@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.10 2004-01-02 13:54:24 kbk Exp $
+!$Id: m3d.F90,v 1.11 2004-01-05 13:23:27 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,7 +19,7 @@
 !
 ! !USES:
    use parameters, only: avmmol
-   use domain, only: vert_cord
+   use domain, only: maxdepth,vert_cord
    use m2d, only: Am
    use variables_2d, only: D,z,UEx,VEx
 #ifndef NO_BAROCLINIC
@@ -50,7 +50,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.10  2004-01-02 13:54:24  kbk
+!  Revision 1.11  2004-01-05 13:23:27  kbk
+!  Poor Man's Z-coordinates
+!
+!  Revision 1.10  2004/01/02 13:54:24  kbk
 !  read equation of state info from namelist - Ruiz
 !
 !  Revision 1.9  2003/12/16 17:02:44  kbk
@@ -244,7 +247,7 @@
 !  Needed for interpolation of temperature and salinity
    if (.not. hotstart) then
       call start_macro()
-      call coordinates(vert_cord,cord_relax)
+      call coordinates(vert_cord,cord_relax,maxdepth)
    end if
 
 #ifndef NO_BAROCLINIC
@@ -312,7 +315,7 @@
    if (bdy3d) call do_bdy_3d(0,T)
 #endif
 
-   call coordinates(vert_cord,cord_relax)
+   call coordinates(vert_cord,cord_relax,maxdepth)
 #ifndef NO_BOTTFRIC
    if (kmax .gt. 1) then
       call bottom_friction_3d()
