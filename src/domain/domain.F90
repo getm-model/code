@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.15 2004-01-05 13:24:27 kbk Exp $
+!$Id: domain.F90,v 1.16 2004-11-04 11:07:00 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -48,7 +48,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.15  2004-01-05 13:24:27  kbk
+!  Revision 1.16  2004-11-04 11:07:00  kbk
+!  fixed format statement in print_mask
+!
+!  Revision 1.15  2004/01/05 13:24:27  kbk
 !  maxdepth from domain namelist - should be calculated later
 !
 !  Revision 1.14  2003/09/02 14:12:14  kbk
@@ -908,12 +911,12 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
 
 #if 0
    do j=jmax+HALO,jmin-HALO,-1
-!      write(0,'(5000(i1,x))') (mask(i,j), i=imin,imax)
+!      write(0,'(5000(i1,1x))') (mask(i,j), i=imin,imax)
       write(0,'(5000(i1))') (mask(i,j), i=imin-HALO,imax+HALO,1)
    end do
 #else
    do j=jmax,jmin,-1
-!      write(0,'(5000(i1,x))') (mask(i,j), i=imin,imax)
+!      write(0,'(5000(i1,1x))') (mask(i,j), i=imin,imax)
       write(0,'(5000(i1))') (mask(i,j), i=imin,imax,1)
    end do
 #endif
