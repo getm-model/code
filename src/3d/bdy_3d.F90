@@ -1,4 +1,4 @@
-!$Id: bdy_3d.F90,v 1.2 2002-06-19 14:32:08 gotm Exp $
+!$Id: bdy_3d.F90,v 1.3 2003-04-07 16:32:31 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,6 +12,7 @@
 !  Description still missing
 !
 ! !USES:
+   use halo_zones, only : H_TAG,U_TAG,V_TAG
    use domain, only: imin,jmin,imax,jmax,H,az,au,av
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
    use domain, only: nsbv,NWB,NNB,NEB,NSB
@@ -31,7 +32,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bdy_3d.F90,v $
-!  Revision 1.2  2002-06-19 14:32:08  gotm
+!  Revision 1.3  2003-04-07 16:32:31  kbk
+!  preliminary support for mirror_bdy_3d
+!
+!  Revision 1.2  2002/06/19 14:32:08  gotm
 !  Index error for wfj, wlj, efj and elj
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:59  gotm
@@ -156,6 +160,7 @@
    end select
 #endif
 
+#ifndef NO_BAROCLINIC
 ! Sponge layer factors according to Martinsen and Engedahl, 1987.
    sp(1)=1.0
    sp(2)=0.5625
@@ -211,6 +216,10 @@
          end do
       end do
    end do
+#endif
+
+   call mirror_bdy_3d(T,H_TAG)
+   call mirror_bdy_3d(S,H_TAG)
 
 #ifdef DEBUG
    write(debug,*) 'leaving do_bdy_3d()'
