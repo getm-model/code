@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.5 2003-12-16 12:32:42 kbk Exp $
+!$Id: sealevel.F90,v 1.6 2004-07-29 19:46:32 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,7 +32,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: sealevel.F90,v $
-!  Revision 1.5  2003-12-16 12:32:42  kbk
+!  Revision 1.6  2004-07-29 19:46:32  hb
+!  For compiler option NOMADS_TEST: some lines shortened
+!
+!  Revision 1.5  2003/12/16 12:32:42  kbk
 !  removed #ifdef SALTWEDGE_TEST (manuel)
 !
 !  Revision 1.4  2003/04/23 12:09:44  kbk
@@ -92,24 +95,27 @@
    zo = z
    do j=jmin,jmax
       do i=imin,imax
-!KBK         zo(i,j) = z(i,j)
          if (az(i,j) .eq. 1) then
             z(i,j)=z(i,j)-dtm*((U(i,j)*DYU-U(i-1,j  )*DYUIM1) &
                               +(V(i,j)*DXV-V(i  ,j-1)*DXVJM1))*ARCD1
 
 #ifdef NOMADS_TEST
-	       kk=1.0
-	       if ((((i.eq.1).or.(i.eq.imax)).and.(j.ge.1).and.(j.le.jmax)).or.(((j.eq.1).or.(j.eq.jmax)).and.(i.ge.1).and.(i.le.imax))) &
-	       z(i,j)=(1.-kk)*z(i,j)
-	       kk=0.5625
-	       if ((((i.eq.2).or.(i.eq.imax-1)).and.(j.ge.2).and.(j.le.jmax-1)).or.(((j.eq.2).or.(j.eq.jmax-1)).and.(i.ge.2).and.(i.le.imax-1))) &
-	       z(i,j)=(1.-kk)*z(i,j)
-	       kk=0.25
-	       if ((((i.eq.3).or.(i.eq.imax-2)).and.(j.ge.3).and.(j.le.jmax-2)).or.(((j.eq.3).or.(j.eq.jmax-2)).and.(i.ge.3).and.(i.le.imax-2))) &
-	       z(i,j)=(1.-kk)*z(i,j)
-	       kk=0.0625
-	       if ((((i.eq.4).or.(i.eq.imax-3)).and.(j.ge.4).and.(j.le.jmax-3)).or.(((j.eq.4).or.(j.eq.jmax-3)).and.(i.ge.4).and.(i.le.imax-3))) &
-	       z(i,j)=(1.-kk)*z(i,j)
+       kk=1.0
+       if ((((i.eq.1).or.(i.eq.imax)).and.(j.ge.1).and.(j.le.jmax)).or. &
+           (((j.eq.1).or.(j.eq.jmax)).and.(i.ge.1).and.(i.le.imax)))    &
+          z(i,j)=(1.-kk)*z(i,j)
+       kk=0.5625
+       if ((((i.eq.2).or.(i.eq.imax-1)).and.(j.ge.2).and.(j.le.jmax-1)).or. &
+           (((j.eq.2).or.(j.eq.jmax-1)).and.(i.ge.2).and.(i.le.imax-1)))    &
+          z(i,j)=(1.-kk)*z(i,j)
+       kk=0.25
+       if ((((i.eq.3).or.(i.eq.imax-2)).and.(j.ge.3).and.(j.le.jmax-2)).or. &
+           (((j.eq.3).or.(j.eq.jmax-2)).and.(i.ge.3).and.(i.le.imax-2)))    &
+           z(i,j)=(1.-kk)*z(i,j)
+       kk=0.0625
+       if ((((i.eq.4).or.(i.eq.imax-3)).and.(j.ge.4).and.(j.le.jmax-3)).or. &
+           (((j.eq.4).or.(j.eq.jmax-3)).and.(i.ge.4).and.(i.le.imax-3)))    &
+           z(i,j)=(1.-kk)*z(i,j)
 #endif
          end if
       end do

@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.11 2004-04-21 09:14:03 lars Exp $
+!$Id: salinity.F90,v 1.12 2004-07-29 19:46:32 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -40,7 +40,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: salinity.F90,v $
-!  Revision 1.11  2004-04-21 09:14:03  lars
+!  Revision 1.12  2004-07-29 19:46:32  hb
+!  For compiler option NOMADS_TEST: some lines shortened
+!
+!  Revision 1.11  2004/04/21 09:14:03  lars
 !  added ifdef for baltic_slice
 !
 !  Revision 1.10  2004/01/06 15:04:00  kbk
@@ -128,6 +131,9 @@
 !  Description still missing
 !
 ! !USES:
+#ifdef NOMADS_TEST
+   use domain, only: dx
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -274,8 +280,7 @@ salt_field_no=1
    do i=1,iimax
       do j=1,jjmax
          do k=kmax/2,kmax
-stop 'salinity - dx is not known'
-!KBK            dist=sqrt((float(i)-float(ic))**2+(float(j)-float(jc))**2)*dx
+            dist=sqrt((float(i)-float(ic))**2+(float(j)-float(jc))**2)*dx
             if (dist.le.3000.) then
                S(i,j,k)=1.1*(dist/(3000.))**8+33.75
             else
@@ -287,7 +292,7 @@ stop 'salinity - dx is not known'
 #endif
 #ifdef SLOPE_TEST
    do i=81,82
-      do j=22,23
+      do j=42,43
       S(i,j,0:kmax) = 25.
       end do
    end do
@@ -432,14 +437,20 @@ stop 'salinity - dx is not known'
          do k=1,kmax
             if (az(i,j).eq.2) S(i,j,k)=SRelax
             kk=0.5625
-            if ((((i.eq.2).or.(i.eq.iimax-1)).and.(j.ge.2).and.(j.le.jjmax-1)).or.(((j.eq.2).or.(j.eq.jjmax-1)).and.(i.ge.2).and.(i.le.iimax-1))) &
-               S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
+            if ((((i.eq.2).or.(i.eq.iimax-1)).and.(j.ge.2).and.   &
+                (j.le.jjmax-1)).or.(((j.eq.2).or.(j.eq.jjmax-1))  &
+                .and.(i.ge.2).and.(i.le.iimax-1)))                &
+                S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
             kk=0.25
-            if ((((i.eq.3).or.(i.eq.iimax-2)).and.(j.ge.3).and.(j.le.jjmax-2)).or.(((j.eq.3).or.(j.eq.jjmax-2)).and.(i.ge.3).and.(i.le.iimax-2))) &
-               S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
+            if ((((i.eq.3).or.(i.eq.iimax-2)).and.(j.ge.3).and.   &
+                (j.le.jjmax-2)).or.(((j.eq.3).or.(j.eq.jjmax-2))  &
+                .and.(i.ge.3).and.(i.le.iimax-2)))                &
+                S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
             kk=0.0625
-            if ((((i.eq.4).or.(i.eq.iimax-3)).and.(j.ge.4).and.(j.le.jjmax-3)).or.(((j.eq.4).or.(j.eq.jjmax-3)).and.(i.ge.4).and.(i.le.iimax-3))) &
-               S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
+            if ((((i.eq.4).or.(i.eq.iimax-3)).and.(j.ge.4).and.   &
+                (j.le.jjmax-3)).or.(((j.eq.4).or.(j.eq.jjmax-3))  &
+                .and.(i.ge.4).and.(i.le.iimax-3)))                &
+                S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
          end do
       end do
   end do
@@ -507,7 +518,7 @@ stop 'salinity - dx is not known'
 
 #ifdef SLOPE_TEST
    do i=81,82
-      do j=22,23
+      do j=42,43
       S(i,j,0:kmax) = 25.
       end do
    end do
