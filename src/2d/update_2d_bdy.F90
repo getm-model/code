@@ -1,4 +1,4 @@
-!$Id: update_2d_bdy.F90,v 1.2 2003-04-07 15:45:05 kbk Exp $
+!$Id: update_2d_bdy.F90,v 1.3 2003-04-23 12:09:44 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,7 +19,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: loop,bdyramp
+   integer, intent(in)                 :: loop,bdyramp
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -29,7 +29,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: update_2d_bdy.F90,v $
-!  Revision 1.2  2003-04-07 15:45:05  kbk
+!  Revision 1.3  2003-04-23 12:09:44  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 15:45:05  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:45  gotm
@@ -64,11 +67,11 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   logical, save :: first=.true.
-   REALTYPE, save :: time_array(1000),zbo(1000),zbn(1000)
-   REALTYPE, save :: t,t1,t2
-   REALTYPE 	:: a,amp,ratio,fac
-   integer	:: i,j,k,l,n
+   logical, save             :: first=.true.
+   REALTYPE, save            :: time_array(1000),zbo(1000),zbn(1000)
+   REALTYPE, save            :: t,t1,t2
+   REALTYPE                  :: a,amp,ratio,fac
+   integer                   :: i,j,k,l,n
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -96,7 +99,7 @@
          bdy_data = amp*sin(OMEGA*t)
 #endif
 #ifdef NOMADS_TEST
-     bdy_data=0.
+         bdy_data=0.
 #endif
 #undef OMEGA
 #ifdef CHANNEL_TEST
@@ -106,26 +109,26 @@
 #endif
 #undef KBK_TESTING
 #ifdef CURVI_TEST
-        k = 0
-	do n=1,NWB
-	   i = wi(n)
-	   if (n .eq. 1) then
-              a = 0.05
-	   else
-              a = -0.05
-	   end if
-           do j=wfj(1),wlj(1)
-	      k = k+1
-              bdy_data(k) = a
-           end do
-        end do
-	do n=1,NEB
-	   i = ei(n)
-           do j=efj(1),elj(1)
-	      k = k+1
-              bdy_data(k) = -0.05
-           end do
-        end do
+         k = 0
+         do n=1,NWB
+            i = wi(n)
+            if (n .eq. 1) then
+               a = 0.05
+            else
+               a = -0.05
+            end if
+            do j=wfj(1),wlj(1)
+               k = k+1
+               bdy_data(k) = a
+            end do
+         end do
+         do n=1,NEB
+            i = ei(n)
+            do j=efj(1),elj(1)
+               k = k+1
+               bdy_data(k) = -0.05
+            end do
+         end do
 #endif
       case (ASCII)
 #ifdef SYLT_TEST
@@ -181,6 +184,7 @@
          k = k+1
       end do
    end do
+
    do n = 1,NNB
       l = l+1
       k = bdy_index(l)
@@ -211,39 +215,14 @@
       end do
    end do
 
-#if 0
-#ifdef NS_06NM_TEST
-   i=109
-   do j=1,jmax
-      if (az(i,j).eq.2) z(i,j)=0.4
-   end do
-#endif
-#ifdef NS_03NM_TEST
-   i=222
-   do j=1,jmax
-      if (az(i,j).eq.2) z(i,j)=0.4
-   end do
-#endif
-#ifdef SYLT_TEST
-   j=jmax
-   do i=1,imax
-      if (az(i,j-2).eq.2) then
-         a=z(i,j-1)+z(i,j-1)-z(i,j-2)
-      else
-         a=z(i,j-1)
-      end if 	
-      if (az(i,j).eq.2) z(i,j)= max(a,-H(i,j)+min_depth)
-   end do
-#endif
-#endif
 #ifdef WADDEN_SEA_TEST
    i=imin
    do j=1,90
       if (az(i+2,j).eq.2) then
          a=z(i+1,j)+z(i+1,j)-z(i+2,j)
-      else	
+      else
          a=z(i+1,j)
-      end if 	
+      end if
       if (az(i,j).eq.2) z(i,j)= max(a,-H(i,j)+min_depth)
    end do
    i=imax
@@ -252,7 +231,7 @@
          a=z(i-1,j)+z(i-1,j)-z(i-2,j)
       else
          a=z(i-1,j)
-      end if 	
+      end if
       if (az(i,j).eq.2) z(i,j)= max(a,-H(i,j)+min_depth)
    end do
 #endif

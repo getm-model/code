@@ -1,4 +1,4 @@
-!$Id: depth_update.F90,v 1.2 2003-04-07 15:27:00 kbk Exp $
+!$Id: depth_update.F90,v 1.3 2003-04-23 12:09:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: depth_update.F90,v $
-!  Revision 1.2  2003-04-07 15:27:00  kbk
+!  Revision 1.3  2003-04-23 12:09:43  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 15:27:00  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:42  gotm
@@ -53,8 +56,8 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer 	:: i,j
-   REALTYPE 	:: d1,d2,x
+   integer                   :: i,j
+   REALTYPE                  :: d1,d2,x
 !EOP
 !-----------------------------------------------------------------------
 !BOC

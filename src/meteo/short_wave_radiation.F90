@@ -1,4 +1,4 @@
-!$Id: short_wave_radiation.F90,v 1.1 2002-05-02 14:01:39 gotm Exp $
+!$Id: short_wave_radiation.F90,v 1.2 2003-04-23 12:05:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -23,9 +23,9 @@
 ! !USES:
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: yday
-   REALTYPE, intent(inout)	:: hour
-   REALTYPE, intent(in)	:: lat,lon,cc
+   integer, intent(in)                 :: yday
+   REALTYPE, intent(inout)             :: hour
+   REALTYPE, intent(in)                :: lat,lon,cc
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -35,45 +35,46 @@
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: short_wave_radiation.F90,v $
-!  Revision 1.1  2002-05-02 14:01:39  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-23 12:05:50  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:39  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1  2001/07/26 14:35:18  bbh
 !  initial import into CVS
 !
-!
 ! !DEFINED PARAMETERS:
-   REALTYPE, parameter  :: pi=3.1415926535897932384626433832795029
-   REALTYPE, parameter  :: deg2rad=pi/180.,rad2deg=180./pi
+   REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029
+   REALTYPE, parameter       :: deg2rad=pi/180.,rad2deg=180./pi
 
-   REALTYPE, parameter	:: solar=1350.
-   REALTYPE, parameter	:: eclips=23.439*deg2rad
-   REALTYPE, parameter	:: tau=0.7
-   REALTYPE, parameter	:: aozone=0.09
+   REALTYPE, parameter       :: solar=1350.
+   REALTYPE, parameter       :: eclips=23.439*deg2rad
+   REALTYPE, parameter       :: tau=0.7
+   REALTYPE, parameter       :: aozone=0.09
 
-   REALTYPE, parameter	:: yrdays(2)= (/365.,366./)
+   REALTYPE, parameter       :: yrdays(2)= (/365.,366./)
 
-   REALTYPE, parameter	:: alb1(20) = 	&
+   REALTYPE, parameter       :: alb1(20) = &
                     (/.719,.656,.603,.480,.385,.300,.250,.193,.164, &
                       .131,.103,.084,.071,.061,.054,.039,.036,.032,.031,.030 /)
 
-   REALTYPE, parameter	:: za(20) = (/90.,88.,86.,84.,82.,80.,78.,76.,74.,70., &
+   REALTYPE, parameter  :: za(20) = (/90.,88.,86.,84.,82.,80.,78.,76.,74.,70., &
                                       66.,62.,58.,54.,50.,40.,30.,20.,10.,0.0 /)
-   REALTYPE	:: dza(19)
+   REALTYPE                 :: dza(19)
    data            dza/8*2.0, 6*4.0, 5*10.0/
 
 ! !LOCAL VARIABLES:
-   REALTYPE	:: alat,alon,eqnx
-   REALTYPE	:: th0,th02,th03,sundec
-   REALTYPE	:: thsun,coszen,zen,dzen,sunbet
-   REALTYPE	:: qatten,qzer,qdir,qdiff,qtot,qshort
-   REALTYPE	:: albedo
-   integer	:: jab
+   REALTYPE                  :: alat,alon,eqnx
+   REALTYPE                  :: th0,th02,th03,sundec
+   REALTYPE                  :: thsun,coszen,zen,dzen,sunbet
+   REALTYPE                  :: qatten,qzer,qdir,qdiff,qtot,qshort
+   REALTYPE                  :: albedo
+   integer                   :: jab
 !
 ! !TO DO:
 !
 ! !BUGS:
-!  yrdays should be set depending on leap year or not.
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -83,8 +84,8 @@
    th03 = 3.*th0
 
 !  sun declination :
-   sundec = 0.006918 - 0.399912*cos(th0) + 0.070257*sin(th0)	&
-           - 0.006758*cos(th02) + 0.000907*sin(th02)		&
+   sundec = 0.006918 - 0.399912*cos(th0) + 0.070257*sin(th0)           &
+           - 0.006758*cos(th02) + 0.000907*sin(th02)                   &
            - 0.002697*cos(th03) + 0.001480*sin(th03)
 
    alon = deg2rad*lon

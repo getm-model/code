@@ -1,4 +1,4 @@
-!$Id: uv_advect.F90,v 1.3 2003-04-07 15:58:18 kbk Exp $
+!$Id: uv_advect.F90,v 1.4 2003-04-23 12:09:44 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,7 +18,7 @@
 #else
    use domain, only: dx,dy,ard1
 #endif
-   use variables_2d,    only: U,DU,UEx,V,DV,VEx,PP
+   use variables_2d, only: U,DU,UEx,V,DV,VEx,PP
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -31,7 +31,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_advect.F90,v $
-!  Revision 1.3  2003-04-07 15:58:18  kbk
+!  Revision 1.4  2003-04-23 12:09:44  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.3  2003/04/07 15:58:18  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:46  gotm
@@ -63,7 +66,7 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer 	:: i,j,ii,jj
+   integer                   :: i,j,ii,jj
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -79,9 +82,9 @@
          PP(i,j) = _ZERO_
          if (az(i,j) .ge. 1) then
             PP(i,j)=0.5*(U(i-1,j)+U(i,j))
-	    if (PP(i,j) .gt. _ZERO_) then
+            if (PP(i,j) .gt. _ZERO_) then
                ii=i-1
-	    else
+            else
                ii=i
             end if
             PP(i,j)=PP(i,j)*U(ii,j)/DU(ii,j)*DYC
@@ -110,7 +113,7 @@
                jj=j+1
             end if
             PP(i,j)=PP(i,j)*U(i,jj)/DU(i,jj)*DXX
-	 end if
+         end if
       end do
    end do
    do j=jmin,jmax        !UEx defined on U-points

@@ -1,4 +1,4 @@
-!$Id: residual.F90,v 1.2 2003-04-07 15:30:58 kbk Exp $
+!$Id: residual.F90,v 1.3 2003-04-23 12:09:44 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,13 +12,12 @@
 !
 ! !USES:
    use domain, only: HU,HV
-!   use variables_2d, only: zu,zuo,zv,zvo
    use variables_2d, only: zu,zv
    use variables_2d, only: u,v,res_du,res_u,res_dv,res_v
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in) :: finish
+   integer, intent(in)                 :: finish
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -28,7 +27,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: residual.F90,v $
-!  Revision 1.2  2003-04-07 15:30:58  kbk
+!  Revision 1.3  2003-04-23 12:09:44  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 15:30:58  kbk
 !  needs to be fixed
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:45  gotm

@@ -32,8 +32,8 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: loop,n
-   logical, intent(in)	:: macro
+   integer, intent(in)                 :: loop,n
+   logical, intent(in)                 :: macro
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -43,7 +43,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: diagnose.F90,v $
-!  Revision 1.2  2003-04-07 12:32:58  kbk
+!  Revision 1.3  2003-04-23 12:07:12  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 12:32:58  kbk
 !  parallel support + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:52  gotm
@@ -57,31 +60,31 @@
 !
 !
 ! !LOCAL VARIABLES:
-   integer, parameter	:: MaxGauges=10
-   integer  	:: gauges=0
-   integer 	:: i,j,k,l
-   integer	:: ii(MaxGauges),jj(MaxGauges)
-   REALTYPE	:: zz,u1,v1,min_depth,uup,udn,vup,vdn,velup,veldn
-   REALTYPE	:: DMIN,DMAX
-   integer 	:: DMINI,DMINJ,DMAXI,DMAXJ
-   REALTYPE	:: UMIN,UMAX
-   integer 	:: UMINI,UMINJ,UMAXI,UMAXJ
-   REALTYPE	:: DUMIN,DUMAX
-   integer 	:: DUMINI,DUMINJ,DUMAXI,DUMAXJ
-   REALTYPE	:: VMIN,VMAX
-   integer 	:: VMINI,VMINJ,VMAXI,VMAXJ
-   REALTYPE	:: DVMIN,DVMAX
-   integer 	:: DVMINI,DVMINJ,DVMAXI,DVMAXJ
-   REALTYPE	:: pi=3.141592654
-   REALTYPE	:: Flux1,Flux2,Flux3
+   integer, parameter        :: MaxGauges=10
+   integer                   :: gauges=0
+   integer                   :: i,j,k,l
+   integer:: ii(MaxGauges),jj(MaxGauges)
+   REALTYPE:: zz,u1,v1,min_depth,uup,udn,vup,vdn,velup,veldn
+   REALTYPE:: DMIN,DMAX
+   integer :: DMINI,DMINJ,DMAXI,DMAXJ
+   REALTYPE:: UMIN,UMAX
+   integer :: UMINI,UMINJ,UMAXI,UMAXJ
+   REALTYPE:: DUMIN,DUMAX
+   integer :: DUMINI,DUMINJ,DUMAXI,DUMAXJ
+   REALTYPE:: VMIN,VMAX
+   integer :: VMINI,VMINJ,VMAXI,VMAXJ
+   REALTYPE:: DVMIN,DVMAX
+   integer :: DVMINI,DVMINJ,DVMAXI,DVMAXJ
+   REALTYPE:: pi=3.141592654
+   REALTYPE:: Flux1,Flux2,Flux3
 #ifdef NOMADS_TEST
-   REALTYPE	:: MKE,APE,densi,zzz,zs,salmin,salmax,area
-   INTEGER      :: salimax,saljmax
+   REALTYPE:: MKE,APE,densi,zzz,zs,salmin,salmax,area
+   INTEGER     :: salimax,saljmax
 #endif
 #ifdef CONSTANCE_TEST
-   REALTYPE	:: ZET,MKE,APE,POT,POTX,APE0,densi,zs,Tint,ccc,N0,b0,WIND=0.
-   LOGICAL,save :: FIRST=.true.
-   INTEGER      :: out,count
+   REALTYPE:: ZET,MKE,APE,POT,POTX,APE0,densi,zs,Tint,ccc,N0,b0,WIND=0.
+   LOGICAL,save:: FIRST=.true.
+   INTEGER     :: out,count
    integer      :: rc
    REALTYPE,save,dimension(:,:,:), allocatable:: dens0
    REALTYPE buoyvec(1:1000000)

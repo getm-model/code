@@ -1,4 +1,4 @@
-!$Id: ncdf_out.F90,v 1.2 2003-04-07 12:32:58 kbk Exp $
+!$Id: ncdf_out.F90,v 1.3 2003-04-23 12:07:12 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_out.F90,v $
-!  Revision 1.2  2003-04-07 12:32:58  kbk
+!  Revision 1.3  2003-04-23 12:07:12  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 12:32:58  kbk
 !  parallel support + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:52  gotm
@@ -44,25 +47,25 @@
 
    interface
       subroutine init_2d_ncdf(fn,title,starttime)
-         character(len=*), intent(in)	:: fn,title,starttime
+         character(len=*), intent(in)  :: fn,title,starttime
       end subroutine init_2d_ncdf
    end interface
 
    interface
       subroutine save_2d_ncdf(secs)
-         REALTYPE, intent(in)		:: secs
+         REALTYPE, intent(in)          :: secs
       end subroutine save_2d_ncdf
    end interface
 
    interface
       subroutine init_3d_ncdf(fn,title,starttime)
-         character(len=*), intent(in)	:: fn,title,starttime
+         character(len=*), intent(in)  :: fn,title,starttime
       end subroutine init_3d_ncdf
    end interface
 
    interface
       subroutine save_3d_ncdf(secs)
-         REALTYPE, intent(in)		:: secs
+         REALTYPE, intent(in)          :: secs
       end subroutine save_3d_ncdf
    end interface
 

@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.4 2003-04-07 15:15:16 kbk Exp $
+!$Id: meteo.F90,v 1.5 2003-04-23 12:05:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -51,31 +51,39 @@
    private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-   public	:: init_meteo, do_meteo, clean_meteo
+   public                              :: init_meteo, do_meteo, clean_meteo
 !
 ! !PUBLIC DATA MEMBERS:
-   character(LEN = PATH_MAX), public	:: meteo_file
-   logical, public	:: metforcing=.false.,on_grid=.true.,calc_met=.false.
-   integer, public	:: method
+   character(LEN = PATH_MAX), public   :: meteo_file
+   logical, public                     :: metforcing=.false.
+   logical, public                     :: on_grid=.true.
+   logical, public                     :: calc_met=.false.
+   integer, public                     :: method
+   REALTYPE, public                    :: w,L,rho_air,qs,qa,ea
    REALTYPE, public, dimension(:,:), allocatable  :: airp,tausx,tausy,swr,shf
    REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum,cc
-   REALTYPE, public	:: w,L,rho_air,qs,qa,ea
 #ifdef WRONG_KONDO
-   REALTYPE, public     :: cd_mom,cd_heat
+   REALTYPE, public                    :: cd_mom,cd_heat
 #else
-   REALTYPE, public     :: cd_mom,cd_heat,cd_latent
+   REALTYPE, public                    :: cd_mom,cd_heat,cd_latent
 #endif
-   REALTYPE, public	:: t_1=-_ONE_,t_2=-_ONE_
-   logical, public	:: new_meteo=.false.
+   REALTYPE, public                    :: t_1=-_ONE_,t_2=-_ONE_
+   logical, public                     :: new_meteo=.false.
 !
 ! !DEFINED PARAMETERS:
-   REALTYPE,public,parameter :: cpa=1008.,KELVIN=273.15,emiss=0.97,bolz=5.67e-8
+   REALTYPE,public,parameter           :: cpa=1008.
+   REALTYPE,public,parameter           :: KELVIN=273.15
+   REALTYPE,public,parameter           :: emiss=0.97
+   REALTYPE,public,parameter           :: bolz=5.67e-8
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
-!  Revision 1.4  2003-04-07 15:15:16  kbk
+!  Revision 1.5  2003-04-23 12:05:50  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.4  2003/04/07 15:15:16  kbk
 !  merged stable and devel
 !
 !  Revision 1.3  2003/03/17 15:04:14  gotm
@@ -112,9 +120,9 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer	:: spinup=0,metfmt=2
-   REALTYPE	:: tx= _ZERO_ ,ty= _ZERO_
-   REALTYPE	:: swr_const= _ZERO_ ,shf_const= _ZERO_
+   integer                   :: spinup=0,metfmt=2
+   REALTYPE                  :: tx= _ZERO_ ,ty= _ZERO_
+   REALTYPE                  :: swr_const= _ZERO_ ,shf_const= _ZERO_
    REALTYPE, dimension(:,:), allocatable :: airp_old,tausx_old,tausy_old
    REALTYPE, dimension(:,:), allocatable :: d_airp,d_tausx,d_tausy
    REALTYPE, dimension(:,:), allocatable :: swr_old,shf_old
@@ -155,7 +163,7 @@
 !  See log for module.
 !
 ! !LOCAL VARIABLES:
-   integer	:: rc
+   integer                   :: rc
    namelist /meteo/ metforcing,on_grid,calc_met,method,spinup,metfmt, &
                     meteo_file,tx,ty,swr_const,shf_const
 !EOP
@@ -338,15 +346,15 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer, save :: k=0
-   integer	:: i,j
-   REALTYPE	:: ramp,hh,t,t_frac
-   REALTYPE	:: short_wave_radiation
-   REALTYPE     :: uu,cosconv,vv,sinconv
-   REALTYPE, parameter  :: pi=3.1415926535897932384626433832795029
-   REALTYPE, parameter  :: deg2rad=pi/180.
-   logical,save	:: first=.true.
-   logical	:: have_sst
+   integer, save             :: k=0
+   integer                   :: i,j
+   REALTYPE                  :: ramp,hh,t,t_frac
+   REALTYPE                  :: short_wave_radiation
+   REALTYPE                  :: uu,cosconv,vv,sinconv
+   REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029
+   REALTYPE, parameter       :: deg2rad=pi/180.
+   logical,save              :: first=.true.
+   logical                   :: have_sst
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -376,21 +384,21 @@
             do j=jjmin,jjmax
                do i=iimin,iimax
                   if (conv(i,j) .ne. _ZERO_ .and. az(i,j) .gt. 0) then
-	             sinconv=sin(-conv(i,j)*deg2rad)
-	             cosconv=cos(-conv(i,j)*deg2rad)
-	             uu=tausx(i,j)
-	             vv=tausy(i,j)
-	             tausx(i,j)= uu*cosconv+vv*sinconv
-	             tausy(i,j)=-uu*sinconv+vv*cosconv
-	          end if
-	       end do
+                     sinconv=sin(-conv(i,j)*deg2rad)
+                     cosconv=cos(-conv(i,j)*deg2rad)
+                     uu=tausx(i,j)
+                     vv=tausy(i,j)
+                     tausx(i,j)= uu*cosconv+vv*sinconv
+                     tausy(i,j)=-uu*sinconv+vv*cosconv
+                  end if
+               end do
             end do
 
 #ifdef CONSTANCE_TEST
             if (t.gt.2.*24.*3600) then
-            tausx = _ZERO_
-            tausy = _ZERO_
-	    end if
+               tausx = _ZERO_
+               tausy = _ZERO_
+            end if
 #endif
             swr   = swr_const
             shf   = shf_const
@@ -409,9 +417,9 @@ have_sst = present(sst)
                      do i=imin,imax
                         if (az(i,j) .ge. 1) then
 if (have_sst) then
-                           swr(i,j) = short_wave_radiation	&
+                           swr(i,j) = short_wave_radiation             &
                                    (yearday,hh,latc(i,j),lonc(i,j),cc(i,j))
-                           call exchange_coefficients(	&
+                           call exchange_coefficients(                 &
                                   u10(i,j),v10(i,j),t2(i,j),airp(i,j), &
                                   sst(i,j),hum(i,j))
                            call fluxes(u10(i,j),v10(i,j),t2(i,j),cc(i,j),  &
@@ -431,7 +439,7 @@ end if
                         end if
                      end do
                   end do
-		  if (have_sst) then
+                  if (have_sst) then
 call update_2d_halo(swr,swr,az,imin,jmin,imax,jmax,H_TAG)
 call wait_halo(H_TAG)
 call update_2d_halo(swr,shf,az,imin,jmin,imax,jmax,H_TAG)

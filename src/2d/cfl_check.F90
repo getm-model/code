@@ -1,4 +1,4 @@
-!$Id: cfl_check.F90,v 1.3 2003-04-03 07:01:49 gotm Exp $
+!$Id: cfl_check.F90,v 1.4 2003-04-23 12:09:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,7 +31,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: cfl_check.F90,v $
-!  Revision 1.3  2003-04-03 07:01:49  gotm
+!  Revision 1.4  2003-04-23 12:09:43  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.3  2003/04/03 07:01:49  gotm
 !  fixed CFL calc. for non cartesian grid
 !
 !  Revision 1.2  2002/10/04 13:56:58  gotm
@@ -63,9 +66,9 @@
 !
 !
 ! !LOCAL VARIABLES:
-   integer	:: pos(2),max_pos(2),rc,i,j
-   REALTYPE	:: h_max=-99.,c,max_dt,dtt
-   logical, dimension(:,:), allocatable	:: lmask
+   integer                   :: pos(2),max_pos(2),rc,i,j
+   REALTYPE                  :: h_max=-99.,c,max_dt,dtt
+   logical, dimension(:,:), allocatable :: lmask
 !EOP
 !-----------------------------------------------------------------------
 !BOC

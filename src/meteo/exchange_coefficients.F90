@@ -1,4 +1,4 @@
-!$Id: exchange_coefficients.F90,v 1.2 2003-03-17 15:04:15 gotm Exp $
+!$Id: exchange_coefficients.F90,v 1.3 2003-04-23 12:05:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,7 +43,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in)	:: u10,v10,airt,airp,sst,hum
+   REALTYPE, intent(in)                :: u10,v10,airt,airp,sst,hum
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -53,7 +53,10 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: exchange_coefficients.F90,v $
-!  Revision 1.2  2003-03-17 15:04:15  gotm
+!  Revision 1.3  2003-04-23 12:05:50  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/03/17 15:04:15  gotm
 !  Fixed Kondo coefficients - -DWRONG_KONDO can be used
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:38  gotm
@@ -62,36 +65,35 @@
 !  Revision 1.1  2001/07/26 14:35:18  bbh
 !  initial import into CVS
 !
-!
 ! !DEFINED PARAMETERS:
-   REALTYPE, parameter	:: a1=6.107799961
-   REALTYPE, parameter	:: a2=4.436518521e-1
-   REALTYPE, parameter	:: a3=1.428945805e-2
-   REALTYPE, parameter	:: a4=2.650648471e-4
-   REALTYPE, parameter	:: a5=3.031240396e-6
-   REALTYPE, parameter	:: a6=2.034080948e-8
-   REALTYPE, parameter	:: a7=6.136820929e-11
-   REALTYPE, parameter	:: const06=0.62198
-   REALTYPE, parameter	:: eps=1.0e-12
+   REALTYPE, parameter       :: a1=6.107799961
+   REALTYPE, parameter       :: a2=4.436518521e-1
+   REALTYPE, parameter       :: a3=1.428945805e-2
+   REALTYPE, parameter       :: a4=2.650648471e-4
+   REALTYPE, parameter       :: a5=3.031240396e-6
+   REALTYPE, parameter       :: a6=2.034080948e-8
+   REALTYPE, parameter       :: a7=6.136820929e-11
+   REALTYPE, parameter       :: const06=0.62198
+   REALTYPE, parameter       :: eps=1.0e-12
 !
 ! !LOCAL VARIABLES:
-   REALTYPE		:: tvirt,s,s0
+   REALTYPE                  :: tvirt,s,s0
 #ifdef WRONG_KONDO
-   REALTYPE		:: ae_h,be_h,ce_h,pe_h
-   REALTYPE		:: ae_m,be_m,ce_m,pe_m
-   REALTYPE		:: cee_heat,cee_mom
+   REALTYPE                  :: ae_h,be_h,ce_h,pe_h
+   REALTYPE                  :: ae_m,be_m,ce_m,pe_m
+   REALTYPE                  :: cee_heat,cee_mom
 #else
-   REALTYPE		:: ae_d,be_d,ce_d,pe_d
-   REALTYPE		:: ae_h,be_h,ce_h,pe_h
-   REALTYPE		:: ae_e,be_e,ce_e,pe_e
-   REALTYPE		:: cee_d,cee_h,cee_e
+   REALTYPE                  :: ae_d,be_d,ce_d,pe_d
+   REALTYPE                  :: ae_h,be_h,ce_h,pe_h
+   REALTYPE                  :: ae_e,be_e,ce_e,pe_e
+   REALTYPE                  :: cee_d,cee_h,cee_e
 #endif
-   REALTYPE		:: x,es,ea
-   REALTYPE		:: ta,ta_k,tw,tw_k
+   REALTYPE                  :: x,es,ea
+   REALTYPE                  :: ta,ta_k,tw,tw_k
 
-   REALTYPE		:: twet,rh
+   REALTYPE                  :: twet,rh
 #ifdef ECMWF_FRV
-   REALTYPE		:: d_tmp
+   REALTYPE                  :: d_tmp
 #endif
 !
 !  !TO DO:

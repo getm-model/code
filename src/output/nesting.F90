@@ -1,4 +1,4 @@
-!$Id: nesting.F90,v 1.2 2003-04-07 12:32:58 kbk Exp $
+!$Id: nesting.F90,v 1.3 2003-04-23 12:07:12 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -37,7 +37,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: nesting.F90,v $
-!  Revision 1.2  2003-04-07 12:32:58  kbk
+!  Revision 1.3  2003-04-23 12:07:12  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 12:32:58  kbk
 !  parallel support + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:53  gotm
@@ -45,22 +48,22 @@
 !
 !
 ! !PRIVATE DATA MEMBERS
-   integer	:: NW_w,NN_w,NE_w,NS_w,nonp_w=0
-   integer, dimension(:), allocatable	:: wi_w,wfj_w,wlj_w
-   integer, dimension(:), allocatable	:: nj_w,nfi_w,nli_w
-   integer, dimension(:), allocatable	:: ei_w,efj_w,elj_w
-   integer, dimension(:), allocatable	:: sj_w,sfi_w,sli_w
-   REALTYPE, allocatable	:: wrk_2d_w(:),wrk_3d_w(:,:)
+   integer                   :: NW_w,NN_w,NE_w,NS_w,nonp_w=0
+   REALTYPE, allocatable     :: wrk_2d_w(:),wrk_3d_w(:,:)
+   integer, dimension(:), allocatable :: wi_w,wfj_w,wlj_w
+   integer, dimension(:), allocatable :: nj_w,nfi_w,nli_w
+   integer, dimension(:), allocatable :: ei_w,efj_w,elj_w
+   integer, dimension(:), allocatable :: sj_w,sfi_w,sli_w
 
-   integer	:: NW_r,NN_r,NE_r,NS_r,nonp_r=0
-   integer, dimension(:), allocatable	:: wi_r,wfj_r,wlj_r
-   integer, dimension(:), allocatable	:: nj_r,nfi_r,nli_r
-   integer, dimension(:), allocatable	:: ei_r,efj_r,elj_r
-   integer, dimension(:), allocatable	:: sj_r,sfi_r,sli_r
-   REALTYPE, allocatable	:: wrk_2d_r(:),wrk_3d_r(:,:)
+   integer                   :: NW_r,NN_r,NE_r,NS_r,nonp_r=0
+   REALTYPE, allocatable     :: wrk_2d_r(:),wrk_3d_r(:,:)
+   integer, dimension(:), allocatable :: wi_r,wfj_r,wlj_r
+   integer, dimension(:), allocatable :: nj_r,nfi_r,nli_r
+   integer, dimension(:), allocatable :: ei_r,efj_r,elj_r
+   integer, dimension(:), allocatable :: sj_r,sfi_r,sli_r
 
-   integer, parameter	:: TGRID=1,UGRID=2,VGRID=3
-   integer, parameter	:: uout=60,uin=61 ! kbk
+   integer, parameter        :: TGRID=1,UGRID=2,VGRID=3
+   integer, parameter        :: uout=60,uin=61 ! kbk
 !EOP
 !-----------------------------------------------------------------------
 
@@ -90,10 +93,10 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: iunit=25 ! kbk
-   integer	:: dum
-   integer	:: rc
-   integer	:: k,n
+   integer                   :: iunit=25 ! kbk
+   integer                   :: dum
+   integer                   :: rc
+   integer                   :: k,n
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -205,7 +208,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: mode
+   integer, intent(in)                 :: mode
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -215,9 +218,9 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k,n
-   integer	:: rc
-   logical	:: first_w=.true.,first_r=.true.
+   integer                   :: i,j,k,n
+   integer                   :: rc
+   logical                   :: first_w=.true.,first_r=.true.
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -229,7 +232,7 @@
    if (mode .eq. WRITING) then
       if(first_w) then
          first_w=.false.
-         open(unit=uout,file='nesting.out',	&
+         open(unit=uout,file='nesting.out',  &
               status='unknown',form='unformatted')
          write(uout) NW_w,NN_w,NE_w,NS_w,nonp_w
          if(NW_w .gt. 0) then
@@ -271,7 +274,7 @@
    if (mode .eq. READING) then
       if(first_r) then
          first_r=.false.
-         open(unit=uin,file='nesting.in',	&
+         open(unit=uin,file='nesting.in',  &
               status='unknown',form='unformatted')
          read(uin) NW_r,NN_r,NE_r,NS_r,nonp_r
          if(NW_r .gt. 0) then
@@ -359,8 +362,8 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer		:: source_grid
-   REALTYPE, intent(in)	:: f(E2DFIELD)
+   integer                             :: source_grid
+   REALTYPE, intent(in)                :: f(E2DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -370,7 +373,7 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer		:: i,j,k,n
+   integer                   :: i,j,k,n
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -455,8 +458,8 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer		:: source_grid
-   REALTYPE, intent(in)	:: f(I3DFIELD)
+   integer                             :: source_grid
+   REALTYPE, intent(in)                :: f(I3DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -466,8 +469,8 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k,n
-   REALTYPE	:: col(0:kmax)
+   integer                   :: i,j,k,n
+   REALTYPE                  :: col(0:kmax)
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -487,7 +490,7 @@
             case (UGRID)
                wrk_3d_w(k,:) = f(i,j,:)
             case (VGRID)
-               wrk_3d_w(k,:) =	&
+               wrk_3d_w(k,:) = &
                   0.25*(f(i,j,:)+f(i,j-1,:)+f(i+1,j-1,:)+f(i+1,j,:))
          end select
       end do
@@ -500,7 +503,7 @@
             case (TGRID)
                wrk_3d_w(k,:) = 0.5*(f(i,j,:)+f(i,j+1,:))
             case (UGRID)
-               wrk_3d_w(k,:) = 	&
+               wrk_3d_w(k,:) = &
                   0.25*(f(i,j,:)+f(i,j+1,:)+f(i-1,j,:)+f(i-1,j+1,:))
             case (VGRID)
                wrk_3d_w(k,:) = f(i,j,:)
@@ -517,7 +520,7 @@
             case (UGRID)
                wrk_3d_w(k,:) = f(i,j,:)
             case (VGRID)
-               wrk_3d_w(k,:) =	&
+               wrk_3d_w(k,:) = &
                   0.25*(f(i,j,:)+f(i,j-1,:)+f(i+1,j-1,:)+f(i+1,j,:))
          end select
       end do
@@ -530,7 +533,7 @@
             case (TGRID)
                wrk_3d_w(k,:) = 0.5*(f(i,j,:)+f(i,j+1,:))
             case (UGRID)
-               wrk_3d_w(k,:) =	&
+               wrk_3d_w(k,:) = &
                   0.25*(f(i,j,:)+f(i,j+1,:)+f(i-1,j,:)+f(i-1,j+1,:))
             case (VGRID)
                wrk_3d_w(k,:) = f(i,j,:)
@@ -557,8 +560,8 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer		:: source_grid
-   REALTYPE, intent(in)	:: f(I3DFIELD)
+   integer                             :: source_grid
+   REALTYPE, intent(in)                :: f(I3DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -568,8 +571,8 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k,n
-   REALTYPE	:: col(0:kmax)
+   integer                   :: i,j,k,n
+   REALTYPE                  :: col(0:kmax)
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -591,7 +594,7 @@
             case (UGRID)
                wrk_3d_r(k,:) = f(i,j,:)
             case (VGRID)
-               wrk_3d_r(k,:) =	&
+               wrk_3d_r(k,:) = &
                   0.25*(f(i,j,:)+f(i,j-1,:)+f(i+1,j-1,:)+f(i+1,j,:))
          end select
       end do
@@ -604,7 +607,7 @@
             case (TGRID)
                wrk_3d_r(k,:) = 0.5*(f(i,j,:)+f(i,j+1,k))
             case (UGRID)
-               wrk_3d_r(k,:) = 	&
+               wrk_3d_r(k,:) = &
                   0.25*(f(i,j,:)+f(i,j+1,:)+f(i-1,j,:)+f(i-1,j+1,:))
             case (VGRID)
                wrk_3d_r(k,:) = f(i,j,:)
@@ -621,7 +624,7 @@
             case (UGRID)
                wrk_3d_r(k,:) = f(i,j,:)
             case (VGRID)
-               wrk_3d_r(k,:) =	&
+               wrk_3d_r(k,:) = &
                   0.25*(f(i,j,:)+f(i,j-1,:)+f(i+1,j-1,:)+f(i+1,j,:))
          end select
       end do
@@ -634,7 +637,7 @@
             case (TGRID)
                wrk_3d_r(k,:) = 0.5*(f(i,j,:)+f(i,j+1,k))
             case (UGRID)
-               wrk_3d_r(k,:) =	&
+               wrk_3d_r(k,:) = &
                   0.25*(f(i,j,:)+f(i,j+1,:)+f(i-1,j,:)+f(i-1,j+1,:))
             case (VGRID)
                wrk_3d_r(k,:) = f(i,j,:)

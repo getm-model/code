@@ -1,4 +1,4 @@
-!$Id: variables_2d.F90,v 1.3 2003-04-07 15:50:20 kbk Exp $
+!$Id: variables_2d.F90,v 1.4 2003-04-23 12:09:44 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -24,14 +24,17 @@
 #else
 #include "dynamic_declarations_2d.h"
 #endif
-   integer	:: size2d_field
-   integer	:: mem2d
+   integer                             :: size2d_field
+   integer                             :: mem2d
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: variables_2d.F90,v $
-!  Revision 1.3  2003-04-07 15:50:20  kbk
+!  Revision 1.4  2003-04-23 12:09:44  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.3  2003/04/07 15:50:20  kbk
 !  initialise variables
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:47  gotm
@@ -41,7 +44,7 @@
 !  2D variables seperated from m2d
 !
 ! !LOCAL VARIABLES:
-   integer	:: rc
+   integer                   :: rc
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -61,7 +64,7 @@
 !  Allocates memory for 2D related fields.
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: runtype
+   integer, intent(in)                 :: runtype
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -91,14 +94,14 @@
 #include "dynamic_allocations_2d.h"
 #endif
 
-   z = _ZERO_ ; zu = _ZERO_ ; zv = _ZERO_
-   U = _ZERO_ ; DU = _ZERO_ ; fU = _ZERO_ ; SlUx = _ZERO_ ; Slru = _ZERO_
-   V = _ZERO_ ; DV = _ZERO_ ; fV = _ZERO_ ; SlVx = _ZERO_ ; Slrv = _ZERO_
+   z = _ZERO_; zu = _ZERO_; zv = _ZERO_
+   U = _ZERO_; DU = _ZERO_; fU = _ZERO_; SlUx = _ZERO_; Slru = _ZERO_
+   V = _ZERO_; DV = _ZERO_; fV = _ZERO_; SlVx = _ZERO_; Slrv = _ZERO_
 
-   Uint = _ZERO_ ; Vint = _ZERO_
-   UEx = _ZERO_ ; VEx = _ZERO_
-   ru = _ZERO_ ; rv = _ZERO_
-   res_du = _ZERO_ ; res_u =  _ZERO_ ; res_dv = _ZERO_ ; res_v =  _ZERO_
+   Uint = _ZERO_; Vint = _ZERO_
+   UEx = _ZERO_; VEx = _ZERO_
+   ru = _ZERO_; rv = _ZERO_
+   res_du = _ZERO_; res_u = _ZERO_; res_dv = _ZERO_; res_v =  _ZERO_
    surfdiv = _ZERO_
 
 #ifdef DEBUG

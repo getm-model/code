@@ -1,4 +1,4 @@
-!$Id: bottom_friction.F90,v 1.3 2003-04-07 15:41:09 kbk Exp $
+!$Id: bottom_friction.F90,v 1.4 2003-04-23 12:09:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,7 +17,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: runtype
+   integer, intent(in)                 :: runtype
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -27,7 +27,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bottom_friction.F90,v $
-!  Revision 1.3  2003-04-07 15:41:09  kbk
+!  Revision 1.4  2003-04-23 12:09:43  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.3  2003/04/07 15:41:09  kbk
 !  adjusted use of mask
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:41  gotm
@@ -56,9 +59,9 @@
 !  initial import into CVS
 !
 !  !LOCAL VARIABLES:
-   integer 	:: i,j
-   REALTYPE 	:: uloc(E2DFIELD),vloc(E2DFIELD)
-   REALTYPE 	:: HH(E2DFIELD),fricvel(E2DFIELD)
+   integer                   :: i,j
+   REALTYPE                  :: uloc(E2DFIELD),vloc(E2DFIELD)
+   REALTYPE                  :: HH(E2DFIELD),fricvel(E2DFIELD)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -113,9 +116,9 @@
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .gt. 0) then
-            vloc(i,j)=0.25* ( V(i  ,j  )/DV(i  ,j  )	&
-                             +V(i+1,j  )/DV(i+1,j  )	&
-                             +V(i  ,j-1)/DV(i  ,j-1)	&
+            vloc(i,j)=0.25* ( V(i  ,j  )/DV(i  ,j  )   &
+                             +V(i+1,j  )/DV(i+1,j  )   &
+                             +V(i  ,j-1)/DV(i  ,j-1)   &
                              +V(i+1,j-1)/DV(i+1,j-1) )
          else
             vloc(i,j) = _ZERO_
@@ -168,9 +171,9 @@
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .gt. 0) then
-            uloc(i,j)=0.25* ( U(i  ,j  )/DU(i  ,j  )	&
-                             +U(i-1,j  )/DU(i-1,j  )	&
-                             +U(i  ,j+1)/DU(i  ,j+1)	&
+            uloc(i,j)=0.25* ( U(i  ,j  )/DU(i  ,j  )   &
+                             +U(i-1,j  )/DU(i-1,j  )   &
+                             +U(i  ,j+1)/DU(i  ,j+1)   &
                              +U(i-1,j+1)/DU(i-1,j+1) )
          else
             uloc(i,j) = _ZERO_

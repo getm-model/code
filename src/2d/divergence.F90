@@ -1,4 +1,4 @@
-!$Id: divergence.F90,v 1.2 2003-04-07 13:08:37 kbk Exp $
+!$Id: divergence.F90,v 1.3 2003-04-23 12:09:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,7 +30,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: divergence.F90,v $
-!  Revision 1.2  2003-04-07 13:08:37  kbk
+!  Revision 1.3  2003-04-23 12:09:43  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 13:08:37  kbk
 !  cleaned code
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:43  gotm
@@ -49,15 +52,16 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j
+   integer                   :: i,j
 !
 !EOP
 !-----------------------------------------------------------------------
 !BOC
    do i=imin,imax
       do j=jmin,jmax
-         surfdiv(i,j) = ((U(i,j)/DU(i,j)*DYU-U(i-1,j)/DU(i-1,j)*DYUIM1)  &
-                      - (V(i,j)/DV(i,j)*DXV-V(i,j-1)/DV(i,j-1)*DXVJM1))*ARCD1
+         surfdiv(i,j)=((U(i,j)/DU(i,j)*DYU-U(i-1,j)/DU(i-1,j)*DYUIM1)  &
+                      -(V(i,j)/DV(i,j)*DXV-V(i,j-1)/DV(i,j-1)*DXVJM1)) &
+                       *ARCD1
       end do
    end do
    return

@@ -1,4 +1,4 @@
-!$Id: momentum.F90,v 1.5 2003-04-07 15:54:16 kbk Exp $
+!$Id: momentum.F90,v 1.6 2003-04-23 12:09:44 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -15,10 +15,10 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: n
-   REALTYPE, intent(in)	:: tausx(E2DFIELD)
-   REALTYPE, intent(in)	:: tausy(E2DFIELD)
-   REALTYPE, intent(in)	:: airp(E2DFIELD)
+   integer, intent(in)                 :: n
+   REALTYPE, intent(in)                :: tausx(E2DFIELD)
+   REALTYPE, intent(in)                :: tausy(E2DFIELD)
+   REALTYPE, intent(in)                :: airp(E2DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -28,7 +28,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: momentum.F90,v $
-!  Revision 1.5  2003-04-07 15:54:16  kbk
+!  Revision 1.6  2003-04-23 12:09:44  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.5  2003/04/07 15:54:16  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:44  gotm
@@ -63,7 +66,7 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-  logical	:: ufirst=.false.  
+  logical                    :: ufirst=.false.
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -99,13 +102,13 @@
 !
 ! !USES:
    use parameters, only: g,rho_0
-   use domain,     only: kmax,imin,imax,jmin,jmax,H,au,min_depth,Cori,dry_u
-   use domain,     only: av,corv
+   use domain, only: imin,imax,jmin,jmax
+   use domain, only: H,au,av,min_depth,dry_u,Cori,corv
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain,       only: dxu,arvd1,dxc,dyx
+   use domain, only: dxu,arvd1,dxc,dyx
    use variables_2d, only: V
 #else
-   use domain,       only: dx
+   use domain, only: dx
 #endif
    use m2d, only: dtm
    use variables_2d, only: D,z,UEx,U,DU,fV,SlUx,SlRu,ru,fU,DV
@@ -113,7 +116,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in)	:: tausx(E2DFIELD),airp(E2DFIELD)
+   REALTYPE, intent(in)                :: tausx(E2DFIELD),airp(E2DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -123,11 +126,12 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j
-   REALTYPE	:: zx(E2DFIELD),Slr(E2DFIELD),tausu(E2DFIELD)
-   REALTYPE	:: zp,zm,Uloc,Uold
-   REALTYPE	:: gamma=rho_0*g
-   REALTYPE	:: cord_curv=_ZERO_
+   integer                   :: i,j
+   REALTYPE                  :: zx(E2DFIELD)
+   REALTYPE                  :: Slr(E2DFIELD),tausu(E2DFIELD)
+   REALTYPE                  :: zp,zm,Uloc,Uold
+   REALTYPE                  :: gamma=rho_0*g
+   REALTYPE                  :: cord_curv=_ZERO_
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -170,14 +174,15 @@
 ! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
             Uloc= &
-               ( U(i,j  )/sqrt(DU(i,j  ))+ U(i-1,j  )/sqrt(DU(i-1,j  ))   &
-               + U(i,j+1)/sqrt(DU(i,j+1))+ U(i-1,j+1)/sqrt(DU(i-1,j+1)))  &
+             ( U(i,j  )/sqrt(DU(i,j  ))+ U(i-1,j  )/sqrt(DU(i-1,j  ))  &
+             + U(i,j+1)/sqrt(DU(i,j+1))+ U(i-1,j+1)/sqrt(DU(i-1,j+1))) &
                *0.25*sqrt(DV(i,j))
 #else
             Uloc=0.25*( U(i,j)+ U(i-1,j)+ U(i,j+1)+ U(i-1,j+1))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-            cord_curv=(V(i,j)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC))/DV(i,j)*ARVD1
+            cord_curv=(V(i,j)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC)) &
+	              /DV(i,j)*ARVD1
             fU(i,j)=(cord_curv+corv(i,j))*Uloc
 #else
             fU(i,j)=corv(i,j)*Uloc
@@ -208,21 +213,21 @@
 !
 ! !USES:
    use parameters, only: g,rho_0
-   use domain,     only: imin,imax,jmin,jmax,H,av,min_depth,Cori
-   use domain,     only: dry_v,au,coru
+   use domain, only: imin,imax,jmin,jmax
+   use domain, only: H,au,av,min_depth,dry_v,Cori,coru
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain,     only: dyv,arud1,dxx,dyc
-   use m2d,        only: U
+   use domain, only: dyv,arud1,dxx,dyc
+   use m2d, only: U
 #else
-   use domain,     only: dy
+   use domain, only: dy
 #endif
-   use m2d,        only: dtm
+   use m2d, only: dtm
    use variables_2d, only: D,z,VEx,V,DV,fU,SlVx,SlRv,rv,fV,DU
    use halo_zones, only : update_2d_halo,wait_halo,V_TAG
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in)	:: tausy(E2DFIELD),airp(E2DFIELD)
+   REALTYPE, intent(in)                :: tausy(E2DFIELD),airp(E2DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -232,11 +237,12 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j
-   REALTYPE	:: zy(E2DFIELD),Slr(E2DFIELD),tausv(E2DFIELD)
-   REALTYPE	:: zp,zm,Vloc
-   REALTYPE	:: gamma=rho_0*g
-   REALTYPE	:: cord_curv=_ZERO_
+   integer                   :: i,j
+   REALTYPE                  :: zy(E2DFIELD)
+   REALTYPE                  :: Slr(E2DFIELD),tausv(E2DFIELD)
+   REALTYPE                  :: zp,zm,Vloc
+   REALTYPE                  :: gamma=rho_0*g
+   REALTYPE                  :: cord_curv=_ZERO_
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -279,17 +285,18 @@
 ! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
             Vloc = &
-	       ( V(i,j  )/sqrt(DV(i,j  ))+ V(i+1,j  )/sqrt(DV(i+1,j  )) + &
-                 V(i,j-1)/sqrt(DV(i,j-1))+ V(i+1,j-1)/sqrt(DV(i+1,j-1)))  &
-                    *0.25*sqrt(DU(i,j))
+            ( V(i,j  )/sqrt(DV(i,j  ))+ V(i+1,j  )/sqrt(DV(i+1,j  )) + &
+              V(i,j-1)/sqrt(DV(i,j-1))+ V(i+1,j-1)/sqrt(DV(i+1,j-1)))  &
+              *0.25*sqrt(DU(i,j))
 #else
             Vloc = 0.25*( V(i,j)+ V(i+1,j)+ V(i,j-1)+ V(i+1,j-1))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         cord_curv=(Vloc*(DYCIP1-DYC)-U(i,j)*(DXX-DXXJM1))/DU(i,j)*ARUD1
-         fV(i,j)=(cord_curv+coru(i,j))*Vloc
+            cord_curv=(Vloc*(DYCIP1-DYC)-U(i,j)*(DXX-DXXJM1)) &
+	              /DU(i,j)*ARUD1
+            fV(i,j)=(cord_curv+coru(i,j))*Vloc
 #else
-         fV(i,j)=coru(i,j)*Vloc
+            fV(i,j)=coru(i,j)*Vloc
 #endif
          else
             fV(i,j) = _ZERO_

@@ -1,4 +1,4 @@
-!$Id: fluxes.F90,v 1.2 2003-03-17 15:04:15 gotm Exp $
+!$Id: fluxes.F90,v 1.3 2003-04-23 12:05:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,18 +32,21 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in)		:: u10,v10,airt,cc,sst
+   REALTYPE, intent(in)                :: u10,v10,airt,cc,sst
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out)	:: hf,taux,tauy
+   REALTYPE, intent(out)               :: hf,taux,tauy
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: fluxes.F90,v $
-!  Revision 1.2  2003-03-17 15:04:15  gotm
+!  Revision 1.3  2003-04-23 12:05:50  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/03/17 15:04:15  gotm
 !  Fixed Kondo coefficients - -DWRONG_KONDO can be used
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:39  gotm
@@ -58,10 +61,10 @@
    integer, parameter   :: hastenrath=2 ! Hastenrath and Lamb, 1978
 !
 ! !LOCAL VARIABLES:
-   REALTYPE		:: tmp
-   REALTYPE		:: qe,qh,qb
-   REALTYPE		:: ta,tw,tw_k
-   integer		:: back_radiation_method=clark
+   REALTYPE                  :: tmp
+   REALTYPE                  :: qe,qh,qb
+   REALTYPE                  :: ta,tw,tw_k
+   integer                   :: back_radiation_method=clark
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -80,21 +83,21 @@
       ta = airt
    end if
 
-   qh=cd_heat*cpa*rho_air*w*(tw-ta)			! sensible
+   qh=cd_heat*cpa*rho_air*w*(tw-ta)            ! sensible
 #ifdef WRONG_KONDO
-   qe=cd_heat*L*rho_air*w*(qs-qa)			! latent
+   qe=cd_heat*L*rho_air*w*(qs-qa)              ! latent
 #else
-   qe=cd_latent*L*rho_air*w*(qs-qa)			! latent
+   qe=cd_latent*L*rho_air*w*(qs-qa)            ! latent
 #endif
 
-   select case(back_radiation_method)			! back radiation
+   select case(back_radiation_method)          ! back radiation
       case(clark)
-         qb=(1.0-.8*cc*cc)				&
-            *emiss*bolz*(tw_k**4)*(0.39-0.05*sqrt(ea/100.0))	&
+         qb=(1.0-.8*cc*cc)                                      &
+            *emiss*bolz*(tw_k**4)*(0.39-0.05*sqrt(ea/100.0))    &
             +4.0*emiss*bolz*(tw_k**3)*(tw-ta)
       case(hastenrath) ! qa in g(water)/kg(wet air)
-         qb=(1.0-.8*cc*cc)				&
-            *emiss*bolz*(tw_k**4)*(0.39-0.056*sqrt(1000*qa))		&
+         qb=(1.0-.8*cc*cc)                                      &
+            *emiss*bolz*(tw_k**4)*(0.39-0.056*sqrt(1000*qa))    &
             +4.0*emiss*bolz*(tw_k**3)*(tw-ta)
       case default
    end select

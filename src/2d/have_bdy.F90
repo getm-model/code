@@ -1,4 +1,4 @@
-!$Id: have_bdy.F90,v 1.2 2003-04-07 15:42:05 kbk Exp $
+!$Id: have_bdy.F90,v 1.3 2003-04-23 12:09:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,7 @@
 !
 ! !USES:
    use domain
-   use m2d,    only: have_boundaries
+   use m2d, only: have_boundaries
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -25,7 +25,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: have_bdy.F90,v $
-!  Revision 1.2  2003-04-07 15:42:05  kbk
+!  Revision 1.3  2003-04-23 12:09:43  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 15:42:05  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:44  gotm
@@ -35,9 +38,9 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k,n
-   integer	:: nbdy
-   integer	:: f,l
+   integer                   :: i,j,k,n
+   integer                   :: nbdy
+   integer                   :: f,l
 !EOP
 !-----------------------------------------------------------------------
 !BOC

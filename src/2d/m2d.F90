@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.2 2003-04-07 12:17:08 kbk Exp $
+!$Id: m2d.F90,v 1.3 2003-04-23 12:09:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,31 +18,34 @@
 !  in from the library lib2d.a.
 !
 ! !USES:
-   use time,       only: julianday,secondsofday
+   use time, only: julianday,secondsofday
    use parameters, only: avmmol
-   use domain,     only: imin,imax,jmin,jmax,az,au,av,H,HU,HV,min_depth
-   use variables_2d
    use halo_zones, only : update_2d_halo,wait_halo,z_TAG,U_TAG,V_TAG
+   use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV,min_depth
+   use variables_2d
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
-   logical	:: have_boundaries
-   REALTYPE	:: dtm, z0_const=0.010, Am=-_ONE_
-   integer	:: MM=1,residual=-1
-   logical 	:: bdy2d=.false.
-   integer	:: bdyfmt_2d,bdytype,bdyramp_2d=-1
-   character(len=PATH_MAX)	:: bdyfile_2d
-   REAL_4B	:: bdy_old(1000)
-   REAL_4B	:: bdy_new(1000)
-   REAL_4B	:: bdy_data(1000)
-   REAL_4B, allocatable :: bdy_times(:)
-   integer, parameter	:: comm_method=-1
+   logical                   :: have_boundaries
+   REALTYPE                  :: dtm, z0_const=0.010, Am=-_ONE_
+   integer                   :: MM=1,residual=-1
+   logical                   :: bdy2d=.false.
+   integer                   :: bdyfmt_2d,bdytype,bdyramp_2d=-1
+   character(len=PATH_MAX)   :: bdyfile_2d
+   REAL_4B                   :: bdy_old(1000)
+   REAL_4B                   :: bdy_new(1000)
+   REAL_4B                   :: bdy_data(1000)
+   REAL_4B, allocatable      :: bdy_times(:)
+   integer, parameter        :: comm_method=-1
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m2d.F90,v $
-!  Revision 1.2  2003-04-07 12:17:08  kbk
+!  Revision 1.3  2003-04-23 12:09:43  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 12:17:08  kbk
 !  parallel version
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:41  gotm
@@ -102,9 +105,9 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: runtype
-   REALTYPE, intent(in)	:: timestep
-   logical, intent(in)	:: hotstart
+   integer, intent(in)                 :: runtype
+   REALTYPE, intent(in)                :: timestep
+   logical, intent(in)                 :: hotstart
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -118,8 +121,9 @@
 !  22Apr99   Karsten Bolding & Hans Burchard  Initial code.
 !
 ! !LOCAL VARIABLES:
-   integer	 	:: rc
-   namelist /m2d/ MM,z0_const,Am,residual,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
+   integer                   :: rc
+   namelist /m2d/ &
+            MM,z0_const,Am,residual,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -200,10 +204,10 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)		:: runtype,loop
-   REALTYPE, intent(in)		:: tausx(E2DFIELD)
-   REALTYPE, intent(in)		:: tausy(E2DFIELD)
-   REALTYPE, intent(in)		:: airp(E2DFIELD)
+   integer, intent(in)                 :: runtype,loop
+   REALTYPE, intent(in)                :: tausx(E2DFIELD)
+   REALTYPE, intent(in)                :: tausy(E2DFIELD)
+   REALTYPE, intent(in)                :: airp(E2DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !

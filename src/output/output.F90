@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.2 2003-04-07 12:32:58 kbk Exp $
+!$Id: output.F90,v 1.3 2003-04-23 12:07:12 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,38 +20,41 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
-   integer			:: out_fmt=NETCDF
-   character(LEN = PATH_MAX)	:: in_dir='.'
-   character(LEN = PATH_MAX)	:: out_dir='.'
-   character(LEN = PATH_MAX)	:: out_f_2d
-   character(LEN = PATH_MAX)	:: out_f_3d
-   character(LEN = PATH_MAX)	:: hot_out
+   integer                             :: out_fmt=NETCDF
+   character(LEN = PATH_MAX)           :: in_dir='.'
+   character(LEN = PATH_MAX)           :: out_dir='.'
+   character(LEN = PATH_MAX)           :: out_f_2d
+   character(LEN = PATH_MAX)           :: out_f_3d
+   character(LEN = PATH_MAX)           :: hot_out
 
-   logical	:: save_meteo=.false.
-   logical	:: save_2d=.true.
-   logical	:: save_3d=.true.
-   logical	:: save_vel=.true.
-   logical	:: save_strho=.true.
-   logical	:: save_s=.true.
-   logical	:: save_t=.true.
-   logical	:: save_rho=.true.
-   logical	:: save_turb=.true.
-   logical	:: save_tke=.true.
-   logical	:: save_eps=.true.
-   logical	:: save_num=.true.
-   logical	:: save_nuh=.true.
-   logical	:: save_spm=.false.
-   integer	:: first_2d=1
-   integer	:: step_2d=1
-   integer	:: first_3d=1
-   integer	:: step_3d=1
-   integer	:: hotout=-1
+   logical                             :: save_meteo=.false.
+   logical                             :: save_2d=.true.
+   logical                             :: save_3d=.true.
+   logical                             :: save_vel=.true.
+   logical                             :: save_strho=.true.
+   logical                             :: save_s=.true.
+   logical                             :: save_t=.true.
+   logical                             :: save_rho=.true.
+   logical                             :: save_turb=.true.
+   logical                             :: save_tke=.true.
+   logical                             :: save_eps=.true.
+   logical                             :: save_num=.true.
+   logical                             :: save_nuh=.true.
+   logical                             :: save_spm=.false.
+   integer                             :: first_2d=1
+   integer                             :: step_2d=1
+   integer                             :: first_3d=1
+   integer                             :: step_3d=1
+   integer                             :: hotout=-1
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
-!  Revision 1.2  2003-04-07 12:32:58  kbk
+!  Revision 1.3  2003-04-23 12:07:12  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 12:32:58  kbk
 !  parallel support + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:52  gotm
@@ -98,9 +101,9 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)		:: runid,title,starttime
-   integer, intent(in)			:: runtype,myid
-   logical, intent(in)			:: dryrun
+   character(len=*), intent(in)        :: runid,title,starttime
+   integer, intent(in)                 :: runtype,myid
+   logical, intent(in)                 :: dryrun
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -113,15 +116,16 @@
 !  See log for module
 !
 ! !LOCAL VARIABLES:
-   namelist /io_spec/ out_fmt,					&
-                     in_dir,out_dir,				&
-                     save_2d,save_3d,save_vel,			&
-                     save_strho,save_s,save_t,save_rho,		&
-                     save_turb,save_tke,save_eps,save_num,save_nuh,	&
-                     save_spm,					&
-                     first_2d,step_2d,first_3d,step_3d,hotout,	&
-		     save_meteo
-!   logical	:: nesting=.true.
+   namelist /io_spec/ &
+             out_fmt, &
+             in_dir,out_dir, &
+             save_2d,save_3d,save_vel, &
+             save_strho,save_s,save_t,save_rho, &
+             save_turb,save_tke,save_eps,save_num,save_nuh, &
+             save_spm, &
+             first_2d,step_2d,first_3d,step_3d,hotout, &
+             save_meteo
+!   logical :: nesting=.true.
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -167,7 +171,7 @@
             if (save_3d) call init_3d_ascii(out_f_3d,title,starttime)
 #else
             STDERR 'ASCII output - not coded yet'
-	    stop 'init_output'
+            stop 'init_output'
 #endif
          case (NETCDF)
             if (save_2d) call init_2d_ncdf(out_f_2d,title,starttime)
@@ -210,8 +214,8 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: runtype,n
-   REALTYPE, intent(in)	:: timestep
+   integer, intent(in)                 :: runtype,n
+   REALTYPE, intent(in)                :: timestep
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -221,9 +225,9 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
-   REALTYPE	:: secs
-   logical	:: write_2d,write_3d
-   integer	:: dummy
+   REALTYPE                  :: secs
+   logical                   :: write_2d,write_3d
+   integer                   :: dummy
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -249,7 +253,7 @@
             if (write_3d) call save_3d_ascii(secs)
 #else
             STDERR 'ASCII output - not coded yet'
-	    stop 'do_output'
+            stop 'do_output'
 #endif
          case (NETCDF)
             if (write_2d) call save_2d_ncdf(secs)
@@ -300,12 +304,12 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)		:: mode
-   character(len=*), intent(in)	:: fname
-   integer, intent(in)		:: runtype
+   integer, intent(in)                 :: mode
+   character(len=*), intent(in)        :: fname
+   integer, intent(in)                 :: runtype
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   integer, intent(inout)	:: loop
+   integer, intent(inout)              :: loop
 !
 ! !OUTPUT PARAMETERS:
 !
@@ -313,7 +317,10 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES
-   integer, save	:: n=0
+   integer, save             :: n=0
+   logical, save             :: continuous=.true.
+   integer                   :: n,jd,secs 
+   REALTYPE                  :: dt
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -355,8 +362,8 @@
       LEVEL3 trim(fname)
       open(RESTART,file=fname,status='unknown',form='unformatted')
       LEVEL3 'reading loop, julianday, secondsofday and timestep'
-      read(RESTART) loop,julianday,secondsofday,timestep
-STDERR 'loop = ',loop
+!KBK      read(RESTART) loop,julianday,secondsofday,timestep
+      read(RESTART) n,jd,secs,dt
       LEVEL3 'reading basic variables'
       read(RESTART) z,zo,U,zu,zub,SlUx,Slru,V,zv,zvb,SlVx,Slrv
 #ifndef NO_3D
@@ -380,6 +387,26 @@ STDERR 'loop = ',loop
       end if
 #endif
       close(RESTART)
+!     make some sanity checks
+      if (continuous) then
+         loop=n; 
+         julianday=jd; secondsofday=secs; timestep=dt;
+      else
+         if (jd .ne. julianday .or. secs .ne. secondsofday) then
+            FATAL 'start time given in getm.inp does not match time'
+            FATAL 'read from hot start file'
+            stop 'restart_file()'
+         end if
+         if (dt .ne. timestep) then
+            LEVEL3 ''
+            LEVEL3 'time step changed between hotstart file and value '
+            LEVEL3 'given in getm.inp (this is OK - but beware when post-'
+            LEVEL3 'processing)'
+            LEVEL3 ''
+         end if
+         loop = 0
+         julianday=jd; secondsofday=secs; timestep=dt;
+      end if
    end if
 #ifdef DEBUG
    write(debug,*) 'Leaving restart_file()'
@@ -450,8 +477,8 @@ STDERR 'loop = ',loop
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)		::  runid
-   integer, intent(in)			::  myid
+   character(len=*), intent(in)        ::  runid
+   integer, intent(in)                 ::  myid
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -463,9 +490,9 @@ STDERR 'loop = ',loop
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
-   character(len=3)			:: buf
-   character(len=16)			:: pid,ext
-   character(len=PATH_MAX)		:: fname
+   character(len=3)                    :: buf
+   character(len=16)                   :: pid,ext
+   character(len=PATH_MAX)             :: fname
 !
 !EOP
 !-----------------------------------------------------------------------

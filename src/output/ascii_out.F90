@@ -1,4 +1,4 @@
-!$Id: ascii_out.F90,v 1.1 2002-05-02 14:01:52 gotm Exp $
+!$Id: ascii_out.F90,v 1.2 2003-04-23 12:07:12 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,8 +20,8 @@
    private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-   public init_2d_ascii,save_2d_ascii
-   public init_3d_ascii,save_3d_ascii
+   public                              init_2d_ascii,save_2d_ascii
+   public                              init_3d_ascii,save_3d_ascii
 !
 ! !PUBLIC DATA MEMBERS:
 !
@@ -29,38 +29,40 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ascii_out.F90,v $
-!  Revision 1.1  2002-05-02 14:01:52  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-23 12:07:12  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:52  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1  2001/09/13 14:50:34  bbh
 !  Stubs for ascii output
-!
 !
 !EOP
 !-----------------------------------------------------------------------
 
    interface
       subroutine init_2d_ascii(fn,title,starttime)
-         character(len=*), intent(in)	:: fn,title,starttime
+         character(len=*), intent(in)  :: fn,title,starttime
       end subroutine init_2d_ascii
    end interface
 
    interface
       subroutine save_2d_ascii(secs,save_meteo)
-         REALTYPE, intent(in)		:: secs
-         logical, intent(in)		:: save_meteo
+         REALTYPE, intent(in)          :: secs
+         logical, intent(in)           :: save_meteo
       end subroutine save_2d_ascii
    end interface
 
    interface
       subroutine init_3d_ascii(fn,title,starttime)
-         character(len=*), intent(in)	:: fn,title,starttime
+         character(len=*), intent(in)  :: fn,title,starttime
       end subroutine init_3d_ascii
    end interface
 
    interface
       subroutine save_3d_ascii(secs)
-         REALTYPE, intent(in)		:: secs
+         REALTYPE, intent(in)          :: secs
       end subroutine save_3d_ascii
    end interface
 

@@ -1,4 +1,4 @@
-!$Id: uv_depths.F90,v 1.4 2003-04-07 15:47:50 kbk Exp $
+!$Id: uv_depths.F90,v 1.5 2003-04-23 12:09:44 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,9 +11,9 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain,   only: imin,imax,jmin,jmax,az,au,av,H,HU,HV
-   use variables_2d,   only: DU,DV
-   use halo_zones, only : update_2d_halo,wait_halo,HU_TAG,HV_TAG
+   use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV
+   use variables_2d, only: DU,DV
+   use halo_zones, only: update_2d_halo,wait_halo,HU_TAG,HV_TAG
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -26,7 +26,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_depths.F90,v $
-!  Revision 1.4  2003-04-07 15:47:50  kbk
+!  Revision 1.5  2003-04-23 12:09:44  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.4  2003/04/07 15:47:50  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:46  gotm
@@ -44,8 +47,8 @@
 !  10Sep kbk: needs some more cleaning + wait for input from Hans
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j
-   logical, save	:: first=.true.
+   integer                   :: i,j
+   logical, save             :: first=.true.
 !
 !EOP
 !-----------------------------------------------------------------------
