@@ -1,4 +1,4 @@
-!$Id: start_macro.F90,v 1.2 2003-04-01 15:30:21 gotm Exp $
+!$Id: start_macro.F90,v 1.3 2003-04-07 11:31:23 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,7 +28,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: start_macro.F90,v $
-!  Revision 1.2  2003-04-01 15:30:21  gotm
+!  Revision 1.3  2003-04-07 11:31:23  gotm
+!  fixed error in assigning ssen
+!
+!  Revision 1.2  2003/04/01 15:30:21  gotm
 !  default compilation without Sylt specific fix
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:55  gotm
@@ -69,11 +72,10 @@
    do j=jjmin-1,jjmax+1         ! Defining 'old' and 'new' sea surface
       do i=iimin-1,iimax+1      ! elevation for macro time step
          sseo(i,j)=ssen(i,j)
+         ssen(i,j)=z(i,j)
 ! This does not work for Sylt - pointed out by Manuel - why? 
 #if 1
          ssen(i,j)=max(ssen(i,j),-H(i,j)+min_depth)
-#else
-         ssen(i,j)=z(i,j)
 #endif
       end do
    end do
