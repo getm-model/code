@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.12 2004-07-29 19:46:32 hb Exp $
+!$Id: salinity.F90,v 1.13 2004-08-06 15:16:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -40,7 +40,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: salinity.F90,v $
-!  Revision 1.12  2004-07-29 19:46:32  hb
+!  Revision 1.13  2004-08-06 15:16:12  hb
+!  Compiler option ARKONA_TEST included
+!
+!  Revision 1.12  2004/07/29 19:46:32  hb
 !  For compiler option NOMADS_TEST: some lines shortened
 !
 !  Revision 1.11  2004/04/21 09:14:03  lars
@@ -290,6 +293,18 @@ salt_field_no=1
       end do
    end do
 #endif
+#ifdef ARKONA_TEST
+   do i=100,135
+      do j=256,257
+         if (az(i,j).ge.1) S(i,j,0:kmax) = 25.
+      end do
+   end do
+   do i=26,27
+      do j=77,100
+         S(i,j,0:kmax) = 8.
+      end do
+   end do
+#endif
 #ifdef SLOPE_TEST
    do i=81,82
       do j=42,43
@@ -515,6 +530,19 @@ salt_field_no=1
          end if
       end do
    end do
+#ifdef ARKONA_TEST
+   do i=100,135
+      do j=256,257
+         if (az(i,j).ge.1) S(i,j,0:kmax) = 25.
+      end do
+   end do
+   do i=26,27
+      do j=77,100
+      S(i,j,0:kmax) = 8.
+      end do
+   end do
+#endif
+
 
 #ifdef SLOPE_TEST
    do i=81,82
