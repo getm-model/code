@@ -1,4 +1,4 @@
-!$Id: init_3d_ncdf.F90,v 1.1 2002-05-02 14:01:46 gotm Exp $
+!$Id: init_3d_ncdf.F90,v 1.2 2003-04-07 12:51:26 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,10 @@
 !
 ! !USES:
    use ncdf_3d
-   use domain, only: ioff,joff,imin,imax,jmin,jmax,xc,yc
+   use domain, only: ioff,joff,imin,imax,jmin,jmax
+#if ! defined(SPHERICAL)
+   use domain, only: xc,yc
+#endif
    use domain, only: iimin,iimax,jjmin,jjmax,kmax
    use domain, only: grid_type,vert_cord
    IMPLICIT NONE
@@ -27,8 +30,11 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_3d_ncdf.F90,v $
-!  Revision 1.1  2002-05-02 14:01:46  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 12:51:26  kbk
+!  CURVILINEAR --> defined(SPHERICAL) || defined(CURVILINEAR)
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:46  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.7  2001/10/25 16:16:20  bbh
 !  No actual storing of data in init_3d_ncdf.F90 -> save_3d_ncdf.F90
@@ -159,7 +165,7 @@
    call set_attributes(ncid,time_id,units=trim(ts),long_name='time')
 
 !  coordinate variables
-#ifndef CURVILINEAR
+#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
    axisdim(1) = x_dim
    err = nf_def_var(ncid,xname,NF_REAL,1,axisdim,xc_id)
    if (err .NE. NF_NOERR) go to 10
