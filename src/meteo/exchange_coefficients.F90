@@ -1,4 +1,4 @@
-!$Id: exchange_coefficients.F90,v 1.5 2003-10-01 12:10:05 kbk Exp $
+!$Id: exchange_coefficients.F90,v 1.6 2003-10-07 15:21:42 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -10,15 +10,29 @@
 !
 ! !DESCRIPTION:
 !  Various variables for calculating meteorological forcing is calculated
-!  here. The input variables are gibe in SI units ($m/s$, $^oC | Kelvin$,
-!  and $Pa$). The following formulaes are used:
+!  here. The input variables are given in SI units ($m/s$, $^oC | Kelvin$,
+!  and $Pa$). The scheme used to get the required variables is as follows:
+!  \begin{itemize}
+!     \item We have sst, wind, air temperature
+!     \item We calculate the saturation vapor pressure (svp(T) based on 
+!           the sea surface temperature.
+!     \item We calculate the specific humidity valid for the sst - using
+!           the just calculated the saturation vapor pressure - unit must
+!           be [kg/kg]
+!     \item We have some measure of the humidity of the air - either
+!           specific humidity at air temperature, relative humidity or
+!           wet bulb tmperature. This needs to be converted to specific 
+!           humidity at 2m.
+!  \end{itemize}
+!  
+!  The following formulaes are used (for the saturation vapor pressure
+!  a large number of different formulaes exists):
 !  \begin{itemize}
 !     \item Latent heat: $L = (2.5-0.00234T)10^6$
-!     \item Specific vapor pressure: $e_s = a_0 + a_1 T^1 + a_2 T^2 + a_3 T^3
+!     \item Saturation vapor pressure: $e_s = a_0 + a_1 T^1 + a_2 T^2 + a_3 T^3
 !                                    + a_4 T^4 + a_5 T^5 + a_6 T^6 + a_7 T^7$
 !     \item Specific humidity: $q_s = const06 e_s / (airp-0.377 e_s) $
-!     \item Absolute humidity: $q_a = 0.01  rh q_s $
-!     \item Absolute vapor pressure: $q_s = q_a airp / (airp + 0.377 q_a) $
+!     \item Actual humidity: $q_a = 0.01  rh q_s $
 !     \item Virtual temperature: $T_v = T_k ( 1 + q_a/const06 )/( 1 + q_a)$
 !     \item Air density: $\rho_a = airp/(287.05 T_v)$
 !     \item Air stability: $S_0 = 0.25(t_w - t_a)/W and s = S_0 |S_0|
@@ -54,7 +68,10 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: exchange_coefficients.F90,v $
-!  Revision 1.5  2003-10-01 12:10:05  kbk
+!  Revision 1.6  2003-10-07 15:21:42  kbk
+!  cleaned a little bit - still need documentation
+!
+!  Revision 1.5  2003/10/01 12:10:05  kbk
 !  hum_method=1 (specific humidity) now works correctly
 !
 !  Revision 1.4  2003/07/01 16:38:34  kbk
@@ -149,24 +166,17 @@
          (min(tw_k,300.)-273.15)/(max(tw_k,200.)-273.15+257.87))
 #endif
 
+   es = a1 +tw*(a2+tw*(a3+tw*(a4+tw*(a5+tw*(a6+tw*a7)))))
+   es = es * 100.0 ! Conversion millibar --> Pascal
+!  saturation specific humidity
+   qs = const06*es/(airp-0.377*es)
+
 !  see ../ncdf/ncdf_meteo.F90 for defined constants
    select case (hum_method)
    case (1)
-      qs = hum
-      es=qs*(airp/100.)/(const06+0.377*qs)
-      ea=6.112*exp(17.67*ta/(ta+243.5))
-#if 1
-      qa=es/ea*qs
-#else
-      rh=100.*es/ea
-      qa=0.01*rh*qs
-#endif
+      qa = hum
    case (2)
       rh = hum
-      es = a1 +tw*(a2+tw*(a3+tw*(a4+tw*(a5+tw*(a6+tw*a7)))))
-      es = es * 100.0 ! Conversion millibar --> Pascal
-!     saturation specific humidity
-      qs = const06*es/(airp-0.377*es)
       qa = 0.01*rh*qs
    case (3)
       ! Piece of code taken from HAMSOM for calculating relative
