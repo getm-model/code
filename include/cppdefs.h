@@ -7,6 +7,8 @@
 
 #if defined(SPHERICAL) || defined(CURVILINEAR)
 #define DXC dxc(i,j)
+#define DXCIP1 dxc(i+1,j)
+#define DXCIM1 dxc(i-1,j)
 #define DXCJP1 dxc(i,j+1)
 #define DXU dxu(i,j)
 #define DXV dxv(i,j)
@@ -15,6 +17,8 @@
 #define DXXJM1 dxx(i,j-1)
 #define DYC dyc(i,j)
 #define DYCIP1 dyc(i+1,j)
+#define DYCJP1 dyc(i,j+1)
+#define DYCJM1 dyc(i,j-1)
 #define DYU dyu(i,j)
 #define DYUIM1 dyu(i-1,j)
 #define DYV dyv(i,j)
@@ -25,6 +29,8 @@
 #define ARVD1 arvd1(i,j)
 #else
 #define DXC dx
+#define DXCIP1 dx
+#define DXCIM1 dx
 #define DXCJP1 dx
 #define DXU dx
 #define DXV dx
@@ -33,6 +39,8 @@
 #define DXXJM1 dx
 #define DYC dy
 #define DYCIP1 dy
+#define DYCJP1 dy
+#define DYCJM1 dy
 #define DYU dy
 #define DYUIM1 dy
 #define DYV dy
