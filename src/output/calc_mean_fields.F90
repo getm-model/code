@@ -1,4 +1,4 @@
-!$Id: calc_mean_fields.F90,v 1.1 2004-03-29 15:35:52 kbk Exp $
+!$Id: calc_mean_fields.F90,v 1.2 2004-04-21 09:11:44 lars Exp $
 #include "cppdefs.h"
 !----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,10 @@
 !  Original author(s): Karsten Bolding & Adolf Stips
 !
 !  $Log: calc_mean_fields.F90,v $
-!  Revision 1.1  2004-03-29 15:35:52  kbk
+!  Revision 1.2  2004-04-21 09:11:44  lars
+!  removed tab
+!
+!  Revision 1.1  2004/03/29 15:35:52  kbk
 !  possible to store calculated mean fields
 !
 !
@@ -83,7 +86,7 @@
       first = .false.
    end if
 
-   if (step .eq. _ZERO_	) then
+   if (step .eq. _ZERO_ ) then
       uumean=_ZERO_; vvmean=_ZERO_; wmean=_ZERO_
       humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
       Tmean=_ZERO_; Smean=_ZERO_
