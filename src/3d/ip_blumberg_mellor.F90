@@ -1,4 +1,4 @@
-!$Id: ip_blumberg_mellor.F90,v 1.3 2004-06-15 10:19:14 kbk Exp $
+!$Id: ip_blumberg_mellor.F90,v 1.4 2004-06-18 12:52:15 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,7 +18,10 @@
 !  Original author(s): Hans Burchard, Adolf Stips, Karsten Bolding
 !
 !  $Log: ip_blumberg_mellor.F90,v $
-!  Revision 1.3  2004-06-15 10:19:14  kbk
+!  Revision 1.4  2004-06-18 12:52:15  hb
+!  Fixed reverted version to correct for factor of 0.5
+!
+!  Revision 1.3  2004/06/15 10:19:14  kbk
 !  reverted to ver. 1.1
 !
 !  Revision 1.1  2004/04/06 12:42:50  kbk
@@ -68,7 +71,7 @@
                rhou=rhol
                rhol=0.5*(rho(i+1,j,k)+rho(i,j,k))
                dxz=(zz(i+1,j,k)-zz(i,j,k))*dxm1
-               prgr=prgr+(grdu+grdl)*0.5*(hun(i,j,k)+hun(i,j,k+1))-dxz*(rhou-rhol)
+               prgr=prgr+0.5*(grdu+grdl)*0.5*(hun(i,j,k)+hun(i,j,k+1))-dxz*(rhou-rhol)
                idpdx(i,j,k)=hun(i,j,k)*prgr
             end do
          end if
@@ -93,7 +96,7 @@
                rhou=rhol
                rhol=0.5*(rho(i,j+1,k)+rho(i,j,k))
                dyz=(zz(i,j+1,k)-zz(i,j,k))*dym1
-               prgr=prgr+(grdu+grdl)*0.5*(hvn(i,j,k)+hvn(i,j,k+1))-dyz*(rhou-rhol)
+               prgr=prgr+0.5*(grdu+grdl)*0.5*(hvn(i,j,k)+hvn(i,j,k+1))-dyz*(rhou-rhol)
                idpdy(i,j,k)=hvn(i,j,k)*prgr
             end do
          end if
