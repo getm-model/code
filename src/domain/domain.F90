@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.2 2002-05-29 13:37:50 gotm Exp $
+!$Id: domain.F90,v 1.3 2003-03-17 15:00:20 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -48,7 +48,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.2  2002-05-29 13:37:50  gotm
+!  Revision 1.3  2003-03-17 15:00:20  gotm
+!  setting lonmap and latmap
+!
+!  Revision 1.2  2002/05/29 13:37:50  gotm
 !  New naming of .h files
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:11  gotm
@@ -445,6 +448,8 @@ end where
 	 end do 	
 	 coru = 2.*omega*sin(deg2rad*latu)
 	 corv = 2.*omega*sin(deg2rad*latv)
+lonmap = lonc
+latmap = latc
 #endif
       case default
          FATAL 'A non valid grid type has been chosen'
@@ -807,6 +812,9 @@ end where
       do j=jl,jh
          do i=il,ih
             az(i,j) = 0
+#if 0
+            H(i,j) = -99.
+#endif
          end do
       end do
    end do
