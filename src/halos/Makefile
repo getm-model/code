@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.1 2002-05-02 14:01:29 gotm Exp $
+#$Id: Makefile,v 1.2 2002-05-02 15:04:42 gotm Exp $
 # 
 # Makefile to build the mpi interface library - libhalo.a
 #
@@ -15,13 +15,21 @@ LIBSRC	=
 
 SRC	= $(MODSRC) $(LIBSRC)
 
+ifeq ($(parallel),false)
 MOD	= \
-${LIB}(parallel.o)	\
+${LIB}(parallel.o)
+else
+MOD	= \
 ${LIB}(halo_mpi.o)	\
 ${LIB}(halo_zones.o)
+endif
 
+ifeq ($(parallel),false)
+OBJ	=
+else
 OBJ	= \
 ${LIB}(halo_test.o)
+endif
 
 all: modules objects
 

@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.1 2002-05-02 14:00:36 gotm Exp $
+#$Id: Rules.make,v 1.2 2002-05-02 15:04:41 gotm Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -24,6 +24,14 @@ ifndef COMPILATION_MODE
 compilation=production
 else
 compilation=$(COMPILATION_MODE)
+endif
+
+# The compilation mode is obtained from $COMPILATION_MODE
+# default production - else debug or profiling
+ifndef GETM_PARALLEL
+parallel=false
+else
+parallel=true
 endif
 
 turbulence=
@@ -105,6 +113,8 @@ EXTRA_LIBS	+= $(NETCDFLIB)
 
 
 # Where does the MPI library reside.
+ifeq ($(parallel),true)
+DEFINES += -DPARALLEL
 ifdef MPIINC
 INCDIRS		+= -I$(MPIINC)
 endif
@@ -122,6 +132,7 @@ LINKDIRS	+= -L$(MPILIBDIR)
 endif
 endif
 EXTRA_LIBS	+= $(MPILIB)
+endif
 
 DOCDIR		= $(GETMDIR)/doc
 
@@ -182,6 +193,7 @@ ifeq ($(FORTRAN_COMPILER),PGF90)
 FC=pgf90
 DEFINES += -DFORTRAN90
 can_do_F90=false
+can_do_F90=true
 F90_to_f90=$(FC) -E $(F90FLAGS) $(EXTRA_FFLAGS) $< > $@
 MODULES=-module $(MODDIR)
 EXTRAS  =
@@ -263,8 +275,8 @@ ifeq  ($(can_do_F90),true)
 	$(FC) $(F90FLAGS) $(EXTRA_FFLAGS) -c $<
 else
 %.f90: %.F90
-#	$(F90_to_f90)
-	$(CPP) $(CPPFLAGS) $< -o $@
+	$(F90_to_f90)
+#	$(CPP) $(CPPFLAGS) $< -o $@
 
 %.o: %.f90
 	$(FC) $(F90FLAGS) $(EXTRA_FFLAGS) -c $< -o $@

@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.1 2002-05-02 14:00:35 gotm Exp $
+#$Id: Makefile,v 1.2 2002-05-02 15:04:41 gotm Exp $
 #
 # Master Makefile for making the 'getm' executable.
 #
@@ -43,6 +43,7 @@ model$(buildtype)_$(FORTRAN_COMPILER): makedirs subdirs
 	$(FC) -o $@ $(LDFLAGS) $(LIBS)
 
 install: model$(buildtype)_$(FORTRAN_COMPILER)
+	mkdir -p $(BINDIR)
 	mv model$(buildtype)_$(FORTRAN_COMPILER) $(BINDIR)
 
 .PHONY: subdirs $(SUBDIRS)
