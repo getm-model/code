@@ -1,4 +1,4 @@
-!$Id: slow_terms.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
+!$Id: slow_terms.F90,v 1.4 2003-06-28 10:43:16 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,7 +30,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: slow_terms.F90,v $
-!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  Revision 1.4  2003-06-28 10:43:16  kbk
+!  cosmestics
+!
+!  Revision 1.3  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 13:36:38  kbk
@@ -72,11 +75,11 @@
    write(debug,*) 'slow_terms() # ',Ncall
 #endif
 
-   if (kmax.gt.1) then
+   if (kmax .gt. 1) then
 
       do j=jjmin,jjmax
          do i=iimin,iimax
-            if (au(i,j).ge.1) then
+            if (au(i,j) .ge. 1) then
                SlUx(i,j)=-UEx(i,j)
             end if
          end do
@@ -85,8 +88,8 @@
       do k=1,kmax
          do j=jjmin,jjmax
             do i=iimin,iimax
-               if (au(i,j).ge.1) then
-                  if (k.ge.kumin(i,j)) then
+               if (au(i,j) .ge. 1) then
+                  if (k .ge. kumin(i,j)) then
 #ifdef NO_BAROCLINIC
                      SlUx(i,j)=SlUx(i,j)+uuEx(i,j,k)
 #else
@@ -100,7 +103,7 @@
 
       do j=jjmin,jjmax
          do i=iimin,iimax
-            if (av(i,j).ge.1) then
+            if (av(i,j) .ge. 1) then
                SlVx(i,j)=-VEx(i,j)
             end if
          end do
@@ -109,8 +112,8 @@
       do k=1,kmax
          do j=jjmin,jjmax
             do i=iimin,iimax
-               if (av(i,j).ge.1) then
-                  if (k.ge.kvmin(i,j)) then
+               if (av(i,j) .ge. 1) then
+                  if (k .ge. kvmin(i,j)) then
 #ifdef NO_BAROCLINIC
                      SlVx(i,j)=SlVx(i,j)+vvEx(i,j,k)
 #else
@@ -127,8 +130,8 @@
       do k=1,kmax
          do j=jjmin,jjmax
             do i=iimin,iimax
-               if (au(i,j).ge.1) then
-                  if (k.ge.kumin(i,j)) then
+               if (au(i,j) .ge. 1) then
+                  if (k .ge. kumin(i,j)) then
 #ifdef NO_BAROCLINIC
                      SlUx(i,j)= _ZERO_
 #else
@@ -143,7 +146,7 @@
       do k=1,kmax
          do j=jjmin,jjmax
             do i=iimin,iimax
-               if (av(i,j).ge.1) then
+               if (av(i,j) .ge. 1) then
                   if (k.ge.kvmin(i,j)) then
 #ifdef NO_BAROCLINIC
                      SlVx(i,j)= _ZERO_
@@ -159,9 +162,9 @@
 
    do j=jjmin,jjmax
       do i=iimin,iimax
-         if (au(i,j).ge.1) then
+         if (au(i,j) .ge. 1) then
             k=kumin(i,j)
-            if (kmax.gt.1) then
+            if (kmax .gt. 1) then
 #ifdef NO_SLR
                STDERR 'NO_SLR U'
                Slru(i,j)= _ZERO_
@@ -179,12 +182,12 @@
 
    do j=jjmin,jjmax
       do i=iimin,iimax
-         if (av(i,j).ge.1) then
+         if (av(i,j) .ge. 1) then
             k=kvmin(i,j)
-            if (kmax.gt.1) then
+            if (kmax .gt. 1) then
 #ifdef NO_SLR
                STDERR 'NO_SLR V'
-               Slrv(i,j)=0.
+               Slrv(i,j)= _ZERO_
 #else
                Slrv(i,j)=-Vint(i,j)/(0.5*(ssvo(i,j)+ssvn(i,j))         &
                                     +HV(i,j))*rv(i,j)                  &
