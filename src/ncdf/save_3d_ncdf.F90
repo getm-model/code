@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.4 2003-05-09 11:38:26 kbk Exp $
+!$Id: save_3d_ncdf.F90,v 1.5 2003-05-09 11:53:13 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -44,7 +44,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
-!  Revision 1.4  2003-05-09 11:38:26  kbk
+!  Revision 1.5  2003-05-09 11:53:13  kbk
+!  forgot to delete some debug lines
+!
+!  Revision 1.4  2003/05/09 11:38:26  kbk
 !  added proper undef support - based on Adolf Stips patch
 !
 !  Revision 1.3  2003/04/23 11:53:24  kbk
@@ -246,8 +249,6 @@
       end if
 
       if (save_rho) then
-!KBK        call cnv_3d(ws,x*rho+drho,iimin,jjmin,0,iimax,jjmax,kmax,size_3d)
-!KBK         call cnv_3d(ws,x*rho+25.,iimin,jjmin,0,iimax,jjmax,kmax,size_3d)
          call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
                      kmin,az,x*rho+25.,rho_missing,ws)
          err = nf_put_vara_real(ncid, sigma_t_id, start, edges, ws)
@@ -259,7 +260,6 @@
    if (save_turb) then
 
       if (save_tke) then
-!KBK         call cnv_3d(ws,tke,iimin,jjmin,0,iimax,jjmax,kmax,size_3d)
          call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
                      kmin,az,tke,tke_missing,ws)
          err = nf_put_vara_real(ncid,tke_id,start,edges,ws)
@@ -267,7 +267,6 @@
       end if
 
       if (save_num) then
-!KBK         call cnv_3d(ws,num,iimin,jjmin,0,iimax,jjmax,kmax,size_3d)
          call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
                      kmin,az,num,num_missing,ws)
          err = nf_put_vara_real(ncid,num_id,start,edges,ws)
@@ -275,7 +274,6 @@
       end if
 
       if (save_nuh) then
-!KBK         call cnv_3d(ws,nuh,iimin,jjmin,0,iimax,jjmax,kmax,size_3d)
          call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
                      kmin,az,nuh,nuh_missing,ws)
          err = nf_put_vara_real(ncid,nuh_id,start,edges,ws)
@@ -283,7 +281,6 @@
       end if
 
       if (save_eps) then
-!KBK         call cnv_3d(ws,eps,iimin,jjmin,0,iimax,jjmax,kmax,size_3d)
          call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
                      kmin,az,eps,eps_missing,ws)
          err = nf_put_vara_real(ncid, eps_id, start, edges, ws)
@@ -293,7 +290,6 @@
 
 #ifndef NO_BAROCLINIC
    if (save_spm) then
-!KBK      call cnv_3d(ws,spm,iimin,jjmin,0,iimax,jjmax,kmax,size_3d)
       call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
                   kmin,az,spm,spm_missing,ws)
       err = nf_put_vara_real(ncid, spm_id, start, edges, ws)
