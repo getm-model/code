@@ -1,4 +1,4 @@
-!$Id: ww_momentum_3d.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
+!$Id: ww_momentum_3d.F90,v 1.4 2003-08-14 12:58:00 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,6 +18,10 @@
    use domain, only: dx,dy,ard1
 #endif
    use variables_3d, only: dt,kmin,uu,vv,ww,ho,hn
+!  #define CALC_HALO_WW
+#ifndef CALC_HALO_WW
+   use halo_zones, only: update_3d_halo,wait_halo,z_TAG
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -30,7 +34,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: ww_momentum_3d.F90,v $
-!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  Revision 1.4  2003-08-14 12:58:00  kbk
+!  update halo zones using - update_3d_halo() - or calculating
+!
+!  Revision 1.3  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 13:05:11  kbk
@@ -73,8 +80,13 @@
    dtm1=_ONE_/dt
 
    do k=1,kmax
+#ifdef CALC_HALO_WW
+      do j=jjmin-1,jjmax+1
+         do i=iimin-1,iimax+1
+#else
       do j=jjmin,jjmax
          do i=iimin,iimax
+#endif
             if (k .lt. kmin(i,j)) then
                ww(i,j,kmin(i,j))= _ZERO_
             else
@@ -86,6 +98,11 @@
          end do
       end do
    end do
+
+#ifndef CALC_HALO_WW
+   call update_3d_halo(ww,ww,az,iimin,jjmin,iimax,jjmax,kmax,z_TAG)
+   call wait_halo(z_TAG)
+#endif
 
 !     Consistency test: ww(i,j,kmax) must always be zero !
 
