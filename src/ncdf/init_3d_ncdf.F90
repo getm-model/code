@@ -1,4 +1,4 @@
-!$Id: init_3d_ncdf.F90,v 1.7 2004-06-15 08:25:57 kbk Exp $
+!$Id: init_3d_ncdf.F90,v 1.8 2004-10-07 15:46:56 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,7 +30,10 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_3d_ncdf.F90,v $
-!  Revision 1.7  2004-06-15 08:25:57  kbk
+!  Revision 1.8  2004-10-07 15:46:56  kbk
+!  removed wrongly placed  comments for save_nuh
+!
+!  Revision 1.7  2004/06/15 08:25:57  kbk
 !  added supoort for spm - Ruiz
 !
 !  Revision 1.6  2004/05/04 09:23:51  kbk
@@ -368,7 +371,7 @@
                              FillValue=fv,missing_value=mv,valid_range=vr)
       end if
 
-!      if (save_nuh) then
+      if (save_nuh) then
          fv = nuh_missing
          mv = nuh_missing
          vr(1) = 0.
@@ -377,7 +380,7 @@
          if (err .NE. NF_NOERR) go to 10
          call set_attributes(ncid,nuh_id,long_name='diffusivity',units='m2/s', &
                              FillValue=fv,missing_value=mv,valid_range=vr)
-!      end if
+      end if
 
       if (save_eps) then
          fv = eps_missing
