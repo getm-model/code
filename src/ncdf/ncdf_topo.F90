@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.3 2003-04-23 11:54:03 kbk Exp $
+!$Id: ncdf_topo.F90,v 1.4 2003-05-02 08:19:14 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,7 +34,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_topo.F90,v $
-!  Revision 1.3  2003-04-23 11:54:03  kbk
+!  Revision 1.4  2003-05-02 08:19:14  kbk
+!  fixed calculationof lonx andlatx if not in file
+!
+!  Revision 1.3  2003/04/23 11:54:03  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 12:39:59  kbk
@@ -114,7 +117,8 @@
 ! !ROUTINE: get_bathymetry - reads bathymetry from NetCDF file
 !
 ! !INTERFACE:
-   subroutine get_bathymetry(H,Hland,iextr,jextr,ioff,joff,imin,imax,jmin,jmax,rc)
+   subroutine get_bathymetry(H,Hland,iextr,jextr,ioff,joff, &
+                             imin,imax,jmin,jmax,rc)
 !
 ! !USES:
    use ncdfin
@@ -153,6 +157,7 @@
    integer                   :: il,ih,jl,jh,iloc,jloc
    REAL_4B, allocatable      :: wrk(:)
    REALTYPE, parameter       :: pi=3.1415927,deg2rad=pi/180.,rad2deg=180./pi
+   REALTYPE                  :: x
 !EOP
 !-------------------------------------------------------------------------
 #include"netcdf.inc"
@@ -175,34 +180,13 @@
    H=Hland
 
    LEVEL3 'reading bathymetry'
-#if 1
-   il = max(imin+ioff,1); ih = min(imax+ioff,iextr)
-   jl = max(jmin+joff,1); jh = min(jmax+joff,jextr)
-   il = max(imin-ioff,1); ih = min(imax+ioff,iextr)
-   jl = max(jmin-joff,1); jh = min(jmax+joff,jextr)
+
    il = max(imin+ioff,1); ih = min(imax+ioff,iextr)
    jl = max(jmin+joff,1); jh = min(jmax+joff,jextr)
    iloc = max(imin-ioff,1); jloc = max(jmin-joff,1)
-#else
-   il = max(imin-ioff,1)
-   if(ioff .lt. 0) then
-      ih = min(imax,iextr)
-   else
-      ih = min(imax+ioff,iextr)
-   end  if
-   jl = max(jmin-joff,1)
-   if(joff .lt. 0) then
-      jh = min(jmax,jextr)
-   else
-      jh = min(jmax+joff,jextr)
-   end  if
-#endif
-STDERR ioff,joff
-STDERR il,jl
-STDERR ih,jh
-STDERR ih-il+1,jh-jl+1
-STDERR iloc,jloc
-   call read_2d_field("bathymetry",imin,imax,jmin,jmax,H,il,ih,jl,jh,iloc,jloc)
+
+   call read_2d_field("bathymetry",imin,imax,jmin,jmax,H, &
+                      il,ih,jl,jh,iloc,jloc)
    where ( H .gt. 20000.)
       H = Hland
    end where
@@ -222,8 +206,6 @@ STDERR iloc,jloc
    if (err .ne. NF_NOERR) go to 10
    dy = wrk(1)
 
-!KBK   il = imin+ioff; ih = imax+ioff
-!KBK   jl = jmin+joff; jh = jmax+joff
    call read_2d_field("lon",imin,imax,jmin,jmax,lonc,il,ih,jl,jh,iloc,jloc)
    call read_2d_field("lat",imin,imax,jmin,jmax,latc,il,ih,jl,jh,iloc,jloc)
    conv = _ZERO_
@@ -232,72 +214,82 @@ STDERR iloc,jloc
 
 #ifdef SPHERICAL
    LEVEL3 'reading spherical grid information'
-!  Reading lat and lon for the C points
-   start(1) = ioff+1
-   edges(1) = imax-(imin-1)
+
+!  Reading longitude for C and X points
+   il = max(imin+ioff,1); ih = min(imax+ioff,iextr)
+   start(1) = il ; edges(1) = ih-il+1
    err = nf_inq_varid(ncbathy,"lon",id)
    if (err .ne. NF_NOERR) go to 10
    err = nf_get_vara_real(ncbathy,id,start,edges,wrk)
    if (err .ne. NF_NOERR) go to 10
-   do j=jmin,jmax
-     lonc(1:,j) = wrk(1:edges(1))
+   indx=1
+   do i=il,ih
+     lonc(iloc+i-il,:) = wrk(indx)
+     indx=indx+1
    end do
+   x = lonc(iloc+1,1) - lonc(iloc,1)
+   lonc(iloc-1,:) = lonc(iloc,:) - x
+   x = lonc(iloc+ih-il,1) - lonc(iloc+ih-il-1,1)
+   lonc(iloc+ih-il+1,:) = lonc(iloc+ih-il,:) + x
 
-   start(1) = joff+1
-   edges(1) = jmax-(jmin-1)
+   start(1) = il
+   edges(1) = ih-il+2
+   err = nf_inq_varid(ncbathy,"lonx",id)
+   if (err .ne. NF_NOERR) then
+      LEVEL4 'Can not read lonx - generating from lonc'
+      do i=il-1,ih
+         x = (lonc(iloc+i-il,1) + lonc(iloc+i-il+1,1))/2. 
+         lonx(i-il+iloc,:) = x
+      end do
+   else
+      err = nf_get_vara_real(ncbathy,id,start,edges,wrk)
+      if (err .ne. NF_NOERR) go to 10
+      indx=1
+      do i=il-1,ih
+        lonx(iloc+i-il,:) = wrk(indx)
+        indx=indx+1
+      end do
+   end if
+   x = lonc(iloc+ih-il+1,1)-lonc(iloc+ih-il,1) 
+   lonx(iloc+ih-il+1,:) = lonc(iloc+ih-il+1,:) + x/2.
+
+!  Reading latitude for C and X points
+   jl = max(jmin+joff,1); jh = min(jmax+joff,jextr)
+   start(1) = jl ; edges(1) = jh-jl+1
    err = nf_inq_varid(ncbathy,"lat",id)
    if (err .ne. NF_NOERR) go to 10
    err = nf_get_vara_real(ncbathy,id,start,edges,wrk)
    if (err .ne. NF_NOERR) go to 10
-   do i=imin,imax
-     latc(i,1:) = wrk(1:edges(1))
+   indx=1
+   do j=jl,jh
+     latc(:,j-jl+jloc) = wrk(indx)
+     indx=indx+1
    end do
+   x = latc(1,jloc+1) - latc(1,jloc)
+   latc(:,jloc-1) = latc(:,jloc) - x
+   x = latc(1,jh-jl+jloc) - latc(1,jh-jl-1+jloc)
+   latc(:,jh-jl+jloc+1) = latc(:,jh-jl+jloc) + x
 
-!  Getting lat and lon for the X points
-   start(1) = ioff+1
-   edges(1) = imax-(imin-1)+1
-   err = nf_inq_varid(ncbathy,"lonx",id)
-   if (err .ne. NF_NOERR) then
-      LEVEL4 'Can not read lonx - generating from lonc'
-
-
-      STOP 'needs a fix - ncdf_topo.F90'
-
-
-
-!      lonx(0,1:) = lonc(1,1:) - (lonc(2,1:) - lonc(1,1:))/2.
-      lonx(0,0) = lonc(1,1) - (lonc(2,1) - lonc(1,1))/2.
-      lonx(0,1:) = lonc(1,1:) - (lonc(2,1:) - lonc(1,1:))/2.
-      do i=imin,imax
-         lonx(i:,1:) = (lonc(i:,1:) + lonc(i+1:,1:))/2.
-      end do
-   else
-      err = nf_get_vara_real(ncbathy,id,start,edges,wrk)
-      if (err .ne. NF_NOERR) go to 10
-      do j=jmin-1,jmax
-         lonx(0:,j) = wrk(1:edges(1))
-      end do
-      lonx(imax+1,:) = 2.*lonx(imax,:)-lonx(imax-1,:)
-   end if
-
-   start(1) = joff+1
-   edges(1) = jmax-(jmin-1)+1
+   start(1) = jl
+   edges(1) = jh+1
    err = nf_inq_varid(ncbathy,"latx",id)
    if (err .ne. NF_NOERR) then
       LEVEL4 'Can not read latx - generating from latc'
-!      latx(0,0:) = latc(1,1:) - (latc(2,1:) - latc(1,1:))/2.
-      do i=imin,imax
-        latx(i,0:) = (latc(i,0:) + latc(i+1,0:))/2.
+      do j=jl-1,jh
+         x = (latc(1,jloc+j-jl) + latc(1,jloc+j-jl+1))/2. 
+         latx(:,jloc+j-jl) = x
       end do
    else
       err = nf_get_vara_real(ncbathy,id,start,edges,wrk)
       if (err .ne. NF_NOERR) go to 10
-      do i=imin-1,imax
-        latx(i,0:) = wrk(1:edges(1))
+      indx=1
+      do j=jl-1,jh
+        latx(:,j-jl+jloc) = wrk(indx)
+        indx=indx+1
       end do
-      latx(:,jmax+1) = 2.*latx(:,jmax)-latx(:,jmax-1)
    endif
-   
+   x = latc(1,jloc+jh-jl+1)-latc(1,jloc+jh-jl) 
+   latx(:,jloc+jh-jl+1) = latc(:,jloc+jh-jl+1) + x/2.
 #endif
 
 #ifdef CURVILINEAR
@@ -396,7 +388,8 @@ STDERR iloc,jloc
 ! !ROUTINE: read_2d_field -
 !
 ! !INTERFACE:
-   subroutine read_2d_field(name,imin,imax,jmin,jmax,field,il,ih,jl,jh,iloc,jloc)
+   subroutine read_2d_field(name,imin,imax,jmin,jmax,field, &
+                            il,ih,jl,jh,iloc,jloc)
 !
 ! !USES:
    use ncdfin
