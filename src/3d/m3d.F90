@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.8 2003-12-16 15:58:54 kbk Exp $
+!$Id: m3d.F90,v 1.9 2003-12-16 17:02:44 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -50,7 +50,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.8  2003-12-16 15:58:54  kbk
+!  Revision 1.9  2003-12-16 17:02:44  kbk
+!  removed TABS - 0. -> _ZERO_
+!
+!  Revision 1.8  2003/12/16 15:58:54  kbk
 !  back ground viscosity and diffusivity (manuel)
 !
 !  Revision 1.7  2003/09/12 16:23:38  kbk
@@ -201,7 +204,7 @@
              bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,     &
              vel_hor_adv,vel_ver_adv,vel_strang,        &
              calc_temp,calc_salt,calc_spm,              &
-	     avmback,avhback
+             avmback,avhback
 !
 !EOP
 !-------------------------------------------------------------------------
