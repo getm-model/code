@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.8 2003-09-13 10:00:51 kbk Exp $
+!$Id: m2d.F90,v 1.9 2004-01-05 08:59:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,7 +41,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m2d.F90,v $
-!  Revision 1.8  2003-09-13 10:00:51  kbk
+!  Revision 1.9  2004-01-05 08:59:38  kbk
+!  different velocity point depth calculations using vel_depth_method
+!
+!  Revision 1.8  2003/09/13 10:00:51  kbk
 !  added numerical diffusion - An - to namelist - passed to uv_diffusion()
 !
 !  Revision 1.7  2003/08/28 10:28:40  kbk
@@ -136,6 +139,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
+   integer                   :: vel_depth_method=0
    namelist /m2d/ &
           MM,z0_const,Am,An,residual,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
@@ -185,7 +189,7 @@
 !kbk     if (have_boundaries) call init_2d_bdy(bdyfmt_2d,bdyfile_2d)
    end if
 
-   call uv_depths()
+   call uv_depths(vel_depth_method)
 
    where ( -H+min_depth .gt. _ZERO_ )
       z = -H+min_depth

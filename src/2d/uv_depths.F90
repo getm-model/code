@@ -1,4 +1,4 @@
-!$Id: uv_depths.F90,v 1.7 2003-06-18 08:27:41 kbk Exp $
+!$Id: uv_depths.F90,v 1.8 2004-01-05 08:59:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,7 +6,7 @@
 ! !IROUTINE: uv_depths - calculate depths in u and v points.
 !
 ! !INTERFACE:
-   subroutine uv_depths
+   subroutine uv_depths(vel_depth_method)
 !
 ! !DESCRIPTION:
 !
@@ -16,6 +16,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   integer, intent(in)                 :: vel_depth_method
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -25,7 +26,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_depths.F90,v $
-!  Revision 1.7  2003-06-18 08:27:41  kbk
+!  Revision 1.8  2004-01-05 08:59:38  kbk
+!  different velocity point depth calculations using vel_depth_method
+!
+!  Revision 1.7  2003/06/18 08:27:41  kbk
 !  using HALO in loop boundaries
 !
 !  Revision 1.6  2003/05/12 09:22:39  kbk
@@ -53,7 +57,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
-   logical, save             :: first=.true.
+   REALTYPE                  :: d_crit=2.0 
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -66,12 +70,41 @@
 
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO-1
-         HU(i,j)=0.5*(H(i,j)+H(i+1,j))
+         select case (vel_depth_method)
+            case (0)
+               HU(i,j)=0.5*(H(i,j)+H(i+1,j))
+            case (1)
+               HU(i,j)=min(H(i,j),H(i+1,j))
+            case (2)
+               if (H(i,j) .lt. d_crit .or. H(i+1,j) .lt. d_crit) then
+                  HU(i,j)=min(H(i,j),H(i+1,j))
+               else
+                  HU(i,j)=0.5*(H(i,j)+H(i+1,j))
+               end if
+            case default
+               call getm_error("uv_depths()", &
+                               "vel_depth_method must be 0, 1 or 2")
+         end select
       end do
    end do
+
    do j=jmin-HALO,jmax+HALO-1
       do i=imin-HALO,imax+HALO
-         HV(i,j)=0.5*(H(i,j)+H(i,j+1))
+         select case (vel_depth_method)
+            case (0)
+               HV(i,j)=0.5*(H(i,j)+H(i,j+1))
+            case (1)
+               HV(i,j)=min(H(i,j),H(i,j+1))
+            case (2)
+               if (H(i,j) .lt. d_crit .or. H(i,j+1) .lt. d_crit) then
+                  HV(i,j)=min(H(i,j),H(i,j+1))
+               else
+                  HV(i,j)=0.5*(H(i,j)+H(i,j+1))
+               end if
+            case default
+               call getm_error("uv_depths()", &
+                               "vel_depth_method must be 0, 1 or 2")
+         end select
       end do
    end do
 
