@@ -1,4 +1,4 @@
-!$Id: parallel.F90,v 1.2 2003-03-24 14:21:11 gotm Exp $
+!$Id: parallel.F90,v 1.3 2003-04-01 15:31:11 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,7 +31,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: parallel.F90,v $
-!  Revision 1.2  2003-03-24 14:21:11  gotm
+!  Revision 1.3  2003-04-01 15:31:11  gotm
+!  removed dead code
+!
+!  Revision 1.2  2003/03/24 14:21:11  gotm
 !  corrected boundary indices
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:29  gotm
@@ -175,6 +178,7 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
+#if 0
    select case (tag)
       case(HU_TAG, U_TAG , DU_TAG) ! for variables defined on u-grid
          ilow=imin;ihigh=imax-1;jlow=jmin;jhigh=jmax
@@ -183,24 +187,16 @@
       case default                 ! for variables defined on scalar-grid
          ilow=imin;ihigh=imax;jlow=jmin;jhigh=jmax
    end select
-ilow=imin;ihigh=imax;jlow=jmin;jhigh=jmax
+#endif
+
+   ilow=imin;ihigh=imax;jlow=jmin;jhigh=jmax
+
    select case (comm_method)
       case(ONE_PROCESS)
-#if 0
-         forall(i=ilow:ilow,j=jlow:jhigh, mask(i,j) .ne. 0) &
-               f1(i-1,j) = f2(i,j)
-         forall(i=ihigh:ihigh,j=jlow:jhigh, mask(i,j) .ne. 0) &
-               f1(i+1,j) = f2(i,j)
-         forall(i=ilow:ihigh,j=jlow:jlow, mask(i,j) .ne. 0) &
-               f1(i,j-1) = f2(i,j)
-         forall(i=ilow:ihigh,j=jhigh:jhigh, mask(i,j) .ne. 0) &
-               f1(i,j+1) = f2(i,j)
-#else
          f1(ilow -1, : )  = f2(ilow,  :  )
          f1(ihigh+1, : )  = f2(ihigh, :  )
          f1( :, jlow -1 ) = f2( :, jlow  )
          f1( :, jhigh+1 ) = f2( :, jhigh )
-#endif
       case default
          FATAL 'A non valid communication method has been chosen'
          stop 'update_2d_halo'
@@ -242,6 +238,8 @@ ilow=imin;ihigh=imax;jlow=jmin;jhigh=jmax
 !EOP
 !-------------------------------------------------------------------------
 !BOC
+
+#if 0
    select case (tag)
       case(HU_TAG, U_TAG , DU_TAG) ! for variables defined on u-grid
          ilow=iimin;ihigh=iimax-1;jlow=jjmin+1;jhigh=jjmax-1
@@ -252,32 +250,16 @@ ilow=imin;ihigh=imax;jlow=jmin;jhigh=jmax
       case default                 ! for variables defined on scalar-grid
          ilow=iimin;ihigh=iimax;jlow=jjmin;jhigh=jjmax
    end select
-ilow=iimin;ihigh=iimax;jlow=jjmin;jhigh=jjmax
+#endif
+
+   ilow=iimin;ihigh=iimax;jlow=jjmin;jhigh=jjmax
+
    select case (comm_method)
       case(ONE_PROCESS)
-#if 0
-!          forall(i=ilow:ilow,j=jlow:jhigh, mask(i,j) .ne. 0) &
-!	       f1(i-1,j,0:kmax) = f2(i,j,0:kmax)
-!          forall(i=ihigh:ihigh,j=jlow:jhigh, mask(i,j) .ne. 0) &
-!	       f1(i+1,j,0:kmax) = f2(i,j,0:kmax)
-!          forall(i=ilow:ihigh,j=jlow:jlow, mask(i,j) .ne. 0) &
-!               f1(i,j-1,0:kmax) = f2(i,j,0:kmax)
-!          forall(i=ilow:ihigh,j=jhigh:jhigh, mask(i,j) .ne. 0) &
-!               f1(i,j+1,0:kmax) = f2(i,j,0:kmax)
-         forall(i=ilow:ilow,j=jlow:jhigh) &
-	       f1(i-1,j,0:kmax) = f2(i,j,0:kmax)
-         forall(i=ihigh:ihigh,j=jlow:jhigh) &
-	       f1(i+1,j,0:kmax) = f2(i,j,0:kmax)
-         forall(i=ilow:ihigh,j=jlow:jlow) &
-               f1(i,j-1,0:kmax) = f2(i,j,0:kmax)
-         forall(i=ilow:ihigh,j=jhigh:jhigh) &
-               f1(i,j+1,0:kmax) = f2(i,j,0:kmax)
-#else
          f1(ilow -1, : , : )  = f2(ilow , : , :  )
          f1(ihigh+1, : , : )  = f2(ihigh, : , :  )
          f1( : , jlow -1, : ) = f2( : , jlow , : )
          f1( : , jhigh+1, : ) = f2( : , jhigh, : )
-#endif
       case default
          FATAL 'A non valid communication method has been chosen'
          stop 'update_3d_halo'
