@@ -1,4 +1,4 @@
-!$Id: have_bdy.F90,v 1.4 2003-05-06 16:02:53 kbk Exp $
+!$Id: have_bdy.F90,v 1.5 2004-02-23 15:14:29 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,7 +25,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: have_bdy.F90,v $
-!  Revision 1.4  2003-05-06 16:02:53  kbk
+!  Revision 1.5  2004-02-23 15:14:29  kbk
+!  correct mapping of eastern boundary - Staneva
+!
+!  Revision 1.4  2003/05/06 16:02:53  kbk
 !  now works with several boundaries on each side in parallel mode
 !
 !  Revision 1.3  2003/04/23 12:09:43  kbk
@@ -116,7 +119,7 @@
                nbdy = nbdy+1
                do k=1,nsbv
                   if (bdy_map(k,1) .eq. ei(i)+ioff .and. &
-                      bdy_map(k,2) .eq. l+joff) then
+                      bdy_map(k,2) .eq. f+joff) then
                      bdy_index(nbdy) = k
                   end if
                end do
