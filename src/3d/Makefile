@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.5 2004-04-06 16:50:50 kbk Exp $
+#$Id: Makefile,v 1.6 2004-04-21 15:15:55 hb Exp $
 #
 # Makefile to build the 3D specific library - libm3d.a
 #
@@ -11,7 +11,7 @@ LIB	= $(LIBDIR)/lib3d${buildtype}.a
 MODSRC	= m3d.F90 variables_3d.F90 advection_3d.F90 eqstate.F90 \
           temperature.F90 salinity.F90 spm.F90 bdy_3d.F90 rivers.F90
 
-LIBSRC	= start_macro.F90 bdy_3d.F90 coordinates.F90 bottom_friction_3d.F90 internal_pressure.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 stresses_3d.F90 ss_nn.F90 gotm.F90 slow_bottom_friction.F90 slow_advection.F90 slow_diffusion.F90 slow_terms.F90 stop_macro.F90
+LIBSRC	= start_macro.F90 bdy_3d.F90 coordinates.F90 bottom_friction_3d.F90 internal_pressure.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 stresses_3d.F90 ss_nn.F90 gotm.F90 slow_bottom_friction.F90 slow_advection.F90 slow_diffusion.F90 slow_terms.F90 stop_macro.F90 check_h.F90
 
 SRC	= $(MODSRC) $(LIBSRC)
 
@@ -64,6 +64,7 @@ $(LIB)(w_split_adv.o)			\
 $(LIB)(w_split_it_adv.o)		\
 $(LIB)(upstream_2dh_adv.o)		\
 $(LIB)(fct_2dh_adv.o)			\
+$(LIB)(check_h.o)                    \
 $(LIB)(stop_macro.o)
 
 ifeq ($(turbulence),gotm)
