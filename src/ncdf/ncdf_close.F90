@@ -1,4 +1,4 @@
-!$Id: ncdf_close.F90,v 1.1 2002-05-02 14:01:47 gotm Exp $
+!$Id: ncdf_close.F90,v 1.2 2003-04-07 12:46:06 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,9 @@
 !
 ! !USES:
    use ncdf_2d, only: nc2d => ncid
+#ifndef NO_3D
    use ncdf_3d, only: nc3d => ncid
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -25,8 +27,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_close.F90,v $
-!  Revision 1.1  2002-05-02 14:01:47  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 12:46:06  kbk
+!  NO_3D
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:47  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.2  2001/09/13 14:56:58  bbh
 !  Also updated
@@ -50,10 +55,12 @@
       err = nf_close(nc2d)
       if (err .NE. NF_NOERR) go to 10
    end if
+#ifndef NO_3D
    if (nc3d .ge. 0) then
       err = nf_close(nc3d)
       if (err .NE. NF_NOERR) go to 10
    end if
+#endif
    return
 
 10 FATAL 'ncdf_close: ',nf_strerror(err)
