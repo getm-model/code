@@ -1,4 +1,4 @@
-!$Id: read_field_ncdf.F90,v 1.4 2003-05-06 16:25:16 kbk Exp $
+!$Id: read_field_ncdf.F90,v 1.5 2003-08-03 08:29:28 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,7 +6,7 @@
 ! !ROUTINE: read_field_ncdf -
 !
 ! !INTERFACE:
-   subroutine read_field_ncdf(fname,var,n,f)
+   subroutine read_field_ncdf(fname,var,nf,f)
 !
 ! !DESCRIPTION:
 !  From a NetCDF files - fname - read the variable - var - into the field - f.
@@ -20,7 +20,7 @@
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fname,var
-   integer                             :: n
+   integer, intent(in)                 :: nf
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -31,7 +31,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: read_field_ncdf.F90,v $
-!  Revision 1.4  2003-05-06 16:25:16  kbk
+!  Revision 1.5  2003-08-03 08:29:28  kbk
+!  use right order of dimensions - need to do x,y names correct
+!
+!  Revision 1.4  2003/05/06 16:25:16  kbk
 !  reads 3D netcdf files properly in parallel mode
 !
 !  Revision 1.3  2003/04/23 11:54:03  kbk
@@ -43,14 +46,15 @@
 !  Revision 1.1.1.1  2002/05/02 14:01:47  gotm
 !  recovering after CVS crash
 !
-!
 ! !LOCAL VARIABLES:
    integer                   :: il,jl,iloc,jloc,indx
    integer                   :: ih,jh,kh,nh
-   integer                   :: rc,err,ncid,var_id,i,j,k
+   integer                   :: rc,err,ncid,var_id,i,j,k,n
    integer                   :: start(4),edges(4)
-   integer                   :: ndims,rec_id
-   REAL_4B, allocatable      :: zax(:), wrk(:)
+   integer                   :: ndims
+   integer                   :: xax_id=-1,yax_id=-1,zax_id=-1,time_id=-1
+   character(len=256)        :: dimname
+   REAL_4B, allocatable      :: zax(:), tax(:), wrk(:)
    REALTYPE, allocatable     :: zax_2d(:), wrk_2d(:,:,:)
 !EOP
 !-------------------------------------------------------------------------
@@ -69,18 +73,63 @@
    err = nf_inq_ndims(ncid, ndims)
    if (err .ne. NF_NOERR) go to 10
 
-!  We assume dimension order as follows 1->i, 2->j, 3->k, 4->n
+   if(ndims .ne. 4) then
+      FATAL 'we assume to read from a 4D field - and ndims = ',ndims
+      stop 'read_field_ncdf()'
+   end if
+
+   do n=1,ndims
+      err = nf_inq_dimname(ncid,n,dimname)
+      if (err .ne. NF_NOERR) go to 10
 
 #if 0
-   err = nf_inq_dimlen(ncid, 1, ih)
-   if (err .ne. NF_NOERR) go to 10
-   err = nf_inq_dimlen(ncid, 2, jh)
-   if (err .ne. NF_NOERR) go to 10
+      if( dimname .eq. 'lon' ) then
+         xax_id = n
+         err = nf_inq_dimlen(ncid,xax_id,iextr)
+         if (err .ne. NF_NOERR) go to 10
+!         LEVEL4 'xax_id  --> ',xax_id,', len = ',iextr
+      end if
+      if( dimname .eq. 'lat' ) then
+         yax_id = n
+         err = nf_inq_dimlen(ncid,yax_id,jextr)
+         if (err .ne. NF_NOERR) go to 10
+!         LEVEL4 'yax_id  --> ',yax_id,', len = ',jextr
+      end if
 #endif
-   err = nf_inq_dimlen(ncid, 3, kh)
-   if (err .ne. NF_NOERR) go to 10
-   err = nf_inq_dimlen(ncid, 4, nh)
-   if (err .ne. NF_NOERR) go to 10
+
+      if( dimname .eq. 'zax' ) then
+         zax_id = n
+         err = nf_inq_dimlen(ncid,zax_id,kh)
+         if (err .ne. NF_NOERR) go to 10
+!         LEVEL4 'zax_id  --> ',zax_id,', len = ',kh
+      end if
+      if( dimname .eq. 'time' ) then
+         time_id = n
+         err = nf_inq_dimlen(ncid,time_id,nh)
+         if (err .ne. NF_NOERR) go to 10
+!         LEVEL4 'time_id --> ',time_id,', len = ',nh
+      end if
+   end do
+
+#if 0
+   if(xax_id .eq. -1) then
+      FATAL 'could not find x-axis information in ',trim(fname)
+      stop 'read_field_ncdf()'
+   end if
+   if(yax_id .eq. -1) then
+      FATAL 'could not find y-axis information in ',trim(fname)
+      stop 'read_field_ncdf()'
+   end if
+#endif
+
+   if(zax_id .eq. -1) then
+      FATAL 'could not find z-axis information in ',trim(fname)
+      stop 'read_field_ncdf()'
+   end if
+   if(time_id .eq. -1) then
+      FATAL 'could not find time-axis information in ',trim(fname)
+      stop 'read_field_ncdf()'
+   end if
 
    err = nf_inq_varid(ncid,"zax",var_id)
    if (err .NE. NF_NOERR) go to 10
@@ -89,20 +138,42 @@
    err = nf_get_var_real(ncid,var_id,zax)
    if (err .NE. NF_NOERR) go to 10
 
-   err = nf_inq_varid(ncid,trim(var),var_id)
+#if 0
+   err = nf_inq_varid(ncid,"time",var_id)
    if (err .NE. NF_NOERR) go to 10
+   allocate(tax(nh),stat=rc)
+   if (rc /= 0) stop 'read_field_ncdf: Error allocating tax'
+   err = nf_get_var_real(ncid,var_id,tax)
+   if (err .NE. NF_NOERR) go to 10
+#endif
 
    il = max(iimin+ioff,1); ih = min(iimax+ioff,iextr)
    jl = max(jjmin+joff,1); jh = min(jjmax+joff,jextr)
    iloc = max(iimin-ioff,1); jloc = max(jjmin-joff,1)
 
    start(1) = il ; start(2) = jl
-   start(3) = 1; start(4) = n
+   start(3) = 1; 
    edges(1) = ih-il+1 ; edges(2) = jh-jl+1
    edges(3) = kh; edges(4) = 1
 
+   start(4) = -1
+   do n=1,nh
+      if (n .eq. nf) then
+         start(4) = n
+         EXIT
+      end if
+   end do
+
+   if(start(4) .lt. 0) then
+      FATAL 'could not find requested field: ',nf
+      stop 'read_field_ncdf()' 
+   end if
+
    allocate(wrk((iimax-iimin+1)*(jjmax-jjmin+1)*kh),stat=rc)
    if (rc /= 0) stop 'read_field_ncdf: Error allocating wrk'
+
+   err = nf_inq_varid(ncid,trim(var),var_id)
+   if (err .NE. NF_NOERR) go to 10
 
    err = nf_get_vara_real(ncid,var_id,start,edges,wrk)
    if (err .NE. NF_NOERR) go to 10
