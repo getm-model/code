@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.1 2002-05-02 14:00:59 gotm Exp $
+!$Id: internal_pressure.F90,v 1.2 2003-04-01 15:50:13 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,8 +30,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: internal_pressure.F90,v $
-!  Revision 1.1  2002-05-02 14:00:59  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-01 15:50:13  gotm
+!  removed dead print statement
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:59  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.15  2001/10/22 08:23:53  bbh
 !  Removed reference to kplus and kminus when not -DPRESS_GRAD_Z
@@ -152,7 +155,6 @@
       do i=iimin,iimax
          if (au(i,j) .ge. 1) then
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-!STDERR i,j,DXU
          dxm1=_ONE_/DXU
 #endif
 #ifdef PRESS_GRAD_Z
