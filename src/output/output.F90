@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.1 2002-05-02 14:01:52 gotm Exp $
+!$Id: output.F90,v 1.2 2003-04-07 12:32:58 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,6 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use commhalo, only: myid
    use time, only: write_time_string,timestep,timestr
    use ncdf_out
    use ascii_out
@@ -26,6 +25,7 @@
    character(LEN = PATH_MAX)	:: out_dir='.'
    character(LEN = PATH_MAX)	:: out_f_2d
    character(LEN = PATH_MAX)	:: out_f_3d
+   character(LEN = PATH_MAX)	:: hot_out
 
    logical	:: save_meteo=.false.
    logical	:: save_2d=.true.
@@ -51,8 +51,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
-!  Revision 1.1  2002-05-02 14:01:52  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 12:32:58  kbk
+!  parallel support + NO_3D, NO_BAROCLINIC
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:52  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.8  2001/10/23 07:37:17  bbh
 !  Saving spm - if calc_spm and save_spm are both true
@@ -91,12 +94,12 @@
 ! !IROUTINE: init_output - initialise all external files and units
 !
 ! !INTERFACE:
-   subroutine init_output(runid,title,starttime,runtype,dryrun)
+   subroutine init_output(runid,title,starttime,runtype,dryrun,myid)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)		:: runid,title,starttime
-   integer, intent(in)			:: runtype
+   integer, intent(in)			:: runtype,myid
    logical, intent(in)			:: dryrun
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -140,19 +143,21 @@
       save_spm = .false.
    end if
 
-   call file_names(runid)
+   call file_names(runid,myid)
 
    if(save_2d) then
-      LEVEL2 '2D results: ',TRIM(out_f_2d)
+      LEVEL2 '2D results: ',trim(out_f_2d)
       LEVEL2 'First=',first_2d,' step=',step_2d
       if(save_meteo) then
          LEVEL2 'Saving meteo forcing in ',trim(out_f_2d)
       end if
    end if
+#ifndef NO_3D
    if(save_3d) then
-      LEVEL2 '3D results: ',TRIM(out_f_3d)
+      LEVEL2 '3D results: ',trim(out_f_3d)
       LEVEL2 'First=',first_3d,' step=',step_3d
    end if
+#endif
 
    if( .not. dryrun) then
       select case (out_fmt)
@@ -166,7 +171,9 @@
 #endif
          case (NETCDF)
             if (save_2d) call init_2d_ncdf(out_f_2d,title,starttime)
+#ifndef NO_3D
             if (save_3d) call init_3d_ncdf(out_f_3d,title,starttime)
+#endif
          case (GRADS)
          case DEFAULT
            STDERR 'Fatal error: A non valid input format has been chosen'
@@ -233,7 +240,7 @@
    if (write_2d .or. write_3d) then
       call write_time_string()
       LEVEL2 'Saving.... ',timestr
-      call divergence()
+!      call divergence()
       secs = n*timestep
       select case (out_fmt)
          case (ASCII)
@@ -246,7 +253,9 @@
 #endif
          case (NETCDF)
             if (write_2d) call save_2d_ncdf(secs)
+#ifndef NO_3D
             if (write_3d) call save_3d_ncdf(secs)
+#endif
          case DEFAULT
            STDERR 'Fatal error: A non valid input format has been chosen'
            stop 'do_output'
@@ -256,7 +265,7 @@
 !  Restart file
    if (hotout .gt. 0 .and. mod(n,hotout) .eq. 0) then
       dummy = n
-      call restart_file(WRITING,trim(out_dir) // '/' // 'restart.out',dummy,runtype)
+      call restart_file(WRITING,trim(hot_out),dummy,runtype)
    end if
 
 #ifdef DEBUG
@@ -282,7 +291,12 @@
 ! !USES:
    use time, only: timestep,julianday,secondsofday
    use m2d,  only: z,zo,U,fU,zu,zub,SlUx,Slru,V,fV,zv,zvb,SlVx,Slrv,Uint,Vint
-   use m3d,  only: uu,vv,tke,eps,num,nuh,T,S,ssen,ssun,ssvn
+#ifndef NO_3D
+   use m3d,  only: uu,vv,tke,eps,num,nuh,ssen,ssun,ssvn
+#ifndef NO_BAROCLINIC
+   use m3d,  only: T,S
+#endif
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -318,17 +332,21 @@
       write(RESTART) loop,julianday,secondsofday,timestep
       LEVEL3 'saving basic variables'
       write(RESTART) z,zo,U,zu,zub,SlUx,Slru,V,zv,zvb,SlVx,Slrv
-      if (runtype .gt. 1)  then
+#ifndef NO_3D
+      if (runtype .ge. 2)  then
          LEVEL3 'saving 3D barotropic variables'
 !kbk         write(RESTART) Uint,Vint
          write(RESTART) uu,vv
          write(RESTART) tke,eps
          write(RESTART) num,nuh
+#ifndef NO_BAROCLINIC
          if(runtype .ge. 3) then
             LEVEL3 'saving 3D baroclinic variables'
             write(RESTART) T,S
          end if
+#endif
       end if
+#endif
       close(RESTART)
    end if
 
@@ -338,9 +356,11 @@
       open(RESTART,file=fname,status='unknown',form='unformatted')
       LEVEL3 'reading loop, julianday, secondsofday and timestep'
       read(RESTART) loop,julianday,secondsofday,timestep
+STDERR 'loop = ',loop
       LEVEL3 'reading basic variables'
       read(RESTART) z,zo,U,zu,zub,SlUx,Slru,V,zv,zvb,SlVx,Slrv
-      if (runtype .gt. 1)  then
+#ifndef NO_3D
+      if (runtype .ge. 2)  then
 !KBK This needs to be changed !!!! KBK
 !Only works because E2DFIELD = I2DFIELD
       ssen=z
@@ -351,11 +371,14 @@
          read(RESTART) uu,vv
          read(RESTART) tke,eps
          read(RESTART) num,nuh
+#ifndef NO_BAROCLINIC
          if(runtype .ge. 3) then
             LEVEL3 'reading 3D baroclinic variables'
             read(RESTART) T,S
          end if
+#endif
       end if
+#endif
       close(RESTART)
    end if
 #ifdef DEBUG
@@ -388,6 +411,7 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
+   REALTYPE :: dummy
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -400,7 +424,8 @@
 
    select case (out_fmt)
       case (NETCDF)
-         call save_2d_ncdf( -_ONE_ )
+         dummy = -_ONE_*1.
+         call save_2d_ncdf(dummy)
          call ncdf_close()
       case DEFAULT
          STDERR 'Fatal error: A non valid input format has been chosen'
@@ -421,11 +446,12 @@
 ! !IROUTINE: file_names - setup output file names
 !
 ! !INTERFACE:
-   subroutine file_names(runid)
+   subroutine file_names(runid,myid)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)		::  runid
+   integer, intent(in)			::  myid
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -437,40 +463,27 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
-   logical 				:: TO_FILE=.false.
    character(len=3)			:: buf
    character(len=16)			:: pid,ext
-
    character(len=PATH_MAX)		:: fname
 !
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-
-   if (myid.ge.0) then
+   if (myid .ge. 0) then
       write(buf,'(I3.3)') myid
-      pid = '.' // TRIM(buf)
+      pid = '.' // trim(buf)
    else
       pid = ''
    end if
 
-!  stdin, stdout, stderr and debug files
-   if (TO_FILE) then
-      ext   = 'stderr'
-      fname = TRIM(runid) // TRIM(pid) // '.' // ext
-      open(stderr,file=Fname)
-
-      ext   = 'stdout'
-      fname = TRIM(runid) // TRIM(pid) // '.' // ext
-      open(stdout,file=Fname)
-   end if
-
+   hot_out = trim(out_dir) //'/'// 'restart' // trim(pid) // '.out'
    if (out_fmt .eq. NETCDF) then
       ext = 'nc'
       out_f_2d =  &
-         TRIM(out_dir) //'/'// TRIM(runid) // '.2d' // TRIM(pid) // '.' // ext
+         trim(out_dir) //'/'// trim(runid) // '.2d' // trim(pid) // '.' // ext
       out_f_3d =  &
-         TRIM(out_dir) //'/'// TRIM(runid) // '.3d' // TRIM(pid) // '.' // ext
+         trim(out_dir) //'/'// trim(runid) // '.3d' // trim(pid) // '.' // ext
    end if
 
    return

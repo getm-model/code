@@ -11,15 +11,23 @@
 !
 ! !USES:
    use domain, only: az,imin,imax,jmin,jmax,kmax,H,iimax,iimin,jjmax,jjmin
-#if ( defined(SPHERICAL) || defined(CURVILINEAR) )
-    use domain, only: xu,yu,yx,angle,xv,xx,dyu
-#else
+#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
     use domain, only: dx,dy
+#else
+    use domain, only: dyu
+#if defined(CURVILINEAR)
+    use domain, only: xu,yu,yx,angle,xv,xx,dyu
+#endif
 #endif
    use m2d,    only: z,D,U,DU,V,DV,ru,rv
 !HB   use m3d,    only: hn,uu,hun,vv,hvn,S,M,rho
-   use variables_3d,    only: dt,hn,uu,hun,vv,hvn,S,T,rho
+#ifndef NO_3D
    use m3d,    only: M
+   use variables_3d,    only: dt,hn,uu,hun,vv,hvn
+#ifndef NO_BAROCLINIC
+   use variables_3d, only: S,T,rho
+#endif
+#endif
    use meteo,      only: tausx
    IMPLICIT NONE
 !
@@ -35,8 +43,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: diagnose.F90,v $
-!  Revision 1.1  2002-05-02 14:01:52  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 12:32:58  kbk
+!  parallel support + NO_3D, NO_BAROCLINIC
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:52  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1  2001/08/27 11:54:33  bbh
 !  TVD-advection for momentum added, some bugs removed

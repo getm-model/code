@@ -1,4 +1,4 @@
-!$Id: nesting.F90,v 1.1 2002-05-02 14:01:53 gotm Exp $
+!$Id: nesting.F90,v 1.2 2003-04-07 12:32:58 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -16,7 +16,14 @@
    use domain, only: iimin,iimax,jjmin,jjmax,kmax
    use time, only: julianday,secondsofday
    use domain, only: H,HU,HV
-   use variables_3d, only: hun,uu,hvn,vv,S,T
+#ifndef NO_3D
+   use variables_3d, only: hun,uu,hvn,vv
+#ifndef NO_BAROCLINIC
+   use variables_3d, only: S,T
+#endif
+#endif
+#ifndef NO_BAROCLINIC
+#endif
    IMPLICIT NONE
 !
    private
@@ -30,8 +37,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: nesting.F90,v $
-!  Revision 1.1  2002-05-02 14:01:53  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 12:32:58  kbk
+!  parallel support + NO_3D, NO_BAROCLINIC
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:53  gotm
+!  recovering after CVS crash
 !
 !
 ! !PRIVATE DATA MEMBERS
@@ -241,6 +251,7 @@
          call collect_2d(VGRID,HV)
          write(uout) wrk_2d_w
       end if
+#if 0
       write(uout) julianday,secondsofday
       call collect_3d(UGRID,hun)
       write(uout) wrk_3d_w
@@ -254,6 +265,7 @@
       write(uout) wrk_3d_w
       call collect_3d(TGRID,S)
       write(uout) wrk_3d_w
+#endif
    end if
 
    if (mode .eq. READING) then
