@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.12 2003-08-21 15:28:29 kbk Exp $
+!$Id: domain.F90,v 1.13 2003-08-28 10:36:30 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,7 +47,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.12  2003-08-21 15:28:29  kbk
+!  Revision 1.13  2003-08-28 10:36:30  kbk
+!  also calculate ax in HALO-zones
+!
+!  Revision 1.12  2003/08/21 15:28:29  kbk
 !  re-enabled update_2d_halo for lonc and latc + cleaning
 !
 !  Revision 1.11  2003/08/15 12:52:49  kbk
@@ -367,10 +370,10 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
 
 !  mask for X-points
    ax=0
-   do j=jmin,jmax
-      do i=imin,imax
-         if (az(i  ,j) .eq. 1 .and. az(i  ,j+1) .eq. 1 .and.    &
-             az(i+1,j) .eq. 1 .and. az(i+1,j+1) .eq. 1) then
+   do j=jmin-HALO,jmax+HALO-1
+      do i=imin-HALO,imax+HALO-1
+         if (az(i  ,j) .ge. 1 .and. az(i  ,j+1) .ge. 1 .and.    &
+             az(i+1,j) .ge. 1 .and. az(i+1,j+1) .ge. 1) then
             ax(i,j)=1
          end if
       end do
@@ -436,8 +439,8 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
          call update_2d_halo(dxv,dxv,av,imin,jmin,imax,jmax,V_TAG)
          call wait_halo(V_TAG)
 
-         do j=jmin-1,jmax
-            do i=imin-1,imax
+         do j=jmin,jmax
+            do i=imin,imax
                dxx(i,j)=deg2rad*(lonv(i+1,j)-lonv(i,j))*rearth &
                       *cos(deg2rad*latx(i,j))
             end do
@@ -469,8 +472,8 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
          call update_2d_halo(dyv,dyv,av,imin,jmin,imax,jmax,V_TAG)
          call wait_halo(V_TAG)
 
-         do j=jmin-1,jmax
-            do i=imin-1,imax
+         do j=jmin,jmax
+            do i=imin,imax
                dyx(i,j)=deg2rad*(latu(i,j+1)-latu(i,j))*rearth
             end do
          end do
