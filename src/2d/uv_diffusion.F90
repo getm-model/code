@@ -1,4 +1,4 @@
-!$Id: uv_diffusion.F90,v 1.3 2003-08-28 10:40:42 kbk Exp $
+!$Id: uv_diffusion.F90,v 1.4 2003-09-13 10:00:51 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,7 +6,7 @@
 ! !ROUTINE: uv_diffusion() - diffusion of momentum.
 !
 ! !INTERFACE:
-   subroutine uv_diffusion(Am)
+   subroutine uv_diffusion(Am,An)
 !
 ! !DESCRIPTION:
 !
@@ -21,7 +21,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-  REALTYPE, intent(in) :: Am
+  REALTYPE, intent(in) :: Am,An
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -32,11 +32,6 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
-!   REALTYPE                  :: AN=100.
-   REALTYPE                  :: AN=1000.
-!   REALTYPE                  :: AN=_ZERO_
-!   REALTYPE                  :: AN=10000.
-!   REALTYPE                  :: AN=100000.
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -46,15 +41,18 @@
    write(debug,*) 'uv_diffusion() # ',Ncall
 #endif
 
-! Central for dx(2*Am*dx(uu^2/hun))
+! Central for dx(2*Am*dx(U^2/HU))
    do j=jmin,jmax
       do i=imin,imax+1          ! PP defined on T-points
+         PP(i,j)=_ZERO_
          if (az(i,j) .ge. 1) then
-            PP(i,j)=2.*Am*DYC*D(i,j)               &
-                    *(U(i,j)/DU(i,j)-U(i-1,j)/DU(i-1,j))/DXC
-            PP(i,j)=PP(i,j)+AN*DYC*(U(i,j)-U(i-1,j))/DXC
-         else
-            PP(i,j)=_ZERO_
+            if(Am .gt. _ZERO_) then
+               PP(i,j)=2.*Am*DYC*D(i,j)               &
+                       *(U(i,j)/DU(i,j)-U(i-1,j)/DU(i-1,j))/DXC
+            end if
+            if(An .gt. _ZERO_) then
+               PP(i,j)=PP(i,j)+An*DYC*(U(i,j)-U(i-1,j))/DXC
+            end if
          end if
       end do
    end do
@@ -69,13 +67,16 @@
 ! Central for dy(Am*(dy(U^2/DU)+dx(V^2/DV)))
    do j=jmin-1,jmax        ! PP defined on X-points
       do i=imin,imax
+         PP(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
-            PP(i,j)=Am*0.5*(DU(i,j)+DU(i,j+1))*DXX  &
-                    *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
-                     +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
-            PP(i,j)=PP(i,j)+AN*(V(i+1,j)-V(i,j))
-         else
-            PP(i,j)=_ZERO_
+            if(Am .gt. _ZERO_) then
+               PP(i,j)=Am*0.5*(DU(i,j)+DU(i,j+1))*DXX  &
+                       *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
+                        +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
+            end if
+            if(An .gt. _ZERO_) then
+               PP(i,j)=PP(i,j)+An*(V(i+1,j)-V(i,j))
+            end if
          end if
       end do
    end do
@@ -90,13 +91,16 @@
 ! Central for dx(Am*(dy(U^2/DU)+dx(V^2/DV)))
    do j=jmin,jmax      ! PP defined on X-points
       do i=imin-1,imax
+         PP(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
-            PP(i,j)=Am*0.5*(DV(i,j)+DV(i+1,j))*DYX  &
-                    *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
-                     +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
-            PP(i,j)=PP(i,j)+AN*(U(i,j+1)-U(i,j))
-         else
-            PP(i,j)=_ZERO_
+            if(Am .gt. _ZERO_) then
+               PP(i,j)=Am*0.5*(DV(i,j)+DV(i+1,j))*DYX  &
+                       *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
+                        +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
+            end if
+            if(An .gt. _ZERO_) then
+               PP(i,j)=PP(i,j)+An*(U(i,j+1)-U(i,j))
+            end if
          end if
       end do
    end do
@@ -111,12 +115,15 @@
 ! Central for dy(2*Am*dy(V^2/DV))
    do j=jmin,jmax+1     ! PP defined on T-points
       do i=imin,imax
+         PP(i,j)=_ZERO_
          if (az(i,j) .ge. 1) then
-            PP(i,j)=2.*Am*DXC*D(i,j)               &
-                    *(V(i,j)/DV(i,j)-V(i,j-1)/DV(i,j-1))/DYC
-            PP(i,j)=PP(i,j)+AN*DXC*(V(i,j)-V(i,j-1))/DYC
-         else
-            PP(i,j)=_ZERO_
+            if(Am .gt. _ZERO_) then
+               PP(i,j)=2.*Am*DXC*D(i,j)               &
+                       *(V(i,j)/DV(i,j)-V(i,j-1)/DV(i,j-1))/DYC
+            end if
+            if(An .gt. _ZERO_) then
+               PP(i,j)=PP(i,j)+An*DXC*(V(i,j)-V(i,j-1))/DYC
+            end if
          end if
       end do
    end do

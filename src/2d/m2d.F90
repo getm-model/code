@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.7 2003-08-28 10:28:40 kbk Exp $
+!$Id: m2d.F90,v 1.8 2003-09-13 10:00:51 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,7 +26,7 @@
 !
 ! !PUBLIC DATA MEMBERS:
    logical                   :: have_boundaries
-   REALTYPE                  :: dtm, z0_const=0.010, Am=-_ONE_
+   REALTYPE                  :: dtm, z0_const=0.010,Am=-_ONE_,An=-_ONE_
    integer                   :: MM=1,residual=-1
    logical                   :: bdy2d=.false.
    integer                   :: bdyfmt_2d,bdytype,bdyramp_2d=-1
@@ -41,7 +41,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m2d.F90,v $
-!  Revision 1.7  2003-08-28 10:28:40  kbk
+!  Revision 1.8  2003-09-13 10:00:51  kbk
+!  added numerical diffusion - An - to namelist - passed to uv_diffusion()
+!
+!  Revision 1.7  2003/08/28 10:28:40  kbk
 !  explict setting UEx and VEx to 0 every micro time step
 !
 !  Revision 1.6  2003/08/15 12:47:40  kbk
@@ -134,7 +137,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: rc
    namelist /m2d/ &
-            MM,z0_const,Am,residual,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
+          MM,z0_const,Am,An,residual,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -162,7 +165,10 @@
 #endif
 
    if (Am .lt. _ZERO_) then
-      LEVEL2 'Am is less than zero ---> horizontal diffusion not included'
+      LEVEL2 'Am < 0 --> horizontal momentum diffusion not included'
+   end if
+   if (An .lt. _ZERO_) then
+      LEVEL2 'An < 0 --> numerical momentum diffusion not included'
    end if
 
    LEVEL2 'Open boundary=',bdy2d
@@ -254,8 +260,8 @@
 #else
 #ifndef UV_ADV_DIRECT
    call uv_advect()
-   if (Am .gt. _ZERO_) then
-      call uv_diffusion(Am) ! Has to be called after uv_advect.
+   if (Am .gt. _ZERO_ .or. An .gt. _ZERO_) then
+      call uv_diffusion(Am,An) ! Has to be called after uv_advect.
    end if
 #endif
 #endif
