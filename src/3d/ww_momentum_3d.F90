@@ -1,4 +1,4 @@
-!$Id: ww_momentum_3d.F90,v 1.4 2003-08-14 12:58:00 kbk Exp $
+!$Id: ww_momentum_3d.F90,v 1.5 2003-08-14 13:04:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,6 +20,7 @@
    use variables_3d, only: dt,kmin,uu,vv,ww,ho,hn
 !  #define CALC_HALO_WW
 #ifndef CALC_HALO_WW
+   use domain, only: az
    use halo_zones, only: update_3d_halo,wait_halo,z_TAG
 #endif
    IMPLICIT NONE
@@ -34,7 +35,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: ww_momentum_3d.F90,v $
-!  Revision 1.4  2003-08-14 12:58:00  kbk
+!  Revision 1.5  2003-08-14 13:04:37  kbk
+!  forgot to include az
+!
+!  Revision 1.4  2003/08/14 12:58:00  kbk
 !  update halo zones using - update_3d_halo() - or calculating
 !
 !  Revision 1.3  2003/04/23 12:16:34  kbk
