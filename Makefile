@@ -4,12 +4,19 @@
 
 # 2003/09/07
 VER=1.1.0
+# 2003/09/16
+VER=1.1.1
 
 TAG=v$(shell cat VERSION | tr . _)
 RELEASE=getm-$(VERSION)
 
 RHOST=bolding-burchard.com
 RUSER=bbh
+RDIR=.
+
+RHOST=gate
+RUSER=kbk
+RDIR=/public/bolding-burchard.com/
 
 EXEC	= model$(libtype)
 
@@ -46,10 +53,10 @@ export:
 
 devel: export
 	scp ~/getm-releases/getm-$(VER)/ChangeLog \
-	    $(RUSER)@$(RHOST):src/ChangeLog.devel
+	    $(RUSER)@$(RHOST):$(RDIR)/src/ChangeLog.devel
 	scp ~/getm-releases/getm-$(VER).tar.gz \
-	    $(RUSER)@$(RHOST):src/
-	ssh $(RUSER)@$(RHOST) \( cd src \; \
+	    $(RUSER)@$(RHOST):$(RDIR)/src/
+	ssh $(RUSER)@$(RHOST) \( cd $(RDIR)/src \; \
 	     ln -sf getm-$(VER).tar.gz getm_devel.tar.gz \)
 
 stable:
