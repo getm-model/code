@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.9 2003-06-29 17:09:04 kbk Exp $
+!$Id: domain.F90,v 1.10 2003-08-03 09:52:11 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,7 +47,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.9  2003-06-29 17:09:04  kbk
+!  Revision 1.10  2003-08-03 09:52:11  kbk
+!  nicer print statements
+!
+!  Revision 1.9  2003/06/29 17:09:04  kbk
 !  removed reference to barrier
 !
 !  Revision 1.8  2003/05/09 11:52:08  kbk
@@ -253,17 +256,40 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
 
          call get_bathymetry(H,Hland,iextr,jextr,ioff,joff, &
                              imin,imax,jmin,jmax,rc)
+#ifdef TEST_PRINT
+STDERR 'H'
+STDERR 'before'
+do j=jmax+HALO,jmin-HALO,-1
+write(0,'(10(f10.1,x))') (H(i,j), i=imin-HALO,imax+HALO)
+end do
+#endif
+
+         call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
+         call wait_halo(H_TAG)
+
+   az = 0
+   where (H .gt. Hland+SMALL)
+      az=1
+   end where
+
          call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG,mirror=.true.)
          call wait_halo(H_TAG)
 
+#ifdef TEST_PRINT
+STDERR 'after'
+do j=jmax+HALO,jmin-HALO,-1
+write(0,'(10(f10.1,x))') (H(i,j), i=imin-HALO,imax+HALO)
+end do
+#endif
+
+#if 0
          call update_2d_halo(lonc,lonc,az,imin,jmin,imax,jmax,H_TAG, &
                              mirror=.false.)
          call wait_halo(H_TAG)
-
          call update_2d_halo(latc,latc,az,imin,jmin,imax,jmax,H_TAG, &
                              mirror=.false.)
          call wait_halo(H_TAG)
-
+#endif
       case default
          FATAL 'A non valid input format has been chosen'
          stop 'init_domain'
@@ -285,10 +311,23 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
    end if
 
 !  Define calculation masks
+!  No calculation point on the boundary of the domain.
+!  restriction imposed by setting up the parallel domain the same as
+!  the serial (kbk - 11/7 2003).
+#if 0
    az = 0
+#if 1
    where (H .gt. Hland+SMALL)
       az=1
    end where
+#else
+   do j=jmin,jmax
+      do i=imin,imax
+         if (H(i,j) .gt. Hland+SMALL) az(i,j) = 1
+      end do
+   end do
+#endif
+#endif
 
 #define BOUNDARY_POINT 2
 !  western boundary - at present elev only
@@ -398,14 +437,53 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
          latv=latx
          latu=latc
 
+
+#ifdef TEST_PRINT
+STDERR 'lonc'
+do j=jmax+HALO,jmin-HALO,-1
+write(0,'(10(f10.1,x))') (lonc(i,j), i=imin-HALO,imax+HALO)
+end do
+
+STDERR 'latc'
+do j=jmax+HALO,jmin-HALO,-1
+write(0,'(10(f10.1,x))') (latc(i,j), i=imin-HALO,imax+HALO)
+end do
+
+STDERR 'lonx'
+do j=jmax+HALO,jmin-HALO,-1
+write(0,'(10(f10.1,x))') (lonx(i,j), i=imin-HALO,imax+HALO)
+end do
+
+STDERR 'latx'
+do j=jmax+HALO,jmin-HALO,-1
+write(0,'(10(f10.1,x))') (latx(i,j), i=imin-HALO,imax+HALO)
+end do
+#endif
+
          do j=jmin,jmax
             do i=imin,imax
                dxc(i,j)=deg2rad*(lonu(i,j)-lonu(i-1,j))*rearth &
                        *cos(deg2rad*latc(i,j))
             end do
          end do
-         call update_2d_halo(dxc,dxc,az,imin,jmin,imax,jmax,H_TAG)
+
+#ifdef TEST_PRINT
+STDERR 'dxc'
+STDERR 'before'
+do j=jmax+HALO,jmin-HALO,-1
+write(0,'(10(f10.1,x))') (dxc(i,j), i=imin-HALO,imax+HALO)
+end do
+#endif
+
+         call update_2d_halo(dxc,dxc,az,imin,jmin,imax,jmax,H_TAG,mirror=.true.)
          call wait_halo(H_TAG)
+
+#ifdef TEST_PRINT
+STDERR 'after'
+do j=jmax+HALO,jmin-HALO,-1
+write(0,'(10(f10.1,x))') (dxc(i,j), i=imin-HALO,imax+HALO)
+end do
+#endif
 
          do j=jmin,jmax
             do i=imin-1,imax
@@ -439,8 +517,25 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
                dyc(i,j)=deg2rad*(latv(i,j)-latv(i,j-1))*rearth
             end do
          end do
+
+#ifdef TEST_PRINT
+STDERR 'dyc'
+STDERR 'before'
+do j=jmax+HALO,jmin-HALO,-1
+write(0,'(10(f10.1,x))') (dyc(i,j), i=imin-HALO,imax+HALO)
+end do
+#endif
+
          call update_2d_halo(dyc,dyc,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
+
+#ifdef TEST_PRINT
+STDERR 'after'
+do j=jmax+HALO,jmin-HALO,-1
+write(0,'(10(f10.1,x))') (dyc(i,j), i=imin-HALO,imax+HALO)
+end do
+#endif
+
 
          do i=imin-1,imax
             do j=jmin,jmax
@@ -575,6 +670,13 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
          stop 'init_domain'
    end select
 
+   STDERR 'az'
+   call print_mask(az)
+   STDERR 'au'
+   call print_mask(au)
+   STDERR 'av'
+   call print_mask(av)
+
 #ifdef DEBUG
 #if 0
    STDERR 'az'
@@ -694,7 +796,8 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
    open(unit,file=fn,action='read',status='old',err=90)
    read(unit,*,end=91,err=92) n
    if(n .ge. 1) then
-      LEVEL2 'Setting minimum depths according to ',trim(fn)
+      LEVEL2 'setting minimum depths according to:'
+      LEVEL3 trim(fn)
    end if
    do k=1,n
       read(unit,*,end=91,err=92) il,jl,ih,jh,dmin
@@ -759,7 +862,8 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
    open(unit,file=fn,action='read',status='old',err=90)
    read(unit,*,end=91,err=92) n
    if(n .gt. 1) then
-      LEVEL2 'Adjusting bathymetry according to ',trim(fn)
+      LEVEL2 'adjusting bathymetry according to:'
+      LEVEL3 trim(fn)
    end if
    do k=1,n
       read(unit,*,end=91,err=92) il,jl,ih,jh,x
@@ -821,7 +925,8 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
    open(unit,file=fn,action='read',status='old',err=90)
    read(unit,*,end=91,err=92) n
    if(n .gt. 1) then
-      LEVEL2 'Adjusting mask according to ',trim(fn)
+      LEVEL2 'adjusting mask according to:'
+      LEVEL3 trim(fn)
    end if
    do k=1,n
       read(unit,*,end=91,err=92) il,jl,ih,jh
@@ -884,10 +989,17 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
    Ncall = Ncall+1
 #endif
 
+#if 0
+   do j=jmax+HALO,jmin-HALO,-1
+!      write(0,'(5000(i1,x))') (mask(i,j), i=imin,imax)
+      write(0,'(5000(i1))') (mask(i,j), i=imin-HALO,imax+HALO,1)
+   end do
+#else
    do j=jmax,jmin,-1
 !      write(0,'(5000(i1,x))') (mask(i,j), i=imin,imax)
       write(0,'(5000(i1))') (mask(i,j), i=imin,imax,1)
    end do
+#endif
 
    return
    end subroutine print_mask
