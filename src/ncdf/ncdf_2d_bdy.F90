@@ -1,4 +1,4 @@
-!$Id: ncdf_2d_bdy.F90,v 1.1 2002-05-02 14:01:46 gotm Exp $
+!$Id: ncdf_2d_bdy.F90,v 1.2 2003-04-07 12:49:47 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,8 +29,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d_bdy.F90,v $
-!  Revision 1.1  2002-05-02 14:01:46  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 12:49:47  kbk
+!  dont need variables_3d
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:46  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.8  2001/10/22 11:43:12  bbh
 !  Proper check of offset time
@@ -76,7 +79,6 @@
 !  kurt,kurt
 !
 ! !USES:
-   use variables_3d
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -191,8 +193,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d_bdy.F90,v $
-!  Revision 1.1  2002-05-02 14:01:46  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 12:49:47  kbk
+!  dont need variables_3d
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:46  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.8  2001/10/22 11:43:12  bbh
 !  Proper check of offset time
