@@ -1,4 +1,4 @@
-!$Id: momentum.F90,v 1.3 2003-03-20 15:58:29 gotm Exp $
+!$Id: momentum.F90,v 1.4 2003-04-02 11:35:14 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,7 +28,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: momentum.F90,v $
-!  Revision 1.3  2003-03-20 15:58:29  gotm
+!  Revision 1.4  2003-04-02 11:35:14  gotm
+!  au and av included for spherical
+!
+!  Revision 1.3  2003/03/20 15:58:29  gotm
 !  removed STDERRi statement
 !
 !  Revision 1.2  2003/03/20 15:51:00  gotm
@@ -100,12 +103,13 @@
 ! !USES:
    use parameters, only: g,rho_0
    use commhalo,   only: update_2d_halo,wait_halo,U_TAG
-   use domain,     only: kmax,imin,imax,jmin,jmax,H,au,min_depth,Cori,dry_u,corv
+   use domain,     only: kmax,imin,imax,jmin,jmax,H,au,av,min_depth,Cori
+   use domain,     only: dry_u,corv
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain,       only: dxu,arvd1,dxc,dyx
    use variables_2d, only: V
 #else
-   use domain,       only: dx,av
+   use domain,       only: dx
 #endif
    use m2d, only: dtm
    use m2d, only: D,z,UEx,U,DU,fV,SlUx,SlRu,ru,fU,DV,uavg
@@ -214,13 +218,13 @@
 ! !USES:
    use parameters, only: g,rho_0
    use commhalo,   only: update_2d_halo,wait_halo,V_TAG
-   use domain,     only: imin,imax,jmin,jmax,H,av,min_depth,Cori
+   use domain,     only: imin,imax,jmin,jmax,H,au,av,min_depth,Cori
    use domain,     only: dry_v,coru
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain,     only: dyv,arud1,dxx,dyc
    use m2d,        only: U
 #else
-   use domain,     only: dy,au
+   use domain,     only: dy
 #endif
    use m2d,        only: dtm,D,z,VEx,V,DV,fU,SlVx,SlRv,rv,fV,DU
    use m2d,        only: vavg
