@@ -2,27 +2,28 @@
 # Master Makefile for the getm project.
 #
 
-VERSION = 1
-PATCHLEVEL = 1
-SUBLEVEL = 0
+# 2003/09/07
+VER=1.1.0
 
-VER	= $(VERSION).$(PATCHLEVEL).$(SUBLEVEL)
+TAG=v$(shell cat VERSION | tr . _)
+RELEASE=getm-$(VERSION)
+
+RHOST=bolding-burchard.com
+RUSER=bbh
 
 EXEC	= model$(libtype)
 
 base =  BUGS INSTALL README TODO HISTORY
 
 all: VERSION $(EXEC) doc
-
-$(EXEC): include/version.h
 	$(MAKE) -C src $(EXEC) install
 
 include/version.h: ./Makefile
-	@echo \#define RELEASE \"$(VERSION).$(PATCHLEVEL).$(SUBLEVEL)\" > .ver
+	@echo \#define RELEASE \"$(VER)\" > .ver
 	@mv -f .ver $@
 
 VERSION: ./Makefile
-	 @echo $(VERSION).$(PATCHLEVEL).$(SUBLEVEL) > $@
+	 @echo $(VER) > $@
 
 doc:
 	$(MAKE) -C src/ doc
@@ -36,9 +37,28 @@ distclean:
 	$(MAKE) -C utils distclean
 	$(RM) -r bin/
 
-dist: distclean
-	(cd ../ ; tar cf - v$(VER)/ | gzip -9 > v$(VER).tar.gz) 
+export:
+	(cd ~/getm-releases ; cvs export -r $(TAG) getm ; mv getm getm-$(VER)/)
+	cvs2cl
+	mv ChangeLog ~/getm-releases/getm-$(VER)/
+	(cd ~/getm-releases ; tar -cvzf getm-$(VER).tar.gz getm-$(VER)/ )
 	sync
+
+devel: export
+	scp ~/getm-releases/getm-$(VER)/ChangeLog \
+	    $(RUSER)@$(RHOST):src/ChangeLog.devel
+	scp ~/getm-releases/getm-$(VER).tar.gz \
+	    $(RUSER)@$(RHOST):src/
+	ssh $(RUSER)@$(RHOST) \( cd src \; \
+	     ln -sf getm-$(VER).tar.gz getm_devel.tar.gz \)
+
+stable:
+	scp ~/getm-releases/getm-$(VER)/ChangeLog \
+	    $(RUSER)@$(RHOST):src/ChangeLog
+	scp ~/getm-releases/getm-$(VER).tar.gz \
+	    $(RUSER)@$(RHOST):src/
+	ssh $(RUSER)@$(RHOST) \( cd src \; \
+	     ln -sf getm-$(VER).tar.gz getm_stable.tar.gz \)
 
 diff:
 	cvs diff > cvs.diff
