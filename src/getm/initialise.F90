@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.3 2003-04-23 12:03:46 kbk Exp $
+!$Id: initialise.F90,v 1.4 2003-08-15 12:50:12 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,7 +22,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
-!  Revision 1.3  2003-04-23 12:03:46  kbk
+!  Revision 1.4  2003-08-15 12:50:12  kbk
+!  use HALO in loop boundaries
+!
+!  Revision 1.3  2003/04/23 12:03:46  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 16:39:16  kbk
@@ -248,8 +251,6 @@
       if (myid .ge. 0) then
          write(buf,'(I3.3)') myid
          buf = '.' // trim(buf) // '.in'
-!STDERR buf
-!stop 'kbk: initialise'
       else
          buf = '.in'
       end if
@@ -273,10 +274,18 @@
 
 #ifndef NO_3D
    if (runtype .ge. 2) then
-      do j=jjmin-1,jjmax
-         do i=iimin-1,iimax
+      do j=jjmin-HALO,jjmax+HALO
+         do i=iimin-HALO,iimax+HALO
             ssen(i,j)=z(i,j)
+         end do
+      end do
+      do j=jjmin-HALO,jjmax+HALO
+         do i=iimin-HALO,iimax+HALO-1
             ssun(i,j)=zu(i,j)
+         end do
+      end do
+      do j=jjmin-HALO,jjmax+HALO-1
+         do i=iimin-HALO,iimax+HALO
             ssvn(i,j)=zv(i,j)
          end do
       end do
