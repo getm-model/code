@@ -1,4 +1,4 @@
-!$Id: read_field_ncdf.F90,v 1.2 2003-04-07 12:39:59 kbk Exp $
+!$Id: read_field_ncdf.F90,v 1.3 2003-04-23 11:54:03 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,19 +19,22 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)	:: fname,var
-   integer			:: n
+   character(len=*), intent(in)        :: fname,var
+   integer                             :: n
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(inout)	:: f(I3DFIELD)
+   REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: read_field_ncdf.F90,v $
-!  Revision 1.2  2003-04-07 12:39:59  kbk
+!  Revision 1.3  2003-04-23 11:54:03  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 12:39:59  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:47  gotm
@@ -39,12 +42,12 @@
 !
 !
 ! !LOCAL VARIABLES:
-   integer	:: ih,jh,kh,nh
-   integer	:: rc,err,ncid,var_id,i,j,k
-   integer	:: start(4),edges(4)
-   integer	:: ndims,rec_id
-   REAL_4B, allocatable		:: zax(:), wrk(:,:,:)
-   REALTYPE, allocatable	:: zax_2d(:), wrk_2d(:,:,:)
+   integer                   :: ih,jh,kh,nh
+   integer                   :: rc,err,ncid,var_id,i,j,k
+   integer                   :: start(4),edges(4)
+   integer                   :: ndims,rec_id
+   REAL_4B, allocatable      :: zax(:), wrk(:,:,:)
+   REALTYPE, allocatable     :: zax_2d(:), wrk_2d(:,:,:)
 !EOP
 !-------------------------------------------------------------------------
 !BOC

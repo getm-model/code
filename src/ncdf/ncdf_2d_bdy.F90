@@ -1,4 +1,4 @@
-!$Id: ncdf_2d_bdy.F90,v 1.2 2003-04-07 12:49:47 kbk Exp $
+!$Id: ncdf_2d_bdy.F90,v 1.3 2003-04-23 11:54:03 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,19 +17,22 @@
 !
    private
 !
-   public :: init_2d_bdy_ncdf,do_2d_bdy_ncdf
+   public                              :: init_2d_bdy_ncdf,do_2d_bdy_ncdf
 !
 ! !PRIVATE DATA MEMBERS:
-   integer 	:: ncid
-   integer	:: time_id,elev_id,nsets,bdy_len
-   integer	:: start(2),edges(2)
-   REALTYPE	:: offset
+   integer                             :: ncid
+   integer                             :: time_id,elev_id,nsets,bdy_len
+   integer                             :: start(2),edges(2)
+   REALTYPE                            :: offset
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d_bdy.F90,v $
-!  Revision 1.2  2003-04-07 12:49:47  kbk
+!  Revision 1.3  2003-04-23 11:54:03  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 12:49:47  kbk
 !  dont need variables_3d
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:46  gotm
@@ -82,7 +85,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)	:: fname
+   character(len=*), intent(in)        :: fname
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -94,9 +97,9 @@
 !  See log for module
 !
 ! !LOCAL VARIABLES:
-   integer	:: err,rec_id,bdy_id
-   character(len=256)	:: units
-   integer	:: j1,s1
+   integer                   :: err,rec_id,bdy_id
+   character(len=256)        :: units
+   integer                   :: j1,s1
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -183,7 +186,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: loop
+   integer, intent(in)                 :: loop
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -193,7 +196,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d_bdy.F90,v $
-!  Revision 1.2  2003-04-07 12:49:47  kbk
+!  Revision 1.3  2003-04-23 11:54:03  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 12:49:47  kbk
 !  dont need variables_3d
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:46  gotm
@@ -228,11 +234,11 @@
 !  Introduced module ncdf_2d_bdy
 !
 ! !LOCAL VARIABLES:
-   integer,save	:: i,n
-   integer	:: err
-   logical	:: first=.true.
-   REALTYPE	:: t
-   REALTYPE, save	:: t1,t2= -_ONE_,loop0
+   integer,save              :: i,n
+   integer                   :: err
+   logical                   :: first=.true.
+   REALTYPE                  :: t
+   REALTYPE, save            :: t1,t2= -_ONE_,loop0
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -255,7 +261,7 @@
       n = size(bdy_times)
       do i=1,n
          if (bdy_times(i) .gt. real(t + offset)) then
-	    EXIT
+            EXIT
          end if
       end do
       t1 = bdy_times(i-1) - offset
@@ -274,7 +280,7 @@
    if(t .gt. t2) then
       do i=1,n
          if(bdy_times(i) .gt. real(t + offset)) then
-	    EXIT
+            EXIT
          end if
       end do
       t1 = bdy_times(i-1) - offset

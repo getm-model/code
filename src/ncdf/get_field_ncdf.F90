@@ -1,4 +1,4 @@
-!$Id: get_field_ncdf.F90,v 1.1 2002-05-02 14:01:48 gotm Exp $
+!$Id: get_field_ncdf.F90,v 1.2 2003-04-23 11:54:03 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -16,19 +16,22 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)	:: fname,var
+   character(len=*), intent(in)        :: fname,var
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out)	:: f(I3DFIELD)
+   REALTYPE, intent(out)               :: f(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: get_field_ncdf.F90,v $
-!  Revision 1.1  2002-05-02 14:01:48  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-23 11:54:03  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:48  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.3  2001/10/22 08:10:43  bbh
 !  De-allocate wrk #ifdef FORTRAN90
@@ -37,9 +40,9 @@
 !  Added get_field_ncdf() + various small bug fixes
 !
 ! !LOCAL VARIABLES:
-   integer	:: rc,err,ncid,var_id,i,j,k,size,indx
-   integer	:: start(3),edges(3)
-   REAL_4B, allocatable	:: wrk(:)
+   integer                   :: rc,err,ncid,var_id,i,j,k,size,indx
+   integer                   :: start(3),edges(3)
+   REAL_4B, allocatable      :: wrk(:)
 !EOP
 !-------------------------------------------------------------------------
 !BOC

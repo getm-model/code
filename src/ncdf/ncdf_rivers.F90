@@ -1,4 +1,4 @@
-!$Id: ncdf_rivers.F90,v 1.1 2002-05-02 14:01:48 gotm Exp $
+!$Id: ncdf_rivers.F90,v 1.2 2003-04-23 11:54:03 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,26 +19,28 @@
    private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-   public init_river_input_ncdf,get_river_data_ncdf
+   public                              init_river_input_ncdf,get_river_data_ncdf
 !
 ! !PRIVATE DATA MEMBERS:
-   REALTYPE	:: offset
-   integer 	:: ncid,ndims,dims(2),unlimdimid,textr
-   integer 	:: start(1),edges(1)
-   integer	:: timedim,time_id
-   integer, allocatable	:: r_ids(:)
-   REAL_4B, allocatable	:: river_times(:)
+   REALTYPE                            :: offset
+   integer                             :: ncid,ndims,dims(2),unlimdimid,textr
+   integer                             :: start(1),edges(1)
+   integer                             :: timedim,time_id
+   integer, allocatable                :: r_ids(:)
+   REAL_4B, allocatable                :: river_times(:)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_rivers.F90,v $
-!  Revision 1.1  2002-05-02 14:01:48  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-23 11:54:03  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:48  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1  2001/10/07 14:50:22  bbh
 !  Reading river data implemented - NetCFD
-!
 !
 ! !TO DO:
 !EOP
@@ -58,8 +60,8 @@
 ! !DESCRIPTION:
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)	:: fn
-   integer, intent(in)		:: nstart
+   character(len=*), intent(in)        :: fn
+   integer, intent(in)                 :: nstart
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -70,10 +72,10 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer      :: i,j,n
-   integer      :: err
-   integer      :: j1,s1,j2,s2
-   character(len=256)	:: time_units
+   integer                   :: i,j,n
+   integer                   :: err
+   integer                   :: j1,s1,j2,s2
+   character(len=256)        :: time_units
 !EOP
 !-------------------------------------------------------------------------
    include "netcdf.inc"
@@ -152,7 +154,7 @@
 ! !DESCRIPTION:
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: loop
+   integer, intent(in)                 :: loop
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -163,12 +165,12 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer      :: i,n,indx,err
-   REALTYPE	:: t
-   REAL_4B	:: x(1)
-   logical, save 	:: first=.true.
-   integer, save 	:: save_n=1,last_indx=-1
-   REALTYPE, save	:: t_1,t_2
+   integer                   :: i,n,indx,err
+   REALTYPE                  :: t
+   REAL_4B                   :: x(1)
+   logical, save             :: first=.true.
+   integer, save             :: save_n=1,last_indx=-1
+   REALTYPE, save            :: t_1,t_2
 !EOP
 !-------------------------------------------------------------------------
    include "netcdf.inc"

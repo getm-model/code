@@ -1,4 +1,4 @@
-!$Id: ncdf_close.F90,v 1.2 2003-04-07 12:46:06 kbk Exp $
+!$Id: ncdf_close.F90,v 1.3 2003-04-23 11:54:03 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_close.F90,v $
-!  Revision 1.2  2003-04-07 12:46:06  kbk
+!  Revision 1.3  2003-04-23 11:54:03  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 12:46:06  kbk
 !  NO_3D
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:47  gotm
@@ -40,7 +43,7 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer	:: err
+   integer                   :: err
 !EOP
 !-----------------------------------------------------------------------
 !BOC

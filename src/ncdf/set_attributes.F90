@@ -1,4 +1,4 @@
-!$Id: set_attributes.F90,v 1.1 2002-05-02 14:01:49 gotm Exp $
+!$Id: set_attributes.F90,v 1.2 2003-04-23 11:54:03 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,12 +6,12 @@
 ! !ROUTINE: Sets various attributes for a NetCDF variable.
 !
 ! !INTERFACE:
-   subroutine set_attributes(ncid,id,                             &
-                                   units,long_name,                     &
-                                   valid_min,valid_max,valid_range,     &
-                                   scale_factor,add_offset,             &
-                                   FillValue,missing_value,             &
-                                   C_format,FORTRAN_format)
+   subroutine set_attributes(ncid,id,                            &
+                             units,long_name,                    &
+                             valid_min,valid_max,valid_range,    &
+                             scale_factor,add_offset,            &
+                             FillValue,missing_value,            &
+                             C_format,FORTRAN_format)
 !
 ! !DESCRIPTION:
 !  This routine is used to set a number of attributes for the various
@@ -23,12 +23,12 @@
 !  IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)          :: ncid,id
-   character(len=*), optional   :: units,long_name
-   REALTYPE, optional           :: valid_min,valid_max,valid_range(2)
-   REALTYPE, optional           :: scale_factor,add_offset
-   REALTYPE, optional           :: FillValue,missing_value
-   character(len=*), optional   :: C_format,FORTRAN_format
+   integer, intent(in)                 :: ncid,id
+   character(len=*), optional          :: units,long_name
+   REALTYPE, optional                  :: valid_min,valid_max,valid_range(2)
+   REALTYPE, optional                  :: scale_factor,add_offset
+   REALTYPE, optional                  :: FillValue,missing_value
+   character(len=*), optional          :: C_format,FORTRAN_format
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -40,8 +40,8 @@
 !  See ncdfout module
 !
 ! !LOCAL VARIABLES:
-   integer			:: len,iret
-   REAL_4B			:: vals(2)
+   integer                   :: len,iret
+   REAL_4B                   :: vals(2)
 !
 !EOP
 !-----------------------------------------------------------------------

@@ -1,4 +1,4 @@
-!$Id: ncdf_3d_bdy.F90,v 1.3 2003-04-07 16:19:52 kbk Exp $
+!$Id: ncdf_3d_bdy.F90,v 1.4 2003-04-23 11:54:03 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -23,25 +23,28 @@
 !
    private
 !
-   public :: init_3d_bdy_ncdf,do_3d_bdy_ncdf
+   public                              :: init_3d_bdy_ncdf,do_3d_bdy_ncdf
 !
 ! !PRIVATE DATA MEMBERS:
-   integer 	:: ncid
-   integer	:: time_id,temp_id,salt_id
-   integer	:: start(4),edges(4)
-   integer	:: time_dim,time_len,bdy_len
-   logical	:: climatology=.false.,from_3d_fields=.false.
-   REALTYPE	:: offset
-   REAL_4B, allocatable	:: bdy_times(:),wrk(:)
-   REALTYPE, allocatable, dimension(:,:)	:: T_old, T_new
-   REALTYPE, allocatable, dimension(:,:)	:: S_old, S_new
-   REALTYPE, allocatable, dimension(:,:,:)	:: T_bdy_clim,S_bdy_clim
+   integer                             :: ncid
+   integer                             :: time_id,temp_id,salt_id
+   integer                             :: start(4),edges(4)
+   integer                             :: time_dim,time_len,bdy_len
+   logical                             :: climatology=.false.,from_3d_fields=.false.
+   REALTYPE                            :: offset
+   REAL_4B, allocatable                :: bdy_times(:),wrk(:)
+   REALTYPE, allocatable, dimension(:,:) :: T_old, T_new
+   REALTYPE, allocatable, dimension(:,:) :: S_old, S_new
+   REALTYPE, allocatable, dimension(:,:,:) :: T_bdy_clim,S_bdy_clim
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
-!  Revision 1.3  2003-04-07 16:19:52  kbk
+!  Revision 1.4  2003-04-23 11:54:03  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.3  2003/04/07 16:19:52  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:49  gotm
@@ -70,7 +73,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)	:: fname
+   character(len=*), intent(in)        :: fname
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -82,17 +85,17 @@
 !  See log for module
 !
 ! !LOCAL VARIABLES:
-   character(len=256)	:: units
-   integer	:: j1,s1
-   integer	:: ndims
-   integer, allocatable, dimension(:)	:: dim_ids,dim_len
-   character(len=16), allocatable 	:: dim_name(:)
+   character(len=256)        :: units
+   integer                   :: j1,s1
+   integer                   :: ndims
+   integer, allocatable, dimension(:):: dim_ids,dim_len
+   character(len=16), allocatable :: dim_name(:)
 
-   REAL_4B, allocatable, dimension(:,:,:)	:: sdum,tdum
-   REAL_4B, allocatable, dimension(:)		:: zlev
+   REAL_4B, allocatable, dimension(:):: zlev
+   REAL_4B, allocatable, dimension(:,:,:):: sdum,tdum
 
-   integer	:: rc,err
-   integer	:: i,j,k,l,n,id
+   integer                   :: rc,err
+   integer                   :: i,j,k,l,n,id
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -238,8 +241,8 @@
          start(1) = 1; edges(1) = kmax+1;
          start(2) = 1; edges(2) = nsbv;
          edges(3) = 1
-	 STDERR 'ncdf_init_3d_bdy - not finished yet'
-	 stop
+         STDERR 'ncdf_init_3d_bdy - not finished yet'
+         stop
       end if
       err = nf_close(ncid)
    else
@@ -304,7 +307,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: loop
+   integer, intent(in)                 :: loop
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -314,7 +317,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
-!  Revision 1.3  2003-04-07 16:19:52  kbk
+!  Revision 1.4  2003-04-23 11:54:03  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.3  2003/04/07 16:19:52  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:49  gotm
@@ -328,15 +334,15 @@
 !
 ! !LOCAL VARIABLES:
 #if 0
-   integer,save	:: i,n
-   integer,save	:: j,k,indx
-   logical	:: first=.true.
-   REALTYPE	:: t
-   REALTYPE, save	:: t1,t2= -_ONE_,loop0
+   integer,save              :: i,n
+   integer,save              :: j,k,indx
+   logical                   :: first=.true.
+   REALTYPE                  :: t
+   REALTYPE, save            :: t1,t2= -_ONE_,loop0
 #endif
-   integer	:: err
-   REALTYPE	:: rat
-   integer	:: monthsecs,prev,this,next
+   integer                   :: err
+   REALTYPE                  :: rat
+   integer                   :: monthsecs,prev,this,next
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -356,7 +362,7 @@
          if (prev .eq. 0) prev=time_len
       else
          STDERR 'do_3d_bdy_ncdf: climatology time_len .ne. 12'
-	 stop
+         stop
       end if
       S_bdy=(1.-rat)*0.5*(S_bdy_clim(prev,:,:)+S_bdy_clim(this,:,:))  &
          +     rat*0.5*(S_bdy_clim(next,:,:)+S_bdy_clim(this,:,:))

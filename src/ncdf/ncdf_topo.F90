@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.2 2003-04-07 12:39:59 kbk Exp $
+!$Id: ncdf_topo.F90,v 1.3 2003-04-23 11:54:03 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,22 +19,25 @@
    implicit none
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)	:: fname
+   character(len=*), intent(in)        :: fname
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
 #ifdef STATIC
-   integer,intent(out)	:: rc
+   integer,intent(out)                 :: rc
 #else
-   integer,intent(out)	:: iextr,jextr,rc
+   integer,intent(out)                 :: iextr,jextr,rc
 #endif
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_topo.F90,v $
-!  Revision 1.2  2003-04-07 12:39:59  kbk
+!  Revision 1.3  2003-04-23 11:54:03  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 12:39:59  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:47  gotm
@@ -56,7 +59,7 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer	:: err
+   integer                   :: err
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -130,26 +133,26 @@
 ! !DESCRIPTION:
 
 ! !INPUT PARAMETERS:
-   integer, intent(in) 		:: iextr,jextr,ioff,joff
-   integer, intent(in) 		:: imin,imax,jmin,jmax
+   integer, intent(in)                 :: iextr,jextr,ioff,joff
+   integer, intent(in)                 :: imin,imax,jmin,jmax
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out) 	:: H(E2DFIELD)
-   REALTYPE, intent(out) 	:: Hland
-   integer, intent(out) 	:: rc
+   REALTYPE, intent(out)               :: H(E2DFIELD)
+   REALTYPE, intent(out)               :: Hland
+   integer, intent(out)                :: rc
 !
 ! !REVISION HISTORY:
 !
 !  22Apr99   Karsten Bolding & Hans Burchard  Initial code.
 !
 ! !LOCAL VARIABLES:
-   integer	:: size,i,j,indx
-   integer	:: id,err
-   REALTYPE, parameter:: pi=3.1415927,deg2rad=pi/180.,rad2deg=180./pi
-   integer	:: il,ih,jl,jh,iloc,jloc
-   REAL_4B, allocatable :: wrk(:)
+   integer                   :: size,i,j,indx
+   integer                   :: id,err
+   integer                   :: il,ih,jl,jh,iloc,jloc
+   REAL_4B, allocatable      :: wrk(:)
+   REALTYPE, parameter       :: pi=3.1415927,deg2rad=pi/180.,rad2deg=180./pi
 !EOP
 !-------------------------------------------------------------------------
 #include"netcdf.inc"
@@ -230,7 +233,7 @@ STDERR iloc,jloc
 #ifdef SPHERICAL
    LEVEL3 'reading spherical grid information'
 !  Reading lat and lon for the C points
-   start(1) = 1
+   start(1) = ioff+1
    edges(1) = imax-(imin-1)
    err = nf_inq_varid(ncbathy,"lon",id)
    if (err .ne. NF_NOERR) go to 10
@@ -240,7 +243,7 @@ STDERR iloc,jloc
      lonc(1:,j) = wrk(1:edges(1))
    end do
 
-   start(1) = 1
+   start(1) = joff+1
    edges(1) = jmax-(jmin-1)
    err = nf_inq_varid(ncbathy,"lat",id)
    if (err .ne. NF_NOERR) go to 10
@@ -251,7 +254,7 @@ STDERR iloc,jloc
    end do
 
 !  Getting lat and lon for the X points
-   start(1) = 1
+   start(1) = ioff+1
    edges(1) = imax-(imin-1)+1
    err = nf_inq_varid(ncbathy,"lonx",id)
    if (err .ne. NF_NOERR) then
@@ -277,7 +280,7 @@ STDERR iloc,jloc
       lonx(imax+1,:) = 2.*lonx(imax,:)-lonx(imax-1,:)
    end if
 
-   start(1) = 1
+   start(1) = joff+1
    edges(1) = jmax-(jmin-1)+1
    err = nf_inq_varid(ncbathy,"latx",id)
    if (err .ne. NF_NOERR) then
@@ -402,24 +405,24 @@ STDERR iloc,jloc
 ! !DESCRIPTION:
 
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)	:: name
-   integer, intent(in)	 	:: imin,imax,jmin,jmax
-   integer, intent(in)	 	:: il,ih,jl,jh
-   integer, intent(in)	 	:: iloc,jloc
+   character(len=*), intent(in)        :: name
+   integer, intent(in)                 :: imin,imax,jmin,jmax
+   integer, intent(in)                 :: il,ih,jl,jh
+   integer, intent(in)                 :: iloc,jloc
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out) 	:: field(E2DFIELD)
+   REALTYPE, intent(out)               :: field(E2DFIELD)
 !
 ! !REVISION HISTORY:
 !
 !  22Apr99   Karsten Bolding & Hans Burchard  Initial code.
 !
 ! !LOCAL VARIABLES:
-   integer	:: id,size,i,j,indx
-   integer	:: err,rc
-   REAL_4B, allocatable 	:: wrk(:)
+   integer                   :: id,size,i,j,indx
+   integer                   :: err,rc
+   REAL_4B, allocatable      :: wrk(:)
 !EOP
 !-------------------------------------------------------------------------
 #include"netcdf.inc"
@@ -440,7 +443,6 @@ STDERR iloc,jloc
    do j=jl,jh
      do i=il,ih
        field(i-il+iloc,j-jl+jloc) = wrk(indx)
-!KBK       field(i,j) = wrk(indx)
        indx = indx+1
      end do
    end do
