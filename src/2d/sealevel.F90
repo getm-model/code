@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.1 2002-05-02 14:00:45 gotm Exp $
+!$Id: sealevel.F90,v 1.2 2003-03-20 15:42:32 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,8 +32,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: sealevel.F90,v $
-!  Revision 1.1  2002-05-02 14:00:45  gotm
-!  Initial revision
+!  Revision 1.2  2003-03-20 15:42:32  gotm
+!  removed un-necessary multiplication with az
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:45  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.9  2001/10/22 11:56:44  bbh
 !  NOMADS_TEST kk =1.0 included
@@ -84,8 +87,8 @@
       do i=imin,imax
          zo(i,j) = z(i,j)
          if (az(i,j) .eq. 1) then
-            z(i,j)=z(i,j)-az(i,j)*dtm*((U(i,j)*DYU-U(i-1,j  )*DYUIM1) &
-                                      +(V(i,j)*DXV-V(i  ,j-1)*DXVJM1))*ARCD1
+            z(i,j)=z(i,j)-dtm*((U(i,j)*DYU-U(i-1,j  )*DYUIM1) &
+                              +(V(i,j)*DXV-V(i  ,j-1)*DXVJM1))*ARCD1
 #ifdef NOMADS_TEST
 	       kk=1.0
 	       if ((((i.eq.1).or.(i.eq.imax)).and.(j.ge.1).and.(j.le.jmax)).or.(((j.eq.1).or.(j.eq.jmax)).and.(i.ge.1).and.(i.le.imax))) &
