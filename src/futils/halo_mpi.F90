@@ -1,4 +1,4 @@
-!$Id: halo_mpi.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
+!$Id: halo_mpi.F90,v 1.3 2003-05-09 11:52:08 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -67,7 +67,10 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_mpi.F90,v $
-!  Revision 1.2  2003-04-23 12:02:43  kbk
+!  Revision 1.3  2003-05-09 11:52:08  kbk
+!  do not mirror coordinate info + use mask for inverse area calculation
+!
+!  Revision 1.2  2003/04/23 12:02:43  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.1  2003/04/07 12:05:42  kbk
@@ -676,7 +679,7 @@ STDERR 'we are waiting'
 ! !IROUTINE: update_2d_halo_mpi - updates the halo zones for 2D fields.
 !
 ! !INTERFACE:
-   SUBROUTINE update_2d_halo_mpi(f1,f2,imin,jmin,imax,jmax,tag)
+   subroutine update_2d_halo_mpi(f1,f2,imin,jmin,imax,jmax,tag,mirror)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -685,6 +688,7 @@ STDERR 'we are waiting'
 ! !INPUT PARAMTERS:
    integer, intent(in)                 :: imin,jmin,imax,jmax
    integer, intent(in)                 :: tag
+   logical, optional, intent(in)       :: mirror
 !
 ! !INPUT/OUTPUT PARAMTERS:
    REALTYPE, intent(inout), dimension(E2DFIELD):: f1,f2
@@ -696,6 +700,7 @@ STDERR 'we are waiting'
 !
 ! !LOCAL VARIABLES:
    integer                   :: il,jl,ih,jh
+   logical                   :: do_mirror=.true.
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -704,6 +709,11 @@ STDERR 'we are waiting'
       call MPI_ABORT(active_comm,-1,ierr)
    end if
    il=imin;ih=imax;jl=jmin;jh=jmax
+
+   if (present(mirror) ) then
+      do_mirror = mirror
+   endif
+
    select case (comm_method)
       case(ONE_PROCESS)
          f1(il-1, : )  = f2(il, :  )
@@ -844,15 +854,17 @@ STDERR 'TWOD_SENDRECV'
          stop 'update_2d_halo_mpi'
    end select
 
-   if ( comm_method .ne. ONE_PROCESS ) then
-      if(left  .eq. MPI_PROC_NULL) f1(il-1, : ) = f1(il, : )
-      if(right .eq. MPI_PROC_NULL) f1(ih+1, : ) = f1(ih, : )
-      if(down  .eq. MPI_PROC_NULL) f1( :, jl-1) = f1( :, jl)
-      if(up    .eq. MPI_PROC_NULL) f1( :, jh+1) = f1( :, jh)
-      if(ul .eq. MPI_PROC_NULL) f1(il-1,jh+1) = f1(il,jh)
-      if(ur .eq. MPI_PROC_NULL) f1(ih+1,jh+1) = f1(ih,jh)
-      if(lr .eq. MPI_PROC_NULL) f1(ih+1,jl-1) = f1(ih,jl)
-      if(ll .eq. MPI_PROC_NULL) f1(il-1,jl-1) = f1(il,jl)
+   if (do_mirror) then
+      if ( comm_method .ne. ONE_PROCESS ) then
+         if(left  .eq. MPI_PROC_NULL) f1(il-1, : ) = f1(il, : )
+         if(right .eq. MPI_PROC_NULL) f1(ih+1, : ) = f1(ih, : )
+         if(down  .eq. MPI_PROC_NULL) f1( :, jl-1) = f1( :, jl)
+         if(up    .eq. MPI_PROC_NULL) f1( :, jh+1) = f1( :, jh)
+         if(ul .eq. MPI_PROC_NULL) f1(il-1,jh+1) = f1(il,jh)
+         if(ur .eq. MPI_PROC_NULL) f1(ih+1,jh+1) = f1(ih,jh)
+         if(lr .eq. MPI_PROC_NULL) f1(ih+1,jl-1) = f1(ih,jl)
+         if(ll .eq. MPI_PROC_NULL) f1(il-1,jl-1) = f1(il,jl)
+      end if
    end if
 
    last_action = SENDING

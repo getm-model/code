@@ -1,4 +1,4 @@
-!$Id: halo_zones.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
+!$Id: halo_zones.F90,v 1.3 2003-05-09 11:52:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,7 +32,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_zones.F90,v $
-!  Revision 1.2  2003-04-23 12:02:43  kbk
+!  Revision 1.3  2003-05-09 11:52:08  kbk
+!  do not mirror coordinate info + use mask for inverse area calculation
+!
+!  Revision 1.2  2003/04/23 12:02:43  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.1  2003/04/07 12:05:42  kbk
@@ -97,7 +100,7 @@
 ! !IROUTINE: update_2d_halo - updates the halo zones for 2D fields.
 !
 ! !INTERFACE:
-   subroutine update_2d_halo(f1,f2,mask,imin,jmin,imax,jmax,tag)
+   subroutine update_2d_halo(f1,f2,mask,imin,jmin,imax,jmax,tag,mirror)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -105,8 +108,9 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: imin,jmin,imax,jmax
-   integer, intent(in)                 :: tag
    integer, intent(in)                 :: mask(-HALO+1:,-HALO+1:)
+   integer, intent(in)                 :: tag
+   logical, optional, intent(in)       :: mirror
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)             :: f1(E2DFIELD),f2(E2DFIELD)
@@ -142,7 +146,12 @@
       f1( :, jh+1 ) = f2( :, jh )
    else
 #ifdef PARALLEL
-      call update_2d_halo_mpi(f1,f2,imin,jmin,imax,jmax,tag)
+      if( present(mirror) ) then
+         call update_2d_halo_mpi(f1,f2,imin,jmin,imax,jmax,tag, &
+                                 mirror=mirror)
+      else
+         call update_2d_halo_mpi(f1,f2,imin,jmin,imax,jmax,tag)
+      endif
 #endif
    end if
    return

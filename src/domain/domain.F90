@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.7 2003-05-02 08:32:31 kbk Exp $
+!$Id: domain.F90,v 1.8 2003-05-09 11:52:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,6 +12,7 @@
 !
 ! !USES:
    use halo_zones, only: update_2d_halo,wait_halo,H_TAG,U_TAG,V_TAG
+use halo_mpi, only: barrier
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -47,7 +48,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.7  2003-05-02 08:32:31  kbk
+!  Revision 1.8  2003-05-09 11:52:08  kbk
+!  do not mirror coordinate info + use mask for inverse area calculation
+!
+!  Revision 1.7  2003/05/02 08:32:31  kbk
 !  re-ordering mask calculation
 !
 !  Revision 1.6  2003/04/23 11:59:39  kbk
@@ -249,13 +253,15 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
                              imin,imax,jmin,jmax,rc)
          call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
-#if 0
-         call update_2d_halo(lonc,lonc,az,imin,jmin,imax,jmax,H_TAG)
+
+         call update_2d_halo(lonc,lonc,az,imin,jmin,imax,jmax,H_TAG, &
+                             mirror=.false.)
          call wait_halo(H_TAG)
 
-         call update_2d_halo(latc,latc,az,imin,jmin,imax,jmax,H_TAG)
+         call update_2d_halo(latc,latc,az,imin,jmin,imax,jmax,H_TAG, &
+                             mirror=.false.)
          call wait_halo(H_TAG)
-#endif
+
       case default
          FATAL 'A non valid input format has been chosen'
          stop 'init_domain'
@@ -377,6 +383,14 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
       case(2)
 #ifdef SPHERICAL
 
+         call update_2d_halo(lonx,lonx,ax,imin,jmin,imax,jmax,H_TAG, &
+                             mirror=.false.)
+         call wait_halo(H_TAG)
+
+         call update_2d_halo(latx,latx,az,imin,jmin,imax,jmax,H_TAG, &
+                             mirror=.false.)
+         call wait_halo(H_TAG)
+
          lonu=lonx
          lonv=lonc
          latv=latx
@@ -415,6 +429,8 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
                       *cos(deg2rad*latx(i,j))
             end do
          end do
+         call update_2d_halo(dxx,dxx,ax,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
 
          do j=jmin,jmax
             do i=imin,imax
@@ -445,20 +461,32 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
                dyx(i,j)=deg2rad*(latu(i,j+1)-latu(i,j))*rearth
             end do
          end do
+         call update_2d_halo(dyx,dyx,ax,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
 
          do j=jmin,jmax
             do i=imin,imax
-               arcd1(i,j)=_ONE_/(dxc(i,j)*dyc(i,j))
-               arud1(i,j)=_ONE_/(dxu(i,j)*dyu(i,j))
-               arvd1(i,j)=_ONE_/(dxv(i,j)*dyv(i,j))
+
+               if( az(i,j) .gt. 0) then
+                  arcd1(i,j)=_ONE_/(dxc(i,j)*dyc(i,j))
+               end if
+
+               if( au(i,j) .gt. 0) then
+                  arud1(i,j)=_ONE_/(dxu(i,j)*dyu(i,j))
+               end if
+
+               if( av(i,j) .gt. 0) then
+                  arvd1(i,j)=_ONE_/(dxv(i,j)*dyv(i,j))
+               end if
+
             end do
          end do
-          call update_2d_halo(arcd1,arcd1,az,imin,jmin,imax,jmax,H_TAG)
-          call wait_halo(H_TAG)
-          call update_2d_halo(arud1,arud1,au,imin,jmin,imax,jmax,U_TAG)
-          call wait_halo(U_TAG)
-          call update_2d_halo(arvd1,arvd1,av,imin,jmin,imax,jmax,V_TAG)
-          call wait_halo(V_TAG)
+         call update_2d_halo(arcd1,arcd1,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
+         call update_2d_halo(arud1,arud1,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+         call update_2d_halo(arvd1,arvd1,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
 
           do j=jmin,jmax
              do i=imin,imax
@@ -545,8 +573,6 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
          stop 'init_domain'
    end select
 
-   STDERR 'az'
-   call print_mask(az)
 #ifdef DEBUG
    STDERR 'az'
    call print_mask(az)
