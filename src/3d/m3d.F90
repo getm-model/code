@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.20 2004-07-28 14:58:18 hb Exp $
+!$Id: m3d.F90,v 1.21 2004-07-29 19:48:44 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -53,7 +53,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.20  2004-07-28 14:58:18  hb
+!  Revision 1.21  2004-07-29 19:48:44  hb
+!  num, nuh now initialised with _ZERO_
+!
+!  Revision 1.20  2004/07/28 14:58:18  hb
 !  Changing subroutine calling order via MUDFLAT
 !
 !  Revision 1.19  2004/06/15 08:25:57  kbk
@@ -328,8 +331,8 @@
    end select
 
    dt = M*timestep
-   num=avmmol
-   nuh=avmmol
+   num=_ZERO_
+   nuh=_ZERO_
 
 !  Needed for interpolation of temperature and salinity
    if (.not. hotstart) then
