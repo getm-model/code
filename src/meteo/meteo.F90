@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.1 2002-05-02 14:01:38 gotm Exp $
+!$Id: meteo.F90,v 1.2 2002-08-16 12:11:06 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -69,8 +69,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
-!  Revision 1.1  2002-05-02 14:01:38  gotm
-!  Initial revision
+!  Revision 1.2  2002-08-16 12:11:06  gotm
+!  Fixed parameter order in call to short_wave_radiation()
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:38  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.8  2001/10/26 09:11:28  bbh
 !  Stresses in meteo.F90 are in N/m2 - divide by rho_0 where necessary
@@ -401,7 +404,7 @@ v10(i,j) = 5.
 airp(i,j) = 100865.1
 #endif
                            swr(i,j) = short_wave_radiation	&
-                                   (yearday,hh,lonmap(i,j),latmap(i,j),cc(i,j))
+                                   (yearday,hh,latmap(i,j),lonmap(i,j),cc(i,j))
                            call exchange_coefficients(	&
                                   u10(i,j),v10(i,j),t2(i,j),airp(i,j),sst(i,j),hum(i,j))
                            call fluxes(u10(i,j),v10(i,j),t2(i,j),cc(i,j),  &
