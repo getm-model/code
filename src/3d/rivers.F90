@@ -1,4 +1,4 @@
-!$Id: rivers.F90,v 1.5 2004-11-12 07:29:36 kbk Exp $
+!$Id: rivers.F90,v 1.6 2005-01-13 09:20:46 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -40,26 +40,35 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_rivers, do_rivers, clean_rivers
-   integer, public                     :: river_method=0,nriver=0
+   integer, public                     :: river_method=0,nriver=0,rriver=0
+   logical,public                      :: use_river_temp = .false.
+   logical,public                      :: use_river_salt = .false.
    character(len=64), public           :: river_data="rivers.nc"
    character(len=64), public, allocatable  :: river_name(:)
+   character(len=64), public, allocatable  :: real_river_name(:)
    integer, public, allocatable        :: ok(:)
-   REALTYPE, public, allocatable       :: river_flow(:),tr(:)
+   REALTYPE, public, allocatable       :: river_flow(:)
+   REALTYPE, public, allocatable       :: river_salt(:)
+   REALTYPE, public, allocatable       :: river_temp(:)
    REALTYPE, public                    :: river_factor= _ONE_
-   REALTYPE, allocatable               :: macro_height(:)
+   REALTYPE, public,parameter          :: temp_missing=-9999.0
+   REALTYPE, public,parameter          :: salt_missing=-9999.0
+   integer,  public, allocatable       :: river_split(:)
 !
 ! !PRIVATE DATA MEMBERS:
    integer                   :: river_format=2
    character(len=64)         :: river_info="riverinfo.dat"
    integer, allocatable      :: ir(:),jr(:)
    REALTYPE, allocatable     :: irr(:)
+   REALTYPE, allocatable     :: macro_height(:)
+   REALTYPE, allocatable     :: flow_fraction(:)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: rivers.F90,v $
-!  Revision 1.5  2004-11-12 07:29:36  kbk
-!  initialising ok to 0 - Buchmann
+!  Revision 1.6  2005-01-13 09:20:46  kbk
+!  support for T and S specifications in rivers - Stips
 !
 !  Revision 1.4  2003/10/14 10:05:54  kbk
 !  checks if indices are in subdomain + cleaning
@@ -112,11 +121,13 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,n,rc
+   integer                   :: i,j,n,nn,ni,rc,m
    integer                   :: unit = 25 ! kbk
    logical                   :: outside
+   REALTYPE                  :: area
    NAMELIST /rivers/ &
-            river_method,river_info,river_format,river_data,river_factor
+            river_method,river_info,river_format,river_data,river_factor, &
+            use_river_salt,use_river_temp
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -136,25 +147,55 @@
          LEVEL2 'river_method= ',river_method
          LEVEL2 'river_data=   ',trim(river_data)
          LEVEL2 'river_format= ',river_format
+         LEVEL2 'use_river_temp= ',use_river_temp
+         LEVEL2 'use_river_salt= ',use_river_salt
          open(unit,file=river_info,action='read',status='old',err=90)
          read(unit,*) nriver
          allocate(ir(nriver),stat=rc) ! i index of rivers
+         if (rc /= 0) stop 'rivers: Error allocating memory (ir)'
          allocate(jr(nriver),stat=rc) ! j index of rivers
-         allocate(river_name(nriver),stat=rc) ! NetCDF name of river.
+         if (rc /= 0) stop 'rivers: Error allocating memory (jr)'
          allocate(ok(nriver),stat=rc) ! valid river spec.
+         if (rc /= 0) stop 'rivers: Error allocating memory (ok)'
+         allocate(river_name(nriver),stat=rc) ! NetCDF name of river.
+         if (rc /= 0) stop 'rivers: Error allocating memory (river_name)'
          allocate(river_flow(nriver),stat=rc) ! river flux
+         if (rc /= 0) stop 'rivers: Error allocating memory (river_flow)'
          allocate(macro_height(nriver),stat=rc) ! height over a macro tims-step
-         allocate(tr(nriver),stat=rc) ! temperature of river water
+         if (rc /= 0) stop 'rivers: Error allocating memory (macro_height)'
+         allocate(river_temp(nriver),stat=rc) ! temperature of river water
+         if (rc /= 0) stop 'rivers: Error allocating memory (river_temp)'
+         allocate(river_salt(nriver),stat=rc) ! salinity of river water
+         if (rc /= 0) stop 'rivers: Error allocating memory (river_salt)'
+         allocate(river_split(nriver),stat=rc) ! split factor for river water
+         if (rc /= 0) stop 'rivers: Error allocating memory (river_split)'
+         allocate(flow_fraction(nriver),stat=rc) ! areafactor of data for river 
+         if (rc /= 0) stop 'rivers: Error allocating memory (flow_fraction)'
          allocate(irr(nriver),stat=rc) ! integrated river runoff
+         if (rc /= 0) stop 'rivers: Error allocating memory (irr)'
+
          ok = 0
+         rriver = 0 ! number of real existing rivers...
+         flow_fraction = _ZERO_
          do n=1,nriver
             read(unit,*) ir(n),jr(n),river_name(n)
+            river_name(n) = trim(river_name(n))
             LEVEL3 trim(river_name(n)),':',ir(n),jr(n)
             i = ir(n)-ioff
             j = jr(n)-joff
-            tr(n) = _ZERO_
+            river_temp(n) = temp_missing
+            river_salt(n) = salt_missing
+            river_flow(n) = _ZERO_
             irr(n) = _ZERO_
             macro_height(n) = _ZERO_
+!           calculate the number of used rivers, they must be 
+!           in sequence !
+            rriver = rriver +1
+            if ( n .gt. 1 ) then
+               if (river_name(n) .eq. river_name(n-1)) then 
+                  rriver = rriver-1
+               end if
+            end if
             outside= &
                     i .lt. iimin .or. i .gt. iimax .or.  &
                     j .lt. jjmin .or. j .gt. jjmax
@@ -165,9 +206,63 @@
                   ok(n) = 0
                else
                   ok(n) = 1
+                  flow_fraction(n) = _ONE_/ARCD1
                end if
             else
 !              LEVEL3 'Outside: river# ',n
+            end if
+         end do
+
+!        calculate the number of used gridboxes, they must be 
+!        in sequence !
+         LEVEL3 'Number of unique rivers: ',rriver
+         allocate(real_river_name(rriver),stat=rc) ! NetCDF name of river.
+         if (rc /= 0) stop 'rivers: Error allocating memory (rivers)'
+         river_split = 1    ! normal case
+         do n=2,nriver
+               if (river_name(n) .eq. river_name(n-1)) then 
+                  river_split(n)=river_split(n-1)+1
+            end if
+         end do
+         ni= nriver
+         do n=1,nriver
+            if (ni .ge. 1) then
+               if ( river_split(ni) .gt. 1 ) then  
+                  do m=1,river_split(ni)
+                     river_split(ni-m+1) =  river_split(ni)
+                  end do
+               end if
+               ni = ni - river_split(ni)
+            end if
+         end do
+         LEVEL3 'split:',river_split
+!        now river_split contains the number of gridboxes used 
+!        for a single river
+         nn = 1
+         ni = 1
+         do n=1,nriver
+            if (ni .le. nriver) then
+               real_river_name(nn) = river_name(ni)
+               if ( river_split(ni) .gt. 1 ) then
+                  area = _ZERO_
+                  do m=1,river_split(ni) 
+                     area = area +  flow_fraction(ni+m-1)
+                  end do
+                  do m=1,river_split(ni)
+                     if ( area .gt. _ZERO_ ) then
+                        flow_fraction(ni+m-1) = flow_fraction(ni+m-1)/area
+                     else
+                        flow_fraction(ni+m-1) = _ZERO_
+                     end if
+                  end do
+               else
+                  flow_fraction(ni) = _ONE_
+               end if
+               nn = nn + 1  
+               ni = ni + river_split(ni)
+            end if 
+            if (ok(n) .eq. 0) then
+               flow_fraction(n) = _ZERO_
             end if
          end do
       case default
@@ -213,9 +308,8 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,n
-   REALTYPE                  :: vol
    REALTYPE                  :: rvol,height
-   REALTYPE                  :: svol,tvol
+   REALTYPE                  :: svol,tvol,vol
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -232,34 +326,34 @@
          do n=1,nriver
             if(ok(n) .gt. 0) then
                i = ir(n)-ioff; j = jr(n)-joff
-               rvol = dtm*river_flow(n)
+               rvol = dtm * river_flow(n) * flow_fraction(n)
                irr(n) = irr(n) + rvol
-               height = rvol*ARCD1
-               macro_height(n)=macro_height(n)+height
+               height = rvol * ARCD1
                z(i,j) = z(i,j) + height
 #ifndef NO_BAROCLINIC
+               macro_height(n)=macro_height(n)+height
+!              on macrotime step adjust 3d fields
                if (do_3d) then
                   if (calc_salt) then
-                     S(i,j,1:kmax) = S(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
-                                    /(H(i,j)+ssen(i,j)+macro_height(n))
+                     if ( river_salt(n) .ne. salt_missing ) then
+                        S(i,j,1:kmax) = (S(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
+                                      + river_salt(n)*macro_height(n))      &
+                                      / (H(i,j)+ssen(i,j)+macro_height(n))
+                     else
+                        S(i,j,1:kmax) = S(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
+                                      / (H(i,j)+ssen(i,j)+macro_height(n))
+                     end if
                   end if
-
-! Changes of total and layer height due to river inflow:
+                  if (calc_temp .and. river_temp(n) .ne. temp_missing) then
+                     T(i,j,1:kmax) = (T(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
+                                      + river_temp(n)*macro_height(n))      &
+                                      / (H(i,j)+ssen(i,j)+macro_height(n))
+                  end if
+!                 Changes of total and layer height due to river inflow:
                   hn(i,j,1:kmax) = hn(i,j,1:kmax)/(H(i,j)+ssen(i,j)) &
                                   *(H(i,j)+ssen(i,j)+macro_height(n))
                   ssen(i,j) = ssen(i,j)+macro_height(n)
                   macro_height(n) = _ZERO_
-#if 0
-                  if (calc_temp .and. tr(n) .gt. _ZERO_) then
-                     tvol = _ZERO_
-                     do k=1,kmax
-                        tvol = tvol+hn(i,j,k)*T(i,j,k)
-                     end do
-                     tvol = tvol*ARCD1
-                     tvol = tvol + tr(n)*rvol
-                     T(i,j,1:kmax) = tvol/vol
-                  end if
-#endif
                end if
 #endif
             end if
