@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.5 2003-05-09 11:53:13 kbk Exp $
+!$Id: save_3d_ncdf.F90,v 1.6 2003-12-08 07:21:53 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -44,7 +44,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
-!  Revision 1.5  2003-05-09 11:53:13  kbk
+!  Revision 1.6  2003-12-08 07:21:53  hb
+!  use proper layer heights for saving velocities
+!
+!  Revision 1.5  2003/05/09 11:53:13  kbk
 !  forgot to delete some debug lines
 !
 !  Revision 1.4  2003/05/09 11:38:26  kbk
@@ -216,13 +219,13 @@
    if (save_vel) then
       call to_3d_vel(imin,jmin,imax,jmax,au, &
                      iimin,jjmin,iimax,jjmax,kmax, &
-                     kmin,hn,uu,vel_missing,ws)
+                     kmin,hun,uu,vel_missing,ws)
       err = nf_put_vara_real(ncid,uu_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
 
       call to_3d_vel(imin,jmin,imax,jmax,av, &
                      iimin,jjmin,iimax,jjmax,kmax, &
-                     kmin,hn,vv,vel_missing,ws)
+                     kmin,hvn,vv,vel_missing,ws)
       err = nf_put_vara_real(ncid,vv_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
 
