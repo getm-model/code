@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.7 2004-05-04 09:23:51 kbk Exp $
+#$Id: Makefile,v 1.8 2004-06-15 08:32:02 kbk Exp $
 #
 # Makefile to build the 3D specific library - libm3d.a
 #
@@ -25,7 +25,7 @@ $(LIB)(salinity.o)			\
 $(LIB)(eqstate.o)			\
 $(LIB)(internal_pressure.o)	
 endif
-ifneq ($(GETM_NO_SUSP_MATTER),true)
+ifeq ($(GETM_SPM),true)
 MOD += \
 $(LIB)(spm.o)
 endif
