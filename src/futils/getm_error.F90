@@ -1,4 +1,4 @@
-!$Id: getm_error.F90,v 1.2 2003-11-03 09:10:41 kbk Exp $
+!$Id: getm_error.F90,v 1.3 2004-04-06 16:54:33 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -7,24 +7,27 @@
 !
 ! !INTERFACE:
    subroutine getm_error(sub,msg)
-   IMPLICIT NONE
 !
 ! !DESCRIPTION:
 !
 ! !USES:
+   IMPLICIT NONE
+#ifdef PARALLEL
+!    use mpi
+    include "mpif.h"
+#endif
 !
 ! !INPUT PARAMETERS:
    character(len=*)                    :: sub,msg
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: getm_error.F90,v $
-!  Revision 1.2  2003-11-03 09:10:41  kbk
+!  Revision 1.3  2004-04-06 16:54:33  kbk
+!  cleaned a little
+!
+!  Revision 1.2  2003/11/03 09:10:41  kbk
 !  now works with both serial and parallel compilation
 !
 !  Revision 1.1  2003/10/30 16:29:37  kbk
@@ -35,9 +38,6 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-#ifdef PARALLEL
-   include "mpif.h"
-#endif
    FATAL "Called from: ",trim(sub)
    FATAL "Message:     ",trim(msg)
 #ifdef PARALLEL
