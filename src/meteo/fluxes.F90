@@ -1,4 +1,4 @@
-!$Id: fluxes.F90,v 1.6 2003-10-01 12:10:05 kbk Exp $
+!$Id: fluxes.F90,v 1.7 2003-12-16 17:16:13 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,9 +25,8 @@
    use meteo, only: cpa,emiss,bolz,KELVIN
    use meteo, only: w,L,rho_air,qs,qa,ea,cd_heat,cd_mom
 #ifdef WRONG_KONDO
-   use meteo, only: cd_mom,cd_heat
 #else
-   use meteo, only: cd_mom,cd_heat,cd_latent
+   use meteo, only: cd_latent
 #endif
    IMPLICIT NONE
 !
@@ -43,7 +42,10 @@
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: fluxes.F90,v $
-!  Revision 1.6  2003-10-01 12:10:05  kbk
+!  Revision 1.7  2003-12-16 17:16:13  kbk
+!  double declaration of cd_heat,cd_mom
+!
+!  Revision 1.6  2003/10/01 12:10:05  kbk
 !  hum_method=1 (specific humidity) now works correctly
 !
 !  Revision 1.5  2003/07/01 16:38:34  kbk
