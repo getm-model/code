@@ -1,4 +1,4 @@
-!$Id: uv_advect_3d.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
+!$Id: uv_advect_3d.F90,v 1.4 2003-05-02 06:55:49 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,7 +35,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_advect_3d.F90,v $
-!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  Revision 1.4  2003-05-02 06:55:49  hb
+!  momemtum advection only for mask=1
+!
+!  Revision 1.3  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 13:36:38  kbk
@@ -207,7 +210,7 @@
    do k=1,kmax
       do j=jjmin,jjmax         ! uuEx defined on U-points
          do i=iimin,iimax
-            if (au(i,j).ge.1) then
+            if (au(i,j).eq.1) then
                if (k .ge. kumin(i,j)) then
                   uuEx(i,j,k)=(PP(i+1,j,k)-PP(i,j,k))*ARUD1
                end if
@@ -237,7 +240,7 @@
    do k=1,kmax
       do j=jjmin,jjmax
          do i=iimin,iimax
-            if (au(i,j) .ge. 1) then
+            if (au(i,j) .eq. 1) then
                if (k .ge. kumin(i,j)) then
                   uuEx(i,j,k)=(uuEx(i,j,k)+(PP(i,j,k)-PP(i,j-1,k))*ARUD1)
                end if
@@ -267,7 +270,7 @@
    do k=1,kmax
       do j=jjmin,jjmax          ! vvEx defined on V-points
          do i=iimin,iimax
-            if (av(i,j) .ge. 1) then
+            if (av(i,j) .eq. 1) then
                if (k .ge. kvmin(i,j)) then
                   vvEx(i,j,k)=(PP(i,j,k)-PP(i-1,j,k))*ARVD1
                end if
@@ -297,7 +300,7 @@
    do k=1,kmax
       do j=jjmin,jjmax          ! vvEx defined on V-points
          do i=iimin,iimax
-            if (av(i,j) .ge. 1) then
+            if (av(i,j) .eq. 1) then
                if (k .ge. kvmin(i,j)) then
                   vvEx(i,j,k)=(vvEx(i,j,k)+(PP(i,j+1,k)-PP(i,j,k))*ARVD1)
                end if

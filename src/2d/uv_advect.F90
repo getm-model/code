@@ -1,4 +1,4 @@
-!$Id: uv_advect.F90,v 1.4 2003-04-23 12:09:44 kbk Exp $
+!$Id: uv_advect.F90,v 1.5 2003-05-02 06:55:49 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,7 +31,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_advect.F90,v $
-!  Revision 1.4  2003-04-23 12:09:44  kbk
+!  Revision 1.5  2003-05-02 06:55:49  hb
+!  momemtum advection only for mask=1
+!
+!  Revision 1.4  2003/04/23 12:09:44  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.3  2003/04/07 15:58:18  kbk
@@ -93,7 +96,7 @@
    end do
    do j=jmin,jmax      ! UEx defined on U-points
       do i=imin,imax
-         if (au(i,j) .ge. 1) then
+         if (au(i,j) .eq. 1) then
             UEx(i,j)=(PP(i+1,j)-PP(i  ,j))*ARUD1
          else
             UEx(i,j)= _ZERO_
@@ -118,7 +121,7 @@
    end do
    do j=jmin,jmax        !UEx defined on U-points
       do i=imin,imax
-         if (au(i,j) .ge. 1) then
+         if (au(i,j) .eq. 1) then
             UEx(i,j)=UEx(i,j)+(PP(i,j  )-PP(i,j-1))*ARUD1
          end if
       end do
@@ -141,7 +144,7 @@
    end do
    do j=jmin,jmax          ! VEx defined on V-points
       do i=imin,imax
-         if (av(i,j) .ge. 1) then
+         if (av(i,j) .eq. 1) then
             VEx(i,j)=(PP(i  ,j)-PP(i-1,j))*ARVD1
          else
             VEx(i,j)= _ZERO_
@@ -166,7 +169,7 @@
    end do
    do j=jmin,jmax             ! VEx defined on V-points
       do i=imin,imax
-         if (av(i,j) .ge. 1) then
+         if (av(i,j) .eq. 1) then
             VEx(i,j)=VEx(i,j)+(PP(i,j+1)-PP(i,j  ))*ARVD1
          end if
       end do
