@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.5 2003-04-23 12:05:50 kbk Exp $
+!$Id: meteo.F90,v 1.6 2003-05-09 14:28:11 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -80,7 +80,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
-!  Revision 1.5  2003-04-23 12:05:50  kbk
+!  Revision 1.6  2003-05-09 14:28:11  kbk
+!  short wave radiation calculated each timestep (not interpolated) - patch from Adolf Stips
+!
+!  Revision 1.5  2003/04/23 12:05:50  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.4  2003/04/07 15:15:16  kbk
@@ -125,8 +128,8 @@
    REALTYPE                  :: swr_const= _ZERO_ ,shf_const= _ZERO_
    REALTYPE, dimension(:,:), allocatable :: airp_old,tausx_old,tausy_old
    REALTYPE, dimension(:,:), allocatable :: d_airp,d_tausx,d_tausy
-   REALTYPE, dimension(:,:), allocatable :: swr_old,shf_old
-   REALTYPE, dimension(:,:), allocatable :: d_swr,d_shf
+   REALTYPE, dimension(:,:), allocatable :: cc_old,shf_old
+   REALTYPE, dimension(:,:), allocatable :: d_cc,d_shf
 !
 ! !TO DO:
 !  A method for stress calculations without knowledge of SST and meteorological
@@ -274,17 +277,17 @@
       if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tausy)'
       d_tausy = _ZERO_
 
-      allocate(swr_old(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_meteo: Error allocating memory (swr_old)'
-      swr_old = _ZERO_
+      allocate(cc_old(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo: Error allocating memory (cc_old)'
+      cc_old = _ZERO_
 
       allocate(shf_old(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (shf_old)'
       shf_old = _ZERO_
 
-      allocate(d_swr(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_meteo: Error allocating memory (d_swr)'
-      d_swr = _ZERO_
+      allocate(d_cc(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo: Error allocating memory (d_cc)'
+      d_cc = _ZERO_
 
       allocate(d_shf(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (d_shf)'
@@ -393,78 +396,76 @@
                   end if
                end do
             end do
-
-#ifdef CONSTANCE_TEST
-            if (t.gt.2.*24.*3600) then
-               tausx = _ZERO_
-               tausy = _ZERO_
-            end if
-#endif
             swr   = swr_const
             shf   = shf_const
          case (2)
             if(calc_met) then
-have_sst = present(sst)
+               have_sst = present(sst)
                if (new_meteo) then
                   if (.not. first) then
                      tausx_old = tausx
                      tausy_old = tausy
-                     swr_old = swr
+                     cc_old = cc
                      shf_old = shf
                   end if
-                  hh = secondsofday/3600.
-                  do j=jmin,jmax
-                     do i=imin,imax
-                        if (az(i,j) .ge. 1) then
-if (have_sst) then
-                           swr(i,j) = short_wave_radiation             &
-                                   (yearday,hh,latc(i,j),lonc(i,j),cc(i,j))
-                           call exchange_coefficients(                 &
-                                  u10(i,j),v10(i,j),t2(i,j),airp(i,j), &
-                                  sst(i,j),hum(i,j))
-                           call fluxes(u10(i,j),v10(i,j),t2(i,j),cc(i,j),  &
-                                       sst(i,j),shf(i,j),tausx(i,j),tausy(i,j))
-else
-swr(i,j) = _ZERO_
-shf(i,j) = _ZERO_
-w=sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
-tausx(i,j) = 1.25e-3*1.25*w*U10(i,j)
-tausy(i,j) = 1.25e-3*1.25*w*V10(i,j)
-end if
-                        else
-                            swr(i,j) = _ZERO_
-                            shf(i,j) = _ZERO_
-                            tausx(i,j) = _ZERO_
-                            tausy(i,j) = _ZERO_
-                        end if
-                     end do
-                  end do
                   if (have_sst) then
-call update_2d_halo(swr,swr,az,imin,jmin,imax,jmax,H_TAG)
-call wait_halo(H_TAG)
-call update_2d_halo(swr,shf,az,imin,jmin,imax,jmax,H_TAG)
-call wait_halo(H_TAG)
+                     do j=jmin,jmax
+                        do i=imin,imax
+                           if (az(i,j) .ge. 1) then
+                              call exchange_coefficients( &
+                                     u10(i,j),v10(i,j),t2(i,j),airp(i,j), &
+                                     sst(i,j),hum(i,j))
+                              call fluxes(u10(i,j),v10(i,j),t2(i,j),cc(i,j),  &
+                                          sst(i,j),shf(i,j),tausx(i,j),tausy(i,j))
+                           else
+                              shf(i,j) = _ZERO_
+                              tausx(i,j) = _ZERO_
+                              tausy(i,j) = _ZERO_
+                           end if
+                        end do
+                     end do
+                  else
+                     do j=jmin,jmax
+                        do i=imin,imax
+                           if (az(i,j) .ge. 1) then
+                              w=sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
+                              tausx(i,j) = 1.25e-3*1.25*w*U10(i,j)
+                              tausy(i,j) = 1.25e-3*1.25*w*V10(i,j)
+                           end if
+                        end do
+                     end do
                   end if
-call update_2d_halo(tausx,tausx,az,imin,jmin,imax,jmax,H_TAG)
-call wait_halo(H_TAG)
-call update_2d_halo(tausy,tausy,az,imin,jmin,imax,jmax,H_TAG)
-call wait_halo(H_TAG)
+                  call update_2d_halo(tausx,tausx,az, &
+                                      imin,jmin,imax,jmax,H_TAG)
+                  call wait_halo(H_TAG)
+                  call update_2d_halo(tausy,tausy,az, &
+                                      imin,jmin,imax,jmax,H_TAG)
+                  call wait_halo(H_TAG)
                   if (.not. first) then
                      d_tausx = tausx - tausx_old
                      d_tausy = tausy - tausy_old
-                     d_swr = swr - swr_old
+                     d_cc = cc - cc_old
                      d_shf = shf - shf_old
                   end if
                end if
                if (.not. first) then
                   t_frac = (t-t_1)/(t_2-t_1)
-                  swr = swr_old + t_frac*d_swr
                   shf = shf_old + t_frac*d_shf
                   tausx = tausx_old + t_frac*d_tausx
                   tausy = tausy_old + t_frac*d_tausy
                end if
+               hh = secondsofday/3600.
+               do j=jmin,jmax
+                  do i=imin,imax
+                     if (az(i,j) .ge. 1) then
+                        swr(i,j) = short_wave_radiation             &
+                                (yearday,hh,latc(i,j),lonc(i,j),cc(i,j))
+                     end if
+                  end do
+               end do
             else
 ! not finished
+stop 'do_meteo'
                airp  =  _ZERO_
                tausx = ramp*tausx
                tausy = ramp*tausy
