@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.6 2003-04-08 13:02:54 frv-bjb Exp $
+#$Id: Rules.make,v 1.7 2003-09-09 06:02:02 kbk Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -88,7 +88,7 @@ endif
 
 # Top of this version of getm.
 ifndef GETMDIR
-GETMDIR  = $(HOME)/getm
+GETMDIR  = $(HOME)/getm-src
 endif
 
 ifndef BINDIR
