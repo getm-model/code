@@ -1,4 +1,4 @@
-!$Id: save_2d_ncdf.F90,v 1.1 2002-05-02 14:01:48 gotm Exp $
+!$Id: save_2d_ncdf.F90,v 1.2 2003-04-07 12:43:12 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,9 +13,13 @@
 ! !USES:
    use ncdf_2d
    use domain, only: ioff,joff,imin,imax,jmin,jmax,H,au,av,min_depth
-   use domain, only: grid_type,xc,yc
+use domain, only: HU,HV
+   use domain, only: grid_type
+#if ! defined(SPHERICAL)
+   use domain, only: xc,yc
+#endif
    use variables_2d, only: z,D,U,DU,V,DV,res_u,res_v,surfdiv
-   use meteo, only: calc_met
+   use meteo, only: metforcing,calc_met
    use meteo, only: airp,u10,v10,t2,hum,cc
    use meteo, only: tausx,tausy,swr,shf
    IMPLICIT NONE
@@ -31,8 +35,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_2d_ncdf.F90,v $
-!  Revision 1.1  2002-05-02 14:01:48  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 12:43:12  kbk
+!  SPHERICAL and NO_BAROCLINIC
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:48  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.3  2001/10/26 12:18:06  bbh
 !  No actual storing of data in init_2d_ncdf.F90 -> save_2d_ncdf.F90
@@ -55,6 +62,8 @@
    if (secs .ge. _ZERO_) then
       n2d = n2d + 1
       if (n2d .eq. 1) then
+
+         ws = _ZERO_
 
          if( xlen*ylen .gt. size_2d ) then
             FATAL 'Increase size_2d in ncdf_2d_save() - this needs a fix'
@@ -79,12 +88,24 @@
 #ifndef CURVILINEAR
             case (1,2)
                do i=imin,imax
+#if 0
+                  ws(i) = ioff+i
+#else
+#if ! defined(SPHERICAL)
                   ws(i) = xc(i)
+#endif
+#endif
                end do
                err = nf_put_var_real(ncid,xc_id,ws)
                if (err .NE. NF_NOERR) go to 10
                do j=jmin,jmax
+#if 0
+                  ws(j) = joff+j
+#else
+#if ! defined(SPHERICAL)
                   ws(j) = yc(j)
+#endif
+#endif
                end do
                err = nf_put_var_real(ncid,yc_id,ws)
                if (err .NE. NF_NOERR) go to 10
@@ -141,7 +162,7 @@
       err = nf_put_vara_real(ncid, surfdiv_id, start, edges, ws)
       if (err .NE. NF_NOERR) go to 10
 
-      if (save_meteo) then
+      if (metforcing .and. save_meteo) then
 
          if (calc_met) then
             call cnv_2d(ws,imin,jmin,imax,jmax,u10,imin,jmin,imax,jmax)
@@ -186,7 +207,9 @@
          if (err .NE. NF_NOERR) go to 10
 
       end if
+
    else ! residual velocities
+
       start(1) = 1
       start(2) = 1
       edges(1) = xlen
@@ -205,7 +228,7 @@
 
    return
 
-10 FATAL 'ncdf_2d_save: ',nf_strerror(err)
+10 FATAL 'save_2d_ncdf: ',nf_strerror(err)
    stop
 
    return

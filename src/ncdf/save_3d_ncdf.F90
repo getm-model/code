@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.1 2002-05-02 14:01:48 gotm Exp $
+!$Id: save_3d_ncdf.F90,v 1.2 2003-04-07 12:43:12 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,14 +13,21 @@
 ! !USES:
    use ncdf_3d
    use domain, only: ioff,joff,imin,imax,jmin,jmax
-   use domain, only: H,au,av,min_depth,xc,yc
+   use domain, only: H,au,av,min_depth
+#if ! defined(SPHERICAL)
+   use domain, only: xc,yc
+#endif
    use domain, only: iimin,iimax,jjmin,jjmax,kmax
    use domain, only: grid_type,vert_cord,ga
    use variables_2d, only: z,D,u,DU,v,DV
    use variables_3d, only: hn,uu,hun,vv,hvn,ww
+#ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho
+#endif
    use variables_3d, only: tke,num,nuh,eps
+#ifndef NO_SUSP_MATTER
    use variables_3d, only: spm
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -34,8 +41,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
-!  Revision 1.1  2002-05-02 14:01:48  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 12:43:12  kbk
+!  SPHERICAL and NO_BAROCLINIC
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:48  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.4  2001/10/25 16:16:21  bbh
 !  No actual storing of data in init_3d_ncdf.F90 -> save_3d_ncdf.F90
@@ -90,6 +100,7 @@
       select case (grid_type)
 #ifndef CURVILINEAR
          case (1,2)
+#if ! defined(SPHERICAL)
             do i=imin,imax
                ws(i) = xc(i)
             end do
@@ -100,6 +111,7 @@
             end do
             err = nf_put_var_real(ncid,yc_id,ws)
             if (err .NE. NF_NOERR) go to 10
+#endif
 #else
          case (3)
             STDERR 'xc and yc are read from input file directly'
@@ -187,6 +199,7 @@
       if (err .NE. NF_NOERR) go to 10
    end if
 
+#ifndef NO_BAROCLINIC
    if (save_strho) then
 
       if (save_s) then
@@ -207,8 +220,8 @@
          err = nf_put_vara_real(ncid, sigma_t_id, start, edges, ws)
          if (err .NE. NF_NOERR) go to 10
       end if
-
    end if ! save_strho
+#endif
 
    if (save_turb) then
 
@@ -237,11 +250,13 @@
       end if
    end if ! save_turb
 
+#ifndef NO_BAROCLINIC
    if (save_spm) then
       call cnv_3d(ws,spm,iimin,jjmin,0,iimax,jjmax,kmax,size_3d)
       err = nf_put_vara_real(ncid, spm_id, start, edges, ws)
       if (err .NE. NF_NOERR) go to 10
    end if
+#endif
 
    err = nf_sync(ncid)
    if (err .NE. NF_NOERR) go to 10
