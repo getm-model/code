@@ -1,4 +1,4 @@
-!$Id: coordinates.F90,v 1.5 2004-01-05 13:23:27 kbk Exp $
+!$Id: coordinates.F90,v 1.6 2004-04-21 15:18:15 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,12 +11,22 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use  parameters, only: g
    use halo_zones, only: update_3d_halo,wait_halo,H_TAG,HU_TAG,HV_TAG
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,H,HU,HV,az,au,av,min_depth
    use domain, only: ga,ddu,ddl,d_gamma,gamma_surf
    use variables_3d, only: dt,kmin,kumin,kvmin,ho,hn,huo,hun,hvo,hvn
    use variables_3d, only: kmin_pmz,kumin_pmz,kvmin_pmz
    use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
+!JMB
+   use variables_3d, only: uu,vv,NN,SS
+   use variables_3d, only: rho
+   use domain, only: dx,dy,ard1
+! to test ...
+   use variables_3d, only: S
+
+!JMB END
+
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -32,7 +42,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: coordinates.F90,v $
-!  Revision 1.5  2004-01-05 13:23:27  kbk
+!  Revision 1.6  2004-04-21 15:18:15  hb
+!  Algorithms for adaptive grids added
+!
+!  Revision 1.5  2004/01/05 13:23:27  kbk
 !  Poor Man's Z-coordinates
 !
 !  Revision 1.4  2003/09/02 14:45:46  kbk
@@ -103,7 +116,36 @@
    logical, save   :: first=.true.,equiv_sigma=.false.
    logical         :: kminset
    REALTYPE, save, dimension(:),     allocatable  :: dga,be,sig,zlev
-   REALTYPE, save, dimension(:,:,:), allocatable  :: gga
+   REALTYPE, save, dimension(:,:,:), allocatable  :: gga,zzz
+!JMB
+   REALTYPE, save, dimension(:),     allocatable  :: NNloc,SSloc
+   REALTYPE, save, dimension(:),     allocatable  :: gaa,gaaold
+   REALTYPE, save, dimension(:),     allocatable  :: aav,av1,av2,av3
+   REALTYPE, save, dimension(:),     allocatable  :: jmb1,jmb2,jmb3,jmb4
+   REALTYPE, save, dimension(:,:,:), allocatable  :: zpos
+   REALTYPE, save, dimension(:,:,:), allocatable  :: zposo
+   REALTYPE, save, dimension(:,:,:), allocatable  :: FF
+   REALTYPE, save, dimension(:,:,:), allocatable  :: work,work2,work3
+   REALTYPE     :: dtm1
+   REALTYPE     :: FACLAG=0.
+   REALTYPE     :: FACDIF=0.1
+   REALTYPE     :: FACVER=0.095
+   REALTYPE     :: FACHOR=0.00
+   REALTYPE     :: FACISO=0.5
+   REALTYPE     :: depthmin=0.05
+   REALTYPE     :: SSnorm=2.0
+   REALTYPE     :: NNnorm=0.2
+   integer      :: MHOR=0
+   integer      :: MVER=15
+   integer      :: IW=15
+   REALTYPE     :: RM,RLIM1,RLIM2,RLIM3,RLIM4
+   INTEGER      :: IM,III,JJJ,II
+   integer      :: split=5
+   REALTYPE     :: c1ad=0.4,c2ad=0.5,c3ad=0.1,c4ad=0.0,dsurf=2.,Tgrid=17280.
+   REALTYPE     :: dtgrid
+   REALTYPE     :: aau(0:kmax),bu(0:kmax)
+   REALTYPE     :: cu(0:kmax),du(0:kmax)
+!JMB END
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -290,6 +332,32 @@
                end do
             end do
 
+!            allocate(zzz(I3DFIELD),stat=rc)  
+!            do j=jjmin-HALO,jjmax+HALO
+!               do i=iimin-HALO,iimax+HALO-1
+!                  zzz(i,j,0)=-HU(i,j) 
+!                  do k=1,kmax
+!                     zzz(i,j,k)=zzz(i,j,k-1)+hun(i,j,k)
+!                  end do
+!               end do
+!            end do
+!            do j=jjmin-HALO,jjmax+HALO
+!               do i=iimin-HALO,iimax+HALO
+!                  do k=1,kmax
+!                      write(90,*) (i-1)*0.7,zzz(i-1,j,k  )    
+!                      write(90,*) (i-1)*0.7,zzz(i-1,j,k-1)    
+!                      write(90,*) (i  )*0.7,zzz(i  ,j,k-1)    
+!                      write(90,*) (i  )*0.7,zzz(i  ,j,k  )    
+!                      write(90,*) (i-1)*0.7,zzz(i-1,j,k  )    
+!                      write(90,*)     
+!                      if ((zzz(i-1,j,k  ).lt.zzz(i  ,j,k-1)).or.(zzz(i-1,j,k-1).gt.zzz(i  ,j,k  )))                     &
+!                 write(91,*) (i-0.5)*0.7,0.25*(zzz(i-1,j,k  )+ &
+!                      zzz(i-1,j,k-1)+zzz(i  ,j,k-1)+zzz(i  ,j,k  )) 
+!                  end do
+!               end do
+!            end do
+!            stop
+
             do k=1,kmax
                do j=jjmin-HALO,jjmax+HALO-1
                   do i=iimin-HALO,iimax+HALO
@@ -300,6 +368,95 @@
                   end do
                end do
             end do
+!JMB
+         case (4) ! sigma coordinates
+         write(*,*) 'begin first '
+            allocate(zpos(I3DFIELD),stat=rc)  ! z-coord. of interface
+            if (rc /= 0) stop 'coordinates: Error allocating memory (zpos)'
+            allocate(zposo(I3DFIELD),stat=rc)  ! z-coord. of interface
+            if (rc /= 0) stop 'coordinates: Error allocating memory (zposo)'
+            allocate(FF(I3DFIELD),stat=rc)  !
+            if (rc /= 0) stop 'coordinates: Error allocating memory (FF)'
+            allocate(work(I3DFIELD),stat=rc)  !
+            if (rc /= 0) stop 'coordinates: Error allocating memory (work)'
+            allocate(work2(I3DFIELD),stat=rc)  !
+            if (rc /= 0) stop 'coordinates: Error allocating memory (work2)'
+            allocate(work3(I3DFIELD),stat=rc)  !
+            if (rc /= 0) stop 'coordinates: Error allocating memory (work3)'
+            allocate(be(0:kmax),stat=rc)     ! working space
+            if (rc /= 0) STOP 'coordinates: Error allocating (be)'
+            allocate(jmb1(0:kmax),stat=rc)     ! working space
+            if (rc /= 0) STOP 'coordinates: Error allocating (jmb1)'
+            allocate(jmb2(0:kmax),stat=rc)     ! working space
+            if (rc /= 0) STOP 'coordinates: Error allocating (jmb2)'
+            allocate(jmb3(0:kmax),stat=rc)     ! working space
+            if (rc /= 0) STOP 'coordinates: Error allocating (jmb3)'
+            allocate(jmb4(0:kmax),stat=rc)     ! working space
+            if (rc /= 0) STOP 'coordinates: Error allocating (jmb4)'
+            allocate(NNloc(0:kmax),stat=rc)     ! working space
+            if (rc /= 0) STOP 'coordinates: Error allocating (NNloc)'
+            allocate(SSloc(0:kmax),stat=rc)     ! working space
+            if (rc /= 0) STOP 'coordinates: Error allocating (SSloc)'
+            allocate(av1(0:kmax),stat=rc)     ! working space
+            if (rc /= 0) STOP 'coordinates: Error allocating (av1)'
+            allocate(av2(0:kmax),stat=rc)     ! working space
+            if (rc /= 0) STOP 'coordinates: Error allocating (av2)'
+            allocate(av3(0:kmax),stat=rc)     ! working space
+            if (rc /= 0) STOP 'coordinates: Error allocating (av3)'
+            allocate(aav(0:kmax),stat=rc)     ! working space
+            if (rc /= 0) STOP 'coordinates: Error allocating (aav)'
+            allocate(gaa(0:kmax),stat=rc)     ! working space
+            if (rc /= 0) STOP 'coordinates: Error allocating (gaa)'
+            allocate(gaaold(0:kmax),stat=rc)     ! working space
+            if (rc /= 0) STOP 'coordinates: Error allocating (gaaold)'
+            kmaxm1= _ONE_/float(kmax)
+! Dirty way to read initial distribution:
+
+            do j=jjmin,jjmax
+               do i=iimin,iimax
+                  ho(i,j,:)=(sseo(i,j)+H(i,j))*kmaxm1
+                  hn(i,j,:)=(ssen(i,j)+H(i,j))*kmaxm1
+               end do
+            end do
+! Internal wave, only for testing for seiche test case
+#ifdef 0           GOTO 10
+            do j=jjmin,jjmax
+                do i=iimin,iimax
+                HH=H(i,j)*(0.5-0.25*(  &
+                2*float(i)/float(iimax)-1 &
+                ))
+                DO K=1,kmax/2
+                ii=kmax/2
+                ho(i,j,k)=HH/float(ii)
+                enddo
+                do k=kmax/2,kmax
+                ii=(kmax-kmax/2)
+                ho(i,j,k)=(h(i,j)-HH)/float(ii)
+                enddo
+                enddo
+            enddo
+            hn=ho
+ 10       CONTINUE
+#endif
+
+            do j=jjmin,jjmax
+               do i=iimin-1,iimax
+                  huo(i,j,:)=(ssuo(i,j)+HU(i,j))*kmaxm1
+                  hun(i,j,:)=(ssun(i,j)+HU(i,j))*kmaxm1
+               end do
+            end do
+            do j=jjmin-1,jjmax
+               do i=iimin,iimax
+                  hvo(i,j,:)=(ssvo(i,j)+HV(i,j))*kmaxm1
+                  hvn(i,j,:)=(ssvn(i,j)+HV(i,j))*kmaxm1
+               end do
+            end do
+            kmin=1
+            kumin=1
+            kvmin=1
+
+!END JMB
+
 
          case default
 
@@ -467,6 +624,295 @@
 !KBK               end if
             end do
          end do
+!JMB
+! DX and DY scaling should be included....
+      case (4) ! adaptive grids
+         write(*,*) 'begin adaptive grids '
+         ho=hn
+
+
+! Lagrangien step 
+           do k=1,kmax
+              do j=jjmin+1,jjmax-1
+                 do i=iimin+1,iimax-1
+                    hn(i,j,k)=ho(i,j,k)                      &
+                        -((uu(i,j,k)*DYU-uu(i-1,j  ,k)*DYUIM1) &
+                        +(vv(i,j,k)*DXV-vv(i  ,j-1,k)*DXVJM1))*ARCD1*dt*FACLAG &
+                        +( &
+                           (ho(i+1,j,k)-ho(i,j,k))*au(i,j) &
+                          +(ho(i-1,j,k)-ho(i,j,k))*au(i-1,j) &
+                          +(ho(i,j+1,k)-ho(i,j,k))*av(i,j) &
+                          +(ho(i,j-1,k)-ho(i,j,k))*av(i,j-1) &
+                         )*FACDIF*0.25
+! Ensure smooth transition to cut-off around depth
+                    hn(i,j,k)=max(hn(i,j,k),depthmin/5.)
+                    IF(hn(i,j,k).LT.depthmin) hn(i,j,k)=hn(i,j,k)+depthmin/5.
+                 end do
+              end do
+           end do
+
+           call hcheck(hn,ssen,h)
+! First step provided Lagrangian modified hn with additional horizontal
+! diffusion of hn. Consistency with total depth is ensured
+
+
+
+
+! Horizontal diffusion of zpos repeated MHOR times
+         do ii=1,MHOR
+! Prepare zpos field
+         call htoz(hn,zpos)
+
+! Next line probably not needed
+!        call htoz(ho,zposo)
+
+
+! For problem zones, put zero 'horizontal diffusion'
+            do k=1,kmax
+               do j=jjmin,jjmax
+                  do i=iimin,iimax
+                     work2(i,j,k)=FACHOR*au(i,j)
+                  enddo
+                enddo
+             enddo
+             do k=2,kmax
+                do j=jjmin,jjmax
+                   do i=iimin+1,iimax
+                      if((zpos(i,j,k)-zpos(i,j,k-1)).lt.depthmin) then
+                         work2(i,j,k)=0
+                         work2(i,j,k-1)=0
+                         work2(i-1,j,k)=0
+                         work2(i-1,j,k-1)=0
+                      endif
+                    enddo
+                 enddo
+              enddo
+              do   k=1,kmax
+                 do j=jjmin,jjmax
+                    do i=iimin,iimax
+                       work3(i,j,k)=FACHOR*av(i,j)
+                     enddo
+                 enddo
+              enddo
+              do k=2,kmax
+                 do j=jjmin+1,jjmax
+                    do i=iimin,iimax
+                       if((zpos(i,j,k)-zpos(i,j,k-1)).lt.depthmin) then
+                          work3(i,j,k)=0
+                          work3(i,j,k-1)=0
+                          work3(i,j-1,k)=0
+                          work3(i,j-1,k-1)=0
+                       endif
+                    enddo
+                 enddo
+              enddo
+! Check for  bounds on i j etc and possible dirichlet conditions on z
+
+! Dirty BC
+           work=zpos
+             do k=1,kmax-1
+                do j=jjmin+1,jjmax-1
+                   do i=iimin+1,iimax-1
+                   RM=0
+                   IM=0
+
+                      DO iii=max(iimin,i-iw),min(iimax,i+iw)
+                        DO jjj=max(jjmin,j-iw),min(jjmax,j+iw)
+                           RM=RM+az(iii,jjj)*(rho(III,jjj,k+1)+rho(III,jjj,k))
+                           IM=IM+az(iii,jjj)
+                        ENDDO
+                      ENDDO
+
+                      work(i,j,k)=zpos(i,j,k)+ &
+                              (   &
+                           (zpos(i+1,j,k)-zpos(i,j,k))*work2(i,j,k) - &
+                           (zpos(i,j,k)-zpos(i-1,j,k))*work2(i-1,j,k)  &
+                         + (zpos(i,j+1,k)-zpos(i,j,k))*work3(i,j,k) - &
+                           (zpos(i,j,k)-zpos(i,j-1,k))*work3(i,j-1,k)  &
+                              )*0.25    &
+                             +( &
+                             .5* (RM/IM-rho(i,j,k+1)-rho(i,j,k))/NN(i,j,k)&
+                              )*FACISO
+
+
+
+                   end do
+                end do
+             end do
+! Local consistency
+            do k=1,kmax
+               do j=jjmin,jjmax
+                  do i=iimin,iimax
+                     zpos(i,j,k)=work(i,j,k)
+                     if((zpos(i,j,k)-zpos(i,j,k-1)).lt.depthmin) then
+                        zpos(i,j,k)=zpos(i,j,k-1)+depthmin
+                     endif
+                  enddo
+               enddo
+            enddo
+ 
+            call ztoh(zpos,hn,depthmin)
+            call hcheck(hn,ssen,h)
+
+
+         end do ! End of Horizontal diffusion of zpos repeated MHOR times
+! After horizontal diffusion updated new and depth consistent hn is available
+
+
+#if 0
+     do ii=1,MVER
+! Interpolate to new positions
+         call htoz(hn,zpos)
+         call htoz(ho,zposo)
+          do j=jjmin,jjmax
+             do i=iimin,iimax
+               do k=1,kmax
+                  jmb1(k)=(zpos(i,j,k)+zpos(i,j,k-1))*0.5
+                  jmb2(k)=(zposo(i,j,k)+zposo(i,j,k-1))*0.5
+                  jmb3(k)=S(i,j,k)
+                enddo
+!               call VINTEP(jmb3,jmb2,0.,0.,1,KMAX,jmb1,1,KMAX,jmb4)
+! col_interpol(N,cols,obs_z,obs_prof,nlev,model_z,model_prof)
+                call col_interpol(kmax,1,jmb2,jmb3,kmax,jmb1,jmb4)
+
+!                if ((i.eq.10).and.(j.eq.2))
+!               do k=1,kmax
+!                write(*,*) k,zposo(i,j,k),jmb   
+!                enddo
+!                end if
+                do k=1,kmax
+                   FF(i,j,k)=jmb4(k)
+!                  FF(i,j,k)=S(i,j,k)
+                enddo
+             enddo
+          enddo
+
+          work=zpos
+          jmb1=0
+          do j=jjmin,jjmax
+             do i=iimin,iimax
+                do k=1,kmax-1
+                   jmb1(k)=min(ABS(FF(i,j,k+1)-FF(i,j,k))/(zpos(i,j,k+1)-zpos(i,j,k)),30.)+0.00000
+
+! TEST at the left boundary
+               enddo
+               jmb1(0)=jmb1(1)
+               jmb1(kmax)=jmb1(kmax-1)
+! One iteration does not need reinterpolation...
+               do k=1,kmax-1
+                  zpos(i,j,k)=work(i,j,k)+ FACVER*(  &
+                     (work(i,j,k+1)-work(i,j,k))*(jmb1(k+1)+jmb1(k)) &
+                     -(work(i,j,k)-work(i,j,k-1))*(jmb1(k-1)+jmb1(k)) &
+                                    )
+               enddo
+             enddo
+           enddo
+
+! End vertical loop
+      enddo
+! End Test of vertical diffusion of zpos
+
+#else
+         call htoz(hn,zpos)
+         dtgrid=dt/float(split)
+          do j=jjmin,jjmax
+             do i=iimin,iimax
+                NNloc=NN(i,j,:) 
+                SSloc=SS(i,j,:) 
+                do k=0,kmax
+                   gaa(k)=(zpos(i,j,k)-ssen(i,j))/(ssen(i,j)+H(i,j))
+                   gaaold(k)=gaa(k)
+                end do 
+                do ii=1,split
+!     Stratification
+! Dirty jm
+      NNloc(kmax)=NNloc(kmax-1)       
+      NNloc(0)=NNloc(1)       
+      SSloc(kmax)=SSloc(kmax-1)       
+      SSloc(0)=SSloc(1)       
+      do k=1,kmax
+         av1(k)=min(1.,max(0.,0.5*(NNloc(k)+NNloc(k-1)))/g*1024./NNnorm)
+      end do
+
+!     Shear
+      do k=1,kmax
+         av2(k)=min(1.,sqrt(max(0.,0.5*(SSloc(k)+SSloc(k-1))))/SSnorm)
+      end do
+
+!     Distance from surface
+      do k=1,kmax
+         av3(k)=1./(dsurf-0.5*(gaa(k-1)+gaa(k))*H(i,j))+            &
+                1./(dsurf+(1.+0.5*(gaa(k-1)+gaa(k)))*H(i,j))
+      end do
+
+!     Calculation of grid diffusivity
+      do k=1,kmax
+         aav(k)=H(i,j)/Tgrid*(c1ad*av1(k)+c2ad*av2(k)+c3ad*av3(k)+c4ad/H(i,j))
+         aav(k)=aav(k)*dtgrid*kmax**2/100.
+!        Minimum layer thickness
+         if ((gaa(k)-gaa(k-1)).lt.0.001/float(kmax)) aav(k)=0.
+      end do
+
+      do k=1,kmax-1
+         aau(k)=-aav(k)
+         cu(k)=-aav(k+1)
+         bu(k)=1.-aau(k)-cu(k)
+         du(k)=gaa(k)
+      end do
+      cu(0)=0
+      bu(0)=1.
+      du(0)=-1.
+
+      bu(kmax)=1.
+      aau(kmax)=0.
+      du(kmax)=0.
+
+      call getm_tridiagonal(kmax,0,kmax,aau,bu,cu,du,gaa)
+
+
+      call col_interpol(kmax-1,1,gaaold,NN(i,j,:),kmax-1,gaa,NNloc)
+      call col_interpol(kmax-1,1,gaaold,SS(i,j,:),kmax-1,gaa,SSloc)
+       
+      
+
+                end do 
+                zpos(i,j,:)=gaa*(ssen(i,j)+H(i,j))+ssen(i,j)
+             enddo
+          enddo
+#endif
+
+
+! Back to hn
+      call ztoh(zpos,hn,depthmin)
+! Normally if positive defined vertical diffusion no check required
+
+
+! Finally derive interface grid sizes for uu and vv
+! Interface treatment and check
+! uu
+            huo=hun
+            do k=1,kmax
+               do j=jjmin,jjmax
+                  do i=iimin,iimax-1
+                     hun(i,j,k)=0.5*(hn(i,j,k)+hn(i+1,j,k))
+                  end do
+               end do
+            end do
+! maybe not allowed in iimax....
+            call hcheck(hun,ssun,hu)
+! vv
+            hvo=hvn
+            do k=1,kmax
+               do j=jjmin,jjmax-1
+                  do i=iimin,iimax
+                     hvn(i,j,k)=0.5*(hn(i,j,k)+hn(i,j+1,k))
+                  end do
+               end do
+            end do
+! maybe not allowed in jjmax....
+            call hcheck(hvn,ssvn,hv)
+
+
 
       case default
 
