@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.6 2004-04-21 15:15:55 hb Exp $
+#$Id: Makefile,v 1.7 2004-05-04 09:23:51 kbk Exp $
 #
 # Makefile to build the 3D specific library - libm3d.a
 #
@@ -11,7 +11,7 @@ LIB	= $(LIBDIR)/lib3d${buildtype}.a
 MODSRC	= m3d.F90 variables_3d.F90 advection_3d.F90 eqstate.F90 \
           temperature.F90 salinity.F90 spm.F90 bdy_3d.F90 rivers.F90
 
-LIBSRC	= start_macro.F90 bdy_3d.F90 coordinates.F90 bottom_friction_3d.F90 internal_pressure.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 stresses_3d.F90 ss_nn.F90 gotm.F90 slow_bottom_friction.F90 slow_advection.F90 slow_diffusion.F90 slow_terms.F90 stop_macro.F90 check_h.F90
+LIBSRC	= start_macro.F90 hcc_check.F90 bdy_3d.F90 coordinates.F90 check_h.F90 bottom_friction_3d.F90 internal_pressure.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 stresses_3d.F90 ss_nn.F90 gotm.F90 slow_bottom_friction.F90 slow_advection.F90 slow_diffusion.F90 slow_terms.F90 stop_macro.F90
 
 SRC	= $(MODSRC) $(LIBSRC)
 
@@ -36,6 +36,7 @@ $(LIB)(rivers.o)
 
 OBJ = \
 $(LIB)(start_macro.o)			\
+$(LIB)(hcc_check.o)			\
 $(LIB)(coordinates.o)			\
 $(LIB)(bottom_friction_3d.o)		\
 $(LIB)(uu_momentum_3d.o)		\

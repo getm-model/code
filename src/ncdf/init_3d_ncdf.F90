@@ -1,4 +1,4 @@
-!$Id: init_3d_ncdf.F90,v 1.5 2003-12-16 12:51:04 kbk Exp $
+!$Id: init_3d_ncdf.F90,v 1.6 2004-05-04 09:23:51 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,7 +30,10 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_3d_ncdf.F90,v $
-!  Revision 1.5  2003-12-16 12:51:04  kbk
+!  Revision 1.6  2004-05-04 09:23:51  kbk
+!  hydrostatic consistency criteria stored in .3d.nc file
+!
+!  Revision 1.5  2003/12/16 12:51:04  kbk
 !  preparing for proper support for SPM (manuel)
 !
 !  Revision 1.4  2003/05/09 11:38:26  kbk
@@ -218,6 +221,17 @@
    vr(2) = 4000.
    call set_attributes(ncid,bathymetry_id,  &
                        long_name='bathymetry',units='meters',          &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
+
+!  hydrostatic consistency criteria
+   err = nf_def_var(ncid,'hcc',NF_REAL,3,f4_dims,hcc_id)
+   if (err .NE. NF_NOERR) go to 10
+   fv = -_ONE_ 
+   mv = -_ONE_
+   vr(1) = 0.
+   vr(2) = 1.
+   call set_attributes(ncid,hcc_id,  &
+                       long_name='hcc',units=' ',          &
                        FillValue=fv,missing_value=mv,valid_range=vr)
 
 !  now to the variables

@@ -25,6 +25,9 @@
   allocate(hvn(I3DFIELD),stat=rc)   ! 3D field for new box height (v-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (hvn)'
 
+  allocate(hcc(I3DFIELD),stat=rc)    ! Hydrostatic consistency check
+  if (rc /= 0) stop 'init_3d: Error allocating memory (hcc)'
+
   allocate(uuEx(I3DFIELD),stat=rc)  ! 3D field for explicit terms in u-equation
   if (rc /= 0) stop 'init_3d: Error allocating memory (uuEx)'
 

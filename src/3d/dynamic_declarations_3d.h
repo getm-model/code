@@ -1,8 +1,8 @@
 ! Remember to update this value if you add more 3D arrays.
 #ifdef UV_TVD
-  integer,parameter                    :: n3d_fields=29
+  integer,parameter                    :: n3d_fields=30
 #else
-  integer,parameter                    :: n3d_fields=22
+  integer,parameter                    :: n3d_fields=23
 #endif
 
 ! Number of vertical layers in z,u,v columns
@@ -13,6 +13,7 @@
   REALTYPE, dimension(:,:,:), allocatable   :: ho,hn
   REALTYPE, dimension(:,:,:), allocatable   :: huo,hun
   REALTYPE, dimension(:,:,:), allocatable   :: hvo,hvn
+  REALTYPE, dimension(:,:,:), allocatable   :: hcc
   REALTYPE, dimension(:,:,:), allocatable   :: uuEx,vvEx
   REALTYPE, dimension(:,:,:), allocatable   :: num,nuh
   REALTYPE, dimension(:,:,:), allocatable   :: tke,eps

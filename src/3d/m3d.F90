@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.17 2004-04-23 09:03:59 kbk Exp $
+!$Id: m3d.F90,v 1.18 2004-05-04 09:23:51 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -52,7 +52,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.17  2004-04-23 09:03:59  kbk
+!  Revision 1.18  2004-05-04 09:23:51  kbk
+!  hydrostatic consistency criteria stored in .3d.nc file
+!
+!  Revision 1.17  2004/04/23 09:03:59  kbk
 !  reverted to pre-adaptive grid version
 !
 !  Revision 1.15  2004/04/20 16:49:37  hb
@@ -321,6 +324,7 @@
    if (.not. hotstart) then
       call start_macro()
       call coordinates(vert_cord,cord_relax,maxdepth)
+      call hcc_check()
    end if
 
 #ifndef NO_BAROCLINIC

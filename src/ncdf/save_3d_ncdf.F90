@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.7 2003-12-16 12:47:11 kbk Exp $
+!$Id: save_3d_ncdf.F90,v 1.8 2004-05-04 09:23:51 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -23,7 +23,7 @@
    use domain, only: iimin,iimax,jjmin,jjmax,kmax
    use domain, only: grid_type,vert_cord,ga
    use variables_2d, only: z,D,u,DU,v,DV
-   use variables_3d, only: kmin,hn,uu,hun,vv,hvn,ww
+   use variables_3d, only: kmin,hn,uu,hun,vv,hvn,ww,hcc
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho
 #endif
@@ -45,7 +45,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
-!  Revision 1.7  2003-12-16 12:47:11  kbk
+!  Revision 1.8  2004-05-04 09:23:51  kbk
+!  hydrostatic consistency criteria stored in .3d.nc file
+!
+!  Revision 1.7  2003/12/16 12:47:11  kbk
 !  rho_0 and g from parameters (manuel)
 !
 !  Revision 1.6  2003/12/08 07:21:53  hb
@@ -167,6 +170,13 @@
       call cnv_2d(imin,jmin,imax,jmax,az,H,h_missing, &
                   imin,jmin,imax,jmax,ws)
       err = nf_put_vara_real(ncid,bathymetry_id,start,edges,ws)
+      if (err .NE. NF_NOERR) go to 10
+
+      start(3) = 1
+      edges(3) = zlen
+      call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
+                  kmin,az,hcc,-_ONE_,ws)
+      err = nf_put_vara_real(ncid,hcc_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
 
       err = nf_sync(ncid)

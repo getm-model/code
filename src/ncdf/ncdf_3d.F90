@@ -1,4 +1,4 @@
-!$Id: ncdf_3d.F90,v 1.4 2003-12-16 12:51:04 kbk Exp $
+!$Id: ncdf_3d.F90,v 1.5 2004-05-04 09:23:51 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,6 +30,7 @@
    integer                             :: lonc_id,latc_id
    integer                             :: time_id
    integer                             :: bathymetry_id
+   integer                             :: hcc_id
    integer                             :: h_id=-1
    integer                             :: elev_id,u_id,v_id
    integer                             :: uu_id,vv_id,w_id
@@ -60,7 +61,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d.F90,v $
-!  Revision 1.4  2003-12-16 12:51:04  kbk
+!  Revision 1.5  2004-05-04 09:23:51  kbk
+!  hydrostatic consistency criteria stored in .3d.nc file
+!
+!  Revision 1.4  2003/12/16 12:51:04  kbk
 !  preparing for proper support for SPM (manuel)
 !
 !  Revision 1.3  2003/05/09 11:38:26  kbk

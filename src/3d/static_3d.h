@@ -22,6 +22,7 @@
   REALTYPE                             :: hun(I3DFIELD)
   REALTYPE                             :: hvo(I3DFIELD)
   REALTYPE                             :: hvn(I3DFIELD)
+  REALTYPE                             :: hcc(I3DFIELD)
   REALTYPE                             :: uuEx(I3DFIELD)
   REALTYPE                             :: vvEx(I3DFIELD)
   REALTYPE                             :: num(I3DFIELD)
