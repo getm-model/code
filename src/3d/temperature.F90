@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.9 2003-12-16 17:10:05 kbk Exp $
+!$Id: temperature.F90,v 1.10 2004-01-06 15:04:00 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -14,7 +14,7 @@
 ! !USES:
    use domain, only: imin,jmin,imax,jmax,H,az
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
-   use variables_3d, only: T,hn
+   use variables_3d, only: T,hn,adv_schemes
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
 !
@@ -28,14 +28,18 @@
    character(len=PATH_MAX)   :: temp_file="t_and_s.nc"
    character(len=32)         :: temp_name='temp'
    REALTYPE                  :: temp_const=20.
-   integer                   :: temp_hor_adv=1,temp_ver_adv=1,temp_strang=0
+   integer                   :: temp_hor_adv=1,temp_ver_adv=1
+   integer                   :: temp_adv_split=0
    REALTYPE                  :: temp_AH=-1.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: temperature.F90,v $
-!  Revision 1.9  2003-12-16 17:10:05  kbk
+!  Revision 1.10  2004-01-06 15:04:00  kbk
+!  FCT advection + split of advection_3d.F90 + extra adv. input checks
+!
+!  Revision 1.9  2003/12/16 17:10:05  kbk
 !  removed TABS
 !
 !  Revision 1.8  2003/12/16 16:13:51  kbk
@@ -143,7 +147,7 @@
    NAMELIST /temp/ &
              temp_method,temp_const,temp_file,              &
              temp_format,temp_name,temp_field_no,           &
-             temp_hor_adv,temp_ver_adv,temp_strang,temp_AH
+             temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -183,16 +187,67 @@ temp_field_no=1
          stop 'init_temperature'
    end select
 
-   LEVEL3 'temp_hor_adv= ',temp_hor_adv
-   LEVEL3 'temp_ver_adv= ',temp_ver_adv
-   LEVEL3 'temp_strang=  ',temp_strang
-
-   if(temp_strang .ne. 0) then
-      LEVEL2 "WARNING"
-      LEVEL2 "need a bug fix in advection_3d.F90 - setting temp_strang to 0"
-      LEVEL2 "WARNING"
-      temp_strang=0
+!  Sanity checks for advection specifications
+   LEVEL3 'temp_hor_adv=   ',temp_hor_adv
+   LEVEL3 'temp_ver_adv=   ',temp_ver_adv
+   LEVEL3 'temp_adv_split= ',temp_adv_split
+   if(temp_hor_adv .eq. 1) then
+      temp_adv_split=-1
+      if(temp_ver_adv .ne. 1) then
+         LEVEL3 "setting temp_ver_adv to 1 - since temp_hor_adv is 1"
+         temp_ver_adv=1
+      end if
    end if
+   LEVEL3 "horizontal: ",trim(adv_schemes(temp_hor_adv))," of temperature"
+   LEVEL3 "vertical:   ",trim(adv_schemes(temp_ver_adv))," of temperature"
+
+   select case (temp_adv_split)
+      case (-1)
+      case (0)
+         select case (temp_hor_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "temp_adv_split=0: temp_hor_adv not valid (2-6)")
+
+         end select
+         select case (temp_ver_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "temp_adv_split=0: temp_ver_adv not valid (2-6)")
+         end select
+         LEVEL2 "1D split --> full u, full v, full w"
+      case (1)
+         select case (temp_hor_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "temp_adv_split=1: temp_hor_adv not valid (2-6)")
+         end select
+         select case (temp_ver_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "temp_adv_split=1: temp_ver_adv not valid (2-6)")
+         end select
+         LEVEL2 "1D split --> half u, half v, full w, half v, half u"
+      case (2)
+         select case (temp_hor_adv)
+            case (2,7)
+            case default
+               call getm_error("init_3d()", &
+                    "temp_adv_split=2: temp_hor_adv not valid (2,7)")
+         end select
+         select case (temp_ver_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "temp_adv_split=2: temp_ver_adv not valid (2-6)")
+         end select
+         LEVEL2 "2D-hor, 1D-vert split --> full uv, full w"
+      case default
+   end select
 
    call update_3d_halo(T,T,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
    call wait_halo(D_TAG)
@@ -275,7 +330,7 @@ temp_field_no=1
 #endif
    call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,   &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
-                        temp_hor_adv,temp_ver_adv,temp_strang,temp_AH)
+                        temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH)
 #ifdef NOMADS_TEST
    T(iimin:iimin,jjmin:jjmax,1:kmax)=10.
    T(iimax:iimax,jjmin:jjmax,1:kmax)=10.

@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.9 2003-12-16 17:10:05 kbk Exp $
+!$Id: salinity.F90,v 1.10 2004-01-06 15:04:00 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,7 +18,7 @@
 #endif
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
    use domain, only: H,az
-   use variables_3d, only: S,hn
+   use variables_3d, only: S,hn,adv_schemes
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
 !
@@ -32,14 +32,18 @@
    character(len=PATH_MAX)   :: salt_file="t_and_s.nc"
    character(len=32)         :: salt_name='salt'
    REALTYPE                  :: salt_const=35.
-   integer                   :: salt_hor_adv=1,salt_ver_adv=1,salt_strang=0
+   integer                   :: salt_hor_adv=1,salt_ver_adv=1
+   integer                   :: salt_adv_split=0
    REALTYPE                  :: salt_AH=-_ONE_
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: salinity.F90,v $
-!  Revision 1.9  2003-12-16 17:10:05  kbk
+!  Revision 1.10  2004-01-06 15:04:00  kbk
+!  FCT advection + split of advection_3d.F90 + extra adv. input checks
+!
+!  Revision 1.9  2003/12/16 17:10:05  kbk
 !  removed TABS
 !
 !  Revision 1.8  2003/12/16 16:13:51  kbk
@@ -148,7 +152,7 @@
    NAMELIST /salt/                                          &
             salt_method,salt_const,salt_file,               &
             salt_format,salt_name,salt_field_no,            &
-            salt_hor_adv,salt_ver_adv,salt_strang,salt_AH
+            salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -199,16 +203,66 @@ salt_field_no=1
          stop 'init_salinity'
    end select
 
-   LEVEL3 'salt_hor_adv= ',salt_hor_adv
-   LEVEL3 'salt_ver_adv= ',salt_ver_adv
-   LEVEL3 'salt_strang=  ',salt_strang
-
-   if(salt_strang .ne. 0) then
-      LEVEL2 "WARNING"
-      LEVEL2 "need a bug fix in advection_3d.F90 - setting salt_strang to 0"
-      LEVEL2 "WARNING"
-      salt_strang=0
+!  Sanity checks for advection specifications
+   LEVEL3 'salt_hor_adv=   ',salt_hor_adv
+   LEVEL3 'salt_ver_adv=   ',salt_ver_adv
+   LEVEL3 'salt_adv_split= ',salt_adv_split
+   if(salt_hor_adv .eq. 1) then
+      salt_adv_split=-1
+      if(salt_ver_adv .ne. 1) then
+         LEVEL3 "setting salt_ver_adv to 1 - since salt_hor_adv is 1"
+         salt_ver_adv=1
+      end if
    end if
+   LEVEL3 "horizontal: ",trim(adv_schemes(salt_hor_adv))," of salinity"
+   LEVEL3 "vertical:   ",trim(adv_schemes(salt_ver_adv))," of salinity"
+
+   select case (salt_adv_split)
+      case (-1)
+      case (0)
+         select case (salt_hor_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "salt_adv_split=0: salt_hor_adv not valid (2-6)")
+         end select
+         select case (salt_ver_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "salt_adv_split=0: salt_ver_adv not valid (2-6)")
+         end select
+         LEVEL3 "1D split --> full u, full v, full w"
+      case (1)
+         select case (salt_hor_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "salt_adv_split=1: salt_hor_adv not valid (2-6)")
+         end select
+         select case (salt_ver_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "salt_adv_split=1: salt_ver_adv not valid (2-6)")
+         end select
+         LEVEL3 "1D split --> half u, half v, full w, half v, half u"
+      case (2)
+         select case (salt_hor_adv)
+            case (2,7)
+            case default
+               call getm_error("init_3d()", &
+                    "salt_adv_split=2: salt_hor_adv not valid (2,7)")
+         end select
+         select case (salt_ver_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "salt_adv_split=2: salt_ver_adv not valid (2-6)")
+         end select
+         LEVEL3 "2D-hor, 1D-vert split --> full uv, full w"
+      case default
+   end select
 
 #ifdef NOMADS_TEST
    S=34.85
@@ -228,8 +282,15 @@ stop 'salinity - dx is not known'
       end do
    end do
 #endif
+#ifdef SLOPE_TEST
+   do i=81,82
+      do j=22,23
+      S(i,j,0:kmax) = 25.
+      end do
+   end do
+#endif
 #ifdef HAIDVOGEL_TEST
-STDERR 'salinity= ',iimin,iimax,i+ioff,iextr/2
+   STDERR 'HAIDVOGEL: salinity= ',iimin,iimax,i+ioff,iextr/2
    do i=iimin-1,iimax+1
       if(i+ioff .le. iextr/2) then
          S(i,jjmin-1:jjmax+1,0:kmax) = 6.4102564
@@ -336,7 +397,7 @@ STDERR 'salinity= ',iimin,iimax,i+ioff,iextr/2
 #endif
    call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,    &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
-                        salt_hor_adv,salt_ver_adv,salt_strang,salt_AH)
+                        salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH)
 
 #ifdef PECS_TEST
    S(iimin:iimin,jjmin:jjmax,1:kmax)=10.
@@ -422,6 +483,14 @@ STDERR 'salinity= ',iimin,iimax,i+ioff,iextr/2
          end if
       end do
    end do
+
+#ifdef SLOPE_TEST
+   do i=81,82
+      do j=22,23
+      S(i,j,0:kmax) = 25.
+      end do
+   end do
+#endif
 
    call update_3d_halo(S,S,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
    call wait_halo(D_TAG)

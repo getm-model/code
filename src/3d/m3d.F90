@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.11 2004-01-05 13:23:27 kbk Exp $
+!$Id: m3d.F90,v 1.12 2004-01-06 15:04:00 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -50,7 +50,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.11  2004-01-05 13:23:27  kbk
+!  Revision 1.12  2004-01-06 15:04:00  kbk
+!  FCT advection + split of advection_3d.F90 + extra adv. input checks
+!
+!  Revision 1.11  2004/01/05 13:23:27  kbk
 !  Poor Man's Z-coordinates
 !
 !  Revision 1.10  2004/01/02 13:54:24  kbk
@@ -172,7 +175,7 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer                   :: vel_hor_adv=1,vel_ver_adv=1,vel_strang=0
+   integer         :: vel_hor_adv=1,vel_ver_adv=1,vel_adv_split=0
 !EOP
 !-----------------------------------------------------------------------
 
@@ -204,11 +207,11 @@
 !  22Apr99   Karsten Bolding & Hans Burchard  Initial code.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: rc
+   integer         :: rc
    NAMELIST /m3d/ &
              M,cnpar,cord_relax,                        &
              bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,     &
-             vel_hor_adv,vel_ver_adv,vel_strang,        &
+             vel_hor_adv,vel_ver_adv,vel_adv_split,     &
              calc_temp,calc_salt,calc_spm,              &
              avmback,avhback
 !
@@ -229,17 +232,73 @@
 ! Allocates memory for the public data members - if not static
    call init_variables_3d(runtype)
 
-   LEVEL2 'vel_hor_adv= ',vel_hor_adv
-   LEVEL2 'vel_ver_adv= ',vel_ver_adv
-   LEVEL2 'vel_strang=  ',vel_strang
-
-   if(vel_hor_adv .gt. 1 .or. vel_ver_adv .gt. 1) then
+!  Sanity checks for advection specifications
+   LEVEL2 'vel_hor_adv=   ',vel_hor_adv
+   LEVEL2 'vel_ver_adv=   ',vel_ver_adv
+   LEVEL2 'vel_adv_split= ',vel_adv_split
+   if(vel_hor_adv .gt. 1) then
 #ifndef UV_TVD
       STDERR 'To run the model with higher order advection for momentum'
       STDERR 'you need to re-compile the model with the option -DUV_TVD.'
-      stop 'init_3d'
+      call getm_error("init_3d()","GETM needs recompilation")
 #endif
+   else
+      vel_adv_split=-1
+      if(vel_ver_adv .ne. 1) then
+         LEVEL2 "setting vel_ver_adv to 1 - since vel_hor_adv is 1"
+         vel_ver_adv=1
+      end if
    end if
+   LEVEL2 "horizontal: ",trim(adv_schemes(vel_hor_adv))," of momentum"
+   LEVEL2 "vertical:   ",trim(adv_schemes(vel_ver_adv))," of momentum"
+
+   select case (vel_adv_split)
+      case (-1)
+      case (0)
+         select case (vel_hor_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "vel_adv_split=0: vel_hor_adv not valid (2-6)")
+         end select
+         select case (vel_ver_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "vel_adv_split=0: vel_ver_adv not valid (2-6)")
+         end select
+         LEVEL2 "1D split --> full u, full v, full w"
+      case (1)
+         select case (vel_hor_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "vel_adv_split=1: vel_hor_adv not valid (2-6)")
+         end select
+         select case (vel_ver_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "vel_adv_split=1: vel_ver_adv not valid (2-6)")
+         end select
+         LEVEL2 "1D split --> half u, half v, full w, half v, half u"
+      case (2)
+         select case (vel_hor_adv)
+            case (2,7)
+            case default
+               call getm_error("init_3d()", &
+                    "vel_adv_split=2: vel_hor_adv not valid (2,7)")
+         end select
+         select case (vel_ver_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "vel_adv_split=2: vel_ver_adv not valid (2-6)")
+         end select
+         LEVEL2 "2D-hor, 1D-vert split --> full uv, full w"
+      case default
+   end select
+
    dt = M*timestep
    num=avmmol
    nuh=avmmol
@@ -340,7 +399,7 @@
    end if
 #ifndef NO_ADVECT
    if (kmax .gt. 1) then
-      call uv_advect_3d(vel_hor_adv,vel_ver_adv,vel_strang)
+      call uv_advect_3d(vel_hor_adv,vel_ver_adv,vel_adv_split)
       if (Am .gt. _ZERO_) then
          call uv_diffusion_3d(Am)  ! Must be called after uv_advect_3d
       end if

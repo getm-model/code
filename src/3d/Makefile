@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.3 2003-04-07 16:45:07 kbk Exp $
+#$Id: Makefile,v 1.4 2004-01-06 15:04:00 kbk Exp $
 #
 # Makefile to build the 3D specific library - libm3d.a
 #
@@ -52,6 +52,13 @@ $(LIB)(slow_bottom_friction.o)	\
 $(LIB)(slow_advection.o)	\
 $(LIB)(slow_diffusion.o)	\
 $(LIB)(slow_terms.o)		\
+$(LIB)(upstream_adv.o)		\
+$(LIB)(u_split_adv.o)		\
+$(LIB)(v_split_adv.o)		\
+$(LIB)(w_split_adv.o)		\
+$(LIB)(w_split_it_adv.o)	\
+$(LIB)(upstream_2dh_adv.o)	\
+$(LIB)(fct_2dh_adv.o)		\
 $(LIB)(stop_macro.o)
 
 ifeq ($(turbulence),gotm)

@@ -1,4 +1,4 @@
-!$Id: variables_3d.F90,v 1.5 2003-12-16 15:58:54 kbk Exp $
+!$Id: variables_3d.F90,v 1.6 2004-01-06 15:04:00 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -21,6 +21,7 @@
 ! !PUBLIC DATA MEMBERS:
    REALTYPE                            :: dt,cnpar=0.9
    REALTYPE                            :: avmback=_ZERO_,avhback=_ZERO_
+   character(len=64)                   :: adv_schemes(7)
 !
 #ifdef STATIC
 #include "static_3d.h"
@@ -34,7 +35,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: variables_3d.F90,v $
-!  Revision 1.5  2003-12-16 15:58:54  kbk
+!  Revision 1.6  2004-01-06 15:04:00  kbk
+!  FCT advection + split of advection_3d.F90 + extra adv. input checks
+!
+!  Revision 1.5  2003/12/16 15:58:54  kbk
 !  back ground viscosity and diffusivity (manuel)
 !
 !  Revision 1.4  2003/04/23 12:16:34  kbk
@@ -127,6 +131,14 @@
    hnadv = _ZERO_ ; hoadv = _ZERO_
    huadv = _ZERO_ ; hvadv = _ZERO_
 #endif
+
+   adv_schemes(1) = "3D first-order upstream advection"
+   adv_schemes(2) = "upstream advection (first-order, monotone)"
+   adv_schemes(3) = "P2-PDM advection (third-order, non-monotone)"
+   adv_schemes(4) = "TVD-Superbee advection (second-order, monotone)"
+   adv_schemes(5) = "TVD-MUSCL advection (second-order, monotone)"
+   adv_schemes(6) = "TVD-P2-PDM advection (third-order, monotone)"
+   adv_schemes(7) = "2D-FCT advection"
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_variables_3d()'
