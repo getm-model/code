@@ -57,6 +57,7 @@
   allocate(SS(I3DFIELD),stat=rc)   ! 3D field for shear frequency
   if (rc /= 0) stop 'init_3d: Error allocating memory (SS)'
 
+#ifndef NO_BAROCLINIC
   allocate(NN(I3DFIELD),stat=rc)   ! 3D field for buoyancy frequency
   if (rc /= 0) stop 'init_3d: Error allocating memory (NN)'
 
@@ -83,6 +84,7 @@
 
   allocate(spm_pool(I2DFIELD),stat=rc) ! Sinking velocity
   if (rc /= 0) stop 'init_3d: Error allocating memory (spm_pool)'
+#endif
 
 #ifdef UV_TVD
   allocate(uadv(I3DFIELD),stat=rc) ! u advection velocity

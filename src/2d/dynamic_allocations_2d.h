@@ -13,35 +13,17 @@
    allocate(zo(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (zo)'
 
-   allocate(zrold(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (zrold)'
-
-   allocate(zrnew(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (zrnew)'
-
    allocate(zu(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (zu)'
 
-   allocate(zuo(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (zuo)'
-
    allocate(zv(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (zv)'
-
-   allocate(zvo(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (zvo)'
 
    allocate(U(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (U)'
 
    allocate(V(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (V)'
-
-   allocate(uavg(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (uavg)'
-
-   allocate(vavg(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (vavg)'
 
    allocate(UEx(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (UEx)'
@@ -61,7 +43,8 @@
    allocate(rv(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (rv)'
 
-   if (runtype .gt. 1) then
+!   if (runtype .gt. 1) then
+   if (runtype .gt. 0) then
       allocate(Uint(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (Uint)'
 
@@ -121,18 +104,6 @@
 
    allocate(zvb0(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (zvb0)'
-
-!kbk   allocate(ResU(E2DFIELD),stat=rc)
-!kbk   if (rc /= 0) stop 'init_2d: Error allocating memory (ResU)'
-
-!kbk   allocate(ResV(E2DFIELD),stat=rc)
-!kbk   if (rc /= 0) stop 'init_2d: Error allocating memory (ResV)'
-
-!kbk   allocate(ResDU(E2DFIELD),stat=rc)
-!kbk   if (rc /= 0) stop 'init_2d: Error allocating memory (ResDU)'
-
-!kbk   allocate(ResDV(E2DFIELD),stat=rc)
-!kbk   if (rc /= 0) stop 'init_2d: Error allocating memory (ResDV)'
 
    allocate(surfdiv(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (surfdiv)'

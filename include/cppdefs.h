@@ -110,7 +110,11 @@
 #endif
 
 ! The width of the HALO zones
+#ifdef PARALLEL
+#define HALO	  2
+#else
 #define HALO	  1
+#endif
 
 ! Here the memory-allocation is defined
 #define E2DFIELD  imin-HALO:imax+HALO,jmin-HALO:jmax+HALO
