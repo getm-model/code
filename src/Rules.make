@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.3 2003-03-17 14:58:37 gotm Exp $
+#$Id: Rules.make,v 1.4 2003-04-01 15:33:19 gotm Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -218,7 +218,7 @@ MODULES=-module $(MODDIR)
 EXTRAS  = -static -w95 -e95
 DEBUG_FLAGS = -g -C
 PROF_FLAGS  = -qp -p
-PROD_FLAGS  = -O3
+PROD_FLAGS  = -O3 -mp
 REAL_4B = real\(4\)
 EXTRA_LIBS += -lPEPCF90 -lpthread
 endif
