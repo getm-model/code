@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.7 2003-12-16 16:00:46 kbk Exp $
+!$Id: salinity.F90,v 1.8 2003-12-16 16:13:51 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -39,7 +39,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: salinity.F90,v $
-!  Revision 1.7  2003-12-16 16:00:46  kbk
+!  Revision 1.8  2003-12-16 16:13:51  kbk
+!  forced ????_strang to 0 - needs clarification
+!
+!  Revision 1.7  2003/12/16 16:00:46  kbk
 !  molecular diffusion for salt and temp (manuel)
 !
 !  Revision 1.6  2003/09/13 10:52:21  kbk
@@ -196,6 +199,13 @@ salt_field_no=1
    LEVEL3 'salt_hor_adv= ',salt_hor_adv
    LEVEL3 'salt_ver_adv= ',salt_ver_adv
    LEVEL3 'salt_strang=  ',salt_strang
+
+   if(salt_strang .ne. 0) then
+      LEVEL2 "WARNING"
+      LEVEL2 "need a bug fix in advection_3d.F90 - setting salt_strang to 0"
+      LEVEL2 "WARNING"
+      salt_strang=0
+   end if
 
 #ifdef NOMADS_TEST
    S=34.85
@@ -370,8 +380,10 @@ STDERR 'salinity= ',iimin,iimax,i+ioff,iextr/2
             if (kmax.gt.1) then
 !     Auxilury terms, old and new time level,
                do k=1,kmax-1
-                  auxo(k)=2.*(1-cnpar)*dt*(nuh(i,j,k)+avmols)/(hn(i,j,k+1)+hn(i,j,k))
-                  auxn(k)=2.*   cnpar *dt*(nuh(i,j,k)+avmols)/(hn(i,j,k+1)+hn(i,j,k))
+                  auxo(k)=2.*(1-cnpar)*dt*(nuh(i,j,k)+avmols)/ &
+		             (hn(i,j,k+1)+hn(i,j,k))
+                  auxn(k)=2.*   cnpar *dt*(nuh(i,j,k)+avmols)/ &
+		             (hn(i,j,k+1)+hn(i,j,k))
                end do
 
 !        Matrix elements for surface layer

@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.7 2003-12-16 16:00:46 kbk Exp $
+!$Id: temperature.F90,v 1.8 2003-12-16 16:13:51 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,7 +35,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: temperature.F90,v $
-!  Revision 1.7  2003-12-16 16:00:46  kbk
+!  Revision 1.8  2003-12-16 16:13:51  kbk
+!  forced ????_strang to 0 - needs clarification
+!
+!  Revision 1.7  2003/12/16 16:00:46  kbk
 !  molecular diffusion for salt and temp (manuel)
 !
 !  Revision 1.6  2003/09/13 10:52:21  kbk
@@ -181,6 +184,13 @@ temp_field_no=1
    LEVEL3 'temp_ver_adv= ',temp_ver_adv
    LEVEL3 'temp_strang=  ',temp_strang
 
+   if(temp_strang .ne. 0) then
+      LEVEL2 "WARNING"
+      LEVEL2 "need a bug fix in advection_3d.F90 - setting temp_strang to 0"
+      LEVEL2 "WARNING"
+      temp_strang=0
+   end if
+
    call update_3d_halo(T,T,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
    call wait_halo(D_TAG)
 
@@ -292,8 +302,10 @@ temp_field_no=1
             if (kmax.gt.1) then
 !     Auxilury terms, old and new time level,
                do k=1,kmax-1
-                  auxo(k)=2.*(1-cnpar)*dt*(nuh(i,j,k)+avmolt)/(hn(i,j,k+1)+hn(i,j,k))
-                  auxn(k)=2.*   cnpar *dt*(nuh(i,j,k)+avmolt)/(hn(i,j,k+1)+hn(i,j,k))
+                  auxo(k)=2.*(1-cnpar)*dt*(nuh(i,j,k)+avmolt)/ &
+		             (hn(i,j,k+1)+hn(i,j,k))
+                  auxn(k)=2.*   cnpar *dt*(nuh(i,j,k)+avmolt)/ &
+		             (hn(i,j,k+1)+hn(i,j,k))
                end do
 
 !        Matrix elements for surface layer
