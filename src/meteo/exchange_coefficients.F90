@@ -1,4 +1,4 @@
-!$Id: exchange_coefficients.F90,v 1.8 2003-12-16 17:35:33 kbk Exp $
+!$Id: exchange_coefficients.F90,v 1.9 2005-01-13 09:49:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -49,11 +49,8 @@
 !
 ! !USES:
    use meteo, only: cpa,KELVIN
-   use meteo, only: L,rho_air,w,qs,qa,cd_heat,cd_mom
-#ifdef WRONG_KONDO
-#else
-   use meteo, only: cd_latent
-#endif
+   use meteo, only: L,rho_air,w,qs,qa,ea,es
+   use meteo, only: cd_mom,cd_heat,cd_latent
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -68,7 +65,10 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: exchange_coefficients.F90,v $
-!  Revision 1.8  2003-12-16 17:35:33  kbk
+!  Revision 1.9  2005-01-13 09:49:37  kbk
+!  wet bulb works, es is global, cleaning - Stips
+!
+!  Revision 1.8  2003/12/16 17:35:33  kbk
 !  Fortran95 requires same type as args to min/max
 !
 !  Revision 1.7  2003/11/17 09:01:12  kbk
@@ -108,17 +108,11 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE                  :: tvirt,s,s0
-#ifdef WRONG_KONDO
-   REALTYPE                  :: ae_h,be_h,ce_h,pe_h
-   REALTYPE                  :: ae_m,be_m,ce_m,pe_m
-   REALTYPE                  :: cee_heat,cee_mom
-#else
    REALTYPE                  :: ae_d,be_d,ce_d,pe_d
    REALTYPE                  :: ae_h,be_h,ce_h,pe_h
    REALTYPE                  :: ae_e,be_e,ce_e,pe_e
    REALTYPE                  :: cee_d,cee_h,cee_e
-#endif
-   REALTYPE                  :: x,es,ea
+   REALTYPE                  :: x
    REALTYPE                  :: ta,ta_k,tw,tw_k
 
    REALTYPE                  :: twet,rh
@@ -173,31 +167,65 @@
          (min(tw_k,300.)-273.15)/(max(tw_k,200.)-273.15+257.87))
 #endif
 
+#ifdef HAMSOM_SVP
+    x  = 17.67*tw/(tw+243.5)
+    es = 611.2 * exp(x)
+#else
    es = a1 +tw*(a2+tw*(a3+tw*(a4+tw*(a5+tw*(a6+tw*a7)))))
    es = es * 100.0 ! Conversion millibar --> Pascal
+#endif
 !  saturation specific humidity
    qs = const06*es/(airp-0.377*es)
 
 !  see ../ncdf/ncdf_meteo.F90 for defined constants
    select case (hum_method)
    case (1)
+!     specifc humidity in kg/kg is given
       qa = hum
+!     aktual water vapor pressure
+      ea = qa *airp/(const06+0.378*qa)
    case (2)
-      rh = hum
-      qa = 0.01*rh*qs
+!     relative humidity in % given
+      rh = 0.01 * hum
+!     saturation vapor pressure at that air temperature
+#ifdef HAMSOM_SVP
+      x  = 17.67*ta/(ta+243.5)
+      ea = 611.2 * exp(x)
+#else
+      ea = a1 +ta*(a2+ta*(a3+ta*(a4+ta*(a5+ta*(a6+ta*a7)))))
+      ea = ea * 100.0 ! Conversion millibar --> Pascal
+#endif
+!     get actual vapor pressure
+      ea = rh * ea
+!     convert to specific humidity
+      qa = const06*ea/(airp-0.377*ea)
    case (3)
       ! Piece of code taken from HAMSOM for calculating relative
       ! humidity from dew point temperature and dry air temperature.
       ! It must be sure that hum is dew point temperature in Kelvin 
       ! in the next line ...
-      dew = hum
+!       use dew in degC
+      if (hum .lt. 100.) then
+         dew = hum
+      else
+         dew = hum - KELVIN
+      end if
+#ifdef HAMSOM_SVP
+      x  = 17.67*dew/(dew+243.5)
+      ea = 611.2 * exp(x)
+#else
+      ea = a1 +dew*(a2+dew*(a3+dew*(a4+dew*(a5+dew*(a6+dew*a7)))))
+      ea = ea * 100.0 ! Conversion millibar --> Pascal
+#endif
+#if 0
+!     This is kept for reference - original HAMSOM formulation
+!     AS see what happens if coding is done without understanding.. 
       x1 = (18.729 - (min(dew,300.*_ONE_)-273.15)/227.3)
       x2 = (min(dew,300.*_ONE_)-273.15) 
       x3 = (max(dew,200.*_ONE_)-273.15+257.87)
       ea = 611.21*exp(x1*x2/x3)
 !KBK      ea  = 611.21*exp((18.729 - (min(dew,300.)-273.15)/227.3)*    &
 !KBK            (min(dew,300.)-273.15)/(max(dew,200.)-273.15+257.87))
-
       x1 = (18.729 - (min(ta_k,300.*_ONE_)-273.15)/227.3)
       x2 = (min(ta_k,300.*_ONE_)-273.15) 
       x3 = (max(ta_k,200.*_ONE_)-273.15+257.87)
@@ -206,17 +234,32 @@
 !KBK            (min(ta_k,300.)-273.15)/(max(ta_k,200.)-273.15+257.87))
       rh = 100.*ea/es
       qa = 0.01*rh*qs
+#endif
+!AS convert actual vapor pressure to specific humidity
+      qa = const06*ea/(airp-0.377*ea)
    case (4)
-      STDERR 'Should be checked - kbk'
-      STDERR 'HAVE_WET_BULB_TEMPERATURE'
-      stop 'exchange_coefficients()' 
-      twet = hum
-      ea = es - 67.*(ta-twet)
-      x = (ta-twet)/(CONST06*L)
-      ea = (es-cpa*airp*x)/(1+cpa*x)
-      if(ea .lt. 0.0) ea = 0.0
-      qa = CONST06*ea/(airp-0.377*ea)
-      STDERR 'Taking hum as wet bulb temperature'
+!     wet bulb temperature given
+!     Calculate the SVP at wet bulb temp then
+!     use the psychrometer formula to get vapour pressure
+!     See Smithsonian Met tables 6th Edition pg 366 eqn 3
+!     Make sure this is in degC 
+      if (hum .lt. 100 ) then
+         twet=hum 
+      else
+         twet=hum - KELVIN
+      end if
+!     saturation vapor pressure at wet bulb temperature
+#ifdef HAMSOM_SVP
+      x  = 17.67*twet/(twet+243.5)
+      ea = 611.2 * exp(x)
+#else
+      ea = a1 +twet*(a2+twet*(a3+twet*(a4+twet*(a5+twet*(a6+twet*a7)))))
+      ea = ea * 100.0 ! Conversion millibar --> Pascal
+#endif
+!     actual vapor pressure
+      ea = ea - 6.6e-4*(1+1.15e-3*twet)*airp*(ta-twet)
+!     specific humidity in kg/kg
+      qa = const06*ea/(airp-0.377*ea)
    case default
       FATAL 'not a valid hum_method'
       stop 'exchange_coefficients()'
@@ -226,42 +269,6 @@
    rho_air = airp/(287.05*Tvirt)
 
 !  Transfer coefficient for heat and momentum
-#ifdef WRONG_KONDO
-   if (w .lt. 2.2) then
-      ae_h=0.0;   be_h=1.23;   ce_h=0.0;      pe_h=-0.16;
-      ae_m=0.0;   be_m=1.185;  ce_m=0.0;      pe_m=-0.157;
-   else if (w .lt. 5.0) then
-      ae_h=0.969; be_h=0.0521; ce_h=0.0;      pe_h=1.0;
-      ae_m=0.927; be_m=0.0546; ce_m=0.0;      pe_m=1.0;
-   else if (w .lt. 8.0) then
-      ae_h=1.18;  be_h=0.01;   ce_h=0.0;      pe_h=1.0;
-      ae_m=1.15;  be_m=0.01;   ce_m=0.0;      pe_m=1.0;
-   else if (w .lt. 25.0) then
-      ae_h=1.196; be_h=0.008;  ce_h=-0.0004;  pe_h=1.0
-      ae_m=1.17;  be_m=0.0075; ce_m=-0.00044; pe_m=1.0;
-   else
-      ae_h=1.68;  be_h=-0.016; ce_h=0;        pe_h=1;
-      ae_m=1.652; be_m=-0.017; ce_m=0.0;      pe_m=1.0;
-   end if
-
-   cee_heat=(ae_h+be_h*exp(pe_h*log(w+eps))+ce_h*(w-8.0)**2)*1.0e-3
-   cee_mom =(ae_m+be_m*exp(pe_m*log(w+eps)))*1.0e-3
-
-!  Stability - assume 10 meter wind
-   s0=0.25*(tw-ta)/(w+eps)**2
-   s=s0*abs(s0)/(abs(s0)+0.01)
-
-   if(s .lt. 0.) then
-      x = 0.1+0.03*s+0.9*exp(4.8*s)
-      cd_heat=x*cee_heat
-      cd_mom =x*cee_mom
-   else
-      cd_heat=cee_heat*(1.0+0.63*sqrt(s))
-      cd_mom =cee_mom *(1.0+0.47*sqrt(s))
-   end if
-
-#else
-
    if (w .lt. 2.2) then
       ae_d=0.0;   be_d=1.08;   ce_d=0.0;      pe_d=-0.15;
       ae_h=0.0;   be_h=1.185;  ce_h=0.0;      pe_h=-0.157;
@@ -304,7 +311,6 @@
       cd_heat=cee_h*(1.0+0.63*sqrt(s))
       cd_latent=cee_e*(1.0+0.63*sqrt(s))
    end if
-#endif
 
    return
    end subroutine exchange_coefficients

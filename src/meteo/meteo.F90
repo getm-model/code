@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.10 2004-01-15 11:45:00 kbk Exp $
+!$Id: meteo.F90,v 1.11 2005-01-13 09:49:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -60,14 +60,10 @@
    logical, public                     :: on_grid=.true.
    logical, public                     :: calc_met=.false.
    integer, public                     :: method
-   REALTYPE, public                    :: w,L,rho_air,qs,qa,ea
+   REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
    REALTYPE, public, dimension(:,:), allocatable  :: airp,tausx,tausy,swr,shf
    REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum,tcc
-#ifdef WRONG_KONDO
-   REALTYPE, public                    :: cd_mom,cd_heat
-#else
    REALTYPE, public                    :: cd_mom,cd_heat,cd_latent
-#endif
    REALTYPE, public                    :: t_1=-_ONE_,t_2=-_ONE_
    logical, public                     :: new_meteo=.false.
    integer, public                     :: hum_method=-1
@@ -82,7 +78,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
-!  Revision 1.10  2004-01-15 11:45:00  kbk
+!  Revision 1.11  2005-01-13 09:49:37  kbk
+!  wet bulb works, es is global, cleaning - Stips
+!
+!  Revision 1.10  2004/01/15 11:45:00  kbk
 !  meteo point source forcing - taus, swr and shf - implemented
 !
 !  Revision 1.9  2003/10/01 12:09:13  kbk

@@ -1,4 +1,4 @@
-!$Id: fluxes.F90,v 1.7 2003-12-16 17:16:13 kbk Exp $
+!$Id: fluxes.F90,v 1.8 2005-01-13 09:49:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -23,11 +23,8 @@
 !
 ! !USES:
    use meteo, only: cpa,emiss,bolz,KELVIN
-   use meteo, only: w,L,rho_air,qs,qa,ea,cd_heat,cd_mom
-#ifdef WRONG_KONDO
-#else
-   use meteo, only: cd_latent
-#endif
+   use meteo, only: w,L,rho_air,qs,qa,ea,es
+   use meteo, only: cd_mom,cd_heat,cd_latent
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -42,7 +39,10 @@
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: fluxes.F90,v $
-!  Revision 1.7  2003-12-16 17:16:13  kbk
+!  Revision 1.8  2005-01-13 09:49:37  kbk
+!  wet bulb works, es is global, cleaning - Stips
+!
+!  Revision 1.7  2003/12/16 17:16:13  kbk
 !  double declaration of cd_heat,cd_mom
 !
 !  Revision 1.6  2003/10/01 12:10:05  kbk
@@ -95,11 +95,7 @@
    end if
 
    qh=cd_heat*cpa*rho_air*w*(tw-ta)            ! sensible
-#ifdef WRONG_KONDO
-   qe=cd_heat*L*rho_air*w*(qs-qa)              ! latent
-#else
    qe=cd_latent*L*rho_air*w*(qs-qa)            ! latent
-#endif
 
    select case(back_radiation_method)          ! back radiation
       case(clark)
