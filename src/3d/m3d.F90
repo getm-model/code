@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.5 2003-04-23 12:16:34 kbk Exp $
+!$Id: m3d.F90,v 1.6 2003-08-28 15:13:57 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -21,7 +21,7 @@
    use parameters, only: avmmol
    use domain, only: vert_cord
    use m2d, only: Am
-   use variables_2d, only: D,z
+   use variables_2d, only: D,z,UEx,VEx
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature
    use salinity,   only: init_salinity, do_salinity
@@ -53,7 +53,10 @@ use halo_mpi
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.5  2003-04-23 12:16:34  kbk
+!  Revision 1.6  2003-08-28 15:13:57  kbk
+!  explicit set UEx and VEx to 0
+!
+!  Revision 1.5  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.4  2003/04/07 16:28:34  kbk
@@ -358,6 +361,7 @@ use halo_mpi
    end if
 #endif
 
+   UEx=_ZERO_ ; VEx=_ZERO_
    if (kmax .gt. 1) then
 #ifndef NO_BOTTFRIC
       call slow_bottom_friction()
