@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.5 2003-08-03 08:13:09 kbk Exp $
+!$Id: salinity.F90,v 1.6 2003-09-13 10:52:21 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -39,7 +39,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: salinity.F90,v $
-!  Revision 1.5  2003-08-03 08:13:09  kbk
+!  Revision 1.6  2003-09-13 10:52:21  kbk
+!  changed field_no to salt_field_no and temp_field_no
+!
+!  Revision 1.5  2003/08/03 08:13:09  kbk
 !  added field_no to namelist
 !
 !  Revision 1.4  2003/04/23 12:16:34  kbk
@@ -132,10 +135,10 @@
 #endif
    integer, parameter        :: nmax=100
    REALTYPE                  :: zlev(nmax),prof(nmax)
-   integer                   :: field_no=1
+   integer                   :: salt_field_no=1
    NAMELIST /salt/                                          &
             salt_method,salt_const,salt_file,               &
-            salt_format,salt_name,field_no,                 &
+            salt_format,salt_name,salt_field_no,            &
             salt_hor_adv,salt_ver_adv,salt_strang,salt_AH
 !EOP
 !-------------------------------------------------------------------------
@@ -147,10 +150,10 @@
 #endif
 
 #ifdef NS_NOMADS_TEST
-field_no=1
+salt_field_no=1
 #endif
 #ifdef MED_15X15MINS_TEST
-field_no=1
+salt_field_no=1
 #endif
 
    LEVEL2 'init_salinity()'
@@ -170,7 +173,7 @@ field_no=1
                            iimin,jjmin,iimax,jjmax,kmax,hn,S)
       case(3)
          LEVEL3 'interpolating from 3D field'
-         call get_field(salt_file,salt_name,field_no,S)
+         call get_field(salt_file,salt_name,salt_field_no,S)
 #ifdef SALTWEDGE_TEST
       case(4)
       !I need this here for hotstart of salinity!!!
