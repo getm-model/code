@@ -1,4 +1,4 @@
-!$Id: bottom_friction.F90,v 1.1 2002-05-02 14:00:41 gotm Exp $
+!$Id: bottom_friction.F90,v 1.2 2003-03-20 15:48:12 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,8 +27,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bottom_friction.F90,v $
-!  Revision 1.1  2002-05-02 14:00:41  gotm
-!  Initial revision
+!  Revision 1.2  2003-03-20 15:48:12  gotm
+!  fixed small bug in calc. of rvv + cleaning the code
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:41  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.6  2001/06/22 08:19:10  bbh
 !  Compiler options such as USE_MASK and OLD_DRY deleted.
@@ -65,18 +68,16 @@
    write(debug,*) 'bottom_friction() # ',Ncall
 #endif
 
-   where (au .gt. 0)
-      uloc=U/DU
-   end where
-
    do j=jmin,jmax
       do i=imin,imax
-      if (au(i,j) .gt. 0) then
-         vloc(i,j)=0.25* ( V(i  ,j  )/DV(i  ,j  )	&
-                          +V(i+1,j  )/DV(i+1,j  )	&
-                          +V(i  ,j-1)/DV(i  ,j-1)	&
-                          +V(i+1,j-1)/DV(i+1,j-1) )	
-      end if
+         if (au(i,j) .gt. 0) then
+            vloc(i,j)=0.25* ( V(i  ,j  )/DV(i  ,j  )	&
+                             +V(i+1,j  )/DV(i+1,j  )	&
+                             +V(i  ,j-1)/DV(i  ,j-1)	&
+                             +V(i+1,j-1)/DV(i+1,j-1) )
+         else
+            vloc(i,j) = _ZERO_
+         end if
       end do
    end do
 
@@ -84,10 +85,12 @@
 
 #ifndef DEBUG
    where (au .gt. 0)
+      uloc=U/DU
       HH=max(min_depth,DU)
       ruu=(kappa/log((zub+0.5*HH)/zub))**2
    end where
 #else
+   uloc=U/DU
    HH=max(min_depth,DU)
    ruu=(zub+0.5*HH)/zub
 
@@ -122,24 +125,25 @@
 !  The y-direction
    do j=jmin,jmax
       do i=imin,imax
-      if (av(i,j) .gt. 0) then
-         uloc(i,j)=0.25* ( U(i  ,j  )/DU(i  ,j  )	&
-                          +U(i-1,j  )/DU(i-1,j  )	&
-                          +U(i  ,j+1)/DU(i  ,j+1)	&
-                          +U(i-1,j+1)/DU(i-1,j+1) )	
-      end if
+         if (av(i,j) .gt. 0) then
+            uloc(i,j)=0.25* ( U(i  ,j  )/DU(i  ,j  )	&
+                             +U(i-1,j  )/DU(i-1,j  )	&
+                             +U(i  ,j+1)/DU(i  ,j+1)	&
+                             +U(i-1,j+1)/DU(i-1,j+1) )
+         else
+            uloc(i,j) = _ZERO_
+         end if
       end do
    end do
-   where (av .gt. 0)
-      vloc=V/DV
-   end where
 
 #ifndef DEBUG
    where (av .gt. 0)
+      vloc=V/DV
       HH=max(min_depth,DV)
       rvv=(kappa/log((zvb+0.5*HH)/zvb))**2
    end where
 #else
+   vloc=V/DV
    HH=max(min_depth,DV)
    rvv=(zvb+0.5*HH)/zvb
 
@@ -159,18 +163,14 @@
    end where
 #endif
 
-   where (av .gt. 0)
-      HH=max(min_depth,DV)
-      rvv=(kappa/log((zvb+0.5*HH)/zvb))**2
-   end where
-!   if (runtype .eq. 1) then
+   if (runtype .eq. 1) then
       where (av .gt. 0)
          fricvel=sqrt(rvv*(uloc**2+vloc**2))
-!         zvb=min(HH,zvb0+0.1*avmmol/max(avmmol,fricvel))
+         zvb=min(HH,zvb0+0.1*avmmol/max(avmmol,fricvel))
          rvv=(zvb+0.5*HH)/zvb
          rvv=(kappa/log(rvv))**2
       end where
-!   end if
+   end if
 
    where (av .gt. 0)
       rv=rvv*sqrt(uloc**2+vloc**2)
