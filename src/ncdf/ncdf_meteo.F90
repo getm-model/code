@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.2 2003-03-17 15:49:10 gotm Exp $
+!$Id: ncdf_meteo.F90,v 1.3 2003-04-07 15:34:15 kbk Exp $
 #include "cppdefs.h"
 !#define HIRLAM_FRV
 #define ECMWF_FRV
@@ -15,7 +15,7 @@
 ! !USES:
    use time, only: string_to_julsecs,TimeDiff,add_secs,in_interval
    use time, only: jul0,secs0,julianday,secondsofday,timestep
-   use domain, only: imin,imax,jmin,jmax,lonmap,latmap,conv
+   use domain, only: imin,imax,jmin,jmax,az,lonc,latc,conv
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
    use meteo, only: meteo_file,on_grid,calc_met,method
    use meteo, only: airp,u10,v10,t2,hum,cc
@@ -37,7 +37,7 @@
    integer	:: tausx_id,tausy_id,swr_id,shf_id
    integer	:: iextr,jextr,textr,tmax
 
-   REALTYPE, allocatable	:: mlon(:,:),mlat(:,:)
+   REALTYPE, allocatable	:: met_lon(:,:),met_lat(:,:)
    REAL_4B, allocatable		:: met_times(:)
    REAL_4B, allocatable		:: wrk(:,:)
    REALTYPE, allocatable	:: wrk_dp(:,:)
@@ -66,8 +66,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.2  2003-03-17 15:49:10  gotm
-!  Changed case of meteo variable names
+!  Revision 1.3  2003-04-07 15:34:15  kbk
+!  updated to lonc,latc
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:47  gotm
 !  recovering after CVS crash
@@ -180,15 +180,15 @@
 
    allocate(wrk_dp(iextr,jextr),stat=err)
    if (err /= 0) stop 'ncdf_meteo: Error allocating memory (wrk_dp)'
-   wrk_dp = 0.
+   wrk_dp = _ZERO_
 
    if ( .not. on_grid ) then
 
-      allocate(mlon(iextr,jextr),stat=err)
-      if (err /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (mlon)'
+      allocate(met_lon(iextr,jextr),stat=err)
+      if (err /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (met_lon)'
 
-      allocate(mlat(iextr,jextr),stat=err)
-      if (err /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (mlat)'
+      allocate(met_lat(iextr,jextr),stat=err)
+      if (err /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (met_lat)'
 
       allocate(ti(E2DFIELD),stat=err)
       if (err /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (ti)'
@@ -198,21 +198,22 @@
 
       allocate(gridmap(E2DFIELD,1:2),stat=err)
       if (err /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (gridmap)'
+      gridmap(:,:,:) = -999
 #define SETTING_LON_LAN
 #ifdef SETTING_LON_LAN
       do j=1,jextr
          do i=1,iextr
 #ifdef ECMWF_FRV
-	    mlon(i,j) = -21. + (i-1)*_ONE_
-	    mlat(i,j) =  48. + (j-1)*_ONE_
+	    met_lon(i,j) = -21. + (i-1)*_ONE_
+	    met_lat(i,j) =  48. + (j-1)*_ONE_
 #endif
 #ifdef HIRLAM_FRV
-	    mlon(i,j) = -39.875 + (i-1)*0.15
-	    mlat(i,j) = -24.477 + (j-1)*0.15
+	    met_lon(i,j) = -39.875 + (i-1)*0.15
+	    met_lat(i,j) = -24.477 + (j-1)*0.15
 #endif
 #ifdef MED_15X15MINS_TEST
-	    mlon(i,j) = -10.125 + (i-1)*1.125
-	    mlat(i,j) =  28.125 + (j-1)*1.125
+	    met_lon(i,j) = -10.125 + (i-1)*1.125
+	    met_lat(i,j) =  28.125 + (j-1)*1.125
 #endif
          end do
       end do
@@ -221,12 +222,12 @@
 !jextr = iextr
 !iextr = i
 STDERR iextr,jextr
-STDERR mlon(1,1),mlat(1,1)
-STDERR mlon(iextr,jextr),mlat(iextr,jextr)
-STDERR lonmap(1,1),latmap(1,1)
-STDERR lonmap(imax,jmax),latmap(imax,jmax)
-      call init_grid_interpol(imin,imax,jmin,jmax,	&
-                lonmap,latmap,mlon,mlat,southpole,gridmap,ti,ui)
+STDERR met_lon(1,1),met_lat(1,1)
+STDERR met_lon(iextr,jextr),met_lat(iextr,jextr)
+STDERR lonc(1,1),latc(1,1)
+STDERR lonc(imax,jmax),latc(imax,jmax)
+      call init_grid_interpol(imin,imax,jmin,jmax,az,	&
+                lonc,latc,met_lon,met_lat,southpole,gridmap,ti,ui)
    end if
 
    if (calc_met) then
@@ -597,8 +598,9 @@ grid_scan=1
             end do
          end do
       else
+         !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(wrk_dp,gridmap,ti,ui,u10)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,u10)
       end if
 
       err = nf_get_vara_real(ncid,v10_id,start,edges,wrk)
@@ -610,8 +612,9 @@ grid_scan=1
             end do
          end do
       else
+         !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(wrk_dp,gridmap,ti,ui,v10)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,v10)
       end if
 
 !     Rotation of wind due to grid convergence      
@@ -637,8 +640,9 @@ grid_scan=1
             end do
          end do
       else
+         !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(wrk_dp,gridmap,ti,ui,airp)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,airp)
       end if
 
       err = nf_get_vara_real(ncid,t2_id,start,edges,wrk)
@@ -650,8 +654,9 @@ grid_scan=1
             end do
          end do
       else
+         !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(wrk_dp,gridmap,ti,ui,t2)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,t2)
       end if
 
       err = nf_get_vara_real(ncid,hum_id,start,edges,wrk)
@@ -663,8 +668,9 @@ grid_scan=1
             end do
          end do
       else
+         !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(wrk_dp,gridmap,ti,ui,hum)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,hum)
       end if
 
       err = nf_get_vara_real(ncid,cc_id,start,edges,wrk)
@@ -676,8 +682,9 @@ grid_scan=1
             end do
          end do
       else
+         !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(wrk_dp,gridmap,ti,ui,cc)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,cc)
       end if
 
    else
