@@ -1,4 +1,4 @@
-!$Id: bottom_friction_3d.F90,v 1.4 2003-04-23 12:16:34 kbk Exp $
+!$Id: bottom_friction_3d.F90,v 1.5 2003-09-12 16:27:27 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: bottom_friction_3d.F90,v $
-!  Revision 1.4  2003-04-23 12:16:34  kbk
+!  Revision 1.5  2003-09-12 16:27:27  kbk
+!  removed save attributes for local variables - now compiles using PGF
+!
+!  Revision 1.4  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.3  2003/04/07 16:29:48  kbk
@@ -68,10 +71,10 @@
    integer                   :: i,j,kk
    REALTYPE                  :: r,hh,fricvel
    logical, save             :: first=.true.
-   REALTYPE, save            :: uuloc(I2DFIELD)
-   REALTYPE, save            :: uvloc(I2DFIELD)
-   REALTYPE, save            :: vuloc(I2DFIELD)
-   REALTYPE, save            :: vvloc(I2DFIELD)
+   REALTYPE                  :: uuloc(I2DFIELD)
+   REALTYPE                  :: uvloc(I2DFIELD)
+   REALTYPE                  :: vuloc(I2DFIELD)
+   REALTYPE                  :: vvloc(I2DFIELD)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -81,6 +84,7 @@
    write(debug,*) 'bottom_friction_3d() # ',Ncall
 #endif
 
+#if 0
    if(first) then
       uuloc = _ZERO_
       uvloc = _ZERO_
@@ -88,6 +92,7 @@
       vvloc = _ZERO_
       first = .false.
    end if
+#endif
 
    do j=jjmin,jjmax
       do i=iimin,iimax

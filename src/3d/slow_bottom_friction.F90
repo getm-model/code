@@ -1,4 +1,4 @@
-!$Id: slow_bottom_friction.F90,v 1.4 2003-08-14 10:53:23 kbk Exp $
+!$Id: slow_bottom_friction.F90,v 1.5 2003-09-12 16:27:27 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: slow_bottom_friction.F90,v $
-!  Revision 1.4  2003-08-14 10:53:23  kbk
+!  Revision 1.5  2003-09-12 16:27:27  kbk
+!  removed save attributes for local variables - now compiles using PGF
+!
+!  Revision 1.4  2003/08/14 10:53:23  kbk
 !  need temporary velocities in some halo zones
 !
 !  Revision 1.3  2003/04/23 12:16:34  kbk
@@ -56,10 +59,10 @@
    integer                   :: i,j
    REALTYPE                  :: uloc,vloc,HH
    logical,save              :: first=.true.
-   REALTYPE, save                  :: Ui(I2DFIELD)
-   REALTYPE, save                  :: Vi(I2DFIELD)
-   REALTYPE, save                  :: ruu(I2DFIELD)
-   REALTYPE, save                  :: rvv(I2DFIELD)
+   REALTYPE                  :: Ui(I2DFIELD)
+   REALTYPE                  :: Vi(I2DFIELD)
+   REALTYPE                  :: ruu(I2DFIELD)
+   REALTYPE                  :: rvv(I2DFIELD)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
