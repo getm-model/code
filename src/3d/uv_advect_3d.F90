@@ -1,4 +1,4 @@
-!$Id: uv_advect_3d.F90,v 1.4 2003-05-02 06:55:49 hb Exp $
+!$Id: uv_advect_3d.F90,v 1.5 2003-06-28 10:40:41 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,7 +35,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_advect_3d.F90,v $
-!  Revision 1.4  2003-05-02 06:55:49  hb
+!  Revision 1.5  2003-06-28 10:40:41  kbk
+!  changed loop order
+!
+!  Revision 1.4  2003/05/02 06:55:49  hb
 !  momemtum advection only for mask=1
 !
 !  Revision 1.3  2003/04/23 12:16:34  kbk
@@ -191,8 +194,8 @@
 
 ! Upstream for dx(uu^2/hun)
    do k=1,kmax
-      do i=iimin,iimax+1          ! PP defined on T-points
-         do j=jjmin,jjmax+1
+      do j=jjmin,jjmax+1             ! PP defined on T-points
+         do i=iimin,iimax+1
             if (az(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
                   PP(i,j,k)=0.5*(uu(i-1,j,k)+uu(i,j,k))
