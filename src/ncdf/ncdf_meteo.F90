@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.13 2004-08-09 10:43:59 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.14 2005-01-12 19:17:47 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -77,7 +77,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.13  2004-08-09 10:43:59  kbk
+!  Revision 1.14  2005-01-12 19:17:47  kbk
+!  setting grid_scan depending on lat-axis - Stips
+!
+!  Revision 1.13  2004/08/09 10:43:59  kbk
 !  correct length of met_times - Buchmann
 !
 !  Revision 1.12  2004/08/09 08:39:36  kbk
@@ -191,6 +194,17 @@
          LEVEL3 'Setting on_grid to true'
          on_grid=.true.
       end if
+   end if
+
+   if (met_lat(1) .gt. met_lat(2)) then
+      LEVEL3 'Reverting lat-axis and setting grid_scan to 0'
+      grid_scan = 0
+      x = met_lat(1)
+      do j=1,jextr/2
+         met_lat(j) = met_lat(jextr-j+1)
+         met_lat(jextr-j+1) = x
+         x = met_lat(j+1)
+      end do
    end if
 
    allocate(wrk(iextr,jextr),stat=err)
