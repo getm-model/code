@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.1 2002-05-02 14:01:47 gotm Exp $
+!$Id: ncdf_meteo.F90,v 1.2 2003-03-17 15:49:10 gotm Exp $
 #include "cppdefs.h"
 !#define HIRLAM_FRV
 #define ECMWF_FRV
@@ -66,8 +66,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.1  2002-05-02 14:01:47  gotm
-!  Initial revision
+!  Revision 1.2  2003-03-17 15:49:10  gotm
+!  Changed case of meteo variable names
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:47  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.4  2001/10/17 14:27:39  bbh
 !  Met-data can now be read from a series of .nc files
@@ -147,12 +150,12 @@
 
 #ifdef ECMWF_FRV
    southpole = (/0.0,-90.0/)
-   name_u10="u10"
-   name_v10="v10"
-   name_airp="msl"
-   name_t2="t2"
-   name_hum="d2"
-   name_cc="tcc"
+   name_u10="U10"
+   name_v10="V10"
+   name_airp="MSL"
+   name_t2="T2"
+   name_hum="D2"
+   name_cc="TCC"
 #endif
 #ifdef HIRLAM_FRV
    southpole = (/0.0,80.0/)
