@@ -1,4 +1,4 @@
-!$Id: halo_mpi.F90,v 1.5 2003-08-14 14:49:51 kbk Exp $
+!$Id: halo_mpi.F90,v 1.6 2004-01-02 09:46:43 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -67,7 +67,10 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_mpi.F90,v $
-!  Revision 1.5  2003-08-14 14:49:51  kbk
+!  Revision 1.6  2004-01-02 09:46:43  kbk
+!  fixed a bug for user defined data types - Peneva
+!
+!  Revision 1.5  2003/08/14 14:49:51  kbk
 !  nicer print statement in barrier()
 !
 !  Revision 1.4  2003/08/03 08:49:51  kbk
@@ -654,7 +657,7 @@ include "mpif.h"
 
 !  HALO yz-slices
    call MPI_TYPE_HVECTOR(o,1,xy_size*sizeof_realtype,y_lines,yz_slices,ierr)
-   call MPI_TYPE_COMMIT(xz_slices,ierr)
+   call MPI_TYPE_COMMIT(yz_slices,ierr)
 
 #else
 !  Using MPI: p. 292
