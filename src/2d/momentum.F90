@@ -1,4 +1,4 @@
-!$Id: momentum.F90,v 1.2 2003-03-20 15:51:00 gotm Exp $
+!$Id: momentum.F90,v 1.3 2003-03-20 15:58:29 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,7 +28,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: momentum.F90,v $
-!  Revision 1.2  2003-03-20 15:51:00  gotm
+!  Revision 1.3  2003-03-20 15:58:29  gotm
+!  removed STDERRi statement
+!
+!  Revision 1.2  2003/03/20 15:51:00  gotm
 !  cleaned + added masked fU/fV = 0. in Coriolis calc
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:44  gotm
@@ -275,8 +278,6 @@
       if (av(imin,j).eq.3) V(imin,j)=V(imin+1,j)
       if (av(imax,j).eq.3) V(imax,j)=V(imax-1,j)
    end do
-
-STDERR 'V: ',V(24,1),zy(24,1),zy(24,2)
 
 !  now v is calculated
    call update_2d_halo(V,V,av,imin,jmin,imax,jmax,V_TAG)
