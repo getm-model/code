@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.11 2003-08-15 12:52:49 kbk Exp $
+!$Id: domain.F90,v 1.12 2003-08-21 15:28:29 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,7 +47,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.11  2003-08-15 12:52:49  kbk
+!  Revision 1.12  2003-08-21 15:28:29  kbk
+!  re-enabled update_2d_halo for lonc and latc + cleaning
+!
+!  Revision 1.11  2003/08/15 12:52:49  kbk
 !  moved az mask calculation + removed print statements
 !
 !  Revision 1.10  2003/08/03 09:52:11  kbk
@@ -259,27 +262,14 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
 
          call get_bathymetry(H,Hland,iextr,jextr,ioff,joff, &
                              imin,imax,jmin,jmax,rc)
-#if 0
-         call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
-         call wait_halo(H_TAG)
 
-   az = 0
-   where (H .gt. Hland+SMALL)
-      az=1
-   end where
-
-         call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG,mirror=.true.)
-         call wait_halo(H_TAG)
-#endif
-
-#if 0
          call update_2d_halo(lonc,lonc,az,imin,jmin,imax,jmax,H_TAG, &
                              mirror=.false.)
          call wait_halo(H_TAG)
          call update_2d_halo(latc,latc,az,imin,jmin,imax,jmax,H_TAG, &
                              mirror=.false.)
          call wait_halo(H_TAG)
-#endif
+
       case default
          FATAL 'A non valid input format has been chosen'
          stop 'init_domain'
@@ -310,25 +300,6 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
       call have_bdy()
       call print_bdy('Local Boundary Information')
    end if
-
-!  Define calculation masks
-!  No calculation point on the boundary of the domain.
-!  restriction imposed by setting up the parallel domain the same as
-!  the serial (kbk - 11/7 2003).
-#if 0
-   az = 0
-#if 1
-   where (H .gt. Hland+SMALL)
-      az=1
-   end where
-#else
-   do j=jmin,jmax
-      do i=imin,imax
-         if (H(i,j) .gt. Hland+SMALL) az(i,j) = 1
-      end do
-   end do
-#endif
-#endif
 
 #define BOUNDARY_POINT 2
 !  western boundary - at present elev only
@@ -429,7 +400,7 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
                              mirror=.false.)
          call wait_halo(H_TAG)
 
-         call update_2d_halo(latx,latx,az,imin,jmin,imax,jmax,H_TAG, &
+         call update_2d_halo(latx,latx,ax,imin,jmin,imax,jmax,H_TAG, &
                              mirror=.false.)
          call wait_halo(H_TAG)
 
@@ -444,7 +415,6 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
                        *cos(deg2rad*latc(i,j))
             end do
          end do
-
          call update_2d_halo(dxc,dxc,az,imin,jmin,imax,jmax,H_TAG,mirror=.true.)
          call wait_halo(H_TAG)
 
@@ -480,7 +450,6 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
                dyc(i,j)=deg2rad*(latv(i,j)-latv(i,j-1))*rearth
             end do
          end do
-
          call update_2d_halo(dyc,dyc,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
 
@@ -617,22 +586,13 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
          stop 'init_domain'
    end select
 
-   STDERR 'az'
-   call print_mask(az)
-   STDERR 'au'
-   call print_mask(au)
-   STDERR 'av'
-   call print_mask(av)
-
 #ifdef DEBUG
-#if 0
    STDERR 'az'
    call print_mask(az)
    STDERR 'au'
    call print_mask(au)
    STDERR 'av'
    call print_mask(av)
-#endif
 #endif
 
    np = count(az(1:imax,1:jmax) .gt. 0)
