@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.2 2003-04-01 15:27:56 gotm Exp $
+!$Id: m3d.F90,v 1.3 2003-04-01 15:56:55 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -42,7 +42,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.2  2003-04-01 15:27:56  gotm
+!  Revision 1.3  2003-04-01 15:56:55  gotm
+!  initialise T, S and rho
+!
+!  Revision 1.2  2003/04/01 15:27:56  gotm
 !  cleaned the code
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:51  gotm
@@ -243,6 +246,7 @@
    end if 
 
    if (runtype .eq. 3 .or. runtype .eq. 4) then
+      T = _ZERO_ ; S = _ZERO_ ; rho = _ZERO_
       if(calc_temp) call init_temperature(1)
       if(calc_salt) call init_salinity(1)
       if(calc_spm)  call init_spm(1)
