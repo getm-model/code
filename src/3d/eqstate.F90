@@ -1,4 +1,4 @@
-!$Id: eqstate.F90,v 1.1 2002-05-02 14:00:59 gotm Exp $
+!$Id: eqstate.F90,v 1.2 2003-04-07 13:19:48 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,8 +22,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: eqstate.F90,v $
-!  Revision 1.1  2002-05-02 14:00:59  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 13:19:48  kbk
+!  parallel support
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:59  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.9  2001/10/17 13:56:02  bbh
 !  Density for Constance case
@@ -94,6 +97,7 @@
 #endif
 
    LEVEL2 'init_eqstate()'
+
    select case (method)
       case (1)
          LEVEL3 'linear equation of state'
@@ -176,33 +180,31 @@
    select case (method)
       case (1)
 #ifdef DENSITY
-         forall(i=iimin:iimax, j=jjmin:jjmax, az(i,j) .gt. 0)	&
+         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)	&
             rho(i,j,1:kmax) = rho_0 + 				&
-	               dtr0*(T(i,j,1:kmax)-T0) + dsr0*(S(i,j,1:kmax)-S0)
+                    dtr0*(T(i,j,1:kmax)-T0) + dsr0*(S(i,j,1:kmax)-S0)
 #endif
 #undef DENSITY
 #ifdef BUOYANCY
          x = -g/rho_0
-         forall(i=iimin:iimax, j=jjmin:jjmax, az(i,j) .gt. 0)	&
+         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)	&
             rho(i,j,1:kmax) = 					&
-	               x*(dtr0*(T(i,j,1:kmax)-T0) + dsr0*(S(i,j,1:kmax)-S0))
+	           x*(dtr0*(T(i,j,1:kmax)-T0) + dsr0*(S(i,j,1:kmax)-S0))
 #endif
 
 #ifdef HAIDVOGEL_TEST
-         forall(i=iimin:iimax, j=jjmin:jjmax, az(i,j) .gt. 0)	&
-          rho(i,j,1:kmax)  =                                    &
-	        -g/rho_0*(S(i,j,1:kmax)+1000.-rho_0)
+         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)	&
+            rho(i,j,1:kmax) = -g/rho_0*(S(i,j,1:kmax)+1000.-rho_0)
 #endif
 #ifdef CONSTANCE_TEST
          x = -g/rho_0
-         forall(i=iimin:iimax, j=jjmin:jjmax, az(i,j) .gt. 0)	&
-          rho(i,j,1:kmax)  =                                    &
-	        x*dtr0*(T(i,j,1:kmax)-T0)
+         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)	&
+          rho(i,j,1:kmax) = x*dtr0*(T(i,j,1:kmax)-T0)
 #endif
       case (2)
          do k = 1,kmax
-            do j = jjmin,jjmax
-               do i = iimin,iimax
+            do j = jjmin-1,jjmax+1
+               do i = iimin-1,iimax+1
 	          if (az(i,j) .gt. 0) then
 		     T1 = T(i,j,k)
                      T2 = T1*T1
@@ -253,11 +255,10 @@
             end do
          end do
 
-
 #if 0
          do k = 1,kmax
-            do j = jjmin:jjmax
-               do i = iimin:iimax
+            do j = jjmin-1:jjmax+1
+               do i = iimin-1:iimax+1
 	          if (az(i,j) .gt. 0) then
 		     p = 50.
                      p2 = p*p
