@@ -55,13 +55,13 @@
 !     write(6,*) 'Inside',hn(iimax/2,2,kmax/2)
       do j=jjmin,jjmax
          do i=iimin,iimax
-	   HH=0.
+            HH=0.
            do k=1,kmax
-	   HH=HH+hn(i,j,k)
+              HH=HH+hn(i,j,k)
            end do
            do k=1,kmax
-           hn(i,j,k)=hn(i,j,k)* (ssen(i,j)+H(i,j))/HH
-	   end do
+              hn(i,j,k)=hn(i,j,k)* (ssen(i,j)+H(i,j))/HH
+           end do
          end do
       end do
 !     write(6,*) 'Inside after',hn(iimax/2,2,kmax/2)
