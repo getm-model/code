@@ -1,4 +1,4 @@
-!$Id: residual.F90,v 1.1 2002-05-02 14:00:45 gotm Exp $
+!$Id: residual.F90,v 1.2 2003-04-07 15:30:58 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,8 @@
 !
 ! !USES:
    use domain, only: HU,HV
-   use variables_2d, only: zu,zuo,zv,zvo
+!   use variables_2d, only: zu,zuo,zv,zvo
+   use variables_2d, only: zu,zv
    use variables_2d, only: u,v,res_du,res_u,res_dv,res_v
    IMPLICIT NONE
 !
@@ -27,15 +28,17 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: residual.F90,v $
-!  Revision 1.1  2002-05-02 14:00:45  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 15:30:58  kbk
+!  needs to be fixed
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:45  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.2  2001/05/03 19:35:01  bbh
 !  Use of variables_2d
 !
 !  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
 !  initial import into CVS
-!
 !
 ! !LOCAL VARIABLES:
 !EOP
@@ -54,10 +57,12 @@
          res_v= _ZERO_
       end where
    else
+#if 0
       res_du=res_du+hu+0.5*(zu+zuo)
       res_u=res_u+u
       res_dv=res_dv+hv+0.5*(zv+zvo)
       res_v=res_v+v
+#endif
    end if
 
    return
