@@ -1,4 +1,4 @@
-!$Id: halo_zones.F90,v 1.3 2003-05-09 11:52:08 kbk Exp $
+!$Id: halo_zones.F90,v 1.4 2003-08-03 08:49:51 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,7 +32,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_zones.F90,v $
-!  Revision 1.3  2003-05-09 11:52:08  kbk
+!  Revision 1.4  2003-08-03 08:49:51  kbk
+!  cleaned code
+!
+!  Revision 1.3  2003/05/09 11:52:08  kbk
 !  do not mirror coordinate info + use mask for inverse area calculation
 !
 !  Revision 1.2  2003/04/23 12:02:43  kbk
@@ -123,27 +126,25 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
    integer                   :: il,jl,ih,jh
+   logical                   :: do_mirror=.true.
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-#if 0
-   select case (tag)
-      case(HU_TAG, U_TAG , DU_TAG) ! for variables defined on u-grid
-         il=imin;ih=imax-1;jl=jmin;jh=jmax
-      case(HV_TAG, V_TAG , DV_TAG) ! for variables defined on v-grid
-         il=imin;ih=imax;jl=jmin;jh=jmax-1
-      case default                 ! for variables defined on scalar-grid
-         il=imin;ih=imax;jl=jmin;jh=jmax
-   end select
-#endif
-
    il=imin;ih=imax;jl=jmin;jh=jmax
 
+   if ( present(mirror) ) do_mirror = mirror
+
    if (nprocs .eq. 1) then
+      if ( do_mirror ) then
       f1(il-1, : )  = f2(il,  :  )
       f1(ih+1, : )  = f2(ih, :  )
       f1( :, jl-1 ) = f2( :, jl  )
       f1( :, jh+1 ) = f2( :, jh )
+      f1(il-1,jh+1) = f2(il,jh)
+      f1(ih+1,jh+1) = f2(ih,jh)
+      f1(ih+1,jl-1) = f2(ih,jl)
+      f1(il-1,jl-1) = f2(il,jl)
+      end if
    else
 #ifdef PARALLEL
       if( present(mirror) ) then
@@ -189,19 +190,6 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-#if 0
-   select case (tag)
-      case(HU_TAG, U_TAG , DU_TAG) ! for variables defined on u-grid
-         il=iimin;ih=iimax-1;jl=jjmin+1;jh=jjmax-1
-         il=iimin;ih=iimax-1;jl=jjmin;jh=jjmax
-      case(HV_TAG, V_TAG , DV_TAG) ! for variables defined on v-grid
-         il=iimin+1;ih=iimax-1;jl=jjmin;jh=jjmax-1
-         il=iimin;ih=iimax;jl=jjmin;jh=jjmax-1
-      case default                 ! for variables defined on scalar-grid
-         il=iimin;ih=iimax;jl=jjmin;jh=jjmax
-   end select
-#endif
-
    il=iimin;ih=iimax;jl=jjmin;jh=jjmax
 
    if (nprocs .eq. 1) then

@@ -1,4 +1,4 @@
-!$Id: halo_mpi.F90,v 1.3 2003-05-09 11:52:08 kbk Exp $
+!$Id: halo_mpi.F90,v 1.4 2003-08-03 08:49:51 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -67,7 +67,10 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_mpi.F90,v $
-!  Revision 1.3  2003-05-09 11:52:08  kbk
+!  Revision 1.4  2003-08-03 08:49:51  kbk
+!  cleaned code
+!
+!  Revision 1.3  2003/05/09 11:52:08  kbk
 !  do not mirror coordinate info + use mask for inverse area calculation
 !
 !  Revision 1.2  2003/04/23 12:02:43  kbk
@@ -710,12 +713,11 @@ STDERR 'we are waiting'
    end if
    il=imin;ih=imax;jl=jmin;jh=jmax
 
-   if (present(mirror) ) then
-      do_mirror = mirror
-   endif
+   if ( present(mirror) ) do_mirror = mirror
 
    select case (comm_method)
       case(ONE_PROCESS)
+         if (do_mirror) then
          f1(il-1, : )  = f2(il, :  )
          f1(ih+1, : )  = f2(ih, :  )
          f1( :, jl-1 ) = f2( :, jl )
@@ -724,6 +726,7 @@ STDERR 'we are waiting'
          f1(ih+1,jh+1) = f2(ih,jh)
          f1(ih+1,jl-1) = f2(ih,jl)
          f1(il-1,jl-1) = f2(il,jl)
+         end if
       case(ONED_SENDRECV)
          if(com_direction .eq. RIGHT_LEFT) then
 #ifdef DEBUG
