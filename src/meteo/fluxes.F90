@@ -1,4 +1,4 @@
-!$Id: fluxes.F90,v 1.1 2002-05-02 14:01:39 gotm Exp $
+!$Id: fluxes.F90,v 1.2 2003-03-17 15:04:15 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -24,6 +24,11 @@
 ! !USES:
    use meteo, only: cpa,emiss,bolz,KELVIN
    use meteo, only: w,L,rho_air,qs,qa,ea,cd_heat,cd_mom
+#ifdef WRONG_KONDO
+   use meteo, only: cd_mom,cd_heat
+#else
+   use meteo, only: cd_mom,cd_heat,cd_latent
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -38,8 +43,11 @@
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: fluxes.F90,v $
-!  Revision 1.1  2002-05-02 14:01:39  gotm
-!  Initial revision
+!  Revision 1.2  2003-03-17 15:04:15  gotm
+!  Fixed Kondo coefficients - -DWRONG_KONDO can be used
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:39  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1  2001/07/26 14:35:18  bbh
 !  initial import into CVS
@@ -72,8 +80,12 @@
       ta = airt
    end if
 
-   qe=cd_heat*L*rho_air*w*(qs-qa)			! latent
    qh=cd_heat*cpa*rho_air*w*(tw-ta)			! sensible
+#ifdef WRONG_KONDO
+   qe=cd_heat*L*rho_air*w*(qs-qa)			! latent
+#else
+   qe=cd_latent*L*rho_air*w*(qs-qa)			! latent
+#endif
 
    select case(back_radiation_method)			! back radiation
       case(clark)

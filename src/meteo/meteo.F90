@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.2 2002-08-16 12:11:06 gotm Exp $
+!$Id: meteo.F90,v 1.3 2003-03-17 15:04:14 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -58,7 +58,12 @@
    integer, public	:: method
    REALTYPE, public, dimension(:,:), allocatable  :: airp,tausx,tausy,swr,shf
    REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum,cc
-   REALTYPE, public	:: w,L,rho_air,qs,qa,ea,cd_heat,cd_mom
+   REALTYPE, public	:: w,L,rho_air,qs,qa,ea
+#ifdef WRONG_KONDO
+   REALTYPE, public	:: cd_mom,cd_heat
+#else
+   REALTYPE, public	:: cd_mom,cd_heat,cd_latent
+#endif
    REALTYPE, public	:: t_1=-_ONE_,t_2=-_ONE_
    logical, public	:: new_meteo=.false.
 !
@@ -69,7 +74,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
-!  Revision 1.2  2002-08-16 12:11:06  gotm
+!  Revision 1.3  2003-03-17 15:04:14  gotm
+!  Fixed Kondo coefficients - -DWRONG_KONDO can be used
+!
+!  Revision 1.2  2002/08/16 12:11:06  gotm
 !  Fixed parameter order in call to short_wave_radiation()
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:38  gotm
