@@ -1,4 +1,4 @@
-!$Id: bottomstress_3d.F90,v 1.1 2002-05-02 14:00:53 gotm Exp $
+!$Id: bottomstress_3d.F90,v 1.2 2003-04-07 13:15:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,8 +25,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: bottomstress_3d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:53  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 13:15:43  kbk
+!  cleaned code
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:53  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.3  2001/06/22 08:19:10  bbh
 !  Compiler options such as USE_MASK and OLD_DRY deleted.
@@ -40,7 +43,6 @@
 !
 !  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
 !  initial import into CVS
-!
 !
 ! !LOCAL VARIABLES:
    integer	:: i,j,k1,k2,k3,k4
