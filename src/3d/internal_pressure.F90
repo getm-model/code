@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.6 2004-04-21 09:21:25 lars Exp $
+!$Id: internal_pressure.F90,v 1.7 2004-05-03 09:31:47 lars Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -51,7 +51,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: internal_pressure.F90,v $
-!  Revision 1.6  2004-04-21 09:21:25  lars
+!  Revision 1.7  2004-05-03 09:31:47  lars
+!  bug fix: defined i,j,k and first
+!
+!  Revision 1.6  2004/04/21 09:21:25  lars
 !  changed to default ip_method=1
 !
 !  Revision 1.5  2004/04/06 12:42:50  kbk
@@ -194,6 +197,8 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
+   integer                :: i,j,k
+   logical, save          :: first=.true.
 !-----------------------------------------------------------------------
 !BOC
 #ifdef DEBUG
@@ -246,6 +251,7 @@
       end do
    end if
 #endif
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_internal_pressure()'
