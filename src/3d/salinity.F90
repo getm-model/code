@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.6 2003-09-13 10:52:21 kbk Exp $
+!$Id: salinity.F90,v 1.7 2003-12-16 16:00:46 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -39,7 +39,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: salinity.F90,v $
-!  Revision 1.6  2003-09-13 10:52:21  kbk
+!  Revision 1.7  2003-12-16 16:00:46  kbk
+!  molecular diffusion for salt and temp (manuel)
+!
+!  Revision 1.6  2003/09/13 10:52:21  kbk
 !  changed field_no to salt_field_no and temp_field_no
 !
 !  Revision 1.5  2003/08/03 08:13:09  kbk
@@ -268,6 +271,7 @@ STDERR 'salinity= ',iimin,iimax,i+ioff,iextr/2
 #else
    use domain, only: dx,dy,ard1
 #endif
+   use parameters, only: avmols
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -366,8 +370,8 @@ STDERR 'salinity= ',iimin,iimax,i+ioff,iextr/2
             if (kmax.gt.1) then
 !     Auxilury terms, old and new time level,
                do k=1,kmax-1
-                  auxo(k)=2.*(1-cnpar)*dt*nuh(i,j,k)/(hn(i,j,k+1)+hn(i,j,k))
-                  auxn(k)=2.*   cnpar *dt*nuh(i,j,k)/(hn(i,j,k+1)+hn(i,j,k))
+                  auxo(k)=2.*(1-cnpar)*dt*(nuh(i,j,k)+avmols)/(hn(i,j,k+1)+hn(i,j,k))
+                  auxn(k)=2.*   cnpar *dt*(nuh(i,j,k)+avmols)/(hn(i,j,k+1)+hn(i,j,k))
                end do
 
 !        Matrix elements for surface layer

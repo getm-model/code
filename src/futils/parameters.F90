@@ -1,4 +1,4 @@
-!$Id: parameters.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
+!$Id: parameters.F90,v 1.3 2003-12-16 16:00:46 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -24,6 +24,8 @@
    REALTYPE, parameter                 :: cp = 3985.
    REALTYPE, parameter                 :: kappa = 0.4
    REALTYPE, parameter                 :: avmmol = 1.8e-6
+   REALTYPE, parameter                 :: avmolt=  1.4e-7
+   REALTYPE, parameter                 :: avmols = 1.1e-9
 !
 !  Turbulence related constants - see www.gotm.net
 !
@@ -31,7 +33,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: parameters.F90,v $
-!  Revision 1.2  2003-04-23 12:02:43  kbk
+!  Revision 1.3  2003-12-16 16:00:46  kbk
+!  molecular diffusion for salt and temp (manuel)
+!
+!  Revision 1.2  2003/04/23 12:02:43  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:19  gotm
