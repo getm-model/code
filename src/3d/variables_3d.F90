@@ -1,4 +1,4 @@
-!$Id: variables_3d.F90,v 1.2 2002-05-29 13:37:50 gotm Exp $
+!$Id: variables_3d.F90,v 1.3 2003-04-07 16:22:31 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -33,8 +33,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: variables_3d.F90,v $
-!  Revision 1.2  2002-05-29 13:37:50  gotm
-!  New naming of .h files
+!  Revision 1.3  2003-04-07 16:22:31  kbk
+!  initialise variables
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:58  gotm
 !  recovering after CVS crash
@@ -106,6 +106,19 @@
 !  Allocates memory for the public data members - if not static
 #ifndef STATIC
 #include "dynamic_allocations_3d.h"
+#endif
+
+   hn = _ZERO_ ; hun = _ZERO_ ; hvn = _ZERO_
+   uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
+   ssen = _ZERO_ ; ssun = _ZERO_ ; ssvn = _ZERO_
+   rru= _ZERO_ ; rrv= _ZERO_
+   uuEx= _ZERO_ ; vvEx= _ZERO_
+   tke=1.e-10 ; eps=1.e-10
+
+#ifdef UV_TVD
+   uadv = _ZERO_ ; vadv = _ZERO_ ; wadv = _ZERO_
+   hnadv = _ZERO_ ; hoadv = _ZERO_
+   huadv = _ZERO_ ; hvadv = _ZERO_
 #endif
 
 #ifdef DEBUG
