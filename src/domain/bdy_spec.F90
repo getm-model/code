@@ -1,4 +1,4 @@
-!$Id: bdy_spec.F90,v 1.2 2003-04-07 15:20:53 kbk Exp $
+!$Id: bdy_spec.F90,v 1.3 2003-04-23 11:59:39 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,7 +17,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)	:: FName
+   character(len=*), intent(in)        :: FName
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -27,7 +27,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bdy_spec.F90,v $
-!  Revision 1.2  2003-04-07 15:20:53  kbk
+!  Revision 1.3  2003-04-23 11:59:39  kbk
+!  update_2d_halo on spherical variables + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 15:20:53  kbk
 !  added bdy_index and bdy_map
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:11  gotm
@@ -40,7 +43,7 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer 	:: i,j,k,l,n,rc
+   integer                   :: i,j,k,l,n,rc
 !
 !EOP
 !-----------------------------------------------------------------------

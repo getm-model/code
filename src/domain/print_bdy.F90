@@ -1,4 +1,4 @@
-!$Id: print_bdy.F90,v 1.1 2002-05-02 14:01:12 gotm Exp $
+!$Id: print_bdy.F90,v 1.2 2003-04-23 11:59:39 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -16,7 +16,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)	:: header
+   character(len=*), intent(in)        :: header
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -26,15 +26,18 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: print_bdy.F90,v $
-!  Revision 1.1  2002-05-02 14:01:12  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-23 11:59:39  kbk
+!  update_2d_halo on spherical variables + TABS to spaces
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:12  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
 !  initial import into CVS
 !
 !
 ! !LOCAL VARIABLES:
-   integer	:: n
+   integer                   :: n
 !
 !EOP
 !-----------------------------------------------------------------------

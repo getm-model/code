@@ -1,4 +1,4 @@
-!$Id: mirror_bdy_3d.F90,v 1.1 2003-04-07 15:22:03 kbk Exp $
+!$Id: mirror_bdy_3d.F90,v 1.2 2003-04-23 11:59:39 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,12 +30,15 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: mirror_bdy_3d.F90,v $
-!  Revision 1.1  2003-04-07 15:22:03  kbk
+!  Revision 1.2  2003-04-23 11:59:39  kbk
+!  update_2d_halo on spherical variables + TABS to spaces
+!
+!  Revision 1.1  2003/04/07 15:22:03  kbk
 !  parallel support
 !
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,n
+   integer                   :: i,j,n
 !
 !EOP
 !-----------------------------------------------------------------------
