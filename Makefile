@@ -34,7 +34,7 @@ clean:
 distclean:
 	$(MAKE) -C src distclean
 	$(MAKE) -C utils distclean
-	$(RM) -r bin
+	$(RM) -r bin/
 
 dist: distclean
 	(cd ../ ; tar cf - v$(VER)/ | gzip -9 > v$(VER).tar.gz) 
