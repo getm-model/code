@@ -1,4 +1,4 @@
-!$Id: ncdf_3d.F90,v 1.2 2003-04-23 11:53:24 kbk Exp $
+!$Id: ncdf_3d.F90,v 1.3 2003-05-09 11:38:26 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -40,12 +40,28 @@
    integer                             :: xlen,ylen,zlen
    integer, parameter                  :: size_3d=9000000
    REAL_4B                             :: ws(size_3d)
+   REALTYPE, parameter                 :: h_missing=-10.0
+   REALTYPE, parameter                 :: elev_missing=-9999.0
+   REALTYPE, parameter                 :: vel_missing=-9999.0
+   REALTYPE, parameter                 :: salt_missing=-9999.0
+   REALTYPE, parameter                 :: temp_missing=-9999.0
+   REALTYPE, parameter                 :: rho_missing=-9999.0
+   REALTYPE, parameter                 :: tke_missing=-9999.0
+   REALTYPE, parameter                 :: nuh_missing=-9999.0
+   REALTYPE, parameter                 :: num_missing=-9999.0
+   REALTYPE, parameter                 :: eps_missing=-9999.0
+   REALTYPE, parameter                 :: spm_missing=-9999.0
+
+
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d.F90,v $
-!  Revision 1.2  2003-04-23 11:53:24  kbk
+!  Revision 1.3  2003-05-09 11:38:26  kbk
+!  added proper undef support - based on Adolf Stips patch
+!
+!  Revision 1.2  2003/04/23 11:53:24  kbk
 !  save lat/lon info for spherical grid
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:49  gotm

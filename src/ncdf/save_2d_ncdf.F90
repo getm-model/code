@@ -1,4 +1,4 @@
-!$Id: save_2d_ncdf.F90,v 1.3 2003-04-23 11:53:24 kbk Exp $
+!$Id: save_2d_ncdf.F90,v 1.4 2003-05-09 11:38:26 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,7 @@
 !
 ! !USES:
    use ncdf_2d
-   use domain, only: ioff,joff,imin,imax,jmin,jmax,H,au,av,min_depth
+   use domain, only: ioff,joff,imin,imax,jmin,jmax,H,az,au,av,min_depth
    use domain, only: grid_type
 #if defined(SPHERICAL)
    use domain, only: lonc,latc
@@ -37,7 +37,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_2d_ncdf.F90,v $
-!  Revision 1.3  2003-04-23 11:53:24  kbk
+!  Revision 1.4  2003-05-09 11:38:26  kbk
+!  added proper undef support - based on Adolf Stips patch
+!
+!  Revision 1.3  2003/04/23 11:53:24  kbk
 !  save lat/lon info for spherical grid
 !
 !  Revision 1.2  2003/04/07 12:43:12  kbk
@@ -136,7 +139,8 @@
          edges(1) = xlen
          edges(2) = ylen
 
-         call cnv_2d(ws,imin,jmin,imax,jmax,H,imin,jmin,imax,jmax)
+         call cnv_2d(imin,jmin,imax,jmax,az,H,h_missing, &
+                     imin,jmin,imax,jmax,ws)
          err = nf_put_vara_real(ncid, bathymetry_id, start, edges, ws)
          if (err .NE. NF_NOERR) go to 10
 
@@ -158,66 +162,80 @@
       edges(3) = 1
 
 ! elevations
-      call eta_mask(ws,imin,jmin,imax,jmax,z,D,H,imin,jmin,imax,jmax,min_depth)
+      call eta_mask(imin,jmin,imax,jmax,az,H,D,z, &
+                    min_depth,elev_missing,imin,jmin,imax,jmax,ws)
       err = nf_put_vara_real(ncid,elev_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
 
 ! average zonal velocity
-      call to_2d_vel(ws,imin,jmin,imax,jmax,au,u,DU,imin,jmin,imax,jmax)
+      call to_2d_vel(imin,jmin,imax,jmax,au,u,DU,vel_missing, &
+                     imin,jmin,imax,jmax,ws)
       err = nf_put_vara_real(ncid, u_id, start, edges, ws)
       if (err .NE. NF_NOERR) go to 10
 
 ! average meridional velocity
-      call to_2d_vel(ws,imin,jmin,imax,jmax,av,v,DV,imin,jmin,imax,jmax)
+      call to_2d_vel(imin,jmin,imax,jmax,av,v,DV,vel_missing, &
+                     imin,jmin,imax,jmax,ws)
       err = nf_put_vara_real(ncid, v_id, start, edges, ws)
       if (err .NE. NF_NOERR) go to 10
 
 ! divergence
-      call cnv_2d(ws,imin,jmin,imax,jmax,surfdiv,imin,jmin,imax,jmax)
+      call cnv_2d(imin,jmin,imax,jmax,az,surfdiv,divergence_missing, &
+                  imin,jmin,imax,jmax,ws)
       err = nf_put_vara_real(ncid, surfdiv_id, start, edges, ws)
       if (err .NE. NF_NOERR) go to 10
 
       if (metforcing .and. save_meteo) then
 
          if (calc_met) then
-            call cnv_2d(ws,imin,jmin,imax,jmax,u10,imin,jmin,imax,jmax)
+            call cnv_2d(imin,jmin,imax,jmax,az,u10,vel_missing, &
+                        imin,jmin,imax,jmax,ws)
             err = nf_put_vara_real(ncid, u10_id, start, edges, ws)
             if (err .NE. NF_NOERR) go to 10
 
-            call cnv_2d(ws,imin,jmin,imax,jmax,v10,imin,jmin,imax,jmax)
+            call cnv_2d(imin,jmin,imax,jmax,az,v10,vel_missing, &
+                        imin,jmin,imax,jmax,ws)
             err = nf_put_vara_real(ncid, v10_id, start, edges, ws)
             if (err .NE. NF_NOERR) go to 10
 
-            call cnv_2d(ws,imin,jmin,imax,jmax,airp,imin,jmin,imax,jmax)
+            call cnv_2d(imin,jmin,imax,jmax,az,airp,airp_missing, &
+                        imin,jmin,imax,jmax,ws)
             err = nf_put_vara_real(ncid, airp_id, start, edges, ws)
             if (err .NE. NF_NOERR) go to 10
 
-            call cnv_2d(ws,imin,jmin,imax,jmax,t2,imin,jmin,imax,jmax)
+            call cnv_2d(imin,jmin,imax,jmax,az,t2,t2_missing, &
+                        imin,jmin,imax,jmax,ws)
             err = nf_put_vara_real(ncid, t2_id, start, edges, ws)
             if (err .NE. NF_NOERR) go to 10
 
-            call cnv_2d(ws,imin,jmin,imax,jmax,hum,imin,jmin,imax,jmax)
+            call cnv_2d(imin,jmin,imax,jmax,az,hum,hum_missing, &
+                        imin,jmin,imax,jmax,ws)
             err = nf_put_vara_real(ncid, hum_id, start, edges, ws)
             if (err .NE. NF_NOERR) go to 10
 
-            call cnv_2d(ws,imin,jmin,imax,jmax,cc,imin,jmin,imax,jmax)
+            call cnv_2d(imin,jmin,imax,jmax,az,cc,cc_missing, &
+                        imin,jmin,imax,jmax,ws)
             err = nf_put_vara_real(ncid, cc_id, start, edges, ws)
             if (err .NE. NF_NOERR) go to 10
          end if
 
-         call cnv_2d(ws,imin,jmin,imax,jmax,tausx,imin,jmin,imax,jmax)
+         call cnv_2d(imin,jmin,imax,jmax,az,tausx,stress_missing, &
+                     imin,jmin,imax,jmax,ws)
          err = nf_put_vara_real(ncid, tausx_id, start, edges, ws)
          if (err .NE. NF_NOERR) go to 10
 
-         call cnv_2d(ws,imin,jmin,imax,jmax,tausy,imin,jmin,imax,jmax)
+         call cnv_2d(imin,jmin,imax,jmax,az,tausy,stress_missing, &
+                     imin,jmin,imax,jmax,ws)
          err = nf_put_vara_real(ncid, tausy_id, start, edges, ws)
          if (err .NE. NF_NOERR) go to 10
 
-         call cnv_2d(ws,imin,jmin,imax,jmax,swr,imin,jmin,imax,jmax)
+         call cnv_2d(imin,jmin,imax,jmax,az,swr,swr_missing, &
+                     imin,jmin,imax,jmax,ws)
          err = nf_put_vara_real(ncid, swr_id, start, edges, ws)
          if (err .NE. NF_NOERR) go to 10
 
-         call cnv_2d(ws,imin,jmin,imax,jmax,shf,imin,jmin,imax,jmax)
+         call cnv_2d(imin,jmin,imax,jmax,az,shf,shf_missing, &
+                     imin,jmin,imax,jmax,ws)
          err = nf_put_vara_real(ncid, shf_id, start, edges, ws)
          if (err .NE. NF_NOERR) go to 10
 
@@ -230,11 +248,13 @@
       edges(1) = xlen
       edges(2) = ylen
 
-      call cnv_2d(ws,imin,jmin,imax,jmax,res_u,imin,jmin,imax,jmax)
+      call cnv_2d(imin,jmin,imax,jmax,az,res_u,vel_missing, &
+                  imin,jmin,imax,jmax,ws)
       err = nf_put_vara_real(ncid, res_u_id, start, edges, ws)
       if (err .NE. NF_NOERR) go to 10
 
-      call cnv_2d(ws,imin,jmin,imax,jmax,res_v,imin,jmin,imax,jmax)
+      call cnv_2d(imin,jmin,imax,jmax,az,res_v,vel_missing, &
+                  imin,jmin,imax,jmax,ws)
       err = nf_put_vara_real(ncid, res_v_id, start, edges, ws)
       if (err .NE. NF_NOERR) go to 10
    end if

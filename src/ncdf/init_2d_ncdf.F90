@@ -1,4 +1,4 @@
-!$Id: init_2d_ncdf.F90,v 1.3 2003-04-23 11:53:24 kbk Exp $
+!$Id: init_2d_ncdf.F90,v 1.4 2003-05-09 11:38:26 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,10 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_2d_ncdf.F90,v $
-!  Revision 1.3  2003-04-23 11:53:24  kbk
+!  Revision 1.4  2003-05-09 11:38:26  kbk
+!  added proper undef support - based on Adolf Stips patch
+!
+!  Revision 1.3  2003/04/23 11:53:24  kbk
 !  save lat/lon info for spherical grid
 !
 !  Revision 1.2  2003/04/07 12:48:11  kbk
@@ -159,8 +162,8 @@
 !  bathymetry
    err = nf_def_var(ncid,'bathymetry',NF_REAL,2,f3_dims,bathymetry_id)
    if (err .NE. NF_NOERR) go to 10
-   fv = -10.
-   mv = -10.
+   fv = h_missing
+   mv = h_missing
    vr(1) = -5.
    vr(2) = 4000.
    call set_attributes(ncid,bathymetry_id,&
@@ -170,15 +173,15 @@
 !  elevation
    err = nf_def_var(ncid,'elev',NF_REAL,3,f3_dims,elev_id)
    if (err .NE. NF_NOERR) go to 10
-   fv = -10.
-   mv = -10.
+   fv = elev_missing
+   mv = elev_missing
    vr(1) = -15.
    vr(2) =  15.
    call set_attributes(ncid,elev_id,long_name='elevation',units='meters', &
                        FillValue=fv,missing_value=mv,valid_range=vr)
 
-   fv = _ZERO_
-   mv = _ZERO_
+   fv = vel_missing
+   mv = vel_missing
    vr(1) = -3.
    vr(2) =  3.
 !  zonal velocity
@@ -196,7 +199,7 @@
 !  meteorology
    if (metforcing .and. save_meteo) then
       if (calc_met) then
-         fv = _ZERO_; mv = _ZERO_; vr(1) = -50.; vr(2) =  50.
+         fv = vel_missing; mv = vel_missing; vr(1) = -50.; vr(2) =  50.
          err = nf_def_var(ncid,'u10',NF_REAL,3,f3_dims,u10_id)
          if (err .NE. NF_NOERR) go to 10
          call set_attributes(ncid,u10_id,long_name='U10',units='m/s', &
@@ -206,28 +209,29 @@
          call set_attributes(ncid,v10_id,long_name='U10',units='m/s', &
                              FillValue=fv,missing_value=mv,valid_range=vr)
 
-         fv = _ZERO_; mv = _ZERO_; vr(1) = 90.e3; vr(2) = 110.e3
+         fv = airp_missing; mv = airp_missing; 
+         vr(1) = 90.e3; vr(2) = 110.e3
          err = nf_def_var(ncid,'airp',NF_REAL,3,f3_dims,airp_id)
          if (err .NE. NF_NOERR) go to 10
          call set_attributes(ncid,airp_id,  &
                              long_name='air pressure',units='Pascal', &
                              FillValue=fv,missing_value=mv,valid_range=vr)
 
-         fv = _ZERO_; mv = _ZERO_; vr(1) = 0; vr(2) = 325.
+         fv = t2_missing; mv = t2_missing; vr(1) = 0; vr(2) = 325.
          err = nf_def_var(ncid,'t2',NF_REAL,3,f3_dims,t2_id)
          if (err .NE. NF_NOERR) go to 10
          call set_attributes(ncid,t2_id,  &
                              long_name='temperature (2m)',units='Kelvin', &
                              FillValue=fv,missing_value=mv,valid_range=vr)
 
-         fv = _ZERO_; mv = _ZERO_; vr(1) = 0; vr(2) = 100.
+         fv = hum_missing; mv = hum_missing; vr(1) = 0; vr(2) = 100.
          err = nf_def_var(ncid,'hum',NF_REAL,3,f3_dims,hum_id)
          if (err .NE. NF_NOERR) go to 10
          call set_attributes(ncid,hum_id,  &
                              long_name='humidity',units='kg/kg', &
                              FillValue=fv,missing_value=mv,valid_range=vr)
 
-         fv = _ZERO_; mv = _ZERO_; vr(1) = 0.; vr(2) = 1.
+         fv = cc_missing; mv = cc_missing; vr(1) = 0.; vr(2) = 1.
          err = nf_def_var(ncid,'cc',NF_REAL,3,f3_dims,cc_id)
          if (err .NE. NF_NOERR) go to 10
          call set_attributes(ncid,cc_id,  &
@@ -235,7 +239,7 @@
                              FillValue=fv,missing_value=mv,valid_range=vr)
       end if
 
-      fv = _ZERO_; mv = _ZERO_; vr(1) = -1; vr(2) = 1.
+      fv = stress_missing; mv = stress_missing; vr(1) = -1; vr(2) = 1.
       err = nf_def_var(ncid,'tausx',NF_REAL,3,f3_dims,tausx_id)
       if (err .NE. NF_NOERR) go to 10
       call set_attributes(ncid,tausx_id,  &
@@ -248,14 +252,14 @@
                           long_name='surface stress - y',units='N/m2', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
-      fv = _ZERO_; mv = _ZERO_; vr(1) = 0; vr(2) = 1500.
+      fv = swr_missing; mv = swr_missing; vr(1) = 0; vr(2) = 1500.
       err = nf_def_var(ncid,'swr',NF_REAL,3,f3_dims,swr_id)
       if (err .NE. NF_NOERR) go to 10
       call set_attributes(ncid,swr_id,  &
                           long_name='short wave radiation',units='W/m2', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
-      fv = _ZERO_; mv = _ZERO_; vr(1) = -1000; vr(2) = 1000.
+      fv = shf_missing; mv = shf_missing; vr(1) = -1000; vr(2) = 1000.
       err = nf_def_var(ncid,'shf',NF_REAL,3,f3_dims,shf_id)
       if (err .NE. NF_NOERR) go to 10
       call set_attributes(ncid,shf_id,  &
@@ -263,13 +267,15 @@
                           FillValue=fv,missing_value=mv,valid_range=vr)
    end if
 
-   fv = _ZERO_; mv = _ZERO_; vr(1) = -3.; vr(2) =  3.
+   fv = divergence_missing; mv = divergence_missing 
+   vr(1) = -3.; vr(2) =  3.
 !  divergence
    err = nf_def_var(ncid,'div',NF_REAL,3,f3_dims,surfdiv_id)
    if (err .NE. NF_NOERR) go to 10
    call set_attributes(ncid,surfdiv_id,long_name='divergence',units='s-1', &
                        FillValue=fv,missing_value=mv,valid_range=vr)
 
+   fv = vel_missing; mv = vel_missing; vr(1) = -3.; vr(2) =  3.
 !  residual currents - u and v
    err = nf_def_var(ncid,'res_u',NF_REAL,2,f3_dims,res_u_id)
    if (err .NE. NF_NOERR) go to 10

@@ -1,4 +1,4 @@
-!$Id: init_3d_ncdf.F90,v 1.3 2003-04-23 11:53:24 kbk Exp $
+!$Id: init_3d_ncdf.F90,v 1.4 2003-05-09 11:38:26 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,7 +30,10 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_3d_ncdf.F90,v $
-!  Revision 1.3  2003-04-23 11:53:24  kbk
+!  Revision 1.4  2003-05-09 11:38:26  kbk
+!  added proper undef support - based on Adolf Stips patch
+!
+!  Revision 1.3  2003/04/23 11:53:24  kbk
 !  save lat/lon info for spherical grid
 !
 !  Revision 1.2  2003/04/07 12:51:26  kbk
@@ -206,8 +209,8 @@
 !  bathymetry
    err = nf_def_var(ncid,'bathymetry',NF_REAL,2,f3_dims,bathymetry_id)
    if (err .NE. NF_NOERR) go to 10
-   fv = -10.
-   mv = -10.
+   fv = h_missing
+   mv = h_missing
    vr(1) = -5.
    vr(2) = 4000.
    call set_attributes(ncid,bathymetry_id,  &
@@ -218,8 +221,8 @@
 !  elevation
    err = nf_def_var(ncid,'elev',NF_REAL,3,f3_dims,elev_id)
    if (err .NE. NF_NOERR) go to 10
-   fv = -10.
-   mv = -10.
+   fv = elev_missing
+   mv = elev_missing
    vr(1) = -15.
    vr(2) =  15.
    call set_attributes(ncid,elev_id,long_name='elevation',units='meters', &
@@ -228,18 +231,18 @@
 !  depth integrated zonal velocity
    err = nf_def_var(ncid,'u',NF_REAL,3,f3_dims,u_id)
    if (err .NE. NF_NOERR) go to 10
-   fv = 0.
-   mv = 0.
+   fv = vel_missing
+   mv = vel_missing
    vr(1) = -3.
    vr(2) =  3.
    call set_attributes(ncid,u_id,long_name='int. zonal vel.',units='m/s', &
                        FillValue=fv,missing_value=mv,valid_range=vr)
 
-!  depth integrated zonal velocity
+!  depth integrated meridional velocity
    err = nf_def_var(ncid,'v',NF_REAL,3,f3_dims,v_id)
    if (err .NE. NF_NOERR) go to 10
-   fv = 0.
-   mv = 0.
+   fv = vel_missing
+   mv = vel_missing
    vr(1) = -3.
    vr(2) =  3.
    call set_attributes(ncid,v_id,long_name='int. meridional vel.',units='m/s', &
@@ -251,8 +254,8 @@
          STDERR 'store z-levels'
          stop 'init_3d_ncdf'
       case (3)
-         fv = 0.
-         mv = 0.
+         fv = h_missing
+         mv = h_missing
          err = nf_def_var(ncid,'h',NF_REAL,4,f4_dims,h_id)
          if (err .NE. NF_NOERR) go to 10
          call set_attributes(ncid,h_id,long_name='layer thickness',  &
@@ -261,8 +264,8 @@
    end select
 
    if (save_vel) then
-      fv = _ZERO_
-      mv = _ZERO_
+      fv = vel_missing
+      mv = vel_missing
       vr(1) = -3.
       vr(2) =  3.
 
@@ -286,10 +289,10 @@
    end if
 
    if (save_strho) then
-      fv = _ZERO_
-      mv = _ZERO_
 
       if (save_s) then
+         fv = salt_missing
+         mv = salt_missing
          vr(1) =  0.
          vr(2) = 40.
          err = nf_def_var(ncid,'salt',NF_REAL,4,f4_dims,salt_id)
@@ -299,6 +302,8 @@
       end if
 
       if (save_t) then
+         fv = temp_missing
+         mv = temp_missing
          vr(1) =  0.
          vr(2) = 40.
          err = nf_def_var(ncid,'temp',NF_REAL,4,f4_dims,temp_id)
@@ -308,6 +313,8 @@
       end if
 
       if (save_rho) then
+         fv = rho_missing
+         mv = rho_missing
          vr(1) =  0.
          vr(2) = 30.
          err = nf_def_var(ncid,'sigma_t',NF_REAL,4,f4_dims,sigma_t_id)
@@ -320,6 +327,8 @@
    if (save_turb) then
 
       if (save_tke) then
+         fv = tke_missing
+         mv = tke_missing
          vr(1) = 0.
          vr(2) = 0.2
          err = nf_def_var(ncid,'tke',NF_REAL,4,f4_dims,tke_id)
@@ -329,6 +338,8 @@
       end if
 
       if (save_num) then
+         fv = num_missing
+         mv = num_missing
          vr(1) = 0.
          vr(2) = 0.2
          err = nf_def_var(ncid,'num',NF_REAL,4,f4_dims,num_id)
@@ -338,6 +349,8 @@
       end if
 
 !      if (save_nuh) then
+         fv = nuh_missing
+         mv = nuh_missing
          vr(1) = 0.
          vr(2) = 0.2
          err = nf_def_var(ncid,'nuh',NF_REAL,4,f4_dims,nuh_id)
@@ -347,6 +360,8 @@
 !      end if
 
       if (save_eps) then
+         fv = eps_missing
+         mv = eps_missing
          vr(1) = 0.
          vr(2) = 0.2
          err = nf_def_var(ncid,'diss',NF_REAL,4,f4_dims,eps_id)
@@ -357,6 +372,8 @@
    end if
 
    if (save_spm) then
+      fv = spm_missing
+      mv = spm_missing
       vr(1) =  0.
       vr(2) = 30.
       err = nf_def_var(ncid,'spm',NF_REAL,4,f4_dims,spm_id)

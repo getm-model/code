@@ -1,4 +1,4 @@
-!$Id: to_2d_vel.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
+!$Id: to_2d_vel.F90,v 1.3 2003-05-09 11:38:26 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,31 +6,35 @@
 ! !ROUTINE: to_2d_vel() - calculates 2D velocities and store in real*4.
 !
 ! !INTERFACE:
-   subroutine to_2d_vel(vel,il,jl,ih,jh,mask,trans,depth,imin,jmin,imax,jmax)
+   subroutine to_2d_vel(imin,jmin,imax,jmax,mask,trans,depth,missing, &
+                        il,jl,ih,jh,vel)
 !
 ! !DESCRIPTION:
-!  Check version at JRC - KBK.
 !
 ! !USES:
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: il,jl,ih,jh
    integer, intent(in)                 :: imin,jmin,imax,jmax
    integer, intent(in)                 :: mask(E2DFIELD)
    REALTYPE, intent(in)                :: trans(E2DFIELD)
    REALTYPE, intent(in)                :: depth(E2DFIELD)
+   REALTYPE, intent(in)                :: missing
+   integer, intent(in)                 :: il,jl,ih,jh
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REAL_4B, intent(out)::  vel(*)
+   REAL_4B, intent(out)                ::  vel(*)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: to_2d_vel.F90,v $
-!  Revision 1.2  2003-04-23 12:02:43  kbk
+!  Revision 1.3  2003-05-09 11:38:26  kbk
+!  added proper undef support - based on Adolf Stips patch
+!
+!  Revision 1.2  2003/04/23 12:02:43  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:19  gotm
@@ -51,7 +55,11 @@
    indx = 1
    do j=jl,jh
       do i=il,ih
-         vel(indx) = trans(i,j)/(depth(i,j)+SMALL)
+         if (mask(i,j) .gt. 0) then
+            vel(indx) = trans(i,j)/depth(i,j)
+         else
+            vel(indx) = missing
+         end if
          indx = indx+1
       end do
    end do
