@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.13 2003-08-28 10:36:30 kbk Exp $
+!$Id: domain.F90,v 1.14 2003-09-02 14:12:14 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,7 +47,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.13  2003-08-28 10:36:30  kbk
+!  Revision 1.14  2003-09-02 14:12:14  kbk
+!  au and av also in HALO-zones
+!
+!  Revision 1.13  2003/08/28 10:36:30  kbk
 !  also calculate ax in HALO-zones
 !
 !  Revision 1.12  2003/08/21 15:28:29  kbk
@@ -336,8 +339,8 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
 
 !  mask for U-points
    au=0
-   do j=jmin,jmax
-      do i=imin,imax
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO-1
          if (az(i,j) .eq. 1 .and. az(i+1,j) .eq. 1) then
             au(i,j)=1
          end if
@@ -353,8 +356,8 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
 
 !  mask for V-points
    av=0
-   do j=jmin,jmax
-      do i=imin,imax
+   do j=jmin-HALO,jmax+HALO-1
+      do i=imin-HALO,imax+HALO
          if (az(i,j) .eq. 1 .and. az(i,j+1) .eq. 1) then
             av(i,j)=1
          end if
