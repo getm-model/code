@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.10 2003-08-03 09:52:11 kbk Exp $
+!$Id: domain.F90,v 1.11 2003-08-15 12:52:49 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,7 +47,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.10  2003-08-03 09:52:11  kbk
+!  Revision 1.11  2003-08-15 12:52:49  kbk
+!  moved az mask calculation + removed print statements
+!
+!  Revision 1.10  2003/08/03 09:52:11  kbk
 !  nicer print statements
 !
 !  Revision 1.9  2003/06/29 17:09:04  kbk
@@ -256,14 +259,7 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
 
          call get_bathymetry(H,Hland,iextr,jextr,ioff,joff, &
                              imin,imax,jmin,jmax,rc)
-#ifdef TEST_PRINT
-STDERR 'H'
-STDERR 'before'
-do j=jmax+HALO,jmin-HALO,-1
-write(0,'(10(f10.1,x))') (H(i,j), i=imin-HALO,imax+HALO)
-end do
-#endif
-
+#if 0
          call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
          call wait_halo(H_TAG)
 
@@ -274,12 +270,6 @@ end do
 
          call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG,mirror=.true.)
          call wait_halo(H_TAG)
-
-#ifdef TEST_PRINT
-STDERR 'after'
-do j=jmax+HALO,jmin-HALO,-1
-write(0,'(10(f10.1,x))') (H(i,j), i=imin-HALO,imax+HALO)
-end do
 #endif
 
 #if 0
@@ -301,6 +291,17 @@ end do
 
 !  Do we want to do adjust the bathymetry
    call adjust_bathymetry(trim(input_dir) // bathymetry_adjust_file)
+
+   call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
+   call wait_halo(H_TAG)
+
+   az = 0
+   where (H .gt. Hland+SMALL)
+      az=1
+   end where
+
+   call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG,mirror=.true.)
+   call wait_halo(H_TAG)
 
 !  Reads boundary location information
    if (openbdy) then
@@ -356,7 +357,7 @@ end do
    end do
 #undef BOUNDARY_POINT
 
-!  Do we want to do adjust the mask
+!  Do we want to further adjust the mask
    call adjust_mask(trim(input_dir) // mask_adjust_file)
 
 !  mask for U-points
@@ -437,29 +438,6 @@ end do
          latv=latx
          latu=latc
 
-
-#ifdef TEST_PRINT
-STDERR 'lonc'
-do j=jmax+HALO,jmin-HALO,-1
-write(0,'(10(f10.1,x))') (lonc(i,j), i=imin-HALO,imax+HALO)
-end do
-
-STDERR 'latc'
-do j=jmax+HALO,jmin-HALO,-1
-write(0,'(10(f10.1,x))') (latc(i,j), i=imin-HALO,imax+HALO)
-end do
-
-STDERR 'lonx'
-do j=jmax+HALO,jmin-HALO,-1
-write(0,'(10(f10.1,x))') (lonx(i,j), i=imin-HALO,imax+HALO)
-end do
-
-STDERR 'latx'
-do j=jmax+HALO,jmin-HALO,-1
-write(0,'(10(f10.1,x))') (latx(i,j), i=imin-HALO,imax+HALO)
-end do
-#endif
-
          do j=jmin,jmax
             do i=imin,imax
                dxc(i,j)=deg2rad*(lonu(i,j)-lonu(i-1,j))*rearth &
@@ -467,23 +445,8 @@ end do
             end do
          end do
 
-#ifdef TEST_PRINT
-STDERR 'dxc'
-STDERR 'before'
-do j=jmax+HALO,jmin-HALO,-1
-write(0,'(10(f10.1,x))') (dxc(i,j), i=imin-HALO,imax+HALO)
-end do
-#endif
-
          call update_2d_halo(dxc,dxc,az,imin,jmin,imax,jmax,H_TAG,mirror=.true.)
          call wait_halo(H_TAG)
-
-#ifdef TEST_PRINT
-STDERR 'after'
-do j=jmax+HALO,jmin-HALO,-1
-write(0,'(10(f10.1,x))') (dxc(i,j), i=imin-HALO,imax+HALO)
-end do
-#endif
 
          do j=jmin,jmax
             do i=imin-1,imax
@@ -518,24 +481,8 @@ end do
             end do
          end do
 
-#ifdef TEST_PRINT
-STDERR 'dyc'
-STDERR 'before'
-do j=jmax+HALO,jmin-HALO,-1
-write(0,'(10(f10.1,x))') (dyc(i,j), i=imin-HALO,imax+HALO)
-end do
-#endif
-
          call update_2d_halo(dyc,dyc,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
-
-#ifdef TEST_PRINT
-STDERR 'after'
-do j=jmax+HALO,jmin-HALO,-1
-write(0,'(10(f10.1,x))') (dyc(i,j), i=imin-HALO,imax+HALO)
-end do
-#endif
-
 
          do i=imin-1,imax
             do j=jmin,jmax
