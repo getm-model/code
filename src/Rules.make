@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.4 2003-04-01 15:33:19 gotm Exp $
+#$Id: Rules.make,v 1.5 2003-04-08 12:57:23 kbk Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -26,12 +26,29 @@ else
 compilation=$(COMPILATION_MODE)
 endif
 
+DEFINES =
+
+ifeq ($(GETM_NO_3D),true)
+DEFINES += -DNO_3D
+export GETM_NO_BAROCLINIC=true
+endif
+
+ifeq ($(GETM_NO_BAROCLINIC),true)
+DEFINES += -DNO_BAROCLINIC
+endif
+
+ifeq ($(GETM_NO_SUSP_MATTER),true)
+DEFINES += -DNO_SUSP_MATTER
+endif
+
 # The compilation mode is obtained from $COMPILATION_MODE
 # default production - else debug or profiling
 ifndef GETM_PARALLEL
 parallel=false
+set par=ser
 else
 parallel=true
+set par=par
 endif
 
 turbulence=
@@ -41,7 +58,10 @@ CPP	= /lib/cpp
 
 # Here you can put defines for the [c|f]pp - some will also be set depending
 # on compilation mode - if STATIC is defined be careful.
-DEFINES =
+#DEFINES = -DHAIDVOGEL_TEST
+ifdef INPUT_DIR
+DEFINES += -DINPUT_DIR="'$(INPUT_DIR)/'"
+endif
 #DEFINES += -DSPHERICAL
 #DEFINES += -DCURVILINEAR
 #DEFINES += -DNO_BOTTFRIC
@@ -89,7 +109,7 @@ EXTRA_LIBS	=
 
 ifeq ($(turbulence),gotm)
 ifndef GOTMDIR
-GOTMDIR	= $(HOME)/gotm
+GOTMDIR = $(HOME)/gotm
 endif
 GOTMLIBDIR	= $(GOTMDIR)/lib/$(FORTRAN_COMPILER)
 LINKDIRS	+= -L$(GOTMLIBDIR)
@@ -109,7 +129,7 @@ NETCDFLIB	= $(NETCDFLIBNAME)
 else
 NETCDFLIB	= -lnetcdf
 ifdef NETCDFLIBDIR
-LDFLAGS		+= -L$(NETCDFLIBDIR)
+LINKDIRS	+= -L$(NETCDFLIBDIR)
 endif
 endif
 EXTRA_LIBS	+= $(NETCDFLIB)
@@ -128,14 +148,14 @@ ifdef MPILIBNAME
 MPILIB		= $(MPILIBNAME)
 else
 MPILIB		= -lmpich
-MPILIB		=
 ifdef MPILIBDIR
-LDFLAGS		+= -L$(MPILIBDIR)
 LINKDIRS	+= -L$(MPILIBDIR)
 endif
 endif
 EXTRA_LIBS	+= $(MPILIB)
 endif
+
+LINKDIRS +=  -L/opt/lam/lib
 
 DOCDIR		= $(GETMDIR)/doc
 
@@ -148,80 +168,7 @@ DOCDIR		= $(GETMDIR)/doc
 # sofar NAG(linux), FUJITSU(Linux), DECF90 (OSF1 and likely Linux on alpha),
 # SunOS, PGF90 - Portland Group Fortran Compiler (on Intel Linux).
 
-# Set options for the NAG Fortran compiler.
-ifeq ($(FORTRAN_COMPILER),NAG)
-FC=f95nag
-DEFINES += -DFORTRAN95
-can_do_F90=true
-MODULES=-mdir $(MODDIR)
-EXTRAS	= -f77
-DEBUG_FLAGS = -g -C=all -O0
-PROF_FLAGS  = -pg -O3
-PROD_FLAGS  = -O3
-REAL_4B	= real*4
-endif
-
-
-# Set options for the Compaq fort compiler - on alphas.
-ifeq ($(FORTRAN_COMPILER),DECFOR)
-FC=f90
-DEFINES += -DFORTRAN95
-can_do_F90=false
-MODULES=-module $(MODDIR)
-EXTRAS	=
-DEBUG_FLAGS = -g -arch host -check bounds -check overflow -check nopower -check underflow -std90 -assume gfullpath 
-DEBUG_FLAGS = -g -arch host -check bounds -check overflow -check nopower -assume gfullpath 
-PROF_FLAGS  = -pg -O
-PROD_FLAGS  = -O -fast -inline speed -pipeline
-#PROD_FLAGS  = -O -fast -inline speed -unroll  1 -pipeline
-REAL_4B	= real\(4\)
-endif
-
-# Set options for the Fujitsu compiler - on Linux/Intel and SunOS.
-ifeq ($(FORTRAN_COMPILER),FUJITSU)
-FC=frt
-can_do_F90=true
-DEFINES += -DFORTRAN95
-MODULES=-Am -M$(MODDIR)
-EXTRAS  = -ml=cdecl -fw
-EXTRAS  = -fw
-DEBUG_FLAGS = -g -H aeus
-PROF_FLAGS  = -pg -O3
-PROD_FLAGS  = -O -K fast
-REAL_4B	= real\(4\)
-endif
-
-# Set options for the Portland Group Fortran 90 compiler.
-ifeq ($(FORTRAN_COMPILER),PGF90)
-FC=pgf90
-DEFINES += -DFORTRAN90
-can_do_F90=false
-can_do_F90=true
-F90_to_f90=$(FC) -E $(F90FLAGS) $(EXTRA_FFLAGS) $< > $@
-MODULES=-module $(MODDIR)
-EXTRAS  =
-DEBUG_FLAGS = -g
-PROF_FLAGS  =
-PROD_FLAGS  = -fast
-REAL_4B = real\(4\)
-endif
-
-# Set options for the Intel Fortran 95 compiler.
-ifeq ($(FORTRAN_COMPILER),IFC)
-FC=ifc
-DEFINES += -DFORTRAN95
-can_do_F90=true
-F90_to_f90=$(FC) -E $(F90FLAGS) $(EXTRA_FFLAGS) $< > $@
-F90_to_f90=
-MODULES=
-MODULES=-module $(MODDIR)
-EXTRAS  = -static -w95 -e95
-DEBUG_FLAGS = -g -C
-PROF_FLAGS  = -qp -p
-PROD_FLAGS  = -O3 -mp
-REAL_4B = real\(4\)
-EXTRA_LIBS += -lPEPCF90 -lpthread
-endif
+include $(GETMDIR)/compilers/compiler.$(FORTRAN_COMPILER)
 
 DEFINES += -DREAL_4B=$(REAL_4B)
 
