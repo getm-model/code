@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.6 2003-08-28 15:13:57 kbk Exp $
+!$Id: m3d.F90,v 1.7 2003-09-12 16:23:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,9 +30,9 @@
 #ifndef NO_BAROCLINIC
    use suspended_matter, only: init_spm, do_spm
 #endif
+   use variables_3d
    use advection_3d, only: init_advection_3d
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
-   use variables_3d
 #ifdef PARALLEL
 use halo_mpi
 #endif
@@ -53,7 +53,10 @@ use halo_mpi
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.6  2003-08-28 15:13:57  kbk
+!  Revision 1.7  2003-09-12 16:23:38  kbk
+!  fixed order of use statement - now compiles on with IFC 7.1
+!
+!  Revision 1.6  2003/08/28 15:13:57  kbk
 !  explicit set UEx and VEx to 0
 !
 !  Revision 1.5  2003/04/23 12:16:34  kbk
