@@ -1,4 +1,4 @@
-!$Id: rivers.F90,v 1.4 2003-10-14 10:05:54 kbk Exp $
+!$Id: rivers.F90,v 1.5 2004-11-12 07:29:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -58,7 +58,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: rivers.F90,v $
-!  Revision 1.4  2003-10-14 10:05:54  kbk
+!  Revision 1.5  2004-11-12 07:29:36  kbk
+!  initialising ok to 0 - Buchmann
+!
+!  Revision 1.4  2003/10/14 10:05:54  kbk
 !  checks if indices are in subdomain + cleaning
 !
 !  Revision 1.3  2003/04/23 12:16:34  kbk
@@ -137,12 +140,13 @@
          read(unit,*) nriver
          allocate(ir(nriver),stat=rc) ! i index of rivers
          allocate(jr(nriver),stat=rc) ! j index of rivers
-         allocate(ok(nriver),stat=rc) ! valid river spec.
          allocate(river_name(nriver),stat=rc) ! NetCDF name of river.
+         allocate(ok(nriver),stat=rc) ! valid river spec.
          allocate(river_flow(nriver),stat=rc) ! river flux
          allocate(macro_height(nriver),stat=rc) ! height over a macro tims-step
          allocate(tr(nriver),stat=rc) ! temperature of river water
          allocate(irr(nriver),stat=rc) ! integrated river runoff
+         ok = 0
          do n=1,nriver
             read(unit,*) ir(n),jr(n),river_name(n)
             LEVEL3 trim(river_name(n)),':',ir(n),jr(n)
