@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.5 2003-12-16 16:56:05 kbk Exp $
+#$Id: Makefile,v 1.6 2004-08-06 08:41:42 lars Exp $
 #
 # Master Makefile for making the 'getm' executable.
 #
@@ -74,7 +74,7 @@ objects:
 
 doc:
 	set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i $@; done
-	
+
 bkup: distclean
 	tar -czvf ../../backups/getm.$$USER.`date +%Y%m%d%H`_`cat ../VERSION`.tar.gz *
 
