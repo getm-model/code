@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.7 2004-05-03 09:31:47 lars Exp $
+!$Id: internal_pressure.F90,v 1.8 2004-06-18 13:00:30 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -51,7 +51,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: internal_pressure.F90,v $
-!  Revision 1.7  2004-05-03 09:31:47  lars
+!  Revision 1.8  2004-06-18 13:00:30  hb
+!  Chu and Fan disactivated because of inconsistencies
+!
+!  Revision 1.7  2004/05/03 09:31:47  lars
 !  bug fix: defined i,j,k and first
 !
 !  Revision 1.6  2004/04/21 09:21:25  lars
@@ -162,9 +165,11 @@
       case(Z_INTERPOL)
          LEVEL3 'Z-interpolation'
       case(SONG_WRIGHT)
-         LEVEL3 'Sung and Wright scheme'
+         LEVEL3 'Song and Wright scheme'
       case(CHU_FAN)
-         LEVEL3 'Chu amd Fan scheme'
+         LEVEL3 'Chu and Fan scheme'
+         call getm_error("init_3d()", &
+             "Not working, use other internal pressure gradient scheme")
       case default
          FATAL 'Not valid ip_method specified'
          stop 'init_internal_pressure()'
