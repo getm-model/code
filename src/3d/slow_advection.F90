@@ -1,4 +1,4 @@
-!$Id: slow_advection.F90,v 1.5 2003-05-02 07:55:04 kbk Exp $
+!$Id: slow_advection.F90,v 1.6 2003-08-28 15:16:31 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,14 +11,14 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain, only: iimin,iimax,jjmin,jjmax,HU,HV,az,au,av
+   use domain, only: iimin,iimax,jjmin,jjmax,HU,HV,az,au,av,ax
    use domain, only: H,min_depth
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dyc,arud1,dxx,dyx,arvd1,dxc
 #else
    use domain, only: dx,dy,ard1
 #endif
-   use variables_2d, only: UEx,VEx,Uint,Vint
+   use variables_2d, only: UEx,VEx,Uint,Vint,PP
    use variables_3d, only: ssun,ssvn
    IMPLICIT NONE
 !
@@ -32,7 +32,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: slow_advection.F90,v $
-!  Revision 1.5  2003-05-02 07:55:04  kbk
+!  Revision 1.6  2003-08-28 15:16:31  kbk
+!  use ax mask, PP from variables_2d, always set PP
+!
+!  Revision 1.5  2003/05/02 07:55:04  kbk
 !  set PP equal 0. + only slow_advection when mask .eq. 1
 !
 !  Revision 1.4  2003/04/23 12:16:34  kbk
@@ -68,7 +71,6 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,ii,jj
-   REALTYPE                  :: PP(I2DFIELD)
    REALTYPE                  :: DUi(I2DFIELD)
    REALTYPE                  :: DVi(I2DFIELD)
 !EOP
@@ -89,7 +91,6 @@
 ! Upstream for dx(U^2/D)
    do j=jjmin,jjmax
       do i=iimin,iimax+1         ! PP defined on T-points
-         PP(i,j) = _ZERO_
          if (az(i,j) .ge. 1) then
             PP(i,j)=0.5*(Uint(i-1,j)+Uint(i,j))
             if (PP(i,j) .gt. _ZERO_ ) then
@@ -98,6 +99,8 @@
                ii=i
             end if
             PP(i,j)=PP(i,j)*Uint(ii,j)/DUi(ii,j)*DYC
+         else
+            PP(i,j) = _ZERO_
          end if
       end do
    end do
@@ -105,17 +108,14 @@
       do i=iimin,iimax           ! UEx defined on U-points
          if (au(i,j) .eq. 1) then
             UEx(i,j)=(PP(i+1,j)-PP(i  ,j))*ARUD1
-         else
-            UEx(i,j)= _ZERO_
          end if
       end do
    end do
 
 !  Upstream for dy(UV/D)
    do j=jjmin-1,jjmax     ! PP defined on X-points
-      do i=iimin-1,iimax
-         PP(i,j) = _ZERO_
-         if (au(i,j) .ge. 1 .or. au(i,j+1) .ge. 1) then
+      do i=iimin,iimax
+         if (ax(i,j) .ge. 1) then
             PP(i,j)=0.5*(Vint(i+1,j)+Vint(i,j))
             if (PP(i,j) .gt. _ZERO_) then
                jj=j
@@ -123,6 +123,8 @@
                jj=j+1
             end if
             PP(i,j)=PP(i,j)*Uint(i,jj)/DUi(i,jj)*DXX
+         else
+            PP(i,j) = _ZERO_
          end if
       end do
    end do
@@ -135,10 +137,9 @@
    end do
 
 ! Upstream for dx(UV/D)
-   do j=jjmin-1,jjmax
+   do j=jjmin,jjmax
       do i=iimin-1,iimax      ! PP defined on X-points
-         PP(i,j) = _ZERO_
-         if (av(i,j) .ge. 1 .or. av(i+1,j) .ge. 1) then
+         if (ax(i,j) .ge. 1) then
             PP(i,j)=0.5*(Uint(i,j)+Uint(i,j+1))
             if (PP(i,j) .gt. _ZERO_) then
                ii=i
@@ -146,6 +147,8 @@
                ii=i+1
             end if
             PP(i,j)=PP(i,j)*Vint(ii,j)/DVi(ii,j)*DYX
+         else
+            PP(i,j) = _ZERO_
          end if
       end do
    end do
@@ -153,8 +156,6 @@
       do i=iimin,iimax       ! VEx defined on V-points
          if (av(i,j) .eq. 1) then
             VEx(i,j)=(PP(i  ,j)-PP(i-1,j))*ARVD1
-         else
-            VEx(i,j)= _ZERO_
          end if
       end do
    end do
@@ -162,7 +163,6 @@
 !  Upstream for dy(V^2/D)
    do j=jjmin,jjmax+1          ! PP defined on T-points
       do i=iimin,iimax
-         PP(i,j) = _ZERO_
          if (az(i,j) .ge. 1) then
             PP(i,j)=0.5*(Vint(i,j-1)+Vint(i,j))
             if (PP(i,j) .gt. _ZERO_) then
@@ -171,6 +171,8 @@
                jj=j
             end if
             PP(i,j)=PP(i,j)*Vint(i,jj)/DVi(i,jj)*DXC
+         else
+            PP(i,j) = _ZERO_
          end if
       end do
    end do
