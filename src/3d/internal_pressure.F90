@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
+!$Id: internal_pressure.F90,v 1.4 2003-08-26 06:59:48 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,7 +30,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: internal_pressure.F90,v $
-!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  Revision 1.4  2003-08-26 06:59:48  kbk
+!  dxm1 -> dym1 for idpdy and SONG_WRIGHT
+!
+!  Revision 1.3  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/01 15:50:13  gotm
@@ -235,7 +238,7 @@
       do i=iimin,iimax
          if (av(i,j) .ge. 1) then
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         dym1 = _ONE_/DYV
+            dym1 = _ONE_/DYV
 #endif
 #ifdef PRESS_GRAD_Z
             zx(1)=-HV(i,j)+0.5*hvn(i,j,1) ! zx defined on v-points
@@ -248,7 +251,7 @@
 !HB                     -rho(i,j  ,kmax)*hn(i,j  ,kmax))*dym1
             grdl=0.5*hvn(i,j,kmax)*(rho(i,j+1,kmax)-rho(i,j,kmax))*dym1
             rhol=0.5*(rho(i,j+1,kmax)+rho(i,j,kmax))     &
-                     *(zz(i,j+1,kmax)- zz(i,j,kmax))*dxm1
+                     *(zz(i,j+1,kmax)- zz(i,j,kmax))*dym1
 #else
             grdl=0.5*hvn(i,j,kmax)*(rho(i,j+1,kmax)-rho(i,j,kmax))*dym1
             rhol=0.5*(rho(i,j+1,kmax)+rho(i,j,kmax))
@@ -329,6 +332,7 @@
       end do
    end if
 #endif
+
 
 #ifdef FORTRAN90
    deallocate(zz,stat=rc)    ! work array
