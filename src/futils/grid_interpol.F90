@@ -1,4 +1,4 @@
-!$Id: grid_interpol.F90,v 1.3 2003-04-23 12:02:43 kbk Exp $
+!$Id: grid_interpol.F90,v 1.4 2003-06-18 08:49:53 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -36,7 +36,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: grid_interpol.F90,v $
-!  Revision 1.3  2003-04-23 12:02:43  kbk
+!  Revision 1.4  2003-06-18 08:49:53  kbk
+!  southpole has length 3: lat, lon, rotation
+!
+!  Revision 1.3  2003/04/23 12:02:43  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 15:25:06  kbk
@@ -81,7 +84,7 @@
    REALTYPE, intent(in)                :: olon(-HALO+1:,-HALO+1:)
    REALTYPE, intent(in)                :: olat(-HALO+1:,-HALO+1:)
    REALTYPE, intent(in)                :: met_lon(:,:),met_lat(:,:)
-   REALTYPE, intent(in)                :: southpole(2)
+   REALTYPE, intent(in)                :: southpole(3)
    integer, optional, intent(in)       :: met_mask(:,:)
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -108,6 +111,11 @@
    LEVEL1 'init_grid_interpol'
    il = imin; ih = imax
    jl = jmin; jh = jmax
+
+   if(southpole(3) .ne. _ZERO_ ) then
+      FATAL 'southpole(3) (rotation) is not coded yet'
+      stop 'init_grid_interpol'
+   endif
 
    if(southpole(1) .ne. _ZERO_ .or. southpole(2) .ne. -90.) then
       rotated_grid = .true.
