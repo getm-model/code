@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.15 2005-01-12 19:26:16 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.16 2005-03-31 10:14:20 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,9 +12,10 @@
 !
 ! !USES:
    use time, only: string_to_julsecs,time_diff,add_secs,in_interval
-   use time, only: jul0,secs0,julianday,secondsofday,timestep
+   use time, only: jul0,secs0,julianday,secondsofday,timestep,simtime
    use domain, only: imin,imax,jmin,jmax,az,lonc,latc,conv
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
+   use grid_interpol, only: to_rotated_lat_lon
    use meteo, only: meteo_file,on_grid,calc_met,method,hum_method
    use meteo, only: airp,u10,v10,t2,hum,tcc
    use meteo, only: tausx,tausy,swr,shf
@@ -36,6 +37,7 @@
    integer         :: iextr,jextr,textr,tmax=-1
    integer         :: grid_scan=1
    logical         :: point_source=.false.
+   logical         :: rotated_meteo_grid=.false.
 
    REALTYPE, allocatable     :: met_lon(:),met_lat(:)
    REAL_4B, allocatable      :: met_times(:)
@@ -77,7 +79,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.15  2005-01-12 19:26:16  kbk
+!  Revision 1.16  2005-03-31 10:14:20  kbk
+!  flux calc. for point source + combined rot. met. and grid convergence
+!
+!  Revision 1.15  2005/01/12 19:26:16  kbk
 !  fixed printing of south pole
 !
 !  Revision 1.14  2005/01/12 19:17:47  kbk
@@ -179,7 +184,7 @@
    integer         :: i,j,n
    integer         :: err
    logical         :: ok=.true.
-   REALTYPE        :: x
+   REALTYPE        :: olon,olat,rlon,rlat,x
 !EOP
 !-------------------------------------------------------------------------
    include "netcdf.inc"
@@ -190,15 +195,6 @@
 #endif
 
    call open_meteo_file(meteo_file)
-
-   if(iextr .eq. 1 .and. jextr .eq. 1) then
-      point_source = .true.
-      LEVEL3 'Assuming Point Source meteo forcing'
-      if (on_grid .eq. .false. ) then
-         LEVEL3 'Setting on_grid to true'
-         on_grid=.true.
-      end if
-   end if
 
    if (met_lat(1) .gt. met_lat(2)) then
       LEVEL3 'Reverting lat-axis and setting grid_scan to 0'
@@ -219,12 +215,27 @@
    if (err /= 0) stop 'ncdf_meteo: Error allocating memory (wrk_dp)'
    wrk_dp = _ZERO_
 
-   if ( .not. on_grid ) then
+   allocate(beta(E2DFIELD),stat=err)
+   if (err /= 0) &
+       stop 'init_meteo_input_ncdf: Error allocating memory (beta)'
+   beta = _ZERO_
 
-      allocate(beta(E2DFIELD),stat=err)
-      if (err /= 0) &
-          stop 'init_meteo_input_ncdf: Error allocating memory (beta)'
-      beta = _ZERO_
+   if(iextr .eq. 1 .and. jextr .eq. 1) then
+      point_source = .true.
+      LEVEL3 'Assuming Point Source meteo forcing'
+      if ( .not. on_grid) then
+         LEVEL3 'Setting on_grid to true'
+         on_grid=.true.
+      end if
+      if (rotated_meteo_grid) then
+         rlon=met_lon(1)
+         rlat=met_lat(1)
+         call to_rotated_lat_lon(southpole,olon,olat,rlon,rlat,x)
+         beta = x
+      end if
+   end if
+
+   if ( .not. on_grid ) then
 
       allocate(ti(E2DFIELD),stat=err)
       if (err /= 0) &
@@ -240,6 +251,7 @@
       if (err /= 0) stop &
               'init_meteo_input_ncdf: Error allocating memory (gridmap)'
       gridmap(:,:,:) = -999
+#if 0
 #ifdef MED_15X15MINS_TEST
       do i=1,iextr
          met_lon(i) = -10.125 + (i-1)*1.125
@@ -258,6 +270,8 @@
       end do
       grid_scan=0
 #endif
+#endif
+
       call init_grid_interpol(imin,imax,jmin,jmax,az,  &
                 lonc,latc,met_lon,met_lat,southpole,gridmap,beta,ti,ui)
 
@@ -397,8 +411,10 @@
 
       t = loop*timestep
       do indx=save_n,tmax
-         if (met_times(indx) .gt. real(t + offset)) EXIT
+         if (met_times(indx) .ge. real(t + offset)) EXIT
       end do
+!     end of simulation?
+
       if (indx .gt. tmax) then
          LEVEL2 'Need new meteo file'
          call open_meteo_file(meteo_file)
@@ -406,7 +422,6 @@
          do indx=save_n,tmax
             if (met_times(indx) .gt. real(t + offset)) EXIT
          end do
-! indx = 1
          save_n = 0
       end if
       start(3) = indx
@@ -574,6 +589,7 @@
             else
                err = nf_get_var_double(ncid,id,southpole)
                if (err .ne. NF_NOERR) go to 10
+               rotated_meteo_grid = .true.
             end if
             LEVEL4 'south pole:'
             LEVEL4 '      lon ',southpole(1)
@@ -702,7 +718,7 @@
 ! !LOCAL VARIABLES:
    integer         :: i1,i2,istr,j1,j2,jstr
    integer         :: i,j,err
-   REALTYPE        :: uu,vv,sinconv,cosconv
+   REALTYPE        :: angle,uu,vv,sinconv,cosconv
 !EOP
 !-----------------------------------------------------------------------
    include "netcdf.inc"
@@ -712,11 +728,15 @@
       err = nf_get_vara_real(ncid,u10_id,start,edges,wrk)
       if (err .ne. NF_NOERR) go to 10
       if (on_grid) then
-         do j=jmin,jmax
-            do i=imin,imax
-               u10(i,j) = wrk(i,j)
+         if (point_source) then
+            u10 = wrk(1,1)
+         else
+            do j=jmin,jmax
+               do i=imin,imax
+                  u10(i,j) = wrk(i,j)
+               end do
             end do
-         end do
+         end if
       else
          !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
@@ -726,24 +746,32 @@
       err = nf_get_vara_real(ncid,v10_id,start,edges,wrk)
       if (err .ne. NF_NOERR) go to 10
       if (on_grid) then
-         do j=jmin,jmax
-            do i=imin,imax
-               v10(i,j) = wrk(i,j)
+         if (point_source) then
+            v10 = wrk(1,1)
+         else
+            do j=jmin,jmax
+               do i=imin,imax
+                  v10(i,j) = wrk(i,j)
+               end do
             end do
-         end do
+         end if
       else
          !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,v10)
       end if
 
-#ifdef SPHERICAL
-!     Rotation of wind due to grid convergence
+!     Rotation of wind due to the combined effect of possible rotation of 
+!     meteorological grid and possible hydrodynamic grid convergence 
+!     (cartesian and curvi-linear grids where conv <> 0.)
       do j=jmin,jmax
          do i=imin,imax
-            if(beta(i,j) .ne. _ZERO_) then
-               sinconv=sin(beta(i,j))
-               cosconv=cos(beta(i,j))
+!KBK            angle=-convc(i,j)*deg2rad
+!KBK            angle=beta(i,j)
+            angle=beta(i,j)-conv(i,j)*deg2rad
+            if(angle .ne. _ZERO_) then
+               sinconv=sin(angle)
+               cosconv=cos(angle)
                uu=u10(i,j)
                vv=v10(i,j)
                u10(i,j)= uu*cosconv+vv*sinconv
@@ -751,35 +779,19 @@
             end if
          end do
       end do
-#else
-      if (southpole(1) .ne. 0. .or. southpole(2) .ne. -90.) then
-LEVEL0 "rotation of wind due to the combined effect of grid convergence"
-LEVEL0 "and rotated meteorological grid is not implemented yet."
-         stop "read_data()"
-      end if
-!     Rotation of wind due to grid convergence
-      do j=jmin,jmax
-         do i=imin,imax
-            if(conv(i,j) .ne. _ZERO_) then
-               sinconv=sin(-conv(i,j)*deg2rad)
-               cosconv=cos(-conv(i,j)*deg2rad)
-               uu=u10(i,j)
-               vv=v10(i,j)
-               u10(i,j)= uu*cosconv+vv*sinconv
-               v10(i,j)=-uu*sinconv+vv*cosconv
-            end if
-         end do
-      end do
-#endif
 
       err = nf_get_vara_real(ncid,airp_id,start,edges,wrk)
       if (err .ne. NF_NOERR) go to 10
       if (on_grid) then
-         do j=jmin,jmax
-            do i=imin,imax
-               airp(i,j) = wrk(i,j)
+         if (point_source) then
+            airp = wrk(1,1)
+         else
+            do j=jmin,jmax
+               do i=imin,imax
+                  airp(i,j) = wrk(i,j)
+               end do
             end do
-         end do
+         end if
       else
          !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
@@ -789,11 +801,15 @@ LEVEL0 "and rotated meteorological grid is not implemented yet."
       err = nf_get_vara_real(ncid,t2_id,start,edges,wrk)
       if (err .ne. NF_NOERR) go to 10
       if (on_grid) then
-         do j=jmin,jmax
-            do i=imin,imax
-               t2(i,j) = wrk(i,j)
+         if (point_source) then
+            t2 = wrk(1,1)
+         else
+            do j=jmin,jmax
+               do i=imin,imax
+                  t2(i,j) = wrk(i,j)
+               end do
             end do
-         end do
+         end if
       else
          !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
@@ -803,11 +819,15 @@ LEVEL0 "and rotated meteorological grid is not implemented yet."
       err = nf_get_vara_real(ncid,hum_id,start,edges,wrk)
       if (err .ne. NF_NOERR) go to 10
       if (on_grid) then
-         do j=jmin,jmax
-            do i=imin,imax
-               hum(i,j) = wrk(i,j)
+         if (point_source) then
+            hum = wrk(1,1)
+         else
+            do j=jmin,jmax
+               do i=imin,imax
+                  hum(i,j) = wrk(i,j)
+               end do
             end do
-         end do
+         end if
       else
          !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
@@ -817,11 +837,15 @@ LEVEL0 "and rotated meteorological grid is not implemented yet."
       err = nf_get_vara_real(ncid,tcc_id,start,edges,wrk)
       if (err .ne. NF_NOERR) go to 10
       if (on_grid) then
-         do j=jmin,jmax
-            do i=imin,imax
-               tcc(i,j) = wrk(i,j)
+         if (point_source) then
+            tcc = wrk(1,1)
+         else
+            do j=jmin,jmax
+               do i=imin,imax
+                  tcc(i,j) = wrk(i,j)
+               end do
             end do
-         end do
+         end if
       else
          !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
