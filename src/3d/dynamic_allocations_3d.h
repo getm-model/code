@@ -76,6 +76,9 @@
   allocate(idpdy(I3DFIELD),stat=rc) ! Internal pressure gradient - y
   if (rc /= 0) stop 'init_3d: Error allocating memory (idpdy)'
 
+#endif
+
+#ifndef NO_SUSP_MATTER
   allocate(spm(I3DFIELD),stat=rc) ! Suspended particulate matter
   if (rc /= 0) stop 'init_3d: Error allocating memory (spm)'
 

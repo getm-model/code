@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.12 2004-01-06 15:04:00 kbk Exp $
+!$Id: m3d.F90,v 1.13 2004-01-08 10:23:20 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,7 @@
    use salinity,   only: init_salinity, do_salinity
    use eqstate,    only: init_eqstate, do_eqstate
 #endif
-#ifndef NO_BAROCLINIC
+#ifndef NO_SUSP_MATTER
    use suspended_matter, only: init_spm, do_spm
 #endif
    use variables_3d
@@ -50,7 +50,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.12  2004-01-06 15:04:00  kbk
+!  Revision 1.13  2004-01-08 10:23:20  kbk
+!  NN not needed for barotropic runs, NO_SUSP_MATTER works
+!
+!  Revision 1.12  2004/01/06 15:04:00  kbk
 !  FCT advection + split of advection_3d.F90 + extra adv. input checks
 !
 !  Revision 1.11  2004/01/05 13:23:27  kbk
@@ -314,7 +317,9 @@
       T = _ZERO_ ; S = _ZERO_ ; rho = _ZERO_
       if(calc_temp) call init_temperature(1)
       if(calc_salt) call init_salinity(1)
+#ifndef NO_SUSP_MATTER
       if(calc_spm)  call init_spm(1)
+#endif
       call init_eqstate()
 #ifndef PECS
       call do_eqstate()
@@ -426,7 +431,9 @@
    if(runtype .eq. 4) then        ! prognostic T and S
       if (calc_temp) call do_temperature(n)
       if (calc_salt) call do_salinity(n)
+#ifndef NO_SUSP_MATTER
       if (calc_spm) call do_spm()
+#endif
 #ifndef PECS
       call do_eqstate()
 #endif

@@ -31,10 +31,10 @@
   REALTYPE                             :: tke(I3DFIELD)
   REALTYPE                             :: eps(I3DFIELD)
   REALTYPE                             :: SS(I3DFIELD)
-  REALTYPE                             :: NN(I3DFIELD)
 
 #ifndef NO_BAROCLINIC
 ! 3D baroclinic fields
+  REALTYPE                             :: NN(I3DFIELD)
   REALTYPE                             :: S(I3DFIELD)
   REALTYPE                             :: T(I3DFIELD)
   REALTYPE                             :: rho(I3DFIELD)
