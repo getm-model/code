@@ -70,7 +70,7 @@
 
 #endif
 
-#ifndef NO_SUSP_MATTER
+#ifdef SPM
   allocate(spm(I3DFIELD),stat=rc) ! Suspended particulate matter
   if (rc /= 0) stop 'init_3d: Error allocating memory (spm)'
 
