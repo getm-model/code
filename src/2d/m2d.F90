@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.9 2004-01-05 08:59:38 kbk Exp $
+!$Id: m2d.F90,v 1.10 2004-01-06 19:07:22 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,7 +41,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m2d.F90,v $
-!  Revision 1.9  2004-01-05 08:59:38  kbk
+!  Revision 1.10  2004-01-06 19:07:22  kbk
+!  vel_depth_method in namelist
+!
+!  Revision 1.9  2004/01/05 08:59:38  kbk
 !  different velocity point depth calculations using vel_depth_method
 !
 !  Revision 1.8  2003/09/13 10:00:51  kbk
@@ -141,7 +144,8 @@
    integer                   :: rc
    integer                   :: vel_depth_method=0
    namelist /m2d/ &
-          MM,z0_const,Am,An,residual,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
+          MM,z0_const,vel_depth_method,Am,An,residual, &
+	  bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
 !BOC
