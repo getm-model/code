@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.2 2002-05-02 15:04:41 gotm Exp $
+#$Id: Rules.make,v 1.3 2003-03-17 14:58:37 gotm Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -88,7 +88,10 @@ LINKDIRS	= -L$(LIBDIR)
 EXTRA_LIBS	=
 
 ifeq ($(turbulence),gotm)
-GOTMLIBDIR	= $$GOTMDIR/lib/$(FORTRAN_COMPILER)
+ifndef GOTMDIR
+GOTMDIR	= $(HOME)/gotm
+endif
+GOTMLIBDIR	= $(GOTMDIR)/lib/$(FORTRAN_COMPILER)
 LINKDIRS	+= -L$(GOTMLIBDIR)
 EXTRA_LIBS	+= -lturbulence$(buildtype) -lutil$(buildtype) 
 INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
@@ -210,13 +213,14 @@ DEFINES += -DFORTRAN95
 can_do_F90=true
 F90_to_f90=$(FC) -E $(F90FLAGS) $(EXTRA_FFLAGS) $< > $@
 F90_to_f90=
-MODULES=-module $(MODDIR)
 MODULES=
-EXTRAS  = -w95 -e95
+MODULES=-module $(MODDIR)
+EXTRAS  = -static -w95 -e95
 DEBUG_FLAGS = -g -C
 PROF_FLAGS  = -qp -p
 PROD_FLAGS  = -O3
 REAL_4B = real\(4\)
+EXTRA_LIBS += -lPEPCF90 -lpthread
 endif
 
 DEFINES += -DREAL_4B=$(REAL_4B)
