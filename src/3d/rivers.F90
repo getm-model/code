@@ -1,4 +1,4 @@
-!$Id: rivers.F90,v 1.1 2002-05-02 14:01:00 gotm Exp $
+!$Id: rivers.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,8 +30,10 @@
 #endif
    use m2d, only: dtm
    use variables_2d, only: z
+#ifndef NO_BAROCLINIC
    use m3d, only: calc_salt,calc_temp
    use variables_3d, only: hn,ssen,T,S
+#endif
    IMPLICIT NONE
 !
    private
@@ -56,8 +58,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: rivers.F90,v $
-!  Revision 1.1  2002-05-02 14:01:00  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:00  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.3  2001/10/07 14:50:22  bbh
 !  Reading river data implemented - NetCFD
@@ -215,6 +220,7 @@
                height = rvol*ARCD1
 	       river_int_flux(n)=river_int_flux(n)+height
                z(i,j) = z(i,j) + height
+#ifndef NO_BAROCLINIC
                if (do_3d) then
                   if (calc_salt) then
                      S(i,j,1:kmax) = S(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
@@ -238,6 +244,7 @@
                   end if
 #endif
                end if
+#endif
             end if
          end do
       case default

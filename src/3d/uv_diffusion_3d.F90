@@ -1,4 +1,4 @@
-!$Id: uv_diffusion_3d.F90,v 1.1 2002-05-02 14:01:01 gotm Exp $
+!$Id: uv_diffusion_3d.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,8 +17,7 @@
 #else
    use domain, only: dx,dy,ard1
 #endif
-   use m2d,    only: DU,DV
-   use variables_3d,    only: kumin,kvmin,uu,vv,ww,hn,hun,hvn,uuEx,vvEx
+   use variables_3d, only: kumin,kvmin,uu,vv,ww,hn,hun,hvn,uuEx,vvEx
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:

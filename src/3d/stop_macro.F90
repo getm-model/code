@@ -1,4 +1,4 @@
-!$Id: stop_macro.F90,v 1.1 2002-05-02 14:00:56 gotm Exp $
+!$Id: stop_macro.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use m2d,    only: Uint,Uinto,Vint,Vinto
+   use variables_2d, only: Uint,Uinto,Vint,Vinto
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -24,8 +24,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: stop_macro.F90,v $
-!  Revision 1.1  2002-05-02 14:00:56  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:56  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.2  2001/08/27 11:50:17  bbh
 !  TVD-advection for momentum added, some bugs removed

@@ -1,4 +1,4 @@
-!$Id: vv_momentum_3d.F90,v 1.1 2002-05-02 14:00:57 gotm Exp $
+!$Id: vv_momentum_3d.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,22 +12,25 @@
 !
 ! !USES:
    use parameters, only: g,avmmol,rho_0
-   use commhalo,   only: update_3d_halo,wait_halo,V_TAG
-   use domain,     only: iimin,iimax,jjmin,jjmax,kmax,H,HV,min_depth
-   use domain,     only: dry_v,Corv,au,av,az,ax
-   use bdy_3d, only: do_bdy_3d
+   use domain, only: iimin,iimax,jjmin,jjmax,kmax,H,HV,min_depth
+   use domain, only: dry_v,Corv,au,av,az,ax
 #if defined CURVILINEAR || defined SPHERICAL
-   use domain,     only: dyv,arvd1,dxc,dyx,dyc,dxx
+   use domain, only: dyv,arvd1,dxc,dyx,dyc,dxx
 #else
-   use domain,     only: dx,dy
+   use domain, only: dx,dy
 #endif
-   use m2d,        only: DV,Vint,D
+   use variables_2d, only: Vint,D
+   use bdy_3d, only: do_bdy_3d
    use variables_3d, only: dt,cnpar,kvmin,uu,vv,huo,hvo,hvn,vvEx,ww,hun
-   use variables_3d, only: num,nuh,sseo,ssvn,rrv,idpdy
+   use variables_3d, only: num,nuh,sseo,ssvn,rrv
+#ifndef NO_BAROCLINIC
+   use variables_3d, only: idpdy
+#endif
 #ifdef UV_TVD
    use variables_3d, only: uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv
 #endif
-   use meteo,      only: tausy,airp
+   use halo_zones, only: update_3d_halo,wait_halo,V_TAG
+   use meteo, only: tausy,airp
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -41,8 +44,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: vv_momentum_3d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:57  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:57  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.16  2001/10/26 09:11:28  bbh
 !  Stresses in meteo.F90 are in N/m2 - divide by rho_0 where necessary
@@ -102,8 +108,9 @@
    REALTYPE	:: auxn(1:kmax-1),auxo(1:kmax-1),fuu(1:kmax)
    REALTYPE	:: a1(0:kmax),a2(0:kmax),a3(0:kmax),a4(0:kmax)
    REALTYPE	:: Res(0:kmax),ex(0:kmax)
-   REALTYPE	:: zp,zm,zy,ResInt,dtl,Diff,Uloc
+   REALTYPE	:: zp,zm,zy,ResInt,Diff,Uloc
    REALTYPE	:: gamma=g*rho_0
+   REALTYPE	:: cord_curv=_ZERO_
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -112,10 +119,8 @@
    Ncall = Ncall+1
    write(debug,*) 'vv_momentum_3d() # ',Ncall
 #endif
-   do i=iimin,iimax
-      do j=jjmin,jjmax
-
-         dtl=dt   ! Applying land mask to time step
+   do j=jjmin,jjmax
+      do i=iimin,iimax
 
          if ((av(i,j) .eq. 1) .or. (av(i,j) .eq. 2)) then
 	
@@ -132,19 +137,21 @@
 #else
                 Uloc=0.25*(uu(i,j,k)+uu(i-1,j,k)+uu(i,j+1,k)+uu(i-1,j+1,k))
 #endif
-#ifdef CURVILINEAR
-                  ex(k)=(vv(i,j,k)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC))     &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                  cord_curv=(vv(i,j,k)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC))     &
                         /hvo(i,j,k)*ARVD1
+	          ex(k)=(cord_curv-Corv(i,j))*Uloc
 #else
-                  ex(k)= _ZERO_
+	          ex(k)=-Corv(i,j)*Uloc
 #endif
-	          ex(k)=(ex(k)-Corv(i,j))*Uloc
-	          ex(k)=ex(k)-vvEx(i,j,k)+idpdy(i,j,k)
-            	  ex(k)=dry_v(i,j)*ex(k)
+#ifdef NO_BAROCLINIC
+                  ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k))
+#else
+                  ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+idpdy(i,j,k))
+#endif
                end do
                ex(kmax)=ex(kmax)                                      &
 	          +dry_v(i,j)*.5*(tausy(i,j)+tausy(i,j+1))/rho_0
-
 !     Eddy viscosity
                do k=kvmin(i,j),kmax-1
                   dif(k)=0.5*(num(i,j,k)+num(i,j+1,k)) + avmmol
@@ -153,8 +160,8 @@
 !     Auxiliury terms, old and new time level,
 !     cnpar: Crank-Nicholson parameter
                do k=kvmin(i,j),kmax-1
-                  auxo(k)=2*(1-cnpar)*dtl*dif(k)/(hvo(i,j,k+1)+hvo(i,j,k))
-                  auxn(k)=2*   cnpar *dtl*dif(k)/(hvn(i,j,k+1)+hvn(i,j,k))
+                  auxo(k)=2*(1-cnpar)*dt*dif(k)/(hvo(i,j,k+1)+hvo(i,j,k))
+                  auxn(k)=2*   cnpar *dt*dif(k)/(hvn(i,j,k+1)+hvn(i,j,k))
                end do
 
 !     Barotropic pressure gradient
@@ -168,8 +175,8 @@
                a2(k)=1+auxn(k-1)/hvn(i,j,k)
                a4(k)=vv(i,j,k  )*(1-auxo(k-1)/hvo(i,j,k))                &
                     +vv(i,j,k-1)*auxo(k-1)/hvo(i,j,k-1)                  &
-	            +dtl*ex(k)                                           &
-                    -dtl*0.5*(hvo(i,j,k)+hvn(i,j,k))*g*zy
+	            +dt*ex(k)                                           &
+                    -dt*0.5*(hvo(i,j,k)+hvn(i,j,k))*g*zy
 
 !     Matrix elements for inner layers
                do k=kvmin(i,j)+1,kmax-1
@@ -179,19 +186,19 @@
                   a4(k)=vv(i,j,k+1)*auxo(k)/hvo(i,j,k+1)                 &
                        +vv(i,j,k  )*(1-(auxo(k)+auxo(k-1))/hvo(i,j,k))   &
                        +vv(i,j,k-1)*auxo(k-1)/hvo(i,j,k-1)               &
-	               +dtl*ex(k)                                        &
-                       -dtl*0.5*(hvo(i,j,k)+hvn(i,j,k))*g*zy
+	               +dt*ex(k)                                        &
+                       -dt*0.5*(hvo(i,j,k)+hvn(i,j,k))*g*zy
                end do
 
 !     Matrix elements for bottom layer
                k=kvmin(i,j)
                a3(k)=-auxn(k  )/hvn(i,j,k+1)
                a2(k)=1+auxn(k)/hvn(i,j,k)                                &
-                        +dtl*rrv(i,j)/(0.5*(hvn(i,j,k)+hvo(i,j,k)))
+                        +dt*rrv(i,j)/(0.5*(hvn(i,j,k)+hvo(i,j,k)))
                a4(k)=vv(i,j,k+1)*auxo(k)/hvo(i,j,k+1)                    &
                        +vv(i,j,k  )*(1-auxo(k)/hvo(i,j,k))               &
-	               +dtl*ex(k)                                        &
-                       -dtl*0.5*(hvo(i,j,k)+hvn(i,j,k))*g*zy
+	               +dt*ex(k)                                        &
+                       -dt*0.5*(hvo(i,j,k)+hvn(i,j,k))*g*zy
 
                call getm_tridiagonal(kmax,kvmin(i,j),kmax,a1,a2,a3,a4,Res)
 

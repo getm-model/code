@@ -1,4 +1,4 @@
-!$Id: slow_bottom_friction.F90,v 1.1 2002-05-02 14:00:55 gotm Exp $
+!$Id: slow_bottom_friction.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,10 +11,10 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use parameters,   only: kappa
    use domain, only: iimin,iimax,jjmin,jjmax,HU,HV,min_depth,au,av
-   use m2d,    only: zub,zvb,ru,rv,Uinto,Vinto
-   use variables_3d,    only: ssuo,ssun,ssvo,ssvn
-   use parameters,    only: kappa
+   use variables_2d, only: zub,zvb,ru,rv,Uinto,Vinto
+   use variables_3d, only: ssuo,ssun,ssvo,ssvn
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -27,8 +27,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: slow_bottom_friction.F90,v $
-!  Revision 1.1  2002-05-02 14:00:55  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:55  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.3  2001/06/22 08:19:10  bbh
 !  Compiler options such as USE_MASK and OLD_DRY deleted.
@@ -60,72 +63,80 @@
    Ncall = Ncall+1
    write(debug,*) 'slow_bottom_friction() # ',Ncall
 #endif
-   ruu = _ZERO_
-   rvv = _ZERO_
-   Ui  = _ZERO_
-   Vi  = _ZERO_
-
    do j=jjmin,jjmax+1
       do i=iimin-1,iimax
-         Ui(i,j)=Uinto(i,j)/(ssuo(i,j)+HU(i,j))
+         if(au(i,j) .ge. 1) then
+            Ui(i,j)=Uinto(i,j)/(ssuo(i,j)+HU(i,j))
+         else
+            Ui(i,j)=_ZERO_
+         end if
       end do
    end do
 
    do j=jjmin-1,jjmax
       do i=iimin,iimax+1
-         Vi(i,j)=Vinto(i,j)/(ssvo(i,j)+HV(i,j))
-      end do
-   end do
-
-   do j=jjmin,jjmax
-      do i=iimin,iimax
-         if (au(i,j).ge.1) then
-         HH=max(min_depth,ssun(i,j)+HU(i,j))
-         ruu(i,j)=(zub(i,j)+0.5*HH)/zub(i,j)
-         if (ruu(i,j).le.1.) then
-            write(9,*) ssuo(i,j),' Bottom xfriction coefficient infinite.'
-            stop
-         end if
-         ruu(i,j)=(kappa/log(ruu(i,j)))**2
-         end if
-      end do
-   end do
-   do j=jjmin,jjmax
-      do i=iimin,iimax
-         if (av(i,j).ge.1) then
-         HH=max(min_depth,ssvn(i,j)+HV(i,j))
-         rvv(i,j)=(zvb(i,j)+0.5*HH)/zvb(i,j)
-         if (rvv(i,j).le.1.) then
-            write(9,*) ssvo(i,j),' Bottom yfriction coefficient infinite.'
-            stop
-         end if
-         rvv(i,j)=(kappa/log(rvv(i,j)))**2
+         if(av(i,j) .ge. 1) then
+            Vi(i,j)=Vinto(i,j)/(ssvo(i,j)+HV(i,j))
+         else
+            Vi(i,j)=_ZERO_
          end if
       end do
    end do
 
    do j=jjmin,jjmax
       do i=iimin,iimax
-         if (au(i,j).ge.1) then
-         uloc=Ui(i,j)
-         vloc=0.25*( Vi(i  ,j  )	&
-                    +Vi(i+1,j  )	&
-                    +Vi(i  ,j-1)	&
-                    +Vi(i+1,j-1) )
-         ru(i,j)=ruu(i,j)*sqrt(uloc**2+vloc**2)
+         if (au(i,j) .ge. 1) then
+            HH=max(min_depth,ssun(i,j)+HU(i,j))
+            ruu(i,j)=(zub(i,j)+0.5*HH)/zub(i,j)
+            if (ruu(i,j) .le. _ONE_) then
+               STDERR i,j,ssuo(i,j),' Bottom xfriction coefficient infinite.'
+               stop 'slow_bottom_friction()'
+            end if
+            ruu(i,j)=(kappa/log(ruu(i,j)))**2
+         end if
+      end do
+   end do
+
+   do j=jjmin,jjmax
+      do i=iimin,iimax
+         if (av(i,j) .ge. 1) then
+            HH=max(min_depth,ssvn(i,j)+HV(i,j))
+            rvv(i,j)=(zvb(i,j)+0.5*HH)/zvb(i,j)
+            if (rvv(i,j) .le. _ONE_) then
+               STDERR i,j,ssvo(i,j),' Bottom yfriction coefficient infinite.'
+               stop 'slow_bottom_friction()'
+            end if
+            rvv(i,j)=(kappa/log(rvv(i,j)))**2
+         end if
+      end do
+   end do
+
+   do j=jjmin,jjmax
+      do i=iimin,iimax
+         if (au(i,j) .ge. 1) then
+            uloc=Ui(i,j)
+            vloc=0.25*( Vi(i  ,j  )	&
+                       +Vi(i+1,j  )	&
+                       +Vi(i  ,j-1)	&
+                       +Vi(i+1,j-1) )
+            ru(i,j)=ruu(i,j)*sqrt(uloc**2+vloc**2)
+         else
+            ru(i,j)=_ZERO_
 	 end if
       end do
    end do
 
    do j=jjmin,jjmax
       do i=iimin,iimax
-         if (av(i,j).ge.1) then
-         uloc=0.25*( Ui(i  ,j  )	&
-                    +Ui(i-1,j  )	&
-                    +Ui(i  ,j+1)	&
-                    +Ui(i-1,j+1) )
-         vloc=Vi(i,j)
-         rv(i,j)=rvv(i,j)*sqrt(uloc**2+vloc**2)
+         if (av(i,j) .ge. 1) then
+            uloc=0.25*( Ui(i  ,j  )	&
+                       +Ui(i-1,j  )	&
+                       +Ui(i  ,j+1)	&
+                       +Ui(i-1,j+1) )
+            vloc=Vi(i,j)
+            rv(i,j)=rvv(i,j)*sqrt(uloc**2+vloc**2)
+         else
+            rv(i,j)=_ZERO_
 	 end if
       end do
    end do

@@ -1,4 +1,4 @@
-!$Id: ss_nn.F90,v 1.1 2002-05-02 14:00:55 gotm Exp $
+!$Id: ss_nn.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,8 +17,11 @@
 !  by including isopycnal slopes.
 !
 ! !USES:
-   use domain,       only: iimin,iimax,jjmin,jjmax,kmax,au,av,az
-   use variables_3d, only: kmin,kumin,uu,hun,kvmin,vv,hvn,SS,NN,rho,hn,num,S
+   use domain, only: iimin,iimax,jjmin,jjmax,kmax,au,av,az
+   use variables_3d, only: kmin,kumin,uu,hun,kvmin,vv,hvn,SS
+#ifndef NO_BAROCLINIC
+   use variables_3d, only: hn,NN,rho,num
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -31,8 +34,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: ss_nn.F90,v $
-!  Revision 1.1  2002-05-02 14:00:55  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:55  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.7  2001/10/12 09:22:10  bbh
 !  Removed some bugs
@@ -114,9 +120,9 @@
       end do
    end do
 
+#ifndef NO_BAROCLINIC
 #define NEW_NN
 #undef NEW_NN
-
    do j=jjmin,jjmax
       do i=iimin,iimax
          if (az(i,j) .eq. 1 ) then
@@ -156,6 +162,7 @@
          end if
       end do
    end do
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving ss_nn()'

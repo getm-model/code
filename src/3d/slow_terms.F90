@@ -1,4 +1,4 @@
-!$Id: slow_terms.F90,v 1.1 2002-05-02 14:00:55 gotm Exp $
+!$Id: slow_terms.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,9 +12,12 @@
 !
 ! !USES:
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,HU,HV,au,av
-   use m2d,    only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
-   use variables_3d,    only: kumin,kvmin,uu,vv,huo,hun,hvo,hvn,idpdx,idpdy
-   use variables_3d,    only: ssuo,ssun,ssvo,ssvn,uuEx,vvEx,rru,rrv
+   use variables_2d, only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
+   use variables_3d, only: kumin,kvmin,uu,vv,huo,hun,hvo,hvn
+   use variables_3d, only: ssuo,ssun,ssvo,ssvn,uuEx,vvEx,rru,rrv
+#ifndef NO_BAROCLINIC
+   use variables_3d, only: idpdx,idpdy
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -27,8 +30,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: slow_terms.F90,v $
-!  Revision 1.1  2002-05-02 14:00:55  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:55  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.6  2001/08/27 11:50:17  bbh
 !  TVD-advection for momentum added, some bugs removed
@@ -66,42 +72,50 @@
 
    if (kmax.gt.1) then
 
-      do i=iimin,iimax
-         do j=jjmin,jjmax
-	    if (au(i,j).ge.1) then
+      do j=jjmin,jjmax
+         do i=iimin,iimax
+            if (au(i,j).ge.1) then
                SlUx(i,j)=-UEx(i,j)
-	    end if
+            end if
          end do
       end do
 
       do k=1,kmax
          do j=jjmin,jjmax
             do i=iimin,iimax
-	       if (au(i,j).ge.1) then
+               if (au(i,j).ge.1) then
                   if (k.ge.kumin(i,j)) then
+#ifdef NO_BAROCLINIC
+                     SlUx(i,j)=SlUx(i,j)+uuEx(i,j,k)
+#else
                      SlUx(i,j)=SlUx(i,j)+uuEx(i,j,k)-idpdx(i,j,k)
+#endif
                   end if
                end if
             end do
          end do
       end do
 
-      do i=iimin,iimax
-         do j=jjmin,jjmax
-	    if (av(i,j).ge.1) then
+      do j=jjmin,jjmax
+         do i=iimin,iimax
+            if (av(i,j).ge.1) then
                SlVx(i,j)=-VEx(i,j)
-	    end if
+            end if
          end do
       end do
 
       do k=1,kmax
          do j=jjmin,jjmax
             do i=iimin,iimax
-	       if (av(i,j).ge.1) then
+               if (av(i,j).ge.1) then
                   if (k.ge.kvmin(i,j)) then
+#ifdef NO_BAROCLINIC
+                     SlVx(i,j)=SlVx(i,j)+vvEx(i,j,k)
+#else
                      SlVx(i,j)=SlVx(i,j)+vvEx(i,j,k)-idpdy(i,j,k)
+#endif
                   end if
-	       end if
+               end if
             end do
          end do
       end do
@@ -111,9 +125,13 @@
       do k=1,kmax
          do j=jjmin,jjmax
             do i=iimin,iimax
-	       if (au(i,j).ge.1) then
+               if (au(i,j).ge.1) then
                   if (k.ge.kumin(i,j)) then
+#ifdef NO_BAROCLINIC
+                     SlUx(i,j)= _ZERO_
+#else
                      SlUx(i,j)=-idpdx(i,j,k)
+#endif
                   end if
                end if
             end do
@@ -123,11 +141,15 @@
       do k=1,kmax
          do j=jjmin,jjmax
             do i=iimin,iimax
-	       if (av(i,j).ge.1) then
+               if (av(i,j).ge.1) then
                   if (k.ge.kvmin(i,j)) then
+#ifdef NO_BAROCLINIC
+                     SlVx(i,j)= _ZERO_
+#else
                      SlVx(i,j)=-idpdy(i,j,k)
+#endif
                   end if
-	       end if
+               end if
             end do
          end do
       end do
@@ -135,21 +157,21 @@
 
    do j=jjmin,jjmax
       do i=iimin,iimax
-      if (au(i,j).ge.1) then
-         k=kumin(i,j)
-	 if (kmax.gt.1) then
+         if (au(i,j).ge.1) then
+            k=kumin(i,j)
+            if (kmax.gt.1) then
 #ifdef NO_SLR
-            STDERR 'NO_SLR U'
-            Slru(i,j)= _ZERO_
+               STDERR 'NO_SLR U'
+               Slru(i,j)= _ZERO_
 #else
-            Slru(i,j)=-Uint(i,j)/(0.5*(ssuo(i,j)+ssun(i,j))	&
-                                    +HU(i,j))*ru(i,j)		&
-                  +uu(i,j,k)/(0.5*(huo(i,j,k)+hun(i,j,k)))*rru(i,j)
+               Slru(i,j)=-Uint(i,j)/(0.5*(ssuo(i,j)+ssun(i,j))	&
+                                       +HU(i,j))*ru(i,j)		&
+                     +uu(i,j,k)/(0.5*(huo(i,j,k)+hun(i,j,k)))*rru(i,j)
 #endif
-         else
-            Slru(i,j)= _ZERO_
+            else
+               Slru(i,j)= _ZERO_
+            end if
          end if
-      end if
       end do
    end do
 
@@ -157,7 +179,7 @@
       do i=iimin,iimax
          if (av(i,j).ge.1) then
             k=kvmin(i,j)
-	    if (kmax.gt.1) then
+            if (kmax.gt.1) then
 #ifdef NO_SLR
                STDERR 'NO_SLR V'
                Slrv(i,j)=0.
@@ -167,7 +189,7 @@
                   +vv(i,j,k)/(0.5*(hvo(i,j,k)+hvn(i,j,k)))*rrv(i,j)
 #endif
             else
-               Slrv(i,j)=0.
+               Slrv(i,j)=_ZERO_
             end if  	
          end if
       end do

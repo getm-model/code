@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.2 2003-03-17 14:59:33 gotm Exp $
+!$Id: temperature.F90,v 1.3 2003-04-07 13:36:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,10 +12,10 @@
 !  Description still missing
 !
 ! !USES:
-   use commhalo, only: myid,update_3d_halo,wait_halo,D_TAG
    use domain, only: imin,jmin,imax,jmax,H,az
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
    use variables_3d, only: T,hn
+   use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
 !
    private
@@ -25,7 +25,8 @@
 !
 ! !PRIVATE DATA MEMBERS:
    integer		:: temp_method=1,temp_format=2
-   character(len=32)	:: temp_file="t_and_s.nc",temp_name='temp'
+   character(len=PATH_MAX)	:: temp_file="t_and_s.nc"
+   character(len=32)	:: temp_name='temp'
    REALTYPE		:: temp_const=20.
    integer		:: temp_hor_adv=1,temp_ver_adv=1,temp_strang=0
    REALTYPE		:: temp_AH=-1.
@@ -34,8 +35,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: temperature.F90,v $
-!  Revision 1.2  2003-03-17 14:59:33  gotm
-!  Added Black Sea support
+!  Revision 1.3  2003-04-07 13:36:38  kbk
+!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:58  gotm
 !  recovering after CVS crash
@@ -139,9 +140,6 @@ field_no=1
 #ifdef MED_15X15MINS_TEST
 field_no=1
 #endif
-#ifdef BLACK_SEA_TEST
-field_no=1
-#endif
 
    LEVEL2 'init_temperature()'
    read(NAMLST,temp)
@@ -170,14 +168,6 @@ field_no=1
    LEVEL3 'temp_ver_adv= ',temp_ver_adv
    LEVEL3 'temp_strang=  ',temp_strang
 
-#ifdef HAIDVOGEL_TEST
-   T=10.
-#else
-!#ifdef PECS
-#ifdef NOMADS_TEST
-   T=10.
-#endif
-#endif
    call update_3d_halo(T,T,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
    call wait_halo(D_TAG)
 

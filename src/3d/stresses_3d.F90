@@ -1,4 +1,4 @@
-!$Id: stresses_3d.F90,v 1.1 2002-05-02 14:00:56 gotm Exp $
+!$Id: stresses_3d.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,8 +13,8 @@
 ! !USES:
    use parameters, only: rho_0
    use domain, only: iimin,iimax,jjmin,jjmax
-   use variables_3d,    only: kumin,kvmin,uu,vv,hun,hvn,rru,rrv,taus,taub
-   use meteo,  only: tausx,tausy
+   use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,rru,rrv,taus,taub
+   use meteo, only: tausx,tausy
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -27,8 +27,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: stresses_3d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:56  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:56  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.4  2001/10/26 09:11:28  bbh
 !  Stresses in meteo.F90 are in N/m2 - divide by rho_0 where necessary
@@ -45,7 +48,6 @@
 !
 !  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
 !  initial import into CVS
-!
 !
 ! !LOCAL VARIABLES:
    integer	:: i,j,k1,k2,k3,k4

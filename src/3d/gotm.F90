@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.2 2003-04-01 15:27:27 gotm Exp $
+!$Id: gotm.F90,v 1.3 2003-04-07 13:36:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,10 +13,9 @@
 ! !USES:
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,az,min_depth,crit_depth
    use domain, only: egon => H
-   use m2d,    only: D,zub,zvb,z
+   use variables_2d, only: D,zub,zvb,z
    use variables_3d, only: dt,kmin,ho,hn,tke,eps,SS,NN,num,nuh,taus,taub
-   use mtridiagonal, only: init_tridiagonal
-   use turbulence, only: init_turbulence, do_turbulence,cde
+   use turbulence, only: do_turbulence,cde
    use turbulence, only: tke1d => tke, eps1d => eps, L1d => L
    use turbulence, only: num1d => num, nuh1d => nuh
    IMPLICIT NONE
@@ -31,8 +30,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: gotm.F90,v $
-!  Revision 1.2  2003-04-01 15:27:27  gotm
-!  cleaned the code
+!  Revision 1.3  2003-04-07 13:36:38  kbk
+!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:54  gotm
 !  recovering after CVS crash
@@ -90,8 +89,8 @@
    write(debug,*) 'gotm() # ',Ncall
 #endif
 
-   do i=iimin,iimax
-      do j=jjmin,jjmax
+   do j=jjmin,jjmax
+      do i=iimin,iimax
 
          if (az(i,j) .eq. 1 ) then
 
@@ -113,7 +112,7 @@
 
             z0s = 0.1
 	    z0b=0.5*(max(zub(i-1,j),zub(i,j))+max(zvb(i,j-1),zvb(i,j)))
-            if (z0s.gt.D(i,j)/10.) z0s=D(i,j)/10.
+            if (z0s .gt. D(i,j)/10.) z0s=D(i,j)/10.
 
 #ifdef PARABOLIC_VISCOSITY
             zz = _ZERO_

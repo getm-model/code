@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.2 2003-03-17 14:59:33 gotm Exp $
+!$Id: salinity.F90,v 1.3 2003-04-07 13:36:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,10 +12,14 @@
 !  Description still missing
 !
 ! !USES:
-   use commhalo, only: myid,update_3d_halo,wait_halo,D_TAG
-   use domain, only: imin,jmin,imax,jmax,H,az
+   use domain, only: imin,jmin,imax,jmax,ioff,joff
+#ifdef HAIDVOGEL_TEST
+   use domain, only: iextr,jextr
+#endif
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
+   use domain, only: H,az
    use variables_3d, only: S,hn
+   use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
 !
    private
@@ -25,17 +29,18 @@
 !
 ! !PRIVATE DATA MEMBERS:
    integer		:: salt_method=1,salt_format=2
-   character(len=32)	:: salt_file="t_and_s.nc",salt_name='salt'
+   character(len=PATH_MAX)	:: salt_file="t_and_s.nc"
+   character(len=32)	:: salt_name='salt'
    REALTYPE		:: salt_const=35.
    integer 		:: salt_hor_adv=1,salt_ver_adv=1,salt_strang=0
-   REALTYPE		:: salt_AH=-1.
+   REALTYPE		:: salt_AH=-_ONE_
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: salinity.F90,v $
-!  Revision 1.2  2003-03-17 14:59:33  gotm
-!  Added Black Sea support
+!  Revision 1.3  2003-04-07 13:36:38  kbk
+!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:58  gotm
 !  recovering after CVS crash
@@ -140,9 +145,6 @@ field_no=1
 #ifdef MED_15X15MINS_TEST
 field_no=1
 #endif
-#ifdef BLACK_SEA_TEST
-field_no=1
-#endif
 
    LEVEL2 'init_salinity()'
    read(NAMLST,salt)
@@ -201,11 +203,15 @@ stop 'salinity - dx is not known'
    end do
 #endif
 #ifdef HAIDVOGEL_TEST
-   S = _ZERO_
-   S(iimin:iimax/2,jjmin:jjmax,1:kmax) = 6.4102564
-   S(iimin:iimax/2,jjmin:jjmax,1:kmax) = 5.
-   S(iimax/2+1:iimax,jjmin:jjmax,1:kmax) = 0.
-   S(iimax/2+1:iimax,jjmin:jjmax,1:kmax) = 0.
+STDERR 'salinity= ',iimin,iimax,i+ioff,iextr/2
+   do i=iimin-1,iimax+1
+      if(i+ioff .le. iextr/2) then
+         S(i,jjmin-1:jjmax+1,0:kmax) = 6.4102564
+         S(i,jjmin-1:jjmax+1,0:kmax) = 5.
+      else
+         S(i,jjmin-1:jjmax+1,0:kmax) = 0.
+      end if
+   end do
 #endif
 !#else
 !#ifdef PECS_TEST
@@ -302,7 +308,7 @@ stop 'salinity - dx is not known'
 #endif
    call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,    &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
-			salt_hor_adv,salt_ver_adv,salt_strang,salt_AH)
+                        salt_hor_adv,salt_ver_adv,salt_strang,salt_AH)
 
 #ifdef PECS_TEST
    S(iimin:iimin,jjmin:jjmax,1:kmax)=10.

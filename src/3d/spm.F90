@@ -1,4 +1,4 @@
-!$Id: spm.F90,v 1.1 2002-05-02 14:00:59 gotm Exp $
+!$Id: spm.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,11 +12,11 @@
 !  Description still missing
 !
 ! !USES:
-   use commhalo, only: myid,update_3d_halo,wait_halo,D_TAG
    use domain, only: imin,jmin,imax,jmax,H,az
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
    use parameters, only: rho_0
    use variables_3d, only: hn,spm,spm_ws,spm_pool,taub
+   use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
 !
    private
@@ -44,8 +44,11 @@
 !  Original author(s): Manuel Ruiz Villarreal, Karsten Bolding and Hans Burchard
 !
 !  $Log: spm.F90,v $
-!  Revision 1.1  2002-05-02 14:00:59  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:59  gotm
+!  recovering after CVS crash
 !
 !
 !  Revision 1.2  2001/10/23 07:30:19  bbh

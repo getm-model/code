@@ -1,4 +1,4 @@
-!$Id: slow_diffusion.F90,v 1.1 2002-05-02 14:01:00 gotm Exp $
+!$Id: slow_diffusion.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,15 +12,13 @@
 !
 ! !USES:
    use domain, only: iimin,iimax,jjmin,jjmax,az,au,av,H,HU,HV
-   use variables_2d, only: D,U,DU,V,DV,UEx,VEx,Uint,Vint
-!   use m2d, only: UEx,VEx,Uint,Vint
-   use variables_3d,    only: ssen,ssun,ssvn
-
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dyc,arud1,dxx,dyx,arvd1,dxc
 #else
    use domain, only: dx,dy,ard1
 #endif
+   use variables_2d, only: D,U,V,UEx,VEx,Uint,Vint
+   use variables_3d, only: ssen,ssun,ssvn
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:

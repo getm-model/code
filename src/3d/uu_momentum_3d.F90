@@ -1,4 +1,4 @@
-!$Id: uu_momentum_3d.F90,v 1.1 2002-05-02 14:00:56 gotm Exp $
+!$Id: uu_momentum_3d.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,22 +12,25 @@
 !
 ! !USES:
    use parameters, only: g,avmmol,rho_0
-   use commhalo,   only: update_3d_halo,wait_halo,U_TAG
-   use domain,     only: iimin,iimax,jjmin,jjmax,kmax,H,HU,min_depth
-   use domain,     only: dry_u,coru,au,av,az,ax
-   use bdy_3d, only: do_bdy_3d
+   use domain, only: iimin,iimax,jjmin,jjmax,kmax,H,HU,min_depth
+   use domain, only: dry_u,coru,au,av,az,ax
 #if defined CURVILINEAR || defined SPHERICAL
-   use domain,     only: dxu,arud1,dxx,dyc,dyx,dxc
+   use domain, only: dxu,arud1,dxx,dyc,dyx,dxc
 #else
-   use domain,     only: dx,dy
+   use domain, only: dx,dy
 #endif
-   use m2d,        only: DU,Uint,D
+   use variables_2d, only: Uint,D
+   use bdy_3d, only: do_bdy_3d
    use variables_3d, only: dt,cnpar,kumin,uu,vv,huo,hun,hvo,uuEx,ww,hvn
-   use variables_3d, only: num,nuh,sseo,ssun,rru,idpdx
+   use variables_3d, only: num,nuh,sseo,ssun,rru
+#ifndef NO_BAROCLINIC
+   use variables_3d, only: idpdx
+#endif
 #ifdef UV_TVD
    use variables_3d, only: uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv
 #endif
-   use meteo,      only: tausx,airp
+   use halo_zones, only: update_3d_halo,wait_halo,U_TAG
+   use meteo, only: tausx,airp
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -41,8 +44,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uu_momentum_3d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:56  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:56  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.17  2001/10/26 09:11:28  bbh
 !  Stresses in meteo.F90 are in N/m2 - divide by rho_0 where necessary
@@ -102,11 +108,13 @@
 ! !LOCAL VARIABLES:
    integer	:: i,j,k,rc
    REALTYPE	:: dif(1:kmax-1)
-   REALTYPE	:: auxn(1:kmax-1),auxo(1:kmax-1),fvv(1:kmax)
+   REALTYPE	:: auxn(1:kmax-1),auxo(1:kmax-1)
    REALTYPE	:: a1(0:kmax),a2(0:kmax),a3(0:kmax),a4(0:kmax)
    REALTYPE	:: Res(0:kmax),ex(0:kmax)
-   REALTYPE	:: zp,zm,zx,ResInt,dtl,Diff,Vloc
+   REALTYPE	:: zp,zm,zx,ResInt,Diff,Vloc
    REALTYPE	:: gamma=g*rho_0
+   REALTYPE	:: cord_curv=_ZERO_
+   
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -118,34 +126,34 @@
    do j=jjmin,jjmax
       do i=iimin,iimax
 
-         dtl=dt   ! Applying land mask to time step
-
          if (au(i,j) .eq. 1 .or. au(i,j) .eq. 2) then
-	    if (kmax .gt. kumin(i,j)) then
+            if (kmax .gt. kumin(i,j)) then
                do k=kumin(i,j),kmax ! explicit terms
 ! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
-                 Vloc=(vv(i  ,j  ,k)/sqrt(hvo(i  ,j  ,k))   &
-                      +vv(i+1,j  ,k)/sqrt(hvo(i+1,j  ,k))   &
-                      +vv(i  ,j-1,k)/sqrt(hvo(i  ,j-1,k))   &
-                      +vv(i+1,j-1,k)/sqrt(hvo(i+1,j-1,k)))  &
-                      *0.25*sqrt(huo(i,j,k))
+                  Vloc=(vv(i  ,j  ,k)/sqrt(hvo(i  ,j  ,k))   &
+                       +vv(i+1,j  ,k)/sqrt(hvo(i+1,j  ,k))   &
+                       +vv(i  ,j-1,k)/sqrt(hvo(i  ,j-1,k))   &
+                       +vv(i+1,j-1,k)/sqrt(hvo(i+1,j-1,k)))  &
+                       *0.25*sqrt(huo(i,j,k))
 #else
-                 Vloc=0.25*(vv(i,j,k)+vv(i+1,j,k)+vv(i,j-1,k)+vv(i+1,j-1,k))
+                  Vloc=0.25*(vv(i,j,k)+vv(i+1,j,k)+vv(i,j-1,k)+vv(i+1,j-1,k))
 #endif
-#ifdef CURVILINEAR
-                  ex(k)=(Vloc*(DYCIP1-DYC)-uu(i,j,k)*(DXX-DXXJM1))   &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                  cord_curv=(Vloc*(DYCIP1-DYC)-uu(i,j,k)*(DXX-DXXJM1))   &
                         /huo(i,j,k)*ARUD1
+                  ex(k)=(cord_curv+coru(i,j))*Vloc
 #else
-                  ex(k)= _ZERO_
+                  ex(k)=coru(i,j)*Vloc
 #endif
-                  ex(k)=(ex(k)+coru(i,j))*Vloc
-                  ex(k)=ex(k)-uuEx(i,j,k)+idpdx(i,j,k)
-	          ex(k)=dry_u(i,j)*ex(k)
+#ifdef NO_BAROCLINIC
+                  ex(k)=dry_u(i,j)*(ex(k)-uuEx(i,j,k))
+#else
+                  ex(k)=dry_u(i,j)*(ex(k)-uuEx(i,j,k)+idpdx(i,j,k))
+#endif
                end do
                ex(kmax)=ex(kmax)                                         &
 	                +dry_u(i,j)*0.5*(tausx(i,j)+tausx(i+1,j))/rho_0
-
 !     Eddy viscosity
                do k=kumin(i,j),kmax-1
                   dif(k)=0.5*(num(i,j,k)+num(i+1,j,k)) + avmmol
@@ -153,8 +161,8 @@
 
 !     Auxilury terms, old and new time level,
                do k=kumin(i,j),kmax-1
-                  auxo(k)=2*(1-cnpar)*dtl*dif(k)/(huo(i,j,k+1)+huo(i,j,k))
-                  auxn(k)=2*   cnpar *dtl*dif(k)/(hun(i,j,k+1)+hun(i,j,k))
+                  auxo(k)=2*(1-cnpar)*dt*dif(k)/(huo(i,j,k+1)+huo(i,j,k))
+                  auxn(k)=2*   cnpar *dt*dif(k)/(hun(i,j,k+1)+hun(i,j,k))
                end do
 
 !     Barotropic pressure gradient
@@ -162,15 +170,14 @@
                zm=max(sseo(i  ,j),-H(i+1,j)+min(min_depth,D(i  ,j)))
                zx=(zp-zm+(airp(i+1,j)-airp(i,j))/gamma)/DXU
 
-
 !     Matrix elements for surface layer
                k=kmax
                a1(k)=-auxn(k-1)/hun(i,j,k-1)
                a2(k)=1.+auxn(k-1)/hun(i,j,k)
                a4(k)=uu(i,j,k  )*(1-auxo(k-1)/huo(i,j,k))       &
                     +uu(i,j,k-1)*auxo(k-1)/huo(i,j,k-1)		&
-                    +dtl*ex(k)					&
-                    -dtl*0.5*(huo(i,j,k)+hun(i,j,k))*g*zx
+                    +dt*ex(k)					&
+                    -dt*0.5*(huo(i,j,k)+hun(i,j,k))*g*zx
 
 !     Matrix elements for inner layers
                do k=kumin(i,j)+1,kmax-1
@@ -180,19 +187,19 @@
                   a4(k)=uu(i,j,k+1)*auxo(k)/huo(i,j,k+1)                &
                        +uu(i,j,k  )*(1-(auxo(k)+auxo(k-1))/huo(i,j,k))  &
                        +uu(i,j,k-1)*auxo(k-1)/huo(i,j,k-1)              &
-                       +dtl*ex(k)                                       &
-                       -dtl*0.5*(huo(i,j,k)+hun(i,j,k))*g*zx
+                       +dt*ex(k)                                       &
+                       -dt*0.5*(huo(i,j,k)+hun(i,j,k))*g*zx
                end do
 
 !     Matrix elements for bottom layer
                k=kumin(i,j)
                a3(k)=-auxn(k  )/hun(i,j,k+1)
                a2(k)=1.+auxn(k)/hun(i,j,k)                            &
-                     +dtl*rru(i,j)/(0.5*(hun(i,j,k)+huo(i,j,k)))
+                     +dt*rru(i,j)/(0.5*(hun(i,j,k)+huo(i,j,k)))
                a4(k)=uu(i,j,k+1)*auxo(k)/huo(i,j,k+1)                &
                     +uu(i,j,k  )*(1-auxo(k)/huo(i,j,k))              &
-                    +dtl*ex(k)                                       &
-                    -dtl*0.5*(huo(i,j,k)+hun(i,j,k))*g*zx
+                    +dt*ex(k)                                       &
+                    -dt*0.5*(huo(i,j,k)+hun(i,j,k))*g*zx
 
                call getm_tridiagonal(kmax,kumin(i,j),kmax,a1,a2,a3,a4,Res)
 
