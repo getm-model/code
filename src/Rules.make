@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.9 2004-01-08 10:20:42 kbk Exp $
+#$Id: Rules.make,v 1.10 2004-06-15 07:57:48 kbk Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -62,7 +62,7 @@ endif
 #DEFINES += -DNO_ADVECT
 #DEFINES += -DNO_SLR
 #DEFINES += -DNEW_CORI
-#DEFINES += -DCONST_VISC
+#DEFINES += -DCONSTANT_VISCOSITY
 #DEFINES += -DPARABOLIC_VISCOSITY
 #DEFINES += -DNEW_METHOD_KBK
 #DEFINES += -DMIN_VEL_DEPTH

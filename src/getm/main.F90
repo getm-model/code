@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.5 2003-09-30 09:44:26 kbk Exp $
+!$Id: main.F90,v 1.6 2004-06-15 07:57:49 kbk Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -39,7 +39,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: main.F90,v $
-!  Revision 1.5  2003-09-30 09:44:26  kbk
+!  Revision 1.6  2004-06-15 07:57:49  kbk
+!  CONST_VISC --> CONSTANT_VISCOSITY - Ruiz
+!
+!  Revision 1.5  2003/09/30 09:44:26  kbk
 !  hotout=0 -> save hot-files at last time step only
 !
 !  Revision 1.4  2003/04/23 12:03:46  kbk
@@ -201,8 +204,8 @@
 #ifdef NO_SLR
    LEVEL1 'NO_SLR'
 #endif
-#ifdef CONST_VISC
-   LEVEL1 'CONST_VISC'
+#ifdef CONSTANT_VISCOSITY
+   LEVEL1 'CONSTANT_VISCOSITY'
 #endif
 #ifdef PARABOLIC_VISCOSITY
    LEVEL1 'PARABOLIC_VISCOSITY'
