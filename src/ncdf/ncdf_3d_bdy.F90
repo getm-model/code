@@ -1,4 +1,4 @@
-!$Id: ncdf_3d_bdy.F90,v 1.6 2003-08-03 09:19:41 kbk Exp $
+!$Id: ncdf_3d_bdy.F90,v 1.7 2003-10-07 15:10:42 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,7 +43,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
-!  Revision 1.6  2003-08-03 09:19:41  kbk
+!  Revision 1.7  2003-10-07 15:10:42  kbk
+!  use zax_dim as argument to dim_len
+!
+!  Revision 1.6  2003/08/03 09:19:41  kbk
 !  optimised reading of climatological boundary data
 !
 !  Revision 1.5  2003/05/05 15:44:20  kbk
@@ -192,7 +195,7 @@
 
 !     we read each boundary column individually
 !     here we can read from both a 3D field and from a
-!     special ondary data file - only the arguments 'start' and 'edges'
+!     special boundary data file - only the arguments 'start' and 'edges'
 !     varies in the calls to 'nf_get_vara_real()'
 !     m counts the time
 !     l counts the boundary number
@@ -201,10 +204,10 @@
       if (from_3d_fields) then
          edges(1) = 1;
          edges(2) = 1;
-         start(3) = 1; edges(3) = dim_len(3);
+         start(3) = 1; edges(3) = dim_len(zax_dim);
          edges(4) = 1
       else
-         start(1) = 1; edges(1) = kmax+1;
+         start(1) = 1; edges(1) = dim_len(zax_dim);
          edges(2) = 1;
          edges(3) = 1
       end if
@@ -223,7 +226,6 @@
                else
                   start(2) = k
                end if
-
                err = nf_get_vara_real(ncid,salt_id,start,edges,wrk)
                if (err .ne. NF_NOERR) go to 10
                call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
@@ -377,7 +379,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
-!  Revision 1.6  2003-08-03 09:19:41  kbk
+!  Revision 1.7  2003-10-07 15:10:42  kbk
+!  use zax_dim as argument to dim_len
+!
+!  Revision 1.6  2003/08/03 09:19:41  kbk
 !  optimised reading of climatological boundary data
 !
 !  Revision 1.5  2003/05/05 15:44:20  kbk
@@ -423,6 +428,7 @@
          STDERR 'do_3d_bdy_ncdf: climatology time_len .ne. 12'
          stop
       end if
+
       S_bdy=(1.-rat)*0.5*(S_bdy_clim(prev,:,:)+S_bdy_clim(this,:,:))  &
          +     rat*0.5*(S_bdy_clim(next,:,:)+S_bdy_clim(this,:,:))
       T_bdy=(1.-rat)*0.5*(T_bdy_clim(prev,:,:)+T_bdy_clim(this,:,:))  &
