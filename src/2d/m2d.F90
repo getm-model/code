@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.1 2002-05-02 14:00:41 gotm Exp $
+!$Id: m2d.F90,v 1.2 2003-04-07 12:17:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,11 +18,11 @@
 !  in from the library lib2d.a.
 !
 ! !USES:
-   use commhalo,   only: myid,nprocs,update_2d_halo,wait_halo,z_TAG,U_TAG,V_TAG
    use time,       only: julianday,secondsofday
    use parameters, only: avmmol
    use domain,     only: imin,imax,jmin,jmax,az,au,av,H,HU,HV,min_depth
    use variables_2d
+   use halo_zones, only : update_2d_halo,wait_halo,z_TAG,U_TAG,V_TAG
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -42,8 +42,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m2d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:41  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 12:17:08  kbk
+!  parallel version
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:41  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.11  2001/10/22 11:55:30  bbh
 !  Only call uv_diffusion() if Am > zero
@@ -136,7 +139,11 @@
 !  Allocates memory for the public data members - if not static
    call init_variables_2d(runtype)
 
-   call cfl_check()
+#ifdef PARALLEL
+   STDERR 'Not calling cfl_check() - PARALLEL'
+#else
+!KBK   call cfl_check()
+#endif
 
    if (Am .lt. _ZERO_) then
       LEVEL2 'Am is less than zero ---> horizontal diffusion not included'
@@ -151,62 +158,27 @@
 
 !  Boundary related information
    if (bdy2d) then
-     call have_bdy()
-     call print_bdy('Local Boundary Information')
+!     call have_bdy()
+!     call print_bdy('Local Boundary Information')
 !kbk     if (have_boundaries) call init_2d_bdy(bdyfmt_2d,bdyfile_2d)
    end if
 
    call uv_depths()
-      call update_2d_halo(z,z,az,imin,jmin,imax,jmax,z_TAG)
-      call wait_halo(z_TAG)
-      call update_2d_halo(U,U,au,imin,jmin,imax,jmax,U_TAG)
-      call wait_halo(U_TAG)
-      call update_2d_halo(V,V,av,imin,jmin,imax,jmax,V_TAG)
-      call wait_halo(V_TAG)
-      z= _ZERO_
-      where ( -H+min_depth .gt.  _ZERO_ )
-         z = -H+min_depth
-      end where
-      zo=z
 
-      zu= _ZERO_
-      where (-HU+min_depth .gt.  _ZERO_ )
-         zu = -HU+min_depth
-      end where
-      U= _ZERO_
-      fU= _ZERO_
-      zub = z0_const
-      SlUx= _ZERO_
-      Slru= _ZERO_
+   where ( -H+min_depth .gt. _ZERO_ )
+      z = -H+min_depth
+   end where
+   zo=z
 
-      zv= _ZERO_
-      where (-HV+min_depth .gt.  _ZERO_ )
-         zv = -HV+min_depth
-      end where
-      V= _ZERO_
-      fV= _ZERO_
-      zvb = z0_const
-      SlVx= _ZERO_
-      Slrv= _ZERO_
+   where (-HU+min_depth .gt. _ZERO_ )
+      zu = -HU+min_depth
+   end where
+   zub = z0_const ; zub0 = z0_const
 
-      if (runtype .gt. 1) then
-         Uint= _ZERO_
-         Vint= _ZERO_
-      end if
-
-!  Some additional fields needs to be initialised.
-   UEx= _ZERO_
-   VEx= _ZERO_
-   ru= _ZERO_
-   rv= _ZERO_
-   res_du= _ZERO_
-   res_u=  _ZERO_
-   res_dv= _ZERO_
-   res_v=  _ZERO_
-   uavg= _ZERO_
-   vavg= _ZERO_
-   zub0 = z0_const
-   zvb0 = z0_const
+   where (-HV+min_depth .gt. _ZERO_ )
+      zv = -HV+min_depth
+   end where
+   zvb = z0_const ; zvb0 = z0_const
 
    call depth_update()
 
@@ -323,7 +295,6 @@
 #endif
 
    call do_residual(1)
-
 
 #ifdef DEBUG
    write(debug,*) 'Leaving clean_2d()'
