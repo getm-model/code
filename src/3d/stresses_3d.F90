@@ -1,4 +1,4 @@
-!$Id: stresses_3d.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
+!$Id: stresses_3d.F90,v 1.4 2003-08-14 09:48:09 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,9 +12,10 @@
 !
 ! !USES:
    use parameters, only: rho_0
-   use domain, only: iimin,iimax,jjmin,jjmax
+   use domain, only: az,au,av,iimin,iimax,jjmin,jjmax
    use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,rru,rrv,taus,taub
    use meteo, only: tausx,tausy
+   use halo_zones, only : update_2d_halo,wait_halo,z_TAG
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -27,7 +28,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: stresses_3d.F90,v $
-!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  Revision 1.4  2003-08-14 09:48:09  kbk
+!  need rru,rrv in halo zones
+!
+!  Revision 1.3  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 13:36:38  kbk
@@ -63,8 +67,15 @@
    write(debug,*) 'stresses_3d() # ',Ncall
 #endif
 
+!  we need to know rru and rrv in the halos as well
+   call update_2d_halo(rru,rru,au,iimin,jjmin,iimax,jjmax,10)
+   call wait_halo(10)
+   call update_2d_halo(rrv,rrv,av,iimin,jjmin,iimax,jjmax,10)
+   call wait_halo(10)
+
    do j=jjmin,jjmax    ! Absolute Value of Bottom Friction
       do i=iimin,iimax
+!KBK         if(az(i,j) .ge. 1) then
          k1=kumin(i-1,j  )
          k2=kumin(i  ,j  )
          k3=kvmin(i  ,j-1)
@@ -79,6 +90,7 @@
                         tausx(i,j)**2+tausx(i-1,j)**2   &
                       + tausy(i,j)**2+tausy(i,j-1)**2)
          taus(i,j)=sqrt(taus(i,j))/rho_0
+!KBK         end if
       end do
    end do
 
