@@ -1,4 +1,4 @@
-!$Id: start_macro.F90,v 1.1 2002-05-02 14:00:55 gotm Exp $
+!$Id: start_macro.F90,v 1.2 2003-04-01 15:30:21 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,8 +28,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: start_macro.F90,v $
-!  Revision 1.1  2002-05-02 14:00:55  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-01 15:30:21  gotm
+!  default compilation without Sylt specific fix
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:55  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.5  2001/08/27 11:51:45  bbh
 !  TVD-advection for momentum added, some bugs removed
@@ -66,10 +69,11 @@
    do j=jjmin-1,jjmax+1         ! Defining 'old' and 'new' sea surface
       do i=iimin-1,iimax+1      ! elevation for macro time step
          sseo(i,j)=ssen(i,j)
-         ssen(i,j)=z(i,j)
-#if 0 
 ! This does not work for Sylt - pointed out by Manuel - why? 
+#if 1
          ssen(i,j)=max(ssen(i,j),-H(i,j)+min_depth)
+#else
+         ssen(i,j)=z(i,j)
 #endif
       end do
    end do
