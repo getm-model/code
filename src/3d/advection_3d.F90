@@ -25,6 +25,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
    use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
 !
    private
@@ -48,7 +49,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: advection_3d.F90,v $
-!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  Revision 1.4  2003-09-03 05:38:45  kbk
+!  need to call update_3d_halo() for each directional split
+!
+!  Revision 1.3  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 16:30:53  kbk
@@ -233,6 +237,11 @@
             case (0)
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a2,&
                                 hor_adv,az,AH)
+
+               call update_3d_halo(f,f,az,& 
+                                   iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+               call wait_halo(D_TAG)
+
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a2,&
                                 hor_adv,az,AH)
                if (kmax.gt.1) then
@@ -245,8 +254,18 @@
             case (1)
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
                                 hor_adv,az,AH)
+
+               call update_3d_halo(f,f,az, &
+	                           iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+               call wait_halo(D_TAG)
+
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
                                 hor_adv,az,AH)
+
+               call update_3d_halo(f,f,az, &
+                                   iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+               call wait_halo(D_TAG)
+
                if (kmax.gt.1) then
 #ifdef ITERATE_VERT_ADV
                   call w_split_it_adv(dt,f,ww,az,a2,ver_adv)
@@ -256,6 +275,11 @@
                end if
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
                                 hor_adv,az,AH)
+
+               call update_3d_halo(f,f,az, &
+                                   iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+               call wait_halo(D_TAG)
+
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
                                 hor_adv,az,AH)
            case default
@@ -462,7 +486,6 @@
    cu = _ZERO_
 
 ! Calculating u-interface fluxes !
-
    select case (method)
       case (UPSTREAM_SPLIT)
          do k=1,kmax
