@@ -1,4 +1,4 @@
-!$Id: uv_advect_3d.F90,v 1.5 2003-06-28 10:40:41 kbk Exp $
+!$Id: uv_advect_3d.F90,v 1.6 2003-08-14 13:00:40 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,7 +35,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_advect_3d.F90,v $
-!  Revision 1.5  2003-06-28 10:40:41  kbk
+!  Revision 1.6  2003-08-14 13:00:40  kbk
+!  do not use masks calculating adv. velocities
+!
+!  Revision 1.5  2003/06/28 10:40:41  kbk
 !  changed loop order
 !
 !  Revision 1.4  2003/05/02 06:55:49  hb
@@ -196,7 +199,7 @@
    do k=1,kmax
       do j=jjmin,jjmax+1             ! PP defined on T-points
          do i=iimin,iimax+1
-            if (az(i,j) .ge. 1) then
+!KBK            if (az(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
                   PP(i,j,k)=0.5*(uu(i-1,j,k)+uu(i,j,k))
                   if (PP(i,j,k) .gt. _ZERO_) then
@@ -205,11 +208,10 @@
                      PP(i,j,k)=PP(i,j,k)*uu(i,j,k)/hun(i,j,k)*DYC
                   end if
                end if
-            end if
+!KBK            end if
          end do
       end do
    end do
-
    do k=1,kmax
       do j=jjmin,jjmax         ! uuEx defined on U-points
          do i=iimin,iimax
@@ -226,7 +228,7 @@
    do k=1,kmax
       do j=jjmin-1,jjmax          ! PP defined on X-points
          do i=iimin-1,iimax
-            if (au(i,j) .ge. 1 .or. au(i,j+1) .ge. 1) then
+!KBK            if (au(i,j) .ge. 1 .or. au(i,j+1) .ge. 1) then
                if (k .ge. kumin(i,j)) then
                   PP(i,j,k)=0.5*(vv(i+1,j,k)+vv(i,j,k))
                   if (PP(i,j,k) .gt. _ZERO_) then
@@ -234,12 +236,11 @@
                   else
                      PP(i,j,k)=PP(i,j,k)*uu(i,j+1,k)/hun(i,j+1,k)*DXX
                   end if
-               end if
+!KBK               end if
             end if
          end do
       end do
    end do
-
    do k=1,kmax
       do j=jjmin,jjmax
          do i=iimin,iimax
@@ -256,7 +257,7 @@
    do k=1,kmax
       do j=jjmin-1,jjmax         !  PP defined on X-points
          do i=iimin-1,iimax
-            if (av(i,j) .ge. 1 .or. av(i+1,j) .ge. 1) then
+!KBK            if (av(i,j) .ge. 1 .or. av(i+1,j) .ge. 1) then
                if (k .ge. kvmin(i,j)) then
                   PP(i,j,k)=0.5*(uu(i,j,k)+uu(i,j+1,k))
                   if (PP(i,j,k) .gt. _ZERO_) then
@@ -265,11 +266,10 @@
                      PP(i,j,k)=PP(i,j,k)*vv(i+1,j,k)/hvn(i+1,j,k)*DYX
                   end if
                end if
-            end if
+!KBK            end if
          end do
       end do
    end do
-
    do k=1,kmax
       do j=jjmin,jjmax          ! vvEx defined on V-points
          do i=iimin,iimax
@@ -286,7 +286,7 @@
    do k=1,kmax
       do j=jjmin,jjmax+1
          do i=iimin,iimax+1
-            if (az(i,j) .ge. 1) then
+!KBK            if (az(i,j) .ge. 1) then
                if (k .ge. kvmin(i,j)) then
                   PP(i,j,k)=0.5*(vv(i,j-1,k)+vv(i,j,k))
                   if (PP(i,j,k) .gt. _ZERO_) then
@@ -295,11 +295,10 @@
                      PP(i,j,k)=PP(i,j,k)*vv(i,j,k)/hvn(i,j,k)*DXC
                   end if
                end if
-            end if
+!KBK            end if
          end do
       end do
    end do
-
    do k=1,kmax
       do j=jjmin,jjmax          ! vvEx defined on V-points
          do i=iimin,iimax
@@ -334,7 +333,7 @@
    end do
 
 ! Upstream for (vv*ww)_k - (vv*ww)_{k-1}
-   do j=jjmin+1,jjmax-2
+   do j=jjmin,jjmax
       do i=iimin,iimax
          if (av(i,j) .eq. 1) then
             www(kvmin(i,j)-1)= _ZERO_
