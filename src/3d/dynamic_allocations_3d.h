@@ -150,3 +150,13 @@
   allocate(kvmin(I2DFIELD),stat=rc) ! Bottom index for vertical v-columns
   if (rc /= 0) stop 'init_3d: Error allocating memory (kvmin)'
 
+! Below are allocations for Poor Mans Z-coordinates - PMZ
+  allocate(kmin_pmz(I2DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (kmin_pmz)'
+
+  allocate(kumin_pmz(I2DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (kumin_pmz)'
+
+  allocate(kvmin_pmz(I2DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (kvmin_pmz)'
+

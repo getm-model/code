@@ -7,6 +7,7 @@
 
 ! Number of vertical layers in z,u,v columns
   integer, dimension(:,:), allocatable:: kmin,kumin,kvmin
+  integer, dimension(:,:), allocatable:: kmin_pmz,kumin_pmz,kvmin_pmz
 
   REALTYPE, dimension(:,:,:), allocatable   :: uu,vv,ww
   REALTYPE, dimension(:,:,:), allocatable   :: ho,hn

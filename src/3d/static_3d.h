@@ -9,6 +9,9 @@
   INTEGER                              :: kmin(I2DFIELD)
   INTEGER                              :: kumin(I2DFIELD)
   INTEGER                              :: kvmin(I2DFIELD)
+  INTEGER                              :: kmin_pmz(I2DFIELD)
+  INTEGER                              :: kumin_pmz(I2DFIELD)
+  INTEGER                              :: kvmin_pmz(I2DFIELD)
 
   REALTYPE                             :: uu(I3DFIELD)
   REALTYPE                             :: vv(I3DFIELD)
