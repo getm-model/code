@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.2 2003-03-20 15:42:32 gotm Exp $
+!$Id: sealevel.F90,v 1.3 2003-04-07 15:44:13 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,15 +11,15 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use commhalo, only: update_2d_halo,wait_halo,z_TAG
-   use domain,   only: imin,imax,jmin,jmax,az,H
+   use domain, only: imin,imax,jmin,jmax,az,H
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only : arcd1,dxv,dyu
 #else
    use domain, only : dx,dy,ard1
 #endif
-   use m2d,      only: dtm,comm_method
-   use variables_2d,      only: z,zo,U,V
+   use m2d, only: dtm
+   use variables_2d, only: z,zo,U,V
+   use halo_zones, only : update_2d_halo,wait_halo,z_TAG
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -32,8 +32,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: sealevel.F90,v $
-!  Revision 1.2  2003-03-20 15:42:32  gotm
-!  removed un-necessary multiplication with az
+!  Revision 1.3  2003-04-07 15:44:13  kbk
+!  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:45  gotm
 !  recovering after CVS crash
@@ -83,12 +83,14 @@
    write(debug,*) 'sealevel() # ',Ncall
 #endif
 
+   zo = z
    do j=jmin,jmax
       do i=imin,imax
-         zo(i,j) = z(i,j)
+!KBK         zo(i,j) = z(i,j)
          if (az(i,j) .eq. 1) then
             z(i,j)=z(i,j)-dtm*((U(i,j)*DYU-U(i-1,j  )*DYUIM1) &
                               +(V(i,j)*DXV-V(i  ,j-1)*DXVJM1))*ARCD1
+
 #ifdef NOMADS_TEST
 	       kk=1.0
 	       if ((((i.eq.1).or.(i.eq.imax)).and.(j.ge.1).and.(j.le.jmax)).or.(((j.eq.1).or.(j.eq.jmax)).and.(i.ge.1).and.(i.le.imax))) &
@@ -113,6 +115,7 @@
 
    call update_2d_halo(z,z,az,imin,jmin,imax,jmax,z_TAG)
    call wait_halo(z_TAG)
+!KBK   call cp_outside_openbdy_2d(z)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving sealevel()'

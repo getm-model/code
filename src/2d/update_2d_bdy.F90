@@ -1,4 +1,4 @@
-!$Id: update_2d_bdy.F90,v 1.1 2002-05-02 14:00:45 gotm Exp $
+!$Id: update_2d_bdy.F90,v 1.2 2003-04-07 15:45:05 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,8 +13,9 @@
 ! !USES:
    use domain, only: NWB,NNB,NEB,NSB,H,min_depth,imin,imax,jmin,jmax,az
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli,nsbv
-   use m2d,    only: dtm,bdyfmt_2d,bdy_data
-   use variables_2d,    only: z
+   use domain, only: bdy_index,nsbv
+   use m2d, only: dtm,bdyfmt_2d,bdy_data
+   use variables_2d, only: z
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -28,8 +29,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: update_2d_bdy.F90,v $
-!  Revision 1.1  2002-05-02 14:00:45  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 15:45:05  kbk
+!  parallel support
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:45  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.8  2001/10/17 13:15:35  bbh
 !  Cleaning
@@ -59,13 +63,12 @@
 !  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
 !  initial import into CVS
 !
-!
 ! !LOCAL VARIABLES:
    logical, save :: first=.true.
    REALTYPE, save :: time_array(1000),zbo(1000),zbn(1000)
    REALTYPE, save :: t,t1,t2
    REALTYPE 	:: a,amp,ratio,fac
-   integer	:: n,i,j,k
+   integer	:: i,j,k,l,n
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -168,38 +171,47 @@
    fac = _ONE_
    if(bdyramp .gt. 1) fac=min( _ONE_ ,4.*loop/float(bdyramp))
 
-   k = 0
+   l = 0
    do n = 1,NWB
+      l = l+1
+      k = bdy_index(l)
       i = wi(n)
       do j = wfj(n),wlj(n)
-         k = k+1
          z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+         k = k+1
       end do
    end do
    do n = 1,NNB
+      l = l+1
+      k = bdy_index(l)
       j = nj(n)
       do i = nfi(n),nli(n)
-         k = k+1
          z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+         k = k+1
       end do
    end do
 
    do n = 1,NEB
+      l = l+1
+      k = bdy_index(l)
       i = ei(n)
       do j = efj(n),elj(n)
-         k = k+1
          z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+         k = k+1
       end do
    end do
 
    do n = 1,NSB
+      l = l+1
+      k = bdy_index(l)
       j = sj(n)
       do i = sfi(n),sli(n)
-         k = k+1
          z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+         k = k+1
       end do
    end do
-#if 1
+
+#if 0
 #ifdef NS_06NM_TEST
    i=109
    do j=1,jmax
