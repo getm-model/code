@@ -1,4 +1,4 @@
-!$Id: eqstate.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
+!$Id: eqstate.F90,v 1.4 2004-01-02 13:54:24 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,18 +11,25 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use  parameters, only: g,rho_0
 !  IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
    public init_eqstate, do_eqstate
 !
 ! !PRIVATE DATA MEMBERS:
+   integer                   :: eqstate_method=1
+   REALTYPE                  :: T0 = 10., S0 = 33.75, p0 = 0.
+   REALTYPE                  :: dtr0 = -0.17, dsr0 = 0.78
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: eqstate.F90,v $
-!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  Revision 1.4  2004-01-02 13:54:24  kbk
+!  read equation of state info from namelist - Ruiz
+!
+!  Revision 1.3  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 13:19:48  kbk
@@ -71,11 +78,10 @@
 ! !IROUTINE: init_eqstate
 !
 ! !INTERFACE:
-   subroutine init_eqstate(method)
+   subroutine init_eqstate()
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: method
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -89,6 +95,7 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
+   namelist /eqstate/ eqstate_method,T0,S0,p0,dtr0,dsr0
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -100,14 +107,19 @@
 #endif
 
    LEVEL2 'init_eqstate()'
+   read(NAMLST,nml=eqstate)
 
-   select case (method)
+   select case (eqstate_method)
       case (1)
          LEVEL3 'linear equation of state'
+         LEVEL4 'T0   = ',T0
+         LEVEL4 'S0   = ',S0
+         LEVEL4 'dtr0 = ',dtr0
+         LEVEL4 'dsr0 = ',dsr0
       case (2)
          LEVEL3 'UNESCO - no pressure adjustment'
       case default
-         FATAL 'init_eqstate(): not a valid method'
+         FATAL 'init_eqstate(): not a valid eqstate_method'
          stop 'init_eqstate()'
    end select
 
@@ -146,13 +158,6 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
    REALTYPE                  :: x
-!  something needs to be done - where to get these variables - namelist
-   integer                   :: method=1
-   REALTYPE                  :: T0 = 10., S0 = 33.75
-   REALTYPE                  :: dtr0 = -0.17, dsr0 = 0.78
-   REALTYPE                  :: rho_0 = 1025.
-   REALTYPE                  :: g=9.82
-!
 #if 0
 !  Brydon et. al. - Table 2 - narrow
    REALTYPE, parameter       :: a1=-1.36471e-1,b1= 5.06423e-1,g1=-5.52640e-4
@@ -180,7 +185,7 @@
 #endif
 
 #define BUOYANCY
-   select case (method)
+   select case (eqstate_method)
       case (1)
 #ifdef DENSITY
          forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)  &
@@ -215,15 +220,15 @@
                      T4 = T2*T2
                      T5 = T1*T4
                      S1 = S(i,j,k)
-                     S15= S1**1.5
-                     S2 = S1*S1
-                     S3 = S1*S2
                      if (S1 .lt. _ZERO_) then
                         STDERR 'Salinity at point ',i,',',j,',',k,' < 0.'
                         STDERR 'Value is S = ',S(i,j,k)
                         STDERR 'Programm continued, value set to zero ...'
                         S(i,j,k)= _ZERO_
                      end if
+                     S15= S1**1.5
+                     S2 = S1*S1
+                     S3 = S1*S2
 
                      x=999.842594+6.793952e-02*T1-9.09529e-03*T2+1.001685e-04*T3
                      x=x-1.120083e-06*T4+6.536332e-09*T5
@@ -288,7 +293,7 @@
 #undef BUOYANCY
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving do_eqstate()'
+   write(debug,*) 'leaving do_eqstate()'
    write(debug,*)
 #endif
    return
@@ -311,7 +316,7 @@
 
    REALTYPE T(1,1,1),S(1,1,1),rho(1,1,1)
 
-   method=2
+   eqstate_method=2
 
    call do_eqstate()
 

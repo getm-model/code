@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.9 2003-12-16 17:02:44 kbk Exp $
+!$Id: m3d.F90,v 1.10 2004-01-02 13:54:24 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -50,7 +50,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.9  2003-12-16 17:02:44  kbk
+!  Revision 1.10  2004-01-02 13:54:24  kbk
+!  read equation of state info from namelist - Ruiz
+!
+!  Revision 1.9  2003/12/16 17:02:44  kbk
 !  removed TABS - 0. -> _ZERO_
 !
 !  Revision 1.8  2003/12/16 15:58:54  kbk
@@ -250,7 +253,7 @@
       if(calc_temp) call init_temperature(1)
       if(calc_salt) call init_salinity(1)
       if(calc_spm)  call init_spm(1)
-      call init_eqstate(1)
+      call init_eqstate()
 #ifndef PECS
       call do_eqstate()
 #endif
