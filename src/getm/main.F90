@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.2 2003-03-17 15:02:03 gotm Exp $
+!$Id: main.F90,v 1.3 2003-04-07 16:39:16 kbk Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -26,11 +26,12 @@
 !
 ! !USES:
    use initialise, only: init_model,runtype,dryrun
-   use commhalo, only: myid
    use time,	 only: simtime
    use domain,	 only: calc_points
    use m2d,	 only: mem2d
+#ifndef NO_3D
    use m3d,	 only: mem3d
+#endif
    use integration
    IMPLICIT NONE
 !
@@ -38,8 +39,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: main.F90,v $
-!  Revision 1.2  2003-03-17 15:02:03  gotm
-!  emphasizing (stable version)
+!  Revision 1.3  2003-04-07 16:39:16  kbk
+!  parallel support, NO_3D
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:25  gotm
 !  recovering after CVS crash
@@ -70,13 +71,8 @@
    call CPU_Time(t1)
 #endif
    call Date_And_Time(datestr,timestr)
-   STDERR LINE
-   STDERR 'getm ver. ',RELEASE,': Started on  ',datestr,' ',timestr
-   STDERR LINE
 
-   call compilation_options
-
-   call init_model()
+   call init_model(datestr,timestr)
    if ( .not. dryrun ) then
       call time_loop(runtype)
    end if
@@ -93,16 +89,20 @@
       LEVEL1 'Number of calc-points: ',Calc_Points
       LEVEL1 'Space requirements (global 2D and 3D arrays):'
       LEVEL2 '2D: ',mem2d/1024,' kbytes'
-      if(runtype .gt. 1) then
+#ifndef NO_3D
+      if(runtype .ge. 2) then
          LEVEL2 '3D: ',mem3d/1024,' kbytes'
       end if
+#endif
    else
       LEVEL1 'getm ver. ',RELEASE,': Completed on ',datestr,' ',timestr
       LEVEL1 'Memory used (global 2D and 3D arrays):'
       LEVEL2 '2D: ',mem2d/1024,' kbytes'
-      if(runtype .gt. 1) then
+#ifndef NO_3D
+      if(runtype .ge. 2) then
          LEVEL2 '3D: ',mem3d/1024,' kbytes'
       end if
+#endif
       if(secs .gt. _ZERO_) then
          LEVEL1 'Total CPU-time was:    ',secs,' seconds'
       end if
@@ -118,9 +118,7 @@
    LEVEL1 'under the General Public License (GPL) - http://www.gnu.org '
    STDERR LINE
 
-   if (myid .ge. 0) then
-      ierr = 0
-   end if
+   call compilation_options
 
    end program getm
 
@@ -134,8 +132,21 @@
    IMPLICIT NONE
 !
    STDERR LINE
-   STDERR 'Compilation options: (stable version)'
+   STDERR 'Compilation options (unstable version):'
    STDERR LINE
+!
+#ifdef PARALLEL
+   LEVEL1 'Compiled for parallel execution'
+#else
+   LEVEL1 'Compiled for serial execution'
+#endif
+!
+#ifdef NO_3D
+   LEVEL1 'NO_3D'
+#endif
+#ifdef NO_BAROCLINIC
+   LEVEL1 'NO_BAROCLINIC'
+#endif
 !
 #ifdef FORTRAN90
    LEVEL1 'Fortran 90 compilation'

@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.1 2002-05-02 14:01:25 gotm Exp $
+!$Id: initialise.F90,v 1.2 2003-04-07 16:39:16 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,8 +22,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
-!  Revision 1.1  2002-05-02 14:01:25  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 16:39:16  kbk
+!  parallel support, NO_3D
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:25  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.10  2001/10/22 12:24:07  bbh
 !  Typo
@@ -68,27 +71,37 @@
 ! !IROUTINE: init_model - initialise getm
 !
 ! !INTERFACE:
-   subroutine init_model()
+   subroutine init_model(dstr,tstr)
 !
 ! !USES:
-   use commhalo,     only: init_mpi,print_mpi_info,myid,nprocs
+   use kurt_parallel,     only: init_parallel,myid
    use output,       only: init_output,do_output,restart_file
    use input,        only: init_input
-   use domain,       only: init_domain,iimin,iimax,jjmin,jjmax,kmax
+   use domain,       only: init_domain
+   use domain,       only: iextr,jextr,imin,imax,jmin,jmax
+   use domain,       only: iimin,iimax,jjmin,jjmax,kmax
    use domain,       only: vert_cord
    use time,         only: init_time,update_time,write_time_string
    use time,         only: start,timestr,timestep
    use m2d,          only: init_2d,z,zu,zv
-   use m3d,          only: cord_relax,init_3d,ssen,ssun,ssvn,T
+#ifndef NO_3D
+   use m3d,          only: cord_relax,init_3d,ssen,ssun,ssvn
+#ifndef NO_BAROCLINIC
+   use m3d,          only: T
+#endif
    use turbulence,   only: init_turbulence
    use mtridiagonal, only: init_tridiagonal
-   use meteo,        only: init_meteo,do_meteo
    use rivers,       only: init_rivers
+#endif
+   use meteo,        only: init_meteo,do_meteo
    use integration,  only: MinN,MaxN
+#ifndef NO_BAROCLINIC
    use eqstate,      only: do_eqstate
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   character(len=*)	:: dstr,tstr
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -103,11 +116,19 @@
 !
 ! !LOCAL VARIABLES:
    integer		:: i,j
+   character(len=8)	:: buf
    character(len=64)	:: runid
    character(len=80)	:: title
    logical		:: parallel=.false.
    logical		:: hotstart=.false.
    logical		:: save_initial=.false.
+#if (defined PARALLEL && defined INPUT_DIR)
+   character(len=PATH_MAX)	:: input_dir=INPUT_DIR
+#else
+   character(len=PATH_MAX)	:: input_dir='./'
+#endif
+   character(len=PATH_MAX)	:: hot_in=''
+
    namelist /param/ dryrun,runid,title,parallel,runtype,	&
                     hotstart,save_initial
 !
@@ -120,28 +141,60 @@
    write(debug,*) 'init_model() # ',Ncall
 #endif
 
-   STDERR LINE
-   STDERR 'Initialising....'
-   STDERR LINE
+   ! We need to pass info about the input directory
+#if 0
+   call getarg(1,base_dir)
+   if(len_trim(base_dir) .eq. 0) then
+      call getenv("base_dir",base_dir)
+   end if
+   if(len_trim(base_dir) .gt. 0) then
+      base_dir = trim(base_dir) // '/'
+   end if
+#endif
+
+#if (defined PARALLEL && defined INPUT_DIR)
+   STDERR 'input_dir:'
+   STDERR trim(input_dir)
+#endif
 !
 ! Open the namelist file to get basic run parameters.
 !
    title='A descriptive title can be specified in the param namelist'
-   open(NAMLST,status='unknown',file='getm.inp')
+   open(NAMLST,status='unknown',file=trim(input_dir) // "/getm.inp")
    read(NAMLST,NML=param)
 
-   LEVEL1 'The run id is: ',trim(runid)
-   LEVEL1 'The title is:  ',trim(title)
-!
-! call all modules Init... routines
-!
-   if (parallel) then
-     call init_mpi()
-     call print_mpi_info()
-   else
-     LEVEL1 'OK - we are making a sequential run'
-     myid = -1; nprocs = 1
+#ifdef NO_BAROCLINIC
+   if(runtype .ge. 3) then
+      FATAL 'getm not compiled for baroclinic runs'
+      stop 'init_model()'
    end if
+#endif
+
+#ifdef NO_3D
+   if(runtype .ge. 2) then
+      FATAL 'getm not compiled for 3D runs'
+      stop 'init_model()'
+   end if
+#endif
+
+! call all modules init_ ... routines
+
+   if (parallel) then
+#ifdef PARALLEL
+      call init_parallel(runid,input_dir)
+#else
+      STDERR 'You must define GETM_PARALLEL and recompile'
+      STDERR 'in order to run in parallel'
+      stop 'init_model()'
+#endif
+   end if
+   STDERR LINE
+   STDERR 'getm ver. ',RELEASE,': Started on  ',dstr,' ',tstr
+   STDERR LINE
+   STDERR 'Initialising....'
+   STDERR LINE
+   LEVEL1 'the run id is: ',trim(runid)
+   LEVEL1 'the title is:  ',trim(title)
 
    select case (runtype)
       case (1)
@@ -157,26 +210,29 @@
          stop 'initialise()'
    end select
 
-! This is not at all ready yet - requires change in sequence of namelists!!!!
-! Maybe it should not be done - main reason is handling of - hotstart.
-
    call init_time(MinN,MaxN)
 
-   call init_domain()
+   call init_domain(input_dir)
 
-   call init_output(runid,title,start,runtype,dryrun)
+!KBK-2003-02-10   call init_output(runid,title,start,runtype,dryrun,myid)
 
    call init_meteo()
 
+#ifndef NO_3D
    call init_rivers()
+#endif
+
+   call init_output(runid,title,start,runtype,dryrun,myid)
 
    call init_2d(runtype,timestep,hotstart)
 
+#ifndef NO_3D
    if (runtype .gt. 1) then
       call init_3d(runtype,timestep,hotstart)
-      call init_turbulence(60,'gotmturb.inp',kmax)
+      call init_turbulence(60,trim(input_dir) // 'gotmturb.inp',kmax)
       call init_tridiagonal(kmax)
    end if
+#endif
 
 #if 0
    call init_waves(hotstart)
@@ -185,20 +241,34 @@
 
    if (hotstart) then
       LEVEL1 'hotstart'
-      call restart_file(READING,'restart.in',MinN,runtype)
+      if (myid .ge. 0) then
+         write(buf,'.(I3.3).in') myid
+!         buf = '.' // trim(buf) // '.in'
+STDERR buf
+stop 'kbk: initialise'
+      else
+         buf = '.in'
+      end if
+      hot_in = trim(input_dir) //'/'// 'restart' // trim(buf)
+      call restart_file(READING,trim(hot_in),MinN,runtype)
+#ifndef NO_3D
       if (runtype .gt. 1) then
          call start_macro()
          call coordinates(vert_cord,cord_relax)
       end if
+#endif
       call depth_update
-      if (runtype .gt. 1) call do_eqstate()
+#ifndef NO_BAROCLINIC
+      if (runtype .ge. 3) call do_eqstate()
+#endif
       call update_time(MinN)
       call write_time_string()
       LEVEL3 timestr
       MinN = MinN+1
    end if
 
-   if (runtype .gt. 1) then
+#ifndef NO_3D
+   if (runtype .ge. 2) then
       do j=jjmin-1,jjmax
          do i=iimin-1,iimax
             ssen(i,j)=z(i,j)
@@ -207,10 +277,17 @@
          end do
       end do
    end if
+#endif
 
-   call init_input(MinN)
+   call init_input(input_dir,MinN)
 
-   call do_meteo(MinN,T(:,:,kmax))
+   if(runtype .le. 2) then
+      call do_meteo(MinN)
+#ifndef NO_BAROCLINIC
+   else
+      call do_meteo(MinN,T(:,:,kmax))
+#endif
+   end if
 
    if (save_initial .and. .not. dryrun) call do_output(runtype,0,_ZERO_)
 

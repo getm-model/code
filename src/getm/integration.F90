@@ -1,4 +1,4 @@
-!$Id: integration.F90,v 1.1 2002-05-02 14:01:25 gotm Exp $
+!$Id: integration.F90,v 1.2 2003-04-07 16:39:16 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,8 +20,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: integration.F90,v $
-!  Revision 1.1  2002-05-02 14:01:25  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 16:39:16  kbk
+!  parallel support, NO_3D
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:25  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.10  2001/10/26 09:11:28  bbh
 !  Stresses in meteo.F90 are in N/m2 - divide by rho_0 where necessary
@@ -76,9 +79,14 @@
    use time,     only: update_time,timestep
    use domain,   only: kmax
    use meteo,    only: do_meteo,tausx,tausy,airp
-   use rivers,   only: do_rivers
    use m2d,      only: integrate_2d
-   use m3d,      only: integrate_3d,M,T
+#ifndef NO_3D
+   use m3d,      only: integrate_3d,M
+#ifndef NO_BAROCLINIC
+   use m3d,      only: T
+#endif
+   use rivers,   only: do_rivers
+#endif
    use input,    only: do_input
    use output,   only: do_output
 #ifdef TEST_NESTING
@@ -116,11 +124,19 @@
 
       if (mod(n,100) .eq. 0) STDERR n
 
-      do_3d = (runtype .gt. 1 .and. mod(n,M) .eq. 0)
-
+#ifndef NO_3D
+      do_3d = (runtype .ge. 2 .and. mod(n,M) .eq. 0)
+#endif
       call do_input(n)
-      call do_meteo(n,T(:,:,kmax))
+      if(runtype .le. 2) then
+         call do_meteo(n)
+#ifndef NO_BAROCLINIC
+      else
+         call do_meteo(n,T(:,:,kmax))
+#endif
+      end if
       call integrate_2d(runtype,n,tausx,tausy,airp)
+#ifndef NO_3D
       call do_rivers(do_3d)
       if (do_3d) then
          call integrate_3d(runtype,n)
@@ -129,6 +145,7 @@
         call do_biology()
 #endif
       end if
+#endif
 
 #ifdef TEST_NESTING
       if (mod(n,80) .eq. 0) then
@@ -138,6 +155,7 @@
       call update_time(n)
 
       call do_output(runtype,n,timestep)
+
 #ifdef DIAGNOSE
       call diagnose(n,MaxN,runtype)
 #endif
