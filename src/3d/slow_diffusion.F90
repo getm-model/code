@@ -1,4 +1,4 @@
-!$Id: slow_diffusion.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
+!$Id: slow_diffusion.F90,v 1.4 2003-08-28 15:19:03 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,13 +11,13 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain, only: iimin,iimax,jjmin,jjmax,az,au,av,H,HU,HV
+   use domain, only: iimin,iimax,jjmin,jjmax,az,au,av,ax,H,HU,HV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dyc,arud1,dxx,dyx,arvd1,dxc
 #else
    use domain, only: dx,dy,ard1
 #endif
-   use variables_2d, only: D,U,V,UEx,VEx,Uint,Vint
+   use variables_2d, only: D,U,V,UEx,VEx,Uint,Vint,PP
    use variables_3d, only: ssen,ssun,ssvn
    IMPLICIT NONE
 !
@@ -33,7 +33,6 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,ii,jj
-   REALTYPE                  :: PP(iimin-1:iimax,jjmin-1:jjmax)
    REALTYPE                  :: Di(iimin-1:iimax+1,jjmin-1:jjmax+1)
    REALTYPE                  :: DUi(iimin-1:iimax+1,jjmin-1:jjmax+1)
    REALTYPE                  :: DVi(iimin-1:iimax+1,jjmin-1:jjmax+1)
@@ -65,16 +64,16 @@
    end do
 
 ! Central for dx(2*AM*dx(U^2/HU))
-
    do j=jjmin,jjmax
       do i=iimin,iimax+1          ! PP defined on T-points
          if (az(i,j) .ge. 1) then
             PP(i,j)=2.*AM*DYC*Di(i,j)               &
                *(Uint(i,j)/DUi(i,j)-Uint(i-1,j)/DUi(i-1,j))/DXC
+         else
+            PP(i,j)=_ZERO_
          end if
       end do
    end do
-
    do j=jjmin,jjmax      ! UEx defined on U-points
       do i=iimin,iimax
          if (au(i,j) .ge. 1) then
@@ -85,15 +84,16 @@
 
 ! Central for dy(AM*(dy(U^2/DU)+dx(V^2/DV)))
    do j=jjmin-1,jjmax        ! PP defined on X-points
-      do i=iimin-1,iimax
-         if (au(i,j) .ge. 1 .or. au(i,j+1) .ge. 1) then
-            PP(i,j)=AM*0.5*(DUi(i+1,j)+DUi(i,j))*DXX  &
+      do i=iimin,iimax
+         if (ax(i,j) .ge. 1) then
+            PP(i,j)=AM*0.5*(DUi(i,j)+DUi(i,j+1))*DXX  &
                    *((Uint(i,j+1)/DUi(i,j+1)-Uint(i,j)/DUi(i,j))/DYX &
                     +(Vint(i+1,j)/DVi(i+1,j)-Vint(i,j)/DVi(i,j))/DXX )
+         else
+            PP(i,j)=_ZERO_
          end if
       end do
    end do
-
    do j=jjmin,jjmax        !UEx defined on U-points
       do i=iimin,iimax
          if (au(i,j) .ge. 1) then
@@ -103,16 +103,17 @@
    end do
 
 ! Central for dx(AM*(dy(U^2/DU)+dx(V^2/DV)))
-   do j=jjmin-1,jjmax      ! PP defined on X-points
+   do j=jjmin,jjmax      ! PP defined on X-points
       do i=iimin-1,iimax
-         if (av(i,j) .ge. 1 .or. av(i+1,j) .ge. 1) then
-            PP(i,j)=AM*0.5*(DUi(i+1,j)+DUi(i,j))*DXX  &
+         if (ax(i,j) .ge. 1) then
+            PP(i,j)=AM*0.5*(DVi(i,j)+DVi(i+1,j))*DXX  &
                    *((Uint(i,j+1)/DUi(i,j+1)-Uint(i,j)/DUi(i,j))/DYX &
                     +(Vint(i+1,j)/DVi(i+1,j)-Vint(i,j)/DVi(i,j))/DXX )
+         else
+            PP(i,j)=_ZERO_
          end if
       end do
    end do
-
    do j=jjmin,jjmax          ! VEx defined on V-points
       do i=iimin,iimax
          if (av(i,j) .ge. 1) then
@@ -123,15 +124,15 @@
 
 ! Central for dy(2*AM*dy(V^2/DV))
    do j=jjmin,jjmax+1     ! PP defined on T-points
-      do i=iimin,iimax+1
+      do i=iimin,iimax
          if (az(i,j) .ge. 1) then
             PP(i,j)=2.*AM*DXC*Di(i,j)               &
                    *(Vint(i,j)/DVi(i,j)-Vint(i,j-1)/DVi(i,j-1))/DYC
-
+         else
+            PP(i,j)=_ZERO_
          end if
       end do
    end do
-
    do j=jjmin,jjmax             ! VEx defined on V-points
       do i=iimin,iimax
          if (av(i,j) .ge. 1) then
