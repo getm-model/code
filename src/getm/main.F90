@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.1 2002-05-02 14:01:25 gotm Exp $
+!$Id: main.F90,v 1.2 2003-03-17 15:02:03 gotm Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -38,8 +38,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: main.F90,v $
-!  Revision 1.1  2002-05-02 14:01:25  gotm
-!  Initial revision
+!  Revision 1.2  2003-03-17 15:02:03  gotm
+!  emphasizing (stable version)
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:25  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.4  2001/09/19 14:21:13  bbh
 !  Cleaning
@@ -131,7 +134,7 @@
    IMPLICIT NONE
 !
    STDERR LINE
-   STDERR 'Compilation options:'
+   STDERR 'Compilation options: (stable version)'
    STDERR LINE
 !
 #ifdef FORTRAN90
