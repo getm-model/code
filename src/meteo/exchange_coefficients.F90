@@ -1,4 +1,4 @@
-!$Id: exchange_coefficients.F90,v 1.3 2003-04-23 12:05:50 kbk Exp $
+!$Id: exchange_coefficients.F90,v 1.4 2003-07-01 16:38:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,7 +6,7 @@
 ! !ROUTINE: Air/sea exchange coefficients
 !
 ! !INTERFACE:
-   subroutine exchange_coefficients(u10,v10,airt,airp,sst,hum)
+   subroutine exchange_coefficients(u10,v10,airt,airp,sst,hum,hum_method)
 !
 ! !DESCRIPTION:
 !  Various variables for calculating meteorological forcing is calculated
@@ -44,6 +44,7 @@
 !
 ! !INPUT PARAMETERS:
    REALTYPE, intent(in)                :: u10,v10,airt,airp,sst,hum
+   integer, intent(in)                 :: hum_method
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -53,7 +54,10 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: exchange_coefficients.F90,v $
-!  Revision 1.3  2003-04-23 12:05:50  kbk
+!  Revision 1.4  2003-07-01 16:38:34  kbk
+!  cleaned code - new methods
+!
+!  Revision 1.3  2003/04/23 12:05:50  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/03/17 15:04:15  gotm
@@ -92,19 +96,12 @@
    REALTYPE                  :: ta,ta_k,tw,tw_k
 
    REALTYPE                  :: twet,rh
-#ifdef ECMWF_FRV
-   REALTYPE                  :: d_tmp
-#endif
-!
-!  !TO DO:
-!
-!  !BUGS:
-!   How to calculate absolute humidity based on the input variables.
-!
+   REALTYPE                  :: dew
 !EOP
 !-----------------------------------------------------------------------
 !BOC
 
+!  water temperature
    if (sst .lt. 100.) then
       tw  = sst
       tw_k= sst+KELVIN
@@ -113,6 +110,7 @@
       tw_k= sst
    end if
 
+!  air temperature
    if (airt .lt. 100.) then
       ta   = airt
       ta_k = airt+KELVIN
@@ -121,39 +119,70 @@
       ta_k = airt
    end if
 
+!  windspeed
    w = sqrt(u10*u10+v10*v10)
+!  latent heat of vaporisation
    L = (2.5-0.00234*tw)*1.e6
+
+!  saturation vapor pressure - using SST as temperature
+!  various formulations are available
+!  I've tested in a spread sheet - give almost the same
+#if 1
+!  http://www.cdc.noaa.gov/coads/software/other/profs_short
    es = a1 +tw*(a2+tw*(a3+tw*(a4+tw*(a5+tw*(a6+tw*a7)))))
    es = es * 100.0 ! Conversion millibar --> Pascal
-   qs = const06*es/(airp-0.377*es)
-
-!  FIXME
-!HB   rh = 90.0
-!  FIXME
-
-#ifdef ECMWF_FRV
-!     Piece of code taken from HAMSOM for calculating relative
-!     humidity from dew point temperature and dry air temperature.
-      d_tmp = hum
-! It must be sure that hum is dew point temperature in Kelvin in the next
-! line ...
-      ea  = 611.21*exp((18.729 - (min(d_tmp,300.)-273.15)/227.3)*       &
-              (min(d_tmp,300.)-273.15)/(max(d_tmp,200.)-273.15+257.87))
-      es  = 611.21*exp((18.729 - (min(ta_k,300.)-273.15)/227.3)*       &
-              (min(ta_k,300.)-273.15)/(max(ta_k,200.)-273.15+257.87))
-      rh = ea/es * 100.
+#endif
+#if 0
+!  http://www.cdc.noaa.gov/coads/software/other/profs_short
+   es = 100.*const06*exp(17.67*tw/(tw+243.5))
+#endif
+#if 0
+!  http://www.usatoday.com/weather/whumcalc.htm
+   es = 6.11*10.0**(7.5*tw/(237.7+tw))
+#endif
+#if 0
+!  From the HAMSOM model
+   es  = 611.21*exp((18.729 - (min(tw_k,300.)-273.15)/227.3)*       &
+         (min(tw_k,300.)-273.15)/(max(tw_k,200.)-273.15+257.87))
 #endif
 
-   if (rh .lt. 0.0) then
-      ea = es - 67.*(ta-twet);
-      x = (ta-twet)/(CONST06*L);
-      ea = (es-cpa*airp*x)/(1+cpa*x);
+!  saturation specific humidity
+   qs = const06*es/(airp-0.377*es)
+
+!  see ../ncdf/ncdf_meteo.F90 for defined constants
+   select case (hum_method)
+   case (1)
+      qa = hum
+   case (2)
+      rh = hum
+      qa = 0.01*rh*qs
+   case (3)
+      ! Piece of code taken from HAMSOM for calculating relative
+      ! humidity from dew point temperature and dry air temperature.
+      ! It must be sure that hum is dew point temperature in Kelvin 
+      ! in the next line ...
+      dew = hum
+      ea  = 611.21*exp((18.729 - (min(dew,300.)-273.15)/227.3)*    &
+            (min(dew,300.)-273.15)/(max(dew,200.)-273.15+257.87))
+      es  = 611.21*exp((18.729 - (min(ta_k,300.)-273.15)/227.3)*     &
+            (min(ta_k,300.)-273.15)/(max(ta_k,200.)-273.15+257.87))
+      rh = ea/es * 100.
+      qa = 0.01*rh*qs
+   case (4)
+      STDERR 'Should be checked - kbk'
+      STDERR 'HAVE_WET_BULB_TEMPERATURE'
+      stop 'exchange_coefficients()' 
+      twet = hum
+      ea = es - 67.*(ta-twet)
+      x = (ta-twet)/(CONST06*L)
+      ea = (es-cpa*airp*x)/(1+cpa*x)
       if(ea .lt. 0.0) ea = 0.0
-      qa = CONST06*ea/(airp-0.377*ea);
-   else
-      qa = 0.01*rh*qs;
-      ea = qa*airp/(const06 + 0.377*qa);
-   end if
+      qa = CONST06*ea/(airp-0.377*ea)
+      STDERR 'Taking hum as wet bulb temperature'
+   case default
+      FATAL 'not a valid hum_method'
+      stop 'exchange_coefficients()'
+   end select
 
    tvirt = ta_k*(1+qa/const06)/(1+qa)
    rho_air = airp/(287.05*Tvirt)
@@ -194,6 +223,7 @@
    end if
 
 #else
+
    if (w .lt. 2.2) then
       ae_d=0.0;   be_d=1.08;   ce_d=0.0;      pe_d=-0.15;
       ae_h=0.0;   be_h=1.185;  ce_h=0.0;      pe_h=-0.157;

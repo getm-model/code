@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.7 2003-06-17 14:53:28 kbk Exp $
+!$Id: meteo.F90,v 1.8 2003-07-01 16:38:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -15,28 +15,29 @@
 !  air pressure [$Pa$], surface stresses [$N/m^2$], short wave radiation
 !  [$W/m^2$] and surface heat fluxes [$W/m^2$] on the computational grid.
 !  The module provides 3 public functions - \emph{init\_meteo()},
-!  \emph{do\_meteo()} and \emph{clean\_meteo()} - and a number of public data
-!  members to hold the actual meteorological fields. Also included in the
-!  module are various constants related to calculating the meteorological
-!  forcing.
+!  \emph{do\_meteo()} and \emph{clean\_meteo()} - and a number of public
+!  data members to hold the actual meteorological fields. Also included 
+!  in the module are various constants related to calculating the 
+!  meteorological forcing.
 !  Information about the calculation domain is obtained from the module
 !  \emph{domain} and time related information comes from the module
 !  \emph{time}.
-!  The meteo module is initialised via a call to \emph{init\_meteo()} which will
-!  read a namelist providing all necessary information. Memory allocation
-!  is also done in \emph{init\_meteo()}.
-!  Obtaining the actual forcing - either by reading from a file or calculaitng
-!  is done via calls to \emph{do\_meteo()}. The actual reading of external data
-!  from files is separated completely from \emph{do\_meteo()} and is done in
-!  the main time loop via a call to  \emph{do\_input()} where all external
-!  file input is handled.
-!  \emph{meteo} supplies 3 variables which can be used by routines for reading
-!  variables. \emph{new\_meteo} is a logical switch which should be set to
-!  .true. when new fields have been read. \emph{t\_1} and \emph{t\_2} holds
-!  the time (in seconds) since the model run of the two fields surrounding
-!  the actual model time - to be used by the temporal interpolation.
-!  Finally \emph{clean\_meteo()} should be called when the simulation is over
-!  as part of the overall procedure of finalising the model run.
+!  The meteo module is initialised via a call to \emph{init\_meteo()} 
+!  that will read a namelist providing all necessary information. Memory 
+!  allocation is also done in \emph{init\_meteo()}.
+!  Obtaining the actual forcing - either by reading from a file or 
+!  calculating is done via calls to \emph{do\_meteo()}. The actual 
+!  reading of external data from files is separated completely from 
+!  \emph{do\_meteo()} and is done in the main time loop via a call to  
+!  \emph{do\_input()} where all external file input is handled.
+!  \emph{meteo} supplies 3 variables which can be used by routines for 
+!  reading variables. \emph{new\_meteo} is a logical switch which should 
+!  be set to .true. when new fields have been read. \emph{t\_1} and 
+!  \emph{t\_2} holds the time (in seconds) since the model run of the two 
+!  fields surrounding the actual model time - to be used by the temporal 
+!  interpolation. Finally \emph{clean\_meteo()} should be called when 
+!  the simulation is over as part of the overall procedure of finalising 
+!  the model run.
 !
 ! !SEE ALSO:
 !  short_wave_radiation.F90, fluxes.F90, exchange_coefficients.F90
@@ -69,6 +70,7 @@
 #endif
    REALTYPE, public                    :: t_1=-_ONE_,t_2=-_ONE_
    logical, public                     :: new_meteo=.false.
+   integer, public                     :: hum_method=-1
 !
 ! !DEFINED PARAMETERS:
    REALTYPE,public,parameter           :: cpa=1008.
@@ -80,7 +82,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
-!  Revision 1.7  2003-06-17 14:53:28  kbk
+!  Revision 1.8  2003-07-01 16:38:34  kbk
+!  cleaned code - new methods
+!
+!  Revision 1.7  2003/06/17 14:53:28  kbk
 !  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
 !
 !  Revision 1.6  2003/05/09 14:28:11  kbk
@@ -417,9 +422,9 @@
                            if (az(i,j) .ge. 1) then
                               call exchange_coefficients( &
                                      u10(i,j),v10(i,j),t2(i,j),airp(i,j), &
-                                     sst(i,j),hum(i,j))
+                                     sst(i,j),hum(i,j),hum_method)
                               call fluxes(u10(i,j),v10(i,j),t2(i,j),tcc(i,j),  &
-                                          sst(i,j),shf(i,j),tausx(i,j),tausy(i,j))
+                                      sst(i,j),shf(i,j),tausx(i,j),tausy(i,j))
                            else
                               shf(i,j) = _ZERO_
                               tausx(i,j) = _ZERO_
@@ -467,8 +472,6 @@
                   end do
                end do
             else
-! not finished
-stop 'do_meteo'
                airp  =  _ZERO_
                tausx = ramp*tausx
                tausy = ramp*tausy

@@ -1,7 +1,5 @@
-!$Id: ncdf_meteo.F90,v 1.4 2003-06-17 14:53:29 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.5 2003-07-01 16:38:33 kbk Exp $
 #include "cppdefs.h"
-!#define HIRLAM_FRV
-#define ECMWF_FRV
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -17,7 +15,7 @@
    use time, only: jul0,secs0,julianday,secondsofday,timestep
    use domain, only: imin,imax,jmin,jmax,az,lonc,latc,conv
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
-   use meteo, only: meteo_file,on_grid,calc_met,method
+   use meteo, only: meteo_file,on_grid,calc_met,method,hum_method
    use meteo, only: airp,u10,v10,t2,hum,tcc
    use meteo, only: tausx,tausy,swr,shf
    use meteo, only: new_meteo,t_1,t_2
@@ -30,14 +28,15 @@
 !
 ! !PRIVATE DATA MEMBERS:
    REALTYPE	:: offset
-   integer 	:: ncid,ndims,dims(3),unlimdimid
+   integer 	:: ncid,ndims,dims(3)
    integer 	:: start(3),edges(3)
    integer 	:: u10_id,v10_id,airp_id,t2_id
    integer 	:: hum_id,convp_id,largep_id,tcc_id
    integer	:: tausx_id,tausy_id,swr_id,shf_id
    integer	:: iextr,jextr,textr,tmax
+   integer	:: grid_scan=1
 
-   REALTYPE, allocatable	:: met_lon(:,:),met_lat(:,:)
+   REALTYPE, allocatable	:: met_lon(:),met_lat(:)
    REAL_4B, allocatable		:: met_times(:)
    REAL_4B, allocatable		:: wrk(:,:)
    REALTYPE, allocatable	:: wrk_dp(:,:)
@@ -49,12 +48,22 @@
    REALTYPE, parameter	:: pi=3.1415926535897932384626433832795029
    REALTYPE, parameter	:: deg2rad=pi/180.,rad2deg=180./pi
    REALTYPE		:: southpole(3) = (/0.0,-90.0,0.0/)
+   character(len=10)	:: name_lon="lon"
+   character(len=10)	:: name_lat="lat"
+   character(len=10)	:: name_time="time"
    character(len=10)	:: name_u10="u10"
    character(len=10)	:: name_v10="v10"
    character(len=10)	:: name_airp="slp"
    character(len=10)	:: name_t2="t2"
-   character(len=10)	:: name_hum="hum"
+   character(len=10)	:: name_hum1="sh"
+   character(len=10)	:: name_hum2="rh"
+   character(len=10)	:: name_hum3="dev2"
+   character(len=10)	:: name_hum4="twet"
    character(len=10)	:: name_tcc="tcc"
+   integer, parameter   :: SPECIFIC_HUM=1
+   integer, parameter   :: RELATIVE_HUM=2
+   integer, parameter   :: DEW_POINT=3
+   integer, parameter   :: WET_BULB=4
 
    character(len=10)	:: name_tausx="tausx"
    character(len=10)	:: name_tausy="tausy"
@@ -66,7 +75,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.4  2003-06-17 14:53:29  kbk
+!  Revision 1.5  2003-07-01 16:38:33  kbk
+!  cleaned code - new methods
+!
+!  Revision 1.4  2003/06/17 14:53:29  kbk
 !  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
 !
 !  Revision 1.3  2003/04/07 15:34:15  kbk
@@ -111,9 +123,9 @@
 !  Based on names of various variables the corresponding variable ids
 !  are obtained from the NetCDF file.
 !  The dimensions of the meteological grid is read (x,y,t).
-!  If the southpole is not (-90,0,0) a rotated grid is assumed and coefficients
-!  for interpolation between the meteorological grid and the model grid are
-!  calculated.
+!  If the southpole is not (0,-90,0) a rotated grid is assumed and 
+!  coefficients for interpolation between the meteorological grid and 
+!  the model grid are calculated.
 !  The arry \emph{met\_times} are filled with the times where forcing is
 !  available.
 !  Finally, meteorological fields are initialised by a call to
@@ -143,36 +155,6 @@
    write(debug,*) 'init_meteo_input_ncdf() # ',Ncall
 #endif
 
-#ifdef ECMWF_FRV
-   LEVEL3 'init_meteo_input_ncdf (ECMWF)'
-#endif
-
-#ifdef HIRLAM_FRV
-   LEVEL3 'init_meteo_input_ncdf (HIRLAM)'
-#endif
-
-#ifdef ECMWF_FRV
-   southpole = (/0.0,-90.0,0.0/)
-   name_u10="U10"
-   name_v10="V10"
-   name_airp="MSL"
-   name_t2="T2"
-   name_hum="D2"
-   name_tcc="TCC"
-#endif
-#ifdef HIRLAM_FRV
-   southpole = (/0.0,80.0,0.0/)
-!   REALTYPE		:: lat0=-24.477,lon0=-39.875
-!   REALTYPE		:: rotation=0.0
-!   REALTYPE		:: origo(2) = (/-24.477,-39.875/)
-   name_u10="u10"
-   name_v10="v10"
-   name_airp="slp"
-   name_t2="t2"
-   name_hum="hum"
-   name_tcc="tcc"
-#endif
-
    call open_meteo_file(meteo_file)
 
    allocate(wrk(iextr,jextr),stat=err)
@@ -185,48 +167,25 @@
 
    if ( .not. on_grid ) then
 
-      allocate(met_lon(iextr,jextr),stat=err)
-      if (err /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (met_lon)'
-
-      allocate(met_lat(iextr,jextr),stat=err)
-      if (err /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (met_lat)'
-
       allocate(ti(E2DFIELD),stat=err)
       if (err /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (ti)'
 
       allocate(ui(E2DFIELD),stat=err)
-      if (err /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (ui)'
+      if (err /= 0) stop &
+              'init_meteo_input_ncdf: Error allocating memory (ui)'
 
       allocate(gridmap(E2DFIELD,1:2),stat=err)
-      if (err /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (gridmap)'
+      if (err /= 0) stop &
+              'init_meteo_input_ncdf: Error allocating memory (gridmap)'
       gridmap(:,:,:) = -999
-#define SETTING_LON_LAN
-#ifdef SETTING_LON_LAN
-      do j=1,jextr
-         do i=1,iextr
-#ifdef ECMWF_FRV
-	    met_lon(i,j) = -21. + (i-1)*_ONE_
-	    met_lat(i,j) =  48. + (j-1)*_ONE_
-#endif
-#ifdef HIRLAM_FRV
-	    met_lon(i,j) = -39.875 + (i-1)*0.15
-	    met_lat(i,j) = -24.477 + (j-1)*0.15
-#endif
 #ifdef MED_15X15MINS_TEST
-	    met_lon(i,j) = -10.125 + (i-1)*1.125
-	    met_lat(i,j) =  28.125 + (j-1)*1.125
-#endif
-         end do
+      do i=1,iextr
+         met_lon(i) = -10.125 + (i-1)*1.125
+      end do
+      do j=1,jextr
+	 met_lat(j) =  28.125 + (j-1)*1.125
       end do
 #endif
-!i = jextr
-!jextr = iextr
-!iextr = i
-STDERR iextr,jextr
-STDERR met_lon(1,1),met_lat(1,1)
-STDERR met_lon(iextr,jextr),met_lat(iextr,jextr)
-STDERR lonc(1,1),latc(1,1)
-STDERR lonc(imax,jmax),latc(imax,jmax)
       call init_grid_interpol(imin,imax,jmin,jmax,az,	&
                 lonc,latc,met_lon,met_lat,southpole,gridmap,ti,ui)
    end if
@@ -245,22 +204,31 @@ STDERR lonc(imax,jmax),latc(imax,jmax)
       err = nf_inq_varid(ncid,name_t2,t2_id)
       if (err .NE. NF_NOERR) go to 10
 
-      err = nf_inq_varid(ncid,name_hum,hum_id)
-      if (err .NE. NF_NOERR) go to 10
-
-#ifdef HIRLAM_FRV
-!      err = nf_inq_varid(ncid,name_convp,convp_id)
-!      if (err .NE. NF_NOERR) go to 10
-
-!      err = nf_inq_varid(ncid,name_largep,largep_id)
-!      if (err .NE. NF_NOERR) go to 10
-#endif
+      hum_id = -1
+      err = nf_inq_varid(ncid,name_hum1,hum_id)
+      if (err .NE. NF_NOERR) then
+         err = nf_inq_varid(ncid,name_hum2,hum_id)
+         if (err .NE. NF_NOERR) then
+            err = nf_inq_varid(ncid,name_hum3,hum_id)
+            if (err .NE. NF_NOERR) then
+               FATAL 'Not able to find valid humudity parameter'
+               stop 'init_meteo_input_ncdf()'
+            else
+               LEVEL2 'Taking hum as dew point temperature'
+               hum_method = DEW_POINT
+            end if
+         else
+            LEVEL2 'Taking hum as relative humidity'
+            hum_method = RELATIVE_HUM
+         end if
+      else
+         LEVEL2 'Taking hum as atmospheric specific humidity'
+         hum_method = SPECIFIC_HUM
+      end if
+!KBKSTDERR 'Taking hum as wet bulb temperature'
 
       err = nf_inq_varid(ncid,name_tcc,tcc_id)
       if (err .NE. NF_NOERR) go to 10
-
-      err = nf_inq_vardimid(ncid,u10_id,dims)
-      if (err .ne. NF_NOERR) go to 10
 
    else
 
@@ -305,8 +273,9 @@ STDERR lonc(imax,jmax),latc(imax,jmax)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
-!  Do book keeping about when new fields are to be read. Set variables used by
-!  \emph{do\_meteo} and finally calls \emph{read\_data} if necessary.
+!  Do book keeping about when new fields are to be read. Set variables 
+!  used by \emph{do\_meteo} and finally calls \emph{read\_data} if 
+!  necessary.
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)	:: loop
@@ -321,7 +290,7 @@ STDERR lonc(imax,jmax),latc(imax,jmax)
 !
 ! !LOCAL VARIABLES:
    integer      :: i,indx
-   integer      :: tmax
+   integer      :: tmax=50
    REALTYPE	:: t
    logical, save 	:: first=.true.
    integer, save 	:: save_n=1
@@ -338,12 +307,6 @@ STDERR lonc(imax,jmax),latc(imax,jmax)
 
 !     find the right index
       t = loop*timestep
-#ifdef HIRLAM_FRV
-tmax = 12
-#else
-tmax = textr
-#endif
-
       do indx=save_n,tmax
          if (met_times(indx) .gt. real(t + offset)) EXIT
       end do
@@ -428,6 +391,8 @@ tmax = textr
    integer		:: n,err
    logical		:: first=.true.
    logical		:: found=.false.,first_open=.true.
+   integer              :: lon_id=-1,lat_id=-1,time_id=-1,id=-1
+   character(len=256)   :: dimname
 !
 ! !TO DO:
 !  Need to allow for opening and searching new files.
@@ -451,44 +416,88 @@ tmax = textr
          err = nf_open(fn,NCNOWRIT,ncid)
          if (err .ne. NF_NOERR) go to 10
 
-!        It is assumed that meteorological variables have the same dimensions
-!        it is also assumed that 1->unlimdimid, 2->jextr, 3->iextr
          if (first_open) then
             first_open = .false.
             err = nf_inq_ndims(ncid,ndims)
             if (err .NE. NF_NOERR) go to 10
-#if 0
-            err = nf_inq_unlimdim(ncid,unlimdimid)
+
+            do n=1,ndims
+               err = nf_inq_dimname(ncid,n,dimname)
+               if (err .ne. NF_NOERR) go to 10
+               if( dimname .eq. name_lon ) then
+                  lon_id = n
+                  err = nf_inq_dimlen(ncid,lon_id,iextr)
+                  if (err .ne. NF_NOERR) go to 10
+                  LEVEL4 'lon_id  --> ',lon_id,', len = ',iextr
+               end if
+               if( dimname .eq. name_lat ) then
+                  lat_id = n
+                  err = nf_inq_dimlen(ncid,lat_id,jextr)
+                  if (err .ne. NF_NOERR) go to 10
+                  LEVEL4 'lat_id  --> ',lat_id,', len = ',jextr
+               end if
+               if( dimname .eq. name_time ) then
+                  time_id = n
+                  err = nf_inq_dimlen(ncid,time_id,textr)
+                  if (err .ne. NF_NOERR) go to 10
+                  LEVEL4 'time_id --> ',time_id,', len = ',textr
+               end if
+            end do
+	    if(lon_id .eq. -1) then
+               FATAL 'could not find longitude coordinate in meteo file'
+               stop 'open_meteo_file()'
+            end if
+	    if(lat_id .eq. -1) then
+               FATAL 'could not find latitude coordinate in meteo file'
+               stop 'open_meteo_file()'
+            end if
+	    if(time_id .eq. -1) then
+               FATAL 'could not find time coordinate in meteo file'
+               stop 'open_meteo_file()'
+            end if
+
+            allocate(met_lon(iextr),stat=err)
+            if (err /= 0) stop &
+                  'open_meteo_file(): Error allocating memory (met_lon)'
+            err = nf_inq_varid(ncid,name_lon,id)
             if (err .NE. NF_NOERR) go to 10
-#endif
-            unlimdimid = 1
-
-            err = nf_inq_dimlen(ncid,unlimdimid,textr)
+            err = nf_get_var_double(ncid,id,met_lon)
             if (err .ne. NF_NOERR) go to 10
 
-            err = nf_inq_dimlen(ncid,2,jextr)
-            if (err .ne. NF_NOERR) go to 10
-
-            err = nf_inq_dimlen(ncid,3,iextr)
+            allocate(met_lat(jextr),stat=err)
+            if (err /= 0) stop &
+                  'open_meteo_file(): Error allocating memory (met_lat)'
+            err = nf_inq_varid(ncid,name_lat,id)
+            if (err .NE. NF_NOERR) go to 10
+            err = nf_get_var_double(ncid,id,met_lat)
             if (err .ne. NF_NOERR) go to 10
 
             allocate(met_times(textr),stat=err)
             if (err /= 0) stop 	&
-	            'open_meteo_file: Error allocating memory (met_times)'
+                  'open_meteo_file(): Error allocating memory (met_times)'
+
+            err = nf_inq_varid(ncid,'southpole',id)
+            if (err .ne. NF_NOERR) then
+               LEVEL4 'Setting southpole to (0,-90,0)'
+            else
+               err = nf_get_var_double(ncid,id,southpole)
+               if (err .ne. NF_NOERR) go to 10
+            end if
+	    LEVEL4 'south pole:'
+	    LEVEL4 '      lon ',southpole(2)
+	    LEVEL4 '      lat ',southpole(1)
+
          end if
 
-         err = nf_inq_dimlen(ncid,unlimdimid,textr)
+         err = nf_inq_varid(ncid,'time',time_id)
          if (err .ne. NF_NOERR) go to 10
-         err =  nf_get_att_text(ncid,unlimdimid,'units',time_units)
+         err = nf_inq_dimlen(ncid,time_id,textr)
+         if (err .ne. NF_NOERR) go to 10
+         err =  nf_get_att_text(ncid,time_id,'units',time_units)
          if (err .NE. NF_NOERR) go to 10
          call string_to_julsecs(time_units,j1,s1)
-         err = nf_get_var_real(ncid,unlimdimid,met_times)
+         err = nf_get_var_real(ncid,time_id,met_times)
          if (err .ne. NF_NOERR) go to 10
-#ifdef HIRLAM_FRV
-         do n=1,textr
-            met_times(n) = 3600.*met_times(n)
-         end do
-#endif
          call add_secs(j1,s1,nint(met_times(textr)),j2,s2)
 
          if (in_interval(j1,s1,julianday,secondsofday,j2,s2)) then
@@ -505,16 +514,12 @@ tmax = textr
       read(iunit,*,err=85,end=90) fn
       err = nf_open(fn,NCNOWRIT,ncid)
       if (err .ne. NF_NOERR) go to 10
-      err =  nf_get_att_text(ncid,unlimdimid,'units',time_units)
+      err =  nf_get_att_text(ncid,time_id,'units',time_units)
       if (err .NE. NF_NOERR) go to 10
       call string_to_julsecs(time_units,j1,s1)
-      err = nf_get_var_real(ncid,unlimdimid,met_times)
+      err = nf_get_var_real(ncid,time_id,met_times)
       if (err .ne. NF_NOERR) go to 10
-#ifdef HIRLAM_FRV
-         do n=1,textr
-            met_times(n) = 3600.*met_times(n)
-         end do
-#endif
+
       call add_secs(j1,s1,nint(met_times(textr)),j2,s2)
    end if
 
@@ -573,7 +578,6 @@ tmax = textr
 ! !LOCAL VARIABLES:
    integer	:: i1,i2,istr,j1,j2,jstr
    integer	:: i,j,err
-   integer	:: grid_scan=0
    REALTYPE	:: uu,vv,sinconv,cosconv
 !EOP
 !-----------------------------------------------------------------------
@@ -581,15 +585,6 @@ tmax = textr
 
    if (calc_met) then
 
-#ifdef ECMWF_FRV
-      grid_scan=0
-#endif
-#ifdef HIRLAM_FRV
-      grid_scan=1
-#endif
-#ifdef MED_15X15MINS_TEST
-grid_scan=1
-#endif
       err = nf_get_vara_real(ncid,u10_id,start,edges,wrk)
       if (err .ne. NF_NOERR) go to 10
       if (on_grid) then

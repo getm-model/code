@@ -1,4 +1,4 @@
-!$Id: fluxes.F90,v 1.4 2003-06-17 14:53:28 kbk Exp $
+!$Id: fluxes.F90,v 1.5 2003-07-01 16:38:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,7 +43,10 @@
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: fluxes.F90,v $
-!  Revision 1.4  2003-06-17 14:53:28  kbk
+!  Revision 1.5  2003-07-01 16:38:34  kbk
+!  cleaned code - new methods
+!
+!  Revision 1.4  2003/06/17 14:53:28  kbk
 !  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
 !
 !  Revision 1.3  2003/04/23 12:05:50  kbk
@@ -95,12 +98,12 @@
 
    select case(back_radiation_method)          ! back radiation
       case(clark)
-         qb=(1.0-.8*tcc*tcc)                                      &
-            *emiss*bolz*(tw_k**4)*(0.39-0.05*sqrt(ea/100.0))    &
+         qb=(1.0-.8*tcc*tcc)                                  &
+            *emiss*bolz*(tw_k**4)*(0.39-0.05*sqrt(ea/100.0))  &
             +4.0*emiss*bolz*(tw_k**3)*(tw-ta)
       case(hastenrath) ! qa in g(water)/kg(wet air)
-         qb=(1.0-.8*tcc*tcc)                                      &
-            *emiss*bolz*(tw_k**4)*(0.39-0.056*sqrt(1000*qa))    &
+         qb=(1.0-.8*tcc*tcc)                                  &
+            *emiss*bolz*(tw_k**4)*(0.39-0.056*sqrt(1000*qa))  &
             +4.0*emiss*bolz*(tw_k**3)*(tw-ta)
       case default
    end select
