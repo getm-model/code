@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.1 2002-05-02 14:00:58 gotm Exp $
+!$Id: temperature.F90,v 1.2 2003-03-17 14:59:33 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,8 +34,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: temperature.F90,v $
-!  Revision 1.1  2002-05-02 14:00:58  gotm
-!  Initial revision
+!  Revision 1.2  2003-03-17 14:59:33  gotm
+!  Added Black Sea support
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:58  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.14  2001/09/03 20:04:21  bbh
 !  Allow individual advection settings for momentum, salinity and temperature
@@ -134,6 +137,9 @@
 field_no=1
 #endif
 #ifdef MED_15X15MINS_TEST
+field_no=1
+#endif
+#ifdef BLACK_SEA_TEST
 field_no=1
 #endif
 
