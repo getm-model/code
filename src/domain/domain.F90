@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.14 2003-09-02 14:12:14 kbk Exp $
+!$Id: domain.F90,v 1.15 2004-01-05 13:24:27 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,6 +17,7 @@
 ! !PUBLIC DATA MEMBERS:
    integer                             :: format=NETCDF
    integer                             :: grid_type=1,vert_cord=1
+   REALTYPE                            :: maxdepth=600.
    REALTYPE, allocatable, dimension(:) :: ga
    REALTYPE                            :: ddu=-_ONE_,ddl=-_ONE_,d_gamma=20.
    logical                             :: gamma_surf=.true.
@@ -47,7 +48,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.14  2003-09-02 14:12:14  kbk
+!  Revision 1.15  2004-01-05 13:24:27  kbk
+!  maxdepth from domain namelist - should be calculated later
+!
+!  Revision 1.14  2003/09/02 14:12:14  kbk
 !  au and av also in HALO-zones
 !
 !  Revision 1.13  2003/08/28 10:36:30  kbk
@@ -202,7 +206,7 @@
    character(len=PATH_MAX)   :: mask_adjust_file='mask.adjust'
    integer                   :: il=-1,ih=-1,jl=-1,jh=-1
    namelist /domain/ &
-             grid_type,vert_cord,ddu,ddl,                       &
+             grid_type,vert_cord,maxdepth,ddu,ddl,              &
              d_gamma,gamma_surf,                                &
              bathymetry,openbdy,bdyinfofile,latitude,           &
              crit_depth,min_depth,kdum,il,ih,jl,jh
