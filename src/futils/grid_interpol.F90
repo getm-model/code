@@ -1,7 +1,13 @@
-!$Id: grid_interpol.F90,v 1.1 2002-05-02 14:01:21 gotm Exp $
+!$Id: grid_interpol.F90,v 1.2 2003-04-07 15:25:06 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
+#endif
+#if 1
+#define USE_VALID_LON_LAT_ONLY
+#endif
+#ifdef USE_VALID_LON_LAT_ONLY
+#define USE_GRIDMAP_UNDEF
 #endif
 !-----------------------------------------------------------------------
 !BOP
@@ -30,8 +36,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: grid_interpol.F90,v $
-!  Revision 1.1  2002-05-02 14:01:21  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 15:25:06  kbk
+!  parallel support
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:21  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.3  2001/09/30 09:06:00  bbh
 !  Cleaned up
@@ -55,8 +64,9 @@
 ! !IROUTINE: init_grid_interpol - initialise grid interpolation.
 !
 ! !INTERFACE:
-   subroutine init_grid_interpol(imin,imax,jmin,jmax,	&
-                         olon,olat,mlon,mlat,southpole,gridmap,t,u,mask)
+   subroutine init_grid_interpol(imin,imax,jmin,jmax,mask,	&
+                         olon,olat,met_lon,met_lat,southpole,   &
+			 gridmap,t,u,met_mask)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -64,10 +74,11 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)	:: imin,imax,jmin,jmax
+   integer, intent(in)	:: mask(-HALO+1:,-HALO+1:)
    REALTYPE, intent(in) :: olon(-HALO+1:,-HALO+1:),olat(-HALO+1:,-HALO+1:)
-   REALTYPE, intent(in) :: mlon(:,:),mlat(:,:)
+   REALTYPE, intent(in) :: met_lon(:,:),met_lat(:,:)
    REALTYPE, intent(in) :: southpole(2)
-   integer, optional, intent(in)	:: mask(:,:)
+   integer, optional, intent(in)	:: met_mask(:,:)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -102,33 +113,24 @@
    LEVEL2 'southpole=',southpole
    LEVEL2 ' --> rotated_grid=',rotated_grid
    if( rotated_grid ) then
-      allocate(rlon(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_gridinterpol: Error allocating memory (rlon)'
+#if 0
+      allocate(rot_lon(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_gridinterpol: Error allocating memory (rot_lon)'
 
-      allocate(rlat(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_gridinterpol: Error allocating memory (rlat)'
+      allocate(rot_lat(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_gridinterpol: Error allocating memory (rot_lat)'
 
       allocate(beta(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_gridinterpol: Error allocating memory (beta)'
-   end if
-   if ( rotated_grid ) then
-      call rotated_lat_lon(southpole,olon,olat,rlon,rlat,beta)
-      call interpol_coefficients(rlon,rlat,mlon,mlat,gridmap,t,u,mask)
-   else
-      call interpol_coefficients(olon,olat,mlon,mlat,gridmap,t,u,mask)
-   endif
 
-#if 0
-   STDERR olon(111,87),olat(111,87)
-   STDERR rlon(111,87),rlat(111,87)
-   i = gridmap(111,87,1)
-   j = gridmap(111,87,2)
-   STDERR i,j
-   STDERR mlon(i,j),mlat(i,j)
-   STDERR mlon(i+1,j),mlat(i+1,j)
-   STDERR mlon(i+1,j+1),mlat(i+1,j+1)
-   STDERR mlon(i,j+1),mlat(i,j+1)
+      call rotated_lat_lon(mask,southpole,met_lon,met_lat,rot_lon,rot_lat,beta)
+      call interpol_coefficients(mask,olon,olat,rot_lon,rot_lat,gridmap,t,u,met_mask)
 #endif
+STDERR 'Check this Karsten - rotated grid'
+stop 'init_grid_interpol.F90'
+   else
+      call interpol_coefficients(mask,olon,olat,met_lon,met_lat,gridmap,t,u,met_mask)
+   endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_grid_interpol()'
@@ -144,13 +146,14 @@
 ! !IROUTINE: do_grid_interpol - do grid interpolation.
 !
 ! !INTERFACE:
-   subroutine do_grid_interpol(ifield,gridmap,t,u,ofield)
+   subroutine do_grid_interpol(mask,ifield,gridmap,t,u,ofield)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
 !  To be written.
 !
 ! !INPUT PARAMETERS:
+   integer, intent(in)	:: mask(-HALO+1:,-HALO+1:)
    REALTYPE, intent(in)	:: ifield(:,:)
    integer, intent(in)	:: gridmap(-HALO+1:,-HALO+1:,1:)
    REALTYPE, intent(in)	:: t(-HALO+1:,-HALO+1:),u(-HALO+1:,-HALO+1:)
@@ -179,19 +182,29 @@
 
    do j=jl,jh
       do i=il,ih
+#ifdef USE_GRIDMAP_UNDEF
          i1 = gridmap(i,j,1)
          j1 = gridmap(i,j,2)
-         d11 = (_ONE_-t(i,j))*(_ONE_-u(i,j))
-	 if(i1 .ge. size(ifield,1) .or. j1 .ge. size(ifield,2)) then
-            ofield(i,j) = ifield(i1,j1)
+         if(i1 .gt. -999 .and. j1 .gt. -999) then
+#else
+         if(mask(i,j) .ge. 1) then
+            i1 = gridmap(i,j,1)
+            j1 = gridmap(i,j,2)
+#endif
+            d11 = (_ONE_-t(i,j))*(_ONE_-u(i,j))
+            if(i1 .ge. size(ifield,1) .or. j1 .ge. size(ifield,2)) then
+               ofield(i,j) = ifield(i1,j1)
+            else
+               i2 = i1+1
+               j2 = j1+1
+               d21 = t(i,j)*(_ONE_-u(i,j))
+               d22 = t(i,j)*u(i,j)
+               d12 = (_ONE_-t(i,j))*u(i,j)
+               ofield(i,j) = d11*ifield(i1,j1)+d21*ifield(i2,j1)+	&
+	                     d22*ifield(i2,j2)+d12*ifield(i1,j2)
+            end if
          else
-            i2 = i1+1
-            j2 = j1+1
-            d21 = t(i,j)*(_ONE_-u(i,j))
-            d22 = t(i,j)*u(i,j)
-            d12 = (_ONE_-t(i,j))*u(i,j)
-            ofield(i,j) = d11*ifield(i1,j1)+d21*ifield(i2,j1)+	&
-	                  d22*ifield(i2,j2)+d12*ifield(i1,j2)
+            ofield(i,j) = _ZERO_
          end if
       end do
    end do
@@ -291,7 +304,7 @@ stop 'kbk'
 ! !IROUTINE: rotated_lat_lon - get the rotated lat-lon
 !
 ! !INTERFACE:
-   subroutine rotated_lat_lon(southpole,lon,lat,rlon,rlat,beta)
+   subroutine rotated_lat_lon(southpole,met_lon,met_lat,rot_lon,rot_lat,beta)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -299,12 +312,12 @@ stop 'kbk'
 !
 ! !INPUT PARAMETERS:
    REALTYPE, intent(in)	:: southpole(2)
-   REALTYPE, intent(in)	:: lon(-HALO+1:,-HALO+1:),lat(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)	:: met_lon(-HALO+1:,-HALO+1:),met_lat(-HALO+1:,-HALO+1:)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out):: rlon(-HALO+1:,-HALO+1:),rlat(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(out):: rot_lon(-HALO+1:,-HALO+1:),rot_lat(-HALO+1:,-HALO+1:)
    REALTYPE, intent(out):: beta(-HALO+1:,-HALO+1:)
 !
 ! !REVISION HISTORY:
@@ -331,37 +344,25 @@ stop 'kbk'
    sinphis=sin(deg2rad*southpole(1))
    cosphis=cos(deg2rad*southpole(1))
 
-!kbk   do j=-HALO+1,size(lon,2)
-!kbk      do i=-HALO+1,size(lon,1)
    do j=jl,jh
       do i=il,ih
-         alpha = deg2rad*(lon(i,j)-southpole(2))
-	 cosalpha = cos(alpha)
-	 sinalpha = sin(alpha)
+         alpha = deg2rad*(met_lon(i,j)-southpole(2))
+         cosalpha = cos(alpha)
+         sinalpha = sin(alpha)
 
-         phi = deg2rad*lat(i,j)
+         phi = deg2rad*met_lat(i,j)
          sinphi = sin(phi)
          cosphi = cos(phi)
 
-         rlat(i,j) = asin(-sinphis*sinphi-cosphis*cosphi*cosalpha)*rad2deg
+         rot_lat(i,j) = asin(-sinphis*sinphi-cosphis*cosphi*cosalpha)*rad2deg
 
          SA = sinalpha*cosphi
          CA = cosphis*sinphi-sinphis*cosphi*cosalpha
-         rlon(i,j) = atan2(SA,CA)*rad2deg
+         rot_lon(i,j) = atan2(SA,CA)*rad2deg
 
          SB =  sinalpha*cosphis
          CB = -sinphis*cosphi+cosphis*sinphi*cosalpha
          beta(i,j) = atan2(SB,CB)
-
-#if 0
-#ifdef DEBUG
-         STDERR 'alpha    =',alpha*rad2deg
-         STDERR 'sinalpha =',sinalpha
-         STDERR 'cosalpha =',cosalpha
-         STDERR 'sinphi   =',sinphi
-         STDERR 'cosphi   =',cosphi
-#endif
-#endif
       end do
    end do
 
@@ -416,16 +417,17 @@ stop 'kbk'
 ! !IROUTINE: interpol_coefficients - set up interpolation coeffcients
 !
 ! !INTERFACE:
-   subroutine interpol_coefficients(rlon,rlat,mlon,mlat,gridmap,t,u,mask)
+   subroutine interpol_coefficients(mask,olon,olat,met_lon,met_lat,gridmap,t,u,met_mask)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
 !  To be written.
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in)	:: rlon(-HALO+1:,-HALO+1:),rlat(-HALO+1:,-HALO+1:)
-   REALTYPE, intent(in)	:: mlon(:,:),mlat(:,:)
-   integer, optional, intent(in)	:: mask(:,:)
+   integer, intent(in)	:: mask(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)	:: olon(-HALO+1:,-HALO+1:),olat(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)	:: met_lon(:,:),met_lat(:,:)
+   integer, optional, intent(in)	:: met_mask(:,:)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -445,41 +447,30 @@ stop 'kbk'
    integer	:: max_i,max_j
 !EOP
 !-------------------------------------------------------------------------
-
 !  first find the lower left (im,jm) in the m-grid which coresponds to
-!  rlon(i,j), rlat(i,j)
-
-!   STDERR il,ih,jl,jh
-
-!   STDERR mlat(1,:)
-!   STDERR mlon(:,1)
-
+!  olon(i,j), olat(i,j)
    do j=jl,jh
       do i=il,ih
-#if 0
+#ifdef USE_VALID_LON_LAT_ONLY
+         if(olon(i,j) .gt. -1000. .and. olat(i,j) .gt. -1000.) then
 #else
-         do jm=1,size(mlat,2)
-            if(mlat(1,jm) .gt. rlat(i,j)) EXIT
-         end do
-         if (jm .gt. size(mlat,2)) then
-!            STDERR i,j,jm
-!            STDERR rlon(i,j),rlat(i,j)
-            outside = .true.
-!	    stop 'deep shit - finding jm'
-         end if
-         do im=1,size(mlon,1)
-!KBK_DEBUG            if(mlon(im,1) .gt. rlon(i,j)) EXIT
-            if(mlon(im,1) .gt. rlon(i,j)) EXIT
-         end do
-         if (im .gt. size(mlon,1)) then
-            outside = .true.
-!            STDERR i,j,im
-!            STDERR rlon(i,j),rlat(i,j)
-!            stop 'deep shit - finding im'
-         end if
+         if(mask(i,j) .ge. 1) then
 #endif
-         gridmap(i,j,1) = im-1
-         gridmap(i,j,2) = jm-1
+            do jm=1,size(met_lat,2)
+               if(met_lat(1,jm) .gt. olat(i,j)) EXIT
+            end do
+            if (jm .gt. size(met_lat,2)) then
+               outside = .true.
+            end if
+            do im=1,size(met_lon,1)
+               if(met_lon(im,1) .gt. olon(i,j)) EXIT
+            end do
+            if (im .gt. size(met_lon,1)) then
+               outside = .true.
+            end if
+            gridmap(i,j,1) = im-1
+            gridmap(i,j,2) = jm-1
+         end if
       end do
    end do
 
@@ -487,80 +478,59 @@ stop 'kbk'
       STDERR 'WARNING - interpol_coefficients: Some points out side the area'
    end if
 
-#if 0
-if( i .eq. ih .and. j .eq. jh) then
-a = gridmap(i,j,1)
-b = gridmap(i,j,2)
-STDERR a,b
-STDERR mlon(a,b),mlat(a,b)
-STDERR rlon(i,j),rlat(i,j)
-STDERR mlon(a+1,b+1),mlat(a+1,b+1)
-stop
-end if
-#endif
-
 !  then calculated the t and u coefficients - via distances - the point of
 !  interest is (x,y)
-max_i = size(mlon,1)
-max_j = size(mlat,2) 
-#if 0
-STDERR max_i,max_j
-STDERR il,ih,jl,jh
-#endif
+max_i = size(met_lon,1)
+max_j = size(met_lat,2) 
    do j=jl,jh
       do i=il,ih
-         x = rlon(i,j)
-         y = rlat(i,j)
-         im = gridmap(i,j,1)
-         jm = gridmap(i,j,2)
-	 if(im .ge. max_i .or. jm .ge. max_j) then
-            t(i,j) = _ZERO_
-            u(i,j) = _ZERO_
-         else
-            if(present(mask)) then
-               ngood = mask(im,jm)+mask(im+1,jm)+mask(im+1,jm+1)+mask(im,jm+1)
+#ifdef USE_VALID_LON_LAT_ONLY
+         if(olon(i,j) .gt. -1000. .and. olat(i,j) .gt. -1000.) then
+#else
+         if(mask(i,j) .ge. 1) then
+#endif
+            x = olon(i,j)
+            y = olat(i,j)
+            im = gridmap(i,j,1)
+            jm = gridmap(i,j,2)
+	    if(im .ge. max_i .or. jm .ge. max_j) then
+               t(i,j) = _ZERO_
+               u(i,j) = _ZERO_
             else
-               ngood = 4
-            end if
-            t(i,j) = _ZERO_
-            u(i,j) = _ZERO_
+               if(present(met_mask)) then
+                  ngood = met_mask(im  ,jm  )+met_mask(im+1,jm  )+ &
+		          met_mask(im+1,jm+1)+met_mask(im  ,jm+1)
+               else
+                  ngood = 4
+               end if
+               t(i,j) = _ZERO_
+               u(i,j) = _ZERO_
 ngood = 4
-            select case (ngood)
-               case (0)
-               case (1,2,3)
-                  t(i,j) = _ZERO_
-!               if(mask(im,jm) .eq. 0 .or. mask(im,jm+1) .eq. 0 ) t(i,j) = _ONE_
-                  u(i,j) = _ZERO_
-!               if(mask(im,jm) .eq. 0 .or. mask(im+1,jm) .eq. 0 ) u(i,j) = _ONE_
-               case (4)
-                  lon1 = mlon(im,jm)
-                  lat1 = mlat(im,jm)
-                  lon2 = mlon(im+1,jm+1)
-                  lat2 = mlat(im+1,jm+1)
-                  t(i,j) = spherical_dist(earth_radius,x,lat1,lon1,lat1)/ &
-                           spherical_dist(earth_radius,lon1,lat1,lon2,lat1)
-                  u(i,j) = spherical_dist(earth_radius,lon1,y,lon1,lat1)/ &
-                           spherical_dist(earth_radius,lon1,lat1,lon1,lat2)
-               case default
-            end select
+               select case (ngood)
+                  case (0)
+                  case (1,2,3)
+                     t(i,j) = _ZERO_
+!                    if(met_mask(im,jm) .eq. 0 .or. met_mask(im,jm+1) .eq. 0 ) &
+!                         t(i,j) = _ONE_
+                     u(i,j) = _ZERO_
+!                    if(met_mask(im,jm) .eq. 0 .or. met_mask(im+1,jm) .eq. 0 ) &
+!                          u(i,j) = _ONE_
+                  case (4)
+                     lon1 = met_lon(im,jm)
+                     lat1 = met_lat(im,jm)
+                     lon2 = met_lon(im+1,jm+1)
+                     lat2 = met_lat(im+1,jm+1)
+                     t(i,j) = spherical_dist(earth_radius,x,lat1,lon1,lat1)/ &
+                              spherical_dist(earth_radius,lon1,lat1,lon2,lat1)
+                     u(i,j) = spherical_dist(earth_radius,lon1,y,lon1,lat1)/ &
+                              spherical_dist(earth_radius,lon1,lat1,lon1,lat2)
+                  case default
+               end select
+            end if
          end if
       end do
    end do
-#if 0
-   y = -5.05757477249522d0
-   im = 6
-   jm = 130
-   lon1 = mlon(im,jm)
-   lat1 = mlat(im,jm)
-   lon2 = mlon(im+1,jm+1)
-   lat2 = mlat(im+1,jm+1)
-   STDERR y,lat1
-   STDERR spherical_dist(earth_radius,lon1,y,lon1,lat1)
-   STDERR lat1,lat2
-   STDERR spherical_dist(earth_radius,lon1,lat1,lon1,lat2)
-   STDERR spherical_dist(earth_radius,lon1,y,lon1,lat1)/spherical_dist(earth_radius,lon1,lat1,lon1,lat2)
-stop 'interpol_coefficients'
-#endif
+
    end subroutine interpol_coefficients
 !EOC
 

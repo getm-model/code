@@ -1,4 +1,4 @@
-!$Id: depth_update.F90,v 1.1 2002-05-02 14:00:42 gotm Exp $
+!$Id: depth_update.F90,v 1.2 2003-04-07 15:27:00 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,10 +11,10 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use commhalo, only: update_2d_halo,wait_halo,D_TAG,DV_TAG,DU_TAG
-   use domain,   only: imin,imax,jmin,jmax,H,HU,HV,min_depth,crit_depth
-   use domain,   only: az,au,av,dry_z,dry_u,dry_v
-   use variables_2d,      only: D,z,zo,DU,zuo,zu,DV,zvo,zv
+   use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth,crit_depth
+   use domain, only: az,au,av,dry_z,dry_u,dry_v
+   use variables_2d, only: D,z,zo,DU,zu,DV,zv
+   use halo_zones, only : update_2d_halo,wait_halo,D_TAG,DU_TAG,DV_TAG
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -27,8 +27,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: depth_update.F90,v $
-!  Revision 1.1  2002-05-02 14:00:42  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 15:27:00  kbk
+!  parallel support
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:42  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.5  2001/08/27 11:53:13  bbh
 !  TVD-advection for momentum added, some bugs removed
@@ -61,67 +64,82 @@
    write(debug,*) 'depth_update() # ',Ncall
 #endif
 
-
-!  Depth in elevation points
-
-   D = z+H
-
-   call update_2d_halo(D,D,az,imin,jmin,imax,jmax,D_TAG)
-
-   call wait_halo(D_TAG)
+#undef USE_MASK
 
 !  U-points
    do j=jmin,jmax
       do i=imin,imax
-         zuo(i,j) = zu(i,j)
+#ifdef USE_MASK
+         if(au(i,j) .gt. 0) then
+#endif
          x=max(0.25*(zo(i,j)+zo(i+1,j)+z(i,j)+z(i+1,j)),-HU(i,j)+min_depth)
          zu(i,j) = x
-	 DU(i,j) = x+HU(i,j)
+         DU(i,j) = x+HU(i,j)
+#ifdef USE_MASK
+         end if
+#endif
       end do
    end do
 
    call update_2d_halo(DU,DU,au,imin,jmin,imax,jmax,DU_TAG)
-   call wait_halo(DU_TAG)
 
 !  V-points
    do j=jmin,jmax
       do i=imin,imax
-         zvo(i,j)=zv(i,j)
+#ifdef USE_MASK
+         if(av(i,j) .gt. 0) then
+#endif
          x = max(0.25*(zo(i,j)+zo(i,j+1)+z(i,j)+z(i,j+1)),-HV(i,j)+min_depth)
          zv(i,j) = x
-	 DV(i,j) = x+HV(i,j)
+         DV(i,j) = x+HV(i,j)
+#ifdef USE_MASK
+         end if
+#endif
       end do
    end do
 
+   call wait_halo(DU_TAG)
+!KBK   call cp_outside_openbdy_2d(DU)
+
    call update_2d_halo(DV,DV,av,imin,jmin,imax,jmax,DV_TAG)
 
-   call wait_halo(DV_TAG)
+!  Depth in elevation points
+   D = z+H
 
-!kbk#ifdef DEBUG
+   call wait_halo(DV_TAG)
+!KBK   call cp_outside_openbdy_2d(DV)
+
+   d1 = 2*min_depth
+   d2 = crit_depth-2*min_depth
+   where (az .gt. 0)
+      dry_z = max(_ZERO_,min(_ONE_,(D-d1/2.)/d2))
+   end where
+   where (au .gt. 0)
+      dry_u = max(_ZERO_,min(_ONE_,(DU-d1)/d2))
+   end where
+   where (av .gt. 0)
+      dry_v = max(_ZERO_,min(_ONE_,(DV-d1)/d2))
+   end where
+
+#ifdef DEBUG
    do j=jmin,jmax
       do i=imin,imax
 
          if(D(i,j) .le. _ZERO_ .and. az(i,j) .gt. 0) then
-            STDERR 'D ',i,j,H(i,j),D(i,j)
+            STDERR 'depth_update: D  ',i,j,H(i,j),D(i,j)
          end if
 
          if(DU(i,j) .le. _ZERO_ .and. au(i,j) .gt. 0) then
-            STDERR 'DU ',i,j,HU(i,j),DU(i,j)
+            STDERR 'depth_update: DU ',i,j,HU(i,j),DU(i,j)
          end if
 
          if(DV(i,j) .le. _ZERO_ .and. av(i,j) .gt. 0) then
-            STDERR 'DV ',i,j,HV(i,j),DV(i,j)
+            STDERR 'depth_update: DV ',i,j,HV(i,j),DV(i,j)
          end if
 
       end do
    end do
-!kbk#endif
-
-   d1 = 2*min_depth
-   d2 = crit_depth-2*min_depth
-   dry_z = max(_ZERO_,min(_ONE_,(D-d1/2.)/d2))
-   dry_u = max(_ZERO_,min(_ONE_,(DU-d1)/d2))
-   dry_v = max(_ZERO_,min(_ONE_,(DV-d1)/d2))
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving depth_update()'
@@ -134,4 +152,3 @@
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------
-
