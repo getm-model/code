@@ -1,4 +1,4 @@
-!$Id: ncdf_rivers.F90,v 1.2 2003-04-23 11:54:03 kbk Exp $
+!$Id: ncdf_rivers.F90,v 1.3 2003-10-14 10:05:54 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,13 +13,13 @@
 ! !USES:
    use time, only: string_to_julsecs,TimeDiff,add_secs,in_interval
    use time, only: jul0,secs0,julianday,secondsofday,timestep
-   use rivers, only: nriver,river_data,river_name,river_flux,river_factor,ok
+   use rivers, only: nriver,river_data,river_name,river_flow,river_factor,ok
    IMPLICIT NONE
 !
    private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-   public                              init_river_input_ncdf,get_river_data_ncdf
+   public init_river_input_ncdf,get_river_data_ncdf
 !
 ! !PRIVATE DATA MEMBERS:
    REALTYPE                            :: offset
@@ -33,7 +33,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_rivers.F90,v $
-!  Revision 1.2  2003-04-23 11:54:03  kbk
+!  Revision 1.3  2003-10-14 10:05:54  kbk
+!  checks if indices are in subdomain + cleaning
+!
+!  Revision 1.2  2003/04/23 11:54:03  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:48  gotm
@@ -194,7 +197,7 @@
          if (ok(n) .gt. 0) then
             err = nf_get_vara_real(ncid,r_ids(n),start,edges,x)
             if (err .ne. NF_NOERR) go to 10
-            river_flux(n) = river_factor*x(1)
+            river_flow(n) = river_factor*x(1)
          end if
       end do
    end if
@@ -219,8 +222,8 @@
          if (ok(n) .gt. 0) then
             err = nf_get_vara_real(ncid,r_ids(n),start,edges,x)
             if (err .ne. NF_NOERR) go to 10
-            river_flux(n) = x(1)
-            STDERR x(1),river_flux(n)
+            river_flow(n) = x(1)
+            STDERR x(1),river_flow(n)
          end if
       end do
    else

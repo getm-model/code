@@ -1,4 +1,4 @@
-!$Id: rivers.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
+!$Id: rivers.F90,v 1.4 2003-10-14 10:05:54 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,7 +22,7 @@
 !  pressure gradient introduced.
 !
 ! !USES:
-   use domain, only: iimin,jjmin,iimax,jjmax
+   use domain, only: iimin,jjmin,iimax,jjmax,ioff,joff
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: H,az,kmax,arcd1
 #else
@@ -44,9 +44,9 @@
    character(len=64), public           :: river_data="rivers.nc"
    character(len=64), public, allocatable  :: river_name(:)
    integer, public, allocatable        :: ok(:)
-   REALTYPE, public, allocatable       :: river_flux(:),tr(:)
-   REALTYPE, public, allocatable       :: river_int_flux(:)
+   REALTYPE, public, allocatable       :: river_flow(:),tr(:)
    REALTYPE, public                    :: river_factor= _ONE_
+   REALTYPE, allocatable               :: macro_height(:)
 !
 ! !PRIVATE DATA MEMBERS:
    integer                   :: river_format=2
@@ -58,7 +58,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: rivers.F90,v $
-!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  Revision 1.4  2003-10-14 10:05:54  kbk
+!  checks if indices are in subdomain + cleaning
+!
+!  Revision 1.3  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 13:36:38  kbk
@@ -108,6 +111,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n,rc
    integer                   :: unit = 25 ! kbk
+   logical                   :: outside
    NAMELIST /rivers/ &
             river_method,river_info,river_format,river_data,river_factor
 !EOP
@@ -135,24 +139,31 @@
          allocate(jr(nriver),stat=rc) ! j index of rivers
          allocate(ok(nriver),stat=rc) ! valid river spec.
          allocate(river_name(nriver),stat=rc) ! NetCDF name of river.
-         allocate(river_flux(nriver),stat=rc) ! river flux
-         allocate(river_int_flux(nriver),stat=rc) ! river integrated flux
+         allocate(river_flow(nriver),stat=rc) ! river flux
+         allocate(macro_height(nriver),stat=rc) ! height over a macro tims-step
          allocate(tr(nriver),stat=rc) ! temperature of river water
          allocate(irr(nriver),stat=rc) ! integrated river runoff
          do n=1,nriver
             read(unit,*) ir(n),jr(n),river_name(n)
             LEVEL3 trim(river_name(n)),':',ir(n),jr(n)
-            i = ir(n)
-            j = jr(n)
+            i = ir(n)-ioff
+            j = jr(n)-joff
             tr(n) = _ZERO_
             irr(n) = _ZERO_
-            river_int_flux(n) = _ZERO_
-            if(az(i,j) .eq. 0) then
-               LEVEL3 'Warning:  river# ',n,' at (',i,j,') is on land'
-               LEVEL3 '          setting ok to 0'
-               ok(n) = 0
+            macro_height(n) = _ZERO_
+            outside= &
+                    i .lt. iimin .or. i .gt. iimax .or.  &
+                    j .lt. jjmin .or. j .gt. jjmax
+            if( .not. outside) then
+               if(az(i,j) .eq. 0) then
+                  LEVEL3 'Warning:  river# ',n,' at (',i,j,') is on land'
+                  LEVEL3 '          setting ok to 0'
+                  ok(n) = 0
+               else
+                  ok(n) = 1
+               end if
             else
-               ok(n) = 1
+!              LEVEL3 'Outside: river# ',n
             end if
          end do
       case default
@@ -201,7 +212,6 @@
    REALTYPE                  :: vol
    REALTYPE                  :: rvol,height
    REALTYPE                  :: svol,tvol
-   REALTYPE,save             :: int(1:200)=0.
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -217,24 +227,24 @@
       case(1,2)
          do n=1,nriver
             if(ok(n) .gt. 0) then
-               i = ir(n); j = jr(n)
-               rvol = dtm*river_flux(n)
+               i = ir(n)-ioff; j = jr(n)-joff
+               rvol = dtm*river_flow(n)
                irr(n) = irr(n) + rvol
                height = rvol*ARCD1
-               river_int_flux(n)=river_int_flux(n)+height
+               macro_height(n)=macro_height(n)+height
                z(i,j) = z(i,j) + height
 #ifndef NO_BAROCLINIC
                if (do_3d) then
                   if (calc_salt) then
                      S(i,j,1:kmax) = S(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
-                                    /(H(i,j)+ssen(i,j)+river_int_flux(n))
+                                    /(H(i,j)+ssen(i,j)+macro_height(n))
                   end if
 
 ! Changes of total and layer height due to river inflow:
                   hn(i,j,1:kmax) = hn(i,j,1:kmax)/(H(i,j)+ssen(i,j)) &
-                                  *(H(i,j)+ssen(i,j)+river_int_flux(n))
-                  ssen(i,j) = ssen(i,j)+river_int_flux(n)
-                  river_int_flux(n) = _ZERO_
+                                  *(H(i,j)+ssen(i,j)+macro_height(n))
+                  ssen(i,j) = ssen(i,j)+macro_height(n)
+                  macro_height(n) = _ZERO_
 #if 0
                   if (calc_temp .and. tr(n) .gt. _ZERO_) then
                      tvol = _ZERO_
@@ -304,10 +314,9 @@
          do n=1,nriver
             if(ok(n) .gt. 0) then
                i = ir(n); j = jr(n)
-               LEVEL2 'River #' ,n, ': ' ,irr(n)/1.e3, ' 10^3 m3'
+               LEVEL2 trim(river_name(n)),':  ' ,irr(n)/1.e6, '10^6 m3'
                tot = tot+irr(n)
             end if
-!kbk               LEVEL2 'Total : ',tot/1.e3,' 10^3 m3'
          end do
       case default
          FATAL 'Not valid rivers_method specified'
