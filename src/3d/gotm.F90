@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.4 2003-04-23 12:16:34 kbk Exp $
+!$Id: gotm.F90,v 1.5 2003-05-05 15:51:57 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,6 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use halo_zones, only: update_3d_halo,wait_halo,H_TAG
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,az,min_depth,crit_depth
    use variables_2d, only: D,zub,zvb,z
    use variables_3d, only: dt,kmin,ho,hn,tke,eps,SS,NN,num,nuh,taus,taub
@@ -29,7 +30,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: gotm.F90,v $
-!  Revision 1.4  2003-04-23 12:16:34  kbk
+!  Revision 1.5  2003-05-05 15:51:57  kbk
+!  proper update of halo zones for num and nuh
+!
+!  Revision 1.4  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.3  2003/04/07 13:36:38  kbk
@@ -148,20 +152,11 @@
       end do
    end do
 
-   ! Extrapolating eddy viscosity to open boundary points:
-   do i=iimin,iimax
-      if (az(i,jjmin).eq.2) num(i,jjmin,:)=num(i,jjmin+1,:)
-      if (az(i,jjmax).eq.2) num(i,jjmax,:)=num(i,jjmax-1,:)
-      if (az(i,jjmin).eq.2) nuh(i,jjmin,:)=nuh(i,jjmin+1,:)
-      if (az(i,jjmax).eq.2) nuh(i,jjmax,:)=nuh(i,jjmax-1,:)
-   end do
+   call update_3d_halo(num,num,az,iimin,jjmin,iimax,jjmax,kmax,H_TAG)
+   call wait_halo(H_TAG)
 
-   do j=jjmin,jjmax
-      if (az(iimin,j).eq.2) num(iimin,j,:)=num(iimin+1,j,:)
-      if (az(iimax,j).eq.2) num(iimax,j,:)=num(iimax+1,j,:)
-      if (az(iimin,j).eq.2) nuh(iimin,j,:)=nuh(iimin+1,j,:)
-      if (az(iimax,j).eq.2) nuh(iimax,j,:)=nuh(iimax+1,j,:)
-   end do
+   call update_3d_halo(nuh,nuh,az,iimin,jjmin,iimax,jjmax,kmax,H_TAG)
+   call wait_halo(H_TAG)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving gotm()'
