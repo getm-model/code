@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.5 2003-07-01 16:38:33 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.6 2003-10-07 15:16:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -33,7 +33,7 @@
    integer 	:: u10_id,v10_id,airp_id,t2_id
    integer 	:: hum_id,convp_id,largep_id,tcc_id
    integer	:: tausx_id,tausy_id,swr_id,shf_id
-   integer	:: iextr,jextr,textr,tmax
+   integer	:: iextr,jextr,textr,tmax=-1
    integer	:: grid_scan=1
 
    REALTYPE, allocatable	:: met_lon(:),met_lat(:)
@@ -75,7 +75,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.5  2003-07-01 16:38:33  kbk
+!  Revision 1.6  2003-10-07 15:16:50  kbk
+!  now works properly with varying length (time) files
+!
+!  Revision 1.5  2003/07/01 16:38:33  kbk
 !  cleaned code - new methods
 !
 !  Revision 1.4  2003/06/17 14:53:29  kbk
@@ -290,7 +293,6 @@
 !
 ! !LOCAL VARIABLES:
    integer      :: i,indx
-   integer      :: tmax=50
    REALTYPE	:: t
    logical, save 	:: first=.true.
    integer, save 	:: save_n=1
@@ -306,6 +308,7 @@
    if (method .eq. 2) then
 
 !     find the right index
+
       t = loop*timestep
       do indx=save_n,tmax
          if (met_times(indx) .gt. real(t + offset)) EXIT
@@ -344,7 +347,6 @@
             new_meteo = .false.
          end if
       end if
-
    end if
 
 #ifdef DEBUG
@@ -388,14 +390,13 @@
    integer, parameter	:: iunit=55
    character(len=256)	:: fn,time_units
    integer		:: j1,s1,j2,s2
-   integer		:: n,err
+   integer		:: n,err,idum
    logical		:: first=.true.
    logical		:: found=.false.,first_open=.true.
-   integer              :: lon_id=-1,lat_id=-1,time_id=-1,id=-1
+   integer, save        :: lon_id=-1,lat_id=-1,time_id=-1,id=-1
    character(len=256)   :: dimname
 !
 ! !TO DO:
-!  Need to allow for opening and searching new files.
 !  Need a variable to indicate homw much to read from each file.
 !EOP
 !-------------------------------------------------------------------------
@@ -441,6 +442,8 @@
                   err = nf_inq_dimlen(ncid,time_id,textr)
                   if (err .ne. NF_NOERR) go to 10
                   LEVEL4 'time_id --> ',time_id,', len = ',textr
+!                  if (tmax .lt. 0) tmax=textr
+                  tmax=textr
                end if
             end do
 	    if(lon_id .eq. -1) then
@@ -489,10 +492,20 @@
 
          end if
 
-         err = nf_inq_varid(ncid,'time',time_id)
+         err = nf_inq_dimlen(ncid,time_id,idum)
          if (err .ne. NF_NOERR) go to 10
-         err = nf_inq_dimlen(ncid,time_id,textr)
-         if (err .ne. NF_NOERR) go to 10
+         if(idum .gt. textr) then
+            deallocate(met_times,stat=err)
+            if (err /= 0) stop      &
+               'open_meteo_file(): Error de-allocating memory (met_times)'
+            allocate(met_times(textr),stat=err)
+            if (err /= 0) stop 	&
+               'open_meteo_file(): Error allocating memory (met_times)'
+         end if
+         textr = idum
+         LEVEL3 'time_id --> ',time_id,', len = ',textr
+!        if (tmax .lt. 0) tmax=textr
+         tmax=textr
          err =  nf_get_att_text(ncid,time_id,'units',time_units)
          if (err .NE. NF_NOERR) go to 10
          call string_to_julsecs(time_units,j1,s1)
@@ -514,8 +527,25 @@
       read(iunit,*,err=85,end=90) fn
       err = nf_open(fn,NCNOWRIT,ncid)
       if (err .ne. NF_NOERR) go to 10
+
+      err = nf_inq_dimlen(ncid,time_id,idum)
+      if (err .ne. NF_NOERR) go to 10
+      if(idum .gt. textr) then
+         deallocate(met_times,stat=err)
+         if (err /= 0) stop      &
+            'open_meteo_file(): Error de-allocating memory (met_times)'
+         allocate(met_times(textr),stat=err)
+         if (err /= 0) stop 	&
+            'open_meteo_file(): Error allocating memory (met_times)'
+      end if
+      textr = idum
+      LEVEL3 'time_id --> ',time_id,', len = ',textr
+!     if (tmax .lt. 0) tmax=textr
+      tmax=textr
+
       err =  nf_get_att_text(ncid,time_id,'units',time_units)
       if (err .NE. NF_NOERR) go to 10
+
       call string_to_julsecs(time_units,j1,s1)
       err = nf_get_var_real(ncid,time_id,met_times)
       if (err .ne. NF_NOERR) go to 10
