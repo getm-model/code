@@ -1,4 +1,4 @@
-!$Id: read_field_ncdf.F90,v 1.3 2003-04-23 11:54:03 kbk Exp $
+!$Id: read_field_ncdf.F90,v 1.4 2003-05-06 16:25:16 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,7 @@
 !  From a NetCDF files - fname - read the variable - var - into the field - f.
 !
 ! !USES:
-   use domain, only: imin,jmin,imax,jmax,ioff,joff
+   use domain, only: imin,jmin,imax,jmax,iextr,jextr,ioff,joff
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
    use domain, only: H,az
    use variables_3d, only: hn
@@ -31,7 +31,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: read_field_ncdf.F90,v $
-!  Revision 1.3  2003-04-23 11:54:03  kbk
+!  Revision 1.4  2003-05-06 16:25:16  kbk
+!  reads 3D netcdf files properly in parallel mode
+!
+!  Revision 1.3  2003/04/23 11:54:03  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 12:39:59  kbk
@@ -42,11 +45,12 @@
 !
 !
 ! !LOCAL VARIABLES:
+   integer                   :: il,jl,iloc,jloc,indx
    integer                   :: ih,jh,kh,nh
    integer                   :: rc,err,ncid,var_id,i,j,k
    integer                   :: start(4),edges(4)
    integer                   :: ndims,rec_id
-   REAL_4B, allocatable      :: zax(:), wrk(:,:,:)
+   REAL_4B, allocatable      :: zax(:), wrk(:)
    REALTYPE, allocatable     :: zax_2d(:), wrk_2d(:,:,:)
 !EOP
 !-------------------------------------------------------------------------
@@ -67,10 +71,12 @@
 
 !  We assume dimension order as follows 1->i, 2->j, 3->k, 4->n
 
+#if 0
    err = nf_inq_dimlen(ncid, 1, ih)
    if (err .ne. NF_NOERR) go to 10
    err = nf_inq_dimlen(ncid, 2, jh)
    if (err .ne. NF_NOERR) go to 10
+#endif
    err = nf_inq_dimlen(ncid, 3, kh)
    if (err .ne. NF_NOERR) go to 10
    err = nf_inq_dimlen(ncid, 4, nh)
@@ -86,13 +92,17 @@
    err = nf_inq_varid(ncid,trim(var),var_id)
    if (err .NE. NF_NOERR) go to 10
 
-   allocate(wrk(ih,jh,kh),stat=rc)
-   if (rc /= 0) stop 'read_field_ncdf: Error allocating wrk'
+   il = max(iimin+ioff,1); ih = min(iimax+ioff,iextr)
+   jl = max(jjmin+joff,1); jh = min(jjmax+joff,jextr)
+   iloc = max(iimin-ioff,1); jloc = max(jjmin-joff,1)
 
-   start(1) = iimin+ioff ; start(2) = jjmin+joff; 
-   start(3) = 1; start(4) = n;
-   edges(1) = iimax-iimin+1 ; edges(2) = jjmax-jjmin+1; 
+   start(1) = il ; start(2) = jl
+   start(3) = 1; start(4) = n
+   edges(1) = ih-il+1 ; edges(2) = jh-jl+1
    edges(3) = kh; edges(4) = 1
+
+   allocate(wrk((iimax-iimin+1)*(jjmax-jjmin+1)*kh),stat=rc)
+   if (rc /= 0) stop 'read_field_ncdf: Error allocating wrk'
 
    err = nf_get_vara_real(ncid,var_id,start,edges,wrk)
    if (err .NE. NF_NOERR) go to 10
@@ -102,9 +112,18 @@
    do k=1,kh
       zax_2d(k) = -zax(kh-k+1)
    end do
-   allocate(wrk_2d(ih,jh,kh),stat=rc)
+
+   allocate(wrk_2d(iimin:iimax,jjmin:jjmax,kh),stat=rc)
    if (rc /= 0) stop 'read_field_ncdf: Error allocating wrk_2d'
-   wrk_2d = wrk
+   indx = 1
+   do k=1,kh
+      do j=jl,jh
+         do i=il,ih
+            wrk_2d(i-il+iloc,j-jl+jloc,k) = wrk(indx)
+            indx = indx+1
+         end do
+      end do
+   end do
 
    call kbk_interpol(kh,zax_2d,wrk_2d,imin,jmin,imax,jmax,az,H, &
                      iimin,jjmin,iimax,jjmax,kmax,hn,f)
