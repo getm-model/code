@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.16 2004-04-21 15:18:15 hb Exp $
+!$Id: m3d.F90,v 1.17 2004-04-23 09:03:59 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -52,8 +52,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.16  2004-04-21 15:18:15  hb
-!  Algorithms for adaptive grids added
+!  Revision 1.17  2004-04-23 09:03:59  kbk
+!  reverted to pre-adaptive grid version
 !
 !  Revision 1.15  2004/04/20 16:49:37  hb
 !  call to coordinates moved for better consistency (see JMB)
@@ -411,8 +411,6 @@
       call uu_momentum_3d(bdy3d)
       ufirst=.true.
    end if
-!JMB
-   call ss_nn()
    call coordinates(vert_cord,cord_relax,maxdepth)
    if (kmax .gt. 1) then
       call ww_momentum_3d()
