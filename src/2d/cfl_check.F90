@@ -1,4 +1,4 @@
-!$Id: cfl_check.F90,v 1.2 2002-10-04 13:56:58 gotm Exp $
+!$Id: cfl_check.F90,v 1.3 2003-04-03 07:01:49 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,7 +31,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: cfl_check.F90,v $
-!  Revision 1.2  2002-10-04 13:56:58  gotm
+!  Revision 1.3  2003-04-03 07:01:49  gotm
+!  fixed CFL calc. for non cartesian grid
+!
+!  Revision 1.2  2002/10/04 13:56:58  gotm
 !  Uses Becker and Deleersnijder (1993) CFL criterion with Coriolis
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:41  gotm
@@ -79,12 +82,19 @@
    max_dt=1000000000.
    do i=imin,imax
       do j=jmin,jmax
-         if (H(i,j).gt.0) then
+         if (az(i,j) .ge. 1 .and. H(i,j) .gt. _ZERO_) then
+#if 0
             dtt=min(dxc(i,j),dyc(i,j))/sqrt(2.*g*H(i,j))
-            if (dtt.lt.max_dt) then
-	       max_dt=dtt
-	       max_pos(1)=i
-	       max_pos(2)=j
+#else
+            c = sqrt(g*H(i,j))
+            dtt = (dxc(i,j)*dyc(i,j))/ &
+                   (sqrt(2.0)*c*sqrt(dxc(i,j)*dxc(i,j)+dyc(i,j)*dyc(i,j)))
+ 
+#endif
+            if (dtt .lt. max_dt) then
+               max_dt=dtt
+               max_pos(1)=i
+               max_pos(2)=j
             end if
          end if
       end do
