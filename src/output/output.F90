@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.7 2003-12-16 16:50:41 kbk Exp $
+!$Id: output.F90,v 1.8 2004-03-29 15:35:52 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,11 +25,13 @@
    character(LEN = PATH_MAX)           :: out_dir='.'
    character(LEN = PATH_MAX)           :: out_f_2d
    character(LEN = PATH_MAX)           :: out_f_3d
+   character(LEN = PATH_MAX)           :: out_f_mean
    character(LEN = PATH_MAX)           :: hot_out
 
    logical                             :: save_meteo=.false.
    logical                             :: save_2d=.true.
    logical                             :: save_3d=.true.
+   logical                             :: save_mean=.false. 
    logical                             :: save_vel=.true.
    logical                             :: save_strho=.true.
    logical                             :: save_s=.true.
@@ -46,12 +48,16 @@
    integer                             :: first_3d=1
    integer                             :: step_3d=1
    integer                             :: hotout=-1
+   integer                             :: meanout=-1
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
-!  Revision 1.7  2003-12-16 16:50:41  kbk
+!  Revision 1.8  2004-03-29 15:35:52  kbk
+!  possible to store calculated mean fields
+!
+!  Revision 1.7  2003/12/16 16:50:41  kbk
 !  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
 !
 !  Revision 1.6  2003/09/30 09:44:27  kbk
@@ -135,7 +141,7 @@
              save_strho,save_s,save_t,save_rho, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              save_spm, &
-             first_2d,step_2d,first_3d,step_3d,hotout, &
+             first_2d,step_2d,first_3d,step_3d,hotout,meanout, &
              save_meteo
 !   logical :: nesting=.true.
 !EOP
@@ -150,6 +156,9 @@
    LEVEL1 'init_output'
 
    read(NAMLST, nml=io_spec)
+   LEVEL2 'save_nuh',save_nuh
+   LEVEL2 'save_num',save_num
+   LEVEL2 'save_tke',save_tke
 
    if (runtype .eq. 1) then
       save_3d = .false.
@@ -175,7 +184,13 @@
    end if
 #endif
 
+   save_mean=(meanout .ge. 0 .and. runtype .gt. 1)
+   if ( save_mean ) then
+      LEVEL2 'Mean fields in: ',trim(out_f_mean)
+   end if
+
    if( .not. dryrun) then
+
       select case (out_fmt)
          case (ASCII)
 #if 0
@@ -190,6 +205,8 @@
 #ifndef NO_3D
             if (save_3d) call init_3d_ncdf(out_f_3d,title,starttime)
 #endif
+            if (save_mean)  &
+                     call init_mean_ncdf(out_f_mean,title,starttime)
          case (GRADS)
          case DEFAULT
            STDERR 'Fatal error: A non valid input format has been chosen'
@@ -238,9 +255,8 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE                  :: secs
-   logical                   :: write_2d,write_3d
+   logical                   :: write_2d,write_3d,write_mean=.false.
    integer                   :: dummy
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -252,8 +268,11 @@
 
    write_2d = save_2d .and. n .ge. first_2d .and. mod(n,step_2d).eq.0
    write_3d = save_3d .and. n .ge. first_3d .and. mod(n,step_3d).eq.0
+   if (meanout .gt. 0 .and. n .gt. 0) then
+      write_mean = save_mean .and. (mod(n,meanout) .eq. 0)
+   end if
 
-   if (write_2d .or. write_3d) then
+   if (write_2d .or. write_3d .or. write_mean) then
       call write_time_string()
       LEVEL2 'Saving.... ',timestr
 !      call divergence()
@@ -272,6 +291,7 @@
 #ifndef NO_3D
             if (write_3d) call save_3d_ncdf(secs)
 #endif
+            if (write_mean) call save_mean_ncdf(secs)
          case DEFAULT
            STDERR 'Fatal error: A non valid input format has been chosen'
            stop 'do_output'
@@ -471,6 +491,14 @@
       call restart_file(WRITING,trim(hot_out),zero,runtype)
    end if
 
+   if (meanout .eq. 0) then
+      select case (out_fmt)
+         case(NETCDF)
+            dummy=-_ZERO_
+            call save_mean_ncdf(dummy)
+      end select
+   end if
+
    select case (out_fmt)
       case (NETCDF)
          dummy = -_ONE_*1.
@@ -533,11 +561,14 @@
          trim(out_dir) //'/'// trim(runid) // '.2d' // trim(pid) // '.' // ext
       out_f_3d =  &
          trim(out_dir) //'/'// trim(runid) // '.3d' // trim(pid) // '.' // ext
+      out_f_mean =  &
+         trim(out_dir) //'/'// trim(runid) // '.mean' // trim(pid) // '.' // ext
    end if
 
    return
    end subroutine file_names
 !EOC
+
 
 !-----------------------------------------------------------------------
 
@@ -545,4 +576,4 @@
 
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
-!-----------------------------------------------------------------------
+!----------------------------------------------------------------------

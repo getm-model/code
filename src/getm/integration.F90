@@ -1,4 +1,4 @@
-!$Id: integration.F90,v 1.3 2003-04-23 12:03:46 kbk Exp $
+!$Id: integration.F90,v 1.4 2004-03-29 15:35:51 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,7 +20,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: integration.F90,v $
-!  Revision 1.3  2003-04-23 12:03:46  kbk
+!  Revision 1.4  2004-03-29 15:35:51  kbk
+!  possible to store calculated mean fields
+!
+!  Revision 1.3  2003/04/23 12:03:46  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 16:39:16  kbk
@@ -59,7 +62,6 @@
 !  Revision 1.1.1.1  2001/04/17 08:43:09  bbh
 !  initial import into CVS
 !
-!
 ! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
@@ -91,7 +93,7 @@
    use rivers,   only: do_rivers
 #endif
    use input,    only: do_input
-   use output,   only: do_output
+   use output,   only: do_output,meanout
 #ifdef TEST_NESTING
    use nesting,   only: nesting_file
 #endif
@@ -157,12 +159,18 @@
 #endif
       call update_time(n)
 
+      if(meanout .ge. 0) then
+         call calc_mean_fields(n,meanout)
+      end if
       call do_output(runtype,n,timestep)
-
 #ifdef DIAGNOSE
       call diagnose(n,MaxN,runtype)
 #endif
    end do
+
+   if (meanout .eq. 0) then
+     call calc_mean_fields(n,n)
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving time_loop()'

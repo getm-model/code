@@ -1,4 +1,4 @@
-!$Id: ncdf_out.F90,v 1.3 2003-04-23 12:07:12 kbk Exp $
+!$Id: ncdf_out.F90,v 1.4 2004-03-29 15:35:52 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,12 +22,16 @@
 ! !PUBLIC MEMBER FUNCTIONS:
    public init_2d_ncdf,save_2d_ncdf
    public init_3d_ncdf,save_3d_ncdf
+   public init_mean_ncdf,save_mean_ncdf
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_out.F90,v $
-!  Revision 1.3  2003-04-23 12:07:12  kbk
+!  Revision 1.4  2004-03-29 15:35:52  kbk
+!  possible to store calculated mean fields
+!
+!  Revision 1.3  2003/04/23 12:07:12  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 12:32:58  kbk
@@ -67,6 +71,18 @@
       subroutine save_3d_ncdf(secs)
          REALTYPE, intent(in)          :: secs
       end subroutine save_3d_ncdf
+   end interface
+
+   interface
+      subroutine init_mean_ncdf(fn,title,starttime)
+         character(len=*), intent(in)  :: fn,title,starttime
+      end subroutine init_mean_ncdf
+   end interface
+
+   interface
+      subroutine save_mean_ncdf(secs)
+         REALTYPE, intent(in)          :: secs
+      end subroutine save_mean_ncdf
    end interface
 
 !-----------------------------------------------------------------------
