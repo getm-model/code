@@ -1,4 +1,4 @@
-!$Id: variables_3d.F90,v 1.1 2002-05-02 14:00:58 gotm Exp $
+!$Id: variables_3d.F90,v 1.2 2002-05-29 13:37:50 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,9 +22,9 @@
    REALTYPE	:: dt,cnpar=0.9
 !
 #ifdef STATIC
-#include "static.h"
+#include "static_3d.h"
 #else
-#include "dynamic_declarations.h"
+#include "dynamic_declarations_3d.h"
 #endif
    integer	:: size3d_field
    integer	:: mem3d
@@ -33,8 +33,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: variables_3d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:58  gotm
-!  Initial revision
+!  Revision 1.2  2002-05-29 13:37:50  gotm
+!  New naming of .h files
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:58  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.6  2001/09/19 13:07:00  bbh
 !  Moved advection related 3D fields to global allocation
@@ -102,7 +105,7 @@
 
 !  Allocates memory for the public data members - if not static
 #ifndef STATIC
-#include "dynamic_allocations.h"
+#include "dynamic_allocations_3d.h"
 #endif
 
 #ifdef DEBUG

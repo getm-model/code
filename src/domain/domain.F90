@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.1 2002-05-02 14:01:11 gotm Exp $
+!$Id: domain.F90,v 1.2 2002-05-29 13:37:50 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,9 +27,9 @@
    logical		:: openbdy=.false.
    integer		:: calc_points
 #ifdef STATIC
-#include "static.h"
+#include "static_domain.h"
 #else
-#include "dynamic_declarations.h"
+#include "dynamic_declarations_domain.h"
 #endif
    integer		:: nsbv
    integer, parameter	:: INNER= 1
@@ -48,8 +48,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.1  2002-05-02 14:01:11  gotm
-!  Initial revision
+!  Revision 1.2  2002-05-29 13:37:50  gotm
+!  New naming of .h files
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:11  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.19  2001/10/23 14:15:55  bbh
 !  Moved ga from coordinates.F90 to domain.F90
@@ -237,7 +240,7 @@
          il = imin ; ih = imax ; jl = jmin ; jh = jmax
 #ifndef STATIC
          iimin = imin ; iimax = imax ; jjmin = jmin ; jjmax = jmax; kmax = kdum
-#include "dynamic_allocations.h"
+#include "dynamic_allocations_domain.h"
 #endif
          call get_bathymetry(H,Hland,il,ih,jl,jh,rc)
       case default

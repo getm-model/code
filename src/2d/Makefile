@@ -1,11 +1,11 @@
-#$Id: Makefile,v 1.1 2002-05-02 14:00:41 gotm Exp $
+#$Id: Makefile,v 1.2 2002-05-29 13:37:49 gotm Exp $
 #
 # Makefile to build the 2D specific library - libm2d.a
 #
 
 include ../Rules.make
 
-INCS	= static.h dynamic_declarations.h dynamic_allocations.h
+INCS	= static_2d.h dynamic_declarations_2d.h dynamic_allocations_2d.h
 LIB	= $(LIBDIR)/lib2d${buildtype}.a
 
 MODSRC	= m2d.F90 variables_2d.F90 

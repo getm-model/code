@@ -1,11 +1,11 @@
-#$Id: Makefile,v 1.1 2002-05-02 14:00:52 gotm Exp $
+#$Id: Makefile,v 1.2 2002-05-29 13:37:49 gotm Exp $
 #
 # Makefile to build the 3D specific library - libm3d.a
 #
 
 include ../Rules.make
 
-INCS	= static.h dynamic_declarations.h dynamic_allocations.h
+INCS	= static_3d.h dynamic_declarations_3d.h dynamic_allocations_3d.h
 LIB	= $(LIBDIR)/lib3d${buildtype}.a
 
 MODSRC	= m3d.F90 variables_3d.F90 advection_3d.F90 eqstate.F90 \
