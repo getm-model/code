@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.10 2004-01-06 15:04:00 kbk Exp $
+!$Id: salinity.F90,v 1.11 2004-04-21 09:14:03 lars Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -40,7 +40,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: salinity.F90,v $
-!  Revision 1.10  2004-01-06 15:04:00  kbk
+!  Revision 1.11  2004-04-21 09:14:03  lars
+!  added ifdef for baltic_slice
+!
+!  Revision 1.10  2004/01/06 15:04:00  kbk
 !  FCT advection + split of advection_3d.F90 + extra adv. input checks
 !
 !  Revision 1.9  2003/12/16 17:10:05  kbk
@@ -288,6 +291,24 @@ stop 'salinity - dx is not known'
       S(i,j,0:kmax) = 25.
       end do
    end do
+#endif
+#ifdef BALTIC_SLICE_TEST
+  j=2
+   if (iimax.eq.102) then
+      do i=2,21
+        S(i,j,0:kmax) = 25.
+      end do
+   end if
+   if (iimax.eq.302) then
+      do i=2,61
+        S(i,j,0:kmax) = 25.
+      end do
+   end if
+   if (iimax.eq.902) then
+      do i=2,181
+        S(i,j,0:kmax) = 25.
+      end do
+   end if
 #endif
 #ifdef HAIDVOGEL_TEST
    STDERR 'HAIDVOGEL: salinity= ',iimin,iimax,i+ioff,iextr/2
