@@ -1,4 +1,4 @@
-!$Id: slow_bottom_friction.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
+!$Id: slow_bottom_friction.F90,v 1.4 2003-08-14 10:53:23 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: slow_bottom_friction.F90,v $
-!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  Revision 1.4  2003-08-14 10:53:23  kbk
+!  need temporary velocities in some halo zones
+!
+!  Revision 1.3  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 13:36:38  kbk
@@ -53,10 +56,10 @@
    integer                   :: i,j
    REALTYPE                  :: uloc,vloc,HH
    logical,save              :: first=.true.
-   REALTYPE                  :: ruu(I2DFIELD)
-   REALTYPE                  :: rvv(I2DFIELD)
-   REALTYPE                  :: Ui(I2DFIELD)
-   REALTYPE                  :: Vi(I2DFIELD)
+   REALTYPE, save                  :: Ui(I2DFIELD)
+   REALTYPE, save                  :: Vi(I2DFIELD)
+   REALTYPE, save                  :: ruu(I2DFIELD)
+   REALTYPE, save                  :: rvv(I2DFIELD)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -65,8 +68,9 @@
    Ncall = Ncall+1
    write(debug,*) 'slow_bottom_friction() # ',Ncall
 #endif
-   do j=jjmin,jjmax+1
-      do i=iimin-1,iimax
+
+   do j=jjmin,jjmax
+      do i=iimin,iimax
          if(au(i,j) .ge. 1) then
             Ui(i,j)=Uinto(i,j)/(ssuo(i,j)+HU(i,j))
          else
@@ -74,9 +78,12 @@
          end if
       end do
    end do
+!  need velocity in some halo points as well
+   Ui(:,jjmax+1) = Uinto(:,jjmax+1)/(ssuo(:,jjmax+1)+HU(:,jjmax+1))
+   Ui(iimin-1,:) = Uinto(iimin-1,:)/(ssuo(iimin-1,:)+HU(iimin-1,:))
 
-   do j=jjmin-1,jjmax
-      do i=iimin,iimax+1
+   do j=jjmin,jjmax
+      do i=iimin,iimax
          if(av(i,j) .ge. 1) then
             Vi(i,j)=Vinto(i,j)/(ssvo(i,j)+HV(i,j))
          else
@@ -84,6 +91,9 @@
          end if
       end do
    end do
+!  need velocity in some halo points as well
+   Vi(:,jjmin-1) = Vinto(:,jjmin-1)/(ssvo(:,jjmin-1)+HV(:,jjmin-1))
+   Vi(iimax+1,:) = Vinto(iimax+1,:)/(ssvo(iimax+1,:)+HV(iimax+1,:))
 
    do j=jjmin,jjmax
       do i=iimin,iimax
