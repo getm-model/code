@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.1 2002-05-02 14:00:51 gotm Exp $
+!$Id: m3d.F90,v 1.2 2003-04-01 15:27:56 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -42,8 +42,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:51  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-01 15:27:56  gotm
+!  cleaned the code
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:51  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.30  2001/10/26 09:13:24  bbh
 !  Only call slow_diffusion() if Am > 0.
@@ -210,18 +213,18 @@
 
    dt = M*timestep
 
-      hn= _ZERO_
-      uu= _ZERO_
-      vv= _ZERO_
-      ww= _ZERO_
-      rru= _ZERO_
-      rrv= _ZERO_
-      uuEx= _ZERO_
-      vvEx= _ZERO_
-      tke=1.e-10
-      eps=1.e-10
-      num=avmmol
-      nuh=avmmol
+   hn= _ZERO_
+   uu= _ZERO_
+   vv= _ZERO_
+   ww= _ZERO_
+   rru= _ZERO_
+   rrv= _ZERO_
+   uuEx= _ZERO_
+   vvEx= _ZERO_
+   tke=1.e-10
+   eps=1.e-10
+   num=avmmol
+   nuh=avmmol
 #ifdef UV_TVD
    uadv = _ZERO_
    vadv = _ZERO_
@@ -305,7 +308,6 @@
 #ifndef NO_BOTTFRIC
    if (kmax.gt.1) then
       call bottom_friction_3d()
-
    end if
 #endif
    SS = _ZERO_
@@ -369,6 +371,7 @@
 #endif
 #endif
    end if
+
    call slow_terms()
    call stop_macro()
 

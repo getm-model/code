@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.1 2002-05-02 14:00:54 gotm Exp $
+!$Id: gotm.F90,v 1.2 2003-04-01 15:27:27 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,8 +31,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: gotm.F90,v $
-!  Revision 1.1  2002-05-02 14:00:54  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-01 15:27:27  gotm
+!  cleaned the code
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:54  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.11  2001/10/23 07:06:43  bbh
 !  PARABOLIC VISCOSITY --> PARABOLIC_VISCOSITY
@@ -87,84 +90,76 @@
    write(debug,*) 'gotm() # ',Ncall
 #endif
 
-n = n+1
-
    do i=iimin,iimax
       do j=jjmin,jjmax
 
          if (az(i,j) .eq. 1 ) then
 
-         u_taus = sqrt(taus(i,j))
-         u_taub = sqrt(taub(i,j))
+            u_taus = sqrt(taus(i,j))
+            u_taub = sqrt(taub(i,j))
 
-         h = hn(i,j,:)
-         SS1d = SS(i,j,:)
-         NN1d = NN(i,j,:)
+            h = hn(i,j,:)
+            SS1d = SS(i,j,:)
+            NN1d = NN(i,j,:)
 
-         P  = num(i,j,:)*SS1d
-         B  = -nuh(i,j,:)*NN1d
+            P  = num(i,j,:)*SS1d
+            B  = -nuh(i,j,:)*NN1d
 
-         tke1d=tke(i,j,:)
-         eps1d=eps(i,j,:)
-         L1d=cde*tke1d**1.5/eps1d
-         num1d=num(i,j,:)
-         nuh1d=nuh(i,j,:)
+            tke1d=tke(i,j,:)
+            eps1d=eps(i,j,:)
+            L1d=cde*tke1d**1.5/eps1d
+            num1d=num(i,j,:)
+            nuh1d=nuh(i,j,:)
 
-         z0s = 0.1
-	 z0b=0.5*(max(zub(i-1,j),zub(i,j))+max(zvb(i,j-1),zvb(i,j)))
-         if (z0s.gt.D(i,j)/10.) z0s=D(i,j)/10.
+            z0s = 0.1
+	    z0b=0.5*(max(zub(i-1,j),zub(i,j))+max(zvb(i,j-1),zvb(i,j)))
+            if (z0s.gt.D(i,j)/10.) z0s=D(i,j)/10.
 
 #ifdef PARABOLIC_VISCOSITY
-         zz = _ZERO_
-         do k=1,kmax-1
-            zz=zz+hn(i,j,k)
-	    tke1d(k)=max(1.e-10,3.333333*u_taub**2*(1.-zz/D(i,j)))
-	    L1d(k)=0.4*(zz+z0b)*sqrt(1.-zz/D(i,j))
-	    eps1d(k)=0.16431677*tke1d(k)**1.5/L1d(k)
-	    num1d(k)=0.09*tke1d(k)**2/eps1d(k)
-	    nuh1d(k)=num1d(k)
-	 end do
+            zz = _ZERO_
+            do k=1,kmax-1
+               zz=zz+hn(i,j,k)
+	       tke1d(k)=max(1.e-10,3.333333*u_taub**2*(1.-zz/D(i,j)))
+	       L1d(k)=0.4*(zz+z0b)*sqrt(1.-zz/D(i,j))
+	       eps1d(k)=0.16431677*tke1d(k)**1.5/L1d(k)
+	       num1d(k)=0.09*tke1d(k)**2/eps1d(k)
+	       nuh1d(k)=num1d(k)
+	    end do
 #else
-         call do_turbulence(kmax,dt,D(i,j),u_taus,u_taub,z0s,z0b,h,   &
-	                    NN1d,SS1d,P,B)
+            call do_turbulence(kmax,dt,D(i,j),u_taus,u_taub,z0s,z0b,h,   &
+	                       NN1d,SS1d,P,B)
 #endif
 
-         tke(i,j,:) = tke1d
-         eps(i,j,:) = eps1d
-         num(i,j,:) = num1d
-         nuh(i,j,:) = nuh1d
+            tke(i,j,:) = tke1d
+            eps(i,j,:) = eps1d
+            num(i,j,:) = num1d
+            nuh(i,j,:) = nuh1d
 #ifdef HAIDVOGEL_TEST
-         num(i,j,:) = 0.e-10
-         nuh(i,j,:) = 0.e-10
+            num(i,j,:) = 0.e-10
+            nuh(i,j,:) = 0.e-10
 #endif
 #ifdef NOMADS_TEST
-         num(i,j,:) = _ZERO_
-         nuh(i,j,:) = _ZERO_
+            num(i,j,:) = _ZERO_
+            nuh(i,j,:) = _ZERO_
 #endif
          end if
       end do
    end do
 
    ! Extrapolating eddy viscosity to open boundary points:
-
-   do k=1,kmax-1
-      do i=iimin,iimax
-         if (az(i,jjmin).eq.2) num(i,jjmin,k)=num(i,jjmin+1,k)
-         if (az(i,jjmax).eq.2) num(i,jjmax,k)=num(i,jjmax-1,k)
-         if (az(i,jjmin).eq.2) nuh(i,jjmin,k)=nuh(i,jjmin+1,k)
-         if (az(i,jjmax).eq.2) nuh(i,jjmax,k)=nuh(i,jjmax-1,k)
-      end do
+   do i=iimin,iimax
+      if (az(i,jjmin).eq.2) num(i,jjmin,:)=num(i,jjmin+1,:)
+      if (az(i,jjmax).eq.2) num(i,jjmax,:)=num(i,jjmax-1,:)
+      if (az(i,jjmin).eq.2) nuh(i,jjmin,:)=nuh(i,jjmin+1,:)
+      if (az(i,jjmax).eq.2) nuh(i,jjmax,:)=nuh(i,jjmax-1,:)
    end do
 
-   do k=1,kmax-1
-      do j=jjmin,jjmax
-         if (az(iimin,j).eq.2) num(iimin,j,k)=num(iimin+1,j,k)
-         if (az(iimax,j).eq.2) num(iimax,j,k)=num(iimax+1,j,k)
-         if (az(iimin,j).eq.2) nuh(iimin,j,k)=nuh(iimin+1,j,k)
-         if (az(iimax,j).eq.2) nuh(iimax,j,k)=nuh(iimax+1,j,k)
-      end do
+   do j=jjmin,jjmax
+      if (az(iimin,j).eq.2) num(iimin,j,:)=num(iimin+1,j,:)
+      if (az(iimax,j).eq.2) num(iimax,j,:)=num(iimax+1,j,:)
+      if (az(iimin,j).eq.2) nuh(iimin,j,:)=nuh(iimin+1,j,:)
+      if (az(iimax,j).eq.2) nuh(iimax,j,:)=nuh(iimax+1,j,:)
    end do
-
 
 #ifdef DEBUG
    write(debug,*) 'Leaving gotm()'
