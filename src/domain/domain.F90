@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.3 2003-03-17 15:00:20 gotm Exp $
+!$Id: domain.F90,v 1.4 2003-03-24 14:19:23 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use commhalo, only	: myid,nprocs,comm_hd,update_2d_halo,H_TAG
+   use commhalo, only	: myid,nprocs,comm_hd,update_2d_halo,wait_halo,H_TAG
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -48,7 +48,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.3  2003-03-17 15:00:20  gotm
+!  Revision 1.4  2003-03-24 14:19:23  gotm
+!  added initialization of H,HU,HV
+!
+!  Revision 1.3  2003/03/17 15:00:20  gotm
 !  setting lonmap and latmap
 !
 !  Revision 1.2  2002/05/29 13:37:50  gotm
@@ -245,16 +248,26 @@
          iimin = imin ; iimax = imax ; jjmin = jmin ; jjmax = jmax; kmax = kdum
 #include "dynamic_allocations_domain.h"
 #endif
+         H = -10.
+         HU = -10.
+         HV = -10.
+
          call get_bathymetry(H,Hland,il,ih,jl,jh,rc)
+
+         call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG)
+	 call wait_halo(H_TAG)
+
       case default
          FATAL 'A non valid input format has been chosen'
          stop 'init_domain'
    end select
 
+#if 0
 #ifdef DK_03NM_TEST
 where (H .lt. 2.) 
 H = -10.
 end where
+#endif
 #endif
 
 ! Define calculation masks
@@ -585,7 +598,8 @@ latmap = latc
    STDERR 'av'
    call print_mask(av)
 #endif
-   np = count(az .gt. 0)
+
+   np = count(az(1:imax,1:jmax) .gt. 0)
    sz = (imax-imin+1)*(jmax-jmin+1)
    LEVEL2 'Dimensions: ',imin,':',imax,',',jmin,':',jmax,',',0,':',kmax
    LEVEL2 '# waterpoints = ',np,' of ',sz
