@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.6 2003-12-08 07:21:53 hb Exp $
+!$Id: save_3d_ncdf.F90,v 1.7 2003-12-16 12:47:11 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,9 +28,10 @@
    use variables_3d, only: S,T,rho
 #endif
    use variables_3d, only: tke,num,nuh,eps
-#ifndef NO_SUSP_MATTER
+#ifdef SPM
    use variables_3d, only: spm
 #endif
+   use parameters, only: g,rho_0
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -44,7 +45,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
-!  Revision 1.6  2003-12-08 07:21:53  hb
+!  Revision 1.7  2003-12-16 12:47:11  kbk
+!  rho_0 and g from parameters (manuel)
+!
+!  Revision 1.6  2003/12/08 07:21:53  hb
 !  use proper layer heights for saving velocities
 !
 !  Revision 1.5  2003/05/09 11:53:13  kbk
@@ -79,7 +83,7 @@
    integer                   :: err
    integer                   :: start(4),edges(4)
    integer, save             :: n3d=0
-   REALTYPE, parameter       :: x=-1025./9.82
+   REALTYPE, parameter       :: x=-rho_0/g
    integer                   :: i,j,k,itmp(1)
 !EOP
 !-----------------------------------------------------------------------
@@ -253,7 +257,7 @@
 
       if (save_rho) then
          call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-                     kmin,az,x*rho+25.,rho_missing,ws)
+                     kmin,az,x*rho+rho_0-1000.,rho_missing,ws)
          err = nf_put_vara_real(ncid, sigma_t_id, start, edges, ws)
          if (err .NE. NF_NOERR) go to 10
       end if
@@ -291,7 +295,7 @@
       end if
    end if ! save_turb
 
-#ifndef NO_BAROCLINIC
+#ifdef SPM
    if (save_spm) then
       call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
                   kmin,az,spm,spm_missing,ws)
