@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.4 2003-08-15 12:50:12 kbk Exp $
+!$Id: initialise.F90,v 1.5 2003-09-03 05:49:31 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,7 +22,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
-!  Revision 1.4  2003-08-15 12:50:12  kbk
+!  Revision 1.5  2003-09-03 05:49:31  kbk
+!  hotstart files now read from - out_dir
+!
+!  Revision 1.4  2003/08/15 12:50:12  kbk
 !  use HALO in loop boundaries
 !
 !  Revision 1.3  2003/04/23 12:03:46  kbk
@@ -81,7 +84,7 @@
 !
 ! !USES:
    use kurt_parallel, only: init_parallel,myid
-   use output, only: init_output,do_output,restart_file
+   use output, only: init_output,do_output,restart_file,out_dir
    use input,  only: init_input
    use domain, only: init_domain
    use domain, only: iextr,jextr,imin,imax,jmin,jmax
@@ -254,7 +257,7 @@
       else
          buf = '.in'
       end if
-      hot_in = trim(input_dir) //'/'// 'restart' // trim(buf)
+      hot_in = trim(out_dir) //'/'// 'restart' // trim(buf)
       call restart_file(READING,trim(hot_in),MinN,runtype)
 #ifndef NO_3D
       if (runtype .gt. 1) then
