@@ -1,4 +1,4 @@
-!$Id: bdy_3d.F90,v 1.4 2003-04-23 12:16:34 kbk Exp $
+!$Id: bdy_3d.F90,v 1.5 2003-05-05 15:47:59 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -15,7 +15,7 @@
    use halo_zones, only : H_TAG,U_TAG,V_TAG
    use domain, only: imin,jmin,imax,jmax,H,az,au,av
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
-   use domain, only: nsbv,NWB,NNB,NEB,NSB
+   use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use variables_3d
    IMPLICIT NONE
@@ -32,7 +32,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bdy_3d.F90,v $
-!  Revision 1.4  2003-04-23 12:16:34  kbk
+!  Revision 1.5  2003-05-05 15:47:59  kbk
+!  T and S boundaries work in parallel runs
+!
+!  Revision 1.4  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.3  2003/04/07 16:32:31  kbk
@@ -128,7 +131,7 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k,n,ii,jj
+   integer                   :: i,j,k,l,n,ii,jj
    REALTYPE                  :: sp(1:4),rat
 !EOP
 !-----------------------------------------------------------------------
@@ -170,59 +173,72 @@
    sp(3)=0.25
    sp(4)=0.0625
 
+   l = 0
    k = 0
    do n=1,NWB
+      l = l+1
+      k = bdy_index(l)
       i = wi(n)
       do j=wfj(n),wlj(n)
-         k = k+1
          do ii=1,4
             if (az(i-1+ii,j).gt.0) then
                S(i-1+ii,j,:) = sp(ii)*S_bdy(k,:)+(1.-sp(ii))*S(i-1+ii,j,:)
                T(i-1+ii,j,:) = sp(ii)*T_bdy(k,:)+(1.-sp(ii))*T(i-1+ii,j,:)
             end if
          end do
+         k = k+1
       end do
    end do
+
    do n = 1,NNB
+      l = l+1
+      k = bdy_index(l)
       j = nj(n)
       do i = nfi(n),nli(n)
-         k = k+1
          do jj=1,4
             if (az(i,j+1-jj).gt.0) then
                S(i,j+1-jj,:) = sp(jj)*S_bdy(k,:)+(1.-sp(jj))*S(i,j+1-jj,:)
                T(i,j+1-jj,:) = sp(jj)*T_bdy(k,:)+(1.-sp(jj))*T(i,j+1-jj,:)
             end if
          end do
+         k = k+1
       end do
    end do
+
    do n=1,NEB
+      l = l+1
+      k = bdy_index(l)
       i = ei(n)
       do j=efj(n),elj(n)
-         k = k+1
          do ii=1,4
             if (az(i+1-ii,j).gt.0) then
                S(i+1-ii,j,:) = sp(ii)*S_bdy(k,:)+(1.-sp(ii))*S(i+1-ii,j,:)
                T(i+1-ii,j,:) = sp(ii)*T_bdy(k,:)+(1.-sp(ii))*T(i+1-ii,j,:)
             end if
          end do
+         k = k+1
       end do
    end do
+
    do n = 1,NSB
+      l = l+1
+      k = bdy_index(l)
       j = sj(n)
       do i = sfi(n),sli(n)
-         k = k+1
          do jj=1,4
             if (az(i,j-1+jj).gt.0) then
                S(i,j-1+jj,:) = sp(jj)*S_bdy(k,:)+(1.-sp(jj))*S(i,j-1+jj,:)
                T(i,j-1+jj,:) = sp(jj)*T_bdy(k,:)+(1.-sp(jj))*T(i,j-1+jj,:)
             end if
          end do
+         k = k+1
       end do
    end do
-#endif
 
    call mirror_bdy_3d(T,H_TAG)
    call mirror_bdy_3d(S,H_TAG)
+
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'leaving do_bdy_3d()'
