@@ -1,4 +1,4 @@
-!$Id: uu_momentum_3d.F90,v 1.4 2004-04-20 16:49:37 hb Exp $
+!$Id: uu_momentum_3d.F90,v 1.5 2004-07-28 14:58:18 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,6 +9,11 @@
    subroutine uu_momentum_3d(bdy3d)
 !
 ! !DESCRIPTION:
+!
+! Three-dimensional velocity equation in eastern direction.
+! If #MUDFLAT is defined, fitting of profiles is made with
+! respect to the new surface elevation, otherwise to the 
+! old surface elevation.
 !
 ! !USES:
    use parameters, only: g,avmmol,rho_0
@@ -45,7 +50,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uu_momentum_3d.F90,v $
-!  Revision 1.4  2004-04-20 16:49:37  hb
+!  Revision 1.5  2004-07-28 14:58:18  hb
+!  Changing subroutine calling order via MUDFLAT
+!
+!  Revision 1.4  2004/04/20 16:49:37  hb
 !  call to coordinates moved for better consistency (see JMB)
 !
 !  Revision 1.3  2003/04/23 12:16:34  kbk
@@ -219,8 +227,11 @@
                do k=kumin(i,j),kmax
                   ResInt=ResInt+Res(k)
                end do
-
+#ifdef MUDFLAT
+               Diff=(Uint(i,j)-ResInt)/(ssun(i,j)+HU(i,j))
+#else
                Diff=(Uint(i,j)-ResInt)/(ssuo(i,j)+HU(i,j))
+#endif
 
                do k=kumin(i,j),kmax
                   uu(i,j,k)=Res(k) +hun(i,j,k)*Diff

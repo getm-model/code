@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.19 2004-06-15 08:25:57 kbk Exp $
+!$Id: m3d.F90,v 1.20 2004-07-28 14:58:18 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -53,7 +53,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.19  2004-06-15 08:25:57  kbk
+!  Revision 1.20  2004-07-28 14:58:18  hb
+!  Changing subroutine calling order via MUDFLAT
+!
+!  Revision 1.19  2004/06/15 08:25:57  kbk
 !  added supoort for spm - Ruiz
 !
 !  Revision 1.18  2004/05/04 09:23:51  kbk
@@ -389,6 +392,11 @@
 !
 ! !DESCRIPTION:
 ! A wrapper to call all 3D related subroutines in one subroutine.
+! if #MUDFLAT is defined, then the sequence of velocity equations
+! and coordinate construction is made such that drying and flooding 
+! is stable. If #MUDFLAT is not defined, then adaptive grids with
+! Lagrangian component are supported. Both, drying and flooding and
+! Lagrangian coordinates does not go together. 
 !
 ! !REVISION HISTORY:
 !  See log for module
@@ -407,6 +415,9 @@
    call start_macro()
 #ifndef NO_BAROCLINIC
    if (bdy3d) call do_bdy_3d(0,T)
+#endif
+#ifdef MUDFLAT
+   call coordinates(vert_cord,cord_relax,maxdepth)
 #endif
 #ifndef NO_BOTTFRIC
    if (kmax .gt. 1) then
@@ -429,7 +440,9 @@
       call uu_momentum_3d(bdy3d)
       ufirst=.true.
    end if
+#ifndef MUDFLAT
    call coordinates(vert_cord,cord_relax,maxdepth)
+#endif
    if (kmax .gt. 1) then
       call ww_momentum_3d()
    end if
