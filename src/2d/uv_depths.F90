@@ -1,4 +1,4 @@
-!$Id: uv_depths.F90,v 1.2 2003-03-20 15:54:03 gotm Exp $
+!$Id: uv_depths.F90,v 1.3 2003-04-01 14:16:54 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,8 +11,8 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use commhalo, only: update_2d_halo,wait_halo,H_TAG,HU_TAG,HV_TAG
-   use domain,   only: imin,imax,jmin,jmax,au,av,H,HU,HV
+   use commhalo, only: update_2d_halo,wait_halo,HU_TAG,HV_TAG
+   use domain,   only: imin,imax,jmin,jmax,az,au,av,H,HU,HV
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -25,7 +25,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_depths.F90,v $
-!  Revision 1.2  2003-03-20 15:54:03  gotm
+!  Revision 1.3  2003-04-01 14:16:54  gotm
+!  removed H_TAG and cleaned code
+!
+!  Revision 1.2  2003/03/20 15:54:03  gotm
 !  added min function + ifdef DK_06NM_TEST to set depth
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:46  gotm
