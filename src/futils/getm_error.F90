@@ -1,4 +1,4 @@
-!$Id: getm_error.F90,v 1.1 2003-10-30 16:29:37 kbk Exp $
+!$Id: getm_error.F90,v 1.2 2003-11-03 09:10:41 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -24,22 +24,27 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: getm_error.F90,v $
-!  Revision 1.1  2003-10-30 16:29:37  kbk
-!  added global error handler
+!  Revision 1.2  2003-11-03 09:10:41  kbk
+!  now works with both serial and parallel compilation
 !
+!  Revision 1.1  2003/10/30 16:29:37  kbk
+!  added global error handler
 !
 ! !LOCAL VARIABLES:
    integer                   :: ierr
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+#ifdef PARALLEL
    include "mpif.h"
-
+#endif
    FATAL "Called from: ",trim(sub)
    FATAL "Message:     ",trim(msg)
-
+#ifdef PARALLEL
    call MPI_Abort(MPI_COMM_WORLD,1,ierr)
+#else
+   stop "getm_error()"
+#endif
 
    return
    end subroutine getm_error
