@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.12 2004-08-09 08:39:36 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.13 2004-08-09 10:43:59 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -77,7 +77,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.12  2004-08-09 08:39:36  kbk
+!  Revision 1.13  2004-08-09 10:43:59  kbk
+!  correct length of met_times - Buchmann
+!
+!  Revision 1.12  2004/08/09 08:39:36  kbk
 !  if SPHERICAL and rotated meteo grid fixed turning of wind - Carsten Hansen (FRV)
 !
 !  Revision 1.11  2004/04/06 16:32:29  kbk
@@ -566,7 +569,7 @@
             deallocate(met_times,stat=err)
             if (err /= 0) stop      &
                'open_meteo_file(): Error de-allocating memory (met_times)'
-            allocate(met_times(textr),stat=err)
+            allocate(met_times(idum),stat=err)
             if (err /= 0) stop &
                'open_meteo_file(): Error allocating memory (met_times)'
          end if
@@ -605,7 +608,7 @@
          deallocate(met_times,stat=err)
          if (err /= 0) stop      &
             'open_meteo_file(): Error de-allocating memory (met_times)'
-         allocate(met_times(textr),stat=err)
+         allocate(met_times(idum),stat=err)
          if (err /= 0) stop &
             'open_meteo_file(): Error allocating memory (met_times)'
       end if
