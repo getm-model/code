@@ -1,4 +1,4 @@
-!$Id: exchange_coefficients.F90,v 1.7 2003-11-17 09:01:12 kbk Exp $
+!$Id: exchange_coefficients.F90,v 1.8 2003-12-16 17:35:33 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -49,10 +49,10 @@
 !
 ! !USES:
    use meteo, only: cpa,KELVIN
-#ifdef WRONG_KONDO
    use meteo, only: L,rho_air,w,qs,qa,cd_heat,cd_mom
+#ifdef WRONG_KONDO
 #else
-   use meteo, only: L,rho_air,w,qs,qa,cd_mom,cd_heat,cd_latent
+   use meteo, only: cd_latent
 #endif
    IMPLICIT NONE
 !
@@ -68,7 +68,10 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: exchange_coefficients.F90,v $
-!  Revision 1.7  2003-11-17 09:01:12  kbk
+!  Revision 1.8  2003-12-16 17:35:33  kbk
+!  Fortran95 requires same type as args to min/max
+!
+!  Revision 1.7  2003/11/17 09:01:12  kbk
 !  fixed serious error in calculation of relative humidity
 !
 !  Revision 1.6  2003/10/07 15:21:42  kbk
@@ -120,6 +123,7 @@
 
    REALTYPE                  :: twet,rh
    REALTYPE                  :: dew
+   REALTYPE                  :: x1,x2,x3
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -187,10 +191,19 @@
       ! It must be sure that hum is dew point temperature in Kelvin 
       ! in the next line ...
       dew = hum
-      ea  = 611.21*exp((18.729 - (min(dew,300.)-273.15)/227.3)*    &
-            (min(dew,300.)-273.15)/(max(dew,200.)-273.15+257.87))
-      es  = 611.21*exp((18.729 - (min(ta_k,300.)-273.15)/227.3)*     &
-            (min(ta_k,300.)-273.15)/(max(ta_k,200.)-273.15+257.87))
+      x1 = (18.729 - (min(dew,300.*_ONE_)-273.15)/227.3)
+      x2 = (min(dew,300.*_ONE_)-273.15) 
+      x3 = (max(dew,200.*_ONE_)-273.15+257.87)
+      ea = 611.21*exp(x1*x2/x3)
+!KBK      ea  = 611.21*exp((18.729 - (min(dew,300.)-273.15)/227.3)*    &
+!KBK            (min(dew,300.)-273.15)/(max(dew,200.)-273.15+257.87))
+
+      x1 = (18.729 - (min(ta_k,300.*_ONE_)-273.15)/227.3)
+      x2 = (min(ta_k,300.*_ONE_)-273.15) 
+      x3 = (max(ta_k,200.*_ONE_)-273.15+257.87)
+      es = 611.21*exp(x1*x2/x3)
+!KBK      es  = 611.21*exp((18.729 - (min(ta_k,300.)-273.15)/227.3)*     &
+!KBK            (min(ta_k,300.)-273.15)/(max(ta_k,200.)-273.15+257.87))
       rh = 100.*ea/es
       qa = 0.01*rh*qs
    case (4)
