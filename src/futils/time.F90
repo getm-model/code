@@ -1,4 +1,4 @@
-!$Id: time.F90,v 1.1 2002-05-02 14:01:19 gotm Exp $
+!$Id: time.F90,v 1.1.1.1 2002-05-02 14:01:19 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -44,8 +44,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: time.F90,v $
-!  Revision 1.1  2002-05-02 14:01:19  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:19  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.8  2001/10/17 08:19:42  bbh
 !  jul0 and jul1 now public

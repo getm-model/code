@@ -1,4 +1,4 @@
-!$Id: ncdf_common.F90,v 1.1 2002-05-02 14:01:49 gotm Exp $
+!$Id: ncdf_common.F90,v 1.1.1.1 2002-05-02 14:01:49 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -24,8 +24,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_common.F90,v $
-!  Revision 1.1  2002-05-02 14:01:49  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:49  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1  2001/09/13 14:50:02  bbh
 !  Cleaner and smaller NetCDF implementation + better axis support

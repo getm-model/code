@@ -1,4 +1,4 @@
-!$Id: uv_depths.F90,v 1.1 2002-05-02 14:00:46 gotm Exp $
+!$Id: uv_depths.F90,v 1.1.1.1 2002-05-02 14:00:46 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,8 +25,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_depths.F90,v $
-!  Revision 1.1  2002-05-02 14:00:46  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:46  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.4  2001/08/01 08:25:52  bbh
 !  CURVILINEAR now implemented

@@ -1,4 +1,4 @@
-!$Id: eta_mask.F90,v 1.1 2002-05-02 14:01:18 gotm Exp $
+!$Id: eta_mask.F90,v 1.1.1.1 2002-05-02 14:01:18 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,8 +31,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: eta_mask.F90,v $
-!  Revision 1.1  2002-05-02 14:01:18  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:18  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.2  2001/04/21 09:41:33  bbh
 !  Partial fixed problem with workspace (ws) variables in ncdf_save_?d.F90 and various conversion programs

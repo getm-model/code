@@ -7,15 +7,15 @@ C
 
 C
 C
-C $Id: comturb.h,v 1.1 2002-05-02 14:01:56 gotm Exp $
+C $Id: comturb.h,v 1.1.1.1 2002-05-02 14:01:56 gotm Exp $
 C
 C
 
 C
 C
 C $Log: comturb.h,v $
-C Revision 1.1  2002-05-02 14:01:56  gotm
-C Initial revision
+C Revision 1.1.1.1  2002-05-02 14:01:56  gotm
+C recovering after CVS crash
 C
 C Revision 1.1.1.1  2001/04/17 08:43:08  bbh
 C initial import into CVS

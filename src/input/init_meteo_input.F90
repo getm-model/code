@@ -1,4 +1,4 @@
-!$Id: init_meteo_input.F90,v 1.1 2002-05-02 14:01:34 gotm Exp $
+!$Id: init_meteo_input.F90,v 1.1.1.1 2002-05-02 14:01:34 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,8 +28,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: init_meteo_input.F90,v $
-!  Revision 1.1  2002-05-02 14:01:34  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:34  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.2  2001/07/26 13:57:14  bbh
 !  Meteo working - needs some polishing

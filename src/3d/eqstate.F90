@@ -1,4 +1,4 @@
-!$Id: eqstate.F90,v 1.1 2002-05-02 14:00:59 gotm Exp $
+!$Id: eqstate.F90,v 1.1.1.1 2002-05-02 14:00:59 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,8 +22,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: eqstate.F90,v $
-!  Revision 1.1  2002-05-02 14:00:59  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:59  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.9  2001/10/17 13:56:02  bbh
 !  Density for Constance case

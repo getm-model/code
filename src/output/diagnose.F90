@@ -35,8 +35,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: diagnose.F90,v $
-!  Revision 1.1  2002-05-02 14:01:52  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:52  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1  2001/08/27 11:54:33  bbh
 !  TVD-advection for momentum added, some bugs removed

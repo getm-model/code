@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.1 2002-05-02 14:00:35 gotm Exp $
+#$Id: Makefile,v 1.1.1.1 2002-05-02 14:00:35 gotm Exp $
 #
 # Master Makefile for making the 'getm' executable.
 #

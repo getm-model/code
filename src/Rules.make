@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.1 2002-05-02 14:00:36 gotm Exp $
+#$Id: Rules.make,v 1.1.1.1 2002-05-02 14:00:36 gotm Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this

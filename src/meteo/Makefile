@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.1 2002-05-02 14:01:38 gotm Exp $
+#$Id: Makefile,v 1.1.1.1 2002-05-02 14:01:38 gotm Exp $
 # 
 # Makefile to build the meteo module - meteo.mod
 #

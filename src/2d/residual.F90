@@ -1,4 +1,4 @@
-!$Id: residual.F90,v 1.1 2002-05-02 14:00:45 gotm Exp $
+!$Id: residual.F90,v 1.1.1.1 2002-05-02 14:00:45 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,8 +27,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: residual.F90,v $
-!  Revision 1.1  2002-05-02 14:00:45  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:45  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.2  2001/05/03 19:35:01  bbh
 !  Use of variables_2d

@@ -1,4 +1,4 @@
-!$Id: uu_momentum_3d.F90,v 1.1 2002-05-02 14:00:56 gotm Exp $
+!$Id: uu_momentum_3d.F90,v 1.1.1.1 2002-05-02 14:00:56 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,8 +41,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uu_momentum_3d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:56  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:56  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.17  2001/10/26 09:11:28  bbh
 !  Stresses in meteo.F90 are in N/m2 - divide by rho_0 where necessary

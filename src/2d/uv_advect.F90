@@ -31,8 +31,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_advect.F90,v $
-!  Revision 1.1  2002-05-02 14:00:46  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:46  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.7  2001/08/27 11:53:13  bbh
 !  TVD-advection for momentum added, some bugs removed

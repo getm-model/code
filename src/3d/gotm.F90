@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.1 2002-05-02 14:00:54 gotm Exp $
+!$Id: gotm.F90,v 1.1.1.1 2002-05-02 14:00:54 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,8 +31,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: gotm.F90,v $
-!  Revision 1.1  2002-05-02 14:00:54  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:54  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.11  2001/10/23 07:06:43  bbh
 !  PARABOLIC VISCOSITY --> PARABOLIC_VISCOSITY

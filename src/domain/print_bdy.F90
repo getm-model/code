@@ -1,4 +1,4 @@
-!$Id: print_bdy.F90,v 1.1 2002-05-02 14:01:12 gotm Exp $
+!$Id: print_bdy.F90,v 1.1.1.1 2002-05-02 14:01:12 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,8 +26,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: print_bdy.F90,v $
-!  Revision 1.1  2002-05-02 14:01:12  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:12  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
 !  initial import into CVS

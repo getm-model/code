@@ -1,4 +1,4 @@
-!$Id: integration.F90,v 1.1 2002-05-02 14:01:25 gotm Exp $
+!$Id: integration.F90,v 1.1.1.1 2002-05-02 14:01:25 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,8 +20,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: integration.F90,v $
-!  Revision 1.1  2002-05-02 14:01:25  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:25  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.10  2001/10/26 09:11:28  bbh
 !  Stresses in meteo.F90 are in N/m2 - divide by rho_0 where necessary

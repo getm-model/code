@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.1 2002-05-02 14:00:51 gotm Exp $
+!$Id: m3d.F90,v 1.1.1.1 2002-05-02 14:00:51 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -42,8 +42,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:51  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:51  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.30  2001/10/26 09:13:24  bbh
 !  Only call slow_diffusion() if Am > 0.

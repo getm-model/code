@@ -1,4 +1,4 @@
-!$Id: coordinates.F90,v 1.1 2002-05-02 14:00:53 gotm Exp $
+!$Id: coordinates.F90,v 1.1.1.1 2002-05-02 14:00:53 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,8 +30,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: coordinates.F90,v $
-!  Revision 1.1  2002-05-02 14:00:53  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:53  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.15  2001/10/26 07:42:27  bbh
 !  Correct values for sigma and general cordinates in ga

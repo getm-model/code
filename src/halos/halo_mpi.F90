@@ -1,4 +1,4 @@
-!$Id: halo_mpi.F90,v 1.1 2002-05-02 14:01:30 gotm Exp $
+!$Id: halo_mpi.F90,v 1.1.1.1 2002-05-02 14:01:30 gotm Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -57,8 +57,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_mpi.F90,v $
-!  Revision 1.1  2002-05-02 14:01:30  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:30  gotm
+!  recovering after CVS crash
 !
 !
 ! !LOCAL VARIABLES:

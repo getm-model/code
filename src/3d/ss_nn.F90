@@ -1,4 +1,4 @@
-!$Id: ss_nn.F90,v 1.1 2002-05-02 14:00:55 gotm Exp $
+!$Id: ss_nn.F90,v 1.1.1.1 2002-05-02 14:00:55 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,8 +31,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: ss_nn.F90,v $
-!  Revision 1.1  2002-05-02 14:00:55  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:55  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.7  2001/10/12 09:22:10  bbh
 !  Removed some bugs

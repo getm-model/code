@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.1 2002-05-02 14:01:11 gotm Exp $
+!$Id: domain.F90,v 1.1.1.1 2002-05-02 14:01:11 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -48,8 +48,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.1  2002-05-02 14:01:11  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:11  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.19  2001/10/23 14:15:55  bbh
 !  Moved ga from coordinates.F90 to domain.F90

@@ -1,4 +1,4 @@
-!$Id: turb.F90,v 1.1 2002-05-02 14:01:57 gotm Exp $
+!$Id: turb.F90,v 1.1.1.1 2002-05-02 14:01:57 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,8 +47,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: turb.F90,v $
-!  Revision 1.1  2002-05-02 14:01:57  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:57  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
 !  initial import into CVS

@@ -1,4 +1,4 @@
-!$Id: get_field_ncdf.F90,v 1.1 2002-05-02 14:01:48 gotm Exp $
+!$Id: get_field_ncdf.F90,v 1.1.1.1 2002-05-02 14:01:48 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,8 +27,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: get_field_ncdf.F90,v $
-!  Revision 1.1  2002-05-02 14:01:48  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:48  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.3  2001/10/22 08:10:43  bbh
 !  De-allocate wrk #ifdef FORTRAN90

@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.1 2002-05-02 14:01:52 gotm Exp $
+!$Id: output.F90,v 1.1.1.1 2002-05-02 14:01:52 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -51,8 +51,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
-!  Revision 1.1  2002-05-02 14:01:52  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:52  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.8  2001/10/23 07:37:17  bbh
 !  Saving spm - if calc_spm and save_spm are both true

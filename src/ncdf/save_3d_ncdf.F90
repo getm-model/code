@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.1 2002-05-02 14:01:48 gotm Exp $
+!$Id: save_3d_ncdf.F90,v 1.1.1.1 2002-05-02 14:01:48 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,8 +34,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
-!  Revision 1.1  2002-05-02 14:01:48  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:48  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.4  2001/10/25 16:16:21  bbh
 !  No actual storing of data in init_3d_ncdf.F90 -> save_3d_ncdf.F90

@@ -1,4 +1,4 @@
-!$Id: bdy_spec.F90,v 1.1 2002-05-02 14:01:11 gotm Exp $
+!$Id: bdy_spec.F90,v 1.1.1.1 2002-05-02 14:01:11 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,8 +26,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bdy_spec.F90,v $
-!  Revision 1.1  2002-05-02 14:01:11  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:11  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.2  2001/09/01 17:12:13  bbh
 !  Removed a STDERR

@@ -1,4 +1,4 @@
-!$Id: short_wave_radiation.F90,v 1.1 2002-05-02 14:01:39 gotm Exp $
+!$Id: short_wave_radiation.F90,v 1.1.1.1 2002-05-02 14:01:39 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,8 +35,8 @@
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: short_wave_radiation.F90,v $
-!  Revision 1.1  2002-05-02 14:01:39  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:39  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1  2001/07/26 14:35:18  bbh
 !  initial import into CVS

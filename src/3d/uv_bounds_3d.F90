@@ -1,4 +1,4 @@
-!$Id: uv_bounds_3d.F90,v 1.1 2002-05-02 14:01:00 gotm Exp $
+!$Id: uv_bounds_3d.F90,v 1.1.1.1 2002-05-02 14:01:00 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,8 +26,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_bounds_3d.F90,v $
-!  Revision 1.1  2002-05-02 14:01:00  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:00  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.3  2001/05/03 20:12:31  bbh
 !  Use of variables_3d

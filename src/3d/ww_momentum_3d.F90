@@ -1,4 +1,4 @@
-!$Id: ww_momentum_3d.F90,v 1.1 2002-05-02 14:00:57 gotm Exp $
+!$Id: ww_momentum_3d.F90,v 1.1.1.1 2002-05-02 14:00:57 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,8 +30,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: ww_momentum_3d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:57  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:57  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.6  2001/08/27 11:50:17  bbh
 !  TVD-advection for momentum added, some bugs removed

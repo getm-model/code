@@ -1,4 +1,4 @@
-!$Id: ver_interpol.F90,v 1.1 2002-05-02 14:01:17 gotm Exp $
+!$Id: ver_interpol.F90,v 1.1.1.1 2002-05-02 14:01:17 gotm Exp $
 #include"cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -33,8 +33,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ver_interpol.F90,v $
-!  Revision 1.1  2002-05-02 14:01:17  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:17  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.2  2001/08/29 11:21:46  bbh
 !  namelists read in salinity and temperature + initialisation

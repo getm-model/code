@@ -1,4 +1,4 @@
-!$Id: divergence.F90,v 1.1 2002-05-02 14:00:43 gotm Exp $
+!$Id: divergence.F90,v 1.1.1.1 2002-05-02 14:00:43 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,8 +30,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: divergence.F90,v $
-!  Revision 1.1  2002-05-02 14:00:43  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:43  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.4  2001/08/01 08:25:52  bbh
 !  CURVILINEAR now implemented

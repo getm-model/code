@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.1 2002-05-02 14:00:58 gotm Exp $
+!$Id: salinity.F90,v 1.1.1.1 2002-05-02 14:00:58 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,8 +34,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: salinity.F90,v $
-!  Revision 1.1  2002-05-02 14:00:58  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:58  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.12  2001/09/03 20:04:21  bbh
 !  Allow individual advection settings for momentum, salinity and temperature

@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.1 2002-05-02 14:01:04 gotm Exp $
+#$Id: Makefile,v 1.1.1.1 2002-05-02 14:01:04 gotm Exp $
 # 
 # Makefile to build utilities written in C - libmcutils.a
 #

@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.1 2002-05-02 14:01:47 gotm Exp $
+!$Id: ncdf_topo.F90,v 1.1.1.1 2002-05-02 14:01:47 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,8 +34,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_topo.F90,v $
-!  Revision 1.1  2002-05-02 14:01:47  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:47  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.5  2001/10/22 12:07:05  bbh
 !  Reading curvi-linear specific fields

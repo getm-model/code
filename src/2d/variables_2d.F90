@@ -1,4 +1,4 @@
-!$Id: variables_2d.F90,v 1.1 2002-05-02 14:00:47 gotm Exp $
+!$Id: variables_2d.F90,v 1.1.1.1 2002-05-02 14:00:47 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,8 +31,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: variables_2d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:47  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:47  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1  2001/05/03 19:30:41  bbh
 !  2D variables seperated from m2d

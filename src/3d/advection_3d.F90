@@ -48,8 +48,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: advection_3d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:58  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:58  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.18  2001/09/19 13:53:08  bbh
 !  Typo

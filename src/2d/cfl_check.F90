@@ -1,4 +1,4 @@
-!$Id: cfl_check.F90,v 1.1 2002-05-02 14:00:41 gotm Exp $
+!$Id: cfl_check.F90,v 1.1.1.1 2002-05-02 14:00:41 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,8 +31,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: cfl_check.F90,v $
-!  Revision 1.1  2002-05-02 14:00:41  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:41  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.7  2001/09/19 11:25:14  gotm
 !  Removed E2DFIELD when de-allocating lmask

@@ -1,4 +1,4 @@
-!$Id: slow_bottom_friction.F90,v 1.1 2002-05-02 14:00:55 gotm Exp $
+!$Id: slow_bottom_friction.F90,v 1.1.1.1 2002-05-02 14:00:55 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,8 +27,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: slow_bottom_friction.F90,v $
-!  Revision 1.1  2002-05-02 14:00:55  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:55  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.3  2001/06/22 08:19:10  bbh
 !  Compiler options such as USE_MASK and OLD_DRY deleted.

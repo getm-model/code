@@ -1,4 +1,4 @@
-!$Id: update_2d_bdy.F90,v 1.1 2002-05-02 14:00:45 gotm Exp $
+!$Id: update_2d_bdy.F90,v 1.1.1.1 2002-05-02 14:00:45 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,8 +28,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: update_2d_bdy.F90,v $
-!  Revision 1.1  2002-05-02 14:00:45  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:45  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.8  2001/10/17 13:15:35  bbh
 !  Cleaning

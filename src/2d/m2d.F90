@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.1 2002-05-02 14:00:41 gotm Exp $
+!$Id: m2d.F90,v 1.1.1.1 2002-05-02 14:00:41 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -42,8 +42,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m2d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:41  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:41  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.11  2001/10/22 11:55:30  bbh
 !  Only call uv_diffusion() if Am > zero

@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.1 2002-05-02 14:00:45 gotm Exp $
+!$Id: sealevel.F90,v 1.1.1.1 2002-05-02 14:00:45 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,8 +32,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: sealevel.F90,v $
-!  Revision 1.1  2002-05-02 14:00:45  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:00:45  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.9  2001/10/22 11:56:44  bbh
 !  NOMADS_TEST kk =1.0 included

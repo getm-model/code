@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.1 2002-05-02 14:00:52 gotm Exp $
+#$Id: Makefile,v 1.1.1.1 2002-05-02 14:00:52 gotm Exp $
 #
 # Makefile to build the 3D specific library - libm3d.a
 #

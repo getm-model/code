@@ -1,4 +1,4 @@
-!$Id: init_3d_ncdf.F90,v 1.1 2002-05-02 14:01:46 gotm Exp $
+!$Id: init_3d_ncdf.F90,v 1.1.1.1 2002-05-02 14:01:46 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,8 +27,8 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_3d_ncdf.F90,v $
-!  Revision 1.1  2002-05-02 14:01:46  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:46  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.7  2001/10/25 16:16:20  bbh
 !  No actual storing of data in init_3d_ncdf.F90 -> save_3d_ncdf.F90

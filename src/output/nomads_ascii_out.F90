@@ -32,8 +32,8 @@
 !  Original author(s): Karsten Bolding & Adolf Stips
 !
 !  $Log: nomads_ascii_out.F90,v $
-!  Revision 1.1  2002-05-02 14:01:53  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:53  gotm
+!  recovering after CVS crash
 !
 !
 ! !LOCAL VARIABLES:

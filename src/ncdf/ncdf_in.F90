@@ -1,4 +1,4 @@
-!$Id: ncdf_in.F90,v 1.1 2002-05-02 14:01:47 gotm Exp $
+!$Id: ncdf_in.F90,v 1.1.1.1 2002-05-02 14:01:47 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,8 +26,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_in.F90,v $
-!  Revision 1.1  2002-05-02 14:01:47  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:47  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.6  2001/05/25 19:26:22  bbh
 !  ncdf_meteo.F90

@@ -1,4 +1,4 @@
-!$Id: init_2d_bdy.F90,v 1.1 2002-05-02 14:01:33 gotm Exp $
+!$Id: init_2d_bdy.F90,v 1.1.1.1 2002-05-02 14:01:33 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,8 +27,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: init_2d_bdy.F90,v $
-!  Revision 1.1  2002-05-02 14:01:33  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:33  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.5  2001/09/19 11:20:32  bbh
 !  Explicit de-allocates memory when -DFORTRAN90

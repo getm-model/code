@@ -1,4 +1,4 @@
-!$Id: grid_interpol.F90,v 1.1 2002-05-02 14:01:21 gotm Exp $
+!$Id: grid_interpol.F90,v 1.1.1.1 2002-05-02 14:01:21 gotm Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -30,8 +30,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: grid_interpol.F90,v $
-!  Revision 1.1  2002-05-02 14:01:21  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:21  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.3  2001/09/30 09:06:00  bbh
 !  Cleaned up

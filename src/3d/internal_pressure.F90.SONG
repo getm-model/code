@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90.SONG,v 1.1 2002-05-02 14:01:01 gotm Exp $
+!$Id: internal_pressure.F90.SONG,v 1.1.1.1 2002-05-02 14:01:01 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,8 +30,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: internal_pressure.F90.SONG,v $
-!  Revision 1.1  2002-05-02 14:01:01  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:01  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.15  2001/10/22 08:23:53  bbh
 !  Removed reference to kplus and kminus when not -DPRESS_GRAD_Z

@@ -1,4 +1,4 @@
-!$Id: get_field.F90,v 1.1 2002-05-02 14:01:33 gotm Exp $
+!$Id: get_field.F90,v 1.1.1.1 2002-05-02 14:01:33 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,8 +29,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: get_field.F90,v $
-!  Revision 1.1  2002-05-02 14:01:33  gotm
-!  Initial revision
+!  Revision 1.1.1.1  2002-05-02 14:01:33  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1  2001/05/10 11:33:48  bbh
 !  Added wrapper - get_field
