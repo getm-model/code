@@ -1,4 +1,4 @@
-!$Id: exchange_coefficients.F90,v 1.4 2003-07-01 16:38:34 kbk Exp $
+!$Id: exchange_coefficients.F90,v 1.5 2003-10-01 12:10:05 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -54,7 +54,10 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: exchange_coefficients.F90,v $
-!  Revision 1.4  2003-07-01 16:38:34  kbk
+!  Revision 1.5  2003-10-01 12:10:05  kbk
+!  hum_method=1 (specific humidity) now works correctly
+!
+!  Revision 1.4  2003/07/01 16:38:34  kbk
 !  cleaned code - new methods
 !
 !  Revision 1.3  2003/04/23 12:05:50  kbk
@@ -126,35 +129,44 @@
 
 !  saturation vapor pressure - using SST as temperature
 !  various formulations are available
-!  I've tested in a spread sheet - give almost the same
-#if 1
+!  I've tested in a spread sheet - they give almost the same
+!  result
+!  for hum_method=2 the calculation of es can be substituted
+!  by any of the formlaes below.
+#if 0
 !  http://www.cdc.noaa.gov/coads/software/other/profs_short
    es = a1 +tw*(a2+tw*(a3+tw*(a4+tw*(a5+tw*(a6+tw*a7)))))
    es = es * 100.0 ! Conversion millibar --> Pascal
-#endif
-#if 0
+
 !  http://www.cdc.noaa.gov/coads/software/other/profs_short
    es = 100.*const06*exp(17.67*tw/(tw+243.5))
-#endif
-#if 0
+
 !  http://www.usatoday.com/weather/whumcalc.htm
    es = 6.11*10.0**(7.5*tw/(237.7+tw))
-#endif
-#if 0
+
 !  From the HAMSOM model
    es  = 611.21*exp((18.729 - (min(tw_k,300.)-273.15)/227.3)*       &
          (min(tw_k,300.)-273.15)/(max(tw_k,200.)-273.15+257.87))
 #endif
 
-!  saturation specific humidity
-   qs = const06*es/(airp-0.377*es)
-
 !  see ../ncdf/ncdf_meteo.F90 for defined constants
    select case (hum_method)
    case (1)
-      qa = hum
+      qs = hum
+      es=qs*(airp/100.)/(const06+0.377*qs)
+      ea=6.112*exp(17.67*ta/(ta+243.5))
+#if 1
+      qa=es/ea*qs
+#else
+      rh=100.*es/ea
+      qa=0.01*rh*qs
+#endif
    case (2)
       rh = hum
+      es = a1 +tw*(a2+tw*(a3+tw*(a4+tw*(a5+tw*(a6+tw*a7)))))
+      es = es * 100.0 ! Conversion millibar --> Pascal
+!     saturation specific humidity
+      qs = const06*es/(airp-0.377*es)
       qa = 0.01*rh*qs
    case (3)
       ! Piece of code taken from HAMSOM for calculating relative
@@ -166,7 +178,7 @@
             (min(dew,300.)-273.15)/(max(dew,200.)-273.15+257.87))
       es  = 611.21*exp((18.729 - (min(ta_k,300.)-273.15)/227.3)*     &
             (min(ta_k,300.)-273.15)/(max(ta_k,200.)-273.15+257.87))
-      rh = ea/es * 100.
+      rh = 100.*ea/es * 100.
       qa = 0.01*rh*qs
    case (4)
       STDERR 'Should be checked - kbk'

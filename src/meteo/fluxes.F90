@@ -1,4 +1,4 @@
-!$Id: fluxes.F90,v 1.5 2003-07-01 16:38:34 kbk Exp $
+!$Id: fluxes.F90,v 1.6 2003-10-01 12:10:05 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,7 +43,10 @@
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: fluxes.F90,v $
-!  Revision 1.5  2003-07-01 16:38:34  kbk
+!  Revision 1.6  2003-10-01 12:10:05  kbk
+!  hum_method=1 (specific humidity) now works correctly
+!
+!  Revision 1.5  2003/07/01 16:38:34  kbk
 !  cleaned code - new methods
 !
 !  Revision 1.4  2003/06/17 14:53:28  kbk
@@ -108,11 +111,6 @@
       case default
    end select
 
-#if 0
-   hf = -qb
-   hf = -qh
-   hf = -qe
-#endif
    hf = -(qe+qh+qb)
 
    tmp   = cd_mom*rho_air*w
