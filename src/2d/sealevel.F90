@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.4 2003-04-23 12:09:44 kbk Exp $
+!$Id: sealevel.F90,v 1.5 2003-12-16 12:32:42 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,7 +32,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: sealevel.F90,v $
-!  Revision 1.4  2003-04-23 12:09:44  kbk
+!  Revision 1.5  2003-12-16 12:32:42  kbk
+!  removed #ifdef SALTWEDGE_TEST (manuel)
+!
+!  Revision 1.4  2003/04/23 12:09:44  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.3  2003/04/07 15:44:13  kbk
@@ -107,10 +110,6 @@
 	       kk=0.0625
 	       if ((((i.eq.4).or.(i.eq.imax-3)).and.(j.ge.4).and.(j.le.jmax-3)).or.(((j.eq.4).or.(j.eq.jmax-3)).and.(i.ge.4).and.(i.le.imax-3))) &
 	       z(i,j)=(1.-kk)*z(i,j)
-#endif
-#ifdef SALTWEDGE_TEST
-!   z(imax,:)=z(imax-1,:)
-    z(imax-1,2)= z(imax-1,2) + 700. * dtm / dx / dy
 #endif
          end if
       end do
