@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.3 2003-04-23 12:07:12 kbk Exp $
+!$Id: output.F90,v 1.4 2003-09-03 05:55:13 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -51,7 +51,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
-!  Revision 1.3  2003-04-23 12:07:12  kbk
+!  Revision 1.4  2003-09-03 05:55:13  kbk
+!  continuous=.false. - allows change of dt
+!
+!  Revision 1.3  2003/04/23 12:07:12  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 12:32:58  kbk
@@ -318,7 +321,7 @@
 !
 ! !LOCAL VARIABLES
    integer, save             :: n=0
-   logical, save             :: continuous=.true.
+   logical, save             :: continuous=.false.
    integer                   :: n,jd,secs 
    REALTYPE                  :: dt
 !
@@ -394,18 +397,19 @@
       else
          if (jd .ne. julianday .or. secs .ne. secondsofday) then
             FATAL 'start time given in getm.inp does not match time'
-            FATAL 'read from hot start file'
+            FATAL 'read from hot-start file'
             stop 'restart_file()'
          end if
          if (dt .ne. timestep) then
             LEVEL3 ''
+            LEVEL3 'INFO:'
             LEVEL3 'time step changed between hotstart file and value '
             LEVEL3 'given in getm.inp (this is OK - but beware when post-'
             LEVEL3 'processing)'
             LEVEL3 ''
          end if
          loop = 0
-         julianday=jd; secondsofday=secs; timestep=dt;
+         julianday=jd; secondsofday=secs
       end if
    end if
 #ifdef DEBUG
