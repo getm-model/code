@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.2 2003-04-07 12:43:12 kbk Exp $
+!$Id: save_3d_ncdf.F90,v 1.3 2003-04-23 11:53:24 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -14,6 +14,9 @@
    use ncdf_3d
    use domain, only: ioff,joff,imin,imax,jmin,jmax
    use domain, only: H,au,av,min_depth
+#if defined(SPHERICAL)
+   use domain, only: lonc,latc
+#endif
 #if ! defined(SPHERICAL)
    use domain, only: xc,yc
 #endif
@@ -41,7 +44,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
-!  Revision 1.2  2003-04-07 12:43:12  kbk
+!  Revision 1.3  2003-04-23 11:53:24  kbk
+!  save lat/lon info for spherical grid
+!
+!  Revision 1.2  2003/04/07 12:43:12  kbk
 !  SPHERICAL and NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:48  gotm
@@ -61,11 +67,11 @@
 !
 !
 ! !LOCAL VARIABLES:
-   integer      :: err
-   integer	:: start(4),edges(4)
-   integer, save        :: n3d=0
-   REALTYPE, parameter	:: x=-1025./9.82
-   integer	:: i,j,k,itmp(1)
+   integer                   :: err
+   integer                   :: start(4),edges(4)
+   integer, save             :: n3d=0
+   REALTYPE, parameter       :: x=-1025./9.82
+   integer                   :: i,j,k,itmp(1)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -96,11 +102,9 @@
       if (err .NE. NF_NOERR) go to 10
 
 !     save coordinate information
-
       select case (grid_type)
-#ifndef CURVILINEAR
-         case (1,2)
-#if ! defined(SPHERICAL)
+         case (1)
+#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
             do i=imin,imax
                ws(i) = xc(i)
             end do
@@ -112,8 +116,21 @@
             err = nf_put_var_real(ncid,yc_id,ws)
             if (err .NE. NF_NOERR) go to 10
 #endif
-#else
+         case (2)
+#if defined(SPHERICAL)
+            do i=imin,imax
+               ws(i) = lonc(i,1)
+            end do
+            err = nf_put_var_real(ncid,lonc_id,ws)
+            if (err .NE. NF_NOERR) go to 10
+            do j=jmin,jmax
+               ws(j) = latc(1,j)
+            end do
+            err = nf_put_var_real(ncid,latc_id,ws)
+            if (err .NE. NF_NOERR) go to 10
+#endif
          case (3)
+#if defined(CURVILINEAR)
             STDERR 'xc and yc are read from input file directly'
 #endif
          case default
