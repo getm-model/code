@@ -1,4 +1,4 @@
-!$Id: depth_update.F90,v 1.3 2003-04-23 12:09:43 kbk Exp $
+!$Id: depth_update.F90,v 1.4 2003-05-12 09:22:39 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -14,7 +14,6 @@
    use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth,crit_depth
    use domain, only: az,au,av,dry_z,dry_u,dry_v
    use variables_2d, only: D,z,zo,DU,zu,DV,zv
-   use halo_zones, only : update_2d_halo,wait_halo,D_TAG,DU_TAG,DV_TAG
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -27,7 +26,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: depth_update.F90,v $
-!  Revision 1.3  2003-04-23 12:09:43  kbk
+!  Revision 1.4  2003-05-12 09:22:39  kbk
+!  no use of update_2d_halo, expand loop boundaries instead
+!
+!  Revision 1.3  2003/04/23 12:09:43  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 15:27:00  kbk
@@ -69,9 +71,12 @@
 
 #undef USE_MASK
 
+!  Depth in elevation points
+   D = z+H
+
 !  U-points
-   do j=jmin,jmax
-      do i=imin,imax
+   do j=jmin-1,jmax+1
+      do i=imin-1,imax+1
 #ifdef USE_MASK
          if(au(i,j) .gt. 0) then
 #endif
@@ -84,11 +89,9 @@
       end do
    end do
 
-   call update_2d_halo(DU,DU,au,imin,jmin,imax,jmax,DU_TAG)
-
 !  V-points
-   do j=jmin,jmax
-      do i=imin,imax
+   do j=jmin-1,jmax+1
+      do i=imin-1,imax+1
 #ifdef USE_MASK
          if(av(i,j) .gt. 0) then
 #endif
@@ -100,17 +103,6 @@
 #endif
       end do
    end do
-
-   call wait_halo(DU_TAG)
-!KBK   call cp_outside_openbdy_2d(DU)
-
-   call update_2d_halo(DV,DV,av,imin,jmin,imax,jmax,DV_TAG)
-
-!  Depth in elevation points
-   D = z+H
-
-   call wait_halo(DV_TAG)
-!KBK   call cp_outside_openbdy_2d(DV)
 
    d1 = 2*min_depth
    d2 = crit_depth-2*min_depth

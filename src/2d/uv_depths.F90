@@ -1,4 +1,4 @@
-!$Id: uv_depths.F90,v 1.5 2003-04-23 12:09:44 kbk Exp $
+!$Id: uv_depths.F90,v 1.6 2003-05-12 09:22:39 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,7 +13,6 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV
    use variables_2d, only: DU,DV
-   use halo_zones, only: update_2d_halo,wait_halo,HU_TAG,HV_TAG
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -26,7 +25,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_depths.F90,v $
-!  Revision 1.5  2003-04-23 12:09:44  kbk
+!  Revision 1.6  2003-05-12 09:22:39  kbk
+!  no use of update_2d_halo, expand loop boundaries instead
+!
+!  Revision 1.5  2003/04/23 12:09:44  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.4  2003/04/07 15:47:50  kbk
@@ -59,8 +61,8 @@
    write(0,*) 'uv_depths() # ',Ncall
 #endif
 
-   do j=jmin,jmax
-      do i=imin,imax
+   do j=jmin-1,jmax+1
+      do i=imin-1,imax+1
 #ifdef MIN_VEL_DEPTH
          HU(i,j)=min(H(i,j),H(i+1,j))
          HV(i,j)=min(H(i,j),H(i,j+1))
@@ -70,12 +72,6 @@
 #endif
       end do
    end do
-
-   call update_2d_halo(HU,HU,au,imin,jmin,imax,jmax,HU_TAG)
-   call wait_halo(HU_TAG)
-
-   call update_2d_halo(HV,HV,av,imin,jmin,imax,jmax,HV_TAG)
-   call wait_halo(HV_TAG)
 
 #ifdef DEBUG
    write(0,*) 'Leaving uv_depths()'
