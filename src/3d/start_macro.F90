@@ -1,4 +1,4 @@
-!$Id: start_macro.F90,v 1.6 2003-08-03 08:54:58 kbk Exp $
+!$Id: start_macro.F90,v 1.7 2004-01-05 12:43:22 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,11 +11,10 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use halo_zones, only: update_2d_halo,z_TAG,U_TAG,V_TAG
-   use domain,   only: iimin,iimax,jjmin,jjmax,H,HU,HV,min_depth
-   use m2d,      only: MM,z,Uint,Vint
-   use m3d,      only: M,dt
-   use variables_3d,      only: sseo,ssen,ssuo,ssun,ssvo,ssvn
+   use domain, only: iimin,iimax,jjmin,jjmax,H,HU,HV,min_depth
+   use m2d, only: z,Uint,Vint
+   use m3d, only: M
+   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -28,7 +27,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: start_macro.F90,v $
-!  Revision 1.6  2003-08-03 08:54:58  kbk
+!  Revision 1.7  2004-01-05 12:43:22  kbk
+!  cleanned
+!
+!  Revision 1.6  2003/08/03 08:54:58  kbk
 !  used HALO in loop boundaries
 !
 !  Revision 1.5  2003/04/23 12:16:34  kbk
@@ -76,14 +78,9 @@
       do i=iimin-HALO,iimax+HALO      ! elevation for macro time step
          sseo(i,j)=ssen(i,j)
          ssen(i,j)=z(i,j)
-! This does not work for Sylt - pointed out by Manuel - why? 
-#if 1
-         ssen(i,j)=max(ssen(i,j),-H(i,j)+min_depth)
-#endif
       end do
    end do
 
-#if 1
    do j=jjmin-HALO,jjmax+HALO             ! Same for U-points
       do i=iimin-HALO,iimax+HALO-1
          ssuo(i,j)=ssun(i,j)
@@ -99,31 +96,6 @@
          ssvn(i,j)=max(ssvn(i,j),-HV(i,j)+min_depth)
       end do
    end do
-#else
-   do j=jjmin,jjmax             ! Same for U-points
-      ssuo(iimin-1,j)=ssun(iimin-1,j)
-      ssun(iimin-1,j)=ssun(iimin,j)
-      do i=iimin,iimax-1
-         ssuo(i,j)=ssun(i,j)
-         ssun(i,j)=0.25*(sseo(i,j)+sseo(i+1,j)+ssen(i,j)+ssen(i+1,j))
-         ssun(i,j)=max(ssun(i,j),-HU(i,j)+min_depth)
-      end do
-      ssuo(iimax,j)=ssun(iimax,j)
-      ssun(iimax,j)=ssun(iimax-1,j)
-   end do
-
-   do i=iimin,iimax             ! Same for V-points
-      ssvo(i,jjmin-1)=ssvn(i,jjmin-1)
-      ssvn(i,jjmin-1)=ssvn(i,jjmin)
-      do j=jjmin,jjmax-1
-         ssvo(i,j)=ssvn(i,j)
-         ssvn(i,j)=0.25*(sseo(i,j)+sseo(i,j+1)+ssen(i,j)+ssen(i,j+1))
-         ssvn(i,j)=max(ssvn(i,j),-HV(i,j)+min_depth)
-      end do
-      ssvo(i,jjmax)=ssvn(i,jjmax)
-      ssvn(i,jjmax)=ssvn(i,jjmax-1)
-   end do
-#endif
 
 ! Defining vertically integrated, conservative
 ! u- and v-transport for macro time step
