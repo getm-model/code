@@ -1,4 +1,4 @@
-!$Id: read_field_ncdf.F90,v 1.5 2003-08-03 08:29:28 kbk Exp $
+!$Id: read_field_ncdf.F90,v 1.6 2004-09-16 14:32:25 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,7 +31,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: read_field_ncdf.F90,v $
-!  Revision 1.5  2003-08-03 08:29:28  kbk
+!  Revision 1.6  2004-09-16 14:32:25  kbk
+!  now reads 1-layer fields
+!
+!  Revision 1.5  2003/08/03 08:29:28  kbk
 !  use right order of dimensions - need to do x,y names correct
 !
 !  Revision 1.4  2003/05/06 16:25:16  kbk
@@ -131,12 +134,14 @@
       stop 'read_field_ncdf()'
    end if
 
-   err = nf_inq_varid(ncid,"zax",var_id)
-   if (err .NE. NF_NOERR) go to 10
-   allocate(zax(kh),stat=rc)
-   if (rc /= 0) stop 'read_field_ncdf: Error allocating zax'
-   err = nf_get_var_real(ncid,var_id,zax)
-   if (err .NE. NF_NOERR) go to 10
+   if (kh .gt. 1) then
+      err = nf_inq_varid(ncid,"zax",var_id)
+      if (err .NE. NF_NOERR) go to 10
+      allocate(zax(kh),stat=rc)
+      if (rc /= 0) stop 'read_field_ncdf: Error allocating zax'
+      err = nf_get_var_real(ncid,var_id,zax)
+      if (err .NE. NF_NOERR) go to 10
+   end if
 
 #if 0
    err = nf_inq_varid(ncid,"time",var_id)
@@ -178,26 +183,36 @@
    err = nf_get_vara_real(ncid,var_id,start,edges,wrk)
    if (err .NE. NF_NOERR) go to 10
 
-   allocate(zax_2d(kh),stat=rc)
-   if (rc /= 0) stop 'read_field_ncdf: Error allocating zax_2d'
-   do k=1,kh
-      zax_2d(k) = -zax(kh-k+1)
-   end do
+   if (kh .gt. 1) then
+      allocate(zax_2d(kh),stat=rc)
+      if (rc /= 0) stop 'read_field_ncdf: Error allocating zax_2d'
+      do k=1,kh
+         zax_2d(k) = -zax(kh-k+1)
+      end do
 
-   allocate(wrk_2d(iimin:iimax,jjmin:jjmax,kh),stat=rc)
-   if (rc /= 0) stop 'read_field_ncdf: Error allocating wrk_2d'
-   indx = 1
-   do k=1,kh
+      allocate(wrk_2d(iimin:iimax,jjmin:jjmax,kh),stat=rc)
+      if (rc /= 0) stop 'read_field_ncdf: Error allocating wrk_2d'
+      indx = 1
+      do k=1,kh
+         do j=jl,jh
+            do i=il,ih
+               wrk_2d(i-il+iloc,j-jl+jloc,k) = wrk(indx)
+               indx = indx+1
+            end do
+         end do
+      end do
+
+      call kbk_interpol(kh,zax_2d,wrk_2d,imin,jmin,imax,jmax,az,H, &
+                        iimin,jjmin,iimax,jjmax,kmax,hn,f)
+   else
+      indx = 1
       do j=jl,jh
          do i=il,ih
-            wrk_2d(i-il+iloc,j-jl+jloc,k) = wrk(indx)
+            f(i-il+iloc,j-jl+jloc,:) = wrk(indx)
             indx = indx+1
          end do
       end do
-   end do
-
-   call kbk_interpol(kh,zax_2d,wrk_2d,imin,jmin,imax,jmax,az,H, &
-                     iimin,jjmin,iimax,jjmax,kmax,hn,f)
+   end if
 
    err = nf_close(ncid)
    if (err .NE. NF_NOERR) go to 10
