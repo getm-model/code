@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.4 2003-04-23 12:16:34 kbk Exp $
+!$Id: temperature.F90,v 1.5 2003-08-03 08:13:09 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,7 +35,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: temperature.F90,v $
-!  Revision 1.4  2003-04-23 12:16:34  kbk
+!  Revision 1.5  2003-08-03 08:13:09  kbk
+!  added field_no to namelist
+!
+!  Revision 1.4  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.3  2003/04/07 13:36:38  kbk
@@ -124,10 +127,10 @@
    integer                   :: k,i,j,n
    integer, parameter        :: nmax=3100
    REALTYPE                  :: zlev(nmax),prof(nmax)
-   integer                   :: field_no=12
+   integer                   :: field_no=1
    NAMELIST /temp/ &
              temp_method,temp_const,temp_file,              &
-             temp_format,temp_name,                         &
+             temp_format,temp_name,field_no,                &
              temp_hor_adv,temp_ver_adv,temp_strang,temp_AH
 !EOP
 !-------------------------------------------------------------------------
