@@ -1,4 +1,4 @@
-!$Id: momentum.F90,v 1.1 2002-05-02 14:00:44 gotm Exp $
+!$Id: momentum.F90,v 1.2 2003-03-20 15:51:00 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,8 +28,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: momentum.F90,v $
-!  Revision 1.1  2002-05-02 14:00:44  gotm
-!  Initial revision
+!  Revision 1.2  2003-03-20 15:51:00  gotm
+!  cleaned + added masked fU/fV = 0. in Coriolis calc
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:44  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.8  2001/10/26 09:11:28  bbh
 !  Stresses in meteo.F90 are in N/m2 - divide by rho_0 where necessary
@@ -99,7 +102,7 @@
    use domain,       only: dxu,arvd1,dxc,dyx
    use variables_2d, only: V
 #else
-   use domain,       only: dx
+   use domain,       only: dx,av
 #endif
    use m2d, only: dtm
    use m2d, only: D,z,UEx,U,DU,fV,SlUx,SlRu,ru,fU,DV,uavg
@@ -137,7 +140,7 @@
             zp=max(z(i+1,j),-H(i  ,j)+min(min_depth,D(i+1,j)))
             zm=max(z(i  ,j),-H(i+1,j)+min(min_depth,D(i  ,j)))
             zx(i,j)=(zp-zm+(airp(i+1,j)-airp(i,j))/gamma)/DXU
-	    tausu(i,j)=0.5*(tausx(i,j)+tausx(i+1,j))
+            tausu(i,j)=0.5*(tausx(i,j)+tausx(i+1,j))
          end if
       end do
    end do
@@ -148,6 +151,7 @@
    where (U.le.0)
       Slr=min(Slru, _ZERO_ )
    end where
+
    where ((au .eq. 1).or.(au .eq. 2))
       U=(U-dtm*(g*DU*zx+dry_u*(-tausu/rho_0-fV+UEx+SlUx+Slr)))/(1+dtm*ru/DU)
    end where
@@ -160,26 +164,29 @@
 
 !  now u is calculated
    call update_2d_halo(U,U,au,imin,jmin,imax,jmax,U_TAG)
-
    call wait_halo(U_TAG)
 
 ! Semi-implicit treatment of Coriolis force for V-momentum eq.
    do j=jmin,jmax
       do i=imin,imax
+         if(av(i,j) .ge. 1) then
 ! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
-         Uloc=( U(i,j  )/sqrt(DU(i,j  ))+ U(i-1,j  )/sqrt(DU(i-1,j  ))   &
-              + U(i,j+1)/sqrt(DU(i,j+1))+ U(i-1,j+1)/sqrt(DU(i-1,j+1)))  &
-              *0.25*sqrt(DV(i,j))
+            Uloc=( U(i,j  )/sqrt(DU(i,j  ))+ U(i-1,j  )/sqrt(DU(i-1,j  ))   &
+                 + U(i,j+1)/sqrt(DU(i,j+1))+ U(i-1,j+1)/sqrt(DU(i-1,j+1)))  &
+                 *0.25*sqrt(DV(i,j))
 #else
-         Uloc=0.25*( U(i,j)+ U(i-1,j)+ U(i,j+1)+ U(i-1,j+1))
+            Uloc=0.25*( U(i,j)+ U(i-1,j)+ U(i,j+1)+ U(i-1,j+1))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         fU(i,j)=(V(i,j)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC))/DV(i,j)*ARVD1
+            fU(i,j)=(V(i,j)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC))/DV(i,j)*ARVD1
 #else
-         fU(i,j)= _ZERO_
+            fU(i,j)= _ZERO_
 #endif
-         fU(i,j)=(fU(i,j)+corv(i,j))*Uloc
+            fU(i,j)=(fU(i,j)+corv(i,j))*Uloc
+         else
+            fU(i,j) = _ZERO_
+         end if
       end do
    end do
 
@@ -210,7 +217,7 @@
    use domain,     only: dyv,arud1,dxx,dyc
    use m2d,        only: U
 #else
-   use domain,     only: dy
+   use domain,     only: dy,au
 #endif
    use m2d,        only: dtm,D,z,VEx,V,DV,fU,SlVx,SlRv,rv,fV,DU
    use m2d,        only: vavg
@@ -242,14 +249,13 @@
 #endif
 
    n = n+1
-
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .gt. 0) then
             zp=max(z(i,j+1),-H(i,j  )+min(min_depth,D(i,j+1)))
             zm=max(z(i,j  ),-H(i,j+1)+min(min_depth,D(i,j  )))
             zy(i,j)=(zp-zm+(airp(i,j+1)-airp(i,j))/gamma)/DYV
-	    tausv(i,j)=0.5*(tausy(i,j)+tausy(i,j+1))
+            tausv(i,j)=0.5*(tausy(i,j)+tausy(i,j+1))
          end if
       end do
    end do
@@ -260,6 +266,7 @@
    where (V.le.0)
       Slr=min(Slrv, _ZERO_ )
    end where
+
    where ((av .eq. 1).or.(av .eq. 2))
       V=(V-dtm*(g*DV*zy+dry_v*(-tausv/rho_0+fU+VEx+SlVx+Slr)))/(1+dtm*rv/DV)
    end where
@@ -269,28 +276,33 @@
       if (av(imax,j).eq.3) V(imax,j)=V(imax-1,j)
    end do
 
+STDERR 'V: ',V(24,1),zy(24,1),zy(24,2)
+
 !  now v is calculated
    call update_2d_halo(V,V,av,imin,jmin,imax,jmax,V_TAG)
-
    call wait_halo(V_TAG)
 
 !  Semi-implicit treatment of Coriolis force for U-momentum eq.
    do j=jmin,jmax
       do i=imin,imax
+         if(au(i,j) .ge. 1) then
 ! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
-         Vloc=    ( V(i,j  )/sqrt(DV(i,j  ))+ V(i+1,j  )/sqrt(DV(i+1,j  )) + &
-                    V(i,j-1)/sqrt(DV(i,j-1))+ V(i+1,j-1)/sqrt(DV(i+1,j-1)))  &
-                    *0.25*sqrt(DU(i,j))
+            Vloc=( V(i,j  )/sqrt(DV(i,j  ))+ V(i+1,j  )/sqrt(DV(i+1,j  )) + &
+                   V(i,j-1)/sqrt(DV(i,j-1))+ V(i+1,j-1)/sqrt(DV(i+1,j-1)))  &
+                   *0.25*sqrt(DU(i,j))
 #else
-         Vloc=    0.25*( V(i,j)+ V(i+1,j)+ V(i,j-1)+ V(i+1,j-1))
+            Vloc=0.25*( V(i,j)+ V(i+1,j)+ V(i,j-1)+ V(i+1,j-1))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         fV(i,j)=(Vloc*(DYCIP1-DYC)-U(i,j)*(DXX-DXXJM1))/DU(i,j)*ARUD1
+            fV(i,j)=(Vloc*(DYCIP1-DYC)-U(i,j)*(DXX-DXXJM1))/DU(i,j)*ARUD1
 #else
-         fV(i,j)= _ZERO_
+            fV(i,j)= _ZERO_
 #endif
-         fV(i,j)=(fV(i,j)+coru(i,j))*Vloc
+            fV(i,j)=(fV(i,j)+coru(i,j))*Vloc
+         else
+            fV(i,j) = _ZERO_
+         end if
       end do
    end do
 
