@@ -1,10 +1,17 @@
 ! Remember to update this value if you add more 3D arrays.
 #ifdef UV_TVD
+#ifndef NO_SUSP_MATTER
   integer, parameter                   :: n3d_fields=29
 #else
+  integer, parameter                   :: n3d_fields=26 
+#endif  
+#else
+#ifndef NO_SUSP_MATTER
   integer, parameter                   :: n3d_fields=22
+#else
+  integer, parameter                   :: n3d_fields=19
 #endif
-
+#endif
 ! Number of vertical layers in z,u,v columns
   INTEGER                              :: kmin(I2DFIELD)
   INTEGER                              :: kumin(I2DFIELD)

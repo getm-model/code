@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.8 2004-05-04 09:23:51 kbk Exp $
+!$Id: save_3d_ncdf.F90,v 1.9 2004-06-15 08:25:57 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,7 +29,7 @@
 #endif
    use variables_3d, only: tke,num,nuh,eps
 #ifdef SPM
-   use variables_3d, only: spm
+   use variables_3d, only: spm_pool,spm
 #endif
    use parameters, only: g,rho_0
    IMPLICIT NONE
@@ -45,7 +45,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
-!  Revision 1.8  2004-05-04 09:23:51  kbk
+!  Revision 1.9  2004-06-15 08:25:57  kbk
+!  added supoort for spm - Ruiz
+!
+!  Revision 1.8  2004/05/04 09:23:51  kbk
 !  hydrostatic consistency criteria stored in .3d.nc file
 !
 !  Revision 1.7  2003/12/16 12:47:11  kbk
@@ -310,6 +313,17 @@
       call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
                   kmin,az,spm,spm_missing,ws)
       err = nf_put_vara_real(ncid, spm_id, start, edges, ws)
+      if (err .NE. NF_NOERR) go to 10
+      !spm pool is a 2d magnitude
+      start(1) = 1
+      start(2) = 1
+      start(3) = n3d
+      edges(1) = xlen
+      edges(2) = ylen
+      edges(3) = 1
+      call cnv_2d(imin,jmin,imax,jmax,az,spm_pool,spmpool_missing, &
+                  imin,jmin,imax,jmax,ws)
+      err = nf_put_vara_real(ncid, spmpool_id, start, edges, ws)
       if (err .NE. NF_NOERR) go to 10
    end if
 #endif

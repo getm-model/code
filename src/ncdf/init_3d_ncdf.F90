@@ -1,4 +1,4 @@
-!$Id: init_3d_ncdf.F90,v 1.6 2004-05-04 09:23:51 kbk Exp $
+!$Id: init_3d_ncdf.F90,v 1.7 2004-06-15 08:25:57 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,7 +30,10 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_3d_ncdf.F90,v $
-!  Revision 1.6  2004-05-04 09:23:51  kbk
+!  Revision 1.7  2004-06-15 08:25:57  kbk
+!  added supoort for spm - Ruiz
+!
+!  Revision 1.6  2004/05/04 09:23:51  kbk
 !  hydrostatic consistency criteria stored in .3d.nc file
 !
 !  Revision 1.5  2003/12/16 12:51:04  kbk
@@ -392,15 +395,24 @@
    if (save_spm) then
       fv = spm_missing
       mv = spm_missing
+      err = nf_def_var(ncid,'spm_pool',NF_REAL,3,f3_dims,spmpool_id) 
+      if (err .NE. NF_NOERR) go to 10
+      vr(1) = 0.
+      vr(2) = 10.
+      call set_attributes(ncid,spmpool_id,long_name='bottom spm pool', &
+                          units='kg/m2', & 
+                          FillValue=fv,missing_value=mv,valid_range=vr)
       vr(1) =  0.
       vr(2) = 30.
       err = nf_def_var(ncid,'spm',NF_REAL,4,f4_dims,spm_id)
       if (err .NE. NF_NOERR) go to 10
       call set_attributes(ncid,spm_id,  &
-                      long_name='suspended particulate matter',units='?????', &
-                      FillValue=fv,missing_value=mv,valid_range=vr)
+                          long_name='suspended particulate matter', &
+                          units='kg/m3', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
    end if
 #endif
+
 !  globals
    err = nf_put_att_text(ncid,NF_GLOBAL,'title',LEN_TRIM(title),title)
    if (err .NE. NF_NOERR) go to 10

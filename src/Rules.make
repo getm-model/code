@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.10 2004-06-15 07:57:48 kbk Exp $
+#$Id: Rules.make,v 1.11 2004-06-15 08:25:57 kbk Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -31,8 +31,8 @@ ifeq ($(GETM_NO_BAROCLINIC),true)
 DEFINES += -DNO_BAROCLINIC
 endif
 
-ifeq ($(GETM_NO_SUSP_MATTER),true)
-DEFINES += -DNO_SUSP_MATTER
+ifeq ($(GETM_SPM),true)
+DEFINES += -DSPM
 endif
 
 # The compilation mode is obtained from $COMPILATION_MODE

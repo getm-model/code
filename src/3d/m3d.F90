@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.18 2004-05-04 09:23:51 kbk Exp $
+!$Id: m3d.F90,v 1.19 2004-06-15 08:25:57 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,7 +29,7 @@
    use internal_pressure, only: init_internal_pressure, do_internal_pressure
    use internal_pressure, only: ip_method
 #endif
-#ifndef NO_SUSP_MATTER
+#ifdef SPM
    use suspended_matter, only: init_spm, do_spm
 #endif
    use variables_3d
@@ -44,6 +44,7 @@
    logical                             :: calc_temp=.true.
    logical                             :: calc_salt=.true.
    logical                             :: calc_spm=.false.
+   logical                             :: hotstart_spm=.false.
    logical                             :: bdy3d=.false.
    integer                             :: bdyfmt_3d,bdyramp_3d
    character(len=PATH_MAX)             :: bdyfile_3d
@@ -52,7 +53,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.18  2004-05-04 09:23:51  kbk
+!  Revision 1.19  2004-06-15 08:25:57  kbk
+!  added supoort for spm - Ruiz
+!
+!  Revision 1.18  2004/05/04 09:23:51  kbk
 !  hydrostatic consistency criteria stored in .3d.nc file
 !
 !  Revision 1.17  2004/04/23 09:03:59  kbk
@@ -246,6 +250,10 @@
    read(NAMLST,m3d)
 !   rewind(NAMLST)
 
+#ifndef SPM
+   if(calc_spm) stop 'To use SPM you have to recompile with -DSPM'
+#endif
+
 ! Allocates memory for the public data members - if not static
    call init_variables_3d(runtype)
 
@@ -332,9 +340,11 @@
       T = _ZERO_ ; S = _ZERO_ ; rho = _ZERO_
       if(calc_temp) call init_temperature(1)
       if(calc_salt) call init_salinity(1)
-#ifndef NO_SUSP_MATTER
-      if(calc_spm)  call init_spm(1)
-#endif
+   end if
+#endif      
+
+#ifndef NO_BAROCLINIC 
+    if (runtype .eq. 3 .or. runtype .eq. 4) then
       call init_eqstate()
 #ifndef PECS
       call do_eqstate()
@@ -345,6 +355,10 @@
          call init_advection_3d(2)
       end if
    end if
+#endif
+#ifdef SPM
+      if(calc_spm)  call init_spm(hotstart_spm,runtype)
+      if(runtype.ne.4) call init_advection_3d(2)
 #endif
 
    if (bdy3d) call init_bdy_3d()
@@ -430,10 +444,7 @@
    STDERR 'NO_ADVECT 3D'
 #endif
 
-#ifdef CONST_VISC
-   num = 1.000e-4
-   nuh = 1.000e-5
-#else
+#ifndef CONSTANT_VISCOSITY
 #ifndef NO_BOTTFRIC
    if (kmax .gt. 1) then
       call stresses_3d()
@@ -448,13 +459,19 @@
    if(runtype .eq. 4) then        ! prognostic T and S
       if (calc_temp) call do_temperature(n)
       if (calc_salt) call do_salinity(n)
-#ifndef NO_SUSP_MATTER
-      if (calc_spm) call do_spm()
-#endif
+   end if
+#endif         
+
+#ifndef NO_BAROCLINIC  
+   if(runtype .eq. 4) then 
 #ifndef PECS
       call do_eqstate()
 #endif
    end if
+#endif
+
+#ifdef SPM
+      if (calc_spm) call do_spm()
 #endif
 
    UEx=_ZERO_ ; VEx=_ZERO_

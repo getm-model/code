@@ -46,17 +46,6 @@
   allocate(eps(I3DFIELD),stat=rc)   ! 3D field for dissipation
   if (rc /= 0) stop 'init_3d: Error allocating memory (eps)'
 
-#ifdef OLD_TURBULENCE
-  allocate(tkeo(I3DFIELD),stat=rc)   ! 3D field for turbulent kinetic energy
-  if (rc /= 0) stop 'init_3d: Error allocating memory (tkeo)'
-
-  allocate(P(I3DFIELD),stat=rc)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (P)'
-
-  allocate(B(I3DFIELD),stat=rc)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (B)'
-#endif
-
   allocate(SS(I3DFIELD),stat=rc)   ! 3D field for shear frequency
   if (rc /= 0) stop 'init_3d: Error allocating memory (SS)'
 
@@ -88,7 +77,7 @@
   allocate(spm_ws(I3DFIELD),stat=rc) ! Sinking velocity
   if (rc /= 0) stop 'init_3d: Error allocating memory (spm_ws)'
 
-  allocate(spm_pool(I2DFIELD),stat=rc) ! Sinking velocity
+  allocate(spm_pool(I2DFIELD),stat=rc) ! Pool of spm
   if (rc /= 0) stop 'init_3d: Error allocating memory (spm_pool)'
 #endif
 

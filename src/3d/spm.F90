@@ -1,4 +1,4 @@
-!$Id: spm.F90,v 1.4 2004-01-07 07:37:37 kbk Exp $
+!$Id: spm.F90,v 1.5 2004-06-15 08:25:57 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,13 +9,76 @@
    module suspended_matter
 !
 ! !DESCRIPTION:
-!  Description still missing
+!  This model for Suspended Particulate Matter (SPM) considers a single
+!  class of non-cohesive SPM particles that do not interact with the mean
+!  flow (no density effect of SPM is taken into account by default).
+!  The concentration $C$ of SPM is  modelled with the tracer equation
+!  At the bottom, the net SPM flux is the residual of erosion and
+!  sedimentation fluxes:
+!  \begin{equation}\label{Bottom_SPM}
+!  \begin{array}{l}
+!  -w_sC-\partial_z(\nu_t' \partial_z C)=F_e-F_s,
+!  \end{array}
+!  \end{equation}
+!  where erosion and sedimentation fluxes are modelled following
+!  \cite{KRONE62} as functions of the bottom shear stress $\tau_b$.
+!  The erosion flux is only non-zero when
+!  the bottom shear stress exceeds a critical shear stress $\tau_{ce}$:
+!  \begin{equation}\label{ero_flux}
+!  F_e = \left\{
+!  \begin{array}{ll}
+!  \displaystyle
+!  \frac {c_e} {\rho_0}(|\tau_b|-\tau_{ce}),
+!  & \mbox{ for } B>0 \mbox{ and } |\tau_b|>\tau_{ce} \\ \\
+!  0, & \mbox{ else}
+!  \end{array}
+!  \right.
+!  \end{equation}
+!  with $c_e erosion constant with units kg\,s\,m$^{-4}$
+!  and the fluff layer SPM content $B$ (see below).
+!  The sedimentation flux is only non-zero for
+!  bottom shear stresses smaller than a critical shear stress $\tau_{cs}$.
+!  This flux is limited by the near bottom concentration $C_b$:
+!  \begin{equation}\label{sed_flux}
+!  F_s = \frac {w_s C_b} {\tau_{cs}} (\tau_{cs}-|\tau_b|).
+!  \end{equation}
+!  Critical shear stresses for erosion and sedimentation
+!  ($\tau_{ce}$ $\tau_{cs}$ have units N\,m$^{-2}$, .
+!  A pool $B$ of non-dynamic particulate matter (fluff layer)
+!  is assumed in order to take into account the
+!  effects of depletion of erodible material at the bottom.
+!  A horizontally homogeneous distribution with $B=B_0$ kg\,m$^{-2}$
+!  is initially assumed. Sedimentation and erosion fill and
+!  empty this pool, respectively:
+!  \begin{equation}\label{SPM_pool}
+!  \begin{array}{l}
+!  \partial_t(B) = F_s-F_e
+!  \end{array}
+!  \end{equation}
+!  and the erosion flux is constricted by the availability of SPM from
+!  the pool (see eq.\ (\ref{ero_flux})).
+!  The erosion and sedimentation fluxes are discretised using the
+!  quasi-implicit \cite{PATANKAR80} approach, which guarantees positivity
+!  of SPM, but only in the diffusion step, negative values might appear
+!  after the advection step, although these negative values should be small.
+!
+!  It is possible to take into account the impact of sediments on density by
+!  setting spm_dens to .true. The modified density is computed as:
+!  \begin{equation}\label{SPM_density}
+!  \begin{array}{l}
+!  \{rho}={rho}_{T,S,p}+(1-\frac {{\rho}_{T,S,p} {\rho}_{spm}} C
+!  \end{array}
+!  \end{equation}
 !
 ! !USES:
-   use domain, only: imin,jmin,imax,jmax,H,az
+   use domain, only: imin,jmin,imax,jmax,ioff,joff
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
-   use parameters, only: rho_0
-   use variables_3d, only: hn,spm,spm_ws,spm_pool,taub
+#ifdef TRACER_POSITIVE
+   use m2d, only : z,D
+#endif
+   use domain, only: H,az
+   use parameters, only: rho_0,g
+   use variables_3d, only: hn,taub,adv_schemes,spm,spm_ws,spm_pool
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
 !
@@ -25,36 +88,35 @@
    public init_spm, do_spm
 !
 ! !PRIVATE DATA MEMBERS:
-   integer:: spm_method=1
-   integer              :: spm_init_method=1, spm_format=2
-   character(len=32):: spm_file="spm.nc",spm_name='spm'
-   integer:: spm_hor_adv=1,spm_ver_adv=1,spm_strang=0
-   REALTYPE             :: spm_AH = -_ONE_
-   REALTYPE             :: spm_const=_ZERO_  
-   REALTYPE             :: spm_init= _ZERO_
-   integer              :: spm_ws_method = 0
-   REALTYPE             :: spm_ws_const=0.001
-   REALTYPE             :: spm_erosion_const, spm_tauc_sedimentation
-   REALTYPE             :: spm_tauc_erosion, spm_pool_init
+   integer                 :: spm_method=1
+   integer                 :: spm_init_method=1, spm_format=2
+   character(len=PATH_MAX) :: spm_file="spm.nc"
+   character(len=32)       :: spm_name='spm'
+   integer                 :: spm_hor_adv=1,spm_ver_adv=1,spm_adv_split=0
+   REALTYPE                :: spm_AH = -_ONE_
+   REALTYPE                :: spm_const= _ZERO_
+   REALTYPE                :: spm_init= _ZERO_
+   integer                 :: spm_ws_method = 0
+   REALTYPE                :: spm_ws_const=0.001
+   REALTYPE                :: spm_erosion_const, spm_tauc_sedimentation
+   REALTYPE                :: spm_tauc_erosion, spm_pool_init
+   REALTYPE                :: spm_porosity=_ZERO_
+   REALTYPE                :: spm_rho= 2650.
+   logical                 :: spm_dens=.false.
 !  For erosion-sedimentation flux
-   REALTYPE             :: Erosion_flux , Sedimentation_flux
-   logical              :: erosed_flux =.false.
+   REALTYPE                :: Erosion_flux , Sedimentation_flux
+   logical                 :: erosed_flux =.false.
+! For flocculation (not yet in namelist)
+   REALTYPE                :: spm_gellingC=0.08        !(g/l or kg/m3)
+   REALTYPE                :: spm_part_density=2650.   !(g/l or kg/m3)
+   integer                 :: spm_mfloc=4
 !
 ! !REVISION HISTORY:
 !  Original author(s): Manuel Ruiz Villarreal, Karsten Bolding and Hans Burchard
 !
 !  $Log: spm.F90,v $
-!  Revision 1.4  2004-01-07 07:37:37  kbk
-!  to compile with IFORT - TABS, etc.
-!
-!  Revision 1.3  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 13:36:38  kbk
-!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:59  gotm
-!  recovering after CVS crash
+!  Revision 1.5  2004-06-15 08:25:57  kbk
+!  added supoort for spm - Ruiz
 !
 !
 !  Revision 1.2  2001/10/23 07:30:19  bbh
@@ -64,6 +126,7 @@
 !  Added support for particulate suspended matter - no IO yet
 !
 ! !LOCAL VARIABLES:
+   REALTYPE, parameter       :: x=-rho_0/g
 !EOP
 !-----------------------------------------------------------------------
 
@@ -75,36 +138,37 @@
 ! !IROUTINE: init_spm
 !
 ! !INTERFACE:
-   subroutine init_spm(adv_method)
+   subroutine init_spm(hotstart_spm,runtype)
 !
 ! !DESCRIPTION:
 !  Description still missing
 !
 ! !USES:
+!  For initialization of spm in intertidal flats
+   use domain,only: min_depth
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: adv_method 
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
+   logical   :: hotstart_spm
+   integer   :: runtype
 !
 ! !REVISION HISTORY:
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k,n
-   integer                   :: rc
-   integer, parameter        :: nmax=10000
-   REALTYPE                  :: zlev(nmax),prof(nmax)
-   NAMELIST /spm_nml/ &
-            spm_method,spm_init_method,  &
-            spm_const,spm_format,spm_file,spm_name, &
-            spm_hor_adv, spm_ver_adv,spm_AH,spm_strang, &
-            spm_ws_method,spm_ws_const,                   &
-            spm_erosion_const, spm_tauc_sedimentation, &
-            spm_tauc_erosion, spm_pool_init
+   integer         :: i,j,k,n
+   integer         :: rc
+   integer, parameter     :: nmax=100
+   REALTYPE        :: zlev(nmax),prof(nmax)
+!  No initial pool of spm at intertidal flats
+   logical         :: intertidal_spm0=.false.
+   namelist /spm_nml/   spm_method,spm_init_method,  &
+                        spm_const,spm_format,spm_file,spm_name, &
+                        spm_hor_adv, spm_ver_adv,spm_AH,spm_adv_split, &
+                        spm_ws_method,spm_ws_const,                   &
+                        spm_erosion_const, spm_tauc_sedimentation, &
+                        spm_tauc_erosion, spm_porosity, spm_pool_init, &
+                        spm_rho,spm_dens
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -117,36 +181,21 @@
    LEVEL2 'init_spm()'
    read(NAMLST,spm_nml)
 
-   LEVEL3 'spm_hor_adv= ',spm_hor_adv
-   LEVEL3 'spm_ver_adv= ',spm_ver_adv
-   LEVEL3 'spm_strang=  ',spm_strang
-
-   spm_ws = _ZERO_
-       
-!  Compute settling velocity
-   select case(spm_ws_method)
-      case(0) !constant
-         do k=1,kmax-1
-            spm_ws(:,:,k) = spm_ws_const ! positive downwards
-         end do
-!     Zanke formula for fall velocity of sediment 
-      case(1) 
-         FATAL 'Zanke method for settling velocity not yet coded'
-         stop  'init_spm'
-   end select 
-   
+   if (spm_dens .eq. .true. .and. runtype .ne. 4)    &
+      stop 'spm_dens=.true. only makes sense for runtype=4'
    select case (spm_init_method)
       case(0)
          LEVEL3 'getting initial fields from hotstart'
+         hotstart_spm=.true.
       case(1)
          LEVEL3 'setting to constant value'
-            forall(i=iimin:iimax,j=jjmin:jjmax, az(i,j) .ne. 0) &
-               spm(i,j,:) = spm_const
+         forall(i=iimin:iimax,j=jjmin:jjmax, az(i,j) .ne. 0) &
+                spm(i,j,:) = spm_const
       case(2)
          LEVEL3 'using profile'
          call read_profile(spm_file,nmax,zlev,prof,n)
-         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,az,H,       &
-                           iimin,jjmin,iimax,jjmax,kmax,hn,spm)
+         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,az,H,     &
+                        iimin,jjmin,iimax,jjmax,kmax,hn,spm)
       case(3)
          LEVEL3 'interpolating from 3D field'
          call get_field(spm_file,spm_name,spm)
@@ -154,15 +203,117 @@
          FATAL 'Not valid spm_init_method specified'
          stop 'init_spm'
    end select
-   
+
    select case (spm_method)
-       case(1) !erosion-sedimentation flux
-          erosed_flux = .true.  
-          spm_pool = spm_pool_init
+       case(1)
+!         erosion-sedimentation flux
+          erosed_flux = .true.
+!         A pool of nondynamic particulate matter is assumed that initially
+!         has a concentration per m of spm_pool_init
+          if(spm_init_method /= 0) then
+             forall(i=iimin:iimax,j=jjmin:jjmax, az(i,j) .eq. 1) &
+                spm_pool(i,j) = spm_pool_init
+                if(.not. intertidal_spm0) then
+                   LEVEL3 'No spm pool in intertidal flats'
+                   forall(i=iimin:iimax,j=jjmin:jjmax, H(i,j) <= 1.35 ) &
+                      spm_pool(i,j) = _ZERO_
+                end if
+          end if
        case default
           FATAL 'Not valid spm_method specified'
-         stop 'init_spm'
+          stop 'init_spm'
    end select
+
+   LEVEL3 'spm_hor_adv=   ',spm_hor_adv
+   LEVEL3 'spm_ver_adv=   ',spm_ver_adv
+   LEVEL3 'spm_adv_split= ',spm_adv_split
+
+   if(spm_hor_adv .eq. 1) then
+      spm_adv_split=-1
+      if(spm_ver_adv .ne. 1) then
+         LEVEL3 "setting spm_ver_adv to 1 - since spm_hor_adv is 1"
+         spm_ver_adv=1
+      end if
+   end if
+   LEVEL3 "horizontal: ",trim(adv_schemes(spm_hor_adv))," of spm"
+   LEVEL3 "vertical:   ",trim(adv_schemes(spm_ver_adv))," of spm"
+
+   select case (spm_adv_split)
+      case (-1)
+      case (0)
+         select case (spm_hor_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "spm_adv_split=0: spm_hor_adv not valid (2-6)")
+         end select
+         select case (spm_ver_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "spm_adv_split=0: spm_ver_adv not valid (2-6)")
+         end select
+         LEVEL3 "1D split --> full u, full v, full w"
+      case (1)
+         select case (spm_hor_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "spm_adv_split=1: spm_hor_adv not valid (2-6)")
+         end select
+         select case (spm_ver_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "spm_adv_split=1: spm_ver_adv not valid (2-6)")
+         end select
+         LEVEL3 "1D split --> half u, half v, full w, half v, half u"
+      case (2)
+         select case (spm_hor_adv)
+            case (2,7)
+            case default
+               call getm_error("init_3d()", &
+                    "spm_adv_split=2: spm_hor_adv not valid (2,7)")
+         end select
+         select case (spm_ver_adv)
+            case (2,3,4,5,6)
+            case default
+               call getm_error("init_3d()", &
+                    "spm_adv_split=2: spm_ver_adv not valid (2-6)")
+         end select
+         LEVEL3 "2D-hor, 1D-vert split --> full uv, full w"
+      case default
+   end select
+   spm_ws = _ZERO_
+
+!  Compute settling velocity
+   select case(spm_ws_method)
+      case(0)
+!        This will have a function if spm_ws is changing and will go to hotstart
+         LEVEL3 'Case 0 not valid for spm_ws_method'
+         stop 'init_spm'
+      case(1) !constant
+         do k=0,kmax
+            spm_ws(:,:,k) = spm_ws_const
+         end do
+      case(2)
+!     Zanke formula for fall velocity of sediment
+         FATAL 'Zanke method for settling velocity not yet coded'
+         stop  'init_spm'
+      case(3)
+         do k=0,kmax
+            spm_ws(:,:,k) = spm_ws_const
+         end do
+   end select
+#ifdef TRACER_POSITIVE
+   LEVEL3 'Positivity of spm concentration will be tested'
+   LEVEL3 'and negative values written to fort.101'
+   write(101,*) 'Points where spm is negative'
+   write(101,*) 'Negative values of less than 1e-12 probably do not imply problems'
+   write(101,*) 'i,j,k,spm(i,j,k),D(i,j),z(i,j),ww(i,j,k),ww(i,j,kmax),1 or 2'
+   write(101,*) 'In column 9 1 indicates negative value after advection step'
+   write(101,*) 'In column 9 2 indicates negative value after vertical diffusion step'
+#endif
 #ifdef DEBUG
    write(debug,*) 'Leaving init_spm()'
    write(debug,*)
@@ -185,33 +336,43 @@
 ! !USES:
    use advection_3d, only: do_advection_3d
    use variables_3d, only: dt,cnpar,hun,hvn,ho,nuh,uu,vv,ww
+#ifndef NO_BAROCLINIC
+   use variables_3d, only: rho
+#endif
    use domain,       only: au,av
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dxv,dyu,dyv,arcd1
+#ifdef ELBE_TEST
+   use domain, only :dxc
+#endif
 #else
    use domain, only: dx,dy,ard1
 #endif
+   use domain, only: dry_z
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k,rc
-   REALTYPE                  :: spmtot
-   REALTYPE                  :: Res(0:kmax)
-   REALTYPE                  :: auxn(1:kmax-1),auxo(1:kmax-1)
-   REALTYPE                  :: a1(0:kmax),a2(0:kmax),a3(0:kmax),a4(0:kmax)
-   REALTYPE                  :: delxu(I2DFIELD),delxv(I2DFIELD)
-   REALTYPE                  :: delyu(I2DFIELD),delyv(I2DFIELD)
-   REALTYPE                  :: area_inv(I2DFIELD)
-   REALTYPE , allocatable  ,dimension (:,:,:) :: ww_aux 
+   integer         :: i,j,k,rc
+   REALTYPE        :: spmtot
+   REALTYPE        :: Res(0:kmax)
+   REALTYPE        :: auxn(1:kmax-1),auxo(1:kmax-1)
+   REALTYPE        :: a1(0:kmax),a2(0:kmax)
+   REALTYPE        :: a3(0:kmax),a4(0:kmax)
+   REALTYPE        :: delxu(I2DFIELD),delxv(I2DFIELD)
+   REALTYPE        :: delyu(I2DFIELD),delyv(I2DFIELD)
+   REALTYPE        :: area_inv(I2DFIELD)
+   REALTYPE        :: bed_flux
+   REALTYPE        :: c
+   REALTYPE        :: volCmud,volCpart
+   integer         :: k2
+   logical         :: patankar=.true.
+#ifdef TRACER_POSITIVE
+   logical         :: kk
+#endif
+   REALTYPE, allocatable, dimension (:,:,:) :: ww_aux
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -221,7 +382,7 @@
    Ncall = Ncall+1
    write(debug,*) 'do_spm() # ',Ncall
 #endif
-   
+
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    delxu=dxu
    delxv=dxv
@@ -237,37 +398,88 @@
 #endif
    allocate(ww_aux(I3DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'init_spm: Error allocating memory (ww_aux)'
-   
+
+!  Update settling velocity if flocculation is considered
+   select case(spm_ws_method)
+      case(3) !Floculation according to winterwerp
+         do i=iimin,iimax
+         do j=jjmin,jjmax
+            if(az(i,j) == 1) then
+               do k=1,kmax-1
+                  volCmud=spm(i,j,k)/spm_gellingC
+                  volCpart=spm(i,j,k)/spm_part_density
+                  volCpart=1.-volCpart
+                  spm_ws(i,j,k)=spm_ws_const*volCpart
+                  spm_ws(i,j,k)=spm_ws(i,j,k)*(1.-min(1.,volCmud))**spm_mfloc
+                  spm_ws(i,j,k)=spm_ws(i,j,k)/(1.+2.5*volCmud)
+               end do
+            end if
+         end do
+         end do
+         spm_ws(:,:,0)=spm_ws(:,:,1)
+         spm_ws(:,:,kmax)=spm_ws(:,:,kmax-1)
+         LEVEL3 'stop. You cannot use a variable sinking velocity '
+         LEVEL3 'without changing advection_3d. The velocity ww used in '
+         LEVEL3 'the advection step for continuity is only the hydrodynamical '
+         stop
+   end select
 !  The vertical velocity to be used in the advection routine for spm is ww-ws
-   ww_aux = ww-spm_ws
+   ww_aux = ww - spm_ws
    call do_advection_3d(dt,spm,uu,vv,ww_aux,hun,hvn,ho,hn,   &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
-                        spm_hor_adv,spm_ver_adv,spm_strang,spm_AH)
-!  Vertical diffusion of spm 
+                        spm_hor_adv,spm_ver_adv,spm_adv_split,spm_AH)
+#ifdef TRACER_POSITIVE
+   kk= .false.
+   do i=iimin,iimax
+      do j=jjmin,jjmax
+         do k=1,kmax
+            if(spm(i,j,k) < _ZERO_ .and. az(i,j) >= 1) then
+               if(spm(i,j,k) < -1.e-12) then
+                  write(101,*) i,j,k,spm(i,j,k),D(i,j),z(i,j),ww(i,j,k),ww(i,j,kmax),'1'
+               end if
+               spm(i,j,k) = _ZERO_
+            end if
+         end do
+      end do
+   end do
+#endif
+
+!  Vertical diffusion of spm
    do j=jjmin,jjmax
       do i=iimin,iimax
-         if (az(i,j) .eq. 1) then
-            if (kmax.gt.1) then
-!           We impose a flux condition on bottom sediments
-!           where flux is computed as the result of erosion and sedimentation
-!           from a pool of nondynamic particulate matter   
-               if(erosed_flux) then
-                  if(spm_pool(i,j) > 1.e-12) then ! If there are sediments in the pool
-                     Erosion_Flux = spm_erosion_const / rho_0 * (taub(i,j)*rho_0-spm_tauc_erosion )  
+         if (az(i,j) .eq. 1 ) then
+            if (kmax .gt. 1) then
+!              We impose a flux condition on bottom sediments
+!              where flux is computed as the result of erosion and sedimentation
+!              from a pool of nondynamic particulate matter
+               if (erosed_flux) then
+!                 1-spm_porosity is the fractional bed concentration
+                  if(spm_pool(i,j) > _ZERO_) then
+!                    if there are sediments in the pool
+                     Erosion_Flux = spm_erosion_const / rho_0                  &
+                            *(1-spm_porosity) * (taub(i,j)*rho_0-spm_tauc_erosion )
                      Erosion_Flux = max(Erosion_Flux,_ZERO_)
                   else
                      Erosion_Flux = _ZERO_
                   end if
-                  Sedimentation_Flux = spm_ws(i,j,1) * spm(i,j,1) *(1.-taub(i,j)*rho_0 / spm_tauc_sedimentation)
-                  Sedimentation_Flux = max(Sedimentation_Flux,_ZERO_)    
-                  a4(1) = Erosion_Flux - Sedimentation_Flux
-                  if (a4(1) > 1e-12) a4(1) = min(spm_pool(i,j)/dt, a4(1))
-                  spm_pool(i,j) = spm_pool(i,j) -  dt * a4(1)
-                  a4(1) = a4(1)* dt          
+                  Sedimentation_Flux = spm_ws(i,j,1) * spm(i,j,1) *  &
+                                 (1.-taub(i,j)*rho_0 / spm_tauc_sedimentation)
+                  Sedimentation_Flux = max(Sedimentation_Flux,_ZERO_)
+                  bed_flux = Erosion_Flux-Sedimentation_Flux
+                  if (bed_flux > _ZERO_) then
+                     bed_flux = min(spm_pool(i,j)/dt,bed_flux)
+                  else
+                     Erosion_Flux = min(spm_pool(i,j)/dt,Erosion_Flux)
+                     spm_pool(i,j) = spm_pool(i,j) -  dt * Erosion_Flux
+                     spm_pool(i,j) = max(spm_pool(i,j),_ZERO_)
+                  end if
+                  if(.not. patankar) then
+                     spm_pool(i,j) = spm_pool(i,j) -  dt * bed_flux
+                     spm_pool(i,j) = max(spm_pool(i,j),_ZERO_)
+                  end if
                else
-                  a4(1) = _ZERO_  
+                  bed_flux = _ZERO_
                end if
-
 !     Auxiliary terms, old and new time level,
                do k=1,kmax-1
                   auxo(k)=2.*(1-cnpar)*dt*nuh(i,j,k)/(hn(i,j,k+1)+hn(i,j,k))
@@ -278,55 +490,139 @@
                k=kmax
                a1(k)=-auxn(k-1)
                a2(k)=hn(i,j,k)+auxn(k-1)
-               a4(k)=spm(i,j,k)*(hn(i,j,k)-auxo(k-1))+spm(i,j,k-1)*auxo(k-1) 
+               a4(k)=spm(i,j,k)*(hn(i,j,k)-auxo(k-1))+spm(i,j,k-1)*auxo(k-1)
 
 !        Matrix elements for inner layers
                do k=2,kmax-1
-                  a3(k)=-auxn(k  )
                   a1(k)=-auxn(k-1)
-                  a2(k)=hn(i,j,k)+auxn(k)+auxn(k-1)
-                  a4(k)=spm(i,j,k+1)*auxo(k)                           &
-                       +spm(i,j,k  )*(hn(i,j,k)-auxo(k)-auxo(k-1))     &
-                       +spm(i,j,k-1)*auxo(k-1)              
+                  a2(k)=+hn(i,j,k)+auxn(k)+auxn(k-1)
+                  a3(k)=-auxn(k  )
+                  a4(k)=spm(i,j,k+1)*auxo(k)                          &
+                       +spm(i,j,k  )*(hn(i,j,k)-auxo(k)-auxo(k-1))    &
+                       +spm(i,j,k-1)*auxo(k-1)
                end do
 
 !        Matrix elements for bottom layer
                k=1
+               a2(k)=hn(i,j,k)+auxn(k)
                a3(k)=-auxn(k  )
-               a2(k)=hn(i,j,k)+auxn(k)                            
-               a4(k)=a4(k)+spm(i,j,k+1)*auxo(k)                        &
-                          +spm(i,j,k  )*(hn(i,j,k)-auxo(k))
+               a4(k)=spm(i,j,k+1)*auxo(k)+spm(i,j,k  )*(hn(i,j,k)-auxo(k))
+
+!        Patankar trick
+               if(patankar) then
+                  if (bed_flux .ge. _ZERO_) then
+                     a4(k)=a4(k)+bed_flux*dt
+                  else
+                     a2(k)=a2(k)-dt*bed_flux/spm(i,j,k)
+                  end if
+               else
+                  a4(k)=a4(k)+bed_flux*dt
+               end if
 
                call getm_tridiagonal(kmax,1,kmax,a1,a2,a3,a4,Res)
-               do k=1,kmax 
+               do k=1,kmax
                   spm(i,j,k)=Res(k)
-               end do    
-            end if 
-         end if 
+               end do
+
+!        spm_pool is updated
+               if (patankar) then
+                  if (bed_flux .ge. _ZERO_) then
+                     spm_pool(i,j) = spm_pool(i,j) -  dt * bed_flux
+                  else
+                     spm_pool(i,j) = spm_pool(i,j) +  dt * spm_ws(i,j,1) * spm(i,j,1)       &
+                           *max(_ZERO_, 1.-taub(i,j)*rho_0 / spm_tauc_sedimentation)
+                  end if
+               end if
+               spm_pool(i,j) = max(_ZERO_,spm_pool(i,j))
+            end if
+         end if
       end do
-   end do    
+   end do
+
+!  Boundary conditions. This should be done via do_bdy_3d but not ready yet
+#if 1
 
 #ifdef SALTWEDGE_TEST
-!  Valid for saltwedge case, lateral zero-gradient BC for WE bound 
-!  call do_bdy_3d(2,spm)
-   spm(iimin,2,:)=spm(iimin+1,2,:) 
-#endif
-#ifdef AAAA
-!  Checks conservation
-   spmtot= _ZERO_  
+!  Valid for saltwedge case, lateral zero-gradient BC for WE boundary
+!   call do_bdy_3d(2,spm)
    do k=1,kmax
-      do j=jjmin,jjmax
-         do i=iimin,iimax
-            if (az(i,j) .eq. 1) then
-               spmtot=spmtot+spm(i,j,k)*hn(i,j,k) 
-            end if    
-         end do
-      end do
+      if(uu(iimin,2,k) > _ZERO_) then
+         spm(iimin,2,k)=spm(iimin+1,2,k)
+      end if
    end do
 #endif
 
-   call update_3d_halo(spm,spm,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+#ifndef SALTWEDGE_TEST
+!  BC at open boundary points (no flux, can be other condition)
+   do i=iimin,iimax
+      if (az(i,jjmin).eq.2) spm(i,jjmin,:)=spm(i,jjmin+1,:)
+      if (az(i,jjmax).eq.2) spm(i,jjmax,:)=spm(i,jjmax-1,:)
+   end do
 
+   do j=jjmin,jjmax
+      if (az(iimin,j).eq.2) spm(iimin,j,:)=spm(iimin+1,j,:)
+      if (az(iimax,j).eq.2) spm(iimax,j,:)=spm(iimax-1,j,:)
+   end do
+#endif
+
+#ifdef ELBE_TEST
+   do j=jmin,jmax
+      if(az(1,j) /= 0) then
+          do k=1 ,kmax
+             if (uu(1,j,k) .gt. _ZERO_) then
+                spm(1,j,k)=max(spm(1,j,k),_ZERO_)
+             else
+                spm(1,j,k)=spm(1,j,k)-dt*area_inv(1,j)*dyu(1,j)*uu(1,j,k)/hun(1,j,k)*(spm(2,j,k)-spm(1,j,k))
+             end if
+          end do
+      end if
+!     River boundary
+      if(az(imax,j) /= 0) then
+         do k=1,kmax
+            spm(imax,j,k)=_ZERO_
+         end do
+      end if
+   end do
+#endif
+
+#endif
+!  End of BC
+
+#ifndef NO_BAROCLINIC
+!  contribution of spm to density
+   if (spm_dens) then
+      do j=jjmin,jjmax
+         do i=iimin,iimax
+            if (az(i,j) .eq. 1 ) then
+               do k=1,kmax
+                  rho(i,j,k)=x*rho(i,j,k)+rho_0
+                  rho(i,j,k)=rho(i,j,k)+(_ONE_-rho(i,j,k)/spm_rho)*spm(i,j,k)
+                  rho(i,j,k)=(rho(i,j,k)-rho_0)/x
+               end do
+            end if
+         end do
+      end do
+   end if
+#endif
+
+#ifdef TRACER_POSITIVE
+   kk=.false.
+   do i=iimin,iimax
+      do j=jjmin,jjmax
+         do k=1,kmax
+            if(spm(i,j,k) < _ZERO_ .and. az(i,j) >= 1) then
+!               if(spm(i,j,k) < -1.e-12)
+               write(101,*) i,j,k,spm(i,j,k),D(i,j),z(i,j),ww(i,j,k),ww(i,j,kmax),'2'
+!               kk=.true.
+!               spm(i,j,k) = _ZERO_
+            end if
+         end do
+      end do
+   end do
+!   if(kk .eq. .true.) stop 'Negative spm concentration'
+#endif
+
+   call update_3d_halo(spm,spm,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
    call wait_halo(D_TAG)
 
 #ifdef FORTRAN90
@@ -347,5 +643,5 @@
    end module suspended_matter
 
 !-----------------------------------------------------------------------
-! Copyright (C) 2001 - Manuel Ruiz, Hans Burchard and Karsten Bolding  !
+! Copyright (C) 2004 - Manuel Ruiz, Hans Burchard and Karsten Bolding  !
 !-----------------------------------------------------------------------

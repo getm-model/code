@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.8 2004-03-29 15:35:52 kbk Exp $
+!$Id: output.F90,v 1.9 2004-06-15 08:25:57 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -54,7 +54,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
-!  Revision 1.8  2004-03-29 15:35:52  kbk
+!  Revision 1.9  2004-06-15 08:25:57  kbk
+!  added supoort for spm - Ruiz
+!
+!  Revision 1.8  2004/03/29 15:35:52  kbk
 !  possible to store calculated mean fields
 !
 !  Revision 1.7  2003/12/16 16:50:41  kbk
@@ -167,7 +170,13 @@
       save_turb = .false.
       save_spm = .false.
    end if
-
+  
+   if (runtype .eq. 2) then
+      save_strho = .false.
+      save_s = .false.
+      save_t = .false.
+   end if
+   
    call file_names(runid,myid)
 
    if(save_2d) then
@@ -333,6 +342,9 @@
    use m3d,  only: T,S
 #endif
 #endif
+#ifdef SPM
+  use m3d,  only: spm,spm_pool,calc_spm,hotstart_spm
+#endif 
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -352,6 +364,7 @@
    integer, save             :: n=0
    logical, save             :: continuous=.false.
    integer                   :: jd,secs 
+   character(len=19)         :: timestr_out
    REALTYPE                  :: dt
 !
 !EOP
@@ -384,6 +397,13 @@
             write(RESTART) T,S
          end if
 #endif
+#ifdef SPM 
+         if(save_spm) then 
+            LEVEL3 'saving spm'
+            write(RESTART) spm
+            write(RESTART) spm_pool
+        end if
+#endif
       end if
 #endif
       close(RESTART)
@@ -402,9 +422,9 @@
       if (runtype .ge. 2)  then
 !KBK This needs to be changed !!!! KBK
 !Only works because E2DFIELD = I2DFIELD
-      ssen=z
-      ssun=zu
-      ssvn=zv
+         ssen=z
+         ssun=zu
+         ssvn=zv
          LEVEL3 'reading 3D barotropic variables'
 !kbk         read(RESTART) Uint,Vint
          read(RESTART) uu,vv
@@ -414,6 +434,18 @@
          if(runtype .ge. 3) then
             LEVEL3 'reading 3D baroclinic variables'
             read(RESTART) T,S
+         end if
+#endif
+#ifdef SPM 
+         if(calc_spm) then
+            if (hotstart_spm) then 
+               LEVEL3 'reading spm variables'
+               read(RESTART) spm
+               read(RESTART) spm_pool
+            else
+               LEVEL3 'spm variables not read from hotstart file'
+               LEVEL3 'set spm_init_method=0 to read them from hotstart file'
+            end if     
          end if
 #endif
       end if
@@ -428,7 +460,11 @@
             FATAL 'start time given in getm.inp does not match time'
             FATAL 'read from hot-start file'
             FATAL 'from getm.inp: ',julianday,secondsofday
+            call write_time_string(julianday,secondsofday,timestr_out)
+            LEVEL3 timestr_out
             FATAL 'from hotstart: ',jd,secs
+            call write_time_string(jd,secs,timestr_out)
+            LEVEL3 timestr_out
             stop 'restart_file()'
          end if
          if (dt .ne. timestep) then

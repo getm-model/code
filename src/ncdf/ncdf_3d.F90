@@ -1,4 +1,4 @@
-!$Id: ncdf_3d.F90,v 1.5 2004-05-04 09:23:51 kbk Exp $
+!$Id: ncdf_3d.F90,v 1.6 2004-06-15 08:25:57 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -37,7 +37,7 @@
    integer                             :: salt_id,temp_id,sigma_t_id
    integer                             :: tke_id,num_id,nuh_id,eps_id
 #ifdef SPM
-   integer                             :: spm_id
+   integer                             :: spmpool_id,spm_id
 #endif
    integer                             :: xlen,ylen,zlen
    integer, parameter                  :: size_3d=9000000
@@ -53,6 +53,7 @@
    REALTYPE, parameter                 :: num_missing=-9999.0
    REALTYPE, parameter                 :: eps_missing=-9999.0
 #ifdef SPM
+   REALTYPE, parameter                 :: spmpool_missing=-9999.0
    REALTYPE, parameter                 :: spm_missing=-9999.0
 #endif
 
@@ -61,7 +62,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d.F90,v $
-!  Revision 1.5  2004-05-04 09:23:51  kbk
+!  Revision 1.6  2004-06-15 08:25:57  kbk
+!  added supoort for spm - Ruiz
+!
+!  Revision 1.5  2004/05/04 09:23:51  kbk
 !  hydrostatic consistency criteria stored in .3d.nc file
 !
 !  Revision 1.4  2003/12/16 12:51:04  kbk
