@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.3 2003-04-07 15:34:15 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.4 2003-06-17 14:53:29 kbk Exp $
 #include "cppdefs.h"
 !#define HIRLAM_FRV
 #define ECMWF_FRV
@@ -18,7 +18,7 @@
    use domain, only: imin,imax,jmin,jmax,az,lonc,latc,conv
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
    use meteo, only: meteo_file,on_grid,calc_met,method
-   use meteo, only: airp,u10,v10,t2,hum,cc
+   use meteo, only: airp,u10,v10,t2,hum,tcc
    use meteo, only: tausx,tausy,swr,shf
    use meteo, only: new_meteo,t_1,t_2
    IMPLICIT NONE
@@ -33,7 +33,7 @@
    integer 	:: ncid,ndims,dims(3),unlimdimid
    integer 	:: start(3),edges(3)
    integer 	:: u10_id,v10_id,airp_id,t2_id
-   integer 	:: hum_id,convp_id,largep_id,cc_id
+   integer 	:: hum_id,convp_id,largep_id,tcc_id
    integer	:: tausx_id,tausy_id,swr_id,shf_id
    integer	:: iextr,jextr,textr,tmax
 
@@ -48,13 +48,13 @@
 !
    REALTYPE, parameter	:: pi=3.1415926535897932384626433832795029
    REALTYPE, parameter	:: deg2rad=pi/180.,rad2deg=180./pi
-   REALTYPE		:: southpole(2) = (/0.0,-90.0/)
-   character(len=10)	:: name_u10="U10"
-   character(len=10)	:: name_v10="V10"
-   character(len=10)	:: name_airp="MSLP"
-   character(len=10)	:: name_t2="T2"
-   character(len=10)	:: name_hum="DEV2"
-   character(len=10)	:: name_cc="CC"
+   REALTYPE		:: southpole(3) = (/0.0,-90.0,0.0/)
+   character(len=10)	:: name_u10="u10"
+   character(len=10)	:: name_v10="v10"
+   character(len=10)	:: name_airp="slp"
+   character(len=10)	:: name_t2="t2"
+   character(len=10)	:: name_hum="hum"
+   character(len=10)	:: name_tcc="tcc"
 
    character(len=10)	:: name_tausx="tausx"
    character(len=10)	:: name_tausy="tausy"
@@ -66,7 +66,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.3  2003-04-07 15:34:15  kbk
+!  Revision 1.4  2003-06-17 14:53:29  kbk
+!  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
+!
+!  Revision 1.3  2003/04/07 15:34:15  kbk
 !  updated to lonc,latc
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:47  gotm
@@ -108,7 +111,7 @@
 !  Based on names of various variables the corresponding variable ids
 !  are obtained from the NetCDF file.
 !  The dimensions of the meteological grid is read (x,y,t).
-!  If the southpole is not (-90,0) a rotated grid is assumed and coefficients
+!  If the southpole is not (-90,0,0) a rotated grid is assumed and coefficients
 !  for interpolation between the meteorological grid and the model grid are
 !  calculated.
 !  The arry \emph{met\_times} are filled with the times where forcing is
@@ -149,27 +152,25 @@
 #endif
 
 #ifdef ECMWF_FRV
-   southpole = (/0.0,-90.0/)
+   southpole = (/0.0,-90.0,0.0/)
    name_u10="U10"
    name_v10="V10"
    name_airp="MSL"
    name_t2="T2"
    name_hum="D2"
-   name_cc="TCC"
+   name_tcc="TCC"
 #endif
 #ifdef HIRLAM_FRV
-   southpole = (/0.0,80.0/)
+   southpole = (/0.0,80.0,0.0/)
 !   REALTYPE		:: lat0=-24.477,lon0=-39.875
 !   REALTYPE		:: rotation=0.0
 !   REALTYPE		:: origo(2) = (/-24.477,-39.875/)
-   name_u10="U10"
-   name_v10="V10"
-   name_airp="MSLP"
-   name_t2="T2"
-   name_hum="DEV2"
-!   name_convp="ACPCP"
-!   name_largep="NCPCP"
-   name_cc="CC"
+   name_u10="u10"
+   name_v10="v10"
+   name_airp="slp"
+   name_t2="t2"
+   name_hum="hum"
+   name_tcc="tcc"
 #endif
 
    call open_meteo_file(meteo_file)
@@ -255,7 +256,7 @@ STDERR lonc(imax,jmax),latc(imax,jmax)
 !      if (err .NE. NF_NOERR) go to 10
 #endif
 
-      err = nf_inq_varid(ncid,name_cc,cc_id)
+      err = nf_inq_varid(ncid,name_tcc,tcc_id)
       if (err .NE. NF_NOERR) go to 10
 
       err = nf_inq_vardimid(ncid,u10_id,dims)
@@ -673,18 +674,18 @@ grid_scan=1
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,hum)
       end if
 
-      err = nf_get_vara_real(ncid,cc_id,start,edges,wrk)
+      err = nf_get_vara_real(ncid,tcc_id,start,edges,wrk)
       if (err .ne. NF_NOERR) go to 10
       if (on_grid) then
          do j=jmin,jmax
             do i=imin,imax
-               cc(i,j) = wrk(i,j)
+               tcc(i,j) = wrk(i,j)
             end do
          end do
       else
          !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,cc)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,tcc)
       end if
 
    else

@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.6 2003-05-09 14:28:11 kbk Exp $
+!$Id: meteo.F90,v 1.7 2003-06-17 14:53:28 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -61,7 +61,7 @@
    integer, public                     :: method
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea
    REALTYPE, public, dimension(:,:), allocatable  :: airp,tausx,tausy,swr,shf
-   REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum,cc
+   REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum,tcc
 #ifdef WRONG_KONDO
    REALTYPE, public                    :: cd_mom,cd_heat
 #else
@@ -80,7 +80,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
-!  Revision 1.6  2003-05-09 14:28:11  kbk
+!  Revision 1.7  2003-06-17 14:53:28  kbk
+!  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
+!
+!  Revision 1.6  2003/05/09 14:28:11  kbk
 !  short wave radiation calculated each timestep (not interpolated) - patch from Adolf Stips
 !
 !  Revision 1.5  2003/04/23 12:05:50  kbk
@@ -128,8 +131,8 @@
    REALTYPE                  :: swr_const= _ZERO_ ,shf_const= _ZERO_
    REALTYPE, dimension(:,:), allocatable :: airp_old,tausx_old,tausy_old
    REALTYPE, dimension(:,:), allocatable :: d_airp,d_tausx,d_tausy
-   REALTYPE, dimension(:,:), allocatable :: cc_old,shf_old
-   REALTYPE, dimension(:,:), allocatable :: d_cc,d_shf
+   REALTYPE, dimension(:,:), allocatable :: tcc_old,shf_old
+   REALTYPE, dimension(:,:), allocatable :: d_tcc,d_shf
 !
 ! !TO DO:
 !  A method for stress calculations without knowledge of SST and meteorological
@@ -246,9 +249,9 @@
          if (rc /= 0) stop 'init_meteo: Error allocating memory (hum)'
          hum = _ZERO_
 
-         allocate(cc(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_meteo: Error allocating memory (cc)'
-         cc = _ZERO_
+         allocate(tcc(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc)'
+         tcc = _ZERO_
 
       else
       end if
@@ -277,17 +280,17 @@
       if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tausy)'
       d_tausy = _ZERO_
 
-      allocate(cc_old(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_meteo: Error allocating memory (cc_old)'
-      cc_old = _ZERO_
+      allocate(tcc_old(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc_old)'
+      tcc_old = _ZERO_
 
       allocate(shf_old(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (shf_old)'
       shf_old = _ZERO_
 
-      allocate(d_cc(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_meteo: Error allocating memory (d_cc)'
-      d_cc = _ZERO_
+      allocate(d_tcc(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tcc)'
+      d_tcc = _ZERO_
 
       allocate(d_shf(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (d_shf)'
@@ -405,7 +408,7 @@
                   if (.not. first) then
                      tausx_old = tausx
                      tausy_old = tausy
-                     cc_old = cc
+                     tcc_old = tcc
                      shf_old = shf
                   end if
                   if (have_sst) then
@@ -415,7 +418,7 @@
                               call exchange_coefficients( &
                                      u10(i,j),v10(i,j),t2(i,j),airp(i,j), &
                                      sst(i,j),hum(i,j))
-                              call fluxes(u10(i,j),v10(i,j),t2(i,j),cc(i,j),  &
+                              call fluxes(u10(i,j),v10(i,j),t2(i,j),tcc(i,j),  &
                                           sst(i,j),shf(i,j),tausx(i,j),tausy(i,j))
                            else
                               shf(i,j) = _ZERO_
@@ -444,7 +447,7 @@
                   if (.not. first) then
                      d_tausx = tausx - tausx_old
                      d_tausy = tausy - tausy_old
-                     d_cc = cc - cc_old
+                     d_tcc = tcc - tcc_old
                      d_shf = shf - shf_old
                   end if
                end if
@@ -459,7 +462,7 @@
                   do i=imin,imax
                      if (az(i,j) .ge. 1) then
                         swr(i,j) = short_wave_radiation             &
-                                (yearday,hh,latc(i,j),lonc(i,j),cc(i,j))
+                                (yearday,hh,latc(i,j),lonc(i,j),tcc(i,j))
                      end if
                   end do
                end do

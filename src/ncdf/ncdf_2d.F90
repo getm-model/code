@@ -1,4 +1,4 @@
-!$Id: ncdf_2d.F90,v 1.3 2003-05-09 11:38:26 kbk Exp $
+!$Id: ncdf_2d.F90,v 1.4 2003-06-17 14:53:29 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,10 +32,10 @@
    integer                             :: elev_id,u_id,v_id
    integer                             :: res_u_id,res_v_id,surfdiv_id
    integer                             :: u10_id,v10_id
-   integer                             :: airp_id,t2_id,hum_id,cc_id
+   integer                             :: airp_id,t2_id,hum_id,tcc_id
    integer                             :: tausx_id,tausy_id,swr_id,shf_id
    integer                             :: xlen,ylen
-   integer, parameter                  :: size_2d=150000
+   integer, parameter                  :: size_2d=500000
    REAL_4B                             :: ws(size_2d)
    REALTYPE, parameter                 :: h_missing=-10.0
    REALTYPE, parameter                 :: elev_missing=-9999.0
@@ -43,7 +43,7 @@
    REALTYPE, parameter                 :: airp_missing=-9999.0
    REALTYPE, parameter                 :: t2_missing=-9999.0
    REALTYPE, parameter                 :: hum_missing=-9999.0
-   REALTYPE, parameter                 :: cc_missing=-9999.0
+   REALTYPE, parameter                 :: tcc_missing=-9999.0
    REALTYPE, parameter                 :: stress_missing=-9999.0
    REALTYPE, parameter                 :: swr_missing=-9999.0
    REALTYPE, parameter                 :: shf_missing=-9999.0
@@ -53,7 +53,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d.F90,v $
-!  Revision 1.3  2003-05-09 11:38:26  kbk
+!  Revision 1.4  2003-06-17 14:53:29  kbk
+!  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
+!
+!  Revision 1.3  2003/05/09 11:38:26  kbk
 !  added proper undef support - based on Adolf Stips patch
 !
 !  Revision 1.2  2003/04/23 11:53:24  kbk

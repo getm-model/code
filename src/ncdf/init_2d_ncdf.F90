@@ -1,4 +1,4 @@
-!$Id: init_2d_ncdf.F90,v 1.4 2003-05-09 11:38:26 kbk Exp $
+!$Id: init_2d_ncdf.F90,v 1.5 2003-06-17 14:53:29 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,10 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_2d_ncdf.F90,v $
-!  Revision 1.4  2003-05-09 11:38:26  kbk
+!  Revision 1.5  2003-06-17 14:53:29  kbk
+!  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
+!
+!  Revision 1.4  2003/05/09 11:38:26  kbk
 !  added proper undef support - based on Adolf Stips patch
 !
 !  Revision 1.3  2003/04/23 11:53:24  kbk
@@ -231,11 +234,11 @@
                              long_name='humidity',units='kg/kg', &
                              FillValue=fv,missing_value=mv,valid_range=vr)
 
-         fv = cc_missing; mv = cc_missing; vr(1) = 0.; vr(2) = 1.
-         err = nf_def_var(ncid,'cc',NF_REAL,3,f3_dims,cc_id)
+         fv = tcc_missing; mv = tcc_missing; vr(1) = 0.; vr(2) = 1.
+         err = nf_def_var(ncid,'tcc',NF_REAL,3,f3_dims,tcc_id)
          if (err .NE. NF_NOERR) go to 10
-         call set_attributes(ncid,cc_id,  &
-                             long_name='cloud cover',units='fraction', &
+         call set_attributes(ncid,tcc_id,  &
+                             long_name='total cloud cover',units='fraction', &
                              FillValue=fv,missing_value=mv,valid_range=vr)
       end if
 

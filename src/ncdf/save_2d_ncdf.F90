@@ -1,4 +1,4 @@
-!$Id: save_2d_ncdf.F90,v 1.4 2003-05-09 11:38:26 kbk Exp $
+!$Id: save_2d_ncdf.F90,v 1.5 2003-06-17 14:53:29 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,7 +22,7 @@
 #endif
    use variables_2d, only: z,D,U,DU,V,DV,res_u,res_v,surfdiv
    use meteo, only: metforcing,calc_met
-   use meteo, only: airp,u10,v10,t2,hum,cc
+   use meteo, only: airp,u10,v10,t2,hum,tcc
    use meteo, only: tausx,tausy,swr,shf
    IMPLICIT NONE
 !
@@ -37,7 +37,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_2d_ncdf.F90,v $
-!  Revision 1.4  2003-05-09 11:38:26  kbk
+!  Revision 1.5  2003-06-17 14:53:29  kbk
+!  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
+!
+!  Revision 1.4  2003/05/09 11:38:26  kbk
 !  added proper undef support - based on Adolf Stips patch
 !
 !  Revision 1.3  2003/04/23 11:53:24  kbk
@@ -213,9 +216,9 @@
             err = nf_put_vara_real(ncid, hum_id, start, edges, ws)
             if (err .NE. NF_NOERR) go to 10
 
-            call cnv_2d(imin,jmin,imax,jmax,az,cc,cc_missing, &
+            call cnv_2d(imin,jmin,imax,jmax,az,tcc,tcc_missing, &
                         imin,jmin,imax,jmax,ws)
-            err = nf_put_vara_real(ncid, cc_id, start, edges, ws)
+            err = nf_put_vara_real(ncid, tcc_id, start, edges, ws)
             if (err .NE. NF_NOERR) go to 10
          end if
 

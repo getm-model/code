@@ -1,4 +1,4 @@
-!$Id: short_wave_radiation.F90,v 1.2 2003-04-23 12:05:50 kbk Exp $
+!$Id: short_wave_radiation.F90,v 1.3 2003-06-17 14:53:28 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,7 +6,7 @@
 ! !ROUTINE: Short wave radiation.
 !
 ! !INTERFACE:
-   REALTYPE function short_wave_radiation(yday,hour,lat,lon,cc)
+   REALTYPE function short_wave_radiation(yday,hour,lat,lon,tcc)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -25,7 +25,7 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: yday
    REALTYPE, intent(inout)             :: hour
-   REALTYPE, intent(in)                :: lat,lon,cc
+   REALTYPE, intent(in)                :: lat,lon,tcc
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -35,7 +35,10 @@
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: short_wave_radiation.F90,v $
-!  Revision 1.2  2003-04-23 12:05:50  kbk
+!  Revision 1.3  2003-06-17 14:53:28  kbk
+!  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
+!
+!  Revision 1.2  2003/04/23 12:05:50  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:39  gotm
@@ -133,12 +136,12 @@
 !  calculates SHORT WAVE FLUX ( watt/m*m )
 !  Rosati,Miyakoda 1988 ; eq. 3.8
 
-!HB I do not know where this "if(cc .lt. 0.3) then" comes from. It is not
+!HB I do not know where this "if(tcc .lt. 0.3) then" comes from. It is not
 !HB included in Rosati,Miyakoda 1988 ; eq. 3.8 ...
-!HB   if(cc .lt. 0.3) then
+!HB   if(tcc .lt. 0.3) then
 !HB      short_wave_radiation  = qtot
 !HB   else
-      short_wave_radiation  = qtot*(1-0.62*cc + .0019*sunbet)*(1.-albedo)
+      short_wave_radiation  = qtot*(1-0.62*tcc + .0019*sunbet)*(1.-albedo)
 !HB   endif
 
    return
