@@ -1,4 +1,4 @@
-!$Id: coordinates.F90,v 1.2 2003-04-07 16:27:32 kbk Exp $
+!$Id: coordinates.F90,v 1.3 2003-04-23 12:16:27 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,8 +19,8 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: cord_type
-   REALTYPE, intent(in)	:: cord_relax
+   integer, intent(in)                 :: cord_type
+   REALTYPE, intent(in)                :: cord_relax
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -30,7 +30,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: coordinates.F90,v $
-!  Revision 1.2  2003-04-07 16:27:32  kbk
+!  Revision 1.3  2003-04-23 12:16:27  kbk
+!  added calls to wait_halo()
+!
+!  Revision 1.2  2003/04/07 16:27:32  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:53  gotm
@@ -86,10 +89,10 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer 	:: i,j,k,rc,kk
-   REALTYPE	:: tmp,kmaxm1,alpha,maxdepth
-   LOGICAL      :: gamma_surf=.true.
-   REALTYPE	:: HH,zz,r
+   integer :: i,j,k,rc,kk
+   REALTYPE:: tmp,kmaxm1,alpha,maxdepth
+   LOGICAL   :: gamma_surf=.true.
+   REALTYPE:: HH,zz,r
    logical, save :: first=.true.,equiv_sigma=.false.
    REALTYPE, save, dimension(:),     allocatable  :: dga,be,sig
    REALTYPE, save, dimension(:,:,:), allocatable  :: gga
@@ -151,7 +154,7 @@
                be(k)=be(k)/(tanh(ddl)+tanh(ddu))-_ONE_
                sig(k)=k/float(kmax)-_ONE_
             end do
-	    if (gamma_surf) then
+            if (gamma_surf) then
                kk=kmax
             else
                kk=1
@@ -159,13 +162,13 @@
             do j=jjmin,jjmax
                do i=iimin,iimax
                   HH=max(H(i,j),min_depth)
-                  alpha=min(					&
-                           ((be(kk)-be(kk-1))-D_gamma/HH	&
-                            *(sig(kk)-sig(kk-1)))		&
+                  alpha=min(&
+                           ((be(kk)-be(kk-1))-D_gamma/HH&
+                            *(sig(kk)-sig(kk-1)))&
                             /((be(kk)-be(kk-1))-(sig(kk)-sig(kk-1))),_ONE_)
                   gga(i,j,0)=-_ONE_
                   do k=1,kmax
-	             gga(i,j,k)=alpha*sig(k)+(1.-alpha)*be(k)
+             gga(i,j,k)=alpha*sig(k)+(1.-alpha)*be(k)
                      if (gga(i,j,k) .lt. gga(i,j,k-1)) then
                         STDERR kk,(be(kk)-be(kk-1)),(sig(kk)-sig(kk-1))
                         STDERR D_gamma,HH
@@ -281,7 +284,7 @@
 ! thicknesses by the following relaxation time scale r. This should
 ! later be generalised also for sigma coordinates.
 
-	 maxdepth=600. ! needs to be calculated later ... HB 
+         maxdepth=600. ! needs to be calculated later ... HB 
          do j=jjmin,jjmax
             do i=iimin,iimax
                r = cord_relax/dt*H(i,j)/maxdepth
@@ -299,37 +302,37 @@
 
          do j=jjmin,jjmax
             do i=iimin-1,iimax
-	       if (au(i,j).gt.0) then
+               if (au(i,j) .gt. 0) then
                   r = cord_relax/dt*HU(i,j)/maxdepth
                   zz = -HU(i,j)
                   do k=1,kmax-1
                      huo(i,j,k) = hun(i,j,k)
-	             HH=max(ssun(i,j)+HU(i,j),min_depth)
+                     HH=max(ssun(i,j)+HU(i,j),min_depth)
                      hun(i,j,k)=(huo(i,j,k)*r+HH*0.5*(gga(i,j,k)-gga(i,j,k-1) &
-		                +gga(i+1,j,k)-gga(i+1,j,k-1)))/(r+1.)
+                               +gga(i+1,j,k)-gga(i+1,j,k-1)))/(r+1.)
                      zz = zz + hun(i,j,k)
                   end do
                   huo(i,j,kmax) = hun(i,j,kmax)
                   hun(i,j,kmax)=ssun(i,j)-zz
-	       end if
+               end if
             end do
          end do
 
          do j=jjmin-1,jjmax
             do i=iimin,iimax
-	       if (av(i,j).gt.0) then
+               if (av(i,j).gt.0) then
                   r = cord_relax/dt*HV(i,j)/maxdepth
                   zz = -HV(i,j)
                   do k=1,kmax-1
                      hvo(i,j,k) = hvn(i,j,k)
-	             HH=max(ssvn(i,j)+HV(i,j),min_depth)
+                     HH=max(ssvn(i,j)+HV(i,j),min_depth)
                      hvn(i,j,k)=(hvo(i,j,k)*r+HH*0.5*(gga(i,j,k)-gga(i,j,k-1) &
-		                  +gga(i,j+1,k)-gga(i,j+1,k-1)))/(r+1.)
+                               +gga(i,j+1,k)-gga(i,j+1,k-1)))/(r+1.)
                      zz=zz+hvn(i,j,k)
                   end do
                   hvo(i,j,kmax) = hvn(i,j,kmax)
                   hvn(i,j,kmax)=ssvn(i,j)-zz
-	       end if
+               end if
             end do
          end do
 
@@ -337,15 +340,18 @@
 
    end select
    call update_3d_halo(ho,ho,az,iimin,jjmin,iimax,jjmax,kmax,H_TAG)
-   call update_3d_halo(hn,hn,az,iimin,jjmin,iimax,jjmax,kmax,H_TAG)
-   call update_3d_halo(huo,huo,au,iimin,jjmin,iimax,jjmax,kmax,HU_TAG)
-   call update_3d_halo(hun,hun,au,iimin,jjmin,iimax,jjmax,kmax,HU_TAG)
-   call update_3d_halo(hvo,hvo,av,iimin,jjmin,iimax,jjmax,kmax,HV_TAG)
-   call update_3d_halo(hvn,hvn,av,iimin,jjmin,iimax,jjmax,kmax,HV_TAG)
-
    call wait_halo(H_TAG)
+   call update_3d_halo(hn,hn,az,iimin,jjmin,iimax,jjmax,kmax,H_TAG)
+   call wait_halo(H_TAG)
+   call update_3d_halo(huo,huo,au,iimin,jjmin,iimax,jjmax,kmax,HU_TAG)
    call wait_halo(HU_TAG)
+   call update_3d_halo(hun,hun,au,iimin,jjmin,iimax,jjmax,kmax,HU_TAG)
+   call wait_halo(HU_TAG)
+   call update_3d_halo(hvo,hvo,av,iimin,jjmin,iimax,jjmax,kmax,HV_TAG)
    call wait_halo(HV_TAG)
+   call update_3d_halo(hvn,hvn,av,iimin,jjmin,iimax,jjmax,kmax,HV_TAG)
+   call wait_halo(HV_TAG)
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving Coordinates()'
