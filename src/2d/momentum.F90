@@ -1,4 +1,4 @@
-!$Id: momentum.F90,v 1.6 2003-04-23 12:09:44 kbk Exp $
+!$Id: momentum.F90,v 1.7 2004-01-07 07:37:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,7 +28,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: momentum.F90,v $
-!  Revision 1.6  2003-04-23 12:09:44  kbk
+!  Revision 1.7  2004-01-07 07:37:36  kbk
+!  to compile with IFORT - TABS, etc.
+!
+!  Revision 1.6  2003/04/23 12:09:44  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.5  2003/04/07 15:54:16  kbk
@@ -182,7 +185,7 @@
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             cord_curv=(V(i,j)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC)) &
-	              /DV(i,j)*ARVD1
+                      /DV(i,j)*ARVD1
             fU(i,j)=(cord_curv+corv(i,j))*Uloc
 #else
             fU(i,j)=corv(i,j)*Uloc
@@ -293,7 +296,7 @@
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             cord_curv=(Vloc*(DYCIP1-DYC)-U(i,j)*(DXX-DXXJM1)) &
-	              /DU(i,j)*ARUD1
+                       /DU(i,j)*ARUD1
             fV(i,j)=(cord_curv+coru(i,j))*Vloc
 #else
             fV(i,j)=coru(i,j)*Vloc

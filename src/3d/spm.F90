@@ -1,4 +1,4 @@
-!$Id: spm.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
+!$Id: spm.F90,v 1.4 2004-01-07 07:37:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -44,7 +44,10 @@
 !  Original author(s): Manuel Ruiz Villarreal, Karsten Bolding and Hans Burchard
 !
 !  $Log: spm.F90,v $
-!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  Revision 1.4  2004-01-07 07:37:37  kbk
+!  to compile with IFORT - TABS, etc.
+!
+!  Revision 1.3  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 13:36:38  kbk
@@ -251,12 +254,12 @@
                if(erosed_flux) then
                   if(spm_pool(i,j) > 1.e-12) then ! If there are sediments in the pool
                      Erosion_Flux = spm_erosion_const / rho_0 * (taub(i,j)*rho_0-spm_tauc_erosion )  
-                     Erosion_Flux = max(Erosion_Flux,0.)
+                     Erosion_Flux = max(Erosion_Flux,_ZERO_)
                   else
                      Erosion_Flux = _ZERO_
                   end if
                   Sedimentation_Flux = spm_ws(i,j,1) * spm(i,j,1) *(1.-taub(i,j)*rho_0 / spm_tauc_sedimentation)
-                  Sedimentation_Flux = max(Sedimentation_Flux,0.)    
+                  Sedimentation_Flux = max(Sedimentation_Flux,_ZERO_)    
                   a4(1) = Erosion_Flux - Sedimentation_Flux
                   if (a4(1) > 1e-12) a4(1) = min(spm_pool(i,j)/dt, a4(1))
                   spm_pool(i,j) = spm_pool(i,j) -  dt * a4(1)
