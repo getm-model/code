@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.3 2003-03-17 15:04:14 gotm Exp $
+!$Id: meteo.F90,v 1.4 2003-04-07 15:15:16 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -42,9 +42,10 @@
 !  short_wave_radiation.F90, fluxes.F90, exchange_coefficients.F90
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,lonmap,latmap,az
-   use domain, only: iimin,iimax,jjmin,jjmax,conv
    use time, only: yearday,secondsofday,timestep
+   use halo_zones, only : H_TAG,update_2d_halo,wait_halo
+   use domain, only: imin,imax,jmin,jmax,lonc,latc,az
+   use domain, only: iimin,iimax,jjmin,jjmax,conv
    IMPLICIT NONE
 !
    private
@@ -60,9 +61,9 @@
    REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum,cc
    REALTYPE, public	:: w,L,rho_air,qs,qa,ea
 #ifdef WRONG_KONDO
-   REALTYPE, public	:: cd_mom,cd_heat
+   REALTYPE, public     :: cd_mom,cd_heat
 #else
-   REALTYPE, public	:: cd_mom,cd_heat,cd_latent
+   REALTYPE, public     :: cd_mom,cd_heat,cd_latent
 #endif
    REALTYPE, public	:: t_1=-_ONE_,t_2=-_ONE_
    logical, public	:: new_meteo=.false.
@@ -74,7 +75,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
-!  Revision 1.3  2003-03-17 15:04:14  gotm
+!  Revision 1.4  2003-04-07 15:15:16  kbk
+!  merged stable and devel
+!
+!  Revision 1.3  2003/03/17 15:04:14  gotm
 !  Fixed Kondo coefficients - -DWRONG_KONDO can be used
 !
 !  Revision 1.2  2002/08/16 12:11:06  gotm
@@ -325,8 +329,8 @@
 ! !INPUT PARAMETERS:
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   integer, intent(in)		:: n
-   REALTYPE, intent(inout)	:: sst(I2DFIELD)
+   integer, intent(in)                 :: n
+   REALTYPE, optional, intent(inout)   :: sst(I2DFIELD)
 !
 ! !OUTPUT PARAMETERS:
 !
@@ -342,6 +346,7 @@
    REALTYPE, parameter  :: pi=3.1415926535897932384626433832795029
    REALTYPE, parameter  :: deg2rad=pi/180.
    logical,save	:: first=.true.
+   logical	:: have_sst
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -368,18 +373,18 @@
             tausx = ramp*tx
             tausy = ramp*ty
 !     Rotation of wind stress due to grid convergence
-      do j=jjmin,jjmax
-         do i=iimin,iimax
-	    if ((conv(i,j) .ne. _ZERO_).and.(az(i,j).gt.0)) then
-	       sinconv=sin(-conv(i,j)*deg2rad)
-	       cosconv=cos(-conv(i,j)*deg2rad)
-	       uu=tausx(i,j)
-	       vv=tausy(i,j)
-	       tausx(i,j)= uu*cosconv+vv*sinconv
-	       tausy(i,j)=-uu*sinconv+vv*cosconv
-	    end if
-	 end do
-      end do
+            do j=jjmin,jjmax
+               do i=iimin,iimax
+                  if (conv(i,j) .ne. _ZERO_ .and. az(i,j) .gt. 0) then
+	             sinconv=sin(-conv(i,j)*deg2rad)
+	             cosconv=cos(-conv(i,j)*deg2rad)
+	             uu=tausx(i,j)
+	             vv=tausy(i,j)
+	             tausx(i,j)= uu*cosconv+vv*sinconv
+	             tausy(i,j)=-uu*sinconv+vv*cosconv
+	          end if
+	       end do
+            end do
 
 #ifdef CONSTANCE_TEST
             if (t.gt.2.*24.*3600) then
@@ -391,6 +396,7 @@
             shf   = shf_const
          case (2)
             if(calc_met) then
+have_sst = present(sst)
                if (new_meteo) then
                   if (.not. first) then
                      tausx_old = tausx
@@ -401,22 +407,22 @@
                   hh = secondsofday/3600.
                   do j=jmin,jmax
                      do i=imin,imax
-                        if (az(i,j) .gt. 0) then
-#if 0
-sst(i,j) = 5.
-cc(i,j) = 0.
-t2(i,j) = 18.
-hum(i,j) = 17.
-u10(i,j) = 5.
-v10(i,j) = 5.
-airp(i,j) = 100865.1
-#endif
+                        if (az(i,j) .ge. 1) then
+if (have_sst) then
                            swr(i,j) = short_wave_radiation	&
-                                   (yearday,hh,latmap(i,j),lonmap(i,j),cc(i,j))
+                                   (yearday,hh,latc(i,j),lonc(i,j),cc(i,j))
                            call exchange_coefficients(	&
-                                  u10(i,j),v10(i,j),t2(i,j),airp(i,j),sst(i,j),hum(i,j))
+                                  u10(i,j),v10(i,j),t2(i,j),airp(i,j), &
+                                  sst(i,j),hum(i,j))
                            call fluxes(u10(i,j),v10(i,j),t2(i,j),cc(i,j),  &
                                        sst(i,j),shf(i,j),tausx(i,j),tausy(i,j))
+else
+swr(i,j) = _ZERO_
+shf(i,j) = _ZERO_
+w=sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
+tausx(i,j) = 1.25e-3*1.25*w*U10(i,j)
+tausy(i,j) = 1.25e-3*1.25*w*V10(i,j)
+end if
                         else
                             swr(i,j) = _ZERO_
                             shf(i,j) = _ZERO_
@@ -425,6 +431,16 @@ airp(i,j) = 100865.1
                         end if
                      end do
                   end do
+		  if (have_sst) then
+call update_2d_halo(swr,swr,az,imin,jmin,imax,jmax,H_TAG)
+call wait_halo(H_TAG)
+call update_2d_halo(swr,shf,az,imin,jmin,imax,jmax,H_TAG)
+call wait_halo(H_TAG)
+                  end if
+call update_2d_halo(tausx,tausx,az,imin,jmin,imax,jmax,H_TAG)
+call wait_halo(H_TAG)
+call update_2d_halo(tausy,tausy,az,imin,jmin,imax,jmax,H_TAG)
+call wait_halo(H_TAG)
                   if (.not. first) then
                      d_tausx = tausx - tausx_old
                      d_tausy = tausy - tausy_old
