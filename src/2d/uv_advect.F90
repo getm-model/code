@@ -1,4 +1,4 @@
-!$Id: uv_advect.F90,v 1.5 2003-05-02 06:55:49 hb Exp $
+!$Id: uv_advect.F90,v 1.6 2003-08-28 10:33:25 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,az,au,av
+   use domain, only: imin,imax,jmin,jmax,az,au,av,ax
    use domain, only: ioff,joff
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dyc,arud1,dxx,dyx,arvd1,dxc
@@ -31,7 +31,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_advect.F90,v $
-!  Revision 1.5  2003-05-02 06:55:49  hb
+!  Revision 1.6  2003-08-28 10:33:25  kbk
+!  use of ax mask, PP is always set
+!
+!  Revision 1.5  2003/05/02 06:55:49  hb
 !  momemtum advection only for mask=1
 !
 !  Revision 1.4  2003/04/23 12:09:44  kbk
@@ -82,7 +85,6 @@
 !  Upstream for dx(U^2/D)
    do j=jmin,jmax         ! PP defined on T-points
       do i=imin,imax+1
-         PP(i,j) = _ZERO_
          if (az(i,j) .ge. 1) then
             PP(i,j)=0.5*(U(i-1,j)+U(i,j))
             if (PP(i,j) .gt. _ZERO_) then
@@ -91,6 +93,8 @@
                ii=i
             end if
             PP(i,j)=PP(i,j)*U(ii,j)/DU(ii,j)*DYC
+         else
+            PP(i,j) = _ZERO_
          end if
       end do
    end do
@@ -98,17 +102,14 @@
       do i=imin,imax
          if (au(i,j) .eq. 1) then
             UEx(i,j)=(PP(i+1,j)-PP(i  ,j))*ARUD1
-         else
-            UEx(i,j)= _ZERO_
          end if
       end do
    end do
 
 !  Upstream for dy(UV/D)
    do j=jmin-1,jmax        ! PP defined on X-points
-      do i=imin-1,imax
-         PP(i,j) = _ZERO_
-         if (au(i,j) .ge. 1 .or. au(i,j+1) .ge. 1) then
+      do i=imin,imax
+         if (ax(i,j) .ge. 1) then
             PP(i,j)=0.5*(V(i+1,j)+V(i,j))
             if (PP(i,j) .gt. _ZERO_) then
                jj=j
@@ -116,6 +117,8 @@
                jj=j+1
             end if
             PP(i,j)=PP(i,j)*U(i,jj)/DU(i,jj)*DXX
+         else
+            PP(i,j) = _ZERO_
          end if
       end do
    end do
@@ -128,10 +131,9 @@
    end do
 
 ! Upstream for dx(UV/D)
-   do j=jmin-1,jmax      ! PP defined on X-points
+   do j=jmin,jmax      ! PP defined on X-points
       do i=imin-1,imax
-         PP(i,j) = _ZERO_
-         if (av(i,j) .ge. 1 .or. av(i+1,j) .ge. 1) then
+         if (ax(i,j) .ge. 1) then
             PP(i,j)=0.5*(U(i,j)+U(i,j+1))
             if (PP(i,j) .gt. _ZERO_) then
                ii=i
@@ -139,6 +141,8 @@
                ii=i+1
             end if
             PP(i,j)=PP(i,j)*V(ii,j)/DV(ii,j)*DYX
+         else
+            PP(i,j) = _ZERO_
          end if
       end do
    end do
@@ -146,8 +150,6 @@
       do i=imin,imax
          if (av(i,j) .eq. 1) then
             VEx(i,j)=(PP(i  ,j)-PP(i-1,j))*ARVD1
-         else
-            VEx(i,j)= _ZERO_
          end if
       end do
    end do
@@ -155,7 +157,6 @@
 !  Upstream for dy(V^2/D)
    do j=jmin,jmax+1     ! PP defined on T-points
       do i=imin,imax
-         PP(i,j) = _ZERO_
          if (az(i,j) .ge. 1) then
             PP(i,j)=0.5*(V(i,j-1)+V(i,j))
             if (PP(i,j) .gt. _ZERO_) then
@@ -164,6 +165,8 @@
                jj=j
             end if
             PP(i,j)=PP(i,j)*V(i,jj)/DV(i,jj)*DXC
+         else
+            PP(i,j) = _ZERO_
          end if
       end do
    end do
