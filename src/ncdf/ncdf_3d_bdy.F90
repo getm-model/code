@@ -1,4 +1,4 @@
-!$Id: ncdf_3d_bdy.F90,v 1.5 2003-05-05 15:44:20 kbk Exp $
+!$Id: ncdf_3d_bdy.F90,v 1.6 2003-08-03 09:19:41 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,19 +29,24 @@
    integer                             :: ncid
    integer                             :: time_id,temp_id,salt_id
    integer                             :: start(4),edges(4)
-   integer                             :: time_dim,time_len,bdy_len
-   logical                             :: climatology=.false.,from_3d_fields=.false.
+   integer                             :: zax_dim,zax_len
+   integer                             :: time_dim,time_len
+   logical                             :: climatology=.false.
+   logical                             :: from_3d_fields=.false.
    REALTYPE                            :: offset
    REAL_4B, allocatable                :: bdy_times(:),wrk(:)
-   REALTYPE, allocatable, dimension(:,:) :: T_old, T_new
-   REALTYPE, allocatable, dimension(:,:) :: S_old, S_new
+   REALTYPE, allocatable, dimension(:,:)   :: T_old, T_new
+   REALTYPE, allocatable, dimension(:,:)   :: S_old, S_new
    REALTYPE, allocatable, dimension(:,:,:) :: T_bdy_clim,S_bdy_clim
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
-!  Revision 1.5  2003-05-05 15:44:20  kbk
+!  Revision 1.6  2003-08-03 09:19:41  kbk
+!  optimised reading of climatological boundary data
+!
+!  Revision 1.5  2003/05/05 15:44:20  kbk
 !  reads boundary values from 3D fields as individual columns
 !
 !  Revision 1.4  2003/04/23 11:54:03  kbk
@@ -95,7 +100,6 @@
    character(len=16), allocatable :: dim_name(:)
 
    REAL_4B, allocatable, dimension(:):: zlev
-   REAL_4B, allocatable, dimension(:,:,:):: sdum,tdum
 
    integer                   :: rc,err
    integer                   :: i,j,k,l,m,n,id
@@ -128,7 +132,7 @@
    do n=1,ndims
       err = nf_inq_dim(ncid, n, dim_name(n), dim_len(n))
       if (err .NE. NF_NOERR) go to 10
-      STDERR n,dim_name(n), dim_len(n)
+      LEVEL4 n,dim_name(n), dim_len(n)
    end do
 
    if(ndims .eq. 4) then
@@ -140,34 +144,33 @@
 !     4 -> time
       LEVEL4 'boundary data from 3D fields'
       from_3d_fields=.true.
+      zax_dim = 3
       time_dim = 4
-
-      allocate(zlev(dim_len(3)),stat=rc)
-      if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (zlev)'
-      err = nf_inq_varid(ncid, dim_name(3), id)
-      if (err .ne. NF_NOERR) go to 10
-      err = nf_get_var_real(ncid,id,zlev)
-      if (err .ne. NF_NOERR) go to 10
-      zlev = -_ONE_*zlev
-
-      allocate(wrk(dim_len(3)),stat=rc)
-      if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (wrk)'
-
-      allocate(tdum(imin:imax,jmin:jmax,dim_len(3)),stat=rc)
-      if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (tdum)'
-
-      allocate(sdum(imin:imax,jmin:jmax,dim_len(3)),stat=rc)
-      if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (sdum)'
    else
-      LEVEL4 'special boundary data file'
 !     We are reading boundary values from a special boundary data file
 !     1 -> zax,levels
 !     2 -> bdy_points
 !     3 -> time
-      bdy_len = dim_len(2)
+      LEVEL4 'special boundary data file'
+      zax_dim = 1
       time_dim = 3
    end if
+   zax_len = dim_len(zax_dim)
    time_len = dim_len(time_dim)
+
+   allocate(zlev(zax_len),stat=rc)
+   if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (zlev)'
+
+   err = nf_inq_varid(ncid, dim_name(zax_dim), id)
+   if (err .ne. NF_NOERR) go to 10
+
+   err = nf_get_var_real(ncid,id,zlev)
+   if (err .ne. NF_NOERR) go to 10
+   zlev = -_ONE_*zlev
+
+   allocate(wrk(zax_len),stat=rc)
+   if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (wrk)'
+
    if( time_len .le. 12) then
       climatology=.true.
       LEVEL4 'Assuming climatolgical 3D boundary conditions'
@@ -179,7 +182,7 @@
 
    err = nf_inq_varid(ncid,'salt',salt_id)
    if (err .NE. NF_NOERR) go to 10
-   
+
    if (climatology) then
       allocate(T_bdy_clim(time_len,nsbv,0:kmax),stat=rc)
       if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_bdy_clim)'
@@ -187,101 +190,122 @@
       allocate(S_bdy_clim(time_len,nsbv,0:kmax),stat=rc)
       if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy_clim)'
 
+!     we read each boundary column individually
+!     here we can read from both a 3D field and from a
+!     special ondary data file - only the arguments 'start' and 'edges'
+!     varies in the calls to 'nf_get_vara_real()'
+!     m counts the time
+!     l counts the boundary number
+!     k counts the number of the specific point
+!     MUST cover the same area as in topo.nc 
       if (from_3d_fields) then
-!        we read each boundary column individually
-!        m counts the time
-!        l counts the boundary number
-!        k counts the number of the specific point
-!        MUST cover the same area as in topo.nc 
          edges(1) = 1;
          edges(2) = 1;
          start(3) = 1; edges(3) = dim_len(3);
          edges(4) = 1
-         do m=1,time_len
-            start(4) = m
-
-            l = 0
-            do n=1,NWB
-               l = l+1
-               k = bdy_index(l)
-               i = wi(n)
-               do j=wfj(n),wlj(n)
-                  start(1) = i+ioff ; start(2) = j+joff
-                  err = nf_get_vara_real(ncid,salt_id,start,edges,wrk)
-                  if (err .ne. NF_NOERR) go to 10
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                                S_bdy_clim(m,k,:))
-                  err = nf_get_vara_real(ncid,temp_id,start,edges,wrk)
-                  if (err .ne. NF_NOERR) go to 10
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                                T_bdy_clim(m,k,:))
-                  k = k+1
-               end do
-            end do
-
-            do n = 1,NNB
-               l = l+1
-               k = bdy_index(l)
-               j = nj(n)
-               do i = nfi(n),nli(n)
-                  start(1) = i+ioff ; start(2) = j+joff
-                  err = nf_get_vara_real(ncid,salt_id,start,edges,wrk)
-                  if (err .ne. NF_NOERR) go to 10
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                                S_bdy_clim(m,k,:))
-                  err = nf_get_vara_real(ncid,temp_id,start,edges,wrk)
-                  if (err .ne. NF_NOERR) go to 10
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                                T_bdy_clim(m,k,:))
-                  k = k+1
-               end do
-            end do
-
-            do n=1,NEB
-               l = l+1
-               k = bdy_index(l)
-               i = ei(n)
-               do j=efj(1),elj(1)
-                  start(1) = i+ioff ; start(2) = j+joff
-                  err = nf_get_vara_real(ncid,salt_id,start,edges,wrk)
-                  if (err .ne. NF_NOERR) go to 10
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                                S_bdy_clim(m,k,:))
-                  err = nf_get_vara_real(ncid,temp_id,start,edges,wrk)
-                  if (err .ne. NF_NOERR) go to 10
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                                T_bdy_clim(m,k,:))
-                  k = k+1
-               end do
-            end do
-
-            do n = 1,NSB
-               l = l+1
-               k = bdy_index(l)
-               j = sj(n)
-               do i = sfi(n),sli(n)
-                  start(1) = i+ioff ; start(2) = j+joff
-                  err = nf_get_vara_real(ncid,salt_id,start,edges,wrk)
-                  if (err .ne. NF_NOERR) go to 10
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                                S_bdy_clim(m,k,:))
-                  err = nf_get_vara_real(ncid,temp_id,start,edges,wrk)
-                  if (err .ne. NF_NOERR) go to 10
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                                T_bdy_clim(m,k,:))
-                  k = k+1
-               end do
-            end do
-         end do
       else
          start(1) = 1; edges(1) = kmax+1;
-         start(2) = 1; edges(2) = nsbv;
+         edges(2) = 1;
          edges(3) = 1
-         STDERR 'ncdf_init_3d_bdy - not finished yet'
-         stop
       end if
+
+      do m=1,time_len
+         start(time_dim) = m
+
+         l = 0
+         do n=1,NWB
+            l = l+1
+            k = bdy_index(l)
+            i = wi(n)
+            do j=wfj(n),wlj(n)
+               if (from_3d_fields) then
+                  start(1) = i+ioff ; start(2) = j+joff
+               else
+                  start(2) = k
+               end if
+
+               err = nf_get_vara_real(ncid,salt_id,start,edges,wrk)
+               if (err .ne. NF_NOERR) go to 10
+               call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
+                             S_bdy_clim(m,k,:))
+               err = nf_get_vara_real(ncid,temp_id,start,edges,wrk)
+               if (err .ne. NF_NOERR) go to 10
+               call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
+                             T_bdy_clim(m,k,:))
+               k = k+1
+            end do
+         end do
+
+         do n = 1,NNB
+            l = l+1
+            k = bdy_index(l)
+            j = nj(n)
+            do i = nfi(n),nli(n)
+               if (from_3d_fields) then
+                  start(1) = i+ioff ; start(2) = j+joff
+               else
+                  start(2) = k
+               end if
+               err = nf_get_vara_real(ncid,salt_id,start,edges,wrk)
+               if (err .ne. NF_NOERR) go to 10
+               call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
+                          S_bdy_clim(m,k,:))
+               err = nf_get_vara_real(ncid,temp_id,start,edges,wrk)
+               if (err .ne. NF_NOERR) go to 10
+               call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
+                             T_bdy_clim(m,k,:))
+               k = k+1
+            end do
+         end do
+
+         do n=1,NEB
+            l = l+1
+            k = bdy_index(l)
+            i = ei(n)
+            do j=efj(1),elj(1)
+               if (from_3d_fields) then
+                  start(1) = i+ioff ; start(2) = j+joff
+               else
+                  start(2) = k
+               end if
+               err = nf_get_vara_real(ncid,salt_id,start,edges,wrk)
+               if (err .ne. NF_NOERR) go to 10
+               call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
+                             S_bdy_clim(m,k,:))
+               err = nf_get_vara_real(ncid,temp_id,start,edges,wrk)
+               if (err .ne. NF_NOERR) go to 10
+               call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
+                             T_bdy_clim(m,k,:))
+               k = k+1
+            end do
+         end do
+
+         do n = 1,NSB
+            l = l+1
+            k = bdy_index(l)
+            j = sj(n)
+            do i = sfi(n),sli(n)
+               if (from_3d_fields) then
+                  start(1) = i+ioff ; start(2) = j+joff
+               else
+                  start(2) = k
+               end if
+               err = nf_get_vara_real(ncid,salt_id,start,edges,wrk)
+               if (err .ne. NF_NOERR) go to 10
+               call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
+                             S_bdy_clim(m,k,:))
+               err = nf_get_vara_real(ncid,temp_id,start,edges,wrk)
+               if (err .ne. NF_NOERR) go to 10
+               call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:), &
+                             T_bdy_clim(m,k,:))
+               k = k+1
+            end do
+         end do
+      end do
       err = nf_close(ncid)
+
    else
+
       err = nf_inq_varid(ncid,'time',time_id)
       if (err .NE. NF_NOERR) go to 10
    
@@ -353,7 +377,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
-!  Revision 1.5  2003-05-05 15:44:20  kbk
+!  Revision 1.6  2003-08-03 09:19:41  kbk
+!  optimised reading of climatological boundary data
+!
+!  Revision 1.5  2003/05/05 15:44:20  kbk
 !  reads boundary values from 3D fields as individual columns
 !
 !  Revision 1.4  2003/04/23 11:54:03  kbk
