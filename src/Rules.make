@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.8 2003-10-07 07:40:47 kbk Exp $
+#$Id: Rules.make,v 1.9 2004-01-08 10:20:42 kbk Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -11,12 +11,6 @@
 #
 
 SHELL   = /bin/sh
-
-VERSION = 1
-PATCHLEVEL = 1
-SUBLEVEL = 0
-
-VER     = $(VERSION).$(PATCHLEVEL).$(SUBLEVEL)
 
 # The compilation mode is obtained from $COMPILATION_MODE
 # default production - else debug or profiling
@@ -88,7 +82,7 @@ endif
 
 # Top of this version of getm.
 ifndef GETMDIR
-GETMDIR  = $(HOME)/getm
+GETMDIR  = $(HOME)/getm-src
 endif
 
 ifndef BINDIR
