@@ -1,4 +1,4 @@
-!$Id: ww_momentum_3d.F90,v 1.1 2002-05-02 14:00:57 gotm Exp $
+!$Id: ww_momentum_3d.F90,v 1.2 2003-04-07 13:05:11 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,12 +12,12 @@
 !
 ! !USES:
    use domain, only: iimin,iimax,jjmin,jjmax,kmax
-   use variables_3d, only: dt,kmin,uu,vv,ww,ho,hn
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: arcd1,dxv,dyu
 #else
    use domain, only: dx,dy,ard1
 #endif
+   use variables_3d, only: dt,kmin,uu,vv,ww,ho,hn
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -30,8 +30,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: ww_momentum_3d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:57  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 13:05:11  kbk
+!  cleaned code
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:57  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.6  2001/08/27 11:50:17  bbh
 !  TVD-advection for momentum added, some bugs removed
