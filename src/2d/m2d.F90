@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.5 2003-08-03 08:53:30 kbk Exp $
+!$Id: m2d.F90,v 1.6 2003-08-15 12:47:40 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,7 +41,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m2d.F90,v $
-!  Revision 1.5  2003-08-03 08:53:30  kbk
+!  Revision 1.6  2003-08-15 12:47:40  kbk
+!  also calling cfl_check() when parallel run
+!
+!  Revision 1.5  2003/08/03 08:53:30  kbk
 !  not calling cfl_check when PARALLEL - should be fixed
 !
 !  Revision 1.4  2003/05/12 09:22:28  kbk
@@ -149,10 +152,10 @@
    call init_variables_2d(runtype)
 
 #ifdef PARALLEL
-   STDERR 'Not calling cfl_check() - PARALLEL'
-!   call cfl_check()
+!   STDERR 'Not calling cfl_check() - PARALLEL'
+   call cfl_check()
 #else
-    call cfl_check()
+   call cfl_check()
 #endif
 
    if (Am .lt. _ZERO_) then
@@ -253,13 +256,13 @@
 #endif
 #endif
    call momentum(loop,tausx,tausy,airp)
-   call sealevel()
-   call depth_update()
-
    if (runtype .gt. 1) then
       Uint=Uint+U
       Vint=Vint+V
    end if
+   call sealevel()
+   call depth_update()
+
    if(residual .gt. 0 .and. loop .ge. residual) then
       call do_residual(0)
    end if
