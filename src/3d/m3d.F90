@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.22 2004-08-06 15:14:35 hb Exp $
+!$Id: m3d.F90,v 1.23 2004-08-09 07:48:07 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -40,7 +40,7 @@
 !
 ! !PUBLIC DATA MEMBERS:
    integer                             :: M=1
-   REALTYPE                            :: cord_relax=_ZERO_   
+   REALTYPE                            :: cord_relax=_ZERO_
    logical                             :: calc_temp=.true.
    logical                             :: calc_salt=.true.
    logical                             :: calc_spm=.false.
@@ -53,7 +53,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.22  2004-08-06 15:14:35  hb
+!  Revision 1.23  2004-08-09 07:48:07  kbk
+!  checking for negative avmback and avhback
+!
+!  Revision 1.22  2004/08/06 15:14:35  hb
 !  num and nuh now properly initialised and no gotm call for CONSTANT_VISCOSITY
 !
 !  Revision 1.21  2004/07/29 19:48:44  hb
@@ -259,8 +262,15 @@
    read(NAMLST,m3d)
 !   rewind(NAMLST)
 
-   if ((avmback.lt._ZERO_).or.(avmback.lt._ZERO_))                     &
-          stop 'avmback and avhback must be non-negative'
+   if (avmback .lt. _ZERO_) then
+      LEVEL2 "setting avmback to 0."
+      avmback = _ZERO_
+   end if
+   if (avhback .lt. _ZERO_) then
+      LEVEL2 "setting avhback to 0."
+      avhback = _ZERO_
+   end if
+
 #ifndef SPM
    if(calc_spm) stop 'To use SPM you have to recompile with -DSPM'
 #endif
@@ -358,9 +368,9 @@
       if(calc_temp) call init_temperature(1)
       if(calc_salt) call init_salinity(1)
    end if
-#endif      
+#endif
 
-#ifndef NO_BAROCLINIC 
+#ifndef NO_BAROCLINIC
     if (runtype .eq. 3 .or. runtype .eq. 4) then
       call init_eqstate()
 #ifndef PECS
@@ -407,10 +417,10 @@
 ! !DESCRIPTION:
 ! A wrapper to call all 3D related subroutines in one subroutine.
 ! if #MUDFLAT is defined, then the sequence of velocity equations
-! and coordinate construction is made such that drying and flooding 
+! and coordinate construction is made such that drying and flooding
 ! is stable. If #MUDFLAT is not defined, then adaptive grids with
 ! Lagrangian component are supported. Both, drying and flooding and
-! Lagrangian coordinates does not go together. 
+! Lagrangian coordinates does not go together.
 !
 ! !REVISION HISTORY:
 !  See log for module
@@ -487,10 +497,10 @@
       if (calc_temp) call do_temperature(n)
       if (calc_salt) call do_salinity(n)
    end if
-#endif         
+#endif
 
-#ifndef NO_BAROCLINIC  
-   if(runtype .eq. 4) then 
+#ifndef NO_BAROCLINIC
+   if(runtype .eq. 4) then
 #ifndef PECS
       call do_eqstate()
 #endif
