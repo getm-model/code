@@ -1,4 +1,4 @@
-!$Id: bottom_friction_3d.F90,v 1.1 2002-05-02 14:00:53 gotm Exp $
+!$Id: bottom_friction_3d.F90,v 1.2 2003-04-01 15:25:33 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,10 +12,9 @@
 !
 ! !USES:
    use parameters, only: kappa,avmmol
-   use commhalo,   only: update_2d_halo,U_TAG,V_TAG
-   use domain,     only: iimin,iimax,jjmin,jjmax,kmax,au,av,min_depth
-   use m2d,        only: zub,zvb,zub0,zvb0
-   use variables_3d,        only: kumin,kvmin,uu,vv,huo,hun,hvo,hvn,rru,rrv
+   use domain, only: iimin,iimax,jjmin,jjmax,kmax,au,av,min_depth
+   use variables_2d, only: zub,zvb,zub0,zvb0
+   use variables_3d, only: kumin,kvmin,uu,vv,huo,hun,hvo,hvn,rru,rrv
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -28,8 +27,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: bottom_friction_3d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:53  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-01 15:25:33  gotm
+!  used save attribute on local variables
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:53  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.8  2001/10/22 07:52:04  bbh
 !  0. -> _ZERO_
@@ -59,14 +61,14 @@
 !  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
 !  initial import into CVS
 !
-!
 ! !LOCAL VARIABLES:
    integer 	:: i,j,kk
    REALTYPE	:: r,hh,fricvel
-   REALTYPE	:: uuloc(I2DFIELD)
-   REALTYPE	:: uvloc(I2DFIELD)
-   REALTYPE	:: vuloc(I2DFIELD)
-   REALTYPE	:: vvloc(I2DFIELD)
+   logical, save             :: first=.true.
+   REALTYPE, save            :: uuloc(I2DFIELD)
+   REALTYPE, save            :: uvloc(I2DFIELD)
+   REALTYPE, save            :: vuloc(I2DFIELD)
+   REALTYPE, save            :: vvloc(I2DFIELD)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -76,70 +78,87 @@
    write(debug,*) 'bottom_friction_3d() # ',Ncall
 #endif
 
-   do j=jjmin,jjmax
-      do i=iimin,iimax
-         if (au(i,j) .gt. 0) then
-         kk = kumin(i,j)
-         uuloc(i,j)=uu(i,j,kk)/(huo(i,j,kk))
-!         uvloc(i,j)=( vv(i,j  ,kk)+vv(i+1,j  ,kk)        &
-!                     +vv(i,j-1,kk)+vv(i+1,j-1,kk) )      &
-!                    /( hvo(i,j  ,kk)+hvo(i+1,j  ,kk)     &
-!                      +hvo(i,j-1,kk)+hvo(i+1,j-1,kk) )
-         uvloc(i,j)=0.25*( vv(i  ,j  ,kk)/hvo(i  ,j  ,kk)         &
-	                  +vv(i+1,j  ,kk)/hvo(i+1,j  ,kk)         &
-                          +vv(i  ,j-1,kk)/hvo(i  ,j-1,kk)         &
-		          +vv(i+1,j-1,kk)/hvo(i+1,j-1,kk) )
-         end if 			
-      end do
-   end do
-
-   do j=jjmin,jjmax
-      do i=iimin,iimax
-         if (av(i,j) .gt. 0) then
-         kk = kvmin(i,j)
-!         vuloc(i,j)=( uu(i  ,j  ,kk) + uu(i-1,j  ,kk)       &
-!                   +  uu(i  ,j+1,kk) + uu(i-1,j+1,kk) )     &
-!                      /(huo(i,j  ,kk)+huo(i-1,j  ,kk)       &
-!                       +huo(i,j+1,kk)+huo(i-1,j+1,kk) )
-         vuloc(i,j)=0.25*( uu(i  ,j  ,kk)/huo(i  ,j  ,kk)    &
-	                 + uu(i-1,j  ,kk)/huo(i-1,j  ,kk)    &
-                         + uu(i  ,j+1,kk)/huo(i  ,j+1,kk)    &
-			 + uu(i-1,j+1,kk)/huo(i-1,j+1,kk) )
-         vvloc(i,j)=vv(i,j,kk)/(hvo(i,j,kk))
-         end if 			
-      end do
-   end do
+   if(first) then
+      uuloc = _ZERO_
+      uvloc = _ZERO_
+      vuloc = _ZERO_
+      vvloc = _ZERO_
+      first = .false.
+   end if
 
    do j=jjmin,jjmax
       do i=iimin,iimax
          if (au(i,j) .ge. 1) then
-         hh=max(min_depth/kmax,hun(i,j,kumin(i,j)))
-         r=(zub(i,j)+0.5*hh)/zub(i,j)
-         r=(kappa/log(r))**2
-!         fricvel=sqrt(r*(uuloc(i,j)**2+uvloc(i,j)**2))
-!         zub(i,j)=min(hh,zub0(i,j)+0.1*avmmol/max(avmmol,fricvel))
-!         r=(zub(i,j)+0.5*hh)/zub(i,j)
-!         r=(kappa/log(r))**2
-         rru(i,j)=r*sqrt(uuloc(i,j)**2+uvloc(i,j)**2)
+            kk = kumin(i,j)
+            uuloc(i,j)=uu(i,j,kk)/(huo(i,j,kk))
+#if 0
+            uvloc(i,j)=( vv(i,j  ,kk)+vv(i+1,j  ,kk)        &
+                        +vv(i,j-1,kk)+vv(i+1,j-1,kk) )      &
+                       /( hvo(i,j  ,kk)+hvo(i+1,j  ,kk)     &
+                         +hvo(i,j-1,kk)+hvo(i+1,j-1,kk) )
+#else
+            uvloc(i,j)=0.25*( vv(i  ,j  ,kk)/hvo(i  ,j  ,kk)         &
+                             +vv(i+1,j  ,kk)/hvo(i+1,j  ,kk)         &
+                             +vv(i  ,j-1,kk)/hvo(i  ,j-1,kk)         &
+                             +vv(i+1,j-1,kk)/hvo(i+1,j-1,kk) )
+#endif
          end if
       end do
    end do
-
 
    do j=jjmin,jjmax
       do i=iimin,iimax
          if (av(i,j) .ge. 1) then
-         hh=max(min_depth/kmax,hvn(i,j,kvmin(i,j)))
-         r=(zvb(i,j)+0.5*hh)/zvb(i,j)
-         r=(kappa/log(r))**2
-!         fricvel=sqrt(r*(vuloc(i,j)**2+vvloc(i,j)**2))
-!         zvb(i,j)=min(hh,zvb0(i,j)+0.1*avmmol/max(avmmol,fricvel))
-!         r=(zvb(i,j)+0.5*hh)/zvb(i,j)
-!         r=(kappa/log(r))**2
-         rrv(i,j)=r*sqrt(vuloc(i,j)**2+vvloc(i,j)**2)
+            kk = kvmin(i,j)
+#if 0
+            vuloc(i,j)=( uu(i  ,j  ,kk) + uu(i-1,j  ,kk)       &
+                      +  uu(i  ,j+1,kk) + uu(i-1,j+1,kk) )     &
+                         /(huo(i,j  ,kk)+huo(i-1,j  ,kk)       &
+                          +huo(i,j+1,kk)+huo(i-1,j+1,kk) )
+#else
+            vuloc(i,j)=0.25*( uu(i  ,j  ,kk)/huo(i  ,j  ,kk)    &
+                            + uu(i-1,j  ,kk)/huo(i-1,j  ,kk)    &
+                            + uu(i  ,j+1,kk)/huo(i  ,j+1,kk)    &
+                            + uu(i-1,j+1,kk)/huo(i-1,j+1,kk) )
+#endif
+            vvloc(i,j)=vv(i,j,kk)/(hvo(i,j,kk))
+         end if 			
+      end do
+   end do
+
+#if 1
+   do j=jjmin,jjmax
+      do i=iimin,iimax
+         if (au(i,j) .ge. 1) then
+            hh=max(min_depth/kmax,hun(i,j,kumin(i,j)))
+            r=(zub(i,j)+0.5*hh)/zub(i,j)
+            r=(kappa/log(r))**2
+!            fricvel=sqrt(r*(uuloc(i,j)**2+uvloc(i,j)**2))
+!            zub(i,j)=min(hh,zub0(i,j)+0.1*avmmol/max(avmmol,fricvel))
+!            r=(zub(i,j)+0.5*hh)/zub(i,j)
+!            r=(kappa/log(r))**2
+            rru(i,j)=r*sqrt(uuloc(i,j)**2+uvloc(i,j)**2)
          end if
       end do
    end do
+#endif
+
+#if 1
+   do j=jjmin,jjmax
+      do i=iimin,iimax
+         if (av(i,j) .ge. 1) then
+            hh=max(min_depth/kmax,hvn(i,j,kvmin(i,j)))
+            r=(zvb(i,j)+0.5*hh)/zvb(i,j)
+            r=(kappa/log(r))**2
+!            fricvel=sqrt(r*(vuloc(i,j)**2+vvloc(i,j)**2))
+!            zvb(i,j)=min(hh,zvb0(i,j)+0.1*avmmol/max(avmmol,fricvel))
+!            r=(zvb(i,j)+0.5*hh)/zvb(i,j)
+!            r=(kappa/log(r))**2
+            rrv(i,j)=r*sqrt(vuloc(i,j)**2+vvloc(i,j)**2)
+         end if
+      end do
+   end do
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving bottom_friction_3d()'
