@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.8 2004-06-18 13:00:30 hb Exp $
+!$Id: internal_pressure.F90,v 1.9 2004-06-18 13:43:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -51,7 +51,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: internal_pressure.F90,v $
-!  Revision 1.8  2004-06-18 13:00:30  hb
+!  Revision 1.9  2004-06-18 13:43:50  kbk
+!  fixed first argument to getm_error()
+!
+!  Revision 1.8  2004/06/18 13:00:30  hb
 !  Chu and Fan disactivated because of inconsistencies
 !
 !  Revision 1.7  2004/05/03 09:31:47  lars
@@ -168,7 +171,7 @@
          LEVEL3 'Song and Wright scheme'
       case(CHU_FAN)
          LEVEL3 'Chu and Fan scheme'
-         call getm_error("init_3d()", &
+         call getm_error("init_internal_pressure()", &
              "Not working, use other internal pressure gradient scheme")
       case default
          FATAL 'Not valid ip_method specified'
