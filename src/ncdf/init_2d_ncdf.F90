@@ -1,4 +1,4 @@
-!$Id: init_2d_ncdf.F90,v 1.5 2003-06-17 14:53:29 kbk Exp $
+!$Id: init_2d_ncdf.F90,v 1.6 2003-10-07 09:11:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,10 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_2d_ncdf.F90,v $
-!  Revision 1.5  2003-06-17 14:53:29  kbk
+!  Revision 1.6  2003-10-07 09:11:38  kbk
+!  fixed typo: longname U10 -> V10 for v10 variable
+!
+!  Revision 1.5  2003/06/17 14:53:29  kbk
 !  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
 !
 !  Revision 1.4  2003/05/09 11:38:26  kbk
@@ -209,7 +212,7 @@
                              FillValue=fv,missing_value=mv,valid_range=vr)
          err = nf_def_var(ncid,'v10',NF_REAL,3,f3_dims,v10_id)
          if (err .NE. NF_NOERR) go to 10
-         call set_attributes(ncid,v10_id,long_name='U10',units='m/s', &
+         call set_attributes(ncid,v10_id,long_name='V10',units='m/s', &
                              FillValue=fv,missing_value=mv,valid_range=vr)
 
          fv = airp_missing; mv = airp_missing; 
