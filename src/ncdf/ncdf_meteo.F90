@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.11 2004-04-06 16:32:29 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.12 2004-08-09 08:39:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,6 +43,7 @@
    REALTYPE, allocatable     :: wrk_dp(:,:)
 
 !  For gridinterpolation
+   REALTYPE, allocatable     :: beta(:,:)
    REALTYPE, allocatable     :: ti(:,:),ui(:,:)
    integer, allocatable      :: gridmap(:,:,:)
 !
@@ -76,7 +77,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.11  2004-04-06 16:32:29  kbk
+!  Revision 1.12  2004-08-09 08:39:36  kbk
+!  if SPHERICAL and rotated meteo grid fixed turning of wind - Carsten Hansen (FRV)
+!
+!  Revision 1.11  2004/04/06 16:32:29  kbk
 !  TimeDiff --> time_diff
 !
 !  Revision 1.10  2004/01/15 11:45:01  kbk
@@ -142,8 +146,8 @@
 !  Based on names of various variables the corresponding variable ids
 !  are obtained from the NetCDF file.
 !  The dimensions of the meteological grid is read (x,y,t).
-!  If the southpole is not (0,-90,0) a rotated grid is assumed and 
-!  coefficients for interpolation between the meteorological grid and 
+!  If the southpole is not (0,-90,0) a rotated grid is assumed and
+!  coefficients for interpolation between the meteorological grid and
 !  the model grid are calculated.
 !  The arry \emph{met\_times} are filled with the times where forcing is
 !  available.
@@ -196,8 +200,14 @@
 
    if ( .not. on_grid ) then
 
+      allocate(beta(E2DFIELD),stat=err)
+      if (err /= 0) &
+          stop 'init_meteo_input_ncdf: Error allocating memory (beta)'
+      beta = _ZERO_
+
       allocate(ti(E2DFIELD),stat=err)
-      if (err /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (ti)'
+      if (err /= 0) &
+          stop 'init_meteo_input_ncdf: Error allocating memory (ti)'
       ti = -999.
 
       allocate(ui(E2DFIELD),stat=err)
@@ -217,8 +227,18 @@
          met_lat(j) =  28.125 + (j-1)*1.125
       end do
 #endif
+
+#ifdef NS_06NM_TEST
+      do i=1,iextr
+         met_lon(i) = -21.0 + (i-1)*1.
+      end do
+      do j=1,jextr
+         met_lat(j) =  48.0 + (j-1)*1.
+      end do
+      grid_scan=0
+#endif
       call init_grid_interpol(imin,imax,jmin,jmax,az,  &
-                lonc,latc,met_lon,met_lat,southpole,gridmap,ti,ui)
+                lonc,latc,met_lon,met_lat,southpole,gridmap,beta,ti,ui)
 
       LEVEL2 "Checking interpolation coefficients"
       do j=jmin,jmax
@@ -321,8 +341,8 @@
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
-!  Do book keeping about when new fields are to be read. Set variables 
-!  used by \emph{do\_meteo} and finally calls \emph{read\_data} if 
+!  Do book keeping about when new fields are to be read. Set variables
+!  used by \emph{do\_meteo} and finally calls \emph{read\_data} if
 !  necessary.
 !
 ! !INPUT PARAMETERS:
@@ -696,7 +716,27 @@
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,v10)
       end if
 
-!     Rotation of wind due to grid convergence      
+#ifdef SPHERICAL
+!     Rotation of wind due to grid convergence
+      do j=jmin,jmax
+         do i=imin,imax
+            if(beta(i,j) .ne. _ZERO_) then
+               sinconv=sin(beta(i,j))
+               cosconv=cos(beta(i,j))
+               uu=u10(i,j)
+               vv=v10(i,j)
+               u10(i,j)= uu*cosconv+vv*sinconv
+               v10(i,j)=-uu*sinconv+vv*cosconv
+            end if
+         end do
+      end do
+#else
+      if (southpole(1) .ne. 0. .or. southpole(2) .ne. -90.) then
+LEVEL0 "rotation of wind due to the combined effect of grid convergence"
+LEVEL0 "and rotated meteorological grid is not implemented yet."
+         stop "read_data()"
+      end if
+!     Rotation of wind due to grid convergence
       do j=jmin,jmax
          do i=imin,imax
             if(conv(i,j) .ne. _ZERO_) then
@@ -707,8 +747,9 @@
                u10(i,j)= uu*cosconv+vv*sinconv
                v10(i,j)=-uu*sinconv+vv*cosconv
             end if
-         end do   
-      end do  
+         end do
+      end do
+#endif
 
       err = nf_get_vara_real(ncid,airp_id,start,edges,wrk)
       if (err .ne. NF_NOERR) go to 10

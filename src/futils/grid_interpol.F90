@@ -1,4 +1,4 @@
-!$Id: grid_interpol.F90,v 1.7 2003-12-16 16:50:40 kbk Exp $
+!$Id: grid_interpol.F90,v 1.8 2004-08-09 08:39:36 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -40,7 +40,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: grid_interpol.F90,v $
-!  Revision 1.7  2003-12-16 16:50:40  kbk
+!  Revision 1.8  2004-08-09 08:39:36  kbk
+!  if SPHERICAL and rotated meteo grid fixed turning of wind - Carsten Hansen (FRV)
+!
+!  Revision 1.7  2003/12/16 16:50:40  kbk
 !  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
 !
 !  Revision 1.6  2003/10/30 16:31:36  kbk
@@ -85,7 +88,7 @@
 ! !INTERFACE:
    subroutine init_grid_interpol(imin,imax,jmin,jmax,mask,      &
                          olon,olat,met_lon,met_lat,southpole,   &
-                         gridmap,t,u,met_mask)
+                         gridmap,beta,t,u,met_mask)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -103,8 +106,10 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out) :: t(-HALO+1:,-HALO+1:),u(-HALO+1:,-HALO+1:)
-   integer, intent(out) :: gridmap(-HALO+1:,-HALO+1:,1:)
+   REALTYPE, intent(out)               :: beta(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(out)               :: t(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(out)               :: u(-HALO+1:,-HALO+1:)
+   integer, intent(out)                :: gridmap(-HALO+1:,-HALO+1:,1:)
 !
 ! !REVISION HISTORY:
 !
@@ -116,7 +121,6 @@
    REALTYPE                  :: x(4),y(4)
    REALTYPE                  :: z
    REALTYPE                  :: xr,yr,zr
-   REALTYPE, allocatable     :: beta(:,:)
 !EOP
 !-------------------------------------------------------------------------
 #ifdef DEBUG
@@ -159,9 +163,6 @@
    LEVEL2 'target field domain:'
    LEVEL3 'lon: ',olon(1,1),olon(imax,jmax)
    LEVEL3 'lat: ',olat(1,1),olat(imax,jmax)
-
-   allocate(beta(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_gridinterpol: Error allocating memory (beta)'
 
    if (present(met_mask)) then
       call interpol_coefficients(mask,southpole, &
