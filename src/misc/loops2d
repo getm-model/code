@@ -1,0 +1,10 @@
+DO i=imin+1,imax-1
+DO i=imin+1,imax-2
+DO i=imin,imax
+DO i=imin,imax-1
+
+DO j=jmin+1,jmax-1
+DO j=jmin+1,jmax-2
+DO j=jmin,jmax
+DO j=jmin,jmax-1
+

@@ -1,0 +1,25 @@
+The following files have been changed on October 29, 2001:
+
+coordinates.F90: the ga-definition for ord_type=3 is commented out because it
+                 seems not to be used.
+
+internal_pressure.F90: There is now a compiler option for the new 
+                       scheme of Song and Wright 1998. It is switched on for
+		       pressure gradient evaluation in sigma-coordinates
+		       (-DPRESS_GRAD_Z NOT defined).
+
+uu_mommentum.F90,vv_mommentum.F90,mommentum.F90: new Coriolis averaging of
+                      Espelid et al. 2000 used, switched on with -DNEW_CORI.
+		      When -DNEW_CORI is not set, simply the avarage
+		      transports are used.
+
+                      In momentum.F90, the slow term for bottom friction does
+		      now always absorb energy.
+
+bottom_friction_3d.F90: Averaging of bottom velocities changed.
+
+m3d.F90: Also in init_3d, start_macro is called before coordinates. 
+         This is a must, because otherwise ssvn etc are zero.
+
+uv_diffusion.F90: Here I have written some lines which are however
+                  commented out. They should stay there for the first. 

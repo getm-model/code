@@ -1,0 +1,55 @@
+Did it differently: time_index: returns in integer to be used in reading fields in ncdf-files
+
+DONE: save jul and secs in bdy_2d.nc files and implement real times
+
+Did it differently: use time_index in get_2d_bdy_ncdf.F90
+
+DONE: update getm.inp to reflect real tidal simulation period - start with ns_coarse.
+
+DONE: read initial fields of salinity and temperature
+
+DONE: stub for internal_pressure - equation_of_state
+
+we need sigma_to_z and z_to_sigma
+
+Ready to implement: temperature.F90, salinity.F90, advection_3d.F90, eqstate.F90, internal_pressure.F90. Should use lock_exchange as test-bed. Within
+#ifdef BAROCLINIC
+
+#endif
+hardcoding is permitted - e.g. variables that later should be read from namelists.
+
+20010608: kbk
+src/ncdf: really needs cleaning - just added ncdf_lon_lat() should maybe make
+a module called ncdf_domain.F90
+
+20010827: hb -- todo items discussed in Schwarzenbek
+
+Put most hardcoded variable settings into the getm.inp file (Karsten) 
+
+Horizontal tracer and momentum diffusion (Hans) 
+
+Solar radiation into Temperature.F90 (Karsten)
+
+Non-reflective lateral boundary conditions (Hans for algorithm, 
+Karsten for data input) 
+
+Work out straight-forward graphical system for GETM (Karsten) 
+
+Source code documentation (Hans, Karsten) 
+
+Run tides for North Sea (Hans, Karsten) 
+
+Set up output routine for lateral boundary conditions for 
+one-way nesting (Karsten)
+
+Interpolation of vertical profiles of T and S into domain, horizontally
+homogeneous and horizontally inhomogeneous (Karsten)
+
+Run simulations for Lake Constance, unstratified, stratified (Hans)  
+
+Data input for rivers (Karsten) 
+
+
+
+
+

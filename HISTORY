@@ -1,0 +1,14 @@
+Initial version developed by Hans Burchard in the Matar MAST project.
+The original code was not very generel and in order to apply it for 
+a different area quite a lot should be changed.
+
+Shortly after Karsten Bolding started at JRC we decided to join forces
+and turn the original code into a generel purpuse 3D model. The first 
+step was to remove all non-generel code from the original code. Second 
+step was to implement generel input-output routines. We decided to use
+NETCDF as file format. Third step was to implement baroclinic effects.
+In late July 1998 the first beta was ready - still with some missing
+features - and was run for different simple test cases.
+
+980724: 
+

@@ -1,0 +1,33 @@
+	: updated in	: diff used in
+domain:
+D	: 
+
+2D - module:
+z	: sealevel
+U	: momentum
+V	: momentum
+DU	: depthupdate
+DV	: depthupdate
+
+
+
+3D - module:
+
+uu	: d3uumomentum	: d3bottomfriction,d3bottomstress,d3stresses,d3uvadvect,d3vvmomentum,d3wwmomentum,ss_nn
+vv	: d3vvmomentum	: d3bottomfriction,d3bottomstress,d3stresses,d3uumomentum,d3uvadvect,d3wwmomentum,ss_nn
+num	: 
+
+huo	: coordinates	: d3bottomfriction,d3vvmomentum
+hun	: coordinates	: d3bottomstress,d3bottomstress,d3stresses,d3uvadvect,ss_nn
+hvo	: coordinates	: d3bottomfriction,d3uumomentum
+hvn	: coordinates	: d3bottomfriction,d3bottomstress,d3stresses,d3uvadvect,ss_nn
+sseo	: startmacro	: d3uumomentum,d3vvmomentum
+rru	: d3bottomfriction	: d3bottomstress,d3stresses
+rrv	: d3bottomfriction	: d3bottomstress,d3stresses
+
+tausy	: from meteo
+tausy	: from meteo
+
+slowadvection() ???
+
+call update_3d_halo(uu,uu,iimin,jjmin,iimax,jjmax,kmax,1)

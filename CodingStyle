@@ -1,0 +1,60 @@
+$Id: CodingStyle,v 1.1 2002-05-02 14:00:27 gotm Exp $
+
+In this file a few general rules for coding 'getm' are given.
+
+0: Use of module, subroutine and function templates.
+In the template directory example files of modules, subroutines and functions
+are available. Please use those if you need to create a new file and please fill
+in all relevant information - especially author and description.
+
+1: Indentation
+Since Fortran90 allows for free-format we don't have to stick to the column 7
+rule. After a bit of testing we have chosen that each new level should be 
+indented 3 blanks e.g..
+
+   subroutine egon
+   logical is_it_true
+   integer i,j
+
+   kaj = 1
+   if (is_it_true) then
+      do i=1,100
+         j=i
+      end do
+   end if
+
+   return
+   end
+
+And please don't put any blanks at the end of lines.
+
+2: Upper and lower case.
+We keep everything in lower case.
+
+3: Variable naming conventions.
+Highest priority is - readability - therefore we have chosen the C-style 
+convention - where we use _ instead of mixed upper/lower case variable names.
+Variables - especially public variables - should have a meaningful name
+like in 'have_boundaries'.
+
+4: Writing diagnostics.
+A few pre-processing definitions have been defined in cppdefs.h to ease writing
+ diagnostics and also to give diagnostics a consistent look. Have a look in 
+cppdefs.h for the actual definitions. Here is just one example:
+
+Instead of coding:
+   write(0,*) 'Some diagnostic ouput'
+use
+   STDERR 'Some diagnostic ouput'
+
+This makes it very easy to change the entire diagnostic system in the program
+by simply changing the definition of STDERR in cppdefs.h.
+To allow for different identations the following set of definitions have been
+implemented:
+LEVEL0 to LEVEL4 they are to be used as STDERR.
+
+5: Import explicitely variables from modules. 
+When other modules are used always use the 'ONLY' keyword and do only import
+the variables actually needed. This give a much clearerpicture of the data 
+flow in the programme.
+
