@@ -1,4 +1,4 @@
-!$Id: init_2d_ncdf.F90,v 1.1 2002-05-02 14:01:48 gotm Exp $
+!$Id: init_2d_ncdf.F90,v 1.2 2003-04-07 12:48:11 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -14,7 +14,7 @@
    use ncdf_2d
    use domain, only: ioff,joff,imin,imax,jmin,jmax
    use domain, only: grid_type
-   use meteo, only: calc_met
+   use meteo, only: metforcing,calc_met
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -27,8 +27,11 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_2d_ncdf.F90,v $
-!  Revision 1.1  2002-05-02 14:01:48  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 12:48:11  kbk
+!  uses metfocing variable
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:48  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.5  2001/10/26 12:18:06  bbh
 !  No actual storing of data in init_2d_ncdf.F90 -> save_2d_ncdf.F90
@@ -173,9 +176,7 @@
    			FillValue=fv,missing_value=mv,valid_range=vr)
 
 !  meteorology
-STDERR '++++ calc_met ++++++++ init_2d_ncdf ++++'
-calc_met = .true.
-   if (save_meteo) then
+   if (metforcing .and. save_meteo) then
       if (calc_met) then
          fv = _ZERO_; mv = _ZERO_; vr(1) = -50.; vr(2) =  50.
          err = nf_def_var(ncid,'u10',NF_REAL,3,f3_dims,u10_id)
