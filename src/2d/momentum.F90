@@ -1,4 +1,4 @@
-!$Id: momentum.F90,v 1.4 2003-04-02 11:35:14 gotm Exp $
+!$Id: momentum.F90,v 1.5 2003-04-07 15:54:16 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,14 +28,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: momentum.F90,v $
-!  Revision 1.4  2003-04-02 11:35:14  gotm
-!  au and av included for spherical
-!
-!  Revision 1.3  2003/03/20 15:58:29  gotm
-!  removed STDERRi statement
-!
-!  Revision 1.2  2003/03/20 15:51:00  gotm
-!  cleaned + added masked fU/fV = 0. in Coriolis calc
+!  Revision 1.5  2003-04-07 15:54:16  kbk
+!  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:44  gotm
 !  recovering after CVS crash
@@ -69,6 +63,7 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
+  logical	:: ufirst=.false.  
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -78,12 +73,14 @@
    write(debug,*) 'Momentum() # ',Ncall
 #endif
 
-   if(mod(n,2) .eq. 0) then
+   if(ufirst) then
       call umomentum(tausx,airp)
       call vmomentum(tausy,airp)
+      ufirst = .false.
    else
       call vmomentum(tausy,airp)
       call umomentum(tausx,airp)
+      ufirst = .true.
    end if
 
    return
@@ -102,9 +99,8 @@
 !
 ! !USES:
    use parameters, only: g,rho_0
-   use commhalo,   only: update_2d_halo,wait_halo,U_TAG
-   use domain,     only: kmax,imin,imax,jmin,jmax,H,au,av,min_depth,Cori
-   use domain,     only: dry_u,corv
+   use domain,     only: kmax,imin,imax,jmin,jmax,H,au,min_depth,Cori,dry_u
+   use domain,     only: av,corv
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain,       only: dxu,arvd1,dxc,dyx
    use variables_2d, only: V
@@ -112,7 +108,8 @@
    use domain,       only: dx
 #endif
    use m2d, only: dtm
-   use m2d, only: D,z,UEx,U,DU,fV,SlUx,SlRu,ru,fU,DV,uavg
+   use variables_2d, only: D,z,UEx,U,DU,fV,SlUx,SlRu,ru,fU,DV
+   use halo_zones, only : update_2d_halo,wait_halo,U_TAG
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -129,8 +126,8 @@
    integer	:: i,j
    REALTYPE	:: zx(E2DFIELD),Slr(E2DFIELD),tausu(E2DFIELD)
    REALTYPE	:: zp,zm,Uloc,Uold
-   integer, save :: n
    REALTYPE	:: gamma=rho_0*g
+   REALTYPE	:: cord_curv=_ZERO_
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -140,7 +137,6 @@
    write(debug,*) 'umomentum() # ',Ncall
 #endif
 
-   n = n+1
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .gt. 0) then
@@ -152,26 +148,20 @@
       end do
    end do
 
-   where (U.gt.0)
+   where (U .gt. 0)
       Slr=max(Slru, _ZERO_ )
-   end where
-   where (U.le.0)
+   else where
       Slr=min(Slru, _ZERO_ )
    end where
 
-   where ((au .eq. 1).or.(au .eq. 2))
+   where ((au .eq. 1) .or. (au .eq. 2))
       U=(U-dtm*(g*DU*zx+dry_u*(-tausu/rho_0-fV+UEx+SlUx+Slr)))/(1+dtm*ru/DU)
    end where
-
-   ! Lateral zero-gradient boundary condition (north & south)
-   do i=imin,imax
-      if (au(i,jmin).eq.3) U(i,jmin)=U(i,jmin+1)
-      if (au(i,jmax).eq.3) U(i,jmax)=U(i,jmax-1)
-   end do
 
 !  now u is calculated
    call update_2d_halo(U,U,au,imin,jmin,imax,jmax,U_TAG)
    call wait_halo(U_TAG)
+   call mirror_bdy_2d(U,U_TAG)
 
 ! Semi-implicit treatment of Coriolis force for V-momentum eq.
    do j=jmin,jmax
@@ -179,20 +169,21 @@
          if(av(i,j) .ge. 1) then
 ! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
-            Uloc=( U(i,j  )/sqrt(DU(i,j  ))+ U(i-1,j  )/sqrt(DU(i-1,j  ))   &
-                 + U(i,j+1)/sqrt(DU(i,j+1))+ U(i-1,j+1)/sqrt(DU(i-1,j+1)))  &
-                 *0.25*sqrt(DV(i,j))
+            Uloc= &
+               ( U(i,j  )/sqrt(DU(i,j  ))+ U(i-1,j  )/sqrt(DU(i-1,j  ))   &
+               + U(i,j+1)/sqrt(DU(i,j+1))+ U(i-1,j+1)/sqrt(DU(i-1,j+1)))  &
+               *0.25*sqrt(DV(i,j))
 #else
             Uloc=0.25*( U(i,j)+ U(i-1,j)+ U(i,j+1)+ U(i-1,j+1))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-            fU(i,j)=(V(i,j)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC))/DV(i,j)*ARVD1
+            cord_curv=(V(i,j)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC))/DV(i,j)*ARVD1
+            fU(i,j)=(cord_curv+corv(i,j))*Uloc
 #else
-            fU(i,j)= _ZERO_
+            fU(i,j)=corv(i,j)*Uloc
 #endif
-            fU(i,j)=(fU(i,j)+corv(i,j))*Uloc
          else
-            fU(i,j) = _ZERO_
+            fU(i,j)= _ZERO_
          end if
       end do
    end do
@@ -217,17 +208,17 @@
 !
 ! !USES:
    use parameters, only: g,rho_0
-   use commhalo,   only: update_2d_halo,wait_halo,V_TAG
-   use domain,     only: imin,imax,jmin,jmax,H,au,av,min_depth,Cori
-   use domain,     only: dry_v,coru
+   use domain,     only: imin,imax,jmin,jmax,H,av,min_depth,Cori
+   use domain,     only: dry_v,au,coru
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain,     only: dyv,arud1,dxx,dyc
    use m2d,        only: U
 #else
    use domain,     only: dy
 #endif
-   use m2d,        only: dtm,D,z,VEx,V,DV,fU,SlVx,SlRv,rv,fV,DU
-   use m2d,        only: vavg
+   use m2d,        only: dtm
+   use variables_2d, only: D,z,VEx,V,DV,fU,SlVx,SlRv,rv,fV,DU
+   use halo_zones, only : update_2d_halo,wait_halo,V_TAG
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -244,8 +235,8 @@
    integer	:: i,j
    REALTYPE	:: zy(E2DFIELD),Slr(E2DFIELD),tausv(E2DFIELD)
    REALTYPE	:: zp,zm,Vloc
-   integer, save :: n
    REALTYPE	:: gamma=rho_0*g
+   REALTYPE	:: cord_curv=_ZERO_
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -255,7 +246,6 @@
    write(debug,*) 'vmomentum() # ',Ncall
 #endif
 
-   n = n+1
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .gt. 0) then
@@ -267,25 +257,20 @@
       end do
    end do
 
-   where (V.gt.0)
+   where (V .gt. 0)
       Slr=max(Slrv, _ZERO_ )
-   end where
-   where (V.le.0)
+   else where
       Slr=min(Slrv, _ZERO_ )
    end where
 
-   where ((av .eq. 1).or.(av .eq. 2))
+   where ((av .eq. 1) .or. (av .eq. 2))
       V=(V-dtm*(g*DV*zy+dry_v*(-tausv/rho_0+fU+VEx+SlVx+Slr)))/(1+dtm*rv/DV)
    end where
-
-   do j=jmin,jmax
-      if (av(imin,j).eq.3) V(imin,j)=V(imin+1,j)
-      if (av(imax,j).eq.3) V(imax,j)=V(imax-1,j)
-   end do
 
 !  now v is calculated
    call update_2d_halo(V,V,av,imin,jmin,imax,jmax,V_TAG)
    call wait_halo(V_TAG)
+   call mirror_bdy_2d(V,V_TAG)
 
 !  Semi-implicit treatment of Coriolis force for U-momentum eq.
    do j=jmin,jmax
@@ -293,18 +278,19 @@
          if(au(i,j) .ge. 1) then
 ! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
-            Vloc=( V(i,j  )/sqrt(DV(i,j  ))+ V(i+1,j  )/sqrt(DV(i+1,j  )) + &
-                   V(i,j-1)/sqrt(DV(i,j-1))+ V(i+1,j-1)/sqrt(DV(i+1,j-1)))  &
-                   *0.25*sqrt(DU(i,j))
+            Vloc = &
+	       ( V(i,j  )/sqrt(DV(i,j  ))+ V(i+1,j  )/sqrt(DV(i+1,j  )) + &
+                 V(i,j-1)/sqrt(DV(i,j-1))+ V(i+1,j-1)/sqrt(DV(i+1,j-1)))  &
+                    *0.25*sqrt(DU(i,j))
 #else
-            Vloc=0.25*( V(i,j)+ V(i+1,j)+ V(i,j-1)+ V(i+1,j-1))
+            Vloc = 0.25*( V(i,j)+ V(i+1,j)+ V(i,j-1)+ V(i+1,j-1))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-            fV(i,j)=(Vloc*(DYCIP1-DYC)-U(i,j)*(DXX-DXXJM1))/DU(i,j)*ARUD1
+         cord_curv=(Vloc*(DYCIP1-DYC)-U(i,j)*(DXX-DXXJM1))/DU(i,j)*ARUD1
+         fV(i,j)=(cord_curv+coru(i,j))*Vloc
 #else
-            fV(i,j)= _ZERO_
+         fV(i,j)=coru(i,j)*Vloc
 #endif
-            fV(i,j)=(fV(i,j)+coru(i,j))*Vloc
          else
             fV(i,j) = _ZERO_
          end if
