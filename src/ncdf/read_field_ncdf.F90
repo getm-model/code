@@ -1,4 +1,4 @@
-!$Id: read_field_ncdf.F90,v 1.1 2002-05-02 14:01:47 gotm Exp $
+!$Id: read_field_ncdf.F90,v 1.2 2003-04-07 12:39:59 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,8 +12,9 @@
 !  From a NetCDF files - fname - read the variable - var - into the field - f.
 !
 ! !USES:
-   use domain, only: imin,jmin,imax,jmax,H,az
+   use domain, only: imin,jmin,imax,jmax,ioff,joff
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
+   use domain, only: H,az
    use variables_3d, only: hn
    IMPLICIT NONE
 !
@@ -30,8 +31,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: read_field_ncdf.F90,v $
-!  Revision 1.1  2002-05-02 14:01:47  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 12:39:59  kbk
+!  parallel support
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:47  gotm
+!  recovering after CVS crash
 !
 !
 ! !LOCAL VARIABLES:
@@ -78,10 +82,15 @@
 
    err = nf_inq_varid(ncid,trim(var),var_id)
    if (err .NE. NF_NOERR) go to 10
+
    allocate(wrk(ih,jh,kh),stat=rc)
    if (rc /= 0) stop 'read_field_ncdf: Error allocating wrk'
-   start(1) = 1 ; start(2) = 1; start(3) = 1; start(4) = n;
-   edges(1) = ih ; edges(2) = jh; edges(3) = kh; edges(4) = 1
+
+   start(1) = iimin+ioff ; start(2) = jjmin+joff; 
+   start(3) = 1; start(4) = n;
+   edges(1) = iimax-iimin+1 ; edges(2) = jjmax-jjmin+1; 
+   edges(3) = kh; edges(4) = 1
+
    err = nf_get_vara_real(ncid,var_id,start,edges,wrk)
    if (err .NE. NF_NOERR) go to 10
 

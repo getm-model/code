@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.1 2002-05-02 14:01:47 gotm Exp $
+!$Id: ncdf_topo.F90,v 1.2 2003-04-07 12:39:59 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,7 +19,7 @@
    implicit none
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)	:: FName
+   character(len=*), intent(in)	:: fname
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -34,8 +34,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_topo.F90,v $
-!  Revision 1.1  2002-05-02 14:01:47  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 12:39:59  kbk
+!  parallel support
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:47  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.5  2001/10/22 12:07:05  bbh
 !  Reading curvi-linear specific fields
@@ -61,9 +64,9 @@
    include "netcdf.inc"
 #ifdef DEBUG
    write(debug,*) 'get_dimensions (NetCDF)'
-   write(debug,*) 'Reading from: ',TRIM(FName)
+   write(debug,*) 'Reading from: ',TRIM(fname)
 #endif
-   err = nf_open(FName,NCNOWRIT,ncbathy)
+   err = nf_open(fname,nf_nowrite,ncbathy)
    if (err .NE. NF_NOERR) go to 10
 
 ! get bathymetry and dimension information
@@ -108,24 +111,29 @@
 ! !ROUTINE: get_bathymetry - reads bathymetry from NetCDF file
 !
 ! !INTERFACE:
-   subroutine get_bathymetry(H,Hland,imin,imax,jmin,jmax,rc)
+   subroutine get_bathymetry(H,Hland,iextr,jextr,ioff,joff,imin,imax,jmin,jmax,rc)
 !
 ! !USES:
    use ncdfin
+   use domain, only: lonc,latc
 #if ! ( defined(SPHERICAL) || defined(CURVILINEAR) ) 
-   use domain, only: dx,dy,lonmap,latmap,conv
+   use domain, only: dx,dy,conv
 #else
-   use domain, only: xx,yx,xc,yc,xu,yu,xv,yv,dxdyc,dydxc,angle,conv
-   use domain, only: lonx,latx,lonc,latc,lonu,latu,lonv,latv
+   use domain, only: lonx,latx,lonu,latu,lonv,latv
+   use domain, only: dxdyc,dydxc,angle,conv
+#if defined(CURVILINEAR)
+   use domain, only: xx,yx,xc,yc,xu,yu,xv,yv
+#endif
 #endif
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
 
 ! !INPUT PARAMETERS:
+   integer, intent(in) 		:: iextr,jextr,ioff,joff
+   integer, intent(in) 		:: imin,imax,jmin,jmax
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   integer, intent(inout) 	:: imin,imax,jmin,jmax
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out) 	:: H(E2DFIELD)
@@ -140,10 +148,8 @@
    integer	:: size,i,j,indx
    integer	:: id,err
    REALTYPE, parameter:: pi=3.1415927,deg2rad=pi/180.,rad2deg=180./pi
+   integer	:: il,ih,jl,jh,iloc,jloc
    REAL_4B, allocatable :: wrk(:)
-#ifdef SPHERICAL
-   
-#endif
 !EOP
 !-------------------------------------------------------------------------
 #include"netcdf.inc"
@@ -165,22 +171,35 @@
 
    H=Hland
 
-   start(1) = imin ; start(2) = jmin
-   edges(1) = imax-imin+1 ; edges(2) = jmax-jmin+1
-
-!kbk+ offset
    LEVEL3 'reading bathymetry'
-   err = nf_get_vara_real(ncbathy,h_id,start,edges,wrk)
-   if (err .ne. NF_NOERR) go to 10
-
-   indx = 1
-   do j=jmin,jmax
-     do i=imin,imax
-       H(i,j) = wrk(indx)
-       indx = indx+1
-     end do
-   end do
-
+#if 1
+   il = max(imin+ioff,1); ih = min(imax+ioff,iextr)
+   jl = max(jmin+joff,1); jh = min(jmax+joff,jextr)
+   il = max(imin-ioff,1); ih = min(imax+ioff,iextr)
+   jl = max(jmin-joff,1); jh = min(jmax+joff,jextr)
+   il = max(imin+ioff,1); ih = min(imax+ioff,iextr)
+   jl = max(jmin+joff,1); jh = min(jmax+joff,jextr)
+   iloc = max(imin-ioff,1); jloc = max(jmin-joff,1)
+#else
+   il = max(imin-ioff,1)
+   if(ioff .lt. 0) then
+      ih = min(imax,iextr)
+   else
+      ih = min(imax+ioff,iextr)
+   end  if
+   jl = max(jmin-joff,1)
+   if(joff .lt. 0) then
+      jh = min(jmax,jextr)
+   else
+      jh = min(jmax+joff,jextr)
+   end  if
+#endif
+STDERR ioff,joff
+STDERR il,jl
+STDERR ih,jh
+STDERR ih-il+1,jh-jl+1
+STDERR iloc,jloc
+   call read_2d_field("bathymetry",imin,imax,jmin,jmax,H,il,ih,jl,jh,iloc,jloc)
    where ( H .gt. 20000.)
       H = Hland
    end where
@@ -200,37 +219,84 @@
    if (err .ne. NF_NOERR) go to 10
    dy = wrk(1)
 
-   call read_2d_field("lon",imin,imax,jmin,jmax,lonmap,imin,imax,jmin,jmax)
-   call read_2d_field("lat",imin,imax,jmin,jmax,latmap,imin,imax,jmin,jmax)
+!KBK   il = imin+ioff; ih = imax+ioff
+!KBK   jl = jmin+joff; jh = jmax+joff
+   call read_2d_field("lon",imin,imax,jmin,jmax,lonc,il,ih,jl,jh,iloc,jloc)
+   call read_2d_field("lat",imin,imax,jmin,jmax,latc,il,ih,jl,jh,iloc,jloc)
    conv = _ZERO_
-   call read_2d_field("conv",imin,imax,jmin,jmax,conv,imin,imax,jmin,jmax)
+   call read_2d_field("conv",imin,imax,jmin,jmax,conv,il,ih,jl,jh,iloc,jloc)
 #endif
+
 #ifdef SPHERICAL
    LEVEL3 'reading spherical grid information'
+!  Reading lat and lon for the C points
    start(1) = 1
-   edges(1) = imax-(imin-1)+1
-   err = nf_inq_varid(ncbathy,"lonx",id)
+   edges(1) = imax-(imin-1)
+   err = nf_inq_varid(ncbathy,"lon",id)
    if (err .ne. NF_NOERR) go to 10
    err = nf_get_vara_real(ncbathy,id,start,edges,wrk)
    if (err .ne. NF_NOERR) go to 10
-   xx(0:imax) = wrk(1:edges(1))
-   xx(imax+1) = 2.*xx(imax)-xx(imax-1)
-!KBK   do j=jmin-1,jmax
-!KBK     lonx(:,j) = wrk(1:edges(1))
-!KBK   end do
+   do j=jmin,jmax
+     lonc(1:,j) = wrk(1:edges(1))
+   end do
+
+   start(1) = 1
+   edges(1) = jmax-(jmin-1)
+   err = nf_inq_varid(ncbathy,"lat",id)
+   if (err .ne. NF_NOERR) go to 10
+   err = nf_get_vara_real(ncbathy,id,start,edges,wrk)
+   if (err .ne. NF_NOERR) go to 10
+   do i=imin,imax
+     latc(i,1:) = wrk(1:edges(1))
+   end do
+
+!  Getting lat and lon for the X points
+   start(1) = 1
+   edges(1) = imax-(imin-1)+1
+   err = nf_inq_varid(ncbathy,"lonx",id)
+   if (err .ne. NF_NOERR) then
+      LEVEL4 'Can not read lonx - generating from lonc'
+
+
+      STOP 'needs a fix - ncdf_topo.F90'
+
+
+
+!      lonx(0,1:) = lonc(1,1:) - (lonc(2,1:) - lonc(1,1:))/2.
+      lonx(0,0) = lonc(1,1) - (lonc(2,1) - lonc(1,1))/2.
+      lonx(0,1:) = lonc(1,1:) - (lonc(2,1:) - lonc(1,1:))/2.
+      do i=imin,imax
+         lonx(i:,1:) = (lonc(i:,1:) + lonc(i+1:,1:))/2.
+      end do
+   else
+      err = nf_get_vara_real(ncbathy,id,start,edges,wrk)
+      if (err .ne. NF_NOERR) go to 10
+      do j=jmin-1,jmax
+         lonx(0:,j) = wrk(1:edges(1))
+      end do
+      lonx(imax+1,:) = 2.*lonx(imax,:)-lonx(imax-1,:)
+   end if
 
    start(1) = 1
    edges(1) = jmax-(jmin-1)+1
    err = nf_inq_varid(ncbathy,"latx",id)
-   if (err .ne. NF_NOERR) go to 10
-   err = nf_get_vara_real(ncbathy,id,start,edges,wrk)
-   if (err .ne. NF_NOERR) go to 10
-   yx(0:jmax) = wrk(1:edges(1))
-   yx(jmax+1) = 2.*yx(jmax)-yx(jmax-1)
-!KBK   do i=imin-1,imax
-!KBK     latx(i,:) = wrk(1:edges(1))
-!KBK   end do
+   if (err .ne. NF_NOERR) then
+      LEVEL4 'Can not read latx - generating from latc'
+!      latx(0,0:) = latc(1,1:) - (latc(2,1:) - latc(1,1:))/2.
+      do i=imin,imax
+        latx(i,0:) = (latc(i,0:) + latc(i+1,0:))/2.
+      end do
+   else
+      err = nf_get_vara_real(ncbathy,id,start,edges,wrk)
+      if (err .ne. NF_NOERR) go to 10
+      do i=imin-1,imax
+        latx(i,0:) = wrk(1:edges(1))
+      end do
+      latx(:,jmax+1) = 2.*latx(:,jmax)-latx(:,jmax-1)
+   endif
+   
 #endif
+
 #ifdef CURVILINEAR
    LEVEL3 'reading curvi-linear grid information'
 !  need to read xx,yx,xc,yc,xu,yu,xv,yv
@@ -238,33 +304,51 @@
 !  also read dxdyc,dydxc,angle
 
 !  0:imax,0:jmax
-   call read_2d_field("xx",imin,imax,jmin,jmax,xx,imin-1,imax,jmin-1,jmax)
-   call read_2d_field("yx",imin,imax,jmin,jmax,yx,imin-1,imax,jmin-1,jmax)
+   il = imin+ioff-1; ih = imax+ioff
+   jl = jmin+joff-1; jh = jmax+joff
+   call read_2d_field("xx",imin,imax,jmin,jmax,xx,il,ih,jl,jh)
+   call read_2d_field("yx",imin,imax,jmin,jmax,yx,il,ih,jl,jh)
 !  1:imax,1:jmax
-   call read_2d_field("xc",imin,imax,jmin,jmax,xc,imin,imax,jmin,jmax)
-   call read_2d_field("yc",imin,imax,jmin,jmax,yc,imin,imax,jmin,jmax)
+   il = imin+ioff;   ih = imax+ioff
+   jl = jmin+joff;   jh = jmax+joff
+   call read_2d_field("xc",imin,imax,jmin,jmax,xc,il,ih,jl,jh)
+   call read_2d_field("yc",imin,imax,jmin,jmax,yc,il,ih,jl,jh)
 !  0:imax,1:jmax
-   call read_2d_field("xu",imin,imax,jmin,jmax,xu,imin-1,imax,jmin,jmax)
-   call read_2d_field("yu",imin,imax,jmin,jmax,yu,imin-1,imax,jmin,jmax)
+   il = imin+ioff-1; ih = imax+ioff
+   jl = jmin+joff;   jh = jmax+joff
+   call read_2d_field("xu",imin,imax,jmin,jmax,xu,il,ih,jl,jh)
+   call read_2d_field("yu",imin,imax,jmin,jmax,yu,il,ih,jl,jh)
 !  1:imax,0:jmax
-   call read_2d_field("xv",imin,imax,jmin,jmax,xv,imin,imax,jmin-1,jmax)
-   call read_2d_field("yv",imin,imax,jmin,jmax,yv,imin,imax,jmin-1,jmax)
+   il = imin+ioff;   ih = imax+ioff
+   jl = jmin+joff-1; jh = jmax+joff
+   call read_2d_field("xv",imin,imax,jmin,jmax,xv,il,ih,jl,jh)
+   call read_2d_field("yv",imin,imax,jmin,jmax,yv,il,ih,jl,jh)
 !  0:imax,0:jmax
-   call read_2d_field("lonx",imin,imax,jmin,jmax,lonx,imin-1,imax,jmin-1,jmax)
-   call read_2d_field("latx",imin,imax,jmin,jmax,latx,imin-1,imax,jmin-1,jmax)
+   il = imin+ioff-1; ih = imax+ioff
+   jl = jmin+joff-1; jh = jmax+joff
+   call read_2d_field("lonx",imin,imax,jmin,jmax,lonx,il,ih,jl,jh)
+   call read_2d_field("latx",imin,imax,jmin,jmax,latx,il,ih,jl,jh)
 !  1:imax,1:jmax
-   call read_2d_field("lonc",imin,imax,jmin,jmax,lonc,imin,imax,jmin,jmax)
-   call read_2d_field("latc",imin,imax,jmin,jmax,latc,imin,imax,jmin,jmax)
+   il = imin+ioff;   ih = imax+ioff
+   jl = jmin+joff;   jh = jmax+joff
+   call read_2d_field("lonc",imin,imax,jmin,jmax,lonc,il,ih,jl,jh)
+   call read_2d_field("latc",imin,imax,jmin,jmax,latc,il,ih,jl,jh)
 !  0:imax,1:jmax
-   call read_2d_field("lonu",imin,imax,jmin,jmax,lonu,imin-1,imax,jmin,jmax)
-   call read_2d_field("latu",imin,imax,jmin,jmax,latu,imin-1,imax,jmin,jmax)
+   il = imin+ioff-1; ih = imax+ioff
+   jl = jmin+joff;   jh = jmax+joff
+   call read_2d_field("lonu",imin,imax,jmin,jmax,lonu,il,ih,jl,jh)
+   call read_2d_field("latu",imin,imax,jmin,jmax,latu,il,ih,jl,jh)
 !  1:imax,0:jmax
-   call read_2d_field("lonv",imin,imax,jmin,jmax,lonv,imin,imax,jmin-1,jmax)
-   call read_2d_field("latv",imin,imax,jmin,jmax,latv,imin,imax,jmin-1,jmax)
+   il = imin+ioff;   ih = imax+ioff
+   jl = jmin+joff-1; jh = jmax+joff
+   call read_2d_field("lonv",imin,imax,jmin,jmax,lonv,il,ih,jl,jh)
+   call read_2d_field("latv",imin,imax,jmin,jmax,latv,il,ih,jl,jh)
 !  1:imax,1:jmax
-   call read_2d_field("dxdyc",imin,imax,jmin,jmax,dxdyc,imin,imax,jmin,jmax)
-   call read_2d_field("dydxc",imin,imax,jmin,jmax,dydxc,imin,imax,jmin,jmax)
-   call read_2d_field("angle",imin,imax,jmin,jmax,angle,imin,imax,jmin,jmax)
+   il = imin+ioff;   ih = imax+ioff
+   jl = jmin+joff;   jh = jmax+joff
+   call read_2d_field("dxdyc",imin,imax,jmin,jmax,dxdyc,il,ih,jl,jh)
+   call read_2d_field("dydxc",imin,imax,jmin,jmax,dydxc,il,ih,jl,jh)
+   call read_2d_field("angle",imin,imax,jmin,jmax,angle,il,ih,jl,jh)
 
 #ifdef DK_COARSE_CURV_TEST
 !  All coordinates are here divided by 1.85185 since the curvilinear grid
@@ -293,10 +377,6 @@
 
 #endif 
 
-#ifdef FORTRAN90
-   allocate(wrk(size),stat=rc)
-   if (rc /= 0) stop 'get_bathymetry: Error allocating work-space'
-#endif
 #ifdef DEBUG
    write(debug,*) 'Leaving get_bathymetry()'
    write(debug,*)
@@ -313,7 +393,7 @@
 ! !ROUTINE: read_2d_field -
 !
 ! !INTERFACE:
-   subroutine read_2d_field(name,imin,imax,jmin,jmax,field,il,ih,jl,jh)
+   subroutine read_2d_field(name,imin,imax,jmin,jmax,field,il,ih,jl,jh,iloc,jloc)
 !
 ! !USES:
    use ncdfin
@@ -325,6 +405,7 @@
    character(len=*), intent(in)	:: name
    integer, intent(in)	 	:: imin,imax,jmin,jmax
    integer, intent(in)	 	:: il,ih,jl,jh
+   integer, intent(in)	 	:: iloc,jloc
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -347,7 +428,7 @@
    allocate(wrk(size),stat=rc)
    if (rc /= 0) stop 'read_2d_field: Error allocating work-space'
 
-   start(1) = 1 ; start(2) = 1
+   start(1) = il ; start(2) = jl
    edges(1) = ih-il+1 ; edges(2) = jh-jl+1
 
    err = nf_inq_varid(ncbathy,name,id)
@@ -355,11 +436,11 @@
 
    err = nf_get_vara_real(ncbathy,id,start,edges,wrk)
    if (err .ne. NF_NOERR) go to 10
-
    indx = 1
    do j=jl,jh
      do i=il,ih
-       field(i,j) = wrk(indx)
+       field(i-il+iloc,j-jl+jloc) = wrk(indx)
+!KBK       field(i,j) = wrk(indx)
        indx = indx+1
      end do
    end do
