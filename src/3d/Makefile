@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.4 2004-01-06 15:04:00 kbk Exp $
+#$Id: Makefile,v 1.5 2004-04-06 16:50:50 kbk Exp $
 #
 # Makefile to build the 3D specific library - libm3d.a
 #
@@ -20,53 +20,59 @@ $(LIB)(variables_3d.o)		\
 $(LIB)(advection_3d.o)
 ifneq ($(GETM_NO_BAROCLINIC),true)
 MOD += \
-$(LIB)(temperature.o)		\
-$(LIB)(salinity.o)		\
-$(LIB)(eqstate.o)
+$(LIB)(temperature.o)			\
+$(LIB)(salinity.o)			\
+$(LIB)(eqstate.o)			\
+$(LIB)(internal_pressure.o)	
 endif
 ifneq ($(GETM_NO_SUSP_MATTER),true)
 MOD += \
 $(LIB)(spm.o)
 endif
 MOD += \
-$(LIB)(bdy_3d.o)		\
-$(LIB)(m3d.o)			\
+$(LIB)(bdy_3d.o)			\
+$(LIB)(m3d.o)				\
 $(LIB)(rivers.o)
 
 OBJ = \
-$(LIB)(start_macro.o)		\
-$(LIB)(coordinates.o)		\
-$(LIB)(bottom_friction_3d.o)	\
-$(LIB)(uu_momentum_3d.o)	\
-$(LIB)(vv_momentum_3d.o)	\
-$(LIB)(ww_momentum_3d.o)	\
-$(LIB)(uv_advect_3d.o)		\
+$(LIB)(start_macro.o)			\
+$(LIB)(coordinates.o)			\
+$(LIB)(bottom_friction_3d.o)		\
+$(LIB)(uu_momentum_3d.o)		\
+$(LIB)(vv_momentum_3d.o)		\
+$(LIB)(ww_momentum_3d.o)		\
+$(LIB)(uv_advect_3d.o)			\
 $(LIB)(uv_diffusion_3d.o)
 ifneq ($(GETM_NO_BAROCLINIC),true)
 OBJ += \
-$(LIB)(internal_pressure.o)
+$(LIB)(ip_blumberg_mellor.o)		\
+$(LIB)(ip_blumberg_mellor_lin.o)	\
+$(LIB)(ip_z_interpol.o)			\
+$(LIB)(ip_song_wright.o)		\
+$(LIB)(ip_chu_fan.o)            
 endif
 OBJ += \
-$(LIB)(eddyviscosity.o)		\
-$(LIB)(slow_bottom_friction.o)	\
-$(LIB)(slow_advection.o)	\
-$(LIB)(slow_diffusion.o)	\
-$(LIB)(slow_terms.o)		\
-$(LIB)(upstream_adv.o)		\
-$(LIB)(u_split_adv.o)		\
-$(LIB)(v_split_adv.o)		\
-$(LIB)(w_split_adv.o)		\
-$(LIB)(w_split_it_adv.o)	\
-$(LIB)(upstream_2dh_adv.o)	\
-$(LIB)(fct_2dh_adv.o)		\
+$(LIB)(eddyviscosity.o)			\
+$(LIB)(slow_bottom_friction.o)		\
+$(LIB)(slow_advection.o)		\
+$(LIB)(slow_diffusion.o)		\
+$(LIB)(slow_terms.o)			\
+$(LIB)(upstream_adv.o)			\
+$(LIB)(u_split_adv.o)			\
+$(LIB)(v_split_adv.o)			\
+$(LIB)(w_split_adv.o)			\
+$(LIB)(w_split_it_adv.o)		\
+$(LIB)(upstream_2dh_adv.o)		\
+$(LIB)(fct_2dh_adv.o)			\
 $(LIB)(stop_macro.o)
 
 ifeq ($(turbulence),gotm)
-OBJ += 		\
-$(LIB)(stresses_3d.o)		\
-$(LIB)(ss_nn.o)			\
+OBJ += 	\
+$(LIB)(stresses_3d.o)			\
+$(LIB)(ss_nn.o)				\
 $(LIB)(gotm.o)
 endif
+
 
 all: modules objects
 
@@ -76,7 +82,7 @@ objects: $(OBJ)
 
 $(MOD): $(INCS)
 
-$(OBJ): $(INCS)
+$(OBJ): $(MOD)
 
 doc:
 	$(PROTEX) $(SRC) > $(DOCDIR)/3d.tex
