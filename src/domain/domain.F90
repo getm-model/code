@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.4 2003-03-24 14:19:23 gotm Exp $
+!$Id: domain.F90,v 1.5 2003-04-07 14:34:42 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use commhalo, only	: myid,nprocs,comm_hd,update_2d_halo,wait_halo,H_TAG
+   use halo_zones, only	: update_2d_halo,wait_halo,H_TAG
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -20,7 +20,7 @@
    REALTYPE, allocatable, dimension(:) :: ga
    REALTYPE		:: ddu=-_ONE_,ddl=-_ONE_,d_gamma=20.
    logical		:: gamma_surf=.true.
-   integer		:: NWB,NNB,NEB,NSB
+   integer		:: NWB,NNB,NEB,NSB,NOB
    REALTYPE    		:: latitude=0.
    REALTYPE    		:: Hland
    REALTYPE		:: min_depth,crit_depth
@@ -33,29 +33,22 @@
 #endif
    integer		:: nsbv
    integer, parameter	:: INNER= 1
-!kbk   integer, parameter			:: OPENBDY=2
-!kbk  integer, parameter			:: HALO=3
    integer		:: ioff=0,joff=0
    integer, dimension(:), allocatable	:: wi,wfj,wlj
    integer, dimension(:), allocatable	:: nj,nfi,nli
    integer, dimension(:), allocatable	:: ei,efj,elj
    integer, dimension(:), allocatable	:: sj,sfi,sli
+   integer, allocatable			:: bdy_index(:),bdy_map(:,:)
 !kbk
-   REALTYPE		:: cori=0.
+   REALTYPE		:: cori= _ZERO_
    REALTYPE, parameter	:: rearth=6370.9490e3
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.4  2003-03-24 14:19:23  gotm
-!  added initialization of H,HU,HV
-!
-!  Revision 1.3  2003/03/17 15:00:20  gotm
-!  setting lonmap and latmap
-!
-!  Revision 1.2  2002/05/29 13:37:50  gotm
-!  New naming of .h files
+!  Revision 1.5  2003-04-07 14:34:42  kbk
+!  parallel support, proper spherical grid init. support
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:11  gotm
 !  recovering after CVS crash
@@ -133,12 +126,13 @@
 ! !IROUTINE: init_domain - initialise the computational domain
 !
 ! !INTERFACE:
-   subroutine init_domain()
+   subroutine init_domain(input_dir)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
 !
 ! !INPUT/OUTPUT PARAMETERS:
+   character(len=*)	:: input_dir
 !
 ! !OUTPUT PARAMETERS:
 !
@@ -189,7 +183,7 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'init_domain(): id =  ',myid
+   write(debug,*) 'init_domain()'
 #endif
 
    LEVEL1 'init_domain'
@@ -225,38 +219,33 @@
    select case (format)
       case(NETCDF)
 #ifdef STATIC
-         call get_dimensions(bathymetry,rc)
+!         call get_dimensions(trim(input_dir) // bathymetry,rc)
+         call get_dimensions('topo.nc',rc)
 #else
-         call get_dimensions(bathymetry,iextr,jextr,rc)
+call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
+         kmax=kdum
 #endif
-
-         if ( myid .lt. 0 .or. nprocs .eq. 1) then
+         call part_domain()
+         il=imin ; ih=imax ; jl=jmin ; jh=jmax
 #ifndef STATIC
-!kbk          imin = 1 ; imax = iextr ; jmin = 1 ; jmax = jextr;
-            if(il .eq. -1 .or. ih .eq. -1 .or. jl .eq. -1 .or. jh .eq. -1) then
-               imin = 1 ; imax = iextr ; jmin = 1 ; jmax = jextr;
-               il = imin ; il = imax ; jl = jmin ; jh = jmax
-            else
-               imin = 1 ; imax = ih-il+1 ; jmin = 1 ; jmax = jh-jl+1;
-            end if
-#endif
-         else
-            call read_par_setup(myid)
-         end if
-         il = imin ; ih = imax ; jl = jmin ; jh = jmax
-#ifndef STATIC
-         iimin = imin ; iimax = imax ; jjmin = jmin ; jjmax = jmax; kmax = kdum
 #include "dynamic_allocations_domain.h"
 #endif
          H = -10.
          HU = -10.
          HV = -10.
 
-         call get_bathymetry(H,Hland,il,ih,jl,jh,rc)
+lonc = -1000.
+latc = -1000.
 
+         call get_bathymetry(H,Hland,iextr,jextr,ioff,joff,imin,imax,jmin,jmax,rc)
          call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG)
-	 call wait_halo(H_TAG)
+         call wait_halo(H_TAG)
 
+         call update_2d_halo(lonc,lonc,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
+
+         call update_2d_halo(latc,latc,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
       case default
          FATAL 'A non valid input format has been chosen'
          stop 'init_domain'
@@ -270,30 +259,14 @@ end where
 #endif
 #endif
 
-! Define calculation masks
-   az = 0
-   az(imin-HALO:imin, : ) = 0
-   az(imax:imax+HALO, : ) = 0
-   az( :, jmin-HALO:jmin) = 0
-   az( :, jmax:jmax+HALO) = 0
-
-   az(imin-HALO:imin-1, : ) = 0
-   az(imax+1:imax+HALO, : ) = 0
-   az( :, jmin-HALO:jmin-1) = 0
-   az( :, jmax+1:jmax+HALO) = 0
-
-   where (H .gt. Hland+SMALL)
-      az=1
-   end where
-
    select case (grid_type)
       case(1)
 #if ! ( defined SPHERICAL || defined CURVILINEAR)
-         xc(1) = 0.5*dx
+         xc(1) = (ioff+0.5)*dx
          do i=imin+1,imax
             xc(i) = xc(i-1)+dx
          end do
-         yc(1) = 0.5*dy
+         yc(1) = (joff+0.5)*dy
          do j=jmin+1,jmax
             yc(j) = yc(j-1)+dy
          end do
@@ -305,94 +278,67 @@ end where
 #endif
       case(2)
 #ifdef SPHERICAL
-#if 0
-#ifdef NS_NOMADS_TEST
-       xx(0) = -5.083333-1./6.
-       do i=imin,imax+1
-          xx(i)=xx(0)+i*1./3.
-       end do
-       yx(0) = 48.8833-0.1
-       do j=jmin,jmax+1
-          yx(j)=yx(0)+j*0.2
-       end do
-#endif
-#endif
-#ifdef MED_15X15MINS_TEST
-       do i=imin,imax
-          lonmap(i,:)=-9.25+(i-1)*0.25
-       end do
-
-       do j=jmin,jmax
-          latmap(:,j)=30.25+(j-1)*0.25
-       end do
-#endif
-       do i=imin,imax+1
-          xc(i)=0.5*(xx(i)+xx(i-1))
-       end do
-       xc(imin-1)=2.*xc(imin)-xc(imin+1)
-!KBK       xc(imax+1)=xc(imax) + 0.5*(xx(imax+1)-xx(imax))
-       xu=xx
-       xv=xc
-       do j=jmin,jmax+1
-          yc(j)=0.5*(yx(j)+yx(j-1))
-       end do
-       yc(jmin-1)=2.*yc(jmin)-yc(jmin+1)
-!KBK       yc(jmax+1)=yc(jmax) + 0.5*(yx(jmax+1)-yx(jmax))
-       yv=yx
-       yu=yc
-       do j=jmin,jmax
-          do i=imin,imax
-             dxc(i,j)=deg2rad*(xu(i)-xu(i-1))*rearth*cos(deg2rad*yc(j))
-          end do
-       end do
-       do j=jmin,jmax
-          do i=imin-1,imax
-             dxu(i,j)=deg2rad*(xc(i+1)-xc(i))*rearth*cos(deg2rad*yc(j))
-          end do
-       end do
-       do j=jmin-1,jmax
-          do i=imin,imax
-             dxv(i,j)=deg2rad*(xx(i)-xx(i-1))*rearth*cos(deg2rad*yv(j))
-          end do
-       end do
-       do j=jmin-1,jmax
-          do i=imin-1,imax
-             dxx(i,j)=deg2rad*(xv(i+1)-xv(i))*rearth*cos(deg2rad*yx(j))
-          end do
-       end do
-       do j=jmin,jmax
-          do i=imin,imax
-             dyc(i,j)=deg2rad*(yv(j)-yv(j-1))*rearth
-          end do
-       end do
-       do i=imin-1,imax
+          lonu=lonx
+          lonv=lonc
+          latv=latx
+          latu=latc
           do j=jmin,jmax
-             dyu(i,j)=deg2rad*(yx(j)-yx(j-1))*rearth
+             do i=imin,imax
+                dxc(i,j)=deg2rad*(lonu(i,j)-lonu(i-1,j))*rearth &
+		         *cos(deg2rad*latc(i,j))
+             end do
           end do
-       end do
-       do j=jmin-1,jmax
-          do i=imin,imax
-             dyv(i,j)=deg2rad*(yc(j+1)-yc(j))*rearth
+          do j=jmin,jmax
+             do i=imin-1,imax
+                dxu(i,j)=deg2rad*(lonc(i+1,j)-lonc(i,j))*rearth &
+		         *cos(deg2rad*latc(i,j))
+             end do
           end do
-       end do
-       do j=jmin-1,jmax
+          do j=jmin-1,jmax
+             do i=imin,imax
+                dxv(i,j)=deg2rad*(lonx(i,j)-lonx(i-1,j))*rearth &
+		         *cos(deg2rad*latv(i,j))
+             end do
+          end do
+          do j=jmin-1,jmax
+             do i=imin-1,imax
+                dxx(i,j)=deg2rad*(lonv(i+1,j)-lonv(i,j))*rearth &
+		         *cos(deg2rad*latx(i,j))
+             end do
+          end do
+          do j=jmin,jmax
+             do i=imin,imax
+                dyc(i,j)=deg2rad*(latv(i,j)-latv(i,j-1))*rearth
+             end do
+          end do
           do i=imin-1,imax
-             dyx(i,j)=deg2rad*(yu(j+1)-yu(j))*rearth
+             do j=jmin,jmax
+                dyu(i,j)=deg2rad*(latx(i,j)-latx(i,j-1))*rearth
+             end do
           end do
-       end do
-       do j=jmin,jmax
-          do i=imin,imax
-             arcd1(i,j)=_ONE_/(dxc(i,j)*dyc(i,j))
-             arud1(i,j)=_ONE_/(dxu(i,j)*dyu(i,j))
-             arvd1(i,j)=_ONE_/(dxv(i,j)*dyv(i,j))
+          do j=jmin-1,jmax
+             do i=imin,imax
+                dyv(i,j)=deg2rad*(latc(i,j+1)-latc(i,j))*rearth
+             end do
           end do
-       end do
-       do j=jmin,jmax
-          do i=imin,imax
-             coru(i,j)=2.*omega*sin(deg2rad*yu(j))
-             corv(i,j)=2.*omega*sin(deg2rad*yv(j))
+          do j=jmin-1,jmax
+             do i=imin-1,imax
+                dyx(i,j)=deg2rad*(latu(i,j+1)-latu(i,j))*rearth
+             end do
           end do
-       end do
+          do j=jmin,jmax
+             do i=imin,imax
+                arcd1(i,j)=_ONE_/(dxc(i,j)*dyc(i,j))
+                arud1(i,j)=_ONE_/(dxu(i,j)*dyu(i,j))
+                arvd1(i,j)=_ONE_/(dxv(i,j)*dyv(i,j))
+             end do
+          end do
+          do j=jmin,jmax
+             do i=imin,imax
+                coru(i,j)=2.*omega*sin(deg2rad*latu(i,j))
+                corv(i,j)=2.*omega*sin(deg2rad*latv(i,j))
+             end do
+          end do
 #endif
       case(3)
 #ifdef CURVILINEAR
@@ -461,8 +407,6 @@ end where
 	 end do 	
 	 coru = 2.*omega*sin(deg2rad*latu)
 	 corv = 2.*omega*sin(deg2rad*latv)
-lonmap = lonc
-latmap = latc
 #endif
       case default
          FATAL 'A non valid grid type has been chosen'
@@ -470,29 +414,21 @@ latmap = latc
    end select
 
 !  Do we want to set a minimum depth for certain regions
-   call set_min_depth(min_depth_file)
+   call set_min_depth(trim(input_dir) // min_depth_file)
 
 !  Do we want to do adjust the bathymetry
-   call adjust_bathymetry(bathymetry_adjust_file)
+   call adjust_bathymetry(trim(input_dir) // bathymetry_adjust_file)
 
 !  Reads boundary location information
    if (openbdy) then
-      call bdy_spec(bdyinfofile)
+      call bdy_spec(trim(input_dir) // bdyinfofile)
       call print_bdy('Global Boundary Information')
+call have_bdy()
+call print_bdy('Local Boundary Information')
    end if
 
-! Define calculation masks
+!  Define calculation masks
    az = 0
-   az(imin-HALO:imin, : ) = 0
-   az(imax:imax+HALO, : ) = 0
-   az( :, jmin-HALO:jmin) = 0
-   az( :, jmax:jmax+HALO) = 0
-
-   az(imin-HALO:imin-1, : ) = 0
-   az(imax+1:imax+HALO, : ) = 0
-   az( :, jmin-HALO:jmin-1) = 0
-   az( :, jmax+1:jmax+HALO) = 0
-
    where (H .gt. Hland+SMALL)
       az=1
    end where
@@ -500,53 +436,32 @@ latmap = latc
 #define BOUNDARY_POINT 2
 !  western boundary - at present elev only
    do n=1,NWB
-#if 0
-      i=wi(n)
-      do j=wfj(n),wlj(n)
-         az(i,j) = BOUNDARY_POINT
-      end do
-#else
       az(wi(n),wfj(n):wlj(n)) = BOUNDARY_POINT
-#endif
+      if(wfj(n) .eq. jmin) az(wi(n),jmin-1) = az(wi(n),jmin)
+      if(wlj(n) .eq. jmax) az(wi(n),jmax+1) = az(wi(n),jmax)
    end do
 !  northern boundary - at present elev only
    do n=1,NNB
-#if 0
-      j=nj(n)
-      do i=nfi(n),nli(n)
-         az(i,j) = BOUNDARY_POINT
-      end do
-#else
       az(nfi(n):nli(n),nj(n)) = BOUNDARY_POINT
-#endif
+      if(nfi(n) .eq. imin) az(imin-1,nj(n)) = az(imin,nj(n))
+      if(nli(n) .eq. imax) az(imax+1,nj(n)) = az(imax,nj(n))
    end do
 !  easter boundary - at present elev only
    do n=1,NEB
-#if 0
-      i=ei(n)
-      do j=efj(n),elj(n)
-         az(i,j) = BOUNDARY_POINT
-      end do
-   end do
-#else
       az(ei(n),efj(n):elj(n)) = BOUNDARY_POINT
-#endif
+      if(efj(n) .eq. jmin) az(ei(n),jmin-1) = az(ei(n),jmin)
+      if(elj(n) .eq. jmax) az(ei(n),jmax+1) = az(ei(n),jmax)
    end do
 !  southern boundary - at present elev only
    do n=1,NSB
-#if 0
-      j=sj(n)
-      do i=sfi(n),sli(n)
-         az(i,j) = BOUNDARY_POINT
-      end do
-#else
       az(sfi(n):sli(n),sj(n)) = BOUNDARY_POINT
-#endif
+      if(sfi(n) .eq. imin) az(imin-1,sj(n)) = az(imin,sj(n))
+      if(sli(n) .eq. imax) az(imax+1,sj(n)) = az(imax,sj(n))
    end do
 #undef BOUNDARY_POINT
 
 !  Do we want to do adjust the mask
-   call adjust_mask(mask_adjust_file)
+   call adjust_mask(trim(input_dir) // mask_adjust_file)
 
    au=0
    do j=jmin,jmax
@@ -604,7 +519,7 @@ latmap = latc
    LEVEL2 'Dimensions: ',imin,':',imax,',',jmin,':',jmax,',',0,':',kmax
    LEVEL2 '# waterpoints = ',np,' of ',sz
 
-   calc_Points = np
+   calc_points = np
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_domain()'
@@ -645,17 +560,20 @@ latmap = latc
 !BOC
 
 #ifndef STATIC
-   open(PARSETUP,file='par_setup')
-
+!   open(PARSETUP,file=input_dir // 'par_setup')
    read(PARSETUP,*)
 
 100  read(PARSETUP,*,ERR=110,END=111) id,imin,imax,jmin,jmax
 
-   close(PARSETUP)
 
-   LEVEL2 'From read_par_setup ',id,imin,imax,jmin,jmax
-
-   if(id .eq. myid ) return
+   if(id .eq. myid ) then 
+      close(PARSETUP)
+      ioff=imin-1 ; joff=jmin-1
+      imax=imax-imin+1 ; imin=1
+      jmax=jmax-jmin+1 ; jmin=1
+      LEVEL2 'From read_par_setup ',id,ioff,imin,imax,joff,jmin,jmax
+      return
+   end if
 
    goto 100
 
@@ -695,6 +613,7 @@ latmap = latc
    integer	:: unit = 25 ! kbk
    integer	:: i,j,k,n
    integer	:: il,jl,ih,jh
+   integer	:: i1,j1
    REALTYPE	:: dmin
 !EOP
 !-----------------------------------------------------------------------
@@ -702,7 +621,7 @@ latmap = latc
    ! Should read in to a buffer at some time to allow for #
    open(unit,file=fn,action='read',status='old',err=90)
    read(unit,*,end=91,err=92) n
-   if(n .gt. 1) then
+   if(n .ge. 1) then
       LEVEL2 'Setting minimum depths according to ',trim(fn)
    end if
    do k=1,n
@@ -710,8 +629,13 @@ latmap = latc
       LEVEL3 'setting min depth in ',il,jl,ih,jh,' to ',dmin
       do j=jl,jh
          do i=il,ih
-            if(H(i,j) .gt. -9. .and. H(i,j) .lt. dmin) then
-               H(i,j) = dmin
+            if(imin+ioff .le. i .and. i .le. imax+ioff .and. &
+               jmin+joff .le. j .and. j .le. jmax+joff ) then
+               i1 = i-ioff
+               j1 = j-joff
+               if(H(i1,j1) .gt. -9. .and. H(i1,j1) .lt. dmin) then
+                  H(i1,j1) = dmin
+               end if
             end if
          end do
       end do
@@ -754,6 +678,7 @@ latmap = latc
    integer	:: unit = 25 ! kbk
    integer	:: i,j,k,n
    integer	:: il,jl,ih,jh
+   integer	:: i1,j1
    REALTYPE	:: x
 !EOP
 !-----------------------------------------------------------------------
@@ -769,7 +694,12 @@ latmap = latc
       LEVEL3 'setting bathymetry in ',il,jl,ih,jh,' to ',x
       do j=jl,jh
          do i=il,ih
-	    H(i,j) = x
+            if(imin+ioff .le. i .and. i .le. imax+ioff .and. &
+               jmin+joff .le. j .and. j .le. jmax+joff ) then
+               i1 = i-ioff
+               j1 = j-joff
+	       H(i1,j1) = x
+            end if
          end do
       end do
    end do
@@ -811,6 +741,7 @@ latmap = latc
    integer	:: unit = 25 ! kbk
    integer	:: i,j,k,n
    integer	:: il,jl,ih,jh
+   integer	:: i1,j1
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -825,10 +756,12 @@ latmap = latc
       LEVEL3 'masking area ',il,jl,ih,jh
       do j=jl,jh
          do i=il,ih
-            az(i,j) = 0
-#if 0
-            H(i,j) = -99.
-#endif
+            if(imin+ioff .le. i .and. i .le. imax+ioff .and. &
+               jmin+joff .le. j .and. j .le. jmax+joff ) then
+               i1 = i-ioff
+               j1 = j-joff
+               az(i1,j1) = 0
+            end if
          end do
       end do
    end do
@@ -880,7 +813,8 @@ latmap = latc
 #endif
 
    do j=jmax,jmin,-1
-      write(0,'(1000(i1))') (mask(i,j), i=imin,imax)
+!      write(0,'(5000(i1,x))') (mask(i,j), i=imin,imax)
+      write(0,'(5000(i1))') (mask(i,j), i=imin,imax)
    end do
 
    return
