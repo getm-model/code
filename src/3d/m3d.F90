@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.7 2003-09-12 16:23:38 kbk Exp $
+!$Id: m3d.F90,v 1.8 2003-12-16 15:58:54 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -33,15 +33,12 @@
    use variables_3d
    use advection_3d, only: init_advection_3d
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
-#ifdef PARALLEL
-use halo_mpi
-#endif
 
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
    integer                             :: M=1
-   REALTYPE                            :: cord_relax=_ZERO_
+   REALTYPE                            :: cord_relax=_ZERO_   
    logical                             :: calc_temp=.true.
    logical                             :: calc_salt=.true.
    logical                             :: calc_spm=.false.
@@ -53,7 +50,10 @@ use halo_mpi
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.7  2003-09-12 16:23:38  kbk
+!  Revision 1.8  2003-12-16 15:58:54  kbk
+!  back ground viscosity and diffusivity (manuel)
+!
+!  Revision 1.7  2003/09/12 16:23:38  kbk
 !  fixed order of use statement - now compiles on with IFC 7.1
 !
 !  Revision 1.6  2003/08/28 15:13:57  kbk
@@ -200,7 +200,8 @@ use halo_mpi
              M,cnpar,cord_relax,                        &
              bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,     &
              vel_hor_adv,vel_ver_adv,vel_strang,        &
-             calc_temp,calc_salt,calc_spm
+             calc_temp,calc_salt,calc_spm,              &
+	     avmback,avhback
 !
 !EOP
 !-------------------------------------------------------------------------

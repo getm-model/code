@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.5 2003-05-05 15:51:57 kbk Exp $
+!$Id: gotm.F90,v 1.6 2003-12-16 15:58:54 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -15,6 +15,7 @@
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,az,min_depth,crit_depth
    use variables_2d, only: D,zub,zvb,z
    use variables_3d, only: dt,kmin,ho,hn,tke,eps,SS,NN,num,nuh,taus,taub
+   use variables_3d, only: avmback,avhback
    use turbulence, only: do_turbulence,cde
    use turbulence, only: tke1d => tke, eps1d => eps, L1d => L
    use turbulence, only: num1d => num, nuh1d => nuh
@@ -30,7 +31,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: gotm.F90,v $
-!  Revision 1.5  2003-05-05 15:51:57  kbk
+!  Revision 1.6  2003-12-16 15:58:54  kbk
+!  back ground viscosity and diffusivity (manuel)
+!
+!  Revision 1.5  2003/05/05 15:51:57  kbk
 !  proper update of halo zones for num and nuh
 !
 !  Revision 1.4  2003/04/23 12:16:34  kbk
@@ -96,6 +100,11 @@
    write(debug,*) 'gotm() # ',Ncall
 #endif
 
+#ifdef CONSTANT_VISCOSITY
+   num(i,j,:) = avmback
+   nuh(i,j,:) = avhback
+#else
+
    do j=jjmin,jjmax
       do i=iimin,iimax
 
@@ -138,23 +147,16 @@
 
             tke(i,j,:) = tke1d
             eps(i,j,:) = eps1d
-            num(i,j,:) = num1d
-            nuh(i,j,:) = nuh1d
-#ifdef HAIDVOGEL_TEST
-            num(i,j,:) = 0.e-10
-            nuh(i,j,:) = 0.e-10
-#endif
-#ifdef NOMADS_TEST
-            num(i,j,:) = _ZERO_
-            nuh(i,j,:) = _ZERO_
-#endif
+            num(i,j,:) = num1d + avmback
+            nuh(i,j,:) = nuh1d + avhback
          end if
       end do
    end do
-
+   
    call update_3d_halo(num,num,az,iimin,jjmin,iimax,jjmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 
+#endif
    call update_3d_halo(nuh,nuh,az,iimin,jjmin,iimax,jjmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 

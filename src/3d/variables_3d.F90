@@ -1,4 +1,4 @@
-!$Id: variables_3d.F90,v 1.4 2003-04-23 12:16:34 kbk Exp $
+!$Id: variables_3d.F90,v 1.5 2003-12-16 15:58:54 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,6 +20,7 @@
 !
 ! !PUBLIC DATA MEMBERS:
    REALTYPE                            :: dt,cnpar=0.9
+   REALTYPE                            :: avmback=_ZERO_,avhback=_ZERO_
 !
 #ifdef STATIC
 #include "static_3d.h"
@@ -33,7 +34,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: variables_3d.F90,v $
-!  Revision 1.4  2003-04-23 12:16:34  kbk
+!  Revision 1.5  2003-12-16 15:58:54  kbk
+!  back ground viscosity and diffusivity (manuel)
+!
+!  Revision 1.4  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.3  2003/04/07 16:22:31  kbk
