@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.7 2003-10-30 16:31:36 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.8 2003-11-03 14:34:54 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -75,7 +75,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.7  2003-10-30 16:31:36  kbk
+!  Revision 1.8  2003-11-03 14:34:54  kbk
+!  use time_var_id in addition to time_id
+!
+!  Revision 1.7  2003/10/30 16:31:36  kbk
 !  check validity of meteo interpolation coeffcients
 !
 !  Revision 1.6  2003/10/07 15:16:50  kbk
@@ -417,6 +420,7 @@
    logical		:: first=.true.
    logical		:: found=.false.,first_open=.true.
    integer, save        :: lon_id=-1,lat_id=-1,time_id=-1,id=-1
+   integer, save        :: time_var_id=-1
    character(len=256)   :: dimname
 !
 ! !TO DO:
@@ -445,6 +449,7 @@
             err = nf_inq_ndims(ncid,ndims)
             if (err .NE. NF_NOERR) go to 10
 
+            LEVEL4 'dimensions'
             do n=1,ndims
                err = nf_inq_dimname(ncid,n,dimname)
                if (err .ne. NF_NOERR) go to 10
@@ -529,10 +534,13 @@
          LEVEL3 'time_id --> ',time_id,', len = ',textr
 !        if (tmax .lt. 0) tmax=textr
          tmax=textr
-         err =  nf_get_att_text(ncid,time_id,'units',time_units)
+
+         err = nf_inq_varid(ncid,name_time,time_var_id)
+         if (err .NE. NF_NOERR) go to 10
+         err =  nf_get_att_text(ncid,time_var_id,'units',time_units)
          if (err .NE. NF_NOERR) go to 10
          call string_to_julsecs(time_units,j1,s1)
-         err = nf_get_var_real(ncid,time_id,met_times)
+         err = nf_get_var_real(ncid,time_var_id,met_times)
          if (err .ne. NF_NOERR) go to 10
          call add_secs(j1,s1,nint(met_times(textr)),j2,s2)
 
@@ -566,11 +574,12 @@
 !     if (tmax .lt. 0) tmax=textr
       tmax=textr
 
-      err =  nf_get_att_text(ncid,time_id,'units',time_units)
+      err = nf_inq_varid(ncid,name_time,time_var_id)
       if (err .NE. NF_NOERR) go to 10
-
+      err =  nf_get_att_text(ncid,time_var_id,'units',time_units)
+      if (err .NE. NF_NOERR) go to 10
       call string_to_julsecs(time_units,j1,s1)
-      err = nf_get_var_real(ncid,time_id,met_times)
+      err = nf_get_var_real(ncid,time_var_id,met_times)
       if (err .ne. NF_NOERR) go to 10
 
       call add_secs(j1,s1,nint(met_times(textr)),j2,s2)
