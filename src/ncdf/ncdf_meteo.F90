@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.9 2003-12-16 16:50:41 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.10 2004-01-15 11:45:01 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,6 +35,7 @@
    integer         :: tausx_id,tausy_id,swr_id,shf_id
    integer         :: iextr,jextr,textr,tmax=-1
    integer         :: grid_scan=1
+   logical         :: point_source=.false.
 
    REALTYPE, allocatable     :: met_lon(:),met_lat(:)
    REAL_4B, allocatable      :: met_times(:)
@@ -75,7 +76,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.9  2003-12-16 16:50:41  kbk
+!  Revision 1.10  2004-01-15 11:45:01  kbk
+!  meteo point source forcing - taus, swr and shf - implemented
+!
+!  Revision 1.9  2003/12/16 16:50:41  kbk
 !  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
 !
 !  Revision 1.8  2003/11/03 14:34:54  kbk
@@ -170,6 +174,15 @@
 
    call open_meteo_file(meteo_file)
 
+   if(iextr .eq. 1 .and. jextr .eq. 1) then
+      point_source = .true.
+      LEVEL3 'Assuming Point Source meteo forcing'
+      if (on_grid .eq. .false. ) then
+         LEVEL3 'Setting on_grid to true'
+         on_grid=.true.
+      end if
+   end if
+
    allocate(wrk(iextr,jextr),stat=err)
    if (err /= 0) stop 'ncdf_meteo: Error allocating memory (wrk)'
    wrk = 0.
@@ -203,23 +216,23 @@
 #endif
       call init_grid_interpol(imin,imax,jmin,jmax,az,  &
                 lonc,latc,met_lon,met_lat,southpole,gridmap,ti,ui)
-   end if
 
-   LEVEL2 "Checking interpolation coefficients"
-   do j=jmin,jmax
-      do i=imin,imax
-         if ( az(i,j) .gt. 0 .and. &
-             (ui(i,j) .lt. _ZERO_ .or. ti(i,j) .lt. _ZERO_ )) then
-            ok=.false.
-            LEVEL3 "error at (i,j) ",i,j
-         end if
+      LEVEL2 "Checking interpolation coefficients"
+      do j=jmin,jmax
+         do i=imin,imax
+            if ( az(i,j) .gt. 0 .and. &
+                (ui(i,j) .lt. _ZERO_ .or. ti(i,j) .lt. _ZERO_ )) then
+               ok=.false.
+               LEVEL3 "error at (i,j) ",i,j
+            end if
+         end do
       end do
-   end do
-   if ( ok ) then
-      LEVEL2 "done"
-   else
-      call getm_error("init_meteo_input_ncdf()", &
-                       "Some interpolation coefficients are not valid")
+      if ( ok ) then
+         LEVEL2 "done"
+      else
+         call getm_error("init_meteo_input_ncdf()", &
+                          "Some interpolation coefficients are not valid")
+      end if
    end if
 
    if (calc_met) then
@@ -443,7 +456,8 @@
       do
          if (found) EXIT
          read(iunit,*,err=85,end=90) fn
-         LEVEL3 'Trying meteo from: ',trim(fn)
+         LEVEL3 'Trying meteo from:'
+         LEVEL4 trim(fn)
          err = nf_open(fn,NCNOWRIT,ncid)
          if (err .ne. NF_NOERR) go to 10
 
@@ -590,7 +604,8 @@
 
    if (found) then
       offset = TimeDiff(jul0,secs0,j1,s1)
-      LEVEL3 'Using meteo from: ',trim(fn)
+      LEVEL3 'Using meteo from:'
+      LEVEL4 trim(fn)
       LEVEL3 'Meteorological offset time ',offset
    else
       FATAL 'Could not find any valid meteo-files'
@@ -752,35 +767,51 @@
 
       err = nf_get_vara_real(ncid,tausx_id,start,edges,wrk)
       if (err .ne. NF_NOERR) go to 10
-      do j=jmin,jmax
-         do i=imin,imax
-            tausx(i,j) = wrk(i,j)
+      if (point_source) then
+         tausx = wrk(1,1)
+      else
+         do j=jmin,jmax
+            do i=imin,imax
+               tausx(i,j) = wrk(i,j)
+            end do
          end do
-      end do
+      end if
 
       err = nf_get_vara_real(ncid,tausy_id,start,edges,wrk)
       if (err .ne. NF_NOERR) go to 10
-      do j=jmin,jmax
-         do i=imin,imax
-            tausy(i,j) = wrk(i,j)
+      if (point_source) then
+         tausy = wrk(1,1)
+      else
+         do j=jmin,jmax
+            do i=imin,imax
+               tausy(i,j) = wrk(i,j)
+            end do
          end do
-      end do
+      end if
 
       err = nf_get_vara_real(ncid,swr_id,start,edges,wrk)
       if (err .ne. NF_NOERR) go to 10
-      do j=jmin,jmax
-         do i=imin,imax
-            swr(i,j) = wrk(i,j)
+      if (point_source) then
+         swr = wrk(1,1)
+      else
+         do j=jmin,jmax
+            do i=imin,imax
+               swr(i,j) = wrk(i,j)
+            end do
          end do
-      end do
+      end if
 
       err = nf_get_vara_real(ncid,shf_id,start,edges,wrk)
       if (err .ne. NF_NOERR) go to 10
-      do j=jmin,jmax
-         do i=imin,imax
-            shf(i,j) = wrk(i,j)
+      if (point_source) then
+         shf = wrk(1,1)
+      else
+         do j=jmin,jmax
+            do i=imin,imax
+               shf(i,j) = wrk(i,j)
+            end do
          end do
-      end do
+      end if
 
    end if
 

@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.9 2003-10-01 12:09:13 kbk Exp $
+!$Id: meteo.F90,v 1.10 2004-01-15 11:45:00 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -82,7 +82,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
-!  Revision 1.9  2003-10-01 12:09:13  kbk
+!  Revision 1.10  2004-01-15 11:45:00  kbk
+!  meteo point source forcing - taus, swr and shf - implemented
+!
+!  Revision 1.9  2003/10/01 12:09:13  kbk
 !  airp in HALO-zones - need in momentum eqs.
 !
 !  Revision 1.8  2003/07/01 16:38:34  kbk
@@ -139,8 +142,8 @@
    REALTYPE                  :: swr_const= _ZERO_ ,shf_const= _ZERO_
    REALTYPE, dimension(:,:), allocatable :: airp_old,tausx_old,tausy_old
    REALTYPE, dimension(:,:), allocatable :: d_airp,d_tausx,d_tausy
-   REALTYPE, dimension(:,:), allocatable :: tcc_old,shf_old
-   REALTYPE, dimension(:,:), allocatable :: d_tcc,d_shf
+   REALTYPE, dimension(:,:), allocatable :: tcc_old,swr_old,shf_old
+   REALTYPE, dimension(:,:), allocatable :: d_tcc,d_swr,d_shf
 !
 ! !TO DO:
 !  A method for stress calculations without knowledge of SST and meteorological
@@ -292,6 +295,10 @@
       if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc_old)'
       tcc_old = _ZERO_
 
+      allocate(swr_old(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo: Error allocating memory (swr_old)'
+      swr_old = _ZERO_
+
       allocate(shf_old(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (shf_old)'
       shf_old = _ZERO_
@@ -299,6 +306,10 @@
       allocate(d_tcc(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tcc)'
       d_tcc = _ZERO_
+
+      allocate(d_swr(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo: Error allocating memory (d_swr)'
+      d_swr = _ZERO_
 
       allocate(d_shf(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (d_shf)'
@@ -478,11 +489,30 @@
                   end do
                end do
             else
-               airp  =  _ZERO_
-               tausx = ramp*tausx
-               tausy = ramp*tausy
-               swr   = _ZERO_
-               shf   = _ZERO_
+               if (first) then
+                  tausx_old = tausx
+                  tausy_old = tausy
+                  swr_old = swr
+                  shf_old = shf
+               end if
+               if (new_meteo) then
+                  tausx_old = tausx_old + d_tausx
+                  tausy_old = tausy_old + d_tausy
+                  swr_old = swr_old + d_swr
+                  shf_old = shf_old + d_shf
+
+                  d_tausx = tausx - tausx_old
+                  d_tausy = tausy - tausy_old
+                  d_swr = swr - swr_old
+                  d_shf = shf - shf_old
+               end if
+               if (.not. first) then
+                  t_frac = (t-t_1)/(t_2-t_1)
+                  tausx = tausx_old + t_frac*d_tausx
+                  tausy = tausy_old + t_frac*d_tausy
+                  swr = swr_old + t_frac*d_swr
+                  shf = shf_old + t_frac*d_shf
+               end if
             endif
          case default
             FATAL 'A non valid meteo method has been specified.'
