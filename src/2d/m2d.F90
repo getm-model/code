@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.6 2003-08-15 12:47:40 kbk Exp $
+!$Id: m2d.F90,v 1.7 2003-08-28 10:28:40 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,7 +41,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m2d.F90,v $
-!  Revision 1.6  2003-08-15 12:47:40  kbk
+!  Revision 1.7  2003-08-28 10:28:40  kbk
+!  explict setting UEx and VEx to 0 every micro time step
+!
+!  Revision 1.6  2003/08/15 12:47:40  kbk
 !  also calling cfl_check() when parallel run
 !
 !  Revision 1.5  2003/08/03 08:53:30  kbk
@@ -245,6 +248,7 @@
       call bottom_friction(runtype)
 #endif
    end if
+   UEx=_ZERO_ ; VEx=_ZERO_
 #ifdef NO_ADVECT
    STDERR 'NO_ADVECT 2D'
 #else
