@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.2 2003-04-07 16:45:07 kbk Exp $
+#$Id: Makefile,v 1.3 2004-03-29 15:46:08 kbk Exp $
 #
 # Makefile to build the ncdf module - ncdfio.o and the libncdfio.a library
 #
@@ -8,9 +8,12 @@ include ../Rules.make
 LIB	= $(LIBDIR)/libncdfio${buildtype}.a
 
 MODSRC	= ncdf_in.F90 ncdf_common.F90 ncdf_2d.F90 ncdf_2d_bdy.F90 \
-          ncdf_3d.F90 ncdf_3d_bdy.F90 ncdf_meteo.F90 ncdf_rivers.F90
+          ncdf_3d.F90 ncdf_3d_bdy.F90 ncdf_meteo.F90 ncdf_rivers.F90 \
+          ncdf_mean.F90 
 
-LIBSRC	= ncdf_topo.F90 set_attributes.F90 init_2d_ncdf.F90 save_2d_ncdf.F90 init_3d_ncdf.F90 save_3d_ncdf.F90 get_field_ncdf.F90 read_field_ncdf.F90 ncdf_close.F90
+LIBSRC	= ncdf_topo.F90 set_attributes.F90 init_2d_ncdf.F90 save_2d_ncdf.F90 \
+      init_3d_ncdf.F90 save_3d_ncdf.F90 get_field_ncdf.F90 read_field_ncdf.F90 \
+       ncdf_close.F90 init_mean_ncdf.F90 save_mean_ncdf.F90 towas.F90
 
 SRC	= $(MODSRC) $(LIBSRC)
 
@@ -26,6 +29,7 @@ ${LIB}(ncdf_rivers.o)
 endif
 MOD	+= 	\
 ${LIB}(ncdf_meteo.o)		\
+${LIB}(ncdf_mean.o)		\
 ${LIB}(ncdf_in.o)
 
 OBJ	= 	\
@@ -37,7 +41,10 @@ ifneq ($(GETM_NO_3D),true)
 OBJ	+= 	\
 ${LIB}(init_3d_ncdf.o)		\
 ${LIB}(save_3d_ncdf.o)		\
+${LIB}(init_mean_ncdf.o)	\
+${LIB}(save_mean_ncdf.o)	\
 ${LIB}(get_field_ncdf.o)	\
+${LIB}(towas.o)			\
 ${LIB}(read_field_ncdf.o)
 endif
 OBJ	+= 	\
