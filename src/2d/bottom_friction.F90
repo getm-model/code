@@ -1,4 +1,4 @@
-!$Id: bottom_friction.F90,v 1.2 2003-03-20 15:48:12 gotm Exp $
+!$Id: bottom_friction.F90,v 1.3 2003-04-07 15:41:09 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,7 @@
 !
 ! !USES:
    use parameters, only: kappa,avmmol
-   use domain,     only: imin,imax,jmin,jmax,au,av,min_depth
+   use domain, only: imin,imax,jmin,jmax,au,av,min_depth
    use variables_2d
    IMPLICIT NONE
 !
@@ -27,8 +27,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bottom_friction.F90,v $
-!  Revision 1.2  2003-03-20 15:48:12  gotm
-!  fixed small bug in calc. of rvv + cleaning the code
+!  Revision 1.3  2003-04-07 15:41:09  kbk
+!  adjusted use of mask
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:41  gotm
 !  recovering after CVS crash
@@ -66,6 +66,48 @@
    integer, save :: Ncall = 0
    Ncall = Ncall+1
    write(debug,*) 'bottom_friction() # ',Ncall
+#endif
+
+#ifdef DEBUG
+   if(Ncall .eq. 1) then
+      STDERR 'bottom_friction(): checking for 0 depth values'
+      do j=jmin,jmax
+         do i=imin,imax
+            if (av(i,j) .eq. 1) then
+               if(DU(i,j) .eq. _ZERO_) then
+                  STDERR 'DU=0 uv_advect ',i,j,i,j,av(i,j)
+               end if
+               if(DU(i-1,j) .eq. _ZERO_) then
+                  STDERR 'DU=0 uv_advect ',i-1,j,i,j,av(i,j)
+               end if
+               if(DU(i,j+1) .eq. _ZERO_) then
+                  STDERR 'DU=0 uv_advect ',i,j+1,i,j,av(i,j)
+               end if
+               if(DU(i-1,j+1) .eq. _ZERO_) then
+                  STDERR 'DU=0 uv_advect ',i-1,j+1,i,j,av(i,j)
+               end if
+            end if
+         end do
+      end do
+      do j=jmin,jmax
+         do i=imin,imax
+            if (au(i,j) .eq. 1) then
+               if(DV(i,j) .eq. _ZERO_) then
+                  STDERR 'DV=0 uv_advect ',i,j,i,j,au(i,j)
+               end if
+               if(DV(i+1,j) .eq. _ZERO_) then
+                  STDERR 'DV=0 uv_advect ',i+1,j,i,j,au(i,j)
+               end if
+               if(DV(i,j-1) .eq. _ZERO_) then
+                  STDERR 'DV=0 uv_advect ',i,j-1,i,j,au(i,j)
+               end if
+               if(DV(i+1,j-1) .eq. _ZERO_) then
+                  STDERR 'DV=0 uv_advect ',i+1,j-1,i,j,au(i,j)
+               end if
+            end if
+         end do
+      end do
+   end if
 #endif
 
    do j=jmin,jmax
