@@ -1,9 +1,9 @@
-!$Id: get_river_data.F90,v 1.3 2003-04-23 12:04:08 kbk Exp $
+!$Id: get_river_data.F90,v 1.4 2003-12-16 12:33:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: get_river_data - read meteo data from file.
+! !IROUTINE: get_river_data - read river data from file.
 !
 ! !INTERFACE:
    subroutine get_river_data(n)
@@ -26,7 +26,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: get_river_data.F90,v $
-!  Revision 1.3  2003-04-23 12:04:08  kbk
+!  Revision 1.4  2003-12-16 12:33:38  kbk
+!  some typos (manuel)
+!
+!  Revision 1.3  2003/04/23 12:04:08  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 12:58:21  kbk
@@ -52,6 +55,7 @@
       case (ANALYTICAL)
       case (ASCII)
          STDERR 'should get ASCII river data'
+	 stop 'ASCII river data input not coded!'
       case (NETCDF)
          call get_river_data_ncdf(n)
       case DEFAULT
