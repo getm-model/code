@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.4 2003-05-02 08:19:14 kbk Exp $
+!$Id: ncdf_topo.F90,v 1.5 2003-05-08 06:38:09 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,7 +34,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_topo.F90,v $
-!  Revision 1.4  2003-05-02 08:19:14  kbk
+!  Revision 1.5  2003-05-08 06:38:09  kbk
+!  fixed edges(1) when reading latx
+!
+!  Revision 1.4  2003/05/02 08:19:14  kbk
 !  fixed calculationof lonx andlatx if not in file
 !
 !  Revision 1.3  2003/04/23 11:54:03  kbk
@@ -232,8 +235,7 @@
    x = lonc(iloc+ih-il,1) - lonc(iloc+ih-il-1,1)
    lonc(iloc+ih-il+1,:) = lonc(iloc+ih-il,:) + x
 
-   start(1) = il
-   edges(1) = ih-il+2
+   start(1) = il; edges(1) = ih-il+2
    err = nf_inq_varid(ncbathy,"lonx",id)
    if (err .ne. NF_NOERR) then
       LEVEL4 'Can not read lonx - generating from lonc'
@@ -270,8 +272,7 @@
    x = latc(1,jh-jl+jloc) - latc(1,jh-jl-1+jloc)
    latc(:,jh-jl+jloc+1) = latc(:,jh-jl+jloc) + x
 
-   start(1) = jl
-   edges(1) = jh+1
+   start(1) = jl; edges(1) = jh-jl+2
    err = nf_inq_varid(ncbathy,"latx",id)
    if (err .ne. NF_NOERR) then
       LEVEL4 'Can not read latx - generating from latc'
