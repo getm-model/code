@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.8 2003-05-09 11:52:08 kbk Exp $
+!$Id: domain.F90,v 1.9 2003-06-29 17:09:04 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,6 @@
 !
 ! !USES:
    use halo_zones, only: update_2d_halo,wait_halo,H_TAG,U_TAG,V_TAG
-use halo_mpi, only: barrier
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -48,7 +47,10 @@ use halo_mpi, only: barrier
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.8  2003-05-09 11:52:08  kbk
+!  Revision 1.9  2003-06-29 17:09:04  kbk
+!  removed reference to barrier
+!
+!  Revision 1.8  2003/05/09 11:52:08  kbk
 !  do not mirror coordinate info + use mask for inverse area calculation
 !
 !  Revision 1.7  2003/05/02 08:32:31  kbk
@@ -251,7 +253,7 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
 
          call get_bathymetry(H,Hland,iextr,jextr,ioff,joff, &
                              imin,imax,jmin,jmax,rc)
-         call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG)
+         call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG,mirror=.true.)
          call wait_halo(H_TAG)
 
          call update_2d_halo(lonc,lonc,az,imin,jmin,imax,jmax,H_TAG, &
@@ -574,12 +576,14 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
    end select
 
 #ifdef DEBUG
+#if 0
    STDERR 'az'
    call print_mask(az)
    STDERR 'au'
    call print_mask(au)
    STDERR 'av'
    call print_mask(av)
+#endif
 #endif
 
    np = count(az(1:imax,1:jmax) .gt. 0)
