@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.5 2003-09-16 07:45:30 kbk Exp $
+!$Id: output.F90,v 1.6 2003-09-30 09:44:27 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -51,7 +51,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
-!  Revision 1.5  2003-09-16 07:45:30  kbk
+!  Revision 1.6  2003-09-30 09:44:27  kbk
+!  hotout=0 -> save hot-files at last time step only
+!
+!  Revision 1.5  2003/09/16 07:45:30  kbk
 !  additional info written when hotstart time mismatch
 !
 !  Revision 1.4  2003/09/03 05:55:13  kbk
@@ -431,10 +434,11 @@
 ! !IROUTINE: clean_output - cleans up after run
 !
 ! !INTERFACE:
-   subroutine clean_output()
+   subroutine clean_output(runtype)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   integer, intent(in)                 :: runtype
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -447,6 +451,7 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
+   integer :: zero=0
    REALTYPE :: dummy
 !
 !EOP
@@ -457,6 +462,11 @@
    Ncall = Ncall+1
    write(debug,*) 'clean_output() # ',Ncall
 #endif
+
+!  Save last restart file
+   if (hotout .eq. 0) then
+      call restart_file(WRITING,trim(hot_out),zero,runtype)
+   end if
 
    select case (out_fmt)
       case (NETCDF)

@@ -1,4 +1,4 @@
-!$Id: cleanup.F90,v 1.3 2003-04-23 12:03:46 kbk Exp $
+!$Id: cleanup.F90,v 1.4 2003-09-30 09:44:26 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,7 +6,7 @@
 ! !ROUTINE:  clean_up - a wrapper to perform cleanup
 !
 ! !INTERFACE:
-   subroutine clean_up(dryrun)
+   subroutine clean_up(dryrun,runtype)
 !
 ! !DESCRIPTION:
 !  Calls the various model components clean up procedures. The called routines
@@ -27,6 +27,7 @@
 !
 ! !INPUT PARAMETERS:
    logical, intent(in)                 :: dryrun
+   integer, intent(in)                 :: runtype
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -36,7 +37,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: cleanup.F90,v $
-!  Revision 1.3  2003-04-23 12:03:46  kbk
+!  Revision 1.4  2003-09-30 09:44:26  kbk
+!  hotout=0 -> save hot-files at last time step only
+!
+!  Revision 1.3  2003/04/23 12:03:46  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 16:39:16  kbk
@@ -74,7 +78,7 @@
 #endif
 
    if( .not. dryrun ) then
-      call clean_output()
+      call clean_output(runtype)
    end if
 
    call clean_input()

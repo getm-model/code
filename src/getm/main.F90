@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.4 2003-04-23 12:03:46 kbk Exp $
+!$Id: main.F90,v 1.5 2003-09-30 09:44:26 kbk Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -39,7 +39,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: main.F90,v $
-!  Revision 1.4  2003-04-23 12:03:46  kbk
+!  Revision 1.5  2003-09-30 09:44:26  kbk
+!  hotout=0 -> save hot-files at last time step only
+!
+!  Revision 1.4  2003/04/23 12:03:46  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.3  2003/04/07 16:39:16  kbk
@@ -78,7 +81,7 @@
    if ( .not. dryrun ) then
       call time_loop(runtype)
    end if
-   call clean_up(dryrun)
+   call clean_up(dryrun,runtype)
 
 #ifdef FORTRAN95
    call CPU_Time(t2)
