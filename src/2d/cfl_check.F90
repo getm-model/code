@@ -1,4 +1,4 @@
-!$Id: cfl_check.F90,v 1.1 2002-05-02 14:00:41 gotm Exp $
+!$Id: cfl_check.F90,v 1.2 2002-10-04 13:56:58 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,8 +31,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: cfl_check.F90,v $
-!  Revision 1.1  2002-05-02 14:00:41  gotm
-!  Initial revision
+!  Revision 1.2  2002-10-04 13:56:58  gotm
+!  Uses Becker and Deleersnijder (1993) CFL criterion with Coriolis
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:41  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.7  2001/09/19 11:25:14  gotm
 !  Removed E2DFIELD when de-allocating lmask
@@ -90,7 +93,18 @@
    LEVEL3 'at this position, dx = ',dxc(max_pos(1),max_pos(2)),' and dy =  ',dyc(max_pos(1),max_pos(2))
 #else
    c = sqrt(g*h_max)
+!  Becker and Deleersnijder
+   max_dt = (dx*dy)/(sqrt(2.0)*c*sqrt(dx*dx+dy*dy)) 
+
+#if 0
+#ifdef POM_CFL
+   max_dt=0.5/(c*sqrt( _ONE_/dx**2 + _ONE_/dy**2 ))
+#endif
+#ifdef OLD_GETM
    max_dt = min(dx,dy)/(c*sqrt(2.))
+#endif
+#endif
+
    LEVEL3 'max depth=',h_max,' at ',pos
 #endif
 
