@@ -1,4 +1,4 @@
-!$Id: exchange_coefficients.F90,v 1.6 2003-10-07 15:21:42 kbk Exp $
+!$Id: exchange_coefficients.F90,v 1.7 2003-11-17 09:01:12 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -68,7 +68,10 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: exchange_coefficients.F90,v $
-!  Revision 1.6  2003-10-07 15:21:42  kbk
+!  Revision 1.7  2003-11-17 09:01:12  kbk
+!  fixed serious error in calculation of relative humidity
+!
+!  Revision 1.6  2003/10/07 15:21:42  kbk
 !  cleaned a little bit - still need documentation
 !
 !  Revision 1.5  2003/10/01 12:10:05  kbk
@@ -188,7 +191,7 @@
             (min(dew,300.)-273.15)/(max(dew,200.)-273.15+257.87))
       es  = 611.21*exp((18.729 - (min(ta_k,300.)-273.15)/227.3)*     &
             (min(ta_k,300.)-273.15)/(max(ta_k,200.)-273.15+257.87))
-      rh = 100.*ea/es * 100.
+      rh = 100.*ea/es
       qa = 0.01*rh*qs
    case (4)
       STDERR 'Should be checked - kbk'
