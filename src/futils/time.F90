@@ -1,4 +1,4 @@
-!$Id: time.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
+!$Id: time.F90,v 1.3 2003-12-15 16:03:59 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -44,7 +44,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: time.F90,v $
-!  Revision 1.2  2003-04-23 12:02:43  kbk
+!  Revision 1.3  2003-12-15 16:03:59  kbk
+!  new correct algorithm in in_interval()
+!
+!  Revision 1.2  2003/04/23 12:02:43  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:19  gotm
@@ -583,14 +586,16 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
+   logical         :: before,after
+!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   if (j .ge. j1 .and. s .ge. s1 .and. j .le. j2 .and. s .le. s2) then
-      in_interval = .true.
-   else
-      in_interval = .false.
-   end if
+
+   before = (j .lt. j1) .or. ( j .eq. j1 .and. (s .lt. s1) )
+   after  = (j .gt. j2) .or. ( j .eq. j2 .and. (s .gt. s2) )
+
+   in_interval = ( .not. before ) .and. ( .not. after )
    return
    end function in_interval
 !EOC
