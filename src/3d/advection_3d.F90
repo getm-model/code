@@ -34,20 +34,24 @@
 !
 ! !PRIVATE DATA MEMBERS:
 #ifdef STATIC
-   REALTYPE	:: cu(I3DFIELD),hi(I3DFIELD),hio(I3DFIELD)
+   REALTYPE                            :: cu(I3DFIELD)
+   REALTYPE                            :: hi(I3DFIELD),hio(I3DFIELD)
 #else
-   REALTYPE, dimension(:,:,:), allocatable	:: cu,hi,hio
+   REALTYPE, dimension(:,:,:), allocatable       :: cu,hi,hio
 #endif
-   REALTYPE, parameter		:: one6th=1./6.
-   integer, parameter 		:: UPSTREAM=1,UPSTREAM_SPLIT=2,P2=3
-   integer, parameter 		:: Superbee=4,MUSCL=5,P2_PDM=6
-   logical, parameter 		:: STRANG=.true.
+   REALTYPE, parameter                 :: one6th=1./6.
+   integer, parameter                  :: UPSTREAM=1,UPSTREAM_SPLIT=2,P2=3
+   integer, parameter                  :: Superbee=4,MUSCL=5,P2_PDM=6
+   logical, parameter                  :: STRANG=.true.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: advection_3d.F90,v $
-!  Revision 1.2  2003-04-07 16:30:53  kbk
+!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 16:30:53  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:58  gotm
@@ -131,7 +135,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: method
+   integer, intent(in)                 :: method
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -141,7 +145,7 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: rc
+   integer                   :: rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -181,8 +185,8 @@
 !
 ! !INTERFACE:
    subroutine do_advection_3d(dt,f,uu,vv,ww,hun,hvn,ho,hn,      &
-                              delxu,delxv,delyu,delyv,area_inv,  &
-			      az,au,av,hor_adv,ver_adv,strang,AH)
+                             delxu,delxv,delyu,delyv,area_inv,  &
+                             az,au,av,hor_adv,ver_adv,strang,AH)
 !
 ! !DESCRIPTION:
 !
@@ -190,17 +194,17 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-  REALTYPE, intent(in)		:: uu(I3DFIELD),vv(I3DFIELD),ww(I3DFIELD)
-  REALTYPE, intent(in)		:: hun(I3DFIELD),hvn(I3DFIELD)
-  REALTYPE, intent(in)		:: ho(I3DFIELD),hn(I3DFIELD)
-  REALTYPE, intent(in)		:: delxu(I2DFIELD),delxv(I2DFIELD)
-  REALTYPE, intent(in)		:: delyu(I2DFIELD),delyv(I2DFIELD)
-  REALTYPE, intent(in)		:: area_inv(I2DFIELD),dt,AH
-  integer, intent(in)		:: az(E2DFIELD),au(E2DFIELD),av(E2DFIELD)
-  integer, intent(in)		:: hor_adv,ver_adv,strang
+   REALTYPE, intent(in)      :: uu(I3DFIELD),vv(I3DFIELD),ww(I3DFIELD)
+   REALTYPE, intent(in)      :: ho(I3DFIELD),hn(I3DFIELD)
+   REALTYPE, intent(in)      :: hun(I3DFIELD),hvn(I3DFIELD)
+   REALTYPE, intent(in)      :: delxu(I2DFIELD),delxv(I2DFIELD)
+   REALTYPE, intent(in)      :: delyu(I2DFIELD),delyv(I2DFIELD)
+   REALTYPE, intent(in)      :: area_inv(I2DFIELD),dt,AH
+   integer, intent(in)       :: az(E2DFIELD),au(E2DFIELD),av(E2DFIELD)
+   integer, intent(in)       :: hor_adv,ver_adv,strang
 !
 ! !INPUT/OUTPUT PARAMETERS:
-  REALTYPE, intent(inout)	:: f(I3DFIELD)
+   REALTYPE, intent(inout)   :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
 !
@@ -208,7 +212,7 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   REALTYPE, parameter	:: a1=0.5,a2=1.0
+   REALTYPE, parameter       :: a1=0.5,a2=1.0
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -221,14 +225,15 @@
 
    select case (hor_adv)
       case (UPSTREAM)
-         call upstream_adv(dt,f,uu,vv,ww,ho,hn,delxv,delyu,delxu,delyv,area_inv,az,AH)
+         call upstream_adv(dt,f,uu,vv,ww,ho,hn, &
+                           delxv,delyu,delxu,delyv,area_inv,az,AH)
       case ((UPSTREAM_SPLIT),(P2),(Superbee),(MUSCL),(P2_PDM))
          hi=ho
          select case (strang)
             case (0)
-               call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a2,   &
+               call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a2,&
                                 hor_adv,az,AH)
-               call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a2,   &
+               call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a2,&
                                 hor_adv,az,AH)
                if (kmax.gt.1) then
 #ifdef ITERATE_VERT_ADV
@@ -238,9 +243,9 @@
 #endif
                end if
             case (1)
-               call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,   &
+               call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
                                 hor_adv,az,AH)
-               call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,   &
+               call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
                                 hor_adv,az,AH)
                if (kmax.gt.1) then
 #ifdef ITERATE_VERT_ADV
@@ -248,17 +253,17 @@
 #else
                   call w_split_adv(dt,f,ww,az,a2,ver_adv)
 #endif
-	       end if
-               call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,   &
+               end if
+               call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
                                 hor_adv,az,AH)
-               call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,   &
+               call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
                                 hor_adv,az,AH)
            case default
               FATAL 'Not valid strang parameter'
          end select
       case default
          FATAL 'This is not so good - do_advection_3d()'
-	 stop
+         stop
    end select
 
 #ifdef DEBUG
@@ -275,7 +280,8 @@
 ! !IROUTINE:  upstream_adv()
 !
 ! !INTERFACE:
-   subroutine upstream_adv(dt,f,uu,vv,ww,ho,hn,delxv,delyu,delxu,delyv,area_inv,az,AH)
+   subroutine upstream_adv(dt,f,uu,vv,ww,ho,hn, &
+                           delxv,delyu,delxu,delyv,area_inv,az,AH)
 !
 ! !DESCRIPTION:
 !
@@ -283,24 +289,25 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in)	:: uu(I3DFIELD),vv(I3DFIELD),ww(I3DFIELD)
-   REALTYPE, intent(in)	:: ho(I3DFIELD),hn(I3DFIELD)
-   REALTYPE, intent(in)	:: delxv(I2DFIELD),delyu(I2DFIELD)
-   REALTYPE, intent(in)	:: delxu(I2DFIELD),delyv(I2DFIELD)
-   REALTYPE, intent(in)	:: area_inv(I2DFIELD),dt,AH
-   integer, intent(in)	:: az(E2DFIELD)
+   REALTYPE, intent(in)                :: uu(I3DFIELD),vv(I3DFIELD)
+   REALTYPE, intent(in)                :: ww(I3DFIELD)
+   REALTYPE, intent(in)                :: ho(I3DFIELD),hn(I3DFIELD)
+   REALTYPE, intent(in)                :: delxv(I2DFIELD),delyu(I2DFIELD)
+   REALTYPE, intent(in)                :: delxu(I2DFIELD),delyv(I2DFIELD)
+   REALTYPE, intent(in)                :: area_inv(I2DFIELD),dt,AH
+   integer, intent(in)                 :: az(E2DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
+   REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(inout)	:: f(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: rc,i,ii,j,jj,k,kk
-   REALTYPE, dimension(:,:,:), allocatable:: adv
+   integer                   :: rc,i,ii,j,jj,k,kk
+   REALTYPE, dimension(:,:,:), allocatable       :: adv
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -325,8 +332,8 @@
             else
                cu(i,j,k)=uu(i,j,k)*f(i+1,j,k)
             end if
-            if ((AH.gt.0.).and.(az(i,j).gt.0).and.(az(i+1,j).gt.0))  &
-               cu(i,j,k)=cu(i,j,k)-AH*(f(i+1,j,k)-f(i,j,k))/delxu(i,j)  &
+            if ((AH.gt.0.).and.(az(i,j).gt.0).and.(az(i+1,j).gt.0))    &
+               cu(i,j,k)=cu(i,j,k)-AH*(f(i+1,j,k)-f(i,j,k))/delxu(i,j) &
                          *0.5*(hn(i+1,j,k)+hn(i,j,k))
          end do
       end do
@@ -373,14 +380,14 @@
                   cu(i,j,k)=ww(i,j,k)*f(i,j,k)
                else
                   cu(i,j,k)=ww(i,j,k)*f(i,j,k+1)
-	       end if
+               end if
             end do
          end do
       end do
       do k=1,kmax   ! Updating the advection term for w-advection !
          do j=jjmin,jjmax
             do i=iimin,iimax
-	       adv(i,j,k)=adv(i,j,k)+(cu(i,j,k)-cu(i,j,k-1))
+               adv(i,j,k)=adv(i,j,k)+(cu(i,j,k)-cu(i,j,k-1))
             end do
          end do
       end do
@@ -414,7 +421,8 @@
 ! !IROUTINE:  u_split_adv()
 !
 ! !INTERFACE:
-   subroutine u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,splitfac,method,az,AH)
+   subroutine u_split_adv(dt,f,uu,hun, &
+                          delxu,delyu,area_inv,au,splitfac,method,az,AH)
 !
 ! !DESCRIPTION:
 !
@@ -422,25 +430,25 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in) :: uu(I3DFIELD),hun(I3DFIELD)
-   REALTYPE, intent(in)	:: delxu(I2DFIELD),delyu(I2DFIELD)
-   REALTYPE, intent(in)	:: area_inv(I2DFIELD),dt
-   integer, intent(in)	:: au(E2DFIELD), az(E2DFIELD)
-   REALTYPE, intent(in)	:: splitfac
-   integer, intent(in)	:: method
-   REALTYPE, intent(in) :: AH
+   REALTYPE, intent(in)      :: uu(I3DFIELD),hun(I3DFIELD)
+   REALTYPE, intent(in)      :: delxu(I2DFIELD),delyu(I2DFIELD)
+   REALTYPE, intent(in)      :: area_inv(I2DFIELD),dt
+   integer, intent(in)       :: au(E2DFIELD), az(E2DFIELD)
+   REALTYPE, intent(in)      :: splitfac
+   integer, intent(in)       :: method
+   REALTYPE, intent(in)      :: AH
 !
 ! !INPUT/OUTPUT PARAMETERS:
+   REALTYPE, intent(inout)   :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out)	:: f(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,ii,j,jj,k,kk
-   REALTYPE	:: c,alpha,beta,x,r,Phi,limit,fu,fc,fd
+   integer                   :: i,ii,j,jj,k,kk
+   REALTYPE                  :: c,alpha,beta,x,r,Phi,limit,fu,fc,fd
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -461,13 +469,13 @@
             do j=jjmin,jjmax
                do i=iimin-1,iimax
                   cu(i,j,k) = _ZERO_
-	          if (au(i,j) .gt. 0) then
+                  if (au(i,j) .gt. 0) then
                      if (uu(i,j,k) .gt. _ZERO_) then
-	                cu(i,j,k)=uu(i,j,k)*f(i,j,k)
-            	     else
-	                cu(i,j,k)=uu(i,j,k)*f(i+1,j,k)
-   	             end if
-		  end if
+                        cu(i,j,k)=uu(i,j,k)*f(i,j,k)
+                     else
+                        cu(i,j,k)=uu(i,j,k)*f(i+1,j,k)
+                     end if
+                  end if
                end do
             end do
          end do
@@ -476,59 +484,61 @@
             do j=jjmin,jjmax
                do i=iimin-1,iimax
                   cu(i,j,k) = _ZERO_
-		  if (au(i,j) .gt. 0) then
+                  if (au(i,j) .gt. 0) then
                      if (uu(i,j,k) .gt. _ZERO_) then
                         c=uu(i,j,k)/hun(i,j,k)*dt/delxu(i,j)
-		        if (au(i-1,j) .gt. 0) then
-		           fu=f(i-1,j,k)         ! upstream
-			else
-		           fu=f(i  ,j,k)
-			end if
-		        fc=f(i  ,j,k)            ! central
-		        fd=f(i+1,j,k)            ! downstream
-		        if (abs(fd-fc) .gt. 1e-10) then
-		           r=(fc-fu)/(fd-fc)     ! slope ratio
-		        else
-		           r=(fc-fu)*1.e10
-		        end if
-		     else
+                        if (au(i-1,j) .gt. 0) then
+                           fu=f(i-1,j,k)         ! upstream
+                        else
+                           fu=f(i  ,j,k)
+                        end if
+                        fc=f(i  ,j,k)            ! central
+                        fd=f(i+1,j,k)            ! downstream
+                        if (abs(fd-fc) .gt. 1e-10) then
+                           r=(fc-fu)/(fd-fc)     ! slope ratio
+                        else
+                           r=(fc-fu)*1.e10
+                        end if
+                     else
                         c=-uu(i,j,k)/hun(i,j,k)*dt/delxu(i,j)
-		        if (au(i+1,j) .gt. 0) then
-		           fu=f(i+2,j,k)         ! upstream
-			else
-		           fu=f(i+1,j,k)
-			end if
-		        fc=f(i+1,j,k)            ! central
-		        fd=f(i  ,j,k)            ! downstream
-		        if (abs(fc-fd) .gt. 1e-10) then
-		           r=(fu-fc)/(fc-fd)     ! slope ratio
-		        else
-		           r=(fu-fc)*1.e10
-		        end if
-		     end if
-		     select case (method)
-		     case ((P2),(P2_PDM))
-                        x = one6th*(1.-2.0*c)
-                        Phi=(0.5+x)+(0.5-x)*r
-			if (method.eq.P2) then
-			   limit=Phi
-			else
-		           limit=max(_ZERO_,min(Phi,2./(1.-c),2.*r/(c+1.e-10)))
-			end if
-		     case (Superbee)
-		        limit=max(_ZERO_, min(1.0, 2.0*r), min(r,2.0) )
-		     case (MUSCL) 	
-		        limit=max(_ZERO_,min(2.0,2.0*r,0.5*(1.0+r)))
-                     case default
-                        FATAL 'This is not so good - do_advection_3d()'
-	                stop
-		     end select
-	             cu(i,j,k)=uu(i,j,k)*(fc+0.5*limit*(1-c)*(fd-fc))
-                     !Horizontal diffusion
-                     if ((AH.gt.0.).and.(az(i,j).gt.0).and.(az(i+1,j).gt.0))   then
-		        cu(i,j,k)=cu(i,j,k)-AH*hun(i,j,k)*(f(i+1,j,k)-f(i,j,k))/delxu(i,j)
-		     end if
-		  end if
+                        if (au(i+1,j) .gt. 0) then
+                           fu=f(i+2,j,k)         ! upstream
+                        else
+                           fu=f(i+1,j,k)
+                        end if
+                        fc=f(i+1,j,k)            ! central
+                        fd=f(i  ,j,k)            ! downstream
+                        if (abs(fc-fd) .gt. 1e-10) then
+                           r=(fu-fc)/(fc-fd)     ! slope ratio
+                        else
+                           r=(fu-fc)*1.e10
+                        end if
+                     end if
+                     select case (method)
+                        case ((P2),(P2_PDM))
+                           x = one6th*(1.-2.0*c)
+                           Phi=(0.5+x)+(0.5-x)*r
+                           if (method.eq.P2) then
+                              limit=Phi
+                           else
+                              limit=max(_ZERO_,min(Phi,2./(1.-c), &
+			                2.*r/(c+1.e-10)))
+                           end if
+                        case (Superbee)
+                           limit=max(_ZERO_,min(1.0, 2.0*r),min(r,2.0))
+                        case (MUSCL)
+                           limit=max(_ZERO_,min(2.0,2.0*r,0.5*(1.0+r)))
+                        case default
+                           FATAL 'Not so good - do_advection_3d()'
+                           stop 'u_split_adv'
+                     end select
+                     cu(i,j,k)=uu(i,j,k)*(fc+0.5*limit*(1-c)*(fd-fc))
+!Horizontal diffusion
+                     if ( AH.gt.0. .and. az(i,j).gt.0 .and. az(i+1,j).gt.0 ) then
+                        cu(i,j,k) = cu(i,j,k)-AH*hun(i,j,k) &
+			            *(f(i+1,j,k)-f(i,j,k))/delxu(i,j)
+                     end if
+                  end if
                end do
             end do
          end do
@@ -537,15 +547,15 @@
    do k=1,kmax   ! Doing the u-advection step
       do j=jjmin,jjmax
          do i=iimin,iimax
-	    if (az(i,j).eq.1) then
+            if (az(i,j) .eq. 1) then
                hio(i,j,k)=hi(i,j,k)
                hi(i,j,k)=hio(i,j,k)                           &
-	                -splitfac*dt*(uu(i,j,k)*delyu(i,j)    &
-		                     -uu(i-1,j,k)*delyu(i-1,j))*area_inv(i,j)
-	       f(i,j,k)=(f(i,j,k)*hio(i,j,k)           &
-	                -splitfac*dt*(cu(i,j,k)*delyu(i,j)    &
-		                     -cu(i-1,j,k)*delyu(i-1,j))*area_inv(i,j) &
-		   		     )/hi(i,j,k)
+                        -splitfac*dt*(uu(i,j,k)*delyu(i,j)    &
+                                     -uu(i-1,j,k)*delyu(i-1,j))*area_inv(i,j)
+               f(i,j,k)=(f(i,j,k)*hio(i,j,k)           &
+                        -splitfac*dt*(cu(i,j,k)*delyu(i,j)    &
+                        -cu(i-1,j,k)*delyu(i-1,j))*area_inv(i,j) &
+                        )/hi(i,j,k)
             end if
          end do
       end do
@@ -564,7 +574,8 @@
 ! !IROUTINE:  v_split_adv()
 !
 ! !INTERFACE:
-   subroutine v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,splitfac,method,az,AH)
+   subroutine v_split_adv(dt,f,vv,hvn, &
+                          delxv,delyv,area_inv,av,splitfac,method,az,AH)
 !
 ! !DESCRIPTION:
 !
@@ -572,25 +583,25 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE , intent(in) :: vv(I3DFIELD),hvn(I3DFIELD)
-   REALTYPE, intent(in)	:: delxv(I2DFIELD),delyv(I2DFIELD)
-   REALTYPE, intent(in)	:: area_inv(I2DFIELD),dt
-   integer, intent(in)	:: av(E2DFIELD),az(E2DFIELD)
-   REALTYPE, intent(in)	:: splitfac
-   integer, intent(in)	:: method
-   REALTYPE, intent(in) :: AH
+   REALTYPE , intent(in)               :: vv(I3DFIELD),hvn(I3DFIELD)
+   REALTYPE, intent(in)                :: delxv(I2DFIELD),delyv(I2DFIELD)
+   REALTYPE, intent(in)                :: area_inv(I2DFIELD),dt
+   integer, intent(in)                 :: av(E2DFIELD),az(E2DFIELD)
+   REALTYPE, intent(in)                :: splitfac
+   integer, intent(in)                 :: method
+   REALTYPE, intent(in)                :: AH
 !
 ! !INPUT/OUTPUT PARAMETERS:
+   REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out)	:: f(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,ii,j,jj,k,kk
-   REALTYPE	:: c,alpha,beta,x,r,Phi,limit,fu,fc,fd
+   integer                   :: i,ii,j,jj,k,kk
+   REALTYPE                  :: c,alpha,beta,x,r,Phi,limit,fu,fc,fd
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -614,9 +625,9 @@
                   if(av(i,j) .gt. 0) then
                      if (vv(i,j,k) .gt. _ZERO_) then
                         cu(i,j,k)=vv(i,j,k)*f(i,j,k)
-	             else
+                     else
                         cu(i,j,k)=vv(i,j,k)*f(i,j+1,k)
-	             end if
+                     end if
                   end if
                end do
             end do
@@ -626,60 +637,60 @@
             do j=jjmin-1,jjmax
                do i=iimin,iimax
                   cu(i,j,k) = _ZERO_
-	          if (av(i,j) .gt. 0) then
+                  if (av(i,j) .gt. 0) then
                      if (vv(i,j,k) .gt. _ZERO_) then
                         c=vv(i,j,k)/hvn(i,j,k)*dt/delyv(i,j)
-		        if (av(i,j-1) .gt. 0) then
-		           fu=f(i,j-1,k)         ! upstream
-			else
-		           fu=f(i,j  ,k)
-			end if
-		        fc=f(i,j  ,k)            ! central
-		        fd=f(i,j+1,k)            ! downstream
-		        if (abs(fd-fc) .gt. 1e-10) then
-		           r=(fc-fu)/(fd-fc)     ! slope ratio
-		        else
-		           r=(fc-fu)*1.e10
-		        end if
-		     else
+                        if (av(i,j-1) .gt. 0) then
+                           fu=f(i,j-1,k)         ! upstream
+                        else
+                           fu=f(i,j  ,k)
+                        end if
+                        fc=f(i,j  ,k)            ! central
+                        fd=f(i,j+1,k)            ! downstream
+                        if (abs(fd-fc) .gt. 1e-10) then
+                           r=(fc-fu)/(fd-fc)     ! slope ratio
+                        else
+                           r=(fc-fu)*1.e10
+                        end if
+                     else
                         c=-vv(i,j,k)/hvn(i,j,k)*dt/delyv(i,j)
-		        if (av(i,j+1) .gt. 0) then
-		           fu=f(i,j+2,k)         ! upstream
-			else
-		           fu=f(i,j+1,k)
-			end if
-		        fc=f(i,j+1,k)            ! central
-		        fd=f(i,j  ,k)            ! downstream
-		        if (abs(fc-fd) .gt. 1e-10) then
-		           r=(fu-fc)/(fc-fd)     ! slope ratio
-		        else
-		           r=(fu-fc)*1.e10
-		        end if
-		     end if
+                        if (av(i,j+1) .gt. 0) then
+                           fu=f(i,j+2,k)         ! upstream
+                        else
+                           fu=f(i,j+1,k)
+                        end if
+                        fc=f(i,j+1,k)            ! central
+                        fd=f(i,j  ,k)            ! downstream
+                        if (abs(fc-fd) .gt. 1e-10) then
+                           r=(fu-fc)/(fc-fd)     ! slope ratio
+                        else
+                           r=(fu-fc)*1.e10
+                        end if
+                     end if
                      x = one6th*(1.-2.0*c)
                      Phi=(0.5+x)+(0.5-x)*r
-		     select case (method)
-		     case ((P2),(P2_PDM))
-                        x = one6th*(1.-2.0*c)
-                        Phi=(0.5+x)+(0.5-x)*r
-			if (method.eq.P2) then
-			   limit=Phi
-			else
-		           limit=max(_ZERO_,min(Phi,2./(1.-c),2.*r/(c+1.e-10)))
-			end if
-		     case (Superbee)
-		        limit=max(_ZERO_, min(1.0, 2.0*r), min(r,2.0) )
-		     case (MUSCL) 	
-		        limit=max(_ZERO_,min(2.0,2.0*r,0.5*(1.0+r)))
-                     case default
-                        FATAL 'This is not so good - do_advection_3d()'
-	                stop
-		     end select
+                     select case (method)
+                        case ((P2),(P2_PDM))
+                           x = one6th*(1.-2.0*c)
+                           Phi=(0.5+x)+(0.5-x)*r
+                           if (method.eq.P2) then
+                           limit=Phi
+                           else
+                           limit=max(_ZERO_,min(Phi,2./(1.-c),2.*r/(c+1.e-10)))
+                           end if
+                        case (Superbee)
+                           limit=max(_ZERO_, min(1.0, 2.0*r), min(r,2.0) )
+                        case (MUSCL)
+                           limit=max(_ZERO_,min(2.0,2.0*r,0.5*(1.0+r)))
+                        case default
+                           FATAL 'This is not so good - do_advection_3d()'
+                           stop 'v_split_adv'
+                     end select
                      cu(i,j,k)=vv(i,j,k)*(fc+0.5*limit*(1-c)*(fd-fc))
-		     !Horizontal diffusion
-		     if ((AH.gt.0.).and.(az(i,j).gt.0).and.(az(i,j+1).gt.0)) &
-		        cu(i,j,k)=cu(i,j,k)-AH*hvn(i,j,k)*(f(i,j+1,k)-f(i,j,k))/delyv(i,j)
-		  end if
+!Horizontal diffusion
+                     if ( AH.gt.0. .and. az(i,j).gt.0 .and. az(i,j+1).gt.0 ) &
+                        cu(i,j,k)=cu(i,j,k)-AH*hvn(i,j,k)*(f(i,j+1,k)-f(i,j,k))/delyv(i,j)
+                     end if
                end do
             end do
          end do
@@ -688,15 +699,15 @@
    do k=1,kmax   ! Doing the v-advection step
       do j=jjmin,jjmax
          do i=iimin,iimax
-	    if (az(i,j).eq.1) then
+            if (az(i,j).eq.1) then
                hio(i,j,k)=hi(i,j,k)
                hi(i,j,k)=hio(i,j,k)              &
-	             -splitfac*dt*(vv(i,j,k)*delxv(i,j)    &
-		                  -vv(i,j-1,k)*delxv(i,j-1))*area_inv(i,j)
-	       f(i,j,k)=(f(i,j,k)*hio(i,j,k)        &
-                   -splitfac*dt*(cu(i,j,k)*delxv(i,j)    &
-       	                        -cu(i,j-1,k)*delxv(i,j-1))*area_inv(i,j))/hi(i,j,k)
-	    end if
+                        -splitfac*dt*(vv(i,j,k)*delxv(i,j)    &
+                        -vv(i,j-1,k)*delxv(i,j-1))*area_inv(i,j)
+               f(i,j,k)=(f(i,j,k)*hio(i,j,k)        &
+                       -splitfac*dt*(cu(i,j,k)*delxv(i,j)    &
+                       -cu(i,j-1,k)*delxv(i,j-1))*area_inv(i,j))/hi(i,j,k)
+            end if
          end do
       end do
    end do
@@ -722,22 +733,22 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE , intent(in) :: ww(I3DFIELD),dt
-   integer , intent(in)  :: az(E2DFIELD)
-   REALTYPE, intent(in)	:: splitfac
-   integer, intent(in)	:: method
+   REALTYPE , intent(in)               :: ww(I3DFIELD),dt
+   integer , intent(in)                :: az(E2DFIELD)
+   REALTYPE, intent(in)                :: splitfac
+   integer, intent(in)                 :: method
 !
 ! !INPUT/OUTPUT PARAMETERS:
+   REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out)	:: f(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,ii,j,jj,k,kk
-   REALTYPE	:: c,alpha,beta,x,r,Phi,limit,fu,fc,fd
+   integer                   :: i,ii,j,jj,k,kk
+   REALTYPE                  :: c,alpha,beta,x,r,Phi,limit,fu,fc,fd
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -763,8 +774,8 @@
                         cu(i,j,k)=ww(i,j,k)*f(i,j,k)
                      else
                         cu(i,j,k)=ww(i,j,k)*f(i,j,k+1)
-	             end if
-	          end if
+                     end if
+                  end if
                end do
             end do
          end do
@@ -773,57 +784,57 @@
             do j=jjmin,jjmax
                do i=iimin,iimax
                   cu(i,j,k) = _ZERO_
-	          if (az(i,j) .eq. 1) then
+                  if (az(i,j) .eq. 1) then
                      if (ww(i,j,k) .gt. _ZERO_) then
                         c=ww(i,j,k)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
-		        if (k .gt. 1) then
-		           fu=f(i,j,k-1)         ! upstream
-			else
-		           fu=f(i,j,k)
-			end if
-		        fc=f(i,j,k  )            ! central
-		        fd=f(i,j,k+1)            ! downstream
-		        if (abs(fd-fc) .gt. 1e-10) then
-		           r=(fc-fu)/(fd-fc)     ! slope ratio
-		        else
-		           r=(fc-fu)*1.e10
-		        end if
-		     else
+                        if (k .gt. 1) then
+                           fu=f(i,j,k-1)         ! upstream
+                        else
+                           fu=f(i,j,k)
+                        end if
+                        fc=f(i,j,k  )            ! central
+                        fd=f(i,j,k+1)            ! downstream
+                        if (abs(fd-fc) .gt. 1e-10) then
+                           r=(fc-fu)/(fd-fc)     ! slope ratio
+                        else
+                           r=(fc-fu)*1.e10
+                        end if
+                     else
                         c=-ww(i,j,k)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
-		        if (k .lt. kmax-1) then
-		           fu=f(i,j,k+2)         ! upstream
-			else
-		           fu=f(i,j,k+1)
-			end if
-		        fc=f(i,j,k+1)            ! central
-		        fd=f(i,j,k  )            ! downstream
-		        if (abs(fc-fd) .gt. 1e-10) then
-		           r=(fu-fc)/(fc-fd)     ! slope ratio
-		        else
-		           r=(fu-fc)*1.e10
-		        end if
-		     end if
+                        if (k .lt. kmax-1) then
+                           fu=f(i,j,k+2)         ! upstream
+                        else
+                           fu=f(i,j,k+1)
+                        end if
+                        fc=f(i,j,k+1)            ! central
+                        fd=f(i,j,k  )            ! downstream
+                        if (abs(fc-fd) .gt. 1e-10) then
+                           r=(fu-fc)/(fc-fd)     ! slope ratio
+                        else
+                           r=(fu-fc)*1.e10
+                        end if
+                     end if
                      x = one6th*(1.-2.0*c)
                      Phi=(0.5+x)+(0.5-x)*r
-		     select case (method)
-		     case ((P2),(P2_PDM))
-                        x = one6th*(1.-2.0*c)
-                        Phi=(0.5+x)+(0.5-x)*r
-			if (method.eq.P2) then
-			   limit=Phi
-			else
-		           limit=max(_ZERO_,min(Phi,2./(1.-c),2.*r/(c+1.e-10)))
-			end if
-		     case (Superbee)
-		        limit=max(_ZERO_, min(1.0, 2.0*r), min(r,2.0) )
-		     case (MUSCL) 	
-		        limit=max(_ZERO_,min(2.0,2.0*r,0.5*(1.0+r)))
-                     case default
-                        FATAL 'This is not so good - do_advection_3d()'
-	                stop
-		     end select
-	             cu(i,j,k)=ww(i,j,k)*(fc+0.5*limit*(1-c)*(fd-fc))
-		  end if
+                     select case (method)
+                        case ((P2),(P2_PDM))
+                           x = one6th*(1.-2.0*c)
+                           Phi=(0.5+x)+(0.5-x)*r
+                           if (method.eq.P2) then
+                              limit=Phi
+                           else
+                              limit=max(_ZERO_,min(Phi,2./(1.-c),2.*r/(c+1.e-10)))
+                           end if
+                        case (Superbee)
+                           limit=max(_ZERO_, min(1.0, 2.0*r), min(r,2.0) )
+                        case (MUSCL)
+                           limit=max(_ZERO_,min(2.0,2.0*r,0.5*(1.0+r)))
+                        case default
+                           FATAL 'This is not so good - do_advection_3d()'
+                           stop 'w_split_adv'
+                     end select
+                     cu(i,j,k)=ww(i,j,k)*(fc+0.5*limit*(1-c)*(fd-fc))
+                  end if
                end do
             end do
          end do
@@ -832,7 +843,7 @@
    do k=1,kmax   ! Doing a w-advection step
       do j=jjmin,jjmax
          do i=iimin,iimax
-	    if (az(i,j) .eq. 1) then
+            if (az(i,j) .eq. 1) then
                hio(i,j,k)=hi(i,j,k)
                hi(i,j,k)=hio(i,j,k)-splitfac*dt*(ww(i,j,k)-ww(i,j,k-1))
                f(i,j,k)=(f(i,j,k)*hio(i,j,k)-        &
@@ -841,7 +852,6 @@
          end do
       end do
    end do
-
 
 #ifdef DEBUG
    write(debug,*) 'Leaving w_split_adv()'
@@ -864,23 +874,23 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE , intent(in) :: ww(I3DFIELD),dt
-   integer , intent(in)  :: az(E2DFIELD)
-   REALTYPE, intent(in)	:: splitfac
-   integer, intent(in)	:: method
+   REALTYPE , intent(in)               :: ww(I3DFIELD),dt
+   integer , intent(in)                :: az(E2DFIELD)
+   REALTYPE, intent(in)                :: splitfac
+   integer, intent(in)                 :: method
 !
 ! !INPUT/OUTPUT PARAMETERS:
+   REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out)	:: f(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,ii,j,jj,k,kk,it
-   REALTYPE	:: c,alpha,beta,x,r,Phi,limit,fu,fc,fd,cmax
-   LOGICAL      :: READY
+   integer                   :: i,ii,j,jj,k,kk,it
+   REALTYPE                  :: c,alpha,beta,x,r,Phi,limit,fu,fc,fd,cmax
+   LOGICAL                   :: READY
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -906,7 +916,7 @@
                         cu(i,j,k)=ww(i,j,k)*f(i,j,k)
                      else
                         cu(i,j,k)=ww(i,j,k)*f(i,j,k+1)
-	             end if
+                     end if
                   end do
                   do k=1,kmax   ! Doing a w-advection step
                      hio(i,j,k)=hi(i,j,k)
@@ -914,90 +924,91 @@
                      f(i,j,k)=(f(i,j,k)*hio(i,j,k)-        &
                                splitfac*dt*(cu(i,j,k)-cu(i,j,k-1)))/hi(i,j,k)
                   end do
-	       end if
+               end if
             end do
          end do
       case ((P2),(Superbee),(MUSCL),(P2_PDM))
          do j=jjmin,jjmax
             do i=iimin,iimax
-	       if (az(i,j) .eq. 1) then
-	          cmax= _ZERO_
-		  it=1
-		  ready=.false.
-111		  do ii=1,it
-                  do k=1,kmax-1
-                  cu(i,j,k) = _ZERO_
-                     if (ww(i,j,k) .gt. _ZERO_) then
-                        c=ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
-			if (c .gt. cmax) cmax=c
-		        if (k .gt. 1) then
-		           fu=f(i,j,k-1)         ! upstream
-			else
-		           fu=f(i,j,k)
-			end if
-		        fc=f(i,j,k  )            ! central
-		        fd=f(i,j,k+1)            ! downstream
-		        if (abs(fd-fc) .gt. 1e-10) then
-		           r=(fc-fu)/(fd-fc)     ! slope ratio
-		        else
-		           r=(fc-fu)*1.e10
-		        end if
-		     else
-                        c=-ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
-			if (c .gt. cmax) cmax=c
-		        if (k .lt. kmax-1) then
-		           fu=f(i,j,k+2)         ! upstream
-			else
-		           fu=f(i,j,k+1)
-			end if
-		        fc=f(i,j,k+1)            ! central
-		        fd=f(i,j,k  )            ! downstream
-		        if (abs(fc-fd) .gt. 1e-10) then
-		           r=(fu-fc)/(fc-fd)     ! slope ratio
-		        else
-		           r=(fu-fc)*1.e10
-		        end if
-		     end if
-                     x = one6th*(1.-2.0*c)
-                     Phi=(0.5+x)+(0.5-x)*r
-		     select case (method)
-		     case ((P2),(P2_PDM))
+               if (az(i,j) .eq. 1) then
+                  cmax= _ZERO_
+                  it=1
+                  ready=.false.
+111               do ii=1,it
+                     do k=1,kmax-1
+                        cu(i,j,k) = _ZERO_
+                        if (ww(i,j,k) .gt. _ZERO_) then
+                           c=ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
+                           if (c .gt. cmax) cmax=c
+                           if (k .gt. 1) then
+                              fu=f(i,j,k-1)         ! upstream
+                           else
+                              fu=f(i,j,k)
+                           end if
+                           fc=f(i,j,k  )            ! central
+                           fd=f(i,j,k+1)            ! downstream
+                           if (abs(fd-fc) .gt. 1e-10) then
+                              r=(fc-fu)/(fd-fc)     ! slope ratio
+                           else
+                              r=(fc-fu)*1.e10
+                           end if
+                        else
+                           c=-ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
+                           if (c .gt. cmax) cmax=c
+                           if (k .lt. kmax-1) then
+                              fu=f(i,j,k+2)         ! upstream
+                           else
+                              fu=f(i,j,k+1)
+                           end if
+                           fc=f(i,j,k+1)            ! central
+                           fd=f(i,j,k  )            ! downstream
+                           if (abs(fc-fd) .gt. 1e-10) then
+                              r=(fu-fc)/(fc-fd)     ! slope ratio
+                           else
+                           r=   (fu-fc)*1.e10
+                           end if
+                        end if
                         x = one6th*(1.-2.0*c)
                         Phi=(0.5+x)+(0.5-x)*r
-			if (method.eq.P2) then
-			   limit=Phi
-			else
-		           limit=max(_ZERO_,min(Phi,2./(1.-c),2.*r/(c+1.e-10)))
-			end if
-		     case (Superbee)
-		        limit=max(_ZERO_, min(1.0, 2.0*r), min(r,2.0) )
-		     case (MUSCL) 	
-		        limit=max(_ZERO_,min(2.0,2.0*r,0.5*(1.0+r)))
-                     case default
-                        FATAL 'This is not so good - do_advection_3d()'
-	                stop
-		     end select
-	             cu(i,j,k)=ww(i,j,k)*(fc+0.5*limit*(1-c)*(fd-fc))
-                  end do
-		  if (.not. READY) then
-		     it=min(200,int(cmax)+1)
+                        select case (method)
+                           case ((P2),(P2_PDM))
+                              x = one6th*(1.-2.0*c)
+                              Phi=(0.5+x)+(0.5-x)*r
+                              if (method.eq.P2) then
+                                 limit=Phi
+                              else
+                                 limit=max(_ZERO_,min(Phi,2./(1.-c),2.*r/(c+1.e-10)))
+                              end if
+                           case (Superbee)
+                              limit=max(_ZERO_, min(1.0, 2.0*r), min(r,2.0) )
+                           case (MUSCL)
+                              limit=max(_ZERO_,min(2.0,2.0*r,0.5*(1.0+r)))
+                           case default
+                              FATAL 'This is not so good - do_advection_3d()'
+                              stop 'w_split_it_adv'
+                        end select
+                        cu(i,j,k)=ww(i,j,k)*(fc+0.5*limit*(1-c)*(fd-fc))
+                     end do
+                     if (.not. READY) then
+                        it=min(200,int(cmax)+1)
 #ifdef DEBUG
-		     if (it .gt. 1) write(95,*) i,j,it,cmax
+                        if (it .gt. 1) write(95,*) i,j,it,cmax
 #endif
-		  end if
-		  if ((it .gt. 1) .and. (.not. READY)) then
-		     READY=.true.
-		     goto 111
-		  end if
-                  do k=1,kmax   ! Doing a w-advection step
-                     hio(i,j,k)=hi(i,j,k)
-                     hi(i,j,k)=hio(i,j,k)                  &
-		      -splitfac/float(it)*dt*(ww(i,j,k)-ww(i,j,k-1))
-                     f(i,j,k)=(f(i,j,k)*hio(i,j,k)         &
-                      -splitfac/float(it)*dt*(cu(i,j,k)-cu(i,j,k-1)))/hi(i,j,k)
+                     end if
+                     if ((it .gt. 1) .and. (.not. READY)) then
+                        READY=.true.
+                        goto 111
+                     end if
+
+                     do k=1,kmax   ! Doing a w-advection step
+                        hio(i,j,k)=hi(i,j,k)
+                        hi(i,j,k)=hio(i,j,k)                  &
+                                 -splitfac/float(it)*dt*(ww(i,j,k)-ww(i,j,k-1))
+                        f(i,j,k)=(f(i,j,k)*hio(i,j,k)         &
+                                -splitfac/float(it)*dt*(cu(i,j,k)-cu(i,j,k-1)))/hi(i,j,k)
+                     end do
                   end do
-                  end do
-	       end if
+               end if
             end do
          end do
    end select

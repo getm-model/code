@@ -1,4 +1,4 @@
-!$Id: uv_diffusion_3d.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
+!$Id: uv_diffusion_3d.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,9 +31,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k,ii,jj,kk
-   REALTYPE	:: PP(iimin-1:iimax,jjmin-1:jjmax,1:kmax)
-   REALTYPE	:: www(0:kmax)
+   integer                   :: i,j,k,ii,jj,kk
+   REALTYPE                  :: PP(iimin-1:iimax,jjmin-1:jjmax,1:kmax)
+   REALTYPE                  :: www(0:kmax)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -50,7 +50,7 @@
             if (az(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
                   PP(i,j,k)=2.*Am*DYC*hn(i,j,k)               &
-		      *(uu(i,j,k)/hun(i,j,k)-uu(i-1,j,k)/hun(i-1,j,k))/DXC
+                      *(uu(i,j,k)/hun(i,j,k)-uu(i-1,j,k)/hun(i-1,j,k))/DXC
                end if
             end if
          end do
@@ -76,8 +76,8 @@
             if (au(i,j) .ge. 1 .or. au(i,j+1) .ge. 1) then
                if (k .ge. kumin(i,j)) then
                   PP(i,j,k)=Am*0.5*(hun(i+1,j,k)+hun(i,j,k))*DXX  &
-		   *((uu(i,j+1,k)/hun(i,j+1,k)-uu(i,j,k)/hun(i,j,k))/DYX &
-		    +(vv(i+1,j,k)/hvn(i+1,j,k)-vv(i,j,k)/hvn(i,j,k))/DXX )
+                      *((uu(i,j+1,k)/hun(i,j+1,k)-uu(i,j,k)/hun(i,j,k))/DYX &
+                       +(vv(i+1,j,k)/hvn(i+1,j,k)-vv(i,j,k)/hvn(i,j,k))/DXX )
                end if
             end if
          end do
@@ -103,8 +103,8 @@
             if (av(i+1,j) .ge. 1 .or. av(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
                   PP(i,j,k)=Am*0.5*(hun(i+1,j,k)+hun(i,j,k))*DXX  &
-		   *((uu(i,j+1,k)/hun(i,j+1,k)-uu(i,j,k)/hun(i,j,k))/DYX &
-		    +(vv(i+1,j,k)/hvn(i+1,j,k)-vv(i,j,k)/hvn(i,j,k))/DXX )
+                      *((uu(i,j+1,k)/hun(i,j+1,k)-uu(i,j,k)/hun(i,j,k))/DYX &
+                       +(vv(i+1,j,k)/hvn(i+1,j,k)-vv(i,j,k)/hvn(i,j,k))/DXX )
                end if
             end if
          end do
@@ -130,7 +130,7 @@
             if (az(i,j) .ge. 1) then
                if (k .ge. kvmin(i,j)) then
                   PP(i,j,k)=2.*Am*DXC*hn(i,j,k)               &
-		      *(vv(i,j,k)/hvn(i,j,k)-vv(i,j-1,k)/hvn(i,j-1,k))/DYC
+                      *(vv(i,j,k)/hvn(i,j,k)-vv(i,j-1,k)/hvn(i,j-1,k))/DYC
                end if
             end if
          end do

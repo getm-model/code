@@ -1,4 +1,4 @@
-!$Id: start_macro.F90,v 1.4 2003-04-07 16:27:32 kbk Exp $
+!$Id: start_macro.F90,v 1.5 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,7 +28,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: start_macro.F90,v $
-!  Revision 1.4  2003-04-07 16:27:32  kbk
+!  Revision 1.5  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.4  2003/04/07 16:27:32  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:55  gotm
@@ -55,8 +58,8 @@
 !
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j
-   REALTYPE	:: split
+   integer                   :: i,j
+   REALTYPE                  :: split
 !EOP
 !-----------------------------------------------------------------------
 !BOC

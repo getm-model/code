@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.2 2003-04-01 15:50:13 gotm Exp $
+!$Id: internal_pressure.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,11 +11,11 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain,       only: iimin,iimax,jjmin,jjmax,kmax,az,au,av,H,HU,HV
+   use domain, only: iimin,iimax,jjmin,jjmax,kmax,az,au,av,H,HU,HV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain,       only: dxu,dyv
+   use domain, only: dxu,dyv
 #else
-   use domain,       only: dx,dy
+   use domain, only: dx,dy
 #endif
    use variables_3d, only: kmin,hn,hun,hvn,idpdx,idpdy,rho
    IMPLICIT NONE
@@ -30,7 +30,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: internal_pressure.F90,v $
-!  Revision 1.2  2003-04-01 15:50:13  gotm
+!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/01 15:50:13  gotm
 !  removed dead print statement
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:59  gotm
@@ -80,17 +83,18 @@
 !  Added further support for baroclinicity
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k,rc
-   REALTYPE	:: dxm1,dym1,x,y,x1,y1,grdl,grdu,rhol,rhou,prgr,dxz,dyz
-   REALTYPE,dimension(:,:,:), allocatable	:: zz
-   REALTYPE,save,dimension(:,:,:), allocatable	:: idpdx0
-   REALTYPE,save,dimension(:,:,:), allocatable	:: idpdy0
-   LOGICAL,save					:: first=.true.
+   integer                   :: i,j,k,rc
+   REALTYPE                  :: dxm1,dym1,x,y,x1,y1
+   REALTYPE                  :: grdl,grdu,rhol,rhou,prgr,dxz,dyz
+   LOGICAL,save              :: first=.true.
 #ifdef PRESS_GRAD_Z
-   REALTYPE					:: zx(kmax)
-   REALTYPE					:: rhoplus,rhominus
-   integer					:: kplus,kminus
+   integer                   :: kplus,kminus
+   REALTYPE                  :: zx(kmax)
+   REALTYPE                  :: rhoplus,rhominus
 #endif
+   REALTYPE,dimension(:,:,:), allocatable        :: zz
+   REALTYPE,save,dimension(:,:,:), allocatable   :: idpdx0
+   REALTYPE,save,dimension(:,:,:), allocatable   :: idpdy0
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -155,7 +159,7 @@
       do i=iimin,iimax
          if (au(i,j) .ge. 1) then
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         dxm1=_ONE_/DXU
+            dxm1=_ONE_/DXU
 #endif
 #ifdef PRESS_GRAD_Z
             zx(1)=-HU(i,j)+0.5*hun(i,j,1) ! zx defined on u-points
@@ -188,13 +192,13 @@
                if (kplus .lt. kmax .and. kplus .gt. 1) then
                   rhoplus=((zx(k)-zz(i+1,j,kplus))*rho(i+1,j,kplus+1)+ &
                           (zz(i+1,j,kplus+1)-zx(k))*rho(i+1,j,kplus))/ &
-	                  (0.5*(hn(i+1,j,kplus+1)+hn(i+1,j,kplus)))
+                          (0.5*(hn(i+1,j,kplus+1)+hn(i+1,j,kplus)))
                end if
                if (kminus .eq. kmax) rhominus=rho(i,j,kminus)
                if ((kminus .lt. kmax) .and. (kminus .gt. 1)) then
                   rhominus=((zx(k)-zz(i,j,kminus))*rho(i,j,kminus+1)+ &
                           (zz(i,j,kminus+1)-zx(k))*rho(i,j,kminus))/  &
-               	          (0.5*(hn(i,j,kminus+1)+hn(i,j,kminus)))
+               (0.5*(hn(i,j,kminus+1)+hn(i,j,kminus)))
                end if
                if (zx(k) .gt. max(-H(i+1,j),-H(i,j))) then
                   grdl=0.5*hun(i,j,k)*(rhoplus-rhominus)*dxm1
@@ -220,7 +224,7 @@
 #endif
 #endif
                idpdx(i,j,k)=hun(i,j,k)*prgr
-   	    end do
+            end do
          end if
       end do
    end do
@@ -264,7 +268,7 @@
                if ((kplus .lt. kmax) .and. (kplus .gt. 1)) then
                   rhoplus=((zx(k)-zz(i,j+1,kplus))*rho(i,j+1,kplus+1)+ &
                           (zz(i,j+1,kplus+1)-zx(k))*rho(i,j+1,kplus))/ &
-	                  (0.5*(hn(i,j+1,kplus+1)+hn(i,j+1,kplus)))
+                          (0.5*(hn(i,j+1,kplus+1)+hn(i,j+1,kplus)))
                end if
                if (kminus .eq. kmax) rhominus=rho(i,j,kminus)
                if ((kminus .lt. kmax) .and. (kminus .gt. 1)) then

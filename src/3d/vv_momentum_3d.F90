@@ -1,4 +1,4 @@
-!$Id: vv_momentum_3d.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
+!$Id: vv_momentum_3d.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,7 +34,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   logical, intent(in)	:: bdy3d
+   logical, intent(in)                 :: bdy3d
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -44,7 +44,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: vv_momentum_3d.F90,v $
-!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 13:36:38  kbk
 !  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:57  gotm
@@ -103,14 +106,15 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k,rc
-   REALTYPE	:: dif(1:kmax-1)
-   REALTYPE	:: auxn(1:kmax-1),auxo(1:kmax-1),fuu(1:kmax)
-   REALTYPE	:: a1(0:kmax),a2(0:kmax),a3(0:kmax),a4(0:kmax)
-   REALTYPE	:: Res(0:kmax),ex(0:kmax)
-   REALTYPE	:: zp,zm,zy,ResInt,Diff,Uloc
-   REALTYPE	:: gamma=g*rho_0
-   REALTYPE	:: cord_curv=_ZERO_
+   integer                   :: i,j,k,rc
+   REALTYPE                  :: dif(1:kmax-1)
+   REALTYPE                  :: auxn(1:kmax-1),auxo(1:kmax-1),fuu(1:kmax)
+   REALTYPE                  :: a1(0:kmax),a2(0:kmax)
+   REALTYPE                  :: a3(0:kmax),a4(0:kmax)
+   REALTYPE                  :: Res(0:kmax),ex(0:kmax)
+   REALTYPE                  :: zp,zm,zy,ResInt,Diff,Uloc
+   REALTYPE                  :: gamma=g*rho_0
+   REALTYPE                  :: cord_curv=_ZERO_
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -123,7 +127,7 @@
       do i=iimin,iimax
 
          if ((av(i,j) .eq. 1) .or. (av(i,j) .eq. 2)) then
-	
+
             if (kmax .gt. kvmin(i,j)) then
 
                do k=kvmin(i,j),kmax      ! explicit terms
@@ -140,9 +144,9 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   cord_curv=(vv(i,j,k)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC))     &
                         /hvo(i,j,k)*ARVD1
-	          ex(k)=(cord_curv-Corv(i,j))*Uloc
+                  ex(k)=(cord_curv-Corv(i,j))*Uloc
 #else
-	          ex(k)=-Corv(i,j)*Uloc
+                  ex(k)=-Corv(i,j)*Uloc
 #endif
 #ifdef NO_BAROCLINIC
                   ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k))
@@ -151,7 +155,7 @@
 #endif
                end do
                ex(kmax)=ex(kmax)                                      &
-	          +dry_v(i,j)*.5*(tausy(i,j)+tausy(i,j+1))/rho_0
+                       +dry_v(i,j)*.5*(tausy(i,j)+tausy(i,j+1))/rho_0
 !     Eddy viscosity
                do k=kvmin(i,j),kmax-1
                   dif(k)=0.5*(num(i,j,k)+num(i,j+1,k)) + avmmol
@@ -173,9 +177,9 @@
                k=kmax
                a1(k)=-auxn(k-1)/hvn(i,j,k-1)
                a2(k)=1+auxn(k-1)/hvn(i,j,k)
-               a4(k)=vv(i,j,k  )*(1-auxo(k-1)/hvo(i,j,k))                &
-                    +vv(i,j,k-1)*auxo(k-1)/hvo(i,j,k-1)                  &
-	            +dt*ex(k)                                           &
+               a4(k)=vv(i,j,k  )*(1-auxo(k-1)/hvo(i,j,k))              &
+                    +vv(i,j,k-1)*auxo(k-1)/hvo(i,j,k-1)                &
+                    +dt*ex(k)                                          &
                     -dt*0.5*(hvo(i,j,k)+hvn(i,j,k))*g*zy
 
 !     Matrix elements for inner layers
@@ -183,21 +187,21 @@
                   a3(k)=-auxn(k  )/hvn(i,j,k+1)
                   a1(k)=-auxn(k-1)/hvn(i,j,k-1)
                   a2(k)=1+(auxn(k)+auxn(k-1))/hvn(i,j,k)
-                  a4(k)=vv(i,j,k+1)*auxo(k)/hvo(i,j,k+1)                 &
-                       +vv(i,j,k  )*(1-(auxo(k)+auxo(k-1))/hvo(i,j,k))   &
-                       +vv(i,j,k-1)*auxo(k-1)/hvo(i,j,k-1)               &
-	               +dt*ex(k)                                        &
+                  a4(k)=vv(i,j,k+1)*auxo(k)/hvo(i,j,k+1)               &
+                       +vv(i,j,k  )*(1-(auxo(k)+auxo(k-1))/hvo(i,j,k)) &
+                       +vv(i,j,k-1)*auxo(k-1)/hvo(i,j,k-1)             &
+                       +dt*ex(k)                                       &
                        -dt*0.5*(hvo(i,j,k)+hvn(i,j,k))*g*zy
                end do
 
 !     Matrix elements for bottom layer
                k=kvmin(i,j)
                a3(k)=-auxn(k  )/hvn(i,j,k+1)
-               a2(k)=1+auxn(k)/hvn(i,j,k)                                &
+               a2(k)=1+auxn(k)/hvn(i,j,k)                              &
                         +dt*rrv(i,j)/(0.5*(hvn(i,j,k)+hvo(i,j,k)))
-               a4(k)=vv(i,j,k+1)*auxo(k)/hvo(i,j,k+1)                    &
-                       +vv(i,j,k  )*(1-auxo(k)/hvo(i,j,k))               &
-	               +dt*ex(k)                                        &
+               a4(k)=vv(i,j,k+1)*auxo(k)/hvo(i,j,k+1)                  &
+                       +vv(i,j,k  )*(1-auxo(k)/hvo(i,j,k))             &
+                       +dt*ex(k)                                       &
                        -dt*0.5*(hvo(i,j,k)+hvn(i,j,k))*g*zy
 
                call getm_tridiagonal(kmax,kvmin(i,j),kmax,a1,a2,a3,a4,Res)
@@ -217,7 +221,7 @@
                end do
             else ! (kmax .eq. kvmin(i,j))
                vv(i,j,kmax)=Vint(i,j)
-	    end if
+            end if
          end if
       end do
    end do

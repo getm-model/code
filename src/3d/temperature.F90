@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.3 2003-04-07 13:36:38 kbk Exp $
+!$Id: temperature.F90,v 1.4 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -24,18 +24,21 @@
    public init_temperature, do_temperature
 !
 ! !PRIVATE DATA MEMBERS:
-   integer		:: temp_method=1,temp_format=2
-   character(len=PATH_MAX)	:: temp_file="t_and_s.nc"
-   character(len=32)	:: temp_name='temp'
-   REALTYPE		:: temp_const=20.
-   integer		:: temp_hor_adv=1,temp_ver_adv=1,temp_strang=0
-   REALTYPE		:: temp_AH=-1.
+   integer                   :: temp_method=1,temp_format=2
+   character(len=PATH_MAX)   :: temp_file="t_and_s.nc"
+   character(len=32)         :: temp_name='temp'
+   REALTYPE                  :: temp_const=20.
+   integer                   :: temp_hor_adv=1,temp_ver_adv=1,temp_strang=0
+   REALTYPE                  :: temp_AH=-1.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: temperature.F90,v $
-!  Revision 1.3  2003-04-07 13:36:38  kbk
+!  Revision 1.4  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.3  2003/04/07 13:36:38  kbk
 !  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:58  gotm
@@ -108,7 +111,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: adv_method
+   integer, intent(in)                 :: adv_method
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -118,13 +121,14 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: k,i,j,n
-   NAMELIST /temp/	temp_method,temp_const,temp_file,	&
-			temp_format,temp_name,			&
-			temp_hor_adv,temp_ver_adv,temp_strang,temp_AH
-   integer, parameter	:: nmax=3100
-   REALTYPE		:: zlev(nmax),prof(nmax)
-   integer		:: field_no=12
+   integer                   :: k,i,j,n
+   integer, parameter        :: nmax=3100
+   REALTYPE                  :: zlev(nmax),prof(nmax)
+   integer                   :: field_no=12
+   NAMELIST /temp/ &
+             temp_method,temp_const,temp_file,              &
+             temp_format,temp_name,                         &
+             temp_hor_adv,temp_ver_adv,temp_strang,temp_AH
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -154,8 +158,8 @@ field_no=1
       case(2)
          LEVEL3 'using profile'
          call read_profile(temp_file,nmax,zlev,prof,n)
-         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,az,H,	&
-	                   iimin,jjmin,iimax,jjmax,kmax,hn,T)
+         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,az,H,       &
+                           iimin,jjmin,iimax,jjmax,kmax,hn,T)
       case(3)
          LEVEL3 'interpolating from 3D field'
          call get_field(temp_file,temp_name,field_no,T)
@@ -214,15 +218,16 @@ field_no=1
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k,rc
-   REALTYPE	:: Res(0:kmax)
-   REALTYPE	:: auxn(1:kmax-1),auxo(1:kmax-1)
-   REALTYPE	:: a1(0:kmax),a2(0:kmax),a3(0:kmax),a4(0:kmax)
-   REALTYPE	:: delxu(I2DFIELD),delxv(I2DFIELD)
-   REALTYPE	:: delyu(I2DFIELD),delyv(I2DFIELD)
-   REALTYPE	:: area_inv(I2DFIELD)
-   REALTYPE	:: swr_loc,shf_loc
-   REALTYPE	:: zz,rad(0:1000),A=0.58,g1=0.35,g2=23.0
+   integer                   :: i,j,k,rc
+   REALTYPE                  :: Res(0:kmax)
+   REALTYPE                  :: auxn(1:kmax-1),auxo(1:kmax-1)
+   REALTYPE                  :: a1(0:kmax),a2(0:kmax)
+   REALTYPE                  :: a3(0:kmax),a4(0:kmax)
+   REALTYPE                  :: delxu(I2DFIELD),delxv(I2DFIELD)
+   REALTYPE                  :: delyu(I2DFIELD),delyv(I2DFIELD)
+   REALTYPE                  :: area_inv(I2DFIELD)
+   REALTYPE                  :: swr_loc,shf_loc
+   REALTYPE                  :: zz,rad(0:1000),A=0.58,g1=0.35,g2=23.0
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -246,8 +251,8 @@ field_no=1
    area_inv=ard1
 #endif
    call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,   &
-                        delxu,delxv,delyu,delyv,area_inv,az,au,av,	&
-			temp_hor_adv,temp_ver_adv,temp_strang,temp_AH)
+                        delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
+                        temp_hor_adv,temp_ver_adv,temp_strang,temp_AH)
 #ifdef NOMADS_TEST
    T(iimin:iimin,jjmin:jjmax,1:kmax)=10.
    T(iimax:iimax,jjmin:jjmax,1:kmax)=10.
@@ -263,55 +268,55 @@ field_no=1
 
 ! Solar radiation
             swr_loc=swr(i,j)
-	    shf_loc=shf(i,j)
-	    if (T(i,j,kmax).le.-0.0575*S(i,j,kmax)) then  ! use most primitive ice model ...
+            shf_loc=shf(i,j)
+            if (T(i,j,kmax).le.-0.0575*S(i,j,kmax)) then  ! use most primitive ice model ...
                shf_loc=max(0.,shf_loc)
-	    end if
-	    rad(kmax)=(swr_loc+shf_loc)/(rho_0*cp)
-	    zz=0.
-	    do k=kmax-1,0,-1
+            end if
+            rad(kmax)=(swr_loc+shf_loc)/(rho_0*cp)
+            zz = _ZERO_
+            do k=kmax-1,0,-1
                zz=zz+hn(i,j,k+1)
-	       rad(k)=swr_loc/(rho_0*cp)*(A*exp(-zz/g1)+(1-A)*exp(-zz/g2))
-	    end do
+               rad(k)=swr_loc/(rho_0*cp)*(A*exp(-zz/g1)+(1-A)*exp(-zz/g2))
+            end do
 
             if (kmax.gt.1) then
 !     Auxilury terms, old and new time level,
                do k=1,kmax-1
-	          auxo(k)=2.*(1-cnpar)*dt*nuh(i,j,k)/(hn(i,j,k+1)+hn(i,j,k))
-	          auxn(k)=2.*   cnpar *dt*nuh(i,j,k)/(hn(i,j,k+1)+hn(i,j,k))
-	       end do
+                  auxo(k)=2.*(1-cnpar)*dt*nuh(i,j,k)/(hn(i,j,k+1)+hn(i,j,k))
+                  auxn(k)=2.*   cnpar *dt*nuh(i,j,k)/(hn(i,j,k+1)+hn(i,j,k))
+               end do
 
 !        Matrix elements for surface layer
-	       k=kmax
-	       a1(k)=-auxn(k-1)
-	       a2(k)=hn(i,j,k)+auxn(k-1)
-	       a4(k)=T(i,j,k)*(hn(i,j,k)-auxo(k-1))+T(i,j,k-1)*auxo(k-1)  &
-	             +dt*(rad(k)-rad(k-1))
+               k=kmax
+               a1(k)=-auxn(k-1)
+               a2(k)=hn(i,j,k)+auxn(k-1)
+               a4(k)=T(i,j,k)*(hn(i,j,k)-auxo(k-1))+T(i,j,k-1)*auxo(k-1)  &
+                     +dt*(rad(k)-rad(k-1))
 
 !        Matrix elements for inner layers
                do k=2,kmax-1
-	          a3(k)=-auxn(k  )
-	          a1(k)=-auxn(k-1)
-       	          a2(k)=hn(i,j,k)+auxn(k)+auxn(k-1)
-	          a4(k)=T(i,j,k+1)*auxo(k)                          &
-	               +T(i,j,k  )*(hn(i,j,k)-auxo(k)-auxo(k-1))    &
-	               +T(i,j,k-1)*auxo(k-1)                        &
-	               +dt*(rad(k)-rad(k-1))
+                  a3(k)=-auxn(k  )
+                  a1(k)=-auxn(k-1)
+                  a2(k)=hn(i,j,k)+auxn(k)+auxn(k-1)
+                  a4(k)=T(i,j,k+1)*auxo(k)                          &
+                       +T(i,j,k  )*(hn(i,j,k)-auxo(k)-auxo(k-1))    &
+                       +T(i,j,k-1)*auxo(k-1)                        &
+                       +dt*(rad(k)-rad(k-1))
                end do
 
 !        Matrix elements for bottom layer
                k=1
-	       a3(k)=-auxn(k  )
-	       a2(k)=hn(i,j,k)+auxn(k)
+               a3(k)=-auxn(k  )
+               a2(k)=hn(i,j,k)+auxn(k)
                a4(k)=T(i,j,k+1)*auxo(k)                           &
-	            +T(i,j,k  )*(hn(i,j,k)-auxo(k))               &
-	            +dt*(rad(k)-rad(k-1))
+                    +T(i,j,k  )*(hn(i,j,k)-auxo(k))               &
+                    +dt*(rad(k)-rad(k-1))
 
                call getm_tridiagonal(kmax,1,kmax,a1,a2,a3,a4,Res)
 
-	       do k=1,kmax
-	          T(i,j,k)=Res(k)
-	       end do
+               do k=1,kmax
+                  T(i,j,k)=Res(k)
+               end do
 
             end if
          end if

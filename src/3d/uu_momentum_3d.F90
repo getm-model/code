@@ -1,4 +1,4 @@
-!$Id: uu_momentum_3d.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
+!$Id: uu_momentum_3d.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,7 +34,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   logical, intent(in)	:: bdy3d
+   logical, intent(in)                 :: bdy3d
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -44,7 +44,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uu_momentum_3d.F90,v $
-!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 13:36:38  kbk
 !  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:56  gotm
@@ -106,14 +109,15 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k,rc
-   REALTYPE	:: dif(1:kmax-1)
-   REALTYPE	:: auxn(1:kmax-1),auxo(1:kmax-1)
-   REALTYPE	:: a1(0:kmax),a2(0:kmax),a3(0:kmax),a4(0:kmax)
-   REALTYPE	:: Res(0:kmax),ex(0:kmax)
-   REALTYPE	:: zp,zm,zx,ResInt,Diff,Vloc
-   REALTYPE	:: gamma=g*rho_0
-   REALTYPE	:: cord_curv=_ZERO_
+   integer                   :: i,j,k,rc
+   REALTYPE                  :: dif(1:kmax-1)
+   REALTYPE                  :: auxn(1:kmax-1),auxo(1:kmax-1)
+   REALTYPE                  :: a1(0:kmax),a2(0:kmax)
+   REALTYPE                  :: a3(0:kmax),a4(0:kmax)
+   REALTYPE                  :: Res(0:kmax),ex(0:kmax)
+   REALTYPE                  :: zp,zm,zx,ResInt,Diff,Vloc
+   REALTYPE                  :: gamma=g*rho_0
+   REALTYPE                  :: cord_curv=_ZERO_
    
 !EOP
 !-----------------------------------------------------------------------
@@ -153,7 +157,7 @@
 #endif
                end do
                ex(kmax)=ex(kmax)                                         &
-	                +dry_u(i,j)*0.5*(tausx(i,j)+tausx(i+1,j))/rho_0
+                       +dry_u(i,j)*0.5*(tausx(i,j)+tausx(i+1,j))/rho_0
 !     Eddy viscosity
                do k=kumin(i,j),kmax-1
                   dif(k)=0.5*(num(i,j,k)+num(i+1,j,k)) + avmmol
@@ -174,9 +178,9 @@
                k=kmax
                a1(k)=-auxn(k-1)/hun(i,j,k-1)
                a2(k)=1.+auxn(k-1)/hun(i,j,k)
-               a4(k)=uu(i,j,k  )*(1-auxo(k-1)/huo(i,j,k))       &
-                    +uu(i,j,k-1)*auxo(k-1)/huo(i,j,k-1)		&
-                    +dt*ex(k)					&
+               a4(k)=uu(i,j,k  )*(1-auxo(k-1)/huo(i,j,k))              &
+                    +uu(i,j,k-1)*auxo(k-1)/huo(i,j,k-1)                &
+                    +dt*ex(k)                                          &
                     -dt*0.5*(huo(i,j,k)+hun(i,j,k))*g*zx
 
 !     Matrix elements for inner layers
@@ -184,9 +188,9 @@
                   a3(k)=-auxn(k  )/hun(i,j,k+1)
                   a1(k)=-auxn(k-1)/hun(i,j,k-1)
                   a2(k)=1.+(auxn(k)+auxn(k-1))/hun(i,j,k)
-                  a4(k)=uu(i,j,k+1)*auxo(k)/huo(i,j,k+1)                &
-                       +uu(i,j,k  )*(1-(auxo(k)+auxo(k-1))/huo(i,j,k))  &
-                       +uu(i,j,k-1)*auxo(k-1)/huo(i,j,k-1)              &
+                  a4(k)=uu(i,j,k+1)*auxo(k)/huo(i,j,k+1)               &
+                       +uu(i,j,k  )*(1-(auxo(k)+auxo(k-1))/huo(i,j,k)) &
+                       +uu(i,j,k-1)*auxo(k-1)/huo(i,j,k-1)             &
                        +dt*ex(k)                                       &
                        -dt*0.5*(huo(i,j,k)+hun(i,j,k))*g*zx
                end do
@@ -194,11 +198,11 @@
 !     Matrix elements for bottom layer
                k=kumin(i,j)
                a3(k)=-auxn(k  )/hun(i,j,k+1)
-               a2(k)=1.+auxn(k)/hun(i,j,k)                            &
+               a2(k)=1.+auxn(k)/hun(i,j,k)                             &
                      +dt*rru(i,j)/(0.5*(hun(i,j,k)+huo(i,j,k)))
-               a4(k)=uu(i,j,k+1)*auxo(k)/huo(i,j,k+1)                &
-                    +uu(i,j,k  )*(1-auxo(k)/huo(i,j,k))              &
-                    +dt*ex(k)                                       &
+               a4(k)=uu(i,j,k+1)*auxo(k)/huo(i,j,k+1)                  &
+                    +uu(i,j,k  )*(1-auxo(k)/huo(i,j,k))                &
+                    +dt*ex(k)                                          &
                     -dt*0.5*(huo(i,j,k)+hun(i,j,k))*g*zx
 
                call getm_tridiagonal(kmax,kumin(i,j),kmax,a1,a2,a3,a4,Res)

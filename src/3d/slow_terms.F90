@@ -1,4 +1,4 @@
-!$Id: slow_terms.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
+!$Id: slow_terms.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,7 +30,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: slow_terms.F90,v $
-!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 13:36:38  kbk
 !  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:55  gotm
@@ -58,9 +61,8 @@
 !  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
 !  initial import into CVS
 !
-!
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k
+   integer                   :: i,j,k
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -164,8 +166,8 @@
                STDERR 'NO_SLR U'
                Slru(i,j)= _ZERO_
 #else
-               Slru(i,j)=-Uint(i,j)/(0.5*(ssuo(i,j)+ssun(i,j))	&
-                                       +HU(i,j))*ru(i,j)		&
+               Slru(i,j)=-Uint(i,j)/(0.5*(ssuo(i,j)+ssun(i,j))         &
+                                       +HU(i,j))*ru(i,j)               &
                      +uu(i,j,k)/(0.5*(huo(i,j,k)+hun(i,j,k)))*rru(i,j)
 #endif
             else
@@ -184,13 +186,13 @@
                STDERR 'NO_SLR V'
                Slrv(i,j)=0.
 #else
-               Slrv(i,j)=-Vint(i,j)/(0.5*(ssvo(i,j)+ssvn(i,j))	&
-                                    +HV(i,j))*rv(i,j)		&
+               Slrv(i,j)=-Vint(i,j)/(0.5*(ssvo(i,j)+ssvn(i,j))         &
+                                    +HV(i,j))*rv(i,j)                  &
                   +vv(i,j,k)/(0.5*(hvo(i,j,k)+hvn(i,j,k)))*rrv(i,j)
 #endif
             else
                Slrv(i,j)=_ZERO_
-            end if  	
+            end if
          end if
       end do
    end do

@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.3 2003-04-07 13:36:38 kbk Exp $
+!$Id: salinity.F90,v 1.4 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,18 +28,21 @@
    public init_salinity, do_salinity
 !
 ! !PRIVATE DATA MEMBERS:
-   integer		:: salt_method=1,salt_format=2
-   character(len=PATH_MAX)	:: salt_file="t_and_s.nc"
-   character(len=32)	:: salt_name='salt'
-   REALTYPE		:: salt_const=35.
-   integer 		:: salt_hor_adv=1,salt_ver_adv=1,salt_strang=0
-   REALTYPE		:: salt_AH=-_ONE_
+   integer                   :: salt_method=1,salt_format=2
+   character(len=PATH_MAX)   :: salt_file="t_and_s.nc"
+   character(len=32)         :: salt_name='salt'
+   REALTYPE                  :: salt_const=35.
+   integer                   :: salt_hor_adv=1,salt_ver_adv=1,salt_strang=0
+   REALTYPE                  :: salt_AH=-_ONE_
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: salinity.F90,v $
-!  Revision 1.3  2003-04-07 13:36:38  kbk
+!  Revision 1.4  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.3  2003/04/07 13:36:38  kbk
 !  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:58  gotm
@@ -106,7 +109,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: adv_method
+   integer, intent(in)                 :: adv_method
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -116,20 +119,21 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-  integer	:: i,j,k,n
+  integer                    :: i,j,k,n
 #ifdef PECS_TEST
-   integer	:: cc(1:30)
+   integer                   :: cc(1:30)
 #endif
 #ifdef NOMADS_TEST
-   INTEGER	:: ic,jc
-   REALTYPE	:: dist
+   INTEGER                   :: ic,jc
+   REALTYPE                  :: dist
 #endif
-   NAMELIST /salt/	salt_method,salt_const,salt_file,	&
-   			salt_format,salt_name,			&
-			salt_hor_adv,salt_ver_adv,salt_strang,salt_AH
-   integer, parameter	:: nmax=100
-   REALTYPE		:: zlev(nmax),prof(nmax)
-   integer		:: field_no=12
+   integer, parameter        :: nmax=100
+   REALTYPE                  :: zlev(nmax),prof(nmax)
+   integer                   :: field_no=12
+   NAMELIST /salt/                                          &
+            salt_method,salt_const,salt_file,               &
+            salt_format,salt_name,                          &
+            salt_hor_adv,salt_ver_adv,salt_strang,salt_AH
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -159,8 +163,8 @@ field_no=1
       case(2)
          LEVEL3 'using profile'
          call read_profile(salt_file,nmax,zlev,prof,n)
-         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,az,H,	&
-	                   iimin,jjmin,iimax,jjmax,kmax,hn,S)
+         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,az,H,  &
+                           iimin,jjmin,iimax,jjmax,kmax,hn,S)
       case(3)
          LEVEL3 'interpolating from 3D field'
          call get_field(salt_file,salt_name,field_no,S)
@@ -193,12 +197,12 @@ field_no=1
          do k=kmax/2,kmax
 stop 'salinity - dx is not known'
 !KBK            dist=sqrt((float(i)-float(ic))**2+(float(j)-float(jc))**2)*dx
-	    if (dist.le.3000.) then
+            if (dist.le.3000.) then
                S(i,j,k)=1.1*(dist/(3000.))**8+33.75
-	    else
-	       S(i,j,k)=34.85
-	    end if
-	 end do
+            else
+               S(i,j,k)=34.85
+            end if
+         end do
       end do
    end do
 #endif
@@ -220,8 +224,8 @@ STDERR 'salinity= ',iimin,iimax,i+ioff,iextr/2
 !      read(98,*) cc(1:30)
 !      do j=1,30
 !         if (cc(j).eq.1) then
-!	    S(i,j+1,1)=20.
-!	 end if
+!            S(i,j+1,1)=20.
+!         end if
 !      end do
 !   end do
 !#endif
@@ -271,19 +275,20 @@ STDERR 'salinity= ',iimin,iimax,i+ioff,iextr/2
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer:: i,j,k,rc
-   REALTYPE	:: Res(0:kmax)
-   REALTYPE	:: auxn(1:kmax-1),auxo(1:kmax-1)
-   REALTYPE	:: a1(0:kmax),a2(0:kmax),a3(0:kmax),a4(0:kmax)
+   integer                   :: i,j,k,rc
+   REALTYPE                  :: Res(0:kmax)
+   REALTYPE                  :: auxn(1:kmax-1),auxo(1:kmax-1)
+   REALTYPE                  :: a1(0:kmax),a2(0:kmax)
+   REALTYPE                  :: a3(0:kmax),a4(0:kmax)
 #ifdef NOMADS_TEST
-   REALTYPE	:: SRelax,kk
+   REALTYPE                  :: SRelax,kk
 #endif
 #ifdef SALTWEDGE_TEST
-   REALTYPE	:: SRelax,kk
+   REALTYPE                  :: SRelax,kk
 #endif
-  REALTYPE	:: delxu(I2DFIELD),delxv(I2DFIELD)
-  REALTYPE	:: delyu(I2DFIELD),delyv(I2DFIELD)
-  REALTYPE	:: area_inv(I2DFIELD)
+  REALTYPE                   :: delxu(I2DFIELD),delxv(I2DFIELD)
+  REALTYPE                   :: delyu(I2DFIELD),delyv(I2DFIELD)
+  REALTYPE                   :: area_inv(I2DFIELD)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -314,25 +319,27 @@ STDERR 'salinity= ',iimin,iimax,i+ioff,iextr/2
    S(iimin:iimin,jjmin:jjmax,1:kmax)=10.
    S(iimax:iimax,jjmin:jjmax,1:kmax)=10.
 #endif
+
 #ifdef NOMADS_TEST
    SRelax=34.85
    do i=1,iimax
       do j=1,jjmax
          do k=1,kmax
             if (az(i,j).eq.2) S(i,j,k)=SRelax
-	    kk=0.5625
-	    if ((((i.eq.2).or.(i.eq.iimax-1)).and.(j.ge.2).and.(j.le.jjmax-1)).or.(((j.eq.2).or.(j.eq.jjmax-1)).and.(i.ge.2).and.(i.le.iimax-1))) &
-	        S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
-	    kk=0.25
-	    if ((((i.eq.3).or.(i.eq.iimax-2)).and.(j.ge.3).and.(j.le.jjmax-2)).or.(((j.eq.3).or.(j.eq.jjmax-2)).and.(i.ge.3).and.(i.le.iimax-2))) &
-	        S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
-	    kk=0.0625
-	    if ((((i.eq.4).or.(i.eq.iimax-3)).and.(j.ge.4).and.(j.le.jjmax-3)).or.(((j.eq.4).or.(j.eq.jjmax-3)).and.(i.ge.4).and.(i.le.iimax-3))) &
-	        S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
-	 end do
+            kk=0.5625
+            if ((((i.eq.2).or.(i.eq.iimax-1)).and.(j.ge.2).and.(j.le.jjmax-1)).or.(((j.eq.2).or.(j.eq.jjmax-1)).and.(i.ge.2).and.(i.le.iimax-1))) &
+               S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
+            kk=0.25
+            if ((((i.eq.3).or.(i.eq.iimax-2)).and.(j.ge.3).and.(j.le.jjmax-2)).or.(((j.eq.3).or.(j.eq.jjmax-2)).and.(i.ge.3).and.(i.le.iimax-2))) &
+               S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
+            kk=0.0625
+            if ((((i.eq.4).or.(i.eq.iimax-3)).and.(j.ge.4).and.(j.le.jjmax-3)).or.(((j.eq.4).or.(j.eq.jjmax-3)).and.(i.ge.4).and.(i.le.iimax-3))) &
+               S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
+         end do
       end do
   end do
 #endif
+
 #ifdef SALTWEDGE_TEST
    SRelax=30.
    j=2
@@ -353,38 +360,38 @@ STDERR 'salinity= ',iimin,iimax,i+ioff,iextr/2
             if (kmax.gt.1) then
 !     Auxilury terms, old and new time level,
                do k=1,kmax-1
-         	  auxo(k)=2.*(1-cnpar)*dt*nuh(i,j,k)/(hn(i,j,k+1)+hn(i,j,k))
-	          auxn(k)=2.*   cnpar *dt*nuh(i,j,k)/(hn(i,j,k+1)+hn(i,j,k))
-	       end do
+                  auxo(k)=2.*(1-cnpar)*dt*nuh(i,j,k)/(hn(i,j,k+1)+hn(i,j,k))
+                  auxn(k)=2.*   cnpar *dt*nuh(i,j,k)/(hn(i,j,k+1)+hn(i,j,k))
+               end do
 
 !        Matrix elements for surface layer
-	       k=kmax
-	       a1(k)=-auxn(k-1)
-   	       a2(k)=hn(i,j,k)+auxn(k-1)
-	       a4(k)=S(i,j,k)*(hn(i,j,k)-auxo(k-1))+S(i,j,k-1)*auxo(k-1)
+               k=kmax
+               a1(k)=-auxn(k-1)
+               a2(k)=hn(i,j,k)+auxn(k-1)
+               a4(k)=S(i,j,k)*(hn(i,j,k)-auxo(k-1))+S(i,j,k-1)*auxo(k-1)
 
 !        Matrix elements for inner layers
                do k=2,kmax-1
-	          a3(k)=-auxn(k  )
-	          a1(k)=-auxn(k-1)
-       	          a2(k)=hn(i,j,k)+auxn(k)+auxn(k-1)
-	          a4(k)=S(i,j,k+1)*auxo(k)                          &
-	               +S(i,j,k  )*(hn(i,j,k)-auxo(k)-auxo(k-1))    &
-	               +S(i,j,k-1)*auxo(k-1)
+                  a3(k)=-auxn(k  )
+                  a1(k)=-auxn(k-1)
+                  a2(k)=hn(i,j,k)+auxn(k)+auxn(k-1)
+                  a4(k)=S(i,j,k+1)*auxo(k)                           &
+                       +S(i,j,k  )*(hn(i,j,k)-auxo(k)-auxo(k-1))     &
+                       +S(i,j,k-1)*auxo(k-1)
                end do
 
 !        Matrix elements for bottom layer
                k=1
-	       a3(k)=-auxn(k  )
-	       a2(k)=hn(i,j,k)+auxn(k)
-               a4(k)=S(i,j,k+1)*auxo(k)                           &
-	            +S(i,j,k  )*(hn(i,j,k)-auxo(k))
+               a3(k)=-auxn(k  )
+               a2(k)=hn(i,j,k)+auxn(k)
+               a4(k)=S(i,j,k+1)*auxo(k)                              &
+                    +S(i,j,k  )*(hn(i,j,k)-auxo(k))
 
                call getm_tridiagonal(kmax,1,kmax,a1,a2,a3,a4,Res)
 
-	       do k=1,kmax
-	          S(i,j,k)=Res(k)
-	       end do
+               do k=1,kmax
+                  S(i,j,k)=Res(k)
+               end do
 
             end if
          end if

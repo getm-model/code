@@ -1,4 +1,4 @@
-!$Id: bottom_friction_3d.F90,v 1.3 2003-04-07 16:29:48 kbk Exp $
+!$Id: bottom_friction_3d.F90,v 1.4 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: bottom_friction_3d.F90,v $
-!  Revision 1.3  2003-04-07 16:29:48  kbk
+!  Revision 1.4  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.3  2003/04/07 16:29:48  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:53  gotm
@@ -62,8 +65,8 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer 	:: i,j,kk
-   REALTYPE	:: r,hh,fricvel
+   integer                   :: i,j,kk
+   REALTYPE                  :: r,hh,fricvel
    logical, save             :: first=.true.
    REALTYPE, save            :: uuloc(I2DFIELD)
    REALTYPE, save            :: uvloc(I2DFIELD)
@@ -128,7 +131,7 @@
          else
             vuloc(i,j) = _ZERO_
             vvloc(i,j) = _ZERO_
-         end if 			
+         end if
       end do
    end do
 

@@ -1,4 +1,4 @@
-!$Id: spm.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
+!$Id: spm.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,10 +25,10 @@
    public init_spm, do_spm
 !
 ! !PRIVATE DATA MEMBERS:
-   integer		:: spm_method=1
+   integer:: spm_method=1
    integer              :: spm_init_method=1, spm_format=2
-   character(len=32)	:: spm_file="spm.nc",spm_name='spm'
-   integer		:: spm_hor_adv=1,spm_ver_adv=1,spm_strang=0
+   character(len=32):: spm_file="spm.nc",spm_name='spm'
+   integer:: spm_hor_adv=1,spm_ver_adv=1,spm_strang=0
    REALTYPE             :: spm_AH = -_ONE_
    REALTYPE             :: spm_const=_ZERO_  
    REALTYPE             :: spm_init= _ZERO_
@@ -44,7 +44,10 @@
 !  Original author(s): Manuel Ruiz Villarreal, Karsten Bolding and Hans Burchard
 !
 !  $Log: spm.F90,v $
-!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 13:36:38  kbk
 !  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:59  gotm
@@ -78,7 +81,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: adv_method 
+   integer, intent(in)                 :: adv_method 
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -88,16 +91,17 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k,n
-   integer      :: rc
-   NAMELIST /spm_nml/	spm_method,spm_init_method,  &
-                        spm_const,spm_format,spm_file,spm_name, &
-                        spm_hor_adv, spm_ver_adv,spm_AH,spm_strang, &
-                        spm_ws_method,spm_ws_const,                   &
-			spm_erosion_const, spm_tauc_sedimentation, &
-			spm_tauc_erosion, spm_pool_init
-   integer, parameter	:: nmax=10000
-   REALTYPE		:: zlev(nmax),prof(nmax)			
+   integer                   :: i,j,k,n
+   integer                   :: rc
+   integer, parameter        :: nmax=10000
+   REALTYPE                  :: zlev(nmax),prof(nmax)
+   NAMELIST /spm_nml/ &
+            spm_method,spm_init_method,  &
+            spm_const,spm_format,spm_file,spm_name, &
+            spm_hor_adv, spm_ver_adv,spm_AH,spm_strang, &
+            spm_ws_method,spm_ws_const,                   &
+            spm_erosion_const, spm_tauc_sedimentation, &
+            spm_tauc_erosion, spm_pool_init
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -120,7 +124,7 @@
    select case(spm_ws_method)
       case(0) !constant
          do k=1,kmax-1
-	    spm_ws(:,:,k) = spm_ws_const ! positive downwards
+            spm_ws(:,:,k) = spm_ws_const ! positive downwards
          end do
 !     Zanke formula for fall velocity of sediment 
       case(1) 
@@ -134,15 +138,15 @@
       case(1)
          LEVEL3 'setting to constant value'
             forall(i=iimin:iimax,j=jjmin:jjmax, az(i,j) .ne. 0) &
-	           spm(i,j,:) = spm_const
+               spm(i,j,:) = spm_const
       case(2)
          LEVEL3 'using profile'
          call read_profile(spm_file,nmax,zlev,prof,n)
-         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,az,H,	&
-	                   iimin,jjmin,iimax,jjmax,kmax,hn,spm)
+         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,az,H,       &
+                           iimin,jjmin,iimax,jjmax,kmax,hn,spm)
       case(3)
          LEVEL3 'interpolating from 3D field'
-         call get_field(spm_file,spm_name,spm)			   	
+         call get_field(spm_file,spm_name,spm)
       case default
          FATAL 'Not valid spm_init_method specified'
          stop 'init_spm'
@@ -151,11 +155,11 @@
    select case (spm_method)
        case(1) !erosion-sedimentation flux
           erosed_flux = .true.  
-	  spm_pool = spm_pool_init
+          spm_pool = spm_pool_init
        case default
           FATAL 'Not valid spm_method specified'
          stop 'init_spm'
-   end select 	  
+   end select
 #ifdef DEBUG
    write(debug,*) 'Leaving init_spm()'
    write(debug,*)
@@ -196,15 +200,15 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k,rc
-   REALTYPE     :: spmtot
-   REALTYPE	:: Res(0:kmax)
-   REALTYPE	:: auxn(1:kmax-1),auxo(1:kmax-1)
-   REALTYPE	:: a1(0:kmax),a2(0:kmax),a3(0:kmax),a4(0:kmax)
+   integer                   :: i,j,k,rc
+   REALTYPE                  :: spmtot
+   REALTYPE                  :: Res(0:kmax)
+   REALTYPE                  :: auxn(1:kmax-1),auxo(1:kmax-1)
+   REALTYPE                  :: a1(0:kmax),a2(0:kmax),a3(0:kmax),a4(0:kmax)
+   REALTYPE                  :: delxu(I2DFIELD),delxv(I2DFIELD)
+   REALTYPE                  :: delyu(I2DFIELD),delyv(I2DFIELD)
+   REALTYPE                  :: area_inv(I2DFIELD)
    REALTYPE , allocatable  ,dimension (:,:,:) :: ww_aux 
-   REALTYPE	:: delxu(I2DFIELD),delxv(I2DFIELD)
-   REALTYPE	:: delyu(I2DFIELD),delyv(I2DFIELD)
-   REALTYPE	:: area_inv(I2DFIELD)
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -234,7 +238,7 @@
 !  The vertical velocity to be used in the advection routine for spm is ww-ws
    ww_aux = ww-spm_ws
    call do_advection_3d(dt,spm,uu,vv,ww_aux,hun,hvn,ho,hn,   &
-                        delxu,delxv,delyu,delyv,area_inv,az,au,av,	&
+                        delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
                         spm_hor_adv,spm_ver_adv,spm_strang,spm_AH)
 !  Vertical diffusion of spm 
    do j=jjmin,jjmax
@@ -244,10 +248,10 @@
 !           We impose a flux condition on bottom sediments
 !           where flux is computed as the result of erosion and sedimentation
 !           from a pool of nondynamic particulate matter   
-               if(erosed_flux) then	           
-	          if(spm_pool(i,j) > 1.e-12) then ! If there are sediments in the pool
-		    Erosion_Flux = spm_erosion_const / rho_0 * (taub(i,j)*rho_0-spm_tauc_erosion )  
-                    Erosion_Flux = max(Erosion_Flux,0.) 	                 
+               if(erosed_flux) then
+                  if(spm_pool(i,j) > 1.e-12) then ! If there are sediments in the pool
+                     Erosion_Flux = spm_erosion_const / rho_0 * (taub(i,j)*rho_0-spm_tauc_erosion )  
+                     Erosion_Flux = max(Erosion_Flux,0.)
                   else
                      Erosion_Flux = _ZERO_
                   end if
@@ -255,7 +259,7 @@
                   Sedimentation_Flux = max(Sedimentation_Flux,0.)    
                   a4(1) = Erosion_Flux - Sedimentation_Flux
                   if (a4(1) > 1e-12) a4(1) = min(spm_pool(i,j)/dt, a4(1))
-		  spm_pool(i,j) = spm_pool(i,j) -  dt * a4(1)
+                  spm_pool(i,j) = spm_pool(i,j) -  dt * a4(1)
                   a4(1) = a4(1)* dt          
                else
                   a4(1) = _ZERO_  
@@ -263,37 +267,37 @@
 
 !     Auxiliary terms, old and new time level,
                do k=1,kmax-1
-	          auxo(k)=2.*(1-cnpar)*dt*nuh(i,j,k)/(hn(i,j,k+1)+hn(i,j,k))
-	          auxn(k)=2.*   cnpar *dt*nuh(i,j,k)/(hn(i,j,k+1)+hn(i,j,k))
-	       end do
+                  auxo(k)=2.*(1-cnpar)*dt*nuh(i,j,k)/(hn(i,j,k+1)+hn(i,j,k))
+                  auxn(k)=2.*   cnpar *dt*nuh(i,j,k)/(hn(i,j,k+1)+hn(i,j,k))
+               end do
 
 !        Matrix elements for surface layer
-	       k=kmax
-	       a1(k)=-auxn(k-1)
-	       a2(k)=hn(i,j,k)+auxn(k-1)
-	       a4(k)=spm(i,j,k)*(hn(i,j,k)-auxo(k-1))+spm(i,j,k-1)*auxo(k-1) 
+               k=kmax
+               a1(k)=-auxn(k-1)
+               a2(k)=hn(i,j,k)+auxn(k-1)
+               a4(k)=spm(i,j,k)*(hn(i,j,k)-auxo(k-1))+spm(i,j,k-1)*auxo(k-1) 
 
 !        Matrix elements for inner layers
                do k=2,kmax-1
-	          a3(k)=-auxn(k  )
-	          a1(k)=-auxn(k-1)
-       	          a2(k)=hn(i,j,k)+auxn(k)+auxn(k-1)
-	          a4(k)=spm(i,j,k+1)*auxo(k)                          &
-	               +spm(i,j,k  )*(hn(i,j,k)-auxo(k)-auxo(k-1))    &
-	               +spm(i,j,k-1)*auxo(k-1)              
-               end do 		    
+                  a3(k)=-auxn(k  )
+                  a1(k)=-auxn(k-1)
+                  a2(k)=hn(i,j,k)+auxn(k)+auxn(k-1)
+                  a4(k)=spm(i,j,k+1)*auxo(k)                           &
+                       +spm(i,j,k  )*(hn(i,j,k)-auxo(k)-auxo(k-1))     &
+                       +spm(i,j,k-1)*auxo(k-1)              
+               end do
 
 !        Matrix elements for bottom layer
                k=1
-	       a3(k)=-auxn(k  )
-	       a2(k)=hn(i,j,k)+auxn(k)                            
-               a4(k)=a4(k)+spm(i,j,k+1)*auxo(k)                           &
-	            +spm(i,j,k  )*(hn(i,j,k)-auxo(k))                          
+               a3(k)=-auxn(k  )
+               a2(k)=hn(i,j,k)+auxn(k)                            
+               a4(k)=a4(k)+spm(i,j,k+1)*auxo(k)                        &
+                          +spm(i,j,k  )*(hn(i,j,k)-auxo(k))
 
                call getm_tridiagonal(kmax,1,kmax,a1,a2,a3,a4,Res)
-	       do k=1,kmax 
-	          spm(i,j,k)=Res(k)
-	       end do    
+               do k=1,kmax 
+                  spm(i,j,k)=Res(k)
+               end do    
             end if 
          end if 
       end do

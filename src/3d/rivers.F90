@@ -1,4 +1,4 @@
-!$Id: rivers.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
+!$Id: rivers.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -40,25 +40,28 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_rivers, do_rivers, clean_rivers
-   integer, public	:: river_method=0,nriver=0
-   character(len=64), public			:: river_data="rivers.nc"
-   character(len=64), public, allocatable	:: river_name(:)
-   integer, public, allocatable			:: ok(:)
-   REALTYPE, public, allocatable		:: river_flux(:),tr(:)
-   REALTYPE, public, allocatable		:: river_int_flux(:)
-   REALTYPE, public				:: river_factor= _ONE_
+   integer, public                     :: river_method=0,nriver=0
+   character(len=64), public           :: river_data="rivers.nc"
+   character(len=64), public, allocatable  :: river_name(:)
+   integer, public, allocatable        :: ok(:)
+   REALTYPE, public, allocatable       :: river_flux(:),tr(:)
+   REALTYPE, public, allocatable       :: river_int_flux(:)
+   REALTYPE, public                    :: river_factor= _ONE_
 !
 ! !PRIVATE DATA MEMBERS:
-   integer		:: river_format=2
-   character(len=64)	:: river_info="riverinfo.dat"
-   integer, allocatable	:: ir(:),jr(:)
-   REALTYPE, allocatable:: irr(:)
+   integer                   :: river_format=2
+   character(len=64)         :: river_info="riverinfo.dat"
+   integer, allocatable      :: ir(:),jr(:)
+   REALTYPE, allocatable     :: irr(:)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: rivers.F90,v $
-!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 13:36:38  kbk
 !  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:00  gotm
@@ -103,10 +106,10 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,n,rc
-   integer	:: unit = 25 ! kbk
-   NAMELIST /rivers/	river_method,river_info,river_format,river_data, &
-                        river_factor
+   integer                   :: i,j,n,rc
+   integer                   :: unit = 25 ! kbk
+   NAMELIST /rivers/ &
+            river_method,river_info,river_format,river_data,river_factor
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -127,7 +130,7 @@
          LEVEL2 'river_data=   ',trim(river_data)
          LEVEL2 'river_format= ',river_format
          open(unit,file=river_info,action='read',status='old',err=90)
-	 read(unit,*) nriver
+         read(unit,*) nriver
          allocate(ir(nriver),stat=rc) ! i index of rivers
          allocate(jr(nriver),stat=rc) ! j index of rivers
          allocate(ok(nriver),stat=rc) ! valid river spec.
@@ -184,7 +187,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   logical, intent(in)		:: do_3d
+   logical, intent(in)                 :: do_3d
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -194,11 +197,11 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k,n
-   REALTYPE	:: vol
-   REALTYPE	:: rvol,height
-   REALTYPE	:: svol,tvol
-   REALTYPE,save	:: int(1:200)=0.
+   integer                   :: i,j,k,n
+   REALTYPE                  :: vol
+   REALTYPE                  :: rvol,height
+   REALTYPE                  :: svol,tvol
+   REALTYPE,save             :: int(1:200)=0.
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -218,20 +221,20 @@
                rvol = dtm*river_flux(n)
                irr(n) = irr(n) + rvol
                height = rvol*ARCD1
-	       river_int_flux(n)=river_int_flux(n)+height
+               river_int_flux(n)=river_int_flux(n)+height
                z(i,j) = z(i,j) + height
 #ifndef NO_BAROCLINIC
                if (do_3d) then
                   if (calc_salt) then
                      S(i,j,1:kmax) = S(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
-		         /(H(i,j)+ssen(i,j)+river_int_flux(n))
+                                    /(H(i,j)+ssen(i,j)+river_int_flux(n))
                   end if
 
 ! Changes of total and layer height due to river inflow:
                   hn(i,j,1:kmax) = hn(i,j,1:kmax)/(H(i,j)+ssen(i,j)) &
-		      *(H(i,j)+ssen(i,j)+river_int_flux(n))
+                                  *(H(i,j)+ssen(i,j)+river_int_flux(n))
                   ssen(i,j) = ssen(i,j)+river_int_flux(n)
-		  river_int_flux(n) = _ZERO_
+                  river_int_flux(n) = _ZERO_
 #if 0
                   if (calc_temp .and. tr(n) .gt. _ZERO_) then
                      tvol = _ZERO_
@@ -284,8 +287,8 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,n
-   REALTYPE	:: tot=_ZERO_
+   integer                   :: i,j,n
+   REALTYPE                  :: tot=_ZERO_
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -302,7 +305,7 @@
             if(ok(n) .gt. 0) then
                i = ir(n); j = jr(n)
                LEVEL2 'River #' ,n, ': ' ,irr(n)/1.e3, ' 10^3 m3'
-	       tot = tot+irr(n)
+               tot = tot+irr(n)
             end if
 !kbk               LEVEL2 'Total : ',tot/1.e3,' 10^3 m3'
          end do

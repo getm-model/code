@@ -1,4 +1,4 @@
-!$Id: variables_3d.F90,v 1.3 2003-04-07 16:22:31 kbk Exp $
+!$Id: variables_3d.F90,v 1.4 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,21 +19,24 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
-   REALTYPE	:: dt,cnpar=0.9
+   REALTYPE                            :: dt,cnpar=0.9
 !
 #ifdef STATIC
 #include "static_3d.h"
 #else
 #include "dynamic_declarations_3d.h"
 #endif
-   integer	:: size3d_field
-   integer	:: mem3d
+   integer                             :: size3d_field
+   integer                             :: mem3d
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: variables_3d.F90,v $
-!  Revision 1.3  2003-04-07 16:22:31  kbk
+!  Revision 1.4  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.3  2003/04/07 16:22:31  kbk
 !  initialise variables
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:58  gotm
@@ -74,7 +77,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)		:: runtype
+   integer, intent(in)                 :: runtype
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -88,7 +91,7 @@
 !  See log for the module.
 !
 ! !LOCAL VARIABLES:
-   integer	:: rc
+   integer                   :: rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -99,7 +102,7 @@
 #endif
 
    LEVEL2 'init_variables_3d'
-   size3d_field=((iimax+HALO)-(iimin+HALO)+1)* 			&
+   size3d_field=((iimax+HALO)-(iimin+HALO)+1)*        &
                 ((jjmax+HALO)-(jjmin+HALO)+1)*(kmax+1)
    mem3d=n3d_fields*size3d_field*REAL_SIZE
 

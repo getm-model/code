@@ -1,4 +1,4 @@
-!$Id: slow_bottom_friction.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
+!$Id: slow_bottom_friction.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use parameters,   only: kappa
+   use parameters, only: kappa
    use domain, only: iimin,iimax,jjmin,jjmax,HU,HV,min_depth,au,av
    use variables_2d, only: zub,zvb,ru,rv,Uinto,Vinto
    use variables_3d, only: ssuo,ssun,ssvo,ssvn
@@ -27,7 +27,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: slow_bottom_friction.F90,v $
-!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 13:36:38  kbk
 !  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:55  gotm
@@ -46,15 +49,14 @@
 !  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
 !  initial import into CVS
 !
-!
 ! !LOCAL VARIABLES:
-   integer	:: i,j
-   REALTYPE	:: uloc,vloc,HH
-   logical,save	:: first=.true.
-   REALTYPE 	:: ruu(I2DFIELD)
-   REALTYPE 	:: rvv(I2DFIELD)
-   REALTYPE 	:: Ui(I2DFIELD)
-   REALTYPE 	:: Vi(I2DFIELD)
+   integer                   :: i,j
+   REALTYPE                  :: uloc,vloc,HH
+   logical,save              :: first=.true.
+   REALTYPE                  :: ruu(I2DFIELD)
+   REALTYPE                  :: rvv(I2DFIELD)
+   REALTYPE                  :: Ui(I2DFIELD)
+   REALTYPE                  :: Vi(I2DFIELD)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -115,29 +117,29 @@
       do i=iimin,iimax
          if (au(i,j) .ge. 1) then
             uloc=Ui(i,j)
-            vloc=0.25*( Vi(i  ,j  )	&
-                       +Vi(i+1,j  )	&
-                       +Vi(i  ,j-1)	&
+            vloc=0.25*( Vi(i  ,j  )    &
+                       +Vi(i+1,j  )    &
+                       +Vi(i  ,j-1)    &
                        +Vi(i+1,j-1) )
             ru(i,j)=ruu(i,j)*sqrt(uloc**2+vloc**2)
          else
             ru(i,j)=_ZERO_
-	 end if
+         end if
       end do
    end do
 
    do j=jjmin,jjmax
       do i=iimin,iimax
          if (av(i,j) .ge. 1) then
-            uloc=0.25*( Ui(i  ,j  )	&
-                       +Ui(i-1,j  )	&
-                       +Ui(i  ,j+1)	&
+            uloc=0.25*( Ui(i  ,j  )    &
+                       +Ui(i-1,j  )    &
+                       +Ui(i  ,j+1)    &
                        +Ui(i-1,j+1) )
             vloc=Vi(i,j)
             rv(i,j)=rvv(i,j)*sqrt(uloc**2+vloc**2)
          else
             rv(i,j)=_ZERO_
-	 end if
+         end if
       end do
    end do
 

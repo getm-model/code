@@ -1,4 +1,4 @@
-!$Id: eqstate.F90,v 1.2 2003-04-07 13:19:48 kbk Exp $
+!$Id: eqstate.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,7 +22,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: eqstate.F90,v $
-!  Revision 1.2  2003-04-07 13:19:48  kbk
+!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 13:19:48  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:59  gotm
@@ -72,7 +75,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: method
+   integer, intent(in)                 :: method
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -141,32 +144,32 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k
-   REALTYPE	:: x
+   integer                   :: i,j,k
+   REALTYPE                  :: x
 !  something needs to be done - where to get these variables - namelist
-   integer	:: method=1
-   REALTYPE	:: T0 = 10., S0 = 33.75
-   REALTYPE	:: dtr0 = -0.17, dsr0 = 0.78
-   REALTYPE	:: rho_0 = 1025.
-   REALTYPE	:: g=9.82
+   integer                   :: method=1
+   REALTYPE                  :: T0 = 10., S0 = 33.75
+   REALTYPE                  :: dtr0 = -0.17, dsr0 = 0.78
+   REALTYPE                  :: rho_0 = 1025.
+   REALTYPE                  :: g=9.82
 !
 #if 0
 !  Brydon et. al. - Table 2 - narrow
-   REALTYPE, parameter	:: a1=-1.36471e-1,b1= 5.06423e-1,g1=-5.52640e-4
-   REALTYPE, parameter	:: a2=-4.68181e-2,b2=-3.57109e-3,g2= 4.88584e-6
-   REALTYPE, parameter	:: a3= 8.07004e-1,b3=-8.76148e-4,g3= 9.96027e-7
-   REALTYPE, parameter	:: a4=-7.45353e-3,b4= 5.25243e-5,g4=-7.25139e-8
-   REALTYPE, parameter	:: a5=-2.94418e-3,b5= 1.57976e-5,g5=-3.98736e-9
-   REALTYPE, parameter	:: a6= 3.43570e-5,b6=-3.46686e-7,g6= 4.00631e-10
-   REALTYPE, parameter	:: a7= 3.48658e-5,b7=-1.68764e-7,g7= 8.26368e-11
+   REALTYPE, parameter       :: a1=-1.36471e-1,b1= 5.06423e-1,g1=-5.52640e-4
+   REALTYPE, parameter       :: a2=-4.68181e-2,b2=-3.57109e-3,g2= 4.88584e-6
+   REALTYPE, parameter       :: a3= 8.07004e-1,b3=-8.76148e-4,g3= 9.96027e-7
+   REALTYPE, parameter       :: a4=-7.45353e-3,b4= 5.25243e-5,g4=-7.25139e-8
+   REALTYPE, parameter       :: a5=-2.94418e-3,b5= 1.57976e-5,g5=-3.98736e-9
+   REALTYPE, parameter       :: a6= 3.43570e-5,b6=-3.46686e-7,g6= 4.00631e-10
+   REALTYPE, parameter       :: a7= 3.48658e-5,b7=-1.68764e-7,g7= 8.26368e-11
 !
-   REALTYPE		:: p=50.,p2
-   REALTYPE		:: c1,c2,c3,c4,c5,c6,c7
+   REALTYPE                  :: p=50.,p2
+   REALTYPE                  :: c1,c2,c3,c4,c5,c6,c7
 !
-   REALTYPE		:: s1,t1,t2,t3
+   REALTYPE                  :: s1,t1,t2,t3
 #endif
-   REALTYPE             :: KK
-   REALTYPE             :: T1,T2,T3,T4,T5,S1,S15,S2,S3,p2
+   REALTYPE                  :: KK
+   REALTYPE                  :: T1,T2,T3,T4,T5,S1,S15,S2,S3,p2
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -180,47 +183,47 @@
    select case (method)
       case (1)
 #ifdef DENSITY
-         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)	&
-            rho(i,j,1:kmax) = rho_0 + 				&
+         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)  &
+            rho(i,j,1:kmax) = rho_0 +                                &
                     dtr0*(T(i,j,1:kmax)-T0) + dsr0*(S(i,j,1:kmax)-S0)
 #endif
 #undef DENSITY
 #ifdef BUOYANCY
          x = -g/rho_0
-         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)	&
-            rho(i,j,1:kmax) = 					&
-	           x*(dtr0*(T(i,j,1:kmax)-T0) + dsr0*(S(i,j,1:kmax)-S0))
+         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)  &
+            rho(i,j,1:kmax) =                                        &
+                   x*(dtr0*(T(i,j,1:kmax)-T0) + dsr0*(S(i,j,1:kmax)-S0))
 #endif
 
 #ifdef HAIDVOGEL_TEST
-         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)	&
+         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)  &
             rho(i,j,1:kmax) = -g/rho_0*(S(i,j,1:kmax)+1000.-rho_0)
 #endif
 #ifdef CONSTANCE_TEST
          x = -g/rho_0
-         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)	&
+         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)  &
           rho(i,j,1:kmax) = x*dtr0*(T(i,j,1:kmax)-T0)
 #endif
       case (2)
          do k = 1,kmax
             do j = jjmin-1,jjmax+1
                do i = iimin-1,iimax+1
-	          if (az(i,j) .gt. 0) then
-		     T1 = T(i,j,k)
+                  if (az(i,j) .gt. 0) then
+                     T1 = T(i,j,k)
                      T2 = T1*T1
                      T3 = T1*T2
                      T4 = T2*T2
                      T5 = T1*T4
-		     S1 = S(i,j,k)
+                     S1 = S(i,j,k)
                      S15= S1**1.5
                      S2 = S1*S1
                      S3 = S1*S2
-		     if (S1 .lt. _ZERO_) then
+                     if (S1 .lt. _ZERO_) then
                         STDERR 'Salinity at point ',i,',',j,',',k,' < 0.'
-			STDERR 'Value is S = ',S(i,j,k)
-			STDERR 'Programm continued, value set to zero ...'
-			S(i,j,k)= _ZERO_
-		     end if
+                        STDERR 'Value is S = ',S(i,j,k)
+                        STDERR 'Programm continued, value set to zero ...'
+                        S(i,j,k)= _ZERO_
+                     end if
 
                      x=999.842594+6.793952e-02*T1-9.09529e-03*T2+1.001685e-04*T3
                      x=x-1.120083e-06*T4+6.536332e-09*T5
@@ -249,7 +252,7 @@
                         x=x/(1.-p/KK)
                      end if
 #endif
-		     rho(i,j,k)=-g*(x-rho_0)/rho_0
+                     rho(i,j,k)=-g*(x-rho_0)/rho_0
                   end if
                end do
             end do
@@ -259,8 +262,8 @@
          do k = 1,kmax
             do j = jjmin-1:jjmax+1
                do i = iimin-1:iimax+1
-	          if (az(i,j) .gt. 0) then
-		     p = 50.
+                  if (az(i,j) .gt. 0) then
+                     p = 50.
                      p2 = p*p
                      c1 = a1 + b1*p + g1*p2
                      c2 = a2 + b2*p + g2*p2
@@ -269,12 +272,12 @@
                      c5 = a5 + b5*p + g5*p2
                      c6 = a6 + b6*p + g6*p2
                      c7 = a7 + b7*p + g7*p2
-		     s1 = S(i,j,k)
-		     t1 = T(i,j,k)
-		     t2 = t1*t1
-		     t3 = t1*t2
+                     s1 = S(i,j,k)
+                     t1 = T(i,j,k)
+                     t2 = t1*t1
+                     t3 = t1*t2
                      rho(i,j,k)=c1+c2*t1+c3*s1+c4*t2+c5*s1*t1+c6*t3+c7*s1*t2
-		     rho(i,j,k)=-g/rho_0*(rho(i,j,k)-rho_0)
+                     rho(i,j,k)=-g/rho_0*(rho(i,j,k)-rho_0)
                   end if
                end do
             end do

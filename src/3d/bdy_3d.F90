@@ -1,4 +1,4 @@
-!$Id: bdy_3d.F90,v 1.3 2003-04-07 16:32:31 kbk Exp $
+!$Id: bdy_3d.F90,v 1.4 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -24,7 +24,7 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_bdy_3d, do_bdy_3d
-   REALTYPE, public, allocatable	:: S_bdy(:,:),T_bdy(:,:)
+   REALTYPE, public, allocatable       :: S_bdy(:,:),T_bdy(:,:)
 !
 ! !PRIVATE DATA MEMBERS:
 !
@@ -32,7 +32,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bdy_3d.F90,v $
-!  Revision 1.3  2003-04-07 16:32:31  kbk
+!  Revision 1.4  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.3  2003/04/07 16:32:31  kbk
 !  preliminary support for mirror_bdy_3d
 !
 !  Revision 1.2  2002/06/19 14:32:08  gotm
@@ -74,7 +77,7 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: rc,i,j,k,n
+   integer                   :: rc,i,j,k,n
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -114,19 +117,19 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: tag
+   integer, intent(in)                 :: tag
 !
 ! !INPUT/OUTPUT PARAMETERS:
+   REALTYPE, intent(inout)             :: field(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out)	:: field(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k,n,ii,jj
-   REALTYPE	:: sp(1:4),rat
+   integer                   :: i,j,k,n,ii,jj
+   REALTYPE                  :: sp(1:4),rat
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -156,7 +159,7 @@
          end do
       case default
          FATAL 'Non valid tag'
-	 stop 'do_bdy_3d'
+         stop 'do_bdy_3d'
    end select
 #endif
 
@@ -173,10 +176,10 @@
       do j=wfj(n),wlj(n)
          k = k+1
          do ii=1,4
-	    if (az(i-1+ii,j).gt.0) then
+            if (az(i-1+ii,j).gt.0) then
                S(i-1+ii,j,:) = sp(ii)*S_bdy(k,:)+(1.-sp(ii))*S(i-1+ii,j,:)
                T(i-1+ii,j,:) = sp(ii)*T_bdy(k,:)+(1.-sp(ii))*T(i-1+ii,j,:)
-	    end if
+            end if
          end do
       end do
    end do
@@ -185,10 +188,10 @@
       do i = nfi(n),nli(n)
          k = k+1
          do jj=1,4
-	    if (az(i,j+1-jj).gt.0) then
+            if (az(i,j+1-jj).gt.0) then
                S(i,j+1-jj,:) = sp(jj)*S_bdy(k,:)+(1.-sp(jj))*S(i,j+1-jj,:)
                T(i,j+1-jj,:) = sp(jj)*T_bdy(k,:)+(1.-sp(jj))*T(i,j+1-jj,:)
-	    end if
+            end if
          end do
       end do
    end do
@@ -197,10 +200,10 @@
       do j=efj(n),elj(n)
          k = k+1
          do ii=1,4
-	    if (az(i+1-ii,j).gt.0) then
+            if (az(i+1-ii,j).gt.0) then
                S(i+1-ii,j,:) = sp(ii)*S_bdy(k,:)+(1.-sp(ii))*S(i+1-ii,j,:)
                T(i+1-ii,j,:) = sp(ii)*T_bdy(k,:)+(1.-sp(ii))*T(i+1-ii,j,:)
-	    end if
+            end if
          end do
       end do
    end do
@@ -209,10 +212,10 @@
       do i = sfi(n),sli(n)
          k = k+1
          do jj=1,4
-	    if (az(i,j-1+jj).gt.0) then
+            if (az(i,j-1+jj).gt.0) then
                S(i,j-1+jj,:) = sp(jj)*S_bdy(k,:)+(1.-sp(jj))*S(i,j-1+jj,:)
                T(i,j-1+jj,:) = sp(jj)*T_bdy(k,:)+(1.-sp(jj))*T(i,j-1+jj,:)
-	    end if
+            end if
          end do
       end do
    end do

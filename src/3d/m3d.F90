@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.4 2003-04-07 16:28:34 kbk Exp $
+!$Id: m3d.F90,v 1.5 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,8 +19,8 @@
 !
 ! !USES:
    use parameters, only: avmmol
-   use domain,     only: vert_cord
-   use m2d,        only: Am
+   use domain, only: vert_cord
+   use m2d, only: Am
    use variables_2d, only: D,z
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature
@@ -28,10 +28,10 @@
    use eqstate,    only: init_eqstate, do_eqstate
 #endif
 #ifndef NO_BAROCLINIC
-   use suspended_matter,	   only: init_spm, do_spm
+   use suspended_matter, only: init_spm, do_spm
 #endif
    use advection_3d, only: init_advection_3d
-   use bdy_3d,     only: init_bdy_3d, do_bdy_3d
+   use bdy_3d, only: init_bdy_3d, do_bdy_3d
    use variables_3d
 #ifdef PARALLEL
 use halo_mpi
@@ -40,18 +40,23 @@ use halo_mpi
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
-   integer	:: M=1
-   REALTYPE	:: cord_relax=_ZERO_
-   logical	:: calc_temp=.true.,calc_salt=.true.,calc_spm=.false.
-   logical	:: bdy3d=.false.
-   integer	:: bdyfmt_3d,bdyramp_3d
-   character(len=PATH_MAX)	:: bdyfile_3d
+   integer                             :: M=1
+   REALTYPE                            :: cord_relax=_ZERO_
+   logical                             :: calc_temp=.true.
+   logical                             :: calc_salt=.true.
+   logical                             :: calc_spm=.false.
+   logical                             :: bdy3d=.false.
+   integer                             :: bdyfmt_3d,bdyramp_3d
+   character(len=PATH_MAX)             :: bdyfile_3d
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.4  2003-04-07 16:28:34  kbk
+!  Revision 1.5  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.4  2003/04/07 16:28:34  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:51  gotm
@@ -152,7 +157,7 @@ use halo_mpi
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer	:: vel_hor_adv=1,vel_ver_adv=1,vel_strang=0
+   integer                   :: vel_hor_adv=1,vel_ver_adv=1,vel_strang=0
 !EOP
 !-----------------------------------------------------------------------
 
@@ -168,9 +173,9 @@ use halo_mpi
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)		:: runtype
-   REALTYPE, intent(in)		:: timestep
-   logical, intent(in)		:: hotstart
+   integer, intent(in)                 :: runtype
+   REALTYPE, intent(in)                :: timestep
+   logical, intent(in)                 :: hotstart
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -184,11 +189,12 @@ use halo_mpi
 !  22Apr99   Karsten Bolding & Hans Burchard  Initial code.
 !
 ! !LOCAL VARIABLES:
-   integer 		:: rc
-   NAMELIST /m3d/ 	M,cnpar,cord_relax,			&
-                        bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,	&
-                        vel_hor_adv,vel_ver_adv,vel_strang,	&
-			calc_temp,calc_salt,calc_spm
+   integer                   :: rc
+   NAMELIST /m3d/ &
+             M,cnpar,cord_relax,                        &
+             bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,     &
+             vel_hor_adv,vel_ver_adv,vel_strang,        &
+             calc_temp,calc_salt,calc_spm
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -265,7 +271,7 @@ use halo_mpi
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: runtype,n
+   integer, intent(in)                 :: runtype,n
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -278,7 +284,7 @@ use halo_mpi
 !  See log for module
 !
 ! !LOCAL VARIABLES:
-  logical, save	:: ufirst=.true.
+  logical, save              :: ufirst=.true.
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -342,7 +348,7 @@ use halo_mpi
 #endif
 #endif
 #ifndef NO_BAROCLINIC
-   if(runtype .eq. 4) then	! prognostic T and S
+   if(runtype .eq. 4) then        ! prognostic T and S
       if (calc_temp) call do_temperature(n)
       if (calc_salt) call do_salinity(n)
       if (calc_spm) call do_spm()

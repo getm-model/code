@@ -1,4 +1,4 @@
-!$Id: stresses_3d.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
+!$Id: stresses_3d.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: stresses_3d.F90,v $
-!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 13:36:38  kbk
 !  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:56  gotm
@@ -50,7 +53,7 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k1,k2,k3,k4
+   integer                   :: i,j,k1,k2,k3,k4
 !EOP
 !-----------------------------------------------------------------------
 !BOC

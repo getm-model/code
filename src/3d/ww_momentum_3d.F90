@@ -1,4 +1,4 @@
-!$Id: ww_momentum_3d.F90,v 1.2 2003-04-07 13:05:11 kbk Exp $
+!$Id: ww_momentum_3d.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,7 +30,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: ww_momentum_3d.F90,v $
-!  Revision 1.2  2003-04-07 13:05:11  kbk
+!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 13:05:11  kbk
 !  cleaned code
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:57  gotm
@@ -56,10 +59,8 @@
 !
 !
 ! !LOCAL VARIABLES:
-   REALTYPE	:: dtm1
-!HB   REALTYPE	:: dxm1,dym1
-   integer	:: i,j,k
-   REALTYPE	:: sold,snew,udiv,vdiv
+   REALTYPE                  :: dtm1
+   integer                   :: i,j,k
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -77,7 +78,7 @@
             if (k .lt. kmin(i,j)) then
                ww(i,j,kmin(i,j))= _ZERO_
             else
-               ww(i,j,k)=ww(i,j,k-1)			&
+               ww(i,j,k)=ww(i,j,k-1)                                   &
                         -(hn(i,j,k)-ho(i  ,j  ,k))*dtm1 &
                         -((uu(i,j,k)*DYU-uu(i-1,j  ,k)*DYUIM1) &
                         +(vv(i,j,k)*DXV-vv(i  ,j-1,k)*DXVJM1))*ARCD1

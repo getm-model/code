@@ -1,4 +1,4 @@
-!$Id: uv_advect_3d.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
+!$Id: uv_advect_3d.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,7 +35,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_advect_3d.F90,v $
-!  Revision 1.2  2003-04-07 13:36:38  kbk
+!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 13:36:38  kbk
 !  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:57  gotm
@@ -67,14 +70,14 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k,rc
-   REALTYPE	:: PP(iimin-1:iimax+1,jjmin-1:jjmax+1,1:kmax)
-   REALTYPE	:: www(0:kmax)
+   integer                   :: i,j,k,rc
+   REALTYPE                  :: PP(iimin-1:iimax+1,jjmin-1:jjmax+1,1:kmax)
+   REALTYPE                  :: www(0:kmax)
 #ifdef UV_TVD
-   REALTYPE	:: dxuadv(I2DFIELD),dxvadv(I2DFIELD),area_inv(I2DFIELD)
-   REALTYPE	:: dyuadv(I2DFIELD),dyvadv(I2DFIELD)
-   integer	:: azadv(I2DFIELD),auadv(I2DFIELD),avadv(I2DFIELD)
-   REALTYPE	:: AH=_ZERO_
+   integer                   :: azadv(I2DFIELD),auadv(I2DFIELD),avadv(I2DFIELD)
+   REALTYPE                  :: dxuadv(I2DFIELD),dxvadv(I2DFIELD),area_inv(I2DFIELD)
+   REALTYPE                  :: dyuadv(I2DFIELD),dyvadv(I2DFIELD)
+   REALTYPE                  :: AH=_ZERO_
 #endif
 
 !EOP
@@ -98,7 +101,7 @@
             hvadv(i,j,k)=0.5*(hvn(i+1,j,k)+hvn(i,j,k))
             hoadv(i,j,k)=huo(i,j,k)
             hnadv(i,j,k)=hun(i,j,k)
-	 end do
+         end do
       end do
    end do
    do j=jjmin,jjmax
@@ -111,13 +114,13 @@
          dxvadv(i,j)=dxx(i,j)
          dyuadv(i,j)=dyc(i,j)
          dyvadv(i,j)=dyx(i,j)
-	 area_inv(i,j)=arud1(i,j)
+         area_inv(i,j)=arud1(i,j)
 #else
          dxuadv(i,j)=dx
          dxvadv(i,j)=dx
          dyuadv(i,j)=dy
          dyvadv(i,j)=dy
-	 area_inv(i,j)=1./(dx*dy)
+         area_inv(i,j)=1./(dx*dy)
 #endif
       end do
    end do
@@ -129,10 +132,10 @@
          end do
       end do
    end do
-   call do_advection_3d(dt,uuEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,	&
-                        dxuadv,dxvadv,dyuadv,dyvadv,area_inv,		&
-			azadv,auadv,avadv,hor_adv,ver_adv,strang,AH)
-   uuEx=-(uuEx*hun-uu)/dt ! Here, uuEx is the advection term.  			
+   call do_advection_3d(dt,uuEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
+                        dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
+                        azadv,auadv,avadv,hor_adv,ver_adv,strang,AH)
+   uuEx=-(uuEx*hun-uu)/dt ! Here, uuEx is the advection term.
 
 ! Here begins dimensional split advection for v-velocity
    do k=1,kmax
@@ -154,17 +157,17 @@
          auadv(i,j)=ax(i,j)
          avadv(i,j)=az(i,j)
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-	 dxuadv(i,j)=dxx(i,j)
-	 dxvadv(i,j)=dxc(i,j)
-	 dyuadv(i,j)=dyx(i,j)
-	 dyvadv(i,j)=dyc(i,j)
-	 area_inv(i,j)=arvd1(i,j)
+         dxuadv(i,j)=dxx(i,j)
+         dxvadv(i,j)=dxc(i,j)
+         dyuadv(i,j)=dyx(i,j)
+         dyvadv(i,j)=dyc(i,j)
+         area_inv(i,j)=arvd1(i,j)
 #else
-	 dxuadv(i,j)=dx
-	 dxvadv(i,j)=dx
-	 dyuadv(i,j)=dy
-	 dyvadv(i,j)=dy
-	 area_inv(i,j)=_ONE_/(dx*dy)
+         dxuadv(i,j)=dx
+         dxvadv(i,j)=dx
+         dyuadv(i,j)=dy
+         dyvadv(i,j)=dy
+         area_inv(i,j)=_ONE_/(dx*dy)
 #endif
       end do
    end do
@@ -176,8 +179,8 @@
          end do
       end do
    end do
-   call do_advection_3d(dt,vvEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,	&
-                        dxuadv,dxvadv,dyuadv,dyvadv,area_inv,		&
+   call do_advection_3d(dt,vvEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
+                        dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
                         azadv,auadv,avadv,hor_adv,ver_adv,strang,AH)
    vvEx=-(vvEx*hvn-vv)/dt ! Here, vvEx is the advection term.
 
@@ -311,16 +314,16 @@
             do k=kumin(i,j),kmax-1
                www(k)=0.5*(ww(i+1,j,k)+ww(i,j,k))
                if (www(k) .gt. _ZERO_) then
-	          www(k)=www(k)*uu(i,j,k)/hun(i,j,k)
-	       else
-	          www(k)=www(k)*uu(i,j,k+1)/hun(i,j,k+1)
-	       end if
+                  www(k)=www(k)*uu(i,j,k)/hun(i,j,k)
+               else
+                  www(k)=www(k)*uu(i,j,k+1)/hun(i,j,k+1)
+               end if
             end do
             www(kmax)= _ZERO_
             do k=kumin(i,j),kmax
                uuEx(i,j,k)=uuEx(i,j,k)+www(k)-www(k-1)
             end do
-	 end if
+         end if
       end do
    end do
 
@@ -331,17 +334,17 @@
             www(kvmin(i,j)-1)= _ZERO_
             do k=kvmin(i,j),kmax-1
                www(k)=0.5*(ww(i,j+1,k)+ww(i,j,k))
-	       if (www(k) .gt. _ZERO_) then
-	          www(k)=www(k)*vv(i,j,k)/hvn(i,j,k)
-	       else
-	          www(k)=www(k)*vv(i,j,k+1)/hvn(i,j,k+1)
+               if (www(k) .gt. _ZERO_) then
+                  www(k)=www(k)*vv(i,j,k)/hvn(i,j,k)
+               else
+                  www(k)=www(k)*vv(i,j,k+1)/hvn(i,j,k+1)
                end if
             end do
             www(kmax)= _ZERO_
             do k=kvmin(i,j),kmax
                vvEx(i,j,k)=vvEx(i,j,k)+www(k)-www(k-1)
             end do
-	 end if
+         end if
       end do
    end do
 

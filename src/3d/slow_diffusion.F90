@@ -1,4 +1,4 @@
-!$Id: slow_diffusion.F90,v 1.2 2003-04-07 13:36:38 kbk Exp $
+!$Id: slow_diffusion.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,7 +22,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-  REALTYPE, intent(in) :: AM
+  REALTYPE, intent(in)                 :: AM
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -32,11 +32,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   integer 	:: i,j,ii,jj
-   REALTYPE     :: PP(iimin-1:iimax,jjmin-1:jjmax)
-   REALTYPE     :: Di(iimin-1:iimax+1,jjmin-1:jjmax+1)
-   REALTYPE     :: DUi(iimin-1:iimax+1,jjmin-1:jjmax+1)
-   REALTYPE     :: DVi(iimin-1:iimax+1,jjmin-1:jjmax+1)
+   integer                   :: i,j,ii,jj
+   REALTYPE                  :: PP(iimin-1:iimax,jjmin-1:jjmax)
+   REALTYPE                  :: Di(iimin-1:iimax+1,jjmin-1:jjmax+1)
+   REALTYPE                  :: DUi(iimin-1:iimax+1,jjmin-1:jjmax+1)
+   REALTYPE                  :: DVi(iimin-1:iimax+1,jjmin-1:jjmax+1)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -79,7 +79,7 @@
       do i=iimin,iimax
          if (au(i,j) .ge. 1) then
             UEx(i,j)=UEx(i,j)-(PP(i+1,j)-PP(i  ,j))*ARUD1
-	 end if
+         end if
       end do
    end do
 
@@ -88,9 +88,9 @@
       do i=iimin-1,iimax
          if (au(i,j) .ge. 1 .or. au(i,j+1) .ge. 1) then
             PP(i,j)=AM*0.5*(DUi(i+1,j)+DUi(i,j))*DXX  &
-	      *((Uint(i,j+1)/DUi(i,j+1)-Uint(i,j)/DUi(i,j))/DYX &
-	      +(Vint(i+1,j)/DVi(i+1,j)-Vint(i,j)/DVi(i,j))/DXX )
-	 end if
+                   *((Uint(i,j+1)/DUi(i,j+1)-Uint(i,j)/DUi(i,j))/DYX &
+                    +(Vint(i+1,j)/DVi(i+1,j)-Vint(i,j)/DVi(i,j))/DXX )
+         end if
       end do
    end do
 
@@ -98,7 +98,7 @@
       do i=iimin,iimax
          if (au(i,j) .ge. 1) then
             UEx(i,j)=UEx(i,j)-(PP(i,j  )-PP(i,j-1))*ARUD1
-	 end if
+         end if
       end do
    end do
 
@@ -107,9 +107,9 @@
       do i=iimin-1,iimax
          if (av(i,j) .ge. 1 .or. av(i+1,j) .ge. 1) then
             PP(i,j)=AM*0.5*(DUi(i+1,j)+DUi(i,j))*DXX  &
-	        *((Uint(i,j+1)/DUi(i,j+1)-Uint(i,j)/DUi(i,j))/DYX &
-		 +(Vint(i+1,j)/DVi(i+1,j)-Vint(i,j)/DVi(i,j))/DXX )
-	 end if
+                   *((Uint(i,j+1)/DUi(i,j+1)-Uint(i,j)/DUi(i,j))/DYX &
+                    +(Vint(i+1,j)/DVi(i+1,j)-Vint(i,j)/DVi(i,j))/DXX )
+         end if
       end do
    end do
 
@@ -117,18 +117,18 @@
       do i=iimin,iimax
          if (av(i,j) .ge. 1) then
             VEx(i,j)=VEx(i,j)-(PP(i  ,j)-PP(i-1,j))*ARVD1
-	 end if
+         end if
       end do
    end do
 
 ! Central for dy(2*AM*dy(V^2/DV))
    do j=jjmin,jjmax+1     ! PP defined on T-points
       do i=iimin,iimax+1
-	 if (az(i,j) .ge. 1) then
+         if (az(i,j) .ge. 1) then
             PP(i,j)=2.*AM*DXC*Di(i,j)               &
-	         *(Vint(i,j)/DVi(i,j)-Vint(i,j-1)/DVi(i,j-1))/DYC
+                   *(Vint(i,j)/DVi(i,j)-Vint(i,j-1)/DVi(i,j-1))/DYC
 
-	 end if
+         end if
       end do
    end do
 
@@ -136,7 +136,7 @@
       do i=iimin,iimax
          if (av(i,j) .ge. 1) then
             VEx(i,j)=VEx(i,j)-(PP(i,j+1)-PP(i,j  ))*ARVD1
-	 end if
+         end if
       end do
    end do
 

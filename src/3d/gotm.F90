@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.3 2003-04-07 13:36:38 kbk Exp $
+!$Id: gotm.F90,v 1.4 2003-04-23 12:16:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,6 @@
 !
 ! !USES:
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,az,min_depth,crit_depth
-   use domain, only: egon => H
    use variables_2d, only: D,zub,zvb,z
    use variables_3d, only: dt,kmin,ho,hn,tke,eps,SS,NN,num,nuh,taus,taub
    use turbulence, only: do_turbulence,cde
@@ -30,7 +29,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: gotm.F90,v $
-!  Revision 1.3  2003-04-07 13:36:38  kbk
+!  Revision 1.4  2003-04-23 12:16:34  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.3  2003/04/07 13:36:38  kbk
 !  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:54  gotm
@@ -72,13 +74,14 @@
 !
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k
-   REALTYPE 	:: u_taus,u_taub,z0s,z0b
-   REALTYPE 	:: h(0:kmax),dry,zz
-   REALTYPE 	:: NN1d(0:kmax),SS1d(0:kmax),P(0:kmax),B(0:kmax)
-   logical, save:: first=.true.
-   integer	:: kk
-   integer, save :: n = 0
+   integer                   :: i,j,k
+   REALTYPE                  :: u_taus,u_taub,z0s,z0b
+   REALTYPE                  :: h(0:kmax),dry,zz
+   REALTYPE                  :: P(0:kmax),B(0:kmax)
+   REALTYPE                  :: NN1d(0:kmax),SS1d(0:kmax)
+   logical, save             :: first=.true.
+   integer, save             :: n = 0
+   integer                   :: kk
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -111,22 +114,22 @@
             nuh1d=nuh(i,j,:)
 
             z0s = 0.1
-	    z0b=0.5*(max(zub(i-1,j),zub(i,j))+max(zvb(i,j-1),zvb(i,j)))
+            z0b=0.5*(max(zub(i-1,j),zub(i,j))+max(zvb(i,j-1),zvb(i,j)))
             if (z0s .gt. D(i,j)/10.) z0s=D(i,j)/10.
 
 #ifdef PARABOLIC_VISCOSITY
             zz = _ZERO_
             do k=1,kmax-1
                zz=zz+hn(i,j,k)
-	       tke1d(k)=max(1.e-10,3.333333*u_taub**2*(1.-zz/D(i,j)))
-	       L1d(k)=0.4*(zz+z0b)*sqrt(1.-zz/D(i,j))
-	       eps1d(k)=0.16431677*tke1d(k)**1.5/L1d(k)
-	       num1d(k)=0.09*tke1d(k)**2/eps1d(k)
-	       nuh1d(k)=num1d(k)
-	    end do
+               tke1d(k)=max(1.e-10,3.333333*u_taub**2*(1.-zz/D(i,j)))
+               L1d(k)=0.4*(zz+z0b)*sqrt(1.-zz/D(i,j))
+               eps1d(k)=0.16431677*tke1d(k)**1.5/L1d(k)
+               num1d(k)=0.09*tke1d(k)**2/eps1d(k)
+               nuh1d(k)=num1d(k)
+            end do
 #else
-            call do_turbulence(kmax,dt,D(i,j),u_taus,u_taub,z0s,z0b,h,   &
-	                       NN1d,SS1d,P,B)
+            call do_turbulence(kmax,dt,D(i,j),u_taus,u_taub,z0s,z0b,h, &
+                               NN1d,SS1d,P,B)
 #endif
 
             tke(i,j,:) = tke1d
