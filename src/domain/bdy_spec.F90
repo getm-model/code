@@ -1,4 +1,4 @@
-!$Id: bdy_spec.F90,v 1.1 2002-05-02 14:01:11 gotm Exp $
+!$Id: bdy_spec.F90,v 1.2 2003-04-07 15:20:53 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,8 +11,9 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain, only: NWB,NNB,NEB,NSB
-   use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli,nsbv
+   use domain, only: NWB,NNB,NEB,NSB,NOB
+   use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
+   use domain, only: bdy_index,bdy_map,nsbv
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -26,8 +27,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bdy_spec.F90,v $
-!  Revision 1.1  2002-05-02 14:01:11  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 15:20:53  kbk
+!  added bdy_index and bdy_map
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:11  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.2  2001/09/01 17:12:13  bbh
 !  Removed a STDERR
@@ -35,9 +39,8 @@
 !  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
 !  initial import into CVS
 !
-!
 ! !LOCAL VARIABLES:
-   integer 	:: n,rc
+   integer 	:: i,j,k,l,n,rc
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -114,7 +117,63 @@
 
    close(BDYINFO)
 
+   NOB = NWB+NNB+NEB+NSB
+
+   LEVEL2 '# of open boundaries ',NOB
    LEVEL2 '# of open bdy points ',nsbv
+
+   if(NOB .gt. 0) then
+      allocate(bdy_index(NOB),stat=rc)
+      if (rc /= 0) stop 'bdy_spec: Error allocating memory (bdy_index)'
+
+      allocate(bdy_map(nsbv,2),stat=rc)
+      if (rc /= 0) stop 'bdy_spec: Error allocating memory (bdy_map)'
+
+      k = 1
+      l = 1
+      do n=1,NWB
+         bdy_index(l) = k
+         l = l+1
+         i = wi(n)
+         do j=wfj(n),wlj(n)
+            bdy_map(k,1) = i
+            bdy_map(k,2) = j
+            k = k+1
+         end do
+      end do
+      do n=1,NNB
+         bdy_index(l) = k
+         l = l+1
+         j = nj(n)
+         do i=nfi(n),nli(n)
+            bdy_map(k,1) = i
+            bdy_map(k,2) = j
+            k = k+1
+         end do
+      end do
+      do n=1,NEB
+         bdy_index(l) = k
+         l = l+1
+         i = ei(n)
+         do j=efj(n),elj(n)
+            bdy_map(k,1) = i
+            bdy_map(k,2) = j
+            k = k+1
+         end do
+      end do
+      do n=1,NSB
+         bdy_index(l) = k
+         l = l+1
+         j = sj(n)
+         do i=sfi(n),sli(n)
+            bdy_map(k,1) = i
+            bdy_map(k,2) = j
+            k = k+1
+         end do
+      end do
+   end if
+
+STDERR 'bdy_spec ',bdy_index
 
 #ifdef DEBUG
    write(debug,*) 'Leaving bdy_spec()'
