@@ -6,6 +6,8 @@
 VER=1.1.0
 # 2003/09/16
 VER=1.1.1
+# 2003/10/18
+VER=1.1.2
 
 TAG=v$(shell cat VERSION | tr . _)
 RELEASE=getm-$(VERSION)
@@ -29,7 +31,7 @@ include/version.h: ./Makefile
 	@echo \#define RELEASE \"$(VER)\" > .ver
 	@mv -f .ver $@
 
-VERSION: ./Makefile
+VERSION: include/version.h
 	 @echo $(VER) > $@
 
 doc:
@@ -44,8 +46,11 @@ distclean:
 	$(MAKE) -C utils distclean
 	$(RM) -r bin/
 
-export:
-	(cd ~/getm-releases ; cvs export -r $(TAG) getm ; mv getm getm-$(VER)/)
+tag:
+	cvs tag $(TAG)
+
+export: tag
+	(cd ~/getm-releases ; cvs export -r $(TAG) getm-src ; mv getm-src getm-$(VER)/)
 	cvs2cl
 	mv ChangeLog ~/getm-releases/getm-$(VER)/
 	(cd ~/getm-releases ; tar -cvzf getm-$(VER).tar.gz getm-$(VER)/ )
