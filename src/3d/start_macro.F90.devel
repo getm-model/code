@@ -1,0 +1,95 @@
+!$Id: start_macro.F90.devel,v 1.1 2003-04-07 17:07:06 kbk Exp $
+#include "cppdefs.h"
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: start_macro() - initialize the macro loop.
+!
+! !INTERFACE:
+   subroutine start_macro()
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use domain,   only: iimin,iimax,jjmin,jjmax,H,HU,HV,min_depth
+   use variables_2d, only: z,Uint,Vint
+   use m3d, only: M,dt
+   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
+   use halo_zones, only: update_2d_halo,z_TAG,U_TAG,V_TAG
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard & Karsten Bolding
+!
+!  $Log: start_macro.F90.devel,v $
+!  Revision 1.1  2003-04-07 17:07:06  kbk
+!  should be fixed and used later
+!
+!
+! !LOCAL VARIABLES:
+   integer	:: i,j
+   REALTYPE	:: split
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'start_macro() # ',Ncall
+#endif
+
+   do j=jjmin-1,jjmax+1         ! Defining 'old' and 'new' sea surface
+      do i=iimin-1,iimax+1      ! elevation for macro time step
+         sseo(i,j)=ssen(i,j)
+         ssen(i,j)=z(i,j)
+#if 1 
+! This does not work for Sylt - pointed out by Manuel - why? 
+         ssen(i,j)=max(ssen(i,j),-H(i,j)+min_depth)
+#endif
+      end do
+   end do
+
+   do j=jjmin-1,jjmax+1             ! Same for U-points
+      do i=iimin-1,iimax
+         ssuo(i,j)=ssun(i,j)
+         ssun(i,j)=0.25*(sseo(i,j)+sseo(i+1,j)+ssen(i,j)+ssen(i+1,j))
+         ssun(i,j)=max(ssun(i,j),-HU(i,j)+min_depth)
+      end do
+   end do
+   ssuo(iimax+1,:)=ssun(iimax+1,:)
+   ssun(iimax+1,:)=ssun(iimax,:)
+
+   do j=jjmin-1,jjmax                ! Same for V-points
+      do i=iimin-1,iimax+1
+         ssvo(i,j)=ssvn(i,j)
+         ssvn(i,j)=0.25*(sseo(i,j)+sseo(i,j+1)+ssen(i,j)+ssen(i,j+1))
+         ssvn(i,j)=max(ssvn(i,j),-HV(i,j)+min_depth)
+      end do
+   end do
+   ssvo(:,jjmax+1)=ssvn(:,jjmax+1)
+   ssvn(:,jjmax+1)=ssvn(:,jjmax)
+
+! Defining vertically integrated, conservative
+! u- and v-transport for macro time step
+
+   split = _ONE_/float(M)
+   Uint = split*Uint
+   Vint = split*Vint
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving start_macro()'
+   write(debug,*)
+#endif
+   return
+   end subroutine start_macro
+!EOC
+
+!-----------------------------------------------------------------------
+! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
+!-----------------------------------------------------------------------

@@ -1,0 +1,324 @@
+!$Id: coordinates.F90.devel,v 1.1 2003-04-07 17:07:06 kbk Exp $
+#include "cppdefs.h"
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE:  coordinates() - defines the vertical coordinate system.
+!
+! !INTERFACE:
+   subroutine coordinates(cord_type,cord_relax)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: H,HU,HV,az,au,av,min_depth
+   use domain, only: ga,ddu,ddl,d_gamma
+   use variables_3d, only: dt,kmin,kumin,kvmin,ho,hn,huo,hun,hvo,hvn
+   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
+   use halo_zones, only: update_3d_halo,wait_halo,H_TAG,HU_TAG,HV_TAG
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)	:: cord_type
+   REALTYPE, intent(in)	:: cord_relax
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard & Karsten Bolding
+!
+!  $Log: coordinates.F90.devel,v $
+!  Revision 1.1  2003-04-07 17:07:06  kbk
+!  should be fixed and used later
+!
+!
+! !LOCAL VARIABLES:
+   integer 	:: i,j,k,rc,kk
+   REALTYPE	:: alpha,maxdepth
+   LOGICAL      :: gamma_surf=.true.
+   REALTYPE	:: HH,zz,r
+   logical, save :: first=.true.,equiv_sigma=.false.
+   REALTYPE, save :: kmaxm1
+   REALTYPE, save, dimension(:),     allocatable  :: dga,be,sig
+   REALTYPE, save, dimension(:,:,:), allocatable  :: gga
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'coordinates() # ',Ncall
+#endif
+
+   if (first) then
+      first = .false.
+      allocate(ga(0:kmax),stat=rc)
+      if (rc /= 0) stop 'coordinates: Error allocating (ga)'
+      allocate(dga(0:kmax),stat=rc)
+      if (rc /= 0) STOP 'coordinates: Error allocating (dga)'
+      ga = _ZERO_; dga = _ZERO_
+      select case (cord_type)
+         case (1) ! sigma coordinates
+            if (ddu .le. _ZERO_ .and. ddl .le. _ZERO_) then
+               equiv_sigma=.true.
+               kmaxm1= _ONE_/float(kmax)
+               ga(0) = -_ONE_
+               do k=1,kmax
+                  ga(k) = ga(k-1) + _ONE_/kmax
+                  dga(k)=ga(k)-ga(k-1)
+               end do
+               ga(kmax) = _ZERO_
+            else
+               ! Non-equidistant sigma coordinates
+               ! This zooming routine is from Antoine Garapon, ICCH, DK
+               ga(0)= -_ONE_
+               dga(0)= _ZERO_
+               do k=1,kmax
+                  ga(k)=tanh((ddl+ddu)*k/float(kmax)-ddl)+tanh(ddl)
+                  ga(k)=ga(k)/(tanh(ddl)+tanh(ddu)) - _ONE_
+                  dga(k)=ga(k)-ga(k-1)
+               end do
+            end if
+            kmin=1
+            kumin=1
+            kvmin=1
+
+            do j=jjmin-1,jjmax+1
+               do i=iimin-1,iimax+1
+                  hn(i,j,1:kmax)=max(sseo(i,j)+H(i,j),min_depth)*dga(1:kmax)
+                  hun(i,j,1:kmax)=max(ssuo(i,j)+HU(i,j),min_depth)*dga(1:kmax)
+                  hvn(i,j,1:kmax)=max(ssvo(i,j)+HV(i,j),min_depth)*dga(1:kmax)
+               end do
+            end do
+
+         case (2) ! z-level
+            STDERR 'z-level not coded yet'
+            stop 'coordinates'
+         case (3) ! general vertical coordinates
+            do k=0,kmax
+               ga(k) = k
+            end do
+            allocate(sig(0:kmax),stat=rc)    ! dimensionless sigma-coordinate
+            if (rc /= 0) STOP 'coordinates: Error allocating (sig)'
+            allocate(be(0:kmax),stat=rc)     ! dimensionless beta-coordinate
+            if (rc /= 0) STOP 'coordinates: Error allocating (be)'
+            allocate(gga(I3DFIELD),stat=rc)  ! dimensionless gamma-coordinate
+            if (rc /= 0) stop 'coordinates: Error allocating memory (gga)'
+	    sig = _ZERO_ ; be = _ZERO_ ; gga = _ZERO_
+            do k=1,kmax
+               be(k)=tanh((ddl+ddu)*k/float(kmax)-ddl)+tanh(ddl)
+               be(k)=be(k)/(tanh(ddl)+tanh(ddu))-_ONE_
+               sig(k)=k/float(kmax)-_ONE_
+            end do
+	    if (gamma_surf) then
+               kk=kmax
+            else
+               kk=1
+            end if
+            do j=jjmin-1,jjmax+1
+               do i=iimin-1,iimax+1
+                  HH=max(H(i,j),min_depth)
+                  alpha=min(					&
+                           ((be(kk)-be(kk-1))-D_gamma/HH	&
+                            *(sig(kk)-sig(kk-1)))		&
+                            /((be(kk)-be(kk-1))-(sig(kk)-sig(kk-1))),_ONE_)
+                  gga(i,j,0)=-_ONE_
+                  do k=1,kmax
+	             gga(i,j,k)=alpha*sig(k)+(1.-alpha)*be(k)
+                     if (gga(i,j,k) .lt. gga(i,j,k-1)) then
+                        STDERR kk,(be(kk)-be(kk-1)),(sig(kk)-sig(kk-1))
+                        STDERR D_gamma,HH
+                        STDERR alpha
+                        STDERR k-1,gga(i,j,k-1),be(k-1),sig(k-1)
+                        STDERR k,gga(i,j,k),be(k),sig(k)
+                        stop 'coordinates'
+                     end if
+                  end do
+               end do
+            end do
+!            call update_3d_halo(gga,gga,az,iimin,jjmin,iimax,jjmax,kmax,H_TAG)
+            kmin=1
+            kumin=1
+            kvmin=1
+!            call wait_halo(H_TAG)
+
+!           Initial layer distribution - uses new as temporary var
+            do k=1,kmax
+               do j=jjmin,jjmax
+                  do i=iimin-1,iimax
+                     HH=max(ssuo(i,j)+HU(i,j),min_depth)
+                     hun(i,j,k)=HH*0.5*            &
+                      (gga(i,j,k)-gga(i,j,k-1)+gga(i+1,j,k)-gga(i+1,j,k-1))
+                  end do
+               end do
+            end do
+            call update_3d_halo(hun,hun,au,iimin,jjmin,iimax,jjmax,kmax,HU_TAG)
+
+            do k=1,kmax
+               do j=jjmin-1,jjmax
+                  do i=iimin,iimax
+                     HH=max(ssvo(i,j)+HV(i,j),min_depth)
+                     hvn(i,j,k)=HH*0.5*            &
+                      (gga(i,j,k)-gga(i,j,k-1)+gga(i,j+1,k)-gga(i,j+1,k-1))
+                  end do
+               end do
+            end do
+            call wait_halo(HU_TAG)
+            call update_3d_halo(hvn,hvn,av,iimin,jjmin,iimax,jjmax,kmax,HV_TAG)
+
+            do k=1,kmax
+               do j=jjmin-1,jjmax+1
+                  do i=iimin-1,iimax+1
+                     HH=max(sseo(i,j)+H(i,j),min_depth)
+                     hn(i,j,k)=HH*(gga(i,j,k)-gga(i,j,k-1))
+                  end do
+               end do
+            end do
+
+            call wait_halo(HV_TAG)
+
+         case default
+      end select
+
+   end if ! first
+
+   ho = hn
+   huo = hun
+   hvo = hvn
+
+#if 0
+STDERR H(iimin,jjmin),H(iimax,jjmin),H(iimax,jjmax),H(iimin,jjmax)
+STDERR H(iimin-1,jjmin-1),H(iimax+1,jjmin-1),H(iimax+1,jjmax+1),H(iimin-1,jjmax+1)
+
+STDERR hn(iimin-1,jjmin-1,1:kmax:2)
+STDERR hn(iimax+1,jjmin-1,1:kmax:2)
+STDERR hn(iimax+1,jjmax+1,1:kmax:2)
+STDERR hn(iimin-1,jjmax+1,1:kmax:2)
+#endif
+
+   select case (cord_type)
+      case (1) ! sigma coordinates
+         if (equiv_sigma) then
+
+            do j=jjmin-1,jjmax+1
+               do i=iimin-1,iimax+1
+                  hn(i,j,:)=max(ssen(i,j)+H(i,j),min_depth)*kmaxm1
+               end do
+            end do
+
+            do j=jjmin-1,jjmax+1
+               do i=iimin-1,iimax+1
+                  hun(i,j,:)=max(ssun(i,j)+HU(i,j),min_depth)*kmaxm1
+               end do
+            end do
+
+            do j=jjmin-1,jjmax+1
+               do i=iimin-1,iimax+1
+                  hvn(i,j,:)=max(ssvn(i,j)+HV(i,j),min_depth)*kmaxm1
+               end do
+            end do
+
+         else ! non-equivdistant
+
+            do j=jjmin-1,jjmax+1
+               do i=iimin-1,iimax+1
+                  hn(i,j,1:kmax)=max(ssen(i,j)+H(i,j),min_depth)*dga(1:kmax)
+               end do
+            end do
+
+            do j=jjmin-1,jjmax+1
+               do i=iimin-1,iimax+1
+                  hun(i,j,1:kmax)=max(ssun(i,j)+HU(i,j),min_depth)*dga(1:kmax)
+               end do
+            end do
+
+            do j=jjmin-1,jjmax+1
+               do i=iimin-1,iimax+1
+                  hvn(i,j,1:kmax)=max(ssvn(i,j)+HV(i,j),min_depth)*dga(1:kmax)
+               end do
+            end do
+         end if
+
+      case (2) ! z-level
+      case (3) ! general vertical coordinates
+
+! The general vertical coordinates can be relaxed towards the new layer
+! thicknesses by the following relaxation time scale r. This should
+! later be generalised also for sigma coordinates.
+
+! hun and hvn needs to communicate with neighbors therefore they are
+! done befoe hn
+
+	 maxdepth=600. ! needs to be calculated later ... HB 
+
+         do j=jjmin,jjmax
+            do i=iimin-1,iimax
+	       if (au(i,j).gt.0) then
+                  r = cord_relax/dt*HU(i,j)/maxdepth
+                  zz = -HU(i,j)
+                  do k=1,kmax-1
+	             HH=max(ssun(i,j)+HU(i,j),min_depth)
+                     hun(i,j,k)=(huo(i,j,k)*r+HH*0.5*(gga(i,j,k)-gga(i,j,k-1) &
+		                +gga(i+1,j,k)-gga(i+1,j,k-1)))/(r+1.)
+                     zz = zz + hun(i,j,k)
+                  end do
+                  hun(i,j,kmax)=ssun(i,j)-zz
+	       end if
+            end do
+         end do
+         call update_3d_halo(hun,hun,au,iimin,jjmin,iimax,jjmax,kmax,HU_TAG)
+
+         do j=jjmin-1,jjmax
+            do i=iimin,iimax
+               if (av(i,j).gt.0) then
+                  r = cord_relax/dt*HV(i,j)/maxdepth
+                  zz = -HV(i,j)
+                  do k=1,kmax-1
+	             HH=max(ssvn(i,j)+HV(i,j),min_depth)
+                     hvn(i,j,k)=(hvo(i,j,k)*r+HH*0.5*(gga(i,j,k)-gga(i,j,k-1) &
+		                  +gga(i,j+1,k)-gga(i,j+1,k-1)))/(r+1.)
+                     zz=zz+hvn(i,j,k)
+                  end do
+                  hvn(i,j,kmax)=ssvn(i,j)-zz
+	       end if
+            end do
+         end do
+
+         call wait_halo(HU_TAG)
+         call update_3d_halo(hvn,hvn,av,iimin,jjmin,iimax,jjmax,kmax,HV_TAG)
+
+         do j=jjmin-1,jjmax+1
+            do i=iimin-1,iimax+1
+               if(az(i,j) .gt. 0) then
+                  r = cord_relax/dt*H(i,j)/maxdepth
+                  zz = -H(i,j)
+                  do k=1,kmax-1
+                     HH=max(ssen(i,j)+H(i,j),min_depth)
+                     hn(i,j,k)=(ho(i,j,k)*r+HH*(gga(i,j,k)-gga(i,j,k-1)))/(r+1.)
+                     zz = zz + hn(i,j,k)
+                  end do
+                  hn(i,j,kmax)=ssen(i,j)-zz
+               end if
+            end do
+         end do
+
+         call wait_halo(HV_TAG)
+
+      case default
+
+   end select
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving Coordinates()'
+   write(debug,*)
+#endif
+   return
+   end subroutine coordinates
+!EOC
+
+!-----------------------------------------------------------------------
+! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
+!-----------------------------------------------------------------------
