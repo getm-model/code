@@ -1,4 +1,4 @@
-!$Id: start_macro.F90,v 1.5 2003-04-23 12:16:34 kbk Exp $
+!$Id: start_macro.F90,v 1.6 2003-08-03 08:54:58 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,7 +28,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: start_macro.F90,v $
-!  Revision 1.5  2003-04-23 12:16:34  kbk
+!  Revision 1.6  2003-08-03 08:54:58  kbk
+!  used HALO in loop boundaries
+!
+!  Revision 1.5  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.4  2003/04/07 16:27:32  kbk
@@ -69,8 +72,8 @@
    write(debug,*) 'start_macro() # ',Ncall
 #endif
 
-   do j=jjmin-1,jjmax+1         ! Defining 'old' and 'new' sea surface
-      do i=iimin-1,iimax+1      ! elevation for macro time step
+   do j=jjmin-HALO,jjmax+HALO         ! Defining 'old' and 'new' sea surface
+      do i=iimin-HALO,iimax+HALO      ! elevation for macro time step
          sseo(i,j)=ssen(i,j)
          ssen(i,j)=z(i,j)
 ! This does not work for Sylt - pointed out by Manuel - why? 
@@ -80,6 +83,23 @@
       end do
    end do
 
+#if 1
+   do j=jjmin-HALO,jjmax+HALO             ! Same for U-points
+      do i=iimin-HALO,iimax+HALO-1
+         ssuo(i,j)=ssun(i,j)
+         ssun(i,j)=0.25*(sseo(i,j)+sseo(i+1,j)+ssen(i,j)+ssen(i+1,j))
+         ssun(i,j)=max(ssun(i,j),-HU(i,j)+min_depth)
+      end do
+   end do
+
+   do j=jjmin-HALO,jjmax+HALO-1
+      do i=iimin-HALO,iimax+HALO             ! Same for V-points
+         ssvo(i,j)=ssvn(i,j)
+         ssvn(i,j)=0.25*(sseo(i,j)+sseo(i,j+1)+ssen(i,j)+ssen(i,j+1))
+         ssvn(i,j)=max(ssvn(i,j),-HV(i,j)+min_depth)
+      end do
+   end do
+#else
    do j=jjmin,jjmax             ! Same for U-points
       ssuo(iimin-1,j)=ssun(iimin-1,j)
       ssun(iimin-1,j)=ssun(iimin,j)
@@ -103,6 +123,7 @@
       ssvo(i,jjmax)=ssvn(i,jjmax)
       ssvn(i,jjmax)=ssvn(i,jjmax-1)
    end do
+#endif
 
 ! Defining vertically integrated, conservative
 ! u- and v-transport for macro time step
