@@ -1,4 +1,4 @@
-!$Id: depth_update.F90,v 1.4 2003-05-12 09:22:39 kbk Exp $
+!$Id: depth_update.F90,v 1.5 2003-06-18 08:27:41 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,7 +26,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: depth_update.F90,v $
-!  Revision 1.4  2003-05-12 09:22:39  kbk
+!  Revision 1.5  2003-06-18 08:27:41  kbk
+!  using HALO in loop boundaries
+!
+!  Revision 1.4  2003/05/12 09:22:39  kbk
 !  no use of update_2d_halo, expand loop boundaries instead
 !
 !  Revision 1.3  2003/04/23 12:09:43  kbk
@@ -75,8 +78,8 @@
    D = z+H
 
 !  U-points
-   do j=jmin-1,jmax+1
-      do i=imin-1,imax+1
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO-1
 #ifdef USE_MASK
          if(au(i,j) .gt. 0) then
 #endif
@@ -90,8 +93,8 @@
    end do
 
 !  V-points
-   do j=jmin-1,jmax+1
-      do i=imin-1,imax+1
+   do j=jmin-HALO,jmax+HALO-1
+      do i=imin-HALO,imax+HALO
 #ifdef USE_MASK
          if(av(i,j) .gt. 0) then
 #endif

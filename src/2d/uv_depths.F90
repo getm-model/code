@@ -1,4 +1,4 @@
-!$Id: uv_depths.F90,v 1.6 2003-05-12 09:22:39 kbk Exp $
+!$Id: uv_depths.F90,v 1.7 2003-06-18 08:27:41 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,7 +25,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_depths.F90,v $
-!  Revision 1.6  2003-05-12 09:22:39  kbk
+!  Revision 1.7  2003-06-18 08:27:41  kbk
+!  using HALO in loop boundaries
+!
+!  Revision 1.6  2003/05/12 09:22:39  kbk
 !  no use of update_2d_halo, expand loop boundaries instead
 !
 !  Revision 1.5  2003/04/23 12:09:44  kbk
@@ -61,15 +64,14 @@
    write(0,*) 'uv_depths() # ',Ncall
 #endif
 
-   do j=jmin-1,jmax+1
-      do i=imin-1,imax+1
-#ifdef MIN_VEL_DEPTH
-         HU(i,j)=min(H(i,j),H(i+1,j))
-         HV(i,j)=min(H(i,j),H(i,j+1))
-#else
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO-1
          HU(i,j)=0.5*(H(i,j)+H(i+1,j))
+      end do
+   end do
+   do j=jmin-HALO,jmax+HALO-1
+      do i=imin-HALO,imax+HALO
          HV(i,j)=0.5*(H(i,j)+H(i,j+1))
-#endif
       end do
    end do
 
