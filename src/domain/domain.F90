@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.6 2003-04-23 11:59:39 kbk Exp $
+!$Id: domain.F90,v 1.7 2003-05-02 08:32:31 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,7 +47,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.6  2003-04-23 11:59:39  kbk
+!  Revision 1.7  2003-05-02 08:32:31  kbk
+!  re-ordering mask calculation
+!
+!  Revision 1.6  2003/04/23 11:59:39  kbk
 !  update_2d_halo on spherical variables + TABS to spaces
 !
 !  Revision 1.5  2003/04/07 14:34:42  kbk
@@ -239,30 +242,120 @@ call get_dimensions(trim(input_dir) // bathymetry,iextr,jextr,rc)
          HU = -10.
          HV = -10.
 
-lonc = -1000.
-latc = -1000.
+         lonc = -1000.
+         latc = -1000.
 
-         call get_bathymetry(H,Hland,iextr,jextr,ioff,joff,imin,imax,jmin,jmax,rc)
+         call get_bathymetry(H,Hland,iextr,jextr,ioff,joff, &
+                             imin,imax,jmin,jmax,rc)
          call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
-
+#if 0
          call update_2d_halo(lonc,lonc,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
 
          call update_2d_halo(latc,latc,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
+#endif
       case default
          FATAL 'A non valid input format has been chosen'
          stop 'init_domain'
    end select
 
-#if 0
-#ifdef DK_03NM_TEST
-where (H .lt. 2.) 
-H = -10.
-end where
-#endif
-#endif
+!  Calculation masks
+!  Do we want to set a minimum depth for certain regions
+   call set_min_depth(trim(input_dir) // min_depth_file)
+
+!  Do we want to do adjust the bathymetry
+   call adjust_bathymetry(trim(input_dir) // bathymetry_adjust_file)
+
+!  Reads boundary location information
+   if (openbdy) then
+      call bdy_spec(trim(input_dir) // bdyinfofile)
+      call print_bdy('Global Boundary Information')
+      call have_bdy()
+      call print_bdy('Local Boundary Information')
+   end if
+
+!  Define calculation masks
+   az = 0
+   where (H .gt. Hland+SMALL)
+      az=1
+   end where
+
+#define BOUNDARY_POINT 2
+!  western boundary - at present elev only
+   do n=1,NWB
+      az(wi(n),wfj(n):wlj(n)) = BOUNDARY_POINT
+      if(wfj(n) .eq. jmin) az(wi(n),jmin-1) = az(wi(n),jmin)
+      if(wlj(n) .eq. jmax) az(wi(n),jmax+1) = az(wi(n),jmax)
+   end do
+!  northern boundary - at present elev only
+   do n=1,NNB
+      az(nfi(n):nli(n),nj(n)) = BOUNDARY_POINT
+      if(nfi(n) .eq. imin) az(imin-1,nj(n)) = az(imin,nj(n))
+      if(nli(n) .eq. imax) az(imax+1,nj(n)) = az(imax,nj(n))
+   end do
+!  easter boundary - at present elev only
+   do n=1,NEB
+      az(ei(n),efj(n):elj(n)) = BOUNDARY_POINT
+      if(efj(n) .eq. jmin) az(ei(n),jmin-1) = az(ei(n),jmin)
+      if(elj(n) .eq. jmax) az(ei(n),jmax+1) = az(ei(n),jmax)
+   end do
+!  southern boundary - at present elev only
+   do n=1,NSB
+      az(sfi(n):sli(n),sj(n)) = BOUNDARY_POINT
+      if(sfi(n) .eq. imin) az(imin-1,sj(n)) = az(imin,sj(n))
+      if(sli(n) .eq. imax) az(imax+1,sj(n)) = az(imax,sj(n))
+   end do
+#undef BOUNDARY_POINT
+
+!  Do we want to do adjust the mask
+   call adjust_mask(trim(input_dir) // mask_adjust_file)
+
+!  mask for U-points
+   au=0
+   do j=jmin,jmax
+      do i=imin,imax
+         if (az(i,j) .eq. 1 .and. az(i+1,j) .eq. 1) then
+            au(i,j)=1
+         end if
+         if ((az(i,j) .eq. 1 .and. az(i+1,j) .eq. 2).or.    &
+             (az(i,j) .eq. 2 .and. az(i+1,j) .eq. 1)) then
+            au(i,j)=2
+         end if
+         if (az(i,j) .eq. 2 .and. az(i+1,j) .eq. 2) then
+            au(i,j)=3
+         end if
+      end do
+   end do
+
+!  mask for V-points
+   av=0
+   do j=jmin,jmax
+      do i=imin,imax
+         if (az(i,j) .eq. 1 .and. az(i,j+1) .eq. 1) then
+            av(i,j)=1
+         end if
+         if ((az(i,j) .eq. 1 .and. az(i,j+1) .eq. 2).or.    &
+             (az(i,j) .eq. 2 .and. az(i,j+1) .eq. 1)) then
+            av(i,j)=2
+         end if
+         if (az(i,j) .eq. 2 .and. az(i,j+1) .eq. 2) then
+            av(i,j)=3
+         end if
+      end do
+   end do
+
+!  mask for X-points
+   ax=0
+   do j=jmin,jmax
+      do i=imin,imax
+         if (az(i  ,j) .eq. 1 .and. az(i  ,j+1) .eq. 1 .and.    &
+             az(i+1,j) .eq. 1 .and. az(i+1,j+1) .eq. 1) then
+            ax(i,j)=1
+         end if
+      end do
+   end do
 
    select case (grid_type)
       case(1)
@@ -283,87 +376,101 @@ end where
 #endif
       case(2)
 #ifdef SPHERICAL
-          lonu=lonx
-          lonv=lonc
-          latv=latx
-          latu=latc
-          do j=jmin,jmax
-             do i=imin,imax
-                dxc(i,j)=deg2rad*(lonu(i,j)-lonu(i-1,j))*rearth &
-                        *cos(deg2rad*latc(i,j))
-             end do
-          end do
-          do j=jmin,jmax
-             do i=imin-1,imax
-                dxu(i,j)=deg2rad*(lonc(i+1,j)-lonc(i,j))*rearth &
-                        *cos(deg2rad*latc(i,j))
-             end do
-          end do
-          do j=jmin-1,jmax
-             do i=imin,imax
-                dxv(i,j)=deg2rad*(lonx(i,j)-lonx(i-1,j))*rearth &
-                        *cos(deg2rad*latv(i,j))
-             end do
-          end do
-          do j=jmin-1,jmax
-             do i=imin-1,imax
-                dxx(i,j)=deg2rad*(lonv(i+1,j)-lonv(i,j))*rearth &
-                       *cos(deg2rad*latx(i,j))
-             end do
-          end do
-          do j=jmin,jmax
-             do i=imin,imax
-                dyc(i,j)=deg2rad*(latv(i,j)-latv(i,j-1))*rearth
-             end do
-          end do
-          do i=imin-1,imax
-             do j=jmin,jmax
-                dyu(i,j)=deg2rad*(latx(i,j)-latx(i,j-1))*rearth
-             end do
-          end do
-          do j=jmin-1,jmax
-             do i=imin,imax
-                dyv(i,j)=deg2rad*(latc(i,j+1)-latc(i,j))*rearth
-             end do
-          end do
-          do j=jmin-1,jmax
-             do i=imin-1,imax
-                dyx(i,j)=deg2rad*(latu(i,j+1)-latu(i,j))*rearth
-             end do
-          end do
-          do j=jmin,jmax
-             do i=imin,imax
-                arcd1(i,j)=_ONE_/(dxc(i,j)*dyc(i,j))
-                arud1(i,j)=_ONE_/(dxu(i,j)*dyu(i,j))
-                arvd1(i,j)=_ONE_/(dxv(i,j)*dyv(i,j))
-             end do
-          end do
+
+         lonu=lonx
+         lonv=lonc
+         latv=latx
+         latu=latc
+
+         do j=jmin,jmax
+            do i=imin,imax
+               dxc(i,j)=deg2rad*(lonu(i,j)-lonu(i-1,j))*rearth &
+                       *cos(deg2rad*latc(i,j))
+            end do
+         end do
+         call update_2d_halo(dxc,dxc,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
+
+         do j=jmin,jmax
+            do i=imin-1,imax
+               dxu(i,j)=deg2rad*(lonc(i+1,j)-lonc(i,j))*rearth &
+                       *cos(deg2rad*latc(i,j))
+            end do
+         end do
+         call update_2d_halo(dxu,dxu,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+
+         do j=jmin-1,jmax
+            do i=imin,imax
+               dxv(i,j)=deg2rad*(lonx(i,j)-lonx(i-1,j))*rearth &
+                       *cos(deg2rad*latv(i,j))
+            end do
+         end do
+         call update_2d_halo(dxv,dxv,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
+
+         do j=jmin-1,jmax
+            do i=imin-1,imax
+               dxx(i,j)=deg2rad*(lonv(i+1,j)-lonv(i,j))*rearth &
+                      *cos(deg2rad*latx(i,j))
+            end do
+         end do
+
+         do j=jmin,jmax
+            do i=imin,imax
+               dyc(i,j)=deg2rad*(latv(i,j)-latv(i,j-1))*rearth
+            end do
+         end do
+         call update_2d_halo(dyc,dyc,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
+
+         do i=imin-1,imax
+            do j=jmin,jmax
+               dyu(i,j)=deg2rad*(latx(i,j)-latx(i,j-1))*rearth
+            end do
+         end do
+         call update_2d_halo(dyu,dyu,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+
+         do j=jmin-1,jmax
+            do i=imin,imax
+               dyv(i,j)=deg2rad*(latc(i,j+1)-latc(i,j))*rearth
+            end do
+         end do
+         call update_2d_halo(dyv,dyv,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
+
+         do j=jmin-1,jmax
+            do i=imin-1,imax
+               dyx(i,j)=deg2rad*(latu(i,j+1)-latu(i,j))*rearth
+            end do
+         end do
+
+         do j=jmin,jmax
+            do i=imin,imax
+               arcd1(i,j)=_ONE_/(dxc(i,j)*dyc(i,j))
+               arud1(i,j)=_ONE_/(dxu(i,j)*dyu(i,j))
+               arvd1(i,j)=_ONE_/(dxv(i,j)*dyv(i,j))
+            end do
+         end do
+          call update_2d_halo(arcd1,arcd1,az,imin,jmin,imax,jmax,H_TAG)
+          call wait_halo(H_TAG)
+          call update_2d_halo(arud1,arud1,au,imin,jmin,imax,jmax,U_TAG)
+          call wait_halo(U_TAG)
+          call update_2d_halo(arvd1,arvd1,av,imin,jmin,imax,jmax,V_TAG)
+          call wait_halo(V_TAG)
+
           do j=jmin,jmax
              do i=imin,imax
                 coru(i,j)=2.*omega*sin(deg2rad*latu(i,j))
                 corv(i,j)=2.*omega*sin(deg2rad*latv(i,j))
              end do
           end do
-          call update_2d_halo(dxc,dxc,az,imin,jmin,imax,jmax,H_TAG)
-          call wait_halo(H_TAG)
-          call update_2d_halo(dyc,dyc,az,imin,jmin,imax,jmax,H_TAG)
-          call wait_halo(H_TAG)
-          call update_2d_halo(arcd1,arcd1,az,imin,jmin,imax,jmax,H_TAG)
-          call wait_halo(H_TAG)
+          call update_2d_halo(coru,coru,au,imin,jmin,imax,jmax,U_TAG)
+          call wait_halo(U_TAG)
+          call update_2d_halo(corv,corv,av,imin,jmin,imax,jmax,V_TAG)
+          call wait_halo(V_TAG)
 
-          call update_2d_halo(dxu,dxu,au,imin,jmin,imax,jmax,U_TAG)
-          call wait_halo(U_TAG)
-          call update_2d_halo(dyu,dyu,au,imin,jmin,imax,jmax,U_TAG)
-          call wait_halo(U_TAG)
-          call update_2d_halo(arud1,arud1,au,imin,jmin,imax,jmax,U_TAG)
-          call wait_halo(U_TAG)
-
-          call update_2d_halo(dxv,dxv,av,imin,jmin,imax,jmax,V_TAG)
-          call wait_halo(V_TAG)
-          call update_2d_halo(dyv,dyv,av,imin,jmin,imax,jmax,V_TAG)
-          call wait_halo(V_TAG)
-          call update_2d_halo(arvd1,arvd1,av,imin,jmin,imax,jmax,V_TAG)
-          call wait_halo(V_TAG)
 #endif
       case(3)
 #ifdef CURVILINEAR
@@ -438,98 +545,8 @@ end where
          stop 'init_domain'
    end select
 
-!  Do we want to set a minimum depth for certain regions
-   call set_min_depth(trim(input_dir) // min_depth_file)
-
-!  Do we want to do adjust the bathymetry
-   call adjust_bathymetry(trim(input_dir) // bathymetry_adjust_file)
-
-!  Reads boundary location information
-   if (openbdy) then
-      call bdy_spec(trim(input_dir) // bdyinfofile)
-      call print_bdy('Global Boundary Information')
-call have_bdy()
-call print_bdy('Local Boundary Information')
-   end if
-
-!  Define calculation masks
-   az = 0
-   where (H .gt. Hland+SMALL)
-      az=1
-   end where
-
-#define BOUNDARY_POINT 2
-!  western boundary - at present elev only
-   do n=1,NWB
-      az(wi(n),wfj(n):wlj(n)) = BOUNDARY_POINT
-      if(wfj(n) .eq. jmin) az(wi(n),jmin-1) = az(wi(n),jmin)
-      if(wlj(n) .eq. jmax) az(wi(n),jmax+1) = az(wi(n),jmax)
-   end do
-!  northern boundary - at present elev only
-   do n=1,NNB
-      az(nfi(n):nli(n),nj(n)) = BOUNDARY_POINT
-      if(nfi(n) .eq. imin) az(imin-1,nj(n)) = az(imin,nj(n))
-      if(nli(n) .eq. imax) az(imax+1,nj(n)) = az(imax,nj(n))
-   end do
-!  easter boundary - at present elev only
-   do n=1,NEB
-      az(ei(n),efj(n):elj(n)) = BOUNDARY_POINT
-      if(efj(n) .eq. jmin) az(ei(n),jmin-1) = az(ei(n),jmin)
-      if(elj(n) .eq. jmax) az(ei(n),jmax+1) = az(ei(n),jmax)
-   end do
-!  southern boundary - at present elev only
-   do n=1,NSB
-      az(sfi(n):sli(n),sj(n)) = BOUNDARY_POINT
-      if(sfi(n) .eq. imin) az(imin-1,sj(n)) = az(imin,sj(n))
-      if(sli(n) .eq. imax) az(imax+1,sj(n)) = az(imax,sj(n))
-   end do
-#undef BOUNDARY_POINT
-
-!  Do we want to do adjust the mask
-   call adjust_mask(trim(input_dir) // mask_adjust_file)
-
-   au=0
-   do j=jmin,jmax
-      do i=imin,imax
-         if (az(i,j) .eq. 1 .and. az(i+1,j) .eq. 1) then
-            au(i,j)=1
-         end if
-         if ((az(i,j) .eq. 1 .and. az(i+1,j) .eq. 2).or.    &
-             (az(i,j) .eq. 2 .and. az(i+1,j) .eq. 1)) then
-            au(i,j)=2
-         end if
-         if (az(i,j) .eq. 2 .and. az(i+1,j) .eq. 2) then
-            au(i,j)=3
-         end if
-      end do
-   end do
-
-   av=0
-   do j=jmin,jmax
-      do i=imin,imax
-         if (az(i,j) .eq. 1 .and. az(i,j+1) .eq. 1) then
-            av(i,j)=1
-         end if
-         if ((az(i,j) .eq. 1 .and. az(i,j+1) .eq. 2).or.    &
-             (az(i,j) .eq. 2 .and. az(i,j+1) .eq. 1)) then
-            av(i,j)=2
-         end if
-         if (az(i,j) .eq. 2 .and. az(i,j+1) .eq. 2) then
-            av(i,j)=3
-         end if
-      end do
-   end do
-
-   ax=0
-   do j=jmin,jmax
-      do i=imin,imax
-         if (az(i  ,j) .eq. 1 .and. az(i  ,j+1) .eq. 1 .and.    &
-             az(i+1,j) .eq. 1 .and. az(i+1,j+1) .eq. 1) then
-            ax(i,j)=1
-         end if
-      end do
-   end do
-
+   STDERR 'az'
+   call print_mask(az)
 #ifdef DEBUG
    STDERR 'az'
    call print_mask(az)
@@ -839,7 +856,7 @@ call print_bdy('Local Boundary Information')
 
    do j=jmax,jmin,-1
 !      write(0,'(5000(i1,x))') (mask(i,j), i=imin,imax)
-      write(0,'(5000(i1))') (mask(i,j), i=imin,imax)
+      write(0,'(5000(i1))') (mask(i,j), i=imin,imax,1)
    end do
 
    return
