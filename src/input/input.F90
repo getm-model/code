@@ -1,4 +1,4 @@
-!$Id: input.F90,v 1.1 2002-05-02 14:01:33 gotm Exp $
+!$Id: input.F90,v 1.2 2003-04-07 13:00:39 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,9 +12,11 @@
 !
 ! !USES:
    use meteo, only: metforcing,method,meteo_file
-   use rivers, only: river_method,nriver,river_data
    use m2d, only: bdy2d,bdyfile_2d,bdyfmt_2d
+#ifndef NO_3D
    use m3d, only: bdy3d,bdyfile_3d,bdyfmt_3d
+   use rivers, only: river_method,nriver,river_data
+#endif
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -23,8 +25,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: input.F90,v $
-!  Revision 1.1  2002-05-02 14:01:33  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 13:00:39  kbk
+!  parallel + cleaned code
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:33  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.5  2001/10/07 14:50:22  bbh
 !  Reading river data implemented - NetCFD
@@ -87,7 +92,7 @@
 ! !IROUTINE: init_input - initialise all external files and units
 !
 ! !INTERFACE:
-   subroutine init_input(n)
+   subroutine init_input(input_dir,n)
 !
 ! !DESCRIPTION:
 !
@@ -95,6 +100,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   character(len=*)	:: input_dir
    integer, intent(in)	:: n
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -116,22 +122,25 @@
 #endif
 
    LEVEL1 'init_input'
-
    if (metforcing .and. method .eq. 2) then
-      call init_meteo_input(meteo_file,n)
+      call init_meteo_input(trim(input_dir) // meteo_file,n)
    end if
 
+#ifndef NO_3D
    if (river_method .gt. 0 .and. nriver .gt. 0) then
-      call init_river_input(river_data,n)
+      call init_river_input(trim(input_dir) // river_data,n)
    end if
+#endif
 
    if(bdy2d) then
-      call init_2d_bdy(bdyfile_2d,bdyfmt_2d)
+      call init_2d_bdy(trim(input_dir) // bdyfile_2d,bdyfmt_2d)
    end if
 
+#ifndef NO_3D
    if(bdy3d) then
-      call init_3d_bdy(bdyfile_3d,bdyfmt_3d)
+      call init_3d_bdy(trim(input_dir) // bdyfile_3d,bdyfmt_3d)
    end if
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_input()'
@@ -178,17 +187,21 @@
       call get_meteo_data(n)
    end if
 
+#ifndef NO_3D
    if(river_method .eq. 2) then
       call get_river_data(n)
    end if
+#endif
 
    if(bdy2d) then
       call get_2d_bdy(bdyfmt_2d,n)
    end if
 
+#ifndef NO_3D
    if(bdy3d) then
       call get_3d_bdy(bdyfmt_3d,n)
    end if
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_input()'

@@ -1,4 +1,4 @@
-!$Id: get_field.F90,v 1.1 2002-05-02 14:01:33 gotm Exp $
+!$Id: get_field.F90,v 1.2 2003-04-07 12:58:21 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,8 +29,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: get_field.F90,v $
-!  Revision 1.1  2002-05-02 14:01:33  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 12:58:21  kbk
+!  parallel + cleaned code
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:33  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1  2001/05/10 11:33:48  bbh
 !  Added wrapper - get_field
@@ -52,7 +55,6 @@
          STDERR 'Should get an ASCII field'
 	 stop 'get_field()'
       case (NETCDF)
-!         call get_field_ncdf(fname,var,f)
          call read_field_ncdf(fname,var,n,f)
       case DEFAULT
          FATAL 'A non valid input format has been chosen'

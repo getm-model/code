@@ -1,4 +1,4 @@
-!$Id: get_river_data.F90,v 1.1 2002-05-02 14:01:34 gotm Exp $
+!$Id: get_river_data.F90,v 1.2 2003-04-07 12:58:21 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,12 +26,14 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: get_river_data.F90,v $
-!  Revision 1.1  2002-05-02 14:01:34  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 12:58:21  kbk
+!  parallel + cleaned code
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:34  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1  2001/10/07 14:50:22  bbh
 !  Reading river data implemented - NetCFD
-!
 !
 ! !LOCAL VARIABLES:
 !EOP
