@@ -1,4 +1,4 @@
-!$Id: time.F90,v 1.3 2003-12-15 16:03:59 kbk Exp $
+!$Id: time.F90,v 1.4 2004-04-06 16:32:28 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,6 +27,9 @@
 ! !USES:
    IMPLICIT NONE
 !
+! !PUBLIC MEMBER FUNCTIONS:
+   public                              :: time_diff
+
 ! !PUBLIC DATA MEMBERS:
    integer                             :: julianday,secondsofday,yearday,month,day
    integer                             :: jul0=-1,secs0=-1
@@ -44,7 +47,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: time.F90,v $
-!  Revision 1.3  2003-12-15 16:03:59  kbk
+!  Revision 1.4  2004-04-06 16:32:28  kbk
+!  TimeDiff --> time_diff
+!
+!  Revision 1.3  2003/12/15 16:03:59  kbk
 !  new correct algorithm in in_interval()
 !
 !  Revision 1.2  2003/04/23 12:02:43  kbk
@@ -152,7 +158,7 @@
          call String2JulSecs(start,jul1,secs1)
          call String2JulSecs(stop,jul2,secs2)
 
-         nsecs = TimeDiff(jul2,secs2,jul1,secs1)
+         nsecs = time_diff(jul2,secs2,jul1,secs1)
          MaxN  = nint(nsecs/timestep)
 
          ndays = jul2-jul1
@@ -498,10 +504,10 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  TimeDiff() - the time difference in seconds
+! !IROUTINE:  time_diff() - the time difference in seconds
 !
 ! !INTERFACE:
-   integer FUNCTION TimeDiff(jul1,secs1,jul2,secs2)
+   integer FUNCTION time_diff(jul1,secs1,jul2,secs2)
 !
 ! !DESCRIPTION:
 !
@@ -521,9 +527,9 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   TimeDiff = 86400*(jul1-jul2) + (secs1-secs2)
+   time_diff = 86400*(jul1-jul2) + (secs1-secs2)
    return
-   end function  TimeDiff
+   end function  time_diff
 !EOC
 
 !-----------------------------------------------------------------------

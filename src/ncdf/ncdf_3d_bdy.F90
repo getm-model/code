@@ -1,4 +1,4 @@
-!$Id: ncdf_3d_bdy.F90,v 1.8 2003-12-16 16:50:41 kbk Exp $
+!$Id: ncdf_3d_bdy.F90,v 1.9 2004-04-06 16:32:29 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,7 +18,7 @@
    use m2d, only: dtm
    use variables_3d, only: hn
    use bdy_3d, only: T_bdy,S_bdy
-   use time, only: string_to_julsecs,TimeDiff,julianday,secondsofday
+   use time, only: string_to_julsecs,time_diff,julianday,secondsofday
    IMPLICIT NONE
 !
    private
@@ -43,7 +43,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
-!  Revision 1.8  2003-12-16 16:50:41  kbk
+!  Revision 1.9  2004-04-06 16:32:29  kbk
+!  TimeDiff --> time_diff
+!
+!  Revision 1.8  2003/12/16 16:50:41  kbk
 !  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
 !
 !  Revision 1.7  2003/10/07 15:10:42  kbk
@@ -324,7 +327,7 @@
       if (err .NE. NF_NOERR) go to 10
    
       call string_to_julsecs(units,j1,s1)
-      offset = TimeDiff(julianday,secondsofday,j1,s1)
+      offset = time_diff(julianday,secondsofday,j1,s1)
       if( offset .lt. _ZERO_ ) then
          FATAL 'Model simulation starts before available boundary data'
          stop 'init_3d_bdy_ncdf'
@@ -382,7 +385,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
-!  Revision 1.8  2003-12-16 16:50:41  kbk
+!  Revision 1.9  2004-04-06 16:32:29  kbk
+!  TimeDiff --> time_diff
+!
+!  Revision 1.8  2003/12/16 16:50:41  kbk
 !  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
 !
 !  Revision 1.7  2003/10/07 15:10:42  kbk

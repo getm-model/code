@@ -1,4 +1,4 @@
-!$Id: ncdf_2d_bdy.F90,v 1.3 2003-04-23 11:54:03 kbk Exp $
+!$Id: ncdf_2d_bdy.F90,v 1.4 2004-04-06 16:32:29 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,7 @@
 !
 ! !USES:
    use m2d, only: dtm,bdy_times,bdy_old,bdy_new,bdy_data
-   use time, only: string_to_julsecs,TimeDiff,julianday,secondsofday
+   use time, only: string_to_julsecs,time_diff,julianday,secondsofday
    IMPLICIT NONE
 !
    private
@@ -29,7 +29,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d_bdy.F90,v $
-!  Revision 1.3  2003-04-23 11:54:03  kbk
+!  Revision 1.4  2004-04-06 16:32:29  kbk
+!  TimeDiff --> time_diff
+!
+!  Revision 1.3  2003/04/23 11:54:03  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 12:49:47  kbk
@@ -150,7 +153,7 @@
    if (err .NE. NF_NOERR) go to 10
 
    call string_to_julsecs(units,j1,s1)
-   offset = TimeDiff(julianday,secondsofday,j1,s1)
+   offset = time_diff(julianday,secondsofday,j1,s1)
    if( offset .lt. _ZERO_ ) then
       FATAL 'Model simulation starts before available boundary data'
       stop 'init_2d_bdy_ncdf'
@@ -196,7 +199,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d_bdy.F90,v $
-!  Revision 1.3  2003-04-23 11:54:03  kbk
+!  Revision 1.4  2004-04-06 16:32:29  kbk
+!  TimeDiff --> time_diff
+!
+!  Revision 1.3  2003/04/23 11:54:03  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 12:49:47  kbk

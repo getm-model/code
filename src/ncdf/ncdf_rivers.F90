@@ -1,4 +1,4 @@
-!$Id: ncdf_rivers.F90,v 1.3 2003-10-14 10:05:54 kbk Exp $
+!$Id: ncdf_rivers.F90,v 1.4 2004-04-06 16:32:29 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use time, only: string_to_julsecs,TimeDiff,add_secs,in_interval
+   use time, only: string_to_julsecs,time_diff,add_secs,in_interval
    use time, only: jul0,secs0,julianday,secondsofday,timestep
    use rivers, only: nriver,river_data,river_name,river_flow,river_factor,ok
    IMPLICIT NONE
@@ -33,7 +33,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_rivers.F90,v $
-!  Revision 1.3  2003-10-14 10:05:54  kbk
+!  Revision 1.4  2004-04-06 16:32:29  kbk
+!  TimeDiff --> time_diff
+!
+!  Revision 1.3  2003/10/14 10:05:54  kbk
 !  checks if indices are in subdomain + cleaning
 !
 !  Revision 1.2  2003/04/23 11:54:03  kbk
@@ -120,15 +123,14 @@
    err = nf_get_var_real(ncid,time_id,river_times)
    if (err .ne. NF_NOERR) go to 10
 
-   offset = TimeDiff(jul0,secs0,j1,s1)
+   offset = time_diff(jul0,secs0,j1,s1)
    if( offset .lt. _ZERO_ ) then    !HB Karsten check, I changed gt to lt
       FATAL 'Model simulation starts before available river data'
       stop 'init_river_input_ncdf'
    endif
 
    call add_secs(j1,s1,nint(river_times(textr)),j2,s2)
-!kbkSTDERR TimeDiff(j1,s1,j2,s2)
-!   if( TimeDiff(j1,s1,j2,s2) .lt. _ZERO_ ) then
+!   if( time_diff(j1,s1,j2,s2) .lt. _ZERO_ ) then
 !      FATAL 'Not sufficient river data available'
 !      stop 'init_river_input_ncdf'
 !   endif

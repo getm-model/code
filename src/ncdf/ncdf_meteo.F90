@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.10 2004-01-15 11:45:01 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.11 2004-04-06 16:32:29 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use time, only: string_to_julsecs,TimeDiff,add_secs,in_interval
+   use time, only: string_to_julsecs,time_diff,add_secs,in_interval
    use time, only: jul0,secs0,julianday,secondsofday,timestep
    use domain, only: imin,imax,jmin,jmax,az,lonc,latc,conv
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
@@ -76,7 +76,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.10  2004-01-15 11:45:01  kbk
+!  Revision 1.11  2004-04-06 16:32:29  kbk
+!  TimeDiff --> time_diff
+!
+!  Revision 1.10  2004/01/15 11:45:01  kbk
 !  meteo point source forcing - taus, swr and shf - implemented
 !
 !  Revision 1.9  2003/12/16 16:50:41  kbk
@@ -603,7 +606,7 @@
    end if
 
    if (found) then
-      offset = TimeDiff(jul0,secs0,j1,s1)
+      offset = time_diff(jul0,secs0,j1,s1)
       LEVEL3 'Using meteo from:'
       LEVEL4 trim(fn)
       LEVEL3 'Meteorological offset time ',offset
