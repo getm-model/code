@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.5 2004-04-06 12:42:50 kbk Exp $
+!$Id: internal_pressure.F90,v 1.6 2004-04-21 09:21:25 lars Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,7 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_internal_pressure, do_internal_pressure
-   integer, public           :: ip_method=3
+   integer, public           :: ip_method=1
 #ifdef STATIC
    REALTYPE                  :: zz(I3DFIELD)
 #ifdef SUBSTR_INI_PRESS
@@ -51,7 +51,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: internal_pressure.F90,v $
-!  Revision 1.5  2004-04-06 12:42:50  kbk
+!  Revision 1.6  2004-04-21 09:21:25  lars
+!  changed to default ip_method=1
+!
+!  Revision 1.5  2004/04/06 12:42:50  kbk
 !  internal pressure calculations now uses wrapper
 !
 !  Revision 1.3  2003/04/23 12:16:34  kbk
