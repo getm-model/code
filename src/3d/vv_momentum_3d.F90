@@ -1,4 +1,4 @@
-!$Id: vv_momentum_3d.F90,v 1.4 2003-06-29 17:06:23 kbk Exp $
+!$Id: vv_momentum_3d.F90,v 1.5 2004-04-20 16:49:37 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -23,6 +23,7 @@
    use bdy_3d, only: do_bdy_3d
    use variables_3d, only: dt,cnpar,kvmin,uu,vv,huo,hvo,hvn,vvEx,ww,hun
    use variables_3d, only: num,nuh,sseo,ssvn,rrv
+   use variables_3d, only: ssvo
 #ifndef NO_BAROCLINIC
    use variables_3d, only: idpdy
 #endif
@@ -44,7 +45,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: vv_momentum_3d.F90,v $
-!  Revision 1.4  2003-06-29 17:06:23  kbk
+!  Revision 1.5  2004-04-20 16:49:37  hb
+!  call to coordinates moved for better consistency (see JMB)
+!
+!  Revision 1.4  2003/06/29 17:06:23  kbk
 !  Corv --> corv
 !
 !  Revision 1.3  2003/04/23 12:16:34  kbk
@@ -217,7 +221,8 @@
                   ResInt=ResInt+Res(k)
                end do
 
-               Diff=(Vint(i,j)-ResInt)/(ssvn(i,j)+HV(i,j))
+               Diff=(Vint(i,j)-ResInt)/(ssvo(i,j)+HV(i,j))
+
 
                do k=kvmin(i,j),kmax
                   vv(i,j,k)=Res(k)+hvn(i,j,k)*Diff

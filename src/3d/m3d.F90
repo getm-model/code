@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.14 2004-04-06 12:42:50 kbk Exp $
+!$Id: m3d.F90,v 1.15 2004-04-20 16:49:37 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -52,7 +52,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.14  2004-04-06 12:42:50  kbk
+!  Revision 1.15  2004-04-20 16:49:37  hb
+!  call to coordinates moved for better consistency (see JMB)
+!
+!  Revision 1.14  2004/04/06 12:42:50  kbk
 !  internal pressure calculations now uses wrapper
 !
 !  Revision 1.13  2004/01/08 10:23:20  kbk
@@ -384,8 +387,6 @@
 #ifndef NO_BAROCLINIC
    if (bdy3d) call do_bdy_3d(0,T)
 #endif
-
-   call coordinates(vert_cord,cord_relax,maxdepth)
 #ifndef NO_BOTTFRIC
    if (kmax .gt. 1) then
       call bottom_friction_3d()
@@ -396,6 +397,8 @@
    NN = _ZERO_
    if (runtype .eq. 4) call do_internal_pressure()
 #endif
+   huo=hun
+   hvo=hvn
    if (ufirst) then
       call uu_momentum_3d(bdy3d)
       call vv_momentum_3d(bdy3d)
@@ -405,6 +408,7 @@
       call uu_momentum_3d(bdy3d)
       ufirst=.true.
    end if
+   call coordinates(vert_cord,cord_relax,maxdepth)
    if (kmax .gt. 1) then
       call ww_momentum_3d()
    end if
