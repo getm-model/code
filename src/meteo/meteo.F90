@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.8 2003-07-01 16:38:34 kbk Exp $
+!$Id: meteo.F90,v 1.9 2003-10-01 12:09:13 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -82,7 +82,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
-!  Revision 1.8  2003-07-01 16:38:34  kbk
+!  Revision 1.9  2003-10-01 12:09:13  kbk
+!  airp in HALO-zones - need in momentum eqs.
+!
+!  Revision 1.8  2003/07/01 16:38:34  kbk
 !  cleaned code - new methods
 !
 !  Revision 1.7  2003/06/17 14:53:28  kbk
@@ -410,6 +413,9 @@
             if(calc_met) then
                have_sst = present(sst)
                if (new_meteo) then
+                  call update_2d_halo(airp,airp,az, &
+                                      imin,jmin,imax,jmax,H_TAG)
+                  call wait_halo(H_TAG)
                   if (.not. first) then
                      tausx_old = tausx
                      tausy_old = tausy
