@@ -1,4 +1,4 @@
-!$Id: vv_momentum_3d.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
+!$Id: vv_momentum_3d.F90,v 1.4 2003-06-29 17:06:23 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,7 +13,7 @@
 ! !USES:
    use parameters, only: g,avmmol,rho_0
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,H,HV,min_depth
-   use domain, only: dry_v,Corv,au,av,az,ax
+   use domain, only: dry_v,corv,au,av,az,ax
 #if defined CURVILINEAR || defined SPHERICAL
    use domain, only: dyv,arvd1,dxc,dyx,dyc,dxx
 #else
@@ -44,7 +44,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: vv_momentum_3d.F90,v $
-!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  Revision 1.4  2003-06-29 17:06:23  kbk
+!  Corv --> corv
+!
+!  Revision 1.3  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 13:36:38  kbk
@@ -144,9 +147,9 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   cord_curv=(vv(i,j,k)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC))     &
                         /hvo(i,j,k)*ARVD1
-                  ex(k)=(cord_curv-Corv(i,j))*Uloc
+                  ex(k)=(cord_curv-corv(i,j))*Uloc
 #else
-                  ex(k)=-Corv(i,j)*Uloc
+                  ex(k)=-corv(i,j)*Uloc
 #endif
 #ifdef NO_BAROCLINIC
                   ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k))
