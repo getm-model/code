@@ -1,4 +1,4 @@
-!$Id: ncdf_3d_bdy.F90,v 1.2 2003-03-17 15:42:51 gotm Exp $
+!$Id: ncdf_3d_bdy.F90,v 1.3 2003-04-07 16:19:52 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,7 +29,7 @@
    integer 	:: ncid
    integer	:: time_id,temp_id,salt_id
    integer	:: start(4),edges(4)
-   integer	:: z_dim,time_dim,time_len,bdy_len
+   integer	:: time_dim,time_len,bdy_len
    logical	:: climatology=.false.,from_3d_fields=.false.
    REALTYPE	:: offset
    REAL_4B, allocatable	:: bdy_times(:),wrk(:)
@@ -41,8 +41,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
-!  Revision 1.2  2003-03-17 15:42:51  gotm
-!  Support for special 3D boundary data file
+!  Revision 1.3  2003-04-07 16:19:52  kbk
+!  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:49  gotm
 !  recovering after CVS crash
@@ -134,8 +134,18 @@
 !     4 -> time
       LEVEL4 'boundary data from 3D fields'
       from_3d_fields=.true.
-      z_dim = 3
       time_dim = 4
+
+      allocate(zlev(dim_len(3)),stat=rc)
+      if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (zlev)'
+      err = nf_inq_varid(ncid, dim_name(3), id)
+      if (err .ne. NF_NOERR) go to 10
+      err = nf_get_var_real(ncid,id,zlev)
+      if (err .ne. NF_NOERR) go to 10
+      zlev = -_ONE_*zlev
+
+      allocate(wrk(dim_len(3)),stat=rc)
+      if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (wrk)'
 
       allocate(tdum(imin:imax,jmin:jmax,dim_len(3)),stat=rc)
       if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (tdum)'
@@ -148,22 +158,9 @@
 !     1 -> zax,levels
 !     2 -> bdy_points
 !     3 -> time
-      z_dim = 1
-      time_dim = 3
       bdy_len = dim_len(2)
-
+      time_dim = 3
    end if
-
-   STDERR 'z_dim ',z_dim,' dim_len(z_dim) ',dim_len(z_dim)
-
-   allocate(zlev(dim_len(z_dim)),stat=rc)
-   if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (zlev)'
-   err = nf_inq_varid(ncid, dim_name(z_dim), id)
-   if (err .ne. NF_NOERR) go to 10
-   err = nf_get_var_real(ncid,id,zlev)
-   if (err .ne. NF_NOERR) go to 10
-   zlev = -_ONE_*zlev
-
    time_len = dim_len(time_dim)
    if( time_len .le. 12) then
       climatology=.true.
@@ -176,12 +173,6 @@
 
    err = nf_inq_varid(ncid,'salt',salt_id)
    if (err .NE. NF_NOERR) go to 10
-
-   allocate(S_new(nsbv,0:kmax),stat=err)
-   if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_new)'
-
-   allocate(T_new(nsbv,0:kmax),stat=err)
-   if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_new)'
    
    if (climatology) then
       allocate(T_bdy_clim(time_len,nsbv,0:kmax),stat=rc)
@@ -189,9 +180,6 @@
 
       allocate(S_bdy_clim(time_len,nsbv,0:kmax),stat=rc)
       if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy_clim)'
-
-      allocate(wrk(dim_len(z_dim)),stat=rc)
-      if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (wrk)'
 
       if (from_3d_fields) then
          start(1) = imin; edges(1) = imax-imin+1;
@@ -250,55 +238,8 @@
          start(1) = 1; edges(1) = kmax+1;
          start(2) = 1; edges(2) = nsbv;
          edges(3) = 1
-         do l=1,time_len
-            start(3) = l
-            err = nf_get_vara_real(ncid,temp_id,start,edges,T_new)
-            if (err .ne. NF_NOERR) go to 10
-            err = nf_get_vara_real(ncid,salt_id,start,edges,S_new)
-            if (err .ne. NF_NOERR) go to 10
-            k = 0
-            do n=1,NWB
-               i = wi(n)
-               do j=wfj(1),wlj(1)
-                  k = k+1
-                  wrk(:) = S_new(k,:)
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:),S_bdy_clim(l,k,:))
-                  wrk(:) = T_new(k,:)
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:),T_bdy_clim(l,k,:))
-               end do
-            end do
-            do n = 1,NNB
-               j = nj(n)
-               do i = nfi(n),nli(n)
-                  k = k+1
-                  wrk(:) = S_new(k,:)
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:),S_bdy_clim(l,k,:))
-                  wrk(:) = T_new(k,:)
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:),T_bdy_clim(l,k,:))
-               end do
-            end do
-            do n=1,NEB
-               i = ei(n)
-               do j=efj(1),elj(1)
-                  k = k+1
-                  wrk(:) = S_new(k,:)
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:),S_bdy_clim(l,k,:))
-                  wrk(:) = T_new(k,:)
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:),T_bdy_clim(l,k,:))
-               end do
-            end do
-            do n = 1,NSB
-               j = sj(n)
-               do i = sfi(n),sli(n)
-                  k = k+1
-                  wrk(:) = S_new(k,:)
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:),S_bdy_clim(l,k,:))
-                  wrk(:) = T_new(k,:)
-                  call interpol(zlev,wrk,H(i,j),kmax,hn(i,j,:),T_bdy_clim(l,k,:))
-               end do
-            end do
-         end do
-	 STDERR 'ncdf_init_3d_bdy() - testing special boundary file format'
+	 STDERR 'ncdf_init_3d_bdy - not finished yet'
+	 stop
       end if
       err = nf_close(ncid)
    else
@@ -323,11 +264,15 @@
          LEVEL3 'Boundary offset time ',offset
       end if
 
-      allocate(S_old(nsbv,0:kmax),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_old)'
-
       allocate(T_old(nsbv,0:kmax),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_old)'
+      allocate(T_new(nsbv,0:kmax),stat=err)
+      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_new)'
+
+      allocate(S_old(nsbv,0:kmax),stat=err)
+      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_old)'
+      allocate(S_new(nsbv,0:kmax),stat=err)
+      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_new)'
 
       allocate(wrk(nsbv*(kmax+1)),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (wrk)'
@@ -369,8 +314,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
-!  Revision 1.2  2003-03-17 15:42:51  gotm
-!  Support for special 3D boundary data file
+!  Revision 1.3  2003-04-07 16:19:52  kbk
+!  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:49  gotm
 !  recovering after CVS crash
@@ -411,7 +356,7 @@
          if (prev .eq. 0) prev=time_len
       else
          STDERR 'do_3d_bdy_ncdf: climatology time_len .ne. 12'
-         stop
+	 stop
       end if
       S_bdy=(1.-rat)*0.5*(S_bdy_clim(prev,:,:)+S_bdy_clim(this,:,:))  &
          +     rat*0.5*(S_bdy_clim(next,:,:)+S_bdy_clim(this,:,:))
