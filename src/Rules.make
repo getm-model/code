@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.5 2003-04-08 12:57:23 kbk Exp $
+#$Id: Rules.make,v 1.6 2003-04-08 13:02:54 frv-bjb Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -144,18 +144,22 @@ endif
 ifdef MPIMOD
 INCDIRS		+= -I$(MPIMOD)
 endif
+ifdef MPILIBFILE
+MPILIB		= $(MPILIBFILE)
+else
 ifdef MPILIBNAME
 MPILIB		= $(MPILIBNAME)
 else
 MPILIB		= -lmpich
+endif
 ifdef MPILIBDIR
+LDFLAGS		+= -L$(MPILIBDIR)
 LINKDIRS	+= -L$(MPILIBDIR)
 endif
 endif
 EXTRA_LIBS	+= $(MPILIB)
 endif
 
-LINKDIRS +=  -L/opt/lam/lib
 
 DOCDIR		= $(GETMDIR)/doc
 
