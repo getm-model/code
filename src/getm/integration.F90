@@ -1,4 +1,4 @@
-!$Id: integration.F90,v 1.2 2003-04-07 16:39:16 kbk Exp $
+!$Id: integration.F90,v 1.3 2003-04-23 12:03:46 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -14,13 +14,16 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
-   integer	:: MinN=1,MaxN=-1
+   integer                             :: MinN=1,MaxN=-1
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: integration.F90,v $
-!  Revision 1.2  2003-04-07 16:39:16  kbk
+!  Revision 1.3  2003-04-23 12:03:46  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 16:39:16  kbk
 !  parallel support, NO_3D
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:25  gotm
@@ -95,7 +98,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)		:: runtype
+   integer, intent(in)                 :: runtype
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -105,8 +108,8 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES
-   logical	:: do_3d
-   integer	:: n
+   logical                   :: do_3d
+   integer                   :: n
 !EOP
 !-----------------------------------------------------------------------
 !BOC

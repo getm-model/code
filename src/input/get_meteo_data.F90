@@ -1,4 +1,4 @@
-!$Id: get_meteo_data.F90,v 1.1 2002-05-02 14:01:33 gotm Exp $
+!$Id: get_meteo_data.F90,v 1.2 2003-04-23 12:04:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -16,7 +16,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: n
+   integer, intent(in)                 :: n
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -26,15 +26,17 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: get_meteo_data.F90,v $
-!  Revision 1.1  2002-05-02 14:01:33  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-23 12:04:08  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:33  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.2  2001/07/26 13:57:14  bbh
 !  Meteo working - needs some polishing
 !
 !  Revision 1.1  2001/05/25 19:12:51  bbh
 !  ncdf/ncdf_meteo.F90
-!
 !
 ! !LOCAL VARIABLES:
 !

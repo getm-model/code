@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.3 2003-04-07 16:39:16 kbk Exp $
+!$Id: main.F90,v 1.4 2003-04-23 12:03:46 kbk Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -26,11 +26,11 @@
 !
 ! !USES:
    use initialise, only: init_model,runtype,dryrun
-   use time,	 only: simtime
-   use domain,	 only: calc_points
-   use m2d,	 only: mem2d
+   use time, only: simtime
+   use domain, only: calc_points
+   use m2d, only: mem2d
 #ifndef NO_3D
-   use m3d,	 only: mem3d
+   use m3d, only: mem3d
 #endif
    use integration
    IMPLICIT NONE
@@ -39,7 +39,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: main.F90,v $
-!  Revision 1.3  2003-04-07 16:39:16  kbk
+!  Revision 1.4  2003-04-23 12:03:46  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.3  2003/04/07 16:39:16  kbk
 !  parallel support, NO_3D
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:25  gotm
@@ -57,12 +60,11 @@
 !  Revision 1.1.1.1  2001/04/17 08:43:09  bbh
 !  initial import into CVS
 !
-!
 ! ! LOCAL VARIABLES
-   character(len=8)	:: datestr
-   character(len=10)	:: timestr
-   real 		:: t1=-1,t2=-1,secs
-   integer 		:: ierr
+   character(len=8)          :: datestr
+   character(len=10)         :: timestr
+   real                      :: t1=-1,t2=-1,secs
+   integer                   :: ierr
 !
 !EOP
 !-----------------------------------------------------------------------

@@ -1,10 +1,10 @@
-!$Id: halo_mpi.F90,v 1.1 2003-04-07 12:05:42 kbk Exp $
+!$Id: halo_mpi.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
 #endif
 
-#define STATIC
+!kbk#define STATIC
 
 !-----------------------------------------------------------------------
 !BOP
@@ -25,78 +25,81 @@ include "mpif.h"
    private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-   public	:: init_mpi,print_MPI_info,barrier
-   public	:: set_active_communicator
-   public	:: update_2d_halo_mpi,update_3d_halo_mpi,wait_halo_mpi
-   public	:: part_domain_mpi
-   integer, public, parameter   :: H_TAG=10,HU_TAG=11,HV_TAG=12
-   integer, public, parameter   :: D_TAG=20,DU_TAG=21,DV_TAG=22
-   integer, public, parameter   :: z_TAG=30,U_TAG=31,V_TAG=32
+   public                              :: init_mpi,print_MPI_info,barrier
+   public                              :: set_active_communicator
+   public                              :: update_2d_halo_mpi
+   public                              :: update_3d_halo_mpi
+   public                              :: wait_halo_mpi
+   public:: part_domain_mpi
+   integer, public, parameter          :: H_TAG=10,HU_TAG=11,HV_TAG=12
+   integer, public, parameter          :: D_TAG=20,DU_TAG=21,DV_TAG=22
+   integer, public, parameter          :: z_TAG=30,U_TAG=31,V_TAG=32
 
-   private	:: MPI_data_types
+   private                             :: MPI_data_types
 
 ! !PUBLIC DATA MEMBERS:
-   integer, public	:: myid=-1, nprocs=1
-   integer, public	:: comm_hd=MPI_COMM_WORLD
-!   integer, public	:: comm_wave=MPI_COMM_WORLD
-!   integer, public	:: comm_biology=MPI_COMM_WORLD
+   integer, public                     :: myid=-1, nprocs=1
+   integer, public                     :: comm_hd=MPI_COMM_WORLD
+!   integer, public                    :: comm_wave=MPI_COMM_WORLD
+!   integer, public                    :: comm_biology=MPI_COMM_WORLD
 !
 !  !DEFINED PARAMETERS:
-   integer, parameter		:: nneighbours=8
+   integer, parameter                  :: nneighbours=8
 !  Different mesh specification methods
-   integer, parameter		:: ONE_CELL=-1
-   integer, parameter		:: ONED_MESH=0
-   integer, parameter		:: TWOD_MESH=1
-   integer, parameter		:: MESH_FROM_FILE=2
+   integer, parameter                  :: ONE_CELL=-1
+   integer, parameter                  :: ONED_MESH=0
+   integer, parameter                  :: TWOD_MESH=1
+   integer, parameter                  :: MESH_FROM_FILE=2
 !  Methods of communication
-   integer, parameter		:: ONE_PROCESS=-1
-   integer, parameter		:: ONED_SENDRECV=0
-   integer, parameter		:: ONED_NONBLOCKING=1
-   integer, parameter		:: TWOD_SENDRECV=2
-   integer, parameter		:: TWOD_NONBLOCKING=3
+   integer, parameter                  :: ONE_PROCESS=-1
+   integer, parameter                  :: ONED_SENDRECV=0
+   integer, parameter                  :: ONED_NONBLOCKING=1
+   integer, parameter                  :: TWOD_SENDRECV=2
+   integer, parameter                  :: TWOD_NONBLOCKING=3
 !  Direction in case of ONED_? communications
-   integer, parameter		:: RIGHT_LEFT=1
-   integer, parameter		:: DOWN_UP=2
+   integer, parameter                  :: RIGHT_LEFT=1
+   integer, parameter                  :: DOWN_UP=2
 !  Last action
-!   integer, parameter		:: SEND_1D=1
-!   integer, parameter		:: SEND_2D=2
-   integer, parameter		:: SENDING=1
-   integer, parameter		:: WAITING=2
+   integer, parameter                  :: SENDING=1
+   integer, parameter                  :: WAITING=2
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_mpi.F90,v $
-!  Revision 1.1  2003-04-07 12:05:42  kbk
+!  Revision 1.2  2003-04-23 12:02:43  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.1  2003/04/07 12:05:42  kbk
 !  new parallel related files
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:30  gotm
 !  recovering after CVS crash
 !
 ! !LOCAL VARIABLES:
-   character(LEN = 256), private	:: pname
-   integer		:: active_comm=MPI_COMM_WORLD
-   integer		:: mesh_method=ONE_CELL
-   logical		:: re_order=.false.
-   integer		:: comm_method=ONE_PROCESS
-   integer		:: len
-   integer		:: ierr
-   integer		:: x_line,x_lines,y_line,y_lines
-   integer		:: i1_slice
-   integer		:: xz_slice,xz_slices
-   integer		:: yz_slice,yz_slices
-   integer		:: z_column
-   integer		:: x_size,y_size,z_size
-   integer		:: xy_size,xz_size,yz_size,xyz_size
-   integer		:: com_direction
-   integer 		:: req(2*nneighbours)
-   integer		:: status_array(MPI_STATUS_SIZE,2*nneighbours)
-   integer		:: dims(2),coords(2)
-   logical		:: periods(2)
-   integer		:: up,down,left,right
-   integer		:: ur,ul,ll,lr
-   integer		:: status(MPI_STATUS_SIZE)
-   integer		:: last_action=WAITING
+   character(LEN = 256), private:: pname
+   integer                   :: active_comm=MPI_COMM_WORLD
+   integer                   :: mesh_method=ONE_CELL
+   logical                   :: re_order=.false.
+   integer                   :: comm_method=ONE_PROCESS
+   integer                   :: len
+   integer                   :: ierr
+   integer                   :: x_line,x_lines,y_line,y_lines
+   integer                   :: i1_slice
+   integer                   :: xz_slice,xz_slices
+   integer                   :: yz_slice,yz_slices
+   integer                   :: z_column
+   integer                   :: x_size,y_size,z_size
+   integer                   :: xy_size,xz_size,yz_size,xyz_size
+   integer                   :: com_direction
+   integer                   :: req(2*nneighbours)
+   integer                   :: status_array(MPI_STATUS_SIZE,2*nneighbours)
+   integer                   :: dims(2),coords(2)
+   logical                   :: periods(2)
+   integer                   :: up,down,left,right
+   integer                   :: ur,ul,ll,lr
+   integer                   :: status(MPI_STATUS_SIZE)
+   integer                   :: last_action=WAITING
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -116,7 +119,7 @@ include "mpif.h"
 !  Initialize MPI parallel environment, i.e. getting process id etc.
 !
 ! !INPUT PARAMTERS:
-   character(len=*)	:: input_dir
+   character(len=*)                    :: input_dir
 !
 ! !INPUT/OUTPUT PARAMTERS:
 !
@@ -126,9 +129,10 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer	:: MeshMethod,MsgMethod
-   logical	:: reorder
-   namelist /nampar/ MeshMethod,reorder,MsgMethod
+   integer                   :: MeshMethod,MsgMethod
+   logical                   :: reorder
+   namelist /nampar/ &
+             MeshMethod,reorder,MsgMethod
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -257,8 +261,8 @@ STDERR 'we are waiting'
 !  Sets global variables for calculation mesh and communication method.
 !
 ! !INPUT PARAMTERS:
-   integer, intent(IN)	:: method
-   logical, intent(IN)	:: reorder
+   integer, intent(in)                 :: method
+   logical, intent(in)                 :: reorder
 !
 ! !INPUT/OUTPUT PARAMTERS:
 !
@@ -290,7 +294,7 @@ STDERR 'we are waiting'
 !  active\_comm to comm.
 !
 ! !INPUT PARAMTERS:
-   integer, intent(IN)		:: comm
+   integer, intent(in)                 :: comm
 !
 ! !INPUT/OUTPUT PARAMTERS:
 !
@@ -321,7 +325,7 @@ STDERR 'we are waiting'
 !  comm\_method to method.
 !
 ! !INPUT PARAMTERS:
-    integer, intent(IN)		:: method
+    integer, intent(in)                :: method
 !
 ! !INPUT/OUTPUT PARAMTERS:
 !
@@ -354,25 +358,25 @@ STDERR 'we are waiting'
 !  Partition the calculation domain.
 !
 ! !INPUT PARAMTERS:
-   integer, intent(in)		:: iextr,jextr,kmax
+   integer, intent(in)                 :: iextr,jextr,kmax
 #ifdef STATIC
-   integer, intent(in)		:: imin,imax,jmin,jmax
+   integer, intent(in)                 :: imin,imax,jmin,jmax
 #endif
 !
 ! !INPUT/OUTPUT PARAMTERS:
 !
 ! !OUTPUT PARAMTERS:
 #ifndef STATIC
-   integer, intent(out)		:: imin,imax,jmin,jmax
+   integer, intent(out)                :: imin,imax,jmin,jmax
 #endif
-   integer, intent(out)		:: ioff,joff
+   integer, intent(out)                :: ioff,joff
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,zz(2),neighbours(nneighbours)
-   character(len=*),parameter :: par_setup="par_setup.dat"
+   integer                   :: i,j,zz(2),neighbours(nneighbours)
+   character(len=*),parameter:: par_setup="par_setup.dat"
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -380,8 +384,14 @@ STDERR 'we are waiting'
    periods(2) = .false.
 
    if(nprocs .eq. 1) then
+
 #ifndef STATIC
       imin=1 ; imax=iextr ; jmin=1 ; jmax=jextr
+#endif
+#if 0
+   STDERR 'AAAAkbk'
+   STDERR imin,imax,jmin,jmax
+   stop
 #endif
       ioff=0 ; joff=0
       return
@@ -401,15 +411,14 @@ STDERR 'we are waiting'
          else
             dims(1) = nprocs
             dims(2) = 1
-	    com_direction = DOWN_UP
+            com_direction = DOWN_UP
          end if
       case(TWOD_MESH)
 #ifdef STATIC
          dims(1) = jextr/(jmax-jmin+1)
-	 if(mod(jextr,(jmax-jmin+1)) .ne. 0) dims(1) = dims(1)+1
+         if(mod(jextr,(jmax-jmin+1)) .ne. 0) dims(1) = dims(1)+1
          dims(2) = iextr/(imax-imin+1)
-	 if(mod(iextr,(imax-imin+1)) .ne. 0) dims(2) = dims(2)+1
-!	 STDERR 'static dims ',dims
+         if(mod(iextr,(imax-imin+1)) .ne. 0) dims(2) = dims(2)+1
 #else
          dims(1) = nprocs
          dims(2) = 1
@@ -529,18 +538,18 @@ STDERR 'we are waiting'
 !  Decompoes an array over m processes
 !
 ! !INPUT PARAMTERS:
-  integer, intent(in)	:: n,np,m
+  integer, intent(in)                  :: n,np,m
 !
 ! !INPUT/OUTPUT PARAMTERS:
 !
 ! !OUTPUT PARAMTERS:
-  integer, intent(out)	:: s,e
+  integer, intent(out)                 :: s,e
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer		:: nlocal,deficit
+   integer                   :: nlocal,deficit
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -572,7 +581,7 @@ STDERR 'we are waiting'
 !  MPI\_TYPE\_CREATE\_SUBARRAY instead.
 !
 ! !INPUT PARAMTERS:
-   integer, intent(in)	:: imin,imax,jmin,jmax,kmax
+   integer, intent(in)                 :: imin,imax,jmin,jmax,kmax
 !
 ! !INPUT/OUTPUT PARAMTERS:
 !
@@ -582,8 +591,8 @@ STDERR 'we are waiting'
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer		:: m,n,o,sizeof_realtype
-   integer		:: real_extent
+   integer                   :: m,n,o,sizeof_realtype
+   integer                   :: real_extent
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -674,11 +683,11 @@ STDERR 'we are waiting'
 !  Print information on the MPI environment
 !
 ! !INPUT PARAMTERS:
-   integer, intent(in)	:: imin,jmin,imax,jmax
-   integer, intent(in)	:: tag
+   integer, intent(in)                 :: imin,jmin,imax,jmax
+   integer, intent(in)                 :: tag
 !
 ! !INPUT/OUTPUT PARAMTERS:
-   REALTYPE, intent(inout), DIMENSION(E2DFIELD)	:: f1,f2
+   REALTYPE, intent(inout), dimension(E2DFIELD):: f1,f2
 !
 ! !OUTPUT PARAMTERS:
 !
@@ -686,7 +695,7 @@ STDERR 'we are waiting'
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer      :: il,jl,ih,jh
+   integer                   :: il,jl,ih,jh
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -865,11 +874,11 @@ STDERR 'TWOD_SENDRECV'
 !  Updates the halo zones for 3D fields.
 !
 ! !INPUT PARAMTERS:
-   integer, intent(in)		:: iimin,jjmin,iimax,jjmax,kmax
-   integer, intent(in)		:: tag
+   integer, intent(in)                 :: iimin,jjmin,iimax,jjmax,kmax
+   integer, intent(in)                 :: tag
 !
 ! !INPUT/OUTPUT PARAMTERS:
-   REALTYPE, intent(inout), DIMENSION(I3DFIELD)	:: f1,f2
+   REALTYPE, intent(inout), DIMENSION(I3DFIELD) :: f1,f2
 !
 ! !OUTPUT PARAMTERS:
 !
@@ -877,7 +886,7 @@ STDERR 'TWOD_SENDRECV'
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer      :: il,jl,ih,jh
+   integer                   :: il,jl,ih,jh
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -1055,7 +1064,7 @@ STDERR 'TWOD_NONBLOCKING'
 !  communications are used this call has no effect.
 !
 ! !INPUT PARAMTERS:
-   integer, intent(in)		:: tag
+   integer, intent(in)                 :: tag
 !
 ! !INPUT/OUTPUT PARAMTERS:
 !

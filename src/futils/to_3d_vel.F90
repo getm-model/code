@@ -1,4 +1,4 @@
-!$Id: to_3d_vel.F90,v 1.1 2002-05-02 14:01:20 gotm Exp $
+!$Id: to_3d_vel.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -14,22 +14,25 @@
 ! !USES:
 !
 ! !INPUT PARAMETERS:
-  integer, intent(in)	:: maxindx
-  integer, intent(in)	:: iimin,jjmin,kmin,iimax,jjmax,kmax
-  REALTYPE, intent(in)	:: trans(I3DFIELD)
-  REALTYPE, intent(in)	:: h(I3DFIELD)
+  integer, intent(in)                  :: maxindx
+  integer, intent(in)                  :: iimin,jjmin,kmin,iimax,jjmax,kmax
+  REALTYPE, intent(in)                 :: trans(I3DFIELD)
+  REALTYPE, intent(in)                 :: h(I3DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REAL_4B, intent(out)	:: vel(*)
+   REAL_4B, intent(out)                :: vel(*)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: to_3d_vel.F90,v $
-!  Revision 1.1  2002-05-02 14:01:20  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-23 12:02:43  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:20  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.2  2001/04/21 09:41:33  bbh
 !  Partial fixed problem with workspace (ws) variables in ncdf_save_?d.F90 and various conversion programs
@@ -39,8 +42,8 @@
 !
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k
-   integer	:: indx
+   integer                   :: i,j,k
+   integer                   :: indx
 !EOP
 !-----------------------------------------------------------------------
 !BOC

@@ -1,4 +1,4 @@
-!$Id: cleanup.F90,v 1.2 2003-04-07 16:39:16 kbk Exp $
+!$Id: cleanup.F90,v 1.3 2003-04-23 12:03:46 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -14,19 +14,19 @@
 !  Some run-time statistics could also be put here.
 !
 ! !USES:
-   use input, 	only: clean_input
-   use meteo, 	only: clean_meteo
-   use m2d, 	only: clean_2d
+   use input, only: clean_input
+   use meteo, only: clean_meteo
+   use m2d, only: clean_2d
 #ifndef NO_3D
-   use rivers, 	only: clean_rivers
-   use m3d, 	only: clean_3d
+   use rivers, only: clean_rivers
+   use m3d, only: clean_3d
 #endif
-   use output, 	only: clean_output
-   use kurt_parallel, 	only: clean_parallel
+   use output, only: clean_output
+   use kurt_parallel, only: clean_parallel
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   logical, intent(in)	:: dryrun
+   logical, intent(in)                 :: dryrun
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -36,7 +36,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: cleanup.F90,v $
-!  Revision 1.2  2003-04-07 16:39:16  kbk
+!  Revision 1.3  2003-04-23 12:03:46  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 16:39:16  kbk
 !  parallel support, NO_3D
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:25  gotm

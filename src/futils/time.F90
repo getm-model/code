@@ -1,4 +1,4 @@
-!$Id: time.F90,v 1.1 2002-05-02 14:01:19 gotm Exp $
+!$Id: time.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,24 +28,27 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
-   integer		:: julianday,secondsofday,yearday,month,day
-   integer		:: jul0=-1,secs0=-1
-   REALTYPE		:: fsecs,simtime
-   REALTYPE		:: timestep
-   character(len=19)	:: timestr
-   character(len=19)	:: start='2000-01-01 00:00:00',stop
-   integer		:: leapyear=0,days_in_mon(0:1,12)
-   integer, parameter	:: secsprday=86400
+   integer                             :: julianday,secondsofday,yearday,month,day
+   integer                             :: jul0=-1,secs0=-1
+   REALTYPE                            :: fsecs,simtime
+   REALTYPE                            :: timestep
+   character(len=19)                   :: timestr
+   character(len=19)                   :: start='2000-01-01 00:00:00',stop
+   integer                             :: leapyear=0,days_in_mon(0:1,12)
+   integer, parameter                  :: secsprday=86400
 !
 ! !private DATA MEMBERS:
-   logical, private	:: HasRealTime=.true.
+   logical, private          :: HasRealTime=.true.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: time.F90,v $
-!  Revision 1.1  2002-05-02 14:01:19  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-23 12:02:43  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:19  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.8  2001/10/17 08:19:42  bbh
 !  jul0 and jul1 now public
@@ -92,7 +95,7 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   integer, intent(out)	:: MinN,MaxN
+   integer, intent(out)                :: MinN,MaxN
 !
 ! !DESCRIPTION:
 !  Reads the namelist and makes calls to the init functions of the
@@ -102,10 +105,10 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
-   integer		:: timefmt=1
-   integer		:: jul1,secs1,jul2,secs2
-   integer		:: ndays,nsecs
-   integer		:: nfirst,nlast
+   integer                   :: timefmt=1
+   integer                   :: jul1,secs1,jul2,secs2
+   integer                   :: ndays,nsecs
+   integer                   :: nfirst,nlast
    namelist /time/ timestep,timefmt,nlast,start,stop
 !
 !EOP
@@ -213,9 +216,9 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
-   integer, parameter	:: IGREG=2299161
-   integer 		:: ja,jb,jc,jd,je
-   REAL			:: x
+   integer, parameter        :: IGREG=2299161
+   integer                   :: ja,jb,jc,jd,je
+   REAL                      :: x
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -267,8 +270,8 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
-   integer, parameter	:: IGREG=15+31*(10+12*1582)
-   integer 		:: ja,jy,jm
+   integer, parameter        :: IGREG=15+31*(10+12*1582)
+   integer                   :: ja,jy,jm
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -305,7 +308,7 @@
 ! !USES:
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: n
+   integer, intent(in)                 :: n
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -315,8 +318,8 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
-   integer	:: nsecs
-   integer	:: yy,mm,dd,jd
+   integer                   :: nsecs
+   integer                   :: yy,mm,dd,jd
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -357,21 +360,21 @@
 ! !USES:
 !
 ! !INPUT PARAMETERS:
-   character(len=*)	:: str
+   character(len=*)                    :: str
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   integer, intent(out)	:: jul,secs
+   integer, intent(out)                :: jul,secs
 !
 ! !REVISION HISTORY:
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
-   character		:: c1,c2,c3,c4
-   integer		:: yy,mm,dd,hh,min,ss
-   integer		:: i
-   character(len=3)	:: set='/:-'
+   character                 :: c1,c2,c3,c4
+   integer                   :: yy,mm,dd,hh,min,ss
+   integer                   :: i
+   character(len=3)          :: set='/:-'
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -404,19 +407,19 @@
 ! !USES:
 !
 ! !INPUT PARAMETERS:
-   character(len=19)	:: timestr
+   character(len=19)                   :: timestr
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   integer, intent(out)	:: jul,secs
+   integer, intent(out)                :: jul,secs
 !
 ! !REVISION HISTORY:
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
-   character		:: c1,c2,c3,c4
-   integer		:: yy,mm,dd,hh,min,ss
+   character                 :: c1,c2,c3,c4
+   integer                   :: yy,mm,dd,hh,min,ss
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -444,18 +447,18 @@
 ! !USES:
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in), optional	:: jul,secs
+   integer, intent(in), optional       :: jul,secs
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   character(len=19), optional		:: str
+   character(len=19), optional         :: str
 !
 ! !REVISION HISTORY:
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer		:: ss,min,hh,dd,mm,yy
+   integer                   :: ss,min,hh,dd,mm,yy
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -502,7 +505,7 @@
 ! !USES:
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: jul1,secs1,jul2,secs2
+   integer, intent(in)                 :: jul1,secs1,jul2,secs2
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -533,12 +536,12 @@
 ! !USES:
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: j1,s1,secs
+   integer, intent(in)                 :: j1,s1,secs
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   integer, intent(out)	:: j2,s2
+   integer, intent(out)                :: j2,s2
 !
 ! !REVISION HISTORY:
 !  22Nov Author name Initial code
@@ -570,7 +573,7 @@
 ! !USES:
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: j1,s1,j,s,j2,s2
+   integer, intent(in)                 :: j1,s1,j,s,j2,s2
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !

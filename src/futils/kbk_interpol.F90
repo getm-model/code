@@ -1,11 +1,11 @@
-!$Id: kbk_interpol.F90,v 1.1 2002-05-02 14:01:21 gotm Exp $
+!$Id: kbk_interpol.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
 #include"cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 ! !ROUTINE: kbk_interpol - vertical interpolation.
 !
 ! !INTERFACE:
-   subroutine kbk_interpol(nlev,zlev,salt_z,imin,jmin,imax,jmax,mask,H,	&
+   subroutine kbk_interpol(nlev,zlev,salt_z,imin,jmin,imax,jmax,mask,H,&
                            iimin,jjmin,iimax,jjmax,kmax,hn,field)
 !
 ! !DESCRIPTION:
@@ -18,35 +18,36 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in) 	:: nlev
-   integer, intent(in)	:: iimin,iimax,jjmin,jjmax,kmax
-   REALTYPE, intent(in)	:: zlev(nlev),salt_z(iimin:iimax,jjmin:jjmax,nlev)
-   integer, intent(in)	:: imin,imax,jmin,jmax
-   integer, intent(in)	:: mask(E2DFIELD)
-   REALTYPE, intent(in)	:: H(E2DFIELD)
-   REALTYPE, intent(in)	:: hn(I3DFIELD)
+   integer, intent(in)                 :: nlev
+   integer, intent(in)                 :: iimin,iimax,jjmin,jjmax,kmax
+   REALTYPE, intent(in)                :: zlev(nlev)
+   REALTYPE, intent(in)                :: salt_z(iimin:iimax,jjmin:jjmax,nlev)
+   integer, intent(in)                 :: imin,imax,jmin,jmax
+   integer, intent(in)                 :: mask(E2DFIELD)
+   REALTYPE, intent(in)                :: H(E2DFIELD)
+   REALTYPE, intent(in)                :: hn(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out):: field(I3DFIELD)
+   REALTYPE, intent(out)               :: field(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: kbk_interpol.F90,v $
-!  Revision 1.1  2002-05-02 14:01:21  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-23 12:02:43  kbk
+!  cleaned code + TABS to spaces
 !
+!  Revision 1.1.1.1  2002/05/02 14:01:21  gotm
+!  recovering after CVS crash
 !
 ! !LOCAL VARIABLES:
-   integer 	:: i,j,k,nn,kl
-   REALTYPE 	:: rat
-   REALTYPE	:: zmodel(kmax),prof(nlev)
+   integer                   :: i,j,k,nn,kl
+   REALTYPE                  :: rat
+   REALTYPE                  :: zmodel(kmax),prof(nlev)
 !
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-!STDERR salt_z(75,72,:)
-!stop
    do j=jjmin,jjmax
       do i=iimin,iimax
 
@@ -63,9 +64,6 @@
             do k=2,kmax
                zmodel(k) = zmodel(k-1) + 0.5*(hn(i,j,k-1)+hn(i,j,k))
             end do
-!STDERR zmodel
-!STDERR zlev
-!stop
 
 !  Set surface values to uppermost input value
             do k=kmax,1,-1
@@ -78,7 +76,7 @@
             do k=1,nlev
                if(prof(k) .ne. -9999.0) EXIT     
             end do
-	    kl = k
+            kl = k
 !  Set bottom values to lowest input value
             do k=1,kmax
                if (zmodel(k) .le. zlev(kl)) then
@@ -97,18 +95,6 @@
                end if
             end do
             field(i,j,0) = field(i,j,1)
-#if 1
-if( i .eq. 85 .and. j .eq. 18) then
-STDERR kl
-do k=nlev,1,-1
-STDERR zlev(k),prof(k)
-end do
-do k=kmax,1,-1
-STDERR zmodel(k),field(i,j,k)
-end do
-!stop
-endif
-#endif
          else
             field(i,j,:) = _ZERO_
          end if

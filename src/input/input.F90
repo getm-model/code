@@ -1,4 +1,4 @@
-!$Id: input.F90,v 1.2 2003-04-07 13:00:39 kbk Exp $
+!$Id: input.F90,v 1.3 2003-04-23 12:04:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,7 +25,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: input.F90,v $
-!  Revision 1.2  2003-04-07 13:00:39  kbk
+!  Revision 1.3  2003-04-23 12:04:08  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 13:00:39  kbk
 !  parallel + cleaned code
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:33  gotm
@@ -53,34 +56,34 @@
 
    interface
       subroutine init_2d_bdy(fn,fmt)
-         character(len=*), intent(in)	:: fn
-         integer, intent(in)	:: fmt
+         character(len=*), intent(in)  :: fn
+         integer, intent(in)           :: fmt
       end subroutine init_2d_bdy
    end interface
 
    interface
       subroutine get_2d_bdy(fmt,n)
-         integer, intent(in)	:: fmt,n
+         integer, intent(in)           :: fmt,n
       end subroutine get_2d_bdy
    end interface
 
    interface
       subroutine init_3d_bdy(fn,fmt)
-         character(len=*), intent(in) :: fn
-         integer, intent(in)	:: fmt
+         character(len=*), intent(in)  :: fn
+         integer, intent(in)           :: fmt
       end subroutine init_3d_bdy
    end interface
 
    interface
       subroutine get_3d_bdy(fmt,n)
-         integer, intent(in)	:: fmt,n
+         integer, intent(in)           :: fmt,n
       end subroutine get_3d_bdy
    end interface
 
    interface
       subroutine get_field(fname,var,f)
-	 character(len=*), intent(in) :: fname,var
-	 REALTYPE, intent(out)	:: f
+         character(len=*),intent(in)   :: fname,var
+         REALTYPE, intent(out)         :: f
       end subroutine get_field
    end interface
 
@@ -100,8 +103,8 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*)	:: input_dir
-   integer, intent(in)	:: n
+   character(len=*)                    :: input_dir
+   integer, intent(in)                 :: n
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !

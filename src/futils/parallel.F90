@@ -1,4 +1,4 @@
-!$Id: parallel.F90,v 1.1 2003-04-07 12:05:42 kbk Exp $
+!$Id: parallel.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,14 +18,17 @@
 !
 ! !PUBLIC DATA MEMBERS:
 #ifndef PARALLEL
-   integer, parameter	:: myid=-1
+   integer, parameter                  :: myid=-1
 #endif
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: parallel.F90,v $
-!  Revision 1.1  2003-04-07 12:05:42  kbk
+!  Revision 1.2  2003-04-23 12:02:43  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.1  2003/04/07 12:05:42  kbk
 !  new parallel related files
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:29  gotm
@@ -63,7 +66,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*)	:: runid,input_dir
+   character(len=*)                    :: runid,input_dir
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -78,10 +81,10 @@
 !
 ! !LOCAL VARIABLES:
 #ifdef PARALLEL
-   logical	:: TO_FILE=.true.
-   character(len=3)	:: buf
-   character(len=16)	:: pid,ext
-   character(len=PATH_MAX)	:: fname
+   logical                   :: TO_FILE=.true.
+   character(len=3)          :: buf
+   character(len=16)         :: pid,ext
+   character(len=PATH_MAX)   :: fname
 #endif
 !
 !EOP

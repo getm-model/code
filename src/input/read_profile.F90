@@ -1,4 +1,4 @@
-!$Id: read_profile.F90,v 1.1 2002-05-02 14:01:34 gotm Exp $
+!$Id: read_profile.F90,v 1.2 2003-04-23 12:04:08 kbk Exp $
 #include"cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,19 +27,22 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*)	:: fn
-   integer, intent(in) 	:: nmax
+   character(len=*)                    :: fn
+   integer, intent(in)                 :: nmax
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(inout)	:: zlev(nmax),prof(nmax)
-   integer, intent(out) 	:: n
+   REALTYPE, intent(inout)             :: zlev(nmax),prof(nmax)
+   integer, intent(out)                :: n
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: read_profile.F90,v $
-!  Revision 1.1  2002-05-02 14:01:34  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-23 12:04:08  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:34  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.2  2001/08/31 11:22:55  bbh
 !  Added n .gt. namx check
@@ -47,9 +50,8 @@
 !  Revision 1.1  2001/08/29 11:11:09  bbh
 !  Added read_profile.F90
 !
-!
 ! !LOCAL VARIABLES:
-   integer 	:: iunit=99,i
+   integer                   :: iunit=99,i
 !
 !EOP
 !-----------------------------------------------------------------------

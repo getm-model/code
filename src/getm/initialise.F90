@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.2 2003-04-07 16:39:16 kbk Exp $
+!$Id: initialise.F90,v 1.3 2003-04-23 12:03:46 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -14,15 +14,18 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
-   public	:: init_model
-   integer	:: runtype=1
-   logical	:: dryrun=.false.
+   public                              :: init_model
+   integer                             :: runtype=1
+   logical                             :: dryrun=.false.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
-!  Revision 1.2  2003-04-07 16:39:16  kbk
+!  Revision 1.3  2003-04-23 12:03:46  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 16:39:16  kbk
 !  parallel support, NO_3D
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:25  gotm
@@ -74,34 +77,34 @@
    subroutine init_model(dstr,tstr)
 !
 ! !USES:
-   use kurt_parallel,     only: init_parallel,myid
-   use output,       only: init_output,do_output,restart_file
-   use input,        only: init_input
-   use domain,       only: init_domain
-   use domain,       only: iextr,jextr,imin,imax,jmin,jmax
-   use domain,       only: iimin,iimax,jjmin,jjmax,kmax
-   use domain,       only: vert_cord
-   use time,         only: init_time,update_time,write_time_string
-   use time,         only: start,timestr,timestep
-   use m2d,          only: init_2d,z,zu,zv
+   use kurt_parallel, only: init_parallel,myid
+   use output, only: init_output,do_output,restart_file
+   use input,  only: init_input
+   use domain, only: init_domain
+   use domain, only: iextr,jextr,imin,imax,jmin,jmax
+   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: vert_cord
+   use time, only: init_time,update_time,write_time_string
+   use time, only: start,timestr,timestep
+   use m2d, only: init_2d,z,zu,zv
 #ifndef NO_3D
-   use m3d,          only: cord_relax,init_3d,ssen,ssun,ssvn
+   use m3d, only: cord_relax,init_3d,ssen,ssun,ssvn
 #ifndef NO_BAROCLINIC
-   use m3d,          only: T
+   use m3d, only: T
 #endif
-   use turbulence,   only: init_turbulence
+   use turbulence, only: init_turbulence
    use mtridiagonal, only: init_tridiagonal
-   use rivers,       only: init_rivers
+   use rivers, only: init_rivers
 #endif
-   use meteo,        only: init_meteo,do_meteo
+   use meteo, only: init_meteo,do_meteo
    use integration,  only: MinN,MaxN
 #ifndef NO_BAROCLINIC
-   use eqstate,      only: do_eqstate
+   use eqstate, only: do_eqstate
 #endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*)	:: dstr,tstr
+   character(len=*)                    :: dstr,tstr
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -115,22 +118,23 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
-   integer		:: i,j
-   character(len=8)	:: buf
-   character(len=64)	:: runid
-   character(len=80)	:: title
-   logical		:: parallel=.false.
-   logical		:: hotstart=.false.
-   logical		:: save_initial=.false.
+   integer:: i,j
+   character(len=8)          :: buf
+   character(len=64)         :: runid
+   character(len=80)         :: title
+   logical                   :: parallel=.false.
+   logical                   :: hotstart=.false.
+   logical                   :: save_initial=.false.
 #if (defined PARALLEL && defined INPUT_DIR)
-   character(len=PATH_MAX)	:: input_dir=INPUT_DIR
+   character(len=PATH_MAX)   :: input_dir=INPUT_DIR
 #else
-   character(len=PATH_MAX)	:: input_dir='./'
+   character(len=PATH_MAX)   :: input_dir='./'
 #endif
-   character(len=PATH_MAX)	:: hot_in=''
+   character(len=PATH_MAX)   :: hot_in=''
 
-   namelist /param/ dryrun,runid,title,parallel,runtype,	&
-                    hotstart,save_initial
+   namelist /param/ &
+             dryrun,runid,title,parallel,runtype,  &
+             hotstart,save_initial
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -242,10 +246,10 @@
    if (hotstart) then
       LEVEL1 'hotstart'
       if (myid .ge. 0) then
-         write(buf,'.(I3.3).in') myid
-!         buf = '.' // trim(buf) // '.in'
-STDERR buf
-stop 'kbk: initialise'
+         write(buf,'(I3.3)') myid
+         buf = '.' // trim(buf) // '.in'
+!STDERR buf
+!stop 'kbk: initialise'
       else
          buf = '.in'
       end if

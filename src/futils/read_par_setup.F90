@@ -1,4 +1,4 @@
-!$Id: read_par_setup.F90,v 1.1 2003-04-07 12:05:42 kbk Exp $
+!$Id: read_par_setup.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,12 +12,12 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in) :: fn ! file to read from
-   integer, intent(in) :: nprocs,myid  ! Number of jobs actually started.
-   integer, intent(in) :: imax,jmax,iextr,jextr
+   character(len=*), intent(in)        :: fn ! file to read from
+   integer, intent(in)                 :: nprocs,myid  ! Number of jobs actually started.
+   integer, intent(in)                 :: imax,jmax,iextr,jextr
 !
 ! !OUTPUT PARAMETERS:
-   integer, intent(out) :: ioff,joff,neighbours(8)
+   integer, intent(out)                :: ioff,joff,neighbours(8)
 !
 ! !DESCRIPTION:
 !  Test the content of a file with neighbour list information.
@@ -32,15 +32,15 @@
 !  2002-02-12 Bjarne Buchmann (bjb@fomfrv.dk) Initial code
 !
 ! !LOCAL VARIABLES:
-   integer, allocatable:: neighbourlist(:,:)
-   integer             :: myid_read
-   integer             :: nprocs_read,err,ijob,ioff_read,joff_read
-   integer             :: imax_read,jmax_read,iextr_read,jextr_read
-   integer             :: iline, njob, nnjob, ineigh
-   integer             :: neighbour_inverse(8)  = &
+   integer                   :: myid_read
+   integer                   :: nprocs_read,err,ijob,ioff_read,joff_read
+   integer                   :: imax_read,jmax_read,iextr_read,jextr_read
+   integer                   :: iline, njob, nnjob, ineigh
+   integer, allocatable      :: neighbourlist(:,:)
+   integer                   :: neighbour_inverse(8)  = &
                                  (/5, 6, 7, 8, 1, 2, 3, 4/)
-   integer, parameter  :: false_flag = -2 ! No-good PID
-   integer, parameter  :: iunit=87 ! check 87 KBK
+   integer, parameter        :: false_flag = -2 ! No-good PID
+   integer, parameter        :: iunit=87 ! check 87 KBK
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -52,15 +52,15 @@
    read(iunit,*,err=1010,end=1020) nprocs_read
 
    if (nprocs_read /= nprocs) then
-     FATAL 'read_par_setup: Number of jobs do not match'
-     FATAL '  Expected value ',nprocs
-     FATAL '  Read value     ',nprocs_read
+      FATAL 'read_par_setup: Number of jobs do not match'
+      FATAL '  Expected value ',nprocs
+      FATAL '  Read value     ',nprocs_read
      stop 
    end if
 
    allocate(neighbourlist(0:nprocs-1,8),stat=err)
    if (err /= 0) &
-     stop 'read_par_setup: Error allocating memory (neighbourlist)'
+      stop 'read_par_setup: Error allocating memory (neighbourlist)'
 !
 ! Flag all neighbourlists to be "unrecongnized value"
    neighbourlist(:,:) =  false_flag
@@ -143,7 +143,6 @@
 !
       do ineigh=1,8
          njob  = neighbourlist(ijob,ineigh)
-!KBKSTDERR njob
          if (njob .gt. -1) then
             nnjob = neighbourlist(njob,neighbour_inverse(ineigh))
             if ( nnjob .ne. ijob ) then

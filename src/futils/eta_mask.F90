@@ -1,4 +1,4 @@
-!$Id: eta_mask.F90,v 1.1 2002-05-02 14:01:18 gotm Exp $
+!$Id: eta_mask.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -15,12 +15,12 @@
 ! !USES:
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: il,jl,ih,jh
-   integer, intent(in)	:: imin,jmin,imax,jmax
-   REALTYPE, intent(in)	:: z(E2DFIELD)
-   REALTYPE, intent(in)	:: D(E2DFIELD)
-   REALTYPE, intent(in)	:: H(E2DFIELD)
-   REALTYPE, intent(in)	:: min_depth
+   integer, intent(in)                 :: il,jl,ih,jh
+   integer, intent(in)                 :: imin,jmin,imax,jmax
+   REALTYPE, intent(in)                :: z(E2DFIELD)
+   REALTYPE, intent(in)                :: D(E2DFIELD)
+   REALTYPE, intent(in)                :: H(E2DFIELD)
+   REALTYPE, intent(in)                :: min_depth
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -31,8 +31,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: eta_mask.F90,v $
-!  Revision 1.1  2002-05-02 14:01:18  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-23 12:02:43  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:18  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.2  2001/04/21 09:41:33  bbh
 !  Partial fixed problem with workspace (ws) variables in ncdf_save_?d.F90 and various conversion programs
@@ -42,8 +45,8 @@
 !
 !
 ! !LOCAL VARIABLES:
-   integer 	:: i,j
-   integer 	:: indx
+   integer                   :: i,j
+   integer                   :: indx
 !EOP
 !-----------------------------------------------------------------------
 !BOC

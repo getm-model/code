@@ -1,4 +1,4 @@
-!$Id: init_river_input.F90,v 1.2 2003-04-07 12:58:21 kbk Exp $
+!$Id: init_river_input.F90,v 1.3 2003-04-23 12:04:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -16,8 +16,8 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in) :: fn
-   integer, intent(in)		:: n
+   character(len=*), intent(in)        :: fn
+   integer, intent(in)                 :: n
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -27,7 +27,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: init_river_input.F90,v $
-!  Revision 1.2  2003-04-07 12:58:21  kbk
+!  Revision 1.3  2003-04-23 12:04:08  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 12:58:21  kbk
 !  parallel + cleaned code
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:34  gotm

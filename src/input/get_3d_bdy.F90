@@ -1,4 +1,4 @@
-!$Id: get_3d_bdy.F90,v 1.1 2002-05-02 14:01:35 gotm Exp $
+!$Id: get_3d_bdy.F90,v 1.2 2003-04-23 12:04:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -16,7 +16,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: fmt,n
+   integer, intent(in)                 :: fmt,n
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -26,8 +26,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: get_3d_bdy.F90,v $
-!  Revision 1.1  2002-05-02 14:01:35  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-23 12:04:08  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:35  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.3  2001/10/22 08:06:42  bbh
 !  Removed a bogus subroutine call

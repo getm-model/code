@@ -1,11 +1,11 @@
-!$Id: ver_interpol.F90,v 1.1 2002-05-02 14:01:17 gotm Exp $
+!$Id: ver_interpol.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
 #include"cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 ! !ROUTINE: ver_interpol - vertical interpolation.
 !
 ! !INTERFACE:
-   subroutine ver_interpol(nlev,zlev,prof,imin,jmin,imax,jmax,mask,H,	&
+   subroutine ver_interpol(nlev,zlev,prof,imin,jmin,imax,jmax,mask,H,  &
                            iimin,jjmin,iimax,jjmax,kmax,hn,field)
 !
 ! !DESCRIPTION:
@@ -18,23 +18,26 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in) 	:: nlev
-   REALTYPE, intent(in)	:: zlev(nlev),prof(nlev)
-   integer, intent(in)	:: imin,imax,jmin,jmax
-   integer, intent(in)	:: mask(E2DFIELD)
-   REALTYPE, intent(in)	:: H(E2DFIELD)
-   integer, intent(in)	:: iimin,iimax,jjmin,jjmax,kmax
-   REALTYPE, intent(in)	:: hn(I3DFIELD)
+   integer, intent(in)                 :: nlev
+   REALTYPE, intent(in)                :: zlev(nlev),prof(nlev)
+   integer, intent(in)                 :: imin,imax,jmin,jmax
+   integer, intent(in)                 :: mask(E2DFIELD)
+   REALTYPE, intent(in)                :: H(E2DFIELD)
+   integer, intent(in)                 :: iimin,iimax,jjmin,jjmax,kmax
+   REALTYPE, intent(in)                :: hn(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out):: field(I3DFIELD)
+   REALTYPE, intent(out)               :: field(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ver_interpol.F90,v $
-!  Revision 1.1  2002-05-02 14:01:17  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-23 12:02:43  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:17  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.2  2001/08/29 11:21:46  bbh
 !  namelists read in salinity and temperature + initialisation
@@ -46,9 +49,9 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer 	:: i,j,k,nn
-   REALTYPE 	:: rat
-   REALTYPE	:: zmodel(kmax)
+   integer :: i,j,k,nn
+   REALTYPE :: rat
+   REALTYPE:: zmodel(kmax)
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -58,7 +61,7 @@
          if(mask(i,j) .ne. 0) then
 
             zmodel(1) = -H(i,j) + 0.5*hn(i,j,1)
-	    do k=2,kmax
+            do k=2,kmax
                zmodel(k) = zmodel(k-1) + 0.5*(hn(i,j,k-1)+hn(i,j,k))
             end do
 
@@ -86,7 +89,7 @@
                   field(i,j,k)=(1-rat)*prof(nn-1)+rat*prof(nn)
                end if
             end do
-	    field(i,j,0) = field(i,j,1)
+            field(i,j,0) = field(i,j,1)
          else
             field(i,j,:) = _ZERO_
          end if

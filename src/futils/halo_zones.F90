@@ -1,4 +1,4 @@
-!$Id: halo_zones.F90,v 1.1 2003-04-07 12:05:42 kbk Exp $
+!$Id: halo_zones.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -23,16 +23,19 @@
 !
 ! !PUBLIC DATA MEMBERS:
 #ifndef PARALLEL
-   integer, parameter	:: H_TAG=10,HU_TAG=11,HV_TAG=12
-   integer, parameter	:: D_TAG=20,DU_TAG=21,DV_TAG=22
-   integer, parameter   :: z_TAG=30,U_TAG=31,V_TAG=32
+   integer, parameter                  :: H_TAG=10,HU_TAG=11,HV_TAG=12
+   integer, parameter                  :: D_TAG=20,DU_TAG=21,DV_TAG=22
+   integer, parameter                  :: z_TAG=30,U_TAG=31,V_TAG=32
 #endif
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_zones.F90,v $
-!  Revision 1.1  2003-04-07 12:05:42  kbk
+!  Revision 1.2  2003-04-23 12:02:43  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.1  2003/04/07 12:05:42  kbk
 !  new parallel related files
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:29  gotm
@@ -40,7 +43,7 @@
 !
 ! !LOCAL VARIABLES:
 #ifndef PARALLEL
-   integer, parameter	:: nprocs=1
+   integer, parameter        :: nprocs=1
 #endif
 !EOP
 !-----------------------------------------------------------------------
@@ -101,12 +104,12 @@
 !  Print information on the MPI environment
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)		:: imin,jmin,imax,jmax
-   integer, intent(in)		:: tag
-   integer, intent(in) 		:: mask(-HALO+1:,-HALO+1:)
+   integer, intent(in)                 :: imin,jmin,imax,jmax
+   integer, intent(in)                 :: tag
+   integer, intent(in)                 :: mask(-HALO+1:,-HALO+1:)
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE, intent(inout) 	:: f1(E2DFIELD),f2(E2DFIELD)
+   REALTYPE, intent(inout)             :: f1(E2DFIELD),f2(E2DFIELD)
 !
 ! !OUTPUT PARAMETERS:
 !
@@ -114,8 +117,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k
-   integer	:: il,jl,ih,jh
+   integer                   :: i,j,k
+   integer                   :: il,jl,ih,jh
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -159,9 +162,9 @@
 !  Print information on the MPI environment
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: iimin,jjmin,iimax,jjmax,kmax
-   integer, intent(in)	:: tag
-   integer, intent(in)	:: mask(-HALO+1:,-HALO+1:)
+   integer, intent(in)                 :: iimin,jjmin,iimax,jjmax,kmax
+   integer, intent(in)                 :: tag
+   integer, intent(in)                 :: mask(-HALO+1:,-HALO+1:)
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout):: f1(I3DFIELD),f2(I3DFIELD)
@@ -172,8 +175,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,k
-   integer	:: il,jl,ih,jh
+   integer                   :: i,j,k
+   integer                   :: il,jl,ih,jh
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -219,7 +222,7 @@
 !  Print information on the MPI environment
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: tag
+   integer, intent(in)                 :: tag
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -233,9 +236,9 @@
 !-------------------------------------------------------------------------
 !BOC
 #ifdef PARALLEL
-!kbk   if (nprocs .gt. 1) then
+   if (nprocs .gt. 1) then
       call wait_halo_mpi(tag)
-!kbk   end if
+   end if
 #endif
    return
    end subroutine wait_halo

@@ -1,4 +1,4 @@
-!$Id: get_field.F90,v 1.2 2003-04-07 12:58:21 kbk Exp $
+!$Id: get_field.F90,v 1.3 2003-04-23 12:04:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,19 +17,22 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)	:: fname,var
-   integer, intent(in)		:: n
+   character(len=*), intent(in)        :: fname,var
+   integer, intent(in)                 :: n
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out)	:: f(I3DFIELD)
+   REALTYPE, intent(out)               :: f(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: get_field.F90,v $
-!  Revision 1.2  2003-04-07 12:58:21  kbk
+!  Revision 1.3  2003-04-23 12:04:08  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 12:58:21  kbk
 !  parallel + cleaned code
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:33  gotm
@@ -40,7 +43,7 @@
 !
 !
 ! !LOCAL VARIABLES:
-   integer, parameter	:: fmt=NETCDF
+   integer, parameter        :: fmt=NETCDF
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -53,7 +56,7 @@
       case (ANALYTICAL)
       case (ASCII)
          STDERR 'Should get an ASCII field'
-	 stop 'get_field()'
+         stop 'get_field()'
       case (NETCDF)
          call read_field_ncdf(fname,var,n,f)
       case DEFAULT

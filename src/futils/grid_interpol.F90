@@ -1,4 +1,4 @@
-!$Id: grid_interpol.F90,v 1.2 2003-04-07 15:25:06 kbk Exp $
+!$Id: grid_interpol.F90,v 1.3 2003-04-23 12:02:43 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -25,9 +25,9 @@
 ! !PUBLIC DATA MEMBERS:
 !
 ! !PRIVATE DATA MEMBERS:
-   REALTYPE, parameter	:: pi=3.1415926535897932384626433832795029
-   REALTYPE, parameter	:: deg2rad=pi/180.,rad2deg=180./pi
-   REALTYPE, parameter	:: earth_radius=6370.9490e3
+   REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029
+   REALTYPE, parameter       :: deg2rad=pi/180.,rad2deg=180./pi
+   REALTYPE, parameter       :: earth_radius=6370.9490e3
 
    REALTYPE, allocatable, dimension(:,:) :: rlon,rlat,beta
    integer :: il,ih,jl,jh
@@ -36,7 +36,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: grid_interpol.F90,v $
-!  Revision 1.2  2003-04-07 15:25:06  kbk
+!  Revision 1.3  2003-04-23 12:02:43  kbk
+!  cleaned code + TABS to spaces
+!
+!  Revision 1.2  2003/04/07 15:25:06  kbk
 !  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:01:21  gotm
@@ -64,21 +67,22 @@
 ! !IROUTINE: init_grid_interpol - initialise grid interpolation.
 !
 ! !INTERFACE:
-   subroutine init_grid_interpol(imin,imax,jmin,jmax,mask,	&
+   subroutine init_grid_interpol(imin,imax,jmin,jmax,mask,      &
                          olon,olat,met_lon,met_lat,southpole,   &
-			 gridmap,t,u,met_mask)
+                         gridmap,t,u,met_mask)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
 !  To be written.
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: imin,imax,jmin,jmax
-   integer, intent(in)	:: mask(-HALO+1:,-HALO+1:)
-   REALTYPE, intent(in) :: olon(-HALO+1:,-HALO+1:),olat(-HALO+1:,-HALO+1:)
-   REALTYPE, intent(in) :: met_lon(:,:),met_lat(:,:)
-   REALTYPE, intent(in) :: southpole(2)
-   integer, optional, intent(in)	:: met_mask(:,:)
+   integer, intent(in)                 :: imin,imax,jmin,jmax
+   integer, intent(in)                 :: mask(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)                :: olon(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)                :: olat(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)                :: met_lon(:,:),met_lat(:,:)
+   REALTYPE, intent(in)                :: southpole(2)
+   integer, optional, intent(in)       :: met_mask(:,:)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -91,9 +95,9 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer	:: rc
-   integer	:: i,j
-   logical	:: rotated_grid
+   integer                   :: rc
+   integer                   :: i,j
+   logical                   :: rotated_grid
 !EOP
 !-------------------------------------------------------------------------
 #ifdef DEBUG
@@ -153,24 +157,25 @@ stop 'init_grid_interpol.F90'
 !  To be written.
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: mask(-HALO+1:,-HALO+1:)
-   REALTYPE, intent(in)	:: ifield(:,:)
-   integer, intent(in)	:: gridmap(-HALO+1:,-HALO+1:,1:)
-   REALTYPE, intent(in)	:: t(-HALO+1:,-HALO+1:),u(-HALO+1:,-HALO+1:)
+   integer, intent(in)                 :: mask(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)                :: ifield(:,:)
+   integer, intent(in)                 :: gridmap(-HALO+1:,-HALO+1:,1:)
+   REALTYPE, intent(in)                :: t(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)                :: u(-HALO+1:,-HALO+1:)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out)	:: ofield(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(out)               :: ofield(-HALO+1:,-HALO+1:)
 !
 ! !REVISION HISTORY:
 !
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j
-   integer	:: i1,i2,j1,j2
-   REALTYPE	:: d11,d21,d22,d12
+   integer                   :: i,j
+   integer                   :: i1,i2,j1,j2
+   REALTYPE                  :: d11,d21,d22,d12
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -200,8 +205,8 @@ stop 'init_grid_interpol.F90'
                d21 = t(i,j)*(_ONE_-u(i,j))
                d22 = t(i,j)*u(i,j)
                d12 = (_ONE_-t(i,j))*u(i,j)
-               ofield(i,j) = d11*ifield(i1,j1)+d21*ifield(i2,j1)+	&
-	                     d22*ifield(i2,j2)+d12*ifield(i1,j2)
+               ofield(i,j) = d11*ifield(i1,j1)+d21*ifield(i2,j1)+      &
+                             d22*ifield(i2,j2)+d12*ifield(i1,j2)
             end if
          else
             ofield(i,j) = _ZERO_
@@ -250,23 +255,24 @@ stop 'kbk'
 !  To be written.
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in)	:: ifield(:,:,:)
-   integer, intent(in)	:: gridmap(-HALO+1:,-HALO+1:,1:)
-   REALTYPE, intent(in)	:: t(-HALO+1:,-HALO+1:),u(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)                :: ifield(:,:,:)
+   integer, intent(in)                 :: gridmap(-HALO+1:,-HALO+1:,1:)
+   REALTYPE, intent(in)                :: t(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)                :: u(-HALO+1:,-HALO+1:)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out)	:: ofield(-HALO+1:,-HALO+1:,0:)
+   REALTYPE, intent(out)               :: ofield(-HALO+1:,-HALO+1:,0:)
 !
 ! !REVISION HISTORY:
 !
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j
-   integer	:: i1,i2,j1,j2
-   REALTYPE	:: d11,d21,d22,d12
+   integer                   :: i,j
+   integer                   :: i1,i2,j1,j2
+   REALTYPE                  :: d11,d21,d22,d12
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -285,8 +291,8 @@ stop 'kbk'
          d21 = t(i,j)*(_ONE_-u(i,j))
          d22 = t(i,j)*u(i,j)
          d12 = (_ONE_-t(i,j))*u(i,j)
-         ofield(i,j,1:) = d11*ifield(i1,j1,:)+d21*ifield(i2,j1,:)+	&
-	                 d22*ifield(i2,j2,:)+d12*ifield(i1,j2,:)
+         ofield(i,j,1:) = d11*ifield(i1,j1,:)+d21*ifield(i2,j1,:)+     &
+                          d22*ifield(i2,j2,:)+d12*ifield(i1,j2,:)
       end do
    end do
 
@@ -311,25 +317,27 @@ stop 'kbk'
 !  To be written.
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in)	:: southpole(2)
-   REALTYPE, intent(in)	:: met_lon(-HALO+1:,-HALO+1:),met_lat(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)                :: southpole(2)
+   REALTYPE, intent(in)                :: met_lon(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)                :: met_lat(-HALO+1:,-HALO+1:)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out):: rot_lon(-HALO+1:,-HALO+1:),rot_lat(-HALO+1:,-HALO+1:)
-   REALTYPE, intent(out):: beta(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(out)               :: rot_lon(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(out)               :: rot_lat(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(out)               :: beta(-HALO+1:,-HALO+1:)
 !
 ! !REVISION HISTORY:
 !
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j
-   REALTYPE     :: sinphis,cosphis
-   REALTYPE     :: alpha,cosalpha,sinalpha
-   REALTYPE     :: phi,sinphi,cosphi
-   REALTYPE     :: SA,CA,SB,CB
+   integer                   :: i,j
+   REALTYPE                  :: sinphis,cosphis
+   REALTYPE                  :: alpha,cosalpha,sinalpha
+   REALTYPE                  :: phi,sinphi,cosphi
+   REALTYPE                  :: SA,CA,SB,CB
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -389,7 +397,7 @@ stop 'kbk'
 !  usually the radius of the earth.
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in)	:: radius,lon1,lat1,lon2,lat2
+   REALTYPE, intent(in)                :: radius,lon1,lat1,lon2,lat2
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -400,7 +408,7 @@ stop 'kbk'
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   REALTYPE	:: a,b,c
+   REALTYPE                  :: a,b,c
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -424,27 +432,29 @@ stop 'kbk'
 !  To be written.
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: mask(-HALO+1:,-HALO+1:)
-   REALTYPE, intent(in)	:: olon(-HALO+1:,-HALO+1:),olat(-HALO+1:,-HALO+1:)
-   REALTYPE, intent(in)	:: met_lon(:,:),met_lat(:,:)
-   integer, optional, intent(in)	:: met_mask(:,:)
+   integer, intent(in)                 :: mask(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)                :: olon(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)                :: olat(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)                :: met_lon(:,:),met_lat(:,:)
+   integer, optional, intent(in)       :: met_mask(:,:)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   integer, intent(out):: gridmap(-HALO+1:,-HALO+1:,1:)
-   REALTYPE, intent(out):: t(-HALO+1:,-HALO+1:),u(-HALO+1:,-HALO+1:)
+   integer, intent(out)                :: gridmap(-HALO+1:,-HALO+1:,1:)
+   REALTYPE, intent(out)               :: t(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(out)               :: u(-HALO+1:,-HALO+1:)
 !
 ! !REVISION HISTORY:
 !
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer	:: i,j,im,jm
-   REALTYPE	:: x,y,lon1,lat1,lon2,lat2
-   integer	:: ngood
-   logical	:: outside=.false.
-   integer	:: max_i,max_j
+   integer                   :: i,j,im,jm
+   REALTYPE                  :: x,y,lon1,lat1,lon2,lat2
+   integer                   :: ngood
+   logical                   :: outside=.false.
+   integer                   :: max_i,max_j
 !EOP
 !-------------------------------------------------------------------------
 !  first find the lower left (im,jm) in the m-grid which coresponds to
@@ -493,13 +503,13 @@ max_j = size(met_lat,2)
             y = olat(i,j)
             im = gridmap(i,j,1)
             jm = gridmap(i,j,2)
-	    if(im .ge. max_i .or. jm .ge. max_j) then
+            if(im .ge. max_i .or. jm .ge. max_j) then
                t(i,j) = _ZERO_
                u(i,j) = _ZERO_
             else
                if(present(met_mask)) then
                   ngood = met_mask(im  ,jm  )+met_mask(im+1,jm  )+ &
-		          met_mask(im+1,jm+1)+met_mask(im  ,jm+1)
+                          met_mask(im+1,jm+1)+met_mask(im  ,jm+1)
                else
                   ngood = 4
                end if
