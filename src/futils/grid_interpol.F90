@@ -1,4 +1,4 @@
-!$Id: grid_interpol.F90,v 1.5 2003-06-30 05:45:26 kbk Exp $
+!$Id: grid_interpol.F90,v 1.6 2003-10-30 16:31:36 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -40,7 +40,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: grid_interpol.F90,v $
-!  Revision 1.5  2003-06-30 05:45:26  kbk
+!  Revision 1.6  2003-10-30 16:31:36  kbk
+!  check validity of meteo interpolation coeffcients
+!
+!  Revision 1.5  2003/06/30 05:45:26  kbk
 !  do interpolation in rotated space
 !
 !  Revision 1.4  2003/06/18 08:49:53  kbk
@@ -587,20 +590,6 @@
 	       end if
             else
             endif
-#if 0
-!KBK - test this
-	    if(im .gt. 2) then
-               gridmap(i,j,1) = im-1
-            else
-               gridmap(i,j,1) = im
-            end if
-	    if(jm .gt. 2) then
-               gridmap(i,j,2) = jm-1
-            else
-               gridmap(i,j,2) = jm
-            end if
-! ======
-#endif
          end if
       end do
    end do
@@ -627,19 +616,13 @@
             end if
             im = gridmap(i,j,1)
             jm = gridmap(i,j,2)
-            if(im .ge. max_i .or. jm .ge. max_j) then
-               t(i,j) = _ZERO_
-               u(i,j) = _ZERO_
-            else
+            if(im .gt. 0 .and. jm .gt. 0) then
                if(present(met_mask)) then
                   ngood = met_mask(im  ,jm  )+met_mask(im+1,jm  )+ &
                           met_mask(im+1,jm+1)+met_mask(im  ,jm+1)
                else
                   ngood = 4
                end if
-               t(i,j) = _ZERO_
-               u(i,j) = _ZERO_
-ngood = 4
                select case (ngood)
                   case (0)
                   case (1,2,3)

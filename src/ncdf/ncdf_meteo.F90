@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.6 2003-10-07 15:16:50 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.7 2003-10-30 16:31:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -75,7 +75,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.6  2003-10-07 15:16:50  kbk
+!  Revision 1.7  2003-10-30 16:31:36  kbk
+!  check validity of meteo interpolation coeffcients
+!
+!  Revision 1.6  2003/10/07 15:16:50  kbk
 !  now works properly with varying length (time) files
 !
 !  Revision 1.5  2003/07/01 16:38:33  kbk
@@ -149,6 +152,7 @@
 ! !LOCAL VARIABLES:
    integer      :: i,j,n
    integer      :: err
+   logical      :: ok=.true.
 !EOP
 !-------------------------------------------------------------------------
    include "netcdf.inc"
@@ -172,10 +176,12 @@
 
       allocate(ti(E2DFIELD),stat=err)
       if (err /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (ti)'
+      ti = -999.
 
       allocate(ui(E2DFIELD),stat=err)
       if (err /= 0) stop &
               'init_meteo_input_ncdf: Error allocating memory (ui)'
+      ui = -999.
 
       allocate(gridmap(E2DFIELD,1:2),stat=err)
       if (err /= 0) stop &
@@ -191,6 +197,23 @@
 #endif
       call init_grid_interpol(imin,imax,jmin,jmax,az,	&
                 lonc,latc,met_lon,met_lat,southpole,gridmap,ti,ui)
+   end if
+
+   LEVEL2 "Checking interpolation coefficients"
+   do j=jmin,jmax
+      do i=imin,imax
+         if ( az(i,j) .gt. 0 .and. &
+             (ui(i,j) .lt. _ZERO_ .or. ti(i,j) .lt. _ZERO_ )) then
+            ok=.false.
+            LEVEL3 "error at (i,j) ",i,j
+         end if
+      end do
+   end do
+   if ( ok ) then
+      LEVEL2 "done"
+   else
+      call getm_error("init_meteo_input_ncdf()", &
+                       "Some interpolation coefficients are not valid")
    end if
 
    if (calc_met) then
