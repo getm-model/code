@@ -1,4 +1,4 @@
-!$Id: ss_nn.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
+!$Id: ss_nn.F90,v 1.4 2003-12-17 10:22:41 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,9 +18,9 @@
 !
 ! !USES:
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,au,av,az
-   use variables_3d, only: kmin,kumin,uu,hun,kvmin,vv,hvn,SS
+   use variables_3d, only: kmin,kumin,hn,uu,hun,kvmin,vv,hvn,SS,num
 #ifndef NO_BAROCLINIC
-   use variables_3d, only: hn,NN,rho,num
+   use variables_3d, only: NN,rho
 #endif
    IMPLICIT NONE
 !
@@ -34,7 +34,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: ss_nn.F90,v $
-!  Revision 1.3  2003-04-23 12:16:34  kbk
+!  Revision 1.4  2003-12-17 10:22:41  kbk
+!  now compiles with -DNO_BAROCLINIC and -DNO_3D
+!
+!  Revision 1.3  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 13:36:38  kbk
