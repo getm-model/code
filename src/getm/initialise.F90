@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.6 2004-01-13 07:49:06 kbk Exp $
+!$Id: initialise.F90,v 1.7 2004-06-15 09:04:51 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,7 +22,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
-!  Revision 1.6  2004-01-13 07:49:06  kbk
+!  Revision 1.7  2004-06-15 09:04:51  kbk
+!  CONST_VISC --> CONSTANT_VISCOSITY - Ruiz
+!
+!  Revision 1.6  2004/01/13 07:49:06  kbk
 !  need maxdepth in parameter list to coordinates()
 !
 !  Revision 1.5  2003/09/03 05:49:31  kbk
@@ -104,6 +107,7 @@
    use turbulence, only: init_turbulence
    use mtridiagonal, only: init_tridiagonal
    use rivers, only: init_rivers
+   use variables_3d, only: avmback,avhback
 #endif
    use meteo, only: init_meteo,do_meteo
    use integration,  only: MinN,MaxN
@@ -242,7 +246,13 @@
 #ifndef NO_3D
    if (runtype .gt. 1) then
       call init_3d(runtype,timestep,hotstart)
+#ifndef CONSTANT_VISCOSITY
       call init_turbulence(60,trim(input_dir) // 'gotmturb.inp',kmax)
+#else
+      LEVEL3 'turbulent viscosity and diffusivity set to constant (-DCONSTANT_VISCOSITY)'
+#endif
+      LEVEL2 'background turbulent viscosity set to',avmback
+      LEVEL2 'background turbulent diffusivity set to',avhback
       call init_tridiagonal(kmax)
    end if
 #endif
