@@ -1,4 +1,4 @@
-!$Id: residual.F90,v 1.3 2003-04-23 12:09:44 kbk Exp $
+!$Id: residual.F90,v 1.4 2004-01-03 16:40:28 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,9 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain, only: HU,HV
-   use variables_2d, only: zu,zv
-   use variables_2d, only: u,v,res_du,res_u,res_dv,res_v
+   use variables_2d, only: u,v,res_du,res_u,res_dv,res_v,du,dv
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -27,7 +25,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: residual.F90,v $
-!  Revision 1.3  2003-04-23 12:09:44  kbk
+!  Revision 1.4  2004-01-03 16:40:28  kbk
+!  bug fix
+!
+!  Revision 1.3  2003/04/23 12:09:44  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 15:30:58  kbk
@@ -59,12 +60,10 @@
          res_v= _ZERO_
       end where
    else
-#if 0
-      res_du=res_du+hu+0.5*(zu+zuo)
+      res_du=res_du+du
       res_u=res_u+u
-      res_dv=res_dv+hv+0.5*(zv+zvo)
+      res_dv=res_dv+dv
       res_v=res_v+v
-#endif
    end if
 
    return
