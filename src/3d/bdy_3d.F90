@@ -1,4 +1,4 @@
-!$Id: bdy_3d.F90,v 1.1 2002-05-02 14:00:59 gotm Exp $
+!$Id: bdy_3d.F90,v 1.2 2002-06-19 14:32:08 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,8 +31,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bdy_3d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:59  gotm
-!  Initial revision
+!  Revision 1.2  2002-06-19 14:32:08  gotm
+!  Index error for wfj, wlj, efj and elj
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:59  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.1  2001/08/30 08:58:19  bbh
 !  Initial import
@@ -162,7 +165,7 @@
    k = 0
    do n=1,NWB
       i = wi(n)
-      do j=wfj(1),wlj(1)
+      do j=wfj(n),wlj(n)
          k = k+1
          do ii=1,4
 	    if (az(i-1+ii,j).gt.0) then
@@ -186,7 +189,7 @@
    end do
    do n=1,NEB
       i = ei(n)
-      do j=efj(1),elj(1)
+      do j=efj(n),elj(n)
          k = k+1
          do ii=1,4
 	    if (az(i+1-ii,j).gt.0) then
