@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.5 2003-09-03 05:49:31 kbk Exp $
+!$Id: initialise.F90,v 1.6 2004-01-13 07:49:06 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,7 +22,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
-!  Revision 1.5  2003-09-03 05:49:31  kbk
+!  Revision 1.6  2004-01-13 07:49:06  kbk
+!  need maxdepth in parameter list to coordinates()
+!
+!  Revision 1.5  2003/09/03 05:49:31  kbk
 !  hotstart files now read from - out_dir
 !
 !  Revision 1.4  2003/08/15 12:50:12  kbk
@@ -89,7 +92,7 @@
    use domain, only: init_domain
    use domain, only: iextr,jextr,imin,imax,jmin,jmax
    use domain, only: iimin,iimax,jjmin,jjmax,kmax
-   use domain, only: vert_cord
+   use domain, only: vert_cord,maxdepth
    use time, only: init_time,update_time,write_time_string
    use time, only: start,timestr,timestep
    use m2d, only: init_2d,z,zu,zv
@@ -262,7 +265,7 @@
 #ifndef NO_3D
       if (runtype .gt. 1) then
          call start_macro()
-         call coordinates(vert_cord,cord_relax)
+         call coordinates(vert_cord,cord_relax,maxdepth)
       end if
 #endif
       call depth_update
