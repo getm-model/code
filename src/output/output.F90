@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.4 2003-09-03 05:55:13 kbk Exp $
+!$Id: output.F90,v 1.5 2003-09-16 07:45:30 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -51,7 +51,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
-!  Revision 1.4  2003-09-03 05:55:13  kbk
+!  Revision 1.5  2003-09-16 07:45:30  kbk
+!  additional info written when hotstart time mismatch
+!
+!  Revision 1.4  2003/09/03 05:55:13  kbk
 !  continuous=.false. - allows change of dt
 !
 !  Revision 1.3  2003/04/23 12:07:12  kbk
@@ -398,6 +401,8 @@
          if (jd .ne. julianday .or. secs .ne. secondsofday) then
             FATAL 'start time given in getm.inp does not match time'
             FATAL 'read from hot-start file'
+            FATAL 'from getm.inp: ',julianday,secondsofday
+            FATAL 'from hotstart: ',jd,secs
             stop 'restart_file()'
          end if
          if (dt .ne. timestep) then
