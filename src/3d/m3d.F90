@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.21 2004-07-29 19:48:44 hb Exp $
+!$Id: m3d.F90,v 1.22 2004-08-06 15:14:35 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -53,7 +53,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.21  2004-07-29 19:48:44  hb
+!  Revision 1.22  2004-08-06 15:14:35  hb
+!  num and nuh now properly initialised and no gotm call for CONSTANT_VISCOSITY
+!
+!  Revision 1.21  2004/07/29 19:48:44  hb
 !  num, nuh now initialised with _ZERO_
 !
 !  Revision 1.20  2004/07/28 14:58:18  hb
@@ -256,6 +259,8 @@
    read(NAMLST,m3d)
 !   rewind(NAMLST)
 
+   if ((avmback.lt._ZERO_).or.(avmback.lt._ZERO_))                     &
+          stop 'avmback and avhback must be non-negative'
 #ifndef SPM
    if(calc_spm) stop 'To use SPM you have to recompile with -DSPM'
 #endif
@@ -331,8 +336,14 @@
    end select
 
    dt = M*timestep
-   num=_ZERO_
-   nuh=_ZERO_
+
+#ifdef CONSTANT_VISCOSITY
+   num=avmback
+   nuh=avhback
+#else
+   num=1.e-15
+   nuh=1.e-15
+#endif
 
 !  Needed for interpolation of temperature and salinity
    if (.not. hotstart) then
@@ -460,17 +471,17 @@
    STDERR 'NO_ADVECT 3D'
 #endif
 
-#ifndef CONSTANT_VISCOSITY
-#ifndef NO_BOTTFRIC
    if (kmax .gt. 1) then
+#ifndef NO_BOTTFRIC
       call stresses_3d()
+#endif
+#ifndef CONSTANT_VISCOSITY
 #ifndef PARABOLIC_VISCOSITY
       call ss_nn()
 #endif
       call gotm()
+#endif
    end if
-#endif
-#endif
 #ifndef NO_BAROCLINIC
    if(runtype .eq. 4) then        ! prognostic T and S
       if (calc_temp) call do_temperature(n)

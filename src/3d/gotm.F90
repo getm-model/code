@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.7 2003-12-17 10:22:41 kbk Exp $
+!$Id: gotm.F90,v 1.8 2004-08-06 15:14:35 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,7 +34,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: gotm.F90,v $
-!  Revision 1.7  2003-12-17 10:22:41  kbk
+!  Revision 1.8  2004-08-06 15:14:35  hb
+!  num and nuh now properly initialised and no gotm call for CONSTANT_VISCOSITY
+!
+!  Revision 1.7  2003/12/17 10:22:41  kbk
 !  now compiles with -DNO_BAROCLINIC and -DNO_3D
 !
 !  Revision 1.6  2003/12/16 15:58:54  kbk
@@ -106,10 +109,6 @@
    write(debug,*) 'gotm() # ',Ncall
 #endif
 
-#ifdef CONSTANT_VISCOSITY
-   num(i,j,:) = avmback
-   nuh(i,j,:) = avhback
-#else
    do j=jjmin,jjmax
       do i=iimin,iimax
 
@@ -175,7 +174,6 @@
    call wait_halo(H_TAG)
 #endif
 
-#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving gotm()'
