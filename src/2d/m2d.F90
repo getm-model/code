@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.4 2003-05-12 09:22:28 kbk Exp $
+!$Id: m2d.F90,v 1.5 2003-08-03 08:53:30 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,7 +41,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m2d.F90,v $
-!  Revision 1.4  2003-05-12 09:22:28  kbk
+!  Revision 1.5  2003-08-03 08:53:30  kbk
+!  not calling cfl_check when PARALLEL - should be fixed
+!
+!  Revision 1.4  2003/05/12 09:22:28  kbk
 !  removed use halo_zones - not used
 !
 !  Revision 1.3  2003/04/23 12:09:43  kbk
@@ -147,8 +150,9 @@
 
 #ifdef PARALLEL
    STDERR 'Not calling cfl_check() - PARALLEL'
+!   call cfl_check()
 #else
-!KBK   call cfl_check()
+    call cfl_check()
 #endif
 
    if (Am .lt. _ZERO_) then
