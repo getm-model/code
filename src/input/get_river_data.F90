@@ -1,4 +1,4 @@
-!$Id: get_river_data.F90,v 1.4 2003-12-16 12:33:38 kbk Exp $
+!$Id: get_river_data.F90,v 1.5 2003-12-16 17:12:52 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,7 +26,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: get_river_data.F90,v $
-!  Revision 1.4  2003-12-16 12:33:38  kbk
+!  Revision 1.5  2003-12-16 17:12:52  kbk
+!  removed TABS
+!
+!  Revision 1.4  2003/12/16 12:33:38  kbk
 !  some typos (manuel)
 !
 !  Revision 1.3  2003/04/23 12:04:08  kbk
@@ -55,7 +58,7 @@
       case (ANALYTICAL)
       case (ASCII)
          STDERR 'should get ASCII river data'
-	 stop 'ASCII river data input not coded!'
+         stop 'ASCII river data input not coded!'
       case (NETCDF)
          call get_river_data_ncdf(n)
       case DEFAULT

@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.8 2003-12-16 16:13:51 kbk Exp $
+!$Id: temperature.F90,v 1.9 2003-12-16 17:10:05 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,7 +35,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: temperature.F90,v $
-!  Revision 1.8  2003-12-16 16:13:51  kbk
+!  Revision 1.9  2003-12-16 17:10:05  kbk
+!  removed TABS
+!
+!  Revision 1.8  2003/12/16 16:13:51  kbk
 !  forced ????_strang to 0 - needs clarification
 !
 !  Revision 1.7  2003/12/16 16:00:46  kbk
@@ -290,7 +293,7 @@ temp_field_no=1
             swr_loc=swr(i,j)
             shf_loc=shf(i,j)
             if (T(i,j,kmax).le.-0.0575*S(i,j,kmax)) then  ! use most primitive ice model ...
-               shf_loc=max(0.,shf_loc)
+               shf_loc=max(_ZERO_,shf_loc)
             end if
             rad(kmax)=(swr_loc+shf_loc)/(rho_0*cp)
             zz = _ZERO_
@@ -303,9 +306,9 @@ temp_field_no=1
 !     Auxilury terms, old and new time level,
                do k=1,kmax-1
                   auxo(k)=2.*(1-cnpar)*dt*(nuh(i,j,k)+avmolt)/ &
-		             (hn(i,j,k+1)+hn(i,j,k))
+                             (hn(i,j,k+1)+hn(i,j,k))
                   auxn(k)=2.*   cnpar *dt*(nuh(i,j,k)+avmolt)/ &
-		             (hn(i,j,k+1)+hn(i,j,k))
+                             (hn(i,j,k+1)+hn(i,j,k))
                end do
 
 !        Matrix elements for surface layer
