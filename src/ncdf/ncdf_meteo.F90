@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.14 2005-01-12 19:17:47 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.15 2005-01-12 19:26:16 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -77,7 +77,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.14  2005-01-12 19:17:47  kbk
+!  Revision 1.15  2005-01-12 19:26:16  kbk
+!  fixed printing of south pole
+!
+!  Revision 1.14  2005/01/12 19:17:47  kbk
 !  setting grid_scan depending on lat-axis - Stips
 !
 !  Revision 1.13  2004/08/09 10:43:59  kbk
@@ -176,6 +179,7 @@
    integer         :: i,j,n
    integer         :: err
    logical         :: ok=.true.
+   REALTYPE        :: x
 !EOP
 !-------------------------------------------------------------------------
    include "netcdf.inc"
@@ -572,8 +576,8 @@
                if (err .ne. NF_NOERR) go to 10
             end if
             LEVEL4 'south pole:'
-            LEVEL4 '      lon ',southpole(2)
-            LEVEL4 '      lat ',southpole(1)
+            LEVEL4 '      lon ',southpole(1)
+            LEVEL4 '      lat ',southpole(2)
 
          end if
 
