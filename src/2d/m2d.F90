@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.3 2003-04-23 12:09:43 kbk Exp $
+!$Id: m2d.F90,v 1.4 2003-05-12 09:22:28 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,7 +20,6 @@
 ! !USES:
    use time, only: julianday,secondsofday
    use parameters, only: avmmol
-   use halo_zones, only : update_2d_halo,wait_halo,z_TAG,U_TAG,V_TAG
    use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV,min_depth
    use variables_2d
    IMPLICIT NONE
@@ -42,7 +41,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m2d.F90,v $
-!  Revision 1.3  2003-04-23 12:09:43  kbk
+!  Revision 1.4  2003-05-12 09:22:28  kbk
+!  removed use halo_zones - not used
+!
+!  Revision 1.3  2003/04/23 12:09:43  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 12:17:08  kbk
