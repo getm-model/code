@@ -1,4 +1,4 @@
-!$Id: coordinates.F90,v 1.1 2002-05-02 14:00:53 gotm Exp $
+!$Id: coordinates.F90,v 1.2 2003-04-07 16:27:32 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use commhalo, only: update_3d_halo,wait_halo,H_TAG,HU_TAG,HV_TAG
+   use halo_zones, only: update_3d_halo,wait_halo,H_TAG,HU_TAG,HV_TAG
    use domain,   only: iimin,iimax,jjmin,jjmax,kmax,H,HU,HV,az,au,av,min_depth
    use domain,   only: ga,ddu,ddl,d_gamma
    use variables_3d, only: dt,kmin,kumin,kvmin,ho,hn,huo,hun,hvo,hvn
@@ -30,8 +30,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: coordinates.F90,v $
-!  Revision 1.1  2002-05-02 14:00:53  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 16:27:32  kbk
+!  parallel support
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:53  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.15  2001/10/26 07:42:27  bbh
 !  Correct values for sigma and general cordinates in ga
@@ -196,7 +199,6 @@
                end do
             end do
          end do
-
          do k=1,kmax
             do j=jjmin,jjmax
                do i=iimin-1,iimax
@@ -229,7 +231,6 @@
       case (1) ! sigma coordinates
          if (equiv_sigma) then
             kmaxm1= _ONE_/float(kmax)
-
             do j=jjmin,jjmax
                do i=iimin,iimax
                   ho(i,j,:)=(sseo(i,j)+H(i,j))*kmaxm1
@@ -273,7 +274,6 @@
                end do
             end do
          end if
-
       case (2) ! z-level
       case (3) ! general vertical coordinates
 
@@ -336,7 +336,6 @@
       case default
 
    end select
-
    call update_3d_halo(ho,ho,az,iimin,jjmin,iimax,jjmax,kmax,H_TAG)
    call update_3d_halo(hn,hn,az,iimin,jjmin,iimax,jjmax,kmax,H_TAG)
    call update_3d_halo(huo,huo,au,iimin,jjmin,iimax,jjmax,kmax,HU_TAG)

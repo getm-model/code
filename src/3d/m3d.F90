@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.3 2003-04-01 15:56:55 gotm Exp $
+!$Id: m3d.F90,v 1.4 2003-04-07 16:28:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,19 +20,28 @@
 ! !USES:
    use parameters, only: avmmol
    use domain,     only: vert_cord
-   use m2d,        only: D,z,Am
+   use m2d,        only: Am
+   use variables_2d, only: D,z
+#ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature
    use salinity,   only: init_salinity, do_salinity
-   use suspended_matter,	   only: init_spm, do_spm
-   use advection_3d, only: init_advection_3d
    use eqstate,    only: init_eqstate, do_eqstate
+#endif
+#ifndef NO_BAROCLINIC
+   use suspended_matter,	   only: init_spm, do_spm
+#endif
+   use advection_3d, only: init_advection_3d
    use bdy_3d,     only: init_bdy_3d, do_bdy_3d
    use variables_3d
+#ifdef PARALLEL
+use halo_mpi
+#endif
+
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
    integer	:: M=1
-   REALTYPE	:: cord_relax=0.
+   REALTYPE	:: cord_relax=_ZERO_
    logical	:: calc_temp=.true.,calc_salt=.true.,calc_spm=.false.
    logical	:: bdy3d=.false.
    integer	:: bdyfmt_3d,bdyramp_3d
@@ -42,11 +51,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.3  2003-04-01 15:56:55  gotm
-!  initialise T, S and rho
-!
-!  Revision 1.2  2003/04/01 15:27:56  gotm
-!  cleaned the code
+!  Revision 1.4  2003-04-07 16:28:34  kbk
+!  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:51  gotm
 !  recovering after CVS crash
@@ -199,7 +205,6 @@
 !   rewind(NAMLST)
 
 ! Allocates memory for the public data members - if not static
-
    call init_variables_3d(runtype)
 
    LEVEL2 'vel_hor_adv= ',vel_hor_adv
@@ -213,38 +218,17 @@
       stop 'init_3d'
 #endif
    end if
-
    dt = M*timestep
-
-   hn= _ZERO_
-   uu= _ZERO_
-   vv= _ZERO_
-   ww= _ZERO_
-   rru= _ZERO_
-   rrv= _ZERO_
-   uuEx= _ZERO_
-   vvEx= _ZERO_
-   tke=1.e-10
-   eps=1.e-10
    num=avmmol
    nuh=avmmol
-#ifdef UV_TVD
-   uadv = _ZERO_
-   vadv = _ZERO_
-   wadv = _ZERO_
-   huadv = _ZERO_
-   hvadv = _ZERO_
-   hoadv = _ZERO_
-   hnadv = _ZERO_
-#endif
 
 !  Needed for interpolation of temperature and salinity
-
-   if (.not.hotstart) then
+   if (.not. hotstart) then
       call start_macro()
       call coordinates(vert_cord,cord_relax)
-   end if 
+   end if
 
+#ifndef NO_BAROCLINIC
    if (runtype .eq. 3 .or. runtype .eq. 4) then
       T = _ZERO_ ; S = _ZERO_ ; rho = _ZERO_
       if(calc_temp) call init_temperature(1)
@@ -259,6 +243,7 @@
          call init_advection_3d(2)
       end if
    end if
+#endif
 
    if (bdy3d) call init_bdy_3d()
 
@@ -281,7 +266,6 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)	:: runtype,n
-
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -304,19 +288,22 @@
    Ncall = Ncall+1
    write(debug,*) 'integrate_3d() # ',Ncall
 #endif
-
    call start_macro()
+#ifndef NO_BAROCLINIC
    if (bdy3d) call do_bdy_3d(0,T)
+#endif
 
    call coordinates(vert_cord,cord_relax)
 #ifndef NO_BOTTFRIC
-   if (kmax.gt.1) then
+   if (kmax .gt. 1) then
       call bottom_friction_3d()
    end if
 #endif
    SS = _ZERO_
+#ifndef NO_BAROCLINIC
    NN = _ZERO_
    if (runtype .eq. 4) call internal_pressure()
+#endif
    if (ufirst) then
       call uu_momentum_3d(bdy3d)
       call vv_momentum_3d(bdy3d)
@@ -330,7 +317,7 @@
       call ww_momentum_3d()
    end if
 #ifndef NO_ADVECT
-   if (kmax.gt.1) then
+   if (kmax .gt. 1) then
       call uv_advect_3d(vel_hor_adv,vel_ver_adv,vel_strang)
       if (Am .gt. _ZERO_) then
          call uv_diffusion_3d(Am)  ! Must be called after uv_advect_3d
@@ -339,12 +326,13 @@
 #else
    STDERR 'NO_ADVECT 3D'
 #endif
+
 #ifdef CONST_VISC
    num = 1.000e-4
-   nuh = 0.000e-5
+   nuh = 1.000e-5
 #else
 #ifndef NO_BOTTFRIC
-   if (kmax.gt.1) then
+   if (kmax .gt. 1) then
       call stresses_3d()
 #ifndef PARABOLIC_VISCOSITY
       call ss_nn()
@@ -353,6 +341,7 @@
    end if
 #endif
 #endif
+#ifndef NO_BAROCLINIC
    if(runtype .eq. 4) then	! prognostic T and S
       if (calc_temp) call do_temperature(n)
       if (calc_salt) call do_salinity(n)
@@ -361,17 +350,18 @@
       call do_eqstate()
 #endif
    end if
+#endif
 
-   if (kmax.gt.1) then
+   if (kmax .gt. 1) then
 #ifndef NO_BOTTFRIC
-   call slow_bottom_friction()
+      call slow_bottom_friction()
 #endif
 #ifndef NO_ADVECT
 #ifndef UV_ADV_DIRECT
-   call slow_advection()
-   if (Am .gt. _ZERO_) then
-      call slow_diffusion(Am) ! Has to be called after slow_advection.
-   end if
+      call slow_advection()
+      if (Am .gt. _ZERO_) then
+         call slow_diffusion(Am) ! Has to be called after slow_advection.
+      end if
 #endif
 #endif
    end if

@@ -1,4 +1,4 @@
-!$Id: bottom_friction_3d.F90,v 1.2 2003-04-01 15:25:33 gotm Exp $
+!$Id: bottom_friction_3d.F90,v 1.3 2003-04-07 16:29:48 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,8 +27,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: bottom_friction_3d.F90,v $
-!  Revision 1.2  2003-04-01 15:25:33  gotm
-!  used save attribute on local variables
+!  Revision 1.3  2003-04-07 16:29:48  kbk
+!  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:53  gotm
 !  recovering after CVS crash
@@ -102,6 +102,9 @@
                              +vv(i  ,j-1,kk)/hvo(i  ,j-1,kk)         &
                              +vv(i+1,j-1,kk)/hvo(i+1,j-1,kk) )
 #endif
+         else
+            uuloc(i,j) = _ZERO_
+            uvloc(i,j) = _ZERO_
          end if
       end do
    end do
@@ -122,6 +125,9 @@
                             + uu(i-1,j+1,kk)/huo(i-1,j+1,kk) )
 #endif
             vvloc(i,j)=vv(i,j,kk)/(hvo(i,j,kk))
+         else
+            vuloc(i,j) = _ZERO_
+            vvloc(i,j) = _ZERO_
          end if 			
       end do
    end do

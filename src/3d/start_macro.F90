@@ -1,4 +1,4 @@
-!$Id: start_macro.F90,v 1.3 2003-04-07 11:31:23 gotm Exp $
+!$Id: start_macro.F90,v 1.4 2003-04-07 16:27:32 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use commhalo, only: update_2d_halo,z_TAG,U_TAG,V_TAG
+   use halo_zones, only: update_2d_halo,z_TAG,U_TAG,V_TAG
    use domain,   only: iimin,iimax,jjmin,jjmax,H,HU,HV,min_depth
    use m2d,      only: MM,z,Uint,Vint
    use m3d,      only: M,dt
@@ -28,11 +28,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: start_macro.F90,v $
-!  Revision 1.3  2003-04-07 11:31:23  gotm
-!  fixed error in assigning ssen
-!
-!  Revision 1.2  2003/04/01 15:30:21  gotm
-!  default compilation without Sylt specific fix
+!  Revision 1.4  2003-04-07 16:27:32  kbk
+!  parallel support
 !
 !  Revision 1.1.1.1  2002/05/02 14:00:55  gotm
 !  recovering after CVS crash

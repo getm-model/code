@@ -25,7 +25,6 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
    use domain, only: iimin,iimax,jjmin,jjmax,kmax
-
    IMPLICIT NONE
 !
    private
@@ -48,8 +47,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: advection_3d.F90,v $
-!  Revision 1.1  2002-05-02 14:00:58  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 16:30:53  kbk
+!  parallel support
+!
+!  Revision 1.1.1.1  2002/05/02 14:00:58  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.18  2001/09/19 13:53:08  bbh
 !  Typo
@@ -106,7 +108,6 @@
 !  Revision 1.1  2001/05/03 20:20:33  bbh
 !  Stubs for baroclinicity
 !
-!
 ! !LOCAL VARIABLES:
    integer :: advection_method
 !EOP
@@ -152,8 +153,7 @@
 
    LEVEL1 'init_advection_3d()'
 
-#ifdef STATIC
-#else
+#ifndef STATIC
    allocate(cu(I3DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection_3d: Error allocating memory (cu)'
 
@@ -164,9 +164,7 @@
    if (rc /= 0) stop 'init_advection_3d: Error allocating memory (hio)'
 #endif
 
-   cu  = _ZERO_
-   hi  = _ZERO_
-   hio = _ZERO_
+   cu  = _ZERO_ ; hi  = _ZERO_ ; hio = _ZERO_ 
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_advection_3d()'
@@ -202,9 +200,9 @@
   integer, intent(in)		:: hor_adv,ver_adv,strang
 !
 ! !INPUT/OUTPUT PARAMETERS:
+  REALTYPE, intent(inout)	:: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-  REALTYPE, intent(out)	:: f(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  See the log for the module
@@ -252,9 +250,9 @@
 #endif
 	       end if
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,   &
-	                        hor_adv,az,AH)
+                                hor_adv,az,AH)
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,   &
-	                        hor_adv,az,AH)
+                                hor_adv,az,AH)
            case default
               FATAL 'Not valid strang parameter'
          end select
@@ -285,17 +283,17 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE             :: uu(I3DFIELD),vv(I3DFIELD),ww(I3DFIELD)
-   REALTYPE             :: ho(I3DFIELD),hn(I3DFIELD)
-   REALTYPE		:: delxv(I2DFIELD),delyu(I2DFIELD)
-   REALTYPE		:: delxu(I2DFIELD),delyv(I2DFIELD)
-   REALTYPE		:: area_inv(I2DFIELD),dt,AH
+   REALTYPE, intent(in)	:: uu(I3DFIELD),vv(I3DFIELD),ww(I3DFIELD)
+   REALTYPE, intent(in)	:: ho(I3DFIELD),hn(I3DFIELD)
+   REALTYPE, intent(in)	:: delxv(I2DFIELD),delyu(I2DFIELD)
+   REALTYPE, intent(in)	:: delxu(I2DFIELD),delyv(I2DFIELD)
+   REALTYPE, intent(in)	:: area_inv(I2DFIELD),dt,AH
    integer, intent(in)	:: az(E2DFIELD)
-   REALTYPE             :: f(I3DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
+   REALTYPE, intent(inout)	:: f(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  See the log for the module
@@ -316,76 +314,69 @@
    allocate(adv(I3DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'upstream_adv: Error allocating memory (adv)'
 
-   cu(iimin-1:iimin-1,jjmin:jjmax,0:kmax)= _ZERO_
-   cu(iimax:iimax,jjmin:jjmax,0:kmax)= _ZERO_
+   adv = _ZERO_
 
+   cu = _ZERO_
    do k=1,kmax   ! Calculating u-interface fluxes !
       do j=jjmin,jjmax
-         do i=iimin,iimax-1
+         do i=iimin-1,iimax
             if (uu(i,j,k) .gt. _ZERO_) then
                cu(i,j,k)=uu(i,j,k)*f(i,j,k)
-	    else
+            else
                cu(i,j,k)=uu(i,j,k)*f(i+1,j,k)
-	    end if
+            end if
             if ((AH.gt.0.).and.(az(i,j).gt.0).and.(az(i+1,j).gt.0))  &
                cu(i,j,k)=cu(i,j,k)-AH*(f(i+1,j,k)-f(i,j,k))/delxu(i,j)  &
-	                 *0.5*(hn(i+1,j,k)+hn(i,j,k))
+                         *0.5*(hn(i+1,j,k)+hn(i,j,k))
          end do
       end do
    end do
-
    do k=1,kmax   ! Updating the advection term for u-advection !
       do j=jjmin,jjmax
          do i=iimin,iimax
-	    adv(i,j,k)=(cu(i,j,k)*delyu(i,j)    &
-	               -cu(i-1,j,k)*delyu(i-1,j))*area_inv(i,j)
+            adv(i,j,k)=(cu(i  ,j,k)*delyu(i  ,j)    &
+                       -cu(i-1,j,k)*delyu(i-1,j))*area_inv(i,j)
          end do
       end do
    end do
 
-   cu(iimin:iimax,jjmin-1:jjmin-1,0:kmax)= _ZERO_
-   cu(iimin:iimax,jjmax:jjmax,0:kmax)= _ZERO_
-
+   cu = _ZERO_
    do k=1,kmax   ! Calculating v-interface fluxes !
-      do j=jjmin,jjmax-1
+      do j=jjmin-1,jjmax
          do i=iimin,iimax
             if (vv(i,j,k) .gt. _ZERO_) then
                cu(i,j,k)=vv(i,j,k)*f(i,j,k)
-	    else
+            else
                cu(i,j,k)=vv(i,j,k)*f(i,j+1,k)
-	    end if
+            end if
             if ((AH.gt.0.).and.(az(i,j).gt.0).and.(az(i,j+1).gt.0))   &
-            cu(i,j,k)=cu(i,j,k)-AH*(f(i,j+1,k)-f(i,j,k))/delyv(i,j)   &
-	        *0.5*(hn(i,j+1,k)+hn(i,j,k))
+               cu(i,j,k)=cu(i,j,k)-AH*(f(i,j+1,k)-f(i,j,k))/delyv(i,j)   &
+                         *0.5*(hn(i,j+1,k)+hn(i,j,k))
          end do
       end do
    end do
-
    do k=1,kmax   ! Updating the advection term for v-advection !
       do j=jjmin,jjmax
          do i=iimin,iimax
-	    adv(i,j,k)=adv(i,j,k)+(cu(i,j,k)*delxv(i,j)   &
-	                          -cu(i,j-1,k)*delxv(i,j-1))*area_inv(i,j)
+            adv(i,j,k)=adv(i,j,k)+(cu(i,j  ,k)*delxv(i,j  )   &
+                                  -cu(i,j-1,k)*delxv(i,j-1))*area_inv(i,j)
          end do
       end do
    end do
 
-   cu(iimin:iimax,jjmin:jjmax,0)= _ZERO_
-   cu(iimin:iimax,jjmin:jjmax,kmax)= _ZERO_
-
+   cu = _ZERO_
    if (kmax.gt.1) then
       do k=1,kmax-1   ! Calculating w-interface fluxes !
          do j=jjmin,jjmax
             do i=iimin,iimax
                if (ww(i,j,k) .gt. _ZERO_) then
                   cu(i,j,k)=ww(i,j,k)*f(i,j,k)
-	       else
+               else
                   cu(i,j,k)=ww(i,j,k)*f(i,j,k+1)
 	       end if
             end do
          end do
       end do
-
       do k=1,kmax   ! Updating the advection term for w-advection !
          do j=jjmin,jjmax
             do i=iimin,iimax
@@ -398,8 +389,8 @@
    do k=1,kmax   ! Doing the full advection in one step
       do j=jjmin,jjmax
          do i=iimin,iimax
-            if (az(i,j).eq.1)                                        &
-	    f(i,j,k)=(f(i,j,k)*ho(i,j,k)-dt*adv(i,j,k))/hn(i,j,k)
+            if (az(i,j) .eq. 1)                                        &
+               f(i,j,k)=(f(i,j,k)*ho(i,j,k)-dt*adv(i,j,k))/hn(i,j,k)
          end do
       end do
    end do
@@ -860,8 +851,6 @@
    end subroutine w_split_adv
 
 !-----------------------------------------------------------------------
-
-!-----------------------------------------------------------------------
 !BOP
 !
 ! !IROUTINE:  w_split_it_adv()
@@ -932,7 +921,7 @@
          do j=jjmin,jjmax
             do i=iimin,iimax
 	       if (az(i,j) .eq. 1) then
-	          cmax=0.
+	          cmax= _ZERO_
 		  it=1
 		  ready=.false.
 111		  do ii=1,it
@@ -940,7 +929,7 @@
                   cu(i,j,k) = _ZERO_
                      if (ww(i,j,k) .gt. _ZERO_) then
                         c=ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
-			if (c.gt.cmax) cmax=c
+			if (c .gt. cmax) cmax=c
 		        if (k .gt. 1) then
 		           fu=f(i,j,k-1)         ! upstream
 			else
@@ -955,7 +944,7 @@
 		        end if
 		     else
                         c=-ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
-			if (c.gt.cmax) cmax=c
+			if (c .gt. cmax) cmax=c
 		        if (k .lt. kmax-1) then
 		           fu=f(i,j,k+2)         ! upstream
 			else
@@ -990,12 +979,13 @@
 		     end select
 	             cu(i,j,k)=ww(i,j,k)*(fc+0.5*limit*(1-c)*(fd-fc))
                   end do
-		  if (.not.READY) then
+		  if (.not. READY) then
 		     it=min(200,int(cmax)+1)
-		     if (it.gt.1) write(95,*) i,j,it,cmax
-		     if (it.gt.1) write(*,*) i,j,it,cmax
+#ifdef DEBUG
+		     if (it .gt. 1) write(95,*) i,j,it,cmax
+#endif
 		  end if
-		  if ((it.gt.1).and.(.not.READY)) then
+		  if ((it .gt. 1) .and. (.not. READY)) then
 		     READY=.true.
 		     goto 111
 		  end if
@@ -1026,4 +1016,3 @@
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------
-
