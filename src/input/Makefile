@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.1 2002-05-02 14:01:32 gotm Exp $
+#$Id: Makefile,v 1.2 2003-04-07 16:45:07 kbk Exp $
 # 
 # Makefile to build the ncdf module - ncdfio.o
 #
@@ -21,13 +21,17 @@ ${LIB}(input.o)
 
 OBJ   = \
 ${LIB}(init_2d_bdy.o)		\
-${LIB}(get_2d_bdy.o)		\
+${LIB}(get_2d_bdy.o)
+ifneq ($(GETM_NO_3D),true)
+OBJ   += \
 ${LIB}(init_3d_bdy.o)		\
 ${LIB}(get_3d_bdy.o)		\
+${LIB}(init_river_input.o)	\
+${LIB}(get_river_data.o)
+endif
+OBJ   += \
 ${LIB}(init_meteo_input.o)	\
 ${LIB}(get_meteo_data.o)	\
-${LIB}(init_river_input.o)	\
-${LIB}(get_river_data.o)	\
 ${LIB}(get_field.o)		\
 ${LIB}(read_profile.o)
 

@@ -1,17 +1,22 @@
-#$Id: Makefile,v 1.2 2002-05-02 15:04:41 gotm Exp $
+#$Id: Makefile,v 1.3 2003-04-07 16:44:48 kbk Exp $
 #
 # Master Makefile for making the 'getm' executable.
 #
 include Rules.make
 
+#$(GETMDIR)/src/halos		\
+
 # Set the subdirectories with Makefiles
 SUBDIRS = \
 $(GETMDIR)/src/futils		\
-$(GETMDIR)/src/halos		\
 $(GETMDIR)/src/domain		\
 $(GETMDIR)/src/meteo		\
-$(GETMDIR)/src/2d		\
-$(GETMDIR)/src/3d		\
+$(GETMDIR)/src/2d
+ifneq ($(GETM_NO_3D),true)
+SUBDIRS += \
+$(GETMDIR)/src/3d
+endif
+SUBDIRS += \
 $(GETMDIR)/src/output		\
 $(GETMDIR)/src/ncdf		\
 $(GETMDIR)/src/input		\
@@ -21,30 +26,34 @@ ifneq ($(turbulence),gotm)
 SUBDIRS += $(GETMDIR)/src/turb
 endif
 
-
 CORE_LIBS	=	\
 		-lgetm${buildtype} 	\
-		-lhalo${buildtype} 	\
 		-loutput${buildtype}	\
 		-ldomain${buildtype} 	\
 		-lmeteo${buildtype}	\
-		-l2d${buildtype}	\
-		-l3d${buildtype}	\
+		-l2d${buildtype}
+ifneq ($(GETM_NO_3D),true)
+CORE_LIBS	+=	\
+		-l3d${buildtype}
+endif
+CORE_LIBS	+=	\
 		-ldomain${buildtype} 	\
 		-linput${buildtype}	\
 		-lncdfio${buildtype}	\
 		-lfutils${buildtype}
 
+#		-lhalo${buildtype} 	\
+
 LIBS		= $(CORE_LIBS) $(EXTRA_LIBS)
 
-all: model$(buildtype)_$(FORTRAN_COMPILER) install
+all: getm$(buildtype)_$(FORTRAN_COMPILER) install
 
-model$(buildtype)_$(FORTRAN_COMPILER): makedirs subdirs
+getm$(buildtype)_$(FORTRAN_COMPILER): makedirs subdirs
 	$(FC) -o $@ $(LDFLAGS) $(LIBS)
 
-install: model$(buildtype)_$(FORTRAN_COMPILER)
+install: getm$(buildtype)_$(FORTRAN_COMPILER)
 	mkdir -p $(BINDIR)
-	mv model$(buildtype)_$(FORTRAN_COMPILER) $(BINDIR)
+	mv getm$(buildtype)_$(FORTRAN_COMPILER) $(BINDIR)
 
 .PHONY: subdirs $(SUBDIRS)
 
@@ -77,7 +86,7 @@ realclean: clean
 distclean: realclean
 	$(RM) ../lib/*/lib*.a
 	$(RM) ../modules/*/*
-	$(RM) ../bin/model_*
+	$(RM) ../bin/getm_*
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 - Hans Burchard and Karsten Bolding (BBH)         !

@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.1 2002-05-02 14:01:25 gotm Exp $
+#$Id: Makefile,v 1.2 2003-04-07 16:45:07 kbk Exp $
 #
 # Makefile to build the main getm library - libmgetm.a
 #
@@ -33,6 +33,7 @@ realclean: clean
 	$(RM) *.o 
 
 distclean: realclean
+	$(RM) work.pc *.d 
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 - Hans Burchard and Karsten Bolding (BBH)         !

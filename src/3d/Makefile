@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.2 2002-05-29 13:37:49 gotm Exp $
+#$Id: Makefile,v 1.3 2003-04-07 16:45:07 kbk Exp $
 #
 # Makefile to build the 3D specific library - libm3d.a
 #
@@ -15,18 +15,25 @@ LIBSRC	= start_macro.F90 bdy_3d.F90 coordinates.F90 bottom_friction_3d.F90 inter
 
 SRC	= $(MODSRC) $(LIBSRC)
 
-MOD	=	\
+MOD = \
 $(LIB)(variables_3d.o)		\
-$(LIB)(advection_3d.o)		\
+$(LIB)(advection_3d.o)
+ifneq ($(GETM_NO_BAROCLINIC),true)
+MOD += \
 $(LIB)(temperature.o)		\
 $(LIB)(salinity.o)		\
-$(LIB)(eqstate.o)		\
-$(LIB)(spm.o)			\
+$(LIB)(eqstate.o)
+endif
+ifneq ($(GETM_NO_SUSP_MATTER),true)
+MOD += \
+$(LIB)(spm.o)
+endif
+MOD += \
 $(LIB)(bdy_3d.o)		\
 $(LIB)(m3d.o)			\
 $(LIB)(rivers.o)
 
-OBJ	=	\
+OBJ = \
 $(LIB)(start_macro.o)		\
 $(LIB)(coordinates.o)		\
 $(LIB)(bottom_friction_3d.o)	\
@@ -34,8 +41,12 @@ $(LIB)(uu_momentum_3d.o)	\
 $(LIB)(vv_momentum_3d.o)	\
 $(LIB)(ww_momentum_3d.o)	\
 $(LIB)(uv_advect_3d.o)		\
-$(LIB)(uv_diffusion_3d.o)	\
-$(LIB)(internal_pressure.o)	\
+$(LIB)(uv_diffusion_3d.o)
+ifneq ($(GETM_NO_BAROCLINIC),true)
+OBJ += \
+$(LIB)(internal_pressure.o)
+endif
+OBJ += \
 $(LIB)(eddyviscosity.o)		\
 $(LIB)(slow_bottom_friction.o)	\
 $(LIB)(slow_advection.o)	\

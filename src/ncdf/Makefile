@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.1 2002-05-02 14:01:46 gotm Exp $
+#$Id: Makefile,v 1.2 2003-04-07 16:45:07 kbk Exp $
 #
 # Makefile to build the ncdf module - ncdfio.o and the libncdfio.a library
 #
@@ -17,22 +17,30 @@ SRC	= $(MODSRC) $(LIBSRC)
 MOD	= 	\
 ${LIB}(ncdf_common.o)		\
 ${LIB}(ncdf_2d.o)		\
+${LIB}(ncdf_2d_bdy.o)
+ifneq ($(GETM_NO_3D),true)
+MOD	+= 	\
 ${LIB}(ncdf_3d.o)		\
-${LIB}(ncdf_meteo.o)		\
-${LIB}(ncdf_rivers.o)		\
-${LIB}(ncdf_2d_bdy.o)		\
 ${LIB}(ncdf_3d_bdy.o)		\
+${LIB}(ncdf_rivers.o)
+endif
+MOD	+= 	\
+${LIB}(ncdf_meteo.o)		\
 ${LIB}(ncdf_in.o)
 
 OBJ	= 	\
 ${LIB}(ncdf_topo.o)		\
 ${LIB}(set_attributes.o)	\
 ${LIB}(init_2d_ncdf.o)		\
-${LIB}(save_2d_ncdf.o)		\
+${LIB}(save_2d_ncdf.o)
+ifneq ($(GETM_NO_3D),true)
+OBJ	+= 	\
 ${LIB}(init_3d_ncdf.o)		\
 ${LIB}(save_3d_ncdf.o)		\
 ${LIB}(get_field_ncdf.o)	\
-${LIB}(read_field_ncdf.o)	\
+${LIB}(read_field_ncdf.o)
+endif
+OBJ	+= 	\
 ${LIB}(ncdf_close.o)
 
 all: modules objects 
