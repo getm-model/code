@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.13 2004-01-08 10:23:20 kbk Exp $
+!$Id: m3d.F90,v 1.14 2004-04-06 12:42:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,6 +26,8 @@
    use temperature,only: init_temperature, do_temperature
    use salinity,   only: init_salinity, do_salinity
    use eqstate,    only: init_eqstate, do_eqstate
+   use internal_pressure, only: init_internal_pressure, do_internal_pressure
+   use internal_pressure, only: ip_method
 #endif
 #ifndef NO_SUSP_MATTER
    use suspended_matter, only: init_spm, do_spm
@@ -50,7 +52,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.13  2004-01-08 10:23:20  kbk
+!  Revision 1.14  2004-04-06 12:42:50  kbk
+!  internal pressure calculations now uses wrapper
+!
+!  Revision 1.13  2004/01/08 10:23:20  kbk
 !  NN not needed for barotropic runs, NO_SUSP_MATTER works
 !
 !  Revision 1.12  2004/01/06 15:04:00  kbk
@@ -216,7 +221,7 @@
              bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,     &
              vel_hor_adv,vel_ver_adv,vel_adv_split,     &
              calc_temp,calc_salt,calc_spm,              &
-             avmback,avhback
+             avmback,avhback,ip_method
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -324,7 +329,8 @@
 #ifndef PECS
       call do_eqstate()
 #endif
-      if (runtype .eq. 3) call internal_pressure()
+      if (runtype .ge. 3) call init_internal_pressure()
+      if (runtype .eq. 3) call do_internal_pressure()
       if (runtype .eq. 4) then
          call init_advection_3d(2)
       end if
@@ -388,7 +394,7 @@
    SS = _ZERO_
 #ifndef NO_BAROCLINIC
    NN = _ZERO_
-   if (runtype .eq. 4) call internal_pressure()
+   if (runtype .eq. 4) call do_internal_pressure()
 #endif
    if (ufirst) then
       call uu_momentum_3d(bdy3d)

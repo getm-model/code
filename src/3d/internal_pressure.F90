@@ -1,14 +1,19 @@
-!$Id: internal_pressure.F90,v 1.4 2003-08-26 06:59:48 kbk Exp $
+!$Id: internal_pressure.F90,v 1.5 2004-04-06 12:42:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: internal_pressure()
+! !MODULE: internal_pressure()
 !
 ! !INTERFACE:
-   subroutine internal_pressure()
+   module internal_pressure
 !
 ! !DESCRIPTION:
+!  ip_method=1    ! old GETM version of Blumberg-Mellor, very stable
+!  ip_method=2    ! new GETM version of 1, zero for linear profiles 
+!  ip_method=3    ! z-coordinates, linear interpolation
+!  ip_method=4    ! Song and Wright 1998 version
+!  ip_method=5    ! CHU and FAN 2003 version
 !
 ! !USES:
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,az,au,av,H,HU,HV
@@ -20,18 +25,34 @@
    use variables_3d, only: kmin,hn,hun,hvn,idpdx,idpdy,rho
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
+! !PUBLIC DATA MEMBERS:
+   public init_internal_pressure, do_internal_pressure
+   integer, public           :: ip_method=3
+#ifdef STATIC
+   REALTYPE                  :: zz(I3DFIELD)
+#ifdef SUBSTR_INI_PRESS
+   REALTYPE                  :: idpdx0(I3DFIELD),idpdy0(I3DFIELD)
+#endif
+#else
+   REALTYPE, allocatable     :: zz(:,:,:)
+#ifdef SUBSTR_INI_PRESS
+   REALTYPE, allocatable     :: idpdx0(:,:,:),idpdy0(:,:,:)
+#endif
+#endif
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
+! !PRIVATE DATA MEMBERS:
+   integer, private, parameter         :: BLUMBERG_MELLOR=1
+   integer, private, parameter         :: BLUMBERG_MELLOR_LIN=2
+   integer, private, parameter         :: Z_INTERPOL=3
+   integer, private, parameter         :: SONG_WRIGHT=4
+   integer, private, parameter         :: CHU_FAN=5
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: internal_pressure.F90,v $
-!  Revision 1.4  2003-08-26 06:59:48  kbk
-!  dxm1 -> dym1 for idpdy and SONG_WRIGHT
+!  Revision 1.5  2004-04-06 12:42:50  kbk
+!  internal pressure calculations now uses wrapper
 !
 !  Revision 1.3  2003/04/23 12:16:34  kbk
 !  cleaned code + TABS to spaces
@@ -85,228 +106,118 @@
 !  Revision 1.1  2001/05/10 11:30:16  bbh
 !  Added further support for baroclinicity
 !
-! !LOCAL VARIABLES:
-   integer                   :: i,j,k,rc
-   REALTYPE                  :: dxm1,dym1,x,y,x1,y1
-   REALTYPE                  :: grdl,grdu,rhol,rhou,prgr,dxz,dyz
-   LOGICAL,save              :: first=.true.
-#ifdef PRESS_GRAD_Z
-   integer                   :: kplus,kminus
-   REALTYPE                  :: zx(kmax)
-   REALTYPE                  :: rhoplus,rhominus
-#endif
-   REALTYPE,dimension(:,:,:), allocatable        :: zz
-   REALTYPE,save,dimension(:,:,:), allocatable   :: idpdx0
-   REALTYPE,save,dimension(:,:,:), allocatable   :: idpdy0
 !EOP
+!-----------------------------------------------------------------------
+
+   contains
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: init_internal_pressure
+!
+! !INTERFACE:
+   subroutine init_internal_pressure()
+   IMPLICIT NONE
+!
+! !DESCRIPTION:
+!  Reads the namelist and makes calls to the init functions of the
+!  various model components.
+!
+! !REVISION HISTORY:
+!  See the log for the module
+!
+!  !LOCAL VARIABLES
+   integer         :: rc
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+
+#ifndef STATIC
+   allocate(zz(I3DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_internal_pressure: Error allocating memory (zz)'
+#ifdef
+   allocate(idpdx0(I3DFIELD),stat=rc) ! Initial x - pressure gradient.
+   if (rc /= 0) stop &
+        'init_internal_pressure(): Error allocating memory (idpdx0)'
+   allocate(idpdy0(I3DFIELD),stat=rc) ! Initial y - pressure gradient.
+   if (rc /= 0) stop &
+         'init_internal_pressure(): Error allocating memory (idpdy0)'
+   idpdx0=_ZERO_ ;  idpdy0=_ZERO_
+#endif
+#endif
+
+   LEVEL2 'init_internal_pressure()'
+   select case (ip_method)
+      case(BLUMBERG_MELLOR)
+         LEVEL3 'Blumber-Mellor scheme'
+      case(BLUMBERG_MELLOR_LIN)
+         LEVEL3 'Blumber-Mellor linear scheme'
+      case(Z_INTERPOL)
+         LEVEL3 'Z-interpolation'
+      case(SONG_WRIGHT)
+         LEVEL3 'Sung and Wright scheme'
+      case(CHU_FAN)
+         LEVEL3 'Chu amd Fan scheme'
+      case default
+         FATAL 'Not valid ip_method specified'
+         stop 'init_internal_pressure()'
+   end select
+
+   return
+   end subroutine init_internal_pressure
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  do_internal_pressure()
+!
+! !INTERFACE:
+   subroutine do_internal_pressure()
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!  See the log for the module
+!
+! !LOCAL VARIABLES:
 !-----------------------------------------------------------------------
 !BOC
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'internal_pressure() # ',Ncall
+   write(debug,*) 'do_internal_pressure() # ',Ncall
 #endif
-
-#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
-   dxm1 = _ONE_/DXU
-   dym1 = _ONE_/DYV
-#endif
-
-#ifdef SUBSTR_INI_PRESS
-   if (first) then
-      allocate(idpdx0(I3DFIELD),stat=rc)    ! Initial x - pressure gradient.
-      if (rc /= 0) stop 'internal_pressure.F90: Error allocating memory (idpdx0)'
-      allocate(idpdy0(I3DFIELD),stat=rc)    ! Initial y - pressure gradient.
-      if (rc /= 0) stop 'internal_pressure.F90: Error allocating memory (idpdy0)'
-   end if
-#endif
-
-   allocate(zz(I3DFIELD),stat=rc)    ! Interface heights.
-   if (rc /= 0) stop 'internal_pressure.F90: Error allocating memory (zz)'
 
    zz = _ZERO_
    idpdx = _ZERO_
    idpdy = _ZERO_
 
-! First, the interface heights are calculated in order to get the
-! interface slopes further down.
-   do j=jjmin,jjmax+1
-      do i=iimin,iimax+1
-         if (az(i,j) .ge. 1) then
-#ifdef PRESS_GRAD_Z
-            zz(i,j,1)=-H(i,j)+0.5*hn(i,j,1)
-            do k=2,kmax
-               zz(i,j,k)=zz(i,j,k-1)+0.5*(hn(i,j,k-1)+hn(i,j,k))
-            end do
-#else
-#ifdef SONG_WRIGHT
-            zz(i,j,1)=-H(i,j)+0.5*hn(i,j,1)
-            do k=2,kmax
-               zz(i,j,k)=zz(i,j,k-1)+0.5*(hn(i,j,k-1)+hn(i,j,k))
-            end do
-#else
-            zz(i,j,1)=-H(i,j)+hn(i,j,1)
-            do k=2,kmax
-               zz(i,j,k)=zz(i,j,k-1)+hn(i,j,k)
-            end do
-
-#endif
-#endif
-         end if
-      end do
-   end do
-
-! Calculation of layer integrated internal pressure gradient as it
-! appears on the right hand side of the u-velocity equation.
-   do j=jjmin,jjmax
-      do i=iimin,iimax
-         if (au(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-            dxm1=_ONE_/DXU
-#endif
-#ifdef PRESS_GRAD_Z
-            zx(1)=-HU(i,j)+0.5*hun(i,j,1) ! zx defined on u-points
-            do k=2,kmax
-               zx(k)=zx(k-1)+0.5*(hun(i,j,k-1)+hun(i,j,k))
-            end do
-#endif
-#ifdef SONG_WRIGHT
-!HB            grdl=0.5*(rho(i+1,j,kmax)*hn(i+1,j,kmax)       &
-!HB                     -rho(i  ,j,kmax)*hn(i  ,j,kmax))*dxm1
-            grdl=0.5*hun(i,j,kmax)*(rho(i+1,j,kmax)-rho(i,j,kmax))*dxm1
-            rhol=0.5*(rho(i+1,j,kmax)+rho(i,j,kmax))       &
-                     *(zz(i+1,j,kmax)- zz(i,j,kmax))*dxm1
-#else
-            grdl=0.5*hun(i,j,kmax)*(rho(i+1,j,kmax)-rho(i,j,kmax))*dxm1
-            rhol=0.5*(rho(i+1,j,kmax)+rho(i,j,kmax))
-#endif
-            prgr=grdl
-            idpdx(i,j,kmax)=hun(i,j,kmax)*prgr
-            do k=kmax-1,1,-1
-               grdu=grdl
-#ifdef PRESS_GRAD_Z
-               do kplus=kmax,1,-1
-                  if (zz(i+1,j,kplus) .le. zx(k)) EXIT
-               end do
-               do kminus=kmax,1,-1
-                  if (zz(i,j,kminus) .le. zx(k)) EXIT
-               end do
-               if (kplus .eq. kmax) rhoplus=rho(i+1,j,kplus)
-               if (kplus .lt. kmax .and. kplus .gt. 1) then
-                  rhoplus=((zx(k)-zz(i+1,j,kplus))*rho(i+1,j,kplus+1)+ &
-                          (zz(i+1,j,kplus+1)-zx(k))*rho(i+1,j,kplus))/ &
-                          (0.5*(hn(i+1,j,kplus+1)+hn(i+1,j,kplus)))
-               end if
-               if (kminus .eq. kmax) rhominus=rho(i,j,kminus)
-               if ((kminus .lt. kmax) .and. (kminus .gt. 1)) then
-                  rhominus=((zx(k)-zz(i,j,kminus))*rho(i,j,kminus+1)+ &
-                          (zz(i,j,kminus+1)-zx(k))*rho(i,j,kminus))/  &
-               (0.5*(hn(i,j,kminus+1)+hn(i,j,kminus)))
-               end if
-               if (zx(k) .gt. max(-H(i+1,j),-H(i,j))) then
-                  grdl=0.5*hun(i,j,k)*(rhoplus-rhominus)*dxm1
-               else
-                  grdl= _ZERO_
-               end if
-               prgr=prgr+grdu+grdl
-#else
-#ifdef SONG_WRIGHT
-               grdl=(0.5*(rho(i+1,j,k)+rho(i+1,j,k+1))               &
-                        *0.5*(hn(i+1,j,k)+hn(i+1,j,k+1))             &
-                    -0.5*(rho(i,j,k)+rho(i,j,k+1))                   &
-                        *0.5*(hn(i,j,k)+hn(i,j,k+1)) )*dxm1
-               rhou=rhol
-               rhol=0.5*(rho(i+1,j,k)+rho(i,j,k))*(zz(i+1,j,k)-zz(i,j,k))*dxm1
-               prgr=prgr+grdl-(rhou-rhol)
-#else
-               grdl=0.5*hun(i,j,k)*(rho(i+1,j,k)-rho(i,j,k))*dxm1
-               rhou=rhol
-               rhol=0.5*(rho(i+1,j,k)+rho(i,j,k))
-               dxz=(zz(i+1,j,k)-zz(i,j,k))*dxm1
-               prgr=prgr+grdu+grdl-dxz*(rhou-rhol)
-#endif
-#endif
-               idpdx(i,j,k)=hun(i,j,k)*prgr
-            end do
-         end if
-      end do
-   end do
-
-! Calculation of layer integrated internal pressure gradient as it
-! appears on the right hand side of the v-velocity equation.
-   do j=jjmin,jjmax
-      do i=iimin,iimax
-         if (av(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-            dym1 = _ONE_/DYV
-#endif
-#ifdef PRESS_GRAD_Z
-            zx(1)=-HV(i,j)+0.5*hvn(i,j,1) ! zx defined on v-points
-            do k=2,kmax
-               zx(k)=zx(k-1)+0.5*(hvn(i,j,k-1)+hvn(i,j,k))
-            end do
-#endif
-#ifdef SONG_WRIGHT
-!HB            grdl=0.5*(rho(i,j+1,kmax)*hn(i,j+1,kmax)     &
-!HB                     -rho(i,j  ,kmax)*hn(i,j  ,kmax))*dym1
-            grdl=0.5*hvn(i,j,kmax)*(rho(i,j+1,kmax)-rho(i,j,kmax))*dym1
-            rhol=0.5*(rho(i,j+1,kmax)+rho(i,j,kmax))     &
-                     *(zz(i,j+1,kmax)- zz(i,j,kmax))*dym1
-#else
-            grdl=0.5*hvn(i,j,kmax)*(rho(i,j+1,kmax)-rho(i,j,kmax))*dym1
-            rhol=0.5*(rho(i,j+1,kmax)+rho(i,j,kmax))
-#endif
-            prgr=grdl
-            idpdy(i,j,kmax)=hvn(i,j,kmax)*prgr
-            do k=kmax-1,1,-1
-               grdu=grdl
-#ifdef PRESS_GRAD_Z
-               do kplus=kmax,1,-1
-                  if (zz(i,j+1,kplus) .le. zx(k)) EXIT
-               end do
-               do kminus=kmax,1,-1
-                  if (zz(i,j,kminus) .le. zx(k)) EXIT
-               end do
-               if (kplus .eq. kmax) rhoplus=rho(i,j+1,kplus)
-               if ((kplus .lt. kmax) .and. (kplus .gt. 1)) then
-                  rhoplus=((zx(k)-zz(i,j+1,kplus))*rho(i,j+1,kplus+1)+ &
-                          (zz(i,j+1,kplus+1)-zx(k))*rho(i,j+1,kplus))/ &
-                          (0.5*(hn(i,j+1,kplus+1)+hn(i,j+1,kplus)))
-               end if
-               if (kminus .eq. kmax) rhominus=rho(i,j,kminus)
-               if ((kminus .lt. kmax) .and. (kminus .gt. 1)) then
-                  rhominus=((zx(k)-zz(i,j,kminus))*rho(i,j,kminus+1)+  &
-                           (zz(i,j,kminus+1)-zx(k))*rho(i,j,kminus))/  &
-                           (0.5*(hn(i,j,kminus+1)+hn(i,j,kminus)))
-               end if
-               if (zx(k).gt.max(-H(i,j+1),-H(i,j))) then
-                  grdl=0.5*hvn(i,j,k)*(rhoplus-rhominus)*dym1
-               else
-                  grdl= _ZERO_
-               end if
-               prgr=prgr+grdu+grdl
-#else
-#ifdef SONG_WRIGHT
-               grdl=(0.5*(rho(i,j+1,k)+rho(i,j+1,k+1))               &
-                        *0.5*(hn(i,j+1,k)+hn(i,j+1,k+1))             &
-                    -0.5*(rho(i,j,k)+rho(i,j,k+1))                   &
-                        *0.5*(hn(i,j,k)+hn(i,j,k+1)) )*dym1
-               rhou=rhol
-               rhol=0.5*(rho(i,j+1,k)+rho(i,j,k))*(zz(i,j+1,k)-zz(i,j,k))*dym1
-               prgr=prgr+grdl-(rhou-rhol)
-#else
-               grdl=0.5*hvn(i,j,k)*(rho(i,j+1,k)-rho(i,j,k))*dym1
-               rhou=rhol
-               rhol=0.5*(rho(i,j+1,k)+rho(i,j,k))
-               dyz=(zz(i,j+1,k)-zz(i,j,k))*dym1
-               prgr=prgr+grdu+grdl-dyz*(rhou-rhol)
-#endif
-#endif
-               idpdy(i,j,k)=hvn(i,j,k)*prgr
-            end do
-         end if
-      end do
-   end do
+   select case (ip_method)
+      case(BLUMBERG_MELLOR)
+         call ip_blumberg_mellor()
+      case(BLUMBERG_MELLOR_LIN)
+         call ip_blumberg_mellor_lin()
+      case(Z_INTERPOL)
+         call ip_z_interpol()
+      case(SONG_WRIGHT)
+         call ip_song_wright()
+      case(CHU_FAN)
+         call ip_chu_fan()
+      case default
+         FATAL 'Not valid ip_method specified'
+         stop 'do_internal_pressure()'
+   end select
 
 #ifdef SUBSTR_INI_PRESS
    if (first) then
@@ -333,19 +244,17 @@
    end if
 #endif
 
-
-#ifdef FORTRAN90
-   deallocate(zz,stat=rc)    ! work array
-   if (rc /= 0) stop 'internal_pressure: Error de-allocating memory (zz)'
-#endif
-
 #ifdef DEBUG
-   write(debug,*) 'Leaving internal_pressure()'
+   write(debug,*) 'Leaving do_internal_pressure()'
    write(debug,*)
 #endif
    return
-   end subroutine internal_pressure
+   end subroutine do_internal_pressure
 !EOC
+
+!-----------------------------------------------------------------------
+
+   end module internal_pressure
 
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
