@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.2 2003-04-07 16:45:07 kbk Exp $
+#$Id: Makefile,v 1.3 2003-12-16 16:56:05 kbk Exp $
 #
 # Makefile to build the main getm library - libmgetm.a
 #
@@ -15,7 +15,7 @@ ${LIB}(initialise.o)
 
 OBJ   = \
 ${LIB}(cleanup.o)		\
-${LIB}(main.o)
+main.o
 
 all: modules objects
 
