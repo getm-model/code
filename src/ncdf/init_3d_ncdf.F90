@@ -1,4 +1,4 @@
-!$Id: init_3d_ncdf.F90,v 1.4 2003-05-09 11:38:26 kbk Exp $
+!$Id: init_3d_ncdf.F90,v 1.5 2003-12-16 12:51:04 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,7 +30,10 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_3d_ncdf.F90,v $
-!  Revision 1.4  2003-05-09 11:38:26  kbk
+!  Revision 1.5  2003-12-16 12:51:04  kbk
+!  preparing for proper support for SPM (manuel)
+!
+!  Revision 1.4  2003/05/09 11:38:26  kbk
 !  added proper undef support - based on Adolf Stips patch
 !
 !  Revision 1.3  2003/04/23 11:53:24  kbk
@@ -371,6 +374,7 @@
       end if
    end if
 
+#ifdef SPM
    if (save_spm) then
       fv = spm_missing
       mv = spm_missing
@@ -382,7 +386,7 @@
                       long_name='suspended particulate matter',units='?????', &
                       FillValue=fv,missing_value=mv,valid_range=vr)
    end if
-
+#endif
 !  globals
    err = nf_put_att_text(ncid,NF_GLOBAL,'title',LEN_TRIM(title),title)
    if (err .NE. NF_NOERR) go to 10

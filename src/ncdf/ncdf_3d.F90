@@ -1,4 +1,4 @@
-!$Id: ncdf_3d.F90,v 1.3 2003-05-09 11:38:26 kbk Exp $
+!$Id: ncdf_3d.F90,v 1.4 2003-12-16 12:51:04 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,8 +35,9 @@
    integer                             :: uu_id,vv_id,w_id
    integer                             :: salt_id,temp_id,sigma_t_id
    integer                             :: tke_id,num_id,nuh_id,eps_id
+#ifdef SPM
    integer                             :: spm_id
-
+#endif
    integer                             :: xlen,ylen,zlen
    integer, parameter                  :: size_3d=9000000
    REAL_4B                             :: ws(size_3d)
@@ -50,15 +51,19 @@
    REALTYPE, parameter                 :: nuh_missing=-9999.0
    REALTYPE, parameter                 :: num_missing=-9999.0
    REALTYPE, parameter                 :: eps_missing=-9999.0
+#ifdef SPM
    REALTYPE, parameter                 :: spm_missing=-9999.0
-
+#endif
 
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d.F90,v $
-!  Revision 1.3  2003-05-09 11:38:26  kbk
+!  Revision 1.4  2003-12-16 12:51:04  kbk
+!  preparing for proper support for SPM (manuel)
+!
+!  Revision 1.3  2003/05/09 11:38:26  kbk
 !  added proper undef support - based on Adolf Stips patch
 !
 !  Revision 1.2  2003/04/23 11:53:24  kbk
