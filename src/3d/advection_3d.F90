@@ -49,7 +49,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: advection_3d.F90,v $
-!  Revision 1.4  2003-09-03 05:38:45  kbk
+!  Revision 1.5  2003-12-16 16:50:40  kbk
+!  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
+!
+!  Revision 1.4  2003/09/03 05:38:45  kbk
 !  need to call update_3d_halo() for each directional split
 !
 !  Revision 1.3  2003/04/23 12:16:34  kbk
@@ -118,6 +121,7 @@
 !
 ! !LOCAL VARIABLES:
    integer :: advection_method
+   REALTYPE, parameter       :: ONE=_ONE_,TWO=2.*_ONE_
 !EOP
 !-----------------------------------------------------------------------
 
@@ -216,7 +220,7 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   REALTYPE, parameter       :: a1=0.5,a2=1.0
+   REALTYPE, parameter       :: a1=0.5*ONE,a2=ONE
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -256,7 +260,7 @@
                                 hor_adv,az,AH)
 
                call update_3d_halo(f,f,az, &
-	                           iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+                                   iimin,jjmin,iimax,jjmax,kmax,D_TAG)
                call wait_halo(D_TAG)
 
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
@@ -539,18 +543,18 @@
                      end if
                      select case (method)
                         case ((P2),(P2_PDM))
-                           x = one6th*(1.-2.0*c)
+                           x = one6th*(ONE-TWO*c)
                            Phi=(0.5+x)+(0.5-x)*r
                            if (method.eq.P2) then
                               limit=Phi
                            else
                               limit=max(_ZERO_,min(Phi,2./(1.-c), &
-			                2.*r/(c+1.e-10)))
+                                        2.*r/(c+1.e-10)))
                            end if
                         case (Superbee)
-                           limit=max(_ZERO_,min(1.0, 2.0*r),min(r,2.0))
+                           limit=max(_ZERO_,min(ONE,TWO*r),min(r,TWO))
                         case (MUSCL)
-                           limit=max(_ZERO_,min(2.0,2.0*r,0.5*(1.0+r)))
+                           limit=max(_ZERO_,min(TWO,TWO*r,0.5*(ONE+r)))
                         case default
                            FATAL 'Not so good - do_advection_3d()'
                            stop 'u_split_adv'
@@ -559,7 +563,7 @@
 !Horizontal diffusion
                      if ( AH.gt.0. .and. az(i,j).gt.0 .and. az(i+1,j).gt.0 ) then
                         cu(i,j,k) = cu(i,j,k)-AH*hun(i,j,k) &
-			            *(f(i+1,j,k)-f(i,j,k))/delxu(i,j)
+                                     *(f(i+1,j,k)-f(i,j,k))/delxu(i,j)
                      end if
                   end if
                end do
@@ -690,11 +694,11 @@
                            r=(fu-fc)*1.e10
                         end if
                      end if
-                     x = one6th*(1.-2.0*c)
+                     x = one6th*(ONE-TWO*c)
                      Phi=(0.5+x)+(0.5-x)*r
                      select case (method)
                         case ((P2),(P2_PDM))
-                           x = one6th*(1.-2.0*c)
+                           x = one6th*(ONE-TWO*c)
                            Phi=(0.5+x)+(0.5-x)*r
                            if (method.eq.P2) then
                            limit=Phi
@@ -702,9 +706,9 @@
                            limit=max(_ZERO_,min(Phi,2./(1.-c),2.*r/(c+1.e-10)))
                            end if
                         case (Superbee)
-                           limit=max(_ZERO_, min(1.0, 2.0*r), min(r,2.0) )
+                           limit=max(_ZERO_, min(ONE,TWO*r), min(r,TWO) )
                         case (MUSCL)
-                           limit=max(_ZERO_,min(2.0,2.0*r,0.5*(1.0+r)))
+                           limit=max(_ZERO_,min(TWO,TWO*r,0.5*(ONE+r)))
                         case default
                            FATAL 'This is not so good - do_advection_3d()'
                            stop 'v_split_adv'
@@ -837,11 +841,11 @@
                            r=(fu-fc)*1.e10
                         end if
                      end if
-                     x = one6th*(1.-2.0*c)
+                     x = one6th*(ONE-TWO*c)
                      Phi=(0.5+x)+(0.5-x)*r
                      select case (method)
                         case ((P2),(P2_PDM))
-                           x = one6th*(1.-2.0*c)
+                           x = one6th*(ONE-TWO*c)
                            Phi=(0.5+x)+(0.5-x)*r
                            if (method.eq.P2) then
                               limit=Phi
@@ -849,9 +853,9 @@
                               limit=max(_ZERO_,min(Phi,2./(1.-c),2.*r/(c+1.e-10)))
                            end if
                         case (Superbee)
-                           limit=max(_ZERO_, min(1.0, 2.0*r), min(r,2.0) )
+                           limit=max(_ZERO_, min(ONE, TWO*r), min(r,TWO) )
                         case (MUSCL)
-                           limit=max(_ZERO_,min(2.0,2.0*r,0.5*(1.0+r)))
+                           limit=max(_ZERO_,min(TWO,TWO*r,0.5*(ONE+r)))
                         case default
                            FATAL 'This is not so good - do_advection_3d()'
                            stop 'w_split_adv'
@@ -991,11 +995,11 @@
                            r=   (fu-fc)*1.e10
                            end if
                         end if
-                        x = one6th*(1.-2.0*c)
+                        x = one6th*(ONE-TWO*c)
                         Phi=(0.5+x)+(0.5-x)*r
                         select case (method)
                            case ((P2),(P2_PDM))
-                              x = one6th*(1.-2.0*c)
+                              x = one6th*(ONE-TWO*c)
                               Phi=(0.5+x)+(0.5-x)*r
                               if (method.eq.P2) then
                                  limit=Phi
@@ -1003,9 +1007,9 @@
                                  limit=max(_ZERO_,min(Phi,2./(1.-c),2.*r/(c+1.e-10)))
                               end if
                            case (Superbee)
-                              limit=max(_ZERO_, min(1.0, 2.0*r), min(r,2.0) )
+                              limit=max(_ZERO_, min(ONE, TWO*r), min(r,TWO) )
                            case (MUSCL)
-                              limit=max(_ZERO_,min(2.0,2.0*r,0.5*(1.0+r)))
+                              limit=max(_ZERO_,min(TWO,TWO*r,0.5*(ONE+r)))
                            case default
                               FATAL 'This is not so good - do_advection_3d()'
                               stop 'w_split_it_adv'

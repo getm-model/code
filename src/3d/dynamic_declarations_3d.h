@@ -28,7 +28,7 @@
 ! suspended matter
 #ifndef NO_SUSP_MATTER
   REALTYPE, dimension(:,:,:), allocatable   :: spm,spm_ws
-  REALTYPE, dimension(:,:), allocatable	    :: spm_pool
+  REALTYPE, dimension(:,:), allocatable     :: spm_pool
 #endif
 
 #ifdef UV_TVD

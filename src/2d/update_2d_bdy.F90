@@ -1,4 +1,4 @@
-!$Id: update_2d_bdy.F90,v 1.3 2003-04-23 12:09:44 kbk Exp $
+!$Id: update_2d_bdy.F90,v 1.4 2003-12-16 16:50:40 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,7 @@
 !
 ! !USES:
    use domain, only: NWB,NNB,NEB,NSB,H,min_depth,imin,imax,jmin,jmax,az
-   use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli,nsbv
+   use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: bdy_index,nsbv
    use m2d, only: dtm,bdyfmt_2d,bdy_data
    use variables_2d, only: z
@@ -29,7 +29,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: update_2d_bdy.F90,v $
-!  Revision 1.3  2003-04-23 12:09:44  kbk
+!  Revision 1.4  2003-12-16 16:50:40  kbk
+!  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
+!
+!  Revision 1.3  2003/04/23 12:09:44  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 15:45:05  kbk
@@ -72,6 +75,7 @@
    REALTYPE, save            :: t,t1,t2
    REALTYPE                  :: a,amp,ratio,fac
    integer                   :: i,j,k,l,n
+   REALTYPE, parameter       :: FOUR=4.*_ONE_
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -172,7 +176,7 @@
 
    ratio = _ONE_
    fac = _ONE_
-   if(bdyramp .gt. 1) fac=min( _ONE_ ,4.*loop/float(bdyramp))
+   if(bdyramp .gt. 1) fac=min( _ONE_ ,FOUR*loop/float(bdyramp))
 
    l = 0
    do n = 1,NWB

@@ -1,4 +1,4 @@
-!$Id: grid_interpol.F90,v 1.6 2003-10-30 16:31:36 kbk Exp $
+!$Id: grid_interpol.F90,v 1.7 2003-12-16 16:50:40 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -40,7 +40,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: grid_interpol.F90,v $
-!  Revision 1.6  2003-10-30 16:31:36  kbk
+!  Revision 1.7  2003-12-16 16:50:40  kbk
+!  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
+!
+!  Revision 1.6  2003/10/30 16:31:36  kbk
 !  check validity of meteo interpolation coeffcients
 !
 !  Revision 1.5  2003/06/30 05:45:26  kbk
@@ -575,7 +578,7 @@
                   gridmap(i,j,1) = im-1
               else
                   outside = .true.
-	       end if
+              end if
             else
             endif
 
@@ -585,9 +588,9 @@
                      if(met_lat(jm) .gt. alat) EXIT
                   end do
                   gridmap(i,j,2) = jm-1
-	       else
+               else
                   outside = .true.
-	       end if
+               end if
             else
             endif
          end if
@@ -609,10 +612,10 @@
 #endif
             if (rotated_grid) then
                call to_rotated_lat_lon(sp,olon(i,j),olat(i,j), &
-	                               x,y,beta(i,j))
+                                       x,y,beta(i,j))
             else
-	       x = olon(i,j)
-	       y = olat(i,j)
+               x = olon(i,j)
+               y = olat(i,j)
             end if
             im = gridmap(i,j,1)
             jm = gridmap(i,j,2)

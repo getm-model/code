@@ -1,9 +1,9 @@
-   integer		:: iextr=-1, jextr=-1
-   integer		:: imin=-1,imax=-1,jmin=-1,jmax=-1
-   integer		:: iimin=-1,iimax=-1,jjmin=-1,jjmax=-1
-   integer		:: kmax=1
+   integer         :: iextr=-1, jextr=-1
+   integer         :: imin=-1,imax=-1,jmin=-1,jmax=-1
+   integer         :: iimin=-1,iimax=-1,jjmin=-1,jjmax=-1
+   integer         :: kmax=1
 
-   integer, dimension(:,:), allocatable	    :: az,au,av,ax
+   integer, dimension(:,:), allocatable     :: az,au,av,ax
 
    REALTYPE, dimension(:,:), allocatable    :: H,HU,HV
    REALTYPE, dimension(:,:), allocatable    :: lonc,latc,conv

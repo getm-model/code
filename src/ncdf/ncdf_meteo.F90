@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.8 2003-11-03 14:34:54 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.9 2003-12-16 16:50:41 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,55 +27,58 @@
    public init_meteo_input_ncdf,get_meteo_data_ncdf
 !
 ! !PRIVATE DATA MEMBERS:
-   REALTYPE	:: offset
-   integer 	:: ncid,ndims,dims(3)
-   integer 	:: start(3),edges(3)
-   integer 	:: u10_id,v10_id,airp_id,t2_id
-   integer 	:: hum_id,convp_id,largep_id,tcc_id
-   integer	:: tausx_id,tausy_id,swr_id,shf_id
-   integer	:: iextr,jextr,textr,tmax=-1
-   integer	:: grid_scan=1
+   REALTYPE        :: offset
+   integer         :: ncid,ndims,dims(3)
+   integer         :: start(3),edges(3)
+   integer         :: u10_id,v10_id,airp_id,t2_id
+   integer         :: hum_id,convp_id,largep_id,tcc_id
+   integer         :: tausx_id,tausy_id,swr_id,shf_id
+   integer         :: iextr,jextr,textr,tmax=-1
+   integer         :: grid_scan=1
 
-   REALTYPE, allocatable	:: met_lon(:),met_lat(:)
-   REAL_4B, allocatable		:: met_times(:)
-   REAL_4B, allocatable		:: wrk(:,:)
-   REALTYPE, allocatable	:: wrk_dp(:,:)
+   REALTYPE, allocatable     :: met_lon(:),met_lat(:)
+   REAL_4B, allocatable      :: met_times(:)
+   REAL_4B, allocatable      :: wrk(:,:)
+   REALTYPE, allocatable     :: wrk_dp(:,:)
 
 !  For gridinterpolation
-   REALTYPE, allocatable	:: ti(:,:),ui(:,:)
-   integer, allocatable		:: gridmap(:,:,:)
+   REALTYPE, allocatable     :: ti(:,:),ui(:,:)
+   integer, allocatable      :: gridmap(:,:,:)
 !
-   REALTYPE, parameter	:: pi=3.1415926535897932384626433832795029
-   REALTYPE, parameter	:: deg2rad=pi/180.,rad2deg=180./pi
-   REALTYPE		:: southpole(3) = (/0.0,-90.0,0.0/)
-   character(len=10)	:: name_lon="lon"
-   character(len=10)	:: name_lat="lat"
-   character(len=10)	:: name_time="time"
-   character(len=10)	:: name_u10="u10"
-   character(len=10)	:: name_v10="v10"
-   character(len=10)	:: name_airp="slp"
-   character(len=10)	:: name_t2="t2"
-   character(len=10)	:: name_hum1="sh"
-   character(len=10)	:: name_hum2="rh"
-   character(len=10)	:: name_hum3="dev2"
-   character(len=10)	:: name_hum4="twet"
-   character(len=10)	:: name_tcc="tcc"
-   integer, parameter   :: SPECIFIC_HUM=1
-   integer, parameter   :: RELATIVE_HUM=2
-   integer, parameter   :: DEW_POINT=3
-   integer, parameter   :: WET_BULB=4
+   REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029
+   REALTYPE, parameter       :: deg2rad=pi/180.,rad2deg=180./pi
+   REALTYPE                  :: southpole(3) = (/0.0,-90.0,0.0/)
+   character(len=10)         :: name_lon="lon"
+   character(len=10)         :: name_lat="lat"
+   character(len=10)         :: name_time="time"
+   character(len=10)         :: name_u10="u10"
+   character(len=10)         :: name_v10="v10"
+   character(len=10)         :: name_airp="slp"
+   character(len=10)         :: name_t2="t2"
+   character(len=10)         :: name_hum1="sh"
+   character(len=10)         :: name_hum2="rh"
+   character(len=10)         :: name_hum3="dev2"
+   character(len=10)         :: name_hum4="twet"
+   character(len=10)         :: name_tcc="tcc"
+   integer, parameter        :: SPECIFIC_HUM=1
+   integer, parameter        :: RELATIVE_HUM=2
+   integer, parameter        :: DEW_POINT=3
+   integer, parameter        :: WET_BULB=4
 
-   character(len=10)	:: name_tausx="tausx"
-   character(len=10)	:: name_tausy="tausy"
-   character(len=10)	:: name_swr="swr"
-   character(len=10)	:: name_shf="shf"
-   character(len=128)	:: model_time
+   character(len=10)         :: name_tausx="tausx"
+   character(len=10)         :: name_tausy="tausy"
+   character(len=10)         :: name_swr="swr"
+   character(len=10)         :: name_shf="shf"
+   character(len=128)        :: model_time
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.8  2003-11-03 14:34:54  kbk
+!  Revision 1.9  2003-12-16 16:50:41  kbk
+!  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
+!
+!  Revision 1.8  2003/11/03 14:34:54  kbk
 !  use time_var_id in addition to time_id
 !
 !  Revision 1.7  2003/10/30 16:31:36  kbk
@@ -141,8 +144,8 @@
 !  \emph{get\_meteo\_data\_ncdf}.
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)	:: fn
-   integer, intent(in)		:: nstart
+   character(len=*), intent(in)        :: fn
+   integer, intent(in)                 :: nstart
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -153,9 +156,9 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer      :: i,j,n
-   integer      :: err
-   logical      :: ok=.true.
+   integer         :: i,j,n
+   integer         :: err
+   logical         :: ok=.true.
 !EOP
 !-------------------------------------------------------------------------
    include "netcdf.inc"
@@ -195,10 +198,10 @@
          met_lon(i) = -10.125 + (i-1)*1.125
       end do
       do j=1,jextr
-	 met_lat(j) =  28.125 + (j-1)*1.125
+         met_lat(j) =  28.125 + (j-1)*1.125
       end do
 #endif
-      call init_grid_interpol(imin,imax,jmin,jmax,az,	&
+      call init_grid_interpol(imin,imax,jmin,jmax,az,  &
                 lonc,latc,met_lon,met_lat,southpole,gridmap,ti,ui)
    end if
 
@@ -307,7 +310,7 @@
 !  necessary.
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: loop
+   integer, intent(in)                 :: loop
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -318,15 +321,15 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer      :: i,indx
-   REALTYPE	:: t
-   logical, save 	:: first=.true.
-   integer, save 	:: save_n=1
+   integer         :: i,indx
+   REALTYPE        :: t
+   logical, save   :: first=.true.
+   integer, save   :: save_n=1
 !
 !EOP
 !-------------------------------------------------------------------------
 #ifdef DEBUG
-   integer, save :: Ncall = 0
+   integer, save   :: Ncall = 0
    Ncall = Ncall+1
    write(debug,*) 'get_meteo_data_ncdf() # ',Ncall
 #endif
@@ -402,7 +405,7 @@
 !  and that they are of the same shape.
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)		:: meteo_file
+   character(len=*), intent(in)        :: meteo_file
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -413,15 +416,15 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer, parameter	:: iunit=55
-   character(len=256)	:: fn,time_units
-   integer		:: j1,s1,j2,s2
-   integer		:: n,err,idum
-   logical		:: first=.true.
-   logical		:: found=.false.,first_open=.true.
-   integer, save        :: lon_id=-1,lat_id=-1,time_id=-1,id=-1
-   integer, save        :: time_var_id=-1
-   character(len=256)   :: dimname
+   integer, parameter        :: iunit=55
+   character(len=256)        :: fn,time_units
+   integer         :: j1,s1,j2,s2
+   integer         :: n,err,idum
+   logical         :: first=.true.
+   logical         :: found=.false.,first_open=.true.
+   integer, save   :: lon_id=-1,lat_id=-1,time_id=-1,id=-1
+   integer, save   :: time_var_id=-1
+   character(len=256) :: dimname
 !
 ! !TO DO:
 !  Need a variable to indicate homw much to read from each file.
@@ -429,7 +432,7 @@
 !-------------------------------------------------------------------------
    include "netcdf.inc"
 #ifdef DEBUG
-   integer, save :: Ncall = 0
+   integer, save   :: Ncall = 0
    Ncall = Ncall+1
    write(debug,*) 'open_meteo_file() # ',Ncall
 #endif
@@ -474,15 +477,15 @@
                   tmax=textr
                end if
             end do
-	    if(lon_id .eq. -1) then
+            if(lon_id .eq. -1) then
                FATAL 'could not find longitude coordinate in meteo file'
                stop 'open_meteo_file()'
             end if
-	    if(lat_id .eq. -1) then
+            if(lat_id .eq. -1) then
                FATAL 'could not find latitude coordinate in meteo file'
                stop 'open_meteo_file()'
             end if
-	    if(time_id .eq. -1) then
+            if(time_id .eq. -1) then
                FATAL 'could not find time coordinate in meteo file'
                stop 'open_meteo_file()'
             end if
@@ -504,7 +507,7 @@
             if (err .ne. NF_NOERR) go to 10
 
             allocate(met_times(textr),stat=err)
-            if (err /= 0) stop 	&
+            if (err /= 0) stop &
                   'open_meteo_file(): Error allocating memory (met_times)'
 
             err = nf_inq_varid(ncid,'southpole',id)
@@ -514,9 +517,9 @@
                err = nf_get_var_double(ncid,id,southpole)
                if (err .ne. NF_NOERR) go to 10
             end if
-	    LEVEL4 'south pole:'
-	    LEVEL4 '      lon ',southpole(2)
-	    LEVEL4 '      lat ',southpole(1)
+            LEVEL4 'south pole:'
+            LEVEL4 '      lon ',southpole(2)
+            LEVEL4 '      lat ',southpole(1)
 
          end if
 
@@ -527,7 +530,7 @@
             if (err /= 0) stop      &
                'open_meteo_file(): Error de-allocating memory (met_times)'
             allocate(met_times(textr),stat=err)
-            if (err /= 0) stop 	&
+            if (err /= 0) stop &
                'open_meteo_file(): Error allocating memory (met_times)'
          end if
          textr = idum
@@ -566,7 +569,7 @@
          if (err /= 0) stop      &
             'open_meteo_file(): Error de-allocating memory (met_times)'
          allocate(met_times(textr),stat=err)
-         if (err /= 0) stop 	&
+         if (err /= 0) stop &
             'open_meteo_file(): Error allocating memory (met_times)'
       end if
       textr = idum
@@ -638,9 +641,9 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer	:: i1,i2,istr,j1,j2,jstr
-   integer	:: i,j,err
-   REALTYPE	:: uu,vv,sinconv,cosconv
+   integer         :: i1,i2,istr,j1,j2,jstr
+   integer         :: i,j,err
+   REALTYPE        :: uu,vv,sinconv,cosconv
 !EOP
 !-----------------------------------------------------------------------
    include "netcdf.inc"
@@ -679,12 +682,12 @@
       do j=jmin,jmax
          do i=imin,imax
             if(conv(i,j) .ne. _ZERO_) then
-	       sinconv=sin(-conv(i,j)*deg2rad)
-	       cosconv=cos(-conv(i,j)*deg2rad)
+               sinconv=sin(-conv(i,j)*deg2rad)
+               cosconv=cos(-conv(i,j)*deg2rad)
                uu=u10(i,j)
                vv=v10(i,j)
-	       u10(i,j)= uu*cosconv+vv*sinconv
-	       v10(i,j)=-uu*sinconv+vv*cosconv
+               u10(i,j)= uu*cosconv+vv*sinconv
+               v10(i,j)=-uu*sinconv+vv*cosconv
             end if
          end do   
       end do  
@@ -808,21 +811,21 @@
 !  the stresses/fluxes directly are available to \emph{do\_meteo}.
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)	:: grid_scan
-   REAL_4B, intent(in)	:: inf(:,:)
+   integer, intent(in)                 :: grid_scan
+   REAL_4B, intent(in)                 :: inf(:,:)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out):: outf(:,:)
+   REALTYPE, intent(out)               :: outf(:,:)
 !
 ! !REVISION HISTORY:
 !
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer	:: i1,i2,istr,j1,j2,jstr
-   integer	:: i,j,err
+   integer         :: i1,i2,istr,j1,j2,jstr
+   integer         :: i,j,err
 !EOP
 !-----------------------------------------------------------------------
 

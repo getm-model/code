@@ -1,4 +1,4 @@
-!$Id: ncdf_3d_bdy.F90,v 1.7 2003-10-07 15:10:42 kbk Exp $
+!$Id: ncdf_3d_bdy.F90,v 1.8 2003-12-16 16:50:41 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,7 +43,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
-!  Revision 1.7  2003-10-07 15:10:42  kbk
+!  Revision 1.8  2003-12-16 16:50:41  kbk
+!  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
+!
+!  Revision 1.7  2003/10/07 15:10:42  kbk
 !  use zax_dim as argument to dim_len
 !
 !  Revision 1.6  2003/08/03 09:19:41  kbk
@@ -379,7 +382,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
-!  Revision 1.7  2003-10-07 15:10:42  kbk
+!  Revision 1.8  2003-12-16 16:50:41  kbk
+!  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
+!
+!  Revision 1.7  2003/10/07 15:10:42  kbk
 !  use zax_dim as argument to dim_len
 !
 !  Revision 1.6  2003/08/03 09:19:41  kbk
@@ -554,13 +560,13 @@ end do
 
 subroutine interpol(zlev,wrk,depth,kmax,zm,col)
 
-REAL_4B		:: zlev(18),wrk(18)
-REALTYPE	:: depth
-integer		:: kmax
-REALTYPE	:: zm(0:kmax),col(0:kmax)
+REAL_4B            :: zlev(18),wrk(18)
+REALTYPE           :: depth
+integer            :: kmax
+REALTYPE           :: zm(0:kmax),col(0:kmax)
 
-REALTYPE	:: zmodel(kmax),rat
-integer		:: k,n,nn
+REALTYPE           :: zmodel(kmax),rat
+integer            :: k,n,nn
 
    zmodel(1) = -depth + 0.5*zm(1)
    do k=2,kmax

@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.6 2003-09-30 09:44:27 kbk Exp $
+!$Id: output.F90,v 1.7 2003-12-16 16:50:41 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -51,7 +51,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
-!  Revision 1.6  2003-09-30 09:44:27  kbk
+!  Revision 1.7  2003-12-16 16:50:41  kbk
+!  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
+!
+!  Revision 1.6  2003/09/30 09:44:27  kbk
 !  hotout=0 -> save hot-files at last time step only
 !
 !  Revision 1.5  2003/09/16 07:45:30  kbk
@@ -328,7 +331,7 @@
 ! !LOCAL VARIABLES
    integer, save             :: n=0
    logical, save             :: continuous=.false.
-   integer                   :: n,jd,secs 
+   integer                   :: jd,secs 
    REALTYPE                  :: dt
 !
 !EOP
