@@ -1,4 +1,4 @@
-!$Id: have_bdy.F90,v 1.3 2003-04-23 12:09:43 kbk Exp $
+!$Id: have_bdy.F90,v 1.4 2003-05-06 16:02:53 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,7 +25,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: have_bdy.F90,v $
-!  Revision 1.3  2003-04-23 12:09:43  kbk
+!  Revision 1.4  2003-05-06 16:02:53  kbk
+!  now works with several boundaries on each side in parallel mode
+!
+!  Revision 1.3  2003/04/23 12:09:43  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 15:42:05  kbk
@@ -55,19 +58,20 @@
    if (NWB .ge. 1) then
       do n = 1,NWB
          if (wi(n) .ge. imin+ioff .and. wi(n) .le. imax+ioff) then
-            wi(n) = wi(n) - ioff
             f = max(jmin+joff,wfj(n)) - joff
             l = min(jmax+joff,wlj(n)) - joff
             if(f .le. l) then
                i = i+1
+               wi(i) = wi(n) - ioff
                wfj(i) = f
                wlj(i) = l
                nbdy = nbdy+1
-do k=1,nsbv
-if(bdy_map(k,1) .eq. wi(n)+ioff .and. bdy_map(k,2) .eq. f+joff) then
-bdy_index(nbdy) = k
-end if
-end do
+               do k=1,nsbv
+                  if (bdy_map(k,1) .eq. wi(i)+ioff .and. &
+                      bdy_map(k,2) .eq. f+joff) then
+                     bdy_index(nbdy) = k
+                  end if
+               end do
             end if
          end if
       end do
@@ -78,19 +82,20 @@ end do
    if (NNB .ge. 1) then
       do n = 1,NNB
          if (nj(n) .ge. jmin+joff .and. nj(n) .le. jmax+joff) then
-            nj(n) = nj(n) - joff
             f = max(imin+ioff,nfi(n)) - ioff
             l = min(imax+ioff,nli(n)) - ioff
             if(f .le. l) then
                i = i+1
                nfi(i) = f
                nli(i) = l
+               nj(i) = nj(n) - joff
                nbdy = nbdy+1
-do k=1,nsbv
-if(bdy_map(k,1) .eq. f+ioff .and. bdy_map(k,2) .eq. nj(n)+joff) then
-bdy_index(nbdy) = k
-end if
-end do
+               do k=1,nsbv
+                  if (bdy_map(k,1) .eq. f+ioff .and.  &
+                      bdy_map(k,2) .eq. nj(i)+joff) then
+                     bdy_index(nbdy) = k
+                  end if
+               end do
             end if
          end if
       end do
@@ -101,19 +106,20 @@ end do
    if (NEB .ge. 1) then
       do n = 1,NEB
          if (ei(n) .ge. imin+ioff .and. ei(n) .le. imax+ioff) then
-            ei(n) = ei(n) - ioff
             f = max(jmin+joff,efj(n)) - joff
             l = min(jmax+joff,elj(n)) - joff
             if(f .le. l) then
                i = i+1
+               ei(i) = ei(n) - ioff
                efj(i) = f
                elj(i) = l
                nbdy = nbdy+1
-do k=1,nsbv
-if(bdy_map(k,1) .eq. ei(n)+ioff .and. bdy_map(k,2) .eq. l+joff) then
-bdy_index(nbdy) = k
-end if
-end do
+               do k=1,nsbv
+                  if (bdy_map(k,1) .eq. ei(i)+ioff .and. &
+                      bdy_map(k,2) .eq. l+joff) then
+                     bdy_index(nbdy) = k
+                  end if
+               end do
             end if
          end if
       end do
@@ -124,19 +130,20 @@ end do
    if (NSB .ge. 1) then
       do n = 1,NSB
          if (sj(n) .ge. jmin+joff .and. sj(n) .le. jmax+joff) then
-            sj(n) = sj(n) - joff
             f = max(imin+ioff,sfi(n)) - ioff
             l = min(imax+ioff,sli(n)) - ioff
             if(f .le. l) then
                i = i+1
                sfi(i) = f
                sli(i) = l
+               sj(i) = sj(n) - joff
                nbdy = nbdy+1
-do k=1,nsbv
-if(bdy_map(k,1) .eq. f+ioff .and. bdy_map(k,2) .eq. sj(n)+joff) then
-bdy_index(nbdy) = k
-end if
-end do
+               do k=1,nsbv
+                  if (bdy_map(k,1) .eq. f+ioff .and. &
+                      bdy_map(k,2) .eq. sj(i)+joff) then
+                     bdy_index(nbdy) = k
+                  end if
+               end do
             end if
          end if
       end do
