@@ -1,4 +1,4 @@
-!$Id: ncdf_in.F90,v 1.1 2002-05-02 14:01:47 gotm Exp $
+!$Id: ncdf_in.F90,v 1.2 2003-04-07 15:36:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,8 +26,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_in.F90,v $
-!  Revision 1.1  2002-05-02 14:01:47  gotm
-!  Initial revision
+!  Revision 1.2  2003-04-07 15:36:08  kbk
+!  not including interface for get_bathymetry
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:47  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.6  2001/05/25 19:26:22  bbh
 !  ncdf_meteo.F90
@@ -62,7 +65,7 @@
 #endif
       end subroutine get_dimensions
    end interface
-
+#if 0
    interface
       subroutine get_bathymetry(H,Hland,dx,dy,imin,imax,jmin,jmax,rc)
          integer, intent(inout)		:: imin,imax,jmin,jmax
@@ -71,6 +74,7 @@
          integer, intent(out)		:: rc
       end subroutine get_bathymetry
    end interface
+#endif
 
    interface
       subroutine get_field_ncdf(fname,var,f)
