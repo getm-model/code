@@ -1,4 +1,4 @@
-!$Id: parallel.F90,v 1.1 2002-05-02 14:01:29 gotm Exp $
+!$Id: parallel.F90,v 1.2 2003-03-24 14:21:11 gotm Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,8 +31,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: parallel.F90,v $
-!  Revision 1.1  2002-05-02 14:01:29  gotm
-!  Initial revision
+!  Revision 1.2  2003-03-24 14:21:11  gotm
+!  corrected boundary indices
+!
+!  Revision 1.1.1.1  2002/05/02 14:01:29  gotm
+!  recovering after CVS crash
 !
 !  Revision 1.4  2001/06/22 08:19:10  bbh
 !  Compiler options such as USE_MASK and OLD_DRY deleted.
@@ -180,6 +183,7 @@
       case default                 ! for variables defined on scalar-grid
          ilow=imin;ihigh=imax;jlow=jmin;jhigh=jmax
    end select
+ilow=imin;ihigh=imax;jlow=jmin;jhigh=jmax
    select case (comm_method)
       case(ONE_PROCESS)
 #if 0
@@ -248,6 +252,7 @@
       case default                 ! for variables defined on scalar-grid
          ilow=iimin;ihigh=iimax;jlow=jjmin;jhigh=jjmax
    end select
+ilow=iimin;ihigh=iimax;jlow=jjmin;jhigh=jjmax
    select case (comm_method)
       case(ONE_PROCESS)
 #if 0
