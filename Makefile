@@ -16,6 +16,8 @@ VER=1.1.4
 VER=1.1.5
 # 2004/06/15
 VER=1.1.6
+# 2005/01/14
+VER=1.1.7
 
 TAG=v$(shell cat VERSION | tr . _)
 RELEASE=getm-$(VERSION)
