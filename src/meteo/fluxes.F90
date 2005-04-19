@@ -1,4 +1,4 @@
-!$Id: fluxes.F90,v 1.8 2005-01-13 09:49:37 kbk Exp $
+!$Id: fluxes.F90,v 1.9 2005-04-19 12:21:23 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,8 +22,13 @@
 !  meteo.F90, exchange_coefficients.F90
 !
 ! !USES:
+#define EA_ZERO
    use meteo, only: cpa,emiss,bolz,KELVIN
-   use meteo, only: w,L,rho_air,qs,qa,ea,es
+#ifdef EA_ZERO
+   use meteo, only: w,L,rho_air,qs,qa
+#else
+   use meteo, only: w,L,rho_air,qs,qa,ea
+#endif
    use meteo, only: cd_mom,cd_heat,cd_latent
    IMPLICIT NONE
 !
@@ -39,7 +44,10 @@
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: fluxes.F90,v $
-!  Revision 1.8  2005-01-13 09:49:37  kbk
+!  Revision 1.9  2005-04-19 12:21:23  kbk
+!  simulate old compiler bug by -DEA_ZERO
+!
+!  Revision 1.8  2005/01/13 09:49:37  kbk
 !  wet bulb works, es is global, cleaning - Stips
 !
 !  Revision 1.7  2003/12/16 17:16:13  kbk
@@ -72,9 +80,12 @@
    integer, parameter   :: hastenrath=2 ! Hastenrath and Lamb, 1978
 !
 ! !LOCAL VARIABLES:
+#ifdef EA_ZERO
+   REALTYPE                  :: ea=_ZERO_
+#endif
    REALTYPE                  :: tmp
    REALTYPE                  :: qe,qh,qb
-   REALTYPE                  :: ta,tw,tw_k
+   REALTYPE                  :: ta,ta_k,tw,tw_k
    integer                   :: back_radiation_method=clark
 !
 !EOP
@@ -88,10 +99,12 @@
       tw_k= sst
    end if
 
-   if (airt .gt. 100.) then
-      ta  = airt - KELVIN
-   else
+   if (airt .lt. 100.) then
       ta = airt
+      ta_k  = airt + KELVIN
+   else
+      ta = airt - KELVIN
+      ta_k = airt
    end if
 
    qh=cd_heat*cpa*rho_air*w*(tw-ta)            ! sensible
@@ -99,12 +112,13 @@
 
    select case(back_radiation_method)          ! back radiation
       case(clark)
-         qb=(1.0-.8*tcc*tcc)                                  &
-            *emiss*bolz*(tw_k**4)*(0.39-0.05*sqrt(ea/100.0))  &
+!        AS - unit of ea is Pascal, must hPa
+         qb=(1.0-.8*tcc*tcc)                                    &
+            *emiss*bolz*(tw_k**4)*(0.39-0.05*sqrt(0.01*ea))     &
             +4.0*emiss*bolz*(tw_k**3)*(tw-ta)
       case(hastenrath) ! qa in g(water)/kg(wet air)
-         qb=(1.0-.8*tcc*tcc)                                  &
-            *emiss*bolz*(tw_k**4)*(0.39-0.056*sqrt(1000*qa))  &
+         qb=(1.0-.8*tcc*tcc)                                    &
+            *emiss*bolz*(tw_k**4)*(0.39-0.056*sqrt(1000.0*qa))  &
             +4.0*emiss*bolz*(tw_k**3)*(tw-ta)
       case default
    end select
