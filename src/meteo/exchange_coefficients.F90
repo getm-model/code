@@ -1,4 +1,4 @@
-!$Id: exchange_coefficients.F90,v 1.12 2005-04-19 13:02:08 kbk Exp $
+!$Id: exchange_coefficients.F90,v 1.13 2005-04-19 13:17:17 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -65,7 +65,10 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: exchange_coefficients.F90,v $
-!  Revision 1.12  2005-04-19 13:02:08  kbk
+!  Revision 1.13  2005-04-19 13:17:17  kbk
+!  reduce es=water vapour pressure sea according to Kraus (1972) - Stips
+!
+!  Revision 1.12  2005/04/19 13:02:08  kbk
 !  use -DOLD_WRONG_FLUXES to get pre-december 2004 behavior
 !
 !  Revision 1.9  2005/01/13 09:49:37  kbk
@@ -178,6 +181,11 @@
 #else
    es = a1 +tw*(a2+tw*(a3+tw*(a4+tw*(a5+tw*(a6+tw*a7)))))
    es = es * 100.0 ! Conversion millibar --> Pascal
+#endif
+#ifndef OLD_WRONG_FLUXES
+!  correction for seawater, following Kraus 1972
+!  correcting for salt water assuming 98% RH
+   es=0.98 * es
 #endif
 !  saturation specific humidity
    qs = const06*es/(airp-0.377*es)
