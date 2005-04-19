@@ -1,4 +1,4 @@
-!$Id: fluxes.F90,v 1.9 2005-04-19 12:21:23 kbk Exp $
+!$Id: fluxes.F90,v 1.10 2005-04-19 13:02:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,7 +22,9 @@
 !  meteo.F90, exchange_coefficients.F90
 !
 ! !USES:
+#ifdef OLD_WRONG_FLUXES
 #define EA_ZERO
+#endif
    use meteo, only: cpa,emiss,bolz,KELVIN
 #ifdef EA_ZERO
    use meteo, only: w,L,rho_air,qs,qa
@@ -44,7 +46,10 @@
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: fluxes.F90,v $
-!  Revision 1.9  2005-04-19 12:21:23  kbk
+!  Revision 1.10  2005-04-19 13:02:08  kbk
+!  use -DOLD_WRONG_FLUXES to get pre-december 2004 behavior
+!
+!  Revision 1.9  2005/04/19 12:21:23  kbk
 !  simulate old compiler bug by -DEA_ZERO
 !
 !  Revision 1.8  2005/01/13 09:49:37  kbk

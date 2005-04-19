@@ -1,4 +1,4 @@
-!$Id: exchange_coefficients.F90,v 1.11 2005-04-19 12:15:07 kbk Exp $
+!$Id: exchange_coefficients.F90,v 1.12 2005-04-19 13:02:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -65,8 +65,8 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: exchange_coefficients.F90,v $
-!  Revision 1.11  2005-04-19 12:15:07  kbk
-!  oops - forgot closing #endif
+!  Revision 1.12  2005-04-19 13:02:08  kbk
+!  use -DOLD_WRONG_FLUXES to get pre-december 2004 behavior
 !
 !  Revision 1.9  2005/01/13 09:49:37  kbk
 !  wet bulb works, es is global, cleaning - Stips
@@ -187,15 +187,17 @@
    case (1)
 !     specific humidity in kg/kg is given
       qa = hum
-!     aktual water vapor pressure
+!     actual water vapor pressure in Pascal
       ea = qa *airp/(const06+0.378*qa)
    case (2)
 !     relative humidity in % given
       rh = 0.01 * hum
 !     saturation vapor pressure at that air temperature
 #ifdef HAMSOM_SVP
-      x  = 17.67*ta/(ta+243.5)
-      ea = 611.2 * exp(x)
+      x1 = (18.729 - (min(ta_k,300.*_ONE_)-273.15)/227.3)
+      x2 = (min(ta_k,300.*_ONE_)-273.15)
+      x3 = (max(ta_k,200.*_ONE_)-273.15+257.87)
+      ea = 611.21*exp(x1*x2/x3)
 #else
       ea = a1 +ta*(a2+ta*(a3+ta*(a4+ta*(a5+ta*(a6+ta*a7)))))
       ea = ea * 100.0 ! Conversion millibar --> Pascal
@@ -217,19 +219,29 @@
          dew = hum-KELVIN
          dew_k = hum
       end if
-#ifdef HAMSUN_SVP
+#ifdef HAMSOM_SVP
       x1 = (18.729 - (min(dew_k,300.*_ONE_)-273.15)/227.3)
-      x2 = (min(dew_k,300.*_ONE_)-273.15) 
+      x2 = (min(dew_k,300.*_ONE_)-273.15)
       x3 = (max(dew_k,200.*_ONE_)-273.15+257.87)
       ea = 611.21*exp(x1*x2/x3)
-
+#ifdef OLD_WRONG_FLUXES
       x1 = (18.729 - (min(ta_k,300.*_ONE_)-273.15)/227.3)
-      x2 = (min(ta_k,300.*_ONE_)-273.15) 
+      x2 = (min(ta_k,300.*_ONE_)-273.15)
       x3 = (max(ta_k,200.*_ONE_)-273.15+257.87)
       es = 611.21*exp(x1*x2/x3)
 #endif
+#else
+      ea = a1 +dew*(a2+dew*(a3+dew*(a4+dew*(a5+dew*(a6+dew*a7)))))
+      ea = ea * 100.0 ! Conversion millibar --> Pascal
+#endif
+
+#ifdef OLD_WRONG_FLUXES
       rh = 100.*ea/es
       qa = 0.01*rh*qs
+#else
+!     AS convert actual vapor pressure to specific humidity
+      qa = const06*ea/(airp-0.377*ea)
+#endif
    case (4)
 !     wet bulb temperature given
 !     Calculate the SVP at wet bulb temp then
