@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.6 2004-06-15 07:57:49 kbk Exp $
+!$Id: main.F90,v 1.7 2005-04-19 15:51:11 kbk Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -39,7 +39,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: main.F90,v $
-!  Revision 1.6  2004-06-15 07:57:49  kbk
+!  Revision 1.7  2005-04-19 15:51:11  kbk
+!  notify on use of -DOLD_WRONG_FLUXES
+!
+!  Revision 1.6  2004/06/15 07:57:49  kbk
 !  CONST_VISC --> CONSTANT_VISCOSITY - Ruiz
 !
 !  Revision 1.5  2003/09/30 09:44:26  kbk
@@ -227,6 +230,9 @@
 #endif
 #ifdef SONG_WRIGHT
    LEVEL1 'SONG_WRIGHT'
+#endif
+#ifdef OLD_WRONG_FLUXES
+   LEVEL1 'OLD_WRONG_FLUXES'
 #endif
 
    STDERR LINE
