@@ -1,4 +1,4 @@
-!$Id: fluxes.F90,v 1.10 2005-04-19 13:02:08 kbk Exp $
+!$Id: fluxes.F90,v 1.11 2005-04-19 15:21:33 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -46,7 +46,10 @@
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: fluxes.F90,v $
-!  Revision 1.10  2005-04-19 13:02:08  kbk
+!  Revision 1.11  2005-04-19 15:21:33  kbk
+!  cleaned long wave radiation and added Bignami and Berliand (ROMS)
+!
+!  Revision 1.10  2005/04/19 13:02:08  kbk
 !  use -DOLD_WRONG_FLUXES to get pre-december 2004 behavior
 !
 !  Revision 1.9  2005/04/19 12:21:23  kbk
@@ -83,15 +86,18 @@
 ! !DEFINED PARAMETERS:
    integer, parameter   :: clark=1      ! Clark et. al, 1974
    integer, parameter   :: hastenrath=2 ! Hastenrath and Lamb, 1978
+   integer, parameter   :: bignami=3    ! Bignami 1995 -Medsea
+   integer, parameter   :: berliand=4   ! Berliand 1952 -ROMS
 !
 ! !LOCAL VARIABLES:
 #ifdef EA_ZERO
    REALTYPE                  :: ea=_ZERO_
 #endif
-   REALTYPE                  :: tmp
+   REALTYPE                  :: tmp,ccf=0.8
    REALTYPE                  :: qe,qh,qb
    REALTYPE                  :: ta,ta_k,tw,tw_k
    integer                   :: back_radiation_method=clark
+   REALTYPE                  :: x1,x2,x3
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -117,15 +123,39 @@
 
    select case(back_radiation_method)          ! back radiation
       case(clark)
-!        AS - unit of ea is Pascal, must hPa
-         qb=(1.0-.8*tcc*tcc)                                    &
-            *emiss*bolz*(tw_k**4)*(0.39-0.05*sqrt(0.01*ea))     &
-            +4.0*emiss*bolz*(tw_k**3)*(tw-ta)
+!        AS unit of ea is Pascal, must hPa
+!        Black body defect term, clouds, water vapor correction
+         x1=(1.0-ccf*tcc*tcc)*(tw_k**4)
+         x2=(0.39-0.05*sqrt(ea*0.01))
+!        Temperature jump term
+         x3=4.0*(tw_k**3)*(tw-ta)
+         qb=emiss*bolz*(x1*x2+x3)
       case(hastenrath) ! qa in g(water)/kg(wet air)
-         qb=(1.0-.8*tcc*tcc)                                    &
-            *emiss*bolz*(tw_k**4)*(0.39-0.056*sqrt(1000.0*qa))  &
-            +4.0*emiss*bolz*(tw_k**3)*(tw-ta)
+!        Black body defect term, clouds, water vapor correction
+         x1=(1.0-ccf*tcc*tcc)*(tw_k**4)
+         x2=(0.39-0.056*sqrt(1000.0*qa))
+!        Temperature jump term
+         x3=4.0*(tw_k**3)*(tw-ta)
+         qb=emiss*bolz*(x1*x2+x3)
+      case(bignami)
+!        AS unit of ea is Pascal, must hPa
+         ccf=0.1762
+!        Black body defect term, clouds, water vapor correction
+         x1=(1.0+ccf*tcc*tcc)*ta_k**4
+         x2=(0.653+0.00535*(ea*0.01))
+!        Temperature jump term
+         x3= emiss*(tw_k**4)
+         qb=bolz*(-x1*x2+x3)
+      case(berliand)
+!        Use Berliand (1952) formula (ROMS).
+!        Black body defect term, clouds, water vapor correction
+         x1=(1.0-0.6823*tcc*tcc)*ta_k**4
+         x2=(0.39-0.05*sqrt(0.01*ea))
+!        Temperature jump term
+         x3=4.0*ta_k**3*(tw-ta)
+         qb=emiss*bolz*(x1*x2+x3)
       case default
+         stop 'fluxes: back_radiation_method'
    end select
 
    hf = -(qe+qh+qb)
