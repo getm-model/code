@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.11 2005-01-13 09:49:37 kbk Exp $
+!$Id: meteo.F90,v 1.12 2005-04-19 15:56:58 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -78,7 +78,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
-!  Revision 1.11  2005-01-13 09:49:37  kbk
+!  Revision 1.12  2005-04-19 15:56:58  kbk
+!  added latitude dependent cloud correction factor for long wave rad. - Stips
+!
+!  Revision 1.11  2005/01/13 09:49:37  kbk
 !  wet bulb works, es is global, cleaning - Stips
 !
 !  Revision 1.10  2004/01/15 11:45:00  kbk
@@ -439,8 +442,9 @@
                               call exchange_coefficients( &
                                      u10(i,j),v10(i,j),t2(i,j),airp(i,j), &
                                      sst(i,j),hum(i,j),hum_method)
-                              call fluxes(u10(i,j),v10(i,j),t2(i,j),tcc(i,j),  &
-                                      sst(i,j),shf(i,j),tausx(i,j),tausy(i,j))
+                              call fluxes(latc(i,j),u10(i,j),v10(i,j),    &
+                                          t2(i,j),tcc(i,j),sst(i,j),      &
+                                          shf(i,j),tausx(i,j),tausy(i,j))
                            else
                               shf(i,j) = _ZERO_
                               tausx(i,j) = _ZERO_
