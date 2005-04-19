@@ -1,4 +1,4 @@
-!$Id: exchange_coefficients.F90,v 1.10 2005-04-19 12:11:33 kbk Exp $
+!$Id: exchange_coefficients.F90,v 1.11 2005-04-19 12:15:07 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -65,8 +65,8 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: exchange_coefficients.F90,v $
-!  Revision 1.10  2005-04-19 12:11:33  kbk
-!  re-introduce temperature limitation - -DHAMSOM_SVP
+!  Revision 1.11  2005-04-19 12:15:07  kbk
+!  oops - forgot closing #endif
 !
 !  Revision 1.9  2005/01/13 09:49:37  kbk
 !  wet bulb works, es is global, cleaning - Stips
@@ -227,7 +227,7 @@
       x2 = (min(ta_k,300.*_ONE_)-273.15) 
       x3 = (max(ta_k,200.*_ONE_)-273.15+257.87)
       es = 611.21*exp(x1*x2/x3)
-
+#endif
       rh = 100.*ea/es
       qa = 0.01*rh*qs
    case (4)
