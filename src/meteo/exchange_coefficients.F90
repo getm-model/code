@@ -1,4 +1,4 @@
-!$Id: exchange_coefficients.F90,v 1.9 2005-01-13 09:49:37 kbk Exp $
+!$Id: exchange_coefficients.F90,v 1.10 2005-04-19 12:11:33 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -65,7 +65,10 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: exchange_coefficients.F90,v $
-!  Revision 1.9  2005-01-13 09:49:37  kbk
+!  Revision 1.10  2005-04-19 12:11:33  kbk
+!  re-introduce temperature limitation - -DHAMSOM_SVP
+!
+!  Revision 1.9  2005/01/13 09:49:37  kbk
 !  wet bulb works, es is global, cleaning - Stips
 !
 !  Revision 1.8  2003/12/16 17:35:33  kbk
@@ -115,8 +118,9 @@
    REALTYPE                  :: x
    REALTYPE                  :: ta,ta_k,tw,tw_k
 
-   REALTYPE                  :: twet,rh
-   REALTYPE                  :: dew
+   REALTYPE                  :: rh
+   REALTYPE                  :: twet,twet_k
+   REALTYPE                  :: dew,dew_k
    REALTYPE                  :: x1,x2,x3
 !EOP
 !-----------------------------------------------------------------------
@@ -168,7 +172,8 @@
 #endif
 
 #ifdef HAMSOM_SVP
-    x  = 17.67*tw/(tw+243.5)
+    x  = (18.729 - (min(tw_k,300.)-273.15)/227.3)*       &
+         (min(tw_k,300.)-273.15)/(max(tw_k,240.)-273.15+257.87)
     es = 611.2 * exp(x)
 #else
    es = a1 +tw*(a2+tw*(a3+tw*(a4+tw*(a5+tw*(a6+tw*a7)))))
@@ -180,7 +185,7 @@
 !  see ../ncdf/ncdf_meteo.F90 for defined constants
    select case (hum_method)
    case (1)
-!     specifc humidity in kg/kg is given
+!     specific humidity in kg/kg is given
       qa = hum
 !     aktual water vapor pressure
       ea = qa *airp/(const06+0.378*qa)
@@ -207,36 +212,24 @@
 !       use dew in degC
       if (hum .lt. 100.) then
          dew = hum
+         dew_k = hum+KELVIN
       else
-         dew = hum - KELVIN
+         dew = hum-KELVIN
+         dew_k = hum
       end if
-#ifdef HAMSOM_SVP
-      x  = 17.67*dew/(dew+243.5)
-      ea = 611.2 * exp(x)
-#else
-      ea = a1 +dew*(a2+dew*(a3+dew*(a4+dew*(a5+dew*(a6+dew*a7)))))
-      ea = ea * 100.0 ! Conversion millibar --> Pascal
-#endif
-#if 0
-!     This is kept for reference - original HAMSOM formulation
-!     AS see what happens if coding is done without understanding.. 
-      x1 = (18.729 - (min(dew,300.*_ONE_)-273.15)/227.3)
-      x2 = (min(dew,300.*_ONE_)-273.15) 
-      x3 = (max(dew,200.*_ONE_)-273.15+257.87)
+#ifdef HAMSUN_SVP
+      x1 = (18.729 - (min(dew_k,300.*_ONE_)-273.15)/227.3)
+      x2 = (min(dew_k,300.*_ONE_)-273.15) 
+      x3 = (max(dew_k,200.*_ONE_)-273.15+257.87)
       ea = 611.21*exp(x1*x2/x3)
-!KBK      ea  = 611.21*exp((18.729 - (min(dew,300.)-273.15)/227.3)*    &
-!KBK            (min(dew,300.)-273.15)/(max(dew,200.)-273.15+257.87))
+
       x1 = (18.729 - (min(ta_k,300.*_ONE_)-273.15)/227.3)
       x2 = (min(ta_k,300.*_ONE_)-273.15) 
       x3 = (max(ta_k,200.*_ONE_)-273.15+257.87)
       es = 611.21*exp(x1*x2/x3)
-!KBK      es  = 611.21*exp((18.729 - (min(ta_k,300.)-273.15)/227.3)*     &
-!KBK            (min(ta_k,300.)-273.15)/(max(ta_k,200.)-273.15+257.87))
+
       rh = 100.*ea/es
       qa = 0.01*rh*qs
-#endif
-!AS convert actual vapor pressure to specific humidity
-      qa = const06*ea/(airp-0.377*ea)
    case (4)
 !     wet bulb temperature given
 !     Calculate the SVP at wet bulb temp then
@@ -245,12 +238,15 @@
 !     Make sure this is in degC 
       if (hum .lt. 100 ) then
          twet=hum 
+         twet_k=hum+KELVIN
       else
-         twet=hum - KELVIN
+         twet=hum-KELVIN
+         twet_k=hum
       end if
 !     saturation vapor pressure at wet bulb temperature
 #ifdef HAMSOM_SVP
-      x  = 17.67*twet/(twet+243.5)
+      x  = (18.729 - (min(twet_k,300.)-273.15)/227.3)*       &
+           (min(twet_k,300.)-273.15)/(max(twet_k,240.)-273.15+257.87)
       ea = 611.2 * exp(x)
 #else
       ea = a1 +twet*(a2+twet*(a3+twet*(a4+twet*(a5+twet*(a6+twet*a7)))))
