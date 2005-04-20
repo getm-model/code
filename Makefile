@@ -61,7 +61,7 @@ distclean:
 	$(RM) -r bin/
 
 tag:
-	cvs tag -b $(TAG)
+	cvs tag $(TAG)
 
 export: tag
 	(cd ~/getm-releases ; cvs export -r $(TAG) getm-src ; mv getm-src getm-$(VER)/)
