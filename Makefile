@@ -20,6 +20,8 @@ VER=1.1.6
 VER=1.1.7
 # 2005/04/20
 VER=1.2.0_branch
+# 2005/04/20
+VER=1.3.0
 
 TAG=v$(shell cat VERSION | tr . _)
 RELEASE=getm-$(VERSION)

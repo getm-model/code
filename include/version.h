@@ -1,1 +1,1 @@
-#define RELEASE "1.2.0_branch"
+#define RELEASE "1.3.0"
