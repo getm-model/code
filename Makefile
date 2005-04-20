@@ -18,6 +18,8 @@ VER=1.1.5
 VER=1.1.6
 # 2005/01/14
 VER=1.1.7
+# 2005/04/20
+VER=1.2.0_branch
 
 TAG=v$(shell cat VERSION | tr . _)
 RELEASE=getm-$(VERSION)
@@ -57,7 +59,7 @@ distclean:
 	$(RM) -r bin/
 
 tag:
-	cvs tag $(TAG)
+	cvs tag -b $(TAG)
 
 export: tag
 	(cd ~/getm-releases ; cvs export -r $(TAG) getm-src ; mv getm-src getm-$(VER)/)
@@ -74,7 +76,7 @@ devel: export
 	ssh $(RUSER)@$(RHOST) \( cd $(RDIR)/src \; \
 	     ln -sf getm-$(VER).tar.gz getm_devel.tar.gz \)
 
-stable:
+stable: export
 	scp ~/getm-releases/getm-$(VER)/ChangeLog \
 	    $(RUSER)@$(RHOST):src/ChangeLog
 	scp ~/getm-releases/getm-$(VER).tar.gz \
