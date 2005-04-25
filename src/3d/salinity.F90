@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.13 2004-08-06 15:16:12 hb Exp $
+!$Id: salinity.F90,v 1.14 2005-04-25 07:55:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,6 +12,7 @@
 !  Description still missing
 !
 ! !USES:
+   use exceptions
    use domain, only: imin,jmin,imax,jmax,ioff,joff
 #ifdef HAIDVOGEL_TEST
    use domain, only: iextr,jextr
@@ -40,7 +41,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: salinity.F90,v $
-!  Revision 1.13  2004-08-06 15:16:12  hb
+!  Revision 1.14  2005-04-25 07:55:50  kbk
+!  use more general frame for error handling - Umlauf
+!
+!  Revision 1.13  2004/08/06 15:16:12  hb
 !  Compiler option ARKONA_TEST included
 !
 !  Revision 1.12  2004/07/29 19:46:32  hb

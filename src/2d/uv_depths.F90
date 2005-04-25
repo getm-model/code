@@ -1,4 +1,4 @@
-!$Id: uv_depths.F90,v 1.8 2004-01-05 08:59:38 kbk Exp $
+!$Id: uv_depths.F90,v 1.9 2005-04-25 07:55:49 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,6 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use exceptions
    use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV
    use variables_2d, only: DU,DV
    IMPLICIT NONE
@@ -26,7 +27,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_depths.F90,v $
-!  Revision 1.8  2004-01-05 08:59:38  kbk
+!  Revision 1.9  2005-04-25 07:55:49  kbk
+!  use more general frame for error handling - Umlauf
+!
+!  Revision 1.8  2004/01/05 08:59:38  kbk
 !  different velocity point depth calculations using vel_depth_method
 !
 !  Revision 1.7  2003/06/18 08:27:41  kbk

@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.16 2005-03-31 10:14:20 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.17 2005-04-25 07:55:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,6 +20,7 @@
    use meteo, only: airp,u10,v10,t2,hum,tcc
    use meteo, only: tausx,tausy,swr,shf
    use meteo, only: new_meteo,t_1,t_2
+   use exceptions
    IMPLICIT NONE
 !
    private
@@ -79,7 +80,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.16  2005-03-31 10:14:20  kbk
+!  Revision 1.17  2005-04-25 07:55:50  kbk
+!  use more general frame for error handling - Umlauf
+!
+!  Revision 1.16  2005/03/31 10:14:20  kbk
 !  flux calc. for point source + combined rot. met. and grid convergence
 !
 !  Revision 1.15  2005/01/12 19:26:16  kbk

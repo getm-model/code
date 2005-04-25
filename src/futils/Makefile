@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.4 2004-04-21 15:23:02 hb Exp $
+#$Id: Makefile,v 1.5 2005-04-25 07:55:49 kbk Exp $
 # 
 # Makefile to build utilities written in Fortran90 - libfutils.a 
 #
@@ -7,11 +7,11 @@ include ../Rules.make
 
 LIB	= $(LIBDIR)/libfutils${buildtype}.a
 
-MODSRC	= parallel.F90 parameters.F90 time.F90 grid_interpol.F90
+MODSRC	= exceptions.F90 parallel.F90 parameters.F90 time.F90 grid_interpol.F90
 
 LIBSRC	= ver_interpol.F90 kbk_interpol.F90 tridiagonal.F90 pos.F90 \
-          cnv_2d.F90 cnv_3d.F90 eta_mask.F90 col_interpol.F90 	\
-          to_2d_vel.F90 to_3d_vel.F90 tow.F90 getm_error.F90
+          cnv_2d.F90 cnv_3d.F90 eta_mask.F90 col_interpol.F90 	    \
+          to_2d_vel.F90 to_3d_vel.F90 tow.F90
 
 SRC	= $(MODSRC) $(LIBSRC)
 
@@ -22,6 +22,7 @@ MOD = ${LIB}(halo_mpi.o) ${LIB}(read_par_setup.o)
 endif
 
 MOD += \
+${LIB}(exceptions.o)	\
 ${LIB}(parallel.o)	\
 ${LIB}(parameters.o)	\
 ${LIB}(halo_zones.o)	\
@@ -39,8 +40,7 @@ ${LIB}(eta_mask.o)	\
 ${LIB}(col_interpol.o)	\
 ${LIB}(to_2d_vel.o)	\
 ${LIB}(to_3d_vel.o)	\
-${LIB}(tow.o)		\
-${LIB}(getm_error.o)
+${LIB}(tow.o)
 
 all: modules objects
 

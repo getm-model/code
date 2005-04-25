@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.9 2004-06-18 13:43:50 kbk Exp $
+!$Id: internal_pressure.F90,v 1.10 2005-04-25 07:55:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -16,6 +16,7 @@
 !  ip_method=5    ! CHU and FAN 2003 version
 !
 ! !USES:
+   use exceptions
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,az,au,av,H,HU,HV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dyv
@@ -51,7 +52,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: internal_pressure.F90,v $
-!  Revision 1.9  2004-06-18 13:43:50  kbk
+!  Revision 1.10  2005-04-25 07:55:50  kbk
+!  use more general frame for error handling - Umlauf
+!
+!  Revision 1.9  2004/06/18 13:43:50  kbk
 !  fixed first argument to getm_error()
 !
 !  Revision 1.8  2004/06/18 13:00:30  hb
