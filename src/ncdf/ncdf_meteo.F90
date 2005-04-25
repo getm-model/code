@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.17 2005-04-25 07:55:50 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.18 2005-04-25 09:25:33 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,7 +13,7 @@
 ! !USES:
    use time, only: string_to_julsecs,time_diff,add_secs,in_interval
    use time, only: jul0,secs0,julianday,secondsofday,timestep,simtime
-   use domain, only: imin,imax,jmin,jmax,az,lonc,latc,conv
+   use domain, only: imin,imax,jmin,jmax,az,lonc,latc,convc
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
    use grid_interpol, only: to_rotated_lat_lon
    use meteo, only: meteo_file,on_grid,calc_met,method,hum_method
@@ -80,7 +80,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.17  2005-04-25 07:55:50  kbk
+!  Revision 1.18  2005-04-25 09:25:33  kbk
+!  conv --> convc
+!
+!  Revision 1.17  2005/04/25 07:55:50  kbk
 !  use more general frame for error handling - Umlauf
 !
 !  Revision 1.16  2005/03/31 10:14:20  kbk
@@ -772,7 +775,7 @@
          do i=imin,imax
 !KBK            angle=-convc(i,j)*deg2rad
 !KBK            angle=beta(i,j)
-            angle=beta(i,j)-conv(i,j)*deg2rad
+            angle=beta(i,j)-convc(i,j)*deg2rad
             if(angle .ne. _ZERO_) then
                sinconv=sin(angle)
                cosconv=cos(angle)
