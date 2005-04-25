@@ -1,9 +1,9 @@
-!$Id: save_mean_ncdf.F90,v 1.1 2004-03-29 15:38:10 kbk Exp $
+!$Id: save_mean_ncdf.F90,v 1.2 2005-04-25 09:32:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: save_mean_ncdf() - saves mean-fields.
+! !ROUTINE: Initialise mean netCDF variables
 !
 ! !INTERFACE:
    subroutine save_mean_ncdf(secs)
@@ -11,33 +11,30 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use exceptions
    use ncdf_mean
-   use domain, only: ioff,joff,imin,imax,jmin,jmax
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
-   use domain, only: H,az
-   use domain, only: grid_type,vert_cord,ga
-   use variables_3d, only: kmin
-#if defined(SPHERICAL)
-   use domain, only: lonc,latc
-#endif
-#if ! defined(SPHERICAL)
-   use domain, only: xc,yc
-#endif
+   use grid_ncdf
    use diagnostic_variables
+   use domain,       only: ioff,joff,imin,imax,jmin,jmax
+   use domain,       only: iimin,iimax,jjmin,jjmax,kmax
+   use domain,       only: H,az
+   use variables_3d, only: kmin
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    REALTYPE, intent(in) :: secs
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
+! !DEFINED PARAMTERS:
+   logical, parameter   :: save3d=.true.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Adolf Stips & Karsten Bolding
 !
 !  $Log: save_mean_ncdf.F90,v $
-!  Revision 1.1  2004-03-29 15:38:10  kbk
+!  Revision 1.2  2005-04-25 09:32:34  kbk
+!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
+!
+!  Revision 1.1  2004/03/29 15:38:10  kbk
 !  possible to store calculated mean fields
 !
 !
@@ -45,94 +42,16 @@
    integer                   :: err
    integer                   :: start(4),edges(4)
    integer, save             :: n3d=0
-   integer                   :: i,j,k,itmp(1)
+
 !EOP
 !-----------------------------------------------------------------------
 !BOC
    include "netcdf.inc"
+
    n3d = n3d + 1
    if (n3d .eq. 1) then
-
-      if( xlen*ylen*zlen .gt. size_3d ) then
-         FATAL 'Increase size_3d in ncdf_save_mean() - this needs a fix'
-         stop 'ncdf_mean_save'
-      end if
-
-!     save info on offset, grid type and vertical coordinates
-      itmp(1) = grid_type
-      err = nf_put_var_int(ncid,grid_type_id,itmp)
-      if (err .NE. NF_NOERR) go to 10
-
-      itmp(1) = vert_cord
-      err = nf_put_var_int(ncid,vert_cord_id,itmp)
-      if (err .NE. NF_NOERR) go to 10
-
-      itmp(1) = ioff
-      err = nf_put_var_int(ncid,ioff_id,itmp)
-      if (err .NE. NF_NOERR) go to 10
-
-      itmp(1) = joff
-      err = nf_put_var_int(ncid,joff_id,itmp)
-      if (err .NE. NF_NOERR) go to 10
-
-!     save coordinate information
-      select case (grid_type)
-         case (1)
-#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
-            do i=imin,imax
-               ws(i) = xc(i)
-            end do
-            err = nf_put_var_real(ncid,xc_id,ws)
-            if (err .NE. NF_NOERR) go to 10
-            do j=jmin,jmax
-               ws(j) = yc(j)
-            end do
-            err = nf_put_var_real(ncid,yc_id,ws)
-            if (err .NE. NF_NOERR) go to 10
-#endif
-         case (2)
-#if defined(SPHERICAL)
-            do i=imin,imax
-               ws(i) = lonc(i,1)
-            end do
-            err = nf_put_var_real(ncid,lonc_id,ws)
-            if (err .NE. NF_NOERR) go to 10
-            do j=jmin,jmax
-               ws(j) = latc(1,j)
-            end do
-            err = nf_put_var_real(ncid,latc_id,ws)
-            if (err .NE. NF_NOERR) go to 10
-#endif
-         case (3)
-#if defined(CURVILINEAR)
-            STDERR 'xc and yc are read from input file directly'
-#endif
-         case default
-      end select
-
-      select case (vert_cord)
-         case (1,2,3)
-            do k=0,kmax
-               ws(k+1) = ga(k)
-            end do
-            err = nf_put_var_real(ncid,z_id,ws)
-            if (err .NE. NF_NOERR) go to 10
-         case default
-      end select
-
-      start(1) = 1
-      start(2) = 1
-      edges(1) = xlen
-      edges(2) = ylen
-      call cnv_2d(imin,jmin,imax,jmax,az,H,h_missing, &
-                  imin,jmin,imax,jmax,ws)
-      err = nf_put_vara_real(ncid,bathymetry_id,start,edges,ws)
-      if (err .NE. NF_NOERR) go to 10
-
-      err = nf_sync(ncid)
-      if (err .NE. NF_NOERR) go to 10
-
-   end if ! (n3d .eq. 1)
+      call save_grid_ncdf(ncid,save3d)
+   end if
 
    start(1) = n3d
    edges(1) = 1

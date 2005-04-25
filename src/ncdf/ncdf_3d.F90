@@ -1,9 +1,9 @@
-!$Id: ncdf_3d.F90,v 1.6 2004-06-15 08:25:57 kbk Exp $
+!$Id: ncdf_3d.F90,v 1.7 2005-04-25 09:32:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: ncdf_3d() - saves 2D-fields.
+! !MODULE: Encapsulate 3D netCDF quantities
 !
 ! !INTERFACE:
    module ncdf_3d
@@ -12,26 +12,16 @@
 !
 ! !USES:
    use output
-   use ncdf_common
    IMPLICIT NONE
 !
-!   private
-!
 ! !PUBLIC DATA MEMBERS:
-   integer, public                     :: ncid=-1
+   integer                             :: ncid=-1
 
-   integer                             :: x_dim,y_dim,z_dim,time_dim
-
-   integer                             :: ioff_id,joff_id,grid_type_id,vert_cord_id
-   integer                             :: xc_id,xx_id,xu_id,xv_id
-   integer                             :: yc_id,yx_id,yu_id,yv_id
-   integer                             :: z_id
-   integer                             :: dx_id,dy_id
-   integer                             :: lonc_id,latc_id
+   integer                             :: x_dim,y_dim,z_dim
+   integer                             :: time_dim
    integer                             :: time_id
-   integer                             :: bathymetry_id
-   integer                             :: hcc_id
-   integer                             :: h_id=-1
+
+   integer                             :: hcc_id,h_id
    integer                             :: elev_id,u_id,v_id
    integer                             :: uu_id,vv_id,w_id
    integer                             :: salt_id,temp_id,sigma_t_id
@@ -39,22 +29,29 @@
 #ifdef SPM
    integer                             :: spmpool_id,spm_id
 #endif
-   integer                             :: xlen,ylen,zlen
-   integer, parameter                  :: size_3d=9000000
-   REAL_4B                             :: ws(size_3d)
-   REALTYPE, parameter                 :: h_missing=-10.0
-   REALTYPE, parameter                 :: elev_missing=-9999.0
-   REALTYPE, parameter                 :: vel_missing=-9999.0
-   REALTYPE, parameter                 :: salt_missing=-9999.0
-   REALTYPE, parameter                 :: temp_missing=-9999.0
-   REALTYPE, parameter                 :: rho_missing=-9999.0
-   REALTYPE, parameter                 :: tke_missing=-9999.0
-   REALTYPE, parameter                 :: nuh_missing=-9999.0
-   REALTYPE, parameter                 :: num_missing=-9999.0
-   REALTYPE, parameter                 :: eps_missing=-9999.0
+#ifdef GETM_BIO
+   integer, allocatable                :: bio_ids(:)
+#endif
+
+   REAL_4B, dimension(:), allocatable  :: ws
+
+! !DEFINED PARAMETERS
+   REALTYPE, parameter                 :: hh_missing     =-9999.0
+   REALTYPE, parameter                 :: elev_missing   =-9999.0
+   REALTYPE, parameter                 :: vel_missing    =-9999.0
+   REALTYPE, parameter                 :: salt_missing   =-9999.0
+   REALTYPE, parameter                 :: temp_missing   =-9999.0
+   REALTYPE, parameter                 :: rho_missing    =-9999.0
+   REALTYPE, parameter                 :: tke_missing    =-9999.0
+   REALTYPE, parameter                 :: nuh_missing    =-9999.0
+   REALTYPE, parameter                 :: num_missing    =-9999.0
+   REALTYPE, parameter                 :: eps_missing    =-9999.0
 #ifdef SPM
    REALTYPE, parameter                 :: spmpool_missing=-9999.0
-   REALTYPE, parameter                 :: spm_missing=-9999.0
+   REALTYPE, parameter                 :: spm_missing    =-9999.0
+#endif
+#ifdef GETM_BIO
+   REALTYPE, parameter                 :: bio_missing=-9999.0
 #endif
 
 !
@@ -62,7 +59,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d.F90,v $
-!  Revision 1.6  2004-06-15 08:25:57  kbk
+!  Revision 1.7  2005-04-25 09:32:34  kbk
+!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
+!
+!  Revision 1.6  2004/06/15 08:25:57  kbk
 !  added supoort for spm - Ruiz
 !
 !  Revision 1.5  2004/05/04 09:23:51  kbk

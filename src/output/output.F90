@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.9 2004-06-15 08:25:57 kbk Exp $
+!$Id: output.F90,v 1.10 2005-04-25 09:32:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -33,6 +33,7 @@
    logical                             :: save_3d=.true.
    logical                             :: save_mean=.false. 
    logical                             :: save_vel=.true.
+   logical                             :: destag=.false.
    logical                             :: save_strho=.true.
    logical                             :: save_s=.true.
    logical                             :: save_t=.true.
@@ -54,7 +55,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
-!  Revision 1.9  2004-06-15 08:25:57  kbk
+!  Revision 1.10  2005-04-25 09:32:34  kbk
+!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
+!
+!  Revision 1.9  2004/06/15 08:25:57  kbk
 !  added supoort for spm - Ruiz
 !
 !  Revision 1.8  2004/03/29 15:35:52  kbk
@@ -140,7 +144,7 @@
    namelist /io_spec/ &
              out_fmt, &
              in_dir,out_dir, &
-             save_2d,save_3d,save_vel, &
+             save_2d,save_3d,save_vel,destag, &
              save_strho,save_s,save_t,save_rho, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              save_spm, &
@@ -175,6 +179,12 @@
       save_strho = .false.
       save_s = .false.
       save_t = .false.
+   end if
+
+   if(destag) then
+      LEVEL2 'de-stag velocities to T-points'
+   else
+      LEVEL2 'keeping velocities on calculation grid'
    end if
    
    call file_names(runid,myid)

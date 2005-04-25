@@ -1,4 +1,4 @@
-!$Id: get_field.F90,v 1.3 2003-04-23 12:04:08 kbk Exp $
+!$Id: get_field.F90,v 1.4 2005-04-25 09:32:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,7 +13,6 @@
 !
 ! !USES:
    use domain, only: iimin,iimax,jjmin,jjmax,kmax
-   use ncdfin, only: get_field_ncdf
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -29,7 +28,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: get_field.F90,v $
-!  Revision 1.3  2003-04-23 12:04:08  kbk
+!  Revision 1.4  2005-04-25 09:32:34  kbk
+!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
+!
+!  Revision 1.3  2003/04/23 12:04:08  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 12:58:21  kbk

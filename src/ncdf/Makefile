@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.4 2004-04-06 16:53:10 kbk Exp $
+#$Id: Makefile,v 1.5 2005-04-25 09:32:34 kbk Exp $
 #
 # Makefile to build the ncdf module - ncdfio.o and the libncdfio.a library
 #
@@ -7,34 +7,38 @@ include ../Rules.make
 
 LIB	= $(LIBDIR)/libncdfio${buildtype}.a
 
-MODSRC	= ncdf_in.F90 ncdf_common.F90 ncdf_2d.F90 ncdf_2d_bdy.F90 \
+MODSRC	= ncdf_common.F90 grid_ncdf.F90 ncdf_2d.F90 ncdf_2d_bdy.F90  \
           ncdf_3d.F90 ncdf_3d_bdy.F90 ncdf_meteo.F90 ncdf_rivers.F90 \
-          ncdf_mean.F90 
+          ncdf_mean.F90 ncdf_topo.F90
 
-LIBSRC	= ncdf_topo.F90 set_attributes.F90 init_2d_ncdf.F90 save_2d_ncdf.F90 \
-      init_3d_ncdf.F90 save_3d_ncdf.F90 get_field_ncdf.F90 read_field_ncdf.F90 \
-       ncdf_close.F90 init_mean_ncdf.F90 save_mean_ncdf.F90
+LIBSRC	= set_attributes.F90 init_grid_ncdf.F90 save_grid_ncdf.F90   \
+          init_2d_ncdf.F90 save_2d_ncdf.F90                          \
+          init_3d_ncdf.F90 save_3d_ncdf.F90                          \
+          get_field_ncdf.F90 read_field_ncdf.F90                     \
+          ncdf_close.F90 init_mean_ncdf.F90 save_mean_ncdf.F90
 
 SRC	= $(MODSRC) $(LIBSRC)
 
-MOD	= 	\
+MOD	= 	                \
 ${LIB}(ncdf_common.o)		\
+${LIB}(grid_ncdf.o)		\
 ${LIB}(ncdf_2d.o)		\
 ${LIB}(ncdf_2d_bdy.o)
 ifneq ($(GETM_NO_3D),true)
-MOD	+= 	\
+MOD	+=                      \
 ${LIB}(ncdf_3d.o)		\
 ${LIB}(ncdf_3d_bdy.o)		\
 ${LIB}(ncdf_rivers.o)
 endif
 MOD	+= 	\
 ${LIB}(ncdf_meteo.o)		\
-${LIB}(ncdf_mean.o)		\
-${LIB}(ncdf_in.o)
+${LIB}(ncdf_topo.o)		\
+${LIB}(ncdf_mean.o)		
 
 OBJ	= 	\
-${LIB}(ncdf_topo.o)		\
 ${LIB}(set_attributes.o)	\
+${LIB}(init_grid_ncdf.o)	\
+${LIB}(save_grid_ncdf.o)	\
 ${LIB}(init_2d_ncdf.o)		\
 ${LIB}(save_2d_ncdf.o)
 ifneq ($(GETM_NO_3D),true)
@@ -59,7 +63,7 @@ doc:
 	$(PROTEX) $(SRC) > $(DOCDIR)/ncdf.tex
 
 clean:
-	$(RM) $(LIB) $(MODDIR)/{ncdf_in,ncdf_out}.{m,mod}
+	$(RM) $(LIB) 
 
 realclean: clean
 	$(RM) *.o

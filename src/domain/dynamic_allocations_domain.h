@@ -1,23 +1,20 @@
+!  mask
+   allocate(az(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (az)'
+
+   allocate(au(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (au)'
+
+   allocate(av(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (av)'
+
+   allocate(ax(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (ax)'
+
+
+!  bathymetry
    allocate(H(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_domain: Error allocating memory (H)'
-
-   allocate(lonc(E2DFIELD),stat=rc)
-   if (rc /=0) stop 'init_domain: Error allocating memory (lonc)'
-
-   allocate(latc(E2DFIELD),stat=rc)
-   if (rc /=0) stop 'init_domain: Error allocating memory (latc)'
-
-   allocate(conv(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_domain: Error allocating memory (conv)'
-
-   allocate(cor(E2DFIELD),stat=rc)
-   if (rc /=0) stop 'init_domain: Error allocating memory (cor)'
-
-   allocate(coru(E2DFIELD),stat=rc)
-   if (rc /=0) stop 'init_domain: Error allocating memory (coru)'
-
-   allocate(corv(E2DFIELD),stat=rc)
-   if (rc /=0) stop 'init_domain: Error allocating memory (corv)'
 
    allocate(HU(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_domain: Error allocating memory (HU)'
@@ -39,27 +36,24 @@
    if (rc /= 0) stop 'init_domain: Error allocating memory (dry_v)'
    dry_v = _ONE_
 
-   allocate(az(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_domain: Error allocating memory (az)'
 
-   allocate(au(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_domain: Error allocating memory (au)'
+!  coriolis terms
+   allocate(cor(E2DFIELD),stat=rc)
+   if (rc /=0) stop 'init_domain: Error allocating memory (cor)'
 
-   allocate(av(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_domain: Error allocating memory (av)'
+   allocate(coru(E2DFIELD),stat=rc)
+   if (rc /=0) stop 'init_domain: Error allocating memory (coru)'
 
-   allocate(ax(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_domain: Error allocating memory (ax)'
+   allocate(corv(E2DFIELD),stat=rc)
+   if (rc /=0) stop 'init_domain: Error allocating memory (corv)'
 
-#if ! ( defined(CURVILINEAR) || defined(SPHERICAL) )
 
-   allocate(xc(imin-HALO:imax+HALO),stat=rc)
-   if (rc /= 0) stop 'init_domain: Error allocating memory (xc)'
+!  lat/lon
+   allocate(lonc(E2DFIELD),stat=rc)
+   if (rc /=0) stop 'init_domain: Error allocating memory (lonc)'
 
-   allocate(yc(jmin-HALO:jmax+HALO),stat=rc)
-   if (rc /= 0) stop 'init_domain: Error allocating memory (yc)'
-
-#else
+   allocate(latc(E2DFIELD),stat=rc)
+   if (rc /=0) stop 'init_domain: Error allocating memory (latc)'
 
    allocate(lonx(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (lonx)'
@@ -79,14 +73,52 @@
    allocate(latv(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (latv)'
 
+
+
+!  grid convergence
+   allocate(convc(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (convc)'
+
+   allocate(convx(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (convx)'
+
+   allocate(angle(E2DFIELD),stat=rc)
+   if (rc /=0) stop 'init_domain: Error allocating memory (angle)'
+
+
+! grid points
+   allocate(xx(E2DFIELD),stat=rc)
+   if (rc /=0) stop 'init_domain: Error allocating memory (xx)'
+
+   allocate(yx(E2DFIELD),stat=rc)
+   if (rc /=0) stop 'init_domain: Error allocating memory (yx)'
+
+   allocate(xc(E2DFIELD),stat=rc)
+   if (rc /=0) stop 'init_domain: Error allocating memory (xc)'
+
+   allocate(yc(E2DFIELD),stat=rc)
+   if (rc /=0) stop 'init_domain: Error allocating memory (yc)'
+
+   allocate(xu(E2DFIELD),stat=rc)
+   if (rc /=0) stop 'init_domain: Error allocating memory (xu)'
+
+   allocate(yu(E2DFIELD),stat=rc)
+   if (rc /=0) stop 'init_domain: Error allocating memory (yu)'
+
+   allocate(xv(E2DFIELD),stat=rc)
+   if (rc /=0) stop 'init_domain: Error allocating memory (xv)'
+
+   allocate(yv(E2DFIELD),stat=rc)
+   if (rc /=0) stop 'init_domain: Error allocating memory (yv)'
+
+
+
+!  metric parameters
    allocate(dxdyc(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (dxdyc)'
 
    allocate(dydxc(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (dydxc)'
-
-   allocate(angle(E2DFIELD),stat=rc)
-   if (rc /=0) stop 'init_domain: Error allocating memory (angle)'
 
    allocate(dxc(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_domain: Error allocating memory (dxc)'
@@ -121,31 +153,6 @@
    allocate(arvd1(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_domain: Error allocating memory (arvd1)'
 
-#if defined(CURVILINEAR)
-   allocate(xc(E2DFIELD),stat=rc)
-   if (rc /=0) stop 'init_domain: Error allocating memory (xc)'
 
-   allocate(yc(E2DFIELD),stat=rc)
-   if (rc /=0) stop 'init_domain: Error allocating memory (yc)'
 
-   allocate(xx(E2DFIELD),stat=rc)
-   if (rc /=0) stop 'init_domain: Error allocating memory (xx)'
-
-   allocate(yx(E2DFIELD),stat=rc)
-   if (rc /=0) stop 'init_domain: Error allocating memory (yx)'
-
-   allocate(xu(E2DFIELD),stat=rc)
-   if (rc /=0) stop 'init_domain: Error allocating memory (xu)'
-
-   allocate(yu(E2DFIELD),stat=rc)
-   if (rc /=0) stop 'init_domain: Error allocating memory (yu)'
-
-   allocate(xv(E2DFIELD),stat=rc)
-   if (rc /=0) stop 'init_domain: Error allocating memory (xv)'
-
-   allocate(yv(E2DFIELD),stat=rc)
-   if (rc /=0) stop 'init_domain: Error allocating memory (yv)'
-#endif
-
-#endif
 

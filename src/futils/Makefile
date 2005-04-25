@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.5 2005-04-25 07:55:49 kbk Exp $
+#$Id: Makefile,v 1.6 2005-04-25 09:32:34 kbk Exp $
 # 
 # Makefile to build utilities written in Fortran90 - libfutils.a 
 #
@@ -11,7 +11,9 @@ MODSRC	= exceptions.F90 parallel.F90 parameters.F90 time.F90 grid_interpol.F90
 
 LIBSRC	= ver_interpol.F90 kbk_interpol.F90 tridiagonal.F90 pos.F90 \
           cnv_2d.F90 cnv_3d.F90 eta_mask.F90 col_interpol.F90 	    \
-          to_2d_vel.F90 to_3d_vel.F90 tow.F90
+          to_2d_vel.F90 to_2d_u.F90 to_2d_v.F90                     \
+	  to_3d_vel.F90 to_3d_uu.F90 to_3d_vv.F90                   \
+	  tow.F90 c2x.F90
 
 SRC	= $(MODSRC) $(LIBSRC)
 
@@ -39,8 +41,13 @@ ${LIB}(cnv_3d.o)	\
 ${LIB}(eta_mask.o)	\
 ${LIB}(col_interpol.o)	\
 ${LIB}(to_2d_vel.o)	\
+${LIB}(to_2d_u.o)	\
+${LIB}(to_2d_v.o)	\
 ${LIB}(to_3d_vel.o)	\
-${LIB}(tow.o)
+${LIB}(to_3d_uu.o)	\
+${LIB}(to_3d_vv.o)	\
+${LIB}(tow.o)		\
+${LIB}(c2x.o)		
 
 all: modules objects
 

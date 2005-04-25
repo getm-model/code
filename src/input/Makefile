@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.2 2003-04-07 16:45:07 kbk Exp $
+#$Id: Makefile,v 1.3 2005-04-25 09:32:34 kbk Exp $
 # 
 # Makefile to build the ncdf module - ncdfio.o
 #
@@ -12,7 +12,7 @@ MODSRC	= input.F90
 LIBSRC	= init_2d_bdy.F90 get_2d_bdy.F90 init_3d_bdy.F90 get_3d_bdy.F90 \
           init_meteo_input.F90 get_meteo_data.F90 \
           init_river_input.F90 get_river_data.F90 \
-          get_field.F90 read_profile.F90
+          get_field.F90 read_profile.F90 check_grid.F90 get_grid.F90
 
 SRC	= $(MODSRC) $(LIBSRC)
 
@@ -33,7 +33,9 @@ OBJ   += \
 ${LIB}(init_meteo_input.o)	\
 ${LIB}(get_meteo_data.o)	\
 ${LIB}(get_field.o)		\
-${LIB}(read_profile.o)
+${LIB}(read_profile.o)          \
+${LIB}(check_grid.o)            \
+${LIB}(get_grid.o)
 
 all: modules objects
 

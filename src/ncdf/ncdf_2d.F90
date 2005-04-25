@@ -1,9 +1,9 @@
-!$Id: ncdf_2d.F90,v 1.4 2003-06-17 14:53:29 kbk Exp $
+!$Id: ncdf_2d.F90,v 1.5 2005-04-25 09:32:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: ncdf_2d() - saves 2D-fields.
+! !MODULE: Encapsulate 2D netCDF quantities
 !
 ! !INTERFACE:
    module ncdf_2d
@@ -12,48 +12,43 @@
 !
 ! !USES:
    use output
-   use ncdf_common
    IMPLICIT NONE
 !
-!   private
-!
 ! !PUBLIC DATA MEMBERS:
-   integer, public                     :: ncid=-1
+   integer                             :: ncid=-1
 
-   integer                             :: x_dim,y_dim,time_dim
-
-   integer                             :: ioff_id,joff_id,grid_type_id
-   integer                             :: xc_id,xx_id,xu_id,xv_id
-   integer                             :: yc_id,yx_id,yu_id,yv_id
-   integer                             :: dx_id,dy_id
-   integer                             :: lonc_id,latc_id
+   integer                             :: x_dim,y_dim
+   integer                             :: time_dim
    integer                             :: time_id
-   integer                             :: bathymetry_id
+
    integer                             :: elev_id,u_id,v_id
    integer                             :: res_u_id,res_v_id,surfdiv_id
    integer                             :: u10_id,v10_id
    integer                             :: airp_id,t2_id,hum_id,tcc_id
    integer                             :: tausx_id,tausy_id,swr_id,shf_id
-   integer                             :: xlen,ylen
-   integer, parameter                  :: size_2d=500000
-   REAL_4B                             :: ws(size_2d)
-   REALTYPE, parameter                 :: h_missing=-10.0
-   REALTYPE, parameter                 :: elev_missing=-9999.0
-   REALTYPE, parameter                 :: vel_missing=-9999.0
-   REALTYPE, parameter                 :: airp_missing=-9999.0
-   REALTYPE, parameter                 :: t2_missing=-9999.0
-   REALTYPE, parameter                 :: hum_missing=-9999.0
-   REALTYPE, parameter                 :: tcc_missing=-9999.0
-   REALTYPE, parameter                 :: stress_missing=-9999.0
-   REALTYPE, parameter                 :: swr_missing=-9999.0
-   REALTYPE, parameter                 :: shf_missing=-9999.0
-   REALTYPE, parameter                 :: divergence_missing=-9999.0
+
+   REAL_4B, dimension(:), allocatable :: ws
+
+! !DEFINED PARAMETERS
+   REALTYPE, parameter                 :: elev_missing       =-9999.0
+   REALTYPE, parameter                 :: vel_missing        =-9999.0
+   REALTYPE, parameter                 :: airp_missing       =-9999.0
+   REALTYPE, parameter                 :: t2_missing         =-9999.0
+   REALTYPE, parameter                 :: hum_missing        =-9999.0
+   REALTYPE, parameter                 :: tcc_missing        =-9999.0
+   REALTYPE, parameter                 :: stress_missing     =-9999.0
+   REALTYPE, parameter                 :: swr_missing        =-9999.0
+   REALTYPE, parameter                 :: shf_missing        =-9999.0
+   REALTYPE, parameter                 :: divergence_missing =-9999.0
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d.F90,v $
-!  Revision 1.4  2003-06-17 14:53:29  kbk
+!  Revision 1.5  2005-04-25 09:32:34  kbk
+!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
+!
+!  Revision 1.4  2003/06/17 14:53:29  kbk
 !  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
 !
 !  Revision 1.3  2003/05/09 11:38:26  kbk

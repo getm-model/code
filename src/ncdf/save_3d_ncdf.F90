@@ -1,9 +1,9 @@
-!$Id: save_3d_ncdf.F90,v 1.9 2004-06-15 08:25:57 kbk Exp $
+!$Id: save_3d_ncdf.F90,v 1.10 2005-04-25 09:32:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: save_3d_ncdf() - saves 2D-fields.
+! !ROUTINE: Save 3D netCDF variables
 !
 ! !INTERFACE:
    subroutine save_3d_ncdf(secs)
@@ -11,18 +11,14 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use exceptions
    use ncdf_3d
-   use domain, only: ioff,joff,imin,imax,jmin,jmax
-   use domain, only: H,az,au,av,min_depth
-#if defined(SPHERICAL)
-   use domain, only: lonc,latc
-#endif
-#if ! defined(SPHERICAL)
-   use domain, only: xc,yc
-#endif
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
-   use domain, only: grid_type,vert_cord,ga
-   use variables_2d, only: z,D,u,DU,v,DV
+   use grid_ncdf
+   use domain,       only: ioff,joff,imin,imax,jmin,jmax
+   use domain,       only: iimin,iimax,jjmin,jjmax,kmax
+   use domain,       only: H,az,au,av,min_depth
+   use variables_2d, only: z,D
+   use variables_2d, only: U,V,DU,DV
    use variables_3d, only: kmin,hn,uu,hun,vv,hvn,ww,hcc
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho
@@ -31,21 +27,23 @@
 #ifdef SPM
    use variables_3d, only: spm_pool,spm
 #endif
-   use parameters, only: g,rho_0
+   use parameters,   only: g,rho_0
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    REALTYPE, intent(in) :: secs
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
+! !DEFINED PARAMTERS:
+   logical, parameter   :: save3d=.true.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
-!  Revision 1.9  2004-06-15 08:25:57  kbk
+!  Revision 1.10  2005-04-25 09:32:34  kbk
+!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
+!
+!  Revision 1.9  2004/06/15 08:25:57  kbk
 !  added supoort for spm - Ruiz
 !
 !  Revision 1.8  2004/05/04 09:23:51  kbk
@@ -90,93 +88,24 @@
    integer                   :: start(4),edges(4)
    integer, save             :: n3d=0
    REALTYPE, parameter       :: x=-rho_0/g
-   integer                   :: i,j,k,itmp(1)
+
 !EOP
 !-----------------------------------------------------------------------
 !BOC
    include "netcdf.inc"
+
    n3d = n3d + 1
    if (n3d .eq. 1) then
 
-      if( xlen*ylen*zlen .gt. size_3d ) then
-         FATAL 'Increase size_3d in ncdf_3d() - this needs a fix'
-         stop 'ncdf_3d_save'
-      end if
-
-!     save info on offset, grid type and vertical coordinates
-      itmp(1) = grid_type
-      err = nf_put_var_int(ncid,grid_type_id,itmp)
-      if (err .NE. NF_NOERR) go to 10
-
-      itmp(1) = vert_cord
-      err = nf_put_var_int(ncid,vert_cord_id,itmp)
-      if (err .NE. NF_NOERR) go to 10
-
-      itmp(1) = ioff
-      err = nf_put_var_int(ncid,ioff_id,itmp)
-      if (err .NE. NF_NOERR) go to 10
-
-      itmp(1) = joff
-      err = nf_put_var_int(ncid,joff_id,itmp)
-      if (err .NE. NF_NOERR) go to 10
-
-!     save coordinate information
-      select case (grid_type)
-         case (1)
-#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
-            do i=imin,imax
-               ws(i) = xc(i)
-            end do
-            err = nf_put_var_real(ncid,xc_id,ws)
-            if (err .NE. NF_NOERR) go to 10
-            do j=jmin,jmax
-               ws(j) = yc(j)
-            end do
-            err = nf_put_var_real(ncid,yc_id,ws)
-            if (err .NE. NF_NOERR) go to 10
-#endif
-         case (2)
-#if defined(SPHERICAL)
-            do i=imin,imax
-               ws(i) = lonc(i,1)
-            end do
-            err = nf_put_var_real(ncid,lonc_id,ws)
-            if (err .NE. NF_NOERR) go to 10
-            do j=jmin,jmax
-               ws(j) = latc(1,j)
-            end do
-            err = nf_put_var_real(ncid,latc_id,ws)
-            if (err .NE. NF_NOERR) go to 10
-#endif
-         case (3)
-#if defined(CURVILINEAR)
-            STDERR 'xc and yc are read from input file directly'
-#endif
-         case default
-      end select
-
-      select case (vert_cord)
-         case (1,2,3)
-            do k=0,kmax
-               ws(k+1) = ga(k)
-            end do
-            err = nf_put_var_real(ncid,z_id,ws)
-            if (err .NE. NF_NOERR) go to 10
-         case default
-      end select
+      call save_grid_ncdf(ncid,save3d)
 
       start(1) = 1
       start(2) = 1
+      start(3) = 1
       edges(1) = xlen
       edges(2) = ylen
-
-      call cnv_2d(imin,jmin,imax,jmax,az,H,h_missing, &
-                  imin,jmin,imax,jmax,ws)
-      err = nf_put_vara_real(ncid,bathymetry_id,start,edges,ws)
-      if (err .NE. NF_NOERR) go to 10
-
-      start(3) = 1
       edges(3) = zlen
+
       call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
                   kmin,az,hcc,-_ONE_,ws)
       err = nf_put_vara_real(ncid,hcc_id,start,edges,ws)
@@ -206,13 +135,13 @@
    if (err .NE. NF_NOERR) go to 10
 
 !  depth integrated zonal velocity
-   call to_2d_vel(imin,jmin,imax,jmax,au,u,DU,vel_missing, &
+   call to_2d_vel(imin,jmin,imax,jmax,au,U,DU,vel_missing, &
                   imin,jmin,imax,jmax,ws)
    err = nf_put_vara_real(ncid,u_id,start,edges,ws)
    if (err .NE. NF_NOERR) go to 10
 
 !  depth integrated meridional velocity
-   call to_2d_vel(imin,jmin,imax,jmax,av,v,DV,vel_missing, &
+   call to_2d_vel(imin,jmin,imax,jmax,av,V,DV,vel_missing, &
                   imin,jmin,imax,jmax,ws)
    err = nf_put_vara_real(ncid,v_id,start,edges,ws)
    if (err .NE. NF_NOERR) go to 10
@@ -227,28 +156,45 @@
    edges(4) = 1
 
    if (h_id .gt. 0) then
-      call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-                  kmin,az,hn,h_missing,ws)
+      call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax,    &
+                  kmin,az,hn,hh_missing,ws)
       err = nf_put_vara_real(ncid,h_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
    end if
 
    if (save_vel) then
-      call to_3d_vel(imin,jmin,imax,jmax,au, &
-                     iimin,jjmin,iimax,jjmax,kmax, &
-                     kmin,hun,uu,vel_missing,ws)
+
+      if (destag) then
+         call to_3d_uu(imin, jmin, imax, jmax,  az,                    &
+                       iimin,jjmin,iimax,jjmax,kmax,                   &
+                       kmin,hun,uu,vel_missing,ws)
+      else
+         call to_3d_vel( imin, jmin, imax, jmax,  au,                  &
+                        iimin,jjmin,iimax,jjmax,kmax,                  &
+                        kmin,hun,uu,vel_missing,ws)
+      endif
+
       err = nf_put_vara_real(ncid,uu_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
 
-      call to_3d_vel(imin,jmin,imax,jmax,av, &
-                     iimin,jjmin,iimax,jjmax,kmax, &
-                     kmin,hvn,vv,vel_missing,ws)
+
+      if (destag) then
+         call to_3d_vv ( imin, jmin, imax, jmax,  az,                 &
+                        iimin,jjmin,iimax,jjmax,kmax,                 &
+                        kmin,hvn,vv,vel_missing,ws)
+      else
+         call to_3d_vel( imin, jmin, imax, jmax,  av,                 &
+                        iimin,jjmin,iimax,jjmax,kmax,                 &
+                        kmin,hvn,vv,vel_missing,ws)
+      endif
+
       err = nf_put_vara_real(ncid,vv_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
 
-      call tow(ws,ww,iimin,jjmin,0,iimax,jjmax,kmax,size_3d)
+      call tow(ws,ww,iimin,jjmin,0,iimax,jjmax,kmax)
       err = nf_put_vara_real(ncid,w_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
+
    end if
 
 #ifndef NO_BAROCLINIC
@@ -310,7 +256,7 @@
 
 #ifdef SPM
    if (save_spm) then
-      call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
+      call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax,    &
                   kmin,az,spm,spm_missing,ws)
       err = nf_put_vara_real(ncid, spm_id, start, edges, ws)
       if (err .NE. NF_NOERR) go to 10
@@ -321,11 +267,30 @@
       edges(1) = xlen
       edges(2) = ylen
       edges(3) = 1
-      call cnv_2d(imin,jmin,imax,jmax,az,spm_pool,spmpool_missing, &
+      call cnv_2d(imin,jmin,imax,jmax,az,spm_pool,spmpool_missing,    &
                   imin,jmin,imax,jmax,ws)
       err = nf_put_vara_real(ncid, spmpool_id, start, edges, ws)
       if (err .NE. NF_NOERR) go to 10
    end if
+#endif
+
+#ifdef GETM_BIO
+!   if (save_bio) then
+      start(1) = 1
+      start(2) = 1
+      start(3) = 1
+      start(4) = n3d
+      edges(1) = xlen
+      edges(2) = ylen
+      edges(3) = zlen
+      edges(4) = 1
+      do n=1,numc
+         call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
+                     kmin,az,cc3d(n,:,:,:),bio_missing,ws)
+         err = nf_put_vara_real(ncid, bio_ids(n), start, edges, ws)
+         if (err .NE.  NF_NOERR) go to 10
+      end do
+!   end if
 #endif
 
    err = nf_sync(ncid)
@@ -333,7 +298,7 @@
 
    return
 
-10 FATAL 'ncdf_3d_save: ',nf_strerror(err)
+10 FATAL 'save_3d_ncdf: ',nf_strerror(err)
    stop
 
    return
