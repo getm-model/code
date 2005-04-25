@@ -1,4 +1,4 @@
-!$Id: exceptions.F90,v 1.1 2005-04-25 07:55:49 kbk Exp $
+!$Id: exceptions.F90,v 1.2 2005-04-25 09:26:57 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,7 +18,7 @@
 ! !USES:
    IMPLICIT NONE
 !
-!   private
+   private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
    public          getm_error,getm_warning
@@ -28,7 +28,10 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: exceptions.F90,v $
-!  Revision 1.1  2005-04-25 07:55:49  kbk
+!  Revision 1.2  2005-04-25 09:26:57  kbk
+!  default all is private
+!
+!  Revision 1.1  2005/04/25 07:55:49  kbk
 !  use more general frame for error handling - Umlauf
 !
 !
