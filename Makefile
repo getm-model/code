@@ -22,6 +22,8 @@ VER=1.1.7
 VER=1.2.0_branch
 # 2005/04/20
 VER=1.3.0
+# 2005/04/27
+VER=1.3.1
 
 TAG=v$(shell cat VERSION | tr . _)
 RELEASE=getm-$(VERSION)
@@ -33,6 +35,7 @@ RDIR=.
 RHOST=gate
 RUSER=kbk
 RDIR=/public/bolding-burchard.com/
+RDIR=bolding-burchard.com/
 
 EXEC	= model$(libtype)
 
