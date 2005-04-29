@@ -1,4 +1,4 @@
-!$Id: read_par_setup.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
+!$Id: read_par_setup.F90,v 1.3 2005-04-29 12:51:59 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -46,7 +46,7 @@
 !-------------------------------------------------------------------------
 !BOC
 ! Read #jobs, test vs. actual nprocs in use
-   STDERR fn
+
    open(unit=iunit,file=fn)
    iline = 1
    read(iunit,*,err=1010,end=1020) nprocs_read
