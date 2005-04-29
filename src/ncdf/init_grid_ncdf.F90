@@ -1,4 +1,4 @@
-!$Id: init_grid_ncdf.F90,v 1.1 2005-04-25 09:32:34 kbk Exp $
+!$Id: init_grid_ncdf.F90,v 1.2 2005-04-29 12:45:41 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -40,7 +40,10 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: init_grid_ncdf.F90,v $
-!  Revision 1.1  2005-04-25 09:32:34  kbk
+!  Revision 1.2  2005-04-29 12:45:41  kbk
+!  stricter COARDS conforming
+!
+!  Revision 1.1  2005/04/25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
 !
@@ -94,18 +97,18 @@
       case (2)
          xname    = 'lonc'
          yname    = 'latc'
-         xunits   = 'deg'
-         yunits   = 'deg'
+         xunits   = 'degrees_east'
+         yunits   = 'degrees_north'
       case (3)
          xname    = 'xic'
          yname    = 'etac'
-         xunits   = '-'
-         yunits   = '-'
+         xunits   = ' '
+         yunits   = ' '
       case (4)
          xname    = 'xic'
          yname    = 'etac'
-         xunits   = '-'
-         yunits   = '-'
+         xunits   = ' '
+         yunits   = ' '
       case default
    end select
 
@@ -113,13 +116,13 @@
       select case (vert_cord)
       case (1)
          zname  = 'sigma'
-         zunits = ''
+         zunits = 'sigma_level'
       case (2)
          zname  = 'z'
          zunits = 'm'
       case (3)
          zname  = 'level'
-         zunits = ''
+         zunits = 'level'
       case default
       end select
    endif
@@ -298,13 +301,13 @@
          status = nf_def_var(ncid,'xc',NF_REAL,1,axisdim,xc_id)
          if (status .ne. NF_NOERR) call netcdf_error(status,            &
                                        "init_grid_ncdf()","xc -")
-         call set_attributes(ncid,xc_id,units=xunits)
+         call set_attributes(ncid,xc_id,units=trim(xunits))
 
          axisdim(1) = y_dim
          status = nf_def_var(ncid,'yc',NF_REAL,1,axisdim,yc_id)
          if (status .ne. NF_NOERR) call netcdf_error(status,            &
                                         "init_grid_ncdf()","yc -")
-         call set_attributes(ncid,yc_id,units=yunits)
+         call set_attributes(ncid,yc_id,units=trim(yunits))
 
       case (2)
 
@@ -312,26 +315,26 @@
          status = nf_def_var(ncid,'dlon',NF_REAL,0,scalar,dlon_id)
          if (status .ne. NF_NOERR) call netcdf_error(status,            &
                                         "init_grid_ncdf()","dlon -")
-         call set_attributes(ncid,dlon_id,units='deg',                  &
+         call set_attributes(ncid,dlon_id,units=trim(xunits),           &
                              long_name='grid spacing (lon)')
 
          status = nf_def_var(ncid,'dlat',NF_REAL,0,scalar,dlat_id)
          if (status .ne. NF_NOERR) call netcdf_error(status,            &
                                         "init_grid_ncdf()","dlat -")
-         call set_attributes(ncid,dlat_id,units='deg',                  &
+         call set_attributes(ncid,dlat_id,units=trim(yunits),           &
                              long_name='grid spacing (lat)')
 
 !        global offset
          status = nf_def_var(ncid,'lon0',NF_REAL,0,scalar,lon0_id)
          if (status .ne. NF_NOERR) call netcdf_error(status,            &
                                         "init_grid_ncdf()","lon0 -")
-         call set_attributes(ncid,lon0_id,units='deg',                  &
+         call set_attributes(ncid,lon0_id,units=trim(xunits),           &
                              long_name='offset (lon)')
 
          status = nf_def_var(ncid,'lat0',NF_REAL,0,scalar,lat0_id)
          if (status .ne. NF_NOERR) call netcdf_error(status,            &
                                         "init_grid_ncdf()","lat0 -")
-         call set_attributes(ncid,lat0_id,units='m',                    &
+         call set_attributes(ncid,lat0_id,units=trim(yunits),           &
                              long_name='offset (lat)')
 
 !        coordinate variables
@@ -339,13 +342,13 @@
          status = nf_def_var(ncid,'lonc',NF_REAL,1,axisdim,lonc_id)
          if (status .ne. NF_NOERR) call netcdf_error(status,            &
                                         "init_grid_ncdf()","lonc -")
-         call set_attributes(ncid,lonc_id,units=xunits)
+         call set_attributes(ncid,lonc_id,units=trim(xunits))
 
          axisdim(1) = y_dim
          status = nf_def_var(ncid,'latc',NF_REAL,1,axisdim,latc_id)
          if (status .ne. NF_NOERR) call netcdf_error(status,            &
                                         "init_grid_ncdf()","latc -")
-         call set_attributes(ncid,latc_id,units=yunits)
+         call set_attributes(ncid,latc_id,units=trim(yunits))
       case (3)
 !        no netcdf support for coordinate variables
 !        for irregularly spaced coordinates
@@ -423,7 +426,7 @@
          vr(1) = -90.
          vr(2) =  90.
          call set_attributes(ncid,latc_id,  &
-                            long_name='latitude',units='deg',           &
+                            long_name='latitude',units='degrees_north', &
                             FillValue=fv,missing_value=mv,valid_range=vr)
 
          status = nf_def_var(ncid,'lonc',NF_REAL,2,f2_dims,lonc_id)
@@ -434,7 +437,7 @@
          vr(1) = -180.
          vr(2) =  180.
          call set_attributes(ncid,lonc_id,  &
-                            long_name='longitude',units='deg',          &
+                            long_name='longitude',units='degrees_east', &
                             FillValue=fv,missing_value=mv,valid_range=vr)
 
       endif
@@ -448,7 +451,7 @@
       vr(1) = -180.
       vr(2) =  180.
       call set_attributes(ncid,convc_id,  &
-                         long_name='grid rotation',units='deg',         &
+                         long_name='grid rotation',units='degrees',     &
                          FillValue=fv,missing_value=mv,valid_range=vr)
    endif
 
