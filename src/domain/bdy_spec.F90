@@ -1,4 +1,4 @@
-!$Id: bdy_spec.F90,v 1.4 2003-08-03 09:52:11 kbk Exp $
+!$Id: bdy_spec.F90,v 1.5 2005-04-29 12:55:31 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bdy_spec.F90,v $
-!  Revision 1.4  2003-08-03 09:52:11  kbk
+!  Revision 1.5  2005-04-29 12:55:31  kbk
+!  removing print statement
+!
+!  Revision 1.4  2003/08/03 09:52:11  kbk
 !  nicer print statements
 !
 !  Revision 1.3  2003/04/23 11:59:39  kbk
@@ -179,8 +182,6 @@
          end do
       end do
    end if
-
-STDERR 'bdy_spec ',bdy_index
 
 #ifdef DEBUG
    write(debug,*) 'Leaving bdy_spec()'
