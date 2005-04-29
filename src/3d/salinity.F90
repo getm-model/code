@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.14 2005-04-25 07:55:50 kbk Exp $
+!$Id: salinity.F90,v 1.15 2005-04-29 12:59:44 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,7 +41,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: salinity.F90,v $
-!  Revision 1.14  2005-04-25 07:55:50  kbk
+!  Revision 1.15  2005-04-29 12:59:44  kbk
+!  cleaned advection info
+!
+!  Revision 1.14  2005/04/25 07:55:50  kbk
 !  use more general frame for error handling - Umlauf
 !
 !  Revision 1.13  2004/08/06 15:16:12  hb
@@ -230,8 +233,8 @@ salt_field_no=1
          salt_ver_adv=1
       end if
    end if
-   LEVEL3 "horizontal: ",trim(adv_schemes(salt_hor_adv))," of salinity"
-   LEVEL3 "vertical:   ",trim(adv_schemes(salt_ver_adv))," of salinity"
+   LEVEL3 "horizontal: ",trim(adv_schemes(salt_hor_adv))
+   LEVEL3 "vertical:   ",trim(adv_schemes(salt_ver_adv))
 
    select case (salt_adv_split)
       case (-1)
