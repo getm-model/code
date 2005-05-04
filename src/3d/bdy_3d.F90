@@ -1,4 +1,4 @@
-!$Id: bdy_3d.F90,v 1.5 2003-05-05 15:47:59 kbk Exp $
+!$Id: bdy_3d.F90,v 1.6 2005-05-04 11:50:57 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,7 +32,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bdy_3d.F90,v $
-!  Revision 1.5  2003-05-05 15:47:59  kbk
+!  Revision 1.6  2005-05-04 11:50:57  kbk
+!  support for non-climatological 3D boundaries (S,T)
+!
+!  Revision 1.5  2003/05/05 15:47:59  kbk
 !  T and S boundaries work in parallel runs
 !
 !  Revision 1.4  2003/04/23 12:16:34  kbk
@@ -91,10 +94,10 @@
 #endif
 
    LEVEL2 'init_bdy_3d()'
-   allocate(S_bdy(nsbv,0:kmax),stat=rc)
+   allocate(S_bdy(0:kmax,nsbv),stat=rc)
    if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (S_bdy)'
 
-   allocate(T_bdy(nsbv,0:kmax),stat=rc)
+   allocate(T_bdy(0:kmax,nsbv),stat=rc)
    if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (T_bdy)'
 
 #ifdef DEBUG
@@ -182,8 +185,8 @@
       do j=wfj(n),wlj(n)
          do ii=1,4
             if (az(i-1+ii,j).gt.0) then
-               S(i-1+ii,j,:) = sp(ii)*S_bdy(k,:)+(1.-sp(ii))*S(i-1+ii,j,:)
-               T(i-1+ii,j,:) = sp(ii)*T_bdy(k,:)+(1.-sp(ii))*T(i-1+ii,j,:)
+               S(i-1+ii,j,:) = sp(ii)*S_bdy(:,k)+(1.-sp(ii))*S(i-1+ii,j,:)
+               T(i-1+ii,j,:) = sp(ii)*T_bdy(:,k)+(1.-sp(ii))*T(i-1+ii,j,:)
             end if
          end do
          k = k+1
@@ -197,8 +200,8 @@
       do i = nfi(n),nli(n)
          do jj=1,4
             if (az(i,j+1-jj).gt.0) then
-               S(i,j+1-jj,:) = sp(jj)*S_bdy(k,:)+(1.-sp(jj))*S(i,j+1-jj,:)
-               T(i,j+1-jj,:) = sp(jj)*T_bdy(k,:)+(1.-sp(jj))*T(i,j+1-jj,:)
+               S(i,j+1-jj,:) = sp(jj)*S_bdy(:,k)+(1.-sp(jj))*S(i,j+1-jj,:)
+               T(i,j+1-jj,:) = sp(jj)*T_bdy(:,k)+(1.-sp(jj))*T(i,j+1-jj,:)
             end if
          end do
          k = k+1
@@ -212,8 +215,8 @@
       do j=efj(n),elj(n)
          do ii=1,4
             if (az(i+1-ii,j).gt.0) then
-               S(i+1-ii,j,:) = sp(ii)*S_bdy(k,:)+(1.-sp(ii))*S(i+1-ii,j,:)
-               T(i+1-ii,j,:) = sp(ii)*T_bdy(k,:)+(1.-sp(ii))*T(i+1-ii,j,:)
+               S(i+1-ii,j,:) = sp(ii)*S_bdy(:,k)+(1.-sp(ii))*S(i+1-ii,j,:)
+               T(i+1-ii,j,:) = sp(ii)*T_bdy(:,k)+(1.-sp(ii))*T(i+1-ii,j,:)
             end if
          end do
          k = k+1
@@ -227,8 +230,8 @@
       do i = sfi(n),sli(n)
          do jj=1,4
             if (az(i,j-1+jj).gt.0) then
-               S(i,j-1+jj,:) = sp(jj)*S_bdy(k,:)+(1.-sp(jj))*S(i,j-1+jj,:)
-               T(i,j-1+jj,:) = sp(jj)*T_bdy(k,:)+(1.-sp(jj))*T(i,j-1+jj,:)
+               S(i,j-1+jj,:) = sp(jj)*S_bdy(:,k)+(1.-sp(jj))*S(i,j-1+jj,:)
+               T(i,j-1+jj,:) = sp(jj)*T_bdy(:,k)+(1.-sp(jj))*T(i,j-1+jj,:)
             end if
          end do
          k = k+1
