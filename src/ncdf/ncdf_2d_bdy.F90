@@ -1,4 +1,4 @@
-!$Id: ncdf_2d_bdy.F90,v 1.4 2004-04-06 16:32:29 kbk Exp $
+!$Id: ncdf_2d_bdy.F90,v 1.5 2005-05-04 11:45:29 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,6 +13,7 @@
 ! !USES:
    use m2d, only: dtm,bdy_times,bdy_old,bdy_new,bdy_data
    use time, only: string_to_julsecs,time_diff,julianday,secondsofday
+   use time, only: write_time_string,timestr
    IMPLICIT NONE
 !
    private
@@ -29,7 +30,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d_bdy.F90,v $
-!  Revision 1.4  2004-04-06 16:32:29  kbk
+!  Revision 1.5  2005-05-04 11:45:29  kbk
+!  adding model time stamp on IO
+!
+!  Revision 1.4  2004/04/06 16:32:29  kbk
 !  TimeDiff --> time_diff
 !
 !  Revision 1.3  2003/04/23 11:54:03  kbk
@@ -199,7 +203,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d_bdy.F90,v $
-!  Revision 1.4  2004-04-06 16:32:29  kbk
+!  Revision 1.5  2005-05-04 11:45:29  kbk
+!  adding model time stamp on IO
+!
+!  Revision 1.4  2004/04/06 16:32:29  kbk
 !  TimeDiff --> time_diff
 !
 !  Revision 1.3  2003/04/23 11:54:03  kbk
@@ -289,6 +296,10 @@
             EXIT
          end if
       end do
+
+      call write_time_string()
+      LEVEL2 timestr,': reading 2D boundary data ...'
+
       t1 = bdy_times(i-1) - offset
       t2 = bdy_times(i) - offset
       start(2) = i-1 ; edges(2) = 1

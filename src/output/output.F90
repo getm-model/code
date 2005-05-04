@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.10 2005-04-25 09:32:34 kbk Exp $
+!$Id: output.F90,v 1.11 2005-05-04 11:45:30 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -55,7 +55,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
-!  Revision 1.10  2005-04-25 09:32:34  kbk
+!  Revision 1.11  2005-05-04 11:45:30  kbk
+!  adding model time stamp on IO
+!
+!  Revision 1.10  2005/04/25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
 !  Revision 1.9  2004/06/15 08:25:57  kbk
@@ -293,7 +296,9 @@
 
    if (write_2d .or. write_3d .or. write_mean) then
       call write_time_string()
-      LEVEL2 'Saving.... ',timestr
+      if (write_2d)   LEVEL2 timestr, ': saving 2D .... '
+      if (write_3d)   LEVEL2 timestr, ': saving 3D .... '
+      if (write_mean) LEVEL2 timestr, ': saving mean fields .... '
 !      call divergence()
       secs = n*timestep
       select case (out_fmt)

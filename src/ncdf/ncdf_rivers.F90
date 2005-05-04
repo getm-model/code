@@ -1,4 +1,4 @@
-!$Id: ncdf_rivers.F90,v 1.5 2005-01-13 09:20:47 kbk Exp $
+!$Id: ncdf_rivers.F90,v 1.6 2005-05-04 11:45:29 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,6 +13,7 @@
 ! !USES:
    use time, only: string_to_julsecs,time_diff,add_secs,in_interval
    use time, only: jul0,secs0,julianday,secondsofday,timestep
+   use time, only: write_time_string,timestep,timestr
    use rivers, only: nriver,river_data,river_name,river_flow,river_factor
    use rivers, only: ok,rriver,real_river_name,river_split
    use rivers, only: temp_missing,salt_missing
@@ -40,7 +41,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_rivers.F90,v $
-!  Revision 1.5  2005-01-13 09:20:47  kbk
+!  Revision 1.6  2005-05-04 11:45:29  kbk
+!  adding model time stamp on IO
+!
+!  Revision 1.5  2005/01/13 09:20:47  kbk
 !  support for T and S specifications in rivers - Stips
 !
 !  Revision 1.4  2004/04/06 16:32:29  kbk
@@ -233,7 +237,8 @@
       if (river_times(indx) .ge. real(t + offset)) EXIT
    end do
    if (indx .gt. last_indx) then
-      LEVEL3 'reading river data - indx = ',indx
+      call write_time_string()
+      LEVEL2 timestr, ': reading river data .... ',indx
       last_indx = indx
       start(1) = indx
       nn = 1

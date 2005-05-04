@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.18 2005-04-25 09:25:33 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.19 2005-05-04 11:45:29 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,6 +13,7 @@
 ! !USES:
    use time, only: string_to_julsecs,time_diff,add_secs,in_interval
    use time, only: jul0,secs0,julianday,secondsofday,timestep,simtime
+   use time, only: write_time_string,timestr
    use domain, only: imin,imax,jmin,jmax,az,lonc,latc,convc
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
    use grid_interpol, only: to_rotated_lat_lon
@@ -80,7 +81,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.18  2005-04-25 09:25:33  kbk
+!  Revision 1.19  2005-05-04 11:45:29  kbk
+!  adding model time stamp on IO
+!
+!  Revision 1.18  2005/04/25 09:25:33  kbk
 !  conv --> convc
 !
 !  Revision 1.17  2005/04/25 07:55:50  kbk
@@ -447,6 +451,8 @@
       else
          if (indx .gt. save_n) then
             new_meteo = .true.
+            call write_time_string()
+            LEVEL2 timestr,': reading meteo data ...'
             save_n = indx
             t_1 = t_2
             t_2 = met_times(indx) - offset
