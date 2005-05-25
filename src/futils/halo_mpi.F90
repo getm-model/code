@@ -1,11 +1,8 @@
-!$Id: halo_mpi.F90,v 1.6 2004-01-02 09:46:43 kbk Exp $
+!$Id: halo_mpi.F90,v 1.6.2.1 2005-05-25 08:05:35 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
 #endif
-
-!kbk#define STATIC
-
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -67,7 +64,10 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_mpi.F90,v $
-!  Revision 1.6  2004-01-02 09:46:43  kbk
+!  Revision 1.6.2.1  2005-05-25 08:05:35  kbk
+!  fixed ONED_NONBLOCKING + cleaning
+!
+!  Revision 1.6  2004/01/02 09:46:43  kbk
 !  fixed a bug for user defined data types - Peneva
 !
 !  Revision 1.5  2003/08/14 14:49:51  kbk
@@ -736,7 +736,7 @@ include "mpif.h"
       case(ONED_SENDRECV)
          if(com_direction .eq. RIGHT_LEFT) then
 #ifdef DEBUG
-STDERR 'ONED_SENDRECV - y_line'
+STDERR 'ONED_SENDRECV - y_lines'
 #endif
             call MPI_SENDRECV(f1(il,jl),   1, y_line, left , tag, &
                               f2(ih+1,jl), 1, y_line, right, tag, &
@@ -747,7 +747,7 @@ STDERR 'ONED_SENDRECV - y_line'
                               active_comm, status, ierr)
          else
 #ifdef DEBUG
-STDERR 'ONED_SENDRECV - x_line'
+STDERR 'ONED_SENDRECV - x_lines'
 #endif
             call MPI_SENDRECV(f1(il,jh),   1, x_line, up,   tag, &
                               f2(il,jl-1), 1, x_line, down, tag, &
@@ -759,27 +759,27 @@ STDERR 'ONED_SENDRECV - x_line'
       case(ONED_NONBLOCKING)
          if(com_direction .eq. RIGHT_LEFT) then
 #ifdef DEBUG
-STDERR 'ONED_NONBLOCKING - y_line'
+STDERR 'ONED_NONBLOCKING - y_lines'
 #endif
-            call MPI_IRECV(f2(ih+1,jl), 1, y_line, right, tag, &
+            call MPI_IRECV(f2(il-HALO,jl),     1, y_lines, left,  tag, &
                               active_comm, req(1), ierr)
-            call MPI_IRECV(f2(il-1,jl), 1, y_line, left,  tag, &
+            call MPI_IRECV(f2(ih+1,jl),        1, y_lines, right, tag, &
                               active_comm, req(2), ierr)
-            call MPI_ISEND(f1(il,jl),   1, y_line, left,  tag, &
+            call MPI_ISEND(f1(il,jl),          1, y_lines, left,  tag, &
                               active_comm, req(3), ierr)
-            call MPI_ISEND(f1(ih,jl),   1, y_line, right, tag, &
+            call MPI_ISEND(f1(ih-(HALO-1),jl), 1, y_lines, right, tag, &
                               active_comm, req(4), ierr)
          else
 #ifdef DEBUG
-STDERR 'ONED_NONBLOCKING - x_line'
+STDERR 'ONED_NONBLOCKING - x_lines'
 #endif
-            call MPI_IRECV(f2(il,jl-1), 1, x_line, down,  tag, &
+            call MPI_IRECV(f2(il,jl-HALO),     1, x_lines, down, tag, &
                               active_comm, req(1), ierr)
-            call MPI_IRECV(f2(il,jh+1), 1, x_line, up,    tag, &
+            call MPI_IRECV(f2(il,jh+1),        1, x_lines, up,   tag, &
                               active_comm, req(2), ierr)
-            call MPI_ISEND(f1(il,jl),   1, x_line, down,  tag, &
+            call MPI_ISEND(f1(il,jl),          1, x_lines, down, tag, &
                               active_comm, req(3), ierr)
-            call MPI_ISEND(f1(il,jh),   1, x_line, up,    tag, &
+            call MPI_ISEND(f1(il,jh-(HALO-1)), 1, x_lines, up,   tag, &
                               active_comm, req(4), ierr)
          end if
       case(TWOD_SENDRECV)
@@ -815,13 +815,13 @@ STDERR 'TWOD_SENDRECV'
 !        Recieving x_lines
          call MPI_IRECV(f2(il,jl-HALO), 1, x_lines, down,  tag, &
                            active_comm, req(1), ierr)
-         call MPI_IRECV(f2(il,jh+1), 1, x_lines, up,    tag, &
+         call MPI_IRECV(f2(il,jh+1),    1, x_lines, up,    tag, &
                            active_comm, req(2), ierr)
 
 !        Recieving y_lines
          call MPI_IRECV(f2(il-HALO,jl), 1, y_lines, left,  tag, &
                            active_comm, req(3), ierr)
-         call MPI_IRECV(f2(ih+1,jl), 1, y_lines, right, tag, &
+         call MPI_IRECV(f2(ih+1,jl),    1, y_lines, right, tag, &
                            active_comm, req(4), ierr)
 
 !        Recieving corner points
@@ -835,15 +835,15 @@ STDERR 'TWOD_SENDRECV'
                            active_comm, req(8), ierr)
 
 !        Sending x_lines
-         call MPI_ISEND(f1(il,jl),   1, x_lines, down,  tag, &
+         call MPI_ISEND(f1(il,jl),          1, x_lines, down,  tag, &
                            active_comm, req(9), ierr)
-         call MPI_ISEND(f1(il,jh-(HALO-1)),   1, x_lines, up,    tag, &
+         call MPI_ISEND(f1(il,jh-(HALO-1)), 1, x_lines, up,    tag, &
                            active_comm, req(10), ierr)
 
 !        Sending y_lines
-         call MPI_ISEND(f1(il,jl),   1, y_lines, left, tag, &
+         call MPI_ISEND(f1(il,jl),          1, y_lines, left,  tag, &
                            active_comm, req(11), ierr)
-         call MPI_ISEND(f1(ih-(HALO-1),jl),  1, y_lines, right,  tag, &
+         call MPI_ISEND(f1(ih-(HALO-1),jl), 1, y_lines, right, tag, &
                            active_comm, req(12), ierr)
 
 !        Sending corner points
@@ -865,14 +865,14 @@ STDERR 'TWOD_SENDRECV'
 
    if (do_mirror) then
       if ( comm_method .ne. ONE_PROCESS ) then
-         if(left  .eq. MPI_PROC_NULL) f1(il-1, : ) = f1(il, : )
-         if(right .eq. MPI_PROC_NULL) f1(ih+1, : ) = f1(ih, : )
-         if(down  .eq. MPI_PROC_NULL) f1( :, jl-1) = f1( :, jl)
-         if(up    .eq. MPI_PROC_NULL) f1( :, jh+1) = f1( :, jh)
-         if(ul .eq. MPI_PROC_NULL) f1(il-1,jh+1) = f1(il,jh)
-         if(ur .eq. MPI_PROC_NULL) f1(ih+1,jh+1) = f1(ih,jh)
-         if(lr .eq. MPI_PROC_NULL) f1(ih+1,jl-1) = f1(ih,jl)
-         if(ll .eq. MPI_PROC_NULL) f1(il-1,jl-1) = f1(il,jl)
+         if(left  .eq. MPI_PROC_NULL) f1(il-1, : )  = f1(il, : )
+         if(right .eq. MPI_PROC_NULL) f1(ih+1, : )  = f1(ih, : )
+         if(down  .eq. MPI_PROC_NULL) f1( :, jl-1)  = f1( :, jl)
+         if(up    .eq. MPI_PROC_NULL) f1( :, jh+1)  = f1( :, jh)
+         if(ul    .eq. MPI_PROC_NULL) f1(il-1,jh+1) = f1(il,jh)
+         if(ur    .eq. MPI_PROC_NULL) f1(ih+1,jh+1) = f1(ih,jh)
+         if(lr    .eq. MPI_PROC_NULL) f1(ih+1,jl-1) = f1(ih,jl)
+         if(ll    .eq. MPI_PROC_NULL) f1(il-1,jl-1) = f1(il,jl)
       end if
    end if
 
@@ -926,7 +926,7 @@ STDERR 'TWOD_SENDRECV'
       case(ONED_SENDRECV)
          if(com_direction .eq. RIGHT_LEFT) then
 #ifdef DEBUG
-STDERR 'ONED_SENDRECV - yz_slice'
+STDERR 'ONED_SENDRECV - yz_slices'
 #endif
             call MPI_SENDRECV(f1(il,jl,0),   1, yz_slice, left , tag, &
                               f2(ih+1,jl,0), 1, yz_slice, right, tag, &
@@ -936,7 +936,7 @@ STDERR 'ONED_SENDRECV - yz_slice'
                               active_comm, status, ierr)
          else
 #ifdef DEBUG
-STDERR 'ONED_SENDRECV - xz_slice'
+STDERR 'ONED_SENDRECV - xz_slices'
 #endif
             call MPI_SENDRECV(f1(il,jl,0),   1, xz_slice, down, tag, &
                               f2(il,jh+1,0), 1, xz_slice, up  , tag, &
@@ -948,27 +948,28 @@ STDERR 'ONED_SENDRECV - xz_slice'
       case(ONED_NONBLOCKING)
          if(com_direction .eq. RIGHT_LEFT) then
 #ifdef DEBUG
-STDERR 'ONED_NONBLOCKING - yz_slice'
+STDERR 'ONED_NONBLOCKING - yz_slices'
 #endif
-            call MPI_IRECV(f2(ih+1,jl,0), 1, yz_slice, right, tag, &
-                              active_comm, req(2), ierr)
-            call MPI_IRECV(f2(il-1,jl,0), 1, yz_slice, left,  tag, &
+STDERR 'yz_slices'
+            call MPI_IRECV(f2(il-HALO,jl,0),     1, yz_slices, left,  tag, &
                               active_comm, req(1), ierr)
-            call MPI_ISEND(f1(il,jl,0),   1, yz_slice, left,  tag, &
-                              active_comm, req(4), ierr)
-            call MPI_ISEND(f1(ih,jl,0),   1, yz_slice, right, tag, &
+            call MPI_IRECV(f2(ih+1,jl,0),        1, yz_slices, right, tag, &
+                              active_comm, req(2), ierr)
+            call MPI_ISEND(f1(il,jl,0),          1, yz_slices, left,  tag, &
                               active_comm, req(3), ierr)
+            call MPI_ISEND(f1(ih-(HALO-1),jl,0), 1, yz_slices, right, tag, &
+                              active_comm, req(4), ierr)
          else
 #ifdef DEBUG
-STDERR 'ONED_NONBLOCKING - xz_slice'
+STDERR 'ONED_NONBLOCKING - xz_slices'
 #endif
-            call MPI_IRECV(f2(il,jl-1,0), 1, xz_slice, down,  tag, &
+            call MPI_IRECV(f2(il,jl-HALO,0),     1, xz_slices, down, tag, &
                               active_comm, req(1), ierr)
-            call MPI_IRECV(f2(il,jh+1,0), 1, xz_slice, up,    tag, &
+            call MPI_IRECV(f2(il,jh+1,0),        1, xz_slices, up,   tag, &
                               active_comm, req(2), ierr)
-            call MPI_ISEND(f1(il,jl,0),   1, xz_slice, down,  tag, &
+            call MPI_ISEND(f1(il,jl,0),          1, xz_slices, down, tag, &
                               active_comm, req(3), ierr)
-            call MPI_ISEND(f1(il,jh,0),   1, xz_slice, up,    tag, &
+            call MPI_ISEND(f1(il,jh-(HALO-1),0), 1, xz_slices, up, tag,   &
                               active_comm, req(4), ierr)
          end if
       case(TWOD_SENDRECV)
@@ -989,31 +990,31 @@ STDERR 'TWOD_SENDRECV'
                            active_comm, status, ierr)
 !        Corner points
          call MPI_SENDRECV(f1(il,jl,0),    1, z_column, ll, tag, &
-                           f2(ih+1,jh+1,0),1, z_column, ur,tag, &
+                           f2(ih+1,jh+1,0),1, z_column, ur, tag, &
                            active_comm, status, ierr)
-         call MPI_SENDRECV(f1(ih,jl,0),    1, z_column, lr,tag, &
+         call MPI_SENDRECV(f1(ih,jl,0),    1, z_column, lr, tag, &
                            f2(il-1,jh+1,0),1, z_column, ul, tag, &
                            active_comm, status, ierr)
-         call MPI_SENDRECV(f1(ih,jh,0),    1, z_column, ur,tag, &
+         call MPI_SENDRECV(f1(ih,jh,0),    1, z_column, ur, tag, &
                            f2(il-1,jl-1,0),1, z_column, ll, tag, &
                            active_comm, status, ierr)
-         call MPI_SENDRECV(f1(il,jh,0),    1, z_column, ul,tag, &
-                           f2(ih+1,jl-1,0),1, z_column, lr,tag, &
+         call MPI_SENDRECV(f1(il,jh,0),    1, z_column, ul, tag, &
+                           f2(ih+1,jl-1,0),1, z_column, lr, tag, &
                            active_comm, status, ierr)
       case(TWOD_NONBLOCKING)
 #ifdef DEBUG
 STDERR 'TWOD_NONBLOCKING'
 #endif
 !        Recieving xz_slices
-         call MPI_IRECV(f2(il,jl-HALO,0), 1, xz_slices, down,  tag, &
+         call MPI_IRECV(f2(il,jl-HALO,0), 1, xz_slices, down, tag, &
                            active_comm, req(1), ierr)
-         call MPI_IRECV(f2(il,jh+1,0), 1, xz_slices, up,    tag, &
+         call MPI_IRECV(f2(il,jh+1,0),    1, xz_slices, up,   tag, &
                            active_comm, req(2), ierr)
 
 !        Recieving yz_slices
          call MPI_IRECV(f2(il-HALO,jl,0), 1, yz_slices, left,  tag, &
                            active_comm, req(3), ierr)
-         call MPI_IRECV(f2(ih+1,jl,0), 1, yz_slices, right, tag, &
+         call MPI_IRECV(f2(ih+1,jl,0),    1, yz_slices, right, tag, &
                            active_comm, req(4), ierr)
 
 !        Recieving corner columns
@@ -1027,28 +1028,28 @@ STDERR 'TWOD_NONBLOCKING'
                            active_comm, req(8), ierr)
 
 !        Sending xz_slices
-         call MPI_ISEND(f1(il,jl,0),   1, xz_slices, down,  tag, &
-                           active_comm, req(9), ierr)
-         call MPI_ISEND(f1(il,jh-(HALO-1),0),   1, xz_slices, up,    tag, &
+         call MPI_ISEND(f1(il,jl,0),          1, xz_slices, down,  tag, &
+                           active_comm,  req(9), ierr)
+         call MPI_ISEND(f1(il,jh-(HALO-1),0), 1, xz_slices, up,    tag, &
                            active_comm, req(10), ierr)
 
 !        Sending yz_slices
-         call MPI_ISEND(f1(il,jl,0),   1, yz_slices, left, tag, &
+         call MPI_ISEND(f1(il,jl,0),          1, yz_slices, left,  tag, &
                            active_comm, req(11), ierr)
-         call MPI_ISEND(f1(ih-(HALO-1),jl,0),   1, yz_slices, right,  tag, &
+         call MPI_ISEND(f1(ih-(HALO-1),jl,0), 1, yz_slices, right, tag, &
                            active_comm, req(12), ierr)
 
 !        Sending corner columns
-         call MPI_ISEND(f1(ih,jh,0), 1, z_column, ur,tag, &
+         call MPI_ISEND(f1(ih,jh,0), 1, z_column, ur, tag, &
                            active_comm, req(13), ierr)
 
-         call MPI_ISEND(f1(il,jh,0), 1, z_column, ul,tag, &
+         call MPI_ISEND(f1(il,jh,0), 1, z_column, ul, tag, &
                            active_comm, req(14), ierr)
 
-         call MPI_ISEND(f1(il,jl,0), 1, z_column, ll,tag, &
+         call MPI_ISEND(f1(il,jl,0), 1, z_column, ll, tag, &
                            active_comm, req(15), ierr)
 
-         call MPI_ISEND(f1(ih,jl,0), 1, z_column, lr,tag, &
+         call MPI_ISEND(f1(ih,jl,0), 1, z_column, lr, tag, &
                            active_comm, req(16), ierr)
       case default
          FATAL 'A non valid communication method has been chosen'
@@ -1056,14 +1057,14 @@ STDERR 'TWOD_NONBLOCKING'
    end select
 
    if ( comm_method .ne. ONE_PROCESS ) then
-      if(left  .eq. MPI_PROC_NULL) f1(il-1, :, : )  = f1(il, :, : )
-      if(right .eq. MPI_PROC_NULL) f1(ih+1, :, : )  = f1(ih, :, : )
-      if(down  .eq. MPI_PROC_NULL) f1( :, jl-1, : ) = f1( :, jl, : )
-      if(up    .eq. MPI_PROC_NULL) f1( :, jh+1, : ) = f1( :, jh, : )
-      if(ul .eq. MPI_PROC_NULL) f1(il-1,jh+1, : ) = f1(il,jh, : )
-      if(ur .eq. MPI_PROC_NULL) f1(ih+1,jh+1, : ) = f1(ih,jh, : )
-      if(lr .eq. MPI_PROC_NULL) f1(ih+1,jl-1, : ) = f1(ih,jl, : )
-      if(ll .eq. MPI_PROC_NULL) f1(il-1,jl-1, : ) = f1(il,jl, : )
+      if(left  .eq. MPI_PROC_NULL) f1(il-1, :, : )   = f1(il, :, : )
+      if(right .eq. MPI_PROC_NULL) f1(ih+1, :, : )   = f1(ih, :, : )
+      if(down  .eq. MPI_PROC_NULL) f1( :, jl-1, : )  = f1( :, jl, : )
+      if(up    .eq. MPI_PROC_NULL) f1( :, jh+1, : )  = f1( :, jh, : )
+      if(ul    .eq. MPI_PROC_NULL) f1(il-1,jh+1, : ) = f1(il,jh, : )
+      if(ur    .eq. MPI_PROC_NULL) f1(ih+1,jh+1, : ) = f1(ih,jh, : )
+      if(lr    .eq. MPI_PROC_NULL) f1(ih+1,jl-1, : ) = f1(ih,jl, : )
+      if(ll    .eq. MPI_PROC_NULL) f1(il-1,jl-1, : ) = f1(il,jl, : )
    end if
 
    last_action = SENDING
