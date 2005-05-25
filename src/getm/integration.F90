@@ -1,4 +1,4 @@
-!$Id: integration.F90,v 1.4 2004-03-29 15:35:51 kbk Exp $
+!$Id: integration.F90,v 1.5 2005-05-25 10:46:15 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,7 +20,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: integration.F90,v $
-!  Revision 1.4  2004-03-29 15:35:51  kbk
+!  Revision 1.5  2005-05-25 10:46:15  kbk
+!  introduced progress print out variable - should go in namelist later
+!
+!  Revision 1.4  2004/03/29 15:35:51  kbk
 !  possible to store calculated mean fields
 !
 !  Revision 1.3  2003/04/23 12:03:46  kbk
@@ -112,6 +115,7 @@
 ! !LOCAL VARIABLES
    logical                   :: do_3d
    integer                   :: n
+   integer                   :: progress=100
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -122,12 +126,12 @@
 #endif
 
    STDERR LINE
-   STDERR 'integrating....'
+   LEVEL1 'integrating....'
    STDERR LINE
 
    do n=MinN,MaxN
 
-      if (mod(n,100) .eq. 0) STDERR n
+      if (progress .gt. 0 .and. mod(n,progress) .eq. 0) LEVEL2 n
 
 #ifndef NO_3D
       do_3d = (runtype .ge. 2 .and. mod(n,M) .eq. 0)
