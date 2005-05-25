@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.18 2005-05-25 10:32:12 kbk Exp $
+!$Id: domain.F90,v 1.19 2005-05-25 10:43:42 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -79,7 +79,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.18  2005-05-25 10:32:12  kbk
+!  Revision 1.19  2005-05-25 10:43:42  kbk
+!  fixed ax calculation
+!
+!  Revision 1.18  2005/05/25 10:32:12  kbk
 !  merged from stabe branch v1_2_1
 !
 !  Revision 1.17  2005/04/25 09:32:34  kbk
@@ -411,14 +414,13 @@
       do i=imin-HALO,imax+HALO-1
          if (az(i  ,j) .ge. 1 .and. az(i  ,j+1) .ge. 1 .and.    &
              az(i+1,j) .ge. 1 .and. az(i+1,j+1) .ge. 1) then
-            ax(i,j)=1
+            mask(i,j)=1
          end if
       end do
    end do
    call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG)
    call wait_halo(H_TAG)
    ax = mask 
-
 
 !  Compute grid points and metric coefficients for different grid types
    select case (grid_type)
