@@ -49,7 +49,13 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: advection_3d.F90,v $
-!  Revision 1.6  2004-01-06 15:04:00  kbk
+!  Revision 1.7  2005-05-25 10:32:13  kbk
+!  merged from stabe branch v1_2_1
+!
+!  Revision 1.6.2.1  2005/05/25 08:39:14  kbk
+!  update HALO's after each fractional step
+!
+!  Revision 1.6  2004/01/06 15:04:00  kbk
 !  FCT advection + split of advection_3d.F90 + extra adv. input checks
 !
 !  Revision 1.5  2003/12/16 16:50:40  kbk
@@ -244,13 +250,16 @@
             case (0)
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a2,&
                                 hor_adv,az,AH)
-
                call update_3d_halo(f,f,az,& 
                                    iimin,jjmin,iimax,jjmax,kmax,D_TAG)
                call wait_halo(D_TAG)
 
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a2,&
                                 hor_adv,az,AH)
+               call update_3d_halo(f,f,az,& 
+                                   iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+               call wait_halo(D_TAG)
+
                if (kmax.gt.1) then
 #ifdef ITERATE_VERT_ADV
                   call w_split_it_adv(dt,f,ww,az,a2,ver_adv)
@@ -261,14 +270,12 @@
             case (1)
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
                                 hor_adv,az,AH)
-
                call update_3d_halo(f,f,az, &
                                    iimin,jjmin,iimax,jjmax,kmax,D_TAG)
                call wait_halo(D_TAG)
 
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
                                 hor_adv,az,AH)
-
                call update_3d_halo(f,f,az, &
                                    iimin,jjmin,iimax,jjmax,kmax,D_TAG)
                call wait_halo(D_TAG)
@@ -279,16 +286,22 @@
 #else
                   call w_split_adv(dt,f,ww,az,a2,ver_adv)
 #endif
+                  call update_3d_halo(f,f,az, &
+                                      iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+                  call wait_halo(D_TAG)
+
                end if
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
                                 hor_adv,az,AH)
-
                call update_3d_halo(f,f,az, &
                                    iimin,jjmin,iimax,jjmax,kmax,D_TAG)
                call wait_halo(D_TAG)
 
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
                                 hor_adv,az,AH)
+               call update_3d_halo(f,f,az, &
+                                   iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+               call wait_halo(D_TAG)
 
             case (2)
                select case (hor_adv)

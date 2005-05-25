@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.17 2005-04-25 09:32:34 kbk Exp $
+!$Id: domain.F90,v 1.18 2005-05-25 10:32:12 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -79,7 +79,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.17  2005-04-25 09:32:34  kbk
+!  Revision 1.18  2005-05-25 10:32:12  kbk
+!  merged from stabe branch v1_2_1
+!
+!  Revision 1.17  2005/04/25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
 !  Revision 1.16  2004/11/04 11:07:00  kbk
@@ -241,6 +244,7 @@
    character(len=PATH_MAX)   :: bathymetry_adjust_file   = 'bathymetry.adjust'
    character(len=PATH_MAX)   :: mask_adjust_file         = 'mask.adjust'
    integer                   :: il=-1,ih=-1,jl=-1,jh=-1
+   REALTYPE                  :: mask(E2DFIELD)
    namelist /domain/ &
              vert_cord,maxdepth,bathy_format,bathymetry,       &
              f_plane,latitude,openbdy,bdyinfofile,             &
@@ -359,42 +363,50 @@
 !  Do we want to further adjust the mask
    call adjust_mask(trim(input_dir) // mask_adjust_file)
 
+   mask = _ONE_*az
+
 !  mask for U-points
-   au=0
+   mask=0
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO-1
          if (az(i,j) .eq. 1 .and. az(i+1,j) .eq. 1) then
-            au(i,j)=1
+            mask(i,j)=1
          end if
          if ((az(i,j) .eq. 1 .and. az(i+1,j) .eq. 2).or.    &
              (az(i,j) .eq. 2 .and. az(i+1,j) .eq. 1)) then
-            au(i,j)=2
+            mask(i,j)=2
          end if
          if (az(i,j) .eq. 2 .and. az(i+1,j) .eq. 2) then
-            au(i,j)=3
+            mask(i,j)=3
          end if
       end do
    end do
+   call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG)
+   call wait_halo(H_TAG)
+   au = mask 
 
 !  mask for V-points
-   av=0
+   mask=_ZERO_
    do j=jmin-HALO,jmax+HALO-1
       do i=imin-HALO,imax+HALO
          if (az(i,j) .eq. 1 .and. az(i,j+1) .eq. 1) then
-            av(i,j)=1
+            mask(i,j)=1
          end if
          if ((az(i,j) .eq. 1 .and. az(i,j+1) .eq. 2).or.    &
              (az(i,j) .eq. 2 .and. az(i,j+1) .eq. 1)) then
-            av(i,j)=2
+            mask(i,j)=2
          end if
          if (az(i,j) .eq. 2 .and. az(i,j+1) .eq. 2) then
-            av(i,j)=3
+            mask(i,j)=3
          end if
       end do
    end do
+   call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG)
+   call wait_halo(H_TAG)
+   av = mask 
 
 !  mask for X-points
-   ax=0
+   mask=0
    do j=jmin-HALO,jmax+HALO-1
       do i=imin-HALO,imax+HALO-1
          if (az(i  ,j) .ge. 1 .and. az(i  ,j+1) .ge. 1 .and.    &
@@ -403,6 +415,9 @@
          end if
       end do
    end do
+   call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG)
+   call wait_halo(H_TAG)
+   ax = mask 
 
 
 !  Compute grid points and metric coefficients for different grid types
@@ -820,7 +835,6 @@
       case default
          call getm_error("metric()","A non valid grid type has been chosen.")
    end select
-
 
    call update_2d_halo(dxc,dxc,az,imin,jmin,imax,jmax,H_TAG)
    call wait_halo(H_TAG)
