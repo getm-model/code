@@ -1,4 +1,4 @@
-!$Id: uv_advect_3d.F90,v 1.7 2003-08-28 15:20:37 kbk Exp $
+!$Id: uv_advect_3d.F90,v 1.7.2.1 2005-05-25 08:41:38 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,7 +6,7 @@
 ! !ROUTINE: uv_advect_3d() - mumentum advection - horizontal.
 !
 ! !INTERFACE:
-   subroutine uv_advect_3d(hor_adv,ver_adv,strang)
+   subroutine uv_advect_3d(hor_adv,ver_adv,adv_split)
 !
 ! !DESCRIPTION:
 !
@@ -22,10 +22,12 @@
    use variables_3d, only: uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv
 #endif
    use advection_3d, only: do_advection_3d
+   use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
+
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)  :: hor_adv,ver_adv,strang
+   integer, intent(in)  :: hor_adv,ver_adv,adv_split
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -35,7 +37,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_advect_3d.F90,v $
-!  Revision 1.7  2003-08-28 15:20:37  kbk
+!  Revision 1.7.2.1  2005-05-25 08:41:38  kbk
+!  fixed loop boundaries + update HALO's when -DUV_TVD
+!
+!  Revision 1.7  2003/08/28 15:20:37  kbk
 !  use ax mask, always set PP
 !
 !  Revision 1.6  2003/08/14 13:00:40  kbk
@@ -102,10 +107,11 @@
 #endif
 
 #ifdef UV_TVD
+
 ! Here begins dimensional split advection for u-velocity
    do k=1,kmax
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jjmin-HALO,jjmax+HALO
+         do i=iimin-HALO,iimax+HALO-1
             uadv(i,j,k)=0.5*(uu(i+1,j,k)+uu(i,j,k))
             vadv(i,j,k)=0.5*(vv(i+1,j,k)+vv(i,j,k))
             wadv(i,j,k)=0.5*(ww(i+1,j,k)+ww(i,j,k))
@@ -116,8 +122,9 @@
          end do
       end do
    end do
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+
+   do j=jjmin-HALO,jjmax+HALO
+      do i=iimin-HALO,iimax+HALO
          azadv(i,j)=au(i,j)
          auadv(i,j)=az(i,j)
          avadv(i,j)=ax(i,j)
@@ -144,15 +151,20 @@
          end do
       end do
    end do
+
+   call update_3d_halo(uuEx,uuEx,au,iimin,jjmin,iimax,jjmax,kmax,U_TAG)
+   call wait_halo(U_TAG)
+
    call do_advection_3d(dt,uuEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
-                        azadv,auadv,avadv,hor_adv,ver_adv,strang,AH)
+                        azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
+
    uuEx=-(uuEx*hun-uu)/dt ! Here, uuEx is the advection term.
 
 ! Here begins dimensional split advection for v-velocity
    do k=1,kmax
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jjmin-HALO,jjmax+HALO-1
+         do i=iimin-HALO,iimax+HALO
             uadv(i,j,k)=0.5*(uu(i,j+1,k)+uu(i,j,k))
             vadv(i,j,k)=0.5*(vv(i,j+1,k)+vv(i,j,k))
             wadv(i,j,k)=0.5*(ww(i,j+1,k)+ww(i,j,k))
@@ -163,8 +175,9 @@
          end do
       end do
    end do
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+
+   do j=jjmin-HALO,jjmax+HALO
+      do i=iimin-HALO,iimax+HALO
          azadv(i,j)=av(i,j)
          auadv(i,j)=ax(i,j)
          avadv(i,j)=az(i,j)
@@ -191,9 +204,14 @@
          end do
       end do
    end do
+
+   call update_3d_halo(vvEx,vvEx,av,iimin,jjmin,iimax,jjmax,kmax,V_TAG)
+   call wait_halo(V_TAG)
+
    call do_advection_3d(dt,vvEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
-                        azadv,auadv,avadv,hor_adv,ver_adv,strang,AH)
+                        azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
+
    vvEx=-(vvEx*hvn-vv)/dt ! Here, vvEx is the advection term.
 
 #else  ! First-order upstream, one three-dimensional  step
