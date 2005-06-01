@@ -1,0 +1,114 @@
+#!/usr/bin/perl -w
+#
+# $Id: getm.namelist,v 1.1 2005-06-01 14:54:01 kbk Exp $
+#
+#
+# http://www.xav.com/perl/lib/Pod/Usage.html
+#
+
+use Pod::Usage;
+#my $man = 0;
+#my $help = 0;
+my $message_text  = "This text precedes the usage message.";
+my $exit_status   = 2;          ## The exit status to use
+my $verbose_level = 0;          ## The verbose level to use
+my $filehandle    = \*STDERR;   ## The filehandle to write to
+
+
+use Getopt::Long;
+$opt={
+ 'help'       =>   0,
+ 'man'        =>   0,
+ 'config'     => 'getm.conf',
+ 'proto'      => 'getm.proto',
+ 'namelist'   =>   0,
+};
+
+#GetOptions('help|?' => \$help, man => \$man) or pod2usage(2);
+#GetOptions($opt, qw(help=s man=s config=s proto=s namelist=s));
+#print $opt->help,$opt->{man};
+#$opt->{help}=1;
+#pod2usage(1);
+#pod2usage(1) if $opt->{help};
+#pod2usage(-verbose => 2) if $opt->{man};
+
+
+GetOptions($opt, qw(config=s proto=s namelist=s));
+
+#GetOptions("help", "man")  ||  pod2usage(2);
+#    pod2usage(1)  if ($opt_help);
+#    pod2usage(-verbose => 2)  if ($opt_man);
+
+#
+#synopis $0 [-config <configfile>] [-proto <protofile>] [-namelist <namelistfile>];
+#
+#EOF
+#
+
+open(CONFIG,$opt->{config}) || die "can not open configfile:$opt->{config}";
+
+while ( <CONFIG> ) {
+  chop;
+# /(\w+)=[^!#]\s*(.+)/ && ($tab{$1}=$2);
+ /(\w+)=\s*(.+)/ && ($tab{$1}=$2);
+# /(\w+)=(\S+)/ && ($tab{$1}=$2);
+}
+
+#Orig grep( /(\w+)=(\S+)/ && ($tab{$1}=$2), @ARGV );
+grep( /(\w+)=\s*(.+)/ && ($tab{$1}=$2), @ARGV );
+
+$expr=join('|',keys %tab);
+@buf=();
+
+open(PROTO,$opt->{proto}) || die "no proto-file:$opt->{proto}";
+
+while ( <PROTO> ) {
+
+ if ( /^\!/ ) { push(@buf,$_); next; }
+ s/($expr)=(\S+)/$1=$tab{$1}/o;
+
+ if  ( /^\s*(\w+)=required/i ) {
+    warn "ERROR in the config file:$1 is not defined but required\n";
+    push(@buf,$_);
+ }else{
+    push(@buf,$_);
+ }
+}
+
+open(STDOUT,">$opt->{namelist}") if $opt->{namelist};
+print @buf;
+
+__END__
+
+    =head1 NAME
+
+    sample - Using GetOpt::Long and Pod::Usage
+
+    =head1 SYNOPSIS
+
+    sample [options] [file ...]
+
+     Options:
+       -help            brief help message
+       -man             full documentation
+
+    =head1 OPTIONS
+
+    =over 8
+
+    =item B<-help>
+
+    Print a brief help message and exits.
+
+    =item B<-man>
+
+    Prints the manual page and exits.
+
+    =back
+
+    =head1 DESCRIPTION
+
+    B<This program> will read the given input file(s) and do something
+    useful with the contents thereof.
+
+    =cut
