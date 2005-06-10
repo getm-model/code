@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.6 2005-04-25 09:32:34 kbk Exp $
+!$Id: ncdf_topo.F90,v 1.7 2005-06-10 16:01:22 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -36,7 +36,7 @@ module ncdf_topo
 ! Other quantities than those mentioned above may also be specified in the bathymetry file. 
 ! These  are not mandatory and, if GETM doesn't find them, only a warning will be written.
 ! To plot data when working with spherical grids, for example, a decision has to be made 
-! about the geographical mapping from (lat,lon) to the ($x$,$y$)-plane.  
+! about the geographical mapping from (lat,lon) to the ($x$,$y$)-plane.
 ! Information about both sets of grid points can be read in by GETM - 
 ! and will be written to the output files used for plotting.
 ! GETM checks the bathymetery file for corresponding variables called 
@@ -81,7 +81,10 @@ module ncdf_topo
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
-!  Revision 1.6  2005-04-25 09:32:34  kbk
+!  Revision 1.7  2005-06-10 16:01:22  kbk
+!  test and use real axis before using axis offset+increment method
+!
+!  Revision 1.6  2005/04/25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
 !
@@ -94,6 +97,8 @@ module ncdf_topo
   integer, private                     :: proj_lon_id,proj_lat_id,proj_rot_id
   integer, private                     :: rearth_id
   integer, private                     :: bathymetry_id
+  integer, private                     :: xcord_id=missing_id
+  integer, private                     :: ycord_id=missing_id
   integer, private                     :: dx_id,dy_id,x0_id,y0_id
   integer, private                     :: dlon_id, dlat_id,lon0_id,lat0_id
   integer, private                     :: convx_id,convc_id
@@ -102,6 +107,7 @@ module ncdf_topo
   integer, private, dimension(2)       :: dimidsT(2)
   integer, private, dimension(2)       :: dimidsX(2)
 
+  logical, private                     :: have_axis      = .false.
   logical, private                     :: latlonx_exists = .true.
   logical, private                     :: latlonc_exists = .true.
   logical, private                     :: xyx_exists     = .true.
@@ -135,11 +141,11 @@ contains
 !
 ! If non-mandatory variables are missing, a warning is output and some logical flags
 ! are set to account for the missing variable.
-! 
+!
 !
 ! !INPUT PARAMETERS:
     character(len=*), intent(in)        :: filename
-#ifdef STATIC 
+#ifdef STATIC
     integer, intent(in)                 :: iextr
     integer, intent(in)                 :: jextr
 #else
@@ -153,12 +159,12 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
+#include"netcdf.inc"
     integer                             :: status
     integer                             :: ndims
     integer                             :: dimlen
-!
+    character*(NF_MAX_NAME)             :: ncname
 !-------------------------------------------------------------------------
-#include"netcdf.inc"
 
 !  Look for things in the bathymetry file that should be there
 !  for all grid types.
@@ -170,7 +176,7 @@ contains
        call netcdf_error(status,"ncdf_check_grid()",   &
                          "Error opening "//trim(filename)//".")
     endif
-  
+
 !   What kind of grid is it?
     status = nf_inq_varid(ncbathy,"grid_type",grid_type_id)
     if (status .ne. NF_NOERR) then
@@ -191,7 +197,7 @@ contains
        call netcdf_error(status,"ncdf_check_grid()",   &
                          "Could not find 'bathymetry' in "//trim(filename)//".")
     endif
-    
+
 !   Is 'bathymetry' a matrix?
     status = nf_inq_varndims(ncbathy,bathymetry_id,ndims)
     if (status .ne. NF_NOERR) then
@@ -199,25 +205,25 @@ contains
                          "Could not get 'ndims' of 'bathymetry' in "//trim(filename)//".")
     endif
 
-    if (ndims.ne.2) then 
+    if (ndims.ne.2) then
        call getm_error("ncdf_check_grid()","'bathymetry' must have 2 dimensions.")
     endif
-    
+
 !   Is the size of 'bathymetry' consistent?
     status = nf_inq_vardimid(ncbathy,bathymetry_id,dimidsT)
     if (status .ne. NF_NOERR) then
        call netcdf_error(status,"ncdf_check_grid()",   &
                          "Could not get 'dimidsT' of 'bathymetry' in "//trim(filename)//".")
     endif
-    
+
     status = nf_inq_dimlen(ncbathy,dimidsT(1),dimlen)
     if (status .ne. NF_NOERR) then
        call netcdf_error(status,"ncdf_check_grid()",   &
                          "Could not get 'dimlen' of 'bathymetry' in "//trim(filename)//".")
     endif
-    
+
 #ifdef STATIC
-    if (dimlen.ne.iextr) then 
+    if (dimlen.ne.iextr) then
        call getm_error("ncdf_check_grid()",   &
                        "Length of first dimension in 'bathymetry' inconsistent.")
     endif
@@ -225,15 +231,15 @@ contains
 !   Get i-dimension for dynamic allocation
     iextr = dimlen
 #endif
-    
+
     status = nf_inq_dimlen(ncbathy,dimidsT(2),dimlen)
     if (status .ne. NF_NOERR) then
        call netcdf_error(status,"ncdf_check_grid()",   &
                          "Could not get 'dimlen' of 'bathymetry' in "//trim(filename)//".")
     endif
-    
+
 #ifdef STATIC
-    if (dimlen.ne.jextr) then 
+    if (dimlen.ne.jextr) then
        call getm_error("ncdf_check_grid()",   &
                        "Length of second dimension in 'bathymetry' inconsistent.")
     endif
@@ -241,7 +247,40 @@ contains
 !   Get j-dimension for dynamic allocation
     jextr = dimlen
 #endif
-    
+
+!   Does the bathymetry have proper axis defined?
+!   We will obtain the names of the two dimensions and
+!   then inquire if there are variables with the same names - if
+!   that is the case they are by NetCDF definition cordinate
+!   axis.
+!   If we have proper cordinate axis we will not ask for and
+!   read x0, dx, y0, dy (equidistant cartesian) or lon0, dlon,
+!   lat0, dlat further down. Instead we will get the information
+!   from the axis directly.
+
+    status = nf_inq_dimname(ncbathy,dimidsT(1),ncname)
+    if (status .ne. NF_NOERR) then
+       call netcdf_error(status,"ncdf_check_grid()",   &
+                         "Could not get name associated with dimidsT(1) in "//trim(filename)//".")
+    endif
+    status = nf_inq_varid(ncbathy,ncname,xcord_id)
+    if (status .ne. NF_NOERR) then
+       call netcdf_warning(status,"ncdf_check_grid()",   &
+                         "Could not get first cordinate name in "//trim(filename)//".")
+    endif
+
+    status = nf_inq_dimname(ncbathy,dimidsT(2),ncname)
+    if (status .ne. NF_NOERR) then
+       call netcdf_error(status,"ncdf_check_grid()",   &
+                         "Could not get name associated with dimidsT(2) in "//trim(filename)//".")
+    endif
+    status = nf_inq_varid(ncbathy,ncname,ycord_id)
+    if (status .ne. NF_NOERR) then
+       call netcdf_warning(status,"ncdf_check_grid()",   &
+                         "Could not get second cordinate name in "//trim(filename)//".")
+    endif
+    have_axis = (xcord_id .ne. missing_id) .and. (ycord_id .ne. missing_id)
+
 
 !   Set grid rotation to zero
 !   (may be updated below)
@@ -249,7 +288,7 @@ contains
     convc = _ZERO_
 
 !   Look for x and y positions of 'X'-points unless grid is Cartesian.
-    if (grid_type.ne.1) then 
+    if (grid_type.ne.1) then
 
        status = nf_inq_varid(ncbathy,"xx",xx_id)
        if (status .ne. NF_NOERR) then
@@ -311,7 +350,7 @@ contains
           latx_id       = missing_id
           latx          = missing_double
        endif
-          
+
        status = nf_inq_varid(ncbathy,"convx",convx_id)
        if (status .ne. NF_NOERR) then
           if (grid_type.eq.1) then
@@ -339,7 +378,7 @@ contains
     endif
 
 !   What parameters are used for the geographic projection?
-    if (proj_exists) then 
+    if (proj_exists) then
 
        status = nf_inq_varid(ncbathy,"proj_lon",proj_lon_id)
        if (status .ne. NF_NOERR) then
@@ -385,44 +424,45 @@ contains
     select case (grid_type)
     case(1)
 
-#if  ( defined(SPHERICAL) || defined(CURVILINEAR) ) 
+#if  ( defined(SPHERICAL) || defined(CURVILINEAR) )
        call getm_error("ncdf_check_grid()",  &
                        "Cannot use Cartesian grid with SPHERICAL or CURVILINEAR #defined.")
 #endif
 
-!      Look for grid spacing
-       status = nf_inq_varid(ncbathy,"dx",dx_id)
-       if (status .ne. NF_NOERR) then
-          call netcdf_error(status,"ncdf_check_grid()",   & 
-                            "Could not find 'dx' in "//trim(filename)//".")
-       endif
-       
-       status = nf_inq_varid(ncbathy,"dy",dy_id)
-       if (status .ne. NF_NOERR) then
-          call netcdf_error(status,"ncdf_check_grid()",   &
-                            "Could not find 'dy' in "//trim(filename)//".")
-       endif
+       if( .not. have_axis) then
+!         Look for grid spacing
+          status = nf_inq_varid(ncbathy,"dx",dx_id)
+          if (status .ne. NF_NOERR) then
+             call netcdf_error(status,"ncdf_check_grid()",   &
+                               "Could not find 'dx' in "//trim(filename)//".")
+          endif
 
-!      Look for offset
-       status = nf_inq_varid(ncbathy,"x0",x0_id)
-       if (status .ne. NF_NOERR) then
-          call netcdf_warning(status,"ncdf_check_grid()",   &
-                              "Could not find 'x0' in "//trim(filename)//". Set to zero." )
-          x0_id = missing_id
-          x0    = _ZERO_
-       endif
-       
-       status = nf_inq_varid(ncbathy,"y0",y0_id)
-       if (status .ne. NF_NOERR) then
-          call netcdf_warning(status,"ncdf_check_grid()",    &
-                              "Could not find 'y0' in "//trim(filename)//". Set to zero.")
-          y0_id = missing_id
-          y0    = _ZERO_
-       endif
-       
+          status = nf_inq_varid(ncbathy,"dy",dy_id)
+          if (status .ne. NF_NOERR) then
+             call netcdf_error(status,"ncdf_check_grid()",   &
+                               "Could not find 'dy' in "//trim(filename)//".")
+          endif
+
+!         Look for offset
+          status = nf_inq_varid(ncbathy,"x0",x0_id)
+          if (status .ne. NF_NOERR) then
+             call netcdf_warning(status,"ncdf_check_grid()",   &
+                                 "Could not find 'x0' in "//trim(filename)//". Set to zero." )
+             x0_id = missing_id
+             x0    = _ZERO_
+          endif
+
+          status = nf_inq_varid(ncbathy,"y0",y0_id)
+          if (status .ne. NF_NOERR) then
+             call netcdf_warning(status,"ncdf_check_grid()",    &
+                                 "Could not find 'y0' in "//trim(filename)//". Set to zero.")
+             y0_id = missing_id
+             y0    = _ZERO_
+          endif
+       end if
 
 !      Try if you can find something more on the T-points
- 
+
        if (.not.latlonx_exists) then
 
           status = nf_inq_varid(ncbathy,"lonc",lonc_id)
@@ -458,50 +498,51 @@ contains
 
        endif
 
-
        LEVEL3 'Using Cartesian grid.'
 
- case(2)
+    case(2)
 
 #ifndef SPHERICAL
        call getm_error("ncdf_check_grid()",   &
                        "Cannot use spherical grid with SPHERICAL not #defined.")
 #endif
 
-!      Look for grid spacing
-       status = nf_inq_varid(ncbathy,"dlon",dlon_id)
-       if (status .ne. NF_NOERR) then
-          call netcdf_error(status,"ncdf_check_grid()",   &
-                            "Could not find 'dlon' in "//trim(filename))
-       endif
+       if( .not. have_axis) then
+!         Look for grid spacing
+          status = nf_inq_varid(ncbathy,"dlon",dlon_id)
+          if (status .ne. NF_NOERR) then
+             call netcdf_error(status,"ncdf_check_grid()",   &
+                               "Could not find 'dlon' in "//trim(filename))
+          endif
 
-       status = nf_inq_varid(ncbathy,"dlat",dlat_id)
-       if (status .ne. NF_NOERR) then
-          call netcdf_error(status,"ncdf_check_grid()",   &
-                            "Could not find 'dlat' in "//trim(filename))
-       endif
+          status = nf_inq_varid(ncbathy,"dlat",dlat_id)
+          if (status .ne. NF_NOERR) then
+             call netcdf_error(status,"ncdf_check_grid()",   &
+                               "Could not find 'dlat' in "//trim(filename))
+          endif
 
-!      Look for offset
-       status = nf_inq_varid(ncbathy,"lon0",lon0_id)
-       if (status .ne. NF_NOERR) then
-          call netcdf_warning(status,"ncdf_check_grid()",   &
-                              "Could not find 'lon0' in "//trim(filename)//". Set to zero." )
-          lon0_id = missing_id
-          lon0    = _ZERO_
-       endif
+!         Look for offset
+          status = nf_inq_varid(ncbathy,"lon0",lon0_id)
+          if (status .ne. NF_NOERR) then
+             call netcdf_warning(status,"ncdf_check_grid()",   &
+                                 "Could not find 'lon0' in "//trim(filename)//". Set to zero." )
+             lon0_id = missing_id
+             lon0    = _ZERO_
+          endif
 
-       status = nf_inq_varid(ncbathy,"lat0",lat0_id)
-       if (status .ne. NF_NOERR) then
-          call netcdf_warning(status,"ncdf_check_grid()",    &
-               "Could not find 'lat0' in "//trim(filename)//". Set to zero.")
-          lat0_id = missing_id 
-          lat0    = _ZERO_
-       endif
-       
+          status = nf_inq_varid(ncbathy,"lat0",lat0_id)
+          if (status .ne. NF_NOERR) then
+             call netcdf_warning(status,"ncdf_check_grid()",    &
+                  "Could not find 'lat0' in "//trim(filename)//". Set to zero.")
+             lat0_id = missing_id
+             lat0    = _ZERO_
+          endif
+       end if
+
 
 !      Try if you can find something on T-points
        if (.not.xyx_exists) then
-          
+
           status = nf_inq_varid(ncbathy,"xc",xc_id)
           if (status .ne. NF_NOERR) then
              call netcdf_warning(status,"ncdf_check_grid()",   &
@@ -510,7 +551,7 @@ contains
              xc_id         = missing_id
              xc            = missing_double
           endif
-          
+
           status = nf_inq_varid(ncbathy,"yc",yc_id)
           if (status .ne. NF_NOERR) then
              call netcdf_warning(status,"ncdf_check_grid()",   &
@@ -545,7 +586,7 @@ contains
 
     case(4)
 #ifndef (CURVILINEAR && SPHERICAL)
-       call getm_error("ncdf_check_grid()",                      & 
+       call getm_error("ncdf_check_grid()",                      &
                      & "Cannot use spherical curvlinear grid with&
                      & CURVILINEAR and SPHERICAL not #defined")
 #endif
@@ -567,7 +608,7 @@ contains
     case default
        call getm_error("ncdf_check_grid()","Invalid grid type. Choose grid_type=1-4.")
     end select
-    
+
     return
   end subroutine ncdf_check_grid
 !EOC
@@ -607,6 +648,7 @@ contains
    integer                   :: status
    integer                   :: il,ih,jl,jh,iloc,jloc,i,j
    integer                   :: ilocl,iloch,jlocl,jloch
+   integer                   :: indx(1)
 !
 !-------------------------------------------------------------------------
 #include"netcdf.inc"
@@ -624,10 +666,10 @@ contains
    il    = max(imin+ioff,1);   ih    = min(imax+ioff,iextr)
    jl    = max(jmin+joff,1);   jh    = min(jmax+joff,jextr)
 
-!  LOCAL index range for variable to be read 
-!  (different from GLOBAL range only for parallel runs)  
+!  LOCAL index range for variable to be read
+!  (different from GLOBAL range only for parallel runs)
    ilocl = max(imin-ioff,1);   jlocl = max(jmin-joff,1)
-   iloch = ih-il+ilocl;        jloch = jh-jl+jlocl; 
+   iloch = ih-il+ilocl;        jloch = jh-jl+jlocl;
 
 !  Read bathymetry
    call ncdf_read_2d(ncbathy,bathymetry_id,H(ilocl:iloch,jlocl:jloch),il,ih,jl,jh)
@@ -644,7 +686,7 @@ contains
          xy_exists  = .true.
 
       elseif (xyc_exists.and.(grid_type.eq.2)) then
-         
+
          call ncdf_read_2d(ncbathy,xc_id,xc(ilocl:iloch,jlocl:jloch),il,ih,jl,jh)
          call ncdf_read_2d(ncbathy,yc_id,yc(ilocl:iloch,jlocl:jloch),il,ih,jl,jh)
 
@@ -656,9 +698,9 @@ contains
 !        x-y information exists now
          xy_exists  = .true.
 
-!        don't update (y,x) at T-points, because it has been read in 
-         updateXYC  = .false. 
-         
+!        don't update (y,x) at T-points, because it has been read in
+         updateXYC  = .false.
+
       endif
 
    endif
@@ -688,9 +730,9 @@ contains
 !        lat-lon information exists now
          latlon_exists  = .true.
 
-!        don't update (lat,lon) at T-points, because it has been read in 
-         updateLatLonC  = .false. 
-         
+!        don't update (lat,lon) at T-points, because it has been read in
+         updateLatLonC  = .false.
+
       endif
 
       if (convx_exists) then
@@ -704,8 +746,8 @@ contains
 !        generate convergence at X-points
          call c2x(imin,imax,jmin,jmax,convc,convx)
 
-!        don't update (lat,lon) at T-points, because it has been read in 
-         updateConvC  = .false. 
+!        don't update (lat,lon) at T-points, because it has been read in
+         updateConvC  = .false.
 
       endif
 
@@ -719,12 +761,12 @@ contains
       if (status .ne. NF_NOERR) then
          call netcdf_error(status,"ncdf_get_grid()","Could not read 'proj_lon'.")
       endif
-   
+
       status = nf_get_var_double(ncbathy,proj_lat_id,proj_lat)
       if (status .ne. NF_NOERR) then
          call netcdf_error(status,"ncdf_get_grid()","Could not read 'proj_lat'.")
       endif
-   
+
       status = nf_get_var_double(ncbathy,proj_rot_id,proj_rot)
       if (status .ne. NF_NOERR) then
          call netcdf_error(status,"ncdf_get_grid()","Could not read 'proj_rot'.")
@@ -741,61 +783,96 @@ contains
    select case (grid_type)
    case(1)
 
-!     Get grid spacing
-      status = nf_get_var_double(ncbathy,dx_id,dx)
-      if (status .ne. NF_NOERR) then
-         call netcdf_error(status,"ncdf_get_grid()","Could not read 'dx'.")
-      endif
-
-      status = nf_get_var_double(ncbathy,dy_id,dy)
-      if (status .ne. NF_NOERR) then
-         call netcdf_error(status,"ncdf_get_grid()","Could not read 'dy'.")
-      endif
-
-!     Get global offsets for x and y      
-      if (x0_id.ne.missing_id) then
-         status = nf_get_var_double(ncbathy,x0_id,x0)
+      if(have_axis) then
+!        This seems a bit complicated - but instead of reading in
+!        x0, dx, y0, dy we calculate them based on the cordinates
+!        for the T-points. Remember (x0,y0) are relative to X-points).
+!        The procedure below only works for equidistant grids.
+!        Necessary to compy with .../domain/domain.F90.
+         indx(1) = 1
+         status = nf_get_var1_double(ncbathy,xcord_id,indx,x0)
+         status = nf_get_var1_double(ncbathy,ycord_id,indx,y0)
+         indx(1) = 2
+         status = nf_get_var1_double(ncbathy,xcord_id,indx,dx)
+         status = nf_get_var1_double(ncbathy,ycord_id,indx,dy)
+         dx=dx-x0
+         dy=dy-y0
+         x0=x0-0.5*dx
+         y0=y0-0.5*dy
+      else
+!        Get grid spacing
+         status = nf_get_var_double(ncbathy,dx_id,dx)
          if (status .ne. NF_NOERR) then
-            call netcdf_error(status,"ncdf_get_grid()","Could not read 'x0'.")
+            call netcdf_error(status,"ncdf_get_grid()","Could not read 'dx'.")
+         endif
+
+         status = nf_get_var_double(ncbathy,dy_id,dy)
+         if (status .ne. NF_NOERR) then
+            call netcdf_error(status,"ncdf_get_grid()","Could not read 'dy'.")
+         endif
+
+!        Get global offsets for x and y
+         if (x0_id.ne.missing_id) then
+            status = nf_get_var_double(ncbathy,x0_id,x0)
+            if (status .ne. NF_NOERR) then
+               call netcdf_error(status,"ncdf_get_grid()","Could not read 'x0'.")
+            endif
+         endif
+
+         if (y0_id.ne.missing_id) then
+            status = nf_get_var_double(ncbathy,y0_id,y0)
+            if (status .ne. NF_NOERR) then
+               call netcdf_error(status,"ncdf_get_grid()","Could not read 'y0'.")
+            endif
          endif
       endif
-
-      if (y0_id.ne.missing_id) then
-         status = nf_get_var_double(ncbathy,y0_id,y0)
-         if (status .ne. NF_NOERR) then
-            call netcdf_error(status,"ncdf_get_grid()","Could not read 'y0'.")
-         endif
-      endif
-      
 
     case(2)
 
-!     Get grid spacing
-      status = nf_get_var_double(ncbathy,dlon_id,dlon)
-      if (status .ne. NF_NOERR) then
-         call netcdf_error(status,"ncdf_get_grid()","Could not read 'dlon'.")
-      endif
-
-      status = nf_get_var_double(ncbathy,dlat_id,dlat)
-      if (status .ne. NF_NOERR) then
-         call netcdf_error(status,"ncdf_get_grid()","Could not read 'dlat'.")
-      endif
-
-
-!     Get global offsets for lon and lat      
-      if (lon0_id.ne.missing_id) then
-         status = nf_get_var_double(ncbathy,lon0_id,lon0)
+      if(have_axis) then
+!        This seems a bit complicated - but instead of reading in
+!        lon0, dlon, lat0, dlat we calculate them based on the cordinates
+!        for the T-points. Remember (lon0,lat0) are relative to X-points).
+!        The procedure below only works for equidistant grids.
+!        Necessary to compy with .../domain/domain.F90.
+         indx(1) = 1
+         status = nf_get_var1_double(ncbathy,xcord_id,indx,lon0)
+         status = nf_get_var1_double(ncbathy,ycord_id,indx,lat0)
+         indx(1) = 2
+         status = nf_get_var1_double(ncbathy,xcord_id,indx,dlon)
+         status = nf_get_var1_double(ncbathy,ycord_id,indx,dlat)
+         dlon=dlon-lon0
+         dlat=dlat-lat0
+         lon0=lon0-0.5*dlon
+         lat0=lat0-0.5*dlat
+      else
+!        Get grid spacing
+         status = nf_get_var_double(ncbathy,dlon_id,dlon)
          if (status .ne. NF_NOERR) then
-            call netcdf_error(status,"ncdf_get_grid()","Could not read 'lon0'.")
+            call netcdf_error(status,"ncdf_get_grid()","Could not read 'dlon'.")
          endif
-      endif
 
-      if (lat0_id.ne.missing_id) then
-         status = nf_get_var_double(ncbathy,lat0_id,lat0)
+         status = nf_get_var_double(ncbathy,dlat_id,dlat)
          if (status .ne. NF_NOERR) then
-            call netcdf_error(status,"ncdf_get_grid()","Could not read 'lat0'.")
+            call netcdf_error(status,"ncdf_get_grid()","Could not read 'dlat'.")
          endif
-      endif
+
+
+!     Get global offsets for lon and lat
+         if (lon0_id.ne.missing_id) then
+            status = nf_get_var_double(ncbathy,lon0_id,lon0)
+            if (status .ne. NF_NOERR) then
+               call netcdf_error(status,"ncdf_get_grid()","Could not read 'lon0'.")
+            endif
+         endif
+
+         if (lat0_id.ne.missing_id) then
+            status = nf_get_var_double(ncbathy,lat0_id,lat0)
+            if (status .ne. NF_NOERR) then
+               call netcdf_error(status,"ncdf_get_grid()","Could not read 'lat0'.")
+            endif
+         endif
+      end if
 
       if (rearth_id.ne.missing_id) then
          status = nf_get_var_double(ncbathy,rearth_id,rearth)
@@ -811,6 +888,10 @@ contains
     case default
        call getm_error("ncdf_get_grid()","Invalid grid type.")
     end select
+
+STDERR lon0,dlon
+STDERR lat0,dlat
+stop
 
    return
    end subroutine ncdf_get_grid
@@ -872,7 +953,7 @@ contains
    endif
 
    status = nf_inq_varname(ncid,varid,varname)
-   if (status .ne. NF_NOERR) then 
+   if (status .ne. NF_NOERR) then
       call netcdf_error(status,"read_2d()","Error inquiring name of variable.")
    endif
 
