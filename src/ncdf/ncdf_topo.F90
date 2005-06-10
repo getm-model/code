@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.7 2005-06-10 16:01:22 kbk Exp $
+!$Id: ncdf_topo.F90,v 1.8 2005-06-10 16:16:41 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,19 +6,20 @@
 ! !MODULE: ncdf_topo - check and read topography and grid
 !
 ! !INTERFACE:
-module ncdf_topo
+   module ncdf_topo
 !
 ! !DESCRIPTION:
 ! This module is responsible for checking and reading all grid-related quantities
 ! contained in a netCDF file. The grid types available so far are:
 ! \begin{itemize}
 !   \item {grid_type=1}. Cartesian grid with constant grid spacing {\tt dx} and {\tt dy}. 
-!         The first $X$-point of the grid may start at {\tt x0} and {\tt y0}. 
-!         If these two offsets are not given, they are set to zero.
+!%         The first $X$-point of the grid may start at {\tt x0} and {\tt y0}. 
+!%         If these two offsets are not given, they are set to zero.
 !   \item {grid_type=2}. Spherical grid with constant grid spacing {\tt dlon} and {\tt dlat}. 
-!         The first grid point may start at {\tt lon0} and {\tt lat0}. If these two offsets
-!         are not given they are set to zero. Earth's radius, {\tt rearth}, necessary to 
-!         construct a spherical grid, may also be given in the input file. 
+!%         The first grid point may start at {\tt lon0} and {\tt lat0}. If these two offsets
+!%         are not given they are set to zero. 
+!         Earth's radius, {\tt rearth}, necessary to construct a spherical grid, may 
+!         also be given in the input file. 
 !         Otherwise it is set to a default value.
 !   \item {grid_type=3}. Plane curvilinear grid where the $x$ and $y$ positions of the $X$-points 
 !         have to be specified in the bathymetry file.
@@ -27,11 +28,18 @@ module ncdf_topo
 ! \end{itemize}
 !
 ! GETM requires that the grid positions read from the netCDF file correspond to $X$-points,
-!  from which the positions of all other points ($u$, $v$, $T$) can be interpolated 
+! from which the positions of all other points ($u$, $v$, $T$) can be interpolated 
 ! straightforwardly. 
 ! The only exception is the {\tt bathymetry}, which is has to be given on the central $T$-points.
 ! Since the bathymetery in GETM is defined on $T$-points this avoids unnecessary interpolation 
 ! of an already polished bathymetry.
+! To confirm with the COARDS conventions cordinate axis information should be properly 
+! included in the NetCDF file. In the cases of equdistant cartesian or spherical
+! coordinates it is checked if proper axis-infomation is present. If that is the
+! case this informations is used directly. If axis information is not present the 
+! input file is checked for {\tt x0}, {\tt y0}, {\tt dx}, {\tt dy} or {\tt lon0}, 
+! {\tt lat0}, {\tt dlon}, {\tt dlat} on which basis proper axis information can
+! be calculated. It is strongly encouraged to stick with the COARDS conventions.
 !
 ! Other quantities than those mentioned above may also be specified in the bathymetry file. 
 ! These  are not mandatory and, if GETM doesn't find them, only a warning will be written.
@@ -81,7 +89,10 @@ module ncdf_topo
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
-!  Revision 1.7  2005-06-10 16:01:22  kbk
+!  Revision 1.8  2005-06-10 16:16:41  kbk
+!  documentation updated
+!
+!  Revision 1.7  2005/06/10 16:01:22  kbk
 !  test and use real axis before using axis offset+increment method
 !
 !  Revision 1.6  2005/04/25 09:32:34  kbk
