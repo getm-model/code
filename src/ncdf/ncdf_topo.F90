@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.8 2005-06-10 16:16:41 kbk Exp $
+!$Id: ncdf_topo.F90,v 1.9 2005-06-14 13:36:01 frv-bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -89,7 +89,10 @@
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
-!  Revision 1.8  2005-06-10 16:16:41  kbk
+!  Revision 1.9  2005-06-14 13:36:01  frv-bjb
+!  temporary KBK stop statement deleted
+!
+!  Revision 1.8  2005/06/10 16:16:41  kbk
 !  documentation updated
 !
 !  Revision 1.7  2005/06/10 16:01:22  kbk
@@ -899,10 +902,6 @@ contains
     case default
        call getm_error("ncdf_get_grid()","Invalid grid type.")
     end select
-
-STDERR lon0,dlon
-STDERR lat0,dlat
-stop
 
    return
    end subroutine ncdf_get_grid
