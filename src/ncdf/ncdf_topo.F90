@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.9 2005-06-14 13:36:01 frv-bjb Exp $
+!$Id: ncdf_topo.F90,v 1.10 2005-06-17 07:57:46 frv-bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -89,7 +89,10 @@
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
-!  Revision 1.9  2005-06-14 13:36:01  frv-bjb
+!  Revision 1.10  2005-06-17 07:57:46  frv-bjb
+!  Bug fix: fail on dlat/lat0 versions
+!
+!  Revision 1.9  2005/06/14 13:36:01  frv-bjb
 !  temporary KBK stop statement deleted
 !
 !  Revision 1.8  2005/06/10 16:16:41  kbk
@@ -281,6 +284,7 @@ contains
     if (status .ne. NF_NOERR) then
        call netcdf_warning(status,"ncdf_check_grid()",   &
                          "Could not get first cordinate name in "//trim(filename)//".")
+       xcord_id = missing_id;
     endif
 
     status = nf_inq_dimname(ncbathy,dimidsT(2),ncname)
@@ -292,6 +296,7 @@ contains
     if (status .ne. NF_NOERR) then
        call netcdf_warning(status,"ncdf_check_grid()",   &
                          "Could not get second cordinate name in "//trim(filename)//".")
+       ycord_id = missing_id;
     endif
     have_axis = (xcord_id .ne. missing_id) .and. (ycord_id .ne. missing_id)
 
