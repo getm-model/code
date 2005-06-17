@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.19 2005-05-25 10:43:42 kbk Exp $
+!$Id: domain.F90,v 1.20 2005-06-17 07:40:19 frv-bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -79,7 +79,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.19  2005-05-25 10:43:42  kbk
+!  Revision 1.20  2005-06-17 07:40:19  frv-bjb
+!  Added check/bailout for zero dlat and dlon
+!
+!  Revision 1.19  2005/05/25 10:43:42  kbk
 !  fixed ax calculation
 !
 !  Revision 1.18  2005/05/25 10:32:12  kbk
@@ -463,13 +466,26 @@
    case(2)
 
 !     Generate lonx,latx from grid spacing and offset
+!
+!     First make test that we have good values for dlat and dlon
+!     (if they are zero the program will fail later due to dx=0 etc)
+      if (dlat .eq. 0.0) then
+         LEVEL1 'ERROR: Delta lat (dlat) seems to be zero!'
+         STOP
+      end if
+      if (dlon .eq. 0.0) then
+         LEVEL1 'ERROR: Delta lon (dlon) seems to be zero!'
+         STOP
+      end if
+!
+!     Then actually generate lonx,latx
       do j = jmin-1,jmax
          lonx(imin-1,j) = ioff*dlon + lon0
          do i=imin,imax
             lonx(i,j) = lonx(i-1,j) + dlon
          end do
       end do
-      
+
       do i=imin-1,imax
          latx(i,jmin-1) = joff*dlat + lat0
          do j=jmin,jmax
