@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.20 2005-06-17 07:40:19 frv-bjb Exp $
+!$Id: domain.F90,v 1.21 2005-06-27 07:18:13 frv-bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -79,7 +79,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.20  2005-06-17 07:40:19  frv-bjb
+!  Revision 1.21  2005-06-27 07:18:13  frv-bjb
+!  Changed STOP statements to call getm_error(...)
+!
+!  Revision 1.20  2005/06/17 07:40:19  frv-bjb
 !  Added check/bailout for zero dlat and dlon
 !
 !  Revision 1.19  2005/05/25 10:43:42  kbk
@@ -281,8 +284,8 @@
       case(3)
          LEVEL2 'Using general vertical coordinates'
       case default
-         FATAL 'A non valid vertical coordinate system has been chosen'
-         stop 'init_domain'
+         call getm_error("init_domain()", &
+                         "A non valid vertical coordinate system has been chosen");
    end select
 
 #ifndef STATIC
@@ -470,12 +473,12 @@
 !     First make test that we have good values for dlat and dlon
 !     (if they are zero the program will fail later due to dx=0 etc)
       if (dlat .eq. 0.0) then
-         LEVEL1 'ERROR: Delta lat (dlat) seems to be zero!'
-         STOP
+         call getm_error("init_domain()", &
+                         "Delta lat (dlat) seems to be zero!")
       end if
       if (dlon .eq. 0.0) then
-         LEVEL1 'ERROR: Delta lon (dlon) seems to be zero!'
-         STOP
+         call getm_error("init_domain()", &
+                         "Delta lon (dlon) seems to be zero!")
       end if
 !
 !     Then actually generate lonx,latx
@@ -959,12 +962,9 @@
 
    goto 100
 
-110   FATAL 'reading domain partition information.'
-      stop
-111   FATAL 'End of file reached - (read_par_setup).'
-      stop
+110 call getm_error("read_par_setup()","reading domain partition information.")
 
-   stop 'read_par_setup'
+111 call getm_error("read_par_setup()","End of file reached.")
 #endif
    return
    end subroutine read_par_setup
@@ -1029,10 +1029,8 @@
 
 90 LEVEL2 'could not open ',trim(fn),' no minimum depth adjustments done'
    return
-91 FATAL 'eof: ',trim(fn)
-   stop 'set_min_depth'
-92 FATAL 'error reading: ',trim(fn)
-   stop 'set_min_depth'
+91 call getm_error("set_min_depth()","End of file "//trim(fn)//".")
+92 call getm_error("set_min_depth()","Error reading "//trim(fn)//".")
    end subroutine set_min_depth
 !EOC
 
@@ -1093,10 +1091,8 @@
 
 90 LEVEL2 'could not open ',trim(fn),' no bathymetry adjustments done'
    return
-91 FATAL 'eof: ',trim(fn)
-   stop 'adjust_bathymetry'
-92 FATAL 'error reading: ',trim(fn)
-   stop 'adjust_bathymetry'
+91 call getm_error("adjust_bathymetry()","End of file "//trim(fn)//".")
+92 call getm_error("adjust_bathymetry()","Error reading "//trim(fn)//".")
    end subroutine adjust_bathymetry
 !EOC
 
@@ -1156,10 +1152,8 @@
 
 90 LEVEL2 'could not open ',trim(fn),' no mask adjustments done'
    return
-91 FATAL 'eof: ',trim(fn)
-   stop 'adjust_mask'
-92 FATAL 'error reading: ',trim(fn)
-   stop 'adjust_mask'
+91 call getm_error("adjust_mask()","End of file "//trim(fn)//".")
+92 call getm_error("adjust_mask()","Error reading "//trim(fn)//".")
    end subroutine adjust_mask
 !EOC
 
