@@ -1,4 +1,4 @@
-!$Id: bdy_3d.F90,v 1.6 2005-05-04 11:50:57 kbk Exp $
+!$Id: bdy_3d.F90,v 1.7 2005-08-26 08:19:31 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,7 +32,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bdy_3d.F90,v $
-!  Revision 1.6  2005-05-04 11:50:57  kbk
+!  Revision 1.7  2005-08-26 08:19:31  kbk
+!  zero gradient open boundaries for biological variables
+!
+!  Revision 1.6  2005/05/04 11:50:57  kbk
 !  support for non-climatological 3D boundaries (S,T)
 !
 !  Revision 1.5  2003/05/05 15:47:59  kbk
@@ -188,6 +191,11 @@
                S(i-1+ii,j,:) = sp(ii)*S_bdy(:,k)+(1.-sp(ii))*S(i-1+ii,j,:)
                T(i-1+ii,j,:) = sp(ii)*T_bdy(:,k)+(1.-sp(ii))*T(i-1+ii,j,:)
             end if
+#ifdef GETM_BIO
+            if ( allocated(cc3d) ) then
+               cc3d(:,i,j,:) = cc3d(:,i+1,j,:)
+            end if
+#endif
          end do
          k = k+1
       end do
@@ -203,6 +211,11 @@
                S(i,j+1-jj,:) = sp(jj)*S_bdy(:,k)+(1.-sp(jj))*S(i,j+1-jj,:)
                T(i,j+1-jj,:) = sp(jj)*T_bdy(:,k)+(1.-sp(jj))*T(i,j+1-jj,:)
             end if
+#ifdef GETM_BIO
+            if ( allocated(cc3d) ) then
+               cc3d(:,i,j,:) = cc3d(:,i,j-1,:)
+            end if
+#endif
          end do
          k = k+1
       end do
@@ -218,6 +231,11 @@
                S(i+1-ii,j,:) = sp(ii)*S_bdy(:,k)+(1.-sp(ii))*S(i+1-ii,j,:)
                T(i+1-ii,j,:) = sp(ii)*T_bdy(:,k)+(1.-sp(ii))*T(i+1-ii,j,:)
             end if
+#ifdef GETM_BIO
+            if ( allocated(cc3d) ) then
+               cc3d(:,i,j,:) = cc3d(:,i-1,j,:)
+            end if
+#endif
          end do
          k = k+1
       end do
@@ -233,6 +251,11 @@
                S(i,j-1+jj,:) = sp(jj)*S_bdy(:,k)+(1.-sp(jj))*S(i,j-1+jj,:)
                T(i,j-1+jj,:) = sp(jj)*T_bdy(:,k)+(1.-sp(jj))*T(i,j-1+jj,:)
             end if
+#ifdef GETM_BIO
+            if ( allocated(cc3d) ) then
+               cc3d(:,i,j,:) = cc3d(:,i,j+1,:)
+            end if
+#endif
          end do
          k = k+1
       end do
@@ -240,6 +263,15 @@
 
    call mirror_bdy_3d(T,H_TAG)
    call mirror_bdy_3d(S,H_TAG)
+
+#ifdef GETM_BIO
+   if ( allocated(cc3d) ) then
+      do n=1,size(cc3d,1)
+         call mirror_bdy_3d(cc3d(n,:,:,:),H_TAG)
+      end do
+   end if
+#endif
+
 
 #endif
 
