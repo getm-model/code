@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.8 2004-08-06 15:14:35 hb Exp $
+!$Id: gotm.F90,v 1.9 2005-09-23 11:26:55 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,7 +34,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: gotm.F90,v $
-!  Revision 1.8  2004-08-06 15:14:35  hb
+!  Revision 1.9  2005-09-23 11:26:55  kbk
+!  support for GOTM v3.2 and above
+!
+!  Revision 1.8  2004/08/06 15:14:35  hb
 !  num and nuh now properly initialised and no gotm call for CONSTANT_VISCOSITY
 !
 !  Revision 1.7  2003/12/17 10:22:41  kbk
@@ -96,6 +99,9 @@
    REALTYPE                  :: h(0:kmax),dry,zz
    REALTYPE                  :: P(0:kmax),B(0:kmax)
    REALTYPE                  :: NN1d(0:kmax),SS1d(0:kmax)
+#ifndef GOTM_3_0
+   REALTYPE                  :: xP(0:kmax)
+#endif
    logical, save             :: first=.true.
    integer, save             :: n = 0
    integer                   :: kk
@@ -109,6 +115,9 @@
    write(debug,*) 'gotm() # ',Ncall
 #endif
 
+#ifndef GOTM_3_0
+   xP = _ZERO_
+#endif
    do j=jjmin,jjmax
       do i=iimin,iimax
 
@@ -153,8 +162,13 @@
 #endif
             end do
 #else
+#ifdef GOTM_3_0
             call do_turbulence(kmax,dt,D(i,j),u_taus,u_taub,z0s,z0b,h, &
                                NN1d,SS1d,P,B)
+#else
+            call do_turbulence(kmax,dt,D(i,j),u_taus,u_taub,z0s,z0b,h, &
+                               NN1d,xP)
+#endif
 #endif
 
             tke(i,j,:) = tke1d
