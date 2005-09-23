@@ -1,4 +1,4 @@
-!$Id: ncdf_rivers.F90,v 1.6 2005-05-04 11:45:29 kbk Exp $
+!$Id: ncdf_rivers.F90,v 1.7 2005-09-23 11:27:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,6 +18,11 @@
    use rivers, only: ok,rriver,real_river_name,river_split
    use rivers, only: temp_missing,salt_missing
    use rivers, only: use_river_temp,use_river_salt,river_temp,river_salt
+#ifdef GETM_BIO
+   use bio, only: bio_calc
+   use bio_var, only: numc,var_names
+   use rivers, only: river_bio
+#endif
    IMPLICIT NONE
 !
    private
@@ -36,12 +41,19 @@
    integer, allocatable                :: r_salt(:)
    integer, allocatable                :: r_temp(:)
    REAL_4B, allocatable                :: river_times(:)
+#ifdef GETM_BIO
+   integer, allocatable                :: bio_id(:,:)
+   integer, allocatable                :: r_bio(:,:)
+#endif
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_rivers.F90,v $
-!  Revision 1.6  2005-05-04 11:45:29  kbk
+!  Revision 1.7  2005-09-23 11:27:43  kbk
+!  support fo nutrient loading in rivers
+!
+!  Revision 1.6  2005/05/04 11:45:29  kbk
 !  adding model time stamp on IO
 !
 !  Revision 1.5  2005/01/13 09:20:47  kbk
@@ -92,10 +104,11 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,n
+   integer                   :: i,j,m,n
    integer                   :: err
    integer                   :: j1,s1,j2,s2
    character(len=256)        :: time_units
+   character(len=256)        :: bio_name
 !EOP
 !-------------------------------------------------------------------------
    include "netcdf.inc"
@@ -119,6 +132,14 @@
    if (err /= 0) stop 'ncdf_river: Error allocating memory (salt_id)'
    allocate(temp_id(rriver),stat=err)
    if (err /= 0) stop 'ncdf_river: Error allocating memory (temp_id)'
+
+#ifdef GETM_BIO
+   allocate(r_bio(rriver,numc),stat=err)
+   if (err /= 0) stop 'ncdf_river: Error allocating memory (r_bio)'
+   allocate(bio_id(rriver,numc),stat=err)
+   if (err /= 0) stop 'ncdf_river: Error allocating memory (bio_id)'
+   bio_id = -1
+#endif
 
    err = nf_open(fn,NCNOWRIT,ncid)
    if (err .ne. NF_NOERR) go to 10
@@ -155,6 +176,19 @@
             if (err .ne. NF_NOERR) go to 10
          end if
       end if
+
+#ifdef GETM_BIO
+      do m=1,numc
+         bio_name=trim(real_river_name(n))//'_'//trim(var_names(m))
+         err =  nf_inq_varid(ncid,trim(bio_name),bio_id(n,m))
+         if (err .ne. NF_NOERR) then
+            bio_id(n,m) = -1
+         end if
+         if ( bio_id(n,m) .ne. -1 ) then
+            LEVEL4 trim(real_river_name(n)),': ',trim(var_names(m))
+         end if
+      end do
+#endif
    end do
 
    allocate(river_times(textr),stat=err)
@@ -214,7 +248,7 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,n,nn,ni,m,indx,err
+   integer                   :: i,j,n,nn,ni,m,indx,err
    REALTYPE                  :: t
    REAL_4B                   :: x(1)
    logical, save             :: first=.true.
@@ -267,12 +301,24 @@
                      river_temp(ni+m-1) = x(1)
                   end do
                end if
+#ifdef GETM_BIO
+               do j=1,numc
+                  if (bio_id(nn,j) .gt. 0) then
+                     err = nf_get_vara_real(ncid,bio_id(nn,j),start,edges,x)
+                     if (err .ne. NF_NOERR) go to 10
+                     do m=1,river_split(ni)
+                        river_bio(ni+m-1,j) = x(1)
+                     end do
+                  end if
+               end do
+#endif
             end if
             nn = nn + 1 
             ni = ni + river_split(ni) 
          end if
       end do
    end if
+
 #else
 !AS this is not to be used !
    t = loop*timestep

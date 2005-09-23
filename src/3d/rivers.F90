@@ -1,4 +1,4 @@
-!$Id: rivers.F90,v 1.6 2005-01-13 09:20:46 kbk Exp $
+!$Id: rivers.F90,v 1.7 2005-09-23 11:27:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,12 +34,20 @@
    use m3d, only: calc_salt,calc_temp
    use variables_3d, only: hn,ssen,T,S
 #endif
+#ifdef GETM_BIO
+   use bio, only: bio_calc
+   use bio_var, only: numc
+   use variables_3d, only: cc3d
+#endif
    IMPLICIT NONE
 !
    private
 !
 ! !PUBLIC DATA MEMBERS:
    public init_rivers, do_rivers, clean_rivers
+#ifdef GETM_BIO
+   public init_rivers_bio
+#endif
    integer, public                     :: river_method=0,nriver=0,rriver=0
    logical,public                      :: use_river_temp = .false.
    logical,public                      :: use_river_salt = .false.
@@ -54,6 +62,10 @@
    REALTYPE, public,parameter          :: temp_missing=-9999.0
    REALTYPE, public,parameter          :: salt_missing=-9999.0
    integer,  public, allocatable       :: river_split(:)
+#ifdef GETM_BIO
+   REALTYPE, public, allocatable       :: river_bio(:,:)
+   REALTYPE, public, parameter         :: bio_missing=-9999.0
+#endif
 !
 ! !PRIVATE DATA MEMBERS:
    integer                   :: river_format=2
@@ -67,7 +79,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: rivers.F90,v $
-!  Revision 1.6  2005-01-13 09:20:46  kbk
+!  Revision 1.7  2005-09-23 11:27:43  kbk
+!  support fo nutrient loading in rivers
+!
+!  Revision 1.6  2005/01/13 09:20:46  kbk
 !  support for T and S specifications in rivers - Stips
 !
 !  Revision 1.4  2003/10/14 10:05:54  kbk
@@ -209,7 +224,7 @@
                   flow_fraction(n) = _ONE_/ARCD1
                end if
             else
-!              LEVEL3 'Outside: river# ',n
+              LEVEL3 'Outside: river# ',n
             end if
          end do
 
@@ -282,6 +297,59 @@
    end subroutine init_rivers
 !EOC
 
+#ifdef GETM_BIO
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: init_rivers_bio
+!
+! !INTERFACE:
+   subroutine init_rivers_bio()
+!
+! !DESCRIPTION:
+!  Allocates memory for storing the biological loads from rivers.
+!  The variable - river_bio - is initialised to  - bio_missing.
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!  See the log for the module
+!
+! !LOCAL VARIABLES:
+   integer                   :: rc
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'init_rivers_bio() # ',Ncall
+#endif
+
+   LEVEL1 'init_rivers_bio()'
+
+   allocate(river_bio(nriver,numc),stat=rc)
+   if (rc /= 0) stop 'rivers: Error allocating memory (river_bio)'
+
+   river_bio = bio_missing
+
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving init_rivers_bio()'
+   write(debug,*)
+#endif
+   return
+   end subroutine init_rivers_bio
+!EOC
+#endif
+
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -307,7 +375,7 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k,n
+   integer                   :: i,j,k,m,n
    REALTYPE                  :: rvol,height
    REALTYPE                  :: svol,tvol,vol
 !
@@ -349,6 +417,18 @@
                                       + river_temp(n)*macro_height(n))      &
                                       / (H(i,j)+ssen(i,j)+macro_height(n))
                   end if
+#ifdef GETM_BIO
+                  if (bio_calc) then
+                     do m=1,numc
+                        if ( river_bio(n,m) .ne. bio_missing ) then
+                           cc3d(m,i,j,1:kmax) = &
+                                 (cc3d(m,i,j,1:kmax)*(H(i,j)+ssen(i,j)) &
+                                 + river_bio(n,m)*macro_height(n))      &
+                                 / (H(i,j)+ssen(i,j)+macro_height(n))
+                        end if
+                     end do
+                  end if
+#endif
 !                 Changes of total and layer height due to river inflow:
                   hn(i,j,1:kmax) = hn(i,j,1:kmax)/(H(i,j)+ssen(i,j)) &
                                   *(H(i,j)+ssen(i,j)+macro_height(n))
