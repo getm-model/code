@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.11 2005-05-04 11:45:30 kbk Exp $
+!$Id: output.F90,v 1.12 2005-09-23 11:27:11 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -55,7 +55,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
-!  Revision 1.11  2005-05-04 11:45:30  kbk
+!  Revision 1.12  2005-09-23 11:27:11  kbk
+!  support for biology via GOTMs biology modules
+!
+!  Revision 1.11  2005/05/04 11:45:30  kbk
 !  adding model time stamp on IO
 !
 !  Revision 1.10  2005/04/25 09:32:34  kbk
@@ -359,7 +362,13 @@
 #endif
 #ifdef SPM
   use m3d,  only: spm,spm_pool,calc_spm,hotstart_spm
-#endif 
+#endif
+#ifdef GETM_BIO
+  use bio, only: bio_calc
+  use bio_var, only: numc
+  use getm_bio, only: hotstart_bio
+  use variables_3d,  only: cc3d
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -377,6 +386,7 @@
 !
 ! !LOCAL VARIABLES
    integer, save             :: n=0
+   integer                   :: i
    logical, save             :: continuous=.false.
    integer                   :: jd,secs 
    character(len=19)         :: timestr_out
@@ -417,7 +427,13 @@
             LEVEL3 'saving spm'
             write(RESTART) spm
             write(RESTART) spm_pool
-        end if
+         end if
+#endif
+#ifdef GETM_BIO
+         if(bio_calc) then
+            LEVEL3 'saving bio variables'
+            write(RESTART) cc3d
+         end if
 #endif
       end if
 #endif
@@ -461,6 +477,12 @@
                LEVEL3 'spm variables not read from hotstart file'
                LEVEL3 'set spm_init_method=0 to read them from hotstart file'
             end if     
+         end if
+#endif
+#ifdef GETM_BIO
+         if(bio_calc .and. hotstart_bio) then
+            LEVEL3 'reading bio variables'
+            read(RESTART) cc3d
          end if
 #endif
       end if

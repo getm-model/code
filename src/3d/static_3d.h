@@ -57,6 +57,8 @@
   REALTYPE                             :: spm_pool(I2DFIELD)
 #endif
 
+  REALTYPE                             :: light(I3DFIELD)
+
 #ifdef UV_TVD
   REALTYPE                             :: uadv(I3DFIELD)
   REALTYPE                             :: vadv(I3DFIELD)

@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.11 2004-06-15 08:25:57 kbk Exp $
+#$Id: Rules.make,v 1.12 2005-09-23 11:27:10 kbk Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -33,6 +33,10 @@ endif
 
 ifeq ($(GETM_SPM),true)
 DEFINES += -DSPM
+endif
+
+ifeq ($(GETM_BIO),true)
+DEFINES += -DGETM_BIO
 endif
 
 # The compilation mode is obtained from $COMPILATION_MODE
@@ -100,6 +104,10 @@ endif
 INCDIRS		= -I$(GETMDIR)/include -I$(MODDIR)
 LINKDIRS	= -L$(LIBDIR)
 EXTRA_LIBS	=
+
+ifeq ($(GETM_BIO),true)
+EXTRA_LIBS += -lbio$(buildtype)
+endif
 
 ifeq ($(turbulence),gotm)
 ifndef GOTMDIR

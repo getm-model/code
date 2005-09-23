@@ -33,6 +33,8 @@
   REALTYPE, dimension(:,:), allocatable     :: spm_pool
 #endif
 
+  REALTYPE, dimension(:,:,:), allocatable   :: light
+
 #ifdef UV_TVD
   REALTYPE, dimension(:,:,:), allocatable   :: uadv,vadv,wadv
   REALTYPE, dimension(:,:,:), allocatable   :: huadv,hvadv,hoadv,hnadv

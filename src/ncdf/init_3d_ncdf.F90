@@ -1,4 +1,4 @@
-!$Id: init_3d_ncdf.F90,v 1.9 2005-04-25 09:32:34 kbk Exp $
+!$Id: init_3d_ncdf.F90,v 1.10 2005-09-23 11:27:10 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,6 +17,9 @@
    use domain, only: ioff,joff
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
+#ifdef GETM_BIO
+   use bio_var, only: numc,var_names,var_units,var_long
+#endif
 
    IMPLICIT NONE
 !
@@ -29,7 +32,10 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_3d_ncdf.F90,v $
-!  Revision 1.9  2005-04-25 09:32:34  kbk
+!  Revision 1.10  2005-09-23 11:27:10  kbk
+!  support for biology via GOTMs biology modules
+!
+!  Revision 1.9  2005/04/25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
 !  Revision 1.8  2004/10/07 15:46:56  kbk
@@ -79,6 +85,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: err
+   integer                   :: n,rc
    integer                   :: xlen,ylen,zlen
    integer                   :: scalar(1),axisdim(1),f3_dims(3),f4_dims(4)
    REALTYPE                  :: fv,mv,vr(2)
@@ -331,14 +338,11 @@
    do n=1,numc
       err = nf_def_var(ncid,var_names(n),NF_REAL,4,f4_dims,bio_ids(n))
       if (err .NE.  NF_NOERR) go to 10
-STDERR n,var_names(n),bio_ids(n)
       call set_attributes(ncid,bio_ids(n), &
-                          long_name=var_long(n), &
-                          units=' ', &
+                          long_name=trim(var_long(n)), &
+                          units=trim(var_units(n)), &
                           FillValue=fv,missing_value=mv,valid_range=vr)
    end do
-   STDERR 'init_3d_ncdf() - remember more bio settings'
-
 #endif
 
 !  globals

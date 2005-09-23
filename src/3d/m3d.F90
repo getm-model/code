@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.24 2005-04-25 07:55:50 kbk Exp $
+!$Id: m3d.F90,v 1.25 2005-09-23 11:27:10 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -33,6 +33,10 @@
 #ifdef SPM
    use suspended_matter, only: init_spm, do_spm
 #endif
+#ifdef GETM_BIO
+   use bio, only: bio_calc
+   use getm_bio, only: init_getm_bio, do_getm_bio
+#endif
    use variables_3d
    use advection_3d, only: init_advection_3d
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
@@ -54,7 +58,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.24  2005-04-25 07:55:50  kbk
+!  Revision 1.25  2005-09-23 11:27:10  kbk
+!  support for biology via GOTMs biology modules
+!
+!  Revision 1.24  2005/04/25 07:55:50  kbk
 !  use more general frame for error handling - Umlauf
 !
 !  Revision 1.23  2004/08/09 07:48:07  kbk
@@ -279,6 +286,10 @@
    if(calc_spm) stop 'To use SPM you have to recompile with -DSPM'
 #endif
 
+#ifndef GETM_BIO
+!KBK   if(bio_calc) stop 'To use BIO you have to recompile with -DBIO'
+#endif
+
 ! Allocates memory for the public data members - if not static
    call init_variables_3d(runtype)
 
@@ -387,9 +398,15 @@
       end if
    end if
 #endif
+
 #ifdef SPM
       if(calc_spm)  call init_spm(hotstart_spm,runtype)
-      if(runtype.ne.4) call init_advection_3d(2)
+      if(runtype .ne. 4) call init_advection_3d(2)
+#endif
+
+#ifdef GETM_BIO
+!KBK      if(bio_calc) call init_getm_bio()
+      call init_getm_bio()
 #endif
 
    if (bdy3d) call init_bdy_3d()
@@ -512,7 +529,11 @@
 #endif
 
 #ifdef SPM
-      if (calc_spm) call do_spm()
+   if (calc_spm) call do_spm()
+#endif
+
+#ifdef GETM_BIO
+   if (bio_calc) call do_getm_bio(dt)
 #endif
 
    UEx=_ZERO_ ; VEx=_ZERO_

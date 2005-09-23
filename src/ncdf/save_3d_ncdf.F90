@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.10 2005-04-25 09:32:34 kbk Exp $
+!$Id: save_3d_ncdf.F90,v 1.11 2005-09-23 11:27:10 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,6 +27,10 @@
 #ifdef SPM
    use variables_3d, only: spm_pool,spm
 #endif
+#ifdef GETM_BIO
+   use bio_var, only: numc
+   use variables_3d, only: cc3d,ws3d
+#endif
    use parameters,   only: g,rho_0
    IMPLICIT NONE
 !
@@ -40,7 +44,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
-!  Revision 1.10  2005-04-25 09:32:34  kbk
+!  Revision 1.11  2005-09-23 11:27:10  kbk
+!  support for biology via GOTMs biology modules
+!
+!  Revision 1.10  2005/04/25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
 !  Revision 1.9  2004/06/15 08:25:57  kbk
@@ -84,7 +91,7 @@
 !
 !
 ! !LOCAL VARIABLES:
-   integer                   :: err
+   integer                   :: err,n
    integer                   :: start(4),edges(4)
    integer, save             :: n3d=0
    REALTYPE, parameter       :: x=-rho_0/g

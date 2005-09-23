@@ -1,4 +1,4 @@
-!$Id: variables_3d.F90,v 1.6 2004-01-06 15:04:00 kbk Exp $
+!$Id: variables_3d.F90,v 1.7 2005-09-23 11:27:10 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,6 +28,11 @@
 #else
 #include "dynamic_declarations_3d.h"
 #endif
+
+#ifdef GETM_BIO
+   REALTYPE, allocatable               :: cc3d(:,:,:,:)
+   REALTYPE, allocatable               :: ws3d(:,:,:,:)
+#endif
    integer                             :: size3d_field
    integer                             :: mem3d
 !
@@ -35,7 +40,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: variables_3d.F90,v $
-!  Revision 1.6  2004-01-06 15:04:00  kbk
+!  Revision 1.7  2005-09-23 11:27:10  kbk
+!  support for biology via GOTMs biology modules
+!
+!  Revision 1.6  2004/01/06 15:04:00  kbk
 !  FCT advection + split of advection_3d.F90 + extra adv. input checks
 !
 !  Revision 1.5  2003/12/16 15:58:54  kbk
@@ -125,6 +133,8 @@
    rru= _ZERO_ ; rrv= _ZERO_
    uuEx= _ZERO_ ; vvEx= _ZERO_
    tke=1.e-10 ; eps=1.e-10
+
+   light=_ONE_
 
 #ifdef UV_TVD
    uadv = _ZERO_ ; vadv = _ZERO_ ; wadv = _ZERO_

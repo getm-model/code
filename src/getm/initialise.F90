@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.7 2004-06-15 09:04:51 kbk Exp $
+!$Id: initialise.F90,v 1.8 2005-09-23 11:27:10 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,7 +22,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
-!  Revision 1.7  2004-06-15 09:04:51  kbk
+!  Revision 1.8  2005-09-23 11:27:10  kbk
+!  support for biology via GOTMs biology modules
+!
+!  Revision 1.7  2004/06/15 09:04:51  kbk
 !  CONST_VISC --> CONSTANT_VISCOSITY - Ruiz
 !
 !  Revision 1.6  2004/01/13 07:49:06  kbk
@@ -103,6 +106,9 @@
    use m3d, only: cord_relax,init_3d,ssen,ssun,ssvn
 #ifndef NO_BAROCLINIC
    use m3d, only: T
+#endif
+#ifdef GETM_BIO
+   use rivers, only: init_rivers_bio
 #endif
    use turbulence, only: init_turbulence
    use mtridiagonal, only: init_tridiagonal
@@ -231,21 +237,20 @@
 
    call init_domain(input_dir)
 
-!KBK-2003-02-10   call init_output(runid,title,start,runtype,dryrun,myid)
-
    call init_meteo()
 
 #ifndef NO_3D
    call init_rivers()
 #endif
 
-   call init_output(runid,title,start,runtype,dryrun,myid)
-
    call init_2d(runtype,timestep,hotstart)
 
 #ifndef NO_3D
    if (runtype .gt. 1) then
       call init_3d(runtype,timestep,hotstart)
+#ifdef GETM_BIO
+      call init_rivers_bio
+#endif
 #ifndef CONSTANT_VISCOSITY
       call init_turbulence(60,trim(input_dir) // 'gotmturb.inp',kmax)
 #else
@@ -254,8 +259,11 @@
       LEVEL2 'background turbulent viscosity set to',avmback
       LEVEL2 'background turbulent diffusivity set to',avhback
       call init_tridiagonal(kmax)
+
    end if
 #endif
+
+   call init_output(runid,title,start,runtype,dryrun,myid)
 
 #if 0
    call init_waves(hotstart)
