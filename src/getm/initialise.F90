@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.9 2005-10-06 09:54:01 hb Exp $
+!$Id: initialise.F90,v 1.10 2005-10-06 12:32:32 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,7 +22,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
-!  Revision 1.9  2005-10-06 09:54:01  hb
+!  Revision 1.10  2005-10-06 12:32:32  kbk
+!  call getm_error() -> use exceptions
+!
+!  Revision 1.9  2005/10/06 09:54:01  hb
 !  added support for vertical slice model - via -DSLICE_MODEL
 !
 !  Revision 1.8  2005/09/23 11:27:10  kbk
@@ -123,6 +126,7 @@
 #ifndef NO_BAROCLINIC
    use eqstate, only: do_eqstate
 #endif
+   use exceptions
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
