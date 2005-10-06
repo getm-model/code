@@ -1,4 +1,4 @@
-!$Id: uv_advect_3d.F90,v 1.8 2005-05-25 10:32:13 kbk Exp $
+!$Id: uv_advect_3d.F90,v 1.9 2005-10-06 09:54:01 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -37,7 +37,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_advect_3d.F90,v $
-!  Revision 1.8  2005-05-25 10:32:13  kbk
+!  Revision 1.9  2005-10-06 09:54:01  hb
+!  added support for vertical slice model - via -DSLICE_MODEL
+!
+!  Revision 1.8  2005/05/25 10:32:13  kbk
 !  merged from stabe branch v1_2_1
 !
 !  Revision 1.7.2.1  2005/05/25 08:41:38  kbk
@@ -249,6 +252,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
 ! Upstream for dy(uu*vv/hun)
    do k=1,kmax
       do j=jjmin-1,jjmax          ! PP defined on X-points
@@ -278,6 +282,7 @@
          end do
       end do
    end do
+#endif
 
 ! Upstream for dx(uu*vv/hvn)
    do k=1,kmax
@@ -309,6 +314,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
 ! Upstream for dy(vv^2/hvn)
    do k=1,kmax
       do j=jjmin,jjmax+1
@@ -338,6 +344,7 @@
          end do
       end do
    end do
+#endif
 
 ! Upstream for (uu*ww)_k - (uu*ww)_{k-1}
    do j=jjmin,jjmax

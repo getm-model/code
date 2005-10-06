@@ -1,4 +1,4 @@
-!$Id: upstream_2dh_adv.F90,v 1.1 2004-01-06 15:04:00 kbk Exp $
+!$Id: upstream_2dh_adv.F90,v 1.2 2005-10-06 09:54:01 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,7 +43,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: upstream_2dh_adv.F90,v $
-!  Revision 1.1  2004-01-06 15:04:00  kbk
+!  Revision 1.2  2005-10-06 09:54:01  hb
+!  added support for vertical slice model - via -DSLICE_MODEL
+!
+!  Revision 1.1  2004/01/06 15:04:00  kbk
 !  FCT advection + split of advection_3d.F90 + extra adv. input checks
 !
 !
@@ -79,6 +82,11 @@
    allocate(cmin(I3DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'fct_2dh: Error allocating memory (cmin)'
 #endif
+!#ifdef SLICE_MODEL
+ FATAL 'upstream_2dh_adv(): Do not use upstream_2dh_adv in SLICE_MODEL mode'
+ stop
+!#endif
+
 
    flx = _ZERO_
    do k=1,kmax   ! Calculating u-interface low-order fluxes !

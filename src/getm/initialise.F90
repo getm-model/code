@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.8 2005-09-23 11:27:10 kbk Exp $
+!$Id: initialise.F90,v 1.9 2005-10-06 09:54:01 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,7 +22,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
-!  Revision 1.8  2005-09-23 11:27:10  kbk
+!  Revision 1.9  2005-10-06 09:54:01  hb
+!  added support for vertical slice model - via -DSLICE_MODEL
+!
+!  Revision 1.8  2005/09/23 11:27:10  kbk
 !  support for biology via GOTMs biology modules
 !
 !  Revision 1.7  2004/06/15 09:04:51  kbk
@@ -211,6 +214,12 @@
       stop 'init_model()'
 #endif
    end if
+
+#if (defined PARALLEL && defined SLICE_MODEL)
+    call getm_error('init_model()', &
+         'SLICE_MODEL does not work with PARALLEL - for now')
+#endif
+
    STDERR LINE
    STDERR 'getm ver. ',RELEASE,': Started on  ',dstr,' ',tstr
    STDERR LINE

@@ -1,4 +1,4 @@
-!$Id: momentum.F90,v 1.7 2004-01-07 07:37:36 kbk Exp $
+!$Id: momentum.F90,v 1.8 2005-10-06 09:54:00 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,7 +28,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: momentum.F90,v $
-!  Revision 1.7  2004-01-07 07:37:36  kbk
+!  Revision 1.8  2005-10-06 09:54:00  hb
+!  added support for vertical slice model - via -DSLICE_MODEL
+!
+!  Revision 1.7  2004/01/07 07:37:36  kbk
 !  to compile with IFORT - TABS, etc.
 !
 !  Revision 1.6  2003/04/23 12:09:44  kbk
@@ -275,6 +278,13 @@
    where ((av .eq. 1) .or. (av .eq. 2))
       V=(V-dtm*(g*DV*zy+dry_v*(-tausv/rho_0+fU+VEx+SlVx+Slr)))/(1+dtm*rv/DV)
    end where
+
+#ifdef SLICE_MODEL
+   do i=imin,imax
+      V(i,1)=V(i,2)
+      V(i,3)=V(i,2)
+   end do
+#endif
 
 !  now v is calculated
    call update_2d_halo(V,V,av,imin,jmin,imax,jmax,V_TAG)

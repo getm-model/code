@@ -1,4 +1,4 @@
-!$Id: slow_diffusion.F90,v 1.4 2003-08-28 15:19:03 kbk Exp $
+!$Id: slow_diffusion.F90,v 1.5 2005-10-06 09:54:01 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -82,6 +82,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
 ! Central for dy(AM*(dy(U^2/DU)+dx(V^2/DV)))
    do j=jjmin-1,jjmax        ! PP defined on X-points
       do i=iimin,iimax
@@ -101,6 +102,7 @@
          end if
       end do
    end do
+#endif
 
 ! Central for dx(AM*(dy(U^2/DU)+dx(V^2/DV)))
    do j=jjmin,jjmax      ! PP defined on X-points
@@ -122,6 +124,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
 ! Central for dy(2*AM*dy(V^2/DV))
    do j=jjmin,jjmax+1     ! PP defined on T-points
       do i=iimin,iimax
@@ -140,6 +143,7 @@
          end if
       end do
    end do
+#endif
 
 #ifdef DEBUG
      write(debug,*) 'Leaving slow_diffusion()'

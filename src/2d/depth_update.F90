@@ -1,4 +1,4 @@
-!$Id: depth_update.F90,v 1.5 2003-06-18 08:27:41 kbk Exp $
+!$Id: depth_update.F90,v 1.6 2005-10-06 09:54:00 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,7 +26,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: depth_update.F90,v $
-!  Revision 1.5  2003-06-18 08:27:41  kbk
+!  Revision 1.6  2005-10-06 09:54:00  hb
+!  added support for vertical slice model - via -DSLICE_MODEL
+!
+!  Revision 1.5  2003/06/18 08:27:41  kbk
 !  using HALO in loop boundaries
 !
 !  Revision 1.4  2003/05/12 09:22:39  kbk
@@ -118,6 +121,13 @@
    where (av .gt. 0)
       dry_v = max(_ZERO_,min(_ONE_,(DV-d1)/d2))
    end where
+
+#ifdef SLICE_MODEL
+   do i=imin,imax
+      DV(i,1)=DV(i,2)
+      DV(i,3)=DV(i,2)
+   end do
+#endif
 
 #ifdef DEBUG
    do j=jmin,jmax

@@ -1,4 +1,4 @@
-!$Id: upstream_adv.F90,v 1.1 2004-01-06 15:04:00 kbk Exp $
+!$Id: upstream_adv.F90,v 1.2 2005-10-06 09:54:01 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -33,7 +33,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: upstream_adv.F90,v $
-!  Revision 1.1  2004-01-06 15:04:00  kbk
+!  Revision 1.2  2005-10-06 09:54:01  hb
+!  added support for vertical slice model - via -DSLICE_MODEL
+!
+!  Revision 1.1  2004/01/06 15:04:00  kbk
 !  FCT advection + split of advection_3d.F90 + extra adv. input checks
 !
 !
@@ -84,6 +87,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
    cu = _ZERO_
    do k=1,kmax   ! Calculating v-interface fluxes !
       do j=jjmin-1,jjmax
@@ -107,6 +111,7 @@
          end do
       end do
    end do
+#endif
 
    cu = _ZERO_
    if (kmax.gt.1) then

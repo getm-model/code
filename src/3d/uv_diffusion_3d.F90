@@ -1,4 +1,4 @@
-!$Id: uv_diffusion_3d.F90,v 1.4 2003-08-28 15:20:37 kbk Exp $
+!$Id: uv_diffusion_3d.F90,v 1.5 2005-10-06 09:54:01 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -69,6 +69,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
 ! Central for dy(Am*(dy(uu^2/hun)+dx(vv^2/hvn)))
    do k=1,kmax
       do j=jjmin-1,jjmax          ! PP defined on X-points
@@ -95,6 +96,7 @@
          end do
       end do
    end do
+#endif
 
 ! Central for dx(Am*(dy(uu^2/hun)+dx(vv^2/hvn)))
    do k=1,kmax
@@ -123,6 +125,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
 ! Central for dy(2*Am*dy(vv^2/hvn))
    do k=1,kmax
       do j=jjmin,jjmax+1
@@ -148,6 +151,7 @@
          end do
       end do
    end do
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving uv_diffusion_3d()'

@@ -49,7 +49,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: advection_3d.F90,v $
-!  Revision 1.7  2005-05-25 10:32:13  kbk
+!  Revision 1.8  2005-10-06 09:54:01  hb
+!  added support for vertical slice model - via -DSLICE_MODEL
+!
+!  Revision 1.7  2005/05/25 10:32:13  kbk
 !  merged from stabe branch v1_2_1
 !
 !  Revision 1.6.2.1  2005/05/25 08:39:14  kbk
@@ -254,11 +257,13 @@
                                    iimin,jjmin,iimax,jjmax,kmax,D_TAG)
                call wait_halo(D_TAG)
 
+#ifndef SLICE_MODEL
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a2,&
                                 hor_adv,az,AH)
                call update_3d_halo(f,f,az,& 
                                    iimin,jjmin,iimax,jjmax,kmax,D_TAG)
                call wait_halo(D_TAG)
+#endif
 
                if (kmax.gt.1) then
 #ifdef ITERATE_VERT_ADV
@@ -274,11 +279,13 @@
                                    iimin,jjmin,iimax,jjmax,kmax,D_TAG)
                call wait_halo(D_TAG)
 
+#ifndef SLICE_MODEL
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
                                 hor_adv,az,AH)
                call update_3d_halo(f,f,az, &
                                    iimin,jjmin,iimax,jjmax,kmax,D_TAG)
                call wait_halo(D_TAG)
+#endif
 
                if (kmax.gt.1) then
 #ifdef ITERATE_VERT_ADV
@@ -291,11 +298,13 @@
                   call wait_halo(D_TAG)
 
                end if
+#ifndef SLICE_MODEL
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
                                 hor_adv,az,AH)
                call update_3d_halo(f,f,az, &
                                    iimin,jjmin,iimax,jjmax,kmax,D_TAG)
                call wait_halo(D_TAG)
+#endif
 
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
                                 hor_adv,az,AH)

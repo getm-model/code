@@ -1,4 +1,4 @@
-!$Id: uv_advect.F90,v 1.6 2003-08-28 10:33:25 kbk Exp $
+!$Id: uv_advect.F90,v 1.7 2005-10-06 09:54:00 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,7 +31,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_advect.F90,v $
-!  Revision 1.6  2003-08-28 10:33:25  kbk
+!  Revision 1.7  2005-10-06 09:54:00  hb
+!  added support for vertical slice model - via -DSLICE_MODEL
+!
+!  Revision 1.6  2003/08/28 10:33:25  kbk
 !  use of ax mask, PP is always set
 !
 !  Revision 1.5  2003/05/02 06:55:49  hb
@@ -106,6 +109,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
 !  Upstream for dy(UV/D)
    do j=jmin-1,jmax        ! PP defined on X-points
       do i=imin,imax
@@ -129,6 +133,7 @@
          end if
       end do
    end do
+#endif
 
 ! Upstream for dx(UV/D)
    do j=jmin,jmax      ! PP defined on X-points
@@ -154,6 +159,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
 !  Upstream for dy(V^2/D)
    do j=jmin,jmax+1     ! PP defined on T-points
       do i=imin,imax
@@ -177,6 +183,7 @@
          end if
       end do
    end do
+#endif
 
 #ifdef DEBUG
      write(debug,*) 'Leaving uv_advect()'

@@ -1,4 +1,4 @@
-!$Id: slow_advection.F90,v 1.6 2003-08-28 15:16:31 kbk Exp $
+!$Id: slow_advection.F90,v 1.7 2005-10-06 09:54:01 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,7 +32,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: slow_advection.F90,v $
-!  Revision 1.6  2003-08-28 15:16:31  kbk
+!  Revision 1.7  2005-10-06 09:54:01  hb
+!  added support for vertical slice model - via -DSLICE_MODEL
+!
+!  Revision 1.6  2003/08/28 15:16:31  kbk
 !  use ax mask, PP from variables_2d, always set PP
 !
 !  Revision 1.5  2003/05/02 07:55:04  kbk
@@ -112,6 +115,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
 !  Upstream for dy(UV/D)
    do j=jjmin-1,jjmax     ! PP defined on X-points
       do i=iimin,iimax
@@ -135,6 +139,7 @@
          end if
       end do
    end do
+#endif
 
 ! Upstream for dx(UV/D)
    do j=jjmin,jjmax
@@ -160,6 +165,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
 !  Upstream for dy(V^2/D)
    do j=jjmin,jjmax+1          ! PP defined on T-points
       do i=iimin,iimax
@@ -183,6 +189,7 @@
          end if
       end do
    end do
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving slow_advection()'

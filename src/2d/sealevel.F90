@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.6 2004-07-29 19:46:32 hb Exp $
+!$Id: sealevel.F90,v 1.7 2005-10-06 09:54:00 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,7 +32,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: sealevel.F90,v $
-!  Revision 1.6  2004-07-29 19:46:32  hb
+!  Revision 1.7  2005-10-06 09:54:00  hb
+!  added support for vertical slice model - via -DSLICE_MODEL
+!
+!  Revision 1.6  2004/07/29 19:46:32  hb
 !  For compiler option NOMADS_TEST: some lines shortened
 !
 !  Revision 1.5  2003/12/16 12:32:42  kbk
@@ -120,6 +123,12 @@
          end if
       end do
    end do
+
+#ifdef SLICE_MODEL
+      do i=imin,imax
+         z(i,3)=z(i,2)
+      end do
+#endif
 
    call update_2d_halo(z,z,az,imin,jmin,imax,jmax,z_TAG)
    call wait_halo(z_TAG)

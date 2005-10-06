@@ -1,4 +1,4 @@
-!$Id: uv_diffusion.F90,v 1.4 2003-09-13 10:00:51 kbk Exp $
+!$Id: uv_diffusion.F90,v 1.5 2005-10-06 09:54:00 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -64,6 +64,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
 ! Central for dy(Am*(dy(U^2/DU)+dx(V^2/DV)))
    do j=jmin-1,jmax        ! PP defined on X-points
       do i=imin,imax
@@ -87,6 +88,7 @@
          end if
       end do
    end do
+#endif
 
 ! Central for dx(Am*(dy(U^2/DU)+dx(V^2/DV)))
    do j=jmin,jmax      ! PP defined on X-points
@@ -112,6 +114,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
 ! Central for dy(2*Am*dy(V^2/DV))
    do j=jmin,jmax+1     ! PP defined on T-points
       do i=imin,imax
@@ -134,6 +137,7 @@
          end if
       end do
    end do
+#endif
 
 #ifdef DEBUG
      write(debug,*) 'Leaving uv_diffusion()'

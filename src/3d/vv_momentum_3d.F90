@@ -1,4 +1,4 @@
-!$Id: vv_momentum_3d.F90,v 1.7 2005-04-25 09:32:34 kbk Exp $
+!$Id: vv_momentum_3d.F90,v 1.8 2005-10-06 09:54:01 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -50,7 +50,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: vv_momentum_3d.F90,v $
-!  Revision 1.7  2005-04-25 09:32:34  kbk
+!  Revision 1.8  2005-10-06 09:54:01  hb
+!  added support for vertical slice model - via -DSLICE_MODEL
+!
+!  Revision 1.7  2005/04/25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
 !  Revision 1.6  2004/07/28 14:58:18  hb
@@ -248,6 +251,15 @@
          end if
       end do
    end do
+
+#ifdef SLICE_MODEL
+   do i=iimin,iimax
+      do k=kvmin(i,2),kmax
+         vv(i,1,k)=vv(i,2,k)
+         vv(i,3,k)=vv(i,2,k)
+      end do
+   end do
+#endif
 
 !  Update the halo zones
    call update_3d_halo(vv,vv,av,iimin,jjmin,iimax,jjmax,kmax,V_TAG)

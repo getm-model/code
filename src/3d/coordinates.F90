@@ -1,4 +1,4 @@
-!$Id: coordinates.F90,v 1.7 2004-04-23 09:03:59 kbk Exp $
+!$Id: coordinates.F90,v 1.8 2005-10-06 09:54:01 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,7 +32,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: coordinates.F90,v $
-!  Revision 1.7  2004-04-23 09:03:59  kbk
+!  Revision 1.8  2005-10-06 09:54:01  hb
+!  added support for vertical slice model - via -DSLICE_MODEL
+!
+!  Revision 1.7  2004/04/23 09:03:59  kbk
 !  reverted to pre-adaptive grid version
 !
 !  Revision 1.5  2004/01/05 13:23:27  kbk
@@ -474,6 +477,17 @@
       case default
 
    end select
+
+#ifdef SLICE_MODEL
+   do i=iimin,iimax
+      do k=kvmin(i,2),kmax
+         hvo(i,1,k)=hvo(i,2,k)
+         hvo(i,3,k)=hvo(i,2,k)
+         hvn(i,1,k)=hvn(i,2,k)
+         hvn(i,3,k)=hvn(i,2,k)
+      end do
+   end do
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving coordinates()'
