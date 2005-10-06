@@ -1,4 +1,4 @@
-!$Id: vv_momentum_3d.F90,v 1.8 2005-10-06 09:54:01 hb Exp $
+!$Id: vv_momentum_3d.F90,v 1.9 2005-10-06 09:58:25 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,6 +29,9 @@
    use variables_3d, only: dt,cnpar,kvmin,uu,vv,huo,hvo,hvn,vvEx,ww,hun
    use variables_3d, only: num,nuh,sseo,ssvn,rrv
    use variables_3d, only: ssvo
+#ifdef XZ_PLUME_TEST
+   use variables_3d, only: rho
+#endif
 #ifndef NO_BAROCLINIC
    use variables_3d, only: idpdy
 #endif
@@ -50,8 +53,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: vv_momentum_3d.F90,v $
-!  Revision 1.8  2005-10-06 09:54:01  hb
-!  added support for vertical slice model - via -DSLICE_MODEL
+!  Revision 1.9  2005-10-06 09:58:25  hb
+!  added itest case for SLICE_MODEL - XZ_PLUME_TEST
 !
 !  Revision 1.7  2005/04/25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
@@ -172,7 +175,11 @@
 #ifdef NO_BAROCLINIC
                   ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k))
 #else
+#ifdef XZ_PLUME_TEST
+                  ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+idpdy(i,j,k)+0.001*hvn(i,j,k)*(rho(i,j,kmax)-rho(i,j,k)))
+#else
                   ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+idpdy(i,j,k))
+#endif
 #endif
                end do
                ex(kmax)=ex(kmax)                                      &
