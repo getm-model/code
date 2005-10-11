@@ -1,4 +1,4 @@
-!$Id: halo_mpi.F90,v 1.7 2005-05-25 10:32:12 kbk Exp $
+!$Id: halo_mpi.F90,v 1.8 2005-10-11 07:55:19 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -64,8 +64,8 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_mpi.F90,v $
-!  Revision 1.7  2005-05-25 10:32:12  kbk
-!  merged from stabe branch v1_2_1
+!  Revision 1.8  2005-10-11 07:55:19  kbk
+!  now sending HALOxHALO corner colums - fixes parallel runs with some higher order advection schemes
 !
 !  Revision 1.6.2.1  2005/05/25 08:05:35  kbk
 !  fixed ONED_NONBLOCKING + cleaning
@@ -100,10 +100,12 @@ include "mpif.h"
    integer                   :: len
    integer                   :: ierr
    integer                   :: x_line,x_lines,y_line,y_lines
-   integer                   :: i1_slice
+   integer                   :: halo_line,halo_square
+!KBK   integer                   :: i1_slice
    integer                   :: xz_slice,xz_slices
    integer                   :: yz_slice,yz_slices
    integer                   :: z_column
+   integer                   :: halo_columns
    integer                   :: x_size,y_size,z_size
    integer                   :: xy_size,xz_size,yz_size,xyz_size
    integer                   :: com_direction
@@ -645,6 +647,14 @@ include "mpif.h"
    call MPI_TYPE_HVECTOR(HALO,1,1*sizeof_realtype,y_line,y_lines,ierr)
    call MPI_TYPE_COMMIT(y_lines,ierr)
 
+!  1 HALO-line
+   call MPI_TYPE_VECTOR(HALO,1,1,MPI_REALTYPE,halo_line,ierr)
+   call MPI_TYPE_COMMIT(halo_line,ierr)
+
+!  HALO square
+   call MPI_TYPE_HVECTOR(HALO,1,x_size*sizeof_realtype,halo_line,halo_square,ierr)
+   call MPI_TYPE_COMMIT(halo_square,ierr)
+
 !  1 xz-slice
    call MPI_TYPE_HVECTOR(o,1,xy_size*sizeof_realtype,x_line,xz_slice,ierr)
    call MPI_TYPE_COMMIT(xz_slice,ierr)
@@ -680,6 +690,10 @@ include "mpif.h"
 !  a vertical column
    call MPI_TYPE_VECTOR(o,1,xy_size,MPI_REALTYPE,z_column,ierr)
    call MPI_TYPE_COMMIT(z_column,ierr)
+
+!  HALO square vertical columns
+   call MPI_TYPE_VECTOR(o,1,xy_size,halo_square,halo_columns,ierr)
+   call MPI_TYPE_COMMIT(halo_columns,ierr)
 
    return
    end subroutine MPI_data_types
@@ -827,14 +841,14 @@ STDERR 'TWOD_SENDRECV'
          call MPI_IRECV(f2(ih+1,jl),    1, y_lines, right, tag, &
                            active_comm, req(4), ierr)
 
-!        Recieving corner points
-         call MPI_IRECV(f2(il-1,jl-1), 1, MPI_REALTYPE,ll,tag, &
+!        Recieving HALOxHALO corner squares
+         call MPI_IRECV(f2(il-HALO,jl-HALO), 1, halo_square,ll,tag, &
                            active_comm, req(5), ierr)
-         call MPI_IRECV(f2(ih+1,jl-1), 1, MPI_REALTYPE,lr,tag, &
+         call MPI_IRECV(f2(ih+1,jl-HALO), 1, halo_square,lr,tag, &
                            active_comm, req(6), ierr)
-         call MPI_IRECV(f2(ih+1,jh+1), 1, MPI_REALTYPE,ur,tag, &
+         call MPI_IRECV(f2(ih+1,jh+1), 1, halo_square,ur,tag, &
                            active_comm, req(7), ierr)
-         call MPI_IRECV(f2(il-1,jh+1), 1, MPI_REALTYPE,ul,tag, &
+         call MPI_IRECV(f2(il-HALO,jh+1), 1, halo_square,ul,tag, &
                            active_comm, req(8), ierr)
 
 !        Sending x_lines
@@ -849,17 +863,17 @@ STDERR 'TWOD_SENDRECV'
          call MPI_ISEND(f1(ih-(HALO-1),jl), 1, y_lines, right, tag, &
                            active_comm, req(12), ierr)
 
-!        Sending corner points
-         call MPI_ISEND(f1(ih,jh), 1, MPI_REALTYPE, ur,tag, &
+!        Sending HALOxHALO corner squares
+         call MPI_ISEND(f1(ih-(HALO-1),jh-(HALO-1)), 1, halo_square, ur,tag, &
                            active_comm, req(13), ierr)
 
-         call MPI_ISEND(f1(il,jh), 1, MPI_REALTYPE, ul,tag, &
+         call MPI_ISEND(f1(il,jh-(HALO-1)), 1, halo_square, ul,tag, &
                            active_comm, req(14), ierr)
 
-         call MPI_ISEND(f1(il,jl), 1, MPI_REALTYPE, ll,tag, &
+         call MPI_ISEND(f1(il,jl), 1, halo_square, ll,tag, &
                            active_comm, req(15), ierr)
 
-         call MPI_ISEND(f1(ih,jl), 1, MPI_REALTYPE, lr,tag, &
+         call MPI_ISEND(f1(ih-(HALO-1),jl), 1, halo_square, lr,tag, &
                            active_comm, req(16), ierr)
       case default
          FATAL 'A non valid communication method has been chosen'
@@ -1021,13 +1035,13 @@ STDERR 'TWOD_NONBLOCKING'
                            active_comm, req(4), ierr)
 
 !        Recieving corner columns
-         call MPI_IRECV(f2(il-1,jl-1,0), 1, z_column,ll,tag, &
+         call MPI_IRECV(f2(il-HALO,jl-HALO,0), 1, halo_columns,ll,tag, &
                            active_comm, req(5), ierr)
-         call MPI_IRECV(f2(ih+1,jl-1,0), 1, z_column,lr,tag, &
+         call MPI_IRECV(f2(ih+1,jl-HALO,0), 1, halo_columns,lr,tag, &
                            active_comm, req(6), ierr)
-         call MPI_IRECV(f2(ih+1,jh+1,0), 1, z_column,ur,tag, &
+         call MPI_IRECV(f2(ih+1,jh+1,0), 1, halo_columns,ur,tag, &
                            active_comm, req(7), ierr)
-         call MPI_IRECV(f2(il-1,jh+1,0), 1, z_column,ul,tag, &
+         call MPI_IRECV(f2(il-HALO,jh+1,0), 1, halo_columns,ul,tag, &
                            active_comm, req(8), ierr)
 
 !        Sending xz_slices
@@ -1043,16 +1057,16 @@ STDERR 'TWOD_NONBLOCKING'
                            active_comm, req(12), ierr)
 
 !        Sending corner columns
-         call MPI_ISEND(f1(ih,jh,0), 1, z_column, ur, tag, &
+         call MPI_ISEND(f1(ih-(HALO-1),jh-(HALO-1),0), 1, halo_columns, ur, tag, &
                            active_comm, req(13), ierr)
 
-         call MPI_ISEND(f1(il,jh,0), 1, z_column, ul, tag, &
+         call MPI_ISEND(f1(il,jh-(HALO-1),0), 1, halo_columns, ul, tag, &
                            active_comm, req(14), ierr)
 
-         call MPI_ISEND(f1(il,jl,0), 1, z_column, ll, tag, &
+         call MPI_ISEND(f1(il,jl,0), 1, halo_columns, ll, tag, &
                            active_comm, req(15), ierr)
 
-         call MPI_ISEND(f1(ih,jl,0), 1, z_column, lr, tag, &
+         call MPI_ISEND(f1(ih-(HALO-1),jl,0), 1, halo_columns, lr, tag, &
                            active_comm, req(16), ierr)
       case default
          FATAL 'A non valid communication method has been chosen'
