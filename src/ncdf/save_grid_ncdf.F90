@@ -1,4 +1,4 @@
-!$Id: save_grid_ncdf.F90,v 1.1 2005-04-25 09:32:34 kbk Exp $
+!$Id: save_grid_ncdf.F90,v 1.2 2005-11-01 15:44:13 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,7 +41,10 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: save_grid_ncdf.F90,v $
-!  Revision 1.1  2005-04-25 09:32:34  kbk
+!  Revision 1.2  2005-11-01 15:44:13  kbk
+!  fixed saving of lonc instaed of latc
+!
+!  Revision 1.1  2005/04/25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
 !
@@ -412,7 +415,7 @@
                                         "save_grid_ncdf()","latc -")
 
          status = nf_put_vara_double(ncid,lonc_id,start,edges,          &
-                                     yc(1:imax,1:jmax))
+                                     lonc(1:imax,1:jmax))
          if (status .ne. NF_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","lonc -")
 
