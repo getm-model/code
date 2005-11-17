@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.10 2005-06-17 07:57:46 frv-bjb Exp $
+!$Id: ncdf_topo.F90,v 1.11 2005-11-17 13:50:22 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -89,7 +89,10 @@
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
-!  Revision 1.10  2005-06-17 07:57:46  frv-bjb
+!  Revision 1.11  2005-11-17 13:50:22  kbk
+!  fixes to compile with gfortran
+!
+!  Revision 1.10  2005/06/17 07:57:46  frv-bjb
 !  Bug fix: fail on dlat/lat0 versions
 !
 !  Revision 1.9  2005/06/14 13:36:01  frv-bjb
@@ -604,7 +607,7 @@ contains
        LEVEL3 'Using plane curvilinear grid.'
 
     case(4)
-#ifndef (CURVILINEAR && SPHERICAL)
+#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
        call getm_error("ncdf_check_grid()",                      &
                      & "Cannot use spherical curvlinear grid with&
                      & CURVILINEAR and SPHERICAL not #defined")

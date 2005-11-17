@@ -34,7 +34,8 @@
    public init_advection_3d, do_advection_3d
 #ifdef STATIC
    REALTYPE, public                    :: cu(I3DFIELD)
-   REALTYPE, public                    :: hi(I3DFIELD),hio(I3DFIELD)
+   REALTYPE, public                    :: hi(I3DFIELD)
+   REALTYPE, public                    :: hio(I3DFIELD)
 #else
    REALTYPE, public, dimension(:,:,:), allocatable       :: hi,hio,cu
 #endif
@@ -49,7 +50,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: advection_3d.F90,v $
-!  Revision 1.8  2005-10-06 09:54:01  hb
+!  Revision 1.9  2005-11-17 13:50:22  kbk
+!  fixes to compile with gfortran
+!
+!  Revision 1.8  2005/10/06 09:54:01  hb
 !  added support for vertical slice model - via -DSLICE_MODEL
 !
 !  Revision 1.7  2005/05/25 10:32:13  kbk
@@ -213,13 +217,21 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in)      :: uu(I3DFIELD),vv(I3DFIELD),ww(I3DFIELD)
-   REALTYPE, intent(in)      :: ho(I3DFIELD),hn(I3DFIELD)
-   REALTYPE, intent(in)      :: hun(I3DFIELD),hvn(I3DFIELD)
-   REALTYPE, intent(in)      :: delxu(I2DFIELD),delxv(I2DFIELD)
-   REALTYPE, intent(in)      :: delyu(I2DFIELD),delyv(I2DFIELD)
+   REALTYPE, intent(in)      :: uu(I3DFIELD)
+   REALTYPE, intent(in)      :: vv(I3DFIELD)
+   REALTYPE, intent(in)      :: ww(I3DFIELD)
+   REALTYPE, intent(in)      :: ho(I3DFIELD)
+   REALTYPE, intent(in)      :: hn(I3DFIELD)
+   REALTYPE, intent(in)      :: hun(I3DFIELD)
+   REALTYPE, intent(in)      :: hvn(I3DFIELD)
+   REALTYPE, intent(in)      :: delxu(I2DFIELD)
+   REALTYPE, intent(in)      :: delxv(I2DFIELD)
+   REALTYPE, intent(in)      :: delyu(I2DFIELD)
+   REALTYPE, intent(in)      :: delyv(I2DFIELD)
    REALTYPE, intent(in)      :: area_inv(I2DFIELD),dt,AH
-   integer, intent(in)       :: az(E2DFIELD),au(E2DFIELD),av(E2DFIELD)
+   integer, intent(in)       :: az(E2DFIELD)
+   integer, intent(in)       :: au(E2DFIELD)
+   integer, intent(in)       :: av(E2DFIELD)
    integer, intent(in)       :: hor_adv,ver_adv,adv_split
 !
 ! !INPUT/OUTPUT PARAMETERS:

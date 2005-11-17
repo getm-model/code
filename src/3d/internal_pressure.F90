@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.10 2005-04-25 07:55:50 kbk Exp $
+!$Id: internal_pressure.F90,v 1.11 2005-11-17 13:50:22 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -52,7 +52,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: internal_pressure.F90,v $
-!  Revision 1.10  2005-04-25 07:55:50  kbk
+!  Revision 1.11  2005-11-17 13:50:22  kbk
+!  fixes to compile with gfortran
+!
+!  Revision 1.10  2005/04/25 07:55:50  kbk
 !  use more general frame for error handling - Umlauf
 !
 !  Revision 1.9  2004/06/18 13:43:50  kbk
@@ -152,7 +155,7 @@
 #ifndef STATIC
    allocate(zz(I3DFIELD),stat=rc)
    if (rc /= 0) stop 'init_internal_pressure: Error allocating memory (zz)'
-#ifdef
+#ifdef SUBSTR_INI_PRESS
    allocate(idpdx0(I3DFIELD),stat=rc) ! Initial x - pressure gradient.
    if (rc /= 0) stop &
         'init_internal_pressure(): Error allocating memory (idpdx0)'
