@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.9 2005-09-23 11:26:55 kbk Exp $
+!$Id: gotm.F90,v 1.10 2006-01-09 10:35:40 lars Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,6 +34,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: gotm.F90,v $
+!  Revision 1.10  2006-01-09 10:35:40  lars
+!  bug fix in call to do_turbulence()
+!
 !  Revision 1.9  2005-09-23 11:26:55  kbk
 !  support for GOTM v3.2 and above
 !
@@ -97,7 +100,9 @@
    integer                   :: i,j,k
    REALTYPE                  :: u_taus,u_taub,z0s,z0b
    REALTYPE                  :: h(0:kmax),dry,zz
+#ifdef GOTM_3_0
    REALTYPE                  :: P(0:kmax),B(0:kmax)
+#endif
    REALTYPE                  :: NN1d(0:kmax),SS1d(0:kmax)
 #ifndef GOTM_3_0
    REALTYPE                  :: xP(0:kmax)
@@ -132,11 +137,6 @@
             NN1d = NN(i,j,:)
 #endif
 
-            P  = num(i,j,:)*SS1d
-#ifndef NO_BAROCLINIC
-            B  = -nuh(i,j,:)*NN1d
-#endif
-
             tke1d=tke(i,j,:)
             eps1d=eps(i,j,:)
             L1d=cde*tke1d**1.5/eps1d
@@ -163,11 +163,17 @@
             end do
 #else
 #ifdef GOTM_3_0
+
+            P  = num(i,j,:)*SS1d
+#ifndef NO_BAROCLINIC
+            B  = -nuh(i,j,:)*NN1d
+#endif
+
             call do_turbulence(kmax,dt,D(i,j),u_taus,u_taub,z0s,z0b,h, &
                                NN1d,SS1d,P,B)
 #else
             call do_turbulence(kmax,dt,D(i,j),u_taus,u_taub,z0s,z0b,h, &
-                               NN1d,xP)
+                               NN1d,SS1d,xP)
 #endif
 #endif
 
