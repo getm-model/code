@@ -2,21 +2,30 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: to_3d_uu() - average 3d-velocities to T-points
+! !ROUTINE: to_3d_uu() - average u-velocities to T-points
 !
 ! !INTERFACE:
-   subroutine to_3d_uu(vel,uu,hun,au,iimin,jjmin,kmin,iimax,jjmax,kmax)
+   subroutine to_3d_uu(imin,jmin,imax,jmax,az,                          &
+                       iimin,jjmin,iimax,jjmax,kmax,                    &
+                       kmin,hun,uu,missing,vel)
 !
 ! !DESCRIPTION:
+! This routine linearly interpolates the velocity at $u$-points to the $T$-points, 
+! whenever the mask at the $T$-points is different from zero. Otherwise, the values
+! are filled with the "missing value", {\tt missing}. The result is written to the 
+! output argument {\tt vel}, which is single precision vector for storage in netCDF.
 !
 ! !USES:
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-  integer,  intent(in)       :: iimin,jjmin,kmin,iimax,jjmax,kmax
-  REALTYPE, intent(in)       :: uu(I3DFIELD)
+  integer,  intent(in)       :: imin,jmin,imax,jmax
+  integer,  intent(in)       :: az(I2DFIELD)
+  integer,  intent(in)       :: iimin,jjmin,iimax,jjmax,kmax
+  integer,  intent(in)       :: kmin(I2DFIELD)
   REALTYPE, intent(in)       :: hun(I3DFIELD)
-  integer,  intent(in)       :: au(I2DFIELD)
+  REALTYPE, intent(in)       :: uu(I3DFIELD)
+  REALTYPE, intent(in)       :: missing
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -27,6 +36,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: to_3d_uu.F90,v $
+!  Revision 1.2  2006-01-11 14:03:28  lars
+!  grave bug - partial re-write
+!
 !  Revision 1.1  2005-04-25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
@@ -35,33 +47,27 @@
    integer                   :: i,j,k
    integer                   :: indx
    REALTYPE                  :: ul,ur
+   REALTYPE, parameter       :: eps=1.E-5
 !EOP
 !-----------------------------------------------------------------------
 !BOC
 
    indx = 1
-   do k=kmin,kmax
+   do k=0,kmax
       do j=jjmin,jjmax
          do i=iimin,iimax
-            ul = _ZERO_
-            ur = _ZERO_
-            if (au(i-1,j) .ne. 0 .and. au(i,j) .ne. 0) then
-               ul = uu(i-1,j,k)/(hun(i-1,j,k)+1.e-5)
-               ur = uu(i  ,j,k)/(hun(i  ,j,k)+1.e-5)
-            endif
-            if (au(i-1,j) .eq. 0 .and. au(i,j) .ne. 0) then
-               ur = uu(i  ,j,k)/(hun(i  ,j,k)+1.e-5)
-               ul = ur
-            endif
-            if (au(i-1,j) .ne. 0 .and. au(i,j) .eq. 0) then   
-               ul = uu(i-1,j,k)/(hun(i-1,j,k)+1.e-5)
-               ur = ul
-            endif
-            vel(indx) = 0.5*(ul+ur)
+            if (az(i,j) .gt. 0) then
+               ul        = 0.5*(uu(i-1,j,k)/(hun(i-1,j,k)+eps))                     
+               ur        = 0.5*(uu(i  ,j,k)/(hun(i  ,j,k)+eps))                     
+               vel(indx) = 0.5*(ul+ur)
+            else
+               vel(indx) = missing
+            end if
             indx = indx+1
          end do
       end do
    end do
+
 
    return
    end subroutine to_3d_uu

@@ -2,31 +2,43 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: to_3d_vv() - average 3d-velocities to T-points
+! !ROUTINE: to_3d_vv() - average v-velocity to T-points
 !
 ! !INTERFACE:
-   subroutine to_3d_vv(vel,vv,hvn,av,iimin,jjmin,kmin,iimax,jjmax,kmax)
+   subroutine to_3d_vv(imin,jmin,imax,jmax,az,                          &
+                       iimin,jjmin,iimax,jjmax,kmax,                    &
+                       kmin,hvn,vv,missing,vel)
 !
 ! !DESCRIPTION:
+! This routine linearly interpolates the velocity at $v$-points to the $T$-points, 
+! whenever the mask at the $T$-points is different from zero. Otherwise, the values
+! are filled with the "missing value", {\tt missing}. The result is written to the 
+! output argument {\tt vel}, which is single precision vector for storage in netCDF.
 !
 ! !USES:
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-  integer,  intent(in)       :: iimin,jjmin,kmin,iimax,jjmax,kmax
-  REALTYPE, intent(in)       :: vv(I3DFIELD)
+  integer,  intent(in)       :: imin,jmin,imax,jmax
+  integer,  intent(in)       :: az(I2DFIELD)
+  integer,  intent(in)       :: iimin,jjmin,iimax,jjmax,kmax
+  integer,  intent(in)       :: kmin(I2DFIELD)
   REALTYPE, intent(in)       :: hvn(I3DFIELD)
-  integer,  intent(in)       :: av(I2DFIELD)
+  REALTYPE, intent(in)       :: vv(I3DFIELD)
+  REALTYPE, intent(in)       :: missing
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REAL_4B, intent(out) :: vel(*)
+   REAL_4B, intent(out)      :: vel(*)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf
 !
 !  $Log: to_3d_vv.F90,v $
+!  Revision 1.2  2006-01-11 14:03:28  lars
+!  grave bug - partial re-write
+!
 !  Revision 1.1  2005-04-25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
@@ -34,38 +46,33 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
    integer                   :: indx
-   REALTYPE                  :: vb,vt
+   REALTYPE                  :: vt,vb
+   REALTYPE, parameter       :: eps=1.E-5
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+
    indx = 1
-   do k=kmin,kmax
+   do k=0,kmax
       do j=jjmin,jjmax
          do i=iimin,iimax
-            vb = _ZERO_
-            vt = _ZERO_
-            if (av(i,j-1) .ne. 0 .and. av(i,j) .ne. 0) then
-               vb = vv(i,j-1,k)/(hvn(i,j-1,k)+1.e-5)
-               vt = vv(i,j  ,k)/(hvn(i,j  ,k)+1.e-5)
-            endif
-            if (av(i,j-1) .eq. 0 .and. av(i,j) .ne. 0) then
-               vt = vv(i,j  ,k)/(hvn(i,j  ,k)+1.e-5)
-               vb = vt
-            endif
-            if (av(i,j-1) .ne. 0 .and. av(i,j) .eq. 0) then   
-               vb = vv(i,j-1,k)/(hvn(i,j-1,k)+1.e-5)
-               vt = vb
-            endif
-            vel(indx) = 0.5*(vb+vt)
+            if (az(i,j) .gt. 0) then
+               vt        = 0.5*(vv(i,j  ,k)/(hvn(i,j  ,k)+eps))
+               vb        = 0.5*(vv(i,j-1,k)/(hvn(i,j-1,k)+eps))
+               vel(indx) = 0.5*(vt+vb)
+            else
+               vel(indx) = missing
+            end if
             indx = indx+1
          end do
       end do
    end do
+
 
    return
    end subroutine to_3d_vv
 !EOC
 
 !-----------------------------------------------------------------------
-! Copyright (C) 2001 - Lars Umlauf, Hans Burchard and Karsten Bolding
+! Copyright (C) 2005 - Lars Umlauf, Hans Burchard and Karsten Bolding
 !-----------------------------------------------------------------------
