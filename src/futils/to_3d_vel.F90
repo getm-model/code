@@ -1,4 +1,4 @@
-!$Id: to_3d_vel.F90,v 1.3 2003-05-09 11:38:26 kbk Exp $
+!$Id: to_3d_vel.F90,v 1.4 2006-01-11 14:02:42 lars Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,8 +6,8 @@
 ! !ROUTINE: to_3d_vel() - calculates 3D-velocities and store in real*4.
 !
 ! !INTERFACE:
-   subroutine to_3d_vel(imin,jmin,imax,jmax,mask, &
-                        iimin,jjmin,iimax,jjmax,kmax, &
+   subroutine to_3d_vel(imin,jmin,imax,jmax,mask,                       &
+                        iimin,jjmin,iimax,jjmax,kmax,                   &
                         kmin,h,trans,missing,vel)
    IMPLICIT NONE
 !
@@ -33,6 +33,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: to_3d_vel.F90,v $
+!  Revision 1.4  2006-01-11 14:02:42  lars
+!  documentation + cosmetics
+!
 !  Revision 1.3  2003-05-09 11:38:26  kbk
 !  added proper undef support - based on Adolf Stips patch
 !

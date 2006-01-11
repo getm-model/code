@@ -1,4 +1,4 @@
-!$Id: to_2d_v.F90,v 1.1 2005-04-25 09:32:34 kbk Exp $
+!$Id: to_2d_v.F90,v 1.2 2006-01-11 14:02:42 lars Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -10,10 +10,11 @@
                       il,jl,ih,jh,vel)
 !
 ! !DESCRIPTION:
-! This routine interpolates the $V$-velocity component from the $V$-points
-! to the $T$-points. If the mask for the $T$-points is zero, the positions
-! are filled up with "missing values". The result is written in a single-precision
-! vector four netCDF output.
+! This routine linearly interpolates the vertically integrated velocity 
+! at $V$-points to the $T$-points, whenever the mask at the $T$-points is different 
+! from zero. Otherwise, the values are filled with a "missing value", {\tt missing}. 
+! The result is written to the output argument {\tt vel}, which is single precision 
+! vector for storage in netCDF.
 !
 ! !USES:
    IMPLICIT NONE
@@ -33,6 +34,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: to_2d_v.F90,v $
+!  Revision 1.2  2006-01-11 14:02:42  lars
+!  documentation + cosmetics
+!
 !  Revision 1.1  2005-04-25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
