@@ -36,6 +36,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: to_3d_vv.F90,v $
+!  Revision 1.3  2006-01-11 14:57:33  lars
+!  added support for kmin
+!
 !  Revision 1.2  2006-01-11 14:03:28  lars
 !  grave bug - partial re-write
 !
@@ -56,9 +59,9 @@
    do k=0,kmax
       do j=jjmin,jjmax
          do i=iimin,iimax
-            if (az(i,j) .gt. 0) then
-               vt        = 0.5*(vv(i,j  ,k)/(hvn(i,j  ,k)+eps))
-               vb        = 0.5*(vv(i,j-1,k)/(hvn(i,j-1,k)+eps))
+         if ( az(i,j) .gt. 0 .and. k .ge. kmin(i,j) ) then
+               vt        = vv(i,j  ,k)/(hvn(i,j  ,k)+eps)
+               vb        = vv(i,j-1,k)/(hvn(i,j-1,k)+eps)
                vel(indx) = 0.5*(vt+vb)
             else
                vel(indx) = missing

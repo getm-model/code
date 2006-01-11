@@ -36,6 +36,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: to_3d_uu.F90,v $
+!  Revision 1.3  2006-01-11 14:57:33  lars
+!  added support for kmin
+!
 !  Revision 1.2  2006-01-11 14:03:28  lars
 !  grave bug - partial re-write
 !
@@ -56,9 +59,9 @@
    do k=0,kmax
       do j=jjmin,jjmax
          do i=iimin,iimax
-            if (az(i,j) .gt. 0) then
-               ul        = 0.5*(uu(i-1,j,k)/(hun(i-1,j,k)+eps))                     
-               ur        = 0.5*(uu(i  ,j,k)/(hun(i  ,j,k)+eps))                     
+         if ( az(i,j) .gt. 0 .and. k .ge. kmin(i,j) ) then
+               ul        = uu(i-1,j,k)/(hun(i-1,j,k)+eps)                     
+               ur        = uu(i  ,j,k)/(hun(i  ,j,k)+eps)                     
                vel(indx) = 0.5*(ul+ur)
             else
                vel(indx) = missing
