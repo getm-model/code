@@ -20,7 +20,7 @@
 !
 ! !INPUT PARAMETERS:
   integer,  intent(in)       :: imin,jmin,imax,jmax
-  integer,  intent(in)       :: az(I2DFIELD)
+  integer,  intent(in)       :: az(E2DFIELD)
   integer,  intent(in)       :: iimin,jjmin,iimax,jjmax,kmax
   integer,  intent(in)       :: kmin(I2DFIELD)
   REALTYPE, intent(in)       :: hun(I3DFIELD)
@@ -36,6 +36,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: to_3d_uu.F90,v $
+!  Revision 1.4  2006-01-19 10:07:55  lars
+!  bugfix (allocation of az-array)
+!
 !  Revision 1.3  2006-01-11 14:57:33  lars
 !  added support for kmin
 !
