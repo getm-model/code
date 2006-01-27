@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.25 2005-09-23 11:27:10 kbk Exp $
+!$Id: m3d.F90,v 1.26 2006-01-27 16:07:56 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -58,7 +58,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.25  2005-09-23 11:27:10  kbk
+!  Revision 1.26  2006-01-27 16:07:56  kbk
+!  now works with -DNO_BAROCLINIC
+!
+!  Revision 1.25  2005/09/23 11:27:10  kbk
 !  support for biology via GOTMs biology modules
 !
 !  Revision 1.24  2005/04/25 07:55:50  kbk
@@ -220,6 +223,9 @@
 !
 ! !LOCAL VARIABLES:
    integer         :: vel_hor_adv=1,vel_ver_adv=1,vel_adv_split=0
+#ifdef NO_BAROCLINIC
+   integer         :: ip_method
+#endif
 !EOP
 !-----------------------------------------------------------------------
 

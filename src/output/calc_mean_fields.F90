@@ -1,4 +1,4 @@
-!$Id: calc_mean_fields.F90,v 1.2 2004-04-21 09:11:44 lars Exp $
+!$Id: calc_mean_fields.F90,v 1.3 2006-01-27 16:07:57 kbk Exp $
 #include "cppdefs.h"
 !----------------------------------------------------------------------
 !BOP
@@ -16,7 +16,10 @@
    use domain, only: az,au,av
    use meteo, only: swr
    use m3d, only: M
-   use variables_3d, only: hn,uu,hun,vv,hvn,ww,S,T,taub
+   use variables_3d, only: hn,uu,hun,vv,hvn,ww,taub
+#ifndef NO_BAROCLINIC
+   use variables_3d, only: S,T
+#endif
    use diagnostic_variables
    IMPLICIT NONE
 !
@@ -27,7 +30,10 @@
 !  Original author(s): Karsten Bolding & Adolf Stips
 !
 !  $Log: calc_mean_fields.F90,v $
-!  Revision 1.2  2004-04-21 09:11:44  lars
+!  Revision 1.3  2006-01-27 16:07:57  kbk
+!  now works with -DNO_BAROCLINIC
+!
+!  Revision 1.2  2004/04/21 09:11:44  lars
 !  removed tab
 !
 !  Revision 1.1  2004/03/29 15:35:52  kbk
@@ -77,19 +83,23 @@
       allocate(hmean(I3DFIELD),stat=rc)
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (hmean)'
+#ifndef NO_BAROCLINIC
       allocate(Tmean(I3DFIELD),stat=rc)
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (Tmean)'
       allocate(Smean(I3DFIELD),stat=rc)
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (Smean)'
+#endif
       first = .false.
    end if
 
    if (step .eq. _ZERO_ ) then
       uumean=_ZERO_; vvmean=_ZERO_; wmean=_ZERO_
       humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
+#ifndef NO_BAROCLINIC
       Tmean=_ZERO_; Smean=_ZERO_
+#endif
       ustarmean=_ZERO_; ustar2mean=_ZERO_; swrmean=_ZERO_
    end if
 
@@ -119,9 +129,11 @@
       humean = humean + hun 
       hvmean = hvmean + hvn 
 
+#ifndef NO_BAROCLINIC
       Tmean = Tmean + T
       Smean = Smean + S
       hmean = hmean + hn
+#endif
 
 !  count them
       step = step + 1.0
@@ -137,9 +149,11 @@
          humean = humean / step
          hvmean = hvmean / step
 
+#ifndef NO_BAROCLINIC
          Tmean = Tmean / step
          Smean = Smean / step
          hmean = hmean / step
+#endif
 
          ustarmean = ustarmean / step
          swrmean = swrmean / step
