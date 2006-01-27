@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.12 2005-04-29 12:59:44 kbk Exp $
+!$Id: temperature.F90,v 1.10.2.1 2006-01-27 09:21:45 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,6 @@
 !  Description still missing
 !
 ! !USES:
-   use exceptions
    use domain, only: imin,jmin,imax,jmax,H,az
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
    use variables_3d, only: T,hn,adv_schemes
@@ -37,13 +36,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: temperature.F90,v $
-!  Revision 1.12  2005-04-29 12:59:44  kbk
-!  cleaned advection info
+!  Revision 1.10.2.1  2006-01-27 09:21:45  kbk
+!  increased nmax to run test cases
 !
-!  Revision 1.11  2005/04/25 07:55:50  kbk
-!  use more general frame for error handling - Umlauf
-!
-!  Revision 1.10  2004/01/06 15:04:00  kbk
+!  Revision 1.10  2004-01-06 15:04:00  kbk
 !  FCT advection + split of advection_3d.F90 + extra adv. input checks
 !
 !  Revision 1.9  2003/12/16 17:10:05  kbk
@@ -205,8 +201,8 @@ temp_field_no=1
          temp_ver_adv=1
       end if
    end if
-   LEVEL3 "horizontal: ",trim(adv_schemes(temp_hor_adv))
-   LEVEL3 "vertical:   ",trim(adv_schemes(temp_ver_adv))
+   LEVEL3 "horizontal: ",trim(adv_schemes(temp_hor_adv))," of temperature"
+   LEVEL3 "vertical:   ",trim(adv_schemes(temp_ver_adv))," of temperature"
 
    select case (temp_adv_split)
       case (-1)
