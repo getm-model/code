@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.13 2005-04-25 09:25:33 kbk Exp $
+!$Id: meteo.F90,v 1.12.2.1 2006-01-27 09:25:21 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -46,7 +46,7 @@
    use time, only: yearday,secondsofday,timestep
    use halo_zones, only : H_TAG,update_2d_halo,wait_halo
    use domain, only: imin,imax,jmin,jmax,lonc,latc,az
-   use domain, only: iimin,iimax,jjmin,jjmax,convc
+   use domain, only: iimin,iimax,jjmin,jjmax,conv
    IMPLICIT NONE
 !
    private
@@ -59,7 +59,7 @@
    logical, public                     :: metforcing=.false.
    logical, public                     :: on_grid=.true.
    logical, public                     :: calc_met=.false.
-   integer, public                     :: method
+   integer, public                     :: met_method
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
    REALTYPE, public, dimension(:,:), allocatable  :: airp,tausx,tausy,swr,shf
    REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum,tcc
@@ -78,10 +78,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
-!  Revision 1.13  2005-04-25 09:25:33  kbk
-!  conv --> convc
+!  Revision 1.12.2.1  2006-01-27 09:25:21  kbk
+!  renamed method to met_method
 !
-!  Revision 1.12  2005/04/19 15:56:58  kbk
+!  Revision 1.12  2005-04-19 15:56:58  kbk
 !  added latitude dependent cloud correction factor for long wave rad. - Stips
 !
 !  Revision 1.11  2005/01/13 09:49:37  kbk
@@ -186,8 +186,8 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
-   namelist /meteo/ metforcing,on_grid,calc_met,method,spinup,metfmt, &
-                    meteo_file,tx,ty,swr_const,shf_const
+   namelist /meteo/ metforcing,on_grid,calc_met,met_method,spinup,   &
+                    metfmt,meteo_file,tx,ty,swr_const,shf_const
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -201,7 +201,7 @@
 
    LEVEL2 'Metforcing=',metforcing
    if (metforcing) then
-      select case (method)
+      select case (met_method)
             case (1)
                LEVEL2 'Constant forcing is used:'
                LEVEL3 'tx  = ',tx
@@ -405,7 +405,7 @@
          ramp = _ONE_
       end if
 
-      select case (method)
+      select case (met_method)
          case (1)
             airp  =  _ZERO_
             tausx = ramp*tx
@@ -413,9 +413,9 @@
 !     Rotation of wind stress due to grid convergence
             do j=jjmin,jjmax
                do i=iimin,iimax
-                  if (convc(i,j) .ne. _ZERO_ .and. az(i,j) .gt. 0) then
-                     sinconv=sin(-convc(i,j)*deg2rad)
-                     cosconv=cos(-convc(i,j)*deg2rad)
+                  if (conv(i,j) .ne. _ZERO_ .and. az(i,j) .gt. 0) then
+                     sinconv=sin(-conv(i,j)*deg2rad)
+                     cosconv=cos(-conv(i,j)*deg2rad)
                      uu=tausx(i,j)
                      vv=tausy(i,j)
                      tausx(i,j)= uu*cosconv+vv*sinconv
@@ -521,7 +521,7 @@
                end if
             endif
          case default
-            FATAL 'A non valid meteo method has been specified.'
+            FATAL 'A non valid meteo met_method has been specified.'
             stop 'do_meteo'
       end select
 

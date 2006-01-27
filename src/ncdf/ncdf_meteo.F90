@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.19 2005-05-04 11:45:29 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.16.2.1 2006-01-27 09:25:21 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,15 +13,13 @@
 ! !USES:
    use time, only: string_to_julsecs,time_diff,add_secs,in_interval
    use time, only: jul0,secs0,julianday,secondsofday,timestep,simtime
-   use time, only: write_time_string,timestr
-   use domain, only: imin,imax,jmin,jmax,az,lonc,latc,convc
+   use domain, only: imin,imax,jmin,jmax,az,lonc,latc,conv
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
    use grid_interpol, only: to_rotated_lat_lon
-   use meteo, only: meteo_file,on_grid,calc_met,method,hum_method
+   use meteo, only: meteo_file,on_grid,calc_met,met_method,hum_method
    use meteo, only: airp,u10,v10,t2,hum,tcc
    use meteo, only: tausx,tausy,swr,shf
    use meteo, only: new_meteo,t_1,t_2
-   use exceptions
    IMPLICIT NONE
 !
    private
@@ -81,16 +79,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.19  2005-05-04 11:45:29  kbk
-!  adding model time stamp on IO
+!  Revision 1.16.2.1  2006-01-27 09:25:21  kbk
+!  renamed method to met_method
 !
-!  Revision 1.18  2005/04/25 09:25:33  kbk
-!  conv --> convc
-!
-!  Revision 1.17  2005/04/25 07:55:50  kbk
-!  use more general frame for error handling - Umlauf
-!
-!  Revision 1.16  2005/03/31 10:14:20  kbk
+!  Revision 1.16  2005-03-31 10:14:20  kbk
 !  flux calc. for point source + combined rot. met. and grid convergence
 !
 !  Revision 1.15  2005/01/12 19:26:16  kbk
@@ -360,7 +352,7 @@
 
    end if
 
-   if (method .eq. 2) then
+   if (met_method .eq. 2) then
       start(1) = 1; start(2) = 1;
       edges(1) = iextr; edges(2) = jextr;
       edges(3) = 1
@@ -416,7 +408,7 @@
    write(debug,*) 'get_meteo_data_ncdf() # ',Ncall
 #endif
 
-   if (method .eq. 2) then
+   if (met_method .eq. 2) then
 
 !     find the right index
 
@@ -451,8 +443,6 @@
       else
          if (indx .gt. save_n) then
             new_meteo = .true.
-            call write_time_string()
-            LEVEL2 timestr,': reading meteo data ...'
             save_n = indx
             t_1 = t_2
             t_2 = met_times(indx) - offset
@@ -781,7 +771,7 @@
          do i=imin,imax
 !KBK            angle=-convc(i,j)*deg2rad
 !KBK            angle=beta(i,j)
-            angle=beta(i,j)-convc(i,j)*deg2rad
+            angle=beta(i,j)-conv(i,j)*deg2rad
             if(angle .ne. _ZERO_) then
                sinconv=sin(angle)
                cosconv=cos(angle)

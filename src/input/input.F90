@@ -1,4 +1,4 @@
-!$Id: input.F90,v 1.3 2003-04-23 12:04:08 kbk Exp $
+!$Id: input.F90,v 1.3.2.1 2006-01-27 09:25:21 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use meteo, only: metforcing,method,meteo_file
+   use meteo, only: metforcing,met_method,meteo_file
    use m2d, only: bdy2d,bdyfile_2d,bdyfmt_2d
 #ifndef NO_3D
    use m3d, only: bdy3d,bdyfile_3d,bdyfmt_3d
@@ -25,6 +25,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: input.F90,v $
+!  Revision 1.3.2.1  2006-01-27 09:25:21  kbk
+!  renamed method to met_method
+!
 !  Revision 1.3  2003-04-23 12:04:08  kbk
 !  cleaned code + TABS to spaces
 !
@@ -125,7 +128,7 @@
 #endif
 
    LEVEL1 'init_input'
-   if (metforcing .and. method .eq. 2) then
+   if (metforcing .and. met_method .eq. 2) then
       call init_meteo_input(trim(input_dir) // meteo_file,n)
    end if
 
@@ -186,7 +189,7 @@
    write(debug,*) 'do_input() # ',Ncall
 #endif
 
-   if(metforcing .and. method .eq. 2) then
+   if(metforcing .and. met_method .eq. 2) then
       call get_meteo_data(n)
    end if
 
