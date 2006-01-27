@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.11 2004-01-07 07:37:36 kbk Exp $
+!$Id: m2d.F90,v 1.12 2006-01-27 16:10:20 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,7 +41,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m2d.F90,v $
-!  Revision 1.11  2004-01-07 07:37:36  kbk
+!  Revision 1.12  2006-01-27 16:10:20  kbk
+!  only call do_residual() when specified
+!
+!  Revision 1.11  2004/01/07 07:37:36  kbk
 !  to compile with IFORT - TABS, etc.
 !
 !  Revision 1.10  2004/01/06 19:07:22  kbk
@@ -328,7 +331,9 @@
    write(debug,*) 'clean_2d() # ',Ncall
 #endif
 
-   call do_residual(1)
+   if(residual .gt. 0) then
+      call do_residual(1)
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving clean_2d()'
