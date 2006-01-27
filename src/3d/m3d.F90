@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.24 2005-04-25 07:55:50 kbk Exp $
+!$Id: m3d.F90,v 1.23.2.1 2006-01-27 08:58:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,7 +18,6 @@
 !  in from the library lib3d.a.
 !
 ! !USES:
-   use exceptions
    use parameters, only: avmmol
    use domain, only: maxdepth,vert_cord
    use m2d, only: Am
@@ -54,10 +53,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
-!  Revision 1.24  2005-04-25 07:55:50  kbk
-!  use more general frame for error handling - Umlauf
+!  Revision 1.23.2.1  2006-01-27 08:58:19  kbk
+!  no works with -DNO_BAROCLINIC
 !
-!  Revision 1.23  2004/08/09 07:48:07  kbk
+!  Revision 1.23  2004-08-09 07:48:07  kbk
 !  checking for negative avmback and avhback
 !
 !  Revision 1.22  2004/08/06 15:14:35  hb
@@ -213,6 +212,9 @@
 !
 ! !LOCAL VARIABLES:
    integer         :: vel_hor_adv=1,vel_ver_adv=1,vel_adv_split=0
+#ifdef NO_BAROCLINIC
+   integer         :: ip_method
+#endif
 !EOP
 !-----------------------------------------------------------------------
 
