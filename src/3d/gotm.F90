@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.8 2004-08-06 15:14:35 hb Exp $
+!$Id: gotm.F90,v 1.8.2.1 2006-01-27 09:15:55 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,6 +34,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: gotm.F90,v $
+!  Revision 1.8.2.1  2006-01-27 09:15:55  kbk
+!  use v3.2.x of GOTM by default
+!
 !  Revision 1.8  2004-08-06 15:14:35  hb
 !  num and nuh now properly initialised and no gotm call for CONSTANT_VISCOSITY
 !
@@ -90,11 +93,18 @@
 !  initial import into CVS
 !
 !
+! Unly un-comment the next line if you want to use an old version of GOTM
+!#define GOTM_2_3_8
+!
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
    REALTYPE                  :: u_taus,u_taub,z0s,z0b
    REALTYPE                  :: h(0:kmax),dry,zz
+#ifdef GOTM_2_3_8
    REALTYPE                  :: P(0:kmax),B(0:kmax)
+#else
+   REALTYPE                  :: xP(0:kmax)
+#endif
    REALTYPE                  :: NN1d(0:kmax),SS1d(0:kmax)
    logical, save             :: first=.true.
    integer, save             :: n = 0
@@ -109,6 +119,9 @@
    write(debug,*) 'gotm() # ',Ncall
 #endif
 
+#ifndef GOTM_2_3_8
+   xP = _ZERO_
+#endif
    do j=jjmin,jjmax
       do i=iimin,iimax
 
@@ -121,11 +134,6 @@
             SS1d = SS(i,j,:)
 #ifndef NO_BAROCLINIC
             NN1d = NN(i,j,:)
-#endif
-
-            P  = num(i,j,:)*SS1d
-#ifndef NO_BAROCLINIC
-            B  = -nuh(i,j,:)*NN1d
 #endif
 
             tke1d=tke(i,j,:)
@@ -153,8 +161,18 @@
 #endif
             end do
 #else
+#ifdef GOTM_2_3_8
+            P  = num(i,j,:)*SS1d
+#ifndef NO_BAROCLINIC
+            B  = -nuh(i,j,:)*NN1d
+#endif
+
             call do_turbulence(kmax,dt,D(i,j),u_taus,u_taub,z0s,z0b,h, &
                                NN1d,SS1d,P,B)
+#else
+            call do_turbulence(kmax,dt,D(i,j),u_taus,u_taub,z0s,z0b,h, &
+                               NN1d,SS1d,xP)
+#endif
 #endif
 
             tke(i,j,:) = tke1d
