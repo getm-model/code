@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.12 2005-04-29 12:59:44 kbk Exp $
+!$Id: temperature.F90,v 1.13 2006-01-27 21:13:31 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -37,6 +37,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: temperature.F90,v $
+!  Revision 1.13  2006-01-27 21:13:31  hb
+!  Boundary conditions for compiler option NOMADS_TEST set to constant for complete sponge region
+!
 !  Revision 1.12  2005-04-29 12:59:44  kbk
 !  cleaned advection info
 !
@@ -339,10 +342,10 @@ temp_field_no=1
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
                         temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH)
 #ifdef NOMADS_TEST
-   T(iimin:iimin,jjmin:jjmax,1:kmax)=10.
-   T(iimax:iimax,jjmin:jjmax,1:kmax)=10.
-   T(iimin:iimax,jjmin:jjmin,1:kmax)=10.
-   T(iimin:iimax,jjmax:jjmax,1:kmax)=10.
+   T(iimin:iimin+3,jjmin:jjmax,1:kmax)=10.
+   T(iimax-3:iimax,jjmin:jjmax,1:kmax)=10.
+   T(iimin:iimax,jjmin:jjmin+3,1:kmax)=10.
+   T(iimin:iimax,jjmax-3:jjmax,1:kmax)=10.
 #endif
 
 !  Solar radiation and vertical diffusion of temperature

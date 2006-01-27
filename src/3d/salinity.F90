@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.15 2005-04-29 12:59:44 kbk Exp $
+!$Id: salinity.F90,v 1.16 2006-01-27 21:13:31 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,6 +41,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: salinity.F90,v $
+!  Revision 1.16  2006-01-27 21:13:31  hb
+!  Boundary conditions for compiler option NOMADS_TEST set to constant for complete sponge region
+!
 !  Revision 1.15  2005-04-29 12:59:44  kbk
 !  cleaned advection info
 !
@@ -413,7 +416,7 @@ salt_field_no=1
    REALTYPE                  :: a1(0:kmax),a2(0:kmax)
    REALTYPE                  :: a3(0:kmax),a4(0:kmax)
 #ifdef NOMADS_TEST
-   REALTYPE                  :: SRelax,kk
+   REALTYPE                  :: SRelax
 #endif
 #ifdef SALTWEDGE_TEST
    REALTYPE                  :: SRelax,kk
@@ -454,28 +457,10 @@ salt_field_no=1
 
 #ifdef NOMADS_TEST
    SRelax=34.85
-   do i=1,iimax
-      do j=1,jjmax
-         do k=1,kmax
-            if (az(i,j).eq.2) S(i,j,k)=SRelax
-            kk=0.5625
-            if ((((i.eq.2).or.(i.eq.iimax-1)).and.(j.ge.2).and.   &
-                (j.le.jjmax-1)).or.(((j.eq.2).or.(j.eq.jjmax-1))  &
-                .and.(i.ge.2).and.(i.le.iimax-1)))                &
-                S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
-            kk=0.25
-            if ((((i.eq.3).or.(i.eq.iimax-2)).and.(j.ge.3).and.   &
-                (j.le.jjmax-2)).or.(((j.eq.3).or.(j.eq.jjmax-2))  &
-                .and.(i.ge.3).and.(i.le.iimax-2)))                &
-                S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
-            kk=0.0625
-            if ((((i.eq.4).or.(i.eq.iimax-3)).and.(j.ge.4).and.   &
-                (j.le.jjmax-3)).or.(((j.eq.4).or.(j.eq.jjmax-3))  &
-                .and.(i.ge.4).and.(i.le.iimax-3)))                &
-                S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
-         end do
-      end do
-  end do
+   S(iimin:iimin+3,jjmin:jjmax,1:kmax)=SRelax
+   S(iimax-3:iimax,jjmin:jjmax,1:kmax)=SRelax
+   S(iimin:iimax,jjmin:jjmin+3,1:kmax)=SRelax
+   S(iimin:iimax,jjmax-3:jjmax,1:kmax)=SRelax
 #endif
 
 #ifdef SALTWEDGE_TEST
@@ -537,6 +522,7 @@ salt_field_no=1
          end if
       end do
    end do
+
 #ifdef ARKONA_TEST
    do i=100,135
       do j=256,257
