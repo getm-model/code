@@ -43,6 +43,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: diagnose.F90,v $
+!  Revision 1.5  2006-01-27 19:55:56  hb
+!  tab removed
+!
 !  Revision 1.4  2004-01-07 07:37:37  kbk
 !  to compile with IFORT - TABS, etc.
 !
@@ -377,8 +380,8 @@
           do k=kmax,1,-1
             if (S(i,j,k).gt.salmax) then
                salmax=S(i,j,k)
-       	salimax=i
-       	saljmax=j
+               salimax=i
+               saljmax=j
             end if
             if (S(i,j,k).lt.salmin) salmin=S(i,j,k)
             if ((S(i,j,k).lt.34.839).and.(k.eq.kmax)) area=area+dx*dy
