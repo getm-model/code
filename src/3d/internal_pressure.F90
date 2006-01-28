@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.11 2005-11-17 13:50:22 kbk Exp $
+!$Id: internal_pressure.F90,v 1.12 2006-01-28 20:07:54 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -52,6 +52,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: internal_pressure.F90,v $
+!  Revision 1.12  2006-01-28 20:07:54  hb
+!  Extensions to compiler option SLICE_MODEL for better representation of zero gradients in y-direction
+!
 !  Revision 1.11  2005-11-17 13:50:22  kbk
 !  fixes to compile with gfortran
 !
@@ -241,6 +244,14 @@
          FATAL 'Not valid ip_method specified'
          stop 'do_internal_pressure()'
    end select
+
+#ifdef SLICE_MODEL
+   do i=iimin,iimax
+      do k=kmin(i,2),kmax
+         idpdx(i,3,k)=idpdx(i,2,k)
+      end do   
+   end do
+#endif
 
 #ifdef SUBSTR_INI_PRESS
    if (first) then

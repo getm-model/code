@@ -1,4 +1,4 @@
-!$Id: momentum.F90,v 1.8 2005-10-06 09:54:00 hb Exp $
+!$Id: momentum.F90,v 1.9 2006-01-28 20:07:52 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,6 +28,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: momentum.F90,v $
+!  Revision 1.9  2006-01-28 20:07:52  hb
+!  Extensions to compiler option SLICE_MODEL for better representation of zero gradients in y-direction
+!
 !  Revision 1.8  2005-10-06 09:54:00  hb
 !  added support for vertical slice model - via -DSLICE_MODEL
 !
@@ -167,6 +170,12 @@
    where ((au .eq. 1) .or. (au .eq. 2))
       U=(U-dtm*(g*DU*zx+dry_u*(-tausu/rho_0-fV+UEx+SlUx+Slr)))/(1+dtm*ru/DU)
    end where
+
+#ifdef SLICE_MODEL
+   do i=imin,imax
+      U(i,3)=U(i,2)
+   end do
+#endif
 
 !  now u is calculated
    call update_2d_halo(U,U,au,imin,jmin,imax,jmax,U_TAG)

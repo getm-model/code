@@ -1,4 +1,4 @@
-!$Id: uu_momentum_3d.F90,v 1.5 2004-07-28 14:58:18 hb Exp $
+!$Id: uu_momentum_3d.F90,v 1.6 2006-01-28 20:07:54 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -50,6 +50,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uu_momentum_3d.F90,v $
+!  Revision 1.6  2006-01-28 20:07:54  hb
+!  Extensions to compiler option SLICE_MODEL for better representation of zero gradients in y-direction
+!
 !  Revision 1.5  2004-07-28 14:58:18  hb
 !  Changing subroutine calling order via MUDFLAT
 !
@@ -241,7 +244,16 @@
             end if
          end if
       end do
+end do
+
+#ifdef SLICE_MODEL
+   do i=iimin,iimax
+      do k=kumin(i,2),kmax
+         uu(i,3,k)=uu(i,2,k)
+      end do
    end do
+#endif
+
 
 !  Update the halo zones
    call update_3d_halo(uu,uu,au,iimin,jjmin,iimax,jjmax,kmax,U_TAG)
