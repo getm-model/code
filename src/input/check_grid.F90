@@ -1,4 +1,4 @@
-!$Id: check_grid.F90,v 1.1 2005-04-25 09:32:34 kbk Exp $
+!$Id: check_grid.F90,v 1.2 2006-01-29 20:32:34 hb Exp $
 #include"cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -10,11 +10,11 @@
 ! !DESCRIPTION:
 !  This is a wrapper routine to check whether the bathymetry file
 !  {\tt filename} contains everything needed for the desired 
-!  {\tt grid_type}. For {\tt STATIC} allocation, it checks whether 
+!  {\tt grid\_type}. For {\tt STATIC} allocation, it checks whether 
 !  {\tt iextr} and {\tt jextr} are in agreement with the size of the 
 !  read grid. For dynamic  allocation, it derives {\tt iextr} and 
 !  {\tt jextr} from the dimensions of the grid.
-!  The only thing {\tt check_grid} actually does is calling specialised 
+!  The only thing {\tt check\_grid} actually does is calling specialised 
 !  routines according to the {\tt filetype} of the file {\tt filename}.
 !  
 ! !USES:
@@ -37,6 +37,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: check_grid.F90,v $
+!  Revision 1.2  2006-01-29 20:32:34  hb
+!  Small LaTeX corrections to source code documentation
+!
 !  Revision 1.1  2005-04-25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !

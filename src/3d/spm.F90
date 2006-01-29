@@ -1,4 +1,4 @@
-!$Id: spm.F90,v 1.5 2004-06-15 08:25:57 kbk Exp $
+!$Id: spm.F90,v 1.6 2006-01-29 20:32:33 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,7 +34,7 @@
 !  \end{array}
 !  \right.
 !  \end{equation}
-!  with $c_e erosion constant with units kg\,s\,m$^{-4}$
+!  with $c_e$ erosion constant with units kg\,s\,m$^{-4}$
 !  and the fluff layer SPM content $B$ (see below).
 !  The sedimentation flux is only non-zero for
 !  bottom shear stresses smaller than a critical shear stress $\tau_{cs}$.
@@ -63,10 +63,10 @@
 !  after the advection step, although these negative values should be small.
 !
 !  It is possible to take into account the impact of sediments on density by
-!  setting spm_dens to .true. The modified density is computed as:
+!  setting {\tt spm\_dens} to {\tt .true}. The modified density is computed as:
 !  \begin{equation}\label{SPM_density}
 !  \begin{array}{l}
-!  \{rho}={rho}_{T,S,p}+(1-\frac {{\rho}_{T,S,p} {\rho}_{spm}} C
+!  {rho}={rho}_{T,S,p}+(1-\frac {{\rho}_{T,S,p} {\rho}_{spm}} C
 !  \end{array}
 !  \end{equation}
 !
@@ -115,6 +115,9 @@
 !  Original author(s): Manuel Ruiz Villarreal, Karsten Bolding and Hans Burchard
 !
 !  $Log: spm.F90,v $
+!  Revision 1.6  2006-01-29 20:32:33  hb
+!  Small LaTeX corrections to source code documentation
+!
 !  Revision 1.5  2004-06-15 08:25:57  kbk
 !  added supoort for spm - Ruiz
 !

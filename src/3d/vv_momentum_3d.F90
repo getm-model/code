@@ -1,4 +1,4 @@
-!$Id: vv_momentum_3d.F90,v 1.9 2005-10-06 09:58:25 hb Exp $
+!$Id: vv_momentum_3d.F90,v 1.10 2006-01-29 20:32:33 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,8 @@
 ! !DESCRIPTION:
 !
 ! Three-dimensional velocity equation in northern direction.
-! If #MUDFLAT is defined, fitting of profiles is made with
+! If the compiler option {\tt MUDFLAT} is defined, fitting of profiles is 
+! made with
 ! respect to the new surface elevation, otherwise to the
 ! old surface elevation.
 !
@@ -53,6 +54,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: vv_momentum_3d.F90,v $
+!  Revision 1.10  2006-01-29 20:32:33  hb
+!  Small LaTeX corrections to source code documentation
+!
 !  Revision 1.9  2005-10-06 09:58:25  hb
 !  added itest case for SLICE_MODEL - XZ_PLUME_TEST
 !

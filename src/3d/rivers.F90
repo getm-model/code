@@ -1,4 +1,4 @@
-!$Id: rivers.F90,v 1.7 2005-09-23 11:27:43 kbk Exp $
+!$Id: rivers.F90,v 1.8 2006-01-29 20:32:33 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -79,6 +79,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: rivers.F90,v $
+!  Revision 1.8  2006-01-29 20:32:33  hb
+!  Small LaTeX corrections to source code documentation
+!
 !  Revision 1.7  2005-09-23 11:27:43  kbk
 !  support fo nutrient loading in rivers
 !
@@ -308,7 +311,7 @@
 !
 ! !DESCRIPTION:
 !  Allocates memory for storing the biological loads from rivers.
-!  The variable - river_bio - is initialised to  - bio_missing.
+!  The variable - {\tt river\_bio} - is initialised to  - {\tt bio\_missing}.
 !
 ! !USES:
    IMPLICIT NONE

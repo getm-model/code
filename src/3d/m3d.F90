@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.26 2006-01-27 16:07:56 kbk Exp $
+!$Id: m3d.F90,v 1.27 2006-01-29 20:32:33 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -58,6 +58,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
+!  Revision 1.27  2006-01-29 20:32:33  hb
+!  Small LaTeX corrections to source code documentation
+!
 !  Revision 1.26  2006-01-27 16:07:56  kbk
 !  now works with -DNO_BAROCLINIC
 !
@@ -443,9 +446,10 @@
 !
 ! !DESCRIPTION:
 ! A wrapper to call all 3D related subroutines in one subroutine.
-! if #MUDFLAT is defined, then the sequence of velocity equations
+! if the compiler option {\tt MUDFLAT} is defined, then the sequence of 
+! velocity equations
 ! and coordinate construction is made such that drying and flooding
-! is stable. If #MUDFLAT is not defined, then adaptive grids with
+! is stable. If {\tt MUDFLAT} is not defined, then adaptive grids with
 ! Lagrangian component are supported. Both, drying and flooding and
 ! Lagrangian coordinates does not go together.
 !

@@ -1,4 +1,4 @@
-!$Id: uu_momentum_3d.F90,v 1.6 2006-01-28 20:07:54 hb Exp $
+!$Id: uu_momentum_3d.F90,v 1.7 2006-01-29 20:32:33 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,8 @@
 ! !DESCRIPTION:
 !
 ! Three-dimensional velocity equation in eastern direction.
-! If #MUDFLAT is defined, fitting of profiles is made with
+! If the compiler option {\tt MUDFLAT} is defined, fitting of profiles 
+! is made with
 ! respect to the new surface elevation, otherwise to the 
 ! old surface elevation.
 !
@@ -50,6 +51,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uu_momentum_3d.F90,v $
+!  Revision 1.7  2006-01-29 20:32:33  hb
+!  Small LaTeX corrections to source code documentation
+!
 !  Revision 1.6  2006-01-28 20:07:54  hb
 !  Extensions to compiler option SLICE_MODEL for better representation of zero gradients in y-direction
 !

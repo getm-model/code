@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.11 2005-11-17 13:50:22 kbk Exp $
+!$Id: ncdf_topo.F90,v 1.12 2006-01-29 20:32:34 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,18 +12,18 @@
 ! This module is responsible for checking and reading all grid-related quantities
 ! contained in a netCDF file. The grid types available so far are:
 ! \begin{itemize}
-!   \item {grid_type=1}. Cartesian grid with constant grid spacing {\tt dx} and {\tt dy}. 
+!   \item {grid\_type=1}. Cartesian grid with constant grid spacing {\tt dx} and {\tt dy}. 
 !%         The first $X$-point of the grid may start at {\tt x0} and {\tt y0}. 
 !%         If these two offsets are not given, they are set to zero.
-!   \item {grid_type=2}. Spherical grid with constant grid spacing {\tt dlon} and {\tt dlat}. 
+!   \item {grid\_type=2}. Spherical grid with constant grid spacing {\tt dlon} and {\tt dlat}. 
 !%         The first grid point may start at {\tt lon0} and {\tt lat0}. If these two offsets
 !%         are not given they are set to zero. 
 !         Earth's radius, {\tt rearth}, necessary to construct a spherical grid, may 
 !         also be given in the input file. 
 !         Otherwise it is set to a default value.
-!   \item {grid_type=3}. Plane curvilinear grid where the $x$ and $y$ positions of the $X$-points 
+!   \item {grid\_type=3}. Plane curvilinear grid where the $x$ and $y$ positions of the $X$-points 
 !         have to be specified in the bathymetry file.
-!   \item {grid_type=4}. Spherical  curvilinear grid where the latitudes and longitudes
+!   \item {grid\_type=4}. Spherical  curvilinear grid where the latitudes and longitudes
 !          of the $X$-points have to be specified in the bathymetry file.
 ! \end{itemize}
 !
@@ -49,8 +49,8 @@
 ! and will be written to the output files used for plotting.
 ! GETM checks the bathymetery file for corresponding variables called 
 ! {\tt (latx,lonx)} {\tt ($xx$,$xy$)}. If it is known, also the type of the projection, 
-! {\tt proj_type}, and its specifications like the projection center and rotation (
-! {\tt proj_lon, proj_lat, proj_rot}) can be given in the input file. The definition
+! {\tt proj\_type}, and its specifications like the projection center and rotation (
+! {\tt proj\_lon, proj\_lat, proj\_rot}) can be given in the input file. The definition
 ! follows that by the Seagrid grid-generation tool. MATLAB scripts to generate
 ! simple grids and bathymeteries can be found it the {\tt matlab} subdirectory. 
 ! Ready-to-run bathymetries for some simple basins can be found among the test cases.
@@ -89,6 +89,9 @@
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
+!  Revision 1.12  2006-01-29 20:32:34  hb
+!  Small LaTeX corrections to source code documentation
+!
 !  Revision 1.11  2005-11-17 13:50:22  kbk
 !  fixes to compile with gfortran
 !
@@ -650,7 +653,7 @@ contains
 !
 ! !DESCRIPTION:
 ! This subroutine reads grid-related quantities and the bathymetry from the 
-! netCDF file. It relies on a previous call to {\tt ncdf_check_grid} setting
+! netCDF file. It relies on a previous call to {\tt ncdf\_check\_grid} setting
 ! all netCDF variable ID's and doing some consistency checks.
 !
 ! !INPUT PARAMETERS:

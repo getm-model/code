@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.12 2006-01-28 20:07:54 hb Exp $
+!$Id: internal_pressure.F90,v 1.13 2006-01-29 20:32:33 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,11 +9,14 @@
    module internal_pressure
 !
 ! !DESCRIPTION:
+!
+!  \begin{verbatim}
 !  ip_method=1    ! old GETM version of Blumberg-Mellor, very stable
 !  ip_method=2    ! new GETM version of 1, zero for linear profiles 
 !  ip_method=3    ! z-coordinates, linear interpolation
 !  ip_method=4    ! Song and Wright 1998 version
 !  ip_method=5    ! CHU and FAN 2003 version
+!  \end{verbatim}
 !
 ! !USES:
    use exceptions
@@ -52,6 +55,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: internal_pressure.F90,v $
+!  Revision 1.13  2006-01-29 20:32:33  hb
+!  Small LaTeX corrections to source code documentation
+!
 !  Revision 1.12  2006-01-28 20:07:54  hb
 !  Extensions to compiler option SLICE_MODEL for better representation of zero gradients in y-direction
 !

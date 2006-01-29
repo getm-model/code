@@ -1,4 +1,4 @@
-!$Id: get_grid.F90,v 1.1 2005-04-25 09:32:34 kbk Exp $
+!$Id: get_grid.F90,v 1.2 2006-01-29 20:32:34 hb Exp $
 #include"cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,8 +9,8 @@
 !
 ! !DESCRIPTION:
 !  This is a wrapper routine to read the bathymetry file
-!  {\tt filename} containing the grid and the bathymetery. {\tt get_grid}
-!  assumes that {\tt check_grid} has been called before.
+!  {\tt filename} containing the grid and the bathymetery. {\tt get\_grid}
+!  assumes that {\tt check\_grid} has been called before.
 !  The only thing it actually does is calling the specialised routines 
 !  according to the {\tt filetype}.
 !
@@ -34,6 +34,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: get_grid.F90,v $
+!  Revision 1.2  2006-01-29 20:32:34  hb
+!  Small LaTeX corrections to source code documentation
+!
 !  Revision 1.1  2005-04-25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !

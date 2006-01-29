@@ -1,4 +1,4 @@
-!$Id: diagnostic_variables.F90,v 1.1 2004-03-29 15:35:52 kbk Exp $
+!$Id: diagnostic_variables.F90,v 1.2 2006-01-29 20:32:34 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,7 @@
 ! !DESCRIPTION:
 !  This modules serves as a container for diagnostic variables. It is the 
 !  responsibillity of the subroutine(s) using these variables to properly
-!  allocate memory. Have a look at .../src/output/calc_mean_fields.F90.
+!  allocate memory. Have a look at {\tt .../src/output/calc\_mean\_fields.F90}.
 !
 ! !USES:
    IMPLICIT NONE
@@ -33,6 +33,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: diagnostic_variables.F90,v $
+!  Revision 1.2  2006-01-29 20:32:34  hb
+!  Small LaTeX corrections to source code documentation
+!
 !  Revision 1.1  2004-03-29 15:35:52  kbk
 !  possible to store calculated mean fields
 !
