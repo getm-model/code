@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.7 2005-10-06 09:54:00 hb Exp $
+!$Id: sealevel.F90,v 1.8 2006-01-29 12:25:20 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,7 +32,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: sealevel.F90,v $
-!  Revision 1.7  2005-10-06 09:54:00  hb
+!  Revision 1.8  2006-01-29 12:25:20  kbk
+!  NOMADS -> FRESHWATER_LENSE
+!
+!  Revision 1.7  2005/10/06 09:54:00  hb
 !  added support for vertical slice model - via -DSLICE_MODEL
 !
 !  Revision 1.6  2004/07/29 19:46:32  hb
@@ -102,7 +105,7 @@
             z(i,j)=z(i,j)-dtm*((U(i,j)*DYU-U(i-1,j  )*DYUIM1) &
                               +(V(i,j)*DXV-V(i  ,j-1)*DXVJM1))*ARCD1
 
-#ifdef NOMADS_TEST
+#ifdef FRESHWATER_LENSE_TEST
        kk=1.0
        if ((((i.eq.1).or.(i.eq.imax)).and.(j.ge.1).and.(j.le.jmax)).or. &
            (((j.eq.1).or.(j.eq.jmax)).and.(i.ge.1).and.(i.le.imax)))    &

@@ -1,4 +1,4 @@
-!$Id: update_2d_bdy.F90,v 1.4 2003-12-16 16:50:40 kbk Exp $
+!$Id: update_2d_bdy.F90,v 1.5 2006-01-29 12:25:20 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,7 +29,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: update_2d_bdy.F90,v $
-!  Revision 1.4  2003-12-16 16:50:40  kbk
+!  Revision 1.5  2006-01-29 12:25:20  kbk
+!  NOMADS -> FRESHWATER_LENSE
+!
+!  Revision 1.4  2003/12/16 16:50:40  kbk
 !  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
 !
 !  Revision 1.3  2003/04/23 12:09:44  kbk
@@ -102,8 +105,8 @@
          amp = 1.5
          bdy_data = amp*sin(OMEGA*t)
 #endif
-#ifdef NOMADS_TEST
-         bdy_data=0.
+#ifdef FRESHWATER_LENSE_TEST
+         bdy_data=_ZERO_
 #endif
 #undef OMEGA
 #ifdef CHANNEL_TEST

@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.16 2006-01-27 21:13:31 hb Exp $
+!$Id: salinity.F90,v 1.17 2006-01-29 12:25:21 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,6 +41,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: salinity.F90,v $
+!  Revision 1.17  2006-01-29 12:25:21  kbk
+!  NOMADS -> FRESHWATER_LENSE
+!
 !  Revision 1.16  2006-01-27 21:13:31  hb
 !  Boundary conditions for compiler option NOMADS_TEST set to constant for complete sponge region
 !
@@ -144,7 +147,7 @@
 !  Description still missing
 !
 ! !USES:
-#ifdef NOMADS_TEST
+#ifdef FRESHWATER_LENSE_TEST
    use domain, only: dx
 #endif
    IMPLICIT NONE
@@ -164,7 +167,7 @@
 #ifdef PECS_TEST
    integer                   :: cc(1:30)
 #endif
-#ifdef NOMADS_TEST
+#ifdef FRESHWATER_LENSE_TEST
    INTEGER                   :: ic,jc
    REALTYPE                  :: dist
 #endif
@@ -184,7 +187,7 @@
    write(debug,*) 'init_salinity() # ',Ncall
 #endif
 
-#ifdef NS_NOMADS_TEST
+#ifdef NS_FRESHWATER_LENSE_TEST
 salt_field_no=1
 #endif
 #ifdef MED_15X15MINS_TEST
@@ -286,7 +289,7 @@ salt_field_no=1
       case default
    end select
 
-#ifdef NOMADS_TEST
+#ifdef FRESHWATER_LENSE_TEST
    S=34.85
    ic=nint(iimax/2.)
    jc=nint(jjmax/2.)
@@ -415,7 +418,7 @@ salt_field_no=1
    REALTYPE                  :: auxn(1:kmax-1),auxo(1:kmax-1)
    REALTYPE                  :: a1(0:kmax),a2(0:kmax)
    REALTYPE                  :: a3(0:kmax),a4(0:kmax)
-#ifdef NOMADS_TEST
+#ifdef FRESHWATER_LENSE_TEST
    REALTYPE                  :: SRelax
 #endif
 #ifdef SALTWEDGE_TEST
@@ -455,7 +458,7 @@ salt_field_no=1
    S(iimax:iimax,jjmin:jjmax,1:kmax)=10.
 #endif
 
-#ifdef NOMADS_TEST
+#ifdef FRESHWATER_LENSE_TEST
    SRelax=34.85
    S(iimin:iimin+3,jjmin:jjmax,1:kmax)=SRelax
    S(iimax-3:iimax,jjmin:jjmax,1:kmax)=SRelax

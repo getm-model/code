@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.13 2006-01-27 21:13:31 hb Exp $
+!$Id: temperature.F90,v 1.14 2006-01-29 12:25:21 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -37,6 +37,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: temperature.F90,v $
+!  Revision 1.14  2006-01-29 12:25:21  kbk
+!  NOMADS -> FRESHWATER_LENSE
+!
 !  Revision 1.13  2006-01-27 21:13:31  hb
 !  Boundary conditions for compiler option NOMADS_TEST set to constant for complete sponge region
 !
@@ -167,7 +170,7 @@
    write(debug,*) 'init_temperature() # ',Ncall
 #endif
 
-#ifdef NS_NOMADS_TEST
+#ifdef NS_FRESHWATER_LENSE_TEST
 temp_field_no=1
 #endif
 #ifdef MED_15X15MINS_TEST
@@ -341,7 +344,7 @@ temp_field_no=1
    call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,   &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
                         temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH)
-#ifdef NOMADS_TEST
+#ifdef FRESHWATER_LENSE_TEST
    T(iimin:iimin+3,jjmin:jjmax,1:kmax)=10.
    T(iimax-3:iimax,jjmin:jjmax,1:kmax)=10.
    T(iimin:iimax,jjmin:jjmin+3,1:kmax)=10.

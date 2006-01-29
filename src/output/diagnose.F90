@@ -43,6 +43,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: diagnose.F90,v $
+!  Revision 1.6  2006-01-29 12:25:21  kbk
+!  NOMADS -> FRESHWATER_LENSE
+!
 !  Revision 1.5  2006-01-27 19:55:56  hb
 !  tab removed
 !
@@ -83,7 +86,7 @@
    integer :: DVMINI,DVMINJ,DVMAXI,DVMAXJ
    REALTYPE:: pi=3.141592654
    REALTYPE:: Flux1,Flux2,Flux3
-#ifdef NOMADS_TEST
+#ifdef FRESHWATER_LENSE_TEST
    REALTYPE:: MKE,APE,densi,zzz,zs,salmin,salmax,area
    INTEGER     :: salimax,saljmax
 #endif
@@ -340,7 +343,7 @@
     end if
 #endif
 
-#ifdef NOMADS_TEST
+#ifdef FRESHWATER_LENSE_TEST
 
 ! Mean kinetic energy:
     if (abs(loop/M-loop/float(M)).lt.1e-10) then
