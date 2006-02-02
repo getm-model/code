@@ -1,4 +1,4 @@
-!$Id: halo_mpi.F90,v 1.8 2005-10-11 07:55:19 kbk Exp $
+!$Id: halo_mpi.F90,v 1.9 2006-02-02 15:17:37 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -64,7 +64,10 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_mpi.F90,v $
-!  Revision 1.8  2005-10-11 07:55:19  kbk
+!  Revision 1.9  2006-02-02 15:17:37  kbk
+!  Vector -> HVector for corner columns
+!
+!  Revision 1.8  2005/10/11 07:55:19  kbk
 !  now sending HALOxHALO corner colums - fixes parallel runs with some higher order advection schemes
 !
 !  Revision 1.6.2.1  2005/05/25 08:05:35  kbk
@@ -692,7 +695,8 @@ include "mpif.h"
    call MPI_TYPE_COMMIT(z_column,ierr)
 
 !  HALO square vertical columns
-   call MPI_TYPE_VECTOR(o,1,xy_size,halo_square,halo_columns,ierr)
+   call MPI_TYPE_HVECTOR(o,1,xy_size*sizeof_realtype,halo_square, &
+                         halo_columns,ierr)
    call MPI_TYPE_COMMIT(halo_columns,ierr)
 
    return
