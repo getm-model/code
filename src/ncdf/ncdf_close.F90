@@ -1,4 +1,4 @@
-!$Id: ncdf_close.F90,v 1.3 2003-04-23 11:54:03 kbk Exp $
+!$Id: ncdf_close.F90,v 1.4 2006-02-02 17:51:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_close.F90,v $
-!  Revision 1.3  2003-04-23 11:54:03  kbk
+!  Revision 1.4  2006-02-02 17:51:37  kbk
+!  do not try and save to un-opened NetCDF files
+!
+!  Revision 1.3  2003/04/23 11:54:03  kbk
 !  cleaned code + TABS to spaces
 !
 !  Revision 1.2  2003/04/07 12:46:06  kbk
@@ -44,6 +47,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: err
+   REALTYPE                  :: dummy=-_ONE_
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -55,7 +59,9 @@
 #endif
 
    if (nc2d .ge. 0) then
+      call save_2d_ncdf(dummy)
       err = nf_close(nc2d)
+         call save_2d_ncdf(dummy)
       if (err .NE. NF_NOERR) go to 10
    end if
 #ifndef NO_3D

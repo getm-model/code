@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.12 2005-09-23 11:27:11 kbk Exp $
+!$Id: output.F90,v 1.13 2006-02-02 17:51:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -55,7 +55,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
-!  Revision 1.12  2005-09-23 11:27:11  kbk
+!  Revision 1.13  2006-02-02 17:51:36  kbk
+!  do not try and save to un-opened NetCDF files
+!
+!  Revision 1.12  2005/09/23 11:27:11  kbk
 !  support for biology via GOTMs biology modules
 !
 !  Revision 1.11  2005/05/04 11:45:30  kbk
@@ -574,8 +577,6 @@
 
    select case (out_fmt)
       case (NETCDF)
-         dummy = -_ONE_*1.
-         call save_2d_ncdf(dummy)
          call ncdf_close()
       case DEFAULT
          STDERR 'Fatal error: A non valid input format has been chosen'
