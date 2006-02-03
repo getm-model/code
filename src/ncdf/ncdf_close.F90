@@ -1,4 +1,4 @@
-!$Id: ncdf_close.F90,v 1.4 2006-02-02 17:51:37 kbk Exp $
+!$Id: ncdf_close.F90,v 1.5 2006-02-03 15:03:53 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,6 +27,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_close.F90,v $
+!  Revision 1.5  2006-02-03 15:03:53  kbk
+!  removed call to save_2d_ncdf() - Stips
+!
 !  Revision 1.4  2006-02-02 17:51:37  kbk
 !  do not try and save to un-opened NetCDF files
 !
@@ -61,7 +64,6 @@
    if (nc2d .ge. 0) then
       call save_2d_ncdf(dummy)
       err = nf_close(nc2d)
-         call save_2d_ncdf(dummy)
       if (err .NE. NF_NOERR) go to 10
    end if
 #ifndef NO_3D
