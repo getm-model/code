@@ -1,4 +1,4 @@
-!$Id: have_bdy.F90,v 1.5 2004-02-23 15:14:29 kbk Exp $
+!$Id: have_bdy.F90,v 1.6 2006-02-04 11:21:52 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,6 +9,10 @@
    subroutine have_bdy
 !
 ! !DESCRIPTION:
+!
+! This routine which is called in {\tt domain.F90} checks whether the present
+! node has open lateral boundaries. The integer field {\tt bdy\_index}
+! is then set accordingly.
 !
 ! !USES:
    use domain
@@ -25,6 +29,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: have_bdy.F90,v $
+!  Revision 1.6  2006-02-04 11:21:52  hb
+!  Source code documentation extended
+!
 !  Revision 1.5  2004-02-23 15:14:29  kbk
 !  correct mapping of eastern boundary - Staneva
 !

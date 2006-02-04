@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.8 2006-01-29 12:25:20 kbk Exp $
+!$Id: sealevel.F90,v 1.9 2006-02-04 11:21:52 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,6 +9,13 @@
    subroutine sealevel
 !
 ! !DESCRIPTION:
+!
+! Here, the sea surface elevation is iterated according to the vertically
+! integrated continuity equation given in (\ref{Elevation}) on page
+! \pageref{Elevation}. 
+!
+! When working with the option {\tt SLICE\_MODEL}, the elevations
+! at $j=2$ are copied to $j=3$.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,az,H
@@ -32,6 +39,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: sealevel.F90,v $
+!  Revision 1.9  2006-02-04 11:21:52  hb
+!  Source code documentation extended
+!
 !  Revision 1.8  2006-01-29 12:25:20  kbk
 !  NOMADS -> FRESHWATER_LENSE
 !

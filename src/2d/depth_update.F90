@@ -1,4 +1,4 @@
-!$Id: depth_update.F90,v 1.6 2005-10-06 09:54:00 hb Exp $
+!$Id: depth_update.F90,v 1.7 2006-02-04 11:21:52 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,6 +9,17 @@
    subroutine depth_update
 !
 ! !DESCRIPTION:
+!
+! This routine which is called at every micro time step updates all
+! necessary depth related information. These are the water depths in the
+! T-, U- and V-points, {\tt D}, {\tt DU} and {\tt DV}, respectively,
+! the sea surface elevation in the U- and V-points, {\tt zu} and {\tt zv},
+! respectively, and the drying value $\alpha$ defined in equation (\ref{alpha})
+! on page \pageref{alpha} in the T-, the U- and the V-points
+! ({\tt dry\_z}, {\tt dry\_u} and {\tt dry\_v}).
+!
+! When working with the option {\tt SLICE\_MODEL}, the water depths in the
+! V-points are mirrored from $j=2$ to $j=1$ and $j=3$.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth,crit_depth
@@ -26,6 +37,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: depth_update.F90,v $
+!  Revision 1.7  2006-02-04 11:21:52  hb
+!  Source code documentation extended
+!
 !  Revision 1.6  2005-10-06 09:54:00  hb
 !  added support for vertical slice model - via -DSLICE_MODEL
 !

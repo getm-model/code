@@ -1,14 +1,147 @@
-!$Id: uv_advect.F90,v 1.7 2005-10-06 09:54:00 hb Exp $
+!$Id: uv_advect.F90,v 1.8 2006-02-04 11:21:52 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: uv_advect() - advection of momentum.
+! !IROUTINE: uv_advect() - 2D advection of momentum \label{sec-uv-advect}
 !
 ! !INTERFACE:
    subroutine uv_advect
 !
 ! !DESCRIPTION:
+!
+! The advective terms in the vertically integrated 
+! momentum equation are discretised in
+! a momentum-conservative form. This is carried out here for the 
+! advective terms in the $U$-equation (\ref{UMOM}) and the 
+! $V$-equation (\ref{VMOM}) (after applying the curvilinear
+! coordinate transformationand multiplying these
+! equations with $mn$). 
+! 
+! First advection term in (\ref{UMOM}):
+! \begin{equation}
+! \begin{array}{l}
+! \displaystyle
+! \left(mn\,\partial_{\cal X}\left(\frac{U^2}{Dn}\right)\right)_{i,j}\approx \\ \\
+! \quad
+! \displaystyle
+! \frac{
+! \frac12(U_{i+1,j}+U_{i,j})\tilde u_{i+1,j}\Delta y^c_{i+1,j}-
+! \frac12(U_{i,j}+U_{i-1,j})\tilde u_{i,j}\Delta y^c_{i,j}
+! }{\Delta x^u_{i,j}\Delta y^u_{i,j}}
+! \end{array}
+! \end{equation}
+! 
+! For the upwind scheme used here, the inter-facial velocities which are defined
+! on T-points are here
+! calculated as:
+! 
+! \begin{equation}
+! \tilde u_{i,j}=
+! \left\{
+! \begin{array}{ll}
+! \displaystyle
+! \frac{U_{i-1,j}}{D^u_{i-1,j}} & \mbox{ for } \frac12(U_{i,j}+U_{i-1,j})>0\\ \\
+! \displaystyle
+! \frac{U_{i,j}}{D^u_{i,j}} & \mbox{ else. } 
+! \end{array}
+! \right.
+! \end{equation}
+! 
+! Second advection term in (\ref{UMOM}):
+! \begin{equation}
+! \begin{array}{l}
+! \displaystyle 
+! \left(mn\,\partial_{\cal Y}y\left(\frac{UV}{Dm}\right)\right)_{i,j,k}\approx \\ \\ 
+! \displaystyle 
+! \quad
+! \frac{
+! \frac12(V_{i+1,j}+V_{i,j})\tilde u_{i,j}\Delta x^+_{i,j}-
+! \frac12(V_{i+1,j-1}+V_{i,j-1})\tilde u_{i,j-1}\Delta x^+_{i,j-1}
+! }{\Delta x^u_{i,j}\Delta y^u_{i,j}}
+! \end{array}
+! \end{equation}
+! 
+! For the upwind scheme used here, the inter-facial 
+! velocities which are defined on
+! X-points are here
+! calculated as:
+! 
+! \begin{equation}
+! \tilde u_{i,j}=
+! \left\{
+! \begin{array}{ll}
+! \displaystyle
+! \frac{U_{i,j}}{D^u_{i,j}} & \mbox{ for } \frac12(V_{i+1,j,k}+V_{i,j,k})>0\\ \\
+! \displaystyle
+! \frac{U_{i,j+1}}{D^u_{i,j+1}} & \mbox{ else. } 
+! \end{array}
+! \right.
+! \end{equation}
+! 
+! First advection term in (\ref{VMOM}):
+! \begin{equation}
+! \begin{array}{l}
+! \displaystyle 
+! \left(mn\,\partial_{\cal X}\left(\frac{UV}{Dn}\right)\right)_{i,j,k}\approx \\ \\ 
+! \displaystyle 
+! \quad
+! \frac{
+! \frac12(U_{i,j+1}+U_{i,j})\tilde v_{i,j}\Delta y^+_{i,j}-
+! \frac12(U_{i-1,j+1}+U_{i-1,j})\tilde v_{i-1,j}\Delta y^+_{i-1,j}
+! }{\Delta x^v_{i,j}\Delta y^v_{i,j}}
+! \end{array}
+! \end{equation}
+! 
+! For the upwind scheme used here, the interfacial 
+! velocities which are defined on
+! X-points are here
+! calculated as:
+! 
+! \begin{equation}
+! \tilde v_{i,j}=
+! \left\{
+! \begin{array}{ll}
+! \displaystyle
+! \frac{V_{i,j}}{D^v_{i,j}} & \mbox{ for } \frac12(U_{i+1,j}+U_{i,j})>0\\ \\
+! \displaystyle
+! \frac{V_{i+1,j}}{D^v_{i+1,j}} & \mbox{ else. } 
+! \end{array}
+! \right.
+! \end{equation}
+! 
+! Second advection term in (\ref{VMOM}):
+! \begin{equation}
+! \begin{array}{l}
+! \displaystyle
+! \left(mn\,\partial_{\cal Y}\left(\frac{V^2}{Dm}\right)\right)_{i,j,k}\approx \\ \\
+! \quad
+! \displaystyle
+! \frac{
+! \frac12(V_{i,j+1}+V_{i,j})\tilde v_{i,j+1}\Delta x^c_{i,j+1}-
+! \frac12(V_{i,j}+V_{i,j-1})\tilde v_{i,j}\Delta x^c_{i,j}
+! }{\Delta x^v_{i,j}\Delta y^v_{i,j}}
+! \end{array}
+! \end{equation}
+! 
+! For the upwind scheme used here, the interfacial velocities which are defined
+! on T-points are here
+! calculated as:
+! 
+! \begin{equation}
+! \tilde v_{i,j}=
+! \left\{
+! \begin{array}{ll}
+! \displaystyle
+! \frac{V_{i,j-1}}{D^v_{i,j-1}} & \mbox{ for } \frac12(V_{i,j}+V_{i,j-1})>0\\ \\
+! \displaystyle
+! \frac{V_{i,j}}{D^v_{i,j}} & \mbox{ else. } 
+! \end{array}
+! \right.
+! \end{equation}
+!
+! When working with the option {\tt SLICE\_MODEL}, the calculation of
+! all gradients in $y$-direction is suppressed.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,az,au,av,ax
@@ -31,6 +164,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_advect.F90,v $
+!  Revision 1.8  2006-02-04 11:21:52  hb
+!  Source code documentation extended
+!
 !  Revision 1.7  2005-10-06 09:54:00  hb
 !  added support for vertical slice model - via -DSLICE_MODEL
 !

@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.12 2006-01-27 16:10:20 kbk Exp $
+!$Id: m2d.F90,v 1.13 2006-02-04 11:21:52 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,13 +9,14 @@
    module m2d
 !
 ! !DESCRIPTION:
-!  This modules contains declarations for all variables related to 2D
+!  This module contains declarations for all variables related to 2D
 !  hydrodynamical calculations. Information about the calculation domain
-!  is included from the \emph{domain.F90} module.
+!  is included from the {\tt domain} module.
 !  The module contains public subroutines for initialisation, integration
 !  and clean up of the 2D model component.
-!  The actual calculation routines are called in integrate\_2d and is linked
-!  in from the library lib2d.a.
+!  The actual calculation routines are called in {\tt integrate\_2d}
+!  and are linked
+!  in from the library {\tt lib2d.a}.
 !
 ! !USES:
    use time, only: julianday,secondsofday
@@ -41,6 +42,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m2d.F90,v $
+!  Revision 1.13  2006-02-04 11:21:52  hb
+!  Source code documentation extended
+!
 !  Revision 1.12  2006-01-27 16:10:20  kbk
 !  only call do_residual() when specified
 !
@@ -124,7 +128,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: init_2d - initialise 2D relatedstuff.
+! !IROUTINE: init_2d - initialise 2D related stuff.
 !
 ! !INTERFACE:
    subroutine init_2d(runtype,timestep,hotstart)
@@ -140,7 +144,12 @@
 ! !OUTPUT PARAMETERS:
 !
 ! !DESCRIPTION:
-!  Allocates memiory for 2D related fields.
+!  Here, the {\tt m2d} namelist is read from {\tt getm.inp}, and the check
+!  for the fulfilment of the CFL criterium for shallow water theory
+!  {\tt cfl\_check} is called. A major part of this subroutine deals
+!  then with the setting of local bathymetry values and initial surface
+!  elevations in $u$- and $v$-points, also by calls to the subroutines 
+!  {\tt uv\_depths} and {\tt depth\_update}.
 !
 ! !REVISION HISTORY:
 !
@@ -192,13 +201,6 @@
       LEVEL2 'Format=',bdyfmt_2d
    end if
 
-!  Boundary related information
-   if (bdy2d) then
-!     call have_bdy()
-!     call print_bdy('Local Boundary Information')
-!kbk     if (have_boundaries) call init_2d_bdy(bdyfmt_2d,bdyfile_2d)
-   end if
-
    call uv_depths(vel_depth_method)
 
    where ( -H+min_depth .gt. _ZERO_ )
@@ -246,7 +248,26 @@
 ! !OUTPUT PARAMETERS:
 !
 ! !DESCRIPTION:
-!  A wrapper to call all 2D related subroutines in one subroutine.
+!  Here, all 2D related subroutines are called. The major calls and their
+!  meaning are:
+!
+!  \vspace{0.5cm}
+!
+!  \begin{tabular}{ll}
+!  {\tt call update\_2d\_bdy} & read in new lateral boundary conditions \\
+!  {\tt call bottom\_friction} & update bottom friction\\
+!  {\tt call uv\_advect} & calculate 2D advection terms\\
+!  {\tt call uv\_diffusion} & calculate 2D  diffusion terms\\
+!  {\tt call momentum} & iterate 2D momemtum equations\\
+!  {\tt call sealevel} & update sea surface elevation\\
+!  {\tt call depth\_update} & update water depths\\
+!  {\tt call do\_residual} & calculate intermdediate values for residual currents
+!  \end{tabular}
+!
+!  \vspace{0.5cm}
+!
+!  It should be noted that some of these calls may be excluded for certain
+!  compiler options set in the {\tt Makefile} of the application.
 !
 ! !REVISION HISTORY:
 !  22Nov Author name Initial code
@@ -315,7 +336,8 @@
 ! !OUTPUT PARAMETERS:
 !
 ! !DESCRIPTION:
-!  This routine cleans up after a 2D integration. Close open files etc.
+!  This routine executes a final call to {\tt do\_residual} where the residual
+!  current calculations are finished.
 !
 ! !REVISION HISTORY:
 !  22Nov Author name Initial code

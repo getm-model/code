@@ -1,14 +1,36 @@
-!$Id: cfl_check.F90,v 1.4 2003-04-23 12:09:43 kbk Exp $
+!$Id: cfl_check.F90,v 1.5 2006-02-04 11:21:52 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: cfl_check() - barotropic residual currents.
+! !ROUTINE: cfl_check() - check for explicit barotropic time step. 
 !
 ! !INTERFACE:
    subroutine cfl_check()
 !
 ! !DESCRIPTION:
+!
+! This routine loops over all horizontal grid points and calculated the
+! maximum time step according to the shallow water criterium by
+! \cite{BECKERSea93}:
+!
+! \begin{equation}
+! \Delta t_{\max} = \min_{i,j} \left\{\frac{\Delta x_{i,j} \Delta y_{i,j}}
+! {\sqrt{2} c_{i,j} \sqrt{\Delta x_{i,j}^2+ \Delta y_{i,j}^2}}\right\}
+! \end{equation}
+!
+! with the local Courant number 
+!
+! \begin{equation}
+! c_{i,j}=\sqrt{g H_{i,j}},
+! \end{equation}
+!
+! where $g$ is the gravitational acceleration and $H_{i,j}$ is the local
+! bathymetry value. In case that the chosen micro time step $\Delta t_m$
+! is larger than $\Delta t_{\max}$, the program will be aborted. In any
+! the CFL diagnostics will be written to standard output.
+!
+
 !
 ! !USES:
    use parameters, only: g
@@ -31,6 +53,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: cfl_check.F90,v $
+!  Revision 1.5  2006-02-04 11:21:52  hb
+!  Source code documentation extended
+!
 !  Revision 1.4  2003-04-23 12:09:43  kbk
 !  cleaned code + TABS to spaces
 !

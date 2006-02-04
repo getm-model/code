@@ -1,4 +1,4 @@
-!$Id: update_2d_bdy.F90,v 1.5 2006-01-29 12:25:20 kbk Exp $
+!$Id: update_2d_bdy.F90,v 1.6 2006-02-04 11:21:52 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,6 +9,15 @@
    subroutine update_2d_bdy(loop,bdyramp)
 !
 ! !DESCRIPTION:
+!
+! In this routine sea surface elevation boundary conditions are read
+! in from a file, interpolated to the actual time step, and distributed
+! to the open boundary grid boxes. 
+! Only for a special test case ({\tt SYLT\_TEST}), ascii data reading is
+! supported. For a few special simple cases, analytical calculation
+! of boundary elevations is supported. The generic way is reading in
+! boundary data from a netcdf file, which is managed in
+! {\tt get\_2d\_bdy} via {\tt get\_2d\_bdy\_ncdf}.
 !
 ! !USES:
    use domain, only: NWB,NNB,NEB,NSB,H,min_depth,imin,imax,jmin,jmax,az
@@ -29,6 +38,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: update_2d_bdy.F90,v $
+!  Revision 1.6  2006-02-04 11:21:52  hb
+!  Source code documentation extended
+!
 !  Revision 1.5  2006-01-29 12:25:20  kbk
 !  NOMADS -> FRESHWATER_LENSE
 !
@@ -143,7 +155,6 @@
             first = .false.
 
             if (bdyfmt_2d .eq. 1) then
-!               open(BDYDATA,file='databoun.dat')
                open(BDYDATA,file='bdy_data.dat')
                t1 = 0.
                do i=1,nsbv

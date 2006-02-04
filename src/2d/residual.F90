@@ -1,4 +1,4 @@
-!$Id: residual.F90,v 1.4 2004-01-03 16:40:28 kbk Exp $
+!$Id: residual.F90,v 1.5 2006-02-04 11:21:52 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,6 +9,23 @@
    subroutine do_residual(finish)
 !
 ! !DESCRIPTION:
+!
+! Here, the residual transports and depths are integrated up every time step.
+! At the end of the simulation, the Eulerian residual currents are
+! calculated from:
+!
+! \begin{equation}
+! u_{res} =
+! \frac{\displaystyle\int_{t_0}^{t_1}U\,\mbox{d}\tau}
+! {\displaystyle\int_{t_0}^{t_1}D^u\,\mbox{d}\tau}, \quad
+! v_{res} =
+! \frac{\displaystyle\int_{t_0}^{t_1}V\,\mbox{d}\tau}
+! {\displaystyle\int_{t_0}^{t_1}D^v\,\mbox{d}\tau},
+! \end{equation}
+!
+! where $t_0$ is the time when the residual calculation begins (to be
+! chosen from namelist) and $t_1$ is the finishing time of the model simulation.
+! 
 !
 ! !USES:
    use variables_2d, only: u,v,res_du,res_u,res_dv,res_v,du,dv
@@ -25,6 +42,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: residual.F90,v $
+!  Revision 1.5  2006-02-04 11:21:52  hb
+!  Source code documentation extended
+!
 !  Revision 1.4  2004-01-03 16:40:28  kbk
 !  bug fix
 !

@@ -1,14 +1,47 @@
-!$Id: uv_depths.F90,v 1.9 2005-04-25 07:55:49 kbk Exp $
+!$Id: uv_depths.F90,v 1.10 2006-02-04 11:21:52 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: uv_depths - calculate depths in u and v points.
+! !IROUTINE: uv_depths - calculate depths in u and v points.\label{sec-uv-depth}
 !
 ! !INTERFACE:
    subroutine uv_depths(vel_depth_method)
 !
 ! !DESCRIPTION:
+!
+! In this routine which is called once during the model initialisation,
+! the bathymetry value in the U- and the V-points are calculated from the
+! bathymetry values in the T-points. The interpolation depends on the value
+! which is given to {\tt vel\_depth\_method}:
+!
+! \begin{equation}
+! H^u_{i,j} = \left\{
+! \begin{array}{ll}
+! \displaystyle
+! \frac12 \left(H_{i,j}+H_{i+1,j}\right), & 
+! \displaystyle
+! \mbox{ for {\tt vel\_depth\_method}} =0, \\ \\ 
+! \displaystyle
+! \min\left\{H_{i,j}+H_{i+1,j}\right\}, & 
+! \displaystyle
+! \mbox{ for {\tt vel\_depth\_method}} =1, \\ \\ 
+! \displaystyle
+! \min\left\{H_{i,j}+H_{i+1,j}\right\}, & 
+! \displaystyle
+! \mbox{ for {\tt vel\_depth\_method}} =2 \mbox{ and } \min\{H_{i,j}i,H_{i+1,j}\}<D_{crit} \\ \\ 
+! \displaystyle
+! \frac12 \left(H_{i,j}+H_{i+1,j}\right), & 
+! \displaystyle
+! \mbox{ for {\tt vel\_depth\_method}} =2 \mbox{ and } \min\{H_{i,j},H_{i+1,j}\}\geq D_{crit} \\ \\ 
+! \end{array}
+! \right.
+! \end{equation}
+!
+! The calculation of $H^v_{i,j}$ is done accordingly.
+!
+! The options 1 and 2 for {\tt vel\_depth\_method} may help to stabilise
+! calculations when drying and flooding is involved.
 !
 ! !USES:
    use exceptions
@@ -27,6 +60,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_depths.F90,v $
+!  Revision 1.10  2006-02-04 11:21:52  hb
+!  Source code documentation extended
+!
 !  Revision 1.9  2005-04-25 07:55:49  kbk
 !  use more general frame for error handling - Umlauf
 !
