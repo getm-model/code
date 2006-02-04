@@ -50,6 +50,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: advection_3d.F90,v $
+!  Revision 1.10  2006-02-04 11:47:26  hb
+!  Source code documentation extended
+!
 !  Revision 1.9  2005-11-17 13:50:22  kbk
 !  fixes to compile with gfortran
 !
@@ -204,7 +207,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  do_advection_3d()
+! !IROUTINE:  do_advection_3d() - high-order advection schemes \label{sec-do-advection-3d}
 !
 ! !INTERFACE:
    subroutine do_advection_3d(dt,f,uu,vv,ww,hun,hvn,ho,hn,      &

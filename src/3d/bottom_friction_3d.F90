@@ -1,9 +1,10 @@
-!$Id: bottom_friction_3d.F90,v 1.5 2003-09-12 16:27:27 kbk Exp $
+!$Id: bottom_friction_3d.F90,v 1.6 2006-02-04 11:47:26 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: bottom_friction_3d() - 3D-bottom friction.
+! !ROUTINE: bottom_friction_3d() - 3D-bottom friction
+! \label{sec-bottom-friction-3d}
 !
 ! !INTERFACE:
    subroutine bottom_friction_3d
@@ -27,6 +28,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: bottom_friction_3d.F90,v $
+!  Revision 1.6  2006-02-04 11:47:26  hb
+!  Source code documentation extended
+!
 !  Revision 1.5  2003-09-12 16:27:27  kbk
 !  removed save attributes for local variables - now compiles using PGF
 !
