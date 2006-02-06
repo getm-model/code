@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.7 2005-04-19 15:51:11 kbk Exp $
+!$Id: main.F90,v 1.8 2006-02-06 11:19:18 kbk Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -38,8 +38,7 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: main.F90,v $
-!  Revision 1.7  2005-04-19 15:51:11  kbk
+!  Revision 1.7  2005/04/19 15:51:11  kbk
 !  notify on use of -DOLD_WRONG_FLUXES
 !
 !  Revision 1.6  2004/06/15 07:57:49  kbk
