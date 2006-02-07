@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.3 2005-04-25 09:32:34 kbk Exp $
+#$Id: Makefile,v 1.4 2006-02-07 07:16:22 kbk Exp $
 # 
 # Makefile to build the domain library - libdomain.a
 #
@@ -37,14 +37,15 @@ $(MOD):	$(INCS)
 
 $(OBJ):	$(INCS)
 
-doc:
+doc: $(SRC)
 	$(PROTEX) $(SRC) > $(DOCDIR)/domain.tex
+	touch doc
 
 clean:
 	$(RM) $(LIB) $(MODDIR)/domain.{m.mod} $(MODDIR)/topo_interface.{m.mod}
 
 realclean: clean
-	$(RM) *.o
+	$(RM) *.o doc 
 
 distclean: realclean
 

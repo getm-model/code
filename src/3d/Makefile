@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.8 2004-06-15 08:32:02 kbk Exp $
+#$Id: Makefile,v 1.9 2006-02-07 07:16:22 kbk Exp $
 #
 # Makefile to build the 3D specific library - libm3d.a
 #
@@ -86,8 +86,9 @@ $(MOD): $(INCS)
 
 $(OBJ): $(MOD)
 
-doc:
+doc: $(SRC)
 	$(PROTEX) $(SRC) > $(DOCDIR)/3d.tex
+	touch doc
 
 clean:
 	$(RM) $(LIB) $(MODDIR)/m3d.{m.mod}

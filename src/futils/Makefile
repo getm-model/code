@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.6 2005-04-25 09:32:34 kbk Exp $
+#$Id: Makefile,v 1.7 2006-02-07 07:16:22 kbk Exp $
 # 
 # Makefile to build utilities written in Fortran90 - libfutils.a 
 #
@@ -55,14 +55,15 @@ modules: $(MOD)
 
 objects: $(OBJ)
 
-doc:
+doc: $(SRC)
 	$(PROTEX) $(SRC) > $(DOCDIR)/futils.tex
+	touch doc
 
 clean:
 	$(RM) $(LIB) $(MODDIR)/{parameters,time,grid_interpol}.{m,mod}
 
 realclean: clean
-	$(RM) *.o
+	$(RM) *.o doc
 
 distclean: realclean
 

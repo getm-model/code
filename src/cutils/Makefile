@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.1 2002-05-02 14:01:04 gotm Exp $
+#$Id: Makefile,v 1.2 2006-02-07 07:16:22 kbk Exp $
 # 
 # Makefile to build utilities written in C - libmcutils.a
 #
@@ -13,14 +13,15 @@ ${LIB}(caldat.o)
 
 all: $(OBJ)
 
-doc:
+doc: $(SRC)
 	$(PROTEX) $(SRC) > $(DOCDIR)/cutils.tex
+	touch doc
 
 clean:
 	$(RM) $(LIB)
 
 realclean: clean
-	$(RM) *.o
+	$(RM) *.o doc
 
 distclean: realclean
 

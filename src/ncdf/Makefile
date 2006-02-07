@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.5 2005-04-25 09:32:34 kbk Exp $
+#$Id: Makefile,v 1.6 2006-02-07 07:16:22 kbk Exp $
 #
 # Makefile to build the ncdf module - ncdfio.o and the libncdfio.a library
 #
@@ -59,14 +59,15 @@ modules: $(MOD)
 
 objects: $(OBJ)
 
-doc:
+doc: $(SRC)
 	$(PROTEX) $(SRC) > $(DOCDIR)/ncdf.tex
+	touch doc
 
 clean:
 	$(RM) $(LIB) 
 
 realclean: clean
-	$(RM) *.o
+	$(RM) *.o doc
 
 distclean: realclean
 

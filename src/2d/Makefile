@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.4 2003-04-07 16:45:07 kbk Exp $
+#$Id: Makefile,v 1.5 2006-02-07 07:16:22 kbk Exp $
 #
 # Makefile to build the 2D specific library - libm2d.a
 #
@@ -10,7 +10,7 @@ LIB	= $(LIBDIR)/lib2d${buildtype}.a
 
 MODSRC	= m2d.F90 variables_2d.F90 
 
-LIBSRC	= cfl_check.F90 have_bdy.F90 bottom_friction.F90 depth_update.F90 momentum.F90 uv_advect.F90  uv_diffusion.F90 coriolis.F90 sealevel.F90 uv_depths.F90 update_2d_bdy.F90 divergence.F90 residual.F90
+LIBSRC	= cfl_check.F90 have_bdy.F90 bottom_friction.F90 depth_update.F90 momentum.F90 uv_advect.F90  uv_diffusion.F90 sealevel.F90 uv_depths.F90 update_2d_bdy.F90 residual.F90
 
 SRC	= $(MODSRC) $(LIBSRC)
 
@@ -21,7 +21,6 @@ ${LIB}(m2d.o)
 OBJ   = \
 ${LIB}(cfl_check.o)	\
 ${LIB}(bottom_friction.o)	\
-${LIB}(coriolis.o)		\
 ${LIB}(depth_update.o)		\
 ${LIB}(momentum.o)		\
 ${LIB}(sealevel.o)		\
@@ -30,7 +29,6 @@ ${LIB}(uv_diffusion.o)		\
 ${LIB}(uv_depths.o)		\
 ${LIB}(have_bdy.o)		\
 ${LIB}(divergence.o)		\
-${LIB}(residual.o)		\
 ${LIB}(update_2d_bdy.o)
 
 all: modules objects
@@ -43,14 +41,15 @@ $(MOD): $(INCS)
 
 $(OBJ): $(INCS)
 
-doc:
+doc: $(SRC)
 	$(PROTEX) $(SRC) > $(DOCDIR)/2d.tex
+	touch doc
 
 clean:
 	$(RM) $(LIB) $(MODDIR)/m2d.{m,mod}
 
 realclean: clean
-	$(RM) *.o 
+	$(RM) *.o doc 
 
 distclean: realclean
 

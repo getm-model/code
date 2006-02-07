@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.3 2003-12-16 16:56:05 kbk Exp $
+#$Id: Makefile,v 1.4 2006-02-07 07:16:22 kbk Exp $
 #
 # Makefile to build the main getm library - libmgetm.a
 #
@@ -23,14 +23,15 @@ modules: $(MOD)
 
 objects: $(OBJ)
 
-doc:
+doc: $(SRC)
 	$(PROTEX) $(SRC) > $(DOCDIR)/getm.tex
+	touch doc
 
 clean:
 	$(RM) ${LIB} $(MODDIR)/{integration,initialise}.{m.mod}
 
 realclean: clean
-	$(RM) *.o 
+	$(RM) *.o doc
 
 distclean: realclean
 	$(RM) work.pc *.d 
