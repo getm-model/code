@@ -1,4 +1,4 @@
-!$Id: ip_chu_fan.F90,v 1.1 2004-04-06 12:42:50 kbk Exp $
+!$Id: ip_chu_fan.F90,v 1.2 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,8 +9,10 @@
    subroutine ip_chu_fan()
 !
 ! !DESCRIPTION:
-!  Blumberg Mellor 2nd order scheme + hydrostatic correction according 
-!  to Chu & Fan JGR 2003
+!   
+! This routine calculates the internal pressure gradient based on the
+! classical approach by \cite{MELLORes94}, extended by the
+! hydrostatic extension by \cite{CHUea03}.
 !
 ! !USES:
    use internal_pressure
@@ -20,6 +22,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding & Adolf Stips
 !
 !  $Log: ip_chu_fan.F90,v $
+!  Revision 1.2  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.1  2004-04-06 12:42:50  kbk
 !  internal pressure calculations now uses wrapper
 !

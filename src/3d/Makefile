@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.9 2006-02-07 07:16:22 kbk Exp $
+#$Id: Makefile,v 1.10 2006-02-10 22:41:56 hb Exp $
 #
 # Makefile to build the 3D specific library - libm3d.a
 #
@@ -12,6 +12,8 @@ MODSRC	= m3d.F90 variables_3d.F90 advection_3d.F90 eqstate.F90 \
           temperature.F90 salinity.F90 spm.F90 bdy_3d.F90 rivers.F90
 
 LIBSRC	= start_macro.F90 hcc_check.F90 bdy_3d.F90 coordinates.F90 check_h.F90 bottom_friction_3d.F90 internal_pressure.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 stresses_3d.F90 ss_nn.F90 gotm.F90 slow_bottom_friction.F90 slow_advection.F90 slow_diffusion.F90 slow_terms.F90 stop_macro.F90
+
+TEXSRC	= m3d.F90 variables_3d.F90  coordinates.F90  check_h.F90 hcc_check.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 bottom_friction_3d.F90 internal_pressure.F90 ip_blumberg_mellor.F90 ip_blumberg_mellor_lin.F90 ip_z_interpol.F90  ip_song_wright.F90 ip_chu_fan.F90 advection_3d.F90 temperature.F90 salinity.F90 spm.F90 eqstate.F90 gotm.F90 ss_nn.F90 stresses_3d.F90 rivers.F90 bdy_3d.F90 slow_bottom_friction.F90 slow_advection.F90 slow_diffusion.F90 slow_terms.F90 start_macro.F90 stop_macro.F90
 
 SRC	= $(MODSRC) $(LIBSRC)
 
@@ -86,15 +88,15 @@ $(MOD): $(INCS)
 
 $(OBJ): $(MOD)
 
-doc: $(SRC)
-	$(PROTEX) $(SRC) > $(DOCDIR)/3d.tex
+doc: $(TEXSRC)
+	$(PROTEX) $(TEXSRC) > $(DOCDIR)/3d.tex
 	touch doc
 
 clean:
 	$(RM) $(LIB) $(MODDIR)/m3d.{m.mod}
 
 realclean: clean
-	$(RM) *.o
+	$(RM) *.o doc
 
 distclean: realclean
 

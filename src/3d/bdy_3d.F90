@@ -1,9 +1,9 @@
-!$Id: bdy_3d.F90,v 1.7 2005-08-26 08:19:31 kbk Exp $
+!$Id: bdy_3d.F90,v 1.8 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE:  bdy_3d - boundary conditions 3D.
+! !MODULE:  bdy_3d - 3D boundary conditions \label{bdy-3d}
 !
 ! !INTERFACE:
    module bdy_3d
@@ -32,6 +32,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bdy_3d.F90,v $
+!  Revision 1.8  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.7  2005-08-26 08:19:31  kbk
 !  zero gradient open boundaries for biological variables
 !
@@ -65,7 +68,8 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: init_bdy_3d
+! !IROUTINE: init_bdy_3d - initialising 3D boundary conditions
+! \label{sec-init-bdy-3d}
 !
 ! !INTERFACE:
    subroutine init_bdy_3d()
@@ -114,7 +118,8 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  do_bdy_3d()
+! !IROUTINE:  do_bdy_3d()  - updating 3D boundary conditions
+! \label{sec-do-bdy-3d}
 !
 ! !INTERFACE:
    subroutine do_bdy_3d(tag,field)

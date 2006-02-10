@@ -1,9 +1,9 @@
-!$Id: uv_advect_3d.F90,v 1.10 2006-02-04 11:47:26 hb Exp $
+!$Id: uv_advect_3d.F90,v 1.11 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: uv_advect_3d() - 3D momentum advection \label{sec-uv-advect-3d}
+! !ROUTINE: uv_advect_3d - 3D momentum advection \label{sec-uv-advect-3d}
 !
 ! !INTERFACE:
    subroutine uv_advect_3d(hor_adv,ver_adv,adv_split)
@@ -277,6 +277,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: uv_advect_3d.F90,v $
+!  Revision 1.11  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.10  2006-02-04 11:47:26  hb
 !  Source code documentation extended
 !

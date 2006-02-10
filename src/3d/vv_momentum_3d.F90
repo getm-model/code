@@ -1,20 +1,47 @@
-!$Id: vv_momentum_3d.F90,v 1.10 2006-01-29 20:32:33 hb Exp $
+!$Id: vv_momentum_3d.F90,v 1.11 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: vv_momentum_3d() - 3D-vmomentum equation.
+! !ROUTINE: vv_momentum_3d - $y$-momentum eq.\ \label{sec-vv-momentum-3d}
 !
 ! !INTERFACE:
    subroutine vv_momentum_3d(bdy3d)
 !
 ! !DESCRIPTION:
 !
-! Three-dimensional velocity equation in northern direction.
-! If the compiler option {\tt MUDFLAT} is defined, fitting of profiles is 
-! made with
+! Here, the budget equation for layer-averaged momentum in eastern direction,
+! $q_k$,
+! is calculated. The physical equation is given as equation (\ref{vEq}),
+! the layer-integrated equation as (\ref{vEqvi}), and after curvilinear
+! transformation as (\ref{vEqviCurvi}).
+! In this routine, first the Coriolis rotation term, $fp_k$ is calculated,
+! either as direct transport averaging, or following \cite{ESPELIDea00}
+! by using velocity averages (in case the compiler option {\tt NEW\_CORI}
+! is set).
+!  
+! As a next step, explicit forcing terms (advection, diffusion,
+! internal pressure gradient, surface stresses) are added up (into the variable
+! {\tt ex(k)}), the eddy viscosity is horizontally interpolated to the V-point,
+! and the barotropic pressure gradient is calculated (the latter
+! includes the pressure gradient correction for drying points, see
+! section \ref{Section_dry}).
+! Afterwards, the matrix is set up for each water column, and it is solved
+! by means of a tri-diagonal matrix solver.
+!  
+! Finally, the new velocity profile is shifted such that its vertical
+! integral is identical to the time integral of the vertically integrated
+! transport.
+! If the compiler option {\tt MUDFLAT} is defined, this fitting of profiles
+! is made with
 ! respect to the new surface elevation, otherwise to the
 ! old surface elevation.
+!  
+! When GETM is run as a slice model (compiler option {\tt SLICE\_MODEL}
+! is activated), the result for $j=2$ is copied to $j=1$ and $j=3$.
+! If the compiler option {\tt XZ\_PLUME\_TEST} is set, a slope
+! of {\tt yslope} for bottom and isopycnals into the $y$-direction is
+! prescribed, which has to be hard-coded as local variable.
 !
 ! !USES:
    use parameters, only: g,avmmol,rho_0
@@ -54,6 +81,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: vv_momentum_3d.F90,v $
+!  Revision 1.11  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.10  2006-01-29 20:32:33  hb
 !  Small LaTeX corrections to source code documentation
 !
@@ -143,6 +173,9 @@
    REALTYPE                  :: zp,zm,zy,ResInt,Diff,Uloc
    REALTYPE                  :: gamma=g*rho_0
    REALTYPE                  :: cord_curv=_ZERO_
+#ifdef XZ_PLUME_TEST
+   REALTYPE                  :: yslope=0.001
+#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -180,7 +213,7 @@
                   ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k))
 #else
 #ifdef XZ_PLUME_TEST
-                  ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+idpdy(i,j,k)+0.001*hvn(i,j,k)*(rho(i,j,kmax)-rho(i,j,k)))
+                  ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+idpdy(i,j,k)+yslope*hvn(i,j,k)*(rho(i,j,kmax)-rho(i,j,k)))
 #else
                   ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+idpdy(i,j,k))
 #endif

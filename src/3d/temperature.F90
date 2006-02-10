@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.14 2006-01-29 12:25:21 kbk Exp $
+!$Id: temperature.F90,v 1.15 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -37,6 +37,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: temperature.F90,v $
+!  Revision 1.15  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.14  2006-01-29 12:25:21  kbk
 !  NOMADS -> FRESHWATER_LENSE
 !
@@ -131,7 +134,8 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: init_temperature
+! !IROUTINE: init_temperature - initialisation of temperature
+! \label{sec-init-temperature}
 !
 ! !INTERFACE:
    subroutine init_temperature(adv_method)
@@ -276,7 +280,7 @@ temp_field_no=1
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  do_temperature()
+! !IROUTINE:  do_temperature() - temperature equation \label{sec-do-temperature}
 !
 ! !INTERFACE:
    subroutine do_temperature(n)

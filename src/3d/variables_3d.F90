@@ -1,4 +1,4 @@
-!$Id: variables_3d.F90,v 1.7 2005-09-23 11:27:10 kbk Exp $
+!$Id: variables_3d.F90,v 1.8 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,8 +11,103 @@
 ! !DESCRIPTION:
 !  This modules contains declarations for all variables related to 3D
 !  hydrodynamical calculations. Information about the calculation domain
-!  is included from the \emph{domain.F90} module.
-!  The module contains public subroutines to initialise and cleanup.
+!  is included from the {\tt domain} module.
+!  The variables are either statically defined in {\tt static\_3d.h} or
+!  dynamically allocated in {\tt dynamic\_declarations\_3d.h}.
+!  The variables which need to be declared have the following dimensions,
+!  units and meanings:
+!
+! \vspace{0.5cm}
+! \begin{supertabular}{llll}
+! {\tt kmin} & 2D & [-] & lowest index in T-point \\
+! {\tt kumin} & 2D &[-]  & lowest index in U-point \\
+! {\tt kvmin} & 2D &[-]  & lowest index in V-point \\
+! {\tt kmin\_pmz} & 2D &[-]  & lowest index in T-point (poor man's
+! $z$-coordinate)\\
+! {\tt kumin\_pmz} & 2D &[-]  & lowest index in U-point (poor man's
+! $z$-coordinate)\\
+! {\tt kvmin\_pmz} & 2D &[-]  & lowest index in V-point (poor man's
+! $z$-coordinate)\\
+! {\tt uu} & 3D & [m$^2$s$^{-1}$] & layer integrated $u$ transport
+! $p_k$\\
+! {\tt vv} & 3D & [m$^2$s$^{-1}$] & layer integrated $v$ transport
+! $q_k$\\
+! {\tt ww} & 3D & [m\,s$^{-1}$] & grid-related vertical velocity
+! $\bar w_k$\\
+! {\tt ho} & 3D & [m] & old layer height in T-point \\
+! {\tt hn} & 3D & [m]& new layer height in T-point \\
+! {\tt huo} & 3D &[m]& old layer height in U-point \\
+! {\tt hun} & 3D & [m]& new layer height in U-point \\
+! {\tt hvo} & 3D & [m]& old layer height in V-point \\
+! {\tt hvn} & 3D & [m]& new layer height in V-point \\
+! {\tt hcc} & 3D &[-] & hydrostatic consistency index in T-points\\
+! {\tt uuEx} & 3D & [m$^2$s$^{-2}$] & sum of advection and 
+! diffusion for $u$-equation\\
+! {\tt vvEx} & 3D &  [m$^2$s$^{-2}$]& sum of advection and 
+! diffusion for $v$-equation\\
+! {\tt num} & 3D &  [m$^2$s$^{-1}$]& eddy viscosity on $w$-points
+! $\nu_t$\\
+! {\tt nuh} & 3D &  [m$^2$s$^{-1}$]& eddy diffusivity on $w$-points $\nu'_t$\\
+! {\tt tke} & 3D &  [m$^2$s$^{-2}$]& turbulent kinetic energy $k$\\
+! {\tt eps} & 3D &  [m$^2$s$^{-3}$]& turbulent dissipation rate
+! $\eps$ \\
+! {\tt SS} & 3D & [s$^{-2}$]& shear-frequency squared $M^2$ \\
+! {\tt NN} & 3D &  [s$^{-2}$]& Brunt-V\"ais\"al\"a frequency squared$N^2$ \\
+! {\tt S} & 3D & [psu] & salinity $S$ \\
+! {\tt T} & 3D & [$^{\circ}$C]& potential temperature $\theta$ \\
+! {\tt rho} & 3D & [m\,s$^{-2}$]& buoyancy $b$ \\
+! {\tt idpdx} & 3D & [m$^2$s$^{-2}$] & $x$-component of internal
+! pressure gradient \\
+! {\tt idpdy} & 3D & [m$^2$s$^{-2}$]& $y$-component of internal
+! pressure gradient\\
+! {\tt spm} & 3D & [kg\,m$^{-3}$] & suspended matter concentration \\
+! {\tt spm\_ws} & 3D & [m\,s$^{-1}$] & settling velocity of
+! suspended matter \\
+! {\tt spm\_pool} & 2D & [kg\,m$^{-2}$] & bottom pool of suspended
+! matter\\
+! {\tt uadv} & 3D & [m\,s$^{-1}$] & interpolated $x$-component of
+! momentum advection velocity \\
+! {\tt vadv} & 3D &  [m\,s$^{-1}$]& interpolated $y$-component of 
+! momentum advection velocity \\
+! {\tt wadv} & 3D &  [m\,s$^{-1}$]& interpolated  vertical component of 
+! momentum advection velocity \\
+! {\tt huadv} & 3D &[m] & interpolated height of advective flux
+! layer ($x$-component) \\
+! {\tt hvadv} & 3D &[m] & interpolated height of advective flux
+! layer ($y$-component) \\
+! {\tt hoadv} & 3D &[m] & old height of advective finite volume cell
+! \\
+! {\tt hnadv} & 3D &[m] & new height of advective finite volume
+! cell\\
+! {\tt sseo} & 2D & [m]& sea surface elevation before macro time
+! step (T-point)\\
+! {\tt ssen} & 2D & [m]& sea surface elevation after macro time
+! step (T-point)\\
+! {\tt ssuo} & 2D & [m]& sea surface elevation before macro time
+! step (U-point)\\
+! {\tt ssun} & 2D & [m]&sea surface elevation after macro time step
+! (U-point)\\
+! {\tt ssvo} & 2D & [m]& sea surface elevation before macro time
+! step (V-point)\\
+! {\tt ssvn} & 2D & [m]& sea surface elevation after macro time
+! step (V-point)\\
+! {\tt rru} & 2D & [m\,s$^{-1}$]&drag coefficient times curret speed
+! in U-point\\
+! {\tt rrv} & 2D & [m\,s$^{-1}$]&drag coefficient times curret speed
+! in V-point\\
+! {\tt taus} & 2D & [m$^2$s$^{-2}$]& normalised surface stress
+! (T-point) \\
+! {\tt taub} & 2D & [m$^2$s$^{-2}$]& normalised bottom stress
+! (T-point) \\
+! \end{supertabular}
+!
+! \vspace{0.5cm}
+!
+! It should be noted that depending on compiler options and runtype not
+! all these variables are defined.
+!
+! The module contains public subroutines to initialise (see
+! {\tt init\_variables\_3d}) and cleanup (see {\tt clean\_variables\_3d}).
 !
 ! !USES:
    use domain,     only: iimin,iimax,jjmin,jjmax,kmax
@@ -40,6 +135,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: variables_3d.F90,v $
+!  Revision 1.8  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.7  2005-09-23 11:27:10  kbk
 !  support for biology via GOTMs biology modules
 !
@@ -86,7 +184,8 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: init_variables_3d - initialise 3D relatedstuff.
+! !IROUTINE: init_variables_3d - initialise 3D related stuff
+! \label{sec-init-variables}
 !
 ! !INTERFACE:
    subroutine init_variables_3d(runtype)
@@ -100,7 +199,9 @@
 ! !OUTPUT PARAMETERS:
 !
 ! !DESCRIPTION:
-!  Allocates memiory for 3D related fields.
+!  Dynamic allocation of memory for 3D related fields via
+!  {\tt dynamic\_allocations\_3d.h} (unless the compiler option
+!  {\tt STATIC} is set). Furthermore, most variables are initialised here.
 !
 ! !REVISION HISTORY:
 !
@@ -174,7 +275,7 @@
 ! !OUTPUT PARAMETERS:
 !
 ! !DESCRIPTION:
-!  This routine cleans up after a 3D integration. Close open files etc.
+!  This routine cleans up after a 3D integrationby doing nothing so far.
 !
 ! !REVISION HISTORY:
 !  See log for the module.

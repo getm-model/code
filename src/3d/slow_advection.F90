@@ -1,9 +1,9 @@
-!$Id: slow_advection.F90,v 1.7 2005-10-06 09:54:01 hb Exp $
+!$Id: slow_advection.F90,v 1.8 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: slow_advection() - ....
+! !ROUTINE: slow_advection() - slow advection terms \label{sec-slow-advection}
 !
 ! !INTERFACE:
    subroutine slow_advection
@@ -32,6 +32,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: slow_advection.F90,v $
+!  Revision 1.8  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.7  2005-10-06 09:54:01  hb
 !  added support for vertical slice model - via -DSLICE_MODEL
 !

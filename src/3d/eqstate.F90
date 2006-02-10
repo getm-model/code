@@ -1,9 +1,9 @@
-!$Id: eqstate.F90,v 1.4 2004-01-02 13:54:24 kbk Exp $
+!$Id: eqstate.F90,v 1.5 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE:  eqstate
+! !MODULE:  eqstate \label{sec-eqstate}
 !
 ! !INTERFACE:
    module eqstate
@@ -26,6 +26,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: eqstate.F90,v $
+!  Revision 1.5  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.4  2004-01-02 13:54:24  kbk
 !  read equation of state info from namelist - Ruiz
 !
@@ -134,7 +137,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  do_eqstate()
+! !IROUTINE:  do_eqstate() - equation of state \label{sec-do-eqstate} 
 !
 ! !INTERFACE:
    subroutine do_eqstate()

@@ -1,9 +1,9 @@
-!$Id: slow_terms.F90,v 1.4 2003-06-28 10:43:16 kbk Exp $
+!$Id: slow_terms.F90,v 1.5 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: slow_terms() - .....
+! !ROUTINE: slow_terms() - calculation of slow terms \label{sec-slow-terms}
 !
 ! !INTERFACE:
    subroutine slow_terms
@@ -30,6 +30,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: slow_terms.F90,v $
+!  Revision 1.5  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.4  2003-06-28 10:43:16  kbk
 !  cosmestics
 !

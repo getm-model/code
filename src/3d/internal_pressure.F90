@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.13 2006-01-29 20:32:33 hb Exp $
+!$Id: internal_pressure.F90,v 1.14 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -10,13 +10,51 @@
 !
 ! !DESCRIPTION:
 !
-!  \begin{verbatim}
-!  ip_method=1    ! old GETM version of Blumberg-Mellor, very stable
-!  ip_method=2    ! new GETM version of 1, zero for linear profiles 
-!  ip_method=3    ! z-coordinates, linear interpolation
-!  ip_method=4    ! Song and Wright 1998 version
-!  ip_method=5    ! CHU and FAN 2003 version
-!  \end{verbatim}
+! In GETM, various methods are provided for the calculation of the 
+! internal pressure gradients terms in $x$- and $y$-direction.
+! These terms which appear as layer-integrated terms in the
+! equations for the layer-integrated momentum are for the
+! eastward momentum $p_k$ (see equation (\ref{uEqvi})):
+!
+! \begin{equation}
+! h_k\left(\frac12h_N(\partial^*_xb)_N
+! +\sum_{j=k}^{N-1}\frac12(h_j+h_{j+1})(\partial^*_xb)_j
+! \right)
+! \end{equation}
+!
+! and for the northward layer-integrated momentum $q_k$ 
+! (see equation (\ref{vEqvi})):
+!
+! \begin{equation}
+! h_k\left(\frac12h_N(\partial^*_yb)_N
+! +\sum_{j=k}^{N-1}\frac12(h_j+h_{j+1})(\partial^*_yb)_j
+! \right)
+! \end{equation}
+!
+! The major problem is how to calculate the horizontal (with respect
+! to isogeopotentials) buoyancy gradients $\partial^*_xb$ and $\partial^*_yb$,
+! which need to be defined at the interfaces positioned vertically
+! between two velocity points. 
+!
+! The methods for calculating the internal pressure gradient included in
+! GETM are currently:
+!
+! \begin{enumerate}
+! \item Method by \cite{MELLORea94}, see routine {\tt ip\_blumberg\_mellor}
+! \item Modified \cite{MELLORea94} method, exact for linear density profiles
+!       with $z$-dependence only, see routine {\tt ip\_blumberg\_mellor\_lin}
+! \item Calculation by mean of linear interpolation to $z$-levels, see routine
+!       {\tt ip\_z\_interpol}
+! \item Method by \cite{SONG98}, see routine {\tt ip\_song\_wright}
+! \item Method by \cite{CHUea03}, see routine {\tt ip\_chu\_fan}
+!  \end{enumerate}
+!
+! It is possible, by setting the compiler option {\tt SUBSTR\_INI\_PRESS},
+! to substract the initial pressure gradient from all pressure
+! gradients. This is only advisable for strong stratification 
+! without any initial internal pressure gradients. In this case
+! any non-zero values of the resulting numerical initial pressure gradient
+! are due to discretisation errors.
 !
 ! !USES:
    use exceptions
@@ -55,6 +93,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: internal_pressure.F90,v $
+!  Revision 1.14  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.13  2006-01-29 20:32:33  hb
 !  Small LaTeX corrections to source code documentation
 !
@@ -142,15 +183,18 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: init_internal_pressure
+! !IROUTINE: init_internal_pressure - initialising internal pressure gradient
+! \label{sec-init-internal pressure}
 !
 ! !INTERFACE:
    subroutine init_internal_pressure()
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
-!  Reads the namelist and makes calls to the init functions of the
-!  various model components.
+!  
+! Here, some necessary memory is allocated (in case of the compiler option
+! {\tt STATIC}), and information is written to the log-file of
+! the simulation.
 !
 ! !REVISION HISTORY:
 !  See the log for the module
@@ -197,16 +241,25 @@
    return
    end subroutine init_internal_pressure
 !EOC
-
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  do_internal_pressure()
+! !IROUTINE:  do_internal_pressure - internal pressure gradient
+! \label{sec-do-internal-pressure}
 !
 ! !INTERFACE:
    subroutine do_internal_pressure()
 !
 ! !DESCRIPTION:
+! 
+! Here, the chosen internal pressure gradient method is selected
+! and (in case that the compiler option {\tt SUBSTR\_INI\_PRESS} is
+! set), the initial pressure is calculated and subtracted from the
+! updated internal pressure gradient.
+!
+! If GETM is executed as slice model (compiler option {\tt SLICE\_MODEL}
+! is set, the internal pressure gradient for $j=2$ is copied to 
+! $j=3$.
 !
 ! !USES:
    IMPLICIT NONE
@@ -223,6 +276,7 @@
 ! !LOCAL VARIABLES:
    integer                :: i,j,k
    logical, save          :: first=.true.
+!EOP
 !-----------------------------------------------------------------------
 !BOC
 #ifdef DEBUG
@@ -251,14 +305,6 @@
          stop 'do_internal_pressure()'
    end select
 
-#ifdef SLICE_MODEL
-   do i=iimin,iimax
-      do k=kmin(i,2),kmax
-         idpdx(i,3,k)=idpdx(i,2,k)
-      end do   
-   end do
-#endif
-
 #ifdef SUBSTR_INI_PRESS
    if (first) then
       first = .false.
@@ -282,6 +328,14 @@
          end do
       end do
    end if
+#endif
+
+#ifdef SLICE_MODEL
+   do i=iimin,iimax
+      do k=kmin(i,2),kmax
+         idpdx(i,3,k)=idpdx(i,2,k)
+      end do   
+   end do
 #endif
 
 

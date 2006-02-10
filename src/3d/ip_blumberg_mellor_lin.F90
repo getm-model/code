@@ -1,4 +1,4 @@
-!$Id: ip_blumberg_mellor_lin.F90,v 1.1 2004-04-06 12:42:50 kbk Exp $
+!$Id: ip_blumberg_mellor_lin.F90,v 1.2 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -10,6 +10,45 @@
 !
 ! !DESCRIPTION:
 !
+! Here, the internal pressure gradient calculation is carried out on the
+! basis of the same buoyancy stencil than in the method according
+! to \cite{MELLORea94} (see routine {\tt ip\_blumberg\_mellor}), 
+! but in such a way that the pressure gradient numerically vanishes for
+! linear stratification without horizontal gradients.
+!
+! \begin{equation}\label{drhodxdiscr_lin}
+! \begin{array}{l}
+! \displaystyle
+! \frac12(h_{i,j,k}+h_{i,j,k+1})\left(m\,\partial_{\cal X}^*b\right)_{i,j,k} \\
+! \\
+! \displaystyle
+! \approx
+! \frac12(h^u_{i,j,k}+h^u_{i,j,k+1})
+! \Bigg[\frac{
+! \frac12 (b_{i+1,j,k+1}+b_{i+1,j,k})-
+! \frac12 (b_{i,j,k+1}+b_{i,j,k})}
+! {\Delta x^u_{i,j}}\\ \\
+! \displaystyle
+! \qquad -
+! \frac12\left(\frac{
+! \frac12 (z^c_{i+1,j,k+1}+z^c_{i+1,j,k})-
+! \frac12 (z^c_{i,j,k+1}+z^c_{i,j,k})}
+! {\Delta x^u_{i,j}}\right) \\ \\
+! \displaystyle
+! \qquad\qquad 
+! \frac12\left(
+! \frac{b_{i+1,j,k+1}-b_{i+1,j,k}}{z^c_{i+1,j,k+1}-z^c_{i+1,j,k}}+
+! \frac{b_{i,j,k+1}-b_{i,j,k}}{z^c_{i,j,k+1}-z^c_{i,j,k}}
+! \right)\Bigg],
+! \end{array}
+! \end{equation}
+!
+! where $z^c_{i,j,k}$ is the $z$-coordinate of the centre of
+! the grid box with the index $(i,j,k)$.
+!
+! The discretisation of $(\partial_y^* b)_k$ for the $v$-equation is
+! done accordingly.
+!
 ! !USES:
    use internal_pressure
    use variables_3d, only: kumin_pmz,kvmin_pmz
@@ -19,6 +58,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: ip_blumberg_mellor_lin.F90,v $
+!  Revision 1.2  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.1  2004-04-06 12:42:50  kbk
 !  internal pressure calculations now uses wrapper
 !

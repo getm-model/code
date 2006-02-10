@@ -1,14 +1,33 @@
-!$Id: hcc_check.F90,v 1.1 2004-05-04 09:23:51 kbk Exp $
+!$Id: hcc_check.F90,v 1.2 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: hcc_check() - hydrostatic consistency criteria
+! !ROUTINE: hcc_check - hydrostatic consistency criteria
 !
 ! !INTERFACE:
    subroutine hcc_check()
 !
 ! !DESCRIPTION:
+!
+! This diagnostic routine calculates the hydrostatic consistency $h^c$ 
+! in each T-point and each layer. $h^c$ is defined as:
+!
+! \begin{equation}\label{HCC}
+! h^c_{i,j,k}=\max\left\{
+! |\partial_xz_k| \frac{\Delta x}{\frac12(h_{i,j,k}+h_{i+1,j,k})},
+! |\partial_yz_k| \frac{\Delta y}{\frac12(h_{i,j,k}+h_{i,j+1,k})}
+! \right\}.
+! \end{equation}
+!
+! For the numerical calculation it is used here that $\Delta x$ and
+! $\Delta y$ can be cancelled out each.
+! For $h^c \leq 1$, the grid box is hydrostatically consistent,
+! else it is called hydrostatically inconsistent. In the latter case,
+! numerical problems can be expected for terrain-following coordinates
+! when stratification is strong.
+!
+! $h^c$ is stored in the 3d netcdf output file.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,az,au,av,HU,HV
@@ -20,6 +39,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: hcc_check.F90,v $
+!  Revision 1.2  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.1  2004-05-04 09:23:51  kbk
 !  hydrostatic consistency criteria stored in .3d.nc file
 !
@@ -36,10 +58,10 @@
    do j=jjmin,jjmax
       do i=iimin,iimax
          if (az(i,j) .ge. 1) then
-            du1=HU(i-1,j)
-            du2=HU(i,j)
-            dv1=HV(i,j-1)
-            dv2=HV(i,j)
+            du1=-HU(i-1,j)
+            du2=-HU(i,j)
+            dv1=-HV(i,j-1)
+            dv2=-HV(i,j)
 
             do k=1,kmax
 

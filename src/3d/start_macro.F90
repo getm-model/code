@@ -1,9 +1,9 @@
-!$Id: start_macro.F90,v 1.7 2004-01-05 12:43:22 kbk Exp $
+!$Id: start_macro.F90,v 1.8 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: start_macro() - initialize the macro loop.
+! !ROUTINE: start_macro() - initialise the macro loop \label{sec-start-macro}
 !
 ! !INTERFACE:
    subroutine start_macro()
@@ -27,6 +27,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: start_macro.F90,v $
+!  Revision 1.8  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.7  2004-01-05 12:43:22  kbk
 !  cleanned
 !

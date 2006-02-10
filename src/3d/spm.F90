@@ -1,4 +1,4 @@
-!$Id: spm.F90,v 1.6 2006-01-29 20:32:33 hb Exp $
+!$Id: spm.F90,v 1.7 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -115,6 +115,9 @@
 !  Original author(s): Manuel Ruiz Villarreal, Karsten Bolding and Hans Burchard
 !
 !  $Log: spm.F90,v $
+!  Revision 1.7  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.6  2006-01-29 20:32:33  hb
 !  Small LaTeX corrections to source code documentation
 !
@@ -328,7 +331,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  do_spm()
+! !IROUTINE:  do_spm() - suspended matter equation \label{sec-do-spm}
 !
 ! !INTERFACE:
    subroutine do_spm()

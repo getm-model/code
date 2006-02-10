@@ -1,9 +1,9 @@
-!$Id: stresses_3d.F90,v 1.4 2003-08-14 09:48:09 kbk Exp $
+!$Id: stresses_3d.F90,v 1.5 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: stresses_3d() - calculates the bottom stresses.
+! !ROUTINE: stresses_3d() - bottom and surface stresses\label{sec-stresses-3d}
 !
 ! !INTERFACE:
    subroutine stresses_3d
@@ -28,6 +28,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: stresses_3d.F90,v $
+!  Revision 1.5  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.4  2003-08-14 09:48:09  kbk
 !  need rru,rrv in halo zones
 !
@@ -75,7 +78,6 @@
 
    do j=jjmin,jjmax    ! Absolute Value of Bottom Friction
       do i=iimin,iimax
-!KBK         if(az(i,j) .ge. 1) then
          k1=kumin(i-1,j  )
          k2=kumin(i  ,j  )
          k3=kvmin(i  ,j-1)
@@ -90,7 +92,6 @@
                         tausx(i,j)**2+tausx(i-1,j)**2   &
                       + tausy(i,j)**2+tausy(i,j-1)**2)
          taus(i,j)=sqrt(taus(i,j))/rho_0
-!KBK         end if
       end do
    end do
 

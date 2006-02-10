@@ -1,9 +1,9 @@
-!$Id: stop_macro.F90,v 1.3 2003-04-23 12:16:34 kbk Exp $
+!$Id: stop_macro.F90,v 1.4 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: stop_macro() - terminates the macro loop.
+! !ROUTINE: stop_macro() - terminates the macro loop \label{sec-stop-macro}
 !
 ! !INTERFACE:
    subroutine stop_macro
@@ -24,6 +24,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: stop_macro.F90,v $
+!  Revision 1.4  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.3  2003-04-23 12:16:34  kbk
 !  cleaned code + TABS to spaces
 !

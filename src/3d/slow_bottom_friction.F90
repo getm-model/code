@@ -1,9 +1,10 @@
-!$Id: slow_bottom_friction.F90,v 1.5 2003-09-12 16:27:27 kbk Exp $
+!$Id: slow_bottom_friction.F90,v 1.6 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: slow_bottom_friction() - .....
+! !ROUTINE: slow_bottom_friction() - slow bottom friction
+! \label{sec-slow-bottom-friction}
 !
 ! !INTERFACE:
    subroutine slow_bottom_friction
@@ -27,6 +28,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: slow_bottom_friction.F90,v $
+!  Revision 1.6  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.5  2003-09-12 16:27:27  kbk
 !  removed save attributes for local variables - now compiles using PGF
 !

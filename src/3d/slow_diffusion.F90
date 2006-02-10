@@ -1,9 +1,9 @@
-!$Id: slow_diffusion.F90,v 1.5 2005-10-06 09:54:01 hb Exp $
+!$Id: slow_diffusion.F90,v 1.6 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: slow_diffusion() - diffusion of momentum.
+! !ROUTINE: slow_diffusion() - slow diffusion terms \label{sec-slow-diffusion}
 !
 ! !INTERFACE:
    subroutine slow_diffusion(AM)

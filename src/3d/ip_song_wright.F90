@@ -1,4 +1,4 @@
-!$Id: ip_song_wright.F90,v 1.1 2004-04-06 12:42:50 kbk Exp $
+!$Id: ip_song_wright.F90,v 1.2 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -10,6 +10,38 @@
 !
 ! !DESCRIPTION:
 !
+! Here, the pressure gradient is calculating according to an energy-conserving
+! method suggested by \cite{SONG98}, which for the pressure gradient in
+! $x$-direction looks as:
+! 
+! \begin{equation}\label{drhodxdiscrSONG}
+! \begin{array}{l}
+! \displaystyle
+! \frac12(h_{i,j,k}+h_{i,j,k+1})\left(m\,\partial_{\cal X}^*b\right)_{i,j,k} \\ \\
+! \displaystyle
+! \approx
+! \frac{
+! \frac14 (b_{i+1,j,k+1}+b_{i+1,j,k})(h^c_{i+1,j,k+1}+h^c_{i+1,j,k})-
+! \frac14 (b_{i,j,k+1}+b_{i,j,k})(h^c_{i,j,k+1}+h^c_{i,j,k})}
+! {\Delta x^u_{i,j}}\\ \\
+! \displaystyle
+! \qquad-
+! \Bigg[\frac12 (b_{i+1,j,k+1}+b_{i,j,k+1})
+! \frac{z^c_{i+1,j,k+1}-z^c_{i,j,k+1}}{\Delta x^u_{i,j}}\\ \\
+! \displaystyle
+! \qquad\qquad -
+! \frac12 (b_{i+1,j,k}+b_{i,j,k})
+! \frac{z^c_{i+1,j,k}-z^c_{i,j,k}}{\Delta x^u_{i,j}}\Bigg],
+! \end{array}
+! \end{equation}
+! 
+! where $z^c_{i,j,k}$ is the $z$-coordinate of the centre of
+! the grid box with the index $(i,j,k)$.
+!
+! The discretisation of $(\partial_y^* b)_k$ for the $v$-equation is
+! done accordingly.
+!
+!
 ! !USES:
    use internal_pressure
    IMPLICIT NONE
@@ -18,6 +50,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: ip_song_wright.F90,v $
+!  Revision 1.2  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.1  2004-04-06 12:42:50  kbk
 !  internal pressure calculations now uses wrapper
 !

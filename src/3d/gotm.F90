@@ -1,9 +1,9 @@
-!$Id: gotm.F90,v 1.10 2006-01-09 10:35:40 lars Exp $
+!$Id: gotm.F90,v 1.11 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: gotm() - a wrapper to call GOTM.
+! !IROUTINE: gotm() - a wrapper to call GOTM \label{sec-gotm}
 !
 ! !INTERFACE:
    subroutine gotm()
@@ -34,6 +34,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: gotm.F90,v $
+!  Revision 1.11  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.10  2006-01-09 10:35:40  lars
 !  bug fix in call to do_turbulence()
 !

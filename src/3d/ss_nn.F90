@@ -1,9 +1,10 @@
-!$Id: ss_nn.F90,v 1.4 2003-12-17 10:22:41 kbk Exp $
+!$Id: ss_nn.F90,v 1.5 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
 ! !ROUTINE: ss_nn() - calculates the Prandtl and Brunt-Vaisalla freq.
+! \label{sec-ss-nn}
 !
 ! !INTERFACE:
    subroutine ss_nn()
@@ -34,6 +35,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: ss_nn.F90,v $
+!  Revision 1.5  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.4  2003-12-17 10:22:41  kbk
 !  now compiles with -DNO_BAROCLINIC and -DNO_3D
 !

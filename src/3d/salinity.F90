@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.17 2006-01-29 12:25:21 kbk Exp $
+!$Id: salinity.F90,v 1.18 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,6 +41,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: salinity.F90,v $
+!  Revision 1.18  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.17  2006-01-29 12:25:21  kbk
 !  NOMADS -> FRESHWATER_LENSE
 !
@@ -138,7 +141,8 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: init_salinity
+! !IROUTINE: init_salinity - initialisation of salinity
+! \label{sec-init-salinity}
 !
 ! !INTERFACE:
    subroutine init_salinity(adv_method)
@@ -382,7 +386,7 @@ salt_field_no=1
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  do_salinity()
+! !IROUTINE:  do_salinity() - salinity equation \label{sec-do-salinity}
 !
 ! !INTERFACE:
    subroutine do_salinity(n)

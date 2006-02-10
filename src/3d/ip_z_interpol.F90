@@ -1,14 +1,23 @@
-!$Id: ip_z_interpol.F90,v 1.1 2004-04-06 12:42:50 kbk Exp $
+!$Id: ip_z_interpol.F90,v 1.2 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: ip_z_interpol()
+! !ROUTINE: ip_z_interpol
 !
 ! !INTERFACE:
    subroutine ip_z_interpol()
 !
 ! !DESCRIPTION:
+!
+! Here, the horizontal gradients of buoyancy, $(\partial_x^* b)_k$ and 
+! $(\partial_y^* b)_k$, are directly calculated in $z$-coordinates by
+! linearly interpolating the buoyancies in the vertical to the
+! evaluation point (which is the interface vertically located between
+! the velocity points). In the case that extrapolations become
+! necessary near the sloping surface (or more likely) near the sloping 
+! bottom, then the last regular buoyancy value (surface value or bottom
+! value) is used.
 !
 ! !USES:
    use internal_pressure
@@ -18,6 +27,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: ip_z_interpol.F90,v $
+!  Revision 1.2  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.1  2004-04-06 12:42:50  kbk
 !  internal pressure calculations now uses wrapper
 !

@@ -1,9 +1,9 @@
-!$Id: rivers.F90,v 1.8 2006-01-29 20:32:33 hb Exp $
+!$Id: rivers.F90,v 1.9 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE:  rivers
+! !MODULE:  rivers \label{sec-rivers}
 !
 ! !INTERFACE:
    module rivers
@@ -79,6 +79,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: rivers.F90,v $
+!  Revision 1.9  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.8  2006-01-29 20:32:33  hb
 !  Small LaTeX corrections to source code documentation
 !

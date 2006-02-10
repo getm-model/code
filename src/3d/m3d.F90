@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.27 2006-01-29 20:32:33 hb Exp $
+!$Id: m3d.F90,v 1.28 2006-02-10 22:41:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,13 +9,19 @@
    module m3d
 !
 ! !DESCRIPTION:
-!  This modules contains declarations for all variables related to 3D
+!  This module contains declarations for all variables related to 3D
 !  hydrodynamical calculations. Information about the calculation domain
-!  is included from the \emph{domain.F90} module.
+!  is included from the {\tt domain} module.
 !  The module contains public subroutines for initialisation, integration
 !  and clean up of the 3D model component.
-!  The actual calculation routines are called in integrate\_3d and is linked
-!  in from the library lib3d.a.
+!  The {\tt m3d} module is initialised in the routine {\tt init\_3d}, see
+!  section \ref{sec-init-3d} described on page
+!  \pageref{sec-init-3d}.
+!  The actual calculation routines are called in {\tt integrate\_3d}
+!  (see section \ref{sec-integrate-3d} on page \pageref{sec-integrate-3d}).
+!  and are linked in from the library {\tt lib3d.a}.
+!  After the simulation, the module is closed in {\tt clean\_3d}, see
+!  section \ref{sec-clean-3d} on page \pageref{sec-clean-3d}.
 !
 ! !USES:
    use exceptions
@@ -58,6 +64,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: m3d.F90,v $
+!  Revision 1.28  2006-02-10 22:41:56  hb
+!  Source code documentation extended
+!
 !  Revision 1.27  2006-01-29 20:32:33  hb
 !  Small LaTeX corrections to source code documentation
 !
@@ -237,7 +246,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: init_3d - initialise 3D relatedstuff.
+! !IROUTINE: init_3d - initialise 3D related stuff \label{sec-init-3d}
 !
 ! !INTERFACE:
    subroutine init_3d(runtype,timestep,hotstart)
@@ -253,7 +262,24 @@
 ! !OUTPUT PARAMETERS:
 !
 ! !DESCRIPTION:
-!  Allocates memiory for 3D related fields.
+!  Here, the {\tt m3d} namelist is read from {\tt getm.inp}, and the
+!  initialisation of variables is called (see routine {\tt init\_variables}
+!  described on page \pageref{sec-init-variables}).
+!  Furthermore, a number of consistency checks are made for the choices
+!  of the momentum advection schemes. When higher-order advection schemes
+!  are chosen for the momentum advection, the compiler option {\tt UV\_TVD}
+!  has to be set. Here, the macro time step $\Delta t$ is calculated 
+!  from the micro time step $\Delta t_m$ and the split factor {\tt M}.
+!  Then, in order to have the vertical coordinate system present already here,
+!  {\tt coordinates} (see page \pageref{sec-coordinates}) needs to be called,
+!  in order to enable proper interpolation of initial values for 
+!  potential temperature $\theta$ and salinity $S$ for cold starts. 
+!  Those initial values are afterwards read in via the routines
+!  {\tt init\_temperature} (page \pageref{sec-init-temperature}) and
+!  {\tt init\_salinity} (page \pageref{sec-init-salinity}).
+!  Finally, in order to prepare for the first time step, the momentum advection
+!  and internal pressure gradient routines are initialised and the
+!  internal pressure gradient routine is called.
 !
 ! !REVISION HISTORY:
 !
@@ -431,7 +457,8 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: integrate_3d - sequence of calls to do 3D model integration
+! !IROUTINE: integrate_3d - calls to do 3D model integration
+! \label{sec-integrate-3d}
 !
 ! !INTERFACE:
    subroutine integrate_3d(runtype,n)
@@ -445,13 +472,75 @@
 ! !OUTPUT PARAMETERS:
 !
 ! !DESCRIPTION:
-! A wrapper to call all 3D related subroutines in one subroutine.
-! if the compiler option {\tt MUDFLAT} is defined, then the sequence of 
-! velocity equations
-! and coordinate construction is made such that drying and flooding
-! is stable. If {\tt MUDFLAT} is not defined, then adaptive grids with
-! Lagrangian component are supported. Both, drying and flooding and
-! Lagrangian coordinates does not go together.
+! This is a wrapper routine to call all 3D related subroutines.
+! The call position for the {\tt coordinates} routine depends on 
+! the compiler option 
+! {\tt MUDFLAT}: If it is defined, then the 
+! call to {\tt coordinates} construction is made such that drying and flooding
+! is stable. If {\tt MUDFLAT} is not defined, then the adaptive grids with
+! Lagrangian component which are currently under development are supported. 
+! Both, drying and flooding and
+! Lagrangian coordinates does not go together yet.
+! The call sequence is as follows:
+!
+! \vspace{0.5cm}
+! 
+! \begin{tabular}{lll}
+! {\tt start\_macro}           & initialising a 3d step & see page
+! \pageref{sec-start-macro} \\
+! {\tt do\_bdy\_3d}            & boundary conditions for $\theta$ and $S$ & see
+! page \pageref{sec-do-bdy-3d} \\
+! {\tt coordinates}            & layer heights ({\tt MUTFLAT} defined) & see
+! page \pageref{sec-coordinates} \\
+! {\tt bottom\_friction\_3d}   & bottom friction & see page
+! \pageref{sec-bottom-friction-3d} \\
+! {\tt do\_internal\_pressure} & internal pressure gradient & see page
+! \pageref{sec-do-internal-pressure} \\
+! {\tt uu\_momentum\_3d}       & layer-integrated $u$-velocity & see page
+! \pageref{sec-uu-momentum-3d} \\
+! {\tt vv\_momentum\_3d}       & layer-integrated $v$-velocity & see page
+! \pageref{sec-vv-momentum-3d} \\
+! {\tt coordinates}            & layer heights ({\tt MUTFLAT} not defined) & see
+! page \pageref{sec-coordinates} \\
+! {\tt ww\_momentum\_3d}       & grid-related vertical velocity & see page
+! \pageref{sec-ww-momentum-3d} \\
+! {\tt uv\_advect\_3d}         & momentum advection & see page
+! \pageref{sec-uv-advect-3d} \\
+! {\tt uv\_diffusion\_3d}      & momentum diffusion & see page
+! \pageref{sec-uv-diffusion-3d} \\
+! {\tt stresses\_3d}           & stresses (for GOTM) & see page
+! \pageref{sec-stresses-3d} \\
+! {\tt ss\_nn}                 & shear and stratification (for GOTM) & see page
+! \pageref{sec-ss-nn} \\
+! {\tt gotm}                   & interface and call to GOTM & see page
+! \pageref{sec-gotm} \\
+! {\tt do\_temperature}        & potential temperature equation & see page
+! \pageref{sec-do-temperature} \\
+! {\tt do\_salinity}           & salinity equation & see page
+! \pageref{sec-do-salinity} \\
+! {\tt do\_eqstate}            & equation of state & see page
+! \pageref{sec-do-eqstate} \\
+! {\tt do\_spm}                & suspended matter equation & see page 
+! \pageref{sec-do-spm} \\
+! {\tt do\_getm\_bio}          & call to GOTM-BIO (not yet released) & \\
+! {\tt slow\_bottom\_friction} & slow bottom friction & see page
+! \pageref{sec-slow-bottom-friction} \\
+! {\tt slow\_advection}        & slow advection terms & see page
+! \pageref{sec-slow-advection} \\
+! {\tt slow\_diffusion}        & slow diffusion terms & see page
+! \pageref{sec-slow-diffusion} \\
+! {\tt slow\_terms}            & sum of slow terms & see page
+! \pageref{sec-slow-terms} \\
+! {\tt stop\_macro}            & finishing a 3d step & see page
+! \pageref{sec-stop-macro}
+! \end{tabular}
+! 
+! \vspace{0.5cm}
+!
+! Several calls are only executed for certain compiler options. At each
+! time step the call sequence for the horizontal momentum equations is
+! changed in order to allow for higher order accuracy for the Coriolis
+! rotation.
 !
 ! !REVISION HISTORY:
 !  See log for module
@@ -575,7 +664,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: clean_3d - cleanup after 3D run.
+! !IROUTINE: clean_3d - cleanup after 3D run \label{sec-clean-3d}
 !
 ! !INTERFACE:
    subroutine clean_3d()
@@ -588,7 +677,8 @@
 ! !OUTPUT PARAMETERS:
 !
 ! !DESCRIPTION:
-!  This routine cleans up after a 3D integration. Close open files etc.
+! Here, a call to the routine {\tt clean\_variables\_3d} which howewer
+! does not do anything yet.
 !
 ! !REVISION HISTORY:
 !  22Nov Author name Initial code
