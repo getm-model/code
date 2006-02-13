@@ -1,0 +1,146 @@
+%$Id: a4.tex,v 1.1 2006-02-13 07:20:04 hb Exp $
+
+\documentclass[a4paper,twoside]{article}
+
+% AMS math and symbols
+\usepackage{amsmath,amsfonts,amssymb,amsbsy,latexsym}
+
+% natural science bibliography
+\usepackage[round]{natbib}
+
+% definitions used in the GETM-manual
+\input definitions.tex
+
+% graphics
+\usepackage[dvips]{graphicx}
+\usepackage{psfrag}
+\usepackage{epic}
+\usepackage{supertabular}
+
+% to make pdf files look OK
+\usepackage{ae}
+
+% center it on a4-format
+\setlength{\evensidemargin}{4.6mm}
+\setlength{\oddsidemargin}{4.6mm}
+\setlength{\textwidth}{150mm}
+
+\begin{document}
+
+
+
+% the titlepage
+\begin{titlepage}
+
+
+\vspace{14mm}
+
+{\sf \bf \huge
+ \begin{center}
+   General Estuarine Transport Model \\
+   GETM
+ \end{center}
+}
+
+\vspace{6mm}
+
+{\sf \bf \LARGE
+ \begin{center}
+   Source Code \\
+      and \\
+Test Case Documentation
+ \end{center}
+}
+
+{\sf \bf \LARGE
+ \begin{center}
+The GETM Developers Team   
+ \end{center}
+}
+
+
+\vspace{5mm}
+
+{\sf \bf \Large
+ \begin{center}
+  Version 1.6
+ \end{center}
+}
+
+\vfill
+
+
+{\sf \bf \Large
+ \begin{center}
+\today
+ \end{center}
+}
+
+\vfill
+
+\end{titlepage}
+
+
+% table of contents
+\cleardoublepage
+\tableofcontents
+
+% include the section files
+% the introduction. All files
+% ending with 'Intro.tex' are hand-made,
+% all others come from 'ProTeX'
+
+\cleardoublepage
+
+\include{introduction}
+
+\cleardoublepage
+\include{getm_physics}
+
+%\cleardoublepage
+%\include{getmIntro}
+%\include{getm}
+
+%\cleardoublepage
+%\include{domainIntro}
+%\include{domain}
+
+\cleardoublepage
+\include{2dIntro}
+\include{2d}
+
+\cleardoublepage
+\include{3dIntro}
+\include{3d}
+
+%\cleardoublepage
+%\include{meteoIntro}
+%\include{meteo}
+
+%%\cleardoublepage
+%\include{inputIntro}
+%\include{input}
+
+%\cleardoublepage
+%\include{outputIntro}
+%\include{output}
+
+%\cleardoublepage
+%\include{ncdfIntro}
+%\include{ncdfo}
+
+%\cleardoublepage
+%\include{futilsIntro}
+%\include{futils}
+
+%\cleardoublepage
+%\include{cases}
+
+ Bibliography with BibTeX:
+\cleardoublepage
+\bibliographystyle{agu}
+\addcontentsline{toc}{section}{Bibliography}
+\bibliography{getm}
+
+
+\end{document}

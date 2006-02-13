@@ -1,0 +1,325 @@
+%$Id: 3dIntro.tex,v 1.1 2006-02-13 07:20:04 hb Exp $
+
+\section{Introduction to 3d module}
+
+\subsection{Overview over 3D routines in GETM}
+\label{Section_Overview_3D}
+
+
+This module contains the physical core of GETM. All three-dimensional
+equations are iterated here, which are currently the equations for
+
+\vspace{0.5cm}
+
+\begin{tabular}{llllll}
+quantity & description & unit & variable & routine name & page \\
+$p_k$    & layer-int.\ $u$-transport & m$^2$s$^{-1}$ & {\tt uu} & 
+{\tt uu\_momentum} & \pageref{sec-uu-momentum-3d} \\
+$q_k$    & layer-int.\ $v$-transport & m$^2$s$^{-1}$ & {\tt vv} & 
+{\tt vv\_momentum} & \pageref{sec-vv-momentum-3d} \\
+$\theta$    & potential temperature & $^{\circ}$C & {\tt T} & 
+{\tt do\_temperature} & \pageref{sec-do-temperature} \\
+$S$    & salinity & psu & {\tt S} & 
+{\tt do\_salinity} & \pageref{sec-do-salinity} \\
+$C$    & suspended matter & kg\,m$^{-3}$ & {\tt spm} & 
+{\tt do\_spm} & \pageref{sec-do-spm} \\
+\end{tabular}
+
+\vspace{0.5cm}
+
+The vertical grid for GETM, i.e.\ the layer thicknesses in all
+U-, V- and T-points, are defined in the routine {\tt coordinates},
+see section \ref{sec-coordinates} on page \ref{sec-coordinates}.
+
+The grid-related vertical velocity $\bar w_k$ is calculated directly from 
+the layer-integrated continuity equation (\ref{ContiLayerInt}) which here done
+in the routine {\tt ww\_momentum} described on page \pageref{sec-ww-momentum-3d}.
+
+The physics of the horizontal momentum equations is given in
+section \ref{Section_3d_momentum}, and their transformation to general vertical
+coordinates in section \ref{SectionLayerIntegrated}. Their numerical
+treatment will be discussed in the routines for the individual terms, see
+below.
+The forcing terms of the horizontal momentum equations are calculated in 
+various routines, such as {\tt uv\_advect\_3d} for the three-dimensional 
+advection (which in turn calls 
+{\tt advection\_3d} in case that higher order positive definite advection
+schemes are chosen for the momentum equation), 
+{\tt uv\_diffusion\_3d.F90} for the horizontal diffusion, 
+{\tt bottom\_friction\_3d} for the bottom friction applied to the lowest
+layer, and {\tt internal\_pressure} for the calculation of the internal
+pressure gradients. 
+
+The major tracer equations in any ocean model are those for potential
+temperature and salinity. They are calculated in the routines 
+{\tt do\_temperature} and {\tt do\_salinity}. A further hard-coded 
+tracer equation is the suspended matter equation, see {\tt do\_spm}.
+
+In the near future (the present text is typed in February 2006),
+a general interface to the biogeochemical module of GOTM 
+(also not yet released) will be available. 
+This allow to add tracer equations of arbitrary complexity to GETM, ranging
+from completely passive tracer equations to complex ecosystem models
+such as ERSEM (\cite{BARETTAea95}). The interfacing between this
+so-called GOTM-BIO to GETM is made in a similar manner than the interfacing
+between GETM  and the GOTM turbulence module described in 
+{\tt gotm} on page \pageref{sec-gotm}.
+The basic structure of GOTM-BIO has been recently presented by 
+\cite{BURCHARDea06}.
+Some more details about the tracer equations currently included in
+GETM is given in section \ref{Section_tracer}.
+
+The entire turbulence model, which basically provides eddy viscosity
+$\nu_t$ and eddy diffusivity $\nu'_t$ is provided from the General
+Ocean Turbulence Model (GOTM, see \cite{UMLAUFea05} for the
+source code documentation and {\tt http://www.gotm.net} download of
+source code, docomentation and test scenarios). The turbulence module
+of GOTM (which is a complete one-dimensional water column model) is coupled
+to GETM via the interfacing routine {\tt gotm} described in section
+{\tt gotm} on page \pageref{sec-gotm}. Major input to the turbulence model
+are the shear squared 
+$M^2=\left(\partial_zu\right)^2+\left(\partial_zu\right)^2$ and the buoyancy
+frequency squared $N^2=\partial_z b$ with the buoyancy $b$ from (\ref{bdef}).
+Those are calculated and interpolated to the T-points where the 
+turbulence model columns are located in the routine {\tt ss\_nn}
+described on page \pageref{sec-ss-nn}.
+
+The surface and bottom stresses which need to be passed to the turbulence
+module as well, are interpolated to T-points in the routine
+{\tt stresses\_3d}, see page \pageref{sec-stresses-3d}.
+
+The module {\tt rivers} (see section \ref{sec-rivers} on page 
+\pageref{sec-rivers}) organises the riverine input of fresh water
+from any number of rivers.
+
+Three-dimensional boundary conditions for temperature and salinity
+are provided by means of the module {\tt bdy-3d}, see section
+\ref{bdy-3d} described on page \pageref{bdy-3d}.
+
+The remaining routines in the module {\tt 3d} deal with the coupling of the
+external and the internal mode. The basic idea of the mode splitting
+has already been discussed in section \ref{Section_mode_splitting}.
+The consistency of the two modes is given through the so-called
+slow terms, which are mode interaction terms resulting from
+subtracting vertically integrated equations with parameterised 
+advection, diffusion, bottom friction and internal pressure 
+gradient from vertically integrated equations with explicit vertical resolution
+of these processes. These slow terms which are updated every macro
+time step only (that is why we call them slow terms) need to be considered
+for the external mode included in module {\tt 2d}.
+Those slow terms are calculated here in the {\tt 3d} module in the routines
+{\tt slow\_bottom\_friction}, {\tt slow\_advection} 
+and {\tt slow\_diffusion}, and they are added together in {\tt slow\_terms},
+see the descriptions in sections \ref{sec-slow-bottom-friction}, 
+\ref{sec-slow-advection},\ref{sec-slow-diffusion} and \ref{sec-slow-terms}
+on pages \pageref{sec-slow-bottom-friction}, 
+\pageref{sec-slow-advection},\pageref{sec-slow-diffusion} and 
+\pageref{sec-slow-terms},
+respectively.
+
+One other important measure of coupling the two modes is to
+add to all calculated $u$- and $v$-velocity profiles the difference 
+between their vertical integral and the time-average of the 
+vertically integrated transport from the previous set of micro time 
+steps. This shifting is done in the routines {\tt uu\_momentum\_3d} and
+{\tt vv\_momentum\_3d} and the  time-average of the
+vertically integrated transport is updated in the {\tt 2d} module 
+in the routine {\tt m2d} and divided by the number of
+micro time steps per macro time step in {\tt start\_macro}. 
+Further basic calculations performed in {\tt start\_macro}
+(see description in section \ref{sec-start-macro} 
+on page \pageref{sec-start-macro}) are the updates of
+the {\it old} and {\it new} sea surface elevations with respect to 
+the actual macro time step.
+The routine {\tt stop\_macro} (see description in section \ref{sec-stop-macro}
+on page \pageref{sec-stop-macro}) 
+which called at the end of each macro time step
+simply resets the variables for the time-averaged transports to zero. 
+
+\subsection{Tracer equations}\label{Section_tracer}
+
+The general conservation equation for tracers $c^i$ with $1\leq i \leq N_c$
+(with $N_c$ being the number of tracers), 
+which can e.g.\ be temperature,
+salinity, nutrients, phytoplankton, zoo-plankton, suspended matter,
+chemical concentrations etc.\ is given as:
+
+\begin{equation}\label{densz}
+\begin{array}{l}
+\partial_t c^i +\partial_x (uc^i) +\partial_y(vc^i) +\partial_z ((w+w_s^i)c^i)
+-\partial_z(\nu_t' \partial_z c^i)
+\\ \\ \displaystyle \qquad
+-\partial_x(A_h^T \partial_x c^i)
+-\partial_y(A_h^T \partial_y c^i)
+=Q^i.
+\end{array} 
+\end{equation}
+
+Here, $\nu'_t$ denotes the vertical eddy diffusivity and
+$A_h^T$ the horizontal diffusivity.
+Vertical migration of concentration with migration velocity
+$w_s^i$ (positive for upward motion) is considered as well. This could be 
+i.e.\ settling of suspended matter or active migration of
+phytoplankton.  
+$Q^i$ denotes all internal sources and sinks of the tracer $c^i$.
+This might e.g.\ be for the temperature equation the heating of water
+due to absorption of solar radiation in the water column.
+
+Surface of bottom boundary conditions for tracers are usually given
+by prescribed fluxes:
+
+\begin{equation}\label{SurfFlux}
+\nu_t' \partial_z c^i = F^i_s  \qquad \mbox{for } z=\zeta
+\end{equation}
+
+and 
+
+\begin{equation}\label{BottFlux}
+\nu_t' \partial_z c^i = -F^i_b  \qquad \mbox{for } z=-H,
+\end{equation}
+
+with surface and bottom fluxes $F^n_s$ and $F^n_b$ directed
+into the domain, respectively. 
+
+At open lateral boundaries, the tracers $c^n$ are prescribed for
+the horizontal velocity normal to the open boundary 
+flowing into the domain. In case of outflow, a zero-gradient condition is
+used. 
+
+All tracer equations except those for temperature, salinity and 
+suspended matter will be treated in the future by means of GOTM-BIO.
+
+The two most important tracer equations which are hard-coded in GETM
+are the transport equations for potential temperature $\theta$ in $^{\circ}$C
+and salinity $S$ in psu (practical salinity units):
+
+\begin{equation}\label{Teq}
+\begin{array}{l}
+\partial_t \theta +\partial_x (u\theta) +\partial_y(v\theta) +\partial_z (w\theta)
+-\partial_z(\nu_t' \partial_z \theta)
+\\ \\ \displaystyle \qquad
+-\partial_x(A_h^\theta \partial_x \theta)
+-\partial_y(A_h^\theta \partial_y \theta)
+=\frac{\partial_z I}{c'_p \rho_0},
+\end{array} 
+\end{equation}
+
+\begin{equation}\label{Seq}
+\begin{array}{l}
+\partial_t S +\partial_x (uS) +\partial_y(vS) +\partial_z (wS)
+-\partial_z(\nu_t' \partial_z S)
+\\ \\ \displaystyle \qquad
+-\partial_x(A_h^S \partial_x S)
+-\partial_y(A_h^S \partial_y S)
+=0.
+\end{array} 
+\end{equation}
+
+On the right hand side of the temperature equation (\ref{Teq})
+is a source term 
+for absorption of solar radiation with the solar radiation at depth $z$,
+$I$, and the specific heat capacity of water, $c'_p$. 
+According to \cite{PAULSONea77} the radiation $I$ in the upper
+water column may be parameterised by
+
+\begin{equation}\label{Light}
+I(z) = I_0 \left(ae^{-\eta_1z}+(1-a)e^{-\eta_2z}\right).
+\end{equation}
+
+Here, $I_0$ is the albedo corrected radiation normal to the sea surface.
+The weighting parameter $a$ and the 
+attenuation lengths for the
+longer and the shorter fraction of the short-wave radiation,
+$\eta_1$ and $\eta_2$, respectively, depend on the turbidity of the water.
+\cite{JERLOV68} defined 6 different classes of water
+from which \cite{PAULSONea77} calculated weighting parameter $a$
+and attenuation coefficients $\eta_1$ and $\eta_2$.
+
+At the surface, flux boundary conditions for $T$ and $S$ have to
+be prescribed. For the potential temperature, it is of the following form:  
+
+\begin{equation}\label{TempFlux}
+\nu'_t \partial_z T= \frac{Q_s+Q_l+Q_b}{c'_p \rho_0},
+\qquad \mbox{for } z=\zeta,
+\end{equation}
+
+with the sensible 
+heat flux, $Q_s$, the 
+latent heat flux, $Q_l$ and the
+long wave back radiation,
+$Q_b$. Here, the \cite{KONDO75} 
+bulk formulae have been used for calculating the
+momentum and temperature surface fluxes
+due to air-sea interactions. 
+In the presence of sea ice, these air-sea fluxes have to be considerably
+changed, see e.g.\ \cite{KANTHAea00b}. 
+Since there is no sea-ice model coupled to GETM presently,
+the surface heat flux is limited to positive values, 
+when the sea surface temperature $T_s$ reaches the freezing point
+
+\begin{equation}\label{freezingpoint}
+T_f=-0.0575\,S_s+1.710523\cdot 10^{-3}\, S_s^{1.5}
+-2.154996\cdot 10^{-4}\,S_s^2\approx -0.0575\,S_s
+\end{equation}
+
+with the sea surface salinity $S_s$, see e.g.\ \cite{KANTHAea00}:
+
+\begin{equation}\label{primitive_ice_model} 
+Q_{surf} = \left\{
+\begin{array}{ll}
+Q_s+Q_l+Q_b, & \mbox{ for } T_s > T_f, \\ \\
+\max\{0,Q_s+Q_l+Q_b\}, & \mbox{ else.}
+\end{array}
+\right.
+\end{equation}
+
+For the surface freshwater flux,
+which defines the salinity flux, the difference between evaporation $Q_E$
+(from 
+bulk formulae) and precipitation $Q_P$ (from observations or
+atmospheric models) is calculated:
+
+\begin{equation}\label{SalFlux}
+\nu'_t\partial_z S = \frac{S(Q_E-Q_P)}{\rho_0(0)},
+\qquad \mbox{for } z=\zeta,
+\end{equation}
+
+where $\rho_0(0)$ is the density of freshwater at sea surface temperature.
+In the presence of sea-ice, the calculation of freshwater flux
+is more complex, see e.g.\ \cite{LARGEea94}.
+However, for many short term calculations, the freshwater
+flux can often be neglected compared to the surface 
+heat flux.
+
+A complete revision of the surface flux calculation is currently under
+development. It will be the idea to have the same surface flux calculations
+for GOTM and GETM. In addition to the older bulk formulae by \cite{KONDO75}
+we will also implement the more recent formlations by 
+\cite{FAIRALLea96}.
+
+Heat and salinity fluxes at the bottom are set to zero. 
+
+\subsection{Equation of state}\label{Section_state_eq}
+
+The coupling between the potential temperature and salinity 
+equations and the momentum
+equations is due to an algebraic equation of state:
+
+\begin{equation}\label{UNESCO} 
+\rho=\rho(\theta,S,p_0)
+\end{equation}
+
+with $p_0=g\rho_0(\zeta-z)$ being the hydrostatic reference pressure.
+In order to obtain potential density from the equation of state, 
+$p_0$ needs to be set to zero, which is the default in GETM.
+
+Currently the equation of state by \cite{FOFONOFFea83} is implemented
+into GETM, but the more recent and more consistent equation of state
+by \cite{JACKETTea05} which is already contained in GOTM
+will be added as an option in the near future.
+
+For the equation of state, also linearised version are implemented into
+GETM, for details, see section \ref{sec-eqstate} on page \pageref{sec-eqstate}.
+
+It should be noted carefully that the GETM variable {\tt rho} actually
+stands for the buoyancy $b$ as defined in (\ref{bdef}).

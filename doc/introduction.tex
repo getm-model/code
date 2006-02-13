@@ -1,0 +1,86 @@
+%$Id: introduction.tex,v 1.1 2006-02-13 07:20:04 hb Exp $
+
+\section{Introduction}
+
+\subsection{What is GETM?}
+
+
+\subsection{A short history of GETM}\label{SectionHistory}
+
+The idea for GETM was born in May 1997 in Arcachon, France during a 
+workshop of the PhaSE project which was sponsored by the European Community
+in the framework of the MAST-III programme. It was planned  
+to set up an idealised numerical model for the Eastern Scheldt, The Netherlands
+for simulating the effect of vertical mixing of nutrients on filter feeder
+growth rates. A discussion between the first author of this report,
+Peter Herman (NIOO, Yerseke, The Netherlands) and Walter Eifler
+(JRC Ispra, Italy) had the result that the
+associated processes were inherently three-dimensional (in space), and thus,
+only a three-dimensional model could give satisfying answers. 
+Now the question arose, which numerical model to use. An old
+wadden sea model by \cite{BURCHARD95} including a two-equation turbulence
+model was written in $z$-coordinates with fixed geopotential layers
+(which could be added or removed for rising and sinking sea surface elevation,
+respectively) had proven to be too noisy for the applications in mind.
+Furthermore, the step-like bottom approximation typical for such models
+did not seem to be sufficient. Other Public Domain models did not allow for
+drying and flooding of inter-tidal flats, such as the Princeton Ocean Model
+(POM). There was thus the need for a new model. Most of the ingredients were
+however already there. The first author of this report had already written a
+$k$-$\eps$ turbulence model, see \cite{BURCHARDea95}, the forerunner
+of GOTM. A two-dimensional code for general vertical coordinates had been
+written as well, see \cite{BURCHARDea97}. And the first author of this report
+had already learned a lot about mode splitting models from
+Jean-Marie Beckers (University of Liege, Belgium).   
+Back from Arcachon in Ispra, Italy at the Joint Research Centre
+of the European Community, the model was basically written during six weeks,
+after which an idealised tidal simulation for the Sylt-R\o m\o{} Bight
+in the wadden sea area between Germany and Denmark could be successfully
+simulated, see \cite{BURCHARD98}.
+By that time this model had the little attractive name {\it MUDFLAT}
+which at least well accounted for
+the models ability to dry and flood inter-tidal flats.  
+At the end of the PhaSE project in 1999, the 
+idealised simulation of mussel growth in the Eastern Scheldt could be
+finished (not yet published, pers.\ comm.\ Francois Lamy and Peter Herman).  
+
+In May 1998 the second author of this report joined the development of
+{\it MUDFLAT}. He first fully rewrote the model from a one-file FORTRAN77 code
+to a modular FORTRAN90/95 code,
+made the interface to GOTM (such that the original $k$-$\eps$ model
+was not used any more), integrated the netCDF-library into the model,
+and prepared the parallelisation of the model. 
+And a new name was created, GETM, General Estuarine Transport Model. 
+As already in GOTM, the word "General" does not imply that the model
+is general, but indicates the motivation to make it more and more general. 
+
+At that time, GETM has actually been applied for simulating currents inside
+the Mururoa atoll in the Pacific Ocean, see \cite{MATHIEUea01}. 
+
+During the year 2001, GETM was then extended by the authors
+of this report to be a fully baroclinic
+model with transport of active and passive tracers, calculation of
+density, internal pressure gradient and stratification, surface heat and
+momentum fluxes and so forth. During a stay of the first author
+at the Universit\'e Catholique de Louvain,
+Institut d'As\-tro\-no\-mie et de G\'eophysique George Lema\^\i tre,
+Belgium (we are grateful to Eric Deleersnijder for this
+invitation and many discussions) the high-order advection schemes have
+been written. 
+During another invitation to Belgium, this time to the
+GHER at the Universit\'e de Li\`ege, the first author had the
+opportunity to discuss numerical details of GETM with Jean-Marie
+Beckers, who originally motivated us to use the mode splitting technique. 
+
+The typical challenging application
+in mind of the authors was always a simulation of the tidal Elbe,
+where baroclinicity and drying and flooding of inter-tidal flats play
+an important role. Furthermore, the tidal Elbe is long, narrow  and bended,
+such that the use of Cartesian coordinates would require an indexing
+of the horizontal fields, see e.g.\ \cite{DUWE88}. Thus, the use of
+curvi-linear coordinates which follow the course of the river
+has already been considered for a long time.   
+However, the extensions just listed above, give the model also the
+ability to simulate shelf sea processes in fully baroclinic mode,
+such that the name General Estuarine Transport Model is already 
+a bit too restrictive. 
