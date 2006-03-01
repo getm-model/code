@@ -1,4 +1,4 @@
-!$Id: v_split_adv.F90,v 1.3 2006-03-01 15:54:08 kbk Exp $
+!$Id: v_split_adv.F90,v 1.4 2006-03-01 16:03:32 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -65,13 +65,13 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE , intent(in)               :: vv(I3DFIELD),hvn(I3DFIELD)
-   REALTYPE, intent(in)                :: delxv(I2DFIELD),delyv(I2DFIELD)
-   REALTYPE, intent(in)                :: area_inv(I2DFIELD),dt
-   integer, intent(in)                 :: av(E2DFIELD),az(E2DFIELD)
-   REALTYPE, intent(in)                :: splitfac
-   integer, intent(in)                 :: method
-   REALTYPE, intent(in)                :: AH
+   REALTYPE, intent(in) :: vv(I3DFIELD),hvn(I3DFIELD)
+   REALTYPE, intent(in) :: delxv(I2DFIELD),delyv(I2DFIELD)
+   REALTYPE, intent(in) :: area_inv(I2DFIELD),dt
+   integer, intent(in)  :: av(E2DFIELD),az(E2DFIELD)
+   REALTYPE, intent(in) :: splitfac
+   integer, intent(in)  :: method
+   REALTYPE, intent(in) :: AH
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)             :: f(I3DFIELD)

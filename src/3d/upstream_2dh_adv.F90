@@ -1,4 +1,4 @@
-!$Id: upstream_2dh_adv.F90,v 1.4 2006-03-01 15:54:08 kbk Exp $
+!$Id: upstream_2dh_adv.F90,v 1.5 2006-03-01 16:03:32 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -84,13 +84,13 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in)                :: uu(I3DFIELD),vv(I3DFIELD)
-   REALTYPE, intent(in)                :: ho(I3DFIELD),hn(I3DFIELD)
-   REALTYPE, intent(in)                :: hun(I3DFIELD),hvn(I3DFIELD)
-   REALTYPE, intent(in)                :: delxv(I2DFIELD),delyu(I2DFIELD)
-   REALTYPE, intent(in)                :: delxu(I2DFIELD),delyv(I2DFIELD)
-   REALTYPE, intent(in)                :: area_inv(I2DFIELD),dt,AH
-   integer, intent(in)                 :: az(E2DFIELD)
+   REALTYPE, intent(in) :: uu(I3DFIELD),vv(I3DFIELD)
+   REALTYPE, intent(in) :: ho(I3DFIELD),hn(I3DFIELD)
+   REALTYPE, intent(in) :: hun(I3DFIELD),hvn(I3DFIELD)
+   REALTYPE, intent(in) :: delxv(I2DFIELD),delyu(I2DFIELD)
+   REALTYPE, intent(in) :: delxu(I2DFIELD),delyv(I2DFIELD)
+   REALTYPE, intent(in) :: area_inv(I2DFIELD),dt,AH
+   integer, intent(in)  :: az(E2DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)             :: f(I3DFIELD)
