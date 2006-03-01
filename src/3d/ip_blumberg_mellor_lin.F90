@@ -1,4 +1,4 @@
-!$Id: ip_blumberg_mellor_lin.F90,v 1.3 2006-03-01 14:45:12 hb Exp $
+!$Id: ip_blumberg_mellor_lin.F90,v 1.4 2006-03-01 15:54:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -53,6 +53,9 @@
    use internal_pressure
    use variables_3d, only: kumin_pmz,kvmin_pmz
    IMPLICIT NONE
+!
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k

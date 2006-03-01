@@ -1,4 +1,4 @@
-!$Id: v_split_adv.F90,v 1.2 2006-03-01 14:45:12 hb Exp $
+!$Id: v_split_adv.F90,v 1.3 2006-03-01 15:54:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -77,6 +77,9 @@
    REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer         :: i,ii,j,jj,k,kk

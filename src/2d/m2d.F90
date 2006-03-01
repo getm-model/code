@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.14 2006-03-01 14:45:12 hb Exp $
+!$Id: m2d.F90,v 1.15 2006-03-01 15:54:07 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -37,6 +37,9 @@
    REAL_4B                   :: bdy_data(1000)
    REAL_4B, allocatable      :: bdy_times(:)
    integer, parameter        :: comm_method=-1
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
 !

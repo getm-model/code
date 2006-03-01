@@ -1,4 +1,4 @@
-!$Id: spm.F90,v 1.8 2006-03-01 14:45:12 hb Exp $
+!$Id: spm.F90,v 1.9 2006-03-01 15:54:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -109,6 +109,9 @@
    REALTYPE                :: spm_gellingC=0.08        !(g/l or kg/m3)
    REALTYPE                :: spm_part_density=2650.   !(g/l or kg/m3)
    integer                 :: spm_mfloc=4
+!
+! !REVISION HISTORY:
+!  Original author(s): Manuel Ruiz Villarreal, Karsten Bolding and Hans Burchard
 !
 ! !LOCAL VARIABLES:
    REALTYPE, parameter       :: x=-rho_0/g

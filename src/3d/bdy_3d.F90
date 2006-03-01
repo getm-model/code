@@ -1,4 +1,4 @@
-!$Id: bdy_3d.F90,v 1.9 2006-03-01 14:45:12 hb Exp $
+!$Id: bdy_3d.F90,v 1.10 2006-03-01 15:54:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,6 +29,9 @@
    REALTYPE, public, allocatable       :: S_bdy(:,:),T_bdy(:,:)
 !
 ! !PRIVATE DATA MEMBERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
 !EOP

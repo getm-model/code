@@ -1,4 +1,8 @@
-!$Id: fct_2dh_adv.F90,v 1.3 2006-03-01 14:45:12 hb Exp $
+<<<<<<< fct_2dh_adv.F90
+!$Id: fct_2dh_adv.F90,v 1.4 2006-03-01 15:54:08 kbk Exp $
+=======
+!$Id: fct_2dh_adv.F90,v 1.4 2006-03-01 15:54:08 kbk Exp $
+>>>>>>> 1.3
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,6 +47,9 @@
    REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer         :: rc,i,ii,j,jj,k,kk

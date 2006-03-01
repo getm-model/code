@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.16 2006-03-01 14:45:12 hb Exp $
+!$Id: temperature.F90,v 1.17 2006-03-01 15:54:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -37,6 +37,9 @@
    integer                   :: temp_hor_adv=1,temp_ver_adv=1
    integer                   :: temp_adv_split=0
    REALTYPE                  :: temp_AH=-1.
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
 !EOP

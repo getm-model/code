@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.29 2006-03-01 14:45:12 hb Exp $
+!$Id: m3d.F90,v 1.30 2006-03-01 15:54:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -59,6 +59,9 @@
    logical                             :: bdy3d=.false.
    integer                             :: bdyfmt_3d,bdyramp_3d
    character(len=PATH_MAX)             :: bdyfile_3d
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
    integer         :: vel_hor_adv=1,vel_ver_adv=1,vel_adv_split=0

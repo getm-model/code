@@ -1,4 +1,4 @@
-!$Id: ip_blumberg_mellor.F90,v 1.6 2006-03-01 14:45:12 hb Exp $
+!$Id: ip_blumberg_mellor.F90,v 1.7 2006-03-01 15:54:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -52,6 +52,9 @@
 ! !USES:
    use internal_pressure
    IMPLICIT NONE
+!
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard, Adolf Stips, Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k

@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.15 2006-03-01 14:45:12 hb Exp $
+!$Id: internal_pressure.F90,v 1.16 2006-03-01 15:54:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -88,6 +88,9 @@
    integer, private, parameter         :: Z_INTERPOL=3
    integer, private, parameter         :: SONG_WRIGHT=4
    integer, private, parameter         :: CHU_FAN=5
+!
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard & Karsten Bolding
 !
 !EOP
 !-----------------------------------------------------------------------

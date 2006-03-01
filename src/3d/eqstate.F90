@@ -1,4 +1,4 @@
-!$Id: eqstate.F90,v 1.6 2006-03-01 14:45:12 hb Exp $
+!$Id: eqstate.F90,v 1.7 2006-03-01 15:54:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,8 +25,10 @@
    REALTYPE                  :: T0 = 10., S0 = 33.75, p0 = 0.
    REALTYPE                  :: dtr0 = -0.17, dsr0 = 0.78
 !
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
+!
 ! !LOCAL VARIABLES:
-
 !EOP
 !-----------------------------------------------------------------------
 

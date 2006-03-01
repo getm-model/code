@@ -1,4 +1,4 @@
-!$Id: ip_song_wright.F90,v 1.3 2006-03-01 14:45:12 hb Exp $
+!$Id: ip_song_wright.F90,v 1.4 2006-03-01 15:54:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -45,6 +45,9 @@
 ! !USES:
    use internal_pressure
    IMPLICIT NONE
+!
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k

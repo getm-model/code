@@ -1,4 +1,4 @@
-!$Id: have_bdy.F90,v 1.7 2006-03-01 14:45:12 hb Exp $
+!$Id: have_bdy.F90,v 1.8 2006-03-01 15:54:07 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -24,6 +24,9 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,n

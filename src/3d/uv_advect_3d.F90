@@ -1,4 +1,4 @@
-!$Id: uv_advect_3d.F90,v 1.12 2006-03-01 14:45:12 hb Exp $
+!$Id: uv_advect_3d.F90,v 1.13 2006-03-01 15:54:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -272,6 +272,9 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc

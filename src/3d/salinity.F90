@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.19 2006-03-01 14:45:12 hb Exp $
+!$Id: salinity.F90,v 1.20 2006-03-01 15:54:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -40,6 +40,9 @@
    integer                   :: salt_hor_adv=1,salt_ver_adv=1
    integer                   :: salt_adv_split=0
    REALTYPE                  :: salt_AH=-_ONE_
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
 !EOP

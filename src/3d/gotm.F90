@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.12 2006-03-01 14:45:12 hb Exp $
+!$Id: gotm.F90,v 1.13 2006-03-01 15:54:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -55,6 +55,9 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k

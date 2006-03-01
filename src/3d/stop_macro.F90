@@ -1,4 +1,4 @@
-!$Id: stop_macro.F90,v 1.5 2006-03-01 14:45:12 hb Exp $
+!$Id: stop_macro.F90,v 1.6 2006-03-01 15:54:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,8 +26,10 @@
 !
 ! !OUTPUT PARAMETERS:
 !
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard & Karsten Bolding
+!
 ! !LOCAL VARIABLES:
-!kbk   integer               :: i,j
 !EOP
 !-----------------------------------------------------------------------
 !BOC

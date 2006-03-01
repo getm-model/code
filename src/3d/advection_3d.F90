@@ -54,6 +54,9 @@
 !
 ! !PRIVATE DATA MEMBERS:
 !
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
+!
 ! !LOCAL VARIABLES:
    integer :: advection_method
 !EOP

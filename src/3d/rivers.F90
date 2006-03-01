@@ -1,4 +1,4 @@
-!$Id: rivers.F90,v 1.10 2006-03-01 14:45:12 hb Exp $
+!$Id: rivers.F90,v 1.11 2006-03-01 15:54:08 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -79,6 +79,9 @@
    REALTYPE, allocatable     :: irr(:)
    REALTYPE, allocatable     :: macro_height(:)
    REALTYPE, allocatable     :: flow_fraction(:)
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
 !EOP
