@@ -1,21 +1,131 @@
-!$Id: ss_nn.F90,v 1.5 2006-02-10 22:41:56 hb Exp $
+!$Id: ss_nn.F90,v 1.6 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: ss_nn() - calculates the Prandtl and Brunt-Vaisalla freq.
+! !ROUTINE: ss_nn - calculates shear and buoyancy frequency
 ! \label{sec-ss-nn}
 !
 ! !INTERFACE:
    subroutine ss_nn()
 !
 ! !DESCRIPTION:
-!  Brunt Vaisalla frequency: Calculation has to be done
-!  as weighted average over the central point (NNc) and
-!  the four neighbouring positions (NNe,NNw,NNn,NNs).
-!  Otherwise the turbulence model would create too
-!  much noise. Later this stencil should be improved
-!  by including isopycnal slopes.
+!
+! Here, the shear frequency squared, 
+! $M^2=\left(\partial_z u\right)^2+\left(\partial_z v\right)^2$, 
+! and the buoyancy frequency squared, $N^2=\partial_z b$, with buoyancy $b$ from
+! (\ref{bdef}) are calculated. 
+! For both calculations, two alternative methods are coded.
+! The two straight-forward methods which are explained first, do
+! both have the disadvantage of generating numerical instabilities.
+! The straight-forward way for calculating $M^2$ is as follows:
+!
+! \begin{equation}\label{ShearSquaredOld}
+! \begin{array}{l}
+! \displaystyle
+! (M^2)_{i,j,k}\approx
+! \frac12
+! \Bigg(\left(\frac{u_{i,j,k+1}-u_{i,j,k}}
+! {\frac12(h^u_{i,j,k+1}+h^u_{i,j,k})}\right)^2
+! +
+! \left(\frac{u_{i-1,j,k+1}-u_{i-1,j,k}}
+! {\frac12(h^u_{i-1,j,k+1}+h^u_{i-1,j,k})}\right)^2
+! \\ \\ \qquad\qquad\quad
+! \displaystyle
+! +
+! \left(\frac{v_{i,j,k+1}-v_{i,j,k}}
+! {\frac12(h^v_{i,j,k+1}+h^v_{i,j,k})}\right)^2
+! +
+! \left(\frac{v_{i,j-1,k+1}-v_{i,j-1,k}}
+! {\frac12(h^v_{i,j-1,k+1}+h^v_{i,j-1,k})}\right)^2
+! \Bigg)
+! \end{array}
+! \end{equation}
+!
+! \cite{BURCHARD01c} developed a new scheme, which guarantees that
+! the mean kinetic energy which is dissipated from the mean flow
+! equals the shear production of turbulent kinetic energy. Therefore,
+! this scheme should be numerically more stable than (\ref{ShearSquaredOld}):
+!
+! \begin{equation}\label{ShearSquaredNew}
+! \begin{array}{l}
+! \displaystyle
+! (M^2)_{i,j,k}\approx
+! \frac12
+! \Bigg(\frac{\frac12(\nu_{i,j,k}+\nu_{i+1,j,k})
+! (u_{i,j,k+1}-u_{i,j,k})^2}{\frac12(h^u_{i,j,k+1}+h^u_{i,j,k})}
+! \\ \\ \qquad\qquad\quad
+! \displaystyle
+! +
+! \frac{\frac12(\nu_{i-1,j,k}+\nu_{i,j,k})
+! (u_{i-1,j,k+1}-u_{i-1,j,k})^2}{\frac12(h^u_{i-1,j,k+1}+h^u_{i-1,j,k})}
+! \\ \\ \qquad\qquad\quad
+! \displaystyle
+! +
+! \frac{\frac12(\nu_{i,j,k}+\nu_{i,j+1,k})
+! (v_{i,j,k+1}-v_{i,j,k})^2}{\frac12(h^v_{i,j,k+1}+h^v_{i,j,k})}
+! \\ \\ \qquad\qquad\quad
+! \displaystyle
+! +
+! \frac{\frac12(\nu_{i,j-1,k}+\nu_{i,j,k})
+! (v_{i,j-1,k+1}-v_{i,j-1,k})^2}{\frac12(h^v_{i,j-1,k+1}+h^v_{i,j-1,k})}
+! \Bigg)
+! \\ \\ \qquad\qquad\quad
+! \displaystyle
+! \cdot
+! \left(\frac12\left(h^c_{i,j,k}+h^c_{i,j,k+1}\right)\nu_{i,j,k}\right)^{-1}
+! \end{array}
+! \end{equation}
+! 
+! The straight-forward discretisation of
+! $N^2$ is given by
+! 
+! \begin{equation}\label{Nstraight}
+! \begin{array}{l}
+! \displaystyle
+! (N^2)_{i,j,k}\approx
+! \frac{b_{i,j,k+1}-b_{i,j,k}}{\frac12(h^t_{i,j,k+1}+h^t_{i,j,k})}.
+! \end{array}
+! \end{equation}
+! 
+! In some cases, together with the straight-forward discretisation
+! of the shear squared, (\ref{ShearSquaredOld}), this
+! did not produce stable numerical results. The reason for this might be that
+! the velocities involved in the calculation for the shear squared do depend
+! on the buoyancies in the two
+! neighbouring T-points such that the straight-forward
+! method (\ref{Nstraight}) leads to an inconsistency.
+! However, other experiments with the energy-conserving discretisation
+! of the shear stress squared, (\ref{ShearSquaredNew})
+! and the straight-forward discretisation of
+! $N^2$, (\ref{Nstraight}),  produced numerically stable results.
+!
+! Most stable results have been obtained with a weighted average 
+! for the $N^2$ calculation:
+!
+! \begin{equation}\label{Naveraged}
+! \begin{array}{l}
+! \displaystyle
+! (N^2)_{i,j,k}\approx
+! \frac16 \Bigg(
+! 2\frac{b_{i,j,k+1}-b_{i,j,k}}{\frac12(h^t_{i,j,k+1}+h^t_{i,j,k})}
+! \\ \\ \qquad\qquad\qquad
+! \displaystyle
+! +
+! \frac{b_{i+1,j,k+1}-b_{i+1,j,k}}{\frac12(h^t_{i+1,j,k+1}+h^t_{i+1,j,k})}
+! +
+! \frac{b_{i-1,j,k+1}-b_{i-1,j,k}}{\frac12(h^t_{i-1,j,k+1}+h^t_{i-1,j,k})}
+! \\ \\ \qquad\qquad\qquad
+! \displaystyle
+! +
+! \frac{b_{i,j+1,k+1}-b_{i,j+1,k}}{\frac12(h^t_{i,j+1,k+1}+h^t_{i,j+1,k})}
+! +
+! \frac{b_{i,j-1,k+1}-b_{i,j-1,k}}{\frac12(h^t_{i,j-1,k+1}+h^t_{i,j-1,k})}
+! \Bigg).
+! \end{array}
+! \end{equation}
+!
+! These stability issues need to be further investigated in the future. 
 !
 ! !USES:
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,au,av,az
@@ -30,51 +140,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: ss_nn.F90,v $
-!  Revision 1.5  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.4  2003-12-17 10:22:41  kbk
-!  now compiles with -DNO_BAROCLINIC and -DNO_3D
-!
-!  Revision 1.3  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 13:36:38  kbk
-!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:55  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.7  2001/10/12 09:22:10  bbh
-!  Removed some bugs
-!
-!  Revision 1.6  2001/09/09 20:12:57  bbh
-!  Weighted averaging for shear production coded
-!
-!  Revision 1.5  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.4  2001/05/22 08:28:27  bbh
-!  Fixed calculation of buoyancy frequency - averaging
-!
-!  Revision 1.3  2001/05/20 07:56:09  bbh
-!  Included bouyancy frequency
-!
-!  Revision 1.2  2001/05/03 20:12:31  bbh
-!  Use of variables_3d
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
-!
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,nb

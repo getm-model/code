@@ -1,4 +1,4 @@
-!$Id: spm.F90,v 1.7 2006-02-10 22:41:56 hb Exp $
+!$Id: spm.F90,v 1.8 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,7 +43,7 @@
 !  F_s = \frac {w_s C_b} {\tau_{cs}} (\tau_{cs}-|\tau_b|).
 !  \end{equation}
 !  Critical shear stresses for erosion and sedimentation
-!  ($\tau_{ce}$ $\tau_{cs}$ have units N\,m$^{-2}$, .
+!  ($\tau_{ce}$ and $\tau_{cs}$ have as units N\,m$^{-2}$).
 !  A pool $B$ of non-dynamic particulate matter (fluff layer)
 !  is assumed in order to take into account the
 !  effects of depletion of erodible material at the bottom.
@@ -64,10 +64,9 @@
 !
 !  It is possible to take into account the impact of sediments on density by
 !  setting {\tt spm\_dens} to {\tt .true}. The modified density is computed as:
+!
 !  \begin{equation}\label{SPM_density}
-!  \begin{array}{l}
-!  {rho}={rho}_{T,S,p}+(1-\frac {{\rho}_{T,S,p} {\rho}_{spm}} C
-!  \end{array}
+!  {\rho}={\rho}_{T,S,p}+\left(1- \frac{{\rho}_{T,S,p}}{{\rho}_{spm}}\right) C.
 !  \end{equation}
 !
 ! !USES:
@@ -111,26 +110,6 @@
    REALTYPE                :: spm_part_density=2650.   !(g/l or kg/m3)
    integer                 :: spm_mfloc=4
 !
-! !REVISION HISTORY:
-!  Original author(s): Manuel Ruiz Villarreal, Karsten Bolding and Hans Burchard
-!
-!  $Log: spm.F90,v $
-!  Revision 1.7  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.6  2006-01-29 20:32:33  hb
-!  Small LaTeX corrections to source code documentation
-!
-!  Revision 1.5  2004-06-15 08:25:57  kbk
-!  added supoort for spm - Ruiz
-!
-!
-!  Revision 1.2  2001/10/23 07:30:19  bbh
-!  module spm renamed to suspended_matter to allow for variable named spm
-!
-!  Revision 1.1  2001/10/22 11:16:09  bbh
-!  Added support for particulate suspended matter - no IO yet
-!
 ! !LOCAL VARIABLES:
    REALTYPE, parameter       :: x=-rho_0/g
 !EOP
@@ -147,7 +126,25 @@
    subroutine init_spm(hotstart_spm,runtype)
 !
 ! !DESCRIPTION:
-!  Description still missing
+!
+! Here, the suspended matter equation is initialised. First, the namelist
+! {\tt spm} is read from {\tt getm.inp}. Then, depending on the
+! {\tt spm\_init\_method}, the suspended matter field is read from a
+! hotstart file ({\tt spm\_init\_method}=0), initialised with a constant value
+! ({\tt spm\_init\_method}=1), initialised and interpolated
+! with horizontally homogeneous
+! suspended matter from a given suspended matter profile 
+! ({\tt spm\_init\_method}=2),
+! or read in and interpolated from a 3D netCDF field 
+! ({\tt spm\_init\_method}=3).
+! Then, some specifications for the SPM bottom pool are given, such as that
+! there should be no initial SPM pool on tidal flats.  
+!
+! As the next step, a number of sanity checks is performed for the chosen
+! suspended matter advection schemes.
+!
+! Finally, the settling velocity is directly prescibed or calculated 
+! by means of the \cite{ZANKE77} formula.
 !
 ! !USES:
 !  For initialization of spm in intertidal flats
@@ -157,9 +154,6 @@
 ! !INPUT PARAMETERS:
    logical   :: hotstart_spm
    integer   :: runtype
-!
-! !REVISION HISTORY:
-!  See the log for the module
 !
 ! !LOCAL VARIABLES:
    integer         :: i,j,k,n
@@ -331,13 +325,36 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  do_spm() - suspended matter equation \label{sec-do-spm}
+! !IROUTINE:  do_spm - suspended matter equation \label{sec-do-spm}
 !
 ! !INTERFACE:
    subroutine do_spm()
 !
 ! !DESCRIPTION:
-!  Description still missing
+!
+! Here, one time step for the suspended matter equation is performed.
+! First, preparations for the call to the advection schemes are
+! made, i.e.\ calculating the necessary metric coefficients
+! and the relevant vertical velocity, which is here composed of the
+! grid-related vertical flow velocity and the settling velocity.
+! Some lines of code allow here for consideration of
+! flocculation processes.
+! After the call to the advection schemes, which actually perform
+! the advection (and horizontal diffusion) step as an operational
+! split step, the fluxes between bottom SPM pool and the suspended matter
+! in the water column are calculated. 
+! Afterwards, the tri-diagonal matrix for calculating the
+! new suspended matter by means of a semi-implicit central scheme for the
+! vertical diffusion is set up.
+! There are no source terms on the right hand sides.
+! The subroutine is completed by solving the tri-diagonal linear
+! equation by means of a tri-diagonal solver.
+! 
+! Optionally, the density of the sediment-laden water may be 
+! corrected by the sediment density, see eq.\ (\ref{SPM_density}).
+!
+! Finally, some special settings for single test cases are made via
+! compiler options.
 !
 ! !USES:
    use advection_3d, only: do_advection_3d
@@ -356,9 +373,6 @@
 #endif
    use domain, only: dry_z
    IMPLICIT NONE
-!
-! !REVISION HISTORY:
-!  See the log for the module
 !
 ! !LOCAL VARIABLES:
    integer         :: i,j,k,rc

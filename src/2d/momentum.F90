@@ -1,9 +1,9 @@
-!$Id: momentum.F90,v 1.10 2006-02-04 11:21:52 hb Exp $
+!$Id: momentum.F90,v 1.11 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: momentum() - 2D-momentum for all interior points.
+! !IROUTINE: momentum - 2D-momentum for all interior points.
 !
 ! !INTERFACE:
    subroutine momentum(n,tausx,tausy,airp)
@@ -28,59 +28,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: momentum.F90,v $
-!  Revision 1.10  2006-02-04 11:21:52  hb
-!  Source code documentation extended
-!
-!  Revision 1.9  2006-01-28 20:07:52  hb
-!  Extensions to compiler option SLICE_MODEL for better representation of zero gradients in y-direction
-!
-!  Revision 1.8  2005-10-06 09:54:00  hb
-!  added support for vertical slice model - via -DSLICE_MODEL
-!
-!  Revision 1.7  2004/01/07 07:37:36  kbk
-!  to compile with IFORT - TABS, etc.
-!
-!  Revision 1.6  2003/04/23 12:09:44  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.5  2003/04/07 15:54:16  kbk
-!  parallel support
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:44  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.8  2001/10/26 09:11:28  bbh
-!  Stresses in meteo.F90 are in N/m2 - divide by rho_0 where necessary
-!
-!  Revision 1.7  2001/10/12 09:19:14  bbh
-!  SALTWEDGE_TEST - should not be here
-!
-!  Revision 1.6  2001/09/04 07:25:28  bbh
-!  Coriolis based on summing up transports
-!
-!  Revision 1.5  2001/08/01 08:25:52  bbh
-!  CURVILINEAR now implemented
-!
-!  Revision 1.4  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.3  2001/05/18 12:55:13  bbh
-!  Included masks in calls to update_2d_halo()
-!
-!  Revision 1.2  2001/05/03 19:35:01  bbh
-!  Use of variables_2d
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:07  bbh
-!  initial import into CVS
 !
 ! !LOCAL VARIABLES:
   logical                    :: ufirst=.false.
@@ -110,7 +57,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: umomentum() - 2D-momentum for all interior points.
+! !IROUTINE: umomentum - 2D-momentum for all interior points.
 !
 ! !INTERFACE:
    subroutine umomentum(tausx,airp)
@@ -182,9 +129,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
@@ -271,7 +215,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: vmomentum() - 2D-momentum for all interior points.
+! !IROUTINE: vmomentum - 2D-momentum for all interior points.
 !
 ! !INTERFACE:
    subroutine vmomentum(tausy,airp)
@@ -343,9 +287,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j

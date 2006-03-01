@@ -1,13 +1,152 @@
-!$Id: u_split_adv.F90,v 1.1 2004-01-06 15:04:00 kbk Exp $
+!$Id: u_split_adv.F90,v 1.2 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  u_split_adv()
+! !IROUTINE:  u_split_adv - 1D x-advection \label{sec-u-split-adv} 
 !
 ! !INTERFACE:
    subroutine u_split_adv(dt,f,uu,hun, &
                           delxu,delyu,area_inv,au,splitfac,method,az,AH)
 ! !DESCRIPTION:
+!
+! Here, the $x$-directional split 1D advection step is executed 
+! with a number of options for the numerical scheme. The basic 
+! advection equation is accompanied by an fractional step
+! for the continuity equation and both equations look as follows:
+!
+! \begin{equation}\label{adv_u_step}
+! h^n_{i,j,k} c^n_{i,j,k} =
+! h^o_{i,j,k} c^o_{i,j,k}
+! \displaystyle
+! - \Delta t 
+! \frac{
+! p_{i,j,k}\tilde c^u_{i,j,k}\Delta y^u_{i,j}-
+! p_{i-1,j,k}\tilde c^u_{i-1,j,k}\Delta y^u_{i-1,j}
+! }{\Delta x^c_{i,j}\Delta y^c_{i,j}},
+! \end{equation}
+!
+! with the 1D continuity equation
+!
+! \begin{equation}\label{adv_u_step_h}
+! h^n_{i,j,k} =
+! h^o_{i,j,k} 
+! \displaystyle
+! - \Delta t 
+! \frac{
+! p_{i,j,k}\Delta y^u_{i,j}-
+! p_{i-1,j,k}\Delta y^u_{i-1,j}
+! }{\Delta x^c_{i,j}\Delta y^c_{i,j}}
+! \end{equation}
+!
+! Here, $n$ and $o$ denote values before and after this operation,
+! respectively, $n$ denote intermediate values when other
+! 1D advection steps come after this and $o$ denotes intermediate
+! values when other 1D advection steps came before this.
+! Furthermore, when this $x$-directional split step is repeated
+! during the total time step (Strang splitting), the time step $\Delta t$
+! denotes a fraction of the full time step.
+!
+! The interfacial fluxes $\tilde c^u_{i,j,k}$ are calculated by means of
+! monotone Total Variation Diminishing (TVD), the first-order monotone
+! upstream and the (non-monotone)
+! unlimited third-order polynomial scheme
+! according to:
+!
+! \begin{equation}\label{LaxWendroffForm}
+! \tilde c_{i,j,k}=
+! \left\{
+! \begin{array}{ll}
+! \left(c_{i,j,k}+\frac12 \tilde c_{i,j,k}^+ (1-|C_{i,j,k}|)
+! (c_{i+1,j,k}-c_{i,j,k})\right) & \mbox{ for } p_{i,j,k} \geq 0, \\ \\
+! \left(c_{i+1,j,k}+\frac12 \tilde c_{i,j,k}^- (1-|C_{i,j,k}|)
+! (c_{i,j,k}-c_{i+1,j,k})\right) & \mbox{ else, }
+! \end{array}
+! \right.
+! \end{equation}
+!
+! with the Courant number $C_{i,j,k}=u_{i,j,k}\Delta t/\Delta x$ and
+!
+! \begin{equation}\label{alphabeta}
+! \tilde c_{i,j,k}^+=\alpha_{i,j,k}+\beta_{i,j,k}r^+_{i,j,k}, \quad
+! \tilde c_{i,j,k}^-=\alpha_{i,j,k}+\beta_{i,j,k}r^-_{i,j,k},
+! \end{equation}
+! 
+! where
+! 
+! \begin{equation}
+! \alpha_{i,j,k}=\frac12 +\frac16(1-2|C_{i,j,k}|),\quad
+! \beta _{i,j,k}=\frac12 -\frac16(1-2|C_{i,j,k}|),
+! \end{equation}
+! 
+! and
+! 
+! \begin{equation}
+! r^+_{i,j,k}=\frac{c_{i,j,k}-c_{i-1,j,k}}{c_{i+1,j,k}-c_{i,j,k}},
+! \quad
+! r^+_{i,j,k}=\frac{c_{i+2,j,k}-c_{i+1,j,k}}{c_{i+1,j,k}-c_{i,j,k}}.
+! \end{equation}
+!
+! It should be noted that by
+! formulation (\ref{LaxWendroffForm}) this so-called P$_2$ scheme 
+! is cast into the
+! so-called Lax-Wendroff form, which would be recovered for
+! $\tilde c_{i,j,k}^+=\tilde c_{i,j,k}^-=1$.
+! 
+! In order to obtain a monotonic and positive scheme, the factors
+! $\tilde c_{i,j,k}^+$ are limited in the following way:
+! 
+! \begin{equation}\label{PDM}
+! \tilde c_{i,j,k}^+ \rightarrow \max \left[
+! 0,\min\left(\tilde c_{i,j,k}^+,\frac{2}{1-|C_{i,j,k}|},
+! \frac{2r^+_{i,j,k}}{|C_{i,j,k}|}\right)
+! \right],
+! \end{equation}
+! 
+! and, equivalently, for $\tilde c_{i,j,k}^-$.
+! This so-called PDM-limiter has been described in detail
+! by \cite{LEONARD91}, who named the PDM-limited P$_2$ scheme
+! also ULTIMATE QUICKEST (quadratic upstream interpolation
+! for convective kinematics with estimated stream terms).
+! 
+! Some simpler limiters which do not exploit the third-order
+! polynomial properties of the discretisation (\ref{LaxWendroffForm}) have been
+! listed by \cite{ZALEZAK87}. Among those are the MUSCL scheme by
+! \cite{VANLEER79},
+! 
+! \begin{equation}\label{MUSCL}
+! \tilde c_{i,j,k}^+ \rightarrow \max \left[
+! 0,\min\left(
+! 2,2r^+_{i,j,k},\frac{1+r^+_{i,j,k}}{2}
+! \right)
+! \right],
+! \end{equation}
+! 
+! and the Superbee scheme by \cite{ROE85},
+! 
+! \begin{equation}\label{Superbee}
+! \tilde c_{i,j,k}^+ \rightarrow \max \left[
+! 0,\min(1,2r^+_{i,j,k}),\min(r^+_{i,j,k},2)
+! \right].
+! \end{equation}
+! 
+! The selector for the schemes is {\tt method}:
+!
+! \vspace{0.5cm}
+!
+! \begin{tabular}{ll}
+! {\tt method = UPSTREAM\_SPLIT}: & first-order upstream (monotone) \\
+! {\tt method = P2}: & third-order polynomial (non-monotone) \\
+! {\tt method = P2\_PDM}: & third-order ULTIMATE-QUICKEST (monotone) \\
+! {\tt method = MUSCL}: & second-order TVD (monotone) \\
+! {\tt method = Superbee}: & second-order TVD (monotone) \\
+! \end{tabular}
+!
+! \vspace{0.5cm}
+!
+! Furthermore, the horizontal diffusion in $y$-direction
+! with the constant diffusion
+! coefficient {\tt AH} is carried out here by means of a central difference
+! second-order scheme.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
@@ -30,14 +169,6 @@
    REALTYPE, intent(inout)   :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: u_split_adv.F90,v $
-!  Revision 1.1  2004-01-06 15:04:00  kbk
-!  FCT advection + split of advection_3d.F90 + extra adv. input checks
-!
 !
 ! !LOCAL VARIABLES:
    integer         :: i,ii,j,jj,k,kk

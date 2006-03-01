@@ -1,13 +1,82 @@
-!$Id: upstream_adv.F90,v 1.2 2005-10-06 09:54:01 hb Exp $
+!$Id: upstream_adv.F90,v 1.3 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  upstream_adv()
+! !IROUTINE:  upstream_adv - 3D upstream advection \label{sec-upstream-adv}
 !
 ! !INTERFACE:
    subroutine upstream_adv(dt,f,uu,vv,ww,ho,hn, &
                            delxv,delyu,delxu,delyv,area_inv,az,AH)
 ! !DESCRIPTION:
+!
+! Here the advection terms (\ref{u_discr_advect}), (\ref{v_discr_advect})
+! and (\ref{w_discr_advect}) are calculated by a upstream scheme and
+! the advection is done in one single time step.
+!
+! This means that the variable to advect is approximated at the interfaces
+! as:
+!
+! \begin{equation}\label{uflux_upstream}
+! c^u_{i,j,k}=
+! \left \{
+! \begin{array}{ll}
+! c_{i,j,k} & \mbox{ for } p_{i,j,k} \geq 0, \\ \\
+! c_{i+1,j,k} & \mbox{ else, } 
+! \end{array}
+! \right.
+! \end{equation}
+! 
+! \begin{equation}\label{vflux_upstream}
+! c^v_{i,j,k}=
+! \left \{
+! \begin{array}{ll}
+! c_{i,j,k} & \mbox{ for } q_{i,j,k} \geq 0, \\ \\
+! c_{i,j+1,k} & \mbox{ else, } 
+! \end{array}
+! \right.
+! \end{equation}
+!
+! and 
+! 
+! \begin{equation}\label{wflux_upstream}
+! c^w_{i,j,k}=
+! \left \{
+! \begin{array}{ll}
+! c_{i,j,k} & \mbox{ for } w_{i,j,k} \geq 0, \\ \\
+! c_{i,j,k+1} & \mbox{ else. } 
+! \end{array}
+! \right.
+! \end{equation}
+! 
+! It should be noted that the quantities $p_{i,j,k}$, $q_{i,j,k}$,
+! $w_{i,j,k}$ are defined relative to the finite volume box, and
+! may (if $c_{i,j,k}$ defines velocities) be calculated by means of
+! interpolation.
+!
+! Then, the one-step scheme is executed as follows:
+!
+! \begin{equation}\label{adv_one_step}
+! \begin{array}{l}
+! h^n_{i,j,k} c^n_{i,j,k} =
+! h^o_{i,j,k} c^o_{i,j,k}  \\ \\ 
+! \displaystyle
+! \qquad - \Delta t \Bigg(
+! \frac{
+! p_{i,j,k}\tilde c^u_{i,j,k}\Delta y^u_{i,j}-
+! p_{i-1,j,k}\tilde c^u_{i-1,j,k}\Delta y^u_{i-1,j}
+! }{\Delta x^c_{i,j}\Delta y^c_{i,j}}
+! +
+! \frac{
+! q_{i,j,k}\tilde c^v_{i,j,k}\Delta y^v_{i,j}-
+! q_{i,j-1,k}\tilde c^v_{i,j-1,k}\Delta y^v_{i,j-1}
+! }{\Delta x^c_{i,j}\Delta y^c_{i,j}} \\ \\
+! \displaystyle
+! \qquad\qquad  +
+! w_{i,j,k}\tilde c^w_{i,j,k}-w_{i,j,k-1}\tilde c^w_{i,j,k-1}\Bigg),
+! \end{array}
+! \end{equation}
+!
+! with the suffices $n$ and $o$ denoting new and old values, respectively.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
@@ -28,17 +97,6 @@
    REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: upstream_adv.F90,v $
-!  Revision 1.2  2005-10-06 09:54:01  hb
-!  added support for vertical slice model - via -DSLICE_MODEL
-!
-!  Revision 1.1  2004/01/06 15:04:00  kbk
-!  FCT advection + split of advection_3d.F90 + extra adv. input checks
-!
 !
 ! !LOCAL VARIABLES:
    integer         :: rc,i,ii,j,jj,k,kk

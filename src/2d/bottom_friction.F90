@@ -1,9 +1,9 @@
-!$Id: bottom_friction.F90,v 1.5 2006-02-04 11:21:52 hb Exp $
+!$Id: bottom_friction.F90,v 1.6 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: bottom_friction() - calculates the 2D bottom friction.
+! !IROUTINE: bottom_friction - calculates the 2D bottom friction.
 !
 ! !INTERFACE:
    subroutine bottom_friction(runtype)
@@ -44,44 +44,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: bottom_friction.F90,v $
-!  Revision 1.5  2006-02-04 11:21:52  hb
-!  Source code documentation extended
-!
-!  Revision 1.4  2003-04-23 12:09:43  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.3  2003/04/07 15:41:09  kbk
-!  adjusted use of mask
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:41  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.6  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.5  2001/05/20 07:46:38  bbh
-!  Fixed masks
-!
-!  Revision 1.4  2001/05/18 13:03:34  bbh
-!  Optimize for speed + masks for update_2d_halo() - CHECK
-!
-!  Revision 1.3  2001/05/03 19:35:01  bbh
-!  Use of variables_2d
-!
-!  Revision 1.2  2001/04/24 08:24:58  bbh
-!  Use runtype instead of macro
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
 !
 !  !LOCAL VARIABLES:
    integer                   :: i,j

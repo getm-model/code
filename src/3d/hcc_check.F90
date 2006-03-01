@@ -1,4 +1,4 @@
-!$Id: hcc_check.F90,v 1.2 2006-02-10 22:41:56 hb Exp $
+!$Id: hcc_check.F90,v 1.3 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,17 +34,6 @@
    use domain, only: iimin,iimax,jjmin,jjmax,kmax
    use variables_3d, only: hn,hun,hvn,hcc
    IMPLICIT NONE
-!
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: hcc_check.F90,v $
-!  Revision 1.2  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.1  2004-05-04 09:23:51  kbk
-!  hydrostatic consistency criteria stored in .3d.nc file
-!
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k

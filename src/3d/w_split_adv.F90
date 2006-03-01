@@ -1,13 +1,44 @@
-!$Id: w_split_adv.F90,v 1.1 2004-01-06 15:04:00 kbk Exp $
+!$Id: w_split_adv.F90,v 1.2 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  w_split_adv()
+! !IROUTINE:  w_split_adv - 1D z-advection \label{sec-w-split-adv}
 !
 ! !INTERFACE:
    subroutine w_split_adv(dt,f,ww,az,splitfac,method)
 !
 ! !DESCRIPTION:
+!
+! Here, the $z$-directional split 1D advection step is executed
+! with a number of options for the numerical scheme. The basic
+! advection equation is accompanied by an fractional step
+! for the continuity equation and both equations look as follows:
+!
+! \begin{equation}\label{adv_w_step}
+! h^n_{i,j,k} c^n_{i,j,k} =
+! h^o_{i,j,k} c^o_{i,j,k}
+! - \Delta t 
+! \left(w_{i,j,k}\tilde c^w_{i,j,k}-w_{i,j,k-1}\tilde c^w_{i,j,k-1}\right),
+! \end{equation}
+!
+! with the 1D continuity equation
+!
+! \begin{equation}\label{adv_w_step_h}
+! h^n_{i,j,k}  =
+! h^o_{i,j,k}   
+! - \Delta t        
+! \left(w_{i,j,k}\tilde -w_{i,j,k-1}\right).
+! \end{equation}
+!
+! Here, $n$ and $o$ denote values before and after this operation,
+! respectively, $n$ denote intermediate values when other
+! 1D advection steps come after this and $o$ denotes intermediate
+! values when other 1D advection steps came before this.
+!
+! The interfacial fluxes $\tilde c^w_{i,j,k}$ are calculated by means of
+! monotone and non-monotone schemes which are described in detail in
+! {\tt u\_split\_adv}, see section \ref{sec-u-split-adv} on
+! page \pageref{sec-u-split-adv}.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
@@ -27,14 +58,6 @@
    REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: w_split_adv.F90,v $
-!  Revision 1.1  2004-01-06 15:04:00  kbk
-!  FCT advection + split of advection_3d.F90 + extra adv. input checks
-!
 !
 ! !LOCAL VARIABLES:
    integer         :: i,ii,j,jj,k,kk

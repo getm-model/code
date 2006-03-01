@@ -1,4 +1,4 @@
-!$Id: uv_depths.F90,v 1.10 2006-02-04 11:21:52 hb Exp $
+!$Id: uv_depths.F90,v 1.11 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -55,45 +55,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: uv_depths.F90,v $
-!  Revision 1.10  2006-02-04 11:21:52  hb
-!  Source code documentation extended
-!
-!  Revision 1.9  2005-04-25 07:55:49  kbk
-!  use more general frame for error handling - Umlauf
-!
-!  Revision 1.8  2004/01/05 08:59:38  kbk
-!  different velocity point depth calculations using vel_depth_method
-!
-!  Revision 1.7  2003/06/18 08:27:41  kbk
-!  using HALO in loop boundaries
-!
-!  Revision 1.6  2003/05/12 09:22:39  kbk
-!  no use of update_2d_halo, expand loop boundaries instead
-!
-!  Revision 1.5  2003/04/23 12:09:44  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.4  2003/04/07 15:47:50  kbk
-!  parallel support
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:46  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.4  2001/08/01 08:25:52  bbh
-!  CURVILINEAR now implemented
-!
-!  Revision 1.2  2001/05/18 12:55:13  bbh
-!  Included masks in calls to update_2d_halo()
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:07  bbh
-!  initial import into CVS
-!
-!  10Sep kbk: needs some more cleaning + wait for input from Hans
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j

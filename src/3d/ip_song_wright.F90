@@ -1,9 +1,9 @@
-!$Id: ip_song_wright.F90,v 1.2 2006-02-10 22:41:56 hb Exp $
+!$Id: ip_song_wright.F90,v 1.3 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: ip_song_wright()
+! !ROUTINE: ip_song_wright
 !
 ! !INTERFACE:
    subroutine ip_song_wright()
@@ -45,17 +45,6 @@
 ! !USES:
    use internal_pressure
    IMPLICIT NONE
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: ip_song_wright.F90,v $
-!  Revision 1.2  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.1  2004-04-06 12:42:50  kbk
-!  internal pressure calculations now uses wrapper
-!
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k

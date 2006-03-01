@@ -1,4 +1,4 @@
-!$Id: eqstate.F90,v 1.5 2006-02-10 22:41:56 hb Exp $
+!$Id: eqstate.F90,v 1.6 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,6 +9,9 @@
    module eqstate
 !
 ! !DESCRIPTION:
+!
+! Documentation will follow when the equation of state calculations
+! are updated. The idea is to use the respective routines from GOTM.
 !
 ! !USES:
    use  parameters, only: g,rho_0
@@ -21,52 +24,6 @@
    integer                   :: eqstate_method=1
    REALTYPE                  :: T0 = 10., S0 = 33.75, p0 = 0.
    REALTYPE                  :: dtr0 = -0.17, dsr0 = 0.78
-!
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: eqstate.F90,v $
-!  Revision 1.5  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.4  2004-01-02 13:54:24  kbk
-!  read equation of state info from namelist - Ruiz
-!
-!  Revision 1.3  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 13:19:48  kbk
-!  parallel support
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:59  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.9  2001/10/17 13:56:02  bbh
-!  Density for Constance case
-!
-!  Revision 1.8  2001/09/03 13:04:29  bbh
-!  Small change for HAIDVOGEL
-!
-!  Revision 1.7  2001/08/27 11:50:17  bbh
-!  TVD-advection for momentum added, some bugs removed
-!
-!  Revision 1.6  2001/07/26 13:23:50  bbh
-!  Partial new eq. of state
-!
-!  Revision 1.5  2001/07/26 12:54:11  bbh
-!  Testing advection schems - using ifdef HAIDVOGEL_TEST
-!
-!  Revision 1.4  2001/05/23 11:23:51  bbh
-!  Removed BAROCLINIC
-!
-!  Revision 1.3  2001/05/11 18:41:23  bbh
-!  define BAROCLINIC for testing
-!
-!  Revision 1.2  2001/05/11 13:46:00  bbh
-!  Added linear equation of state
-!
-!  Revision 1.1  2001/05/10 11:30:16  bbh
-!  Added further support for baroclinicity
 !
 ! !LOCAL VARIABLES:
 
@@ -93,9 +50,6 @@
 ! !DESCRIPTION:
 !  Reads the namelist and makes calls to the init functions of the
 !  various model components.
-!
-! !REVISION HISTORY:
-!  See the log for the module
 !
 ! !LOCAL VARIABLES:
    namelist /eqstate/ eqstate_method,T0,S0,p0,dtr0,dsr0
@@ -137,12 +91,14 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  do_eqstate() - equation of state \label{sec-do-eqstate} 
+! !IROUTINE:  do_eqstate - equation of state \label{sec-do-eqstate} 
 !
 ! !INTERFACE:
    subroutine do_eqstate()
 !
 ! !DESCRIPTION:
+!
+! Here, the equation of state is calculated for every 3D grid point.  
 !
 ! !USES:
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,az
@@ -154,9 +110,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  See the log for the module
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k

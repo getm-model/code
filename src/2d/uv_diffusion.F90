@@ -1,9 +1,9 @@
-!$Id: uv_diffusion.F90,v 1.6 2006-02-04 11:20:22 hb Exp $
+!$Id: uv_diffusion.F90,v 1.7 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: uv_diffusion() - 2D diffusion of momentum \label{sec-uv-diffusion}
+! !ROUTINE: uv_diffusion - 2D diffusion of momentum \label{sec-uv-diffusion}
 !
 ! !INTERFACE:
    subroutine uv_diffusion(Am,An)
@@ -171,9 +171,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j

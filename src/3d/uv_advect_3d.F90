@@ -1,4 +1,4 @@
-!$Id: uv_advect_3d.F90,v 1.11 2006-02-10 22:41:56 hb Exp $
+!$Id: uv_advect_3d.F90,v 1.12 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -272,71 +272,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: uv_advect_3d.F90,v $
-!  Revision 1.11  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.10  2006-02-04 11:47:26  hb
-!  Source code documentation extended
-!
-!  Revision 1.9  2005-10-06 09:54:01  hb
-!  added support for vertical slice model - via -DSLICE_MODEL
-!
-!  Revision 1.8  2005/05/25 10:32:13  kbk
-!  merged from stabe branch v1_2_1
-!
-!  Revision 1.7.2.1  2005/05/25 08:41:38  kbk
-!  fixed loop boundaries + update HALO's when -DUV_TVD
-!
-!  Revision 1.7  2003/08/28 15:20:37  kbk
-!  use ax mask, always set PP
-!
-!  Revision 1.6  2003/08/14 13:00:40  kbk
-!  do not use masks calculating adv. velocities
-!
-!  Revision 1.5  2003/06/28 10:40:41  kbk
-!  changed loop order
-!
-!  Revision 1.4  2003/05/02 06:55:49  hb
-!  momemtum advection only for mask=1
-!
-!  Revision 1.3  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 13:36:38  kbk
-!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:57  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.7  2001/10/12 11:39:20  bbh
-!  TVD moved out of ??_momentum_3d.F90 and into uv_advect_3d.F90
-!
-!  Revision 1.6  2001/08/01 08:31:22  bbh
-!  CURVILINEAR now implemented
-!
-!  Revision 1.5  2001/07/26 13:47:18  bbh
-!  Fixed some typos
-!
-!  Revision 1.4  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.3  2001/05/03 20:12:31  bbh
-!  Use of variables_3d
-!
-!  Revision 1.2  2001/05/01 07:13:27  bbh
-!  use: kmax from m3d to domain
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc

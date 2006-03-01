@@ -1,4 +1,4 @@
-!$Id: ip_blumberg_mellor.F90,v 1.5 2006-02-10 22:41:56 hb Exp $
+!$Id: ip_blumberg_mellor.F90,v 1.6 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -52,23 +52,6 @@
 ! !USES:
    use internal_pressure
    IMPLICIT NONE
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard, Adolf Stips, Karsten Bolding
-!
-!  $Log: ip_blumberg_mellor.F90,v $
-!  Revision 1.5  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.4  2004-06-18 12:52:15  hb
-!  Fixed reverted version to correct for factor of 0.5
-!
-!  Revision 1.3  2004/06/15 10:19:14  kbk
-!  reverted to ver. 1.1
-!
-!  Revision 1.1  2004/04/06 12:42:50  kbk
-!  internal pressure calculations now uses wrapper
-!
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k

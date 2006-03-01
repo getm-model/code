@@ -1,4 +1,4 @@
-!$Id: depth_update.F90,v 1.7 2006-02-04 11:21:52 hb Exp $
+!$Id: depth_update.F90,v 1.8 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,50 +32,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: depth_update.F90,v $
-!  Revision 1.7  2006-02-04 11:21:52  hb
-!  Source code documentation extended
-!
-!  Revision 1.6  2005-10-06 09:54:00  hb
-!  added support for vertical slice model - via -DSLICE_MODEL
-!
-!  Revision 1.5  2003/06/18 08:27:41  kbk
-!  using HALO in loop boundaries
-!
-!  Revision 1.4  2003/05/12 09:22:39  kbk
-!  no use of update_2d_halo, expand loop boundaries instead
-!
-!  Revision 1.3  2003/04/23 12:09:43  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 15:27:00  kbk
-!  parallel support
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:42  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.5  2001/08/27 11:53:13  bbh
-!  TVD-advection for momentum added, some bugs removed
-!
-!  Revision 1.4  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.3  2001/05/18 13:03:34  bbh
-!  Optimize for speed + masks for update_2d_halo() - CHECK
-!
-!  Revision 1.2  2001/05/03 19:35:01  bbh
-!  Use of variables_2d
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:07  bbh
-!  initial import into CVS
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j

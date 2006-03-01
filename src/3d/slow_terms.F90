@@ -1,14 +1,24 @@
-!$Id: slow_terms.F90,v 1.5 2006-02-10 22:41:56 hb Exp $
+!$Id: slow_terms.F90,v 1.6 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: slow_terms() - calculation of slow terms \label{sec-slow-terms}
+! !ROUTINE: slow_terms - calculation of slow terms \label{sec-slow-terms}
 !
 ! !INTERFACE:
    subroutine slow_terms
 !
 ! !DESCRIPTION:
+!
+! Here, the calculation of the so-called slow terms (which are the 
+! interaction terms between the barotropic and the baroclinic mode) is
+! completed. The mathematical form of these slow terms is given by 
+! equations (\ref{Slowfirst}) - (\ref{Slowlast}), see section
+! \ref{SectionVerticalIntegrated}.
+! These calculations have been prepared in the routines 
+! {\tt slow\_bottom\_friction}, {\tt slow\_advection} and
+! {\tt slow\_diffusion}.
+
 !
 ! !USES:
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,HU,HV,au,av
@@ -25,47 +35,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: slow_terms.F90,v $
-!  Revision 1.5  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.4  2003-06-28 10:43:16  kbk
-!  cosmestics
-!
-!  Revision 1.3  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 13:36:38  kbk
-!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:55  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.6  2001/08/27 11:50:17  bbh
-!  TVD-advection for momentum added, some bugs removed
-!
-!  Revision 1.5  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.4  2001/05/20 07:51:40  bbh
-!  Internal pressure included
-!
-!  Revision 1.3  2001/05/03 20:12:31  bbh
-!  Use of variables_3d
-!
-!  Revision 1.2  2001/05/01 07:13:27  bbh
-!  use: kmax from m3d to domain
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k

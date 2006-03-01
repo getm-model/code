@@ -1,9 +1,9 @@
-!$Id: internal_pressure.F90,v 1.14 2006-02-10 22:41:56 hb Exp $
+!$Id: internal_pressure.F90,v 1.15 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: internal_pressure()
+! !MODULE: internal_pressure
 !
 ! !INTERFACE:
    module internal_pressure
@@ -89,92 +89,6 @@
    integer, private, parameter         :: SONG_WRIGHT=4
    integer, private, parameter         :: CHU_FAN=5
 !
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: internal_pressure.F90,v $
-!  Revision 1.14  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.13  2006-01-29 20:32:33  hb
-!  Small LaTeX corrections to source code documentation
-!
-!  Revision 1.12  2006-01-28 20:07:54  hb
-!  Extensions to compiler option SLICE_MODEL for better representation of zero gradients in y-direction
-!
-!  Revision 1.11  2005-11-17 13:50:22  kbk
-!  fixes to compile with gfortran
-!
-!  Revision 1.10  2005/04/25 07:55:50  kbk
-!  use more general frame for error handling - Umlauf
-!
-!  Revision 1.9  2004/06/18 13:43:50  kbk
-!  fixed first argument to getm_error()
-!
-!  Revision 1.8  2004/06/18 13:00:30  hb
-!  Chu and Fan disactivated because of inconsistencies
-!
-!  Revision 1.7  2004/05/03 09:31:47  lars
-!  bug fix: defined i,j,k and first
-!
-!  Revision 1.6  2004/04/21 09:21:25  lars
-!  changed to default ip_method=1
-!
-!  Revision 1.5  2004/04/06 12:42:50  kbk
-!  internal pressure calculations now uses wrapper
-!
-!  Revision 1.3  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/01 15:50:13  gotm
-!  removed dead print statement
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:59  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.15  2001/10/22 08:23:53  bbh
-!  Removed reference to kplus and kminus when not -DPRESS_GRAD_Z
-!
-!  Revision 1.14  2001/10/22 07:47:59  bbh
-!  Needed to run dos2unix
-!
-!  Revision 1.13  2001/10/22 07:45:26  bbh
-!  Fixed a serious bug - now gives the same as old version
-!
-!  Revision 1.10  2001/09/04 07:29:18  bbh
-!  Internal pressure based on interpolation to z-coordinates
-!
-!  Revision 1.9  2001/09/03 13:03:37  bbh
-!  Initial pressure gradient can now be subtracted
-!
-!  Revision 1.8  2001/08/31 15:40:37  bbh
-!  initial pressure can be subtracted now
-!
-!  Revision 1.7  2001/08/01 08:31:22  bbh
-!  CURVILINEAR now implemented
-!
-!  Revision 1.6  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.5  2001/05/25 19:09:48  bbh
-!  Removed dead code
-!
-!  Revision 1.4  2001/05/20 09:19:09  bbh
-!  Use who specified twice
-!
-!  Revision 1.3  2001/05/20 07:51:40  bbh
-!  Internal pressure included
-!
-!  Revision 1.2  2001/05/11 13:47:00  bbh
-!  Added actual code
-!
-!  Revision 1.1  2001/05/10 11:30:16  bbh
-!  Added further support for baroclinicity
-!
 !EOP
 !-----------------------------------------------------------------------
 
@@ -196,10 +110,7 @@
 ! {\tt STATIC}), and information is written to the log-file of
 ! the simulation.
 !
-! !REVISION HISTORY:
-!  See the log for the module
-!
-!  !LOCAL VARIABLES
+! !LOCAL VARIABLES
    integer         :: rc
 !EOP
 !-------------------------------------------------------------------------
@@ -269,9 +180,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  See the log for the module
 !
 ! !LOCAL VARIABLES:
    integer                :: i,j,k

@@ -1,8 +1,8 @@
-!$Id: fct_2dh_adv.F90,v 1.2 2004-01-07 07:37:37 kbk Exp $
+!$Id: fct_2dh_adv.F90,v 1.3 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  fct_2dh_adv()
+! !IROUTINE:  fct_2dh_adv - 2D flux-corrected transport \label{sec-fct-2dh-adv}
 !
 ! !INTERFACE:
    subroutine fct_2dh_adv(dt,f,uu,vv,ho,hn,hun,hvn, &
@@ -10,7 +10,12 @@
 ! !DESCRIPTION:
 ! In this routine, the flux corrected transport advection scheme by
 ! \cite{ZALEZAK79} is applied for the two horizontal directions in
-! one step. The monotone low-order flux is the first-order upstream scheme, the
+! one step. For details of this type of operator splitting, see the
+! routine {\tt upstream\_2dh\_adv} (see section \ref{sec-upstream-2dh-adv} 
+! on page \pageref{sec-upstream-2dh-adv}). 
+! 
+! The monotone low-order flux is the first-order upstream 
+! scheme, the
 ! high-order flux is the third-order ULTIMATE QUICKEST scheme by 
 ! \cite{LEONARDea95}. The scheme should thus be positive definite and of 
 ! high resolution. In order to remove truncation errors which might in Wadden
@@ -38,17 +43,6 @@
    REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: fct_2dh_adv.F90,v $
-!  Revision 1.2  2004-01-07 07:37:37  kbk
-!  to compile with IFORT - TABS, etc.
-!
-!  Revision 1.1  2004/01/06 15:04:00  kbk
-!  FCT advection + split of advection_3d.F90 + extra adv. input checks
-!
 !
 ! !LOCAL VARIABLES:
    integer         :: rc,i,ii,j,jj,k,kk

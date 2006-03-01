@@ -1,4 +1,4 @@
-!$Id: ww_momentum_3d.F90,v 1.6 2006-02-10 22:41:56 hb Exp $
+!$Id: ww_momentum_3d.F90,v 1.7 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -48,47 +48,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: ww_momentum_3d.F90,v $
-!  Revision 1.6  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.5  2003-08-14 13:04:37  kbk
-!  forgot to include az
-!
-!  Revision 1.4  2003/08/14 12:58:00  kbk
-!  update halo zones using - update_3d_halo() - or calculating
-!
-!  Revision 1.3  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 13:05:11  kbk
-!  cleaned code
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:57  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.6  2001/08/27 11:50:17  bbh
-!  TVD-advection for momentum added, some bugs removed
-!
-!  Revision 1.5  2001/08/01 08:31:22  bbh
-!  CURVILINEAR now implemented
-!
-!  Revision 1.4  2001/05/21 13:07:19  bbh
-!  dt and cnpar is in variables_3d.F90
-!
-!  Revision 1.3  2001/05/03 20:12:31  bbh
-!  Use of variables_3d
-!
-!  Revision 1.2  2001/05/01 07:13:27  bbh
-!  use: kmax from m3d to domain
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
-!
 !
 ! !LOCAL VARIABLES:
    REALTYPE                  :: dtm1

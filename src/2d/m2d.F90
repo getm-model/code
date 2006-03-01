@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.13 2006-02-04 11:21:52 hb Exp $
+!$Id: m2d.F90,v 1.14 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -38,86 +38,6 @@
    REAL_4B, allocatable      :: bdy_times(:)
    integer, parameter        :: comm_method=-1
 !
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: m2d.F90,v $
-!  Revision 1.13  2006-02-04 11:21:52  hb
-!  Source code documentation extended
-!
-!  Revision 1.12  2006-01-27 16:10:20  kbk
-!  only call do_residual() when specified
-!
-!  Revision 1.11  2004/01/07 07:37:36  kbk
-!  to compile with IFORT - TABS, etc.
-!
-!  Revision 1.10  2004/01/06 19:07:22  kbk
-!  vel_depth_method in namelist
-!
-!  Revision 1.9  2004/01/05 08:59:38  kbk
-!  different velocity point depth calculations using vel_depth_method
-!
-!  Revision 1.8  2003/09/13 10:00:51  kbk
-!  added numerical diffusion - An - to namelist - passed to uv_diffusion()
-!
-!  Revision 1.7  2003/08/28 10:28:40  kbk
-!  explict setting UEx and VEx to 0 every micro time step
-!
-!  Revision 1.6  2003/08/15 12:47:40  kbk
-!  also calling cfl_check() when parallel run
-!
-!  Revision 1.5  2003/08/03 08:53:30  kbk
-!  not calling cfl_check when PARALLEL - should be fixed
-!
-!  Revision 1.4  2003/05/12 09:22:28  kbk
-!  removed use halo_zones - not used
-!
-!  Revision 1.3  2003/04/23 12:09:43  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 12:17:08  kbk
-!  parallel version
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:41  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.11  2001/10/22 11:55:30  bbh
-!  Only call uv_diffusion() if Am > zero
-!
-!  Revision 1.10  2001/10/22 08:48:30  bbh
-!  Am moved from paramters.F90 to m2d.F90
-!
-!  Revision 1.9  2001/10/11 13:07:03  bbh
-!  Support for horizontal diffusion
-!
-!  Revision 1.8  2001/09/01 17:07:10  bbh
-!  Ramping of surface elevation boundaries - via namelist
-!
-!  Revision 1.7  2001/08/27 11:53:13  bbh
-!  TVD-advection for momentum added, some bugs removed
-!
-!  Revision 1.6  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.5  2001/05/18 12:55:13  bbh
-!  Included masks in calls to update_2d_halo()
-!
-!  Revision 1.4  2001/05/06 18:51:55  bbh
-!  Towards proper implementation of specified 2D bdy.
-!
-!  Revision 1.3  2001/05/03 19:35:01  bbh
-!  Use of variables_2d
-!
-!  Revision 1.2  2001/04/24 08:24:58  bbh
-!  Use runtype instead of macro
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:07  bbh
-!  initial import into CVS
-!
 ! !LOCAL VARIABLES:
 !
 !EOP
@@ -150,10 +70,6 @@
 !  then with the setting of local bathymetry values and initial surface
 !  elevations in $u$- and $v$-points, also by calls to the subroutines 
 !  {\tt uv\_depths} and {\tt depth\_update}.
-!
-! !REVISION HISTORY:
-!
-!  22Apr99   Karsten Bolding & Hans Burchard  Initial code.
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
@@ -269,9 +185,6 @@
 !  It should be noted that some of these calls may be excluded for certain
 !  compiler options set in the {\tt Makefile} of the application.
 !
-! !REVISION HISTORY:
-!  22Nov Author name Initial code
-!
 ! !LOCAL VARIABLES:
 !EOP
 !-------------------------------------------------------------------------
@@ -338,9 +251,6 @@
 ! !DESCRIPTION:
 !  This routine executes a final call to {\tt do\_residual} where the residual
 !  current calculations are finished.
-!
-! !REVISION HISTORY:
-!  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
 !

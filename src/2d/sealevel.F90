@@ -1,9 +1,9 @@
-!$Id: sealevel.F90,v 1.9 2006-02-04 11:21:52 hb Exp $
+!$Id: sealevel.F90,v 1.10 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: sealevel() - using the cont. eq. to get the sealevel.
+! !IROUTINE: sealevel - using the cont. eq. to get the sealevel.
 !
 ! !INTERFACE:
    subroutine sealevel
@@ -34,66 +34,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: sealevel.F90,v $
-!  Revision 1.9  2006-02-04 11:21:52  hb
-!  Source code documentation extended
-!
-!  Revision 1.8  2006-01-29 12:25:20  kbk
-!  NOMADS -> FRESHWATER_LENSE
-!
-!  Revision 1.7  2005/10/06 09:54:00  hb
-!  added support for vertical slice model - via -DSLICE_MODEL
-!
-!  Revision 1.6  2004/07/29 19:46:32  hb
-!  For compiler option NOMADS_TEST: some lines shortened
-!
-!  Revision 1.5  2003/12/16 12:32:42  kbk
-!  removed #ifdef SALTWEDGE_TEST (manuel)
-!
-!  Revision 1.4  2003/04/23 12:09:44  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.3  2003/04/07 15:44:13  kbk
-!  parallel support
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:45  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.9  2001/10/22 11:56:44  bbh
-!  NOMADS_TEST kk =1.0 included
-!
-!  Revision 1.8  2001/09/01 17:15:13  bbh
-!  Forgot to remove a few print statements
-!
-!  Revision 1.7  2001/09/01 16:49:27  bbh
-!  A nasty hard-coding of z = 0. if mask = 2
-!
-!  Revision 1.6  2001/08/27 11:53:13  bbh
-!  TVD-advection for momentum added, some bugs removed
-!
-!  Revision 1.5  2001/08/01 08:25:52  bbh
-!  CURVILINEAR now implemented
-!
-!  Revision 1.4  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.3  2001/05/18 12:55:13  bbh
-!  Included masks in calls to update_2d_halo()
-!
-!  Revision 1.2  2001/05/03 19:35:01  bbh
-!  Use of variables_2d
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:07  bbh
-!  initial import into CVS
-!
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j

@@ -1,4 +1,4 @@
-!$Id: variables_2d.F90,v 1.5 2006-02-04 11:21:52 hb Exp $
+!$Id: variables_2d.F90,v 1.6 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,25 +29,6 @@
 #endif
    integer                             :: size2d_field
    integer                             :: mem2d
-!
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: variables_2d.F90,v $
-!  Revision 1.5  2006-02-04 11:21:52  hb
-!  Source code documentation extended
-!
-!  Revision 1.4  2003-04-23 12:09:44  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.3  2003/04/07 15:50:20  kbk
-!  initialise variables
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:47  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.1  2001/05/03 19:30:41  bbh
-!  2D variables seperated from m2d
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
@@ -116,10 +97,6 @@
 !
 ! !OUTPUT PARAMETERS:
 !
-! !REVISION HISTORY:
-!
-!  See log for module.
-!
 ! !LOCAL VARIABLES:
 !
 !EOP
@@ -175,9 +152,6 @@
 !
 ! !DESCRIPTION:
 !  This routine is currently empty.
-!
-! !REVISION HISTORY:
-!  See log for module.
 !
 ! !LOCAL VARIABLES:
 !

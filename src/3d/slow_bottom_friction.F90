@@ -1,15 +1,30 @@
-!$Id: slow_bottom_friction.F90,v 1.6 2006-02-10 22:41:56 hb Exp $
+!$Id: slow_bottom_friction.F90,v 1.7 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: slow_bottom_friction() - slow bottom friction
+! !ROUTINE: slow_bottom_friction - slow bed friction
 ! \label{sec-slow-bottom-friction}
 !
 ! !INTERFACE:
    subroutine slow_bottom_friction
 !
 ! !DESCRIPTION:
+!
+! This routine basically calculates the bed friction, as it would come out
+! if the vertically and macro timestep averaged velocity would be used.
+! The output of this subroutine is thus $R\sqrt{u^2+v^2}$ on the U-points
+! (see variable {\tt ruu}) and on the V-points (see {\tt rvv}) with the
+! vertically and macro timestep averaged velocity components on the
+! old time step, $u$ and $v$,
+! which are in the code denoted by {\tt Ui} and {\tt Vi}, respectively.
+! The drag coefficient $R$ is given by eq.\
+! (\ref{bottom_vert}) on page \pageref{bottom_vert}.
+! The results for the variables {\tt ruu} and {\tt rvv} will then be used
+! in the routine {\tt slow\_terms} described on page \pageref{sec-slow-terms}
+! for the calculation of the slow terms $S^x_F$ and $S^y_F$, see
+! section \ref{SectionVerticalIntegrated}.
+!
 !
 ! !USES:
    use parameters, only: kappa
@@ -23,41 +38,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: slow_bottom_friction.F90,v $
-!  Revision 1.6  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.5  2003-09-12 16:27:27  kbk
-!  removed save attributes for local variables - now compiles using PGF
-!
-!  Revision 1.4  2003/08/14 10:53:23  kbk
-!  need temporary velocities in some halo zones
-!
-!  Revision 1.3  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 13:36:38  kbk
-!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:55  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.3  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.2  2001/05/03 20:12:31  bbh
-!  Use of variables_3d
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j

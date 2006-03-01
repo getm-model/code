@@ -1,14 +1,50 @@
-!$Id: w_split_it_adv.F90,v 1.1 2004-01-06 15:04:00 kbk Exp $
+!$Id: w_split_it_adv.F90,v 1.2 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  w_split_it_adv()
+! !IROUTINE:  w_split_it_adv -  iterated 1D z-advection 
+!             \label{sec-w-split-it-adv}
 !
 ! !INTERFACE:
    subroutine w_split_it_adv(dt,f,ww,az,splitfac,method)
 !
 ! !DESCRIPTION:
 !
+! Here, the same one-dimensional advection step as in {\tt w\_split\_adv}
+! (see section \ref{sec-w-split-adv} on page \pageref{sec-w-split-adv}) 
+! is applied, but with an
+! iteration in time in case that the vertical Courant number exceeds
+! unity at any interface of the water column under calculation.
+!
+! The number of time steps is calculated as
+!
+! \begin{equation}
+! N^{\Delta_t}_{i,j} = \max_k\left\{\mbox{\tt int}\left(C_{i,j,k}+1\right)
+! \right\},
+! \end{equation}
+!
+! with the Courant number 
+!
+! \begin{equation}
+! C_{i,j,k}=\left|w_{i,j,k}\right|
+! \frac{\Delta t}{\frac12 \left(h^n_{i,j,k}+h^n_{i,j,k+1}
+! \right)}
+! \end{equation}
+!
+! and the truncation function {\tt int}.
+!
+! After the number of iterations $N^{\Delta_t}_{i,j}$ is calculated,
+! the vertical advection step is calculated $N^{\Delta_t}_{i,j}$
+! with a time step of $\Delta t / N^{\Delta_t}_{i,j}$. By doing so,
+! it is avoided that the model blows up due to violation
+! of the CFL criterium, which could happen fast in case of
+! high vertical resolution together with processes such as upwelling
+! or fast sinking material. The good thing about this procedure is that
+! only the water column is punished by higher numerical load 
+! in which the potential violation of the CFL criterium
+! occurs.  
+!
+! 
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
    use domain, only: iimin,iimax,jjmin,jjmax,kmax
@@ -27,14 +63,6 @@
    REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: w_split_it_adv.F90,v $
-!  Revision 1.1  2004-01-06 15:04:00  kbk
-!  FCT advection + split of advection_3d.F90 + extra adv. input checks
-!
 !
 ! !LOCAL VARIABLES:
    integer         :: i,ii,j,jj,k,kk,it

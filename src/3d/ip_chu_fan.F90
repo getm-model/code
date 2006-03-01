@@ -1,9 +1,9 @@
-!$Id: ip_chu_fan.F90,v 1.2 2006-02-10 22:41:56 hb Exp $
+!$Id: ip_chu_fan.F90,v 1.3 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: ip_chu_fan()
+! !ROUTINE: ip_chu_fan 
 !
 ! !INTERFACE:
    subroutine ip_chu_fan()
@@ -11,23 +11,12 @@
 ! !DESCRIPTION:
 !   
 ! This routine calculates the internal pressure gradient based on the
-! classical approach by \cite{MELLORes94}, extended by the
+! classical approach by \cite{MELLORea94}, extended by the
 ! hydrostatic extension by \cite{CHUea03}.
 !
 ! !USES:
    use internal_pressure
    IMPLICIT NONE
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding & Adolf Stips
-!
-!  $Log: ip_chu_fan.F90,v $
-!  Revision 1.2  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.1  2004-04-06 12:42:50  kbk
-!  internal pressure calculations now uses wrapper
-!
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k

@@ -1,4 +1,4 @@
-!$Id: rivers.F90,v 1.9 2006-02-10 22:41:56 hb Exp $
+!$Id: rivers.F90,v 1.10 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,14 +9,19 @@
    module rivers
 !
 ! !DESCRIPTION:
+!
 !  This module includes support for river input. Rivers are treated the same
-!  way as meteorology, i.e. as external to the hydrodynamic model itself.
-!  The model follows the same scheme as all other modules, i.e. init\_rivers
-!  sets up necessary information, do\_rivers update the relevant variables.
-!  do\_river should be called before any 2d and 3d routines as it only
-!  updates the sea surface elevation (2d) and sea surface elevation +
-!  optional salinity and temperature (3d). Any update of other parameters,
-!  (D, DU, DV...) are done through the relevant subroutines.
+!  way as meteorology, i.e.\ as external module to the hydrodynamic model 
+!  itself.
+!  The module follows the same scheme as all other modules, i.e.\
+!  {\tt init\_rivers}
+!  sets up necessary information, and {\tt do\_rivers} updates
+!  the relevant variables.
+!  {\tt do\_river} is called in {\tt getm/integration.F90} 
+!  between the {\tt 2d} and {\tt 3d} routines as it only
+!  updates the sea surface elevation (in {\tt 2d}) and sea surface elevation,
+!  and
+!  optionally salinity and temperature (in {\tt 3d}). 
 !  At present the momentum of the river water is not include, the model
 !  however has a direct response to the river water because of the
 !  pressure gradient introduced.
@@ -75,43 +80,6 @@
    REALTYPE, allocatable     :: macro_height(:)
    REALTYPE, allocatable     :: flow_fraction(:)
 !
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: rivers.F90,v $
-!  Revision 1.9  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.8  2006-01-29 20:32:33  hb
-!  Small LaTeX corrections to source code documentation
-!
-!  Revision 1.7  2005-09-23 11:27:43  kbk
-!  support fo nutrient loading in rivers
-!
-!  Revision 1.6  2005/01/13 09:20:46  kbk
-!  support for T and S specifications in rivers - Stips
-!
-!  Revision 1.4  2003/10/14 10:05:54  kbk
-!  checks if indices are in subdomain + cleaning
-!
-!  Revision 1.3  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 13:36:38  kbk
-!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:00  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.3  2001/10/07 14:50:22  bbh
-!  Reading river data implemented - NetCFD
-!
-!  Revision 1.2  2001/09/19 14:21:13  bbh
-!  Cleaning
-!
-!  Revision 1.1  2001/09/18 17:48:32  bbh
-!  Added algoritm for rivers - getting river data still missing
-!
 ! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
@@ -124,10 +92,18 @@
 ! !IROUTINE: init_rivers
 !
 ! !INTERFACE:
-   subroutine init_rivers()
+   subroutine init_rivers
 !
 ! !DESCRIPTION:
-!  Description still missing
+!
+! First of all, the namelist {\tt rivers} is read from getm.F90 and
+! a number of vectors with the length of {\tt nriver} (number of
+! rivers) is allocated. Then, by looping over all rivers, the 
+! ascii file {\tt river\_info} is read, and checked for consistency.
+! The number of used rivers {\tt rriver} is calculated and it is checked
+! whether they are on land (which gives a warning) or not. When a river name
+! occurs more than once in {\tt river\_info}, it means that its runoff
+! is split among several grid boxed (for wide river mouths).
 !
 ! !USES:
    IMPLICIT NONE
@@ -137,9 +113,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  See the log for the module
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n,nn,ni,rc,m
@@ -313,8 +286,9 @@
    subroutine init_rivers_bio()
 !
 ! !DESCRIPTION:
-!  Allocates memory for storing the biological loads from rivers.
-!  The variable - {\tt river\_bio} - is initialised to  - {\tt bio\_missing}.
+! First, memory for storing the biological loads from rivers is 
+! allocated.
+! The variable - {\tt river\_bio} - is initialised to  - {\tt bio\_missing}.
 !
 ! !USES:
    IMPLICIT NONE
@@ -324,9 +298,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  See the log for the module
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
@@ -359,13 +330,19 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  do_rivers()
+! !IROUTINE:  do_rivers - updating river points \label{sec-do-rivers}
 !
 ! !INTERFACE:
    subroutine do_rivers(do_3d)
 !
 ! !DESCRIPTION:
-!  Description still missing
+! 
+! Here, the temperature, salinity, sea surface elevation and layer heights
+! are updated in the river inflow grid boxes. Temperature and salinity
+! are mixed with riverine values proportional to the old volume and the
+! river inflow volume at that time step, sea surface elevation is simply
+! increased by the inflow volume divided by the grid box area, and
+! the layer heights are increased proportionally. 
 !
 ! !USES:
    IMPLICIT NONE
@@ -376,9 +353,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  See the log for the module
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,m,n
@@ -460,13 +434,16 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  clean_rivers()
+! !IROUTINE:  clean_rivers 
 !
 ! !INTERFACE:
-   subroutine clean_rivers()
+   subroutine clean_rivers
 !
 ! !DESCRIPTION:
-!  Description still missing
+!  
+! This routine closes the river handling by writing the integrated
+! river run-off for each river to standard output.
+! 
 !
 ! !USES:
    IMPLICIT NONE
@@ -476,9 +453,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  See the log for the module
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n

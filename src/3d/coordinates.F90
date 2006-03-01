@@ -1,4 +1,4 @@
-!$Id: coordinates.F90,v 1.9 2006-02-10 22:41:56 hb Exp $
+!$Id: coordinates.F90,v 1.10 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -85,83 +85,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: coordinates.F90,v $
-!  Revision 1.9  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.8  2005-10-06 09:54:01  hb
-!  added support for vertical slice model - via -DSLICE_MODEL
-!
-!  Revision 1.7  2004/04/23 09:03:59  kbk
-!  reverted to pre-adaptive grid version
-!
-!  Revision 1.5  2004/01/05 13:23:27  kbk
-!  Poor Man's Z-coordinates
-!
-!  Revision 1.4  2003/09/02 14:45:46  kbk
-!  calculate in HALO-zones instead of using update_3d_halo()
-!
-!  Revision 1.3  2003/04/23 12:16:27  kbk
-!  added calls to wait_halo()
-!
-!  Revision 1.2  2003/04/07 16:27:32  kbk
-!  parallel support
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:53  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.15  2001/10/26 07:42:27  bbh
-!  Correct values for sigma and general cordinates in ga
-!
-!  Revision 1.14  2001/10/23 14:15:55  bbh
-!  Moved ga from coordinates.F90 to domain.F90
-!
-!  Revision 1.13  2001/10/23 12:43:48  bbh
-!  Forgot to calculate initial values hn, hun, hvn - when general vertical coodinates
-!
-!  Revision 1.12  2001/10/22 09:26:41  bbh
-!  Added cord_relax
-!
-!  Revision 1.11  2001/10/17 07:43:59  bbh
-!  Relaxation of layer depth + cleaning
-!
-!  Revision 1.10  2001/09/14 09:01:58  bbh
-!  Re-ordered
-!
-!  Revision 1.9  2001/09/01 17:10:25  bbh
-!  Vertical coordinate definition now specified via namelist
-!
-!  Revision 1.8  2001/08/31 15:44:44  bbh
-!  general vertical coordinates added
-!
-!  Revision 1.7  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.6  2001/05/18 10:00:50  bbh
-!  Added masks to calls to update_3d_halo()
-!
-!  Revision 1.5  2001/05/18 08:15:49  bbh
-!  Cosmetics
-!
-!  Revision 1.4  2001/05/16 07:02:49  bbh
-!  Finished equidistant and non-equidistant sigma coordinates
-!
-!  Revision 1.3  2001/05/15 11:45:38  bbh
-!  Added zooming
-!
-!  Revision 1.2  2001/05/03 20:12:31  bbh
-!  Use of variables_3d
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
 !
 ! !LOCAL VARIABLES:
    integer         :: i,j,k,rc,kk

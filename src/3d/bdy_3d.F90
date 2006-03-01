@@ -1,4 +1,4 @@
-!$Id: bdy_3d.F90,v 1.8 2006-02-10 22:41:56 hb Exp $
+!$Id: bdy_3d.F90,v 1.9 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,7 +9,9 @@
    module bdy_3d
 !
 ! !DESCRIPTION:
-!  Description still missing
+!  
+! Here, the three-dimensional boundary
+! conditions for temperature and salinity are handled.
 !
 ! !USES:
    use halo_zones, only : H_TAG,U_TAG,V_TAG
@@ -28,37 +30,6 @@
 !
 ! !PRIVATE DATA MEMBERS:
 !
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: bdy_3d.F90,v $
-!  Revision 1.8  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.7  2005-08-26 08:19:31  kbk
-!  zero gradient open boundaries for biological variables
-!
-!  Revision 1.6  2005/05/04 11:50:57  kbk
-!  support for non-climatological 3D boundaries (S,T)
-!
-!  Revision 1.5  2003/05/05 15:47:59  kbk
-!  T and S boundaries work in parallel runs
-!
-!  Revision 1.4  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.3  2003/04/07 16:32:31  kbk
-!  preliminary support for mirror_bdy_3d
-!
-!  Revision 1.2  2002/06/19 14:32:08  gotm
-!  Index error for wfj, wlj, efj and elj
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:59  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.1  2001/08/30 08:58:19  bbh
-!  Initial import
-!
 ! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
@@ -75,7 +46,9 @@
    subroutine init_bdy_3d()
 !
 ! !DESCRIPTION:
-!  Description still missing
+!
+! Here, the necessary fields {\tt S\_bdy} and {\tt T\_bdy} for
+! salinity and temperature, respectively, are allocated.
 !
 ! !USES:
    IMPLICIT NONE
@@ -85,9 +58,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  See the log for the module
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc,i,j,k,n
@@ -118,14 +88,17 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  do_bdy_3d()  - updating 3D boundary conditions
+! !IROUTINE:  do_bdy_3d  - updating 3D boundary conditions
 ! \label{sec-do-bdy-3d}
 !
 ! !INTERFACE:
    subroutine do_bdy_3d(tag,field)
 !
 ! !DESCRIPTION:
-!  Description still missing
+!
+! Here, the boundary conditions for salinity and temperature are
+! copied to the boundary points and relaxed to the near boundary points
+! by means of the flow relaxation scheme by \cite{MARTINSENea87}.
 !
 ! !USES:
    IMPLICIT NONE
@@ -137,9 +110,6 @@
    REALTYPE, intent(inout)             :: field(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  See the log for the module
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,l,n,ii,jj

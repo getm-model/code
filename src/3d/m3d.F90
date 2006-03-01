@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.28 2006-02-10 22:41:56 hb Exp $
+!$Id: m3d.F90,v 1.29 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -60,179 +60,6 @@
    integer                             :: bdyfmt_3d,bdyramp_3d
    character(len=PATH_MAX)             :: bdyfile_3d
 !
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: m3d.F90,v $
-!  Revision 1.28  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.27  2006-01-29 20:32:33  hb
-!  Small LaTeX corrections to source code documentation
-!
-!  Revision 1.26  2006-01-27 16:07:56  kbk
-!  now works with -DNO_BAROCLINIC
-!
-!  Revision 1.25  2005/09/23 11:27:10  kbk
-!  support for biology via GOTMs biology modules
-!
-!  Revision 1.24  2005/04/25 07:55:50  kbk
-!  use more general frame for error handling - Umlauf
-!
-!  Revision 1.23  2004/08/09 07:48:07  kbk
-!  checking for negative avmback and avhback
-!
-!  Revision 1.22  2004/08/06 15:14:35  hb
-!  num and nuh now properly initialised and no gotm call for CONSTANT_VISCOSITY
-!
-!  Revision 1.21  2004/07/29 19:48:44  hb
-!  num, nuh now initialised with _ZERO_
-!
-!  Revision 1.20  2004/07/28 14:58:18  hb
-!  Changing subroutine calling order via MUDFLAT
-!
-!  Revision 1.19  2004/06/15 08:25:57  kbk
-!  added supoort for spm - Ruiz
-!
-!  Revision 1.18  2004/05/04 09:23:51  kbk
-!  hydrostatic consistency criteria stored in .3d.nc file
-!
-!  Revision 1.17  2004/04/23 09:03:59  kbk
-!  reverted to pre-adaptive grid version
-!
-!  Revision 1.15  2004/04/20 16:49:37  hb
-!  call to coordinates moved for better consistency (see JMB)
-!
-!  Revision 1.14  2004/04/06 12:42:50  kbk
-!  internal pressure calculations now uses wrapper
-!
-!  Revision 1.13  2004/01/08 10:23:20  kbk
-!  NN not needed for barotropic runs, NO_SUSP_MATTER works
-!
-!  Revision 1.12  2004/01/06 15:04:00  kbk
-!  FCT advection + split of advection_3d.F90 + extra adv. input checks
-!
-!  Revision 1.11  2004/01/05 13:23:27  kbk
-!  Poor Man's Z-coordinates
-!
-!  Revision 1.10  2004/01/02 13:54:24  kbk
-!  read equation of state info from namelist - Ruiz
-!
-!  Revision 1.9  2003/12/16 17:02:44  kbk
-!  removed TABS - 0. -> _ZERO_
-!
-!  Revision 1.8  2003/12/16 15:58:54  kbk
-!  back ground viscosity and diffusivity (manuel)
-!
-!  Revision 1.7  2003/09/12 16:23:38  kbk
-!  fixed order of use statement - now compiles on with IFC 7.1
-!
-!  Revision 1.6  2003/08/28 15:13:57  kbk
-!  explicit set UEx and VEx to 0
-!
-!  Revision 1.5  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.4  2003/04/07 16:28:34  kbk
-!  parallel support
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:51  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.30  2001/10/26 09:13:24  bbh
-!  Only call slow_diffusion() if Am > 0.
-!
-!  Revision 1.29  2001/10/23 12:38:58  bbh
-!  Forgot cord_relax in one call to coordinates()
-!
-!  Revision 1.28  2001/10/23 07:53:10  bbh
-!  spm -> suspended_matter
-!
-!  Revision 1.27  2001/10/23 07:05:11  bbh
-!  Parabolic viscosity - -DPARABOLIC_VISCOSITY
-!
-!  Revision 1.26  2001/10/22 11:16:09  bbh
-!  Added support for particulate suspended matter - no IO yet
-!
-!  Revision 1.25  2001/10/22 09:26:41  bbh
-!  Added cord_relax
-!
-!  Revision 1.24  2001/10/22 08:48:30  bbh
-!  Am moved from paramters.F90 to m2d.F90
-!
-!  Revision 1.23  2001/10/12 11:39:20  bbh
-!  TVD moved out of ??_momentum_3d.F90 and into uv_advect_3d.F90
-!
-!  Revision 1.22  2001/10/12 08:49:56  bbh
-!  Support for horizontal diffusion
-!
-!  Revision 1.21  2001/09/19 13:07:00  bbh
-!  Moved advection related 3D fields to global allocation
-!
-!  Revision 1.20  2001/09/03 20:14:03  bbh
-!  Fixed reading of vel_{hor,vel,strang
-!
-!  Revision 1.19  2001/09/03 20:04:21  bbh
-!  Allow individual advection settings for momentum, salinity and temperature
-!
-!  Revision 1.18  2001/09/03 13:02:52  bbh
-!  Small changes due to NOMADS
-!
-!  Revision 1.17  2001/08/31 15:39:49  bbh
-!  ifdef for CONSTANCE added
-!
-!  Revision 1.16  2001/08/30 08:56:26  bbh
-!  Preparing for 3D boundary conditions
-!
-!  Revision 1.15  2001/08/29 12:08:05  bbh
-!  temp_adv and salt_adv needs to be public
-!
-!  Revision 1.14  2001/08/29 11:21:46  bbh
-!  namelists read in salinity and temperature + initialisation
-!
-!  Revision 1.13  2001/08/27 11:51:45  bbh
-!  TVD-advection for momentum added, some bugs removed
-!
-!  Revision 1.12  2001/08/01 08:31:22  bbh
-!  CURVILINEAR now implemented
-!
-!  Revision 1.11  2001/07/26 13:46:06  bbh
-!  Included info for salinity and temperature in namelist
-!
-!  Revision 1.10  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.9  2001/05/25 19:36:36  bbh
-!  Added call to eqstate
-!
-!  Revision 1.8  2001/05/21 13:07:19  bbh
-!  dt and cnpar is in variables_3d.F90
-!
-!  Revision 1.7  2001/05/20 07:51:40  bbh
-!  Internal pressure included
-!
-!  Revision 1.6  2001/05/18 08:17:49  bbh
-!  Tidying up initialization of salinity and temperature
-!
-!  Revision 1.5  2001/05/15 11:47:57  bbh
-!  Added update_3d_halo for initial S and T
-!
-!  Revision 1.4  2001/05/10 11:30:16  bbh
-!  Added further support for baroclinicity
-!
-!  Revision 1.3  2001/05/03 20:12:31  bbh
-!  Use of variables_3d
-!
-!  Revision 1.2  2001/04/24 08:39:21  bbh
-!  Included runtype as argument to integrate_3d
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
-!
 ! !LOCAL VARIABLES:
    integer         :: vel_hor_adv=1,vel_ver_adv=1,vel_adv_split=0
 #ifdef NO_BAROCLINIC
@@ -280,10 +107,6 @@
 !  Finally, in order to prepare for the first time step, the momentum advection
 !  and internal pressure gradient routines are initialised and the
 !  internal pressure gradient routine is called.
-!
-! !REVISION HISTORY:
-!
-!  22Apr99   Karsten Bolding & Hans Burchard  Initial code.
 !
 ! !LOCAL VARIABLES:
    integer         :: rc
@@ -542,9 +365,6 @@
 ! changed in order to allow for higher order accuracy for the Coriolis
 ! rotation.
 !
-! !REVISION HISTORY:
-!  See log for module
-!
 ! !LOCAL VARIABLES:
   logical, save              :: ufirst=.true.
 !
@@ -679,9 +499,6 @@
 ! !DESCRIPTION:
 ! Here, a call to the routine {\tt clean\_variables\_3d} which howewer
 ! does not do anything yet.
-!
-! !REVISION HISTORY:
-!  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
 !

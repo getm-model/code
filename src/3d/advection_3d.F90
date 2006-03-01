@@ -9,18 +9,26 @@
    module advection_3d
 !
 ! !DESCRIPTION:
+!
 !  This module do advection of scalars.  The module follows the same
 !  convention as the other modules in 'getm'. The module is initialised
 !  by calling 'init\_advection\_3d()'. In the time-loop 'do\_advection\_3d' is
 !  called. 'do\_advection\_3d' is a wrapper routine which - dependent on the
-!  actual advection scheme chosen - makes a call to the appropriate subroutine.
+!  actual advection scheme chosen - makes calls to the appropriate 
+!  subroutines, which may be done as one-step or multiple-step schemes.
+!  The actual subroutines are coded in external FORTRAN files.
 !  New advection schemes are easily implemented - at least from a program
 !  point of view - since only this module needs to be changed.
 !  Additional work arrays can easily be added following the stencil given
-!  below. To add a new advection scheme 3 things must be done: 1) define
-!  a unique constant to identify the scheme (see e.g. UPSTREAM and TVD)
-!  2) adopt the 'select case' in 'do\_advection\_3d()' and 3) write the actual
-!  subroutine.
+!  below. To add a new advection scheme three things must be done: 
+!
+!  \begin{enumerate}
+!  \item define
+!  a unique constant to identify the scheme (see e.g.\ {\tt UPSTREAM}
+!  and {\tt TVD})
+!  \item adopt the {\tt select case} in {\tt do\_advection\_3d} and 
+!  \item  write the actual subroutine.
+!  \end{enumerate}
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
@@ -46,98 +54,6 @@
 !
 ! !PRIVATE DATA MEMBERS:
 !
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: advection_3d.F90,v $
-!  Revision 1.10  2006-02-04 11:47:26  hb
-!  Source code documentation extended
-!
-!  Revision 1.9  2005-11-17 13:50:22  kbk
-!  fixes to compile with gfortran
-!
-!  Revision 1.8  2005/10/06 09:54:01  hb
-!  added support for vertical slice model - via -DSLICE_MODEL
-!
-!  Revision 1.7  2005/05/25 10:32:13  kbk
-!  merged from stabe branch v1_2_1
-!
-!  Revision 1.6.2.1  2005/05/25 08:39:14  kbk
-!  update HALO's after each fractional step
-!
-!  Revision 1.6  2004/01/06 15:04:00  kbk
-!  FCT advection + split of advection_3d.F90 + extra adv. input checks
-!
-!  Revision 1.5  2003/12/16 16:50:40  kbk
-!  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
-!
-!  Revision 1.4  2003/09/03 05:38:45  kbk
-!  need to call update_3d_halo() for each directional split
-!
-!  Revision 1.3  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 16:30:53  kbk
-!  parallel support
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:58  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.18  2001/09/19 13:53:08  bbh
-!  Typo
-!
-!  Revision 1.17  2001/09/19 13:46:52  bbh
-!  Nasty memory leak in upstream_adv() - only if -DFORTRAN90
-!
-!  Revision 1.16  2001/09/03 20:13:08  bbh
-!  Corrected order of select (strang)
-!
-!  Revision 1.15  2001/09/03 20:04:21  bbh
-!  Allow individual advection settings for momentum, salinity and temperature
-!
-!  Revision 1.14  2001/09/03 12:56:58  bbh
-!  Advection can now be split into different schemes for each direction
-!
-!  Revision 1.13  2001/08/29 14:22:59  bbh
-!  Dimensions for masks are needed
-!
-!  Revision 1.12  2001/08/29 12:44:39  bbh
-!  masks are E2DFIELD
-!
-!  Revision 1.11  2001/08/27 11:51:45  bbh
-!  TVD-advection for momentum added, some bugs removed
-!
-!  Revision 1.10  2001/08/01 08:31:22  bbh
-!  CURVILINEAR now implemented
-!
-!  Revision 1.9  2001/07/26 12:49:33  bbh
-!  Added a number of new advection schemes - UPSTREAM_SPLIT, P2,
-!  Superbee, MUSCL and P2_PDM.
-!
-!  Revision 1.8  2001/05/22 08:24:21  bbh
-!  Added adv in call to advection routines
-!
-!  Revision 1.7  2001/05/18 09:45:16  bbh
-!  Removed some LEVEL2 statements
-!
-!  Revision 1.6  2001/05/18 09:37:07  bbh
-!  IMPLICITE NONE was commented out  at one place
-!
-!  Revision 1.5  2001/05/18 07:59:46  bbh
-!  UPSTREAM advection is ready
-!
-!  Revision 1.4  2001/05/11 13:47:53  bbh
-!  First do UPSTREAM
-!
-!  Revision 1.3  2001/05/04 13:15:05  bbh
-!  Public members was commented out
-!
-!  Revision 1.2  2001/05/04 09:53:06  bbh
-!  Added stubs for upstream_adv() and tdv_adv + description
-!
-!  Revision 1.1  2001/05/03 20:20:33  bbh
-!  Stubs for baroclinicity
-!
 ! !LOCAL VARIABLES:
    integer :: advection_method
 !EOP
@@ -154,8 +70,9 @@
    subroutine init_advection_3d(method)
 !
 ! !DESCRIPTION:
-!  Reads the namelist and makes calls to the init functions of the
-!  various model components.
+!
+! Here, memory for some variables is allocated, which are then initialised to
+! zero.
 !
 ! !USES
    IMPLICIT NONE
@@ -166,9 +83,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  See the log for the module
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
@@ -207,7 +121,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  do_advection_3d() - high-order advection schemes \label{sec-do-advection-3d}
+! !IROUTINE:  do_advection_3d - 3D advection schemes \label{sec-do-advection-3d}
 !
 ! !INTERFACE:
    subroutine do_advection_3d(dt,f,uu,vv,ww,hun,hvn,ho,hn,      &
@@ -216,34 +130,120 @@
 !
 ! !DESCRIPTION:
 !
+! Here, advection terms for all three-dimensional state variables are
+! calculated by means of a finite-volume approach (an exception
+! is the possibility to directly calculate the momentum advection
+! by a one-step three-dimensional upstream scheme, 
+! see {\tt uv\_advection\_3d}) and the advection step is carried out
+! as a fractional advection time step. Those 3D variables may be defined on
+! T-, U-, V- and W-points. The latter option is interesting for 
+! turbulent quantities, but is not coded yet. Inside this advection
+! routine, it does not matter, wehre the advected variable is located
+! on the grid. All finite volume fluxes and geometric coefficients
+! need to be calculated before {\tt advection\_3d} is called.
+!
+! Originally, this 3D advection routine has been written for tracer
+! equations. There,
+! after multiplying the layer-integrated and transformed to
+! curvilinear coordinates tracer equation (\ref{C_Layer_IntCurvi}) 
+! with $mn$, the advective 
+! terms in this equation are discretised as follows. 
+! 
+! First advection term in (\ref{C_Layer_IntCurvi}):
+! \begin{equation}\label{u_discr_advect}
+! \left(mn\,\partial_{\cal X}\left(\frac{p_kc_k}{n}\right)\right)_{i,j}\approx 
+! \frac{
+! p_{i,j,k}\tilde c^u_{i,j,k}\Delta y^u_{i,j}-
+! p_{i-1,j,k}\tilde c^u_{i-1,j,k}\Delta y^u_{i-1,j}
+! }{\Delta x^c_{i,j}\Delta y^c_{i,j}}
+! \end{equation}
+! 
+! Second advection term in (\ref{C_Layer_IntCurvi}):
+! \begin{equation}\label{v_discr_advect}
+! \left(mn\,\partial_{\cal Y}\left(\frac{q_kc_k}{m}\right)\right)_{i,j}\approx 
+! \frac{
+! q_{i,j,k}\tilde c^v_{i,j,k}\Delta y^v_{i,j}-
+! q_{i,j-1,k}\tilde c^v_{i,j-1,k}\Delta y^v_{i,j-1}
+! }{\Delta x^c_{i,j}\Delta y^c_{i,j}}
+! \end{equation}
+! 
+! Vertical advective fluxes in (\ref{C_Layer_IntCurvi}):
+! \begin{equation}\label{w_discr_advect}
+! \left(\bar w_{k} \tilde c_{k}\right)_{i,j}\approx
+! w_{i,j,k}\tilde c^w_{i,j,k}. 
+! \end{equation}
+! 
+! The interfacial concentrations $\tilde c_{i,j,k}$ are calculated 
+! according to upwind or higher order directional split
+! schemes, which are discussed in detail below and in sections 
+! \ref{sec-upstream-adv} - \ref{sec-fct-2dh-adv}. 
+! 
+! However, as said above, in the same way these routines may be applied 
+! to quantities on
+! U-, V-, and W-points, if the transports and geometric coefficients 
+! are properly calculated.
+! 
+! There are various combinations of advection schemes possible. 
+! The first selection is whether a one-step 3D first-order upstream method
+! is cosen, or a fractional step method. 
+!
+! The next selection is (if a fractional step method is selected) 
+! how to do the fractional steps (selection on {\tt adv\_split}). There
+! are different options, 
+!
+! \begin{enumerate}
+! \item directional split with subsequent full steps in $x$-, $y$- and 
+! $z$-direction, 
+! \item split with subsequent half steps in $x$-, and $y$-direction, a
+! full step in $z$-direction, and half steps in $y$- and $x$-direction.
+! \item directional split into a 2D horizontal step and a 1D vertical step.
+! \end{enumerate}
+!
+! For the 1D directional-split schemes, first-order upstream, 
+! ULTIMATE QUICKEST, and the Total Variation Diminishing (TVD) schemes
+! Superbee, MUSCL, and P$_2$PDM are available. 
+
+! For the 2D horizontal step, an upstream scheme and a Flux-Corrected
+! Transport (FCT) scheme have been coded.
+! 
+! If the compiler option {\tt ITERATE\_VERT\_ADV} is chosen, the vertical
+! advection is iterated as many times with reduced time step that 
+! the CFL criterium for vertical advection is fulfilled, see the routine
+! {\tt w\_split\_it\_adv}.
+!
+! With the compiler option {\tt SLICE\_MODEL}, the advection in
+! $y$-direction is not executed.
+!
+!
 ! !USES:
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in)      :: uu(I3DFIELD)
-   REALTYPE, intent(in)      :: vv(I3DFIELD)
-   REALTYPE, intent(in)      :: ww(I3DFIELD)
-   REALTYPE, intent(in)      :: ho(I3DFIELD)
-   REALTYPE, intent(in)      :: hn(I3DFIELD)
-   REALTYPE, intent(in)      :: hun(I3DFIELD)
-   REALTYPE, intent(in)      :: hvn(I3DFIELD)
-   REALTYPE, intent(in)      :: delxu(I2DFIELD)
-   REALTYPE, intent(in)      :: delxv(I2DFIELD)
-   REALTYPE, intent(in)      :: delyu(I2DFIELD)
-   REALTYPE, intent(in)      :: delyv(I2DFIELD)
-   REALTYPE, intent(in)      :: area_inv(I2DFIELD),dt,AH
-   integer, intent(in)       :: az(E2DFIELD)
-   integer, intent(in)       :: au(E2DFIELD)
-   integer, intent(in)       :: av(E2DFIELD)
-   integer, intent(in)       :: hor_adv,ver_adv,adv_split
+   REALTYPE, intent(in) :: uu(I3DFIELD)       ! layer-integrated x-transport
+   REALTYPE, intent(in) :: vv(I3DFIELD)       ! layer-integrated y-transport
+   REALTYPE, intent(in) :: ww(I3DFIELD)       ! grid-related vertical velocity
+   REALTYPE, intent(in) :: ho(I3DFIELD)       ! old height of finite volume box
+   REALTYPE, intent(in) :: hn(I3DFIELD)       ! new height of finite volume box
+   REALTYPE, intent(in) :: hun(I3DFIELD)      ! height of x-interfaces
+   REALTYPE, intent(in) :: hvn(I3DFIELD)      ! height of y-interfaces
+   REALTYPE, intent(in) :: delxu(I2DFIELD)    ! dx centered on u-transport pt. 
+   REALTYPE, intent(in) :: delxv(I2DFIELD)    ! length of y-interface
+   REALTYPE, intent(in) :: delyu(I2DFIELD)    ! length of u-interface 
+   REALTYPE, intent(in) :: delyv(I2DFIELD)    ! dy centered on v-transport pt.
+   REALTYPE, intent(in) :: area_inv(I2DFIELD) ! inverse of horizontal box area
+   REALTYPE, intent(in) :: dt                 ! advection time step
+   REALTYPE, intent(in) :: AH                 ! constant horizontal diffusivity 
+   integer, intent(in)  :: az(E2DFIELD)       ! mask for box centre (1: water)
+   integer, intent(in)  :: au(E2DFIELD)       ! mask for u-transport (1: water)
+   integer, intent(in)  :: av(E2DFIELD)       ! mask for v-transport (1: water)
+   integer, intent(in)  :: hor_adv            ! selection for horizontal scheme
+   integer, intent(in)  :: ver_adv            ! selection for vertical scheme
+   integer, intent(in)  :: adv_split          ! selection for split mode
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)   :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  See the log for the module
 !
 ! !LOCAL VARIABLES:
    REALTYPE, parameter       :: a1=0.5*ONE,a2=ONE

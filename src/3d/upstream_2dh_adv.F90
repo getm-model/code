@@ -1,8 +1,9 @@
-!$Id: upstream_2dh_adv.F90,v 1.2 2005-10-06 09:54:01 hb Exp $
+!$Id: upstream_2dh_adv.F90,v 1.3 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  upstream_2dh_adv()
+! !IROUTINE:  upstream_2dh_adv - 2D upstream advection
+! \label{sec-upstream-2dh-adv}
 !
 ! !INTERFACE:
    subroutine upstream_2dh_adv(dt,f,uu,vv,ho,hn,hun,hvn, &
@@ -16,8 +17,65 @@
 ! Sea applications cause non-monotonicity, a truncation of over- and 
 ! undershoots is carried out at the end of this subroutine. Such 
 ! two-dimensional schemes are advantageous in Wadden Sea applications, since
-! one-dimensional directioal-split schemes might compute negative intermediate
+! one-dimensional directional-split schemes might compute negative intermediate
 ! depths.
+!
+! Before or after this 2D-horizontal advection is executed, 
+! a 1D vertical advection
+! step, possibly with another scheme, needs to be carried out.
+!
+! The advection terms are calculated according to (\ref{u_discr_advect}) and
+! (\ref{v_discr_advect}) and the interface 
+! fluxes are again calculated according to (\ref{uflux_upstream}) and
+! (\ref{vflux_upstream}).
+!
+! However, here in contrast to the one-step advection scheme with
+! (\ref{adv_one_step}) implemented in {\tt upstream\_adv},
+! first the complete horizontal and then the complete vertical
+! advection needs to be executed. For consistency and conservation
+! reasons, a partial step for the continuity equation needs
+! to be executed as well. This is done as follows:
+!
+! \begin{equation}\label{adv_hor_step}
+! \begin{array}{l}
+! h^n_{i,j,k} c^n_{i,j,k} =
+! h^o_{i,j,k} c^o_{i,j,k} \\ \\
+! \displaystyle
+! \qquad - \Delta t \Bigg(
+! \frac{
+! p_{i,j,k}\tilde c^u_{i,j,k}\Delta y^u_{i,j}-
+! p_{i-1,j,k}\tilde c^u_{i-1,j,k}\Delta y^u_{i-1,j}
+! }{\Delta x^c_{i,j}\Delta y^c_{i,j}}
+! +
+! \frac{
+! q_{i,j,k}\tilde c^v_{i,j,k}\Delta y^v_{i,j}-
+! q_{i,j-1,k}\tilde c^v_{i,j-1,k}\Delta y^v_{i,j-1}
+! }{\Delta x^c_{i,j}\Delta y^c_{i,j}}\Bigg),
+! \end{array}
+! \end{equation}
+!
+! with the layer height changes
+!
+! \begin{equation}\label{adv_hor_step_h}
+! h^n_{i,j,k} =
+! h^o_{i,j,k} 
+! \displaystyle
+! - \Delta t \Bigg(
+! \frac{
+! p_{i,j,k}\Delta y^u_{i,j}-
+! p_{i-1,j,k}\Delta y^u_{i-1,j}
+! }{\Delta x^c_{i,j}\Delta y^c_{i,j}}
+! +
+! \frac{
+! q_{i,j,k}\Delta y^v_{i,j}-
+! q_{i,j-1,k}\Delta y^v_{i,j-1}
+! }{\Delta x^c_{i,j}\Delta y^c_{i,j}}\Bigg).
+! \end{equation}
+!
+! Here, $n$ and $o$ denote values before and after this operation,
+! respectively, $n$ denote intermediate values when the
+! 1D advection step comes after this and $o$ denotes intermediate
+! values when the 1D advection step came before this.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
@@ -38,17 +96,6 @@
    REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: upstream_2dh_adv.F90,v $
-!  Revision 1.2  2005-10-06 09:54:01  hb
-!  added support for vertical slice model - via -DSLICE_MODEL
-!
-!  Revision 1.1  2004/01/06 15:04:00  kbk
-!  FCT advection + split of advection_3d.F90 + extra adv. input checks
-!
 !
 ! !LOCAL VARIABLES:
    integer         :: rc,i,j,k,ii,jj

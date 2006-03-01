@@ -1,4 +1,4 @@
-!$Id: uu_momentum_3d.F90,v 1.8 2006-02-10 22:41:56 hb Exp $
+!$Id: uu_momentum_3d.F90,v 1.9 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -70,89 +70,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: uu_momentum_3d.F90,v $
-!  Revision 1.8  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.7  2006-01-29 20:32:33  hb
-!  Small LaTeX corrections to source code documentation
-!
-!  Revision 1.6  2006-01-28 20:07:54  hb
-!  Extensions to compiler option SLICE_MODEL for better representation of zero gradients in y-direction
-!
-!  Revision 1.5  2004-07-28 14:58:18  hb
-!  Changing subroutine calling order via MUDFLAT
-!
-!  Revision 1.4  2004/04/20 16:49:37  hb
-!  call to coordinates moved for better consistency (see JMB)
-!
-!  Revision 1.3  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 13:36:38  kbk
-!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:56  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.17  2001/10/26 09:11:28  bbh
-!  Stresses in meteo.F90 are in N/m2 - divide by rho_0 where necessary
-!
-!  Revision 1.16  2001/10/12 11:43:04  bbh
-!  Fixed conflicts
-!
-!  Revision 1.15  2001/10/12 11:39:20  bbh
-!  TVD moved out of ??_momentum_3d.F90 and into uv_advect_3d.F90
-!
-!  Revision 1.14  2001/09/19 13:07:00  bbh
-!  Moved advection related 3D fields to global allocation
-!
-!  Revision 1.13  2001/09/04 07:25:28  bbh
-!  Coriolis based on summing up transports
-!
-!  Revision 1.12  2001/09/03 20:04:21  bbh
-!  Allow individual advection settings for momentum, salinity and temperature
-!
-!  Revision 1.11  2001/09/03 12:56:58  bbh
-!  Advection can now be split into different schemes for each direction
-!
-!  Revision 1.10  2001/08/30 08:56:26  bbh
-!  Preparing for 3D boundary conditions
-!
-!  Revision 1.9  2001/08/27 11:51:45  bbh
-!  TVD-advection for momentum added, some bugs removed
-!
-!  Revision 1.8  2001/08/01 08:31:22  bbh
-!  CURVILINEAR now implemented
-!
-!  Revision 1.7  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.6  2001/05/21 13:07:19  bbh
-!  dt and cnpar is in variables_3d.F90
-!
-!  Revision 1.5  2001/05/20 07:51:40  bbh
-!  Internal pressure included
-!
-!  Revision 1.4  2001/05/18 10:00:50  bbh
-!  Added masks to calls to update_3d_halo()
-!
-!  Revision 1.3  2001/05/03 20:12:31  bbh
-!  Use of variables_3d
-!
-!  Revision 1.2  2001/04/24 08:38:15  bbh
-!  cosmetics - :-)
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc

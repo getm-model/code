@@ -1,14 +1,60 @@
-!$Id: v_split_adv.F90,v 1.1 2004-01-06 15:04:00 kbk Exp $
+!$Id: v_split_adv.F90,v 1.2 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  v_split_adv()
+! !IROUTINE:  v_split_adv - 1D y-advection \label{sec-v-split-adv}
 !
 ! !INTERFACE:
    subroutine v_split_adv(dt,f,vv,hvn, &
                           delxv,delyv,area_inv,av,splitfac,method,az,AH)
 ! !DESCRIPTION:
+!
+! Here, the $y$-directional split 1D advection step is executed
+! with a number of options for the numerical scheme. The basic
+! advection equation is accompanied by an fractional step
+! for the continuity equation and both equations look as follows:
+! 
+! \begin{equation}\label{adv_v_step}
+! h^n_{i,j,k} c^n_{i,j,k} =
+! h^o_{i,j,k} c^o_{i,j,k}
+! \displaystyle
+! - \Delta t 
+! \frac{ 
+! q_{i,j,k}\tilde c^v_{i,j,k}\Delta y^v_{i,j}-
+! q_{i,j-1,k}\tilde c^v_{i,j-1,k}\Delta y^v_{i,j-1}
+! }{\Delta x^c_{i,j}\Delta y^c_{i,j}},
+! \end{equation}
+!
+! with the 1D continuity equation
+! \begin{equation}\label{adv_v_step_h}
+! h^n_{i,j,k} =
+! h^o_{i,j,k}
+! \displaystyle
+! - \Delta t
+! \frac{
+! q_{i,j,k}\Delta y^v_{i,j}-
+! q_{i,j-1,k}\Delta y^v_{i,j-1}
+! }{\Delta x^c_{i,j}\Delta y^c_{i,j}}.
+! \end{equation}
+!
+! Here, $n$ and $o$ denote values before and after this operation,
+! respectively, $n$ denote intermediate values when other
+! 1D advection steps come after this and $o$ denotes intermediate
+! values when other 1D advection steps came before this.
+! Furthermore, when this $y$-directional split step is repeated
+! during the total time step (Strang splitting), the time step $\Delta t$
+! denotes a fraction of the full time step.
+!
+! The interfacial fluxes $\tilde c^v_{i,j,k}$ are calculated by means of
+! monotone and non-monotone schemes which are described in detail in 
+! {\tt u\_split\_adv}, see section \ref{sec-u-split-adv} on 
+! page \pageref{sec-u-split-adv}. 
+!
+! Furthermore, the horizontal diffusion in $y$-direction
+! with the constant diffusion
+! coefficient {\tt AH} is carried out here by means of a central difference
+! second-order scheme.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
@@ -31,14 +77,6 @@
    REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: v_split_adv.F90,v $
-!  Revision 1.1  2004-01-06 15:04:00  kbk
-!  FCT advection + split of advection_3d.F90 + extra adv. input checks
-!
 !
 ! !LOCAL VARIABLES:
    integer         :: i,ii,j,jj,k,kk

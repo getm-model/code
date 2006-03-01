@@ -1,14 +1,23 @@
-!$Id: slow_advection.F90,v 1.8 2006-02-10 22:41:56 hb Exp $
+!$Id: slow_advection.F90,v 1.9 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: slow_advection() - slow advection terms \label{sec-slow-advection}
+! !ROUTINE: slow_advection - slow advection terms \label{sec-slow-advection}
 !
 ! !INTERFACE:
    subroutine slow_advection
 !
 ! !DESCRIPTION:
+!
+! Here, the calculation of the advective slow terms $S^x_A$ and $S^y_A$
+! (see eqs.\ (\ref{SxA}) and (\ref{SyA})) is prepared. This routine
+! basically repeats the calculations made in the routine {\tt uv\_advect}, 
+! see section \ref{sec-uv-advect}, but this time based on the macro time
+! step averaged and vertically integrated transports {\tt Uint} and {\tt Vint}.
+! The calculations of  $S^x_A$ and $S^y_A$ are then completed in the 
+! routine {\tt slow\_terms}, see section \ref{sec-slow-terms} on page 
+! \pageref{sec-slow-terms}.
 !
 ! !USES:
    use domain, only: iimin,iimax,jjmin,jjmax,HU,HV,az,au,av,ax
@@ -27,53 +36,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: slow_advection.F90,v $
-!  Revision 1.8  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.7  2005-10-06 09:54:01  hb
-!  added support for vertical slice model - via -DSLICE_MODEL
-!
-!  Revision 1.6  2003/08/28 15:16:31  kbk
-!  use ax mask, PP from variables_2d, always set PP
-!
-!  Revision 1.5  2003/05/02 07:55:04  kbk
-!  set PP equal 0. + only slow_advection when mask .eq. 1
-!
-!  Revision 1.4  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.3  2003/04/07 16:24:04  kbk
-!  changed order of some loops
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:54  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.6  2001/08/27 11:50:17  bbh
-!  TVD-advection for momentum added, some bugs removed
-!
-!  Revision 1.5  2001/08/01 08:31:22  bbh
-!  CURVILINEAR now implemented
-!
-!  Revision 1.4  2001/06/25 13:15:33  bbh
-!  Fixed a few typos found by the DECFOR compiler
-!
-!  Revision 1.3  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.2  2001/05/03 20:12:31  bbh
-!  Use of variables_3d
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,ii,jj

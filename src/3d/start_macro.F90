@@ -1,14 +1,32 @@
-!$Id: start_macro.F90,v 1.8 2006-02-10 22:41:56 hb Exp $
+!$Id: start_macro.F90,v 1.9 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: start_macro() - initialise the macro loop \label{sec-start-macro}
+! !ROUTINE: start_macro - initialise the macro loop \label{sec-start-macro}
 !
 ! !INTERFACE:
    subroutine start_macro()
 !
 ! !DESCRIPTION:
+!
+! This routine needs to be called from {\tt m3d} at the beginning
+! of each macro time step. Here, the sea surface elevations at the
+! before and after the macro time step are updated at the
+! T-, U- and V-points.the sea surface elevations at the
+! before and after the macro time step are updated at the
+! T-, U- and V-points, their notation is {\tt sseo}, {\tt ssen},
+! {\tt ssuo}, {\tt ssun}, {\tt ssvo} and {\tt ssvn}, where {\tt e},
+! {\tt u} and {\tt v} stand for T-, U- and V-point and {\tt o} and
+! {\tt n} for old and new, respectively, see also the description of
+! {\tt variables\_3d} in section \ref{sec-variables-3d} on page 
+! \pageref{sec-variables-3d}.
+!
+! Furthermore, the vertically integrated transports {\tt Uint}
+! and {\tt Vint} are here divided by the number of micro time
+! steps per macro time step, {\tt M}, in order to obtain 
+! the time-averaged transports.
+!
 !
 ! !USES:
    use domain, only: iimin,iimax,jjmin,jjmax,H,HU,HV,min_depth
@@ -22,48 +40,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: start_macro.F90,v $
-!  Revision 1.8  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.7  2004-01-05 12:43:22  kbk
-!  cleanned
-!
-!  Revision 1.6  2003/08/03 08:54:58  kbk
-!  used HALO in loop boundaries
-!
-!  Revision 1.5  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.4  2003/04/07 16:27:32  kbk
-!  parallel support
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:55  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.5  2001/08/27 11:51:45  bbh
-!  TVD-advection for momentum added, some bugs removed
-!
-!  Revision 1.4  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.3  2001/05/18 13:00:36  bbh
-!  Added masks for update_2d_halo() for possible later use
-!
-!  Revision 1.2  2001/05/03 20:12:31  bbh
-!  Use of variables_3d
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
-!
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j

@@ -1,9 +1,9 @@
-!$Id: variables_3d.F90,v 1.8 2006-02-10 22:41:56 hb Exp $
+!$Id: variables_3d.F90,v 1.9 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: variables_3d - global 3D related variables
+! !MODULE: variables_3d - global 3D related variables \label{sec-variables-3d}
 !
 ! !INTERFACE:
    module variables_3d
@@ -131,49 +131,6 @@
    integer                             :: size3d_field
    integer                             :: mem3d
 !
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: variables_3d.F90,v $
-!  Revision 1.8  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.7  2005-09-23 11:27:10  kbk
-!  support for biology via GOTMs biology modules
-!
-!  Revision 1.6  2004/01/06 15:04:00  kbk
-!  FCT advection + split of advection_3d.F90 + extra adv. input checks
-!
-!  Revision 1.5  2003/12/16 15:58:54  kbk
-!  back ground viscosity and diffusivity (manuel)
-!
-!  Revision 1.4  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.3  2003/04/07 16:22:31  kbk
-!  initialise variables
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:58  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.6  2001/09/19 13:07:00  bbh
-!  Moved advection related 3D fields to global allocation
-!
-!  Revision 1.5  2001/09/01 17:10:25  bbh
-!  Vertical coordinate definition now specified via namelist
-!
-!  Revision 1.4  2001/08/27 11:51:45  bbh
-!  TVD-advection for momentum added, some bugs removed
-!
-!  Revision 1.3  2001/05/21 13:07:19  bbh
-!  dt and cnpar is in variables_3d.F90
-!
-!  Revision 1.2  2001/05/18 08:25:52  bbh
-!  Added zooming variables
-!
-!  Revision 1.1  2001/05/03 19:31:56  bbh
-!  3D variables seperated from m3d
-!
 ! !LOCAL VARIABLES:
 !
 !EOP
@@ -202,10 +159,6 @@
 !  Dynamic allocation of memory for 3D related fields via
 !  {\tt dynamic\_allocations\_3d.h} (unless the compiler option
 !  {\tt STATIC} is set). Furthermore, most variables are initialised here.
-!
-! !REVISION HISTORY:
-!
-!  See log for the module.
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
@@ -276,9 +229,6 @@
 !
 ! !DESCRIPTION:
 !  This routine cleans up after a 3D integrationby doing nothing so far.
-!
-! !REVISION HISTORY:
-!  See log for the module.
 !
 ! !LOCAL VARIABLES:
 !

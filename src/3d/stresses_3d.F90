@@ -1,14 +1,24 @@
-!$Id: stresses_3d.F90,v 1.5 2006-02-10 22:41:56 hb Exp $
+!$Id: stresses_3d.F90,v 1.6 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: stresses_3d() - bottom and surface stresses\label{sec-stresses-3d}
+! !ROUTINE: stresses_3d - bottom and surface stresses\label{sec-stresses-3d}
 !
 ! !INTERFACE:
    subroutine stresses_3d
 !
 ! !DESCRIPTION:
+!
+! As preparation of the call to {\tt do\_turbulence} in the routine {\tt gotm},
+! see section \ref{sec-gotm}, the normalised surface and bottom stresses,
+! $\tau_s/\rho_0$ (variable {\tt taus}) and $\tau_b/\rho_0$ (variable {\tt
+! taub}), respectively, are calculated and interpolated to the T-points.
+! Input parameters to this routine are {\tt rru} and {tt rrv}, which
+! contain $r\sqrt{u^2+v^2}$ for the U- and V-points, respectively. 
+! The modules of the surface and bottom stress vectors are calculated
+! then by means of taking the square root of the sum of the squares of
+! the stess components.
 !
 ! !USES:
    use parameters, only: rho_0
@@ -23,41 +33,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: stresses_3d.F90,v $
-!  Revision 1.5  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.4  2003-08-14 09:48:09  kbk
-!  need rru,rrv in halo zones
-!
-!  Revision 1.3  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 13:36:38  kbk
-!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:56  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.4  2001/10/26 09:11:28  bbh
-!  Stresses in meteo.F90 are in N/m2 - divide by rho_0 where necessary
-!
-!  Revision 1.3  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.2  2001/05/03 20:22:44  bbh
-!  Also uses variables_3d
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k1,k2,k3,k4

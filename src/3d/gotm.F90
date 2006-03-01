@@ -1,14 +1,40 @@
-!$Id: gotm.F90,v 1.11 2006-02-10 22:41:56 hb Exp $
+!$Id: gotm.F90,v 1.12 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: gotm() - a wrapper to call GOTM \label{sec-gotm}
+! !ROUTINE: gotm - a wrapper to call GOTM \label{sec-gotm}
 !
 ! !INTERFACE:
    subroutine gotm()
 !
 ! !DESCRIPTION:
+! 
+! Here, the turbulence module of the General Ocean Turbulence Model (GOTM,
+! see {\tt www.gotm.net} and \cite{UMLAUFea05}) is called. First, all
+! necessary parameters are transformed to suit with a 1D water column model,
+! i.e., 3D fields are transformed to a vertical vector, 2D horizontal
+! fields are converted to a scalar. The transformed 3D fields are
+! the layer heights {\tt hn $\rightarrow$ h}, the shear squared 
+! {\tt SS $\rightarrow$ SS1d},
+! the buoyancy frequency squared {\tt NN $\rightarrow$ NN1d}, 
+! the turbulent kinetic energy {\tt tke $\rightarrow$ tke1d}, 
+! the dissipation rate {\tt eps $\rightarrow$ eps1d}
+! (from which the integral length scale {\tt L1d} is calculated), the
+! eddy viscosity {\tt num $\rightarrow$ num1d}, and the eddy diffusivity
+! {\tt nuh $\rightarrow$ nuh1d}. The scalars are the surface and bottom friction
+! velocities, {\tt u\_taus} and {\tt u\_taub}, respectively, the 
+! surface roughness parameter {\tt z0s} (which is currently hard-coded),
+! and the bottom roughess parameter {\tt z0b}.
+! Then, the GOTM turbulence module {\tt do\_turbulence} is called with
+! all the transformed parameters discussed above. Finally, the 
+! vertical vectors {\tt tke1d}, {\tt eps1d}, {\tt num1d} and {\tt nuh1d}
+! are transformed back to 3D fields. 
+!
+! There are furthermore a number of compiler options provided, e.g.\
+! for an older GOTM version, for barotropic calcuations,
+! and for simple parabolic viscosity profiles circumventing the GOTM
+! turbulence module. 
 !
 ! !USES:
    use halo_zones, only: update_3d_halo,wait_halo,H_TAG
@@ -30,75 +56,6 @@
 !
 ! !OUTPUT PARAMETERS:
 !
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: gotm.F90,v $
-!  Revision 1.11  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.10  2006-01-09 10:35:40  lars
-!  bug fix in call to do_turbulence()
-!
-!  Revision 1.9  2005-09-23 11:26:55  kbk
-!  support for GOTM v3.2 and above
-!
-!  Revision 1.8  2004/08/06 15:14:35  hb
-!  num and nuh now properly initialised and no gotm call for CONSTANT_VISCOSITY
-!
-!  Revision 1.7  2003/12/17 10:22:41  kbk
-!  now compiles with -DNO_BAROCLINIC and -DNO_3D
-!
-!  Revision 1.6  2003/12/16 15:58:54  kbk
-!  back ground viscosity and diffusivity (manuel)
-!
-!  Revision 1.5  2003/05/05 15:51:57  kbk
-!  proper update of halo zones for num and nuh
-!
-!  Revision 1.4  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.3  2003/04/07 13:36:38  kbk
-!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:54  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.11  2001/10/23 07:06:43  bbh
-!  PARABOLIC VISCOSITY --> PARABOLIC_VISCOSITY
-!
-!  Revision 1.10  2001/10/23 07:05:11  bbh
-!  Parabolic viscosity - -DPARABOLIC_VISCOSITY
-!
-!  Revision 1.8  2001/09/09 20:11:46  bbh
-!  Buoyancy production has now right sign
-!
-!  Revision 1.7  2001/08/27 11:50:17  bbh
-!  TVD-advection for momentum added, some bugs removed
-!
-!  Revision 1.6  2001/07/26 12:54:11  bbh
-!  Testing advection schems - using ifdef HAIDVOGEL_TEST
-!
-!  Revision 1.5  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.4  2001/05/21 13:07:19  bbh
-!  dt and cnpar is in variables_3d.F90
-!
-!  Revision 1.3  2001/05/20 07:49:22  bbh
-!  Also diffusivities + partial fix of z0b
-!
-!  Revision 1.2  2001/05/03 20:12:31  bbh
-!  Use of variables_3d
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
-!
-!
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
    REALTYPE                  :: u_taus,u_taub,z0s,z0b
@@ -110,9 +67,6 @@
 #ifndef GOTM_3_0
    REALTYPE                  :: xP(0:kmax)
 #endif
-   logical, save             :: first=.true.
-   integer, save             :: n = 0
-   integer                   :: kk
 !
 !EOP
 !-----------------------------------------------------------------------

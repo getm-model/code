@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.18 2006-02-10 22:41:56 hb Exp $
+!$Id: salinity.F90,v 1.19 2006-03-01 14:45:12 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,7 +9,11 @@
    module salinity
 !
 ! !DESCRIPTION:
-!  Description still missing
+!
+! In this module, the salinity equation is processed by
+! reading in the namelist {\tt salt} and initialising the salinity field
+! (this is done in {\tt init\_salinity}),
+! and calculating the advection-diffusion-equation (see {\tt do\_salinity}).
 !
 ! !USES:
    use exceptions
@@ -37,101 +41,6 @@
    integer                   :: salt_adv_split=0
    REALTYPE                  :: salt_AH=-_ONE_
 !
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: salinity.F90,v $
-!  Revision 1.18  2006-02-10 22:41:56  hb
-!  Source code documentation extended
-!
-!  Revision 1.17  2006-01-29 12:25:21  kbk
-!  NOMADS -> FRESHWATER_LENSE
-!
-!  Revision 1.16  2006-01-27 21:13:31  hb
-!  Boundary conditions for compiler option NOMADS_TEST set to constant for complete sponge region
-!
-!  Revision 1.15  2005-04-29 12:59:44  kbk
-!  cleaned advection info
-!
-!  Revision 1.14  2005/04/25 07:55:50  kbk
-!  use more general frame for error handling - Umlauf
-!
-!  Revision 1.13  2004/08/06 15:16:12  hb
-!  Compiler option ARKONA_TEST included
-!
-!  Revision 1.12  2004/07/29 19:46:32  hb
-!  For compiler option NOMADS_TEST: some lines shortened
-!
-!  Revision 1.11  2004/04/21 09:14:03  lars
-!  added ifdef for baltic_slice
-!
-!  Revision 1.10  2004/01/06 15:04:00  kbk
-!  FCT advection + split of advection_3d.F90 + extra adv. input checks
-!
-!  Revision 1.9  2003/12/16 17:10:05  kbk
-!  removed TABS
-!
-!  Revision 1.8  2003/12/16 16:13:51  kbk
-!  forced ????_strang to 0 - needs clarification
-!
-!  Revision 1.7  2003/12/16 16:00:46  kbk
-!  molecular diffusion for salt and temp (manuel)
-!
-!  Revision 1.6  2003/09/13 10:52:21  kbk
-!  changed field_no to salt_field_no and temp_field_no
-!
-!  Revision 1.5  2003/08/03 08:13:09  kbk
-!  added field_no to namelist
-!
-!  Revision 1.4  2003/04/23 12:16:34  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.3  2003/04/07 13:36:38  kbk
-!  parallel support, cleaned code + NO_3D, NO_BAROCLINIC
-!
-!  Revision 1.1.1.1  2002/05/02 14:00:58  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.12  2001/09/03 20:04:21  bbh
-!  Allow individual advection settings for momentum, salinity and temperature
-!
-!  Revision 1.11  2001/09/03 12:56:58  bbh
-!  Advection can now be split into different schemes for each direction
-!
-!  Revision 1.10  2001/08/29 12:08:05  bbh
-!  temp_adv and salt_adv needs to be public
-!
-!  Revision 1.9  2001/08/29 11:21:46  bbh
-!  namelists read in salinity and temperature + initialisation
-!
-!  Revision 1.8  2001/08/27 11:51:45  bbh
-!  TVD-advection for momentum added, some bugs removed
-!
-!  Revision 1.7  2001/07/26 13:14:06  bbh
-!  Included adv_method in calls
-!
-!  Revision 1.6  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.5  2001/05/22 08:26:12  bbh
-!  Fixed vertical diffusion
-!
-!  Revision 1.4  2001/05/21 13:07:19  bbh
-!  dt and cnpar is in variables_3d.F90
-!
-!  Revision 1.3  2001/05/18 09:51:07  bbh
-!  Included az in call to update_3d_halo()
-!
-!  Revision 1.2  2001/05/18 08:24:41  bbh
-!  Advection of salinity and temperature
-!
-!  Revision 1.1  2001/05/03 20:20:33  bbh
-!  Stubs for baroclinicity
-!
 ! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
@@ -148,7 +57,20 @@
    subroutine init_salinity(adv_method)
 !
 ! !DESCRIPTION:
-!  Description still missing
+!
+! Here, the salinity equation is initialised. First, the namelist
+! {\tt salt} is read from {\tt getm.inp}. Then, depending on the
+! {\tt salt\_method}, the salinity field is read from a
+! hotstart file ({\tt salt\_method}=0), initialised with a constant value
+! ({\tt salt\_method}=1), initialised and interpolated
+! with horizontally homogeneous 
+! salinity from a given salinity profile ({\tt salt\_method}=2),
+! or read in and interpolated from a 3D netCDF field ({\tt salt\_method}=3).
+! Finally, a number of sanity checks are performed for the chosen
+! salinity advection schemes.
+!
+! Apart from this, there are various options for specific initial
+! conditions which are selected by means of compiler options.
 !
 ! !USES:
 #ifdef FRESHWATER_LENSE_TEST
@@ -162,9 +84,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  See the log for the module
 !
 ! !LOCAL VARIABLES:
   integer                    :: i,j,k,n
@@ -386,13 +305,27 @@ salt_field_no=1
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  do_salinity() - salinity equation \label{sec-do-salinity}
+! !IROUTINE:  do_salinity - salinity equation \label{sec-do-salinity}
 !
 ! !INTERFACE:
    subroutine do_salinity(n)
 !
 ! !DESCRIPTION:
-!  Description still missing
+!
+! Here, one time step for the salinity equation is performed.
+! First, preparations for the call to the advection schemes are
+! made, i.e.\ calculating the necessary metric coefficients.
+! After the call to the advection schemes, which actually perform
+! the advection (and horizontal diffusion) step as an operational
+! split step, the tri-diagonal matrix for calculating the
+! new salinity by means of a semi-implicit central scheme for the
+! vertical diffusion is set up. 
+! There are no source terms on the right hand sides.
+! The subroutine is completed by solving the tri-diagonal linear
+! equation by means of a tri-diagonal solver.
+!
+! Also here, there are some specific options for single test cases
+! selected by compiler options.
 !
 ! !USES:
    use advection_3d, only: do_advection_3d
@@ -412,9 +345,6 @@ salt_field_no=1
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-!
-! !REVISION HISTORY:
-!  See the log for the module
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc
