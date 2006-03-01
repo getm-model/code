@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.1 2006-02-07 07:16:21 kbk Exp $
+#$Id: Makefile,v 1.2 2006-03-01 14:40:17 hb Exp $
 #
 # Makefile for the GETM source code documentation. 
 #
@@ -9,7 +9,7 @@ SRCDIR    = ../src
 
 RUSER=bolding
 RHOST=bolding-burchard.com
-RDIR=/data/kamel/domains/bolding-burchard.com/doc/v1.6/pdf/
+RDIR=/data/kamel/domains/bolding-burchard.com/doc/v1.6/
 
 
 PROTEXSRC  = getm.tex		\
@@ -46,9 +46,13 @@ TEXHTMLSRC = introduction.tex      \
              cases.tex             \
              gotm.bib
 
-.PHONY :     clean realclean distclean upload $(PROTEXSRC)
+.PHONY: html clean realclean distclean upload $(PROTEXSRC)
 
-all: a4.dvi a4.ps a4.pdf
+all: a4.dvi html
+
+a4: a4.dvi
+	dvips a4.dvi
+	dvipdf a4.dvi
 
 a4.dvi: a4.tex $(TEXSRC) $(PROTEXSRC) figures
 	latex  a4.tex
@@ -57,18 +61,17 @@ a4.dvi: a4.tex $(TEXSRC) $(PROTEXSRC) figures
 	latex  a4.tex
 	latex  a4.tex
 
-a4.ps: a4.dvi
-	dvips a4.dvi
-
-a4.pdf: a4.dvi
-	dvipdf a4.dvi
+html: a4.tex $(TEXSRC) $(PROTEXSRC) figures
+	mkdir -p html
+	latex2html -dir html a4.tex
 
 # Generate the protex dependend latex files (from the source code)
 $(PROTEXSRC):
 	$(MAKE) -C $(SRCDIR)/$(shell echo $@ | cut -f 1 -d .) doc
 
-upload: a4.pdf
-	scp -r a4.pdf $(RUSER)@$(RHOST):$(RDIR)
+upload: a4 html
+	scp -r a4.pdf $(RUSER)@$(RHOST):$(RDIR)/pdf/
+	scp -r html/* $(RUSER)@$(RHOST):$(RDIR)/html/
 
 figures:
 	wget -nd -nH -q http://www.bolding-burchard.com/src/figures/getm-figs-1.6.x.gz
@@ -79,8 +82,12 @@ clean:
 	$(RM) *.log *.toc *.aux *.bbl *.blg *.bac *~
 
 realclean: clean
-	$(RM) *.dvi *.ps *.pdf
 	$(RM) $(PROTEXSRC)
+	$(RM) *.dvi *.ps *.pdf
+	$(RM) -r html/
+ifdef PROTEXSRC
+	set -e; for i in $(PROTEXSRC); do $(MAKE) -C $(SRCDIR)/$(shell echo $(i) | cut -f 1 -d .) $@; done
+endif
 
 distclean: realclean
 	$(RM) *.gz

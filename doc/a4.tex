@@ -1,4 +1,4 @@
-%$Id: a4.tex,v 1.1 2006-02-13 07:20:04 hb Exp $
+%$Id: a4.tex,v 1.2 2006-03-01 14:40:17 hb Exp $
 
 \documentclass[a4paper,twoside]{article}
 
@@ -32,29 +32,39 @@
 % the titlepage
 \begin{titlepage}
 
-
-\vspace{14mm}
+\vfill
 
 {\sf \bf \huge
  \begin{center}
-   General Estuarine Transport Model \\
-   GETM
+   General Estuarine Transport Model
  \end{center}
 }
+\begin{center}
+\includegraphics[width=\linewidth]{./figures/GETM2.ps}
+\end{center}
 
 \vspace{6mm}
 
 {\sf \bf \LARGE
  \begin{center}
-   Source Code \\
-      and \\
-Test Case Documentation
+   Source Code and Test Case \\ Documentation
  \end{center}
 }
 
 {\sf \bf \LARGE
  \begin{center}
-The GETM Developers Team   
+Hans Burchard$^{1,2}$, Karsten Bolding$^3$\\ and Lars Umlauf$^1$   
+ \end{center}
+}
+
+
+\vspace{6mm}
+
+{\sf \bf \Large
+ \begin{center}
+ 1: Baltic Sea Research Institute Warnem\"unde, Germany \\
+ 2: Bolding \& Burchard Hydrodynamics, Rostock, Germany \\
+ 3: Bolding \& Burchard Hydrodynamics, Asperup, Denmark
  \end{center}
 }
 
@@ -136,7 +146,7 @@ The GETM Developers Team
 %\cleardoublepage
 %\include{cases}
 
- Bibliography with BibTeX:
+% Bibliography with BibTeX:
 \cleardoublepage
 \bibliographystyle{agu}
 \addcontentsline{toc}{section}{Bibliography}

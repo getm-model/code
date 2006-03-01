@@ -1,64 +1,34 @@
-%$Id: Numerics.tex,v 1.1 2006-02-13 07:20:04 hb Exp $
+\subsection{Tracer advection}
 
-\subsection{Bed friction}\label{SectionBedFric}
- 
-As already mentioned earlier in section \ref{SectionDynBounds},
-caution is needed when discretising the
-bottom boundary conditions for momentum, (\ref{DynBoundbx}).
-They are an example
-for a physical condition which has to be modified for the numerical
-discretisation, since the discrete velocity point nearest to the bottom
-is half a grid box away from the point where the
-\index{boundary conditions}boundary condition
-is defined. Furthermore, due to the logarithmic \index{law of the wall}
-law, high velocity
-gradients are typical near the bed. Simply setting the discrete bottom
-velocity to zero, would therefore lead to large discretisation errors.
-Instead, a flux condition using bottom stresses is derived from the law of the wall,
-see e.g.\ \cite{BURCHARD01b}. 
+After multiplying (\ref{C_Layer_IntCurvi}) with $mn$, the advective 
+terms in this equation are discretised as follows. 
 
-For the determination of the normalised bottom stresses
-
-\begin{equation}\label{tauxb}
-\frac{\tau^x_b}{\rho_0}=u_*^{bx}u_*^b,
-\end{equation}
-\begin{equation}\label{tauyb}
-\frac{\tau^y_b}{\rho_0}=u_*^{by}u_*^b
+First advection term in (\ref{C_Layer_IntCurvi}):
+\begin{equation}
+\left(mn\,\partial_{\cal X}\left(\frac{p_kc_k}{n}\right)\right)_{i,j}\approx 
+\frac{
+p_{i,j,k}\tilde c_{i,j,k}\Delta y^u_{i,j}-
+p_{i-1,j,k}\tilde c_{i-1,j,k}\Delta y^u_{i-1,j}
+}{\Delta x^c_{i,j}\Delta y^c_{i,j}}
 \end{equation}
 
-with the friction velocities
-$u_*^b=\sqrt{\tau_b/\rho_0}$\label{pagetaub} with
-$\tau_b=\sqrt{(\tau^x_{b})^2+(\tau^y_{b})^2}$,
-assumptions about the structure of
-velocity inside the discrete bottom layer have to be made.
-We use here the logarithmic profile 
-
-\begin{equation}\label{log_prof}
-\frac{u(z')}{u_*}
-=\frac{1}{\kappa}\mbox{ln}\left(\frac{z'+z_0^b}{z_0^b}\right),
+Second advection term in (\ref{C_Layer_IntCurvi}):
+\begin{equation}
+\left(mn\,\partial_{\cal Y}\left(\frac{q_kc_k}{m}\right)\right)_{i,j}\approx 
+\frac{
+q_{i,j,k}\tilde c_{i,j,k}\Delta y^v_{i,j}-
+q_{i,j-1,k}\tilde c_{i,j-1,k}\Delta y^v_{i,j-1}
+}{\Delta x^c_{i,j}\Delta y^c_{i,j}}
 \end{equation}
 
-with the bottom roughness length $z_0^b$, the von K\'arm\'an constant $\kappa=0.4$
-and the distance from the bed, $z'$. 
-Therefore, estimates for the velocities in the centre of the bottom
-layer can be achieved by:
-
-\begin{equation}\label{ulogdis}
-u_b = \frac{u_*^{bx}}{\kappa}\mbox{ln} \left(\frac{0.5h_1+z_0^b}{z_0^b}\right),
+Vertical advective fluxes in (\ref{C_Layer_IntCurvi}):
+\begin{equation}
+\left(\bar w_{k} \tilde c_{k}\right)_{i,j}\approx
+w_{i,j,k})\tilde c_{i,j,k}. 
 \end{equation}
 
-\begin{equation}\label{vlogdis}
-v_b = \frac{u_*^{by}}{\kappa}\mbox{ln} \left(\frac{0.5h_1+z_0^b}{z_0^b}\right).
-\end{equation}
-
-For $h_1\rightarrow 0$, the original \index{boundary conditions!Dirichlet-type}
-Dirichlet-type
-no-slip boundary conditions (\ref{DynBoundbx}) are retained.
-Another possibility would be to specify the bottom velocities $u_b$ and $v_b$
-such that they are equal to the layer-averaged \index{law of the wall}
-log-law velocities
-(see \cite{BAUMERTea89}, \cite{BAUMERTea92}).
-The calculation of this is however slightly more time consuming
-and does not lead to a higher accuracy.
-
+The interfacial concentrations $\tilde c_{i,j,k}$ are calculated 
+according to upwind or higher order directional split
+schemes, which are discussed in detail in section 
+\ref{SectionHigherOrder}. 
 

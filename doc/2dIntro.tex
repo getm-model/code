@@ -1,4 +1,4 @@
-%$Id: 2dIntro.tex,v 1.1 2006-02-13 07:20:04 hb Exp $
+%$Id: 2dIntro.tex,v 1.2 2006-03-01 14:40:17 hb Exp $
 
 \section{Introduction to 2d module}
 
@@ -8,7 +8,7 @@ sea surface elevation equation. For the momentum equations, interaction terms
 with the baroclinic three-dimentional mode need to be considered. Those terms
 are here called the slow terms.
 
-\subsection{Vertically integrated mode}
+\subsection{Vertically integrated mode}\label{SectionVerticalIntegrated}
 
 In order to provide the splitting of the model into
 an internal and an external mode, the continuity equation and
@@ -129,7 +129,7 @@ for bottom friction
 S^x_{F}=\tau^x_b-\frac{R}{D^2}U\sqrt{U^2+V^2},
 \end{equation}
 
-\begin{equation}
+\begin{equation}\label{Slowsecond}
 S^y_{F}=\tau^y_b-\frac{R}{D^2}V\sqrt{U^2+V^2},
 \end{equation}
 
@@ -147,7 +147,7 @@ S^y_{A}=\int_{-H}^{\zeta}\left(\partial_x (uv)+\partial_yv^2\right)\,dz-
 
 horizontal diffusion
 
-\begin{equation}
+\begin{equation}\label{SxD}
 \begin{array}{l}
 \displaystyle
 S^x_D=
@@ -162,7 +162,7 @@ S^x_D=
 \end{array}
 \end{equation} 
 
-\begin{equation}
+\begin{equation}\label{SyD}
 \begin{array}{l}
 \displaystyle
 S^y_D=
