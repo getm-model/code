@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.13 2005-04-25 09:25:33 kbk Exp $
+!$Id: meteo.F90,v 1.14 2006-03-01 13:52:22 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -59,7 +59,7 @@
    logical, public                     :: metforcing=.false.
    logical, public                     :: on_grid=.true.
    logical, public                     :: calc_met=.false.
-   integer, public                     :: method
+   integer, public                     :: met_method
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
    REALTYPE, public, dimension(:,:), allocatable  :: airp,tausx,tausy,swr,shf
    REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum,tcc
@@ -78,6 +78,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
+!  Revision 1.14  2006-03-01 13:52:22  kbk
+!  renamed method to met_method
+!
 !  Revision 1.13  2005-04-25 09:25:33  kbk
 !  conv --> convc
 !
@@ -186,7 +189,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
-   namelist /meteo/ metforcing,on_grid,calc_met,method,spinup,metfmt, &
+   namelist /meteo/ metforcing,on_grid,calc_met,met_method,spinup,metfmt, &
                     meteo_file,tx,ty,swr_const,shf_const
 !EOP
 !-------------------------------------------------------------------------
@@ -201,7 +204,7 @@
 
    LEVEL2 'Metforcing=',metforcing
    if (metforcing) then
-      select case (method)
+      select case (met_method)
             case (1)
                LEVEL2 'Constant forcing is used:'
                LEVEL3 'tx  = ',tx
@@ -405,7 +408,7 @@
          ramp = _ONE_
       end if
 
-      select case (method)
+      select case (met_method)
          case (1)
             airp  =  _ZERO_
             tausx = ramp*tx

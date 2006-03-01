@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.19 2005-05-04 11:45:29 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.20 2006-03-01 13:52:22 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,7 +17,7 @@
    use domain, only: imin,imax,jmin,jmax,az,lonc,latc,convc
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
    use grid_interpol, only: to_rotated_lat_lon
-   use meteo, only: meteo_file,on_grid,calc_met,method,hum_method
+   use meteo, only: meteo_file,on_grid,calc_met,met_method,hum_method
    use meteo, only: airp,u10,v10,t2,hum,tcc
    use meteo, only: tausx,tausy,swr,shf
    use meteo, only: new_meteo,t_1,t_2
@@ -81,7 +81,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
-!  Revision 1.19  2005-05-04 11:45:29  kbk
+!  Revision 1.20  2006-03-01 13:52:22  kbk
+!  renamed method to met_method
+!
+!  Revision 1.19  2005/05/04 11:45:29  kbk
 !  adding model time stamp on IO
 !
 !  Revision 1.18  2005/04/25 09:25:33  kbk
@@ -206,6 +209,15 @@
 #endif
 
    call open_meteo_file(meteo_file)
+
+   if(iextr .eq. 1 .and. jextr .eq. 1) then
+      point_source = .true.
+      LEVEL3 'Assuming Point Source meteo forcing'
+!      if (on_grid .eq. .false. ) then
+         LEVEL3 'Setting on_grid to true'
+         on_grid=.true.
+!      end if
+   end if
 
    if (met_lat(1) .gt. met_lat(2)) then
       LEVEL3 'Reverting lat-axis and setting grid_scan to 0'
@@ -360,7 +372,7 @@
 
    end if
 
-   if (method .eq. 2) then
+   if (met_method .eq. 2) then
       start(1) = 1; start(2) = 1;
       edges(1) = iextr; edges(2) = jextr;
       edges(3) = 1
@@ -416,7 +428,7 @@
    write(debug,*) 'get_meteo_data_ncdf() # ',Ncall
 #endif
 
-   if (method .eq. 2) then
+   if (met_method .eq. 2) then
 
 !     find the right index
 
