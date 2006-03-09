@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.10 2005-10-06 12:32:32 kbk Exp $
+!$Id: initialise.F90,v 1.11 2006-03-09 10:53:55 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,7 +22,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
-!  Revision 1.10  2005-10-06 12:32:32  kbk
+!  Revision 1.11  2006-03-09 10:53:55  kbk
+!  set spinup to -1 when doing hotstart
+!
+!  Revision 1.10  2005/10/06 12:32:32  kbk
 !  call getm_error() -> use exceptions
 !
 !  Revision 1.9  2005/10/06 09:54:01  hb
@@ -250,7 +253,7 @@
 
    call init_domain(input_dir)
 
-   call init_meteo()
+   call init_meteo(hotstart)
 
 #ifndef NO_3D
    call init_rivers()

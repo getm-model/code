@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.14 2006-03-01 13:52:22 kbk Exp $
+!$Id: meteo.F90,v 1.15 2006-03-09 10:53:57 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -78,6 +78,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
+!  Revision 1.15  2006-03-09 10:53:57  kbk
+!  set spinup to -1 when doing hotstart
+!
 !  Revision 1.14  2006-03-01 13:52:22  kbk
 !  renamed method to met_method
 !
@@ -170,7 +173,7 @@
 ! !IROUTINE: init_meteo - initialise the \emph{meteo} module.
 !
 ! !INTERFACE:
-   subroutine init_meteo()
+   subroutine init_meteo(hotstart)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -178,6 +181,7 @@
 !  the content of the namelist various variables are allocated and initialised.
 !
 ! !INPUT PARAMETERS:
+   logical, intent(in)                 :: hotstart
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -224,7 +228,13 @@
                end if
          case default
       end select
-      LEVEL2 'Forcing will be spun up over ',spinup,' timesteps'
+      if (hotstart .and. spinup .gt. 0) then
+         LEVEL2 'hotstart --> spinup=-1'
+         spinup=-1
+      end if
+      if ( spinup .gt. 0) then
+         LEVEL2 'Forcing will be spun up over ',spinup,' timesteps'
+      end if
    end if
 
 ! Allocates memory for the public data members
