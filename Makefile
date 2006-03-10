@@ -26,9 +26,12 @@ VER=1.3.0
 VER=1.3.1
 # 2005/05/25
 VER=1.3.2
+# 2006/03/10
+VER=1.3.3
 
-TAG=v$(shell cat VERSION | tr . _)
-RELEASE=getm-$(VERSION)
+TAG=v$(shell echo $VER | tr . _)
+RELEASE=getm-$(VER)
+release_dir=/public/ftp/pub/getm-releases
 
 RHOST=bolding-burchard.com
 RUSER=bbh
@@ -38,23 +41,23 @@ RHOST=gate
 RUSER=kbk
 RDIR=bolding-burchard.com/
 
-EXEC	= model$(libtype)
-
 base =  BUGS INSTALL README TODO HISTORY
 
-all: VERSION $(EXEC) doc
-	$(MAKE) -C src $(EXEC) install
+.PHONY: doc
 
-include/version.h: ./Makefile
+all: VERSION
+
+VERSION: Makefile
+	$(MAKE) distclean
+	@echo $(VER) > $@
+	@date > timestamp
 	@echo \#define RELEASE \"$(VER)\" > .ver
-	@mv -f .ver $@
+	@mv -f .ver include/version.h
 
-VERSION: include/version.h
-	 @echo $(VER) > $@
+Makefile:
 
 doc:
-	$(MAKE) -C src/ doc
-	set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i doc; done
+	$(MAKE) -C doc/
 
 clean:
 	rm -f VERSION
@@ -67,31 +70,30 @@ distclean:
 tag:
 	cvs tag $(TAG)
 
-export: tag
-	(cd ~/getm-releases ; cvs export -r $(TAG) getm-src ; mv getm-src getm-$(VER)/)
-
-devel: export
+devel: tag
+	(cd $(release_dir)/$@/ ; cvs -d gate:/public/cvs export -r $(TAG) -d getm-$(VER)/ getm-src )
 	cvs2cl -F trunk
-	mv ChangeLog ~/getm-releases/getm-$(VER)/
-	(cd ~/getm-releases ; tar -cvzf getm-$(VER).tar.gz getm-$(VER)/ )
+	mv ChangeLog $(release_dir)/$@/getm-$(VER)/
+	(cd $(release_dir)/$@ ; tar -cvzf getm-$(VER).tar.gz getm-$(VER)/ )
 	sync
-	scp ~/getm-releases/getm-$(VER)/ChangeLog \
-	    $(RUSER)@$(RHOST):$(RDIR)/src/ChangeLog.devel
-	scp ~/getm-releases/getm-$(VER).tar.gz \
-	    $(RUSER)@$(RHOST):$(RDIR)/src/
-	ssh $(RUSER)@$(RHOST) \( cd $(RDIR)/src \; \
-	     ln -sf getm-$(VER).tar.gz getm_devel.tar.gz \)
+	scp $(release_dir)/$@/getm-$(VER)/ChangeLog \
+	    $(RUSER)@$(RHOST):$(RDIR)/src/$@/ChangeLog
+	scp $(release_dir)/$@/getm-$(VER).tar.gz \
+	    $(RUSER)@$(RHOST):$(RDIR)/src/$@/
+	ssh $(RUSER)@$(RHOST) \( cd $(RDIR)/src/$@ \; \
+	     ln -sf getm-$(VER).tar.gz getm-devel.tar.gz \)
 
 stable: export
+	(cd $(release_dir)/$@/ ; cvs -d gate:/public/cvs export -r $(TAG) -d getm-$(VER)/ getm-src )
 	cvs2cl -b -F $(BRANCH) --no-ancestors
-	mv ChangeLog ~/getm-releases/getm-$(VER)/
-	(cd ~/getm-releases ; tar -cvzf getm-$(VER).tar.gz getm-$(VER)/ )
+	mv ChangeLog $(release_dir)/$@/getm-$(VER)/
+	(cd $(release_dir)/$@ ; tar -cvzf getm-$(VER).tar.gz getm-$(VER)/ )
 	sync
-	scp ~/getm-releases/getm-$(VER)/ChangeLog \
-	    $(RUSER)@$(RHOST):src/ChangeLog
-	scp ~/getm-releases/getm-$(VER).tar.gz \
-	    $(RUSER)@$(RHOST):src/
-	ssh $(RUSER)@$(RHOST) \( cd src \; \
-	     ln -sf getm-$(VER).tar.gz getm_stable.tar.gz \)
+	scp $(release_dir)/$@/getm-$(VER)/ChangeLog \
+	    $(RUSER)@$(RHOST):src/$@/ChangeLog
+	scp $(release_dir)/$@/getm-$(VER).tar.gz \
+	    $(RUSER)@$(RHOST):src/$@/
+	ssh $(RUSER)@$(RHOST) \( cd src/$@/ \; \
+	     ln -sf getm-$(VER).tar.gz getm-stable.tar.gz \)
 
 dummy:
