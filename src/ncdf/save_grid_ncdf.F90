@@ -1,4 +1,4 @@
-!$Id: save_grid_ncdf.F90,v 1.2 2005-11-01 15:44:13 kbk Exp $
+!$Id: save_grid_ncdf.F90,v 1.3 2006-03-10 08:44:02 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,6 +41,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: save_grid_ncdf.F90,v $
+!  Revision 1.3  2006-03-10 08:44:02  kbk
+!  fixed saving coordinate variables
+!
 !  Revision 1.2  2005-11-01 15:44:13  kbk
 !  fixed saving of lonc instaed of latc
 !
@@ -70,6 +73,7 @@
 
 
    REAL_4B, dimension(:), allocatable :: ws
+   REALTYPE, dimension(:), allocatable :: cord
 !
 !EOP
 !------------------------------------------------------------------------
@@ -295,6 +299,13 @@
                                   "save_grid_ncdf()","joff -")
 
 !  save coordinate information
+!  Using the F77 NetCDF interface it is necessary to make a copy of the
+!  coordinate variables to a 1-based vector. The cord variable is 
+!  allocated here and used further down.
+   allocate(cord(max(imax,jmax)),stat=status)
+   if (status .ne. 0) call getm_error("save_grid_ncdf()",               &
+                                      "error allocating cord")
+
    select case (grid_type)
    case (1)
 
@@ -317,14 +328,22 @@
                                      "save_grid_ncdf()","y0 -")
 
 !     coordinate variables
+#if 1
+      cord=xc(1:imax,1)
+      status = nf_put_var_double(ncid,xc_id,cord)
+#else
       status = nf_put_var_double(ncid,xc_id,xc(1:imax,1))
+#endif
       if (status .ne. NF_NOERR) call netcdf_error(status,               &
                                      "save_grid_ncdf()","xc -")
-
+#if 1
+      cord=yc(1,1:jmax)
+      status = nf_put_var_double(ncid,yc_id,cord)
+#else
       status = nf_put_var_double(ncid,yc_id,yc(1,1:jmax))
+#endif
       if (status .ne. NF_NOERR) call netcdf_error(status,               &
                                      "save_grid_ncdf()","yc -")
-
    case (2)
 
 !     global offset
@@ -346,11 +365,20 @@
                                      "save_grid_ncdf()","lon0 -")
 
 !     coordinate variables
+#if 1
+      cord=lonc(1:imax,1)
+      status = nf_put_var_double(ncid,lonc_id,cord)
+#else
       status = nf_put_var_double(ncid,lonc_id,lonc(1:imax,1))
+#endif
       if (status .ne. NF_NOERR) call netcdf_error(status,               &
                                      "save_grid_ncdf()","lonc -")
-
+#if 1
+      cord=latc(1,1:jmax)
+      status = nf_put_var_double(ncid,latc_id,cord)
+#else
       status = nf_put_var_double(ncid,latc_id,latc(1,1:jmax))
+#endif
       if (status .ne. NF_NOERR) call netcdf_error(status,               &
                                      "save_grid_ncdf()","latc -")
    case (3)
