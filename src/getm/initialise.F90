@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.12 2006-03-17 11:06:32 kbk Exp $
+!$Id: initialise.F90,v 1.13 2006-03-17 17:19:52 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,6 +22,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
+!  Revision 1.13  2006-03-17 17:19:52  kbk
+!  simulation with hotstart identical to continuous run - checked with md5sum
+!
 !  Revision 1.12  2006-03-17 11:06:32  kbk
 !  cleaner inclusion of SPM module
 !
@@ -115,6 +118,7 @@
    use time, only: start,timestr,timestep
    use m2d, only: init_2d,z,zu,zv
 #ifndef NO_3D
+   use m2d, only: Uint,Vint
    use m3d, only: cord_relax,init_3d,ssen,ssun,ssvn
 #ifndef NO_BAROCLINIC
    use m3d, only: T
@@ -307,13 +311,13 @@
       end if
       hot_in = trim(out_dir) //'/'// 'restart' // trim(buf)
       call restart_file(READING,trim(hot_in),MinN,runtype)
-#ifndef NO_3D
-      if (runtype .gt. 1) then
-         call start_macro()
-         call coordinates(vert_cord,cord_relax,maxdepth)
-      end if
-#endif
       call depth_update
+      if (runtype .ge. 2) then
+         call coordinates(vert_cord,cord_relax,maxdepth)
+         Uint=_ZERO_
+         Vint=_ZERO_
+      end if
+
 #ifndef NO_BAROCLINIC
       if (runtype .ge. 3) call do_eqstate()
 #endif
@@ -322,26 +326,6 @@
       LEVEL3 timestr
       MinN = MinN+1
    end if
-
-#ifndef NO_3D
-   if (runtype .ge. 2) then
-      do j=jjmin-HALO,jjmax+HALO
-         do i=iimin-HALO,iimax+HALO
-            ssen(i,j)=z(i,j)
-         end do
-      end do
-      do j=jjmin-HALO,jjmax+HALO
-         do i=iimin-HALO,iimax+HALO-1
-            ssun(i,j)=zu(i,j)
-         end do
-      end do
-      do j=jjmin-HALO,jjmax+HALO-1
-         do i=iimin-HALO,iimax+HALO
-            ssvn(i,j)=zv(i,j)
-         end do
-      end do
-   end if
-#endif
 
    call init_input(input_dir,MinN)
 

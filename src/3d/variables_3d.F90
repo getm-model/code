@@ -1,4 +1,4 @@
-!$Id: variables_3d.F90,v 1.10 2006-03-01 15:54:08 kbk Exp $
+!$Id: variables_3d.F90,v 1.11 2006-03-17 17:19:54 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -197,6 +197,11 @@
    uadv = _ZERO_ ; vadv = _ZERO_ ; wadv = _ZERO_
    hnadv = _ZERO_ ; hoadv = _ZERO_
    huadv = _ZERO_ ; hvadv = _ZERO_
+#endif
+
+#ifndef NO_BAROCLINIC
+   idpdx=_ZERO_
+   idpdy=_ZERO_
 #endif
 
    adv_schemes(1) = "3D first-order upstream advection"

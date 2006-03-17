@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.14 2006-03-17 11:06:33 kbk Exp $
+!$Id: output.F90,v 1.15 2006-03-17 17:19:54 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -54,6 +54,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.15  2006-03-17 17:19:54  kbk
+!  simulation with hotstart identical to continuous run - checked with md5sum
+!
 !  Revision 1.14  2006-03-17 11:06:33  kbk
 !  cleaner inclusion of SPM module
 !
@@ -359,9 +362,13 @@
    use variables_2d, only: z,zo
    use variables_2d, only: U,fU,zu,zub,SlUx,Slru
    use variables_2d, only: V,fV,zv,zvb,SlVx,Slrv
-   use variables_2d, only: Uint,Vint
+   use variables_2d, only: Uinto,Vinto
 #ifndef NO_3D
-   use variables_3d, only: uu,vv,tke,eps,num,nuh,ssen,ssun,ssvn
+   use variables_3d, only: ssen,ssun,ssvn
+   use variables_3d, only: sseo,ssuo,ssvo
+   use variables_3d, only: uu,vv,ww
+   use variables_3d, only: uuEx,vvEx
+   use variables_3d, only: tke,eps,num,nuh
 #ifndef NO_BAROCLINIC
    use variables_3d, only: T,S
 #endif
@@ -419,8 +426,11 @@
 #ifndef NO_3D
       if (runtype .ge. 2)  then
          LEVEL3 'saving 3D barotropic variables'
-!kbk         write(RESTART) Uint,Vint
-         write(RESTART) uu,vv
+         write(RESTART) ssen,ssun,ssvn
+         write(RESTART) sseo,ssuo,ssvo
+         write(RESTART) Uinto,Vinto
+         write(RESTART) uu,vv,ww
+         write(RESTART) uuEx,vvEx
          write(RESTART) tke,eps
          write(RESTART) num,nuh
 #ifndef NO_BAROCLINIC
@@ -460,12 +470,12 @@
       if (runtype .ge. 2)  then
 !KBK This needs to be changed !!!! KBK
 !Only works because E2DFIELD = I2DFIELD
-         ssen=z
-         ssun=zu
-         ssvn=zv
          LEVEL3 'reading 3D barotropic variables'
-!kbk         read(RESTART) Uint,Vint
-         read(RESTART) uu,vv
+         read(RESTART) ssen,ssun,ssvn
+         read(RESTART) sseo,ssuo,ssvo
+         read(RESTART) Uinto,Vinto
+         read(RESTART) uu,vv,ww
+         read(RESTART) uuEx,vvEx
          read(RESTART) tke,eps
          read(RESTART) num,nuh
 #ifndef NO_BAROCLINIC
