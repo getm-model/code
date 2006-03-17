@@ -1,4 +1,4 @@
-!$Id: integration.F90,v 1.5 2005-05-25 10:46:15 kbk Exp $
+!$Id: integration.F90,v 1.6 2006-03-17 11:06:32 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,6 +20,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: integration.F90,v $
+!  Revision 1.6  2006-03-17 11:06:32  kbk
+!  cleaner inclusion of SPM module
+!
 !  Revision 1.5  2005-05-25 10:46:15  kbk
 !  introduced progress print out variable - should go in namelist later
 !
@@ -95,6 +98,9 @@
 #endif
    use rivers,   only: do_rivers
 #endif
+#ifdef SPM
+   use suspended_matter, only: spm_calc,do_spm
+#endif
    use input,    only: do_input
    use output,   only: do_output,meanout
 #ifdef TEST_NESTING
@@ -149,8 +155,12 @@
       call do_rivers(do_3d)
       if (do_3d) then
          call integrate_3d(runtype,n)
+
+#ifdef SPM
+         if (spm_calc) call do_spm()
+#endif
+
 #if 0
-        call do_waves()
         call do_biology()
 #endif
       end if

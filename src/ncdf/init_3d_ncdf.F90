@@ -1,4 +1,4 @@
-!$Id: init_3d_ncdf.F90,v 1.10 2005-09-23 11:27:10 kbk Exp $
+!$Id: init_3d_ncdf.F90,v 1.11 2006-03-17 11:06:33 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,6 +17,9 @@
    use domain, only: ioff,joff
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
+#ifdef SPM
+   use suspended_matter, only: spm_save
+#endif
 #ifdef GETM_BIO
    use bio_var, only: numc,var_names,var_units,var_long
 #endif
@@ -32,7 +35,10 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_3d_ncdf.F90,v $
-!  Revision 1.10  2005-09-23 11:27:10  kbk
+!  Revision 1.11  2006-03-17 11:06:33  kbk
+!  cleaner inclusion of SPM module
+!
+!  Revision 1.10  2005/09/23 11:27:10  kbk
 !  support for biology via GOTMs biology modules
 !
 !  Revision 1.9  2005/04/25 09:32:34  kbk
@@ -306,7 +312,7 @@
    end if
 
 #ifdef SPM
-   if (save_spm) then
+   if (spm_save) then
       fv = spm_missing
       mv = spm_missing
       err = nf_def_var(ncid,'spm_pool',NF_REAL,3,f3_dims,spmpool_id) 

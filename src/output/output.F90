@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.13 2006-02-02 17:51:36 kbk Exp $
+!$Id: output.F90,v 1.14 2006-03-17 11:06:33 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,7 +43,6 @@
    logical                             :: save_eps=.true.
    logical                             :: save_num=.true.
    logical                             :: save_nuh=.true.
-   logical                             :: save_spm=.false.
    integer                             :: first_2d=1
    integer                             :: step_2d=1
    integer                             :: first_3d=1
@@ -55,6 +54,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.14  2006-03-17 11:06:33  kbk
+!  cleaner inclusion of SPM module
+!
 !  Revision 1.13  2006-02-02 17:51:36  kbk
 !  do not try and save to un-opened NetCDF files
 !
@@ -156,7 +158,6 @@
              save_2d,save_3d,save_vel,destag, &
              save_strho,save_s,save_t,save_rho, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
-             save_spm, &
              first_2d,step_2d,first_3d,step_3d,hotout,meanout, &
              save_meteo
 !   logical :: nesting=.true.
@@ -181,7 +182,6 @@
       save_vel = .false.
       save_strho = .false.
       save_turb = .false.
-      save_spm = .false.
    end if
   
    if (runtype .eq. 2) then
@@ -356,15 +356,19 @@
 !
 ! !USES:
    use time, only: timestep,julianday,secondsofday
-   use m2d,  only: z,zo,U,fU,zu,zub,SlUx,Slru,V,fV,zv,zvb,SlVx,Slrv,Uint,Vint
+   use variables_2d, only: z,zo
+   use variables_2d, only: U,fU,zu,zub,SlUx,Slru
+   use variables_2d, only: V,fV,zv,zvb,SlVx,Slrv
+   use variables_2d, only: Uint,Vint
 #ifndef NO_3D
-   use m3d,  only: uu,vv,tke,eps,num,nuh,ssen,ssun,ssvn
+   use variables_3d, only: uu,vv,tke,eps,num,nuh,ssen,ssun,ssvn
 #ifndef NO_BAROCLINIC
-   use m3d,  only: T,S
+   use variables_3d, only: T,S
 #endif
 #endif
 #ifdef SPM
-  use m3d,  only: spm,spm_pool,calc_spm,hotstart_spm
+  use suspended_matter, only: spm_calc,spm_hotstart
+  use variables_3d, only: spm,spm_pool
 #endif
 #ifdef GETM_BIO
   use bio, only: bio_calc
@@ -426,7 +430,7 @@
          end if
 #endif
 #ifdef SPM 
-         if(save_spm) then 
+         if(spm_calc) then 
             LEVEL3 'saving spm'
             write(RESTART) spm
             write(RESTART) spm_pool
@@ -471,8 +475,8 @@
          end if
 #endif
 #ifdef SPM 
-         if(calc_spm) then
-            if (hotstart_spm) then 
+         if(spm_calc) then
+            if (spm_hotstart) then 
                LEVEL3 'reading spm variables'
                read(RESTART) spm
                read(RESTART) spm_pool

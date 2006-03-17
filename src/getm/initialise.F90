@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.11 2006-03-09 10:53:55 kbk Exp $
+!$Id: initialise.F90,v 1.12 2006-03-17 11:06:32 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,6 +22,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
+!  Revision 1.12  2006-03-17 11:06:32  kbk
+!  cleaner inclusion of SPM module
+!
 !  Revision 1.11  2006-03-09 10:53:55  kbk
 !  set spinup to -1 when doing hotstart
 !
@@ -116,13 +119,16 @@
 #ifndef NO_BAROCLINIC
    use m3d, only: T
 #endif
-#ifdef GETM_BIO
-   use rivers, only: init_rivers_bio
-#endif
    use turbulence, only: init_turbulence
    use mtridiagonal, only: init_tridiagonal
    use rivers, only: init_rivers
    use variables_3d, only: avmback,avhback
+#ifdef SPM
+   use suspended_matter, only: init_spm
+#endif
+#ifdef GETM_BIO
+   use rivers, only: init_rivers_bio
+#endif
 #endif
    use meteo, only: init_meteo,do_meteo
    use integration,  only: MinN,MaxN
@@ -264,9 +270,6 @@
 #ifndef NO_3D
    if (runtype .gt. 1) then
       call init_3d(runtype,timestep,hotstart)
-#ifdef GETM_BIO
-      call init_rivers_bio
-#endif
 #ifndef CONSTANT_VISCOSITY
       call init_turbulence(60,trim(input_dir) // 'gotmturb.inp',kmax)
 #else
@@ -276,10 +279,18 @@
       LEVEL2 'background turbulent diffusivity set to',avhback
       call init_tridiagonal(kmax)
 
+#ifdef SPM
+      call init_spm(trim(input_dir) // 'spm.inp',runtype)
+#endif
+#ifdef GETM_BIO
+      call init_rivers_bio
+#endif
    end if
 #endif
 
    call init_output(runid,title,start,runtype,dryrun,myid)
+
+   close(NAMLST)
 
 #if 0
    call init_waves(hotstart)

@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.30 2006-03-01 15:54:08 kbk Exp $
+!$Id: m3d.F90,v 1.31 2006-03-17 11:06:33 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -36,9 +36,6 @@
    use internal_pressure, only: init_internal_pressure, do_internal_pressure
    use internal_pressure, only: ip_method
 #endif
-#ifdef SPM
-   use suspended_matter, only: init_spm, do_spm
-#endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use getm_bio, only: init_getm_bio, do_getm_bio
@@ -54,8 +51,6 @@
    REALTYPE                            :: cord_relax=_ZERO_
    logical                             :: calc_temp=.true.
    logical                             :: calc_salt=.true.
-   logical                             :: calc_spm=.false.
-   logical                             :: hotstart_spm=.false.
    logical                             :: bdy3d=.false.
    integer                             :: bdyfmt_3d,bdyramp_3d
    character(len=PATH_MAX)             :: bdyfile_3d
@@ -117,7 +112,7 @@
              M,cnpar,cord_relax,                        &
              bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,     &
              vel_hor_adv,vel_ver_adv,vel_adv_split,     &
-             calc_temp,calc_salt,calc_spm,              &
+             calc_temp,calc_salt,                       &
              avmback,avhback,ip_method
 !
 !EOP
@@ -142,14 +137,6 @@
       LEVEL2 "setting avhback to 0."
       avhback = _ZERO_
    end if
-
-#ifndef SPM
-   if(calc_spm) stop 'To use SPM you have to recompile with -DSPM'
-#endif
-
-#ifndef GETM_BIO
-!KBK   if(bio_calc) stop 'To use BIO you have to recompile with -DBIO'
-#endif
 
 ! Allocates memory for the public data members - if not static
    call init_variables_3d(runtype)
@@ -258,11 +245,6 @@
          call init_advection_3d(2)
       end if
    end if
-#endif
-
-#ifdef SPM
-      if(calc_spm)  call init_spm(hotstart_spm,runtype)
-      if(runtype .ne. 4) call init_advection_3d(2)
 #endif
 
 #ifdef GETM_BIO
@@ -448,10 +430,6 @@
       call do_eqstate()
 #endif
    end if
-#endif
-
-#ifdef SPM
-   if (calc_spm) call do_spm()
 #endif
 
 #ifdef GETM_BIO

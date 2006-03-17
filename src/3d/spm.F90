@@ -1,4 +1,4 @@
-!$Id: spm.F90,v 1.9 2006-03-01 15:54:08 kbk Exp $
+!$Id: spm.F90,v 1.10 2006-03-17 11:06:33 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -70,6 +70,7 @@
 !  \end{equation}
 !
 ! !USES:
+   use exceptions
    use domain, only: imin,jmin,imax,jmax,ioff,joff
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
 #ifdef TRACER_POSITIVE
@@ -85,6 +86,9 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_spm, do_spm
+   logical, public           :: spm_calc=.false.
+   logical, public           :: spm_save=.true.
+   logical, public           :: spm_hotstart=.false.
 !
 ! !PRIVATE DATA MEMBERS:
    integer                 :: spm_method=1
@@ -111,7 +115,8 @@
    integer                 :: spm_mfloc=4
 !
 ! !REVISION HISTORY:
-!  Original author(s): Manuel Ruiz Villarreal, Karsten Bolding and Hans Burchard
+!  Original author(s): Manuel Ruiz Villarreal, Karsten Bolding 
+!                      and Hans Burchard
 !
 ! !LOCAL VARIABLES:
    REALTYPE, parameter       :: x=-rho_0/g
@@ -126,7 +131,7 @@
 ! !IROUTINE: init_spm
 !
 ! !INTERFACE:
-   subroutine init_spm(hotstart_spm,runtype)
+   subroutine init_spm(nml_file,runtype)
 !
 ! !DESCRIPTION:
 !
@@ -155,8 +160,12 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   logical   :: hotstart_spm
-   integer   :: runtype
+   character(len=*), intent(in)   :: nml_file
+!   logical                   :: hotstart_spm
+   integer, intent(in)            :: runtype
+!
+! !REVISION HISTORY:
+!  See revision for the module
 !
 ! !LOCAL VARIABLES:
    integer         :: i,j,k,n
@@ -165,11 +174,11 @@
    REALTYPE        :: zlev(nmax),prof(nmax)
 !  No initial pool of spm at intertidal flats
    logical         :: intertidal_spm0=.false.
-   namelist /spm_nml/   spm_method,spm_init_method,  &
-                        spm_const,spm_format,spm_file,spm_name, &
-                        spm_hor_adv, spm_ver_adv,spm_AH,spm_adv_split, &
-                        spm_ws_method,spm_ws_const,                   &
-                        spm_erosion_const, spm_tauc_sedimentation, &
+   namelist /spm_nml/   spm_calc,spm_save,spm_method,spm_init_method,  &
+                        spm_const,spm_format,spm_file,spm_name,        &
+                        spm_hor_adv, spm_ver_adv,spm_adv_split,        &
+                        spm_AH,spm_ws_method,spm_ws_const,             &
+                        spm_erosion_const, spm_tauc_sedimentation,     &
                         spm_tauc_erosion, spm_porosity, spm_pool_init, &
                         spm_rho,spm_dens
 !EOP
@@ -181,142 +190,158 @@
    write(debug,*) 'init_spm() # ',Ncall
 #endif
 
-   LEVEL2 'init_spm()'
-   read(NAMLST,spm_nml)
+   LEVEL1 'init_spm()'
+   open(NAMLST2,status='unknown',file=trim(nml_file))
+   read(NAMLST2,spm_nml)
+   close(NAMLST2)
 
-   if (spm_dens .eq. .true. .and. runtype .ne. 4)    &
-      stop 'spm_dens=.true. only makes sense for runtype=4'
-   select case (spm_init_method)
-      case(0)
-         LEVEL3 'getting initial fields from hotstart'
-         hotstart_spm=.true.
-      case(1)
-         LEVEL3 'setting to constant value'
-         forall(i=iimin:iimax,j=jjmin:jjmax, az(i,j) .ne. 0) &
-                spm(i,j,:) = spm_const
-      case(2)
-         LEVEL3 'using profile'
-         call read_profile(spm_file,nmax,zlev,prof,n)
-         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,az,H,     &
-                        iimin,jjmin,iimax,jjmax,kmax,hn,spm)
-      case(3)
-         LEVEL3 'interpolating from 3D field'
-         call get_field(spm_file,spm_name,spm)
-      case default
-         FATAL 'Not valid spm_init_method specified'
-         stop 'init_spm'
-   end select
+   if (spm_calc) then
+      if (spm_dens .and. runtype .ne. 4)    &
+         stop 'spm_dens=.true. only makes sense for runtype=4'
+      LEVEL2 'spm_init_method= ',spm_init_method
+      select case (spm_init_method)
+         case(0)
+            LEVEL3 'getting initial SPM from hotstart'
+            spm_hotstart=.true.
+         case(1)
+            LEVEL3 'setting to constant value'
+            forall(i=iimin:iimax,j=jjmin:jjmax, az(i,j) .ne. 0) &
+                   spm(i,j,:) = spm_const
+         case(2)
+            LEVEL3 'using profile'
+            call read_profile(spm_file,nmax,zlev,prof,n)
+            call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,az,H,     &
+                           iimin,jjmin,iimax,jjmax,kmax,hn,spm)
+         case(3)
+            LEVEL3 'interpolating from 3D field'
+            call get_field(spm_file,spm_name,spm)
+         case default
+            FATAL 'Not valid spm_init_method specified'
+            stop 'init_spm'
+      end select
 
-   select case (spm_method)
-       case(1)
+      LEVEL2 'spm_method= ',spm_method
+      select case (spm_method)
+          case(1)
 !         erosion-sedimentation flux
-          erosed_flux = .true.
+             erosed_flux = .true.
 !         A pool of nondynamic particulate matter is assumed that initially
 !         has a concentration per m of spm_pool_init
-          if(spm_init_method /= 0) then
-             forall(i=iimin:iimax,j=jjmin:jjmax, az(i,j) .eq. 1) &
-                spm_pool(i,j) = spm_pool_init
-                if(.not. intertidal_spm0) then
-                   LEVEL3 'No spm pool in intertidal flats'
-                   forall(i=iimin:iimax,j=jjmin:jjmax, H(i,j) <= 1.35 ) &
-                      spm_pool(i,j) = _ZERO_
-                end if
-          end if
-       case default
-          FATAL 'Not valid spm_method specified'
-          stop 'init_spm'
-   end select
+             if(spm_init_method /= 0) then
+                forall(i=iimin:iimax,j=jjmin:jjmax, az(i,j) .eq. 1) &
+                   spm_pool(i,j) = spm_pool_init
+                   if(.not. intertidal_spm0) then
+                      LEVEL3 'No spm pool in intertidal flats'
+                      forall(i=iimin:iimax,j=jjmin:jjmax, H(i,j) <= 1.35 ) &
+                         spm_pool(i,j) = _ZERO_
+                   end if
+             end if
+          case default
+             FATAL 'Not valid spm_method specified'
+             stop 'init_spm'
+      end select
 
-   LEVEL3 'spm_hor_adv=   ',spm_hor_adv
-   LEVEL3 'spm_ver_adv=   ',spm_ver_adv
-   LEVEL3 'spm_adv_split= ',spm_adv_split
+      LEVEL2 'spm_hor_adv=   ',spm_hor_adv
+      LEVEL2 'spm_ver_adv=   ',spm_ver_adv
+      LEVEL2 'spm_adv_split= ',spm_adv_split
 
-   if(spm_hor_adv .eq. 1) then
-      spm_adv_split=-1
-      if(spm_ver_adv .ne. 1) then
-         LEVEL3 "setting spm_ver_adv to 1 - since spm_hor_adv is 1"
-         spm_ver_adv=1
+      if(spm_hor_adv .eq. 1) then
+         spm_adv_split=-1
+         if(spm_ver_adv .ne. 1) then
+            LEVEL3 "setting spm_ver_adv to 1 - since spm_hor_adv is 1"
+            spm_ver_adv=1
+         end if
       end if
-   end if
-   LEVEL3 "horizontal: ",trim(adv_schemes(spm_hor_adv))," of spm"
-   LEVEL3 "vertical:   ",trim(adv_schemes(spm_ver_adv))," of spm"
+      LEVEL3 "horizontal: ",trim(adv_schemes(spm_hor_adv))," of spm"
+      LEVEL3 "vertical:   ",trim(adv_schemes(spm_ver_adv))," of spm"
 
-   select case (spm_adv_split)
-      case (-1)
-      case (0)
-         select case (spm_hor_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "spm_adv_split=0: spm_hor_adv not valid (2-6)")
-         end select
-         select case (spm_ver_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "spm_adv_split=0: spm_ver_adv not valid (2-6)")
-         end select
-         LEVEL3 "1D split --> full u, full v, full w"
-      case (1)
-         select case (spm_hor_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "spm_adv_split=1: spm_hor_adv not valid (2-6)")
-         end select
-         select case (spm_ver_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "spm_adv_split=1: spm_ver_adv not valid (2-6)")
-         end select
-         LEVEL3 "1D split --> half u, half v, full w, half v, half u"
-      case (2)
-         select case (spm_hor_adv)
+      select case (spm_adv_split)
+         case (-1)
+         case (0)
+            select case (spm_hor_adv)
+               case (2,3,4,5,6)
+               case default
+                  call getm_error("init_3d()", &
+                       "spm_adv_split=0: spm_hor_adv not valid (2-6)")
+            end select
+            select case (spm_ver_adv)
+               case (2,3,4,5,6)
+               case default
+                  call getm_error("init_3d()", &
+                       "spm_adv_split=0: spm_ver_adv not valid (2-6)")
+            end select
+            LEVEL3 "1D split --> full u, full v, full w"
+         case (1)
+            select case (spm_hor_adv)
+               case (2,3,4,5,6)
+               case default
+                  call getm_error("init_3d()", &
+                       "spm_adv_split=1: spm_hor_adv not valid (2-6)")
+            end select
+            select case (spm_ver_adv)
+               case (2,3,4,5,6)
+               case default
+                  call getm_error("init_3d()", &
+                       "spm_adv_split=1: spm_ver_adv not valid (2-6)")
+            end select
+            LEVEL3 "1D split --> half u, half v, full w, half v, half u"
+         case (2)
+            select case (spm_hor_adv)
             case (2,7)
             case default
                call getm_error("init_3d()", &
-                    "spm_adv_split=2: spm_hor_adv not valid (2,7)")
-         end select
-         select case (spm_ver_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "spm_adv_split=2: spm_ver_adv not valid (2-6)")
-         end select
-         LEVEL3 "2D-hor, 1D-vert split --> full uv, full w"
-      case default
-   end select
-   spm_ws = _ZERO_
+                       "spm_adv_split=2: spm_hor_adv not valid (2,7)")
+            end select
+            select case (spm_ver_adv)
+               case (2,3,4,5,6)
+               case default
+                  call getm_error("init_3d()", &
+                       "spm_adv_split=2: spm_ver_adv not valid (2-6)")
+            end select
+            LEVEL3 "2D-hor, 1D-vert split --> full uv, full w"
+         case default
+      end select
+      spm_ws = _ZERO_
 
 !  Compute settling velocity
-   select case(spm_ws_method)
-      case(0)
+      LEVEL2 'spm_ws_method= ',spm_ws_method
+      select case(spm_ws_method)
+         case(0)
 !        This will have a function if spm_ws is changing and will go to hotstart
-         LEVEL3 'Case 0 not valid for spm_ws_method'
-         stop 'init_spm'
-      case(1) !constant
-         do k=0,kmax
-            spm_ws(:,:,k) = spm_ws_const
-         end do
-      case(2)
+            LEVEL3 'Case 0 not valid for spm_ws_method'
+            stop 'init_spm'
+         case(1) !constant
+            LEVEL3 'spm_ws_const= ',spm_ws_const
+            do k=0,kmax
+               spm_ws(:,:,k) = spm_ws_const
+            end do
+         case(2)
 !     Zanke formula for fall velocity of sediment
-         FATAL 'Zanke method for settling velocity not yet coded'
-         stop  'init_spm'
-      case(3)
-         do k=0,kmax
-            spm_ws(:,:,k) = spm_ws_const
-         end do
-   end select
+            FATAL 'Zanke method for settling velocity not yet coded'
+            stop  'init_spm'
+!         case(3)
+!            LEVEL3 'spm_ws_const= ',spm_ws_const
+!            do k=0,kmax
+!               spm_ws(:,:,k) = spm_ws_const
+!            end do
+      end select
+      LEVEL2 'spm_erosion_const= ',spm_erosion_const
+      LEVEL2 'spm_tauc_sedimentation= ',spm_tauc_sedimentation
+      LEVEL2 'spm_tauc_erosion= ',spm_tauc_erosion
+      LEVEL2 'spm_pool_init= ',spm_pool_init
 #ifdef TRACER_POSITIVE
-   LEVEL3 'Positivity of spm concentration will be tested'
-   LEVEL3 'and negative values written to fort.101'
-   write(101,*) 'Points where spm is negative'
-   write(101,*) 'Negative values of less than 1e-12 probably do not imply problems'
-   write(101,*) 'i,j,k,spm(i,j,k),D(i,j),z(i,j),ww(i,j,k),ww(i,j,kmax),1 or 2'
-   write(101,*) 'In column 9 1 indicates negative value after advection step'
-   write(101,*) 'In column 9 2 indicates negative value after vertical diffusion step'
+      LEVEL3 'Positivity of spm concentration will be tested'
+      LEVEL3 'and negative values written to fort.101'
+      write(101,*) 'Points where spm is negative'
+      write(101,*) 'Negative values of less than 1e-12 probably do not imply problems'
+      write(101,*) 'i,j,k,spm(i,j,k),D(i,j),z(i,j),ww(i,j,k),ww(i,j,kmax),1 or 2'
+      write(101,*) 'In column 9 1 indicates negative value after advection step'
+      write(101,*) 'In column 9 2 indicates negative value after vertical diffusion step'
 #endif
+   else
+      LEVEL2 'No suspended sediment calculations'
+      spm_save=.false.
+   end if
 #ifdef DEBUG
    write(debug,*) 'Leaving init_spm()'
    write(debug,*)
@@ -433,8 +458,8 @@
                   volCpart=spm(i,j,k)/spm_part_density
                   volCpart=1.-volCpart
                   spm_ws(i,j,k)=spm_ws_const*volCpart
-                  spm_ws(i,j,k)=spm_ws(i,j,k)*(1.-min(1.,volCmud))**spm_mfloc
-                  spm_ws(i,j,k)=spm_ws(i,j,k)/(1.+2.5*volCmud)
+                  spm_ws(i,j,k)=spm_ws(i,j,k)*(_ONE_-min(_ONE_,volCmud))**spm_mfloc
+                  spm_ws(i,j,k)=spm_ws(i,j,k)/(_ONE_+2.5*volCmud)
                end do
             end if
          end do
