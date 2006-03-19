@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.20 2006-03-01 15:54:08 kbk Exp $
+!$Id: salinity.F90,v 1.21 2006-03-19 10:19:36 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -243,6 +243,9 @@ salt_field_no=1
          S(i,j,0:kmax) = 8.
       end do
    end do
+#endif
+#ifdef INTERLEAVING_TEST
+   S(2:6,2,1:20) = 12.
 #endif
 #ifdef SLOPE_TEST
    do i=81,82
