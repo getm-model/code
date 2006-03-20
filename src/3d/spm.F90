@@ -1,4 +1,4 @@
-!$Id: spm.F90,v 1.10 2006-03-17 11:06:33 kbk Exp $
+!$Id: spm.F90,v 1.11 2006-03-20 06:59:54 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -338,6 +338,11 @@
       write(101,*) 'In column 9 1 indicates negative value after advection step'
       write(101,*) 'In column 9 2 indicates negative value after vertical diffusion step'
 #endif
+
+#ifdef INTERLEAVING_TEST
+   spm(2:6,2,1:20) = 1.
+#endif
+
    else
       LEVEL2 'No suspended sediment calculations'
       spm_save=.false.
