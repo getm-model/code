@@ -1,4 +1,4 @@
-#$Id: compiler.FUJITSU,v 1.1 2003-04-07 12:02:01 kbk Exp $
+#$Id: compiler.FUJITSU,v 1.2 2006-03-23 12:20:57 kbk Exp $
 #
 # Set options for the Fujitsu compiler - on Linux/Intel and SunOS.
 ifeq ($(FORTRAN_COMPILER),FUJITSU)
@@ -11,5 +11,5 @@ EXTRAS  = -fw
 DEBUG_FLAGS = -g -H aeus
 PROF_FLAGS  = -pg -O3
 PROD_FLAGS  = -O -K fast
-REAL_4B	= real\(4\)
+DEFINES += -DREAL_4B=real\(4\)
 endif

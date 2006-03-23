@@ -1,4 +1,4 @@
-#$Id: compiler.PGF90,v 1.1 2003-04-07 12:02:01 kbk Exp $
+#$Id: compiler.PGF90,v 1.2 2006-03-23 12:20:57 kbk Exp $
 #
 # Set options for the Portland Group Fortran 90 compiler.
 ifeq ($(FORTRAN_COMPILER),PGF90)
@@ -12,5 +12,5 @@ EXTRAS  =
 DEBUG_FLAGS = -g -Ktrap=fp -Mbounds
 PROF_FLAGS  = -Mprof=func
 PROD_FLAGS  = -fast
-REAL_4B = real\(4\)
+DEFINES += -DREAL_4B=real\(4\)
 endif

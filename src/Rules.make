@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.12 2005-09-23 11:27:10 kbk Exp $
+#$Id: Rules.make,v 1.13 2006-03-23 12:20:57 kbk Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -20,7 +20,7 @@ else
 compilation=$(COMPILATION_MODE)
 endif
 
-DEFINES =
+DEFINES=-D$(FORTRAN_COMPILER)
 
 ifeq ($(GETM_NO_3D),true)
 DEFINES += -DNO_3D
@@ -174,9 +174,9 @@ DOCDIR		= $(GETMDIR)/doc
 # sofar NAG(linux), FUJITSU(Linux), DECF90 (OSF1 and likely Linux on alpha),
 # SunOS, PGF90 - Portland Group Fortran Compiler (on Intel Linux).
 
-include $(GETMDIR)/compilers/compiler.$(FORTRAN_COMPILER)
+#KBKinclude $(GETMDIR)/compilers/compiler.$(FORTRAN_COMPILER)
 
-DEFINES += -DREAL_4B=$(REAL_4B)
+#DEFINES += -DREAL_4B=$(REAL_4B)
 
 # Sets options for debug compilation
 ifeq ($(compilation),debug)
@@ -198,6 +198,8 @@ buildtype = _prod
 DEFINES += -DPRODUCTION $(STATIC)
 FLAGS   = $(PROD_FLAGS) 
 endif
+
+include $(GETMDIR)/compilers/compiler.$(FORTRAN_COMPILER)
 
 # For making the source code documentation.
 PROTEX	= protex -b -n -s
