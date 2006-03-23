@@ -1,4 +1,4 @@
-!$Id: eqstate.F90,v 1.7 2006-03-01 15:54:08 kbk Exp $
+!$Id: eqstate.F90,v 1.8 2006-03-23 09:53:43 frv-bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -178,12 +178,14 @@
                      T4 = T2*T2
                      T5 = T1*T4
                      S1 = S(i,j,k)
+#ifdef DEBUG
                      if (S1 .lt. _ZERO_) then
                         STDERR 'Salinity at point ',i,',',j,',',k,' < 0.'
                         STDERR 'Value is S = ',S(i,j,k)
                         STDERR 'Programm continued, value set to zero ...'
                         S(i,j,k)= _ZERO_
                      end if
+#endif
                      S15= S1**1.5
                      S2 = S1*S1
                      S3 = S1*S2
