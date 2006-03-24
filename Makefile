@@ -49,9 +49,9 @@ doc:
 
 devel stable branch: VERSION
 	@echo
-        @echo "making a new "$@" release: v"$(VER)
-        @echo
-        @. release.sh $@ $(VER)
+	@echo "making a new "$@" release: v"$(VER)
+	@echo
+	@. release.sh $@ $(VER)
 
 clean:
 	rm -f VERSION
