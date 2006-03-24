@@ -28,6 +28,8 @@ VER=1.3.1
 VER=1.3.2
 # 2006/03/10
 VER=1.3.3
+# 2006/03/24 - new stable branch
+VER=1.4
 
 .PHONY: doc
 
