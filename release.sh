@@ -25,7 +25,7 @@ BRANCH=$TAG
 
 RHOST=gate
 RUSER=kbk
-RDIR=bolding-burchard.com/
+RDIR=bolding-burchard.com/src
 
 export CVSROOT=$USER@gate:/public/cvs
 export CVS_RSH=ssh
@@ -52,14 +52,17 @@ fi
 
 if [ "$release_type" = "branch" ] ; then
    cvs tag -b $TAG
-   CVS2CL="cvs2cl -b -F $BRANCH --no-ancestors"
+   echo "now check out the new branch and update the Makefile"
+   echo "the CVS2CL has to be modified"
+   exit 0
 fi
+
 
 $CVS2CL && mkdir -p $release_dir/$release_name/include/ &&  mv ChangeLog VERSION $release_dir/$release_name && mv include/version.h $release_dir/$release_name/include/
 
 cd $release_dir && cvs export -r $TAG -d $release_name getm-src && tar -cvzf $tarfile $release_name/ && ln -sf $release_name.tar.gz getm-$release_type.tar.gz
 
 scp -p $release_dir/$tarfile $RHOST:$RDIR/$release_type/
-ssh $RHOST \( cd $RDIR/$release_type \; rm getm-$release_type.tar.gz \; ln -s $tarfile getm-$release_type.tar.gz \)
+ssh $RHOST \( cd $RDIR/$release_type \; rm getm-$release_type.tar.gz \; ln -s $tarfile getm-$release_type.tar.gz \; tar -xvzf $tarfile \; rm getm-$release_type \; ln -s $release_name getm-$release_type \)
 
 exit 0
