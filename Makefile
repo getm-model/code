@@ -29,20 +29,6 @@ VER=1.3.2
 # 2006/03/10
 VER=1.3.3
 
-TAG=v$(shell echo $VER | tr . _)
-RELEASE=getm-$(VER)
-release_dir=/public/ftp/pub/getm-releases
-
-RHOST=bolding-burchard.com
-RUSER=bbh
-RDIR=.
-
-RHOST=gate
-RUSER=kbk
-RDIR=bolding-burchard.com/
-
-base =  BUGS INSTALL README TODO HISTORY
-
 .PHONY: doc
 
 all: VERSION
@@ -59,41 +45,22 @@ Makefile:
 doc:
 	$(MAKE) -C doc/
 
+devel stable branch: VERSION
+	@echo
+	@echo "making a new "$@" release: v"$(VER)
+	@echo
+	@. release.sh $@ $(VER)
+
 clean:
 	rm -f VERSION
 
 distclean:
-	$(MAKE) -C src distclean
-#	$(MAKE) -C utils distclean
-	$(RM) -r bin/
+	$(MAKE) -C doc $@
+	$(MAKE) -C src $@
+	$(RM) timestep VERSION include/version.h
+	$(RM) -r bin/ lib/ modules/
 
-tag:
-	cvs tag $(TAG)
-
-devel: tag
-	(cd $(release_dir)/$@/ ; cvs -d gate:/public/cvs export -r $(TAG) -d getm-$(VER)/ getm-src )
-	cvs2cl -F trunk
-	mv ChangeLog $(release_dir)/$@/getm-$(VER)/
-	(cd $(release_dir)/$@ ; tar -cvzf getm-$(VER).tar.gz getm-$(VER)/ )
-	sync
-	scp $(release_dir)/$@/getm-$(VER)/ChangeLog \
-	    $(RUSER)@$(RHOST):$(RDIR)/src/$@/ChangeLog
-	scp $(release_dir)/$@/getm-$(VER).tar.gz \
-	    $(RUSER)@$(RHOST):$(RDIR)/src/$@/
-	ssh $(RUSER)@$(RHOST) \( cd $(RDIR)/src/$@ \; \
-	     ln -sf getm-$(VER).tar.gz getm-devel.tar.gz \)
-
-stable: export
-	(cd $(release_dir)/$@/ ; cvs -d gate:/public/cvs export -r $(TAG) -d getm-$(VER)/ getm-src )
-	cvs2cl -b -F $(BRANCH) --no-ancestors
-	mv ChangeLog $(release_dir)/$@/getm-$(VER)/
-	(cd $(release_dir)/$@ ; tar -cvzf getm-$(VER).tar.gz getm-$(VER)/ )
-	sync
-	scp $(release_dir)/$@/getm-$(VER)/ChangeLog \
-	    $(RUSER)@$(RHOST):src/$@/ChangeLog
-	scp $(release_dir)/$@/getm-$(VER).tar.gz \
-	    $(RUSER)@$(RHOST):src/$@/
-	ssh $(RUSER)@$(RHOST) \( cd src/$@/ \; \
-	     ln -sf getm-$(VER).tar.gz getm-stable.tar.gz \)
-
-dummy:
+#-----------------------------------------------------------------------
+# Copyright (C) 2006 - Hans Burchard and Karsten Bolding (BBH)         !
+# #-----------------------------------------------------------------------
+#
