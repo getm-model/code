@@ -28,8 +28,8 @@ VER=1.3.1
 VER=1.3.2
 # 2006/03/10
 VER=1.3.3
-# 2006/03/24 - new stable branch
-VER=1.4
+# 2006/03/24
+VER=1.4.1
 
 .PHONY: doc
 
@@ -49,9 +49,9 @@ doc:
 
 devel stable branch: VERSION
 	@echo
-	@echo "making a new "$@" release: v"$(VER)
-	@echo
-	@. release.sh $@ $(VER)
+        @echo "making a new "$@" release: v"$(VER)
+        @echo
+        @. release.sh $@ $(VER)
 
 clean:
 	rm -f VERSION
@@ -60,9 +60,7 @@ distclean:
 	$(MAKE) -C doc $@
 	$(MAKE) -C src $@
 	$(RM) timestep VERSION include/version.h
-	$(RM) -r bin/ lib/ modules/
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2006 - Hans Burchard and Karsten Bolding (BBH)         !
-# #-----------------------------------------------------------------------
-#
+#-----------------------------------------------------------------------
