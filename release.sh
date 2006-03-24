@@ -41,17 +41,17 @@ if [ -d $release_dir/$release_name ] ; then
 fi
 
 if [ "$release_type" = "stable" ] ; then
-#   cvs tag $TAG
+   cvs tag $TAG
    CVS2CL="cvs2cl -b -F $BRANCH --no-ancestors"
 fi
 
 if [ "$release_type" = "devel" ] ; then
-#   cvs tag $TAG
+   cvs tag $TAG
    CVS2CL="cvs2cl -F trunk"
 fi
 
 if [ "$release_type" = "branch" ] ; then
-#   cvs tag -b $TAG
+   cvs tag -b $TAG
    CVS2CL="cvs2cl -b -F $BRANCH --no-ancestors"
 fi
 
