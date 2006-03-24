@@ -60,7 +60,7 @@ fi
 
 $CVS2CL && mkdir -p $release_dir/$release_name/include/ &&  mv ChangeLog VERSION $release_dir/$release_name && mv include/version.h $release_dir/$release_name/include/
 
-cd $release_dir && cvs export -r $TAG -d $release_name getm-src && tar -cvzf $tarfile $release_name/ && ln -sf $release_name.tar.gz getm-$release_type.tar.gz
+cd $release_dir && cvs export -r $TAG -d $release_name getm-src && tar -cvzf $tarfile $release_name/ && rm getm-$release_type.tar.gz getm-$release_type && ln -sf $release_name.tar.gz getm-$release_type.tar.gz && ln -s $release_name getm-$release_type
 
 scp -p $release_dir/$tarfile $RHOST:$RDIR/$release_type/
 ssh $RHOST \( cd $RDIR/$release_type \; rm getm-$release_type.tar.gz \; ln -s $tarfile getm-$release_type.tar.gz \; tar -xvzf $tarfile \; rm getm-$release_type \; ln -s $release_name getm-$release_type \)
