@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.13 2006-03-17 17:19:52 kbk Exp $
+!$Id: initialise.F90,v 1.14 2006-06-02 12:42:20 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,6 +22,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
+!  Revision 1.14  2006-06-02 12:42:20  kbk
+!  support for common epoch for hotstart runs
+!
 !  Revision 1.13  2006-03-17 17:19:52  kbk
 !  simulation with hotstart identical to continuous run - checked with md5sum
 !
@@ -163,6 +166,7 @@
    character(len=80)         :: title
    logical                   :: parallel=.false.
    logical                   :: hotstart=.false.
+   logical                   :: use_epoch=.false.
    logical                   :: save_initial=.false.
 #if (defined PARALLEL && defined INPUT_DIR)
    character(len=PATH_MAX)   :: input_dir=INPUT_DIR
@@ -173,7 +177,7 @@
 
    namelist /param/ &
              dryrun,runid,title,parallel,runtype,  &
-             hotstart,save_initial
+             hotstart,use_epoch,save_initial
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -310,7 +314,7 @@
          buf = '.in'
       end if
       hot_in = trim(out_dir) //'/'// 'restart' // trim(buf)
-      call restart_file(READING,trim(hot_in),MinN,runtype)
+      call restart_file(READING,trim(hot_in),MinN,runtype,use_epoch)
       call depth_update
       if (runtype .ge. 2) then
          call coordinates(vert_cord,cord_relax,maxdepth)

@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.15 2006-03-17 17:19:54 kbk Exp $
+!$Id: output.F90,v 1.16 2006-06-02 12:42:21 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -54,6 +54,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.16  2006-06-02 12:42:21  kbk
+!  support for common epoch for hotstart runs
+!
 !  Revision 1.15  2006-03-17 17:19:54  kbk
 !  simulation with hotstart identical to continuous run - checked with md5sum
 !
@@ -352,7 +355,7 @@
 ! !ROUTINE: restart_file - read/write the restart file
 !
 ! !INTERFACE:
-   subroutine restart_file(mode,fname,loop,runtype)
+   subroutine restart_file(mode,fname,loop,runtype,use_epoch)
 !
 ! !DESCRIPTION:
 !  This routine write the variables necesaary for a 'hot' model start.
@@ -389,6 +392,7 @@
    integer, intent(in)                 :: mode
    character(len=*), intent(in)        :: fname
    integer, intent(in)                 :: runtype
+   logical, optional, intent(in)       :: use_epoch
 !
 ! !INPUT/OUTPUT PARAMETERS:
    integer, intent(inout)              :: loop
@@ -400,8 +404,7 @@
 !
 ! !LOCAL VARIABLES
    integer, save             :: n=0
-   integer                   :: i
-   logical, save             :: continuous=.false.
+   integer                   :: i,j
    integer                   :: jd,secs 
    character(len=19)         :: timestr_out
    REALTYPE                  :: dt
@@ -462,8 +465,7 @@
       LEVEL3 trim(fname)
       open(RESTART,file=fname,status='unknown',form='unformatted')
       LEVEL3 'reading loop, julianday, secondsofday and timestep'
-!KBK      read(RESTART) loop,julianday,secondsofday,timestep
-      read(RESTART) n,jd,secs,dt
+      read(RESTART) j,jd,secs,dt
       LEVEL3 'reading basic variables'
       read(RESTART) z,zo,U,zu,zub,SlUx,Slru,V,zv,zvb,SlVx,Slrv
 #ifndef NO_3D
@@ -506,8 +508,8 @@
 #endif
       close(RESTART)
 !     make some sanity checks
-      if (continuous) then
-         loop=n; 
+      if (use_epoch) then
+         loop=j; 
          julianday=jd; secondsofday=secs; timestep=dt;
       else
          if (jd .ne. julianday .or. secs .ne. secondsofday) then
@@ -547,13 +549,14 @@
 ! !IROUTINE: clean_output - cleans up after run
 !
 ! !INTERFACE:
-   subroutine clean_output(runtype)
+   subroutine clean_output(runtype,loop)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
 !
 ! !INPUT/OUTPUT PARAMETERS:
+   integer, intent(inout)              :: loop
 !
 ! !OUTPUT PARAMETERS:
 !
@@ -578,7 +581,7 @@
 
 !  Save last restart file
    if (hotout .eq. 0) then
-      call restart_file(WRITING,trim(hot_out),zero,runtype)
+      call restart_file(WRITING,trim(hot_out),loop,runtype)
    end if
 
    if (meanout .eq. 0) then

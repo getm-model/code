@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.9 2006-02-06 15:18:21 kbk Exp $
+!$Id: main.F90,v 1.10 2006-06-02 12:42:20 kbk Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -39,6 +39,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: main.F90,v $
+!  Revision 1.10  2006-06-02 12:42:20  kbk
+!  support for common epoch for hotstart runs
+!
 !  Revision 1.9  2006-02-06 15:18:21  kbk
 !  reverted to v1.7
 !
@@ -90,7 +93,7 @@
    if ( .not. dryrun ) then
       call time_loop(runtype)
    end if
-   call clean_up(dryrun,runtype)
+   call clean_up(dryrun,runtype,MaxN)
 
 #ifdef FORTRAN95
    call CPU_Time(t2)
