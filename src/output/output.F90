@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.16 2006-06-02 12:42:21 kbk Exp $
+!$Id: output.F90,v 1.17 2006-06-03 11:56:02 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -54,6 +54,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.17  2006-06-03 11:56:02  kbk
+!  fixed use_epoch when start is equal to epoch time
+!
 !  Revision 1.16  2006-06-02 12:42:21  kbk
 !  support for common epoch for hotstart runs
 !
@@ -509,8 +512,12 @@
       close(RESTART)
 !     make some sanity checks
       if (use_epoch) then
-         loop=j; 
-         julianday=jd; secondsofday=secs; timestep=dt;
+         if (jd .eq. julianday .and. secs .eq. secondsofday) then
+            loop=0
+         else
+            loop=j;
+            julianday=jd; secondsofday=secs; timestep=dt;
+         end if
       else
          if (jd .ne. julianday .or. secs .ne. secondsofday) then
             FATAL 'start time given in getm.inp does not match time'
@@ -580,6 +587,7 @@
 #endif
 
 !  Save last restart file
+
    if (hotout .eq. 0) then
       call restart_file(WRITING,trim(hot_out),loop,runtype)
    end if
