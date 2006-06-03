@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.21 2005-06-27 07:18:13 frv-bjb Exp $
+!$Id: domain.F90,v 1.22 2006-06-03 11:43:16 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -50,6 +50,7 @@
    REALTYPE                            :: Hland
    REALTYPE                            :: min_depth,crit_depth
 
+   REALTYPE                            :: longitude      = _ZERO_
    REALTYPE                            :: latitude       = _ZERO_
    logical                             :: f_plane        = .true.
 
@@ -79,6 +80,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.22  2006-06-03 11:43:16  kbk
+!  added namelist fallback longitude - heatfluxes
+!
 !  Revision 1.21  2005-06-27 07:18:13  frv-bjb
 !  Changed STOP statements to call getm_error(...)
 !
@@ -256,7 +260,7 @@
    REALTYPE                  :: mask(E2DFIELD)
    namelist /domain/ &
              vert_cord,maxdepth,bathy_format,bathymetry,       &
-             f_plane,latitude,openbdy,bdyinfofile,             &
+             longitude,latitude,f_plane,openbdy,bdyinfofile,   &
              crit_depth,min_depth,kdum,ddu,ddl,                &
              d_gamma,gamma_surf,il,ih,jl,jh
 !EOP
@@ -526,6 +530,10 @@
    end select
 
 
+   if ( .not. latlon_exists ) then
+      LEVEL2 "Setting constant longitude (swr)" 
+      lonc = longitude
+   end if
 
 !  Compute Coriolis parameter
    if (f_plane) then
