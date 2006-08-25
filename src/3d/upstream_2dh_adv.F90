@@ -1,4 +1,4 @@
-!$Id: upstream_2dh_adv.F90,v 1.5 2006-03-01 16:03:32 kbk Exp $
+!$Id: upstream_2dh_adv.F90,v 1.6 2006-08-25 09:11:20 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -132,10 +132,10 @@
    allocate(cmin(I3DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'fct_2dh: Error allocating memory (cmin)'
 #endif
-!#ifdef SLICE_MODEL
+#ifdef SLICE_MODEL
  FATAL 'upstream_2dh_adv(): Do not use upstream_2dh_adv in SLICE_MODEL mode'
  stop
-!#endif
+#endif
 
 
    flx = _ZERO_
