@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.14 2006-06-02 12:42:20 kbk Exp $
+!$Id: initialise.F90,v 1.15 2006-08-25 09:34:10 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,6 +22,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
+!  Revision 1.15  2006-08-25 09:34:10  kbk
+!  include biology calls
+!
 !  Revision 1.14  2006-06-02 12:42:20  kbk
 !  support for common epoch for hotstart runs
 !
@@ -134,6 +137,8 @@
    use suspended_matter, only: init_spm
 #endif
 #ifdef GETM_BIO
+   use bio, only: bio_calc
+   use getm_bio, only: init_getm_bio
    use rivers, only: init_rivers_bio
 #endif
 #endif
@@ -291,6 +296,7 @@
       call init_spm(trim(input_dir) // 'spm.inp',runtype)
 #endif
 #ifdef GETM_BIO
+      call init_getm_bio(trim(input_dir) // 'getm_bio.inp')
       call init_rivers_bio
 #endif
    end if

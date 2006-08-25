@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.11 2006-03-01 14:51:21 hb Exp $
+#$Id: Makefile,v 1.12 2006-08-25 09:34:10 kbk Exp $
 #
 # Makefile to build the 3D specific library - libm3d.a
 #
@@ -30,6 +30,9 @@ endif
 ifeq ($(GETM_SPM),true)
 MOD += \
 $(LIB)(spm.o)
+endif
+ifeq ($(GETM_BIO),true)
+MOD += $(LIB)(getm_bio.o)
 endif
 MOD += \
 $(LIB)(bdy_3d.o)			\
