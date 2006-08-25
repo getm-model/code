@@ -1,4 +1,4 @@
-!$Id: halo_mpi.F90,v 1.9 2006-02-02 15:17:37 kbk Exp $
+!$Id: halo_mpi.F90,v 1.10 2006-08-25 09:08:14 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -64,6 +64,9 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_mpi.F90,v $
+!  Revision 1.10  2006-08-25 09:08:14  kbk
+!  do NOT mirror fields
+!
 !  Revision 1.9  2006-02-02 15:17:37  kbk
 !  Vector -> HVector for corner columns
 !
@@ -1077,6 +1080,9 @@ STDERR 'TWOD_NONBLOCKING'
          stop 'update_3d_halo_mpi'
    end select
 
+! Produces an error in some sub-domain layout cases if the following is
+! included.
+#if 0
    if ( comm_method .ne. ONE_PROCESS ) then
       if(left  .eq. MPI_PROC_NULL) f1(il-1, :, : )   = f1(il, :, : )
       if(right .eq. MPI_PROC_NULL) f1(ih+1, :, : )   = f1(ih, :, : )
@@ -1087,7 +1093,7 @@ STDERR 'TWOD_NONBLOCKING'
       if(lr    .eq. MPI_PROC_NULL) f1(ih+1,jl-1, : ) = f1(ih,jl, : )
       if(ll    .eq. MPI_PROC_NULL) f1(il-1,jl-1, : ) = f1(il,jl, : )
    end if
-
+#endif
    last_action = SENDING
    return
    end subroutine update_3d_halo_mpi
