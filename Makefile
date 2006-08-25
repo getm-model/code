@@ -34,6 +34,9 @@ VER=1.4
 VER=1.5.0
 # 2006/03/24 - branch for developing adaptive coordinates
 VER=adaptive_cord
+# 2006/08/25
+VER=1.5.1
+
 
 .PHONY: doc
 
