@@ -49,7 +49,8 @@
 ! !USES:
    use domain,   only: iimin,iimax,jjmin,jjmax,kmax
    IMPLICIT NONE
-   REALTYPE        :: ssen(I2DFIELD),hn(I3DFIELD),h(I2DFIELD),HH,depthmin
+   REALTYPE        :: ssen(I2DFIELD),hn(I3DFIELD)
+   REALTYPE        :: h(I2DFIELD),HH,depthmin
    integer         :: i,j,k
 ! Final check of layer thicnkess thoug not necessary if zpos treated correctly
 !     write(6,*) 'Inside',hn(iimax/2,2,kmax/2)
