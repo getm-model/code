@@ -1,4 +1,4 @@
-!$Id: vv_momentum_3d.F90,v 1.13 2006-03-01 15:54:08 kbk Exp $
+!$Id: vv_momentum_3d.F90,v 1.14 2006-08-25 09:00:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -230,6 +230,7 @@
    end if
 
    call wait_halo(V_TAG)
+   call mirror_bdy_3d(vv,V_TAG)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving vv_momentum_3d()'

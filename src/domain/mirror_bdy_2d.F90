@@ -1,4 +1,4 @@
-!$Id: mirror_bdy_2d.F90,v 1.2 2003-04-23 11:59:39 kbk Exp $
+!$Id: mirror_bdy_2d.F90,v 1.3 2006-08-25 09:00:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,7 +30,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: mirror_bdy_2d.F90,v $
-!  Revision 1.2  2003-04-23 11:59:39  kbk
+!  Revision 1.3  2006-08-25 09:00:19  kbk
+!  fixed sequence of boundary updates
+!
+!  Revision 1.2  2003/04/23 11:59:39  kbk
 !  update_2d_halo on spherical variables + TABS to spaces
 !
 !  Revision 1.1  2003/04/07 15:22:03  kbk
@@ -51,35 +54,46 @@
 
    select case (tag)
       case (U_TAG)
-#if 0
          do n = 1,NNB
             j = nj(n)
+            f(nfi(n)-2,j) = f(nfi(n)-2,j-1)
+            f(nfi(n)-1,j) = f(nfi(n)-1,j-1)
             do i = nfi(n),nli(n)
                if (au(i,j) .eq. 3) f(i,j) = f(i,j-1)
             end do
+            f(nli(n)+1,j) = f(nfi(n)+1,j-1)
+            f(nli(n)+2,j) = f(nfi(n)+2,j-1)
          end do
-#else
-!KBKSTDERR 'mirror_bdy_2d: U_TAG'
-#endif
          do n = 1,NSB
             j = sj(n)
+            f(sfi(n)-2,j) = f(sfi(n)-2,j+1)
+            f(sfi(n)-1,j) = f(sfi(n)-1,j+1)
             do i = sfi(n),sli(n)
                if (au(i,j) .eq. 3) f(i,j) = f(i,j+1)
             end do
+            f(sli(n)+1,j) = f(sli(n)+1,j+1)
+            f(sli(n)+2,j) = f(sli(n)+2,j+1)
          end do
       case (V_TAG)
          do n = 1,NWB
             i = wi(n)
+            f(i,wfj(n)-2) = f(i+1,wfj(n)-2)
+            f(i,wfj(n)-1) = f(i+1,wfj(n)-1)
             do j = wfj(n),wlj(n)
                if (av(i,j) .eq. 3) f(i,j) = f(i+1,j)
             end do
+            f(i,wlj(n)+1) = f(i+1,wlj(n)+1)
+            f(i,wlj(n)+2) = f(i+1,wlj(n)+2)
          end do
-
          do n = 1,NEB
             i = ei(n)
+            f(i,efj(n)-2) = f(i+1,efj(n)-2)
+            f(i,efj(n)-1) = f(i+1,efj(n)-1)
             do j = efj(n),elj(n)
                if (av(i,j) .eq. 3) f(i,j) = f(i-1,j)
             end do
+            f(i,elj(n)+1) = f(i+1,elj(n)+1)
+            f(i,elj(n)+2) = f(i+1,elj(n)+2)
          end do
       case default
 #if 0

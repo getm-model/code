@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.17 2006-03-01 15:54:08 kbk Exp $
+!$Id: temperature.F90,v 1.18 2006-08-25 09:00:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -191,6 +191,7 @@ temp_field_no=1
 
    call update_3d_halo(T,T,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
    call wait_halo(D_TAG)
+   call mirror_bdy_3d(T,D_TAG)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_temperature()'
@@ -360,9 +361,6 @@ temp_field_no=1
          end if
       end do
    end do
-
-   call update_3d_halo(T,T,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
-   call wait_halo(D_TAG)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_temperature()'

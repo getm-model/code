@@ -1,4 +1,4 @@
-!$Id: uu_momentum_3d.F90,v 1.10 2006-03-01 15:54:08 kbk Exp $
+!$Id: uu_momentum_3d.F90,v 1.11 2006-08-25 09:00:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -214,6 +214,7 @@ end do
    end if
 
    call wait_halo(U_TAG)
+   call mirror_bdy_3d(uu,U_TAG)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving uu_momentum_3d()'

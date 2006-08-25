@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.15 2006-03-01 15:54:07 kbk Exp $
+!$Id: m2d.F90,v 1.16 2006-08-25 09:00:17 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,9 +32,9 @@
    logical                   :: bdy2d=.false.
    integer                   :: bdyfmt_2d,bdytype,bdyramp_2d=-1
    character(len=PATH_MAX)   :: bdyfile_2d
-   REAL_4B                   :: bdy_old(1000)
-   REAL_4B                   :: bdy_new(1000)
-   REAL_4B                   :: bdy_data(1000)
+   REAL_4B                   :: bdy_old(1500)
+   REAL_4B                   :: bdy_new(1500)
+   REAL_4B                   :: bdy_data(1500)
    REAL_4B, allocatable      :: bdy_times(:)
    integer, parameter        :: comm_method=-1
 !
@@ -198,8 +198,6 @@
    write(debug,*) 'integrate_2d() # ',Ncall
 #endif
 
-   if (have_boundaries) call update_2d_bdy(loop,bdyramp_2d)
-
    if (mod(loop-1,MM) .eq. 0) then        ! MacroMicro time step
 #ifndef NO_BOTTFRIC
       call bottom_friction(runtype)
@@ -221,6 +219,7 @@
       Uint=Uint+U
       Vint=Vint+V
    end if
+   if (have_boundaries) call update_2d_bdy(loop,bdyramp_2d)
    call sealevel()
    call depth_update()
 

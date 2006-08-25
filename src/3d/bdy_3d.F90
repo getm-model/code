@@ -1,4 +1,4 @@
-!$Id: bdy_3d.F90,v 1.10 2006-03-01 15:54:08 kbk Exp $
+!$Id: bdy_3d.F90,v 1.11 2006-08-25 09:00:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -238,9 +238,6 @@
          k = k+1
       end do
    end do
-
-   call mirror_bdy_3d(T,H_TAG)
-   call mirror_bdy_3d(S,H_TAG)
 
 #ifdef GETM_BIO
    if ( allocated(cc3d) ) then

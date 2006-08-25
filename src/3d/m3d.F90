@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.31 2006-03-17 11:06:33 kbk Exp $
+!$Id: m3d.F90,v 1.32 2006-08-25 09:00:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,7 +26,7 @@
 ! !USES:
    use exceptions
    use parameters, only: avmmol
-   use domain, only: maxdepth,vert_cord
+   use domain, only: maxdepth,vert_cord,az
    use m2d, only: Am
    use variables_2d, only: D,z,UEx,VEx
 #ifndef NO_BAROCLINIC
@@ -43,6 +43,9 @@
    use variables_3d
    use advection_3d, only: init_advection_3d
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
+!  Necessary to use halo_zones because update_3d_halos() have been moved out 
+!  temperature.F90 and salinity.F90 - should be changed at a later stage
+   use halo_zones, only: update_3d_halo,wait_halo,D_TAG
 
    IMPLICIT NONE
 !
@@ -363,7 +366,6 @@
 #endif
    call start_macro()
 #ifndef NO_BAROCLINIC
-   if (bdy3d) call do_bdy_3d(0,T)
 #endif
 #ifdef MUDFLAT
    call coordinates(vert_cord,cord_relax,maxdepth)
@@ -421,6 +423,23 @@
    if(runtype .eq. 4) then        ! prognostic T and S
       if (calc_temp) call do_temperature(n)
       if (calc_salt) call do_salinity(n)
+
+!     The following is a bit clumpsy and should be changed when do_bdy_3d()
+!     operates on individual fields and not as is the case now - on both
+!     T and S.
+#ifndef NO_BAROCLINIC
+      if (bdy3d) call do_bdy_3d(0,T)
+      if (calc_temp) then
+         call update_3d_halo(T,T,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+         call wait_halo(D_TAG)
+         call mirror_bdy_3d(T,D_TAG)
+      end if
+      if (calc_salt) then
+         call update_3d_halo(S,S,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+         call wait_halo(D_TAG)
+         call mirror_bdy_3d(S,D_TAG)
+      end if
+#endif
    end if
 #endif
 

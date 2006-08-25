@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.21 2006-03-19 10:19:36 hb Exp $
+!$Id: salinity.F90,v 1.22 2006-08-25 09:00:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -299,6 +299,7 @@ salt_field_no=1
 
    call update_3d_halo(S,S,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
    call wait_halo(D_TAG)
+   call mirror_bdy_3d(S,D_TAG)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_salinity()'
@@ -487,9 +488,6 @@ salt_field_no=1
       end do
    end do
 #endif
-
-   call update_3d_halo(S,S,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
-   call wait_halo(D_TAG)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_salinity()'
