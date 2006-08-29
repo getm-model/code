@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.15 2006-08-25 09:34:10 kbk Exp $
+!$Id: initialise.F90,v 1.16 2006-08-29 08:25:16 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,6 +22,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
+!  Revision 1.16  2006-08-29 08:25:16  kbk
+!  added diagnostics
+!
 !  Revision 1.15  2006-08-25 09:34:10  kbk
 !  include biology calls
 !
@@ -269,6 +272,9 @@
    end select
 
    call init_time(MinN,MaxN)
+   if(use_epoch) then
+      LEVEL2 'using "',start,'" as time reference'
+   end if
 
    call init_domain(input_dir)
 
@@ -321,6 +327,7 @@
       end if
       hot_in = trim(out_dir) //'/'// 'restart' // trim(buf)
       call restart_file(READING,trim(hot_in),MinN,runtype,use_epoch)
+      LEVEL3 'MinN adjusted to ',MinN
       call depth_update
       if (runtype .ge. 2) then
          call coordinates(vert_cord,cord_relax,maxdepth)
