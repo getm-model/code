@@ -1,4 +1,4 @@
-!$Id: grid_ncdf.F90,v 1.1 2005-04-25 09:32:34 kbk Exp $
+!$Id: grid_ncdf.F90,v 1.2 2006-09-26 07:06:06 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,7 +17,7 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
-   integer                             :: xlen,ylen,zlen
+   integer                             :: xlen=-1,ylen=-1,zlen=-1
 
 ! !DEFINED PARAMETERS
    REALTYPE, parameter                 :: h_missing      =-10.0
@@ -29,6 +29,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: grid_ncdf.F90,v $
+!  Revision 1.2  2006-09-26 07:06:06  kbk
+!  to compile on Macs with Intel compiler
+!
 !  Revision 1.1  2005-04-25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
