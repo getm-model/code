@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.6 2004-08-06 08:41:42 lars Exp $
+#$Id: Makefile,v 1.7 2006-11-21 15:41:20 kbk Exp $
 #
 # Master Makefile for making the 'getm' executable.
 #
@@ -46,7 +46,10 @@ CORE_LIBS	+=	\
 
 LIBS		= $(CORE_LIBS) $(EXTRA_LIBS)
 
-all: getm$(buildtype)_$(FORTRAN_COMPILER) install
+all: ../VERSION getm$(buildtype)_$(FORTRAN_COMPILER) install
+
+../VERSION: ../Makefile
+	$(MAKE) -C ..
 
 getm$(buildtype)_$(FORTRAN_COMPILER): makedirs subdirs
 	$(FC) -o $@ getm/main.o $(LDFLAGS) $(LIBS)
