@@ -1,4 +1,4 @@
-!$Id: parallel.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
+!$Id: parallel.F90,v 1.3 2006-11-21 15:10:47 frv-bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,7 @@
 !
 ! !USES:
 #ifdef PARALLEL
-   use halo_mpi, only: init_mpi,print_MPI_info,myid
+   use halo_mpi, only: postinit_mpi,print_MPI_info,myid
 #endif
    IMPLICIT NONE
 !
@@ -25,6 +25,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: parallel.F90,v $
+!  Revision 1.3  2006-11-21 15:10:47  frv-bjb
+!  Parallel independence of INPUT_DIR for getm.inp read. Unset INPUT_DIR to use MPI working dir.
+!
 !  Revision 1.2  2003-04-23 12:02:43  kbk
 !  cleaned code + TABS to spaces
 !
@@ -97,7 +100,7 @@
 #endif
 
 #ifdef PARALLEL
-   call init_mpi(input_dir)
+   call postinit_mpi(input_dir)
    call print_MPI_info()
    if (TO_FILE) then
       if (myid .ge. 0) then

@@ -1,4 +1,4 @@
-!$Id: halo_mpi.F90,v 1.10 2006-08-25 09:08:14 kbk Exp $
+!$Id: halo_mpi.F90,v 1.11 2006-11-21 15:10:46 frv-bjb Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -22,7 +22,8 @@ include "mpif.h"
    private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-   public                              :: init_mpi,print_MPI_info,barrier
+   public                              :: init_mpi,postinit_mpi
+   public                              :: print_MPI_info,barrier
    public                              :: set_active_communicator
    public                              :: update_2d_halo_mpi
    public                              :: update_3d_halo_mpi
@@ -64,6 +65,9 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_mpi.F90,v $
+!  Revision 1.11  2006-11-21 15:10:46  frv-bjb
+!  Parallel independence of INPUT_DIR for getm.inp read. Unset INPUT_DIR to use MPI working dir.
+!
 !  Revision 1.10  2006-08-25 09:08:14  kbk
 !  do NOT mirror fields
 !
@@ -135,14 +139,13 @@ include "mpif.h"
 ! !IROUTINE: init_mpi - initialize the basic MPI environment
 !
 ! !INTERFACE:
-   subroutine init_mpi(input_dir)
+   subroutine init_mpi
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
 !  Initialize MPI parallel environment, i.e. getting process id etc.
 !
 ! !INPUT PARAMTERS:
-   character(len=*)                    :: input_dir
 !
 ! !INPUT/OUTPUT PARAMTERS:
 !
@@ -150,12 +153,9 @@ include "mpif.h"
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
+!  Revised by: Bjarne Buchmann, 2006
 !
 ! !LOCAL VARIABLES:
-   integer                   :: MeshMethod,MsgMethod
-   logical                   :: reorder
-   namelist /nampar/ &
-             MeshMethod,reorder,MsgMethod
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -163,11 +163,6 @@ include "mpif.h"
 #ifdef DEBUG
    write(debug,*) 'init_mpi'
 #endif
-
-!  Read parallel/MPI specific things from the namelist.
-   open(11,file=trim(input_dir) // 'parallel.inp')
-   read(11,nampar)
-   close(11)
 
 !  Initialize the MPI environment
    call MPI_INIT(ierr)
@@ -190,9 +185,6 @@ include "mpif.h"
       call MPI_Abort(MPI_COMM_WORLD,-1,ierr)
    end if
 
-   call set_com_method(MsgMethod)
-   call set_mesh_method(MeshMethod,reorder)
-
 !  Get the processor names
    call MPI_GET_PROCESSOR_NAME(pname,len,ierr)
    if(ierr .ne. MPI_SUCCESS) THEN
@@ -207,6 +199,61 @@ include "mpif.h"
    return
    end subroutine init_mpi
 !EOC
+
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: postinit_mpi - more MPI initialization
+!
+! !INTERFACE:
+   subroutine postinit_mpi(input_dir)
+   IMPLICIT NONE
+!
+! !DESCRIPTION:
+!  Initialization that requires read namelist.
+!
+! !INPUT PARAMTERS:
+   character(len=*)                    :: input_dir
+!
+! !INPUT/OUTPUT PARAMTERS:
+!
+! !OUTPUT PARAMTERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
+!  Revised by: Bjarne Buchmann, 2006
+!
+! !LOCAL VARIABLES:
+   integer                   :: MeshMethod,MsgMethod
+   logical                   :: reorder
+   namelist /nampar/ &
+             MeshMethod,reorder,MsgMethod
+!
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   write(debug,*) 'postinit_mpi'
+#endif
+
+!  Read parallel/MPI specific things from the namelist.
+   open(11,file=trim(input_dir) // 'parallel.inp')
+   read(11,nampar)
+   close(11)
+
+   call set_com_method(MsgMethod)
+   call set_mesh_method(MeshMethod,reorder)
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving postinit_mpi()'
+   write(debug,*)
+#endif
+   return
+   end subroutine postinit_mpi
+!EOC
+
+
 
 !-----------------------------------------------------------------------
 !BOP

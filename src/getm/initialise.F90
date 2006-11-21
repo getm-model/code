@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.16 2006-08-29 08:25:16 kbk Exp $
+!$Id: initialise.F90,v 1.17 2006-11-21 15:10:45 frv-bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,6 +22,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
+!  Revision 1.17  2006-11-21 15:10:45  frv-bjb
+!  Parallel independence of INPUT_DIR for getm.inp read. Unset INPUT_DIR to use MPI working dir.
+!
 !  Revision 1.16  2006-08-29 08:25:16  kbk
 !  added diagnostics
 !
@@ -117,6 +120,9 @@
 !
 ! !USES:
    use kurt_parallel, only: init_parallel,myid
+#ifdef PARALLEL
+   use halo_mpi, only: init_mpi,print_MPI_info
+#endif
    use output, only: init_output,do_output,restart_file,out_dir
    use input,  only: init_input
    use domain, only: init_domain
@@ -205,6 +211,15 @@
    if(len_trim(base_dir) .gt. 0) then
       base_dir = trim(base_dir) // '/'
    end if
+#endif
+
+!
+! In parallel mode it is imperative to let the instances 
+! "say hello" right away. For MPI this changes the working directory,
+! so that input files can be read.
+!
+#ifdef PARALLEL
+   call init_mpi()
 #endif
 
 #if (defined PARALLEL && defined INPUT_DIR)
