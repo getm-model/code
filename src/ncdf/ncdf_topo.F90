@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.12 2006-01-29 20:32:34 hb Exp $
+!$Id: ncdf_topo.F90,v 1.13 2006-11-24 09:10:56 frv-bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -89,6 +89,9 @@
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
+!  Revision 1.13  2006-11-24 09:10:56  frv-bjb
+!  Higher accuracy in x0,dx computations
+!
 !  Revision 1.12  2006-01-29 20:32:34  hb
 !  Small LaTeX corrections to source code documentation
 !
@@ -809,21 +812,10 @@ contains
    case(1)
 
       if(have_axis) then
-!        This seems a bit complicated - but instead of reading in
-!        x0, dx, y0, dy we calculate them based on the cordinates
-!        for the T-points. Remember (x0,y0) are relative to X-points).
-!        The procedure below only works for equidistant grids.
-!        Necessary to compy with .../domain/domain.F90.
-         indx(1) = 1
-         status = nf_get_var1_double(ncbathy,xcord_id,indx,x0)
-         status = nf_get_var1_double(ncbathy,ycord_id,indx,y0)
-         indx(1) = 2
-         status = nf_get_var1_double(ncbathy,xcord_id,indx,dx)
-         status = nf_get_var1_double(ncbathy,ycord_id,indx,dy)
-         dx=dx-x0
-         dy=dy-y0
-         x0=x0-0.5*dx
-         y0=y0-0.5*dy
+!        Use a sub to compute x0, dx, y0 and dy from the axis info
+!        The coordinate string / name is only used for logging purposes
+         call ncdf_get_grid_dxy(ncbathy,xcord_id,iextr,"x",x0,dx)
+         call ncdf_get_grid_dxy(ncbathy,ycord_id,jextr,"y",y0,dy)
       else
 !        Get grid spacing
          status = nf_get_var_double(ncbathy,dx_id,dx)
@@ -855,21 +847,10 @@ contains
     case(2)
 
       if(have_axis) then
-!        This seems a bit complicated - but instead of reading in
-!        lon0, dlon, lat0, dlat we calculate them based on the cordinates
-!        for the T-points. Remember (lon0,lat0) are relative to X-points).
-!        The procedure below only works for equidistant grids.
-!        Necessary to compy with .../domain/domain.F90.
-         indx(1) = 1
-         status = nf_get_var1_double(ncbathy,xcord_id,indx,lon0)
-         status = nf_get_var1_double(ncbathy,ycord_id,indx,lat0)
-         indx(1) = 2
-         status = nf_get_var1_double(ncbathy,xcord_id,indx,dlon)
-         status = nf_get_var1_double(ncbathy,ycord_id,indx,dlat)
-         dlon=dlon-lon0
-         dlat=dlat-lat0
-         lon0=lon0-0.5*dlon
-         lat0=lat0-0.5*dlat
+!        Use a sub to compute lon0, dlon, lat0 and dlat from the axis info
+!        The coordinate string / name is only used for logging purposes
+         call ncdf_get_grid_dxy(ncbathy,xcord_id,iextr,"lon",lon0,dlon)
+         call ncdf_get_grid_dxy(ncbathy,ycord_id,jextr,"lat",lat0,dlat)
       else
 !        Get grid spacing
          status = nf_get_var_double(ncbathy,dlon_id,dlon)
@@ -917,6 +898,127 @@ contains
    return
    end subroutine ncdf_get_grid
 !EOC
+
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: ncdf_get_grid_dxy
+!
+! !INTERFACE:
+   subroutine ncdf_get_grid_dxy(ncid,varid,iextr,cordname,x0,dx)
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !DESCRIPTION:
+!  Helper routine for ncdf_get_grid.
+!  Computes x and dx given that the netcdf file contains the axis 
+!  (T-point) information.
+!  It is assumed that the coordinate values are equidistantly spaced.
+!  The equidistance is tested and warnings given if non-equidistant 
+!  values are noted.
+!
+!  The routine also works for y, lon, and lat.
+!
+! !INPUT PARAMETERS:
+   integer,      intent(in)             :: ncid
+   integer,      intent(in)             :: varid
+   integer,      intent(in)             :: iextr
+   character(len=*), intent(in)         :: cordname
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE, intent(out)               :: x0, dx
+!
+! !REVISION HISTORY:
+!  Original author(s): Bjarne Buchmann
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+   integer                   :: status
+   integer                   :: indx(1)
+   integer                   :: i
+   REALTYPE                  :: startval,endval
+   REALTYPE                  :: expectval,readval,dval
+!
+!-------------------------------------------------------------------------
+#include"netcdf.inc"
+
+#ifdef DEBUG
+   write(debug,*) "ncdf_get_grid_dxy(): working on coordinate " // cordname
+#endif
+!
+! x0 and dx are computed from the T-points.
+! Remember (x0, y0, lon0,lat0) are relative to X-points.
+! The procedure only works for equidistant grids.
+! Necessary to comply with .../domain/domain.F90.
+! Iextr (or jextr) is used to find the last entry in the coordinate axis.
+!
+   indx(1) = 1
+   status = nf_get_var1_double(ncid,varid,indx,startval)
+   if (status .ne. NF_NOERR) then
+      call netcdf_error(status,"ncdf_get_grid_dxy()",    &
+                        "Could not read first value of " // cordname)
+   endif
+   indx(1) = iextr
+   status = nf_get_var1_double(ncid,varid,indx,endval)
+   if (status .ne. NF_NOERR) then
+      call netcdf_error(status,"ncdf_get_grid_dxy()",    &
+                        "Could not read last value of "  // cordname)
+   endif
+
+#ifdef DEBUG
+   write(debug,*) "ncdf_get_grid_dxy(): Range of " // cordname // " ",   &
+        startval,endval
+#endif
+
+!
+! Compute grid spacing based on first and last value:
+!
+   dx = (endval-startval)/(iextr-1)
+
+!
+! Compute x0 as dx/2 before first read value.
+! x0 should be an X-point (not a T-point).
+!
+   x0 = startval - 0.50*dx
+
+!
+! Test that the read values are approximately equidistantly spaced.
+! This implementation could be faster if we read the entire array, but the 
+! present implementation is low on memory/allocation. Also, it is really 
+! fast as it is 1D and executed once, so there should be no performance 
+! gain by reading the entire array.
+!
+   do i=1,iextr
+! Note that startval and x0 no longer match at this point,
+      expectval = startval + dx * (i-1)
+      indx(1) = i
+      status = nf_get_var1_double(ncid,varid,indx,readval)
+      if (status .ne. NF_NOERR) then
+         call netcdf_error(status,"ncdf_get_grid_dxy()",   &
+                           "Could not read one value of " // cordname)
+      endif
+      dval = abs(expectval-readval)
+! Compare with a fairly lax criterion:
+      if (dval .gt. 0.1 * dx) then
+         LEVEL1 "Warning: Non-equidistant grid detected for " // cordname
+         LEVEL1 "    Read value no. ",i
+         LEVEL1 "    Expected value ",expectval
+         LEVEL1 "    Actually read  ",readval
+! Dont bother checking the rest.
+! All values are set, so we might as well return from here.
+         return
+      end if
+   end do
+
+   return
+   end subroutine ncdf_get_grid_dxy
+!EOC
+
+!-------------------------------------------------------------------------
+
 
 
 
