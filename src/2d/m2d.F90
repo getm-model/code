@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.16 2006-08-25 09:00:17 kbk Exp $
+!$Id: m2d.F90,v 1.17 2006-12-01 07:16:04 frv-bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,6 +29,7 @@
    logical                   :: have_boundaries
    REALTYPE                  :: dtm, z0_const=0.010,Am=-_ONE_,An=-_ONE_
    integer                   :: MM=1,residual=-1
+   integer                   :: sealevel_check=0
    logical                   :: bdy2d=.false.
    integer                   :: bdyfmt_2d,bdytype,bdyramp_2d=-1
    character(len=PATH_MAX)   :: bdyfile_2d
@@ -78,7 +79,7 @@
    integer                   :: rc
    integer                   :: vel_depth_method=0
    namelist /m2d/ &
-          MM,z0_const,vel_depth_method,Am,An,residual, &
+          MM,z0_const,vel_depth_method,Am,An,residual,sealevel_check, &
           bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
@@ -111,6 +112,14 @@
    end if
    if (An .lt. _ZERO_) then
       LEVEL2 'An < 0 --> numerical momentum diffusion not included'
+   end if
+
+   if (sealevel_check .eq. 0) then
+      LEVEL2 'sealevel_check=0 --> NaN checks disabled'
+   else if (sealevel_check .gt. 0) then
+      LEVEL2 'sealevel_check>0 --> NaN values will result in error conditions'
+   else
+      LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
    end if
 
    LEVEL2 'Open boundary=',bdy2d
