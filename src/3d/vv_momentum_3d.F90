@@ -1,4 +1,4 @@
-!$Id: vv_momentum_3d.F90,v 1.14 2006-08-25 09:00:19 kbk Exp $
+!$Id: vv_momentum_3d.F90,v 1.15 2006-12-15 09:57:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,7 +6,7 @@
 ! !ROUTINE: vv_momentum_3d - $y$-momentum eq.\ \label{sec-vv-momentum-3d}
 !
 ! !INTERFACE:
-   subroutine vv_momentum_3d(bdy3d)
+   subroutine vv_momentum_3d(n,bdy3d)
 !
 ! !DESCRIPTION:
 !
@@ -44,7 +44,9 @@
 ! prescribed, which has to be hard-coded as local variable.
 !
 ! !USES:
+   use exceptions
    use parameters, only: g,avmmol,rho_0
+   use domain, only: imin,jmin,imax,jmax
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,H,HV,min_depth
    use domain, only: dry_v,corv,au,av,az,ax
 #if defined CURVILINEAR || defined SPHERICAL
@@ -68,9 +70,11 @@
 #endif
    use halo_zones, only: update_3d_halo,wait_halo,V_TAG
    use meteo, only: tausy,airp
+   use m3d, only: vel_check,min_vel,max_vel
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   integer, intent(in)                 :: n
    logical, intent(in)                 :: bdy3d
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -93,6 +97,7 @@
 #ifdef XZ_PLUME_TEST
    REALTYPE                  :: yslope=0.001
 #endif
+   integer                   :: status
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -231,6 +236,23 @@
 
    call wait_halo(V_TAG)
    call mirror_bdy_3d(vv,V_TAG)
+
+   if (vel_check .ne. 0 .and. mod(n,abs(vel_check)) .eq. 0) then
+      call check_3d_fields(imin,jmin,imax,jmax,av,       &
+                           iimin,jjmin,iimax,jjmax,kmax, &
+                           kvmin,vv,min_vel,max_vel,status)
+      if (status .gt. 0) then
+         if (vel_check .gt. 0) then
+            call getm_error("vv_momentum_3d()", &
+                            "out-of-bound values encountered")
+         end if
+         if (vel_check .lt. 0) then
+            LEVEL1 'do_salinity(): ',status, &
+                   ' out-of-bound values encountered'
+         end if
+      end if
+   end if
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving vv_momentum_3d()'

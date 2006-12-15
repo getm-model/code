@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.32 2006-08-25 09:00:19 kbk Exp $
+!$Id: m3d.F90,v 1.33 2006-12-15 09:57:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -57,6 +57,8 @@
    logical                             :: bdy3d=.false.
    integer                             :: bdyfmt_3d,bdyramp_3d
    character(len=PATH_MAX)             :: bdyfile_3d
+   integer                             :: vel_check=0
+   REALTYPE                            :: min_vel=-4.,max_vel=4.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -116,7 +118,8 @@
              bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,     &
              vel_hor_adv,vel_ver_adv,vel_adv_split,     &
              calc_temp,calc_salt,                       &
-             avmback,avhback,ip_method
+             avmback,avhback,ip_method,                 &
+             vel_check,min_vel,max_vel
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -210,6 +213,17 @@
          LEVEL2 "2D-hor, 1D-vert split --> full uv, full w"
       case default
    end select
+
+   LEVEL2 'vel_check=',vel_check
+   if (vel_check .ne. 0) then
+      LEVEL3 'doing sanity checks on velocities every ',vel_check,' timesteps'
+      if (vel_check .gt. 0) then
+         LEVEL3 'out-of-bound values result in termination of program'
+      end if
+      if (vel_check .lt. 0) then
+         LEVEL3 'out-of-bound values result in warnings only'
+      end if
+   end if
 
    dt = M*timestep
 
@@ -383,12 +397,12 @@
    huo=hun
    hvo=hvn
    if (ufirst) then
-      call uu_momentum_3d(bdy3d)
-      call vv_momentum_3d(bdy3d)
+      call uu_momentum_3d(n,bdy3d)
+      call vv_momentum_3d(n,bdy3d)
       ufirst=.false.
    else
-      call vv_momentum_3d(bdy3d)
-      call uu_momentum_3d(bdy3d)
+      call vv_momentum_3d(n,bdy3d)
+      call uu_momentum_3d(n,bdy3d)
       ufirst=.true.
    end if
 #ifndef MUDFLAT

@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.18 2006-08-25 09:00:19 kbk Exp $
+!$Id: temperature.F90,v 1.19 2006-12-15 09:57:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,7 +20,7 @@
    use exceptions
    use domain, only: imin,jmin,imax,jmax,H,az
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
-   use variables_3d, only: T,hn,adv_schemes
+   use variables_3d, only: T,hn,adv_schemes,kmin
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
 !
@@ -37,6 +37,8 @@
    integer                   :: temp_hor_adv=1,temp_ver_adv=1
    integer                   :: temp_adv_split=0
    REALTYPE                  :: temp_AH=-1.
+   integer                   :: temp_check=0
+   REALTYPE                  :: min_temp=-2.,max_temp=35.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -85,9 +87,10 @@
    REALTYPE                  :: zlev(nmax),prof(nmax)
    integer                   :: temp_field_no=1
    NAMELIST /temp/ &
-             temp_method,temp_const,temp_file,              &
-             temp_format,temp_name,temp_field_no,           &
-             temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH
+            temp_method,temp_const,temp_file,                 &
+            temp_format,temp_name,temp_field_no,              &
+            temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH, &
+            temp_check,min_temp,max_temp
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -157,7 +160,7 @@ temp_field_no=1
                call getm_error("init_3d()", &
                     "temp_adv_split=0: temp_ver_adv not valid (2-6)")
          end select
-         LEVEL2 "1D split --> full u, full v, full w"
+         LEVEL3 "1D split --> full u, full v, full w"
       case (1)
          select case (temp_hor_adv)
             case (2,3,4,5,6)
@@ -171,7 +174,7 @@ temp_field_no=1
                call getm_error("init_3d()", &
                     "temp_adv_split=1: temp_ver_adv not valid (2-6)")
          end select
-         LEVEL2 "1D split --> half u, half v, full w, half v, half u"
+         LEVEL3 "1D split --> half u, half v, full w, half v, half u"
       case (2)
          select case (temp_hor_adv)
             case (2,7)
@@ -185,13 +188,24 @@ temp_field_no=1
                call getm_error("init_3d()", &
                     "temp_adv_split=2: temp_ver_adv not valid (2-6)")
          end select
-         LEVEL2 "2D-hor, 1D-vert split --> full uv, full w"
+         LEVEL3 "2D-hor, 1D-vert split --> full uv, full w"
       case default
    end select
 
    call update_3d_halo(T,T,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
    call wait_halo(D_TAG)
    call mirror_bdy_3d(T,D_TAG)
+
+   LEVEL3 'temp_check=',temp_check
+   if (temp_check .ne. 0) then
+      LEVEL4 'doing sanity check on temperature'
+      if (temp_check .gt. 0) then
+         LEVEL4 'out-of-bound values result in termination of program'
+      end if
+      if (temp_check .lt. 0) then
+         LEVEL4 'out-of-bound values result in warnings only'
+      end if
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_temperature()'
@@ -264,6 +278,7 @@ temp_field_no=1
    REALTYPE                  :: area_inv(I2DFIELD)
    REALTYPE                  :: swr_loc,shf_loc
    REALTYPE                  :: zz,rad(0:1000),A=0.58,g1=0.35,g2=23.0
+   integer                   :: status
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -361,6 +376,23 @@ temp_field_no=1
          end if
       end do
    end do
+
+   if (temp_check .ne. 0 .and. mod(n,abs(temp_check)) .eq. 0) then
+      call check_3d_fields(imin,jmin,imax,jmax,az,       &
+                           iimin,jjmin,iimax,jjmax,kmax, &
+                           kmin,T,min_temp,max_temp,status)
+      if (status .gt. 0) then
+         if (temp_check .gt. 0) then
+            call getm_error("do_temperature()", &
+                            "out-of-bound values encountered")
+         end if
+         if (temp_check .lt. 0) then
+            LEVEL1 'do_temperature(): ',status, &
+                   ' out-of-bound values encountered'
+         end if
+      end if
+   end if
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_temperature()'

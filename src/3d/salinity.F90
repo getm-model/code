@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.22 2006-08-25 09:00:19 kbk Exp $
+!$Id: salinity.F90,v 1.23 2006-12-15 09:57:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -23,7 +23,7 @@
 #endif
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
    use domain, only: H,az
-   use variables_3d, only: S,hn,adv_schemes
+   use variables_3d, only: S,hn,adv_schemes,kmin
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
 !
@@ -40,6 +40,8 @@
    integer                   :: salt_hor_adv=1,salt_ver_adv=1
    integer                   :: salt_adv_split=0
    REALTYPE                  :: salt_AH=-_ONE_
+   integer                   :: salt_check=0
+   REALTYPE                  :: min_salt=0.,max_salt=40.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -100,10 +102,11 @@
    integer, parameter        :: nmax=100
    REALTYPE                  :: zlev(nmax),prof(nmax)
    integer                   :: salt_field_no=1
-   NAMELIST /salt/                                          &
-            salt_method,salt_const,salt_file,               &
-            salt_format,salt_name,salt_field_no,            &
-            salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH
+   NAMELIST /salt/                                            &
+            salt_method,salt_const,salt_file,                 &
+            salt_format,salt_name,salt_field_no,              &
+            salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH, &
+            salt_check,min_salt,max_salt
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -301,6 +304,18 @@ salt_field_no=1
    call wait_halo(D_TAG)
    call mirror_bdy_3d(S,D_TAG)
 
+   LEVEL3 'salt_check=',salt_check
+   if (salt_check .ne. 0) then
+      LEVEL4 'doing sanity check on salinity'
+      if (salt_check .gt. 0) then
+         LEVEL4 'out-of-bound values result in termination of program'
+      end if
+      if (salt_check .lt. 0) then
+         LEVEL4 'out-of-bound values result in warnings only'
+      end if
+   end if
+
+
 #ifdef DEBUG
    write(debug,*) 'Leaving init_salinity()'
    write(debug,*)
@@ -368,6 +383,7 @@ salt_field_no=1
   REALTYPE                   :: delxu(I2DFIELD),delxv(I2DFIELD)
   REALTYPE                   :: delyu(I2DFIELD),delyv(I2DFIELD)
   REALTYPE                   :: area_inv(I2DFIELD)
+  integer                    :: status
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -488,6 +504,22 @@ salt_field_no=1
       end do
    end do
 #endif
+
+   if (salt_check .ne. 0 .and. mod(n,abs(salt_check)) .eq. 0) then
+      call check_3d_fields(imin,jmin,imax,jmax,az,       &
+                           iimin,jjmin,iimax,jjmax,kmax, &
+                           kmin,S,min_salt,max_salt,status)
+      if (status .gt. 0) then
+         if (salt_check .gt. 0) then
+            call getm_error("do_salinity()", &
+                            "out-of-bound values encountered")
+         end if
+         if (salt_check .lt. 0) then
+            LEVEL1 'do_salinity(): ',status, &
+                   ' out-of-bound values encountered'
+         end if
+      end if
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_salinity()'

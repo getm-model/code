@@ -1,4 +1,4 @@
-!$Id: uu_momentum_3d.F90,v 1.11 2006-08-25 09:00:19 kbk Exp $
+!$Id: uu_momentum_3d.F90,v 1.12 2006-12-15 09:57:50 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,7 +6,7 @@
 ! !ROUTINE: uu_momentum_3d - $x$-momentum eq.\ \label{sec-uu-momentum-3d}
 !
 ! !INTERFACE:
-   subroutine uu_momentum_3d(bdy3d)
+   subroutine uu_momentum_3d(n,bdy3d)
 !
 ! !DESCRIPTION:
 !
@@ -41,7 +41,9 @@
 ! is activated), the result for $j=2$ is copied to $j=3$. 
 !
 ! !USES:
+   use exceptions
    use parameters, only: g,avmmol,rho_0
+   use domain, only: imin,jmin,imax,jmax
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,H,HU,min_depth
    use domain, only: dry_u,coru,au,av,az,ax
 #if defined CURVILINEAR || defined SPHERICAL
@@ -62,9 +64,11 @@
 #endif
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG
    use meteo, only: tausx,airp
+   use m3d, only: vel_check,min_vel,max_vel
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   integer, intent(in)                 :: n
    logical, intent(in)                 :: bdy3d
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -84,7 +88,7 @@
    REALTYPE                  :: zp,zm,zx,ResInt,Diff,Vloc
    REALTYPE                  :: gamma=g*rho_0
    REALTYPE                  :: cord_curv=_ZERO_
-   
+   integer                   :: status 
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -215,6 +219,24 @@ end do
 
    call wait_halo(U_TAG)
    call mirror_bdy_3d(uu,U_TAG)
+
+   if (vel_check .ne. 0 .and. mod(n,abs(vel_check)) .eq. 0) then
+      call check_3d_fields(imin,jmin,imax,jmax,au,       &
+                           iimin,jjmin,iimax,jjmax,kmax, &
+                           kumin,uu,min_vel,max_vel,status)
+      if (status .gt. 0) then
+         if (vel_check .gt. 0) then
+            call getm_error("uu_momentum_3d()", &
+                            "out-of-bound values encountered")
+         end if
+         if (vel_check .lt. 0) then
+            LEVEL1 'do_salinity(): ',status, &
+                   ' out-of-bound values encountered'
+         end if
+      end if
+   end if
+
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving uu_momentum_3d()'
