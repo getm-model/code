@@ -1,4 +1,4 @@
-!$Id: vv_momentum_3d.F90,v 1.15 2006-12-15 09:57:50 kbk Exp $
+!$Id: vv_momentum_3d.F90,v 1.16 2006-12-15 10:25:42 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -247,7 +247,7 @@
                             "out-of-bound values encountered")
          end if
          if (vel_check .lt. 0) then
-            LEVEL1 'do_salinity(): ',status, &
+            LEVEL1 'vv_momentum_3d(): ',status, &
                    ' out-of-bound values encountered'
          end if
       end if

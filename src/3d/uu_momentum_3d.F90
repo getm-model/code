@@ -1,4 +1,4 @@
-!$Id: uu_momentum_3d.F90,v 1.12 2006-12-15 09:57:50 kbk Exp $
+!$Id: uu_momentum_3d.F90,v 1.13 2006-12-15 10:25:42 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -230,7 +230,7 @@ end do
                             "out-of-bound values encountered")
          end if
          if (vel_check .lt. 0) then
-            LEVEL1 'do_salinity(): ',status, &
+            LEVEL1 'uu_momentum_3d(): ',status, &
                    ' out-of-bound values encountered'
          end if
       end if

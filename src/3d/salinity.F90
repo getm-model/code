@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.23 2006-12-15 09:57:50 kbk Exp $
+!$Id: salinity.F90,v 1.24 2006-12-15 10:25:42 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -307,6 +307,8 @@ salt_field_no=1
    LEVEL3 'salt_check=',salt_check
    if (salt_check .ne. 0) then
       LEVEL4 'doing sanity check on salinity'
+      LEVEL4 'min_salt=',min_salt
+      LEVEL4 'max_salt=',max_salt
       if (salt_check .gt. 0) then
          LEVEL4 'out-of-bound values result in termination of program'
       end if

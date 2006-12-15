@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.33 2006-12-15 09:57:50 kbk Exp $
+!$Id: m3d.F90,v 1.34 2006-12-15 10:25:42 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -216,7 +216,9 @@
 
    LEVEL2 'vel_check=',vel_check
    if (vel_check .ne. 0) then
-      LEVEL3 'doing sanity checks on velocities every ',vel_check,' timesteps'
+      LEVEL3 'doing sanity checks on velocities'
+      LEVEL3 'min_vel=',min_vel
+      LEVEL3 'max_vel=',max_vel
       if (vel_check .gt. 0) then
          LEVEL3 'out-of-bound values result in termination of program'
       end if

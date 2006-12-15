@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.19 2006-12-15 09:57:50 kbk Exp $
+!$Id: temperature.F90,v 1.20 2006-12-15 10:25:42 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -199,6 +199,8 @@ temp_field_no=1
    LEVEL3 'temp_check=',temp_check
    if (temp_check .ne. 0) then
       LEVEL4 'doing sanity check on temperature'
+      LEVEL4 'min_temp=',min_temp
+      LEVEL4 'max_temp=',max_temp
       if (temp_check .gt. 0) then
          LEVEL4 'out-of-bound values result in termination of program'
       end if
