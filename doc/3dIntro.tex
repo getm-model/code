@@ -1,4 +1,4 @@
-%$Id: 3dIntro.tex,v 1.1 2006-02-13 07:20:04 hb Exp $
+%$Id: 3dIntro.tex,v 1.2 2007-01-10 22:01:16 hb Exp $
 
 \section{Introduction to 3d module}
 
@@ -146,7 +146,8 @@ chemical concentrations etc.\ is given as:
 
 \begin{equation}\label{densz}
 \begin{array}{l}
-\partial_t c^i +\partial_x (uc^i) +\partial_y(vc^i) +\partial_z ((w+w_s^i)c^i)
+\partial_t c^i +\partial_x (uc^i) +\partial_y(vc^i) 
++\partial_z ((w+\alpha w_s^i)c^i)
 -\partial_z(\nu_t' \partial_z c^i)
 \\ \\ \displaystyle \qquad
 -\partial_x(A_h^T \partial_x c^i)
@@ -161,6 +162,13 @@ Vertical migration of concentration with migration velocity
 $w_s^i$ (positive for upward motion) is considered as well. This could be 
 i.e.\ settling of suspended matter or active migration of
 phytoplankton.  
+In order to avoid stability problems with vertical advection when 
+intertidal flats are drying, the settling of SPM is linearly 
+reduced towards zero when the water
+depth is between the critical and the minimum water depth. 
+This is
+done by means of multiplication of the settling velocity with $\alpha$,
+(see the definition in equation (\ref{alpha})).
 $Q^i$ denotes all internal sources and sinks of the tracer $c^i$.
 This might e.g.\ be for the temperature equation the heating of water
 due to absorption of solar radiation in the water column.
