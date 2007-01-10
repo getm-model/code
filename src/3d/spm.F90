@@ -1,4 +1,4 @@
-!$Id: spm.F90,v 1.11 2006-03-20 06:59:54 kbk Exp $
+!$Id: spm.F90,v 1.12 2007-01-10 21:27:07 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,7 @@
 !  This model for Suspended Particulate Matter (SPM) considers a single
 !  class of non-cohesive SPM particles that do not interact with the mean
 !  flow (no density effect of SPM is taken into account by default).
-!  The concentration $C$ of SPM is  modelled with the tracer equation
+!  The concentration $C$ of SPM is modelled with the tracer equation.
 !  At the bottom, the net SPM flux is the residual of erosion and
 !  sedimentation fluxes:
 !  \begin{equation}\label{Bottom_SPM}
@@ -44,6 +44,8 @@
 !  \end{equation}
 !  Critical shear stresses for erosion and sedimentation
 !  ($\tau_{ce}$ and $\tau_{cs}$ have as units N\,m$^{-2}$).
+!  However, the SPM flux between the water column and the bed
+!  may be switched off by setting {\tt spm\_method} in {\tt spm.inp} to zero.
 !  A pool $B$ of non-dynamic particulate matter (fluff layer)
 !  is assumed in order to take into account the
 !  effects of depletion of erodible material at the bottom.
@@ -61,6 +63,10 @@
 !  quasi-implicit \cite{PATANKAR80} approach, which guarantees positivity
 !  of SPM, but only in the diffusion step, negative values might appear
 !  after the advection step, although these negative values should be small.
+!  The settling of SPM is linearly reduced towards zero when the water
+!  depth is between the critical and the minimum water depth. This is
+!  done by means of multiplication of the settling velocity with $\alpha$,
+!  (see the definition in equation (\ref{alpha})). 
 !
 !  It is possible to take into account the impact of sediments on density by
 !  setting {\tt spm\_dens} to {\tt .true}. The modified density is computed as:
@@ -222,6 +228,8 @@
 
       LEVEL2 'spm_method= ',spm_method
       select case (spm_method)
+          case(0)
+             erosed_flux = .false.
           case(1)
 !         erosion-sedimentation flux
              erosed_flux = .true.
@@ -477,7 +485,14 @@
          stop
    end select
 !  The vertical velocity to be used in the advection routine for spm is ww-ws
-   ww_aux = ww - spm_ws
+!  In drying grid boxes, the settling velocity is reduced.
+   do i=iimin,iimax
+      do j=jjmin,jjmax
+         do k=0,kmax
+            ww_aux(i,j,k) = ww(i,j,k) - spm_ws(i,j,k)*dry_z(i,j)
+         end do
+      end do
+   end do
    call do_advection_3d(dt,spm,uu,vv,ww_aux,hun,hvn,ho,hn,   &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
                         spm_hor_adv,spm_ver_adv,spm_adv_split,spm_AH)
