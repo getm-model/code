@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.12 2006-12-01 07:16:04 frv-bjb Exp $
+!$Id: sealevel.F90,v 1.13 2007-01-10 21:28:55 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -117,7 +117,7 @@
 !  suspended.
 !
 !  The behaviour of this routine is controlled by the 
-!  {\tt sealevel_check} parameter in the {\tt m2d} namelist.
+!  {\tt sealevel\_check} parameter in the {\tt m2d} namelist.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
