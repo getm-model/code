@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.17 2006-12-01 07:16:04 frv-bjb Exp $
+!$Id: m2d.F90,v 1.18 2007-02-07 16:32:22 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,12 +22,15 @@
    use time, only: julianday,secondsofday
    use parameters, only: avmmol
    use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV,min_depth
+   use domain, only: z0_method,z0_const,z0
+   use halo_zones, only : update_2d_halo,wait_halo
+   use halo_zones, only : U_TAG,V_TAG,H_TAG
    use variables_2d
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
    logical                   :: have_boundaries
-   REALTYPE                  :: dtm, z0_const=0.010,Am=-_ONE_,An=-_ONE_
+   REALTYPE                  :: dtm,Am=-_ONE_,An=-_ONE_
    integer                   :: MM=1,residual=-1
    integer                   :: sealevel_check=0
    logical                   :: bdy2d=.false.
@@ -77,9 +80,10 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
+   integer                   :: i,j
    integer                   :: vel_depth_method=0
    namelist /m2d/ &
-          MM,z0_const,vel_depth_method,Am,An,residual,sealevel_check, &
+          MM,vel_depth_method,Am,An,residual,sealevel_check, &
           bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
@@ -139,12 +143,26 @@
    where (-HU+min_depth .gt. _ZERO_ )
       zu = -HU+min_depth
    end where
-   zub = z0_const ; zub0 = z0_const
 
    where (-HV+min_depth .gt. _ZERO_ )
       zv = -HV+min_depth
    end where
-   zvb = z0_const ; zvb0 = z0_const
+
+!  bottom roughness
+   if (z0_method .eq. 0) then
+      zub0 = z0_const
+      zvb0 = z0_const
+   end if
+   if (z0_method .eq. 1) then
+      do j=jmin,jmax
+         do i=imin,imax
+           if (au(i,j) .gt. 0) zub0(i,j) = 0.5*(z0(i,j)+z0(i+1,j))
+           if (av(i,j) .gt. 0) zvb0(i,j) = 0.5*(z0(i,j)+z0(i,j+1))
+         end do
+      end do
+      call update_2d_halo(zub0,zub0,au,imin,jmin,imax,jmax,U_TAG)
+      call update_2d_halo(zvb0,zvb0,av,imin,jmin,imax,jmax,V_TAG)
+   end if
 
    call depth_update()
 
@@ -221,6 +239,10 @@
    if (Am .gt. _ZERO_ .or. An .gt. _ZERO_) then
       call uv_diffusion(Am,An) ! Has to be called after uv_advect.
    end if
+   call mirror_bdy_2d(UEx,U_TAG)
+   call mirror_bdy_2d(VEx,V_TAG)
+   UEx=_ZERO_
+   VEx=_ZERO_
 #endif
 #endif
    call momentum(loop,tausx,tausy,airp)

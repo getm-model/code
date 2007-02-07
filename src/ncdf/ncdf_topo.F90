@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.13 2006-11-24 09:10:56 frv-bjb Exp $
+!$Id: ncdf_topo.F90,v 1.14 2007-02-07 16:32:22 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -68,6 +68,7 @@
   use domain, only                    : xx,yx,xc,yc
   use domain, only                    : latx,lonx,latc,lonc
   use domain, only                    : convx,convc
+  use domain, only                    : z0_method,z0
 
 
   IMPLICIT NONE
@@ -89,6 +90,9 @@
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
+!  Revision 1.14  2007-02-07 16:32:22  kbk
+!  added spatial varying bottom roughness
+!
 !  Revision 1.13  2006-11-24 09:10:56  frv-bjb
 !  Higher accuracy in x0,dx computations
 !
@@ -130,6 +134,7 @@
   integer, private                     :: convx_id,convc_id
   integer, private                     :: latx_id,lonx_id,latc_id,lonc_id
   integer, private                     :: xx_id,yx_id,xc_id,yc_id
+  integer, private                     :: z0_id
   integer, private, dimension(2)       :: dimidsT(2)
   integer, private, dimension(2)       :: dimidsX(2)
 
@@ -447,6 +452,13 @@ contains
        endif
     endif
 
+    if (z0_method .eq. 1) then
+       status = nf_inq_varid(ncbathy,"z0",z0_id)
+       if (status .ne. NF_NOERR) then
+          call netcdf_error(status,"ncdf_check_grid()",   &
+                           "Could not find 'z0' in "//trim(filename)//".")
+       end if
+    end if
 
 !   Is all we need for that particular grid_type in the topo-file?
     select case (grid_type)
@@ -894,6 +906,11 @@ contains
     case default
        call getm_error("ncdf_get_grid()","Invalid grid type.")
     end select
+
+!  Read bottom roughness
+   if (z0_method .eq. 1) then
+      call ncdf_read_2d(ncbathy,z0_id,z0(ilocl:iloch,jlocl:jloch),il,ih,jl,jh)
+   end if
 
    return
    end subroutine ncdf_get_grid

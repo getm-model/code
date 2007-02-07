@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.24 2007-02-07 16:27:06 kbk Exp $
+!$Id: domain.F90,v 1.25 2007-02-07 16:32:22 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -70,6 +70,10 @@
 
    REALTYPE                            :: cori= _ZERO_
 
+!  method for specifying bottom roughness (0=const, 1=from topo.nc)
+   integer                             :: z0_method=0
+   REALTYPE                            :: z0_const=0.001
+
 ! !DEFINED PARAMETERS:
    integer,           parameter        :: INNER          = 1
    REALTYPE, private, parameter        :: pi             = 3.141592654
@@ -80,6 +84,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.25  2007-02-07 16:32:22  kbk
+!  added spatial varying bottom roughness
+!
 !  Revision 1.24  2007-02-07 16:27:06  kbk
 !  changed and fixed loop boundaries
 !
@@ -268,7 +275,7 @@
              vert_cord,maxdepth,bathy_format,bathymetry,       &
              longitude,latitude,f_plane,openbdy,bdyinfofile,   &
              crit_depth,min_depth,kdum,ddu,ddl,                &
-             d_gamma,gamma_surf,il,ih,jl,jh
+             d_gamma,gamma_surf,il,ih,jl,jh,z0_method,z0_const
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -296,6 +303,17 @@
       case default
          call getm_error("init_domain()", &
                          "A non valid vertical coordinate system has been chosen");
+   end select
+
+   select case (z0_method)
+      case(0)
+         LEVEL2 'Using constant bottom roughness'
+      case(1)
+         LEVEL2 'Using space varying bottom roughness'
+         LEVEL2 '..  will read z0 from the topo file ..'
+      case default
+         call getm_error("init_domain()", &
+                         "A non valid z0 method has been chosen");
    end select
 
 #ifndef STATIC

@@ -36,6 +36,5 @@
    REALTYPE, dimension(:,:), allocatable    :: dyc,dyu,dyv,dyx
    REALTYPE, dimension(:,:), allocatable    :: arcd1,arud1,arvd1
 
-
-
-
+!  bottom roughness
+   REALTYPE, dimension(:,:), allocatable    :: z0

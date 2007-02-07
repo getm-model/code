@@ -61,3 +61,5 @@
    REALTYPE                            :: arud1(E2DFIELD)
    REALTYPE                            :: arvd1(E2DFIELD)
 
+!  bottom roughness
+   REALTYPE                            :: z0(E2DFIELD)
