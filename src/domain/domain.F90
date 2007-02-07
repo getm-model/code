@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.23 2006-08-25 09:05:20 kbk Exp $
+!$Id: domain.F90,v 1.24 2007-02-07 16:27:06 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -80,6 +80,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.24  2007-02-07 16:27:06  kbk
+!  changed and fixed loop boundaries
+!
 !  Revision 1.23  2006-08-25 09:05:20  kbk
 !  metric coefficients also calculated in HALO zones
 !
@@ -435,6 +438,8 @@
    call wait_halo(H_TAG)
    ax = mask
 
+   call mirror_bdy_2d(H,H_TAG)
+
 !  Compute grid points and metric coefficients for different grid types
    select case (grid_type)
 
@@ -619,11 +624,8 @@
 !EOP
 !------------------------------------------------------------------------
 !BOC
-
- 
-
-   do i=imin-1,imax+HALO
-      do j=jmin-HALO,jmax+HALO
+   do i=imin-HALO,imax+HALO
+      do j=jmin-HALO+1,jmax+HALO
          xu(i,j)   = 0.5*(  xx(i,j) +   xx(i,j-1))
          yu(i,j)   = 0.5*(  yx(i,j) +   yx(i,j-1))
          latu(i,j) = 0.5*(latx(i,j) + latx(i,j-1))
@@ -642,8 +644,8 @@
    call wait_halo(U_TAG)
 
 
-   do i=imin-HALO,imax+HALO
-      do j=jmin-1,jmax+HALO
+   do i=imin-HALO+1,imax+HALO
+      do j=jmin-HALO,jmax+HALO
          xv(i,j)   = 0.5*(  xx(i,j) +   xx(i-1,j))
          yv(i,j)   = 0.5*(  yx(i,j) +   yx(i-1,j))
          latv(i,j) = 0.5*(latx(i,j) + latx(i-1,j))
@@ -754,15 +756,15 @@
 
    case(2)
 
-      do j=jmin-1,jmax+HALO
-         do i=imin-1,imax+HALO
+      do j=jmin-HALO+1,jmax+HALO
+         do i=imin-HALO+1,imax+HALO
             dxc(i,j)=deg2rad*(lonu(i,j)-lonu(i-1,j))*rearth &
                  *cos(deg2rad*latc(i,j))
             dyc(i,j)=deg2rad*(latv(i,j)-latv(i,j-1))*rearth
          end do
       end do
 
-      do j=jmin-1,jmax+HALO
+      do j=jmin-HALO+1,jmax+HALO
          do i=imin-HALO,imax+HALO-1
             dxu(i,j)=deg2rad*(lonc(i+1,j)-lonc(i,j))*rearth &
                  *cos(deg2rad*latc(i,j))
@@ -771,15 +773,15 @@
       end do
 
       do j=jmin-HALO,jmax+HALO-1
-         do i=imin-1,imax+HALO
+         do i=imin-HALO+1,imax+HALO
             dxv(i,j)=deg2rad*(lonx(i,j)-lonx(i-1,j))*rearth &
                  *cos(deg2rad*latv(i,j))
             dyv(i,j)=deg2rad*(latc(i,j+1)-latc(i,j))*rearth
          end do
       end do
 
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
+      do j=jmin-HALO,jmax+HALO-1
+         do i=imin-HALO,imax+HALO-1
             dxx(i,j)=deg2rad*(lonv(i+1,j)-lonv(i,j))*rearth &
                  *cos(deg2rad*latx(i,j))
             dyx(i,j)=deg2rad*(latu(i,j+1)-latu(i,j))*rearth
