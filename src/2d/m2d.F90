@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.19 2007-02-08 06:43:33 kbk Exp $
+!$Id: m2d.F90,v 1.20 2007-02-08 06:51:23 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -128,7 +128,10 @@
 
    LEVEL2 'Open boundary=',bdy2d
    if (bdy2d) then
-      if(hotstart) bdyramp_2d = -1
+      if (hotstart .and. bdyramp_2d .gt. 0) then
+          LEVEL2 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
+          LEVEL2 'WARNING: .. be sure you know what you are doing ..'
+      end if
       LEVEL2 TRIM(bdyfile_2d)
       LEVEL2 'Format=',bdyfmt_2d
    end if
