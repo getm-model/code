@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.25 2007-02-07 16:32:22 kbk Exp $
+!$Id: domain.F90,v 1.26 2007-02-08 06:43:27 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -84,6 +84,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.26  2007-02-08 06:43:27  kbk
+!  update HALOS for z0 - and changed loop boundaries for zub0,zvb0
+!
 !  Revision 1.25  2007-02-07 16:32:22  kbk
 !  added spatial varying bottom roughness
 !
@@ -584,6 +587,11 @@
 
    call update_2d_halo(corv,corv,av,imin,jmin,imax,jmax,V_TAG)
    call wait_halo(V_TAG)
+
+   if (z0_method .eq. 1) then
+      call update_2d_halo(z0,z0,az,imin,jmin,imax,jmax,H_TAG)
+      call wait_halo(V_TAG)
+   end if
 
 #ifdef DEBUG
    STDERR 'az'
