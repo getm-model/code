@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.20 2006-12-15 10:25:42 kbk Exp $
+!$Id: temperature.F90,v 1.21 2007-02-13 08:38:42 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,7 +20,7 @@
    use exceptions
    use domain, only: imin,jmin,imax,jmax,H,az
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
-   use variables_3d, only: T,hn,adv_schemes,kmin
+   use variables_3d, only: T,hn,adv_schemes,kmin,A,g1,g2
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
 !
@@ -37,6 +37,9 @@
    integer                   :: temp_hor_adv=1,temp_ver_adv=1
    integer                   :: temp_adv_split=0
    REALTYPE                  :: temp_AH=-1.
+   integer                   :: attenuation_method=0,jerlov=1
+   character(len=PATH_MAX)   :: attenuation_file="attenuation.nc"
+   REALTYPE                  :: A_const=0.58,g1_const=0.35,g2_const=23.0
    integer                   :: temp_check=0
    REALTYPE                  :: min_temp=-2.,max_temp=35.
 !
@@ -86,10 +89,12 @@
    integer, parameter        :: nmax=10000
    REALTYPE                  :: zlev(nmax),prof(nmax)
    integer                   :: temp_field_no=1
-   NAMELIST /temp/ &
+   namelist /temp/ &
             temp_method,temp_const,temp_file,                 &
             temp_format,temp_name,temp_field_no,              &
             temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH, &
+            attenuation_method,attenuation_file,jerlov,       &
+            A_const,g1_const,g2_const,                        &
             temp_check,min_temp,max_temp
 !EOP
 !-------------------------------------------------------------------------
@@ -196,6 +201,49 @@ temp_field_no=1
    call wait_halo(D_TAG)
    call mirror_bdy_3d(T,D_TAG)
 
+   select case (attenuation_method)
+      case (0)
+         LEVEL3 'setting attenuation coefficients to constant values:'
+         select case (jerlov)
+            case (1)
+               LEVEL4 'Jerlov class 1: A=0.58, g1=0.35 , g2=23.0'
+               A_const=0.58;g1_const=0.35;g2_const=23.0
+            case (2)
+               LEVEL4 'Jerlov class 2: A=0.68, g1=1.2 , g2=28.0'
+               A_const=0.68;g1_const=1.20;g2_const=28.0
+            case (3)
+               LEVEL4 'Jerlov class 3: A=0.62, g1=0.6 , g2=20.0'
+               A_const=0.62;g1_const=0.60;g2_const=20.0
+            case (4)
+               LEVEL4 'Jerlov class 4: A=0.67, g1=1.0 , g2=17.0'
+               A_const=0.67;g1_const=1.00;g2_const=17.0
+            case (5)
+               LEVEL4 'Jerlov class 5: A=0.77, g1=1.5 , g2=14.0'
+               A_const=0.77;g1_const=1.50;g2_const=14.0
+            case (6)
+               LEVEL4 'Jerlov class 6: A=0.78, g1=1.40 , g2=7.9'
+               A_const=0.78;g1_const=1.40;g2_const=7.9
+            case default
+               LEVEL4 'User specified:'
+               LEVEL4 ' A=  ',A_const
+               LEVEL4 ' g1= ',g1_const
+               LEVEL4 ' g2= ',g2_const
+         end select
+         A=A_const
+         g1=g1_const
+         g2=g2_const
+      case (1)
+         LEVEL3 'reading attenuation coefficients from:'
+         LEVEL4 trim(attenuation_file)
+         LEVEL1 'WARNING: reading routine not coded yet'
+         LEVEL1 'WARNING: setting to jerlov=1'
+         A_const=0.58;g1_const=0.35;g2_const=23.0
+         A=A_const
+         g1=g1_const
+         g2=g2_const
+      case default
+   end select
+
    LEVEL3 'temp_check=',temp_check
    if (temp_check .ne. 0) then
       LEVEL4 'doing sanity check on temperature'
@@ -279,7 +327,7 @@ temp_field_no=1
    REALTYPE                  :: delyu(I2DFIELD),delyv(I2DFIELD)
    REALTYPE                  :: area_inv(I2DFIELD)
    REALTYPE                  :: swr_loc,shf_loc
-   REALTYPE                  :: zz,rad(0:1000),A=0.58,g1=0.35,g2=23.0
+   REALTYPE                  :: zz,rad(0:1000)
    integer                   :: status
 !EOP
 !-----------------------------------------------------------------------
@@ -330,7 +378,8 @@ temp_field_no=1
             zz = _ZERO_
             do k=kmax-1,0,-1
                zz=zz+hn(i,j,k+1)
-               rad(k)=swr_loc/(rho_0*cp)*(A*exp(-zz/g1)+(1-A)*exp(-zz/g2))
+               rad(k)=swr_loc/(rho_0*cp) &
+                      *(A(i,j)*exp(-zz/g1(i,j))+(1-A(i,j))*exp(-zz/g2(i,j)))
             end do
 
             if (kmax.gt.1) then

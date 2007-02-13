@@ -158,3 +158,12 @@
   allocate(kvmin_pmz(I2DFIELD),stat=rc)
   if (rc /= 0) stop 'init_3d: Error allocating memory (kvmin_pmz)'
 
+! for light attenuation
+  allocate(A(I2DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (A)'
+
+  allocate(g1(I2DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (g1)'
+
+  allocate(g2(I2DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (g2)'
