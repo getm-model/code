@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.20 2007-02-08 06:51:23 kbk Exp $
+!$Id: m2d.F90,v 1.21 2007-02-20 11:40:29 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -168,6 +168,8 @@
          end do
       end do
    end if
+   zub=zub0
+   zvb=zvb0
 
    call depth_update()
 
