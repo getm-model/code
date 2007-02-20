@@ -68,6 +68,9 @@
   allocate(idpdy(I3DFIELD),stat=rc) ! Internal pressure gradient - y
   if (rc /= 0) stop 'init_3d: Error allocating memory (idpdy)'
 
+  allocate(rad(I3DFIELD),stat=rc) ! Solar radiation
+  if (rc /= 0) stop 'init_3d: Error allocating memory (rad)'
+
 #endif
 
 #ifdef SPM

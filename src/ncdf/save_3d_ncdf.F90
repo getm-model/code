@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.12 2006-03-17 11:06:33 kbk Exp $
+!$Id: save_3d_ncdf.F90,v 1.13 2007-02-20 13:52:15 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -21,7 +21,7 @@
    use variables_2d, only: U,V,DU,DV
    use variables_3d, only: kmin,hn,uu,hun,vv,hvn,ww,hcc
 #ifndef NO_BAROCLINIC
-   use variables_3d, only: S,T,rho
+   use variables_3d, only: S,T,rho,rad
 #endif
    use variables_3d, only: tke,num,nuh,eps
 #ifdef SPM
@@ -47,6 +47,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
+!  Revision 1.13  2007-02-20 13:52:15  kbk
+!  solar radiation -> 3d field - possible to save
+!
 !  Revision 1.12  2006-03-17 11:06:33  kbk
 !  cleaner inclusion of SPM module
 !
@@ -233,6 +236,14 @@
          err = nf_put_vara_real(ncid, sigma_t_id, start, edges, ws)
          if (err .NE. NF_NOERR) go to 10
       end if
+
+      if (save_rad) then
+         call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
+                     kmin,az,rad,rad_missing,ws)
+         err = nf_put_vara_real(ncid, rad_id, start, edges, ws)
+         if (err .NE. NF_NOERR) go to 10
+      end if
+
    end if ! save_strho
 #endif
 

@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.21 2007-02-13 08:38:42 kbk Exp $
+!$Id: temperature.F90,v 1.22 2007-02-20 13:52:15 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,7 +20,7 @@
    use exceptions
    use domain, only: imin,jmin,imax,jmax,H,az
    use domain, only: iimin,jjmin,iimax,jjmax,kmax
-   use variables_3d, only: T,hn,adv_schemes,kmin,A,g1,g2
+   use variables_3d, only: T,rad,hn,adv_schemes,kmin,A,g1,g2
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
 !
@@ -327,7 +327,7 @@ temp_field_no=1
    REALTYPE                  :: delyu(I2DFIELD),delyv(I2DFIELD)
    REALTYPE                  :: area_inv(I2DFIELD)
    REALTYPE                  :: swr_loc,shf_loc
-   REALTYPE                  :: zz,rad(0:1000)
+   REALTYPE                  :: zz,rad1d(0:1000)
    integer                   :: status
 !EOP
 !-----------------------------------------------------------------------
@@ -363,24 +363,34 @@ temp_field_no=1
 
 !  Solar radiation and vertical diffusion of temperature
 
+!  Solar radiation
+   do j=jjmin,jjmax
+      do i=iimin,iimax
+         if (az(i,j) .ge. 1) then
+            swr_loc=swr(i,j)
+            rad(i,j,kmax)=swr_loc
+            zz = _ZERO_
+            do k=kmax-1,0,-1
+               zz=zz+hn(i,j,k+1)
+               rad(i,j,k)=swr_loc &
+                      *(A(i,j)*exp(-zz/g1(i,j))+(1-A(i,j))*exp(-zz/g2(i,j)))
+            end do
+         end if
+      end do
+   end do
+
    do j=jjmin,jjmax
       do i=iimin,iimax
          if (az(i,j) .eq. 1) then
 
-! Solar radiation
-            swr_loc=swr(i,j)
             shf_loc=shf(i,j)
+
             if (T(i,j,kmax).le.-0.0575*S(i,j,kmax)) then  ! use most primitive 
                                                           ! sea ice model ...
                shf_loc=max(_ZERO_,shf_loc)
             end if
-            rad(kmax)=(swr_loc+shf_loc)/(rho_0*cp)
-            zz = _ZERO_
-            do k=kmax-1,0,-1
-               zz=zz+hn(i,j,k+1)
-               rad(k)=swr_loc/(rho_0*cp) &
-                      *(A(i,j)*exp(-zz/g1(i,j))+(1-A(i,j))*exp(-zz/g2(i,j)))
-            end do
+
+            rad1d(0:kmax)=rad(i,j,:)/(rho_0*cp)           ! note this
 
             if (kmax.gt.1) then
 !     Auxilury terms, old and new time level,
@@ -396,7 +406,7 @@ temp_field_no=1
                a1(k)=-auxn(k-1)
                a2(k)=hn(i,j,k)+auxn(k-1)
                a4(k)=T(i,j,k)*(hn(i,j,k)-auxo(k-1))+T(i,j,k-1)*auxo(k-1)  &
-                     +dt*(rad(k)-rad(k-1))
+                     +dt*(rad1d(k)+shf_loc/(rho_0*cp)-rad1d(k-1))
 
 !        Matrix elements for inner layers
                do k=2,kmax-1
@@ -406,7 +416,7 @@ temp_field_no=1
                   a4(k)=T(i,j,k+1)*auxo(k)                          &
                        +T(i,j,k  )*(hn(i,j,k)-auxo(k)-auxo(k-1))    &
                        +T(i,j,k-1)*auxo(k-1)                        &
-                       +dt*(rad(k)-rad(k-1))
+                       +dt*(rad1d(k)-rad1d(k-1))
                end do
 
 !        Matrix elements for bottom layer
@@ -415,7 +425,7 @@ temp_field_no=1
                a2(k)=hn(i,j,k)+auxn(k)
                a4(k)=T(i,j,k+1)*auxo(k)                           &
                     +T(i,j,k  )*(hn(i,j,k)-auxo(k))               &
-                    +dt*(rad(k)-rad(k-1))
+                    +dt*(rad1d(k)-rad1d(k-1))
 
                call getm_tridiagonal(kmax,1,kmax,a1,a2,a3,a4,Res)
 

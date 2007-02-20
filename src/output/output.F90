@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.17 2006-06-03 11:56:02 kbk Exp $
+!$Id: output.F90,v 1.18 2007-02-20 13:52:15 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -38,6 +38,7 @@
    logical                             :: save_s=.true.
    logical                             :: save_t=.true.
    logical                             :: save_rho=.true.
+   logical                             :: save_rad=.false.
    logical                             :: save_turb=.true.
    logical                             :: save_tke=.true.
    logical                             :: save_eps=.true.
@@ -54,6 +55,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.18  2007-02-20 13:52:15  kbk
+!  solar radiation -> 3d field - possible to save
+!
 !  Revision 1.17  2006-06-03 11:56:02  kbk
 !  fixed use_epoch when start is equal to epoch time
 !
@@ -165,7 +169,7 @@
              out_fmt, &
              in_dir,out_dir, &
              save_2d,save_3d,save_vel,destag, &
-             save_strho,save_s,save_t,save_rho, &
+             save_strho,save_s,save_t,save_rho,save_rad, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              first_2d,step_2d,first_3d,step_3d,hotout,meanout, &
              save_meteo

@@ -25,6 +25,7 @@
 ! 3D baroclinic fields
   REALTYPE, dimension(:,:,:), allocatable   :: S,T,rho
   REALTYPE, dimension(:,:,:), allocatable   :: idpdx,idpdy
+  REALTYPE, dimension(:,:,:), allocatable   :: rad
 #endif
 
 ! suspended matter

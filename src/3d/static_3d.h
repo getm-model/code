@@ -48,6 +48,7 @@
   REALTYPE                             :: rho(I3DFIELD)
   REALTYPE                             :: idpdx(I3DFIELD)
   REALTYPE                             :: idpdy(I3DFIELD)
+  REALTYPE                             :: rad(I3DFIELD)
 #endif
 
 #ifdef SPM

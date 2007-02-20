@@ -1,4 +1,4 @@
-!$Id: ncdf_3d.F90,v 1.7 2005-04-25 09:32:34 kbk Exp $
+!$Id: ncdf_3d.F90,v 1.8 2007-02-20 13:52:15 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,6 +25,7 @@
    integer                             :: elev_id,u_id,v_id
    integer                             :: uu_id,vv_id,w_id
    integer                             :: salt_id,temp_id,sigma_t_id
+   integer                             :: rad_id
    integer                             :: tke_id,num_id,nuh_id,eps_id
 #ifdef SPM
    integer                             :: spmpool_id,spm_id
@@ -42,6 +43,7 @@
    REALTYPE, parameter                 :: salt_missing   =-9999.0
    REALTYPE, parameter                 :: temp_missing   =-9999.0
    REALTYPE, parameter                 :: rho_missing    =-9999.0
+   REALTYPE, parameter                 :: rad_missing    =-9999.0
    REALTYPE, parameter                 :: tke_missing    =-9999.0
    REALTYPE, parameter                 :: nuh_missing    =-9999.0
    REALTYPE, parameter                 :: num_missing    =-9999.0
@@ -59,7 +61,10 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d.F90,v $
-!  Revision 1.7  2005-04-25 09:32:34  kbk
+!  Revision 1.8  2007-02-20 13:52:15  kbk
+!  solar radiation -> 3d field - possible to save
+!
+!  Revision 1.7  2005/04/25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
 !  Revision 1.6  2004/06/15 08:25:57  kbk

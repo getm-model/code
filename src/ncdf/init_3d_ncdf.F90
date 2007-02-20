@@ -1,4 +1,4 @@
-!$Id: init_3d_ncdf.F90,v 1.11 2006-03-17 11:06:33 kbk Exp $
+!$Id: init_3d_ncdf.F90,v 1.12 2007-02-20 13:52:15 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,6 +35,9 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_3d_ncdf.F90,v $
+!  Revision 1.12  2007-02-20 13:52:15  kbk
+!  solar radiation -> 3d field - possible to save
+!
 !  Revision 1.11  2006-03-17 11:06:33  kbk
 !  cleaner inclusion of SPM module
 !
@@ -262,6 +265,18 @@
          call set_attributes(ncid,sigma_t_id,long_name='sigma_t',units='kg/m3',&
                              FillValue=fv,missing_value=mv,valid_range=vr)
       end if
+
+      if (save_rad) then
+         fv = rad_missing
+         mv = rad_missing
+         vr(1) =  0.
+         vr(2) = 1354.
+         err = nf_def_var(ncid,'radiation',NF_REAL,4,f4_dims,rad_id)
+         if (err .NE. NF_NOERR) go to 10
+         call set_attributes(ncid,rad_id,long_name='radiation',units='W/m2',&
+                             FillValue=fv,missing_value=mv,valid_range=vr)
+      end if
+
    end if
 
    if (save_turb) then
