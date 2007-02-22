@@ -1,4 +1,4 @@
-!$Id: save_grid_ncdf.F90,v 1.3 2006-03-10 08:44:02 kbk Exp $
+!$Id: save_grid_ncdf.F90,v 1.4 2007-02-22 08:48:13 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,6 +18,7 @@
 !
 ! !USES:
    use exceptions
+   use output, only: save_masks
    use grid_ncdf
    use domain, only: imin,imax,jmin,jmax
    use domain, only: ioff,joff
@@ -29,7 +30,8 @@
    use domain, only: proj_exists
    use domain, only: proj_lon,proj_lat,proj_rot
    use domain, only: rearth
-   use domain, only: h,az,ga
+   use domain, only: h,ga
+   use domain, only: az,au,av
 
    IMPLICIT NONE
 !
@@ -41,6 +43,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: save_grid_ncdf.F90,v $
+!  Revision 1.4  2007-02-22 08:48:13  kbk
+!  possible to save masks (az, au, av)
+!
 !  Revision 1.3  2006-03-10 08:44:02  kbk
 !  fixed saving coordinate variables
 !
@@ -67,7 +72,7 @@
    integer                   :: xc_id,yc_id
    integer                   :: lonc_id,latc_id
    integer                   :: convc_id
-   integer                   :: bathymetry_id
+   integer                   :: bathymetry_id,id
 
    character(32)             :: zname
 
@@ -412,6 +417,29 @@
    status = nf_put_vara_real(ncid,bathymetry_id,start,edges,ws)
    if (status .ne. NF_NOERR) call netcdf_error(status,                  &
                                   "save_grid_ncdf()","bathymetry -")
+
+   if (save_masks) then
+      status = nf_inq_varid(ncid,'t_mask',id)
+      if (status .ne. NF_NOERR) call netcdf_error(status,            &
+                                        "save_grid_ncdf()","t_mask_id")
+      status = nf_put_vara_int(ncid,id,start,edges,az(imin:imax,jmin:jmax))
+      if (status .ne. NF_NOERR) call netcdf_error(status,            &
+                                        "save_grid_ncdf()","t_mask")
+
+      status = nf_inq_varid(ncid,'u_mask',id)
+      if (status .ne. NF_NOERR) call netcdf_error(status,            &
+                                        "save_grid_ncdf()","v_mask_id")
+      status = nf_put_vara_int(ncid,id,start,edges,au(imin:imax,jmin:jmax))
+      if (status .ne. NF_NOERR) call netcdf_error(status,            &
+                                        "save_grid_ncdf()","u_mask")
+
+      status = nf_inq_varid(ncid,'v_mask',id)
+      if (status .ne. NF_NOERR) call netcdf_error(status,            &
+                                        "save_grid_ncdf()","v_mask_id")
+      status = nf_put_vara_int(ncid,id,start,edges,av(imin:imax,jmin:jmax))
+      if (status .ne. NF_NOERR) call netcdf_error(status,            &
+                                        "save_grid_ncdf()","v_mask")
+   end if
 
 !  Save x and y position of T-points
    if (grid_type .ne. 1) then

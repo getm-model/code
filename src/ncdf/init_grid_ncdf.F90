@@ -1,4 +1,4 @@
-!$Id: init_grid_ncdf.F90,v 1.2 2005-04-29 12:45:41 kbk Exp $
+!$Id: init_grid_ncdf.F90,v 1.3 2007-02-22 08:48:12 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,6 +19,7 @@
 !
 ! !USES:
    use exceptions
+   use output, only: save_masks
    use ncdf_common
    use grid_ncdf
    use domain, only: imin,imax,jmin,jmax,kmax
@@ -40,7 +41,10 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: init_grid_ncdf.F90,v $
-!  Revision 1.2  2005-04-29 12:45:41  kbk
+!  Revision 1.3  2007-02-22 08:48:12  kbk
+!  possible to save masks (az, au, av)
+!
+!  Revision 1.2  2005/04/29 12:45:41  kbk
 !  stricter COARDS conforming
 !
 !  Revision 1.1  2005/04/25 09:32:34  kbk
@@ -61,6 +65,7 @@
    integer                   :: xc_id,yc_id
    integer                   :: lonc_id,latc_id
    integer                   :: convc_id
+   integer                   :: t_mask_id,u_mask_id,v_mask_id
    integer                   :: bathymetry_id
    REALTYPE                  :: fv,mv,vr(2)
    character(32)             :: xname,yname,zname
@@ -411,6 +416,23 @@
    call set_attributes(ncid,bathymetry_id,                              &
                        long_name='bathymetry',units='m',                &
                        FillValue=fv,missing_value=mv,valid_range=vr)
+
+   if (save_masks) then
+      status = nf_def_var(ncid,'t_mask',NF_INT,2,f2_dims,t_mask_id)
+      if (status .ne. NF_NOERR) call netcdf_error(status,                  &
+                                  "init_grid_ncdf()","t_mask")
+      call set_attributes(ncid,t_mask_id,long_name='mask for T-points')
+
+      status = nf_def_var(ncid,'u_mask',NF_INT,2,f2_dims,u_mask_id)
+      if (status .ne. NF_NOERR) call netcdf_error(status,                  &
+                                  "init_grid_ncdf()","u_mask")
+      call set_attributes(ncid,u_mask_id,long_name='mask for U-points')
+
+      status = nf_def_var(ncid,'v_mask',NF_INT,2,f2_dims,v_mask_id)
+      if (status .ne. NF_NOERR) call netcdf_error(status,                  &
+                                  "init_grid_ncdf()","v_mask")
+      call set_attributes(ncid,v_mask_id,long_name='mask for V-points')
+   end if
 
 !  lat,lon positions of T-points and grid rotation
 !  for non-spherical grids

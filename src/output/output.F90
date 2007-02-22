@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.18 2007-02-20 13:52:15 kbk Exp $
+!$Id: output.F90,v 1.19 2007-02-22 08:48:11 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,6 +29,7 @@
    character(LEN = PATH_MAX)           :: hot_out
 
    logical                             :: save_meteo=.false.
+   logical                             :: save_masks=.false.
    logical                             :: save_2d=.true.
    logical                             :: save_3d=.true.
    logical                             :: save_mean=.false. 
@@ -55,6 +56,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.19  2007-02-22 08:48:11  kbk
+!  possible to save masks (az, au, av)
+!
 !  Revision 1.18  2007-02-20 13:52:15  kbk
 !  solar radiation -> 3d field - possible to save
 !
@@ -168,7 +172,7 @@
    namelist /io_spec/ &
              out_fmt, &
              in_dir,out_dir, &
-             save_2d,save_3d,save_vel,destag, &
+             save_2d,save_3d,save_masks,save_vel,destag, &
              save_strho,save_s,save_t,save_rho,save_rad, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              first_2d,step_2d,first_3d,step_3d,hotout,meanout, &
