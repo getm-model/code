@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.21 2007-02-20 11:40:29 kbk Exp $
+!$Id: m2d.F90,v 1.22 2007-02-22 16:38:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -248,8 +248,6 @@
    end if
    call mirror_bdy_2d(UEx,U_TAG)
    call mirror_bdy_2d(VEx,V_TAG)
-   UEx=_ZERO_
-   VEx=_ZERO_
 #endif
 #endif
    call momentum(loop,tausx,tausy,airp)
