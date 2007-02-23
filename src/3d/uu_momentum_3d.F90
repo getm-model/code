@@ -1,4 +1,4 @@
-!$Id: uu_momentum_3d.F90,v 1.13 2006-12-15 10:25:42 kbk Exp $
+!$Id: uu_momentum_3d.F90,v 1.14 2007-02-23 12:37:58 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -64,6 +64,7 @@
 #endif
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG
    use meteo, only: tausx,airp
+   use m3d, only: ip_fac
    use m3d, only: vel_check,min_vel,max_vel
    IMPLICIT NONE
 !
@@ -124,7 +125,7 @@
 #ifdef NO_BAROCLINIC
                   ex(k)=dry_u(i,j)*(ex(k)-uuEx(i,j,k))
 #else
-                  ex(k)=dry_u(i,j)*(ex(k)-uuEx(i,j,k)+idpdx(i,j,k))
+                  ex(k)=dry_u(i,j)*(ex(k)-uuEx(i,j,k)+ip_fac*idpdx(i,j,k))
 #endif
                end do
                ex(kmax)=ex(kmax)                                         &

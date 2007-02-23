@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.34 2006-12-15 10:25:42 kbk Exp $
+!$Id: m3d.F90,v 1.35 2007-02-23 12:37:58 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -57,6 +57,7 @@
    logical                             :: bdy3d=.false.
    integer                             :: bdyfmt_3d,bdyramp_3d
    character(len=PATH_MAX)             :: bdyfile_3d
+   REALTYPE                            :: ip_fac=_ONE_
    integer                             :: vel_check=0
    REALTYPE                            :: min_vel=-4.,max_vel=4.
 !
@@ -68,6 +69,7 @@
 #ifdef NO_BAROCLINIC
    integer         :: ip_method
 #endif
+   integer         :: ip_ramp=-1
 !EOP
 !-----------------------------------------------------------------------
 
@@ -118,7 +120,7 @@
              bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,     &
              vel_hor_adv,vel_ver_adv,vel_adv_split,     &
              calc_temp,calc_salt,                       &
-             avmback,avhback,ip_method,                 &
+             avmback,avhback,ip_method,ip_ramp,         &
              vel_check,min_vel,max_vel
 !
 !EOP
@@ -214,6 +216,8 @@
       case default
    end select
 
+   LEVEL2 'ip_ramp=',ip_ramp
+
    LEVEL2 'vel_check=',vel_check
    if (vel_check .ne. 0) then
       LEVEL3 'doing sanity checks on velocities'
@@ -268,7 +272,7 @@
 
 #ifdef GETM_BIO
 !KBK      if(bio_calc) call init_getm_bio()
-      call init_getm_bio()
+      call init_getm_bio('bio.nml')
 #endif
 
    if (bdy3d) call init_bdy_3d()
@@ -398,6 +402,8 @@
 #endif
    huo=hun
    hvo=hvn
+   ip_fac=_ONE_
+   if (ip_ramp .gt. 0) ip_fac=min( _ONE_ ,n/float(ip_ramp))
    if (ufirst) then
       call uu_momentum_3d(n,bdy3d)
       call vv_momentum_3d(n,bdy3d)
