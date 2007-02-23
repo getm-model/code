@@ -1,4 +1,4 @@
-!$Id: ip_z_interpol.F90,v 1.4 2006-03-01 15:54:08 kbk Exp $
+!$Id: ip_z_interpol.F90,v 1.5 2007-02-23 12:20:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,10 +29,10 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
    REALTYPE                  :: dxm1,dym1
-   REALTYPE                  :: grdl,grdu,rhol,rhou,prgr,dxz,dyz
+   REALTYPE                  :: grdl,grdu,buoyl,prgr,dxz,dyz
    integer                   :: kplus,kminus
    REALTYPE                  :: zx(kmax)
-   REALTYPE                  :: rhoplus,rhominus
+   REALTYPE                  :: buoyplus,buoyminus
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -65,8 +65,8 @@
             do k=2,kmax
                zx(k)=zx(k-1)+0.5*(hun(i,j,k-1)+hun(i,j,k))
             end do
-            grdl=0.5*hun(i,j,kmax)*(rho(i+1,j,kmax)-rho(i,j,kmax))*dxm1
-            rhol=0.5*(rho(i+1,j,kmax)+rho(i,j,kmax))
+            grdl=0.5*hun(i,j,kmax)*(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
+            buoyl=0.5*(buoy(i+1,j,kmax)+buoy(i,j,kmax))
             prgr=grdl
             idpdx(i,j,kmax)=hun(i,j,kmax)*prgr
             do k=kmax-1,1,-1
@@ -77,20 +77,20 @@
                do kminus=kmax,1,-1 ! Find neighboring index to west
                   if (zz(i,j,kminus) .le. zx(k)) EXIT
                end do
-               if (kplus .eq. kmax) rhoplus=rho(i+1,j,kplus)
+               if (kplus .eq. kmax) buoyplus=buoy(i+1,j,kplus)
                if (kplus .lt. kmax .and. kplus .gt. 1) then ! interpolate
-                  rhoplus=((zx(k)-zz(i+1,j,kplus))*rho(i+1,j,kplus+1)+ &
-                          (zz(i+1,j,kplus+1)-zx(k))*rho(i+1,j,kplus))/ &
+                  buoyplus=((zx(k)-zz(i+1,j,kplus))*buoy(i+1,j,kplus+1)+ &
+                          (zz(i+1,j,kplus+1)-zx(k))*buoy(i+1,j,kplus))/ &
                           (0.5*(hn(i+1,j,kplus+1)+hn(i+1,j,kplus)))
                end if
-               if (kminus .eq. kmax) rhominus=rho(i,j,kminus)
+               if (kminus .eq. kmax) buoyminus=buoy(i,j,kminus)
                if ((kminus .lt. kmax) .and. (kminus .gt. 1)) then ! interpolate
-                  rhominus=((zx(k)-zz(i,j,kminus))*rho(i,j,kminus+1)+ &
-                          (zz(i,j,kminus+1)-zx(k))*rho(i,j,kminus))/  &
+                  buoyminus=((zx(k)-zz(i,j,kminus))*buoy(i,j,kminus+1)+ &
+                          (zz(i,j,kminus+1)-zx(k))*buoy(i,j,kminus))/  &
                (0.5*(hn(i,j,kminus+1)+hn(i,j,kminus)))
                end if
                if (zx(k) .gt. max(-H(i+1,j),-H(i,j))) then
-                  grdl=0.5*hun(i,j,k)*(rhoplus-rhominus)*dxm1
+                  grdl=0.5*hun(i,j,k)*(buoyplus-buoyminus)*dxm1
                else
                   grdl= _ZERO_
                end if
@@ -113,8 +113,8 @@
             do k=2,kmax
                zx(k)=zx(k-1)+0.5*(hvn(i,j,k-1)+hvn(i,j,k))
             end do
-            grdl=0.5*hvn(i,j,kmax)*(rho(i,j+1,kmax)-rho(i,j,kmax))*dym1
-            rhol=0.5*(rho(i,j+1,kmax)+rho(i,j,kmax))
+            grdl=0.5*hvn(i,j,kmax)*(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
+            buoyl=0.5*(buoy(i,j+1,kmax)+buoy(i,j,kmax))
             prgr=grdl
             idpdy(i,j,kmax)=hvn(i,j,kmax)*prgr
             do k=kmax-1,1,-1
@@ -125,20 +125,20 @@
                do kminus=kmax,1,-1 ! Find neighboring index to south
                   if (zz(i,j,kminus) .le. zx(k)) EXIT
                end do
-               if (kplus .eq. kmax) rhoplus=rho(i,j+1,kplus)
+               if (kplus .eq. kmax) buoyplus=buoy(i,j+1,kplus)
                if ((kplus .lt. kmax) .and. (kplus .gt. 1)) then
-                  rhoplus=((zx(k)-zz(i,j+1,kplus))*rho(i,j+1,kplus+1)+ &
-                          (zz(i,j+1,kplus+1)-zx(k))*rho(i,j+1,kplus))/ &
+                  buoyplus=((zx(k)-zz(i,j+1,kplus))*buoy(i,j+1,kplus+1)+ &
+                          (zz(i,j+1,kplus+1)-zx(k))*buoy(i,j+1,kplus))/ &
                           (0.5*(hn(i,j+1,kplus+1)+hn(i,j+1,kplus)))
                end if
-               if (kminus .eq. kmax) rhominus=rho(i,j,kminus)
+               if (kminus .eq. kmax) buoyminus=buoy(i,j,kminus)
                if ((kminus .lt. kmax) .and. (kminus .gt. 1)) then
-                  rhominus=((zx(k)-zz(i,j,kminus))*rho(i,j,kminus+1)+  &
-                           (zz(i,j,kminus+1)-zx(k))*rho(i,j,kminus))/  &
+                  buoyminus=((zx(k)-zz(i,j,kminus))*buoy(i,j,kminus+1)+  &
+                           (zz(i,j,kminus+1)-zx(k))*buoy(i,j,kminus))/  &
                            (0.5*(hn(i,j,kminus+1)+hn(i,j,kminus)))
                end if
                if (zx(k).gt.max(-H(i,j+1),-H(i,j))) then
-                  grdl=0.5*hvn(i,j,k)*(rhoplus-rhominus)*dym1
+                  grdl=0.5*hvn(i,j,k)*(buoyplus-buoyminus)*dym1
                else
                   grdl= _ZERO_
                end if

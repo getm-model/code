@@ -1,4 +1,4 @@
-!$Id: eqstate.F90,v 1.8 2006-03-23 09:53:43 frv-bjb Exp $
+!$Id: eqstate.F90,v 1.9 2007-02-23 12:20:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -104,7 +104,7 @@
 !
 ! !USES:
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,az
-   use variables_3d, only: T,S,rho
+   use variables_3d, only: T,S,rho,buoy
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -116,21 +116,6 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
    REALTYPE                  :: x
-#if 0
-!  Brydon et. al. - Table 2 - narrow
-   REALTYPE, parameter       :: a1=-1.36471e-1,b1= 5.06423e-1,g1=-5.52640e-4
-   REALTYPE, parameter       :: a2=-4.68181e-2,b2=-3.57109e-3,g2= 4.88584e-6
-   REALTYPE, parameter       :: a3= 8.07004e-1,b3=-8.76148e-4,g3= 9.96027e-7
-   REALTYPE, parameter       :: a4=-7.45353e-3,b4= 5.25243e-5,g4=-7.25139e-8
-   REALTYPE, parameter       :: a5=-2.94418e-3,b5= 1.57976e-5,g5=-3.98736e-9
-   REALTYPE, parameter       :: a6= 3.43570e-5,b6=-3.46686e-7,g6= 4.00631e-10
-   REALTYPE, parameter       :: a7= 3.48658e-5,b7=-1.68764e-7,g7= 8.26368e-11
-!
-   REALTYPE                  :: p=50.,p2
-   REALTYPE                  :: c1,c2,c3,c4,c5,c6,c7
-!
-   REALTYPE                  :: s1,t1,t2,t3
-#endif
    REALTYPE                  :: KK
    REALTYPE                  :: T1,T2,T3,T4,T5,S1,S15,S2,S3,p2
 !EOP
@@ -145,27 +130,17 @@
 #define BUOYANCY
    select case (eqstate_method)
       case (1)
-#ifdef DENSITY
          forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)  &
             rho(i,j,1:kmax) = rho_0 +                                &
                     dtr0*(T(i,j,1:kmax)-T0) + dsr0*(S(i,j,1:kmax)-S0)
-#endif
-#undef DENSITY
-#ifdef BUOYANCY
-         x = -g/rho_0
-         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)  &
-            rho(i,j,1:kmax) =                                        &
-                   x*(dtr0*(T(i,j,1:kmax)-T0) + dsr0*(S(i,j,1:kmax)-S0))
-#endif
 
 #ifdef HAIDVOGEL_TEST
          forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)  &
-            rho(i,j,1:kmax) = -g/rho_0*(S(i,j,1:kmax)+1000.-rho_0)
+            rho(i,j,1:kmax) = 1000. + S(i,j,1:kmax)
 #endif
 #ifdef CONSTANCE_TEST
-         x = -g/rho_0
          forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)  &
-          rho(i,j,1:kmax) = x*dtr0*(T(i,j,1:kmax)-T0)
+          rho(i,j,1:kmax) = 1000. + *dtr0*(T(i,j,1:kmax)-T0)
 #endif
       case (2)
          do k = 1,kmax
@@ -217,40 +192,18 @@
                         x=x/(1.-p/KK)
                      end if
 #endif
-                     rho(i,j,k)=-g*(x-rho_0)/rho_0
+                     rho(i,j,k)=x
                   end if
                end do
             end do
          end do
 
-#if 0
-         do k = 1,kmax
-            do j = jjmin-1:jjmax+1
-               do i = iimin-1:iimax+1
-                  if (az(i,j) .gt. 0) then
-                     p = 50.
-                     p2 = p*p
-                     c1 = a1 + b1*p + g1*p2
-                     c2 = a2 + b2*p + g2*p2
-                     c3 = a3 + b3*p + g3*p2
-                     c4 = a4 + b4*p + g4*p2
-                     c5 = a5 + b5*p + g5*p2
-                     c6 = a6 + b6*p + g6*p2
-                     c7 = a7 + b7*p + g7*p2
-                     s1 = S(i,j,k)
-                     t1 = T(i,j,k)
-                     t2 = t1*t1
-                     t3 = t1*t2
-                     rho(i,j,k)=c1+c2*t1+c3*s1+c4*t2+c5*s1*t1+c6*t3+c7*s1*t2
-                     rho(i,j,k)=-g/rho_0*(rho(i,j,k)-rho_0)
-                  end if
-               end do
-            end do
-         end do
-#endif
       case default
    end select
 #undef BUOYANCY
+
+   x=-g/rho_0
+   buoy=x*(rho-rho_0)
 
 #ifdef DEBUG
    write(debug,*) 'leaving do_eqstate()'

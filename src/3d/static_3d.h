@@ -1,15 +1,15 @@
 ! Remember to update this value if you add more 3D arrays.
 #ifdef UV_TVD
 #ifdef SPM
-  integer, parameter                   :: n3d_fields=29
+  integer, parameter                   :: n3d_fields=36
 #else
-  integer, parameter                   :: n3d_fields=26 
+  integer, parameter                   :: n3d_fields=33 
 #endif  
 #else
 #ifdef SPM
-  integer, parameter                   :: n3d_fields=22
+  integer, parameter                   :: n3d_fields=29
 #else
-  integer, parameter                   :: n3d_fields=19
+  integer, parameter                   :: n3d_fields=26
 #endif
 #endif
 ! Number of vertical layers in z,u,v columns
@@ -45,10 +45,12 @@
   REALTYPE                             :: NN(I3DFIELD)
   REALTYPE                             :: S(I3DFIELD)
   REALTYPE                             :: T(I3DFIELD)
+  REALTYPE                             :: rad(I3DFIELD)
   REALTYPE                             :: rho(I3DFIELD)
+  REALTYPE                             :: buoy(I3DFIELD)
   REALTYPE                             :: idpdx(I3DFIELD)
   REALTYPE                             :: idpdy(I3DFIELD)
-  REALTYPE                             :: rad(I3DFIELD)
+  REALTYPE                             :: light(I3DFIELD)
 #endif
 
 #ifdef SPM
@@ -57,8 +59,6 @@
   REALTYPE                             :: spm_ws(I3DFIELD)
   REALTYPE                             :: spm_pool(I2DFIELD)
 #endif
-
-  REALTYPE                             :: light(I3DFIELD)
 
 #ifdef UV_TVD
   REALTYPE                             :: uadv(I3DFIELD)

@@ -1,4 +1,4 @@
-!$Id: ss_nn.F90,v 1.7 2006-03-01 15:54:08 kbk Exp $
+!$Id: ss_nn.F90,v 1.8 2007-02-23 12:20:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -131,7 +131,7 @@
    use domain, only: iimin,iimax,jjmin,jjmax,kmax,au,av,az
    use variables_3d, only: kmin,kumin,hn,uu,hun,kvmin,vv,hvn,SS,num
 #ifndef NO_BAROCLINIC
-   use variables_3d, only: NN,rho
+   use variables_3d, only: NN,buoy
 #endif
    IMPLICIT NONE
 !
@@ -206,29 +206,29 @@
          if (az(i,j) .eq. 1 ) then
             do k=kmax-1,1,-1
                dz=0.5*(hn(i,j,k+1)+hn(i,j,k))
-               NNc =(rho(i,j,k+1)-rho(i,j,k))/dz
+               NNc =(buoy(i,j,k+1)-buoy(i,j,k))/dz
 #ifndef NEW_NN
                if (az(i+1,j) .eq. 1) then
                   dz=0.5*(hn(i+1,j,k+1)+hn(i+1,j,k))
-                  NNe=(rho(i+1,j,k+1)-rho(i+1,j,k))/dz
+                  NNe=(buoy(i+1,j,k+1)-buoy(i+1,j,k))/dz
                else
                   NNe=NNc
                end if 
                if (az(i-1,j) .eq. 1) then
                   dz=0.5*(hn(i-1,j,k+1)+hn(i-1,j,k))
-                  NNw=(rho(i-1,j,k+1)-rho(i-1,j,k))/dz
+                  NNw=(buoy(i-1,j,k+1)-buoy(i-1,j,k))/dz
                else
                   NNw=NNc
                end if
                if (az(i,j+1) .eq. 1) then
                   dz=0.5*(hn(i,j+1,k+1)+hn(i,j+1,k))
-                  NNn=(rho(i,j+1,k+1)-rho(i,j+1,k))/dz
+                  NNn=(buoy(i,j+1,k+1)-buoy(i,j+1,k))/dz
                else
                   NNn=NNc
                end if
                if (az(i,j-1) .eq. 1) then
                   dz=0.5*(hn(i,j-1,k+1)+hn(i,j-1,k))
-                  NNs=(rho(i,j-1,k+1)-rho(i,j-1,k))/dz
+                  NNs=(buoy(i,j-1,k+1)-buoy(i,j-1,k))/dz
                else
                   NNs=NNc
                end if

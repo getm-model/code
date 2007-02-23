@@ -1,4 +1,4 @@
-!$Id: ip_blumberg_mellor_lin.F90,v 1.4 2006-03-01 15:54:08 kbk Exp $
+!$Id: ip_blumberg_mellor_lin.F90,v 1.5 2007-02-23 12:20:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -92,15 +92,15 @@
             dxm1=_ONE_/DXU
 #endif
             dxzl=(zz(i+1,j,kmax)-zz(i,j,kmax))*dxm1
-            dxrl=(rho(i+1,j,kmax)-rho(i,j,kmax))*dxm1
+            dxrl=(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
             prgr=0.
             do k=kmax-1,kumin_pmz(i,j),-1
                dxzu=dxzl
                dxzl=(zz(i+1,j,k)-zz(i,j,k))*dxm1
                dxru=dxrl
-               dxrl=(rho(i+1,j,k)-rho(i,j,k))*dxm1
-               dzr2=(rho(i+1,j,k+1)-rho(i+1,j,k))/(zz(i+1,j,k+1)-zz(i+1,j,k))
-               dzr1=(rho(i  ,j,k+1)-rho(i  ,j,k))/(zz(i  ,j,k+1)-zz(i  ,j,k))
+               dxrl=(buoy(i+1,j,k)-buoy(i,j,k))*dxm1
+               dzr2=(buoy(i+1,j,k+1)-buoy(i+1,j,k))/(zz(i+1,j,k+1)-zz(i+1,j,k))
+               dzr1=(buoy(i  ,j,k+1)-buoy(i  ,j,k))/(zz(i  ,j,k+1)-zz(i  ,j,k))
                aa=0.5*(dxrl+dxru)
                bb=0.5*(dxzl+dxzu)
                cc=0.5*(dzr2+dzr1)
@@ -121,16 +121,16 @@
             dym1 = _ONE_/DYV
 #endif
            dyzl=(zz(i,j+1,kmax)-zz(i,j,kmax))*dym1
-           dyrl=(rho(i,j+1,kmax)-rho(i,j,kmax))*dym1
+           dyrl=(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
             prgr=0.
             idpdy(i,j,kmax)=hvn(i,j,kmax)*prgr
             do k=kmax-1,kvmin_pmz(i,j),-1
                dyzu=dyzl
                dyzl=(zz(i,j+1,k)-zz(i,j,k))*dym1
                dyru=dyrl
-               dyrl=(rho(i,j+1,k)-rho(i,j,k))*dym1
-               dzr2=(rho(i,j+1,k+1)-rho(i,j+1,k))/(zz(i,j+1,k+1)-zz(i,j+1,k))
-               dzr1=(rho(i,j  ,k+1)-rho(i  ,j,k))/(zz(i  ,j,k+1)-zz(i  ,j,k))
+               dyrl=(buoy(i,j+1,k)-buoy(i,j,k))*dym1
+               dzr2=(buoy(i,j+1,k+1)-buoy(i,j+1,k))/(zz(i,j+1,k+1)-zz(i,j+1,k))
+               dzr1=(buoy(i,j  ,k+1)-buoy(i  ,j,k))/(zz(i  ,j,k+1)-zz(i  ,j,k))
                aa=0.5*(dyrl+dyru)
                bb=0.5*(dyzl+dyzu)
                cc=0.5*(dzr2+dzr1)

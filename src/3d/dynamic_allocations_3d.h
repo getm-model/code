@@ -59,8 +59,11 @@
   allocate(T(I3DFIELD),stat=rc)     ! 3D field for temperature
   if (rc /= 0) stop 'init_3d: Error allocating memory (T)'
 
-  allocate(rho(I3DFIELD),stat=rc)  ! 3D field for density (actual buoyancy)
+  allocate(rho(I3DFIELD),stat=rc)  ! 3D field for density
   if (rc /= 0) stop 'init_3d: Error allocating memory (rho)'
+
+  allocate(buoy(I3DFIELD),stat=rc)  ! 3D field for buoyancy
+  if (rc /= 0) stop 'init_3d: Error allocating memory (buoy)'
 
   allocate(idpdx(I3DFIELD),stat=rc) ! Internal pressure gradient - x
   if (rc /= 0) stop 'init_3d: Error allocating memory (idpdx)'

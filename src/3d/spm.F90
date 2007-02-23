@@ -1,4 +1,4 @@
-!$Id: spm.F90,v 1.12 2007-01-10 21:27:07 hb Exp $
+!$Id: spm.F90,v 1.13 2007-02-23 12:20:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -124,8 +124,6 @@
 !  Original author(s): Manuel Ruiz Villarreal, Karsten Bolding 
 !                      and Hans Burchard
 !
-! !LOCAL VARIABLES:
-   REALTYPE, parameter       :: x=-rho_0/g
 !EOP
 !-----------------------------------------------------------------------
 
@@ -663,9 +661,7 @@
          do i=iimin,iimax
             if (az(i,j) .eq. 1 ) then
                do k=1,kmax
-                  rho(i,j,k)=x*rho(i,j,k)+rho_0
                   rho(i,j,k)=rho(i,j,k)+(_ONE_-rho(i,j,k)/spm_rho)*spm(i,j,k)
-                  rho(i,j,k)=(rho(i,j,k)-rho_0)/x
                end do
             end if
          end do

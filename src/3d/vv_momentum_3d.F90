@@ -1,4 +1,4 @@
-!$Id: vv_momentum_3d.F90,v 1.16 2006-12-15 10:25:42 kbk Exp $
+!$Id: vv_momentum_3d.F90,v 1.17 2007-02-23 12:20:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -60,7 +60,7 @@
    use variables_3d, only: num,nuh,sseo,ssvn,rrv
    use variables_3d, only: ssvo
 #ifdef XZ_PLUME_TEST
-   use variables_3d, only: rho
+   use variables_3d, only: buoy
 #endif
 #ifndef NO_BAROCLINIC
    use variables_3d, only: idpdy
@@ -70,6 +70,7 @@
 #endif
    use halo_zones, only: update_3d_halo,wait_halo,V_TAG
    use meteo, only: tausy,airp
+   use m3d, only: ip_fac
    use m3d, only: vel_check,min_vel,max_vel
    IMPLICIT NONE
 !
@@ -135,9 +136,9 @@
                   ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k))
 #else
 #ifdef XZ_PLUME_TEST
-                  ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+idpdy(i,j,k)+yslope*hvn(i,j,k)*(rho(i,j,kmax)-rho(i,j,k)))
+                  ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+idpdy(i,j,k)+yslope*hvn(i,j,k)*(buoy(i,j,kmax)-buoy(i,j,k)))
 #else
-                  ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+idpdy(i,j,k))
+                  ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+ip_fac*idpdy(i,j,k))
 #endif
 #endif
                end do

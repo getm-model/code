@@ -1,4 +1,4 @@
-%$Id: 3dIntro.tex,v 1.2 2007-01-10 22:01:16 hb Exp $
+%$Id: 3dIntro.tex,v 1.3 2007-02-23 12:20:35 kbk Exp $
 
 \section{Introduction to 3d module}
 
@@ -329,5 +329,6 @@ will be added as an option in the near future.
 For the equation of state, also linearised version are implemented into
 GETM, for details, see section \ref{sec-eqstate} on page \pageref{sec-eqstate}.
 
-It should be noted carefully that the GETM variable {\tt rho} actually
-stands for the buoyancy $b$ as defined in (\ref{bdef}).
+For convinient use in other subroutines the buoyancy $b$ as defined in 
+(\ref{bdef} is calculated and stored in the GETM variable {tt buoy}.
+

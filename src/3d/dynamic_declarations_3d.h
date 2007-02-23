@@ -1,8 +1,8 @@
 ! Remember to update this value if you add more 3D arrays.
 #ifdef UV_TVD
-  integer,parameter                    :: n3d_fields=30
+  integer,parameter                    :: n3d_fields=33
 #else
-  integer,parameter                    :: n3d_fields=23
+  integer,parameter                    :: n3d_fields=26
 #endif
 
 ! Number of vertical layers in z,u,v columns
@@ -23,9 +23,9 @@
   REALTYPE, dimension(:,:,:), allocatable   :: NN
 
 ! 3D baroclinic fields
-  REALTYPE, dimension(:,:,:), allocatable   :: S,T,rho
+  REALTYPE, dimension(:,:,:), allocatable   :: S,T,rho,buoy
   REALTYPE, dimension(:,:,:), allocatable   :: idpdx,idpdy
-  REALTYPE, dimension(:,:,:), allocatable   :: rad
+  REALTYPE, dimension(:,:,:), allocatable   :: rad,light
 #endif
 
 ! suspended matter
@@ -33,8 +33,6 @@
   REALTYPE, dimension(:,:,:), allocatable   :: spm,spm_ws
   REALTYPE, dimension(:,:), allocatable     :: spm_pool
 #endif
-
-  REALTYPE, dimension(:,:,:), allocatable   :: light
 
 #ifdef UV_TVD
   REALTYPE, dimension(:,:,:), allocatable   :: uadv,vadv,wadv

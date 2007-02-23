@@ -1,4 +1,4 @@
-!$Id: ip_song_wright.F90,v 1.4 2006-03-01 15:54:08 kbk Exp $
+!$Id: ip_song_wright.F90,v 1.5 2007-02-23 12:20:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -52,7 +52,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
    REALTYPE                  :: dxm1,dym1
-   REALTYPE                  :: grdl,grdu,rhol,rhou,prgr,dxz,dyz
+   REALTYPE                  :: grdl,grdu,buoyl,buoyu,prgr,dxz,dyz
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -82,20 +82,20 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
 #endif
-            grdl=0.5*hun(i,j,kmax)*(rho(i+1,j,kmax)-rho(i,j,kmax))*dxm1
-            rhol=0.5*(rho(i+1,j,kmax)+rho(i,j,kmax))       &
+            grdl=0.5*hun(i,j,kmax)*(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
+            buoyl=0.5*(buoy(i+1,j,kmax)+buoy(i,j,kmax))       &
                      *(zz(i+1,j,kmax)- zz(i,j,kmax))*dxm1
             prgr=grdl
             idpdx(i,j,kmax)=hun(i,j,kmax)*prgr
             do k=kmax-1,1,-1
                grdu=grdl
-               grdl=(0.5*(rho(i+1,j,k)+rho(i+1,j,k+1))               &
+               grdl=(0.5*(buoy(i+1,j,k)+buoy(i+1,j,k+1))               &
                         *0.5*(hn(i+1,j,k)+hn(i+1,j,k+1))             &
-                    -0.5*(rho(i,j,k)+rho(i,j,k+1))                   &
+                    -0.5*(buoy(i,j,k)+buoy(i,j,k+1))                   &
                         *0.5*(hn(i,j,k)+hn(i,j,k+1)) )*dxm1
-               rhou=rhol
-               rhol=0.5*(rho(i+1,j,k)+rho(i,j,k))*(zz(i+1,j,k)-zz(i,j,k))*dxm1
-               prgr=prgr+grdl-(rhou-rhol)
+               buoyu=buoyl
+               buoyl=0.5*(buoy(i+1,j,k)+buoy(i,j,k))*(zz(i+1,j,k)-zz(i,j,k))*dxm1
+               prgr=prgr+grdl-(buoyu-buoyl)
                idpdx(i,j,k)=hun(i,j,k)*prgr
             end do
          end if
@@ -110,20 +110,20 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
          dym1 = _ONE_/DYV
 #endif
-            grdl=0.5*hvn(i,j,kmax)*(rho(i,j+1,kmax)-rho(i,j,kmax))*dym1
-            rhol=0.5*(rho(i,j+1,kmax)+rho(i,j,kmax))     &
+            grdl=0.5*hvn(i,j,kmax)*(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
+            buoyl=0.5*(buoy(i,j+1,kmax)+buoy(i,j,kmax))     &
                      *(zz(i,j+1,kmax)- zz(i,j,kmax))*dxm1
             prgr=grdl
             idpdy(i,j,kmax)=hvn(i,j,kmax)*prgr
             do k=kmax-1,1,-1
                grdu=grdl
-               grdl=(0.5*(rho(i,j+1,k)+rho(i,j+1,k+1))               &
+               grdl=(0.5*(buoy(i,j+1,k)+buoy(i,j+1,k+1))               &
                         *0.5*(hn(i,j+1,k)+hn(i,j+1,k+1))             &
-                    -0.5*(rho(i,j,k)+rho(i,j,k+1))                   &
+                    -0.5*(buoy(i,j,k)+buoy(i,j,k+1))                   &
                         *0.5*(hn(i,j,k)+hn(i,j,k+1)) )*dym1
-               rhou=rhol
-               rhol=0.5*(rho(i,j+1,k)+rho(i,j,k))*(zz(i,j+1,k)-zz(i,j,k))*dym1
-               prgr=prgr+grdl-(rhou-rhol)
+               buoyu=buoyl
+               buoyl=0.5*(buoy(i,j+1,k)+buoy(i,j,k))*(zz(i,j+1,k)-zz(i,j,k))*dym1
+               prgr=prgr+grdl-(buoyu-buoyl)
                idpdy(i,j,k)=hvn(i,j,k)*prgr
             end do
          end if

@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.13 2007-02-20 13:52:15 kbk Exp $
+!$Id: save_3d_ncdf.F90,v 1.14 2007-02-23 12:20:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,6 +47,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
+!  Revision 1.14  2007-02-23 12:20:37  kbk
+!  introduce buoy() and rename rho() to buoy()i where appropriate
+!
 !  Revision 1.13  2007-02-20 13:52:15  kbk
 !  solar radiation -> 3d field - possible to save
 !
@@ -103,7 +106,6 @@
    integer                   :: err,n
    integer                   :: start(4),edges(4)
    integer, save             :: n3d=0
-   REALTYPE, parameter       :: x=-rho_0/g
 
 !EOP
 !-----------------------------------------------------------------------
@@ -232,7 +234,7 @@
 
       if (save_rho) then
          call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-                     kmin,az,x*rho+rho_0-1000.,rho_missing,ws)
+                     kmin,az,rho-1000.,rho_missing,ws)
          err = nf_put_vara_real(ncid, sigma_t_id, start, edges, ws)
          if (err .NE. NF_NOERR) go to 10
       end if

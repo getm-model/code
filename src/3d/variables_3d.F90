@@ -1,4 +1,4 @@
-!$Id: variables_3d.F90,v 1.11 2006-03-17 17:19:54 kbk Exp $
+!$Id: variables_3d.F90,v 1.12 2007-02-23 12:20:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -55,7 +55,9 @@
 ! {\tt NN} & 3D &  [s$^{-2}$]& Brunt-V\"ais\"al\"a frequency squared$N^2$ \\
 ! {\tt S} & 3D & [psu] & salinity $S$ \\
 ! {\tt T} & 3D & [$^{\circ}$C]& potential temperature $\theta$ \\
-! {\tt rho} & 3D & [m\,s$^{-2}$]& buoyancy $b$ \\
+! {\tt rad} & 3D & [Wm$^{-2}$]& Short wave penetration \\
+! {\tt rho} & 3D & [kg\,m$^{-3}$]& density $rho$ \\
+! {\tt buoy} & 3D & [m\,s$^{-2}$]& buoyancy $b$ \\
 ! {\tt idpdx} & 3D & [m$^2$s$^{-2}$] & $x$-component of internal
 ! pressure gradient \\
 ! {\tt idpdy} & 3D & [m$^2$s$^{-2}$]& $y$-component of internal
@@ -191,6 +193,7 @@
    uuEx= _ZERO_ ; vvEx= _ZERO_
    tke=1.e-10 ; eps=1.e-10
 
+   rad=_ZERO_
    light=_ONE_
 
 #ifdef UV_TVD

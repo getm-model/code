@@ -1,4 +1,4 @@
-!$Id: ip_chu_fan.F90,v 1.4 2006-03-01 15:54:08 kbk Exp $
+!$Id: ip_chu_fan.F90,v 1.5 2007-02-23 12:20:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -24,7 +24,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
    REALTYPE                  :: dxm1,dym1,x,y,x1,y1,hc
-   REALTYPE                  :: grdl,grdu,rhol,rhou,prgr,dxz,dyz
+   REALTYPE                  :: grdl,grdu,buoyl,buoyu,prgr,dxz,dyz
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -54,22 +54,22 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
 #endif
-            grdl=(rho(i+1,j,kmax)-rho(i,j,kmax))*dxm1
-            rhol=0.5*(rho(i+1,j,kmax)+rho(i,j,kmax))
+            grdl=(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
+            buoyl=0.5*(buoy(i+1,j,kmax)+buoy(i,j,kmax))
             prgr=grdl
             idpdx(i,j,kmax)=hun(i,j,kmax)*prgr*0.5*hun(i,j,kmax)
             do k=kmax-1,1,-1
                grdu=grdl
-               grdl=(rho(i+1,j,k)-rho(i,j,k))*dxm1
-               rhou=rhol
-               rhol=0.5*(rho(i+1,j,k)+rho(i,j,k))
+               grdl=(buoy(i+1,j,k)-buoy(i,j,k))*dxm1
+               buoyu=buoyl
+               buoyl=0.5*(buoy(i+1,j,k)+buoy(i,j,k))
                dxz=(zz(i+1,j,k)-zz(i,j,k))*dxm1
-               hc=(zz(i+1,j,k)-zz(i+1,j,k+1))**2*(rho(i+1,j,k)-rho(i+1,j,k+1))
-               hc=hc-(zz(i,j,k)-zz(i,j,k+1))**2*(rho(i,j,k)-rho(i,j,k+1)) 
-               hc=hc+(zz(i+1,j,k+1)-zz(i,j,k+1))**2*(rho(i+1,j,k+1)-rho(i,j,k+1)) 
-               hc=hc-(zz(i+1,j,k)-zz(i,j,k))**2*(rho(i+1,j,k)-rho(i,j,k)) 
+               hc=(zz(i+1,j,k)-zz(i+1,j,k+1))**2*(buoy(i+1,j,k)-buoy(i+1,j,k+1))
+               hc=hc-(zz(i,j,k)-zz(i,j,k+1))**2*(buoy(i,j,k)-buoy(i,j,k+1)) 
+               hc=hc+(zz(i+1,j,k+1)-zz(i,j,k+1))**2*(buoy(i+1,j,k+1)-buoy(i,j,k+1)) 
+               hc=hc-(zz(i+1,j,k)-zz(i,j,k))**2*(buoy(i+1,j,k)-buoy(i,j,k)) 
                hc=hc*dxm1*0.1666666667/(zz(i,j,k)+zz(i+1,j,k)-zz(i,j,k+1)-zz(i+1,j,k+1))
-               prgr=prgr+(grdu+grdl+hc)*0.5*(hun(i,j,k)+hun(i,j,k+1))-dxz*(rhou-rhol)
+               prgr=prgr+(grdu+grdl+hc)*0.5*(hun(i,j,k)+hun(i,j,k+1))-dxz*(buoyu-buoyl)
                idpdx(i,j,k)=hun(i,j,k)*prgr
             end do
          end if
@@ -84,22 +84,22 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
          dym1 = _ONE_/DYV
 #endif
-            grdl=(rho(i,j+1,kmax)-rho(i,j,kmax))*dym1
-            rhol=0.5*(rho(i,j+1,kmax)+rho(i,j,kmax))
+            grdl=(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
+            buoyl=0.5*(buoy(i,j+1,kmax)+buoy(i,j,kmax))
             prgr=grdl
             idpdy(i,j,kmax)=hvn(i,j,kmax)*prgr*0.5*hvn(i,j,kmax)
             do k=kmax-1,1,-1
                grdu=grdl
-               grdl=(rho(i,j+1,k)-rho(i,j,k))*dym1
-               rhou=rhol
-               rhol=0.5*(rho(i,j+1,k)+rho(i,j,k))
+               grdl=(buoy(i,j+1,k)-buoy(i,j,k))*dym1
+               buoyu=buoyl
+               buoyl=0.5*(buoy(i,j+1,k)+buoy(i,j,k))
                dyz=(zz(i,j+1,k)-zz(i,j,k))*dym1
-               hc=(zz(i,j+1,k)-zz(i,j+1,k+1))**2*(rho(i,j+1,k)-rho(i,j+1,k+1))
-               hc=hc-(zz(i,j,k)-zz(i,j,k+1))**2*(rho(i,j,k)-rho(i,j,k+1)) 
-               hc=hc+(zz(i,j+1,k+1)-zz(i,j,k+1))**2*(rho(i,j+1,k+1)-rho(i,j,k+1)) 
-               hc=hc-(zz(i,j+1,k)-zz(i,j,k))**2*(rho(i,j+1,k)-rho(i,j,k)) 
+               hc=(zz(i,j+1,k)-zz(i,j+1,k+1))**2*(buoy(i,j+1,k)-buoy(i,j+1,k+1))
+               hc=hc-(zz(i,j,k)-zz(i,j,k+1))**2*(buoy(i,j,k)-buoy(i,j,k+1)) 
+               hc=hc+(zz(i,j+1,k+1)-zz(i,j,k+1))**2*(buoy(i,j+1,k+1)-buoy(i,j,k+1)) 
+               hc=hc-(zz(i,j+1,k)-zz(i,j,k))**2*(buoy(i,j+1,k)-buoy(i,j,k)) 
                hc=hc*dym1*0.1666666667/(zz(i,j,k)+zz(i,j+1,k)-zz(i,j,k+1)-zz(i,j+1,k+1))
-               prgr=prgr+(grdu+grdl+hc)*0.5*(hvn(i,j,k)+hvn(i,j,k+1))-dyz*(rhou-rhol)
+               prgr=prgr+(grdu+grdl+hc)*0.5*(hvn(i,j,k)+hvn(i,j,k+1))-dyz*(buoyu-buoyl)
                idpdy(i,j,k)=hvn(i,j,k)*prgr
             end do
          end if

@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.16 2006-03-01 15:54:08 kbk Exp $
+!$Id: internal_pressure.F90,v 1.17 2007-02-23 12:20:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -64,7 +64,7 @@
 #else
    use domain, only: dx,dy
 #endif
-   use variables_3d, only: kmin,hn,hun,hvn,idpdx,idpdy,rho
+   use variables_3d, only: kmin,hn,hun,hvn,idpdx,idpdy,buoy
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
