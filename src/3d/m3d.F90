@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.35 2007-02-23 12:37:58 kbk Exp $
+!$Id: m3d.F90,v 1.36 2007-03-07 13:09:26 frv-bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -403,7 +403,7 @@
    huo=hun
    hvo=hvn
    ip_fac=_ONE_
-   if (ip_ramp .gt. 0) ip_fac=min( _ONE_ ,n/float(ip_ramp))
+   if (ip_ramp .gt. 0) ip_fac=min( float(1.0) ,float(n/float(ip_ramp)))
    if (ufirst) then
       call uu_momentum_3d(n,bdy3d)
       call vv_momentum_3d(n,bdy3d)
