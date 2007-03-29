@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.12 2006-08-25 09:34:10 kbk Exp $
+#$Id: Makefile,v 1.13 2007-03-29 12:28:22 kbk Exp $
 #
 # Makefile to build the 3D specific library - libm3d.a
 #
@@ -11,9 +11,9 @@ LIB	= $(LIBDIR)/lib3d${buildtype}.a
 MODSRC	= m3d.F90 variables_3d.F90 advection_3d.F90 eqstate.F90 \
           temperature.F90 salinity.F90 spm.F90 bdy_3d.F90 rivers.F90
 
-LIBSRC	= start_macro.F90 hcc_check.F90 bdy_3d.F90 coordinates.F90 check_h.F90 bottom_friction_3d.F90 internal_pressure.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 stresses_3d.F90 ss_nn.F90 gotm.F90 slow_bottom_friction.F90 slow_advection.F90 slow_diffusion.F90 slow_terms.F90 stop_macro.F90
+LIBSRC	= start_macro.F90 hcc_check.F90 bdy_3d.F90 coordinates.F90 sigma_coordinates.F90 general_coordinates.F90 hybrid_coordinates.F90 adaptive_coordinates.F90 check_h.F90 bottom_friction_3d.F90 internal_pressure.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 stresses_3d.F90 ss_nn.F90 gotm.F90 slow_bottom_friction.F90 slow_advection.F90 slow_diffusion.F90 slow_terms.F90 stop_macro.F90
 
-TEXSRC	= m3d.F90 variables_3d.F90  coordinates.F90  check_h.F90 hcc_check.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 bottom_friction_3d.F90 internal_pressure.F90 ip_blumberg_mellor.F90 ip_blumberg_mellor_lin.F90 ip_z_interpol.F90  ip_song_wright.F90 ip_chu_fan.F90 advection_3d.F90 upstream_adv.F90 upstream_2dh_adv.F90 u_split_adv.F90 v_split_adv.F90 w_split_adv.F90 w_split_it_adv.F90 fct_2dh_adv.F90 temperature.F90 salinity.F90 spm.F90 eqstate.F90 ss_nn.F90 stresses_3d.F90 gotm.F90 rivers.F90 bdy_3d.F90 slow_bottom_friction.F90 slow_advection.F90 slow_diffusion.F90 slow_terms.F90 start_macro.F90 stop_macro.F90
+TEXSRC	= m3d.F90 variables_3d.F90  coordinates.F90 sigma_coordinates.F90 general_coordinates.F90 hybrid_coordinates.F90 adaptive_coordinates.F90 check_h.F90 hcc_check.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 bottom_friction_3d.F90 internal_pressure.F90 ip_blumberg_mellor.F90 ip_blumberg_mellor_lin.F90 ip_z_interpol.F90  ip_song_wright.F90 ip_chu_fan.F90 advection_3d.F90 upstream_adv.F90 upstream_2dh_adv.F90 u_split_adv.F90 v_split_adv.F90 w_split_adv.F90 w_split_it_adv.F90 fct_2dh_adv.F90 temperature.F90 salinity.F90 spm.F90 eqstate.F90 ss_nn.F90 stresses_3d.F90 gotm.F90 rivers.F90 bdy_3d.F90 slow_bottom_friction.F90 slow_advection.F90 slow_diffusion.F90 slow_terms.F90 start_macro.F90 stop_macro.F90
 
 SRC	= $(MODSRC) $(LIBSRC)
 
@@ -43,6 +43,10 @@ OBJ = \
 $(LIB)(start_macro.o)			\
 $(LIB)(hcc_check.o)			\
 $(LIB)(coordinates.o)			\
+$(LIB)(sigma_coordinates.o)		\
+$(LIB)(general_coordinates.o)		\
+$(LIB)(hybrid_coordinates.o)		\
+$(LIB)(adaptive_coordinates.o)		\
 $(LIB)(bottom_friction_3d.o)		\
 $(LIB)(uu_momentum_3d.o)		\
 $(LIB)(vv_momentum_3d.o)		\

@@ -1,13 +1,13 @@
-!$Id: coordinates.F90,v 1.12 2007-03-29 12:28:22 kbk Exp $
+!$Id: sigma_coordinates.F90,v 1.1 2007-03-29 12:28:22 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE:  coordinates - defines the vertical coordinate
-! \label{sec-coordinates}
+! !ROUTINE:  equidistant and zoomed sigma-coordinates
+! \label{sec-sigam-coordinates}
 !
 ! !INTERFACE:
-   subroutine coordinates(cord_type,cord_relax,maxdepth)
+   subroutine sigma_coordinates(first)
 !
 ! !DESCRIPTION:
 !
@@ -69,18 +69,23 @@
 ! conceptionally developed by \cite{BURCHARDea04}.
 !
 ! !USES:
+   use domain, only: iimin,iimax,jjmin,jjmax,kmax,H,HU,HV
+   use domain, only: ga,ddu,ddl
+   use variables_3d, only: kmin,kumin,kvmin,ho,hn,huo,hun,hvo,hvn
+   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: cord_type
-   REALTYPE, intent(in)                :: cord_relax
-   REALTYPE, intent(in)                :: maxdepth
+   logical, intent(in)                  :: first
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   logical, save   :: first=.true.
+   integer          :: i,j,k,rc
+   REALTYPE         :: kmaxm1
+   logical, save    :: equiv_sigma=.false.
+   REALTYPE, save, dimension(:), allocatable  :: dga
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -91,59 +96,88 @@
 #endif
 
    if (first) then
-      select case (cord_type)
-         case (1) ! sigma coordinates
-            LEVEL2 'using sigma vertical coordinates'
-            call sigma_coordinates(.true.)
-         case (2) ! z-level
-         case (3) ! general vertical coordinates
-            LEVEL2 'using general vertical coordinates'
-            call general_coordinates(.true.,cord_relax,maxdepth)
-         case (4) ! hybrid vertical coordinates
-            LEVEL2 'using hybrid vertical coordinates'
-            call hybrid_coordinates(.true.)
-STDERR 'coordinates(): hybrid_coordinates not coded yet'
-stop
-         case (5) ! adaptive vertical coordinates
-            LEVEL2 'using adaptive vertical coordinates'
-            call adaptive_coordinates(.true.)
-STDERR 'coordinates(): adaptive_coordinates not coded yet'
-stop
-         case default
-      end select
-      first = .false.
-   else
-      select case (cord_type)
-         case (1) ! sigma coordinates
-            call sigma_coordinates(.false.)
-         case (2) ! z-level
-         case (3) ! general vertical coordinates
-            call general_coordinates(.false.,cord_relax,maxdepth)
-         case (4) ! hybrid vertical coordinates
-            call hybrid_coordinates(.false.)
-         case (5) ! adaptive vertical coordinates
-            call adaptive_coordinates(.false.)
-         case default
-      end select
+      if (.not. allocated(ga)) allocate(ga(0:kmax),stat=rc)
+      if (rc /= 0) stop 'coordinates: Error allocating (ga)'
+      if (ddu .le. _ZERO_ .and. ddl .le. _ZERO_) then
+         equiv_sigma=.true.
+         ga(0) = -_ONE_
+         do k=1,kmax
+            ga(k) = ga(k-1) + _ONE_/kmax
+         end do
+         ga(kmax) = _ZERO_
+      else
+         ! Non-equidistant sigma coordinates
+         ! This zooming routine is from Antoine Garapon, ICCH, DK
+         if (ddu .lt. _ZERO_) ddu=_ZERO_
+         if (ddl .lt. _ZERO_) ddl=_ZERO_
+         allocate(dga(0:kmax),stat=rc)
+         if (rc /= 0) STOP 'coordinates: Error allocating (dga)'
+         ga(0)= -_ONE_
+         dga(0)= _ZERO_
+         do k=1,kmax
+            ga(k)=tanh((ddl+ddu)*k/float(kmax)-ddl)+tanh(ddl)
+            ga(k)=ga(k)/(tanh(ddl)+tanh(ddu)) - _ONE_
+            dga(k)=ga(k)-ga(k-1)
+         end do
+      end if
+      kmin=1
+      kumin=1
+      kvmin=1
    end if ! first
 
-#ifdef SLICE_MODEL
-   do i=iimin,iimax
-      do k=kvmin(i,2),kmax
-         hvo(i,1,k)=hvo(i,2,k)
-         hvo(i,3,k)=hvo(i,2,k)
-         hvn(i,1,k)=hvn(i,2,k)
-         hvn(i,3,k)=hvn(i,2,k)
+   if (equiv_sigma) then
+      kmaxm1= _ONE_/float(kmax)
+      do j=jjmin-HALO,jjmax+HALO
+         do i=iimin-HALO,iimax+HALO
+            ho(i,j,:)=(sseo(i,j)+H(i,j))*kmaxm1
+            hn(i,j,:)=(ssen(i,j)+H(i,j))*kmaxm1
+         end do
       end do
-   end do
-#endif
+
+      do j=jjmin-HALO,jjmax+HALO
+         do i=iimin-HALO,iimax+HALO-1
+            huo(i,j,:)=(ssuo(i,j)+HU(i,j))*kmaxm1
+            hun(i,j,:)=(ssun(i,j)+HU(i,j))*kmaxm1
+         end do
+      end do
+
+      do j=jjmin-HALO,jjmax+HALO-1
+         do i=iimin-HALO,iimax+HALO
+            hvo(i,j,:)=(ssvo(i,j)+HV(i,j))*kmaxm1
+            hvn(i,j,:)=(ssvn(i,j)+HV(i,j))*kmaxm1
+         end do
+      end do
+
+   else ! non-equivdistant
+
+      do j=jjmin-HALO,jjmax+HALO
+         do i=iimin-HALO,iimax+HALO
+            ho(i,j,1:kmax)=(sseo(i,j)+H(i,j))*dga(1:kmax)
+            hn(i,j,1:kmax)=(ssen(i,j)+H(i,j))*dga(1:kmax)
+         end do
+      end do
+
+      do j=jjmin-HALO,jjmax+HALO
+         do i=iimin-HALO,iimax+HALO-1
+            huo(i,j,1:kmax)=(ssuo(i,j)+HU(i,j))*dga(1:kmax)
+            hun(i,j,1:kmax)=(ssun(i,j)+HU(i,j))*dga(1:kmax)
+         end do
+      end do
+
+      do j=jjmin-HALO,jjmax+HALO-1
+         do i=iimin-HALO,iimax+HALO
+            hvo(i,j,1:kmax)=(ssvo(i,j)+HV(i,j))*dga(1:kmax)
+            hvn(i,j,1:kmax)=(ssvn(i,j)+HV(i,j))*dga(1:kmax)
+         end do
+      end do
+   end if
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving coordinates()'
+   write(debug,*) 'Leaving sigma_coordinates()'
    write(debug,*)
 #endif
    return
-   end subroutine coordinates
+   end subroutine sigma_coordinates
 !EOC
 
 !-----------------------------------------------------------------------
