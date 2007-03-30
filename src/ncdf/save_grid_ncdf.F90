@@ -1,4 +1,4 @@
-!$Id: save_grid_ncdf.F90,v 1.4 2007-02-22 08:48:13 kbk Exp $
+!$Id: save_grid_ncdf.F90,v 1.5 2007-03-30 13:11:00 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,6 +43,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: save_grid_ncdf.F90,v $
+!  Revision 1.5  2007-03-30 13:11:00  hb
+!  Use of adaptive and hybrid vertical coordinates technically enabled
+!
 !  Revision 1.4  2007-02-22 08:48:13  kbk
 !  possible to save masks (az, au, av)
 !
@@ -212,7 +215,7 @@
          zname  = 'sigma'
       case (2)
          zname  = 'z'
-      case (3)
+      case (3,4,5)
          zname  = 'level'
       case default
       end select
@@ -397,7 +400,7 @@
 !  vertical levels
    if (save3d) then
       select case (vert_cord)
-      case (1,2,3)
+      case (1,2,3,4,5)
          status = nf_put_var_double(ncid,z_id,ga)
          if (status .ne. NF_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","ga -")

@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.26 2007-02-08 06:43:27 kbk Exp $
+!$Id: domain.F90,v 1.27 2007-03-30 13:10:59 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -84,6 +84,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.27  2007-03-30 13:10:59  hb
+!  Use of adaptive and hybrid vertical coordinates technically enabled
+!
 !  Revision 1.26  2007-02-08 06:43:27  kbk
 !  update HALOS for z0 - and changed loop boundaries for zub0,zvb0
 !
@@ -303,6 +306,14 @@
          LEVEL2 'Using z-level coordinates'
       case(3)
          LEVEL2 'Using general vertical coordinates'
+      case (4) ! hybrid vertical coordinates
+         LEVEL2 'using hybrid vertical coordinates'
+         STDERR 'domain: hybrid_coordinates not coded yet'
+         stop
+      case (5) ! adaptive vertical coordinates
+         LEVEL2 'using adaptive vertical coordinates'
+         STDERR 'domain: adaptive_coordinates not coded yet'
+         stop
       case default
          call getm_error("init_domain()", &
                          "A non valid vertical coordinate system has been chosen");

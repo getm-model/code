@@ -1,4 +1,4 @@
-!$Id: init_grid_ncdf.F90,v 1.3 2007-02-22 08:48:12 kbk Exp $
+!$Id: init_grid_ncdf.F90,v 1.4 2007-03-30 13:11:00 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,6 +41,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: init_grid_ncdf.F90,v $
+!  Revision 1.4  2007-03-30 13:11:00  hb
+!  Use of adaptive and hybrid vertical coordinates technically enabled
+!
 !  Revision 1.3  2007-02-22 08:48:12  kbk
 !  possible to save masks (az, au, av)
 !
@@ -125,7 +128,7 @@
       case (2)
          zname  = 'z'
          zunits = 'm'
-      case (3)
+      case (3,4,5)
          zname  = 'level'
          zunits = 'level'
       case default

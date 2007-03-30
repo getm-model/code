@@ -1,4 +1,4 @@
-!$Id: init_3d_ncdf.F90,v 1.12 2007-02-20 13:52:15 kbk Exp $
+!$Id: init_3d_ncdf.F90,v 1.13 2007-03-30 13:11:00 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,6 +35,9 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_3d_ncdf.F90,v $
+!  Revision 1.13  2007-03-30 13:11:00  hb
+!  Use of adaptive and hybrid vertical coordinates technically enabled
+!
 !  Revision 1.12  2007-02-20 13:52:15  kbk
 !  solar radiation -> 3d field - possible to save
 !
@@ -181,7 +184,7 @@
       case (1)
       case (2)
          call getm_error("init_3d_ncdf()","saving of z-levels disabled")
-      case (3)
+      case (3,4,5)
          fv = hh_missing
          mv = hh_missing
          err = nf_def_var(ncid,'h',NF_REAL,4,f4_dims,h_id)
