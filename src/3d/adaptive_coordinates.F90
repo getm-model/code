@@ -1,4 +1,4 @@
-!$Id: adaptive_coordinates.F90,v 1.2 2007-03-30 13:10:59 hb Exp $
+!$Id: adaptive_coordinates.F90,v 1.3 2007-04-16 11:05:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -21,7 +21,12 @@
    use  parameters,  only: g,rho_0
    use variables_3d, only: uu,vv,NN,SS
    use variables_3d, only: rho
+#if defined CURVILINEAR || defined SPHERICAL
+   use domain,       only: dxv,dyu,arcd1
+#else
    use domain,       only: dx,dy,ard1
+#endif
+
 !ADAPTIVE-END
 
    IMPLICIT NONE
