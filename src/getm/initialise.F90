@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.17 2006-11-21 15:10:45 frv-bjb Exp $
+!$Id: initialise.F90,v 1.18 2007-05-08 09:01:15 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,6 +22,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
+!  Revision 1.18  2007-05-08 09:01:15  kbk
+!  gotmturb.inp -> gotmturb.nml
+!
 !  Revision 1.17  2006-11-21 15:10:45  frv-bjb
 !  Parallel independence of INPUT_DIR for getm.inp read. Unset INPUT_DIR to use MPI working dir.
 !
@@ -305,7 +308,7 @@
    if (runtype .gt. 1) then
       call init_3d(runtype,timestep,hotstart)
 #ifndef CONSTANT_VISCOSITY
-      call init_turbulence(60,trim(input_dir) // 'gotmturb.inp',kmax)
+      call init_turbulence(60,trim(input_dir) // 'gotmturb.nml',kmax)
 #else
       LEVEL3 'turbulent viscosity and diffusivity set to constant (-DCONSTANT_VISCOSITY)'
 #endif
