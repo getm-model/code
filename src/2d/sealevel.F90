@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.13 2007-01-10 21:28:55 hb Exp $
+!$Id: sealevel.F90,v 1.14 2007-05-08 08:47:27 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -188,7 +188,9 @@
          can_check = can_check + 1
       end if
 ! Check a failing (NaN) case:
+#ifndef GFORTRAN
       zdum = 0.0/0.0
+#endif
       call sealevel_nandum(zdum,ahuge,idum)
       if (idum .eq. 2) then
          can_check = can_check + 1
