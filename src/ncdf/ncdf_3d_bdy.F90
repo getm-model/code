@@ -1,4 +1,4 @@
-!$Id: ncdf_3d_bdy.F90,v 1.10 2005-05-04 11:50:57 kbk Exp $
+!$Id: ncdf_3d_bdy.F90,v 1.11 2007-05-08 09:08:18 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,6 +47,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.11  2007-05-08 09:08:18  kbk
+!  rudimentary check for valid lower boundary data
+!
 !  Revision 1.10  2005-05-04 11:50:57  kbk
 !  support for non-climatological 3D boundaries (S,T)
 !
@@ -464,6 +467,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.11  2007-05-08 09:08:18  kbk
+!  rudimentary check for valid lower boundary data
+!
 !  Revision 1.10  2005-05-04 11:50:57  kbk
 !  support for non-climatological 3D boundaries (S,T)
 !
@@ -670,6 +676,12 @@
    do k=kmax,1,-1
       if (zmodel(k) .ge. zlev(1)) col(k) = wrk(1)
    end do
+
+!  find largest index with valid value in wrk
+   do nn=1,nlev
+      if (wrk(nn) .lt. -999. ) EXIT
+   end do
+   if (nn .ne. nlev .or. wrk(nn) .lt. -999.) nn=nn-1
 
    do k=1,kmax
       if (zmodel(k) .le. zlev(nlev)) col(k) = wrk(nlev)
