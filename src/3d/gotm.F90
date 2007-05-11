@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.13 2006-03-01 15:54:08 kbk Exp $
+!$Id: gotm.F90,v 1.14 2007-05-11 12:04:24 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -63,13 +63,8 @@
    integer                   :: i,j,k
    REALTYPE                  :: u_taus,u_taub,z0s,z0b
    REALTYPE                  :: h(0:kmax),dry,zz
-#ifdef GOTM_3_0
-   REALTYPE                  :: P(0:kmax),B(0:kmax)
-#endif
    REALTYPE                  :: NN1d(0:kmax),SS1d(0:kmax)
-#ifndef GOTM_3_0
    REALTYPE                  :: xP(0:kmax)
-#endif
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -80,9 +75,7 @@
    write(debug,*) 'gotm() # ',Ncall
 #endif
 
-#ifndef GOTM_3_0
    xP = _ZERO_
-#endif
    do j=jjmin,jjmax
       do i=iimin,iimax
 
@@ -96,7 +89,6 @@
 #ifndef NO_BAROCLINIC
             NN1d = NN(i,j,:)
 #endif
-
             tke1d=tke(i,j,:)
             eps1d=eps(i,j,:)
             L1d=cde*tke1d**1.5/eps1d
@@ -104,7 +96,6 @@
 #ifndef NO_BAROCLINIC
             nuh1d=nuh(i,j,:)
 #endif
-
             z0s = 0.1
             z0b=0.5*(max(zub(i-1,j),zub(i,j))+max(zvb(i,j-1),zvb(i,j)))
             if (z0s .gt. D(i,j)/10.) z0s=D(i,j)/10.
@@ -122,21 +113,9 @@
 #endif
             end do
 #else
-#ifdef GOTM_3_0
-
-            P  = num(i,j,:)*SS1d
-#ifndef NO_BAROCLINIC
-            B  = -nuh(i,j,:)*NN1d
-#endif
-
-            call do_turbulence(kmax,dt,D(i,j),u_taus,u_taub,z0s,z0b,h, &
-                               NN1d,SS1d,P,B)
-#else
             call do_turbulence(kmax,dt,D(i,j),u_taus,u_taub,z0s,z0b,h, &
                                NN1d,SS1d,xP)
 #endif
-#endif
-
             tke(i,j,:) = tke1d
             eps(i,j,:) = eps1d
             num(i,j,:) = num1d + avmback
@@ -153,7 +132,6 @@
    call update_3d_halo(nuh,nuh,az,iimin,jjmin,iimax,jjmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 #endif
-
 
 #ifdef DEBUG
    write(debug,*) 'Leaving gotm()'
