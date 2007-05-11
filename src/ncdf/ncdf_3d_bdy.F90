@@ -1,4 +1,4 @@
-!$Id: ncdf_3d_bdy.F90,v 1.11 2007-05-08 09:08:18 kbk Exp $
+!$Id: ncdf_3d_bdy.F90,v 1.12 2007-05-11 07:51:27 frv-bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,6 +47,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.12  2007-05-11 07:51:27  frv-bjb
+!  Free dimid numbering for 3d bdy files (order in var still fixed)
+!
 !  Revision 1.11  2007-05-08 09:08:18  kbk
 !  rudimentary check for valid lower boundary data
 !
@@ -114,7 +117,8 @@
 ! !LOCAL VARIABLES:
    character(len=256)        :: units
    integer                   :: j1,s1
-   integer                   :: ndims
+   integer                   :: ndims, nvardims
+   integer                   :: vardim_ids(4)
    integer, allocatable, dimension(:):: dim_ids,dim_len
    character(len=16), allocatable :: dim_name(:)
    integer                   :: rc,err
@@ -164,12 +168,56 @@
       time_dim = 4
    else
 !     We are reading boundary values from a special boundary data file
-!     1 -> zax,levels
-!     2 -> bdy_points
-!     3 -> time
+!     The variables 'salt' and 'temp' must both exist and be spanned by
+!     dimensions as:
+!       1 -> zax,levels
+!       2 -> bdy_points
+!       3 -> time
+!     We will use this information to actually find the dimension
+!     index numbers in the data set.
+!     Some of the tests will be repeated later (fixing is possible but not 
+!     high priority, BJB 2007-04-25).
       LEVEL4 'special boundary data file'
-      zax_dim = 1
-      time_dim = 3
+!     This test may break backward compatibility, so I leave it out for now:
+      !if (ndims .NE. 3) stop 'init_3d_bdy_ncdf: Wrong number of dims in file (must be 3)'
+
+      LEVEL4 ' ... checking variable "temp"'
+
+      err = nf_inq_varid(ncid,'temp',temp_id)
+      if (err .NE. NF_NOERR) go to 10
+
+      err = nf_inq_varndims(ncid,temp_id,nvardims)
+      if (err .NE. NF_NOERR) go to 10
+
+      if (nvardims .NE. 3) &
+           stop 'init_3d_bdy_ncdf: Wrong number of dims in temp (must be 3)'
+
+      err = nf_inq_vardimid(ncid,temp_id,vardim_ids)
+      if (err .NE. NF_NOERR) go to 10
+
+      zax_dim  = vardim_ids(1)
+      time_dim = vardim_ids(3)
+
+      ! The 'salt' part is only for error capture.
+      LEVEL4 ' ... checking variable "salt"'
+
+      err = nf_inq_varid(ncid,'salt',salt_id)
+      if (err .NE. NF_NOERR) go to 10
+
+      err = nf_inq_varndims(ncid,salt_id,nvardims)
+      if (err .NE. NF_NOERR) go to 10
+
+      if (nvardims .NE. 3) &
+           stop 'init_3d_bdy_ncdf: Wrong number of dims in salt (must be 3)'
+
+      err = nf_inq_vardimid(ncid,salt_id,vardim_ids)
+      if (err .NE. NF_NOERR) go to 10
+
+      if (zax_dim /= vardim_ids(1)) &
+           stop 'init_3d_bdy_ncdf: First (zax) dimension of salt and temp differs'
+      if (time_dim /= vardim_ids(3)) &
+           stop 'init_3d_bdy_ncdf: Third (time) dimension of salt and temp differs'
+
    end if
    zax_len = dim_len(zax_dim)
    time_len = dim_len(time_dim)
@@ -467,6 +515,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.12  2007-05-11 07:51:27  frv-bjb
+!  Free dimid numbering for 3d bdy files (order in var still fixed)
+!
 !  Revision 1.11  2007-05-08 09:08:18  kbk
 !  rudimentary check for valid lower boundary data
 !
