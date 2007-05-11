@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.37 2007-03-30 09:31:14 frv-bjb Exp $
+!$Id: m3d.F90,v 1.38 2007-05-11 12:03:35 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -38,7 +38,7 @@
 #endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
-   use getm_bio, only: init_getm_bio, do_getm_bio
+   use getm_bio, only: do_getm_bio
 #endif
    use variables_3d
    use advection_3d, only: init_advection_3d
@@ -268,11 +268,6 @@
          call init_advection_3d(2)
       end if
    end if
-#endif
-
-#ifdef GETM_BIO
-!KBK      if(bio_calc) call init_getm_bio()
-      call init_getm_bio('bio.nml')
 #endif
 
    if (bdy3d) call init_bdy_3d()
