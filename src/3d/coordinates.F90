@@ -1,4 +1,4 @@
-!$Id: coordinates.F90,v 1.13 2007-03-30 13:10:59 hb Exp $
+!$Id: coordinates.F90,v 1.13.2.1 2007-05-14 11:54:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -108,6 +108,7 @@ stop
             LEVEL2 'using adaptive vertical coordinates'
             call adaptive_coordinates(.true.)
 STDERR 'coordinates(): adaptive_coordinates not coded yet'
+stop
          case default
       end select
       first = .false.
