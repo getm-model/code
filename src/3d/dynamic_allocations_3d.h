@@ -74,6 +74,8 @@
   allocate(rad(I3DFIELD),stat=rc) ! Solar radiation
   if (rc /= 0) stop 'init_3d: Error allocating memory (rad)'
 
+  allocate(light(I3DFIELD),stat=rc) ! light advection velocity
+  if (rc /= 0) stop 'init_3d: Error allocating memory (light)'
 #endif
 
 #ifdef SPM
@@ -86,9 +88,6 @@
   allocate(spm_pool(I2DFIELD),stat=rc) ! Pool of spm
   if (rc /= 0) stop 'init_3d: Error allocating memory (spm_pool)'
 #endif
-
-  allocate(light(I3DFIELD),stat=rc) ! light advection velocity
-  if (rc /= 0) stop 'init_3d: Error allocating memory (light)'
 
 #ifdef UV_TVD
   allocate(uadv(I3DFIELD),stat=rc) ! u advection velocity

@@ -1,4 +1,4 @@
-!$Id: variables_3d.F90,v 1.12 2007-02-23 12:20:37 kbk Exp $
+!$Id: variables_3d.F90,v 1.12.2.1 2007-05-14 12:39:03 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -193,9 +193,6 @@
    uuEx= _ZERO_ ; vvEx= _ZERO_
    tke=1.e-10 ; eps=1.e-10
 
-   rad=_ZERO_
-   light=_ONE_
-
 #ifdef UV_TVD
    uadv = _ZERO_ ; vadv = _ZERO_ ; wadv = _ZERO_
    hnadv = _ZERO_ ; hoadv = _ZERO_
@@ -205,6 +202,8 @@
 #ifndef NO_BAROCLINIC
    idpdx=_ZERO_
    idpdy=_ZERO_
+   rad=_ZERO_
+   light=_ONE_
 #endif
 
    adv_schemes(1) = "3D first-order upstream advection"
