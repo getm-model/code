@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.13 2006-03-23 12:20:57 kbk Exp $
+#$Id: Rules.make,v 1.14 2007-05-14 12:09:27 kbk Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -75,9 +75,6 @@ endif
 #DEFINES += -DSUBSTR_INI_PRESS
 #DEFINES += -DSONG_WRIGHT
 #DEFINES += -DUV_TVD
-#DEFINES += -ECMWF_FRV
-#DEFINES += -HIRLAM_FRV
-#DEFINES += -SETTING_LON_LAN
 ifdef STATIC
 else
 endif
@@ -86,7 +83,7 @@ endif
 
 # Top of this version of getm.
 ifndef GETMDIR
-GETMDIR  = $(HOME)/getm-src
+GETMDIR  = $(HOME)/GETM/getm-devel
 endif
 
 ifndef BINDIR
