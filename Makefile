@@ -36,6 +36,8 @@ VER=1.5.0
 VER=adaptive_cord
 # 2006/08/25
 VER=1.5.1
+# 2007/05/14 - new stable release
+VER=1.6.0
 
 
 .PHONY: doc
