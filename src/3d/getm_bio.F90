@@ -1,5 +1,6 @@
-!$Id: getm_bio.F90,v 1.1.2.1 2007-05-14 12:04:43 kbk Exp $
+!$Id: getm_bio.F90,v 1.1.2.2 2007-05-14 12:40:06 kbk Exp $
 #include "cppdefs.h"
+#define GOTM_V3
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -25,7 +26,11 @@
    use advection_3d, only: do_advection_3d
    use meteo, only: swr,u10,v10
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
+#ifdef GOTM_V3
+   use bio, only: init_bio, do_bio
+#else
    use bio, only: init_bio, set_env_bio, do_bio
+#endif
    use bio, only: bio_calc
    use bio_var, only: numc
    use bio_var, only: cc,ws,var_names,var_units,var_long
@@ -56,6 +61,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: getm_bio.F90,v $
+!  Revision 1.1.2.2  2007-05-14 12:40:06  kbk
+!  bio only works with gotm-3.3.x for now
+!
 !  Revision 1.1.2.1  2007-05-14 12:04:43  kbk
 !  support for biology via GOTM - v3.3.x for now
 !
@@ -203,13 +211,10 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   LEVEL2 'do_getm_bio()'
-
 !  First we do all the vertical processes
    do j=jjmin,jjmax
       do i=iimin,iimax
          if (az(i,j) .ge. 1 ) then
-#define GOTM_V3
 #ifdef GOTM_V3
             I_0=swr(i,j)
             h1d=hn(i,j,:)
