@@ -1,4 +1,4 @@
-!$Id: mirror_bdy_2d.F90,v 1.3 2006-08-25 09:00:19 kbk Exp $
+!$Id: mirror_bdy_2d.F90,v 1.4 2007-05-14 08:12:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,6 +30,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: mirror_bdy_2d.F90,v $
+!  Revision 1.4  2007-05-14 08:12:43  kbk
+!  fixed loops
+!
 !  Revision 1.3  2006-08-25 09:00:19  kbk
 !  fixed sequence of boundary updates
 !
@@ -39,10 +42,8 @@
 !  Revision 1.1  2003/04/07 15:22:03  kbk
 !  parallel support
 !
-!
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -61,8 +62,8 @@
             do i = nfi(n),nli(n)
                if (au(i,j) .eq. 3) f(i,j) = f(i,j-1)
             end do
-            f(nli(n)+1,j) = f(nfi(n)+1,j-1)
-            f(nli(n)+2,j) = f(nfi(n)+2,j-1)
+            f(nli(n)+1,j) = f(nli(n)+1,j-1)
+            f(nli(n)+2,j) = f(nli(n)+2,j-1)
          end do
          do n = 1,NSB
             j = sj(n)
@@ -87,16 +88,15 @@
          end do
          do n = 1,NEB
             i = ei(n)
-            f(i,efj(n)-2) = f(i+1,efj(n)-2)
-            f(i,efj(n)-1) = f(i+1,efj(n)-1)
+            f(i,efj(n)-2) = f(i-1,efj(n)-2)
+            f(i,efj(n)-1) = f(i-1,efj(n)-1)
             do j = efj(n),elj(n)
                if (av(i,j) .eq. 3) f(i,j) = f(i-1,j)
             end do
-            f(i,elj(n)+1) = f(i+1,elj(n)+1)
-            f(i,elj(n)+2) = f(i+1,elj(n)+2)
+            f(i,elj(n)+1) = f(i-1,elj(n)+1)
+            f(i,elj(n)+2) = f(i-1,elj(n)+2)
          end do
       case default
-#if 0
          do n = 1,NWB
             i = wi(n)
             do j = wfj(n),wlj(n)
@@ -124,9 +124,7 @@
                f(i,j-1) = f(i,j)
             end do
          end do
-#endif
    end select
-
 
 #ifdef DEBUG
    write(debug,*) 'Leaving mirror_bdy_2d()'

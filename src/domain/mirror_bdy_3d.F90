@@ -1,4 +1,4 @@
-!$Id: mirror_bdy_3d.F90,v 1.3 2006-08-25 09:00:19 kbk Exp $
+!$Id: mirror_bdy_3d.F90,v 1.4 2007-05-14 08:12:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,6 +30,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: mirror_bdy_3d.F90,v $
+!  Revision 1.4  2007-05-14 08:12:43  kbk
+!  fixed loops
+!
 !  Revision 1.3  2006-08-25 09:00:19  kbk
 !  fixed sequence of boundary updates
 !
@@ -61,8 +64,8 @@
             do i = nfi(n),nli(n)
                if (au(i,j) .eq. 3) f(i,j,:) = f(i,j-1,:)
             end do
-            f(nli(n)+1,j,:) = f(nfi(n)+1,j-1,:)
-            f(nli(n)+2,j,:) = f(nfi(n)+2,j-1,:)
+            f(nli(n)+1,j,:) = f(nli(n)+1,j-1,:)
+            f(nli(n)+2,j,:) = f(nli(n)+2,j-1,:)
          end do
          do n = 1,NSB
             j = sj(n)
