@@ -1,4 +1,4 @@
-!$Id: short_wave_radiation.F90,v 1.3 2003-06-17 14:53:28 kbk Exp $
+!$Id: short_wave_radiation.F90,v 1.4 2007-05-19 16:44:27 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,6 +35,9 @@
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: short_wave_radiation.F90,v $
+!  Revision 1.4  2007-05-19 16:44:27  kbk
+!  re-introduced cloud cover if statement
+!
 !  Revision 1.3  2003-06-17 14:53:28  kbk
 !  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
 !
@@ -136,13 +139,11 @@
 !  calculates SHORT WAVE FLUX ( watt/m*m )
 !  Rosati,Miyakoda 1988 ; eq. 3.8
 
-!HB I do not know where this "if(tcc .lt. 0.3) then" comes from. It is not
-!HB included in Rosati,Miyakoda 1988 ; eq. 3.8 ...
-!HB   if(tcc .lt. 0.3) then
-!HB      short_wave_radiation  = qtot
-!HB   else
+   if(tcc .lt. 0.3) then
+      short_wave_radiation  = qtot
+   else
       short_wave_radiation  = qtot*(1-0.62*tcc + .0019*sunbet)*(1.-albedo)
-!HB   endif
+   endif
 
    return
    end function short_wave_radiation
