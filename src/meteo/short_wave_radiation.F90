@@ -1,4 +1,4 @@
-!$Id: short_wave_radiation.F90,v 1.4 2007-05-19 16:44:27 kbk Exp $
+!$Id: short_wave_radiation.F90,v 1.5 2007-05-21 14:01:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,6 +35,9 @@
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: short_wave_radiation.F90,v $
+!  Revision 1.5  2007-05-21 14:01:19  kbk
+!  limitation suggested by Adolf Stips
+!
 !  Revision 1.4  2007-05-19 16:44:27  kbk
 !  re-introduced cloud cover if statement
 !
@@ -138,12 +141,19 @@
 !  radiation as from Reed(1977), Simpson and Paulson(1979)
 !  calculates SHORT WAVE FLUX ( watt/m*m )
 !  Rosati,Miyakoda 1988 ; eq. 3.8
-
+#if 1
+   short_wave_radiation  = qtot*(1-0.62*tcc + .0019*sunbet)*(1.-albedo)
+   if(short_wave_radiation .gt. qtot ) then
+      short_wave_radiation  = qtot
+   end if
+#else
+!  original implementation
    if(tcc .lt. 0.3) then
       short_wave_radiation  = qtot
    else
       short_wave_radiation  = qtot*(1-0.62*tcc + .0019*sunbet)*(1.-albedo)
    endif
+#endif
 
    return
    end function short_wave_radiation
