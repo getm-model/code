@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.14 2007-02-23 12:20:37 kbk Exp $
+!$Id: save_3d_ncdf.F90,v 1.15 2007-05-22 09:37:20 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -16,10 +16,15 @@
    use grid_ncdf
    use domain,       only: ioff,joff,imin,imax,jmin,jmax
    use domain,       only: iimin,iimax,jjmin,jjmax,kmax
-   use domain,       only: H,az,au,av,min_depth
+   use domain,       only: H,HU,HV,az,au,av,min_depth
+#if defined CURVILINEAR || defined SPHERICAL
+   use domain,       only: dxc,dyc
+#else
+   use domain,       only: dx,dy
+#endif
    use variables_2d, only: z,D
    use variables_2d, only: U,V,DU,DV
-   use variables_3d, only: kmin,hn,uu,hun,vv,hvn,ww,hcc
+   use variables_3d, only: dt,kmin,ho,hn,uu,hun,vv,hvn,ww,hcc
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho,rad
 #endif
@@ -47,6 +52,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
+!  Revision 1.15  2007-05-22 09:37:20  kbk
+!  saving physical vertical velocities
+!
 !  Revision 1.14  2007-02-23 12:20:37  kbk
 !  introduce buoy() and rename rho() to buoy()i where appropriate
 !
@@ -208,8 +216,15 @@
 
       err = nf_put_vara_real(ncid,vv_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
-
-      call tow(ws,ww,iimin,jjmin,0,iimax,jjmax,kmax)
+      call tow( imin, jmin, imax, jmax,  az,                          &
+               iimin,jjmin,iimax,jjmax,kmin,kmax,                     &
+               dt,                                                    &
+#if defined CURVILINEAR || defined SPHERICAL
+               dxc,dyc,                                               &
+#else
+               dx,dy,                                                 &
+#endif
+               HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,ws)
       err = nf_put_vara_real(ncid,w_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
 
