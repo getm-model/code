@@ -1,4 +1,4 @@
-!$Id: tow.F90,v 1.3 2007-05-22 09:37:22 kbk Exp $
+!$Id: tow.F90,v 1.4 2007-05-22 09:59:55 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -51,6 +51,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: tow.F90,v $
+!  Revision 1.4  2007-05-22 09:59:55  kbk
+!  fixed HV index error + z-coordinate indices
+!
 !  Revision 1.3  2007-05-22 09:37:22  kbk
 !  saving physical vertical velocities
 !
@@ -87,11 +90,15 @@
             k=kmin(i,j)-1
             dtz=_ZERO_
             dxz=-(HU(i,j)-HU(i-1,j))/DXC
-            dyz=-(HV(i,j)-HV(i-1,j))/DYC
+            dyz=-(HV(i,j)-HV(i,j-1))/DYC
             u=0.5*(uu(i,j,k+1)/hun(i,j,k+1)+uu(i-1,j,k+1)/hun(i-1,j,k+1))
             v=0.5*(vv(i,j,k+1)/hvn(i,j,k+1)+vv(i,j-1,k+1)/hvn(i,j-1,k+1))
             indx=i+(j-jjmin)*(iimax-iimin+1)
             ws(indx) = ww(i,j,k) + dtz + u*dxz + v*dyz
+!           points below kmin - z-coordinates only
+            do k=0,kmin(i,j)-1
+               indx = indx+1
+            end do
 !           interior points
             do k=kmin(i,j),kmax-1
                dtz=dtz+(hn(i,j,k)-ho(i,j,k))/dt
