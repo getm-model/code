@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.14 2007-02-07 16:32:22 kbk Exp $
+!$Id: ncdf_topo.F90,v 1.15 2007-05-26 15:20:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -90,6 +90,9 @@
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
+!  Revision 1.15  2007-05-26 15:20:37  kbk
+!  print NetCDF version info
+!
 !  Revision 1.14  2007-02-07 16:32:22  kbk
 !  added spatial varying bottom roughness
 !
@@ -200,6 +203,7 @@ contains
 !  Look for things in the bathymetry file that should be there
 !  for all grid types.
 
+   LEVEL1 'using NetCDF version: ',trim(NF_INQ_LIBVERS())
 
 !   Open file
     status = nf_open(filename,nf_nowrite,ncbathy)
