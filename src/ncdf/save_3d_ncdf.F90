@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.15 2007-05-22 09:37:20 kbk Exp $
+!$Id: save_3d_ncdf.F90,v 1.16 2007-05-26 12:19:31 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -52,6 +52,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
+!  Revision 1.16  2007-05-26 12:19:31  kbk
+!  destag of vertical velocities
+!
 !  Revision 1.15  2007-05-22 09:37:20  kbk
 !  saving physical vertical velocities
 !
@@ -224,7 +227,7 @@
 #else
                dx,dy,                                                 &
 #endif
-               HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,ws)
+               HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,destag,ws)
       err = nf_put_vara_real(ncid,w_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
 

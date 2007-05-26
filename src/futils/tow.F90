@@ -1,4 +1,4 @@
-!$Id: tow.F90,v 1.5 2007-05-22 14:47:41 kbk Exp $
+!$Id: tow.F90,v 1.6 2007-05-26 12:19:30 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -14,7 +14,7 @@
 #else
                   dx,dy,                                               &
 #endif
-                  HU,HV,hn,ho,uu,hun,vv,hvn,ww,missing,ws)
+                  HU,HV,hn,ho,uu,hun,vv,hvn,ww,missing,destag,ws)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -43,6 +43,7 @@
    REALTYPE, intent(in)                :: hvn(I3DFIELD)
    REALTYPE, intent(in)                :: ww(I3DFIELD)
    REALTYPE, intent(in)                :: missing
+   logical, intent(in)                 :: destag
 !
 ! !OUTPUT PARAMETERS:
    REAL_4B, intent(out)                :: ws(*)
@@ -51,6 +52,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: tow.F90,v $
+!  Revision 1.6  2007-05-26 12:19:30  kbk
+!  destag of vertical velocities
+!
 !  Revision 1.5  2007-05-22 14:47:41  kbk
 !  fixed indx for z-coordinates
 !
@@ -123,6 +127,13 @@
             v=0.5*(vv(i,j,k)/hvn(i,j,k)+vv(i,j-1,k)/hvn(i,j-1,k))
             indx = indx+l
             ws(indx) = ww(i,j,k) + dtz  + u*dxz + v*dyz
+            if (destag) then
+               do k=kmax,kmin(i,j),-1
+                  ws(indx)=0.5*(ws(indx)+ws(indx-l))
+                  indx = indx-l
+               end do
+               ws(indx) = missing
+            end if
          end if
       end do
    end do
