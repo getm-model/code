@@ -1,4 +1,4 @@
-!$Id: read_field_ncdf.F90,v 1.6 2004-09-16 14:32:25 kbk Exp $
+!$Id: read_field_ncdf.F90,v 1.7 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,8 +12,7 @@
 !  From a NetCDF files - fname - read the variable - var - into the field - f.
 !
 ! !USES:
-   use domain, only: imin,jmin,imax,jmax,iextr,jextr,ioff,joff
-   use domain, only: iimin,jjmin,iimax,jjmax,kmax
+   use domain, only: imin,jmin,imax,jmax,kmax,iextr,jextr,ioff,joff
    use domain, only: H,az
    use variables_3d, only: hn
    IMPLICIT NONE
@@ -31,6 +30,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: read_field_ncdf.F90,v $
+!  Revision 1.7  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.6  2004-09-16 14:32:25  kbk
 !  now reads 1-layer fields
 !
@@ -152,9 +154,9 @@
    if (err .NE. NF_NOERR) go to 10
 #endif
 
-   il = max(iimin+ioff,1); ih = min(iimax+ioff,iextr)
-   jl = max(jjmin+joff,1); jh = min(jjmax+joff,jextr)
-   iloc = max(iimin-ioff,1); jloc = max(jjmin-joff,1)
+   il = max(imin+ioff,1); ih = min(imax+ioff,iextr)
+   jl = max(jmin+joff,1); jh = min(jmax+joff,jextr)
+   iloc = max(imin-ioff,1); jloc = max(jmin-joff,1)
 
    start(1) = il ; start(2) = jl
    start(3) = 1; 
@@ -174,7 +176,7 @@
       stop 'read_field_ncdf()' 
    end if
 
-   allocate(wrk((iimax-iimin+1)*(jjmax-jjmin+1)*kh),stat=rc)
+   allocate(wrk((imax-imin+1)*(jmax-jmin+1)*kh),stat=rc)
    if (rc /= 0) stop 'read_field_ncdf: Error allocating wrk'
 
    err = nf_inq_varid(ncid,trim(var),var_id)
@@ -190,7 +192,7 @@
          zax_2d(k) = -zax(kh-k+1)
       end do
 
-      allocate(wrk_2d(iimin:iimax,jjmin:jjmax,kh),stat=rc)
+      allocate(wrk_2d(imin:imax,jmin:jmax,kh),stat=rc)
       if (rc /= 0) stop 'read_field_ncdf: Error allocating wrk_2d'
       indx = 1
       do k=1,kh
@@ -202,8 +204,8 @@
          end do
       end do
 
-      call kbk_interpol(kh,zax_2d,wrk_2d,imin,jmin,imax,jmax,az,H, &
-                        iimin,jjmin,iimax,jjmax,kmax,hn,f)
+      call kbk_interpol(kh,zax_2d,wrk_2d,imin,jmin,imax,jmax,kmax, &
+                        az,H,hn,f)
    else
       indx = 1
       do j=jl,jh

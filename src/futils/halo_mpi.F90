@@ -1,4 +1,4 @@
-!$Id: halo_mpi.F90,v 1.11 2006-11-21 15:10:46 frv-bjb Exp $
+!$Id: halo_mpi.F90,v 1.12 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -65,6 +65,9 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_mpi.F90,v $
+!  Revision 1.12  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.11  2006-11-21 15:10:46  frv-bjb
 !  Parallel independence of INPUT_DIR for getm.inp read. Unset INPUT_DIR to use MPI working dir.
 !
@@ -959,14 +962,14 @@ STDERR 'TWOD_SENDRECV'
 ! !IROUTINE: update_3d_halo_mpi - updates the halo zones for 3D fields.
 !
 ! !INTERFACE:
-   SUBROUTINE update_3d_halo_mpi(f1,f2,iimin,jjmin,iimax,jjmax,kmax,tag)
+   SUBROUTINE update_3d_halo_mpi(f1,f2,imin,jmin,imax,jmax,kmax,tag)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
 !  Updates the halo zones for 3D fields.
 !
 ! !INPUT PARAMTERS:
-   integer, intent(in)                 :: iimin,jjmin,iimax,jjmax,kmax
+   integer, intent(in)                 :: imin,jmin,imax,jmax,kmax
    integer, intent(in)                 :: tag
 !
 ! !INPUT/OUTPUT PARAMTERS:
@@ -987,7 +990,7 @@ STDERR 'TWOD_SENDRECV'
       FATAL 'Last action was not WAITING - not ready for sending (3D)'
       call MPI_ABORT(active_comm,-1,ierr)
    end if
-   il=iimin;ih=iimax;jl=jjmin;jh=jjmax
+   il=imin;ih=imax;jl=jmin;jh=jmax
    select case (comm_method)
       case(ONE_PROCESS)
          f1(il-1, :, : )  = f2(il, :, :  )

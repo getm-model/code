@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.16 2007-05-26 12:19:31 kbk Exp $
+!$Id: save_3d_ncdf.F90,v 1.17 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -14,8 +14,7 @@
    use exceptions
    use ncdf_3d
    use grid_ncdf
-   use domain,       only: ioff,joff,imin,imax,jmin,jmax
-   use domain,       only: iimin,iimax,jjmin,jjmax,kmax
+   use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
    use domain,       only: H,HU,HV,az,au,av,min_depth
 #if defined CURVILINEAR || defined SPHERICAL
    use domain,       only: dxc,dyc
@@ -52,6 +51,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
+!  Revision 1.17  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.16  2007-05-26 12:19:31  kbk
 !  destag of vertical velocities
 !
@@ -135,8 +137,8 @@
       edges(2) = ylen
       edges(3) = zlen
 
-      call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-                  kmin,az,hcc,-_ONE_,ws)
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,hcc,-_ONE_, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
       err = nf_put_vara_real(ncid,hcc_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
 
@@ -159,7 +161,7 @@
 
 !  elevations
    call eta_mask(imin,jmin,imax,jmax,az,H,D,z,min_depth,elev_missing, &
-                 iimin,jmin,iimax,jjmax,ws)
+                 imin,jmin,imax,jmax,ws)
    err = nf_put_vara_real(ncid,elev_id,start,edges,ws)
    if (err .NE. NF_NOERR) go to 10
 
@@ -185,8 +187,8 @@
    edges(4) = 1
 
    if (h_id .gt. 0) then
-      call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax,    &
-                  kmin,az,hn,hh_missing,ws)
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,hn,hh_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
       err = nf_put_vara_real(ncid,h_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
    end if
@@ -194,13 +196,11 @@
    if (save_vel) then
 
       if (destag) then
-         call to_3d_uu(imin, jmin, imax, jmax,  az,                    &
-                       iimin,jjmin,iimax,jjmax,kmax,                   &
-                       kmin,hun,uu,vel_missing,ws)
+         call to_3d_uu(imin,jmin,imax,jmax,kmin,kmax,az, &
+                       hun,uu,vel_missing,ws)
       else
-         call to_3d_vel( imin, jmin, imax, jmax,  au,                  &
-                        iimin,jjmin,iimax,jjmax,kmax,                  &
-                        kmin,hun,uu,vel_missing,ws)
+         call to_3d_vel(imin,jmin,imax,jmax,kmin,kmax,au, &
+                        hun,uu,vel_missing,ws)
       endif
 
       err = nf_put_vara_real(ncid,uu_id,start,edges,ws)
@@ -208,24 +208,21 @@
 
 
       if (destag) then
-         call to_3d_vv ( imin, jmin, imax, jmax,  az,                 &
-                        iimin,jjmin,iimax,jjmax,kmax,                 &
-                        kmin,hvn,vv,vel_missing,ws)
+         call to_3d_vv (imin,jmin,imax,jmax,kmin,kmax,az, &
+                        hvn,vv,vel_missing,ws)
       else
-         call to_3d_vel( imin, jmin, imax, jmax,  av,                 &
-                        iimin,jjmin,iimax,jjmax,kmax,                 &
-                        kmin,hvn,vv,vel_missing,ws)
+         call to_3d_vel(imin,jmin,imax,jmax,kmin,kmax,av, &
+                        hvn,vv,vel_missing,ws)
       endif
 
       err = nf_put_vara_real(ncid,vv_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
-      call tow( imin, jmin, imax, jmax,  az,                          &
-               iimin,jjmin,iimax,jjmax,kmin,kmax,                     &
-               dt,                                                    &
+      call tow(imin,jmin,imax,jmax,kmin,kmax,az, &
+               dt,                               &
 #if defined CURVILINEAR || defined SPHERICAL
-               dxc,dyc,                                               &
+               dxc,dyc,                          &
 #else
-               dx,dy,                                                 &
+               dx,dy,                            &
 #endif
                HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,destag,ws)
       err = nf_put_vara_real(ncid,w_id,start,edges,ws)
@@ -237,29 +234,29 @@
    if (save_strho) then
 
       if (save_s) then
-         call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-                     kmin,az,S,salt_missing,ws)
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,S,salt_missing, &
+                     imin,imax,jmin,jmax,0,kmax,ws)
          err = nf_put_vara_real(ncid, salt_id, start, edges, ws)
          if (err .NE. NF_NOERR) go to 10
       end if
 
       if (save_t) then
-         call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-                     kmin,az,T,temp_missing,ws)
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,T,temp_missing, &
+                     imin,imax,jmin,jmax,0,kmax,ws)
          err = nf_put_vara_real(ncid, temp_id, start, edges, ws)
          if (err .NE. NF_NOERR) go to 10
       end if
 
       if (save_rho) then
-         call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-                     kmin,az,rho-1000.,rho_missing,ws)
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,rho-1000.,rho_missing, &
+                     imin,imax,jmin,jmax,0,kmax,ws)
          err = nf_put_vara_real(ncid, sigma_t_id, start, edges, ws)
          if (err .NE. NF_NOERR) go to 10
       end if
 
       if (save_rad) then
-         call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-                     kmin,az,rad,rad_missing,ws)
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,rad,rad_missing, &
+                     imin,imax,jmin,jmax,0,kmax,ws)
          err = nf_put_vara_real(ncid, rad_id, start, edges, ws)
          if (err .NE. NF_NOERR) go to 10
       end if
@@ -270,29 +267,29 @@
    if (save_turb) then
 
       if (save_tke) then
-         call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-                     kmin,az,tke,tke_missing,ws)
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,tke,tke_missing, &
+                     imin,imax,jmin,jmax,0,kmax,ws)
          err = nf_put_vara_real(ncid,tke_id,start,edges,ws)
          if (err .NE. NF_NOERR) go to 10
       end if
 
       if (save_num) then
-         call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-                     kmin,az,num,num_missing,ws)
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,num,num_missing, &
+                     imin,imax,jmin,jmax,0,kmax,ws)
          err = nf_put_vara_real(ncid,num_id,start,edges,ws)
          if (err .NE. NF_NOERR) go to 10
       end if
 
       if (save_nuh) then
-         call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-                     kmin,az,nuh,nuh_missing,ws)
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nuh,nuh_missing, &
+                     imin,imax,jmin,jmax,0,kmax,ws)
          err = nf_put_vara_real(ncid,nuh_id,start,edges,ws)
          if (err .NE. NF_NOERR) go to 10
       end if
 
       if (save_eps) then
-         call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-                     kmin,az,eps,eps_missing,ws)
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,eps,eps_missing, &
+                     imin,imax,jmin,jmax,0,kmax,ws)
          err = nf_put_vara_real(ncid, eps_id, start, edges, ws)
          if (err .NE. NF_NOERR) go to 10
       end if
@@ -300,8 +297,8 @@
 
 #ifdef SPM
    if (spm_save) then
-      call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax,    &
-                  kmin,az,spm,spm_missing,ws)
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,spm,spm_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
       err = nf_put_vara_real(ncid, spm_id, start, edges, ws)
       if (err .NE. NF_NOERR) go to 10
       !spm pool is a 2d magnitude
@@ -329,8 +326,8 @@
       edges(3) = zlen
       edges(4) = 1
       do n=1,numc
-         call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-                     kmin,az,cc3d(n,:,:,:),bio_missing,ws)
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,cc3d(n,:,:,:), &
+                     bio_missing,imin,imax,jmin,jmax,0,kmax,ws)
          err = nf_put_vara_real(ncid, bio_ids(n), start, edges, ws)
          if (err .NE.  NF_NOERR) go to 10
       end do

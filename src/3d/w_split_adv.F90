@@ -1,4 +1,4 @@
-!$Id: w_split_adv.F90,v 1.3 2006-03-01 15:54:08 kbk Exp $
+!$Id: w_split_adv.F90,v 1.4 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,8 +41,7 @@
 ! page \pageref{sec-u-split-adv}.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: imin,imax,jmin,jmax,kmax
    use advection_3d, only: hi,hio,cu
    use advection_3d, only: UPSTREAM_SPLIT,P2,SUPERBEE,MUSCL,P2_PDM
    use advection_3d, only: ONE,TWO,ONE6TH
@@ -81,8 +80,8 @@
    select case (method)
       case (UPSTREAM_SPLIT)
          do k=1,kmax-1
-            do j=jjmin,jjmax
-               do i=iimin,iimax
+            do j=jmin,jmax
+               do i=imin,imax
                   cu(i,j,k) = _ZERO_
                   if (az(i,j) .eq. 1) then
                      if (ww(i,j,k) .gt. _ZERO_) then
@@ -96,8 +95,8 @@
          end do
       case ((P2),(Superbee),(MUSCL),(P2_PDM))
          do k=1,kmax-1
-            do j=jjmin,jjmax
-               do i=iimin,iimax
+            do j=jmin,jmax
+               do i=imin,imax
                   cu(i,j,k) = _ZERO_
                   if (az(i,j) .eq. 1) then
                      if (ww(i,j,k) .gt. _ZERO_) then
@@ -156,8 +155,8 @@
    end select
 
    do k=1,kmax   ! Doing a w-advection step
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             if (az(i,j) .eq. 1) then
                hio(i,j,k)=hi(i,j,k)
                hi(i,j,k)=hio(i,j,k)-splitfac*dt*(ww(i,j,k)-ww(i,j,k-1))

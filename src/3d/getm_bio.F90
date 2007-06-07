@@ -1,4 +1,4 @@
-!$Id: getm_bio.F90,v 1.2 2007-05-14 12:16:22 kbk Exp $
+!$Id: getm_bio.F90,v 1.3 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,7 @@
 !
 ! !USES:
    use parameters, only: g,rho_0
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: az,au,av
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dxv,dyu,dyv,arcd1
@@ -56,6 +56,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: getm_bio.F90,v $
+!  Revision 1.3  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.2  2007-05-14 12:16:22  kbk
 !  added support for biology - via GOTM
 !
@@ -117,8 +120,8 @@
          LEVEL2 "Reading biological fields from hotstart file"
       else
          LEVEL2 "Initialise biological fields from namelist"
-         do j=jjmin,jjmax
-            do i=iimin,iimax
+         do j=jmin,jmax
+            do i=imin,imax
                if (az(i,j) .ge. 1 ) then
                   cc3d(:,i,j,:)=cc
                end if
@@ -128,7 +131,7 @@
 
       do n=1,numc
          call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az, &
-                             iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+                             imin,jmin,imax,jmax,kmax,D_TAG)
          call wait_halo(D_TAG)
       end do
 
@@ -206,8 +209,8 @@
    LEVEL2 'do_getm_bio()'
 
 !  First we do all the vertical processes
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (az(i,j) .ge. 1 ) then
 #ifdef GOTM_V3
             I_0=swr(i,j)
@@ -253,7 +256,7 @@
               bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH)
 
       call update_3d_halo(ff,ff,az, &
-                          iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+                          imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
       cc3d(n,:,:,:) = ff
 #else
@@ -262,7 +265,7 @@
               bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH)
 
       call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az, &
-                          iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+                          imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
 #endif
    end do

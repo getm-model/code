@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.38 2007-05-11 12:03:35 kbk Exp $
+!$Id: m3d.F90,v 1.39 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -447,12 +447,12 @@
 #ifndef NO_BAROCLINIC
       if (bdy3d) call do_bdy_3d(0,T)
       if (calc_temp) then
-         call update_3d_halo(T,T,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+         call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
          call wait_halo(D_TAG)
          call mirror_bdy_3d(T,D_TAG)
       end if
       if (calc_salt) then
-         call update_3d_halo(S,S,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+         call update_3d_halo(S,S,az,imin,jmin,imax,jmax,kmax,D_TAG)
          call wait_halo(D_TAG)
          call mirror_bdy_3d(S,D_TAG)
       end if

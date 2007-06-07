@@ -1,4 +1,4 @@
-!$Id: vv_momentum_3d.F90,v 1.17 2007-02-23 12:20:37 kbk Exp $
+!$Id: vv_momentum_3d.F90,v 1.18 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -46,8 +46,7 @@
 ! !USES:
    use exceptions
    use parameters, only: g,avmmol,rho_0
-   use domain, only: imin,jmin,imax,jmax
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax,H,HV,min_depth
+   use domain, only: imin,imax,jmin,jmax,kmax,H,HV,min_depth
    use domain, only: dry_v,corv,au,av,az,ax
 #if defined CURVILINEAR || defined SPHERICAL
    use domain, only: dyv,arvd1,dxc,dyx,dyc,dxx
@@ -107,8 +106,8 @@
    Ncall = Ncall+1
    write(debug,*) 'vv_momentum_3d() # ',Ncall
 #endif
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
 
          if ((av(i,j) .eq. 1) .or. (av(i,j) .eq. 2)) then
 
@@ -220,7 +219,7 @@
    end do
 
 #ifdef SLICE_MODEL
-   do i=iimin,iimax
+   do i=imin,imax
       do k=kvmin(i,2),kmax
          vv(i,1,k)=vv(i,2,k)
          vv(i,3,k)=vv(i,2,k)
@@ -229,7 +228,7 @@
 #endif
 
 !  Update the halo zones
-   call update_3d_halo(vv,vv,av,iimin,jjmin,iimax,jjmax,kmax,V_TAG)
+   call update_3d_halo(vv,vv,av,imin,jmin,imax,jmax,kmax,V_TAG)
 
    if (bdy3d) then
 !      call do_bdy_3d(2,vv)
@@ -239,9 +238,8 @@
    call mirror_bdy_3d(vv,V_TAG)
 
    if (vel_check .ne. 0 .and. mod(n,abs(vel_check)) .eq. 0) then
-      call check_3d_fields(imin,jmin,imax,jmax,av,       &
-                           iimin,jjmin,iimax,jjmax,kmax, &
-                           kvmin,vv,min_vel,max_vel,status)
+      call check_3d_fields(imin,jmin,imax,jmax,kvmin,kmax,av, &
+                           vv,min_vel,max_vel,status)
       if (status .gt. 0) then
          if (vel_check .gt. 0) then
             call getm_error("vv_momentum_3d()", &

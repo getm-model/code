@@ -119,13 +119,10 @@
 
 ! Here the memory-allocation is defined
 #define E2DFIELD  imin-HALO:imax+HALO,jmin-HALO:jmax+HALO
-#define I2DFIELD  iimin-HALO:iimax+HALO,jjmin-HALO:jjmax+HALO
-#define I3DFIELD  iimin-HALO:iimax+HALO,jjmin-HALO:jjmax+HALO,0:kmax
+#define I2DFIELD  imin-HALO:imax+HALO,jmin-HALO:jmax+HALO
+#define I3DFIELD  imin-HALO:imax+HALO,jmin-HALO:jmax+HALO,0:kmax
 
 ! These defines the do loops for the real inner points..
 ! that is the points that are independent of neighbours.
 #define DO_EILOOP  DO i=imin,imax
 #define DO_EJLOOP  DO j=jmin,jmax
-
-#define DO_IILOOP  DO i=iimin,iimax
-#define DO_IJLOOP  DO j=jjmin,jjmax

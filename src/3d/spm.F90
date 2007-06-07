@@ -1,4 +1,4 @@
-!$Id: spm.F90,v 1.13 2007-02-23 12:20:37 kbk Exp $
+!$Id: spm.F90,v 1.14 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -77,8 +77,7 @@
 !
 ! !USES:
    use exceptions
-   use domain, only: imin,jmin,imax,jmax,ioff,joff
-   use domain, only: iimin,jjmin,iimax,jjmax,kmax
+   use domain, only: imin,jmin,imax,jmax,kmax,ioff,joff
 #ifdef TRACER_POSITIVE
    use m2d, only : z,D
 #endif
@@ -209,13 +208,13 @@
             spm_hotstart=.true.
          case(1)
             LEVEL3 'setting to constant value'
-            forall(i=iimin:iimax,j=jjmin:jjmax, az(i,j) .ne. 0) &
+            forall(i=imin:imax,j=jmin:jmax, az(i,j) .ne. 0) &
                    spm(i,j,:) = spm_const
          case(2)
             LEVEL3 'using profile'
             call read_profile(spm_file,nmax,zlev,prof,n)
-            call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,az,H,     &
-                           iimin,jjmin,iimax,jjmax,kmax,hn,spm)
+            call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,kmax, &
+                              az,H,hn,spm)
          case(3)
             LEVEL3 'interpolating from 3D field'
             call get_field(spm_file,spm_name,spm)
@@ -234,11 +233,11 @@
 !         A pool of nondynamic particulate matter is assumed that initially
 !         has a concentration per m of spm_pool_init
              if(spm_init_method /= 0) then
-                forall(i=iimin:iimax,j=jjmin:jjmax, az(i,j) .eq. 1) &
+                forall(i=imin:imax,j=jmin:jmax, az(i,j) .eq. 1) &
                    spm_pool(i,j) = spm_pool_init
                    if(.not. intertidal_spm0) then
                       LEVEL3 'No spm pool in intertidal flats'
-                      forall(i=iimin:iimax,j=jjmin:jjmax, H(i,j) <= 1.35 ) &
+                      forall(i=imin:imax,j=jmin:jmax, H(i,j) <= 1.35 ) &
                          spm_pool(i,j) = _ZERO_
                    end if
              end if
@@ -461,8 +460,8 @@
 !  Update settling velocity if flocculation is considered
    select case(spm_ws_method)
       case(3) !Floculation according to winterwerp
-         do i=iimin,iimax
-         do j=jjmin,jjmax
+         do i=imin,imax
+         do j=jmin,jmax
             if(az(i,j) == 1) then
                do k=1,kmax-1
                   volCmud=spm(i,j,k)/spm_gellingC
@@ -484,8 +483,8 @@
    end select
 !  The vertical velocity to be used in the advection routine for spm is ww-ws
 !  In drying grid boxes, the settling velocity is reduced.
-   do i=iimin,iimax
-      do j=jjmin,jjmax
+   do i=imin,imax
+      do j=jmin,jmax
          do k=0,kmax
             ww_aux(i,j,k) = ww(i,j,k) - spm_ws(i,j,k)*dry_z(i,j)
          end do
@@ -496,8 +495,8 @@
                         spm_hor_adv,spm_ver_adv,spm_adv_split,spm_AH)
 #ifdef TRACER_POSITIVE
    kk= .false.
-   do i=iimin,iimax
-      do j=jjmin,jjmax
+   do i=imin,imax
+      do j=jmin,jmax
          do k=1,kmax
             if(spm(i,j,k) < _ZERO_ .and. az(i,j) >= 1) then
                if(spm(i,j,k) < -1.e-12) then
@@ -511,8 +510,8 @@
 #endif
 
 !  Vertical diffusion of spm
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (az(i,j) .eq. 1 ) then
             if (kmax .gt. 1) then
 !              We impose a flux condition on bottom sediments
@@ -612,22 +611,22 @@
 !  Valid for saltwedge case, lateral zero-gradient BC for WE boundary
 !   call do_bdy_3d(2,spm)
    do k=1,kmax
-      if(uu(iimin,2,k) > _ZERO_) then
-         spm(iimin,2,k)=spm(iimin+1,2,k)
+      if(uu(imin,2,k) > _ZERO_) then
+         spm(imin,2,k)=spm(imin+1,2,k)
       end if
    end do
 #endif
 
 #ifndef SALTWEDGE_TEST
 !  BC at open boundary points (no flux, can be other condition)
-   do i=iimin,iimax
-      if (az(i,jjmin).eq.2) spm(i,jjmin,:)=spm(i,jjmin+1,:)
-      if (az(i,jjmax).eq.2) spm(i,jjmax,:)=spm(i,jjmax-1,:)
+   do i=imin,imax
+      if (az(i,jmin).eq.2) spm(i,jmin,:)=spm(i,jmin+1,:)
+      if (az(i,jmax).eq.2) spm(i,jmax,:)=spm(i,jmax-1,:)
    end do
 
-   do j=jjmin,jjmax
-      if (az(iimin,j).eq.2) spm(iimin,j,:)=spm(iimin+1,j,:)
-      if (az(iimax,j).eq.2) spm(iimax,j,:)=spm(iimax-1,j,:)
+   do j=jmin,jmax
+      if (az(imin,j).eq.2) spm(imin,j,:)=spm(imin+1,j,:)
+      if (az(imax,j).eq.2) spm(imax,j,:)=spm(imax-1,j,:)
    end do
 #endif
 
@@ -657,8 +656,8 @@
 #ifndef NO_BAROCLINIC
 !  contribution of spm to density
    if (spm_dens) then
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             if (az(i,j) .eq. 1 ) then
                do k=1,kmax
                   rho(i,j,k)=rho(i,j,k)+(_ONE_-rho(i,j,k)/spm_rho)*spm(i,j,k)
@@ -671,8 +670,8 @@
 
 #ifdef TRACER_POSITIVE
    kk=.false.
-   do i=iimin,iimax
-      do j=jjmin,jjmax
+   do i=imin,imax
+      do j=jmin,jmax
          do k=1,kmax
             if(spm(i,j,k) < _ZERO_ .and. az(i,j) >= 1) then
 !               if(spm(i,j,k) < -1.e-12)
@@ -686,7 +685,7 @@
 !   if(kk .eq. .true.) stop 'Negative spm concentration'
 #endif
 
-   call update_3d_halo(spm,spm,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+   call update_3d_halo(spm,spm,az,imin,jmin,imax,jmax,kmax,D_TAG)
    call wait_halo(D_TAG)
 
 #ifdef FORTRAN90

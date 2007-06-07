@@ -1,4 +1,4 @@
-!$Id: ip_chu_fan.F90,v 1.5 2007-02-23 12:20:37 kbk Exp $
+!$Id: ip_chu_fan.F90,v 1.6 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,8 +35,8 @@
 
 !  First, the interface heights are calculated in order to get the
 !  interface slopes further down.
-   do j=jjmin,jjmax+1
-      do i=iimin,iimax+1
+   do j=jmin,jmax+1
+      do i=imin,imax+1
          if (az(i,j) .ge. 1) then
             zz(i,j,1)=-H(i,j)+hn(i,j,1)
             do k=2,kmax
@@ -48,8 +48,8 @@
 
 !  Calculation of layer integrated internal pressure gradient as it
 !  appears on the right hand side of the u-velocity equation.
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (au(i,j) .ge. 1) then
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
@@ -78,8 +78,8 @@
 
 !  Calculation of layer integrated internal pressure gradient as it
 !  appears on the right hand side of the v-velocity equation.
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (av(i,j) .ge. 1) then
 #if defined(SPHERICAL) || defined(CURVILINEAR)
          dym1 = _ONE_/DYV

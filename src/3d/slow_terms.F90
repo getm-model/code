@@ -1,4 +1,4 @@
-!$Id: slow_terms.F90,v 1.7 2006-03-01 15:54:08 kbk Exp $
+!$Id: slow_terms.F90,v 1.8 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -21,7 +21,7 @@
 
 !
 ! !USES:
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax,HU,HV,au,av
+   use domain, only: imin,imax,jmin,jmax,kmax,HU,HV,au,av
    use variables_2d, only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
    use variables_3d, only: kumin,kvmin,uu,vv,huo,hun,hvo,hvn
    use variables_3d, only: ssuo,ssun,ssvo,ssvn,uuEx,vvEx,rru,rrv
@@ -52,8 +52,8 @@
 
    if (kmax .gt. 1) then
 
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             if (au(i,j) .ge. 1) then
                SlUx(i,j)=-UEx(i,j)
             end if
@@ -61,8 +61,8 @@
       end do
 
       do k=1,kmax
-         do j=jjmin,jjmax
-            do i=iimin,iimax
+         do j=jmin,jmax
+            do i=imin,imax
                if (au(i,j) .ge. 1) then
                   if (k .ge. kumin(i,j)) then
 #ifdef NO_BAROCLINIC
@@ -76,8 +76,8 @@
          end do
       end do
 
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             if (av(i,j) .ge. 1) then
                SlVx(i,j)=-VEx(i,j)
             end if
@@ -85,8 +85,8 @@
       end do
 
       do k=1,kmax
-         do j=jjmin,jjmax
-            do i=iimin,iimax
+         do j=jmin,jmax
+            do i=imin,imax
                if (av(i,j) .ge. 1) then
                   if (k .ge. kvmin(i,j)) then
 #ifdef NO_BAROCLINIC
@@ -103,8 +103,8 @@
    else
 
       do k=1,kmax
-         do j=jjmin,jjmax
-            do i=iimin,iimax
+         do j=jmin,jmax
+            do i=imin,imax
                if (au(i,j) .ge. 1) then
                   if (k .ge. kumin(i,j)) then
 #ifdef NO_BAROCLINIC
@@ -119,8 +119,8 @@
       end do
 
       do k=1,kmax
-         do j=jjmin,jjmax
-            do i=iimin,iimax
+         do j=jmin,jmax
+            do i=imin,imax
                if (av(i,j) .ge. 1) then
                   if (k.ge.kvmin(i,j)) then
 #ifdef NO_BAROCLINIC
@@ -135,8 +135,8 @@
       end do
    endif
 
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (au(i,j) .ge. 1) then
             k=kumin(i,j)
             if (kmax .gt. 1) then
@@ -155,8 +155,8 @@
       end do
    end do
 
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (av(i,j) .ge. 1) then
             k=kvmin(i,j)
             if (kmax .gt. 1) then

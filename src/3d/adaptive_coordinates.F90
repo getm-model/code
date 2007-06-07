@@ -1,4 +1,4 @@
-!$Id: adaptive_coordinates.F90,v 1.3 2007-04-16 11:05:34 kbk Exp $
+!$Id: adaptive_coordinates.F90,v 1.4 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,7 +13,7 @@
 !  For Richard to do
 !
 ! !USES:
-   use domain, only: ga,iimin,iimax,jjmin,jjmax,kmax,H,HU,HV,az,au,av
+   use domain, only: ga,imin,imax,jmin,jmax,kmax,H,HU,HV,az,au,av
    use variables_3d, only: dt,kmin,kumin,kvmin,ho,hn,huo,hvo,hun,hvn
    use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
    use variables_3d, only: kmin_pmz,kumin_pmz,kvmin_pmz
@@ -123,20 +123,20 @@ STDERR 'adaptive_coordinates()'
             kmaxm1= _ONE_/float(kmax)
 
 ! Dirty way to read initial distribution (as equidistant sigma coordinates):
-            do j=jjmin,jjmax
-               do i=iimin,iimax
+            do j=jmin,jmax
+               do i=imin,imax
                   ho(i,j,:)=(sseo(i,j)+H(i,j))*kmaxm1
                   hn(i,j,:)=(ssen(i,j)+H(i,j))*kmaxm1
                end do
             end do
-            do j=jjmin,jjmax
-               do i=iimin-1,iimax
+            do j=jmin,jmax
+               do i=imin-1,imax
                   huo(i,j,:)=(ssuo(i,j)+HU(i,j))*kmaxm1
                   hun(i,j,:)=(ssun(i,j)+HU(i,j))*kmaxm1
                end do
             end do
-            do j=jjmin-1,jjmax
-               do i=iimin,iimax
+            do j=jmin-1,jmax
+               do i=imin,imax
                   hvo(i,j,:)=(ssvo(i,j)+HV(i,j))*kmaxm1
                   hvn(i,j,:)=(ssvn(i,j)+HV(i,j))*kmaxm1
                end do
@@ -154,8 +154,8 @@ STDERR 'adaptive_coordinates()'
          ho=hn
 ! Lagrangian and thickness filtering step 
          do k=1,kmax
-            do j=jjmin+1,jjmax-1
-               do i=iimin+1,iimax-1
+            do j=jmin+1,jmax-1
+               do i=imin+1,imax-1
                   hn(i,j,k)=ho(i,j,k)                       &
                      -((uu(i,j,k)*DYU-uu(i-1,j  ,k)*DYUIM1) &
                      +(vv(i,j,k)*DXV-vv(i  ,j-1,k)*DXVJM1)) &
@@ -184,15 +184,15 @@ STDERR 'adaptive_coordinates()'
 
 ! For problem zones (boundaries, thin layers), put zero 'horizontal diffusion'
          do k=1,kmax-1
-            do j=jjmin,jjmax
-               do i=iimin,iimax
+            do j=jmin,jmax
+               do i=imin,imax
                   if (au(i,j).eq.1) work2(i,j,k)=_ONE_
                end do
             end do
          end do
          do k=2,kmax
-            do j=jjmin,jjmax
-               do i=iimin+1,iimax
+            do j=jmin,jmax
+               do i=imin+1,imax
                   if ((zpos(i,j,k)-zpos(i,j,k-1)).lt.depthmin) then
                      work2(i  ,j,k  )=0
                      work2(i  ,j,k-1)=0
@@ -203,15 +203,15 @@ STDERR 'adaptive_coordinates()'
             end do
          end do
          do k=1,kmax
-            do j=jjmin,jjmax
-               do i=iimin,iimax
+            do j=jmin,jmax
+               do i=imin,imax
                   if (av(i,j).eq.1) work3(i,j,k)=_ONE_
                end do
             end do
          end do
          do k=2,kmax
-            do j=jjmin+1,jjmax
-               do i=iimin,iimax
+            do j=jmin+1,jmax
+               do i=imin,imax
                   if((zpos(i,j,k)-zpos(i,j,k-1)).lt.depthmin) then
                      work3(i,j,k)=0
                      work3(i,j,k-1)=0
@@ -226,12 +226,12 @@ STDERR 'adaptive_coordinates()'
 ! Dirty BC
            zposo=zpos
               do k=1,kmax-1
-                 do j=jjmin+1,jjmax-1
-                    do i=iimin+1,iimax-1
+                 do j=jmin+1,jmax-1
+                    do i=imin+1,imax-1
                        rm=0
                        im=0
-                       do iii=max(iimin,i-iw),min(iimax,i+iw)
-                          do jjj=max(jjmin,j-iw),min(jjmax,j+iw)
+                       do iii=max(imin,i-iw),min(imax,i+iw)
+                          do jjj=max(jmin,j-iw),min(jmax,j+iw)
                              rm=rm+az(iii,jjj)*(rho(iii,jjj,k+1)+rho(iii,jjj,k))
                              im=im+az(iii,jjj)
                           end do
@@ -252,8 +252,8 @@ STDERR 'adaptive_coordinates()'
               end do
 ! Local consistency
               do k=1,kmax
-                 do j=jjmin,jjmax
-                    do i=iimin,iimax
+                 do j=jmin,jmax
+                    do i=imin,imax
                        if((zpos(i,j,k)-zpos(i,j,k-1)).lt.depthmin) then
                           zpos(i,j,k)=zpos(i,j,k-1)+depthmin
                        endif
@@ -269,8 +269,8 @@ STDERR 'adaptive_coordinates()'
 
         call htoz(hn,zpos)
         dtgrid=dt/float(split)
-        do j=jjmin,jjmax
-           do i=iimin,iimax
+        do j=jmin,jmax
+           do i=imin,imax
               if (az(i,j) .eq. 1) then
               NNloc=NN(i,j,:) 
               SSloc=SS(i,j,:) 
@@ -348,24 +348,24 @@ STDERR 'adaptive_coordinates()'
 ! uu
         huo=hun
         do k=1,kmax
-           do j=jjmin,jjmax
-              do i=iimin,iimax-1
+           do j=jmin,jmax
+              do i=imin,imax-1
                  hun(i,j,k)=0.5*(hn(i,j,k)+hn(i+1,j,k))
               end do
            end do
         end do
-! maybe not allowed in iimax....
+! maybe not allowed in imax....
         call hcheck(hun,ssun,hu)
 ! vv
         hvo=hvn
            do k=1,kmax
-              do j=jjmin,jjmax-1
-                 do i=iimin,iimax
+              do j=jmin,jmax-1
+                 do i=imin,imax
                     hvn(i,j,k)=0.5*(hn(i,j,k)+hn(i,j+1,k))
                  end do
               end do
            end do
-! maybe not allowed in jjmax....
+! maybe not allowed in jmax....
            call hcheck(hvn,ssvn,hv)
 
 #ifdef DEBUG

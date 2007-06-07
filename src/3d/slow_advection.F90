@@ -1,4 +1,4 @@
-!$Id: slow_advection.F90,v 1.10 2006-03-01 15:54:08 kbk Exp $
+!$Id: slow_advection.F90,v 1.11 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,7 +20,7 @@
 ! \pageref{sec-slow-terms}.
 !
 ! !USES:
-   use domain, only: iimin,iimax,jjmin,jjmax,HU,HV,az,au,av,ax
+   use domain, only: imin,imax,jmin,jmax,HU,HV,az,au,av,ax
    use domain, only: H,min_depth
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dyc,arud1,dxx,dyx,arvd1,dxc
@@ -52,16 +52,16 @@
    Ncall = Ncall+1
    write(debug,*) 'slow_advection() # ',Ncall
 #endif
-   do j=jjmin-1,jjmax+1
-      do i=iimin-1,iimax+1
+   do j=jmin-1,jmax+1
+      do i=imin-1,imax+1
          DUi(i,j)=ssun(i,j)+HU(i,j)
          DVi(i,j)=ssvn(i,j)+HV(i,j)
       end do
    end do
 
 ! Upstream for dx(U^2/D)
-   do j=jjmin,jjmax
-      do i=iimin,iimax+1         ! PP defined on T-points
+   do j=jmin,jmax
+      do i=imin,imax+1         ! PP defined on T-points
          if (az(i,j) .ge. 1) then
             PP(i,j)=0.5*(Uint(i-1,j)+Uint(i,j))
             if (PP(i,j) .gt. _ZERO_ ) then
@@ -75,8 +75,8 @@
          end if
       end do
    end do
-   do j=jjmin,jjmax
-      do i=iimin,iimax           ! UEx defined on U-points
+   do j=jmin,jmax
+      do i=imin,imax           ! UEx defined on U-points
          if (au(i,j) .eq. 1) then
             UEx(i,j)=(PP(i+1,j)-PP(i  ,j))*ARUD1
          end if
@@ -85,8 +85,8 @@
 
 #ifndef SLICE_MODEL
 !  Upstream for dy(UV/D)
-   do j=jjmin-1,jjmax     ! PP defined on X-points
-      do i=iimin,iimax
+   do j=jmin-1,jmax     ! PP defined on X-points
+      do i=imin,imax
          if (ax(i,j) .ge. 1) then
             PP(i,j)=0.5*(Vint(i+1,j)+Vint(i,j))
             if (PP(i,j) .gt. _ZERO_) then
@@ -100,8 +100,8 @@
          end if
       end do
    end do
-   do j=jjmin,jjmax
-      do i=iimin,iimax       !UEx defined on U-points
+   do j=jmin,jmax
+      do i=imin,imax       !UEx defined on U-points
          if (au(i,j) .eq. 1) then
             UEx(i,j)=UEx(i,j)+(PP(i,j  )-PP(i,j-1))*ARUD1
          end if
@@ -110,8 +110,8 @@
 #endif
 
 ! Upstream for dx(UV/D)
-   do j=jjmin,jjmax
-      do i=iimin-1,iimax      ! PP defined on X-points
+   do j=jmin,jmax
+      do i=imin-1,imax      ! PP defined on X-points
          if (ax(i,j) .ge. 1) then
             PP(i,j)=0.5*(Uint(i,j)+Uint(i,j+1))
             if (PP(i,j) .gt. _ZERO_) then
@@ -125,8 +125,8 @@
          end if
       end do
    end do
-   do j=jjmin,jjmax
-      do i=iimin,iimax       ! VEx defined on V-points
+   do j=jmin,jmax
+      do i=imin,imax       ! VEx defined on V-points
          if (av(i,j) .eq. 1) then
             VEx(i,j)=(PP(i  ,j)-PP(i-1,j))*ARVD1
          end if
@@ -135,8 +135,8 @@
 
 #ifndef SLICE_MODEL
 !  Upstream for dy(V^2/D)
-   do j=jjmin,jjmax+1          ! PP defined on T-points
-      do i=iimin,iimax
+   do j=jmin,jmax+1          ! PP defined on T-points
+      do i=imin,imax
          if (az(i,j) .ge. 1) then
             PP(i,j)=0.5*(Vint(i,j-1)+Vint(i,j))
             if (PP(i,j) .gt. _ZERO_) then
@@ -150,8 +150,8 @@
          end if
       end do
    end do
-   do j=jjmin,jjmax           ! VEx defined on V-points
-      do i=iimin,iimax
+   do j=jmin,jmax           ! VEx defined on V-points
+      do i=imin,imax
          if (av(i,j) .eq. 1) then
             VEx(i,j)=VEx(i,j)+(PP(i,j+1)-PP(i,j  ))*ARVD1
          end if

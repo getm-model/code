@@ -1,4 +1,4 @@
-!$Id: sigma_coordinates.F90,v 1.1 2007-03-29 12:28:22 kbk Exp $
+!$Id: sigma_coordinates.F90,v 1.2 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -69,7 +69,7 @@
 ! conceptionally developed by \cite{BURCHARDea04}.
 !
 ! !USES:
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax,H,HU,HV
+   use domain, only: imin,imax,jmin,jmax,kmax,H,HU,HV
    use domain, only: ga,ddu,ddl
    use variables_3d, only: kmin,kumin,kvmin,ho,hn,huo,hun,hvo,hvn
    use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
@@ -127,22 +127,22 @@
 
    if (equiv_sigma) then
       kmaxm1= _ONE_/float(kmax)
-      do j=jjmin-HALO,jjmax+HALO
-         do i=iimin-HALO,iimax+HALO
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
             ho(i,j,:)=(sseo(i,j)+H(i,j))*kmaxm1
             hn(i,j,:)=(ssen(i,j)+H(i,j))*kmaxm1
          end do
       end do
 
-      do j=jjmin-HALO,jjmax+HALO
-         do i=iimin-HALO,iimax+HALO-1
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO-1
             huo(i,j,:)=(ssuo(i,j)+HU(i,j))*kmaxm1
             hun(i,j,:)=(ssun(i,j)+HU(i,j))*kmaxm1
          end do
       end do
 
-      do j=jjmin-HALO,jjmax+HALO-1
-         do i=iimin-HALO,iimax+HALO
+      do j=jmin-HALO,jmax+HALO-1
+         do i=imin-HALO,imax+HALO
             hvo(i,j,:)=(ssvo(i,j)+HV(i,j))*kmaxm1
             hvn(i,j,:)=(ssvn(i,j)+HV(i,j))*kmaxm1
          end do
@@ -150,22 +150,22 @@
 
    else ! non-equivdistant
 
-      do j=jjmin-HALO,jjmax+HALO
-         do i=iimin-HALO,iimax+HALO
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
             ho(i,j,1:kmax)=(sseo(i,j)+H(i,j))*dga(1:kmax)
             hn(i,j,1:kmax)=(ssen(i,j)+H(i,j))*dga(1:kmax)
          end do
       end do
 
-      do j=jjmin-HALO,jjmax+HALO
-         do i=iimin-HALO,iimax+HALO-1
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO-1
             huo(i,j,1:kmax)=(ssuo(i,j)+HU(i,j))*dga(1:kmax)
             hun(i,j,1:kmax)=(ssun(i,j)+HU(i,j))*dga(1:kmax)
          end do
       end do
 
-      do j=jjmin-HALO,jjmax+HALO-1
-         do i=iimin-HALO,iimax+HALO
+      do j=jmin-HALO,jmax+HALO-1
+         do i=imin-HALO,imax+HALO
             hvo(i,j,1:kmax)=(ssvo(i,j)+HV(i,j))*dga(1:kmax)
             hvn(i,j,1:kmax)=(ssvn(i,j)+HV(i,j))*dga(1:kmax)
          end do

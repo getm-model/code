@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.15 2006-03-09 10:53:57 kbk Exp $
+!$Id: meteo.F90,v 1.16 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -45,8 +45,7 @@
 ! !USES:
    use time, only: yearday,secondsofday,timestep
    use halo_zones, only : H_TAG,update_2d_halo,wait_halo
-   use domain, only: imin,imax,jmin,jmax,lonc,latc,az
-   use domain, only: iimin,iimax,jjmin,jjmax,convc
+   use domain, only: imin,imax,jmin,jmax,lonc,latc,convc,az
    IMPLICIT NONE
 !
    private
@@ -78,6 +77,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
+!  Revision 1.16  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.15  2006-03-09 10:53:57  kbk
 !  set spinup to -1 when doing hotstart
 !
@@ -424,8 +426,8 @@
             tausx = ramp*tx
             tausy = ramp*ty
 !     Rotation of wind stress due to grid convergence
-            do j=jjmin,jjmax
-               do i=iimin,iimax
+            do j=jmin,jmax
+               do i=imin,imax
                   if (convc(i,j) .ne. _ZERO_ .and. az(i,j) .gt. 0) then
                      sinconv=sin(-convc(i,j)*deg2rad)
                      cosconv=cos(-convc(i,j)*deg2rad)

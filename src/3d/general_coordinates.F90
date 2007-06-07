@@ -1,4 +1,4 @@
-!$Id: general_coordinates.F90,v 1.1 2007-03-29 12:28:22 kbk Exp $
+!$Id: general_coordinates.F90,v 1.2 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -70,7 +70,7 @@
 !
 ! !USES:
    use domain, only: ga,ddu,ddl,d_gamma,gamma_surf
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax,H,HU,HV,az,au,av,min_depth
+   use domain, only: imin,imax,jmin,jmax,kmax,H,HU,HV,az,au,av,min_depth
    use variables_3d, only: dt,kmin,kumin,kvmin,ho,hn,huo,hun,hvo,hvn
    use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
    IMPLICIT NONE
@@ -128,8 +128,8 @@
       else
          kk=1
       end if
-      do j=jjmin-HALO,jjmax+HALO
-         do i=iimin-HALO,iimax+HALO
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
             HH=max(sseo(i,j)+H(i,j),min_depth)
             alpha=min(&
                      ((be(kk)-be(kk-1))-D_gamma/HH&
@@ -156,8 +156,8 @@
 
 !     Here, the initial layer distribution is calculated.
       do k=1,kmax
-         do j=jjmin-HALO,jjmax+HALO
-            do i=iimin-HALO,iimax+HALO
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO
                HH=max(sseo(i,j)+H(i,j),min_depth)
                hn(i,j,k)=HH*(gga(i,j,k)-gga(i,j,k-1))
             end do
@@ -165,8 +165,8 @@
       end do
 
       do k=1,kmax
-         do j=jjmin-HALO,jjmax+HALO
-            do i=iimin-HALO,iimax+HALO-1
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO-1
                HH=max(ssuo(i,j)+HU(i,j),min_depth)
                huo(i,j,k)=HH*0.5*            &
                 (gga(i,j,k)-gga(i,j,k-1)+gga(i+1,j,k)-gga(i+1,j,k-1))
@@ -176,8 +176,8 @@
       end do
 
       do k=1,kmax
-         do j=jjmin-HALO,jjmax+HALO-1
-            do i=iimin-HALO,iimax+HALO
+         do j=jmin-HALO,jmax+HALO-1
+            do i=imin-HALO,imax+HALO
                HH=max(ssvo(i,j)+HV(i,j),min_depth)
                hvo(i,j,k)=HH*0.5*            &
                 (gga(i,j,k)-gga(i,j,k-1)+gga(i,j+1,k)-gga(i,j+1,k-1))
@@ -191,8 +191,8 @@
 ! thicknesses by the following relaxation time scale r. This should
 ! later be generalised also for sigma coordinates.
 
-   do j=jjmin-HALO,jjmax+HALO
-      do i=iimin-HALO,iimax+HALO
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
          r=cord_relax/dt*H(i,j)/maxdepth
          HH=ssen(i,j)+H(i,j)
          if (HH .lt. D_gamma) then
@@ -213,8 +213,8 @@
       end do
    end do
 
-   do j=jjmin-HALO,jjmax+HALO
-      do i=iimin-HALO,iimax+HALO-1
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO-1
 !KBK         if (au(i,j) .gt. 0) then
             r=cord_relax/dt*HU(i,j)/maxdepth
             zz=-HU(i,j)
@@ -231,8 +231,8 @@
       end do
    end do
 
-   do j=jjmin-HALO,jjmax+HALO-1
-      do i=iimin-HALO,iimax+HALO
+   do j=jmin-HALO,jmax+HALO-1
+      do i=imin-HALO,imax+HALO
 !KBK         if (av(i,j).gt.0) then
             r=cord_relax/dt*HV(i,j)/maxdepth
             zz=-HV(i,j)

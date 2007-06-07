@@ -1,4 +1,4 @@
-!$Id: fct_2dh_adv.F90,v 1.5 2006-03-01 16:03:32 kbk Exp $
+!$Id: fct_2dh_adv.F90,v 1.6 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,8 +25,7 @@
 ! one-dimensional directioal-split schemes might compute negative intermediate
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: imin,imax,jmin,jmax,kmax
    use advection_3d, only: hi,hio
    IMPLICIT NONE
 !
@@ -105,8 +104,8 @@
 
    flx = _ZERO_
    do k=1,kmax   ! Calculating u-interface low-order fluxes !
-      do j=jjmin,jjmax
-         do i=iimin-1,iimax
+      do j=jmin,jmax
+         do i=imin-1,imax
             if (uu(i,j,k) .gt. _ZERO_) then
                flx(i,j,k)=uu(i,j,k)*f(i,j,k)
             else
@@ -118,8 +117,8 @@
 
    fly = _ZERO_
    do k=1,kmax   ! Calculating v-interface low-order fluxes !
-      do j=jjmin-1,jjmax
-         do i=iimin,iimax
+      do j=jmin-1,jmax
+         do i=imin,imax
             if (vv(i,j,k) .gt. _ZERO_) then
                fly(i,j,k)=vv(i,j,k)*f(i,j,k)
             else
@@ -131,8 +130,8 @@
 
    fhx = _ZERO_
    do k=1,kmax   ! Calculating u-interface high-order fluxes !
-      do j=jjmin,jjmax
-         do i=iimin-1,iimax
+      do j=jmin,jmax
+         do i=imin-1,imax
             uuu=uu(i,j,k)/hun(i,j,k)*dt/delxu(i,j)
             vvv=0.25*(vv(i  ,j-1,k)/hvn(i  ,j-1,k)           &
                      +vv(i  ,j  ,k)/hvn(i  ,j  ,k)           &
@@ -198,8 +197,8 @@
 
    fhy = _ZERO_
    do k=1,kmax   ! Calculating v-interface high-order fluxes !
-      do j=jjmin-1,jjmax
-         do i=iimin,iimax
+      do j=jmin-1,jmax
+         do i=imin,imax
             uuu=vv(i,j,k)*dt/delyv(i,j) 
             vvv=0.25*(                             &
                     uu(i-1,j,k)/hun(i-1,j,k)       &
@@ -267,8 +266,8 @@
 
 ! Calculate intermediate low resolution solution fi 
    do k=1,kmax 
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             if (az(i,j) .eq. 1)  then                                      
                hio(i,j,k)=hi(i,j,k)
                hi(i,j,k)=hio(i,j,k)                               &
@@ -286,8 +285,8 @@
 
 ! Calculating and applying the flux limiter
    do k=1,kmax  
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             if (az(i,j) .eq. 1) then
                cmin(i,j,k)= 10000.
                cmax(i,j,k)=-10000.
@@ -331,8 +330,8 @@
 
 !  Limiters for the u-fluxes (fac)
    do k=1,kmax   
-      do j=jjmin,jjmax
-         do i=iimin-1,iimax
+      do j=jmin,jmax
+         do i=imin-1,imax
             if (fhx(i,j,k)-flx(i,j,k).ge.0.) then
                fac=min(rm(i,j,k),rp(i+1,j,k))
             else
@@ -348,8 +347,8 @@
 
 !  Limiters for the v-fluxes (fac)
    do k=1,kmax   
-      do j=jjmin-1,jjmax
-         do i=iimin,iimax
+      do j=jmin-1,jmax
+         do i=imin,imax
             if (fhy(i,j,k)-fly(i,j,k).ge.0.) then
                fac=min(rm(i,j,k),rp(i,j+1,k))
             else
@@ -366,8 +365,8 @@
 
 ! Doing the full advection in one step
    do k=1,kmax   
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             if (az(i,j) .eq. 1)  then                                      
 ! CAUTION: hi(i,j,k) already calculated above
                f(i,j,k)=(f(i,j,k)*hio(i,j,k)                              &

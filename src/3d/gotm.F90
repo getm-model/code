@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.14 2007-05-11 12:04:24 kbk Exp $
+!$Id: gotm.F90,v 1.15 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -38,7 +38,7 @@
 !
 ! !USES:
    use halo_zones, only: update_3d_halo,wait_halo,H_TAG
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax,az,min_depth,crit_depth
+   use domain, only: imin,imax,jmin,jmax,kmax,az,min_depth,crit_depth
    use variables_2d, only: D,zub,zvb,z
    use variables_3d, only: dt,kmin,ho,hn,tke,eps,SS,num,taus,taub
 #ifndef NO_BAROCLINIC
@@ -76,8 +76,8 @@
 #endif
 
    xP = _ZERO_
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
 
          if (az(i,j) .eq. 1 ) then
 
@@ -126,10 +126,10 @@
       end do
    end do
    
-   call update_3d_halo(num,num,az,iimin,jjmin,iimax,jjmax,kmax,H_TAG)
+   call update_3d_halo(num,num,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 #ifndef NO_BAROCLINIC
-   call update_3d_halo(nuh,nuh,az,iimin,jjmin,iimax,jjmax,kmax,H_TAG)
+   call update_3d_halo(nuh,nuh,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 #endif
 

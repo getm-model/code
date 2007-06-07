@@ -1,4 +1,4 @@
-!$Id: uu_momentum_3d.F90,v 1.14 2007-02-23 12:37:58 kbk Exp $
+!$Id: uu_momentum_3d.F90,v 1.15 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,8 +43,7 @@
 ! !USES:
    use exceptions
    use parameters, only: g,avmmol,rho_0
-   use domain, only: imin,jmin,imax,jmax
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax,H,HU,min_depth
+   use domain, only: imin,imax,jmin,jmax,kmax,H,HU,min_depth
    use domain, only: dry_u,coru,au,av,az,ax
 #if defined CURVILINEAR || defined SPHERICAL
    use domain, only: dxu,arud1,dxx,dyc,dyx,dxc
@@ -99,8 +98,8 @@
    write(debug,*) 'uu_momentum_3d() # ',Ncall
 #endif
 
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
 
          if (au(i,j) .eq. 1 .or. au(i,j) .eq. 2) then
             if (kmax .gt. kumin(i,j)) then
@@ -203,7 +202,7 @@
 end do
 
 #ifdef SLICE_MODEL
-   do i=iimin,iimax
+   do i=imin,imax
       do k=kumin(i,2),kmax
          uu(i,3,k)=uu(i,2,k)
       end do
@@ -212,7 +211,7 @@ end do
 
 
 !  Update the halo zones
-   call update_3d_halo(uu,uu,au,iimin,jjmin,iimax,jjmax,kmax,U_TAG)
+   call update_3d_halo(uu,uu,au,imin,jmin,imax,jmax,kmax,U_TAG)
 
    if (bdy3d) then
 !      call do_bdy_3d(1,uu)
@@ -222,9 +221,8 @@ end do
    call mirror_bdy_3d(uu,U_TAG)
 
    if (vel_check .ne. 0 .and. mod(n,abs(vel_check)) .eq. 0) then
-      call check_3d_fields(imin,jmin,imax,jmax,au,       &
-                           iimin,jjmin,iimax,jjmax,kmax, &
-                           kumin,uu,min_vel,max_vel,status)
+      call check_3d_fields(imin,jmin,imax,jmax,kumin,kmax,au, &
+                           uu,min_vel,max_vel,status)
       if (status .gt. 0) then
          if (vel_check .gt. 0) then
             call getm_error("uu_momentum_3d()", &

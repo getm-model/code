@@ -1,4 +1,4 @@
-!$Id: bdy_3d.F90,v 1.11 2006-08-25 09:00:19 kbk Exp $
+!$Id: bdy_3d.F90,v 1.12 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -15,8 +15,7 @@
 !
 ! !USES:
    use halo_zones, only : H_TAG,U_TAG,V_TAG
-   use domain, only: imin,jmin,imax,jmax,H,az,au,av
-   use domain, only: iimin,jjmin,iimax,jjmax,kmax
+   use domain, only: imin,jmin,imax,jmax,kmax,H,az,au,av
    use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use variables_3d
@@ -131,17 +130,17 @@
       case (1)
       ! Lateral zero-gradient boundary condition (north & south)
          do k=1,kmax
-            do i=iimin,iimax
-               if (au(i,jjmin) .eq. 3) field(i,jjmin,k)=field(i,jjmin+1,k)
-               if (au(i,jjmax) .eq. 3) field(i,jjmax,k)=field(i,jjmax-1,k)
+            do i=imin,imax
+               if (au(i,jmin) .eq. 3) field(i,jmin,k)=field(i,jmin+1,k)
+               if (au(i,jmax) .eq. 3) field(i,jmax,k)=field(i,jmax-1,k)
             end do
          end do
       case (2)
       ! Lateral zero-gradient boundary conditions (west & east)
          do k=1,kmax
-            do j=jjmin,jjmax
-               if (av(iimin,j) .eq. 3) field(iimin,j,k)=field(iimin+1,j,k)
-               if (av(iimax,j) .eq. 3) field(iimax,j,k)=field(iimax-1,j,k)
+            do j=jmin,jmax
+               if (av(imin,j) .eq. 3) field(imin,j,k)=field(imin+1,j,k)
+               if (av(imax,j) .eq. 3) field(imax,j,k)=field(imax-1,j,k)
             end do
          end do
       case default

@@ -1,12 +1,12 @@
-!$Id: kbk_interpol.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
+!$Id: kbk_interpol.F90,v 1.3 2007-06-07 10:25:19 kbk Exp $
 #include"cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 ! !ROUTINE: kbk_interpol - vertical interpolation.
 !
 ! !INTERFACE:
-   subroutine kbk_interpol(nlev,zlev,salt_z,imin,jmin,imax,jmax,mask,H,&
-                           iimin,jjmin,iimax,jjmax,kmax,hn,field)
+   subroutine kbk_interpol(nlev,zlev,salt_z,imin,jmin,imax,jmax,kmax, &
+                           mask,H,hn,field)
 !
 ! !DESCRIPTION:
 !
@@ -19,10 +19,9 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: nlev
-   integer, intent(in)                 :: iimin,iimax,jjmin,jjmax,kmax
    REALTYPE, intent(in)                :: zlev(nlev)
-   REALTYPE, intent(in)                :: salt_z(iimin:iimax,jjmin:jjmax,nlev)
-   integer, intent(in)                 :: imin,imax,jmin,jmax
+   REALTYPE, intent(in)                :: salt_z(imin:imax,jmin:jmax,nlev)
+   integer, intent(in)                 :: imin,imax,jmin,jmax,kmax
    integer, intent(in)                 :: mask(E2DFIELD)
    REALTYPE, intent(in)                :: H(E2DFIELD)
    REALTYPE, intent(in)                :: hn(I3DFIELD)
@@ -34,6 +33,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: kbk_interpol.F90,v $
+!  Revision 1.3  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.2  2003-04-23 12:02:43  kbk
 !  cleaned code + TABS to spaces
 !
@@ -48,8 +50,8 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
 
          if(mask(i,j) .ne. 0) then
 #if 1

@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.22 2007-02-20 13:52:15 kbk Exp $
+!$Id: temperature.F90,v 1.23 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,8 +18,7 @@
 !
 ! !USES:
    use exceptions
-   use domain, only: imin,jmin,imax,jmax,H,az
-   use domain, only: iimin,jjmin,iimax,jjmax,kmax
+   use domain, only: imin,jmin,imax,kmax,jmax,H,az
    use variables_3d, only: T,rad,hn,adv_schemes,kmin,A,g1,g2
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
@@ -120,13 +119,13 @@ temp_field_no=1
          LEVEL3 'getting initial fields from hotstart'
       case(1)
          LEVEL3 'setting to constant value'
-         forall(i=iimin:iimax,j=jjmin:jjmax, az(i,j) .ne. 0) &
+         forall(i=imin:imax,j=jmin:jmax, az(i,j) .ne. 0) &
                 T(i,j,:) = temp_const
       case(2)
          LEVEL3 'using profile'
          call read_profile(temp_file,nmax,zlev,prof,n)
-         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,az,H,       &
-                           iimin,jjmin,iimax,jjmax,kmax,hn,T)
+         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,kmax, &
+                           az,H,hn,T)
       case(3)
          LEVEL3 'interpolating from 3D field'
          call get_field(temp_file,temp_name,temp_field_no,T)
@@ -197,7 +196,7 @@ temp_field_no=1
       case default
    end select
 
-   call update_3d_halo(T,T,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+   call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
    call wait_halo(D_TAG)
    call mirror_bdy_3d(T,D_TAG)
 
@@ -299,7 +298,7 @@ temp_field_no=1
 ! !USES:
    use advection_3d, only: do_advection_3d
    use variables_3d, only: dt,cnpar,hn,ho,nuh,uu,vv,ww,hun,hvn,S
-   use domain,       only: iimin,iimax,jjmin,jjmax,kmax,az,au,av
+   use domain,       only: imin,imax,jmin,jmax,kmax,az,au,av
    use meteo,        only: swr,shf
    use parameters,   only: rho_0,cp
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -355,17 +354,17 @@ temp_field_no=1
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
                         temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH)
 #ifdef FRESHWATER_LENSE_TEST
-   T(iimin:iimin+3,jjmin:jjmax,1:kmax)=10.
-   T(iimax-3:iimax,jjmin:jjmax,1:kmax)=10.
-   T(iimin:iimax,jjmin:jjmin+3,1:kmax)=10.
-   T(iimin:iimax,jjmax-3:jjmax,1:kmax)=10.
+   T(imin:imin+3,jmin:jmax,1:kmax)=10.
+   T(imax-3:imax,jmin:jmax,1:kmax)=10.
+   T(imin:imax,jmin:jmin+3,1:kmax)=10.
+   T(imin:imax,jmax-3:jmax,1:kmax)=10.
 #endif
 
 !  Solar radiation and vertical diffusion of temperature
 
 !  Solar radiation
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (az(i,j) .ge. 1) then
             swr_loc=swr(i,j)
             rad(i,j,kmax)=swr_loc
@@ -379,8 +378,8 @@ temp_field_no=1
       end do
    end do
 
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (az(i,j) .eq. 1) then
 
             shf_loc=shf(i,j)
@@ -439,9 +438,8 @@ temp_field_no=1
    end do
 
    if (temp_check .ne. 0 .and. mod(n,abs(temp_check)) .eq. 0) then
-      call check_3d_fields(imin,jmin,imax,jmax,az,       &
-                           iimin,jjmin,iimax,jjmax,kmax, &
-                           kmin,T,min_temp,max_temp,status)
+      call check_3d_fields(imin,jmin,imax,jmax,kmin,kmax,az, &
+                           T,min_temp,max_temp,status)
       if (status .gt. 0) then
          if (temp_check .gt. 0) then
             call getm_error("do_temperature()", &

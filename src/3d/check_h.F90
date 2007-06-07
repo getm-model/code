@@ -5,13 +5,13 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain,   only: iimin,iimax,jjmin,jjmax,kmax,H
+   use domain,   only: imin,imax,jmin,jmax,kmax,H
    IMPLICIT NONE
    REALTYPE        :: zpos(I3DFIELD),hn(I3DFIELD),depthmin
    integer         :: i,j,k
       do k=1,kmax
-      do j=jjmin,jjmax
-       do i=iimin,iimax
+      do j=jmin,jmax
+       do i=imin,imax
        hn(i,j,k)= zpos(i,j,k)-zpos(i,j,k-1)
        hn(i,j,k)=max(hn(i,j,k),depthmin)
        enddo
@@ -26,13 +26,13 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain,   only: iimin,iimax,jjmin,jjmax,kmax,H
+   use domain,   only: imin,imax,jmin,jmax,kmax,H
    IMPLICIT NONE
    REALTYPE        :: zpos(I3DFIELD),hn(I3DFIELD),depthmin
    integer         :: i,j,k
-!     write(6,*) 'htoz',iimax,hn(iimax/2,2,kmax/2),H(iimax/2,2)
-      do j=jjmin,jjmax
-       do i=iimin,iimax
+!     write(6,*) 'htoz',imax,hn(imax/2,2,kmax/2),H(imax/2,2)
+      do j=jmin,jmax
+       do i=imin,imax
        zpos(i,j,0)=-H(i,j)
        do k=1,kmax
        zpos(i,j,k)=zpos(i,j,k-1)+hn(i,j,k)
@@ -47,15 +47,15 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain,   only: iimin,iimax,jjmin,jjmax,kmax
+   use domain,   only: imin,imax,jmin,jmax,kmax
    IMPLICIT NONE
    REALTYPE        :: ssen(I2DFIELD),hn(I3DFIELD)
    REALTYPE        :: h(I2DFIELD),HH,depthmin
    integer         :: i,j,k
 ! Final check of layer thicnkess thoug not necessary if zpos treated correctly
-!     write(6,*) 'Inside',hn(iimax/2,2,kmax/2)
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+!     write(6,*) 'Inside',hn(imax/2,2,kmax/2)
+      do j=jmin,jmax
+         do i=imin,imax
             HH=0.
            do k=1,kmax
               HH=HH+hn(i,j,k)
@@ -65,7 +65,7 @@
            end do
          end do
       end do
-!     write(6,*) 'Inside after',hn(iimax/2,2,kmax/2)
+!     write(6,*) 'Inside after',hn(imax/2,2,kmax/2)
    
      return
      end

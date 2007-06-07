@@ -1,4 +1,4 @@
-!$Id: ww_momentum_3d.F90,v 1.8 2006-03-01 15:54:08 kbk Exp $
+!$Id: ww_momentum_3d.F90,v 1.9 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,7 +29,7 @@
 ! soon be coded in the routine {\tt tow} in the directory {\tt futils}.
 !
 ! !USES:
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: imin,imax,jmin,jmax,kmax
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: arcd1,dxv,dyu
 #else
@@ -68,11 +68,11 @@
 
    do k=1,kmax
 #ifdef CALC_HALO_WW
-      do j=jjmin-1,jjmax+1
-         do i=iimin-1,iimax+1
+      do j=jmin-1,jmax+1
+         do i=imin-1,imax+1
 #else
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
 #endif
             if (k .lt. kmin(i,j)) then
                ww(i,j,kmin(i,j))= _ZERO_
@@ -87,7 +87,7 @@
    end do
 
 #ifndef CALC_HALO_WW
-   call update_3d_halo(ww,ww,az,iimin,jjmin,iimax,jjmax,kmax,z_TAG)
+   call update_3d_halo(ww,ww,az,imin,jmin,imax,jmax,kmax,z_TAG)
    call wait_halo(z_TAG)
 #endif
 

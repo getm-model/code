@@ -5,9 +5,8 @@
 ! !ROUTINE: to_3d_vv() - average v-velocity to T-points
 !
 ! !INTERFACE:
-   subroutine to_3d_vv(imin,jmin,imax,jmax,az,                          &
-                       iimin,jjmin,iimax,jjmax,kmax,                    &
-                       kmin,hvn,vv,missing,vel)
+   subroutine to_3d_vv(imin,jmin,imax,jmax,kmin,kmax,az, &
+                       hvn,vv,missing,vel)
 !
 ! !DESCRIPTION:
 ! This routine linearly interpolates the velocity at $v$-points to the $T$-points, 
@@ -20,9 +19,9 @@
 !
 ! !INPUT PARAMETERS:
   integer,  intent(in)       :: imin,jmin,imax,jmax
-  integer,  intent(in)       :: az(E2DFIELD)
-  integer,  intent(in)       :: iimin,jjmin,iimax,jjmax,kmax
   integer,  intent(in)       :: kmin(I2DFIELD)
+  integer,  intent(in)       :: kmax
+  integer,  intent(in)       :: az(E2DFIELD)
   REALTYPE, intent(in)       :: hvn(I3DFIELD)
   REALTYPE, intent(in)       :: vv(I3DFIELD)
   REALTYPE, intent(in)       :: missing
@@ -36,6 +35,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: to_3d_vv.F90,v $
+!  Revision 1.5  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.4  2006-01-19 10:07:55  lars
 !  bugfix (allocation of az-array)
 !
@@ -60,8 +62,8 @@
 
    indx = 1
    do k=0,kmax
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
          if ( az(i,j) .gt. 0 .and. k .ge. kmin(i,j) ) then
                vt        = vv(i,j  ,k)/(hvn(i,j  ,k)+eps)
                vb        = vv(i,j-1,k)/(hvn(i,j-1,k)+eps)

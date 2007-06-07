@@ -1,4 +1,4 @@
-!$Id: get_field_ncdf.F90,v 1.2 2003-04-23 11:54:03 kbk Exp $
+!$Id: get_field_ncdf.F90,v 1.3 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,7 @@
 !  From a NetCDF files - fname - read the variable - var - into the field - f.
 !
 ! !USES:
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: imin,imax,jmin,jmax,kmax
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -27,6 +27,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: get_field_ncdf.F90,v $
+!  Revision 1.3  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.2  2003-04-23 11:54:03  kbk
 !  cleaned code + TABS to spaces
 !
@@ -72,19 +75,19 @@
    err = nf_inq_varid(ncid,trim(var),var_id)
    if (err .NE. NF_NOERR) go to 10
 
-   size = (iimax-iimin+1)*(jjmax-jjmin+1)*(kmax+1)
+   size = (imax-imin+1)*(jmax-jmin+1)*(kmax+1)
    allocate(wrk(size),stat=rc)
    if (rc /= 0) stop 'get_field_ncdf: Error allocating work-space'
 
-   start(1) = iimin ; start(2) = jjmin; start(3) = 1
-   edges(1) = iimax-iimin+1 ; edges(2) = jjmax-jjmin+1; edges(3) = kmax
+   start(1) = imin ; start(2) = jmin; start(3) = 1
+   edges(1) = imax-imin+1 ; edges(2) = jmax-jmin+1; edges(3) = kmax
    err = nf_get_vara_real(ncid,var_id,start,edges,wrk)
    if (err .NE. NF_NOERR) go to 10
 
    indx = 1
    do k=1,kmax
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             f(i,j,k) = wrk(indx)
             indx = indx+1
          end do

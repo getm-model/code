@@ -1,6 +1,5 @@
    integer         :: iextr=-1, jextr=-1
    integer         :: imin=-1,imax=-1,jmin=-1,jmax=-1
-   integer         :: iimin=-1,iimax=-1,jjmin=-1,jjmax=-1
    integer         :: kmax=1
 
 !  mask

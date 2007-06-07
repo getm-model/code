@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.24 2006-12-15 10:25:42 kbk Exp $
+!$Id: salinity.F90,v 1.25 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,11 +17,10 @@
 !
 ! !USES:
    use exceptions
-   use domain, only: imin,jmin,imax,jmax,ioff,joff
+   use domain, only: imin,jmin,imax,jmax,kmax,ioff,joff
 #ifdef HAIDVOGEL_TEST
    use domain, only: iextr,jextr
 #endif
-   use domain, only: iimin,jjmin,iimax,jjmax,kmax
    use domain, only: H,az
    use variables_3d, only: S,hn,adv_schemes,kmin
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
@@ -131,13 +130,13 @@ salt_field_no=1
          LEVEL3 'getting initial fields from hotstart'
       case(1)
          LEVEL3 'setting to constant value'
-         forall(i=iimin:iimax,j=jjmin:jjmax, az(i,j) .ne. 0) &
+         forall(i=imin:imax,j=jmin:jmax, az(i,j) .ne. 0) &
                 S(i,j,:) = salt_const
       case(2)
          LEVEL3 'using profile'
          call read_profile(salt_file,nmax,zlev,prof,n)
-         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,az,H,  &
-                           iimin,jjmin,iimax,jjmax,kmax,hn,S)
+         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,kmax, &
+                           az,H,hn,S)
       case(3)
          LEVEL3 'interpolating from 3D field'
          call get_field(salt_file,salt_name,salt_field_no,S)
@@ -220,10 +219,10 @@ salt_field_no=1
 
 #ifdef FRESHWATER_LENSE_TEST
    S=34.85
-   ic=nint(iimax/2.)
-   jc=nint(jjmax/2.)
-   do i=1,iimax
-      do j=1,jjmax
+   ic=nint(imax/2.)
+   jc=nint(jmax/2.)
+   do i=1,imax
+      do j=1,jmax
          do k=kmax/2,kmax
             dist=sqrt((float(i)-float(ic))**2+(float(j)-float(jc))**2)*dx
             if (dist.le.3000.) then
@@ -259,30 +258,30 @@ salt_field_no=1
 #endif
 #ifdef BALTIC_SLICE_TEST
   j=2
-   if (iimax.eq.102) then
+   if (imax.eq.102) then
       do i=2,21
         S(i,j,0:kmax) = 25.
       end do
    end if
-   if (iimax.eq.302) then
+   if (imax.eq.302) then
       do i=2,61
         S(i,j,0:kmax) = 25.
       end do
    end if
-   if (iimax.eq.902) then
+   if (imax.eq.902) then
       do i=2,181
         S(i,j,0:kmax) = 25.
       end do
    end if
 #endif
 #ifdef HAIDVOGEL_TEST
-   STDERR 'HAIDVOGEL: salinity= ',iimin,iimax,i+ioff,iextr/2
-   do i=iimin-1,iimax+1
+   STDERR 'HAIDVOGEL: salinity= ',imin,imax,i+ioff,iextr/2
+   do i=imin-1,imax+1
       if(i+ioff .le. iextr/2) then
-         S(i,jjmin-1:jjmax+1,0:kmax) = 6.4102564
-         S(i,jjmin-1:jjmax+1,0:kmax) = 5.
+         S(i,jmin-1:jmax+1,0:kmax) = 6.4102564
+         S(i,jmin-1:jmax+1,0:kmax) = 5.
       else
-         S(i,jjmin-1:jjmax+1,0:kmax) = 0.
+         S(i,jmin-1:jmax+1,0:kmax) = 0.
       end if
    end do
 #endif
@@ -300,7 +299,7 @@ salt_field_no=1
 !#endif
 !#endif
 
-   call update_3d_halo(S,S,az,iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+   call update_3d_halo(S,S,az,imin,jmin,imax,jmax,kmax,D_TAG)
    call wait_halo(D_TAG)
    call mirror_bdy_3d(S,D_TAG)
 
@@ -354,7 +353,7 @@ salt_field_no=1
 ! !USES:
    use advection_3d, only: do_advection_3d
    use variables_3d, only: dt,cnpar,hn,ho,nuh,uu,vv,ww,hun,hvn
-   use domain,       only: iimin,iimax,jjmin,jjmax,kmax,az,au,av
+   use domain,       only: imin,imax,jmin,jmax,kmax,az,au,av
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dxv,dyu,dyv,arcd1
 #else
@@ -413,16 +412,16 @@ salt_field_no=1
                         salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH)
 
 #ifdef PECS_TEST
-   S(iimin:iimin,jjmin:jjmax,1:kmax)=10.
-   S(iimax:iimax,jjmin:jjmax,1:kmax)=10.
+   S(imin:imin,jmin:jmax,1:kmax)=10.
+   S(imax:imax,jmin:jmax,1:kmax)=10.
 #endif
 
 #ifdef FRESHWATER_LENSE_TEST
    SRelax=34.85
-   S(iimin:iimin+3,jjmin:jjmax,1:kmax)=SRelax
-   S(iimax-3:iimax,jjmin:jjmax,1:kmax)=SRelax
-   S(iimin:iimax,jjmin:jjmin+3,1:kmax)=SRelax
-   S(iimin:iimax,jjmax-3:jjmax,1:kmax)=SRelax
+   S(imin:imin+3,jmin:jmax,1:kmax)=SRelax
+   S(imax-3:imax,jmin:jmax,1:kmax)=SRelax
+   S(imin:imax,jmin:jmin+3,1:kmax)=SRelax
+   S(imin:imax,jmax-3:jmax,1:kmax)=SRelax
 #endif
 
 #ifdef SALTWEDGE_TEST
@@ -439,8 +438,8 @@ salt_field_no=1
 
 !  Advection and vertical diffusion and of salinity
 
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (az(i,j) .eq. 1) then
             if (kmax.gt.1) then
 !     Auxilury terms, old and new time level,
@@ -508,9 +507,8 @@ salt_field_no=1
 #endif
 
    if (salt_check .ne. 0 .and. mod(n,abs(salt_check)) .eq. 0) then
-      call check_3d_fields(imin,jmin,imax,jmax,az,       &
-                           iimin,jjmin,iimax,jjmax,kmax, &
-                           kmin,S,min_salt,max_salt,status)
+      call check_3d_fields(imin,jmin,imax,jmax,kmin,kmax,az, &
+                           S,min_salt,max_salt,status)
       if (status .gt. 0) then
          if (salt_check .gt. 0) then
             call getm_error("do_salinity()", &

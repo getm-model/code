@@ -1,4 +1,4 @@
-!$Id: mirror_bdy_3d.F90,v 1.4 2007-05-14 08:12:43 kbk Exp $
+!$Id: mirror_bdy_3d.F90,v 1.5 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,7 @@
 !
 ! !USES:
    use halo_zones, only : U_TAG,V_TAG,H_TAG,D_TAG
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: az,au,av
    use domain, only: NWB,NNB,NEB,NSB
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
@@ -30,6 +30,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: mirror_bdy_3d.F90,v $
+!  Revision 1.5  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.4  2007-05-14 08:12:43  kbk
 !  fixed loops
 !

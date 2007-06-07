@@ -1,4 +1,4 @@
-!$Id: c2x.F90,v 1.1 2005-04-25 09:32:34 kbk Exp $
+!$Id: c2x.F90,v 1.2 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,7 +6,7 @@
 ! !ROUTINE: Interpolate fields from central T-points to X-points
 !
 ! !INTERFACE:
-   subroutine c2x(iimin,iimax,jjmin,jjmax,cfield,xfield)
+   subroutine c2x(imin,imax,jmin,jmax,cfield,xfield)
 !
 ! !DESCRIPTION: 
 ! This routine interpolates a variable given on the 
@@ -18,7 +18,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer,    intent(in)              :: iimin,jjmin,iimax,jjmax
+   integer,    intent(in)              :: imin,imax,jmin,jmax
    REALTYPE,   intent(in)              :: cfield(I2DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -30,6 +30,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: c2x.F90,v $
+!  Revision 1.2  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.1  2005-04-25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
@@ -42,43 +45,43 @@
 !BOC
 
 !  do the interior X-points
-   do j=jjmin,jjmax-1
-      do i=iimin,iimax-1
+   do j=jmin,jmax-1
+      do i=imin,imax-1
          xfield(i,j) = 0.25*( cfield(i  ,j) + cfield(i+1,j+1) &
                            +  cfield(i+1,j) + cfield(i  ,j+1) )
       end do
    end do
 
 !  do the interior U and V-points as an intermediate step
-   do j=jjmin,jjmax
-      do i=iimin,iimax-1
+   do j=jmin,jmax
+      do i=imin,imax-1
           ufield(i,j) = 0.5*( cfield(i,j) + cfield(i+1,j) ) 
       end do
    end do
 
-   do j=jjmin,jjmax-1
-      do i=iimin,iimax
+   do j=jmin,jmax-1
+      do i=imin,imax
          vfield(i,j) = 0.5*( cfield(i,j) + cfield(i,j+1) ) 
       end do
    end do
 
 !  do the edges
-   do i=iimin,iimax-1
-      xfield(i,jjmin-1) = 2.0*ufield(i,jjmin) - xfield(i,jjmin  ) 
-      xfield(i,jjmax  ) = 2.0*ufield(i,jjmax) - xfield(i,jjmax-1) 
+   do i=imin,imax-1
+      xfield(i,jmin-1) = 2.0*ufield(i,jmin) - xfield(i,jmin  ) 
+      xfield(i,jmax  ) = 2.0*ufield(i,jmax) - xfield(i,jmax-1) 
    end do
 
-   do i=jjmin,jjmax-1
-      xfield(iimin-1,j) = 2.0*vfield(iimin,j) - xfield(iimin,j  ) 
-      xfield(iimax  ,j) = 2.0*vfield(iimax,j) - xfield(iimax-1,j) 
+   do i=jmin,jmax-1
+      xfield(imin-1,j) = 2.0*vfield(imin,j) - xfield(imin,j  ) 
+      xfield(imax  ,j) = 2.0*vfield(imax,j) - xfield(imax-1,j) 
    end do
 
 !  do the exterior corners
-   xfield(iimin-1,jjmin-1) = 2.0*ufield(iimin-1,jjmin) - xfield(iimin-1,jjmin  )
-   xfield(iimin-1,jjmax  ) = 2.0*ufield(iimin-1,jjmax) - xfield(iimin-1,jjmax-1)
+   xfield(imin-1,jmin-1) = 2.0*ufield(imin-1,jmin) - xfield(imin-1,jmin  )
+   xfield(imin-1,jmax  ) = 2.0*ufield(imin-1,jmax) - xfield(imin-1,jmax-1)
 
-   xfield(iimax  ,jjmin-1) = 2.0*ufield(iimax  ,jjmin) - xfield(iimax  ,jjmin  )
-   xfield(iimax  ,jjmax  ) = 2.0*ufield(iimax  ,jjmax) - xfield(iimax  ,jjmax-1)
+   xfield(imax  ,jmin-1) = 2.0*ufield(imax  ,jmin) - xfield(imax  ,jmin  )
+   xfield(imax  ,jmax  ) = 2.0*ufield(imax  ,jmax) - xfield(imax  ,jmax-1)
 
    return
    end subroutine c2x

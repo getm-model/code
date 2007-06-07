@@ -1,4 +1,4 @@
-!$Id: upstream_adv.F90,v 1.5 2006-03-01 16:03:32 kbk Exp $
+!$Id: upstream_adv.F90,v 1.6 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -79,8 +79,7 @@
 ! with the suffices $n$ and $o$ denoting new and old values, respectively.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: imin,imax,jmin,jmax,kmax
    use advection_3d, only: cu
    IMPLICIT NONE
 !
@@ -126,8 +125,8 @@
 
    cu = _ZERO_
    do k=1,kmax   ! Calculating u-interface fluxes !
-      do j=jjmin,jjmax
-         do i=iimin-1,iimax
+      do j=jmin,jmax
+         do i=imin-1,imax
             if (uu(i,j,k) .gt. _ZERO_) then
                cu(i,j,k)=uu(i,j,k)*f(i,j,k)
             else
@@ -140,8 +139,8 @@
       end do
    end do
    do k=1,kmax   ! Updating the advection term for u-advection !
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             adv(i,j,k)=(cu(i  ,j,k)*delyu(i  ,j)    &
                        -cu(i-1,j,k)*delyu(i-1,j))*area_inv(i,j)
          end do
@@ -151,8 +150,8 @@
 #ifndef SLICE_MODEL
    cu = _ZERO_
    do k=1,kmax   ! Calculating v-interface fluxes !
-      do j=jjmin-1,jjmax
-         do i=iimin,iimax
+      do j=jmin-1,jmax
+         do i=imin,imax
             if (vv(i,j,k) .gt. _ZERO_) then
                cu(i,j,k)=vv(i,j,k)*f(i,j,k)
             else
@@ -165,8 +164,8 @@
       end do
    end do
    do k=1,kmax   ! Updating the advection term for v-advection !
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             adv(i,j,k)=adv(i,j,k)+(cu(i,j  ,k)*delxv(i,j  )   &
                                   -cu(i,j-1,k)*delxv(i,j-1))*area_inv(i,j)
          end do
@@ -177,8 +176,8 @@
    cu = _ZERO_
    if (kmax.gt.1) then
       do k=1,kmax-1   ! Calculating w-interface fluxes !
-         do j=jjmin,jjmax
-            do i=iimin,iimax
+         do j=jmin,jmax
+            do i=imin,imax
                if (ww(i,j,k) .gt. _ZERO_) then
                   cu(i,j,k)=ww(i,j,k)*f(i,j,k)
                else
@@ -188,8 +187,8 @@
          end do
       end do
       do k=1,kmax   ! Updating the advection term for w-advection !
-         do j=jjmin,jjmax
-            do i=iimin,iimax
+         do j=jmin,jmax
+            do i=imin,imax
                adv(i,j,k)=adv(i,j,k)+(cu(i,j,k)-cu(i,j,k-1))
             end do
          end do
@@ -197,8 +196,8 @@
    end if
 
    do k=1,kmax   ! Doing the full advection in one step
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             if (az(i,j) .eq. 1)                                        &
                f(i,j,k)=(f(i,j,k)*ho(i,j,k)-dt*adv(i,j,k))/hn(i,j,k)
          end do

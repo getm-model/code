@@ -1,4 +1,4 @@
-!$Id: coordinates.F90,v 1.13 2007-03-30 13:10:59 hb Exp $
+!$Id: coordinates.F90,v 1.14 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -127,7 +127,7 @@ STDERR 'coordinates(): adaptive_coordinates not coded yet'
    end if ! first
 
 #ifdef SLICE_MODEL
-   do i=iimin,iimax
+   do i=imin,imax
       do k=kvmin(i,2),kmax
          hvo(i,1,k)=hvo(i,2,k)
          hvo(i,3,k)=hvo(i,2,k)

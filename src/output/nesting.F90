@@ -1,4 +1,4 @@
-!$Id: nesting.F90,v 1.3 2003-04-23 12:07:12 kbk Exp $
+!$Id: nesting.F90,v 1.4 2007-06-07 10:25:20 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,8 +12,7 @@
 !  Still missing
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: imin,imax,jmin,jmax,kmax
    use time, only: julianday,secondsofday
    use domain, only: H,HU,HV
 #ifndef NO_3D
@@ -37,6 +36,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: nesting.F90,v $
+!  Revision 1.4  2007-06-07 10:25:20  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.3  2003-04-23 12:07:12  kbk
 !  cleaned code + TABS to spaces
 !

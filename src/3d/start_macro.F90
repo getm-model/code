@@ -1,4 +1,4 @@
-!$Id: start_macro.F90,v 1.10 2006-03-01 15:54:08 kbk Exp $
+!$Id: start_macro.F90,v 1.11 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,7 +29,7 @@
 !
 !
 ! !USES:
-   use domain, only: iimin,iimax,jjmin,jjmax,H,HU,HV,min_depth
+   use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth
    use m2d, only: z,Uint,Vint
    use m3d, only: M
    use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
@@ -56,23 +56,23 @@
    write(debug,*) 'start_macro() # ',Ncall
 #endif
 
-   do j=jjmin-HALO,jjmax+HALO         ! Defining 'old' and 'new' sea surface
-      do i=iimin-HALO,iimax+HALO      ! elevation for macro time step
+   do j=jmin-HALO,jmax+HALO         ! Defining 'old' and 'new' sea surface
+      do i=imin-HALO,imax+HALO      ! elevation for macro time step
          sseo(i,j)=ssen(i,j)
          ssen(i,j)=z(i,j)
       end do
    end do
 
-   do j=jjmin-HALO,jjmax+HALO             ! Same for U-points
-      do i=iimin-HALO,iimax+HALO-1
+   do j=jmin-HALO,jmax+HALO             ! Same for U-points
+      do i=imin-HALO,imax+HALO-1
          ssuo(i,j)=ssun(i,j)
          ssun(i,j)=0.25*(sseo(i,j)+sseo(i+1,j)+ssen(i,j)+ssen(i+1,j))
          ssun(i,j)=max(ssun(i,j),-HU(i,j)+min_depth)
       end do
    end do
 
-   do j=jjmin-HALO,jjmax+HALO-1
-      do i=iimin-HALO,iimax+HALO             ! Same for V-points
+   do j=jmin-HALO,jmax+HALO-1
+      do i=imin-HALO,imax+HALO             ! Same for V-points
          ssvo(i,j)=ssvn(i,j)
          ssvn(i,j)=0.25*(sseo(i,j)+sseo(i,j+1)+ssen(i,j)+ssen(i,j+1))
          ssvn(i,j)=max(ssvn(i,j),-HV(i,j)+min_depth)

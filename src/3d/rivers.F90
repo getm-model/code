@@ -1,4 +1,4 @@
-!$Id: rivers.F90,v 1.11 2006-03-01 15:54:08 kbk Exp $
+!$Id: rivers.F90,v 1.12 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,7 +27,7 @@
 !  pressure gradient introduced.
 !
 ! !USES:
-   use domain, only: iimin,jjmin,iimax,jjmax,ioff,joff
+   use domain, only: imin,jmin,imax,jmax,ioff,joff
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: H,az,kmax,arcd1
 #else
@@ -194,8 +194,8 @@
                end if
             end if
             outside= &
-                    i .lt. iimin .or. i .gt. iimax .or.  &
-                    j .lt. jjmin .or. j .gt. jjmax
+                    i .lt. imin .or. i .gt. imax .or.  &
+                    j .lt. jmin .or. j .gt. jmax
             if( .not. outside) then
                if(az(i,j) .eq. 0) then
                   LEVEL3 'Warning:  river# ',n,' at (',i,j,') is on land'

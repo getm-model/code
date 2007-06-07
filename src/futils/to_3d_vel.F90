@@ -1,4 +1,4 @@
-!$Id: to_3d_vel.F90,v 1.4 2006-01-11 14:02:42 lars Exp $
+!$Id: to_3d_vel.F90,v 1.5 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,9 +6,8 @@
 ! !ROUTINE: to_3d_vel() - calculates 3D-velocities and store in real*4.
 !
 ! !INTERFACE:
-   subroutine to_3d_vel(imin,jmin,imax,jmax,mask,                       &
-                        iimin,jjmin,iimax,jjmax,kmax,                   &
-                        kmin,h,trans,missing,vel)
+   subroutine to_3d_vel(imin,jmin,imax,jmax,kmin,kmax,mask, &
+                        h,trans,missing,vel)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -17,9 +16,9 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: imin,jmin,imax,jmax
-   integer, intent(in)                 :: mask(E2DFIELD)
-   integer, intent(in)                 :: iimin,jjmin,iimax,jjmax,kmax
    integer, intent(in)                 :: kmin(I2DFIELD)
+   integer, intent(in)                 :: kmax
+   integer, intent(in)                 :: mask(E2DFIELD)
    REALTYPE, intent(in)                :: h(I3DFIELD)
    REALTYPE, intent(in)                :: trans(I3DFIELD)
    REALTYPE, intent(in)                :: missing
@@ -33,6 +32,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: to_3d_vel.F90,v $
+!  Revision 1.5  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.4  2006-01-11 14:02:42  lars
 !  documentation + cosmetics
 !
@@ -59,8 +61,8 @@
 !BOC
    indx = 1
    do k=0,kmax
-     do j=jjmin,jjmax
-       do i=iimin,iimax
+     do j=jmin,jmax
+       do i=imin,imax
          if ( mask(i,j) .gt. 0 .and. k .ge. kmin(i,j) ) then
             vel(indx) = trans(i,j,k)/h(i,j,k)
          else

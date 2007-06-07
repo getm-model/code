@@ -31,8 +31,7 @@
 !  \end{enumerate}
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: imin,imax,jmin,jmax,kmax
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
 !
@@ -272,14 +271,14 @@
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a2,&
                                 hor_adv,az,AH)
                call update_3d_halo(f,f,az,& 
-                                   iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+                                   imin,jmin,imax,jmax,kmax,D_TAG)
                call wait_halo(D_TAG)
 
 #ifndef SLICE_MODEL
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a2,&
                                 hor_adv,az,AH)
                call update_3d_halo(f,f,az,& 
-                                   iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+                                   imin,jmin,imax,jmax,kmax,D_TAG)
                call wait_halo(D_TAG)
 #endif
 
@@ -294,14 +293,14 @@
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
                                 hor_adv,az,AH)
                call update_3d_halo(f,f,az, &
-                                   iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+                                   imin,jmin,imax,jmax,kmax,D_TAG)
                call wait_halo(D_TAG)
 
 #ifndef SLICE_MODEL
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
                                 hor_adv,az,AH)
                call update_3d_halo(f,f,az, &
-                                   iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+                                   imin,jmin,imax,jmax,kmax,D_TAG)
                call wait_halo(D_TAG)
 #endif
 
@@ -312,7 +311,7 @@
                   call w_split_adv(dt,f,ww,az,a2,ver_adv)
 #endif
                   call update_3d_halo(f,f,az, &
-                                      iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+                                      imin,jmin,imax,jmax,kmax,D_TAG)
                   call wait_halo(D_TAG)
 
                end if
@@ -320,14 +319,14 @@
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
                                 hor_adv,az,AH)
                call update_3d_halo(f,f,az, &
-                                   iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+                                   imin,jmin,imax,jmax,kmax,D_TAG)
                call wait_halo(D_TAG)
 #endif
 
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
                                 hor_adv,az,AH)
                call update_3d_halo(f,f,az, &
-                                   iimin,jjmin,iimax,jjmax,kmax,D_TAG)
+                                   imin,jmin,imax,jmax,kmax,D_TAG)
                call wait_halo(D_TAG)
 
             case (2)

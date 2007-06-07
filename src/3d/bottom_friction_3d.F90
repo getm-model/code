@@ -1,4 +1,4 @@
-!$Id: bottom_friction_3d.F90,v 1.9 2006-03-01 15:54:08 kbk Exp $
+!$Id: bottom_friction_3d.F90,v 1.10 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -46,7 +46,7 @@
 !
 ! !USES:
    use parameters, only: kappa,avmmol
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax,au,av,min_depth
+   use domain, only: imin,imax,jmin,jmax,kmax,au,av,min_depth
    use variables_2d, only: zub,zvb,zub0,zvb0
    use variables_3d, only: kumin,kvmin,uu,vv,huo,hun,hvo,hvn,rru,rrv
    IMPLICIT NONE
@@ -87,8 +87,8 @@
    end if
 #endif
 
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (au(i,j) .ge. 1) then
             kk = kumin(i,j)
             uuloc(i,j)=uu(i,j,kk)/(huo(i,j,kk))
@@ -110,8 +110,8 @@
       end do
    end do
 
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (av(i,j) .ge. 1) then
             kk = kvmin(i,j)
 #if 0
@@ -134,8 +134,8 @@
    end do
 
 #if 1
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (au(i,j) .ge. 1) then
             hh=max(min_depth/kmax,hun(i,j,kumin(i,j)))
             r=(zub(i,j)+0.5*hh)/zub(i,j)
@@ -151,8 +151,8 @@
 #endif
 
 #if 1
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (av(i,j) .ge. 1) then
             hh=max(min_depth/kmax,hvn(i,j,kvmin(i,j)))
             r=(zvb(i,j)+0.5*hh)/zvb(i,j)

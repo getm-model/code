@@ -1,4 +1,4 @@
-!$Id: calc_mean_fields.F90,v 1.3 2006-01-27 16:07:57 kbk Exp $
+!$Id: calc_mean_fields.F90,v 1.4 2007-06-07 10:25:20 kbk Exp $
 #include "cppdefs.h"
 !----------------------------------------------------------------------
 !BOP
@@ -11,8 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain, only: imax,imin,jmax,jmin
-   use domain, only: iimax,iimin,jjmax,jjmin,kmax
+   use domain, only: imax,imin,jmax,jmin,kmax
    use domain, only: az,au,av
    use meteo, only: swr
    use m3d, only: M
@@ -30,6 +29,9 @@
 !  Original author(s): Karsten Bolding & Adolf Stips
 !
 !  $Log: calc_mean_fields.F90,v $
+!  Revision 1.4  2007-06-07 10:25:20  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.3  2006-01-27 16:07:57  kbk
 !  now works with -DNO_BAROCLINIC
 !
@@ -174,8 +176,8 @@
 !  we must destagger,  yes
 
          tmpf = _ZERO_
-         do j=jjmin,jjmax
-            do i=iimin,iimax
+         do j=jmin,jmax
+            do i=imin,imax
 !  check if we are in the water
                if(au(i,j) .gt. 0 .and. au(i-1,j) .gt. 0) then
                   do k = 1, kmax
@@ -187,8 +189,8 @@
          uumean = tmpf
 
          tmpf = _ZERO_
-         do j=jjmin,jjmax
-            do i=iimin,iimax
+         do j=jmin,jmax
+            do i=imin,imax
 !  check if we are in the water
                if(av(i,j) .gt. 0 .and. av(i,j-1) .gt. 0) then
                   do k = 1, kmax
@@ -200,8 +202,8 @@
          vvmean = tmpf
 
          tmpf = 0.0
-         do j=jjmin,jjmax
-            do i=iimin,iimax
+         do j=jmin,jmax
+            do i=imin,imax
 !  check if we are in the water
                if(az(i,j) .gt. 0) then
                   tmpf(i,j,1)=wmean(i,j,1)/2.0

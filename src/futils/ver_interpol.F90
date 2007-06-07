@@ -1,12 +1,12 @@
-!$Id: ver_interpol.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
+!$Id: ver_interpol.F90,v 1.3 2007-06-07 10:25:19 kbk Exp $
 #include"cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 ! !ROUTINE: ver_interpol - vertical interpolation.
 !
 ! !INTERFACE:
-   subroutine ver_interpol(nlev,zlev,prof,imin,jmin,imax,jmax,mask,H,  &
-                           iimin,jjmin,iimax,jjmax,kmax,hn,field)
+   subroutine ver_interpol(nlev,zlev,prof,imin,jmin,imax,jmax,kmax, &
+                           mask,H,hn,field)
 !
 ! !DESCRIPTION:
 !
@@ -20,10 +20,9 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: nlev
    REALTYPE, intent(in)                :: zlev(nlev),prof(nlev)
-   integer, intent(in)                 :: imin,imax,jmin,jmax
+   integer, intent(in)                 :: imin,jmin,imax,jmax,kmax
    integer, intent(in)                 :: mask(E2DFIELD)
    REALTYPE, intent(in)                :: H(E2DFIELD)
-   integer, intent(in)                 :: iimin,iimax,jjmin,jjmax,kmax
    REALTYPE, intent(in)                :: hn(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
@@ -33,6 +32,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ver_interpol.F90,v $
+!  Revision 1.3  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.2  2003-04-23 12:02:43  kbk
 !  cleaned code + TABS to spaces
 !
@@ -56,8 +58,8 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if(mask(i,j) .ne. 0) then
 
             zmodel(1) = -H(i,j) + 0.5*hn(i,j,1)

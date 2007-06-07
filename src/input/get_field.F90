@@ -1,4 +1,4 @@
-!$Id: get_field.F90,v 1.4 2005-04-25 09:32:34 kbk Exp $
+!$Id: get_field.F90,v 1.5 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,7 @@
 !  Reads from file - fname - the variable var into f.
 !
 ! !USES:
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: imin,imax,jmin,jmax,kmax
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -28,6 +28,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: get_field.F90,v $
+!  Revision 1.5  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.4  2005-04-25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !

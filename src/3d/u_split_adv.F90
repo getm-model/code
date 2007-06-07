@@ -1,4 +1,4 @@
-!$Id: u_split_adv.F90,v 1.4 2006-03-02 05:12:59 kbk Exp $
+!$Id: u_split_adv.F90,v 1.5 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -149,8 +149,7 @@
 ! second-order scheme.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: imin,imax,jmin,jmax,kmax
    use advection_3d, only: hi,hio,cu
    use advection_3d, only: UPSTREAM_SPLIT,P2,SUPERBEE,MUSCL,P2_PDM
    use advection_3d, only: ONE,TWO,ONE6TH
@@ -191,8 +190,8 @@
    select case (method)
       case (UPSTREAM_SPLIT)
          do k=1,kmax
-            do j=jjmin,jjmax
-               do i=iimin-1,iimax
+            do j=jmin,jmax
+               do i=imin-1,imax
                   cu(i,j,k) = _ZERO_
                   if (au(i,j) .gt. 0) then
                      if (uu(i,j,k) .gt. _ZERO_) then
@@ -206,8 +205,8 @@
          end do
       case ((P2),(Superbee),(MUSCL),(P2_PDM))
          do k=1,kmax
-            do j=jjmin,jjmax
-               do i=iimin-1,iimax
+            do j=jmin,jmax
+               do i=imin-1,imax
                   cu(i,j,k) = _ZERO_
                   if (au(i,j) .gt. 0) then
                      if (uu(i,j,k) .gt. _ZERO_) then
@@ -270,8 +269,8 @@
    end select
 
    do k=1,kmax   ! Doing the u-advection step
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             if (az(i,j) .eq. 1) then
                hio(i,j,k)=hi(i,j,k)
                hi(i,j,k)=hio(i,j,k)                           &

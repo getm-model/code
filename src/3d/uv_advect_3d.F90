@@ -1,4 +1,4 @@
-!$Id: uv_advect_3d.F90,v 1.13 2006-03-01 15:54:08 kbk Exp $
+!$Id: uv_advect_3d.F90,v 1.14 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -251,7 +251,7 @@
 ! 
 ! !
 ! !USES:
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax,az,au,av,ax
+   use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,ax
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dyc,arud1,dxx,dyx,arvd1,dxc
 #else
@@ -278,7 +278,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc
-   REALTYPE                  :: PP(iimin-1:iimax+1,jjmin-1:jjmax+1,1:kmax)
+   REALTYPE                  :: PP(imin-1:imax+1,jmin-1:jmax+1,1:kmax)
    REALTYPE                  :: www(0:kmax)
 #ifdef UV_TVD
    integer                   :: azadv(I2DFIELD),auadv(I2DFIELD),avadv(I2DFIELD)
@@ -300,8 +300,8 @@
 
 ! Here begins dimensional split advection for u-velocity
    do k=1,kmax
-      do j=jjmin-HALO,jjmax+HALO
-         do i=iimin-HALO,iimax+HALO-1
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO-1
             uadv(i,j,k)=0.5*(uu(i+1,j,k)+uu(i,j,k))
             vadv(i,j,k)=0.5*(vv(i+1,j,k)+vv(i,j,k))
             wadv(i,j,k)=0.5*(ww(i+1,j,k)+ww(i,j,k))
@@ -313,8 +313,8 @@
       end do
    end do
 
-   do j=jjmin-HALO,jjmax+HALO
-      do i=iimin-HALO,iimax+HALO
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
          azadv(i,j)=au(i,j)
          auadv(i,j)=az(i,j)
          avadv(i,j)=ax(i,j)
@@ -335,14 +335,14 @@
    end do
 
    do k=1,kmax  ! uuEx is here the velocity to be transported.
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             uuEx(i,j,k)=uu(i,j,k)/huo(i,j,k)
          end do
       end do
    end do
 
-   call update_3d_halo(uuEx,uuEx,au,iimin,jjmin,iimax,jjmax,kmax,U_TAG)
+   call update_3d_halo(uuEx,uuEx,au,imin,jmin,imax,jmax,kmax,U_TAG)
    call wait_halo(U_TAG)
 
    call do_advection_3d(dt,uuEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
@@ -353,8 +353,8 @@
 
 ! Here begins dimensional split advection for v-velocity
    do k=1,kmax
-      do j=jjmin-HALO,jjmax+HALO-1
-         do i=iimin-HALO,iimax+HALO
+      do j=jmin-HALO,jmax+HALO-1
+         do i=imin-HALO,imax+HALO
             uadv(i,j,k)=0.5*(uu(i,j+1,k)+uu(i,j,k))
             vadv(i,j,k)=0.5*(vv(i,j+1,k)+vv(i,j,k))
             wadv(i,j,k)=0.5*(ww(i,j+1,k)+ww(i,j,k))
@@ -366,8 +366,8 @@
       end do
    end do
 
-   do j=jjmin-HALO,jjmax+HALO
-      do i=iimin-HALO,iimax+HALO
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
          azadv(i,j)=av(i,j)
          auadv(i,j)=ax(i,j)
          avadv(i,j)=az(i,j)
@@ -388,14 +388,14 @@
    end do
 
    do k=1,kmax   ! vvEx is here the velocity to be transported.
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             vvEx(i,j,k)=vv(i,j,k)/hvo(i,j,k)
          end do
       end do
    end do
 
-   call update_3d_halo(vvEx,vvEx,av,iimin,jjmin,iimax,jjmax,kmax,V_TAG)
+   call update_3d_halo(vvEx,vvEx,av,imin,jmin,imax,jmax,kmax,V_TAG)
    call wait_halo(V_TAG)
 
    call do_advection_3d(dt,vvEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
@@ -408,8 +408,8 @@
 
 ! Upstream for dx(uu^2/hun)
    do k=1,kmax
-      do j=jjmin,jjmax             ! PP defined on T-points
-         do i=iimin,iimax+1
+      do j=jmin,jmax             ! PP defined on T-points
+         do i=imin,imax+1
             PP(i,j,k)=_ZERO_
             if (az(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
@@ -425,8 +425,8 @@
       end do
    end do
    do k=1,kmax
-      do j=jjmin,jjmax         ! uuEx defined on U-points
-         do i=iimin,iimax
+      do j=jmin,jmax         ! uuEx defined on U-points
+         do i=imin,imax
             if (au(i,j) .eq. 1) then
                if (k .ge. kumin(i,j)) then
                   uuEx(i,j,k)=(PP(i+1,j,k)-PP(i,j,k))*ARUD1
@@ -439,8 +439,8 @@
 #ifndef SLICE_MODEL
 ! Upstream for dy(uu*vv/hun)
    do k=1,kmax
-      do j=jjmin-1,jjmax          ! PP defined on X-points
-         do i=iimin,iimax
+      do j=jmin-1,jmax          ! PP defined on X-points
+         do i=imin,imax
             PP(i,j,k)=_ZERO_
             if (ax(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
@@ -456,8 +456,8 @@
       end do
    end do
    do k=1,kmax
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             if (au(i,j) .eq. 1) then
                if (k .ge. kumin(i,j)) then
                   uuEx(i,j,k)=(uuEx(i,j,k)+(PP(i,j,k)-PP(i,j-1,k))*ARUD1)
@@ -470,8 +470,8 @@
 
 ! Upstream for dx(uu*vv/hvn)
    do k=1,kmax
-      do j=jjmin-1,jjmax         !  PP defined on X-points
-         do i=iimin-1,iimax
+      do j=jmin-1,jmax         !  PP defined on X-points
+         do i=imin-1,imax
             PP(i,j,k)=_ZERO_
             if (ax(i,j) .ge. 1) then
                if (k .ge. kvmin(i,j)) then
@@ -487,8 +487,8 @@
       end do
    end do
    do k=1,kmax
-      do j=jjmin,jjmax          ! vvEx defined on V-points
-         do i=iimin,iimax
+      do j=jmin,jmax          ! vvEx defined on V-points
+         do i=imin,imax
             if (av(i,j) .eq. 1) then
                if (k .ge. kvmin(i,j)) then
                   vvEx(i,j,k)=(PP(i,j,k)-PP(i-1,j,k))*ARVD1
@@ -501,8 +501,8 @@
 #ifndef SLICE_MODEL
 ! Upstream for dy(vv^2/hvn)
    do k=1,kmax
-      do j=jjmin,jjmax+1
-         do i=iimin,iimax
+      do j=jmin,jmax+1
+         do i=imin,imax
             PP(i,j,k)=_ZERO_
             if (az(i,j) .ge. 1) then
                if (k .ge. kvmin(i,j)) then
@@ -518,8 +518,8 @@
       end do
    end do
    do k=1,kmax
-      do j=jjmin,jjmax          ! vvEx defined on V-points
-         do i=iimin,iimax
+      do j=jmin,jmax          ! vvEx defined on V-points
+         do i=imin,imax
             if (av(i,j) .eq. 1) then
                if (k .ge. kvmin(i,j)) then
                   vvEx(i,j,k)=(vvEx(i,j,k)+(PP(i,j+1,k)-PP(i,j,k))*ARVD1)
@@ -531,8 +531,8 @@
 #endif
 
 ! Upstream for (uu*ww)_k - (uu*ww)_{k-1}
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (au(i,j) .eq. 1) then
             www(kumin(i,j)-1)= _ZERO_
             do k=kumin(i,j),kmax-1
@@ -552,8 +552,8 @@
    end do
 
 ! Upstream for (vv*ww)_k - (vv*ww)_{k-1}
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (av(i,j) .eq. 1) then
             www(kvmin(i,j)-1)= _ZERO_
             do k=kvmin(i,j),kmax-1

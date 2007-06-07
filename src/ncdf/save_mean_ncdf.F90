@@ -1,4 +1,4 @@
-!$Id: save_mean_ncdf.F90,v 1.2 2005-04-25 09:32:34 kbk Exp $
+!$Id: save_mean_ncdf.F90,v 1.3 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -15,8 +15,7 @@
    use ncdf_mean
    use grid_ncdf
    use diagnostic_variables
-   use domain,       only: ioff,joff,imin,imax,jmin,jmax
-   use domain,       only: iimin,iimax,jjmin,jjmax,kmax
+   use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
    use domain,       only: H,az
    use variables_3d, only: kmin
    IMPLICIT NONE
@@ -31,6 +30,9 @@
 !  Original author(s): Adolf Stips & Karsten Bolding
 !
 !  $Log: save_mean_ncdf.F90,v $
+!  Revision 1.3  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.2  2005-04-25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
@@ -94,39 +96,39 @@
 
 !  layer thickness
    if (hmean_id .gt. 0) then
-      call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-                  kmin,az,hmean,h_missing,ws)
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,hmean,h_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
       err = nf_put_vara_real(ncid,hmean_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
    end if
 
 !  uumean
-   call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-               kmin,az,uumean,vel_missing,ws)
+   call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,uumean,vel_missing, &
+               imin,imax,jmin,jmax,0,kmax,ws)
    err = nf_put_vara_real(ncid, uumean_id, start, edges, ws)
    if (err .NE. NF_NOERR) go to 10
 
 !  vvmean
-   call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-               kmin,az,vvmean,vel_missing,ws)
+   call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,vvmean,vel_missing, &
+               imin,imax,jmin,jmax,0,kmax,ws)
    err = nf_put_vara_real(ncid, vvmean_id, start, edges, ws)
    if (err .NE. NF_NOERR) go to 10
 
 !  wmean
-   call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-               kmin,az,wmean,vel_missing,ws)
+   call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,wmean,vel_missing, &
+               imin,imax,jmin,jmax,0,kmax,ws)
    err = nf_put_vara_real(ncid, wmean_id, start, edges, ws)
    if (err .NE. NF_NOERR) go to 10
 
 !  salt mean
-   call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-               kmin,az,Smean,salt_missing,ws)
+   call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,Smean,salt_missing, &
+               imin,imax,jmin,jmax,0,kmax,ws)
    err = nf_put_vara_real(ncid, saltmean_id, start, edges, ws)
    if (err .NE. NF_NOERR) go to 10
 
 !  mean temperature
-   call cnv_3d(imin,jmin,imax,jmax,iimin,jjmin,iimax,jjmax,kmax, &
-               kmin,az,Tmean,temp_missing,ws)
+   call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,Tmean,temp_missing, &
+               imin,imax,jmin,jmax,0,kmax,ws)
    err = nf_put_vara_real(ncid, tempmean_id, start, edges, ws)
    if (err .NE. NF_NOERR) go to 10
 

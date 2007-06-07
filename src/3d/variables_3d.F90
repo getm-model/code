@@ -1,4 +1,4 @@
-!$Id: variables_3d.F90,v 1.12 2007-02-23 12:20:37 kbk Exp $
+!$Id: variables_3d.F90,v 1.13 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -112,7 +112,7 @@
 ! {\tt init\_variables\_3d}) and cleanup (see {\tt clean\_variables\_3d}).
 !
 ! !USES:
-   use domain,     only: iimin,iimax,jjmin,jjmax,kmax
+   use domain,     only: imin,imax,jmin,jmax,kmax
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -177,8 +177,8 @@
 #endif
 
    LEVEL2 'init_variables_3d'
-   size3d_field=((iimax+HALO)-(iimin+HALO)+1)*        &
-                ((jjmax+HALO)-(jjmin+HALO)+1)*(kmax+1)
+   size3d_field=((imax+HALO)-(imin+HALO)+1)*        &
+                ((jmax+HALO)-(jmin+HALO)+1)*(kmax+1)
    mem3d=n3d_fields*size3d_field*REAL_SIZE
 
 !  Allocates memory for the public data members - if not static

@@ -10,7 +10,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain, only: az,imin,imax,jmin,jmax,kmax,H,iimax,iimin,jjmax,jjmin
+   use domain, only: az,imin,imax,jmin,jmax,kmax,H
 #if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
     use domain, only: dx,dy
 #else
@@ -43,6 +43,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: diagnose.F90,v $
+!  Revision 1.7  2007-06-07 10:25:20  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.6  2006-01-29 12:25:21  kbk
 !  NOMADS -> FRESHWATER_LENSE
 !

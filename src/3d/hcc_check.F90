@@ -1,4 +1,4 @@
-!$Id: hcc_check.F90,v 1.4 2006-03-01 15:54:08 kbk Exp $
+!$Id: hcc_check.F90,v 1.5 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,8 +30,7 @@
 ! $h^c$ is stored in the 3d netcdf output file.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,az,au,av,HU,HV
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,HU,HV
    use variables_3d, only: hn,hun,hvn,hcc
    IMPLICIT NONE
 !
@@ -47,8 +46,8 @@
 !BOC
    LEVEL2 'HCC check'
 
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (az(i,j) .ge. 1) then
             du1=-HU(i-1,j)
             du2=-HU(i,j)

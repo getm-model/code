@@ -1,4 +1,4 @@
-!$Id: eqstate.F90,v 1.9 2007-02-23 12:20:36 kbk Exp $
+!$Id: eqstate.F90,v 1.10 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -103,7 +103,7 @@
 ! Here, the equation of state is calculated for every 3D grid point.  
 !
 ! !USES:
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax,az
+   use domain, only: imin,imax,jmin,jmax,kmax,az
    use variables_3d, only: T,S,rho,buoy
    IMPLICIT NONE
 !
@@ -130,22 +130,22 @@
 #define BUOYANCY
    select case (eqstate_method)
       case (1)
-         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)  &
+         forall(i=imin-1:imax+1,j=jmin-1:jmax+1,az(i,j) .gt. 0)  &
             rho(i,j,1:kmax) = rho_0 +                                &
                     dtr0*(T(i,j,1:kmax)-T0) + dsr0*(S(i,j,1:kmax)-S0)
 
 #ifdef HAIDVOGEL_TEST
-         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)  &
+         forall(i=imin-1:imax+1,j=jmin-1:jmax+1,az(i,j) .gt. 0)  &
             rho(i,j,1:kmax) = 1000. + S(i,j,1:kmax)
 #endif
 #ifdef CONSTANCE_TEST
-         forall(i=iimin-1:iimax+1,j=jjmin-1:jjmax+1,az(i,j) .gt. 0)  &
+         forall(i=imin-1:imax+1,j=jmin-1:jmax+1,az(i,j) .gt. 0)  &
           rho(i,j,1:kmax) = 1000. + *dtr0*(T(i,j,1:kmax)-T0)
 #endif
       case (2)
          do k = 1,kmax
-            do j = jjmin-1,jjmax+1
-               do i = iimin-1,iimax+1
+            do j = jmin-1,jmax+1
+               do i = imin-1,imax+1
                   if (az(i,j) .gt. 0) then
                      T1 = T(i,j,k)
                      T2 = T1*T1

@@ -1,4 +1,4 @@
-!$Id: ss_nn.F90,v 1.8 2007-02-23 12:20:37 kbk Exp $
+!$Id: ss_nn.F90,v 1.9 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -128,7 +128,7 @@
 ! These stability issues need to be further investigated in the future. 
 !
 ! !USES:
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax,au,av,az
+   use domain, only: imin,imax,jmin,jmax,kmax,au,av,az
    use variables_3d, only: kmin,kumin,hn,uu,hun,kvmin,vv,hvn,SS,num
 #ifndef NO_BAROCLINIC
    use variables_3d, only: NN,buoy
@@ -160,8 +160,8 @@
 #define NEW_SS
 
 !  Prandtl frequency
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (az(i,j) .eq. 1 ) then
             do k=1,kmax-1
 ! This is an older version which we should keep here.
@@ -201,8 +201,8 @@
 #ifndef NO_BAROCLINIC
 #define NEW_NN
 #undef NEW_NN
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (az(i,j) .eq. 1 ) then
             do k=kmax-1,1,-1
                dz=0.5*(hn(i,j,k+1)+hn(i,j,k))

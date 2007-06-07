@@ -1,4 +1,4 @@
-!$Id: stresses_3d.F90,v 1.7 2006-03-01 15:54:08 kbk Exp $
+!$Id: stresses_3d.F90,v 1.8 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,7 +22,7 @@
 !
 ! !USES:
    use parameters, only: rho_0
-   use domain, only: az,au,av,iimin,iimax,jjmin,jjmax
+   use domain, only: az,au,av,imin,imax,jmin,jmax
    use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,rru,rrv,taus,taub
    use meteo, only: tausx,tausy
    use halo_zones, only : update_2d_halo,wait_halo,z_TAG
@@ -49,13 +49,13 @@
 #endif
 
 !  we need to know rru and rrv in the halos as well
-   call update_2d_halo(rru,rru,au,iimin,jjmin,iimax,jjmax,10)
+   call update_2d_halo(rru,rru,au,imin,jmin,imax,jmax,10)
    call wait_halo(10)
-   call update_2d_halo(rrv,rrv,av,iimin,jjmin,iimax,jjmax,10)
+   call update_2d_halo(rrv,rrv,av,imin,jmin,imax,jmax,10)
    call wait_halo(10)
 
-   do j=jjmin,jjmax    ! Absolute Value of Bottom Friction
-      do i=iimin,iimax
+   do j=jmin,jmax    ! Absolute Value of Bottom Friction
+      do i=imin,imax
          k1=kumin(i-1,j  )
          k2=kumin(i  ,j  )
          k3=kvmin(i  ,j-1)

@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.17 2007-02-23 12:20:36 kbk Exp $
+!$Id: internal_pressure.F90,v 1.18 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -58,7 +58,7 @@
 !
 ! !USES:
    use exceptions
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax,az,au,av,H,HU,HV
+   use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,H,HU,HV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dyv
 #else
@@ -220,8 +220,8 @@
    if (first) then
       first = .false.
       do k=0,kmax
-         do j=jjmin,jjmax
-            do i=iimin,iimax
+         do j=jmin,jmax
+            do i=imin,imax
                idpdx0(i,j,k) = idpdx(i,j,k)
                idpdx(i,j,k) = _ZERO_
                idpdy0(i,j,k) = idpdy(i,j,k)
@@ -231,8 +231,8 @@
       end do
    else
       do k=0,kmax
-         do j=jjmin,jjmax
-            do i=iimin,iimax
+         do j=jmin,jmax
+            do i=imin,imax
                idpdx(i,j,k) = idpdx(i,j,k) - idpdx0(i,j,k)
                idpdy(i,j,k) = idpdy(i,j,k) - idpdy0(i,j,k)
             end do
@@ -242,7 +242,7 @@
 #endif
 
 #ifdef SLICE_MODEL
-   do i=iimin,iimax
+   do i=imin,imax
       do k=kmin(i,2),kmax
          idpdx(i,3,k)=idpdx(i,2,k)
       end do   

@@ -1,4 +1,4 @@
-!$Id: tow.F90,v 1.6 2007-05-26 12:19:30 kbk Exp $
+!$Id: tow.F90,v 1.7 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,8 +6,7 @@
 ! !ROUTINE: tow() - calculates vertical velocities and store in real*4.
 !
 ! !INTERFACE:
-   subroutine tow(imin,jmin,imax,jmax,mask,                            &
-                  iimin,jjmin,iimax,jjmax,kmin,kmax,                   &
+   subroutine tow(imin,jmin,imax,jmax,kmin,kmax,mask,                  &
                   dt,                                                  &
 #if defined CURVILINEAR || defined SPHERICAL
                   dxc,dyc,                                             &
@@ -23,9 +22,9 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: imin,jmin,imax,jmax
-   integer, intent(in)                 :: mask(E2DFIELD)
-   integer, intent(in)                 :: iimin,jjmin,iimax,jjmax,kmax
    integer, intent(in)                 :: kmin(I2DFIELD)
+   integer, intent(in)                 :: kmax
+   integer, intent(in)                 :: mask(E2DFIELD)
    REALTYPE, intent(in)                :: dt
 #if defined CURVILINEAR || defined SPHERICAL
    REALTYPE, intent(in)                :: dxc(E2DFIELD)
@@ -52,6 +51,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: tow.F90,v $
+!  Revision 1.7  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.6  2007-05-26 12:19:30  kbk
 !  destag of vertical velocities
 !
@@ -89,12 +91,12 @@
    if (physical_vel) then
 
 !  save physical velocities
-   l=(iimax-iimin+1)*(jjmax-jjmin+1)
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   l=(imax-imin+1)*(jmax-jmin+1)
+   do j=jmin,jmax
+      do i=imin,imax
          if(mask(i,j) .gt. 0) then
 !           points below kmin - z-coordinates only
-            indx=i+(j-jjmin)*(iimax-iimin+1)
+            indx=i+(j-jmin)*(imax-imin+1)
             do k=0,kmin(i,j)-2
                indx = indx+l
             end do
@@ -141,8 +143,8 @@
 !     save grid-related velocities
       indx = 1
       do k=0,kmax
-         do j=jjmin,jjmax
-            do i=iimin,iimax
+         do j=jmin,jmax
+            do i=imin,imax
                ws(indx) = ww(i,j,k)
                indx = indx+1
             end do

@@ -1,4 +1,4 @@
-!$Id: halo_zones.F90,v 1.4 2003-08-03 08:49:51 kbk Exp $
+!$Id: halo_zones.F90,v 1.5 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,6 +32,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_zones.F90,v $
+!  Revision 1.5  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.4  2003-08-03 08:49:51  kbk
 !  cleaned code
 !
@@ -165,14 +168,14 @@
 ! !IROUTINE: update_3d_halo - updates the halo zones for 3D fields.
 !
 ! !INTERFACE:
-   subroutine update_3d_halo(f1,f2,mask,iimin,jjmin,iimax,jjmax,kmax,tag)
+   subroutine update_3d_halo(f1,f2,mask,imin,jmin,imax,jmax,kmax,tag)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
 !  Print information on the MPI environment
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: iimin,jjmin,iimax,jjmax,kmax
+   integer, intent(in)                 :: imin,jmin,imax,jmax,kmax
    integer, intent(in)                 :: tag
    integer, intent(in)                 :: mask(-HALO+1:,-HALO+1:)
 !
@@ -190,7 +193,7 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-   il=iimin;ih=iimax;jl=jjmin;jh=jjmax
+   il=imin;ih=imax;jl=jmin;jh=jmax
 
    if (nprocs .eq. 1) then
       f1(il-1, : , : )  = f2(il, : , :  )
@@ -199,7 +202,7 @@
       f1( : , jh+1, : ) = f2( : , jh, : )
    else
 #ifdef PARALLEL
-      call update_3d_halo_mpi(f1,f2,iimin,jjmin,iimax,jjmax,kmax,tag)
+      call update_3d_halo_mpi(f1,f2,imin,jmin,imax,jmax,kmax,tag)
 #endif
    end if
    return

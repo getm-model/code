@@ -1,4 +1,4 @@
-!$Id: slow_bottom_friction.F90,v 1.8 2006-03-01 15:54:08 kbk Exp $
+!$Id: slow_bottom_friction.F90,v 1.9 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,7 +28,7 @@
 !
 ! !USES:
    use parameters, only: kappa
-   use domain, only: iimin,iimax,jjmin,jjmax,HU,HV,min_depth,au,av
+   use domain, only: imin,imax,jmin,jmax,HU,HV,min_depth,au,av
    use variables_2d, only: zub,zvb,ru,rv,Uinto,Vinto
    use variables_3d, only: ssuo,ssun,ssvo,ssvn
    IMPLICIT NONE
@@ -59,8 +59,8 @@
    write(debug,*) 'slow_bottom_friction() # ',Ncall
 #endif
 
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if(au(i,j) .ge. 1) then
             Ui(i,j)=Uinto(i,j)/(ssuo(i,j)+HU(i,j))
          else
@@ -69,11 +69,11 @@
       end do
    end do
 !  need velocity in some halo points as well
-   Ui(:,jjmax+1) = Uinto(:,jjmax+1)/(ssuo(:,jjmax+1)+HU(:,jjmax+1))
-   Ui(iimin-1,:) = Uinto(iimin-1,:)/(ssuo(iimin-1,:)+HU(iimin-1,:))
+   Ui(:,jmax+1) = Uinto(:,jmax+1)/(ssuo(:,jmax+1)+HU(:,jmax+1))
+   Ui(imin-1,:) = Uinto(imin-1,:)/(ssuo(imin-1,:)+HU(imin-1,:))
 
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if(av(i,j) .ge. 1) then
             Vi(i,j)=Vinto(i,j)/(ssvo(i,j)+HV(i,j))
          else
@@ -82,11 +82,11 @@
       end do
    end do
 !  need velocity in some halo points as well
-   Vi(:,jjmin-1) = Vinto(:,jjmin-1)/(ssvo(:,jjmin-1)+HV(:,jjmin-1))
-   Vi(iimax+1,:) = Vinto(iimax+1,:)/(ssvo(iimax+1,:)+HV(iimax+1,:))
+   Vi(:,jmin-1) = Vinto(:,jmin-1)/(ssvo(:,jmin-1)+HV(:,jmin-1))
+   Vi(imax+1,:) = Vinto(imax+1,:)/(ssvo(imax+1,:)+HV(imax+1,:))
 
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (au(i,j) .ge. 1) then
             HH=max(min_depth,ssun(i,j)+HU(i,j))
             ruu(i,j)=(zub(i,j)+0.5*HH)/zub(i,j)
@@ -99,8 +99,8 @@
       end do
    end do
 
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (av(i,j) .ge. 1) then
             HH=max(min_depth,ssvn(i,j)+HV(i,j))
             rvv(i,j)=(zvb(i,j)+0.5*HH)/zvb(i,j)
@@ -113,8 +113,8 @@
       end do
    end do
 
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (au(i,j) .ge. 1) then
             uloc=Ui(i,j)
             vloc=0.25*( Vi(i  ,j  )    &
@@ -128,8 +128,8 @@
       end do
    end do
 
-   do j=jjmin,jjmax
-      do i=iimin,iimax
+   do j=jmin,jmax
+      do i=imin,imax
          if (av(i,j) .ge. 1) then
             uloc=0.25*( Ui(i  ,j  )    &
                        +Ui(i-1,j  )    &

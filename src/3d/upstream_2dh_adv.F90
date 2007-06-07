@@ -1,4 +1,4 @@
-!$Id: upstream_2dh_adv.F90,v 1.6 2006-08-25 09:11:20 kbk Exp $
+!$Id: upstream_2dh_adv.F90,v 1.7 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -78,8 +78,7 @@
 ! values when the 1D advection step came before this.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: imin,imax,jmin,jmax,kmax
    use advection_3d, only: hi,hio
    IMPLICIT NONE
 !
@@ -140,8 +139,8 @@
 
    flx = _ZERO_
    do k=1,kmax   ! Calculating u-interface low-order fluxes !
-      do j=jjmin,jjmax
-         do i=iimin-1,iimax
+      do j=jmin,jmax
+         do i=imin-1,imax
             if (uu(i,j,k) .gt. _ZERO_) then
                flx(i,j,k)=uu(i,j,k)*f(i,j,k)
             else
@@ -156,8 +155,8 @@
 
    fly = _ZERO_
    do k=1,kmax   ! Calculating v-interface low-order fluxes !
-      do j=jjmin-1,jjmax
-         do i=iimin,iimax
+      do j=jmin-1,jmax
+         do i=imin,imax
             if (vv(i,j,k) .gt. _ZERO_) then
                fly(i,j,k)=vv(i,j,k)*f(i,j,k)
             else
@@ -173,8 +172,8 @@
    cmax = -100000.
    cmin =  100000.
    do k=1,kmax 
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             if (az(i,j) .eq. 1)  then                                      
                do ii=-1,1
                   if (az(i+ii,j).eq.1) then
@@ -194,8 +193,8 @@
    end do
 
    do k=1,kmax 
-      do j=jjmin,jjmax
-         do i=iimin,iimax
+      do j=jmin,jmax
+         do i=imin,imax
             if (az(i,j) .eq. 1)  then                                      
                hio(i,j,k)=hi(i,j,k)
                hi(i,j,k)=hio(i,j,k)                               &

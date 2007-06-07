@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.18 2007-05-08 09:01:15 kbk Exp $
+!$Id: initialise.F90,v 1.19 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,6 +22,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
+!  Revision 1.19  2007-06-07 10:25:19  kbk
+!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
+!
 !  Revision 1.18  2007-05-08 09:01:15  kbk
 !  gotmturb.inp -> gotmturb.nml
 !
@@ -129,8 +132,7 @@
    use output, only: init_output,do_output,restart_file,out_dir
    use input,  only: init_input
    use domain, only: init_domain
-   use domain, only: iextr,jextr,imin,imax,jmin,jmax
-   use domain, only: iimin,iimax,jjmin,jjmax,kmax
+   use domain, only: iextr,jextr,imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord,maxdepth
    use time, only: init_time,update_time,write_time_string
    use time, only: start,timestr,timestep
