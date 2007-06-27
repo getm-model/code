@@ -1,4 +1,4 @@
-!$Id: variables_2d.F90,v 1.7 2006-03-01 15:54:07 kbk Exp $
+!$Id: variables_2d.F90,v 1.8 2007-06-27 08:55:26 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -129,6 +129,8 @@
    ru = _ZERO_; rv = _ZERO_
    res_du = _ZERO_; res_u = _ZERO_; res_dv = _ZERO_; res_v =  _ZERO_
    surfdiv = _ZERO_
+   fwf = _ZERO_
+   fwf_int = _ZERO_
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_variables_2d()'
