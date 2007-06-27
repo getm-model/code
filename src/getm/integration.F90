@@ -1,4 +1,4 @@
-!$Id: integration.F90,v 1.8 2007-06-27 08:39:35 kbk Exp $
+!$Id: integration.F90,v 1.9 2007-06-27 17:54:15 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,6 +20,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: integration.F90,v $
+!  Revision 1.9  2007-06-27 17:54:15  kbk
+!  need to multiply by time step to get integrated fresh water flux
+!
 !  Revision 1.8  2007-06-27 08:39:35  kbk
 !  support for fresh water fluxes at the sea surface - Adolf Stips
 !
@@ -165,7 +168,7 @@
       if (fwf_method .ge. 1) then
          fwf = evap+precip
          if (do_3d) then
-            fwf_int = fwf_int+fwf
+            fwf_int = fwf_int+timestep*fwf
          end if
       end if
 
