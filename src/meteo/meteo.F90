@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.16 2007-06-07 10:25:19 kbk Exp $
+!$Id: meteo.F90,v 1.17 2007-06-27 08:39:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -59,24 +59,35 @@
    logical, public                     :: on_grid=.true.
    logical, public                     :: calc_met=.false.
    integer, public                     :: met_method
+   integer, public                     :: fwf_method=0
+   REALTYPE, public                    :: evap_factor = _ONE_
+   REALTYPE, public                    :: precip_factor = _ONE_
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
    REALTYPE, public, dimension(:,:), allocatable  :: airp,tausx,tausy,swr,shf
    REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum,tcc
+   REALTYPE, public, dimension(:,:), allocatable  :: evap,precip
    REALTYPE, public                    :: cd_mom,cd_heat,cd_latent
+   REALTYPE, public                    :: cd_precip = _ZERO_
    REALTYPE, public                    :: t_1=-_ONE_,t_2=-_ONE_
    logical, public                     :: new_meteo=.false.
    integer, public                     :: hum_method=-1
 !
 ! !DEFINED PARAMETERS:
-   REALTYPE,public,parameter           :: cpa=1008.
+   REALTYPE,public,parameter           :: cpa=1008.    !AS that is not exact !
    REALTYPE,public,parameter           :: KELVIN=273.15
    REALTYPE,public,parameter           :: emiss=0.97
    REALTYPE,public,parameter           :: bolz=5.67e-8
+!  REALTYPE,public,parameter           :: cpa=1004.67 ! specific heat of dry air- correct
+   REALTYPE,public,parameter           :: cpw=4192.   ! specific heat of sea water
+   REALTYPE,public,parameter           :: rho_precip = 1000.0
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
+!  Revision 1.17  2007-06-27 08:39:36  kbk
+!  support for fresh water fluxes at the sea surface - Adolf Stips
+!
 !  Revision 1.16  2007-06-07 10:25:19  kbk
 !  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
 !
@@ -153,10 +164,13 @@
    integer                   :: spinup=0,metfmt=2
    REALTYPE                  :: tx= _ZERO_ ,ty= _ZERO_
    REALTYPE                  :: swr_const= _ZERO_ ,shf_const= _ZERO_
+   REALTYPE                  :: evap_const= _ZERO_ ,precip_const= _ZERO_
    REALTYPE, dimension(:,:), allocatable :: airp_old,tausx_old,tausy_old
    REALTYPE, dimension(:,:), allocatable :: d_airp,d_tausx,d_tausy
    REALTYPE, dimension(:,:), allocatable :: tcc_old,swr_old,shf_old
    REALTYPE, dimension(:,:), allocatable :: d_tcc,d_swr,d_shf
+   REALTYPE, dimension(:,:), allocatable :: evap_old,precip_old
+   REALTYPE, dimension(:,:), allocatable :: d_evap,d_precip
 !
 ! !TO DO:
 !  A method for stress calculations without knowledge of SST and meteorological
@@ -195,8 +209,10 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
-   namelist /meteo/ metforcing,on_grid,calc_met,met_method,spinup,metfmt, &
-                    meteo_file,tx,ty,swr_const,shf_const
+   namelist /meteo/ metforcing,on_grid,calc_met,met_method,fwf_method, &
+                    spinup,metfmt,meteo_file, &
+                    tx,ty,swr_const,shf_const,evap_const,precip_const, &
+                    precip_factor,evap_factor
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -213,10 +229,10 @@
       select case (met_method)
             case (1)
                LEVEL2 'Constant forcing is used:'
-               LEVEL3 'tx  = ',tx
-               LEVEL3 'ty  = ',ty
-               LEVEL3 'swr = ',swr_const
-               LEVEL3 'shf = ',shf_const
+               LEVEL3 'tx     = ',tx
+               LEVEL3 'ty     = ',ty
+               LEVEL3 'swr    = ',swr_const
+               LEVEL3 'shf    = ',shf_const
             case (2)
                if(on_grid) then
                   LEVEL2 'Meteorological fields are on the computational grid'
@@ -230,6 +246,23 @@
                end if
          case default
       end select
+
+      select case (fwf_method)
+            case (1)
+               LEVEL2 'Constant evaporation/precipitation'
+               LEVEL3 'evap   = ',evap_const
+               LEVEL3 'precip = ',precip_const
+            case (2)
+               LEVEL2 'Evaporation/precipitation read from file'
+            case (3)
+               LEVEL2 'Precipitation read from file'
+               LEVEL2 'Evaporation calculated'
+            case (4)
+               LEVEL2 'No precipitation'
+               LEVEL2 'Evaporation calculated'
+         case default
+      end select
+
       if (hotstart .and. spinup .gt. 0) then
          LEVEL2 'hotstart --> spinup=-1'
          spinup=-1
@@ -260,6 +293,14 @@
    allocate(shf(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (shf)'
    shf = _ZERO_
+
+   allocate(evap(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (evap)'
+   evap = _ZERO_
+
+   allocate(precip(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (precip)'
+   precip = _ZERO_
 
    if (metforcing) then
 
@@ -335,6 +376,26 @@
       if (rc /= 0) stop 'init_meteo: Error allocating memory (d_shf)'
       d_shf = _ZERO_
 
+      if (fwf_method .ge. 2) then
+         allocate(evap_old(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (evap_old)'
+         evap_old = _ZERO_
+
+         allocate(d_evap(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (d_evap)'
+         d_evap = _ZERO_
+      end if
+
+      if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+         allocate(precip_old(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (precip_old)'
+         precip_old = _ZERO_
+
+         allocate(d_precip(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (d_precip)'
+         d_precip = _ZERO_
+      end if
+
    end if
 #ifdef DEBUG
    write(debug,*) 'Leaving init_meteo()'
@@ -366,8 +427,10 @@
 !  air pressure, stresses in x and y direction, short wave radiation and
 !  surface heat fluxes.
 !  The surface heat flux is the sum of the latent and sensible heat + the
-!  net back radiation.
-!  The structure of this routine looks at firts glance a bit more complicated
+!  net back radiation. Additional if available the surface freshwater fluxes
+!  can be set const or read in from the meteo file. The unit in the meteo file
+!  is assumed to be meter (/day).  
+!  The structure of this routine looks at first glance a bit more complicated
 !  than should be necessary. The main reason is we need two fields in order to
 !  do any time interpolation - which explains the use of \emph{first}.
 !  In addition checks of the logical \emph{new\_meteo} is checked - set by the
@@ -440,6 +503,10 @@
             end do
             swr   = swr_const
             shf   = shf_const
+            if (fwf_method .eq. 1) then
+               evap = evap_const
+               precip = precip_const
+            end if
          case (2)
             if(calc_met) then
                have_sst = present(sst)
@@ -452,6 +519,12 @@
                      tausy_old = tausy
                      tcc_old = tcc
                      shf_old = shf
+                     if (fwf_method .ge. 2) then
+                        evap_old = evap
+                     end if
+                     if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+                        precip_old = precip
+                     end if
                   end if
                   if (have_sst) then
                      do j=jmin,jmax
@@ -461,12 +534,16 @@
                                      u10(i,j),v10(i,j),t2(i,j),airp(i,j), &
                                      sst(i,j),hum(i,j),hum_method)
                               call fluxes(latc(i,j),u10(i,j),v10(i,j),    &
-                                          t2(i,j),tcc(i,j),sst(i,j),      &
-                                          shf(i,j),tausx(i,j),tausy(i,j))
+                                      t2(i,j),tcc(i,j),sst(i,j),precip(i,j), &
+                                      shf(i,j),tausx(i,j),tausy(i,j),evap(i,j))
                            else
                               shf(i,j) = _ZERO_
                               tausx(i,j) = _ZERO_
                               tausy(i,j) = _ZERO_
+                              if (fwf_method .ge. 1) then
+                                 evap(i,j) = _ZERO_
+                                 precip(i,j) = _ZERO_
+                              end if
                            end if
                         end do
                      end do
@@ -492,6 +569,12 @@
                      d_tausy = tausy - tausy_old
                      d_tcc = tcc - tcc_old
                      d_shf = shf - shf_old
+                     if (fwf_method .ge. 2) then
+                        d_evap = evap - evap_old
+                     end if
+                     if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+                        d_precip = precip - precip_old
+                     end if
                   end if
                end if
                if (.not. first) then
@@ -499,6 +582,12 @@
                   shf = shf_old + t_frac*d_shf
                   tausx = tausx_old + t_frac*d_tausx
                   tausy = tausy_old + t_frac*d_tausy
+                  if (fwf_method .ge. 2) then
+                     evap = evap_old + t_frac*d_evap
+                  end if
+                  if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+                     precip = precip_old + t_frac*d_precip
+                  end if
                end if
                hh = secondsofday/3600.
                do j=jmin,jmax
@@ -515,6 +604,12 @@
                   tausy_old = tausy
                   swr_old = swr
                   shf_old = shf
+                  if (fwf_method .ge. 2) then
+                     evap_old = evap
+                  end if
+                  if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+                     precip_old = precip
+                  end if
                end if
                if (new_meteo) then
                   tausx_old = tausx_old + d_tausx
@@ -526,6 +621,14 @@
                   d_tausy = tausy - tausy_old
                   d_swr = swr - swr_old
                   d_shf = shf - shf_old
+                  if (fwf_method .ge. 2) then
+                     evap_old = evap_old + d_evap
+                     d_evap = evap - evap_old
+                  end if
+                  if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+                     precip_old = precip_old + d_precip
+                     d_precip = precip - precip_old
+                  end if
                end if
                if (.not. first) then
                   t_frac = (t-t_1)/(t_2-t_1)
@@ -533,8 +636,14 @@
                   tausy = tausy_old + t_frac*d_tausy
                   swr = swr_old + t_frac*d_swr
                   shf = shf_old + t_frac*d_shf
+                  if (fwf_method .ge. 2) then
+                     evap = evap_old + t_frac*d_evap
+                  end if
+                  if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+                     precip = precip_old + t_frac*d_precip
+                  end if
                end if
-            endif
+            end if
          case default
             FATAL 'A non valid meteo method has been specified.'
             stop 'do_meteo'

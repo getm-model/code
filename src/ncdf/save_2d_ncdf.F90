@@ -1,4 +1,4 @@
-!$Id: save_2d_ncdf.F90,v 1.6 2005-04-25 09:32:34 kbk Exp $
+!$Id: save_2d_ncdf.F90,v 1.7 2007-06-27 08:39:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,7 +19,9 @@
    use variables_2d, only: z,D,U,DU,V,DV,res_u,res_v,surfdiv
    use meteo,        only: metforcing,calc_met
    use meteo,        only: airp,u10,v10,t2,hum,tcc
+   use meteo,        only: evap,precip
    use meteo,        only: tausx,tausy,swr,shf
+
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -32,6 +34,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_2d_ncdf.F90,v $
+!  Revision 1.7  2007-06-27 08:39:37  kbk
+!  support for fresh water fluxes at the sea surface - Adolf Stips
+!
 !  Revision 1.6  2005-04-25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
@@ -154,6 +159,21 @@
                         imin,jmin,imax,jmax,ws)
             err = nf_put_vara_real(ncid, tcc_id, start, edges, ws)
             if (err .NE. NF_NOERR) go to 10
+
+            if (evap_id .ge. 0) then
+               call cnv_2d(imin,jmin,imax,jmax,az,evap,evap_missing, &
+                          imin,jmin,imax,jmax,ws)
+               err = nf_put_vara_real(ncid, evap_id, start, edges, ws)
+               if (err .NE. NF_NOERR) go to 10
+            end if
+
+            if (precip_id .ge. 0) then
+               call cnv_2d(imin,jmin,imax,jmax,az,precip,precip_missing, &
+                          imin,jmin,imax,jmax,ws)
+               err = nf_put_vara_real(ncid, precip_id, start, edges, ws)
+               if (err .NE. NF_NOERR) go to 10
+            end if
+
          end if
 
          call cnv_2d(imin,jmin,imax,jmax,az,tausx,stress_missing, &

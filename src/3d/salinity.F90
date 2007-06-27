@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.25 2007-06-07 10:25:19 kbk Exp $
+!$Id: salinity.F90,v 1.26 2007-06-27 08:39:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,6 +22,7 @@
    use domain, only: iextr,jextr
 #endif
    use domain, only: H,az
+   use variables_2d, only: fwf_int
    use variables_3d, only: S,hn,adv_schemes,kmin
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
@@ -110,9 +111,9 @@
 !-------------------------------------------------------------------------
 !BOC
 #ifdef DEBUG
-   integer, save :: Ncall = 0
-   Ncall = Ncall+1
-   write(debug,*) 'init_salinity() # ',Ncall
+!   integer, save :: Ncall = 0
+!   Ncall = Ncall+1
+!   write(debug,*) 'init_salinity() # ',Ncall
 #endif
 
 #ifdef NS_FRESHWATER_LENSE_TEST
@@ -275,7 +276,7 @@ salt_field_no=1
    end if
 #endif
 #ifdef HAIDVOGEL_TEST
-   STDERR 'HAIDVOGEL: salinity= ',imin,imax,i+ioff,iextr/2
+!   STDERR 'HAIDVOGEL: salinity= ',imin,imax,i+ioff,iextr/2
    do i=imin-1,imax+1
       if(i+ioff .le. iextr/2) then
          S(i,jmin-1:jmax+1,0:kmax) = 6.4102564
@@ -393,6 +394,15 @@ salt_field_no=1
    Ncall = Ncall+1
    write(debug,*) 'do_salinity() # ',Ncall
 #endif
+
+   do j=jmin,jmax
+      do i=imin,imax
+         if (az(i,j) .eq. 1) then
+            S(i,j,kmax) = S(i,j,kmax)*hn(i,j,kmax) &
+                          /(hn(i,j,kmax)+fwf_int(i,j))
+         end if
+      end do
+   end do
 
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    delxu=dxu

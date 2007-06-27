@@ -1,4 +1,4 @@
-!$Id: init_2d_ncdf.F90,v 1.7 2005-04-25 09:32:34 kbk Exp $
+!$Id: init_2d_ncdf.F90,v 1.8 2007-06-27 08:39:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,6 +17,8 @@
    use domain, only: imin,imax,jmin,jmax
    use domain, only: ioff,joff
    use meteo,  only: metforcing,calc_met
+   use meteo,  only: fwf_method
+
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -28,6 +30,9 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_2d_ncdf.F90,v $
+!  Revision 1.8  2007-06-27 08:39:37  kbk
+!  support for fresh water fluxes at the sea surface - Adolf Stips
+!
 !  Revision 1.7  2005-04-25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
@@ -206,6 +211,25 @@
       call set_attributes(ncid,shf_id,  &
                           long_name='surface heat fluxes',units='W/m2', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
+
+      if (fwf_method .ge. 2) then
+         fv = evap_missing; mv = evap_missing; vr(1) = -1.0; vr(2) = 1.
+         err = nf_def_var(ncid,'evap',NF_REAL,3,f3_dims,evap_id)
+         if (err .NE. NF_NOERR) go to 10
+         call set_attributes(ncid,evap_id,  &
+                            long_name='evaporation',units='m/s', &
+                            FillValue=fv,missing_value=mv,valid_range=vr)
+      end if
+
+      if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+         fv = precip_missing; mv = precip_missing; vr(1) = -1.; vr(2) = 1.
+         err = nf_def_var(ncid,'precip',NF_REAL,3,f3_dims,precip_id)
+         if (err .NE. NF_NOERR) go to 10
+         call set_attributes(ncid,precip_id,  &
+                            long_name='precipitation',units='m/s', &
+                            FillValue=fv,missing_value=mv,valid_range=vr)
+      end if
+
    end if
 
    fv = divergence_missing; mv = divergence_missing 

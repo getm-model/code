@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.20 2006-03-01 13:52:22 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.21 2007-06-27 08:39:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,8 +19,10 @@
    use grid_interpol, only: to_rotated_lat_lon
    use meteo, only: meteo_file,on_grid,calc_met,met_method,hum_method
    use meteo, only: airp,u10,v10,t2,hum,tcc
+   use meteo, only: fwf_method,evap,precip
    use meteo, only: tausx,tausy,swr,shf
    use meteo, only: new_meteo,t_1,t_2
+   use meteo, only: evap_factor,precip_factor
    use exceptions
    IMPLICIT NONE
 !
@@ -35,6 +37,7 @@
    integer         :: start(3),edges(3)
    integer         :: u10_id,v10_id,airp_id,t2_id
    integer         :: hum_id,convp_id,largep_id,tcc_id
+   integer         :: evap_id,precip_id
    integer         :: tausx_id,tausy_id,swr_id,shf_id
    integer         :: iextr,jextr,textr,tmax=-1
    integer         :: grid_scan=1
@@ -66,6 +69,8 @@
    character(len=10)         :: name_hum3="dev2"
    character(len=10)         :: name_hum4="twet"
    character(len=10)         :: name_tcc="tcc"
+   character(len=10)         :: name_evap="evap"
+   character(len=10)         :: name_precip="precip"
    integer, parameter        :: SPECIFIC_HUM=1
    integer, parameter        :: RELATIVE_HUM=2
    integer, parameter        :: DEW_POINT=3
@@ -81,6 +86,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
+!  Revision 1.21  2007-06-27 08:39:37  kbk
+!  support for fresh water fluxes at the sea surface - Adolf Stips
+!
 !  Revision 1.20  2006-03-01 13:52:22  kbk
 !  renamed method to met_method
 !
@@ -337,7 +345,7 @@
          if (err .NE. NF_NOERR) then
             err = nf_inq_varid(ncid,name_hum3,hum_id)
             if (err .NE. NF_NOERR) then
-               FATAL 'Not able to find valid humudity parameter'
+               FATAL 'Not able to find valid humidity parameter'
                stop 'init_meteo_input_ncdf()'
             else
                LEVEL2 'Taking hum as dew point temperature'
@@ -355,6 +363,15 @@
 
       err = nf_inq_varid(ncid,name_tcc,tcc_id)
       if (err .NE. NF_NOERR) go to 10
+
+      if (fwf_method .eq. 2) then
+         err = nf_inq_varid(ncid,name_evap,evap_id)
+         if (err .NE. NF_NOERR) go to 10
+      end if
+      if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+         err = nf_inq_varid(ncid,name_precip,precip_id)
+         if (err .NE. NF_NOERR) go to 10
+      end if
 
    else
 
@@ -875,6 +892,50 @@
          !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,tcc)
+      end if
+
+      if (evap_id .ge. 0) then
+         err = nf_get_vara_real(ncid,evap_id,start,edges,wrk)
+         if (err .ne. NF_NOERR) go to 10
+         if (on_grid) then
+            if (point_source) then
+               evap = wrk(1,1)
+            else
+               do j=jmin,jmax
+                  do i=imin,imax
+                     evap(i,j) = wrk(i,j)
+                  end do
+               end do 
+            end if
+         else
+            call copy_var(grid_scan,wrk,wrk_dp)
+            call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,evap)
+         end if
+         if (evap_factor .ne. _ONE_) then
+            evap = evap * evap_factor
+         end if
+      end if
+
+      if (precip_id .gt. 0) then
+         err = nf_get_vara_real(ncid,precip_id,start,edges,wrk)
+         if (err .ne. NF_NOERR) go to 10
+         if (on_grid) then
+            if (point_source) then
+               precip = wrk(1,1)
+            else
+               do j=jmin,jmax
+                  do i=imin,imax
+                     precip(i,j) = wrk(i,j)
+                  end do
+               end do
+            end if
+         else
+            call copy_var(grid_scan,wrk,wrk_dp)
+            call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,precip)
+         end if
+         if (precip_factor .ne. _ONE_) then
+            precip = precip * precip_factor
+         end if
       end if
 
    else

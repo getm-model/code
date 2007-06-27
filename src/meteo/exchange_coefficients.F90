@@ -1,4 +1,4 @@
-!$Id: exchange_coefficients.F90,v 1.13 2005-04-19 13:17:17 kbk Exp $
+!$Id: exchange_coefficients.F90,v 1.14 2007-06-27 08:39:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -23,6 +23,9 @@
 !           specific humidity at air temperature, relative humidity or
 !           wet bulb tmperature. This needs to be converted to specific 
 !           humidity at 2m.
+!     \item In the case of precipitation, we compute the sensible heatflux
+!           due to the additional water, assuming that the rain has the same
+!           temperature as the air.
 !  \end{itemize}
 !  
 !  The following formulaes are used (for the saturation vapor pressure
@@ -51,6 +54,7 @@
    use meteo, only: cpa,KELVIN
    use meteo, only: L,rho_air,w,qs,qa,ea,es
    use meteo, only: cd_mom,cd_heat,cd_latent
+   use meteo, only: fwf_method,cpw,cd_precip
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -65,6 +69,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: exchange_coefficients.F90,v $
+!  Revision 1.14  2007-06-27 08:39:36  kbk
+!  support for fresh water fluxes at the sea surface - Adolf Stips
+!
 !  Revision 1.13  2005-04-19 13:17:17  kbk
 !  reduce es=water vapour pressure sea according to Kraus (1972) - Stips
 !
@@ -111,6 +118,7 @@
    REALTYPE, parameter       :: a7=6.136820929e-11
    REALTYPE, parameter       :: const06=0.62198
    REALTYPE, parameter       :: eps=1.0e-12
+   REALTYPE, parameter       :: rgas=287.1  !J/kg/K gas const dry air
 !
 ! !LOCAL VARIABLES:
    REALTYPE                  :: tvirt,s,s0
@@ -326,6 +334,16 @@
       cd_mom =cee_d*(1.0+0.47*sqrt(s))
       cd_heat=cee_h*(1.0+0.63*sqrt(s))
       cd_latent=cee_e*(1.0+0.63*sqrt(s))
+   end if
+
+   if (fwf_method .ge. 1) then
+      x1 = 2.11e-5*(ta_k/KELVIN)**1.94
+      x2 = 0.02411*(1.0+ta*(3.309e-3-1.44e-6*ta))/(rho_air*cpa)
+      x3 = qa * L /(rgas * ta_K * ta_K)
+      cd_precip = 1.0/(1.0+const06*(x3*L*x1)/(cpa*x2))
+      cd_precip = cd_precip*cpw*((tw-ta) + (qs-qa)*L/cpa)
+   else
+      cd_precip = _ZERO_
    end if
 
    return

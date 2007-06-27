@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.14 2007-05-08 08:47:27 kbk Exp $
+!$Id: sealevel.F90,v 1.15 2007-06-27 08:39:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,6 +17,9 @@
 ! When working with the option {\tt SLICE\_MODEL}, the elevations
 ! at $j=2$ are copied to $j=3$.
 !
+! Now with consideration of fresh water fluxes (precipitation and 
+! evaporation). Positive for flux into the water.
+!
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,az,H
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -25,7 +28,7 @@
    use domain, only : dx,dy,ard1
 #endif
    use m2d, only: dtm
-   use variables_2d, only: z,zo,U,V
+   use variables_2d, only: z,zo,U,V,fwf
    use halo_zones, only : update_2d_halo,wait_halo,z_TAG
    IMPLICIT NONE
 !
@@ -41,7 +44,6 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j
    REALTYPE                  :: kk
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -56,7 +58,8 @@
       do i=imin,imax
          if (az(i,j) .eq. 1) then
             z(i,j)=z(i,j)-dtm*((U(i,j)*DYU-U(i-1,j  )*DYUIM1) &
-                              +(V(i,j)*DXV-V(i  ,j-1)*DXVJM1))*ARCD1
+                              +(V(i,j)*DXV-V(i  ,j-1)*DXVJM1))*ARCD1 &
+                         +dtm*fwf(i,j)
 
 #ifdef FRESHWATER_LENSE_TEST
        kk=1.0

@@ -1,4 +1,4 @@
-!$Id: integration.F90,v 1.7 2006-08-25 09:34:10 kbk Exp $
+!$Id: integration.F90,v 1.8 2007-06-27 08:39:35 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,6 +20,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: integration.F90,v $
+!  Revision 1.8  2007-06-27 08:39:35  kbk
+!  support for fresh water fluxes at the sea surface - Adolf Stips
+!
 !  Revision 1.7  2006-08-25 09:34:10  kbk
 !  include biology calls
 !
@@ -92,12 +95,13 @@
 ! !USES:
    use time,     only: update_time,timestep
    use domain,   only: kmax
-   use meteo,    only: do_meteo,tausx,tausy,airp
+   use meteo,    only: do_meteo,tausx,tausy,airp,fwf_method,evap,precip
    use m2d,      only: integrate_2d
+   use variables_2d, only: fwf,fwf_int
 #ifndef NO_3D
    use m3d,      only: integrate_3d,M
 #ifndef NO_BAROCLINIC
-   use m3d,      only: T
+   use variables_3d, only: T
 #endif
    use rivers,   only: do_rivers
 #endif
@@ -157,6 +161,14 @@
          call do_meteo(n,T(:,:,kmax))
 #endif
       end if
+
+      if (fwf_method .ge. 1) then
+         fwf = evap+precip
+         if (do_3d) then
+            fwf_int = fwf_int+fwf
+         end if
+      end if
+
       call integrate_2d(runtype,n,tausx,tausy,airp)
 #ifndef NO_3D
       call do_rivers(do_3d)
@@ -168,6 +180,9 @@
 #ifdef GETM_BIO
          if (bio_calc) call do_getm_bio(timestep)
 #endif
+      end if
+      if (fwf_method .ge. 1) then
+         fwf_int = _ZERO_
       end if
 #endif
 

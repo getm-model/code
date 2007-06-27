@@ -1,4 +1,4 @@
-!$Id: fluxes.F90,v 1.12 2005-04-19 15:56:58 kbk Exp $
+!$Id: fluxes.F90,v 1.13 2007-06-27 08:39:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,17 +6,24 @@
 ! !ROUTINE: Heat and momentum fluxes.
 !
 ! !INTERFACE:
-   subroutine fluxes(lat,u10,v10,airt,tcc,sst,hf,taux,tauy)
+!   subroutine fluxes(lat,u10,v10,airt,tcc,sst,hf,taux,tauy)
+   subroutine fluxes(lat,u10,v10,airt,tcc,sst,precip,hf,taux,tauy,evap)
 !
 ! !DESCRIPTION:
 !  The sum of the latent and sensible heat fluxes + longwave
-!  back-radiation is calculated and returned in \emph{hf} [$W/m^2$]. Also the
+!  net-radiation is calculated and returned in \emph{hf} [$W/m^2$]. Also the
 !  sea surface stresses are calculated and returned in \emph{taux} and
-!  \emph{tauy} [$N/m^2$], repsectively. The wind velocities are following the
+!  \emph{tauy} [$N/m^2$], respectively. Sensible heat and stress coming 
+!  from rain are considered. Further the fresh water flux due to 
+!  evaporation/kondensation is calculated here. 
+!  The wind velocities are following the
 !  meteorological convention (from where) and are in $m/s$. The
 !  temperatures \emph{airt} and \emph{sst} can be in Kelvin or Celcius -
 !  if they are $>$ 100 - Kelvin is assumed. \emph{tcc} - the total cloud 
-!  cover is specified as fraction between 0 and 1.
+!  cover is specified as fraction between 0 and 1. Net long wave radiation according
+!  to the Josey ea. JGR, 2003 formula 2, considering the effect of water vapor on
+!  the long wave radiation is in the moment the best available parameterization and
+!  therefore recommended for use. 
 !
 ! !SEE ALSO:
 !  meteo.F90, exchange_coefficients.F90
@@ -32,20 +39,25 @@
    use meteo, only: w,L,rho_air,qs,qa,ea
 #endif
    use meteo, only: cd_mom,cd_heat,cd_latent
+   use meteo, only: fwf_method,cd_precip
+   use parameters, only: rho_0
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in)                :: lat,u10,v10,airt,tcc,sst
+   REALTYPE, intent(in)                :: lat,u10,v10,airt,tcc,sst,precip
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out)               :: hf,taux,tauy
+   REALTYPE, intent(out)               :: hf,taux,tauy,evap
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: fluxes.F90,v $
+!  Revision 1.13  2007-06-27 08:39:36  kbk
+!  support for fresh water fluxes at the sea surface - Adolf Stips
+!
 !  Revision 1.12  2005-04-19 15:56:58  kbk
 !  added latitude dependent cloud correction factor for long wave rad. - Stips
 !
@@ -91,6 +103,8 @@
    integer, parameter   :: hastenrath=2 ! Hastenrath and Lamb, 1978
    integer, parameter   :: bignami=3    ! Bignami 1995 -Medsea
    integer, parameter   :: berliand=4   ! Berliand 1952 -ROMS
+   integer, parameter   :: josey1=5     ! Josey 2003, 1
+   integer, parameter   :: josey2=6     ! Josey 2003, 2
 !
 #ifndef OLD_WRONG_FLUXES
    real, parameter, dimension(91)  :: cloud_correction_factor = (/ &
@@ -123,7 +137,8 @@
    REALTYPE                  :: qe,qh,qb
    REALTYPE                  :: ta,ta_k,tw,tw_k
    integer                   :: back_radiation_method=clark
-   REALTYPE                  :: x1,x2,x3
+   REALTYPE                  :: x1,x2,x3,x
+   REALTYPE, parameter       :: rho_precip=1000.
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -185,6 +200,21 @@
 !        Temperature jump term
          x3=4.0*ta_k**3*(tw-ta)
          qb=emiss*bolz*(x1*x2+x3)
+      case(josey1)
+!        Use Josey et.al. formula 1 2003
+         x1=emiss*tw_k**4
+         x2=(10.77*tcc+2.34)*tcc-18.44
+         x3=0.955*(ta_k+x2)**4
+         qb=bolz*(x1-x3)
+      case(josey2)
+!        Use Josey et.al. formula 2 2003
+         x1=emiss*tw_k**4
+!AS avoid zero trap, limit to about 1% rel. humidity ~ 10Pa
+         if ( ea .lt. 10.0 ) ea = 10.0
+         x2=34.07+4157.0/(log(2.1718e10/ea))
+         x2=(10.77*tcc+2.34)*tcc-18.44+0.84*(x2-ta_k+4.01)
+         x3=0.955*(ta_k+x2)**4
+         qb=bolz*(x1-x3)
       case default
          stop 'fluxes: back_radiation_method'
    end select
@@ -194,6 +224,21 @@
    tmp   = cd_mom*rho_air*w
    taux  = tmp*u10
    tauy  = tmp*v10
+
+   if (precip .gt. _ZERO_) then
+!     sensible heat due to rain
+      hf = hf - precip*rho_precip* cd_precip
+!     momentum flux due to rainfall (in kg/m^2/s)
+      tmp  = 0.85 * precip*rho_precip * w
+      x=u10
+      taux  = taux + tmp * sign(1.0,x)
+      x=v10
+      tauy  = tauy + tmp * sign(1.0,x)
+   end if
+
+   if (fwf_method .ge. 2) then
+      evap = rho_air/rho_0*cd_latent*w*(qa-qs)
+   end if
 
    return
    end subroutine fluxes

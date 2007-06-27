@@ -107,3 +107,9 @@
 
    allocate(surfdiv(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (surfdiv)'
+
+   allocate(fwf(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (surfdiv)'
+
+   allocate(fwf_int(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (surfdiv)'

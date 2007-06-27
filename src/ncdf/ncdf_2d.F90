@@ -1,4 +1,4 @@
-!$Id: ncdf_2d.F90,v 1.5 2005-04-25 09:32:34 kbk Exp $
+!$Id: ncdf_2d.F90,v 1.6 2007-06-27 08:39:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,6 +26,7 @@
    integer                             :: u10_id,v10_id
    integer                             :: airp_id,t2_id,hum_id,tcc_id
    integer                             :: tausx_id,tausy_id,swr_id,shf_id
+   integer                             :: evap_id=-1,precip_id=-1
 
    REAL_4B, dimension(:), allocatable :: ws
 
@@ -40,11 +41,16 @@
    REALTYPE, parameter                 :: swr_missing        =-9999.0
    REALTYPE, parameter                 :: shf_missing        =-9999.0
    REALTYPE, parameter                 :: divergence_missing =-9999.0
+   REALTYPE, parameter                 :: evap_missing       =-9999.0
+   REALTYPE, parameter                 :: precip_missing     =-9999.0 
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d.F90,v $
+!  Revision 1.6  2007-06-27 08:39:37  kbk
+!  support for fresh water fluxes at the sea surface - Adolf Stips
+!
 !  Revision 1.5  2005-04-25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
