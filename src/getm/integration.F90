@@ -1,4 +1,4 @@
-!$Id: integration.F90,v 1.9 2007-06-27 17:54:15 kbk Exp $
+!$Id: integration.F90,v 1.10 2007-06-27 18:31:59 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,6 +20,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: integration.F90,v $
+!  Revision 1.10  2007-06-27 18:31:59  kbk
+!  fixed calculation of integrated fresh water flux
+!
 !  Revision 1.9  2007-06-27 17:54:15  kbk
 !  need to multiply by time step to get integrated fresh water flux
 !
@@ -167,9 +170,9 @@
 
       if (fwf_method .ge. 1) then
          fwf = evap+precip
-         if (do_3d) then
-            fwf_int = fwf_int+timestep*fwf
-         end if
+#ifndef NO_3D
+         fwf_int = fwf_int+timestep*fwf
+#endif
       end if
 
       call integrate_2d(runtype,n,tausx,tausy,airp)
@@ -183,9 +186,11 @@
 #ifdef GETM_BIO
          if (bio_calc) call do_getm_bio(timestep)
 #endif
-      end if
-      if (fwf_method .ge. 1) then
-         fwf_int = _ZERO_
+#ifndef NO_3D
+         if (fwf_method .ge. 1) then
+            fwf_int = _ZERO_
+         end if
+#endif
       end if
 #endif
 
