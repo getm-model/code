@@ -1,4 +1,4 @@
-!$Id: coordinates.F90,v 1.14 2007-06-07 10:25:19 kbk Exp $
+!$Id: coordinates.F90,v 1.15 2007-06-29 10:55:42 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -69,6 +69,10 @@
 ! conceptionally developed by \cite{BURCHARDea04}.
 !
 ! !USES:
+#ifdef SLICE_MODEL
+   use domain, only: imin,imax,jmin,jmax,kmax
+   use variables_3d, only: kvmin,hvo,hvn
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -81,6 +85,9 @@
 !
 ! !LOCAL VARIABLES:
    logical, save   :: first=.true.
+#ifdef SLICE_MODEL
+   integer          :: i,j,k
+#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
