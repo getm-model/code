@@ -1,4 +1,4 @@
-!$Id: ip_blumberg_mellor.F90,v 1.9 2007-06-07 10:25:19 kbk Exp $
+!$Id: ip_blumberg_mellor.F90,v 1.10 2007-07-12 10:26:00 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -91,8 +91,8 @@
 #endif
             grdl=(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
             buoyl=0.5*(buoy(i+1,j,kmax)+buoy(i,j,kmax))
-            prgr=grdl
-            idpdx(i,j,kmax)=hun(i,j,kmax)*prgr*0.5*hun(i,j,kmax)
+            prgr=grdl*0.5*hun(i,j,kmax)
+            idpdx(i,j,kmax)=hun(i,j,kmax)*prgr
             do k=kmax-1,1,-1
                grdu=grdl
                grdl=(buoy(i+1,j,k)-buoy(i,j,k))*dxm1
@@ -116,8 +116,8 @@
 #endif
             grdl=(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
             buoyl=0.5*(buoy(i,j+1,kmax)+buoy(i,j,kmax))
-            prgr=grdl
-            idpdy(i,j,kmax)=hvn(i,j,kmax)*prgr*0.5*hvn(i,j,kmax)
+            prgr=grdl*0.5*hvn(i,j,kmax)
+            idpdy(i,j,kmax)=hvn(i,j,kmax)*prgr
             do k=kmax-1,1,-1
                grdu=grdl
                grdl=(buoy(i,j+1,k)-buoy(i,j,k))*dym1

@@ -1,4 +1,4 @@
-!$Id: ip_blumberg_mellor_lin.F90,v 1.6 2007-06-07 10:25:19 kbk Exp $
+!$Id: ip_blumberg_mellor_lin.F90,v 1.7 2007-07-12 10:26:00 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -93,7 +93,8 @@
 #endif
             dxzl=(zz(i+1,j,kmax)-zz(i,j,kmax))*dxm1
             dxrl=(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
-            prgr=0.
+            prgr=dxrl*0.5*hun(i,j,kmax)
+            idpdx(i,j,kmax)=hun(i,j,kmax)*prgr
             do k=kmax-1,kumin_pmz(i,j),-1
                dxzu=dxzl
                dxzl=(zz(i+1,j,k)-zz(i,j,k))*dxm1
@@ -105,7 +106,6 @@
                bb=0.5*(dxzl+dxzu)
                cc=0.5*(dzr2+dzr1)
                prgr=prgr+(aa-bb*cc)*0.5*(hun(i,j,k+1)+hun(i,j,k))
-               if (k.eq.kmax-1) idpdx(i,j,kmax)=prgr*0.5*hun(i,j,kmax)**2
                idpdx(i,j,k)=hun(i,j,k)*prgr
             end do
          end if
@@ -122,7 +122,7 @@
 #endif
            dyzl=(zz(i,j+1,kmax)-zz(i,j,kmax))*dym1
            dyrl=(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
-            prgr=0.
+            prgr=dyrl*0.5*hun(i,j,kmax)
             idpdy(i,j,kmax)=hvn(i,j,kmax)*prgr
             do k=kmax-1,kvmin_pmz(i,j),-1
                dyzu=dyzl
@@ -135,7 +135,6 @@
                bb=0.5*(dyzl+dyzu)
                cc=0.5*(dzr2+dzr1)
                prgr=prgr+(aa-bb*cc)*0.5*(hvn(i,j,k+1)+hvn(i,j,k))
-               if (k.eq.kmax-1) idpdy(i,j,kmax)=prgr*0.5*hvn(i,j,kmax)**2
                idpdy(i,j,k)=hvn(i,j,k)*prgr
             end do
          end if
