@@ -1,0 +1,8 @@
+#$Id: make_pub_list,v 1.1 2007-07-21 08:41:58 kbk Exp $
+
+#bibtex2html -s siam -r -d getm_pub.bib 
+bibtex2html -nodoc -noheader -s ieeetr -r -d getm_pub.bib 
+#bibtex2html -nodoc -noheader -s ieeetr -a getm_pub.bib 
+scp getm_pub.html getm_pub_bib.html  getm.eu:/srv/www/htdocs/doc/
+rm getm_pub.html getm_pub_bib.html
+
