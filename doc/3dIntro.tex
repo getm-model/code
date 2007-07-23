@@ -1,4 +1,4 @@
-%$Id: 3dIntro.tex,v 1.3 2007-02-23 12:20:35 kbk Exp $
+%$Id: 3dIntro.tex,v 1.4 2007-07-23 10:25:49 hb Exp $
 
 \section{Introduction to 3d module}
 
@@ -177,13 +177,13 @@ Surface of bottom boundary conditions for tracers are usually given
 by prescribed fluxes:
 
 \begin{equation}\label{SurfFlux}
-\nu_t' \partial_z c^i = F^i_s  \qquad \mbox{for } z=\zeta
+-\alpha w_s^i c^i+\nu_t' \partial_z c^i = F^i_s  \qquad \mbox{for } z=\zeta
 \end{equation}
 
 and 
 
 \begin{equation}\label{BottFlux}
-\nu_t' \partial_z c^i = -F^i_b  \qquad \mbox{for } z=-H,
+-\alpha w_s^i c^i+\nu_t' \partial_z c^i = -F^i_b  \qquad \mbox{for } z=-H,
 \end{equation}
 
 with surface and bottom fluxes $F^n_s$ and $F^n_b$ directed

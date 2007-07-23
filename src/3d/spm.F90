@@ -1,4 +1,4 @@
-!$Id: spm.F90,v 1.14 2007-06-07 10:25:19 kbk Exp $
+!$Id: spm.F90,v 1.15 2007-07-23 10:25:50 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,13 +22,15 @@
 !  \end{equation}
 !  where erosion and sedimentation fluxes are modelled following
 !  \cite{KRONE62} as functions of the bottom shear stress $\tau_b$.
+!  In (\ref{Bottom_SPM}), $w_s$ is a positive settling velocity. So far,
+!  GETM is only coded for constant settling velocities. 
 !  The erosion flux is only non-zero when
 !  the bottom shear stress exceeds a critical shear stress $\tau_{ce}$:
 !  \begin{equation}\label{ero_flux}
 !  F_e = \left\{
 !  \begin{array}{ll}
 !  \displaystyle
-!  \frac {c_e} {\rho_0}(|\tau_b|-\tau_{ce}),
+!  \max \left\{\frac {c_e} {\rho_0}(|\tau_b|-\tau_{ce}),0\right\},
 !  & \mbox{ for } B>0 \mbox{ and } |\tau_b|>\tau_{ce} \\ \\
 !  0, & \mbox{ else}
 !  \end{array}
@@ -40,7 +42,7 @@
 !  bottom shear stresses smaller than a critical shear stress $\tau_{cs}$.
 !  This flux is limited by the near bottom concentration $C_b$:
 !  \begin{equation}\label{sed_flux}
-!  F_s = \frac {w_s C_b} {\tau_{cs}} (\tau_{cs}-|\tau_b|).
+!  F_s = \max\left\{\frac {w_s C_b} {\tau_{cs}} (\tau_{cs}-|\tau_b|),0\right\}.
 !  \end{equation}
 !  Critical shear stresses for erosion and sedimentation
 !  ($\tau_{ce}$ and $\tau_{cs}$ have as units N\,m$^{-2}$).
