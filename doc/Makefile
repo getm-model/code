@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.2 2006-03-01 14:40:17 hb Exp $
+#$Id: Makefile,v 1.3 2007-07-24 10:55:07 kbk Exp $
 #
 # Makefile for the GETM source code documentation. 
 #
@@ -9,7 +9,7 @@ SRCDIR    = ../src
 
 RUSER=bolding
 RHOST=bolding-burchard.com
-RDIR=/data/kamel/domains/bolding-burchard.com/doc/v1.6/
+RDIR=/data/kamel/domains/bolding-burchard.com/doc/v1.8/
 
 
 PROTEXSRC  = getm.tex		\
@@ -74,9 +74,9 @@ upload: a4 html
 	scp -r html/* $(RUSER)@$(RHOST):$(RDIR)/html/
 
 figures:
-	wget -nd -nH -q http://www.bolding-burchard.com/src/figures/getm-figs-1.6.x.gz
-	tar -xvzf getm-figs-1.6.x.gz
-	$(RM) getm-figs-1.6.x.gz
+	wget -nd -nH -q http://www.bolding-burchard.com/src/figures/getm-figs-1.8.x.gz
+	tar -xvzf getm-figs-1.8.x.gz
+	$(RM) getm-figs-1.8.x.gz
 
 clean:
 	$(RM) *.log *.toc *.aux *.bbl *.blg *.bac *~
