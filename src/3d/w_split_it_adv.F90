@@ -1,4 +1,4 @@
-!$Id: w_split_it_adv.F90,v 1.4 2007-06-07 10:25:19 kbk Exp $
+!$Id: w_split_it_adv.F90,v 1.5 2007-07-31 07:28:10 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -88,20 +88,40 @@
          do j=jmin,jmax
             do i=imin,imax
                if (az(i,j) .eq. 1) then
-                  do k=1,kmax-1
-                     cu(i,j,k) = _ZERO_
-                     if (ww(i,j,k) .gt. _ZERO_) then
-                        cu(i,j,k)=ww(i,j,k)*f(i,j,k)
-                     else
-                        cu(i,j,k)=ww(i,j,k)*f(i,j,k+1)
+                  cmax= _ZERO_
+                  it=1
+                  ready=.false.
+222               do ii=1,it
+                     do k=1,kmax-1
+                        cu(i,j,k) = _ZERO_
+                        if (ww(i,j,k) .gt. _ZERO_) then
+                           c=ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
+                           if (c .gt. cmax) cmax=c
+                           cu(i,j,k)=ww(i,j,k)*f(i,j,k)
+                        else
+                           c=-ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
+                           if (c .gt. cmax) cmax=c
+                           cu(i,j,k)=ww(i,j,k)*f(i,j,k+1)
+                        end if
+                     end do
+                     if (.not. READY) then
+                        it=min(200,int(cmax)+1)
+#ifdef DEBUG
+                        if (it .gt. 1) write(95,*) i,j,it,cmax
+#endif
                      end if
-                  end do
-                  do k=1,kmax   ! Doing a w-advection step
-                     hio(i,j,k)=hi(i,j,k)
-                     hi(i,j,k)=hio(i,j,k)-splitfac*dt*(ww(i,j,k)-ww(i,j,k-1))
-                     f(i,j,k)=(f(i,j,k)*hio(i,j,k)-        &
-                               splitfac*dt*(cu(i,j,k)-cu(i,j,k-1)))/hi(i,j,k)
-                  end do
+                     if ((it .gt. 1) .and. (.not. READY)) then
+                        READY=.true.
+                        goto 222
+                     end if
+                     do k=1,kmax   ! Doing a w-advection step
+                        hio(i,j,k)=hi(i,j,k)
+                        hi(i,j,k)=hio(i,j,k)-splitfac/float(it)               &
+                                  *dt*(ww(i,j,k)-ww(i,j,k-1))
+                        f(i,j,k)=(f(i,j,k)*hio(i,j,k)-splitfac/float(it)      &
+                                  *dt*(cu(i,j,k)-cu(i,j,k-1)))/hi(i,j,k)
+                     end do
+                  end do   
                end if
             end do
          end do
