@@ -1,0 +1,201 @@
+#include "cppdefs.h"
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: ip_shchepetkin_williams
+!
+! !INTERFACE:
+   subroutine ip_shchepetkin_williams()
+!
+! !DESCRIPTION:
+!
+! Here, the pressure gradient is calculated according to the
+! method suggested by \cite(SHCHEPETKINandWILLIAMS03).
+! This method uses a nonconservative  Density-Jacobian scheme,
+! based on  cubic polynomial fits for  "buoy" and the vertical
+! position of rho-points as functions of nondimensional coordinates
+! (XI,ETA,s), that is, its respective array indices.
+! The cubic polynomials are monotonized by using harmonic mean
+! instead of linear averages to interpolate slopes.
+! This scheme retains exact anti-symmetry:
+!
+!        J(rho,zz)=-J(zz,rho).
+!
+! If parameter OneFifth (below) is set to zero, the scheme should
+! become identical to standard Jacobian.
+!
+!
+! !USES:
+   use internal_pressure
+   use variables_3d, only: hn,buoy,sseo
+   use domain, only: H,az,au,av
+   IMPLICIT NONE
+!
+! !REVISION HISTORY:
+!  Original author(s): Richard Hofmeister
+!
+! !LOCAL VARIABLES:
+   integer                   :: i,j,k
+   REALTYPE                  :: dR(I3DFIELD)=_ZERO_
+   REALTYPE                  :: dZ(I3DFIELD)=_ZERO_
+   REALTYPE                  :: P(I3DFIELD)=_ZERO_
+   REALTYPE                  :: dxm1,dym1,cff,cff1,cff2
+   REALTYPE                  :: AJ=_ZERO_
+   REALTYPE                  :: eps=1.e-10
+   REALTYPE                  :: OneFifth = 0.2
+   REALTYPE                  :: FC(I2DFIELD)=_ZERO_
+   REALTYPE                  :: dZx(I2DFIELD)=_ZERO_
+   REALTYPE                  :: dRx(I2DFIELD)=_ZERO_
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+!#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
+   dxm1 = _ONE_/DXU
+   dym1 = _ONE_/DYV
+!#endif
+
+!  First, the rho-point heights are calculated 
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
+         if (az(i,j) .ge. 1) then
+            zz(i,j,1)=-H(i,j)+0.5*hn(i,j,1)
+            do k=2,kmax
+               zz(i,j,k)=zz(i,j,k-1)+0.5*(hn(i,j,k-1)+hn(i,j,k))
+            end do
+         end if
+      end do
+   end do
+
+   do j=jmin,jmax+1
+      do i=imin,imax+1
+        if (az(i,j) .ge. 1) then
+        do k=1,kmax-1
+          dR(i,j,k)=buoy(i,j,k+1)-buoy(i,j,k)
+          dZ(i,j,k)=zz(i,j,k+1)-zz(i,j,k)
+        end do
+        dR(i,j,kmax)=dR(i,j,kmax-1)
+        dZ(i,j,kmax)=dZ(i,j,kmax-1)
+        dR(i,j,0)=dR(i,j,1)
+        dZ(i,j,0)=dZ(i,j,1)
+
+        do k=kmax,1,-1
+          cff=2.0*dR(i,j,k)*dR(i,j,k-1)
+          if (cff .gt. eps) then
+            dR(i,j,k)=cff/(dR(i,j,k)+dR(i,j,k-1))
+          else
+            dR(i,j,k)=_ZERO_
+          end if
+          dZ(i,j,k)=2.0*dZ(i,j,k)*dZ(i,j,k-1)/(dZ(i,j,k)+dZ(i,j,k-1))
+        end do
+
+        cff1=1.0/(zz(i,j,kmax)-zz(i,j,kmax-1))
+        cff2=0.5*(buoy(i,j,kmax)-buoy(i,j,kmax-1))*0.5*hn(i,j,kmax)*cff1
+
+        P(i,j,kmax)=(buoy(i,j,kmax)+cff2)*0.5*hn(i,j,kmax)
+
+        do k=kmax-1,1,-1
+          P(i,j,k)=P(i,j,k+1)+0.5*((buoy(i,j,k+1)+buoy(i,j,k))* &
+                   (zz(i,j,k+1)-zz(i,j,k))-OneFifth*((dR(i,j,k+1)-dR(i,j,k))* &
+                   (zz(i,j,k+1)-zz(i,j,k)-1./12.*(dZ(i,j,k+1)+dZ(i,j,k)))- &
+                   (dZ(i,j,k+1)-dZ(i,j,k))*(buoy(i,j,k+1)-buoy(i,j,k)- &
+                   1./12.*(dR(i,j,k+1)+dR(i,j,k)))))
+        end do
+      end if
+    end do
+  end do
+
+! Compute pressure gradient term as it
+! appears on the right hand side of u equation
+
+      do k=kmax,1,-1
+        do j=jmin,jmax
+          do i=imin-HALO+1,imax+HALO
+            dZx(i,j)=zz(i,j,k)-zz(i-1,j,k)
+            dRx(i,j)=buoy(i,j,k)-buoy(i-1,j,k)
+          end do
+        end do
+
+        do j=jmin,jmax
+          do i=imin,imax+HALO-1
+            cff=2.0*dZx(i,j)*dZx(i+1,j)
+            if (cff .gt. eps) then
+              cff1=1.0/(dZx(i,j)+dZx(i+1,j))
+              dZx(i,j)=cff*cff1
+            else
+              dZx(i,j)=_ZERO_
+            end if
+            cff1=2.0*dRx(i,j)*dRx(i+1,j)
+            if (cff1 .gt. eps) then
+              cff2=1.0/(dRx(i,j)+dRx(i+1,j))
+              dRx(i,j)=cff1*cff2
+            else
+              dRx(i,j)=_ZERO_
+            end if
+          end do
+        end do
+
+        do j=jmin,jmax
+          do i=imin,imax+HALO-2
+            if (au(i,j) .ge. 1) then
+             AJ = P(i+1,j,k) - P(i,j,k)
+             FC(i,j) = 0.5*((buoy(i+1,j,k)+buoy(i,j,k))* &
+               (zz(i+1,j,k)-zz(i,j,k))-OneFifth*((dRx(i+1,j)-dRx(i,j))* &
+               (zz(i+1,j,k)-zz(i,j,k)-1.0/12.0*(dZx(i+1,j)+dZx(i,j)))- &
+               (dZx(i+1,j)-dZx(i,j))*(buoy(i+1,j,k)-buoy(i,j,k)-1.0/12.0*(dRx(i+1,j)+dRx(i,j)))))
+             AJ = AJ + FC(i,j)
+            idpdx(i,j,k)=AJ*dxm1*hun(i,j,k) - hun(i,j,k)*dxm1*(sseo(i+1,j)-sseo(i,j))*0.5*(buoy(i+1,j,kmax)+buoy(i,j,kmax))
+            end if
+          end do
+        end do
+      end do
+
+! Compute pressure gradient term as it
+! appears on the right hand side of v equation
+
+      do k=kmax,1,-1
+        do j=jmin-HALO+1,jmax+HALO
+          do i=imin,imax
+            dZx(i,j)=zz(i,j,k)-zz(i,j-1,k)
+            dRx(i,j)=buoy(i,j,k)-buoy(i,j-1,k)
+          end do
+        end do
+
+        do j=jmin,jmax+HALO-1
+          do i=imin,imax
+            cff=2.0*dZx(i,j)*dZx(i,j+1)
+            if (cff .gt. eps) then
+              cff1=1.0/(dZx(i,j)+dZx(i,j+1))
+              dZx(i,j)=cff*cff1
+            else
+              dZx(i,j)=_ZERO_
+            end if
+            cff1=2.0*dRx(i,j)*dRx(i,j+1)
+            if (cff1 .gt. eps) then
+              cff2=1.0/(dRx(i,j)+dRx(i,j+1))
+              dRx(i,j)=cff1*cff2
+            else
+              dRx(i,j)=_ZERO_
+            end if
+          end do
+        end do
+
+        do j=jmin,jmax+HALO-2
+          do i=imin,imax
+            if (av(i,j) .ge. 1) then
+            AJ = P(i,j+1,k) - P(i,j,k)
+            FC(i,j) = 0.5*((buoy(i,j+1,k)+buoy(i,j,k))* &
+                   (zz(i,j+1,k)-zz(i,j,k))-OneFifth*((dRx(i,j+1)-dRx(i,j))* &
+                   (zz(i,j+1,k)-zz(i,j,k)- &
+                   1.0/12.0*(dZx(i,j+1)+dZx(i,j)))-(dZx(i,j+1)-dZx(i,j))* &
+                   (buoy(i,j+1,k)-buoy(i,j,k)-1.0/12.0*(dRx(i,j+1)+dRx(i,j)))))
+            AJ = AJ + FC(i,j)
+            idpdy(i,j,k)=AJ*dym1*hvn(i,j,k) - hvn(i,j,k)*dym1*(sseo(i,j+1)-sseo(i,j))*0.5*(buoy(i,j+1,kmax)+buoy(i,j,kmax))
+            end if
+          end do
+        end do
+      end do
+
+   return
+   end subroutine ip_shchepetkin_williams
+!EOC

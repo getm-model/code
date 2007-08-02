@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.18 2007-06-07 10:25:19 kbk Exp $
+!$Id: internal_pressure.F90,v 1.19 2007-08-02 09:49:26 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -88,6 +88,7 @@
    integer, private, parameter         :: Z_INTERPOL=3
    integer, private, parameter         :: SONG_WRIGHT=4
    integer, private, parameter         :: CHU_FAN=5
+   integer, private, parameter         :: SHCHEPETKIN_WILLIAMS=6
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -147,6 +148,8 @@
          LEVEL3 'Chu and Fan scheme'
          call getm_error("init_internal_pressure()", &
              "Not working, use other internal pressure gradient scheme")
+      case(SHCHEPETKIN_WILLIAMS)
+         LEVEL3 'Shchepetkin and Williams scheme'
       case default
          FATAL 'Not valid ip_method specified'
          stop 'init_internal_pressure()'
@@ -211,6 +214,8 @@
          call ip_song_wright()
       case(CHU_FAN)
          call ip_chu_fan()
+      case(SHCHEPETKIN_WILLIAMS)
+         call ip_shchepetkin_williams()
       case default
          FATAL 'Not valid ip_method specified'
          stop 'do_internal_pressure()'
