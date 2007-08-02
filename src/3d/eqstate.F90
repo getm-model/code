@@ -1,4 +1,4 @@
-!$Id: eqstate.F90,v 1.10 2007-06-07 10:25:19 kbk Exp $
+!$Id: eqstate.F90,v 1.11 2007-08-02 09:46:21 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -130,7 +130,7 @@
 #define BUOYANCY
    select case (eqstate_method)
       case (1)
-         forall(i=imin-1:imax+1,j=jmin-1:jmax+1,az(i,j) .gt. 0)  &
+         forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO,az(i,j) .gt. 0)  &
             rho(i,j,1:kmax) = rho_0 +                                &
                     dtr0*(T(i,j,1:kmax)-T0) + dsr0*(S(i,j,1:kmax)-S0)
 
@@ -139,13 +139,13 @@
             rho(i,j,1:kmax) = 1000. + S(i,j,1:kmax)
 #endif
 #ifdef CONSTANCE_TEST
-         forall(i=imin-1:imax+1,j=jmin-1:jmax+1,az(i,j) .gt. 0)  &
+         forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO,az(i,j) .gt. 0)  &
           rho(i,j,1:kmax) = 1000. + *dtr0*(T(i,j,1:kmax)-T0)
 #endif
       case (2)
          do k = 1,kmax
-            do j = jmin-1,jmax+1
-               do i = imin-1,imax+1
+            do j = jmin-HALO,jmax+HALO
+               do i = imin-HALO,imax+HALO
                   if (az(i,j) .gt. 0) then
                      T1 = T(i,j,k)
                      T2 = T1*T1
@@ -153,12 +153,16 @@
                      T4 = T2*T2
                      T5 = T1*T4
                      S1 = S(i,j,k)
-#ifdef DEBUG
+
+#ifdef NONNEGSALT
                      if (S1 .lt. _ZERO_) then
+#ifdef DEBUG
                         STDERR 'Salinity at point ',i,',',j,',',k,' < 0.'
                         STDERR 'Value is S = ',S(i,j,k)
                         STDERR 'Programm continued, value set to zero ...'
+#endif
                         S(i,j,k)= _ZERO_
+                        S1 = _ZERO_
                      end if
 #endif
                      S15= S1**1.5
