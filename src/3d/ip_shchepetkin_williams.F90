@@ -10,20 +10,30 @@
 ! !DESCRIPTION:
 !
 ! Here, the pressure gradient is calculated according to the
-! method suggested by \cite(SHCHEPETKINandWILLIAMS03).
+! method and the algorithm suggested by Shchepetkin and McWilliams, 2003.
 ! This method uses a nonconservative  Density-Jacobian scheme,
-! based on  cubic polynomial fits for  "buoy" and the vertical
-! position of rho-points as functions of nondimensional coordinates
-! (XI,ETA,s), that is, its respective array indices.
+! based on  cubic polynomial fits for the bouyancy "buoy" and "zz", the vertical
+! position of rho-points, as functions of its respective array indices.
 ! The cubic polynomials are monotonized by using harmonic mean
 ! instead of linear averages to interpolate slopes.
-! This scheme retains exact anti-symmetry:
-!
-!        J(rho,zz)=-J(zz,rho).
+! Exact anti-symmetry of the density Jacobian
+! \begin{equation}
+!        J(rho,zz)=-J(zz,rho)
+! \end{equation}
+!  is retained for the density/bouyancy
+! Jacobian in the pressure gradient formulation in x-direction
+! for a non aligned vertical coordinate $\sigma$,
+! the atmospheric pressure $p_0$ and the sea surface elevation $\eta$:
+! \begin{equation}
+! \label{eq: shchepetkin pgf}
+! - {1 \over \rho_0} \partial_x p = \underbrace{-{1 \over \rho_0} \partial_x p_0 - g \partial_x\eta}_{uu\_momentum}
+!                          + \underbrace{buoy(\eta) \partial_x\eta + \int_z^\eta J(buoy,zz)\mbox{d}\sigma}_{idpdx}
+! \end{equation}
+! Details about the calculation of the integral over the Jacobian in
+! (\ref{eq: shchepetkin pgf}) can be found in Shchepetkin and McWilliams, 2003.
 !
 ! If parameter OneFifth (below) is set to zero, the scheme should
 ! become identical to standard Jacobian.
-!
 !
 ! !USES:
    use internal_pressure
@@ -50,10 +60,10 @@
 !-----------------------------------------------------------------------
 !BOC
 
-!#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
+#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
    dxm1 = _ONE_/DXU
    dym1 = _ONE_/DYV
-!#endif
+#endif
 
 !  First, the rho-point heights are calculated 
    do j=jmin-HALO,jmax+HALO
@@ -138,6 +148,9 @@
         do j=jmin,jmax
           do i=imin,imax+HALO-2
             if (au(i,j) .ge. 1) then
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+            dxm1=_ONE_/DXU
+#endif
              AJ = P(i+1,j,k) - P(i,j,k)
              FC(i,j) = 0.5*((buoy(i+1,j,k)+buoy(i,j,k))* &
                (zz(i+1,j,k)-zz(i,j,k))-OneFifth*((dRx(i+1,j)-dRx(i,j))* &
@@ -183,6 +196,9 @@
         do j=jmin,jmax+HALO-2
           do i=imin,imax
             if (av(i,j) .ge. 1) then
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+            dym1 = _ONE_/DYV
+#endif
             AJ = P(i,j+1,k) - P(i,j,k)
             FC(i,j) = 0.5*((buoy(i,j+1,k)+buoy(i,j,k))* &
                    (zz(i,j+1,k)-zz(i,j,k))-OneFifth*((dRx(i,j+1)-dRx(i,j))* &
