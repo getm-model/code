@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.19 2007-02-22 08:48:11 kbk Exp $
+!$Id: output.F90,v 1.20 2007-08-23 18:48:17 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -49,13 +49,16 @@
    integer                             :: step_2d=1
    integer                             :: first_3d=1
    integer                             :: step_3d=1
-   integer                             :: hotout=-1
+   integer                             :: hotout(3)=-1
    integer                             :: meanout=-1
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.20  2007-08-23 18:48:17  kbk
+!  added flexibility for saving hot-start files
+!
 !  Revision 1.19  2007-02-22 08:48:11  kbk
 !  possible to save masks (az, au, av)
 !
@@ -229,6 +232,19 @@
    end if
 #endif
 
+   if ( hotout(1) .gt. 0 .and. hotout(2) .lt. hotout(1) ) then
+      if ( hotout(2) .eq. -1 ) then
+         hotout(2) = 2147483647
+         hotout(3) = hotout(1)
+      else
+         hotout(2) = hotout(1)
+         hotout(3) = 1
+      end if
+   end if
+   if ( hotout(1) .eq. hotout(2)) then
+      hotout(3) = 1
+   end if
+
    save_mean=(meanout .ge. 0 .and. runtype .gt. 1)
    if ( save_mean ) then
       LEVEL2 'Mean fields in: ',trim(out_f_mean)
@@ -346,9 +362,13 @@
    end if
 
 !  Restart file
-   if (hotout .gt. 0 .and. mod(n,hotout) .eq. 0) then
-      dummy = n
-      call restart_file(WRITING,trim(hot_out),dummy,runtype)
+   if ( hotout(1) .gt. 0 ) then
+      if (hotout(1) .le. n .and. &
+          n .le. hotout(2) .and. &
+          mod(n,hotout(3)) .eq. 0) then
+         dummy = n
+         call restart_file(WRITING,trim(hot_out),dummy,runtype)
+      end if
    end if
 
 #ifdef DEBUG
@@ -596,7 +616,7 @@
 
 !  Save last restart file
 
-   if (hotout .eq. 0) then
+   if (hotout(1) .eq. 0) then
       call restart_file(WRITING,trim(hot_out),loop,runtype)
    end if
 
