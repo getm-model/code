@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.22 2007-06-28 16:39:41 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.23 2007-08-24 10:43:44 frv-bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -86,6 +86,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
+!  Revision 1.23  2007-08-24 10:43:44  frv-bjb
+!  Allow negative seconds in meteo nc-files input
+!
 !  Revision 1.22  2007-06-28 16:39:41  kbk
 !  initialise evap_id and precip_id to -1
 !
@@ -535,7 +538,7 @@
 ! !LOCAL VARIABLES:
    integer, parameter        :: iunit=55
    character(len=256)        :: fn,time_units
-   integer         :: j1,s1,j2,s2
+   integer         :: junit,sunit,j1,s1,j2,s2
    integer         :: n,err,idum
    logical         :: first=.true.
    logical         :: found=.false.,first_open=.true.
@@ -661,10 +664,12 @@
          if (err .NE. NF_NOERR) go to 10
          err =  nf_get_att_text(ncid,time_var_id,'units',time_units)
          if (err .NE. NF_NOERR) go to 10
-         call string_to_julsecs(time_units,j1,s1)
+         call string_to_julsecs(time_units,junit,sunit)
          err = nf_get_var_real(ncid,time_var_id,met_times)
          if (err .ne. NF_NOERR) go to 10
-         call add_secs(j1,s1,nint(met_times(textr)),j2,s2)
+
+         call add_secs(junit,sunit,nint(met_times(1)),    j1,s1)
+         call add_secs(junit,sunit,nint(met_times(textr)),j2,s2)
 
          if (in_interval(j1,s1,julianday,secondsofday,j2,s2)) then
             found = .true.
@@ -700,15 +705,16 @@
       if (err .NE. NF_NOERR) go to 10
       err =  nf_get_att_text(ncid,time_var_id,'units',time_units)
       if (err .NE. NF_NOERR) go to 10
-      call string_to_julsecs(time_units,j1,s1)
+      call string_to_julsecs(time_units,junit,sunit)
       err = nf_get_var_real(ncid,time_var_id,met_times)
       if (err .ne. NF_NOERR) go to 10
 
-      call add_secs(j1,s1,nint(met_times(textr)),j2,s2)
+      call add_secs(junit,sunit,nint(met_times(1)),    j1,s1)
+      call add_secs(junit,sunit,nint(met_times(textr)),j2,s2)
    end if
 
    if (found) then
-      offset = time_diff(jul0,secs0,j1,s1)
+      offset = time_diff(jul0,secs0,junit,sunit)
       LEVEL3 'Using meteo from:'
       LEVEL4 trim(fn)
       LEVEL3 'Meteorological offset time ',offset

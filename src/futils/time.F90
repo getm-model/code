@@ -1,4 +1,4 @@
-!$Id: time.F90,v 1.4 2004-04-06 16:32:28 kbk Exp $
+!$Id: time.F90,v 1.5 2007-08-24 10:43:45 frv-bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,6 +47,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: time.F90,v $
+!  Revision 1.5  2007-08-24 10:43:45  frv-bjb
+!  Allow negative seconds in meteo nc-files input
+!
 !  Revision 1.4  2004-04-06 16:32:28  kbk
 !  TimeDiff --> time_diff
 !
@@ -564,6 +567,9 @@
    if (s2 .gt. 86400) then
       s2 = s2 - 86400
       j2 = j2 +1
+   else if (s2 .lt. 0) then
+      s2 = s2 + 86400
+      j2 = j2 -1
    end if
    return
    end subroutine  add_secs
