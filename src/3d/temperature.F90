@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.23 2007-06-07 10:25:19 kbk Exp $
+!$Id: temperature.F90,v 1.24 2007-09-21 08:34:32 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -88,6 +88,7 @@
    integer, parameter        :: nmax=10000
    REALTYPE                  :: zlev(nmax),prof(nmax)
    integer                   :: temp_field_no=1
+   integer                   :: status
    namelist /temp/ &
             temp_method,temp_const,temp_file,                 &
             temp_format,temp_name,temp_field_no,              &
@@ -253,6 +254,19 @@ temp_field_no=1
       end if
       if (temp_check .lt. 0) then
          LEVEL4 'out-of-bound values result in warnings only'
+      end if
+
+      call check_3d_fields(imin,jmin,imax,jmax,kmin,kmax,az, &
+                           T,min_temp,max_temp,status)
+      if (status .gt. 0) then
+         if (temp_check .gt. 0) then
+            call getm_error("do_temperature()", &
+                            "out-of-bound values encountered")
+         end if
+         if (temp_check .lt. 0) then
+            LEVEL1 'do_temperature(): ',status, &
+                   ' out-of-bound values encountered'
+         end if
       end if
    end if
 

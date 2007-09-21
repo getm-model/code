@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.26 2007-06-27 08:39:36 kbk Exp $
+!$Id: salinity.F90,v 1.27 2007-09-21 08:34:32 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -91,7 +91,7 @@
 ! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
-  integer                    :: i,j,k,n
+   integer                   :: i,j,k,n
 #ifdef PECS_TEST
    integer                   :: cc(1:30)
 #endif
@@ -102,6 +102,7 @@
    integer, parameter        :: nmax=100
    REALTYPE                  :: zlev(nmax),prof(nmax)
    integer                   :: salt_field_no=1
+   integer                   :: status
    NAMELIST /salt/                                            &
             salt_method,salt_const,salt_file,                 &
             salt_format,salt_name,salt_field_no,              &
@@ -315,6 +316,20 @@ salt_field_no=1
       if (salt_check .lt. 0) then
          LEVEL4 'out-of-bound values result in warnings only'
       end if
+
+      call check_3d_fields(imin,jmin,imax,jmax,kmin,kmax,az, &
+                           S,min_salt,max_salt,status)
+      if (status .gt. 0) then
+         if (salt_check .gt. 0) then
+            call getm_error("do_salinity()", &
+                            "out-of-bound values encountered")
+         end if
+         if (salt_check .lt. 0) then
+            LEVEL1 'do_salinity(): ',status, &
+                   ' out-of-bound values encountered'
+         end if
+      end if
+
    end if
 
 
