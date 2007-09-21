@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.21 2007-09-21 13:03:41 kbk Exp $
+!$Id: output.F90,v 1.22 2007-09-21 13:13:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -57,6 +57,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.22  2007-09-21 13:13:37  kbk
+!  added hotin_fmt and hotout_fmt output namelist
+!
 !  Revision 1.21  2007-09-21 13:03:41  kbk
 !  added drop-in NetCDF replacement for binary hotstart file (default is binary)
 !
@@ -177,7 +180,7 @@
 !
 ! !LOCAL VARIABLES:
    namelist /io_spec/ &
-             out_fmt, &
+             out_fmt,hotin_fmt,hotout_fmt, &
              in_dir,out_dir, &
              save_2d,save_3d,save_masks,save_vel,destag, &
              save_strho,save_s,save_t,save_rho,save_rad, &
