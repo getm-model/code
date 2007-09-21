@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.20 2007-08-23 18:48:17 kbk Exp $
+!$Id: output.F90,v 1.21 2007-09-21 13:03:41 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,6 @@
 !
 ! !USES:
    use time, only: write_time_string,timestep,timestr
-   use ncdf_out
    use ascii_out
 #ifdef TEST_NESTING
    use nesting
@@ -21,6 +20,8 @@
 !
 ! !PUBLIC DATA MEMBERS:
    integer                             :: out_fmt=NETCDF
+   integer                             :: hotin_fmt=BINARY
+   integer                             :: hotout_fmt=BINARY
    character(LEN = PATH_MAX)           :: in_dir='.'
    character(LEN = PATH_MAX)           :: out_dir='.'
    character(LEN = PATH_MAX)           :: out_f_2d
@@ -56,6 +57,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.21  2007-09-21 13:03:41  kbk
+!  added drop-in NetCDF replacement for binary hotstart file (default is binary)
+!
 !  Revision 1.20  2007-08-23 18:48:17  kbk
 !  added flexibility for saving hot-start files
 !
@@ -452,92 +456,111 @@
    if (mode .eq. WRITING) then
       n = n + 1
       LEVEL2 'Saving hotstart file # ',n,' as ',fname
-      open(RESTART,file=fname,status='unknown',form='unformatted')
-      LEVEL3 'saving loop, julianday, secondsofday and timestep'
-      write(RESTART) loop,julianday,secondsofday,timestep
-      LEVEL3 'saving basic variables'
-      write(RESTART) z,zo,U,zu,zub,SlUx,Slru,V,zv,zvb,SlVx,Slrv
+      select case (hotout_fmt)
+         case(NETCDF)
+            if (n .eq. 1) then
+               call create_restart_ncdf(fname,loop,runtype)
+            end if
+            call write_restart_ncdf(1000,loop,julianday,secondsofday)
+         case(BINARY)
+            open(RESTART,file=fname,status='unknown',form='unformatted')
+            LEVEL3 'saving loop, julianday, secondsofday and timestep'
+            write(RESTART) loop,julianday,secondsofday,timestep
+            LEVEL3 'saving basic variables'
+            write(RESTART) z,zo,U,zu,zub,SlUx,Slru,V,zv,zvb,SlVx,Slrv
 #ifndef NO_3D
-      if (runtype .ge. 2)  then
-         LEVEL3 'saving 3D barotropic variables'
-         write(RESTART) ssen,ssun,ssvn
-         write(RESTART) sseo,ssuo,ssvo
-         write(RESTART) Uinto,Vinto
-         write(RESTART) uu,vv,ww
-         write(RESTART) uuEx,vvEx
-         write(RESTART) tke,eps
-         write(RESTART) num,nuh
+            if (runtype .ge. 2)  then
+               LEVEL3 'saving 3D barotropic variables'
+               write(RESTART) ssen,ssun,ssvn
+               write(RESTART) sseo,ssuo,ssvo
+               write(RESTART) Uinto,Vinto
+               write(RESTART) uu,vv,ww
+               write(RESTART) uuEx,vvEx
+               write(RESTART) tke,eps
+               write(RESTART) num,nuh
 #ifndef NO_BAROCLINIC
-         if(runtype .ge. 3) then
-            LEVEL3 'saving 3D baroclinic variables'
-            write(RESTART) T,S
-         end if
+               if(runtype .ge. 3) then
+                  LEVEL3 'saving 3D baroclinic variables'
+                  write(RESTART) T,S
+               end if
 #endif
 #ifdef SPM 
-         if(spm_calc) then 
-            LEVEL3 'saving spm'
-            write(RESTART) spm
-            write(RESTART) spm_pool
-         end if
+               if(spm_calc) then 
+                  LEVEL3 'saving spm'
+                  write(RESTART) spm
+                  write(RESTART) spm_pool
+               end if
 #endif
 #ifdef GETM_BIO
-         if(bio_calc) then
-            LEVEL3 'saving bio variables'
-            write(RESTART) cc3d
-         end if
+               if(bio_calc) then
+                  LEVEL3 'saving bio variables'
+                  write(RESTART) cc3d
+               end if
 #endif
-      end if
+            end if
 #endif
-      close(RESTART)
-   end if
+            close(RESTART)
+         case DEFAULT
+            STDERR 'Fatal error: A non valid hot format has been chosen'
+            stop 'clean_output'
+      end select
+   end if ! WRITING
 
    if (mode .eq. READING) then
       LEVEL2 'Reading hotstart file: '
       LEVEL3 trim(fname)
-      open(RESTART,file=fname,status='unknown',form='unformatted')
-      LEVEL3 'reading loop, julianday, secondsofday and timestep'
-      read(RESTART) j,jd,secs,dt
-      LEVEL3 'reading basic variables'
-      read(RESTART) z,zo,U,zu,zub,SlUx,Slru,V,zv,zvb,SlVx,Slrv
+      select case (hotin_fmt)
+         case(NETCDF)
+            call open_restart_ncdf(fname,runtype)
+            call read_restart_ncdf(j,jd,secs,dt)
+         case(BINARY)
+            open(RESTART,file=fname,status='unknown',form='unformatted')
+            LEVEL3 'reading loop, julianday, secondsofday and timestep'
+            read(RESTART) j,jd,secs,dt
+            LEVEL3 'reading basic variables'
+            read(RESTART) z,zo,U,zu,zub,SlUx,Slru,V,zv,zvb,SlVx,Slrv
 #ifndef NO_3D
-      if (runtype .ge. 2)  then
-!KBK This needs to be changed !!!! KBK
-!Only works because E2DFIELD = I2DFIELD
-         LEVEL3 'reading 3D barotropic variables'
-         read(RESTART) ssen,ssun,ssvn
-         read(RESTART) sseo,ssuo,ssvo
-         read(RESTART) Uinto,Vinto
-         read(RESTART) uu,vv,ww
-         read(RESTART) uuEx,vvEx
-         read(RESTART) tke,eps
-         read(RESTART) num,nuh
+            if (runtype .ge. 2)  then
+               LEVEL3 'reading 3D barotropic variables'
+               read(RESTART) ssen,ssun,ssvn
+               read(RESTART) sseo,ssuo,ssvo
+               read(RESTART) Uinto,Vinto
+               read(RESTART) uu,vv,ww
+               read(RESTART) uuEx,vvEx
+               read(RESTART) tke,eps
+               read(RESTART) num,nuh
 #ifndef NO_BAROCLINIC
-         if(runtype .ge. 3) then
-            LEVEL3 'reading 3D baroclinic variables'
-            read(RESTART) T,S
-         end if
+               if(runtype .ge. 3) then
+                  LEVEL3 'reading 3D baroclinic variables'
+                  read(RESTART) T,S
+               end if
 #endif
 #ifdef SPM 
-         if(spm_calc) then
-            if (spm_hotstart) then 
-               LEVEL3 'reading spm variables'
-               read(RESTART) spm
-               read(RESTART) spm_pool
-            else
-               LEVEL3 'spm variables not read from hotstart file'
-               LEVEL3 'set spm_init_method=0 to read them from hotstart file'
-            end if     
-         end if
+               if(spm_calc) then
+                  if (spm_hotstart) then 
+                     LEVEL3 'reading spm variables'
+                     read(RESTART) spm
+                     read(RESTART) spm_pool
+                  else
+                     LEVEL3 'spm variables not read from hotstart file'
+                     LEVEL3 'set spm_init_method=0 to read them from hotstart file'
+                  end if     
+               end if
 #endif
 #ifdef GETM_BIO
-         if(bio_calc .and. hotstart_bio) then
-            LEVEL3 'reading bio variables'
-            read(RESTART) cc3d
-         end if
+               if(bio_calc .and. hotstart_bio) then
+                  LEVEL3 'reading bio variables'
+                  read(RESTART) cc3d
+               end if
 #endif
-      end if
+            end if
 #endif
-      close(RESTART)
+            close(RESTART)
+         case DEFAULT
+            STDERR 'Fatal error: A non valid hot format has been chosen'
+            stop 'clean_output'
+      end select
+
 !     make some sanity checks
       if (use_epoch) then
          if (jd .eq. julianday .and. secs .eq. secondsofday) then
@@ -569,7 +592,8 @@
          loop = 0
          julianday=jd; secondsofday=secs
       end if
-   end if
+   end if ! READING
+
 #ifdef DEBUG
    write(debug,*) 'Leaving restart_file()'
    write(debug,*)
@@ -615,7 +639,6 @@
 #endif
 
 !  Save last restart file
-
    if (hotout(1) .eq. 0) then
       call restart_file(WRITING,trim(hot_out),loop,runtype)
    end if
