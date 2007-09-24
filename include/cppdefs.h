@@ -67,7 +67,7 @@
 #define ANALYTICAL	0
 #define ASCII		1
 #define NETCDF		2
-#define RAWBINARY	3
+#define BINARY		3
 #define OPENDX		4
 #define GRADS		5
 
