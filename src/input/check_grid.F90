@@ -1,4 +1,4 @@
-!$Id: check_grid.F90,v 1.2 2006-01-29 20:32:34 hb Exp $
+!$Id: check_grid.F90,v 1.3 2007-09-25 08:31:18 kbk Exp $
 #include"cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -37,6 +37,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: check_grid.F90,v $
+!  Revision 1.3  2007-09-25 08:31:18  kbk
+!  RAWBINARY --> BINARY
+!
 !  Revision 1.2  2006-01-29 20:32:34  hb
 !  Small LaTeX corrections to source code documentation
 !
@@ -56,7 +59,7 @@
               "ASCII format for "//trim(filename)//" not yet supported.")
       case(NETCDF)
          call ncdf_check_grid(filename,iextr,jextr)
-      case(RAWBINARY)
+      case(BINARY)
          call getm_error("check_grid()", &
               "RAWBINDARY format for "//trim(filename)//" not yet supported.")
       case default
