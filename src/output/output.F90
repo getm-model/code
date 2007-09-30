@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.22 2007-09-21 13:13:37 kbk Exp $
+!$Id: output.F90,v 1.23 2007-09-30 13:00:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -57,6 +57,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.23  2007-09-30 13:00:43  kbk
+!  prints real time as part of progessoutput
+!
 !  Revision 1.22  2007-09-21 13:13:37  kbk
 !  added hotin_fmt and hotout_fmt output namelist
 !
@@ -342,9 +345,9 @@
 
    if (write_2d .or. write_3d .or. write_mean) then
       call write_time_string()
-      if (write_2d)   LEVEL2 timestr, ': saving 2D .... '
-      if (write_3d)   LEVEL2 timestr, ': saving 3D .... '
-      if (write_mean) LEVEL2 timestr, ': saving mean fields .... '
+      if (write_2d)   LEVEL3 timestr, ': saving 2D .... '
+      if (write_3d)   LEVEL3 timestr, ': saving 3D .... '
+      if (write_mean) LEVEL3 timestr, ': saving mean fields .... '
 !      call divergence()
       secs = n*timestep
       select case (out_fmt)

@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.23 2007-08-24 10:43:44 frv-bjb Exp $
+!$Id: ncdf_meteo.F90,v 1.24 2007-09-30 13:00:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -86,6 +86,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
+!  Revision 1.24  2007-09-30 13:00:43  kbk
+!  prints real time as part of progessoutput
+!
 !  Revision 1.23  2007-08-24 10:43:44  frv-bjb
 !  Allow negative seconds in meteo nc-files input
 !
@@ -487,7 +490,7 @@
          if (indx .gt. save_n) then
             new_meteo = .true.
             call write_time_string()
-            LEVEL2 timestr,': reading meteo data ...'
+            LEVEL3 timestr,': reading meteo data ...'
             save_n = indx
             t_1 = t_2
             t_2 = met_times(indx) - offset

@@ -1,4 +1,4 @@
-!$Id: ncdf_3d_bdy.F90,v 1.12 2007-05-11 07:51:27 frv-bjb Exp $
+!$Id: ncdf_3d_bdy.F90,v 1.13 2007-09-30 13:00:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,6 +47,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.13  2007-09-30 13:00:43  kbk
+!  prints real time as part of progessoutput
+!
 !  Revision 1.12  2007-05-11 07:51:27  frv-bjb
 !  Free dimid numbering for 3d bdy files (order in var still fixed)
 !
@@ -235,7 +238,7 @@
    allocate(wrk(zax_len),stat=rc)
    if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (wrk)'
 
-   if( time_len .le. 12) then
+   if( time_len .eq. 12) then
       climatology=.true.
       LEVEL4 'Assuming climatolgical 3D boundary conditions'
       LEVEL4 '# of times = ',time_len
@@ -515,6 +518,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.13  2007-09-30 13:00:43  kbk
+!  prints real time as part of progessoutput
+!
 !  Revision 1.12  2007-05-11 07:51:27  frv-bjb
 !  Free dimid numbering for 3d bdy files (order in var still fixed)
 !
@@ -603,7 +609,7 @@
             t2=t
          else
             call write_time_string()
-            LEVEL2 timestr,': reading 3D boundary data ...'
+            LEVEL3 timestr,': reading 3D boundary data ...'
          end if
 
          n = size(bdy_times)

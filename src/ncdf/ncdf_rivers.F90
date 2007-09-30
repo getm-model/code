@@ -1,4 +1,4 @@
-!$Id: ncdf_rivers.F90,v 1.7 2005-09-23 11:27:43 kbk Exp $
+!$Id: ncdf_rivers.F90,v 1.8 2007-09-30 13:00:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -50,6 +50,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_rivers.F90,v $
+!  Revision 1.8  2007-09-30 13:00:43  kbk
+!  prints real time as part of progessoutput
+!
 !  Revision 1.7  2005-09-23 11:27:43  kbk
 !  support fo nutrient loading in rivers
 !
@@ -272,7 +275,7 @@
    end do
    if (indx .gt. last_indx) then
       call write_time_string()
-      LEVEL2 timestr, ': reading river data .... ',indx
+      LEVEL3 timestr, ': reading river data .... ',indx
       last_indx = indx
       start(1) = indx
       nn = 1

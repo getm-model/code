@@ -1,4 +1,4 @@
-!$Id: ncdf_2d_bdy.F90,v 1.5 2005-05-04 11:45:29 kbk Exp $
+!$Id: ncdf_2d_bdy.F90,v 1.6 2007-09-30 13:00:43 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,6 +30,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d_bdy.F90,v $
+!  Revision 1.6  2007-09-30 13:00:43  kbk
+!  prints real time as part of progessoutput
+!
 !  Revision 1.5  2005-05-04 11:45:29  kbk
 !  adding model time stamp on IO
 !
@@ -203,6 +206,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d_bdy.F90,v $
+!  Revision 1.6  2007-09-30 13:00:43  kbk
+!  prints real time as part of progessoutput
+!
 !  Revision 1.5  2005-05-04 11:45:29  kbk
 !  adding model time stamp on IO
 !
@@ -298,7 +304,7 @@
       end do
 
       call write_time_string()
-      LEVEL2 timestr,': reading 2D boundary data ...'
+      LEVEL3 timestr,': reading 2D boundary data ...'
 
       t1 = bdy_times(i-1) - offset
       t2 = bdy_times(i) - offset

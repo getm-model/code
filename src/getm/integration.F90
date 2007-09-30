@@ -1,4 +1,4 @@
-!$Id: integration.F90,v 1.10 2007-06-27 18:31:59 kbk Exp $
+!$Id: integration.F90,v 1.11 2007-09-30 13:00:42 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,6 +20,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: integration.F90,v $
+!  Revision 1.11  2007-09-30 13:00:42  kbk
+!  prints real time as part of progessoutput
+!
 !  Revision 1.10  2007-06-27 18:31:59  kbk
 !  fixed calculation of integrated fresh water flux
 !
@@ -139,6 +142,8 @@
    logical                   :: do_3d
    integer                   :: n
    integer                   :: progress=100
+   character(8)              :: d_
+   character(10)             :: t_
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -154,7 +159,10 @@
 
    do n=MinN,MaxN
 
-      if (progress .gt. 0 .and. mod(n,progress) .eq. 0) LEVEL2 n
+      if (progress .gt. 0 .and. mod(n,progress) .eq. 0) then
+         call date_and_time(date=d_,time=t_)
+         LEVEL1 t_(1:2),':',t_(3:4),':',t_(5:10),' n=',n
+      end if
 
 #ifndef NO_3D
       do_3d = (runtype .ge. 2 .and. mod(n,M) .eq. 0)
