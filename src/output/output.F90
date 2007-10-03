@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.23 2007-09-30 13:00:43 kbk Exp $
+!$Id: output.F90,v 1.24 2007-10-03 06:59:22 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -57,6 +57,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.24  2007-10-03 06:59:22  kbk
+!  NetCDF restart uses runtype properly
+!
 !  Revision 1.23  2007-09-30 13:00:43  kbk
 !  prints real time as part of progessoutput
 !
@@ -467,7 +470,7 @@
             if (n .eq. 1) then
                call create_restart_ncdf(fname,loop,runtype)
             end if
-            call write_restart_ncdf(1000,loop,julianday,secondsofday)
+            call write_restart_ncdf(runtype,1000,loop,julianday,secondsofday)
          case(BINARY)
             open(RESTART,file=fname,status='unknown',form='unformatted')
             LEVEL3 'saving loop, julianday, secondsofday and timestep'
@@ -485,20 +488,20 @@
                write(RESTART) tke,eps
                write(RESTART) num,nuh
 #ifndef NO_BAROCLINIC
-               if(runtype .ge. 3) then
+               if (runtype .ge. 3) then
                   LEVEL3 'saving 3D baroclinic variables'
                   write(RESTART) T,S
                end if
 #endif
 #ifdef SPM 
-               if(spm_calc) then 
+               if (spm_calc) then 
                   LEVEL3 'saving spm'
                   write(RESTART) spm
                   write(RESTART) spm_pool
                end if
 #endif
 #ifdef GETM_BIO
-               if(bio_calc) then
+               if (bio_calc) then
                   LEVEL3 'saving bio variables'
                   write(RESTART) cc3d
                end if
@@ -518,7 +521,7 @@
       select case (hotin_fmt)
          case(NETCDF)
             call open_restart_ncdf(fname,runtype)
-            call read_restart_ncdf(j,jd,secs,dt)
+            call read_restart_ncdf(runtype,j,jd,secs,dt)
          case(BINARY)
             open(RESTART,file=fname,status='unknown',form='unformatted')
             LEVEL3 'reading loop, julianday, secondsofday and timestep'
