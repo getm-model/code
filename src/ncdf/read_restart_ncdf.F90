@@ -1,4 +1,4 @@
-!$Id: read_restart_ncdf.F90,v 1.2 2007-10-03 06:59:23 kbk Exp $
+!$Id: read_restart_ncdf.F90,v 1.3 2007-10-04 13:55:04 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -50,6 +50,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: read_restart_ncdf.F90,v $
+!  Revision 1.3  2007-10-04 13:55:04  kbk
+!  only read S and T if runtype .ge. 3
+!
 !  Revision 1.2  2007-10-03 06:59:23  kbk
 !  NetCDF restart uses runtype properly
 !
@@ -269,7 +272,7 @@
       call wait_halo(H_TAG)
 
 #ifndef NO_BAROCLINIC
-      if (runtype .ge. 2)  then
+      if (runtype .ge. 3)  then
          status = &
          nf90_get_var(ncid,T_id,T(iloc:ilen,jloc:jlen,0:kmax),start,edges)
          if (status .NE. NF90_NOERR) go to 10
