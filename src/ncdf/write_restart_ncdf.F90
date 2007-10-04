@@ -1,4 +1,4 @@
-!$Id: write_restart_ncdf.F90,v 1.2 2007-10-03 06:59:23 kbk Exp $
+!$Id: write_restart_ncdf.F90,v 1.3 2007-10-04 13:55:37 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,7 +28,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in)      :: runtype
+   integer, intent(in)       :: runtype
    REALTYPE, intent(in)      :: secs ! not used now
    integer, intent(in)       :: loop,julianday,secondsofday
 !
@@ -38,6 +38,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: write_restart_ncdf.F90,v $
+!  Revision 1.3  2007-10-04 13:55:37  kbk
+!  fixed varriable type of runtype
+!
 !  Revision 1.2  2007-10-03 06:59:23  kbk
 !  NetCDF restart uses runtype properly
 !
