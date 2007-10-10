@@ -1,4 +1,4 @@
-!$Id: ncdf_3d_bdy.F90,v 1.13 2007-09-30 13:00:43 kbk Exp $
+!$Id: ncdf_3d_bdy.F90,v 1.14 2007-10-10 10:01:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,6 +47,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.14  2007-10-10 10:01:19  kbk
+!  fixed interpolation when model depth > boundary data depth
+!
 !  Revision 1.13  2007-09-30 13:00:43  kbk
 !  prints real time as part of progessoutput
 !
@@ -518,6 +521,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.14  2007-10-10 10:01:19  kbk
+!  fixed interpolation when model depth > boundary data depth
+!
 !  Revision 1.13  2007-09-30 13:00:43  kbk
 !  prints real time as part of progessoutput
 !
@@ -723,7 +729,7 @@
 ! !LOCAL VARIABLES:
 
    REALTYPE                  :: zmodel(kmax),rat
-   integer                   :: k,n,nn
+   integer                   :: k,li,n,nn,
 
    zmodel(1) = -depth + 0.5*zm(1)
    do k=2,kmax
@@ -735,17 +741,17 @@
    end do
 
 !  find largest index with valid value in wrk
-   do nn=1,nlev
-      if (wrk(nn) .lt. -999. ) EXIT
+   do li=1,nlev
+      if (wrk(li) .lt. -999. ) EXIT
    end do
-   if (nn .ne. nlev .or. wrk(nn) .lt. -999.) nn=nn-1
+   if (li .ne. nlev .or. wrk(li) .lt. -999.) li=li-1
 
    do k=1,kmax
-      if (zmodel(k) .le. zlev(nlev)) col(k) = wrk(nlev)
+      if (zmodel(k) .le. zlev(li)) col(k) = wrk(li)
    end do
 
    do k=1,kmax
-      if (zmodel(k) .gt. zlev(nlev) .and. zmodel(k) .lt. zlev(1)) then
+      if (zmodel(k) .gt. zlev(li) .and. zmodel(k) .lt. zlev(1)) then
          nn=nlev+1
 224      nn=nn-1
          if(zlev(nn) .le. zmodel(k)) goto 224
