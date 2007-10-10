@@ -1,4 +1,4 @@
-!$Id: ncdf_3d_bdy.F90,v 1.14 2007-10-10 10:01:19 kbk Exp $
+!$Id: ncdf_3d_bdy.F90,v 1.15 2007-10-10 10:25:20 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,6 +47,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.15  2007-10-10 10:25:20  kbk
+!  oops
+!
 !  Revision 1.14  2007-10-10 10:01:19  kbk
 !  fixed interpolation when model depth > boundary data depth
 !
@@ -521,6 +524,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.15  2007-10-10 10:25:20  kbk
+!  oops
+!
 !  Revision 1.14  2007-10-10 10:01:19  kbk
 !  fixed interpolation when model depth > boundary data depth
 !
@@ -729,7 +735,7 @@
 ! !LOCAL VARIABLES:
 
    REALTYPE                  :: zmodel(kmax),rat
-   integer                   :: k,li,n,nn,
+   integer                   :: k,li,n,nn
 
    zmodel(1) = -depth + 0.5*zm(1)
    do k=2,kmax
