@@ -1,4 +1,4 @@
-!$Id: init_grid_ncdf.F90,v 1.4 2007-03-30 13:11:00 hb Exp $
+!$Id: init_grid_ncdf.F90,v 1.5 2007-10-16 07:14:35 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,6 +41,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: init_grid_ncdf.F90,v $
+!  Revision 1.5  2007-10-16 07:14:35  kbk
+!  pseudo coordinate variables for curvi-linear grids
+!
 !  Revision 1.4  2007-03-30 13:11:00  hb
 !  Use of adaptive and hybrid vertical coordinates technically enabled
 !
@@ -67,6 +70,7 @@
    integer                   :: dx_id,dy_id,dlon_id,dlat_id
    integer                   :: xc_id,yc_id
    integer                   :: lonc_id,latc_id
+   integer                   :: xic_id,etac_id
    integer                   :: convc_id
    integer                   :: t_mask_id,u_mask_id,v_mask_id
    integer                   :: bathymetry_id
@@ -357,12 +361,17 @@
          if (status .ne. NF_NOERR) call netcdf_error(status,            &
                                         "init_grid_ncdf()","latc -")
          call set_attributes(ncid,latc_id,units=trim(yunits))
-      case (3)
-!        no netcdf support for coordinate variables
-!        for irregularly spaced coordinates
-      case (4)
-!        no netcdf support for coordinate variables
-!        for irregularly spaced coordinates
+      case (3,4)
+!        pseudo coordinate variables
+         axisdim(1) = x_dim
+         status = nf_def_var(ncid,'xic',NF_REAL,1,axisdim,xic_id)
+         if (status .ne. NF_NOERR) call netcdf_error(status,            &
+                                        "init_grid_ncdf()","xic -")
+
+         axisdim(1) = y_dim
+         status = nf_def_var(ncid,'etac',NF_REAL,1,axisdim,etac_id)
+         if (status .ne. NF_NOERR) call netcdf_error(status,            &
+                                        "init_grid_ncdf()","etac -")
       case default
    end select
 

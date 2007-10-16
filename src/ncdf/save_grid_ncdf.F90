@@ -1,4 +1,4 @@
-!$Id: save_grid_ncdf.F90,v 1.5 2007-03-30 13:11:00 hb Exp $
+!$Id: save_grid_ncdf.F90,v 1.6 2007-10-16 07:14:35 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,6 +43,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: save_grid_ncdf.F90,v $
+!  Revision 1.6  2007-10-16 07:14:35  kbk
+!  pseudo coordinate variables for curvi-linear grids
+!
 !  Revision 1.5  2007-03-30 13:11:00  hb
 !  Use of adaptive and hybrid vertical coordinates technically enabled
 !
@@ -60,6 +63,7 @@
 !
 !
 ! !LOCAL VARIABLES:
+   integer                   :: i,j
    integer                   :: status
    integer                   :: start(2),edges(2)
 
@@ -74,6 +78,7 @@
    integer                   :: dx_id,dy_id,dlon_id,dlat_id
    integer                   :: xc_id,yc_id
    integer                   :: lonc_id,latc_id
+   integer                   :: xic_id,etac_id
    integer                   :: convc_id
    integer                   :: bathymetry_id,id
 
@@ -199,12 +204,15 @@
          if (status .ne. NF_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","latc_id -")
 
-      case (3)
-!        no netcdf support for coordinate variables
-!        for irregularly spaced coordinates
-      case (4)
-!        no netcdf support for coordinate variables
-!        for irregularly spaced coordinates
+      case (3,4)
+!        pseudo coordinate variables
+         status = nf_inq_varid(ncid,'xic',xic_id)
+         if (status .ne. NF_NOERR) call netcdf_error(status,            &
+                                       "save_grid_ncdf()","xic_id -")
+
+         status = nf_inq_varid(ncid,'etac',etac_id)
+         if (status .ne. NF_NOERR) call netcdf_error(status,            &
+                                       "save_grid_ncdf()","etac_id -")
       case default
    end select
 
@@ -389,10 +397,20 @@
 #endif
       if (status .ne. NF_NOERR) call netcdf_error(status,               &
                                      "save_grid_ncdf()","latc -")
-   case (3)
-!     saved below
-   case (4)
-!     saved below
+   case (3,4)
+!     pseudo coordinate variables
+      do i=1,imax
+         cord(i) = ioff+i
+      end do
+      status = nf_put_var_double(ncid,xic_id,cord)
+      if (status .ne. NF_NOERR) call netcdf_error(status,               &
+                                     "save_grid_ncdf()","xic -")
+      do j=1,jmax
+         cord(j) = joff+j
+      end do
+      status = nf_put_var_double(ncid,etac_id,cord)
+      if (status .ne. NF_NOERR) call netcdf_error(status,               &
+                                     "save_grid_ncdf()","etac -")
    case default
    end select
 
