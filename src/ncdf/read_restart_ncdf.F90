@@ -1,4 +1,4 @@
-!$Id: read_restart_ncdf.F90,v 1.3 2007-10-04 13:55:04 kbk Exp $
+!$Id: read_restart_ncdf.F90,v 1.4 2007-10-16 13:34:05 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -50,6 +50,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: read_restart_ncdf.F90,v $
+!  Revision 1.4  2007-10-16 13:34:05  kbk
+!  differentiate between mandatory and non-mandatory fields
+!
 !  Revision 1.3  2007-10-04 13:55:04  kbk
 !  only read S and T if runtype .ge. 3
 !
@@ -89,12 +92,13 @@
       jl = max(jmin+joff,1); jh = min(jmax+joff,jextr)
       iloc = max(imin-ioff,1); jloc = max(jmin-joff,1)
    end if
-   ilen = ih-il+1 
+   ilen = ih-il+1
    jlen = jh-jl+1
    start(1) = il ; edges(1) = ih-il+1
    start(2) = jl ; edges(2) = jh-jl+1
    start(3) = 1  ; edges(3) = kmax+1
 
+!  z is required
    status = &
    nf90_get_var(ncid,z_id,z(iloc:ilen,jloc:jlen),start,edges)
    if (status .NE. NF90_NOERR) go to 10
@@ -103,21 +107,33 @@
 
    status = &
    nf90_get_var(ncid,zo_id,zo(iloc:ilen,jloc:jlen),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-   call update_2d_halo(zo,zo,az,imin,jmin,imax,jmax,H_TAG)
-   call wait_halo(H_TAG)
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 "read_restart_ncdf(): setting zo=z"
+      zo=z
+   else
+      call update_2d_halo(zo,zo,az,imin,jmin,imax,jmax,H_TAG)
+      call wait_halo(H_TAG)
+   end if
 
    status = &
    nf90_get_var(ncid,U_id,U(iloc:ilen,jloc:jlen),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-   call update_2d_halo(U,U,au,imin,jmin,imax,jmax,U_TAG)
-   call wait_halo(U_TAG)
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 "read_restart_ncdf(): setting U=0"
+      U=_ZERO_
+   else
+      call update_2d_halo(U,U,au,imin,jmin,imax,jmax,U_TAG)
+      call wait_halo(U_TAG)
+   end if
 
    status = &
    nf90_get_var(ncid,zu_id,zu(iloc:ilen,jloc:jlen),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-   call update_2d_halo(zu,zu,au,imin,jmin,imax,jmax,U_TAG)
-   call wait_halo(U_TAG)
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 "read_restart_ncdf(): setting zu=0"
+      zu=_ZERO_
+   else
+      call update_2d_halo(zu,zu,au,imin,jmin,imax,jmax,U_TAG)
+      call wait_halo(U_TAG)
+   end if
 
    status = &
    nf90_get_var(ncid,zub_id,zub(iloc:ilen,jloc:jlen),start,edges)
@@ -127,27 +143,43 @@
 
    status = &
    nf90_get_var(ncid,SlUx_id,SlUx(iloc:ilen,jloc:jlen),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-   call update_2d_halo(SlUx,SlUx,au,imin,jmin,imax,jmax,U_TAG)
-   call wait_halo(U_TAG)
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 "read_restart_ncdf(): setting SlUx=0"
+      SlUx=_ZERO_
+   else
+      call update_2d_halo(SlUx,SlUx,au,imin,jmin,imax,jmax,U_TAG)
+      call wait_halo(U_TAG)
+   end if
 
    status = &
    nf90_get_var(ncid,Slru_id,Slru(iloc:ilen,jloc:jlen),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-   call update_2d_halo(Slru,Slru,au,imin,jmin,imax,jmax,U_TAG)
-   call wait_halo(U_TAG)
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 "read_restart_ncdf(): setting Slru=0"
+      ssun=_ZERO_
+   else
+      call update_2d_halo(Slru,Slru,au,imin,jmin,imax,jmax,U_TAG)
+      call wait_halo(U_TAG)
+   end if
 
    status = &
    nf90_get_var(ncid,V_id,V(iloc:ilen,jloc:jlen),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-   call update_2d_halo(V,V,av,imin,jmin,imax,jmax,V_TAG)
-   call wait_halo(V_TAG)
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 "read_restart_ncdf(): setting V=0"
+      V=_ZERO_
+   else
+      call update_2d_halo(V,V,av,imin,jmin,imax,jmax,V_TAG)
+      call wait_halo(V_TAG)
+   end if
 
    status = &
    nf90_get_var(ncid,zv_id,zv(iloc:ilen,jloc:jlen),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-   call update_2d_halo(zv,zv,av,imin,jmin,imax,jmax,V_TAG)
-   call wait_halo(V_TAG)
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 "read_restart_ncdf(): setting zv=0"
+      zv=_ZERO_
+   else
+      call update_2d_halo(zv,zv,av,imin,jmin,imax,jmax,V_TAG)
+      call wait_halo(V_TAG)
+   end if
 
    status = &
    nf90_get_var(ncid,zvb_id,zvb(iloc:ilen,jloc:jlen),start,edges)
@@ -157,114 +189,184 @@
 
    status = &
    nf90_get_var(ncid,SlVx_id,SlVx(iloc:ilen,jloc:jlen),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-   call update_2d_halo(SlVx,SlVx,av,imin,jmin,imax,jmax,V_TAG)
-   call wait_halo(V_TAG)
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 "read_restart_ncdf(): setting SlVx=0"
+      SlVx=_ZERO_
+   else
+      call update_2d_halo(SlVx,SlVx,av,imin,jmin,imax,jmax,V_TAG)
+      call wait_halo(V_TAG)
+   end if
 
    status = &
    nf90_get_var(ncid,Slrv_id,Slrv(iloc:ilen,jloc:jlen),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-   call update_2d_halo(Slrv,Slrv,av,imin,jmin,imax,jmax,V_TAG)
-   call wait_halo(V_TAG)
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 "read_restart_ncdf(): setting Slrv=0"
+      Slrv=_ZERO_
+   else
+      call update_2d_halo(Slrv,Slrv,av,imin,jmin,imax,jmax,V_TAG)
+      call wait_halo(V_TAG)
+   end if
 
 #ifndef NO_3D
    if (runtype .ge. 2)  then
       status = &
       nf90_get_var(ncid,ssen_id,ssen(iloc:ilen,jloc:jlen),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-      call update_2d_halo(ssen,ssen,az,imin,jmin,imax,jmax,H_TAG)
-      call wait_halo(H_TAG)
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 "read_restart_ncdf(): setting ssen=0"
+         ssen=_ZERO_
+      else
+         call update_2d_halo(ssen,ssen,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
+      end if
 
       status = &
       nf90_get_var(ncid,ssun_id,ssun(iloc:ilen,jloc:jlen),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-      call update_2d_halo(ssun,ssun,au,imin,jmin,imax,jmax,U_TAG)
-      call wait_halo(U_TAG)
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 "read_restart_ncdf(): setting ssun=0"
+         ssun=_ZERO_
+         where (au .eq. 0)
+            ssun=10.2
+         end where
+      else
+         call update_2d_halo(ssun,ssun,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+      end if
 
       status = &
       nf90_get_var(ncid,ssvn_id,ssvn(iloc:ilen,jloc:jlen),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-      call update_2d_halo(ssvn,ssvn,av,imin,jmin,imax,jmax,V_TAG)
-      call wait_halo(V_TAG)
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 "read_restart_ncdf(): setting ssvn=0"
+         ssvn=_ZERO_
+         where (av .eq. 0)
+            ssvn=10.2
+         end where
+      else
+         call update_2d_halo(ssvn,ssvn,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
+      end if
 
       status = &
       nf90_get_var(ncid,sseo_id,sseo(iloc:ilen,jloc:jlen),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-      call update_2d_halo(sseo,sseo,az,imin,jmin,imax,jmax,H_TAG)
-      call wait_halo(H_TAG)
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 "read_restart_ncdf(): setting sseo=0"
+         sseo=_ZERO_
+      else
+         call update_2d_halo(sseo,sseo,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
+      end if
 
       status = &
       nf90_get_var(ncid,ssuo_id,ssuo(iloc:ilen,jloc:jlen),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-      call update_2d_halo(ssuo,ssuo,au,imin,jmin,imax,jmax,U_TAG)
-      call wait_halo(U_TAG)
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 "read_restart_ncdf(): setting ssuo=0"
+         ssuo=_ZERO_
+      else
+         call update_2d_halo(ssuo,ssuo,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+      end if
 
       status = &
       nf90_get_var(ncid,ssvo_id,ssvo(iloc:ilen,jloc:jlen),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-      call update_2d_halo(ssvo,ssvo,av,imin,jmin,imax,jmax,V_TAG)
-      call wait_halo(V_TAG)
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 "read_restart_ncdf(): setting ssvo=0"
+         ssvo=_ZERO_
+      else
+         call update_2d_halo(ssvo,ssvo,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
+      end if
 
       status = &
       nf90_get_var(ncid,Uinto_id,Uinto(iloc:ilen,jloc:jlen),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-      call update_2d_halo(Uinto,Uinto,au,imin,jmin,imax,jmax,U_TAG)
-      call wait_halo(U_TAG)
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 "read_restart_ncdf(): setting Uinto=0"
+         Uinto=_ZERO_
+      else
+         call update_2d_halo(Uinto,Uinto,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+      end if
 
       status = &
       nf90_get_var(ncid,Vinto_id,Vinto(iloc:ilen,jloc:jlen),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-      call update_2d_halo(Vinto,Vinto,av,imin,jmin,imax,jmax,V_TAG)
-      call wait_halo(V_TAG)
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 "read_restart_ncdf(): setting Vinto=0"
+         Vinto=_ZERO_
+      else
+         call update_2d_halo(Vinto,Vinto,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
+      end if
 
       status = &
       nf90_get_var(ncid,uu_id,uu(iloc:ilen,jloc:jlen,0:kmax),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-      call update_3d_halo(uu,uu,au,imin,jmin,imax,jmax,kmax,U_TAG)
-      call wait_halo(U_TAG)
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 "read_restart_ncdf(): setting uu=0"
+         uu=_ZERO_
+      else
+         call update_3d_halo(uu,uu,au,imin,jmin,imax,jmax,kmax,U_TAG)
+         call wait_halo(U_TAG)
+      end if
 
       status = &
       nf90_get_var(ncid,vv_id,vv(iloc:ilen,jloc:jlen,0:kmax),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-      call update_3d_halo(vv,vv,av,imin,jmin,imax,jmax,kmax,V_TAG)
-      call wait_halo(V_TAG)
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 "read_restart_ncdf(): setting vv=0"
+         vv=_ZERO_
+      else
+         call update_3d_halo(vv,vv,av,imin,jmin,imax,jmax,kmax,V_TAG)
+         call wait_halo(V_TAG)
+      end if
 
       status = &
       nf90_get_var(ncid,ww_id,ww(iloc:ilen,jloc:jlen,0:kmax),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-      call update_3d_halo(ww,ww,az,imin,jmin,imax,jmax,kmax,H_TAG)
-      call wait_halo(H_TAG)
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 "read_restart_ncdf(): setting ww=0"
+         ww=_ZERO_
+      else
+         call update_3d_halo(ww,ww,az,imin,jmin,imax,jmax,kmax,H_TAG)
+         call wait_halo(H_TAG)
+      end if
 
       status = &
       nf90_get_var(ncid,uuEx_id,uuEx(iloc:ilen,jloc:jlen,0:kmax),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-      call update_3d_halo(uuEx,uuEx,au,imin,jmin,imax,jmax,kmax,U_TAG)
-      call wait_halo(U_TAG)
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 "read_restart_ncdf(): setting uuEx=0"
+         uuEx=_ZERO_
+      else
+         call update_3d_halo(uuEx,uuEx,au,imin,jmin,imax,jmax,kmax,U_TAG)
+         call wait_halo(U_TAG)
+      end if
 
       status = &
       nf90_get_var(ncid,vvEx_id,vvEx(iloc:ilen,jloc:jlen,0:kmax),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-      call update_3d_halo(vvEx,vvEx,av,imin,jmin,imax,jmax,kmax,V_TAG)
-      call wait_halo(V_TAG)
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 "read_restart_ncdf(): setting vvEx=0"
+         vvEx=_ZERO_
+      else
+         call update_3d_halo(vvEx,vvEx,av,imin,jmin,imax,jmax,kmax,V_TAG)
+         call wait_halo(V_TAG)
+      end if
 
+!     tke is required
       status = &
       nf90_get_var(ncid,tke_id,tke(iloc:ilen,jloc:jlen,0:kmax),start,edges)
       if (status .NE. NF90_NOERR) go to 10
       call update_3d_halo(tke,tke,az,imin,jmin,imax,jmax,kmax,H_TAG)
       call wait_halo(H_TAG)
 
+!     eps is required
       status = &
       nf90_get_var(ncid,eps_id,eps(iloc:ilen,jloc:jlen,0:kmax),start,edges)
       if (status .NE. NF90_NOERR) go to 10
       call update_3d_halo(eps,eps,az,imin,jmin,imax,jmax,kmax,H_TAG)
       call wait_halo(H_TAG)
 
+!     num is required
       status = &
       nf90_get_var(ncid,num_id,num(iloc:ilen,jloc:jlen,0:kmax),start,edges)
       if (status .NE. NF90_NOERR) go to 10
       call update_3d_halo(num,num,az,imin,jmin,imax,jmax,kmax,H_TAG)
       call wait_halo(H_TAG)
 
+!     nuh is required
       status = &
       nf90_get_var(ncid,nuh_id,nuh(iloc:ilen,jloc:jlen,0:kmax),start,edges)
       if (status .NE. NF90_NOERR) go to 10
@@ -273,12 +375,14 @@
 
 #ifndef NO_BAROCLINIC
       if (runtype .ge. 3)  then
+!        T is required
          status = &
          nf90_get_var(ncid,T_id,T(iloc:ilen,jloc:jlen,0:kmax),start,edges)
          if (status .NE. NF90_NOERR) go to 10
          call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,H_TAG)
          call wait_halo(H_TAG)
 
+!        S is required
          status = &
          nf90_get_var(ncid,S_id,S(iloc:ilen,jloc:jlen,0:kmax),start,edges)
          if (status .NE. NF90_NOERR) go to 10
@@ -290,15 +394,23 @@
       if(spm_calc) then
          status = &
          nf90_get_var(ncid,spm_id,spm(iloc:ilen,jloc:jlen,0:kmax),start,edges)
-         if (status .NE. NF90_NOERR) go to 10
-         call update_3d_halo(spm,spm,az,imin,jmin,imax,jmax,kmax,H_TAG)
-         call wait_halo(H_TAG)
+         if (status .NE. NF90_NOERR) then
+            LEVEL3 "read_restart_ncdf(): setting spm=0"
+            spm=_ZERO_
+         else
+            call update_3d_halo(spm,spm,az,imin,jmin,imax,jmax,kmax,H_TAG)
+            call wait_halo(H_TAG)
+         end if
 
          status = &
          nf90_get_var(ncid,spmpool_id,spmpool(iloc:ilen,jloc:jlen),start,edges)
-         if (status .NE. NF90_NOERR) go to 10
-         call update_2d_halo(spmpool,spmpool,az,imin,jmin,imax,jmax,H_TAG)
-         call wait_halo(H_TAG)
+         if (status .NE. NF90_NOERR) then
+            LEVEL3 "read_restart_ncdf(): setting spmpool=0"
+            spmpool=_ZERO_
+         else
+            call update_2d_halo(spmpool,spmpool,az,imin,jmin,imax,jmax,H_TAG)
+            call wait_halo(H_TAG)
+         end if
       end if
 #endif
 #ifdef GETM_BIO
