@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.27 2007-03-30 13:10:59 hb Exp $
+!$Id: domain.F90,v 1.28 2007-10-16 06:22:56 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -84,6 +84,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.28  2007-10-16 06:22:56  kbk
+!  curvi-linear now runs in parallel
+!
 !  Revision 1.27  2007-03-30 13:10:59  hb
 !  Use of adaptive and hybrid vertical coordinates technically enabled
 !
@@ -835,14 +838,14 @@
       end do
 
       do j=jmin,jmax
-         do i=imin,imax-1
+         do i=imin,imax
             dxu(i,j)=sqrt((xc(i+1,j)-xc(i,j))**2+(yc(i+1,j)-yc(i,j))**2)
             dyu(i,j)=sqrt((xx(i,j)-xx(i,j-1))**2+(yx(i,j)-yx(i,j-1))**2)
          end do
       end do
 
-      do i=imin,imax
-         do j=jmin,jmax-1
+      do j=jmin,jmax
+         do i=imin,imax
             dxv(i,j)=sqrt((xx(i,j)-xx(i-1,j))**2+(yx(i,j)-yx(i-1,j))**2)
             dyv(i,j)=sqrt((xc(i,j+1)-xc(i,j))**2+(yc(i,j+1)-yc(i,j))**2)
          end do
@@ -869,7 +872,7 @@
       end do
 
       do j=jmin,jmax
-         do i=imin-1,imax
+         do i=imin,imax
             dx = deg2rad*(lonc(i+1,j)-lonc(i,j))*rearth*cos(deg2rad*latu(i,j))
             dy = deg2rad*(latc(i+1,j)-latc(i,j))*rearth
             dxu(i,j)= sqrt(dx*dx+dy*dy)
@@ -879,7 +882,7 @@
          end do
       end do
 
-      do j=jmin-1,jmax
+      do j=jmin,jmax
          do i=imin,imax
             dx = deg2rad*(lonx(i,j)-lonx(i-1,j))*rearth*cos(deg2rad*latv(i,j))
             dy = deg2rad*(latx(i,j)-latx(i-1,j))*rearth
