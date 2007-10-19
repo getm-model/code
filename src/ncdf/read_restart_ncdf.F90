@@ -1,4 +1,4 @@
-!$Id: read_restart_ncdf.F90,v 1.4 2007-10-16 13:34:05 kbk Exp $
+!$Id: read_restart_ncdf.F90,v 1.5 2007-10-19 07:52:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -50,6 +50,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: read_restart_ncdf.F90,v $
+!  Revision 1.5  2007-10-19 07:52:36  kbk
+!  zub and zvb not in hotstart files anymore
+!
 !  Revision 1.4  2007-10-16 13:34:05  kbk
 !  differentiate between mandatory and non-mandatory fields
 !
@@ -136,12 +139,6 @@
    end if
 
    status = &
-   nf90_get_var(ncid,zub_id,zub(iloc:ilen,jloc:jlen),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-   call update_2d_halo(zub,zub,au,imin,jmin,imax,jmax,U_TAG)
-   call wait_halo(U_TAG)
-
-   status = &
    nf90_get_var(ncid,SlUx_id,SlUx(iloc:ilen,jloc:jlen),start,edges)
    if (status .NE. NF90_NOERR) then
       LEVEL3 "read_restart_ncdf(): setting SlUx=0"
@@ -180,12 +177,6 @@
       call update_2d_halo(zv,zv,av,imin,jmin,imax,jmax,V_TAG)
       call wait_halo(V_TAG)
    end if
-
-   status = &
-   nf90_get_var(ncid,zvb_id,zvb(iloc:ilen,jloc:jlen),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-   call update_2d_halo(zvb,zvb,av,imin,jmin,imax,jmax,V_TAG)
-   call wait_halo(V_TAG)
 
    status = &
    nf90_get_var(ncid,SlVx_id,SlVx(iloc:ilen,jloc:jlen),start,edges)

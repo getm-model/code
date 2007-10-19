@@ -1,4 +1,4 @@
-!$Id: write_restart_ncdf.F90,v 1.3 2007-10-04 13:55:37 kbk Exp $
+!$Id: write_restart_ncdf.F90,v 1.4 2007-10-19 07:52:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -38,6 +38,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: write_restart_ncdf.F90,v $
+!  Revision 1.4  2007-10-19 07:52:36  kbk
+!  zub and zvb not in hotstart files anymore
+!
 !  Revision 1.3  2007-10-04 13:55:37  kbk
 !  fixed varriable type of runtype
 !
@@ -110,10 +113,6 @@
    if (status .NE. NF90_NOERR) go to 10
 
    status = &
-   nf90_put_var(ncid,zub_id,zub(imin:imax,jmin:jmax),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-
-   status = &
    nf90_put_var(ncid,SlUx_id,SlUx(imin:imax,jmin:jmax),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
@@ -127,10 +126,6 @@
 
    status = &
    nf90_put_var(ncid,zv_id,zv(imin:imax,jmin:jmax),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-
-   status = &
-   nf90_put_var(ncid,zvb_id,zvb(imin:imax,jmin:jmax),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
    status = &

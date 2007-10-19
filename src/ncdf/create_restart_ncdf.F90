@@ -1,4 +1,4 @@
-!$Id: create_restart_ncdf.F90,v 1.1 2007-09-21 13:03:42 kbk Exp $
+!$Id: create_restart_ncdf.F90,v 1.2 2007-10-19 07:52:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -39,6 +39,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: create_restart_ncdf.F90,v $
+!  Revision 1.2  2007-10-19 07:52:36  kbk
+!  zub and zvb not in hotstart files anymore
+!
 !  Revision 1.1  2007-09-21 13:03:42  kbk
 !  added drop-in NetCDF replacement for binary hotstart file (default is binary)
 !
@@ -110,10 +113,6 @@
                             (/ xdim_id, ydim_id /), zu_id)
    if (status .NE. NF90_NOERR) go to 10
 
-   status = nf90_def_var(ncid, "zub", nf90_double, &
-                            (/ xdim_id, ydim_id /), zub_id)
-   if (status .NE. NF90_NOERR) go to 10
-
    status = nf90_def_var(ncid, "SlUx", nf90_double, &
                             (/ xdim_id, ydim_id /), SlUx_id)
    if (status .NE. NF90_NOERR) go to 10
@@ -128,10 +127,6 @@
 
    status = nf90_def_var(ncid, "zv", nf90_double, &
                             (/ xdim_id, ydim_id /), zv_id)
-   if (status .NE. NF90_NOERR) go to 10
-
-   status = nf90_def_var(ncid, "zvb", nf90_double, &
-                            (/ xdim_id, ydim_id /), zvb_id)
    if (status .NE. NF90_NOERR) go to 10
 
    status = nf90_def_var(ncid, "SlVx", nf90_double, &

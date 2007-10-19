@@ -1,4 +1,4 @@
-!$Id: ncdf_restart.F90,v 1.1 2007-09-21 13:03:42 kbk Exp $
+!$Id: ncdf_restart.F90,v 1.2 2007-10-19 07:52:36 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -36,9 +36,9 @@
    integer                             :: secondsofday_id
    integer                             :: timestep_id
    integer                             :: z_id,zo_id
-   integer                             :: U_id,zu_id,zub_id
+   integer                             :: U_id,zu_id
    integer                             :: SlUx_id,Slru_id
-   integer                             :: V_id,zv_id,zvb_id
+   integer                             :: V_id,zv_id
    integer                             :: SlVx_id,Slrv_id
 #ifndef NO_3D
    integer                             :: ssen_id,ssun_id,ssvn_id
@@ -68,6 +68,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: ncdf_restart.F90,v $
+!  Revision 1.2  2007-10-19 07:52:36  kbk
+!  zub and zvb not in hotstart files anymore
+!
 !  Revision 1.1  2007-09-21 13:03:42  kbk
 !  added drop-in NetCDF replacement for binary hotstart file (default is binary)
 !

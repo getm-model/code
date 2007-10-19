@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.24 2007-10-03 06:59:22 kbk Exp $
+!$Id: output.F90,v 1.25 2007-10-19 07:52:35 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -57,6 +57,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.25  2007-10-19 07:52:35  kbk
+!  zub and zvb not in hotstart files anymore
+!
 !  Revision 1.24  2007-10-03 06:59:22  kbk
 !  NetCDF restart uses runtype properly
 !
@@ -407,8 +410,13 @@
 ! !USES:
    use time, only: timestep,julianday,secondsofday
    use variables_2d, only: z,zo
-   use variables_2d, only: U,fU,zu,zub,SlUx,Slru
-   use variables_2d, only: V,fV,zv,zvb,SlVx,Slrv
+#ifdef ZUB_ZVB
+   use variables_2d, only: U,fU,zu,res_du,SlUx,Slru
+   use variables_2d, only: V,fV,zv,res_dv,SlVx,Slrv
+#else
+   use variables_2d, only: U,fU,zu,SlUx,Slru
+   use variables_2d, only: V,fV,zv,SlVx,Slrv
+#endif
    use variables_2d, only: Uinto,Vinto
 #ifndef NO_3D
    use variables_3d, only: ssen,ssun,ssvn
@@ -470,13 +478,17 @@
             if (n .eq. 1) then
                call create_restart_ncdf(fname,loop,runtype)
             end if
-            call write_restart_ncdf(runtype,1000,loop,julianday,secondsofday)
+            call write_restart_ncdf(runtype,_ZERO_,loop,julianday,secondsofday)
          case(BINARY)
             open(RESTART,file=fname,status='unknown',form='unformatted')
             LEVEL3 'saving loop, julianday, secondsofday and timestep'
             write(RESTART) loop,julianday,secondsofday,timestep
             LEVEL3 'saving basic variables'
-            write(RESTART) z,zo,U,zu,zub,SlUx,Slru,V,zv,zvb,SlVx,Slrv
+#ifdef ZUB_ZVB
+            write(RESTART) z,zo,U,zu,res_du,SlUx,Slru,V,zv,res_dv,SlVx,Slrv
+#else
+            write(RESTART) z,zo,U,zu,SlUx,Slru,V,zv,SlVx,Slrv
+#endif
 #ifndef NO_3D
             if (runtype .ge. 2)  then
                LEVEL3 'saving 3D barotropic variables'
@@ -527,7 +539,12 @@
             LEVEL3 'reading loop, julianday, secondsofday and timestep'
             read(RESTART) j,jd,secs,dt
             LEVEL3 'reading basic variables'
-            read(RESTART) z,zo,U,zu,zub,SlUx,Slru,V,zv,zvb,SlVx,Slrv
+#ifdef ZUB_ZVB
+            read(RESTART) z,zo,U,zu,res_du,SlUx,Slru,V,zv,res_dv,SlVx,Slrv
+            res_du=_ZERO_ ; res_dv=_ZERO_
+#else
+            read(RESTART) z,zo,U,zu,SlUx,Slru,V,zv,SlVx,Slrv
+#endif
 #ifndef NO_3D
             if (runtype .ge. 2)  then
                LEVEL3 'reading 3D barotropic variables'
