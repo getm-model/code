@@ -1,16 +1,21 @@
-#$Id: Rules.make,v 1.14 2007-05-14 12:09:27 kbk Exp $
+#$Id: Rules.make,v 1.15 2007-10-24 11:23:33 kbk Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
 # file and included in all other Makefiles.
 # Here you set the fortran compiler and the compilation mode (debug,prof,prod)
-# Presently, reasonable values for the NAG Fortran 95 and the Compaq Fortran
-# compilers are included.
 # If you want to include info for a new compiler - please know what you are 
-# doing.
-#
+# doing - then add a new file to the directory ../compilers.
 
 SHELL   = /bin/sh
+CPP	= /lib/cpp
+
+# Information about which Fortran compiler to use is 
+# obtained from $(FORTRAN_COMPILER) - environment variable.
+# The file ../compilers/compiler.$(FORTRAN_COMPILER) must exist
+
+DEFINES=-D$(FORTRAN_COMPILER)
+include $(GETMDIR)/compilers/compiler.$(FORTRAN_COMPILER)
 
 # The compilation mode is obtained from $COMPILATION_MODE
 # default production - else debug or profiling
@@ -20,27 +25,28 @@ else
 compilation=$(COMPILATION_MODE)
 endif
 
-DEFINES=-D$(FORTRAN_COMPILER)
-
+# 2D compilation only
 ifeq ($(GETM_NO_3D),true)
 DEFINES += -DNO_3D
 export GETM_NO_BAROCLINIC=true
 endif
 
+# 3D barotropic
 ifeq ($(GETM_NO_BAROCLINIC),true)
 DEFINES += -DNO_BAROCLINIC
 endif
 
+# Suspended matter
 ifeq ($(GETM_SPM),true)
 DEFINES += -DSPM
 endif
 
+# Bio-geochemical component
 ifeq ($(GETM_BIO),true)
 DEFINES += -DGETM_BIO
 endif
 
-# The compilation mode is obtained from $COMPILATION_MODE
-# default production - else debug or profiling
+# Compile for parallel execution
 ifndef GETM_PARALLEL
 parallel=false
 set par=ser
@@ -52,11 +58,8 @@ endif
 turbulence=
 turbulence=gotm
 
-CPP	= /lib/cpp
-
 # Here you can put defines for the [c|f]pp - some will also be set depending
 # on compilation mode - if STATIC is defined be careful.
-#DEFINES = -DHAIDVOGEL_TEST
 ifdef INPUT_DIR
 DEFINES += -DINPUT_DIR="'$(INPUT_DIR)/'"
 endif
@@ -120,6 +123,8 @@ EXTRA_LIBS	+= -lturb$(buildtype)
 endif
 
 # Where does the NetCDF include file and library reside.
+NETCDF=NETCDF3
+ifeq ($(NETCDF),NETCDF3)
 ifdef NETCDFINC
 INCDIRS		+= -I$(NETCDFINC)
 endif
@@ -131,12 +136,31 @@ ifdef NETCDFLIBDIR
 LINKDIRS	+= -L$(NETCDFLIBDIR)
 endif
 endif
-EXTRA_LIBS	+= $(NETCDFLIB)
+HDF5LIB		=
+else
+ifdef HDF5_DIR
+INCDIRS		+= -I$(HDF5_DIR)/include
+LINKDIRS	+= -L$(HDF5_DIR)/lib
+HDF5LIB		= -lhdf5
+HDF5LIB		=  $(HDF5_DIR)/lib/libhdf5_hl.a $(HDF5_DIR)/lib/libhdf5.a /usr/lib/libz.a
+endif
+endif
+EXTRA_LIBS	+= $(NETCDFLIB) $(HDF5LIB)
 
 
 # Where does the MPI library reside.
 ifeq ($(parallel),true)
 DEFINES += -DPARALLEL
+
+# do we want to use OpenMPI - FC set to mpif90
+ifeq ($(MPI),OPENMPI)
+MPI_COMPILE_FLAGS = $(shell mpif90 --showme:compile)
+MPI_LINK_FLAGS = $(shell mpif90 --showme:link)
+FC=mpif90
+INCDIRS		+= $(MPI_COMPILE_FLAGS)
+LINKDIRS	+= $(MPI_LINK_FLAGS)
+else
+# default to MPICH
 ifdef MPIINC
 INCDIRS		+= -I$(MPIINC)
 endif
@@ -158,22 +182,9 @@ endif
 endif
 EXTRA_LIBS	+= $(MPILIB)
 endif
-
+endif
 
 DOCDIR		= $(GETMDIR)/doc
-
-# Information about which Fortran compiler to use is 
-# obtained from $(FORTRAN_COMPILER) - environment variable.
-
-# Normaly this should not be changed - unless you want something very specific.
-
-# The Fortran compiler is determined from the EV FORTRAN_COMPILER - options 
-# sofar NAG(linux), FUJITSU(Linux), DECF90 (OSF1 and likely Linux on alpha),
-# SunOS, PGF90 - Portland Group Fortran Compiler (on Intel Linux).
-
-#KBKinclude $(GETMDIR)/compilers/compiler.$(FORTRAN_COMPILER)
-
-#DEFINES += -DREAL_4B=$(REAL_4B)
 
 # Sets options for debug compilation
 ifeq ($(compilation),debug)
@@ -196,13 +207,10 @@ DEFINES += -DPRODUCTION $(STATIC)
 FLAGS   = $(PROD_FLAGS) 
 endif
 
-include $(GETMDIR)/compilers/compiler.$(FORTRAN_COMPILER)
-
 # For making the source code documentation.
 PROTEX	= protex -b -n -s
 
 # It should not be necessary to change anything below this line - kbk
-
 #
 # False targets.
 #
@@ -237,4 +245,3 @@ else
 %.o: %.f90
 	$(FC) $(F90FLAGS) $(EXTRA_FFLAGS) -c $< -o $@
 endif
-
