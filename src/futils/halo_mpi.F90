@@ -1,4 +1,4 @@
-!$Id: halo_mpi.F90,v 1.12 2007-06-07 10:25:19 kbk Exp $
+!$Id: halo_mpi.F90,v 1.13 2007-11-01 09:25:07 kb Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -65,6 +65,9 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_mpi.F90,v $
+!  Revision 1.13  2007-11-01 09:25:07  kb
+!  explicit set MPI_PROC_NULL for non-existing neighbors
+!
 !  Revision 1.12  2007-06-07 10:25:19  kbk
 !  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
 !
@@ -502,14 +505,14 @@ include "mpif.h"
       case(MESH_FROM_FILE)
          call read_par_setup(par_setup,nprocs,myid,imax,jmax,iextr,jextr, &
                              ioff,joff,neighbours)
-         left  = neighbours(1)
-         ul    = neighbours(2)
-         up    = neighbours(3)
-         ur    = neighbours(4)
-         right = neighbours(5)
-         lr    = neighbours(6)
-         down  = neighbours(7)
-         ll    = neighbours(8)
+         left  = neighbours(1) ; if (left  .eq. -1) left  = MPI_PROC_NULL
+         ul    = neighbours(2) ; if (ul    .eq. -1) ul    = MPI_PROC_NULL
+         up    = neighbours(3) ; if (up    .eq. -1) up    = MPI_PROC_NULL
+         ur    = neighbours(4) ; if (ur    .eq. -1) ur    = MPI_PROC_NULL
+         right = neighbours(5) ; if (right .eq. -1) right = MPI_PROC_NULL
+         lr    = neighbours(6) ; if (lr    .eq. -1) lr    = MPI_PROC_NULL
+         down  = neighbours(7) ; if (down  .eq. -1) down  = MPI_PROC_NULL
+         ll    = neighbours(8) ; if (ll    .eq. -1) ll    = MPI_PROC_NULL
       case default
          FATAL 'A non valid partitioning method has been chosen'
          call MPI_ABORT(MPI_COMM_WORLD,-1,ierr)
