@@ -2,10 +2,10 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: ip_shchepetkin_williams
+! !ROUTINE: ip_shchepetkin_mcwilliams
 !
 ! !INTERFACE:
-   subroutine ip_shchepetkin_williams()
+   subroutine ip_shchepetkin_mcwilliams()
 !
 ! !DESCRIPTION:
 !
@@ -47,19 +47,26 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
-   REALTYPE                  :: dR(I3DFIELD)=_ZERO_
-   REALTYPE                  :: dZ(I3DFIELD)=_ZERO_
-   REALTYPE                  :: P(I3DFIELD)=_ZERO_
+   REALTYPE                  :: dR(I3DFIELD)
+   REALTYPE                  :: dZ(I3DFIELD)
+   REALTYPE                  :: P(I3DFIELD)
    REALTYPE                  :: dxm1,dym1,cff,cff1,cff2
-   REALTYPE                  :: AJ=_ZERO_
+   REALTYPE                  :: AJ
    REALTYPE                  :: eps=1.e-10
    REALTYPE                  :: OneFifth = 0.2
-   REALTYPE                  :: FC(I2DFIELD)=_ZERO_
-   REALTYPE                  :: dZx(I2DFIELD)=_ZERO_
-   REALTYPE                  :: dRx(I2DFIELD)=_ZERO_
+   REALTYPE                  :: FC(I2DFIELD)
+   REALTYPE                  :: dZx(I2DFIELD)
+   REALTYPE                  :: dRx(I2DFIELD)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+   dR=_ZERO_
+   dZ=_ZERO_
+   P=_ZERO_
+   FC=_ZERO_
+   AJ=_ZERO_
+   dZx=_ZERO_
+   dRx=_ZERO_
 
 #if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
    dxm1 = _ONE_/DXU
@@ -212,7 +219,7 @@
    end do
 
    return
-   end subroutine ip_shchepetkin_williams
+   end subroutine ip_shchepetkin_mcwilliams
 !EOC
 
 !-----------------------------------------------------------------------

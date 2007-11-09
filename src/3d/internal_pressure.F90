@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.19 2007-08-02 09:49:26 hb Exp $
+!$Id: internal_pressure.F90,v 1.20 2007-11-09 10:40:49 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,6 +47,8 @@
 !       {\tt ip\_z\_interpol}
 ! \item Method by \cite{SONG98}, see routine {\tt ip\_song\_wright}
 ! \item Method by \cite{CHUea03}, see routine {\tt ip\_chu\_fan}
+! \item Method by \cite{SHCHEPETKINea03}, see routine {\tt
+! ip\_shchepetkin\_mcwilliams}
 !  \end{enumerate}
 !
 ! It is possible, by setting the compiler option {\tt SUBSTR\_INI\_PRESS},
@@ -88,7 +90,7 @@
    integer, private, parameter         :: Z_INTERPOL=3
    integer, private, parameter         :: SONG_WRIGHT=4
    integer, private, parameter         :: CHU_FAN=5
-   integer, private, parameter         :: SHCHEPETKIN_WILLIAMS=6
+   integer, private, parameter         :: SHCHEPETKIN_MCWILLIAMS=6
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -148,8 +150,8 @@
          LEVEL3 'Chu and Fan scheme'
          call getm_error("init_internal_pressure()", &
              "Not working, use other internal pressure gradient scheme")
-      case(SHCHEPETKIN_WILLIAMS)
-         LEVEL3 'Shchepetkin and Williams scheme'
+      case(SHCHEPETKIN_MCWILLIAMS)
+         LEVEL3 'Shchepetkin and McWilliams scheme'
       case default
          FATAL 'Not valid ip_method specified'
          stop 'init_internal_pressure()'
@@ -214,8 +216,8 @@
          call ip_song_wright()
       case(CHU_FAN)
          call ip_chu_fan()
-      case(SHCHEPETKIN_WILLIAMS)
-         call ip_shchepetkin_williams()
+      case(SHCHEPETKIN_MCWILLIAMS)
+         call ip_shchepetkin_mcwilliams()
       case default
          FATAL 'Not valid ip_method specified'
          stop 'do_internal_pressure()'
