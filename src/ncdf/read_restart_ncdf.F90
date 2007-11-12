@@ -1,4 +1,4 @@
-!$Id: read_restart_ncdf.F90,v 1.5 2007-10-19 07:52:36 kbk Exp $
+!$Id: read_restart_ncdf.F90,v 1.6 2007-11-12 13:50:17 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -33,6 +33,7 @@
    use variables_2d
    use variables_3d
 #ifdef GETM_BIO
+   use bio, only: bio_calc
    use bio_var, only: numc
 #endif
    IMPLICIT NONE
@@ -50,6 +51,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: read_restart_ncdf.F90,v $
+!  Revision 1.6  2007-11-12 13:50:17  kb
+!  also need bio_calc
+!
 !  Revision 1.5  2007-10-19 07:52:36  kbk
 !  zub and zvb not in hotstart files anymore
 !
