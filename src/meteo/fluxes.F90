@@ -1,4 +1,4 @@
-!$Id: fluxes.F90,v 1.13 2007-06-27 08:39:36 kbk Exp $
+!$Id: fluxes.F90,v 1.14 2007-11-15 13:31:18 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -55,6 +55,9 @@
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: fluxes.F90,v $
+!  Revision 1.14  2007-11-15 13:31:18  kb
+!  1.0 -> _ONE_
+!
 !  Revision 1.13  2007-06-27 08:39:36  kbk
 !  support for fresh water fluxes at the sea surface - Adolf Stips
 !
@@ -231,9 +234,9 @@
 !     momentum flux due to rainfall (in kg/m^2/s)
       tmp  = 0.85 * precip*rho_precip * w
       x=u10
-      taux  = taux + tmp * sign(1.0,x)
+      taux  = taux + tmp * sign(_ONE_,x)
       x=v10
-      tauy  = tauy + tmp * sign(1.0,x)
+      tauy  = tauy + tmp * sign(_ONE_,x)
    end if
 
    if (fwf_method .ge. 2) then
