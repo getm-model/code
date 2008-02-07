@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.39 2007-06-07 10:25:19 kbk Exp $
+!$Id: m3d.F90,v 1.40 2008-02-07 08:27:44 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,7 +26,7 @@
 ! !USES:
    use exceptions
    use parameters, only: avmmol
-   use domain, only: maxdepth,vert_cord,az
+   use domain, only: openbdy,maxdepth,vert_cord,az
    use m2d, only: Am
    use variables_2d, only: D,z,UEx,VEx
 #ifndef NO_BAROCLINIC
@@ -270,6 +270,7 @@
    end if
 #endif
 
+   if (openbdy .eq. .false.) bdy3d=.false.
    if (bdy3d) call init_bdy_3d()
 
 #ifdef DEBUG

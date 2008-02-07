@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.22 2007-02-22 16:38:19 kbk Exp $
+!$Id: m2d.F90,v 1.23 2008-02-07 08:27:43 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,7 +22,7 @@
    use time, only: julianday,secondsofday
    use parameters, only: avmmol
    use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV,min_depth
-   use domain, only: z0_method,z0_const,z0
+   use domain, only: openbdy,z0_method,z0_const,z0
    use halo_zones, only : update_2d_halo,wait_halo
    use halo_zones, only : U_TAG,V_TAG,H_TAG
    use variables_2d
@@ -126,6 +126,7 @@
       LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
    end if
 
+   if (openbdy .eq. .false.)  bdy2d=.false.
    LEVEL2 'Open boundary=',bdy2d
    if (bdy2d) then
       if (hotstart .and. bdyramp_2d .gt. 0) then
