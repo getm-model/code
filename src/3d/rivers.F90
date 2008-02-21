@@ -1,4 +1,4 @@
-!$Id: rivers.F90,v 1.12 2007-06-07 10:25:19 kbk Exp $
+!$Id: rivers.F90,v 1.13 2008-02-21 11:37:05 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -63,6 +63,7 @@
    REALTYPE, public, allocatable       :: river_flow(:)
    REALTYPE, public, allocatable       :: river_salt(:)
    REALTYPE, public, allocatable       :: river_temp(:)
+   REALTYPE, public                    :: river_ramp= -1
    REALTYPE, public                    :: river_factor= _ONE_
    REALTYPE, public,parameter          :: temp_missing=-9999.0
    REALTYPE, public,parameter          :: salt_missing=-9999.0
@@ -123,8 +124,8 @@
    logical                   :: outside
    REALTYPE                  :: area
    NAMELIST /rivers/ &
-            river_method,river_info,river_format,river_data,river_factor, &
-            use_river_salt,use_river_temp
+            river_method,river_info,river_format,river_data,river_ramp, &
+            river_factor,use_river_salt,use_river_temp
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -144,6 +145,8 @@
          LEVEL2 'river_method= ',river_method
          LEVEL2 'river_data=   ',trim(river_data)
          LEVEL2 'river_format= ',river_format
+         LEVEL2 'river_ramp=   ',river_ramp
+         LEVEL2 'river_factor= ',river_factor
          LEVEL2 'use_river_temp= ',use_river_temp
          LEVEL2 'use_river_salt= ',use_river_salt
          open(unit,file=river_info,action='read',status='old',err=90)
@@ -359,6 +362,8 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,m,n
+   integer, save             :: nn=0
+   REALTYPE                  :: ramp=_ONE_
    REALTYPE                  :: rvol,height
    REALTYPE                  :: svol,tvol,vol
 !
@@ -371,13 +376,20 @@
    write(debug,*) 'do_rivers() # ',Ncall
 #endif
 
+!  river spin-up
+   ramp=_ONE_
+   if (river_ramp .gt. 0 .and. nn .lt. river_ramp) then
+      ramp=min( _ONE_ , nn*_ONE_/river_ramp)
+      nn=nn+1
+   end if
+
    select case (river_method)
       case(0)
       case(1,2)
          do n=1,nriver
             if(ok(n) .gt. 0) then
                i = ir(n)-ioff; j = jr(n)-joff
-               rvol = dtm * river_flow(n) * flow_fraction(n)
+               rvol = ramp * dtm * river_flow(n) * flow_fraction(n)
                irr(n) = irr(n) + rvol
                height = rvol * ARCD1
                z(i,j) = z(i,j) + height
