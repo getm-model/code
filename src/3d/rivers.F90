@@ -1,4 +1,4 @@
-!$Id: rivers.F90,v 1.14 2008-02-21 12:01:37 kb Exp $
+!$Id: rivers.F90,v 1.15 2008-02-21 12:04:42 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -362,13 +362,8 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,m,n
-<<<<<<< rivers.F90
-   integer, save             :: kaj=0
-   REALTYPE                  :: ramp=_ONE_
-=======
    integer, save             :: nn=0
    REALTYPE                  :: ramp=_ONE_
->>>>>>> 1.13
    REALTYPE                  :: rvol,height
    REALTYPE                  :: svol,tvol,vol
 !
@@ -381,13 +376,6 @@
    write(debug,*) 'do_rivers() # ',Ncall
 #endif
 
-<<<<<<< rivers.F90
-   if (river_ramp .gt. 0) then
-      ramp=min( _ONE_ , kaj*_ONE_/river_ramp)
-STDERR ramp
-      kaj=kaj+1
-   end if
-=======
 !  river spin-up
    ramp=_ONE_
    if (river_ramp .gt. 0 .and. nn .lt. river_ramp) then
@@ -395,7 +383,6 @@ STDERR ramp
       nn=nn+1
    end if
 
->>>>>>> 1.13
    select case (river_method)
       case(0)
       case(1,2)
