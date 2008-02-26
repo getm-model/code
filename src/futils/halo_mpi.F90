@@ -1,4 +1,4 @@
-!$Id: halo_mpi.F90,v 1.13 2007-11-01 09:25:07 kb Exp $
+!$Id: halo_mpi.F90,v 1.14 2008-02-26 10:59:52 kb Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -65,6 +65,9 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_mpi.F90,v $
+!  Revision 1.14  2008-02-26 10:59:52  kb
+!  MPI version printed
+!
 !  Revision 1.13  2007-11-01 09:25:07  kb
 !  explicit set MPI_PROC_NULL for non-existing neighbors
 !
@@ -317,9 +320,21 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
+   integer         :: ver,subver
+   character(len=8) :: vstr
+!
 !EOP
 !-------------------------------------------------------------------------
 !BOC
+!  Get the MPI version
+   call MPI_GET_VERSION(ver,subver,ierr)
+   if (ierr .ne. MPI_SUCCESS) THEN
+      STDERR 'Fatal error: unable to get MPI version information.'
+      call MPI_Abort(MPI_COMM_WORLD,-1,ierr)
+   end if
+   write(vstr,'(a1,I1,a1,I1)') 'v',ver,'.',subver
+   LEVEL0 "MPI is initialised - ",trim(vstr)
+
    LEVEL0 'Process ',myid,' of ',nprocs,' is alive on ',pname(1:len)
    end subroutine print_MPI_info
 !EOC
