@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.15 2007-06-07 10:25:19 kbk Exp $
+!$Id: gotm.F90,v 1.16 2008-03-26 13:25:52 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,6 +31,15 @@
 ! vertical vectors {\tt tke1d}, {\tt eps1d}, {\tt num1d} and {\tt nuh1d}
 ! are transformed back to 3D fields. 
 !
+! In case that the compiler option {\tt STRUCTURE\_FRICTION} is switched on,
+! the additional turbulence production by structures in the water column is calculated
+! by calculating the total production as
+! \begin{equation}
+! P_{tot} = P +C \left(u^2+v^2\right)^{3/2},
+! \end{equation}
+! with the shear production $P$, and the structure friction coefficient $C$. The
+! latter is calculated in the routine {\tt structure\_friction\_3d.F90}.
+!
 ! There are furthermore a number of compiler options provided, e.g.\
 ! for an older GOTM version, for barotropic calcuations,
 ! and for simple parabolic viscosity profiles circumventing the GOTM
@@ -45,6 +54,9 @@
    use variables_3d, only: NN,nuh
 #endif
    use variables_3d, only: avmback,avhback
+#ifdef STRUCTURE_FRICTION
+   use variables_3d, only: uu,vv,hun,hvn,sf
+#endif
    use turbulence, only: do_turbulence,cde
    use turbulence, only: tke1d => tke, eps1d => eps, L1d => L
    use turbulence, only: num1d => num, nuh1d => nuh
@@ -65,6 +77,10 @@
    REALTYPE                  :: h(0:kmax),dry,zz
    REALTYPE                  :: NN1d(0:kmax),SS1d(0:kmax)
    REALTYPE                  :: xP(0:kmax)
+#ifdef STRUCTURE_FRICTION
+   REALTYPE                  :: cds=0.01
+#endif
+
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -81,6 +97,15 @@
 
          if (az(i,j) .eq. 1 ) then
 
+#ifdef STRUCTURE_FRICTION
+            do k=1,kmax
+               xP(k)= 0.25*(                                                   &
+               (uu(i  ,j  ,k)/hun(i  ,j  ,k))**2*(sf(i  ,j  ,k)+sf(i+1,j  ,k)) &
+              +(uu(i-1,j  ,k)/hun(i-1,j  ,k))**2*(sf(i-1,j  ,k)+sf(i  ,j  ,k)) &
+              +(vv(i  ,j  ,k)/hvn(i  ,j  ,k))**2*(sf(i  ,j  ,k)+sf(i  ,j+1,k)) &
+              +(vv(i  ,j-1,k)/hvn(i  ,j-1,k))**2*(sf(i  ,j-1,k)+sf(i  ,j  ,k))) 
+            end do
+#endif
             u_taus = sqrt(taus(i,j))
             u_taub = sqrt(taub(i,j))
 

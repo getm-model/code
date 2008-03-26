@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.15 2007-10-24 11:23:33 kbk Exp $
+#$Id: Rules.make,v 1.16 2008-03-26 13:25:52 hb Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -39,6 +39,11 @@ endif
 # Suspended matter
 ifeq ($(GETM_SPM),true)
 DEFINES += -DSPM
+endif
+
+# Structure friction
+ifeq ($(GETM_STRUCTURE_FRICTION),true)
+DEFINES += -DSTRUCTURE_FRICTION
 endif
 
 # Bio-geochemical component

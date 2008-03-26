@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.40 2008-02-07 08:27:44 kb Exp $
+!$Id: m3d.F90,v 1.41 2008-03-26 13:25:52 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -400,6 +400,9 @@
    hvo=hvn
    ip_fac=_ONE_
    if (ip_ramp .gt. 0) ip_fac=min( _ONE_ , n*_ONE_/ip_ramp)
+#ifdef STRUCTURE_FRICTION
+   call structure_friction_3d
+#endif
    if (ufirst) then
       call uu_momentum_3d(n,bdy3d)
       call vv_momentum_3d(n,bdy3d)

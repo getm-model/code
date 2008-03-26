@@ -1,4 +1,4 @@
-!$Id: uu_momentum_3d.F90,v 1.15 2007-06-07 10:25:19 kbk Exp $
+!$Id: uu_momentum_3d.F90,v 1.16 2008-03-26 13:25:52 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,6 +29,13 @@
 ! Afterwards, the matrix is set up for each water column, and it is solved 
 ! by means of a tri-diagonal matrix solver. 
 !
+! In case that the compiler option {\tt STRUCTURE\_FRICTION} is switched on, 
+! the frictional effect of structures in the water column is calculated
+! by adding the quadratic frictional term $C u \sqrt{u^2+v^2}$ (with a minus sign on
+! the right hand side) numerically implicitly to the $u$-equation,
+! with the friction coefficient $C$. The explicit part of this term, $C\sqrt{u^2+v^2}$,
+! is calculated in the routine {\tt structure\_friction\_3d.F90}.
+!
 ! Finally, the new velocity profile is shifted such that its vertical
 ! integral is identical to the time integral of the vertically integrated
 ! transport.
@@ -55,6 +62,9 @@
    use variables_3d, only: dt,cnpar,kumin,uu,vv,huo,hun,hvo,uuEx,ww,hvn
    use variables_3d, only: num,nuh,sseo,ssun,rru
    use variables_3d, only: ssuo
+#ifdef STRUCTURE_FRICTION
+   use variables_3d, only: sf
+#endif
 #ifndef NO_BAROCLINIC
    use variables_3d, only: idpdx
 #endif
@@ -175,6 +185,12 @@
                     +uu(i,j,k  )*(1-auxo(k)/huo(i,j,k))                &
                     +dt*ex(k)                                          &
                     -dt*0.5*(huo(i,j,k)+hun(i,j,k))*g*zx
+
+#ifdef STRUCTURE_FRICTION
+               do k=kumin(i,j),kmax
+                  a2(k)=a2(k)+dt*0.5*(sf(i,j,k)+sf(i+1,j,k))
+               end do
+#endif
 
                call getm_tridiagonal(kmax,kumin(i,j),kmax,a1,a2,a3,a4,Res)
 

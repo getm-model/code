@@ -10,6 +10,9 @@
   integer, dimension(:,:), allocatable:: kmin_pmz,kumin_pmz,kvmin_pmz
 
   REALTYPE, dimension(:,:,:), allocatable   :: uu,vv,ww
+#ifdef STRUCTURE_FRICTION
+  REALTYPE, dimension(:,:,:), allocatable   :: sf
+#endif
   REALTYPE, dimension(:,:,:), allocatable   :: ho,hn
   REALTYPE, dimension(:,:,:), allocatable   :: huo,hun
   REALTYPE, dimension(:,:,:), allocatable   :: hvo,hvn

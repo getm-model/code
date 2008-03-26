@@ -1,4 +1,4 @@
-!$Id: slow_terms.F90,v 1.8 2007-06-07 10:25:19 kbk Exp $
+!$Id: slow_terms.F90,v 1.9 2008-03-26 13:25:52 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,6 +28,10 @@
 #ifndef NO_BAROCLINIC
    use variables_3d, only: idpdx,idpdy
 #endif
+#ifdef STRUCTURE_FRICTION
+   use variables_3d, only: sf
+#endif
+
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -148,6 +152,11 @@
                                        +HU(i,j))*ru(i,j)               &
                      +uu(i,j,k)/(0.5*(huo(i,j,k)+hun(i,j,k)))*rru(i,j)
 #endif
+#ifdef STRUCTURE_FRICTION
+               do k=1,kmax
+                  Slru(i,j)=Slru(i,j)+uu(i,j,k)*0.5*(sf(i,j,k)+sf(i-1,j,k))
+               end do
+#endif
             else
                Slru(i,j)= _ZERO_
             end if
@@ -167,6 +176,11 @@
                Slrv(i,j)=-Vint(i,j)/(0.5*(ssvo(i,j)+ssvn(i,j))         &
                                     +HV(i,j))*rv(i,j)                  &
                   +vv(i,j,k)/(0.5*(hvo(i,j,k)+hvn(i,j,k)))*rrv(i,j)
+#endif
+#ifdef STRUCTURE_FRICTION
+               do k=1,kmax
+                  Slrv(i,j)=Slrv(i,j)+vv(i,j,k)*0.5*(sf(i,j,k)+sf(i,j-1,k))
+               end do
 #endif
             else
                Slrv(i,j)=_ZERO_

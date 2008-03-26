@@ -7,6 +7,11 @@
   allocate(ww(I3DFIELD),stat=rc)    ! 3D field for w-velocity
   if (rc /= 0) stop 'init_3d: Error allocating memory (ww)'
 
+#ifdef STRUCTURE_FRICTION
+  allocate(sf(I3DFIELD),stat=rc)    ! 3D field for velocity in T-points
+  if (rc /= 0) stop 'init_3d: Error allocating memory (sf)'
+#endif
+
   allocate(ho(I3DFIELD),stat=rc)    ! 3D field for old box height (z-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (ho)'
 

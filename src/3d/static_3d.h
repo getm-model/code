@@ -23,6 +23,9 @@
   REALTYPE                             :: uu(I3DFIELD)
   REALTYPE                             :: vv(I3DFIELD)
   REALTYPE                             :: ww(I3DFIELD)
+#ifdef STRUCTURE_FRICTION
+  REALTYPE                             :: sf(I3DFIELD)
+#endif
   REALTYPE                             :: ho(I3DFIELD)
   REALTYPE                             :: hn(I3DFIELD)
   REALTYPE                             :: huo(I3DFIELD)
