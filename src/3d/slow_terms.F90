@@ -1,4 +1,4 @@
-!$Id: slow_terms.F90,v 1.9 2008-03-26 13:25:52 hb Exp $
+!$Id: slow_terms.F90,v 1.10 2008-03-27 08:51:23 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -154,7 +154,7 @@
 #endif
 #ifdef STRUCTURE_FRICTION
                do k=1,kmax
-                  Slru(i,j)=Slru(i,j)+uu(i,j,k)*0.5*(sf(i,j,k)+sf(i-1,j,k))
+                  Slru(i,j)=Slru(i,j)+uu(i,j,k)*0.5*(sf(i,j,k)+sf(i+1,j,k))
                end do
 #endif
             else
@@ -179,7 +179,7 @@
 #endif
 #ifdef STRUCTURE_FRICTION
                do k=1,kmax
-                  Slrv(i,j)=Slrv(i,j)+vv(i,j,k)*0.5*(sf(i,j,k)+sf(i,j-1,k))
+                  Slrv(i,j)=Slrv(i,j)+vv(i,j,k)*0.5*(sf(i,j,k)+sf(i,j+1,k))
                end do
 #endif
             else

@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.16 2008-03-26 13:25:52 hb Exp $
+!$Id: gotm.F90,v 1.17 2008-03-27 08:51:23 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -77,10 +77,6 @@
    REALTYPE                  :: h(0:kmax),dry,zz
    REALTYPE                  :: NN1d(0:kmax),SS1d(0:kmax)
    REALTYPE                  :: xP(0:kmax)
-#ifdef STRUCTURE_FRICTION
-   REALTYPE                  :: cds=0.01
-#endif
-
 !
 !EOP
 !-----------------------------------------------------------------------
