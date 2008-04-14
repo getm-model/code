@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.23 2008-02-07 08:27:43 kb Exp $
+!$Id: m2d.F90,v 1.24 2008-04-14 11:25:05 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -126,7 +126,7 @@
       LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
    end if
 
-   if (openbdy .eq. .false.)  bdy2d=.false.
+   if (.not. openbdy)  bdy2d=.false.
    LEVEL2 'Open boundary=',bdy2d
    if (bdy2d) then
       if (hotstart .and. bdyramp_2d .gt. 0) then

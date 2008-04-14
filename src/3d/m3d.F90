@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.41 2008-03-26 13:25:52 hb Exp $
+!$Id: m3d.F90,v 1.42 2008-04-14 11:25:06 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -270,7 +270,7 @@
    end if
 #endif
 
-   if (openbdy .eq. .false.) bdy3d=.false.
+   if (.not. openbdy) bdy3d=.false.
    if (bdy3d) call init_bdy_3d()
 
 #ifdef DEBUG
