@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.16 2008-03-26 13:25:52 hb Exp $
+#$Id: Rules.make,v 1.17 2008-05-17 11:39:47 kb Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -152,20 +152,22 @@ endif
 endif
 EXTRA_LIBS	+= $(NETCDFLIB) $(HDF5LIB)
 
-
 # Where does the MPI library reside.
 ifeq ($(parallel),true)
 DEFINES += -DPARALLEL
 
-# do we want to use OpenMPI - FC set to mpif90
+# OPENMPI - set FC to mpif90
 ifeq ($(MPI),OPENMPI)
-MPI_COMPILE_FLAGS = $(shell mpif90 --showme:compile)
-MPI_LINK_FLAGS = $(shell mpif90 --showme:link)
 FC=mpif90
-INCDIRS		+= $(MPI_COMPILE_FLAGS)
-LINKDIRS	+= $(MPI_LINK_FLAGS)
-else
-# default to MPICH
+endif
+
+# MPICH2 - set FC to mpif90
+ifeq ($(MPI),MPICH2)
+FC=mpif90
+endif
+
+# obsolete - use either OPenMPI or MPICH2
+ifeq ($(MPI),MPICH)
 ifdef MPIINC
 INCDIRS		+= -I$(MPIINC)
 endif
@@ -178,7 +180,7 @@ else
 ifdef MPILIBNAME
 MPILIB		= $(MPILIBNAME)
 else
-MPILIB		= -lmpich
+MPILIB		= -lmpich -lpthread
 endif
 ifdef MPILIBDIR
 LDFLAGS		+= -L$(MPILIBDIR)
@@ -187,6 +189,7 @@ endif
 endif
 EXTRA_LIBS	+= $(MPILIB)
 endif
+
 endif
 
 DOCDIR		= $(GETMDIR)/doc
