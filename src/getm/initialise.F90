@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.19 2007-06-07 10:25:19 kbk Exp $
+!$Id: initialise.F90,v 1.20 2008-05-21 06:22:58 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,6 +22,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
+!  Revision 1.20  2008-05-21 06:22:58  kb
+!  fixed time(1) when save_initial and use_epoch are both true
+!
 !  Revision 1.19  2007-06-07 10:25:19  kbk
 !  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
 !
@@ -374,7 +377,9 @@
 #endif
    end if
 
-   if (save_initial .and. .not. dryrun) call do_output(runtype,0,_ZERO_)
+   if (save_initial .and. .not. dryrun) then
+      call do_output(runtype,MinN-1,timestep)
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_model()'
