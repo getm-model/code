@@ -1,4 +1,4 @@
-!$Id: parallel.F90,v 1.3 2006-11-21 15:10:47 frv-bjb Exp $
+!$Id: parallel.F90,v 1.4 2008-06-26 06:19:30 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,7 @@
 !
 ! !USES:
 #ifdef PARALLEL
-   use halo_mpi, only: postinit_mpi,print_MPI_info,myid
+   use halo_mpi, only: postinit_mpi,print_MPI_info,barrier,myid
 #endif
    IMPLICIT NONE
 !
@@ -25,6 +25,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: parallel.F90,v $
+!  Revision 1.4  2008-06-26 06:19:30  kb
+!  barrier() + verbose when finishing parallel run - Büchmann
+!
 !  Revision 1.3  2006-11-21 15:10:47  frv-bjb
 !  Parallel independence of INPUT_DIR for getm.inp read. Unset INPUT_DIR to use MPI working dir.
 !
@@ -164,9 +167,13 @@
 #endif
 
 #ifdef PARALLEL
+   LEVEL2 'At final MPI barrier'
+   call barrier()
+   LEVEL2 'About to finish parallel part of GETM - calling MPI_Finalize()'  
    if(myid .ge. 0) then
       call MPI_Finalize(ierr)
    end if
+   LEVEL2 'MPI finalized'
 #endif
 
 #ifdef DEBUG
