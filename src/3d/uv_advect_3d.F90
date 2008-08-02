@@ -1,4 +1,4 @@
-!$Id: uv_advect_3d.F90,v 1.15 2008-08-02 07:31:06 kb Exp $
+!$Id: uv_advect_3d.F90,v 1.16 2008-08-02 07:42:44 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -286,8 +286,9 @@
    integer                   :: avadv(I2DFIELD)
    REALTYPE                  :: dxuadv(I2DFIELD)
    REALTYPE                  :: dxvadv(I2DFIELD)
+   REALTYPE                  :: dyuadv(I2DFIELD)
+   REALTYPE                  :: dyvadv(I2DFIELD)
    REALTYPE                  :: area_inv(I2DFIELD)
-   REALTYPE                  :: dyuadv(I2DFIELD),dyvadv(I2DFIELD)
    REALTYPE                  :: AH=_ZERO_
 #endif
 
