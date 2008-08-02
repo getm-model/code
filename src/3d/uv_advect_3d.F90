@@ -1,4 +1,4 @@
-!$Id: uv_advect_3d.F90,v 1.14 2007-06-07 10:25:19 kbk Exp $
+!$Id: uv_advect_3d.F90,v 1.15 2008-08-02 07:31:06 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -281,8 +281,12 @@
    REALTYPE                  :: PP(imin-1:imax+1,jmin-1:jmax+1,1:kmax)
    REALTYPE                  :: www(0:kmax)
 #ifdef UV_TVD
-   integer                   :: azadv(I2DFIELD),auadv(I2DFIELD),avadv(I2DFIELD)
-   REALTYPE                  :: dxuadv(I2DFIELD),dxvadv(I2DFIELD),area_inv(I2DFIELD)
+   integer                   :: azadv(I2DFIELD)
+   integer                   :: auadv(I2DFIELD)
+   integer                   :: avadv(I2DFIELD)
+   REALTYPE                  :: dxuadv(I2DFIELD)
+   REALTYPE                  :: dxvadv(I2DFIELD)
+   REALTYPE                  :: area_inv(I2DFIELD)
    REALTYPE                  :: dyuadv(I2DFIELD),dyvadv(I2DFIELD)
    REALTYPE                  :: AH=_ZERO_
 #endif
