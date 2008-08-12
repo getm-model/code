@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.10 2006-06-02 12:42:20 kbk Exp $
+!$Id: main.F90,v 1.11 2008-08-12 08:38:49 kb Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -39,6 +39,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: main.F90,v $
+!  Revision 1.11  2008-08-12 08:38:49  kb
+!  added NONNEGSALT to compilation_options()
+!
 !  Revision 1.10  2006-06-02 12:42:20  kbk
 !  support for common epoch for hotstart runs
 !
@@ -224,6 +227,9 @@
 #endif
 #ifdef UV_TVD
    LEVEL1 'UV_TVD'
+#endif
+#ifdef NONNEGSALT
+   LEVEL1 'NONNEGSALT'
 #endif
 #ifdef PRESS_GRAD_Z
    LEVEL1 'PRESS_GRAD_Z'
