@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.17 2007-06-27 08:39:36 kbk Exp $
+!$Id: meteo.F90,v 1.18 2008-08-29 13:59:12 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -85,6 +85,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
+!  Revision 1.18  2008-08-29 13:59:12  kb
+!  fixed parallel run for constant metforing with convc<>0
+!
 !  Revision 1.17  2007-06-27 08:39:36  kbk
 !  support for fresh water fluxes at the sea surface - Adolf Stips
 !
@@ -296,11 +299,16 @@
 
    allocate(evap(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (evap)'
-   evap = _ZERO_
 
    allocate(precip(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (precip)'
-   precip = _ZERO_
+   if (fwf_method .eq. 1) then
+      evap = evap_const
+      precip = precip_const
+   else
+      evap = _ZERO_
+      precip = _ZERO_
+   end if
 
    if (metforcing) then
 
@@ -489,8 +497,8 @@
             tausx = ramp*tx
             tausy = ramp*ty
 !     Rotation of wind stress due to grid convergence
-            do j=jmin,jmax
-               do i=imin,imax
+            do j=jmin-1,jmax+1
+               do i=imin-1,imax+1
                   if (convc(i,j) .ne. _ZERO_ .and. az(i,j) .gt. 0) then
                      sinconv=sin(-convc(i,j)*deg2rad)
                      cosconv=cos(-convc(i,j)*deg2rad)

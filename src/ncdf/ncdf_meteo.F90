@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.24 2007-09-30 13:00:43 kbk Exp $
+!$Id: ncdf_meteo.F90,v 1.25 2008-08-29 13:59:12 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -86,6 +86,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
+!  Revision 1.25  2008-08-29 13:59:12  kb
+!  fixed parallel run for constant metforing with convc<>0
+!
 !  Revision 1.24  2007-09-30 13:00:43  kbk
 !  prints real time as part of progessoutput
 !
@@ -818,8 +821,8 @@
 !     Rotation of wind due to the combined effect of possible rotation of 
 !     meteorological grid and possible hydrodynamic grid convergence 
 !     (cartesian and curvi-linear grids where conv <> 0.)
-      do j=jmin,jmax
-         do i=imin,imax
+      do j=jmin-1,jmax+1
+         do i=imin-1,imax+1
 !KBK            angle=-convc(i,j)*deg2rad
 !KBK            angle=beta(i,j)
             angle=beta(i,j)-convc(i,j)*deg2rad
