@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.15 2007-06-27 08:39:36 kbk Exp $
+!$Id: sealevel.F90,v 1.16 2008-09-16 10:03:24 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,6 +30,11 @@
    use m2d, only: dtm
    use variables_2d, only: z,zo,U,V,fwf
    use halo_zones, only : update_2d_halo,wait_halo,z_TAG
+#ifdef USE_BREAKS
+   use halo_zones, only : nprocs,set_flag,u_TAG,v_TAG
+   use variables_2d, only: break_mask,break_stat
+   use domain, only : min_depth,au,av
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -43,7 +48,12 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
+#ifdef USE_BREAKS
+   integer                   :: n,break_flag,break_flags(nprocs)
+#endif
+#ifdef FRESHWATER_LENSE_TEST
    REALTYPE                  :: kk
+#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -54,6 +64,16 @@
 #endif
 
    zo = z
+
+#ifdef USE_BREAKS
+   break_flag=1
+   break_mask(imin:imax,jmin:jmax)=0
+
+   do while (break_flag .gt. 0)
+
+   break_flag=0
+#endif
+
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .eq. 1) then
@@ -79,9 +99,44 @@
            (((j.eq.4).or.(j.eq.jmax-3)).and.(i.ge.4).and.(i.le.imax-3)))    &
            z(i,j)=(1.-kk)*z(i,j)
 #endif
+
+#ifdef USE_BREAKS
+            if (z(i,j)+H(i,j) .lt. 0.9*min_depth .and. &
+                break_mask(i,j) .eq. 0 ) then
+               break_mask(i,j)=1
+               break_stat(i,j)=break_stat(i,j)+1
+               break_flag=break_flag+1
+               U(i,j)=_ZERO_
+               U(i-1,j)=_ZERO_
+               V(i,j)=_ZERO_
+               V(i,j-1)=_ZERO_
+            end if
+#endif
          end if
+
       end do
    end do
+
+#ifdef USE_BREAKS
+   call set_flag(nprocs,break_flag,break_flags)
+
+   do n=0,nprocs
+      if (break_flags(n) .gt. 0) then
+         break_flag=1
+         LEVEL1 "Warning: emergency break in subdomain: ",n
+      end if
+   end do
+
+   if(break_flag .ne. 0) then
+      z=zo
+      call update_2d_halo(U,U,au,imin,jmin,imax,jmax,u_TAG)
+      call wait_halo(u_TAG)
+      call update_2d_halo(V,V,av,imin,jmin,imax,jmax,v_TAG)
+      call wait_halo(v_TAG)
+   end if
+
+   end do                    !end do while(break_flag>0)
+#endif
 
    call sealevel_nan_check()
 

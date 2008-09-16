@@ -1,4 +1,4 @@
-!$Id: halo_mpi.F90,v 1.14 2008-02-26 10:59:52 kb Exp $
+!$Id: halo_mpi.F90,v 1.15 2008-09-16 10:03:24 kb Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -28,6 +28,7 @@ include "mpif.h"
    public                              :: update_2d_halo_mpi
    public                              :: update_3d_halo_mpi
    public                              :: wait_halo_mpi
+   public                              :: set_flag_mpi
    public:: part_domain_mpi
    integer, public, parameter          :: H_TAG=10,HU_TAG=11,HV_TAG=12
    integer, public, parameter          :: D_TAG=20,DU_TAG=21,DV_TAG=22
@@ -65,6 +66,9 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_mpi.F90,v $
+!  Revision 1.15  2008-09-16 10:03:24  kb
+!  added Holtermanns emergency break algorithm
+!
 !  Revision 1.14  2008-02-26 10:59:52  kb
 !  MPI version printed
 !
@@ -1218,6 +1222,41 @@ STDERR 'TWOD_NONBLOCKING'
    last_action = WAITING
    return
    end subroutine wait_halo_mpi
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: set_flag_mpi - sets and checks integer flag
+!
+! !INTERFACE:
+   SUBROUTINE set_flag_mpi(n,flag,flags)
+   IMPLICIT NONE
+!
+! !DESCRIPTION:
+!  Call MPI\_WAITALL to wait for any un-finished communications. If SENDRECV
+!  communications are used this call has no effect.
+!
+! !INPUT PARAMTERS:
+   integer, intent(in)                 :: n,flag
+!
+! !OUTPUT PARAMTERS:
+   integer, intent(out)                :: flags(n)
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Peter Holtermann
+!
+! !LOCAL VARIABLES:
+!
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+
+   CALL MPI_GATHER(flag,1,MPI_INTEGER,flags,1,MPI_INTEGER,0,MPI_COMM_WORLD, ierr);
+   CALL MPI_BCAST(flags,nprocs,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+
+   return
+   end subroutine set_flag_mpi
 !EOC
 
 ! On UNIC mpi_abort is not defined - strano

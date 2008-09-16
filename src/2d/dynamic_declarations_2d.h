@@ -1,3 +1,7 @@
+#ifdef USE_BREAKS
+  integer,dimension(:,:),allocatable   :: break_mask
+  integer,dimension(:,:),allocatable   :: break_stat
+#endif
   REALTYPE,dimension(:,:),allocatable  :: D,DU,DV
   REALTYPE,dimension(:,:),allocatable  :: z,zo
   REALTYPE,dimension(:,:),allocatable  :: zu,zv

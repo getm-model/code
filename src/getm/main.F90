@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.11 2008-08-12 08:38:49 kb Exp $
+!$Id: main.F90,v 1.12 2008-09-16 10:03:24 kb Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -39,6 +39,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: main.F90,v $
+!  Revision 1.12  2008-09-16 10:03:24  kb
+!  added Holtermanns emergency break algorithm
+!
 !  Revision 1.11  2008-08-12 08:38:49  kb
 !  added NONNEGSALT to compilation_options()
 !
@@ -230,6 +233,9 @@
 #endif
 #ifdef NONNEGSALT
    LEVEL1 'NONNEGSALT'
+#endif
+#ifdef USE_BREAKS
+   LEVEL1 'USE_BREAKS'
 #endif
 #ifdef PRESS_GRAD_Z
    LEVEL1 'PRESS_GRAD_Z'

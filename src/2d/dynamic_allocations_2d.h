@@ -1,3 +1,11 @@
+#ifdef USE_BREAKS
+   allocate(break_mask(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (iteration_mask)'
+
+   allocate(break_stat(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (iteration_stat)'
+#endif
+
    allocate(D(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (D)'
 
@@ -113,3 +121,4 @@
 
    allocate(fwf_int(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (surfdiv)'
+

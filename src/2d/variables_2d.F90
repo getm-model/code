@@ -1,4 +1,4 @@
-!$Id: variables_2d.F90,v 1.8 2007-06-27 08:55:26 kbk Exp $
+!$Id: variables_2d.F90,v 1.9 2008-09-16 10:03:24 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -118,6 +118,10 @@
 !  Allocates memory for the public data members - if not static
 #ifndef STATIC
 #include "dynamic_allocations_2d.h"
+#endif
+
+#ifdef USE_BREAKS
+   break_mask = 0
 #endif
 
    z = _ZERO_; zu = _ZERO_; zv = _ZERO_

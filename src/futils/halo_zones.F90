@@ -1,4 +1,4 @@
-!$Id: halo_zones.F90,v 1.5 2007-06-07 10:25:19 kbk Exp $
+!$Id: halo_zones.F90,v 1.6 2008-09-16 10:03:24 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,6 +32,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_zones.F90,v $
+!  Revision 1.6  2008-09-16 10:03:24  kb
+!  added Holtermanns emergency break algorithm
+!
 !  Revision 1.5  2007-06-07 10:25:19  kbk
 !  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
 !
@@ -242,6 +245,43 @@
 #endif
    return
    end subroutine wait_halo
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: set_flag - set a flag across sub-domains
+!
+! !INTERFACE:
+   subroutine set_flag(n,flag,flags)
+   IMPLICIT NONE
+!
+! !DESCRIPTION:
+!  Call the parallel library (MPI) routine for setting an array of flags
+!  - or - in case of a serial run just set the local value. 
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)                 :: n,flag
+!
+! !OUTPUT PARAMETERS:
+   integer, intent(out)                :: flags(n)
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding
+!
+! !LOCAL VARIABLES:
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef PARALLEL
+   if (nprocs .gt. 1) then
+      call set_flag_mpi(n,flag,flags)
+   end if
+#else
+   flags(n) = flag
+#endif
+   return
+   end subroutine set_flag
 !EOC
 
 !-----------------------------------------------------------------------
