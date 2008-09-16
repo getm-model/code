@@ -1,4 +1,4 @@
-!$Id: save_2d_ncdf.F90,v 1.7 2007-06-27 08:39:37 kbk Exp $
+!$Id: save_2d_ncdf.F90,v 1.8 2008-09-16 11:21:51 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -15,8 +15,11 @@
    use ncdf_2d
    use grid_ncdf
    use domain,       only: ioff,joff,imin,imax,jmin,jmax
-   use domain,       only: H,az,au,av,min_depth
+   use domain,       only: H,az,au,av,crit_depth
    use variables_2d, only: z,D,U,DU,V,DV,res_u,res_v,surfdiv
+#if USE_BREAKS
+   use variables_2d, only: break_stat
+#endif
    use meteo,        only: metforcing,calc_met
    use meteo,        only: airp,u10,v10,t2,hum,tcc
    use meteo,        only: evap,precip
@@ -34,6 +37,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_2d_ncdf.F90,v $
+!  Revision 1.8  2008-09-16 11:21:51  kb
+!  if -DUSE_BREAKS save break statistics
+!
 !  Revision 1.7  2007-06-27 08:39:37  kbk
 !  support for fresh water fluxes at the sea surface - Adolf Stips
 !
@@ -95,7 +101,7 @@
 
 ! elevations
       call eta_mask(imin,jmin,imax,jmax,az,H,D,z, &
-                    min_depth,elev_missing,imin,jmin,imax,jmax,ws)
+                    crit_depth,elev_missing,imin,jmin,imax,jmax,ws)
       err = nf_put_vara_real(ncid,elev_id,start,edges,ws)
       if (err .NE. NF_NOERR) go to 10
 
@@ -214,6 +220,12 @@
                   imin,jmin,imax,jmax,ws)
       err = nf_put_vara_real(ncid, res_v_id, start, edges, ws)
       if (err .NE. NF_NOERR) go to 10
+
+#if USE_BREAKS
+      err = nf_put_vara_int(ncid, break_stat_id, start, edges, &
+                            break_stat(imin:imax,jmin:jmax))
+      if (err .NE. NF_NOERR) go to 10
+#endif
    end if
    err = nf_sync(ncid)
    if (err .NE. NF_NOERR) go to 10

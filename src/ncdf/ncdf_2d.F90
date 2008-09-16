@@ -1,4 +1,4 @@
-!$Id: ncdf_2d.F90,v 1.6 2007-06-27 08:39:37 kbk Exp $
+!$Id: ncdf_2d.F90,v 1.7 2008-09-16 11:21:50 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,6 +27,7 @@
    integer                             :: airp_id,t2_id,hum_id,tcc_id
    integer                             :: tausx_id,tausy_id,swr_id,shf_id
    integer                             :: evap_id=-1,precip_id=-1
+   integer                             :: break_stat_id=-1
 
    REAL_4B, dimension(:), allocatable :: ws
 
@@ -48,6 +49,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d.F90,v $
+!  Revision 1.7  2008-09-16 11:21:50  kb
+!  if -DUSE_BREAKS save break statistics
+!
 !  Revision 1.6  2007-06-27 08:39:37  kbk
 !  support for fresh water fluxes at the sea surface - Adolf Stips
 !

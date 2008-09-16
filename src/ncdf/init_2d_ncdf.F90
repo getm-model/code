@@ -1,4 +1,4 @@
-!$Id: init_2d_ncdf.F90,v 1.8 2007-06-27 08:39:37 kbk Exp $
+!$Id: init_2d_ncdf.F90,v 1.9 2008-09-16 11:21:51 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,6 +30,9 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_2d_ncdf.F90,v $
+!  Revision 1.9  2008-09-16 11:21:51  kb
+!  if -DUSE_BREAKS save break statistics
+!
 !  Revision 1.8  2007-06-27 08:39:37  kbk
 !  support for fresh water fluxes at the sea surface - Adolf Stips
 !
@@ -251,6 +254,14 @@
    if (err .NE. NF_NOERR) go to 10
    call set_attributes(ncid,res_v_id,long_name='res. v',units='m/s', &
                        FillValue=fv,missing_value=mv,valid_range=vr)
+
+#ifdef USE_BREAKS
+      err = nf_def_var(ncid,'break_stat',NF_INT,2,f3_dims,break_stat_id)
+      if (err .ne. NF_NOERR) call netcdf_error(err,                  &
+                                  "init_2d_ncdf()","break_stat")
+      call set_attributes(ncid,break_stat_id, &
+                          long_name='stats (emergency breaks)')
+#endif
 
 !  globals
    err = nf_put_att_text(ncid,NF_GLOBAL,'title',LEN_TRIM(title),title)
