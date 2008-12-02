@@ -1,4 +1,4 @@
-!$Id: fct_2dh_adv.F90,v 1.6 2007-06-07 10:25:19 kbk Exp $
+!$Id: fct_2dh_adv.F90,v 1.7 2008-12-02 03:17:37 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -23,6 +23,14 @@
 ! undershoots is carried out at the end of this subroutine. Such 
 ! two-dimensional schemes are advantageous in Wadden Sea applications, since
 ! one-dimensional directioal-split schemes might compute negative intermediate
+! solutions.
+! Extra checks for boundaries including mirroring out of
+! the transported quantities are performed in order to account for
+! the third-order large stencils.
+! 
+!  If GETM is executed as slice model (compiler option {\tt
+!  SLICE\_MODEL}) the advection step for the $y$ direction is not
+!  executed.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
@@ -115,6 +123,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
    fly = _ZERO_
    do k=1,kmax   ! Calculating v-interface low-order fluxes !
       do j=jmin-1,jmax
@@ -127,6 +136,7 @@
          end do
       end do
    end do
+#endif
 
    fhx = _ZERO_
    do k=1,kmax   ! Calculating u-interface high-order fluxes !
@@ -147,6 +157,24 @@
                   CSWW=f(i-1,j-1,k)
                   CC  =f(i+1,j  ,k)
                   CS  =f(i+1,j-1,k) 
+                  if (az(i-1,j-1) .eq. 0) then 
+                     CSWW=CW
+                  end if   
+                  if (az(i-1,j  ) .eq. 0) then 
+                     CWW=CW
+                  end if   
+                  if (az(i  ,j+1) .eq. 0) then 
+                     CNW=CW
+                  end if   
+                  if (az(i  ,j-1) .eq. 0) then 
+                     CSW=CW
+                  end if   
+                  if (az(i  ,j-2) .eq. 0) then 
+                     CSSW=CNW
+                  end if   
+                  if (az(i+1,j-1) .eq. 0) then 
+                     CS=CC
+                  end if   
                else 
                   CNW =f(i  ,j-1,k) 
                   CW  =f(i  ,j  ,k)
@@ -156,6 +184,24 @@
                   CSWW=f(i-1,j+1,k)
                   CC  =f(i+1,j  ,k)
                   CS  =f(i+1,j+1,k) 
+                  if (az(i-1,j+1) .eq. 0) then 
+                     CSWW=CW
+                  end if   
+                  if (az(i-1,j  ) .eq. 0) then 
+                     CWW=CW
+                  end if   
+                  if (az(i  ,j-1) .eq. 0) then 
+                     CNW=CW
+                  end if   
+                  if (az(i  ,j+1) .eq. 0) then 
+                     CSW=CW
+                  end if   
+                  if (az(i  ,j+2) .eq. 0) then 
+                     CSSW=CNW
+                  end if   
+                  if (az(i+1,j+1) .eq. 0) then 
+                     CS=CC
+                  end if   
                end if  
             else
                if (vvv.gt._ZERO_) then
@@ -167,6 +213,24 @@
                   CSWW=f(i+2,j-1,k)
                   CC  =f(i  ,j  ,k)
                   CS  =f(i  ,j-1,k) 
+                  if (az(i+2,j-1) .eq. 0) then 
+                     CSWW=CW
+                  end if   
+                  if (az(i+2,j  ) .eq. 0) then 
+                     CWW=CW
+                  end if   
+                  if (az(i+1,j+1) .eq. 0) then 
+                     CNW=CW
+                  end if   
+                  if (az(i+1,j-1) .eq. 0) then 
+                     CSW=CW
+                  end if   
+                  if (az(i+1,j-2) .eq. 0) then 
+                     CSSW=CNW
+                  end if   
+                  if (az(i  ,j-1) .eq. 0) then 
+                     CS=CC
+                  end if   
                else 
                   CNW =f(i+1,j-1,k) 
                   CW  =f(i+1,j  ,k)
@@ -176,6 +240,24 @@
                   CSWW=f(i+2,j+1,k)
                   CC  =f(i  ,j  ,k)
                   CS  =f(i  ,j+1,k) 
+                  if (az(i+2,j+1) .eq. 0) then 
+                     CSWW=CW
+                  end if   
+                  if (az(i+2,j  ) .eq. 0) then 
+                     CWW=CW
+                  end if   
+                  if (az(i+1,j-1) .eq. 0) then 
+                     CNW=CW
+                  end if   
+                  if (az(i+1,j+1) .eq. 0) then 
+                     CSW=CW
+                  end if   
+                  if (az(i+1,j+2) .eq. 0) then 
+                     CSSW=CNW
+                  end if   
+                  if (az(i  ,j+1) .eq. 0) then 
+                     CS=CC
+                  end if   
                end if  
             end if
             uuu=abs(uuu)
@@ -195,6 +277,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
    fhy = _ZERO_
    do k=1,kmax   ! Calculating v-interface high-order fluxes !
       do j=jmin-1,jmax
@@ -216,6 +299,24 @@
                   CSWW=f(i-1,j-1,k)
                   CC  =f(i  ,j+1,k)
                   CS  =f(i-1,j+1,k)
+                  if (az(i-1,j-1) .eq. 0) then 
+                     CSWW=CW
+                  end if   
+                  if (az(i  ,j-1) .eq. 0) then 
+                     CWW=CW
+                  end if   
+                  if (az(i+1,j  ) .eq. 0) then 
+                     CNW=CW
+                  end if   
+                  if (az(i-1,j  ) .eq. 0) then 
+                     CSW=CW
+                  end if   
+                  if (az(i-2,j  ) .eq. 0) then 
+                     CSSW=CNW
+                  end if   
+                  if (az(i-1,j+1) .eq. 0) then 
+                     CS=CC
+                  end if   
                else 
                   CNW =f(i-1,j  ,k)
                   CW  =f(i  ,j  ,k)
@@ -225,6 +326,24 @@
                   CSWW=f(i+1,j-1,k)
                   CC  =f(i  ,j+1,k)
                   CS  =f(i+1,j+1,k)
+                  if (az(i+1,j-1) .eq. 0) then 
+                     CSWW=CW
+                  end if   
+                  if (az(i  ,j-1) .eq. 0) then 
+                     CWW=CW
+                  end if   
+                  if (az(i-1,j  ) .eq. 0) then 
+                     CNW=CW
+                  end if   
+                  if (az(i+1,j  ) .eq. 0) then 
+                     CSW=CW
+                  end if   
+                  if (az(i+2,j  ) .eq. 0) then 
+                     CSSW=CNW
+                  end if   
+                  if (az(i+1,j+1) .eq. 0) then 
+                     CS=CC
+                  end if   
                end if  
             else
                if (vvv .gt. _ZERO_) then
@@ -236,6 +355,24 @@
                   CSWW=f(i-1,j+2,k)
                   CC  =f(i  ,j  ,k)
                   CS  =f(i-1,j  ,k)
+                  if (az(i-1,j+2) .eq. 0) then 
+                     CSWW=CW
+                  end if   
+                  if (az(i  ,j+2) .eq. 0) then 
+                     CWW=CW
+                  end if   
+                  if (az(i+1,j+1) .eq. 0) then 
+                     CNW=CW
+                  end if   
+                  if (az(i-1,j+1) .eq. 0) then 
+                     CSW=CW
+                  end if   
+                  if (az(i-2,j+1) .eq. 0) then 
+                     CSSW=CNW
+                  end if   
+                  if (az(i-1,j  ) .eq. 0) then 
+                     CS=CC
+                  end if   
                else 
                   CNW =f(i-1,j+1,k)
                   CW  =f(i  ,j+1,k)
@@ -245,6 +382,24 @@
                   CSWW=f(i+1,j+2,k)
                   CC  =f(i  ,j  ,k)
                   CS  =f(i+1,j  ,k)
+                  if (az(i+1,j+2) .eq. 0) then 
+                     CSWW=CW
+                  end if   
+                  if (az(i  ,j+2) .eq. 0) then 
+                     CWW=CW
+                  end if   
+                  if (az(i-1,j+1) .eq. 0) then 
+                     CNW=CW
+                  end if   
+                  if (az(i+1,j+1) .eq. 0) then 
+                     CSW=CW
+                  end if   
+                  if (az(i+2,j+1) .eq. 0) then 
+                     CSSW=CNW
+                  end if   
+                  if (az(i+1,j  ) .eq. 0) then 
+                     CS=CC
+                  end if   
                end if  
             end if
             uuu=abs(uuu)
@@ -263,6 +418,7 @@
          end do
       end do
    end do
+#endif
 
 ! Calculate intermediate low resolution solution fi 
    do k=1,kmax 
@@ -272,11 +428,15 @@
                hio(i,j,k)=hi(i,j,k)
                hi(i,j,k)=hio(i,j,k)                               &
                -dt*((uu(i  ,j,k)*delyu(i  ,j)-uu(i-1,j,k)*delyu(i-1,j)  &
+#ifndef SLICE_MODEL
                     +vv(i,j  ,k)*delxv(i,j  )-vv(i,j-1,k)*delxv(i,j-1)  &
+#endif
                     )*area_inv(i,j))
                fi(i,j,k)=(f(i,j,k)*hio(i,j,k)                               &
                -dt*((flx(i  ,j,k)*delyu(i  ,j)-flx(i-1,j,k)*delyu(i-1,j)  &
+#ifndef SLICE_MODEL
                     +fly(i,j  ,k)*delxv(i,j  )-fly(i,j-1,k)*delxv(i,j-1)  &
+#endif
                     )*area_inv(i,j)))/hi(i,j,k)
             end if 
          end do
@@ -302,15 +462,22 @@
                   end do
                end do
 ! max (Cu) and min (Cl) possible concentration after a time step
-               CExx=(min(fhx(i  ,j  ,k)-flx(i  ,j  ,k),_ZERO_) &
-                    -max(fhx(i-1,j  ,k)-flx(i-1,j  ,k),_ZERO_))/delxu(i,j)     &
+               CExx=((min(fhx(i  ,j  ,k)-flx(i  ,j  ,k),_ZERO_)                &
+                    -max(fhx(i-1,j  ,k)-flx(i-1,j  ,k),_ZERO_))/delxu(i,j)     &    
+#ifndef SLICE_MODEL
                    +(min(fhy(i  ,j  ,k)-fly(i  ,j  ,k),_ZERO_)                 &
-                    -max(fhy(i  ,j-1,k)-fly(i  ,j-1,k),_ZERO_))/delyv(i,j)
+                    -max(fhy(i  ,j-1,k)-fly(i  ,j-1,k),_ZERO_))/delyv(i,j)     &
+#endif
+                                                                          )
                Cu=(fi(i,j,k)*hi(i,j,k)-dt*CExx)/hi(i,j,k)
-               CExx=(max(fhx(i  ,j  ,k)-flx(i  ,j  ,k),_ZERO_)                 &
+               CExx=((max(fhx(i  ,j  ,k)-flx(i  ,j  ,k),_ZERO_)                &
                     -min(fhx(i-1,j  ,k)-flx(i-1,j  ,k),_ZERO_))/delxu(i,j)     &
+#ifndef SLICE_MODEL
                    +(max(fhy(i  ,j  ,k)-fly(i  ,j  ,k),_ZERO_)                 &
-                    -min(fhy(i  ,j-1,k)-fly(i  ,j-1,k),_ZERO_))/delyv(i,j)
+                    -min(fhy(i  ,j-1,k)-fly(i  ,j-1,k),_ZERO_))/delyv(i,j)     &
+#endif
+                                                                          )
+
                Cl=(fi(i,j,k)*hi(i,j,k)-dt*CExx)/hi(i,j,k)
 ! calculating the maximum limiters rp and rm for each conc. cell
                if (Cu .eq. fi(i,j,k)) then
@@ -345,6 +512,7 @@
       end do
    end do
 
+#ifndef SLICE_MODEL
 !  Limiters for the v-fluxes (fac)
    do k=1,kmax   
       do j=jmin-1,jmax
@@ -361,6 +529,7 @@
          end do
       end do
    end do
+#endif
 
 
 ! Doing the full advection in one step
@@ -371,7 +540,9 @@
 ! CAUTION: hi(i,j,k) already calculated above
                f(i,j,k)=(f(i,j,k)*hio(i,j,k)                              &
                -dt*((fhx(i  ,j,k)*delyu(i  ,j)-fhx(i-1,j,k)*delyu(i-1,j)  &
+#ifndef SLICE_MODEL
                     +fhy(i,j  ,k)*delxv(i,j  )-fhy(i,j-1,k)*delxv(i,j-1)  &
+#endif
                     )*area_inv(i,j)))/hi(i,j,k)
 ! Force monotonicity, this is needed here for correcting truncations errors:
                if (f(i,j,k) .gt. cmax(i,j,k)) f(i,j,k)=cmax(i,j,k)            
