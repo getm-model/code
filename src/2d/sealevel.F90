@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.16 2008-09-16 10:03:24 kb Exp $
+!$Id: sealevel.F90,v 1.17 2008-12-09 01:04:38 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -80,7 +80,7 @@
             z(i,j)=z(i,j)-dtm*((U(i,j)*DYU-U(i-1,j  )*DYUIM1) &
                               +(V(i,j)*DXV-V(i  ,j-1)*DXVJM1))*ARCD1 &
                          +dtm*fwf(i,j)
-
+#if 0
 #ifdef FRESHWATER_LENSE_TEST
        kk=1.0
        if ((((i.eq.1).or.(i.eq.imax)).and.(j.ge.1).and.(j.le.jmax)).or. &
@@ -98,6 +98,7 @@
        if ((((i.eq.4).or.(i.eq.imax-3)).and.(j.ge.4).and.(j.le.jmax-3)).or. &
            (((j.eq.4).or.(j.eq.jmax-3)).and.(i.ge.4).and.(i.le.imax-3)))    &
            z(i,j)=(1.-kk)*z(i,j)
+#endif
 #endif
 
 #ifdef USE_BREAKS
