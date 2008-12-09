@@ -1,4 +1,4 @@
-!$Id: get_2d_bdy.F90,v 1.2 2003-04-23 12:04:08 kbk Exp $
+!$Id: get_2d_bdy.F90,v 1.3 2008-12-09 00:31:58 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,6 +26,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: get_2d_bdy.F90,v $
+!  Revision 1.3  2008-12-09 00:31:58  kb
+!  added new 2D open boundaries
+!
 !  Revision 1.2  2003-04-23 12:04:08  kbk
 !  cleaned code + TABS to spaces
 !
@@ -52,6 +55,7 @@
    write(debug,*) 'get_2d_bdy() # ',ncall
 #endif
    select case (fmt)
+      case (NO_DATA)
       case (ANALYTICAL)
       case (ASCII)
          STDERR 'should get ASCII boundary data'

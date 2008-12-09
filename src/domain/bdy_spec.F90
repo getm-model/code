@@ -1,4 +1,4 @@
-!$Id: bdy_spec.F90,v 1.5 2005-04-29 12:55:31 kbk Exp $
+!$Id: bdy_spec.F90,v 1.6 2008-12-09 00:31:57 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -14,6 +14,8 @@
    use domain, only: NWB,NNB,NEB,NSB,NOB
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: bdy_index,bdy_map,nsbv
+   use domain, only: bdy_2d_type,bdy_3d_type
+   use domain, only: need_2d_bdy_elev,need_2d_bdy_u,need_2d_bdy_v
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -27,6 +29,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bdy_spec.F90,v $
+!  Revision 1.6  2008-12-09 00:31:57  kb
+!  added new 2D open boundaries
+!
 !  Revision 1.5  2005-04-29 12:55:31  kbk
 !  removing print statement
 !
@@ -50,6 +55,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,l,n,rc
+   integer                   :: type_2d(4,10),type_3d(4,10)
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -75,8 +81,16 @@
       allocate(wlj(NWB),stat=rc)
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (wlj)'
       do n = 1,NWB
-         read(BDYINFO,*,END=91,ERR=92) wi(n),wfj(n),wlj(n)
+         read(BDYINFO,*,END=91,ERR=92) wi(n),wfj(n),wlj(n), &
+                                       type_2d(1,n),type_3d(1,n)
          nsbv = nsbv + (wlj(n)-wfj(n)+1)
+      end do
+      do n = 1,NWB
+         if (type_2d(1,n) .eq. CLAMPED) need_2d_bdy_elev = .true.
+         if (type_2d(1,n) .eq. FLATHER_ELEV) then
+            need_2d_bdy_elev = .true.
+            need_2d_bdy_u    = .true.
+         end if
       end do
    end if
 
@@ -90,8 +104,16 @@
       allocate(nli(NNB),stat=rc)
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (nli)'
       do n = 1,NNB
-         read(BDYINFO,*,END=91,ERR=92) nj(n),nfi(n),nli(n)
+         read(BDYINFO,*,END=91,ERR=92) nj(n),nfi(n),nli(n), &
+                                       type_2d(2,n),type_3d(2,n)
          nsbv = nsbv + (nli(n)-nfi(n)+1)
+      end do
+      do n = 1,NNB
+         if (type_2d(2,n) .eq. CLAMPED) need_2d_bdy_elev = .true.
+         if (type_2d(2,n) .eq. FLATHER_ELEV) then
+            need_2d_bdy_elev = .true.
+            need_2d_bdy_v    = .true.
+         end if
       end do
    end if
 
@@ -105,8 +127,16 @@
       allocate(elj(NEB),stat=rc)
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (elj)'
       do n = 1,NEB
-         read(BDYINFO,*,END=91,ERR=92) ei(n),efj(n),elj(n)
+         read(BDYINFO,*,END=91,ERR=92) ei(n),efj(n),elj(n), &
+                                       type_2d(3,n),type_3d(3,n)
          nsbv = nsbv + (elj(n)-efj(n)+1)
+      end do
+      do n = 1,NEB
+         if (type_2d(3,n) .eq. CLAMPED) need_2d_bdy_elev = .true.
+         if (type_2d(3,n) .eq. FLATHER_ELEV) then
+            need_2d_bdy_elev = .true.
+            need_2d_bdy_u    = .true.
+         end if
       end do
    end if
 
@@ -120,14 +150,50 @@
       allocate(sli(NSB),stat=rc)
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (sli)'
       do n = 1,NSB
-         read(BDYINFO,*,END=91,ERR=92) sj(n),sfi(n),sli(n)
+         read(BDYINFO,*,END=91,ERR=92) sj(n),sfi(n),sli(n), &
+                                       type_2d(4,n),type_3d(4,n)
          nsbv = nsbv + (sli(n)-sfi(n)+1)
+      end do
+      do n=1,NSB
+         if (type_2d(4,n) .eq. CLAMPED) need_2d_bdy_elev = .true.
+         if (type_2d(4,n) .eq. FLATHER_ELEV) then
+            need_2d_bdy_elev = .true.
+            need_2d_bdy_v    = .true.
+         end if
       end do
    end if
 
    close(BDYINFO)
 
    NOB = NWB+NNB+NEB+NSB
+
+   allocate(bdy_2d_type(NOB),stat=rc)
+   if (rc /= 0) stop 'bdy_spec: Error allocating memory (bdy_2d_type)'
+
+   allocate(bdy_3d_type(NOB),stat=rc)
+   if (rc /= 0) stop 'bdy_spec: Error allocating memory (bdy_3d_type)'
+
+   l=1
+   do n = 1,NWB
+      bdy_2d_type(l) = type_2d(1,n)
+      bdy_3d_type(l) = type_3d(1,n)
+      l=l+1
+   end do
+   do n = 1,NNB
+      bdy_2d_type(l) = type_2d(2,n)
+      bdy_3d_type(l) = type_3d(2,n)
+      l=l+1
+   end do
+   do n = 1,NEB
+      bdy_2d_type(l) = type_2d(3,n)
+      bdy_3d_type(l) = type_3d(3,n)
+      l=l+1
+   end do
+   do n = 1,NSB
+      bdy_2d_type(l) = type_2d(4,n)
+      bdy_3d_type(l) = type_3d(4,n)
+      l=l+1
+   end do
 
    LEVEL2 '# of open boundaries ',NOB
    LEVEL2 '# of open bdy points ',nsbv

@@ -1,4 +1,4 @@
-!$Id: have_bdy.F90,v 1.8 2006-03-01 15:54:07 kbk Exp $
+!$Id: have_bdy.F90,v 1.9 2008-12-09 00:31:57 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,7 +29,7 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k,n
+   integer                   :: i,j,k,m,n
    integer                   :: nbdy
    integer                   :: f,l
 !EOP
@@ -43,8 +43,10 @@
 
    nbdy = 0
    i = 0
+   m = 0
    if (NWB .ge. 1) then
       do n = 1,NWB
+         m = m+1
          if (wi(n) .ge. imin+ioff .and. wi(n) .le. imax+ioff) then
             f = max(jmin+joff,wfj(n)) - joff
             l = min(jmax+joff,wlj(n)) - joff
@@ -54,6 +56,7 @@
                wfj(i) = f
                wlj(i) = l
                nbdy = nbdy+1
+               bdy_2d_type(nbdy) = bdy_2d_type(m)
                do k=1,nsbv
                   if (bdy_map(k,1) .eq. wi(i)+ioff .and. &
                       bdy_map(k,2) .eq. f+joff) then
@@ -69,6 +72,7 @@
    i = 0
    if (NNB .ge. 1) then
       do n = 1,NNB
+         m = m+1
          if (nj(n) .ge. jmin+joff .and. nj(n) .le. jmax+joff) then
             f = max(imin+ioff,nfi(n)) - ioff
             l = min(imax+ioff,nli(n)) - ioff
@@ -78,6 +82,7 @@
                nli(i) = l
                nj(i) = nj(n) - joff
                nbdy = nbdy+1
+               bdy_2d_type(nbdy) = bdy_2d_type(m)
                do k=1,nsbv
                   if (bdy_map(k,1) .eq. f+ioff .and.  &
                       bdy_map(k,2) .eq. nj(i)+joff) then
@@ -93,6 +98,7 @@
    i = 0
    if (NEB .ge. 1) then
       do n = 1,NEB
+         m = m+1
          if (ei(n) .ge. imin+ioff .and. ei(n) .le. imax+ioff) then
             f = max(jmin+joff,efj(n)) - joff
             l = min(jmax+joff,elj(n)) - joff
@@ -102,6 +108,7 @@
                efj(i) = f
                elj(i) = l
                nbdy = nbdy+1
+               bdy_2d_type(nbdy) = bdy_2d_type(m)
                do k=1,nsbv
                   if (bdy_map(k,1) .eq. ei(i)+ioff .and. &
                       bdy_map(k,2) .eq. f+joff) then
@@ -117,6 +124,7 @@
    i = 0
    if (NSB .ge. 1) then
       do n = 1,NSB
+         m = m+1
          if (sj(n) .ge. jmin+joff .and. sj(n) .le. jmax+joff) then
             f = max(imin+ioff,sfi(n)) - ioff
             l = min(imax+ioff,sli(n)) - ioff
@@ -126,6 +134,7 @@
                sli(i) = l
                sj(i) = sj(n) - joff
                nbdy = nbdy+1
+               bdy_2d_type(nbdy) = bdy_2d_type(m)
                do k=1,nsbv
                   if (bdy_map(k,1) .eq. f+ioff .and. &
                       bdy_map(k,2) .eq. sj(i)+joff) then

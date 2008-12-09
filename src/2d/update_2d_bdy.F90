@@ -1,4 +1,4 @@
-!$Id: update_2d_bdy.F90,v 1.8 2006-03-01 15:54:07 kbk Exp $
+!$Id: update_2d_bdy.F90,v 1.9 2008-12-09 00:31:57 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -23,8 +23,15 @@
    use domain, only: NWB,NNB,NEB,NSB,H,min_depth,imin,imax,jmin,jmax,az
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: bdy_index,nsbv
-   use m2d, only: dtm,bdyfmt_2d,bdy_data
-   use variables_2d, only: z
+   use domain, only: bdy_2d_type
+   use m2d, only: dtm,bdyfmt_2d,bdy_data,bdy_data_u,bdy_data_v
+   use variables_2d, only: z,D,U,DU,V,DV
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+   use domain, only: dxc,dyc
+#else
+   use domain, only: dx,dy
+#endif
+
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -60,6 +67,7 @@
    t = loop*dtm
 
    select case (bdyfmt_2d)
+      case (NO_DATA)
       case (ANALYTICAL)
 #define OMEGA 2.*3.141592654/43200.
 #ifdef COAST_TEST
@@ -145,13 +153,33 @@
    fac = _ONE_
    if(bdyramp .gt. 1) fac=min( _ONE_ ,FOUR*loop/float(bdyramp))
 
+! implicit Sommerfeldt
+#if 0
+eta = 1/(1+Cx)(eta_old + Cx*eta_new)
+               Cx=dtm/dx*srt(g*D)
+               z(i,j) = _ONE_/(_ONE_+Cx)*(z(i,j)+Cx*z(i,j-1))
+#endif
+
    l = 0
    do n = 1,NWB
       l = l+1
       k = bdy_index(l)
       i = wi(n)
       do j = wfj(n),wlj(n)
-         z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+         select case (bdy_2d_type(l))
+            case (ZERO_GRADIENT)
+               z(i,j) = z(i+1,j)
+            case (SOMMERFELDT)
+               z(i,j) = z(i,j) + dtm/DXC*sqrt(9.81*D(i,j))*(z(i+1,j)-z(i,j))
+            case (CLAMPED)
+               z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+            case (FLATHER_ELEV)
+               a = sqrt(DU(i,j)/9.81)*(U(i,j)/DU(i,j)-bdy_data_u(k))
+               z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
+            case default
+               FATAL 'Illegal NWB 2D boundary type selection'
+               stop 'update_2d_bdy()'
+         end select
          k = k+1
       end do
    end do
@@ -161,7 +189,20 @@
       k = bdy_index(l)
       j = nj(n)
       do i = nfi(n),nli(n)
-         z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+         select case (bdy_2d_type(l))
+            case (ZERO_GRADIENT)
+               z(i,j) = z(i,j-1)
+            case (SOMMERFELDT)
+               z(i,j) = z(i,j) - dtm/DXC*sqrt(9.81*D(i,j))*(z(i,j)-z(i,j-1))
+            case (CLAMPED)
+               z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+            case (FLATHER_ELEV)
+               a = sqrt(DV(i,j)/9.81)*(V(i,j-1)/DV(i,j-1)+bdy_data_v(k))
+               z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
+            case default
+               FATAL 'Illegal NNB 2D boundary type selection'
+               stop 'update_2d_bdy()'
+         end select
          k = k+1
       end do
    end do
@@ -171,7 +212,20 @@
       k = bdy_index(l)
       i = ei(n)
       do j = efj(n),elj(n)
-         z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+         select case (bdy_2d_type(l))
+            case (ZERO_GRADIENT)
+               z(i,j) = z(i-1,j)
+            case (SOMMERFELDT)
+               z(i,j) = z(i,j) - dtm/DXC*sqrt(9.81*D(i,j))*(z(i,j)-z(i-1,j))
+            case (CLAMPED)
+               z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+            case (FLATHER_ELEV)
+               a = sqrt(DU(i,j)/9.81)*(U(i-1,j)/DU(i-1,j)-bdy_data_u(k))
+               z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
+            case default
+               FATAL 'Illegal NEB 2D boundary type selection'
+               stop 'update_2d_bdy()'
+         end select
          k = k+1
       end do
    end do
@@ -181,7 +235,20 @@
       k = bdy_index(l)
       j = sj(n)
       do i = sfi(n),sli(n)
-         z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+         select case (bdy_2d_type(l))
+            case (ZERO_GRADIENT)
+               z(i,j) = z(i,j+1)
+            case (SOMMERFELDT)
+               z(i,j) = z(i,j) + dtm/DXC*sqrt(9.81*D(i,j))*(z(i,j+1)-z(i,j))
+            case (CLAMPED)
+               z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+            case (FLATHER_ELEV)
+               a = sqrt(DV(i,j)/9.81)*(V(i,j)/DV(i,j)-bdy_data_v(k))
+               z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
+            case default
+               FATAL 'Illegal NSB 2D boundary type selection'
+               stop 'update_2d_bdy()'
+         end select
          k = k+1
       end do
    end do

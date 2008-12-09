@@ -51,6 +51,13 @@
 #define ARVD1 ard1
 #endif
 
+! For 2D boundary conditions
+#define ZERO_GRADIENT 1
+#define SOMMERFELDT   2
+#define CLAMPED       3
+#define FLATHER_ELEV  4
+#define FLATHER_VEL   5
+
 ! Reserved Fortran units
 #define stdin  		5
 #define stdout 		6
@@ -64,6 +71,7 @@
 #define BDYDATA 	22
 
 ! Data/file formats
+#define NO_DATA		-1
 #define ANALYTICAL	0
 #define ASCII		1
 #define NETCDF		2

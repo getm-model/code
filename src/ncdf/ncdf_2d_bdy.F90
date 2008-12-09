@@ -1,4 +1,4 @@
-!$Id: ncdf_2d_bdy.F90,v 1.6 2007-09-30 13:00:43 kbk Exp $
+!$Id: ncdf_2d_bdy.F90,v 1.7 2008-12-09 00:31:58 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,9 +11,11 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use m2d, only: dtm,bdy_times,bdy_old,bdy_new,bdy_data
+!KB   use m2d, only: dtm,bdy_times,bdy_old,bdy_new,bdy_data
+   use m2d, only: dtm,bdy_times,bdy_data,bdy_data_u,bdy_data_v
    use time, only: string_to_julsecs,time_diff,julianday,secondsofday
    use time, only: write_time_string,timestr
+   use domain,  only: need_2d_bdy_elev,need_2d_bdy_u,need_2d_bdy_v
    IMPLICIT NONE
 !
    private
@@ -22,14 +24,26 @@
 !
 ! !PRIVATE DATA MEMBERS:
    integer                             :: ncid
-   integer                             :: time_id,elev_id,nsets,bdy_len
+   integer                             :: time_id,elev_id=-1,nsets,bdy_len
+   integer                             :: u_id=-1, v_id=-1
    integer                             :: start(2),edges(2)
    REALTYPE                            :: offset
+
+   REAL_4B                            :: bdy_old(1500)
+   REAL_4B                            :: bdy_new(1500)
+   REAL_4B                            :: bdy_old_u(1500)
+   REAL_4B                            :: bdy_new_u(1500)
+   REAL_4B                            :: bdy_old_v(1500)
+   REAL_4B                            :: bdy_new_v(1500)
+!
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d_bdy.F90,v $
+!  Revision 1.7  2008-12-09 00:31:58  kb
+!  added new 2D open boundaries
+!
 !  Revision 1.6  2007-09-30 13:00:43  kbk
 !  prints real time as part of progessoutput
 !
@@ -150,8 +164,20 @@
    if (err .NE. NF_NOERR) go to 10
 #endif
 
-   err = nf_inq_varid(ncid,'elev',elev_id)
-   if (err .NE. NF_NOERR) go to 10
+   if ( need_2d_bdy_elev ) then
+      err = nf_inq_varid(ncid,'elev',elev_id)
+      if (err .NE. NF_NOERR) go to 10
+   end if
+
+   if ( need_2d_bdy_u ) then
+      err = nf_inq_varid(ncid,'u',u_id)
+      if (err .NE. NF_NOERR) go to 10
+   end if
+
+   if ( need_2d_bdy_v ) then
+      err = nf_inq_varid(ncid,'v',v_id)
+      if (err .NE. NF_NOERR) go to 10
+   end if
 
    allocate(bdy_times(nsets),stat=err)
    if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_times)'
@@ -206,6 +232,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d_bdy.F90,v $
+!  Revision 1.7  2008-12-09 00:31:58  kb
+!  added new 2D open boundaries
+!
 !  Revision 1.6  2007-09-30 13:00:43  kbk
 !  prints real time as part of progessoutput
 !
@@ -286,14 +315,36 @@
       t1 = bdy_times(i-1) - offset
       t2 = bdy_times(i) - offset
 
+      if ( need_2d_bdy_elev ) then
+         start(2) = i-1 ; edges(2) = 1
+         err = nf_get_vara_real(ncid,elev_id,start,edges,bdy_old)
+         if(err .NE. NF_NOERR) go to 10
 
-      start(2) = i-1 ; edges(2) = 1
-      err = nf_get_vara_real(ncid,elev_id,start,edges,bdy_old)
-      if(err .NE. NF_NOERR) go to 10
+         start(2) = i ; edges(2) = 1
+         err = nf_get_vara_real(ncid,elev_id,start,edges,bdy_new)
+         if(err .NE. NF_NOERR) go to 10
+      end if
 
-      start(2) = i ; edges(2) = 1
-      err = nf_get_vara_real(ncid,elev_id,start,edges,bdy_new)
-      if(err .NE. NF_NOERR) go to 10
+      if ( need_2d_bdy_u ) then
+         start(2) = i-1 ; edges(2) = 1
+         err = nf_get_vara_real(ncid,u_id,start,edges,bdy_old_u)
+         if(err .NE. NF_NOERR) go to 10
+
+         start(2) = i ; edges(2) = 1
+         err = nf_get_vara_real(ncid,u_id,start,edges,bdy_new_u)
+         if(err .NE. NF_NOERR) go to 10
+      end if
+
+      if ( need_2d_bdy_v ) then
+         start(2) = i-1 ; edges(2) = 1
+         err = nf_get_vara_real(ncid,v_id,start,edges,bdy_old_v)
+         if(err .NE. NF_NOERR) go to 10
+
+         start(2) = i ; edges(2) = 1
+         err = nf_get_vara_real(ncid,v_id,start,edges,bdy_new_v)
+         if(err .NE. NF_NOERR) go to 10
+      end if
+
    end if
 
    if(t .gt. t2) then
@@ -308,16 +359,48 @@
 
       t1 = bdy_times(i-1) - offset
       t2 = bdy_times(i) - offset
-      start(2) = i-1 ; edges(2) = 1
-      err = nf_get_vara_real(ncid,elev_id,start,edges,bdy_old)
-      if(err .NE. NF_NOERR) go to 10
 
-      start(2) = i ; edges(2) = 1
-      err = nf_get_vara_real(ncid,elev_id,start,edges,bdy_new)
-      if(err .NE. NF_NOERR) go to 10
+      if ( need_2d_bdy_elev ) then
+         start(2) = i-1 ; edges(2) = 1
+         err = nf_get_vara_real(ncid,elev_id,start,edges,bdy_old)
+         if(err .NE. NF_NOERR) go to 10
+
+         start(2) = i ; edges(2) = 1
+         err = nf_get_vara_real(ncid,elev_id,start,edges,bdy_new)
+         if(err .NE. NF_NOERR) go to 10
+      end if
+
+      if ( need_2d_bdy_u ) then
+         start(2) = i-1 ; edges(2) = 1
+         err = nf_get_vara_real(ncid,u_id,start,edges,bdy_old_u)
+         if(err .NE. NF_NOERR) go to 10
+
+         start(2) = i ; edges(2) = 1
+         err = nf_get_vara_real(ncid,u_id,start,edges,bdy_new_u)
+         if(err .NE. NF_NOERR) go to 10
+      end if
+
+      if ( need_2d_bdy_v ) then
+         start(2) = i-1 ; edges(2) = 1
+         err = nf_get_vara_real(ncid,v_id,start,edges,bdy_old_v)
+         if(err .NE. NF_NOERR) go to 10
+
+         start(2) = i ; edges(2) = 1
+         err = nf_get_vara_real(ncid,v_id,start,edges,bdy_new_v)
+         if(err .NE. NF_NOERR) go to 10
+      end if
+
    end if
 
-   bdy_data = bdy_old + (bdy_new - bdy_old)*(t-t1)/(t2-t1)
+   if ( need_2d_bdy_elev ) then
+      bdy_data = bdy_old + (bdy_new - bdy_old)*(t-t1)/(t2-t1)
+   end if
+   if ( need_2d_bdy_v ) then
+      bdy_data_u = bdy_old_u + (bdy_new_u - bdy_old_u)*(t-t1)/(t2-t1)
+   end if
+   if ( need_2d_bdy_v ) then
+      bdy_data_v = bdy_old_v + (bdy_new_v - bdy_old_v)*(t-t1)/(t2-t1)
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_2d_bdy_ncdf()'

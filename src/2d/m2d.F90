@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.24 2008-04-14 11:25:05 kb Exp $
+!$Id: m2d.F90,v 1.25 2008-12-09 00:31:57 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -36,9 +36,9 @@
    logical                   :: bdy2d=.false.
    integer                   :: bdyfmt_2d,bdytype,bdyramp_2d=-1
    character(len=PATH_MAX)   :: bdyfile_2d
-   REAL_4B                   :: bdy_old(1500)
-   REAL_4B                   :: bdy_new(1500)
    REAL_4B                   :: bdy_data(1500)
+   REAL_4B                   :: bdy_data_u(1500)
+   REAL_4B                   :: bdy_data_v(1500)
    REAL_4B, allocatable      :: bdy_times(:)
    integer, parameter        :: comm_method=-1
 !

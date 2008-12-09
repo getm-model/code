@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.28 2007-10-16 06:22:56 kbk Exp $
+!$Id: domain.F90,v 1.29 2008-12-09 00:31:57 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -62,11 +62,18 @@
    integer                             :: nsbv
 
    integer                             :: ioff=0,joff=0
+   integer, dimension(:), allocatable  :: bdy_2d_type
+   integer, dimension(:), allocatable  :: bdy_3d_type
    integer, dimension(:), allocatable  :: wi,wfj,wlj
    integer, dimension(:), allocatable  :: nj,nfi,nli
    integer, dimension(:), allocatable  :: ei,efj,elj
    integer, dimension(:), allocatable  :: sj,sfi,sli
    integer, allocatable                :: bdy_index(:),bdy_map(:,:)
+
+   character(len=64)                   :: bdy_2d_desc(5)
+   logical                             :: need_2d_bdy_elev = .false.
+   logical                             :: need_2d_bdy_u    = .false.
+   logical                             :: need_2d_bdy_v    = .false.
 
    REALTYPE                            :: cori= _ZERO_
 
@@ -84,6 +91,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.29  2008-12-09 00:31:57  kb
+!  added new 2D open boundaries
+!
 !  Revision 1.28  2007-10-16 06:22:56  kbk
 !  curvi-linear now runs in parallel
 !
@@ -293,6 +303,12 @@
    Ncall = Ncall+1
    write(debug,*) 'init_domain()'
 #endif
+
+   bdy_2d_desc(ZERO_GRADIENT)           = "Zero gradient"
+   bdy_2d_desc(SOMMERFELDT)             = "Sommerfeldt rad."
+   bdy_2d_desc(CLAMPED)                 = "Clamped"
+   bdy_2d_desc(FLATHER_ELEV)            = "Flather (elev)"
+   bdy_2d_desc(FLATHER_VEL)             = "Flather (vel)"
 
    LEVEL1 'init_domain'
 
