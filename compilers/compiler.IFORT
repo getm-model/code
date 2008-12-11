@@ -7,8 +7,9 @@ F90_to_f90=
 MODULES=-module $(MODDIR)
 EXTRAS  = -w95 -e95
 EXTRAS  = -w95
-DEBUG_FLAGS = -g -C
-PROF_FLAGS  = -qp -p
-PROD_FLAGS  = -O3 -i-static
+DEBUG_FLAGS = -g -C -check -fpe0 -traceback
+PROF_FLAGS  = -qp -p -O0
+PROD_FLAGS  = -O3 -i-static 
+PROD_FLAGS  = -O3 -i-static -parallel
 DEFINES += -DREAL_4B=real\(4\)
 endif
