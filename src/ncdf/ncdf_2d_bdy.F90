@@ -1,4 +1,4 @@
-!$Id: ncdf_2d_bdy.F90,v 1.7 2008-12-09 00:31:58 kb Exp $
+!$Id: ncdf_2d_bdy.F90,v 1.8 2008-12-12 06:06:50 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,6 +41,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d_bdy.F90,v $
+!  Revision 1.8  2008-12-12 06:06:50  kb
+!  fixed serious error in specified u boundary velocity
+!
 !  Revision 1.7  2008-12-09 00:31:58  kb
 !  added new 2D open boundaries
 !
@@ -232,6 +235,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_2d_bdy.F90,v $
+!  Revision 1.8  2008-12-12 06:06:50  kb
+!  fixed serious error in specified u boundary velocity
+!
 !  Revision 1.7  2008-12-09 00:31:58  kb
 !  added new 2D open boundaries
 !
@@ -395,7 +401,7 @@
    if ( need_2d_bdy_elev ) then
       bdy_data = bdy_old + (bdy_new - bdy_old)*(t-t1)/(t2-t1)
    end if
-   if ( need_2d_bdy_v ) then
+   if ( need_2d_bdy_u ) then
       bdy_data_u = bdy_old_u + (bdy_new_u - bdy_old_u)*(t-t1)/(t2-t1)
    end if
    if ( need_2d_bdy_v ) then
