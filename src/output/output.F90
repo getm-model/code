@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.25 2007-10-19 07:52:35 kbk Exp $
+!$Id: output.F90,v 1.26 2009-01-05 09:57:06 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -46,6 +46,7 @@
    logical                             :: save_eps=.true.
    logical                             :: save_num=.true.
    logical                             :: save_nuh=.true.
+   logical                             :: save_ss_nn=.false.
    integer                             :: first_2d=1
    integer                             :: step_2d=1
    integer                             :: first_3d=1
@@ -57,6 +58,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.26  2009-01-05 09:57:06  kb
+!  option for storing SS and NN
+!
 !  Revision 1.25  2007-10-19 07:52:35  kbk
 !  zub and zvb not in hotstart files anymore
 !
@@ -193,7 +197,7 @@
              in_dir,out_dir, &
              save_2d,save_3d,save_masks,save_vel,destag, &
              save_strho,save_s,save_t,save_rho,save_rad, &
-             save_turb,save_tke,save_eps,save_num,save_nuh, &
+             save_turb,save_tke,save_eps,save_num,save_nuh,save_ss_nn, &
              first_2d,step_2d,first_3d,step_3d,hotout,meanout, &
              save_meteo
 !   logical :: nesting=.true.

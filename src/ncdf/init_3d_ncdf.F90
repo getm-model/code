@@ -1,4 +1,4 @@
-!$Id: init_3d_ncdf.F90,v 1.13 2007-03-30 13:11:00 hb Exp $
+!$Id: init_3d_ncdf.F90,v 1.14 2009-01-05 09:57:06 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,6 +35,9 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_3d_ncdf.F90,v $
+!  Revision 1.14  2009-01-05 09:57:06  kb
+!  option for storing SS and NN
+!
 !  Revision 1.13  2007-03-30 13:11:00  hb
 !  Use of adaptive and hybrid vertical coordinates technically enabled
 !
@@ -329,6 +332,29 @@
       end if
    end if
 
+   if (save_SS_NN) then
+
+      fv = SS_missing
+      mv = SS_missing
+      vr(1) = 0.
+      vr(2) = 0.01
+      err = nf_def_var(ncid,'SS',NF_REAL,4,f4_dims,SS_id)
+      if (err .NE. NF_NOERR) go to 10
+      call set_attributes(ncid,SS_id,long_name='shear stress',units='s-1',&
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+#ifndef NO_BAROCLINIC
+      fv = NN_missing
+      mv = NN_missing
+      vr(1) = -0.001
+      vr(2) = 0.01
+      err = nf_def_var(ncid,'NN',NF_REAL,4,f4_dims,NN_id)
+      if (err .NE. NF_NOERR) go to 10
+      call set_attributes(ncid,NN_id,long_name='Brunt-Vaisala frequency', &
+                          units='s-1',&
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+#endif
+
+   end if
 #ifdef SPM
    if (spm_save) then
       fv = spm_missing

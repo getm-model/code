@@ -1,4 +1,4 @@
-!$Id: ncdf_3d.F90,v 1.8 2007-02-20 13:52:15 kbk Exp $
+!$Id: ncdf_3d.F90,v 1.9 2009-01-05 09:57:06 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,6 +27,7 @@
    integer                             :: salt_id,temp_id,sigma_t_id
    integer                             :: rad_id
    integer                             :: tke_id,num_id,nuh_id,eps_id
+   integer                             :: SS_id,NN_id
 #ifdef SPM
    integer                             :: spmpool_id,spm_id
 #endif
@@ -48,6 +49,8 @@
    REALTYPE, parameter                 :: nuh_missing    =-9999.0
    REALTYPE, parameter                 :: num_missing    =-9999.0
    REALTYPE, parameter                 :: eps_missing    =-9999.0
+   REALTYPE, parameter                 :: SS_missing     =-9999.0
+   REALTYPE, parameter                 :: NN_missing     =-9999.0
 #ifdef SPM
    REALTYPE, parameter                 :: spmpool_missing=-9999.0
    REALTYPE, parameter                 :: spm_missing    =-9999.0
@@ -61,6 +64,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d.F90,v $
+!  Revision 1.9  2009-01-05 09:57:06  kb
+!  option for storing SS and NN
+!
 !  Revision 1.8  2007-02-20 13:52:15  kbk
 !  solar radiation -> 3d field - possible to save
 !

@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.17 2007-06-07 10:25:19 kbk Exp $
+!$Id: save_3d_ncdf.F90,v 1.18 2009-01-05 09:57:06 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -23,9 +23,9 @@
 #endif
    use variables_2d, only: z,D
    use variables_2d, only: U,V,DU,DV
-   use variables_3d, only: dt,kmin,ho,hn,uu,hun,vv,hvn,ww,hcc
+   use variables_3d, only: dt,kmin,ho,hn,uu,hun,vv,hvn,ww,hcc,SS
 #ifndef NO_BAROCLINIC
-   use variables_3d, only: S,T,rho,rad
+   use variables_3d, only: S,T,rho,rad,NN
 #endif
    use variables_3d, only: tke,num,nuh,eps
 #ifdef SPM
@@ -51,6 +51,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
+!  Revision 1.18  2009-01-05 09:57:06  kb
+!  option for storing SS and NN
+!
 !  Revision 1.17  2007-06-07 10:25:19  kbk
 !  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
 !
@@ -294,6 +297,23 @@
          if (err .NE. NF_NOERR) go to 10
       end if
    end if ! save_turb
+
+   if (save_ss_nn) then
+
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,SS,SS_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf_put_vara_real(ncid, SS_id, start, edges, ws)
+      if (err .NE. NF_NOERR) go to 10
+
+#ifndef NO_BAROCLINIC
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,NN,NN_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf_put_vara_real(ncid, NN_id, start, edges, ws)
+      if (err .NE. NF_NOERR) go to 10
+
+#endif
+
+   end if ! save_ss_nn
 
 #ifdef SPM
    if (spm_save) then
