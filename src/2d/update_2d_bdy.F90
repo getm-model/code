@@ -1,4 +1,4 @@
-!$Id: update_2d_bdy.F90,v 1.9 2008-12-09 00:31:57 kb Exp $
+!$Id: update_2d_bdy.F90,v 1.10 2009-01-30 15:33:03 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -197,7 +197,7 @@ eta = 1/(1+Cx)(eta_old + Cx*eta_new)
             case (CLAMPED)
                z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
             case (FLATHER_ELEV)
-               a = sqrt(DV(i,j)/9.81)*(V(i,j-1)/DV(i,j-1)+bdy_data_v(k))
+               a = sqrt(DV(i,j)/9.81)*(V(i,j-1)/DV(i,j-1)-bdy_data_v(k))
                z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
             case default
                FATAL 'Illegal NNB 2D boundary type selection'
