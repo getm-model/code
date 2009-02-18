@@ -1,4 +1,4 @@
-!$Id: vv_momentum_3d.F90,v 1.19 2008-03-26 13:25:52 hb Exp $
+!$Id: vv_momentum_3d.F90,v 1.20 2009-02-18 13:38:14 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -168,9 +168,13 @@
                end do
 
 !     Barotropic pressure gradient
+#ifndef NO_BAROTROPIC
                zp=max(sseo(i,j+1),-H(i,j  )+min(min_depth,D(i,j+1)))
                zm=max(sseo(i,j  ),-H(i,j+1)+min(min_depth,D(i,j  )))
                zy=(zp-zm+(airp(i,j+1)-airp(i,j))/gamma)/DYV
+#else
+               zy=0.
+#endif
 
 !     Matrix elements for surface layer
                k=kmax
@@ -227,7 +231,11 @@
 
 
                do k=kvmin(i,j),kmax
+#ifndef NO_BAROTROPIC
                   vv(i,j,k)=Res(k)+hvn(i,j,k)*Diff
+#else
+                  vv(i,j,k)=Res(k)
+#endif
                end do
             else ! (kmax .eq. kvmin(i,j))
                vv(i,j,kmax)=Vint(i,j)

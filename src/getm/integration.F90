@@ -1,4 +1,4 @@
-!$Id: integration.F90,v 1.11 2007-09-30 13:00:42 kbk Exp $
+!$Id: integration.F90,v 1.12 2009-02-18 13:38:15 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,6 +20,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: integration.F90,v $
+!  Revision 1.12  2009-02-18 13:38:15  hb
+!  GETM runs without barotropic mode enabled, set -DNO_BAROTROPIC
+!
 !  Revision 1.11  2007-09-30 13:00:42  kbk
 !  prints real time as part of progessoutput
 !
@@ -183,7 +186,9 @@
 #endif
       end if
 
+#ifndef NO_BAROTROPIC
       call integrate_2d(runtype,n,tausx,tausy,airp)
+#endif
 #ifndef NO_3D
       call do_rivers(do_3d)
       if (do_3d) then

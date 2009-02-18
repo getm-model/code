@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.42 2008-04-14 11:25:06 kb Exp $
+!$Id: m3d.F90,v 1.43 2009-02-18 13:38:14 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -477,6 +477,7 @@
 #endif
 
    UEx=_ZERO_ ; VEx=_ZERO_
+#ifndef NO_BAROTROPIC
    if (kmax .gt. 1) then
 #ifndef NO_BOTTFRIC
       call slow_bottom_friction()
@@ -492,6 +493,7 @@
    end if
 
    call slow_terms()
+#endif
    call stop_macro()
 
 #ifdef DEBUG

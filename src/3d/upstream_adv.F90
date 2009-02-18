@@ -1,4 +1,4 @@
-!$Id: upstream_adv.F90,v 1.6 2007-06-07 10:25:19 kbk Exp $
+!$Id: upstream_adv.F90,v 1.7 2009-02-18 13:38:14 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -115,6 +115,12 @@
    Ncall = Ncall+1
    write(debug,*) 'upstream_adv() # ',Ncall
 #endif
+#ifdef NO_BAROTROPIC
+   STDERR 'Do not use upstream_adv() with the compiler option NO_BAROTROPIC'
+   STDERR 'Use w_split_it_adv() instead, choose option ITERATE_VERT_ADV'
+   stop 'upstream_adv()'
+#endif
+
 
 #ifdef USE_ALLOCATED_ARRAYS
    allocate(adv(I3DFIELD),stat=rc)    ! work array

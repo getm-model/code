@@ -1,4 +1,4 @@
-!$Id: w_split_adv.F90,v 1.4 2007-06-07 10:25:19 kbk Exp $
+!$Id: w_split_adv.F90,v 1.5 2009-02-18 13:38:14 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -72,7 +72,11 @@
    Ncall = Ncall+1
    write(debug,*) 'w_split_adv() # ',Ncall
 #endif
-
+#ifdef NO_BAROTROPIC
+   STDERR 'Do not use w_split_adv() with the compiler option NO_BAROTROPIC'
+   STDERR 'Use w_split_it_adv() instead, choose option ITERATE_VERT_ADV'
+   stop 'w_split_adv()'
+#endif
    cu = _ZERO_
 
 ! Calculating w-interface fluxes !

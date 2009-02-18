@@ -1,4 +1,4 @@
-!$Id: uu_momentum_3d.F90,v 1.16 2008-03-26 13:25:52 hb Exp $
+!$Id: uu_momentum_3d.F90,v 1.17 2009-02-18 13:38:14 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -151,9 +151,13 @@
                end do
 
 !     Barotropic pressure gradient
+#ifndef NO_BAROTROPIC
                zp=max(sseo(i+1,j),-H(i  ,j)+min(min_depth,D(i+1,j)))
                zm=max(sseo(i  ,j),-H(i+1,j)+min(min_depth,D(i  ,j)))
                zx=(zp-zm+(airp(i+1,j)-airp(i,j))/gamma)/DXU
+#else
+               zx=0.
+#endif
 
 !     Matrix elements for surface layer
                k=kmax
@@ -208,7 +212,11 @@
 #endif
 
                do k=kumin(i,j),kmax
+#ifndef NO_BAROTROPIC
                   uu(i,j,k)=Res(k) +hun(i,j,k)*Diff
+#else
+                  uu(i,j,k)=Res(k)
+#endif
                end do
             else  ! if (kmax .eq. kumin(i,j))
                   uu(i,j,kmax)=Uint(i,j)

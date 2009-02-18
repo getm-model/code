@@ -1,4 +1,4 @@
-!$Id: w_split_it_adv.F90,v 1.5 2007-07-31 07:28:10 hb Exp $
+!$Id: w_split_it_adv.F90,v 1.6 2009-02-18 13:38:14 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -82,7 +82,6 @@
    cu = _ZERO_
 
 ! Calculating w-interface fluxes !
-
    select case (method)
       case (UPSTREAM_SPLIT)
          do j=jmin,jmax
@@ -133,10 +132,14 @@
                   it=1
                   ready=.false.
 111               do ii=1,it
-                     do k=1,kmax-1
+                     do k=1,kmax
                         cu(i,j,k) = _ZERO_
                         if (ww(i,j,k) .gt. _ZERO_) then
-                           c=ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
+                           if (k.lt.kmax) then
+                              c=ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
+                           else   
+                              c=ww(i,j,k)/float(it)*dt/hi(i,j,k)
+                           end if
                            if (c .gt. cmax) cmax=c
                            if (k .gt. 1) then
                               fu=f(i,j,k-1)         ! upstream
@@ -144,21 +147,37 @@
                               fu=f(i,j,k)
                            end if
                            fc=f(i,j,k  )            ! central
-                           fd=f(i,j,k+1)            ! downstream
+                           if (k.lt.kmax) then
+                              fd=f(i,j,k+1)         ! downstream
+                           else  
+                              fd=f(i,j,k)           ! downstream
+                           end if   
                            if (abs(fd-fc) .gt. 1e-10) then
                               r=(fc-fu)/(fd-fc)     ! slope ratio
                            else
                               r=(fc-fu)*1.e10
                            end if
                         else
-                           c=-ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
+                           if (k.lt.kmax) then
+                              c=-ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
+                           else
+                              c=-ww(i,j,k)/float(it)*dt/hi(i,j,k)
+                           end if
                            if (c .gt. cmax) cmax=c
                            if (k .lt. kmax-1) then
                               fu=f(i,j,k+2)         ! upstream
                            else
-                              fu=f(i,j,k+1)
+                              if (k.lt.kmax) then
+                                 fu=f(i,j,k+1)
+                              else
+                                 fu=f(i,j,k)
+                              end if
                            end if
-                           fc=f(i,j,k+1)            ! central
+                           if (k.lt.kmax) then
+                              fc=f(i,j,k+1)            ! central
+                           else
+                              fc=f(i,j,k)              ! central
+                           end if
                            fd=f(i,j,k  )            ! downstream
                            if (abs(fc-fd) .gt. 1e-10) then
                               r=(fu-fc)/(fc-fd)     ! slope ratio
