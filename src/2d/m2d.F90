@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.25 2008-12-09 00:31:57 kb Exp $
+!$Id: m2d.F90,v 1.26 2009-03-10 14:15:27 lars Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -104,9 +104,9 @@
 !  Allocates memory for the public data members - if not static
    call init_variables_2d(runtype)
 
-#ifdef PARALLEL
-!   STDERR 'Not calling cfl_check() - PARALLEL'
-   call cfl_check()
+#if defined(PARALLEL) || defined(NO_BAROTROPIC) 
+!   STDERR 'Not calling cfl_check() - PARALLEL or NO_BAROTROPIC'
+!   call cfl_check()
 #else
    call cfl_check()
 #endif
