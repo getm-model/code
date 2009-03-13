@@ -1,4 +1,4 @@
-!$Id: set_attributes.F90,v 1.2 2003-04-23 11:54:03 kbk Exp $
+!$Id: set_attributes.F90,v 1.3 2009-03-13 14:44:14 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -8,6 +8,7 @@
 ! !INTERFACE:
    subroutine set_attributes(ncid,id,                            &
                              units,long_name,                    &
+                             netcdf_real,                        &
                              valid_min,valid_max,valid_range,    &
                              scale_factor,add_offset,            &
                              FillValue,missing_value,            &
@@ -24,6 +25,7 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: ncid,id
+   integer, optional                   :: netcdf_real
    character(len=*), optional          :: units,long_name
    REALTYPE, optional                  :: valid_min,valid_max,valid_range(2)
    REALTYPE, optional                  :: scale_factor,add_offset
@@ -41,12 +43,20 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: len,iret
+   integer                   :: ft
    REAL_4B                   :: vals(2)
 !
 !EOP
 !-----------------------------------------------------------------------
 !BOC
    include "netcdf.inc"
+
+   if(present(netcdf_real)) then
+      ft=netcdf_real
+   else
+      ft=NF_FLOAT
+   end if
+
    if(present(units)) then
       len = len_trim(units)
       iret = nf_put_att_text(ncid,id,'units',len,units)
@@ -69,38 +79,38 @@
 
    if(present(valid_min)) then
       vals(1) = valid_min
-      iret = nf_put_att_real(ncid,id,'valid_min',NF_FLOAT,1,vals)
+      iret = nf_put_att_real(ncid,id,'valid_min',ft,1,vals)
    end if
 
    if(present(valid_max)) then
       vals(1) = valid_max
-      iret = nf_put_att_real(ncid,id,'valid_max',NF_FLOAT,1,vals)
+      iret = nf_put_att_real(ncid,id,'valid_max',ft,1,vals)
    end if
 
    if(present(valid_range)) then
       vals(1) = valid_range(1)
       vals(2) = valid_range(2)
-      iret = nf_put_att_real(ncid,id,'valid_range',NF_FLOAT,2,vals)
+      iret = nf_put_att_real(ncid,id,'valid_range',ft,2,vals)
    end if
 
    if(present(scale_factor)) then
       vals(1) = scale_factor
-      iret = nf_put_att_real(ncid,id,'scale_factor',NF_FLOAT,1,vals)
+      iret = nf_put_att_real(ncid,id,'scale_factor',ft,1,vals)
    end if
 
    if(present(add_offset)) then
       vals(1) = add_offset
-      iret = nf_put_att_real(ncid,id,'add_offset',NF_FLOAT,1,vals)
+      iret = nf_put_att_real(ncid,id,'add_offset',ft,1,vals)
    end if
 
    if(present(FillValue)) then
       vals(1) = FillValue
-      iret = nf_put_att_real(ncid,id,'_FillValue',NF_FLOAT,1,vals)
+      iret = nf_put_att_real(ncid,id,'_FillValue',ft,1,vals)
    end if
 
    if(present(missing_value)) then
       vals(1) = missing_value
-      iret = nf_put_att_real(ncid,id,'missing_value',NF_FLOAT,1,vals)
+      iret = nf_put_att_real(ncid,id,'missing_value',ft,1,vals)
    end if
 
    return

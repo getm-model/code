@@ -1,4 +1,4 @@
-!$Id: ncdf_common.F90,v 1.3 2005-04-25 09:32:34 kbk Exp $
+!$Id: ncdf_common.F90,v 1.4 2009-03-13 14:44:14 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,6 +17,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_common.F90,v $
+!  Revision 1.4  2009-03-13 14:44:14  kb
+!  grid information in NF_DOUBLE
+!
 !  Revision 1.3  2005-04-25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
@@ -35,12 +38,14 @@
    interface
       subroutine set_attributes(ncid,id,                               &
                                 units,long_name,                       &
+                                netcdf_real,                           &
                                 valid_min,valid_max,valid_range,       &
                                 scale_factor,add_offset,               &
                                 FillValue,missing_value,               &
                                 C_format,FORTRAN_format)
          integer, intent(in)           :: ncid,id
          character(len=*), optional    :: units,long_name
+         integer, optional             :: netcdf_real
          REALTYPE, optional            :: valid_min,valid_max,valid_range(2)
          REALTYPE, optional            :: scale_factor,add_offset
          REALTYPE, optional            :: FillValue,missing_value
