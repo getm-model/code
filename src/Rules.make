@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.17 2008-05-17 11:39:47 kb Exp $
+#$Id: Rules.make,v 1.18 2009-03-18 09:24:19 kb Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -128,29 +128,40 @@ EXTRA_LIBS	+= -lturb$(buildtype)
 endif
 
 # Where does the NetCDF include file and library reside.
-NETCDF=NETCDF3
-ifeq ($(NETCDF),NETCDF3)
+
 ifdef NETCDFINC
 INCDIRS		+= -I$(NETCDFINC)
 endif
+
+ifdef NETCDFLIBDIR
+LINKDIRS	+= -L$(NETCDFLIBDIR)
+endif
+
 ifdef NETCDFLIBNAME
 NETCDFLIB	= $(NETCDFLIBNAME)
 else
 NETCDFLIB	= -lnetcdf
-ifdef NETCDFLIBDIR
-LINKDIRS	+= -L$(NETCDFLIBDIR)
 endif
-endif
-HDF5LIB		=
-else
+
+ifeq ($(NETCDF_VERSION),NETCDF4)
+
+DEFINES		+= -DNETCDF4
 ifdef HDF5_DIR
 INCDIRS		+= -I$(HDF5_DIR)/include
 LINKDIRS	+= -L$(HDF5_DIR)/lib
-HDF5LIB		= -lhdf5
-HDF5LIB		=  $(HDF5_DIR)/lib/libhdf5_hl.a $(HDF5_DIR)/lib/libhdf5.a /usr/lib/libz.a
 endif
+HDF5LIB		= -lhdf5_hl -lhdf5 -lz
+
+else  # NetCDF3 is default
+
+DEFINES		+= -DNETCDF3
+HDF5LIB		=
+
 endif
+
 EXTRA_LIBS	+= $(NETCDFLIB) $(HDF5LIB)
+
+# NetCDF/HDF configuration done
 
 # Where does the MPI library reside.
 ifeq ($(parallel),true)
