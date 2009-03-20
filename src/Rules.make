@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.18 2009-03-18 09:24:19 kb Exp $
+#$Id: Rules.make,v 1.19 2009-03-20 08:35:30 kb Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -175,6 +175,11 @@ endif
 # MPICH2 - set FC to mpif90
 ifeq ($(MPI),MPICH2)
 FC=mpif90
+endif
+
+# SGI - MPI - works for Peter Holtermann on ALTIX 3700.
+ifeq ($(MPI),SGIMPI)
+EXTRA_LIBS      += -lmpi
 endif
 
 # obsolete - use either OPenMPI or MPICH2
