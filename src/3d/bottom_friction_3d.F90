@@ -1,4 +1,4 @@
-!$Id: bottom_friction_3d.F90,v 1.10 2007-06-07 10:25:19 kbk Exp $
+!$Id: bottom_friction_3d.F90,v 1.11 2009-04-22 10:00:40 lars Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -166,6 +166,16 @@
       end do
    end do
 #endif
+
+
+#ifdef SLICE_MODEL
+   do i=imin,imax
+      rrv(i,1)=rrv(i,2)
+      rrv(i,3)=rrv(i,2)
+   enddo
+#endif
+
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving bottom_friction_3d()'
