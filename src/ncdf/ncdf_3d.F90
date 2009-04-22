@@ -1,4 +1,4 @@
-!$Id: ncdf_3d.F90,v 1.9 2009-01-05 09:57:06 kb Exp $
+!$Id: ncdf_3d.F90,v 1.10 2009-04-22 10:09:36 lars Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -23,6 +23,7 @@
 
    integer                             :: hcc_id,h_id
    integer                             :: elev_id,u_id,v_id
+   integer                             :: taubx_id,tauby_id
    integer                             :: uu_id,vv_id,w_id
    integer                             :: salt_id,temp_id,sigma_t_id
    integer                             :: rad_id
@@ -41,6 +42,7 @@
    REALTYPE, parameter                 :: hh_missing     =-9999.0
    REALTYPE, parameter                 :: elev_missing   =-9999.0
    REALTYPE, parameter                 :: vel_missing    =-9999.0
+   REALTYPE, parameter                 :: tau_missing    =-9999.0
    REALTYPE, parameter                 :: salt_missing   =-9999.0
    REALTYPE, parameter                 :: temp_missing   =-9999.0
    REALTYPE, parameter                 :: rho_missing    =-9999.0
@@ -64,6 +66,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d.F90,v $
+!  Revision 1.10  2009-04-22 10:09:36  lars
+!  support for bottom stress output
+!
 !  Revision 1.9  2009-01-05 09:57:06  kb
 !  option for storing SS and NN
 !

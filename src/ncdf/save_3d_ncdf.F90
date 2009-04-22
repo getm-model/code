@@ -1,4 +1,4 @@
-!$Id: save_3d_ncdf.F90,v 1.18 2009-01-05 09:57:06 kb Exp $
+!$Id: save_3d_ncdf.F90,v 1.19 2009-04-22 10:09:36 lars Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -24,6 +24,7 @@
    use variables_2d, only: z,D
    use variables_2d, only: U,V,DU,DV
    use variables_3d, only: dt,kmin,ho,hn,uu,hun,vv,hvn,ww,hcc,SS
+   use variables_3d, only: taubx,tauby
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho,rad,NN
 #endif
@@ -51,6 +52,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: save_3d_ncdf.F90,v $
+!  Revision 1.19  2009-04-22 10:09:36  lars
+!  support for bottom stress output
+!
 !  Revision 1.18  2009-01-05 09:57:06  kb
 !  option for storing SS and NN
 !
@@ -122,6 +126,7 @@
    integer                   :: err,n
    integer                   :: start(4),edges(4)
    integer, save             :: n3d=0
+   REALTYPE                  :: DONE(E2DFIELD)
 
 !EOP
 !-----------------------------------------------------------------------
@@ -179,6 +184,41 @@
                   imin,jmin,imax,jmax,ws)
    err = nf_put_vara_real(ncid,v_id,start,edges,ws)
    if (err .NE. NF_NOERR) go to 10
+
+   
+   if (save_taub) then
+
+      !  bottom stress (x)
+      if (destag) then
+         DONE = _ONE_
+         call to_2d_u(imin,jmin,imax,jmax,au,rho_0*taubx,DONE,tau_missing, &
+              imin,jmin,imax,jmax,ws)
+      else
+         call cnv_2d(imin,jmin,imax,jmax,au,rho_0*taubx,tau_missing,       &
+              imin,jmin,imax,jmax,ws)
+
+      endif
+
+      err = nf_put_vara_real(ncid,taubx_id,start,edges,ws)
+      if (err .NE. NF_NOERR) go to 10
+
+
+      !  bottom stress (y)
+      if (destag) then
+         DONE = _ONE_
+         call to_2d_v(imin,jmin,imax,jmax,av,rho_0*tauby,DONE,tau_missing, &
+              imin,jmin,imax,jmax,ws)
+      else
+         call cnv_2d(imin,jmin,imax,jmax,av,rho_0*tauby,tau_missing,       &
+              imin,jmin,imax,jmax,ws)
+      endif
+
+      err = nf_put_vara_real(ncid,tauby_id,start,edges,ws)
+      if (err .NE. NF_NOERR) go to 10
+
+
+   endif
+
 
    start(1) = 1
    start(2) = 1

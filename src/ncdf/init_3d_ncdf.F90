@@ -1,4 +1,4 @@
-!$Id: init_3d_ncdf.F90,v 1.14 2009-01-05 09:57:06 kb Exp $
+!$Id: init_3d_ncdf.F90,v 1.15 2009-04-22 10:09:36 lars Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,6 +35,9 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_3d_ncdf.F90,v $
+!  Revision 1.15  2009-04-22 10:09:36  lars
+!  support for bottom stress output
+!
 !  Revision 1.14  2009-01-05 09:57:06  kb
 !  option for storing SS and NN
 !
@@ -182,6 +185,33 @@
    vr(2) =  3.
    call set_attributes(ncid,v_id,long_name='int. meridional vel.',units='m/s', &
                        FillValue=fv,missing_value=mv,valid_range=vr)
+
+
+   if (save_taub) then
+
+      !  bottom stress in x-direction
+      err = nf_def_var(ncid,'taubx',NF_REAL,3,f3_dims,taubx_id)
+      if (err .NE. NF_NOERR) go to 10
+      fv = tau_missing
+      mv = tau_missing
+      vr(1) = -10.
+      vr(2) =  10.
+      call set_attributes(ncid,taubx_id,long_name='bottom stress (x)',units='Pa', &
+           FillValue=fv,missing_value=mv,valid_range=vr)
+
+      !  bottom stress in y-direction
+      err = nf_def_var(ncid,'tauby',NF_REAL,3,f3_dims,tauby_id)
+      if (err .NE. NF_NOERR) go to 10
+      fv = tau_missing
+      mv = tau_missing
+      vr(1) = -10.
+      vr(2) =  10.
+      call set_attributes(ncid,tauby_id,long_name='bottom stress (y)',units='Pa', &
+           FillValue=fv,missing_value=mv,valid_range=vr)
+
+
+   endif
+
 
    select case (vert_cord)
       case (1)
