@@ -48,7 +48,8 @@
   REALTYPE, dimension(:,:), allocatable     :: ssvo,ssvn
 
 ! 3D friction in 3D domain
-  REALTYPE, dimension(:,:), allocatable     :: rru,rrv,taus,taub
+  REALTYPE, dimension(:,:), allocatable     :: rru,rrv
+  REALTYPE, dimension(:,:), allocatable     :: taus,taubx,tauby,taub
 
 ! attenuation
   REALTYPE, dimension(:,:), allocatable     :: A,g1,g2

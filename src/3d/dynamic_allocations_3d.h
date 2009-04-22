@@ -147,6 +147,12 @@
   allocate(taus(I2DFIELD),stat=rc)  ! Absolute Value of surface stress
   if (rc /= 0) stop 'init_3d: Error allocating memory (taus)'
 
+  allocate(taubx(I2DFIELD),stat=rc)  ! x-component of bottom stress
+  if (rc /= 0) stop 'init_3d: Error allocating memory (taubx)'
+
+  allocate(tauby(I2DFIELD),stat=rc)  ! y-component of bottom stress
+  if (rc /= 0) stop 'init_3d: Error allocating memory (tauby)'
+
   allocate(taub(I2DFIELD),stat=rc)  ! Absolute Value of bottom stress
   if (rc /= 0) stop 'init_3d: Error allocating memory (taub)'
 

@@ -85,6 +85,8 @@
   REALTYPE                             :: rru(I2DFIELD)
   REALTYPE                             :: rrv(I2DFIELD)
   REALTYPE                             :: taus(I2DFIELD)
+  REALTYPE                             :: taubx(I2DFIELD)
+  REALTYPE                             :: tauby(I2DFIELD)
   REALTYPE                             :: taub(I2DFIELD)
 
 ! light attenuation
