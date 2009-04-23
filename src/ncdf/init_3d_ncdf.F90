@@ -1,4 +1,4 @@
-!$Id: init_3d_ncdf.F90,v 1.15 2009-04-22 10:09:36 lars Exp $
+!$Id: init_3d_ncdf.F90,v 1.16 2009-04-23 14:30:37 lars Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,6 +35,9 @@
 ! !REVISION HISTORY:
 !
 !  $Log: init_3d_ncdf.F90,v $
+!  Revision 1.16  2009-04-23 14:30:37  lars
+!  corrected wrong units/name for NN and SS
+!
 !  Revision 1.15  2009-04-22 10:09:36  lars
 !  support for bottom stress output
 !
@@ -370,7 +373,7 @@
       vr(2) = 0.01
       err = nf_def_var(ncid,'SS',NF_REAL,4,f4_dims,SS_id)
       if (err .NE. NF_NOERR) go to 10
-      call set_attributes(ncid,SS_id,long_name='shear stress',units='s-1',&
+      call set_attributes(ncid,SS_id,long_name='shear frequency squared',units='s-2',&
                           FillValue=fv,missing_value=mv,valid_range=vr)
 #ifndef NO_BAROCLINIC
       fv = NN_missing
@@ -379,8 +382,8 @@
       vr(2) = 0.01
       err = nf_def_var(ncid,'NN',NF_REAL,4,f4_dims,NN_id)
       if (err .NE. NF_NOERR) go to 10
-      call set_attributes(ncid,NN_id,long_name='Brunt-Vaisala frequency', &
-                          units='s-1',&
+      call set_attributes(ncid,NN_id,long_name='buoyancy frequency squared', &
+                          units='s-2',&
                           FillValue=fv,missing_value=mv,valid_range=vr)
 #endif
 
