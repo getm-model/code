@@ -1,4 +1,4 @@
-!$Id: integration.F90,v 1.12 2009-02-18 13:38:15 hb Exp $
+!$Id: integration.F90,v 1.13 2009-04-27 08:03:02 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,6 +20,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: integration.F90,v $
+!  Revision 1.13  2009-04-27 08:03:02  kb
+!  getm/initialise.F90
+!
 !  Revision 1.12  2009-02-18 13:38:15  hb
 !  GETM runs without barotropic mode enabled, set -DNO_BAROTROPIC
 !
@@ -173,9 +176,11 @@
       call do_input(n)
       if(runtype .le. 2) then
          call do_meteo(n)
+#ifndef NO_3D
 #ifndef NO_BAROCLINIC
       else
          call do_meteo(n,T(:,:,kmax))
+#endif
 #endif
       end if
 

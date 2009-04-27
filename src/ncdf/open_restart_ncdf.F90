@@ -1,4 +1,4 @@
-!$Id: open_restart_ncdf.F90,v 1.2 2007-10-19 07:52:36 kbk Exp $
+!$Id: open_restart_ncdf.F90,v 1.3 2009-04-27 08:03:02 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,6 +28,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: open_restart_ncdf.F90,v $
+!  Revision 1.3  2009-04-27 08:03:02  kb
+!  getm/initialise.F90
+!
 !  Revision 1.2  2007-10-19 07:52:36  kbk
 !  zub and zvb not in hotstart files anymore
 !
@@ -166,8 +169,8 @@
       status = nf90_inq_varid(ncid, "bio", bio_id)
       if (status .NE. NF90_NOERR) go to 10
 #endif
-#endif
    end if
+#endif
 
    return
 
