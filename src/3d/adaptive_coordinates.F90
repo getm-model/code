@@ -1,4 +1,4 @@
-!$Id: adaptive_coordinates.F90,v 1.4 2007-06-07 10:25:19 kbk Exp $
+!$Id: adaptive_coordinates.F90,v 1.5 2009-04-27 07:36:08 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,6 +13,7 @@
 !  For Richard to do
 !
 ! !USES:
+#if 0
    use domain, only: ga,imin,imax,jmin,jmax,kmax,H,HU,HV,az,au,av
    use variables_3d, only: dt,kmin,kumin,kvmin,ho,hn,huo,hvo,hun,hvn
    use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
@@ -371,6 +372,8 @@ STDERR 'adaptive_coordinates()'
 #ifdef DEBUG
    write(debug,*) 'Leaving adaptive_coordinates()'
    write(debug,*)
+#endif
+
 #endif
    return
    end subroutine adaptive_coordinates
