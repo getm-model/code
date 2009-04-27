@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.20 2008-05-21 06:22:58 kb Exp $
+!$Id: initialise.F90,v 1.21 2009-04-27 08:03:59 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,6 +22,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
+!  Revision 1.21  2009-04-27 08:03:59  kb
+!  compiles with NO_3D
+!
 !  Revision 1.20  2008-05-21 06:22:58  kb
 !  fixed time(1) when save_initial and use_epoch are both true
 !
@@ -352,11 +355,13 @@
       call restart_file(READING,trim(hot_in),MinN,runtype,use_epoch)
       LEVEL3 'MinN adjusted to ',MinN
       call depth_update
+#ifndef NO_3D
       if (runtype .ge. 2) then
          call coordinates(vert_cord,cord_relax,maxdepth)
          Uint=_ZERO_
          Vint=_ZERO_
       end if
+#endif
 
 #ifndef NO_BAROCLINIC
       if (runtype .ge. 3) call do_eqstate()
@@ -371,9 +376,11 @@
 
    if(runtype .le. 2) then
       call do_meteo(MinN)
+#ifndef NO_3D
 #ifndef NO_BAROCLINIC
    else
       call do_meteo(MinN,T(:,:,kmax))
+#endif
 #endif
    end if
 
