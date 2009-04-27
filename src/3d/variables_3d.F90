@@ -1,4 +1,4 @@
-!$Id: variables_3d.F90,v 1.13 2007-06-07 10:25:19 kbk Exp $
+!$Id: variables_3d.F90,v 1.14 2009-04-27 07:34:58 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -193,8 +193,10 @@
    uuEx= _ZERO_ ; vvEx= _ZERO_
    tke=1.e-10 ; eps=1.e-10
 
+#ifndef NO_BAROCLINIC
    rad=_ZERO_
    light=_ONE_
+#endif
 
 #ifdef UV_TVD
    uadv = _ZERO_ ; vadv = _ZERO_ ; wadv = _ZERO_
