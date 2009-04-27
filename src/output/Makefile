@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.3 2006-02-07 07:16:22 kbk Exp $
+#$Id: Makefile,v 1.4 2009-04-27 09:22:55 kb Exp $
 # 
 # Makefile to build the output module
 #
@@ -15,14 +15,20 @@ LIBSRC	= diagnose.F90
 SRC	= $(MODSRC) $(LIBSRC)
 
 MOD   = \
-${LIB}(nesting.o)		\
-${LIB}(diagnostic_variables.o)	\
+${LIB}(nesting.o)
+ifneq ($(GETM_NO_3D),true)
+${LIB}(diagnostic_variables.o)
+endif
+MOD += \
 ${LIB}(ncdf_out.o)		\
 ${LIB}(ascii_out.o)		\
 ${LIB}(output.o)		
 
-OBJ     =       \
-$(LIB)(calc_mean_fields.o) 	\
+OBJ     =
+ifneq ($(GETM_NO_3D),true)
+$(LIB)(calc_mean_fields.o)
+endif
+OBJ += \
 $(LIB)(diagnose.o) 	
 
 all: modules objects

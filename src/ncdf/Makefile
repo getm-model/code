@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.7 2007-09-21 13:03:42 kbk Exp $
+#$Id: Makefile,v 1.8 2009-04-27 09:22:55 kb Exp $
 #
 # Makefile to build the ncdf module - ncdfio.o and the libncdfio.a library
 #
@@ -48,16 +48,16 @@ ifneq ($(GETM_NO_3D),true)
 OBJ	+= 	\
 ${LIB}(init_3d_ncdf.o)		\
 ${LIB}(save_3d_ncdf.o)		\
-${LIB}(create_restart_ncdf.o)	\
-${LIB}(write_restart_ncdf.o)	\
-${LIB}(open_restart_ncdf.o)	\
-${LIB}(read_restart_ncdf.o)	\
 ${LIB}(init_mean_ncdf.o)	\
 ${LIB}(save_mean_ncdf.o)	\
 ${LIB}(get_field_ncdf.o)	\
 ${LIB}(read_field_ncdf.o)
 endif
 OBJ	+= 	\
+${LIB}(create_restart_ncdf.o)	\
+${LIB}(write_restart_ncdf.o)	\
+${LIB}(open_restart_ncdf.o)	\
+${LIB}(read_restart_ncdf.o)	\
 ${LIB}(ncdf_close.o)
 
 all: modules objects 

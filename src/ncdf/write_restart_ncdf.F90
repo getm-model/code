@@ -1,4 +1,4 @@
-!$Id: write_restart_ncdf.F90,v 1.5 2007-11-12 13:50:17 kb Exp $
+!$Id: write_restart_ncdf.F90,v 1.6 2009-04-27 09:22:55 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -21,7 +21,9 @@
    use domain, only: xc,yc,lonc,latc
    use domain, only: imin,imax,jmin,jmax,kmax
    use variables_2d
+#ifndef NO_3D
    use variables_3d
+#endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use bio_var, only: numc
@@ -39,6 +41,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: write_restart_ncdf.F90,v $
+!  Revision 1.6  2009-04-27 09:22:55  kb
+!  mean calculation de-activated with -DNO_3D
+!
 !  Revision 1.5  2007-11-12 13:50:17  kb
 !  also need bio_calc
 !

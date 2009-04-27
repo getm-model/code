@@ -1,4 +1,4 @@
-!$Id: read_restart_ncdf.F90,v 1.6 2007-11-12 13:50:17 kb Exp $
+!$Id: read_restart_ncdf.F90,v 1.7 2009-04-27 09:22:55 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,7 +31,9 @@
    use halo_zones, only: update_2d_halo,update_3d_halo,wait_halo
    use halo_zones, only: H_TAG,U_TAG,V_TAG
    use variables_2d
+#ifndef NO_3D
    use variables_3d
+#endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use bio_var, only: numc
@@ -51,6 +53,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: read_restart_ncdf.F90,v $
+!  Revision 1.7  2009-04-27 09:22:55  kb
+!  mean calculation de-activated with -DNO_3D
+!
 !  Revision 1.6  2007-11-12 13:50:17  kb
 !  also need bio_calc
 !
@@ -103,7 +108,9 @@
    jlen = jh-jl+1
    start(1) = il ; edges(1) = ih-il+1
    start(2) = jl ; edges(2) = jh-jl+1
+#ifndef NO_3D
    start(3) = 1  ; edges(3) = kmax+1
+#endif
 
 !  z is required
    status = &
@@ -156,7 +163,6 @@
    nf90_get_var(ncid,Slru_id,Slru(iloc:ilen,jloc:jlen),start,edges)
    if (status .NE. NF90_NOERR) then
       LEVEL3 "read_restart_ncdf(): setting Slru=0"
-      ssun=_ZERO_
    else
       call update_2d_halo(Slru,Slru,au,imin,jmin,imax,jmax,U_TAG)
       call wait_halo(U_TAG)

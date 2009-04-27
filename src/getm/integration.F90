@@ -1,4 +1,4 @@
-!$Id: integration.F90,v 1.13 2009-04-27 08:03:02 kb Exp $
+!$Id: integration.F90,v 1.14 2009-04-27 09:22:54 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,6 +20,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: integration.F90,v $
+!  Revision 1.14  2009-04-27 09:22:54  kb
+!  mean calculation de-activated with -DNO_3D
+!
 !  Revision 1.13  2009-04-27 08:03:02  kb
 !  getm/initialise.F90
 !
@@ -219,18 +222,22 @@
 #endif
       call update_time(n)
 
+#ifndef NO_3D
       if(meanout .ge. 0) then
          call calc_mean_fields(n,meanout)
       end if
+#endif
       call do_output(runtype,n,timestep)
 #ifdef DIAGNOSE
       call diagnose(n,MaxN,runtype)
 #endif
    end do
 
+#ifndef NO_3D
    if (meanout .eq. 0) then
      call calc_mean_fields(n,n)
    end if
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving time_loop()'

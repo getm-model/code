@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.27 2009-04-22 10:07:19 lars Exp $
+!$Id: output.F90,v 1.28 2009-04-27 09:22:55 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -59,6 +59,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.28  2009-04-27 09:22:55  kb
+!  mean calculation de-activated with -DNO_3D
+!
 !  Revision 1.27  2009-04-22 10:07:19  lars
 !  added switch for bottom stress output
 !
@@ -270,10 +273,12 @@
       hotout(3) = 1
    end if
 
+#ifndef NO_3D
    save_mean=(meanout .ge. 0 .and. runtype .gt. 1)
    if ( save_mean ) then
       LEVEL2 'Mean fields in: ',trim(out_f_mean)
    end if
+#endif
 
    if( .not. dryrun) then
 
@@ -290,9 +295,9 @@
             if (save_2d) call init_2d_ncdf(out_f_2d,title,starttime)
 #ifndef NO_3D
             if (save_3d) call init_3d_ncdf(out_f_3d,title,starttime)
-#endif
             if (save_mean)  &
                      call init_mean_ncdf(out_f_mean,title,starttime)
+#endif
          case (GRADS)
          case DEFAULT
            STDERR 'Fatal error: A non valid input format has been chosen'
@@ -354,9 +359,11 @@
 
    write_2d = save_2d .and. n .ge. first_2d .and. mod(n,step_2d).eq.0
    write_3d = save_3d .and. n .ge. first_3d .and. mod(n,step_3d).eq.0
+#ifndef NO_3D
    if (meanout .gt. 0 .and. n .gt. 0) then
       write_mean = save_mean .and. (mod(n,meanout) .eq. 0)
    end if
+#endif
 
    if (write_2d .or. write_3d .or. write_mean) then
       call write_time_string()
@@ -378,8 +385,8 @@
             if (write_2d) call save_2d_ncdf(secs)
 #ifndef NO_3D
             if (write_3d) call save_3d_ncdf(secs)
-#endif
             if (write_mean) call save_mean_ncdf(secs)
+#endif
          case DEFAULT
            STDERR 'Fatal error: A non valid input format has been chosen'
            stop 'do_output'
@@ -682,7 +689,9 @@
       select case (out_fmt)
          case(NETCDF)
             dummy=-_ZERO_
+#ifndef NO_3D
             call save_mean_ncdf(dummy)
+#endif
       end select
    end if
 
