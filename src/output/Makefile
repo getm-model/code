@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.4 2009-04-27 09:22:55 kb Exp $
+#$Id: Makefile,v 1.5 2009-04-28 06:49:11 kb Exp $
 # 
 # Makefile to build the output module
 #
@@ -17,6 +17,7 @@ SRC	= $(MODSRC) $(LIBSRC)
 MOD   = \
 ${LIB}(nesting.o)
 ifneq ($(GETM_NO_3D),true)
+MOD += \
 ${LIB}(diagnostic_variables.o)
 endif
 MOD += \
@@ -26,6 +27,7 @@ ${LIB}(output.o)
 
 OBJ     =
 ifneq ($(GETM_NO_3D),true)
+OBJ += \
 $(LIB)(calc_mean_fields.o)
 endif
 OBJ += \
