@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.16 2008-03-26 13:25:51 hb Exp $
+#$Id: Makefile,v 1.17 2009-05-05 07:39:47 kb Exp $
 #
 # Makefile to build the 3D specific library - libm3d.a
 #
@@ -65,6 +65,7 @@ $(LIB)(ip_blumberg_mellor_lin.o)	\
 $(LIB)(ip_z_interpol.o)			\
 $(LIB)(ip_song_wright.o)		\
 $(LIB)(ip_shchepetkin_mcwilliams.o)     \
+$(LIB)(ip_stelling_vankester.o)         \
 $(LIB)(ip_chu_fan.o)            
 endif
 OBJ += \

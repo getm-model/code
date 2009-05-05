@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.20 2007-11-09 10:40:49 kb Exp $
+!$Id: internal_pressure.F90,v 1.21 2009-05-05 07:39:47 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -49,6 +49,8 @@
 ! \item Method by \cite{CHUea03}, see routine {\tt ip\_chu\_fan}
 ! \item Method by \cite{SHCHEPETKINea03}, see routine {\tt
 ! ip\_shchepetkin\_mcwilliams}
+! \item Method by \cite{STELLINGea94}, see routine {\tt
+! ip\_stelling\_vankester.F90}
 !  \end{enumerate}
 !
 ! It is possible, by setting the compiler option {\tt SUBSTR\_INI\_PRESS},
@@ -66,7 +68,7 @@
 #else
    use domain, only: dx,dy
 #endif
-   use variables_3d, only: kmin,hn,hun,hvn,idpdx,idpdy,buoy
+   use variables_3d, only: kmin,hn,hun,hvn,idpdx,idpdy,buoy,ssun,ssvn,ssen
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -91,6 +93,7 @@
    integer, private, parameter         :: SONG_WRIGHT=4
    integer, private, parameter         :: CHU_FAN=5
    integer, private, parameter         :: SHCHEPETKIN_MCWILLIAMS=6
+   integer, private, parameter         :: STELLING_VANKESTER=7
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -151,7 +154,9 @@
          call getm_error("init_internal_pressure()", &
              "Not working, use other internal pressure gradient scheme")
       case(SHCHEPETKIN_MCWILLIAMS)
-         LEVEL3 'Shchepetkin and McWilliams scheme'
+         LEVEL3 'Shchepetkin and McWilliams (2003) scheme'
+      case(STELLING_VANKESTER)
+         LEVEL3 'Stelling and vanKester (1994) scheme'
       case default
          FATAL 'Not valid ip_method specified'
          stop 'init_internal_pressure()'
@@ -218,7 +223,9 @@
          call ip_chu_fan()
       case(SHCHEPETKIN_MCWILLIAMS)
          call ip_shchepetkin_mcwilliams()
-      case default
+      case(STELLING_VANKESTER)
+         call ip_stelling_vankester()
+      case default   
          FATAL 'Not valid ip_method specified'
          stop 'do_internal_pressure()'
    end select
