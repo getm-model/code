@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.26 2009-03-10 14:15:27 lars Exp $
+!$Id: m2d.F90,v 1.27 2009-05-07 13:16:10 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,6 +19,7 @@
 !  in from the library {\tt lib2d.a}.
 !
 ! !USES:
+   use exceptions
    use time, only: julianday,secondsofday
    use parameters, only: avmmol
    use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV,min_depth
@@ -30,7 +31,13 @@
 !
 ! !PUBLIC DATA MEMBERS:
    logical                   :: have_boundaries
-   REALTYPE                  :: dtm,Am=-_ONE_,An=-_ONE_
+   REALTYPE                  :: dtm,Am=-_ONE_
+!  method for specifying horizontal numerical diffusion coefficient
+!     (0=const, 1=from named nc-file)
+   integer                   :: An_method=0
+   REALTYPE                  :: An_const=-_ONE_
+   character(LEN = PATH_MAX) :: An_file
+
    integer                   :: MM=1,residual=-1
    integer                   :: sealevel_check=0
    logical                   :: bdy2d=.false.
@@ -83,8 +90,8 @@
    integer                   :: i,j
    integer                   :: vel_depth_method=0
    namelist /m2d/ &
-          MM,vel_depth_method,Am,An,residual,sealevel_check, &
-          bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
+          MM,vel_depth_method,Am,An_method,An_const,An_file,residual, &
+          sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -114,9 +121,23 @@
    if (Am .lt. _ZERO_) then
       LEVEL2 'Am < 0 --> horizontal momentum diffusion not included'
    end if
-   if (An .lt. _ZERO_) then
-      LEVEL2 'An < 0 --> numerical momentum diffusion not included'
-   end if
+
+   select case (An_method)
+      case(0)
+         LEVEL2 'An_method=0 -> horizontal numerical diffusion not included'
+      case(1)
+         LEVEL2 'An_method=1 -> Using constant horizontal numerical diffusion'
+         if (An_const .lt. _ZERO_) then
+              call getm_error("init_2d()", &
+                         "Constant horizontal numerical diffusion <0");
+         end if
+      case(2)
+         LEVEL2 'An_method=2 -> Using space varying horizontal numerical diffusion'
+         LEVEL2 '..  will read An from An_file ',An_file
+      case default
+         call getm_error("init_2d()", &
+                         "A non valid An method has been chosen");
+   end select
 
    if (sealevel_check .eq. 0) then
       LEVEL2 'sealevel_check=0 --> NaN checks disabled'
@@ -171,6 +192,20 @@
    end if
    zub=zub0
    zvb=zvb0
+
+!  horizontal diffusion
+   if (An_method .eq. 0) then
+      An = _ZERO_
+   end if
+   if (An_method .eq. 1) then
+      An = An_const
+   end if
+! TODO: We need to actually read in the data before we send to neighbors
+   if (An_method .eq. 2) then
+      call update_2d_halo(An,An,az,imin,jmin,imax,jmax,H_TAG)
+      call wait_halo(H_TAG)
+   end if
+
 
    call depth_update()
 
@@ -244,7 +279,7 @@
 #else
 #ifndef UV_ADV_DIRECT
    call uv_advect()
-   if (Am .gt. _ZERO_ .or. An .gt. _ZERO_) then
+   if (Am .gt. _ZERO_ .or. An_method .gt. 0) then
       call uv_diffusion(Am,An) ! Has to be called after uv_advect.
    end if
    call mirror_bdy_2d(UEx,U_TAG)

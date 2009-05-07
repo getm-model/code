@@ -21,6 +21,7 @@
   REALTYPE,dimension(:,:),allocatable  :: Slru,Slrv
   REALTYPE,dimension(:,:),allocatable  :: zub,zvb
   REALTYPE,dimension(:,:),allocatable  :: zub0,zvb0
+  REALTYPE,dimension(:,:),allocatable  :: An
   REALTYPE,dimension(:,:),allocatable  :: surfdiv
   REALTYPE,dimension(:,:),allocatable  :: fwf,fwf_int
 
