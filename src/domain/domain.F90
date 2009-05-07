@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.30 2009-05-07 10:10:15 kb Exp $
+!$Id: domain.F90,v 1.31 2009-05-07 15:50:46 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,6 +25,10 @@
    integer                             :: grid_type      = 1
    integer                             :: vert_cord      = 1
    integer                             :: proj_type      = 1
+!  global index range
+   integer                             :: ilg=-1,ihg=-1,jlg=-1,jhg=-1
+!  local index range
+   integer                             :: ill=-1,ihl=-1,jll=-1,jhl=-1
 
    logical                             :: latlon_exists  = .false.
    logical                             :: xy_exists      = .false.
@@ -91,6 +95,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.31  2009-05-07 15:50:46  kb
+!  added global and local horizontal index range
+!
 !  Revision 1.30  2009-05-07 10:10:15  kb
 !  fixed tag in wait_halo() - Buchmann
 !
@@ -361,6 +368,15 @@
 #ifndef STATIC
 #include "dynamic_allocations_domain.h"
 #endif
+
+!  GLOBAL horizontal index range for 2D and 3D variables
+   ilg = max(imin+ioff,1); ihg = min(imax+ioff,iextr)
+   jlg = max(jmin+joff,1); jhg = min(jmax+joff,jextr)
+
+!  LOCAL horizontal index range for 2D and 3D variables
+   ill = max(imin+ioff,1); ihl = min(imax+ioff,iextr)
+   jll = max(jmin+joff,1); jhl = min(jmax+joff,jextr)
+
    H = -10.
    HU = -10.
    HV = -10.
