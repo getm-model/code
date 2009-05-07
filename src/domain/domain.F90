@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.29 2008-12-09 00:31:57 kb Exp $
+!$Id: domain.F90,v 1.30 2009-05-07 10:10:15 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -91,6 +91,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.30  2009-05-07 10:10:15  kb
+!  fixed tag in wait_halo() - Buchmann
+!
 !  Revision 1.29  2008-12-09 00:31:57  kb
 !  added new 2D open boundaries
 !
@@ -620,7 +623,7 @@
 
    if (z0_method .eq. 1) then
       call update_2d_halo(z0,z0,az,imin,jmin,imax,jmax,H_TAG)
-      call wait_halo(V_TAG)
+      call wait_halo(H_TAG)
    end if
 
 #ifdef DEBUG
