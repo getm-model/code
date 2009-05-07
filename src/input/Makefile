@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.4 2006-02-07 07:16:22 kbk Exp $
+#$Id: Makefile,v 1.5 2009-05-07 16:02:00 kb Exp $
 # 
 # Makefile to build the ncdf module - ncdfio.o
 #
@@ -32,6 +32,7 @@ endif
 OBJ   += \
 ${LIB}(init_meteo_input.o)	\
 ${LIB}(get_meteo_data.o)	\
+${LIB}(get_2d_field.o)		\
 ${LIB}(get_field.o)		\
 ${LIB}(read_profile.o)          \
 ${LIB}(check_grid.o)            \

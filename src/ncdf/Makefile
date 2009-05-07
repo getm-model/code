@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.8 2009-04-27 09:22:55 kb Exp $
+#$Id: Makefile,v 1.9 2009-05-07 16:02:01 kb Exp $
 #
 # Makefile to build the ncdf module - ncdfio.o and the libncdfio.a library
 #
@@ -15,6 +15,7 @@ LIBSRC	= set_attributes.F90 init_grid_ncdf.F90 save_grid_ncdf.F90	\
           init_2d_ncdf.F90 save_2d_ncdf.F90				\
           init_3d_ncdf.F90 save_3d_ncdf.F90				\
           get_field_ncdf.F90 read_field_ncdf.F90 ncdf_close.F90		\
+          get_2d_field_ncdf.F90						\
 	  create_restart_ncdf.F90 write_restart_ncdf.F90		\
 	  open_restart_ncdf.F90 read_restart_ncdf.F90			\
 	  init_mean_ncdf.F90 save_mean_ncdf.F90
@@ -54,6 +55,7 @@ ${LIB}(get_field_ncdf.o)	\
 ${LIB}(read_field_ncdf.o)
 endif
 OBJ	+= 	\
+${LIB}(get_2d_field_ncdf.o)	\
 ${LIB}(create_restart_ncdf.o)	\
 ${LIB}(write_restart_ncdf.o)	\
 ${LIB}(open_restart_ncdf.o)	\
