@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.27 2009-05-07 13:16:10 bjb Exp $
+!$Id: m2d.F90,v 1.28 2009-05-07 16:00:26 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -23,6 +23,8 @@
    use time, only: julianday,secondsofday
    use parameters, only: avmmol
    use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV,min_depth
+   use domain, only: ilg,ihg,jlg,jhg
+   use domain, only: ill,ihl,jll,jhl
    use domain, only: openbdy,z0_method,z0_const,z0
    use halo_zones, only : update_2d_halo,wait_halo
    use halo_zones, only : U_TAG,V_TAG,H_TAG
@@ -125,15 +127,22 @@
    select case (An_method)
       case(0)
          LEVEL2 'An_method=0 -> horizontal numerical diffusion not included'
+         An = _ZERO_
       case(1)
          LEVEL2 'An_method=1 -> Using constant horizontal numerical diffusion'
          if (An_const .lt. _ZERO_) then
               call getm_error("init_2d()", &
                          "Constant horizontal numerical diffusion <0");
+         else
+            An = An_const
          end if
       case(2)
          LEVEL2 'An_method=2 -> Using space varying horizontal numerical diffusion'
-         LEVEL2 '..  will read An from An_file ',An_file
+         LEVEL2 '..  will read An from An_file ',trim(An_file)
+stop 'not working properly yet'
+         call get_2d_field("test.nc","An",ilg,ihg,jlg,jhg,An(ill:ihl,jll:jhl))
+         call update_2d_halo(An,An,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
       case default
          call getm_error("init_2d()", &
                          "A non valid An method has been chosen");
@@ -192,20 +201,6 @@
    end if
    zub=zub0
    zvb=zvb0
-
-!  horizontal diffusion
-   if (An_method .eq. 0) then
-      An = _ZERO_
-   end if
-   if (An_method .eq. 1) then
-      An = An_const
-   end if
-! TODO: We need to actually read in the data before we send to neighbors
-   if (An_method .eq. 2) then
-      call update_2d_halo(An,An,az,imin,jmin,imax,jmax,H_TAG)
-      call wait_halo(H_TAG)
-   end if
-
 
    call depth_update()
 
@@ -280,7 +275,7 @@
 #ifndef UV_ADV_DIRECT
    call uv_advect()
    if (Am .gt. _ZERO_ .or. An_method .gt. 0) then
-      call uv_diffusion(Am,An) ! Has to be called after uv_advect.
+      call uv_diffusion(Am,An_method,An) ! Has to be called after uv_advect.
    end if
    call mirror_bdy_2d(UEx,U_TAG)
    call mirror_bdy_2d(VEx,V_TAG)

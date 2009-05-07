@@ -1,4 +1,4 @@
-!$Id: uv_diffusion.F90,v 1.9 2009-05-07 13:16:10 bjb Exp $
+!$Id: uv_diffusion.F90,v 1.10 2009-05-07 16:00:26 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,7 +6,7 @@
 ! !ROUTINE: uv_diffusion - 2D diffusion of momentum \label{sec-uv-diffusion}
 !
 ! !INTERFACE:
-   subroutine uv_diffusion(Am,An)
+   subroutine uv_diffusion(Am,An_method,An)
 !
 ! !DESCRIPTION:
 !
@@ -167,6 +167,7 @@
 !
 ! !INPUT PARAMETERS:
   REALTYPE, intent(in) :: Am
+  integer, intent(in)  :: An_method
   REALTYPE, intent(in) :: An(E2DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -196,8 +197,9 @@
                PP(i,j)=2.*Am*DYC*D(i,j)               &
                        *(U(i,j)/DU(i,j)-U(i-1,j)/DU(i-1,j))/DXC
             end if
-            ! We could disable the following line entirely, if An_method.eq.0
-            PP(i,j)=PP(i,j)+An(i,j)*DYC*(U(i,j)-U(i-1,j))/DXC
+            if (An_method .gt. 0) then
+               PP(i,j)=PP(i,j)+An(i,j)*DYC*(U(i,j)-U(i-1,j))/DXC
+            end if
          end if
       end do
    end do
@@ -220,8 +222,9 @@
                        *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
                         +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
             end if
-            ! We could disable the following line entirely, if An_method.eq.0
-            PP(i,j)=PP(i,j)+An(i,j)*(U(i,j+1)-U(i,j))*DXX/DYX
+            if (An_method .gt. 0) then
+               PP(i,j)=PP(i,j)+An(i,j)*(U(i,j+1)-U(i,j))*DXX/DYX
+            end if
          end if
       end do
    end do
@@ -244,8 +247,9 @@
                        *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
                         +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
             end if
-            ! We could disable the following line entirely, if An_method.eq.0
-            PP(i,j)=PP(i,j)+An(i,j)*(V(i+1,j)-V(i,j))*DYX/DXX
+            if (An_method .gt. 0) then
+               PP(i,j)=PP(i,j)+An(i,j)*(V(i+1,j)-V(i,j))*DYX/DXX
+            end if
          end if
       end do
    end do
@@ -267,8 +271,9 @@
                PP(i,j)=2.*Am*DXC*D(i,j)               &
                        *(V(i,j)/DV(i,j)-V(i,j-1)/DV(i,j-1))/DYC
             end if
-            ! We could disable the following line entirely, if An_method.eq.0
-            PP(i,j)=PP(i,j)+An(i,j)*DXC*(V(i,j)-V(i,j-1))/DYC
+            if (An_method .gt. 0) then
+               PP(i,j)=PP(i,j)+An(i,j)*DXC*(V(i,j)-V(i,j-1))/DYC
+            end if
          end if
       end do
    end do
