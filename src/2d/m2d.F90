@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.28 2009-05-07 16:00:26 kb Exp $
+!$Id: m2d.F90,v 1.29 2009-05-12 10:50:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,6 +29,7 @@
    use halo_zones, only : update_2d_halo,wait_halo
    use halo_zones, only : U_TAG,V_TAG,H_TAG
    use variables_2d
+   use input, only: get_2d_field
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -139,8 +140,7 @@
       case(2)
          LEVEL2 'An_method=2 -> Using space varying horizontal numerical diffusion'
          LEVEL2 '..  will read An from An_file ',trim(An_file)
-stop 'not working properly yet'
-         call get_2d_field("test.nc","An",ilg,ihg,jlg,jhg,An(ill:ihl,jll:jhl))
+         call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,An(ill:ihl,jll:jhl))
          call update_2d_halo(An,An,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
       case default

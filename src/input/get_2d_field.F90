@@ -1,4 +1,4 @@
-!$Id: get_2d_field.F90,v 1.1 2009-05-07 16:02:01 kb Exp $
+!$Id: get_2d_field.F90,v 1.2 2009-05-12 10:50:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,6 +12,7 @@
 !  Reads varname from a named file - fn - into to field.
 !
 ! !USES:
+   use field_2d_ncdf, only: get_2d_field_ncdf
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:

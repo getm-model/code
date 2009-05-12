@@ -1,17 +1,50 @@
-!$Id: get_2d_field_ncdf.F90,v 1.1 2009-05-07 16:02:01 kb Exp $
+!$Id: get_2d_field_ncdf.F90,v 1.2 2009-05-12 10:50:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: get_2d_field_ncdf()
+! !MODULE: field_2d_ncdf - Interface with 2D field from file
 !
 ! !INTERFACE:
-   subroutine get_2d_field_ncdf(fn,varname,il,ih,jl,jh,field)
+   module field_2d_ncdf
+
 !
+! !DESCRIPTION:
+! This module is responsible for reading 2D field quantities
+! contained in a netCDF file. 
 ! !USES:
    use netcdf
    use exceptions
    IMPLICIT NONE
+!
+! !PUBLIC MEMBER FUNCTIONS:
+public get_2d_field_ncdf
+!
+! !PUBLIC DATA MEMBERS:
+!
+! !DEFINED PARAMETERS:
+!
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding, Lars Umlauf
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+!
+
+!-----------------------------------------------------------------------
+
+contains
+
+!-----------------------------------------------------------------------
+!BOP
+! !IROUTINE: get_2d_field_ncdf()
+!
+! !INTERFACE:
+   subroutine get_2d_field_ncdf(fn,varname,il,ih,jl,jh,field)
+! !USES:
+    IMPLICIT NONE
 !
 ! !DESCRIPTION:
 !  A two-dimensional netCDF variable with specified global range 
@@ -26,9 +59,6 @@
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out)               :: field(:,:)
-!
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding, Lars Umlauf
 !
 ! !LOCAL VARIABLES:
    integer, dimension(2)               :: start
@@ -84,3 +114,5 @@
 !-----------------------------------------------------------------------
 ! Copyright (C) 2009 - Hans Burchard and Karsten Bolding (BB)          !
 !-----------------------------------------------------------------------
+
+end module field_2d_ncdf
