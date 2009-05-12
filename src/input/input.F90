@@ -1,4 +1,4 @@
-!$Id: input.F90,v 1.4 2006-03-01 13:52:21 kbk Exp $
+!$Id: input.F90,v 1.5 2009-05-12 07:08:27 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,6 +25,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: input.F90,v $
+!  Revision 1.5  2009-05-12 07:08:27  kb
+!  added interface for get_2d_field()
+!
 !  Revision 1.4  2006-03-01 13:52:21  kbk
 !  renamed method to met_method
 !
@@ -88,6 +91,14 @@
          character(len=*),intent(in)   :: fname,var
          REALTYPE, intent(out)         :: f
       end subroutine get_field
+   end interface
+
+   interface
+      subroutine get_2d_field(fn,varname,il,ih,jl,jh,f)
+         character(len=*),intent(in)   :: fn,varname
+         integer, intent(in)           :: il,ih,jl,jh
+         REALTYPE, intent(out)         :: f
+      end subroutine get_2d_field
    end interface
 
    contains
