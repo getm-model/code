@@ -43,6 +43,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !  $Log: diagnose.F90,v $
+!  Revision 1.8  2009-05-14 13:59:10  bjb
+!  Remove tab whitespace
+!
 !  Revision 1.7  2007-06-07 10:25:20  kbk
 !  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
 !
@@ -253,7 +256,7 @@
                 write(80,*) xx(i-1,j-1),yx(i-1,j-1)
                 write(80,*) xx(i,j-1),yx(i,j-1)
                 write(80,*) '>'
-              end if        	
+              end if
           end do
        end do
      end if
