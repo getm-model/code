@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.31 2009-05-07 15:50:46 kb Exp $
+!$Id: domain.F90,v 1.32 2009-05-15 06:59:10 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -95,6 +95,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.32  2009-05-15 06:59:10  bjb
+!  typo fix
+!
 !  Revision 1.31  2009-05-07 15:50:46  kb
 !  added global and local horizontal index range
 !
@@ -374,8 +377,8 @@
    jlg = max(jmin+joff,1); jhg = min(jmax+joff,jextr)
 
 !  LOCAL horizontal index range for 2D and 3D variables
-   ill = max(imin+ioff,1); ihl = min(imax+ioff,iextr)
-   jll = max(jmin+joff,1); jhl = min(jmax+joff,jextr)
+   ill = max(imin-ioff,1); ihl = min(imax,iextr-ioff)
+   jll = max(jmin-joff,1); jhl = min(jmax,jextr-joff)
 
    H = -10.
    HU = -10.
