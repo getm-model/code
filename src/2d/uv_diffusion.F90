@@ -1,4 +1,4 @@
-!$Id: uv_diffusion.F90,v 1.10 2009-05-07 16:00:26 kb Exp $
+!$Id: uv_diffusion.F90,v 1.11 2009-05-15 07:00:16 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,7 +6,7 @@
 ! !ROUTINE: uv_diffusion - 2D diffusion of momentum \label{sec-uv-diffusion}
 !
 ! !INTERFACE:
-   subroutine uv_diffusion(Am,An_method,An)
+   subroutine uv_diffusion(Am,An_method,An,AnX)
 !
 ! !DESCRIPTION:
 !
@@ -168,7 +168,7 @@
 ! !INPUT PARAMETERS:
   REALTYPE, intent(in) :: Am
   integer, intent(in)  :: An_method
-  REALTYPE, intent(in) :: An(E2DFIELD)
+  REALTYPE, intent(in) :: An(E2DFIELD),AnX(E2DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -223,7 +223,7 @@
                         +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
             end if
             if (An_method .gt. 0) then
-               PP(i,j)=PP(i,j)+An(i,j)*(U(i,j+1)-U(i,j))*DXX/DYX
+               PP(i,j)=PP(i,j)+AnX(i,j)*(U(i,j+1)-U(i,j))*DXX/DYX
             end if
          end if
       end do
@@ -248,7 +248,7 @@
                         +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
             end if
             if (An_method .gt. 0) then
-               PP(i,j)=PP(i,j)+An(i,j)*(V(i+1,j)-V(i,j))*DYX/DXX
+               PP(i,j)=PP(i,j)+AnX(i,j)*(V(i+1,j)-V(i,j))*DYX/DXX
             end if
          end if
       end do

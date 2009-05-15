@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.30 2009-05-13 09:46:10 bjb Exp $
+!$Id: m2d.F90,v 1.31 2009-05-15 07:00:16 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,6 +26,7 @@
    use domain, only: ilg,ihg,jlg,jhg
    use domain, only: ill,ihl,jll,jhl
    use domain, only: openbdy,z0_method,z0_const,z0
+   use domain, only: az,ax
    use halo_zones, only : update_2d_halo,wait_halo
    use halo_zones, only : U_TAG,V_TAG,H_TAG
    use variables_2d
@@ -63,6 +64,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
+  integer                    :: num_neighbors
+  REALTYPE                   :: An_sum
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -142,13 +145,49 @@
               call getm_error("init_2d()", &
                          "Constant horizontal numerical diffusion <0");
          else
-            An = An_const
+            An  = An_const
+            AnX = An_const
          end if
       case(2)
          LEVEL2 'An_method=2 -> Using space varying horizontal numerical diffusion'
          LEVEL2 '..  will read An from An_file ',trim(An_file)
+         ! Initialize and then read field:
+         An = _ZERO_
          call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,An(ill:ihl,jll:jhl))
          call update_2d_halo(An,An,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
+         ! Compute AnX (An in X-points) based on An and the X- and T- masks
+         AnX = _ZERO_
+         do j=jmin,jmax+1
+            do i=imin,imax+1
+               if (ax(i,j) .ge. 1) then
+                  num_neighbors = 0
+                  An_sum = _ZERO_
+                  ! Each AnX should have up to 4 T-point neighbours.
+                  if ( az(i-1,j-1) .ge. 1 ) then
+                     An_sum        = An_sum + An(i-1,j-1)
+                     num_neighbors = num_neighbors +1
+                  end if
+                  if ( az(i-1,j) .ge. 1 ) then
+                     An_sum        = An_sum + An(i-1,j)
+                     num_neighbors = num_neighbors +1
+                  end if
+                  if ( az(i,j-1) .ge. 1 ) then
+                     An_sum        = An_sum + An(i,j-1)
+                     num_neighbors = num_neighbors +1
+                  end if
+                  if ( az(i,j) .ge. 1 ) then
+                     An_sum        = An_sum + An(i,j)
+                     num_neighbors = num_neighbors +1
+                  end if
+                  ! Take average of actual neighbours:
+                  if (num_neighbors .gt. 0) then
+                     AnX(i,j) = An_sum/num_neighbors
+                  end if
+               end if
+            end do
+         end do
+         call update_2d_halo(AnX,AnX,ax,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
       case default
          call getm_error("init_2d()", &
@@ -282,7 +321,7 @@
 #ifndef UV_ADV_DIRECT
    call uv_advect()
    if (Am .gt. _ZERO_ .or. An_method .gt. 0) then
-      call uv_diffusion(Am,An_method,An) ! Has to be called after uv_advect.
+      call uv_diffusion(Am,An_method,An,AnX) ! Has to be called after uv_advect.
    end if
    call mirror_bdy_2d(UEx,U_TAG)
    call mirror_bdy_2d(VEx,V_TAG)
