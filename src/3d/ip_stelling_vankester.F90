@@ -1,4 +1,4 @@
-!$Id: ip_stelling_vankester.F90,v 1.1 2009-05-05 07:39:47 kb Exp $
+!$Id: ip_stelling_vankester.F90,v 1.2 2009-05-25 14:37:58 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -38,7 +38,7 @@
    REALTYPE                  :: dxm1,dym1
    REALTYPE                  :: grdl,grdu,buoyl,prgr,dxz,dyz,dzz,zlm
    integer                   :: kplus,kminus,klower,kupper
-   integer                   :: lnum=2*kmax+1
+   integer                   :: lnum
    REALTYPE                  :: zx(kmax)
    REALTYPE                  :: zl(2*kmax+1)
    REALTYPE                  :: dzl(2*kmax+1)
@@ -54,6 +54,7 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+lnum=2*kmax+1
 #if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
    dxm1 = _ONE_/DXU
    dym1 = _ONE_/DYV
