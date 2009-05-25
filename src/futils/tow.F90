@@ -1,4 +1,4 @@
-!$Id: tow.F90,v 1.7 2007-06-07 10:25:19 kbk Exp $
+!$Id: tow.F90,v 1.8 2009-05-25 19:00:18 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -51,6 +51,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: tow.F90,v $
+!  Revision 1.8  2009-05-25 19:00:18  hb
+!  correction for compiler option SLICE_MODEL
+!
 !  Revision 1.7  2007-06-07 10:25:19  kbk
 !  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
 !
@@ -104,7 +107,11 @@
             k=kmin(i,j)-1
             dtz=_ZERO_
             dxz=-(HU(i,j)-HU(i-1,j))/DXC
+#ifndef SLICE_MODEL
             dyz=-(HV(i,j)-HV(i,j-1))/DYC
+#else
+            dyz=0.
+#endif
             u=0.5*(uu(i,j,k+1)/hun(i,j,k+1)+uu(i-1,j,k+1)/hun(i-1,j,k+1))
             v=0.5*(vv(i,j,k+1)/hvn(i,j,k+1)+vv(i,j-1,k+1)/hvn(i,j-1,k+1))
             ws(indx) = ww(i,j,k) + dtz + u*dxz + v*dyz
@@ -112,7 +119,11 @@
             do k=kmin(i,j),kmax-1
                dtz=dtz+(hn(i,j,k)-ho(i,j,k))/dt
                dxz=dxz+(hun(i,j,k)-hun(i-1,j,k))/DXC
+#ifndef SLICE_MODEL
                dyz=dyz+(hvn(i,j,k)-hvn(i,j-1,k))/DYC
+#else
+               dyz=0.
+#endif
                u=0.25*(uu(i,j,k  )/hun(i,j,k  )+uu(i-1,j,k  )/hun(i-1,j,k  )+&
                        uu(i,j,k+1)/hun(i,j,k+1)+uu(i-1,j,k+1)/hun(i-1,j,k+1) )
                v=0.25*(vv(i,j,k  )/hvn(i,j,k  )+vv(i,j-1,k  )/hvn(i,j-1,k  )+&
@@ -124,7 +135,11 @@
             k=kmax
             dtz=dtz+(hn(i,j,k)-ho(i,j,k))/dt
             dxz=dxz+(hun(i,j,k)-hun(i-1,j,k))/DXC
+#ifndef SLICE_MODEL
             dyz=dyz+(hvn(i,j,k)-hvn(i,j-1,k))/DYC
+#else
+               dyz=0.
+#endif
             u=0.5*(uu(i,j,k)/hun(i,j,k)+uu(i-1,j,k)/hun(i-1,j,k))
             v=0.5*(vv(i,j,k)/hvn(i,j,k)+vv(i,j-1,k)/hvn(i,j-1,k))
             indx = indx+l
