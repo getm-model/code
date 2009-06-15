@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.19 2009-03-20 08:35:30 kb Exp $
+#$Id: Rules.make,v 1.20 2009-06-15 12:45:14 kb Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -52,12 +52,12 @@ DEFINES += -DGETM_BIO
 endif
 
 # Compile for parallel execution
-ifndef GETM_PARALLEL
-parallel=false
-set par=ser
-else
+ifeq ($(GETM_PARALLEL),true)
 parallel=true
 set par=par
+else
+parallel=false
+set par=ser
 endif
 
 turbulence=
