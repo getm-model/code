@@ -1,4 +1,4 @@
-!$Id: uv_advect_3d.F90,v 1.16 2008-08-02 07:42:44 kb Exp $
+!$Id: uv_advect_3d.F90,v 1.17 2009-06-25 07:10:52 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -321,7 +321,7 @@
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
          azadv(i,j)=au(i,j)
-         auadv(i,j)=az(i,j)
+         if (i.lt.imax+HALO) auadv(i,j)=az(i+1,j)
          avadv(i,j)=ax(i,j)
 #if defined(SPHERICAL) || defined(CURVILINEAR) 
          dxuadv(i,j)=dxc(i,j)
@@ -375,7 +375,7 @@
       do i=imin-HALO,imax+HALO
          azadv(i,j)=av(i,j)
          auadv(i,j)=ax(i,j)
-         avadv(i,j)=az(i,j)
+         if (j.lt.jmax+HALO) avadv(i,j)=az(i,j+1)
 #if defined(SPHERICAL) || defined(CURVILINEAR)
          dxuadv(i,j)=dxx(i,j)
          dxvadv(i,j)=dxc(i,j)
