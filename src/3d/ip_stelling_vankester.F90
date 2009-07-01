@@ -1,4 +1,4 @@
-!$Id: ip_stelling_vankester.F90,v 1.2 2009-05-25 14:37:58 kb Exp $
+!$Id: ip_stelling_vankester.F90,v 1.3 2009-07-01 12:37:59 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -78,6 +78,10 @@ lnum=2*kmax+1
 !  appears on the right hand side of the u-velocity equation.
    do j=jmin,jmax
       do i=imin,imax
+         n=0
+         m=0
+         zl=_ZERO_
+
          if (au(i,j) .ge. 1) then
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
@@ -203,9 +207,13 @@ lnum=2*kmax+1
 ! appears on the right hand side of the v-velocity equation.
    do j=jmin,jmax
       do i=imin,imax
+         n=0
+         m=0
+         zl=_ZERO_
+
          if (av(i,j) .ge. 1) then
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         dxm1 = _ONE_/DYV
+         dym1 = _ONE_/DYV
 #endif
             ! merge zl vector from zi's
             zx(1)=-HV(i,j)+0.5*hvn(i,j,1) ! zx defined on u-points
