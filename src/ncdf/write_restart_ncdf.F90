@@ -1,4 +1,4 @@
-!$Id: write_restart_ncdf.F90,v 1.6 2009-04-27 09:22:55 kb Exp $
+!$Id: write_restart_ncdf.F90,v 1.7 2009-07-18 12:36:01 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,6 +28,9 @@
    use bio, only: bio_calc
    use bio_var, only: numc
 #endif
+#ifdef SPM
+   use suspended_matter
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -41,6 +44,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: write_restart_ncdf.F90,v $
+!  Revision 1.7  2009-07-18 12:36:01  kb
+!  fixed SPM hot-start bug - Hofmeister
+!
 !  Revision 1.6  2009-04-27 09:22:55  kb
 !  mean calculation de-activated with -DNO_3D
 !
@@ -233,7 +239,7 @@
          if (status .NE. NF90_NOERR) go to 10
 
          status = &
-         nf90_put_var(ncid,spmpool_id,spmpool(imin:imax,jmin:jmax),start,edges)
+         nf90_put_var(ncid,spmpool_id,spm_pool(imin:imax,jmin:jmax),start,edges)
          if (status .NE. NF90_NOERR) go to 10
       end if
 #endif

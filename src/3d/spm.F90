@@ -1,4 +1,4 @@
-!$Id: spm.F90,v 1.15 2007-07-23 10:25:50 hb Exp $
+!$Id: spm.F90,v 1.16 2009-07-18 12:36:00 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -487,7 +487,7 @@
 !  In drying grid boxes, the settling velocity is reduced.
    do i=imin,imax
       do j=jmin,jmax
-         do k=0,kmax
+         do k=1,kmax-1
             ww_aux(i,j,k) = ww(i,j,k) - spm_ws(i,j,k)*dry_z(i,j)
          end do
       end do

@@ -1,4 +1,4 @@
-!$Id: read_restart_ncdf.F90,v 1.7 2009-04-27 09:22:55 kb Exp $
+!$Id: read_restart_ncdf.F90,v 1.8 2009-07-18 12:36:01 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -38,6 +38,9 @@
    use bio, only: bio_calc
    use bio_var, only: numc
 #endif
+#ifdef SPM
+   use suspended_matter
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -53,6 +56,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: read_restart_ncdf.F90,v $
+!  Revision 1.8  2009-07-18 12:36:01  kb
+!  fixed SPM hot-start bug - Hofmeister
+!
 !  Revision 1.7  2009-04-27 09:22:55  kb
 !  mean calculation de-activated with -DNO_3D
 !
@@ -393,6 +399,7 @@
 #endif
 #ifdef SPM
       if(spm_calc) then
+        if (spm_hotstart) then
          status = &
          nf90_get_var(ncid,spm_id,spm(iloc:ilen,jloc:jlen,0:kmax),start,edges)
          if (status .NE. NF90_NOERR) then
@@ -404,14 +411,18 @@
          end if
 
          status = &
-         nf90_get_var(ncid,spmpool_id,spmpool(iloc:ilen,jloc:jlen),start,edges)
+         nf90_get_var(ncid,spmpool_id,spm_pool(iloc:ilen,jloc:jlen),start,edges)
          if (status .NE. NF90_NOERR) then
             LEVEL3 "read_restart_ncdf(): setting spmpool=0"
-            spmpool=_ZERO_
+            spm_pool=_ZERO_
          else
-            call update_2d_halo(spmpool,spmpool,az,imin,jmin,imax,jmax,H_TAG)
+            call update_2d_halo(spm_pool,spm_pool,az,imin,jmin,imax,jmax,H_TAG)
             call wait_halo(H_TAG)
          end if
+        else
+         LEVEL3 'spm variables not read from hotstart file'
+         LEVEL3 'set spm_init_method=0 to read them from hotstart file'
+        end if
       end if
 #endif
 #ifdef GETM_BIO

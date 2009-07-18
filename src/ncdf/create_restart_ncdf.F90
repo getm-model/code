@@ -1,4 +1,4 @@
-!$Id: create_restart_ncdf.F90,v 1.3 2009-04-27 08:03:02 kb Exp $
+!$Id: create_restart_ncdf.F90,v 1.4 2009-07-18 12:36:01 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -39,6 +39,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: create_restart_ncdf.F90,v $
+!  Revision 1.4  2009-07-18 12:36:01  kb
+!  fixed SPM hot-start bug - Hofmeister
+!
 !  Revision 1.3  2009-04-27 08:03:02  kb
 !  getm/initialise.F90
 !
@@ -225,7 +228,7 @@
       if (status .NE. NF90_NOERR) go to 10
 
       status = nf90_def_var(ncid, "spmpool", nf90_double, &
-                               (/ xdim_id, ydim_id, zdim_id /), spmpool_id)
+                               (/ xdim_id, ydim_id /), spmpool_id)
       if (status .NE. NF90_NOERR) go to 10
 #endif
 #ifdef GETM_BIO
