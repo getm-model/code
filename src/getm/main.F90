@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.12 2008-09-16 10:03:24 kb Exp $
+!$Id: main.F90,v 1.13 2009-07-28 08:15:42 kb Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -7,7 +7,7 @@
 !!
 !! !AUTHORS: Hans Burchard and Karsten Bolding
 !!
-!! !AFFILIATION: Bolding & Burhard Hydrodynamics
+!! !AFFILIATION: Bolding & Burhard ApS.
 !!
 !! !DATE:
 !!
@@ -39,6 +39,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: main.F90,v $
+!  Revision 1.13  2009-07-28 08:15:42  kb
+!  Hydrodynamics --> ApS.
+!
 !  Revision 1.12  2008-09-16 10:03:24  kb
 !  added Holtermanns emergency break algorithm
 !
@@ -137,7 +140,7 @@
       end if
    endif
    STDERR LINE
-   LEVEL1 'Copyright (C) Bolding & Burchard Hydrodynamics'
+   LEVEL1 'Copyright (C) Bolding & Burchard ApS.'
    LEVEL1 'under the General Public License (GPL) - http://www.gnu.org '
    STDERR LINE
 
