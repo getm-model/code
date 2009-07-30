@@ -1,4 +1,4 @@
-!$Id: ncdf_3d_bdy.F90,v 1.15 2007-10-10 10:25:20 kbk Exp $
+!$Id: ncdf_3d_bdy.F90,v 1.16 2009-07-30 15:30:07 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,6 +47,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.16  2009-07-30 15:30:07  kb
+!  fixed j-index for +1 eastern boundaries - Hofmeister
+!
 !  Revision 1.15  2007-10-10 10:25:20  kbk
 !  oops
 !
@@ -334,7 +337,7 @@
             l = l+1
             k = bdy_index(l)
             i = ei(n)
-            do j=efj(1),elj(1)
+            do j=efj(n),elj(n)
                if (from_3d_fields) then
                   start(1) = i+ioff ; start(2) = j+joff
                else
@@ -465,7 +468,7 @@
          l = l+1
          k = bdy_index(l)
          i = ei(n)
-         do j=efj(1),elj(1)
+         do j=efj(n),elj(n)
             call interpol(zax_len,zlev,S_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
                           S_new(:,k))
             call interpol(zax_len,zlev,T_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
@@ -524,6 +527,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.16  2009-07-30 15:30:07  kb
+!  fixed j-index for +1 eastern boundaries - Hofmeister
+!
 !  Revision 1.15  2007-10-10 10:25:20  kbk
 !  oops
 !
@@ -677,7 +683,7 @@
             l = l+1
             k = bdy_index(l)
             i = ei(n)
-            do j=efj(1),elj(1)
+            do j=efj(n),elj(n)
                call interpol(zax_len,zlev,S_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
                              S_new(:,k))
                call interpol(zax_len,zlev,T_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
