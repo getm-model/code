@@ -1,4 +1,4 @@
-!$Id: ncdf_3d_bdy.F90,v 1.16 2009-07-30 15:30:07 kb Exp $
+!$Id: ncdf_3d_bdy.F90,v 1.17 2009-08-13 08:24:51 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,6 +47,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.17  2009-08-13 08:24:51  kb
+!  added a few checks on z-xais in the 3D boundary file - suggested by Buchmann
+!
 !  Revision 1.16  2009-07-30 15:30:07  kb
 !  fixed j-index for +1 eastern boundaries - Hofmeister
 !
@@ -242,7 +245,27 @@
 
    err = nf_get_var_real(ncid,id,zlev)
    if (err .ne. NF_NOERR) go to 10
-   zlev = -_ONE_*zlev
+
+!  a few sanity checks on the vertical axis for the 3D boundaries 
+   do n=1,zax_len
+      if (zlev(n) .eq. NF_FILL_REAL) then
+         FATAL '3D boundary z-axis contains NF_FILL_REAL values'
+         FATAL 'proper interpolation cant be done'
+         stop 'init_3d_bdy_ncdf'
+      end if
+   end do
+!  not sure if this check is safe - kb
+   if ( zlev(1) .ge. _ZERO_ .and. zlev(zax_len) .gt. _ZERO_ ) then
+      LEVEL4 'converting positive z-axis (depth) values to negative'
+      zlev = -_ONE_*zlev
+   end if
+!  check strict monotonicity
+   do n=1,zax_len-1
+      if ( .not. zlev(n) .gt. zlev(n+1) ) then
+         FATAL '3D boundary z-axis not strict monotone: ',zlev(n),zlev(n+1)
+         stop 'init_3d_bdy_ncdf'
+      end if
+   end do
 
    allocate(wrk(zax_len),stat=rc)
    if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (wrk)'
@@ -527,6 +550,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.17  2009-08-13 08:24:51  kb
+!  added a few checks on z-xais in the 3D boundary file - suggested by Buchmann
+!
 !  Revision 1.16  2009-07-30 15:30:07  kb
 !  fixed j-index for +1 eastern boundaries - Hofmeister
 !
