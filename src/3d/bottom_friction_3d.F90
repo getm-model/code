@@ -1,4 +1,4 @@
-!$Id: bottom_friction_3d.F90,v 1.11 2009-04-22 10:00:40 lars Exp $
+!$Id: bottom_friction_3d.F90,v 1.12 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -49,6 +49,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax,au,av,min_depth
    use variables_2d, only: zub,zvb,zub0,zvb0
    use variables_3d, only: kumin,kvmin,uu,vv,huo,hun,hvo,hvn,rru,rrv
+   use getm_timers, only: tic, toc, TIM_BOTTFRICT3D
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -76,6 +77,7 @@
    Ncall = Ncall+1
    write(debug,*) 'bottom_friction_3d() # ',Ncall
 #endif
+   call tic(TIM_BOTTFRICT3D)
 
 #if 0
    if(first) then
@@ -175,8 +177,7 @@
    enddo
 #endif
 
-
-
+   call toc(TIM_BOTTFRICT3D)
 #ifdef DEBUG
    write(debug,*) 'Leaving bottom_friction_3d()'
    write(debug,*)

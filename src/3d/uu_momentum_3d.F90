@@ -1,4 +1,4 @@
-!$Id: uu_momentum_3d.F90,v 1.17 2009-02-18 13:38:14 hb Exp $
+!$Id: uu_momentum_3d.F90,v 1.18 2009-08-18 10:24:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -75,6 +75,7 @@
    use meteo, only: tausx,airp
    use m3d, only: ip_fac
    use m3d, only: vel_check,min_vel,max_vel
+   use getm_timers, only: tic, toc, TIM_UUMOMENTUM, TIM_UUMOMENTUMH
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -107,6 +108,7 @@
    Ncall = Ncall+1
    write(debug,*) 'uu_momentum_3d() # ',Ncall
 #endif
+   call tic(TIM_UUMOMENTUM)
 
    do j=jmin,jmax
       do i=imin,imax
@@ -235,6 +237,7 @@ end do
 
 
 !  Update the halo zones
+   call tic(TIM_UUMOMENTUMH)
    call update_3d_halo(uu,uu,au,imin,jmin,imax,jmax,kmax,U_TAG)
 
    if (bdy3d) then
@@ -242,6 +245,7 @@ end do
    end if
 
    call wait_halo(U_TAG)
+   call toc(TIM_UUMOMENTUMH)
    call mirror_bdy_3d(uu,U_TAG)
 
    if (vel_check .ne. 0 .and. mod(n,abs(vel_check)) .eq. 0) then
@@ -260,7 +264,7 @@ end do
    end if
 
 
-
+   call toc(TIM_UUMOMENTUM)
 #ifdef DEBUG
    write(debug,*) 'Leaving uu_momentum_3d()'
    write(debug,*)

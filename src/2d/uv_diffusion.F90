@@ -1,4 +1,4 @@
-!$Id: uv_diffusion.F90,v 1.11 2009-05-15 07:00:16 bjb Exp $
+!$Id: uv_diffusion.F90,v 1.12 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -163,6 +163,7 @@
    use domain, only: dx,dy,ard1
 #endif
    use variables_2d, only: D,U,DU,UEx,V,DV,VEx,PP
+   use getm_timers,  only: tic,toc,TIM_UVDIFFUS
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -187,6 +188,7 @@
    Ncall = Ncall+1
    write(debug,*) 'uv_diffusion() # ',Ncall
 #endif
+   CALL tic(TIM_UVDIFFUS)
 
 ! Central for dx(2*Am*dx(U/DU))
    do j=jmin,jmax
@@ -286,6 +288,7 @@
    end do
 #endif
 
+   CALL toc(TIM_UVDIFFUS)
 #ifdef DEBUG
      write(debug,*) 'Leaving uv_diffusion()'
      write(debug,*)

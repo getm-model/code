@@ -1,4 +1,4 @@
-!$Id: ww_momentum_3d.F90,v 1.9 2007-06-07 10:25:19 kbk Exp $
+!$Id: ww_momentum_3d.F90,v 1.10 2009-08-18 10:24:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,6 +41,7 @@
    use domain, only: az
    use halo_zones, only: update_3d_halo,wait_halo,z_TAG
 #endif
+   use getm_timers, only: tic, toc, TIM_WWMOMENTUM, TIM_WWMOMENTUMH
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -63,6 +64,7 @@
    Ncall = Ncall+1
    write(debug,*) 'ww_momentum_3d() # ',Ncall
 #endif
+   call tic(TIM_WWMOMENTUM)
 
    dtm1=_ONE_/dt
 
@@ -87,12 +89,14 @@
    end do
 
 #ifndef CALC_HALO_WW
+   call tic(TIM_WWMOMENTUMH)
    call update_3d_halo(ww,ww,az,imin,jmin,imax,jmax,kmax,z_TAG)
    call wait_halo(z_TAG)
+   call toc(TIM_WWMOMENTUMH)
 #endif
 
 !     Consistency test: ww(i,j,kmax) must always be zero !
-
+   call toc(TIM_WWMOMENTUM)
 #ifdef DEBUG
    write(debug,*) 'Leaving ww_momentum_3d()'
    write(debug,*)

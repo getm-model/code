@@ -1,4 +1,4 @@
-!$Id: input.F90,v 1.6 2009-05-12 10:50:44 bjb Exp $
+!$Id: input.F90,v 1.7 2009-08-18 10:24:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,6 +25,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: input.F90,v $
+!  Revision 1.7  2009-08-18 10:24:46  bjb
+!  New getm_timers module
+!
 !  Revision 1.6  2009-05-12 10:50:44  bjb
 !  Works with An from netcdf file
 !
@@ -177,6 +180,7 @@
 !
 ! !INTERFACE:
    subroutine do_input(n)
+   use getm_timers, only: tic, toc, TIM_INPUT
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -202,6 +206,7 @@
    Ncall = Ncall+1
    write(debug,*) 'do_input() # ',Ncall
 #endif
+   call tic(TIM_INPUT)
 
    if(metforcing .and. met_method .eq. 2) then
       call get_meteo_data(n)
@@ -223,6 +228,7 @@
    end if
 #endif
 
+   call toc(TIM_INPUT)
 #ifdef DEBUG
    write(debug,*) 'Leaving do_input()'
    write(debug,*)

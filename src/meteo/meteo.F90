@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.18 2008-08-29 13:59:12 kb Exp $
+!$Id: meteo.F90,v 1.19 2009-08-18 10:24:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -85,6 +85,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
+!  Revision 1.19  2009-08-18 10:24:46  bjb
+!  New getm_timers module
+!
 !  Revision 1.18  2008-08-29 13:59:12  kb
 !  fixed parallel run for constant metforing with convc<>0
 !
@@ -420,6 +423,7 @@
 !
 ! !INTERFACE:
    subroutine do_meteo(n,sst)
+   use getm_timers, only: tic, toc, TIM_METEO
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -479,6 +483,7 @@
    Ncall = Ncall+1
    write(debug,*) 'do_meteo() # ',Ncall
 #endif
+   call tic(TIM_METEO)
 
    if (metforcing) then
 
@@ -660,6 +665,7 @@
    end if
    first = .false.
 
+   call toc(TIM_METEO)
 #ifdef DEBUG
      write(debug,*) 'Leaving do_meteo()'
      write(debug,*)

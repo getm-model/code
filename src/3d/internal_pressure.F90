@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.21 2009-05-05 07:39:47 kb Exp $
+!$Id: internal_pressure.F90,v 1.22 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -186,6 +186,7 @@
 ! $j=3$.
 !
 ! !USES:
+   use getm_timers, only: tic, toc, TIM_INTPRESS
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -205,7 +206,7 @@
    Ncall = Ncall+1
    write(debug,*) 'do_internal_pressure() # ',Ncall
 #endif
-
+   call tic(TIM_INTPRESS)
    zz = _ZERO_
    idpdx = _ZERO_
    idpdy = _ZERO_
@@ -263,7 +264,7 @@
    end do
 #endif
 
-
+   call toc(TIM_INTPRESS)
 #ifdef DEBUG
    write(debug,*) 'Leaving do_internal_pressure()'
    write(debug,*)

@@ -1,4 +1,4 @@
-!$Id: uv_depths.F90,v 1.12 2006-03-01 15:54:07 kbk Exp $
+!$Id: uv_depths.F90,v 1.13 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,6 +47,7 @@
    use exceptions
    use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV
    use variables_2d, only: DU,DV
+   use getm_timers, only: tic,toc,TIM_UVDEPTHS
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -71,6 +72,7 @@
    Ncall = Ncall+1
    write(0,*) 'uv_depths() # ',Ncall
 #endif
+   CALL tic(TIM_UVDEPTHS)
 
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO-1
@@ -112,6 +114,7 @@
       end do
    end do
 
+   CALL toc(TIM_UVDEPTHS)
 #ifdef DEBUG
    write(0,*) 'Leaving uv_depths()'
    write(0,*)

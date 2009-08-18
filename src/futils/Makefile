@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.8 2006-12-15 09:57:48 kbk Exp $
+#$Id: Makefile,v 1.9 2009-08-18 10:24:45 bjb Exp $
 # 
 # Makefile to build utilities written in Fortran90 - libfutils.a 
 #
@@ -7,7 +7,8 @@ include ../Rules.make
 
 LIB	= $(LIBDIR)/libfutils${buildtype}.a
 
-MODSRC	= exceptions.F90 parallel.F90 parameters.F90 time.F90 grid_interpol.F90
+MODSRC	= exceptions.F90 parallel.F90 parameters.F90 time.F90       \
+          getm_timers.F90 grid_interpol.F90
 
 LIBSRC	= ver_interpol.F90 kbk_interpol.F90 tridiagonal.F90 pos.F90 \
           cnv_2d.F90 cnv_3d.F90 eta_mask.F90 col_interpol.F90 	    \
@@ -29,6 +30,7 @@ ${LIB}(parallel.o)	\
 ${LIB}(parameters.o)	\
 ${LIB}(halo_zones.o)	\
 ${LIB}(time.o)		\
+${LIB}(getm_timers.o)	\
 ${LIB}(grid_interpol.o)
 
 OBJ = \
@@ -61,7 +63,7 @@ doc: $(SRC)
 	touch doc
 
 clean:
-	$(RM) $(LIB) $(MODDIR)/{parameters,time,grid_interpol}.{m,mod}
+	$(RM) $(LIB) $(MODDIR)/{parameters,time,getm_timers,grid_interpol}.{m,mod}
 
 realclean: clean
 	$(RM) *.o doc

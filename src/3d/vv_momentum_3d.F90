@@ -1,4 +1,4 @@
-!$Id: vv_momentum_3d.F90,v 1.20 2009-02-18 13:38:14 hb Exp $
+!$Id: vv_momentum_3d.F90,v 1.21 2009-08-18 10:24:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -83,6 +83,7 @@
    use meteo, only: tausy,airp
    use m3d, only: ip_fac
    use m3d, only: vel_check,min_vel,max_vel
+   use getm_timers, only: tic, toc, TIM_VVMOMENTUM, TIM_VVMOMENTUMH
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -118,6 +119,8 @@
    Ncall = Ncall+1
    write(debug,*) 'vv_momentum_3d() # ',Ncall
 #endif
+   call tic(TIM_VVMOMENTUM)
+
    do j=jmin,jmax
       do i=imin,imax
 
@@ -254,6 +257,7 @@
 #endif
 
 !  Update the halo zones
+   call tic(TIM_VVMOMENTUMH)
    call update_3d_halo(vv,vv,av,imin,jmin,imax,jmax,kmax,V_TAG)
 
    if (bdy3d) then
@@ -261,6 +265,7 @@
    end if
 
    call wait_halo(V_TAG)
+   call toc(TIM_VVMOMENTUMH)
    call mirror_bdy_3d(vv,V_TAG)
 
    if (vel_check .ne. 0 .and. mod(n,abs(vel_check)) .eq. 0) then
@@ -278,7 +283,7 @@
       end if
    end if
 
-
+   call toc(TIM_VVMOMENTUM)
 #ifdef DEBUG
    write(debug,*) 'Leaving vv_momentum_3d()'
    write(debug,*)

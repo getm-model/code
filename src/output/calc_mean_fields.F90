@@ -1,4 +1,4 @@
-!$Id: calc_mean_fields.F90,v 1.4 2007-06-07 10:25:20 kbk Exp $
+!$Id: calc_mean_fields.F90,v 1.5 2009-08-18 10:24:46 bjb Exp $
 #include "cppdefs.h"
 !----------------------------------------------------------------------
 !BOP
@@ -20,6 +20,7 @@
    use variables_3d, only: S,T
 #endif
    use diagnostic_variables
+   use getm_timers, only: tic, toc, TIM_CALCMEANF
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -29,6 +30,9 @@
 !  Original author(s): Karsten Bolding & Adolf Stips
 !
 !  $Log: calc_mean_fields.F90,v $
+!  Revision 1.5  2009-08-18 10:24:46  bjb
+!  New getm_timers module
+!
 !  Revision 1.4  2007-06-07 10:25:20  kbk
 !  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
 !
@@ -55,6 +59,7 @@
    Ncall = Ncall+1
    write(debug,*) 'calc_mean_fields() # ',Ncall
 #endif
+   call tic(TIM_CALCMEANF)
 
    if (first ) then
       LEVEL3 'calc_mean_fields(): initialising variables'
@@ -218,6 +223,7 @@
       step = _ZERO_
    end if
 
+   call toc(TIM_CALCMEANF)
    return
    end subroutine calc_mean_fields
 !EOC

@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.20 2009-06-15 12:45:14 kb Exp $
+#$Id: Rules.make,v 1.21 2009-08-18 10:24:43 bjb Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -49,6 +49,11 @@ endif
 # Bio-geochemical component
 ifeq ($(GETM_BIO),true)
 DEFINES += -DGETM_BIO
+endif
+
+# Remove timers
+ifeq ($(GETM_NO_TIMERS),true)
+DEFINES += -DNO_TIMERS
 endif
 
 # Compile for parallel execution

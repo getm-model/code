@@ -1,4 +1,4 @@
-!$Id: depth_update.F90,v 1.9 2006-03-01 15:54:07 kbk Exp $
+!$Id: depth_update.F90,v 1.10 2009-08-18 10:24:43 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,6 +25,7 @@
    use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth,crit_depth
    use domain, only: az,au,av,dry_z,dry_u,dry_v
    use variables_2d, only: D,z,zo,DU,zu,DV,zv
+   use getm_timers,  only: tic, toc, TIM_DPTHUPDATE
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -47,6 +48,7 @@
    Ncall = Ncall+1
    write(debug,*) 'depth_update() # ',Ncall
 #endif
+   CALL tic(TIM_DPTHUPDATE)
 
 #undef USE_MASK
 
@@ -122,6 +124,7 @@
    end do
 #endif
 
+   CALL toc(TIM_DPTHUPDATE)
 #ifdef DEBUG
    write(debug,*) 'Leaving depth_update()'
    write(debug,*)

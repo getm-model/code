@@ -1,4 +1,4 @@
-!$Id: stop_macro.F90,v 1.6 2006-03-01 15:54:08 kbk Exp $
+!$Id: stop_macro.F90,v 1.7 2009-08-18 10:24:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,6 +18,7 @@
 !
 ! !USES:
    use variables_2d, only: Uint,Uinto,Vint,Vinto
+   use getm_timers, only: tic, toc, TIM_STOPMCR
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:

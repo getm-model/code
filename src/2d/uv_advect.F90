@@ -1,4 +1,4 @@
-!$Id: uv_advect.F90,v 1.10 2006-03-01 15:54:07 kbk Exp $
+!$Id: uv_advect.F90,v 1.11 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -152,6 +152,7 @@
    use domain, only: dx,dy,ard1
 #endif
    use variables_2d, only: U,DU,UEx,V,DV,VEx,PP
+   use getm_timers, only: tic, toc, TIM_UVADVECT
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -173,6 +174,7 @@
    Ncall = Ncall+1
    write(debug,*) 'uv_advect() # ',Ncall
 #endif
+   CALL tic(TIM_UVADVECT)
 
 !  Upstream for dx(U^2/D)
    do j=jmin,jmax         ! PP defined on T-points
@@ -274,6 +276,7 @@
    end do
 #endif
 
+   CALL toc(TIM_UVADVECT)
 #ifdef DEBUG
      write(debug,*) 'Leaving uv_advect()'
      write(debug,*)

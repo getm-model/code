@@ -1,4 +1,4 @@
-!$Id: structure_friction_3d.F90,v 1.1 2008-03-26 13:25:51 hb Exp $
+!$Id: structure_friction_3d.F90,v 1.2 2009-08-18 10:24:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,6 +27,7 @@
    use domain, only: az
    use halo_zones, only: update_3d_halo,wait_halo,z_TAG
 #endif
+   use getm_timers, only: tic, toc, TIM_STRCTFRICT
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -53,6 +54,7 @@
    Ncall = Ncall+1
    write(debug,*) 'structure_friction_3d() # ',Ncall
 #endif
+   call tic(TIM_STRCTFRICT)
 
 !  cds is the friction coefficient which a structure imposes to a
 !  flow field. It has the unit [1/m] and should be a 3d field. For the
@@ -90,6 +92,7 @@
    call wait_halo(z_TAG)
 #endif
 
+   call toc(TIM_STRCTFRICT)
 #ifdef DEBUG
    write(debug,*) 'Leaving structure_friction_3d()'
    write(debug,*)

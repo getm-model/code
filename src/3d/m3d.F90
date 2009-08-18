@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.43 2009-02-18 13:38:14 hb Exp $
+!$Id: m3d.F90,v 1.44 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -289,6 +289,7 @@
 !
 ! !INTERFACE:
    subroutine integrate_3d(runtype,n)
+   use getm_timers, only: tic, toc, TIM_INTEGR3D
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -391,15 +392,21 @@
       call bottom_friction_3d()
    end if
 #endif
+   call tic(TIM_INTEGR3D)
    SS = _ZERO_
+   call toc(TIM_INTEGR3D)
 #ifndef NO_BAROCLINIC
+   call tic(TIM_INTEGR3D)
    NN = _ZERO_
+   call toc(TIM_INTEGR3D)
    if (runtype .eq. 4) call do_internal_pressure()
 #endif
+   call tic(TIM_INTEGR3D)
    huo=hun
    hvo=hvn
    ip_fac=_ONE_
    if (ip_ramp .gt. 0) ip_fac=min( _ONE_ , n*_ONE_/ip_ramp)
+   call toc(TIM_INTEGR3D)
 #ifdef STRUCTURE_FRICTION
    call structure_friction_3d
 #endif
@@ -449,6 +456,7 @@
 !     operates on individual fields and not as is the case now - on both
 !     T and S.
 #ifndef NO_BAROCLINIC
+      call tic(TIM_INTEGR3D)
       if (bdy3d) call do_bdy_3d(0,T)
       if (calc_temp) then
          call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
@@ -460,6 +468,7 @@
          call wait_halo(D_TAG)
          call mirror_bdy_3d(S,D_TAG)
       end if
+      call toc(TIM_INTEGR3D)
 #endif
    end if
 #endif
@@ -473,7 +482,9 @@
 #endif
 
 #ifdef GETM_BIO
+   call tic(TIM_INTEGR3D)
    if (bio_calc) call do_getm_bio(dt)
+   call toc(TIM_INTEGR3D)
 #endif
 
    UEx=_ZERO_ ; VEx=_ZERO_
@@ -494,7 +505,9 @@
 
    call slow_terms()
 #endif
+   call tic(TIM_INTEGR3D)
    call stop_macro()
+   call toc(TIM_INTEGR3D)
 
 #ifdef DEBUG
      write(debug,*) 'Leaving integrate_3d()'

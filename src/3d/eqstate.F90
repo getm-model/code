@@ -1,4 +1,4 @@
-!$Id: eqstate.F90,v 1.11 2007-08-02 09:46:21 hb Exp $
+!$Id: eqstate.F90,v 1.12 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -105,6 +105,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,az
    use variables_3d, only: T,S,rho,buoy
+   use getm_timers, only: tic, toc, TIM_EQSTATE
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -126,6 +127,7 @@
    Ncall = Ncall+1
    write(debug,*) 'do_eqstate() # ',Ncall
 #endif
+   call tic(TIM_EQSTATE)
 
 #define BUOYANCY
    select case (eqstate_method)
@@ -209,6 +211,7 @@
    x=-g/rho_0
    buoy=x*(rho-rho_0)
 
+   call toc(TIM_EQSTATE)
 #ifdef DEBUG
    write(debug,*) 'leaving do_eqstate()'
    write(debug,*)

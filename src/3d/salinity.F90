@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.27 2007-09-21 08:34:32 kbk Exp $
+!$Id: salinity.F90,v 1.28 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -376,6 +376,7 @@ salt_field_no=1
    use domain, only: dx,dy,ard1
 #endif
    use parameters, only: avmols
+   use getm_timers, only: tic, toc, TIM_SALT
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -409,6 +410,7 @@ salt_field_no=1
    Ncall = Ncall+1
    write(debug,*) 'do_salinity() # ',Ncall
 #endif
+   call tic(TIM_SALT)
 
    do j=jmin,jmax
       do i=imin,imax
@@ -432,10 +434,14 @@ salt_field_no=1
    delyv=dy
    area_inv=ard1
 #endif
+   ! Note: do_advection_3d is timed separately, so we 
+   ! stop the present counter
+   call toc(TIM_SALT)
    call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,    &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
                         salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH)
 
+   call tic(TIM_SALT)
 #ifdef PECS_TEST
    S(imin:imin,jmin:jmax,1:kmax)=10.
    S(imax:imax,jmin:jmax,1:kmax)=10.
@@ -546,6 +552,7 @@ salt_field_no=1
       end if
    end if
 
+   call toc(TIM_SALT)
 #ifdef DEBUG
    write(debug,*) 'Leaving do_salinity()'
    write(debug,*)

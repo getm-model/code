@@ -118,6 +118,9 @@
 #define _ONE_  1.0d0
 #endif
 
+! Rare use of long integers (e.g. timers):
+#define LONGINT INTEGER(KIND=8)
+
 ! The width of the HALO zones
 #define HALO	  2
 

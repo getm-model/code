@@ -1,4 +1,4 @@
-!$Id: slow_terms.F90,v 1.10 2008-03-27 08:51:23 hb Exp $
+!$Id: slow_terms.F90,v 1.11 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,6 +25,7 @@
    use variables_2d, only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
    use variables_3d, only: kumin,kvmin,uu,vv,huo,hun,hvo,hvn
    use variables_3d, only: ssuo,ssun,ssvo,ssvn,uuEx,vvEx,rru,rrv
+   use getm_timers, only: tic, toc, TIM_SLOWTERMS
 #ifndef NO_BAROCLINIC
    use variables_3d, only: idpdx,idpdy
 #endif
@@ -53,6 +54,7 @@
    Ncall = Ncall+1
    write(debug,*) 'slow_terms() # ',Ncall
 #endif
+   call tic(TIM_SLOWTERMS)
 
    if (kmax .gt. 1) then
 
@@ -189,6 +191,7 @@
       end do
    end do
 
+   call toc(TIM_SLOWTERMS)
 #ifdef DEBUG
    write(debug,*) 'Leaving slow_terms()'
    write(debug,*)

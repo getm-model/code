@@ -1,4 +1,4 @@
-!$Id: ss_nn.F90,v 1.9 2007-06-07 10:25:19 kbk Exp $
+!$Id: ss_nn.F90,v 1.10 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -133,6 +133,7 @@
 #ifndef NO_BAROCLINIC
    use variables_3d, only: NN,buoy
 #endif
+   use getm_timers, only: tic, toc, TIM_SSNN
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -155,6 +156,7 @@
    Ncall = Ncall+1
    write(debug,*) 'ss_nn() # ',Ncall
 #endif
+   call tic(TIM_SSNN)
 
 #undef NEW_SS
 #define NEW_SS
@@ -242,6 +244,7 @@
    end do
 #endif
 
+   call toc(TIM_SSNN)
 #ifdef DEBUG
    write(debug,*) 'Leaving ss_nn()'
    write(debug,*)

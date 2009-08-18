@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.24 2007-09-21 08:34:32 kbk Exp $
+!$Id: temperature.F90,v 1.25 2009-08-18 10:24:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -321,6 +321,7 @@ temp_field_no=1
    use domain, only: dx,dy,ard1
 #endif
    use parameters, only: avmolt
+   use getm_timers, only: tic, toc, TIM_TEMP
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -350,6 +351,7 @@ temp_field_no=1
    Ncall = Ncall+1
    write(debug,*) 'do_temperature() # ',Ncall
 #endif
+   call tic(TIM_TEMP)
 
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    delxu=dxu
@@ -364,9 +366,13 @@ temp_field_no=1
    delyv=dy
    area_inv=ard1
 #endif
+   ! Note: do_advection_3d is timed separately, so we 
+   ! stop the present counter
+   call toc(TIM_TEMP)
    call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,   &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
                         temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH)
+   call tic(TIM_TEMP)
 #ifdef FRESHWATER_LENSE_TEST
    T(imin:imin+3,jmin:jmax,1:kmax)=10.
    T(imax-3:imax,jmin:jmax,1:kmax)=10.
@@ -467,6 +473,7 @@ temp_field_no=1
    end if
 
 
+   call toc(TIM_TEMP)
 #ifdef DEBUG
    write(debug,*) 'Leaving do_temperature()'
    write(debug,*)

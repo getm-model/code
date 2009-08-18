@@ -1,4 +1,4 @@
-!$Id: slow_advection.F90,v 1.11 2007-06-07 10:25:19 kbk Exp $
+!$Id: slow_advection.F90,v 1.12 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,6 +29,7 @@
 #endif
    use variables_2d, only: UEx,VEx,Uint,Vint,PP
    use variables_3d, only: ssun,ssvn
+   use getm_timers, only: tic, toc, TIM_SLOWADV
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -52,6 +53,8 @@
    Ncall = Ncall+1
    write(debug,*) 'slow_advection() # ',Ncall
 #endif
+   call tic(TIM_SLOWADV)
+
    do j=jmin-1,jmax+1
       do i=imin-1,imax+1
          DUi(i,j)=ssun(i,j)+HU(i,j)
@@ -159,6 +162,7 @@
    end do
 #endif
 
+   call toc(TIM_SLOWADV)
 #ifdef DEBUG
    write(debug,*) 'Leaving slow_advection()'
    write(debug,*)

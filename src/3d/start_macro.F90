@@ -1,4 +1,4 @@
-!$Id: start_macro.F90,v 1.11 2007-06-07 10:25:19 kbk Exp $
+!$Id: start_macro.F90,v 1.12 2009-08-18 10:24:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -33,6 +33,7 @@
    use m2d, only: z,Uint,Vint
    use m3d, only: M
    use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
+   use getm_timers, only: tic, toc, TIM_STARTMCR
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -55,6 +56,7 @@
    Ncall = Ncall+1
    write(debug,*) 'start_macro() # ',Ncall
 #endif
+   call tic(TIM_STARTMCR)
 
    do j=jmin-HALO,jmax+HALO         ! Defining 'old' and 'new' sea surface
       do i=imin-HALO,imax+HALO      ! elevation for macro time step
@@ -86,6 +88,7 @@
    Uint = split*Uint
    Vint = split*Vint
 
+   call toc(TIM_STARTMCR)
 #ifdef DEBUG
    write(debug,*) 'Leaving start_macro()'
    write(debug,*)

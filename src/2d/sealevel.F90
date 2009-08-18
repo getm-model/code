@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.17 2008-12-09 01:04:38 kb Exp $
+!$Id: sealevel.F90,v 1.18 2009-08-18 10:24:43 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,6 +29,7 @@
 #endif
    use m2d, only: dtm
    use variables_2d, only: z,zo,U,V,fwf
+   use getm_timers, only: tic, toc, TIM_SEALEVEL, TIM_SEALEVELH
    use halo_zones, only : update_2d_halo,wait_halo,z_TAG
 #ifdef USE_BREAKS
    use halo_zones, only : nprocs,set_flag,u_TAG,v_TAG
@@ -62,6 +63,7 @@
    Ncall = Ncall+1
    write(debug,*) 'sealevel() # ',Ncall
 #endif
+   call tic(TIM_SEALEVEL)
 
    zo = z
 
@@ -130,10 +132,12 @@
 
    if(break_flag .ne. 0) then
       z=zo
+      call tic(TIM_SEALEVELH)
       call update_2d_halo(U,U,au,imin,jmin,imax,jmax,u_TAG)
       call wait_halo(u_TAG)
       call update_2d_halo(V,V,av,imin,jmin,imax,jmax,v_TAG)
       call wait_halo(v_TAG)
+      call toc(TIM_SEALEVELH)
    end if
 
    end do                    !end do while(break_flag>0)
@@ -146,10 +150,12 @@
          z(i,3)=z(i,2)
       end do
 #endif
-
+   call tic(TIM_SEALEVELH)
    call update_2d_halo(z,z,az,imin,jmin,imax,jmax,z_TAG)
    call wait_halo(z_TAG)
+   call toc(TIM_SEALEVELH)
 
+   call toc(TIM_SEALEVEL)
 #ifdef DEBUG
    write(debug,*) 'Leaving sealevel()'
    write(debug,*)

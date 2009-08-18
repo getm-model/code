@@ -1,4 +1,4 @@
-!$Id: uv_advect_3d.F90,v 1.17 2009-06-25 07:10:52 hb Exp $
+!$Id: uv_advect_3d.F90,v 1.18 2009-08-18 10:24:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -263,6 +263,7 @@
 #endif
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
+   use getm_timers, only: tic, toc, TIM_UVADV3D, TIM_UVADV3DH
 
    IMPLICIT NONE
 !
@@ -300,7 +301,7 @@
    Ncall = Ncall+1
    write(debug,*) 'uv_advect_3d() # ',Ncall
 #endif
-
+   call tic(TIM_UVADV3D)
 #ifdef UV_TVD
 
 ! Here begins dimensional split advection for u-velocity
@@ -347,8 +348,10 @@
       end do
    end do
 
+   call tic(TIM_UVADV3DH)
    call update_3d_halo(uuEx,uuEx,au,imin,jmin,imax,jmax,kmax,U_TAG)
    call wait_halo(U_TAG)
+   call toc(TIM_UVADV3DH)
 
    call do_advection_3d(dt,uuEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
@@ -400,8 +403,10 @@
       end do
    end do
 
+   call tic(TIM_UVADV3DH)
    call update_3d_halo(vvEx,vvEx,av,imin,jmin,imax,jmax,kmax,V_TAG)
    call wait_halo(V_TAG)
+   call toc(TIM_UVADV3DH)
 
    call do_advection_3d(dt,vvEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
@@ -579,6 +584,7 @@
 
 #endif  ! End of three-dimensional first-order upstream
 
+   call toc(TIM_UVADV3D)
 #ifdef DEBUG
    write(debug,*) 'Leaving uv_advect_3d()'
    write(debug,*)

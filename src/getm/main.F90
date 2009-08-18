@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.13 2009-07-28 08:15:42 kb Exp $
+!$Id: main.F90,v 1.14 2009-08-18 10:24:46 bjb Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -29,6 +29,7 @@
    use time, only: simtime
    use domain, only: calc_points
    use m2d, only: mem2d
+   use getm_timers, only: write_getm_timers
 #ifndef NO_3D
    use m3d, only: mem3d
 #endif
@@ -39,6 +40,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: main.F90,v $
+!  Revision 1.14  2009-08-18 10:24:46  bjb
+!  New getm_timers module
+!
 !  Revision 1.13  2009-07-28 08:15:42  kb
 !  Hydrodynamics --> ApS.
 !
@@ -138,6 +142,10 @@
          LEVEL1 'CPU-time/calc-point:   ',secs/(MaxN-MinN+1)/Calc_Points,' seconds'
          LEVEL1 'Sim-time/CPU-time:     ',simtime/secs
       end if
+#ifndef NO_TIMERS
+      STDERR LINE
+      call write_getm_timers
+#endif      
    endif
    STDERR LINE
    LEVEL1 'Copyright (C) Bolding & Burchard ApS.'
@@ -251,6 +259,9 @@
 #endif
 #ifdef SONG_WRIGHT
    LEVEL1 'SONG_WRIGHT'
+#endif
+#ifdef NO_TIMERS
+   LEVEL1 'NO_TIMERS'
 #endif
 #ifdef OLD_WRONG_FLUXES
    LEVEL1 'OLD_WRONG_FLUXES'

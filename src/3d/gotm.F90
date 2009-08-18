@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.17 2008-03-27 08:51:23 hb Exp $
+!$Id: gotm.F90,v 1.18 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -60,6 +60,7 @@
    use turbulence, only: do_turbulence,cde
    use turbulence, only: tke1d => tke, eps1d => eps, L1d => L
    use turbulence, only: num1d => num, nuh1d => nuh
+   use getm_timers, only: tic, toc, TIM_GOTM, TIM_GOTMTURB, TIM_GOTMH
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -86,6 +87,7 @@
    Ncall = Ncall+1
    write(debug,*) 'gotm() # ',Ncall
 #endif
+   call tic(TIM_GOTM)
 
    xP = _ZERO_
    do j=jmin,jmax
@@ -134,8 +136,13 @@
 #endif
             end do
 #else
+            ! If we do tic/toc for do_turbulence, then we can
+            ! easily get into the millions of system_clock calls,
+            ! as the call is deeply in loops
+            !call tic(TIM_GOTMTURB)
             call do_turbulence(kmax,dt,D(i,j),u_taus,u_taub,z0s,z0b,h, &
                                NN1d,SS1d,xP)
+            !call toc(TIM_GOTMTURB)
 #endif
             tke(i,j,:) = tke1d
             eps(i,j,:) = eps1d
@@ -146,14 +153,17 @@
          end if
       end do
    end do
-   
+
+   call tic(TIM_GOTMH)   
    call update_3d_halo(num,num,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 #ifndef NO_BAROCLINIC
    call update_3d_halo(nuh,nuh,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 #endif
+   call toc(TIM_GOTMH)   
 
+   call toc(TIM_GOTM)   
 #ifdef DEBUG
    write(debug,*) 'Leaving gotm()'
    write(debug,*)

@@ -1,4 +1,4 @@
-!$Id: momentum.F90,v 1.12 2006-03-01 15:54:07 kbk Exp $
+!$Id: momentum.F90,v 1.13 2009-08-18 10:24:43 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,6 +17,9 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
+   ! For timer here: Only clock what is not taken at "next" level.
+   use getm_timers, only: tic, toc, TIM_MOMENTUM
+
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -42,6 +45,7 @@
    Ncall = Ncall+1
    write(debug,*) 'Momentum() # ',Ncall
 #endif
+   CALL tic(TIM_MOMENTUM)
 
    if(ufirst) then
       call umomentum(tausx,airp)
@@ -53,6 +57,11 @@
       ufirst = .true.
    end if
 
+   CALL toc(TIM_MOMENTUM)
+#ifdef DEBUG
+   write(debug,*) 'Leaving momentum()'
+   write(debug,*)
+#endif
    return
    end subroutine momentum
 !EOC
@@ -123,6 +132,7 @@
 #endif
    use m2d, only: dtm
    use variables_2d, only: D,z,UEx,U,DU,fV,SlUx,SlRu,ru,fU,DV
+   use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,U_TAG
    IMPLICIT NONE
 !
@@ -177,8 +187,10 @@
 #endif
 
 !  now u is calculated
+   CALL tic(TIM_MOMENTUMH)
    call update_2d_halo(U,U,au,imin,jmin,imax,jmax,U_TAG)
    call wait_halo(U_TAG)
+   CALL toc(TIM_MOMENTUMH)
    call mirror_bdy_2d(U,U_TAG)
 
 ! Semi-implicit treatment of Coriolis force for V-momentum eq.
@@ -281,6 +293,7 @@
 #endif
    use m2d, only: dtm
    use variables_2d, only: D,z,VEx,V,DV,fU,SlVx,SlRv,rv,fV,DU
+   use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,V_TAG
    IMPLICIT NONE
 !
@@ -336,8 +349,10 @@
 #endif
 
 !  now v is calculated
+   CALL tic(TIM_MOMENTUMH)
    call update_2d_halo(V,V,av,imin,jmin,imax,jmax,V_TAG)
    call wait_halo(V_TAG)
+   CALL toc(TIM_MOMENTUMH)
    call mirror_bdy_2d(V,V_TAG)
 
 !  Semi-implicit treatment of Coriolis force for U-momentum eq.

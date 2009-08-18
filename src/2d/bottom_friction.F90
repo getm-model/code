@@ -1,4 +1,4 @@
-!$Id: bottom_friction.F90,v 1.7 2006-03-01 15:54:07 kbk Exp $
+!$Id: bottom_friction.F90,v 1.8 2009-08-18 10:24:43 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -36,6 +36,7 @@
    use parameters, only: kappa,avmmol
    use domain, only: imin,imax,jmin,jmax,au,av,min_depth
    use variables_2d
+   use getm_timers, only: tic, toc, TIM_BOTTFRICT
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -60,6 +61,8 @@
    Ncall = Ncall+1
    write(debug,*) 'bottom_friction() # ',Ncall
 #endif
+
+CALL tic(TIM_BOTTFRICT)
 
 #ifdef DEBUG
    if(Ncall .eq. 1) then
@@ -210,6 +213,8 @@
    where (av .gt. 0)
       rv=rvv*sqrt(uloc**2+vloc**2)
    end where
+
+   CALL toc(TIM_BOTTFRICT)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving bottom_friction()'

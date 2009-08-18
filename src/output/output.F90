@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.28 2009-04-27 09:22:55 kb Exp $
+!$Id: output.F90,v 1.29 2009-08-18 10:24:47 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -59,6 +59,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.29  2009-08-18 10:24:47  bjb
+!  New getm_timers module
+!
 !  Revision 1.28  2009-04-27 09:22:55  kb
 !  mean calculation de-activated with -DNO_3D
 !
@@ -331,6 +334,7 @@
 !  Writes calculated fields to files.
 !
 ! !USES:
+   use getm_timers, only: tic, toc, TIM_OUTPUT
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -356,6 +360,7 @@
    Ncall = Ncall+1
    write(debug,*) 'do_output() # ',Ncall
 #endif
+   call tic(TIM_OUTPUT)
 
    write_2d = save_2d .and. n .ge. first_2d .and. mod(n,step_2d).eq.0
    write_3d = save_3d .and. n .ge. first_3d .and. mod(n,step_3d).eq.0
@@ -403,6 +408,7 @@
       end if
    end if
 
+   call toc(TIM_OUTPUT)
 #ifdef DEBUG
    write(debug,*) 'Leaving do_output()'
    write(debug,*)

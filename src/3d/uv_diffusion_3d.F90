@@ -1,4 +1,4 @@
-!$Id: uv_diffusion_3d.F90,v 1.9 2007-06-07 10:25:19 kbk Exp $
+!$Id: uv_diffusion_3d.F90,v 1.10 2009-08-18 10:24:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -119,6 +119,7 @@
    use domain, only: dx,dy,ard1
 #endif
    use variables_3d, only: kumin,kvmin,uu,vv,ww,hn,hun,hvn,uuEx,vvEx
+   use getm_timers, only: tic, toc, TIM_UVDIFF3D
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -143,6 +144,7 @@
    Ncall = Ncall+1
    write(debug,*) 'D3uvDiff() # ',Ncall
 #endif
+   call tic(TIM_UVDIFF3D)
 
 ! Central for dx(2*Am*dx(uu^2/hun))
    do k=1,kmax
@@ -254,6 +256,7 @@
    end do
 #endif
 
+   call toc(TIM_UVDIFF3D)
 #ifdef DEBUG
    write(debug,*) 'Leaving uv_diffusion_3d()'
    write(debug,*)

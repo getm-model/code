@@ -1,4 +1,4 @@
-!$Id: slow_bottom_friction.F90,v 1.9 2007-06-07 10:25:19 kbk Exp $
+!$Id: slow_bottom_friction.F90,v 1.10 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,6 +31,7 @@
    use domain, only: imin,imax,jmin,jmax,HU,HV,min_depth,au,av
    use variables_2d, only: zub,zvb,ru,rv,Uinto,Vinto
    use variables_3d, only: ssuo,ssun,ssvo,ssvn
+   use getm_timers, only: tic, toc, TIM_SLOWBFRICT
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -58,6 +59,7 @@
    Ncall = Ncall+1
    write(debug,*) 'slow_bottom_friction() # ',Ncall
 #endif
+   call tic(TIM_SLOWBFRICT)
 
    do j=jmin,jmax
       do i=imin,imax
@@ -143,6 +145,7 @@
       end do
    end do
 
+   call toc(TIM_SLOWBFRICT)
 #ifdef DEBUG
    write(debug,*) 'Leaving slow_bottom_friction()'
    write(debug,*)

@@ -1,4 +1,4 @@
-!$Id: slow_diffusion.F90,v 1.8 2007-06-07 10:25:19 kbk Exp $
+!$Id: slow_diffusion.F90,v 1.9 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,6 +31,7 @@
 #endif
    use variables_2d, only: D,U,V,UEx,VEx,Uint,Vint,PP
    use variables_3d, only: ssen,ssun,ssvn
+   use getm_timers, only: tic, toc, TIM_SLOWDIFF
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -53,6 +54,7 @@
    Ncall = Ncall+1
    write(debug,*) 'slow_diffusion() # ',Ncall
 #endif
+   call tic(TIM_SLOWDIFF)
 
    do j=jmin-1,jmax+1
       do i=imin-1,imax+1
@@ -154,6 +156,7 @@
    end do
 #endif
 
+   call toc(TIM_SLOWDIFF)
 #ifdef DEBUG
      write(debug,*) 'Leaving slow_diffusion()'
      write(debug,*)

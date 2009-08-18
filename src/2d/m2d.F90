@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.31 2009-05-15 07:00:16 bjb Exp $
+!$Id: m2d.F90,v 1.32 2009-08-18 10:24:43 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -265,6 +265,7 @@
 !
 ! !INTERFACE:
    subroutine integrate_2d(runtype,loop,tausx,tausy,airp)
+   use getm_timers, only: tic, toc, TIM_INTEGR2D
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -308,7 +309,6 @@
    Ncall = Ncall+1
    write(debug,*) 'integrate_2d() # ',Ncall
 #endif
-
    if (mod(loop-1,MM) .eq. 0) then        ! MacroMicro time step
 #ifndef NO_BOTTFRIC
       call bottom_friction(runtype)
@@ -323,21 +323,27 @@
    if (Am .gt. _ZERO_ .or. An_method .gt. 0) then
       call uv_diffusion(Am,An_method,An,AnX) ! Has to be called after uv_advect.
    end if
+   call tic(TIM_INTEGR2D)
    call mirror_bdy_2d(UEx,U_TAG)
    call mirror_bdy_2d(VEx,V_TAG)
+   call toc(TIM_INTEGR2D)
 #endif
 #endif
    call momentum(loop,tausx,tausy,airp)
    if (runtype .gt. 1) then
+      call tic(TIM_INTEGR2D)
       Uint=Uint+U
       Vint=Vint+V
+      call toc(TIM_INTEGR2D)
    end if
    if (have_boundaries) call update_2d_bdy(loop,bdyramp_2d)
    call sealevel()
    call depth_update()
 
    if(residual .gt. 0 .and. loop .ge. residual) then
+      call tic(TIM_INTEGR2D)
       call do_residual(0)
+      call toc(TIM_INTEGR2D)
    end if
 
 #ifdef DEBUG

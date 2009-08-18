@@ -1,4 +1,4 @@
-!$Id: stresses_3d.F90,v 1.9 2009-04-22 10:02:36 lars Exp $
+!$Id: stresses_3d.F90,v 1.10 2009-08-18 10:24:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,6 +28,7 @@
    use variables_3d, only: taus,taubx,tauby,taub
    use meteo, only: tausx,tausy
    use halo_zones, only : update_2d_halo,wait_halo,z_TAG
+   use getm_timers, only: tic, toc, TIM_STRESSES3D, TIM_STRESSES3DH
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -49,12 +50,15 @@
    Ncall = Ncall+1
    write(debug,*) 'stresses_3d() # ',Ncall
 #endif
+   call tic(TIM_STRESSES3D)
 
 !  we need to know rru and rrv in the halos as well
+   call tic(TIM_STRESSES3DH)
    call update_2d_halo(rru,rru,au,imin,jmin,imax,jmax,10)
    call wait_halo(10)
    call update_2d_halo(rrv,rrv,av,imin,jmin,imax,jmax,10)
    call wait_halo(10)
+   call toc(TIM_STRESSES3DH)
 
 
 !  x-component of bottom momentum flux at U-points
@@ -106,6 +110,7 @@
       end do
    end do
 
+   call toc(TIM_STRESSES3D)
 #ifdef DEBUG
    write(debug,*) 'Leaving stresses_3d()'
    write(debug,*)

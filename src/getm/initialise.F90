@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.21 2009-04-27 08:03:59 kb Exp $
+!$Id: initialise.F90,v 1.22 2009-08-18 10:24:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,6 +22,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
+!  Revision 1.22  2009-08-18 10:24:46  bjb
+!  New getm_timers module
+!
 !  Revision 1.21  2009-04-27 08:03:59  kb
 !  compiles with NO_3D
 !
@@ -143,6 +146,7 @@
    use time, only: init_time,update_time,write_time_string
    use time, only: start,timestr,timestep
    use m2d, only: init_2d,z,zu,zv
+   use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
 #ifndef NO_3D
    use m2d, only: Uint,Vint
    use m3d, only: cord_relax,init_3d,ssen,ssun,ssvn
@@ -212,6 +216,11 @@
    Ncall = Ncall+1
    write(debug,*) 'init_model() # ',Ncall
 #endif
+#ifndef NO_TIMERS
+   call init_getm_timers()
+#endif
+   ! Immediately start to time (rest of) init:
+   call tic(TIM_INITIALIZE)
 
    ! We need to pass info about the input directory
 #if 0
@@ -373,6 +382,9 @@
    end if
 
    call init_input(input_dir,MinN)
+
+   call toc(TIM_INITIALIZE)
+   ! The rest is timed with meteo and output.
 
    if(runtype .le. 2) then
       call do_meteo(MinN)

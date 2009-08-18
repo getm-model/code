@@ -1,4 +1,4 @@
-!$Id: coordinates.F90,v 1.15 2007-06-29 10:55:42 kbk Exp $
+!$Id: coordinates.F90,v 1.16 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -73,6 +73,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use variables_3d, only: kvmin,hvo,hvn
 #endif
+   use getm_timers, only: tic, toc,TIM_COORDS
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -96,6 +97,7 @@
    Ncall = Ncall+1
    write(debug,*) 'coordinates() # ',Ncall
 #endif
+   call tic(TIM_COORDS)
 
    if (first) then
       select case (cord_type)
@@ -144,6 +146,7 @@ STDERR 'coordinates(): adaptive_coordinates not coded yet'
    end do
 #endif
 
+   call toc(TIM_COORDS)
 #ifdef DEBUG
    write(debug,*) 'Leaving coordinates()'
    write(debug,*)
