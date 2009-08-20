@@ -325,25 +325,31 @@
 ! Get local tics per second for this machine:
    CALL SYSTEM_CLOCK(count_dummy,count_rate,count_max)
 !
+! Compute total clocked wall time for later use in output.
+   tottime=_ZERO_
+   do i=1,max_timers
+      if (LGE(timernames(i),'0')) then
+         ! "Minor" timers should start with space (ASCII char 0).
+         ! Actually, dash or underscore is ok too.
+         ! This is not an "inner" timer add to total timed wall time:
+         tottime=tottime+_ONE_*timercounts(i)/count_rate
+      end if
+   end do
+!
 ! Write all timers
    LEVEL1 'GETM timers in seconds (',count_rate,' tics per second)'
-   tottime=_ZERO_
+   LEVEL1 '                             wall      #sysclocks     % of total'
+   LEVEL1 ' Timername                time (s)        calls       clocked time'
    do i=1,max_timers
       if (len_trim(timernames(i)).gt.0) then
          thistime = _ONE_*timercounts(i)/count_rate
 !         LEVEL1 '  walltime ',timernames(i),' ',_ONE_*timercounts(i)/count_rate
-         write(stderr,100) 'walltime',timernames(i),thistime,' ,  sysclock calls:',sysclockcalls(i)
-100      FORMAT(A14, A26, F10.2,A20,I10)
-         if (LGE(timernames(i),'0')) then
-            ! Minor" timers should start with space (ASCII char 0).
-            ! Actually, dash or underscore is ok too.
-            ! This is not an "inner" timer add to total timed wall time:
-            tottime=tottime+thistime
-         end if
-      end if
+         write(stderr,100) timernames(i),thistime,sysclockcalls(i),100*thistime/tottime
+100      FORMAT(A26,F10.2,I15,F14.2)
+200      FORMAT(A14, A26, F10.2,A20,I10)
+     end if
    end do
-   write(stderr,100) 'walltime','  TIMERS SUM  ',tottime
-   LEVEL1 '  called "SYSTEM_CLOCK"',num_clock_calls,' times'
+   write(stderr,100) '  TIMERS SUM  ',tottime,num_clock_calls,100*_ONE_
 
 !
 ! For logging/debugging store name of each subroutine.
