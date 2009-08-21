@@ -1,4 +1,4 @@
-!$Id: parallel.F90,v 1.4 2008-06-26 06:19:30 kb Exp $
+!$Id: parallel.F90,v 1.5 2009-08-21 08:56:34 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,13 +11,13 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    use halo_mpi, only: postinit_mpi,print_MPI_info,barrier,myid
 #endif
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
-#ifndef PARALLEL
+#ifndef GETM_PARALLEL
    integer, parameter                  :: myid=-1
 #endif
 !
@@ -25,6 +25,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: parallel.F90,v $
+!  Revision 1.5  2009-08-21 08:56:34  bjb
+!  Fix name clash on PARALLEL with OpenMP key word
+!
 !  Revision 1.4  2008-06-26 06:19:30  kb
 !  barrier() + verbose when finishing parallel run - Büchmann
 !
@@ -86,7 +89,7 @@
 !  22Apr99   Karsten Bolding & Hans Burchard  Initial code.
 !
 ! !LOCAL VARIABLES:
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    logical                   :: TO_FILE=.true.
    character(len=3)          :: buf
    character(len=16)         :: pid,ext
@@ -102,7 +105,7 @@
    write(debug,*) 'init_parallel'
 #endif
 
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    call postinit_mpi(input_dir)
    call print_MPI_info()
    if (TO_FILE) then
@@ -154,7 +157,7 @@
 !  22Apr99   Karsten Bolding & Hans Burchard  Initial code.
 !
 ! !LOCAL VARIABLES:
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    integer              :: ierr
 #endif
 !EOP
@@ -166,7 +169,7 @@
    write(debug,*) 'clean_parallel'
 #endif
 
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    LEVEL2 'At final MPI barrier'
    call barrier()
    LEVEL2 'About to finish parallel part of GETM - calling MPI_Finalize()'  

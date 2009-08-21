@@ -1,4 +1,4 @@
-!$Id: exceptions.F90,v 1.2 2005-04-25 09:26:57 kbk Exp $
+!$Id: exceptions.F90,v 1.3 2009-08-21 08:56:34 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,6 +28,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: exceptions.F90,v $
+!  Revision 1.3  2009-08-21 08:56:34  bjb
+!  Fix name clash on PARALLEL with OpenMP key word
+!
 !  Revision 1.2  2005-04-25 09:26:57  kbk
 !  default all is private
 !
@@ -55,7 +58,7 @@
 !
 ! !USES:
     IMPLICIT NONE
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
 !    use mpi
     include "mpif.h"
 #endif
@@ -80,7 +83,7 @@
    STDERR "FATAL GETM ERROR: "//trim(whatsup)
    STDERR " "
 
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    call MPI_Abort(MPI_COMM_WORLD,1,ierr)
 #else
    stop
@@ -135,7 +138,7 @@
 !
 ! !USES:
    IMPLICIT NONE
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
 !    use mpi
     include "mpif.h"
 #endif
@@ -169,7 +172,7 @@
    STDERR "NETCDF MESSAGE    : "//trim(nf_strerror(status))
    STDERR " "
 
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    call MPI_Abort(MPI_COMM_WORLD,1,ierr)
 #else
    stop

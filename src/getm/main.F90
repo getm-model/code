@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.14 2009-08-18 10:24:46 bjb Exp $
+!$Id: main.F90,v 1.15 2009-08-21 08:56:34 bjb Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -40,6 +40,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: main.F90,v $
+!  Revision 1.15  2009-08-21 08:56:34  bjb
+!  Fix name clash on PARALLEL with OpenMP key word
+!
 !  Revision 1.14  2009-08-18 10:24:46  bjb
 !  New getm_timers module
 !
@@ -169,7 +172,7 @@
    STDERR 'Compilation options (unstable version):'
    STDERR LINE
 !
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    LEVEL1 'Compiled for parallel execution'
 #else
    LEVEL1 'Compiled for serial execution'

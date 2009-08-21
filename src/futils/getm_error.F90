@@ -1,4 +1,4 @@
-!$Id: getm_error.F90,v 1.3 2004-04-06 16:54:33 kbk Exp $
+!$Id: getm_error.F90,v 1.4 2009-08-21 08:56:34 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,7 @@
 !
 ! !USES:
    IMPLICIT NONE
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
 !    use mpi
     include "mpif.h"
 #endif
@@ -24,6 +24,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: getm_error.F90,v $
+!  Revision 1.4  2009-08-21 08:56:34  bjb
+!  Fix name clash on PARALLEL with OpenMP key word
+!
 !  Revision 1.3  2004-04-06 16:54:33  kbk
 !  cleaned a little
 !
@@ -40,7 +43,7 @@
 !BOC
    FATAL "Called from: ",trim(sub)
    FATAL "Message:     ",trim(msg)
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    call MPI_Abort(MPI_COMM_WORLD,1,ierr)
 #else
    stop "getm_error()"

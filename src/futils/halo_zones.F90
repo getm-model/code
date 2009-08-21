@@ -1,4 +1,4 @@
-!$Id: halo_zones.F90,v 1.6 2008-09-16 10:03:24 kb Exp $
+!$Id: halo_zones.F90,v 1.7 2009-08-21 08:56:34 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,7 +13,7 @@
 !  places in 'getm'. From version 1.4 real use of MPI will be implemented.
 !
 ! !USES:
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    use halo_mpi
 #endif
    IMPLICIT NONE
@@ -22,7 +22,7 @@
    public init_halo_zones,update_2d_halo,update_3d_halo,wait_halo
 !
 ! !PUBLIC DATA MEMBERS:
-#ifndef PARALLEL
+#ifndef GETM_PARALLEL
    integer, parameter                  :: H_TAG=10,HU_TAG=11,HV_TAG=12
    integer, parameter                  :: D_TAG=20,DU_TAG=21,DV_TAG=22
    integer, parameter                  :: z_TAG=30,U_TAG=31,V_TAG=32
@@ -32,6 +32,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_zones.F90,v $
+!  Revision 1.7  2009-08-21 08:56:34  bjb
+!  Fix name clash on PARALLEL with OpenMP key word
+!
 !  Revision 1.6  2008-09-16 10:03:24  kb
 !  added Holtermanns emergency break algorithm
 !
@@ -54,7 +57,7 @@
 !  recovering after CVS crash
 !
 ! !LOCAL VARIABLES:
-#ifndef PARALLEL
+#ifndef GETM_PARALLEL
    integer, parameter        :: nprocs=1
 #endif
 !EOP
@@ -152,7 +155,7 @@
       f1(il-1,jl-1) = f2(il,jl)
       end if
    else
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
       if( present(mirror) ) then
          call update_2d_halo_mpi(f1,f2,imin,jmin,imax,jmax,tag, &
                                  mirror=mirror)
@@ -204,7 +207,7 @@
       f1( : , jl-1, : ) = f2( : , jl, : )
       f1( : , jh+1, : ) = f2( : , jh, : )
    else
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
       call update_3d_halo_mpi(f1,f2,imin,jmin,imax,jmax,kmax,tag)
 #endif
    end if
@@ -238,7 +241,7 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    if (nprocs .gt. 1) then
       call wait_halo_mpi(tag)
    end if
@@ -273,7 +276,7 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    if (nprocs .gt. 1) then
       call set_flag_mpi(n,flag,flags)
    end if

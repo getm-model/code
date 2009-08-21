@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.22 2009-08-18 10:24:46 bjb Exp $
+!$Id: initialise.F90,v 1.23 2009-08-21 08:56:34 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,6 +22,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
+!  Revision 1.23  2009-08-21 08:56:34  bjb
+!  Fix name clash on PARALLEL with OpenMP key word
+!
 !  Revision 1.22  2009-08-18 10:24:46  bjb
 !  New getm_timers module
 !
@@ -135,7 +138,7 @@
 !
 ! !USES:
    use kurt_parallel, only: init_parallel,myid
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    use halo_mpi, only: init_mpi,print_MPI_info
 #endif
    use output, only: init_output,do_output,restart_file,out_dir
@@ -197,7 +200,7 @@
    logical                   :: hotstart=.false.
    logical                   :: use_epoch=.false.
    logical                   :: save_initial=.false.
-#if (defined PARALLEL && defined INPUT_DIR)
+#if (defined GETM_PARALLEL && defined INPUT_DIR)
    character(len=PATH_MAX)   :: input_dir=INPUT_DIR
 #else
    character(len=PATH_MAX)   :: input_dir='./'
@@ -238,11 +241,11 @@
 ! "say hello" right away. For MPI this changes the working directory,
 ! so that input files can be read.
 !
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    call init_mpi()
 #endif
 
-#if (defined PARALLEL && defined INPUT_DIR)
+#if (defined GETM_PARALLEL && defined INPUT_DIR)
    STDERR 'input_dir:'
    STDERR trim(input_dir)
 #endif
@@ -270,7 +273,7 @@
 ! call all modules init_ ... routines
 
    if (parallel) then
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
       call init_parallel(runid,input_dir)
 #else
       STDERR 'You must define GETM_PARALLEL and recompile'
@@ -279,9 +282,9 @@
 #endif
    end if
 
-#if (defined PARALLEL && defined SLICE_MODEL)
+#if (defined GETM_PARALLEL && defined SLICE_MODEL)
     call getm_error('init_model()', &
-         'SLICE_MODEL does not work with PARALLEL - for now')
+         'SLICE_MODEL does not work with GETM_PARALLEL - for now')
 #endif
 
    STDERR LINE

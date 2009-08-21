@@ -1,4 +1,4 @@
-!$Id: part_domain.F90,v 1.2 2007-06-07 10:25:19 kbk Exp $
+!$Id: part_domain.F90,v 1.3 2009-08-21 08:56:34 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +12,7 @@
    use domain, only: iextr,jextr
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: ioff,joff
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    use halo_mpi, only: part_domain_mpi
 #endif
    IMPLICIT NONE
@@ -39,7 +39,7 @@
    write(debug,*) 'part_domain'
 #endif
 
-#ifndef PARALLEL
+#ifndef GETM_PARALLEL
 #ifndef STATIC
    imin=1 ; imax=iextr ; jmin=1 ; jmax=jextr
 #endif

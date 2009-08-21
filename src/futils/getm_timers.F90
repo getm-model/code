@@ -149,7 +149,7 @@
  
    timernames(TIM_INTEGR2D)    = 'integrate_2d other'
 
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    timernames(TIM_MOMENTUMH)   = ' momentum-halo'
 #endif
 
@@ -183,7 +183,7 @@
    timernames(TIM_INTEGR3D)    = 'integrate_3d other'
 
 ! We only really want to display halo-stuff if we compile for parallel:
-#ifdef PARALLEL
+#ifdef GETM_PARALLEL
    timernames(TIM_GOTMH)       = ' gotm-halo'
    timernames(TIM_SEALEVELH)   = ' sealevel-halo'
    timernames(TIM_UVADV3DH)    = ' uv_advect_3d-halo'
