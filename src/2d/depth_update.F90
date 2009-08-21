@@ -1,4 +1,4 @@
-!$Id: depth_update.F90,v 1.10 2009-08-18 10:24:43 bjb Exp $
+!$Id: depth_update.F90,v 1.11 2009-08-21 07:26:26 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -39,7 +39,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
-   REALTYPE                  :: d1,d2,x
+   REALTYPE                  :: d1,x,d2i
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -61,7 +61,7 @@
 #ifdef USE_MASK
          if(au(i,j) .gt. 0) then
 #endif
-         x=max(0.25*(zo(i,j)+zo(i+1,j)+z(i,j)+z(i+1,j)),-HU(i,j)+min_depth)
+         x=max(_QUART_*(zo(i,j)+zo(i+1,j)+z(i,j)+z(i+1,j)),-HU(i,j)+min_depth)
          zu(i,j) = x
          DU(i,j) = x+HU(i,j)
 #ifdef USE_MASK
@@ -76,7 +76,7 @@
 #ifdef USE_MASK
          if(av(i,j) .gt. 0) then
 #endif
-         x = max(0.25*(zo(i,j)+zo(i,j+1)+z(i,j)+z(i,j+1)),-HV(i,j)+min_depth)
+         x = max(_QUART_*(zo(i,j)+zo(i,j+1)+z(i,j)+z(i,j+1)),-HV(i,j)+min_depth)
          zv(i,j) = x
          DV(i,j) = x+HV(i,j)
 #ifdef USE_MASK
@@ -85,16 +85,16 @@
       end do
    end do
 
-   d1 = 2*min_depth
-   d2 = crit_depth-2*min_depth
+   d1  = 2*min_depth
+   d2i = _ONE_/(crit_depth-2*min_depth)
    where (az .gt. 0)
-      dry_z = max(_ZERO_,min(_ONE_,(D-d1/2.)/d2))
+      dry_z = max(_ZERO_,min(_ONE_,(D-_HALF_*d1)*d2i))
    end where
    where (au .gt. 0)
-      dry_u = max(_ZERO_,min(_ONE_,(DU-d1)/d2))
+      dry_u = max(_ZERO_,min(_ONE_,(DU-d1)*d2i))
    end where
    where (av .gt. 0)
-      dry_v = max(_ZERO_,min(_ONE_,(DV-d1)/d2))
+      dry_v = max(_ZERO_,min(_ONE_,(DV-d1)*d2i))
    end where
 
 #ifdef SLICE_MODEL

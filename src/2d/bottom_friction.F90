@@ -1,4 +1,4 @@
-!$Id: bottom_friction.F90,v 1.8 2009-08-18 10:24:43 bjb Exp $
+!$Id: bottom_friction.F90,v 1.9 2009-08-21 07:26:26 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -62,7 +62,7 @@
    write(debug,*) 'bottom_friction() # ',Ncall
 #endif
 
-CALL tic(TIM_BOTTFRICT)
+   CALL tic(TIM_BOTTFRICT)
 
 #ifdef DEBUG
    if(Ncall .eq. 1) then
@@ -109,10 +109,10 @@ CALL tic(TIM_BOTTFRICT)
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .gt. 0) then
-            vloc(i,j)=0.25* ( V(i  ,j  )/DV(i  ,j  )   &
-                             +V(i+1,j  )/DV(i+1,j  )   &
-                             +V(i  ,j-1)/DV(i  ,j-1)   &
-                             +V(i+1,j-1)/DV(i+1,j-1) )
+            vloc(i,j)=_QUART_* ( V(i  ,j  )/DV(i  ,j  )   &
+                                +V(i+1,j  )/DV(i+1,j  )   &
+                                +V(i  ,j-1)/DV(i  ,j-1)   &
+                                +V(i+1,j-1)/DV(i+1,j-1) )
          else
             vloc(i,j) = _ZERO_
          end if
@@ -125,12 +125,12 @@ CALL tic(TIM_BOTTFRICT)
    where (au .gt. 0)
       uloc=U/DU
       HH=max(min_depth,DU)
-      ruu=(kappa/log((zub+0.5*HH)/zub))**2
+      ruu=(kappa/log((zub+_HALF_*HH)/zub))**2
    end where
 #else
    uloc=U/DU
    HH=max(min_depth,DU)
-   ruu=(zub+0.5*HH)/zub
+   ruu=(zub+_HALF_*HH)/zub
 
    do j=jmin,jmax
       do i=imin,imax
@@ -150,8 +150,8 @@ CALL tic(TIM_BOTTFRICT)
    if (runtype .eq. 1) then
       where (au .gt. 0)
          fricvel=sqrt(ruu*(uloc**2+vloc**2))
-         zub=min(HH,zub0+0.1*avmmol/max(avmmol,fricvel))
-         ruu=(zub+0.5*HH)/zub
+         zub=min(HH,zub0+_TENTH_*avmmol/max(avmmol,fricvel))
+         ruu=(zub+_HALF_*HH)/zub
          ruu=(kappa/log(ruu))**2
       end where
    end if
@@ -164,10 +164,10 @@ CALL tic(TIM_BOTTFRICT)
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .gt. 0) then
-            uloc(i,j)=0.25* ( U(i  ,j  )/DU(i  ,j  )   &
-                             +U(i-1,j  )/DU(i-1,j  )   &
-                             +U(i  ,j+1)/DU(i  ,j+1)   &
-                             +U(i-1,j+1)/DU(i-1,j+1) )
+            uloc(i,j)=_QUART_* ( U(i  ,j  )/DU(i  ,j  )   &
+                                +U(i-1,j  )/DU(i-1,j  )   &
+                                +U(i  ,j+1)/DU(i  ,j+1)   &
+                                +U(i-1,j+1)/DU(i-1,j+1) )
          else
             uloc(i,j) = _ZERO_
          end if
@@ -178,12 +178,12 @@ CALL tic(TIM_BOTTFRICT)
    where (av .gt. 0)
       vloc=V/DV
       HH=max(min_depth,DV)
-      rvv=(kappa/log((zvb+0.5*HH)/zvb))**2
+      rvv=(kappa/log((zvb+_HALF_*HH)/zvb))**2
    end where
 #else
    vloc=V/DV
    HH=max(min_depth,DV)
-   rvv=(zvb+0.5*HH)/zvb
+   rvv=(zvb+_HALF_*HH)/zvb
 
    do j=jmin,jmax
       do i=imin,imax
@@ -204,8 +204,8 @@ CALL tic(TIM_BOTTFRICT)
    if (runtype .eq. 1) then
       where (av .gt. 0)
          fricvel=sqrt(rvv*(uloc**2+vloc**2))
-         zvb=min(HH,zvb0+0.1*avmmol/max(avmmol,fricvel))
-         rvv=(zvb+0.5*HH)/zvb
+         zvb=min(HH,zvb0+_TENTH_*avmmol/max(avmmol,fricvel))
+         rvv=(zvb+_HALF_*HH)/zvb
          rvv=(kappa/log(rvv))**2
       end where
    end if

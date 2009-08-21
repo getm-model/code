@@ -109,12 +109,18 @@
 #define REALTYPE REAL
 #define REAL_SIZE 4
 #define _ZERO_ 0.0
+#define _TENTH_ 0.1
+#define _QUART_ 0.25
+#define _HALF_ 0.5
 #define _ONE_  1.0
 #else
 #define REALTYPE DOUBLE PRECISION
 #define MPI_REALTYPE MPI_DOUBLE_PRECISION
 #define REAL_SIZE 8
 #define _ZERO_ 0.0d0
+#define _TENTH_ 0.1d0
+#define _QUART_ 0.25d0
+#define _HALF_ 0.5d0
 #define _ONE_  1.0d0
 #endif
 
