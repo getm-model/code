@@ -1,4 +1,4 @@
-!$Id: create_restart_ncdf.F90,v 1.4 2009-07-18 12:36:01 kb Exp $
+!$Id: create_restart_ncdf.F90,v 1.5 2009-08-21 10:39:00 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -39,6 +39,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: create_restart_ncdf.F90,v $
+!  Revision 1.5  2009-08-21 10:39:00  kb
+!  -DINCLUDE_HALOS will include halo-zones when writing/reading NetCDF hotstart files
+!
 !  Revision 1.4  2009-07-18 12:36:01  kb
 !  fixed SPM hot-start bug - Hofmeister
 !
@@ -64,8 +67,13 @@
    if (status .NE. NF90_NOERR) go to 10
 
 !  length of netCDF dimensions
+#ifdef INCLUDE_HALOS
+   xlen = (imax+HALO)-(imin-HALO)+1
+   ylen = (jmax+HALO)-(jmin-HALO)+1
+#else
    xlen = imax-imin+1
    ylen = jmax-jmin+1
+#endif
    zlen = kmax+1
 
    status = nf90_def_dim(ncid, "xax", xlen, xdim_id)

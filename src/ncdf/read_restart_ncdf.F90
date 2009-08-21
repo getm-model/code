@@ -1,4 +1,4 @@
-!$Id: read_restart_ncdf.F90,v 1.8 2009-07-18 12:36:01 kb Exp $
+!$Id: read_restart_ncdf.F90,v 1.9 2009-08-21 10:39:00 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -56,6 +56,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: read_restart_ncdf.F90,v $
+!  Revision 1.9  2009-08-21 10:39:00  kb
+!  -DINCLUDE_HALOS will include halo-zones when writing/reading NetCDF hotstart files
+!
 !  Revision 1.8  2009-07-18 12:36:01  kb
 !  fixed SPM hot-start bug - Hofmeister
 !
@@ -101,19 +104,39 @@
 
 !  allows reading from subdomain or topo.nc sized files
 !  i.e. ncmerged files cut to the same size as topo.nc
+#ifdef INCLUDE_HALOS
+   if (xlen .eq. ((imax+HALO)-(imin-HALO)+1) .and.  &
+       ylen .eq. ((jmax+HALO)-(jmin-HALO)+1) ) then
+      LEVEL3 'hotstart file(s) include HALO-zones'
+      il = 1 ; ih = xlen - 2*HALO
+      jl = 1 ; jh = ylen - 2*HALO
+      start(1) = il + HALO
+      start(2) = jl + HALO
+#else
    if (xlen .eq. (imax-imin+1) .and. ylen .eq. (jmax-jmin+1) ) then
+      LEVEL3 'hotstart file(s) do NOT include HALO-zones'
       il = 1 ; ih = xlen
       jl = 1 ; jh = ylen
+      start(1) = il
+      start(2) = jl
+#endif
       iloc = 1 ; jloc = 1
    else
+      if ( xlen .ne. iextr .or. ylen .ne. jextr ) then
+         FATAL 'x- or y-dimemsions of hotstart different from iextr or jextr'
+         stop 'read_restart_ncdf()'
+      end if
+      LEVEL3 'hotstart file has topo.nc size'
       il = max(imin+ioff,1); ih = min(imax+ioff,iextr)
       jl = max(jmin+joff,1); jh = min(jmax+joff,jextr)
+      start(1) = il
+      start(2) = jl
       iloc = max(imin-ioff,1); jloc = max(jmin-joff,1)
    end if
    ilen = ih-il+1
    jlen = jh-jl+1
-   start(1) = il ; edges(1) = ih-il+1
-   start(2) = jl ; edges(2) = jh-jl+1
+   edges(1) = ih-il+1
+   edges(2) = jh-jl+1
 #ifndef NO_3D
    start(3) = 1  ; edges(3) = kmax+1
 #endif
