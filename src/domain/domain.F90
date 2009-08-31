@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.32 2009-05-15 06:59:10 bjb Exp $
+!$Id: domain.F90,v 1.33 2009-08-31 10:37:03 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -95,6 +95,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.33  2009-08-31 10:37:03  bjb
+!  Consistent treatment of topo in halo zones
+!
 !  Revision 1.32  2009-05-15 06:59:10  bjb
 !  typo fix
 !
@@ -473,7 +476,7 @@
          end if
       end do
    end do
-   call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG)
+   call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
    call wait_halo(H_TAG)
    au = mask
 
@@ -493,7 +496,7 @@
          end if
       end do
    end do
-   call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG)
+   call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
    call wait_halo(H_TAG)
    av = mask
 

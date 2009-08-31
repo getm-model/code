@@ -1,4 +1,4 @@
-!$Id: mirror_bdy_2d.F90,v 1.4 2007-05-14 08:12:43 kbk Exp $
+!$Id: mirror_bdy_2d.F90,v 1.5 2009-08-31 10:37:03 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,6 +30,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: mirror_bdy_2d.F90,v $
+!  Revision 1.5  2009-08-31 10:37:03  bjb
+!  Consistent treatment of topo in halo zones
+!
 !  Revision 1.4  2007-05-14 08:12:43  kbk
 !  fixed loops
 !
@@ -57,71 +60,55 @@
       case (U_TAG)
          do n = 1,NNB
             j = nj(n)
-            f(nfi(n)-2,j) = f(nfi(n)-2,j-1)
-            f(nfi(n)-1,j) = f(nfi(n)-1,j-1)
-            do i = nfi(n),nli(n)
+            do i = nfi(n)-HALO,nli(n)+HALO
                if (au(i,j) .eq. 3) f(i,j) = f(i,j-1)
-            end do
-            f(nli(n)+1,j) = f(nli(n)+1,j-1)
-            f(nli(n)+2,j) = f(nli(n)+2,j-1)
+             end do
          end do
          do n = 1,NSB
             j = sj(n)
-            f(sfi(n)-2,j) = f(sfi(n)-2,j+1)
-            f(sfi(n)-1,j) = f(sfi(n)-1,j+1)
-            do i = sfi(n),sli(n)
+            do i = sfi(n)-HALO,sli(n)+HALO
                if (au(i,j) .eq. 3) f(i,j) = f(i,j+1)
             end do
-            f(sli(n)+1,j) = f(sli(n)+1,j+1)
-            f(sli(n)+2,j) = f(sli(n)+2,j+1)
          end do
       case (V_TAG)
          do n = 1,NWB
             i = wi(n)
-            f(i,wfj(n)-2) = f(i+1,wfj(n)-2)
-            f(i,wfj(n)-1) = f(i+1,wfj(n)-1)
-            do j = wfj(n),wlj(n)
+            do j = wfj(n)-HALO,wlj(n)+HALO
                if (av(i,j) .eq. 3) f(i,j) = f(i+1,j)
             end do
-            f(i,wlj(n)+1) = f(i+1,wlj(n)+1)
-            f(i,wlj(n)+2) = f(i+1,wlj(n)+2)
          end do
          do n = 1,NEB
             i = ei(n)
-            f(i,efj(n)-2) = f(i-1,efj(n)-2)
-            f(i,efj(n)-1) = f(i-1,efj(n)-1)
-            do j = efj(n),elj(n)
+            do j = efj(n)-HALO,elj(n)+HALO
                if (av(i,j) .eq. 3) f(i,j) = f(i-1,j)
             end do
-            f(i,elj(n)+1) = f(i-1,elj(n)+1)
-            f(i,elj(n)+2) = f(i-1,elj(n)+2)
          end do
       case default
          do n = 1,NWB
             i = wi(n)
-            do j = wfj(n),wlj(n)
-               f(i-1,j) = f(i,j)
+            do j = wfj(n)-HALO,wlj(n)+HALO
+               if (az(i,j) .gt. 1) f(i-1,j) = f(i,j)
             end do
          end do
 
          do n = 1,NNB
             j = nj(n)
-            do i = nfi(n),nli(n)
-               f(i,j+1) = f(i,j)
+            do i = nfi(n)-HALO,nli(n)+HALO
+               if (az(i,j) .gt. 1) f(i,j+1) = f(i,j)
             end do
          end do
 
          do n = 1,NEB
             i = ei(n)
-            do j = efj(n),elj(n)
-               f(i+1,j) = f(i,j)
+            do j = efj(n)-HALO,elj(n)+HALO
+               if (az(i,j) .gt. 1) f(i+1,j) = f(i,j)
             end do
          end do
 
          do n = 1,NSB
             j = sj(n)
-            do i = sfi(n),sli(n)
-               f(i,j-1) = f(i,j)
+            do i = sfi(n)-HALO,sli(n)+HALO
+               if (az(i,j) .gt. 1) f(i,j-1) = f(i,j)
             end do
          end do
    end select
