@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.45 2009-09-04 07:58:19 bjb Exp $
+!$Id: m3d.F90,v 1.46 2009-09-04 11:50:33 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,7 +43,7 @@
    use variables_3d
    use advection_3d, only: init_advection_3d
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
-   use bdy_3d, only: bdy3d_rlxucut, bdy3d_rlxmax, bdy3d_rlxmin
+   use bdy_3d, only: bdy3d_tmrlx, bdy3d_tmrlx_ucut, bdy3d_tmrlx_max, bdy3d_tmrlx_min
 !  Necessary to use halo_zones because update_3d_halos() have been moved out 
 !  temperature.F90 and salinity.F90 - should be changed at a later stage
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
@@ -119,7 +119,8 @@
    NAMELIST /m3d/ &
              M,cnpar,cord_relax,                        &
              bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,     &
-	     bdy3d_rlxucut,bdy3d_rlxmax,bdy3d_rlxmin,   &
+	     bdy3d_tmrlx,bdy3d_tmrlx_ucut,              &
+             bdy3d_tmrlx_max,bdy3d_tmrlx_min,           &
              vel_hor_adv,vel_ver_adv,vel_adv_split,     &
              calc_temp,calc_salt,                       &
              avmback,avhback,ip_method,ip_ramp,         &
@@ -219,20 +220,20 @@
    end select
 
 !  Sanity checks for bdy 3d
-   if (bdy3d) then
-      LEVEL2 'bdy3d=.true.'
-      LEVEL2 'bdy3d_rlxmax=   ',bdy3d_rlxmax
-      LEVEL2 'bdy3d_rlxmin=   ',bdy3d_rlxmin
-      LEVEL2 'bdy3d_rlxucut=  ',bdy3d_rlxucut
-      if (bdy3d_rlxmin<_ZERO_ .or. bdy3d_rlxmin>_ONE_)       &
-           call getm_error("init_3d()",                      &
-           "bdy3d_rlxmin is out of valid range [0:1]")
-      if (bdy3d_rlxmax<bdy3d_rlxmin .or. bdy3d_rlxmin>_ONE_) &
-           call getm_error("init_3d()",                      &
-           "bdy3d_rlxmax is out of valid range [bdy3d_rlxmax:1]")
-      if (bdy3d_rlxucut<_ZERO_)                              &
-           call getm_error("init_3d()",                      &
-           "bdy3d_rlxmax is out of valid range [0:inf[")
+   if (bdy3d .and. bdy3d_tmrlx) then
+      LEVEL2 'bdy3d_tmrlx=.true.'
+      LEVEL2 'bdy3d_tmrlx_max=   ',bdy3d_tmrlx_max
+      LEVEL2 'bdy3d_tmrlx_min=   ',bdy3d_tmrlx_min
+      LEVEL2 'bdy3d_tmrlx_ucut=  ',bdy3d_tmrlx_ucut
+      if (bdy3d_tmrlx_min<_ZERO_ .or. bdy3d_tmrlx_min>_ONE_)          &
+           call getm_error("init_3d()",                               &
+           "bdy3d_tmrlx_min is out of valid range [0:1]")
+      if (bdy3d_tmrlx_max<bdy3d_tmrlx_min .or. bdy3d_tmrlx_min>_ONE_) &
+           call getm_error("init_3d()",                               &
+           "bdy3d_tmrlx_max is out of valid range [bdy3d_tmrlx_max:1]")
+      if (bdy3d_tmrlx_ucut<_ZERO_)                                    &
+           call getm_error("init_3d()",                               &
+           "bdy3d_tmrlx_max is out of valid range [0:inf[")
    end if
 
    LEVEL2 'ip_ramp=',ip_ramp
