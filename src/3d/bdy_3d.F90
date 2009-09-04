@@ -1,4 +1,4 @@
-!$Id: bdy_3d.F90,v 1.12 2007-06-07 10:25:19 kbk Exp $
+!$Id: bdy_3d.F90,v 1.13 2009-09-04 07:58:19 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,6 +26,11 @@
 ! !PUBLIC DATA MEMBERS:
    public init_bdy_3d, do_bdy_3d
    REALTYPE, public, allocatable       :: S_bdy(:,:),T_bdy(:,:)
+   REALTYPE, public                    :: bdy3d_rlxucut=_ONE_/50
+   REALTYPE, public                    :: bdy3d_rlxmax=_ONE_/4
+   REALTYPE, public                    :: bdy3d_rlxmin=_ZERO_
+   REALTYPE,         allocatable       :: bdyvertS(:), bdyvertT(:)
+   REALTYPE,         allocatable       :: rlxcoef(:)
 !
 ! !PRIVATE DATA MEMBERS:
 !
@@ -79,6 +84,16 @@
    allocate(T_bdy(0:kmax,nsbv),stat=rc)
    if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (T_bdy)'
 
+   allocate(bdyvertS(0:kmax),stat=rc)
+   if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (bdyvertS)'
+
+   allocate(bdyvertT(0:kmax),stat=rc)
+   if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (bdyvertT)'
+
+   allocate(rlxcoef(0:kmax),stat=rc)
+   if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (rlxcoef)'
+
+
 #ifdef DEBUG
    write(debug,*) 'Leaving init_bdy_3d()'
    write(debug,*)
@@ -102,6 +117,14 @@
 ! copied to the boundary points and relaxed to the near boundary points
 ! by means of the flow relaxation scheme by \cite{MARTINSENea87}.
 !
+! As an extention to the flow relaxation scheme, it is possible 
+! to relax the boundary point values to the specified boundary 
+! condition in time, thus giving more realistic situations 
+! especially for outgoing flow conditions. This nudging is implemented
+! to depend on the local (3D) current velocity perpendicular to 
+! the boundary. For strong outflow, the boundary condition is turned 
+! off, while for inflows it is given a high impact.
+!
 ! !USES:
    IMPLICIT NONE
 !
@@ -114,8 +137,10 @@
 ! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k,l,n,ii,jj
+   integer                   :: i,j,k,l,n,ii,jj,kk
    REALTYPE                  :: sp(1:4),rat
+   REALTYPE                  :: bdy3d_rlxumin
+   REALTYPE                  :: wsum
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -155,6 +180,9 @@
    sp(2)=0.5625
    sp(3)=0.25
    sp(4)=0.0625
+! Hardcoding of lower limit of velocity cut-off for temporal relaxation.
+! Linear variation between bdy3d_rlxumin and bdy3d_rlxucut.
+   bdy3d_rlxumin = -0.25*bdy3d_rlxucut
 
    l = 0
    k = 0
@@ -163,10 +191,47 @@
       k = bdy_index(l)
       i = wi(n)
       do j=wfj(n),wlj(n)
+         if (au(i,j).gt.0) then
+            ! Local temporal relaxation coeficient depends on 
+            ! local current just *inside* domain:
+            do kk=1,kmax
+               if (uu(i,j,kk).ge.bdy3d_rlxucut) then
+                  rlxcoef(kk) = bdy3d_rlxmax
+               else if (uu(i,j,kk).le.bdy3d_rlxumin) then
+                  rlxcoef(kk) = bdy3d_rlxmin
+               else
+                  rlxcoef(kk) = (bdy3d_rlxmax-bdy3d_rlxmin)*(uu(i,j,kk)-bdy3d_rlxumin) &
+                       /(bdy3d_rlxucut-bdy3d_rlxumin)+ bdy3d_rlxmin
+               end if
+            end do
+         else
+            rlxcoef(:)=bdy3d_rlxmax
+         end if
+         ! Temporal relaxation: Weight inner (actual) solution near boundary 
+         ! with boundary condition (outer solution.)
+         wsum= MIN(az(i-1+2,j),1)*sp(2)+MIN(az(i-1+3,j),1)*sp(3)+MIN(az(i-1+4,j),1)*sp(4)
+         if (wsum>_ZERO_) then
+            ! Get (weighted avr of) inner near-bdy solution (sponge) cells:
+            bdyvertS(:) = (_ONE_/wsum)*( MIN(az(i-1+2,j),1) * sp(2) * S(i-1+2,j,:) &
+                                        +MIN(az(i-1+3,j),1) * sp(3) * S(i-1+3,j,:) &
+                                        +MIN(az(i-1+4,j),1) * sp(4) * S(i-1+4,j,:) )
+            bdyvertT(:) = (_ONE_/wsum)*( MIN(az(i-1+2,j),1) * sp(2) * T(i-1+2,j,:) &
+                                        +MIN(az(i-1+3,j),1) * sp(3) * T(i-1+3,j,:) &
+                                        +MIN(az(i-1+4,j),1) * sp(4) * T(i-1+4,j,:) )
+            ! Weight inner and outer (bc) solutions for use 
+            ! in spatial relaxation/sponge
+            bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:) + rlxcoef(:)*S_bdy(:,k)
+            bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:) + rlxcoef(:)*T_bdy(:,k)
+         else
+            ! No near-bdy points. Just clamp bdy temporally:
+            bdyvertS(:) = S_bdy(:,k)
+            bdyvertT(:) = T_bdy(:,k)
+         end if
          do ii=1,4
+            ! Spatial relaxation / sponge:
             if (az(i-1+ii,j).gt.0) then
-               S(i-1+ii,j,:) = sp(ii)*S_bdy(:,k)+(1.-sp(ii))*S(i-1+ii,j,:)
-               T(i-1+ii,j,:) = sp(ii)*T_bdy(:,k)+(1.-sp(ii))*T(i-1+ii,j,:)
+               S(i-1+ii,j,:) = sp(ii)*bdyvertS(:)+(_ONE_-sp(ii))*S(i-1+ii,j,:)
+               T(i-1+ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i-1+ii,j,:)
             end if
 #ifdef GETM_BIO
             if ( allocated(cc3d) ) then
@@ -183,10 +248,38 @@
       k = bdy_index(l)
       j = nj(n)
       do i = nfi(n),nli(n)
+         if (av(i,j-1).gt.0) then
+            do kk=1,kmax
+               if (vv(i,j-1,kk).le.-bdy3d_rlxucut) then
+                  rlxcoef(kk) = bdy3d_rlxmax
+               else if (vv(i,j-1,kk).ge.-bdy3d_rlxumin) then
+                  rlxcoef(kk) = bdy3d_rlxmin
+               else
+                  rlxcoef(kk) = -(bdy3d_rlxmax-bdy3d_rlxmin)*(vv(i,j-1,kk)+bdy3d_rlxumin) &
+                       /(bdy3d_rlxucut-bdy3d_rlxumin)+ bdy3d_rlxmin
+               end if
+            end do
+         else
+            rlxcoef(:)=bdy3d_rlxmax
+         end if
+         wsum= MIN(az(i,j+1-2),1)*sp(2)+MIN(az(i,j+1-3),1)*sp(3)+MIN(az(i,j+1-4),1)*sp(4)
+         if (wsum>_ZERO_) then
+            bdyvertS(:) = (_ONE_/wsum)*( MIN(az(i,j+1-2),1) * sp(2) * S(i,j+1-2,:) &
+                                        +MIN(az(i,j+1-3),1) * sp(3) * S(i,j+1-3,:) &
+                                        +MIN(az(i,j+1-4),1) * sp(4) * S(i,j+1-4,:) )
+            bdyvertT(:) = (_ONE_/wsum)*( MIN(az(i,j+1-2),1) * sp(2) * T(i,j+1-2,:) &
+                                        +MIN(az(i,j+1-3),1) * sp(3) * T(i,j+1-3,:) &
+                                        +MIN(az(i,j+1-4),1) * sp(4) * T(i,j+1-4,:) )
+            bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:) + rlxcoef(:)*S_bdy(:,k)
+            bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:) + rlxcoef(:)*T_bdy(:,k)
+         else
+            bdyvertS(:) = S_bdy(:,k)
+            bdyvertT(:) = T_bdy(:,k)
+         end if
          do jj=1,4
             if (az(i,j+1-jj).gt.0) then
-               S(i,j+1-jj,:) = sp(jj)*S_bdy(:,k)+(1.-sp(jj))*S(i,j+1-jj,:)
-               T(i,j+1-jj,:) = sp(jj)*T_bdy(:,k)+(1.-sp(jj))*T(i,j+1-jj,:)
+               S(i,j+1-jj,:) = sp(jj)*bdyvertS(:)+(_ONE_-sp(jj))*S(i,j+1-jj,:)
+               T(i,j+1-jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j+1-jj,:)
             end if
 #ifdef GETM_BIO
             if ( allocated(cc3d) ) then
@@ -203,10 +296,38 @@
       k = bdy_index(l)
       i = ei(n)
       do j=efj(n),elj(n)
+         if (au(i-1,j).gt.0) then
+            do kk=1,kmax
+               if (uu(i-1,j,kk).le.-bdy3d_rlxucut) then
+                  rlxcoef(kk) = bdy3d_rlxmax
+               else if (uu(i-1,j,kk).ge.-bdy3d_rlxumin) then
+                  rlxcoef(kk) = bdy3d_rlxmin
+               else
+                  rlxcoef(kk) = -(bdy3d_rlxmax-bdy3d_rlxmin)*(uu(i-1,j,kk)+bdy3d_rlxumin) &
+                       /(bdy3d_rlxucut-bdy3d_rlxumin)+ bdy3d_rlxmin
+               end if
+            end do
+         else
+            rlxcoef(:)=bdy3d_rlxmax
+         end if
+         wsum= MIN(az(i+1-2,j),1)*sp(2)+MIN(az(i+1-3,j),1)*sp(3)+MIN(az(i+1-4,j),1)*sp(4)
+         if (wsum>_ZERO_) then
+            bdyvertS(:) = (_ONE_/wsum)*( MIN(az(i+1-2,j),1) * sp(2) * S(i+1-2,j,:) &
+                                        +MIN(az(i+1-3,j),1) * sp(3) * S(i+1-3,j,:) &
+                                        +MIN(az(i+1-4,j),1) * sp(4) * S(i+1-4,j,:) )
+            bdyvertT(:) = (_ONE_/wsum)*( MIN(az(i+1-2,j),1) * sp(2) * T(i+1-2,j,:) &
+                                        +MIN(az(i+1-3,j),1) * sp(3) * T(i+1-3,j,:) &
+                                        +MIN(az(i+1-4,j),1) * sp(4) * T(i+1-4,j,:) )
+            bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:) + rlxcoef(:)*S_bdy(:,k)
+            bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:) + rlxcoef(:)*T_bdy(:,k)
+         else
+            bdyvertS(:) = S_bdy(:,k)
+            bdyvertT(:) = T_bdy(:,k)
+         end if
          do ii=1,4
             if (az(i+1-ii,j).gt.0) then
-               S(i+1-ii,j,:) = sp(ii)*S_bdy(:,k)+(1.-sp(ii))*S(i+1-ii,j,:)
-               T(i+1-ii,j,:) = sp(ii)*T_bdy(:,k)+(1.-sp(ii))*T(i+1-ii,j,:)
+               S(i+1-ii,j,:) = sp(ii)*bdyvertS(:)+(_ONE_-sp(ii))*S(i+1-ii,j,:)
+               T(i+1-ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i+1-ii,j,:)
             end if
 #ifdef GETM_BIO
             if ( allocated(cc3d) ) then
@@ -223,10 +344,38 @@
       k = bdy_index(l)
       j = sj(n)
       do i = sfi(n),sli(n)
+         if (av(i,j).gt.0) then
+            do kk=1,kmax
+               if (vv(i,j,kk).ge.bdy3d_rlxucut) then
+                  rlxcoef(kk) = bdy3d_rlxmax
+               else if (vv(i,j,kk).le.bdy3d_rlxumin) then
+                  rlxcoef(kk) = bdy3d_rlxmin
+               else
+                  rlxcoef(kk) = (bdy3d_rlxmax-bdy3d_rlxmin)*(vv(i,j,kk)-bdy3d_rlxumin) &
+                       /(bdy3d_rlxucut-bdy3d_rlxumin)+ bdy3d_rlxmin
+               end if
+            end do
+         else
+            rlxcoef(:)=bdy3d_rlxmax
+         end if
+         wsum= MIN(az(i,j-1+2),1)*sp(2)+MIN(az(i,j-1+3),1)*sp(3)+MIN(az(i,j-1+4),1)*sp(4)
+         if (wsum>_ZERO_) then
+            bdyvertS(:) = (_ONE_/wsum)*( MIN(az(i,j-1+2),1) * sp(2) * S(i,j-1+2,:) &
+                                        +MIN(az(i,j-1+3),1) * sp(3) * S(i,j-1+3,:) &
+                                        +MIN(az(i,j-1+4),1) * sp(4) * S(i,j-1+4,:) )
+            bdyvertT(:) = (_ONE_/wsum)*( MIN(az(i,j-1+2),1) * sp(2) * T(i,j-1+2,:) &
+                                        +MIN(az(i,j-1+3),1) * sp(3) * T(i,j-1+3,:) &
+                                        +MIN(az(i,j-1+4),1) * sp(4) * T(i,j-1+4,:) )
+            bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:) + rlxcoef(:)*S_bdy(:,k)
+            bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:) + rlxcoef(:)*T_bdy(:,k)
+         else
+            bdyvertS(:) = S_bdy(:,k)
+            bdyvertT(:) = T_bdy(:,k)
+         end if
          do jj=1,4
             if (az(i,j-1+jj).gt.0) then
-               S(i,j-1+jj,:) = sp(jj)*S_bdy(:,k)+(1.-sp(jj))*S(i,j-1+jj,:)
-               T(i,j-1+jj,:) = sp(jj)*T_bdy(:,k)+(1.-sp(jj))*T(i,j-1+jj,:)
+               S(i,j-1+jj,:) = sp(jj)*bdyvertS(:)+(_ONE_-sp(jj))*S(i,j-1+jj,:)
+               T(i,j-1+jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j-1+jj,:)
             end if
 #ifdef GETM_BIO
             if ( allocated(cc3d) ) then
