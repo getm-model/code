@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<!-- $Id: getm-1.7.schema,v 1.2 2009-09-15 11:22:27 kb Exp $ -->
+<!-- $Id: getm-1.7.schema,v 1.3 2009-09-17 13:08:29 kb Exp $ -->
 <element name="scenario" version="getm-1.7" namelistextension=".inp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Programmeren/GOTM-CVS/gotm/gui.py/core/scenario-1.0.xsd">
 	<element name="getm">
 		<element name="param" label="general model setup">
@@ -355,6 +355,7 @@
 		<element name="temp" label="variables related to temperature">
 			<element name="temp_method" type="int" label="temperature method">
 				<options>
+					<option value="0" label="read from hotstart file"/>
 					<option value="1" label="constant"/>
 					<option value="2" label="homogeneous stratification"/>
 					<option value="3" label="from 3D field"/>
@@ -466,6 +467,7 @@
 		<element name="salt" label="variables related to salinity">
 			<element name="salt_method" type="int" label="salinity method">
 				<options>
+					<option value="0" label="read from hotstart file"/>
 					<option value="1" label="constant"/>
 					<option value="2" label="homogeneous stratification"/>
 					<option value="3" label="from 3D field"/>
