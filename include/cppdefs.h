@@ -113,7 +113,7 @@
 #define _QUART_ 0.25
 #define _HALF_ 0.5
 #define _ONE_  1.0
-#define _TWO_  1.0
+#define _TWO_  2.0
 #else
 #define REALTYPE DOUBLE PRECISION
 #define MPI_REALTYPE MPI_DOUBLE_PRECISION
