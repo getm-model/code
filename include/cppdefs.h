@@ -113,6 +113,7 @@
 #define _QUART_ 0.25
 #define _HALF_ 0.5
 #define _ONE_  1.0
+#define _TWO_  1.0
 #else
 #define REALTYPE DOUBLE PRECISION
 #define MPI_REALTYPE MPI_DOUBLE_PRECISION
@@ -122,6 +123,7 @@
 #define _QUART_ 0.25d0
 #define _HALF_ 0.5d0
 #define _ONE_  1.0d0
+#define _TWO_  2.0d0
 #endif
 
 ! Rare use of long integers (e.g. timers):
