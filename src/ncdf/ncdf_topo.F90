@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.16 2009-08-31 10:37:04 bjb Exp $
+!$Id: ncdf_topo.F90,v 1.17 2009-09-23 10:04:40 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -90,8 +90,8 @@
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
-!  Revision 1.16  2009-08-31 10:37:04  bjb
-!  Consistent treatment of topo in halo zones
+!  Revision 1.17  2009-09-23 10:04:40  kb
+!  reverted to v1.15 - to allow for major update
 !
 !  Revision 1.15  2007-05-26 15:20:37  kbk
 !  print NetCDF version info
@@ -695,7 +695,6 @@ contains
    integer                   :: status
    integer                   :: il,ih,jl,jh,iloc,jloc,i,j
    integer                   :: ilocl,iloch,jlocl,jloch
-   integer                   :: iskipl,jskipl
    integer                   :: indx(1)
 !
 !-------------------------------------------------------------------------
@@ -711,28 +710,13 @@ contains
    end where
 
 !  GLOBAL index range for variable to be read
-#define READ_HALOS
-#ifdef READ_HALOS
-   il    = max(imin-HALO+ioff,1);   ih    = min(imax+HALO+ioff,iextr)
-   jl    = max(jmin-HALO+joff,1);   jh    = min(jmax+HALO+joff,jextr)
-   iskipl= il - (imin-HALO+ioff)
-   jskipl= jl - (jmin-HALO+joff)
-#else
    il    = max(imin+ioff,1);   ih    = min(imax+ioff,iextr)
    jl    = max(jmin+joff,1);   jh    = min(jmax+joff,jextr)
-#endif
 
 !  LOCAL index range for variable to be read
 !  (different from GLOBAL range only for parallel runs)
-#ifdef READ_HALOS
-   ilocl = imin-HALO+iskipl;
-   jlocl = jmin-HALO+jskipl;
-   iloch = ih-il+ilocl;        jloch = jh-jl+jlocl;
-#else
    ilocl = max(imin-ioff,1);   jlocl = max(jmin-joff,1)
    iloch = ih-il+ilocl;        jloch = jh-jl+jlocl;
-#endif
-#undef READ_HALOS
 
 !  Read bathymetry
    call ncdf_read_2d(ncbathy,bathymetry_id,H(ilocl:iloch,jlocl:jloch),il,ih,jl,jh)
@@ -1022,7 +1006,7 @@ contains
 ! Compute x0 as dx/2 before first read value.
 ! x0 should be an X-point (not a T-point).
 !
-   x0 = startval - _HALF_*dx
+   x0 = startval - 0.50*dx
 
 !
 ! Test that the read values are approximately equidistantly spaced.
