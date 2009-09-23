@@ -1,4 +1,4 @@
-!$Id: save_grid_ncdf.F90,v 1.7 2009-09-23 10:11:48 kb Exp $
+!$Id: save_grid_ncdf.F90,v 1.8 2009-09-23 12:40:00 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -48,6 +48,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: save_grid_ncdf.F90,v $
+!  Revision 1.8  2009-09-23 12:40:00  kb
+!  only save latu, latv, convc when have_lonlat=.true. when grid_type=1
+!
 !  Revision 1.7  2009-09-23 10:11:48  kb
 !  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
 !
@@ -316,19 +319,29 @@ STDERR start,edges
 
          case (1)
 
-            status = nf90_inq_varid(ncid,'latu',id)
-            if (status .ne. NF90_NOERR) call netcdf_error(status,         &
-                                          "save_grid_ncdf()","latu -")
-            status = nf90_put_var(ncid,id,latu(IRANGE,JRANGE),start,edges)
-            if (status .ne. NF90_NOERR) call netcdf_error(status,         &
-                                          "save_grid_ncdf()","latu -")
+            if ( have_lonlat ) then
+               status = nf90_inq_varid(ncid,'latu',id)
+               if (status .ne. NF90_NOERR) call netcdf_error(status,         &
+                                             "save_grid_ncdf()","latu -")
+               status = nf90_put_var(ncid,id,latu(IRANGE,JRANGE),start,edges)
+               if (status .ne. NF90_NOERR) call netcdf_error(status,         &
+                                             "save_grid_ncdf()","latu -")
 
-            status = nf90_inq_varid(ncid,'latv',id)
-            if (status .ne. NF90_NOERR) call netcdf_error(status,         &
-                                          "save_grid_ncdf()","latv -")
-            status = nf90_put_var(ncid,id,latv(IRANGE,JRANGE),start,edges)
-            if (status .ne. NF90_NOERR) call netcdf_error(status,         &
-                                          "save_grid_ncdf()","latv -")
+               status = nf90_inq_varid(ncid,'latv',id)
+               if (status .ne. NF90_NOERR) call netcdf_error(status,         &
+                                             "save_grid_ncdf()","latv -")
+               status = nf90_put_var(ncid,id,latv(IRANGE,JRANGE),start,edges)
+               if (status .ne. NF90_NOERR) call netcdf_error(status,         &
+                                             "save_grid_ncdf()","latv -")
+
+               status = nf90_inq_varid(ncid,'convc',id)
+               if (status .ne. NF90_NOERR) call netcdf_error(status,         &
+                                             "save_grid_ncdf()","convc -")
+               status = nf90_put_var(ncid,id,convc(IRANGE,JRANGE),start,edges)
+               if (status .ne. NF90_NOERR) call netcdf_error(status,         &
+                                             "save_grid_ncdf()","convc -")
+
+            end if
 
          case default
 
