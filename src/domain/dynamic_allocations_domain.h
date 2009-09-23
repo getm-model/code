@@ -1,3 +1,10 @@
+!  coordinate axes - in case of grid-type = 1 or 2
+   allocate(xcord(imin-HALO:imax+HALO),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (xcord)'
+
+   allocate(ycord(jmin-HALO:jmax+HALO),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (ycord)'
+
 !  mask
    allocate(az(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_domain: Error allocating memory (az)'
@@ -40,57 +47,70 @@
 !  coriolis terms
    allocate(cor(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (cor)'
+   cor = _ZERO_
 
    allocate(coru(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (coru)'
+   coru = _ZERO_
 
    allocate(corv(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (corv)'
+   corv = _ZERO_
 
 
 !  lat/lon
    allocate(lonc(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (lonc)'
+   lonc = -999.
 
    allocate(latc(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (latc)'
+   latc = -999.
 
-   allocate(lonx(E2DFIELD),stat=rc)
+   allocate(lonx(E2DXFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (lonx)'
+   lonx = -999.
 
-   allocate(latx(E2DFIELD),stat=rc)
+   allocate(latx(E2DXFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (latx)'
+   latx = -999.
 
    allocate(lonu(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (lonu)'
+   lonu = -999.
 
    allocate(latu(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (latu)'
+   latu = -999.
 
    allocate(lonv(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (lonv)'
+   lonv = -999.
 
    allocate(latv(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (latv)'
-
+   latv = -999.
 
 
 !  grid convergence
    allocate(convc(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_domain: Error allocating memory (convc)'
+   convc = -999.
 
-   allocate(convx(E2DFIELD),stat=rc)
+   allocate(convx(E2DXFIELD),stat=rc)
    if (rc /= 0) stop 'init_domain: Error allocating memory (convx)'
+   convx = -999.
 
    allocate(angle(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (angle)'
+   angle = -999.
 
 
 ! grid points
-   allocate(xx(E2DFIELD),stat=rc)
+   allocate(xx(E2DXFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (xx)'
 
-   allocate(yx(E2DFIELD),stat=rc)
+   allocate(yx(E2DXFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (yx)'
 
    allocate(xc(E2DFIELD),stat=rc)
@@ -110,7 +130,6 @@
 
    allocate(yv(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (yv)'
-
 
 
 !  metric parameters
@@ -152,6 +171,7 @@
 
    allocate(arvd1(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_domain: Error allocating memory (arvd1)'
+
 
 !  bottom roughness
    allocate(z0(E2DFIELD),stat=rc)

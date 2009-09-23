@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.33 2009-08-31 10:37:03 bjb Exp $
+!$Id: domain.F90,v 1.34 2009-09-23 10:09:20 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,35 +9,39 @@
    module domain
 !
 ! !DESCRIPTION:
+!  This module provides all variables related to the bathymetry and
+!  model grid. The public subroutine $init\_domain()$ is called once
+!  and upon successful completion the bathymetry has been read and 
+!  optionally modified, the calculation masks have been setup and
+!  all grid related variables have been initialised.\newline
+!  The $domain$-module depends on another module doing the actual
+!  reading of variables from files. This is provided through the
+!  generic subroutine $read_topo_file$. This subroutine takes two
+!  parameters - 1) a fileformat and 2) a filename. Adding a new 
+!  input file format is thus straight forward and can be done
+!  without any changes to $domain$.
+!  Public variables defined in this module is used through out the
+!  code.
 !
 ! !USES:
    use exceptions
-   use topo_interface, only: check_grid,get_grid
    use halo_zones,     only: update_2d_halo,wait_halo
    use halo_zones,     only: H_TAG,U_TAG,V_TAG
-
    IMPLICIT NONE
-!
 !
 ! !PUBLIC DATA MEMBERS:
    integer                             :: bathy_format   = NETCDF
 
    integer                             :: grid_type      = 1
    integer                             :: vert_cord      = 1
-   integer                             :: proj_type      = 1
 !  global index range
    integer                             :: ilg=-1,ihg=-1,jlg=-1,jhg=-1
 !  local index range
    integer                             :: ill=-1,ihl=-1,jll=-1,jhl=-1
 
-   logical                             :: latlon_exists  = .false.
-   logical                             :: xy_exists      = .false.
-   logical                             :: updateXYC      = .true.
-   logical                             :: updateLatLonC  = .true.
-   logical                             :: updateConvC    = .true.
+   logical                             :: have_lonlat    = .true.
+   logical                             :: have_xy        = .true.
 
-   logical                             :: proj_exists    = .true.
-   REALTYPE                            :: proj_lon,proj_lat,proj_rot
    REALTYPE                            :: rearth
 
    REALTYPE                            :: maxdepth       = -1.
@@ -95,6 +99,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.34  2009-09-23 10:09:20  kb
+!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
+!
 !  Revision 1.33  2009-08-31 10:37:03  bjb
 !  Consistent treatment of topo in halo zones
 !
@@ -247,6 +254,7 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
+   REALTYPE, parameter                  :: rearth_default = 6378815.
 
 !EOP
 !-----------------------------------------------------------------------
@@ -256,39 +264,38 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: init_domain - initialise the computational domain
+! !IROUTINE: init_domain() - initialise the computational domain
 
 !
 ! !INTERFACE:
    subroutine init_domain(input_dir)
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
+! !DESCRIPTION:
+!  This routine is responsible for setting up the bathymetry and
+!  the grid information.\newline
+!  The following steps are done in $init\_domain()$:
+!  \begin{itemize}
+!     \item[1:] partition of the calculation domain - important for
+!               parallel runs
+!     \item[2:] reading bathymetry and grid information through the
+!               generic subroutine $read\_topo\_file$
+!     \item[3:] optionally set minimum depth in regions
+!     \item[4:] optionally adjust the depth in regions
+!     \item[5:] optionally adjust the depth in regions
+!     \item[6:] calculate the mask for T-points
+!     \item[7:] optionally adjust the mask in regions
+!     \item[8:] read boundary information and adjust masks
+!     \item[9:] calculate masks for U-, V- and X-points
+!     \item[10:] calculate additional grid-information - like $latu$ and
+!                $latv$
+!     \item[11:] calculate metrics - i.e. all necessary grid-spacings
+!     \item[12:] calculate Coriolis parameter - can be constant or
+!                spatially varying
+!  \end{itemize}
 !
 ! !INPUT/OUTPUT PARAMETERS:
    character(len=*)                    :: input_dir
-!
-! !OUTPUT PARAMETERS:
-!
-! !DESCRIPTION:
-!  Initialize the calculation domain - that is obtain information of the
-!  extent of the domain - imin,imax,jmin and jmax.
-!  This subroutine operates in two principally different ways.
-!  In the first case it has been compiled with \#define STATIC which means that
-!  most arrays are statically allocated. In this case the information of
-!  the extenstion of the domain is obtained from a file called dimensions.h,
-!  where imin,imax,jmin and jmax are specified as integer parameters.
-!  If STATIC has not been defined during compilation all arrays are allocatable.
-!  In this case information of the extension of the domain is obtained from
-!  the bathymetry file. After imin,imax,jmin and jmax are known arrays are
-!  allocated.
-!  Next step is to read in the batymetry. Then location of boundaries are read.
-!  Hereafter calculation masks are setup - note that the masks are explicitely
-!  set to 0 in the halo zones.
-!  Finally the halo zones are filled. In the case of only one process the
-!  information is simply copied where as in a parallel run the information is
-!  communicated from the neighboring processes - this is all done in
-!  update\_2d\_halo().
 !
 ! !REVISION HISTORY:
 !
@@ -331,8 +338,22 @@
 !  Read domain specific things from the namelist.
    read(NAMLST,domain)
 
+#ifndef STATIC
+   kmax=kdum
+#endif
+!  prepare parallel run
+   call part_domain()
+   il=imin ; ih=imax ; jl=jmin ; jh=jmax
+#ifndef STATIC
+#include "dynamic_allocations_domain.h"
+#endif
+
+   H = -10.
+   HU = -10.
+   HV = -10.
+
 !  check grid and dimensions
-   call check_grid(bathymetry,bathy_format,iextr,jextr)
+   call read_topo_file(bathy_format,bathymetry)
 
    select case (vert_cord)
       case(1)
@@ -353,54 +374,6 @@
          call getm_error("init_domain()", &
                          "A non valid vertical coordinate system has been chosen");
    end select
-
-   select case (z0_method)
-      case(0)
-         LEVEL2 'Using constant bottom roughness'
-      case(1)
-         LEVEL2 'Using space varying bottom roughness'
-         LEVEL2 '..  will read z0 from the topo file ..'
-      case default
-         call getm_error("init_domain()", &
-                         "A non valid z0 method has been chosen");
-   end select
-
-#ifndef STATIC
-   kmax=kdum
-#endif
-! prepare parallel run
-   call part_domain()
-   il=imin ; ih=imax ; jl=jmin ; jh=jmax
-#ifndef STATIC
-#include "dynamic_allocations_domain.h"
-#endif
-
-!  GLOBAL horizontal index range for 2D and 3D variables
-   ilg = max(imin+ioff,1); ihg = min(imax+ioff,iextr)
-   jlg = max(jmin+joff,1); jhg = min(jmax+joff,jextr)
-
-!  LOCAL horizontal index range for 2D and 3D variables
-   ill = max(imin-ioff,1); ihl = min(imax,iextr-ioff)
-   jll = max(jmin-joff,1); jhl = min(jmax,jextr-joff)
-
-   H = -10.
-   HU = -10.
-   HV = -10.
-
-   lonc = -1000.
-   latc = -1000.
-
-!  read grid and bathymetry
-   call get_grid(bathy_format,H,Hland,iextr,jextr,ioff,joff, &
-                imin,imax,jmin,jmax)
-
-!  prepare parallel setup
-   call update_2d_halo(lonc,lonc,az,imin,jmin,imax,jmax,H_TAG, &
-                       mirror=.false.)
-   call wait_halo(H_TAG)
-   call update_2d_halo(latc,latc,az,imin,jmin,imax,jmax,H_TAG, &
-                       mirror=.false.)
-   call wait_halo(H_TAG)
 
 !  Calculation masks
 !  Do we want to set a minimum depth for certain regions
@@ -516,118 +489,26 @@
 
    call mirror_bdy_2d(H,H_TAG)
 
-!  Compute grid points and metric coefficients for different grid types
-   select case (grid_type)
+!  Interpolate (latx,lonx) and (xx,yx) to the u, v, and T-points.
+   call x2uvc()
 
-!  CARTESIAN
-   case(1)
+!  calculate the metric coeff.
+   call metric()
 
-!     Generate xx and yx from grid spacing
-      do j = jmin-1,jmax
-         xx(imin-1,j) = ioff*dx + x0
-         do i=imin,imax
-            xx(i,j) = xx(i-1,j) + dx
-         end do
-      end do
-
-      do i=imin-1,imax
-         yx(i,jmin-1) = joff*dy + y0
-         do j=jmin,jmax
-            yx(i,j) = yx(i,j-1) + dy
-         end do
-      end do
-
-!     Exchange halo information for parallel runs
-      call update_2d_halo(xx,xx,ax,imin,jmin,imax,jmax,H_TAG, mirror=.false.)
-      call wait_halo(H_TAG)
-
-      call update_2d_halo(yx,yx,ax,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
-      call wait_halo(H_TAG)
-
-!     xx and yx points exist now
-      xy_exists = .true.
-
-!     Interpolate (latx,lonx) and (xx,yx) to the u, v, and T-points.
-      call x2uvc(updateXYC,updateLatLonC,updateConvc)
-
-!     Compute metric coefficients
-      ard1 = _ONE_/(dx*dy)
-
-!  SPHERICAL
-   case(2)
-
-!     Generate lonx,latx from grid spacing and offset
-!
-!     First make test that we have good values for dlat and dlon
-!     (if they are zer the program will fail later due to dx=0 etc)
-      if (dlat .eq. 0.0) then
-         call getm_error("init_domain()", &
-                         "Delta lat (dlat) seems to be zero!")
-      end if
-      if (dlon .eq. 0.0) then
-         call getm_error("init_domain()", &
-                         "Delta lon (dlon) seems to be zero!")
-      end if
-!
-!     Then actually generate lonx,latx
-      do j = jmin-1,jmax+1
-         lonx(imin-1,j) = ioff*dlon + lon0
-         do i=imin,imax+1
-            lonx(i,j) = lonx(i-1,j) + dlon
-         end do
-      end do
-
-      do i=imin-1,imax+1
-         latx(i,jmin-1) = joff*dlat + lat0
-         do j=jmin,jmax+1
-            latx(i,j) = latx(i,j-1) + dlat
-         end do
-      end do
-
-!     Exchange halo information for parallel runs
-      call update_2d_halo(lonx,lonx,ax,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
-      call wait_halo(H_TAG)
-
-      call update_2d_halo(latx,latx,ax,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
-      call wait_halo(H_TAG)
-
-!     lat and long exist now
-      latlon_exists = .true.
-
-!     Interpolate (latx,lonx) and (xx,yx) to the u, v, and T-points.
-      call x2uvc(updateXYC,updateLatLonC,updateConvc)
-
-!     Compute metric coefficients
-      call metric(grid_type)
-
-!  PLANE/SPHERICAL CURVILINEAR
-   case(3,4)
-
-!     Interpolate (latx,lonx) and (xx,yx) to the u, v, and T-points.
-      call x2uvc(updateXYC,updateLatLonC,updateConvc)
-
-!     Compute metric coefficients
-      call metric(grid_type)
-
-   case default
-      call getm_error("init_domain()","A non valid grid type has been chosen.")
-   end select
-
-
-   if ( .not. latlon_exists ) then
-      LEVEL2 "Setting constant longitude (swr)"
+   if ( .not. have_lonlat ) then
+      LEVEL2 "Setting constant longitude (swr) - lon = ",longitude
       lonc = longitude
    end if
 
 !  Compute Coriolis parameter
    if (f_plane) then
-      LEVEL2 "Assuming constant Coriolis parameter."
+      LEVEL2 "Assuming constant Coriolis parameter - lat = ",latitude
       cori = 2.*omega*sin(deg2rad*latitude)
       coru = cori
       corv = cori
    else
-      if (latlon_exists) then
-         LEVEL2 "Computing spatially varying Coriolis parameter from (lat,lon)."
+      if (have_lonlat) then
+         LEVEL2 "Computing spatially varying Coriolis parameter"
 
          coru = 2.*omega*sin(deg2rad*latu)
          corv = 2.*omega*sin(deg2rad*latv)
@@ -643,10 +524,18 @@
    call update_2d_halo(corv,corv,av,imin,jmin,imax,jmax,V_TAG)
    call wait_halo(V_TAG)
 
-   if (z0_method .eq. 1) then
-      call update_2d_halo(z0,z0,az,imin,jmin,imax,jmax,H_TAG)
-      call wait_halo(H_TAG)
-   end if
+   select case (z0_method)
+      case(0)
+         LEVEL2 'Using constant bottom roughness'
+      case(1)
+         LEVEL2 'Using space varying bottom roughness'
+         LEVEL2 '..  will read z0 from the topo file ..'
+         call update_2d_halo(z0,z0,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
+      case default
+         call getm_error("init_domain()", &
+                         "A non valid z0 method has been chosen");
+   end select
 
 #ifdef DEBUG
    STDERR 'az'
@@ -657,7 +546,7 @@
    call print_mask(av)
 #endif
 
-   np = count(az(1:imax,1:jmax) .gt. 0)
+   np = count(az(imin:imax,jmin:jmax) .gt. 0)
    sz = (imax-imin+1)*(jmax-jmin+1)
    LEVEL2 'Dimensions: ',imin,':',imax,',',jmin,':',jmax,',',0,':',kmax
    LEVEL2 '# waterpoints = ',np,' of ',sz
@@ -679,15 +568,8 @@
 ! !IROUTINE: x2uvc() - interpolate grid-points
 !
 ! !INTERFACE:
-   subroutine x2uvc(updateXYC,updateLatLonC,updateConvc)
+   subroutine x2uvc()
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-  logical, intent(in)        :: updateXYC
-  logical, intent(in)        :: updateLatLonC
-  logical, intent(in)        :: updateConvC
-
-!
 !
 ! !DESCRIPTION:
 !  This routine interpolates (latx,lonx), (xx,yx), and convx to the
@@ -697,209 +579,287 @@
 !  if data at the T-points have been read from the topo input file.
 !
 ! !REVISION HISTORY:
-! Original author(s): Lars Umlauf
+!  Original author(s): Lars Umlauf
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j
-!
-!EOP
-!------------------------------------------------------------------------
-!BOC
-   do i=imin-HALO,imax+HALO
-      do j=jmin-HALO+1,jmax+HALO
-         xu(i,j)   = 0.5*(  xx(i,j) +   xx(i,j-1))
-         yu(i,j)   = 0.5*(  yx(i,j) +   yx(i,j-1))
-         latu(i,j) = 0.5*(latx(i,j) + latx(i,j-1))
-         lonu(i,j) = 0.5*(lonx(i,j) + lonx(i,j-1))
-      end do
-   end do
-
-   call update_2d_halo(xu,xu,au,imin,jmin,imax,jmax,U_TAG,mirror=.false.)
-   call wait_halo(U_TAG)
-   call update_2d_halo(yu,yu,au,imin,jmin,imax,jmax,U_TAG,mirror=.false.)
-   call wait_halo(U_TAG)
-
-   call update_2d_halo(latu,latu,au,imin,jmin,imax,jmax,U_TAG,mirror=.false.)
-   call wait_halo(U_TAG)
-   call update_2d_halo(lonu,lonu,au,imin,jmin,imax,jmax,U_TAG,mirror=.false.)
-   call wait_halo(U_TAG)
-
-
-   do i=imin-HALO+1,imax+HALO
-      do j=jmin-HALO,jmax+HALO
-         xv(i,j)   = 0.5*(  xx(i,j) +   xx(i-1,j))
-         yv(i,j)   = 0.5*(  yx(i,j) +   yx(i-1,j))
-         latv(i,j) = 0.5*(latx(i,j) + latx(i-1,j))
-         lonv(i,j) = 0.5*(lonx(i,j) + lonx(i-1,j))
-      end do
-   end do
-
-   call update_2d_halo(xv,xv,av,imin,jmin,imax,jmax,V_TAG,mirror=.false.)
-   call wait_halo(V_TAG)
-   call update_2d_halo(yv,yv,av,imin,jmin,imax,jmax,V_TAG,mirror=.false.)
-   call wait_halo(V_TAG)
-
-   call update_2d_halo(latv,latv,av,imin,jmin,imax,jmax,V_TAG,mirror=.false.)
-   call wait_halo(V_TAG)
-   call update_2d_halo(lonv,lonv,av,imin,jmin,imax,jmax,V_TAG,mirror=.false.)
-   call wait_halo(V_TAG)
-
-
-   if (updateXYC) then
-      do i=imin,imax
-         do j=jmin,jmax
-            xc(i,j)   = 0.5*(  xu(i,j) +  xu(i-1,j))
-         end do
-      end do
-
-      do i=imin,imax
-         do j=jmin,jmax
-            yc(i,j)   = 0.5*(  yv(i,j) +   yv(i,j-1))
-         end do
-      end do
-   endif
-
-   if (updateLatLonC) then
-      do i=imin,imax
-         do j=jmin,jmax
-            latc(i,j) = 0.5*(latu(i,j) +latu(i-1,j))
-         end do
-      end do
-
-      do i=imin,imax
-         do j=jmin,jmax
-            lonc(i,j) = 0.5*(lonv(i,j) + lonv(i,j-1))
-         end do
-      end do
-   endif
-
-   if (updateConvc) then
-      do i=imin,imax
-         do j=jmin,jmax
-            convc(i,j)   = 0.25*(  convx(i-1,j-1) + convx(i-1,j)    &
-                                 + convx(i  ,j-1) + convx(i,j  ) )
-         end do
-      end do
-   endif
-
-
-   call update_2d_halo(xc,xc,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
-   call wait_halo(H_TAG)
-
-   call update_2d_halo(yc,yc,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
-   call wait_halo(H_TAG)
-
-   call update_2d_halo(latc,latc,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
-   call wait_halo(H_TAG)
-
-   call update_2d_halo(lonc,lonc,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
-   call wait_halo(H_TAG)
-
-   call update_2d_halo(convc,convc,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
-   call wait_halo(H_TAG)
-
-
-   return
-   end subroutine x2uvc
-!EOC
-
-
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: compute the metric coefficients
-!
-! !INTERFACE:
-   subroutine metric(grid_type)
-   IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-   integer, intent(in)                 :: grid_type
-!
-! !DESCRIPTION:
-! Computes the grid increments and areas related to the metric coefficients
-! of non-Cartesian grids.
-!
-! !REVISION HISTORY:
-! Original author(s): Lars Umlauf
-!
-! !LOCAL VARIABLES:
-   integer                   :: i,j
-!
+   integer                   :: i,j,n
+   REALTYPE                  :: x
 !EOP
 !------------------------------------------------------------------------
 !BOC
 
    select case (grid_type)
 
-   case(1)
+      case(1)
 
-   case(2)
+         if ( have_lonlat ) then
 
-      do j=jmin-HALO+1,jmax+HALO
-         do i=imin-HALO+1,imax+HALO
-            dxc(i,j)=deg2rad*(lonu(i,j)-lonu(i-1,j))*rearth &
-                 *cos(deg2rad*latc(i,j))
-            dyc(i,j)=deg2rad*(latv(i,j)-latv(i,j-1))*rearth
+!           latu and latv are only needed for active momentum points
+            do j=jll,jhl-1
+               do i=ill,ihl-1
+
+                  if ( au(i,j) .eq. 1 .or. au(i,j) .eq. 2 ) then
+
+                     latu(i,j) = ( latc(i  ,j) + latc(i+1,j+1) &
+                                 + latc(i+1,j) + latc(i  ,j+1) ) / 4
+                  end if
+
+                  if ( av(i,j) .eq. 1 .or. av(i,j) .eq. 2 ) then
+                     latv(i,j) = ( latc(i  ,j) + latc(i+1,j+1) &
+                                 + latc(i+1,j) + latc(i  ,j+1) ) / 4
+                  end if
+
+               end do
+            end do
+
+! this is just a check and can be deleted if nobody experiences problems
+#if 1
+            if ( joff+jhl .eq. jextr ) then
+               do i=ill,ihl
+                  if ( au(i,jhl) .eq. 1 .or. au(i,j) .eq. 2 ) then
+                     latu(i,jhl) = 1000
+                     LEVEL0 'x2uvc() - warning: latu is set to illegal value'
+                     LEVEL0 'please report the problem on getm-users'
+                     stop
+                  end if
+               end do
+            end if
+
+            if ( ioff+ihl .eq. iextr ) then
+               do j=jll,jhl
+                  if ( av(ihl,j) .eq. 1 .or. av(i,j) .eq. 2 ) then
+                     latv(i,jhl) = 1000
+                     LEVEL0 'x2uvc() - warning: latv is set to illegal value'
+                     LEVEL0 'please report the problem on getm-users'
+                     stop
+                  end if
+               end do
+            end if
+#endif
+
+         end if
+
+
+      case(2)
+
+!        we need latx to calculate dxv - utilize equidistance
+         latx(ill:ihl,jll-1) = latc(ill:ihl,jll) - dlat/2.
+         n=1
+         do j=jll,jhl
+            latx(ill:ihl,j) = latx(ill:ihl,jll-1) + n*dlat
+            n=n+1
          end do
-      end do
 
-      do j=jmin-HALO+1,jmax+HALO
-         do i=imin-HALO,imax+HALO-1
-            dxu(i,j)=deg2rad*(lonc(i+1,j)-lonc(i,j))*rearth &
-                 *cos(deg2rad*latc(i,j))
-            dyu(i,j)=deg2rad*(latx(i,j)-latx(i,j-1))*rearth
+         latu = latc
+         latv(ill:ihl,jll:jhl) = latx(ill:ihl,jll:jhl)
+
+      case(3)
+
+         do j=jll,jhl
+            do i=ill,ihl
+               xu(i,j)   = ( xx(i,j) +   xx(i,j-1) ) / 2
+               yu(i,j)   = ( yx(i,j) +   yx(i,j-1) ) / 2
+
+               xv(i,j)   = ( xx(i,j) +   xx(i-1,j) ) / 2
+               yv(i,j)   = ( yx(i,j) +   yx(i-1,j) ) / 2
+            end do
          end do
-      end do
 
-      do j=jmin-HALO,jmax+HALO-1
-         do i=imin-HALO+1,imax+HALO
-            dxv(i,j)=deg2rad*(lonx(i,j)-lonx(i-1,j))*rearth &
-                 *cos(deg2rad*latv(i,j))
-            dyv(i,j)=deg2rad*(latc(i,j+1)-latc(i,j))*rearth
+         do j=jll,jhl
+            do i=ill+1,ihl
+               xc(i,j)   = ( xu(i,j) +  xu(i-1,j) ) / 2
+            end do
          end do
-      end do
 
-      do j=jmin-HALO,jmax+HALO-1
-         do i=imin-HALO,imax+HALO-1
-            dxx(i,j)=deg2rad*(lonv(i+1,j)-lonv(i,j))*rearth &
-                 *cos(deg2rad*latx(i,j))
-            dyx(i,j)=deg2rad*(latu(i,j+1)-latu(i,j))*rearth
+         do j=jll+1,jhl
+            do i=ill,ihl
+               yc(i,j)   = ( yv(i,j) +   yv(i,j-1) ) / 2
+            end do
          end do
-      end do
 
-   case(3)
 
-      do i=imin,imax
-         do j=jmin,jmax
-            dxc(i,j)=sqrt((xu(i,j)-xu(i-1,j))**2+(yu(i,j)-yu(i-1,j))**2)
-            dyc(i,j)=sqrt((xv(i,j)-xv(i,j-1))**2+(yv(i,j)-yv(i,j-1))**2)
+         if ( have_lonlat ) then
+
+            do j=jll,jhl
+               do i=ill,ihl
+
+                  latu(i,j)  = ( latx(i,j) + latx(i,j-1) ) / 2
+
+                  latv(i,j)  = ( latx(i,j) + latx(i-1,j) ) / 2
+
+                  lonc(i,j)  = ( lonx(i-1,j-1) + lonx(i-1,j) &
+                               + lonx(i  ,j-1) + lonx(i,j  ) ) / 4
+
+                  latc(i,j)  = ( latx(i-1,j-1) + latx(i-1,j) &
+                               + latx(i  ,j-1) + latx(i,j  ) ) / 4
+
+                  convc(i,j) = ( convx(i-1,j-1) + convx(i-1,j) &
+                               + convx(i  ,j-1) + convx(i,j  ) ) / 4
+               end do
+            end do
+
+         end if
+
+      case default
+         call getm_error("x2uvc()","A non valid grid type has been chosen.")
+   end select
+
+   return
+   end subroutine x2uvc
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: metric() - calculate metric coefficients
+!
+! !INTERFACE:
+   subroutine metric()
+   IMPLICIT NONE
+!
+! !DESCRIPTION:
+!  Computes the grid increments and areas related to the metric 
+!  coefficients. 
+!
+! !REVISION HISTORY:
+!  Original author(s): Lars Umlauf
+!
+! !LOCAL VARIABLES:
+   integer                   :: n
+   integer                   :: i,j
+!EOP
+!------------------------------------------------------------------------
+!BOC
+   rearth = rearth_default
+
+   LEVEL2 'calculating metrics'
+
+   select case (grid_type)
+
+      case(1)  ! Cartesian
+
+         if ( dx .le. _ZERO_ .or. dy .le. _ZERO_ ) then
+
+            n = ihl-ill
+            dx = (xcord(ihl) - xcord(ill))/(_ONE_*n)
+
+            n = jhl-jll
+            dy = (ycord(jhl) - ycord(jll))/(_ONE_*n)
+
+         end if
+
+!        potentially do checks on consistency of dx and x-axis
+
+         ard1 = _ONE_/(dx*dy)
+
+         LEVEL3 'dx= ',dx,', dy= ',dy
+
+      case(2)  ! Spherical
+
+         if ( dlon .le. _ZERO_ .or. dlat .le. _ZERO_ ) then
+
+            n = ihl-ill
+            dlon = (xcord(ihl) - xcord(ill))/(_ONE_*n)
+
+            n = jhl-jll
+            dlat = (ycord(jhl) - ycord(jll))/(_ONE_*n)
+
+         end if
+
+!        potentially do checks on consistency of dx and x-axis
+	 LEVEL3 'dlon= ',dlon,', dlat= ',dlat
+
+!        note that all dy? are identical on constant
+
+         do j=jll,jhl
+            dxc(ill:ihl,j)=deg2rad*dlon*rearth*cos(deg2rad*latc(ill:ihl,j))
          end do
-      end do
+         dyc = deg2rad*dlat*rearth
 
-      do j=jmin,jmax
-         do i=imin,imax
-            dxu(i,j)=sqrt((xc(i+1,j)-xc(i,j))**2+(yc(i+1,j)-yc(i,j))**2)
-            dyu(i,j)=sqrt((xx(i,j)-xx(i,j-1))**2+(yx(i,j)-yx(i,j-1))**2)
+         dxu = dxc
+         dyu = dyc
+
+         do j=jll,jhl
+            dxv(ill:ihl,j)=deg2rad*dlon*rearth*cos(deg2rad*latx(ill:ihl,j))
          end do
-      end do
+         dyv = dyc
 
-      do j=jmin,jmax
-         do i=imin,imax
-            dxv(i,j)=sqrt((xx(i,j)-xx(i-1,j))**2+(yx(i,j)-yx(i-1,j))**2)
-            dyv(i,j)=sqrt((xc(i,j+1)-xc(i,j))**2+(yc(i,j+1)-yc(i,j))**2)
+         dxx = dxv
+         dyx = dyc
+
+         LEVEL3 'dxc= [ ',minval(dxc,mask=(az .gt. 0)), &
+                          maxval(dxc,mask=(az .gt. 0)), ' ]'
+         LEVEL3 'dxu= [ ',minval(dxu,mask=(au .gt. 0)), &
+                          maxval(dxu,mask=(au .gt. 0)), ' ]'
+         LEVEL3 'dxv= [ ',minval(dxv,mask=(av .gt. 0)), &
+                          maxval(dxv,mask=(av .gt. 0)), ' ]'
+         LEVEL3 'dxx= [ ',minval(dxx,mask=(ax .gt. 0)), &
+                          maxval(dxx,mask=(ax .gt. 0)), ' ]'
+         LEVEL3 'dy[cuvx]=',minval(dyc,mask=(az .gt. 0))
+
+      case(3) ! planar curvi-linear
+
+         do j=jll+1,jhl
+            do i=ill+1,ihl
+               dxc(i,j)=sqrt((xu(i,j)-xu(i-1,j))**2+(yu(i,j)-yu(i-1,j))**2)
+               dyc(i,j)=sqrt((xv(i,j)-xv(i,j-1))**2+(yv(i,j)-yv(i,j-1))**2)
+            end do
          end do
-      end do
 
-      do j=jmin,jmax
-         do i=imin,imax
-            dxx(i,j)=sqrt((xv(i+1,j)-xv(i,j))**2+(yv(i+1,j)-yv(i,j))**2)
-            dyx(i,j)=sqrt((xu(i,j+1)-xu(i,j))**2+(yu(i,j+1)-yu(i,j))**2)
+         do j=jll+1,jhl
+            do i=ill+1,ihl-1
+               dxu(i,j)=sqrt((xc(i+1,j)-xc(i,j))**2+(yc(i+1,j)-yc(i,j))**2)
+            end do
          end do
-      end do
 
-   case(4)
+         do j=jll,jhl
+            do i=ill,ihl
+               dyu(i,j)=sqrt((xx(i,j)-xx(i,j-1))**2+(yx(i,j)-yx(i,j-1))**2)
+            end do
+         end do
+
+         do j=jll,jhl
+            do i=ill,ihl
+               dxv(i,j)=sqrt((xx(i,j)-xx(i-1,j))**2+(yx(i,j)-yx(i-1,j))**2)
+            end do
+         end do
+
+         do j=jll+1,jhl-1
+            do i=ill+1,ihl
+               dyv(i,j)=sqrt((xc(i,j+1)-xc(i,j))**2+(yc(i,j+1)-yc(i,j))**2)
+            end do
+         end do
+
+         do j=jll,jhl
+            do i=ill,ihl-1
+               dxx(i,j)=sqrt((xv(i+1,j)-xv(i,j))**2+(yv(i+1,j)-yv(i,j))**2)
+            end do
+         end do
+
+         do j=jll,jhl-1
+            do i=ill,ihl
+               dyx(i,j)=sqrt((xu(i,j+1)-xu(i,j))**2+(yu(i,j+1)-yu(i,j))**2)
+            end do
+         end do
+
+         LEVEL3 'dxc= [ ',minval(dxc,mask=(az .gt. 0)), &
+                          maxval(dxc,mask=(az .gt. 0)), ' ]'
+         LEVEL3 'dyc= [ ',minval(dyc,mask=(az .gt. 0)), &
+                          maxval(dyc,mask=(az .gt. 0)), ' ]'
+         LEVEL3 'dxu= [ ',minval(dxu,mask=(au .gt. 0)), &
+                          maxval(dxu,mask=(au .gt. 0)), ' ]'
+         LEVEL3 'dyu= [ ',minval(dyu,mask=(au .gt. 0)), &
+                          maxval(dyu,mask=(au .gt. 0)), ' ]'
+         LEVEL3 'dxv= [ ',minval(dxv,mask=(av .gt. 0)), &
+                          maxval(dxv,mask=(av .gt. 0)), ' ]'
+         LEVEL3 'dyv= [ ',minval(dyv,mask=(av .gt. 0)), &
+                          maxval(dyv,mask=(av .gt. 0)), ' ]'
+         LEVEL3 'dxx= [ ',minval(dxx,mask=(ax .gt. 0)), &
+                          maxval(dxx,mask=(ax .gt. 0)), ' ]'
+         LEVEL3 'dyx= [ ',minval(dyx,mask=(ax .gt. 0)), &
+                          maxval(dyx,mask=(ax .gt. 0)), ' ]'
+
+   case(4) ! sperical curvi-linear
 
       do j=jmin,jmax
          do i=imin,imax
@@ -949,79 +909,82 @@
          call getm_error("metric()","A non valid grid type has been chosen.")
    end select
 
-   call update_2d_halo(dxc,dxc,az,imin,jmin,imax,jmax,H_TAG)
-   call wait_halo(H_TAG)
-   call update_2d_halo(dyc,dyc,az,imin,jmin,imax,jmax,H_TAG)
-   call wait_halo(H_TAG)
+   if ( grid_type .ne. 1 ) then
 
-   call update_2d_halo(dxu,dxu,au,imin,jmin,imax,jmax,U_TAG)
-   call wait_halo(U_TAG)
-   call update_2d_halo(dyu,dyu,au,imin,jmin,imax,jmax,U_TAG)
-   call wait_halo(U_TAG)
+      call update_2d_halo(dxc,dxc,az,imin,jmin,imax,jmax,H_TAG)
+      call wait_halo(H_TAG)
 
-   call update_2d_halo(dxv,dxv,av,imin,jmin,imax,jmax,V_TAG)
-   call wait_halo(V_TAG)
-   call update_2d_halo(dyv,dyv,av,imin,jmin,imax,jmax,V_TAG)
-   call wait_halo(V_TAG)
+      call update_2d_halo(dyc,dyc,az,imin,jmin,imax,jmax,H_TAG)
+      call wait_halo(H_TAG)
 
-   call update_2d_halo(dxx,dxx,ax,imin,jmin,imax,jmax,H_TAG)
-   call wait_halo(H_TAG)
-   call update_2d_halo(dyx,dyx,ax,imin,jmin,imax,jmax,H_TAG)
-   call wait_halo(H_TAG)
+      call update_2d_halo(dxu,dxu,au,imin,jmin,imax,jmax,U_TAG)
+      call wait_halo(U_TAG)
+
+      call update_2d_halo(dyu,dyu,au,imin,jmin,imax,jmax,U_TAG)
+      call wait_halo(U_TAG)
+
+      call update_2d_halo(dxv,dxv,av,imin,jmin,imax,jmax,V_TAG)
+      call wait_halo(V_TAG)
+
+      call update_2d_halo(dyv,dyv,av,imin,jmin,imax,jmax,V_TAG)
+      call wait_halo(V_TAG)
+
+      call update_2d_halo(dxx,dxx,ax,imin,jmin,imax,jmax,H_TAG)
+      call wait_halo(H_TAG)
+
+      call update_2d_halo(dyx,dyx,ax,imin,jmin,imax,jmax,H_TAG)
+      call wait_halo(H_TAG)
 
 
-!  compute differently centered areas of grid boxes
-   do j=jmin-HALO,jmax+HALO
-      do i=imin-HALO,imax+HALO
+!     compute differently centered areas of grid boxes
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
 
-         if( az(i,j) .gt. 0) then
-            arcd1(i,j)=_ONE_/(dxc(i,j)*dyc(i,j))
-         end if
+            if( az(i,j) .gt. 0) then
+               arcd1(i,j)=_ONE_/(dxc(i,j)*dyc(i,j))
+            end if
 
-         if( au(i,j) .gt. 0) then
-            arud1(i,j)=_ONE_/(dxu(i,j)*dyu(i,j))
-         end if
+            if( au(i,j) .gt. 0) then
+               arud1(i,j)=_ONE_/(dxu(i,j)*dyu(i,j))
+            end if
 
-         if( av(i,j) .gt. 0) then
-            arvd1(i,j)=_ONE_/(dxv(i,j)*dyv(i,j))
-         end if
+            if( av(i,j) .gt. 0) then
+               arvd1(i,j)=_ONE_/(dxv(i,j)*dyv(i,j))
+            end if
 
+         end do
       end do
-   end do
 
-   call update_2d_halo(arcd1,arcd1,az,imin,jmin,imax,jmax,H_TAG)
-   call wait_halo(H_TAG)
+      call update_2d_halo(arcd1,arcd1,az,imin,jmin,imax,jmax,H_TAG)
+      call wait_halo(H_TAG)
 
-   call update_2d_halo(arud1,arud1,au,imin,jmin,imax,jmax,U_TAG)
-   call wait_halo(U_TAG)
+      call update_2d_halo(arud1,arud1,au,imin,jmin,imax,jmax,U_TAG)
+      call wait_halo(U_TAG)
 
-   call update_2d_halo(arvd1,arvd1,av,imin,jmin,imax,jmax,V_TAG)
-   call wait_halo(V_TAG)
+      call update_2d_halo(arvd1,arvd1,av,imin,jmin,imax,jmax,V_TAG)
+      call wait_halo(V_TAG)
+
+   end if
 
    return
    end subroutine metric
 !EOC
 
 
-
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: read_par_setup - reads domain partition
+! !IROUTINE: read_par_setup() - reads domain partition
 !
 ! !INTERFACE:
    subroutine read_par_setup(myid)
    IMPLICIT NONE
 !
+! !DESCRIPTION:
+!  Reads the partitioning of the global domain in a parallel run
+!
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: myid
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
-! !DESCRIPTION:
-!  Reads the partitioning of the domain in parallel run
 !
 ! !REVISION HISTORY:
 !
@@ -1063,21 +1026,18 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: set_min_depth -
+! !IROUTINE: set_min_depth() - set the minimum depth in regions
 !
 ! !INTERFACE:
    subroutine set_min_depth(fn)
    IMPLICIT NONE
 !
+! !DESCRIPTION:
+!  Read region definitions and minimum depth for those regions. Adjust the
+!  bathymetry (variable $H$) accordingly.
+!
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fn
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
-! !DESCRIPTION:
-!  Read mask adjustments from file.
 !
 ! !REVISION HISTORY:
 !
@@ -1127,21 +1087,17 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: adjust_bathymetry - read mask adjustments from file.
+! !IROUTINE: adjust_bathymetry() - read mask adjustments from file.
 !
 ! !INTERFACE:
    subroutine adjust_bathymetry(fn)
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-   character(len=*), intent(in)        :: fn
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !DESCRIPTION:
 !  Read bathymetry adjustments from file.
+!
+! !INPUT PARAMETERS:
+   character(len=*), intent(in)        :: fn
 !
 ! !REVISION HISTORY:
 !
@@ -1189,21 +1145,17 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: adjust_mask - read mask adjustments from file.
+! !IROUTINE: adjust_mask() - read mask adjustments from file.
 !
 ! !INTERFACE:
    subroutine adjust_mask(fn)
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-   character(len=*), intent(in)        :: fn
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !DESCRIPTION:
 !  Read mask adjustments from file.
+!
+! !INPUT PARAMETERS:
+   character(len=*), intent(in)        :: fn
 !
 ! !REVISION HISTORY:
 !
@@ -1250,21 +1202,17 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: print_mask - prints a mask in readable format
+! !IROUTINE: print_mask() - prints a mask in readable format
 !
 ! !INTERFACE:
    subroutine print_mask(mask)
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-   integer, intent(in), dimension(E2DFIELD) :: mask
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !DESCRIPTION:
 !  Prints a integer mask in a human readable form.
+!
+! !INPUT PARAMETERS:
+   integer, intent(in), dimension(E2DFIELD) :: mask
 !
 ! !REVISION HISTORY:
 !

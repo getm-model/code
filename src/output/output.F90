@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.29 2009-08-18 10:24:47 bjb Exp $
+!$Id: output.F90,v 1.30 2009-09-23 10:11:48 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,9 +29,10 @@
    character(LEN = PATH_MAX)           :: out_f_mean
    character(LEN = PATH_MAX)           :: hot_out
 
-   logical                             :: save_meteo=.false.
+   logical                             :: save_metrics=.false.
    logical                             :: save_masks=.false.
    logical                             :: save_2d=.true.
+   logical                             :: save_meteo=.false.
    logical                             :: save_3d=.true.
    logical                             :: save_mean=.false. 
    logical                             :: save_vel=.true.
@@ -59,6 +60,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.30  2009-09-23 10:11:48  kb
+!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
+!
 !  Revision 1.29  2009-08-18 10:24:47  bjb
 !  New getm_timers module
 !
@@ -204,8 +208,8 @@
 ! !LOCAL VARIABLES:
    namelist /io_spec/ &
              out_fmt,hotin_fmt,hotout_fmt, &
-             in_dir,out_dir, &
-             save_2d,save_3d,save_masks,save_vel,destag, &
+             in_dir,out_dir, save_metrics, save_masks, &
+             save_2d,save_3d,save_vel,destag, &
              save_strho,save_s,save_t,save_rho,save_rad, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              save_ss_nn,save_taub, &

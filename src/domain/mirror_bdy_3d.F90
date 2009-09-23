@@ -1,14 +1,18 @@
-!$Id: mirror_bdy_3d.F90,v 1.6 2009-08-31 10:37:03 bjb Exp $
+!$Id: mirror_bdy_3d.F90,v 1.7 2009-09-23 10:11:47 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: mirror_bdy_3d
+! !ROUTINE: mirror_bdy_3d() - mirrors 3d vaiables
 !
 ! !INTERFACE:
    subroutine mirror_bdy_3d(f,tag)
 !
 ! !DESCRIPTION:
+!  Some variables are mirrored outside the calculation domain in the 
+!  vicinity of the open boundaries. This is to avoid if statements
+!  when calculating e.g. the Coriolis terms and advection.
+!  This routines mirrors 3d variables.
 !
 ! !USES:
    use halo_zones, only : U_TAG,V_TAG,H_TAG,D_TAG
@@ -30,6 +34,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: mirror_bdy_3d.F90,v $
+!  Revision 1.7  2009-09-23 10:11:47  kb
+!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
+!
 !  Revision 1.6  2009-08-31 10:37:03  bjb
 !  Consistent treatment of topo in halo zones
 !

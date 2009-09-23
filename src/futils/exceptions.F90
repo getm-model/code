@@ -1,4 +1,4 @@
-!$Id: exceptions.F90,v 1.3 2009-08-21 08:56:34 bjb Exp $
+!$Id: exceptions.F90,v 1.4 2009-09-23 10:11:47 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -16,6 +16,7 @@
 ! is fatal and the code exits.
 !
 ! !USES:
+   use netcdf
    IMPLICIT NONE
 !
    private
@@ -28,6 +29,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: exceptions.F90,v $
+!  Revision 1.4  2009-09-23 10:11:47  kb
+!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
+!
 !  Revision 1.3  2009-08-21 08:56:34  bjb
 !  Fix name clash on PARALLEL with OpenMP key word
 !
@@ -36,7 +40,6 @@
 !
 !  Revision 1.1  2005/04/25 07:55:49  kbk
 !  use more general frame for error handling - Umlauf
-!
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -52,16 +55,15 @@
    subroutine getm_error(routine,whatsup)
 !
 ! !DESCRIPTION:
-!  Reports a fatal \emph{error} concerning a certain {\tt routine} in GETM
-!  and exits.
+!  Reports a fatal \emph{error} concerning a certain {\tt routine} in 
+!  GETM and exits.
 !  The argument {\tt whatsup} is short (!) error message.
 !
 ! !USES:
-    IMPLICIT NONE
 #ifdef GETM_PARALLEL
-!    use mpi
-    include "mpif.h"
+    use mpi
 #endif
+    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
     character(len=*), intent(in)       :: routine
@@ -137,11 +139,10 @@
    subroutine netcdf_error(status,routine,whatsup)
 !
 ! !USES:
-   IMPLICIT NONE
 #ifdef GETM_PARALLEL
-!    use mpi
-    include "mpif.h"
+    use mpi
 #endif
+   IMPLICIT NONE
 !
 ! !DESCRIPTION:
 !  Reports an \emph{error} concerning a certain netCDF {\tt routine}
@@ -165,11 +166,10 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
    STDERR " "
    STDERR "FATAL NETCDF ERROR: Called from "//trim(routine)
    STDERR "FATAL NETCDF ERROR: "//trim(whatsup)
-   STDERR "NETCDF MESSAGE    : "//trim(nf_strerror(status))
+   STDERR "NETCDF MESSAGE    : "//trim(nf90_strerror(status))
    STDERR " "
 
 #ifdef GETM_PARALLEL
@@ -209,11 +209,10 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
    STDERR " "
    STDERR "NETCDF WARNING: Called from "//trim(routine)
    STDERR "NETCDF WARNING: "//trim(whatsup)
-   STDERR "NETCDF MESSAGE: "//trim(nf_strerror(status))
+   STDERR "NETCDF MESSAGE: "//trim(nf90_strerror(status))
    STDERR " "
 
    return

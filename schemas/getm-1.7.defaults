@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- $Id: getm-1.7.defaults,v 1.2 2009-09-15 11:22:26 kb Exp $ -->
+<!-- $Id: getm-1.7.defaults,v 1.3 2009-09-23 10:11:46 kb Exp $ -->
 <scenario version="getm-1.7">
 	<getm>
 		<param>
@@ -431,18 +431,21 @@
 			<out_dir>
 				.
 			</out_dir>
-			<save_meteo>
-				True
-			</save_meteo>
-			<save_2d>
-				True
-			</save_2d>
-			<save_3d>
-				True
-			</save_3d>
+			<save_metrics>
+				False
+			</save_masks>
 			<save_masks>
 				False
 			</save_masks>
+			<save_2d>
+				True
+			</save_2d>
+			<save_meteo>
+				True
+			</save_meteo>
+			<save_3d>
+				True
+			</save_3d>
 			<save_vel>
 				True
 			</save_vel>

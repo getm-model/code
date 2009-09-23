@@ -134,8 +134,20 @@
 
 ! Here the memory-allocation is defined
 #define E2DFIELD  imin-HALO:imax+HALO,jmin-HALO:jmax+HALO
+#define E2DXFIELD imin-1-HALO:imax+HALO,jmin-1-HALO:jmax+HALO
 #define I2DFIELD  imin-HALO:imax+HALO,jmin-HALO:jmax+HALO
 #define I3DFIELD  imin-HALO:imax+HALO,jmin-HALO:jmax+HALO,0:kmax
+
+! For easier saving HALO zones in NetCDF files - used in:
+! save_grid_ncdf.F90 and write_restart_ncdf.F90
+#ifdef SAVE_HALOS
+#define IRANGE imin-HALO:imax+HALO
+#define JRANGE jmin-HALO:jmax+HALO
+#else
+#define IRANGE imin:imax
+#define JRANGE jmin:jmax
+#endif
+
 
 ! These defines the do loops for the real inner points..
 ! that is the points that are independent of neighbours.

@@ -2,6 +2,9 @@
    integer         :: imin=-1,imax=-1,jmin=-1,jmax=-1
    integer         :: kmax=1
 
+!  coordinate axes - grid-type = 1 or 2
+   REALTYPE, dimension(:), allocatable      :: xcord, ycord
+
 !  mask
    integer, dimension(:,:), allocatable     :: az,au,av,ax
 
@@ -28,8 +31,8 @@
    REALTYPE, dimension(:,:), allocatable    :: xv,yv
 
 !  metric parameters
-   REALTYPE                                 :: dx,dy,x0,y0,ard1
-   REALTYPE                                 :: dlon,dlat,lon0,lat0
+   REALTYPE                                 :: dx=-_ONE_,dy=-_ONE_,ard1
+   REALTYPE                                 :: dlon=-_ONE_,dlat=-_ONE_
    REALTYPE, dimension(:,:), allocatable    :: dxdyc,dydxc
    REALTYPE, dimension(:,:), allocatable    :: dxc,dxu,dxv,dxx
    REALTYPE, dimension(:,:), allocatable    :: dyc,dyu,dyv,dyx

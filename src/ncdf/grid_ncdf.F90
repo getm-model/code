@@ -1,4 +1,4 @@
-!$Id: grid_ncdf.F90,v 1.2 2006-09-26 07:06:06 kbk Exp $
+!$Id: grid_ncdf.F90,v 1.3 2009-09-23 10:11:48 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,17 +18,22 @@
 !
 ! !PUBLIC DATA MEMBERS:
    integer                             :: xlen=-1,ylen=-1,zlen=-1
+   integer                             :: xc_dim=-1,yc_dim=-1
+   integer                             :: xx_dim=-1,yx_dim=-1
 
 ! !DEFINED PARAMETERS
    REALTYPE, parameter                 :: h_missing      =-10.0
-   REALTYPE, parameter                 :: xy_missing     =-9999.0
-   REALTYPE, parameter                 :: latlon_missing =-9999.0
-   REALTYPE, parameter                 :: conv_missing   =-9999.0
+   REALTYPE, parameter                 :: xy_missing     =-999.0
+   REALTYPE, parameter                 :: latlon_missing =-999.0
+   REALTYPE, parameter                 :: conv_missing   =-999.0
 !
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf
 !
 !  $Log: grid_ncdf.F90,v $
+!  Revision 1.3  2009-09-23 10:11:48  kb
+!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
+!
 !  Revision 1.2  2006-09-26 07:06:06  kbk
 !  to compile on Macs with Intel compiler
 !

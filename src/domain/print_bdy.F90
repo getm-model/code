@@ -1,14 +1,19 @@
-!$Id: print_bdy.F90,v 1.3 2008-12-09 00:31:57 kb Exp $
+!$Id: print_bdy.F90,v 1.4 2009-09-23 10:11:47 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: print_bdy(header) - prints boundary location info.
+! !ROUTINE: print_bdy() - print open boundary info
 !
 ! !INTERFACE:
    subroutine print_bdy(header)
 !
 ! !DESCRIPTION:
+!  Print the open boundary information. This routine is called twice -
+!  first time with the global boundary infromation and second time
+!  with the local boundary information. In the case of a serial run the
+!  info is identical - in the case of a parallel run the open boundary 
+!  information for a each sub-domain will be printed.
 !
 ! !USES:
    use domain, only: NWB,NNB,NEB,NSB
@@ -28,6 +33,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: print_bdy.F90,v $
+!  Revision 1.4  2009-09-23 10:11:47  kb
+!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
+!
 !  Revision 1.3  2008-12-09 00:31:57  kb
 !  added new 2D open boundaries
 !

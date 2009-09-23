@@ -1,12 +1,17 @@
-!$Id: part_domain.F90,v 1.3 2009-08-21 08:56:34 bjb Exp $
+!$Id: part_domain.F90,v 1.4 2009-09-23 10:11:47 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: part_domain - partition the calculation domain
+! !ROUTINE: part_domain() - partition the domain
 !
 ! !INTERFACE:
    subroutine part_domain()
+!
+! !DESCRIPTION:
+!  Set various integers defining the calculation domain. The settings
+!  depends on STATIC vs. DYNAMIC compilation and serial vs. parallel
+!  model run.
 !
 ! !USES:
    use domain, only: iextr,jextr
@@ -17,19 +22,9 @@
 #endif
    IMPLICIT NONE
 !
-! !DESCRIPTION:
-!  Set various integers defining the calculation domain
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -46,17 +41,6 @@
    ioff=0 ; joff=0
 #else
    call part_domain_mpi(iextr,jextr,kmax,imin,imax,jmin,jmax,ioff,joff)
-#endif
-
-#if 0
-#ifndef STATIC
-      if(il .eq. -1 .or. ih .eq. -1 .or. jl .eq. -1 .or. jh .eq. -1) then
-         imin = 1 ; imax = iextr ; jmin = 1 ; jmax = jextr;
-         il = imin ; il = imax ; jl = jmin ; jh = jmax
-      else
-         imin = 1 ; imax = ih-il+1 ; jmin = 1 ; jmax = jh-jl+1;
-      end if
-#endif
 #endif
 
 #ifdef DEBUG

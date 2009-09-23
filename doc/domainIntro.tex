@@ -1,11 +1,71 @@
-%$Id: domainIntro.tex,v 1.1 2006-02-13 07:20:04 hb Exp $
+%$Id: domainIntro.tex,v 1.2 2009-09-23 10:11:46 kb Exp $
 
 \section{Introduction to the calculation domain}
 
 \vspace{0.5cm}
 
-This module contains everything related to define the computational
-domain.
+  This module handles all tasks related to the definition of the
+  computational domain - except reading in variables from file.
+  The required information depends on the $grid\_type$ and also on the
+  complexity of the model simulation to be done.\newline
+  The mandatory varible $grid\_type$ read from the file containing
+  the bathymetry and coordinate information (presently only NetCDF
+  is supported) is guiding subsequent tasks. $grid\_type$ can take
+  the following values:
+  \begin{itemize}
+      \item[1:] equi-distant plane grid - $dx$, $dy$ are constant - but
+                not necessarily equal
+      \item[2:] equi-distant spherical grid  - $dlon$, $dlat$ are
+                constant - and again not necessarily  equal
+      \item[3:] curvilinear grid in the plane - $dx$, $dy$ are both
+                functions of (i,j). The grid must be orthogonal
+      \item[4:] curvilinear grid on a sphere - $dx$, $dy$ are functions
+                of (i,j) and are calculated under the assumption of a
+                perfect sphere
+  \end{itemize}
+
+  For all values of $grid\_type$ the bathymetry given on the T-points
+  (see the GETM manual for definition) must be given.\newline
+
+  Based on the value of $grid\_type$ the following additional variables
+  are required:
+  \begin{itemize}
+      \item[1:] proper monotone coordinate informtion in the xy-plane
+                with equidistant spacing. The name of the coordinate
+                variables are $xcord$ and $ycord$.
+      \item[2:] proper monotone coordinate informtion on the sphere
+                with equidistant spacing in longitude and latitude. The
+                names of the coordinate variables are $xcord$ and $ycord$.
+      \item[3:] position in the plane of the grid-vertices. These are
+                called X-points in GETM. The names of these two variables
+                are $xx$ and $yx$.
+      \item[4:] position on the sphere of the grid-vertices. The names
+                of these variables are clled $lonx$ and $latx$
+  \end{itemize}
+
+  In addition to the above required grid information the following
+  information is necessary for specific model configurations:
+  \begin{itemize}
+      \item[A:] $latu$ and $latv$ \newline
+             If $f\_plane$ is false information about the
+             latitude of U- and V-points are required for calculating
+             the Coriolis term correctly. For $grid\_type=1$
+             $latu$ and $latv$ are calculated based on an additional field
+             $latc$ i.e. the latitude of the T-points. For $grid\_type=3$
+             $latx$ i.e. the latitude of the X-points will have to be
+             provided in order to calculate $latu$ and $latv$.
+      \item[B:] $lonc$, $latc$ and $convc$ \newline
+             The longitude, latitude positions of
+             the T-points are required when using forcing from a NWP-model.
+             $lonc$ and $latc$ are used to do spatial interpolation from
+             the meteo-grid to the GETM model and $convc$ is the rotation
+             of the local grid from true north.
+  \end{itemize}
+
+  In addition to the information above a few files are optionally read
+  in $init\_domain()$. Information about open boundaries, modifications
+  to the bathymetry and the calculation masks are are done via simple
+  ASCII files. \newline
 
 \vspace{0.5cm}
 

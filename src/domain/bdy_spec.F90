@@ -1,14 +1,15 @@
-!$Id: bdy_spec.F90,v 1.6 2008-12-09 00:31:57 kb Exp $
+!$Id: bdy_spec.F90,v 1.7 2009-09-23 10:11:47 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: bdy_spec() - defines the open boundaries.
+! !ROUTINE: bdy_spec() - defines open boundaries
 !
 ! !INTERFACE:
-   subroutine bdy_spec(FName)
+   subroutine bdy_spec(fn)
 !
 ! !DESCRIPTION:
+!  Read in the open boundary information from 'fn'.
 !
 ! !USES:
    use domain, only: NWB,NNB,NEB,NSB,NOB
@@ -19,7 +20,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)        :: FName
+   character(len=*), intent(in)        :: fn
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -29,6 +30,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bdy_spec.F90,v $
+!  Revision 1.7  2009-09-23 10:11:47  kb
+!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
+!
 !  Revision 1.6  2008-12-09 00:31:57  kb
 !  added new 2D open boundaries
 !
@@ -68,8 +72,8 @@
 #endif
 
    LEVEL2 'Reading boundary location information from:'
-   LEVEL3 TRIM(FName)
-   open(BDYINFO,file=FName,status='unknown',ERR=90)
+   LEVEL3 TRIM(fn)
+   open(BDYINFO,file=fn,status='unknown',ERR=90)
 
 !  Western boundary info
    read(BDYINFO,*,END=91,ERR=92) NWB
@@ -255,10 +259,10 @@
 #endif
 
    return
-90 FATAL 'can not open ',TRIM(FName)
+90 FATAL 'can not open ',TRIM(fn)
    stop
-91 STDERR 'EOF ',TRIM(FName)
-92 STDERR 'Error reading ',TRIM(FName)
+91 STDERR 'EOF ',TRIM(fn)
+92 STDERR 'Error reading ',TRIM(fn)
 
    return
    end subroutine bdy_spec
