@@ -1,4 +1,4 @@
-!$Id: create_restart_ncdf.F90,v 1.5 2009-08-21 10:39:00 kb Exp $
+!$Id: create_restart_ncdf.F90,v 1.6 2009-09-23 09:54:52 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -15,7 +15,7 @@
 !  corresponding to the names used in the Fortran files. Only the actual
 !  domain is stored (i.e. not the halo-zones). This allows easy use of 
 !  'ncmerge' to stitch a number of hotstart files together to cover the
-!  entire computational domain. See read_restart_ncdf() for use.
+!  entire computational domain. See read\_restart\_ncdf() for use.
 !
 ! !USES:
    use netcdf
@@ -39,6 +39,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: create_restart_ncdf.F90,v $
+!  Revision 1.6  2009-09-23 09:54:52  kb
+!  fixed typos in DESCRIPTION
+!
 !  Revision 1.5  2009-08-21 10:39:00  kb
 !  -DINCLUDE_HALOS will include halo-zones when writing/reading NetCDF hotstart files
 !

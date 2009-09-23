@@ -1,4 +1,4 @@
-!$Id: write_restart_ncdf.F90,v 1.8 2009-08-21 10:39:01 kb Exp $
+!$Id: write_restart_ncdf.F90,v 1.9 2009-09-23 09:54:53 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -10,7 +10,7 @@
 !
 ! !DESCRIPTION:
 !  Writes to a NetCDF file previously created using the 
-!  create_restart_ncdf() subroutine all variables necessary to make
+!  create\_restart\_ncdf() subroutine all variables necessary to make
 !  a correct GETM hotstart. The Fortran variables are written directly 
 !  into the corresponding NetCDF variable.
 !
@@ -44,6 +44,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: write_restart_ncdf.F90,v $
+!  Revision 1.9  2009-09-23 09:54:53  kb
+!  fixed typos in DESCRIPTION
+!
 !  Revision 1.8  2009-08-21 10:39:01  kb
 !  -DINCLUDE_HALOS will include halo-zones when writing/reading NetCDF hotstart files
 !
@@ -94,15 +97,11 @@
       zax(k)=k
    end do
 
-#ifdef INCLUDE_HALOS
-#define IRANGE imin-HALO:imax+HALO
-#define JRANGE jmin-HALO:jmax+HALO
+#ifdef SAVE_HALOS
    LEVEL3 'include HALOs in NetCDF hostart files'
    start(1) = 1; edges(1) = (imax+HALO)-(imin-HALO)+1
    start(2) = 1; edges(2) = (jmax+HALO)-(jmin-HALO)+1
 #else
-#define IRANGE imin:imax
-#define JRANGE jmin:jmax
    start(1) = 1; edges(1) = imax-imin+1
    start(2) = 1; edges(2) = jmax-jmin+1
 #endif

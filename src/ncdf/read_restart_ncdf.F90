@@ -1,4 +1,4 @@
-!$Id: read_restart_ncdf.F90,v 1.9 2009-08-21 10:39:00 kb Exp $
+!$Id: read_restart_ncdf.F90,v 1.10 2009-09-23 09:54:53 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -10,7 +10,7 @@
 !
 ! !DESCRIPTION:
 !  Reads from a NetCDF files (with handler ncid) opened with
-!  open_restart_ncdf(). All variable id's are initialised. The variables
+!  open\_restart\_ncdf(). All variable id's are initialised. The variables
 !  can be read from hotstart files with the same dimensions as given by
 !  imin:imax,jmin:jmax - or - from a hotstart file with the same dimensions
 !  as topo.nc (and on the same grid). This allows to use 'ncmerge' to
@@ -20,8 +20,8 @@
 !  as topo.nc. Allowing for the file naming scheme in GETM links for each 
 !  sub-domain should be made - e.g. ln -s restart.in restart.000.in; ln -s 
 !  restart.in restart.001.in etc.\newline
-!  Halo-zones are updated using calls to update_2d_halo() and 
-!  update_3d_halo().
+!  Halo-zones are updated using calls to update\_2d\_halo() and 
+!  update\_3d\_halo().
 !
 ! !USES:
    use netcdf
@@ -56,6 +56,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: read_restart_ncdf.F90,v $
+!  Revision 1.10  2009-09-23 09:54:53  kb
+!  fixed typos in DESCRIPTION
+!
 !  Revision 1.9  2009-08-21 10:39:00  kb
 !  -DINCLUDE_HALOS will include halo-zones when writing/reading NetCDF hotstart files
 !

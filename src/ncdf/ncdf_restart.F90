@@ -1,4 +1,4 @@
-!$Id: ncdf_restart.F90,v 1.2 2007-10-19 07:52:36 kbk Exp $
+!$Id: ncdf_restart.F90,v 1.3 2009-09-23 09:54:52 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,14 +9,14 @@
    module ncdf_restart
 !
 ! !DESCRIPTION:
-!  This module and the related *_restart_ncdf() subroutines provide a
+!  This module and the related *\_restart\_ncdf() subroutines provide a
 !  drop-in replacement for the binary file hotstart facility in GETM.
 !  The main reason for using NetCDF formatted hotstart files instead of
 !  binary format is the abillity to use standard tools (nco, ncmerge) is
 !  a much easier way to to introduce a new subdomain decomposition for
-!  an already running set-up - without having to start all over again. See
-!  read_restart_ncdf() for further explanation.\newline
-!  This modules just contains variables shared accros the *_restart_ncdf()
+!  an already running set-up - without having to start all over again. 
+!  See $read\_restart\_ncdf()$ for further explanation.\newline
+!  This modules just contains variables shared accros the *\_restart\_ncdf()
 !  routines.
 !
 ! !USES:
@@ -68,6 +68,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: ncdf_restart.F90,v $
+!  Revision 1.3  2009-09-23 09:54:52  kb
+!  fixed typos in DESCRIPTION
+!
 !  Revision 1.2  2007-10-19 07:52:36  kbk
 !  zub and zvb not in hotstart files anymore
 !

@@ -1,4 +1,4 @@
-!$Id: open_restart_ncdf.F90,v 1.3 2009-04-27 08:03:02 kb Exp $
+!$Id: open_restart_ncdf.F90,v 1.4 2009-09-23 09:54:53 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,7 @@
 ! !DESCRIPTION:
 !  Opens a NetCDF formatted GETM hotstart file. All NetCDF variable
 !  id's necessary for making a correct GETM hotstart are read. The id's 
-!  are shared with the reading routine using the ncdf_restart module.
+!  are shared with the reading routine using the ncdf\_restart module.
 !
 ! !USES:
    use netcdf
@@ -28,6 +28,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: open_restart_ncdf.F90,v $
+!  Revision 1.4  2009-09-23 09:54:53  kb
+!  fixed typos in DESCRIPTION
+!
 !  Revision 1.3  2009-04-27 08:03:02  kb
 !  getm/initialise.F90
 !
