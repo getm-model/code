@@ -1,4 +1,4 @@
-!$Id: ss_nn.F90,v 1.10 2009-08-18 10:24:44 bjb Exp $
+!$Id: ss_nn.F90,v 1.11 2009-09-23 08:23:59 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -168,32 +168,32 @@
             do k=1,kmax-1
 ! This is an older version which we should keep here.
 #ifndef NEW_SS
-              SS(i,j,k)=0.5* (                                               &
-                   ( (uu(i,j,k+1)/hun(i,j,k+1)-uu(i,j,k)/hun(i,j,k))         &
-                   /(0.5*(hun(i,j,k+1)+hun(i,j,k))) )**2                     &
-                +  ( (uu(i-1,j,k+1)/hun(i-1,j,k+1)-uu(i-1,j,k)/hun(i-1,j,k)) &
-                   /(0.5*(hun(i-1,j,k+1)+hun(i-1,j,k))) )**2                 &
-                +  ( (vv(i,j,k+1)/hvn(i,j,k+1)-vv(i,j,k)/hvn(i,j,k))         &
-                   /(0.5*(hvn(i,j,k+1)+hvn(i,j,k))) )**2                     &
-                +  ( (vv(i,j-1,k+1)/hvn(i,j-1,k+1)-vv(i,j-1,k)/hvn(i,j-1,k)) &
-                   /(0.5*(hvn(i,j-1,k+1)+hvn(i,j-1,k))) )**2                 &
+              SS(i,j,k)=_HALF_* (                                             &
+                   ( (uu(i,j,k+1)/hun(i,j,k+1)-uu(i,j,k)/hun(i,j,k))          &
+                   /(_HALF_*(hun(i,j,k+1)+hun(i,j,k))) )**2                   &
+                +  ( (uu(i-1,j,k+1)/hun(i-1,j,k+1)-uu(i-1,j,k)/hun(i-1,j,k))  &
+                   /(_HALF_*(hun(i-1,j,k+1)+hun(i-1,j,k))) )**2               &
+                +  ( (vv(i,j,k+1)/hvn(i,j,k+1)-vv(i,j,k)/hvn(i,j,k))          &
+                   /(_HALF_*(hvn(i,j,k+1)+hvn(i,j,k))) )**2                   &
+                +  ( (vv(i,j-1,k+1)/hvn(i,j-1,k+1)-vv(i,j-1,k)/hvn(i,j-1,k))  &
+                   /(_HALF_*(hvn(i,j-1,k+1)+hvn(i,j-1,k))) )**2               &
                             )
 #else
 ! This version should better conserve energy.
-              SS(i,j,k)=0.5* (                                                &
+              SS(i,j,k)=_HALF_* (                                             &
                    (uu(i,j,k+1)/hun(i,j,k+1)-uu(i,j,k)/hun(i,j,k))**2         &
-                   /(0.5*(hun(i,j,k+1)+hun(i,j,k)))                           &
-                    *0.5*(num(i,j,k)+num(i+1,j,k))                            &
-               +  (uu(i-1,j,k+1)/hun(i-1,j,k+1)-uu(i-1,j,k)/hun(i-1,j,k))**2 &
-                  /(0.5*(hun(i-1,j,k+1)+hun(i-1,j,k)))                       &
-                   *0.5*(num(i-1,j,k)+num(i,j,k))                            &
+                   /(_HALF_*(hun(i,j,k+1)+hun(i,j,k)))                        &
+                    *_HALF_*(num(i,j,k)+num(i+1,j,k))                         &
+               +  (uu(i-1,j,k+1)/hun(i-1,j,k+1)-uu(i-1,j,k)/hun(i-1,j,k))**2  &
+                  /(_HALF_*(hun(i-1,j,k+1)+hun(i-1,j,k)))                     &
+                   *_HALF_*(num(i-1,j,k)+num(i,j,k))                          &
                 +  (vv(i,j,k+1)/hvn(i,j,k+1)-vv(i,j,k)/hvn(i,j,k))**2         &
-                   /(0.5*(hvn(i,j,k+1)+hvn(i,j,k)))                           &
-                    *0.5*(num(i,j,k)+num(i,j+1,k))                            &
+                   /(_HALF_*(hvn(i,j,k+1)+hvn(i,j,k)))                        &
+                    *_HALF_*(num(i,j,k)+num(i,j+1,k))                         &
                 +  (vv(i,j-1,k+1)/hvn(i,j-1,k+1)-vv(i,j-1,k)/hvn(i,j-1,k))**2 &
-                   /(0.5*(hvn(i,j-1,k+1)+hvn(i,j-1,k)))                       &
-                    *0.5*(num(i,j-1,k)+num(i,j,k))                            &
-                            )/(0.5*(hn(i,j,k)+hn(i,j,k+1)))/num(i,j,k)
+                   /(_HALF_*(hvn(i,j-1,k+1)+hvn(i,j-1,k)))                    &
+                    *_HALF_*(num(i,j-1,k)+num(i,j,k))                         &
+                            )/(_HALF_*(hn(i,j,k)+hn(i,j,k+1)))/num(i,j,k)
 #endif
             end do
          end if
@@ -207,34 +207,39 @@
       do i=imin,imax
          if (az(i,j) .eq. 1 ) then
             do k=kmax-1,1,-1
-               dz=0.5*(hn(i,j,k+1)+hn(i,j,k))
+               dz=_HALF_*(hn(i,j,k+1)+hn(i,j,k))
                NNc =(buoy(i,j,k+1)-buoy(i,j,k))/dz
 #ifndef NEW_NN
                if (az(i+1,j) .eq. 1) then
-                  dz=0.5*(hn(i+1,j,k+1)+hn(i+1,j,k))
+                  dz=_HALF_*(hn(i+1,j,k+1)+hn(i+1,j,k))
                   NNe=(buoy(i+1,j,k+1)-buoy(i+1,j,k))/dz
                else
                   NNe=NNc
                end if 
                if (az(i-1,j) .eq. 1) then
-                  dz=0.5*(hn(i-1,j,k+1)+hn(i-1,j,k))
+                  dz=_HALF_*(hn(i-1,j,k+1)+hn(i-1,j,k))
                   NNw=(buoy(i-1,j,k+1)-buoy(i-1,j,k))/dz
                else
                   NNw=NNc
                end if
                if (az(i,j+1) .eq. 1) then
-                  dz=0.5*(hn(i,j+1,k+1)+hn(i,j+1,k))
+                  dz=_HALF_*(hn(i,j+1,k+1)+hn(i,j+1,k))
                   NNn=(buoy(i,j+1,k+1)-buoy(i,j+1,k))/dz
                else
                   NNn=NNc
                end if
                if (az(i,j-1) .eq. 1) then
-                  dz=0.5*(hn(i,j-1,k+1)+hn(i,j-1,k))
+                  dz=_HALF_*(hn(i,j-1,k+1)+hn(i,j-1,k))
                   NNs=(buoy(i,j-1,k+1)-buoy(i,j-1,k))/dz
                else
                   NNs=NNc
                end if
-               NN(i,j,k)=0.3333333*NNc+0.1666666*(NNe+NNw+NNn+NNs)
+               NN(i,j,k)=(_ONE_/3)*NNc+(_ONE_/6)*(NNe+NNw+NNn+NNs)
+! BJB-NOTE: This old implementation (with limited accuracy constants)
+!   yields significantly different results. Relative elevation  
+!   differences of O(1e-4) have been observed between old and new 
+!   implementation. BJB 2009-09-23.
+!              NN(i,j,k)=0.3333333*NNc+0.1666666*(NNe+NNw+NNn+NNs)
 #else
                NN(i,j,k)=NNc
 #endif
