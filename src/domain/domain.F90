@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.34 2009-09-23 10:09:20 kb Exp $
+!$Id: domain.F90,v 1.35 2009-09-24 12:37:03 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -51,7 +51,7 @@
    logical                             :: gamma_surf     = .true.
    REALTYPE, allocatable, dimension(:) :: ga
 
-   integer                             :: NWB,NNB,NEB,NSB,NOB
+   integer                             :: NWB=-1,NNB=-1,NEB=-1,NSB=-1,NOB
    integer                             :: calc_points
    logical                             :: openbdy        = .false.
 
@@ -99,6 +99,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.35  2009-09-24 12:37:03  kb
+!  comments and empty lines allowed in: bdyinfo.dat, minimum_depth.dat, bathymetry.adjust and mask.adjust - using ideas of Alex Barth
+!
 !  Revision 1.34  2009-09-23 10:09:20  kb
 !  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
 !
@@ -1043,44 +1046,56 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: unit = 25 ! kbk
-   integer                   :: i,j,k,n
+   character(len=255)        :: line
+   integer                   :: iostat
+   integer                   :: i,j,k=0,n=-1
    integer                   :: il,jl,ih,jh
    integer                   :: i1,j1
    REALTYPE                  :: dmin
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   ! Should read in to a buffer at some time to allow for #
-   open(unit,file=fn,action='read',status='old',err=90)
-   read(unit,*,end=91,err=92) n
-   if(n .ge. 1) then
-      LEVEL2 'setting minimum depths according to:'
-      LEVEL3 trim(fn)
-   end if
-   do k=1,n
-      read(unit,*,end=91,err=92) il,jl,ih,jh,dmin
-      LEVEL3 'setting min depth in ',il,jl,ih,jh,' to ',dmin
-      do j=jl,jh
-         do i=il,ih
-            if(imin+ioff .le. i .and. i .le. imax+ioff .and. &
-               jmin+joff .le. j .and. j .le. jmax+joff ) then
-               i1 = i-ioff
-               j1 = j-joff
-               if(H(i1,j1) .gt. -9. .and. H(i1,j1) .lt. dmin) then
-                  H(i1,j1) = dmin
-               end if
-            end if
-         end do
-      end do
-   end do
-   close(unit)
+!   open(unit,file=fn,action='read',iostat=iostat,status='old',err=90)
+   open(unit,file=fn,action='read',iostat=iostat,status='old')
 
+   do while (iostat == 0)
+      read(unit,'(A)',iostat=iostat,end=91,err=92) line
+!     skip comments and empty lines
+      if (line(1:1) == '#' .or. line(1:1) == '!' .or. len(trim(line)) == 0 ) then
+      else if ( n .eq. -1 ) then
+         read(line,*) n
+         if(n .gt. 1) then
+            LEVEL2 'setting minimum depths according to:'
+            LEVEL3 trim(fn)
+         end if
+      else
+         read(line,*,iostat=iostat) il,jl,ih,jh,dmin
+         if (iostat .ne. 0) goto 93
+         k = k+1
+         LEVEL3 il,jl,ih,jh,dmin
+         do j=jl,jh
+            do i=il,ih
+               if(imin+ioff .le. i .and. i .le. imax+ioff .and. &
+                  jmin+joff .le. j .and. j .le. jmax+joff ) then
+                  i1 = i-ioff
+                  j1 = j-joff
+                  if(H(i1,j1) .gt. -9. .and. H(i1,j1) .lt. dmin) then
+                     H(i1,j1) = dmin
+                  end if
+               end if
+            end do
+         end do
+      end if
+   end do
+
+   close(unit)
    return
 
 90 LEVEL2 'could not open ',trim(fn),' no minimum depth adjustments done'
+91 LEVEL2 'done'
    return
-91 call getm_error("set_min_depth()","End of file "//trim(fn)//".")
-92 call getm_error("set_min_depth()","Error reading "//trim(fn)//".")
+92 call getm_error("set_min_depth()","End of file "//trim(fn)//".")
+93 call getm_error("set_min_depth()","Error reading line: "//trim(line))
    end subroutine set_min_depth
 !EOC
 
@@ -1103,42 +1118,51 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: unit = 25 ! kbk
-   integer                   :: i,j,k,n
+   character(len=255)        :: line
+   integer                   :: iostat
+   integer                   :: i,j,k=0,n=-1
    integer                   :: il,jl,ih,jh
-   integer                   :: i1,j1
    REALTYPE                  :: x
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   ! Should read in to a buffer at some time to allow for #
-   open(unit,file=fn,action='read',status='old',err=90)
-   read(unit,*,end=91,err=92) n
-   if(n .gt. 1) then
-      LEVEL2 'adjusting bathymetry according to:'
-      LEVEL3 trim(fn)
-   end if
-   do k=1,n
-      read(unit,*,end=91,err=92) il,jl,ih,jh,x
-      LEVEL3 'setting bathymetry in ',il,jl,ih,jh,' to ',x
-      do j=jl,jh
-         do i=il,ih
-            if(imin+ioff .le. i .and. i .le. imax+ioff .and. &
-               jmin+joff .le. j .and. j .le. jmax+joff ) then
-               i1 = i-ioff
-               j1 = j-joff
-               H(i1,j1) = x
-            end if
-         end do
-      end do
-   end do
-   close(unit)
+!   open(unit,file=fn,action='read',iostat=iostat,status='old',err=90)
+   open(unit,file=fn,action='read',iostat=iostat,status='old')
 
+   do while (iostat == 0)
+      read(unit,'(A)',iostat=iostat,end=91,err=92) line
+!     skip comments and empty lines
+      if (line(1:1) == '#' .or. line(1:1) == '!' .or. len(trim(line)) == 0 ) then
+      else if ( n .eq. -1 ) then
+         read(line,*) n
+         if(n .gt. 1) then
+            LEVEL2 'adjusting bathymetry according to:'
+            LEVEL3 trim(fn)
+         end if
+      else
+         read(line,*,iostat=iostat) il,jl,ih,jh,x
+         if (iostat .ne. 0) goto 93
+         k = k+1
+         LEVEL3 il,jl,ih,jh,x
+         do j=jl,jh
+            do i=il,ih
+               if(imin+ioff .le. i .and. i .le. imax+ioff .and. &
+                  jmin+joff .le. j .and. j .le. jmax+joff ) then
+                  H(i-ioff,j-joff) = x
+               end if
+            end do
+         end do
+      end if
+   end do
+
+   close(unit)
    return
 
 90 LEVEL2 'could not open ',trim(fn),' no bathymetry adjustments done'
+91 LEVEL2 'done'
    return
-91 call getm_error("adjust_bathymetry()","End of file "//trim(fn)//".")
-92 call getm_error("adjust_bathymetry()","Error reading "//trim(fn)//".")
+92 call getm_error("adjust_bathymetry()","End of file "//trim(fn)//".")
+93 call getm_error("adjust_bathymetry()","Error reading line: "//trim(line))
    end subroutine adjust_bathymetry
 !EOC
 
@@ -1152,7 +1176,10 @@
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
-!  Read mask adjustments from file.
+!  Read mask adjustments from file. The file format allows comments.
+!  Comment characters are ! or # - they MUST be in column 1.
+!  Lines with white-spaces are skipped. Conversion errors
+!  are caught and an error condition occurs.
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fn
@@ -1161,41 +1188,50 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: unit = 25 ! kbk
-   integer                   :: i,j,k,n
+   character(len=255)        :: line
+   integer                   :: iostat
+   integer                   :: i,j,k=0,n=-1
    integer                   :: il,jl,ih,jh
-   integer                   :: i1,j1
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   ! Should read in to a buffer at some time to allow for #
-   open(unit,file=fn,action='read',status='old',err=90)
-   read(unit,*,end=91,err=92) n
-   if(n .gt. 1) then
-      LEVEL2 'adjusting mask according to:'
-      LEVEL3 trim(fn)
-   end if
-   do k=1,n
-      read(unit,*,end=91,err=92) il,jl,ih,jh
-      LEVEL3 'masking area ',il,jl,ih,jh
-      do j=jl,jh
-         do i=il,ih
-            if(imin+ioff .le. i .and. i .le. imax+ioff .and. &
-               jmin+joff .le. j .and. j .le. jmax+joff ) then
-               i1 = i-ioff
-               j1 = j-joff
-               az(i1,j1) = 0
-            end if
-         end do
-      end do
-   end do
-   close(unit)
+!   open(unit,file=fn,action='read',iostat=iostat,status='old',err=90)
+   open(unit,file=fn,action='read',iostat=iostat,status='old')
 
+   do while (iostat == 0)
+      read(unit,'(A)',iostat=iostat,end=91,err=92) line
+!     skip comments and empty lines
+      if (line(1:1) == '#' .or. line(1:1) == '!' .or. len(trim(line)) == 0 ) then
+      else if ( n .eq. -1 ) then
+         read(line,*) n
+         if(n .gt. 1) then
+            LEVEL2 'adjusting mask according to:'
+            LEVEL3 trim(fn)
+         end if
+      else
+         read(line,*,iostat=iostat) il,jl,ih,jh
+         if (iostat .ne. 0) goto 93
+         k = k+1
+         LEVEL3 il,jl,ih,jh
+         do j=jl,jh
+            do i=il,ih
+               if(imin+ioff .le. i .and. i .le. imax+ioff .and. &
+                  jmin+joff .le. j .and. j .le. jmax+joff ) then
+                  az(i-ioff,j-joff) = 0
+               end if
+            end do
+         end do
+      end if
+   end do
+
+   close(unit)
    return
 
 90 LEVEL2 'could not open ',trim(fn),' no mask adjustments done'
+91 LEVEL2 'done'
    return
-91 call getm_error("adjust_mask()","End of file "//trim(fn)//".")
-92 call getm_error("adjust_mask()","Error reading "//trim(fn)//".")
+92 call getm_error("adjust_mask()","Error reading "//trim(fn))
+93 call getm_error("adjust_mask()","Error reading line: "//trim(line))
    end subroutine adjust_mask
 !EOC
 

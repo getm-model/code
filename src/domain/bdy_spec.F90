@@ -1,4 +1,4 @@
-!$Id: bdy_spec.F90,v 1.7 2009-09-23 10:11:47 kb Exp $
+!$Id: bdy_spec.F90,v 1.8 2009-09-24 12:37:03 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,6 +12,7 @@
 !  Read in the open boundary information from 'fn'.
 !
 ! !USES:
+   use exceptions
    use domain, only: NWB,NNB,NEB,NSB,NOB
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: bdy_index,bdy_map,nsbv
@@ -30,6 +31,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bdy_spec.F90,v $
+!  Revision 1.8  2009-09-24 12:37:03  kb
+!  comments and empty lines allowed in: bdyinfo.dat, minimum_depth.dat, bathymetry.adjust and mask.adjust - using ideas of Alex Barth
+!
 !  Revision 1.7  2009-09-23 10:11:47  kb
 !  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
 !
@@ -58,7 +62,10 @@
 !  initial import into CVS
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k,l,n,rc
+   character(len=255)        :: line
+   integer                   :: iostat
+   integer                   :: i,j,k,l
+   integer                   :: n,rc
    integer                   :: type_2d(4,10),type_3d(4,10)
 !
 !EOP
@@ -72,11 +79,28 @@
 #endif
 
    LEVEL2 'Reading boundary location information from:'
-   LEVEL3 TRIM(fn)
-   open(BDYINFO,file=fn,status='unknown',ERR=90)
+   LEVEL3 trim(fn)
+
+
+!   open(BDYINFO,file=fn,status='unknown',ERR=90)
+
+!   open(unit,file=fn,action='read',iostat=iostat,status='old',err=90)
+   open(BDYINFO,file=fn,action='read',iostat=iostat,status='old')
 
 !  Western boundary info
-   read(BDYINFO,*,END=91,ERR=92) NWB
+   do while (NWB .eq. -1 .and. iostat == 0)
+      read(BDYINFO,'(A)',iostat=iostat,end=91,err=92) line
+!     skip comments and empty lines
+      if (line(1:1) == '#' .or. line(1:1) == '!' .or. &
+          len(trim(line)) == 0 ) then
+      else
+         read(line,*) NWB
+      end if
+   end do
+   if (NWB .lt. 0) then
+      call getm_error("bdy_spec()","NWB < 0")
+   end if
+
    if (NWB .ge. 1) then
       allocate(wi(NWB),stat=rc)
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (wi)'
@@ -84,10 +108,19 @@
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (wfj)'
       allocate(wlj(NWB),stat=rc)
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (wlj)'
-      do n = 1,NWB
-         read(BDYINFO,*,END=91,ERR=92) wi(n),wfj(n),wlj(n), &
+
+      n=0
+      do while (n .ne. NWB .or. iostat == 0)
+         read(BDYINFO,'(A)',iostat=iostat,end=91,err=92) line
+!        skip comments and empty lines
+         if (line(1:1) == '#' .or. line(1:1) == '!' .or. &
+             len(trim(line)) == 0 ) then
+         else
+            n=n+1
+            read(line,*,END=91,ERR=92) wi(n),wfj(n),wlj(n), &
                                        type_2d(1,n),type_3d(1,n)
-         nsbv = nsbv + (wlj(n)-wfj(n)+1)
+            nsbv = nsbv + (wlj(n)-wfj(n)+1)
+         end if
       end do
       do n = 1,NWB
          if (type_2d(1,n) .eq. CLAMPED) need_2d_bdy_elev = .true.
@@ -99,7 +132,19 @@
    end if
 
 !  Northern boundary info
-   read(BDYINFO,*,END=91,ERR=92) NNB
+   do while (NNB .eq. -1 .and. iostat == 0)
+      read(BDYINFO,'(A)',iostat=iostat,end=91,err=92) line
+!     skip comments and empty lines
+      if (line(1:1) == '#' .or. line(1:1) == '!' .or. &
+          len(trim(line)) == 0 ) then
+      else
+         read(line,*) NNB
+      end if
+   end do
+   if (NNB .lt. 0) then
+      call getm_error("bdy_spec()","NNB < 0")
+   end if
+
    if (NNB .ge. 1 ) then
       allocate(nj(NNB),stat=rc)
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (nj)'
@@ -107,10 +152,19 @@
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (nfi)'
       allocate(nli(NNB),stat=rc)
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (nli)'
-      do n = 1,NNB
-         read(BDYINFO,*,END=91,ERR=92) nj(n),nfi(n),nli(n), &
+
+      n=0
+      do while (n .ne. NNB .and. iostat == 0)
+         read(BDYINFO,'(A)',iostat=iostat,end=91,err=92) line
+!        skip comments and empty lines
+         if (line(1:1) == '#' .or. line(1:1) == '!' .or. &
+             len(trim(line)) == 0 ) then
+         else
+            n=n+1
+            read(line,*,END=91,ERR=92) nj(n),nfi(n),nli(n), &
                                        type_2d(2,n),type_3d(2,n)
-         nsbv = nsbv + (nli(n)-nfi(n)+1)
+            nsbv = nsbv + (nli(n)-nfi(n)+1)
+         end if
       end do
       do n = 1,NNB
          if (type_2d(2,n) .eq. CLAMPED) need_2d_bdy_elev = .true.
@@ -122,7 +176,18 @@
    end if
 
 !  Eastern boundary info
-   read(BDYINFO,*,END=91,ERR=92) NEB
+   do while (NEB .eq. -1 .and. iostat == 0)
+      read(BDYINFO,'(A)',iostat=iostat,end=91,err=92) line
+!     skip comments and empty lines
+      if (line(1:1) == '#' .or. line(1:1) == '!' .or. &
+          len(trim(line)) == 0 ) then
+      else
+         read(line,*) NEB
+      end if
+   end do
+   if (NEB .lt. 0) then
+      call getm_error("bdy_spec()","NEB < 0")
+   end if
    if (NEB .ge. 1 ) then
       allocate(ei(NEB),stat=rc)
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (ei)'
@@ -130,10 +195,18 @@
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (efj)'
       allocate(elj(NEB),stat=rc)
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (elj)'
-      do n = 1,NEB
-         read(BDYINFO,*,END=91,ERR=92) ei(n),efj(n),elj(n), &
+      n=0
+      do while (n .ne. NEB .and. iostat == 0)
+         read(BDYINFO,'(A)',iostat=iostat,end=91,err=92) line
+!        skip comments and empty lines
+         if (line(1:1) == '#' .or. line(1:1) == '!' .or. &
+             len(trim(line)) == 0 ) then
+         else
+            n=n+1
+            read(line,*,END=91,ERR=92) ei(n),efj(n),elj(n), &
                                        type_2d(3,n),type_3d(3,n)
-         nsbv = nsbv + (elj(n)-efj(n)+1)
+            nsbv = nsbv + (elj(n)-efj(n)+1)
+         end if
       end do
       do n = 1,NEB
          if (type_2d(3,n) .eq. CLAMPED) need_2d_bdy_elev = .true.
@@ -145,7 +218,18 @@
    end if
 
 !  Southern boundary info
-   read(BDYINFO,*,END=91,ERR=92) NSB
+   do while (NSB .eq. -1 .and. iostat == 0)
+      read(BDYINFO,'(A)',iostat=iostat,end=91,err=92) line
+!     skip comments and empty lines
+      if (line(1:1) == '#' .or. line(1:1) == '!' .or. &
+          len(trim(line)) == 0 ) then
+      else
+         read(line,*) NSB
+      end if
+   end do
+   if (NSB .lt. 0) then
+      call getm_error("bdy_spec()","NSB < 0")
+   end if
    if (NSB .ge. 1 ) then
       allocate(sj(NSB),stat=rc)
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (sj)'
@@ -153,10 +237,18 @@
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (sfi)'
       allocate(sli(NSB),stat=rc)
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (sli)'
-      do n = 1,NSB
-         read(BDYINFO,*,END=91,ERR=92) sj(n),sfi(n),sli(n), &
+      n=0
+      do while (n .ne. NSB .and. iostat == 0)
+         read(BDYINFO,'(A)',iostat=iostat,end=91,err=92) line
+!        skip comments and empty lines
+         if (line(1:1) == '#' .or. line(1:1) == '!' .or. &
+             len(trim(line)) == 0 ) then
+         else
+            n=n+1
+            read(line,*,END=91,ERR=92) sj(n),sfi(n),sli(n), &
                                        type_2d(4,n),type_3d(4,n)
-         nsbv = nsbv + (sli(n)-sfi(n)+1)
+            nsbv = nsbv + (sli(n)-sfi(n)+1)
+         end if
       end do
       do n=1,NSB
          if (type_2d(4,n) .eq. CLAMPED) need_2d_bdy_elev = .true.
