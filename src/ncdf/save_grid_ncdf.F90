@@ -1,4 +1,4 @@
-!$Id: save_grid_ncdf.F90,v 1.8 2009-09-23 12:40:00 kb Exp $
+!$Id: save_grid_ncdf.F90,v 1.9 2009-09-25 12:17:25 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -48,6 +48,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: save_grid_ncdf.F90,v $
+!  Revision 1.9  2009-09-25 12:17:25  kb
+!  removed undef [IJ]RANGE
+!
 !  Revision 1.8  2009-09-23 12:40:00  kb
 !  only save latu, latv, convc when have_lonlat=.true. when grid_type=1
 !
@@ -170,7 +173,6 @@
             status = nf90_inq_varid(ncid,'lonc',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","lonc -")
-STDERR start,edges
             status = nf90_put_var(ncid,id,lonc(IRANGE,JRANGE),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","lonc -")
@@ -473,9 +475,6 @@ STDERR start,edges
       if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","v_mask")
    end if
-
-#undef IRANGE
-#undef JRANGE
 
    return
    end subroutine save_grid_ncdf

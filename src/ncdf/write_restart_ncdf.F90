@@ -1,4 +1,4 @@
-!$Id: write_restart_ncdf.F90,v 1.9 2009-09-23 09:54:53 kb Exp $
+!$Id: write_restart_ncdf.F90,v 1.10 2009-09-25 12:17:26 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -44,6 +44,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: write_restart_ncdf.F90,v $
+!  Revision 1.10  2009-09-25 12:17:26  kb
+!  removed undef [IJ]RANGE
+!
 !  Revision 1.9  2009-09-23 09:54:53  kb
 !  fixed typos in DESCRIPTION
 !
@@ -266,9 +269,6 @@
 #endif
    end if
 #endif
-
-#undef IRANGE
-#undef JRANGE
 
    status = nf90_sync(ncid)
    if (status .NE. NF90_NOERR) go to 10
