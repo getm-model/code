@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.16 2009-08-21 10:39:00 kb Exp $
+!$Id: main.F90,v 1.17 2009-09-25 12:14:56 kb Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -40,6 +40,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: main.F90,v $
+!  Revision 1.17  2009-09-25 12:14:56  kb
+!  INCLUDE_HALOS --> SAVE_HALOS
+!
 !  Revision 1.16  2009-08-21 10:39:00  kb
 !  -DINCLUDE_HALOS will include halo-zones when writing/reading NetCDF hotstart files
 !
@@ -272,8 +275,8 @@
 #ifdef OLD_WRONG_FLUXES
    LEVEL1 'OLD_WRONG_FLUXES'
 #endif
-#ifdef INCLUDE_HALOS
-   LEVEL1 'INCLUDE_HALOS'
+#ifdef SAVE_HALOS
+   LEVEL1 'SAVE_HALOS'
 #endif
 
    STDERR LINE

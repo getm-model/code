@@ -1,4 +1,4 @@
-!$Id: create_restart_ncdf.F90,v 1.6 2009-09-23 09:54:52 kb Exp $
+!$Id: create_restart_ncdf.F90,v 1.7 2009-09-25 12:14:56 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -39,6 +39,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: create_restart_ncdf.F90,v $
+!  Revision 1.7  2009-09-25 12:14:56  kb
+!  INCLUDE_HALOS --> SAVE_HALOS
+!
 !  Revision 1.6  2009-09-23 09:54:52  kb
 !  fixed typos in DESCRIPTION
 !
@@ -70,7 +73,7 @@
    if (status .NE. NF90_NOERR) go to 10
 
 !  length of netCDF dimensions
-#ifdef INCLUDE_HALOS
+#ifdef SAVE_HALOS
    xlen = (imax+HALO)-(imin-HALO)+1
    ylen = (jmax+HALO)-(jmin-HALO)+1
 #else

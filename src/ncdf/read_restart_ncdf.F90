@@ -1,4 +1,4 @@
-!$Id: read_restart_ncdf.F90,v 1.10 2009-09-23 09:54:53 kb Exp $
+!$Id: read_restart_ncdf.F90,v 1.11 2009-09-25 12:14:56 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -56,6 +56,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: read_restart_ncdf.F90,v $
+!  Revision 1.11  2009-09-25 12:14:56  kb
+!  INCLUDE_HALOS --> SAVE_HALOS
+!
 !  Revision 1.10  2009-09-23 09:54:53  kb
 !  fixed typos in DESCRIPTION
 !
@@ -107,7 +110,7 @@
 
 !  allows reading from subdomain or topo.nc sized files
 !  i.e. ncmerged files cut to the same size as topo.nc
-#ifdef INCLUDE_HALOS
+#ifdef SAVE_HALOS
    if (xlen .eq. ((imax+HALO)-(imin-HALO)+1) .and.  &
        ylen .eq. ((jmax+HALO)-(jmin-HALO)+1) ) then
       LEVEL3 'hotstart file(s) include HALO-zones'
