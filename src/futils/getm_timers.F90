@@ -16,9 +16,9 @@
    IMPLICIT NONE
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-   public                              :: init_getm_timers,  \
-                                          write_getm_timers, \
-                                          tic, toc
+   public                              :: init_getm_timers
+   public                              :: write_getm_timers
+   public                              :: tic, toc
 
 ! !PUBLIC DATA MEMBERS:
 ! The indices order the output.
