@@ -1,4 +1,4 @@
-!$Id: init_grid_ncdf.F90,v 1.7 2009-09-23 10:11:48 kb Exp $
+!$Id: init_grid_ncdf.F90,v 1.8 2009-09-28 14:39:06 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,6 +41,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: init_grid_ncdf.F90,v $
+!  Revision 1.8  2009-09-28 14:39:06  kb
+!  INLUDE_HALOS -> SAVE_HALOS, renamed dimension names
+!
 !  Revision 1.7  2009-09-23 10:11:48  kb
 !  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
 !
@@ -70,6 +73,7 @@
    integer                   :: f2_dims(2)
    REALTYPE                  :: fv,mv,vr(2)
    character(32)             :: xname,yname,zname
+   character(32)             :: xxname,yxname
    character(32)             :: xunits,yunits,zunits
 !EOP
 !-----------------------------------------------------------------------
@@ -87,8 +91,8 @@
    endif
 
 ! length of netCDF dimensions
-! set INCLUDE_HALOS via Makefile
-#ifdef INCLUDE_HALOS
+! set SAVE_HALOS via Makefile
+#ifdef SAVE_HALOS
    xlen = (imax+HALO)-(imin-HALO)+1
    ylen = (jmax+HALO)-(jmin-HALO)+1
    zlen = kmax+1
@@ -112,12 +116,16 @@
          yunits   = 'degrees_north'
       case (3)
          xname    = 'xic'
+         xxname   = 'xicx'
          yname    = 'etac'
+         yxname   = 'etax'
          xunits   = ' '
          yunits   = ' '
       case (4)
          xname    = 'xic'
+         xxname   = 'xicx'
          yname    = 'etac'
+         yxname   = 'etax'
          xunits   = ' '
          yunits   = ' '
       case default
@@ -149,13 +157,13 @@
    y_dim=yc_dim
    if (status .ne. NF90_NOERR) call netcdf_error(status,                  &
                                   "init_grid_ncdf()","yc_dim -")
-   select case (vert_cord)
+   select case (grid_type)
       case(3,4)
-         status = nf90_def_dim(ncid,'kurt',xlen+1,xx_dim)
+         status = nf90_def_dim(ncid,xxname,xlen+1,xx_dim)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "init_grid_ncdf()","xx_dim -")
 
-         status = nf90_def_dim(ncid,'egon',ylen+1,yx_dim)
+         status = nf90_def_dim(ncid,yxname,ylen+1,yx_dim)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "init_grid_ncdf()","yx_dim -")
       case default
@@ -355,7 +363,6 @@
          end if
 
 
-#if 1
       case (3,4)
 !        pseudo coordinate variables
          axisdim(1) = x_dim
@@ -368,6 +375,7 @@
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "init_grid_ncdf()","etac -")
 
+!        position of vertices
          status = nf90_def_var(ncid,'xx',NF90_DOUBLE,(/ xx_dim, yx_dim /),id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "init_grid_ncdf()","xc -")
@@ -391,8 +399,6 @@
                             long_name='yx-position',units='m',           &
                             netcdf_real=NF90_DOUBLE, &
                             FillValue=fv,missing_value=mv,valid_range=vr)
-
-#endif
       case default
    end select
 
