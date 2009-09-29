@@ -1,5 +1,5 @@
 # Set options for the Intel Fortran 95 compiler - ver. 11
-ifeq ($(FORTRAN_COMPILER),IFORT)
+ifeq ($(FORTRAN_COMPILER),IFORT11)
 FC=ifort
 DEFINES += -DFORTRAN95
 can_do_F90=true
