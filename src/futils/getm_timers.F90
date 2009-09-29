@@ -92,12 +92,6 @@
    subroutine init_getm_timers()
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !DESCRIPTION:
 !  Initializes timers for some subroutines.
 !
@@ -106,7 +100,6 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -216,6 +209,7 @@
    subroutine tic(timerindex)
    IMPLICIT NONE
 !
+! !DESCRIPTION:
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: timerindex
@@ -250,6 +244,7 @@
    subroutine toc(timerindex)
    IMPLICIT NONE
 !
+! !DESCRIPTION:
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)  :: timerindex
@@ -294,12 +289,6 @@
    subroutine write_getm_timers()
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !DESCRIPTION:
 !  Write contents of subroutines
 !
@@ -310,7 +299,6 @@
    integer                   :: i
    LONGINT                   :: count_rate, count_max, count_dummy
    REALTYPE                  :: thistime,tottime
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC
