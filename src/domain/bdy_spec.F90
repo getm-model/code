@@ -1,4 +1,4 @@
-!$Id: bdy_spec.F90,v 1.8 2009-09-24 12:37:03 kb Exp $
+!$Id: bdy_spec.F90,v 1.9 2009-09-29 08:07:28 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,6 +31,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: bdy_spec.F90,v $
+!  Revision 1.9  2009-09-29 08:07:28  kb
+!  fixed reading western boundary information
+!
 !  Revision 1.8  2009-09-24 12:37:03  kb
 !  comments and empty lines allowed in: bdyinfo.dat, minimum_depth.dat, bathymetry.adjust and mask.adjust - using ideas of Alex Barth
 !
@@ -110,7 +113,7 @@
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (wlj)'
 
       n=0
-      do while (n .ne. NWB .or. iostat == 0)
+      do while (n .ne. NWB .and. iostat == 0)
          read(BDYINFO,'(A)',iostat=iostat,end=91,err=92) line
 !        skip comments and empty lines
          if (line(1:1) == '#' .or. line(1:1) == '!' .or. &
