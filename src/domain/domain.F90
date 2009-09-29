@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.35 2009-09-24 12:37:03 kb Exp $
+!$Id: domain.F90,v 1.36 2009-09-29 07:17:41 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -16,7 +16,7 @@
 !  all grid related variables have been initialised.\newline
 !  The $domain$-module depends on another module doing the actual
 !  reading of variables from files. This is provided through the
-!  generic subroutine $read_topo_file$. This subroutine takes two
+!  generic subroutine $read\_topo\_file$. This subroutine takes two
 !  parameters - 1) a fileformat and 2) a filename. Adding a new 
 !  input file format is thus straight forward and can be done
 !  without any changes to $domain$.
@@ -99,6 +99,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.36  2009-09-29 07:17:41  kb
+!  fixed typos - for protex
+!
 !  Revision 1.35  2009-09-24 12:37:03  kb
 !  comments and empty lines allowed in: bdyinfo.dat, minimum_depth.dat, bathymetry.adjust and mask.adjust - using ideas of Alex Barth
 !
@@ -1177,7 +1180,7 @@
 !
 ! !DESCRIPTION:
 !  Read mask adjustments from file. The file format allows comments.
-!  Comment characters are ! or # - they MUST be in column 1.
+!  Comment characters are ! or \# - they MUST be in column 1.
 !  Lines with white-spaces are skipped. Conversion errors
 !  are caught and an error condition occurs.
 !
