@@ -19,7 +19,6 @@
    public                              :: init_getm_timers
    public                              :: write_getm_timers
    public                              :: tic, toc
-
 ! !PUBLIC DATA MEMBERS:
 ! The indices order the output.
 ! Allow extra "spaces" here and there to let new timers be possible
@@ -71,6 +70,9 @@
    ! This is for do_input and do_output
    integer, parameter :: TIM_INPUT       = 90   ! input
    integer, parameter :: TIM_OUTPUT      = 92   ! output
+!
+! !REVISION HISTORY:
+!  Original author(s): Bjarne Buchmann
 
 ! !LOCAL VARIABLES:
    integer, parameter :: max_timers = 99
@@ -96,7 +98,7 @@
 !  Initializes timers for some subroutines.
 !
 ! !REVISION HISTORY:
-!  13Aug2009 Bjarne Buchmann Initial code
+!  Original author(s): Bjarne Buchmann
 !
 ! !LOCAL VARIABLES:
    integer                   :: i
@@ -210,9 +212,20 @@
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
+!  Start/store wall clock for particular timer
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: timerindex
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Bjarne Buchmann
+!
+! !LOCAL VARIABLES:
+!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -245,9 +258,17 @@
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
+!  Get wall clock and update used time for particular timer
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)  :: timerindex
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Bjarne Buchmann
 !
 ! !LOCAL VARIABLES:
    LONGINT              :: timertoc
@@ -290,10 +311,10 @@
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
-!  Write contents of subroutines
+!  Write contents of all timers
 !
 ! !REVISION HISTORY:
-!  13Aug2009 Bjarne Buchmann Initial code
+!  Original author(s): Bjarne Buchmann
 !
 ! !LOCAL VARIABLES:
    integer                   :: i
@@ -331,10 +352,9 @@
    do i=1,max_timers
       if (len_trim(timernames(i)).gt.0) then
          thistime = _ONE_*timercounts(i)/count_rate
-!         LEVEL1 '  walltime ',timernames(i),' ',_ONE_*timercounts(i)/count_rate
-         write(stderr,100) timernames(i),thistime,sysclockcalls(i),100*thistime/tottime
+         write(stderr,100) timernames(i),thistime,                       &
+              sysclockcalls(i),100*thistime/tottime
 100      FORMAT(A26,F10.2,I15,F14.2)
-200      FORMAT(A14, A26, F10.2,A20,I10)
      end if
    end do
    write(stderr,100) '  TIMERS SUM  ',tottime,num_clock_calls,100*_ONE_
