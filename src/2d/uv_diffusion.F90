@@ -1,4 +1,4 @@
-!$Id: uv_diffusion.F90,v 1.12 2009-08-18 10:24:44 bjb Exp $
+!$Id: uv_diffusion.F90,v 1.13 2009-09-30 11:28:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -164,6 +164,7 @@
 #endif
    use variables_2d, only: D,U,DU,UEx,V,DV,VEx,PP
    use getm_timers,  only: tic,toc,TIM_UVDIFFUS
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -190,7 +191,11 @@
 #endif
    CALL tic(TIM_UVDIFFUS)
 
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP    PRIVATE(i,j)
+
 ! Central for dx(2*Am*dx(U/DU))
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax+1          ! PP defined on T-points
          PP(i,j)=_ZERO_
@@ -205,6 +210,8 @@
          end if
       end do
    end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax      ! UEx defined on U-points
       do i=imin,imax
          if (au(i,j) .ge. 1) then
@@ -212,9 +219,11 @@
          end if
       end do
    end do
+!$OMP END DO
 
 #ifndef SLICE_MODEL
 ! Central for dy(Am*(dy(U/DU)+dx(V/DV)))
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-1,jmax        ! PP defined on X-points
       do i=imin,imax
          PP(i,j)=_ZERO_
@@ -230,6 +239,8 @@
          end if
       end do
    end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax        !UEx defined on U-points
       do i=imin,imax
          if (au(i,j) .ge. 1) then
@@ -237,9 +248,11 @@
          end if
       end do
    end do
+!$OMP END DO
 #endif
 
 ! Central for dx(Am*(dy(U^2/DU)+dx(V^2/DV)))
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax      ! PP defined on X-points
       do i=imin-1,imax
          PP(i,j)=_ZERO_
@@ -255,6 +268,8 @@
          end if
       end do
    end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax          ! VEx defined on V-points
       do i=imin,imax
          if (av(i,j) .ge. 1) then
@@ -262,9 +277,11 @@
          end if
       end do
    end do
+!$OMP END DO
 
 #ifndef SLICE_MODEL
 ! Central for dy(2*Am*dy(V^2/DV))
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax+1     ! PP defined on T-points
       do i=imin,imax
          PP(i,j)=_ZERO_
@@ -279,6 +296,8 @@
          end if
       end do
    end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax             ! VEx defined on V-points
       do i=imin,imax
          if (av(i,j) .ge. 1) then
@@ -286,7 +305,10 @@
          end if
       end do
    end do
+!$OMP END DO
 #endif
+
+!$OMP END PARALLEL
 
    CALL toc(TIM_UVDIFFUS)
 #ifdef DEBUG

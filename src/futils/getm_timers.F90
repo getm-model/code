@@ -65,17 +65,31 @@
    integer, parameter :: TIM_CALCMEANF   = 68   ! 3d calc_mean_fields
    integer, parameter :: TIM_METEO       = 70   ! do_meteo (could use + halo)
    ! These catch compuations in integrate_[23]d, which are not in other timers:
-   integer, parameter :: TIM_INTEGR2D    = 88   ! 2d integrate_2d - remaining stuff
-   integer, parameter :: TIM_INTEGR3D    = 89   ! 3d integrate_3d - remaining stuff
+   integer, parameter :: TIM_INTEGR2D    = 80   ! 2d integrate_2d - remaining stuff
+   integer, parameter :: TIM_INTEGR3D    = 81   ! 3d integrate_3d - remaining stuff
    ! This is for do_input and do_output
    integer, parameter :: TIM_INPUT       = 90   ! input
    integer, parameter :: TIM_OUTPUT      = 92   ! output
+   ! These catch stuff that are *also* measured somewhere else:
+   integer, parameter :: TIM_ADVECT3DTOT = 100  ! advection_3d (uv+tracers)
+   integer, parameter :: TIM_CHECK3DF    = 102  ! check_3d_fields
+   ! This is test timers for temporary purposes:
+   integer, parameter :: TIM_TEST00      = 170
+   integer, parameter :: TIM_TEST01      = 171
+   integer, parameter :: TIM_TEST02      = 172
+   integer, parameter :: TIM_TEST03      = 173
+   integer, parameter :: TIM_TEST04      = 174
+   integer, parameter :: TIM_TEST05      = 175
+   integer, parameter :: TIM_TEST06      = 176
+   integer, parameter :: TIM_TEST07      = 177
+   integer, parameter :: TIM_TEST08      = 178
+   integer, parameter :: TIM_TEST09      = 179
 !
 ! !REVISION HISTORY:
 !  Original author(s): Bjarne Buchmann
 
 ! !LOCAL VARIABLES:
-   integer, parameter :: max_timers = 99
+   integer, parameter :: max_timers = 200
    LONGINT            :: timercounts(max_timers)
    LONGINT            :: timertics(max_timers), sysclockcalls(max_timers)
    character(len=24)  :: timernames(max_timers)
@@ -144,6 +158,10 @@
  
    timernames(TIM_INTEGR2D)    = 'integrate_2d other'
 
+   timernames(TIM_METEO)       = 'do_meteo'
+   timernames(TIM_INPUT)       = 'do_input'
+   timernames(TIM_OUTPUT)      = 'do_output'
+
 #ifdef GETM_PARALLEL
    timernames(TIM_MOMENTUMH)   = ' momentum-halo'
 #endif
@@ -171,10 +189,9 @@
    timernames(TIM_STARTMCR)    = 'start_macro'
    timernames(TIM_EQSTATE)     = 'eq_state'
    timernames(TIM_CALCMEANF)   = 'calc_mean_fields'
-   timernames(TIM_METEO)       = 'do_meteo'
-   timernames(TIM_INPUT)       = 'do_input'
-   timernames(TIM_OUTPUT)      = 'do_output'
 
+   timernames(TIM_CHECK3DF)    = ' sum check_3d_fields'
+   timernames(TIM_ADVECT3DTOT) = ' sum do_advection_3d'
    timernames(TIM_INTEGR3D)    = 'integrate_3d other'
 
 ! We only really want to display halo-stuff if we compile for parallel:
@@ -192,6 +209,17 @@
    timernames(TIM_STRCTFRICT)  = 'structure_friction_3d'
 #endif
 #endif
+
+   timernames(TIM_TEST00)  = ' test-00'
+   timernames(TIM_TEST01)  = ' test-01'
+   timernames(TIM_TEST02)  = ' test-02'
+   timernames(TIM_TEST03)  = ' test-03'
+   timernames(TIM_TEST04)  = ' test-04'
+   timernames(TIM_TEST05)  = ' test-05'
+   timernames(TIM_TEST06)  = ' test-06'
+   timernames(TIM_TEST07)  = ' test-07'
+   timernames(TIM_TEST08)  = ' test-08'
+   timernames(TIM_TEST09)  = ' test-09'
 
 
 #ifdef DEBUG

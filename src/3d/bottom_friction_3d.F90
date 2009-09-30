@@ -1,4 +1,4 @@
-!$Id: bottom_friction_3d.F90,v 1.12 2009-08-18 10:24:44 bjb Exp $
+!$Id: bottom_friction_3d.F90,v 1.13 2009-09-30 11:28:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -50,6 +50,7 @@
    use variables_2d, only: zub,zvb,zub0,zvb0
    use variables_3d, only: kumin,kvmin,uu,vv,huo,hun,hvo,hvn,rru,rrv
    use getm_timers, only: tic, toc, TIM_BOTTFRICT3D
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -89,6 +90,8 @@
    end if
 #endif
 
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,kk,r,hh,fricvel)
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .ge. 1) then
@@ -111,7 +114,9 @@
          end if
       end do
    end do
+!$OMP END DO
 
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .ge. 1) then
@@ -134,8 +139,10 @@
          end if
       end do
    end do
+!$OMP END DO
 
 #if 1
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .ge. 1) then
@@ -150,9 +157,11 @@
          end if
       end do
    end do
+!$OMP END DO
 #endif
 
 #if 1
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .ge. 1) then
@@ -167,8 +176,10 @@
          end if
       end do
    end do
+!$OMP END DO
 #endif
 
+!$OMP END PARALLEL
 
 #ifdef SLICE_MODEL
    do i=imin,imax

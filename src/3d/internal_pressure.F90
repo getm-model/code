@@ -1,4 +1,4 @@
-!$Id: internal_pressure.F90,v 1.22 2009-08-18 10:24:44 bjb Exp $
+!$Id: internal_pressure.F90,v 1.23 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -128,6 +128,7 @@
 #ifndef STATIC
    allocate(zz(I3DFIELD),stat=rc)
    if (rc /= 0) stop 'init_internal_pressure: Error allocating memory (zz)'
+   zz=_ZERO_
 #ifdef SUBSTR_INI_PRESS
    allocate(idpdx0(I3DFIELD),stat=rc) ! Initial x - pressure gradient.
    if (rc /= 0) stop &
@@ -138,6 +139,7 @@
    idpdx0=_ZERO_ ;  idpdy0=_ZERO_
 #endif
 #endif
+
 
    LEVEL2 'init_internal_pressure()'
    select case (ip_method)
@@ -207,9 +209,10 @@
    write(debug,*) 'do_internal_pressure() # ',Ncall
 #endif
    call tic(TIM_INTPRESS)
-   zz = _ZERO_
-   idpdx = _ZERO_
-   idpdy = _ZERO_
+
+! BJB-NOTE: Initialization of zz, idpdx and ipdy moved to the 
+!  individual ip_methods to allow speed-up based on method (by 
+!  local reduction of amount of initialzation) BJB 2009-09-24.
 
    select case (ip_method)
       case(BLUMBERG_MELLOR)
@@ -226,7 +229,7 @@
          call ip_shchepetkin_mcwilliams()
       case(STELLING_VANKESTER)
          call ip_stelling_vankester()
-      case default   
+      case default
          FATAL 'Not valid ip_method specified'
          stop 'do_internal_pressure()'
    end select

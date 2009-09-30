@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.17 2009-09-25 12:14:56 kb Exp $
+!$Id: main.F90,v 1.18 2009-09-30 11:28:47 bjb Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -40,6 +40,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: main.F90,v $
+!  Revision 1.18  2009-09-30 11:28:47  bjb
+!  OpenMP threading initial implementation
+!
 !  Revision 1.17  2009-09-25 12:14:56  kb
 !  INCLUDE_HALOS --> SAVE_HALOS
 !
@@ -183,6 +186,13 @@
 #else
    LEVEL1 'Compiled for serial execution'
 #endif
+
+#ifdef GETM_OMP
+   LEVEL1 '   with OpenMP thread capability'
+#else
+   LEVEL1 '   without OpenMP thread capability'
+#endif
+
 !
 #ifdef NO_3D
    LEVEL1 'NO_3D'

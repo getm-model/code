@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.28 2009-08-18 10:24:44 bjb Exp $
+!$Id: salinity.F90,v 1.29 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -377,6 +377,7 @@ salt_field_no=1
 #endif
    use parameters, only: avmols
    use getm_timers, only: tic, toc, TIM_SALT
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -388,10 +389,9 @@ salt_field_no=1
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc
-   REALTYPE                  :: Res(0:kmax)
-   REALTYPE                  :: auxn(1:kmax-1),auxo(1:kmax-1)
-   REALTYPE                  :: a1(0:kmax),a2(0:kmax)
-   REALTYPE                  :: a3(0:kmax),a4(0:kmax)
+   REALTYPE, POINTER         :: Res(:)
+   REALTYPE, POINTER         :: auxn(:),auxo(:)
+   REALTYPE, POINTER         :: a1(:),a2(:),a3(:),a4(:)
 #ifdef FRESHWATER_LENSE_TEST
    REALTYPE                  :: SRelax
 #endif
@@ -443,8 +443,8 @@ salt_field_no=1
 
    call tic(TIM_SALT)
 #ifdef PECS_TEST
-   S(imin:imin,jmin:jmax,1:kmax)=10.
-   S(imax:imax,jmin:jmax,1:kmax)=10.
+   S(imin:imin,jmin:jmax,1:kmax)=10*_ONE_
+   S(imax:imax,jmin:jmax,1:kmax)=10*_ONE_
 #endif
 
 #ifdef FRESHWATER_LENSE_TEST
@@ -467,17 +467,45 @@ salt_field_no=1
    S(imax-1,2,:)=0. !river
 #endif 
 
-!  Advection and vertical diffusion and of salinity
 
+! OMP-NOTE: Pointers are used to for each thread to use its 
+!           own work storage.
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP    PRIVATE(i,j,k,rc)                                             &
+!$OMP    PRIVATE(Res,auxn,auxo,a1,a2,a3,a4)
+
+! Each thread allocates its own HEAP storage:
+   allocate(Res(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'do_salinity: Error allocating memory (Res)'
+   allocate(auxn(1:kmax-1),stat=rc)    ! work array
+   if (rc /= 0) stop 'do_salinity: Error allocating memory (auxn)'
+   allocate(auxo(1:kmax-1),stat=rc)    ! work array
+   if (rc /= 0) stop 'do_salinity: Error allocating memory (auxo)'
+   allocate(a1(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'do_salinity: Error allocating memory (a1)'
+   allocate(a2(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'do_salinity: Error allocating memory (a2)'
+   allocate(a3(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'do_salinity: Error allocating memory (a3)'
+   allocate(a4(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'do_salinity: Error allocating memory (auxo)'
+
+! Note: We do not need to initialize these work arrays.
+!   Tested BJB 2009-09-25. 
+
+
+
+!  Advection and vertical diffusion and of salinity
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .eq. 1) then
             if (kmax.gt.1) then
 !     Auxilury terms, old and new time level,
                do k=1,kmax-1
-                  auxo(k)=2.*(1-cnpar)*dt*(nuh(i,j,k)+avmols)/ &
+                  auxo(k)=2*(1-cnpar)*dt*(nuh(i,j,k)+avmols)/ &
                              (hn(i,j,k+1)+hn(i,j,k))
-                  auxn(k)=2.*   cnpar *dt*(nuh(i,j,k)+avmols)/ &
+                  auxn(k)=2*   cnpar *dt*(nuh(i,j,k)+avmols)/ &
                              (hn(i,j,k+1)+hn(i,j,k))
                end do
 
@@ -514,6 +542,25 @@ salt_field_no=1
          end if
       end do
    end do
+!$OMP END DO
+
+! Each thread must deallocate its own HEAP storage:
+   deallocate(Res,stat=rc)
+   if (rc /= 0) stop 'do_salinity: Error deallocating memory (Res)'
+   deallocate(auxn,stat=rc)
+   if (rc /= 0) stop 'do_salinity: Error deallocating memory (auxn)'
+   deallocate(auxo,stat=rc)
+   if (rc /= 0) stop 'do_salinity: Error deallocating memory (auxo)'
+   deallocate(a1,stat=rc)
+   if (rc /= 0) stop 'do_salinity: Error deallocating memory (a1)'
+   deallocate(a2,stat=rc)
+   if (rc /= 0) stop 'do_salinity: Error deallocating memory (a2)'
+   deallocate(a3,stat=rc)
+   if (rc /= 0) stop 'do_salinity: Error deallocating memory (a3)'
+   deallocate(a4,stat=rc)
+   if (rc /= 0) stop 'do_salinity: Error deallocating memory (a4)'
+ 
+!$OMP END PARALLEL
 
 #ifdef ARKONA_TEST
    do i=100,135

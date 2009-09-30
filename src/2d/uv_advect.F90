@@ -1,4 +1,4 @@
-!$Id: uv_advect.F90,v 1.11 2009-08-18 10:24:44 bjb Exp $
+!$Id: uv_advect.F90,v 1.12 2009-09-30 11:28:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -153,6 +153,7 @@
 #endif
    use variables_2d, only: U,DU,UEx,V,DV,VEx,PP
    use getm_timers, only: tic, toc, TIM_UVADVECT
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -176,7 +177,10 @@
 #endif
    CALL tic(TIM_UVADVECT)
 
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,ii,jj)
+
 !  Upstream for dx(U^2/D)
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax         ! PP defined on T-points
       do i=imin,imax+1
          if (az(i,j) .ge. 1) then
@@ -192,6 +196,8 @@
          end if
       end do
    end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax      ! UEx defined on U-points
       do i=imin,imax
          if (au(i,j) .eq. 1) then
@@ -199,9 +205,11 @@
          end if
       end do
    end do
+!$OMP END DO
 
 #ifndef SLICE_MODEL
 !  Upstream for dy(UV/D)
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-1,jmax        ! PP defined on X-points
       do i=imin,imax
          if (ax(i,j) .ge. 1) then
@@ -217,6 +225,8 @@
          end if
       end do
    end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax        !UEx defined on U-points
       do i=imin,imax
          if (au(i,j) .eq. 1) then
@@ -224,9 +234,11 @@
          end if
       end do
    end do
+!$OMP END DO
 #endif
 
 ! Upstream for dx(UV/D)
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax      ! PP defined on X-points
       do i=imin-1,imax
          if (ax(i,j) .ge. 1) then
@@ -242,6 +254,8 @@
          end if
       end do
    end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax          ! VEx defined on V-points
       do i=imin,imax
          if (av(i,j) .eq. 1) then
@@ -249,9 +263,11 @@
          end if
       end do
    end do
+!$OMP END DO
 
 #ifndef SLICE_MODEL
 !  Upstream for dy(V^2/D)
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax+1     ! PP defined on T-points
       do i=imin,imax
          if (az(i,j) .ge. 1) then
@@ -267,6 +283,8 @@
          end if
       end do
    end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax             ! VEx defined on V-points
       do i=imin,imax
          if (av(i,j) .eq. 1) then
@@ -274,7 +292,10 @@
          end if
       end do
    end do
+!$OMP END DO
 #endif
+
+!$OMP END PARALLEL
 
    CALL toc(TIM_UVADVECT)
 #ifdef DEBUG

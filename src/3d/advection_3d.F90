@@ -218,6 +218,7 @@
 !
 !
 ! !USES:
+   use getm_timers, only: tic, toc, TIM_ADVECT3DTOT
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -259,6 +260,7 @@
    Ncall = Ncall+1
    write(debug,*) 'do_advection_3d() # ',Ncall
 #endif
+   call tic(TIM_ADVECT3DTOT)
 
    select case (hor_adv)
       case (UPSTREAM)
@@ -355,6 +357,7 @@
          stop
    end select
 
+   call toc(TIM_ADVECT3DTOT)
 #ifdef DEBUG
    write(debug,*) 'Leaving do_advection_3d()'
    write(debug,*)

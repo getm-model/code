@@ -40,6 +40,7 @@
    use internal_pressure
    use variables_3d, only: hn,buoy,sseo
    use domain, only: H,az,au,av
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !REVISION HISTORY:
@@ -60,19 +61,31 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   dR=_ZERO_
-   dZ=_ZERO_
-   P=_ZERO_
-   FC=_ZERO_
-   AJ=_ZERO_
-   dZx=_ZERO_
-   dRx=_ZERO_
+
+! OMP-NOTE: Initialization to _ZERO_ of arrays are done by master 
+!   threads little at a time. Typically while the remaining threads
+!   execute the loop prior to the one where the arrays are needed.
+!   The local work arrays do presently not need initialization.
+!    BJB 2009-09-24.
+
+   zz(:,:,0) = _ZERO_
 
 #if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
    dxm1 = _ONE_/DXU
    dym1 = _ONE_/DYV
 #endif
 
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP    PRIVATE(i,j,k, cff,cff1,cff2,AJ)
+
+! BJB-NOTE: We do not need to initialize these:
+!!$OMP MASTER
+!   dR=_ZERO_
+!   dZ=_ZERO_
+!   P=_ZERO_
+!!$OMP END MASTER
+
+!$OMP DO SCHEDULE(RUNTIME)
 !  First, the rho-point heights are calculated 
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
@@ -84,7 +97,15 @@
          end if
       end do
    end do
+!$OMP END DO
 
+! BJB-NOTE: dZx and dRx do not need to be initialized
+!!$OMP MASTER
+!   dZx=_ZERO_
+!   dRx=_ZERO_
+!!$OMP END MASTER
+
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax+1
       do i=imin,imax+1
          if (az(i,j) .ge. 1) then
@@ -122,17 +143,32 @@
          end if
       end do
    end do
+!$OMP END DO
 
 ! Compute pressure gradient term as it
 ! appears on the right hand side of u equation
+! OMP-NOTE: If we want to thread the k-loop, then each thread 
+!    needs to allocate it's own (i,j)-size work arrays,
+!    BJB 2009-09-24.
    do k=kmax,1,-1
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin-HALO+1,imax+HALO
             dZx(i,j)=zz(i,j,k)-zz(i-1,j,k)
             dRx(i,j)=buoy(i,j,k)-buoy(i-1,j,k)
          end do
       end do
+!$OMP END DO
 
+! BJB-NOTE: I am not sure that this intialization is necessary.
+!    BJB 2009-09-25.
+!$OMP MASTER
+   idpdx(:,:,0) = _ZERO_
+   idpdy(:,:,0) = _ZERO_
+!$OMP END MASTER
+
+
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax+HALO-1
             cff=2.0*dZx(i,j)*dZx(i+1,j)
@@ -151,7 +187,10 @@
             end if
          end do
       end do
+!$OMP END DO
 
+
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax+HALO-2
             if (au(i,j) .ge. 1) then
@@ -168,20 +207,38 @@
             end if
          end do
       end do
+!$OMP END DO
    end do
 
 ! Compute pressure gradient term as it
 ! appears on the right hand side of v equation
+! OMP-NOTE: The following loops cannot be threaded along the j-dimension.
+!    Threading along k seems to be non-trivial too. Thus, we reverse the 
+!    loop order on OMP and thread over i. 
    do k=kmax,1,-1
+#ifdef GETM_OMP
+!$OMP DO SCHEDULE(RUNTIME)
+      do i=imin,imax
+         do j=jmin-HALO+1,jmax+HALO
+#else
       do j=jmin-HALO+1,jmax+HALO
          do i=imin,imax
+#endif
+
             dZx(i,j)=zz(i,j,k)-zz(i,j-1,k)
             dRx(i,j)=buoy(i,j,k)-buoy(i,j-1,k)
          end do
       end do
+!$OMP END DO
 
+#ifdef GETM_OMP
+!$OMP DO SCHEDULE(RUNTIME)
+      do i=imin,imax
+         do j=jmin,jmax+HALO-1
+#else
       do j=jmin,jmax+HALO-1
          do i=imin,imax
+#endif
             cff=2.0*dZx(i,j)*dZx(i,j+1)
             if (cff .gt. eps) then
                cff1=1.0/(dZx(i,j)+dZx(i,j+1))
@@ -198,9 +255,16 @@
             end if
          end do
       end do
+!$OMP END DO
 
+#ifdef GETM_OMP
+!$OMP DO SCHEDULE(RUNTIME)
+      do i=imin,imax
+         do j=jmin,jmax+HALO-2
+#else
       do j=jmin,jmax+HALO-2
          do i=imin,imax
+#endif
             if (av(i,j) .ge. 1) then
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dym1 = _ONE_/DYV
@@ -216,7 +280,10 @@
             end if
          end do
       end do
+!$OMP END DO
    end do
+
+!$OMP END PARALLEL
 
    return
    end subroutine ip_shchepetkin_mcwilliams

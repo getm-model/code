@@ -1,4 +1,4 @@
-!$Id: uv_advect_3d.F90,v 1.18 2009-08-18 10:24:45 bjb Exp $
+!$Id: uv_advect_3d.F90,v 1.19 2009-09-30 11:28:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -264,7 +264,7 @@
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
    use getm_timers, only: tic, toc, TIM_UVADV3D, TIM_UVADV3DH
-
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -280,7 +280,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc
    REALTYPE                  :: PP(imin-1:imax+1,jmin-1:jmax+1,1:kmax)
-   REALTYPE                  :: www(0:kmax)
+   REALTYPE, POINTER         :: www(:)
 #ifdef UV_TVD
    integer                   :: azadv(I2DFIELD)
    integer                   :: auadv(I2DFIELD)
@@ -291,6 +291,7 @@
    REALTYPE                  :: dyvadv(I2DFIELD)
    REALTYPE                  :: area_inv(I2DFIELD)
    REALTYPE                  :: AH=_ZERO_
+   REALTYPE                  :: dti,dxdyi
 #endif
 
 !EOP
@@ -304,21 +305,49 @@
    call tic(TIM_UVADV3D)
 #ifdef UV_TVD
 
+   dti = _ONE_/dt
+#if defined(SPHERICAL) || defined(CURVILINEAR) 
+#else
+   dxdyi = _ONE_/(dx*dy)
+#endif
+
+! Note: With the present implementation, we do not need to 
+!  initialize these arrays: PP, azadv, auadv, avadv, dxuadv, 
+!  dxvadv, dyuadv, dyvadv, area_inv.  Tested BJB 2009-09-25.
+
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,rc)
+   
 ! Here begins dimensional split advection for u-velocity
    do k=1,kmax
-      do j=jmin-HALO,jmax+HALO
+!$OMP DO SCHEDULE(RUNTIME)
+     do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO-1
-            uadv(i,j,k)=0.5*(uu(i+1,j,k)+uu(i,j,k))
-            vadv(i,j,k)=0.5*(vv(i+1,j,k)+vv(i,j,k))
-            wadv(i,j,k)=0.5*(ww(i+1,j,k)+ww(i,j,k))
-            huadv(i,j,k)=0.5*(hun(i+1,j,k)+hun(i,j,k))
-            hvadv(i,j,k)=0.5*(hvn(i+1,j,k)+hvn(i,j,k))
+            uadv(i,j,k)=_HALF_*(uu(i+1,j,k)+uu(i,j,k))
+            vadv(i,j,k)=_HALF_*(vv(i+1,j,k)+vv(i,j,k))
+            wadv(i,j,k)=_HALF_*(ww(i+1,j,k)+ww(i,j,k))
+            huadv(i,j,k)=_HALF_*(hun(i+1,j,k)+hun(i,j,k))
+            hvadv(i,j,k)=_HALF_*(hvn(i+1,j,k)+hvn(i,j,k))
             hoadv(i,j,k)=huo(i,j,k)
             hnadv(i,j,k)=hun(i,j,k)
          end do
       end do
+!$OMP END DO NOWAIT
    end do
 
+   do k=1,kmax  ! uuEx is here the velocity to be transported.
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin,jmax
+         do i=imin,imax
+            uuEx(i,j,k)=uu(i,j,k)/huo(i,j,k)
+         end do
+      end do
+!$OMP END DO NOWAIT
+   end do
+!$OMP END PARALLEL
+
+
+! The following loops contain mostly memory copy, and very
+! few actual computations. It is not worthwhile to thread them.
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
          azadv(i,j)=au(i,j)
@@ -335,18 +364,11 @@
          dxvadv(i,j)=dx
          dyuadv(i,j)=dy
          dyvadv(i,j)=dy
-         area_inv(i,j)=1./(dx*dy)
+         area_inv(i,j)=dxdyi
 #endif
       end do
    end do
 
-   do k=1,kmax  ! uuEx is here the velocity to be transported.
-      do j=jmin,jmax
-         do i=imin,imax
-            uuEx(i,j,k)=uu(i,j,k)/huo(i,j,k)
-         end do
-      end do
-   end do
 
    call tic(TIM_UVADV3DH)
    call update_3d_halo(uuEx,uuEx,au,imin,jmin,imax,jmax,kmax,U_TAG)
@@ -357,22 +379,48 @@
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
                         azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
 
-   uuEx=-(uuEx*hun-uu)/dt ! Here, uuEx is the advection term.
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
+
+
+!   uuEx=-(uuEx*hun-uu)/dt ! Here, uuEx is the advection term.
+   do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            uuEx(i,j,k)=dti*(uu(i,j,k)-uuEx(i,j,k)*hun(i,j,k))
+         end do
+      end do
+!$OMP END DO NOWAIT
+   end do
 
 ! Here begins dimensional split advection for v-velocity
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO
-            uadv(i,j,k)=0.5*(uu(i,j+1,k)+uu(i,j,k))
-            vadv(i,j,k)=0.5*(vv(i,j+1,k)+vv(i,j,k))
-            wadv(i,j,k)=0.5*(ww(i,j+1,k)+ww(i,j,k))
-            huadv(i,j,k)=0.5*(hun(i,j+1,k)+hun(i,j,k))
-            hvadv(i,j,k)=0.5*(hvn(i,j+1,k)+hvn(i,j,k))
+            uadv(i,j,k)=_HALF_*(uu(i,j+1,k)+uu(i,j,k))
+            vadv(i,j,k)=_HALF_*(vv(i,j+1,k)+vv(i,j,k))
+            wadv(i,j,k)=_HALF_*(ww(i,j+1,k)+ww(i,j,k))
+            huadv(i,j,k)=_HALF_*(hun(i,j+1,k)+hun(i,j,k))
+            hvadv(i,j,k)=_HALF_*(hvn(i,j+1,k)+hvn(i,j,k))
             hoadv(i,j,k)=hvo(i,j,k)
             hnadv(i,j,k)=hvn(i,j,k)
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+
+   do k=1,kmax   ! vvEx is here the velocity to be transported.
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin,jmax
+         do i=imin,imax
+            vvEx(i,j,k)=vv(i,j,k)/hvo(i,j,k)
+         end do
+      end do
+!$OMP END DO NOWAIT
+   end do
+
+!$OMP END PARALLEL
 
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
@@ -390,18 +438,12 @@
          dxvadv(i,j)=dx
          dyuadv(i,j)=dy
          dyvadv(i,j)=dy
-         area_inv(i,j)=_ONE_/(dx*dy)
+         area_inv(i,j)=dxdyi
 #endif
       end do
    end do
 
-   do k=1,kmax   ! vvEx is here the velocity to be transported.
-      do j=jmin,jmax
-         do i=imin,imax
-            vvEx(i,j,k)=vv(i,j,k)/hvo(i,j,k)
-         end do
-      end do
-   end do
+
 
    call tic(TIM_UVADV3DH)
    call update_3d_halo(vvEx,vvEx,av,imin,jmin,imax,jmax,kmax,V_TAG)
@@ -412,49 +454,55 @@
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
                         azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
 
-   vvEx=-(vvEx*hvn-vv)/dt ! Here, vvEx is the advection term.
-
+!   vvEx=-(vvEx*hvn-vv)/dt ! Here, vvEx is the advection term.
+   vvEx=-(vvEx*hvn-vv)*dti ! Here, vvEx is the advection term.
+!      ! END UV_TDV
 #else  ! First-order upstream, one three-dimensional  step
+
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k , rc,www)
 
 ! Upstream for dx(uu^2/hun)
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax             ! PP defined on T-points
          do i=imin,imax+1
-            PP(i,j,k)=_ZERO_
-            if (az(i,j) .ge. 1) then
-               if (k .ge. kumin(i,j)) then
-                  PP(i,j,k)=0.5*(uu(i-1,j,k)+uu(i,j,k))
-                  if (PP(i,j,k) .gt. _ZERO_) then
-                     PP(i,j,k)=PP(i,j,k)*uu(i-1,j,k)/hun(i-1,j,k)*DYC
-                  else
-                     PP(i,j,k)=PP(i,j,k)*uu(i,j,k)/hun(i,j,k)*DYC
-                  end if
+            if ( (az(i,j).ge. 1) .and. (k.ge.kumin(i,j)) ) then
+               PP(i,j,k)=_HALF_*(uu(i-1,j,k)+uu(i,j,k))
+               if (PP(i,j,k) .gt. _ZERO_) then
+                  PP(i,j,k)=PP(i,j,k)*uu(i-1,j,k)/hun(i-1,j,k)*DYC
+               else
+                  PP(i,j,k)=PP(i,j,k)*uu(i,j,k)/hun(i,j,k)*DYC
                end if
+            else
+               PP(i,j,k)=_ZERO_
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax         ! uuEx defined on U-points
          do i=imin,imax
-            if (au(i,j) .eq. 1) then
-               if (k .ge. kumin(i,j)) then
-                  uuEx(i,j,k)=(PP(i+1,j,k)-PP(i,j,k))*ARUD1
-               end if
+            if ((au(i,j) .eq. 1).and.(k .ge. kumin(i,j))) then
+               uuEx(i,j,k)=(PP(i+1,j,k)-PP(i,j,k))*ARUD1
             end if
          end do
       end do
+!$OMP END DO
    end do
 
 #ifndef SLICE_MODEL
 ! Upstream for dy(uu*vv/hun)
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax          ! PP defined on X-points
          do i=imin,imax
             PP(i,j,k)=_ZERO_
             if (ax(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
-                  PP(i,j,k)=0.5*(vv(i+1,j,k)+vv(i,j,k))
+                  PP(i,j,k)=_HALF_*(vv(i+1,j,k)+vv(i,j,k))
                   if (PP(i,j,k) .gt. _ZERO_) then
                      PP(i,j,k)=PP(i,j,k)*uu(i,j,k)/hun(i,j,k)*DXX
                   else
@@ -464,8 +512,11 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
             if (au(i,j) .eq. 1) then
@@ -475,17 +526,20 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
 #endif
 
 ! Upstream for dx(uu*vv/hvn)
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax         !  PP defined on X-points
          do i=imin-1,imax
             PP(i,j,k)=_ZERO_
             if (ax(i,j) .ge. 1) then
                if (k .ge. kvmin(i,j)) then
-                  PP(i,j,k)=0.5*(uu(i,j,k)+uu(i,j+1,k))
+                  PP(i,j,k)=_HALF_*(uu(i,j,k)+uu(i,j+1,k))
                   if (PP(i,j,k) .gt. _ZERO_) then
                      PP(i,j,k)=PP(i,j,k)*vv(i,j,k)/hvn(i,j,k)*DYX
                   else
@@ -495,8 +549,11 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax          ! vvEx defined on V-points
          do i=imin,imax
             if (av(i,j) .eq. 1) then
@@ -506,17 +563,20 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
 
 #ifndef SLICE_MODEL
 ! Upstream for dy(vv^2/hvn)
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax+1
          do i=imin,imax
             PP(i,j,k)=_ZERO_
             if (az(i,j) .ge. 1) then
                if (k .ge. kvmin(i,j)) then
-                  PP(i,j,k)=0.5*(vv(i,j-1,k)+vv(i,j,k))
+                  PP(i,j,k)=_HALF_*(vv(i,j-1,k)+vv(i,j,k))
                   if (PP(i,j,k) .gt. _ZERO_) then
                      PP(i,j,k)=PP(i,j,k)*vv(i,j-1,k)/hvn(i,j-1,k)*DXC
                   else
@@ -526,8 +586,11 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax          ! vvEx defined on V-points
          do i=imin,imax
             if (av(i,j) .eq. 1) then
@@ -537,16 +600,24 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
 #endif
 
+! OMP-NOTE: Each thread allocates its own HEAP storage:
+   allocate(www(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'uu_momentum_3d: Error allocating memory (www)'
+
+!
 ! Upstream for (uu*ww)_k - (uu*ww)_{k-1}
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .eq. 1) then
             www(kumin(i,j)-1)= _ZERO_
             do k=kumin(i,j),kmax-1
-               www(k)=0.5*(ww(i+1,j,k)+ww(i,j,k))
+               www(k)=_HALF_*(ww(i+1,j,k)+ww(i,j,k))
                if (www(k) .gt. _ZERO_) then
                   www(k)=www(k)*uu(i,j,k)/hun(i,j,k)
                else
@@ -560,14 +631,16 @@
          end if
       end do
    end do
+!$OMP END DO
 
 ! Upstream for (vv*ww)_k - (vv*ww)_{k-1}
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .eq. 1) then
             www(kvmin(i,j)-1)= _ZERO_
             do k=kvmin(i,j),kmax-1
-               www(k)=0.5*(ww(i,j+1,k)+ww(i,j,k))
+               www(k)=_HALF_*(ww(i,j+1,k)+ww(i,j,k))
                if (www(k) .gt. _ZERO_) then
                   www(k)=www(k)*vv(i,j,k)/hvn(i,j,k)
                else
@@ -581,8 +654,15 @@
          end if
       end do
    end do
+!$OMP END DO
 
+! Each thread must deallocate its own HEAP storage:
+   deallocate(www,stat=rc)
+   if (rc /= 0) stop 'uu_advect_3d: Error deallocating memory (www)'      
+
+!$OMP END PARALLEL
 #endif  ! End of three-dimensional first-order upstream
+
 
    call toc(TIM_UVADV3D)
 #ifdef DEBUG

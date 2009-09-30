@@ -1,4 +1,4 @@
-!$Id: slow_advection.F90,v 1.12 2009-08-18 10:24:44 bjb Exp $
+!$Id: slow_advection.F90,v 1.13 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,6 +30,7 @@
    use variables_2d, only: UEx,VEx,Uint,Vint,PP
    use variables_3d, only: ssun,ssvn
    use getm_timers, only: tic, toc, TIM_SLOWADV
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -55,18 +56,23 @@
 #endif
    call tic(TIM_SLOWADV)
 
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,ii,jj)
+
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-1,jmax+1
       do i=imin-1,imax+1
          DUi(i,j)=ssun(i,j)+HU(i,j)
          DVi(i,j)=ssvn(i,j)+HV(i,j)
       end do
    end do
+!$OMP END DO
 
 ! Upstream for dx(U^2/D)
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax+1         ! PP defined on T-points
          if (az(i,j) .ge. 1) then
-            PP(i,j)=0.5*(Uint(i-1,j)+Uint(i,j))
+            PP(i,j)=_HALF_*(Uint(i-1,j)+Uint(i,j))
             if (PP(i,j) .gt. _ZERO_ ) then
                ii=i-1
             else
@@ -78,6 +84,8 @@
          end if
       end do
    end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax           ! UEx defined on U-points
          if (au(i,j) .eq. 1) then
@@ -85,13 +93,15 @@
          end if
       end do
    end do
+!$OMP END DO
 
 #ifndef SLICE_MODEL
 !  Upstream for dy(UV/D)
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-1,jmax     ! PP defined on X-points
       do i=imin,imax
          if (ax(i,j) .ge. 1) then
-            PP(i,j)=0.5*(Vint(i+1,j)+Vint(i,j))
+            PP(i,j)=_HALF_*(Vint(i+1,j)+Vint(i,j))
             if (PP(i,j) .gt. _ZERO_) then
                jj=j
             else
@@ -103,6 +113,8 @@
          end if
       end do
    end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax       !UEx defined on U-points
          if (au(i,j) .eq. 1) then
@@ -111,12 +123,14 @@
       end do
    end do
 #endif
+!$OMP END DO
 
 ! Upstream for dx(UV/D)
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin-1,imax      ! PP defined on X-points
          if (ax(i,j) .ge. 1) then
-            PP(i,j)=0.5*(Uint(i,j)+Uint(i,j+1))
+            PP(i,j)=_HALF_*(Uint(i,j)+Uint(i,j+1))
             if (PP(i,j) .gt. _ZERO_) then
                ii=i
             else
@@ -128,6 +142,8 @@
          end if
       end do
    end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax       ! VEx defined on V-points
          if (av(i,j) .eq. 1) then
@@ -135,13 +151,15 @@
          end if
       end do
    end do
+!$OMP END DO
 
 #ifndef SLICE_MODEL
 !  Upstream for dy(V^2/D)
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax+1          ! PP defined on T-points
       do i=imin,imax
          if (az(i,j) .ge. 1) then
-            PP(i,j)=0.5*(Vint(i,j-1)+Vint(i,j))
+            PP(i,j)=_HALF_*(Vint(i,j-1)+Vint(i,j))
             if (PP(i,j) .gt. _ZERO_) then
                jj=j-1
             else
@@ -153,6 +171,8 @@
          end if
       end do
    end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax           ! VEx defined on V-points
       do i=imin,imax
          if (av(i,j) .eq. 1) then
@@ -160,7 +180,9 @@
          end if
       end do
    end do
+!$OMP END DO
 #endif
+!$OMP END PARALLEL
 
    call toc(TIM_SLOWADV)
 #ifdef DEBUG

@@ -1,4 +1,4 @@
-!$Id: depth_update.F90,v 1.11 2009-08-21 07:26:26 bjb Exp $
+!$Id: depth_update.F90,v 1.12 2009-09-30 11:28:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,6 +26,7 @@
    use domain, only: az,au,av,dry_z,dry_u,dry_v
    use variables_2d, only: D,z,zo,DU,zu,DV,zv
    use getm_timers,  only: tic, toc, TIM_DPTHUPDATE
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -39,7 +40,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
-   REALTYPE                  :: d1,x,d2i
+   REALTYPE                  :: d1,d2i,x
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -50,12 +51,24 @@
 #endif
    CALL tic(TIM_DPTHUPDATE)
 
+! TODO/BJB: Why is this turned off?
 #undef USE_MASK
 
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,d1,d2i,x)
+
 !  Depth in elevation points
-   D = z+H
+
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
+         ! TODO/BJB: Is it enough to do this on az?
+         D(i,j) = z(i,j)+H(i,j)
+      end do
+   end do
+!$OMP END DO NOWAIT
 
 !  U-points
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO-1
 #ifdef USE_MASK
@@ -69,8 +82,10 @@
 #endif
       end do
    end do
+!$OMP END DO NOWAIT
 
 !  V-points
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO-1
       do i=imin-HALO,imax+HALO
 #ifdef USE_MASK
@@ -84,18 +99,28 @@
 #endif
       end do
    end do
+!$OMP END DO
+
 
    d1  = 2*min_depth
    d2i = _ONE_/(crit_depth-2*min_depth)
-   where (az .gt. 0)
-      dry_z = max(_ZERO_,min(_ONE_,(D-_HALF_*d1)*d2i))
-   end where
-   where (au .gt. 0)
-      dry_u = max(_ZERO_,min(_ONE_,(DU-d1)*d2i))
-   end where
-   where (av .gt. 0)
-      dry_v = max(_ZERO_,min(_ONE_,(DV-d1)*d2i))
-   end where
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
+         if (az(i,j) .gt. 0) then
+            dry_z(i,j)=max(_ZERO_,min(_ONE_,(D(i,j)-_HALF_*d1)*d2i))
+         end if
+         if (au(i,j) .gt. 0) then
+            dry_u(i,j) = max(_ZERO_,min(_ONE_,(DU(i,j)-d1)*d2i))
+         end if
+         if (av(i,j) .gt. 0) then
+            dry_v(i,j) = max(_ZERO_,min(_ONE_,(DV(i,j)-d1)*d2i))
+         end if
+     end do
+  end do
+!$OMP END DO
+
+!$OMP END PARALLEL
 
 #ifdef SLICE_MODEL
    do i=imin,imax

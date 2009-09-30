@@ -1,4 +1,4 @@
-!$Id: general_coordinates.F90,v 1.2 2007-06-07 10:25:19 kbk Exp $
+!$Id: general_coordinates.F90,v 1.3 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -73,6 +73,9 @@
    use domain, only: imin,imax,jmin,jmax,kmax,H,HU,HV,az,au,av,min_depth
    use variables_3d, only: dt,kmin,kumin,kvmin,ho,hn,huo,hun,hvo,hvn
    use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
+! BJB-TEST time loops
+   use getm_timers, only: tic,toc, TIM_TEST01
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -164,6 +167,7 @@
          end do
       end do
 
+! BJB-TODO: Change 0.5 -> _HALF_ (and 1. -> _ONE_) in this file.
       do k=1,kmax
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO-1
@@ -187,10 +191,14 @@
       end do
    end if ! first
 
+   call tic(TIM_TEST01)
+
 ! The general vertical coordinates can be relaxed towards the new layer
 ! thicknesses by the following relaxation time scale r. This should
 ! later be generalised also for sigma coordinates.
 
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,rc,kk,HH,zz,r)
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
          r=cord_relax/dt*H(i,j)/maxdepth
@@ -198,7 +206,7 @@
          if (HH .lt. D_gamma) then
             do k=1,kmax
                ho(i,j,k)=hn(i,j,k)
-               hn(i,j,k)=HH/float(kmax)
+               hn(i,j,k)=HH/kmax
             end do
          else
             zz=-H(i,j)
@@ -212,7 +220,9 @@
          end if
       end do
    end do
+!$OMP END DO NOWAIT
 
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO-1
 !KBK         if (au(i,j) .gt. 0) then
@@ -230,7 +240,9 @@
 !KBK         end if
       end do
    end do
+!$OMP END DO NOWAIT
 
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO-1
       do i=imin-HALO,imax+HALO
 !KBK         if (av(i,j).gt.0) then
@@ -248,6 +260,9 @@
 !KBK         end if
       end do
    end do
+!$OMP END DO
+!$OMP END PARALLEL
+   call toc(TIM_TEST01)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving general_coordinates()'

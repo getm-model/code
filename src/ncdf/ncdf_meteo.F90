@@ -1,4 +1,4 @@
-!$Id: ncdf_meteo.F90,v 1.25 2008-08-29 13:59:12 kb Exp $
+!$Id: ncdf_meteo.F90,v 1.26 2009-09-30 11:28:48 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -86,6 +86,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_meteo.F90,v $
+!  Revision 1.26  2009-09-30 11:28:48  bjb
+!  OpenMP threading initial implementation
+!
 !  Revision 1.25  2008-08-29 13:59:12  kb
 !  fixed parallel run for constant metforing with convc<>0
 !
@@ -219,6 +222,7 @@
    integer         :: err
    logical         :: ok=.true.
    REALTYPE        :: olon,olat,rlon,rlat,x
+   character(len=10) :: name_thisvar
 !EOP
 !-------------------------------------------------------------------------
    include "netcdf.inc"
@@ -337,16 +341,19 @@
    end if
 
    if (calc_met) then
-
+      name_thisvar = name_u10
       err = nf_inq_varid(ncid,name_u10,u10_id)
       if (err .NE. NF_NOERR) go to 10
 
+      name_thisvar = name_v10
       err = nf_inq_varid(ncid,name_v10,v10_id)
       if (err .NE. NF_NOERR) go to 10
 
+      name_thisvar = name_airp
       err = nf_inq_varid(ncid,name_airp,airp_id)
       if (err .NE. NF_NOERR) go to 10
 
+      name_thisvar = name_t2
       err = nf_inq_varid(ncid,name_t2,t2_id)
       if (err .NE. NF_NOERR) go to 10
 
@@ -373,29 +380,36 @@
       end if
 !KBKSTDERR 'Taking hum as wet bulb temperature'
 
+      name_thisvar = name_tcc
       err = nf_inq_varid(ncid,name_tcc,tcc_id)
       if (err .NE. NF_NOERR) go to 10
 
       if (fwf_method .eq. 2) then
+         name_thisvar = name_evap
          err = nf_inq_varid(ncid,name_evap,evap_id)
          if (err .NE. NF_NOERR) go to 10
       end if
       if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+         name_thisvar = name_precip
          err = nf_inq_varid(ncid,name_precip,precip_id)
          if (err .NE. NF_NOERR) go to 10
       end if
 
    else
 
+      name_thisvar = name_tausx
       err = nf_inq_varid(ncid,name_tausx,tausx_id)
       if (err .NE. NF_NOERR) go to 10
 
+      name_thisvar = name_tausy
       err = nf_inq_varid(ncid,name_tausy,tausy_id)
       if (err .NE. NF_NOERR) go to 10
 
+      name_thisvar = name_swr
       err = nf_inq_varid(ncid,name_swr,swr_id)
       if (err .NE. NF_NOERR) go to 10
 
+      name_thisvar = name_shf
       err = nf_inq_varid(ncid,name_shf,shf_id)
       if (err .NE. NF_NOERR) go to 10
 
@@ -413,7 +427,7 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'init_meteo_input_ncdf: ',nf_strerror(err)
+10 FATAL 'init_meteo_input_ncdf: ',name_thisvar,' ',nf_strerror(err)
    stop
    end subroutine init_meteo_input_ncdf
 !EOC

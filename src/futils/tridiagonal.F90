@@ -1,4 +1,4 @@
-!$Id: tridiagonal.F90,v 1.2 2003-04-23 12:02:43 kbk Exp $
+!$Id: tridiagonal.F90,v 1.3 2009-09-30 11:28:47 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,6 +28,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: tridiagonal.F90,v $
+!  Revision 1.3  2009-09-30 11:28:47  bjb
+!  OpenMP threading initial implementation
+!
 !  Revision 1.2  2003-04-23 12:02:43  kbk
 !  cleaned code + TABS to spaces
 !
@@ -43,6 +46,8 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+! OMP-NOTE: As all local storage (i, ru, and qu) is on stack, this routine
+!  should be thread-safe. BJB 2009-09-21.
    ru(lt)=au(lt)/bu(lt)
    qu(lt)=du(lt)/bu(lt)
 

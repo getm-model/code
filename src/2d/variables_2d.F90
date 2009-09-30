@@ -1,4 +1,4 @@
-!$Id: variables_2d.F90,v 1.9 2008-09-16 10:03:24 kb Exp $
+!$Id: variables_2d.F90,v 1.10 2009-09-30 11:28:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -124,17 +124,31 @@
    break_mask = 0
 #endif
 
-   z = _ZERO_; zu = _ZERO_; zv = _ZERO_
-   U = _ZERO_; DU = _ZERO_; fU = _ZERO_; SlUx = _ZERO_; Slru = _ZERO_
-   V = _ZERO_; DV = _ZERO_; fV = _ZERO_; SlVx = _ZERO_; Slrv = _ZERO_
+   z  = _ZERO_; zo =_ZERO_ 
+   zu = _ZERO_; zub=_ZERO_ ; zub0=_ZERO_ 
+   zv = _ZERO_; zvb=_ZERO_ ; zvb0=_ZERO_ 
+   D = _ZERO_; 
+   U = _ZERO_; DU = _ZERO_; fU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_ 
+   V = _ZERO_; DV = _ZERO_; fV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_ 
 
-   Uint = _ZERO_; Vint = _ZERO_
-   UEx = _ZERO_; VEx = _ZERO_
-   ru = _ZERO_; rv = _ZERO_
-   res_du = _ZERO_; res_u = _ZERO_; res_dv = _ZERO_; res_v =  _ZERO_
-   surfdiv = _ZERO_
-   fwf = _ZERO_
+   ru = _ZERO_; ruu=_ZERO_; Uinto=_ZERO_
+   rv = _ZERO_; rvv=_ZERO_; Vinto=_ZERO_
+   
+   res_du = _ZERO_; res_u = _ZERO_
+   res_dv = _ZERO_; res_v = _ZERO_
+
+   SlUx=_ZERO_; Slru=_ZERO_
+   SlVx=_ZERO_; Slrv=_ZERO_
+
+   PP      = _ZERO_
+   fwf     = _ZERO_
    fwf_int = _ZERO_
+
+   surfdiv=_ZERO_
+   EWbdy=_ZERO_
+   ENbdy=_ZERO_
+   EEbdy=_ZERO_
+   ESbdy=_ZERO_
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_variables_2d()'

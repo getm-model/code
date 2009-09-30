@@ -1,4 +1,4 @@
-!$Id: vv_momentum_3d.F90,v 1.21 2009-08-18 10:24:45 bjb Exp $
+!$Id: vv_momentum_3d.F90,v 1.22 2009-09-30 11:28:47 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -84,6 +84,7 @@
    use m3d, only: ip_fac
    use m3d, only: vel_check,min_vel,max_vel
    use getm_timers, only: tic, toc, TIM_VVMOMENTUM, TIM_VVMOMENTUMH
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -99,14 +100,15 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc
-   REALTYPE                  :: dif(1:kmax-1)
-   REALTYPE                  :: auxn(1:kmax-1),auxo(1:kmax-1),fuu(1:kmax)
-   REALTYPE                  :: a1(0:kmax),a2(0:kmax)
-   REALTYPE                  :: a3(0:kmax),a4(0:kmax)
-   REALTYPE                  :: Res(0:kmax),ex(0:kmax)
+   REALTYPE, POINTER         :: dif(:)
+   REALTYPE, POINTER         :: auxn(:),auxo(:)
+   REALTYPE, POINTER         :: a1(:),a2(:)
+   REALTYPE, POINTER         :: a3(:),a4(:)
+   REALTYPE, POINTER         :: Res(:),ex(:)
    REALTYPE                  :: zp,zm,zy,ResInt,Diff,Uloc
    REALTYPE                  :: gamma=g*rho_0
    REALTYPE                  :: cord_curv=_ZERO_
+   REALTYPE                  :: gammai,rho_0i
 #ifdef XZ_PLUME_TEST
    REALTYPE                  :: yslope=0.001
 #endif
@@ -121,6 +123,46 @@
 #endif
    call tic(TIM_VVMOMENTUM)
 
+   gammai=_ONE_/gamma
+   rho_0i=_ONE_/rho_0
+
+
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP    PRIVATE(i,j,k,rc,zp,zm,zy,ResInt,Diff,Uloc,cord_curv)         &
+!$OMP    PRIVATE(dif,auxn,auxo,a1,a2,a3,a4,Res,ex)
+
+ ! Each thread allocates its own HEAP storage:
+   allocate(dif(1:kmax-1),stat=rc)    ! work array
+   if (rc /= 0) stop 'vv_momentum_3d: Error allocating memory (dif)'
+
+   allocate(auxn(1:kmax-1),stat=rc)    ! work array
+   if (rc /= 0) stop 'vv_momentum_3d: Error allocating memory (auxn)'
+
+   allocate(auxo(1:kmax-1),stat=rc)    ! work array
+   if (rc /= 0) stop 'vv_momentum_3d: Error allocating memory (auxo)'
+
+   allocate(a1(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'vv_momentum_3d: Error allocating memory (a1)'
+
+   allocate(a2(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'vv_momentum_3d: Error allocating memory (a2)'
+
+   allocate(a3(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'vv_momentum_3d: Error allocating memory (a3)'
+
+   allocate(a4(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'vv_momentum_3d: Error allocating memory (a4)'
+
+   allocate(Res(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'vv_momentum_3d: Error allocating memory (Res)'
+
+   allocate(ex(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'vv_momentum_3d: Error allocating memory (ex)'
+
+! Note: We do not need to initialize these work arrays.
+!   Tested BJB 2009-09-25. 
+
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
 
@@ -135,9 +177,9 @@
                      +uu(i-1,j  ,k)/sqrt(huo(i-1,j  ,k))  &
                      +uu(i  ,j+1,k)/sqrt(huo(i  ,j+1,k))  &
                      +uu(i-1,j+1,k)/sqrt(huo(i-1,j+1,k))) &
-                     *0.25*sqrt(hvo(i,j,k))
+                     *_QUART_*sqrt(hvo(i,j,k))
 #else
-                Uloc=0.25*(uu(i,j,k)+uu(i-1,j,k)+uu(i,j+1,k)+uu(i-1,j+1,k))
+                Uloc=_QUART_*(uu(i,j,k)+uu(i-1,j,k)+uu(i,j+1,k)+uu(i-1,j+1,k))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   cord_curv=(vv(i,j,k)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC))     &
@@ -157,10 +199,10 @@
 #endif
                end do
                ex(kmax)=ex(kmax)                                      &
-                       +dry_v(i,j)*.5*(tausy(i,j)+tausy(i,j+1))/rho_0
+                       +dry_v(i,j)*_HALF_*(tausy(i,j)+tausy(i,j+1))/rho_0
 !     Eddy viscosity
                do k=kvmin(i,j),kmax-1
-                  dif(k)=0.5*(num(i,j,k)+num(i,j+1,k)) + avmmol
+                  dif(k)=_HALF_*(num(i,j,k)+num(i,j+1,k)) + avmmol
                end do
 
 !     Auxiliury terms, old and new time level,
@@ -176,7 +218,7 @@
                zm=max(sseo(i,j  ),-H(i,j+1)+min(min_depth,D(i,j  )))
                zy=(zp-zm+(airp(i,j+1)-airp(i,j))/gamma)/DYV
 #else
-               zy=0.
+               zy=_ZERO_
 #endif
 
 !     Matrix elements for surface layer
@@ -186,33 +228,33 @@
                a4(k)=vv(i,j,k  )*(1-auxo(k-1)/hvo(i,j,k))              &
                     +vv(i,j,k-1)*auxo(k-1)/hvo(i,j,k-1)                &
                     +dt*ex(k)                                          &
-                    -dt*0.5*(hvo(i,j,k)+hvn(i,j,k))*g*zy
+                    -dt*_HALF_*(hvo(i,j,k)+hvn(i,j,k))*g*zy
 
 !     Matrix elements for inner layers
                do k=kvmin(i,j)+1,kmax-1
                   a3(k)=-auxn(k  )/hvn(i,j,k+1)
                   a1(k)=-auxn(k-1)/hvn(i,j,k-1)
-                  a2(k)=1+(auxn(k)+auxn(k-1))/hvn(i,j,k)
+                  a2(k)=_ONE_+(auxn(k)+auxn(k-1))/hvn(i,j,k)
                   a4(k)=vv(i,j,k+1)*auxo(k)/hvo(i,j,k+1)               &
                        +vv(i,j,k  )*(1-(auxo(k)+auxo(k-1))/hvo(i,j,k)) &
                        +vv(i,j,k-1)*auxo(k-1)/hvo(i,j,k-1)             &
                        +dt*ex(k)                                       &
-                       -dt*0.5*(hvo(i,j,k)+hvn(i,j,k))*g*zy
+                       -dt*_HALF_*(hvo(i,j,k)+hvn(i,j,k))*g*zy
                end do
 
 !     Matrix elements for bottom layer
                k=kvmin(i,j)
                a3(k)=-auxn(k  )/hvn(i,j,k+1)
-               a2(k)=1+auxn(k)/hvn(i,j,k)                              &
-                        +dt*rrv(i,j)/(0.5*(hvn(i,j,k)+hvo(i,j,k)))
+               a2(k)=_ONE_+auxn(k)/hvn(i,j,k)                          &
+                        +dt*rrv(i,j)/(_HALF_*(hvn(i,j,k)+hvo(i,j,k)))
                a4(k)=vv(i,j,k+1)*auxo(k)/hvo(i,j,k+1)                  &
-                       +vv(i,j,k  )*(1-auxo(k)/hvo(i,j,k))             &
+                       +vv(i,j,k  )*(_ONE_-auxo(k)/hvo(i,j,k))         &
                        +dt*ex(k)                                       &
-                       -dt*0.5*(hvo(i,j,k)+hvn(i,j,k))*g*zy
+                       -dt*_HALF_*(hvo(i,j,k)+hvn(i,j,k))*g*zy
 
 #ifdef STRUCTURE_FRICTION
                do k=kvmin(i,j),kmax
-                  a2(k)=a2(k)+dt*0.5*(sf(i,j,k)+sf(i,j+1,k))
+                  a2(k)=a2(k)+dt*_HALF_*(sf(i,j,k)+sf(i,j+1,k))
                end do
 #endif
 
@@ -246,15 +288,48 @@
          end if
       end do
    end do
+!$OMP END DO
 
 #ifdef SLICE_MODEL
+!$OMP DO SCHEDULE(RUNTIME)
    do i=imin,imax
       do k=kvmin(i,2),kmax
          vv(i,1,k)=vv(i,2,k)
          vv(i,3,k)=vv(i,2,k)
       end do
    end do
+!$OMP END DO
 #endif
+
+! Each thread must deallocate its own HEAP storage:
+   deallocate(dif,stat=rc)
+   if (rc /= 0) stop 'vv_momentum_3d: Error deallocating memory (dif)'
+
+   deallocate(auxn,stat=rc)
+   if (rc /= 0) stop 'vv_momentum_3d: Error deallocating memory (auxn)'
+
+   deallocate(auxo,stat=rc)
+   if (rc /= 0) stop 'vv_momentum_3d: Error deallocating memory (auxo)'
+
+   deallocate(a1,stat=rc)
+   if (rc /= 0) stop 'vv_momentum_3d: Error deallocating memory (a1)'
+
+   deallocate(a2,stat=rc)
+   if (rc /= 0) stop 'vv_momentum_3d: Error deallocating memory (a2)'
+
+   deallocate(a3,stat=rc)
+   if (rc /= 0) stop 'vv_momentum_3d: Error deallocating memory (a3)'
+
+   deallocate(a4,stat=rc)
+   if (rc /= 0) stop 'vv_momentum_3d: Error deallocating memory (a4)'
+
+   deallocate(Res,stat=rc)
+   if (rc /= 0) stop 'vv_momentum_3d: Error deallocating memory (Res)'
+
+   deallocate(ex,stat=rc)
+   if (rc /= 0) stop 'vv_momentum_3d: Error deallocating memory (ex)'
+
+!$OMP END PARALLEL
 
 !  Update the halo zones
    call tic(TIM_VVMOMENTUMH)

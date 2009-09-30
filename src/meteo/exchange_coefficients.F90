@@ -1,4 +1,4 @@
-!$Id: exchange_coefficients.F90,v 1.14 2007-06-27 08:39:36 kbk Exp $
+!$Id: exchange_coefficients.F90,v 1.15 2009-09-30 11:28:48 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -69,6 +69,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: exchange_coefficients.F90,v $
+!  Revision 1.15  2009-09-30 11:28:48  bjb
+!  OpenMP threading initial implementation
+!
 !  Revision 1.14  2007-06-27 08:39:36  kbk
 !  support for fresh water fluxes at the sea surface - Adolf Stips
 !
@@ -136,6 +139,8 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+
+! BJB-TODO: Change paramenters+constants in code to double precision
 
 !  water temperature
    if (sst .lt. 100.) then

@@ -1,4 +1,4 @@
-!$Id: ss_nn.F90,v 1.11 2009-09-23 08:23:59 bjb Exp $
+!$Id: ss_nn.F90,v 1.12 2009-09-30 11:28:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -134,6 +134,7 @@
    use variables_3d, only: NN,buoy
 #endif
    use getm_timers, only: tic, toc, TIM_SSNN
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -158,10 +159,19 @@
 #endif
    call tic(TIM_SSNN)
 
+! BJB-TODO: There are a lot of single- (or lower-) precision constants
+!   in this routine. Enough that it significantly influences the result
+!   if they are correctly converted to full (double) precision.
+!   A conversion should be done, but I will not do it as part of
+!   the OMP-implementation as it muddles the comparisons of old and
+!   new results. BJB 2009-09-22
+
 #undef NEW_SS
 #define NEW_SS
 
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,nb,dz,NNc,NNe,NNw,NNn,NNs)
 !  Prandtl frequency
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .eq. 1 ) then
@@ -199,10 +209,12 @@
          end if
       end do
    end do
+!$OMP END DO
 
 #ifndef NO_BAROCLINIC
 #define NEW_NN
 #undef NEW_NN
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .eq. 1 ) then
@@ -247,8 +259,10 @@
          end if
       end do
    end do
+!$OMP END DO
 #endif
 
+!$OMP END PARALLEL
    call toc(TIM_SSNN)
 #ifdef DEBUG
    write(debug,*) 'Leaving ss_nn()'

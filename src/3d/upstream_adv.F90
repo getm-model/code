@@ -1,4 +1,4 @@
-!$Id: upstream_adv.F90,v 1.7 2009-02-18 13:38:14 hb Exp $
+!$Id: upstream_adv.F90,v 1.8 2009-09-30 11:28:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -81,6 +81,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
    use advection_3d, only: cu
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -121,16 +122,25 @@
    stop 'upstream_adv()'
 #endif
 
-
 #ifdef USE_ALLOCATED_ARRAYS
    allocate(adv(I3DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'upstream_adv: Error allocating memory (adv)'
 #endif
 
-   adv = _ZERO_
+! Note: We do not need to initialize adv.
+!   Tested BJB 2009-09-25. 
 
-   cu = _ZERO_
+
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
+
+! OMP-NOTE: Master thread can initialize this array, while 
+! the other threads do useful stuff in the next loop.
+!$OMP MASTER
+   adv(:,:,0) = _ZERO_
+!$OMP END MASTER
+
    do k=1,kmax   ! Calculating u-interface fluxes !
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin-1,imax
             if (uu(i,j,k) .gt. _ZERO_) then
@@ -140,22 +150,28 @@
             end if
             if ((AH.gt.0.).and.(az(i,j).gt.0).and.(az(i+1,j).gt.0))    &
                cu(i,j,k)=cu(i,j,k)-AH*(f(i+1,j,k)-f(i,j,k))/delxu(i,j) &
-                         *0.5*(hn(i+1,j,k)+hn(i,j,k))
+                         *_HALF_*(hn(i+1,j,k)+hn(i,j,k))
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
+
    do k=1,kmax   ! Updating the advection term for u-advection !
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
             adv(i,j,k)=(cu(i  ,j,k)*delyu(i  ,j)    &
                        -cu(i-1,j,k)*delyu(i-1,j))*area_inv(i,j)
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
 
 #ifndef SLICE_MODEL
-   cu = _ZERO_
    do k=1,kmax   ! Calculating v-interface fluxes !
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax
          do i=imin,imax
             if (vv(i,j,k) .gt. _ZERO_) then
@@ -165,23 +181,38 @@
             end if
             if ((AH.gt.0.).and.(az(i,j).gt.0).and.(az(i,j+1).gt.0))   &
                cu(i,j,k)=cu(i,j,k)-AH*(f(i,j+1,k)-f(i,j,k))/delyv(i,j)   &
-                         *0.5*(hn(i,j+1,k)+hn(i,j,k))
+                         *_HALF_*(hn(i,j+1,k)+hn(i,j,k))
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
+
    do k=1,kmax   ! Updating the advection term for v-advection !
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
             adv(i,j,k)=adv(i,j,k)+(cu(i,j  ,k)*delxv(i,j  )   &
                                   -cu(i,j-1,k)*delxv(i,j-1))*area_inv(i,j)
          end do
       end do
+!$OMP END DO NOWAIT
    end do
 #endif
 
-   cu = _ZERO_
+!$OMP BARRIER
+! OMP-NOTE: It is possible to thread the following initialization,
+!     but it does not really make an impact on the local wall clock
+!     time, so it is left in serial. BJB 2009-09-21.
+!$OMP MASTER
+   cu(:,:,0)    = _ZERO_
+   cu(:,:,kmax) = _ZERO_
+!$OMP END MASTER
+!$OMP BARRIER
+
    if (kmax.gt.1) then
       do k=1,kmax-1   ! Calculating w-interface fluxes !
+!$OMP DO SCHEDULE(RUNTIME)
          do j=jmin,jmax
             do i=imin,imax
                if (ww(i,j,k) .gt. _ZERO_) then
@@ -191,24 +222,30 @@
                end if
             end do
          end do
+!$OMP END DO
       end do
       do k=1,kmax   ! Updating the advection term for w-advection !
+!$OMP DO SCHEDULE(RUNTIME)
          do j=jmin,jmax
             do i=imin,imax
                adv(i,j,k)=adv(i,j,k)+(cu(i,j,k)-cu(i,j,k-1))
             end do
          end do
+!$OMP END DO
       end do
    end if
 
    do k=1,kmax   ! Doing the full advection in one step
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
             if (az(i,j) .eq. 1)                                        &
                f(i,j,k)=(f(i,j,k)*ho(i,j,k)-dt*adv(i,j,k))/hn(i,j,k)
          end do
       end do
+!$OMP END DO
    end do
+!$OMP END PARALLEL
 
 #ifdef USE_ALLOCATED_ARRAYS
 #ifdef FORTRAN90

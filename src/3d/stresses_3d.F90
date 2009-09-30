@@ -1,4 +1,4 @@
-!$Id: stresses_3d.F90,v 1.10 2009-08-18 10:24:45 bjb Exp $
+!$Id: stresses_3d.F90,v 1.11 2009-09-30 11:28:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,6 +29,7 @@
    use meteo, only: tausx,tausy
    use halo_zones, only : update_2d_halo,wait_halo,z_TAG
    use getm_timers, only: tic, toc, TIM_STRESSES3D, TIM_STRESSES3DH
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -41,7 +42,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k,k1,k2,k3,k4
+   integer                   :: i,j,k,ku1,ku2,kv1,kv2
+   REALTYPE                  :: rho_0i
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -52,6 +54,8 @@
 #endif
    call tic(TIM_STRESSES3D)
 
+   rho_0i=_ONE_/rho_0
+
 !  we need to know rru and rrv in the halos as well
    call tic(TIM_STRESSES3DH)
    call update_2d_halo(rru,rru,au,imin,jmin,imax,jmax,10)
@@ -60,8 +64,10 @@
    call wait_halo(10)
    call toc(TIM_STRESSES3DH)
 
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,ku1,ku2,kv1,kv2)
 
 !  x-component of bottom momentum flux at U-points
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax    
       do i=imin-1,imax
 
@@ -70,8 +76,10 @@
 
       enddo
    enddo
+!$OMP END DO NOWAIT
 
 !  y-component of bottom momentum flux at V-points  
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-1,jmax    
       do i=imin,imax
  
@@ -80,35 +88,36 @@
 
       enddo
    enddo
+!$OMP END DO
 
 !  stress magnitude
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax    
       do i=imin,imax
 
 !        lower indices at U- and V-points
-         k1=kumin(i-1,j  )
-         k2=kumin(i  ,j  )
-         k3=kvmin(i  ,j-1)
-         k4=kvmin(i  ,j  )
+         ku1=kumin(i-1,j  )
+         ku2=kumin(i  ,j  )
+         kv1=kvmin(i  ,j-1)
+         kv2=kvmin(i  ,j  )
 
 
 !        total bottom stress at T-points
-         taub(i,j)=0.5*(                                            &
-                   (uu(i-1,j  ,k1)/hun(i-1,j  ,k1)*rru(i-1,j  ))**2 &
-                  +(uu(i  ,j  ,k2)/hun(i  ,j  ,k2)*rru(i  ,j  ))**2 &
-                  +(vv(i  ,j-1,k3)/hvn(i  ,j-1,k3)*rrv(i  ,j-1))**2 &
-                  +(vv(i  ,j  ,k4)/hvn(i  ,j  ,k4)*rrv(i  ,j  ))**2)
-
-         taub(i,j)=sqrt(taub(i,j))
+         taub(i,j)=sqrt(_HALF_*(                                      &
+                   (uu(i-1,j  ,ku1)/hun(i-1,j  ,ku1)*rru(i-1,j  ))**2 &
+                  +(uu(i  ,j  ,ku2)/hun(i  ,j  ,ku2)*rru(i  ,j  ))**2 &
+                  +(vv(i  ,j-1,kv1)/hvn(i  ,j-1,kv1)*rrv(i  ,j-1))**2 &
+                  +(vv(i  ,j  ,kv2)/hvn(i  ,j  ,kv2)*rrv(i  ,j  ))**2))
 
 !        total surface stress at T-points
-         taus(i,j)=0.5*(                                &
+         taus(i,j)=rho_0i*sqrt(_HALF_*(                 &
                         tausx(i,j)**2+tausx(i-1,j)**2   &
-                      + tausy(i,j)**2+tausy(i,j-1)**2)
-         taus(i,j)=sqrt(taus(i,j))/rho_0
+                      + tausy(i,j)**2+tausy(i,j-1)**2) )
 
       end do
    end do
+!$OMP END DO
+!$OMP END PARALLEL
 
    call toc(TIM_STRESSES3D)
 #ifdef DEBUG

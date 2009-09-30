@@ -1,4 +1,4 @@
-!$Id: eqstate.F90,v 1.12 2009-08-18 10:24:44 bjb Exp $
+!$Id: eqstate.F90,v 1.13 2009-09-30 11:28:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -106,6 +106,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax,az
    use variables_3d, only: T,S,rho,buoy
    use getm_timers, only: tic, toc, TIM_EQSTATE
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -129,28 +130,52 @@
 #endif
    call tic(TIM_EQSTATE)
 
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP    PRIVATE(i,j,k, x,KK, T1,T2,T3,T4,T5,S1,S15,S2,S3,p2)
+
 #define BUOYANCY
    select case (eqstate_method)
       case (1)
-         forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO,az(i,j) .gt. 0)  &
-            rho(i,j,1:kmax) = rho_0 +                                &
-                    dtr0*(T(i,j,1:kmax)-T0) + dsr0*(S(i,j,1:kmax)-S0)
+         LEVEL1 'BJB EQST TEST'
+!         forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO,az(i,j) .gt. 0)  &
+         do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+            do j=jmin-HALO,jmax+HALO
+               do i=imin-HALO,imax+HALO
+                  rho(i,j,k) = rho_0 +                                &
+                       dtr0*(T(i,j,k)-T0) + dsr0*(S(i,j,k)-S0)
+               end do
+            end do
+!$OMP END DO NOWAIT
+         end do
 
+!$OMP BARRIER
+
+! OMP-TODO: HAIDVOGEL_TEST and CONSTANCE_TEST not threaded. It should
+!  be easy to thread, but the gain would only be for those cases, 
+!  and the risk of introducing erros is non-zero. BJB 2009-09-25.
 #ifdef HAIDVOGEL_TEST
+!$OMP MASTER
          forall(i=imin-1:imax+1,j=jmin-1:jmax+1,az(i,j) .gt. 0)  &
             rho(i,j,1:kmax) = 1000. + S(i,j,1:kmax)
+!$OMP END MASTER
 #endif
 #ifdef CONSTANCE_TEST
+!$OMP MASTER
          forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO,az(i,j) .gt. 0)  &
-          rho(i,j,1:kmax) = 1000. + *dtr0*(T(i,j,1:kmax)-T0)
+            rho(i,j,1:kmax) = 1000. + *dtr0*(T(i,j,1:kmax)-T0)
+!$OMP END MASTER
 #endif
       case (2)
          do k = 1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
             do j = jmin-HALO,jmax+HALO
                do i = imin-HALO,imax+HALO
                   if (az(i,j) .gt. 0) then
                      T1 = T(i,j,k)
                      T2 = T1*T1
+! BJB-TODO: Due to caching, it is likely (slightly) faster to 
+!    compute T3=T1*T1*T1 (etc). Same for S further down.
                      T3 = T1*T2
                      T4 = T2*T2
                      T5 = T1*T4
@@ -159,15 +184,19 @@
 #ifdef NONNEGSALT
                      if (S1 .lt. _ZERO_) then
 #ifdef DEBUG
+!$OMP CRITICAL
                         STDERR 'Salinity at point ',i,',',j,',',k,' < 0.'
                         STDERR 'Value is S = ',S(i,j,k)
                         STDERR 'Programm continued, value set to zero ...'
+!$OMP END CRITICAL
 #endif
                         S(i,j,k)= _ZERO_
                         S1 = _ZERO_
                      end if
 #endif
-                     S15= S1**1.5
+! BJB-TODO: S1*sqrt(S1) is faster than S1**1.5 (plus the latter has the double-precision problem!)
+!                     S15= S1*sqrt(S1)
+                     S15 = S1**1.5
                      S2 = S1*S1
                      S3 = S1*S2
 
@@ -175,6 +204,7 @@
                      x=x-1.120083e-06*T4+6.536332e-09*T5
                      x=x+S1*(0.824493-4.0899e-03*T1+7.6438e-05*T2-8.2467e-07*T3)
                      x=x+S1*5.3875e-09*T4
+! BJB-TODO: Use S15 rather than sqrt(S3)
                      x=x+sqrt(S3)*(-5.72466e-03+1.0227e-04*T1-1.6546e-06*T2)
                      x=x+4.8314e-04*S2
 
@@ -202,14 +232,27 @@
                   end if
                end do
             end do
+!$OMP END DO NOWAIT
          end do
+
+!$OMP BARRIER
 
       case default
    end select
 #undef BUOYANCY
 
    x=-g/rho_0
-   buoy=x*(rho-rho_0)
+   do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            buoy(i,j,k)=x*(rho(i,j,k)-rho_0)
+         end do
+      end do
+!$OMP END DO NOWAIT
+   end do
+
+!$OMP END PARALLEL
 
    call toc(TIM_EQSTATE)
 #ifdef DEBUG

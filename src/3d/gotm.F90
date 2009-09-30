@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.18 2009-08-18 10:24:44 bjb Exp $
+!$Id: gotm.F90,v 1.19 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -82,6 +82,14 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+! Note: For ifort we need to explicitly state that this routine is 
+! single-thread only. Presently I don't know why that is necessary, 
+! but if I use ifort -omp without any OMP-statements in this file, 
+! then the result is garbage. 
+! The OMP SINGLE or OMP MASTER statements helps, but sometimes it *still* 
+! messes up, in the sense that NaN "suddenly" appears on output.
+! Apparently, writing out array-copy explicitly helps.
+!    BJB 2009-09-17.
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
@@ -96,6 +104,8 @@
          if (az(i,j) .eq. 1 ) then
 
 #ifdef STRUCTURE_FRICTION
+! BJB-TODO: Change 0.25 -> _QUART_, 0.5 -> _QUART_, 0.1->_TENTH_ in this file
+!    Change all constants to double
             do k=1,kmax
                xP(k)= 0.25*(                                                   &
                (uu(i  ,j  ,k)/hun(i  ,j  ,k))**2*(sf(i  ,j  ,k)+sf(i+1,j  ,k)) &
@@ -106,27 +116,29 @@
 #endif
             u_taus = sqrt(taus(i,j))
             u_taub = sqrt(taub(i,j))
-
-            h = hn(i,j,:)
-            SS1d = SS(i,j,:)
+            do k=0,kmax
+               h(k)    = hn(i,j,k)
+               SS1d(k) = SS(i,j,k)
 #ifndef NO_BAROCLINIC
-            NN1d = NN(i,j,:)
+               NN1d(k) = NN(i,j,k)
 #endif
-            tke1d=tke(i,j,:)
-            eps1d=eps(i,j,:)
-            L1d=cde*tke1d**1.5/eps1d
-            num1d=num(i,j,:)
+               tke1d(k)=tke(i,j,k)
+               eps1d(k)=eps(i,j,k)
+               L1d(k)  =cde*tke1d(k)**1.5/eps1d(k)
+               num1d(k)=num(i,j,k)
 #ifndef NO_BAROCLINIC
-            nuh1d=nuh(i,j,:)
+               nuh1d(k)=nuh(i,j,k)
 #endif
+            end do
             z0s = 0.1
-            z0b=0.5*(max(zub(i-1,j),zub(i,j))+max(zvb(i,j-1),zvb(i,j)))
-            if (z0s .gt. D(i,j)/10.) z0s=D(i,j)/10.
+            z0b = 0.5*(max(zub(i-1,j),zub(i,j))+max(zvb(i,j-1),zvb(i,j)))
+            if (z0s .gt. D(i,j)/10.) z0s= D(i,j)/10.
 
 #ifdef PARABOLIC_VISCOSITY
             zz = _ZERO_
             do k=1,kmax-1
                zz=zz+hn(i,j,k)
+! BJB-TODO: Get rid of **1.5 and **2
                tke1d(k)=max(1.e-10,3.333333*u_taub**2*(1.-zz/D(i,j)))
                L1d(k)=0.4*(zz+z0b)*sqrt(1.-zz/D(i,j))
                eps1d(k)=0.16431677*tke1d(k)**1.5/L1d(k)
@@ -144,12 +156,14 @@
                                NN1d,SS1d,xP)
             !call toc(TIM_GOTMTURB)
 #endif
-            tke(i,j,:) = tke1d
-            eps(i,j,:) = eps1d
-            num(i,j,:) = num1d + avmback
+            do k=0,kmax
+               tke(i,j,k) = tke1d(k)
+               eps(i,j,k) = eps1d(k)
+               num(i,j,k) = num1d(k) + avmback
 #ifndef NO_BAROCLINIC
-            nuh(i,j,:) = nuh1d + avhback
+               nuh(i,j,k) = nuh1d(k) + avhback
 #endif
+            end do
          end if
       end do
    end do
@@ -161,9 +175,9 @@
    call update_3d_halo(nuh,nuh,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 #endif
-   call toc(TIM_GOTMH)   
+   call toc(TIM_GOTMH)
 
-   call toc(TIM_GOTM)   
+   call toc(TIM_GOTM)
 #ifdef DEBUG
    write(debug,*) 'Leaving gotm()'
    write(debug,*)

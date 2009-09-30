@@ -1,4 +1,4 @@
-!$Id: ip_stelling_vankester.F90,v 1.3 2009-07-01 12:37:59 kb Exp $
+!$Id: ip_stelling_vankester.F90,v 1.4 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,70 +28,113 @@
 !
 ! !USES:
    use internal_pressure
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !REVISION HISTORY:
 !  Original author(s): Richard Hofmeister
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k,l,kcount
+   integer                   :: i,j,k,l,kcount, rc
    REALTYPE                  :: dxm1,dym1
-   REALTYPE                  :: grdl,grdu,buoyl,prgr,dxz,dyz,dzz,zlm
-   integer                   :: kplus,kminus,klower,kupper
+   REALTYPE                  :: prgr,dyz,dzz,zlm
+   integer                   :: klower,kupper
    integer                   :: lnum
-   REALTYPE                  :: zx(kmax)
-   REALTYPE                  :: zl(2*kmax+1)
-   REALTYPE                  :: dzl(2*kmax+1)
-   REALTYPE                  :: dzfrac(kmax)
    REALTYPE                  :: db,dcn,dcm
-   integer                   :: lvel(kmax+1)
    logical                   :: changed
    REALTYPE                  :: zltmp
    REALTYPE                  :: buoyplus,buoyminus
    REALTYPE                  :: zi(I3DFIELD)
-   integer                   :: m(2*kmax+1)
-   integer                   :: n(2*kmax+1)
+   REALTYPE, POINTER         :: zx(:)
+   REALTYPE, POINTER         :: zl(:)
+   REALTYPE, POINTER         :: dzl(:)
+   REALTYPE, POINTER         :: dzfrac(:)
+   integer, POINTER          :: lvel(:)
+   integer, POINTER          :: m(:)
+   integer, POINTER          :: n(:)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-lnum=2*kmax+1
+   lnum=2*kmax+1
 #if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
    dxm1 = _ONE_/DXU
    dym1 = _ONE_/DYV
 #endif
 
+! BJB-TODO: The zeroing of these three arrays is costly.
+!  Try to reduce amount of initialization. BJB 2009-09-22.
+   zz(:,:,0) = _ZERO_
+
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP    PRIVATE(i,j,k,l,kcount, rc)                                   &
+!$OMP    PRIVATE(prgr,dyz,dzz,zlm,klower,kupper,lnum,db,dcn,dcm)       &
+!$OMP    PRIVATE(changed,zltmp,buoyplus,buoyminus)                     &
+!$OMP    PRIVATE(zx,zl,dzl,dzfrac,lvel,m,n)
+
+! OMP-NOTE: Each thread allocates its own HEAP storage for the 
+!    vertical work storage:
+   allocate(zx(kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'ip_stelling_vankester: Error allocating memory (zx)'
+   allocate(zl(2*kmax+1),stat=rc)    ! work array
+   if (rc /= 0) stop 'ip_stelling_vankester: Error allocating memory (zl)'
+   allocate(dzl(2*kmax+1),stat=rc)    ! work array
+   if (rc /= 0) stop 'ip_stelling_vankester: Error allocating memory (dzl)'
+   allocate(dzfrac(kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'ip_stelling_vankester: Error allocating memory (dzfrac)'
+   allocate(lvel(kmax+1),stat=rc)    ! work array
+   if (rc /= 0) stop 'ip_stelling_vankester: Error allocating memory (lvel)'
+   allocate(m(2*kmax+1),stat=rc)    ! work array
+   if (rc /= 0) stop 'ip_stelling_vankester: Error allocating memory (m)'
+   allocate(n(2*kmax+1),stat=rc)    ! work array
+   if (rc /= 0) stop 'ip_stelling_vankester: Error allocating memory (n)'
+
+! Test de-init for funky compilers:
+! NOTE: It is not necessary to initialize the 1D work arrays 
+!    nor the 3D array zi. BJB 2009-09-26.
+
+! OMP-NOTE: Master thread initialize while other threads go ahead
+!   and do work.
+!$OMP MASTER
+   idpdx(:,:,0) = _ZERO_
+   idpdy(:,:,0) = _ZERO_
+!$OMP END MASTER
+
+
 !  First, the heights of the pressure points are calculated.
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax+1
       do i=imin,imax+1
          if (az(i,j) .ge. 1) then
-            zz(i,j,1)=-H(i,j)+0.5*hn(i,j,1)
+            zz(i,j,1)=-H(i,j)+_HALF_*hn(i,j,1)
             zi(i,j,1)=-H(i,j)
             do k=2,kmax
-               zz(i,j,k)=zz(i,j,k-1)+0.5*(hn(i,j,k-1)+hn(i,j,k))
+               zz(i,j,k)=zz(i,j,k-1)+_HALF_*(hn(i,j,k-1)+hn(i,j,k))
                zi(i,j,k)=zi(i,j,k-1)+hn(i,j,k-1)
             end do
          end if
       end do
    end do
+!$OMP END DO
 
 !  Calculation of layer integrated internal pressure gradient as it
 !  appears on the right hand side of the u-velocity equation.
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
-         n=0
-         m=0
-         zl=_ZERO_
+         n(:)=0
+         m(:)=0
+         zl(:)=_ZERO_
 
          if (au(i,j) .ge. 1) then
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
 #endif
             ! merge zl vector from zi's
-            zx(1)=-HU(i,j)+0.5*hun(i,j,1) ! zx defined on u-points
+            zx(1)=-HU(i,j)+_HALF_*hun(i,j,1) ! zx defined on u-points
             zl(1)=zi(i,j,1)
             zl(2)=zi(i+1,j,1)
             do k=2,kmax
-               zx(k)=zx(k-1)+0.5*(hun(i,j,k-1)+hun(i,j,k))
+               zx(k)=zx(k-1)+_HALF_*(hun(i,j,k-1)+hun(i,j,k))
                zl(k*2-1)=zi(i,j,k)
                zl(k*2)=zi(i+1,j,k)
             end do
@@ -136,7 +179,7 @@ lnum=2*kmax+1
             do k=kmax,1,-1
                do l=lvel(k+1)-1,lvel(k),-1
                   ! calc b-gradient
-                  zlm=0.5*dzl(l)+zl(l)
+                  zlm=_HALF_*dzl(l)+zl(l)
                   
                   if (zz(i+1,j,n(l)).ge.zz(i,j,kmax)) then
                            buoyminus=buoy(i,j,kmax)
@@ -202,25 +245,27 @@ lnum=2*kmax+1
          end if
       end do
    end do
+!$OMP END DO
 
 ! Calculation of layer integrated internal pressure gradient as it
 ! appears on the right hand side of the v-velocity equation.
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
-         n=0
-         m=0
-         zl=_ZERO_
+         n(:)=0
+         m(:)=0
+         zl(:)=_ZERO_
 
          if (av(i,j) .ge. 1) then
 #if defined(SPHERICAL) || defined(CURVILINEAR)
          dym1 = _ONE_/DYV
 #endif
             ! merge zl vector from zi's
-            zx(1)=-HV(i,j)+0.5*hvn(i,j,1) ! zx defined on u-points
+            zx(1)=-HV(i,j)+_HALF_*hvn(i,j,1) ! zx defined on u-points
             zl(1)=zi(i,j,1)
             zl(2)=zi(i,j+1,1)
             do k=2,kmax
-               zx(k)=zx(k-1)+0.5*(hvn(i,j,k-1)+hvn(i,j,k))
+               zx(k)=zx(k-1)+_HALF_*(hvn(i,j,k-1)+hvn(i,j,k))
                zl(k*2-1)=zi(i,j,k)
                zl(k*2)=zi(i,j+1,k)
             end do
@@ -264,7 +309,7 @@ lnum=2*kmax+1
             do k=kmax,1,-1
                do l=lvel(k+1)-1,lvel(k),-1
                   ! calc b-gradient
-                  zlm=0.5*dzl(l)+zl(l)
+                  zlm=_HALF_*dzl(l)+zl(l)
                   
                   if (zz(i,j+1,n(l)).ge.zz(i,j,kmax)) then
                            buoyminus=buoy(i,j,kmax)
@@ -327,7 +372,25 @@ lnum=2*kmax+1
          end if
       end do
    end do
+!$OMP END DO
 
+! Each thread must deallocate its own HEAP storage:
+   deallocate(zx,stat=rc)
+   if (rc /= 0) stop 'ip_stelling_vankester: Error deallocating memory (zx)'
+   deallocate(zl,stat=rc)
+   if (rc /= 0) stop 'ip_stelling_vankester: Error deallocating memory (zl)'
+   deallocate(dzl,stat=rc)
+   if (rc /= 0) stop 'ip_stelling_vankester: Error deallocating memory (dzl)'
+   deallocate(dzfrac,stat=rc)
+   if (rc /= 0) stop 'ip_stelling_vankester: Error deallocating memory (dzfrac)'
+   deallocate(lvel,stat=rc)
+   if (rc /= 0) stop 'ip_stelling_vankester: Error deallocating memory (lvel)'
+   deallocate(m,stat=rc)
+   if (rc /= 0) stop 'ip_stelling_vankester: Error deallocating memory (m)'
+   deallocate(n,stat=rc)
+   if (rc /= 0) stop 'ip_stelling_vankester: Error deallocating memory (n)'
+
+!$OMP END PARALLEL
    return
    end subroutine ip_stelling_vankester
 !EOC

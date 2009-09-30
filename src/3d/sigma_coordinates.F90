@@ -1,4 +1,4 @@
-!$Id: sigma_coordinates.F90,v 1.2 2007-06-07 10:25:19 kbk Exp $
+!$Id: sigma_coordinates.F90,v 1.3 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -125,52 +125,73 @@
       kvmin=1
    end if ! first
 
+
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,rc,kmaxm1)
    if (equiv_sigma) then
       kmaxm1= _ONE_/float(kmax)
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
             ho(i,j,:)=(sseo(i,j)+H(i,j))*kmaxm1
             hn(i,j,:)=(ssen(i,j)+H(i,j))*kmaxm1
          end do
       end do
+!$OMP END DO NOWAIT
 
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO-1
             huo(i,j,:)=(ssuo(i,j)+HU(i,j))*kmaxm1
             hun(i,j,:)=(ssun(i,j)+HU(i,j))*kmaxm1
          end do
       end do
+!$OMP END DO NOWAIT
 
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO
             hvo(i,j,:)=(ssvo(i,j)+HV(i,j))*kmaxm1
             hvn(i,j,:)=(ssvn(i,j)+HV(i,j))*kmaxm1
          end do
       end do
+!$OMP END DO NOWAIT
 
    else ! non-equivdistant
-
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-            ho(i,j,1:kmax)=(sseo(i,j)+H(i,j))*dga(1:kmax)
-            hn(i,j,1:kmax)=(ssen(i,j)+H(i,j))*dga(1:kmax)
+      do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO
+               ho(i,j,k)=(sseo(i,j)+H(i,j))*dga(k)
+               hn(i,j,k)=(ssen(i,j)+H(i,j))*dga(k)
+            end do
          end do
+!$OMP END DO NOWAIT
       end do
 
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO-1
-            huo(i,j,1:kmax)=(ssuo(i,j)+HU(i,j))*dga(1:kmax)
-            hun(i,j,1:kmax)=(ssun(i,j)+HU(i,j))*dga(1:kmax)
+      do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO-1
+               huo(i,j,k)=(ssuo(i,j)+HU(i,j))*dga(k)
+               hun(i,j,k)=(ssun(i,j)+HU(i,j))*dga(k)
+            end do
          end do
+!$OMP END DO NOWAIT
       end do
 
-      do j=jmin-HALO,jmax+HALO-1
-         do i=imin-HALO,imax+HALO
-            hvo(i,j,1:kmax)=(ssvo(i,j)+HV(i,j))*dga(1:kmax)
-            hvn(i,j,1:kmax)=(ssvn(i,j)+HV(i,j))*dga(1:kmax)
+      do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+         do j=jmin-HALO,jmax+HALO-1
+            do i=imin-HALO,imax+HALO
+               hvo(i,j,k)=(ssvo(i,j)+HV(i,j))*dga(k)
+               hvn(i,j,k)=(ssvn(i,j)+HV(i,j))*dga(k)
+            end do
          end do
+!$OMP END DO NOWAIT
       end do
    end if
+
+!$OMP END PARALLEL
 
 #ifdef DEBUG
    write(debug,*) 'Leaving sigma_coordinates()'

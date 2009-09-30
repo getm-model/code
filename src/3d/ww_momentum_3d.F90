@@ -1,4 +1,4 @@
-!$Id: ww_momentum_3d.F90,v 1.10 2009-08-18 10:24:45 bjb Exp $
+!$Id: ww_momentum_3d.F90,v 1.11 2009-09-30 11:28:47 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -42,6 +42,7 @@
    use halo_zones, only: update_3d_halo,wait_halo,z_TAG
 #endif
    use getm_timers, only: tic, toc, TIM_WWMOMENTUM, TIM_WWMOMENTUMH
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -68,11 +69,17 @@
 
    dtm1=_ONE_/dt
 
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
+
+! OMP-NOTE: k-1 is used at layer k, so we have to conclude 
+!    one layer at a time (wait after each later).
    do k=1,kmax
 #ifdef CALC_HALO_WW
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax+1
          do i=imin-1,imax+1
 #else
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
 #endif
@@ -86,7 +93,10 @@
            end if
          end do
       end do
+!$OMP END DO
    end do
+
+!$OMP END PARALLEL 
 
 #ifndef CALC_HALO_WW
    call tic(TIM_WWMOMENTUMH)

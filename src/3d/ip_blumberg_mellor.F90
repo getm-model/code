@@ -1,4 +1,4 @@
-!$Id: ip_blumberg_mellor.F90,v 1.10 2007-07-12 10:26:00 kbk Exp $
+!$Id: ip_blumberg_mellor.F90,v 1.11 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -51,6 +51,7 @@
 !
 ! !USES:
    use internal_pressure
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !REVISION HISTORY:
@@ -68,8 +69,18 @@
    dym1 = _ONE_/DYV
 #endif
 
+   zz(:,:,0) = _ZERO_
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP    PRIVATE(i,j,k,grdl,grdu,buoyl,buoyu,prgr,dxz,dyz)
+
+!$OMP MASTER
+   idpdx(:,:,0)    = _ZERO_
+   idpdy(:,:,0)    = _ZERO_
+!$OMP END MASTER
+
 !  First, the interface heights are calculated in order to get the
 !  interface slopes further down.
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax+1
       do i=imin,imax+1
          if (az(i,j) .ge. 1) then
@@ -80,9 +91,13 @@
          end if
       end do
    end do
+!$OMP END DO
+
+! BJB-TODO: Change 0.5->_HALF_ etc in this file
 
 !  Calculation of layer integrated internal pressure gradient as it
 !  appears on the right hand side of the u-velocity equation.
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .ge. 1) then
@@ -105,9 +120,11 @@
          end if
       end do
    end do
+!$OMP END DO NOWAIT
 
 !  Calculation of layer integrated internal pressure gradient as it
 !  appears on the right hand side of the v-velocity equation.
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .ge. 1) then
@@ -130,7 +147,8 @@
          end if
       end do
    end do
-
+!$OMP END DO
+!$OMP END PARALLEL
    return
    end subroutine ip_blumberg_mellor
 !EOC

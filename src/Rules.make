@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.22 2009-08-21 08:56:33 bjb Exp $
+#$Id: Rules.make,v 1.23 2009-09-30 11:28:44 bjb Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -33,6 +33,7 @@ endif
 
 # 3D barotropic
 ifeq ($(GETM_NO_BAROCLINIC),true)
+
 DEFINES += -DNO_BAROCLINIC
 endif
 
@@ -56,6 +57,11 @@ ifeq ($(GETM_NO_TIMERS),true)
 DEFINES += -DNO_TIMERS
 endif
 
+# OpenMP computation (mostly with compiler directives anyway):
+ifeq ($(GETM_OMP),true)
+DEFINES += -DGETM_OMP
+endif
+
 # Compile for parallel execution
 ifeq ($(GETM_PARALLEL),true)
 parallel=true
@@ -65,6 +71,7 @@ parallel=false
 set par=ser
 endif
 
+
 turbulence=
 turbulence=gotm
 
@@ -73,6 +80,7 @@ turbulence=gotm
 ifdef INPUT_DIR
 DEFINES += -DINPUT_DIR="'$(INPUT_DIR)/'"
 endif
+DEFINES += -DINCLUDE_HALOS
 #DEFINES += -DSPHERICAL
 #DEFINES += -DCURVILINEAR
 #DEFINES += -DNO_BOTTFRIC
@@ -236,6 +244,10 @@ DEFINES += -DPRODUCTION $(STATIC)
 FLAGS   = $(PROD_FLAGS) 
 endif
 
+ifdef GETM_OMP
+FLAGS   += $(OMP_FLAGS)
+endif
+
 # For making the source code documentation.
 PROTEX	= protex -b -n -s
 
@@ -253,6 +265,9 @@ CPPFLAGS	= $(DEFINES) $(INCDIRS)
 FFLAGS  	= $(DEFINES) $(FLAGS) $(MODULES) $(INCDIRS) $(EXTRAS)
 F90FLAGS  	= $(FFLAGS)
 LDFLAGS		= $(FFLAGS) $(LINKDIRS)
+ifdef GETM_OMP
+LDFLAGS += $(OMP_FLAGS)
+endif
 
 #
 # Special variables which should not be exported

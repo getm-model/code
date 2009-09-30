@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.25 2009-08-18 10:24:45 bjb Exp $
+!$Id: temperature.F90,v 1.26 2009-09-30 11:28:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -322,6 +322,7 @@ temp_field_no=1
 #endif
    use parameters, only: avmolt
    use getm_timers, only: tic, toc, TIM_TEMP
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -333,15 +334,17 @@ temp_field_no=1
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc
-   REALTYPE                  :: Res(0:kmax)
-   REALTYPE                  :: auxn(1:kmax-1),auxo(1:kmax-1)
-   REALTYPE                  :: a1(0:kmax),a2(0:kmax)
-   REALTYPE                  :: a3(0:kmax),a4(0:kmax)
    REALTYPE                  :: delxu(I2DFIELD),delxv(I2DFIELD)
    REALTYPE                  :: delyu(I2DFIELD),delyv(I2DFIELD)
    REALTYPE                  :: area_inv(I2DFIELD)
-   REALTYPE                  :: swr_loc,shf_loc
-   REALTYPE                  :: zz,rad1d(0:1000)
+! OMP-NOTE: The pointer declarations is to allow each omp thread to 
+!   have its own work storage (over a vertical).
+   REALTYPE, POINTER         :: Res(:)
+   REALTYPE, POINTER         :: auxn(:),auxo(:)
+   REALTYPE, POINTER         :: a1(:),a2(:),a3(:),a4(:)
+   REALTYPE, POINTER         :: rad1d(:)
+   REALTYPE                  :: zz,swr_loc,shf_loc
+   REALTYPE                  :: rho_0_cpi
    integer                   :: status
 !EOP
 !-----------------------------------------------------------------------
@@ -352,7 +355,10 @@ temp_field_no=1
    write(debug,*) 'do_temperature() # ',Ncall
 #endif
    call tic(TIM_TEMP)
+   rho_0_cpi = _ONE_/(rho_0*cp)
 
+! OMP-NOTE: It is likely not worthwhile to thread memory copy.
+!      BJB 2009-09-25.
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    delxu=dxu
    delxv=dxv
@@ -374,15 +380,43 @@ temp_field_no=1
                         temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH)
    call tic(TIM_TEMP)
 #ifdef FRESHWATER_LENSE_TEST
-   T(imin:imin+3,jmin:jmax,1:kmax)=10.
-   T(imax-3:imax,jmin:jmax,1:kmax)=10.
-   T(imin:imax,jmin:jmin+3,1:kmax)=10.
-   T(imin:imax,jmax-3:jmax,1:kmax)=10.
+   T(imin:imin+3,jmin:jmax,1:kmax)=10*_ONE_
+   T(imax-3:imax,jmin:jmax,1:kmax)=10*_ONE_
+   T(imin:imax,jmin:jmin+3,1:kmax)=10*_ONE_
+   T(imin:imax,jmax-3:jmax,1:kmax)=10*_ONE_
 #endif
+
+! OMP-NOTE: Pointer definitions and allocation so that each thread can 
+!           get its own work memory.
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP    PRIVATE(i,j,k,rc, zz,swr_loc,shf_loc)                         &
+!$OMP    PRIVATE(Res,auxn,auxo,a1,a2,a3,a4,rad1d)
+
+! Each thread allocates its own HEAP storage:
+   allocate(Res(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'do_temperature: Error allocating memory (Res)'
+   allocate(auxn(1:kmax-1),stat=rc)    ! work array
+   if (rc /= 0) stop 'do_temperature: Error allocating memory (auxn)'
+   allocate(auxo(1:kmax-1),stat=rc)    ! work array
+   if (rc /= 0) stop 'do_temperature: Error allocating memory (auxo)'
+   allocate(a1(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'do_temperature: Error allocating memory (a1)'
+   allocate(a2(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'do_temperature: Error allocating memory (a2)'
+   allocate(a3(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'do_temperature: Error allocating memory (a3)'
+   allocate(a4(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'do_temperature: Error allocating memory (auxo)'
+   allocate(rad1d(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'do_temperature: Error allocating memory (rad1d)'
+
+! Note: We do not need to initialize these work arrays.
+!   Tested BJB 2009-09-25. 
 
 !  Solar radiation and vertical diffusion of temperature
 
 !  Solar radiation
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .ge. 1) then
@@ -397,7 +431,11 @@ temp_field_no=1
          end if
       end do
    end do
+!$OMP END DO
 
+! OMP-NOTE: This needs local per-thread storage to thread:
+!  rad1d, auxo, auxn, a1, a2, a4, a3, Res
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .eq. 1) then
@@ -409,14 +447,16 @@ temp_field_no=1
                shf_loc=max(_ZERO_,shf_loc)
             end if
 
-            rad1d(0:kmax)=rad(i,j,:)/(rho_0*cp)           ! note this
+            do k=0,kmax
+               rad1d(k)=rad(i,j,k)*rho_0_cpi            ! note this
+            end do
 
             if (kmax.gt.1) then
 !     Auxilury terms, old and new time level,
                do k=1,kmax-1
-                  auxo(k)=2.*(1-cnpar)*dt*(nuh(i,j,k)+avmolt)/ &
+                  auxo(k)=2*(1-cnpar)*dt*(nuh(i,j,k)+avmolt)/ &
                              (hn(i,j,k+1)+hn(i,j,k))
-                  auxn(k)=2.*   cnpar *dt*(nuh(i,j,k)+avmolt)/ &
+                  auxn(k)=2*   cnpar *dt*(nuh(i,j,k)+avmolt)/ &
                              (hn(i,j,k+1)+hn(i,j,k))
                end do
 
@@ -425,7 +465,7 @@ temp_field_no=1
                a1(k)=-auxn(k-1)
                a2(k)=hn(i,j,k)+auxn(k-1)
                a4(k)=T(i,j,k)*(hn(i,j,k)-auxo(k-1))+T(i,j,k-1)*auxo(k-1)  &
-                     +dt*(rad1d(k)+shf_loc/(rho_0*cp)-rad1d(k-1))
+                     +dt*(rad1d(k)+shf_loc*rho_0_cpi-rad1d(k-1))
 
 !        Matrix elements for inner layers
                do k=2,kmax-1
@@ -456,6 +496,28 @@ temp_field_no=1
          end if
       end do
    end do
+!$OMP END DO
+
+! Each thread must deallocate its own HEAP storage:
+   deallocate(Res,stat=rc)
+   if (rc /= 0) stop 'do_temperature: Error deallocating memory (Res)'
+   deallocate(auxn,stat=rc)
+   if (rc /= 0) stop 'do_temperature: Error deallocating memory (auxn)'
+   deallocate(auxo,stat=rc)
+   if (rc /= 0) stop 'do_temperature: Error deallocating memory (auxo)'
+   deallocate(a1,stat=rc)
+   if (rc /= 0) stop 'do_temperature: Error deallocating memory (a1)'
+   deallocate(a2,stat=rc)
+   if (rc /= 0) stop 'do_temperature: Error deallocating memory (a2)'
+   deallocate(a3,stat=rc)
+   if (rc /= 0) stop 'do_temperature: Error deallocating memory (a3)'
+   deallocate(a4,stat=rc)
+   if (rc /= 0) stop 'do_temperature: Error deallocating memory (a4)'
+   deallocate(rad1d,stat=rc)
+   if (rc /= 0) stop 'do_temperature: Error deallocating memory (rad1d)'
+
+
+!$OMP END PARALLEL
 
    if (temp_check .ne. 0 .and. mod(n,abs(temp_check)) .eq. 0) then
       call check_3d_fields(imin,jmin,imax,jmax,kmin,kmax,az, &

@@ -17,6 +17,7 @@
 !  The out-of-bound values are written to stderr.
 !
 ! !USES:
+   use getm_timers, only: tic, toc, TIM_CHECK3DF
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -36,6 +37,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: check_3d_fields.F90,v $
+!  Revision 1.3  2009-09-30 11:28:47  bjb
+!  OpenMP threading initial implementation
+!
 !  Revision 1.2  2007-06-07 10:25:19  kbk
 !  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
 !
@@ -48,6 +52,7 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+   call tic(TIM_CHECK3DF)
    status=0
 
    do k=0,kmax
@@ -62,6 +67,7 @@
          end do
       end do
    end do
+   call toc(TIM_CHECK3DF)
 
    return
    end subroutine check_3d_fields

@@ -1,4 +1,4 @@
-!$Id: uv_diffusion_3d.F90,v 1.10 2009-08-18 10:24:45 bjb Exp $
+!$Id: uv_diffusion_3d.F90,v 1.11 2009-09-30 11:28:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -120,6 +120,7 @@
 #endif
    use variables_3d, only: kumin,kvmin,uu,vv,ww,hn,hun,hvn,uuEx,vvEx
    use getm_timers, only: tic, toc, TIM_UVDIFF3D
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -135,7 +136,6 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,ii,jj,kk
    REALTYPE                  :: PP(imin-1:imax+1,jmin-1:jmax+1,1:kmax)
-   REALTYPE                  :: www(0:kmax)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -146,8 +146,12 @@
 #endif
    call tic(TIM_UVDIFF3D)
 
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP    PRIVATE(i,j,k,ii,jj,kk)
+
 ! Central for dx(2*Am*dx(uu^2/hun))
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax+1          ! PP defined on T-points
             PP(i,j,k)=_ZERO_
@@ -159,8 +163,11 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax         ! uuEx defined on U-points
          do i=imin,imax
             if (au(i,j) .ge. 1) then
@@ -170,11 +177,14 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
 
 #ifndef SLICE_MODEL
 ! Central for dy(Am*(dy(uu^2/hun)+dx(vv^2/hvn)))
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax          ! PP defined on X-points
          do i=imin,imax
             PP(i,j,k)=_ZERO_
@@ -187,8 +197,11 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
             if (au(i,j) .ge. 1) then
@@ -198,11 +211,14 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
 #endif
 
 ! Central for dx(Am*(dy(uu^2/hun)+dx(vv^2/hvn)))
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax          ! PP defined on X-points
          do i=imin-1,imax
             PP(i,j,k)=_ZERO_
@@ -215,8 +231,11 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax          ! vvEx defined on V-points
          do i=imin,imax
             if (av(i,j) .ge. 1) then
@@ -226,11 +245,14 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
 
 #ifndef SLICE_MODEL
 ! Central for dy(2*Am*dy(vv^2/hvn))
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax+1
          do i=imin,imax          ! PP defined on T-points
             if (az(i,j) .ge. 1) then
@@ -241,9 +263,12 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
 
    do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax          ! vvEx defined on V-points
          do i=imin,imax
             if (av(i,j) .ge. 1) then
@@ -253,8 +278,10 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
 #endif
+!$OMP END PARALLEL
 
    call toc(TIM_UVDIFF3D)
 #ifdef DEBUG

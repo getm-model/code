@@ -1,4 +1,4 @@
-!$Id: fct_2dh_adv.F90,v 1.7 2008-12-02 03:17:37 hb Exp $
+!$Id: fct_2dh_adv.F90,v 1.8 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,6 +35,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
    use advection_3d, only: hi,hio
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -110,8 +111,23 @@
    if (rc /= 0) stop 'fct_2dh_adv: Error allocating memory (cmin)'
 #endif
 
-   flx = _ZERO_
+! NOTE: With the present implementation it is not necessary 
+!   to initialize flx, fly, fhx, fhy, cmin and cmax. Even if they 
+!   are set to garbage here, then it does not change the result.
+!      BJB 2009-09-25.
+
+! BJB-TODO/BUG: There is an error in the use of fi, rp and rm. 
+!  They are used in a larger region than they are computed. 
+!  As a result, the result of the rpesent scheme changes if 
+!  they are initialized. Presently, tehre is no initialization 
+!  of these arrays even though perhaps there should be.
+!      BJB 2009-09-25.
+   
+!$OMP PARALLEL DEFAULT(SHARED) &
+!$OMP   PRIVATE(i,j,k,CNW,CW,CSW,CSSW,CWW,CSWW,CC,CS,uuu,vvv,x,CExx,Cl,Cu,fac)
+
    do k=1,kmax   ! Calculating u-interface low-order fluxes !
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin-1,imax
             if (uu(i,j,k) .gt. _ZERO_) then
@@ -121,11 +137,12 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
 
 #ifndef SLICE_MODEL
-   fly = _ZERO_
    do k=1,kmax   ! Calculating v-interface low-order fluxes !
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax
          do i=imin,imax
             if (vv(i,j,k) .gt. _ZERO_) then
@@ -135,10 +152,17 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
 #endif
 
-   fhx = _ZERO_
+
+! OMP-TODO: The following loop gives errornous results when
+!   threaded. - tried both at k,j, adn i. And I cant see what
+!   should be wrong. Further, the original code needs an update 
+!   in any case, so for now I'll leave it in serial. 
+!   BJB 2009-09-23.
+!$OMP MASTER
    do k=1,kmax   ! Calculating u-interface high-order fluxes !
       do j=jmin,jmax
          do i=imin-1,imax
@@ -276,9 +300,14 @@
          end do
       end do
    end do
+!$OMP END MASTER
+!$OMP BARRIER
 
 #ifndef SLICE_MODEL
-   fhy = _ZERO_
+
+! OMP-TODO: This loop has the same issue as for the x-direction.
+!   It will stay in serial until later. BJB 2009-09-23.
+!$OMP MASTER
    do k=1,kmax   ! Calculating v-interface high-order fluxes !
       do j=jmin-1,jmax
          do i=imin,imax
@@ -418,10 +447,13 @@
          end do
       end do
    end do
+!$OMP END MASTER
+!$OMP BARRIER
 #endif
 
 ! Calculate intermediate low resolution solution fi 
    do k=1,kmax 
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
             if (az(i,j) .eq. 1)  then                                      
@@ -441,17 +473,20 @@
             end if 
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
 
 ! Calculating and applying the flux limiter
    do k=1,kmax  
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
             if (az(i,j) .eq. 1) then
                cmin(i,j,k)= 10000.
                cmax(i,j,k)=-10000.
 ! Calculate min and max of all values around one point
-               do ii=-1,1 
+               do ii=-1,1
                   do jj=-1,1
                      if (az(i+ii,j+jj).ge.1) then
                         x=min(f(i+ii,j+jj,k),fi(i+ii,j+jj,k))
@@ -493,10 +528,14 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
+
 
 !  Limiters for the u-fluxes (fac)
    do k=1,kmax   
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin-1,imax
             if (fhx(i,j,k)-flx(i,j,k).ge.0.) then
@@ -510,11 +549,14 @@
                          *0.5*(hn(i+1,j,k)+hn(i,j,k))
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
 
 #ifndef SLICE_MODEL
 !  Limiters for the v-fluxes (fac)
    do k=1,kmax   
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax
          do i=imin,imax
             if (fhy(i,j,k)-fly(i,j,k).ge.0.) then
@@ -528,12 +570,15 @@
                          *0.5*(hn(i,j+1,k)+hn(i,j,k))
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
 #endif
 
 
 ! Doing the full advection in one step
-   do k=1,kmax   
+   do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
             if (az(i,j) .eq. 1)  then                                      
@@ -550,7 +595,10 @@
             end if 
          end do
       end do
+!$OMP END DO
    end do
+
+!$OMP END PARALLEL
 
 #ifdef USE_ALLOCATED_ARRAYS
 #ifdef FORTRAN90

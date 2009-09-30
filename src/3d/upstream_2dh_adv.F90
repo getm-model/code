@@ -1,4 +1,4 @@
-!$Id: upstream_2dh_adv.F90,v 1.7 2007-06-07 10:25:19 kbk Exp $
+!$Id: upstream_2dh_adv.F90,v 1.8 2009-09-30 11:28:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -80,6 +80,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
    use advection_3d, only: hi,hio
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -117,7 +118,6 @@
    Ncall = Ncall+1
    write(debug,*) 'upstream_2dh_adv() # ',Ncall
 #endif
-
 #ifdef USE_ALLOCATED_ARRAYS
    allocate(flx(I3DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'upstream_2dh_adv: Error allocating memory (flx)'
@@ -136,9 +136,23 @@
  stop
 #endif
 
+! NOTE: With the present implementation it is not necessary 
+!   to initialize flx and fly. Even if they 
+!   are set to garbage here, then it does not change the result.
+!      BJB 2009-09-25.
 
-   flx = _ZERO_
+
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(rc,i,j,k,ii,jj)
+
+! OMP-NOTE: Master thread initializes, while other threads can 
+!    start on the following two loops.
+!$OMP MASTER
+   cmax = -100000*_ONE_
+   cmin =  100000*_ONE_
+!$OMP END MASTER
+
    do k=1,kmax   ! Calculating u-interface low-order fluxes !
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin-1,imax
             if (uu(i,j,k) .gt. _ZERO_) then
@@ -146,15 +160,16 @@
             else
                flx(i,j,k)=uu(i,j,k)*f(i+1,j,k)
             end if
-            if ((AH.gt.0.).and.(az(i,j).gt.0).and.(az(i+1,j).gt.0))    &
+            if ((AH.gt._ZERO_).and.(az(i,j).gt.0).and.(az(i+1,j).gt.0))    &
                flx(i,j,k)=flx(i,j,k)-AH*(f(i+1,j,k)-f(i,j,k))/delxu(i,j) &
-                         *0.5*(hn(i+1,j,k)+hn(i,j,k))
+                         *_HALF_*(hn(i+1,j,k)+hn(i,j,k))
          end do
       end do
+!$OMP END DO NOWAIT
    end do
 
-   fly = _ZERO_
    do k=1,kmax   ! Calculating v-interface low-order fluxes !
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax
          do i=imin,imax
             if (vv(i,j,k) .gt. _ZERO_) then
@@ -162,16 +177,17 @@
             else
                fly(i,j,k)=vv(i,j,k)*f(i,j+1,k)
             end if
-            if ((AH.gt.0.).and.(az(i,j).gt.0).and.(az(i,j+1).gt.0))   &
+            if ((AH.gt._ZERO_).and.(az(i,j).gt.0).and.(az(i,j+1).gt.0))   &
                fly(i,j,k)=fly(i,j,k)-AH*(f(i,j+1,k)-f(i,j,k))/delyv(i,j)   &
-                         *0.5*(hn(i,j+1,k)+hn(i,j,k))
+                         *_HALF_*(hn(i,j+1,k)+hn(i,j,k))
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
 
-   cmax = -100000.
-   cmin =  100000.
    do k=1,kmax 
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
             if (az(i,j) .eq. 1)  then                                      
@@ -190,9 +206,13 @@
             end if 
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
+
 
    do k=1,kmax 
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
             if (az(i,j) .eq. 1)  then                                      
@@ -211,7 +231,10 @@
             end if 
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+
+!$OMP END PARALLEL
 
 #ifdef USE_ALLOCATED_ARRAYS
 #ifdef FORTRAN90

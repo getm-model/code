@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.18 2009-08-18 10:24:43 bjb Exp $
+!$Id: sealevel.F90,v 1.19 2009-09-30 11:28:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,6 +35,7 @@
    use halo_zones, only : nprocs,set_flag,u_TAG,v_TAG
    use variables_2d, only: break_mask,break_stat
    use domain, only : min_depth,au,av
+!$ use omp_lib
 #endif
    IMPLICIT NONE
 !
@@ -65,7 +66,14 @@
 #endif
    call tic(TIM_SEALEVEL)
 
-   zo = z
+! OMP-NOTE: This loop does not really improve from threading. 
+! It is bound by memory access, and everything is nicely
+! lined up anyway, so we keep it in serial.
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
+         zo(i,j) = z(i,j)
+      end do
+   end do
 
 #ifdef USE_BREAKS
    break_flag=1
@@ -76,6 +84,19 @@
    break_flag=0
 #endif
 
+! Presently this loop is only threaded for no-breaks. 
+! If this loop should be threaded with USE_BREAKS, then 
+! a bit of coding and testing is needed (see below) as
+! it is sliglty more complicated.
+! The present routine is a small part of the total CPU.
+#ifndef USE_BREAKS
+#ifdef FRESHWATER_LENSE_TEST
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,kk)
+#else
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j)
+#endif
+!$OMP DO SCHEDULE(RUNTIME)
+#endif
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .eq. 1) then
@@ -108,6 +129,7 @@
                 break_mask(i,j) .eq. 0 ) then
                break_mask(i,j)=1
                break_stat(i,j)=break_stat(i,j)+1
+! If included in OMP, these would certainly be OMP CRITICAL
                break_flag=break_flag+1
                U(i,j)=_ZERO_
                U(i-1,j)=_ZERO_
@@ -119,6 +141,12 @@
 
       end do
    end do
+#ifndef USE_BREAKS
+!$OMP END  DO
+!$OMP END PARALLEL
+#endif
+
+
 
 #ifdef USE_BREAKS
    call set_flag(nprocs,break_flag,break_flags)
@@ -153,7 +181,7 @@
    call tic(TIM_SEALEVELH)
    call update_2d_halo(z,z,az,imin,jmin,imax,jmax,z_TAG)
    call wait_halo(z_TAG)
-   call toc(TIM_SEALEVELH)
+   CALL toc(TIM_SEALEVELH)
 
    call toc(TIM_SEALEVEL)
 #ifdef DEBUG
@@ -273,18 +301,26 @@
    if (can_check .gt. 0 .and. mod(Ncall,abs(sealevel_check)).eq.0) then
 ! Count number of NaNs encountered
       num_nan = 0
+!$OMP  PARALLEL DO DEFAULT(SHARED) PRIVATE(i,j,idum)
       do j=jmin,jmax
          do i=imin,imax
             call sealevel_nandum(z(i,j),ahuge,idum)
             if (idum .eq. 2) then
+! TODO: OMP may be implemented here, but this 
+! section would be critical.
 ! Increment counter for NaNs:
-               num_nan = num_nan + 1
 ! Keep at least one point with location (may be overwritten later)
+!$OMP CRITICAL(NANCOUNT)
+               num_nan = num_nan + 1
                inan = i
                jnan = j
+!$OMP END CRITICAL(NANCOUNT)
             end if
          end do
       end do
+!$OMP END PARALLEL DO
+
+
 ! Do something if there were NaNs:
       if (num_nan .gt. 0) then
 ! Warn about this badness

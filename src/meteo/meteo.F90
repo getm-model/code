@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.19 2009-08-18 10:24:46 bjb Exp $
+!$Id: meteo.F90,v 1.20 2009-09-30 11:28:48 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -85,6 +85,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
+!  Revision 1.20  2009-09-30 11:28:48  bjb
+!  OpenMP threading initial implementation
+!
 !  Revision 1.19  2009-08-18 10:24:46  bjb
 !  New getm_timers module
 !
@@ -424,6 +427,7 @@
 ! !INTERFACE:
    subroutine do_meteo(n,sst)
    use getm_timers, only: tic, toc, TIM_METEO
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -471,7 +475,9 @@
    REALTYPE                  :: ramp,hh,t,t_frac
    REALTYPE                  :: short_wave_radiation
    REALTYPE                  :: uu,cosconv,vv,sinconv
+! BJB-TODO: Make sure that 3.14... is defined as *double* precision
    REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029
+! BJB-TODO: Change 180. to 180 (integer)
    REALTYPE, parameter       :: deg2rad=pi/180.
    logical,save              :: first=.true.
    logical                   :: have_sst
@@ -485,23 +491,46 @@
 #endif
    call tic(TIM_METEO)
 
+! OMP-NOTE: The vast majority of CPU time is spent in calls to e.g. 
+!   exchange_coefficients, fluxes, and especially short_wave_radiation.
+!   It is critical to thread these loops, while the rest is not really 
+!   critical. In fact, some of the simpler loops have more memory access 
+!   than real computations, and should as such not be threaded.
+!     BJB 2009-09-30.
+
+!$OMP PARALLEL DEFAULT(SHARED)                                           &
+!$OMP     PRIVATE(i,j,ramp,hh,t,t_frac)                                  &
+!$OMP     PRIVATE(uu,cosconv,vv,sinconv,have_sst)
+
+
    if (metforcing) then
 
       t = n*timestep
 
       if(spinup .gt. 0 .and. k .lt. spinup) then
+! BJB-TODO: Replace 1.0 with _ONE_ etc in this file.
          ramp = 1.0*k/spinup
+!$OMP MASTER
          k = k + 1
+!$OMP END MASTER
       else
          ramp = _ONE_
       end if
 
       select case (met_method)
          case (1)
+! BJB-TODO: Why is this called every time step (even after k=spinup)-
+!    It should all be constant in time after that(?)
+
+! OMP-NOTE: Memory copy done in serial
+!$OMP MASTER
             airp  =  _ZERO_
             tausx = ramp*tx
             tausy = ramp*ty
+!$OMP END MASTER
+!$OMP BARRIER
 !     Rotation of wind stress due to grid convergence
+!$OMP DO SCHEDULE(RUNTIME)
             do j=jmin-1,jmax+1
                do i=imin-1,imax+1
                   if (convc(i,j) .ne. _ZERO_ .and. az(i,j) .gt. 0) then
@@ -514,16 +543,20 @@
                   end if
                end do
             end do
+!$OMP END DO NOWAIT
+!$OMP SINGLE
             swr   = swr_const
             shf   = shf_const
             if (fwf_method .eq. 1) then
                evap = evap_const
                precip = precip_const
             end if
+!$OMP END SINGLE
          case (2)
             if(calc_met) then
                have_sst = present(sst)
                if (new_meteo) then
+!$OMP MASTER
                   call update_2d_halo(airp,airp,az, &
                                       imin,jmin,imax,jmax,H_TAG)
                   call wait_halo(H_TAG)
@@ -539,7 +572,16 @@
                         precip_old = precip
                      end if
                   end if
+!$OMP END MASTER
+!$OMP BARRIER
+
+LEVEL1 'BJB -test1',k
+
                   if (have_sst) then
+LEVEL1 'BJB -test2',k
+! BJB-TODO: Check if exchange_coefficients and fluxes are thread safe !$OMP DO SCHEDULE(RUNTIME)
+! BJB-TODO: Not tested with sst meteo(!)
+!$OMP DO SCHEDULE(RUNTIME)
                      do j=jmin,jmax
                         do i=imin,imax
                            if (az(i,j) .ge. 1) then
@@ -560,24 +602,32 @@
                            end if
                         end do
                      end do
+!$OMP END DO
                   else
+LEVEL1 'BJB -test3',k
+!$OMP DO SCHEDULE(RUNTIME)
                      do j=jmin,jmax
                         do i=imin,imax
                            if (az(i,j) .ge. 1) then
+! BJB-TODO: Update constants to double.
                               w=sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
                               tausx(i,j) = 1.25e-3*1.25*w*U10(i,j)
                               tausy(i,j) = 1.25e-3*1.25*w*V10(i,j)
                            end if
                         end do
                      end do
+!$OMP END DO
                   end if
+!$OMP MASTER
                   call update_2d_halo(tausx,tausx,az, &
                                       imin,jmin,imax,jmax,H_TAG)
                   call wait_halo(H_TAG)
                   call update_2d_halo(tausy,tausy,az, &
                                       imin,jmin,imax,jmax,H_TAG)
                   call wait_halo(H_TAG)
+ !$OMP END MASTER
                   if (.not. first) then
+ !$OMP MASTER
                      d_tausx = tausx - tausx_old
                      d_tausy = tausy - tausy_old
                      d_tcc = tcc - tcc_old
@@ -588,21 +638,28 @@
                      if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
                         d_precip = precip - precip_old
                      end if
+!$OMP END MASTER
                   end if
                end if
                if (.not. first) then
-                  t_frac = (t-t_1)/(t_2-t_1)
-                  shf = shf_old + t_frac*d_shf
-                  tausx = tausx_old + t_frac*d_tausx
-                  tausy = tausy_old + t_frac*d_tausy
-                  if (fwf_method .ge. 2) then
-                     evap = evap_old + t_frac*d_evap
-                  end if
-                  if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-                     precip = precip_old + t_frac*d_precip
-                  end if
+!$OMP MASTER
+                   t_frac = (t-t_1)/(t_2-t_1)
+                   shf   = shf_old   + t_frac*d_shf
+                   tausx = tausx_old + t_frac*d_tausx
+                   tausy = tausy_old + t_frac*d_tausy
+                   if (fwf_method .ge. 2) then
+                      evap = evap_old + t_frac*d_evap
+                   end if
+                   if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+                      precip = precip_old + t_frac*d_precip
+                   end if
+!$OMP END MASTER
                end if
+! BJB-TODO: Convert constant to full precision:
                hh = secondsofday/3600.
+! OMP-NOTE: short_wave_radiation seems thread-safe.
+!     Most of the CPU-time is used here, so it is important to thread well.
+!$OMP DO SCHEDULE(RUNTIME)
                do j=jmin,jmax
                   do i=imin,imax
                      if (az(i,j) .ge. 1) then
@@ -611,8 +668,10 @@
                      end if
                   end do
                end do
+!$OMP END DO
             else
                if (first) then
+!$OMP MASTER
                   tausx_old = tausx
                   tausy_old = tausy
                   swr_old = swr
@@ -623,8 +682,10 @@
                   if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
                      precip_old = precip
                   end if
+!$OMP END MASTER
                end if
                if (new_meteo) then
+!$OMP MASTER
                   tausx_old = tausx_old + d_tausx
                   tausy_old = tausy_old + d_tausy
                   swr_old = swr_old + d_swr
@@ -642,9 +703,11 @@
                      precip_old = precip_old + d_precip
                      d_precip = precip - precip_old
                   end if
+!$OMP END MASTER
                end if
                if (.not. first) then
                   t_frac = (t-t_1)/(t_2-t_1)
+!$OMP MASTER
                   tausx = tausx_old + t_frac*d_tausx
                   tausy = tausy_old + t_frac*d_tausy
                   swr = swr_old + t_frac*d_swr
@@ -655,14 +718,20 @@
                   if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
                      precip = precip_old + t_frac*d_precip
                   end if
+!$OMP END MASTER
                end if
             end if
          case default
+!$OMP MASTER
             FATAL 'A non valid meteo method has been specified.'
             stop 'do_meteo'
+!$OMP END MASTER
       end select
 
    end if
+
+!$OMP END PARALLEL
+
    first = .false.
 
    call toc(TIM_METEO)

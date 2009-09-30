@@ -1,4 +1,4 @@
-!$Id: slow_terms.F90,v 1.11 2009-08-18 10:24:44 bjb Exp $
+!$Id: slow_terms.F90,v 1.12 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -33,6 +33,7 @@
    use variables_3d, only: sf
 #endif
 
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -46,6 +47,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
+   REALTYPE                  :: vertsum
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -56,91 +58,85 @@
 #endif
    call tic(TIM_SLOWTERMS)
 
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,vertsum)
+
    if (kmax .gt. 1) then
 
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
             if (au(i,j) .ge. 1) then
-               SlUx(i,j)=-UEx(i,j)
+               vertsum=-UEx(i,j)
+               do k=1,kmax
+                  if (k .ge. kumin(i,j)) then
+#ifdef NO_BAROCLINIC
+                     vertsum=vertsum+uuEx(i,j,k)
+#else
+                     vertsum=vertsum+uuEx(i,j,k)-idpdx(i,j,k)
+#endif
+                  end if
+               end do
+               SlUx(i,j)=vertsum
             end if
          end do
       end do
+!$OMP END DO NOWAIT
 
-      do k=1,kmax
-         do j=jmin,jmax
-            do i=imin,imax
-               if (au(i,j) .ge. 1) then
-                  if (k .ge. kumin(i,j)) then
-#ifdef NO_BAROCLINIC
-                     SlUx(i,j)=SlUx(i,j)+uuEx(i,j,k)
-#else
-                     SlUx(i,j)=SlUx(i,j)+uuEx(i,j,k)-idpdx(i,j,k)
-#endif
-                  end if
-               end if
-            end do
-         end do
-      end do
-
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
             if (av(i,j) .ge. 1) then
-               SlVx(i,j)=-VEx(i,j)
+               vertsum=-VEx(i,j)
+               do k=1,kmax
+                  if (k .ge. kvmin(i,j)) then
+#ifdef NO_BAROCLINIC
+                     vertsum=vertsum+vvEx(i,j,k)
+#else
+                     vertsum=vertsum+vvEx(i,j,k)-idpdy(i,j,k)
+#endif
+                  end if
+               end do
+               SlVx(i,j)=vertsum
             end if
          end do
       end do
-
-      do k=1,kmax
-         do j=jmin,jmax
-            do i=imin,imax
-               if (av(i,j) .ge. 1) then
-                  if (k .ge. kvmin(i,j)) then
-#ifdef NO_BAROCLINIC
-                     SlVx(i,j)=SlVx(i,j)+vvEx(i,j,k)
-#else
-                     SlVx(i,j)=SlVx(i,j)+vvEx(i,j,k)-idpdy(i,j,k)
-#endif
-                  end if
-               end if
-            end do
-         end do
-      end do
+!$OMP END DO
 
    else
-
-      do k=1,kmax
-         do j=jmin,jmax
-            do i=imin,imax
-               if (au(i,j) .ge. 1) then
-                  if (k .ge. kumin(i,j)) then
+!
+! Here kmax=1, so the loops degenerate and there is no need 
+! to test for k .ge. kumin(i,j).
+      k=1
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin,jmax
+         do i=imin,imax
+            if (au(i,j) .ge. 1) then
 #ifdef NO_BAROCLINIC
-                     SlUx(i,j)= _ZERO_
+               SlUx(i,j)= _ZERO_
 #else
-                     SlUx(i,j)=-idpdx(i,j,k)
+               SlUx(i,j)=-idpdx(i,j,k)
 #endif
-                  end if
-               end if
-            end do
+            end if
          end do
       end do
+!$OMP END DO
 
-      do k=1,kmax
-         do j=jmin,jmax
-            do i=imin,imax
-               if (av(i,j) .ge. 1) then
-                  if (k.ge.kvmin(i,j)) then
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin,jmax
+         do i=imin,imax
+            if (av(i,j) .ge. 1) then
 #ifdef NO_BAROCLINIC
-                     SlVx(i,j)= _ZERO_
+               SlVx(i,j)= _ZERO_
 #else
-                     SlVx(i,j)=-idpdy(i,j,k)
+               SlVx(i,j)=-idpdy(i,j,k)
 #endif
-                  end if
-               end if
-            end do
+            end if
          end do
       end do
+!$OMP END DO
    endif
 
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .ge. 1) then
@@ -150,13 +146,13 @@
                STDERR 'NO_SLR U'
                Slru(i,j)= _ZERO_
 #else
-               Slru(i,j)=-Uint(i,j)/(0.5*(ssuo(i,j)+ssun(i,j))         &
+               Slru(i,j)=-Uint(i,j)/(_HALF_*(ssuo(i,j)+ssun(i,j))         &
                                        +HU(i,j))*ru(i,j)               &
-                     +uu(i,j,k)/(0.5*(huo(i,j,k)+hun(i,j,k)))*rru(i,j)
+                     +uu(i,j,k)/(_HALF_*(huo(i,j,k)+hun(i,j,k)))*rru(i,j)
 #endif
 #ifdef STRUCTURE_FRICTION
                do k=1,kmax
-                  Slru(i,j)=Slru(i,j)+uu(i,j,k)*0.5*(sf(i,j,k)+sf(i+1,j,k))
+                  Slru(i,j)=Slru(i,j)+uu(i,j,k)*_HALF_*(sf(i,j,k)+sf(i+1,j,k))
                end do
 #endif
             else
@@ -165,7 +161,9 @@
          end if
       end do
    end do
+!$OMP END DO NOWAIT
 
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .ge. 1) then
@@ -175,13 +173,13 @@
                STDERR 'NO_SLR V'
                Slrv(i,j)= _ZERO_
 #else
-               Slrv(i,j)=-Vint(i,j)/(0.5*(ssvo(i,j)+ssvn(i,j))         &
+               Slrv(i,j)=-Vint(i,j)/(_HALF_*(ssvo(i,j)+ssvn(i,j))         &
                                     +HV(i,j))*rv(i,j)                  &
-                  +vv(i,j,k)/(0.5*(hvo(i,j,k)+hvn(i,j,k)))*rrv(i,j)
+                  +vv(i,j,k)/(_HALF_*(hvo(i,j,k)+hvn(i,j,k)))*rrv(i,j)
 #endif
 #ifdef STRUCTURE_FRICTION
                do k=1,kmax
-                  Slrv(i,j)=Slrv(i,j)+vv(i,j,k)*0.5*(sf(i,j,k)+sf(i,j+1,k))
+                  Slrv(i,j)=Slrv(i,j)+vv(i,j,k)*_HALF_*(sf(i,j,k)+sf(i,j+1,k))
                end do
 #endif
             else
@@ -190,6 +188,8 @@
          end if
       end do
    end do
+!$OMP END DO
+!$OMP END PARALLEL
 
    call toc(TIM_SLOWTERMS)
 #ifdef DEBUG

@@ -1,4 +1,4 @@
-!$Id: w_split_it_adv.F90,v 1.6 2009-02-18 13:38:14 hb Exp $
+!$Id: w_split_it_adv.F90,v 1.7 2009-09-30 11:28:47 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -49,7 +49,8 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use advection_3d, only: hi,hio,cu
    use advection_3d, only: UPSTREAM_SPLIT,P2,SUPERBEE,MUSCL,P2_PDM
-   use advection_3d, only: ONE,TWO,ONE6TH
+   use advection_3d, only: ONE6TH
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -79,11 +80,23 @@
    write(debug,*) 'w_split_it_adv() # ',Ncall
 #endif
 
-   cu = _ZERO_
+! OMP note: Initialization (mem copy) done in serial:
+   !cu = _ZERO_
+
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,c,x,r,Phi,limit,fu,fc,fd,cmax)
+
+! OMP TODO: The present loops (j-i-k) gains only a small speedup from
+!  threading. Likely, the many jumps in memory limits the performance.
 
 ! Calculating w-interface fluxes !
    select case (method)
       case (UPSTREAM_SPLIT)
+!$OMP MASTER
+         cu(:,:,kmax) = _ZERO_
+!$OMP END MASTER
+!$OMP BARRIER
+
+!$OMP DO SCHEDULE(RUNTIME)
          do j=jmin,jmax
             do i=imin,imax
                if (az(i,j) .eq. 1) then
@@ -92,13 +105,13 @@
                   ready=.false.
 222               do ii=1,it
                      do k=1,kmax-1
-                        cu(i,j,k) = _ZERO_
+                        !cu(i,j,k) = _ZERO_
                         if (ww(i,j,k) .gt. _ZERO_) then
-                           c=ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
+                           c=ww(i,j,k)/it*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                            if (c .gt. cmax) cmax=c
                            cu(i,j,k)=ww(i,j,k)*f(i,j,k)
                         else
-                           c=-ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
+                           c=-ww(i,j,k)/it*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                            if (c .gt. cmax) cmax=c
                            cu(i,j,k)=ww(i,j,k)*f(i,j,k+1)
                         end if
@@ -124,7 +137,14 @@
                end if
             end do
          end do
+!$OMP END DO
       case ((P2),(Superbee),(MUSCL),(P2_PDM))
+!$OMP MASTER
+         cu(:,:,0) = _ZERO_
+!$OMP END MASTER
+!$OMP BARRIER
+
+!$OMP DO SCHEDULE(RUNTIME)
          do j=jmin,jmax
             do i=imin,imax
                if (az(i,j) .eq. 1) then
@@ -136,7 +156,7 @@
                         cu(i,j,k) = _ZERO_
                         if (ww(i,j,k) .gt. _ZERO_) then
                            if (k.lt.kmax) then
-                              c=ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
+                              c=ww(i,j,k)/float(it)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                            else   
                               c=ww(i,j,k)/float(it)*dt/hi(i,j,k)
                            end if
@@ -159,7 +179,7 @@
                            end if
                         else
                            if (k.lt.kmax) then
-                              c=-ww(i,j,k)/float(it)*dt/(0.5*(hi(i,j,k)+hi(i,j,k+1)))
+                              c=-ww(i,j,k)/float(it)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                            else
                               c=-ww(i,j,k)/float(it)*dt/hi(i,j,k)
                            end if
@@ -185,26 +205,24 @@
                            r=   (fu-fc)*1.e10
                            end if
                         end if
-                        x = one6th*(ONE-TWO*c)
-                        Phi=(0.5+x)+(0.5-x)*r
                         select case (method)
                            case ((P2),(P2_PDM))
-                              x = one6th*(ONE-TWO*c)
-                              Phi=(0.5+x)+(0.5-x)*r
+                              x = one6th*(_ONE_-_TWO_*c)
+                              Phi=(_HALF_+x)+(_HALF_-x)*r
                               if (method.eq.P2) then
                                  limit=Phi
                               else
-                                 limit=max(_ZERO_,min(Phi,2./(1.-c),2.*r/(c+1.e-10)))
+                                 limit=max(_ZERO_,min(Phi,_TWO_/(_ONE_-c),_TWO_*r/(c+1.e-10)))
                               end if
                            case (Superbee)
-                              limit=max(_ZERO_, min(ONE, TWO*r), min(r,TWO) )
+                              limit=max(_ZERO_, min(_ONE_, _TWO_*r), min(r,_TWO_) )
                            case (MUSCL)
-                              limit=max(_ZERO_,min(TWO,TWO*r,0.5*(ONE+r)))
+                              limit=max(_ZERO_,min(_TWO_,_TWO_*r,_HALF_*(_ONE_+r)))
                            case default
                               FATAL 'This is not so good - do_advection_3d()'
                               stop 'w_split_it_adv'
                         end select
-                        cu(i,j,k)=ww(i,j,k)*(fc+0.5*limit*(1-c)*(fd-fc))
+                        cu(i,j,k)=ww(i,j,k)*(fc+_HALF_*limit*(_ONE_-c)*(fd-fc))
                      end do
                      if (.not. READY) then
                         it=min(200,int(cmax)+1)
@@ -228,7 +246,9 @@
                end if
             end do
          end do
+!$OMP END DO
    end select
+!$OMP END PARALLEL
 
 #ifdef DEBUG
    write(debug,*) 'Leaving w_split_it_adv()'

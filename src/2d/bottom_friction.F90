@@ -1,4 +1,4 @@
-!$Id: bottom_friction.F90,v 1.9 2009-08-21 07:26:26 bjb Exp $
+!$Id: bottom_friction.F90,v 1.10 2009-09-30 11:28:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -36,7 +36,8 @@
    use parameters, only: kappa,avmmol
    use domain, only: imin,imax,jmin,jmax,au,av,min_depth
    use variables_2d
-   use getm_timers, only: tic, toc, TIM_BOTTFRICT
+   use getm_timers,  only: tic, toc, TIM_BOTTFRICT
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -61,7 +62,6 @@
    Ncall = Ncall+1
    write(debug,*) 'bottom_friction() # ',Ncall
 #endif
-
    CALL tic(TIM_BOTTFRICT)
 
 #ifdef DEBUG
@@ -106,6 +106,12 @@
    end if
 #endif
 
+
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j)
+
+!  The x-direction
+
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .gt. 0) then
@@ -118,49 +124,61 @@
          end if
       end do
    end do
+!OMP END DO NOWAIT
 
-!  The x-direction
-
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
+         if (au(i,j) .gt. 0) then
+            uloc(i,j) = U(i,j)/DU(i,j)
+            HH(i,j)=max(min_depth,DU(i,j))
 #ifndef DEBUG
-   where (au .gt. 0)
-      uloc=U/DU
-      HH=max(min_depth,DU)
-      ruu=(kappa/log((zub+_HALF_*HH)/zub))**2
-   end where
+            ruu(i,j)=(kappa/log((zub(i,j)+_HALF_*HH(i,j))/zub(i,j)))**2
 #else
-   uloc=U/DU
-   HH=max(min_depth,DU)
-   ruu=(zub+_HALF_*HH)/zub
-
-   do j=jmin,jmax
-      do i=imin,imax
-         if (ruu(i,j) .le. _ONE_) then
-            STDERR 'bottom_friction friction coefficient infinite.'
-            STDERR 'i = ',i,' j = ',j
-            STDERR 'min_depth = ',min_depth,' DU = ',DU(i,j)
-            stop
+            ruu(i,j)=(zub(i,j)+_HALF_*HH(i,j))/zub(i,j)
+            if (ruu(i,j) .le. _ONE_) then
+!$OMP CRITICAL
+               STDERR 'bottom_friction friction coefficient infinite.'
+               STDERR 'i = ',i,' j = ',j
+               STDERR 'min_depth = ',min_depth,' DU = ',DU(i,j)
+!$OMP END CRITICAL
+               stop
+            end if
+            ruu(i,j)=(kappa/log(ruu(i,j)))**2
+#endif
          end if
       end do
    end do
-   where (au .gt. 0)
-      ruu=(kappa/log(ruu))**2
-   end where
-#endif
+!$OMP END DO
 
    if (runtype .eq. 1) then
-      where (au .gt. 0)
-         fricvel=sqrt(ruu*(uloc**2+vloc**2))
-         zub=min(HH,zub0+_TENTH_*avmmol/max(avmmol,fricvel))
-         ruu=(zub+_HALF_*HH)/zub
-         ruu=(kappa/log(ruu))**2
-      end where
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if (au(i,j) .gt. 0) then
+               fricvel(i,j)=sqrt(ruu(i,j)*(uloc(i,j)**2+vloc(i,j)**2))
+               zub(i,j)=min(HH(i,j),zub0(i,j)+_TENTH_*avmmol/max(avmmol,fricvel(i,j)))
+               ruu(i,j)=(zub(i,j)+_HALF_*HH(i,j))/zub(i,j)
+               ruu(i,j)=(kappa/log(ruu(i,j)))**2
+               ru(i,j)=ruu(i,j)*sqrt(uloc(i,j)**2+vloc(i,j)**2)
+            end if
+         end do
+      end do
+!$OMP END DO
+   else
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if (au(i,j) .gt. 0) then
+               ru(i,j)=ruu(i,j)*sqrt(uloc(i,j)**2+vloc(i,j)**2)
+            end if
+         end do
+      end do
+!$OMP END DO
    end if
 
-   where (au .gt. 0)
-      ru=ruu*sqrt(uloc**2+vloc**2)
-   end where
-
 !  The y-direction
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .gt. 0) then
@@ -173,49 +191,62 @@
          end if
       end do
    end do
+!$OMP END DO NOWAIT
 
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
+         if (av(i,j) .gt. 0) then
+            vloc(i,j)=V(i,j)/DV(i,j)
+            HH(i,j)=max(min_depth,DV(i,j))
 #ifndef DEBUG
-   where (av .gt. 0)
-      vloc=V/DV
-      HH=max(min_depth,DV)
-      rvv=(kappa/log((zvb+_HALF_*HH)/zvb))**2
-   end where
+            rvv(i,j)=(kappa/log((zvb(i,j)+_HALF_*HH(i,j))/zvb(i,j)))**2
 #else
-   vloc=V/DV
-   HH=max(min_depth,DV)
-   rvv=(zvb+_HALF_*HH)/zvb
-
-   do j=jmin,jmax
-      do i=imin,imax
-         if (rvv(i,j) .le. _ONE_) then
-            STDERR 'bottom_friction friction coefficient infinite.'
-            STDERR 'i = ',i,' j = ',j
-            STDERR 'min_depth = ',min_depth,' DV = ',DU(i,j)
-            stop
+            rvv(i,j)=(zvb(i,j)+_HALF_*HH(i,j))/zvb(i,j)
+            if (rvv(i,j) .le. _ONE_) then
+!$OMP CRITICAL
+               STDERR 'bottom_friction friction coefficient infinite.'
+               STDERR 'i = ',i,' j = ',j
+               STDERR 'min_depth = ',min_depth,' DV = ',DU(i,j)
+!$OMP END CRITICAL
+               stop
+            end if
+            rvv(i,j)=(kappa/log(rvv(i,j)))**2
+#endif
          end if
       end do
    end do
-
-   where (av .gt. 0)
-      rvv=(kappa/log(rvv))**2
-   end where
-#endif
+!$OMP END DO
 
    if (runtype .eq. 1) then
-      where (av .gt. 0)
-         fricvel=sqrt(rvv*(uloc**2+vloc**2))
-         zvb=min(HH,zvb0+_TENTH_*avmmol/max(avmmol,fricvel))
-         rvv=(zvb+_HALF_*HH)/zvb
-         rvv=(kappa/log(rvv))**2
-      end where
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if (av(i,j) .gt. 0) then
+               fricvel(i,j)=sqrt(rvv(i,j)*(uloc(i,j)**2+vloc(i,j)**2))
+               zvb(i,j)=min(HH(i,j),zvb0(i,j)+_TENTH_*avmmol/max(avmmol,fricvel(i,j)))
+               rvv(i,j)=(zvb(i,j)+_HALF_*HH(i,j))/zvb(i,j)
+               rvv(i,j)=(kappa/log(rvv(i,j)))**2
+               rv(i,j)=rvv(i,j)*sqrt(uloc(i,j)**2+vloc(i,j)**2)
+            end if
+         end do
+      end do
+!$OMP END DO
+   else
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if (av(i,j) .gt. 0) then
+               rv(i,j)=rvv(i,j)*sqrt(uloc(i,j)**2+vloc(i,j)**2)
+            end if
+         end do
+      end do
+!$OMP END DO
    end if
 
-   where (av .gt. 0)
-      rv=rvv*sqrt(uloc**2+vloc**2)
-   end where
+!$OMP END PARALLEL
 
    CALL toc(TIM_BOTTFRICT)
-
 #ifdef DEBUG
    write(debug,*) 'Leaving bottom_friction()'
    write(debug,*)

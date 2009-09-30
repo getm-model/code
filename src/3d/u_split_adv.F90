@@ -1,4 +1,4 @@
-!$Id: u_split_adv.F90,v 1.5 2007-06-07 10:25:19 kbk Exp $
+!$Id: u_split_adv.F90,v 1.6 2009-09-30 11:28:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -152,7 +152,8 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use advection_3d, only: hi,hio,cu
    use advection_3d, only: UPSTREAM_SPLIT,P2,SUPERBEE,MUSCL,P2_PDM
-   use advection_3d, only: ONE,TWO,ONE6TH
+   use advection_3d, only: one6th
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -173,8 +174,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   integer         :: i,ii,j,jj,k,kk
-   REALTYPE        :: c,alpha,beta,x,r,Phi,limit,fu,fc,fd
+   integer         :: i,j,k
+   REALTYPE        :: c,x,r,Phi,limit,fu,fc,fd
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -184,30 +185,34 @@
    write(debug,*) 'u_split_adv() # ',Ncall
 #endif
 
-   cu = _ZERO_
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,c,x,r,Phi,limit,fu,fc,fd)
 
 ! Calculating u-interface fluxes !
    select case (method)
       case (UPSTREAM_SPLIT)
          do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
             do j=jmin,jmax
                do i=imin-1,imax
-                  cu(i,j,k) = _ZERO_
                   if (au(i,j) .gt. 0) then
-                     if (uu(i,j,k) .gt. _ZERO_) then
+                    if (uu(i,j,k) .gt. _ZERO_) then
                         cu(i,j,k)=uu(i,j,k)*f(i,j,k)
                      else
                         cu(i,j,k)=uu(i,j,k)*f(i+1,j,k)
                      end if
+                  else
+                     cu(i,j,k) = _ZERO_
                   end if
                end do
             end do
+!$OMP END DO NOWAIT
          end do
+!$OMP BARRIER
       case ((P2),(Superbee),(MUSCL),(P2_PDM))
          do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
             do j=jmin,jmax
                do i=imin-1,imax
-                  cu(i,j,k) = _ZERO_
                   if (au(i,j) .gt. 0) then
                      if (uu(i,j,k) .gt. _ZERO_) then
                         c=uu(i,j,k)/hun(i,j,k)*dt/delxu(i,j)
@@ -240,35 +245,41 @@
                      end if
                      select case (method)
                         case ((P2),(P2_PDM))
-                           x = one6th*(ONE-TWO*c)
-                           Phi=(0.5+x)+(0.5-x)*r
+                           x = one6th*(_ONE_-_TWO_*c)
+                           Phi=(_HALF_+x)+(_HALF_-x)*r
                            if (method.eq.P2) then
                               limit=Phi
                            else
-                              limit=max(_ZERO_,min(Phi,2./(1.-c), &
-                                        2.*r/(c+1.e-10)))
+                              limit=max(_ZERO_,min(Phi,_TWO_/(_ONE_-c), &
+                                        _TWO_*r/(c+1.e-10)))
                            end if
                         case (Superbee)
-                           limit=max(_ZERO_,min(ONE,TWO*r),min(r,TWO))
+                           limit=max(_ZERO_,min(_ONE_,_TWO_*r),min(r,_TWO_))
                         case (MUSCL)
-                           limit=max(_ZERO_,min(TWO,TWO*r,0.5*(ONE+r)))
+                           limit=max(_ZERO_,min(_TWO_,_TWO_*r,0.5*(_ONE_+r)))
                         case default
                            FATAL 'Not so good - do_advection_3d()'
                            stop 'u_split_adv'
                      end select
-                     cu(i,j,k)=uu(i,j,k)*(fc+0.5*limit*(1-c)*(fd-fc))
+                     cu(i,j,k)=uu(i,j,k)*(fc+_HALF_*limit*(_ONE_-c)*(fd-fc))
 !Horizontal diffusion
-                     if ( AH.gt.0. .and. az(i,j).gt.0 .and. az(i+1,j).gt.0 ) then
+                     if ( AH.gt._ZERO_ .and. az(i,j).gt.0 .and. az(i+1,j).gt.0 ) then
                         cu(i,j,k) = cu(i,j,k)-AH*hun(i,j,k) &
                                      *(f(i+1,j,k)-f(i,j,k))/delxu(i,j)
                      end if
+                  else
+                     cu(i,j,k) = _ZERO_
                   end if
                end do
             end do
+!$OMP END DO NOWAIT
          end do
+!$OMP BARRIER
    end select
 
+!$OMP BARRIER
    do k=1,kmax   ! Doing the u-advection step
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
             if (az(i,j) .eq. 1) then
@@ -283,7 +294,9 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end do
+!$OMP END PARALLEL
 
 #ifdef DEBUG
    write(debug,*) 'Leaving u_split_adv()'

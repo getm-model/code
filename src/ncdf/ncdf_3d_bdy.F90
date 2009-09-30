@@ -1,4 +1,4 @@
-!$Id: ncdf_3d_bdy.F90,v 1.17 2009-08-13 08:24:51 kb Exp $
+!$Id: ncdf_3d_bdy.F90,v 1.18 2009-09-30 11:28:48 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,6 +47,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.18  2009-09-30 11:28:48  bjb
+!  OpenMP threading initial implementation
+!
 !  Revision 1.17  2009-08-13 08:24:51  kb
 !  added a few checks on z-xais in the 3D boundary file - suggested by Buchmann
 !
@@ -550,6 +553,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_3d_bdy.F90,v $
+!  Revision 1.18  2009-09-30 11:28:48  bjb
+!  OpenMP threading initial implementation
+!
 !  Revision 1.17  2009-08-13 08:24:51  kb
 !  added a few checks on z-xais in the 3D boundary file - suggested by Buchmann
 !
@@ -782,8 +788,17 @@
    do li=1,nlev
       if (wrk(li) .lt. -999. ) EXIT
    end do
-   if (li .ne. nlev .or. wrk(li) .lt. -999.) li=li-1
-
+   ! BJB-NOTE: Typically, li will end up as nlev+1, so the first
+   !   of the following tests gets false. However, during debug 
+   !   compilation the second condition *MAY* evaulate wrk(li), 
+   !   which will result in a "forrtl: severe".
+   !if (li .ne. nlev .or. wrk(li) .lt. -999.) li=li-1
+   if (li .ne. nlev) then
+      li=li-1
+   elseif (wrk(li) .lt. -999.) then
+      li=li-1
+   end if
+   
    do k=1,kmax
       if (zmodel(k) .le. zlev(li)) col(k) = wrk(li)
    end do

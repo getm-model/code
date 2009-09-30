@@ -1,4 +1,4 @@
-!$Id: short_wave_radiation.F90,v 1.5 2007-05-21 14:01:19 kbk Exp $
+!$Id: short_wave_radiation.F90,v 1.6 2009-09-30 11:28:48 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,6 +35,9 @@
 !  Original author(s): Karsten Bolding and Hans Burchard
 !
 !  $Log: short_wave_radiation.F90,v $
+!  Revision 1.6  2009-09-30 11:28:48  bjb
+!  OpenMP threading initial implementation
+!
 !  Revision 1.5  2007-05-21 14:01:19  kbk
 !  limitation suggested by Adolf Stips
 !
@@ -88,6 +91,8 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+! BJB-TODO: Change all parameters and constants to double
+
    th0 = 2.*pi*yday/yrdays(1)
    th02 = 2.*th0
    th03 = 3.*th0
