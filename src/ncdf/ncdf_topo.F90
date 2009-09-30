@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.18 2009-09-23 10:09:20 kb Exp $
+!$Id: ncdf_topo.F90,v 1.19 2009-09-30 05:32:48 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -48,6 +48,9 @@
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
+!  Revision 1.19  2009-09-30 05:32:48  kb
+!  fixed calculation of dx, dy when dlon, dlat not present
+!
 !  Revision 1.18  2009-09-23 10:09:20  kb
 !  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
 !
@@ -138,7 +141,7 @@ contains
    integer                             :: yaxis_id=-1
    integer, dimension(2)               :: dimidsT(2)
    character*(NF90_MAX_NAME)           :: xaxis_name,yaxis_name
-   integer                             :: i,j
+   integer                             :: i,j,n
    integer                             :: iskipl,jskipl
    integer, dimension(1)               :: start
    integer, dimension(1)               :: count
@@ -356,6 +359,17 @@ contains
             LEVEL3 'dx and dy will be calculated from axes information'
          end if
 
+         if ( dx .le. _ZERO_ .or. dy .le. _ZERO_ ) then
+
+            n = ihl-ill
+            dx = (xcord(ihl) - xcord(ill))/(_ONE_*n)
+
+            n = jhl-jll
+            dy = (ycord(jhl) - ycord(jll))/(_ONE_*n)
+
+         end if
+         LEVEL3 'dx= ',dx,', dy= ',dy
+
 !        checking for additional fields
          LEVEL2 'checking for additional variable(s): lonc, latc, convc '
 
@@ -458,6 +472,18 @@ contains
          else
             LEVEL3 'dlon and dlat will be calculated from axes information'
          end if
+         if ( dlon .le. _ZERO_ .or. dlat .le. _ZERO_ ) then
+
+            n = ihl-ill
+            dlon = (xcord(ihl) - xcord(ill))/(_ONE_*n)
+
+            n = jhl-jll
+            dlat = (ycord(jhl) - ycord(jll))/(_ONE_*n)
+
+         end if
+!        potentially do checks on consistency of dx and x-axis
+         LEVEL3 'dlon= ',dlon,', dlat= ',dlat
+
 
 !        checking for additional fields
          LEVEL2 'checking for additional variable(s): xc, yc '

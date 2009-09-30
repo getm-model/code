@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.36 2009-09-29 07:17:41 kb Exp $
+!$Id: domain.F90,v 1.37 2009-09-30 05:32:47 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -99,6 +99,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.37  2009-09-30 05:32:47  kb
+!  fixed calculation of dx, dy when dlon, dlat not present
+!
 !  Revision 1.36  2009-09-29 07:17:41  kb
 !  fixed typos - for protex
 !
@@ -650,6 +653,9 @@
 
 !        we need latx to calculate dxv - utilize equidistance
          latx(ill:ihl,jll-1) = latc(ill:ihl,jll) - dlat/2.
+STDERR ill,jll,dlat/2.
+STDERR latc(1,1),latx(1,0)
+!stop
          n=1
          do j=jll,jhl
             latx(ill:ihl,j) = latx(ill:ihl,jll-1) + n*dlat
@@ -731,7 +737,6 @@
 !  Original author(s): Lars Umlauf
 !
 ! !LOCAL VARIABLES:
-   integer                   :: n
    integer                   :: i,j
 !EOP
 !------------------------------------------------------------------------
@@ -744,36 +749,9 @@
 
       case(1)  ! Cartesian
 
-         if ( dx .le. _ZERO_ .or. dy .le. _ZERO_ ) then
-
-            n = ihl-ill
-            dx = (xcord(ihl) - xcord(ill))/(_ONE_*n)
-
-            n = jhl-jll
-            dy = (ycord(jhl) - ycord(jll))/(_ONE_*n)
-
-         end if
-
-!        potentially do checks on consistency of dx and x-axis
-
          ard1 = _ONE_/(dx*dy)
 
-         LEVEL3 'dx= ',dx,', dy= ',dy
-
       case(2)  ! Spherical
-
-         if ( dlon .le. _ZERO_ .or. dlat .le. _ZERO_ ) then
-
-            n = ihl-ill
-            dlon = (xcord(ihl) - xcord(ill))/(_ONE_*n)
-
-            n = jhl-jll
-            dlat = (ycord(jhl) - ycord(jll))/(_ONE_*n)
-
-         end if
-
-!        potentially do checks on consistency of dx and x-axis
-	 LEVEL3 'dlon= ',dlon,', dlat= ',dlat
 
 !        note that all dy? are identical on constant
 
