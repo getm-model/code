@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.20 2009-09-30 11:28:48 bjb Exp $
+!$Id: meteo.F90,v 1.21 2009-09-30 11:33:48 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -85,6 +85,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
+!  Revision 1.21  2009-09-30 11:33:48  bjb
+!  Removed tmp output
+!
 !  Revision 1.20  2009-09-30 11:28:48  bjb
 !  OpenMP threading initial implementation
 !
@@ -575,10 +578,7 @@
 !$OMP END MASTER
 !$OMP BARRIER
 
-LEVEL1 'BJB -test1',k
-
                   if (have_sst) then
-LEVEL1 'BJB -test2',k
 ! BJB-TODO: Check if exchange_coefficients and fluxes are thread safe !$OMP DO SCHEDULE(RUNTIME)
 ! BJB-TODO: Not tested with sst meteo(!)
 !$OMP DO SCHEDULE(RUNTIME)
@@ -604,7 +604,6 @@ LEVEL1 'BJB -test2',k
                      end do
 !$OMP END DO
                   else
-LEVEL1 'BJB -test3',k
 !$OMP DO SCHEDULE(RUNTIME)
                      do j=jmin,jmax
                         do i=imin,imax
