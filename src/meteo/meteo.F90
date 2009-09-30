@@ -1,4 +1,4 @@
-!$Id: meteo.F90,v 1.21 2009-09-30 11:33:48 bjb Exp $
+!$Id: meteo.F90,v 1.22 2009-09-30 14:38:34 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -85,11 +85,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: meteo.F90,v $
-!  Revision 1.21  2009-09-30 11:33:48  bjb
-!  Removed tmp output
-!
-!  Revision 1.20  2009-09-30 11:28:48  bjb
-!  OpenMP threading initial implementation
+!  Revision 1.22  2009-09-30 14:38:34  bjb
+!  Bugfix meteo: Less threading
 !
 !  Revision 1.19  2009-08-18 10:24:46  bjb
 !  New getm_timers module
@@ -493,19 +490,12 @@
    write(debug,*) 'do_meteo() # ',Ncall
 #endif
    call tic(TIM_METEO)
-
-! OMP-NOTE: The vast majority of CPU time is spent in calls to e.g. 
-!   exchange_coefficients, fluxes, and especially short_wave_radiation.
-!   It is critical to thread these loops, while the rest is not really 
-!   critical. In fact, some of the simpler loops have more memory access 
-!   than real computations, and should as such not be threaded.
-!     BJB 2009-09-30.
-
-!$OMP PARALLEL DEFAULT(SHARED)                                           &
-!$OMP     PRIVATE(i,j,ramp,hh,t,t_frac)                                  &
-!$OMP     PRIVATE(uu,cosconv,vv,sinconv,have_sst)
-
-
+! OMP-NOTE: In this routine some loops, which have to do with read-in of 
+!    new meteo have not been threaded due to use of heap-allocated scalars
+!    in exchange_coefficients() and fluxes().
+!    However, for the cases I have tested, calls to short_wave_radiation
+!    is by far the most expensive of the present routine.
+!       BJB 2009-09-30.
    if (metforcing) then
 
       t = n*timestep
@@ -513,9 +503,7 @@
       if(spinup .gt. 0 .and. k .lt. spinup) then
 ! BJB-TODO: Replace 1.0 with _ONE_ etc in this file.
          ramp = 1.0*k/spinup
-!$OMP MASTER
          k = k + 1
-!$OMP END MASTER
       else
          ramp = _ONE_
       end if
@@ -524,17 +512,13 @@
          case (1)
 ! BJB-TODO: Why is this called every time step (even after k=spinup)-
 !    It should all be constant in time after that(?)
-
-! OMP-NOTE: Memory copy done in serial
-!$OMP MASTER
             airp  =  _ZERO_
             tausx = ramp*tx
             tausy = ramp*ty
-!$OMP END MASTER
-!$OMP BARRIER
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j, sinconv,cosconv,uu,vv)
 !     Rotation of wind stress due to grid convergence
 !$OMP DO SCHEDULE(RUNTIME)
-            do j=jmin-1,jmax+1
+             do j=jmin-1,jmax+1
                do i=imin-1,imax+1
                   if (convc(i,j) .ne. _ZERO_ .and. az(i,j) .gt. 0) then
                      sinconv=sin(-convc(i,j)*deg2rad)
@@ -546,20 +530,18 @@
                   end if
                end do
             end do
-!$OMP END DO NOWAIT
-!$OMP SINGLE
+!$OMP END DO
+!$OMP END PARALLEL
             swr   = swr_const
             shf   = shf_const
             if (fwf_method .eq. 1) then
                evap = evap_const
                precip = precip_const
             end if
-!$OMP END SINGLE
          case (2)
             if(calc_met) then
                have_sst = present(sst)
                if (new_meteo) then
-!$OMP MASTER
                   call update_2d_halo(airp,airp,az, &
                                       imin,jmin,imax,jmax,H_TAG)
                   call wait_halo(H_TAG)
@@ -575,13 +557,10 @@
                         precip_old = precip
                      end if
                   end if
-!$OMP END MASTER
-!$OMP BARRIER
-
                   if (have_sst) then
-! BJB-TODO: Check if exchange_coefficients and fluxes are thread safe !$OMP DO SCHEDULE(RUNTIME)
-! BJB-TODO: Not tested with sst meteo(!)
-!$OMP DO SCHEDULE(RUNTIME)
+! OMP-NOTE: This is an expensive loop, but we cannot thread it as long
+!    as exchange_coefficients() and fluxes() pass information through 
+!    scalars in the meteo module. BJB 2009-09-30.
                      do j=jmin,jmax
                         do i=imin,imax
                            if (az(i,j) .ge. 1) then
@@ -602,9 +581,8 @@
                            end if
                         end do
                      end do
-!$OMP END DO
                   else
-!$OMP DO SCHEDULE(RUNTIME)
+! OMP-NOTE: w needs to be a local (stack) variable to thread this loop.
                      do j=jmin,jmax
                         do i=imin,imax
                            if (az(i,j) .ge. 1) then
@@ -615,18 +593,14 @@
                            end if
                         end do
                      end do
-!$OMP END DO
                   end if
-!$OMP MASTER
                   call update_2d_halo(tausx,tausx,az, &
                                       imin,jmin,imax,jmax,H_TAG)
                   call wait_halo(H_TAG)
                   call update_2d_halo(tausy,tausy,az, &
                                       imin,jmin,imax,jmax,H_TAG)
                   call wait_halo(H_TAG)
- !$OMP END MASTER
                   if (.not. first) then
- !$OMP MASTER
                      d_tausx = tausx - tausx_old
                      d_tausy = tausy - tausy_old
                      d_tcc = tcc - tcc_old
@@ -637,27 +611,29 @@
                      if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
                         d_precip = precip - precip_old
                      end if
-!$OMP END MASTER
                   end if
                end if
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j, t_frac, hh)
                if (.not. first) then
-!$OMP MASTER
-                   t_frac = (t-t_1)/(t_2-t_1)
-                   shf   = shf_old   + t_frac*d_shf
-                   tausx = tausx_old + t_frac*d_tausx
-                   tausy = tausy_old + t_frac*d_tausy
-                   if (fwf_method .ge. 2) then
-                      evap = evap_old + t_frac*d_evap
-                   end if
-                   if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-                      precip = precip_old + t_frac*d_precip
-                   end if
-!$OMP END MASTER
+                  t_frac = (t-t_1)/(t_2-t_1)
+!$OMP DO SCHEDULE(RUNTIME)
+                  do j=jmin-HALO,jmax+HALO
+!                     do i=imin-HALO,imax+HALO
+                        shf(:,j)   = shf_old(:,j)    + t_frac*d_shf(:,j)
+                        tausx(:,j) = tausx_old(:,j)  + t_frac*d_tausx(:,j)
+                        tausy(:,j) = tausy_old(:,j)  + t_frac*d_tausy(:,j)
+                        if (fwf_method .ge. 2) then
+                           evap(:,j) = evap_old(:,j) + t_frac*d_evap(:,j)
+                        end if
+                        if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+                           precip(:,j) = precip_old(:,j) + t_frac*d_precip(:,j)
+                        end if
+!                     end do
+                  end do
+!$OMP END DO
                end if
 ! BJB-TODO: Convert constant to full precision:
                hh = secondsofday/3600.
-! OMP-NOTE: short_wave_radiation seems thread-safe.
-!     Most of the CPU-time is used here, so it is important to thread well.
 !$OMP DO SCHEDULE(RUNTIME)
                do j=jmin,jmax
                   do i=imin,imax
@@ -668,9 +644,10 @@
                   end do
                end do
 !$OMP END DO
+!$OMP END PARALLEL
             else
                if (first) then
-!$OMP MASTER
+! OMP-NOTE: Dont thread simple memory copy:
                   tausx_old = tausx
                   tausy_old = tausy
                   swr_old = swr
@@ -681,56 +658,56 @@
                   if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
                      precip_old = precip
                   end if
-!$OMP END MASTER
                end if
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j, t_frac)
                if (new_meteo) then
-!$OMP MASTER
-                  tausx_old = tausx_old + d_tausx
-                  tausy_old = tausy_old + d_tausy
-                  swr_old = swr_old + d_swr
-                  shf_old = shf_old + d_shf
-
-                  d_tausx = tausx - tausx_old
-                  d_tausy = tausy - tausy_old
-                  d_swr = swr - swr_old
-                  d_shf = shf - shf_old
-                  if (fwf_method .ge. 2) then
-                     evap_old = evap_old + d_evap
-                     d_evap = evap - evap_old
-                  end if
-                  if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-                     precip_old = precip_old + d_precip
-                     d_precip = precip - precip_old
-                  end if
-!$OMP END MASTER
+!$OMP DO SCHEDULE(RUNTIME)
+                  do j=jmin-HALO,jmax+HALO
+                     tausx_old(:,j) = tausx_old(:,j) + d_tausx(:,j)
+                     tausy_old(:,j) = tausy_old(:,j) + d_tausy(:,j)
+                     swr_old(:,j) = swr_old(:,j) + d_swr(:,j)
+                     shf_old(:,j) = shf_old(:,j) + d_shf(:,j)
+                  
+                     d_tausx(:,j) = tausx(:,j) - tausx_old(:,j)
+                     d_tausy(:,j) = tausy(:,j) - tausy_old(:,j)
+                     d_swr(:,j) = swr(:,j) - swr_old(:,j)
+                     d_shf(:,j) = shf(:,j) - shf_old(:,j)
+                     if (fwf_method .ge. 2) then
+                        evap_old(:,j) = evap_old(:,j) + d_evap(:,j)
+                        d_evap(:,j) = evap(:,j) - evap_old(:,j)
+                     end if
+                     if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+                        precip_old(:,j) = precip_old(:,j) + d_precip(:,j)
+                        d_precip(:,j) = precip(:,j) - precip_old(:,j)
+                     end if
+                  end do
+!$OMP END DO
                end if
                if (.not. first) then
                   t_frac = (t-t_1)/(t_2-t_1)
-!$OMP MASTER
-                  tausx = tausx_old + t_frac*d_tausx
-                  tausy = tausy_old + t_frac*d_tausy
-                  swr = swr_old + t_frac*d_swr
-                  shf = shf_old + t_frac*d_shf
-                  if (fwf_method .ge. 2) then
-                     evap = evap_old + t_frac*d_evap
-                  end if
-                  if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-                     precip = precip_old + t_frac*d_precip
-                  end if
-!$OMP END MASTER
+!$OMP DO SCHEDULE(RUNTIME)
+                  do j=jmin-HALO,jmax+HALO
+                     tausx(:,j) = tausx_old(:,j) + t_frac*d_tausx(:,j)
+                     tausy(:,j) = tausy_old(:,j) + t_frac*d_tausy(:,j)
+                     swr(:,j)   = swr_old(:,j)   + t_frac*d_swr(:,j)
+                     shf(:,j)   = shf_old(:,j)   + t_frac*d_shf(:,j)
+                     if (fwf_method .ge. 2) then
+                        evap(:,j) = evap_old(:,j) + t_frac*d_evap(:,j)
+                     end if
+                     if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+                        precip(:,j) = precip_old(:,j) + t_frac*d_precip(:,j)
+                     end if
+                  end do
+!$OMP END DO
                end if
+!$OMP END PARALLEL
             end if
          case default
-!$OMP MASTER
             FATAL 'A non valid meteo method has been specified.'
             stop 'do_meteo'
-!$OMP END MASTER
       end select
 
    end if
-
-!$OMP END PARALLEL
-
    first = .false.
 
    call toc(TIM_METEO)
