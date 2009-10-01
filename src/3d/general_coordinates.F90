@@ -1,4 +1,4 @@
-!$Id: general_coordinates.F90,v 1.3 2009-09-30 11:28:45 bjb Exp $
+!$Id: general_coordinates.F90,v 1.4 2009-10-01 07:13:54 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -73,8 +73,6 @@
    use domain, only: imin,imax,jmin,jmax,kmax,H,HU,HV,az,au,av,min_depth
    use variables_3d, only: dt,kmin,kumin,kvmin,ho,hn,huo,hun,hvo,hvn
    use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
-! BJB-TEST time loops
-   use getm_timers, only: tic,toc, TIM_TEST01
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -191,8 +189,6 @@
       end do
    end if ! first
 
-   call tic(TIM_TEST01)
-
 ! The general vertical coordinates can be relaxed towards the new layer
 ! thicknesses by the following relaxation time scale r. This should
 ! later be generalised also for sigma coordinates.
@@ -262,7 +258,6 @@
    end do
 !$OMP END DO
 !$OMP END PARALLEL
-   call toc(TIM_TEST01)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving general_coordinates()'
