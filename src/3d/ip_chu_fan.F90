@@ -1,4 +1,4 @@
-!$Id: ip_chu_fan.F90,v 1.7 2009-09-30 11:28:45 bjb Exp $
+!$Id: ip_chu_fan.F90,v 1.8 2009-10-01 12:23:13 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -74,21 +74,21 @@
             dxm1=_ONE_/DXU
 #endif
             grdl=(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
-            buoyl=_ZERO_*(buoy(i+1,j,kmax)+buoy(i,j,kmax))
+            buoyl=_HALF_*(buoy(i+1,j,kmax)+buoy(i,j,kmax))
             prgr=grdl
-            idpdx(i,j,kmax)=hun(i,j,kmax)*prgr*_ZERO_*hun(i,j,kmax)
+            idpdx(i,j,kmax)=hun(i,j,kmax)*prgr*_HALF_*hun(i,j,kmax)
             do k=kmax-1,1,-1
                grdu=grdl
                grdl=(buoy(i+1,j,k)-buoy(i,j,k))*dxm1
                buoyu=buoyl
-               buoyl=_ZERO_*(buoy(i+1,j,k)+buoy(i,j,k))
+               buoyl=_HALF_*(buoy(i+1,j,k)+buoy(i,j,k))
                dxz=(zz(i+1,j,k)-zz(i,j,k))*dxm1
                hc=(zz(i+1,j,k)-zz(i+1,j,k+1))**2*(buoy(i+1,j,k)-buoy(i+1,j,k+1))
                hc=hc-(zz(i,j,k)-zz(i,j,k+1))**2*(buoy(i,j,k)-buoy(i,j,k+1)) 
                hc=hc+(zz(i+1,j,k+1)-zz(i,j,k+1))**2*(buoy(i+1,j,k+1)-buoy(i,j,k+1)) 
                hc=hc-(zz(i+1,j,k)-zz(i,j,k))**2*(buoy(i+1,j,k)-buoy(i,j,k)) 
                hc=hc*dxm1*SIXTH/(zz(i,j,k)+zz(i+1,j,k)-zz(i,j,k+1)-zz(i+1,j,k+1))
-               prgr=prgr+(grdu+grdl+hc)*_ZERO_*(hun(i,j,k)+hun(i,j,k+1))-dxz*(buoyu-buoyl)
+               prgr=prgr+(grdu+grdl+hc)*_HALF_*(hun(i,j,k)+hun(i,j,k+1))-dxz*(buoyu-buoyl)
                idpdx(i,j,k)=hun(i,j,k)*prgr
             end do
          end if
@@ -106,21 +106,21 @@
          dym1 = _ONE_/DYV
 #endif
             grdl=(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
-            buoyl=_ZERO_*(buoy(i,j+1,kmax)+buoy(i,j,kmax))
+            buoyl=_HALF_*(buoy(i,j+1,kmax)+buoy(i,j,kmax))
             prgr=grdl
-            idpdy(i,j,kmax)=hvn(i,j,kmax)*prgr*_ZERO_*hvn(i,j,kmax)
+            idpdy(i,j,kmax)=hvn(i,j,kmax)*prgr*_HALF_*hvn(i,j,kmax)
             do k=kmax-1,1,-1
                grdu=grdl
                grdl=(buoy(i,j+1,k)-buoy(i,j,k))*dym1
                buoyu=buoyl
-               buoyl=_ZERO_*(buoy(i,j+1,k)+buoy(i,j,k))
+               buoyl=_HALF_*(buoy(i,j+1,k)+buoy(i,j,k))
                dyz=(zz(i,j+1,k)-zz(i,j,k))*dym1
                hc=(zz(i,j+1,k)-zz(i,j+1,k+1))**2*(buoy(i,j+1,k)-buoy(i,j+1,k+1))
                hc=hc-(zz(i,j,k)-zz(i,j,k+1))**2*(buoy(i,j,k)-buoy(i,j,k+1)) 
                hc=hc+(zz(i,j+1,k+1)-zz(i,j,k+1))**2*(buoy(i,j+1,k+1)-buoy(i,j,k+1)) 
                hc=hc-(zz(i,j+1,k)-zz(i,j,k))**2*(buoy(i,j+1,k)-buoy(i,j,k)) 
                hc=hc*dym1*SIXTH/(zz(i,j,k)+zz(i,j+1,k)-zz(i,j,k+1)-zz(i,j+1,k+1))
-               prgr=prgr+(grdu+grdl+hc)*_ZERO_*(hvn(i,j,k)+hvn(i,j,k+1))-dyz*(buoyu-buoyl)
+               prgr=prgr+(grdu+grdl+hc)*_HALF_*(hvn(i,j,k)+hvn(i,j,k+1))-dyz*(buoyu-buoyl)
                idpdy(i,j,k)=hvn(i,j,k)*prgr
             end do
          end if
