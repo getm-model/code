@@ -73,7 +73,9 @@
    ! These catch stuff that are *also* measured somewhere else:
    integer, parameter :: TIM_ADVECT3DTOT = 100  ! advection_3d (uv+tracers)
    integer, parameter :: TIM_CHECK3DF    = 102  ! check_3d_fields
-   ! This is test timers for temporary purposes:
+   ! This is test timers for temporary coding purposes:
+   !  Note: All timers with index 170+ (test_timer_first) are  
+   !  considered test timers, so dont implement your timers here
    integer, parameter :: TIM_TEST00      = 170
    integer, parameter :: TIM_TEST01      = 171
    integer, parameter :: TIM_TEST02      = 172
@@ -89,7 +91,8 @@
 !  Original author(s): Bjarne Buchmann
 
 ! !LOCAL VARIABLES:
-   integer, parameter :: max_timers = 200
+   integer, parameter :: max_timers       = 200
+   integer, parameter :: test_timer_first = 170
    LONGINT            :: timercounts(max_timers)
    LONGINT            :: timertics(max_timers), sysclockcalls(max_timers)
    character(len=24)  :: timernames(max_timers)
@@ -380,9 +383,13 @@
    do i=1,max_timers
       if (len_trim(timernames(i)).gt.0) then
          thistime = _ONE_*timercounts(i)/count_rate
-         write(stderr,100) timernames(i),thistime,                       &
-              sysclockcalls(i),100*thistime/tottime
-100      FORMAT(A26,F10.2,I15,F14.2)
+!  Note: Test-timers (index test_timer_first+) only written if 
+!   they are actually used
+         if (i.lt.test_timer_first .or. sysclockcalls(i).gt.0) then
+            write(stderr,100) timernames(i),thistime,                   &
+                 sysclockcalls(i),100*thistime/tottime
+100         FORMAT(A26,F10.2,I15,F14.2)
+         end if
      end if
    end do
    write(stderr,100) '  TIMERS SUM  ',tottime,num_clock_calls,100*_ONE_
