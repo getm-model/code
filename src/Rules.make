@@ -1,4 +1,4 @@
-#$Id: Rules.make,v 1.23 2009-09-30 11:28:44 bjb Exp $
+#$Id: Rules.make,v 1.24 2009-10-02 06:43:51 kb Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -80,7 +80,6 @@ turbulence=gotm
 ifdef INPUT_DIR
 DEFINES += -DINPUT_DIR="'$(INPUT_DIR)/'"
 endif
-DEFINES += -DINCLUDE_HALOS
 #DEFINES += -DSPHERICAL
 #DEFINES += -DCURVILINEAR
 #DEFINES += -DNO_BOTTFRIC
