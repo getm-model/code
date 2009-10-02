@@ -1,4 +1,4 @@
-!$Id: sealevel.F90,v 1.19 2009-09-30 11:28:44 bjb Exp $
+!$Id: sealevel.F90,v 1.20 2009-10-02 11:29:11 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,8 +35,8 @@
    use halo_zones, only : nprocs,set_flag,u_TAG,v_TAG
    use variables_2d, only: break_mask,break_stat
    use domain, only : min_depth,au,av
-!$ use omp_lib
 #endif
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
