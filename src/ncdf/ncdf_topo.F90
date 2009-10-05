@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.19 2009-09-30 05:32:48 kb Exp $
+!$Id: ncdf_topo.F90,v 1.20 2009-10-05 11:40:03 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -48,6 +48,9 @@
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
+!  Revision 1.20  2009-10-05 11:40:03  kb
+!  fixed behaviour for grid_type=3 and lonx, latx, convx not in topo.nc
+!
 !  Revision 1.19  2009-09-30 05:32:48  kb
 !  fixed calculation of dx, dy when dlon, dlat not present
 !
@@ -545,8 +548,7 @@ contains
 
          status = nf90_inq_varid(ncid,"lonx",id)
          if (status .ne. NF90_NOERR) then
-            call netcdf_error(status,"ncdf_check_grid()",   &
-                              "Can not find 'lonx' in "//trim(filename))
+            LEVEL3 'lonx is not in the file'
          else
             call ncdf_read_2d(ncid,id,lonx(-1+ill:ihl,-1+jll:jhl),ilg,ihg+1,jlg,jhg+1 )
             LEVEL3 'lonx - OK'
@@ -555,8 +557,7 @@ contains
 
          status = nf90_inq_varid(ncid,"latx",id)
          if (status .ne. NF90_NOERR) then
-            call netcdf_error(status,"ncdf_check_grid()",   &
-                              "Can not find 'latx' in "//trim(filename))
+            LEVEL3 'latx is not in the file'
          else
             call ncdf_read_2d(ncid,id,latx(-1+ill:ihl,-1+jll:jhl),ilg,ihg+1,jlg,jhg+1 )
             LEVEL3 'latx - OK'
@@ -571,11 +572,11 @@ contains
 
          status = nf90_inq_varid(ncid,"convx",id)
          if (status .ne. NF90_NOERR) then
-            call netcdf_error(status,"ncdf_check_grid()",   &
-                              "Can not find 'convx' in "//trim(filename))
+            LEVEL3 'convx is not in the file'
+         else
+            call ncdf_read_2d(ncid,id,convx(-1+ill:ihl,-1+jll:jhl),ilg,ihg+1,jlg,jhg+1 )
+            LEVEL3 'convx - OK'
          end if
-         call ncdf_read_2d(ncid,id,convx(-1+ill:ihl,-1+jll:jhl),ilg,ihg+1,jlg,jhg+1 )
-         LEVEL3 'convx - OK'
 
          LEVEL3 'done'
 
