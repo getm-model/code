@@ -1,4 +1,4 @@
-!$Id: w_split_it_adv.F90,v 1.7 2009-09-30 11:28:47 bjb Exp $
+!$Id: w_split_it_adv.F90,v 1.8 2009-10-06 11:45:34 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -83,7 +83,9 @@
 ! OMP note: Initialization (mem copy) done in serial:
    !cu = _ZERO_
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,c,x,r,Phi,limit,fu,fc,fd,cmax)
+!$OMP PARALLEL DEFAULT(SHARED)                                          &
+!$OMP       PRIVATE(i,ii,j,jj,k,kk,it,READY)                            &
+!$OMP       PRIVATE(c,alpha,beta,x,r,Phi,limit,fu,fc,fd,cmax)
 
 ! OMP TODO: The present loops (j-i-k) gains only a small speedup from
 !  threading. Likely, the many jumps in memory limits the performance.
