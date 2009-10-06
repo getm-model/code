@@ -1,4 +1,4 @@
-!$Id: save_grid_ncdf.F90,v 1.9 2009-09-25 12:17:25 kb Exp $
+!$Id: save_grid_ncdf.F90,v 1.10 2009-10-06 13:11:16 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -48,6 +48,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: save_grid_ncdf.F90,v $
+!  Revision 1.10  2009-10-06 13:11:16  kb
+!  only save bathymetry when az > 0
+!
 !  Revision 1.9  2009-09-25 12:17:25  kb
 !  removed undef [IJ]RANGE
 !
@@ -82,6 +85,7 @@
    integer                   :: start(2),edges(2)
    integer                   :: id
    character(32)             :: zname
+   REALTYPE                  :: ws(E2DFIELD)
 !EOP
 !------------------------------------------------------------------------
 !BOC
@@ -449,7 +453,16 @@
    status = nf90_inq_varid(ncid,'bathymetry',id)
    if (status .ne. NF90_NOERR) call netcdf_error(status,                  &
                                   "save_grid_ncdf()","bathymetry_id -")
-   status = nf90_put_var(ncid,id,H(IRANGE,JRANGE),start,edges)
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
+         if(az(i,j) .gt. 0) then
+            ws(i,j) = H(i,j)
+         else
+            ws(i,j) = -10.
+         end if
+      end do
+   end do
+   status = nf90_put_var(ncid,id,ws(IRANGE,JRANGE),start,edges)
    if (status .ne. NF90_NOERR) call netcdf_error(status,                  &
                                   "save_grid_ncdf()","bathymetry -")
 
