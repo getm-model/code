@@ -1,4 +1,4 @@
-#$Id: Makefile,v 1.5 2009-04-28 06:49:11 kb Exp $
+#$Id: Makefile,v 1.6 2009-10-06 11:42:49 kb Exp $
 # 
 # Makefile to build the output module
 #
@@ -7,7 +7,8 @@ include ../Rules.make
 
 LIB	= $(LIBDIR)/liboutput${buildtype}.a
 
-MODSRC	= output.F90 ncdf_out.F90 ascii_out.F90 \
+MODSRC	= output.F90 parser.F90 variable_info.F90 \
+          ncdf_out.F90 ascii_out.F90 \
           diagnostic_variables.F90 nesting.F90 
 
 LIBSRC	= diagnose.F90
@@ -23,6 +24,8 @@ endif
 MOD += \
 ${LIB}(ncdf_out.o)		\
 ${LIB}(ascii_out.o)		\
+$(LIB)(parser.o)		\
+$(LIB)(variable_info.o)		\
 ${LIB}(output.o)		
 
 OBJ     =
@@ -31,13 +34,25 @@ OBJ += \
 $(LIB)(calc_mean_fields.o)
 endif
 OBJ += \
-$(LIB)(diagnose.o) 	
+$(LIB)(diagnose.o)
 
 all: modules objects
 
 modules: $(MOD)
 
 objects: $(OBJ)
+
+tests: test_parser test_varinfo
+
+test_parser: modules objects test_parser.o
+	$(FC) -o $@ $@.o $(LDFLAGS) $(LIB)
+	$(RM) $@.o
+	./$@
+
+test_varinfo: modules objects test_varinfo.o
+	$(FC) -o $@ $@.o $(LDFLAGS) $(LIB)
+	$(RM) $@.o
+	./$@
 
 doc: $(SRC)
 	$(PROTEX) $(SRC) > $(DOCDIR)/output.tex
