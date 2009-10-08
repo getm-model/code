@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.20 2009-10-05 11:40:03 kb Exp $
+!$Id: ncdf_topo.F90,v 1.21 2009-10-08 16:08:00 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -48,6 +48,9 @@
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
+!  Revision 1.21  2009-10-08 16:08:00  kb
+!  axes defined in entire domain - cartesian, spherical
+!
 !  Revision 1.20  2009-10-05 11:40:03  kb
 !  fixed behaviour for grid_type=3 and lonx, latx, convx not in topo.nc
 !
@@ -154,6 +157,7 @@ contains
    logical                             :: have_lat=.false.
    logical                             :: have_xc=.false.
    logical                             :: have_yc=.false.
+   REALTYPE                            :: a(2)
 !EOP
 !-------------------------------------------------------------------------
 
@@ -252,7 +256,7 @@ contains
 !  Does the bathymetry have proper axis defined?
 !  We will obtain the names of the two dimensions and
 !  then inquire if there are variables with the same names - if
-!  that is the case they are by NetCDF definition cordinate
+!  that is the case they are by NetCDF definition coordinate
 !  axis.
 
    status = nf90_inquire_dimension(ncid,dimidsT(1),name=xaxis_name)
@@ -265,7 +269,7 @@ contains
       status = nf90_inq_varid(ncid,xaxis_name,xaxis_id)
       if (status .ne. NF90_NOERR) then
          call netcdf_error(status,"ncdf_check_grid()",   &
-                           "Could not get first cordinate name in "//trim(filename)//".")
+                           "Could not get first coordinate name in "//trim(filename)//".")
       endif
 
       status = nf90_inquire_dimension(ncid,dimidsT(2),name=yaxis_name)
@@ -276,7 +280,7 @@ contains
       status = nf90_inq_varid(ncid,yaxis_name,yaxis_id)
       if (status .ne. NF90_NOERR) then
          call netcdf_error(status,"ncdf_check_grid()",   &
-                           "Could not get second cordinate name in "//trim(filename)//".")
+                           "Could not get second coordinate name in "//trim(filename)//".")
       endif
       LEVEL3 'axes names:    ',trim(xaxis_name),', ',trim(yaxis_name)
    end if
@@ -294,8 +298,6 @@ contains
 !  Read bathymetry
    call ncdf_read_2d(ncid,bathymetry_id,H(ill:ihl,jll:jhl),ilg,ihg,jlg,jhg)
 
-   LEVEL3 'done'
-
    select case (grid_type)
 
       case(1)
@@ -308,38 +310,6 @@ contains
          call getm_error("ncdf_check_grid()",  &
                          "Cannot use Cartesian grid with SPHERICAL or CURVILINEAR #defined.")
 #endif
-         LEVEL2 'reading coordinate variables: ',trim(xaxis_name),', ',trim(yaxis_name)
-
-         status = nf90_inq_varid(ncid,trim(xaxis_name),id)
-         if (status .ne. NF90_NOERR) then
-            call netcdf_error(status,"ncdf_check_grid()",   &
-                              "Can not find x-axis in "//trim(filename))
-         end if
-         start(1) = ilg ; count(1) = ihg-ilg+1
-         status = nf90_get_var(ncid,id,xcord(ill:ihl), &
-                               start = start, count = count)
-
-         if (status .ne. NF90_NOERR) then
-            call netcdf_error(status,"ncdf_check_grid()",   &
-                              "Error reading x-axis in "//trim(filename))
-         end if
-
-         status = nf90_inq_varid(ncid,trim(yaxis_name),id)
-         if (status .ne. NF90_NOERR) then
-            call netcdf_error(status,"ncdf_check_grid()",   &
-                              "Can not find y-axis in "//trim(filename))
-         end if
-         start(1) = jlg ; count(1) = jhg-jlg+1
-         status = nf90_get_var(ncid,id,ycord(jll:jhl), &
-                               start = start, count = count)
-
-         if (status .ne. NF90_NOERR) then
-            call netcdf_error(status,"ncdf_check_grid()",   &
-                              "Error reading y-axis in "//trim(filename))
-         end if
-
-         LEVEL3 'done'
-
          LEVEL2 'checking for dx and dy'
 
          status = nf90_inq_varid(ncid,'dx',id)
@@ -362,16 +332,65 @@ contains
             LEVEL3 'dx and dy will be calculated from axes information'
          end if
 
-         if ( dx .le. _ZERO_ .or. dy .le. _ZERO_ ) then
-
-            n = ihl-ill
-            dx = (xcord(ihl) - xcord(ill))/(_ONE_*n)
-
-            n = jhl-jll
-            dy = (ycord(jhl) - ycord(jll))/(_ONE_*n)
-
+         LEVEL2 'reading/constructing coordinate variables: ', &
+                 trim(xaxis_name),', ',trim(yaxis_name)
+!        x
+         status = nf90_inq_varid(ncid,trim(xaxis_name),id)
+         if (status .ne. NF90_NOERR) then
+            call netcdf_error(status,"ncdf_check_grid()",   &
+                              "Can not find x-axis in "//trim(filename))
          end if
+         count(1) = 1
+         start(1) = 1
+         status = nf90_get_var(ncid,id,a(1:1),start = start,count = count)
+         start(1) = iextr
+         status = nf90_get_var(ncid,id,a(2:2),start = start,count = count)
+
+         if ( .not. have_dx ) dx = (a(2)-a(1))/(iextr-1)
+         do i=imin-HALO,imax+HALO
+            xcord(i) = a(1) + (i+ioff-1)*dx 
+         end do
+#if 0
+!        potentially do checks on consistency of spacing and axis
+         start(1) = jlg ; count(1) = ihg-ilg+1
+         status = nf90_get_var(ncid,id,xcord(ill:ihl), &
+                               start = start, count = count)
+         if (status .ne. NF90_NOERR) then
+            call netcdf_error(status,"ncdf_check_grid()",   &
+                              "Error reading y-axis in "//trim(filename))
+         end if
+#endif
+!        y
+         status = nf90_inq_varid(ncid,trim(yaxis_name),id)
+         if (status .ne. NF90_NOERR) then
+            call netcdf_error(status,"ncdf_check_grid()",   &
+                              "Can not find y-axis in "//trim(filename))
+         end if
+         count(1) = 1
+         start(1) = 1
+         status = nf90_get_var(ncid,id,a(1:1),start = start,count = count)
+         start(1) = jextr
+         status = nf90_get_var(ncid,id,a(2:2),start = start,count = count)
+         if ( .not. have_dy ) dy = (a(2)-a(1))/(jextr-1)
+         do j=jmin-HALO,jmax+HALO
+            ycord(j) = a(1) + (j+joff-1)*dy 
+         end do
+#if 0
+!        potentially do checks on consistency of spacing and axis
+         start(1) = jlg ; count(1) = jhg-jlg+1
+         status = nf90_get_var(ncid,id,ycord(jll:jhl), &
+                               start = start, count = count)
+         if (status .ne. NF90_NOERR) then
+            call netcdf_error(status,"ncdf_check_grid()",   &
+                              "Error reading y-axis in "//trim(filename))
+         end if
+#endif
          LEVEL3 'dx= ',dx,', dy= ',dy
+#if 0
+STDERR xcord(imin:imax)
+STDERR ycord(jmin:jmax)
+stop
+#endif
 
 !        checking for additional fields
          LEVEL2 'checking for additional variable(s): lonc, latc, convc '
@@ -419,41 +438,6 @@ contains
          call getm_error("ncdf_check_grid()",   &
                           "Cannot use spherical grid with SPHERICAL not #defined.")
 #endif
-
-         LEVEL2 'reading coordinate variables: ',trim(xaxis_name),', ',trim(yaxis_name)
-         status = nf90_inq_varid(ncid,trim(xaxis_name),id)
-         if (status .ne. NF90_NOERR) then
-            call netcdf_error(status,"ncdf_check_grid()",   &
-                              "Can not find 'x-axis' in "//trim(filename))
-         end if
-         start(1) = ilg ; count(1) = ihg-ilg+1
-         status = nf90_get_var(ncid,id,xcord(ill:ihl), &
-                               start = start, count = count)
-         if (status .ne. NF90_NOERR) then
-            call netcdf_error(status,"ncdf_check_grid()",   &
-                              "Error reading x-axis in "//trim(filename))
-         end if
-         do j=jll,jhl
-            lonc(ill:ihl,j) = xcord(ill:ihl)
-         end do
-
-         status = nf90_inq_varid(ncid,trim(yaxis_name),id)
-         if (status .ne. NF90_NOERR) then
-            call netcdf_error(status,"ncdf_check_grid()",   &
-                              "Can not find 'y-axis' in "//trim(filename))
-         end if
-         start(1) = jlg ; count(1) = jhg-jlg+1
-         status = nf90_get_var(ncid,id,ycord(jll:jhl), &
-                               start = start, count = count)
-         if (status .ne. NF90_NOERR) then
-            call netcdf_error(status,"ncdf_check_grid()",   &
-                              "Error reading y-axis in "//trim(filename))
-         end if
-         do i=ill,ihl
-            latc(i,jll:jhl) = ycord(jll:jhl)
-         end do
-         LEVEL3 'done'
-
          LEVEL2 'checking for dlon and dlat'
 
          status = nf90_inq_varid(ncid,'dlon',id)
@@ -475,18 +459,69 @@ contains
          else
             LEVEL3 'dlon and dlat will be calculated from axes information'
          end if
-         if ( dlon .le. _ZERO_ .or. dlat .le. _ZERO_ ) then
 
-            n = ihl-ill
-            dlon = (xcord(ihl) - xcord(ill))/(_ONE_*n)
-
-            n = jhl-jll
-            dlat = (ycord(jhl) - ycord(jll))/(_ONE_*n)
-
+         LEVEL2 'reading/constructing coordinate variables: ', &
+                 trim(xaxis_name),', ',trim(yaxis_name)
+!        lon
+         status = nf90_inq_varid(ncid,trim(xaxis_name),id)
+         if (status .ne. NF90_NOERR) then
+            call netcdf_error(status,"ncdf_check_grid()",   &
+                              "Can not find 'x-axis' in "//trim(filename))
          end if
-!        potentially do checks on consistency of dx and x-axis
-         LEVEL3 'dlon= ',dlon,', dlat= ',dlat
+         count(1) = 1
+         start(1) = 1
+         status = nf90_get_var(ncid,id,a(1:1),start = start,count = count)
+         start(1) = iextr
+         status = nf90_get_var(ncid,id,a(2:2),start = start,count = count)
 
+         if ( .not. have_dlon ) dlon = (a(2)-a(1))/(iextr-1)
+         do i=imin-HALO,imax+HALO
+            xcord(i) = a(1) + (i+ioff-1)*dlon 
+         end do
+#if 0
+!        potentially do checks on consistency of spacing and axis
+         start(1) = ilg ; count(1) = ihg-ilg+1
+         status = nf90_get_var(ncid,id,xcord(ill:ihl), &
+                               start = start, count = count)
+         if (status .ne. NF90_NOERR) then
+            call netcdf_error(status,"ncdf_check_grid()",   &
+                              "Error reading x-axis in "//trim(filename))
+         end if
+#endif
+         do j=jmin-HALO,jmax+HALO
+            lonc(:,j) = xcord(:)
+         end do
+!        lat
+         status = nf90_inq_varid(ncid,trim(yaxis_name),id)
+         if (status .ne. NF90_NOERR) then
+            call netcdf_error(status,"ncdf_check_grid()",   &
+                              "Can not find 'y-axis' in "//trim(filename))
+         end if
+         count(1) = 1
+         start(1) = 1
+         status = nf90_get_var(ncid,id,a(1:1),start = start,count = count)
+         start(1) = jextr
+         status = nf90_get_var(ncid,id,a(2:2),start = start,count = count)
+
+         if ( .not. have_dlat ) dlat = (a(2)-a(1))/(jextr-1)
+         do j=jmin-HALO,jmax+HALO
+            ycord(j) = a(1) + (j+joff-1)*dlat 
+         end do
+#if 0
+!        potentially do checks on consistency of spacing and axis
+         start(1) = jlg ; count(1) = jhg-jlg+1
+         status = nf90_get_var(ncid,id,ycord(jll:jhl), &
+                               start = start, count = count)
+         if (status .ne. NF90_NOERR) then
+            call netcdf_error(status,"ncdf_check_grid()",   &
+                              "Error reading y-axis in "//trim(filename))
+         end if
+#endif
+         do i=imin-HALO,imax+HALO
+            latc(i,:) = ycord(:)
+         end do
+
+         LEVEL3 'dlon= ',dlon,', dlat= ',dlat
 
 !        checking for additional fields
          LEVEL2 'checking for additional variable(s): xc, yc '
@@ -515,8 +550,6 @@ contains
          else
             have_xy = .false.
          end if
-
-         LEVEL3 'done'
 
       case(3)
 !     curvi-linear - we require:   xx, yx
@@ -631,6 +664,132 @@ contains
     return
   end subroutine ncdf_read_topo_file
 !EOC
+
+#if 0
+!!!!!!!!!
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: coords_and_grid_spacing
+!
+! !INTERFACE:
+   subroutine coords_and_grid_spacing(ncid,varid,iextr,cordname,x0,dx)
+!
+! !USES:
+   IMPLICIT NONE
+! 
+! !DESCRIPTION:
+!  Helper routine for ncdf_get_grid.
+!  Computes x and dx given that the netcdf file contains the axis
+!  (T-point) information.
+!  It is assumed that the coordinate values are equidistantly spaced.
+!  The equidistance is tested and warnings given if non-equidistant
+!  values are noted.
+!
+!  The routine also works for y, lon, and lat.
+!
+! !INPUT PARAMETERS:
+   integer,      intent(in)             :: ncid
+   character(len=*), intent(in)         :: spacing_name
+   character(len=*), intent(in)         :: cord_name
+   integer,      intent(in)             :: 
+   character(len=*), intent(in)         :: cordname
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE, intent(out)               :: x0, dx
+!
+! !REVISION HISTORY:
+!  Original author(s): Bjarne Buchmann
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+   integer                   :: status
+   integer                   :: indx(1)
+   integer                   :: i
+   REALTYPE                  :: startval,endval
+   REALTYPE                  :: expectval,readval,dval
+!
+!-------------------------------------------------------------------------
+#include"netcdf.inc"
+
+#ifdef DEBUG
+   write(debug,*) "ncdf_get_grid_dxy(): working on coordinate " // cordname
+#endif
+!
+! x0 and dx are computed from the T-points.
+! Remember (x0, y0, lon0,lat0) are relative to X-points.
+! The procedure only works for equidistant grids.
+! Necessary to comply with .../domain/domain.F90.
+! Iextr (or jextr) is used to find the last entry in the coordinate axis.
+!
+   indx(1) = 1
+   status = nf_get_var1_double(ncid,varid,indx,startval)
+   if (status .ne. NF_NOERR) then
+      call netcdf_error(status,"ncdf_get_grid_dxy()",    &
+                        "Could not read first value of " // cordname)
+   endif
+   indx(1) = iextr
+   status = nf_get_var1_double(ncid,varid,indx,endval)
+   if (status .ne. NF_NOERR) then
+      call netcdf_error(status,"ncdf_get_grid_dxy()",    &
+                        "Could not read last value of "  // cordname)
+   endif
+
+#ifdef DEBUG
+   write(debug,*) "ncdf_get_grid_dxy(): Range of " // cordname // " ",   &
+        startval,endval
+#endif
+
+!
+! Compute grid spacing based on first and last value:
+!
+!
+   dx = (endval-startval)/(iextr-1)
+
+!
+! Compute x0 as dx/2 before first read value.
+! x0 should be an X-point (not a T-point).
+!
+   x0 = startval - 0.50*dx
+
+!
+! Test that the read values are approximately equidistantly spaced.
+! This implementation could be faster if we read the entire array, but the
+! present implementation is low on memory/allocation. Also, it is really
+! fast as it is 1D and executed once, so there should be no performance
+! gain by reading the entire array.
+!
+   do i=1,iextr
+! Note that startval and x0 no longer match at this point,
+      expectval = startval + dx * (i-1)
+      indx(1) = i
+      status = nf_get_var1_double(ncid,varid,indx,readval)
+      if (status .ne. NF_NOERR) then
+         call netcdf_error(status,"ncdf_get_grid_dxy()",   &
+                           "Could not read one value of " // cordname)
+      endif
+      dval = abs(expectval-readval)
+! Compare with a fairly lax criterion:
+      if (dval .gt. 0.1 * dx) then
+         LEVEL1 "Warning: Non-equidistant grid detected for " // cordname
+         LEVEL1 "    Read value no. ",i
+         LEVEL1 "    Expected value ",expectval
+         LEVEL1 "    Actually read  ",readval
+! Dont bother checking the rest.
+! All values are set, so we might as well return from here.
+         return
+      end if
+   end do
+
+   return
+   end subroutine coords_and_grid_spacing
+!EOC
+
+!-------------------------------------------------------------------------
+!!!!!!!!!
+#endif
 
 !-----------------------------------------------------------------------
 !BOP
