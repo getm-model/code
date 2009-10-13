@@ -1,4 +1,4 @@
-!$Id: init_grid_ncdf.F90,v 1.8 2009-09-28 14:39:06 kb Exp $
+!$Id: init_grid_ncdf.F90,v 1.9 2009-10-13 13:15:11 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,6 +41,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: init_grid_ncdf.F90,v $
+!  Revision 1.9  2009-10-13 13:15:11  kb
+!  added psedo-coordinates when grid-type 3 or 4
+!
 !  Revision 1.8  2009-09-28 14:39:06  kb
 !  INLUDE_HALOS -> SAVE_HALOS, renamed dimension names
 !
@@ -116,14 +119,14 @@
          yunits   = 'degrees_north'
       case (3)
          xname    = 'xic'
-         xxname   = 'xicx'
+         xxname   = 'xix'
          yname    = 'etac'
          yxname   = 'etax'
          xunits   = ' '
          yunits   = ' '
       case (4)
          xname    = 'xic'
-         xxname   = 'xicx'
+         xxname   = 'xix'
          yname    = 'etac'
          yxname   = 'etax'
          xunits   = ' '
@@ -364,7 +367,7 @@
 
 
       case (3,4)
-!        pseudo coordinate variables
+!        pseudo coordinate variables - T-points
          axisdim(1) = x_dim
          status = nf90_def_var(ncid,'xic',NF90_DOUBLE,axisdim,id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
@@ -374,6 +377,17 @@
          status = nf90_def_var(ncid,'etac',NF90_DOUBLE,axisdim,id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "init_grid_ncdf()","etac -")
+
+!        pseudo coordinate variables - X-points
+         axisdim(1) = xx_dim
+         status = nf90_def_var(ncid,'xix',NF90_DOUBLE,axisdim,id)
+         if (status .ne. NF90_NOERR) call netcdf_error(status,            &
+                                        "init_grid_ncdf()","xix -")
+
+         axisdim(1) = yx_dim
+         status = nf90_def_var(ncid,'etax',NF90_DOUBLE,axisdim,id)
+         if (status .ne. NF90_NOERR) call netcdf_error(status,            &
+                                        "init_grid_ncdf()","etax -")
 
 !        position of vertices
          status = nf90_def_var(ncid,'xx',NF90_DOUBLE,(/ xx_dim, yx_dim /),id)

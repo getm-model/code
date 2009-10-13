@@ -4,6 +4,10 @@
    REALTYPE                             :: xcord(imin-HALO:imax+HALO)
    REALTYPE                             :: ycord(jmin-HALO:jmax+HALO)
 
+!  pseudo coordinate axes - grid-type = 3 or 4
+   REALTYPE                             :: xxcord(imin-HALO-1:imax+HALO)
+   REALTYPE                             :: yxcord(jmin-HALO-1:jmax+HALO)
+
 !  mask
    integer                             :: az(E2DFIELD)
    integer                             :: au(E2DFIELD)

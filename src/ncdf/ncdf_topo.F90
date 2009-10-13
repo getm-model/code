@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.21 2009-10-08 16:08:00 kb Exp $
+!$Id: ncdf_topo.F90,v 1.22 2009-10-13 13:15:11 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,6 +26,7 @@
   use domain, only                    : H, Hland
   use domain, only                    : grid_type
   use domain, only                    : xcord,ycord
+  use domain, only                    : xxcord,yxcord
   use domain, only                    : dx,dy
   use domain, only                    : xc,yc
   use domain, only                    : xx,yx
@@ -48,6 +49,9 @@
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
+!  Revision 1.22  2009-10-13 13:15:11  kb
+!  added psedo-coordinates when grid-type 3 or 4
+!
 !  Revision 1.21  2009-10-08 16:08:00  kb
 !  axes defined in entire domain - cartesian, spherical
 !
@@ -189,7 +193,7 @@ contains
 !   LEVEL2 'grid_type: ',grid_type
    select case (grid_type)
       case(1)
-         LEVEL2 'using Cartesian grid.'
+         LEVEL2 'using cartesian grid.'
       case(2)
          LEVEL2 'using spherical grid.'
       case(3)
@@ -301,8 +305,8 @@ contains
    select case (grid_type)
 
       case(1)
-!     cartesian - we require:   xc, yc
 !     cartesian - we check for: dx, dy
+!     cartesian - we require:   xc, yc
 !     cartesian - we check for: lonc, latc, convc
 !     cartesian - later we calculate: latu, latv
 
@@ -428,8 +432,8 @@ stop
          end if
 
       case(2)
-!     spherical - we require:   lonc, latc
 !     spherical - we check for: dlon, dlat
+!     spherical - we require:   lonc, latc
 !     spherical - we check for: xc, yc
 !     spherical - later we calculate: latu, latv
 !     
@@ -650,6 +654,21 @@ stop
       case default
    end select
 
+   select case (grid_type)
+      case(3,4)
+!        pseudo coordinates for T- and X-points
+         xxcord(imin-HALO-1) = imin-HALO-1+ioff
+         do i=imin-HALO,imax+HALO
+            xcord(i)  = i+ioff - _HALF_
+            xxcord(i) = i+ioff
+         end do
+         yxcord(jmin-HALO-1) = jmin-HALO-1+joff
+         do j=jmin-HALO,jmax+HALO
+            ycord(j)  = j+joff - _HALF_
+            yxcord(j) = j+joff
+         end do
+   end select
+
 !  read bottom roughness
    if (z0_method .eq. 1) then
       status = nf90_inq_varid(ncid,"z0",id)
@@ -712,7 +731,6 @@ stop
    REALTYPE                  :: expectval,readval,dval
 !
 !-------------------------------------------------------------------------
-#include"netcdf.inc"
 
 #ifdef DEBUG
    write(debug,*) "ncdf_get_grid_dxy(): working on coordinate " // cordname

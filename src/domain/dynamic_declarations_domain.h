@@ -5,6 +5,9 @@
 !  coordinate axes - grid-type = 1 or 2
    REALTYPE, dimension(:), allocatable      :: xcord, ycord
 
+!  coordinate axes - grid-type = 3 or 4
+   REALTYPE, dimension(:), allocatable      :: xxcord, yxcord
+
 !  mask
    integer, dimension(:,:), allocatable     :: az,au,av,ax
 

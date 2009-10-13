@@ -1,4 +1,4 @@
-!$Id: save_grid_ncdf.F90,v 1.10 2009-10-06 13:11:16 kb Exp $
+!$Id: save_grid_ncdf.F90,v 1.11 2009-10-13 13:15:11 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,6 +27,7 @@
    use domain, only: dx,dy
    use domain, only: dlon,dlat
    use domain, only: xcord,ycord
+   use domain, only: xxcord,yxcord
    use domain, only: xc,yc
    use domain, only: xx,yx
    use domain, only: latc,lonc,convc
@@ -48,6 +49,9 @@
 !  Original author(s): Lars Umlauf
 !
 !  $Log: save_grid_ncdf.F90,v $
+!  Revision 1.11  2009-10-13 13:15:11  kb
+!  added psedo-coordinates when grid-type 3 or 4
+!
 !  Revision 1.10  2009-10-06 13:11:16  kb
 !  only save bathymetry when az > 0
 !
@@ -161,14 +165,14 @@
          status = nf90_inq_varid(ncid,'xc',id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","xc_id -")
-         status = nf90_put_var(ncid,id,xcord(imin:imax))
+         status = nf90_put_var(ncid,id,xcord(IRANGE))
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","xc -")
 
          status = nf90_inq_varid(ncid,'yc',id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","yc_id -")
-         status = nf90_put_var(ncid,id,ycord(jmin:jmax))
+         status = nf90_put_var(ncid,id,ycord(JRANGE))
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","yc -")
 
@@ -246,16 +250,12 @@
 
          end if
 
-#if 1
       case (3,4)
 
-!        pseudo coordinate variables
+!        pseudo coordinate variables - T-points
          status = nf90_inq_varid(ncid,'xic',id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","xic_id -")
-         do i=imin,imax
-            xcord(i) = ioff+i
-         end do
          status = nf90_put_var(ncid,id,xcord(IRANGE))
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","xic -")
@@ -263,14 +263,26 @@
          status = nf90_inq_varid(ncid,'etac',id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","etac_id -")
-         do j=1,jmax
-            ycord(j) = joff+j
-         end do
          status = nf90_put_var(ncid,id,ycord(JRANGE))
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","etac -")
 
+!        pseudo coordinate variables - X-points
+         status = nf90_inq_varid(ncid,'xix',id)
+         if (status .ne. NF90_NOERR) call netcdf_error(status,            &
+                                       "save_grid_ncdf()","xix_id -")
+         status = nf90_put_var(ncid,id,xxcord(-1+IRANGE))
+         if (status .ne. NF90_NOERR) call netcdf_error(status,            &
+                                        "save_grid_ncdf()","xix -")
 
+         status = nf90_inq_varid(ncid,'etax',id)
+         if (status .ne. NF90_NOERR) call netcdf_error(status,            &
+                                       "save_grid_ncdf()","etax_id -")
+         status = nf90_put_var(ncid,id,yxcord(-1+JRANGE))
+         if (status .ne. NF90_NOERR) call netcdf_error(status,            &
+                                        "save_grid_ncdf()","etax -")
+
+!        positions of vertices
          status = nf90_inq_varid(ncid,'xx',id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","xx_id -")
@@ -314,7 +326,6 @@
                                         convc(1:imax,1:jmax))
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","convc -")
-#endif
 #endif
       case default
 

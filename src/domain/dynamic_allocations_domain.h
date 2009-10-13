@@ -5,6 +5,13 @@
    allocate(ycord(jmin-HALO:jmax+HALO),stat=rc)
    if (rc /= 0) stop 'init_domain: Error allocating memory (ycord)'
 
+!  pseudo coordinate axes - in case of grid-type = 3 or 4
+   allocate(xxcord(imin-HALO-1:imax+HALO),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (xxcord)'
+
+   allocate(yxcord(jmin-HALO-1:jmax+HALO),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (yxcord)'
+
 !  mask
    allocate(az(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_domain: Error allocating memory (az)'
