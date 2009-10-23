@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.20 2009-10-23 12:30:47 hb Exp $
+!$Id: gotm.F90,v 1.21 2009-10-23 12:49:32 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -104,10 +104,9 @@
          if (az(i,j) .eq. 1 ) then
 
 #ifdef STRUCTURE_FRICTION
-! BJB-TODO: Change 0.25 -> _QUART_, 0.5 -> _QUART_, 0.1->_TENTH_ in this file
-!    Change all constants to double
+! BJB-TODO: Change all constants to double
             do k=1,kmax
-               xP(k)= 0.25*(                                                   &
+               xP(k)= _QUART_*(                                                &
                (uu(i  ,j  ,k)/hun(i  ,j  ,k))**2*(sf(i  ,j  ,k)+sf(i+1,j  ,k)) &
               +(uu(i-1,j  ,k)/hun(i-1,j  ,k))**2*(sf(i-1,j  ,k)+sf(i  ,j  ,k)) &
               +(vv(i  ,j  ,k)/hvn(i  ,j  ,k))**2*(sf(i  ,j  ,k)+sf(i  ,j+1,k)) &
@@ -130,8 +129,8 @@
                nuh1d(k)=nuh(i,j,k)
 #endif
             end do
-            z0s = 0.1
-            z0b = 0.5*(max(zub(i-1,j),zub(i,j))+max(zvb(i,j-1),zvb(i,j)))
+            z0s = _TENTH_
+            z0b = _HALF_*(max(zub(i-1,j),zub(i,j))+max(zvb(i,j-1),zvb(i,j)))
             if (z0s .gt. D(i,j)/10.) z0s= D(i,j)/10.
 
 #ifdef PARABOLIC_VISCOSITY
@@ -140,9 +139,9 @@
                zz=zz+hn(i,j,k)
 ! BJB-TODO: Get rid of **1.5 and **2
                tke1d(k)=max(1.e-10,3.333333*taub(i,j)*(_ONE_-zz/D(i,j)))
-               L1d(k)=0.4*(zz+z0b)*sqrt(1.-zz/D(i,j))
-               eps1d(k)=0.16431677*tke1d(k)**1.5/L1d(k)
-               num1d(k)=0.09*tke1d(k)**2/eps1d(k)
+               L1d(k)=0.4*(zz+z0b)*sqrt(_ONE_-zz/D(i,j))
+               eps1d(k)=0.16431677*sqrt(tke1d(k)*tke1d(k)*tke1d(k))/L1d(k)
+               num1d(k)=0.09*tke1d(k)*tke1d(k)/eps1d(k)
 #ifndef NO_BAROCLINIC
                nuh1d(k)=num1d(k)
 #endif
