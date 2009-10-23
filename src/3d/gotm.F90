@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.19 2009-09-30 11:28:45 bjb Exp $
+!$Id: gotm.F90,v 1.20 2009-10-23 12:30:47 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -139,7 +139,7 @@
             do k=1,kmax-1
                zz=zz+hn(i,j,k)
 ! BJB-TODO: Get rid of **1.5 and **2
-               tke1d(k)=max(1.e-10,3.333333*u_taub**2*(1.-zz/D(i,j)))
+               tke1d(k)=max(1.e-10,3.333333*taub(i,j)*(_ONE_-zz/D(i,j)))
                L1d(k)=0.4*(zz+z0b)*sqrt(1.-zz/D(i,j))
                eps1d(k)=0.16431677*tke1d(k)**1.5/L1d(k)
                num1d(k)=0.09*tke1d(k)**2/eps1d(k)
