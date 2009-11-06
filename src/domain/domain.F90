@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.38 2009-11-05 14:36:10 bjb Exp $
+!$Id: domain.F90,v 1.39 2009-11-06 07:04:25 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -99,6 +99,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
+!  Revision 1.39  2009-11-06 07:04:25  bjb
+!  Consistent application of bathymetry.adjust with new bathy read
+!
 !  Revision 1.38  2009-11-05 14:36:10  bjb
 !  Consistent application of mask.adjsut with new bathy read
 !
@@ -1130,8 +1133,8 @@ STDERR latc(1,1),latx(1,0)
          LEVEL3 il,jl,ih,jh,x
          do j=jl,jh
             do i=il,ih
-               if(imin+ioff .le. i .and. i .le. imax+ioff .and. &
-                  jmin+joff .le. j .and. j .le. jmax+joff ) then
+               if(imin+ioff-HALO .le. i .and. i .le. imax+ioff+HALO .and. &
+                  jmin+joff-HALO .le. j .and. j .le. jmax+joff+HALO ) then
                   H(i-ioff,j-joff) = x
                end if
             end do
