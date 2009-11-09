@@ -102,11 +102,11 @@
 !  grid convergence
    allocate(convc(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_domain: Error allocating memory (convc)'
-   convc = -999.
+   convc = _ZERO_
 
    allocate(convx(E2DXFIELD),stat=rc)
    if (rc /= 0) stop 'init_domain: Error allocating memory (convx)'
-   convx = -999.
+   convx = _ZERO_
 
    allocate(angle(E2DFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (angle)'

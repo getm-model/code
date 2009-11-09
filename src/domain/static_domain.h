@@ -39,8 +39,8 @@
 
 !  grid convergence
    REALTYPE                            :: angle(E2DFIELD)
-   REALTYPE                            :: convc(E2DFIELD) = -999.
-   REALTYPE                            :: convx(E2DXFIELD) = -999.
+   REALTYPE                            :: convc(E2DFIELD) = _ZERO_
+   REALTYPE                            :: convx(E2DXFIELD) = _ZERO_
 
 !  grid points
    REALTYPE                            :: xx(E2DXFIELD)
