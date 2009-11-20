@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.30 2009-09-23 10:11:48 kb Exp $
+!$Id: output.F90,v 1.31 2009-11-20 09:56:55 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -60,6 +60,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.31  2009-11-20 09:56:55  kb
+!  use new GOTM/BIO interface
+!
 !  Revision 1.30  2009-09-23 10:11:48  kb
 !  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
 !
@@ -461,7 +464,7 @@
 #ifdef GETM_BIO
   use bio, only: bio_calc
   use bio_var, only: numc
-  use getm_bio, only: hotstart_bio
+  use getm_bio, only: bio_init_method
   use variables_3d,  only: cc3d
 #endif
    IMPLICIT NONE
@@ -599,8 +602,9 @@
                   end if     
                end if
 #endif
+
 #ifdef GETM_BIO
-               if(bio_calc .and. hotstart_bio) then
+               if(bio_calc .and. bio_init_method .eq. 0) then
                   LEVEL3 'reading bio variables'
                   read(RESTART) cc3d
                end if
