@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.22 2009-10-13 13:15:11 kb Exp $
+!$Id: ncdf_topo.F90,v 1.23 2009-12-10 14:22:52 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,7 +11,7 @@
 ! !DESCRIPTION:
 !  This module reads the bathymetry and grid information required by the
 !  module $domain$. The file format is NetCDF and data are read from 
-!  the file specified as an paramater $ncdf_read_topo_file()$. For a 
+!  the file specified as an paramater $ncdf\_read\_topo\_file()$. For a 
 !  full description of the required variables see the documention for 
 !  domain. The specific readings are guided by $grid\_type$.
 
@@ -49,6 +49,9 @@
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
+!  Revision 1.23  2009-12-10 14:22:52  kb
+!  fixed typos - Hofmeister
+!
 !  Revision 1.22  2009-10-13 13:15:11  kb
 !  added psedo-coordinates when grid-type 3 or 4
 !
@@ -699,7 +702,6 @@ stop
    IMPLICIT NONE
 ! 
 ! !DESCRIPTION:
-!  Helper routine for ncdf_get_grid.
 !  Computes x and dx given that the netcdf file contains the axis
 !  (T-point) information.
 !  It is assumed that the coordinate values are equidistantly spaced.
