@@ -1,4 +1,4 @@
-!$Id: read_par_setup.F90,v 1.3 2005-04-29 12:51:59 kbk Exp $
+!$Id: read_par_setup.F90,v 1.4 2009-12-11 11:43:20 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -7,7 +7,7 @@
 !
 ! !INTERFACE:
    subroutine read_par_setup(fn,nprocs,myid,imax,jmax,iextr,jextr,  &
-                             ioff,joff,neighbours)
+                             ioff,joff,neighbours,numthreads)
 !
    IMPLICIT NONE
 !
@@ -17,7 +17,7 @@
    integer, intent(in)                 :: imax,jmax,iextr,jextr
 !
 ! !OUTPUT PARAMETERS:
-   integer, intent(out)                :: ioff,joff,neighbours(8)
+   integer, intent(out)                :: ioff,joff,neighbours(8),numthreads
 !
 ! !DESCRIPTION:
 !  Test the content of a file with neighbour list information.
@@ -30,17 +30,21 @@
 !
 ! !REVISION HISTORY:
 !  2002-02-12 Bjarne Buchmann (bjb@fomfrv.dk) Initial code
+!  2009-10-22 Bjarne Buchmann (bjb@frv.dk) Add read number threads per subdomain
 !
 ! !LOCAL VARIABLES:
    integer                   :: myid_read
    integer                   :: nprocs_read,err,ijob,ioff_read,joff_read
    integer                   :: imax_read,jmax_read,iextr_read,jextr_read
-   integer                   :: iline, njob, nnjob, ineigh
-   integer, allocatable      :: neighbourlist(:,:)
+   integer                   :: iline, njob, nnjob, ineigh, nthreads_read
+   integer                   :: thislineok
+   integer, allocatable      :: neighbourlist(:,:), nthreads(:)
    integer                   :: neighbour_inverse(8)  = &
                                  (/5, 6, 7, 8, 1, 2, 3, 4/)
    integer, parameter        :: false_flag = -2 ! No-good PID
    integer, parameter        :: iunit=87 ! check 87 KBK
+   character(len=255)        :: line
+   integer                   :: iostat,iostat2
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -48,8 +52,19 @@
 ! Read #jobs, test vs. actual nprocs in use
 
    open(unit=iunit,file=fn)
-   iline = 1
-   read(iunit,*,err=1010,end=1020) nprocs_read
+   iline   = 0 ! Index for line number in file
+   thislineok = 0 ! Flag for this line read OK
+   do while (thislineok .eq. 0 .and. iostat == 0)
+      iline=iline+1
+      read(iunit,'(A)',iostat=iostat,end=1020,err=1010) line
+!        skip comments and empty lines
+      if (line(1:1) == '#' .or. line(1:1) == '!' .or. &
+           len(trim(line)) == 0 ) then
+      else
+         read(line,*,err=1010,end=1020) nprocs_read
+         thislineok=1
+      end if
+   end do
 
    if (nprocs_read /= nprocs) then
       FATAL 'read_par_setup: Number of jobs do not match'
@@ -61,13 +76,26 @@
    allocate(neighbourlist(0:nprocs-1,8),stat=err)
    if (err /= 0) &
       stop 'read_par_setup: Error allocating memory (neighbourlist)'
+   allocate(nthreads(0:nprocs-1),stat=err)
+   if (err /= 0) &
+      stop 'read_par_setup: Error allocating memory (nthreads)'
 !
 ! Flag all neighbourlists to be "unrecongnized value"
    neighbourlist(:,:) =  false_flag
+   nthreads(:)        =  -1
 !
-   iline = 2
-   read(iunit,*,err=1010,end=1020) &
-     imax_read,jmax_read,iextr_read,jextr_read
+   thislineok = 0
+   do while (thislineok .eq. 0 .and. iostat == 0)
+      iline=iline+1
+      read(iunit,'(A)',iostat=iostat,end=1020,err=1010) line
+      if (line(1:1) == '#' .or. line(1:1) == '!' .or. &
+           len(trim(line)) == 0 ) then
+      else
+         read(line,*,err=1010,end=1020) &
+              imax_read,jmax_read,iextr_read,jextr_read
+         thislineok=1
+      end if
+   end do
 
    if (iextr_read /= iextr .OR. jextr_read /= jextr) then
       FATAL 'read_par_setup: Global grid sizes do not match'
@@ -84,14 +112,34 @@
    end if
 !
 ! Read following lines (one per job)
-
    do ijob=0,nprocs-1
-      iline = iline+1
-      read(iunit,*,err=1010,end=1020) &
-         myid_read,ioff_read,joff_read,neighbours
+      thislineok = 0
+      do while (thislineok .eq. 0 .and. iostat == 0)
+         iline=iline+1
+         read(iunit,'(A)',iostat=iostat,end=1020,err=1010) line
+         if (line(1:1) == '#' .or. line(1:1) == '!' .or. &
+              len(trim(line)) == 0 ) then
+         else
+! Read lines of format:
+!  ID IOFF JOFF 8xNEIGHs numThr
+! Accept older format without "numThr" (number of threads)
+!   First try new format:
+            read(line,*,iostat=iostat2) &
+                 myid_read,ioff_read,joff_read,neighbours,nthreads_read
+            if (iostat2 .ne. 0) then
+!   Try alternative old format
+               read(line,*,err=1010,end=1020) &
+                    myid_read,ioff_read,joff_read,neighbours
+               nthreads_read=0
+            end if
+            thislineok=1
+         end if
+      end do
+
       if(myid_read .eq. myid) then
          ioff = ioff_read
          joff = joff_read
+         numthreads = nthreads_read
       end if
 !
 ! Perform straight-forward tests on this input:
@@ -158,7 +206,7 @@
    end do
 
    LEVEL1 'read_par_setup: Consistency OK'
-   rewind(iunit,err=1030)
+   close(iunit)
 
    neighbours(1:8) = neighbourlist(myid,1:8)
    return
@@ -171,10 +219,6 @@
 
  1020 continue
    FATAL 'read_par_setup: Premature EOF at line',iline
-   stop
-
- 1030 continue
-   FATAL 'read_par_setup: Could not rewind input file'
    stop
 
 end subroutine read_par_setup

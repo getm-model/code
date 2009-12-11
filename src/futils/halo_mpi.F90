@@ -1,4 +1,4 @@
-!$Id: halo_mpi.F90,v 1.15 2008-09-16 10:03:24 kb Exp $
+!$Id: halo_mpi.F90,v 1.16 2009-12-11 11:43:20 bjb Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -66,6 +66,9 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: halo_mpi.F90,v $
+!  Revision 1.16  2009-12-11 11:43:20  bjb
+!  Optionally read number of threads from subdomain spec file
+!
 !  Revision 1.15  2008-09-16 10:03:24  kb
 !  added Holtermanns emergency break algorithm
 !
@@ -447,6 +450,7 @@ include "mpif.h"
 !
 ! !INTERFACE:
    SUBROUTINE part_domain_mpi(iextr,jextr,kmax,imin,imax,jmin,jmax,ioff,joff)
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -470,7 +474,7 @@ include "mpif.h"
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,zz(2),neighbours(nneighbours)
+   integer                   :: i,j,zz(2),neighbours(nneighbours),numthreads
    character(len=*),parameter:: par_setup="par_setup.dat"
 !EOP
 !-------------------------------------------------------------------------
@@ -523,7 +527,7 @@ include "mpif.h"
 #endif
       case(MESH_FROM_FILE)
          call read_par_setup(par_setup,nprocs,myid,imax,jmax,iextr,jextr, &
-                             ioff,joff,neighbours)
+                             ioff,joff,neighbours,numthreads)
          left  = neighbours(1) ; if (left  .eq. -1) left  = MPI_PROC_NULL
          ul    = neighbours(2) ; if (ul    .eq. -1) ul    = MPI_PROC_NULL
          up    = neighbours(3) ; if (up    .eq. -1) up    = MPI_PROC_NULL
@@ -532,6 +536,13 @@ include "mpif.h"
          lr    = neighbours(6) ; if (lr    .eq. -1) lr    = MPI_PROC_NULL
          down  = neighbours(7) ; if (down  .eq. -1) down  = MPI_PROC_NULL
          ll    = neighbours(8) ; if (ll    .eq. -1) ll    = MPI_PROC_NULL
+
+! IF we use OMP and IF the number of read threads is sensible (>0), then set #threads:
+!$       if (numthreads>0) then
+!$          LEVEL1 'Setting number of threads to ',numthreads
+!$          call omp_set_num_threads(numthreads)
+!$       end if
+!$       LEVEL1 'Number of threads is ',omp_get_max_threads()
       case default
          FATAL 'A non valid partitioning method has been chosen'
          call MPI_ABORT(MPI_COMM_WORLD,-1,ierr)
