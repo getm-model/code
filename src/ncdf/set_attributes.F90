@@ -1,4 +1,4 @@
-!$Id: set_attributes.F90,v 1.3 2009-03-13 14:44:14 kb Exp $
+!$Id: set_attributes.F90,v 1.4 2009-12-11 08:41:15 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -16,7 +16,7 @@
 !
 ! !DESCRIPTION:
 !  This routine is used to set a number of attributes for the various
-!  variables. The routine make heavy use of the \em{optional} keyword.
+!  variables. The routine make heavy use of the {\em optional} keyword.
 !  The list of recognized keywords is very easy expandable. We have
 !  included a sub-set of the COARDS conventions.
 !
