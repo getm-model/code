@@ -1,4 +1,4 @@
-!$Id: m2d.F90,v 1.34 2009-09-30 11:28:44 bjb Exp $
+!$Id: m2d.F90,v 1.35 2009-12-11 13:19:04 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -189,6 +189,14 @@
          end do
          call update_2d_halo(AnX,AnX,ax,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
+         !
+         ! If all An values are really zero, then we should not use An-smoothing at all...
+         ! Note that smoothing may be on in other subdomains.
+         if ( MAXVAL(ABS(An)) .eq. _ZERO_ ) then
+            LEVEL2 '  All An is zero for this (sub)domain - switching to An_method=0'
+            An_method=0
+         end if
+            
       case default
          call getm_error("init_2d()", &
                          "A non valid An method has been chosen");
