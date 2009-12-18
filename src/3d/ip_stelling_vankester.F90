@@ -1,4 +1,4 @@
-!$Id: ip_stelling_vankester.F90,v 1.4 2009-09-30 11:28:45 bjb Exp $
+!$Id: ip_stelling_vankester.F90,v 1.5 2009-12-18 08:11:10 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -165,11 +165,13 @@
                n(l)=n(l+1)
                if (zl(l+1) .le. zi(i  ,j,m(l))) m(l)=max(1,m(l)-1)
                if (zl(l+1) .le. zi(i+1,j,n(l))) n(l)=max(1,n(l)-1)
-
-               if (zx(kcount) .gt. zl(l)) then
-                  lvel(kcount)=l
-                  dzfrac(kcount)=(zx(kcount)-zl(l))
-                  kcount = kcount-1
+               
+               if (kcount .gt. 0) then
+                  if (zx(kcount) .gt. zl(l)) then
+                     lvel(kcount)=l
+                     dzfrac(kcount)=(zx(kcount)-zl(l))
+                     kcount = kcount-1
+                  end if
                end if
             end do
 
@@ -296,11 +298,13 @@
                n(l)=n(l+1)
                if (zl(l+1) .le. zi(i  ,j,m(l))) m(l)=max(1,m(l)-1)
                if (zl(l+1) .le. zi(i,j+1,n(l))) n(l)=max(1,n(l)-1)
-
-               if (zx(kcount) .gt. zl(l)) then
-                  lvel(kcount)=l
-                  dzfrac(kcount)=(zx(kcount)-zl(l))
-                  kcount = kcount-1
+               
+               if (kcount .gt. 0) then
+                  if (zx(kcount) .gt. zl(l)) then
+                     lvel(kcount)=l
+                     dzfrac(kcount)=(zx(kcount)-zl(l))
+                     kcount = kcount-1
+                  end if
                end if
             end do
 
