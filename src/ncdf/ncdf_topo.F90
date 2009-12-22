@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.23 2009-12-10 14:22:52 kb Exp $
+!$Id: ncdf_topo.F90,v 1.24 2009-12-22 08:44:38 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -49,6 +49,9 @@
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
+!  Revision 1.24  2009-12-22 08:44:38  kb
+!  added conditional compilation checks - Klingbeil
+!
 !  Revision 1.23  2009-12-10 14:22:52  kb
 !  fixed typos - Hofmeister
 !
@@ -313,7 +316,7 @@ contains
 !     cartesian - we check for: lonc, latc, convc
 !     cartesian - later we calculate: latu, latv
 
-#if  ( defined(SPHERICAL) || defined(CURVILINEAR) )
+#if ( defined(SPHERICAL) || defined(CURVILINEAR) )
          call getm_error("ncdf_check_grid()",  &
                          "Cannot use Cartesian grid with SPHERICAL or CURVILINEAR #defined.")
 #endif
@@ -441,9 +444,9 @@ stop
 !     spherical - later we calculate: latu, latv
 !     
 
-#ifndef SPHERICAL
+#if !( defined(SPHERICAL) && !defined(CURVILINEAR) )
          call getm_error("ncdf_check_grid()",   &
-                          "Cannot use spherical grid with SPHERICAL not #defined.")
+                          "Cannot use spherical grid with SPHERICAL not #defined or CURVILINEAR #defined.")
 #endif
          LEVEL2 'checking for dlon and dlat'
 
@@ -563,9 +566,9 @@ stop
 !     curvi-linear - we check for: lonx, latx, convx
 !     curvi-linear - later we calculate: lonc, latc, latu, latv
 
-#ifndef CURVILINEAR
+#if !( defined(CURVILINEAR) && !defined(SPHERICAL) )
          call getm_error("ncdf_check_grid()",   &
-                         "Cannot use curvlinear grid with CURVILINEAR not #defined")
+                         "Cannot use curvlinear grid with CURVILINEAR not #defined or SPHERICAL #defined")
 #endif
          LEVEL3 'reading coordinate variables: xx, yx'
          status = nf90_inq_varid(ncid,"xx",id)
@@ -624,10 +627,10 @@ stop
 !     curvi-linear (spherical) - we require:   lonx, latx, convx
 !     curvi-linear (spherical) - we check for: xx, yx
 !     curvi-linear (spherical) - later we calculate: lonu, latu, lonv, latv and xc, yc
-#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
+#if !( defined(SPHERICAL) && defined(CURVILINEAR) )
          call getm_error("ncdf_check_grid()",                      &
                        & "Cannot use spherical curvlinear grid with&
-                       &  CURVILINEAR and SPHERICAL not #defined")
+                       &  CURVILINEAR or SPHERICAL not #defined")
 #endif
          LEVEL3 'reading coordinate variables: lonx, latx'
          status = nf90_inq_varid(ncid,"lonx",id)
