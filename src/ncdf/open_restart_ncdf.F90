@@ -1,4 +1,4 @@
-!$Id: open_restart_ncdf.F90,v 1.4 2009-09-23 09:54:53 kb Exp $
+!$Id: open_restart_ncdf.F90,v 1.5 2010-01-21 15:46:23 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -16,6 +16,10 @@
 ! !USES:
    use netcdf
    use ncdf_restart
+#ifdef GETM_BIO
+   use bio, only: bio_calc
+   use getm_bio, only: bio_init_method
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -28,6 +32,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: open_restart_ncdf.F90,v $
+!  Revision 1.5  2010-01-21 15:46:23  kb
+!  fixed BIO-restart
+!
 !  Revision 1.4  2009-09-23 09:54:53  kb
 !  fixed typos in DESCRIPTION
 !
@@ -169,8 +176,10 @@
       if (status .NE. NF90_NOERR) go to 10
 #endif
 #ifdef GETM_BIO
-      status = nf90_inq_varid(ncid, "bio", bio_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (bio_calc .and. bio_init_method .eq. 0) then
+         status = nf90_inq_varid(ncid, "bio", bio_id)
+         if (status .NE. NF90_NOERR) go to 10
+      end if
 #endif
    end if
 #endif

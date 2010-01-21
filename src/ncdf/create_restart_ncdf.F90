@@ -1,4 +1,4 @@
-!$Id: create_restart_ncdf.F90,v 1.7 2009-09-25 12:14:56 kb Exp $
+!$Id: create_restart_ncdf.F90,v 1.8 2010-01-21 15:46:23 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -24,6 +24,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
 #ifdef GETM_BIO
+   use bio, only: bio_calc
    use bio_var, only: numc
 #endif
    IMPLICIT NONE
@@ -39,6 +40,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: create_restart_ncdf.F90,v $
+!  Revision 1.8  2010-01-21 15:46:23  kb
+!  fixed BIO-restart
+!
 !  Revision 1.7  2009-09-25 12:14:56  kb
 !  INCLUDE_HALOS --> SAVE_HALOS
 !
@@ -92,8 +96,10 @@
    if (status .NE. NF90_NOERR) go to 10
 
 #ifdef GETM_BIO
-   status = nf90_def_dim(ncid, "biodim", numc, biodim_id)
-   if (status .NE. NF90_NOERR) go to 10
+   if (bio_calc) then
+      status = nf90_def_dim(ncid, "biodim", numc, biodim_id)
+      if (status .NE. NF90_NOERR) go to 10
+   end if
 #endif
 
    status = nf90_def_var(ncid, "loop", nf90_int, loop_id)
@@ -246,10 +252,12 @@
       if (status .NE. NF90_NOERR) go to 10
 #endif
 #ifdef GETM_BIO
-      status = nf90_def_var(ncid, "bio", nf90_double, &
-                               (/ xdim_id, ydim_id, zdim_id, biodim_id /), &
+      if (bio_calc) then
+         status = nf90_def_var(ncid, "bio", nf90_double, &
+                               (/ biodim_id, xdim_id, ydim_id, zdim_id /), &
                                 bio_id)
-      if (status .NE. NF90_NOERR) go to 10
+         if (status .NE. NF90_NOERR) go to 10
+      end if
 #endif
    end if
 #endif

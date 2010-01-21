@@ -1,4 +1,4 @@
-!$Id: write_restart_ncdf.F90,v 1.10 2009-09-25 12:17:26 kb Exp $
+!$Id: write_restart_ncdf.F90,v 1.11 2010-01-21 15:46:24 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -44,6 +44,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: write_restart_ncdf.F90,v $
+!  Revision 1.11  2010-01-21 15:46:24  kb
+!  fixed BIO-restart
+!
 !  Revision 1.10  2009-09-25 12:17:26  kb
 !  removed undef [IJ]RANGE
 !
@@ -260,11 +263,21 @@
 #endif
 #ifdef GETM_BIO
       if (bio_calc) then
-         start(4) = 1; edges(4) = numc
+
+         start(1) = 1; edges(1) = numc
+#ifdef SAVE_HALOS
+         start(2) = 1; edges(2) = (imax+HALO)-(imin-HALO)+1
+         start(3) = 1; edges(3) = (jmax+HALO)-(jmin-HALO)+1
+#else
+         start(2) = 1; edges(2) = imax-imin+1
+         start(3) = 1; edges(3) = jmax-jmin+1
+#endif
+         start(4) = 1; edges(4) = kmax+1
          status = &
-         nf90_put_var(ncid,bio_id,cc3d(IRANGE,JRANGE,0:kmax,numc), &
+         nf90_put_var(ncid,bio_id,cc3d(1:numc,IRANGE,JRANGE,0:kmax), &
                       start,edges)
          if (status .NE. NF90_NOERR) go to 10
+
       end if
 #endif
    end if

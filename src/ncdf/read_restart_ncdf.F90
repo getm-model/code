@@ -1,4 +1,4 @@
-!$Id: read_restart_ncdf.F90,v 1.11 2009-09-25 12:14:56 kb Exp $
+!$Id: read_restart_ncdf.F90,v 1.12 2010-01-21 15:46:24 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -37,6 +37,7 @@
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use bio_var, only: numc
+   use getm_bio, only: bio_init_method
 #endif
 #ifdef SPM
    use suspended_matter
@@ -56,6 +57,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: read_restart_ncdf.F90,v $
+!  Revision 1.12  2010-01-21 15:46:24  kb
+!  fixed BIO-restart
+!
 !  Revision 1.11  2009-09-25 12:14:56  kb
 !  INCLUDE_HALOS --> SAVE_HALOS
 !
@@ -89,13 +93,13 @@
 !  Revision 1.1  2007-09-21 13:03:42  kbk
 !  added drop-in NetCDF replacement for binary hotstart file (default is binary)
 !
-!
 ! !LOCAL VARIABLES:
    integer         :: il,ih,iloc,ilen
    integer         :: jl,jh,jloc,jlen
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+
    status = nf90_get_var(ncid,loop_id,loop)
    if (status .NE. NF90_NOERR) go to 10
 
@@ -455,12 +459,24 @@
       end if
 #endif
 #ifdef GETM_BIO
-      if(bio_calc) then
-         start(4) = 1; edges(4) = numc
+      if(bio_calc .and. bio_init_method .eq. 0) then
+
+         start(1) = 1;  edges(1) = numc
+#ifdef SAVE_HALOS
+STDERR 'needs a fix here - read_restart_ncdf()'
+stop
+         start(2) = il; edges(2) = numc
+         start(3) = jl; edges(3) = numc
+#else
+         start(2) = il; edges(2) = ih-il+1
+         start(3) = jl; edges(3) = jh-jl+1
+#endif
+         start(4) = 1;  edges(4) = kmax+1
+
          status = &
-         nf90_get_var(ncid,bio_id,cc3d(iloc:ilen,jloc:jlen,0:kmax,numc), &
-                start,edges)
+         nf90_get_var(ncid,bio_id,cc3d(1:numc,iloc:ilen,jloc:jlen,0:kmax),start,edges)
          if (status .NE. NF90_NOERR) go to 10
+
       end if
 #endif
    end if
