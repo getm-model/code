@@ -1,4 +1,4 @@
-!$Id: ncdf_restart.F90,v 1.3 2009-09-23 09:54:52 kb Exp $
+!$Id: ncdf_restart.F90,v 1.4 2010-02-23 08:23:35 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -48,6 +48,7 @@
    integer                             :: uuEx_id,vvEx_id
    integer                             :: tke_id,eps_id
    integer                             :: num_id,nuh_id
+   integer                             :: hn_id
 #ifndef NO_BAROCLINIC
    integer                             :: T_id,S_id
 #endif
@@ -68,6 +69,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: ncdf_restart.F90,v $
+!  Revision 1.4  2010-02-23 08:23:35  kb
+!  adaptive vertical coordinates - Hofmeister
+!
 !  Revision 1.3  2009-09-23 09:54:52  kb
 !  fixed typos in DESCRIPTION
 !

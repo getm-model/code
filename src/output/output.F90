@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.31 2009-11-20 09:56:55 kb Exp $
+!$Id: output.F90,v 1.32 2010-02-23 08:23:36 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -60,6 +60,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.32  2010-02-23 08:23:36  kb
+!  adaptive vertical coordinates - Hofmeister
+!
 !  Revision 1.31  2009-11-20 09:56:55  kb
 !  use new GOTM/BIO interface
 !
@@ -453,6 +456,7 @@
    use variables_3d, only: uu,vv,ww
    use variables_3d, only: uuEx,vvEx
    use variables_3d, only: tke,eps,num,nuh
+   use variables_3d, only: hn
 #ifndef NO_BAROCLINIC
    use variables_3d, only: T,S
 #endif
@@ -528,6 +532,7 @@
                write(RESTART) uuEx,vvEx
                write(RESTART) tke,eps
                write(RESTART) num,nuh
+               write(RESTART) hn
 #ifndef NO_BAROCLINIC
                if (runtype .ge. 3) then
                   LEVEL3 'saving 3D baroclinic variables'
@@ -584,6 +589,7 @@
                read(RESTART) uuEx,vvEx
                read(RESTART) tke,eps
                read(RESTART) num,nuh
+               read(RESTART) hn
 #ifndef NO_BAROCLINIC
                if(runtype .ge. 3) then
                   LEVEL3 'reading 3D baroclinic variables'

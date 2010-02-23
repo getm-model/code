@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.46 2009-09-04 11:50:33 bjb Exp $
+!$Id: m3d.F90,v 1.47 2010-02-23 08:23:35 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -264,7 +264,7 @@
 !  Needed for interpolation of temperature and salinity
    if (.not. hotstart) then
       call start_macro()
-      call coordinates(vert_cord,cord_relax,maxdepth)
+      call coordinates(vert_cord,cord_relax,maxdepth,hotstart)
       call hcc_check()
    end if
 
@@ -281,6 +281,35 @@
       call init_eqstate()
 #ifndef PECS
       call do_eqstate()
+      call ss_nn()
+#endif
+
+      if (.not. openbdy) bdy3d=.false.
+      if (bdy3d) call init_bdy_3d()
+#ifdef PREADAPT
+      if (bdy3d) call do_bdy_3d(0,T)
+      if (vert_cord .eq. 5) then
+        LEVEL2 'pre-adapting coordinates'
+        do ii=1,PREADAPT
+           call start_macro()
+	   call coordinates(vert_cord,cord_relax,maxdepth)
+	   call ww_momentum_3d()
+	   if(calc_salt) call do_salinity(1)
+	   if(calc_temp) call do_temperature(1)
+	   call do_eqstate()
+	   call ss_nn()
+	   call stop_macro()
+	   if (mod(ii,10).eq._ZERO_) LEVEL3 ii
+	end do
+      end if
+	
+      LEVEL2 'reinterpolating initial salinity'
+      if(calc_salt) call init_salinity(1)
+      LEVEL2 'reinterpolating initial temperature'
+      if(calc_temp) call init_temperature(1)
+      call do_eqstate()
+      if (runtype .eq. 4) call do_internal_pressure()
+      call ss_nn()
 #endif
       if (runtype .ge. 3) call init_internal_pressure()
       if (runtype .eq. 3) call do_internal_pressure()
@@ -289,9 +318,6 @@
       end if
    end if
 #endif
-
-   if (.not. openbdy) bdy3d=.false.
-   if (bdy3d) call init_bdy_3d()
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_3d()'
@@ -440,6 +466,7 @@
       ufirst=.true.
    end if
 #ifndef MUDFLAT
+   if (vert_cord .eq. 5) call ss_nn()
    call coordinates(vert_cord,cord_relax,maxdepth)
 #endif
    if (kmax .gt. 1) then
@@ -462,7 +489,7 @@
 #endif
 #ifndef CONSTANT_VISCOSITY
 #ifndef PARABOLIC_VISCOSITY
-      call ss_nn()
+      if (vert_cord .ne. 5) call ss_nn()
 #endif
       call gotm()
 #endif

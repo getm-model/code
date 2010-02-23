@@ -10,8 +10,8 @@
    REALTYPE        :: zpos(I3DFIELD),hn(I3DFIELD),depthmin
    integer         :: i,j,k
       do k=1,kmax
-      do j=jmin,jmax
-       do i=imin,imax
+      do j=jmin-HALO,jmax+HALO
+       do i=imin-HALO,imax+HALO
        hn(i,j,k)= zpos(i,j,k)-zpos(i,j,k-1)
        hn(i,j,k)=max(hn(i,j,k),depthmin)
        enddo
@@ -31,8 +31,8 @@
    REALTYPE        :: zpos(I3DFIELD),hn(I3DFIELD),depthmin
    integer         :: i,j,k
 !     write(6,*) 'htoz',imax,hn(imax/2,2,kmax/2),H(imax/2,2)
-      do j=jmin,jmax
-       do i=imin,imax
+      do j=jmin-HALO,jmax+HALO
+       do i=imin-HALO,imax+HALO
        zpos(i,j,0)=-H(i,j)
        do k=1,kmax
        zpos(i,j,k)=zpos(i,j,k-1)+hn(i,j,k)
@@ -41,7 +41,7 @@
       enddo
      return
      end
-         subroutine hcheck(hn,ssen,h)
+         subroutine hcheck(hn,ssen,H)
 #include "cppdefs.h"
 !
 ! !DESCRIPTION:
@@ -50,7 +50,7 @@
    use domain,   only: imin,imax,jmin,jmax,kmax
    IMPLICIT NONE
    REALTYPE        :: ssen(I2DFIELD),hn(I3DFIELD)
-   REALTYPE        :: h(I2DFIELD),HH,depthmin
+   REALTYPE        :: H(I2DFIELD),HH,depthmin
    integer         :: i,j,k
 ! Final check of layer thicnkess thoug not necessary if zpos treated correctly
 !     write(6,*) 'Inside',hn(imax/2,2,kmax/2)

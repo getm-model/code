@@ -1,4 +1,4 @@
-!$Id: coordinates.F90,v 1.16 2009-08-18 10:24:44 bjb Exp $
+!$Id: coordinates.F90,v 1.17 2010-02-23 08:23:35 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -7,7 +7,7 @@
 ! \label{sec-coordinates}
 !
 ! !INTERFACE:
-   subroutine coordinates(cord_type,cord_relax,maxdepth)
+   subroutine coordinates(cord_type,cord_relax,maxdepth,hotstart)
 !
 ! !DESCRIPTION:
 !
@@ -80,6 +80,7 @@
    integer, intent(in)                 :: cord_type
    REALTYPE, intent(in)                :: cord_relax
    REALTYPE, intent(in)                :: maxdepth
+   logical, intent(in)                 :: hotstart
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -115,8 +116,9 @@ STDERR 'coordinates(): hybrid_coordinates not coded yet'
 stop
          case (5) ! adaptive vertical coordinates
             LEVEL2 'using adaptive vertical coordinates'
-            call adaptive_coordinates(.true.)
-STDERR 'coordinates(): adaptive_coordinates not coded yet'
+#ifndef NO_BAROCLINIC
+            call adaptive_coordinates(.true.,hotstart)
+#endif
          case default
       end select
       first = .false.
@@ -130,7 +132,9 @@ STDERR 'coordinates(): adaptive_coordinates not coded yet'
          case (4) ! hybrid vertical coordinates
             call hybrid_coordinates(.false.)
          case (5) ! adaptive vertical coordinates
-            call adaptive_coordinates(.false.)
+#ifndef NO_BAROCLINIC
+            call adaptive_coordinates(.false.,hotstart)
+#endif
          case default
       end select
    end if ! first
