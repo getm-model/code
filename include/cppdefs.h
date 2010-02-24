@@ -65,6 +65,7 @@
 #define debug  		0
 #define NAMLST 		10
 #define NAMLST2		11
+#define ADAPTNML	12
 #define RESTART 	15
 #define PARSETUP 	20
 #define BDYINFO 	21
