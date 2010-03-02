@@ -1,4 +1,4 @@
-!$Id: m3d.F90,v 1.47 2010-02-23 08:23:35 kb Exp $
+!$Id: m3d.F90,v 1.48 2010-03-02 19:39:32 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -492,6 +492,9 @@
       if (vert_cord .ne. 5) call ss_nn()
 #endif
       call gotm()
+#ifdef TURB_ADV
+      call tke_eps_advect_3d(vel_hor_adv,vel_ver_adv,vel_adv_split)
+#endif
 #endif
    end if
 #ifndef NO_BAROCLINIC
