@@ -1,4 +1,4 @@
-!$Id: gotm.F90,v 1.21 2009-10-23 12:49:32 hb Exp $
+!$Id: gotm.F90,v 1.22 2010-03-02 13:06:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -101,7 +101,7 @@
    do j=jmin,jmax
       do i=imin,imax
 
-         if (az(i,j) .eq. 1 ) then
+         if (az(i,j) .ge. 1 ) then
 
 #ifdef STRUCTURE_FRICTION
 ! BJB-TODO: Change all constants to double

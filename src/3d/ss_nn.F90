@@ -1,4 +1,4 @@
-!$Id: ss_nn.F90,v 1.12 2009-09-30 11:28:46 bjb Exp $
+!$Id: ss_nn.F90,v 1.13 2010-03-02 13:06:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -174,7 +174,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
-         if (az(i,j) .eq. 1 ) then
+         if (az(i,j) .ge. 1 ) then
             do k=1,kmax-1
 ! This is an older version which we should keep here.
 #ifndef NEW_SS
@@ -217,30 +217,30 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
-         if (az(i,j) .eq. 1 ) then
+         if (az(i,j) .ge. 1 ) then
             do k=kmax-1,1,-1
                dz=_HALF_*(hn(i,j,k+1)+hn(i,j,k))
                NNc =(buoy(i,j,k+1)-buoy(i,j,k))/dz
 #ifndef NEW_NN
-               if (az(i+1,j) .eq. 1) then
+               if (az(i+1,j) .ge. 1) then
                   dz=_HALF_*(hn(i+1,j,k+1)+hn(i+1,j,k))
                   NNe=(buoy(i+1,j,k+1)-buoy(i+1,j,k))/dz
                else
                   NNe=NNc
                end if 
-               if (az(i-1,j) .eq. 1) then
+               if (az(i-1,j) .ge. 1) then
                   dz=_HALF_*(hn(i-1,j,k+1)+hn(i-1,j,k))
                   NNw=(buoy(i-1,j,k+1)-buoy(i-1,j,k))/dz
                else
                   NNw=NNc
                end if
-               if (az(i,j+1) .eq. 1) then
+               if (az(i,j+1) .ge. 1) then
                   dz=_HALF_*(hn(i,j+1,k+1)+hn(i,j+1,k))
                   NNn=(buoy(i,j+1,k+1)-buoy(i,j+1,k))/dz
                else
                   NNn=NNc
                end if
-               if (az(i,j-1) .eq. 1) then
+               if (az(i,j-1) .ge. 1) then
                   dz=_HALF_*(hn(i,j-1,k+1)+hn(i,j-1,k))
                   NNs=(buoy(i,j-1,k+1)-buoy(i,j-1,k))/dz
                else
