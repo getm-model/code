@@ -1,4 +1,4 @@
-!$Id: main.F90,v 1.18 2009-09-30 11:28:47 bjb Exp $
+!$Id: main.F90,v 1.19 2010-03-03 06:24:22 kb Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -40,6 +40,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: main.F90,v $
+!  Revision 1.19  2010-03-03 06:24:22  kb
+!  output info concerning TURB_ADV
+!
 !  Revision 1.18  2009-09-30 11:28:47  bjb
 !  OpenMP threading initial implementation
 !
@@ -239,6 +242,9 @@
 #endif
 #ifdef CURVILINEAR
    LEVEL1 'CURVILINEAR'
+#endif
+#ifdef TURB_ADV
+   LEVEL1 'TURB_ADV'
 #endif
 #ifdef NO_BOTTFRIC
    LEVEL1 'NO_BOTTFRIC'
