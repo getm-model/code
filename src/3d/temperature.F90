@@ -1,4 +1,4 @@
-!$Id: temperature.F90,v 1.26 2009-09-30 11:28:46 bjb Exp $
+!$Id: temperature.F90,v 1.27 2010-03-15 13:04:51 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -379,12 +379,6 @@ temp_field_no=1
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
                         temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH)
    call tic(TIM_TEMP)
-#ifdef FRESHWATER_LENSE_TEST
-   T(imin:imin+3,jmin:jmax,1:kmax)=10*_ONE_
-   T(imax-3:imax,jmin:jmax,1:kmax)=10*_ONE_
-   T(imin:imax,jmin:jmin+3,1:kmax)=10*_ONE_
-   T(imin:imax,jmax-3:jmax,1:kmax)=10*_ONE_
-#endif
 
 ! OMP-NOTE: Pointer definitions and allocation so that each thread can 
 !           get its own work memory.

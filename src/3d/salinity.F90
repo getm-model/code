@@ -1,4 +1,4 @@
-!$Id: salinity.F90,v 1.29 2009-09-30 11:28:45 bjb Exp $
+!$Id: salinity.F90,v 1.30 2010-03-15 13:04:51 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -78,9 +78,6 @@
 ! conditions which are selected by means of compiler options.
 !
 ! !USES:
-#ifdef FRESHWATER_LENSE_TEST
-   use domain, only: dx
-#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -94,10 +91,6 @@
    integer                   :: i,j,k,n
 #ifdef PECS_TEST
    integer                   :: cc(1:30)
-#endif
-#ifdef FRESHWATER_LENSE_TEST
-   INTEGER                   :: ic,jc
-   REALTYPE                  :: dist
 #endif
    integer, parameter        :: nmax=100
    REALTYPE                  :: zlev(nmax),prof(nmax)
@@ -219,23 +212,6 @@ salt_field_no=1
       case default
    end select
 
-#ifdef FRESHWATER_LENSE_TEST
-   S=34.85
-   ic=nint(imax/2.)
-   jc=nint(jmax/2.)
-   do i=1,imax
-      do j=1,jmax
-         do k=kmax/2,kmax
-            dist=sqrt((float(i)-float(ic))**2+(float(j)-float(jc))**2)*dx
-            if (dist.le.3000.) then
-               S(i,j,k)=1.1*(dist/(3000.))**8+33.75
-            else
-               S(i,j,k)=34.85
-            end if
-         end do
-      end do
-   end do
-#endif
 #ifdef ARKONA_TEST
    do i=100,135
       do j=256,257
@@ -392,9 +368,6 @@ salt_field_no=1
    REALTYPE, POINTER         :: Res(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
    REALTYPE, POINTER         :: a1(:),a2(:),a3(:),a4(:)
-#ifdef FRESHWATER_LENSE_TEST
-   REALTYPE                  :: SRelax
-#endif
 #ifdef SALTWEDGE_TEST
    REALTYPE                  :: SRelax,kk
 #endif
@@ -445,14 +418,6 @@ salt_field_no=1
 #ifdef PECS_TEST
    S(imin:imin,jmin:jmax,1:kmax)=10*_ONE_
    S(imax:imax,jmin:jmax,1:kmax)=10*_ONE_
-#endif
-
-#ifdef FRESHWATER_LENSE_TEST
-   SRelax=34.85
-   S(imin:imin+3,jmin:jmax,1:kmax)=SRelax
-   S(imax-3:imax,jmin:jmax,1:kmax)=SRelax
-   S(imin:imax,jmin:jmin+3,1:kmax)=SRelax
-   S(imin:imax,jmax-3:jmax,1:kmax)=SRelax
 #endif
 
 #ifdef SALTWEDGE_TEST
