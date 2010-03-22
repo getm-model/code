@@ -1,4 +1,4 @@
-!$Id: slow_terms.F90,v 1.12 2009-09-30 11:28:45 bjb Exp $
+!$Id: slow_terms.F90,v 1.13 2010-03-22 05:02:58 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,6 +25,7 @@
    use variables_2d, only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
    use variables_3d, only: kumin,kvmin,uu,vv,huo,hun,hvo,hvn
    use variables_3d, only: ssuo,ssun,ssvo,ssvn,uuEx,vvEx,rru,rrv
+   use m3d, only: ip_fac
    use getm_timers, only: tic, toc, TIM_SLOWTERMS
 #ifndef NO_BAROCLINIC
    use variables_3d, only: idpdx,idpdy
@@ -72,7 +73,7 @@
 #ifdef NO_BAROCLINIC
                      vertsum=vertsum+uuEx(i,j,k)
 #else
-                     vertsum=vertsum+uuEx(i,j,k)-idpdx(i,j,k)
+                     vertsum=vertsum+uuEx(i,j,k)-ip_fac*idpdx(i,j,k)
 #endif
                   end if
                end do
@@ -92,7 +93,7 @@
 #ifdef NO_BAROCLINIC
                      vertsum=vertsum+vvEx(i,j,k)
 #else
-                     vertsum=vertsum+vvEx(i,j,k)-idpdy(i,j,k)
+                     vertsum=vertsum+vvEx(i,j,k)-ip_fac*idpdy(i,j,k)
 #endif
                   end if
                end do
@@ -114,7 +115,7 @@
 #ifdef NO_BAROCLINIC
                SlUx(i,j)= _ZERO_
 #else
-               SlUx(i,j)=-idpdx(i,j,k)
+               SlUx(i,j)=-ip_fac*idpdx(i,j,k)
 #endif
             end if
          end do
@@ -128,7 +129,7 @@
 #ifdef NO_BAROCLINIC
                SlVx(i,j)= _ZERO_
 #else
-               SlVx(i,j)=-idpdy(i,j,k)
+               SlVx(i,j)=-ip_fac*idpdy(i,j,k)
 #endif
             end if
          end do
