@@ -1,4 +1,4 @@
-!$Id: stop_macro.F90,v 1.8 2010-03-24 12:35:21 hb Exp $
+!$Id: stop_macro.F90,v 1.9 2010-03-24 14:58:15 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -42,7 +42,6 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -56,16 +55,6 @@
   Uint= _ZERO_
   Vinto=Vint
   Vint= _ZERO_
-
-   k=kmax
-   do j=jmin,jmax
-      do i=imin,imax
-         surfdiv(i,j)= ((uu(i,  j  ,k)/hun(i  ,j  ,k)*DYU                  &
-                        -uu(i-1,j  ,k)/hun(i-1,j  ,k)*DYUIM1)              &
-                       +(vv(i,  j  ,k)/hvn(i  ,j  ,k)*DXV                  &
-                        -vv(i,  j-1,k)/hvn(i  ,j-1,k)*DXVJM1))*ARCD1
-      end do
-   end do
 
 #ifdef DEBUG
    write(debug,*) 'Leaving stop_macro()'

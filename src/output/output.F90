@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.32 2010-02-23 08:23:36 kb Exp $
+!$Id: output.F90,v 1.33 2010-03-24 14:58:15 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -60,6 +60,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.33  2010-03-24 14:58:15  kb
+!  cleaned divergence calculations
+!
 !  Revision 1.32  2010-02-23 08:23:36  kb
 !  adaptive vertical coordinates - Hofmeister
 !
@@ -385,7 +388,9 @@
       if (write_2d)   LEVEL3 timestr, ': saving 2D .... '
       if (write_3d)   LEVEL3 timestr, ': saving 3D .... '
       if (write_mean) LEVEL3 timestr, ': saving mean fields .... '
-!      call divergence()
+#ifndef NO_3D
+      call divergence()
+#endif
       secs = n*timestep
       select case (out_fmt)
          case (ASCII)
