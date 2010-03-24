@@ -1,4 +1,4 @@
-!$Id: stop_macro.F90,v 1.7 2009-08-18 10:24:45 bjb Exp $
+!$Id: stop_macro.F90,v 1.8 2010-03-24 12:35:21 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -15,10 +15,21 @@
 ! averaged transports to old values {\tt Uinto} and {\tt Vinto}, and
 ! to reinitialise the transports {\tt Uint} and {\tt Vint}
 ! to zero.
+! This is also the place where the surface velocity divergence is
+! calculated, i.e.\ {\tt div}$=\partial_x u(z=\eta)+\partial_y v(z=\eta)$,
+! to be output in the 2d netcdf file.
 !
 ! !USES:
-   use variables_2d, only: Uint,Uinto,Vint,Vinto
+   use domain, only: imin,imax,jmin,jmax,kmax
+   use variables_2d, only: Uint,Uinto,Vint,Vinto,surfdiv
+   use variables_3d, only: hun,hvn,uu,vv
    use getm_timers, only: tic, toc, TIM_STOPMCR
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+   use domain, only: arcd1,dxv,dyu
+#else
+   use domain, only: dx,dy,ard1
+#endif
+
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -31,6 +42,7 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
+   integer                   :: i,j,k
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -44,6 +56,16 @@
   Uint= _ZERO_
   Vinto=Vint
   Vint= _ZERO_
+
+   k=kmax
+   do j=jmin,jmax
+      do i=imin,imax
+         surfdiv(i,j)= ((uu(i,  j  ,k)/hun(i  ,j  ,k)*DYU                  &
+                        -uu(i-1,j  ,k)/hun(i-1,j  ,k)*DYUIM1)              &
+                       +(vv(i,  j  ,k)/hvn(i  ,j  ,k)*DXV                  &
+                        -vv(i,  j-1,k)/hvn(i  ,j-1,k)*DXVJM1))*ARCD1
+      end do
+   end do
 
 #ifdef DEBUG
    write(debug,*) 'Leaving stop_macro()'
