@@ -1,4 +1,4 @@
-!$Id: momentum.F90,v 1.14 2009-09-30 11:28:44 bjb Exp $
+!$Id: momentum.F90,v 1.15 2010-03-24 12:06:13 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -178,22 +178,9 @@
    end do
 !$OMP END DO
 
-!   where (U .gt. 0)
-!      Slr=max(Slru, _ZERO_ )
-!   else where
-!      Slr=min(Slru, _ZERO_ )
-!   end where
-!   where ((au .eq. 1) .or. (au .eq. 2))
-!      U=(U-dtm*(g*DU*zx+dry_u*(-tausu/rho_0-fV+UEx+SlUx+Slr(i,j))))/(1+dtm*ru/DU)
-!   end where
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
-         if (U(i,j) .gt. 0) then
-            Slr(i,j)=max(Slru(i,j), _ZERO_ )
-         else
-            Slr(i,j)=min(Slru(i,j), _ZERO_ )
-         end if
          if ((au(i,j) .eq. 1) .or. (au(i,j) .eq. 2)) then
             U(i,j)=(U(i,j)-dtm*(g*DU(i,j)*zx(i,j)+dry_u(i,j)*&
                  (-tausu(i,j)/rho_0-fV(i,j)+UEx(i,j)+SlUx(i,j)+Slr(i,j))))/&
@@ -365,34 +352,9 @@
    end do
 !$OMP END DO
 
-!   where (V .gt. 0)
-!      Slr=max(Slrv, _ZERO_ )
-!   else where
-!      Slr=min(Slrv, _ZERO_ )
-!   end where
-! $OMP DO SCHEDULE(RUNTIME)
-!   do j=jmin-HALO,jmax+HALO
-!      do i=imin-HALO,imax+HALO
-!         if (V(i,j).gt.0) then
-!            Slr(i,j)=max(Slrv(i,j), _ZERO_ )
-!         else
-!            Slr(i,j)=min(Slrv(i,j), _ZERO_ )
-!         end if
-!      end do
-!   end do
-! $OMP END DO
-
-!   where ((av .eq. 1) .or. (av .eq. 2))
-!      V=(V-dtm*(g*DV*zy+dry_v*(-tausv/rho_0+fU+VEx+SlVx+Slr)))/(1+dtm*rv/DV)
-!   end where
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
-         if (V(i,j).gt.0) then
-            Slr(i,j)=max(Slrv(i,j), _ZERO_ )
-         else
-            Slr(i,j)=min(Slrv(i,j), _ZERO_ )
-         end if         
          if ((av(i,j) .eq. 1) .or. (av(i,j) .eq. 2)) then
             V(i,j)=(V(i,j)-dtm*(g*DV(i,j)*zy(i,j)+dry_v(i,j)*&
                  (-tausv(i,j)/rho_0+fU(i,j)+VEx(i,j)+SlVx(i,j)+Slr(i,j))))/&
