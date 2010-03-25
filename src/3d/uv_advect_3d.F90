@@ -1,4 +1,4 @@
-!$Id: uv_advect_3d.F90,v 1.19 2009-09-30 11:28:46 bjb Exp $
+!$Id: uv_advect_3d.F90,v 1.20 2010-03-25 08:22:03 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -454,8 +454,21 @@
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
                         azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
 
-!   vvEx=-(vvEx*hvn-vv)/dt ! Here, vvEx is the advection term.
-   vvEx=-(vvEx*hvn-vv)*dti ! Here, vvEx is the advection term.
+! OMP-NOTE: It might not pay off to thread this loop (due to OMP overhead)
+!   vvEx=-(vvEx*hvn-vv)*dti ! Here, vvEx is the advection term.
+
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
+   do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            vvEx(i,j,k)=dti*(vv(i,j,k)-vvEx(i,j,k)*hvn(i,j,k))
+         end do
+      end do
+!$OMP END DO NOWAIT
+   end do
+!$OMP END PARALLEL
+
 !      ! END UV_TDV
 #else  ! First-order upstream, one three-dimensional  step
 
