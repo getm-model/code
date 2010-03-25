@@ -1,4 +1,4 @@
-!$Id: momentum.F90,v 1.15 2010-03-24 12:06:13 hb Exp $
+!$Id: momentum.F90,v 1.16 2010-03-25 11:48:55 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -130,7 +130,7 @@
    use domain, only: dx
 #endif
    use m2d, only: dtm
-   use variables_2d, only: D,z,UEx,U,DU,fV,SlUx,SlRu,ru,fU,DV
+   use variables_2d, only: D,z,UEx,U,DU,fV,SlUx,Slru,ru,fU,DV
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,U_TAG
 !$ use omp_lib
@@ -146,7 +146,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j
    REALTYPE                  :: zx(E2DFIELD)
-   REALTYPE                  :: Slr(E2DFIELD),tausu(E2DFIELD)
+   REALTYPE                  :: tausu(E2DFIELD)
    REALTYPE                  :: zp,zm,Uloc
    REALTYPE                  :: gamma=rho_0*g
    REALTYPE                  :: cord_curv=_ZERO_
@@ -183,7 +183,7 @@
       do i=imin-HALO,imax+HALO
          if ((au(i,j) .eq. 1) .or. (au(i,j) .eq. 2)) then
             U(i,j)=(U(i,j)-dtm*(g*DU(i,j)*zx(i,j)+dry_u(i,j)*&
-                 (-tausu(i,j)/rho_0-fV(i,j)+UEx(i,j)+SlUx(i,j)+Slr(i,j))))/&
+                 (-tausu(i,j)/rho_0-fV(i,j)+UEx(i,j)+SlUx(i,j)+Slru(i,j))))/&
                  (_ONE_+dtm*ru(i,j)/DU(i,j))
          end if
       end do
@@ -305,7 +305,7 @@
    use domain, only: dy
 #endif
    use m2d, only: dtm
-   use variables_2d, only: D,z,VEx,V,DV,fU,SlVx,SlRv,rv,fV,DU
+   use variables_2d, only: D,z,VEx,V,DV,fU,SlVx,Slrv,rv,fV,DU
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,V_TAG
    IMPLICIT NONE
@@ -320,7 +320,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j
    REALTYPE                  :: zy(E2DFIELD)
-   REALTYPE                  :: Slr(E2DFIELD),tausv(E2DFIELD)
+   REALTYPE                  :: tausv(E2DFIELD)
    REALTYPE                  :: zp,zm,Vloc
    REALTYPE                  :: gamma=rho_0*g
    REALTYPE                  :: cord_curv=_ZERO_
@@ -357,7 +357,7 @@
       do i=imin-HALO,imax+HALO
          if ((av(i,j) .eq. 1) .or. (av(i,j) .eq. 2)) then
             V(i,j)=(V(i,j)-dtm*(g*DV(i,j)*zy(i,j)+dry_v(i,j)*&
-                 (-tausv(i,j)/rho_0+fU(i,j)+VEx(i,j)+SlVx(i,j)+Slr(i,j))))/&
+                 (-tausv(i,j)/rho_0+fU(i,j)+VEx(i,j)+SlVx(i,j)+Slrv(i,j))))/&
                  (_ONE_+dtm*rv(i,j)/DV(i,j))
          end if
       end do
