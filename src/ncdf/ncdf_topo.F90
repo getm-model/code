@@ -1,4 +1,4 @@
-!$Id: ncdf_topo.F90,v 1.24 2009-12-22 08:44:38 kb Exp $
+!$Id: ncdf_topo.F90,v 1.25 2010-03-26 19:12:49 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -49,6 +49,9 @@
 !                      Karsten Bolding and Hans Burchard)
 !
 !  $Log: ncdf_topo.F90,v $
+!  Revision 1.25  2010-03-26 19:12:49  kb
+!  aborting if grid_type=4
+!
 !  Revision 1.24  2009-12-22 08:44:38  kb
 !  added conditional compilation checks - Klingbeil
 !
@@ -206,6 +209,7 @@ contains
          LEVEL2 'using plane curvilinear grid.'
       case(4)
          LEVEL2 'using spherical curvilinear grid.'
+         call getm_error("ncdf_check_grid()","grid_type=4 has not been properly implemented yet.")
       case default
          call getm_error("ncdf_check_grid()","Invalid grid type. Choose grid_type=1-4.")
    end select
