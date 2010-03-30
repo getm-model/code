@@ -1,4 +1,4 @@
-!$Id: write_restart_ncdf.F90,v 1.13 2010-03-30 11:48:38 kb Exp $
+!$Id: write_restart_ncdf.F90,v 1.14 2010-03-30 12:03:24 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -44,6 +44,9 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: write_restart_ncdf.F90,v $
+!  Revision 1.14  2010-03-30 12:03:24  kb
+!  fixed BIO restart in NetCDF
+!
 !  Revision 1.13  2010-03-30 11:48:38  kb
 !  removing adaptive_coodinates
 !
@@ -82,7 +85,7 @@
 !
 !
 ! !LOCAL VARIABLES:
-   integer         :: k
+   integer         :: k,n
    REALTYPE, allocatable :: zax(:)
 !EOP
 !-----------------------------------------------------------------------
@@ -276,11 +279,20 @@
          start(3) = 1; edges(3) = jmax-jmin+1
 #endif
          start(4) = 1; edges(4) = kmax+1
+#if 0
          status = &
          nf90_put_var(ncid,bio_id,cc3d(1:numc,IRANGE,JRANGE,0:kmax), &
                       start,edges)
          if (status .NE. NF90_NOERR) go to 10
-
+#else
+         do n=1,numc
+            start(1) = n; edges(1) = 1
+            status = &
+            nf90_put_var(ncid,bio_id,cc3d(n,IRANGE,JRANGE,0:kmax), &
+                         start,edges)
+            if (status .NE. NF90_NOERR) go to 10
+         end do
+#endif
       end if
 #endif
    end if
