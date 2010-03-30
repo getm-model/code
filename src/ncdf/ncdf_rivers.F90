@@ -1,4 +1,4 @@
-!$Id: ncdf_rivers.F90,v 1.8 2007-09-30 13:00:43 kbk Exp $
+!$Id: ncdf_rivers.F90,v 1.9 2010-03-30 10:06:51 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -50,6 +50,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: ncdf_rivers.F90,v $
+!  Revision 1.9  2010-03-30 10:06:51  kb
+!  removed temporarely diagnostic output
+!
 !  Revision 1.8  2007-09-30 13:00:43  kbk
 !  prints real time as part of progessoutput
 !
@@ -345,7 +348,6 @@
             err = nf_get_vara_real(ncid,r_ids(n),start,edges,x)
             if (err .ne. NF_NOERR) go to 10
             river_flow(n) = x(1)
-            STDERR x(1),river_flow(n)
          end if
       end do
    else
