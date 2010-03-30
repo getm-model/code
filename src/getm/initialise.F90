@@ -1,4 +1,4 @@
-!$Id: initialise.F90,v 1.24 2010-02-23 08:23:35 kb Exp $
+!$Id: initialise.F90,v 1.25 2010-03-30 11:48:36 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,8 +22,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: initialise.F90,v $
-!  Revision 1.24  2010-02-23 08:23:35  kb
-!  adaptive vertical coordinates - Hofmeister
+!  Revision 1.25  2010-03-30 11:48:36  kb
+!  removing adaptive_coodinates
 !
 !  Revision 1.23  2009-08-21 08:56:34  bjb
 !  Fix name clash on PARALLEL with OpenMP key word
@@ -372,7 +372,7 @@
       call depth_update
 #ifndef NO_3D
       if (runtype .ge. 2) then
-         call coordinates(vert_cord,cord_relax,maxdepth,hotstart)
+         call coordinates(vert_cord,cord_relax,maxdepth)
          Uint=_ZERO_
          Vint=_ZERO_
       end if

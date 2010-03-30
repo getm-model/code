@@ -1,4 +1,4 @@
-!$Id: output.F90,v 1.33 2010-03-24 14:58:15 kb Exp $
+!$Id: output.F90,v 1.34 2010-03-30 11:48:38 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -60,6 +60,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: output.F90,v $
+!  Revision 1.34  2010-03-30 11:48:38  kb
+!  removing adaptive_coodinates
+!
 !  Revision 1.33  2010-03-24 14:58:15  kb
 !  cleaned divergence calculations
 !
@@ -461,7 +464,6 @@
    use variables_3d, only: uu,vv,ww
    use variables_3d, only: uuEx,vvEx
    use variables_3d, only: tke,eps,num,nuh
-   use variables_3d, only: hn
 #ifndef NO_BAROCLINIC
    use variables_3d, only: T,S
 #endif
@@ -537,7 +539,6 @@
                write(RESTART) uuEx,vvEx
                write(RESTART) tke,eps
                write(RESTART) num,nuh
-               write(RESTART) hn
 #ifndef NO_BAROCLINIC
                if (runtype .ge. 3) then
                   LEVEL3 'saving 3D baroclinic variables'
@@ -594,7 +595,6 @@
                read(RESTART) uuEx,vvEx
                read(RESTART) tke,eps
                read(RESTART) num,nuh
-               read(RESTART) hn
 #ifndef NO_BAROCLINIC
                if(runtype .ge. 3) then
                   LEVEL3 'reading 3D baroclinic variables'

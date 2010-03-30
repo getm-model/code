@@ -1,4 +1,4 @@
-!$Id: domain.F90,v 1.40 2010-02-23 08:23:35 kb Exp $
+!$Id: domain.F90,v 1.41 2010-03-30 11:48:37 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -99,8 +99,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  $Log: domain.F90,v $
-!  Revision 1.40  2010-02-23 08:23:35  kb
-!  adaptive vertical coordinates - Hofmeister
+!  Revision 1.41  2010-03-30 11:48:37  kb
+!  removing adaptive_coodinates
 !
 !  Revision 1.39  2009-11-06 07:04:25  bjb
 !  Consistent application of bathymetry.adjust with new bathy read
@@ -386,10 +386,8 @@
          stop
       case (5) ! adaptive vertical coordinates
          LEVEL2 'using adaptive vertical coordinates'
-#ifdef NO_BAROCLINIC
-         LEVEL2 'adaptive coordinates are not working with NO_BAROCLINIC'
+         STDERR 'domain: adaptive_coordinates not coded yet'
          stop
-#endif
       case default
          call getm_error("init_domain()", &
                          "A non valid vertical coordinate system has been chosen");

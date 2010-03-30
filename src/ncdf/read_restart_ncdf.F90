@@ -1,4 +1,4 @@
-!$Id: read_restart_ncdf.F90,v 1.13 2010-02-23 08:23:36 kb Exp $
+!$Id: read_restart_ncdf.F90,v 1.14 2010-03-30 11:48:38 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -57,8 +57,8 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: read_restart_ncdf.F90,v $
-!  Revision 1.13  2010-02-23 08:23:36  kb
-!  adaptive vertical coordinates - Hofmeister
+!  Revision 1.14  2010-03-30 11:48:38  kb
+!  removing adaptive_coodinates
 !
 !  Revision 1.12  2010-01-21 15:46:24  kb
 !  fixed BIO-restart
@@ -415,14 +415,6 @@
       if (status .NE. NF90_NOERR) go to 10
       call update_3d_halo(nuh,nuh,az,imin,jmin,imax,jmax,kmax,H_TAG)
       call wait_halo(H_TAG)
-
-!     hn is required for adaptive coordinates
-      status = &
-      nf90_get_var(ncid,hn_id,hn(iloc:ilen,jloc:jlen,0:kmax),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-      call update_3d_halo(hn,hn,az,imin,jmin,imax,jmax,kmax,H_TAG)
-      call wait_halo(H_TAG)
-
 
 #ifndef NO_BAROCLINIC
       if (runtype .ge. 3)  then

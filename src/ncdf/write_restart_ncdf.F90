@@ -1,4 +1,4 @@
-!$Id: write_restart_ncdf.F90,v 1.12 2010-02-23 08:23:36 kb Exp $
+!$Id: write_restart_ncdf.F90,v 1.13 2010-03-30 11:48:38 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -44,8 +44,8 @@
 !  Original author(s): Karsten Bolding
 !
 !  $Log: write_restart_ncdf.F90,v $
-!  Revision 1.12  2010-02-23 08:23:36  kb
-!  adaptive vertical coordinates - Hofmeister
+!  Revision 1.13  2010-03-30 11:48:38  kb
+!  removing adaptive_coodinates
 !
 !  Revision 1.11  2010-01-21 15:46:24  kb
 !  fixed BIO-restart
@@ -240,10 +240,6 @@
 
       status = &
       nf90_put_var(ncid,nuh_id,nuh(IRANGE,JRANGE,0:kmax),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-
-      status = &
-      nf90_put_var(ncid,hn_id,hn(IRANGE,JRANGE,0:kmax),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
 #ifndef NO_BAROCLINIC
