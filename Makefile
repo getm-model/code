@@ -40,6 +40,8 @@ VER=1.5.1
 VER=1.6.0
 # 2007/05/14 - new devel release
 VER=1.7.0
+# 2010/04/01 - new stable release
+VER=1.8.0
 
 
 .PHONY: doc
@@ -62,7 +64,7 @@ devel stable branch: VERSION
 	@echo
 	@echo "making a new "$@" release: v"$(VER)
 	@echo
-	@. release.sh $@ $(VER)
+	./release.sh $@ $(VER)
 
 clean:
 	rm -f VERSION
