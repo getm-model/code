@@ -126,21 +126,26 @@ ifeq ($(GETM_BIO),true)
 EXTRA_LIBS += -lbio$(buildtype)
 endif
 
-ifeq ($(turbulence),gotm)
 ifndef GOTMDIR
-GOTMDIR = $(HOME)/gotm
+GOTMDIR = $(HOME)/GOTM/v4.1.x
 endif
 GOTMLIBDIR	= $(GOTMDIR)/lib/$(FORTRAN_COMPILER)
 LINKDIRS	+= -L$(GOTMLIBDIR)
 EXTRA_LIBS	+= -lturbulence$(buildtype) -lutil$(buildtype) 
 INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
-else
-DEFINES		+= -DOLD_TURBULENCE
-EXTRA_LIBS	+= -lturb$(buildtype)
-endif
+
 
 # Where does the NetCDF include file and library reside.
 
+ifeq ($(NETCDF_VERSION),NETCDF4)
+
+DEFINES		+= -DNETCDF4
+INCDIRS		+= $(shell nc-config --fflags)
+NETCDFLIB	=  $(shell nc-config --flibs)
+
+else  # NetCDF3 is default
+
+DEFINES		+= -DNETCDF3
 ifdef NETCDFINC
 INCDIRS		+= -I$(NETCDFINC)
 endif
@@ -155,23 +160,9 @@ else
 NETCDFLIB	= -lnetcdf
 endif
 
-ifeq ($(NETCDF_VERSION),NETCDF4)
-
-DEFINES		+= -DNETCDF4
-ifdef HDF5_DIR
-INCDIRS		+= -I$(HDF5_DIR)/include
-LINKDIRS	+= -L$(HDF5_DIR)/lib
-endif
-HDF5LIB		= -lhdf5_hl -lhdf5 -lz
-
-else  # NetCDF3 is default
-
-DEFINES		+= -DNETCDF3
-HDF5LIB		=
-
 endif
 
-EXTRA_LIBS	+= $(NETCDFLIB) $(HDF5LIB)
+EXTRA_LIBS	+= $(NETCDFLIB) -lcurl
 
 # NetCDF/HDF configuration done
 
