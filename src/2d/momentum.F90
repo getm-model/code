@@ -147,6 +147,7 @@
    integer                   :: i,j
    REALTYPE                  :: zx(E2DFIELD)
    REALTYPE                  :: tausu(E2DFIELD)
+   REALTYPE                  :: Slr(E2DFIELD)
    REALTYPE                  :: zp,zm,Uloc
    REALTYPE                  :: gamma=rho_0*g
    REALTYPE                  :: cord_curv=_ZERO_
@@ -181,9 +182,14 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
+         if (U(i,j) .gt. 0) then
+            Slr(i,j)=max(Slru(i,j), _ZERO_ )
+         else
+            Slr(i,j)=min(Slru(i,j), _ZERO_ )
+         end if
          if ((au(i,j) .eq. 1) .or. (au(i,j) .eq. 2)) then
             U(i,j)=(U(i,j)-dtm*(g*DU(i,j)*zx(i,j)+dry_u(i,j)*&
-                 (-tausu(i,j)/rho_0-fV(i,j)+UEx(i,j)+SlUx(i,j)+Slru(i,j))))/&
+                 (-tausu(i,j)/rho_0-fV(i,j)+UEx(i,j)+SlUx(i,j)+Slr(i,j))))/&
                  (_ONE_+dtm*ru(i,j)/DU(i,j))
          end if
       end do
@@ -321,6 +327,7 @@
    integer                   :: i,j
    REALTYPE                  :: zy(E2DFIELD)
    REALTYPE                  :: tausv(E2DFIELD)
+   REALTYPE                  :: Slr(E2DFIELD)
    REALTYPE                  :: zp,zm,Vloc
    REALTYPE                  :: gamma=rho_0*g
    REALTYPE                  :: cord_curv=_ZERO_
@@ -355,9 +362,14 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
+         if (V(i,j).gt.0) then
+            Slr(i,j)=max(Slrv(i,j), _ZERO_ )
+         else
+            Slr(i,j)=min(Slrv(i,j), _ZERO_ )
+         end if
          if ((av(i,j) .eq. 1) .or. (av(i,j) .eq. 2)) then
             V(i,j)=(V(i,j)-dtm*(g*DV(i,j)*zy(i,j)+dry_v(i,j)*&
-                 (-tausv(i,j)/rho_0+fU(i,j)+VEx(i,j)+SlVx(i,j)+Slrv(i,j))))/&
+                 (-tausv(i,j)/rho_0+fU(i,j)+VEx(i,j)+SlVx(i,j)+Slr(i,j))))/&
                  (_ONE_+dtm*rv(i,j)/DV(i,j))
          end if
       end do
