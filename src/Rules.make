@@ -10,6 +10,16 @@
 SHELL   = /bin/sh
 CPP	= /lib/cpp
 
+# Top of this version of GETM and GOTM. Defaults can be overwritten using 
+# environment variables.
+ifndef GETMDIR
+GETMDIR  = $(HOME)/GETM/v1.8.x
+endif
+
+ifndef GOTMDIR
+GOTMDIR = $(HOME)/GOTM/gotm-cvs
+endif
+
 # Information about which Fortran compiler to use is 
 # obtained from $(FORTRAN_COMPILER) - environment variable.
 # The file ../compilers/compiler.$(FORTRAN_COMPILER) must exist
@@ -33,7 +43,6 @@ endif
 
 # 3D barotropic
 ifeq ($(GETM_NO_BAROCLINIC),true)
-
 DEFINES += -DNO_BAROCLINIC
 endif
 
@@ -71,10 +80,6 @@ parallel=false
 set par=ser
 endif
 
-
-turbulence=
-turbulence=gotm
-
 # Here you can put defines for the [c|f]pp - some will also be set depending
 # on compilation mode - if STATIC is defined be careful.
 ifdef INPUT_DIR
@@ -95,17 +100,8 @@ endif
 #DEFINES += -DSUBSTR_INI_PRESS
 #DEFINES += -DSONG_WRIGHT
 #DEFINES += -DUV_TVD
-ifdef STATIC
-else
-endif
 
-# Directory related settings.
-
-# Top of this version of getm.
-ifndef GETMDIR
-GETMDIR  = $(HOME)/GETM/getm-devel
-endif
-
+# Further directory related settings.
 ifndef BINDIR
 BINDIR	= $(GETMDIR)/bin
 endif
@@ -126,14 +122,11 @@ ifeq ($(GETM_BIO),true)
 EXTRA_LIBS += -lbio$(buildtype)
 endif
 
-ifndef GOTMDIR
-GOTMDIR = $(HOME)/GOTM/v4.1.x
-endif
+# Turbulence directory
 GOTMLIBDIR	= $(GOTMDIR)/lib/$(FORTRAN_COMPILER)
 LINKDIRS	+= -L$(GOTMLIBDIR)
 EXTRA_LIBS	+= -lturbulence$(buildtype) -lutil$(buildtype) 
 INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
-
 
 # Where does the NetCDF include file and library reside.
 
@@ -162,7 +155,7 @@ endif
 
 endif
 
-EXTRA_LIBS	+= $(NETCDFLIB) -lcurl
+EXTRA_LIBS	+= $(NETCDFLIB)
 
 # NetCDF/HDF configuration done
 

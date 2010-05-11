@@ -22,10 +22,6 @@ $(GETMDIR)/src/ncdf		\
 $(GETMDIR)/src/input		\
 $(GETMDIR)/src/getm
 
-ifneq ($(turbulence),gotm)
-SUBDIRS += $(GETMDIR)/src/turb
-endif
-
 CORE_LIBS	=	\
 		-lgetm${buildtype} 	\
 		-loutput${buildtype}	\
