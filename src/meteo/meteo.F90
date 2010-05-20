@@ -174,9 +174,11 @@
    REALTYPE                  :: tx= _ZERO_ ,ty= _ZERO_
    REALTYPE                  :: swr_const= _ZERO_ ,shf_const= _ZERO_
    REALTYPE                  :: evap_const= _ZERO_ ,precip_const= _ZERO_
-   REALTYPE, dimension(:,:), allocatable :: airp_old,tausx_old,tausy_old
+   REALTYPE, dimension(:,:), allocatable :: airp_old,airp_new
+   REALTYPE, dimension(:,:), allocatable :: tausx_old,tausy_old
    REALTYPE, dimension(:,:), allocatable :: d_airp,d_tausx,d_tausy
-   REALTYPE, dimension(:,:), allocatable :: tcc_old,swr_old,shf_old
+   REALTYPE, dimension(:,:), allocatable :: tcc_old,tcc_new
+   REALTYPE, dimension(:,:), allocatable :: swr_old,shf_old
    REALTYPE, dimension(:,:), allocatable :: d_tcc,d_swr,d_shf
    REALTYPE, dimension(:,:), allocatable :: evap_old,precip_old
    REALTYPE, dimension(:,:), allocatable :: d_evap,d_precip
@@ -346,6 +348,10 @@
       if (rc /= 0) stop 'init_meteo: Error allocating memory (airp_old)'
       airp_old = _ZERO_
 
+      allocate(airp_new(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo: Error allocating memory (airp_new)'
+      airp_new = _ZERO_
+
       allocate(tausx_old(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx_old)'
       tausx_old = _ZERO_
@@ -369,6 +375,10 @@
       allocate(tcc_old(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc_old)'
       tcc_old = _ZERO_
+
+      allocate(tcc_new(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc_new)'
+      tcc_new = _ZERO_
 
       allocate(swr_old(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (swr_old)'
@@ -546,9 +556,10 @@
                                       imin,jmin,imax,jmax,H_TAG)
                   call wait_halo(H_TAG)
                   if (.not. first) then
+                     airp_old  = airp_new
+                     tcc_old   = tcc_new
                      tausx_old = tausx
                      tausy_old = tausy
-                     tcc_old = tcc
                      shf_old = shf
                      if (fwf_method .ge. 2) then
                         evap_old = evap
@@ -557,6 +568,8 @@
                         precip_old = precip
                      end if
                   end if
+                  airp_new = airp
+                  tcc_new  = tcc
                   if (have_sst) then
 ! OMP-NOTE: This is an expensive loop, but we cannot thread it as long
 !    as exchange_coefficients() and fluxes() pass information through 
@@ -571,6 +584,8 @@
                                       t2(i,j),tcc(i,j),sst(i,j),precip(i,j), &
                                       shf(i,j),tausx(i,j),tausy(i,j),evap(i,j))
                            else
+! BJB-TODO: This part of the if-block could be omitted, if the entire fields 
+! are zero'ed out during init (unless az(i,j) may change with time).
                               shf(i,j) = _ZERO_
                               tausx(i,j) = _ZERO_
                               tausy(i,j) = _ZERO_
@@ -603,6 +618,7 @@
                   if (.not. first) then
                      d_tausx = tausx - tausx_old
                      d_tausy = tausy - tausy_old
+                     d_airp = airp - airp_old
                      d_tcc = tcc - tcc_old
                      d_shf = shf - shf_old
                      if (fwf_method .ge. 2) then
@@ -619,6 +635,8 @@
 !$OMP DO SCHEDULE(RUNTIME)
                   do j=jmin-HALO,jmax+HALO
 !                     do i=imin-HALO,imax+HALO
+                        airp(:,j)  = airp_old(:,j)   + t_frac*d_airp(:,j)
+                        tcc(:,j)   = tcc_old(:,j)    + t_frac*d_tcc(:,j)
                         shf(:,j)   = shf_old(:,j)    + t_frac*d_shf(:,j)
                         tausx(:,j) = tausx_old(:,j)  + t_frac*d_tausx(:,j)
                         tausy(:,j) = tausy_old(:,j)  + t_frac*d_tausy(:,j)
@@ -646,6 +664,8 @@
 !$OMP END DO
 !$OMP END PARALLEL
             else
+! BJB-TODO: Need to figure out how/if airp&tcc are correctly computed in
+!    the following (.not. calc_met):
                if (first) then
 ! OMP-NOTE: Dont thread simple memory copy:
                   tausx_old = tausx
