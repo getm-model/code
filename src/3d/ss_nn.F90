@@ -166,9 +166,6 @@
 !   the OMP-implementation as it muddles the comparisons of old and
 !   new results. BJB 2009-09-22
 
-#undef NEW_SS
-#define NEW_SS
-
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,nb,dz,NNc,NNe,NNw,NNn,NNs)
 !  Prandtl frequency
 !$OMP DO SCHEDULE(RUNTIME)

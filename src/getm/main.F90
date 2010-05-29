@@ -264,6 +264,9 @@
 #ifdef MIN_VEL_DEPTH
    LEVEL1 'MIN_VEL_DEPTH'
 #endif
+#ifdef NEW_SS
+   LEVEL1 'NEW_SS'
+#endif
 #ifdef UV_TVD
    LEVEL1 'UV_TVD'
 #endif
