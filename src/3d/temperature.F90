@@ -206,22 +206,22 @@ temp_field_no=1
          LEVEL3 'setting attenuation coefficients to constant values:'
          select case (jerlov)
             case (1)
-               LEVEL4 'Jerlov class 1: A=0.58, g1=0.35 , g2=23.0'
+               LEVEL4 'Jerlov Type I (=case I): A=0.58, g1=0.35 , g2=23.0'
                A_const=0.58;g1_const=0.35;g2_const=23.0
             case (2)
-               LEVEL4 'Jerlov class 2: A=0.68, g1=1.2 , g2=28.0'
+               LEVEL4 'Jerlov Type 1 (=case I): A=0.68, g1=1.2 , g2=28.0'
                A_const=0.68;g1_const=1.20;g2_const=28.0
             case (3)
-               LEVEL4 'Jerlov class 3: A=0.62, g1=0.6 , g2=20.0'
+               LEVEL4 'Jerlov Type IA (=case IA): A=0.62, g1=0.6 , g2=20.0'
                A_const=0.62;g1_const=0.60;g2_const=20.0
             case (4)
-               LEVEL4 'Jerlov class 4: A=0.67, g1=1.0 , g2=17.0'
+               LEVEL4 'Jerlov Type IB (=case 1B): A=0.67, g1=1.0 , g2=17.0'
                A_const=0.67;g1_const=1.00;g2_const=17.0
             case (5)
-               LEVEL4 'Jerlov class 5: A=0.77, g1=1.5 , g2=14.0'
+               LEVEL4 'Jerlov Type II (=case II): A=0.77, g1=1.5 , g2=14.0'
                A_const=0.77;g1_const=1.50;g2_const=14.0
             case (6)
-               LEVEL4 'Jerlov class 6: A=0.78, g1=1.40 , g2=7.9'
+               LEVEL4 'Jerlov Type III (=case II, coastal): A=0.78, g1=1.40 , g2=7.9'
                A_const=0.78;g1_const=1.40;g2_const=7.9
             case default
                LEVEL4 'User specified:'
