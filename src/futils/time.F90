@@ -33,6 +33,7 @@
 ! !PUBLIC DATA MEMBERS:
    integer                             :: julianday,secondsofday,yearday,month,day
    integer                             :: jul0=-1,secs0=-1
+   integer                             :: juln=-1,secsn=-1
    REALTYPE                            :: fsecs,simtime
    REALTYPE                            :: timestep
    character(len=19)                   :: timestr
@@ -153,7 +154,17 @@
          HasRealTime=.false.
          LEVEL2 '# of timesteps: ',MaxN
          start='2000-01-01 00:00:00'
+
+         call String2JulSecs(start,jul1,secs1)
+
+         nsecs = nint(MaxN*timestep) + secs1
+         ndays = nsecs/86400
+         jul2  = jul1 + ndays
+         secs2 = mod(nsecs,86400)
+         call write_time_string(jul2,secs2,stop)
+
          LEVEL2 'Fake start:     ',start
+         LEVEL2 'Fake stop:      ',stop
       case (2)
          LEVEL2 'Start:          ',start
          LEVEL2 'Stop:           ',stop
@@ -188,6 +199,9 @@
 
    jul0  = jul1
    secs0 = secs1
+
+   juln  = jul2
+   secsn = secs2
 
    julianday    = jul0
    secondsofday = secs0
