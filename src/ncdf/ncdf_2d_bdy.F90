@@ -13,7 +13,8 @@
 ! !USES:
 !KB   use m2d, only: dtm,bdy_times,bdy_old,bdy_new,bdy_data
    use m2d, only: dtm,bdy_times,bdy_data,bdy_data_u,bdy_data_v
-   use time, only: string_to_julsecs,time_diff,julianday,secondsofday
+   use time, only: string_to_julsecs,time_diff,add_secs
+   use time, only: julianday,secondsofday,juln,secsn
    use time, only: write_time_string,timestr
    use domain,  only: need_2d_bdy_elev,need_2d_bdy_u,need_2d_bdy_v
    IMPLICIT NONE
@@ -126,7 +127,8 @@
 ! !LOCAL VARIABLES:
    integer                   :: err,rec_id,bdy_id
    character(len=256)        :: units
-   integer                   :: j1,s1
+   character(len=19)         :: tbuf
+   integer                   :: j1,s1,j2,s2
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -190,15 +192,28 @@
 
    call string_to_julsecs(units,j1,s1)
    offset = time_diff(julianday,secondsofday,j1,s1)
-   if( offset .lt. _ZERO_ ) then
+   if( offset .lt. bdy_times(1) ) then
       FATAL 'Model simulation starts before available boundary data'
+      call write_time_string(julianday,secondsofday,tbuf)
+      FATAL 'Simulation starts: ',tbuf
+      call add_secs(j1,s1,nint(bdy_times(1)),j2,s2)
+      call write_time_string(j2,s2,tbuf)
+      FATAL 'Datafile starts:   ',tbuf
       stop 'init_2d_bdy_ncdf'
    else
       LEVEL3 'Boundary offset time ',offset
    end if
 
-
-!  Should have check on length of bdy_file > integration length
+!  check if the bdy data file is long enough
+   if( time_diff(juln,secsn,j1,s1) .gt. bdy_times(nsets) ) then
+      FATAL 'Not enough 2D boundary data in file'
+      call write_time_string(juln,secsn,tbuf)
+      FATAL 'Simulation ends: ',tbuf
+      call add_secs(j1,s1,nint(bdy_times(nsets)),j2,s2)
+      call write_time_string(j2,s2,tbuf)
+      FATAL 'Datafile ends:   ',tbuf
+      stop 'init_2d_bdy_ncdf'
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_2d_bdy_ncdf()'

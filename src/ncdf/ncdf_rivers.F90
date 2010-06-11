@@ -11,9 +11,9 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use time, only: string_to_julsecs,time_diff,add_secs,in_interval
-   use time, only: jul0,secs0,julianday,secondsofday,timestep
-   use time, only: write_time_string,timestep,timestr
+   use time, only: string_to_julsecs,time_diff,add_secs
+   use time, only: julianday,secondsofday,juln,secsn,timestep
+   use time, only: write_time_string,timestr
    use rivers, only: nriver,river_data,river_name,river_flow,river_factor
    use rivers, only: ok,rriver,real_river_name,river_split
    use rivers, only: temp_missing,salt_missing
@@ -112,6 +112,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,m,n
    integer                   :: err
+   character(len=19)         :: tbuf
    integer                   :: j1,s1,j2,s2
    character(len=256)        :: time_units
    character(len=256)        :: bio_name
@@ -207,17 +208,29 @@
    err = nf_get_var_real(ncid,time_id,river_times)
    if (err .ne. NF_NOERR) go to 10
 
-   offset = time_diff(jul0,secs0,j1,s1)
-   if( offset .lt. _ZERO_ ) then    !HB Karsten check, I changed gt to lt
+   offset = time_diff(julianday,secondsofday,j1,s1)
+   if( offset .lt. river_times(1) ) then
       FATAL 'Model simulation starts before available river data'
+      call write_time_string(julianday,secondsofday,tbuf)
+      FATAL 'Simulation starts: ',tbuf
+      call add_secs(j1,s1,nint(river_times(1)),j2,s2)
+      call write_time_string(j2,s2,tbuf)
+      FATAL 'River file starts: ',tbuf
       stop 'init_river_input_ncdf'
+   else
+      LEVEL3 'River offset time ',offset
    endif
 
-   call add_secs(j1,s1,nint(river_times(textr)),j2,s2)
-!   if( time_diff(j1,s1,j2,s2) .lt. _ZERO_ ) then
-!      FATAL 'Not sufficient river data available'
-!      stop 'init_river_input_ncdf'
-!   endif
+!  check if the bdy data file is long enough
+   if( time_diff(juln,secsn,j1,s1) .gt. river_times(textr) ) then
+      FATAL 'Not sufficient river data available'
+      call write_time_string(juln,secsn,tbuf)
+      FATAL 'Simulation ends: ',tbuf
+      call add_secs(j1,s1,nint(river_times(textr)),j2,s2)
+      call write_time_string(j2,s2,tbuf)
+      FATAL 'River file ends: ',tbuf
+      stop 'init_river_input_ncdf'
+   endif
 
    call get_river_data_ncdf(nstart)
 
