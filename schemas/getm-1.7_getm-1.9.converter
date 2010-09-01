@@ -1,3 +1,4 @@
 <?xml version="1.0" ?>
+<!-- this converter is currently an empty placeholder, but it is needed to tell xmlstore that direct conversion between 1.7 and 1.9 is permitted. -->
 <converter source="getm-1.7" target="getm-1.9"/>
 
