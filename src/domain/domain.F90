@@ -1194,7 +1194,7 @@ STDERR latc(1,1),latx(1,0)
       if (line(1:1) == '#' .or. line(1:1) == '!' .or. len(trim(line)) == 0 ) then
       else if ( n .eq. -1 ) then
          read(line,*) n
-         if(n .gt. 1) then
+         if(n .ge. 1) then
             LEVEL2 'adjusting mask according to:'
             LEVEL3 trim(fn)
          end if
