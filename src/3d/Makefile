@@ -80,17 +80,13 @@ $(LIB)(w_split_adv.o)			\
 $(LIB)(w_split_it_adv.o)		\
 $(LIB)(upstream_2dh_adv.o)		\
 $(LIB)(fct_2dh_adv.o)			\
-$(LIB)(check_h.o)			\
-$(LIB)(divergence.o)			\
-$(LIB)(stop_macro.o)
-
-ifeq ($(turbulence),gotm)
-OBJ += 	\
 $(LIB)(stresses_3d.o)			\
 $(LIB)(ss_nn.o)				\
 $(LIB)(gotm.o)				\
-$(LIB)(tke_eps_advect_3d.o)
-endif
+$(LIB)(check_h.o)			\
+$(LIB)(divergence.o)			\
+$(LIB)(tke_eps_advect_3d.o)		\
+$(LIB)(stop_macro.o)
 
 
 all: modules objects
