@@ -431,24 +431,25 @@
 					<option value="4" label="Jerlov type IB"/>
 					<option value="5" label="Jerlov type II"/>
 					<option value="6" label="Jerlov type III"/>
+					<option value="7" label="User specified A, g1 and g2"/>
 				</options>
 			</element>
 			<element name="A_const" type="float" label="longwave fraction of visible light">
 				<condition type="and">
 					<condition type="eq" variable="./attenuation_method" value="0"/>
-					<condition type="eq" variable="./jerlov" value="0"/>
+					<condition type="eq" variable="./jerlov" value="7"/>
 				</condition>
 			</element>
 			<element name="g1_const" type="float" label="efolding depth of longwave fraction" unit="m">
 				<condition type="and">
 					<condition type="eq" variable="./attenuation_method" value="0"/>
-					<condition type="eq" variable="./jerlov" value="0"/>
+					<condition type="eq" variable="./jerlov" value="7"/>
 				</condition>
 			</element>
 			<element name="g2_const" type="float" label="efolding depth of shortwave fraction" unit="m">
 				<condition type="and">
 					<condition type="eq" variable="./attenuation_method" value="0"/>
-					<condition type="eq" variable="./jerlov" value="0"/>
+					<condition type="eq" variable="./jerlov" value="7"/>
 				</condition>
 			</element>
 			<element name="attenuation_file" type="string" label="name of file with varying coefficients">
