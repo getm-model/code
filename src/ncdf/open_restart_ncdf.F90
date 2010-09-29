@@ -53,133 +53,255 @@
 !
 ! !LOCAL VARIABLES:
    integer         :: dimids(3)
+   character(len=20) :: varnam
 !EOP
 !-------------------------------------------------------------------------
 !BOC
 !  open netCDF file
+   varnam="FILE"
    status = nf90_open(fname, NF90_NOWRITE, ncid)
    if (status .NE. NF90_NOERR) go to 10
 
+   varnam="loop"
    status = nf90_inq_varid(ncid, "loop", loop_id)
    if (status .NE. NF90_NOERR) go to 10
 
+   varnam="julianday"
    status = nf90_inq_varid(ncid, "julianday", julianday_id)
    if (status .NE. NF90_NOERR) go to 10
 
+   varnam="secondsofday"
    status = nf90_inq_varid(ncid, "secondsofday", secondsofday_id)
    if (status .NE. NF90_NOERR) go to 10
 
+   varnam="timestep"
    status = nf90_inq_varid(ncid, "timestep", timestep_id)
    if (status .NE. NF90_NOERR) go to 10
 
+!  z is required
+   varnam="z"
    status = nf90_inq_varid(ncid, "z", z_id)
    if (status .NE. NF90_NOERR) go to 10
 
+   varnam="z dimensions"
    status = nf90_inquire_variable(ncid,z_id,dimids = dimids)
    if (status .NE. NF90_NOERR) go to 10
 
+   varnam="z dim1"
    status = nf90_inquire_dimension(ncid,dimids(1),len = xlen)
    if (status .NE. NF90_NOERR) go to 10
 
+   varnam="z dim2"
    status = nf90_inquire_dimension(ncid,dimids(2),len = ylen)
    if (status .NE. NF90_NOERR) go to 10
 
+!  Some of the variables are optionally in restart file
+   varnam="zo"
    status = nf90_inq_varid(ncid, "zo", zo_id)
-   if (status .NE. NF90_NOERR) go to 10
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 'variable missing in restart file. Skipping ',varnam
+      zo_id=-1
+   end if
 
+   varnam="U"
    status = nf90_inq_varid(ncid, "U", U_id)
-   if (status .NE. NF90_NOERR) go to 10
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 'variable missing in restart file. Skipping ',varnam
+      U_id=-1
+   end if
 
+   varnam="zu"
    status = nf90_inq_varid(ncid, "zu", zu_id)
-   if (status .NE. NF90_NOERR) go to 10
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 'variable missing in restart file. Skipping ',varnam
+      zu_id=-1
+   end if
 
+   varnam="SlUx"
    status = nf90_inq_varid(ncid, "SlUx", SlUx_id)
-   if (status .NE. NF90_NOERR) go to 10
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 'variable missing in restart file. Skipping ',varnam
+      SlUx_id=-1
+   end if
 
+   varnam="Slru"
    status = nf90_inq_varid(ncid, "Slru", Slru_id)
-   if (status .NE. NF90_NOERR) go to 10
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 'variable missing in restart file. Skipping ',varnam
+      Slru_id=-1
+   end if
 
+   varnam="V"
    status = nf90_inq_varid(ncid, "V", V_id)
-   if (status .NE. NF90_NOERR) go to 10
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 'variable missing in restart file. Skipping ',varnam
+      V_id=-1
+   end if
 
+   varnam="zv"
    status = nf90_inq_varid(ncid, "zv", zv_id)
-   if (status .NE. NF90_NOERR) go to 10
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 'variable missing in restart file. Skipping ',varnam
+      zv_id=-1
+   end if
 
+   varnam="SlVx"
    status = nf90_inq_varid(ncid, "SlVx", SlVx_id)
-   if (status .NE. NF90_NOERR) go to 10
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 'variable missing in restart file. Skipping ',varnam
+      SlVx_id=-1
+   end if
 
+   varnam="Slrv"
    status = nf90_inq_varid(ncid, "Slrv", Slrv_id)
-   if (status .NE. NF90_NOERR) go to 10
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 'variable missing in restart file. Skipping ',varnam
+      Slrv_id=-1
+   end if
 
 #ifndef NO_3D
    if (runtype .ge. 2)  then
+      varnam="ssen"
       status = nf90_inq_varid(ncid, "ssen", ssen_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+         ssen_id=-1
+      end if
 
+      varnam="ssun"
       status = nf90_inq_varid(ncid, "ssun", ssun_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+         ssun_id=-1
+      end if
 
+      varnam="ssvn"
       status = nf90_inq_varid(ncid, "ssvn", ssvn_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+         ssvn_id=-1
+      end if
 
+      varnam="sseo"
       status = nf90_inq_varid(ncid, "sseo", sseo_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+         sseo_id=-1
+      end if
 
+      varnam="ssuo"
       status = nf90_inq_varid(ncid, "ssuo", ssuo_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+         ssuo_id=-1
+      end if
 
+      varnam="ssvo"
       status = nf90_inq_varid(ncid, "ssvo", ssvo_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+         ssvo_id=-1
+      end if
 
+      varnam=""
       status = nf90_inq_varid(ncid, "Uinto", Uinto_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+         Uinto_id=-1
+      end if
 
+      varnam="Vinto"
       status = nf90_inq_varid(ncid, "Vinto", Vinto_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+         Vinto_id=-1
+      end if
 
+      varnam="uu"
       status = nf90_inq_varid(ncid, "uu", uu_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+         uu_id=-1
+      end if
 
+      varnam="vv"
       status = nf90_inq_varid(ncid, "vv", vv_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+         vv_id=-1
+      end if
 
+      varnam="ww"
       status = nf90_inq_varid(ncid, "ww", ww_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+         ww_id=-1
+      end if
 
+      varnam="uuEx"
       status = nf90_inq_varid(ncid, "uuEx", uuEx_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+         uuEx_id=-1
+      end if
 
+      varnam="vvEx"
       status = nf90_inq_varid(ncid, "vvEx", vvEx_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+         vvEx_id=-1
+      end if
 
+!  tke is required
+      varnam="tke"
       status = nf90_inq_varid(ncid, "tke", tke_id)
       if (status .NE. NF90_NOERR) go to 10
 
+!  eps is required
+      varnam="eps"
       status = nf90_inq_varid(ncid, "eps", eps_id)
       if (status .NE. NF90_NOERR) go to 10
 
+!  num is required
+      varnam="num"
       status = nf90_inq_varid(ncid, "num", num_id)
       if (status .NE. NF90_NOERR) go to 10
 
+!  nuh is required
+      varnam="nuh"
       status = nf90_inq_varid(ncid, "nuh", nuh_id)
       if (status .NE. NF90_NOERR) go to 10
 
 #ifndef NO_BAROCLINIC
+!  T is required
+      varnam="T"
       status = nf90_inq_varid(ncid, "T", T_id)
       if (status .NE. NF90_NOERR) go to 10
 
+!  S is required
+      varnam="S"
       status = nf90_inq_varid(ncid, "S", S_id)
       if (status .NE. NF90_NOERR) go to 10
 #endif
 #ifdef SPM
+      varnam="spm"
       status = nf90_inq_varid(ncid, "spm", spm_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+         spm_id=-1
+      end if
 
+      varnam="spmpool"
       status = nf90_inq_varid(ncid, "spmpool", spmpool_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+         spmpool_id=-1
+      end if
+
 #endif
 #ifdef GETM_BIO
       if (bio_calc .and. bio_init_method .eq. 0) then
+         varnam="bio"
          status = nf90_inq_varid(ncid, "bio", bio_id)
          if (status .NE. NF90_NOERR) go to 10
       end if
@@ -189,7 +311,7 @@
 
    return
 
-   10 FATAL 'open_restart_ncdf: ',nf90_strerror(status)
+   10 FATAL 'open_restart_ncdf: ',varnam,' ',nf90_strerror(status)
    stop 'open_restart_ncdf'
 
    return
