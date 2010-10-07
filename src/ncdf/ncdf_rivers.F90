@@ -298,7 +298,7 @@
       ni = 1
       do n =1,nriver
          if (ni .le. nriver) then
-            if (ok(ni) .gt. 0) then
+            if (ok(ni) .ne. 0) then
                err = nf_get_vara_real(ncid,r_ids(nn),start,edges,x)
                if (err .ne. NF_NOERR) go to 10
                do m=1,river_split(ni)
@@ -357,7 +357,7 @@
       t_2 = t_1
 
       do n =1,nriver
-         if (ok(n) .gt. 0) then
+         if (ok(n) .ne. 0) then
             err = nf_get_vara_real(ncid,r_ids(n),start,edges,x)
             if (err .ne. NF_NOERR) go to 10
             river_flow(n) = x(1)

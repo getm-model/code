@@ -79,7 +79,7 @@
    integer, allocatable      :: ir(:),jr(:)
    REALTYPE, allocatable     :: irr(:)
    REALTYPE, allocatable     :: macro_height(:)
-   REALTYPE, allocatable     :: flow_fraction(:)
+   REALTYPE, allocatable     :: flow_fraction(:),flow_fraction_rel(:)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -119,10 +119,10 @@
 ! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,n,nn,ni,rc,m
+   integer                   :: i,j,n,nn,ni,rc,m,iriver,jriver,numcells
    integer                   :: unit = 25 ! kbk
    logical                   :: outside
-   REALTYPE                  :: area
+   REALTYPE                  :: area, total_weight
    NAMELIST /rivers/ &
             river_method,river_info,river_format,river_data,river_ramp, &
             river_factor,use_river_salt,use_river_temp
@@ -155,7 +155,7 @@
          if (rc /= 0) stop 'rivers: Error allocating memory (ir)'
          allocate(jr(nriver),stat=rc) ! j index of rivers
          if (rc /= 0) stop 'rivers: Error allocating memory (jr)'
-         allocate(ok(nriver),stat=rc) ! valid river spec.
+         allocate(ok(nriver),stat=rc) ! valid river spec. 1=yes, 0=other domain, -1=other domain, but need read.
          if (rc /= 0) stop 'rivers: Error allocating memory (ok)'
          allocate(river_name(nriver),stat=rc) ! NetCDF name of river.
          if (rc /= 0) stop 'rivers: Error allocating memory (river_name)'
@@ -169,14 +169,16 @@
          if (rc /= 0) stop 'rivers: Error allocating memory (river_salt)'
          allocate(river_split(nriver),stat=rc) ! split factor for river water
          if (rc /= 0) stop 'rivers: Error allocating memory (river_split)'
-         allocate(flow_fraction(nriver),stat=rc) ! areafactor of data for river 
+         allocate(flow_fraction_rel(nriver),stat=rc) ! Weight factor of data for river
+         if (rc /= 0) stop 'rivers: Error allocating memory (flow_fraction_rel)'
+         allocate(flow_fraction(nriver),stat=rc) ! Weight factor of data for river - scaled to unity sum for river
          if (rc /= 0) stop 'rivers: Error allocating memory (flow_fraction)'
          allocate(irr(nriver),stat=rc) ! integrated river runoff
          if (rc /= 0) stop 'rivers: Error allocating memory (irr)'
 
          ok = 0
          rriver = 0 ! number of real existing rivers...
-         flow_fraction = _ZERO_
+         flow_fraction_rel = _ZERO_
          do n=1,nriver
             read(unit,*) ir(n),jr(n),river_name(n)
             river_name(n) = trim(river_name(n))
@@ -196,6 +198,10 @@
                   rriver = rriver-1
                end if
             end if
+! Other weighting schemes could be implemented here. But we can only use 
+! information, which is available for cells also outside the present subdomain.
+!           flow_fraction(n) = _ONE_/ARCD1 ! This does not work.
+            flow_fraction_rel(n) = _ONE_
             outside= &
                     i .lt. imin .or. i .gt. imax .or.  &
                     j .lt. jmin .or. j .gt. jmax
@@ -205,59 +211,47 @@
                   LEVEL3 '          setting ok to 0'
                   ok(n) = 0
                else
+                  LEVEL3 'Inside ',trim(river_name(n)),': river# ',n
                   ok(n) = 1
-                  flow_fraction(n) = _ONE_/ARCD1
                end if
             else
               LEVEL3 'Outside: river# ',n
             end if
          end do
 
-!        calculate the number of used gridboxes, they must be 
-!        in sequence !
+!  Calculate the number of used gridboxes.
+!  This particular section is prepared for multi-cell rivers not-in-sequence.
          LEVEL3 'Number of unique rivers: ',rriver
          allocate(real_river_name(rriver),stat=rc) ! NetCDF name of river.
-         if (rc /= 0) stop 'rivers: Error allocating memory (rivers)'
-         river_split = 1    ! normal case
-         do n=2,nriver
-               if (river_name(n) .eq. river_name(n-1)) then 
-                  river_split(n)=river_split(n-1)+1
-            end if
-         end do
-         ni= nriver
-         do n=1,nriver
-            if (ni .ge. 1) then
-               if ( river_split(ni) .gt. 1 ) then  
-                  do m=1,river_split(ni)
-                     river_split(ni-m+1) =  river_split(ni)
-                  end do
+         if (rc /= 0) stop 'rivers: Error allocating memory (real_river_name)'
+         river_split(:) = 1    ! normal case
+!  This is a brute-force implementation, N**2, but N is presumed low.
+         do iriver=1,nriver
+            numcells=0
+            total_weight=_ZERO_
+            do jriver=1,nriver
+               if (river_name(iriver) .eq. river_name(jriver)) then 
+                  numcells     = numcells+1
+                  total_weight = total_weight+flow_fraction_rel(jriver)
+                  if (ok(iriver).gt.0 .and. ok(jriver).eq.0) ok(jriver)=-1
                end if
-               ni = ni - river_split(ni)
+            end do
+            river_split(iriver)   = numcells
+            flow_fraction(iriver) = flow_fraction_rel(iriver)/total_weight
+            if (numcells /= 1 .and. ok(iriver)) then
+               LEVEL3 'Multicell river (',trim(river_name(iriver)),'):# ',iriver, &
+                    'w=',flow_fraction(iriver)
             end if
          end do
+
          LEVEL3 'split:',river_split
-!        now river_split contains the number of gridboxes used 
-!        for a single river
+!  Create a list with the river names without multiple-cells, i.e. just a 
+!  single entry per real river name.
          nn = 1
          ni = 1
          do n=1,nriver
             if (ni .le. nriver) then
                real_river_name(nn) = river_name(ni)
-               if ( river_split(ni) .gt. 1 ) then
-                  area = _ZERO_
-                  do m=1,river_split(ni) 
-                     area = area +  flow_fraction(ni+m-1)
-                  end do
-                  do m=1,river_split(ni)
-                     if ( area .gt. _ZERO_ ) then
-                        flow_fraction(ni+m-1) = flow_fraction(ni+m-1)/area
-                     else
-                        flow_fraction(ni+m-1) = _ZERO_
-                     end if
-                  end do
-               else
-                  flow_fraction(ni) = _ONE_
-               end if
                nn = nn + 1  
                ni = ni + river_split(ni)
             end if 
@@ -265,6 +259,7 @@
                flow_fraction(n) = _ZERO_
             end if
          end do
+
       case default
          FATAL 'A non valid river_method has been selected'
          stop 'init_rivers'
@@ -435,7 +430,7 @@
          end do
       case default
          FATAL 'Not valid rivers_method specified'
-         stop 'init_rivers'
+         stop 'do_rivers'
    end select
 
 #ifdef DEBUG
@@ -493,11 +488,11 @@
          end do
       case default
          FATAL 'Not valid rivers_method specified'
-         stop 'init_rivers'
+         stop 'clean_rivers'
    end select
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving do_rivers()'
+   write(debug,*) 'Leaving clean_rivers()'
    write(debug,*)
 #endif
    return
