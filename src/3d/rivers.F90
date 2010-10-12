@@ -121,7 +121,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n,nn,ni,rc,m,iriver,jriver,numcells
    integer                   :: unit = 25 ! kbk
-   logical                   :: outside
+   logical                   :: outside,outsidehalo
    REALTYPE                  :: area, total_weight
    NAMELIST /rivers/ &
             river_method,river_info,river_format,river_data,river_ramp, &
@@ -176,6 +176,11 @@
          allocate(irr(nriver),stat=rc) ! integrated river runoff
          if (rc /= 0) stop 'rivers: Error allocating memory (irr)'
 
+! ok(:) flags the location of each river relative to present subdomain:
+!   1: River is present domain
+!   2: River is in HALO of present domain
+!  -1: River is multi-cell, where another part is inside present domain
+!   0: River is outside present domain (no association)
          ok = 0
          rriver = 0 ! number of real existing rivers...
          flow_fraction_rel = _ZERO_
@@ -205,14 +210,20 @@
             outside= &
                     i .lt. imin .or. i .gt. imax .or.  &
                     j .lt. jmin .or. j .gt. jmax
-            if( .not. outside) then
+            outsidehalo= &
+                    (i .lt. imin-HALO) .or. (i .gt. imax+HALO) .or.  &
+                    (j .lt. jmin-HALO) .or. (j .gt. jmax+HALO)
+            if( .not. outsidehalo) then
                if(az(i,j) .eq. 0) then
                   LEVEL3 'Warning:  river# ',n,' at (',i,j,') is on land'
                   LEVEL3 '          setting ok to 0'
                   ok(n) = 0
-               else
+               else if (.not. outside) then
                   LEVEL3 'Inside ',trim(river_name(n)),': river# ',n
                   ok(n) = 1
+               else
+                  LEVEL3 'Inhalo ',trim(river_name(n)),': river# ',n
+                  ok(n) = 2
                end if
             else
               LEVEL3 'Outside: river# ',n
@@ -238,7 +249,9 @@
             end do
             river_split(iriver)   = numcells
             flow_fraction(iriver) = flow_fraction_rel(iriver)/total_weight
-            if (numcells /= 1 .and. ok(iriver)) then
+         end do
+         do iriver=1,nriver
+           if (numcells /= 1 .and. ok(iriver)) then
                LEVEL3 'Multicell river (',trim(river_name(iriver)),'):# ',iriver, &
                     'w=',flow_fraction(iriver)
             end if
@@ -254,7 +267,7 @@
                real_river_name(nn) = river_name(ni)
                nn = nn + 1  
                ni = ni + river_split(ni)
-            end if 
+            end if
             if (ok(n) .eq. 0) then
                flow_fraction(n) = _ZERO_
             end if
@@ -385,7 +398,9 @@
             if(ok(n) .gt. 0) then
                i = ir(n)-ioff; j = jr(n)-joff
                rvol = ramp * dtm * river_flow(n) * flow_fraction(n)
-               irr(n) = irr(n) + rvol
+               if (ok(n) .eq. 1) then
+                  irr(n) = irr(n) + rvol
+               end if
                height = rvol * ARCD1
                z(i,j) = z(i,j) + height
 #ifndef NO_BAROCLINIC
