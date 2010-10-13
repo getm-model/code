@@ -251,7 +251,7 @@
             flow_fraction(iriver) = flow_fraction_rel(iriver)/total_weight
          end do
          do iriver=1,nriver
-           if (numcells /= 1 .and. ok(iriver)) then
+           if (numcells.ne.1 .and. ok(iriver).ne.0) then
                LEVEL3 'Multicell river (',trim(river_name(iriver)),'):# ',iriver, &
                     'w=',flow_fraction(iriver)
             end if
