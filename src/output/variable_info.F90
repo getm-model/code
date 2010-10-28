@@ -55,7 +55,7 @@
    public init_var_info, print_var_info
 
    integer, parameter           :: max_length=255
-   type varinfo
+   type, public                 :: varinfo
       integer                   :: id=-1
       character(len=max_length) :: name=''
       integer                   :: ndims=-1
@@ -70,7 +70,7 @@
 !      REALTYPE, pointer         :: save_data_2d(:,:)   => null()
    end type varinfo
 
-   type(varinfo), public        :: varinfo_list(40)
+   type(varinfo)                :: varinfo_list(40)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hannes Rennau
