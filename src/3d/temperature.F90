@@ -39,6 +39,8 @@
    integer                   :: attenuation_method=0,jerlov=1
    character(len=PATH_MAX)   :: attenuation_file="attenuation.nc"
    REALTYPE                  :: A_const=0.58,g1_const=0.35,g2_const=23.0
+   REALTYPE                  :: swr_bot_refl_frac=-_ONE_
+   REALTYPE                  :: swr_min_bot_frac=0.01
    integer                   :: temp_check=0
    REALTYPE                  :: min_temp=-2.,max_temp=35.
 !
@@ -95,6 +97,7 @@
             temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH, &
             attenuation_method,attenuation_file,jerlov,       &
             A_const,g1_const,g2_const,                        &
+            swr_bot_refl_frac, swr_min_bot_frac,              &
             temp_check,min_temp,max_temp
 !EOP
 !-------------------------------------------------------------------------
@@ -244,6 +247,12 @@ temp_field_no=1
       case default
    end select
 
+   if (swr_bot_refl_frac .gt. _ZERO_) then
+      LEVEL3 "reflection of short wave radiation from the bottom:"
+      LEVEL4 "swr_bot_refl_frac=",swr_bot_refl_frac
+      LEVEL4 "swr_min_bot_frac= ",swr_min_bot_frac
+   end if
+
    LEVEL3 'temp_check=',temp_check
    if (temp_check .ne. 0) then
       LEVEL4 'doing sanity check on temperature'
@@ -298,6 +307,14 @@ temp_field_no=1
 ! from given surface radiation ({\tt swr\_loc}) 
 ! by means of a double exponential
 ! approach, see equation (\ref{Light}) on page \pageref{Light}). 
+! An option to reflect part of the short wave radiation that reaches the
+! bottom has been implemented. In very shallow waters - or with very clear
+! waters - a significant part of the incoming radiation will reach the 
+! bottom. Setting swr\_bot\_refl\_frac to a value between 0 and 1 will 
+! reflect this fraction of what ever the value of SWR is at the bottom. 
+! The default value of swr\_bot\_refl\_frac is 0.
+! The reflection is only done if the ratio between the surface and bottom 
+! values of SWR is greater than swr\_min\_bot\_frac (default 0.01). 
 ! Furthermore, the surface heat flux {\tt sfl\_loc} is given a 
 ! value.
 ! The sea surface temperature is limited by the freezing point
@@ -344,6 +361,7 @@ temp_field_no=1
    REALTYPE, POINTER         :: a1(:),a2(:),a3(:),a4(:)
    REALTYPE, POINTER         :: rad1d(:)
    REALTYPE                  :: zz,swr_loc,shf_loc
+   REALTYPE                  :: swr_refl
    REALTYPE                  :: rho_0_cpi
    integer                   :: status
 !EOP
@@ -442,7 +460,27 @@ temp_field_no=1
             end if
 
             do k=0,kmax
-               rad1d(k)=rad(i,j,k)*rho_0_cpi            ! note this
+               rad1d(k)=rad(i,j,k)
+            end do
+!           allow for reflection of SWR from bottom.
+            if (swr_bot_refl_frac .gt. _ZERO_ .and. &
+                rad1d(0)/rad1d(kmax) .gt. swr_min_bot_frac) then
+               swr_refl=rad1d(0)*swr_bot_refl_frac
+#if 0
+            if (D(i,j) .lt. 0.5) then
+               STDERR 'SWR ',i,j,swr_loc,swr_refl
+            end if
+#endif
+               rad1d(0)=rad1d(0)-swr_refl
+               zz = _ZERO_
+               do k=1,kmax
+                  zz=zz+hn(i,j,k)
+                  rad1d(k)=rad(i,j,k) - swr_refl &
+                         *(A(i,j)*exp(-zz/g1(i,j))+(1-A(i,j))*exp(-zz/g2(i,j)))
+               end do
+            end if
+            do k=0,kmax
+               rad1d(k)=rad1d(k)*rho_0_cpi                ! note this
             end do
 
             if (kmax.gt.1) then

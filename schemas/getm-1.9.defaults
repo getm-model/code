@@ -343,6 +343,12 @@
 			<attenuation_file>
 				attenuation.nc
 			</attenuation_file>
+			<swr_bot_refl_frac>
+				0.
+			</swr_bot_refl_frac>
+			<swr_min_bot_frac>
+				0.01
+			</swr_min_bot_frac>
 			<temp_check>
 				0
 			</temp_check>

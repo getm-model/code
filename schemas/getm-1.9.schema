@@ -455,6 +455,11 @@
 			<element name="attenuation_file" type="string" label="name of file with varying coefficients">
 				<condition type="eq" variable="./attenuation_method" value="1"/>
 			</element>
+			<element name="swr_bot_refl_frac" type="float" minInclusive="0." maxInclusive="1." label="fraction of bottom SWR that is reflected" description="At low - or in clear - waters a certain amount of SWR reaches the bottom. The value of this variable specifies how much is reflected up in the water column. Set to 0 to have no reflection. Default value is 0">
+			</element>
+			<element name="swr_min_bot_frac" type="float" minInclusive="0.0" maxInclusive="1." label="only do reflection if bottom/surface SWR is .gt. this value"  description="Only do reflection if the ratio of bottom to surface SWR is greater than this variable. Only used if swr_bot_refl_frac is greater than 0. Default is 0.01.">
+				<condition type="ne" variable="./swr_bot_refl_frac" value="0"/>
+			</element>
 			<element name="temp_check" type="int" label="interval between checks for out-of-bounds temperatures" description="Interval between checks for out-of-bounds temperatures. 0: disabled, &gt;0: check every temp_check step, abort if check fails, &lt;0: check every abs(temp_check) step, warn if check fails"/>
 			<element name="min_temp"   type="float" label="minimum valid temperature" unit="°C">
 				<condition type="ne" variable="./temp_check" value="0"/>
