@@ -18,7 +18,7 @@
 !
 ! !USES:
    use exceptions
-   use domain, only: imin,jmin,imax,kmax,jmax,H,az
+   use domain, only: imin,jmin,imax,kmax,jmax,H,az,dry_z
    use variables_3d, only: T,rad,hn,adv_schemes,kmin,A,g1,g2
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
@@ -497,7 +497,7 @@ temp_field_no=1
                a1(k)=-auxn(k-1)
                a2(k)=hn(i,j,k)+auxn(k-1)
                a4(k)=T(i,j,k)*(hn(i,j,k)-auxo(k-1))+T(i,j,k-1)*auxo(k-1)  &
-                     +dt*(rad1d(k)+shf_loc*rho_0_cpi-rad1d(k-1))
+                     +dry_z(i,j)*dt*(rad1d(k)+shf_loc*rho_0_cpi-rad1d(k-1))
 
 !        Matrix elements for inner layers
                do k=2,kmax-1
@@ -507,7 +507,7 @@ temp_field_no=1
                   a4(k)=T(i,j,k+1)*auxo(k)                          &
                        +T(i,j,k  )*(hn(i,j,k)-auxo(k)-auxo(k-1))    &
                        +T(i,j,k-1)*auxo(k-1)                        &
-                       +dt*(rad1d(k)-rad1d(k-1))
+                       +dry_z(i,j)*dt*(rad1d(k)-rad1d(k-1))
                end do
 
 !        Matrix elements for bottom layer
@@ -516,7 +516,7 @@ temp_field_no=1
                a2(k)=hn(i,j,k)+auxn(k)
                a4(k)=T(i,j,k+1)*auxo(k)                           &
                     +T(i,j,k  )*(hn(i,j,k)-auxo(k))               &
-                    +dt*(rad1d(k)-rad1d(k-1))
+                    +dry_z(i,j)*dt*(rad1d(k)-rad1d(k-1))
 
                call getm_tridiagonal(kmax,1,kmax,a1,a2,a3,a4,Res)
 
