@@ -176,6 +176,63 @@
           long_name='mean temperature',units='degC',&
           FillValue=fv,missing_value=mv,valid_range=vr)
 
+   if (save_mix_analysis) then
+      fv = nummix_missing
+      mv = nummix_missing
+      vr(1) = -100.0
+      vr(2) =  100.0
+
+      err = nf_def_var(ncid,'nummix3d_S',NF_REAL,4,f4_dims,nm3dS_id)
+      if (err .NE. NF_NOERR) go to 10
+      call set_attributes(ncid,nm3dS_id, &
+          long_name='mean numerical mixing of salinity', &
+          units='psu**2/s',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+      err = nf_def_var(ncid,'nummix3d_T',NF_REAL,4,f4_dims,nm3dT_id)
+      if (err .NE. NF_NOERR) go to 10
+      call set_attributes(ncid,nm3dT_id, &
+          long_name='mean numerical mixing of temperature', &
+          units='degC**2/s',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+      err = nf_def_var(ncid,'phymix3d_S',NF_REAL,4,f4_dims,pm3dS_id)
+      if (err .NE. NF_NOERR) go to 10
+      call set_attributes(ncid,pm3dS_id, &
+          long_name='mean physical mixing of salinity', &
+          units='psu**2/s',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+      err = nf_def_var(ncid,'phymix3d_T',NF_REAL,4,f4_dims,pm3dT_id)
+      if (err .NE. NF_NOERR) go to 10
+      call set_attributes(ncid,pm3dT_id, &
+         long_name='mean physical mixing of temperature', &
+         units='degC**2/s',&
+         FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf_def_var(ncid,'nummix2d_S',NF_REAL,3,f3_dims,nm2dS_id)
+      if (err .NE. NF_NOERR) go to 10
+      call set_attributes(ncid,nm2dS_id, &
+          long_name='mean, vert.integrated numerical mixing of salinity', &
+          units='psu**2 m/s',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+      err = nf_def_var(ncid,'nummix2d_T',NF_REAL,3,f3_dims,nm2dT_id)
+      if (err .NE. NF_NOERR) go to 10
+      call set_attributes(ncid,nm2dT_id, &
+          long_name='mean, vert.integrated numerical mixing of temperature', &
+          units='degC**2 m/s',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+      err = nf_def_var(ncid,'phymix2d_S',NF_REAL,3,f3_dims,pm2dS_id)
+      if (err .NE. NF_NOERR) go to 10
+      call set_attributes(ncid,pm2dS_id, &
+          long_name='mean, vert.integrated physical mixing of salinity', &
+          units='psu**2 m/s',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+      err = nf_def_var(ncid,'phymix2d_T',NF_REAL,3,f3_dims,pm2dT_id)
+      if (err .NE. NF_NOERR) go to 10
+      call set_attributes(ncid,pm2dT_id, &
+         long_name='mean, vert.integrated physical mixing of temperature', &
+         units='degC**2 m/s',&
+         FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
+
 !  globals
    err = nf_put_att_text(ncid,NF_GLOBAL,'title',LEN_TRIM(title),title)
    if (err .NE. NF_NOERR) go to 10

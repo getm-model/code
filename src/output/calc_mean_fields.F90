@@ -15,9 +15,12 @@
    use domain, only: az,au,av
    use meteo, only: swr
    use m3d, only: M
+   use variables_3d, only: do_mixing_analysis
    use variables_3d, only: hn,uu,hun,vv,hvn,ww,taub
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T
+   use variables_3d, only: nummix3d_S,nummix2d_S,nummix3d_T,nummix2d_T
+   use variables_3d, only: phymix3d_S,phymix2d_S,phymix3d_T,phymix2d_T
 #endif
    use diagnostic_variables
    use getm_timers, only: tic, toc, TIM_CALCMEANF
@@ -98,6 +101,33 @@
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (Smean)'
 #endif
+      if (do_mixing_analysis) then
+         allocate(nummix3d_S_mean(I3DFIELD),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (nummix3d_S_mean)'
+         allocate(nummix3d_T_mean(I3DFIELD),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (nummix3d_T_mean)'
+         allocate(nummix2d_S_mean(I2DFIELD),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (nummix2d_S_mean)'
+         allocate(nummix2d_T_mean(I2DFIELD),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (nummix2d_T_mean)'
+         allocate(phymix3d_S_mean(I3DFIELD),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (nummix3d_S_mean)'
+         allocate(phymix3d_T_mean(I3DFIELD),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (nummix3d_T_mean)'
+         allocate(phymix2d_S_mean(I2DFIELD),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (nummix2d_S_mean)'
+         allocate(phymix2d_T_mean(I2DFIELD),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (nummix2d_T_mean)'
+      end if
+
       first = .false.
    end if
 
@@ -106,6 +136,12 @@
       humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
 #ifndef NO_BAROCLINIC
       Tmean=_ZERO_; Smean=_ZERO_
+      if (do_mixing_analysis) then
+         nummix3d_S_mean=_ZERO_; nummix2d_S_mean=_ZERO_
+         nummix3d_T_mean=_ZERO_; nummix2d_T_mean=_ZERO_
+         phymix3d_S_mean=_ZERO_; phymix2d_S_mean=_ZERO_
+         phymix3d_T_mean=_ZERO_; phymix2d_T_mean=_ZERO_
+      end if
 #endif
       ustarmean=_ZERO_; ustar2mean=_ZERO_; swrmean=_ZERO_
    end if
@@ -140,8 +176,17 @@
       Tmean = Tmean + T
       Smean = Smean + S
       hmean = hmean + hn
+      if (do_mixing_analysis) then
+         nummix3d_S_mean = nummix3d_S_mean + nummix3d_S
+         nummix2d_S_mean = nummix2d_S_mean + nummix2d_S
+         nummix3d_T_mean = nummix3d_T_mean + nummix3d_T
+         nummix2d_T_mean = nummix2d_T_mean + nummix2d_T
+         phymix3d_S_mean = phymix3d_S_mean + phymix3d_S
+         phymix2d_S_mean = phymix2d_S_mean + phymix2d_S
+         phymix3d_T_mean = phymix3d_T_mean + phymix3d_T
+         phymix2d_T_mean = phymix2d_T_mean + phymix2d_T
+      end if
 #endif
-
 !  count them
       step = step + 1.0
    end if   ! here we summed them up
@@ -160,6 +205,16 @@
          Tmean = Tmean / step
          Smean = Smean / step
          hmean = hmean / step
+         if (do_mixing_analysis) then
+            nummix3d_S_mean = nummix3d_S_mean / step
+            nummix2d_S_mean = nummix2d_S_mean / step
+            nummix3d_T_mean = nummix3d_T_mean / step
+            nummix2d_T_mean = nummix2d_T_mean / step
+            phymix3d_S_mean = phymix3d_S_mean / step
+            phymix2d_S_mean = phymix2d_S_mean / step
+            phymix3d_T_mean = phymix3d_T_mean / step
+            phymix2d_T_mean = phymix2d_T_mean / step
+         end if
 #endif
 
          ustarmean = ustarmean / step

@@ -352,7 +352,10 @@ salt_field_no=1
    use domain, only: dx,dy,ard1
 #endif
    use parameters, only: avmols
-   use getm_timers, only: tic, toc, TIM_SALT
+   use getm_timers, only: tic, toc, TIM_SALT, TIM_MIXANALYSIS
+   use variables_3d, only: do_mixing_analysis
+   use variables_3d, only: nummix3d_S,nummix2d_S
+   use variables_3d, only: phymix3d_S,phymix2d_S
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -371,6 +374,7 @@ salt_field_no=1
 #ifdef SALTWEDGE_TEST
    REALTYPE                  :: SRelax,kk
 #endif
+  REALTYPE                   :: S2(I3DFIELD)
   REALTYPE                   :: delxu(I2DFIELD),delxv(I2DFIELD)
   REALTYPE                   :: delyu(I2DFIELD),delyv(I2DFIELD)
   REALTYPE                   :: area_inv(I2DFIELD)
@@ -410,9 +414,27 @@ salt_field_no=1
    ! Note: do_advection_3d is timed separately, so we 
    ! stop the present counter
    call toc(TIM_SALT)
+
+   if (do_mixing_analysis) then
+      call tic(TIM_MIXANALYSIS)
+      S2 = S**2
+      call toc(TIM_MIXANALYSIS)
+      call do_advection_3d(dt,S2,uu,vv,ww,hun,hvn,ho,hn,    &
+                        delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
+                        salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH)
+      
+   end if
+
    call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,    &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
                         salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH)
+
+   if (do_mixing_analysis) then
+      call tic(TIM_MIXANALYSIS)
+      call numerical_mixing(S2,S,nummix3d_S,nummix2d_S)
+      call physical_mixing(S,nuh+avmols,phymix3d_S,phymix2d_S)
+      call toc(TIM_MIXANALYSIS)
+   end if
 
    call tic(TIM_SALT)
 #ifdef PECS_TEST

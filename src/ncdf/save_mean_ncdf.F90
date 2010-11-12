@@ -132,6 +132,54 @@
    err = nf_put_vara_real(ncid, tempmean_id, start, edges, ws)
    if (err .NE. NF_NOERR) go to 10
 
+   if (save_mix_analysis) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az, &
+                  nummix3d_S_mean,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf_put_vara_real(ncid, nm3dS_id, start, edges, ws)
+      if (err .NE. NF_NOERR) go to 10
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az, &
+                  nummix3d_T_mean,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf_put_vara_real(ncid, nm3dT_id, start, edges, ws)
+      if (err .NE. NF_NOERR) go to 10
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az, &
+                  phymix3d_S_mean,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf_put_vara_real(ncid, pm3dS_id, start, edges, ws)
+      if (err .NE. NF_NOERR) go to 10
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az, &
+                  phymix3d_T_mean,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf_put_vara_real(ncid, pm3dT_id, start, edges, ws)
+      if (err .NE. NF_NOERR) go to 10
+   
+
+      start(1) = 1
+      start(2) = 1
+      start(3) = n3d
+      edges(1) = xlen
+      edges(2) = ylen
+      edges(3) = 1
+
+      call cnv_2d(imin,jmin,imax,jmax,az,nummix2d_S_mean,nummix_missing, &
+                  imin,jmin,imax,jmax,ws)
+      err = nf_put_vara_real(ncid, nm2dS_id, start, edges, ws)
+      if (err .NE. NF_NOERR) go to 10
+      call cnv_2d(imin,jmin,imax,jmax,az,nummix2d_T_mean,nummix_missing, &
+                  imin,jmin,imax,jmax,ws)
+      err = nf_put_vara_real(ncid, nm2dT_id, start, edges, ws)
+      if (err .NE. NF_NOERR) go to 10
+      call cnv_2d(imin,jmin,imax,jmax,az,phymix2d_S_mean,nummix_missing, &
+                  imin,jmin,imax,jmax,ws)
+      err = nf_put_vara_real(ncid, pm2dS_id, start, edges, ws)
+      if (err .NE. NF_NOERR) go to 10
+      call cnv_2d(imin,jmin,imax,jmax,az,phymix2d_T_mean,nummix_missing, &
+                  imin,jmin,imax,jmax,ws)
+      err = nf_put_vara_real(ncid, pm2dT_id, start, edges, ws)
+      if (err .NE. NF_NOERR) go to 10
+   end if
+
    err = nf_sync(ncid)
    if (err .NE. NF_NOERR) go to 10
 

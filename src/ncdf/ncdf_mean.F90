@@ -32,6 +32,9 @@
    REALTYPE, parameter                 :: temp_missing=-9999.0
    REALTYPE, parameter                 :: tke_missing=-9999.0
    REALTYPE, parameter                 :: eps_missing=-9999.0
+   REALTYPE, parameter                 :: nummix_missing=-9999.0
+   integer                             :: nm3dS_id,nm3dT_id,nm2dS_id,nm2dT_id
+   integer                             :: pm3dS_id,pm3dT_id,pm2dS_id,pm2dT_id
 
    REAL_4B, dimension(:), allocatable :: ws
 !

@@ -35,6 +35,8 @@
 #ifdef GETM_BIO
    integer, allocatable                :: bio_ids(:)
 #endif
+   integer                             :: nm3dS_id,nm3dT_id,nm2dS_id,nm2dT_id
+   integer                             :: pm3dS_id,pm3dT_id,pm2dS_id,pm2dT_id
 
    REAL_4B, dimension(:), allocatable  :: ws
 
@@ -60,6 +62,7 @@
 #ifdef GETM_BIO
    REALTYPE, parameter                 :: bio_missing=-9999.0
 #endif
+   REALTYPE, parameter                 :: nummix_missing=-9999.0
 
 !
 ! !REVISION HISTORY:

@@ -73,6 +73,7 @@
    ! These catch stuff that are *also* measured somewhere else:
    integer, parameter :: TIM_ADVECT3DTOT = 100  ! advection_3d (uv+tracers)
    integer, parameter :: TIM_CHECK3DF    = 102  ! check_3d_fields
+   integer, parameter :: TIM_MIXANALYSIS = 103  ! (numerical) mixing analysis
    ! This is test timers for temporary coding purposes:
    !  Note: All timers with index 170+ (test_timer_first) are  
    !  considered test timers, so dont implement your timers here
@@ -196,6 +197,7 @@
    timernames(TIM_CHECK3DF)    = ' sum check_3d_fields'
    timernames(TIM_ADVECT3DTOT) = ' sum do_advection_3d'
    timernames(TIM_INTEGR3D)    = 'integrate_3d other'
+   timernames(TIM_MIXANALYSIS) = 'numerical mixing analysis'
 
 ! We only really want to display halo-stuff if we compile for parallel:
 #ifdef GETM_PARALLEL

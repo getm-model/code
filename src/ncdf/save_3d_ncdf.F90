@@ -27,6 +27,7 @@
    use variables_3d, only: taubx,tauby
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho,rad,NN
+   use variables_3d, only: nummix3d_S,nummix3d_T,phymix3d_S,phymix3d_T
 #endif
    use variables_3d, only: tke,num,nuh,eps
 #ifdef SPM
@@ -354,6 +355,27 @@
 #endif
 
    end if ! save_ss_nn
+
+#ifndef NO_BAROCLINIC
+   if (save_mix_analysis) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix3d_S,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf_put_vara_real(ncid, nm3dS_id, start, edges, ws)
+      if (err .NE. NF_NOERR) go to 10
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix3d_T,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf_put_vara_real(ncid, nm3dT_id, start, edges, ws)
+      if (err .NE. NF_NOERR) go to 10
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix3d_S,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf_put_vara_real(ncid, pm3dS_id, start, edges, ws)
+      if (err .NE. NF_NOERR) go to 10
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix3d_T,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf_put_vara_real(ncid, pm3dT_id, start, edges, ws)
+      if (err .NE. NF_NOERR) go to 10
+   end if ! save_mix_analysis
+#endif
 
 #ifdef SPM
    if (spm_save) then

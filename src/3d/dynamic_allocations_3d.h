@@ -79,6 +79,30 @@
   allocate(rad(I3DFIELD),stat=rc) ! Solar radiation
   if (rc /= 0) stop 'init_3d: Error allocating memory (rad)'
 
+  allocate(nummix3d_S(I3DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (nummix3d_S)'
+
+  allocate(nummix2d_S(I2DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (nummix2d_S)'
+
+  allocate(nummix3d_T(I3DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (nummix3d_T)'
+
+  allocate(nummix2d_T(I2DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (nummix2d_T)'
+
+  allocate(phymix3d_S(I3DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (phymix3d_S)'
+
+  allocate(phymix2d_S(I2DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (phymix2d_S)'
+
+  allocate(phymix3d_T(I3DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (phymix3d_T)'
+
+  allocate(phymix2d_T(I2DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (phymix2d_T)'
+
 #endif
 
 #ifdef SPM

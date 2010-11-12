@@ -388,6 +388,39 @@
 #endif
 
    end if
+
+#ifndef NO_BAROCLINIC
+   if (save_mix_analysis) then
+      fv = nummix_missing
+      mv = nummix_missing
+      vr(1) = -100.0
+      vr(2) = 100.0
+      err = nf_def_var(ncid,'nummix3d_S',NF_REAL,4,f4_dims,nm3dS_id)
+      if (err .NE. NF_NOERR) go to 10
+      call set_attributes(ncid,nm3dS_id, &
+          long_name='numerical mixing of salinity', &
+          units='psu**2/s',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+      err = nf_def_var(ncid,'nummix3d_T',NF_REAL,4,f4_dims,nm3dT_id)
+      if (err .NE. NF_NOERR) go to 10
+      call set_attributes(ncid,nm3dT_id, &
+          long_name='numerical mixing of temperature', &
+          units='degC**2/s',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+      err = nf_def_var(ncid,'phymix3d_S',NF_REAL,4,f4_dims,pm3dS_id)
+      if (err .NE. NF_NOERR) go to 10
+      call set_attributes(ncid,pm3dS_id, &
+          long_name='physical mixing of salinity', &
+          units='psu**2/s',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+      err = nf_def_var(ncid,'phymix3d_T',NF_REAL,4,f4_dims,pm3dT_id)
+      if (err .NE. NF_NOERR) go to 10
+      call set_attributes(ncid,pm3dT_id, &
+         long_name='physical mixing of temperature', &
+         units='degC**2/s',&
+         FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
+#endif
 #ifdef SPM
    if (spm_save) then
       fv = spm_missing

@@ -13,6 +13,7 @@
 ! !USES:
    use time, only: write_time_string,timestep,timestr
    use ascii_out
+   use variables_3d, only: do_mixing_analysis
 #ifdef TEST_NESTING
    use nesting
 #endif
@@ -55,6 +56,8 @@
    integer                             :: step_3d=1
    integer                             :: hotout(3)=-1
    integer                             :: meanout=-1
+   logical                             :: save_mix_analysis=.false.
+
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -226,7 +229,7 @@
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              save_ss_nn,save_taub, &
              first_2d,step_2d,first_3d,step_3d,hotout,meanout, &
-             save_meteo
+             save_meteo, save_mix_analysis
 !   logical :: nesting=.true.
 !EOP
 !-------------------------------------------------------------------------
@@ -328,6 +331,11 @@
       call init_nesting()
 !   end if
 #endif
+
+   if (save_mix_analysis) then
+      LEVEL2 "calculate and save mixing analysis"
+      do_mixing_analysis=.true.
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_output()'

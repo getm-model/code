@@ -28,6 +28,16 @@
    REALTYPE,dimension(:,:,:), allocatable :: hmean
    REALTYPE,dimension(:,:,:), allocatable :: Tmean
    REALTYPE,dimension(:,:,:), allocatable :: Smean
+
+   REALTYPE,dimension(:,:,:), allocatable :: nummix3d_S_mean
+   REALTYPE,dimension(:,:), allocatable :: nummix2d_S_mean
+   REALTYPE,dimension(:,:,:), allocatable :: nummix3d_T_mean
+   REALTYPE,dimension(:,:), allocatable :: nummix2d_T_mean
+   REALTYPE,dimension(:,:,:), allocatable :: phymix3d_S_mean
+   REALTYPE,dimension(:,:), allocatable :: phymix2d_S_mean
+   REALTYPE,dimension(:,:,:), allocatable :: phymix3d_T_mean
+   REALTYPE,dimension(:,:), allocatable :: phymix2d_T_mean
+
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard

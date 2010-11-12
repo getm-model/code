@@ -119,6 +119,7 @@
    REALTYPE                            :: dt,cnpar=0.9
    REALTYPE                            :: avmback=_ZERO_,avhback=_ZERO_
    character(len=64)                   :: adv_schemes(7)
+   logical                             :: do_mixing_analysis=.false.
 !
 #ifdef STATIC
 #include "static_3d.h"
@@ -207,6 +208,8 @@
 #ifndef NO_BAROCLINIC
    idpdx=_ZERO_
    idpdy=_ZERO_
+   nummix3d_S = _ZERO_ ; nummix2d_S = _ZERO_
+   nummix3d_T = _ZERO_ ; nummix2d_T = _ZERO_
 #endif
 
    adv_schemes(1) = "3D first-order upstream advection"
