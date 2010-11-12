@@ -500,6 +500,10 @@
                                         "save_grid_ncdf()","v_mask")
    end if
 
+   status = nf90_sync(ncid)
+   if (status .ne. NF90_NOERR) call netcdf_error(status,            &
+                                     "save_grid_ncdf()","syncing")
+
    return
    end subroutine save_grid_ncdf
 !EOC
