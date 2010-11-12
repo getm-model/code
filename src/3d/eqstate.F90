@@ -136,8 +136,6 @@
 #define BUOYANCY
    select case (eqstate_method)
       case (1)
-         LEVEL1 'BJB EQST TEST'
-!         forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO,az(i,j) .gt. 0)  &
          do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
             do j=jmin-HALO,jmax+HALO
