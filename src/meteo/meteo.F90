@@ -436,9 +436,7 @@
 !
 ! !INTERFACE:
    subroutine do_meteo(n,sst)
-   use getm_timers, only: tic, toc, TIM_METEO
 !$ use omp_lib
-   IMPLICIT NONE
 !
 ! !DESCRIPTION:
 !  Should be called once every time step to update the meteorological forcing.
@@ -467,6 +465,9 @@
 !  time steps).
 !  To implement an use a different set of formulae for flux calculations
 !  should be a matter of only changing the involved subroutines.
+!
+   use getm_timers, only: tic, toc, TIM_METEO
+   IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
 !
