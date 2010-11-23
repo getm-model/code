@@ -206,6 +206,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use getm_timers, only: tic, toc, TIM_GETM_BIO
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -228,6 +229,8 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+
+   call tic(TIM_GETM_BIO)
 
 !  First we do all the vertical processes
    do j=jmin,jmax
@@ -297,6 +300,8 @@
       call wait_halo(D_TAG)
 #endif
    end do
+
+   call toc(TIM_GETM_BIO)
 
    return
    end subroutine do_getm_bio

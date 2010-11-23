@@ -64,6 +64,7 @@
    integer, parameter :: TIM_EQSTATE     = 66   ! 3d do_eqstate
    integer, parameter :: TIM_CALCMEANF   = 68   ! 3d calc_mean_fields
    integer, parameter :: TIM_METEO       = 70   ! do_meteo (could use + halo)
+   integer, parameter :: TIM_GETM_BIO    = 72   ! do_getm_bio
    ! These catch compuations in integrate_[23]d, which are not in other timers:
    integer, parameter :: TIM_INTEGR2D    = 80   ! 2d integrate_2d - remaining stuff
    integer, parameter :: TIM_INTEGR3D    = 81   ! 3d integrate_3d - remaining stuff
