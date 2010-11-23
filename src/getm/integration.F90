@@ -107,7 +107,8 @@
    subroutine time_loop(runtype)
 !
 ! !DESCRIPTION:
-!  A wrapper that calls meteo\_forcing, integrate\_2d, integrate\_3d and output
+!  A wrapper that calls meteo\_forcing, integrate\_2d, integrate\_3d,
+!  do\_getm\_bio and output
 !  within a time loop.
 !
 ! !USES:
@@ -205,7 +206,7 @@
          if (spm_calc) call do_spm()
 #endif
 #ifdef GETM_BIO
-         if (bio_calc) call do_getm_bio(timestep)
+         if (bio_calc) call do_getm_bio(M*timestep)
 #endif
 #ifndef NO_3D
          if (fwf_method .ge. 1) then

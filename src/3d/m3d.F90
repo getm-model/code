@@ -36,10 +36,6 @@
    use internal_pressure, only: init_internal_pressure, do_internal_pressure
    use internal_pressure, only: ip_method
 #endif
-#ifdef GETM_BIO
-   use bio, only: bio_calc
-   use getm_bio, only: do_getm_bio
-#endif
    use variables_3d
    use advection_3d, only: init_advection_3d
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
@@ -502,12 +498,6 @@
       call do_eqstate()
 #endif
    end if
-#endif
-
-#ifdef GETM_BIO
-   call tic(TIM_INTEGR3D)
-   if (bio_calc) call do_getm_bio(dt)
-   call toc(TIM_INTEGR3D)
 #endif
 
    UEx=_ZERO_ ; VEx=_ZERO_
