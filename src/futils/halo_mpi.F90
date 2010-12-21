@@ -16,9 +16,9 @@
 !  of 'getm' using the Message Passage Interface (MPI) method.
 !
 ! !USES:
-!KBK   use mpi
+   use mpi
    IMPLICIT NONE
-include "mpif.h"
+!
    private
 !
 ! !PUBLIC MEMBER FUNCTIONS:

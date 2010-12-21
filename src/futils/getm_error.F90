@@ -11,11 +11,10 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   IMPLICIT NONE
 #ifdef GETM_PARALLEL
-!    use mpi
-    include "mpif.h"
+    use mpi
 #endif
+   IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    character(len=*)                    :: sub,msg
