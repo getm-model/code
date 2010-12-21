@@ -13,7 +13,7 @@ CPP	= /lib/cpp
 # Top of this version of GETM and GOTM. Defaults can be overwritten using 
 # environment variables.
 ifndef GETMDIR
-GETMDIR  = $(HOME)/GETM/v1.8.x
+GETMDIR  = $(HOME)/GETM/getm-git
 endif
 
 ifndef GOTMDIR
