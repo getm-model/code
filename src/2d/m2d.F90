@@ -158,26 +158,27 @@
          call wait_halo(H_TAG)
          ! Compute AnX (An in X-points) based on An and the X- and T- masks
          AnX = _ZERO_
-         do j=jmin,jmax+1
-            do i=imin,imax+1
+         ! We loop over the X-points in the present domain.
+         do j=jmin-1,jmax
+            do i=imin-1,imax
                if (ax(i,j) .ge. 1) then
                   num_neighbors = 0
                   An_sum = _ZERO_
                   ! Each AnX should have up to 4 T-point neighbours.
-                  if ( az(i-1,j-1) .ge. 1 ) then
-                     An_sum        = An_sum + An(i-1,j-1)
-                     num_neighbors = num_neighbors +1
-                  end if
-                  if ( az(i-1,j) .ge. 1 ) then
-                     An_sum        = An_sum + An(i-1,j)
-                     num_neighbors = num_neighbors +1
-                  end if
-                  if ( az(i,j-1) .ge. 1 ) then
-                     An_sum        = An_sum + An(i,j-1)
-                     num_neighbors = num_neighbors +1
-                  end if
                   if ( az(i,j) .ge. 1 ) then
                      An_sum        = An_sum + An(i,j)
+                     num_neighbors = num_neighbors +1
+                  end if
+                  if ( az(i,j+1) .ge. 1 ) then
+                     An_sum        = An_sum + An(i,j+1)
+                     num_neighbors = num_neighbors +1
+                  end if
+                  if ( az(i+1,j) .ge. 1 ) then
+                     An_sum        = An_sum + An(i+1,j)
+                     num_neighbors = num_neighbors +1
+                  end if
+                  if ( az(i+1,j+1) .ge. 1 ) then
+                     An_sum        = An_sum + An(i+1,j+1)
                      num_neighbors = num_neighbors +1
                   end if
                   ! Take average of actual neighbours:
