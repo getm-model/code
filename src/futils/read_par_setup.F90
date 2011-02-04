@@ -51,7 +51,7 @@
 !BOC
 ! Read #jobs, test vs. actual nprocs in use
 
-   open(unit=iunit,file=fn)
+   open(unit=iunit,file=fn,iostat=iostat)
    iline   = 0 ! Index for line number in file
    thislineok = 0 ! Flag for this line read OK
    do while (thislineok .eq. 0 .and. iostat == 0)
