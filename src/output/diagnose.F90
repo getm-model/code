@@ -107,10 +107,6 @@
    REALTYPE volvec(1:1000000)
 #endif
    REALTYPE aa(1:500,0:25)
-#ifdef HAIDVOGEL_TEST
-   REALTYPE        :: MKE,APE,APE0,densi,zs,zzz
-   LOGICAL,save    :: FIRST=.true.
-#endif
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -311,42 +307,6 @@
      end if
 !#endif
 #endif
-#endif
-#ifdef HAIDVOGEL_TEST
-
-    if (abs(loop/M-loop/float(M)).lt.1e-10) then
-    MKE=0.
-    APE=0.
-    do k=1,kmax
-       do j=1,jmax
-          do i=1,imax
-            MKE=MKE+0.5*1025.*(uu(i,j,k)**2/hun(i,j,k)*dx*dy+vv(i,j,k)**2/hvn(i,j,k)*dx*dy)
-         end do
-       end do
-    end do
-    do j=1,jmax
-       do i=1,imax
-          zs=z(i,j)
-          do k=kmax,1,-1
-            zs=zs-0.5*hn(i,j,k)
-            densi=1025.-rho(i,j,k)*1025./9.82
-            APE=APE+dx*dy*9.82*hn(i,j,k)*densi*zs
-            zs=zs-0.5*hn(i,j,k)
-         end do
-       end do
-    end do
-    if (FIRST) then
-       APE0=APE
-       FIRST=.false.
-    end if
-    zzz=0
-    do i=2,129
-       do j=2,4
-          zzz=zzz+z(i,j)
-       end do
-    end do        
-    write(80,996) loop*dt/3600./24./float(M),MKE,APE-APE0,MKE+APE-APE0
-    end if
 #endif
 
 #ifdef FRESHWATER_LENSE_TEST

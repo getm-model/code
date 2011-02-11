@@ -149,15 +149,9 @@
 
 !$OMP BARRIER
 
-! OMP-TODO: HAIDVOGEL_TEST and CONSTANCE_TEST not threaded. It should
+! OMP-TODO: CONSTANCE_TEST not threaded. It should
 !  be easy to thread, but the gain would only be for those cases, 
 !  and the risk of introducing erros is non-zero. BJB 2009-09-25.
-#ifdef HAIDVOGEL_TEST
-!$OMP MASTER
-         forall(i=imin-1:imax+1,j=jmin-1:jmax+1,az(i,j) .gt. 0)  &
-            rho(i,j,1:kmax) = 1000. + S(i,j,1:kmax)
-!$OMP END MASTER
-#endif
 #ifdef CONSTANCE_TEST
 !$OMP MASTER
          forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO,az(i,j) .gt. 0)  &

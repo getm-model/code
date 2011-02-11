@@ -18,9 +18,6 @@
 ! !USES:
    use exceptions
    use domain, only: imin,jmin,imax,jmax,kmax,ioff,joff
-#ifdef HAIDVOGEL_TEST
-   use domain, only: iextr,jextr
-#endif
    use domain, only: H,az
    use variables_2d, only: fwf_int
    use variables_3d, only: S,hn,adv_schemes,kmin
@@ -251,17 +248,6 @@ salt_field_no=1
         S(i,j,0:kmax) = 25.
       end do
    end if
-#endif
-#ifdef HAIDVOGEL_TEST
-!   STDERR 'HAIDVOGEL: salinity= ',imin,imax,i+ioff,iextr/2
-   do i=imin-1,imax+1
-      if(i+ioff .le. iextr/2) then
-         S(i,jmin-1:jmax+1,0:kmax) = 6.4102564
-         S(i,jmin-1:jmax+1,0:kmax) = 5.
-      else
-         S(i,jmin-1:jmax+1,0:kmax) = 0.
-      end if
-   end do
 #endif
 !#else
 !#ifdef PECS_TEST
