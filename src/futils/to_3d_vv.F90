@@ -26,10 +26,8 @@
   REALTYPE, intent(in)       :: vv(I3DFIELD)
   REALTYPE, intent(in)       :: missing
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
-   REAL_4B, intent(out)      :: vel(*)
+   REALTYPE, intent(out)     :: vel(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf
@@ -50,33 +48,26 @@
 !  Revision 1.1  2005-04-25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
-!
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
-   integer                   :: indx
    REALTYPE                  :: vt,vb
    REALTYPE, parameter       :: eps=1.E-5
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-
-   indx = 1
    do k=0,kmax
       do j=jmin,jmax
          do i=imin,imax
          if ( az(i,j) .gt. 0 .and. k .ge. kmin(i,j) ) then
                vt        = vv(i,j  ,k)/(hvn(i,j  ,k)+eps)
                vb        = vv(i,j-1,k)/(hvn(i,j-1,k)+eps)
-               vel(indx) = 0.5*(vt+vb)
+               vel(i,j,k) = 0.5*(vt+vb)
             else
-               vel(indx) = missing
+               vel(i,j,k) = missing
             end if
-            indx = indx+1
          end do
       end do
    end do
-
-
    return
    end subroutine to_3d_vv
 !EOC

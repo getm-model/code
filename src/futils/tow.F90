@@ -45,7 +45,7 @@
    logical, intent(in)                 :: destag
 !
 ! !OUTPUT PARAMETERS:
-   REAL_4B, intent(out)                :: ws(*)
+   REALTYPE, intent(out)               :: ws(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -110,11 +110,11 @@
 #ifndef SLICE_MODEL
             dyz=-(HV(i,j)-HV(i,j-1))/DYC
 #else
-            dyz=0.
+            dyz=_ZERO_
 #endif
             u=0.5*(uu(i,j,k+1)/hun(i,j,k+1)+uu(i-1,j,k+1)/hun(i-1,j,k+1))
             v=0.5*(vv(i,j,k+1)/hvn(i,j,k+1)+vv(i,j-1,k+1)/hvn(i,j-1,k+1))
-            ws(indx) = ww(i,j,k) + dtz + u*dxz + v*dyz
+            ws(i,j,k) = ww(i,j,k) + dtz + u*dxz + v*dyz
 !           interior points
             do k=kmin(i,j),kmax-1
                dtz=dtz+(hn(i,j,k)-ho(i,j,k))/dt
@@ -122,14 +122,14 @@
 #ifndef SLICE_MODEL
                dyz=dyz+(hvn(i,j,k)-hvn(i,j-1,k))/DYC
 #else
-               dyz=0.
+               dyz=_ZERO_
 #endif
                u=0.25*(uu(i,j,k  )/hun(i,j,k  )+uu(i-1,j,k  )/hun(i-1,j,k  )+&
                        uu(i,j,k+1)/hun(i,j,k+1)+uu(i-1,j,k+1)/hun(i-1,j,k+1) )
                v=0.25*(vv(i,j,k  )/hvn(i,j,k  )+vv(i,j-1,k  )/hvn(i,j-1,k  )+&
                        vv(i,j,k+1)/hvn(i,j,k+1)+vv(i,j-1,k+1)/hvn(i,j-1,k+1) )
                indx = indx+l
-               ws(indx) = ww(i,j,k) + dtz + u*dxz + v*dyz
+               ws(i,j,k) = ww(i,j,k) + dtz + u*dxz + v*dyz
             end do
 !           surface
             k=kmax
@@ -138,18 +138,18 @@
 #ifndef SLICE_MODEL
             dyz=dyz+(hvn(i,j,k)-hvn(i,j-1,k))/DYC
 #else
-               dyz=0.
+               dyz=_ZERO_
 #endif
             u=0.5*(uu(i,j,k)/hun(i,j,k)+uu(i-1,j,k)/hun(i-1,j,k))
             v=0.5*(vv(i,j,k)/hvn(i,j,k)+vv(i,j-1,k)/hvn(i,j-1,k))
             indx = indx+l
-            ws(indx) = ww(i,j,k) + dtz  + u*dxz + v*dyz
+            ws(i,j,k) = ww(i,j,k) + dtz  + u*dxz + v*dyz
             if (destag) then
                do k=kmax,kmin(i,j),-1
-                  ws(indx)=0.5*(ws(indx)+ws(indx-l))
-                  indx = indx-l
+!KB - be carefull with index-1
+!                  ws(i,j,k)=0.5*(ws(indx)+ws(indx-l))
                end do
-               ws(indx) = missing
+               ws(i,j,k) = missing
             end if
          end if
       end do
@@ -160,8 +160,7 @@
       do k=0,kmax
          do j=jmin,jmax
             do i=imin,imax
-               ws(indx) = ww(i,j,k)
-               indx = indx+1
+               ws(i,j,k) = ww(i,j,k)
             end do
          end do
       end do

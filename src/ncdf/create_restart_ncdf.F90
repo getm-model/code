@@ -80,7 +80,7 @@
    if (status .NE. NF90_NOERR) go to 10
 
 !  length of netCDF dimensions
-#ifdef SAVE_HALOS
+#ifdef _WRITE_HOT_HALOS_
    xlen = (imax+HALO)-(imin-HALO)+1
    ylen = (jmax+HALO)-(jmin-HALO)+1
 #else

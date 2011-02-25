@@ -11,6 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use netcdf
    use domain, only: imin,imax,jmin,jmax,kmax,ioff,joff
    use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
@@ -146,7 +147,6 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
 #ifdef DEBUG
    write(debug,*) 'ncdf_init_3d_bdy (NetCDF)'
    write(debug,*) 'Reading from: ',trim(fname)
@@ -154,11 +154,11 @@
 
    LEVEL3 'init_3d_bdy_ncdf'
 
-   err = nf_open(fname,NCNOWRIT,ncid)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_open(fname,NF90_NOWRITE,ncid)
+   if (err .NE. NF90_NOERR) go to 10
 
-   err = nf_inq_ndims(ncid,ndims)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_inquire(ncid, nDimensions = nDims)
+   if (err .NE. NF90_NOERR) go to 10
 
    allocate(dim_ids(ndims),stat=rc)
    if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (dim_ids)'
@@ -170,8 +170,8 @@
    if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (dim_name)'
 
    do n=1,ndims
-      err = nf_inq_dim(ncid, n, dim_name(n), dim_len(n))
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inquire_dimension(ncid,n,name=dim_name(n),len=dim_len(n))
+      if (err .NE. NF90_NOERR) go to 10
       LEVEL4 n,dim_name(n), dim_len(n)
    end do
 
@@ -203,17 +203,17 @@
 
       LEVEL4 ' ... checking variable "temp"'
 
-      err = nf_inq_varid(ncid,'temp',temp_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,'temp',temp_id)
+      if (err .NE. NF90_NOERR) go to 10
 
-      err = nf_inq_varndims(ncid,temp_id,nvardims)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inquire_variable(ncid,temp_id,ndims=nvardims)
+      if (err .NE. NF90_NOERR) go to 10
 
       if (nvardims .NE. 3) &
            stop 'init_3d_bdy_ncdf: Wrong number of dims in temp (must be 3)'
 
-      err = nf_inq_vardimid(ncid,temp_id,vardim_ids)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inquire_variable(ncid,temp_id,dimids=vardim_ids)
+      if (err .NE. NF90_NOERR) go to 10
 
       zax_dim  = vardim_ids(1)
       time_dim = vardim_ids(3)
@@ -221,17 +221,17 @@
       ! The 'salt' part is only for error capture.
       LEVEL4 ' ... checking variable "salt"'
 
-      err = nf_inq_varid(ncid,'salt',salt_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,'salt',salt_id)
+      if (err .NE. NF90_NOERR) go to 10
 
-      err = nf_inq_varndims(ncid,salt_id,nvardims)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inquire_variable(ncid,salt_id,ndims=nvardims)
+      if (err .NE. NF90_NOERR) go to 10
 
       if (nvardims .NE. 3) &
            stop 'init_3d_bdy_ncdf: Wrong number of dims in salt (must be 3)'
 
-      err = nf_inq_vardimid(ncid,salt_id,vardim_ids)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inquire_variable(ncid,salt_id,dimids=vardim_ids)
+      if (err .NE. NF90_NOERR) go to 10
 
       if (zax_dim /= vardim_ids(1)) &
            stop 'init_3d_bdy_ncdf: First (zax) dimension of salt and temp differs'
@@ -245,16 +245,16 @@
    allocate(zlev(zax_len),stat=rc)
    if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (zlev)'
 
-   err = nf_inq_varid(ncid, dim_name(zax_dim), id)
-   if (err .ne. NF_NOERR) go to 10
+   err = nf90_inq_varid(ncid, dim_name(zax_dim), id)
+   if (err .ne. NF90_NOERR) go to 10
 
-   err = nf_get_var_real(ncid,id,zlev)
-   if (err .ne. NF_NOERR) go to 10
+   err = nf90_get_var(ncid,id,zlev)
+   if (err .ne. NF90_NOERR) go to 10
 
 !  a few sanity checks on the vertical axis for the 3D boundaries 
    do n=1,zax_len
-      if (zlev(n) .eq. NF_FILL_REAL) then
-         FATAL '3D boundary z-axis contains NF_FILL_REAL values'
+      if (zlev(n) .eq. NF90_FILL_REAL) then
+         FATAL '3D boundary z-axis contains NF90_FILL_REAL values'
          FATAL 'proper interpolation cant be done'
          stop 'init_3d_bdy_ncdf'
       end if
@@ -281,11 +281,11 @@
       LEVEL4 '# of times = ',time_len
    end if
 
-   err = nf_inq_varid(ncid,'temp',temp_id)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_inq_varid(ncid,'temp',temp_id)
+   if (err .NE. NF90_NOERR) go to 10
 
-   err = nf_inq_varid(ncid,'salt',salt_id)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_inq_varid(ncid,'salt',salt_id)
+   if (err .NE. NF90_NOERR) go to 10
 
    if (climatology) then
 
@@ -298,7 +298,7 @@
 !     we read each boundary column individually
 !     here we can read from both a 3D field and from a
 !     special boundary data file - only the arguments 'start' and 'edges'
-!     varies in the calls to 'nf_get_vara_real()'
+!     varies in the calls to 'nf90_get_var()'
 !     m counts the time
 !     l counts the boundary number
 !     k counts the number of the specific point
@@ -327,12 +327,12 @@
                else
                   start(2) = k
                end if
-               err = nf_get_vara_real(ncid,salt_id,start,edges,wrk)
-               if (err .ne. NF_NOERR) go to 10
+               err = nf90_get_var(ncid,salt_id,wrk,start,edges)
+               if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
                              S_bdy_clim(m,:,k))
-               err = nf_get_vara_real(ncid,temp_id,start,edges,wrk)
-               if (err .ne. NF_NOERR) go to 10
+               err = nf90_get_var(ncid,temp_id,wrk,start,edges)
+               if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
                              T_bdy_clim(m,:,k))
                k = k+1
@@ -349,12 +349,12 @@
                else
                   start(2) = k
                end if
-               err = nf_get_vara_real(ncid,salt_id,start,edges,wrk)
-               if (err .ne. NF_NOERR) go to 10
+               err = nf90_get_var(ncid,salt_id,wrk,start,edges)
+               if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
                              S_bdy_clim(m,:,k))
-               err = nf_get_vara_real(ncid,temp_id,start,edges,wrk)
-               if (err .ne. NF_NOERR) go to 10
+               err = nf90_get_var(ncid,temp_id,wrk,start,edges)
+               if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
                              T_bdy_clim(m,:,k))
                k = k+1
@@ -371,12 +371,12 @@
                else
                   start(2) = k
                end if
-               err = nf_get_vara_real(ncid,salt_id,start,edges,wrk)
-               if (err .ne. NF_NOERR) go to 10
+               err = nf90_get_var(ncid,salt_id,wrk,start,edges)
+               if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
                              S_bdy_clim(m,:,k))
-               err = nf_get_vara_real(ncid,temp_id,start,edges,wrk)
-               if (err .ne. NF_NOERR) go to 10
+               err = nf90_get_var(ncid,temp_id,wrk,start,edges)
+               if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
                              T_bdy_clim(m,:,k))
                k = k+1
@@ -393,33 +393,33 @@
                else
                   start(2) = k
                end if
-               err = nf_get_vara_real(ncid,salt_id,start,edges,wrk)
-               if (err .ne. NF_NOERR) go to 10
+               err = nf90_get_var(ncid,salt_id,wrk,start,edges)
+               if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
                              S_bdy_clim(m,:,k))
-               err = nf_get_vara_real(ncid,temp_id,start,edges,wrk)
-               if (err .ne. NF_NOERR) go to 10
+               err = nf90_get_var(ncid,temp_id,wrk,start,edges)
+               if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
                              T_bdy_clim(m,:,k))
                k = k+1
             end do
          end do
       end do
-      err = nf_close(ncid)
+      err = nf90_close(ncid)
 
    else
 
-      err = nf_inq_varid(ncid,'time',time_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,'time',time_id)
+      if (err .NE. NF90_NOERR) go to 10
 
-      err =  nf_get_att_text(ncid,time_id,'units',units)
-      if (err .NE. NF_NOERR) go to 10
+      err =  nf90_get_att(ncid,time_id,'units',units)
+      if (err .NE. NF90_NOERR) go to 10
 
       allocate(bdy_times(time_len),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (bdy_times)'
 
-      err = nf_get_var_real(ncid,time_id,bdy_times)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,time_id,bdy_times)
+      if (err .NE. NF90_NOERR) go to 10
 
       call string_to_julsecs(units,j1,s1)
       offset = time_diff(julianday,secondsofday,j1,s1)
@@ -475,11 +475,11 @@
       start(2) = 1; edges(2) = nsbv;
       start(3) = i; edges(3) = 1
 
-      err = nf_get_vara_real(ncid,temp_id,start,edges,T_wrk)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,temp_id,T_wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
 
-      err = nf_get_vara_real(ncid,salt_id,start,edges,S_wrk)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,salt_id,S_wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
 
       l = 0
       do n=1,NWB
@@ -540,7 +540,7 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'init_3d_bdy_ncdf: ',nf_strerror(err)
+10 FATAL 'init_3d_bdy_ncdf: ',nf90_strerror(err)
    stop
    end subroutine init_3d_bdy_ncdf
 !EOC
@@ -640,7 +640,6 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
 #ifdef DEBUG
    write(debug,*) 'do_3d_bdy_ncdf (NetCDF)'
 #endif
@@ -696,11 +695,11 @@
          T_old = T_new
          S_old = S_new
 
-         err = nf_get_vara_real(ncid,temp_id,start,edges,T_wrk)
-         if (err .ne. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,temp_id,T_wrk,start,edges)
+         if (err .ne. NF90_NOERR) go to 10
 
-         err = nf_get_vara_real(ncid,salt_id,start,edges,S_wrk)
-         if (err .ne. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,salt_id,S_wrk,start,edges)
+         if (err .ne. NF90_NOERR) go to 10
 
          l = 0
          do n=1,NWB
@@ -766,7 +765,7 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'do_3d_bdy_ncdf: ',nf_strerror(err)
+10 FATAL 'do_3d_bdy_ncdf: ',nf90_strerror(err)
    stop
    end subroutine do_3d_bdy_ncdf
 !EOC

@@ -28,7 +28,7 @@
    integer,  intent(in)                :: il,jl,ih,jh
 
 ! !OUTPUT PARAMETERS:
-   REAL_4B, intent(out)                :: vel(*)
+   REALTYPE, intent(out)               :: vel(E2DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf
@@ -40,25 +40,21 @@
 !  Revision 1.1  2005-04-25 09:32:34  kbk
 !  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
-!
 ! !LOCAL VARIABLES:
-   integer                             :: i,j,indx
+   integer                             :: i,j
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   indx = 1
    do j=jl,jh
       do i=il,ih
          if (az(i,j) .gt. 0) then
-            vel(indx) = 0.5*( u(i-1,j)/DU(i-1,j)                     &
-                          +   u(i  ,j)/DU(i  ,j) )
+            vel(i,j) = 0.5*( u(i-1,j)/DU(i-1,j)                     &
+                         +   u(i  ,j)/DU(i  ,j) )
          else
-            vel(indx) = missing
+            vel(i,j) = missing
          end if
-         indx = indx+1
       end do
    end do
-
    return
    end subroutine to_2d_u
 !EOC

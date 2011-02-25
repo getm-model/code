@@ -12,6 +12,7 @@
 !  From a NetCDF files - fname - read the variable - var - into the field - f.
 !
 ! !USES:
+   use netcdf
    use domain, only: imin,imax,jmin,jmax,kmax
    IMPLICIT NONE
 !
@@ -49,7 +50,6 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
 #ifdef DEBUG
    write(debug,*) 'get_field_ncdf (NetCDF)'
    write(debug,*) 'Reading from: ',trim(fname)
@@ -57,23 +57,25 @@
 
    LEVEL3 'get_field_ncdf'
 
-   err = nf_open(fname,NCNOWRIT,ncid)
-   if (err .NE. NF_NOERR) go to 10
+stop 'kaj'
+
+   err = nf90_open(fname,NF90_NOWRITE,ncid)
+   if (err .NE. NF90_NOERR) go to 10
 #if 0
-   err = nf_inq_unlimdim(ncid, rec_id)
-   if (err .ne. NF_NOERR) go to 10
+   err = nf90_inq_unlimdim(ncid, rec_id)
+   if (err .ne. NF90_NOERR) go to 10
 
-   err = nf_inq_dimlen(ncid, rec_id, nsets)
-   if (err .ne. NF_NOERR) go to 10
+   err = nf90_inq_dimlen(ncid, rec_id, nsets)
+   if (err .ne. NF90_NOERR) go to 10
 
-   err = nf_inq_dimid(ncid, 'nbdyp', bdy_id)
-   if (err .ne. NF_NOERR)  go to 10
+   err = nf90_inq_dimid(ncid, 'nbdyp', bdy_id)
+   if (err .ne. NF90_NOERR)  go to 10
 
-   err = nf_inq_dimlen(ncid, bdy_id, bdy_len)
-   if (err .ne. NF_NOERR) go to 10
+   err = nf90_inq_dimlen(ncid, bdy_id, bdy_len)
+   if (err .ne. NF90_NOERR) go to 10
 #endif
-   err = nf_inq_varid(ncid,trim(var),var_id)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_inq_varid(ncid,trim(var),var_id)
+   if (err .NE. NF90_NOERR) go to 10
 
    size = (imax-imin+1)*(jmax-jmin+1)*(kmax+1)
    allocate(wrk(size),stat=rc)
@@ -81,8 +83,8 @@
 
    start(1) = imin ; start(2) = jmin; start(3) = 1
    edges(1) = imax-imin+1 ; edges(2) = jmax-jmin+1; edges(3) = kmax
-   err = nf_get_vara_real(ncid,var_id,start,edges,wrk)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_get_var(ncid,var_id,wrk,start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
    indx = 1
    do k=1,kmax
@@ -94,15 +96,15 @@
       end do
    end do
 
-   err = nf_close(ncid)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_close(ncid)
+   if (err .NE. NF90_NOERR) go to 10
 
 #ifdef DEBUG
    write(debug,*) 'Leaving get_field_ncdf()'
    write(debug,*)
 #endif
    return
-10 FATAL 'get_field_ncdf: ',nf_strerror(err)
+10 FATAL 'get_field_ncdf: ',nf90_strerror(err)
    stop
    end subroutine get_field_ncdf
 !EOC

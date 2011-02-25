@@ -94,8 +94,8 @@
    endif
 
 ! length of netCDF dimensions
-! set SAVE_HALOS via Makefile
-#ifdef SAVE_HALOS
+! set _WRITE_HALOS_ via Makefile
+#ifdef _WRITE_HALOS_
    xlen = (imax+HALO)-(imin-HALO)+1
    ylen = (jmax+HALO)-(jmin-HALO)+1
    zlen = kmax+1

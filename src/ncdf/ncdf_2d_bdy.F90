@@ -11,6 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use netcdf
 !KB   use m2d, only: dtm,bdy_times,bdy_old,bdy_new,bdy_data
    use m2d, only: dtm,bdy_times,bdy_data,bdy_data_u,bdy_data_v
    use time, only: string_to_julsecs,time_diff,add_secs
@@ -133,62 +134,61 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
 #ifdef DEBUG
    write(debug,*) 'init_2d_bdy_ncdf'
    write(debug,*) 'Reading from: ',trim(fname)
 #endif
    LEVEL3 'init_2d_bdy_ncdf'
 
-   err = nf_open(fname,NCNOWRIT,ncid)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_open(fname,NF90_NOWRITE,ncid)
+   if (err .NE. NF90_NOERR) go to 10
 
-   err = nf_inq_unlimdim(ncid, rec_id)
-   if (err .ne. NF_NOERR) go to 10
+   err = nf90_inquire(ncid, unlimitedDimID = rec_id)
+   if (err .ne. NF90_NOERR) go to 10
 
-   err = nf_inq_dimlen(ncid, rec_id, nsets)
-   if (err .ne. NF_NOERR) go to 10
+   err = nf90_inquire_dimension(ncid, rec_id, len = nsets)
+   if (err .ne. NF90_NOERR) go to 10
 
-   err = nf_inq_dimid(ncid, 'nbdyp', bdy_id)
-   if (err .ne. NF_NOERR)  go to 10
+   err = nf90_inq_dimid(ncid, 'nbdyp', bdy_id)
+   if (err .ne. NF90_NOERR)  go to 10
 
-   err = nf_inq_dimlen(ncid, bdy_id, bdy_len)
-   if (err .ne. NF_NOERR) go to 10
+   err = nf90_inquire_dimension(ncid, bdy_id, len = bdy_len)
+   if (err .ne. NF90_NOERR) go to 10
 
-   err = nf_inq_varid(ncid,'time',time_id)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_inq_varid(ncid,'time',time_id)
+   if (err .NE. NF90_NOERR) go to 10
 
-   err =  nf_get_att_text(ncid,time_id,'units',units)
-   if (err .NE. NF_NOERR) go to 10
+   err =  nf90_get_att(ncid,time_id,'units',units)
+   if (err .NE. NF90_NOERR) go to 10
 
 #if 0
-   err = nf_inq_varid(ncid,'julday',jul_id)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_inq_varid(ncid,'julday',jul_id)
+   if (err .NE. NF90_NOERR) go to 10
 
-   err = nf_inq_varid(ncid,'secs',secs_id)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_inq_varid(ncid,'secs',secs_id)
+   if (err .NE. NF90_NOERR) go to 10
 #endif
 
    if ( need_2d_bdy_elev ) then
-      err = nf_inq_varid(ncid,'elev',elev_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,'elev',elev_id)
+      if (err .NE. NF90_NOERR) go to 10
    end if
 
    if ( need_2d_bdy_u ) then
-      err = nf_inq_varid(ncid,'u',u_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,'u',u_id)
+      if (err .NE. NF90_NOERR) go to 10
    end if
 
    if ( need_2d_bdy_v ) then
-      err = nf_inq_varid(ncid,'v',v_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,'v',v_id)
+      if (err .NE. NF90_NOERR) go to 10
    end if
 
    allocate(bdy_times(nsets),stat=err)
    if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_times)'
 
-   err = nf_get_var_real(ncid,time_id,bdy_times)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_get_var(ncid,time_id,bdy_times)
+   if (err .NE. NF90_NOERR) go to 10
 
    call string_to_julsecs(units,j1,s1)
    offset = time_diff(julianday,secondsofday,j1,s1)
@@ -220,7 +220,7 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'init_2d_bdy_ncdf: ',nf_strerror(err)
+10 FATAL 'init_2d_bdy_ncdf: ',nf90_strerror(err)
    stop
    end subroutine init_2d_bdy_ncdf
 !EOC
@@ -312,7 +312,6 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
 #ifdef DEBUG
    write(debug,*) 'do_2d_bdy_ncdf (NetCDF)'
 #endif
@@ -338,32 +337,32 @@
 
       if ( need_2d_bdy_elev ) then
          start(2) = i-1 ; edges(2) = 1
-         err = nf_get_vara_real(ncid,elev_id,start,edges,bdy_old)
-         if(err .NE. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,elev_id,bdy_old,start,edges)
+         if(err .NE. NF90_NOERR) go to 10
 
          start(2) = i ; edges(2) = 1
-         err = nf_get_vara_real(ncid,elev_id,start,edges,bdy_new)
-         if(err .NE. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,elev_id,bdy_new,start,edges)
+         if(err .NE. NF90_NOERR) go to 10
       end if
 
       if ( need_2d_bdy_u ) then
          start(2) = i-1 ; edges(2) = 1
-         err = nf_get_vara_real(ncid,u_id,start,edges,bdy_old_u)
-         if(err .NE. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,u_id,bdy_old_u,start,edges)
+         if(err .NE. NF90_NOERR) go to 10
 
          start(2) = i ; edges(2) = 1
-         err = nf_get_vara_real(ncid,u_id,start,edges,bdy_new_u)
-         if(err .NE. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,u_id,bdy_new_u,start,edges)
+         if(err .NE. NF90_NOERR) go to 10
       end if
 
       if ( need_2d_bdy_v ) then
          start(2) = i-1 ; edges(2) = 1
-         err = nf_get_vara_real(ncid,v_id,start,edges,bdy_old_v)
-         if(err .NE. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,v_id,bdy_old_v,start,edges)
+         if(err .NE. NF90_NOERR) go to 10
 
          start(2) = i ; edges(2) = 1
-         err = nf_get_vara_real(ncid,v_id,start,edges,bdy_new_v)
-         if(err .NE. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,v_id,bdy_new_v,start,edges)
+         if(err .NE. NF90_NOERR) go to 10
       end if
 
    end if
@@ -383,32 +382,32 @@
 
       if ( need_2d_bdy_elev ) then
          start(2) = i-1 ; edges(2) = 1
-         err = nf_get_vara_real(ncid,elev_id,start,edges,bdy_old)
-         if(err .NE. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,elev_id,bdy_old,start,edges)
+         if(err .NE. NF90_NOERR) go to 10
 
          start(2) = i ; edges(2) = 1
-         err = nf_get_vara_real(ncid,elev_id,start,edges,bdy_new)
-         if(err .NE. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,elev_id,bdy_new,start,edges)
+         if(err .NE. NF90_NOERR) go to 10
       end if
 
       if ( need_2d_bdy_u ) then
          start(2) = i-1 ; edges(2) = 1
-         err = nf_get_vara_real(ncid,u_id,start,edges,bdy_old_u)
-         if(err .NE. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,u_id,bdy_old_u,start,edges)
+         if(err .NE. NF90_NOERR) go to 10
 
          start(2) = i ; edges(2) = 1
-         err = nf_get_vara_real(ncid,u_id,start,edges,bdy_new_u)
-         if(err .NE. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,u_id,bdy_new_u,start,edges)
+         if(err .NE. NF90_NOERR) go to 10
       end if
 
       if ( need_2d_bdy_v ) then
          start(2) = i-1 ; edges(2) = 1
-         err = nf_get_vara_real(ncid,v_id,start,edges,bdy_old_v)
-         if(err .NE. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,v_id,bdy_old_v,start,edges)
+         if(err .NE. NF90_NOERR) go to 10
 
          start(2) = i ; edges(2) = 1
-         err = nf_get_vara_real(ncid,v_id,start,edges,bdy_new_v)
-         if(err .NE. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,v_id,bdy_new_v,start,edges)
+         if(err .NE. NF90_NOERR) go to 10
       end if
 
    end if
@@ -428,7 +427,7 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'do_2d_bdy_ncdf: ',nf_strerror(err)
+10 FATAL 'do_2d_bdy_ncdf: ',nf90_strerror(err)
    stop
    end subroutine do_2d_bdy_ncdf
 !EOC

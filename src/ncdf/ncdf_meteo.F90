@@ -11,6 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use netcdf
    use time, only: string_to_julsecs,time_diff,add_secs,in_interval
    use time, only: jul0,secs0,julianday,secondsofday,timestep,simtime
    use time, only: write_time_string,timestr
@@ -225,7 +226,6 @@
    character(len=10) :: name_thisvar
 !EOP
 !-------------------------------------------------------------------------
-   include "netcdf.inc"
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
@@ -342,28 +342,28 @@
 
    if (calc_met) then
       name_thisvar = name_u10
-      err = nf_inq_varid(ncid,name_u10,u10_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,name_u10,u10_id)
+      if (err .NE. NF90_NOERR) go to 10
 
       name_thisvar = name_v10
-      err = nf_inq_varid(ncid,name_v10,v10_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,name_v10,v10_id)
+      if (err .NE. NF90_NOERR) go to 10
 
       name_thisvar = name_airp
-      err = nf_inq_varid(ncid,name_airp,airp_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,name_airp,airp_id)
+      if (err .NE. NF90_NOERR) go to 10
 
       name_thisvar = name_t2
-      err = nf_inq_varid(ncid,name_t2,t2_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,name_t2,t2_id)
+      if (err .NE. NF90_NOERR) go to 10
 
       hum_id = -1
-      err = nf_inq_varid(ncid,name_hum1,hum_id)
-      if (err .NE. NF_NOERR) then
-         err = nf_inq_varid(ncid,name_hum2,hum_id)
-         if (err .NE. NF_NOERR) then
-            err = nf_inq_varid(ncid,name_hum3,hum_id)
-            if (err .NE. NF_NOERR) then
+      err = nf90_inq_varid(ncid,name_hum1,hum_id)
+      if (err .NE. NF90_NOERR) then
+         err = nf90_inq_varid(ncid,name_hum2,hum_id)
+         if (err .NE. NF90_NOERR) then
+            err = nf90_inq_varid(ncid,name_hum3,hum_id)
+            if (err .NE. NF90_NOERR) then
                FATAL 'Not able to find valid humidity parameter'
                stop 'init_meteo_input_ncdf()'
             else
@@ -381,37 +381,37 @@
 !KBKSTDERR 'Taking hum as wet bulb temperature'
 
       name_thisvar = name_tcc
-      err = nf_inq_varid(ncid,name_tcc,tcc_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,name_tcc,tcc_id)
+      if (err .NE. NF90_NOERR) go to 10
 
       if (fwf_method .eq. 2) then
          name_thisvar = name_evap
-         err = nf_inq_varid(ncid,name_evap,evap_id)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_inq_varid(ncid,name_evap,evap_id)
+         if (err .NE. NF90_NOERR) go to 10
       end if
       if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
          name_thisvar = name_precip
-         err = nf_inq_varid(ncid,name_precip,precip_id)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_inq_varid(ncid,name_precip,precip_id)
+         if (err .NE. NF90_NOERR) go to 10
       end if
 
    else
 
       name_thisvar = name_tausx
-      err = nf_inq_varid(ncid,name_tausx,tausx_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,name_tausx,tausx_id)
+      if (err .NE. NF90_NOERR) go to 10
 
       name_thisvar = name_tausy
-      err = nf_inq_varid(ncid,name_tausy,tausy_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,name_tausy,tausy_id)
+      if (err .NE. NF90_NOERR) go to 10
 
       name_thisvar = name_swr
-      err = nf_inq_varid(ncid,name_swr,swr_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,name_swr,swr_id)
+      if (err .NE. NF90_NOERR) go to 10
 
       name_thisvar = name_shf
-      err = nf_inq_varid(ncid,name_shf,shf_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,name_shf,shf_id)
+      if (err .NE. NF90_NOERR) go to 10
 
    end if
 
@@ -427,7 +427,7 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'init_meteo_input_ncdf: ',name_thisvar,' ',nf_strerror(err)
+10 FATAL 'init_meteo_input_ncdf: ',name_thisvar,' ',nf90_strerror(err)
    stop
    end subroutine init_meteo_input_ncdf
 !EOC
@@ -570,7 +570,6 @@
 !  Need a variable to indicate homw much to read from each file.
 !EOP
 !-------------------------------------------------------------------------
-   include "netcdf.inc"
 #ifdef DEBUG
    integer, save   :: Ncall = 0
    Ncall = Ncall+1
@@ -585,34 +584,34 @@
          read(iunit,*,err=85,end=90) fn
          LEVEL3 'Trying meteo from:'
          LEVEL4 trim(fn)
-         err = nf_open(fn,NCNOWRIT,ncid)
-         if (err .ne. NF_NOERR) go to 10
+         err = nf90_open(fn,NF90_NOWRITE,ncid)
+         if (err .ne. NF90_NOERR) go to 10
 
          if (first_open) then
             first_open = .false.
-            err = nf_inq_ndims(ncid,ndims)
-            if (err .NE. NF_NOERR) go to 10
+            err = nf90_inquire(ncid,nDimensions=ndims)
+            if (err .NE. NF90_NOERR) go to 10
 
             LEVEL4 'dimensions'
             do n=1,ndims
-               err = nf_inq_dimname(ncid,n,dimname)
-               if (err .ne. NF_NOERR) go to 10
+               err = nf90_inquire_dimension(ncid,n,name=dimname)
+               if (err .ne. NF90_NOERR) go to 10
                if( dimname .eq. name_lon ) then
                   lon_id = n
-                  err = nf_inq_dimlen(ncid,lon_id,iextr)
-                  if (err .ne. NF_NOERR) go to 10
+                  err = nf90_inquire_dimension(ncid,lon_id,len=iextr)
+                  if (err .ne. NF90_NOERR) go to 10
                   LEVEL4 'lon_id  --> ',lon_id,', len = ',iextr
                end if
                if( dimname .eq. name_lat ) then
                   lat_id = n
-                  err = nf_inq_dimlen(ncid,lat_id,jextr)
-                  if (err .ne. NF_NOERR) go to 10
+                  err = nf90_inquire_dimension(ncid,lat_id,len=jextr)
+                  if (err .ne. NF90_NOERR) go to 10
                   LEVEL4 'lat_id  --> ',lat_id,', len = ',jextr
                end if
                if( dimname .eq. name_time ) then
                   time_id = n
-                  err = nf_inq_dimlen(ncid,time_id,textr)
-                  if (err .ne. NF_NOERR) go to 10
+                  err = nf90_inquire_dimension(ncid,time_id,len=textr)
+                  if (err .ne. NF90_NOERR) go to 10
                   LEVEL4 'time_id --> ',time_id,', len = ',textr
 !                  if (tmax .lt. 0) tmax=textr
                   tmax=textr
@@ -634,29 +633,29 @@
             allocate(met_lon(iextr),stat=err)
             if (err /= 0) stop &
                   'open_meteo_file(): Error allocating memory (met_lon)'
-            err = nf_inq_varid(ncid,name_lon,id)
-            if (err .NE. NF_NOERR) go to 10
-            err = nf_get_var_double(ncid,id,met_lon)
-            if (err .ne. NF_NOERR) go to 10
+            err = nf90_inq_varid(ncid,name_lon,id)
+            if (err .NE. NF90_NOERR) go to 10
+            err = nf90_get_var(ncid,id,met_lon)
+            if (err .ne. NF90_NOERR) go to 10
 
             allocate(met_lat(jextr),stat=err)
             if (err /= 0) stop &
                   'open_meteo_file(): Error allocating memory (met_lat)'
-            err = nf_inq_varid(ncid,name_lat,id)
-            if (err .NE. NF_NOERR) go to 10
-            err = nf_get_var_double(ncid,id,met_lat)
-            if (err .ne. NF_NOERR) go to 10
+            err = nf90_inq_varid(ncid,name_lat,id)
+            if (err .NE. NF90_NOERR) go to 10
+            err = nf90_get_var(ncid,id,met_lat)
+            if (err .ne. NF90_NOERR) go to 10
 
             allocate(met_times(textr),stat=err)
             if (err /= 0) stop &
                   'open_meteo_file(): Error allocating memory (met_times)'
 
-            err = nf_inq_varid(ncid,'southpole',id)
-            if (err .ne. NF_NOERR) then
+            err = nf90_inq_varid(ncid,'southpole',id)
+            if (err .ne. NF90_NOERR) then
                LEVEL4 'Setting southpole to (0,-90,0)'
             else
-               err = nf_get_var_double(ncid,id,southpole)
-               if (err .ne. NF_NOERR) go to 10
+               err = nf90_get_var(ncid,id,southpole)
+               if (err .ne. NF90_NOERR) go to 10
                rotated_meteo_grid = .true.
             end if
             LEVEL4 'south pole:'
@@ -665,8 +664,8 @@
 
          end if
 
-         err = nf_inq_dimlen(ncid,time_id,idum)
-         if (err .ne. NF_NOERR) go to 10
+         err = nf90_inquire_dimension(ncid,time_id,len=idum)
+         if (err .ne. NF90_NOERR) go to 10
          if(idum .gt. textr) then
             deallocate(met_times,stat=err)
             if (err /= 0) stop      &
@@ -680,13 +679,13 @@
 !        if (tmax .lt. 0) tmax=textr
          tmax=textr
 
-         err = nf_inq_varid(ncid,name_time,time_var_id)
-         if (err .NE. NF_NOERR) go to 10
-         err =  nf_get_att_text(ncid,time_var_id,'units',time_units)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_inq_varid(ncid,name_time,time_var_id)
+         if (err .NE. NF90_NOERR) go to 10
+         err =  nf90_get_att(ncid,time_var_id,'units',time_units)
+         if (err .NE. NF90_NOERR) go to 10
          call string_to_julsecs(time_units,junit,sunit)
-         err = nf_get_var_real(ncid,time_var_id,met_times)
-         if (err .ne. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,time_var_id,met_times)
+         if (err .ne. NF90_NOERR) go to 10
 
          call add_secs(junit,sunit,nint(met_times(1)),    j1,s1)
          call add_secs(junit,sunit,nint(met_times(textr)),j2,s2)
@@ -694,20 +693,20 @@
          if (in_interval(j1,s1,julianday,secondsofday,j2,s2)) then
             found = .true.
          else
-            err = nf_close(ncid)
-            if (err .NE. NF_NOERR) go to 10
+            err = nf90_close(ncid)
+            if (err .NE. NF90_NOERR) go to 10
          end if
       end do
    else
-      err = nf_close(ncid)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_close(ncid)
+      if (err .NE. NF90_NOERR) go to 10
 !     open next file
       read(iunit,*,err=85,end=90) fn
-      err = nf_open(fn,NCNOWRIT,ncid)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_open(fn,NF90_NOWRITE,ncid)
+      if (err .ne. NF90_NOERR) go to 10
 
-      err = nf_inq_dimlen(ncid,time_id,idum)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_inquire_dimension(ncid,time_id,len=idum)
+      if (err .ne. NF90_NOERR) go to 10
       if(idum .gt. textr) then
          deallocate(met_times,stat=err)
          if (err /= 0) stop      &
@@ -721,13 +720,13 @@
 !     if (tmax .lt. 0) tmax=textr
       tmax=textr
 
-      err = nf_inq_varid(ncid,name_time,time_var_id)
-      if (err .NE. NF_NOERR) go to 10
-      err =  nf_get_att_text(ncid,time_var_id,'units',time_units)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,name_time,time_var_id)
+      if (err .NE. NF90_NOERR) go to 10
+      err =  nf90_get_att(ncid,time_var_id,'units',time_units)
+      if (err .NE. NF90_NOERR) go to 10
       call string_to_julsecs(time_units,junit,sunit)
-      err = nf_get_var_real(ncid,time_var_id,met_times)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,time_var_id,met_times)
+      if (err .ne. NF90_NOERR) go to 10
 
       call add_secs(junit,sunit,nint(met_times(1)),    j1,s1)
       call add_secs(junit,sunit,nint(met_times(textr)),j2,s2)
@@ -744,7 +743,7 @@
    end if
 
    return
-10 FATAL 'open_meteo_file: ',nf_strerror(err)
+10 FATAL 'open_meteo_file: ',nf90_strerror(err)
    stop 'open_meteo_file()'
 80 FATAL 'I could not open: ',trim(meteo_file)
    stop 'open_meteo_file()'
@@ -792,12 +791,10 @@
    REALTYPE        :: angle,uu,vv,sinconv,cosconv
 !EOP
 !-----------------------------------------------------------------------
-   include "netcdf.inc"
-
    if (calc_met) then
 
-      err = nf_get_vara_real(ncid,u10_id,start,edges,wrk)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,u10_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
             u10 = wrk(1,1)
@@ -814,8 +811,8 @@
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,u10)
       end if
 
-      err = nf_get_vara_real(ncid,v10_id,start,edges,wrk)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,v10_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
             v10 = wrk(1,1)
@@ -851,8 +848,8 @@
          end do
       end do
 
-      err = nf_get_vara_real(ncid,airp_id,start,edges,wrk)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,airp_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
             airp = wrk(1,1)
@@ -869,8 +866,8 @@
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,airp)
       end if
 
-      err = nf_get_vara_real(ncid,t2_id,start,edges,wrk)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,t2_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
             t2 = wrk(1,1)
@@ -887,8 +884,8 @@
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,t2)
       end if
 
-      err = nf_get_vara_real(ncid,hum_id,start,edges,wrk)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,hum_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
             hum = wrk(1,1)
@@ -905,8 +902,8 @@
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,hum)
       end if
 
-      err = nf_get_vara_real(ncid,tcc_id,start,edges,wrk)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,tcc_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
             tcc = wrk(1,1)
@@ -924,8 +921,8 @@
       end if
 
       if (evap_id .ge. 0) then
-         err = nf_get_vara_real(ncid,evap_id,start,edges,wrk)
-         if (err .ne. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,evap_id,wrk,start,edges)
+         if (err .ne. NF90_NOERR) go to 10
          if (on_grid) then
             if (point_source) then
                evap = wrk(1,1)
@@ -946,8 +943,8 @@
       end if
 
       if (precip_id .gt. 0) then
-         err = nf_get_vara_real(ncid,precip_id,start,edges,wrk)
-         if (err .ne. NF_NOERR) go to 10
+         err = nf90_get_var(ncid,precip_id,wrk,start,edges)
+         if (err .ne. NF90_NOERR) go to 10
          if (on_grid) then
             if (point_source) then
                precip = wrk(1,1)
@@ -969,8 +966,8 @@
 
    else
 
-      err = nf_get_vara_real(ncid,tausx_id,start,edges,wrk)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,tausx_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
       if (point_source) then
          tausx = wrk(1,1)
       else
@@ -981,8 +978,8 @@
          end do
       end if
 
-      err = nf_get_vara_real(ncid,tausy_id,start,edges,wrk)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,tausy_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
       if (point_source) then
          tausy = wrk(1,1)
       else
@@ -993,8 +990,8 @@
          end do
       end if
 
-      err = nf_get_vara_real(ncid,swr_id,start,edges,wrk)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,swr_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
       if (point_source) then
          swr = wrk(1,1)
       else
@@ -1005,8 +1002,8 @@
          end do
       end if
 
-      err = nf_get_vara_real(ncid,shf_id,start,edges,wrk)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,shf_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
       if (point_source) then
          shf = wrk(1,1)
       else
@@ -1024,7 +1021,7 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'read_data: ',nf_strerror(err)
+10 FATAL 'read_data: ',nf90_strerror(err)
    stop
    end subroutine read_data
 !EOC

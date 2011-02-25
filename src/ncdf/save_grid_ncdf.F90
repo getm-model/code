@@ -95,9 +95,9 @@
 !BOC
 
 ! set NetCDF slice information
-! set SAVE_HALOS via Makefile
-#ifdef SAVE_HALOS
-   LEVEL3 'include HALOs in NetCDF hostart files'
+! set _WRITE_HALOS_ via Makefile
+#ifdef _WRITE_HALOS_
+   LEVEL3 'include HALOs in NetCDF output files'
    start(1) = 1; edges(1) = (imax+HALO)-(imin-HALO)+1
    start(2) = 1; edges(2) = (jmax+HALO)-(jmin-HALO)+1
 #else
@@ -165,14 +165,14 @@
          status = nf90_inq_varid(ncid,'xc',id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","xc_id -")
-         status = nf90_put_var(ncid,id,xcord(IRANGE))
+         status = nf90_put_var(ncid,id,xcord(_IRANGE_))
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","xc -")
 
          status = nf90_inq_varid(ncid,'yc',id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","yc_id -")
-         status = nf90_put_var(ncid,id,ycord(JRANGE))
+         status = nf90_put_var(ncid,id,ycord(_JRANGE_))
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","yc -")
 
@@ -181,21 +181,21 @@
             status = nf90_inq_varid(ncid,'lonc',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","lonc -")
-            status = nf90_put_var(ncid,id,lonc(IRANGE,JRANGE),start,edges)
+            status = nf90_put_var(ncid,id,lonc(_2D_W_),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","lonc -")
 
             status = nf90_inq_varid(ncid,'latc',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","latc -")
-            status = nf90_put_var(ncid,id,latc(IRANGE,JRANGE),start,edges)
+            status = nf90_put_var(ncid,id,latc(_2D_W_),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","latc -")
 
             status = nf90_inq_varid(ncid,'convc',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","convc -")
-            status = nf90_put_var(ncid,id,convc(IRANGE,JRANGE),start,edges)
+            status = nf90_put_var(ncid,id,convc(_2D_W_),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","convc -")
 
@@ -222,14 +222,14 @@
          status = nf90_inq_varid(ncid,'lonc',id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","lonc_id -")
-         status = nf90_put_var(ncid,id,xcord(IRANGE))
+         status = nf90_put_var(ncid,id,xcord(_IRANGE_))
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","lonc -")
 
          status = nf90_inq_varid(ncid,'latc',id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","latc_id -")
-         status = nf90_put_var(ncid,id,ycord(JRANGE))
+         status = nf90_put_var(ncid,id,ycord(_JRANGE_))
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","latc -")
          if ( have_xy ) then
@@ -237,14 +237,14 @@
             status = nf90_inq_varid(ncid,'xc',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","xc -")
-            status = nf90_put_var(ncid,id,xc(IRANGE,JRANGE),start,edges)
+            status = nf90_put_var(ncid,id,xc(_2D_W_),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","xc -")
 
             status = nf90_inq_varid(ncid,'yc',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","yc -")
-            status = nf90_put_var(ncid,id,yc(IRANGE,JRANGE),start,edges)
+            status = nf90_put_var(ncid,id,yc(_2D_W_),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","yc -")
 
@@ -256,14 +256,14 @@
          status = nf90_inq_varid(ncid,'xic',id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","xic_id -")
-         status = nf90_put_var(ncid,id,xcord(IRANGE))
+         status = nf90_put_var(ncid,id,xcord(_IRANGE_))
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","xic -")
 
          status = nf90_inq_varid(ncid,'etac',id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","etac_id -")
-         status = nf90_put_var(ncid,id,ycord(JRANGE))
+         status = nf90_put_var(ncid,id,ycord(_JRANGE_))
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","etac -")
 
@@ -271,14 +271,14 @@
          status = nf90_inq_varid(ncid,'xix',id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","xix_id -")
-         status = nf90_put_var(ncid,id,xxcord(-1+IRANGE))
+         status = nf90_put_var(ncid,id,xxcord(-1+_IRANGE_))
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","xix -")
 
          status = nf90_inq_varid(ncid,'etax',id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","etax_id -")
-         status = nf90_put_var(ncid,id,yxcord(-1+JRANGE))
+         status = nf90_put_var(ncid,id,yxcord(-1+_JRANGE_))
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","etax -")
 
@@ -288,14 +288,14 @@
                                        "save_grid_ncdf()","xx_id -")
          edges(1) = edges(1) + 1 
          edges(2) = edges(2) + 1
-         status = nf90_put_var(ncid,id,xx(-1+IRANGE,-1+JRANGE),start,edges)
+         status = nf90_put_var(ncid,id,xx(-1+_IRANGE_,-1+_JRANGE_),start,edges)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","xx -")
 
          status = nf90_inq_varid(ncid,'yx',id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","yx_id -")
-         status = nf90_put_var(ncid,id,yx(-1+IRANGE,-1+JRANGE),start,edges)
+         status = nf90_put_var(ncid,id,yx(-1+_IRANGE_,-1+_JRANGE_),start,edges)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","yx -")
          edges(1) = edges(1) - 1
@@ -340,21 +340,21 @@
                status = nf90_inq_varid(ncid,'latu',id)
                if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                              "save_grid_ncdf()","latu -")
-               status = nf90_put_var(ncid,id,latu(IRANGE,JRANGE),start,edges)
+               status = nf90_put_var(ncid,id,latu(_2D_W_),start,edges)
                if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                              "save_grid_ncdf()","latu -")
 
                status = nf90_inq_varid(ncid,'latv',id)
                if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                              "save_grid_ncdf()","latv -")
-               status = nf90_put_var(ncid,id,latv(IRANGE,JRANGE),start,edges)
+               status = nf90_put_var(ncid,id,latv(_2D_W_),start,edges)
                if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                              "save_grid_ncdf()","latv -")
 
                status = nf90_inq_varid(ncid,'convc',id)
                if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                              "save_grid_ncdf()","convc -")
-               status = nf90_put_var(ncid,id,convc(IRANGE,JRANGE),start,edges)
+               status = nf90_put_var(ncid,id,convc(_2D_W_),start,edges)
                if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                              "save_grid_ncdf()","convc -")
 
@@ -365,70 +365,70 @@
             status = nf90_inq_varid(ncid,'latu',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","latu -")
-            status = nf90_put_var(ncid,id,latu(IRANGE,JRANGE),start,edges)
+            status = nf90_put_var(ncid,id,latu(_2D_W_),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","latu -")
 
             status = nf90_inq_varid(ncid,'latv',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","latv -")
-            status = nf90_put_var(ncid,id,latv(IRANGE,JRANGE),start,edges)
+            status = nf90_put_var(ncid,id,latv(_2D_W_),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","latv -")
 
             status = nf90_inq_varid(ncid,'dxc',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dxc -")
-            status = nf90_put_var(ncid,id,dxc(IRANGE,JRANGE),start,edges)
+            status = nf90_put_var(ncid,id,dxc(_2D_W_),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dxc -")
 
             status = nf90_inq_varid(ncid,'dyc',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dyc -")
-            status = nf90_put_var(ncid,id,dyc(IRANGE,JRANGE),start,edges)
+            status = nf90_put_var(ncid,id,dyc(_2D_W_),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dyc -")
 
             status = nf90_inq_varid(ncid,'dxu',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dxu -")
-            status = nf90_put_var(ncid,id,dxu(IRANGE,JRANGE),start,edges)
+            status = nf90_put_var(ncid,id,dxu(_2D_W_),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dxu -")
 
             status = nf90_inq_varid(ncid,'dyu',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dyu -")
-            status = nf90_put_var(ncid,id,dyu(IRANGE,JRANGE),start,edges)
+            status = nf90_put_var(ncid,id,dyu(_2D_W_),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dyu -")
 
             status = nf90_inq_varid(ncid,'dxv',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dxv -")
-            status = nf90_put_var(ncid,id,dxv(IRANGE,JRANGE),start,edges)
+            status = nf90_put_var(ncid,id,dxv(_2D_W_),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dxv -")
 
             status = nf90_inq_varid(ncid,'dyv',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dyv -")
-            status = nf90_put_var(ncid,id,dyv(IRANGE,JRANGE),start,edges)
+            status = nf90_put_var(ncid,id,dyv(_2D_W_),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dyv -")
 
             status = nf90_inq_varid(ncid,'dxx',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dxx -")
-            status = nf90_put_var(ncid,id,dxx(IRANGE,JRANGE),start,edges)
+            status = nf90_put_var(ncid,id,dxx(_2D_W_),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dxx -")
 
             status = nf90_inq_varid(ncid,'dyx',id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dyx -")
-            status = nf90_put_var(ncid,id,dyx(IRANGE,JRANGE),start,edges)
+            status = nf90_put_var(ncid,id,dyx(_2D_W_),start,edges)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                           "save_grid_ncdf()","dyx -")
 
@@ -473,7 +473,7 @@
          end if
       end do
    end do
-   status = nf90_put_var(ncid,id,ws(IRANGE,JRANGE),start,edges)
+   status = nf90_put_var(ncid,id,ws(_2D_W_),start,edges)
    if (status .ne. NF90_NOERR) call netcdf_error(status,                  &
                                   "save_grid_ncdf()","bathymetry -")
 
@@ -481,21 +481,21 @@
       status = nf90_inq_varid(ncid,'t_mask',id)
       if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","t_mask_id")
-      status = nf90_put_var(ncid,id,az(IRANGE,JRANGE),start,edges)
+      status = nf90_put_var(ncid,id,az(_2D_W_),start,edges)
       if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","t_mask")
 
       status = nf90_inq_varid(ncid,'u_mask',id)
       if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","v_mask_id")
-      status = nf90_put_var(ncid,id,au(IRANGE,JRANGE),start,edges)
+      status = nf90_put_var(ncid,id,au(_2D_W_),start,edges)
       if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","u_mask")
 
       status = nf90_inq_varid(ncid,'v_mask',id)
       if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","v_mask_id")
-      status = nf90_put_var(ncid,id,av(IRANGE,JRANGE),start,edges)
+      status = nf90_put_var(ncid,id,av(_2D_W_),start,edges)
       if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                         "save_grid_ncdf()","v_mask")
    end if

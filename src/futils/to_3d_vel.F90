@@ -23,10 +23,8 @@
    REALTYPE, intent(in)                :: trans(I3DFIELD)
    REALTYPE, intent(in)                :: missing
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
-   REAL_4B, intent(out)                :: vel(*)
+   REALTYPE, intent(out)               :: vel(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -55,24 +53,20 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
-   integer                   :: indx
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   indx = 1
    do k=0,kmax
      do j=jmin,jmax
        do i=imin,imax
          if ( mask(i,j) .gt. 0 .and. k .ge. kmin(i,j) ) then
-            vel(indx) = trans(i,j,k)/h(i,j,k)
+            vel(i,j,k) = trans(i,j,k)/h(i,j,k)
          else
-            vel(indx) = missing
+            vel(i,j,k) = missing
          end if
-         indx = indx+1
        end do
      end do
    end do
-
    return
    end subroutine to_3d_vel
 !EOC

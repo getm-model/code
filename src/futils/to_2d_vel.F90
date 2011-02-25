@@ -26,10 +26,8 @@
    REALTYPE, intent(in)                :: missing
    integer, intent(in)                 :: il,jl,ih,jh
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
-   REAL_4B, intent(out)                ::  vel(*)
+   REALTYPE, intent(out)               ::  vel(E2DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -53,24 +51,20 @@
 !  Revision 1.1.1.1  2001/04/17 08:43:09  bbh
 !  initial import into CVS
 !
-!
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,indx
+   integer                   :: i,j
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   indx = 1
    do j=jl,jh
       do i=il,ih
          if (mask(i,j) .gt. 0) then
-            vel(indx) = trans(i,j)/depth(i,j)
+            vel(i,j) = trans(i,j)/depth(i,j)
          else
-            vel(indx) = missing
+            vel(i,j) = missing
          end if
-         indx = indx+1
       end do
    end do
-
    return
    end subroutine to_2d_vel
 !EOC

@@ -23,10 +23,8 @@
    REALTYPE, intent(in)                :: min_depth,missing
    integer, intent(in)                 :: il,jl,ih,jh
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
-   REAL_4B, intent(out)                :: eta(*)
+   REALTYPE, intent(out)                :: eta(E2DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -49,23 +47,20 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
-   integer                   :: indx
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   indx = 1
    do j=jl,jh
       do i=il,ih
          if (mask(i,j) .gt. 0 ) then
             if(z(i,j) .lt. (-H(i,j) + min_depth + 0.1) ) then
-               eta(indx) = missing
+               eta(i,j) = missing
             else
-               eta(indx) = z(i,j)
+               eta(i,j) = z(i,j)
             end if
          else
-            eta(indx) = missing
+            eta(i,j) = missing
          end if
-         indx = indx+1
       end do
    end do
 

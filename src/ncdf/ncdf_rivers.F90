@@ -11,6 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use netcdf
    use time, only: string_to_julsecs,time_diff,add_secs
    use time, only: julianday,secondsofday,juln,secsn,timestep
    use time, only: write_time_string,timestr
@@ -118,7 +119,6 @@
    character(len=256)        :: bio_name
 !EOP
 !-------------------------------------------------------------------------
-   include "netcdf.inc"
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
@@ -148,47 +148,47 @@
    bio_id = -1
 #endif
 
-   err = nf_open(fn,NCNOWRIT,ncid)
-   if (err .ne. NF_NOERR) go to 10
+   err = nf90_open(fn,NF90_NOWRITE,ncid)
+   if (err .ne. NF90_NOERR) go to 10
 
-   err = nf_inq_unlimdim(ncid,unlimdimid)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_inquire(ncid, unlimitedDimID = unlimdimid)
+   if (err .NE. NF90_NOERR) go to 10
 
-   err = nf_inq_dimlen(ncid,unlimdimid,textr)
-   if (err .ne. NF_NOERR) go to 10
+   err = nf90_inquire_dimension(ncid,unlimdimid,len = textr)
+   if (err .ne. NF90_NOERR) go to 10
 
-   err = nf_inq_varid(ncid,"time",time_id)
-   if (err .ne. NF_NOERR) go to 10
+   err = nf90_inq_varid(ncid,"time",time_id)
+   if (err .ne. NF90_NOERR) go to 10
 
    do n=1,rriver
-      err = nf_inq_varid(ncid,real_river_name(n),r_ids(n))
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,real_river_name(n),r_ids(n))
+      if (err .ne. NF90_NOERR) go to 10
       r_salt(n) = 0
       if ( use_river_salt ) then
-         err =  nf_get_att_int(ncid,r_ids(n),'salt',r_salt(n))
-!        if (err .ne. NF_NOERR) go to 10
+         err =  nf90_get_att(ncid,r_ids(n),'salt',r_salt(n))
+!        if (err .ne. NF90_NOERR) go to 10
          if (r_salt(n) .eq. 1 ) then
             LEVEL3 'river salinity:    ',trim(real_river_name(n))//trim('_salt')
-            err =  nf_inq_varid(ncid,trim(real_river_name(n))//trim('_salt'),salt_id(n))
-            if (err .ne. NF_NOERR) go to 10
+            err =  nf90_inq_varid(ncid,trim(real_river_name(n))//trim('_salt'),salt_id(n))
+            if (err .ne. NF90_NOERR) go to 10
          end if
       end if
       r_temp(n) = 0
       if ( use_river_temp ) then
-         err =  nf_get_att_int(ncid,r_ids(n),'temp',r_temp(n))
-!        if (err .ne. NF_NOERR) go to 10
+         err =  nf90_get_att(ncid,r_ids(n),'temp',r_temp(n))
+!        if (err .ne. NF90_NOERR) go to 10
          if (r_temp(n) .eq. 1 ) then
             LEVEL3 'river temperature: ',trim(real_river_name(n))//trim('_temp')
-            err =  nf_inq_varid(ncid,trim(real_river_name(n))//trim('_temp'),temp_id(n))
-            if (err .ne. NF_NOERR) go to 10
+            err =  nf90_inq_varid(ncid,trim(real_river_name(n))//trim('_temp'),temp_id(n))
+            if (err .ne. NF90_NOERR) go to 10
          end if
       end if
 
 #ifdef GETM_BIO
       do m=1,numc
          bio_name=trim(real_river_name(n))//'_'//trim(var_names(m))
-         err =  nf_inq_varid(ncid,trim(bio_name),bio_id(n,m))
-         if (err .ne. NF_NOERR) then
+         err =  nf90_inq_varid(ncid,trim(bio_name),bio_id(n,m))
+         if (err .ne. NF90_NOERR) then
             bio_id(n,m) = -1
          end if
          if ( bio_id(n,m) .ne. -1 ) then
@@ -202,11 +202,11 @@
    if (err /= 0) stop  &
       'init_river_input_ncdf: Error allocating memory (river_times)'
 
-   err =  nf_get_att_text(ncid,time_id,'units',time_units)
-   if (err .ne. NF_NOERR) go to 10
+   err =  nf90_get_att(ncid,time_id,'units',time_units)
+   if (err .ne. NF90_NOERR) go to 10
    call string_to_julsecs(time_units,j1,s1)
-   err = nf_get_var_real(ncid,time_id,river_times)
-   if (err .ne. NF_NOERR) go to 10
+   err = nf90_get_var(ncid,time_id,river_times)
+   if (err .ne. NF90_NOERR) go to 10
 
    offset = time_diff(julianday,secondsofday,j1,s1)
    if( offset .lt. river_times(1) ) then
@@ -239,7 +239,7 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'init_river_input_ncdf: ',nf_strerror(err)
+10 FATAL 'init_river_input_ncdf: ',nf90_strerror(err)
    stop
    end subroutine init_river_input_ncdf
 !EOC
@@ -275,7 +275,6 @@
    REALTYPE, save            :: t_1,t_2
 !EOP
 !-------------------------------------------------------------------------
-   include "netcdf.inc"
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
@@ -299,23 +298,23 @@
       do n =1,nriver
          if (ni .le. nriver) then
             if (ok(ni) .ne. 0) then
-               err = nf_get_vara_real(ncid,r_ids(nn),start,edges,x)
-               if (err .ne. NF_NOERR) go to 10
+               err = nf90_get_var(ncid,r_ids(nn),x,start,edges)
+               if (err .ne. NF90_NOERR) go to 10
                do m=1,river_split(ni)
                   river_flow(ni+m-1) = river_factor*x(1)
                   river_salt(ni+m-1) = salt_missing
                   river_temp(ni+m-1) = temp_missing
                end do
                if ( r_salt(nn) .eq. 1 ) then
-                  err = nf_get_vara_real(ncid,salt_id(nn),start,edges,x)
-                  if (err .ne. NF_NOERR) go to 10
+                  err = nf90_get_var(ncid,salt_id(nn),x,start,edges)
+                  if (err .ne. NF90_NOERR) go to 10
                   do m=1,river_split(ni)
                      river_salt(ni+m-1) = x(1)
                   end do
                end if
                if ( r_temp(nn) .eq. 1 ) then
-                  err = nf_get_vara_real(ncid,temp_id(nn),start,edges,x)
-                  if (err .ne. NF_NOERR) go to 10
+                  err = nf90_get_var(ncid,temp_id(nn),x,start,edges)
+                  if (err .ne. NF90_NOERR) go to 10
                   do m=1,river_split(ni)
                      river_temp(ni+m-1) = x(1)
                   end do
@@ -323,8 +322,8 @@
 #ifdef GETM_BIO
                do j=1,numc
                   if (bio_id(nn,j) .gt. 0) then
-                     err = nf_get_vara_real(ncid,bio_id(nn,j),start,edges,x)
-                     if (err .ne. NF_NOERR) go to 10
+                     err = nf90_get_var(ncid,bio_id(nn,j),x,start,edges)
+                     if (err .ne. NF90_NOERR) go to 10
                      do m=1,river_split(ni)
                         river_bio(ni+m-1,j) = x(1)
                      end do
@@ -358,8 +357,8 @@
 
       do n =1,nriver
          if (ok(n) .ne. 0) then
-            err = nf_get_vara_real(ncid,r_ids(n),start,edges,x)
-            if (err .ne. NF_NOERR) go to 10
+            err = nf90_get_var(ncid,r_ids(n),x,start,edges)
+            if (err .ne. NF90_NOERR) go to 10
             river_flow(n) = x(1)
          end if
       end do
@@ -378,7 +377,7 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'get_river_data_ncdf: ',nf_strerror(err)
+10 FATAL 'get_river_data_ncdf: ',nf90_strerror(err)
    stop
    end subroutine get_river_data_ncdf
 !EOC

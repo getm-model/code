@@ -752,14 +752,14 @@ stop
 ! Iextr (or jextr) is used to find the last entry in the coordinate axis.
 !
    indx(1) = 1
-   status = nf_get_var1_double(ncid,varid,indx,startval)
-   if (status .ne. NF_NOERR) then
+   status = nf90_get_var(ncid,varid,startval,indx)
+   if (status .ne. NF90_NOERR) then
       call netcdf_error(status,"ncdf_get_grid_dxy()",    &
                         "Could not read first value of " // cordname)
    endif
    indx(1) = iextr
-   status = nf_get_var1_double(ncid,varid,indx,endval)
-   if (status .ne. NF_NOERR) then
+   status = nf90_get_var(ncid,varid,endval,indx)
+   if (status .ne. NF90_NOERR) then
       call netcdf_error(status,"ncdf_get_grid_dxy()",    &
                         "Could not read last value of "  // cordname)
    endif
@@ -792,8 +792,8 @@ stop
 ! Note that startval and x0 no longer match at this point,
       expectval = startval + dx * (i-1)
       indx(1) = i
-      status = nf_get_var1_double(ncid,varid,indx,readval)
-      if (status .ne. NF_NOERR) then
+      status = nf90_get_var(ncid,varid,indx,readval)
+      if (status .ne. NF90_NOERR) then
          call netcdf_error(status,"ncdf_get_grid_dxy()",   &
                            "Could not read one value of " // cordname)
       endif

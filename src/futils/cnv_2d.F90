@@ -21,10 +21,8 @@
    REALTYPE, intent(in)                :: missing
    integer, intent(in)                 :: il,jl,ih,jh
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
-   REAL_4B, intent(out)                :: ws(*)
+   REALTYPE, intent(out)                :: ws(E2DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -47,22 +45,18 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
-   integer                   :: indx
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   indx = 1
    do j=jl,jh
       do i=il,ih
          if(mask(i,j) .gt. 0) then
-            ws(indx) = var(i,j)
+            ws(i,j) = var(i,j)
          else
-            ws(indx) = missing
+            ws(i,j) = missing
          end if
-         indx = indx+1
       end do
    end do
-
    return
    end subroutine cnv_2d
 !EOC

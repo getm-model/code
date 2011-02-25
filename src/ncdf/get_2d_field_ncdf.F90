@@ -67,8 +67,6 @@ contains
    integer                             :: status,ncid,varid
 !EOP
 !-------------------------------------------------------------------------
-!#include"netcdf.inc"
-
    LEVEL3 'get_2d_field_ncdf()'
 
    start(1) = il

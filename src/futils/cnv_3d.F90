@@ -23,10 +23,8 @@
    REALTYPE, intent(in)                :: missing
    integer, intent(in)                 :: il,jl,ih,jh,kl,kh
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
-   REAL_4B, intent(out)                :: ws(*)
+   REALTYPE, intent(out)               :: ws(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -52,24 +50,20 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
-   integer                   :: indx
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   indx = 1
    do k=kl,kh
       do j=jl,jh
          do i=il,ih
             if (mask(i,j) .gt. 0 .and. k .ge. kmin(i,j) ) then
-               ws(indx) = var(i,j,k)
+               ws(i,j,k) = var(i,j,k)
             else
-               ws(indx) = missing
+               ws(i,j,k) = missing
             end if
-            indx = indx+1
          end do
       end do
    end do
-
    return
    end subroutine cnv_3d
 !EOC

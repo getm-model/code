@@ -109,7 +109,7 @@
       zax(k)=k
    end do
 
-#ifdef SAVE_HALOS
+#ifdef _WRITE_HOT_HALOS_
    LEVEL3 'include HALOs in NetCDF hostart files'
    start(1) = 1; edges(1) = (imax+HALO)-(imin-HALO)+1
    start(2) = 1; edges(2) = (jmax+HALO)-(jmin-HALO)+1
@@ -121,14 +121,14 @@
 
    select case (grid_type)
       case (1) ! cartesian
-         status = nf90_put_var(ncid,xax_id,xc(IRANGE,1))
+         status = nf90_put_var(ncid,xax_id,xc(_IRANGE_,1))
          if (status .NE. NF90_NOERR) go to 10
-         status = nf90_put_var(ncid,yax_id,yc(1,JRANGE))
+         status = nf90_put_var(ncid,yax_id,yc(1,_IRANGE_))
          if (status .NE. NF90_NOERR) go to 10
       case (2) ! spherical
-         status = nf90_put_var(ncid,xax_id,lonc(IRANGE,1))
+         status = nf90_put_var(ncid,xax_id,lonc(_IRANGE_,1))
          if (status .NE. NF90_NOERR) go to 10
-         status = nf90_put_var(ncid,yax_id,latc(1,JRANGE))
+         status = nf90_put_var(ncid,yax_id,latc(1,_IRANGE_))
          if (status .NE. NF90_NOERR) go to 10
    end select
 
@@ -136,134 +136,134 @@
    if (status .NE. NF90_NOERR) go to 10
 
    status = &
-   nf90_put_var(ncid,z_id,z(IRANGE,JRANGE),start,edges)
+   nf90_put_var(ncid,z_id,z(_2D_W_HOT_),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
    status = &
-   nf90_put_var(ncid,zo_id,zo(IRANGE,JRANGE),start,edges)
+   nf90_put_var(ncid,zo_id,zo(_2D_W_HOT_),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
    status = &
-   nf90_put_var(ncid,U_id,U(IRANGE,JRANGE),start,edges)
+   nf90_put_var(ncid,U_id,U(_2D_W_HOT_),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
    status = &
-   nf90_put_var(ncid,zu_id,zu(IRANGE,JRANGE),start,edges)
+   nf90_put_var(ncid,zu_id,zu(_2D_W_HOT_),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
    status = &
-   nf90_put_var(ncid,SlUx_id,SlUx(IRANGE,JRANGE),start,edges)
+   nf90_put_var(ncid,SlUx_id,SlUx(_2D_W_HOT_),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
    status = &
-   nf90_put_var(ncid,Slru_id,Slru(IRANGE,JRANGE),start,edges)
+   nf90_put_var(ncid,Slru_id,Slru(_2D_W_HOT_),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
    status = &
-   nf90_put_var(ncid,V_id,V(IRANGE,JRANGE),start,edges)
+   nf90_put_var(ncid,V_id,V(_2D_W_HOT_),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
    status = &
-   nf90_put_var(ncid,zv_id,zv(IRANGE,JRANGE),start,edges)
+   nf90_put_var(ncid,zv_id,zv(_2D_W_HOT_),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
    status = &
-   nf90_put_var(ncid,SlVx_id,SlVx(IRANGE,JRANGE),start,edges)
+   nf90_put_var(ncid,SlVx_id,SlVx(_2D_W_HOT_),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
    status = &
-   nf90_put_var(ncid,Slrv_id,Slrv(IRANGE,JRANGE),start,edges)
+   nf90_put_var(ncid,Slrv_id,Slrv(_2D_W_HOT_),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
 #ifndef NO_3D
    if (runtype .ge. 2)  then
       status = &
-      nf90_put_var(ncid,ssen_id,ssen(IRANGE,JRANGE),start,edges)
+      nf90_put_var(ncid,ssen_id,ssen(_2D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,ssun_id,ssun(IRANGE,JRANGE),start,edges)
+      nf90_put_var(ncid,ssun_id,ssun(_2D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,ssvn_id,ssvn(IRANGE,JRANGE),start,edges)
+      nf90_put_var(ncid,ssvn_id,ssvn(_2D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,sseo_id,sseo(IRANGE,JRANGE),start,edges)
+      nf90_put_var(ncid,sseo_id,sseo(_2D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,ssuo_id,ssuo(IRANGE,JRANGE),start,edges)
+      nf90_put_var(ncid,ssuo_id,ssuo(_2D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,ssvo_id,ssvo(IRANGE,JRANGE),start,edges)
+      nf90_put_var(ncid,ssvo_id,ssvo(_2D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,Uinto_id,Uinto(IRANGE,JRANGE),start,edges)
+      nf90_put_var(ncid,Uinto_id,Uinto(_2D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,Vinto_id,Vinto(IRANGE,JRANGE),start,edges)
+      nf90_put_var(ncid,Vinto_id,Vinto(_2D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,uu_id,uu(IRANGE,JRANGE,0:kmax),start,edges)
+      nf90_put_var(ncid,uu_id,uu(_3D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,vv_id,vv(IRANGE,JRANGE,0:kmax),start,edges)
+      nf90_put_var(ncid,vv_id,vv(_3D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,ww_id,ww(IRANGE,JRANGE,0:kmax),start,edges)
+      nf90_put_var(ncid,ww_id,ww(_3D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,uuEx_id,uuEx(IRANGE,JRANGE,0:kmax),start,edges)
+      nf90_put_var(ncid,uuEx_id,uuEx(_3D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,vvEx_id,vvEx(IRANGE,JRANGE,0:kmax),start,edges)
+      nf90_put_var(ncid,vvEx_id,vvEx(_3D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,tke_id,tke(IRANGE,JRANGE,0:kmax),start,edges)
+      nf90_put_var(ncid,tke_id,tke(_3D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,eps_id,eps(IRANGE,JRANGE,0:kmax),start,edges)
+      nf90_put_var(ncid,eps_id,eps(_3D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,num_id,num(IRANGE,JRANGE,0:kmax),start,edges)
+      nf90_put_var(ncid,num_id,num(_3D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
-      nf90_put_var(ncid,nuh_id,nuh(IRANGE,JRANGE,0:kmax),start,edges)
+      nf90_put_var(ncid,nuh_id,nuh(_3D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
 #ifndef NO_BAROCLINIC
       if (runtype .ge. 3) then
          status = &
-         nf90_put_var(ncid,T_id,T(IRANGE,JRANGE,0:kmax),start,edges)
+         nf90_put_var(ncid,T_id,T(_3D_W_HOT_),start,edges)
          if (status .NE. NF90_NOERR) go to 10
 
          status = &
-         nf90_put_var(ncid,S_id,S(IRANGE,JRANGE,0:kmax),start,edges)
+         nf90_put_var(ncid,S_id,S(_3D_W_HOT_),start,edges)
          if (status .NE. NF90_NOERR) go to 10
       end if
 #endif
 #ifdef SPM
       if (spm_calc) then
          status = &
-         nf90_put_var(ncid,spm_id,spm(IRANGE,JRANGE,0:kmax),start,edges)
+         nf90_put_var(ncid,spm_id,spm(_3D_W_HOT_),start,edges)
          if (status .NE. NF90_NOERR) go to 10
 
          status = &
-         nf90_put_var(ncid,spmpool_id,spm_pool(IRANGE,JRANGE),start,edges)
+         nf90_put_var(ncid,spmpool_id,spm_pool(_3D_W_HOT_)
          if (status .NE. NF90_NOERR) go to 10
       end if
 #endif
@@ -271,7 +271,7 @@
       if (bio_calc) then
 
          start(1) = 1; edges(1) = numc
-#ifdef SAVE_HALOS
+#ifdef _WRITE_HOT_HALOS_
          start(2) = 1; edges(2) = (imax+HALO)-(imin-HALO)+1
          start(3) = 1; edges(3) = (jmax+HALO)-(jmin-HALO)+1
 #else
@@ -281,14 +281,14 @@
          start(4) = 1; edges(4) = kmax+1
 #if 0
          status = &
-         nf90_put_var(ncid,bio_id,cc3d(1:numc,IRANGE,JRANGE,0:kmax), &
+         nf90_put_var(ncid,bio_id,cc3d(1:numc,_3D_W_HOT_), &
                       start,edges)
          if (status .NE. NF90_NOERR) go to 10
 #else
          do n=1,numc
             start(1) = n; edges(1) = 1
             status = &
-            nf90_put_var(ncid,bio_id,cc3d(n,IRANGE,JRANGE,0:kmax), &
+            nf90_put_var(ncid,bio_id,cc3d(n,_3D_W_HOT_), &
                          start,edges)
             if (status .NE. NF90_NOERR) go to 10
          end do

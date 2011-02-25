@@ -12,6 +12,7 @@
 !  From a NetCDF files - fname - read the variable - var - into the field - f.
 !
 ! !USES:
+   use netcdf
    use domain, only: imin,jmin,imax,jmax,kmax,iextr,jextr,ioff,joff
    use domain, only: H,az
    use variables_3d, only: hn
@@ -64,7 +65,6 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
 #ifdef DEBUG
    write(debug,*) 'read_field_ncdf (NetCDF)'
    write(debug,*) 'Reading from: ',trim(fname)
@@ -72,11 +72,11 @@
 
    LEVEL3 'read_field_ncdf'
 
-   err = nf_open(fname,NCNOWRIT,ncid)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_open(fname,NF90_NOWRITE,ncid)
+   if (err .NE. NF90_NOERR) go to 10
 
-   err = nf_inq_ndims(ncid, ndims)
-   if (err .ne. NF_NOERR) go to 10
+   err = nf90_inquire(ncid,nDimensions=ndims)
+   if (err .ne. NF90_NOERR) go to 10
 
    if(ndims .ne. 4) then
       FATAL 'we assume to read from a 4D field - and ndims = ',ndims
@@ -84,34 +84,34 @@
    end if
 
    do n=1,ndims
-      err = nf_inq_dimname(ncid,n,dimname)
-      if (err .ne. NF_NOERR) go to 10
+      err = nf90_inquire_dimension(ncid,n,name=dimname)
+      if (err .ne. NF90_NOERR) go to 10
 
 #if 0
       if( dimname .eq. 'lon' ) then
          xax_id = n
-         err = nf_inq_dimlen(ncid,xax_id,iextr)
-         if (err .ne. NF_NOERR) go to 10
+         err = nf90_inq_dimlen(ncid,xax_id,iextr)
+         if (err .ne. NF90_NOERR) go to 10
 !         LEVEL4 'xax_id  --> ',xax_id,', len = ',iextr
       end if
       if( dimname .eq. 'lat' ) then
          yax_id = n
-         err = nf_inq_dimlen(ncid,yax_id,jextr)
-         if (err .ne. NF_NOERR) go to 10
+         err = nf90_inq_dimlen(ncid,yax_id,jextr)
+         if (err .ne. NF90_NOERR) go to 10
 !         LEVEL4 'yax_id  --> ',yax_id,', len = ',jextr
       end if
 #endif
 
       if( dimname .eq. 'zax' ) then
          zax_id = n
-         err = nf_inq_dimlen(ncid,zax_id,kh)
-         if (err .ne. NF_NOERR) go to 10
+         err = nf90_inquire_dimension(ncid,zax_id,len = kh)
+         if (err .ne. NF90_NOERR) go to 10
 !         LEVEL4 'zax_id  --> ',zax_id,', len = ',kh
       end if
       if( dimname .eq. 'time' ) then
          time_id = n
-         err = nf_inq_dimlen(ncid,time_id,nh)
-         if (err .ne. NF_NOERR) go to 10
+         err = nf90_inquire_dimension(ncid,time_id,len = nh)
+         if (err .ne. NF90_NOERR) go to 10
 !         LEVEL4 'time_id --> ',time_id,', len = ',nh
       end if
    end do
@@ -137,21 +137,21 @@
    end if
 
    if (kh .gt. 1) then
-      err = nf_inq_varid(ncid,"zax",var_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,"zax",var_id)
+      if (err .NE. NF90_NOERR) go to 10
       allocate(zax(kh),stat=rc)
       if (rc /= 0) stop 'read_field_ncdf: Error allocating zax'
-      err = nf_get_var_real(ncid,var_id,zax)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,var_id,zax)
+      if (err .NE. NF90_NOERR) go to 10
    end if
 
 #if 0
-   err = nf_inq_varid(ncid,"time",var_id)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_inq_varid(ncid,"time",var_id)
+   if (err .NE. NF90_NOERR) go to 10
    allocate(tax(nh),stat=rc)
    if (rc /= 0) stop 'read_field_ncdf: Error allocating tax'
-   err = nf_get_var_real(ncid,var_id,tax)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_get_var(ncid,var_id,tax)
+   if (err .NE. NF90_NOERR) go to 10
 #endif
 
    il = max(imin+ioff,1); ih = min(imax+ioff,iextr)
@@ -179,11 +179,11 @@
    allocate(wrk((imax-imin+1)*(jmax-jmin+1)*kh),stat=rc)
    if (rc /= 0) stop 'read_field_ncdf: Error allocating wrk'
 
-   err = nf_inq_varid(ncid,trim(var),var_id)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_inq_varid(ncid,trim(var),var_id)
+   if (err .NE. NF90_NOERR) go to 10
 
-   err = nf_get_vara_real(ncid,var_id,start,edges,wrk)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_get_var(ncid,var_id,wrk,start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
    if (kh .gt. 1) then
       allocate(zax_2d(kh),stat=rc)
@@ -216,8 +216,8 @@
       end do
    end if
 
-   err = nf_close(ncid)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_close(ncid)
+   if (err .NE. NF90_NOERR) go to 10
 
 #ifdef FORTRAN90
    deallocate(zax,stat=rc)
@@ -235,7 +235,7 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'read_field_ncdf: ',nf_strerror(err)
+10 FATAL 'read_field_ncdf: ',nf90_strerror(err)
    stop
    end subroutine read_field_ncdf
 !EOC

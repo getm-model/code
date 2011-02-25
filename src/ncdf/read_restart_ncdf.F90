@@ -117,7 +117,7 @@
 
 !  allows reading from subdomain or topo.nc sized files
 !  i.e. ncmerged files cut to the same size as topo.nc
-#ifdef SAVE_HALOS
+#ifdef __READ_HOT_HALOS_
    if (xlen .eq. ((imax+HALO)-(imin-HALO)+1) .and.  &
        ylen .eq. ((jmax+HALO)-(jmin-HALO)+1) ) then
       LEVEL3 'hotstart file(s) include HALO-zones'
@@ -465,7 +465,7 @@
       if(bio_calc .and. bio_init_method .eq. 0) then
 
          start(1) = 1;  edges(1) = numc
-#ifdef SAVE_HALOS
+#ifdef _READ_HOT_HALOS_
 STDERR 'needs a fix here - read_restart_ncdf()'
 stop
          start(2) = il; edges(2) = numc

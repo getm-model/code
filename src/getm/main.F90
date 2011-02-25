@@ -294,8 +294,14 @@
 #ifdef OLD_WRONG_FLUXES
    LEVEL1 'OLD_WRONG_FLUXES'
 #endif
-#ifdef SAVE_HALOS
-   LEVEL1 'SAVE_HALOS'
+#ifdef _WRITE_HALOS_
+   LEVEL1 '_WRITE_HALOS_'
+#endif
+#ifdef _WRITE_HOT_HALOS_
+   LEVEL1 '_WRITE_HOT_HALOS_'
+#endif
+#ifdef _READ_HOT_HALOS_
+   LEVEL1 '_READ_HOT_HALOS_'
 #endif
 
    STDERR LINE

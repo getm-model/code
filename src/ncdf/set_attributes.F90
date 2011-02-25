@@ -21,15 +21,22 @@
 !  included a sub-set of the COARDS conventions.
 !
 ! !USES:
+   use netcdf
 !  IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: ncid,id
    integer, optional                   :: netcdf_real
    character(len=*), optional          :: units,long_name
+#if 1
    REALTYPE, optional                  :: valid_min,valid_max,valid_range(2)
    REALTYPE, optional                  :: scale_factor,add_offset
    REALTYPE, optional                  :: FillValue,missing_value
+#else
+   REAL_4B, optional                  :: valid_min,valid_max,valid_range(2)
+   REAL_4B, optional                  :: scale_factor,add_offset
+   REAL_4B, optional                  :: FillValue,missing_value
+#endif
    character(len=*), optional          :: C_format,FORTRAN_format
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -42,75 +49,63 @@
 !  See ncdfout module
 !
 ! !LOCAL VARIABLES:
-   integer                   :: len,iret
+   integer                   :: iret
    integer                   :: ft
    REAL_4B                   :: vals(2)
 !
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
-
    if(present(netcdf_real)) then
       ft=netcdf_real
    else
-      ft=NF_FLOAT
+      ft=NF90_FLOAT
    end if
 
    if(present(units)) then
-      len = len_trim(units)
-      iret = nf_put_att_text(ncid,id,'units',len,units)
+      iret = nf90_put_att(ncid,id,'units',trim(units))
    end if
 
    if(present(long_name)) then
-      len = len_trim(long_name)
-      iret = nf_put_att_text(ncid,id,'long_name',len,long_name)
+      iret = nf90_put_att(ncid,id,'long_name',trim(long_name))
    end if
 
    if(present(C_format)) then
-      len = len_trim(C_format)
-      iret = nf_put_att_text(ncid,id,'C_format',len,C_format)
+      iret = nf90_put_att(ncid,id,'C_format',trim(C_format))
    end if
 
    if(present(FORTRAN_format)) then
-      len = len_trim(FORTRAN_format)
-      iret = nf_put_att_text(ncid,id,'FORTRAN_format',len,FORTRAN_format)
+      iret = nf90_put_att(ncid,id,'FORTRAN_format',trim(FORTRAN_format))
    end if
 
    if(present(valid_min)) then
-      vals(1) = valid_min
-      iret = nf_put_att_real(ncid,id,'valid_min',ft,1,vals)
+      iret = nf90_put_att(ncid,id,'valid_min',valid_min)
    end if
 
    if(present(valid_max)) then
-      vals(1) = valid_max
-      iret = nf_put_att_real(ncid,id,'valid_max',ft,1,vals)
+      iret = nf90_put_att(ncid,id,'valid_max',valid_max)
    end if
 
    if(present(valid_range)) then
-      vals(1) = valid_range(1)
-      vals(2) = valid_range(2)
-      iret = nf_put_att_real(ncid,id,'valid_range',ft,2,vals)
+      iret = nf90_put_att(ncid,id,'valid_range',valid_range)
    end if
 
    if(present(scale_factor)) then
-      vals(1) = scale_factor
-      iret = nf_put_att_real(ncid,id,'scale_factor',ft,1,vals)
+      iret = nf90_put_att(ncid,id,'scale_factor',scale_factor)
    end if
 
    if(present(add_offset)) then
-      vals(1) = add_offset
-      iret = nf_put_att_real(ncid,id,'add_offset',ft,1,vals)
+      iret = nf90_put_att(ncid,id,'add_offset',add_offset)
    end if
 
+#if 0
    if(present(FillValue)) then
-      vals(1) = FillValue
-      iret = nf_put_att_real(ncid,id,'_FillValue',ft,1,vals)
+      iret = nf90_put_att(ncid,id,'_FillValue',FillValue)
    end if
+#endif
 
    if(present(missing_value)) then
-      vals(1) = missing_value
-      iret = nf_put_att_real(ncid,id,'missing_value',ft,1,vals)
+      iret = nf90_put_att(ncid,id,'missing_value',missing_value)
    end if
 
    return

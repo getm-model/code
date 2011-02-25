@@ -11,6 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use netcdf
    use ncdf_2d, only: nc2d => ncid
 #ifndef NO_3D
    use ncdf_3d, only: nc3d => ncid
@@ -54,7 +55,6 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
@@ -63,18 +63,18 @@
 
    if (nc2d .ge. 0) then
       call save_2d_ncdf(dummy)
-      err = nf_close(nc2d)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_close(nc2d)
+      if (err .NE. NF90_NOERR) go to 10
    end if
 #ifndef NO_3D
    if (nc3d .ge. 0) then
-      err = nf_close(nc3d)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_close(nc3d)
+      if (err .NE. NF90_NOERR) go to 10
    end if
 #endif
    return
 
-10 FATAL 'ncdf_close: ',nf_strerror(err)
+10 FATAL 'ncdf_close: ',nf90_strerror(err)
    stop
 
 #ifdef DEBUG

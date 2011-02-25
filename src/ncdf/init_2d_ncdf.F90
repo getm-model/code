@@ -11,6 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use netcdf
    use exceptions
    use ncdf_common
    use ncdf_2d
@@ -74,34 +75,27 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: err
-   integer                   :: xlen,ylen
-   integer                   :: scalar(1),axisdim(1),f2_dims(2),f3_dims(3)
+   integer                   :: scalar(1),f2_dims(2),f3_dims(3)
    REALTYPE                  :: fv,mv,vr(2)
    character(len=80)         :: history,ts
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
-
 !  create netCDF file
-   err = nf_create(fn, NF_CLOBBER, ncid)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_create(fn, NF90_CLOBBER, ncid)
+   if (err .NE. NF90_NOERR) go to 10
 
 !  initialize all time-independent, grid related variables
    call init_grid_ncdf(ncid,init3d,x_dim,y_dim)
 
-!  length of netCDF dimensions
-   xlen = imax-imin+1
-   ylen = jmax-jmin+1
-
 !  allocate workspace
-   allocate(ws(xlen*ylen),stat=err)
+   allocate(ws(E2DFIELD),stat=err)
    if (err .ne. 0) call getm_error("init_2d_ncdf()",               &
                                    "error allocating ws")
 
 !  define unlimited dimension
-   err = nf_def_dim(ncid,'time',NF_UNLIMITED,time_dim)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_def_dim(ncid,'time',NF90_UNLIMITED,time_dim)
+   if (err .NE. NF90_NOERR) go to 10
 
 !  netCDF dimension vectors
    f3_dims(3)= time_dim
@@ -113,14 +107,13 @@
    ts = 'seconds since '//starttime
 
 !  time
-   axisdim(1) = time_dim
-   err = nf_def_var(ncid,'time',NF_REAL,1,axisdim,time_id)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_def_var(ncid,'time',NF90_REAL,time_dim,time_id)
+   if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,time_id,units=trim(ts),long_name='time')
 
 !  elevation
-   err = nf_def_var(ncid,'elev',NF_REAL,3,f3_dims,elev_id)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_def_var(ncid,'elev',NF90_REAL,f3_dims,elev_id)
+   if (err .NE. NF90_NOERR) go to 10
    fv = elev_missing
    mv = elev_missing
    vr(1) = -15.
@@ -134,14 +127,14 @@
    vr(1) = -3.
    vr(2) =  3.
 !  zonal velocity
-   err = nf_def_var(ncid,'u',NF_REAL,3,f3_dims,u_id)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_def_var(ncid,'u',NF90_REAL,f3_dims,u_id)
+   if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,u_id,long_name='zonal velocity',units='m/s', &
                        FillValue=fv,missing_value=mv,valid_range=vr)
 
 !  meridional velocity
-   err = nf_def_var(ncid,'v',NF_REAL,3,f3_dims,v_id)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_def_var(ncid,'v',NF90_REAL,f3_dims,v_id)
+   if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,v_id,long_name='meridional velocity',units='m/s', &
                        FillValue=fv,missing_value=mv,valid_range=vr)
 
@@ -149,76 +142,76 @@
    if (metforcing .and. save_meteo) then
       if (calc_met) then
          fv = vel_missing; mv = vel_missing; vr(1) = -50.; vr(2) =  50.
-         err = nf_def_var(ncid,'u10',NF_REAL,3,f3_dims,u10_id)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_def_var(ncid,'u10',NF90_REAL,f3_dims,u10_id)
+         if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,u10_id,long_name='U10',units='m/s', &
                              FillValue=fv,missing_value=mv,valid_range=vr)
-         err = nf_def_var(ncid,'v10',NF_REAL,3,f3_dims,v10_id)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_def_var(ncid,'v10',NF90_REAL,f3_dims,v10_id)
+         if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,v10_id,long_name='V10',units='m/s', &
                              FillValue=fv,missing_value=mv,valid_range=vr)
 
          fv = airp_missing; mv = airp_missing; 
          vr(1) = 90.e3; vr(2) = 110.e3
-         err = nf_def_var(ncid,'airp',NF_REAL,3,f3_dims,airp_id)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_def_var(ncid,'airp',NF90_REAL,f3_dims,airp_id)
+         if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,airp_id,  &
                              long_name='air pressure',units='Pascal', &
                              FillValue=fv,missing_value=mv,valid_range=vr)
 
          fv = t2_missing; mv = t2_missing; vr(1) = 0; vr(2) = 325.
-         err = nf_def_var(ncid,'t2',NF_REAL,3,f3_dims,t2_id)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_def_var(ncid,'t2',NF90_REAL,f3_dims,t2_id)
+         if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,t2_id,  &
                              long_name='temperature (2m)',units='Kelvin', &
                              FillValue=fv,missing_value=mv,valid_range=vr)
 
          fv = hum_missing; mv = hum_missing; vr(1) = 0; vr(2) = 100.
-         err = nf_def_var(ncid,'hum',NF_REAL,3,f3_dims,hum_id)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_def_var(ncid,'hum',NF90_REAL,f3_dims,hum_id)
+         if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,hum_id,  &
                              long_name='humidity',units='kg/kg', &
                              FillValue=fv,missing_value=mv,valid_range=vr)
 
          fv = tcc_missing; mv = tcc_missing; vr(1) = 0.; vr(2) = 1.
-         err = nf_def_var(ncid,'tcc',NF_REAL,3,f3_dims,tcc_id)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_def_var(ncid,'tcc',NF90_REAL,f3_dims,tcc_id)
+         if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,tcc_id,  &
                              long_name='total cloud cover',units='fraction', &
                              FillValue=fv,missing_value=mv,valid_range=vr)
       end if
 
       fv = stress_missing; mv = stress_missing; vr(1) = -1; vr(2) = 1.
-      err = nf_def_var(ncid,'tausx',NF_REAL,3,f3_dims,tausx_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_def_var(ncid,'tausx',NF90_REAL,f3_dims,tausx_id)
+      if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,tausx_id,  &
                           long_name='surface stress - x',units='N/m2', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf_def_var(ncid,'tausy',NF_REAL,3,f3_dims,tausy_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_def_var(ncid,'tausy',NF90_REAL,f3_dims,tausy_id)
+      if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,tausy_id,  &
                           long_name='surface stress - y',units='N/m2', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
       fv = swr_missing; mv = swr_missing; vr(1) = 0; vr(2) = 1500.
-      err = nf_def_var(ncid,'swr',NF_REAL,3,f3_dims,swr_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_def_var(ncid,'swr',NF90_REAL,f3_dims,swr_id)
+      if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,swr_id,  &
                           long_name='short wave radiation',units='W/m2', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
       fv = shf_missing; mv = shf_missing; vr(1) = -1000; vr(2) = 1000.
-      err = nf_def_var(ncid,'shf',NF_REAL,3,f3_dims,shf_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_def_var(ncid,'shf',NF90_REAL,f3_dims,shf_id)
+      if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,shf_id,  &
                           long_name='surface heat fluxes',units='W/m2', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
       if (fwf_method .ge. 2) then
          fv = evap_missing; mv = evap_missing; vr(1) = -1.0; vr(2) = 1.
-         err = nf_def_var(ncid,'evap',NF_REAL,3,f3_dims,evap_id)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_def_var(ncid,'evap',NF90_REAL,f3_dims,evap_id)
+         if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,evap_id,  &
                             long_name='evaporation',units='m/s', &
                             FillValue=fv,missing_value=mv,valid_range=vr)
@@ -226,8 +219,8 @@
 
       if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
          fv = precip_missing; mv = precip_missing; vr(1) = -1.; vr(2) = 1.
-         err = nf_def_var(ncid,'precip',NF_REAL,3,f3_dims,precip_id)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_def_var(ncid,'precip',NF90_REAL,f3_dims,precip_id)
+         if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,precip_id,  &
                             long_name='precipitation',units='m/s', &
                             FillValue=fv,missing_value=mv,valid_range=vr)
@@ -238,45 +231,45 @@
    fv = divergence_missing; mv = divergence_missing 
    vr(1) = -3.; vr(2) =  3.
 !  divergence
-   err = nf_def_var(ncid,'div',NF_REAL,3,f3_dims,surfdiv_id)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_def_var(ncid,'div',NF90_REAL,f3_dims,surfdiv_id)
+   if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,surfdiv_id,long_name='divergence',units='s-1', &
                        FillValue=fv,missing_value=mv,valid_range=vr)
 
    fv = vel_missing; mv = vel_missing; vr(1) = -3.; vr(2) =  3.
 !  residual currents - u and v
-   err = nf_def_var(ncid,'res_u',NF_REAL,2,f3_dims,res_u_id)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_def_var(ncid,'res_u',NF90_REAL,f3_dims,res_u_id)
+   if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,res_u_id,long_name='res. u',units='m/s', &
                        FillValue=fv,missing_value=mv,valid_range=vr)
 
-   err = nf_def_var(ncid,'res_v',NF_REAL,2,f3_dims,res_v_id)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_def_var(ncid,'res_v',NF90_REAL,f3_dims,res_v_id)
+   if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,res_v_id,long_name='res. v',units='m/s', &
                        FillValue=fv,missing_value=mv,valid_range=vr)
 
 #ifdef USE_BREAKS
-      err = nf_def_var(ncid,'break_stat',NF_INT,2,f3_dims,break_stat_id)
-      if (err .ne. NF_NOERR) call netcdf_error(err,                  &
+      err = nf90_def_var(ncid,'break_stat',NF90_INT,f3_dims,break_stat_id)
+      if (err .ne. NF90_NOERR) call netcdf_error(err,                  &
                                   "init_2d_ncdf()","break_stat")
       call set_attributes(ncid,break_stat_id, &
                           long_name='stats (emergency breaks)')
 #endif
 
 !  globals
-   err = nf_put_att_text(ncid,NF_GLOBAL,'title',LEN_TRIM(title),title)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_put_att(ncid,NF90_GLOBAL,'title',trim(title))
+   if (err .NE. NF90_NOERR) go to 10
 
-   err = nf_put_att_text(ncid,NF_GLOBAL,'history',LEN_TRIM(history),history)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_put_att(ncid,NF90_GLOBAL,'history',trim(history))
+   if (err .NE. NF90_NOERR) go to 10
 
    ! leave define mode
-   err = nf_enddef(ncid)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_enddef(ncid)
+   if (err .NE. NF90_NOERR) go to 10
 
    return
 
-   10 FATAL 'init_2d_ncdf: ',nf_strerror(err)
+   10 FATAL 'init_2d_ncdf: ',nf90_strerror(err)
    stop 'init_2d_ncdf'
    end subroutine init_2d_ncdf
 !EOC

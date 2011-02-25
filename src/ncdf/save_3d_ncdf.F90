@@ -11,9 +11,11 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use netcdf
    use exceptions
+   use ncdf_2d,      only: ws2d => ws
    use ncdf_3d
-   use grid_ncdf
+   use grid_ncdf,    only: xlen,ylen,zlen
    use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
    use domain,       only: H,HU,HV,az,au,av,min_depth
 #if defined CURVILINEAR || defined SPHERICAL
@@ -128,12 +130,10 @@
    integer                   :: start(4),edges(4)
    integer, save             :: n3d=0
    REALTYPE                  :: DONE(E2DFIELD)
-
+   REALTYPE                  :: dum(1)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
-
    n3d = n3d + 1
    if (n3d .eq. 1) then
 
@@ -142,24 +142,26 @@
       start(1) = 1
       start(2) = 1
       start(3) = 1
+      start(4) = n3d
       edges(1) = xlen
       edges(2) = ylen
       edges(3) = zlen
+      edges(4) = 1
 
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,hcc,-_ONE_, &
                   imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf_put_vara_real(ncid,hcc_id,start,edges,ws)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_put_var(ncid,hcc_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
 
-      err = nf_sync(ncid)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_sync(ncid)
+      if (err .NE. NF90_NOERR) go to 10
 
    end if ! (n3d .eq. 1)
 
    start(1) = n3d
    edges(1) = 1
-   ws(1) = secs
-   err = nf_put_vara_real(ncid,time_id,start,edges,ws(1))
+   dum(1) = secs
+   err = nf90_put_var(ncid,time_id,dum,start,edges)
 
    start(1) = 1
    start(2) = 1
@@ -170,21 +172,21 @@
 
 !  elevations
    call eta_mask(imin,jmin,imax,jmax,az,H,D,z,min_depth,elev_missing, &
-                 imin,jmin,imax,jmax,ws)
-   err = nf_put_vara_real(ncid,elev_id,start,edges,ws)
-   if (err .NE. NF_NOERR) go to 10
+                 imin,jmin,imax,jmax,ws2d)
+   err = nf90_put_var(ncid,elev_id,ws2d(_2D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
 !  depth integrated zonal velocity
    call to_2d_vel(imin,jmin,imax,jmax,au,U,DU,vel_missing, &
-                  imin,jmin,imax,jmax,ws)
-   err = nf_put_vara_real(ncid,u_id,start,edges,ws)
-   if (err .NE. NF_NOERR) go to 10
+                  imin,jmin,imax,jmax,ws2d)
+   err = nf90_put_var(ncid,u_id,ws2d(_2D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
 !  depth integrated meridional velocity
    call to_2d_vel(imin,jmin,imax,jmax,av,V,DV,vel_missing, &
-                  imin,jmin,imax,jmax,ws)
-   err = nf_put_vara_real(ncid,v_id,start,edges,ws)
-   if (err .NE. NF_NOERR) go to 10
+                  imin,jmin,imax,jmax,ws2d)
+   err = nf90_put_var(ncid,v_id,ws2d(_2D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
    
    if (save_taub) then
@@ -193,29 +195,29 @@
       if (destag) then
          DONE = _ONE_
          call to_2d_u(imin,jmin,imax,jmax,au,rho_0*taubx,DONE,tau_missing, &
-              imin,jmin,imax,jmax,ws)
+              imin,jmin,imax,jmax,ws2d)
       else
          call cnv_2d(imin,jmin,imax,jmax,au,rho_0*taubx,tau_missing,       &
-              imin,jmin,imax,jmax,ws)
+              imin,jmin,imax,jmax,ws2d)
 
       endif
 
-      err = nf_put_vara_real(ncid,taubx_id,start,edges,ws)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_put_var(ncid,taubx_id,ws2d(_2D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
 
 
       !  bottom stress (y)
       if (destag) then
          DONE = _ONE_
          call to_2d_v(imin,jmin,imax,jmax,av,rho_0*tauby,DONE,tau_missing, &
-              imin,jmin,imax,jmax,ws)
+              imin,jmin,imax,jmax,ws2d)
       else
          call cnv_2d(imin,jmin,imax,jmax,av,rho_0*tauby,tau_missing,       &
-              imin,jmin,imax,jmax,ws)
+              imin,jmin,imax,jmax,ws2d)
       endif
 
-      err = nf_put_vara_real(ncid,tauby_id,start,edges,ws)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_put_var(ncid,tauby_id,ws2d(_2D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
 
 
    endif
@@ -233,8 +235,9 @@
    if (h_id .gt. 0) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,hn,hh_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf_put_vara_real(ncid,h_id,start,edges,ws)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_put_var(ncid,h_id,ws(_3D_W_),start,edges)
+!      err = nf90_put_var(ncid,h_id,hn(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
    end if
 
    if (save_vel) then
@@ -247,8 +250,8 @@
                         hun,uu,vel_missing,ws)
       endif
 
-      err = nf_put_vara_real(ncid,uu_id,start,edges,ws)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_put_var(ncid,uu_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
 
 
       if (destag) then
@@ -259,8 +262,8 @@
                         hvn,vv,vel_missing,ws)
       endif
 
-      err = nf_put_vara_real(ncid,vv_id,start,edges,ws)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_put_var(ncid,vv_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
       call tow(imin,jmin,imax,jmax,kmin,kmax,az, &
                dt,                               &
 #if defined CURVILINEAR || defined SPHERICAL
@@ -269,8 +272,8 @@
                dx,dy,                            &
 #endif
                HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,destag,ws)
-      err = nf_put_vara_real(ncid,w_id,start,edges,ws)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_put_var(ncid,w_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
 
    end if
 
@@ -280,29 +283,29 @@
       if (save_s) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,S,salt_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf_put_vara_real(ncid, salt_id, start, edges, ws)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_put_var(ncid,salt_id,ws(_3D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
       end if
 
       if (save_t) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,T,temp_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf_put_vara_real(ncid, temp_id, start, edges, ws)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_put_var(ncid,temp_id,ws(_3D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
       end if
 
       if (save_rho) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,rho-1000.,rho_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf_put_vara_real(ncid, sigma_t_id, start, edges, ws)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_put_var(ncid,sigma_t_id,ws(_3D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
       end if
 
       if (save_rad) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,rad,rad_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf_put_vara_real(ncid, rad_id, start, edges, ws)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_put_var(ncid,rad_id,ws(_3D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
       end if
 
    end if ! save_strho
@@ -313,29 +316,29 @@
       if (save_tke) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,tke,tke_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf_put_vara_real(ncid,tke_id,start,edges,ws)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_put_var(ncid,tke_id,ws(_3D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
       end if
 
       if (save_num) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,num,num_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf_put_vara_real(ncid,num_id,start,edges,ws)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_put_var(ncid,num_id,ws(_3D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
       end if
 
       if (save_nuh) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nuh,nuh_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf_put_vara_real(ncid,nuh_id,start,edges,ws)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_put_var(ncid,nuh_id,ws(_3D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
       end if
 
       if (save_eps) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,eps,eps_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf_put_vara_real(ncid, eps_id, start, edges, ws)
-         if (err .NE. NF_NOERR) go to 10
+         err = nf90_put_var(ncid,eps_id,ws(_3D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
       end if
    end if ! save_turb
 
@@ -343,14 +346,14 @@
 
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,SS,SS_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf_put_vara_real(ncid, SS_id, start, edges, ws)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_put_var(ncid,SS_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
 
 #ifndef NO_BAROCLINIC
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,NN,NN_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf_put_vara_real(ncid, NN_id, start, edges, ws)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_put_var(ncid,NN_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
 
 #endif
 
@@ -360,20 +363,20 @@
    if (save_mix_analysis) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix3d_S,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf_put_vara_real(ncid, nm3dS_id, start, edges, ws)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_put_var(ncid,nm3dS_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix3d_T,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf_put_vara_real(ncid, nm3dT_id, start, edges, ws)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_put_var(ncid,nm3dT_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix3d_S,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf_put_vara_real(ncid, pm3dS_id, start, edges, ws)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_put_var(ncid,pm3dS_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix3d_T,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf_put_vara_real(ncid, pm3dT_id, start, edges, ws)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_put_var(ncid,pm3dT_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
    end if ! save_mix_analysis
 #endif
 
@@ -381,8 +384,8 @@
    if (spm_save) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,spm,spm_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf_put_vara_real(ncid, spm_id, start, edges, ws)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_put_var(ncid,spm_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
       !spm pool is a 2d magnitude
       start(1) = 1
       start(2) = 1
@@ -392,8 +395,8 @@
       edges(3) = 1
       call cnv_2d(imin,jmin,imax,jmax,az,spm_pool,spmpool_missing,    &
                   imin,jmin,imax,jmax,ws)
-      err = nf_put_vara_real(ncid, spmpool_id, start, edges, ws)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_put_var(ncid,spmpool_id,ws2d(_2D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
    end if
 #endif
 
@@ -410,18 +413,18 @@
       do n=1,numc
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,cc3d(n,:,:,:), &
                      bio_missing,imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf_put_vara_real(ncid, bio_ids(n), start, edges, ws)
-         if (err .NE.  NF_NOERR) go to 10
+         err = nf90_put_var(ncid,bio_ids(n),ws(_3D_W_),start,edges)
+         if (err .NE.  NF90_NOERR) go to 10
       end do
 !   end if
 #endif
 
-   err = nf_sync(ncid)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_sync(ncid)
+   if (err .NE. NF90_NOERR) go to 10
 
    return
 
-10 FATAL 'save_3d_ncdf: ',nf_strerror(err)
+10 FATAL 'save_3d_ncdf: ',nf90_strerror(err)
    stop
 
    return

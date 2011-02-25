@@ -133,22 +133,52 @@
 ! The width of the HALO zones
 #define HALO	  2
 
-! Here the memory-allocation is defined
-#define E2DFIELD  imin-HALO:imax+HALO,jmin-HALO:jmax+HALO
-#define E2DXFIELD imin-1-HALO:imax+HALO,jmin-1-HALO:jmax+HALO
-#define I2DFIELD  imin-HALO:imax+HALO,jmin-HALO:jmax+HALO
-#define I3DFIELD  imin-HALO:imax+HALO,jmin-HALO:jmax+HALO,0:kmax
+! Size of dimensions with and without HALO-zones:
+#define _IRANGE_HALO_ imin-HALO:imax+HALO
+#define _JRANGE_HALO_ jmin-HALO:jmax+HALO
+#define _IRANGE_NO_HALO_ imin:imax
+#define _JRANGE_NO_HALO_ jmin:jmax
+#define _KRANGE_ 0:kmax
 
-! For easier saving HALO zones in NetCDF files - used in:
-! save_grid_ncdf.F90 and write_restart_ncdf.F90
-#ifdef SAVE_HALOS
-#define IRANGE imin-HALO:imax+HALO
-#define JRANGE jmin-HALO:jmax+HALO
-#else
-#define IRANGE imin:imax
-#define JRANGE jmin:jmax
+! Here the memory-allocation is defined using above definitions
+#define E2DFIELD  _IRANGE_HALO_,_JRANGE_HALO_
+#define E2DXFIELD -1+_IRANGE_HALO_,-1+_JRANGE_HALO_
+#define I2DFIELD  _IRANGE_HALO_,_JRANGE_HALO_
+#define I3DFIELD  _IRANGE_HALO_,_JRANGE_HALO_,_KRANGE_
+
+! _2D_W_HOT_, _3D_W_HOT_ - macros for writing hot-start files
+#ifdef _WRITE_HOT_HALOS_
+#warning "_WRITE_HOT_HALOS_ not implemented yet - undef it"
+#undef _WRITE_HOT_HALOS_
+#endif
+#define _2D_W_HOT_ _IRANGE_NO_HALO_,_JRANGE_NO_HALO_
+#define _3D_W_HOT_ _IRANGE_NO_HALO_,_JRANGE_NO_HALO_,_KRANGE_
+
+! _2D_R_HOT_, _3D_R_HOT_ - macros for reading hot-start files
+#ifdef _READ_HOT_HALOS_
+#warning "READ_HOT_HALOS_ not implemented yet - undef it"
+#undef _READ_HOT_HALOS_
+#endif
+#define _2D_R_HOT_ _IRANGE_NO_HALO_,_JRANGE_NO_HALO_
+#define _3D_R_HOT_ _IRANGE_NO_HALO_,_JRANGE_NO_HALO_,_KRANGE_
+
+! _2D_W_, _3D_W_ to specify array slices in nf90_put_var()
+#ifdef _WRITE_HALOS_
+#warning "_WRITE_HALOS_ not implemented yet - undef it"
+#undef _WRITE_HALOS_
+! need to update/fix .../futils/{cnv_,to}*.F90
+! loop boundaries and mask issue
 #endif
 
+#ifdef _WRITE_HALOS_
+#define _IRANGE_ _IRANGE_HALO_
+#define _JRANGE_ _JRANGE_HALO_
+#else
+#define _IRANGE_ _IRANGE_NO_HALO_
+#define _JRANGE_ _JRANGE_NO_HALO_
+#endif
+#define _2D_W_ _IRANGE_,_JRANGE_
+#define _3D_W_ _IRANGE_,_JRANGE_,_KRANGE_
 
 ! These defines the do loops for the real inner points..
 ! that is the points that are independent of neighbours.

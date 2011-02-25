@@ -29,7 +29,7 @@
    integer                             :: evap_id=-1,precip_id=-1
    integer                             :: break_stat_id=-1
 
-   REAL_4B, dimension(:), allocatable :: ws
+   REALTYPE, dimension(:,:), allocatable :: ws
 
 ! !DEFINED PARAMETERS
    REALTYPE, parameter                 :: elev_missing       =-9999.0
