@@ -57,8 +57,6 @@
 
    LEVEL3 'get_field_ncdf'
 
-stop 'kaj'
-
    err = nf90_open(fname,NF90_NOWRITE,ncid)
    if (err .NE. NF90_NOERR) go to 10
 #if 0
