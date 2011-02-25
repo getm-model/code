@@ -151,7 +151,7 @@
    ts = 'seconds since '//starttime
 
 !  time
-   err = nf90_def_var(ncid,'time',NF90_REAL,time_dim,time_id)
+   err = nf90_def_var(ncid,'time',NF90_DOUBLE,time_dim,time_id)
    if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,time_id,units=trim(ts),long_name='time')
 
