@@ -83,7 +83,6 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
-   integer                   :: indx,l
    REALTYPE                  :: dtz,dxz,dyz
    REALTYPE                  :: u,v
    logical, save             :: physical_vel=.true.
@@ -94,15 +93,9 @@
    if (physical_vel) then
 
 !  save physical velocities
-   l=(imax-imin+1)*(jmax-jmin+1)
    do j=jmin,jmax
       do i=imin,imax
          if(mask(i,j) .gt. 0) then
-!           points below kmin - z-coordinates only
-            indx=i+(j-jmin)*(imax-imin+1)
-            do k=0,kmin(i,j)-2
-               indx = indx+l
-            end do
 !           bottom - normally k=0
             k=kmin(i,j)-1
             dtz=_ZERO_
@@ -128,7 +121,6 @@
                        uu(i,j,k+1)/hun(i,j,k+1)+uu(i-1,j,k+1)/hun(i-1,j,k+1) )
                v=0.25*(vv(i,j,k  )/hvn(i,j,k  )+vv(i,j-1,k  )/hvn(i,j-1,k  )+&
                        vv(i,j,k+1)/hvn(i,j,k+1)+vv(i,j-1,k+1)/hvn(i,j-1,k+1) )
-               indx = indx+l
                ws(i,j,k) = ww(i,j,k) + dtz + u*dxz + v*dyz
             end do
 !           surface
@@ -142,12 +134,10 @@
 #endif
             u=0.5*(uu(i,j,k)/hun(i,j,k)+uu(i-1,j,k)/hun(i-1,j,k))
             v=0.5*(vv(i,j,k)/hvn(i,j,k)+vv(i,j-1,k)/hvn(i,j-1,k))
-            indx = indx+l
             ws(i,j,k) = ww(i,j,k) + dtz  + u*dxz + v*dyz
             if (destag) then
                do k=kmax,kmin(i,j),-1
-!KB - be carefull with index-1
-!                  ws(i,j,k)=0.5*(ws(indx)+ws(indx-l))
+                  ws(i,j,k)=0.5*(ws(i,j,k)+ws(i,j,k-1))
                end do
                ws(i,j,k) = missing
             end if
@@ -156,7 +146,6 @@
    end do
    else
 !     save grid-related velocities
-      indx = 1
       do k=0,kmax
          do j=jmin,jmax
             do i=imin,imax
