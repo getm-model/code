@@ -123,12 +123,12 @@
       case (1) ! cartesian
          status = nf90_put_var(ncid,xax_id,xc(_IRANGE_,1))
          if (status .NE. NF90_NOERR) go to 10
-         status = nf90_put_var(ncid,yax_id,yc(1,_IRANGE_))
+         status = nf90_put_var(ncid,yax_id,yc(1,_JRANGE_))
          if (status .NE. NF90_NOERR) go to 10
       case (2) ! spherical
          status = nf90_put_var(ncid,xax_id,lonc(_IRANGE_,1))
          if (status .NE. NF90_NOERR) go to 10
-         status = nf90_put_var(ncid,yax_id,latc(1,_IRANGE_))
+         status = nf90_put_var(ncid,yax_id,latc(1,_JRANGE_))
          if (status .NE. NF90_NOERR) go to 10
    end select
 
