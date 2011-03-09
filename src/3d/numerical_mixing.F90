@@ -31,9 +31,9 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+   nm2d=_ZERO_
    do k=1,kmax 
       do j=jmin,jmax
-         nm2d(i,j)=_ZERO_
          do i=imin,imax
             nm3d(i,j,k)=(F_2(i,j,k)-F(i,j,k)**2)/dt
             nm2d(i,j)=nm2d(i,j)+nm3d(i,j,k)*hn(i,j,k)
