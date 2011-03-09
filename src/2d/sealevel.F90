@@ -281,8 +281,11 @@
          can_check = can_check + 1
       end if
 ! Check a failing (NaN) case:
+! does not work in DEBUG comilation with ifort:
+#ifndef DEBUG
 #ifndef GFORTRAN
       zdum = 0.0/0.0
+#endif
 #endif
       call sealevel_nandum(zdum,ahuge,idum)
       if (idum .eq. 2) then
