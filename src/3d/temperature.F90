@@ -394,17 +394,20 @@ temp_field_no=1
    delyv=dy
    area_inv=ard1
 #endif
-   ! Note: do_advection_3d is timed separately, so we 
-   ! stop the present counter
-   call toc(TIM_TEMP)
 
    if (do_mixing_analysis) then
+      call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
+! OMP-note: The following array-based line could be implemented 
+!    with OMP as a WORKSHARE construct. However, it would require a dedicated 
+!    PARALLEL region (as the various advection schemes have their own regions),
+!    so the overhead of the contruct would be rather large.
       T2 = T**2
-      call toc(TIM_MIXANALYSIS)
       call do_advection_3d(dt,T2,uu,vv,ww,hun,hvn,ho,hn,    &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
                         temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH)
+      call toc(TIM_MIXANALYSIS)
+      call tic(TIM_TEMP)
    end if
 
    call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,   &
@@ -412,13 +415,13 @@ temp_field_no=1
                         temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH)
 
    if (do_mixing_analysis) then
+      call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)        
       call numerical_mixing(T2,T,nummix3d_T,nummix2d_T)
       call physical_mixing(T,nuh+avmolt,phymix3d_T,phymix2d_T)
       call toc(TIM_MIXANALYSIS)
+      call tic(TIM_TEMP)
    end if
-
-   call tic(TIM_TEMP)
 
 ! OMP-NOTE: Pointer definitions and allocation so that each thread can 
 !           get its own work memory.

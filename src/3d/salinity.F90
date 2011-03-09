@@ -397,18 +397,20 @@ salt_field_no=1
    delyv=dy
    area_inv=ard1
 #endif
-   ! Note: do_advection_3d is timed separately, so we 
-   ! stop the present counter
-   call toc(TIM_SALT)
 
    if (do_mixing_analysis) then
+      call toc(TIM_SALT)
       call tic(TIM_MIXANALYSIS)
+! OMP-note: The following array-based line could be implemented 
+!    with OMP as a WORKSHARE construct. However, it would require a dedicated 
+!    PARALLEL region (as the various advection schemes have their own regions),
+!    so the overhead of the contruct would be rather large.
       S2 = S**2
-      call toc(TIM_MIXANALYSIS)
       call do_advection_3d(dt,S2,uu,vv,ww,hun,hvn,ho,hn,    &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
                         salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH)
-      
+      call toc(TIM_MIXANALYSIS)
+      call tic(TIM_SALT)
    end if
 
    call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,    &
@@ -416,13 +418,14 @@ salt_field_no=1
                         salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH)
 
    if (do_mixing_analysis) then
+      call toc(TIM_SALT)
       call tic(TIM_MIXANALYSIS)
       call numerical_mixing(S2,S,nummix3d_S,nummix2d_S)
       call physical_mixing(S,nuh+avmols,phymix3d_S,phymix2d_S)
       call toc(TIM_MIXANALYSIS)
+      call tic(TIM_SALT)
    end if
 
-   call tic(TIM_SALT)
 #ifdef PECS_TEST
    S(imin:imin,jmin:jmax,1:kmax)=10*_ONE_
    S(imax:imax,jmin:jmax,1:kmax)=10*_ONE_
