@@ -164,20 +164,20 @@
       edges(3) = 1
 
       call cnv_2d(imin,jmin,imax,jmax,az,nummix2d_S_mean,nummix_missing, &
-                  imin,jmin,imax,jmax,ws3d)
-      err = nf90_put_var(ncid, nm2dS_id,ws3d(_3D_W_),start,edges)
+                  imin,jmin,imax,jmax,ws2d)
+      err = nf90_put_var(ncid, nm2dS_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
       call cnv_2d(imin,jmin,imax,jmax,az,nummix2d_T_mean,nummix_missing, &
-                  imin,jmin,imax,jmax,ws3d)
-      err = nf90_put_var(ncid, nm2dT_id,ws3d(_3D_W_),start,edges)
+                  imin,jmin,imax,jmax,ws2d)
+      err = nf90_put_var(ncid, nm2dT_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
       call cnv_2d(imin,jmin,imax,jmax,az,phymix2d_S_mean,nummix_missing, &
-                  imin,jmin,imax,jmax,ws3d)
-      err = nf90_put_var(ncid, pm2dS_id,ws3d(_3D_W_),start,edges)
+                  imin,jmin,imax,jmax,ws2d)
+      err = nf90_put_var(ncid, pm2dS_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
       call cnv_2d(imin,jmin,imax,jmax,az,phymix2d_T_mean,nummix_missing, &
-                  imin,jmin,imax,jmax,ws3d)
-      err = nf90_put_var(ncid, pm2dT_id,ws3d(_3D_W_),start,edges)
+                  imin,jmin,imax,jmax,ws2d)
+      err = nf90_put_var(ncid, pm2dT_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
 
