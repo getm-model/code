@@ -597,9 +597,9 @@
             res_du=_ZERO_ ; res_dv=_ZERO_
 #else
             read(RESTART) z,zo,U,zu,SlUx,Slru,V,zv,SlVx,Slrv
-            WHERE(au .EQ. 0) U=_ZERO_
-            WHERE(av .EQ. 0) V=_ZERO_
 #endif
+            where(au .eq. 0) U=_ZERO_
+            where(av .eq. 0) V=_ZERO_
 #ifndef NO_3D
             if (runtype .ge. 2)  then
                LEVEL3 'reading 3D barotropic variables'
