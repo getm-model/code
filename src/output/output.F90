@@ -463,6 +463,7 @@
    use time, only: timestep,julianday,secondsofday
    use variables_2d, only: z,zo
    use domain, only: au,av
+   use domain, only: imin,imax,jmin,jmax
 #ifdef ZUB_ZVB
    use variables_2d, only: U,fU,zu,res_du,SlUx,Slru
    use variables_2d, only: V,fV,zv,res_dv,SlVx,Slrv
