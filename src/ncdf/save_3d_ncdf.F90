@@ -281,14 +281,14 @@
 #ifndef NO_BAROCLINIC
    if (save_strho) then
 
-      if (save_s) then
+      if (calc_salt .and. save_s) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,S,salt_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
          err = nf90_put_var(ncid,salt_id,ws(_3D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
 
-      if (save_t) then
+      if (calc_temp .and. save_t) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,T,temp_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
          err = nf90_put_var(ncid,temp_id,ws(_3D_W_),start,edges)
