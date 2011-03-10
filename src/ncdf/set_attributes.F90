@@ -98,11 +98,13 @@
       iret = nf90_put_att(ncid,id,'add_offset',add_offset)
    end if
 
-#if 0
    if(present(FillValue)) then
-      iret = nf90_put_att(ncid,id,'_FillValue',FillValue)
+      if (ft .eq. NF90_DOUBLE) then
+         iret = nf90_put_att(ncid,id,'_FillValue',FillValue)
+      else
+         iret = nf90_put_att(ncid,id,'_FillValue',real(FillValue))
+      end if
    end if
-#endif
 
    if(present(missing_value)) then
       iret = nf90_put_att(ncid,id,'missing_value',missing_value)

@@ -264,7 +264,7 @@
 
    if (save_strho) then
 
-      if (save_s) then
+      if (calc_salt .and. save_s) then
          fv = salt_missing
          mv = salt_missing
          vr(1) =  0.
@@ -275,7 +275,7 @@
                              FillValue=fv,missing_value=mv,valid_range=vr)
       end if
 
-      if (save_t) then
+      if (calc_temp .and. save_t) then
          fv = temp_missing
          mv = temp_missing
          vr(1) =  0.

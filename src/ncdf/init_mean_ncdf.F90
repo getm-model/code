@@ -19,7 +19,6 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
    use m3d, only: calc_temp,calc_salt
-
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -144,25 +143,30 @@
           long_name='mean vertical vel.',units='m/s', &
           FillValue=fv,missing_value=mv,valid_range=vr)
 
-   fv = salt_missing
-   mv = salt_missing
-   vr(1) =  0.
-   vr(2) = 40.
-   err = nf90_def_var(ncid,'saltmean',NF90_REAL,f4_dims,saltmean_id)
-   if (err .NE. NF90_NOERR) go to 10
-   call set_attributes(ncid,saltmean_id, &
-          long_name='mean salinity',units='PSU', &
-          FillValue=fv,missing_value=mv,valid_range=vr)
+#ifndef NO_BAROCLINIC
+   if (calc_salt) then
+      fv = salt_missing
+      mv = salt_missing
+      vr(1) =  0.
+      vr(2) = 40.
+      err = nf90_def_var(ncid,'saltmean',NF90_REAL,f4_dims,saltmean_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,saltmean_id, &
+             long_name='mean salinity',units='PSU', &
+             FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
 
-   fv = temp_missing
-   mv = temp_missing
-   vr(1) =  0.
-   vr(2) = 40.
-   err = nf90_def_var(ncid,'tempmean',NF90_REAL,f4_dims,tempmean_id)
-   if (err .NE. NF90_NOERR) go to 10
-   call set_attributes(ncid,tempmean_id, &
-          long_name='mean temperature',units='degC',&
-          FillValue=fv,missing_value=mv,valid_range=vr)
+   if (calc_temp) then
+      fv = temp_missing
+      mv = temp_missing
+      vr(1) =  0.
+      vr(2) = 40.
+      err = nf90_def_var(ncid,'tempmean',NF90_REAL,f4_dims,tempmean_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,tempmean_id, &
+             long_name='mean temperature',units='degC',&
+             FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
 
    if (save_mix_analysis) then
       fv = nummix_missing
@@ -230,6 +234,7 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
       end if
    end if
+#endif
 
 !  globals
    err = nf90_put_att(ncid,NF90_GLOBAL,'title',trim(title))
