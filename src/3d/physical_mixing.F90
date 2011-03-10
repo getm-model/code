@@ -17,7 +17,7 @@
 
 ! !INPUT PARAMETERS:
    REALTYPE, intent(in)  :: F(I3DFIELD)
-   REALTYPE, intent(in)  :: diffusivity(I3DFIELD)
+   REALTYPE, intent(in)  :: diffusivity
 !
 ! !INPUT PARAMETERS
    REALTYPE, intent(out) :: pm3d(I3DFIELD)
@@ -40,7 +40,7 @@
            if (k.eq.kmax) then
              dupper=_ZERO_
            else
-             dupper=_TWO_*(diffusivity(i,j,k))*(F(i,j,k+1)-F(i,j,k))**2 &
+             dupper=_TWO_*(diffusivity+nuh(i,j,k))*(F(i,j,k+1)-F(i,j,k))**2 &
                       /(_HALF_*(hn(i,j,k+1)+hn(i,j,k)))**2
            end if
            pm3d(i,j,k)=_HALF_*(dupper+dlower)
