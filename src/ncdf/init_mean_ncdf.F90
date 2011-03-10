@@ -18,7 +18,7 @@
    use domain, only: ioff,joff
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
-
+   use m3d, only: calc_temp,calc_salt
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:

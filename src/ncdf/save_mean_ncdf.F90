@@ -21,6 +21,7 @@
    use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
    use domain,       only: H,az
    use variables_3d, only: kmin
+   use m3d, only: calc_temp,calc_salt
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
