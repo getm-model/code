@@ -19,6 +19,7 @@
    use domain, only: ioff,joff
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
+   use m3d, only: calc_temp,calc_salt
 #ifdef SPM
    use suspended_matter, only: spm_save
 #endif
@@ -386,30 +387,38 @@
       mv = nummix_missing
       vr(1) = -100.0
       vr(2) = 100.0
-      err = nf90_def_var(ncid,'nummix3d_S',NF90_REAL,f4_dims,nm3dS_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,nm3dS_id, &
-          long_name='numerical mixing of salinity', &
-          units='psu**2/s',&
-          FillValue=fv,missing_value=mv,valid_range=vr)
-      err = nf90_def_var(ncid,'nummix3d_T',NF90_REAL,f4_dims,nm3dT_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,nm3dT_id, &
-          long_name='numerical mixing of temperature', &
-          units='degC**2/s',&
-          FillValue=fv,missing_value=mv,valid_range=vr)
-      err = nf90_def_var(ncid,'phymix3d_S',NF90_REAL,f4_dims,pm3dS_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,pm3dS_id, &
-          long_name='physical mixing of salinity', &
-          units='psu**2/s',&
-          FillValue=fv,missing_value=mv,valid_range=vr)
-      err = nf90_def_var(ncid,'phymix3d_T',NF90_REAL,f4_dims,pm3dT_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,pm3dT_id, &
-         long_name='physical mixing of temperature', &
-         units='degC**2/s',&
-         FillValue=fv,missing_value=mv,valid_range=vr)
+
+      if (calc_salt) then
+         err = nf90_def_var(ncid,'nummix3d_S',NF90_REAL,f4_dims,nm3dS_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,nm3dS_id, &
+             long_name='numerical mixing of salinity', &
+             units='psu**2/s',&
+             FillValue=fv,missing_value=mv,valid_range=vr)
+
+         err = nf90_def_var(ncid,'phymix3d_S',NF90_REAL,f4_dims,pm3dS_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,pm3dS_id, &
+             long_name='physical mixing of salinity', &
+             units='psu**2/s',&
+             FillValue=fv,missing_value=mv,valid_range=vr)
+      end if
+
+      if (calc_temp) then
+         err = nf90_def_var(ncid,'nummix3d_T',NF90_REAL,f4_dims,nm3dT_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,nm3dT_id, &
+             long_name='numerical mixing of temperature', &
+             units='degC**2/s',&
+             FillValue=fv,missing_value=mv,valid_range=vr)
+
+         err = nf90_def_var(ncid,'phymix3d_T',NF90_REAL,f4_dims,pm3dT_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,pm3dT_id, &
+             long_name='physical mixing of temperature', &
+             units='degC**2/s',&
+             FillValue=fv,missing_value=mv,valid_range=vr)
+      end if
    end if
 #endif
 #ifdef SPM

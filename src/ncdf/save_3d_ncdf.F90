@@ -43,6 +43,7 @@
    use variables_3d, only: cc3d,ws3d
 #endif
    use parameters,   only: g,rho_0
+   use m3d, only: calc_temp,calc_salt
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -361,22 +362,29 @@
 
 #ifndef NO_BAROCLINIC
    if (save_mix_analysis) then
-      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix3d_S,nummix_missing, &
-                  imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf90_put_var(ncid,nm3dS_id,ws(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
-      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix3d_T,nummix_missing, &
-                  imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf90_put_var(ncid,nm3dT_id,ws(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
-      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix3d_S,nummix_missing, &
-                  imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf90_put_var(ncid,pm3dS_id,ws(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
-      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix3d_T,nummix_missing, &
-                  imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf90_put_var(ncid,pm3dT_id,ws(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+      if (calc_salt) then
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix3d_S,nummix_missing, &
+                     imin,imax,jmin,jmax,0,kmax,ws)
+         err = nf90_put_var(ncid,nm3dS_id,ws(_3D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix3d_S,nummix_missing, &
+                     imin,imax,jmin,jmax,0,kmax,ws)
+         err = nf90_put_var(ncid,pm3dS_id,ws(_3D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+
+      if (calc_temp) then
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix3d_T,nummix_missing, &
+                     imin,imax,jmin,jmax,0,kmax,ws)
+         err = nf90_put_var(ncid,nm3dT_id,ws(_3D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix3d_T,nummix_missing, &
+                     imin,imax,jmin,jmax,0,kmax,ws)
+         err = nf90_put_var(ncid,pm3dT_id,ws(_3D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
    end if ! save_mix_analysis
 #endif
 

@@ -13,7 +13,9 @@
 ! !USES:
    use time, only: write_time_string,timestep,timestr
    use ascii_out
+#ifndef NO_3D
    use variables_3d, only: do_mixing_analysis
+#endif
 #ifdef TEST_NESTING
    use nesting
 #endif
@@ -332,10 +334,12 @@
 !   end if
 #endif
 
+#ifndef NO_3D
    if (save_mix_analysis) then
       LEVEL2 "calculate and save mixing analysis"
       do_mixing_analysis=.true.
    end if
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_output()'
