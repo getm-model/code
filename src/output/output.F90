@@ -462,6 +462,7 @@
 ! !USES:
    use time, only: timestep,julianday,secondsofday
    use variables_2d, only: z,zo
+   use domain, only: au,av
 #ifdef ZUB_ZVB
    use variables_2d, only: U,fU,zu,res_du,SlUx,Slru
    use variables_2d, only: V,fV,zv,res_dv,SlVx,Slrv
@@ -596,6 +597,8 @@
             res_du=_ZERO_ ; res_dv=_ZERO_
 #else
             read(RESTART) z,zo,U,zu,SlUx,Slru,V,zv,SlVx,Slrv
+            WHERE(au .EQ. 0) U=_ZERO_
+            WHERE(av .EQ. 0) V=_ZERO_
 #endif
 #ifndef NO_3D
             if (runtype .ge. 2)  then
@@ -607,6 +610,10 @@
                read(RESTART) uuEx,vvEx
                read(RESTART) tke,eps
                read(RESTART) num,nuh
+               forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO, au(i,j).EQ.0) &
+                    uu(i,j,:)=_ZERO_
+               forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO, av(i,j).EQ.0) &
+                    vv(i,j,:)=_ZERO_
 #ifndef NO_BAROCLINIC
                if(runtype .ge. 3) then
                   LEVEL3 'reading 3D baroclinic variables'
