@@ -151,7 +151,7 @@
 
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,hcc,-_ONE_, &
                   imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf90_put_var(ncid,hcc_id,ws(_3D_W_),start,edges)
+      err = nf90_put_var(ncid,hcc_id,ws(_3D_W_),start(1:3),edges(1:3))
       if (err .NE. NF90_NOERR) go to 10
 
       err = nf90_sync(ncid)

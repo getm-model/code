@@ -227,7 +227,7 @@
 
 
 !  hydrostatic consistency criterion
-   err = nf90_def_var(ncid,'hcc',NF90_REAL,f4_dims,hcc_id)
+   err = nf90_def_var(ncid,'hcc',NF90_REAL,f4_dims(1:3),hcc_id)
    if (err .NE. NF90_NOERR) go to 10
    fv = -_ONE_ 
    mv = -_ONE_
