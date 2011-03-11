@@ -13,7 +13,7 @@ MODSRC	= m3d.F90 variables_3d.F90 advection_3d.F90 eqstate.F90 \
 
 LIBSRC	= start_macro.F90 hcc_check.F90 bdy_3d.F90 coordinates.F90 sigma_coordinates.F90 general_coordinates.F90 hybrid_coordinates.F90 check_h.F90 bottom_friction_3d.F90 internal_pressure.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 structure_friction_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 tke_eps_advect_3d.F90 stresses_3d.F90 ss_nn.F90 gotm.F90 slow_bottom_friction.F90 slow_advection.F90 slow_diffusion.F90 slow_terms.F90 divergence.F90 stop_macro.F90
 
-TEXSRC	= m3d.F90 variables_3d.F90  coordinates.F90 sigma_coordinates.F90 general_coordinates.F90 hybrid_coordinates.F90 check_h.F90 hcc_check.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 structure_friction_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 tke_eps_advect_3d.F90 bottom_friction_3d.F90 internal_pressure.F90 ip_blumberg_mellor.F90 ip_blumberg_mellor_lin.F90 ip_z_interpol.F90  ip_song_wright.F90 ip_chu_fan.F90 ip_shchepetkin_mcwilliams.F90 ip_stelling_vankester.F90 numerical_mixing.F90 physical_mixing.F90 advection_3d.F90 upstream_adv.F90 upstream_2dh_adv.F90 u_split_adv.F90 v_split_adv.F90 w_split_adv.F90 w_split_it_adv.F90 fct_2dh_adv.F90 temperature.F90 salinity.F90 spm.F90 eqstate.F90 ss_nn.F90 stresses_3d.F90 gotm.F90 rivers.F90 bdy_3d.F90 slow_bottom_friction.F90 slow_advection.F90 slow_diffusion.F90 slow_terms.F90 start_macro.F90 stop_macro.F90 divergence.F90
+TEXSRC	= m3d.F90 variables_3d.F90  coordinates.F90 sigma_coordinates.F90 general_coordinates.F90 hybrid_coordinates.F90 adaptive_coordinates.F90 check_h.F90 hcc_check.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 structure_friction_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 tke_eps_advect_3d.F90 bottom_friction_3d.F90 internal_pressure.F90 ip_blumberg_mellor.F90 ip_blumberg_mellor_lin.F90 ip_z_interpol.F90  ip_song_wright.F90 ip_chu_fan.F90 ip_shchepetkin_mcwilliams.F90 ip_stelling_vankester.F90 numerical_mixing.F90 physical_mixing.F90 advection_3d.F90 upstream_adv.F90 upstream_2dh_adv.F90 u_split_adv.F90 v_split_adv.F90 w_split_adv.F90 w_split_it_adv.F90 fct_2dh_adv.F90 temperature.F90 salinity.F90 spm.F90 eqstate.F90 ss_nn.F90 stresses_3d.F90 gotm.F90 rivers.F90 bdy_3d.F90 slow_bottom_friction.F90 slow_advection.F90 slow_diffusion.F90 slow_terms.F90 start_macro.F90 stop_macro.F90 divergence.F90
 
 SRC	= $(MODSRC) $(LIBSRC)
 
@@ -60,6 +60,8 @@ $(LIB)(uv_advect_3d.o)			\
 $(LIB)(uv_diffusion_3d.o)
 ifneq ($(GETM_NO_BAROCLINIC),true)
 OBJ += \
+$(LIB)(adaptive_coordinates.o)          \
+$(LIB)(preadapt_coordinates.o)          \
 $(LIB)(ip_blumberg_mellor.o)		\
 $(LIB)(ip_blumberg_mellor_lin.o)	\
 $(LIB)(ip_z_interpol.o)			\
@@ -101,6 +103,13 @@ objects: $(OBJ)
 $(MOD): $(INCS)
 
 $(OBJ): $(MOD)
+
+tests: test_eqstate
+
+test_eqstate: modules objects test_eqstate.o
+	$(FC) -o $@ $@.o $(LDFLAGS) $(LIB)
+	$(RM) $@.o
+	./$@
 
 doc: $(TEXSRC)
 	$(PROTEX) $(TEXSRC) > $(DOCDIR)/3d.tex

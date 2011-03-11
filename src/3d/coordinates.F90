@@ -7,7 +7,7 @@
 ! \label{sec-coordinates}
 !
 ! !INTERFACE:
-   subroutine coordinates(cord_type,cord_relax,maxdepth)
+   subroutine coordinates(hotstart)
 !
 ! !DESCRIPTION:
 !
@@ -74,18 +74,23 @@
    use variables_3d, only: kvmin,hvo,hvn
 #endif
    use getm_timers, only: tic, toc,TIM_COORDS
+   use m3d
+   use domain, only: vert_cord
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: cord_type
-   REALTYPE, intent(in)                :: cord_relax
-   REALTYPE, intent(in)                :: maxdepth
+!   integer, intent(in)                 :: cord_type
+!   REALTYPE, intent(in)                :: cord_relax
+!   REALTYPE, intent(in)                :: maxdepth
+   logical, intent(in)                 :: hotstart
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    logical, save   :: first=.true.
+   integer         :: ii
+!   integer         :: preadapt=0
 #ifdef SLICE_MODEL
    integer          :: i,j,k
 #endif
@@ -100,37 +105,40 @@
    call tic(TIM_COORDS)
 
    if (first) then
-      select case (cord_type)
-         case (1) ! sigma coordinates
+      select case (vert_cord)
+         case (_SIGMA_COORDS_) ! sigma coordinates
             LEVEL2 'using sigma vertical coordinates'
             call sigma_coordinates(.true.)
-         case (2) ! z-level
-         case (3) ! general vertical coordinates
+         case (_Z_COORDS_) ! z-level
+         case (_GENERAL_COORDS_) ! general vertical coordinates
             LEVEL2 'using general vertical coordinates'
             call general_coordinates(.true.,cord_relax,maxdepth)
-         case (4) ! hybrid vertical coordinates
+         case (_HYBRID_COORDS_) ! hybrid vertical coordinates
             LEVEL2 'using hybrid vertical coordinates'
             call hybrid_coordinates(.true.)
 STDERR 'coordinates(): hybrid_coordinates not coded yet'
 stop
-         case (5) ! adaptive vertical coordinates
+         case (_ADAPTIVE_COORDS_) ! adaptive vertical coordinates
             LEVEL2 'using adaptive vertical coordinates'
-!KB            call adaptive_coordinates(.true.)
-STDERR 'coordinates(): adaptive_coordinates not coded yet'
+#ifndef NO_BAROCLINIC
+            call adaptive_coordinates(.true.,hotstart)
+#endif
          case default
       end select
       first = .false.
    else
-      select case (cord_type)
-         case (1) ! sigma coordinates
+      select case (vert_cord)
+         case (_SIGMA_COORDS_) ! sigma coordinates
             call sigma_coordinates(.false.)
-         case (2) ! z-level
-         case (3) ! general vertical coordinates
+         case (_Z_COORDS_) ! z-level
+         case (_GENERAL_COORDS_) ! general vertical coordinates
             call general_coordinates(.false.,cord_relax,maxdepth)
-         case (4) ! hybrid vertical coordinates
+         case (_HYBRID_COORDS_) ! hybrid vertical coordinates
             call hybrid_coordinates(.false.)
-         case (5) ! adaptive vertical coordinates
-!KB            call adaptive_coordinates(.false.)
+         case (_ADAPTIVE_COORDS_) ! adaptive vertical coordinates
+#ifndef NO_BAROCLINIC
+            call adaptive_coordinates(.false.,hotstart)
+#endif
          case default
       end select
    end if ! first

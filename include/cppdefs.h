@@ -184,3 +184,10 @@
 ! that is the points that are independent of neighbours.
 #define DO_EILOOP  DO i=imin,imax
 #define DO_EJLOOP  DO j=jmin,jmax
+
+! Definition of vertical coordinate identifiers
+#define _SIGMA_COORDS_        1
+#define _Z_COORDS_            2
+#define _GENERAL_COORDS_      3
+#define _HYBRID_COORDS_       4
+#define _ADAPTIVE_COORDS_     5

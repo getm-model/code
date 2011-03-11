@@ -45,6 +45,7 @@
 					<option value="1" label="sigma"/>
 					<option value="2" label="z-level"/>
 					<option value="3" label="general vertical coordinates (gvc)"/>
+					<option value="5" label="adaptive coordinates"/>
 				</options>
 			</element>
 			<element name="maxdepth" type="float" label="maximum depth in active calculation domain" unit="m">
@@ -617,5 +618,24 @@
 			<element name="meanout" type="int" label="make average over 'meanout' time steps" description="Make average over 'meanout' time steps. Special cases: if &lt; 0 - no averaging, if = 0 - average over entire run."/>
 		</element>
 
+	</element>
+	<element name="adaptcoord">
+                <condition type="eq" variable="getm/domain/vert_cord" value="5"/>
+		<element name="adapt_coord" label="adaptive coordinates parameters">
+			<element name="faclag" type="float" label="Lagrangian tendency" minInclusive="0" maxInclusive="1"/>
+<!--			<condition type="eq" variable="../../getm/domain/vert_cord" value="5"/></element>-->
+			<element name="faciso" type="float" label="Isopycnal tendency" minInclusive="0" maxInclusive="1"/>
+			<element name="fachor" type="float" label="interf. postition filter" minInclusive="0" maxInclusive="1"/>
+			<element name="facdif" type="float" label="layer height filter" minInclusive="0" maxInclusive="1"/>
+			<element name="depthmin" type="float" label="minimum layer height" unit="m"/>
+			<element name="cNN" type="float" label="zoom. tendency stratification" minInclusive="0" maxInclusive="1"/>
+			<element name="cSS" type="float" label="zoom. tendency shear" minInclusive="0" maxInclusive="1"/>
+			<element name="cNN" type="float" label="zoom. tendency boundaries" minInclusive="0" maxInclusive="1"/>
+			<element name="d_vel" type="float" unit="m/s" label="vel. difference to resolve"/>
+			<element name="d_dens" type="float" unit="kg/m³" label="dens. difference to resolve"/>
+			<element name="dsurf" type="float" label="reference distance to boundaries" unit="m"/>
+			<element name="tgrid" type="float" label="adaptation timescale" unit="s"/>
+			<element name="preadapt" type="int" label="pre-adaptation iterations"/> 
+		</element>
 	</element>
 </element>

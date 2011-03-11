@@ -212,10 +212,10 @@
    endif
 
    select case (vert_cord)
-      case (1)
-      case (2)
+      case (_SIGMA_COORDS_)
+      case (_Z_COORDS_)
          call getm_error("init_3d_ncdf()","saving of z-levels disabled")
-      case (3,4,5)
+      case (_GENERAL_COORDS_,_HYBRID_COORDS_,_ADAPTIVE_COORDS_)
          fv = hh_missing
          mv = hh_missing
          err = nf90_def_var(ncid,'h',NF90_REAL,f4_dims,h_id)

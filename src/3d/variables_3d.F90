@@ -133,6 +133,7 @@
 #endif
    integer                             :: size3d_field
    integer                             :: mem3d
+   integer                             :: preadapt
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -193,6 +194,7 @@
    rru= _ZERO_ ; rrv= _ZERO_
    uuEx= _ZERO_ ; vvEx= _ZERO_
    tke=1.e-10 ; eps=1.e-10
+   preadapt=0
 
 #ifndef NO_BAROCLINIC
    rad=_ZERO_

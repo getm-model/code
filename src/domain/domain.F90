@@ -384,10 +384,12 @@
          LEVEL2 'using hybrid vertical coordinates'
          STDERR 'domain: hybrid_coordinates not coded yet'
          stop
-      case (5) ! adaptive vertical coordinates
+      case (_ADAPTIVE_COORDS_) ! adaptive vertical coordinates
          LEVEL2 'using adaptive vertical coordinates'
-         STDERR 'domain: adaptive_coordinates not coded yet'
+#ifdef NO_BAROCLINIC
+         LEVEL2 'adaptive coordinates are not working with NO_BAROCLINIC'
          stop
+#endif
       case default
          call getm_error("init_domain()", &
                          "A non valid vertical coordinate system has been chosen");

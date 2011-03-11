@@ -422,6 +422,14 @@
       call update_3d_halo(nuh,nuh,az,imin,jmin,imax,jmax,kmax,H_TAG)
       call wait_halo(H_TAG)
 
+!     hn is required for adaptive coordinates
+      status = &
+      nf90_get_var(ncid,hn_id,hn(iloc:ilen,jloc:jlen,0:kmax),start,edges)
+      if (status .NE. NF90_NOERR) go to 10
+      call update_3d_halo(hn,hn,az,imin,jmin,imax,jmax,kmax,H_TAG)
+      call wait_halo(H_TAG)
+
+
 #ifndef NO_BAROCLINIC
       if (runtype .ge. 3)  then
 !        T is required

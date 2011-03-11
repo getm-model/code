@@ -27,11 +27,12 @@
    private
 !
 ! !PUBLIC DATA MEMBERS:
-   public init_salinity, do_salinity
+   public init_salinity, do_salinity, init_salinity_field
 !
 ! !PRIVATE DATA MEMBERS:
    integer                   :: salt_method=1,salt_format=2
    character(len=PATH_MAX)   :: salt_file="t_and_s.nc"
+   integer                   :: salt_field_no=1
    character(len=32)         :: salt_name='salt'
    REALTYPE                  :: salt_const=35.
    integer                   :: salt_hor_adv=1,salt_ver_adv=1
@@ -86,12 +87,6 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,n
-#ifdef PECS_TEST
-   integer                   :: cc(1:30)
-#endif
-   integer, parameter        :: nmax=100
-   REALTYPE                  :: zlev(nmax),prof(nmax)
-   integer                   :: salt_field_no=1
    integer                   :: status
    NAMELIST /salt/                                            &
             salt_method,salt_const,salt_file,                 &
@@ -107,47 +102,11 @@
 !   write(debug,*) 'init_salinity() # ',Ncall
 #endif
 
-#ifdef NS_FRESHWATER_LENSE_TEST
-salt_field_no=1
-#endif
-#ifdef MED_15X15MINS_TEST
-salt_field_no=1
-#endif
-
    LEVEL2 'init_salinity()'
    read(NAMLST,salt)
 
-   select case (salt_method)
-      case(0)
-         LEVEL3 'getting initial fields from hotstart'
-      case(1)
-         LEVEL3 'setting to constant value'
-         forall(i=imin:imax,j=jmin:jmax, az(i,j) .ne. 0) &
-                S(i,j,:) = salt_const
-      case(2)
-         LEVEL3 'using profile'
-         call read_profile(salt_file,nmax,zlev,prof,n)
-         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,kmax, &
-                           az,H,hn,S)
-      case(3)
-         LEVEL3 'interpolating from 3D field'
-         call get_field(salt_file,salt_name,salt_field_no,S)
-#ifdef SALTWEDGE_TEST
-      case(4)
-      !I need this here for hotstart of salinity!!!
-         LEVEL3 'initializing with #ifdef SALTWEDGE'
-         S =  _ZERO_
-         do i=1,100
-            do k=1,kmax
-               S(i,2,k)=30.*(1.- tanh(float(i-1)*0.05))
-            end do      
-         end do   
-#endif
-      case default
-         FATAL 'Not valid salt_method specified'
-         stop 'init_salinity'
-   end select
-
+   call init_salinity_field()
+   
 !  Sanity checks for advection specifications
    LEVEL3 'salt_hor_adv=   ',salt_hor_adv
    LEVEL3 'salt_ver_adv=   ',salt_ver_adv
@@ -209,6 +168,114 @@ salt_field_no=1
       case default
    end select
 
+   LEVEL3 'salt_check=',salt_check
+   if (salt_check .ne. 0) then
+      LEVEL4 'doing sanity check on salinity'
+      LEVEL4 'min_salt=',min_salt
+      LEVEL4 'max_salt=',max_salt
+      if (salt_check .gt. 0) then
+         LEVEL4 'out-of-bound values result in termination of program'
+      end if
+      if (salt_check .lt. 0) then
+         LEVEL4 'out-of-bound values result in warnings only'
+      end if
+
+      call check_3d_fields(imin,jmin,imax,jmax,kmin,kmax,az, &
+                           S,min_salt,max_salt,status)
+      if (status .gt. 0) then
+         if (salt_check .gt. 0) then
+            call getm_error("do_salinity()", &
+                            "out-of-bound values encountered")
+         end if
+         if (salt_check .lt. 0) then
+            LEVEL1 'do_salinity(): ',status, &
+                   ' out-of-bound values encountered'
+         end if
+      end if
+
+   end if
+
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving init_salinity()'
+   write(debug,*)
+#endif
+   return
+   end subroutine init_salinity
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: init_salinity_field - initialisation of the salinity field
+! \label{sec-init-salinity}
+!
+! !INTERFACE:
+   subroutine init_salinity_field()
+!
+! !DESCRIPTION:
+! Initialisation of the salinity field as specified by salt_method
+! and exchange of the HALO zones
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !LOCAL VARIABLES:
+   integer                   :: i,j,k,n
+#ifdef PECS_TEST
+   integer                   :: cc(1:30)
+#endif
+   integer, parameter        :: nmax=100
+   REALTYPE                  :: zlev(nmax),prof(nmax)
+   integer                   :: salt_field_no=1
+   integer                   :: status
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef NS_FRESHWATER_LENSE_TEST
+salt_field_no=1
+#endif
+#ifdef MED_15X15MINS_TEST
+salt_field_no=1
+#endif
+
+   select case (salt_method)
+      case(0)
+         LEVEL3 'getting initial fields from hotstart'
+      case(1)
+         LEVEL3 'setting to constant value'
+         forall(i=imin:imax,j=jmin:jmax, az(i,j) .ne. 0) &
+                S(i,j,:) = salt_const
+      case(2)
+         LEVEL3 'using profile'
+         call read_profile(salt_file,nmax,zlev,prof,n)
+         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,kmax, &
+                           az,H,hn,S)
+      case(3)
+         LEVEL3 'interpolating from 3D field'
+         call get_field(salt_file,salt_name,salt_field_no,S)
+#ifdef SALTWEDGE_TEST
+      case(4)
+      !I need this here for hotstart of salinity!!!
+         LEVEL3 'initializing with #ifdef SALTWEDGE'
+         S =  _ZERO_
+         do i=1,100
+            do k=1,kmax
+               S(i,2,k)=30.*(1.- tanh(float(i-1)*0.05))
+            end do      
+         end do   
+#endif
+      case default
+         FATAL 'Not valid salt_method specified'
+         stop 'init_salinity'
+   end select
+
 #ifdef ARKONA_TEST
    do i=100,135
       do j=256,257
@@ -267,40 +334,12 @@ salt_field_no=1
    call wait_halo(D_TAG)
    call mirror_bdy_3d(S,D_TAG)
 
-   LEVEL3 'salt_check=',salt_check
-   if (salt_check .ne. 0) then
-      LEVEL4 'doing sanity check on salinity'
-      LEVEL4 'min_salt=',min_salt
-      LEVEL4 'max_salt=',max_salt
-      if (salt_check .gt. 0) then
-         LEVEL4 'out-of-bound values result in termination of program'
-      end if
-      if (salt_check .lt. 0) then
-         LEVEL4 'out-of-bound values result in warnings only'
-      end if
-
-      call check_3d_fields(imin,jmin,imax,jmax,kmin,kmax,az, &
-                           S,min_salt,max_salt,status)
-      if (status .gt. 0) then
-         if (salt_check .gt. 0) then
-            call getm_error("do_salinity()", &
-                            "out-of-bound values encountered")
-         end if
-         if (salt_check .lt. 0) then
-            LEVEL1 'do_salinity(): ',status, &
-                   ' out-of-bound values encountered'
-         end if
-      end if
-
-   end if
-
-
 #ifdef DEBUG
-   write(debug,*) 'Leaving init_salinity()'
+   write(debug,*) 'Leaving init_salinity_field()'
    write(debug,*)
 #endif
    return
-   end subroutine init_salinity
+   end subroutine init_salinity_field
 !EOC
 
 !-----------------------------------------------------------------------

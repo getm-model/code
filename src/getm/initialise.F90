@@ -372,7 +372,7 @@
       call depth_update
 #ifndef NO_3D
       if (runtype .ge. 2) then
-         call coordinates(vert_cord,cord_relax,maxdepth)
+         call coordinates(hotstart)
          Uint=_ZERO_
          Vint=_ZERO_
       end if
