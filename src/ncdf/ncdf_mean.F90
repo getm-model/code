@@ -24,6 +24,11 @@
    integer                             :: swrmean_id,ustarmean_id,ustar2mean_id
    integer                             :: uumean_id,vvmean_id,wmean_id
    integer                             :: saltmean_id,tempmean_id,hmean_id
+   integer                             :: nm3dS_id,nm3dT_id,nm2dS_id,nm2dT_id
+   integer                             :: pm3dS_id,pm3dT_id,pm2dS_id,pm2dT_id
+#ifdef GETM_BIO
+   integer, allocatable                :: biomean_id(:)
+#endif
 
    REALTYPE, parameter                 :: hh_missing=-10.0
    REALTYPE, parameter                 :: swr_missing=-9999.0
@@ -33,8 +38,9 @@
    REALTYPE, parameter                 :: tke_missing=-9999.0
    REALTYPE, parameter                 :: eps_missing=-9999.0
    REALTYPE, parameter                 :: nummix_missing=-9999.0
-   integer                             :: nm3dS_id,nm3dT_id,nm2dS_id,nm2dT_id
-   integer                             :: pm3dS_id,pm3dT_id,pm2dS_id,pm2dT_id
+#ifdef GETM_BIO
+   REALTYPE, parameter                 :: bio_missing=-9999.0
+#endif
 
 !
 !  Original author(s): Adolf Stips & Karsten Bolding

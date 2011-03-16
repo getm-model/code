@@ -38,6 +38,9 @@
    REALTYPE,dimension(:,:,:), allocatable :: phymix3d_T_mean
    REALTYPE,dimension(:,:), allocatable :: phymix2d_T_mean
 
+#ifdef GETM_BIO
+   REALTYPE,dimension(:,:,:,:), allocatable :: cc3dmean
+#endif
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard

@@ -22,6 +22,11 @@
    use variables_3d, only: nummix3d_S,nummix2d_S,nummix3d_T,nummix2d_T
    use variables_3d, only: phymix3d_S,phymix2d_S,phymix3d_T,phymix2d_T
 #endif
+#ifdef GETM_BIO
+   use bio, only: bio_calc
+   use bio_var, only: numc
+   use variables_3d,  only: cc3d
+#endif
    use diagnostic_variables
    use getm_timers, only: tic, toc, TIM_CALCMEANF
    IMPLICIT NONE
@@ -132,6 +137,11 @@
          end if
       end if
 #endif
+#ifdef GETM_BIO
+      allocate(cc3dmean(numc,I3DFIELD),stat=rc)
+      if (rc /= 0) &
+          stop 'calc_mean_fields.F90: Error allocating memory (cc3dmean)'
+#endif
       first = .false.
    end if
 
@@ -150,6 +160,9 @@
             phymix3d_S_mean=_ZERO_; phymix2d_S_mean=_ZERO_
          end if
       end if
+#endif
+#ifdef GETM_BIO
+      cc3dmean=_ZERO_
 #endif
       ustarmean=_ZERO_; ustar2mean=_ZERO_; swrmean=_ZERO_
    end if
@@ -199,6 +212,9 @@
          end if
       end if
 #endif
+#ifdef GETM_BIO
+      if (bio_calc) cc3dmean=cc3dmean + cc3d
+#endif
 !  count them
       step = step + 1.0
    end if   ! here we summed them up
@@ -232,7 +248,9 @@
             end if
          end if
 #endif
-
+#ifdef GETM_BIO
+         if (bio_calc) cc3dmean = cc3dmean / step
+#endif
          ustarmean = ustarmean / step
          swrmean = swrmean / step
 
