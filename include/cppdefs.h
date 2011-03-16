@@ -180,7 +180,3 @@
 #define _2D_W_ _IRANGE_,_JRANGE_
 #define _3D_W_ _IRANGE_,_JRANGE_,_KRANGE_
 
-! These defines the do loops for the real inner points..
-! that is the points that are independent of neighbours.
-#define DO_EILOOP  DO i=imin,imax
-#define DO_EJLOOP  DO j=jmin,jmax
