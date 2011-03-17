@@ -272,6 +272,8 @@
    end if
 #endif
 
+    call init_advection_3d(2)
+
 #ifndef NO_BAROCLINIC
     if (runtype .eq. 3 .or. runtype .eq. 4) then
       call init_eqstate()
@@ -280,9 +282,6 @@
 #endif
       if (runtype .ge. 3) call init_internal_pressure()
       if (runtype .eq. 3) call do_internal_pressure()
-      if (runtype .eq. 4) then
-         call init_advection_3d(2)
-      end if
    end if
 #endif
 
