@@ -1,4 +1,3 @@
-#$Id: Makefile,v 1.21 2010-03-30 11:48:36 kb Exp $
 #
 # Makefile to build the 3D specific library - libm3d.a
 #

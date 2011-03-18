@@ -1,4 +1,3 @@
-#$Id: Makefile,v 1.7 2006-11-21 15:41:20 kbk Exp $
 #
 # Master Makefile for making the 'getm' executable.
 #
