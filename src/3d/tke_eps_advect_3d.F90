@@ -35,10 +35,6 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)  :: hor_adv,ver_adv,adv_split
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
@@ -53,7 +49,6 @@
    REALTYPE                  :: AH=_ZERO_
    REALTYPE                  :: dxdyi
 #endif
-
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -67,7 +62,6 @@
    STDERR 'Do not use tke_eps_advect_3d() without the compiler option UV_TVD'
    stop 'tke_eps_advect_3d()'
 #else
-
 
 #if defined(SPHERICAL) || defined(CURVILINEAR) 
 #else

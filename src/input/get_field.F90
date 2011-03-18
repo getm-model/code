@@ -1,4 +1,3 @@
-!$Id: get_field.F90,v 1.5 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,33 +18,11 @@
    character(len=*), intent(in)        :: fname,var
    integer, intent(in)                 :: n
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out)               :: f(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: get_field.F90,v $
-!  Revision 1.5  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.4  2005-04-25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
-!  Revision 1.3  2003/04/23 12:04:08  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 12:58:21  kbk
-!  parallel + cleaned code
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:33  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.1  2001/05/10 11:33:48  bbh
-!  Added wrapper - get_field
-!
 !
 ! !LOCAL VARIABLES:
    integer, parameter        :: fmt=NETCDF

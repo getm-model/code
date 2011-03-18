@@ -1,4 +1,3 @@
-!$Id: nesting.F90,v 1.4 2007-06-07 10:25:20 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,20 +34,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: nesting.F90,v $
-!  Revision 1.4  2007-06-07 10:25:20  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.3  2003-04-23 12:07:12  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 12:32:58  kbk
-!  parallel support + NO_3D, NO_BAROCLINIC
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:53  gotm
-!  recovering after CVS crash
-!
-!
 ! !PRIVATE DATA MEMBERS
    integer                   :: NW_w,NN_w,NE_w,NS_w,nonp_w=0
    REALTYPE, allocatable     :: wrk_2d_w(:),wrk_3d_w(:,:)
@@ -84,12 +69,6 @@
 !
 ! !USES:
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  See the log for the module
@@ -212,10 +191,6 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: mode
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  See the log for the module
 !
@@ -324,12 +299,6 @@
 ! !USES:
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  See the log for the module
 !
@@ -366,10 +335,6 @@
 ! !INPUT PARAMETERS:
    integer                             :: source_grid
    REALTYPE, intent(in)                :: f(E2DFIELD)
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  See the log for the module
@@ -462,10 +427,6 @@
 ! !INPUT PARAMETERS:
    integer                             :: source_grid
    REALTYPE, intent(in)                :: f(I3DFIELD)
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  See the log for the module
@@ -564,10 +525,6 @@
 ! !INPUT PARAMETERS:
    integer                             :: source_grid
    REALTYPE, intent(in)                :: f(I3DFIELD)
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  See the log for the module

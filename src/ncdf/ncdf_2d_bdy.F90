@@ -1,4 +1,3 @@
-!$Id: ncdf_2d_bdy.F90,v 1.8 2008-12-12 06:06:50 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +11,6 @@
 !
 ! !USES:
    use netcdf
-!KB   use m2d, only: dtm,bdy_times,bdy_old,bdy_new,bdy_data
    use m2d, only: dtm,bdy_times,bdy_data,bdy_data_u,bdy_data_v
    use time, only: string_to_julsecs,time_diff,add_secs
    use time, only: julianday,secondsofday,juln,secsn
@@ -42,58 +40,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: ncdf_2d_bdy.F90,v $
-!  Revision 1.8  2008-12-12 06:06:50  kb
-!  fixed serious error in specified u boundary velocity
-!
-!  Revision 1.7  2008-12-09 00:31:58  kb
-!  added new 2D open boundaries
-!
-!  Revision 1.6  2007-09-30 13:00:43  kbk
-!  prints real time as part of progessoutput
-!
-!  Revision 1.5  2005-05-04 11:45:29  kbk
-!  adding model time stamp on IO
-!
-!  Revision 1.4  2004/04/06 16:32:29  kbk
-!  TimeDiff --> time_diff
-!
-!  Revision 1.3  2003/04/23 11:54:03  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 12:49:47  kbk
-!  dont need variables_3d
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:46  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.8  2001/10/22 11:43:12  bbh
-!  Proper check of offset time
-!
-!  Revision 1.7  2001/10/17 14:57:38  bbh
-!  Force offset to _ZERO_ - needs fix
-!
-!  Revision 1.6  2001/09/19 14:21:13  bbh
-!  Cleaning
-!
-!  Revision 1.5  2001/07/27 06:41:35  bbh
-!  Added ncdf_lon_lat.F90
-!
-!  Revision 1.4  2001/07/26 14:07:18  bbh
-!  Typos
-!
-!  Revision 1.3  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.2  2001/05/18 13:04:39  bbh
-!  Cosmetics
-!
-!  Revision 1.1  2001/05/14 12:45:56  bbh
-!  Introduced module ncdf_2d_bdy
 !EOP
 !-----------------------------------------------------------------------
 
@@ -115,10 +61,6 @@
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fname
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -242,65 +184,8 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: loop
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: ncdf_2d_bdy.F90,v $
-!  Revision 1.8  2008-12-12 06:06:50  kb
-!  fixed serious error in specified u boundary velocity
-!
-!  Revision 1.7  2008-12-09 00:31:58  kb
-!  added new 2D open boundaries
-!
-!  Revision 1.6  2007-09-30 13:00:43  kbk
-!  prints real time as part of progessoutput
-!
-!  Revision 1.5  2005-05-04 11:45:29  kbk
-!  adding model time stamp on IO
-!
-!  Revision 1.4  2004/04/06 16:32:29  kbk
-!  TimeDiff --> time_diff
-!
-!  Revision 1.3  2003/04/23 11:54:03  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 12:49:47  kbk
-!  dont need variables_3d
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:46  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.8  2001/10/22 11:43:12  bbh
-!  Proper check of offset time
-!
-!  Revision 1.7  2001/10/17 14:57:38  bbh
-!  Force offset to _ZERO_ - needs fix
-!
-!  Revision 1.6  2001/09/19 14:21:13  bbh
-!  Cleaning
-!
-!  Revision 1.5  2001/07/27 06:41:35  bbh
-!  Added ncdf_lon_lat.F90
-!
-!  Revision 1.4  2001/07/26 14:07:18  bbh
-!  Typos
-!
-!  Revision 1.3  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.2  2001/05/18 13:04:39  bbh
-!  Cosmetics
-!
-!  Revision 1.1  2001/05/14 12:45:56  bbh
-!  Introduced module ncdf_2d_bdy
 !
 ! !LOCAL VARIABLES:
    integer,save              :: i,n
@@ -308,7 +193,6 @@
    logical                   :: first=.true.
    REALTYPE                  :: t
    REALTYPE, save            :: t1,t2= -_ONE_,loop0
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC

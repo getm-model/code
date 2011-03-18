@@ -1,4 +1,3 @@
-!$Id: exceptions.F90,v 1.4 2009-09-23 10:11:47 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,19 +27,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf
 !
-!  $Log: exceptions.F90,v $
-!  Revision 1.4  2009-09-23 10:11:47  kb
-!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
-!
-!  Revision 1.3  2009-08-21 08:56:34  bjb
-!  Fix name clash on PARALLEL with OpenMP key word
-!
-!  Revision 1.2  2005-04-25 09:26:57  kbk
-!  default all is private
-!
-!  Revision 1.1  2005/04/25 07:55:49  kbk
-!  use more general frame for error handling - Umlauf
-!
 !EOP
 !-----------------------------------------------------------------------
 
@@ -68,9 +54,6 @@
 ! !INPUT PARAMETERS:
     character(len=*), intent(in)       :: routine
     character(len=*), intent(in)       :: whatsup
-!
-! !BUGS:
-!  Exit status for parallel runs is not yet clean.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf

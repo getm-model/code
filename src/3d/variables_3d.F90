@@ -1,4 +1,3 @@
-!$Id: variables_3d.F90,v 1.14 2009-04-27 07:34:58 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -137,8 +136,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
-!
 !EOP
 !-----------------------------------------------------------------------
 
@@ -156,10 +153,6 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !DESCRIPTION:
 !  Dynamic allocation of memory for 3D related fields via
@@ -237,16 +230,8 @@
    subroutine clean_variables_3d()
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !DESCRIPTION:
 !  This routine cleans up after a 3D integrationby doing nothing so far.
-!
-! !LOCAL VARIABLES:
 !
 !EOP
 !-----------------------------------------------------------------------

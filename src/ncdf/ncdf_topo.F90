@@ -1,4 +1,3 @@
-!$Id: ncdf_topo.F90,v 1.25 2010-03-26 19:12:49 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,64 +46,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf (adapted from an earlier version of
 !                      Karsten Bolding and Hans Burchard)
-!
-!  $Log: ncdf_topo.F90,v $
-!  Revision 1.25  2010-03-26 19:12:49  kb
-!  aborting if grid_type=4
-!
-!  Revision 1.24  2009-12-22 08:44:38  kb
-!  added conditional compilation checks - Klingbeil
-!
-!  Revision 1.23  2009-12-10 14:22:52  kb
-!  fixed typos - Hofmeister
-!
-!  Revision 1.22  2009-10-13 13:15:11  kb
-!  added psedo-coordinates when grid-type 3 or 4
-!
-!  Revision 1.21  2009-10-08 16:08:00  kb
-!  axes defined in entire domain - cartesian, spherical
-!
-!  Revision 1.20  2009-10-05 11:40:03  kb
-!  fixed behaviour for grid_type=3 and lonx, latx, convx not in topo.nc
-!
-!  Revision 1.19  2009-09-30 05:32:48  kb
-!  fixed calculation of dx, dy when dlon, dlat not present
-!
-!  Revision 1.18  2009-09-23 10:09:20  kb
-!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
-!
-!  Revision 1.17  2009-09-23 10:04:40  kb
-!  reverted to v1.15 - to allow for major update
-!
-!  Revision 1.15  2007-05-26 15:20:37  kbk
-!  print NetCDF version info
-!
-!  Revision 1.14  2007-02-07 16:32:22  kbk
-!  added spatial varying bottom roughness
-!
-!  Revision 1.13  2006-11-24 09:10:56  frv-bjb
-!  Higher accuracy in x0,dx computations
-!
-!  Revision 1.12  2006-01-29 20:32:34  hb
-!  Small LaTeX corrections to source code documentation
-!
-!  Revision 1.11  2005-11-17 13:50:22  kbk
-!  fixes to compile with gfortran
-!
-!  Revision 1.10  2005/06/17 07:57:46  frv-bjb
-!  Bug fix: fail on dlat/lat0 versions
-!
-!  Revision 1.9  2005/06/14 13:36:01  frv-bjb
-!  temporary KBK stop statement deleted
-!
-!  Revision 1.8  2005/06/10 16:16:41  kbk
-!  documentation updated
-!
-!  Revision 1.7  2005/06/10 16:01:22  kbk
-!  test and use real axis before using axis offset+increment method
-!
-!  Revision 1.6  2005/04/25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
 !
 ! !LOCAL VARIABLES:
   private                                 ncdf_read_2d
@@ -730,15 +671,13 @@ stop
 ! !REVISION HISTORY:
 !  Original author(s): Bjarne Buchmann
 !
-!EOP
-!
 ! !LOCAL VARIABLES:
    integer                   :: status
    integer                   :: indx(1)
    integer                   :: i
    REALTYPE                  :: startval,endval
    REALTYPE                  :: expectval,readval,dval
-!
+!EOP
 !-------------------------------------------------------------------------
 
 #ifdef DEBUG

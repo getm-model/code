@@ -1,4 +1,3 @@
-!$Id: structure_friction_3d.F90,v 1.2 2009-08-18 10:24:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -30,12 +29,6 @@
    use getm_timers, only: tic, toc, TIM_STRCTFRICT
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
@@ -45,7 +38,6 @@
 #ifdef STRUCTURE_FRICTION
    REALTYPE                  :: cds(I2DFIELD)
 #endif
-
 !EOP
 !-----------------------------------------------------------------------
 !BOC

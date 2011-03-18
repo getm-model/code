@@ -1,4 +1,3 @@
-!$Id: variable_info.F90,v 1.1 2009-10-06 11:42:49 kb Exp $
 !#ifdef NETCDF4
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
@@ -75,12 +74,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hannes Rennau
 !
-!  $Log: variable_info.F90,v $
-!  Revision 1.1  2009-10-06 11:42:49  kb
-!  first steps towards imore flexible output
-!
-!
-
 !EOP
 !-----------------------------------------------------------------------
 

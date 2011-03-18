@@ -1,4 +1,3 @@
-!$Id: divergence.F90,v 1.1 2010-03-24 14:58:15 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -21,23 +20,11 @@
    use variables_3d, only: hun,hvn,uu,vv
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
-!  $Log: divergence.F90,v $
-!  Revision 1.1  2010-03-24 14:58:15  kb
-!  cleaned divergence calculations
-!
-!
 ! !LOCAL VARIABLES:
    integer                   :: i,j
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC

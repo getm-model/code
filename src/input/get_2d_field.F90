@@ -1,4 +1,3 @@
-!$Id: get_2d_field.F90,v 1.2 2009-05-12 10:50:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,8 +17,6 @@
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fn,varname
    integer, intent(in)                 :: il,ih,jl,jh
-!
-! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out)               :: field(:,:)

@@ -1,4 +1,3 @@
-!$Id: domain.F90,v 1.41 2010-03-30 11:48:37 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -98,182 +97,8 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: domain.F90,v $
-!  Revision 1.41  2010-03-30 11:48:37  kb
-!  removing adaptive_coodinates
-!
-!  Revision 1.39  2009-11-06 07:04:25  bjb
-!  Consistent application of bathymetry.adjust with new bathy read
-!
-!  Revision 1.38  2009-11-05 14:36:10  bjb
-!  Consistent application of mask.adjsut with new bathy read
-!
-!  Revision 1.37  2009-09-30 05:32:47  kb
-!  fixed calculation of dx, dy when dlon, dlat not present
-!
-!  Revision 1.36  2009-09-29 07:17:41  kb
-!  fixed typos - for protex
-!
-!  Revision 1.35  2009-09-24 12:37:03  kb
-!  comments and empty lines allowed in: bdyinfo.dat, minimum_depth.dat, bathymetry.adjust and mask.adjust - using ideas of Alex Barth
-!
-!  Revision 1.34  2009-09-23 10:09:20  kb
-!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
-!
-!  Revision 1.33  2009-08-31 10:37:03  bjb
-!  Consistent treatment of topo in halo zones
-!
-!  Revision 1.32  2009-05-15 06:59:10  bjb
-!  typo fix
-!
-!  Revision 1.31  2009-05-07 15:50:46  kb
-!  added global and local horizontal index range
-!
-!  Revision 1.30  2009-05-07 10:10:15  kb
-!  fixed tag in wait_halo() - Buchmann
-!
-!  Revision 1.29  2008-12-09 00:31:57  kb
-!  added new 2D open boundaries
-!
-!  Revision 1.28  2007-10-16 06:22:56  kbk
-!  curvi-linear now runs in parallel
-!
-!  Revision 1.27  2007-03-30 13:10:59  hb
-!  Use of adaptive and hybrid vertical coordinates technically enabled
-!
-!  Revision 1.26  2007-02-08 06:43:27  kbk
-!  update HALOS for z0 - and changed loop boundaries for zub0,zvb0
-!
-!  Revision 1.25  2007-02-07 16:32:22  kbk
-!  added spatial varying bottom roughness
-!
-!  Revision 1.24  2007-02-07 16:27:06  kbk
-!  changed and fixed loop boundaries
-!
-!  Revision 1.23  2006-08-25 09:05:20  kbk
-!  metric coefficients also calculated in HALO zones
-!
-!  Revision 1.22  2006-06-03 11:43:16  kbk
-!  added namelist fallback longitude - heatfluxes
-!
-!  Revision 1.21  2005-06-27 07:18:13  frv-bjb
-!  Changed STOP statements to call getm_error(...)
-!
-!  Revision 1.20  2005/06/17 07:40:19  frv-bjb
-!  Added check/bailout for zero dlat and dlon
-!
-!  Revision 1.19  2005/05/25 10:43:42  kbk
-!  fixed ax calculation
-!
-!  Revision 1.18  2005/05/25 10:32:12  kbk
-!  merged from stabe branch v1_2_1
-!
-!  Revision 1.17  2005/04/25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
-!  Revision 1.16  2004/11/04 11:07:00  kbk
-!  fixed format statement in print_mask
-!
-!  Revision 1.15  2004/01/05 13:24:27  kbk
-!  maxdepth from domain namelist - should be calculated later
-!
-!  Revision 1.14  2003/09/02 14:12:14  kbk
-!  au and av also in HALO-zones
-!
-!  Revision 1.13  2003/08/28 10:36:30  kbk
-!  also calculate ax in HALO-zones
-!
-!  Revision 1.12  2003/08/21 15:28:29  kbk
-!  re-enabled update_2d_halo for lonc and latc + cleaning
-!
-!  Revision 1.11  2003/08/15 12:52:49  kbk
-!  moved az mask calculation + removed print statements
-!
-!  Revision 1.10  2003/08/03 09:52:11  kbk
-!  nicer print statements
-!
-!  Revision 1.9  2003/06/29 17:09:04  kbk
-!  removed reference to barrier
-!
-!  Revision 1.8  2003/05/09 11:52:08  kbk
-!  do not mirror coordinate info + use mask for inverse area calculation
-!
-!  Revision 1.7  2003/05/02 08:32:31  kbk
-!  re-ordering mask calculation
-!
-!  Revision 1.6  2003/04/23 11:59:39  kbk
-!  update_2d_halo on spherical variables + TABS to spaces
-!
-!  Revision 1.5  2003/04/07 14:34:42  kbk
-!  parallel support, proper spherical grid init. support
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:11  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.19  2001/10/23 14:15:55  bbh
-!  Moved ga from coordinates.F90 to domain.F90
-!
-!  Revision 1.18  2001/10/22 12:10:26  bbh
-!  Partly support for SPHERICAL grid is coded
-!
-!  Revision 1.17  2001/09/26 10:01:41  bbh
-!  lat and lon maps now read in ncdf_topo.F90
-!
-!  Revision 1.16  2001/09/24 07:49:32  bbh
-!  Include .h files for memory declaration/allocation
-!
-!  Revision 1.15  2001/09/21 11:52:47  bbh
-!  Minimum depth for specific areas through - set_min_depth()
-!
-!  Revision 1.14  2001/09/14 12:04:15  bbh
-!  Added xc,yc to hold coordinates + cleaning
-!
-!  Revision 1.13  2001/09/04 08:00:14  bbh
-!  Fill coru and corv arrays
-!
-!  Revision 1.12  2001/09/04 07:36:32  bbh
-!  We need ioff and joff in parallel runs
-!
-!  Revision 1.11  2001/09/03 15:14:22  bbh
-!  Bug with Coriolis removed
-!
-!  Revision 1.10  2001/09/01 17:10:25  bbh
-!  Vertical coordinate definition now specified via namelist
-!
-!  Revision 1.9  2001/08/27 11:55:02  bbh
-!  TVD-advection for momentum added, some bugs removed
-!
-!  Revision 1.8  2001/08/01 08:19:57  bbh
-!  Fields for CURVILINEAR - now done
-!
-!  Revision 1.7  2001/07/26 14:31:43  bbh
-!  Manual merge
-!
-!  Revision 1.6  2001/07/26 14:20:02  bbh
-!  Added grid_type, vert_cord, lonmap and latmap
-!
-!  Revision 1.5  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.4  2001/05/14 12:38:58  bbh
-!  Set minimum detph to 10. meters if not COAST_TEST - to be fixed later.
-!
-!  Revision 1.3  2001/05/06 18:51:55  bbh
-!  Towards proper implementation of specified 2D bdy.
-!
-!  Revision 1.2  2001/04/24 08:24:58  bbh
-!  Use runtype instead of macro
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
-!
 ! !LOCAL VARIABLES:
    REALTYPE, parameter                  :: rearth_default = 6378815.
-
 !EOP
 !-----------------------------------------------------------------------
 
@@ -316,8 +141,6 @@
    character(len=*)                    :: input_dir
 !
 ! !REVISION HISTORY:
-!
-!  See log for module
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
@@ -981,11 +804,8 @@ STDERR latc(1,1),latx(1,0)
 !
 ! !REVISION HISTORY:
 !
-!  22Apr99   Karsten Bolding & Hans Burchard  Initial code.
-!
 ! !LOCAL VARIABLES:
    integer                   :: id
-!
 !EOP
 !------------------------------------------------------------------------
 !BOC
@@ -1246,7 +1066,6 @@ STDERR latc(1,1),latx(1,0)
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC

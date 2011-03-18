@@ -1,4 +1,3 @@
-!$Id: parser.F90,v 1.1 2009-10-06 11:42:49 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -63,11 +62,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding
-!
-!  $Log: parser.F90,v $
-!  Revision 1.1  2009-10-06 11:42:49  kb
-!  first steps towards imore flexible output
-!
 !
 !  subset of the model domain for output
    type output_set

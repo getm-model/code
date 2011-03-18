@@ -1,4 +1,3 @@
-!$Id: uv_diffusion_3d.F90,v 1.11 2009-09-30 11:28:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -126,10 +125,6 @@
 ! !INPUT PARAMETERS:
   REALTYPE, intent(in) :: Am
 
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !

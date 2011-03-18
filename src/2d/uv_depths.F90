@@ -1,4 +1,3 @@
-!$Id: uv_depths.F90,v 1.13 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -53,17 +52,12 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: vel_depth_method
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
    REALTYPE                  :: d_crit=2.0 
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC

@@ -1,4 +1,3 @@
-!$Id: uv_diffusion.F90,v 1.13 2009-09-30 11:28:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -171,10 +170,6 @@
   REALTYPE, intent(in) :: Am
   integer, intent(in)  :: An_method
   REALTYPE, intent(in) :: An(E2DFIELD),AnX(E2DFIELD)
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard

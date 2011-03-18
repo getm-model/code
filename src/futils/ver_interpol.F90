@@ -1,4 +1,3 @@
-!$Id: ver_interpol.F90,v 1.3 2007-06-07 10:25:19 kbk Exp $
 #include"cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,30 +30,10 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: ver_interpol.F90,v $
-!  Revision 1.3  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.2  2003-04-23 12:02:43  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:17  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.2  2001/08/29 11:21:46  bbh
-!  namelists read in salinity and temperature + initialisation
-!
-!  Revision 1.1  2001/08/27 11:56:12  bbh
-!  New file added
-!
-!  Revision 1.1.1.1  2001/02/12 15:55:58  gotm
-!  initial import into CVS
-!
 ! !LOCAL VARIABLES:
    integer :: i,j,k,nn
    REALTYPE :: rat
    REALTYPE:: zmodel(kmax)
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC

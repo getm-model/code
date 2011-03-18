@@ -1,4 +1,3 @@
-!$Id: ncdf_restart.F90,v 1.5 2010-03-30 11:52:32 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -66,20 +65,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding
-!
-!  $Log: ncdf_restart.F90,v $
-!  Revision 1.5  2010-03-30 11:52:32  kb
-!  removing adaptive_coodinates
-!
-!  Revision 1.3  2009-09-23 09:54:52  kb
-!  fixed typos in DESCRIPTION
-!
-!  Revision 1.2  2007-10-19 07:52:36  kbk
-!  zub and zvb not in hotstart files anymore
-!
-!  Revision 1.1  2007-09-21 13:03:42  kbk
-!  added drop-in NetCDF replacement for binary hotstart file (default is binary)
-!
 !
 !EOP
 !-----------------------------------------------------------------------

@@ -1,4 +1,3 @@
-!$Id: update_2d_bdy.F90,v 1.10 2009-01-30 15:33:03 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,15 +30,10 @@
 #else
    use domain, only: dx,dy
 #endif
-
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: loop,bdyramp
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -74,72 +68,7 @@
          amp = 1.5
          bdy_data = amp*sin(OMEGA*t)
 #endif
-#ifdef WADDEN_SEA_TEST
-         amp = 1.5
-         bdy_data = amp*sin(OMEGA*t)
-#endif
-#ifdef FRESHWATER_LENSE_TEST
-         bdy_data=_ZERO_
-#endif
-#undef OMEGA
-#ifdef CHANNEL_TEST
-         stop 'CHANNEL_TEST - update2dbdy'
-         z(1,:)  =  0.01
-         z(51,:) = -0.01
-#endif
-#undef KBK_TESTING
-#ifdef CURVI_TEST
-         k = 0
-         do n=1,NWB
-            i = wi(n)
-            if (n .eq. 1) then
-               a = 0.05
-            else
-               a = -0.05
-            end if
-            do j=wfj(1),wlj(1)
-               k = k+1
-               bdy_data(k) = a
-            end do
-         end do
-         do n=1,NEB
-            i = ei(n)
-            do j=efj(1),elj(1)
-               k = k+1
-               bdy_data(k) = -0.05
-            end do
-         end do
-#endif
       case (ASCII)
-#ifdef SYLT_TEST
-         if (first) then
-            first = .false.
-
-            if (bdyfmt_2d .eq. 1) then
-               open(BDYDATA,file='bdy_data.dat')
-               t1 = 0.
-               do i=1,nsbv
-                  read(BDYDATA,*) zbo(i)
-               end do
-               t2 = 44714./80
-               do i=1,nsbv
-                  read(BDYDATA,*) zbn(i)
-               end do
-            end if
-         end if
-
-!  Read in new boundary values
-         if (t .ge. t2) then
-            t1 = t2
-            t2 = t2+44714./80
-            zbo = zbn
-
-            STDERR 'Reading new boundary values.... '
-            do i=1,nsbv
-               read(BDYDATA,*) zbn(i)
-            end do
-         end if
-#endif
       case (NETCDF)
 !        Read in get_2d_bdy() via get_2d_bdy_ncdf()
       case default
@@ -152,13 +81,6 @@
    ratio = _ONE_
    fac = _ONE_
    if(bdyramp .gt. 1) fac=min( _ONE_ ,FOUR*loop/float(bdyramp))
-
-! implicit Sommerfeldt
-#if 0
-eta = 1/(1+Cx)(eta_old + Cx*eta_new)
-               Cx=dtm/dx*srt(g*D)
-               z(i,j) = _ONE_/(_ONE_+Cx)*(z(i,j)+Cx*z(i,j-1))
-#endif
 
    l = 0
    do n = 1,NWB
@@ -252,27 +174,6 @@ eta = 1/(1+Cx)(eta_old + Cx*eta_new)
          k = k+1
       end do
    end do
-
-#ifdef WADDEN_SEA_TEST
-   i=imin
-   do j=1,90
-      if (az(i+2,j).eq.2) then
-         a=z(i+1,j)+z(i+1,j)-z(i+2,j)
-      else
-         a=z(i+1,j)
-      end if
-      if (az(i,j).eq.2) z(i,j)= max(a,-H(i,j)+min_depth)
-   end do
-   i=imax
-   do j=1,127
-      if (az(i-2,j).eq.2) then
-         a=z(i-1,j)+z(i-1,j)-z(i-2,j)
-      else
-         a=z(i-1,j)
-      end if
-      if (az(i,j).eq.2) z(i,j)= max(a,-H(i,j)+min_depth)
-   end do
-#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving update_2d_bdy()'

@@ -251,14 +251,8 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: timerindex
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Bjarne Buchmann
-!
-! !LOCAL VARIABLES:
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -296,10 +290,6 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)  :: timerindex
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Bjarne Buchmann

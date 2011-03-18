@@ -1,4 +1,3 @@
-!$Id: rivers.F90,v 1.15 2008-02-21 12:04:42 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -84,7 +83,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 
@@ -111,12 +109,6 @@
 !
 ! !USES:
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n,nn,ni,rc,m,iriver,jriver,numcells
@@ -307,12 +299,6 @@
 ! !USES:
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !LOCAL VARIABLES:
    integer                   :: rc
 !EOP
@@ -364,17 +350,12 @@
 ! !INPUT PARAMETERS:
    logical, intent(in)                 :: do_3d
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,m,n
    integer, save             :: nn=0
    REALTYPE                  :: ramp=_ONE_
    REALTYPE                  :: rvol,height
    REALTYPE                  :: svol,tvol,vol
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -468,16 +449,9 @@
 !  
 ! This routine closes the river handling by writing the integrated
 ! river run-off for each river to standard output.
-! 
 !
 ! !USES:
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n

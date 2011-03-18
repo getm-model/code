@@ -1,4 +1,3 @@
-!$Id: internal_pressure.F90,v 1.23 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -190,12 +189,6 @@
 ! !USES:
    use getm_timers, only: tic, toc, TIM_INTPRESS
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                :: i,j,k

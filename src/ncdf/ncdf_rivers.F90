@@ -1,4 +1,3 @@
-!$Id: ncdf_rivers.F90,v 1.9 2010-03-30 10:06:51 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -50,38 +49,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: ncdf_rivers.F90,v $
-!  Revision 1.9  2010-03-30 10:06:51  kb
-!  removed temporarely diagnostic output
-!
-!  Revision 1.8  2007-09-30 13:00:43  kbk
-!  prints real time as part of progessoutput
-!
-!  Revision 1.7  2005-09-23 11:27:43  kbk
-!  support fo nutrient loading in rivers
-!
-!  Revision 1.6  2005/05/04 11:45:29  kbk
-!  adding model time stamp on IO
-!
-!  Revision 1.5  2005/01/13 09:20:47  kbk
-!  support for T and S specifications in rivers - Stips
-!
-!  Revision 1.4  2004/04/06 16:32:29  kbk
-!  TimeDiff --> time_diff
-!
-!  Revision 1.3  2003/10/14 10:05:54  kbk
-!  checks if indices are in subdomain + cleaning
-!
-!  Revision 1.2  2003/04/23 11:54:03  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:48  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.1  2001/10/07 14:50:22  bbh
-!  Reading river data implemented - NetCFD
-!
-! !TO DO:
 !EOP
 !-----------------------------------------------------------------------
 
@@ -101,10 +68,6 @@
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fn
    integer, intent(in)                 :: nstart
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !
@@ -257,10 +220,6 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: loop
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !

@@ -1,4 +1,3 @@
-!$Id: ss_nn.F90,v 1.13 2010-03-02 13:06:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -136,12 +135,6 @@
    use getm_timers, only: tic, toc, TIM_SSNN
 !$ use omp_lib
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding

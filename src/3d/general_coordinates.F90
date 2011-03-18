@@ -1,4 +1,3 @@
-!$Id: general_coordinates.F90,v 1.4 2009-10-01 07:13:54 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -80,10 +79,6 @@
    logical, intent(in)                 :: first
    REALTYPE, intent(in)                :: cord_relax
    REALTYPE, intent(in)                :: maxdepth
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding

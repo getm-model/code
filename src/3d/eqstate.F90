@@ -1,4 +1,3 @@
-!$Id: eqstate.F90,v 1.13 2009-09-30 11:28:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,7 +27,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 
@@ -43,19 +41,12 @@
    subroutine init_eqstate()
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !DESCRIPTION:
 !  Reads the namelist and makes calls to the init functions of the
 !  various model components.
 !
 ! !LOCAL VARIABLES:
    namelist /eqstate/ eqstate_method,T0,S0,p0,dtr0,dsr0
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -108,12 +99,6 @@
    use getm_timers, only: tic, toc, TIM_EQSTATE
 !$ use omp_lib
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k

@@ -1,4 +1,3 @@
-!$Id: time.F90,v 1.5 2007-08-24 10:43:45 frv-bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,48 +46,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: time.F90,v $
-!  Revision 1.5  2007-08-24 10:43:45  frv-bjb
-!  Allow negative seconds in meteo nc-files input
-!
-!  Revision 1.4  2004-04-06 16:32:28  kbk
-!  TimeDiff --> time_diff
-!
-!  Revision 1.3  2003/12/15 16:03:59  kbk
-!  new correct algorithm in in_interval()
-!
-!  Revision 1.2  2003/04/23 12:02:43  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:19  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.8  2001/10/17 08:19:42  bbh
-!  jul0 and jul1 now public
-!
-!  Revision 1.7  2001/09/28 12:29:22  bbh
-!  Added add_secs() and in_interval()
-!
-!  Revision 1.6  2001/07/26 13:52:41  bbh
-!  Cleaning + description
-!
-!  Revision 1.5  2001/05/14 12:40:23  bbh
-!  Removed test output in string_to_time()
-!
-!  Revision 1.4  2001/05/07 19:52:56  bbh
-!  Included - as valid delimiter in string_to_julsecs
-!
-!  Revision 1.3  2001/05/07 14:37:45  bbh
-!  Added string_to_julsecs() - reads time imbedded in a string
-!
-!  Revision 1.2  2001/05/06 18:51:55  bbh
-!  Towards proper implementation of specified 2D bdy.
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:09  bbh
-!  initial import into CVS
-!
-!
-! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 
@@ -233,8 +190,6 @@
 ! !INPUT PARAMETERS:
    integer  julian
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
    integer  yyyy,mm,dd
 !
@@ -287,8 +242,6 @@
 ! !INPUT PARAMETERS:
    integer  yyyy,mm,dd
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
    integer  julian
 !
@@ -335,10 +288,6 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: n
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  22Nov Author name Initial code
@@ -388,8 +337,6 @@
 ! !INPUT PARAMETERS:
    character(len=*)                    :: str
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
    integer, intent(out)                :: jul,secs
 !
@@ -435,8 +382,6 @@
 ! !INPUT PARAMETERS:
    character(len=19)                   :: timestr
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
    integer, intent(out)                :: jul,secs
 !
@@ -457,7 +402,6 @@
 
    return
    end subroutine String2JulSecs
-
 !EOC
 
 !-----------------------------------------------------------------------
@@ -533,14 +477,9 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: jul1,secs1,jul2,secs2
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  22Nov Author name Initial code
 !
-! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -564,15 +503,12 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: j1,s1,secs
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
    integer, intent(out)                :: j2,s2
 !
 ! !REVISION HISTORY:
 !  22Nov Author name Initial code
 !
-! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -604,16 +540,11 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: j1,s1,j,s,j2,s2
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
    logical         :: before,after
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC

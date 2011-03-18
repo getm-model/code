@@ -1,4 +1,3 @@
-!$Id: c2x.F90,v 1.2 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -21,21 +20,11 @@
    integer,    intent(in)              :: imin,imax,jmin,jmax
    REALTYPE,   intent(in)              :: cfield(I2DFIELD)
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
    REALTYPE,  intent(out)              :: xfield(I2DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf
-!
-!  $Log: c2x.F90,v $
-!  Revision 1.2  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.1  2005-04-25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
@@ -43,7 +32,6 @@
  !EOP
 !-----------------------------------------------------------------------
 !BOC
-
 !  do the interior X-points
    do j=jmin,jmax-1
       do i=imin,imax-1

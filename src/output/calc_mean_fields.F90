@@ -1,4 +1,3 @@
-!$Id: calc_mean_fields.F90,v 1.5 2009-08-18 10:24:46 bjb Exp $
 #include "cppdefs.h"
 !----------------------------------------------------------------------
 !BOP
@@ -36,23 +35,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Adolf Stips
-!
-!  $Log: calc_mean_fields.F90,v $
-!  Revision 1.5  2009-08-18 10:24:46  bjb
-!  New getm_timers module
-!
-!  Revision 1.4  2007-06-07 10:25:20  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.3  2006-01-27 16:07:57  kbk
-!  now works with -DNO_BAROCLINIC
-!
-!  Revision 1.2  2004/04/21 09:11:44  lars
-!  removed tab
-!
-!  Revision 1.1  2004/03/29 15:35:52  kbk
-!  possible to store calculated mean fields
-!
 !
 ! !LOCAL VARIABLES:
    integer         :: i,j,k,rc

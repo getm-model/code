@@ -1,4 +1,3 @@
-!$Id: bdy_3d.F90,v 1.14 2009-09-04 11:50:34 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -38,7 +37,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 
@@ -60,12 +58,6 @@
 !
 ! !USES:
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc,i,j,k,n
@@ -134,8 +126,6 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)             :: field(I3DFIELD)
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,l,n,ii,jj,kk
@@ -448,7 +438,6 @@
       end do
    end if
 #endif
-
 
 #endif
 

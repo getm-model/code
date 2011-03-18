@@ -1,4 +1,3 @@
-!$Id: uu_momentum_3d.F90,v 1.19 2009-09-30 11:28:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -82,10 +81,6 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: n
    logical, intent(in)                 :: bdy3d
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding

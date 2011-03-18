@@ -1,4 +1,3 @@
-!$Id: w_split_adv.F90,v 1.6 2009-09-30 11:28:47 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -57,8 +56,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
@@ -78,7 +75,6 @@
    STDERR 'Use w_split_it_adv() instead, choose option ITERATE_VERT_ADV'
    stop 'w_split_adv()'
 #endif
-
 
    cu(:,:,kmax)=_ZERO_
 

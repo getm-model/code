@@ -1,4 +1,3 @@
-!$Id: bottom_friction.F90,v 1.10 2009-09-30 11:28:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -42,10 +41,6 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard

@@ -1,4 +1,3 @@
-!$Id: read_restart_ncdf.F90,v 1.14 2010-03-30 11:48:38 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -55,46 +54,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding
-!
-!  $Log: read_restart_ncdf.F90,v $
-!  Revision 1.14  2010-03-30 11:48:38  kb
-!  removing adaptive_coodinates
-!
-!  Revision 1.12  2010-01-21 15:46:24  kb
-!  fixed BIO-restart
-!
-!  Revision 1.11  2009-09-25 12:14:56  kb
-!  INCLUDE_HALOS --> SAVE_HALOS
-!
-!  Revision 1.10  2009-09-23 09:54:53  kb
-!  fixed typos in DESCRIPTION
-!
-!  Revision 1.9  2009-08-21 10:39:00  kb
-!  -DINCLUDE_HALOS will include halo-zones when writing/reading NetCDF hotstart files
-!
-!  Revision 1.8  2009-07-18 12:36:01  kb
-!  fixed SPM hot-start bug - Hofmeister
-!
-!  Revision 1.7  2009-04-27 09:22:55  kb
-!  mean calculation de-activated with -DNO_3D
-!
-!  Revision 1.6  2007-11-12 13:50:17  kb
-!  also need bio_calc
-!
-!  Revision 1.5  2007-10-19 07:52:36  kbk
-!  zub and zvb not in hotstart files anymore
-!
-!  Revision 1.4  2007-10-16 13:34:05  kbk
-!  differentiate between mandatory and non-mandatory fields
-!
-!  Revision 1.3  2007-10-04 13:55:04  kbk
-!  only read S and T if runtype .ge. 3
-!
-!  Revision 1.2  2007-10-03 06:59:23  kbk
-!  NetCDF restart uses runtype properly
-!
-!  Revision 1.1  2007-09-21 13:03:42  kbk
-!  added drop-in NetCDF replacement for binary hotstart file (default is binary)
 !
 ! !LOCAL VARIABLES:
    integer         :: il,ih,iloc,ilen,i

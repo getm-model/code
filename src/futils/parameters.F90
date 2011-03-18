@@ -1,4 +1,3 @@
-!$Id: parameters.F90,v 1.3 2003-12-16 16:00:46 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,39 +31,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: parameters.F90,v $
-!  Revision 1.3  2003-12-16 16:00:46  kbk
-!  molecular diffusion for salt and temp (manuel)
-!
-!  Revision 1.2  2003/04/23 12:02:43  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:19  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.6  2001/10/22 08:48:30  bbh
-!  Am moved from paramters.F90 to m2d.F90
-!
-!  Revision 1.5  2001/10/12 09:00:23  bbh
-!  AM in here - should be moved sometime
-!
-!  Revision 1.4  2001/07/26 13:52:02  bbh
-!  Cleaning
-!
-!  Revision 1.3  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.2  2001/05/18 08:41:49  bbh
-!  Added rho_0
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:09  bbh
-!  initial import into CVS
-!
-! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 

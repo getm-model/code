@@ -1,4 +1,3 @@
-!$Id: open_restart_ncdf.F90,v 1.7 2010-03-30 11:48:37 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,30 +25,8 @@
    character(len=*), intent(in)        :: fname
    integer, intent(in)                 :: runtype
 !
-! !DEFINED PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding
-!
-!  $Log: open_restart_ncdf.F90,v $
-!  Revision 1.7  2010-03-30 11:48:37  kb
-!  removing adaptive_coodinates
-!
-!  Revision 1.5  2010-01-21 15:46:23  kb
-!  fixed BIO-restart
-!
-!  Revision 1.4  2009-09-23 09:54:53  kb
-!  fixed typos in DESCRIPTION
-!
-!  Revision 1.3  2009-04-27 08:03:02  kb
-!  getm/initialise.F90
-!
-!  Revision 1.2  2007-10-19 07:52:36  kbk
-!  zub and zvb not in hotstart files anymore
-!
-!  Revision 1.1  2007-09-21 13:03:42  kbk
-!  added drop-in NetCDF replacement for binary hotstart file (default is binary)
-!
 !
 ! !LOCAL VARIABLES:
    integer         :: dimids(3)

@@ -1,4 +1,3 @@
-!$id: advection_3d.F90,v 1.18 2001/09/19 13:53:08 bbh Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -51,8 +50,6 @@
    REALTYPE, public, parameter         :: one6th=1./6.
    REALTYPE, public, parameter         :: ONE=_ONE_,TWO=2.*_ONE_
 !
-! !PRIVATE DATA MEMBERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
@@ -81,10 +78,6 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: method
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
@@ -246,12 +239,9 @@
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)   :: f(I3DFIELD)
 !
-! !OUTPUT PARAMETERS:
-!
 ! !LOCAL VARIABLES:
    REALTYPE, parameter       :: a1=0.5*ONE,a2=ONE
    integer         :: k
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC

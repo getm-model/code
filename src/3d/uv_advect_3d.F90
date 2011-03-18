@@ -1,4 +1,3 @@
-!$Id: uv_advect_3d.F90,v 1.20 2010-03-25 08:22:03 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -270,10 +269,6 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)  :: hor_adv,ver_adv,adv_split
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
@@ -293,7 +288,6 @@
    REALTYPE                  :: AH=_ZERO_
    REALTYPE                  :: dti,dxdyi
 #endif
-
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -442,8 +436,6 @@
 #endif
       end do
    end do
-
-
 
    call tic(TIM_UVADV3DH)
    call update_3d_halo(vvEx,vvEx,av,imin,jmin,imax,jmax,kmax,V_TAG)
@@ -675,7 +667,6 @@
 
 !$OMP END PARALLEL
 #endif  ! End of three-dimensional first-order upstream
-
 
    call toc(TIM_UVADV3D)
 #ifdef DEBUG

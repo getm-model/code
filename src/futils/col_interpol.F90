@@ -1,4 +1,3 @@
-!$Id: col_interpol.F90,v 1.1 2004-04-21 15:23:02 hb Exp $
 #include"cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,26 +26,13 @@
 !
 ! !REVISION HISTORY: 
 !  Original author(s): Karsten Bolding & Hans Burchard
-!  $Log: col_interpol.F90,v $
-!  Revision 1.1  2004-04-21 15:23:02  hb
-!  col_interpol.F90 added as tool for vertical interpolation
 !
-!  Revision 1.3  2003/03/28 09:20:36  kbk
-!  added new copyright to files
-!
-!  Revision 1.2  2003/03/10 08:54:16  gotm
-!  Improved documentation and cleaned up code
-!
-!  Revision 1.1.1.1  2001/02/12 15:55:58  gotm
-!  initial import into CVS
-!
-!EOP
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,ii,jj
    REALTYPE                  :: rat 
    REALTYPE                  :: z,w0,w1,w2,r1,r2 
-! 
+!EOP
 !-----------------------------------------------------------------------
 !BOC
 !  Set surface values to uppermost input value 

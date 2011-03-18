@@ -1,4 +1,3 @@
-!$Id: u_split_adv.F90,v 1.6 2009-09-30 11:28:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -167,8 +166,6 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)   :: f(I3DFIELD)
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding

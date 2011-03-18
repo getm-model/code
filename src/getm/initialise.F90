@@ -1,4 +1,3 @@
-!$Id: initialise.F90,v 1.25 2010-03-30 11:48:36 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -21,111 +20,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: initialise.F90,v $
-!  Revision 1.25  2010-03-30 11:48:36  kb
-!  removing adaptive_coodinates
-!
-!  Revision 1.23  2009-08-21 08:56:34  bjb
-!  Fix name clash on PARALLEL with OpenMP key word
-!
-!  Revision 1.22  2009-08-18 10:24:46  bjb
-!  New getm_timers module
-!
-!  Revision 1.21  2009-04-27 08:03:59  kb
-!  compiles with NO_3D
-!
-!  Revision 1.20  2008-05-21 06:22:58  kb
-!  fixed time(1) when save_initial and use_epoch are both true
-!
-!  Revision 1.19  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.18  2007-05-08 09:01:15  kbk
-!  gotmturb.inp -> gotmturb.nml
-!
-!  Revision 1.17  2006-11-21 15:10:45  frv-bjb
-!  Parallel independence of INPUT_DIR for getm.inp read. Unset INPUT_DIR to use MPI working dir.
-!
-!  Revision 1.16  2006-08-29 08:25:16  kbk
-!  added diagnostics
-!
-!  Revision 1.15  2006-08-25 09:34:10  kbk
-!  include biology calls
-!
-!  Revision 1.14  2006-06-02 12:42:20  kbk
-!  support for common epoch for hotstart runs
-!
-!  Revision 1.13  2006-03-17 17:19:52  kbk
-!  simulation with hotstart identical to continuous run - checked with md5sum
-!
-!  Revision 1.12  2006-03-17 11:06:32  kbk
-!  cleaner inclusion of SPM module
-!
-!  Revision 1.11  2006-03-09 10:53:55  kbk
-!  set spinup to -1 when doing hotstart
-!
-!  Revision 1.10  2005/10/06 12:32:32  kbk
-!  call getm_error() -> use exceptions
-!
-!  Revision 1.9  2005/10/06 09:54:01  hb
-!  added support for vertical slice model - via -DSLICE_MODEL
-!
-!  Revision 1.8  2005/09/23 11:27:10  kbk
-!  support for biology via GOTMs biology modules
-!
-!  Revision 1.7  2004/06/15 09:04:51  kbk
-!  CONST_VISC --> CONSTANT_VISCOSITY - Ruiz
-!
-!  Revision 1.6  2004/01/13 07:49:06  kbk
-!  need maxdepth in parameter list to coordinates()
-!
-!  Revision 1.5  2003/09/03 05:49:31  kbk
-!  hotstart files now read from - out_dir
-!
-!  Revision 1.4  2003/08/15 12:50:12  kbk
-!  use HALO in loop boundaries
-!
-!  Revision 1.3  2003/04/23 12:03:46  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 16:39:16  kbk
-!  parallel support, NO_3D
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:25  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.10  2001/10/22 12:24:07  bbh
-!  Typo
-!
-!  Revision 1.9  2001/10/22 11:45:27  bbh
-!  Only save initial fields if not dryrun
-!
-!  Revision 1.8  2001/09/18 17:52:03  bbh
-!  save_initial now in namelist
-!
-!  Revision 1.7  2001/09/18 17:48:32  bbh
-!  Added algoritm for rivers - getting river data still missing
-!
-!  Revision 1.6  2001/09/13 15:00:28  bbh
-!  Use the new ncdf-scheme
-!
-!  Revision 1.5  2001/07/26 13:57:14  bbh
-!  Meteo working - needs some polishing
-!
-!  Revision 1.4  2001/06/04 13:09:53  bbh
-!  Includes - dryrun - in call to init_output()
-!
-!  Revision 1.3  2001/05/03 20:11:11  bbh
-!  Use runtype in init_3d
-!
-!  Revision 1.2  2001/04/24 08:24:58  bbh
-!  Use runtype instead of macro
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
-!
-!
-! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 
@@ -183,10 +77,6 @@
 ! !INPUT PARAMETERS:
    character(len=*)                    :: dstr,tstr
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !DESCRIPTION:
 !  Reads the namelist and makes calls to the init functions of the
 !  various model components.
@@ -213,7 +103,6 @@
    namelist /param/ &
              dryrun,runid,title,parallel,runtype,  &
              hotstart,use_epoch,save_initial
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC

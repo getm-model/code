@@ -1,4 +1,3 @@
-!$Id: w_split_it_adv.F90,v 1.8 2009-10-06 11:45:34 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,7 +42,6 @@
 ! only the water column is punished by higher numerical load 
 ! in which the potential violation of the CFL criterium
 ! occurs.  
-!
 ! 
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
@@ -61,8 +59,6 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)             :: f(I3DFIELD)
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding

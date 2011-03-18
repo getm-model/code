@@ -1,4 +1,3 @@
-!$Id: bdy_spec.F90,v 1.9 2009-09-29 08:07:28 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -23,46 +22,8 @@
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fn
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: bdy_spec.F90,v $
-!  Revision 1.9  2009-09-29 08:07:28  kb
-!  fixed reading western boundary information
-!
-!  Revision 1.8  2009-09-24 12:37:03  kb
-!  comments and empty lines allowed in: bdyinfo.dat, minimum_depth.dat, bathymetry.adjust and mask.adjust - using ideas of Alex Barth
-!
-!  Revision 1.7  2009-09-23 10:11:47  kb
-!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
-!
-!  Revision 1.6  2008-12-09 00:31:57  kb
-!  added new 2D open boundaries
-!
-!  Revision 1.5  2005-04-29 12:55:31  kbk
-!  removing print statement
-!
-!  Revision 1.4  2003/08/03 09:52:11  kbk
-!  nicer print statements
-!
-!  Revision 1.3  2003/04/23 11:59:39  kbk
-!  update_2d_halo on spherical variables + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 15:20:53  kbk
-!  added bdy_index and bdy_map
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:11  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.2  2001/09/01 17:12:13  bbh
-!  Removed a STDERR
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
 !
 ! !LOCAL VARIABLES:
    character(len=255)        :: line
@@ -70,7 +31,6 @@
    integer                   :: i,j,k,l
    integer                   :: n,rc
    integer                   :: type_2d(4,10),type_3d(4,10)
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC

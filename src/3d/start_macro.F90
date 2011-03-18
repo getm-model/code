@@ -1,4 +1,3 @@
-!$Id: start_macro.F90,v 1.12 2009-08-18 10:24:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,12 +34,6 @@
    use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
    use getm_timers, only: tic, toc, TIM_STARTMCR
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding

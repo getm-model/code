@@ -1,4 +1,3 @@
-!$Id: meteo.F90,v 1.22 2009-09-30 14:38:34 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -84,91 +83,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: meteo.F90,v $
-!  Revision 1.22  2009-09-30 14:38:34  bjb
-!  Bugfix meteo: Less threading
-!
-!  Revision 1.19  2009-08-18 10:24:46  bjb
-!  New getm_timers module
-!
-!  Revision 1.18  2008-08-29 13:59:12  kb
-!  fixed parallel run for constant metforing with convc<>0
-!
-!  Revision 1.17  2007-06-27 08:39:36  kbk
-!  support for fresh water fluxes at the sea surface - Adolf Stips
-!
-!  Revision 1.16  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.15  2006-03-09 10:53:57  kbk
-!  set spinup to -1 when doing hotstart
-!
-!  Revision 1.14  2006-03-01 13:52:22  kbk
-!  renamed method to met_method
-!
-!  Revision 1.13  2005-04-25 09:25:33  kbk
-!  conv --> convc
-!
-!  Revision 1.12  2005/04/19 15:56:58  kbk
-!  added latitude dependent cloud correction factor for long wave rad. - Stips
-!
-!  Revision 1.11  2005/01/13 09:49:37  kbk
-!  wet bulb works, es is global, cleaning - Stips
-!
-!  Revision 1.10  2004/01/15 11:45:00  kbk
-!  meteo point source forcing - taus, swr and shf - implemented
-!
-!  Revision 1.9  2003/10/01 12:09:13  kbk
-!  airp in HALO-zones - need in momentum eqs.
-!
-!  Revision 1.8  2003/07/01 16:38:34  kbk
-!  cleaned code - new methods
-!
-!  Revision 1.7  2003/06/17 14:53:28  kbk
-!  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
-!
-!  Revision 1.6  2003/05/09 14:28:11  kbk
-!  short wave radiation calculated each timestep (not interpolated) - patch from Adolf Stips
-!
-!  Revision 1.5  2003/04/23 12:05:50  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.4  2003/04/07 15:15:16  kbk
-!  merged stable and devel
-!
-!  Revision 1.3  2003/03/17 15:04:14  gotm
-!  Fixed Kondo coefficients - -DWRONG_KONDO can be used
-!
-!  Revision 1.2  2002/08/16 12:11:06  gotm
-!  Fixed parameter order in call to short_wave_radiation()
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:38  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.8  2001/10/26 09:11:28  bbh
-!  Stresses in meteo.F90 are in N/m2 - divide by rho_0 where necessary
-!
-!  Revision 1.7  2001/09/28 12:32:58  bbh
-!  Normalize calculated stresses with 1000. - should be rho_0
-!
-!  Revision 1.6  2001/08/31 15:41:49  bbh
-!  ifdef for CONSTANCE added
-!
-!  Revision 1.5  2001/07/26 13:57:14  bbh
-!  Meteo working - needs some polishing
-!
-!  Revision 1.4  2001/06/04 13:15:12  bbh
-!  Further steps towards full implementation of meteorological forcing
-!
-!  Revision 1.3  2001/05/25 19:14:53  bbh
-!  Towards real meteorological forcing
-!
-!  Revision 1.2  2001/04/24 08:31:18  bbh
-!  Initialise all allocated variables with _ZERO_
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
-!
 ! !LOCAL VARIABLES:
    integer                   :: spinup=0,metfmt=2
    REALTYPE                  :: tx= _ZERO_ ,ty= _ZERO_
@@ -182,13 +96,6 @@
    REALTYPE, dimension(:,:), allocatable :: d_tcc,d_swr,d_shf
    REALTYPE, dimension(:,:), allocatable :: evap_old,precip_old
    REALTYPE, dimension(:,:), allocatable :: d_evap,d_precip
-!
-! !TO DO:
-!  A method for stress calculations without knowledge of SST and meteorological
-!  variables ($C_d \rho_a W^2) to be used with depth integrated simulations.
-!
-! !BUGS:
-!
 !EOP
 !-----------------------------------------------------------------------
 
@@ -209,10 +116,6 @@
 !
 ! !INPUT PARAMETERS:
    logical, intent(in)                 :: hotstart
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !
@@ -469,13 +372,9 @@
    use getm_timers, only: tic, toc, TIM_METEO
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
 ! !INPUT/OUTPUT PARAMETERS:
    integer, intent(in)                 :: n
    REALTYPE, optional, intent(inout)   :: sst(I2DFIELD)
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  See module for log.
@@ -752,16 +651,8 @@
 ! !DESCRIPTION:
 !  This routine cleans up the \emph{meteo} module.
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  See module for log.
-!
-! !LOCAL VARIABLES:
 !
 !EOP
 !-----------------------------------------------------------------------

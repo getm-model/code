@@ -26,26 +26,12 @@
   integer,  intent(in)       :: mask(E2DFIELD)
   REALTYPE, intent(in)       :: f(I3DFIELD)
   REALTYPE, intent(in)       :: minval,maxval
-
-!
-! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
    integer, intent(out)      :: status
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding
-!
-!  $Log: check_3d_fields.F90,v $
-!  Revision 1.3  2009-09-30 11:28:47  bjb
-!  OpenMP threading initial implementation
-!
-!  Revision 1.2  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.1  2006-12-15 09:57:48  kbk
-!  optional sanity checks on velocities, temperature and salinity fields
-!
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k

@@ -1,4 +1,3 @@
-!$Id: gotm.F90,v 1.22 2010-03-02 13:06:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -63,12 +62,6 @@
    use getm_timers, only: tic, toc, TIM_GOTM, TIM_GOTMTURB, TIM_GOTMH
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
@@ -78,7 +71,6 @@
    REALTYPE                  :: h(0:kmax),dry,zz
    REALTYPE                  :: NN1d(0:kmax),SS1d(0:kmax)
    REALTYPE                  :: xP(0:kmax)
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC

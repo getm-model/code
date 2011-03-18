@@ -1,4 +1,3 @@
-!$Id: momentum.F90,v 1.16 2010-03-25 11:48:55 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -26,10 +25,6 @@
    REALTYPE, intent(in)                :: tausx(E2DFIELD)
    REALTYPE, intent(in)                :: tausy(E2DFIELD)
    REALTYPE, intent(in)                :: airp(E2DFIELD)
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -138,10 +133,6 @@
 !
 ! !INPUT PARAMETERS:
    REALTYPE, intent(in)                :: tausx(E2DFIELD),airp(E2DFIELD)
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
@@ -318,10 +309,6 @@
 !
 ! !INPUT PARAMETERS:
    REALTYPE, intent(in)                :: tausy(E2DFIELD),airp(E2DFIELD)
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j

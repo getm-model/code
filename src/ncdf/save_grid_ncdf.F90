@@ -1,4 +1,3 @@
-!$Id: save_grid_ncdf.F90,v 1.11 2009-10-13 13:15:11 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,41 +46,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf
-!
-!  $Log: save_grid_ncdf.F90,v $
-!  Revision 1.11  2009-10-13 13:15:11  kb
-!  added psedo-coordinates when grid-type 3 or 4
-!
-!  Revision 1.10  2009-10-06 13:11:16  kb
-!  only save bathymetry when az > 0
-!
-!  Revision 1.9  2009-09-25 12:17:25  kb
-!  removed undef [IJ]RANGE
-!
-!  Revision 1.8  2009-09-23 12:40:00  kb
-!  only save latu, latv, convc when have_lonlat=.true. when grid_type=1
-!
-!  Revision 1.7  2009-09-23 10:11:48  kb
-!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
-!
-!  Revision 1.6  2007-10-16 07:14:35  kbk
-!  pseudo coordinate variables for curvi-linear grids
-!
-!  Revision 1.5  2007-03-30 13:11:00  hb
-!  Use of adaptive and hybrid vertical coordinates technically enabled
-!
-!  Revision 1.4  2007-02-22 08:48:13  kbk
-!  possible to save masks (az, au, av)
-!
-!  Revision 1.3  2006-03-10 08:44:02  kbk
-!  fixed saving coordinate variables
-!
-!  Revision 1.2  2005-11-01 15:44:13  kbk
-!  fixed saving of lonc instaed of latc
-!
-!  Revision 1.1  2005/04/25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j

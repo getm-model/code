@@ -1,4 +1,3 @@
-!$Id: fluxes.F90,v 1.14 2007-11-15 13:31:18 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -46,60 +45,11 @@
 ! !INPUT PARAMETERS:
    REALTYPE, intent(in)                :: lat,u10,v10,airt,tcc,sst,precip
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out)               :: hf,taux,tauy,evap
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding and Hans Burchard
-!
-!  $Log: fluxes.F90,v $
-!  Revision 1.14  2007-11-15 13:31:18  kb
-!  1.0 -> _ONE_
-!
-!  Revision 1.13  2007-06-27 08:39:36  kbk
-!  support for fresh water fluxes at the sea surface - Adolf Stips
-!
-!  Revision 1.12  2005-04-19 15:56:58  kbk
-!  added latitude dependent cloud correction factor for long wave rad. - Stips
-!
-!  Revision 1.11  2005/04/19 15:21:33  kbk
-!  cleaned long wave radiation and added Bignami and Berliand (ROMS)
-!
-!  Revision 1.10  2005/04/19 13:02:08  kbk
-!  use -DOLD_WRONG_FLUXES to get pre-december 2004 behavior
-!
-!  Revision 1.9  2005/04/19 12:21:23  kbk
-!  simulate old compiler bug by -DEA_ZERO
-!
-!  Revision 1.8  2005/01/13 09:49:37  kbk
-!  wet bulb works, es is global, cleaning - Stips
-!
-!  Revision 1.7  2003/12/16 17:16:13  kbk
-!  double declaration of cd_heat,cd_mom
-!
-!  Revision 1.6  2003/10/01 12:10:05  kbk
-!  hum_method=1 (specific humidity) now works correctly
-!
-!  Revision 1.5  2003/07/01 16:38:34  kbk
-!  cleaned code - new methods
-!
-!  Revision 1.4  2003/06/17 14:53:28  kbk
-!  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
-!
-!  Revision 1.3  2003/04/23 12:05:50  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/03/17 15:04:15  gotm
-!  Fixed Kondo coefficients - -DWRONG_KONDO can be used
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:39  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.1  2001/07/26 14:35:18  bbh
-!  initial import into CVS
-!
 !
 ! !DEFINED PARAMETERS:
    integer, parameter   :: clark=1      ! Clark et. al, 1974

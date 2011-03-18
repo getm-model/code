@@ -1,4 +1,3 @@
-!$Id: fct_2dh_adv.F90,v 1.8 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -50,8 +49,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
@@ -72,7 +69,6 @@
 #endif
    REALTYPE        :: CNW,CW,CSW,CSSW,CWW,CSWW,CC,CS
    REALTYPE        :: uuu,vvv,x,CExx,Cl,Cu,fac
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC

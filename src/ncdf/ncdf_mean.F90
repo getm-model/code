@@ -1,4 +1,3 @@
-!$Id: ncdf_mean.F90,v 1.2 2005-04-25 09:32:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -44,14 +43,6 @@
 
 !
 !  Original author(s): Adolf Stips & Karsten Bolding
-!
-!  $Log: ncdf_mean.F90,v $
-!  Revision 1.2  2005-04-25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
-!  Revision 1.1  2004/03/29 15:38:10  kbk
-!  possible to store calculated mean fields
-!
 !
 !EOP
 !-----------------------------------------------------------------------

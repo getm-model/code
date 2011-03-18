@@ -1,4 +1,3 @@
-!$Id: salinity.F90,v 1.30 2010-03-15 13:04:51 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -43,7 +42,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 
@@ -294,7 +292,6 @@ salt_field_no=1
 
    end if
 
-
 #ifdef DEBUG
    write(debug,*) 'Leaving init_salinity()'
    write(debug,*)
@@ -347,10 +344,6 @@ salt_field_no=1
 !
 ! !INPUT PARAMETERS:
    integer, intent(in) :: n
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc
@@ -550,7 +543,6 @@ salt_field_no=1
       end do
    end do
 #endif
-
 
 #ifdef SLOPE_TEST
    do i=81,82

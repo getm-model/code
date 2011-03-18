@@ -1,4 +1,3 @@
-!$Id: m3d.F90,v 1.49 2010-03-30 11:48:37 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -86,9 +85,6 @@
    REALTYPE, intent(in)                :: timestep
    logical, intent(in)                 :: hotstart
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !DESCRIPTION:
 !  Here, the {\tt m3d} namelist is read from {\tt getm.inp}, and the
@@ -115,13 +111,12 @@
    NAMELIST /m3d/ &
              M,cnpar,cord_relax,                        &
              bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,     &
-	     bdy3d_tmrlx,bdy3d_tmrlx_ucut,              &
+             bdy3d_tmrlx,bdy3d_tmrlx_ucut,              &
              bdy3d_tmrlx_max,bdy3d_tmrlx_min,           &
              vel_hor_adv,vel_ver_adv,vel_adv_split,     &
              calc_temp,calc_salt,                       &
              avmback,avhback,ip_method,ip_ramp,         &
              vel_check,min_vel,max_vel
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC

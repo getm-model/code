@@ -1,4 +1,3 @@
-!$Id: input.F90,v 1.7 2009-08-18 10:24:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -23,45 +22,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: input.F90,v $
-!  Revision 1.7  2009-08-18 10:24:46  bjb
-!  New getm_timers module
-!
-!  Revision 1.6  2009-05-12 10:50:44  bjb
-!  Works with An from netcdf file
-!
-!  Revision 1.5  2009-05-12 07:08:27  kb
-!  added interface for get_2d_field()
-!
-!  Revision 1.4  2006-03-01 13:52:21  kbk
-!  renamed method to met_method
-!
-!  Revision 1.3  2003/04/23 12:04:08  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 13:00:39  kbk
-!  parallel + cleaned code
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:33  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.5  2001/10/07 14:50:22  bbh
-!  Reading river data implemented - NetCFD
-!
-!  Revision 1.4  2001/07/26 13:57:14  bbh
-!  Meteo working - needs some polishing
-!
-!  Revision 1.3  2001/05/25 19:03:02  bbh
-!  New method for - input - all is done via do_input()
-!
-!  Revision 1.2  2001/05/10 11:33:48  bbh
-!  Added wrapper - get_field
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:09  bbh
-!  initial import into CVS
-!
-! !LOCAL VARIABLES:
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -126,14 +86,8 @@
    character(len=*)                    :: input_dir
    integer, intent(in)                 :: n
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  22Nov Author name Initial code
-!
-! !LOCAL VARIABLES:
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -189,14 +143,7 @@
 ! !INPUT PARAMETERS:
    integer, intent(in) :: n
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
-!  22Nov Author name Initial code
-!
-! !LOCAL VARIABLES:
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -246,20 +193,10 @@
    subroutine clean_input()
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !DESCRIPTION:
 !  Writes calculated fields to files.
 !
 ! !REVISION HISTORY:
-!  22Nov Author name Initial code
-!
-! !LOCAL VARIABLES:
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC

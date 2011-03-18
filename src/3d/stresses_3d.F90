@@ -1,4 +1,3 @@
-!$Id: stresses_3d.F90,v 1.11 2009-09-30 11:28:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,12 +30,6 @@
    use getm_timers, only: tic, toc, TIM_STRESSES3D, TIM_STRESSES3DH
 !$ use omp_lib
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding

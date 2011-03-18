@@ -1,4 +1,3 @@
-!$Id: to_2d_v.F90,v 1.2 2006-01-11 14:02:42 lars Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,14 +31,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf
-!
-!  $Log: to_2d_v.F90,v $
-!  Revision 1.2  2006-01-11 14:02:42  lars
-!  documentation + cosmetics
-!
-!  Revision 1.1  2005-04-25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
 !
 ! !LOCAL VARIABLES:
    integer                             :: i,j

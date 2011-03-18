@@ -1,4 +1,3 @@
-!$Id: sealevel.F90,v 1.20 2009-10-02 11:29:11 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -38,12 +37,6 @@
 #endif
 !$ use omp_lib
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -219,12 +212,6 @@
    use exceptions, only: getm_error
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Bjarne B\"uchmann
 !
@@ -235,7 +222,6 @@
    integer       :: num_nan
    integer       :: i,j,inan,jnan, idum
    REALTYPE      :: ahuge,zdum
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -359,8 +345,6 @@
 ! !INPUT PARAMETERS:
    REALTYPE, intent(in)       :: a,b
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
    integer, intent(out)      :: idum
 !
@@ -372,7 +356,6 @@
 !  The default is 2, and the idea is that "imin=2" should be returned
 !  also if a is NaN. If b=HUGE(b), then this provides a means to detect 
 !  if a is a denormal number.
-!
 !
 !EOP
 !-----------------------------------------------------------------------

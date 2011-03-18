@@ -1,4 +1,3 @@
-!$Id: ncdf_in.F90,v 1.3 2003-04-23 11:54:03 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -24,34 +23,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: ncdf_in.F90,v $
-!  Revision 1.3  2003-04-23 11:54:03  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 15:36:08  kbk
-!  not including interface for get_bathymetry
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:47  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.6  2001/05/25 19:26:22  bbh
-!  ncdf_meteo.F90
-!
-!  Revision 1.5  2001/05/14 12:49:13  bbh
-!  Removed init_2d_bdy_ncdf and get_2d_bdy_ncdf
-!
-!  Revision 1.4  2001/05/10 11:38:29  bbh
-!  Added get_field_ncdf() + various small bug fixes
-!
-!  Revision 1.3  2001/05/07 14:43:01  bbh
-!  Removed arrays julday and secs - not used anyway
-!
-!  Revision 1.2  2001/05/06 18:51:55  bbh
-!  Towards proper implementation of specified 2D bdy.
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:07  bbh
-!  initial import into CVS
 !
 !EOP
 !-----------------------------------------------------------------------

@@ -1,4 +1,3 @@
-!$Id: cfl_check.F90,v 1.7 2006-03-01 15:54:07 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -42,12 +41,6 @@
 #endif
    use m2d, only: dtm
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard

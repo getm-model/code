@@ -1,4 +1,3 @@
-!$Id: get_field_ncdf.F90,v 1.3 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,29 +18,11 @@
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fname,var
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out)               :: f(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: get_field_ncdf.F90,v $
-!  Revision 1.3  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.2  2003-04-23 11:54:03  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:48  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.3  2001/10/22 08:10:43  bbh
-!  De-allocate wrk #ifdef FORTRAN90
-!
-!  Revision 1.1  2001/05/10 11:38:29  bbh
-!  Added get_field_ncdf() + various small bug fixes
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc,err,ncid,var_id,i,j,k,size,indx

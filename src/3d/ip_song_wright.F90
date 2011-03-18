@@ -1,4 +1,3 @@
-!$Id: ip_song_wright.F90,v 1.7 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -40,7 +39,6 @@
 !
 ! The discretisation of $(\partial_y^* b)_k$ for the $v$-equation is
 ! done accordingly.
-!
 !
 ! !USES:
    use internal_pressure

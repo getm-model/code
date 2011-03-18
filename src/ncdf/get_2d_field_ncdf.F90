@@ -1,4 +1,3 @@
-!$Id: get_2d_field_ncdf.F90,v 1.2 2009-05-12 10:50:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -20,19 +19,11 @@
 ! !PUBLIC MEMBER FUNCTIONS:
 public get_2d_field_ncdf
 !
-! !PUBLIC DATA MEMBERS:
-!
-! !DEFINED PARAMETERS:
-!
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding, Lars Umlauf
 !
 !EOP
-!
-! !LOCAL VARIABLES:
-!
-
 !-----------------------------------------------------------------------
 
 contains

@@ -1,4 +1,3 @@
-!$Id: slow_terms.F90,v 1.13 2010-03-22 05:02:58 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,7 +17,6 @@
 ! These calculations have been prepared in the routines 
 ! {\tt slow\_bottom\_friction}, {\tt slow\_advection} and
 ! {\tt slow\_diffusion}.
-
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,HU,HV,au,av
@@ -33,15 +31,8 @@
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
 #endif
-
 !$ use omp_lib
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding

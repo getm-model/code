@@ -1,4 +1,3 @@
-!$Id: slow_diffusion.F90,v 1.9 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,11 +34,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-  REALTYPE, intent(in)                 :: AM
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
+   REALTYPE, intent(in)                 :: AM
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,ii,jj

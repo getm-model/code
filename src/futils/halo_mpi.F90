@@ -1,4 +1,3 @@
-!$Id: halo_mpi.F90,v 1.16 2009-12-11 11:43:20 bjb Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -65,58 +64,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: halo_mpi.F90,v $
-!  Revision 1.16  2009-12-11 11:43:20  bjb
-!  Optionally read number of threads from subdomain spec file
-!
-!  Revision 1.15  2008-09-16 10:03:24  kb
-!  added Holtermanns emergency break algorithm
-!
-!  Revision 1.14  2008-02-26 10:59:52  kb
-!  MPI version printed
-!
-!  Revision 1.13  2007-11-01 09:25:07  kb
-!  explicit set MPI_PROC_NULL for non-existing neighbors
-!
-!  Revision 1.12  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.11  2006-11-21 15:10:46  frv-bjb
-!  Parallel independence of INPUT_DIR for getm.inp read. Unset INPUT_DIR to use MPI working dir.
-!
-!  Revision 1.10  2006-08-25 09:08:14  kbk
-!  do NOT mirror fields
-!
-!  Revision 1.9  2006-02-02 15:17:37  kbk
-!  Vector -> HVector for corner columns
-!
-!  Revision 1.8  2005/10/11 07:55:19  kbk
-!  now sending HALOxHALO corner colums - fixes parallel runs with some higher order advection schemes
-!
-!  Revision 1.6.2.1  2005/05/25 08:05:35  kbk
-!  fixed ONED_NONBLOCKING + cleaning
-!
-!  Revision 1.6  2004/01/02 09:46:43  kbk
-!  fixed a bug for user defined data types - Peneva
-!
-!  Revision 1.5  2003/08/14 14:49:51  kbk
-!  nicer print statement in barrier()
-!
-!  Revision 1.4  2003/08/03 08:49:51  kbk
-!  cleaned code
-!
-!  Revision 1.3  2003/05/09 11:52:08  kbk
-!  do not mirror coordinate info + use mask for inverse area calculation
-!
-!  Revision 1.2  2003/04/23 12:02:43  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.1  2003/04/07 12:05:42  kbk
-!  new parallel related files
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:30  gotm
-!  recovering after CVS crash
-!
 ! !LOCAL VARIABLES:
    character(LEN = 256), private:: pname
    integer                   :: active_comm=MPI_COMM_WORLD
@@ -161,17 +108,9 @@
 ! !DESCRIPTION:
 !  Initialize MPI parallel environment, i.e. getting process id etc.
 !
-! !INPUT PARAMTERS:
-!
-! !INPUT/OUTPUT PARAMTERS:
-!
-! !OUTPUT PARAMTERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !  Revised by: Bjarne Buchmann, 2006
-!
-! !LOCAL VARIABLES:
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -232,10 +171,6 @@
 ! !INPUT PARAMTERS:
    character(len=*)                    :: input_dir
 !
-! !INPUT/OUTPUT PARAMTERS:
-!
-! !OUTPUT PARAMTERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !  Revised by: Bjarne Buchmann, 2006
@@ -245,7 +180,6 @@
    logical                   :: reorder
    namelist /nampar/ &
              MeshMethod,reorder,MsgMethod
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -269,8 +203,6 @@
    end subroutine postinit_mpi
 !EOC
 
-
-
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -284,16 +216,8 @@
 !  When this subroutine is called all processes wait for all others to
 !  reach this point in the execution. Use with care - slows down.
 !
-! !INPUT PARAMTERS:
-!
-! !INPUT/OUTPUT PARAMTERS:
-!
-! !OUTPUT PARAMTERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-! !LOCAL VARIABLES:
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -317,19 +241,12 @@
 !  Used to print information concerning the actual process. Id, name of
 !  processor etc..
 !
-! !INPUT PARAMTERS:
-!
-! !INPUT/OUTPUT PARAMTERS:
-!
-! !OUTPUT PARAMTERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
    integer         :: ver,subver
    character(len=8) :: vstr
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -362,14 +279,9 @@
    integer, intent(in)                 :: method
    logical, intent(in)                 :: reorder
 !
-! !INPUT/OUTPUT PARAMTERS:
-!
-! !OUTPUT PARAMTERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -394,14 +306,9 @@
 ! !INPUT PARAMTERS:
    integer, intent(in)                 :: comm
 !
-! !INPUT/OUTPUT PARAMTERS:
-!
-! !OUTPUT PARAMTERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -425,14 +332,9 @@
 ! !INPUT PARAMTERS:
     integer, intent(in)                :: method
 !
-! !INPUT/OUTPUT PARAMTERS:
-!
-! !OUTPUT PARAMTERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -461,8 +363,6 @@
 #ifdef STATIC
    integer, intent(in)                 :: imin,imax,jmin,jmax
 #endif
-!
-! !INPUT/OUTPUT PARAMTERS:
 !
 ! !OUTPUT PARAMTERS:
 #ifndef STATIC
@@ -646,8 +546,6 @@
 ! !INPUT PARAMTERS:
   integer, intent(in)                  :: n,np,m
 !
-! !INPUT/OUTPUT PARAMTERS:
-!
 ! !OUTPUT PARAMTERS:
   integer, intent(out)                 :: s,e
 !
@@ -689,17 +587,12 @@
 ! !INPUT PARAMTERS:
    integer, intent(in)                 :: imin,imax,jmin,jmax,kmax
 !
-! !INPUT/OUTPUT PARAMTERS:
-!
-! !OUTPUT PARAMTERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
    integer                   :: m,n,o,sizeof_realtype
    integer                   :: real_extent
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -808,8 +701,6 @@
 !
 ! !INPUT/OUTPUT PARAMTERS:
    REALTYPE, intent(inout), dimension(E2DFIELD):: f1,f2
-!
-! !OUTPUT PARAMTERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -1008,14 +899,11 @@ STDERR 'TWOD_SENDRECV'
 ! !INPUT/OUTPUT PARAMTERS:
    REALTYPE, intent(inout), DIMENSION(I3DFIELD) :: f1,f2
 !
-! !OUTPUT PARAMTERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
    integer                   :: il,jl,ih,jh
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -1198,14 +1086,8 @@ STDERR 'TWOD_NONBLOCKING'
 ! !INPUT PARAMTERS:
    integer, intent(in)                 :: tag
 !
-! !INPUT/OUTPUT PARAMTERS:
-!
-! !OUTPUT PARAMTERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-! !LOCAL VARIABLES:
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -1257,8 +1139,6 @@ STDERR 'TWOD_NONBLOCKING'
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Peter Holtermann
 !
-! !LOCAL VARIABLES:
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -1269,14 +1149,6 @@ STDERR 'TWOD_NONBLOCKING'
    return
    end subroutine set_flag_mpi
 !EOC
-
-! On UNIC mpi_abort is not defined - strano
-#if 0
-subroutine mpi_abort(i1,i2,i3)
-integer i1,i2,i3
-return
-end subroutine mpi_abort
-#endif
 
 !-----------------------------------------------------------------------
 

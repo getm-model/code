@@ -1,4 +1,3 @@
-!$Id: variables_2d.F90,v 1.10 2009-09-30 11:28:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -35,7 +34,6 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
-!
 !EOP
 !-----------------------------------------------------------------------
 
@@ -95,12 +93,6 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
-! !LOCAL VARIABLES:
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -166,12 +158,6 @@
 ! !INTERFACE:
    subroutine clean_variables_2d()
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !DESCRIPTION:
 !  This routine is currently empty.

@@ -1,4 +1,3 @@
-!$Id: temperature.F90,v 1.27 2010-03-15 13:04:51 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -47,7 +46,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 
@@ -80,10 +78,6 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: adv_method
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                   :: k,i,j,n
@@ -347,10 +341,6 @@ temp_field_no=1
 !
 ! !INPUT PARAMETERS:
   integer, intent(in) :: n
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc

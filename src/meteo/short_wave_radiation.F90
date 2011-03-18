@@ -1,4 +1,3 @@
-!$Id: short_wave_radiation.F90,v 1.6 2009-09-30 11:28:48 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,34 +26,8 @@
    REALTYPE, intent(inout)             :: hour
    REALTYPE, intent(in)                :: lat,lon,tcc
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding and Hans Burchard
-!
-!  $Log: short_wave_radiation.F90,v $
-!  Revision 1.6  2009-09-30 11:28:48  bjb
-!  OpenMP threading initial implementation
-!
-!  Revision 1.5  2007-05-21 14:01:19  kbk
-!  limitation suggested by Adolf Stips
-!
-!  Revision 1.4  2007-05-19 16:44:27  kbk
-!  re-introduced cloud cover if statement
-!
-!  Revision 1.3  2003-06-17 14:53:28  kbk
-!  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
-!
-!  Revision 1.2  2003/04/23 12:05:50  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:39  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.1  2001/07/26 14:35:18  bbh
-!  initial import into CVS
 !
 ! !DEFINED PARAMETERS:
    REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029
@@ -83,11 +56,6 @@
    REALTYPE                  :: qatten,qzer,qdir,qdiff,qtot,qshort
    REALTYPE                  :: albedo
    integer                   :: jab
-!
-! !TO DO:
-!
-! !BUGS:
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
