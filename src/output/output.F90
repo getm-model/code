@@ -36,7 +36,7 @@
    logical                             :: save_2d=.true.
    logical                             :: save_meteo=.false.
    logical                             :: save_3d=.true.
-   logical                             :: save_mean=.false. 
+   logical                             :: save_mean=.false.
    logical                             :: save_vel=.true.
    logical                             :: destag=.false.
    logical                             :: save_strho=.true.
@@ -119,7 +119,7 @@
       save_strho = .false.
       save_turb = .false.
    end if
-  
+
    if (runtype .eq. 2) then
       save_strho = .false.
       save_s = .false.
@@ -131,7 +131,7 @@
    else
       LEVEL2 'keeping velocities on calculation grid'
    end if
-   
+
    call file_names(runid,myid)
 
    if(save_2d) then
@@ -369,7 +369,7 @@
 ! !LOCAL VARIABLES
    integer, save             :: n=0
    integer                   :: i,j
-   integer                   :: jd,secs 
+   integer                   :: jd,secs
    character(len=19)         :: timestr_out
    REALTYPE                  :: dt
 !EOP
@@ -416,8 +416,8 @@
                   write(RESTART) T,S
                end if
 #endif
-#ifdef SPM 
-               if (spm_calc) then 
+#ifdef SPM
+               if (spm_calc) then
                   LEVEL3 'saving spm'
                   write(RESTART) spm
                   write(RESTART) spm_pool
@@ -478,16 +478,16 @@
                   read(RESTART) T,S
                end if
 #endif
-#ifdef SPM 
+#ifdef SPM
                if(spm_calc) then
-                  if (spm_hotstart) then 
+                  if (spm_hotstart) then
                      LEVEL3 'reading spm variables'
                      read(RESTART) spm
                      read(RESTART) spm_pool
                   else
                      LEVEL3 'spm variables not read from hotstart file'
                      LEVEL3 'set spm_init_method=0 to read them from hotstart file'
-                  end if     
+                  end if
                end if
 #endif
 

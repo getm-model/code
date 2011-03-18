@@ -10,13 +10,13 @@
 ! !DESCRIPTION:
 !  This module provides all variables related to the bathymetry and
 !  model grid. The public subroutine $init\_domain()$ is called once
-!  and upon successful completion the bathymetry has been read and 
+!  and upon successful completion the bathymetry has been read and
 !  optionally modified, the calculation masks have been setup and
 !  all grid related variables have been initialised.\newline
 !  The $domain$-module depends on another module doing the actual
 !  reading of variables from files. This is provided through the
 !  generic subroutine $read\_topo\_file$. This subroutine takes two
-!  parameters - 1) a fileformat and 2) a filename. Adding a new 
+!  parameters - 1) a fileformat and 2) a filename. Adding a new
 !  input file format is thus straight forward and can be done
 !  without any changes to $domain$.
 !  Public variables defined in this module is used through out the
@@ -562,8 +562,8 @@ STDERR latc(1,1),latx(1,0)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
-!  Computes the grid increments and areas related to the metric 
-!  coefficients. 
+!  Computes the grid increments and areas related to the metric
+!  coefficients.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf

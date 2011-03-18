@@ -42,7 +42,7 @@
    REALTYPE, parameter                 :: shf_missing        =-9999.0
    REALTYPE, parameter                 :: divergence_missing =-9999.0
    REALTYPE, parameter                 :: evap_missing       =-9999.0
-   REALTYPE, parameter                 :: precip_missing     =-9999.0 
+   REALTYPE, parameter                 :: precip_missing     =-9999.0
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard

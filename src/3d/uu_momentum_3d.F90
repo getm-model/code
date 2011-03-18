@@ -25,10 +25,10 @@
 ! and the barotropic pressure gradient is calculated (the latter
 ! includes the pressure gradient correction for drying points, see
 ! section \ref{Section_dry}).
-! Afterwards, the matrix is set up for each water column, and it is solved 
-! by means of a tri-diagonal matrix solver. 
+! Afterwards, the matrix is set up for each water column, and it is solved
+! by means of a tri-diagonal matrix solver.
 !
-! In case that the compiler option {\tt STRUCTURE\_FRICTION} is switched on, 
+! In case that the compiler option {\tt STRUCTURE\_FRICTION} is switched on,
 ! the frictional effect of structures in the water column is calculated
 ! by adding the quadratic frictional term $C u \sqrt{u^2+v^2}$ (with a minus sign on
 ! the right hand side) numerically implicitly to the $u$-equation,
@@ -38,13 +38,13 @@
 ! Finally, the new velocity profile is shifted such that its vertical
 ! integral is identical to the time integral of the vertically integrated
 ! transport.
-! If the compiler option {\tt MUDFLAT} is defined, this fitting of profiles 
+! If the compiler option {\tt MUDFLAT} is defined, this fitting of profiles
 ! is made with
-! respect to the new surface elevation, otherwise to the 
+! respect to the new surface elevation, otherwise to the
 ! old surface elevation.
 !
 ! When GETM is run as a slice model (compiler option {\tt SLICE\_MODEL}
-! is activated), the result for $j=2$ is copied to $j=3$. 
+! is activated), the result for $j=2$ is copied to $j=3$.
 !
 ! !USES:
    use exceptions
@@ -96,7 +96,7 @@
    REALTYPE                  :: gamma=g*rho_0
    REALTYPE                  :: cord_curv=_ZERO_
    REALTYPE                  :: gammai,rho_0i
-   integer                   :: status 
+   integer                   :: status
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -142,7 +142,7 @@
    if (rc /= 0) stop 'uu_momentum_3d: Error allocating memory (ex)'
 
 ! Note: We do not need to initialize these work arrays.
-!   Tested BJB 2009-09-25. 
+!   Tested BJB 2009-09-25.
 
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax

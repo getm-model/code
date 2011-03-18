@@ -12,7 +12,7 @@
 !  to make a correct GETM hotstart. The created file contains dimensions
 !  (xax, yax, zax) as well as the (empty) variables. Variables are named
 !  corresponding to the names used in the Fortran files. Only the actual
-!  domain is stored (i.e. not the halo-zones). This allows easy use of 
+!  domain is stored (i.e. not the halo-zones). This allows easy use of
 !  'ncmerge' to stitch a number of hotstart files together to cover the
 !  entire computational domain. See read\_restart\_ncdf() for use.
 !
@@ -39,7 +39,7 @@
 ! !LOCAL VARIABLES:
    character(len=80)         :: history,tts
    character(len=80)         :: title
-   character(len=80)         :: str_error 
+   character(len=80)         :: str_error
 !EOP
 !-------------------------------------------------------------------------
 !BOC

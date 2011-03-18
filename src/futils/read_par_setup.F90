@@ -20,7 +20,7 @@
 !
 ! !DESCRIPTION:
 !  Test the content of a file with neighbour list information.
-!  At the time of calling, the file must be opened and rewound.  
+!  At the time of calling, the file must be opened and rewound.
 !  The routine will then rewind the file after use.
 !
 !  The global grid has extent 1:iextr,1:jextr
@@ -69,7 +69,7 @@
       FATAL 'read_par_setup: Number of jobs do not match'
       FATAL '  Expected value ',nprocs
       FATAL '  Read value     ',nprocs_read
-     stop 
+     stop
    end if
 
    allocate(neighbourlist(0:nprocs-1,8),stat=err)
@@ -101,7 +101,7 @@
       FATAL '  Expected ',iextr,' by ',jextr
       FATAL '  Read     ',iextr_read,' by ',jextr_read
       stop
-   end if 
+   end if
 
    if (imax_read /= imax .OR. jmax_read /= jmax) then
       FATAL 'read_par_setup: Local grid sizes do not match'
@@ -152,18 +152,18 @@
 
       if (myid_read < 0 .OR. minval(neighbours)<-1) then
          FATAL ' read_par_setup: Negative job ID on line ',iline
-         stop 
+         stop
       end if
 
       if (myid_read > nprocs-1 .OR. maxval(neighbours)> nprocs-1 ) then
          FATAL 'read_par_setup: Job ID appears too large on line ',iline
-         stop 
+         stop
       end if
 
       if (neighbourlist(myid_read,1) .NE.  false_flag) then
          FATAL 'read_par_setup: Line ',iline
          FATAL '  Job ID ',myid_read,' included twice '
-         stop 
+         stop
       end if
 !
 !  Store in local array
@@ -175,17 +175,17 @@
       if (minval(neighbourlist(ijob,:))<-1) then
          FATAL ' read_par_setup: Job ID ',ijob, &
                'does not seem to be specified'
-         stop 
+         stop
       end if
 !
-!  Test each neighbour for consistency on the basic notion that 
-!  "my right-hand-side neighbour's left-hand-side neighbour 
-!   should be myself". The vector neighbour_inverse contains the 
+!  Test each neighbour for consistency on the basic notion that
+!  "my right-hand-side neighbour's left-hand-side neighbour
+!   should be myself". The vector neighbour_inverse contains the
 !  "right-hand-side to left-hand-side" relations.
 !  The "inverse lookup list" functions so that my neighbour(i) should
 !  have me as neighbour neighbour_inverse(i)
 !  Neighbours are indexed clock-wise starting with WEST.
-!  This makes the vector have the form 
+!  This makes the vector have the form
 !      (/5, 6, 7, 8, 1, 2, 3, 4/)
 !
       do ineigh=1,8
@@ -198,7 +198,7 @@
                FATAL '  BUT Neighbour ',neighbour_inverse(ineigh),'of job ', &
                      njob,' is NOT ',ijob
                FATAL '  (rather, it is ',nnjob,')'
-               stop 
+               stop
             end if
          end if
       end do
@@ -210,7 +210,7 @@
    neighbours(1:8) = neighbourlist(myid,1:8)
    return
 !
-! Capture errors: 
+! Capture errors:
 
  1010 continue
    FATAL 'read_par_setup: Unexpected format at line ',iline

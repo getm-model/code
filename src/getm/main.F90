@@ -94,7 +94,7 @@
 #ifndef NO_TIMERS
       STDERR LINE
       call write_getm_timers
-#endif      
+#endif
    endif
    STDERR LINE
    LEVEL1 'Copyright (C) Bolding & Burchard ApS.'

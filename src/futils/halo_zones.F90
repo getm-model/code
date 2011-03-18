@@ -43,7 +43,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: init_halo_zones - 
+! !IROUTINE: init_halo_zones -
 !
 ! !INTERFACE:
    subroutine init_halo_zones()
@@ -218,7 +218,7 @@
 !
 ! !DESCRIPTION:
 !  Call the parallel library (MPI) routine for setting an array of flags
-!  - or - in case of a serial run just set the local value. 
+!  - or - in case of a serial run just set the local value.
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: n,flag

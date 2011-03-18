@@ -9,7 +9,7 @@
 !
 ! !DESCRIPTION:
 !  Opens a NetCDF formatted GETM hotstart file. All NetCDF variable
-!  id's necessary for making a correct GETM hotstart are read. The id's 
+!  id's necessary for making a correct GETM hotstart are read. The id's
 !  are shared with the reading routine using the ncdf\_restart module.
 !
 ! !USES:

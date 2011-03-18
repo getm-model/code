@@ -9,9 +9,9 @@
                        hvn,vv,missing,vel)
 !
 ! !DESCRIPTION:
-! This routine linearly interpolates the velocity at $v$-points to the $T$-points, 
+! This routine linearly interpolates the velocity at $v$-points to the $T$-points,
 ! whenever the mask at the $T$-points is different from zero. Otherwise, the values
-! are filled with the "missing value", {\tt missing}. The result is written to the 
+! are filled with the "missing value", {\tt missing}. The result is written to the
 ! output argument {\tt vel}, which is single precision vector for storage in netCDF.
 !
 ! !USES:

@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: tke_eps_advect_3d - 3D turbulence advection 
+! !ROUTINE: tke_eps_advect_3d - 3D turbulence advection
 !
 ! !INTERFACE:
    subroutine tke_eps_advect_3d(hor_adv,ver_adv,adv_split)
@@ -11,9 +11,9 @@
 !
 ! This routine carries out advection of the prognostic turbulence quantities
 ! {\tt tke} (turbuent kinetic energy, $k$) and {\tt eps} (lenght scale related
-! turbulence quantity, e.g.\ dissipation rate of $k$, $\varepsilon$, or 
-! turbulent frequency, $\omega=\varepsilon/k$. Here, the TVD advection 
-! schemes are used which are also used for the momentum advection. 
+! turbulence quantity, e.g.\ dissipation rate of $k$, $\varepsilon$, or
+! turbulent frequency, $\omega=\varepsilon/k$. Here, the TVD advection
+! schemes are used which are also used for the momentum advection.
 !
 ! !
 ! !USES:
@@ -63,7 +63,7 @@
    stop 'tke_eps_advect_3d()'
 #else
 
-#if defined(SPHERICAL) || defined(CURVILINEAR) 
+#if defined(SPHERICAL) || defined(CURVILINEAR)
 #else
    dxdyi = _ONE_/(dx*dy)
 #endif
@@ -97,7 +97,7 @@
 
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
-#if defined(SPHERICAL) || defined(CURVILINEAR) 
+#if defined(SPHERICAL) || defined(CURVILINEAR)
          dxuadv(i,j)=dxu(i,j)
          dxvadv(i,j)=dxv(i,j)
          dyuadv(i,j)=dyu(i,j)

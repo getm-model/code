@@ -9,10 +9,10 @@
                       il,jl,ih,jh,vel)
 !
 ! !DESCRIPTION:
-! This routine linearly interpolates the vertically integrated velocity 
-! at $U$-points to the $T$-points, whenever the mask at the $T$-points is different 
-! from zero. Otherwise, the values are filled with a "missing value", {\tt missing}. 
-! The result is written to the output argument {\tt vel}, which is single precision 
+! This routine linearly interpolates the vertically integrated velocity
+! at $U$-points to the $T$-points, whenever the mask at the $T$-points is different
+! from zero. Otherwise, the values are filled with a "missing value", {\tt missing}.
+! The result is written to the output argument {\tt vel}, which is single precision
 ! vector for storage in netCDF.
 !
 ! !USES:

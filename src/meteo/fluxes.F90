@@ -12,17 +12,17 @@
 !  The sum of the latent and sensible heat fluxes + longwave
 !  net-radiation is calculated and returned in \emph{hf} [$W/m^2$]. Also the
 !  sea surface stresses are calculated and returned in \emph{taux} and
-!  \emph{tauy} [$N/m^2$], respectively. Sensible heat and stress coming 
-!  from rain are considered. Further the fresh water flux due to 
-!  evaporation/kondensation is calculated here. 
+!  \emph{tauy} [$N/m^2$], respectively. Sensible heat and stress coming
+!  from rain are considered. Further the fresh water flux due to
+!  evaporation/kondensation is calculated here.
 !  The wind velocities are following the
 !  meteorological convention (from where) and are in $m/s$. The
 !  temperatures \emph{airt} and \emph{sst} can be in Kelvin or Celcius -
-!  if they are $>$ 100 - Kelvin is assumed. \emph{tcc} - the total cloud 
+!  if they are $>$ 100 - Kelvin is assumed. \emph{tcc} - the total cloud
 !  cover is specified as fraction between 0 and 1. Net long wave radiation according
 !  to the Josey ea. JGR, 2003 formula 2, considering the effect of water vapor on
 !  the long wave radiation is in the moment the best available parameterization and
-!  therefore recommended for use. 
+!  therefore recommended for use.
 !
 ! !SEE ALSO:
 !  meteo.F90, exchange_coefficients.F90

@@ -433,7 +433,7 @@
                                long_name='dy for T-points',units='m',     &
                                FillValue=fv,missing_value=mv, &
                                netcdf_real=NF90_DOUBLE)
- 
+
             status = nf90_def_var(ncid,'dxu',NF90_DOUBLE,f2_dims,id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                            "init_grid_ncdf()","dxu -")

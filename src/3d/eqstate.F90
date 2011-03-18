@@ -84,14 +84,14 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  do_eqstate - equation of state \label{sec-do-eqstate} 
+! !IROUTINE:  do_eqstate - equation of state \label{sec-do-eqstate}
 !
 ! !INTERFACE:
    subroutine do_eqstate()
 !
 ! !DESCRIPTION:
 !
-! Here, the equation of state is calculated for every 3D grid point.  
+! Here, the equation of state is calculated for every 3D grid point.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,az
@@ -135,7 +135,7 @@
 !$OMP BARRIER
 
 ! OMP-TODO: CONSTANCE_TEST not threaded. It should
-!  be easy to thread, but the gain would only be for those cases, 
+!  be easy to thread, but the gain would only be for those cases,
 !  and the risk of introducing erros is non-zero. BJB 2009-09-25.
 #ifdef CONSTANCE_TEST
 !$OMP MASTER
@@ -151,7 +151,7 @@
                   if (az(i,j) .gt. 0) then
                      T1 = T(i,j,k)
                      T2 = T1*T1
-! BJB-TODO: Due to caching, it is likely (slightly) faster to 
+! BJB-TODO: Due to caching, it is likely (slightly) faster to
 !    compute T3=T1*T1*T1 (etc). Same for S further down.
                      T3 = T1*T2
                      T4 = T2*T2

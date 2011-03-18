@@ -11,11 +11,11 @@
 !
 ! Here, the calculation of the advective slow terms $S^x_A$ and $S^y_A$
 ! (see eqs.\ (\ref{SxA}) and (\ref{SyA})) is prepared. This routine
-! basically repeats the calculations made in the routine {\tt uv\_advect}, 
+! basically repeats the calculations made in the routine {\tt uv\_advect},
 ! see section \ref{sec-uv-advect}, but this time based on the macro time
 ! step averaged and vertically integrated transports {\tt Uint} and {\tt Vint}.
-! The calculations of  $S^x_A$ and $S^y_A$ are then completed in the 
-! routine {\tt slow\_terms}, see section \ref{sec-slow-terms} on page 
+! The calculations of  $S^x_A$ and $S^y_A$ are then completed in the
+! routine {\tt slow\_terms}, see section \ref{sec-slow-terms} on page
 ! \pageref{sec-slow-terms}.
 !
 ! !USES:

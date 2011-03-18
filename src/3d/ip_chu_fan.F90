@@ -2,13 +2,13 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: ip_chu_fan 
+! !ROUTINE: ip_chu_fan
 !
 ! !INTERFACE:
    subroutine ip_chu_fan()
 !
 ! !DESCRIPTION:
-!   
+!
 ! This routine calculates the internal pressure gradient based on the
 ! classical approach by \cite{MELLORea94}, extended by the
 ! hydrostatic extension by \cite{CHUea03}.
@@ -34,8 +34,8 @@
    dym1 = _ONE_/DYV
 #endif
 
-! OMP-NOTE: The initialization and OMP implementation in this routine 
-!   is not tested, as the initialization states that the present 
+! OMP-NOTE: The initialization and OMP implementation in this routine
+!   is not tested, as the initialization states that the present
 !   method is "Not working, use other internal pressure gradient scheme"
 !   BJB 2009-09-24.
 
@@ -83,9 +83,9 @@
                buoyl=_HALF_*(buoy(i+1,j,k)+buoy(i,j,k))
                dxz=(zz(i+1,j,k)-zz(i,j,k))*dxm1
                hc=(zz(i+1,j,k)-zz(i+1,j,k+1))**2*(buoy(i+1,j,k)-buoy(i+1,j,k+1))
-               hc=hc-(zz(i,j,k)-zz(i,j,k+1))**2*(buoy(i,j,k)-buoy(i,j,k+1)) 
-               hc=hc+(zz(i+1,j,k+1)-zz(i,j,k+1))**2*(buoy(i+1,j,k+1)-buoy(i,j,k+1)) 
-               hc=hc-(zz(i+1,j,k)-zz(i,j,k))**2*(buoy(i+1,j,k)-buoy(i,j,k)) 
+               hc=hc-(zz(i,j,k)-zz(i,j,k+1))**2*(buoy(i,j,k)-buoy(i,j,k+1))
+               hc=hc+(zz(i+1,j,k+1)-zz(i,j,k+1))**2*(buoy(i+1,j,k+1)-buoy(i,j,k+1))
+               hc=hc-(zz(i+1,j,k)-zz(i,j,k))**2*(buoy(i+1,j,k)-buoy(i,j,k))
                hc=hc*dxm1*SIXTH/(zz(i,j,k)+zz(i+1,j,k)-zz(i,j,k+1)-zz(i+1,j,k+1))
                prgr=prgr+(grdu+grdl+hc)*_HALF_*(hun(i,j,k)+hun(i,j,k+1))-dxz*(buoyu-buoyl)
                idpdx(i,j,k)=hun(i,j,k)*prgr
@@ -115,9 +115,9 @@
                buoyl=_HALF_*(buoy(i,j+1,k)+buoy(i,j,k))
                dyz=(zz(i,j+1,k)-zz(i,j,k))*dym1
                hc=(zz(i,j+1,k)-zz(i,j+1,k+1))**2*(buoy(i,j+1,k)-buoy(i,j+1,k+1))
-               hc=hc-(zz(i,j,k)-zz(i,j,k+1))**2*(buoy(i,j,k)-buoy(i,j,k+1)) 
-               hc=hc+(zz(i,j+1,k+1)-zz(i,j,k+1))**2*(buoy(i,j+1,k+1)-buoy(i,j,k+1)) 
-               hc=hc-(zz(i,j+1,k)-zz(i,j,k))**2*(buoy(i,j+1,k)-buoy(i,j,k)) 
+               hc=hc-(zz(i,j,k)-zz(i,j,k+1))**2*(buoy(i,j,k)-buoy(i,j,k+1))
+               hc=hc+(zz(i,j+1,k+1)-zz(i,j,k+1))**2*(buoy(i,j+1,k+1)-buoy(i,j,k+1))
+               hc=hc-(zz(i,j+1,k)-zz(i,j,k))**2*(buoy(i,j+1,k)-buoy(i,j,k))
                hc=hc*dym1*SIXTH/(zz(i,j,k)+zz(i,j+1,k)-zz(i,j,k+1)-zz(i,j+1,k+1))
                prgr=prgr+(grdu+grdl+hc)*_HALF_*(hvn(i,j,k)+hvn(i,j,k+1))-dyz*(buoyu-buoyl)
                idpdy(i,j,k)=hvn(i,j,k)*prgr

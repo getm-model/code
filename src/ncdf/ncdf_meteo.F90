@@ -714,8 +714,8 @@
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,v10)
       end if
 
-!     Rotation of wind due to the combined effect of possible rotation of 
-!     meteorological grid and possible hydrodynamic grid convergence 
+!     Rotation of wind due to the combined effect of possible rotation of
+!     meteorological grid and possible hydrodynamic grid convergence
 !     (cartesian and curvi-linear grids where conv <> 0.)
       do j=jmin-1,jmax+1
          do i=imin-1,imax+1
@@ -816,7 +816,7 @@
                   do i=imin,imax
                      evap(i,j) = wrk(i,j)
                   end do
-               end do 
+               end do
             end if
          else
             call copy_var(grid_scan,wrk,wrk_dp)

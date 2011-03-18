@@ -9,12 +9,12 @@
 !
 ! !DESCRIPTION:
 !
-! Here, the calculation of the so-called slow terms (which are the 
+! Here, the calculation of the so-called slow terms (which are the
 ! interaction terms between the barotropic and the baroclinic mode) is
-! completed. The mathematical form of these slow terms is given by 
+! completed. The mathematical form of these slow terms is given by
 ! equations (\ref{Slowfirst}) - (\ref{Slowlast}), see section
 ! \ref{SectionVerticalIntegrated}.
-! These calculations have been prepared in the routines 
+! These calculations have been prepared in the routines
 ! {\tt slow\_bottom\_friction}, {\tt slow\_advection} and
 ! {\tt slow\_diffusion}.
 !
@@ -96,7 +96,7 @@
 
    else
 !
-! Here kmax=1, so the loops degenerate and there is no need 
+! Here kmax=1, so the loops degenerate and there is no need
 ! to test for k .ge. kumin(i,j).
       k=1
 !$OMP DO SCHEDULE(RUNTIME)

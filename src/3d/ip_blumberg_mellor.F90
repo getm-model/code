@@ -16,7 +16,7 @@
 ! which is $(\partial_x^* b)_k$ (in the case of the $u$-equation),
 ! is discretised
 ! between two vertically adjacent velocity points:
-! 
+!
 ! \begin{equation}\label{drhodxdiscr}
 ! \begin{array}{l}
 ! \displaystyle
@@ -43,7 +43,7 @@
 ! done accordingly.
 !
 ! In this routine, as a first step, the interface heights are calculated
-! in the T-points, in order to allow for the calculation of the 
+! in the T-points, in order to allow for the calculation of the
 ! coordinate slopes in the U- and V-points. In a second step, the
 ! expression (\ref{drhodxdiscr}) equivalent formulation for the
 ! $y$-direction are integrated up downwards, beginning from the surface.

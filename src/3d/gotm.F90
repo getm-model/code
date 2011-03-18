@@ -8,27 +8,27 @@
    subroutine gotm()
 !
 ! !DESCRIPTION:
-! 
+!
 ! Here, the turbulence module of the General Ocean Turbulence Model (GOTM,
 ! see {\tt www.gotm.net} and \cite{UMLAUFea05}) is called. First, all
 ! necessary parameters are transformed to suit with a 1D water column model,
 ! i.e., 3D fields are transformed to a vertical vector, 2D horizontal
 ! fields are converted to a scalar. The transformed 3D fields are
-! the layer heights {\tt hn $\rightarrow$ h}, the shear squared 
+! the layer heights {\tt hn $\rightarrow$ h}, the shear squared
 ! {\tt SS $\rightarrow$ SS1d},
-! the buoyancy frequency squared {\tt NN $\rightarrow$ NN1d}, 
-! the turbulent kinetic energy {\tt tke $\rightarrow$ tke1d}, 
+! the buoyancy frequency squared {\tt NN $\rightarrow$ NN1d},
+! the turbulent kinetic energy {\tt tke $\rightarrow$ tke1d},
 ! the dissipation rate {\tt eps $\rightarrow$ eps1d}
 ! (from which the integral length scale {\tt L1d} is calculated), the
 ! eddy viscosity {\tt num $\rightarrow$ num1d}, and the eddy diffusivity
 ! {\tt nuh $\rightarrow$ nuh1d}. The scalars are the surface and bottom friction
-! velocities, {\tt u\_taus} and {\tt u\_taub}, respectively, the 
+! velocities, {\tt u\_taus} and {\tt u\_taub}, respectively, the
 ! surface roughness parameter {\tt z0s} (which is currently hard-coded),
 ! and the bottom roughess parameter {\tt z0b}.
 ! Then, the GOTM turbulence module {\tt do\_turbulence} is called with
-! all the transformed parameters discussed above. Finally, the 
+! all the transformed parameters discussed above. Finally, the
 ! vertical vectors {\tt tke1d}, {\tt eps1d}, {\tt num1d} and {\tt nuh1d}
-! are transformed back to 3D fields. 
+! are transformed back to 3D fields.
 !
 ! In case that the compiler option {\tt STRUCTURE\_FRICTION} is switched on,
 ! the additional turbulence production by structures in the water column is calculated
@@ -42,7 +42,7 @@
 ! There are furthermore a number of compiler options provided, e.g.\
 ! for an older GOTM version, for barotropic calcuations,
 ! and for simple parabolic viscosity profiles circumventing the GOTM
-! turbulence module. 
+! turbulence module.
 !
 ! !USES:
    use halo_zones, only: update_3d_halo,wait_halo,H_TAG
@@ -74,11 +74,11 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-! Note: For ifort we need to explicitly state that this routine is 
-! single-thread only. Presently I don't know why that is necessary, 
-! but if I use ifort -omp without any OMP-statements in this file, 
-! then the result is garbage. 
-! The OMP SINGLE or OMP MASTER statements helps, but sometimes it *still* 
+! Note: For ifort we need to explicitly state that this routine is
+! single-thread only. Presently I don't know why that is necessary,
+! but if I use ifort -omp without any OMP-statements in this file,
+! then the result is garbage.
+! The OMP SINGLE or OMP MASTER statements helps, but sometimes it *still*
 ! messes up, in the sense that NaN "suddenly" appears on output.
 ! Apparently, writing out array-copy explicitly helps.
 !    BJB 2009-09-17.
@@ -102,7 +102,7 @@
                (uu(i  ,j  ,k)/hun(i  ,j  ,k))**2*(sf(i  ,j  ,k)+sf(i+1,j  ,k)) &
               +(uu(i-1,j  ,k)/hun(i-1,j  ,k))**2*(sf(i-1,j  ,k)+sf(i  ,j  ,k)) &
               +(vv(i  ,j  ,k)/hvn(i  ,j  ,k))**2*(sf(i  ,j  ,k)+sf(i  ,j+1,k)) &
-              +(vv(i  ,j-1,k)/hvn(i  ,j-1,k))**2*(sf(i  ,j-1,k)+sf(i  ,j  ,k))) 
+              +(vv(i  ,j-1,k)/hvn(i  ,j-1,k))**2*(sf(i  ,j-1,k)+sf(i  ,j  ,k)))
             end do
 #endif
             u_taus = sqrt(taus(i,j))
@@ -159,7 +159,7 @@
       end do
    end do
 
-   call tic(TIM_GOTMH)   
+   call tic(TIM_GOTMH)
    call update_3d_halo(num,num,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 #ifndef NO_BAROCLINIC

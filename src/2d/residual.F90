@@ -24,7 +24,7 @@
 !
 ! where $t_0$ is the time when the residual calculation begins (to be
 ! chosen from namelist) and $t_1$ is the finishing time of the model simulation.
-! 
+!
 !
 ! !USES:
    use variables_2d, only: u,v,res_du,res_u,res_dv,res_v,du,dv

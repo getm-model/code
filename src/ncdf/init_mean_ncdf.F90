@@ -76,7 +76,7 @@
    call set_attributes(ncid,time_id,units=trim(tts),long_name='time')
 
 
-!  short wave radiation 
+!  short wave radiation
    fv = swr_missing; mv = swr_missing; vr(1) = 0; vr(2) = 1500.
    err = nf90_def_var(ncid,'swrmean',NF90_REAL,f3_dims,swrmean_id)
    if (err .NE. NF90_NOERR) go to 10
@@ -102,7 +102,7 @@
 
    select case (vert_cord)
       case (1)
-      case (2)    
+      case (2)
          call getm_error("init_3d_ncdf()","saving of z-levels disabled")
       case (3)
          fv = hh_missing
@@ -248,9 +248,9 @@
       if (err .NE.  NF90_NOERR) go to 10
       call set_attributes(ncid,biomean_id(n), &
                           long_name=trim(var_long(n)), &
-                          units=trim(var_units(n)), & 
+                          units=trim(var_units(n)), &
                           FillValue=fv,missing_value=mv,valid_range=vr)
-   end do 
+   end do
 #endif
 
 !  globals

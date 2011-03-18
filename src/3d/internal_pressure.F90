@@ -9,7 +9,7 @@
 !
 ! !DESCRIPTION:
 !
-! In GETM, various methods are provided for the calculation of the 
+! In GETM, various methods are provided for the calculation of the
 ! internal pressure gradients terms in $x$- and $y$-direction.
 ! These terms which appear as layer-integrated terms in the
 ! equations for the layer-integrated momentum are for the
@@ -21,7 +21,7 @@
 ! \right)
 ! \end{equation}
 !
-! and for the northward layer-integrated momentum $q_k$ 
+! and for the northward layer-integrated momentum $q_k$
 ! (see equation (\ref{vEqvi})):
 !
 ! \begin{equation}
@@ -33,7 +33,7 @@
 ! The major problem is how to calculate the horizontal (with respect
 ! to isogeopotentials) buoyancy gradients $\partial^*_xb$ and $\partial^*_yb$,
 ! which need to be defined at the interfaces positioned vertically
-! between two velocity points. 
+! between two velocity points.
 !
 ! The methods for calculating the internal pressure gradient included in
 ! GETM are currently:
@@ -54,7 +54,7 @@
 !
 ! It is possible, by setting the compiler option {\tt SUBSTR\_INI\_PRESS},
 ! to substract the initial pressure gradient from all pressure
-! gradients. This is only advisable for strong stratification 
+! gradients. This is only advisable for strong stratification
 ! without any initial internal pressure gradients. In this case
 ! any non-zero values of the resulting numerical initial pressure gradient
 ! are due to discretisation errors.
@@ -113,7 +113,7 @@
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
-!  
+!
 ! Here, some necessary memory is allocated (in case of the compiler option
 ! {\tt STATIC}), and information is written to the log-file of
 ! the simulation.
@@ -176,14 +176,14 @@
    subroutine do_internal_pressure()
 !
 ! !DESCRIPTION:
-! 
+!
 ! Here, the chosen internal pressure gradient method is selected
 ! and (in case that the compiler option {\tt SUBSTR\_INI\_PRESS} is
 ! set), the initial pressure is calculated and subtracted from the
 ! updated internal pressure gradient.
 !
 ! If GETM is executed as slice model (compiler option {\tt SLICE\_MODEL}
-! is set, the internal pressure gradient for $j=2$ is copied to 
+! is set, the internal pressure gradient for $j=2$ is copied to
 ! $j=3$.
 !
 ! !USES:
@@ -203,8 +203,8 @@
 #endif
    call tic(TIM_INTPRESS)
 
-! BJB-NOTE: Initialization of zz, idpdx and ipdy moved to the 
-!  individual ip_methods to allow speed-up based on method (by 
+! BJB-NOTE: Initialization of zz, idpdx and ipdy moved to the
+!  individual ip_methods to allow speed-up based on method (by
 !  local reduction of amount of initialzation) BJB 2009-09-24.
 
    select case (ip_method)
@@ -256,7 +256,7 @@
    do i=imin,imax
       do k=kmin(i,2),kmax
          idpdx(i,3,k)=idpdx(i,2,k)
-      end do   
+      end do
    end do
 #endif
 

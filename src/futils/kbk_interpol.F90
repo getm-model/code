@@ -64,7 +64,7 @@
 
 !  Search index of lowest OK value
             do k=1,nlev
-               if(prof(k) .ne. -9999.0) EXIT     
+               if(prof(k) .ne. -9999.0) EXIT
             end do
             kl = k
 !  Set bottom values to lowest input value

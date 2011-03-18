@@ -40,9 +40,9 @@
 ! {\tt hvo} & 3D & [m]& old layer height in V-point \\
 ! {\tt hvn} & 3D & [m]& new layer height in V-point \\
 ! {\tt hcc} & 3D &[-] & hydrostatic consistency index in T-points\\
-! {\tt uuEx} & 3D & [m$^2$s$^{-2}$] & sum of advection and 
+! {\tt uuEx} & 3D & [m$^2$s$^{-2}$] & sum of advection and
 ! diffusion for $u$-equation\\
-! {\tt vvEx} & 3D &  [m$^2$s$^{-2}$]& sum of advection and 
+! {\tt vvEx} & 3D &  [m$^2$s$^{-2}$]& sum of advection and
 ! diffusion for $v$-equation\\
 ! {\tt num} & 3D &  [m$^2$s$^{-1}$]& eddy viscosity on $w$-points
 ! $\nu_t$\\
@@ -68,9 +68,9 @@
 ! matter\\
 ! {\tt uadv} & 3D & [m\,s$^{-1}$] & interpolated $x$-component of
 ! momentum advection velocity \\
-! {\tt vadv} & 3D &  [m\,s$^{-1}$]& interpolated $y$-component of 
+! {\tt vadv} & 3D &  [m\,s$^{-1}$]& interpolated $y$-component of
 ! momentum advection velocity \\
-! {\tt wadv} & 3D &  [m\,s$^{-1}$]& interpolated  vertical component of 
+! {\tt wadv} & 3D &  [m\,s$^{-1}$]& interpolated  vertical component of
 ! momentum advection velocity \\
 ! {\tt huadv} & 3D &[m] & interpolated height of advective flux
 ! layer ($x$-component) \\

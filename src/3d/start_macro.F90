@@ -18,12 +18,12 @@
 ! {\tt ssuo}, {\tt ssun}, {\tt ssvo} and {\tt ssvn}, where {\tt e},
 ! {\tt u} and {\tt v} stand for T-, U- and V-point and {\tt o} and
 ! {\tt n} for old and new, respectively, see also the description of
-! {\tt variables\_3d} in section \ref{sec-variables-3d} on page 
+! {\tt variables\_3d} in section \ref{sec-variables-3d} on page
 ! \pageref{sec-variables-3d}.
 !
 ! Furthermore, the vertically integrated transports {\tt Uint}
 ! and {\tt Vint} are here divided by the number of micro time
-! steps per macro time step, {\tt M}, in order to obtain 
+! steps per macro time step, {\tt M}, in order to obtain
 ! the time-averaged transports.
 !
 !

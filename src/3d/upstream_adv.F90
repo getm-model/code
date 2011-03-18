@@ -20,33 +20,33 @@
 ! \left \{
 ! \begin{array}{ll}
 ! c_{i,j,k} & \mbox{ for } p_{i,j,k} \geq 0, \\ \\
-! c_{i+1,j,k} & \mbox{ else, } 
+! c_{i+1,j,k} & \mbox{ else, }
 ! \end{array}
 ! \right.
 ! \end{equation}
-! 
+!
 ! \begin{equation}\label{vflux_upstream}
 ! c^v_{i,j,k}=
 ! \left \{
 ! \begin{array}{ll}
 ! c_{i,j,k} & \mbox{ for } q_{i,j,k} \geq 0, \\ \\
-! c_{i,j+1,k} & \mbox{ else, } 
+! c_{i,j+1,k} & \mbox{ else, }
 ! \end{array}
 ! \right.
 ! \end{equation}
 !
-! and 
-! 
+! and
+!
 ! \begin{equation}\label{wflux_upstream}
 ! c^w_{i,j,k}=
 ! \left \{
 ! \begin{array}{ll}
 ! c_{i,j,k} & \mbox{ for } w_{i,j,k} \geq 0, \\ \\
-! c_{i,j,k+1} & \mbox{ else. } 
+! c_{i,j,k+1} & \mbox{ else. }
 ! \end{array}
 ! \right.
 ! \end{equation}
-! 
+!
 ! It should be noted that the quantities $p_{i,j,k}$, $q_{i,j,k}$,
 ! $w_{i,j,k}$ are defined relative to the finite volume box, and
 ! may (if $c_{i,j,k}$ defines velocities) be calculated by means of
@@ -57,7 +57,7 @@
 ! \begin{equation}\label{adv_one_step}
 ! \begin{array}{l}
 ! h^n_{i,j,k} c^n_{i,j,k} =
-! h^o_{i,j,k} c^o_{i,j,k}  \\ \\ 
+! h^o_{i,j,k} c^o_{i,j,k}  \\ \\
 ! \displaystyle
 ! \qquad - \Delta t \Bigg(
 ! \frac{
@@ -125,12 +125,12 @@
 #endif
 
 ! Note: We do not need to initialize adv.
-!   Tested BJB 2009-09-25. 
+!   Tested BJB 2009-09-25.
 
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
 
-! OMP-NOTE: Master thread can initialize this array, while 
+! OMP-NOTE: Master thread can initialize this array, while
 ! the other threads do useful stuff in the next loop.
 !$OMP MASTER
    adv(:,:,0) = _ZERO_

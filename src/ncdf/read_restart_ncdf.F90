@@ -14,12 +14,12 @@
 !  imin:imax,jmin:jmax - or - from a hotstart file with the same dimensions
 !  as topo.nc (and on the same grid). This allows to use 'ncmerge' to
 !  combine a number of hotstart files in to one - make a new sub-domain
-!  decomposition and use the newly created hotstart file. It might be 
-!  necessary to use 'ncks' to cut the file to be have the same dimensions 
-!  as topo.nc. Allowing for the file naming scheme in GETM links for each 
-!  sub-domain should be made - e.g. ln -s restart.in restart.000.in; ln -s 
+!  decomposition and use the newly created hotstart file. It might be
+!  necessary to use 'ncks' to cut the file to be have the same dimensions
+!  as topo.nc. Allowing for the file naming scheme in GETM links for each
+!  sub-domain should be made - e.g. ln -s restart.in restart.000.in; ln -s
 !  restart.in restart.001.in etc.\newline
-!  Halo-zones are updated using calls to update\_2d\_halo() and 
+!  Halo-zones are updated using calls to update\_2d\_halo() and
 !  update\_3d\_halo().
 !
 ! !USES:

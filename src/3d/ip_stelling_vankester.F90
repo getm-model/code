@@ -9,8 +9,8 @@
 !
 ! !DESCRIPTION:
 !
-! Here, the horizontal gradients of buoyancy, $(\partial_x^* b)_k$ and 
-! $(\partial_y^* b)_k$, are calculated as suggested in 
+! Here, the horizontal gradients of buoyancy, $(\partial_x^* b)_k$ and
+! $(\partial_y^* b)_k$, are calculated as suggested in
 ! Stelling and vanKester (1994).
 ! The horizontal gradient of buoyancy is calculated with defining
 ! kmax non-sloping control volumes in each water column and evaluating the
@@ -70,7 +70,7 @@
 !$OMP    PRIVATE(changed,zltmp,buoyplus,buoyminus)                     &
 !$OMP    PRIVATE(zx,zl,dzl,dzfrac,lvel,m,n)
 
-! OMP-NOTE: Each thread allocates its own HEAP storage for the 
+! OMP-NOTE: Each thread allocates its own HEAP storage for the
 !    vertical work storage:
    allocate(zx(kmax),stat=rc)    ! work array
    if (rc /= 0) stop 'ip_stelling_vankester: Error allocating memory (zx)'
@@ -88,7 +88,7 @@
    if (rc /= 0) stop 'ip_stelling_vankester: Error allocating memory (n)'
 
 ! Test de-init for funky compilers:
-! NOTE: It is not necessary to initialize the 1D work arrays 
+! NOTE: It is not necessary to initialize the 1D work arrays
 !    nor the 3D array zi. BJB 2009-09-26.
 
 ! OMP-NOTE: Master thread initialize while other threads go ahead
@@ -164,7 +164,7 @@
                n(l)=n(l+1)
                if (zl(l+1) .le. zi(i  ,j,m(l))) m(l)=max(1,m(l)-1)
                if (zl(l+1) .le. zi(i+1,j,n(l))) n(l)=max(1,n(l)-1)
-               
+
                if (kcount .gt. 0) then
                   if (zx(kcount) .gt. zl(l)) then
                      lvel(kcount)=l
@@ -181,10 +181,10 @@
                do l=lvel(k+1)-1,lvel(k),-1
                   ! calc b-gradient
                   zlm=_HALF_*dzl(l)+zl(l)
-                  
+
                   if (zz(i+1,j,n(l)).ge.zz(i,j,kmax)) then
                            buoyminus=buoy(i,j,kmax)
-                  else 
+                  else
                     if (zz(i+1,j,n(l)).le.zz(i,j,1)) then
                             buoyminus=buoy(i,j,1)
                     else
@@ -196,7 +196,7 @@
                           kupper=m(l)
                       end if
                       dzz=zz(i,j,kupper)-zz(i,j,klower)
-                      buoyminus=(zz(i+1,j,n(l))-zz(i,j,klower))/dzz * & 
+                      buoyminus=(zz(i+1,j,n(l))-zz(i,j,klower))/dzz * &
                             buoy(i,j,kupper) + &
                             (zz(i,j,kupper)-zz(i+1,j,n(l)))/dzz * &
                             buoy(i,j,klower)
@@ -205,7 +205,7 @@
 
                   if (zz(i,j,m(l)).ge.zz(i+1,j,kmax)) then
                            buoyplus=buoy(i+1,j,kmax)
-                  else 
+                  else
                     if (zz(i,j,m(l)).le.zz(i+1,j,1)) then
                            buoyplus=buoy(i+1,j,1)
                     else
@@ -223,11 +223,11 @@
                            buoy(i+1,j,klower)
                     end if
                   end if
-                  
+
                   dcm=buoy(i+1,j,n(l))-buoyminus
                   dcn=buoyplus-buoy(i,j,m(l))
 
-                  if (dcn*dcm .lt. _ZERO_) then 
+                  if (dcn*dcm .lt. _ZERO_) then
                      db=_ZERO_
                   else
                      if (dcn.ge._ZERO_) then
@@ -236,7 +236,7 @@
                          db=max(dcn,dcm)
                      end if
                   end if
-                  
+
                   !calc p-gradient (even in the dzl of u-point)
                   prgr = prgr + dzl(l)*db*dxm1
                end do
@@ -297,7 +297,7 @@
                n(l)=n(l+1)
                if (zl(l+1) .le. zi(i  ,j,m(l))) m(l)=max(1,m(l)-1)
                if (zl(l+1) .le. zi(i,j+1,n(l))) n(l)=max(1,n(l)-1)
-               
+
                if (kcount .gt. 0) then
                   if (zx(kcount) .gt. zl(l)) then
                      lvel(kcount)=l
@@ -313,10 +313,10 @@
                do l=lvel(k+1)-1,lvel(k),-1
                   ! calc b-gradient
                   zlm=_HALF_*dzl(l)+zl(l)
-                  
+
                   if (zz(i,j+1,n(l)).ge.zz(i,j,kmax)) then
                            buoyminus=buoy(i,j,kmax)
-                  else 
+                  else
                     if (zz(i,j+1,n(l)).le.zz(i,j,1)) then
                             buoyminus=buoy(i,j,1)
                     else
@@ -328,7 +328,7 @@
                           kupper=m(l)
                       end if
                       dzz=zz(i,j,kupper)-zz(i,j,klower)
-                      buoyminus=(zz(i,j+1,n(l))-zz(i,j,klower))/dzz * & 
+                      buoyminus=(zz(i,j+1,n(l))-zz(i,j,klower))/dzz * &
                             buoy(i,j,kupper) + &
                             (zz(i,j,kupper)-zz(i,j+1,n(l)))/dzz * &
                             buoy(i,j,klower)
@@ -337,7 +337,7 @@
 
                   if (zz(i,j,m(l)).ge.zz(i,j+1,kmax)) then
                            buoyplus=buoy(i,j+1,kmax)
-                  else 
+                  else
                     if (zz(i,j,m(l)).le.zz(i,j+1,1)) then
                            buoyplus=buoy(i,j+1,1)
                     else
@@ -355,17 +355,17 @@
                            buoy(i,j+1,klower)
                     end if
                   end if
-                  
+
                   dcm=buoy(i,j+1,n(l))-buoyminus
                   dcn=buoyplus-buoy(i,j,m(l))
 
-                  if (dcn*dcm .lt. _ZERO_) then 
+                  if (dcn*dcm .lt. _ZERO_) then
                      db=_ZERO_
                   else
                      if (dcn.ge._ZERO_) db=min(dcn,dcm)
                      if (dcn.le._ZERO_) db=max(dcn,dcm)
                   end if
-                  
+
                   !calc p-gradient (even in the dzl of u-point)
                   prgr = prgr + dzl(l)*db*dym1
                end do

@@ -9,13 +9,13 @@
 !
 ! !DESCRIPTION:
 !
-! For the discretisation of the momentum advection terms, two 
-! conceptionally different methods have been implemented in GETM. 
+! For the discretisation of the momentum advection terms, two
+! conceptionally different methods have been implemented in GETM.
 ! The first is the straight-forward multidimensional advection
 ! scheme, which is here realised as the first-order upwind scheme,
-! see paragraph {\bf Multidimensional approach} on page 
-! \pageref{uvadvect-multi}. 
-! 
+! see paragraph {\bf Multidimensional approach} on page
+! \pageref{uvadvect-multi}.
+!
 ! In order to make use of the higher-order directional-split
 ! methods for tracers (see section \ref{sec-do-advection-3d}),
 ! an alternative method is implemented, in which the complete advection step
@@ -23,7 +23,7 @@
 ! which are needed for the calculation of the slow terms, see equations
 ! (\ref{SxA}) and (\ref{SyA})) are calculated from this
 ! (see paragraph {\bf Directional-split approach} on page
-! \pageref{uvadvect-direct}). 
+! \pageref{uvadvect-direct}).
 !
 ! The choice which of the two methods to be used is made by means
 ! of the compiler option {\tt UV\_TVD} which has to be set in the
@@ -35,15 +35,15 @@
 !
 ! When working with the option {\tt SLICE\_MODEL}, the calculation of
 ! all gradients in $y$-direction is suppressed.
-! 
-! \paragraph{Multidimensional approach}\label{uvadvect-multi} 
-! 
+!
+! \paragraph{Multidimensional approach}\label{uvadvect-multi}
+!
 ! The advective terms in the momentum equation are discretised in
-! a momentum-conservative form. This is carried out here for the 
-! advective terms in the $u$-equation (\ref{uEqviCurvi}) and the 
+! a momentum-conservative form. This is carried out here for the
+! advective terms in the $u$-equation (\ref{uEqviCurvi}) and the
 ! $v$-equation (\ref{vEqviCurvi}) (after multiplying these
-! equations with $mn$). 
-! 
+! equations with $mn$).
+!
 ! First advection term in (\ref{uEqviCurvi}):
 ! \begin{equation}
 ! \begin{array}{l}
@@ -57,27 +57,27 @@
 ! }{\Delta x^u_{i,j}\Delta y^u_{i,j}}
 ! \end{array}
 ! \end{equation}
-! 
+!
 ! For an upwind scheme, the inter-facial velocities which are defined
 ! on T-points are here
 ! calculated as:
-! 
+!
 ! \begin{equation}
 ! \tilde u_{i,j,k}=
 ! \left\{
 ! \begin{array}{ll}
 ! u_{i-1,j,k} & \mbox{ for } \frac12(p_{i,j,k}+p_{i-1,j,k})>0\\ \\
-! u_{i,j,k} & \mbox{ else. } 
+! u_{i,j,k} & \mbox{ else. }
 ! \end{array}
 ! \right.
 ! \end{equation}
-! 
+!
 ! Second advection term in (\ref{uEqviCurvi}):
 ! \begin{equation}
 ! \begin{array}{l}
-! \displaystyle 
-! \left(mn\,\partial_{\cal Y}y\left(\frac{v_kp_k}{m}\right)\right)_{i,j,k}\approx \\ \\ 
-! \displaystyle 
+! \displaystyle
+! \left(mn\,\partial_{\cal Y}y\left(\frac{v_kp_k}{m}\right)\right)_{i,j,k}\approx \\ \\
+! \displaystyle
 ! \quad
 ! \frac{
 ! \frac12(q_{i+1,j,k}+q_{i,j,k})\tilde u_{i,j,k}\Delta x^+_{i,j}-
@@ -85,27 +85,27 @@
 ! }{\Delta x^u_{i,j}\Delta y^u_{i,j}}
 ! \end{array}
 ! \end{equation}
-! 
+!
 ! For an upwind scheme, the inter-facial velocities which are defined on
 ! X-points are here
 ! calculated as:
-! 
+!
 ! \begin{equation}
 ! \tilde u_{i,j,k}=
 ! \left\{
 ! \begin{array}{ll}
 ! u_{i,j,k} & \mbox{ for } \frac12(q_{i+1,j,k}+q_{i,j,k})>0\\ \\
-! u_{i,j+1,k} & \mbox{ else. } 
+! u_{i,j+1,k} & \mbox{ else. }
 ! \end{array}
 ! \right.
 ! \end{equation}
-! 
+!
 ! First advection term in (\ref{vEqviCurvi}):
 ! \begin{equation}
 ! \begin{array}{l}
-! \displaystyle 
-! \left(mn\,\partial_{\cal X}\left(\frac{v_kq_k}{n}\right)\right)_{i,j,k}\approx \\ \\ 
-! \displaystyle 
+! \displaystyle
+! \left(mn\,\partial_{\cal X}\left(\frac{v_kq_k}{n}\right)\right)_{i,j,k}\approx \\ \\
+! \displaystyle
 ! \quad
 ! \frac{
 ! \frac12(p_{i,j+1,k}+p_{i,j,k})\tilde v_{i,j,k}\Delta y^+_{i,j}-
@@ -113,21 +113,21 @@
 ! }{\Delta x^v_{i,j}\Delta y^v_{i,j}}
 ! \end{array}
 ! \end{equation}
-! 
+!
 ! For an upwind scheme, the interfacial velocities which are defined on
 ! X-points are here
 ! calculated as:
-! 
+!
 ! \begin{equation}
 ! \tilde v_{i,j,k}=
 ! \left\{
 ! \begin{array}{ll}
 ! v_{i,j,k} & \mbox{ for } \frac12(p_{i+1,j,k}+p_{i,j,k})>0\\ \\
-! v_{i+1,j,k} & \mbox{ else. } 
+! v_{i+1,j,k} & \mbox{ else. }
 ! \end{array}
 ! \right.
 ! \end{equation}
-! 
+!
 ! Second advection term in (\ref{vEqviCurvi}):
 ! \begin{equation}
 ! \begin{array}{l}
@@ -141,33 +141,33 @@
 ! }{\Delta x^v_{i,j}\Delta y^v_{i,j}}
 ! \end{array}
 ! \end{equation}
-! 
+!
 ! For an upwind scheme, the interfacial velocities which are defined
 ! on T-points are here
 ! calculated as:
-! 
+!
 ! \begin{equation}
 ! \tilde v_{i,j,k}=
 ! \left\{
 ! \begin{array}{ll}
 ! v_{i,j-1,k} & \mbox{ for } \frac12(q_{i,j,k}+q_{i,j-1,k})>0\\ \\
-! v_{i,j,k} & \mbox{ else. } 
+! v_{i,j,k} & \mbox{ else. }
 ! \end{array}
 ! \right.
 ! \end{equation}
-! 
+!
 ! The vertical advection terms in equations (\ref{uEqviCurvi})
 ! and (\ref{vEqviCurvi})
-! can be discretised in an upstream scheme as well. 
-! 
-! Vertical advective flux in (\ref{uEqviCurvi}): 
+! can be discretised in an upstream scheme as well.
+!
+! Vertical advective flux in (\ref{uEqviCurvi}):
 ! \begin{equation}
 ! \left(\bar w_{k} \tilde u_{k}\right)_{i,j}\approx
-! \frac12(w_{i+1,j,k}+w_{i,j,k})\tilde u_{i,j,k} 
+! \frac12(w_{i+1,j,k}+w_{i,j,k})\tilde u_{i,j,k}
 ! \end{equation}
-! 
-! with 
-! 
+!
+! with
+!
 ! \begin{equation}
 ! \tilde u_{i,j,k}=
 ! \left\{
@@ -177,15 +177,15 @@
 ! \end{array}
 ! \right.
 ! \end{equation}
-! 
-! Vertical advective flux in (\ref{vEqviCurvi}): 
+!
+! Vertical advective flux in (\ref{vEqviCurvi}):
 ! \begin{equation}
 ! \left(\bar w_{k} \tilde v_{k}\right)_{i,j}\approx
-! \frac12(w_{i,j+1,k}+w_{i,j,k})\tilde v_{i,j,k} 
+! \frac12(w_{i,j+1,k}+w_{i,j,k})\tilde v_{i,j,k}
 ! \end{equation}
-! 
-! with 
-! 
+!
+! with
+!
 ! \begin{equation}
 ! \tilde v_{i,j,k}=
 ! \left\{
@@ -195,27 +195,27 @@
 ! \end{array}
 ! \right.
 ! \end{equation}
-! 
-! 
-! \paragraph{Directional-split approach}\label{uvadvect-direct} 
-! 
+!
+!
+! \paragraph{Directional-split approach}\label{uvadvect-direct}
+!
 ! Multidimensional treatment of advective terms in three-dimensional
 ! models is often quite unhandy, especially when higher-order
 ! advection schemes are needed. On the other hand, directional-split
 ! methods (which update the advected fields
 ! in each directional step and then "forget" the advection terms)
-! as discussed in section \ref{sec-do-advection-3d} on page 
-! \pageref{sec-do-advection-3d}, 
-! cannot directly be used 
+! as discussed in section \ref{sec-do-advection-3d} on page
+! \pageref{sec-do-advection-3d},
+! cannot directly be used
 ! for momentum advection when the models are based on mode splitting as
-! e.g.\ GETM. The reason for this is that the three-dimensional 
+! e.g.\ GETM. The reason for this is that the three-dimensional
 ! advection terms are also needed for calculating the slow terms of the
-! barotropic (external) mode, see equations (\ref{SxA}) and (\ref{SyA}). 
-! 
+! barotropic (external) mode, see equations (\ref{SxA}) and (\ref{SyA}).
+!
 ! The procedure suggested here is as follows. First, the pure momentum advection
 ! equations are formally solved with the directional-split method
 ! described in section \ref{sec-do-advection-3d}:
-! 
+!
 ! \begin{equation}\label{uEqvi_adv}
 ! \begin{array}{l}
 ! \partial_t p_k
@@ -224,30 +224,30 @@
 ! = 0,
 ! \end{array}
 ! \end{equation}
-! 
+!
 ! \begin{equation}\label{vEqvi_adv}
 ! \partial_t q_k
 ! +\partial_x(u_kq_k)+\partial_y(v_kq_k)
 ! +\bar w_k  \tilde v_k -\bar w_{k-1}  \tilde v_{k-1}
 ! =0.
 ! \end{equation}
-! 
-! The new solutions $\hat p_{i,j,k}$ and $\hat q_{i,j,k}$ 
+!
+! The new solutions $\hat p_{i,j,k}$ and $\hat q_{i,j,k}$
 ! are however not further used, but instead the resulting advective terms
-! $-(\hat p_{i,j,k}-p_{i,j,k})/\Delta t$ and 
+! $-(\hat p_{i,j,k}-p_{i,j,k})/\Delta t$ and
 ! $-(\hat q_{i,j,k}-q_{i,j,k})/\Delta t$
 ! are later applied to the momentum equations (together with other
 ! processes such as horizontal diffusion, pressure gradients, etc.)
 ! and also used for the calculation of the slow terms in
-! (\ref{SxA}) and (\ref{SyA}). 
-! 
+! (\ref{SxA}) and (\ref{SyA}).
+!
 ! With this method, all higher-order directional-split advection schemes
-! are now available for the momentum advection. The advective 
+! are now available for the momentum advection. The advective
 ! fluxes needed for this have to be averaged from the conservative
 ! advective fluxes resulting from the continuity equation
 ! Continuity will
-! still be retained due to the linearity of the continuity equation.    
-! 
+! still be retained due to the linearity of the continuity equation.
+!
 ! !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,ax
@@ -300,17 +300,17 @@
 #ifdef UV_TVD
 
    dti = _ONE_/dt
-#if defined(SPHERICAL) || defined(CURVILINEAR) 
+#if defined(SPHERICAL) || defined(CURVILINEAR)
 #else
    dxdyi = _ONE_/(dx*dy)
 #endif
 
-! Note: With the present implementation, we do not need to 
-!  initialize these arrays: PP, azadv, auadv, avadv, dxuadv, 
+! Note: With the present implementation, we do not need to
+!  initialize these arrays: PP, azadv, auadv, avadv, dxuadv,
 !  dxvadv, dyuadv, dyvadv, area_inv.  Tested BJB 2009-09-25.
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,rc)
-   
+
 ! Here begins dimensional split advection for u-velocity
    do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
@@ -347,7 +347,7 @@
          azadv(i,j)=au(i,j)
          if (i.lt.imax+HALO) auadv(i,j)=az(i+1,j)
          avadv(i,j)=ax(i,j)
-#if defined(SPHERICAL) || defined(CURVILINEAR) 
+#if defined(SPHERICAL) || defined(CURVILINEAR)
          dxuadv(i,j)=dxc(i,j)
          dxvadv(i,j)=dxx(i,j)
          dyuadv(i,j)=dyc(i,j)
@@ -663,7 +663,7 @@
 
 ! Each thread must deallocate its own HEAP storage:
    deallocate(www,stat=rc)
-   if (rc /= 0) stop 'uu_advect_3d: Error deallocating memory (www)'      
+   if (rc /= 0) stop 'uu_advect_3d: Error deallocating memory (www)'
 
 !$OMP END PARALLEL
 #endif  ! End of three-dimensional first-order upstream

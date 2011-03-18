@@ -9,9 +9,9 @@
                        hun,uu,missing,vel)
 !
 ! !DESCRIPTION:
-! This routine linearly interpolates the velocity at $u$-points to the $T$-points, 
+! This routine linearly interpolates the velocity at $u$-points to the $T$-points,
 ! whenever the mask at the $T$-points is different from zero. Otherwise, the values
-! are filled with the "missing value", {\tt missing}. The result is written to the 
+! are filled with the "missing value", {\tt missing}. The result is written to the
 ! output argument {\tt vel}, which is single precision vector for storage in netCDF.
 !
 ! !USES:
@@ -43,8 +43,8 @@
       do j=jmin,jmax
          do i=imin,imax
          if ( az(i,j) .gt. 0 .and. k .ge. kmin(i,j) ) then
-               ul        = uu(i-1,j,k)/(hun(i-1,j,k)+eps)                     
-               ur        = uu(i  ,j,k)/(hun(i  ,j,k)+eps)                     
+               ul        = uu(i-1,j,k)/(hun(i-1,j,k)+eps)
+               ur        = uu(i  ,j,k)/(hun(i  ,j,k)+eps)
                vel(i,j,k) = 0.5*(ul+ur)
             else
                vel(i,j,k) = missing

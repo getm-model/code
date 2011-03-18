@@ -250,7 +250,7 @@
          status = nf90_inq_varid(ncid,'xx',id)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &
                                        "save_grid_ncdf()","xx_id -")
-         edges(1) = edges(1) + 1 
+         edges(1) = edges(1) + 1
          edges(2) = edges(2) + 1
          status = nf90_put_var(ncid,id,xx(-1+_IRANGE_,-1+_JRANGE_),start,edges)
          if (status .ne. NF90_NOERR) call netcdf_error(status,            &

@@ -8,9 +8,9 @@
 !
 ! !DESCRIPTION:
 !  This is a wrapper routine to read the bathymetry file
-!  {\tt filename} containing the bathymetry and grid infformation. 
-!  The only thing it actually does is calling the specialised routines 
-!  according to the {\tt filetype}. Presently only NetCDF format is 
+!  {\tt filename} containing the bathymetry and grid infformation.
+!  The only thing it actually does is calling the specialised routines
+!  according to the {\tt filetype}. Presently only NetCDF format is
 !  supported
 !
 ! !USES:

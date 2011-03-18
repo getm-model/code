@@ -11,7 +11,7 @@
 !  Print the open boundary information. This routine is called twice -
 !  first time with the global boundary infromation and second time
 !  with the local boundary information. In the case of a serial run the
-!  info is identical - in the case of a parallel run the open boundary 
+!  info is identical - in the case of a parallel run the open boundary
 !  information for a each sub-domain will be printed.
 !
 ! !USES:

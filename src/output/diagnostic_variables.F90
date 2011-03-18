@@ -8,7 +8,7 @@
    module diagnostic_variables
 !
 ! !DESCRIPTION:
-!  This modules serves as a container for diagnostic variables. It is the 
+!  This modules serves as a container for diagnostic variables. It is the
 !  responsibillity of the subroutine(s) using these variables to properly
 !  allocate memory. Have a look at {\tt .../src/output/calc\_mean\_fields.F90}.
 !

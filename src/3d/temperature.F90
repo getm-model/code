@@ -8,11 +8,11 @@
    module temperature
 !
 ! !DESCRIPTION:
-!  
+!
 ! In this module, the temperature equation is processed by
 ! reading in the namelist {\tt temp} and initialising the temperature field
-! (this is done in {\tt init\_temperature}), 
-! and calculating the advection-diffusion-equation, which includes 
+! (this is done in {\tt init\_temperature}),
+! and calculating the advection-diffusion-equation, which includes
 ! penetrating short-wave radiation as source term (see {\tt do\_temperature}).
 !
 ! !USES:
@@ -66,11 +66,11 @@
 ! {\tt temp} is read from {\tt getm.inp}. Then, depending on the
 ! {\tt temp\_method}, the temperature field is read from a
 ! hotstart file ({\tt temp\_method}=0), initialised with a constant value
-! ({\tt temp\_method}=1), initialised and interpolated 
+! ({\tt temp\_method}=1), initialised and interpolated
 ! with horizontally homogeneous
 ! temperature from a given temperature profile ({\tt temp\_method}=2),
 ! or read in and interpolated from a 3D netCDF field ({\tt temp\_method}=3).
-! Finally, a number of sanity checks are performed for the chosen 
+! Finally, a number of sanity checks are performed for the chosen
 ! temperature advection schemes.
 !
 ! !USES:
@@ -290,32 +290,32 @@ temp_field_no=1
    subroutine do_temperature(n)
 !
 ! !DESCRIPTION:
-!  
+!
 ! Here, one time step for the temperature equation is performed.
 ! First, preparations for the call to the advection schemes are
 ! made, i.e.\ calculating the necessary metric coefficients.
 ! After the call to the advection schemes, which actually perform
 ! the advection (and horizontal diffusion) step as an operational
-! split step, the solar radiation at the interfaces ({\tt rad(k)}) 
+! split step, the solar radiation at the interfaces ({\tt rad(k)})
 ! is calculated
-! from given surface radiation ({\tt swr\_loc}) 
+! from given surface radiation ({\tt swr\_loc})
 ! by means of a double exponential
-! approach, see equation (\ref{Light}) on page \pageref{Light}). 
+! approach, see equation (\ref{Light}) on page \pageref{Light}).
 ! An option to reflect part of the short wave radiation that reaches the
 ! bottom has been implemented. In very shallow waters - or with very clear
-! waters - a significant part of the incoming radiation will reach the 
-! bottom. Setting swr\_bot\_refl\_frac to a value between 0 and 1 will 
-! reflect this fraction of what ever the value of SWR is at the bottom. 
+! waters - a significant part of the incoming radiation will reach the
+! bottom. Setting swr\_bot\_refl\_frac to a value between 0 and 1 will
+! reflect this fraction of what ever the value of SWR is at the bottom.
 ! The default value of swr\_bot\_refl\_frac is 0.
-! The reflection is only done if the ratio between the surface and bottom 
-! values of SWR is greater than swr\_min\_bot\_frac (default 0.01). 
-! Furthermore, the surface heat flux {\tt sfl\_loc} is given a 
+! The reflection is only done if the ratio between the surface and bottom
+! values of SWR is greater than swr\_min\_bot\_frac (default 0.01).
+! Furthermore, the surface heat flux {\tt sfl\_loc} is given a
 ! value.
 ! The sea surface temperature is limited by the freezing point
 ! temperature (as a most primitive sea ice model). The next
 ! step is to set up the tri-diagonal matrix for calculating the
 ! new temperature by means of a semi-implicit central scheme for the
-! vertical diffusion. Source terms which appear on the right hand sides 
+! vertical diffusion. Source terms which appear on the right hand sides
 ! are due to the divergence of the solar radiation at the interfaces.
 ! The subroutine is completed by solving the tri-diagonal linear
 ! equation by means of a tri-diagonal solver.
@@ -348,7 +348,7 @@ temp_field_no=1
    REALTYPE                  :: delxu(I2DFIELD),delxv(I2DFIELD)
    REALTYPE                  :: delyu(I2DFIELD),delyv(I2DFIELD)
    REALTYPE                  :: area_inv(I2DFIELD)
-! OMP-NOTE: The pointer declarations is to allow each omp thread to 
+! OMP-NOTE: The pointer declarations is to allow each omp thread to
 !   have its own work storage (over a vertical).
    REALTYPE, POINTER         :: Res(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
@@ -388,8 +388,8 @@ temp_field_no=1
    if (do_mixing_analysis) then
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
-! OMP-note: The following array-based line could be implemented 
-!    with OMP as a WORKSHARE construct. However, it would require a dedicated 
+! OMP-note: The following array-based line could be implemented
+!    with OMP as a WORKSHARE construct. However, it would require a dedicated
 !    PARALLEL region (as the various advection schemes have their own regions),
 !    so the overhead of the contruct would be rather large.
       T2 = T**2
@@ -406,14 +406,14 @@ temp_field_no=1
 
    if (do_mixing_analysis) then
       call toc(TIM_TEMP)
-      call tic(TIM_MIXANALYSIS)        
+      call tic(TIM_MIXANALYSIS)
       call numerical_mixing(T2,T,nummix3d_T,nummix2d_T)
       call physical_mixing(T,avmolt,phymix3d_T,phymix2d_T)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
    end if
 
-! OMP-NOTE: Pointer definitions and allocation so that each thread can 
+! OMP-NOTE: Pointer definitions and allocation so that each thread can
 !           get its own work memory.
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j,k,rc, zz,swr_loc,shf_loc)                         &
@@ -438,7 +438,7 @@ temp_field_no=1
    if (rc /= 0) stop 'do_temperature: Error allocating memory (rad1d)'
 
 ! Note: We do not need to initialize these work arrays.
-!   Tested BJB 2009-09-25. 
+!   Tested BJB 2009-09-25.
 
 !  Solar radiation and vertical diffusion of temperature
 
@@ -469,7 +469,7 @@ temp_field_no=1
 
             shf_loc=shf(i,j)
 
-            if (T(i,j,kmax).le.-0.0575*S(i,j,kmax)) then  ! use most primitive 
+            if (T(i,j,kmax).le.-0.0575*S(i,j,kmax)) then  ! use most primitive
                                                           ! sea ice model ...
                shf_loc=max(_ZERO_,shf_loc)
             end if

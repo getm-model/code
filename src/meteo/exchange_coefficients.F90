@@ -13,20 +13,20 @@
 !  and $Pa$). The scheme used to get the required variables is as follows:
 !  \begin{itemize}
 !     \item We have sst, wind, air temperature
-!     \item We calculate the saturation vapor pressure (svp(T) based on 
+!     \item We calculate the saturation vapor pressure (svp(T) based on
 !           the sea surface temperature.
 !     \item We calculate the specific humidity valid for the sst - using
 !           the just calculated the saturation vapor pressure - unit must
 !           be [kg/kg]
 !     \item We have some measure of the humidity of the air - either
 !           specific humidity at air temperature, relative humidity or
-!           wet bulb tmperature. This needs to be converted to specific 
+!           wet bulb tmperature. This needs to be converted to specific
 !           humidity at 2m.
 !     \item In the case of precipitation, we compute the sensible heatflux
 !           due to the additional water, assuming that the rain has the same
 !           temperature as the air.
 !  \end{itemize}
-!  
+!
 !  The following formulaes are used (for the saturation vapor pressure
 !  a large number of different formulaes exists):
 !  \begin{itemize}
@@ -182,7 +182,7 @@
    case (3)
       ! Piece of code taken from HAMSOM for calculating relative
       ! humidity from dew point temperature and dry air temperature.
-      ! It must be sure that hum is dew point temperature in Kelvin 
+      ! It must be sure that hum is dew point temperature in Kelvin
       ! in the next line ...
 !       use dew in degC
       if (hum .lt. 100.) then
@@ -220,9 +220,9 @@
 !     Calculate the SVP at wet bulb temp then
 !     use the psychrometer formula to get vapour pressure
 !     See Smithsonian Met tables 6th Edition pg 366 eqn 3
-!     Make sure this is in degC 
+!     Make sure this is in degC
       if (hum .lt. 100 ) then
-         twet=hum 
+         twet=hum
          twet_k=hum+KELVIN
       else
          twet=hum-KELVIN

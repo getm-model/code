@@ -15,27 +15,27 @@
 !  [$W/m^2$] and surface heat fluxes [$W/m^2$] on the computational grid.
 !  The module provides 3 public functions - \emph{init\_meteo()},
 !  \emph{do\_meteo()} and \emph{clean\_meteo()} - and a number of public
-!  data members to hold the actual meteorological fields. Also included 
-!  in the module are various constants related to calculating the 
+!  data members to hold the actual meteorological fields. Also included
+!  in the module are various constants related to calculating the
 !  meteorological forcing.
 !  Information about the calculation domain is obtained from the module
 !  \emph{domain} and time related information comes from the module
 !  \emph{time}.
-!  The meteo module is initialised via a call to \emph{init\_meteo()} 
-!  that will read a namelist providing all necessary information. Memory 
+!  The meteo module is initialised via a call to \emph{init\_meteo()}
+!  that will read a namelist providing all necessary information. Memory
 !  allocation is also done in \emph{init\_meteo()}.
-!  Obtaining the actual forcing - either by reading from a file or 
-!  calculating is done via calls to \emph{do\_meteo()}. The actual 
-!  reading of external data from files is separated completely from 
-!  \emph{do\_meteo()} and is done in the main time loop via a call to  
+!  Obtaining the actual forcing - either by reading from a file or
+!  calculating is done via calls to \emph{do\_meteo()}. The actual
+!  reading of external data from files is separated completely from
+!  \emph{do\_meteo()} and is done in the main time loop via a call to
 !  \emph{do\_input()} where all external file input is handled.
-!  \emph{meteo} supplies 3 variables which can be used by routines for 
-!  reading variables. \emph{new\_meteo} is a logical switch which should 
-!  be set to .true. when new fields have been read. \emph{t\_1} and 
-!  \emph{t\_2} holds the time (in seconds) since the model run of the two 
-!  fields surrounding the actual model time - to be used by the temporal 
-!  interpolation. Finally \emph{clean\_meteo()} should be called when 
-!  the simulation is over as part of the overall procedure of finalising 
+!  \emph{meteo} supplies 3 variables which can be used by routines for
+!  reading variables. \emph{new\_meteo} is a logical switch which should
+!  be set to .true. when new fields have been read. \emph{t\_1} and
+!  \emph{t\_2} holds the time (in seconds) since the model run of the two
+!  fields surrounding the actual model time - to be used by the temporal
+!  interpolation. Finally \emph{clean\_meteo()} should be called when
+!  the simulation is over as part of the overall procedure of finalising
 !  the model run.
 !
 ! !SEE ALSO:
@@ -356,7 +356,7 @@
 !  The surface heat flux is the sum of the latent and sensible heat + the
 !  net back radiation. Additional if available the surface freshwater fluxes
 !  can be set const or read in from the meteo file. The unit in the meteo file
-!  is assumed to be meter (/day).  
+!  is assumed to be meter (/day).
 !  The structure of this routine looks at first glance a bit more complicated
 !  than should be necessary. The main reason is we need two fields in order to
 !  do any time interpolation - which explains the use of \emph{first}.
@@ -400,7 +400,7 @@
    write(debug,*) 'do_meteo() # ',Ncall
 #endif
    call tic(TIM_METEO)
-! OMP-NOTE: In this routine some loops, which have to do with read-in of 
+! OMP-NOTE: In this routine some loops, which have to do with read-in of
 !    new meteo have not been threaded due to use of heap-allocated scalars
 !    in exchange_coefficients() and fluxes().
 !    However, for the cases I have tested, calls to short_wave_radiation
@@ -472,7 +472,7 @@
                   tcc_new  = tcc
                   if (have_sst) then
 ! OMP-NOTE: This is an expensive loop, but we cannot thread it as long
-!    as exchange_coefficients() and fluxes() pass information through 
+!    as exchange_coefficients() and fluxes() pass information through
 !    scalars in the meteo module. BJB 2009-09-30.
                      do j=jmin,jmax
                         do i=imin,imax
@@ -484,7 +484,7 @@
                                       t2(i,j),tcc(i,j),sst(i,j),precip(i,j), &
                                       shf(i,j),tausx(i,j),tausy(i,j),evap(i,j))
                            else
-! BJB-TODO: This part of the if-block could be omitted, if the entire fields 
+! BJB-TODO: This part of the if-block could be omitted, if the entire fields
 ! are zero'ed out during init (unless az(i,j) may change with time).
                               shf(i,j) = _ZERO_
                               tausx(i,j) = _ZERO_
@@ -587,7 +587,7 @@
                      tausy_old(:,j) = tausy_old(:,j) + d_tausy(:,j)
                      swr_old(:,j) = swr_old(:,j) + d_swr(:,j)
                      shf_old(:,j) = shf_old(:,j) + d_shf(:,j)
-                  
+
                      d_tausx(:,j) = tausx(:,j) - tausx_old(:,j)
                      d_tausy(:,j) = tausy(:,j) - tausy_old(:,j)
                      d_swr(:,j) = swr(:,j) - swr_old(:,j)

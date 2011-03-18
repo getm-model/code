@@ -8,7 +8,7 @@
    subroutine mirror_bdy_2d(f,tag)
 !
 ! !DESCRIPTION:
-!  Some variables are mirrored outside the calculation domain in the 
+!  Some variables are mirrored outside the calculation domain in the
 !  vicinity of the open boundaries. This is to avoid if statements
 !  when calculating e.g. the Coriolis terms and advection.
 !  This routines mirrors 2d variables.

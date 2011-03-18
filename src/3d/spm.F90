@@ -22,7 +22,7 @@
 !  where erosion and sedimentation fluxes are modelled following
 !  \cite{KRONE62} as functions of the bottom shear stress $\tau_b$.
 !  In (\ref{Bottom_SPM}), $w_s$ is a positive settling velocity. So far,
-!  GETM is only coded for constant settling velocities. 
+!  GETM is only coded for constant settling velocities.
 !  The erosion flux is only non-zero when
 !  the bottom shear stress exceeds a critical shear stress $\tau_{ce}$:
 !  \begin{equation}\label{ero_flux}
@@ -67,7 +67,7 @@
 !  The settling of SPM is linearly reduced towards zero when the water
 !  depth is between the critical and the minimum water depth. This is
 !  done by means of multiplication of the settling velocity with $\alpha$,
-!  (see the definition in equation (\ref{alpha})). 
+!  (see the definition in equation (\ref{alpha})).
 !
 !  It is possible to take into account the impact of sediments on density by
 !  setting {\tt spm\_dens} to {\tt .true}. The modified density is computed as:
@@ -121,7 +121,7 @@
    integer                 :: spm_mfloc=4
 !
 ! !REVISION HISTORY:
-!  Original author(s): Manuel Ruiz Villarreal, Karsten Bolding 
+!  Original author(s): Manuel Ruiz Villarreal, Karsten Bolding
 !                      and Hans Burchard
 !
 !EOP
@@ -145,17 +145,17 @@
 ! hotstart file ({\tt spm\_init\_method}=0), initialised with a constant value
 ! ({\tt spm\_init\_method}=1), initialised and interpolated
 ! with horizontally homogeneous
-! suspended matter from a given suspended matter profile 
+! suspended matter from a given suspended matter profile
 ! ({\tt spm\_init\_method}=2),
-! or read in and interpolated from a 3D netCDF field 
+! or read in and interpolated from a 3D netCDF field
 ! ({\tt spm\_init\_method}=3).
 ! Then, some specifications for the SPM bottom pool are given, such as that
-! there should be no initial SPM pool on tidal flats.  
+! there should be no initial SPM pool on tidal flats.
 !
 ! As the next step, a number of sanity checks is performed for the chosen
 ! suspended matter advection schemes.
 !
-! Finally, the settling velocity is directly prescibed or calculated 
+! Finally, the settling velocity is directly prescibed or calculated
 ! by means of the \cite{ZANKE77} formula.
 !
 ! !USES:
@@ -381,15 +381,15 @@
 ! After the call to the advection schemes, which actually perform
 ! the advection (and horizontal diffusion) step as an operational
 ! split step, the fluxes between bottom SPM pool and the suspended matter
-! in the water column are calculated. 
+! in the water column are calculated.
 ! Afterwards, the tri-diagonal matrix for calculating the
 ! new suspended matter by means of a semi-implicit central scheme for the
 ! vertical diffusion is set up.
 ! There are no source terms on the right hand sides.
 ! The subroutine is completed by solving the tri-diagonal linear
 ! equation by means of a tri-diagonal solver.
-! 
-! Optionally, the density of the sediment-laden water may be 
+!
+! Optionally, the density of the sediment-laden water may be
 ! corrected by the sediment density, see eq.\ (\ref{SPM_density}).
 !
 ! Finally, some special settings for single test cases are made via

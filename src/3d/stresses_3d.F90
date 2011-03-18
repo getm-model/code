@@ -14,11 +14,11 @@
 ! $\tau_s/\rho_0$ (variable {\tt taus}) and $\tau_b/\rho_0$ (variable {\tt
 ! taub}), respectively, are calculated and interpolated to the T-points.
 ! Input parameters to this routine are {\tt rru} and {tt rrv}, which
-! contain $r\sqrt{u^2+v^2}$ for the U- and V-points, respectively. 
+! contain $r\sqrt{u^2+v^2}$ for the U- and V-points, respectively.
 ! The modules of the surface and bottom stress vectors are calculated
 ! then by means of taking the square root of the sum of the squares of
 ! the stess components. In a similar way also the $x$- and $y$-components
-! of the bottom stress are computed for output. 
+! of the bottom stress are computed for output.
 !
 ! !USES:
    use parameters, only: rho_0
@@ -61,7 +61,7 @@
 
 !  x-component of bottom momentum flux at U-points
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax    
+   do j=jmin,jmax
       do i=imin-1,imax
 
          k          = kumin(i,j)                      ! bottom index
@@ -71,11 +71,11 @@
    enddo
 !$OMP END DO NOWAIT
 
-!  y-component of bottom momentum flux at V-points  
+!  y-component of bottom momentum flux at V-points
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-1,jmax    
+   do j=jmin-1,jmax
       do i=imin,imax
- 
+
          k          = kvmin(i,j)                      ! bottom index
          tauby(i,j) = - vv(i,j,k)/hvn(i,j,k)*rrv(i,j) ! momentum flux
 
@@ -85,7 +85,7 @@
 
 !  stress magnitude
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax    
+   do j=jmin,jmax
       do i=imin,imax
 
 !        lower indices at U- and V-points

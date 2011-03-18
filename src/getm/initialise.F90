@@ -129,7 +129,7 @@
 #endif
 
 !
-! In parallel mode it is imperative to let the instances 
+! In parallel mode it is imperative to let the instances
 ! "say hello" right away. For MPI this changes the working directory,
 ! so that input files can be read.
 !

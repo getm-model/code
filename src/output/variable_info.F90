@@ -9,19 +9,19 @@
 !
 ! !DESCRIPTION:
 !  This module will be used by the GETM output system to obtain information
-!  about variables. Multiple output definitions i.e. hyperslabs and 
+!  about variables. Multiple output definitions i.e. hyperslabs and
 !  variable-lists shall all use the information contained here. The key
 !  to the meta-data is the $name$ i.e. search the array until agreement
 !  between $varinfo$->$name$ and variable name searched for.
-!  This module provides meta data information about all variables GETM 
+!  This module provides meta data information about all variables GETM
 !  that be saved in output files. The specific data for a given variable
 !  is contained in a defined type $varinfo$. $varinfo$ contains a number
-!  of fields including a unique $id$, a $name$, information about the 
+!  of fields including a unique $id$, a $name$, information about the
 !  dimensions of the variable and additional fields that can be used by
 !  NetCDF to give COARDS conforming meta data information.
 !  The $varinfo$ also contains pointer types that can be used to point to
 !  the Fortran variable actually holding the data. For a re-useable type
-!  definition it is necessary to define pointers to 1D, 2D and 3D 
+!  definition it is necessary to define pointers to 1D, 2D and 3D
 !  variables.
 !  The $varinfo\_list$ can be expanded to also include compound variables
 !  i.e. variables that are functions of other variables. In this case the
@@ -88,7 +88,7 @@ contains
    subroutine init_var_info()
 !
 ! !DESCRIPTION:
-!  Here a list meta-data for all possible GETM outputr variables is 
+!  Here a list meta-data for all possible GETM outputr variables is
 !  constructed. The information is put in an array.
 !
    IMPLICIT NONE

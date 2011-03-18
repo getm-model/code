@@ -11,12 +11,12 @@
 !
 ! Here, the sea surface elevation is iterated according to the vertically
 ! integrated continuity equation given in (\ref{Elevation}) on page
-! \pageref{Elevation}. 
+! \pageref{Elevation}.
 !
 ! When working with the option {\tt SLICE\_MODEL}, the elevations
 ! at $j=2$ are copied to $j=3$.
 !
-! Now with consideration of fresh water fluxes (precipitation and 
+! Now with consideration of fresh water fluxes (precipitation and
 ! evaporation). Positive for flux into the water.
 !
 ! !USES:
@@ -59,7 +59,7 @@
 #endif
    call tic(TIM_SEALEVEL)
 
-! OMP-NOTE: This loop does not really improve from threading. 
+! OMP-NOTE: This loop does not really improve from threading.
 ! It is bound by memory access, and everything is nicely
 ! lined up anyway, so we keep it in serial.
    do j=jmin-HALO,jmax+HALO
@@ -77,8 +77,8 @@
    break_flag=0
 #endif
 
-! Presently this loop is only threaded for no-breaks. 
-! If this loop should be threaded with USE_BREAKS, then 
+! Presently this loop is only threaded for no-breaks.
+! If this loop should be threaded with USE_BREAKS, then
 ! a bit of coding and testing is needed (see below) as
 ! it is sliglty more complicated.
 ! The present routine is a small part of the total CPU.
@@ -195,14 +195,14 @@
 !
 ! !DESCRIPTION:
 !
-!  The sea surface elevation (2d) variable is sweeped scanning for 
-!  not-a-number (NaN). NaN values indicate that the integration 
+!  The sea surface elevation (2d) variable is sweeped scanning for
+!  not-a-number (NaN). NaN values indicate that the integration
 !  has become unstable and that it really should be stopped.
 !  First time a NaN value is found, a warning is issued and possibly
-!  the code is stopped. After the first encounter, the sweep is 
+!  the code is stopped. After the first encounter, the sweep is
 !  suspended.
 !
-!  The behaviour of this routine is controlled by the 
+!  The behaviour of this routine is controlled by the
 !  {\tt sealevel\_check} parameter in the {\tt m2d} namelist.
 !
 ! !USES:
@@ -235,9 +235,9 @@
 ! In general checking for NaN is not trivial.
 ! Some compilers allow the use of functions ISNAN or ieee_is_nan.
 ! The functions are not neceassily available for all compilers, so be careful.
-! The approach taken here is to compare against HUGE and 
+! The approach taken here is to compare against HUGE and
 ! then say that the value is *not* NaN if it can compare less than HUGE.
-! However, it is important that the comparison is not removed by the 
+! However, it is important that the comparison is not removed by the
 ! compiler - as it may really test out as "always true" from a compile-
 ! time point of view. Function inlining and other funny stuff done by smart
 ! compilers can make this approach not working.
@@ -295,7 +295,7 @@
          do i=imin,imax
             call sealevel_nandum(z(i,j),ahuge,idum)
             if (idum .eq. 2) then
-! TODO: OMP may be implemented here, but this 
+! TODO: OMP may be implemented here, but this
 ! section would be critical.
 ! Increment counter for NaNs:
 ! Keep at least one point with location (may be overwritten later)
@@ -354,7 +354,7 @@
 !  to spot NaN  values.
 !  Output is 1 or 2, based on which is smaller (a or b, respectively).
 !  The default is 2, and the idea is that "imin=2" should be returned
-!  also if a is NaN. If b=HUGE(b), then this provides a means to detect 
+!  also if a is NaN. If b=HUGE(b), then this provides a means to detect
 !  if a is a denormal number.
 !
 !EOP

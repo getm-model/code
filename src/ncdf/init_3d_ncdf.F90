@@ -158,7 +158,7 @@
 !  hydrostatic consistency criterion
    err = nf90_def_var(ncid,'hcc',NF90_REAL,f4_dims(1:3),hcc_id)
    if (err .NE. NF90_NOERR) go to 10
-   fv = -_ONE_ 
+   fv = -_ONE_
    mv = -_ONE_
    vr(1) = 0.
    vr(2) = 1.
@@ -354,12 +354,12 @@
    if (spm_save) then
       fv = spm_missing
       mv = spm_missing
-      err = nf90_def_var(ncid,'spm_pool',NF90_REAL,f3_dims,spmpool_id) 
+      err = nf90_def_var(ncid,'spm_pool',NF90_REAL,f3_dims,spmpool_id)
       if (err .NE. NF90_NOERR) go to 10
       vr(1) = 0.
       vr(2) = 10.
       call set_attributes(ncid,spmpool_id,long_name='bottom spm pool', &
-                          units='kg/m2', & 
+                          units='kg/m2', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
       vr(1) =  0.
       vr(2) = 30.

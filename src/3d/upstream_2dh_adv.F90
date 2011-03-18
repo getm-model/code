@@ -9,22 +9,22 @@
                            delxv,delyu,delxu,delyv,area_inv,az,AH)
 !
 ! !DESCRIPTION:
-! In this routine, the first-order upstream advection scheme 
+! In this routine, the first-order upstream advection scheme
 ! is applied for the two horizontal directions in
-! one step. The scheme should be positive definite and of 
+! one step. The scheme should be positive definite and of
 ! high resolution. In order to remove truncation errors which might in Wadden
-! Sea applications cause non-monotonicity, a truncation of over- and 
-! undershoots is carried out at the end of this subroutine. Such 
+! Sea applications cause non-monotonicity, a truncation of over- and
+! undershoots is carried out at the end of this subroutine. Such
 ! two-dimensional schemes are advantageous in Wadden Sea applications, since
 ! one-dimensional directional-split schemes might compute negative intermediate
 ! depths.
 !
-! Before or after this 2D-horizontal advection is executed, 
+! Before or after this 2D-horizontal advection is executed,
 ! a 1D vertical advection
 ! step, possibly with another scheme, needs to be carried out.
 !
 ! The advection terms are calculated according to (\ref{u_discr_advect}) and
-! (\ref{v_discr_advect}) and the interface 
+! (\ref{v_discr_advect}) and the interface
 ! fluxes are again calculated according to (\ref{uflux_upstream}) and
 ! (\ref{vflux_upstream}).
 !
@@ -57,7 +57,7 @@
 !
 ! \begin{equation}\label{adv_hor_step_h}
 ! h^n_{i,j,k} =
-! h^o_{i,j,k} 
+! h^o_{i,j,k}
 ! \displaystyle
 ! - \Delta t \Bigg(
 ! \frac{
@@ -132,15 +132,15 @@
  stop
 #endif
 
-! NOTE: With the present implementation it is not necessary 
-!   to initialize flx and fly. Even if they 
+! NOTE: With the present implementation it is not necessary
+!   to initialize flx and fly. Even if they
 !   are set to garbage here, then it does not change the result.
 !      BJB 2009-09-25.
 
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(rc,i,j,k,ii,jj)
 
-! OMP-NOTE: Master thread initializes, while other threads can 
+! OMP-NOTE: Master thread initializes, while other threads can
 !    start on the following two loops.
 !$OMP MASTER
    cmax = -100000*_ONE_
@@ -182,24 +182,24 @@
    end do
 !$OMP BARRIER
 
-   do k=1,kmax 
+   do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
-            if (az(i,j) .eq. 1)  then                                      
+            if (az(i,j) .eq. 1)  then
                do ii=-1,1
                   if (az(i+ii,j).eq.1) then
                      if (f(i+ii,j,k).gt.cmax(i,j,k)) cmax(i,j,k)=f(i+ii,j,k)
                      if (f(i+ii,j,k).lt.cmin(i,j,k)) cmin(i,j,k)=f(i+ii,j,k)
-                  end if 
+                  end if
                end do
                do jj=-1,1,2
                   if (az(i,j+jj).eq.1) then
                      if (f(i,j+jj,k).gt.cmax(i,j,k)) cmax(i,j,k)=f(i,j+jj,k)
                      if (f(i,j+jj,k).lt.cmin(i,j,k)) cmin(i,j,k)=f(i,j+jj,k)
-                  end if 
+                  end if
                end do
-            end if 
+            end if
          end do
       end do
 !$OMP END DO NOWAIT
@@ -207,11 +207,11 @@
 !$OMP BARRIER
 
 
-   do k=1,kmax 
+   do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
-            if (az(i,j) .eq. 1)  then                                      
+            if (az(i,j) .eq. 1)  then
                hio(i,j,k)=hi(i,j,k)
                hi(i,j,k)=hio(i,j,k)                               &
                -dt*((uu(i  ,j,k)*delyu(i  ,j)-uu(i-1,j,k)*delyu(i-1,j)  &
@@ -222,9 +222,9 @@
                     +fly(i,j  ,k)*delxv(i,j  )-fly(i,j-1,k)*delxv(i,j-1)  &
                     )*area_inv(i,j)))/hi(i,j,k)
 ! Force monotonicity, this is needed here for correcting truncations errors:
-               if (f(i,j,k).gt.cmax(i,j,k)) f(i,j,k)=cmax(i,j,k)            
-               if (f(i,j,k).lt.cmin(i,j,k)) f(i,j,k)=cmin(i,j,k)            
-            end if 
+               if (f(i,j,k).gt.cmax(i,j,k)) f(i,j,k)=cmax(i,j,k)
+               if (f(i,j,k).lt.cmin(i,j,k)) f(i,j,k)=cmin(i,j,k)
+            end if
          end do
       end do
 !$OMP END DO NOWAIT

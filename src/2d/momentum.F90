@@ -11,7 +11,7 @@
 !
 ! This small routine calls the $U$-equation and the $V$-equation in an
 ! alternating sequence (UVVUUVVUUVVU), in order to provide higher
-! accuracy and energy conservation for the explicit numerical treatment 
+! accuracy and energy conservation for the explicit numerical treatment
 ! of the Coriolis term.
 !
 ! !USES:
@@ -75,16 +75,16 @@
 ! number of slow terms is calculated. One slight modification is that
 ! for better stability of drying and flooding processes the slow friction
 ! term $S^x_F$ is now also multiplied with the parameter $\alpha$ defined
-! in eq.\ (\ref{alpha}). 
+! in eq.\ (\ref{alpha}).
 !
-! Furthermore, the horizontal pressure gradient $\partial^*_x\zeta$ is 
+! Furthermore, the horizontal pressure gradient $\partial^*_x\zeta$ is
 ! modified in order to
-! support drying and flooding, see figure \ref{figpressgrad} on page 
+! support drying and flooding, see figure \ref{figpressgrad} on page
 ! \pageref{figpressgrad} and the explanations in section \ref{Section_dry}.
 ! $\partial^*_x\zeta$ is now also considering the atmospheric pressure
 ! gradient at sea surface height.
 !
-! For numerical stability reasons, the $U$-momentum equation is here 
+! For numerical stability reasons, the $U$-momentum equation is here
 ! discretised in time such that the
 ! bed friction is treated explicitely:
 !
@@ -96,9 +96,9 @@
 !  \end{equation}
 !
 !  with $U_{Ex}$ combining advection and diffusion of $U$, see routines
-!  {\tt uv\_advect} (section \ref{sec-uv-advect} on page 
-!  \pageref{sec-uv-advect}) and {\tt uv\_diffusion} 
-!  (section \ref{sec-uv-diffusion} on page 
+!  {\tt uv\_advect} (section \ref{sec-uv-advect} on page
+!  \pageref{sec-uv-advect}) and {\tt uv\_diffusion}
+!  (section \ref{sec-uv-diffusion} on page
 !  \pageref{sec-uv-diffusion}). The slow terms
 !  are calculated in the routine {\tt slow\_terms} documented in section
 !  \ref{sec-slow-terms} on page \pageref{sec-slow-terms}.
@@ -153,7 +153,7 @@
 #endif
 
    gammai = _ONE_/gamma
-   
+
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,Uloc)
 
 !$OMP DO SCHEDULE(RUNTIME)
@@ -252,16 +252,16 @@
 ! number of slow terms is calculated. One slight modification is that
 ! for better stability of drying and flooding processes the slow friction
 ! term $S^y_F$ is now also multiplied with the parameter $\alpha$ defined
-! in eq.\ (\ref{alpha}). 
+! in eq.\ (\ref{alpha}).
 !
-! Furthermore, the horizontal pressure gradient $\partial^*_y\zeta$ is 
+! Furthermore, the horizontal pressure gradient $\partial^*_y\zeta$ is
 ! modified in order to
-! support drying and flooding, see figure \ref{figpressgrad} on page 
+! support drying and flooding, see figure \ref{figpressgrad} on page
 ! \pageref{figpressgrad} and the explanations in section \ref{Section_dry}.
 ! $\partial^*_y\zeta$ is now also considering the atmospheric pressure
 ! gradient at sea surface height.
 !
-! For numerical stability reasons, the $V$-momentum equation is here 
+! For numerical stability reasons, the $V$-momentum equation is here
 ! discretised in time such that the
 ! bed friction is treated explicitely:
 !

@@ -11,7 +11,7 @@
 !
 ! Here, the local continuity equation is calculated in order to obtain
 ! the grid-related vertical velocity $\bar w_k$. An layer-integrated equation
-! for this quantity is given as equation (\ref{ContiLayerInt}) which 
+! for this quantity is given as equation (\ref{ContiLayerInt}) which
 ! has been derived
 ! from the differential formulation (\ref{Konti}).
 !
@@ -64,7 +64,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
 
-! OMP-NOTE: k-1 is used at layer k, so we have to conclude 
+! OMP-NOTE: k-1 is used at layer k, so we have to conclude
 !    one layer at a time (wait after each later).
    do k=1,kmax
 #ifdef CALC_HALO_WW
@@ -89,7 +89,7 @@
 !$OMP END DO
    end do
 
-!$OMP END PARALLEL 
+!$OMP END PARALLEL
 
 #ifndef CALC_HALO_WW
    call tic(TIM_WWMOMENTUMH)

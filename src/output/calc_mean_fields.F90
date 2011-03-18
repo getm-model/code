@@ -150,10 +150,10 @@
    end if
 
 !  Sum every macro time step, even less would be okay
-   if(mod(n,M) .eq. 0) then 
+   if(mod(n,M) .eq. 0) then
 
       swrmean = swrmean + swr
-!     AS this has to be checked, if it is the correct ustar, 
+!     AS this has to be checked, if it is the correct ustar,
 !     so we must not divide by rho_0 !!
       ustarmean = ustarmean + sqrt(taub)
       ustar2mean = ustar2mean + (taub)
@@ -172,7 +172,7 @@
       wmean = wmean + ww
 #endif
 
-      humean = humean + hun 
+      humean = humean + hun
       hvmean = hvmean + hvn
       hmean = hmean + hn
 

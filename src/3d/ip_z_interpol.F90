@@ -9,12 +9,12 @@
 !
 ! !DESCRIPTION:
 !
-! Here, the horizontal gradients of buoyancy, $(\partial_x^* b)_k$ and 
+! Here, the horizontal gradients of buoyancy, $(\partial_x^* b)_k$ and
 ! $(\partial_y^* b)_k$, are directly calculated in $z$-coordinates by
 ! linearly interpolating the buoyancies in the vertical to the
 ! evaluation point (which is the interface vertically located between
 ! the velocity points). In the case that extrapolations become
-! necessary near the sloping surface (or more likely) near the sloping 
+! necessary near the sloping surface (or more likely) near the sloping
 ! bottom, then the last regular buoyancy value (surface value or bottom
 ! value) is used.
 !
@@ -46,7 +46,7 @@
 !$OMP    PRIVATE(i,j,k,rc)                                             &
 !$OMP    PRIVATE(grdl,grdu,buoyl,prgr,dxz,dyz,buoyplus,buoyminus, zx)
 
-! OMP-NOTE: Each thread allocates its own HEAP storage for the 
+! OMP-NOTE: Each thread allocates its own HEAP storage for the
 !    vertical work storage:
    allocate(zx(kmax),stat=rc)    ! work array
    if (rc /= 0) stop 'ip_z_interpol: Error allocating memory (zx)'

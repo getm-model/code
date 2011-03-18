@@ -49,44 +49,44 @@
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
-!  Allocates memory (unless {\tt STATIC} is set) for 2D related fields, 
-!  by an include statement. Furthermore all public 2D variables are 
+!  Allocates memory (unless {\tt STATIC} is set) for 2D related fields,
+!  by an include statement. Furthermore all public 2D variables are
 !  initialised to zero. Those are listed in table \ref{table_2d_variables}
 !  on page \pageref{table_2d_variables}.
 !
 !  \begin{table}[h]
 !  \begin{center}
 !  \begin{tabular}{lll}
-! {\tt z } & sea surface elevation in T-point & [m] \\ 
-! {\tt zu } & sea surface elevation in U-point & [m]\\ 
-! {\tt zv } & sea surface elevation in V-point & [m]\\ 
-! {\tt U } & $x$ component of transport in U-point & [m$^2$s$^{-1}$] \\ 
-! {\tt DU } & water depth in U-point & [m] \\ 
-! {\tt fU } & Coriolis term for $V$-equation in V-point & [m$^2$s$^{-2}$] \\ 
-! {\tt SlUx } & slow term for $U$-equation in U-point & [m$^2$s$^{-2}$] \\ 
+! {\tt z } & sea surface elevation in T-point & [m] \\
+! {\tt zu } & sea surface elevation in U-point & [m]\\
+! {\tt zv } & sea surface elevation in V-point & [m]\\
+! {\tt U } & $x$ component of transport in U-point & [m$^2$s$^{-1}$] \\
+! {\tt DU } & water depth in U-point & [m] \\
+! {\tt fU } & Coriolis term for $V$-equation in V-point & [m$^2$s$^{-2}$] \\
+! {\tt SlUx } & slow term for $U$-equation in U-point & [m$^2$s$^{-2}$] \\
 ! {\tt Slru } &slow bottom friction for $U$-equation in U-point &
-! [m$^2$s$^{-2}$]\\ 
-! {\tt V } & $y$ component of transport in V-point & [m$^2$s$^{-1}$]\\ 
-! {\tt DV } & water depth in V-point & [m] \\ 
-! {\tt fV } &  Coriolis term for $U$-equation in U-point & [m$^2$s$^{-2}$]\\ 
-! {\tt SlVx } & slow term for $V$-equation in V-point & [m$^2$s$^{-2}$] \\ 
+! [m$^2$s$^{-2}$]\\
+! {\tt V } & $y$ component of transport in V-point & [m$^2$s$^{-1}$]\\
+! {\tt DV } & water depth in V-point & [m] \\
+! {\tt fV } &  Coriolis term for $U$-equation in U-point & [m$^2$s$^{-2}$]\\
+! {\tt SlVx } & slow term for $V$-equation in V-point & [m$^2$s$^{-2}$] \\
 ! {\tt Slrv } &slow bottom friction for $V$-equation in V-point &
-! [m$^2$s$^{-2}$]\\ 
-! {\tt Uint } & $x$-component of mean transport in U-point & [m$^2$s$^{-1}$]\\ 
-! {\tt Vint } & $y$-component of mean transport in V-point & [m$^2$s$^{-1}$]\\ 
-! {\tt UEx } & sum of explicit terms for for $U$-equation in U-point & [m$^2$s$^{-2}$]\\ 
-! {\tt VEx } &sum of explicit terms for for $V$-equation in V-point & [m$^2$s$^{-2}$]\\ 
-! {\tt ru } & bottom friction for $U$-equation in U-point & [m$^2$s$^{-2}$]\\ 
-! {\tt rv } &bottom friction for $V$-equation in V-point & [m$^2$s$^{-2}$]\\ 
-! {\tt res\_du } & residual depth in U-point & [m]\\ 
+! [m$^2$s$^{-2}$]\\
+! {\tt Uint } & $x$-component of mean transport in U-point & [m$^2$s$^{-1}$]\\
+! {\tt Vint } & $y$-component of mean transport in V-point & [m$^2$s$^{-1}$]\\
+! {\tt UEx } & sum of explicit terms for for $U$-equation in U-point & [m$^2$s$^{-2}$]\\
+! {\tt VEx } &sum of explicit terms for for $V$-equation in V-point & [m$^2$s$^{-2}$]\\
+! {\tt ru } & bottom friction for $U$-equation in U-point & [m$^2$s$^{-2}$]\\
+! {\tt rv } &bottom friction for $V$-equation in V-point & [m$^2$s$^{-2}$]\\
+! {\tt res\_du } & residual depth in U-point & [m]\\
 ! {\tt res\_u } & $x$-component of residual transport in U-point &
-! [m$^2$s$^{-1}$]\\ 
-! {\tt res\_dv } & residual depth in V-point & [m] \\ 
+! [m$^2$s$^{-1}$]\\
+! {\tt res\_dv } & residual depth in V-point & [m] \\
 ! {\tt res\_v } &$y$-component of residual transport in V-point &
-! [m$^2$s$^{-1}$]\\ 
-! {\tt surfdiv } &divergence of surface currents in T-point & [s$^{-1}$]\\ 
+! [m$^2$s$^{-1}$]\\
+! {\tt surfdiv } &divergence of surface currents in T-point & [s$^{-1}$]\\
 ! \end{tabular}
-! \caption{Public 2D variables.} 
+! \caption{Public 2D variables.}
 ! \label{table_2d_variables}
 ! \end{center}
 ! \end{table}
@@ -116,16 +116,16 @@
    break_mask = 0
 #endif
 
-   z  = _ZERO_; zo =_ZERO_ 
-   zu = _ZERO_; zub=_ZERO_ ; zub0=_ZERO_ 
-   zv = _ZERO_; zvb=_ZERO_ ; zvb0=_ZERO_ 
-   D = _ZERO_; 
-   U = _ZERO_; DU = _ZERO_; fU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_ 
-   V = _ZERO_; DV = _ZERO_; fV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_ 
+   z  = _ZERO_; zo =_ZERO_
+   zu = _ZERO_; zub=_ZERO_ ; zub0=_ZERO_
+   zv = _ZERO_; zvb=_ZERO_ ; zvb0=_ZERO_
+   D = _ZERO_;
+   U = _ZERO_; DU = _ZERO_; fU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
+   V = _ZERO_; DV = _ZERO_; fV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
 
    ru = _ZERO_; ruu=_ZERO_; Uinto=_ZERO_
    rv = _ZERO_; rvv=_ZERO_; Vinto=_ZERO_
-   
+
    res_du = _ZERO_; res_u = _ZERO_
    res_dv = _ZERO_; res_v = _ZERO_
 

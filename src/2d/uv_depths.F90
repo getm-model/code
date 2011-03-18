@@ -18,21 +18,21 @@
 ! H^u_{i,j} = \left\{
 ! \begin{array}{ll}
 ! \displaystyle
-! \frac12 \left(H_{i,j}+H_{i+1,j}\right), & 
+! \frac12 \left(H_{i,j}+H_{i+1,j}\right), &
 ! \displaystyle
-! \mbox{ for {\tt vel\_depth\_method}} =0, \\ \\ 
+! \mbox{ for {\tt vel\_depth\_method}} =0, \\ \\
 ! \displaystyle
-! \min\left\{H_{i,j}+H_{i+1,j}\right\}, & 
+! \min\left\{H_{i,j}+H_{i+1,j}\right\}, &
 ! \displaystyle
-! \mbox{ for {\tt vel\_depth\_method}} =1, \\ \\ 
+! \mbox{ for {\tt vel\_depth\_method}} =1, \\ \\
 ! \displaystyle
-! \min\left\{H_{i,j}+H_{i+1,j}\right\}, & 
+! \min\left\{H_{i,j}+H_{i+1,j}\right\}, &
 ! \displaystyle
-! \mbox{ for {\tt vel\_depth\_method}} =2 \mbox{ and } \min\{H_{i,j}i,H_{i+1,j}\}<D_{crit} \\ \\ 
+! \mbox{ for {\tt vel\_depth\_method}} =2 \mbox{ and } \min\{H_{i,j}i,H_{i+1,j}\}<D_{crit} \\ \\
 ! \displaystyle
-! \frac12 \left(H_{i,j}+H_{i+1,j}\right), & 
+! \frac12 \left(H_{i,j}+H_{i+1,j}\right), &
 ! \displaystyle
-! \mbox{ for {\tt vel\_depth\_method}} =2 \mbox{ and } \min\{H_{i,j},H_{i+1,j}\}\geq D_{crit} \\ \\ 
+! \mbox{ for {\tt vel\_depth\_method}} =2 \mbox{ and } \min\{H_{i,j},H_{i+1,j}\}\geq D_{crit} \\ \\
 ! \end{array}
 ! \right.
 ! \end{equation}
@@ -57,7 +57,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
-   REALTYPE                  :: d_crit=2.0 
+   REALTYPE                  :: d_crit=2.0
 !EOP
 !-----------------------------------------------------------------------
 !BOC

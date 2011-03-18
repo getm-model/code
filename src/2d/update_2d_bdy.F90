@@ -11,7 +11,7 @@
 !
 ! In this routine sea surface elevation boundary conditions are read
 ! in from a file, interpolated to the actual time step, and distributed
-! to the open boundary grid boxes. 
+! to the open boundary grid boxes.
 ! Only for a special test case ({\tt SYLT\_TEST}), ascii data reading is
 ! supported. For a few special simple cases, analytical calculation
 ! of boundary elevations is supported. The generic way is reading in

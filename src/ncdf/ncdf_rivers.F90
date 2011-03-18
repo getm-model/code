@@ -290,8 +290,8 @@
                end do
 #endif
             end if
-            nn = nn + 1 
-            ni = ni + river_split(ni) 
+            nn = nn + 1
+            ni = ni + river_split(ni)
          end if
       end do
    end if

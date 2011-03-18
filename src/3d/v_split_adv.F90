@@ -13,13 +13,13 @@
 ! with a number of options for the numerical scheme. The basic
 ! advection equation is accompanied by an fractional step
 ! for the continuity equation and both equations look as follows:
-! 
+!
 ! \begin{equation}\label{adv_v_step}
 ! h^n_{i,j,k} c^n_{i,j,k} =
 ! h^o_{i,j,k} c^o_{i,j,k}
 ! \displaystyle
-! - \Delta t 
-! \frac{ 
+! - \Delta t
+! \frac{
 ! q_{i,j,k}\tilde c^v_{i,j,k}\Delta y^v_{i,j}-
 ! q_{i,j-1,k}\tilde c^v_{i,j-1,k}\Delta y^v_{i,j-1}
 ! }{\Delta x^c_{i,j}\Delta y^c_{i,j}},
@@ -46,9 +46,9 @@
 ! denotes a fraction of the full time step.
 !
 ! The interfacial fluxes $\tilde c^v_{i,j,k}$ are calculated by means of
-! monotone and non-monotone schemes which are described in detail in 
-! {\tt u\_split\_adv}, see section \ref{sec-u-split-adv} on 
-! page \pageref{sec-u-split-adv}. 
+! monotone and non-monotone schemes which are described in detail in
+! {\tt u\_split\_adv}, see section \ref{sec-u-split-adv} on
+! page \pageref{sec-u-split-adv}.
 !
 ! Furthermore, the horizontal diffusion in $y$-direction
 ! with the constant diffusion
@@ -169,7 +169,7 @@
 !Horizontal diffusion
                      if ( AH.gt._ZERO_ .and. az(i,j).gt.0 .and. az(i,j+1).gt.0 ) &
                         cu(i,j,k)=cu(i,j,k)-AH*hvn(i,j,k)*(f(i,j+1,k)-f(i,j,k))/delyv(i,j)
-                  else 
+                  else
                      cu(i,j,k) = _ZERO_
                   end if
                end do

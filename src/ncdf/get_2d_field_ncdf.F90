@@ -10,7 +10,7 @@
 !
 ! !DESCRIPTION:
 ! This module is responsible for reading 2D field quantities
-! contained in a netCDF file. 
+! contained in a netCDF file.
 ! !USES:
    use netcdf
    use exceptions
@@ -38,10 +38,10 @@ contains
     IMPLICIT NONE
 !
 ! !DESCRIPTION:
-!  A two-dimensional netCDF variable with specified global range 
+!  A two-dimensional netCDF variable with specified global range
 ! {\tt il < i < ih} and {\tt jl < j < jh} is read into {\tt field}.
-! It is checked if the sizes of the fields correspond exactly. 
-! When calling this funtions, remember that  FORTRAN netCDF variables 
+! It is checked if the sizes of the fields correspond exactly.
+! When calling this funtions, remember that  FORTRAN netCDF variables
 ! start with index 1.
 !
 ! !INPUT PARAMETERS:

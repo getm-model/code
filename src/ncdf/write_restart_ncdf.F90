@@ -8,9 +8,9 @@
    subroutine write_restart_ncdf(runtype,secs,loop,julianday,secondsofday)
 !
 ! !DESCRIPTION:
-!  Writes to a NetCDF file previously created using the 
+!  Writes to a NetCDF file previously created using the
 !  create\_restart\_ncdf() subroutine all variables necessary to make
-!  a correct GETM hotstart. The Fortran variables are written directly 
+!  a correct GETM hotstart. The Fortran variables are written directly
 !  into the corresponding NetCDF variable.
 !
 ! !USES:

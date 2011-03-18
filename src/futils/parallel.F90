@@ -124,7 +124,7 @@
 #ifdef GETM_PARALLEL
    LEVEL2 'At final MPI barrier'
    call barrier()
-   LEVEL2 'About to finish parallel part of GETM - calling MPI_Finalize()'  
+   LEVEL2 'About to finish parallel part of GETM - calling MPI_Finalize()'
    if(myid .ge. 0) then
       call MPI_Finalize(ierr)
    end if

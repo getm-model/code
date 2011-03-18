@@ -9,9 +9,9 @@
 !
 ! !DESCRIPTION:
 !  This module reads the bathymetry and grid information required by the
-!  module $domain$. The file format is NetCDF and data are read from 
-!  the file specified as an paramater $ncdf\_read\_topo\_file()$. For a 
-!  full description of the required variables see the documention for 
+!  module $domain$. The file format is NetCDF and data are read from
+!  the file specified as an paramater $ncdf\_read\_topo\_file()$. For a
+!  full description of the required variables see the documention for
 !  domain. The specific readings are guided by $grid\_type$.
 
 ! !USES:
@@ -67,7 +67,7 @@ contains
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
-!  This routine checks for and opens a NetCDF file with GETM bathymetry and 
+!  This routine checks for and opens a NetCDF file with GETM bathymetry and
 !  grid information. The first variable read and checked is $grid\_type$.
 !  Subsequent operations depends on the value of $grid\_type$.
 !
@@ -269,14 +269,14 @@ contains
 
          status = nf90_inq_varid(ncid,'dx',id)
          if (status .ne. NF90_NOERR) then
-            have_dx=.false. 
+            have_dx=.false.
          else
             status = nf90_get_var(ncid,id,dx)
          end if
 
          status = nf90_inq_varid(ncid,'dy',id)
          if (status .ne. NF90_NOERR) then
-            have_dy=.false. 
+            have_dy=.false.
          else
             status = nf90_get_var(ncid,id,dy)
          end if
@@ -303,7 +303,7 @@ contains
 
          if ( .not. have_dx ) dx = (a(2)-a(1))/(iextr-1)
          do i=imin-HALO,imax+HALO
-            xcord(i) = a(1) + (i+ioff-1)*dx 
+            xcord(i) = a(1) + (i+ioff-1)*dx
          end do
 #if 0
 !        potentially do checks on consistency of spacing and axis
@@ -328,7 +328,7 @@ contains
          status = nf90_get_var(ncid,id,a(2:2),start = start,count = count)
          if ( .not. have_dy ) dy = (a(2)-a(1))/(jextr-1)
          do j=jmin-HALO,jmax+HALO
-            ycord(j) = a(1) + (j+joff-1)*dy 
+            ycord(j) = a(1) + (j+joff-1)*dy
          end do
 #if 0
 !        potentially do checks on consistency of spacing and axis
@@ -387,7 +387,7 @@ stop
 !     spherical - we require:   lonc, latc
 !     spherical - we check for: xc, yc
 !     spherical - later we calculate: latu, latv
-!     
+!
 
 #if !( defined(SPHERICAL) && !defined(CURVILINEAR) )
          call getm_error("ncdf_check_grid()",   &
@@ -397,14 +397,14 @@ stop
 
          status = nf90_inq_varid(ncid,'dlon',id)
          if (status .ne. NF90_NOERR) then
-            have_dlon=.false. 
+            have_dlon=.false.
          else
             status = nf90_get_var(ncid,id,dlon)
          end if
 
          status = nf90_inq_varid(ncid,'dlat',id)
          if (status .ne. NF90_NOERR) then
-            have_dlat=.false. 
+            have_dlat=.false.
          else
             status = nf90_get_var(ncid,id,dlat)
          end if
@@ -431,7 +431,7 @@ stop
 
          if ( .not. have_dlon ) dlon = (a(2)-a(1))/(iextr-1)
          do i=imin-HALO,imax+HALO
-            xcord(i) = a(1) + (i+ioff-1)*dlon 
+            xcord(i) = a(1) + (i+ioff-1)*dlon
          end do
 #if 0
 !        potentially do checks on consistency of spacing and axis
@@ -460,7 +460,7 @@ stop
 
          if ( .not. have_dlat ) dlat = (a(2)-a(1))/(jextr-1)
          do j=jmin-HALO,jmax+HALO
-            ycord(j) = a(1) + (j+joff-1)*dlat 
+            ycord(j) = a(1) + (j+joff-1)*dlat
          end do
 #if 0
 !        potentially do checks on consistency of spacing and axis
@@ -648,7 +648,7 @@ stop
 !
 ! !USES:
    IMPLICIT NONE
-! 
+!
 ! !DESCRIPTION:
 !  Computes x and dx given that the netcdf file contains the axis
 !  (T-point) information.
@@ -662,7 +662,7 @@ stop
    integer,      intent(in)             :: ncid
    character(len=*), intent(in)         :: spacing_name
    character(len=*), intent(in)         :: cord_name
-   integer,      intent(in)             :: 
+   integer,      intent(in)             ::
    character(len=*), intent(in)         :: cordname
 !
 ! !OUTPUT PARAMETERS:
@@ -769,10 +769,10 @@ stop
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
-!  A two-dimensional netCDF variable with specified global range 
+!  A two-dimensional netCDF variable with specified global range
 !  {\tt il < i < ih} and {\tt jl < j < jh} is read into {\tt field}.
-!  It is checked if the sizes of the fields correspond exactly. 
-!  When calling this funtions, remember that  FORTRAN netCDF variables 
+!  It is checked if the sizes of the fields correspond exactly.
+!  When calling this funtions, remember that  FORTRAN netCDF variables
 !  start with index 1.
 !
 ! !INPUT PARAMETERS:

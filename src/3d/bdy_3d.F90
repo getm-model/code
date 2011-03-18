@@ -8,7 +8,7 @@
    module bdy_3d
 !
 ! !DESCRIPTION:
-!  
+!
 ! Here, the three-dimensional boundary
 ! conditions for temperature and salinity are handled.
 !
@@ -110,12 +110,12 @@
 ! copied to the boundary points and relaxed to the near boundary points
 ! by means of the flow relaxation scheme by \cite{MARTINSENea87}.
 !
-! As an extention to the flow relaxation scheme, it is possible 
-! to relax the boundary point values to the specified boundary 
-! condition in time, thus giving more realistic situations 
+! As an extention to the flow relaxation scheme, it is possible
+! to relax the boundary point values to the specified boundary
+! condition in time, thus giving more realistic situations
 ! especially for outgoing flow conditions. This nudging is implemented
-! to depend on the local (3D) current velocity perpendicular to 
-! the boundary. For strong outflow, the boundary condition is turned 
+! to depend on the local (3D) current velocity perpendicular to
+! the boundary. For strong outflow, the boundary condition is turned
 ! off, while for inflows it is given a high impact.
 !
 ! !USES:
@@ -184,7 +184,7 @@
       do j=wfj(n),wlj(n)
          if (bdy3d_tmrlx) then
             if (au(i,j).gt.0) then
-!                Local temporal relaxation coeficient depends on 
+!                Local temporal relaxation coeficient depends on
 !                local current just *inside* domain:
                do kk=1,kmax
                   if (uu(i,j,kk).ge.bdy3d_tmrlx_ucut) then
@@ -201,7 +201,7 @@
             else
                rlxcoef(:)=bdy3d_tmrlx_max
             end if
-!             Temporal relaxation: Weight inner (actual) solution near boundary 
+!             Temporal relaxation: Weight inner (actual) solution near boundary
 !             with boundary condition (outer solution.)
             wsum= MIN(az(i-1+2,j),1)*sp(2)                              &
                  +MIN(az(i-1+3,j),1)*sp(3)                              &
@@ -218,7 +218,7 @@
                               +MIN(az(i-1+3,j),1) * sp(3) * T(i-1+3,j,:) &
                               +MIN(az(i-1+4,j),1) * sp(4) * T(i-1+4,j,:) &
                                           )
-!                Weight inner and outer (bc) solutions for use 
+!                Weight inner and outer (bc) solutions for use
 !                in spatial relaxation/sponge
                bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:) + rlxcoef(:)*S_bdy(:,k)
                bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:) + rlxcoef(:)*T_bdy(:,k)

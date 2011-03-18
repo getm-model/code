@@ -16,7 +16,7 @@
 ! \begin{equation}\label{adv_w_step}
 ! h^n_{i,j,k} c^n_{i,j,k} =
 ! h^o_{i,j,k} c^o_{i,j,k}
-! - \Delta t 
+! - \Delta t
 ! \left(w_{i,j,k}\tilde c^w_{i,j,k}-w_{i,j,k-1}\tilde c^w_{i,j,k-1}\right),
 ! \end{equation}
 !
@@ -24,8 +24,8 @@
 !
 ! \begin{equation}\label{adv_w_step_h}
 ! h^n_{i,j,k}  =
-! h^o_{i,j,k}   
-! - \Delta t        
+! h^o_{i,j,k}
+! - \Delta t
 ! \left(w_{i,j,k}\tilde -w_{i,j,k-1}\right).
 ! \end{equation}
 !

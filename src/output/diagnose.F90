@@ -249,10 +249,10 @@
         j=jmax/2
         do i=1,imax-1
            write(95,*) V(i,j)/DV(i,j),0.5*(z(i,j)+z(i,j+1)),(i-0.5)*dx
-        end do        
+        end do
         do i=1,imax-2
            write(96,*) 0.5*(U(i,j)/DU(i,j)+U(i,j+1)/DU(i,j+1)),i*dx
-        end do        
+        end do
         i=imax/2
         do j=2,jmax-1
             write(90,*) U(i,j)/DU(i,j),0.5*(z(i,j)+z(i+1,j)),(j-1-0.5)*dy
@@ -347,34 +347,34 @@
        if ((H(i,j).lt.-5).and.(H(i,j+1).gt.-5)) then
           aa(j,0)=-H(i,j+1)
           do k=1,kmax
-             aa(j,k)=aa(j,k-1)+hn(i,j+1,k) 
-          end do 
+             aa(j,k)=aa(j,k-1)+hn(i,j+1,k)
+          end do
        end if
        if ((H(i,j).gt.-5).and.(H(i,j+1).lt.-5)) then
           aa(j,0)=-H(i,j)
           do k=1,kmax
-             aa(j,k)=aa(j,k-1)+hn(i,j,k) 
-          end do 
+             aa(j,k)=aa(j,k-1)+hn(i,j,k)
+          end do
        end if
        if ((H(i,j).gt.-5).and.(H(i,j+1).gt.-5)) then
           aa(j,0)=-0.5*(H(i,j)+H(i,j+1))
           do k=1,kmax
-             aa(j,k)=aa(j,k-1)+0.5*(hn(i,j,k)+hn(i,j+1,k)) 
-          end do 
-       end if 
+             aa(j,k)=aa(j,k-1)+0.5*(hn(i,j,k)+hn(i,j+1,k))
+          end do
+       end if
     end do
     do k=1,kmax
 !       do i=113,138
         do j=33,51
-          if (H(i,j).gt.-5) then 
+          if (H(i,j).gt.-5) then
           write(96,*) j*6.,aa(j,k)
           write(96,*) (j-1.)*6.,aa(j-1,k)
           write(96,*) (j-1.)*6.,aa(j-1,k-1)
           write(96,*) j*6.,aa(j,k-1)
           write(96,*) j*6.,aa(j,k)
-          write(96,*) 
-         end if 
-       end do 
+          write(96,*)
+         end if
+       end do
     end do
     stop
 #endif

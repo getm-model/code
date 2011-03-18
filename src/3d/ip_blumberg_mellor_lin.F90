@@ -11,7 +11,7 @@
 !
 ! Here, the internal pressure gradient calculation is carried out on the
 ! basis of the same buoyancy stencil than in the method according
-! to \cite{MELLORea94} (see routine {\tt ip\_blumberg\_mellor}), 
+! to \cite{MELLORea94} (see routine {\tt ip\_blumberg\_mellor}),
 ! but in such a way that the pressure gradient numerically vanishes for
 ! linear stratification without horizontal gradients.
 !
@@ -34,7 +34,7 @@
 ! \frac12 (z^c_{i,j,k+1}+z^c_{i,j,k})}
 ! {\Delta x^u_{i,j}}\right) \\ \\
 ! \displaystyle
-! \qquad\qquad 
+! \qquad\qquad
 ! \frac12\left(
 ! \frac{b_{i+1,j,k+1}-b_{i+1,j,k}}{z^c_{i+1,j,k+1}-z^c_{i+1,j,k}}+
 ! \frac{b_{i,j,k+1}-b_{i,j,k}}{z^c_{i,j,k+1}-z^c_{i,j,k}}

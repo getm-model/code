@@ -97,7 +97,7 @@
 
 !  Western
    read(iunit,*,end=91,err=92) NW_w
-   if (NW_w .ge. 1) then   
+   if (NW_w .ge. 1) then
       allocate(wi_w(NW_w),stat=rc)
       if (rc /= 0) stop 'init_nesting: Error allocating memory (wi_w)'
       allocate(wfj_w(NW_w),stat=rc)
@@ -112,7 +112,7 @@
 
 !  Northen
    read(iunit,*,end=91,err=92) NN_w
-   if (NN_w .ge. 1) then   
+   if (NN_w .ge. 1) then
       allocate(nj_w(NN_w),stat=rc)
       if (rc /= 0) stop 'init_nesting: Error allocating memory (nj_w)'
       allocate(nfi_w(NN_w),stat=rc)

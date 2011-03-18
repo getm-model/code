@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: physical_mixing() 
+! !ROUTINE: physical_mixing()
 !
 ! !INTERFACE:
    subroutine physical_mixing(F,diffusivity,pm3d,pm2d)
@@ -24,11 +24,11 @@
    REALTYPE, intent(out) :: pm2d(I2DFIELD)
 !
 ! !REVISION HISTORY:
-!  Original author(s): Hannes Rennau 
+!  Original author(s): Hannes Rennau
 !
 ! !LOCAL VARIABLES:
    REALTYPE                  :: dupper,dlower
-   integer                   :: i,j,k 
+   integer                   :: i,j,k
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -48,7 +48,7 @@
            pm2d(i,j)=pm2d(i,j)+pm3d(i,j,k)*hn(i,j,k)
          end do
       end do
-   end do 
+   end do
    return
    end subroutine physical_mixing
 !EOC

@@ -107,7 +107,7 @@
          call set_attributes(ncid,v10_id,long_name='V10',units='m/s', &
                              FillValue=fv,missing_value=mv,valid_range=vr)
 
-         fv = airp_missing; mv = airp_missing; 
+         fv = airp_missing; mv = airp_missing;
          vr(1) = 90.e3; vr(2) = 110.e3
          err = nf90_def_var(ncid,'airp',NF90_REAL,f3_dims,airp_id)
          if (err .NE. NF90_NOERR) go to 10
@@ -184,7 +184,7 @@
 
    end if
 
-   fv = divergence_missing; mv = divergence_missing 
+   fv = divergence_missing; mv = divergence_missing
    vr(1) = -3.; vr(2) =  3.
 !  divergence
    err = nf90_def_var(ncid,'div',NF90_REAL,f3_dims,surfdiv_id)

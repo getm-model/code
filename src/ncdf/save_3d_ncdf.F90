@@ -117,7 +117,6 @@
    err = nf90_put_var(ncid,v_id,ws2d(_2D_W_),start,edges)
    if (err .NE. NF90_NOERR) go to 10
 
-   
    if (save_taub) then
 
       !  bottom stress (x)

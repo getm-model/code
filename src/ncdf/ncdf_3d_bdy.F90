@@ -135,7 +135,7 @@
 !       3 -> time
 !     We will use this information to actually find the dimension
 !     index numbers in the data set.
-!     Some of the tests will be repeated later (fixing is possible but not 
+!     Some of the tests will be repeated later (fixing is possible but not
 !     high priority, BJB 2007-04-25).
       LEVEL4 'special boundary data file'
 !     This test may break backward compatibility, so I leave it out for now:
@@ -191,7 +191,7 @@
    err = nf90_get_var(ncid,id,zlev)
    if (err .ne. NF90_NOERR) go to 10
 
-!  a few sanity checks on the vertical axis for the 3D boundaries 
+!  a few sanity checks on the vertical axis for the 3D boundaries
    do n=1,zax_len
       if (zlev(n) .eq. NF90_FILL_REAL) then
          FATAL '3D boundary z-axis contains NF90_FILL_REAL values'
@@ -684,8 +684,8 @@
       if (wrk(li) .lt. -999. ) EXIT
    end do
    ! BJB-NOTE: Typically, li will end up as nlev+1, so the first
-   !   of the following tests gets false. However, during debug 
-   !   compilation the second condition *MAY* evaulate wrk(li), 
+   !   of the following tests gets false. However, during debug
+   !   compilation the second condition *MAY* evaulate wrk(li),
    !   which will result in a "forrtl: severe".
    !if (li .ne. nlev .or. wrk(li) .lt. -999.) li=li-1
    if (li .ne. nlev) then
@@ -693,7 +693,7 @@
    elseif (wrk(li) .lt. -999.) then
       li=li-1
    end if
-   
+
    do k=1,kmax
       if (zmodel(k) .le. zlev(li)) col(k) = wrk(li)
    end do

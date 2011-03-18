@@ -23,7 +23,7 @@
    use m3d, only: calc_temp,calc_salt
 #ifdef GETM_BIO
    use bio_var, only: numc
-#endif 
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:

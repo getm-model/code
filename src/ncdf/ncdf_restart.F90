@@ -13,7 +13,7 @@
 !  The main reason for using NetCDF formatted hotstart files instead of
 !  binary format is the abillity to use standard tools (nco, ncmerge) is
 !  a much easier way to to introduce a new subdomain decomposition for
-!  an already running set-up - without having to start all over again. 
+!  an already running set-up - without having to start all over again.
 !  See $read\_restart\_ncdf()$ for further explanation.\newline
 !  This modules just contains variables shared accros the *\_restart\_ncdf()
 !  routines.

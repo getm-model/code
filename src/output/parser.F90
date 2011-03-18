@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: 
+! !MODULE:
 !
 ! !INTERFACE:
    module parser
@@ -27,10 +27,10 @@
 !  i,j,k,n and the last field is the variable list.\newline
 !  Note that an id can be repeated. In this case the first hyperslab
 !  definition is used and the variable list is the union. For the hyperslap
-!  field it is not necessary to specify for all indices. If a given index 
+!  field it is not necessary to specify for all indices. If a given index
 !  is not defined the minimum and maximum values are used with a stride of
 !  1. Note that the keywords $begin$ and $end$ can be used. The 3 field
-!  contains a comma-separated list of variables to include iin the 
+!  contains a comma-separated list of variables to include iin the
 !  output-set. The variable names must match the names of variables given
 !  in $variable_info.F90$
 !  \newline
@@ -88,7 +88,7 @@ contains
 
 !-----------------------------------------------------------------------
 !BOP
-! !ROUTINE: parse_output_list() - 
+! !ROUTINE: parse_output_list() -
 !
 ! !INTERFACE:
    subroutine parse_output_list(fn,imin,imax,jmin,jmax,kmin,kmax,nmin,nmax,ol)
@@ -172,7 +172,7 @@ contains
                   i=i-1
                end if
             end if
-         end do 
+         end do
       end if
    end do
 !write(*,*) 'Nuniq=  ',i
@@ -223,17 +223,17 @@ contains
 !write(*,*) 'cc ',lines(k)(i:m)
          if (lines(k)(l:l) == 'i') then
             i=l+2
-            call parse_range(lines(k)(i:m),ol(n)%il,ol(n)%ih,ol(n)%is,imin,imax)   
+            call parse_range(lines(k)(i:m),ol(n)%il,ol(n)%ih,ol(n)%is,imin,imax)
          else if (lines(k)(l:l) == 'j') then
             i=l+2
-            call parse_range(lines(k)(i:m),ol(n)%jl,ol(n)%jh,ol(n)%js,jmin,jmax)   
+            call parse_range(lines(k)(i:m),ol(n)%jl,ol(n)%jh,ol(n)%js,jmin,jmax)
          else if (lines(k)(l:l) == 'k') then
             i=l+2
-            call parse_range(lines(k)(i:m),ol(n)%kl,ol(n)%kh,ol(n)%ks,kmin,kmax)   
+            call parse_range(lines(k)(i:m),ol(n)%kl,ol(n)%kh,ol(n)%ks,kmin,kmax)
          else if (lines(k)(l:l) == 'n') then
             i=l+2
 !write(*,*) 'dd ',lines(k)(i:m)
-            call parse_range(lines(k)(i:m),ol(n)%nl,ol(n)%nh,ol(n)%ns,nmin,nmax)   
+            call parse_range(lines(k)(i:m),ol(n)%nl,ol(n)%nh,ol(n)%ns,nmin,nmax)
          end if
 
          i = m+2
@@ -271,7 +271,7 @@ contains
       i = 1
       j = next_index(line,var_sep,i)-1
       do l=1,nb_vars
-         var_names(l)=trim(line(i:j)) 
+         var_names(l)=trim(line(i:j))
          i=j+2
          j = next_index(line,var_sep,i)-1
       end do
@@ -293,7 +293,7 @@ end do
       end do
       nb_vars=m
 #if 0
-i = 0 
+i = 0
 do l=1,size(var_names)
    if (len_trim(var_names(l)) .gt. 0) then
       i = i+1
@@ -346,7 +346,7 @@ end do
 
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE: print_output_list - 
+! !IROUTINE: print_output_list -
 !
 ! !DESCRIPTION:
 !
@@ -378,7 +378,7 @@ end do
 
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE: deallocate_output_list - 
+! !IROUTINE: deallocate_output_list -
 !
 ! !DESCRIPTION:
 !
@@ -404,7 +404,7 @@ end do
 
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE: next_index - 
+! !IROUTINE: next_index -
 !
 ! !INTERFACE:
    function next_index(s,sep,start,finish)
@@ -441,7 +441,7 @@ end do
 
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE: count_chars() - 
+! !IROUTINE: count_chars() -
 !
 ! !INTERFACE:
    function count_chars(s,sep)
@@ -470,7 +470,7 @@ end do
 
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE: parse_index() - 
+! !IROUTINE: parse_index() -
 !
 ! !DESCRIPTION:
 !
@@ -499,7 +499,7 @@ end do
 
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE: parse_range() - 
+! !IROUTINE: parse_range() -
 !
 ! !INTERFACE:
    subroutine parse_range(s,first,last,step,min,max)
@@ -515,7 +515,7 @@ end do
    integer, intent(out)           :: first,last,step
 !
 ! !LOCAL VARIABLES:
-   integer         :: i,j  
+   integer         :: i,j
 !EOP
 !-------------------------------------------------------------------------
 !BOC

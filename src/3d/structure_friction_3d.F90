@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: structure_friction_3d - 
+! !ROUTINE: structure_friction_3d -
 ! \label{sec-structure_friction-3d}
 !
 ! !INTERFACE:
@@ -16,7 +16,7 @@
 ! \begin{equation}
 ! \mbox{\tt sf} = C(z) \sqrt{u(z)^2+v(z)^2},
 ! \end{equation}
-! with the friction coefficient $C$ bearing the physical unit [1/m]. 
+! with the friction coefficient $C$ bearing the physical unit [1/m].
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
@@ -57,7 +57,7 @@
       do i=imin,imax
          if ((i.eq.90).and.(j.eq.6)) then
             cds(i,j)=0.01
-         end if   
+         end if
       end do
    end do
    sf=_ZERO_

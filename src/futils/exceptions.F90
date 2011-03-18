@@ -41,7 +41,7 @@
    subroutine getm_error(routine,whatsup)
 !
 ! !DESCRIPTION:
-!  Reports a fatal \emph{error} concerning a certain {\tt routine} in 
+!  Reports a fatal \emph{error} concerning a certain {\tt routine} in
 !  GETM and exits.
 !  The argument {\tt whatsup} is short (!) error message.
 !

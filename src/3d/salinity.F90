@@ -63,7 +63,7 @@
 ! {\tt salt\_method}, the salinity field is read from a
 ! hotstart file ({\tt salt\_method}=0), initialised with a constant value
 ! ({\tt salt\_method}=1), initialised and interpolated
-! with horizontally homogeneous 
+! with horizontally homogeneous
 ! salinity from a given salinity profile ({\tt salt\_method}=2),
 ! or read in and interpolated from a 3D netCDF field ({\tt salt\_method}=3).
 ! Finally, a number of sanity checks are performed for the chosen
@@ -138,8 +138,8 @@ salt_field_no=1
          do i=1,100
             do k=1,kmax
                S(i,2,k)=30.*(1.- tanh(float(i-1)*0.05))
-            end do      
-         end do   
+            end do
+         end do
 #endif
       case default
          FATAL 'Not valid salt_method specified'
@@ -317,7 +317,7 @@ salt_field_no=1
 ! the advection (and horizontal diffusion) step as an operational
 ! split step, the tri-diagonal matrix for calculating the
 ! new salinity by means of a semi-implicit central scheme for the
-! vertical diffusion is set up. 
+! vertical diffusion is set up.
 ! There are no source terms on the right hand sides.
 ! The subroutine is completed by solving the tri-diagonal linear
 ! equation by means of a tri-diagonal solver.
@@ -394,8 +394,8 @@ salt_field_no=1
    if (do_mixing_analysis) then
       call toc(TIM_SALT)
       call tic(TIM_MIXANALYSIS)
-! OMP-note: The following array-based line could be implemented 
-!    with OMP as a WORKSHARE construct. However, it would require a dedicated 
+! OMP-note: The following array-based line could be implemented
+!    with OMP as a WORKSHARE construct. However, it would require a dedicated
 !    PARALLEL region (as the various advection schemes have their own regions),
 !    so the overhead of the contruct would be rather large.
       S2 = S**2
@@ -434,10 +434,10 @@ salt_field_no=1
       end do
    end do
    S(imax-1,2,:)=0. !river
-#endif 
+#endif
 
 
-! OMP-NOTE: Pointers are used to for each thread to use its 
+! OMP-NOTE: Pointers are used to for each thread to use its
 !           own work storage.
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j,k,rc)                                             &
@@ -460,7 +460,7 @@ salt_field_no=1
    if (rc /= 0) stop 'do_salinity: Error allocating memory (auxo)'
 
 ! Note: We do not need to initialize these work arrays.
-!   Tested BJB 2009-09-25. 
+!   Tested BJB 2009-09-25.
 
 
 
@@ -528,7 +528,7 @@ salt_field_no=1
    if (rc /= 0) stop 'do_salinity: Error deallocating memory (a3)'
    deallocate(a4,stat=rc)
    if (rc /= 0) stop 'do_salinity: Error deallocating memory (a4)'
- 
+
 !$OMP END PARALLEL
 
 #ifdef ARKONA_TEST

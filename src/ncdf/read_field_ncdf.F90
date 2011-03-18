@@ -136,7 +136,7 @@
    iloc = max(imin-ioff,1); jloc = max(jmin-joff,1)
 
    start(1) = il ; start(2) = jl
-   start(3) = 1; 
+   start(3) = 1;
    edges(1) = ih-il+1 ; edges(2) = jh-jl+1
    edges(3) = kh; edges(4) = 1
 
@@ -150,7 +150,7 @@
 
    if(start(4) .lt. 0) then
       FATAL 'could not find requested field: ',nf
-      stop 'read_field_ncdf()' 
+      stop 'read_field_ncdf()'
    end if
 
    allocate(wrk((imax-imin+1)*(jmax-jmin+1)*kh),stat=rc)

@@ -8,13 +8,13 @@
    subroutine slow_diffusion(AM)
 !
 ! !DESCRIPTION:
-! 
+!
 ! Here, the calculation of the diffusive slow terms $S^x_D$ and $S^y_D$
 ! (see eqs.\ (\ref{SxD}) and (\ref{SxD})) is prepared. This routine
 ! basically repeats the calculations made in the routine {\tt uv\_iondvect},
 ! see section \ref{sec-uv-advect}, but this time based on the macro time
 ! step averaged and vertically integrated transports {\tt Uint} and {\tt Vint}.
-! However, the damping of the external mode, as described in 
+! However, the damping of the external mode, as described in
 ! (\ref{smooth_example_1}) and
 ! (\ref{smooth_example_2}) is not considered here.
 ! The calculations of  $S^x_D$ and $S^y_D$ are then completed in the
