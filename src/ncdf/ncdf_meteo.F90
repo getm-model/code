@@ -1,4 +1,3 @@
-!$Id: ncdf_meteo.F90,v 1.26 2009-09-30 11:28:48 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -86,99 +85,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: ncdf_meteo.F90,v $
-!  Revision 1.26  2009-09-30 11:28:48  bjb
-!  OpenMP threading initial implementation
-!
-!  Revision 1.25  2008-08-29 13:59:12  kb
-!  fixed parallel run for constant metforing with convc<>0
-!
-!  Revision 1.24  2007-09-30 13:00:43  kbk
-!  prints real time as part of progessoutput
-!
-!  Revision 1.23  2007-08-24 10:43:44  frv-bjb
-!  Allow negative seconds in meteo nc-files input
-!
-!  Revision 1.22  2007-06-28 16:39:41  kbk
-!  initialise evap_id and precip_id to -1
-!
-!  Revision 1.21  2007-06-27 08:39:37  kbk
-!  support for fresh water fluxes at the sea surface - Adolf Stips
-!
-!  Revision 1.20  2006-03-01 13:52:22  kbk
-!  renamed method to met_method
-!
-!  Revision 1.19  2005/05/04 11:45:29  kbk
-!  adding model time stamp on IO
-!
-!  Revision 1.18  2005/04/25 09:25:33  kbk
-!  conv --> convc
-!
-!  Revision 1.17  2005/04/25 07:55:50  kbk
-!  use more general frame for error handling - Umlauf
-!
-!  Revision 1.16  2005/03/31 10:14:20  kbk
-!  flux calc. for point source + combined rot. met. and grid convergence
-!
-!  Revision 1.15  2005/01/12 19:26:16  kbk
-!  fixed printing of south pole
-!
-!  Revision 1.14  2005/01/12 19:17:47  kbk
-!  setting grid_scan depending on lat-axis - Stips
-!
-!  Revision 1.13  2004/08/09 10:43:59  kbk
-!  correct length of met_times - Buchmann
-!
-!  Revision 1.12  2004/08/09 08:39:36  kbk
-!  if SPHERICAL and rotated meteo grid fixed turning of wind - Carsten Hansen (FRV)
-!
-!  Revision 1.11  2004/04/06 16:32:29  kbk
-!  TimeDiff --> time_diff
-!
-!  Revision 1.10  2004/01/15 11:45:01  kbk
-!  meteo point source forcing - taus, swr and shf - implemented
-!
-!  Revision 1.9  2003/12/16 16:50:41  kbk
-!  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
-!
-!  Revision 1.8  2003/11/03 14:34:54  kbk
-!  use time_var_id in addition to time_id
-!
-!  Revision 1.7  2003/10/30 16:31:36  kbk
-!  check validity of meteo interpolation coeffcients
-!
-!  Revision 1.6  2003/10/07 15:16:50  kbk
-!  now works properly with varying length (time) files
-!
-!  Revision 1.5  2003/07/01 16:38:33  kbk
-!  cleaned code - new methods
-!
-!  Revision 1.4  2003/06/17 14:53:29  kbk
-!  default meteo variables names comply with Adolf Stips suggestion + southpole(3)
-!
-!  Revision 1.3  2003/04/07 15:34:15  kbk
-!  updated to lonc,latc
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:47  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.4  2001/10/17 14:27:39  bbh
-!  Met-data can now be read from a series of .nc files
-!
-!  Revision 1.3  2001/07/26 13:57:14  bbh
-!  Meteo working - needs some polishing
-!
-!  Revision 1.2  2001/06/04 13:15:12  bbh
-!  Further steps towards full implementation of meteorological forcing
-!
-!  Revision 1.1  2001/05/25 19:26:22  bbh
-!  ncdf_meteo.F90
-!
-! !TO DO:
-!  Unified method of obtaining time info - needs some namelist variables.
-!  Loop over met-files listed in meteo_file.
-!  Make code independent of HIRLAM/ECMWF etc.
-!
 !EOP
 !-----------------------------------------------------------------------
 
@@ -209,10 +115,6 @@
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fn
    integer, intent(in)                 :: nstart
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !
@@ -449,10 +351,6 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: loop
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !
 !  See module for log.
@@ -462,7 +360,6 @@
    REALTYPE        :: t
    logical, save   :: first=.true.
    integer, save   :: save_n=1
-!
 !EOP
 !-------------------------------------------------------------------------
 #ifdef DEBUG
@@ -547,10 +444,6 @@
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: meteo_file
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !
 !  See module for log.
@@ -566,8 +459,6 @@
    integer, save   :: time_var_id=-1
    character(len=256) :: dimname
 !
-! !TO DO:
-!  Need a variable to indicate homw much to read from each file.
 !EOP
 !-------------------------------------------------------------------------
 #ifdef DEBUG
@@ -775,12 +666,6 @@
 !  of either variables used for calculating stresses and fluxes or directly
 !  the stresses/fluxes directly are available to \emph{do\_meteo}.
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !
 !  See module for log.
@@ -829,8 +714,8 @@
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,v10)
       end if
 
-!     Rotation of wind due to the combined effect of possible rotation of 
-!     meteorological grid and possible hydrodynamic grid convergence 
+!     Rotation of wind due to the combined effect of possible rotation of
+!     meteorological grid and possible hydrodynamic grid convergence
 !     (cartesian and curvi-linear grids where conv <> 0.)
       do j=jmin-1,jmax+1
          do i=imin-1,imax+1
@@ -931,7 +816,7 @@
                   do i=imin,imax
                      evap(i,j) = wrk(i,j)
                   end do
-               end do 
+               end do
             end if
          else
             call copy_var(grid_scan,wrk,wrk_dp)

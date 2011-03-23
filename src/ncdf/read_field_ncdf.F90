@@ -1,4 +1,3 @@
-!$Id: read_field_ncdf.F90,v 1.7 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,28 +28,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: read_field_ncdf.F90,v $
-!  Revision 1.7  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.6  2004-09-16 14:32:25  kbk
-!  now reads 1-layer fields
-!
-!  Revision 1.5  2003/08/03 08:29:28  kbk
-!  use right order of dimensions - need to do x,y names correct
-!
-!  Revision 1.4  2003/05/06 16:25:16  kbk
-!  reads 3D netcdf files properly in parallel mode
-!
-!  Revision 1.3  2003/04/23 11:54:03  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 12:39:59  kbk
-!  parallel support
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:47  gotm
-!  recovering after CVS crash
 !
 ! !LOCAL VARIABLES:
    integer                   :: il,jl,iloc,jloc,indx
@@ -159,7 +136,7 @@
    iloc = max(imin-ioff,1); jloc = max(jmin-joff,1)
 
    start(1) = il ; start(2) = jl
-   start(3) = 1; 
+   start(3) = 1;
    edges(1) = ih-il+1 ; edges(2) = jh-jl+1
    edges(3) = kh; edges(4) = 1
 
@@ -173,7 +150,7 @@
 
    if(start(4) .lt. 0) then
       FATAL 'could not find requested field: ',nf
-      stop 'read_field_ncdf()' 
+      stop 'read_field_ncdf()'
    end if
 
    allocate(wrk((imax-imin+1)*(jmax-jmin+1)*kh),stat=rc)

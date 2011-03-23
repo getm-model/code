@@ -1,4 +1,3 @@
-!$Id: tridiagonal.F90,v 1.3 2009-09-30 11:28:47 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,26 +18,11 @@
    REALTYPE, intent(in)                :: au(0:kmax),bu(0:kmax)
    REALTYPE, intent(in)                :: cu(0:kmax),du(0:kmax)
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out)               :: value(0:kmax)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: tridiagonal.F90,v $
-!  Revision 1.3  2009-09-30 11:28:47  bjb
-!  OpenMP threading initial implementation
-!
-!  Revision 1.2  2003-04-23 12:02:43  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:21  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:09  bbh
-!  initial import into CVS
 !
 ! !LOCAL VARIABLES:
    REALTYPE                  :: ru(0:kmax),qu(0:kmax)

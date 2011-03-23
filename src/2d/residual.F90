@@ -1,4 +1,3 @@
-!$Id: residual.F90,v 1.7 2006-03-01 15:54:07 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -25,7 +24,7 @@
 !
 ! where $t_0$ is the time when the residual calculation begins (to be
 ! chosen from namelist) and $t_1$ is the finishing time of the model simulation.
-! 
+!
 !
 ! !USES:
    use variables_2d, only: u,v,res_du,res_u,res_dv,res_v,du,dv
@@ -34,14 +33,9 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: finish
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 !BOC

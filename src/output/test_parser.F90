@@ -1,4 +1,3 @@
-!$Id: test_parser.F90,v 1.1 2009-10-06 11:42:49 kb Exp $
    program test_parser
 !
 ! !DESCRIPTION:

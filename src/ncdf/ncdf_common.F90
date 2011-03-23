@@ -1,4 +1,3 @@
-!$Id: ncdf_common.F90,v 1.4 2009-03-13 14:44:14 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -15,23 +14,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: ncdf_common.F90,v $
-!  Revision 1.4  2009-03-13 14:44:14  kb
-!  grid information in NF_DOUBLE
-!
-!  Revision 1.3  2005-04-25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
-!  Revision 1.2  2003/04/23 11:54:03  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:49  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.1  2001/09/13 14:50:02  bbh
-!  Cleaner and smaller NetCDF implementation + better axis support
-!
 !
 !EOP
 !-----------------------------------------------------------------------

@@ -1,4 +1,3 @@
-!$Id: get_2d_bdy.F90,v 1.3 2008-12-09 00:31:58 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -18,33 +17,8 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: fmt,n
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: get_2d_bdy.F90,v $
-!  Revision 1.3  2008-12-09 00:31:58  kb
-!  added new 2D open boundaries
-!
-!  Revision 1.2  2003-04-23 12:04:08  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:33  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.3  2001/10/22 08:06:42  bbh
-!  Removed a bogus subroutine call
-!
-!  Revision 1.2  2001/05/14 12:45:24  bbh
-!  Introduced module ncdf_2d_bdy
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:09  bbh
-!  initial import into CVS
-!
-! !LOCAL VARIABLES:
 !
 !EOP
 !-------------------------------------------------------------------------

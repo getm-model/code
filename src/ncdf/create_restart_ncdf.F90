@@ -1,4 +1,3 @@
-!$Id: create_restart_ncdf.F90,v 1.10 2010-03-30 11:48:37 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,7 +12,7 @@
 !  to make a correct GETM hotstart. The created file contains dimensions
 !  (xax, yax, zax) as well as the (empty) variables. Variables are named
 !  corresponding to the names used in the Fortran files. Only the actual
-!  domain is stored (i.e. not the halo-zones). This allows easy use of 
+!  domain is stored (i.e. not the halo-zones). This allows easy use of
 !  'ncmerge' to stitch a number of hotstart files together to cover the
 !  entire computational domain. See read\_restart\_ncdf() for use.
 !
@@ -34,44 +33,13 @@
    integer, intent(in)                 :: loop
    integer, intent(in)                 :: runtype
 !
-! !DEFINED PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding
-!
-!  $Log: create_restart_ncdf.F90,v $
-!  Revision 1.10  2010-03-30 11:48:37  kb
-!  removing adaptive_coodinates
-!
-!  Revision 1.8  2010-01-21 15:46:23  kb
-!  fixed BIO-restart
-!
-!  Revision 1.7  2009-09-25 12:14:56  kb
-!  INCLUDE_HALOS --> SAVE_HALOS
-!
-!  Revision 1.6  2009-09-23 09:54:52  kb
-!  fixed typos in DESCRIPTION
-!
-!  Revision 1.5  2009-08-21 10:39:00  kb
-!  -DINCLUDE_HALOS will include halo-zones when writing/reading NetCDF hotstart files
-!
-!  Revision 1.4  2009-07-18 12:36:01  kb
-!  fixed SPM hot-start bug - Hofmeister
-!
-!  Revision 1.3  2009-04-27 08:03:02  kb
-!  getm/initialise.F90
-!
-!  Revision 1.2  2007-10-19 07:52:36  kbk
-!  zub and zvb not in hotstart files anymore
-!
-!  Revision 1.1  2007-09-21 13:03:42  kbk
-!  added drop-in NetCDF replacement for binary hotstart file (default is binary)
-!
 !
 ! !LOCAL VARIABLES:
    character(len=80)         :: history,tts
    character(len=80)         :: title
-   character(len=80)         :: str_error 
+   character(len=80)         :: str_error
 !EOP
 !-------------------------------------------------------------------------
 !BOC

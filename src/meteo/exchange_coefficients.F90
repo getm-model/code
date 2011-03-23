@@ -1,4 +1,3 @@
-!$Id: exchange_coefficients.F90,v 1.15 2009-09-30 11:28:48 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -14,20 +13,20 @@
 !  and $Pa$). The scheme used to get the required variables is as follows:
 !  \begin{itemize}
 !     \item We have sst, wind, air temperature
-!     \item We calculate the saturation vapor pressure (svp(T) based on 
+!     \item We calculate the saturation vapor pressure (svp(T) based on
 !           the sea surface temperature.
 !     \item We calculate the specific humidity valid for the sst - using
 !           the just calculated the saturation vapor pressure - unit must
 !           be [kg/kg]
 !     \item We have some measure of the humidity of the air - either
 !           specific humidity at air temperature, relative humidity or
-!           wet bulb tmperature. This needs to be converted to specific 
+!           wet bulb tmperature. This needs to be converted to specific
 !           humidity at 2m.
 !     \item In the case of precipitation, we compute the sensible heatflux
 !           due to the additional water, assuming that the rain has the same
 !           temperature as the air.
 !  \end{itemize}
-!  
+!
 !  The following formulaes are used (for the saturation vapor pressure
 !  a large number of different formulaes exists):
 !  \begin{itemize}
@@ -61,55 +60,8 @@
    REALTYPE, intent(in)                :: u10,v10,airt,airp,sst,hum
    integer, intent(in)                 :: hum_method
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding
-!
-!  $Log: exchange_coefficients.F90,v $
-!  Revision 1.15  2009-09-30 11:28:48  bjb
-!  OpenMP threading initial implementation
-!
-!  Revision 1.14  2007-06-27 08:39:36  kbk
-!  support for fresh water fluxes at the sea surface - Adolf Stips
-!
-!  Revision 1.13  2005-04-19 13:17:17  kbk
-!  reduce es=water vapour pressure sea according to Kraus (1972) - Stips
-!
-!  Revision 1.12  2005/04/19 13:02:08  kbk
-!  use -DOLD_WRONG_FLUXES to get pre-december 2004 behavior
-!
-!  Revision 1.9  2005/01/13 09:49:37  kbk
-!  wet bulb works, es is global, cleaning - Stips
-!
-!  Revision 1.8  2003/12/16 17:35:33  kbk
-!  Fortran95 requires same type as args to min/max
-!
-!  Revision 1.7  2003/11/17 09:01:12  kbk
-!  fixed serious error in calculation of relative humidity
-!
-!  Revision 1.6  2003/10/07 15:21:42  kbk
-!  cleaned a little bit - still need documentation
-!
-!  Revision 1.5  2003/10/01 12:10:05  kbk
-!  hum_method=1 (specific humidity) now works correctly
-!
-!  Revision 1.4  2003/07/01 16:38:34  kbk
-!  cleaned code - new methods
-!
-!  Revision 1.3  2003/04/23 12:05:50  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/03/17 15:04:15  gotm
-!  Fixed Kondo coefficients - -DWRONG_KONDO can be used
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:38  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.1  2001/07/26 14:35:18  bbh
-!  initial import into CVS
 !
 ! !DEFINED PARAMETERS:
    REALTYPE, parameter       :: a1=6.107799961
@@ -230,7 +182,7 @@
    case (3)
       ! Piece of code taken from HAMSOM for calculating relative
       ! humidity from dew point temperature and dry air temperature.
-      ! It must be sure that hum is dew point temperature in Kelvin 
+      ! It must be sure that hum is dew point temperature in Kelvin
       ! in the next line ...
 !       use dew in degC
       if (hum .lt. 100.) then
@@ -268,9 +220,9 @@
 !     Calculate the SVP at wet bulb temp then
 !     use the psychrometer formula to get vapour pressure
 !     See Smithsonian Met tables 6th Edition pg 366 eqn 3
-!     Make sure this is in degC 
+!     Make sure this is in degC
       if (hum .lt. 100 ) then
-         twet=hum 
+         twet=hum
          twet_k=hum+KELVIN
       else
          twet=hum-KELVIN

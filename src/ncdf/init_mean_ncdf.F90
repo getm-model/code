@@ -1,4 +1,3 @@
-!$Id: init_mean_ncdf.F90,v 1.2 2005-04-25 09:32:34 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,6 +18,9 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
    use m3d, only: calc_temp,calc_salt
+#ifdef GETM_BIO
+   use bio_var, only: numc,var_names,var_units,var_long
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -30,15 +32,11 @@
 ! !REVISION HISTORY:
 !  Original author(s): Adolf Stips & Karsten Bolding
 !
-!  $Log: init_mean_ncdf.F90,v $
-!  Revision 1.2  2005-04-25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
 !  Revision 1.1  2004/03/29 15:38:10  kbk
 !  possible to store calculated mean fields
-! 
 !
 ! !LOCAL VARIABLES:
+   integer                   :: n
    integer                   :: err
    integer                   :: scalar(1),f3_dims(3),f4_dims(4)
    REALTYPE                  :: fv,mv,vr(2)
@@ -78,7 +76,7 @@
    call set_attributes(ncid,time_id,units=trim(tts),long_name='time')
 
 
-!  short wave radiation 
+!  short wave radiation
    fv = swr_missing; mv = swr_missing; vr(1) = 0; vr(2) = 1500.
    err = nf90_def_var(ncid,'swrmean',NF90_REAL,f3_dims,swrmean_id)
    if (err .NE. NF90_NOERR) go to 10
@@ -233,6 +231,25 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
       end if
    end if
+#endif
+
+#ifdef GETM_BIO
+   allocate(biomean_id(numc),stat=err)
+   if (err /= 0) stop 'init_3d_ncdf(): Error allocating memory (bio_ids)'
+
+   fv = bio_missing
+   mv = bio_missing
+   vr(1) = -50.
+   vr(2) = 9999.
+   do n=1,numc
+      err = nf90_def_var(ncid,trim(var_names(n)) // '_mean',NF90_REAL, &
+                         f4_dims,biomean_id(n))
+      if (err .NE.  NF90_NOERR) go to 10
+      call set_attributes(ncid,biomean_id(n), &
+                          long_name=trim(var_long(n)), &
+                          units=trim(var_units(n)), &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+   end do
 #endif
 
 !  globals

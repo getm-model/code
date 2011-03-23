@@ -1,4 +1,3 @@
-!$Id: coordinates.F90,v 1.18 2010-03-30 11:48:37 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -15,7 +14,7 @@
 ! during every macro time step. This is done for the old and the new
 ! layer thicknesses at every point. Calculation of the layer distribution
 ! in the U- and V-points is done indepently from the calculation in the
-! T-points, since different methods for the calculation of the 
+! T-points, since different methods for the calculation of the
 ! bathymetry values in the U- and V-points are possible, see routine
 ! {\tt uv\_depths} described on page \pageref{sec-uv-depth}.
 !
@@ -23,17 +22,17 @@
 ! are coded:
 !
 ! \begin{enumerate}
-! \item Classical $\sigma$ coordinates where layer interfaces for each 
+! \item Classical $\sigma$ coordinates where layer interfaces for each
 ! layer index have a fixed relative position $\sigma_k$ in the water column,
-! which may be even equidistant or non-equidistant, see equations 
-! (\ref{sigma}) and (\ref{formula_Antoine}). 
-! The surface and bottom zooming factors 
+! which may be even equidistant or non-equidistant, see equations
+! (\ref{sigma}) and (\ref{formula_Antoine}).
+! The surface and bottom zooming factors
 ! $d_u$ and $d_l$ are read in via the {\tt domain} namelist in {\tt getm.inp}
 ! as {\tt ddu} and {\tt ddl}.
 ! In the first call to coordinates, the relative interface positions
 ! {\tt dga} are calculated as a one-dimensional vector (in case of
 ! non-equidistant $\sigma$ coordinates), and those are then multiplied with
-! the water depths in all T-, U- and V-points to get the layer thicknesses. 
+! the water depths in all T-, U- and V-points to get the layer thicknesses.
 ! \item Also $z$- (i.e.\ geopotential) coordinates are enabled in GETM
 ! in principle. However, they may not yet work and need further
 ! development. First of all, fixed $z$-levels are defined by means of
@@ -45,12 +44,12 @@
 ! \qquad k=0,\dots,N\qquad
 ! \end{equation}
 !
-! Then, layers are from the surface down filled into the T-point 
+! Then, layers are from the surface down filled into the T-point
 ! water column locally.
 ! When the last layer is shallower than {\tt hnmin} (hard coded as local
-! variable), the two last layers are combined. The index of the lowest 
+! variable), the two last layers are combined. The index of the lowest
 ! layer is then stored in the integer field {\tt kmin\_pmz}.
-! layer thicknesses in U- and V-points are then taken as the minimum 
+! layer thicknesses in U- and V-points are then taken as the minimum
 ! values of adjacent thicknesses in T-points, and bottom indices
 ! {\tt kumin\_pmz} and  {\tt kvmin\_pmz} are taken as the maximum
 ! of adjacent  {\tt kmin\_pmz} indices.
@@ -60,11 +59,11 @@
 ! an interpolation between equidistant and non-equaidistant $\sigma$
 ! coordinates. During the first call, a three-dimensional field
 ! {\tt gga} containing the relative interface positions is calculated,
-! which further down used together with the actual water depth in the 
+! which further down used together with the actual water depth in the
 ! T-, U- and V-points for calculating the updated old and new layer
 ! thicknesses.
 !\end{enumerate}
-! 
+!
 ! A fourth option will soon be the adaptive grids which have been
 ! conceptionally developed by \cite{BURCHARDea04}.
 !

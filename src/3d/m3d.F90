@@ -1,4 +1,3 @@
-!$Id: m3d.F90,v 1.49 2010-03-30 11:48:37 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -41,7 +40,7 @@
    use advection_3d, only: init_advection_3d
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
    use bdy_3d, only: bdy3d_tmrlx, bdy3d_tmrlx_ucut, bdy3d_tmrlx_max, bdy3d_tmrlx_min
-!  Necessary to use halo_zones because update_3d_halos() have been moved out 
+!  Necessary to use halo_zones because update_3d_halos() have been moved out
 !  temperature.F90 and salinity.F90 - should be changed at a later stage
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
 
@@ -87,9 +86,6 @@
    REALTYPE, intent(in)                :: timestep
    logical, intent(in)                 :: hotstart
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !DESCRIPTION:
 !  Here, the {\tt m3d} namelist is read from {\tt getm.inp}, and the
@@ -98,12 +94,12 @@
 !  Furthermore, a number of consistency checks are made for the choices
 !  of the momentum advection schemes. When higher-order advection schemes
 !  are chosen for the momentum advection, the compiler option {\tt UV\_TVD}
-!  has to be set. Here, the macro time step $\Delta t$ is calculated 
+!  has to be set. Here, the macro time step $\Delta t$ is calculated
 !  from the micro time step $\Delta t_m$ and the split factor {\tt M}.
 !  Then, in order to have the vertical coordinate system present already here,
 !  {\tt coordinates} (see page \pageref{sec-coordinates}) needs to be called,
-!  in order to enable proper interpolation of initial values for 
-!  potential temperature $\theta$ and salinity $S$ for cold starts. 
+!  in order to enable proper interpolation of initial values for
+!  potential temperature $\theta$ and salinity $S$ for cold starts.
 !  Those initial values are afterwards read in via the routines
 !  {\tt init\_temperature} (page \pageref{sec-init-temperature}) and
 !  {\tt init\_salinity} (page \pageref{sec-init-salinity}).
@@ -116,13 +112,12 @@
    NAMELIST /m3d/ &
              M,cnpar,cord_relax,                        &
              bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,     &
-	     bdy3d_tmrlx,bdy3d_tmrlx_ucut,              &
+             bdy3d_tmrlx,bdy3d_tmrlx_ucut,              &
              bdy3d_tmrlx_max,bdy3d_tmrlx_min,           &
              vel_hor_adv,vel_ver_adv,vel_adv_split,     &
              calc_temp,calc_salt,                       &
              avmback,avhback,ip_method,ip_ramp,         &
              vel_check,min_vel,max_vel
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -273,6 +268,8 @@
    end if
 #endif
 
+    call init_advection_3d(2)
+
 #ifndef NO_BAROCLINIC
     if (runtype .eq. 3 .or. runtype .eq. 4) then
       call init_eqstate()
@@ -285,9 +282,6 @@
       if (bdy3d) call init_bdy_3d()
       if (runtype .ge. 3) call init_internal_pressure()
       if (runtype .eq. 3) call do_internal_pressure()
-      if (runtype .eq. 4) then
-         call init_advection_3d(2)
-      end if
    end if
 
    if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
@@ -321,18 +315,18 @@
 !
 ! !DESCRIPTION:
 ! This is a wrapper routine to call all 3D related subroutines.
-! The call position for the {\tt coordinates} routine depends on 
-! the compiler option 
-! {\tt MUDFLAT}: If it is defined, then the 
+! The call position for the {\tt coordinates} routine depends on
+! the compiler option
+! {\tt MUDFLAT}: If it is defined, then the
 ! call to {\tt coordinates} construction is made such that drying and flooding
 ! is stable. If {\tt MUDFLAT} is not defined, then the adaptive grids with
-! Lagrangian component which are currently under development are supported. 
+! Lagrangian component which are currently under development are supported.
 ! Both, drying and flooding and
 ! Lagrangian coordinates does not go together yet.
 ! The call sequence is as follows:
 !
 ! \vspace{0.5cm}
-! 
+!
 ! \begin{tabular}{lll}
 ! {\tt start\_macro}           & initialising a 3d step & see page
 ! \pageref{sec-start-macro} \\
@@ -368,7 +362,7 @@
 ! \pageref{sec-do-salinity} \\
 ! {\tt do\_eqstate}            & equation of state & see page
 ! \pageref{sec-do-eqstate} \\
-! {\tt do\_spm}                & suspended matter equation & see page 
+! {\tt do\_spm}                & suspended matter equation & see page
 ! \pageref{sec-do-spm} \\
 ! {\tt do\_getm\_bio}          & call to GOTM-BIO (not yet released) & \\
 ! {\tt slow\_bottom\_friction} & slow bottom friction & see page
@@ -382,7 +376,7 @@
 ! {\tt stop\_macro}            & finishing a 3d step & see page
 ! \pageref{sec-stop-macro}
 ! \end{tabular}
-! 
+!
 ! \vspace{0.5cm}
 !
 ! Several calls are only executed for certain compiler options. At each

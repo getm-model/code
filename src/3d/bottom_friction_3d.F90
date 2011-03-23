@@ -1,4 +1,3 @@
-!$Id: bottom_friction_3d.F90,v 1.13 2009-09-30 11:28:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -21,7 +20,7 @@
 ! \end{equation}
 !
 ! with the velocity components of the bottom layer, $u_b$ and $v_b$,
-! and the drag coefficient 
+! and the drag coefficient
 !
 ! \begin{equation}\label{r}
 ! r = \left(\frac{\kappa}{\ln \left(\frac{0.5h_1+z_0^b}{z_0^b}\right)}
@@ -32,7 +31,7 @@
 ! provided as output parameters {\tt rru} (for U-points) and
 ! {\tt rrv} (for V-points). The layer height $h_1$ in (\ref{r}) is set to
 ! the thickness of the bottom layer in the respective U- or V-point.
-! 
+!
 ! There are some experimental options for the interested user included
 ! here. It is possible to change the interpolation of $u$ to V-points
 ! and of $v$ to U-points from velocity-based interpolation (as done
@@ -52,12 +51,6 @@
    use getm_timers, only: tic, toc, TIM_BOTTFRICT3D
 !$ use omp_lib
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding

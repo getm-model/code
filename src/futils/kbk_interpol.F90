@@ -1,4 +1,3 @@
-!$Id: kbk_interpol.F90,v 1.3 2007-06-07 10:25:19 kbk Exp $
 #include"cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -32,21 +31,10 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: kbk_interpol.F90,v $
-!  Revision 1.3  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.2  2003-04-23 12:02:43  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:21  gotm
-!  recovering after CVS crash
-!
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,nn,kl
    REALTYPE                  :: rat
    REALTYPE                  :: zmodel(kmax),prof(nlev)
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -76,7 +64,7 @@
 
 !  Search index of lowest OK value
             do k=1,nlev
-               if(prof(k) .ne. -9999.0) EXIT     
+               if(prof(k) .ne. -9999.0) EXIT
             end do
             kl = k
 !  Set bottom values to lowest input value

@@ -1,4 +1,3 @@
-!$Id: halo_zones.F90,v 1.7 2009-08-21 08:56:34 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -31,31 +30,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: halo_zones.F90,v $
-!  Revision 1.7  2009-08-21 08:56:34  bjb
-!  Fix name clash on PARALLEL with OpenMP key word
-!
-!  Revision 1.6  2008-09-16 10:03:24  kb
-!  added Holtermanns emergency break algorithm
-!
-!  Revision 1.5  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.4  2003-08-03 08:49:51  kbk
-!  cleaned code
-!
-!  Revision 1.3  2003/05/09 11:52:08  kbk
-!  do not mirror coordinate info + use mask for inverse area calculation
-!
-!  Revision 1.2  2003/04/23 12:02:43  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.1  2003/04/07 12:05:42  kbk
-!  new parallel related files
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:29  gotm
-!  recovering after CVS crash
-!
 ! !LOCAL VARIABLES:
 #ifndef GETM_PARALLEL
    integer, parameter        :: nprocs=1
@@ -69,7 +43,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: init_halo_zones - 
+! !IROUTINE: init_halo_zones -
 !
 ! !INTERFACE:
    subroutine init_halo_zones()
@@ -78,16 +52,8 @@
 ! !DESCRIPTION:
 !  Initialize Parallel environment
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-! !LOCAL VARIABLES:
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -126,8 +92,6 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)             :: f1(E2DFIELD),f2(E2DFIELD)
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -188,8 +152,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout):: f1(I3DFIELD),f2(I3DFIELD)
 !
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
@@ -230,14 +192,9 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: tag
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -261,7 +218,7 @@
 !
 ! !DESCRIPTION:
 !  Call the parallel library (MPI) routine for setting an array of flags
-!  - or - in case of a serial run just set the local value. 
+!  - or - in case of a serial run just set the local value.
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: n,flag
@@ -272,7 +229,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding
 !
-! !LOCAL VARIABLES:
 !EOP
 !-------------------------------------------------------------------------
 !BOC

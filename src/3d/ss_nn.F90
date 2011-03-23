@@ -1,4 +1,3 @@
-!$Id: ss_nn.F90,v 1.13 2010-03-02 13:06:56 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,10 +10,10 @@
 !
 ! !DESCRIPTION:
 !
-! Here, the shear frequency squared, 
-! $M^2=\left(\partial_z u\right)^2+\left(\partial_z v\right)^2$, 
+! Here, the shear frequency squared,
+! $M^2=\left(\partial_z u\right)^2+\left(\partial_z v\right)^2$,
 ! and the buoyancy frequency squared, $N^2=\partial_z b$, with buoyancy $b$ from
-! (\ref{bdef}) are calculated. 
+! (\ref{bdef}) are calculated.
 ! For both calculations, two alternative methods are coded.
 ! The two straight-forward methods which are explained first, do
 ! both have the disadvantage of generating numerical instabilities.
@@ -76,10 +75,10 @@
 ! \left(\frac12\left(h^c_{i,j,k}+h^c_{i,j,k+1}\right)\nu_{i,j,k}\right)^{-1}
 ! \end{array}
 ! \end{equation}
-! 
+!
 ! The straight-forward discretisation of
 ! $N^2$ is given by
-! 
+!
 ! \begin{equation}\label{Nstraight}
 ! \begin{array}{l}
 ! \displaystyle
@@ -87,7 +86,7 @@
 ! \frac{b_{i,j,k+1}-b_{i,j,k}}{\frac12(h^t_{i,j,k+1}+h^t_{i,j,k})}.
 ! \end{array}
 ! \end{equation}
-! 
+!
 ! In some cases, together with the straight-forward discretisation
 ! of the shear squared, (\ref{ShearSquaredOld}), this
 ! did not produce stable numerical results. The reason for this might be that
@@ -100,7 +99,7 @@
 ! and the straight-forward discretisation of
 ! $N^2$, (\ref{Nstraight}),  produced numerically stable results.
 !
-! Most stable results have been obtained with a weighted average 
+! Most stable results have been obtained with a weighted average
 ! for the $N^2$ calculation:
 !
 ! \begin{equation}\label{Naveraged}
@@ -125,7 +124,7 @@
 ! \end{array}
 ! \end{equation}
 !
-! These stability issues need to be further investigated in the future. 
+! These stability issues need to be further investigated in the future.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,au,av,az
@@ -136,12 +135,6 @@
    use getm_timers, only: tic, toc, TIM_SSNN
 !$ use omp_lib
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -224,7 +217,7 @@
                   NNe=(buoy(i+1,j,k+1)-buoy(i+1,j,k))/dz
                else
                   NNe=NNc
-               end if 
+               end if
                if (az(i-1,j) .ge. 1) then
                   dz=_HALF_*(hn(i-1,j,k+1)+hn(i-1,j,k))
                   NNw=(buoy(i-1,j,k+1)-buoy(i-1,j,k))/dz
@@ -245,8 +238,8 @@
                end if
                NN(i,j,k)=(_ONE_/3)*NNc+(_ONE_/6)*(NNe+NNw+NNn+NNs)
 ! BJB-NOTE: This old implementation (with limited accuracy constants)
-!   yields significantly different results. Relative elevation  
-!   differences of O(1e-4) have been observed between old and new 
+!   yields significantly different results. Relative elevation
+!   differences of O(1e-4) have been observed between old and new
 !   implementation. BJB 2009-09-23.
 !              NN(i,j,k)=0.3333333*NNc+0.1666666*(NNe+NNw+NNn+NNs)
 #else

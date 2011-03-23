@@ -1,4 +1,3 @@
-!$Id: w_split_adv.F90,v 1.6 2009-09-30 11:28:47 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -17,7 +16,7 @@
 ! \begin{equation}\label{adv_w_step}
 ! h^n_{i,j,k} c^n_{i,j,k} =
 ! h^o_{i,j,k} c^o_{i,j,k}
-! - \Delta t 
+! - \Delta t
 ! \left(w_{i,j,k}\tilde c^w_{i,j,k}-w_{i,j,k-1}\tilde c^w_{i,j,k-1}\right),
 ! \end{equation}
 !
@@ -25,8 +24,8 @@
 !
 ! \begin{equation}\label{adv_w_step_h}
 ! h^n_{i,j,k}  =
-! h^o_{i,j,k}   
-! - \Delta t        
+! h^o_{i,j,k}
+! - \Delta t
 ! \left(w_{i,j,k}\tilde -w_{i,j,k-1}\right).
 ! \end{equation}
 !
@@ -57,8 +56,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)             :: f(I3DFIELD)
 !
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
@@ -78,7 +75,6 @@
    STDERR 'Use w_split_it_adv() instead, choose option ITERATE_VERT_ADV'
    stop 'w_split_adv()'
 #endif
-
 
    cu(:,:,kmax)=_ZERO_
 

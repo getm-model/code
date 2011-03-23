@@ -1,4 +1,3 @@
-#$Id: Makefile,v 1.6 2006-02-10 22:29:12 hb Exp $
 #
 # Makefile to build the 2D specific library - libm2d.a
 #

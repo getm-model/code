@@ -1,4 +1,3 @@
-!$Id: eqstate.F90,v 1.13 2009-09-30 11:28:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -28,7 +27,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 
@@ -43,19 +41,12 @@
    subroutine init_eqstate()
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !DESCRIPTION:
 !  Reads the namelist and makes calls to the init functions of the
 !  various model components.
 !
 ! !LOCAL VARIABLES:
    namelist /eqstate/ eqstate_method,T0,S0,p0,dtr0,dsr0
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -93,14 +84,14 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  do_eqstate - equation of state \label{sec-do-eqstate} 
+! !IROUTINE:  do_eqstate - equation of state \label{sec-do-eqstate}
 !
 ! !INTERFACE:
    subroutine do_eqstate()
 !
 ! !DESCRIPTION:
 !
-! Here, the equation of state is calculated for every 3D grid point.  
+! Here, the equation of state is calculated for every 3D grid point.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,az
@@ -108,12 +99,6 @@
    use getm_timers, only: tic, toc, TIM_EQSTATE
 !$ use omp_lib
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
@@ -150,7 +135,7 @@
 !$OMP BARRIER
 
 ! OMP-TODO: CONSTANCE_TEST not threaded. It should
-!  be easy to thread, but the gain would only be for those cases, 
+!  be easy to thread, but the gain would only be for those cases,
 !  and the risk of introducing erros is non-zero. BJB 2009-09-25.
 #ifdef CONSTANCE_TEST
 !$OMP MASTER
@@ -166,7 +151,7 @@
                   if (az(i,j) .gt. 0) then
                      T1 = T(i,j,k)
                      T2 = T1*T1
-! BJB-TODO: Due to caching, it is likely (slightly) faster to 
+! BJB-TODO: Due to caching, it is likely (slightly) faster to
 !    compute T3=T1*T1*T1 (etc). Same for S further down.
                      T3 = T1*T2
                      T4 = T2*T2

@@ -1,4 +1,3 @@
-!$Id: init_grid_ncdf.F90,v 1.9 2009-10-13 13:15:11 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -39,35 +38,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf
-!
-!  $Log: init_grid_ncdf.F90,v $
-!  Revision 1.9  2009-10-13 13:15:11  kb
-!  added psedo-coordinates when grid-type 3 or 4
-!
-!  Revision 1.8  2009-09-28 14:39:06  kb
-!  INLUDE_HALOS -> SAVE_HALOS, renamed dimension names
-!
-!  Revision 1.7  2009-09-23 10:11:48  kb
-!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
-!
-!  Revision 1.6  2009-03-13 14:44:14  kb
-!  grid information in NF_DOUBLE
-!
-!  Revision 1.5  2007-10-16 07:14:35  kbk
-!  pseudo coordinate variables for curvi-linear grids
-!
-!  Revision 1.4  2007-03-30 13:11:00  hb
-!  Use of adaptive and hybrid vertical coordinates technically enabled
-!
-!  Revision 1.3  2007-02-22 08:48:12  kbk
-!  possible to save masks (az, au, av)
-!
-!  Revision 1.2  2005/04/29 12:45:41  kbk
-!  stricter COARDS conforming
-!
-!  Revision 1.1  2005/04/25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
 !
 ! !LOCAL VARIABLES:
    integer                   :: status
@@ -463,7 +433,7 @@
                                long_name='dy for T-points',units='m',     &
                                FillValue=fv,missing_value=mv, &
                                netcdf_real=NF90_DOUBLE)
- 
+
             status = nf90_def_var(ncid,'dxu',NF90_DOUBLE,f2_dims,id)
             if (status .ne. NF90_NOERR) call netcdf_error(status,         &
                                            "init_grid_ncdf()","dxu -")

@@ -1,8 +1,7 @@
-!$Id: w_split_it_adv.F90,v 1.8 2009-10-06 11:45:34 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  w_split_it_adv -  iterated 1D z-advection 
+! !IROUTINE:  w_split_it_adv -  iterated 1D z-advection
 !             \label{sec-w-split-it-adv}
 !
 ! !INTERFACE:
@@ -11,7 +10,7 @@
 ! !DESCRIPTION:
 !
 ! Here, the same one-dimensional advection step as in {\tt w\_split\_adv}
-! (see section \ref{sec-w-split-adv} on page \pageref{sec-w-split-adv}) 
+! (see section \ref{sec-w-split-adv} on page \pageref{sec-w-split-adv})
 ! is applied, but with an
 ! iteration in time in case that the vertical Courant number exceeds
 ! unity at any interface of the water column under calculation.
@@ -23,7 +22,7 @@
 ! \right\},
 ! \end{equation}
 !
-! with the Courant number 
+! with the Courant number
 !
 ! \begin{equation}
 ! C_{i,j,k}=\left|w_{i,j,k}\right|
@@ -40,11 +39,10 @@
 ! of the CFL criterium, which could happen fast in case of
 ! high vertical resolution together with processes such as upwelling
 ! or fast sinking material. The good thing about this procedure is that
-! only the water column is punished by higher numerical load 
+! only the water column is punished by higher numerical load
 ! in which the potential violation of the CFL criterium
-! occurs.  
+! occurs.
 !
-! 
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
    use advection_3d, only: hi,hio,cu
@@ -61,8 +59,6 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)             :: f(I3DFIELD)
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -135,7 +131,7 @@
                         f(i,j,k)=(f(i,j,k)*hio(i,j,k)-splitfac/float(it)      &
                                   *dt*(cu(i,j,k)-cu(i,j,k-1)))/hi(i,j,k)
                      end do
-                  end do   
+                  end do
                end if
             end do
          end do
@@ -159,7 +155,7 @@
                         if (ww(i,j,k) .gt. _ZERO_) then
                            if (k.lt.kmax) then
                               c=ww(i,j,k)/float(it)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
-                           else   
+                           else
                               c=ww(i,j,k)/float(it)*dt/hi(i,j,k)
                            end if
                            if (c .gt. cmax) cmax=c
@@ -171,9 +167,9 @@
                            fc=f(i,j,k  )            ! central
                            if (k.lt.kmax) then
                               fd=f(i,j,k+1)         ! downstream
-                           else  
+                           else
                               fd=f(i,j,k)           ! downstream
-                           end if   
+                           end if
                            if (abs(fd-fc) .gt. 1e-10) then
                               r=(fc-fu)/(fd-fc)     ! slope ratio
                            else

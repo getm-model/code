@@ -1,4 +1,3 @@
-!$Id: vv_momentum_3d.F90,v 1.22 2009-09-30 11:28:47 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,7 +18,7 @@
 ! either as direct transport averaging, or following \cite{ESPELIDea00}
 ! by using velocity averages (in case the compiler option {\tt NEW\_CORI}
 ! is set).
-!  
+!
 ! As a next step, explicit forcing terms (advection, diffusion,
 ! internal pressure gradient, surface stresses) are added up (into the variable
 ! {\tt ex(k)}), the eddy viscosity is horizontally interpolated to the V-point,
@@ -37,7 +36,7 @@
 ! with the friction coefficient $C$. The explicit part of this term,
 ! $C\sqrt{u^2+v^2}$,
 ! is calculated in the routine {\tt structure\_friction\_3d.F90}.
-!  
+!
 ! Finally, the new velocity profile is shifted such that its vertical
 ! integral is identical to the time integral of the vertically integrated
 ! transport.
@@ -45,7 +44,7 @@
 ! is made with
 ! respect to the new surface elevation, otherwise to the
 ! old surface elevation.
-!  
+!
 ! When GETM is run as a slice model (compiler option {\tt SLICE\_MODEL}
 ! is activated), the result for $j=2$ is copied to $j=1$ and $j=3$.
 ! If the compiler option {\tt XZ\_PLUME\_TEST} is set, a slope
@@ -90,10 +89,6 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: n
    logical, intent(in)                 :: bdy3d
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -160,7 +155,7 @@
    if (rc /= 0) stop 'vv_momentum_3d: Error allocating memory (ex)'
 
 ! Note: We do not need to initialize these work arrays.
-!   Tested BJB 2009-09-25. 
+!   Tested BJB 2009-09-25.
 
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax

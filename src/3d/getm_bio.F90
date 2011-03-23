@@ -1,4 +1,3 @@
-!$Id: getm_bio.F90,v 1.4 2009-11-20 09:17:13 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -57,16 +56,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
-!
-!  $Log: getm_bio.F90,v $
-!  Revision 1.4  2009-11-20 09:17:13  kb
-!  updated GOTM/BIO interface
-!
-!  Revision 1.3  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.2  2007-05-14 12:16:22  kbk
-!  added support for biology - via GOTM
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -211,10 +200,6 @@
 !
 ! !INPUT PARAMETERS:
    REALTYPE, intent(in)                :: dt
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  See the log for the module

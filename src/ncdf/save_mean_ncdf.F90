@@ -1,4 +1,3 @@
-!$Id: save_mean_ncdf.F90,v 1.3 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -22,6 +21,9 @@
    use domain,       only: H,az
    use variables_3d, only: kmin
    use m3d, only: calc_temp,calc_salt
+#ifdef GETM_BIO
+   use bio_var, only: numc
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -33,18 +35,8 @@
 ! !REVISION HISTORY:
 !  Original author(s): Adolf Stips & Karsten Bolding
 !
-!  $Log: save_mean_ncdf.F90,v $
-!  Revision 1.3  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.2  2005-04-25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
-!  Revision 1.1  2004/03/29 15:38:10  kbk
-!  possible to store calculated mean fields
-!
-!
 ! !LOCAL VARIABLES:
+   integer                   :: n
    integer                   :: err
    integer                   :: start(4),edges(4)
    integer, save             :: n3d=0
@@ -199,6 +191,15 @@
          if (err .NE. NF90_NOERR) go to 10
       end if
    end if
+#endif
+
+#ifdef GETM_BIO
+   do n=1,numc
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,cc3dmean(n,:,:,:), &
+                  bio_missing,imin,imax,jmin,jmax,0,kmax,ws3d)
+      err = nf90_put_var(ncid, biomean_id(n), ws3d(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end do
 #endif
 
    err = nf90_sync(ncid)

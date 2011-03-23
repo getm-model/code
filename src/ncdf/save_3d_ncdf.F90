@@ -1,4 +1,3 @@
-!$Id: save_3d_ncdf.F90,v 1.19 2009-04-22 10:09:36 lars Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -54,77 +53,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: save_3d_ncdf.F90,v $
-!  Revision 1.19  2009-04-22 10:09:36  lars
-!  support for bottom stress output
-!
-!  Revision 1.18  2009-01-05 09:57:06  kb
-!  option for storing SS and NN
-!
-!  Revision 1.17  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.16  2007-05-26 12:19:31  kbk
-!  destag of vertical velocities
-!
-!  Revision 1.15  2007-05-22 09:37:20  kbk
-!  saving physical vertical velocities
-!
-!  Revision 1.14  2007-02-23 12:20:37  kbk
-!  introduce buoy() and rename rho() to buoy()i where appropriate
-!
-!  Revision 1.13  2007-02-20 13:52:15  kbk
-!  solar radiation -> 3d field - possible to save
-!
-!  Revision 1.12  2006-03-17 11:06:33  kbk
-!  cleaner inclusion of SPM module
-!
-!  Revision 1.11  2005/09/23 11:27:10  kbk
-!  support for biology via GOTMs biology modules
-!
-!  Revision 1.10  2005/04/25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
-!  Revision 1.9  2004/06/15 08:25:57  kbk
-!  added supoort for spm - Ruiz
-!
-!  Revision 1.8  2004/05/04 09:23:51  kbk
-!  hydrostatic consistency criteria stored in .3d.nc file
-!
-!  Revision 1.7  2003/12/16 12:47:11  kbk
-!  rho_0 and g from parameters (manuel)
-!
-!  Revision 1.6  2003/12/08 07:21:53  hb
-!  use proper layer heights for saving velocities
-!
-!  Revision 1.5  2003/05/09 11:53:13  kbk
-!  forgot to delete some debug lines
-!
-!  Revision 1.4  2003/05/09 11:38:26  kbk
-!  added proper undef support - based on Adolf Stips patch
-!
-!  Revision 1.3  2003/04/23 11:53:24  kbk
-!  save lat/lon info for spherical grid
-!
-!  Revision 1.2  2003/04/07 12:43:12  kbk
-!  SPHERICAL and NO_BAROCLINIC
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:48  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.4  2001/10/25 16:16:21  bbh
-!  No actual storing of data in init_3d_ncdf.F90 -> save_3d_ncdf.F90
-!
-!  Revision 1.3  2001/10/23 14:19:20  bbh
-!  Stores h if general vertical coordinates
-!
-!  Revision 1.2  2001/10/23 07:37:17  bbh
-!  Saving spm - if calc_spm and save_spm are both true
-!
-!  Revision 1.1  2001/09/13 14:50:02  bbh
-!  Cleaner and smaller NetCDF implementation + better axis support
-!
 !
 ! !LOCAL VARIABLES:
    integer                   :: err,n
@@ -189,7 +117,6 @@
    err = nf90_put_var(ncid,v_id,ws2d(_2D_W_),start,edges)
    if (err .NE. NF90_NOERR) go to 10
 
-   
    if (save_taub) then
 
       !  bottom stress (x)

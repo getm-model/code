@@ -1,9 +1,8 @@
-!$Id: structure_friction_3d.F90,v 1.2 2009-08-18 10:24:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: structure_friction_3d - 
+! !ROUTINE: structure_friction_3d -
 ! \label{sec-structure_friction-3d}
 !
 ! !INTERFACE:
@@ -17,7 +16,7 @@
 ! \begin{equation}
 ! \mbox{\tt sf} = C(z) \sqrt{u(z)^2+v(z)^2},
 ! \end{equation}
-! with the friction coefficient $C$ bearing the physical unit [1/m]. 
+! with the friction coefficient $C$ bearing the physical unit [1/m].
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
@@ -30,12 +29,6 @@
    use getm_timers, only: tic, toc, TIM_STRCTFRICT
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
@@ -45,7 +38,6 @@
 #ifdef STRUCTURE_FRICTION
    REALTYPE                  :: cds(I2DFIELD)
 #endif
-
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -65,7 +57,7 @@
       do i=imin,imax
          if ((i.eq.90).and.(j.eq.6)) then
             cds(i,j)=0.01
-         end if   
+         end if
       end do
    end do
    sf=_ZERO_

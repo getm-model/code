@@ -1,4 +1,3 @@
-#$Id: Makefile,v 1.9 2009-05-07 16:02:01 kb Exp $
 #
 # Makefile to build the ncdf module - ncdfio.o and the libncdfio.a library
 #
