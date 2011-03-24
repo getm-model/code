@@ -289,9 +289,9 @@
          call init_advection_3d(2)
       end if
    end if
+#endif
 
    if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
-#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_3d()'

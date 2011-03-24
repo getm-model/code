@@ -60,8 +60,11 @@
 
 ! ADAPTIVE-BEGIN
    use  parameters,  only: g,rho_0
-   use variables_3d, only: uu,vv,NN,SS
+   use variables_3d, only: uu,vv,SS
+#ifndef NO_BAROCLINIC
+   use variables_3d, only: NN
    use variables_3d, only: rho
+#endif
    use domain,       only: ddu,ddl
    use halo_zones, only: update_3d_halo,wait_halo
    use halo_zones, only: H_TAG,U_TAG,V_TAG
@@ -100,33 +103,33 @@
    REALTYPE, save, dimension(:,:,:), allocatable  :: zpos ! new pos. of z-levels
    REALTYPE, save, dimension(:,:,:), allocatable  :: zposo! old pos. of z-levels
    REALTYPE, save, dimension(:,:,:), allocatable  :: work2,work3
-   REALTYPE     :: faclag=0.0  ! Factor on Lagrangian coords., 0.le.faclag.le.1
-   REALTYPE     :: facdif=0.3  ! Factor on thickness filter,   0.le.faclag.le.1
-   REALTYPE     :: fachor=0.1  ! Factor on position filter,  0.le.faclag.le.1
-   REALTYPE     :: faciso=0.e-6 ! Factor for isopycnal tendency
-   REALTYPE     :: depthmin=0.2
-   REALTYPE     :: Ncrit=1.e-6
-   integer      :: mhor=1 ! this number is experimental - it has to be 1 for now-
-   integer      :: iw=2 ! stencil for isopycnal tendency
+   REALTYPE     :: faclag=_ZERO_    ! Factor on Lagrangian coords., 0.le.faclag.le.1
+   REALTYPE     :: facdif=3*_TENTH_ ! Factor on thickness filter,   0.le.faclag.le.1
+   REALTYPE     :: fachor=_TENTH_   ! Factor on position filter,  0.le.faclag.le.1
+   REALTYPE     :: faciso=_ZERO_    ! Factor for isopycnal tendency
+   REALTYPE     :: depthmin=_ONE_/5
+   REALTYPE     :: Ncrit=_ONE_/1000000
+   integer      :: mhor=1    ! this number is experimental - it has to be 1 for now-
+   integer      :: iw=2      ! stencil for isopycnal tendency
    REALTYPE     :: rm
    INTEGER      :: im,iii,jjj,ii
-   integer      :: split=1     !splits the vertical adaption into #split steps
-   REALTYPE     :: c1ad=0.2     ! dependence on NN
-   REALTYPE     :: c2ad=0.0     ! dependence on SS
-   REALTYPE     :: c3ad=0.2    ! distance from surface and bottom
-   REALTYPE     :: c4ad=0.6    ! background value
-   REALTYPE     :: d_vel=0.1  ! Typical value of absolute shear 
-   REALTYPE     :: d_dens=0.5  ! Typical value of BVF squared
-   REALTYPE     :: dsurf=1.     ! reference value for surface/bottom distance
-   REALTYPE     :: tgrid=21600. ! Time scale of grid adaptation
+   integer      :: split=1           ! splits the vertical adaption into #split steps
+   REALTYPE     :: c1ad=_ONE_/5      ! dependence on NN
+   REALTYPE     :: c2ad=_ZERO_       ! dependence on SS
+   REALTYPE     :: c3ad=_ONE_/5      ! distance from surface and bottom
+   REALTYPE     :: c4ad=6*_TENTH_    ! background value
+   REALTYPE     :: d_vel=_TENTH_     ! Typical value of absolute shear 
+   REALTYPE     :: d_dens=_HALF_     ! Typical value of BVF squared
+   REALTYPE     :: dsurf=20*_ONE_       ! reference value for surface/bottom distance
+   REALTYPE     :: tgrid=21600*_ONE_ ! Time scale of grid adaptation
    REALTYPE     :: dtgrid
    REALTYPE     :: aau(0:kmax),bu(0:kmax)
    REALTYPE     :: cu(0:kmax),du(0:kmax)
-   REALTYPE     :: facupper=1.0
-   REALTYPE     :: faclower=1.0
+   REALTYPE     :: facupper=_ONE_
+   REALTYPE     :: faclower=_ONE_
    REALTYPE     :: cNN,cSS,cdd,csum
-   REALTYPE     :: cbg=0.6
-   REALTYPE     :: tfac_hor=3600.0 ! factor introducing a hor. adaption timescale = dt/tgrid_hor where tgrid_hor=tgrid/N
+   REALTYPE     :: cbg=6*_TENTH_
+   REALTYPE     :: tfac_hor=3600*_ONE_ ! factor introducing a hor. adaption timescale = dt/tgrid_hor where tgrid_hor=tgrid/N
    integer      :: iip
 
    integer,save :: count=0     
@@ -195,6 +198,10 @@ STDERR 'adaptive_coordinates()'
       kmaxm1= _ONE_/float(kmax)
       LEVEL2 "allocated memory"
 
+! In the case of no-baroclinic, the nnloc will never be updated,
+! so we initiialize it here. Same for avn: Both just remain zero.
+      NNloc(:) = _ZERO_
+      avn(:)   = _ZERO_
       if (.not.hotstart) then
 ! Dirty way to read initial distribution (as equidistant sigma coordinates):
          do j=jmin-HALO,jmax+HALO
@@ -232,13 +239,17 @@ STDERR 'adaptive_coordinates()'
       faclower=max(_ZERO_,ddl)/(max(_ZERO_,ddu)+max(_ZERO_,ddl))
       facupper=max(_ZERO_,ddu)/(max(_ZERO_,ddu)+max(_ZERO_,ddl))
 !   norm factors for diffusive adaption
+#ifdef NO_BAROCLINIC
+      c1ad=_ZERO_
+#else
       c1ad=max(_ZERO_,cNN)
+#endif
       c2ad=max(_ZERO_,cSS)
       c3ad=max(_ZERO_,cdd)
-      if (cbg .lt. 1.0) then
+      if (cbg .lt. _ONE_) then
          c4ad=max(_ZERO_,cbg)
       else
-         c4ad=max(_ZERO_,(1.0-c1ad-c2ad-c3ad))
+         c4ad=max(_ZERO_,(_ONE_-c1ad-c2ad-c3ad))
       end if
       csum=c1ad+c2ad+c3ad+c4ad
          if (csum .gt. _ONE_) then
@@ -268,7 +279,7 @@ STDERR 'adaptive_coordinates()'
                    (ho(i+1,j  ,k)-ho(i,j,k))*min(1,au(i  ,j  )) &
                   +(ho(i-1,j  ,k)-ho(i,j,k))*min(1,au(i-1,j  )) &
                   +(ho(i  ,j+1,k)-ho(i,j,k))*min(1,av(i  ,j  )) &
-                  + (ho(i  ,j-1,k)-ho(i,j,k))*min(1,av(i ,j-1)) &
+                  +(ho(i  ,j-1,k)-ho(i,j,k))*min(1,av(i  ,j-1)) &
                   )*facdif*_QUART_ *tfac_hor
 
 ! Ensure smooth transition to cut-off around depth
@@ -306,10 +317,10 @@ STDERR 'adaptive_coordinates()'
             do j=jmin-HALO,jmax+HALO
                do i=imin+1-HALO,imax+HALO
                   if ((zpos(i,j,k)-zpos(i,j,k-1)).lt.depthmin) then
-                     work2(i  ,j,k  )=0
-                     work2(i  ,j,k-1)=0
-                     work2(i-1,j,k  )=0
-                     work2(i-1,j,k-1)=0
+                     work2(i  ,j,k  )=_ZERO_
+                     work2(i  ,j,k-1)=_ZERO_
+                     work2(i-1,j,k  )=_ZERO_
+                     work2(i-1,j,k-1)=_ZERO_
                   endif
                end do
             end do
@@ -325,10 +336,10 @@ STDERR 'adaptive_coordinates()'
             do j=jmin+1-HALO,jmax+HALO
                do i=imin-HALO,imax+HALO
                   if((zpos(i,j,k)-zpos(i,j,k-1)).lt.depthmin) then
-                     work3(i,j,k)=0
-                     work3(i,j,k-1)=0
-                     work3(i,j-1,k)=0
-                     work3(i,j-1,k-1)=0
+                     work3(i,j  ,k)   = _ZERO_
+                     work3(i,j  ,k-1) = _ZERO_
+                     work3(i,j-1,k)   = _ZERO_
+                     work3(i,j-1,k-1) = _ZERO_
                   endif
                end do
             end do
@@ -338,8 +349,10 @@ STDERR 'adaptive_coordinates()'
          do k=1,kmax-1
             do j=jmin-HALO+2,jmax+HALO-2
                do i=imin-HALO+2,imax+HALO-2
-                  if (faciso .ge. 0.00001) then
-                     rm=0
+                  deltaiso=_ZERO_
+#ifndef NO_BAROCLINIC
+                  if (faciso .ge. _ONE_/100000) then
+                     rm=_ZERO_
                      im=0
                      do iii=max(imin-HALO,i-iw),min(imax+HALO,i+iw)
                         do jjj=max(jmin-HALO,j-iw),min(jmax+HALO,j+iw)
@@ -355,18 +368,14 @@ STDERR 'adaptive_coordinates()'
                         deltaiso=hn(i,j,k+1)-depthmin
                      if (deltaiso.le.(-hn(i,j,k))) &
                         deltaiso=-hn(i,j,k)+depthmin 
-                     else
-                        deltaiso=_ZERO_
-                     end if
-  
-                     zpos(i,j,k)=zposo(i,j,k)+ &
-                        (   &
-                        (zposo(i+1,j,k)-zposo(i,j,k))*work2(i,j,k) - &
-                        (zposo(i,j,k)-zposo(i-1,j,k))*work2(i-1,j,k)  &
-                        + (zposo(i,j+1,k)-zposo(i,j,k))*work3(i,j,k) - &
-                        (zposo(i,j,k)-zposo(i,j-1,k))*work3(i,j-1,k)  &
-                        )*_QUART_*fachor *tfac_hor    &
-                        + deltaiso
+                  end if
+#endif
+                  zpos(i,j,k)= zposo(i,j,k) + deltaiso                       &
+                        +_QUART_*fachor *tfac_hor*(_ZERO_                    &
+                          +(zposo(i+1,j  ,k)-zposo(i  ,j,k))*work2(i  ,j,k)  &
+                          -(zposo(i,  j  ,k)-zposo(i-1,j,k))*work2(i-1,j,k)  &
+                          +(zposo(i,  j+1,k)-zposo(i,  j,k))*work3(i,  j,k)  &
+                          -(zposo(i,  j,  k)-zposo(i,j-1,k))*work3(i,j-1,k) )
                end do
             end do
          end do
@@ -397,28 +406,29 @@ STDERR 'adaptive_coordinates()'
       do j=jmin,jmax
          do i=imin,imax
             if (az(i,j) .ge. 1) then
-               NNloc=NN(i,j,:) 
+#ifndef NO_BAROCLINIC
+               NNloc=NN(i,j,:)
+#endif
                SSloc=SS(i,j,:)
                do k=0,kmax
-                  gaa(k)=(zpos(i,j,k)-ssen(i,j))/(ssen(i,j)+H(i,j))
+                  gaa(k)   =( zpos(i,j,k)-ssen(i,j))/(ssen(i,j)+H(i,j))
                   gaaold(k)=(zposo(i,j,k)-ssen(i,j))/(ssen(i,j)+H(i,j))
                end do 
                do ii=1,split
-
-                  call col_interpol(kmax-1,1,gaaold,NN(i,j,:),kmax-1,gaa,NNloc)
-                  call col_interpol(kmax-1,1,gaaold,SS(i,j,:),kmax-1,gaa,SSloc)
-
 !     Stratification
+#ifndef NO_BAROCLINIC
+                  call col_interpol(kmax-1,1,gaaold,NN(i,j,:),kmax-1,gaa,NNloc)
                   NNloc(kmax)=NNloc(kmax-1)       
                   NNloc(0)=NNloc(1)       
-                  SSloc(kmax)=SSloc(kmax-1)       
-                  SSloc(0)=SSloc(1)       
                   do k=1,kmax
                      avn(k)=min(_ONE_,max(_ZERO_,_HALF_*(NNloc(k)+NNloc(k-1)))/g &
                            *rho_0/d_dens)
                   end do
-
+#endif
 !     Shear
+                  call col_interpol(kmax-1,1,gaaold,SS(i,j,:),kmax-1,gaa,SSloc)
+                  SSloc(kmax)=SSloc(kmax-1)       
+                  SSloc(0)=SSloc(1)       
                   do k=1,kmax
                      avs(k)=min(_ONE_,sqrt(max(_ZERO_,_HALF_*  &
                             (SSloc(k)+SSloc(k-1))))/d_vel)

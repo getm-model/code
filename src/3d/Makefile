@@ -57,11 +57,11 @@ endif
 OBJ += \
 OBJ += \
 $(LIB)(uv_advect_3d.o)			\
-$(LIB)(uv_diffusion_3d.o)
+$(LIB)(uv_diffusion_3d.o)               \
+$(LIB)(adaptive_coordinates.o)          \
+$(LIB)(preadapt_coordinates.o)
 ifneq ($(GETM_NO_BAROCLINIC),true)
 OBJ += \
-$(LIB)(adaptive_coordinates.o)          \
-$(LIB)(preadapt_coordinates.o)          \
 $(LIB)(ip_blumberg_mellor.o)		\
 $(LIB)(ip_blumberg_mellor_lin.o)	\
 $(LIB)(ip_z_interpol.o)			\
