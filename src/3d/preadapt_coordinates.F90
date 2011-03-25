@@ -7,7 +7,7 @@
 ! \label{sec-preadapt-coordinates}
 !
 ! !INTERFACE:
-   subroutine preadapt_coordinates(N)
+   subroutine preadapt_coordinates(preadapt)
 !
 ! !DESCRIPTION:
 !
@@ -29,7 +29,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: N
+   integer, intent(in)                 :: preadapt
 !
 ! !REVISION HISTORY:
 !  Original author(s): Richard Hofmeister
@@ -41,9 +41,9 @@
 !BOC
 
    call tic(TIM_COORDS)
-   if (N.ne.0) then
+   if (preadapt.ne.0) then
       LEVEL1 'pre-adapting coordinates'
-      do ii=1,N
+      do ii=1,preadapt
          call start_macro()
          SS=_ZERO_
          call adaptive_coordinates(.false.,.false.)
@@ -57,7 +57,7 @@
          call stop_macro()
          if (mod(ii,10).eq._ZERO_) LEVEL3 ii
       end do
-                  
+
 #ifndef NO_BAROCLINIC
       LEVEL2 'reinterpolating initial salinity'
       if(calc_salt) then
@@ -68,7 +68,7 @@
          call init_temperature_field()
       end if
       call do_eqstate()
-      call do_internal_pressure() !assuming to run always in runtype>2
+      call do_internal_pressure()
 #endif
    end if
    call toc(TIM_COORDS)

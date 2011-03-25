@@ -38,7 +38,7 @@
 ! tgrid - Time scale of grid adaptation [s]\\
 ! preadapt - number of iterations for pre-adaptation\\
 ! \\
-! The parameters cNN,cSS,cdd are used for the vertical adaption and 
+! The parameters cNN,cSS,cdd are used for the vertical adaption and
 ! have to be less or equal 1 in sum. The difference to 1 is describing a
 ! background value which forces the coordinates back to a sigma distribution.
 ! The values ddu and ddl from the domain namelist are used for weighting
@@ -118,9 +118,9 @@
    REALTYPE     :: c2ad=_ZERO_       ! dependence on SS
    REALTYPE     :: c3ad=_ONE_/5      ! distance from surface and bottom
    REALTYPE     :: c4ad=6*_TENTH_    ! background value
-   REALTYPE     :: d_vel=_TENTH_     ! Typical value of absolute shear 
+   REALTYPE     :: d_vel=_TENTH_     ! Typical value of absolute shear
    REALTYPE     :: d_dens=_HALF_     ! Typical value of BVF squared
-   REALTYPE     :: dsurf=20*_ONE_       ! reference value for surface/bottom distance
+   REALTYPE     :: dsurf=20*_ONE_    ! reference value for surface/bottom distance
    REALTYPE     :: tgrid=21600*_ONE_ ! Time scale of grid adaptation
    REALTYPE     :: dtgrid
    REALTYPE     :: aau(0:kmax),bu(0:kmax)
@@ -132,7 +132,7 @@
    REALTYPE     :: tfac_hor=3600*_ONE_ ! factor introducing a hor. adaption timescale = dt/tgrid_hor where tgrid_hor=tgrid/N
    integer      :: iip
 
-   integer,save :: count=0     
+   integer,save :: count=0
       namelist /adapt_coord/   faclag,facdif,fachor,faciso,  &
                         depthmin,Ncrit, &
                         cNN,cSS,cdd,cbg,d_vel,d_dens, &
@@ -235,7 +235,7 @@ STDERR 'adaptive_coordinates()'
       kumin_pmz=1
       kvmin_pmz=1
 
-!   factors for diffusion at surface and bottom
+!     factors for diffusion at surface and bottom
       faclower=max(_ZERO_,ddl)/(max(_ZERO_,ddu)+max(_ZERO_,ddl))
       facupper=max(_ZERO_,ddu)/(max(_ZERO_,ddu)+max(_ZERO_,ddl))
 !   norm factors for diffusive adaption
@@ -267,7 +267,7 @@ STDERR 'adaptive_coordinates()'
 
    else !not first
       ho=hn
-! Lagrangian and thickness filtering step 
+!     Lagrangian and thickness filtering step
       do k=1,kmax
          do j=jmin+1-HALO,jmax-1+HALO
             do i=imin+1-HALO,imax-1+HALO
@@ -282,14 +282,14 @@ STDERR 'adaptive_coordinates()'
                   +(ho(i  ,j-1,k)-ho(i,j,k))*min(1,av(i  ,j-1)) &
                   )*facdif*_QUART_ *tfac_hor
 
-! Ensure smooth transition to cut-off around depth
+!              Ensure smooth transition to cut-off around depth
                hn(i,j,k)=max(hn(i,j,k),depthmin)
             end do
          end do
       end do
       call hcheck(hn,ssen,H)
 
-!  Update the halo zones
+!     Update the halo zones
       call update_3d_halo(hn,hn,az,imin,jmin,imax,jmax,kmax,H_TAG)
       call wait_halo(H_TAG)
 
@@ -302,10 +302,10 @@ STDERR 'adaptive_coordinates()'
 ! profile assumes NN=const.
 
       do ii=1,mhor
-! Prepare zpos field
+!        Prepare zpos field
          call htoz(hn,zpos)
 
-! For problem zones (boundaries, thin layers), put zero 'horizontal diffusion'
+!         For problem zones (boundaries, thin layers), put zero 'horizontal diffusion'
          do k=1,kmax-1
             do j=jmin-HALO,jmax+HALO
                do i=imin-HALO,imax+HALO
@@ -367,7 +367,7 @@ STDERR 'adaptive_coordinates()'
                      if (deltaiso.ge.hn(i,j,k+1)) &
                         deltaiso=hn(i,j,k+1)-depthmin
                      if (deltaiso.le.(-hn(i,j,k))) &
-                        deltaiso=-hn(i,j,k)+depthmin 
+                        deltaiso=-hn(i,j,k)+depthmin
                   end if
 #endif
                   zpos(i,j,k)= zposo(i,j,k) + deltaiso                       &
@@ -379,7 +379,7 @@ STDERR 'adaptive_coordinates()'
                end do
             end do
          end do
-! Local consistency
+!        Local consistency
          call ztoh(zpos,hn,depthmin)
          do k=1,kmax
             do j=jmin-HALO+1,jmax+HALO-1
@@ -396,10 +396,10 @@ STDERR 'adaptive_coordinates()'
 
 
       end do ! End of Horizontal diffusion of zpos repeated mhor times
-! After horizontal diffusion updated new and depth consistent hn is available
 
+!     After horizontal diffusion updated new and depth consistent hn is available
       call htoz(hn,zpos)
-! get old z positions (same as NN, SS)
+!     Get old z positions (same as NN, SS)
       call htoz(ho,zposo)
 
       dtgrid=dt/float(split)
@@ -415,8 +415,8 @@ STDERR 'adaptive_coordinates()'
                   gaaold(k)=(zposo(i,j,k)-ssen(i,j))/(ssen(i,j)+H(i,j))
                end do 
                do ii=1,split
-!     Stratification
 #ifndef NO_BAROCLINIC
+!                 Stratification
                   call col_interpol(kmax-1,1,gaaold,NN(i,j,:),kmax-1,gaa,NNloc)
                   NNloc(kmax)=NNloc(kmax-1)       
                   NNloc(0)=NNloc(1)       
@@ -425,7 +425,7 @@ STDERR 'adaptive_coordinates()'
                            *rho_0/d_dens)
                   end do
 #endif
-!     Shear
+!                 Shear
                   call col_interpol(kmax-1,1,gaaold,SS(i,j,:),kmax-1,gaa,SSloc)
                   SSloc(kmax)=SSloc(kmax-1)       
                   SSloc(0)=SSloc(1)       
@@ -434,18 +434,18 @@ STDERR 'adaptive_coordinates()'
                             (SSloc(k)+SSloc(k-1))))/d_vel)
                   end do
 
-!     Distance from surface and bottom
+!                 Distance from surface and bottom
                   do k=1,kmax
                      avd(k)=facupper*_ONE_/(dsurf-_HALF_*(gaa(k-1)+gaa(k))*H(i,j))+         &
                            faclower*_ONE_/(dsurf+(_ONE_+_HALF_*(gaa(k-1)+gaa(k)))*H(i,j))
                   end do
 
-!     Calculation of grid diffusivity
+!                 Calculation of grid diffusivity
                   do k=1,kmax
                      aav(k)=H(i,j)/tgrid*(c1ad*avn(k)+c2ad*avs(k)+ &
                            c3ad*avd(k)+c4ad/H(i,j))
                      aav(k)=aav(k)*dtgrid*kmax**2/100.
-!        Minimum layer thickness
+!                    Minimum layer thickness
                      if ((gaa(k)-gaa(k-1)).lt.0.001/float(kmax)) aav(k)=0.
 !                      if (hn(i,j,k).le.depthmin) aav(k)=0.
                   end do
@@ -472,9 +472,9 @@ STDERR 'adaptive_coordinates()'
          end do
       end do
 
-! Back to hn
+!     Back to hn
       call ztoh(zpos,hn,depthmin)
-! Normally if positive defined vertical diffusion no check required
+!     Normally if positive defined vertical diffusion no check required
 
    end if !first
 
