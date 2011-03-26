@@ -1,4 +1,3 @@
-!$Id: ascii_out.F90,v 1.2 2003-04-23 12:07:12 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -27,16 +26,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: ascii_out.F90,v $
-!  Revision 1.2  2003-04-23 12:07:12  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:52  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.1  2001/09/13 14:50:34  bbh
-!  Stubs for ascii output
 !
 !EOP
 !-----------------------------------------------------------------------

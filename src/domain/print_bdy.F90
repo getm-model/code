@@ -1,4 +1,3 @@
-!$Id: print_bdy.F90,v 1.4 2009-09-23 10:11:47 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,7 +11,7 @@
 !  Print the open boundary information. This routine is called twice -
 !  first time with the global boundary infromation and second time
 !  with the local boundary information. In the case of a serial run the
-!  info is identical - in the case of a parallel run the open boundary 
+!  info is identical - in the case of a parallel run the open boundary
 !  information for a each sub-domain will be printed.
 !
 ! !USES:
@@ -25,33 +24,12 @@
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: header
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: print_bdy.F90,v $
-!  Revision 1.4  2009-09-23 10:11:47  kb
-!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
-!
-!  Revision 1.3  2008-12-09 00:31:57  kb
-!  added new 2D open boundaries
-!
-!  Revision 1.2  2003-04-23 11:59:39  kbk
-!  update_2d_halo on spherical variables + TABS to spaces
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:12  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
-!
-!
 ! !LOCAL VARIABLES:
    integer                   :: m,n
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC

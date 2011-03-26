@@ -9,7 +9,7 @@
 !
 ! !DESCRIPTION:
 !  This module implements a set of variables and subroutines which make
-!  it possible to find cumulative wall-time spent on various parts of 
+!  it possible to find cumulative wall-time spent on various parts of
 !  GETM. A subroutine can call tic and toc to start and stop timers.
 !
 ! !USES:
@@ -76,7 +76,7 @@
    integer, parameter :: TIM_CHECK3DF    = 102  ! check_3d_fields
    integer, parameter :: TIM_MIXANALYSIS = 103  ! (numerical) mixing analysis
    ! This is test timers for temporary coding purposes:
-   !  Note: All timers with index 170+ (test_timer_first) are  
+   !  Note: All timers with index 170+ (test_timer_first) are
    !  considered test timers, so dont implement your timers here
    integer, parameter :: TIM_TEST00      = 170
    integer, parameter :: TIM_TEST01      = 171
@@ -144,8 +144,8 @@
 ! Only the timers with defined names will be shown at end.
 !
 ! It is possible to time less than a single subroutine.
-! If you put "timers within timers", then let the first character of 
-! the "inner" timers start with a blank. This formats well and is 
+! If you put "timers within timers", then let the first character of
+! the "inner" timers start with a blank. This formats well and is
 ! used when computing total wall time
 !
 !   The integers are to easily see length of a string compare to max=24.
@@ -160,7 +160,7 @@
    timernames(TIM_UVDIFFUS)    = 'uv_diffusion'
    timernames(TIM_DPTHUPDATE)  = 'depth_update'
    timernames(TIM_SEALEVEL)    = 'sealevel'
- 
+
    timernames(TIM_INTEGR2D)    = 'integrate_2d other'
 
    timernames(TIM_METEO)       = 'do_meteo'
@@ -251,14 +251,8 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: timerindex
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Bjarne Buchmann
-!
-! !LOCAL VARIABLES:
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -296,10 +290,6 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)  :: timerindex
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Bjarne Buchmann
@@ -386,7 +376,7 @@
    do i=1,max_timers
       if (len_trim(timernames(i)).gt.0) then
          thistime = _ONE_*timercounts(i)/count_rate
-!  Note: Test-timers (index test_timer_first+) only written if 
+!  Note: Test-timers (index test_timer_first+) only written if
 !   they are actually used
          if (i.lt.test_timer_first .or. sysclockcalls(i).gt.0) then
             write(stderr,100) timernames(i),thistime,                   &

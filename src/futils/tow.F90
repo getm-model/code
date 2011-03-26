@@ -1,4 +1,3 @@
-!$Id: tow.F90,v 1.8 2009-05-25 19:00:18 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -49,37 +48,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: tow.F90,v $
-!  Revision 1.8  2009-05-25 19:00:18  hb
-!  correction for compiler option SLICE_MODEL
-!
-!  Revision 1.7  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.6  2007-05-26 12:19:30  kbk
-!  destag of vertical velocities
-!
-!  Revision 1.5  2007-05-22 14:47:41  kbk
-!  fixed indx for z-coordinates
-!
-!  Revision 1.4  2007-05-22 09:59:55  kbk
-!  fixed HV index error + z-coordinate indices
-!
-!  Revision 1.3  2007-05-22 09:37:22  kbk
-!  saving physical vertical velocities
-!
-!  Revision 1.2  2003-04-23 12:02:43  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:20  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.2  2001/04/21 09:41:33  bbh
-!  Partial fixed problem with workspace (ws) variables in ncdf_save_?d.F90 and various conversion programs
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:09  bbh
-!  initial import into CVS
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k

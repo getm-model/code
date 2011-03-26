@@ -1,4 +1,3 @@
-!$Id: stop_macro.F90,v 1.9 2010-03-24 14:58:15 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,14 +28,7 @@
 #else
    use domain, only: dx,dy,ard1
 #endif
-
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding

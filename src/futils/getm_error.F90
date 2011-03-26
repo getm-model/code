@@ -1,4 +1,3 @@
-!$Id: getm_error.F90,v 1.4 2009-08-21 08:56:34 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -21,19 +20,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: getm_error.F90,v $
-!  Revision 1.4  2009-08-21 08:56:34  bjb
-!  Fix name clash on PARALLEL with OpenMP key word
-!
-!  Revision 1.3  2004-04-06 16:54:33  kbk
-!  cleaned a little
-!
-!  Revision 1.2  2003/11/03 09:10:41  kbk
-!  now works with both serial and parallel compilation
-!
-!  Revision 1.1  2003/10/30 16:29:37  kbk
-!  added global error handler
 !
 ! !LOCAL VARIABLES:
    integer                   :: ierr

@@ -1,4 +1,3 @@
-!$Id: ncdf_restart.F90,v 1.5 2010-03-30 11:52:32 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -14,7 +13,7 @@
 !  The main reason for using NetCDF formatted hotstart files instead of
 !  binary format is the abillity to use standard tools (nco, ncmerge) is
 !  a much easier way to to introduce a new subdomain decomposition for
-!  an already running set-up - without having to start all over again. 
+!  an already running set-up - without having to start all over again.
 !  See $read\_restart\_ncdf()$ for further explanation.\newline
 !  This modules just contains variables shared accros the *\_restart\_ncdf()
 !  routines.
@@ -67,20 +66,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding
-!
-!  $Log: ncdf_restart.F90,v $
-!  Revision 1.5  2010-03-30 11:52:32  kb
-!  removing adaptive_coodinates
-!
-!  Revision 1.3  2009-09-23 09:54:52  kb
-!  fixed typos in DESCRIPTION
-!
-!  Revision 1.2  2007-10-19 07:52:36  kbk
-!  zub and zvb not in hotstart files anymore
-!
-!  Revision 1.1  2007-09-21 13:03:42  kbk
-!  added drop-in NetCDF replacement for binary hotstart file (default is binary)
-!
 !
 !EOP
 !-----------------------------------------------------------------------

@@ -1,4 +1,3 @@
-!$Id: ncdf_topo.F90,v 1.25 2010-03-26 19:12:49 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -10,9 +9,9 @@
 !
 ! !DESCRIPTION:
 !  This module reads the bathymetry and grid information required by the
-!  module $domain$. The file format is NetCDF and data are read from 
-!  the file specified as an paramater $ncdf\_read\_topo\_file()$. For a 
-!  full description of the required variables see the documention for 
+!  module $domain$. The file format is NetCDF and data are read from
+!  the file specified as an paramater $ncdf\_read\_topo\_file()$. For a
+!  full description of the required variables see the documention for
 !  domain. The specific readings are guided by $grid\_type$.
 
 ! !USES:
@@ -48,64 +47,6 @@
 !  Original author(s): Lars Umlauf (adapted from an earlier version of
 !                      Karsten Bolding and Hans Burchard)
 !
-!  $Log: ncdf_topo.F90,v $
-!  Revision 1.25  2010-03-26 19:12:49  kb
-!  aborting if grid_type=4
-!
-!  Revision 1.24  2009-12-22 08:44:38  kb
-!  added conditional compilation checks - Klingbeil
-!
-!  Revision 1.23  2009-12-10 14:22:52  kb
-!  fixed typos - Hofmeister
-!
-!  Revision 1.22  2009-10-13 13:15:11  kb
-!  added psedo-coordinates when grid-type 3 or 4
-!
-!  Revision 1.21  2009-10-08 16:08:00  kb
-!  axes defined in entire domain - cartesian, spherical
-!
-!  Revision 1.20  2009-10-05 11:40:03  kb
-!  fixed behaviour for grid_type=3 and lonx, latx, convx not in topo.nc
-!
-!  Revision 1.19  2009-09-30 05:32:48  kb
-!  fixed calculation of dx, dy when dlon, dlat not present
-!
-!  Revision 1.18  2009-09-23 10:09:20  kb
-!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
-!
-!  Revision 1.17  2009-09-23 10:04:40  kb
-!  reverted to v1.15 - to allow for major update
-!
-!  Revision 1.15  2007-05-26 15:20:37  kbk
-!  print NetCDF version info
-!
-!  Revision 1.14  2007-02-07 16:32:22  kbk
-!  added spatial varying bottom roughness
-!
-!  Revision 1.13  2006-11-24 09:10:56  frv-bjb
-!  Higher accuracy in x0,dx computations
-!
-!  Revision 1.12  2006-01-29 20:32:34  hb
-!  Small LaTeX corrections to source code documentation
-!
-!  Revision 1.11  2005-11-17 13:50:22  kbk
-!  fixes to compile with gfortran
-!
-!  Revision 1.10  2005/06/17 07:57:46  frv-bjb
-!  Bug fix: fail on dlat/lat0 versions
-!
-!  Revision 1.9  2005/06/14 13:36:01  frv-bjb
-!  temporary KBK stop statement deleted
-!
-!  Revision 1.8  2005/06/10 16:16:41  kbk
-!  documentation updated
-!
-!  Revision 1.7  2005/06/10 16:01:22  kbk
-!  test and use real axis before using axis offset+increment method
-!
-!  Revision 1.6  2005/04/25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
 ! !LOCAL VARIABLES:
   private                                 ncdf_read_2d
 !EOP
@@ -126,7 +67,7 @@ contains
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
-!  This routine checks for and opens a NetCDF file with GETM bathymetry and 
+!  This routine checks for and opens a NetCDF file with GETM bathymetry and
 !  grid information. The first variable read and checked is $grid\_type$.
 !  Subsequent operations depends on the value of $grid\_type$.
 !
@@ -328,14 +269,14 @@ contains
 
          status = nf90_inq_varid(ncid,'dx',id)
          if (status .ne. NF90_NOERR) then
-            have_dx=.false. 
+            have_dx=.false.
          else
             status = nf90_get_var(ncid,id,dx)
          end if
 
          status = nf90_inq_varid(ncid,'dy',id)
          if (status .ne. NF90_NOERR) then
-            have_dy=.false. 
+            have_dy=.false.
          else
             status = nf90_get_var(ncid,id,dy)
          end if
@@ -362,7 +303,7 @@ contains
 
          if ( .not. have_dx ) dx = (a(2)-a(1))/(iextr-1)
          do i=imin-HALO,imax+HALO
-            xcord(i) = a(1) + (i+ioff-1)*dx 
+            xcord(i) = a(1) + (i+ioff-1)*dx
          end do
 #if 0
 !        potentially do checks on consistency of spacing and axis
@@ -387,7 +328,7 @@ contains
          status = nf90_get_var(ncid,id,a(2:2),start = start,count = count)
          if ( .not. have_dy ) dy = (a(2)-a(1))/(jextr-1)
          do j=jmin-HALO,jmax+HALO
-            ycord(j) = a(1) + (j+joff-1)*dy 
+            ycord(j) = a(1) + (j+joff-1)*dy
          end do
 #if 0
 !        potentially do checks on consistency of spacing and axis
@@ -446,7 +387,7 @@ stop
 !     spherical - we require:   lonc, latc
 !     spherical - we check for: xc, yc
 !     spherical - later we calculate: latu, latv
-!     
+!
 
 #if !( defined(SPHERICAL) && !defined(CURVILINEAR) )
          call getm_error("ncdf_check_grid()",   &
@@ -456,14 +397,14 @@ stop
 
          status = nf90_inq_varid(ncid,'dlon',id)
          if (status .ne. NF90_NOERR) then
-            have_dlon=.false. 
+            have_dlon=.false.
          else
             status = nf90_get_var(ncid,id,dlon)
          end if
 
          status = nf90_inq_varid(ncid,'dlat',id)
          if (status .ne. NF90_NOERR) then
-            have_dlat=.false. 
+            have_dlat=.false.
          else
             status = nf90_get_var(ncid,id,dlat)
          end if
@@ -490,7 +431,7 @@ stop
 
          if ( .not. have_dlon ) dlon = (a(2)-a(1))/(iextr-1)
          do i=imin-HALO,imax+HALO
-            xcord(i) = a(1) + (i+ioff-1)*dlon 
+            xcord(i) = a(1) + (i+ioff-1)*dlon
          end do
 #if 0
 !        potentially do checks on consistency of spacing and axis
@@ -519,7 +460,7 @@ stop
 
          if ( .not. have_dlat ) dlat = (a(2)-a(1))/(jextr-1)
          do j=jmin-HALO,jmax+HALO
-            ycord(j) = a(1) + (j+joff-1)*dlat 
+            ycord(j) = a(1) + (j+joff-1)*dlat
          end do
 #if 0
 !        potentially do checks on consistency of spacing and axis
@@ -707,7 +648,7 @@ stop
 !
 ! !USES:
    IMPLICIT NONE
-! 
+!
 ! !DESCRIPTION:
 !  Computes x and dx given that the netcdf file contains the axis
 !  (T-point) information.
@@ -721,7 +662,7 @@ stop
    integer,      intent(in)             :: ncid
    character(len=*), intent(in)         :: spacing_name
    character(len=*), intent(in)         :: cord_name
-   integer,      intent(in)             :: 
+   integer,      intent(in)             ::
    character(len=*), intent(in)         :: cordname
 !
 ! !OUTPUT PARAMETERS:
@@ -730,15 +671,13 @@ stop
 ! !REVISION HISTORY:
 !  Original author(s): Bjarne Buchmann
 !
-!EOP
-!
 ! !LOCAL VARIABLES:
    integer                   :: status
    integer                   :: indx(1)
    integer                   :: i
    REALTYPE                  :: startval,endval
    REALTYPE                  :: expectval,readval,dval
-!
+!EOP
 !-------------------------------------------------------------------------
 
 #ifdef DEBUG
@@ -830,10 +769,10 @@ stop
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
-!  A two-dimensional netCDF variable with specified global range 
+!  A two-dimensional netCDF variable with specified global range
 !  {\tt il < i < ih} and {\tt jl < j < jh} is read into {\tt field}.
-!  It is checked if the sizes of the fields correspond exactly. 
-!  When calling this funtions, remember that  FORTRAN netCDF variables 
+!  It is checked if the sizes of the fields correspond exactly.
+!  When calling this funtions, remember that  FORTRAN netCDF variables
 !  start with index 1.
 !
 ! !INPUT PARAMETERS:

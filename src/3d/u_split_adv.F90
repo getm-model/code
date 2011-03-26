@@ -1,16 +1,15 @@
-!$Id: u_split_adv.F90,v 1.6 2009-09-30 11:28:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  u_split_adv - 1D x-advection \label{sec-u-split-adv} 
+! !IROUTINE:  u_split_adv - 1D x-advection \label{sec-u-split-adv}
 !
 ! !INTERFACE:
    subroutine u_split_adv(dt,f,uu,hun, &
                           delxu,delyu,area_inv,au,splitfac,method,az,AH)
 ! !DESCRIPTION:
 !
-! Here, the $x$-directional split 1D advection step is executed 
-! with a number of options for the numerical scheme. The basic 
+! Here, the $x$-directional split 1D advection step is executed
+! with a number of options for the numerical scheme. The basic
 ! advection equation is accompanied by an fractional step
 ! for the continuity equation and both equations look as follows:
 !
@@ -18,7 +17,7 @@
 ! h^n_{i,j,k} c^n_{i,j,k} =
 ! h^o_{i,j,k} c^o_{i,j,k}
 ! \displaystyle
-! - \Delta t 
+! - \Delta t
 ! \frac{
 ! p_{i,j,k}\tilde c^u_{i,j,k}\Delta y^u_{i,j}-
 ! p_{i-1,j,k}\tilde c^u_{i-1,j,k}\Delta y^u_{i-1,j}
@@ -29,9 +28,9 @@
 !
 ! \begin{equation}\label{adv_u_step_h}
 ! h^n_{i,j,k} =
-! h^o_{i,j,k} 
+! h^o_{i,j,k}
 ! \displaystyle
-! - \Delta t 
+! - \Delta t
 ! \frac{
 ! p_{i,j,k}\Delta y^u_{i,j}-
 ! p_{i-1,j,k}\Delta y^u_{i-1,j}
@@ -70,16 +69,16 @@
 ! \tilde c_{i,j,k}^+=\alpha_{i,j,k}+\beta_{i,j,k}r^+_{i,j,k}, \quad
 ! \tilde c_{i,j,k}^-=\alpha_{i,j,k}+\beta_{i,j,k}r^-_{i,j,k},
 ! \end{equation}
-! 
+!
 ! where
-! 
+!
 ! \begin{equation}
 ! \alpha_{i,j,k}=\frac12 +\frac16(1-2|C_{i,j,k}|),\quad
 ! \beta _{i,j,k}=\frac12 -\frac16(1-2|C_{i,j,k}|),
 ! \end{equation}
-! 
+!
 ! and
-! 
+!
 ! \begin{equation}
 ! r^+_{i,j,k}=\frac{c_{i,j,k}-c_{i-1,j,k}}{c_{i+1,j,k}-c_{i,j,k}},
 ! \quad
@@ -87,32 +86,32 @@
 ! \end{equation}
 !
 ! It should be noted that by
-! formulation (\ref{LaxWendroffForm}) this so-called P$_2$ scheme 
+! formulation (\ref{LaxWendroffForm}) this so-called P$_2$ scheme
 ! is cast into the
 ! so-called Lax-Wendroff form, which would be recovered for
 ! $\tilde c_{i,j,k}^+=\tilde c_{i,j,k}^-=1$.
-! 
+!
 ! In order to obtain a monotonic and positive scheme, the factors
 ! $\tilde c_{i,j,k}^+$ are limited in the following way:
-! 
+!
 ! \begin{equation}\label{PDM}
 ! \tilde c_{i,j,k}^+ \rightarrow \max \left[
 ! 0,\min\left(\tilde c_{i,j,k}^+,\frac{2}{1-|C_{i,j,k}|},
 ! \frac{2r^+_{i,j,k}}{|C_{i,j,k}|}\right)
 ! \right],
 ! \end{equation}
-! 
+!
 ! and, equivalently, for $\tilde c_{i,j,k}^-$.
 ! This so-called PDM-limiter has been described in detail
 ! by \cite{LEONARD91}, who named the PDM-limited P$_2$ scheme
 ! also ULTIMATE QUICKEST (quadratic upstream interpolation
 ! for convective kinematics with estimated stream terms).
-! 
+!
 ! Some simpler limiters which do not exploit the third-order
 ! polynomial properties of the discretisation (\ref{LaxWendroffForm}) have been
 ! listed by \cite{ZALEZAK87}. Among those are the MUSCL scheme by
 ! \cite{VANLEER79},
-! 
+!
 ! \begin{equation}\label{MUSCL}
 ! \tilde c_{i,j,k}^+ \rightarrow \max \left[
 ! 0,\min\left(
@@ -120,15 +119,15 @@
 ! \right)
 ! \right],
 ! \end{equation}
-! 
+!
 ! and the Superbee scheme by \cite{ROE85},
-! 
+!
 ! \begin{equation}\label{Superbee}
 ! \tilde c_{i,j,k}^+ \rightarrow \max \left[
 ! 0,\min(1,2r^+_{i,j,k}),\min(r^+_{i,j,k},2)
 ! \right].
 ! \end{equation}
-! 
+!
 ! The selector for the schemes is {\tt method}:
 !
 ! \vspace{0.5cm}
@@ -167,8 +166,6 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)   :: f(I3DFIELD)
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding

@@ -1,4 +1,3 @@
-!$Id: slow_terms.F90,v 1.13 2010-03-22 05:02:58 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -10,15 +9,14 @@
 !
 ! !DESCRIPTION:
 !
-! Here, the calculation of the so-called slow terms (which are the 
+! Here, the calculation of the so-called slow terms (which are the
 ! interaction terms between the barotropic and the baroclinic mode) is
-! completed. The mathematical form of these slow terms is given by 
+! completed. The mathematical form of these slow terms is given by
 ! equations (\ref{Slowfirst}) - (\ref{Slowlast}), see section
 ! \ref{SectionVerticalIntegrated}.
-! These calculations have been prepared in the routines 
+! These calculations have been prepared in the routines
 ! {\tt slow\_bottom\_friction}, {\tt slow\_advection} and
 ! {\tt slow\_diffusion}.
-
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,HU,HV,au,av
@@ -33,15 +31,8 @@
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
 #endif
-
 !$ use omp_lib
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -105,7 +96,7 @@
 
    else
 !
-! Here kmax=1, so the loops degenerate and there is no need 
+! Here kmax=1, so the loops degenerate and there is no need
 ! to test for k .ge. kumin(i,j).
       k=1
 !$OMP DO SCHEDULE(RUNTIME)

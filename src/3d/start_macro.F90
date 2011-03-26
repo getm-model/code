@@ -1,4 +1,3 @@
-!$Id: start_macro.F90,v 1.12 2009-08-18 10:24:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,12 +18,12 @@
 ! {\tt ssuo}, {\tt ssun}, {\tt ssvo} and {\tt ssvn}, where {\tt e},
 ! {\tt u} and {\tt v} stand for T-, U- and V-point and {\tt o} and
 ! {\tt n} for old and new, respectively, see also the description of
-! {\tt variables\_3d} in section \ref{sec-variables-3d} on page 
+! {\tt variables\_3d} in section \ref{sec-variables-3d} on page
 ! \pageref{sec-variables-3d}.
 !
 ! Furthermore, the vertically integrated transports {\tt Uint}
 ! and {\tt Vint} are here divided by the number of micro time
-! steps per macro time step, {\tt M}, in order to obtain 
+! steps per macro time step, {\tt M}, in order to obtain
 ! the time-averaged transports.
 !
 !
@@ -35,12 +34,6 @@
    use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
    use getm_timers, only: tic, toc, TIM_STARTMCR
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding

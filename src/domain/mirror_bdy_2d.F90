@@ -1,4 +1,3 @@
-!$Id: mirror_bdy_2d.F90,v 1.6 2009-09-23 10:11:47 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,7 +8,7 @@
    subroutine mirror_bdy_2d(f,tag)
 !
 ! !DESCRIPTION:
-!  Some variables are mirrored outside the calculation domain in the 
+!  Some variables are mirrored outside the calculation domain in the
 !  vicinity of the open boundaries. This is to avoid if statements
 !  when calculating e.g. the Coriolis terms and advection.
 !  This routines mirrors 2d variables.
@@ -32,25 +31,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: mirror_bdy_2d.F90,v $
-!  Revision 1.6  2009-09-23 10:11:47  kb
-!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
-!
-!  Revision 1.5  2009-08-31 10:37:03  bjb
-!  Consistent treatment of topo in halo zones
-!
-!  Revision 1.4  2007-05-14 08:12:43  kbk
-!  fixed loops
-!
-!  Revision 1.3  2006-08-25 09:00:19  kbk
-!  fixed sequence of boundary updates
-!
-!  Revision 1.2  2003/04/23 11:59:39  kbk
-!  update_2d_halo on spherical variables + TABS to spaces
-!
-!  Revision 1.1  2003/04/07 15:22:03  kbk
-!  parallel support
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n

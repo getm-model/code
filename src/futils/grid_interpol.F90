@@ -1,4 +1,3 @@
-!$Id: grid_interpol.F90,v 1.8 2004-08-09 08:39:36 kbk Exp $
 #include "cppdefs.h"
 #ifndef HALO
 #define HALO 0
@@ -39,42 +38,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: grid_interpol.F90,v $
-!  Revision 1.8  2004-08-09 08:39:36  kbk
-!  if SPHERICAL and rotated meteo grid fixed turning of wind - Carsten Hansen (FRV)
-!
-!  Revision 1.7  2003/12/16 16:50:40  kbk
-!  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
-!
-!  Revision 1.6  2003/10/30 16:31:36  kbk
-!  check validity of meteo interpolation coeffcients
-!
-!  Revision 1.5  2003/06/30 05:45:26  kbk
-!  do interpolation in rotated space
-!
-!  Revision 1.4  2003/06/18 08:49:53  kbk
-!  southpole has length 3: lat, lon, rotation
-!
-!  Revision 1.3  2003/04/23 12:02:43  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 15:25:06  kbk
-!  parallel support
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:21  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.3  2001/09/30 09:06:00  bbh
-!  Cleaned up
-!
-!  Revision 1.2  2001/07/26 13:51:35  bbh
-!  Grid interpolation (including rotated grid) now works
-!
-!  Revision 1.1  2001/05/25 18:52:21  bbh
-!  Added grid_interpol
-!
-! !LOCAL VARIABLES:
-!
 !EOP
 !-----------------------------------------------------------------------
 
@@ -102,8 +65,6 @@
    REALTYPE, intent(in)                :: met_lon(:),met_lat(:)
    REALTYPE, intent(in)                :: southpole(3)
    integer, optional, intent(in)       :: met_mask(:,:)
-!
-! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out)               :: beta(-HALO+1:,-HALO+1:)
@@ -199,8 +160,6 @@
    REALTYPE, intent(in)                :: t(-HALO+1:,-HALO+1:)
    REALTYPE, intent(in)                :: u(-HALO+1:,-HALO+1:)
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out)               :: ofield(-HALO+1:,-HALO+1:)
 !
@@ -212,7 +171,6 @@
    integer                   :: i,j
    integer                   :: i1,i2,j1,j2
    REALTYPE                  :: d11,d21,d22,d12
-!
 !EOP
 !-------------------------------------------------------------------------
 #ifdef DEBUG
@@ -270,8 +228,6 @@
    REALTYPE, intent(in)                :: t(-HALO+1:,-HALO+1:)
    REALTYPE, intent(in)                :: u(-HALO+1:,-HALO+1:)
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out)               :: ofield(-HALO+1:,-HALO+1:,0:)
 !
@@ -283,7 +239,6 @@
    integer                   :: i,j
    integer                   :: i1,i2,j1,j2
    REALTYPE                  :: d11,d21,d22,d12
-!
 !EOP
 !-------------------------------------------------------------------------
 #ifdef DEBUG
@@ -333,7 +288,6 @@
    REALTYPE, intent(in)                :: alat
 !
 ! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out)               :: rlon
    REALTYPE, intent(out)               :: rlat
@@ -405,8 +359,6 @@
    REALTYPE, intent(in)                :: rlon
    REALTYPE, intent(in)                :: rlat
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out)               :: alon
    REALTYPE, intent(out)               :: alat
@@ -476,17 +428,12 @@
 ! !INPUT PARAMETERS:
    REALTYPE, intent(in)                :: radius,lon1,lat1,lon2,lat2
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
    REALTYPE                  :: a,b,c
-!
 !EOP
 !-------------------------------------------------------------------------
    a = sin(deg2rad*0.5*(lat2-lat1))
@@ -516,8 +463,6 @@
    REALTYPE, intent(in)                :: olat(-HALO+1:,-HALO+1:)
    REALTYPE, intent(in)                :: met_lon(:),met_lat(:)
    integer, optional, intent(in)       :: met_mask(:,:)
-!
-! !INPUT/OUTPUT PARAMETERS:
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out)               :: beta(-HALO+1:,-HALO+1:)

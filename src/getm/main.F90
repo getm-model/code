@@ -1,4 +1,3 @@
-!$Id: main.F90,v 1.19 2010-03-03 06:24:22 kb Exp $
 #include "cppdefs.h"
 !!-----------------------------------------------------------------------
 !!BOI
@@ -39,76 +38,11 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: main.F90,v $
-!  Revision 1.19  2010-03-03 06:24:22  kb
-!  output info concerning TURB_ADV
-!
-!  Revision 1.18  2009-09-30 11:28:47  bjb
-!  OpenMP threading initial implementation
-!
-!  Revision 1.17  2009-09-25 12:14:56  kb
-!  INCLUDE_HALOS --> SAVE_HALOS
-!
-!  Revision 1.16  2009-08-21 10:39:00  kb
-!  -DINCLUDE_HALOS will include halo-zones when writing/reading NetCDF hotstart files
-!
-!  Revision 1.15  2009-08-21 08:56:34  bjb
-!  Fix name clash on PARALLEL with OpenMP key word
-!
-!  Revision 1.14  2009-08-18 10:24:46  bjb
-!  New getm_timers module
-!
-!  Revision 1.13  2009-07-28 08:15:42  kb
-!  Hydrodynamics --> ApS.
-!
-!  Revision 1.12  2008-09-16 10:03:24  kb
-!  added Holtermanns emergency break algorithm
-!
-!  Revision 1.11  2008-08-12 08:38:49  kb
-!  added NONNEGSALT to compilation_options()
-!
-!  Revision 1.10  2006-06-02 12:42:20  kbk
-!  support for common epoch for hotstart runs
-!
-!  Revision 1.9  2006-02-06 15:18:21  kbk
-!  reverted to v1.7
-!
-!  Revision 1.7  2005-04-19 15:51:11  kbk
-!  notify on use of -DOLD_WRONG_FLUXES
-!
-!  Revision 1.6  2004/06/15 07:57:49  kbk
-!  CONST_VISC --> CONSTANT_VISCOSITY - Ruiz
-!
-!  Revision 1.5  2003/09/30 09:44:26  kbk
-!  hotout=0 -> save hot-files at last time step only
-!
-!  Revision 1.4  2003/04/23 12:03:46  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.3  2003/04/07 16:39:16  kbk
-!  parallel support, NO_3D
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:25  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.4  2001/09/19 14:21:13  bbh
-!  Cleaning
-!
-!  Revision 1.3  2001/09/19 08:34:36  bbh
-!  Only calls CPU_time() if -DFORTRAN95
-!
-!  Revision 1.2  2001/04/24 08:24:58  bbh
-!  Use runtype instead of macro
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:09  bbh
-!  initial import into CVS
-!
 ! ! LOCAL VARIABLES
    character(len=8)          :: datestr
    character(len=10)         :: timestr
    real                      :: t1=-1,t2=-1,secs
    integer                   :: ierr
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -160,7 +94,7 @@
 #ifndef NO_TIMERS
       STDERR LINE
       call write_getm_timers
-#endif      
+#endif
    endif
    STDERR LINE
    LEVEL1 'Copyright (C) Bolding & Burchard ApS.'

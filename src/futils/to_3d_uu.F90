@@ -9,9 +9,9 @@
                        hun,uu,missing,vel)
 !
 ! !DESCRIPTION:
-! This routine linearly interpolates the velocity at $u$-points to the $T$-points, 
+! This routine linearly interpolates the velocity at $u$-points to the $T$-points,
 ! whenever the mask at the $T$-points is different from zero. Otherwise, the values
-! are filled with the "missing value", {\tt missing}. The result is written to the 
+! are filled with the "missing value", {\tt missing}. The result is written to the
 ! output argument {\tt vel}, which is single precision vector for storage in netCDF.
 !
 ! !USES:
@@ -32,22 +32,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf
 !
-!  $Log: to_3d_uu.F90,v $
-!  Revision 1.5  2007-06-07 10:25:19  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.4  2006-01-19 10:07:55  lars
-!  bugfix (allocation of az-array)
-!
-!  Revision 1.3  2006-01-11 14:57:33  lars
-!  added support for kmin
-!
-!  Revision 1.2  2006-01-11 14:03:28  lars
-!  grave bug - partial re-write
-!
-!  Revision 1.1  2005-04-25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
    REALTYPE                  :: ul,ur
@@ -59,8 +43,8 @@
       do j=jmin,jmax
          do i=imin,imax
          if ( az(i,j) .gt. 0 .and. k .ge. kmin(i,j) ) then
-               ul        = uu(i-1,j,k)/(hun(i-1,j,k)+eps)                     
-               ur        = uu(i  ,j,k)/(hun(i  ,j,k)+eps)                     
+               ul        = uu(i-1,j,k)/(hun(i-1,j,k)+eps)
+               ur        = uu(i  ,j,k)/(hun(i  ,j,k)+eps)
                vel(i,j,k) = 0.5*(ul+ur)
             else
                vel(i,j,k) = missing

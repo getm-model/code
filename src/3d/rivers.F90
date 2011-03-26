@@ -1,4 +1,3 @@
-!$Id: rivers.F90,v 1.15 2008-02-21 12:04:42 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,17 +10,17 @@
 ! !DESCRIPTION:
 !
 !  This module includes support for river input. Rivers are treated the same
-!  way as meteorology, i.e.\ as external module to the hydrodynamic model 
+!  way as meteorology, i.e.\ as external module to the hydrodynamic model
 !  itself.
 !  The module follows the same scheme as all other modules, i.e.\
 !  {\tt init\_rivers}
 !  sets up necessary information, and {\tt do\_rivers} updates
 !  the relevant variables.
-!  {\tt do\_river} is called in {\tt getm/integration.F90} 
+!  {\tt do\_river} is called in {\tt getm/integration.F90}
 !  between the {\tt 2d} and {\tt 3d} routines as it only
 !  updates the sea surface elevation (in {\tt 2d}) and sea surface elevation,
 !  and
-!  optionally salinity and temperature (in {\tt 3d}). 
+!  optionally salinity and temperature (in {\tt 3d}).
 !  At present the momentum of the river water is not include, the model
 !  however has a direct response to the river water because of the
 !  pressure gradient introduced.
@@ -84,7 +83,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 
@@ -102,7 +100,7 @@
 !
 ! First of all, the namelist {\tt rivers} is read from getm.F90 and
 ! a number of vectors with the length of {\tt nriver} (number of
-! rivers) is allocated. Then, by looping over all rivers, the 
+! rivers) is allocated. Then, by looping over all rivers, the
 ! ascii file {\tt river\_info} is read, and checked for consistency.
 ! The number of used rivers {\tt rriver} is calculated and it is checked
 ! whether they are on land (which gives a warning) or not. When a river name
@@ -111,12 +109,6 @@
 !
 ! !USES:
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n,nn,ni,rc,m,iriver,jriver,numcells
@@ -195,15 +187,15 @@
             river_flow(n) = _ZERO_
             irr(n) = _ZERO_
             macro_height(n) = _ZERO_
-!           calculate the number of used rivers, they must be 
+!           calculate the number of used rivers, they must be
 !           in sequence !
             rriver = rriver +1
             if ( n .gt. 1 ) then
-               if (river_name(n) .eq. river_name(n-1)) then 
+               if (river_name(n) .eq. river_name(n-1)) then
                   rriver = rriver-1
                end if
             end if
-! Other weighting schemes could be implemented here. But we can only use 
+! Other weighting schemes could be implemented here. But we can only use
 ! information, which is available for cells also outside the present subdomain.
 !           flow_fraction(n) = _ONE_/ARCD1 ! This does not work.
             flow_fraction_rel(n) = _ONE_
@@ -241,7 +233,7 @@
             numcells=0
             total_weight=_ZERO_
             do jriver=1,nriver
-               if (river_name(iriver) .eq. river_name(jriver)) then 
+               if (river_name(iriver) .eq. river_name(jriver)) then
                   numcells     = numcells+1
                   total_weight = total_weight+flow_fraction_rel(jriver)
                   if (ok(iriver).gt.0 .and. ok(jriver).eq.0) ok(jriver)=-1
@@ -258,14 +250,14 @@
          end do
 
          LEVEL3 'split:',river_split
-!  Create a list with the river names without multiple-cells, i.e. just a 
+!  Create a list with the river names without multiple-cells, i.e. just a
 !  single entry per real river name.
          nn = 1
          ni = 1
          do n=1,nriver
             if (ni .le. nriver) then
                real_river_name(nn) = river_name(ni)
-               nn = nn + 1  
+               nn = nn + 1
                ni = ni + river_split(ni)
             end if
             if (ok(n) .eq. 0) then
@@ -300,18 +292,12 @@
    subroutine init_rivers_bio()
 !
 ! !DESCRIPTION:
-! First, memory for storing the biological loads from rivers is 
+! First, memory for storing the biological loads from rivers is
 ! allocated.
 ! The variable - {\tt river\_bio} - is initialised to  - {\tt bio\_missing}.
 !
 ! !USES:
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
@@ -350,13 +336,13 @@
    subroutine do_rivers(do_3d)
 !
 ! !DESCRIPTION:
-! 
+!
 ! Here, the temperature, salinity, sea surface elevation and layer heights
 ! are updated in the river inflow grid boxes. Temperature and salinity
 ! are mixed with riverine values proportional to the old volume and the
 ! river inflow volume at that time step, sea surface elevation is simply
 ! increased by the inflow volume divided by the grid box area, and
-! the layer heights are increased proportionally. 
+! the layer heights are increased proportionally.
 !
 ! !USES:
    IMPLICIT NONE
@@ -364,17 +350,12 @@
 ! !INPUT PARAMETERS:
    logical, intent(in)                 :: do_3d
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,m,n
    integer, save             :: nn=0
    REALTYPE                  :: ramp=_ONE_
    REALTYPE                  :: rvol,height
    REALTYPE                  :: svol,tvol,vol
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -459,25 +440,18 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  clean_rivers 
+! !IROUTINE:  clean_rivers
 !
 ! !INTERFACE:
    subroutine clean_rivers
 !
 ! !DESCRIPTION:
-!  
+!
 ! This routine closes the river handling by writing the integrated
 ! river run-off for each river to standard output.
-! 
 !
 ! !USES:
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n

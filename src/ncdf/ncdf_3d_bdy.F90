@@ -1,4 +1,3 @@
-!$Id: ncdf_3d_bdy.F90,v 1.18 2009-09-30 11:28:48 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -48,61 +47,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: ncdf_3d_bdy.F90,v $
-!  Revision 1.18  2009-09-30 11:28:48  bjb
-!  OpenMP threading initial implementation
-!
-!  Revision 1.17  2009-08-13 08:24:51  kb
-!  added a few checks on z-xais in the 3D boundary file - suggested by Buchmann
-!
-!  Revision 1.16  2009-07-30 15:30:07  kb
-!  fixed j-index for +1 eastern boundaries - Hofmeister
-!
-!  Revision 1.15  2007-10-10 10:25:20  kbk
-!  oops
-!
-!  Revision 1.14  2007-10-10 10:01:19  kbk
-!  fixed interpolation when model depth > boundary data depth
-!
-!  Revision 1.13  2007-09-30 13:00:43  kbk
-!  prints real time as part of progessoutput
-!
-!  Revision 1.12  2007-05-11 07:51:27  frv-bjb
-!  Free dimid numbering for 3d bdy files (order in var still fixed)
-!
-!  Revision 1.11  2007-05-08 09:08:18  kbk
-!  rudimentary check for valid lower boundary data
-!
-!  Revision 1.10  2005-05-04 11:50:57  kbk
-!  support for non-climatological 3D boundaries (S,T)
-!
-!  Revision 1.9  2004/04/06 16:32:29  kbk
-!  TimeDiff --> time_diff
-!
-!  Revision 1.8  2003/12/16 16:50:41  kbk
-!  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
-!
-!  Revision 1.7  2003/10/07 15:10:42  kbk
-!  use zax_dim as argument to dim_len
-!
-!  Revision 1.6  2003/08/03 09:19:41  kbk
-!  optimised reading of climatological boundary data
-!
-!  Revision 1.5  2003/05/05 15:44:20  kbk
-!  reads boundary values from 3D fields as individual columns
-!
-!  Revision 1.4  2003/04/23 11:54:03  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.3  2003/04/07 16:19:52  kbk
-!  parallel support
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:49  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.1  2001/10/17 13:28:27  bbh
-!  Initial import
-!
 !EOP
 !-----------------------------------------------------------------------
 
@@ -124,10 +68,6 @@
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fname
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -195,7 +135,7 @@
 !       3 -> time
 !     We will use this information to actually find the dimension
 !     index numbers in the data set.
-!     Some of the tests will be repeated later (fixing is possible but not 
+!     Some of the tests will be repeated later (fixing is possible but not
 !     high priority, BJB 2007-04-25).
       LEVEL4 'special boundary data file'
 !     This test may break backward compatibility, so I leave it out for now:
@@ -251,7 +191,7 @@
    err = nf90_get_var(ncid,id,zlev)
    if (err .ne. NF90_NOERR) go to 10
 
-!  a few sanity checks on the vertical axis for the 3D boundaries 
+!  a few sanity checks on the vertical axis for the 3D boundaries
    do n=1,zax_len
       if (zlev(n) .eq. NF90_FILL_REAL) then
          FATAL '3D boundary z-axis contains NF90_FILL_REAL values'
@@ -563,70 +503,8 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: loop
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: ncdf_3d_bdy.F90,v $
-!  Revision 1.18  2009-09-30 11:28:48  bjb
-!  OpenMP threading initial implementation
-!
-!  Revision 1.17  2009-08-13 08:24:51  kb
-!  added a few checks on z-xais in the 3D boundary file - suggested by Buchmann
-!
-!  Revision 1.16  2009-07-30 15:30:07  kb
-!  fixed j-index for +1 eastern boundaries - Hofmeister
-!
-!  Revision 1.15  2007-10-10 10:25:20  kbk
-!  oops
-!
-!  Revision 1.14  2007-10-10 10:01:19  kbk
-!  fixed interpolation when model depth > boundary data depth
-!
-!  Revision 1.13  2007-09-30 13:00:43  kbk
-!  prints real time as part of progessoutput
-!
-!  Revision 1.12  2007-05-11 07:51:27  frv-bjb
-!  Free dimid numbering for 3d bdy files (order in var still fixed)
-!
-!  Revision 1.11  2007-05-08 09:08:18  kbk
-!  rudimentary check for valid lower boundary data
-!
-!  Revision 1.10  2005-05-04 11:50:57  kbk
-!  support for non-climatological 3D boundaries (S,T)
-!
-!  Revision 1.9  2004/04/06 16:32:29  kbk
-!  TimeDiff --> time_diff
-!
-!  Revision 1.8  2003/12/16 16:50:41  kbk
-!  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
-!
-!  Revision 1.7  2003/10/07 15:10:42  kbk
-!  use zax_dim as argument to dim_len
-!
-!  Revision 1.6  2003/08/03 09:19:41  kbk
-!  optimised reading of climatological boundary data
-!
-!  Revision 1.5  2003/05/05 15:44:20  kbk
-!  reads boundary values from 3D fields as individual columns
-!
-!  Revision 1.4  2003/04/23 11:54:03  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.3  2003/04/07 16:19:52  kbk
-!  parallel support
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:49  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.1  2001/10/17 13:28:27  bbh
-!  Initial import
-!
-!  Revision 1.1  2001/05/14 12:45:56  bbh
-!  Introduced module ncdf_2d_bdy
 !
 ! !LOCAL VARIABLES:
    integer         :: err
@@ -806,8 +684,8 @@
       if (wrk(li) .lt. -999. ) EXIT
    end do
    ! BJB-NOTE: Typically, li will end up as nlev+1, so the first
-   !   of the following tests gets false. However, during debug 
-   !   compilation the second condition *MAY* evaulate wrk(li), 
+   !   of the following tests gets false. However, during debug
+   !   compilation the second condition *MAY* evaulate wrk(li),
    !   which will result in a "forrtl: severe".
    !if (li .ne. nlev .or. wrk(li) .lt. -999.) li=li-1
    if (li .ne. nlev) then
@@ -815,7 +693,7 @@
    elseif (wrk(li) .lt. -999.) then
       li=li-1
    end if
-   
+
    do k=1,kmax
       if (zmodel(k) .le. zlev(li)) col(k) = wrk(li)
    end do

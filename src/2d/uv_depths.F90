@@ -1,4 +1,3 @@
-!$Id: uv_depths.F90,v 1.13 2009-08-18 10:24:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,21 +18,21 @@
 ! H^u_{i,j} = \left\{
 ! \begin{array}{ll}
 ! \displaystyle
-! \frac12 \left(H_{i,j}+H_{i+1,j}\right), & 
+! \frac12 \left(H_{i,j}+H_{i+1,j}\right), &
 ! \displaystyle
-! \mbox{ for {\tt vel\_depth\_method}} =0, \\ \\ 
+! \mbox{ for {\tt vel\_depth\_method}} =0, \\ \\
 ! \displaystyle
-! \min\left\{H_{i,j}+H_{i+1,j}\right\}, & 
+! \min\left\{H_{i,j}+H_{i+1,j}\right\}, &
 ! \displaystyle
-! \mbox{ for {\tt vel\_depth\_method}} =1, \\ \\ 
+! \mbox{ for {\tt vel\_depth\_method}} =1, \\ \\
 ! \displaystyle
-! \min\left\{H_{i,j}+H_{i+1,j}\right\}, & 
+! \min\left\{H_{i,j}+H_{i+1,j}\right\}, &
 ! \displaystyle
-! \mbox{ for {\tt vel\_depth\_method}} =2 \mbox{ and } \min\{H_{i,j}i,H_{i+1,j}\}<D_{crit} \\ \\ 
+! \mbox{ for {\tt vel\_depth\_method}} =2 \mbox{ and } \min\{H_{i,j}i,H_{i+1,j}\}<D_{crit} \\ \\
 ! \displaystyle
-! \frac12 \left(H_{i,j}+H_{i+1,j}\right), & 
+! \frac12 \left(H_{i,j}+H_{i+1,j}\right), &
 ! \displaystyle
-! \mbox{ for {\tt vel\_depth\_method}} =2 \mbox{ and } \min\{H_{i,j},H_{i+1,j}\}\geq D_{crit} \\ \\ 
+! \mbox{ for {\tt vel\_depth\_method}} =2 \mbox{ and } \min\{H_{i,j},H_{i+1,j}\}\geq D_{crit} \\ \\
 ! \end{array}
 ! \right.
 ! \end{equation}
@@ -53,17 +52,12 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: vel_depth_method
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
-   REALTYPE                  :: d_crit=2.0 
-!
+   REALTYPE                  :: d_crit=2.0
 !EOP
 !-----------------------------------------------------------------------
 !BOC

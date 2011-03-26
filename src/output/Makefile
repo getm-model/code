@@ -1,4 +1,3 @@
-#$Id: Makefile,v 1.6 2009-10-06 11:42:49 kb Exp $
 # 
 # Makefile to build the output module
 #

@@ -1,9 +1,8 @@
-!$Id: cfl_check.F90,v 1.7 2006-03-01 15:54:07 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: cfl_check - check for explicit barotropic time step. 
+! !ROUTINE: cfl_check - check for explicit barotropic time step.
 !
 ! !INTERFACE:
    subroutine cfl_check()
@@ -19,7 +18,7 @@
 ! {\sqrt{2} c_{i,j} \sqrt{\Delta x_{i,j}^2+ \Delta y_{i,j}^2}}\right\}
 ! \end{equation}
 !
-! with the local Courant number 
+! with the local Courant number
 !
 ! \begin{equation}
 ! c_{i,j}=\sqrt{g H_{i,j}},
@@ -42,12 +41,6 @@
 #endif
    use m2d, only: dtm
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -79,7 +72,7 @@
             c = sqrt(g*H(i,j))
             dtt = (dxc(i,j)*dyc(i,j))/ &
                    (sqrt(2.0)*c*sqrt(dxc(i,j)*dxc(i,j)+dyc(i,j)*dyc(i,j)))
- 
+
 #endif
             if (dtt .lt. max_dt) then
                max_dt=dtt
@@ -94,7 +87,7 @@
 #else
    c = sqrt(g*h_max)
 !  Becker and Deleersnijder
-   max_dt = (dx*dy)/(sqrt(2.0)*c*sqrt(dx*dx+dy*dy)) 
+   max_dt = (dx*dy)/(sqrt(2.0)*c*sqrt(dx*dx+dy*dy))
 
 #if 0
 #ifdef POM_CFL

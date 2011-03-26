@@ -1,4 +1,3 @@
-!$Id: grid_ncdf.F90,v 1.3 2009-09-23 10:11:48 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -29,17 +28,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf
-!
-!  $Log: grid_ncdf.F90,v $
-!  Revision 1.3  2009-09-23 10:11:48  kb
-!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
-!
-!  Revision 1.2  2006-09-26 07:06:06  kbk
-!  to compile on Macs with Intel compiler
-!
-!  Revision 1.1  2005-04-25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
 !
 !EOP
 !-----------------------------------------------------------------------

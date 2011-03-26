@@ -1,4 +1,3 @@
-!$Id: ip_song_wright.F90,v 1.7 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,7 +12,7 @@
 ! Here, the pressure gradient is calculating according to an energy-conserving
 ! method suggested by \cite{SONG98}, which for the pressure gradient in
 ! $x$-direction looks as:
-! 
+!
 ! \begin{equation}\label{drhodxdiscrSONG}
 ! \begin{array}{l}
 ! \displaystyle
@@ -34,13 +33,12 @@
 ! \frac{z^c_{i+1,j,k}-z^c_{i,j,k}}{\Delta x^u_{i,j}}\Bigg],
 ! \end{array}
 ! \end{equation}
-! 
+!
 ! where $z^c_{i,j,k}$ is the $z$-coordinate of the centre of
 ! the grid box with the index $(i,j,k)$.
 !
 ! The discretisation of $(\partial_y^* b)_k$ for the $v$-equation is
 ! done accordingly.
-!
 !
 ! !USES:
    use internal_pressure

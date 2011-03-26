@@ -1,4 +1,3 @@
-!$Id: hcc_check.F90,v 1.5 2007-06-07 10:25:19 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -10,7 +9,7 @@
 !
 ! !DESCRIPTION:
 !
-! This diagnostic routine calculates the hydrostatic consistency $h^c$ 
+! This diagnostic routine calculates the hydrostatic consistency $h^c$
 ! in each T-point and each layer. $h^c$ is defined as:
 !
 ! \begin{equation}\label{HCC}
@@ -71,7 +70,7 @@
                   dv2 = _ZERO_
                end if
 
-               x = (du2-du1)/hn(i,j,k) 
+               x = (du2-du1)/hn(i,j,k)
                y = (dv2-dv1)/hn(i,j,k)
                hcc(i,j,k) = max(abs(x),abs(y))
 

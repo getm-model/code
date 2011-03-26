@@ -1,4 +1,3 @@
-!$Id: m2d.F90,v 1.35 2009-12-11 13:19:04 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -95,7 +94,7 @@
 !  for the fulfilment of the CFL criterium for shallow water theory
 !  {\tt cfl\_check} is called. A major part of this subroutine deals
 !  then with the setting of local bathymetry values and initial surface
-!  elevations in $u$- and $v$-points, also by calls to the subroutines 
+!  elevations in $u$- and $v$-points, also by calls to the subroutines
 !  {\tt uv\_depths} and {\tt depth\_update}.
 !
 ! !LOCAL VARIABLES:
@@ -124,7 +123,7 @@
 !  Allocates memory for the public data members - if not static
    call init_variables_2d(runtype)
 
-#if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC) 
+#if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
 !   STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'
 !   call cfl_check()
 #else
@@ -197,7 +196,7 @@
             LEVEL2 '  All An is zero for this (sub)domain - switching to An_method=0'
             An_method=0
          end if
-            
+
       case default
          call getm_error("init_2d()", &
                          "A non valid An method has been chosen");

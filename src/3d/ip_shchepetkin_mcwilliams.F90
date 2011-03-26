@@ -10,19 +10,19 @@
 ! !DESCRIPTION:
 !
 ! Here, the pressure gradient is calculated according to the
-! method and the algorithm suggested by Shchepetkin and McWilliams, 
+! method and the algorithm suggested by Shchepetkin and McWilliams,
 ! 2003. This method uses a nonconservative  Density-Jacobian scheme,
-! based on  cubic polynomial fits for the bouyancy "buoy" and "zz", 
-! the vertical position of rho-points, as functions of its respective 
-! array indices. The cubic polynomials are monotonized by using harmonic 
+! based on  cubic polynomial fits for the bouyancy "buoy" and "zz",
+! the vertical position of rho-points, as functions of its respective
+! array indices. The cubic polynomials are monotonized by using harmonic
 ! mean instead of linear averages to interpolate slopes.
 ! Exact anti-symmetry of the density Jacobian
 ! \begin{equation}
 !        J(rho,zz)=-J(zz,rho)
 ! \end{equation}
-! is retained for the density/bouyancy Jacobian in the pressure 
-! gradient formulation in x-direction for a non aligned vertical 
-! coordinate $\sigma$, the atmospheric pressure $p_0$ and the sea 
+! is retained for the density/bouyancy Jacobian in the pressure
+! gradient formulation in x-direction for a non aligned vertical
+! coordinate $\sigma$, the atmospheric pressure $p_0$ and the sea
 ! surface elevation $\eta$:
 ! \begin{equation}
 ! \label{eq: shchepetkin pgf}
@@ -30,7 +30,7 @@
 !                          + \underbrace{buoy(\eta) \partial_x\eta + \int_z^\eta J(buoy,zz)\mbox{d}\sigma}_{idpdx}
 ! \end{equation}
 ! Details about the calculation of the integral over the Jacobian in
-! (\ref{eq: shchepetkin pgf}) can be found in Shchepetkin and McWilliams, 
+! (\ref{eq: shchepetkin pgf}) can be found in Shchepetkin and McWilliams,
 ! 2003.
 !
 ! If parameter OneFifth (below) is set to zero, the scheme should
@@ -62,7 +62,7 @@
 !-----------------------------------------------------------------------
 !BOC
 
-! OMP-NOTE: Initialization to _ZERO_ of arrays are done by master 
+! OMP-NOTE: Initialization to _ZERO_ of arrays are done by master
 !   threads little at a time. Typically while the remaining threads
 !   execute the loop prior to the one where the arrays are needed.
 !   The local work arrays do presently not need initialization.
@@ -86,7 +86,7 @@
 !!$OMP END MASTER
 
 !$OMP DO SCHEDULE(RUNTIME)
-!  First, the rho-point heights are calculated 
+!  First, the rho-point heights are calculated
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
          if (az(i,j) .ge. 1) then
@@ -147,7 +147,7 @@
 
 ! Compute pressure gradient term as it
 ! appears on the right hand side of u equation
-! OMP-NOTE: If we want to thread the k-loop, then each thread 
+! OMP-NOTE: If we want to thread the k-loop, then each thread
 !    needs to allocate it's own (i,j)-size work arrays,
 !    BJB 2009-09-24.
    do k=kmax,1,-1
@@ -213,8 +213,8 @@
 ! Compute pressure gradient term as it
 ! appears on the right hand side of v equation
 ! OMP-NOTE: The following loops cannot be threaded along the j-dimension.
-!    Threading along k seems to be non-trivial too. Thus, we reverse the 
-!    loop order on OMP and thread over i. 
+!    Threading along k seems to be non-trivial too. Thus, we reverse the
+!    loop order on OMP and thread over i.
    do k=kmax,1,-1
 #ifdef GETM_OMP
 !$OMP DO SCHEDULE(RUNTIME)
@@ -292,4 +292,3 @@
 !-----------------------------------------------------------------------
 ! Copyright (C) 2007 - Richard Hofmeister                              !
 !-----------------------------------------------------------------------
-

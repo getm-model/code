@@ -1,4 +1,3 @@
-!$Id: write_restart_ncdf.F90,v 1.14 2010-03-30 12:03:24 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,9 +8,9 @@
    subroutine write_restart_ncdf(runtype,secs,loop,julianday,secondsofday)
 !
 ! !DESCRIPTION:
-!  Writes to a NetCDF file previously created using the 
+!  Writes to a NetCDF file previously created using the
 !  create\_restart\_ncdf() subroutine all variables necessary to make
-!  a correct GETM hotstart. The Fortran variables are written directly 
+!  a correct GETM hotstart. The Fortran variables are written directly
 !  into the corresponding NetCDF variable.
 !
 ! !USES:
@@ -38,51 +37,8 @@
    REALTYPE, intent(in)      :: secs ! not used now
    integer, intent(in)       :: loop,julianday,secondsofday
 !
-! !DEFINED PARAMTERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding
-!
-!  $Log: write_restart_ncdf.F90,v $
-!  Revision 1.14  2010-03-30 12:03:24  kb
-!  fixed BIO restart in NetCDF
-!
-!  Revision 1.13  2010-03-30 11:48:38  kb
-!  removing adaptive_coodinates
-!
-!  Revision 1.11  2010-01-21 15:46:24  kb
-!  fixed BIO-restart
-!
-!  Revision 1.10  2009-09-25 12:17:26  kb
-!  removed undef [IJ]RANGE
-!
-!  Revision 1.9  2009-09-23 09:54:53  kb
-!  fixed typos in DESCRIPTION
-!
-!  Revision 1.8  2009-08-21 10:39:01  kb
-!  -DINCLUDE_HALOS will include halo-zones when writing/reading NetCDF hotstart files
-!
-!  Revision 1.7  2009-07-18 12:36:01  kb
-!  fixed SPM hot-start bug - Hofmeister
-!
-!  Revision 1.6  2009-04-27 09:22:55  kb
-!  mean calculation de-activated with -DNO_3D
-!
-!  Revision 1.5  2007-11-12 13:50:17  kb
-!  also need bio_calc
-!
-!  Revision 1.4  2007-10-19 07:52:36  kbk
-!  zub and zvb not in hotstart files anymore
-!
-!  Revision 1.3  2007-10-04 13:55:37  kbk
-!  fixed varriable type of runtype
-!
-!  Revision 1.2  2007-10-03 06:59:23  kbk
-!  NetCDF restart uses runtype properly
-!
-!  Revision 1.1  2007-09-21 13:03:42  kbk
-!  added drop-in NetCDF replacement for binary hotstart file (default is binary)
-!
 !
 ! !LOCAL VARIABLES:
    integer         :: k,n

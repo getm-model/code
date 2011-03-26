@@ -1,4 +1,3 @@
-!$Id: integration.F90,v 1.14 2009-04-27 09:22:54 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -19,80 +18,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: integration.F90,v $
-!  Revision 1.14  2009-04-27 09:22:54  kb
-!  mean calculation de-activated with -DNO_3D
-!
-!  Revision 1.13  2009-04-27 08:03:02  kb
-!  getm/initialise.F90
-!
-!  Revision 1.12  2009-02-18 13:38:15  hb
-!  GETM runs without barotropic mode enabled, set -DNO_BAROTROPIC
-!
-!  Revision 1.11  2007-09-30 13:00:42  kbk
-!  prints real time as part of progessoutput
-!
-!  Revision 1.10  2007-06-27 18:31:59  kbk
-!  fixed calculation of integrated fresh water flux
-!
-!  Revision 1.9  2007-06-27 17:54:15  kbk
-!  need to multiply by time step to get integrated fresh water flux
-!
-!  Revision 1.8  2007-06-27 08:39:35  kbk
-!  support for fresh water fluxes at the sea surface - Adolf Stips
-!
-!  Revision 1.7  2006-08-25 09:34:10  kbk
-!  include biology calls
-!
-!  Revision 1.6  2006-03-17 11:06:32  kbk
-!  cleaner inclusion of SPM module
-!
-!  Revision 1.5  2005-05-25 10:46:15  kbk
-!  introduced progress print out variable - should go in namelist later
-!
-!  Revision 1.4  2004/03/29 15:35:51  kbk
-!  possible to store calculated mean fields
-!
-!  Revision 1.3  2003/04/23 12:03:46  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 16:39:16  kbk
-!  parallel support, NO_3D
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:25  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.10  2001/10/26 09:11:28  bbh
-!  Stresses in meteo.F90 are in N/m2 - divide by rho_0 where necessary
-!
-!  Revision 1.9  2001/10/17 08:22:56  bbh
-!  Resolved conflicts
-!
-!  Revision 1.8  2001/10/17 08:21:53  bbh
-!  Cleaned
-!
-!  Revision 1.7  2001/09/18 17:48:32  bbh
-!  Added algoritm for rivers - getting river data still missing
-!
-!  Revision 1.6  2001/08/30 08:02:45  bbh
-!  Default should be not TEST_METFORCING
-!
-!  Revision 1.5  2001/07/26 13:57:14  bbh
-!  Meteo working - needs some polishing
-!
-!  Revision 1.4  2001/06/04 13:10:25  bbh
-!  Cleaning
-!
-!  Revision 1.3  2001/05/25 19:03:02  bbh
-!  New method for - input - all is done via do_input()
-!
-!  Revision 1.2  2001/04/24 08:24:58  bbh
-!  Use runtype instead of macro
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:09  bbh
-!  initial import into CVS
-!
-! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 
@@ -141,12 +66,7 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
-!  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES
    logical                   :: do_3d

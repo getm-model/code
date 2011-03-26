@@ -1,4 +1,3 @@
-!$Id: diagnostic_variables.F90,v 1.2 2006-01-29 20:32:34 hb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -9,7 +8,7 @@
    module diagnostic_variables
 !
 ! !DESCRIPTION:
-!  This modules serves as a container for diagnostic variables. It is the 
+!  This modules serves as a container for diagnostic variables. It is the
 !  responsibillity of the subroutine(s) using these variables to properly
 !  allocate memory. Have a look at {\tt .../src/output/calc\_mean\_fields.F90}.
 !
@@ -38,17 +37,12 @@
    REALTYPE,dimension(:,:,:), allocatable :: phymix3d_T_mean
    REALTYPE,dimension(:,:), allocatable :: phymix2d_T_mean
 
+#ifdef GETM_BIO
+   REALTYPE,dimension(:,:,:,:), allocatable :: cc3dmean
+#endif
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: diagnostic_variables.F90,v $
-!  Revision 1.2  2006-01-29 20:32:34  hb
-!  Small LaTeX corrections to source code documentation
-!
-!  Revision 1.1  2004-03-29 15:35:52  kbk
-!  possible to store calculated mean fields
-!
 !
 !EOP
 !-----------------------------------------------------------------------

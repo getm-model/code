@@ -1,4 +1,3 @@
-!$Id: init_3d_ncdf.F90,v 1.16 2009-04-23 14:30:37 lars Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -36,76 +35,6 @@
    logical,    parameter               :: init3d=.true.
 !
 ! !REVISION HISTORY:
-!
-!  $Log: init_3d_ncdf.F90,v $
-!  Revision 1.16  2009-04-23 14:30:37  lars
-!  corrected wrong units/name for NN and SS
-!
-!  Revision 1.15  2009-04-22 10:09:36  lars
-!  support for bottom stress output
-!
-!  Revision 1.14  2009-01-05 09:57:06  kb
-!  option for storing SS and NN
-!
-!  Revision 1.13  2007-03-30 13:11:00  hb
-!  Use of adaptive and hybrid vertical coordinates technically enabled
-!
-!  Revision 1.12  2007-02-20 13:52:15  kbk
-!  solar radiation -> 3d field - possible to save
-!
-!  Revision 1.11  2006-03-17 11:06:33  kbk
-!  cleaner inclusion of SPM module
-!
-!  Revision 1.10  2005/09/23 11:27:10  kbk
-!  support for biology via GOTMs biology modules
-!
-!  Revision 1.9  2005/04/25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
-!  Revision 1.8  2004/10/07 15:46:56  kbk
-!  removed wrongly placed  comments for save_nuh
-!
-!  Revision 1.7  2004/06/15 08:25:57  kbk
-!  added supoort for spm - Ruiz
-!
-!  Revision 1.6  2004/05/04 09:23:51  kbk
-!  hydrostatic consistency criteria stored in .3d.nc file
-!
-!  Revision 1.5  2003/12/16 12:51:04  kbk
-!  preparing for proper support for SPM (manuel)
-!
-!  Revision 1.4  2003/05/09 11:38:26  kbk
-!  added proper undef support - based on Adolf Stips patch
-!
-!  Revision 1.3  2003/04/23 11:53:24  kbk
-!  save lat/lon info for spherical grid
-!
-!  Revision 1.2  2003/04/07 12:51:26  kbk
-!  CURVILINEAR --> defined(SPHERICAL) || defined(CURVILINEAR)
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:46  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.7  2001/10/25 16:16:20  bbh
-!  No actual storing of data in init_3d_ncdf.F90 -> save_3d_ncdf.F90
-!
-!  Revision 1.6  2001/10/23 14:19:20  bbh
-!  Stores h if general vertical coordinates
-!
-!  Revision 1.5  2001/10/23 07:37:17  bbh
-!  Saving spm - if calc_spm and save_spm are both true
-!
-!  Revision 1.4  2001/10/22 08:03:13  bbh
-!  Misplaced #else
-!
-!  Revision 1.3  2001/09/24 14:13:25  bbh
-!  xc and yc have changing shape depending on grid_type
-!
-!  Revision 1.2  2001/09/19 11:20:32  bbh
-!  Explicit de-allocates memory when -DFORTRAN90
-!
-!  Revision 1.1  2001/09/13 14:50:02  bbh
-!  Cleaner and smaller NetCDF implementation + better axis support
 !
 ! !LOCAL VARIABLES:
    integer                   :: err
@@ -229,7 +158,7 @@
 !  hydrostatic consistency criterion
    err = nf90_def_var(ncid,'hcc',NF90_REAL,f4_dims(1:3),hcc_id)
    if (err .NE. NF90_NOERR) go to 10
-   fv = -_ONE_ 
+   fv = -_ONE_
    mv = -_ONE_
    vr(1) = 0.
    vr(2) = 1.
@@ -425,12 +354,12 @@
    if (spm_save) then
       fv = spm_missing
       mv = spm_missing
-      err = nf90_def_var(ncid,'spm_pool',NF90_REAL,f3_dims,spmpool_id) 
+      err = nf90_def_var(ncid,'spm_pool',NF90_REAL,f3_dims,spmpool_id)
       if (err .NE. NF90_NOERR) go to 10
       vr(1) = 0.
       vr(2) = 10.
       call set_attributes(ncid,spmpool_id,long_name='bottom spm pool', &
-                          units='kg/m2', & 
+                          units='kg/m2', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
       vr(1) =  0.
       vr(2) = 30.

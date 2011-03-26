@@ -1,4 +1,3 @@
-!$Id: nesting.F90,v 1.4 2007-06-07 10:25:20 kbk Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -34,20 +33,6 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
-!
-!  $Log: nesting.F90,v $
-!  Revision 1.4  2007-06-07 10:25:20  kbk
-!  iimin,iimax,jjmin,jjmax -> imin,imax,jmin,jmax
-!
-!  Revision 1.3  2003-04-23 12:07:12  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 12:32:58  kbk
-!  parallel support + NO_3D, NO_BAROCLINIC
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:53  gotm
-!  recovering after CVS crash
-!
 !
 ! !PRIVATE DATA MEMBERS
    integer                   :: NW_w,NN_w,NE_w,NS_w,nonp_w=0
@@ -85,12 +70,6 @@
 ! !USES:
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  See the log for the module
 !
@@ -118,7 +97,7 @@
 
 !  Western
    read(iunit,*,end=91,err=92) NW_w
-   if (NW_w .ge. 1) then   
+   if (NW_w .ge. 1) then
       allocate(wi_w(NW_w),stat=rc)
       if (rc /= 0) stop 'init_nesting: Error allocating memory (wi_w)'
       allocate(wfj_w(NW_w),stat=rc)
@@ -133,7 +112,7 @@
 
 !  Northen
    read(iunit,*,end=91,err=92) NN_w
-   if (NN_w .ge. 1) then   
+   if (NN_w .ge. 1) then
       allocate(nj_w(NN_w),stat=rc)
       if (rc /= 0) stop 'init_nesting: Error allocating memory (nj_w)'
       allocate(nfi_w(NN_w),stat=rc)
@@ -211,10 +190,6 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: mode
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  See the log for the module
@@ -324,12 +299,6 @@
 ! !USES:
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  See the log for the module
 !
@@ -366,10 +335,6 @@
 ! !INPUT PARAMETERS:
    integer                             :: source_grid
    REALTYPE, intent(in)                :: f(E2DFIELD)
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  See the log for the module
@@ -462,10 +427,6 @@
 ! !INPUT PARAMETERS:
    integer                             :: source_grid
    REALTYPE, intent(in)                :: f(I3DFIELD)
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  See the log for the module
@@ -564,10 +525,6 @@
 ! !INPUT PARAMETERS:
    integer                             :: source_grid
    REALTYPE, intent(in)                :: f(I3DFIELD)
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  See the log for the module

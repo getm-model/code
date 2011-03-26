@@ -1,4 +1,3 @@
-!$Id: set_attributes.F90,v 1.4 2009-12-11 08:41:15 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -39,10 +38,6 @@
 #endif
    character(len=*), optional          :: C_format,FORTRAN_format
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
@@ -52,7 +47,6 @@
    integer                   :: iret
    integer                   :: ft
    REAL_4B                   :: vals(2)
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC

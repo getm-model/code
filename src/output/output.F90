@@ -1,4 +1,3 @@
-!$Id: output.F90,v 1.34 2010-03-30 11:48:38 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -37,7 +36,7 @@
    logical                             :: save_2d=.true.
    logical                             :: save_meteo=.false.
    logical                             :: save_3d=.true.
-   logical                             :: save_mean=.false. 
+   logical                             :: save_mean=.false.
    logical                             :: save_vel=.true.
    logical                             :: destag=.false.
    logical                             :: save_strho=.true.
@@ -64,135 +63,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: output.F90,v $
-!  Revision 1.34  2010-03-30 11:48:38  kb
-!  removing adaptive_coodinates
-!
-!  Revision 1.33  2010-03-24 14:58:15  kb
-!  cleaned divergence calculations
-!
-!  Revision 1.32  2010-02-23 08:23:36  kb
-!  adaptive vertical coordinates - Hofmeister
-!
-!  Revision 1.31  2009-11-20 09:56:55  kb
-!  use new GOTM/BIO interface
-!
-!  Revision 1.30  2009-09-23 10:11:48  kb
-!  rewrite of grid-initialisation, optional grid info saved to file, -DSAVE_HALO, updated documentation
-!
-!  Revision 1.29  2009-08-18 10:24:47  bjb
-!  New getm_timers module
-!
-!  Revision 1.28  2009-04-27 09:22:55  kb
-!  mean calculation de-activated with -DNO_3D
-!
-!  Revision 1.27  2009-04-22 10:07:19  lars
-!  added switch for bottom stress output
-!
-!  Revision 1.26  2009-01-05 09:57:06  kb
-!  option for storing SS and NN
-!
-!  Revision 1.25  2007-10-19 07:52:35  kbk
-!  zub and zvb not in hotstart files anymore
-!
-!  Revision 1.24  2007-10-03 06:59:22  kbk
-!  NetCDF restart uses runtype properly
-!
-!  Revision 1.23  2007-09-30 13:00:43  kbk
-!  prints real time as part of progessoutput
-!
-!  Revision 1.22  2007-09-21 13:13:37  kbk
-!  added hotin_fmt and hotout_fmt output namelist
-!
-!  Revision 1.21  2007-09-21 13:03:41  kbk
-!  added drop-in NetCDF replacement for binary hotstart file (default is binary)
-!
-!  Revision 1.20  2007-08-23 18:48:17  kbk
-!  added flexibility for saving hot-start files
-!
-!  Revision 1.19  2007-02-22 08:48:11  kbk
-!  possible to save masks (az, au, av)
-!
-!  Revision 1.18  2007-02-20 13:52:15  kbk
-!  solar radiation -> 3d field - possible to save
-!
-!  Revision 1.17  2006-06-03 11:56:02  kbk
-!  fixed use_epoch when start is equal to epoch time
-!
-!  Revision 1.16  2006-06-02 12:42:21  kbk
-!  support for common epoch for hotstart runs
-!
-!  Revision 1.15  2006-03-17 17:19:54  kbk
-!  simulation with hotstart identical to continuous run - checked with md5sum
-!
-!  Revision 1.14  2006-03-17 11:06:33  kbk
-!  cleaner inclusion of SPM module
-!
-!  Revision 1.13  2006-02-02 17:51:36  kbk
-!  do not try and save to un-opened NetCDF files
-!
-!  Revision 1.12  2005/09/23 11:27:11  kbk
-!  support for biology via GOTMs biology modules
-!
-!  Revision 1.11  2005/05/04 11:45:30  kbk
-!  adding model time stamp on IO
-!
-!  Revision 1.10  2005/04/25 09:32:34  kbk
-!  added NetCDF IO rewrite + de-stag of velocities - Umlauf
-!
-!  Revision 1.9  2004/06/15 08:25:57  kbk
-!  added supoort for spm - Ruiz
-!
-!  Revision 1.8  2004/03/29 15:35:52  kbk
-!  possible to store calculated mean fields
-!
-!  Revision 1.7  2003/12/16 16:50:41  kbk
-!  added support for Intel/IFORT compiler - expanded TABS, same types in subroutine calls
-!
-!  Revision 1.6  2003/09/30 09:44:27  kbk
-!  hotout=0 -> save hot-files at last time step only
-!
-!  Revision 1.5  2003/09/16 07:45:30  kbk
-!  additional info written when hotstart time mismatch
-!
-!  Revision 1.4  2003/09/03 05:55:13  kbk
-!  continuous=.false. - allows change of dt
-!
-!  Revision 1.3  2003/04/23 12:07:12  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.2  2003/04/07 12:32:58  kbk
-!  parallel support + NO_3D, NO_BAROCLINIC
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:52  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.8  2001/10/23 07:37:17  bbh
-!  Saving spm - if calc_spm and save_spm are both true
-!
-!  Revision 1.7  2001/10/18 07:14:57  bbh
-!  Resolved conflicts
-!
-!  Revision 1.6  2001/09/18 20:08:11  bbh
-!  Added save_nuh
-!
-!  Revision 1.5  2001/09/13 14:50:02  bbh
-!  Cleaner and smaller NetCDF implementation + better axis support
-!
-!  Revision 1.4  2001/07/26 13:57:14  bbh
-!  Meteo working - needs some polishing
-!
-!  Revision 1.3  2001/06/04 13:09:53  bbh
-!  Includes - dryrun - in call to init_output()
-!
-!  Revision 1.2  2001/04/24 08:24:58  bbh
-!  Use runtype instead of macro
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
-!
-! !LOCAL VARIABLES:
-!
 !EOP
 !-----------------------------------------------------------------------
 
@@ -211,12 +81,6 @@
    character(len=*), intent(in)        :: runid,title,starttime
    integer, intent(in)                 :: runtype,myid
    logical, intent(in)                 :: dryrun
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
-! !DESCRIPTION:
 !
 ! !REVISION HISTORY:
 !
@@ -255,7 +119,7 @@
       save_strho = .false.
       save_turb = .false.
    end if
-  
+
    if (runtype .eq. 2) then
       save_strho = .false.
       save_s = .false.
@@ -267,7 +131,7 @@
    else
       LEVEL2 'keeping velocities on calculation grid'
    end if
-   
+
    call file_names(runid,myid)
 
    if(save_2d) then
@@ -368,10 +232,6 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype,n
    REALTYPE, intent(in)                :: timestep
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  22Nov Author name Initial code
@@ -504,18 +364,15 @@
 ! !INPUT/OUTPUT PARAMETERS:
    integer, intent(inout)              :: loop
 !
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES
    integer, save             :: n=0
    integer                   :: i,j
-   integer                   :: jd,secs 
+   integer                   :: jd,secs
    character(len=19)         :: timestr_out
    REALTYPE                  :: dt
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -561,8 +418,8 @@
                   write(RESTART) T,S
                end if
 #endif
-#ifdef SPM 
-               if (spm_calc) then 
+#ifdef SPM
+               if (spm_calc) then
                   LEVEL3 'saving spm'
                   write(RESTART) spm
                   write(RESTART) spm_pool
@@ -624,16 +481,16 @@
                   read(RESTART) T,S
                end if
 #endif
-#ifdef SPM 
+#ifdef SPM
                if(spm_calc) then
-                  if (spm_hotstart) then 
+                  if (spm_hotstart) then
                      LEVEL3 'reading spm variables'
                      read(RESTART) spm
                      read(RESTART) spm_pool
                   else
                      LEVEL3 'spm variables not read from hotstart file'
                      LEVEL3 'set spm_init_method=0 to read them from hotstart file'
-                  end if     
+                  end if
                end if
 #endif
 
@@ -707,8 +564,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
    integer, intent(inout)              :: loop
 !
-! !OUTPUT PARAMETERS:
-!
 ! !DESCRIPTION:
 !  Writes calculated fields to files.
 !
@@ -772,10 +627,6 @@
    character(len=*), intent(in)        ::  runid
    integer, intent(in)                 ::  myid
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !DESCRIPTION:
 !
 ! !REVISION HISTORY:
@@ -785,7 +636,6 @@
    character(len=3)                    :: buf
    character(len=16)                   :: pid,ext
    character(len=PATH_MAX)             :: fname
-!
 !EOP
 !-----------------------------------------------------------------------
 !BOC

@@ -66,7 +66,7 @@
          end do
       end do
 !     write(6,*) 'Inside after',hn(imax/2,2,kmax/2)
-   
+
      return
      end
-     
+

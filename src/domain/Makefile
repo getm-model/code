@@ -1,4 +1,3 @@
-#$Id: Makefile,v 1.5 2009-09-23 10:11:46 kb Exp $
 # 
 # Makefile to build the domain library - libdomain.a
 #

@@ -1,4 +1,3 @@
-#$Id: Makefile,v 1.3 2007-07-24 10:55:07 kbk Exp $
 #
 # Makefile for the GETM source code documentation. 
 #

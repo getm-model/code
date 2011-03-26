@@ -1,4 +1,3 @@
-#$Id: Makefile,v 1.9 2009-08-18 10:24:45 bjb Exp $
 # 
 # Makefile to build utilities written in Fortran90 - libfutils.a 
 #

@@ -1,4 +1,3 @@
-!$Id: parallel.F90,v 1.5 2009-08-21 08:56:34 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -24,42 +23,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-!  $Log: parallel.F90,v $
-!  Revision 1.5  2009-08-21 08:56:34  bjb
-!  Fix name clash on PARALLEL with OpenMP key word
-!
-!  Revision 1.4  2008-06-26 06:19:30  kb
-!  barrier() + verbose when finishing parallel run - Büchmann
-!
-!  Revision 1.3  2006-11-21 15:10:47  frv-bjb
-!  Parallel independence of INPUT_DIR for getm.inp read. Unset INPUT_DIR to use MPI working dir.
-!
-!  Revision 1.2  2003-04-23 12:02:43  kbk
-!  cleaned code + TABS to spaces
-!
-!  Revision 1.1  2003/04/07 12:05:42  kbk
-!  new parallel related files
-!
-!  Revision 1.1.1.1  2002/05/02 14:01:29  gotm
-!  recovering after CVS crash
-!
-!  Revision 1.4  2001/06/22 08:19:10  bbh
-!  Compiler options such as USE_MASK and OLD_DRY deleted.
-!  Open and passive boundary for z created.
-!  Various inconsistencies removed.
-!  wait_halo added.
-!  Checked loop boundaries
-!
-!  Revision 1.3  2001/05/18 12:53:08  bbh
-!  Prepared for mask in update_2d_halo - but not used yet
-!
-!  Revision 1.2  2001/05/18 10:03:44  bbh
-!  Added mask in parameter list to update_3d_halo()
-!
-!  Revision 1.1.1.1  2001/04/17 08:43:08  bbh
-!  initial import into CVS
-!
-! !LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 
@@ -77,10 +40,6 @@
 ! !INPUT PARAMETERS:
    character(len=*)                    :: runid,input_dir
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !DESCRIPTION:
 !  Initialize Parallel environment
 !
@@ -95,7 +54,6 @@
    character(len=16)         :: pid,ext
    character(len=PATH_MAX)   :: fname
 #endif
-!
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -143,12 +101,6 @@
    subroutine clean_parallel()
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !DESCRIPTION:
 !  Initialize Parallel environment
 !
@@ -172,7 +124,7 @@
 #ifdef GETM_PARALLEL
    LEVEL2 'At final MPI barrier'
    call barrier()
-   LEVEL2 'About to finish parallel part of GETM - calling MPI_Finalize()'  
+   LEVEL2 'About to finish parallel part of GETM - calling MPI_Finalize()'
    if(myid .ge. 0) then
       call MPI_Finalize(ierr)
    end if

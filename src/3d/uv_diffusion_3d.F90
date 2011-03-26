@@ -1,4 +1,3 @@
-!$Id: uv_diffusion_3d.F90,v 1.11 2009-09-30 11:28:46 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -11,13 +10,13 @@
 !
 ! !DESCRIPTION:
 !
-! Here, the horizontal diffusion terms are discretised in 
-! momentum-conserving form 
+! Here, the horizontal diffusion terms are discretised in
+! momentum-conserving form
 ! as well. For simplicity,
 ! this shown here for these terms as they appear in equations
-! (\ref{uEqviCurvi}) and (\ref{vEqviCurvi}), 
-! i.e.\ without multiplying them by $mn$.  
-! 
+! (\ref{uEqviCurvi}) and (\ref{vEqviCurvi}),
+! i.e.\ without multiplying them by $mn$.
+!
 ! First horizontal diffusion term in (\ref{uEqviCurvi}):
 ! \begin{equation}
 ! \begin{array}{l}
@@ -32,35 +31,35 @@
 ! \frac{u_{i,j,k}-u_{i-1,j,k}}{\Delta x_{i,j}^c}
 ! \end{array}
 ! \end {equation}
-! 
+!
 ! Second horizontal diffusion term in (\ref{uEqviCurvi}):
 ! \begin{equation}
 ! \begin{array}{l}
 ! \displaystyle
 ! \partial_{\cal Y}\left(\frac{A_Mh_k}{m}
 ! (n\partial_{\cal Y}u_k+m\partial_{\cal X}v_k)\right)_{i,j,k}
-! \approx 
-! \\ \\ \displaystyle \quad 
+! \approx
+! \\ \\ \displaystyle \quad
 ! \,\,\,\,\,\frac14\left(
 ! A^M_{i+1,j+1,k}+A^M_{i,j+1,k}+A^M_{i,j,k}+A^M_{i+1,j,k}\right)
 ! h^+_{i,j,k}\Delta x^+_{i,j}
-! \\ \\ \displaystyle \quad 
+! \\ \\ \displaystyle \quad
 ! \,\,\,\,\,\times\bigg(
 ! \frac{u_{i,j+1,k}-u_{i,j,k}}{\Delta y^+_{i,j}}
 ! -\frac{v_{i+1,j,k}-v_{i,j,k}}{\Delta x^+_{i,j}}
 ! \bigg)
-! \\ \\ \displaystyle \quad 
+! \\ \\ \displaystyle \quad
 ! -\frac14\left(
 ! A^M_{i+1,j,k}+A^M_{i,j,k}+A^M_{i,j-1,k}+A^M_{i+1,j-1,k}\right)
 ! h^+_{i,j-1,k}\Delta x^+_{i,j-1}
-! \\ \\ \displaystyle \quad 
+! \\ \\ \displaystyle \quad
 ! \,\,\,\,\,\times\bigg(
 ! \frac{u_{i,j,k}-u_{i,j-1,k}}{\Delta y^+_{i,j-1}}
 ! -\frac{v_{i+1,j-1,k}-v_{i,j-1,k}}{\Delta x^+_{i,j-1}}
 ! \bigg)
 ! \end{array}
 ! \end {equation}
-! 
+!
 ! First horizontal diffusion term in (\ref{vEqviCurvi}):
 ! \begin{equation}
 ! \begin{array}{l}
@@ -75,38 +74,38 @@
 ! \frac{v_{i,j,k}-v_{i,j-1,k}}{\Delta y_{i,j}^c}
 ! \end{array}
 ! \end {equation}
-! 
+!
 ! Second horizontal diffusion term in (\ref{vEqviCurvi}):
 ! \begin{equation}
 ! \begin{array}{l}
 ! \displaystyle
 ! \partial_{\cal X}\left(\frac{A_Mh_k}{n}
 ! (n\partial_{\cal Y}u_k+m\partial_{\cal X}v_k)\right)_{i,j,k}
-! \approx 
-! \\ \\ \displaystyle \quad 
+! \approx
+! \\ \\ \displaystyle \quad
 ! \,\,\,\,\,\frac14\left(
 ! A^M_{i+1,j+1,k}+A^M_{i,j+1,k}+A^M_{i,j,k}+A^M_{i+1,j,k}\right)
 ! h^+_{i,j,k}\Delta x^+_{i,j}
-! \\ \\ \displaystyle \quad 
+! \\ \\ \displaystyle \quad
 ! \,\,\,\,\,\times\bigg(
 ! \frac{u_{i,j+1,k}-u_{i,j,k}}{\Delta y^+_{i,j}}
 ! -\frac{v_{i+1,j,k}-v_{i,j,k}}{\Delta x^+_{i,j}}
 ! \bigg)
-! \\ \\ \displaystyle \quad 
+! \\ \\ \displaystyle \quad
 ! -\frac14\left(
 ! A^M_{i,j+1,k}+A^M_{i-1,j+1,k}+A^M_{i-1,j,k}+A^M_{i,j,k}\right)
 ! h^+_{i-1,j,k}\Delta x^+_{i-1,j}
-! \\ \\ \displaystyle \quad 
+! \\ \\ \displaystyle \quad
 ! \,\,\,\,\,\times\bigg(
 ! \frac{u_{i-1,j+1,k}-u_{i-1,j,k}}{\Delta y^+_{i-1,j}}
 ! -\frac{v_{i,j,k}-v_{i-1,j,k}}{\Delta x^+_{i-1,j}}
 ! \bigg)
 ! \end{array}
 ! \end {equation}
-! 
-! It is assumed here that the horizontal momentum diffusivities 
+!
+! It is assumed here that the horizontal momentum diffusivities
 ! $A^M_{i,j,k}$ are located
-! on the T-points.  
+! on the T-points.
 !
 ! For the case of a slice model simulation (compiler option {\tt SLICE\_MODEL}
 ! activated) the diffusive fluxes in $y$-direction are set to zero.
@@ -126,10 +125,6 @@
 ! !INPUT PARAMETERS:
   REALTYPE, intent(in) :: Am
 
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !

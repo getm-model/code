@@ -1,4 +1,3 @@
-!$Id: uv_advect.F90,v 1.12 2009-09-30 11:28:44 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -10,14 +9,14 @@
 !
 ! !DESCRIPTION:
 !
-! The advective terms in the vertically integrated 
+! The advective terms in the vertically integrated
 ! momentum equation are discretised in
-! a momentum-conservative form. This is carried out here for the 
-! advective terms in the $U$-equation (\ref{UMOM}) and the 
+! a momentum-conservative form. This is carried out here for the
+! advective terms in the $U$-equation (\ref{UMOM}) and the
 ! $V$-equation (\ref{VMOM}) (after applying the curvilinear
 ! coordinate transformationand multiplying these
-! equations with $mn$). 
-! 
+! equations with $mn$).
+!
 ! First advection term in (\ref{UMOM}):
 ! \begin{equation}
 ! \begin{array}{l}
@@ -31,11 +30,11 @@
 ! }{\Delta x^u_{i,j}\Delta y^u_{i,j}}
 ! \end{array}
 ! \end{equation}
-! 
+!
 ! For the upwind scheme used here, the inter-facial velocities which are defined
 ! on T-points are here
 ! calculated as:
-! 
+!
 ! \begin{equation}
 ! \tilde u_{i,j}=
 ! \left\{
@@ -43,17 +42,17 @@
 ! \displaystyle
 ! \frac{U_{i-1,j}}{D^u_{i-1,j}} & \mbox{ for } \frac12(U_{i,j}+U_{i-1,j})>0\\ \\
 ! \displaystyle
-! \frac{U_{i,j}}{D^u_{i,j}} & \mbox{ else. } 
+! \frac{U_{i,j}}{D^u_{i,j}} & \mbox{ else. }
 ! \end{array}
 ! \right.
 ! \end{equation}
-! 
+!
 ! Second advection term in (\ref{UMOM}):
 ! \begin{equation}
 ! \begin{array}{l}
-! \displaystyle 
-! \left(mn\,\partial_{\cal Y}y\left(\frac{UV}{Dm}\right)\right)_{i,j,k}\approx \\ \\ 
-! \displaystyle 
+! \displaystyle
+! \left(mn\,\partial_{\cal Y}y\left(\frac{UV}{Dm}\right)\right)_{i,j,k}\approx \\ \\
+! \displaystyle
 ! \quad
 ! \frac{
 ! \frac12(V_{i+1,j}+V_{i,j})\tilde u_{i,j}\Delta x^+_{i,j}-
@@ -61,12 +60,12 @@
 ! }{\Delta x^u_{i,j}\Delta y^u_{i,j}}
 ! \end{array}
 ! \end{equation}
-! 
-! For the upwind scheme used here, the inter-facial 
+!
+! For the upwind scheme used here, the inter-facial
 ! velocities which are defined on
 ! X-points are here
 ! calculated as:
-! 
+!
 ! \begin{equation}
 ! \tilde u_{i,j}=
 ! \left\{
@@ -74,17 +73,17 @@
 ! \displaystyle
 ! \frac{U_{i,j}}{D^u_{i,j}} & \mbox{ for } \frac12(V_{i+1,j,k}+V_{i,j,k})>0\\ \\
 ! \displaystyle
-! \frac{U_{i,j+1}}{D^u_{i,j+1}} & \mbox{ else. } 
+! \frac{U_{i,j+1}}{D^u_{i,j+1}} & \mbox{ else. }
 ! \end{array}
 ! \right.
 ! \end{equation}
-! 
+!
 ! First advection term in (\ref{VMOM}):
 ! \begin{equation}
 ! \begin{array}{l}
-! \displaystyle 
-! \left(mn\,\partial_{\cal X}\left(\frac{UV}{Dn}\right)\right)_{i,j,k}\approx \\ \\ 
-! \displaystyle 
+! \displaystyle
+! \left(mn\,\partial_{\cal X}\left(\frac{UV}{Dn}\right)\right)_{i,j,k}\approx \\ \\
+! \displaystyle
 ! \quad
 ! \frac{
 ! \frac12(U_{i,j+1}+U_{i,j})\tilde v_{i,j}\Delta y^+_{i,j}-
@@ -92,12 +91,12 @@
 ! }{\Delta x^v_{i,j}\Delta y^v_{i,j}}
 ! \end{array}
 ! \end{equation}
-! 
-! For the upwind scheme used here, the interfacial 
+!
+! For the upwind scheme used here, the interfacial
 ! velocities which are defined on
 ! X-points are here
 ! calculated as:
-! 
+!
 ! \begin{equation}
 ! \tilde v_{i,j}=
 ! \left\{
@@ -105,11 +104,11 @@
 ! \displaystyle
 ! \frac{V_{i,j}}{D^v_{i,j}} & \mbox{ for } \frac12(U_{i+1,j}+U_{i,j})>0\\ \\
 ! \displaystyle
-! \frac{V_{i+1,j}}{D^v_{i+1,j}} & \mbox{ else. } 
+! \frac{V_{i+1,j}}{D^v_{i+1,j}} & \mbox{ else. }
 ! \end{array}
 ! \right.
 ! \end{equation}
-! 
+!
 ! Second advection term in (\ref{VMOM}):
 ! \begin{equation}
 ! \begin{array}{l}
@@ -123,11 +122,11 @@
 ! }{\Delta x^v_{i,j}\Delta y^v_{i,j}}
 ! \end{array}
 ! \end{equation}
-! 
+!
 ! For the upwind scheme used here, the interfacial velocities which are defined
 ! on T-points are here
 ! calculated as:
-! 
+!
 ! \begin{equation}
 ! \tilde v_{i,j}=
 ! \left\{
@@ -135,7 +134,7 @@
 ! \displaystyle
 ! \frac{V_{i,j-1}}{D^v_{i,j-1}} & \mbox{ for } \frac12(V_{i,j}+V_{i,j-1})>0\\ \\
 ! \displaystyle
-! \frac{V_{i,j}}{D^v_{i,j}} & \mbox{ else. } 
+! \frac{V_{i,j}}{D^v_{i,j}} & \mbox{ else. }
 ! \end{array}
 ! \right.
 ! \end{equation}
@@ -155,12 +154,6 @@
    use getm_timers, only: tic, toc, TIM_UVADVECT
 !$ use omp_lib
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding

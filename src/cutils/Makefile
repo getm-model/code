@@ -1,4 +1,3 @@
-#$Id: Makefile,v 1.2 2006-02-07 07:16:22 kbk Exp $
 # 
 # Makefile to build utilities written in C - libmcutils.a
 #
