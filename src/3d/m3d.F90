@@ -283,9 +283,9 @@
       if (runtype .ge. 3) call init_internal_pressure()
       if (runtype .eq. 3) call do_internal_pressure()
    end if
+#endif
 
    if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
-#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_3d()'

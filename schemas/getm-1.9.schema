@@ -630,7 +630,7 @@
 			<element name="depthmin" type="float" label="minimum layer height" unit="m"/>
 			<element name="cNN" type="float" label="zoom. tendency stratification" minInclusive="0" maxInclusive="1"/>
 			<element name="cSS" type="float" label="zoom. tendency shear" minInclusive="0" maxInclusive="1"/>
-			<element name="cNN" type="float" label="zoom. tendency boundaries" minInclusive="0" maxInclusive="1"/>
+			<element name="cdd" type="float" label="zoom. tendency boundaries" minInclusive="0" maxInclusive="1"/>
 			<element name="d_vel" type="float" unit="m/s" label="vel. difference to resolve"/>
 			<element name="d_dens" type="float" unit="kg/m³" label="dens. difference to resolve"/>
 			<element name="dsurf" type="float" label="reference distance to boundaries" unit="m"/>

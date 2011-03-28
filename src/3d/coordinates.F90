@@ -119,9 +119,7 @@ STDERR 'coordinates(): hybrid_coordinates not coded yet'
 stop
          case (_ADAPTIVE_COORDS_) ! adaptive vertical coordinates
             LEVEL2 'using adaptive vertical coordinates'
-#ifndef NO_BAROCLINIC
             call adaptive_coordinates(.true.,hotstart)
-#endif
          case default
       end select
       first = .false.
@@ -135,9 +133,7 @@ stop
          case (_HYBRID_COORDS_) ! hybrid vertical coordinates
             call hybrid_coordinates(.false.)
          case (_ADAPTIVE_COORDS_) ! adaptive vertical coordinates
-#ifndef NO_BAROCLINIC
             call adaptive_coordinates(.false.,hotstart)
-#endif
          case default
       end select
    end if ! first
