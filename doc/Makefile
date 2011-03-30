@@ -53,14 +53,14 @@ a4: a4.dvi
 	dvips a4.dvi
 	dvipdf a4.dvi
 
-a4.dvi: a4.tex $(TEXSRC) $(PROTEXSRC) figures
+a4.dvi: a4.tex $(TEXSRC) $(PROTEXSRC)
 	latex  a4.tex
 	bibtex a4
 	latex  a4.tex
 	latex  a4.tex
 	latex  a4.tex
 
-html: a4.tex $(TEXSRC) $(PROTEXSRC) figures
+html: a4.tex $(TEXSRC) $(PROTEXSRC)
 	mkdir -p html
 	latex2html -dir html a4.tex
 
@@ -71,11 +71,6 @@ $(PROTEXSRC):
 upload: a4 html
 	scp -r a4.pdf $(RUSER)@$(RHOST):$(RDIR)/pdf/
 	scp -r html/* $(RUSER)@$(RHOST):$(RDIR)/html/
-
-figures:
-	wget -nd -nH -q http://www.bolding-burchard.com/src/figures/getm-figs-1.8.x.gz
-	tar -xvzf getm-figs-1.8.x.gz
-	$(RM) getm-figs-1.8.x.gz
 
 clean:
 	$(RM) *.log *.toc *.aux *.bbl *.blg *.bac *~
@@ -90,5 +85,4 @@ endif
 
 distclean: realclean
 	$(RM) *.gz
-	$(RM) -r figures
 
