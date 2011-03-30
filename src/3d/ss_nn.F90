@@ -252,6 +252,18 @@
 !$OMP END DO
 #endif
 
+#ifdef SLICE_MODEL
+do k=1,kmax-1
+   do i = imin,imax
+      if (az(i,2) .ge. 1 ) then
+         SS(i,3,k)=SS(i,2,k)
+         NN(i,3,k)=NN(i,2,k)
+      end if
+   end do
+end do
+#endif
+
+
 !$OMP END PARALLEL
    call toc(TIM_SSNN)
 #ifdef DEBUG

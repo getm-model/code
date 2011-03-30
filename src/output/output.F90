@@ -338,6 +338,7 @@
    use variables_3d, only: uu,vv,ww
    use variables_3d, only: uuEx,vvEx
    use variables_3d, only: tke,eps,num,nuh
+   use variables_3d, only: hn
 #ifndef NO_BAROCLINIC
    use variables_3d, only: T,S
 #endif
@@ -410,6 +411,7 @@
                write(RESTART) uuEx,vvEx
                write(RESTART) tke,eps
                write(RESTART) num,nuh
+               write(RESTART) hn
 #ifndef NO_BAROCLINIC
                if (runtype .ge. 3) then
                   LEVEL3 'saving 3D baroclinic variables'
@@ -468,6 +470,7 @@
                read(RESTART) uuEx,vvEx
                read(RESTART) tke,eps
                read(RESTART) num,nuh
+               read(RESTART) hn
                forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO, au(i,j).EQ.0) &
                     uu(i,j,:)=_ZERO_
                forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO, av(i,j).EQ.0) &

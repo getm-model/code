@@ -69,6 +69,7 @@
                     crit_depth,elev_missing,imin,jmin,imax,jmax,ws)
       err = nf90_put_var(ncid,elev_id,ws(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
+
 ! average zonal velocity
       if (destag) then
          call to_2d_u(imin,jmin,imax,jmax,az,u,DU,vel_missing,         &

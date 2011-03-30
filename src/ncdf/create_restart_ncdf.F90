@@ -204,6 +204,10 @@
                                (/ xdim_id, ydim_id, zdim_id /), nuh_id)
       if (status .NE. NF90_NOERR) go to 10
 
+      status = nf90_def_var(ncid, "hn", nf90_double, &
+                               (/ xdim_id, ydim_id, zdim_id /), hn_id)
+      if (status .NE. NF90_NOERR) go to 10
+
 #ifndef NO_BAROCLINIC
       status = nf90_def_var(ncid, "T", nf90_double, &
                                (/ xdim_id, ydim_id, zdim_id /), T_id)

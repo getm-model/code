@@ -180,3 +180,9 @@
 #define _2D_W_ _IRANGE_,_JRANGE_
 #define _3D_W_ _IRANGE_,_JRANGE_,_KRANGE_
 
+! Definition of vertical coordinate identifiers
+#define _SIGMA_COORDS_        1
+#define _Z_COORDS_            2
+#define _GENERAL_COORDS_      3
+#define _HYBRID_COORDS_       4
+#define _ADAPTIVE_COORDS_     5

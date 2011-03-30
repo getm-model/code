@@ -249,6 +249,11 @@
       status = nf90_inq_varid(ncid, "nuh", nuh_id)
       if (status .NE. NF90_NOERR) go to 10
 
+!  hn is required
+      varnam="hn"
+      status = nf90_inq_varid(ncid, "hn", hn_id)
+      if (status .NE. NF90_NOERR) go to 10
+
 #ifndef NO_BAROCLINIC
 !  T is required
       varnam="T"

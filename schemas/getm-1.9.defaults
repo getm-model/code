@@ -520,4 +520,21 @@
 			</meanout>
 		</io_spec>
 	</getm>
+        <adaptcoord>
+		<adapt_coord>
+			<faclag>0.0</faclag>
+			<faciso>0.0</faciso>
+			<fachor>0.1</fachor>
+			<facdif>0.3</facdif>
+			<depthmin>0.2</depthmin>
+			<cNN>0.2</cNN>
+			<cSS>0.0</cSS>
+			<cdd>0.2</cdd>
+			<d_vel>0.1</d_vel>
+			<d_dens>0.5</d_dens>
+			<dsurf>20.</dsurf>
+			<tgrid>21600.</tgrid>
+			<preadapt>0</preadapt>
+		</adapt_coord>
+        </adaptcoord>
 </scenario>

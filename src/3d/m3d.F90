@@ -29,8 +29,9 @@
    use m2d, only: Am
    use variables_2d, only: D,z,UEx,VEx
 #ifndef NO_BAROCLINIC
-   use temperature,only: init_temperature, do_temperature
-   use salinity,   only: init_salinity, do_salinity
+   use temperature,only: init_temperature, do_temperature, &
+            init_temperature_field
+   use salinity,   only: init_salinity, do_salinity, init_salinity_field
    use eqstate,    only: init_eqstate, do_eqstate
    use internal_pressure, only: init_internal_pressure, do_internal_pressure
    use internal_pressure, only: ip_method
@@ -255,7 +256,7 @@
 !  Needed for interpolation of temperature and salinity
    if (.not. hotstart) then
       call start_macro()
-      call coordinates(vert_cord,cord_relax,maxdepth)
+      call coordinates(hotstart)
       call hcc_check()
    end if
 
@@ -274,14 +275,17 @@
       call init_eqstate()
 #ifndef PECS
       call do_eqstate()
+      call ss_nn()
 #endif
+
+      if (.not. openbdy) bdy3d=.false.
+      if (bdy3d) call init_bdy_3d()
       if (runtype .ge. 3) call init_internal_pressure()
       if (runtype .eq. 3) call do_internal_pressure()
    end if
 #endif
 
-   if (.not. openbdy) bdy3d=.false.
-   if (bdy3d) call init_bdy_3d()
+   if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_3d()'
@@ -395,7 +399,7 @@
 #ifndef NO_BAROCLINIC
 #endif
 #ifdef MUDFLAT
-   call coordinates(vert_cord,cord_relax,maxdepth)
+   call coordinates(.false.)
 #endif
 #ifndef NO_BOTTFRIC
    if (kmax .gt. 1) then
@@ -429,8 +433,12 @@
       call uu_momentum_3d(n,bdy3d)
       ufirst=.true.
    end if
+
 #ifndef MUDFLAT
-   call coordinates(vert_cord,cord_relax,maxdepth)
+   if (kmax .gt. 1) then
+      if (vert_cord .eq. _ADAPTIVE_COORDS_) call ss_nn()
+   end if
+   call coordinates(.false.)
 #endif
    if (kmax .gt. 1) then
       call ww_momentum_3d()
@@ -445,14 +453,13 @@
 #else
    STDERR 'NO_ADVECT 3D'
 #endif
-
    if (kmax .gt. 1) then
 #ifndef NO_BOTTFRIC
       call stresses_3d()
 #endif
 #ifndef CONSTANT_VISCOSITY
 #ifndef PARABOLIC_VISCOSITY
-      call ss_nn()
+      if (vert_cord .ne. _ADAPTIVE_COORDS_) call ss_nn()
 #endif
       call gotm()
 #ifdef TURB_ADV

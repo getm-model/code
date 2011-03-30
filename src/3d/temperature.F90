@@ -25,11 +25,12 @@
    private
 !
 ! !PUBLIC DATA MEMBERS:
-   public init_temperature, do_temperature
+   public init_temperature, do_temperature, init_temperature_field
 !
 ! !PRIVATE DATA MEMBERS:
    integer                   :: temp_method=1,temp_format=2
    character(len=PATH_MAX)   :: temp_file="t_and_s.nc"
+   integer                   :: temp_field_no=1
    character(len=32)         :: temp_name='temp'
    REALTYPE                  :: temp_const=20.
    integer                   :: temp_hor_adv=1,temp_ver_adv=1
@@ -81,9 +82,6 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: k,i,j,n
-   integer, parameter        :: nmax=10000
-   REALTYPE                  :: zlev(nmax),prof(nmax)
-   integer                   :: temp_field_no=1
    integer                   :: status
    namelist /temp/ &
             temp_method,temp_const,temp_file,                 &
@@ -102,35 +100,10 @@
    write(debug,*) 'init_temperature() # ',Ncall
 #endif
 
-#ifdef NS_FRESHWATER_LENSE_TEST
-temp_field_no=1
-#endif
-#ifdef MED_15X15MINS_TEST
-temp_field_no=1
-#endif
-
    LEVEL2 'init_temperature()'
    read(NAMLST,temp)
 
-   select case (temp_method)
-      case(0)
-         LEVEL3 'getting initial fields from hotstart'
-      case(1)
-         LEVEL3 'setting to constant value'
-         forall(i=imin:imax,j=jmin:jmax, az(i,j) .ne. 0) &
-                T(i,j,:) = temp_const
-      case(2)
-         LEVEL3 'using profile'
-         call read_profile(temp_file,nmax,zlev,prof,n)
-         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,kmax, &
-                           az,H,hn,T)
-      case(3)
-         LEVEL3 'interpolating from 3D field'
-         call get_field(temp_file,temp_name,temp_field_no,T)
-      case default
-         FATAL 'Not valid temp_method specified'
-         stop 'init_temperature'
-   end select
+   call init_temperature_field()
 
 !  Sanity checks for advection specifications
    LEVEL3 'temp_hor_adv=   ',temp_hor_adv
@@ -193,10 +166,6 @@ temp_field_no=1
          LEVEL3 "2D-hor, 1D-vert split --> full uv, full w"
       case default
    end select
-
-   call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
-   call wait_halo(D_TAG)
-   call mirror_bdy_3d(T,D_TAG)
 
    select case (attenuation_method)
       case (0)
@@ -280,6 +249,76 @@ temp_field_no=1
    return
    end subroutine init_temperature
 !EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: init_temperature_field - initialisation of temperature field
+! \label{sec-init-temperature-field}
+!
+! !INTERFACE:
+   subroutine init_temperature_field()
+!
+! !DESCRIPTION:
+! Initialise the temperature field as specified with temp_method
+! and exchange the HALO zones
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !LOCAL VARIABLES:
+   integer                   :: k,i,j,n
+   integer, parameter        :: nmax=10000
+   REALTYPE                  :: zlev(nmax),prof(nmax)
+   integer                   :: status
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+
+#ifdef NS_FRESHWATER_LENSE_TEST
+temp_field_no=1
+#endif
+#ifdef MED_15X15MINS_TEST
+temp_field_no=1
+#endif
+   select case (temp_method)
+      case(0)
+         LEVEL3 'getting initial fields from hotstart'
+      case(1)
+         LEVEL3 'setting to constant value'
+         forall(i=imin:imax,j=jmin:jmax, az(i,j) .ne. 0) &
+                T(i,j,:) = temp_const
+      case(2)
+         LEVEL3 'using profile'
+         call read_profile(temp_file,nmax,zlev,prof,n)
+         call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,kmax, &
+                           az,H,hn,T)
+      case(3)
+         LEVEL3 'interpolating from 3D field'
+         call get_field(temp_file,temp_name,temp_field_no,T)
+      case default
+         FATAL 'Not valid temp_method specified'
+         stop 'init_temperature'
+   end select
+
+   call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
+   call wait_halo(D_TAG)
+   call mirror_bdy_3d(T,D_TAG)
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving init_temperature_field()'
+   write(debug,*)
+#endif
+   return
+   end subroutine init_temperature_field
+!EOC
+
 
 !-----------------------------------------------------------------------
 !BOP

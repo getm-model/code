@@ -197,20 +197,18 @@
    call read_topo_file(bathy_format,bathymetry)
 
    select case (vert_cord)
-      case(1)
+      case(_SIGMA_COORDS_)
          LEVEL2 'Using sigma coordinates'
-      case(2)
+      case(_Z_COORDS_)
          LEVEL2 'Using z-level coordinates'
-      case(3)
+      case(_GENERAL_COORDS_)
          LEVEL2 'Using general vertical coordinates'
-      case (4) ! hybrid vertical coordinates
+      case (_HYBRID_COORDS_) ! hybrid vertical coordinates
          LEVEL2 'using hybrid vertical coordinates'
          STDERR 'domain: hybrid_coordinates not coded yet'
          stop
-      case (5) ! adaptive vertical coordinates
+      case (_ADAPTIVE_COORDS_) ! adaptive vertical coordinates
          LEVEL2 'using adaptive vertical coordinates'
-         STDERR 'domain: adaptive_coordinates not coded yet'
-         stop
       case default
          call getm_error("init_domain()", &
                          "A non valid vertical coordinate system has been chosen");
