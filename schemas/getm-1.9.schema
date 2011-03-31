@@ -547,7 +547,8 @@
 			<element name="eqstate_method" type="int" label="equation of state method">
 				<options>
 					<option value="1" label="linearisation of equation of state with T0,S0,dtr0,dsr0" />
-					<option value="2" label="UNESCO equation of state" description="UNESCO equation of state with no pressure adjustment. See -DUNPRESS for pressure effect" />
+                                        <option value="2" label="UNESCO equation of state" description="UNESCO (1980) equation of state with no pressure adjustment" />
+                                        <option value="3" label="TEOS-10 equation of state" description=" http://www.teos-10.org/ - adopted for modelling according Jackett et al. 2006" />
 				</options>
 			</element>
 			<element name="T0" type="float" label="reference temperature for linear equation of state" unit="ºC">

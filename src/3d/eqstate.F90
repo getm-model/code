@@ -13,14 +13,16 @@
 ! are updated. The idea is to use the respective routines from GOTM.
 !
 ! !USES:
-   use  parameters, only: g,rho_0
+   use domain, only: imin,imax,jmin,jmax,kmax,az
+   use  parameters, only:   g,rho_0
+   use  variables_3d, only: T,S,rho
 !  IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
    public init_eqstate, do_eqstate
 !
 ! !PRIVATE DATA MEMBERS:
-   integer                   :: eqstate_method=1
+   integer                   :: eqstate_method=3
    REALTYPE                  :: T0 = 10., S0 = 33.75, p0 = 0.
    REALTYPE                  :: dtr0 = -0.17, dsr0 = 0.78
 !
@@ -68,6 +70,8 @@
          LEVEL4 'dsr0 = ',dsr0
       case (2)
          LEVEL3 'UNESCO - no pressure adjustment'
+      case (3)
+         LEVEL3 'Jackett ea 2006 - without pressure in rho'
       case default
          FATAL 'init_eqstate(): not a valid eqstate_method'
          stop 'init_eqstate()'
@@ -95,7 +99,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,az
-   use variables_3d, only: T,S,rho,buoy
+   use variables_3d, only: kmin,T,S,rho,buoy,hn,alpha,beta
    use getm_timers, only: tic, toc, TIM_EQSTATE
 !$ use omp_lib
    IMPLICIT NONE
@@ -103,8 +107,8 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
    REALTYPE                  :: x
-   REALTYPE                  :: KK
-   REALTYPE                  :: T1,T2,T3,T4,T5,S1,S15,S2,S3,p2
+   REALTYPE                  :: p1,s1,t1
+   REALTYPE                  :: th,densp,dens0,al,be
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -115,8 +119,8 @@
 #endif
    call tic(TIM_EQSTATE)
 
-!$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP    PRIVATE(i,j,k, x,KK, T1,T2,T3,T4,T5,S1,S15,S2,S3,p2)
+!$OMP PARALLEL DEFAULT(SHARED)          &
+!$OMP PRIVATE(i,j,k, x,T1,S1,)
 
 #define BUOYANCY
    select case (eqstate_method)
@@ -125,41 +129,63 @@
 !$OMP DO SCHEDULE(RUNTIME)
             do j=jmin-HALO,jmax+HALO
                do i=imin-HALO,imax+HALO
-                  rho(i,j,k) = rho_0 +                                &
+                  rho(i,j,k) = rho_0 +                                 &
                        dtr0*(T(i,j,k)-T0) + dsr0*(S(i,j,k)-S0)
                end do
             end do
 !$OMP END DO NOWAIT
          end do
 
-!$OMP BARRIER
-
-! OMP-TODO: CONSTANCE_TEST not threaded. It should
-!  be easy to thread, but the gain would only be for those cases,
-!  and the risk of introducing erros is non-zero. BJB 2009-09-25.
-#ifdef CONSTANCE_TEST
-!$OMP MASTER
-         forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO,az(i,j) .gt. 0)  &
-            rho(i,j,1:kmax) = 1000. + *dtr0*(T(i,j,1:kmax)-T0)
-!$OMP END MASTER
+#ifndef _OLD_BVF_
+         alpha = dtr0
+         beta  = dsr0
 #endif
+
       case (2)
          do k = 1,kmax
-!$OMP DO SCHEDULE(RUNTIME)
             do j = jmin-HALO,jmax+HALO
                do i = imin-HALO,imax+HALO
                   if (az(i,j) .gt. 0) then
-                     T1 = T(i,j,k)
-                     T2 = T1*T1
-! BJB-TODO: Due to caching, it is likely (slightly) faster to
-!    compute T3=T1*T1*T1 (etc). Same for S further down.
-                     T3 = T1*T2
-                     T4 = T2*T2
-                     T5 = T1*T4
-                     S1 = S(i,j,k)
+                     call rho_from_theta_unesco80(T(i,j,k),S(i,j,k), &
+                                                  rho(i,j,k))
+                  end if
+               end do
+            end do
+         end do
+#undef BUOYANCY
 
+#ifndef _OLD_BVF_
+         do j = jmin-HALO,jmax+HALO
+            do i = imin-HALO,imax+HALO
+               if (az(i,j) .gt. 0) then
+
+!                 not used anyway - but looks better
+                  alpha(i,j,kmax) = _ZERO_
+                  beta(i,j,kmax)  = _ZERO_
+
+                  p1 = _ZERO_
+                  do k = kmax-1,kmin(i,j),-1
+                     th = _HALF_ * (T(i,j,k+1)+T(i,j,k))
+                     s1 = _HALF_ * (S(i,j,k+1)+S(i,j,k))
+                     p1 = p1+hn(i,j,k+1)
+                     call eosall_from_theta(s1,th,p1,  &
+                                            beta(i,j,k),alpha(i,j,k))
+                  end do
+               end if
+            end do
+         end do
+#endif
+      case (3)
+! fisrt calculate potential density
+         do j = jmin-HALO,jmax+HALO
+            do i = imin-HALO,imax+HALO
+               if (az(i,j) .gt. 0) then
+
+                  do k = 1,kmax
+                     th = T(i,j,k)
+                     s1 = S(i,j,k)
 #ifdef NONNEGSALT
-                     if (S1 .lt. _ZERO_) then
+                     if (s1 .lt. _ZERO_) then
 #ifdef DEBUG
 !$OMP CRITICAL
                         STDERR 'Salinity at point ',i,',',j,',',k,' < 0.'
@@ -167,58 +193,46 @@
                         STDERR 'Programm continued, value set to zero ...'
 !$OMP END CRITICAL
 #endif
-                        S(i,j,k)= _ZERO_
-                        S1 = _ZERO_
+! Ulf, Richard, Hans, kb                        S(i,j,k)= _ZERO_
+                        s1 = _ZERO_
                      end if
-#endif
-! BJB-TODO: S1*sqrt(S1) is faster than S1**1.5 (plus the latter has the double-precision problem!)
-!                     S15= S1*sqrt(S1)
-                     S15 = S1**1.5
-                     S2 = S1*S1
-                     S3 = S1*S2
-
-                     x=999.842594+6.793952e-02*T1-9.09529e-03*T2+1.001685e-04*T3
-                     x=x-1.120083e-06*T4+6.536332e-09*T5
-                     x=x+S1*(0.824493-4.0899e-03*T1+7.6438e-05*T2-8.2467e-07*T3)
-                     x=x+S1*5.3875e-09*T4
-! BJB-TODO: Use S15 rather than sqrt(S3)
-                     x=x+sqrt(S3)*(-5.72466e-03+1.0227e-04*T1-1.6546e-06*T2)
-                     x=x+4.8314e-04*S2
-
-#ifdef UNPRESS
-                     if ((p.gt.0)) then
-                        p2=p*p
-                        KK= 19652.21                                                &
-                          +148.4206     *T1       -2.327105    *T2        &
-                          +  1.360477E-2*T3       -5.155288E-5 *T4        &
-                          +  3.239908      *p     +1.43713E-3  *T *p      &
-                          +  1.16092E-4 *T2*p     -5.77905E-7  *T3*p      &
-                          +  8.50935E-5    *p2    -6.12293E-6  *T *p2     &
-                          +  5.2787E-8  *T2*p2                            &
-                          + 54.6746           *S1 -0.603459    *T    *S1  &
-                          +  1.09987E-2 *T2   *S1 -6.1670E-5   *T3   *S1  &
-                          +  7.944E-2         *S15+1.6483E-2   *T    *S15 &
-                          -  5.3009E-4  *T2   *S15+2.2838E-3      *p *S1  &
-                          -  1.0981E-5  *T1*p *S1 -1.6078E-6   *T2*p *S1  &
-                          +  1.91075E-4    *p *S15-9.9348E-7      *p2*S1  &
-                          +  2.0816E-8  *T1*p2*S1   +9.1697E-10  *T2*p2*S1
-                        x=x/(1.-p/KK)
-                     end if
-#endif
-                     rho(i,j,k)=x
-                  end if
-               end do
+#endif  !NONNEGSALT
+                     call rho_from_theta(s1,th,_ZERO_,rho(i,j,k),densp)
+                  end do
+               end if
             end do
-!$OMP END DO NOWAIT
          end do
+#undef BUOYANCY
 
-!$OMP BARRIER
+#ifndef _OLD_BVF_
+!        calculate at SS interface, rho, alpha, beta
+         do j = jmin-HALO,jmax+HALO
+            do i = imin-HALO,imax+HALO
+               if (az(i,j) .gt. 0) then
+
+!                 not used anyway - but looks better
+                  alpha(i,j,kmax) = _ZERO_
+                  beta(i,j,kmax)  = _ZERO_
+
+                  p1 = _ZERO_
+                  do k = kmax-1,kmin(i,j),-1
+                     th = _HALF_ * (T(i,j,k+1)+T(i,j,k))
+                     s1 = _HALF_ * (S(i,j,k+1)+S(i,j,k))
+                     p1 = p1+hn(i,j,k+1)
+                     call eosall_from_theta(s1,th,p1,  &
+                                            beta(i,j,k),alpha(i,j,k))
+                  end do
+               end if
+            end do
+         end do
+#endif
 
       case default
    end select
-#undef BUOYANCY
 
-   x=-g/rho_0
+! GETM still uses surface potential density for buoy
+! to be used in pressure gradient routines
+   x= -g/rho_0
    do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO
@@ -241,6 +255,297 @@
 !EOC
 
 !-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: rho_from_theta_unesco80
+
+! !INTERFACE:
+   subroutine rho_from_theta_unesco80(T,S,rho)
+!
+! !DESCRIPTION:
+! Here, the equation of state is calculated using the UNESCO 1980 code.
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   REALTYPE, intent(in)      :: T   ! potential temperature degC
+   REALTYPE, intent(in)      :: S   ! salinity PSU
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE, intent(out)     :: rho ! density [kg/m3]
+!
+! !REVISION HISTORY:
+!
+! !LOCAL VARIABLES:
+   REALTYPE                  :: x,T1,T2,T3,T4,T5,S1,S2,S3
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   T1 = T
+   T2 = T1*T1
+   T3 = T1*T2
+   T4 = T2*T2
+   T5 = T1*T4
+   S1 = S
+
+#ifdef NONNEGSALT
+   if (S1 .lt. _ZERO_) then
+#ifdef DEBUG
+      STDERR 'Value is S = ',S
+      STDERR 'Programm continued, value set to zero ...'
+#endif
+      S1 = _ZERO_
+   end if
+#endif
+   S2 = S1*S1
+   S3 = S1*S2
+
+   x=999.842594+6.793952e-02*T1-9.09529e-03*T2+1.001685e-04*T3
+   x=x-1.120083e-06*T4+6.536332e-09*T5
+   x=x+S1*(0.824493-4.0899e-03*T1+7.6438e-05*T2-8.2467e-07*T3)
+   x=x+S1*5.3875e-09*T4
+   x=x+sqrt(S3)*(-5.72466e-03+1.0227e-04*T1-1.6546e-06*T2)
+   x=x+4.8314e-04*S2
+   rho = x
+   return
+   end subroutine rho_from_theta_unesco80
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: rho_from_theta
+!
+! !INTERFACE:
+   subroutine rho_from_theta(s,th,p,dens0,densp)
+!
+! !DESCRIPTION:
+! Here, the equation of state is calculated
+! Uses Jackett ea 2006 algorithm specific for potential temperature
+! Checkvalue
+!   S=35
+!   T=25
+!   p=10000
+!   rho_from_theta = 1062.53817
+!
+!   s                : salinity                           (psu)
+!   th               : potential temperature              (deg C, ITS-90)
+!   p                : gauge pressure                     (dbar)
+!                      (absolute pressure - 10.1325 dbar)
+!
+!   rho_from_theta   : in-situ density                    (kg m^-3)
+!
+!   check value      : rho_from_theta(20,20,1000) = 1017.728868019642
+!
+!   based on DRJ on 10/12/03
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   REALTYPE, intent(in)      :: th  ! potential temperature degC
+   REALTYPE, intent(in)      :: s  ! in situ salinity PSU
+   REALTYPE, intent(in)      :: p  ! pressure in dbars
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE, intent(out)     :: dens0  ! density at 0.0 dbars
+   REALTYPE, intent(out)     :: densp  ! density at p dbars
+!
+! !REVISION HISTORY:
+!  AS 2009 based on code provided by Jackett 2005
+!  See the log for the module
+!
+! !LOCAL VARIABLES
+   REALTYPE th2,sqrts,anum,aden,pth
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   th2 = th*th; sqrts = sqrt(s)
+
+   anum =          9.9984085444849347d+02 +    &
+              th*( 7.3471625860981584d+00 +    &
+              th*(-5.3211231792841769d-02 +    &
+              th*  3.6492439109814549d-04)) +  &
+               s*( 2.5880571023991390d+00 -    &
+              th*  6.7168282786692355d-03 +    &
+               s*  1.9203202055760151d-03)
+
+   aden =          1.0000000000000000d+00 +    &
+              th*( 7.2815210113327091d-03 +    &
+              th*(-4.4787265461983921d-05 +    &
+              th*( 3.3851002965802430d-07 +    &
+              th*  1.3651202389758572d-10))) + &
+               s*( 1.7632126669040377d-03 -    &
+              th*( 8.8066583251206474d-06 +    &
+             th2*  1.8832689434804897d-10) +   &
+           sqrts*( 5.7463776745432097d-06 +    &
+             th2*  1.4716275472242334d-09))
+
+   dens0 = anum/aden
+   densp = dens0
+
+   if(p .ne. _ZERO_) then
+
+      pth = p*th
+
+      anum = anum +        p*( 1.1798263740430364d-02 +   &
+                         th2*  9.8920219266399117d-08 +   &
+                           s*  4.6996642771754730d-06 -   &
+                           p*( 2.5862187075154352d-08 +   &
+                         th2*  3.2921414007960662d-12))
+
+      aden = aden +        p*( 6.7103246285651894d-06 -   &
+                    pth*(th2*  2.4461698007024582d-17 +   &
+                           p*  9.1534417604289062d-18))
+
+      densp = anum/aden
+   end if
+
+   return
+   end subroutine rho_from_theta
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: eosall_from_theta
+!
+! !INTERFACE:
+   subroutine eosall_from_theta(s,th,p,rho_s,rho_th)
+!
+! !DESCRIPTION:
+!   in-situ density and its derivatives (only 2) as functions of
+!   salinity, potential temperature and pressure as in
+!   Jackett, McDougall, Feistel, Wright and Griffies (2006), JAOT
+!
+!   s                : salinity                           (psu)
+!   th               : potential temperature              (deg C, ITS-90)
+!   p                : gauge pressure                     (dbar)
+!                      (absolute pressure - 10.1325 dbar)
+!
+!   rho              : in-situ density                    (kg m^-3)
+!   rho_s            : partial derivative wrt s           (kg m^-3 psu^-1)
+!   rho_th           : partial derivative wrt th          (kg m^-3 deg C^-1)
+!
+!   check values     : eosall_from_theta(20,20,1000,...) gives
+!
+!                               rho =  1017.728868019642
+!                               rho_s =   0.7510471164699279
+!                               rho_th = -0.2570255211349140
+!
+!   based on DRJ on 10/12/03
+
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   REALTYPE, intent(in)      :: th ! potential temperature degC
+   REALTYPE, intent(in)      :: s  ! in situ salinity PSU
+   REALTYPE, intent(in)      :: p  ! pressure in dbars
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE, intent(out)     :: rho_s   ! partial derivative wrt s
+   REALTYPE, intent(out)     :: rho_th  ! partial derivative wrt th
+
+! !REVISION HISTORY:
+!  AS 2009 based on code provided by Jackett 2005
+!  See the log for the module
+!
+! !LOCAL VARIABLES
+   REALTYPE        :: th2,sqrts,anum,aden,pth
+   REALTYPE        :: rho,anum_s,aden_s,anum_th,aden_th,rec_aden
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   th2 = th*th; sqrts = sqrt(s)
+
+   anum =       9.9984085444849347d+02 +         &
+           th*( 7.3471625860981584d+00 +         &
+           th*(-5.3211231792841769d-02 +         &
+
+           th*  3.6492439109814549d-04)) +       &
+            s*( 2.5880571023991390d+00 -         &
+           th*  6.7168282786692355d-03 +         &
+            s*  1.9203202055760151d-03)
+
+   aden =       1.0000000000000000d+00 +         &
+           th*( 7.2815210113327091d-03 +         &
+           th*(-4.4787265461983921d-05 +         &
+           th*( 3.3851002965802430d-07 +         &
+           th*  1.3651202389758572d-10))) +      &
+            s*( 1.7632126669040377d-03 -         &
+           th*( 8.8066583251206474d-06 +         &
+          th2*  1.8832689434804897d-10) +        &
+        sqrts*( 5.7463776745432097d-06 +         &
+          th2*  1.4716275472242334d-09))
+
+
+   anum_s =     2.5880571023991390d+00 -         &
+           th*  6.7168282786692355d-03 +         &
+            s*  3.8406404111520300d-03
+
+   aden_s =     1.7632126669040377d-03 +        &
+           th*(-8.8066583251206470d-06 -        &
+          th2*  1.8832689434804897d-10) +       &
+        sqrts*( 8.6195665118148150d-06 +        &
+          th2*  2.2074413208363504d-09)
+
+   anum_th =    7.3471625860981580d+00 +        &
+           th*(-1.0642246358568354d-01 +        &
+           th*  1.0947731732944364d-03)-        &
+           s*  6.7168282786692355d-03
+
+   aden_th =    7.2815210113327090d-03 +        &
+           th*(-8.9574530923967840d-05 +        &
+           th*( 1.0155300889740728d-06 +        &
+           th*  5.4604809559034290d-10)) +      &
+            s*(-8.8066583251206470d-06 -        &
+          th2*  5.6498068304414700d-10 +        &
+           th*sqrts*  2.9432550944484670d-09)
+
+   if(p .ne. _ZERO_) then
+
+     pth = p*th
+
+     anum = anum +   p*( 1.1798263740430364d-02 +     &
+                   th2*  9.8920219266399117d-08 +     &
+                     s*  4.6996642771754730d-06 -     &
+                     p*( 2.5862187075154352d-08 +     &
+                   th2*  3.2921414007960662d-12))
+
+     aden = aden + p*( 6.7103246285651894d-06 -       &
+                 pth*(th2*  2.4461698007024582d-17 +  &
+                   p*  9.1534417604289062d-18))
+
+
+     anum_s = anum_s +  p*  4.6996642771754730d-06
+
+     anum_th = anum_th + pth*( 1.9784043853279823d-07 - &
+                           p*  6.5842828015921320d-12)
+
+     aden_th = aden_th -                                &
+                    p*p*(th2*  7.3385094021073750d-17 + &
+                      p*  9.1534417604289060d-18)
+
+   end if
+
+   rec_aden = _ONE_ / aden
+
+   rho = anum*rec_aden
+
+   rho_s = (anum_s-aden_s*rho)*rec_aden
+
+   rho_th = (anum_th-aden_th*rho)*rec_aden
+
+!  saline contraction coefficient is rho_s/rho
+!  thermal expansion coefficient is -rho_th/rho
+
+   return
+   end subroutine eosall_from_theta
+!EOC
+
+!-----------------------------------------------------------------------
 
    end module eqstate
 
@@ -248,17 +553,3 @@
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------
 
-!#define TEST_EQSTATE
-#ifdef TEST_EQSTATE
-   program test_eqstate
-
-   use eqstate
-
-   REALTYPE T(1,1,1),S(1,1,1),rho(1,1,1)
-
-   eqstate_method=2
-
-   call do_eqstate()
-
-   end
-#endif

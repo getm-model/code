@@ -129,8 +129,12 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,au,av,az
    use variables_3d, only: kmin,kumin,hn,uu,hun,kvmin,vv,hvn,SS,num
+   use parameters, only: g,rho_0
 #ifndef NO_BAROCLINIC
-   use variables_3d, only: NN,buoy
+   use variables_3d, only: NN,buoy,T,S
+#ifndef _OLD_BVF_
+   use variables_3d, only: alpha,beta
+#endif
 #endif
    use getm_timers, only: tic, toc, TIM_SSNN
 !$ use omp_lib
@@ -141,7 +145,12 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,nb
-   REALTYPE                  :: dz,NNc,NNe,NNw,NNn,NNs
+   REALTYPE                  :: dz,NNc,ttt
+   REALTYPE                  :: NNe,NNw,NNn,NNs
+   REALTYPE, parameter       :: small_bvf = 1.d-10
+#ifdef _SMOOTH_BVF_VERT_
+   REALTYPE                  :: below,center,above
+#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -165,6 +174,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .ge. 1 ) then
+            SS(i,j,kmax) = _ZERO_
             do k=1,kmax-1
 ! This is an older version which we should keep here.
 #ifndef NEW_SS
@@ -202,54 +212,78 @@
 !$OMP END DO
 
 #ifndef NO_BAROCLINIC
-#define NEW_NN
-#undef NEW_NN
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-1,jmax+1
+      do i=imin-1,imax+1
+         if (az(i,j) .ge. 1 ) then
+            NN(i,j,kmax) = small_bvf
+            do k=kmax-1,1,-1
+               dz=_HALF_*(hn(i,j,k+1)+hn(i,j,k))
+#ifdef _OLD_BVF_
+               NNc =(buoy(i,j,k+1)-buoy(i,j,k))/dz
+#else
+               NNc = -g / rho_0
+               NNc = NNc/dz *(alpha(i,j,k) *(T(i,j,k+1)-T(i,j,k)) &
+                         + beta(i,j,k) *(S(i,j,k+1)-S(i,j,k)))
+#endif
+               if (abs(NNc) .lt. small_bvf ) then
+                  NNc = sign(1.0,NNc) * small_bvf
+               end if
+               NN(i,j,k)= NNc
+            end do
+#ifdef _SMOOTH_BVF_VERT_
+            if ( kmax .ge. 4 ) then
+               below  = NN(i,j,1)
+               center = NN(i,j,2)
+               above  = NN(i,j,3)
+               do k= 2,kmax-2
+                  center = _HALF_ * center + _QUART_ * (below+above)
+                  below  = NN(i,j,k)
+                  NN(i,j,k) = center
+                  center = NN(i,j,k+1)
+                  above  = NN(i,j,k+2)
+               end do
+            end if
+#endif
+         end if
+      end do
+   end do
+!$OMP END DO
+
+#ifdef SMOOTH_BVF_HORI
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .ge. 1 ) then
             do k=kmax-1,1,-1
-               dz=_HALF_*(hn(i,j,k+1)+hn(i,j,k))
-               NNc =(buoy(i,j,k+1)-buoy(i,j,k))/dz
-#ifndef NEW_NN
+               NNc = NN(i,j,k)
                if (az(i+1,j) .ge. 1) then
-                  dz=_HALF_*(hn(i+1,j,k+1)+hn(i+1,j,k))
-                  NNe=(buoy(i+1,j,k+1)-buoy(i+1,j,k))/dz
+                  NNe= NN(i+1,j,k)
                else
                   NNe=NNc
                end if
                if (az(i-1,j) .ge. 1) then
-                  dz=_HALF_*(hn(i-1,j,k+1)+hn(i-1,j,k))
-                  NNw=(buoy(i-1,j,k+1)-buoy(i-1,j,k))/dz
+                  NNw= NN(i-1,j,k)
                else
                   NNw=NNc
                end if
                if (az(i,j+1) .ge. 1) then
-                  dz=_HALF_*(hn(i,j+1,k+1)+hn(i,j+1,k))
-                  NNn=(buoy(i,j+1,k+1)-buoy(i,j+1,k))/dz
+                  NNn= NN(i,j+1,k)
                else
                   NNn=NNc
                end if
                if (az(i,j-1) .ge. 1) then
-                  dz=_HALF_*(hn(i,j-1,k+1)+hn(i,j-1,k))
-                  NNs=(buoy(i,j-1,k+1)-buoy(i,j-1,k))/dz
+                  NNs= NN(i,j-1,k)
                else
                   NNs=NNc
                end if
-               NN(i,j,k)=(_ONE_/3)*NNc+(_ONE_/6)*(NNe+NNw+NNn+NNs)
-! BJB-NOTE: This old implementation (with limited accuracy constants)
-!   yields significantly different results. Relative elevation
-!   differences of O(1e-4) have been observed between old and new
-!   implementation. BJB 2009-09-23.
-!              NN(i,j,k)=0.3333333*NNc+0.1666666*(NNe+NNw+NNn+NNs)
-#else
-               NN(i,j,k)=NNc
-#endif
+               NN(i,j,k) = (_ONE_/3)*NNc+(_ONE_/6)*(NNe+NNw+NNn+NNs)
             end do
          end if
       end do
    end do
 !$OMP END DO
+#endif
 #endif
 
 #ifdef SLICE_MODEL

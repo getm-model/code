@@ -67,6 +67,12 @@
   allocate(rho(I3DFIELD),stat=rc)  ! 3D field for density
   if (rc /= 0) stop 'init_3d: Error allocating memory (rho)'
 
+  allocate(alpha(I3DFIELD),stat=rc)  ! 3D field for alpha
+  if (rc /= 0) stop 'init_3d: Error allocating memory (alpha)'
+
+  allocate(beta(I3DFIELD),stat=rc)  ! 3D field for beta
+  if (rc /= 0) stop 'init_3d: Error allocating memory (beta)'
+
   allocate(buoy(I3DFIELD),stat=rc)  ! 3D field for buoyancy
   if (rc /= 0) stop 'init_3d: Error allocating memory (buoy)'
 
