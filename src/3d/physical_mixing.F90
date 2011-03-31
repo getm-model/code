@@ -9,7 +9,9 @@
 !
 ! !DESCRIPTION:
 !
-
+! Here, the physical tracer variance decay is calculated as proposed
+! in \cite{BURCHARDea08b}.
+!
 ! !USES:
    use domain,       only: imin,imax,jmin,jmax,kmax,H
    use variables_3d, only: dt,nuh,hn,ssen

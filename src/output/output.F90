@@ -73,6 +73,8 @@
 !
 ! !IROUTINE: init_output - initialise all external files and units
 !
+! !DESCRIPTION:
+!
 ! !INTERFACE:
    subroutine init_output(runid,title,starttime,runtype,dryrun,myid)
    IMPLICIT NONE

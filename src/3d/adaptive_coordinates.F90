@@ -32,8 +32,8 @@
 ! cNN - dependence on stratification\\
 ! cSS - dependence on shear\\
 ! cdd - dep. on distance from surface and bottom\\
-! d_vel - Typical velocity difference for scaling cNN adaption\\
-! d_dens - Typical density difference for scaling cSS adaption\\
+! d\_vel - Typical velocity difference for scaling cNN adaption\\
+! d\_dens - Typical density difference for scaling cSS adaption\\
 ! dsurf - reference value for surface/bottom distance [m]\\
 ! tgrid - Time scale of grid adaptation [s]\\
 ! preadapt - number of iterations for pre-adaptation\\

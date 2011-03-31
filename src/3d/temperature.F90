@@ -260,7 +260,7 @@
    subroutine init_temperature_field()
 !
 ! !DESCRIPTION:
-! Initialise the temperature field as specified with temp_method
+! Initialise the temperature field as specified with temp\_method
 ! and exchange the HALO zones
 !
 ! !USES:

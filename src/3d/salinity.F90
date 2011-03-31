@@ -212,7 +212,7 @@
    subroutine init_salinity_field()
 !
 ! !DESCRIPTION:
-! Initialisation of the salinity field as specified by salt_method
+! Initialisation of the salinity field as specified by salt\_method
 ! and exchange of the HALO zones
 !
 ! !USES:

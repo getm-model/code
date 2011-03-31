@@ -15,7 +15,6 @@
 ! turbulent frequency, $\omega=\varepsilon/k$. Here, the TVD advection
 ! schemes are used which are also used for the momentum advection.
 !
-! !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,az,au,av
 #if defined(SPHERICAL) || defined(CURVILINEAR)

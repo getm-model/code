@@ -9,6 +9,8 @@
 !
 ! !DESCRIPTION:
 !
+! Here, the numerical tracer variance decay is calculated as proposed
+! in \cite{BURCHARDea08b}.
 !
 ! !USES:
    use domain,       only: imin,imax,jmin,jmax,kmax
