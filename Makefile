@@ -42,8 +42,10 @@ VER=1.6.0
 VER=1.7.0
 # 2010/04/01 - new stable release
 VER=1.8.0
-# 2010/04/01 - new stable release
+# 2010/04/01 - new devel release
 VER=1.9.0
+# 2011/04/01 - new stable release
+VER=2.0.0
 
 
 .PHONY: doc
