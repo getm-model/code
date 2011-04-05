@@ -478,7 +478,6 @@
 !     The following is a bit clumpsy and should be changed when do_bdy_3d()
 !     operates on individual fields and not as is the case now - on both
 !     T and S.
-#ifndef NO_BAROCLINIC
       call tic(TIM_INTEGR3D)
       if (bdy3d) call do_bdy_3d(0,T)
       if (calc_temp) then
@@ -496,12 +495,7 @@
          call mirror_bdy_3d(S,D_TAG)
       end if
       call toc(TIM_INTEGR3D)
-#endif
-   end if
-#endif
 
-#ifndef NO_BAROCLINIC
-   if(runtype .eq. 4) then
 #ifndef PECS
       call do_eqstate()
 #endif
