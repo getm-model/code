@@ -508,7 +508,9 @@
    end if
 #endif
 
+   call tic(TIM_INTEGR3D)
    UEx=_ZERO_ ; VEx=_ZERO_
+   call toc(TIM_INTEGR3D)
 #ifndef NO_BAROTROPIC
    if (kmax .gt. 1) then
 #ifndef NO_BOTTFRIC
