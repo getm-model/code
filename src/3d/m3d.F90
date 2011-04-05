@@ -304,6 +304,9 @@
 ! !INTERFACE:
    subroutine integrate_3d(runtype,n)
    use getm_timers, only: tic, toc, TIM_INTEGR3D
+#ifndef NO_BAROCLINIC
+   use getm_timers, only: TIM_TEMPH, TIM_SALTH
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -479,13 +482,17 @@
       call tic(TIM_INTEGR3D)
       if (bdy3d) call do_bdy_3d(0,T)
       if (calc_temp) then
+         call tic(TIM_TEMPH)
          call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
          call wait_halo(D_TAG)
+         call toc(TIM_TEMPH)
          call mirror_bdy_3d(T,D_TAG)
       end if
       if (calc_salt) then
+         call tic(TIM_SALTH)
          call update_3d_halo(S,S,az,imin,jmin,imax,jmax,kmax,D_TAG)
          call wait_halo(D_TAG)
+         call toc(TIM_SALTH)
          call mirror_bdy_3d(S,D_TAG)
       end if
       call toc(TIM_INTEGR3D)

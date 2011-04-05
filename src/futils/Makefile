@@ -7,7 +7,7 @@ include ../Rules.make
 LIB	= $(LIBDIR)/libfutils${buildtype}.a
 
 MODSRC	= exceptions.F90 parallel.F90 parameters.F90 time.F90       \
-          getm_timers.F90 grid_interpol.F90
+          grid_interpol.F90
 
 LIBSRC	= ver_interpol.F90 kbk_interpol.F90 tridiagonal.F90 pos.F90 \
           cnv_2d.F90 cnv_3d.F90 eta_mask.F90 col_interpol.F90 	    \
@@ -18,9 +18,9 @@ LIBSRC	= ver_interpol.F90 kbk_interpol.F90 tridiagonal.F90 pos.F90 \
 SRC	= $(MODSRC) $(LIBSRC)
 
 ifeq ($(parallel),false)
-MOD =
+MOD = ${LIB}(getm_timers.o) 
 else
-MOD = ${LIB}(halo_mpi.o) ${LIB}(read_par_setup.o)
+MOD = ${LIB}(getm_timers.o) ${LIB}(halo_mpi.o) ${LIB}(read_par_setup.o)
 endif
 
 MOD += \
