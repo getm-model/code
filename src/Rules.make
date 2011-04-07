@@ -17,7 +17,7 @@ GETMDIR  = $(HOME)/GETM/getm-git
 endif
 
 ifndef GOTMDIR
-GOTMDIR = $(HOME)/GOTM/gotm-cvs
+GOTMDIR = $(HOME)/GOTM/gotm-git
 endif
 
 # Information about which Fortran compiler to use is 
