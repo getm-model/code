@@ -689,6 +689,7 @@
 !
 ! !INTERFACE:
    subroutine update_2d_halo_mpi(f1,f2,imin,jmin,imax,jmax,tag,mirror)
+   use getm_timers, only: tic, toc, TIM_HALO2D
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -715,6 +716,7 @@
       FATAL 'Last action was not WAITING - not ready for sending (2D)'
       call MPI_ABORT(active_comm,-1,ierr)
    end if
+   call tic(TIM_HALO2D)
    il=imin;ih=imax;jl=jmin;jh=jmax
 
    if ( present(mirror) ) do_mirror = mirror
@@ -876,6 +878,7 @@ STDERR 'TWOD_SENDRECV'
 
    last_action = SENDING
 
+   call toc(TIM_HALO2D)
    return
    end subroutine update_2d_halo_mpi
 !EOC
@@ -887,6 +890,7 @@ STDERR 'TWOD_SENDRECV'
 !
 ! !INTERFACE:
    SUBROUTINE update_3d_halo_mpi(f1,f2,imin,jmin,imax,jmax,kmax,tag)
+   use getm_timers, only: tic, toc, TIM_HALO3D
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -911,6 +915,7 @@ STDERR 'TWOD_SENDRECV'
       FATAL 'Last action was not WAITING - not ready for sending (3D)'
       call MPI_ABORT(active_comm,-1,ierr)
    end if
+   call tic(TIM_HALO3D)
    il=imin;ih=imax;jl=jmin;jh=jmax
    select case (comm_method)
       case(ONE_PROCESS)
@@ -1066,6 +1071,7 @@ STDERR 'TWOD_NONBLOCKING'
    end if
 #endif
    last_action = SENDING
+   call toc(TIM_HALO3D)
    return
    end subroutine update_3d_halo_mpi
 !EOC
@@ -1077,6 +1083,7 @@ STDERR 'TWOD_NONBLOCKING'
 !
 ! !INTERFACE:
    SUBROUTINE wait_halo_mpi(tag)
+   use getm_timers, only: tic, toc, TIM_HALOWAIT
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -1096,6 +1103,7 @@ STDERR 'TWOD_NONBLOCKING'
       FATAL 'Last action was not sending - nothing to wait for'
       call MPI_ABORT(active_comm,-1,ierr)
    end if
+   call tic(TIM_HALOWAIT)
    select case (comm_method)
       case(ONE_PROCESS)
       case(ONED_SENDRECV)
@@ -1113,6 +1121,7 @@ STDERR 'TWOD_NONBLOCKING'
          stop 'wait_mpi'
    end select
    last_action = WAITING
+   call toc(TIM_HALOWAIT)
    return
    end subroutine wait_halo_mpi
 !EOC
