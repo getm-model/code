@@ -153,7 +153,6 @@
    character(len=PATH_MAX)   :: bathymetry_adjust_file   = 'bathymetry.adjust'
    character(len=PATH_MAX)   :: mask_adjust_file         = 'mask.adjust'
    integer                   :: il=-1,ih=-1,jl=-1,jh=-1
-   REALTYPE                  :: mask(E2DFIELD)
    namelist /domain/ &
              vert_cord,maxdepth,bathy_format,bathymetry,       &
              longitude,latitude,f_plane,openbdy,bdyinfofile,   &
@@ -185,16 +184,14 @@
 !  prepare parallel run
    call part_domain()
    il=imin ; ih=imax ; jl=jmin ; jh=jmax
-#ifndef STATIC
-#include "dynamic_allocations_domain.h"
-#endif
-
-   H = -10.
-   HU = -10.
-   HV = -10.
 
 !  check grid and dimensions
+!  dynamic_allocations_domain_1.h will be included when reading 
+!  the topo file
    call read_topo_file(bathy_format,bathymetry)
+#ifndef STATIC
+#include "dynamic_allocations_domain_2.h"
+#endif
 
    select case (vert_cord)
       case(_SIGMA_COORDS_)

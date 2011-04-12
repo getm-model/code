@@ -16,7 +16,7 @@
 #else
     use domain, only: dyu
 #if defined(CURVILINEAR)
-    use domain, only: xu,yu,yx,angle,xv,xx,dyu
+    use domain, only: xu,yu,yx,xv,xx,dyu
 #endif
 #endif
    use m2d,    only: z,D,U,DU,V,DV,ru,rv

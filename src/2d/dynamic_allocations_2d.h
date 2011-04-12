@@ -126,5 +126,16 @@
    if (rc /= 0) stop 'init_2d: Error allocating memory (surfdiv)'
 
    allocate(fwf_int(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (surfdiv)'
+   if (rc /= 0) stop 'init_2d: Error allocating memory (fwf_int)'
 
+   allocate(EWbdy(jmax),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (EWbdy)'
+
+   allocate(ENbdy(imax),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (ENbdy)'
+
+   allocate(EEbdy(jmax),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (EEbdy)'
+
+   allocate(ESbdy(imax),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (ESbdy)'
