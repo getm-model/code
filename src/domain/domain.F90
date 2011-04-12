@@ -784,56 +784,6 @@ STDERR latc(1,1),latx(1,0)
    end subroutine metric
 !EOC
 
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: read_par_setup() - reads domain partition
-!
-! !INTERFACE:
-   subroutine read_par_setup(myid)
-   IMPLICIT NONE
-!
-! !DESCRIPTION:
-!  Reads the partitioning of the global domain in a parallel run
-!
-! !INPUT PARAMETERS:
-   integer, intent(in)                 :: myid
-!
-! !REVISION HISTORY:
-!
-! !LOCAL VARIABLES:
-   integer                   :: id
-!EOP
-!------------------------------------------------------------------------
-!BOC
-
-#ifndef STATIC
-!   open(PARSETUP,file=input_dir // 'par_setup')
-   read(PARSETUP,*)
-
-100  read(PARSETUP,*,ERR=110,END=111) id,imin,imax,jmin,jmax
-
-
-   if(id .eq. myid ) then
-      close(PARSETUP)
-      ioff=imin-1 ; joff=jmin-1
-      imax=imax-imin+1 ; imin=1
-      jmax=jmax-jmin+1 ; jmin=1
-      LEVEL2 'From read_par_setup ',id,ioff,imin,imax,joff,jmin,jmax
-      return
-   end if
-
-   goto 100
-
-110 call getm_error("read_par_setup()","reading domain partition information.")
-
-111 call getm_error("read_par_setup()","End of file reached.")
-#endif
-   return
-   end subroutine read_par_setup
-!EOC
-
 !-----------------------------------------------------------------------
 !BOP
 !
