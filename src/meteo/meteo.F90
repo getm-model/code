@@ -64,7 +64,7 @@
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
    REALTYPE, public, dimension(:,:), allocatable  :: airp,tausx,tausy,swr,shf
    REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum,tcc
-   REALTYPE, public, dimension(:,:), allocatable  :: evap,precip
+   REALTYPE, public, dimension(:,:), allocatable, target  :: evap,precip
    REALTYPE, public                    :: cd_mom,cd_heat,cd_latent
    REALTYPE, public                    :: cd_precip = _ZERO_
    REALTYPE, public                    :: t_1=-_ONE_,t_2=-_ONE_

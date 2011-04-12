@@ -25,6 +25,9 @@
 #ifdef GETM_BIO
    use bio_var, only: numc,var_names,var_units,var_long
 #endif
+#ifdef _FABM_
+   use gotm_fabm, only: model
+#endif
 
    IMPLICIT NONE
 !
@@ -386,6 +389,57 @@
       call set_attributes(ncid,bio_ids(n), &
                           long_name=trim(var_long(n)), &
                           units=trim(var_units(n)), &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+   end do
+#endif
+
+#ifdef _FABM_
+   fv = bio_missing
+   mv = bio_missing
+   vr(1) = _ZERO_
+   vr(2) = 9999.
+
+   allocate(fabm_ids(ubound(model%info%state_variables,1)),stat=rc)
+   if (rc /= 0) stop 'init_3d_ncdf(): Error allocating memory (fabm_ids)'
+   do n=1,ubound(model%info%state_variables,1)
+      err = nf90_def_var(ncid,model%info%state_variables(n)%name,NF90_REAL,f4_dims,fabm_ids(n))
+      if (err .NE.  NF90_NOERR) go to 10
+      call set_attributes(ncid,fabm_ids(n), &
+                          long_name=trim(model%info%state_variables(n)%longname), &
+                          units=trim(model%info%state_variables(n)%units), &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+   end do
+
+   allocate(fabm_ids_ben(ubound(model%info%state_variables_ben,1)),stat=rc)
+   if (rc /= 0) stop 'init_3d_ncdf(): Error allocating memory (fabm_ids_ben)'
+   do n=1,ubound(model%info%state_variables_ben,1)
+      err = nf90_def_var(ncid,model%info%state_variables_ben(n)%name,NF90_REAL,f4_dims,fabm_ids_ben(n))
+      if (err .NE.  NF90_NOERR) go to 10
+      call set_attributes(ncid,fabm_ids_ben(n), &
+                          long_name=trim(model%info%state_variables_ben(n)%longname), &
+                          units=trim(model%info%state_variables_ben(n)%units), &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+   end do
+
+   allocate(fabm_ids_diag(ubound(model%info%diagnostic_variables,1)),stat=rc)
+   if (rc /= 0) stop 'init_3d_ncdf(): Error allocating memory (fabm_ids_diag)'
+   do n=1,ubound(model%info%diagnostic_variables,1)
+      err = nf90_def_var(ncid,model%info%diagnostic_variables(n)%name,NF90_REAL,f4_dims,fabm_ids_diag(n))
+      if (err .NE.  NF90_NOERR) go to 10
+      call set_attributes(ncid,fabm_ids_diag(n), &
+                          long_name=trim(model%info%diagnostic_variables(n)%longname), &
+                          units=trim(model%info%diagnostic_variables(n)%units), &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+   end do
+
+   allocate(fabm_ids_diag_hz(ubound(model%info%diagnostic_variables_hz,1)),stat=rc)
+   if (rc /= 0) stop 'init_3d_ncdf(): Error allocating memory (fabm_ids_diag_hz)'
+   do n=1,ubound(model%info%diagnostic_variables_hz,1)
+      err = nf90_def_var(ncid,model%info%diagnostic_variables_hz(n)%name,NF90_REAL,f3_dims,fabm_ids_diag_hz(n))
+      if (err .NE.  NF90_NOERR) go to 10
+      call set_attributes(ncid,fabm_ids_diag_hz(n), &
+                          long_name=trim(model%info%diagnostic_variables_hz(n)%longname), &
+                          units=trim(model%info%diagnostic_variables_hz(n)%units), &
                           FillValue=fv,missing_value=mv,valid_range=vr)
    end do
 #endif

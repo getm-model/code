@@ -60,6 +60,9 @@
 #ifdef SPM
    use suspended_matter, only: init_spm
 #endif
+#ifdef _FABM_
+   use getm_fabm, only: init_getm_fabm
+#endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use getm_bio, only: init_getm_bio
@@ -230,6 +233,10 @@
 
 #ifdef SPM
       call init_spm(trim(input_dir) // 'spm.inp',runtype)
+#endif
+#ifdef _FABM_
+      call init_getm_fabm(trim(input_dir) // 'getm_fabm.inp')
+!KB      call init_rivers_bio
 #endif
 #ifdef GETM_BIO
       call init_getm_bio(trim(input_dir) // 'getm_bio.inp')

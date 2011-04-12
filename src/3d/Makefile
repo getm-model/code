@@ -30,6 +30,9 @@ ifeq ($(GETM_SPM),true)
 MOD += \
 $(LIB)(spm.o)
 endif
+ifeq ($(FABM),true)
+MOD += $(LIB)(getm_fabm.o)
+endif
 ifeq ($(GETM_BIO),true)
 MOD += $(LIB)(getm_bio.o)
 endif

@@ -52,6 +52,10 @@
 #ifdef SPM
    use suspended_matter, only: spm_calc,do_spm
 #endif
+#ifdef _FABM_
+   use gotm_fabm, only: fabm_calc
+   use getm_fabm, only: do_getm_fabm
+#endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use getm_bio, only: do_getm_bio
@@ -124,6 +128,9 @@
          call integrate_3d(runtype,n)
 #ifdef SPM
          if (spm_calc) call do_spm()
+#endif
+#ifdef _FABM_
+         if (fabm_calc) call do_getm_fabm(M*timestep)
 #endif
 #ifdef GETM_BIO
          if (bio_calc) call do_getm_bio(M*timestep)

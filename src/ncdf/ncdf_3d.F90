@@ -34,6 +34,9 @@
 #ifdef GETM_BIO
    integer, allocatable                :: bio_ids(:)
 #endif
+#ifdef _FABM_
+   integer, allocatable, dimension(:)  :: fabm_ids,fabm_ids_diag,fabm_ids_ben,fabm_ids_diag_hz
+#endif
    integer                             :: nm3dS_id,nm3dT_id,nm2dS_id,nm2dT_id
    integer                             :: pm3dS_id,pm3dT_id,pm2dS_id,pm2dT_id
 
@@ -58,7 +61,7 @@
    REALTYPE, parameter                 :: spmpool_missing=-9999.0
    REALTYPE, parameter                 :: spm_missing    =-9999.0
 #endif
-#ifdef GETM_BIO
+#if (defined(GETM_BIO) || defined(_FABM_))
    REALTYPE, parameter                 :: bio_missing=-9999.0
 #endif
    REALTYPE, parameter                 :: nummix_missing=-9999.0

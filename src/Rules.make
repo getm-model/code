@@ -1,4 +1,3 @@
-#$Id: Rules.make,v 1.24 2009-10-02 06:43:51 kb Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -56,11 +55,6 @@ ifeq ($(GETM_STRUCTURE_FRICTION),true)
 DEFINES += -DSTRUCTURE_FRICTION
 endif
 
-# Bio-geochemical component
-ifeq ($(GETM_BIO),true)
-DEFINES += -DGETM_BIO
-endif
-
 # Remove timers
 ifeq ($(GETM_NO_TIMERS),true)
 DEFINES += -DNO_TIMERS
@@ -82,6 +76,8 @@ endif
 
 # Here you can put defines for the [c|f]pp - some will also be set depending
 # on compilation mode - if STATIC is defined be careful.
+
+# It is not necessary to set INPUT_DIR
 ifdef INPUT_DIR
 DEFINES += -DINPUT_DIR="'$(INPUT_DIR)/'"
 endif
@@ -118,7 +114,21 @@ INCDIRS		= -I$(GETMDIR)/include -I$(MODDIR)
 LINKDIRS	= -L$(LIBDIR)
 EXTRA_LIBS	=
 
+# FABM-geochemical component
+ifeq ($(FABM),true)
+DEFINES += -D_FABM_
+ifndef FABMDIR
+FABMDIR = $(HOME)/FABM/fabm-svn
+endif
+INCDIRS    += -I$(FABMDIR)/include -I$(FABMDIR)/modules/gotm/$(FORTRAN_COMPILER) -I$(FABMDIR)/src/drivers/gotm
+LINKDIRS   += -L$(FABMDIR)/lib/gotm/$(FORTRAN_COMPILER)
+EXTRA_LIBS += -lgotm_fabm$(buildtype) -lfabm$(buildtype)
+unexport GETM_BIO
+endif
+
+# Old GOTM-BIO component - deprecated
 ifeq ($(GETM_BIO),true)
+DEFINES    += -DGETM_BIO
 EXTRA_LIBS += -lbio$(buildtype)
 endif
 
@@ -129,7 +139,6 @@ EXTRA_LIBS	+= -lturbulence$(buildtype) -lutil$(buildtype)
 INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
 
 # Where does the NetCDF include file and library reside.
-
 ifeq ($(NETCDF_VERSION),NETCDF4)
 
 DEFINES		+= -DNETCDF4
@@ -156,7 +165,6 @@ endif
 endif
 
 EXTRA_LIBS	+= $(NETCDFLIB)
-
 # NetCDF/HDF configuration done
 
 # Where does the MPI library reside.
@@ -242,7 +250,6 @@ PROTEX	= protex -b -n -s
 
 .SUFFIXES:
 .SUFFIXES: .F90
-
 
 CPPFLAGS	= $(DEFINES) $(INCDIRS)
 FFLAGS  	= $(DEFINES) $(FLAGS) $(MODULES) $(INCDIRS) $(EXTRAS)

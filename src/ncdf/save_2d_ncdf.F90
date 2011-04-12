@@ -48,7 +48,7 @@
 
       n2d = n2d + 1
       if (n2d .eq. 1) then
-         call save_grid_ncdf(ncid,save3d,x_dim,y_dim)
+         call save_grid_ncdf(ncid,save3d)
       end if
 
       start(1) = n2d

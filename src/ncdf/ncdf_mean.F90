@@ -37,7 +37,7 @@
    REALTYPE, parameter                 :: tke_missing=-9999.0
    REALTYPE, parameter                 :: eps_missing=-9999.0
    REALTYPE, parameter                 :: nummix_missing=-9999.0
-#ifdef GETM_BIO
+#if (defined(GETM_BIO) || defined(_FABM_))
    REALTYPE, parameter                 :: bio_missing=-9999.0
 #endif
 
