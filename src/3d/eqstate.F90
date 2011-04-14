@@ -108,7 +108,7 @@
    integer                   :: i,j,k
    REALTYPE                  :: x
    REALTYPE                  :: p1,s1,t1
-   REALTYPE                  :: th,densp,dens0,al,be
+   REALTYPE                  :: th,densp
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -120,7 +120,7 @@
    call tic(TIM_EQSTATE)
 
 !$OMP PARALLEL DEFAULT(SHARED)          &
-!$OMP PRIVATE(i,j,k, x,T1,S1,)
+!$OMP PRIVATE(i,j,k, x,p1,s1,t1,th,densp)
 
 #define BUOYANCY
    select case (eqstate_method)
@@ -137,12 +137,20 @@
          end do
 
 #ifndef _OLD_BVF_
+! First finished threas should just start intiializing arrays...
+!$OMP SINGLE
          alpha = dtr0
+!$OMP END SINGLE NOWAIT
+!$OMP SINGLE
          beta  = dsr0
+!$OMP END SINGLE NOWAIT
 #endif
+! This OMP barrier is necessary for the NOWAIT speedup of the rho-loop above
+!$OMP BARRIER
 
       case (2)
          do k = 1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
             do j = jmin-HALO,jmax+HALO
                do i = imin-HALO,imax+HALO
                   if (az(i,j) .gt. 0) then
@@ -151,10 +159,14 @@
                   end if
                end do
             end do
+!$OMP END DO NOWAIT
          end do
+! This OMP barrier is necessary for the NOWAIT speedup of the previous loop:
+!$OMP BARRIER
 #undef BUOYANCY
 
 #ifndef _OLD_BVF_
+!$OMP DO SCHEDULE(RUNTIME)
          do j = jmin-HALO,jmax+HALO
             do i = imin-HALO,imax+HALO
                if (az(i,j) .gt. 0) then
@@ -174,9 +186,11 @@
                end if
             end do
          end do
+!$OMP END DO
 #endif
       case (3)
 ! fisrt calculate potential density
+!$OMP DO SCHEDULE(RUNTIME)
          do j = jmin-HALO,jmax+HALO
             do i = imin-HALO,imax+HALO
                if (az(i,j) .gt. 0) then
@@ -202,10 +216,12 @@
                end if
             end do
          end do
+!$OMP END DO
 #undef BUOYANCY
 
 #ifndef _OLD_BVF_
 !        calculate at SS interface, rho, alpha, beta
+!$OMP DO SCHEDULE(RUNTIME)
          do j = jmin-HALO,jmax+HALO
             do i = imin-HALO,imax+HALO
                if (az(i,j) .gt. 0) then
@@ -225,6 +241,7 @@
                end if
             end do
          end do
+!$OMP END DO
 #endif
 
       case default
