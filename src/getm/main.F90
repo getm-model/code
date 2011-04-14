@@ -46,6 +46,8 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+   call cmdline
+
 #ifdef FORTRAN95
    call CPU_Time(t1)
 #endif
@@ -106,11 +108,64 @@
    end program getm
 
 !EOC
-!-----------------------------------------------------------------------
-! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
-!-----------------------------------------------------------------------
 
+!-----------------------------------------------------------------------
+   subroutine cmdline
+   use initialise, only: dryrun
+   IMPLICIT NONE
+   character(len=64)    :: arg
+   integer              :: i
 
+   if (command_argument_count() .eq. 0) return
+
+   do i = 1, command_argument_count()
+      call get_command_argument(i, arg)
+
+      select case (arg)
+      case ('-v', '--version')
+         LEVEL0
+         LEVEL0 'GETM version ',RELEASE
+         LEVEL0
+         stop
+      case ('-c', '--compile')
+         LEVEL0
+         call compilation_options
+         LEVEL0
+         stop
+      case ('-h', '--help')
+         call print_help()
+         stop
+!KB      case ('--dryrun')
+!KB         dryrun=.true.
+      case default
+         LEVEL0
+         LEVEL0 'Unrecognized command-line option: ', arg
+         LEVEL0
+         call print_help()
+         stop
+      end select
+   end do
+   return
+   end
+
+!-----------------------------------------------------------------------
+   subroutine print_help()
+     print '(a)', 'usage: getm [OPTIONS]'
+     print '(a)', ''
+     print '(a)', 'Without any options, getm will continue execution.'
+     print '(a)', ''
+     print '(a)', 'cmdline options:'
+     print '(a)', ''
+     print '(a)', '  -v, --version     print version information and exit'
+     print '(a)', '  -c, --compile     print compilation options'
+     print '(a)', '  -h, --help        print usage information and exit'
+     print '(a)', ''
+     print '(a)', 'visit getm.eu for further info'
+     print '(a)', 'consider subscribing to getm-users@googlegroups.com'
+     print '(a)', ''
+  end subroutine print_help
+
+!-----------------------------------------------------------------------
    subroutine compilation_options
    IMPLICIT NONE
 !
@@ -242,3 +297,8 @@
 
    return
    end
+
+!-----------------------------------------------------------------------
+! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
+!-----------------------------------------------------------------------
+
