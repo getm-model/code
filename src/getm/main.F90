@@ -292,6 +292,12 @@
 #ifdef _READ_HOT_HALOS_
    LEVEL1 '_READ_HOT_HALOS_'
 #endif
+#ifdef GETM_BIO
+   LEVEL1 'GETM_BIO'
+#endif
+#ifdef _FABM_
+   LEVEL1 '_FABM_'
+#endif
 
    STDERR LINE
 
