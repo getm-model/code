@@ -33,6 +33,9 @@
    use m3d, only: mem3d
 #endif
    use integration
+#ifdef GETM_PARALLEL
+   use halo_mpi, only: all_2d_exchange, all_3d_exchange
+#endif
    IMPLICIT NONE
 !
 ! !REVISION HISTORY:
@@ -99,6 +102,12 @@
 #endif
    endif
    STDERR LINE
+#ifdef GETM_PARALLEL
+   LEVEL1 "Communication with other sub-domains:"
+   LEVEL2 "2D data exchange: ",all_2d_exchange/(1024*1024)," MB"
+   LEVEL2 "3D data exchange: ",all_3d_exchange/(1024*1024)," MB"
+   STDERR LINE
+#endif
    LEVEL1 'Copyright (C) Bolding & Burchard ApS.'
    LEVEL1 'under the General Public License (GPL) - http://www.gnu.org '
    STDERR LINE
