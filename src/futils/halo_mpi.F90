@@ -38,6 +38,7 @@
 ! !PUBLIC DATA MEMBERS:
    integer, public                     :: myid=-1, nprocs=1
    integer, public                     :: comm_hd=MPI_COMM_WORLD
+   integer, public                     :: all_2d_exchange, all_3d_exchange
 !   integer, public                    :: comm_wave=MPI_COMM_WORLD
 !   integer, public                    :: comm_biology=MPI_COMM_WORLD
 !
@@ -90,6 +91,9 @@
    integer                   :: ur,ul,ll,lr
    integer                   :: status(MPI_STATUS_SIZE)
    integer                   :: last_action=WAITING
+   integer                   :: size_point
+   integer                   :: size_left, size_ul,size_up,  size_ur
+   integer                   :: size_right,size_lr,size_down,size_ll
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -146,6 +150,9 @@
       STDERR 'Fatal error: unable to get processor name.'
       call MPI_Abort(MPI_COMM_WORLD,-1,ierr)
    end if
+
+   all_2d_exchange = 0
+   all_3d_exchange = 0
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_mpi()'
@@ -386,11 +393,6 @@
 
 #ifndef STATIC
       imin=1 ; imax=iextr ; jmin=1 ; jmax=jextr
-#endif
-#if 0
-   STDERR 'AAAAkbk'
-   STDERR imin,imax,jmin,jmax
-   stop
 #endif
       ioff=0 ; joff=0
       return
@@ -678,6 +680,55 @@
                          halo_columns,ierr)
    call MPI_TYPE_COMMIT(halo_columns,ierr)
 
+   size_point = sizeof_realtype
+   if (left  .eq. MPI_PROC_NULL) then
+      size_left = 0
+   else
+      size_left = m*sizeof_realtype
+   end if
+
+   if (ul    .eq. MPI_PROC_NULL) then
+      size_ul = 0
+   else
+      size_ul = sizeof_realtype
+   end if
+
+   if (up    .eq. MPI_PROC_NULL) then
+      size_up = 0
+   else
+      size_up = n*sizeof_realtype
+   end if
+
+   if (ur    .eq. MPI_PROC_NULL) then
+      size_ur = 0
+   else
+      size_ur = sizeof_realtype
+   end if
+
+   if (right .eq. MPI_PROC_NULL) then
+      size_right = 0
+   else
+      size_left = m*sizeof_realtype
+   end if
+
+   if (lr    .eq. MPI_PROC_NULL) then
+      size_up = 0
+   else
+      size_lr = sizeof_realtype
+   end if
+
+   if (down  .eq. MPI_PROC_NULL) then
+      size_down = 0
+   else
+      size_down = n*sizeof_realtype
+   end if
+
+   if (ll    .eq. MPI_PROC_NULL) then
+      size_ll = 0
+   else
+      size_ll = sizeof_realtype
+   end if
+
    return
    end subroutine MPI_data_types
 !EOC
@@ -688,7 +739,8 @@
 ! !IROUTINE: update_2d_halo_mpi - updates the halo zones for 2D fields.
 !
 ! !INTERFACE:
-   subroutine update_2d_halo_mpi(f1,f2,imin,jmin,imax,jmax,tag,mirror)
+   subroutine update_2d_halo_mpi(f1,f2,imin,jmin,imax,jmax,tag, &
+                                 halo_strategy,mirror)
    use getm_timers, only: tic, toc, TIM_HALO2D
    IMPLICIT NONE
 !
@@ -698,7 +750,8 @@
 ! !INPUT PARAMTERS:
    integer, intent(in)                 :: imin,jmin,imax,jmax
    integer, intent(in)                 :: tag
-   logical, optional, intent(in)       :: mirror
+   integer, intent(in), optional       :: halo_strategy
+   logical, intent(in), optional       :: mirror
 !
 ! !INPUT/OUTPUT PARAMTERS:
    REALTYPE, intent(inout), dimension(E2DFIELD):: f1,f2
@@ -709,6 +762,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: il,jl,ih,jh
    logical                   :: do_mirror=.true.
+   integer                   :: strategy
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -720,6 +774,15 @@
    il=imin;ih=imax;jl=jmin;jh=jmax
 
    if ( present(mirror) ) do_mirror = mirror
+#if 0
+   if ( present(halo_strategy) ) then 
+      strategy = halo_strategy
+   else
+      strategy = _ALL_HALOS_
+   end if
+#else
+      strategy = _ALL_HALOS_
+#endif
 
    select case (comm_method)
       case(ONE_PROCESS)
@@ -812,52 +875,253 @@ STDERR 'TWOD_SENDRECV'
                            f2(ih+1,jl-1),1, MPI_REALTYPE, lr,tag, &
                            active_comm, status, ierr)
       case(TWOD_NONBLOCKING)
-!        Recieving x_lines
-         call MPI_IRECV(f2(il,jl-HALO), 1, x_lines, down,  tag, &
-                           active_comm, req(1), ierr)
-         call MPI_IRECV(f2(il,jh+1),    1, x_lines, up,    tag, &
-                           active_comm, req(2), ierr)
+!STDERR '2D - ',strategy
+         select case (strategy)
+            case (_ALL_HALOS_)
+!STDERR '2D - _ALL_HALOS_'
+!              Recieving x_lines
+               call MPI_IRECV(f2(il,jl-HALO), 1, x_lines, down,  tag, &
+                                 active_comm, req(1), ierr)
+               call MPI_IRECV(f2(il,jh+1),    1, x_lines, up,    tag, &
+                                 active_comm, req(2), ierr)
 
-!        Recieving y_lines
-         call MPI_IRECV(f2(il-HALO,jl), 1, y_lines, left,  tag, &
-                           active_comm, req(3), ierr)
-         call MPI_IRECV(f2(ih+1,jl),    1, y_lines, right, tag, &
-                           active_comm, req(4), ierr)
+!              Recieving y_lines
+               call MPI_IRECV(f2(il-HALO,jl), 1, y_lines, left,  tag, &
+                                 active_comm, req(3), ierr)
+               call MPI_IRECV(f2(ih+1,jl),    1, y_lines, right, tag, &
+                                 active_comm, req(4), ierr)
 
-!        Recieving HALOxHALO corner squares
-         call MPI_IRECV(f2(il-HALO,jl-HALO), 1, halo_square,ll,tag, &
-                           active_comm, req(5), ierr)
-         call MPI_IRECV(f2(ih+1,jl-HALO), 1, halo_square,lr,tag, &
-                           active_comm, req(6), ierr)
-         call MPI_IRECV(f2(ih+1,jh+1), 1, halo_square,ur,tag, &
-                           active_comm, req(7), ierr)
-         call MPI_IRECV(f2(il-HALO,jh+1), 1, halo_square,ul,tag, &
-                           active_comm, req(8), ierr)
+!              Recieving HALOxHALO corner squares
+               call MPI_IRECV(f2(il-HALO,jl-HALO), 1, halo_square,ll,tag, &
+                                 active_comm, req(5), ierr)
+               call MPI_IRECV(f2(ih+1,jl-HALO), 1, halo_square,lr,tag, &
+                                 active_comm, req(6), ierr)
+               call MPI_IRECV(f2(ih+1,jh+1), 1, halo_square,ur,tag, &
+                                 active_comm, req(7), ierr)
+               call MPI_IRECV(f2(il-HALO,jh+1), 1, halo_square,ul,tag, &
+                                 active_comm, req(8), ierr)
+!              Sending x_lines
+               call MPI_ISEND(f1(il,jl),          1, x_lines, down,  tag, &
+                                 active_comm, req(9), ierr)
+               call MPI_ISEND(f1(il,jh-(HALO-1)), 1, x_lines, up,    tag, &
+                                 active_comm, req(10), ierr)
 
-!        Sending x_lines
-         call MPI_ISEND(f1(il,jl),          1, x_lines, down,  tag, &
-                           active_comm, req(9), ierr)
-         call MPI_ISEND(f1(il,jh-(HALO-1)), 1, x_lines, up,    tag, &
-                           active_comm, req(10), ierr)
+!              Sending y_lines
+               call MPI_ISEND(f1(il,jl),          1, y_lines, left,  tag, &
+                                 active_comm, req(11), ierr)
+               call MPI_ISEND(f1(ih-(HALO-1),jl), 1, y_lines, right, tag, &
+                                 active_comm, req(12), ierr)
 
-!        Sending y_lines
-         call MPI_ISEND(f1(il,jl),          1, y_lines, left,  tag, &
-                           active_comm, req(11), ierr)
-         call MPI_ISEND(f1(ih-(HALO-1),jl), 1, y_lines, right, tag, &
-                           active_comm, req(12), ierr)
+!              Sending HALOxHALO corner squares
+               call MPI_ISEND(f1(ih-(HALO-1),jh-(HALO-1)), 1, halo_square, ur,tag, &
+                                 active_comm, req(13), ierr)
 
-!        Sending HALOxHALO corner squares
-         call MPI_ISEND(f1(ih-(HALO-1),jh-(HALO-1)), 1, halo_square, ur,tag, &
-                           active_comm, req(13), ierr)
+               call MPI_ISEND(f1(il,jh-(HALO-1)), 1, halo_square, ul,tag, &
+                                 active_comm, req(14), ierr)
 
-         call MPI_ISEND(f1(il,jh-(HALO-1)), 1, halo_square, ul,tag, &
-                           active_comm, req(14), ierr)
+               call MPI_ISEND(f1(il,jl), 1, halo_square, ll,tag, &
+                                 active_comm, req(15), ierr)
 
-         call MPI_ISEND(f1(il,jl), 1, halo_square, ll,tag, &
-                           active_comm, req(15), ierr)
+               call MPI_ISEND(f1(ih-(HALO-1),jl), 1, halo_square, lr,tag, &
+                                 active_comm, req(16), ierr)
 
-         call MPI_ISEND(f1(ih-(HALO-1),jl), 1, halo_square, lr,tag, &
-                           active_comm, req(16), ierr)
+               all_2d_exchange =  all_2d_exchange &
+                                + HALO*size_left  &
+                                + HALO*size_up    &
+                                + HALO*size_right &
+                                + HALO*size_down  &
+                                + 4*HALO*HALO*size_point
+
+            case (_WE_HALOS_)
+!              Recieving y_lines
+               call MPI_IRECV(f2(il-HALO,jl), 1, y_lines, left,  tag, &
+                                 active_comm, req(1), ierr)
+               call MPI_IRECV(f2(ih+1,jl),    1, y_lines, right, tag, &
+                                 active_comm, req(2), ierr)
+
+!              Recieving HALOxHALO corner squares
+               call MPI_IRECV(f2(il-HALO,jl-HALO), 1, halo_square,ll,tag, &
+                                 active_comm, req(3), ierr)
+               call MPI_IRECV(f2(ih+1,jl-HALO), 1, halo_square,lr,tag, &
+                                 active_comm, req(4), ierr)
+               call MPI_IRECV(f2(ih+1,jh+1), 1, halo_square,ur,tag, &
+                                 active_comm, req(5), ierr)
+               call MPI_IRECV(f2(il-HALO,jh+1), 1, halo_square,ul,tag, &
+                                 active_comm, req(6), ierr)
+
+!              Sending y_lines
+               call MPI_ISEND(f1(il,jl),          1, y_lines, left,  tag, &
+                                 active_comm, req(7), ierr)
+               call MPI_ISEND(f1(ih-(HALO-1),jl), 1, y_lines, right, tag, &
+                                 active_comm, req(8), ierr)
+
+!              Sending HALOxHALO corner squares
+               call MPI_ISEND(f1(ih-(HALO-1),jh-(HALO-1)), 1, halo_square, ur,tag, &
+                                 active_comm, req(9), ierr)
+
+               call MPI_ISEND(f1(il,jh-(HALO-1)), 1, halo_square, ul,tag, &
+                                 active_comm, req(10), ierr)
+
+               call MPI_ISEND(f1(il,jl), 1, halo_square, ll,tag, &
+                                 active_comm, req(11), ierr)
+
+               call MPI_ISEND(f1(ih-(HALO-1),jl), 1, halo_square, lr,tag, &
+                                 active_comm, req(12), ierr)
+
+            case (_SN_HALOS_)
+!              Recieving x_lines
+               call MPI_IRECV(f2(il,jl-HALO), 1, x_lines, down,  tag, &
+                                 active_comm, req(1), ierr)
+               call MPI_IRECV(f2(il,jh+1),    1, x_lines, up,    tag, &
+                                 active_comm, req(2), ierr)
+
+!              Recieving HALOxHALO corner squares
+               call MPI_IRECV(f2(il-HALO,jl-HALO), 1, halo_square,ll,tag, &
+                                 active_comm, req(3), ierr)
+               call MPI_IRECV(f2(ih+1,jl-HALO), 1, halo_square,lr,tag, &
+                                 active_comm, req(4), ierr)
+               call MPI_IRECV(f2(ih+1,jh+1), 1, halo_square,ur,tag, &
+                                 active_comm, req(5), ierr)
+               call MPI_IRECV(f2(il-HALO,jh+1), 1, halo_square,ul,tag, &
+                                 active_comm, req(6), ierr)
+
+!              Sending x_lines
+               call MPI_ISEND(f1(il,jl),          1, x_lines, down,  tag, &
+                                 active_comm, req(7), ierr)
+               call MPI_ISEND(f1(il,jh-(HALO-1)), 1, x_lines, up,    tag, &
+                                 active_comm, req(8), ierr)
+
+!              Sending HALOxHALO corner squares
+               call MPI_ISEND(f1(ih-(HALO-1),jh-(HALO-1)), 1, halo_square, ur,tag, &
+                                 active_comm, req(9), ierr)
+
+               call MPI_ISEND(f1(il,jh-(HALO-1)), 1, halo_square, ul,tag, &
+                                 active_comm, req(10), ierr)
+
+               call MPI_ISEND(f1(il,jl), 1, halo_square, ll,tag, &
+                                 active_comm, req(11), ierr)
+
+               call MPI_ISEND(f1(ih-(HALO-1),jl), 1, halo_square, lr,tag, &
+                                 active_comm, req(12), ierr)
+
+            case (_ALL_ROW_)
+!KB - should not be columns but only points
+!              Recieving x_line
+               call MPI_IRECV(f2(il,jl-1), 1, x_line, down,  tag, &
+                                 active_comm, req(1), ierr)
+               call MPI_IRECV(f2(il,jh+1), 1, x_line, up,    tag, &
+                                 active_comm, req(2), ierr)
+
+!              Recieving y_line
+               call MPI_IRECV(f2(il-1,jl), 1, y_line, left,  tag, &
+                                 active_comm, req(3), ierr)
+               call MPI_IRECV(f2(ih+1,jl), 1, y_line, right, tag, &
+                                 active_comm, req(4), ierr)
+!              Recieving corner points
+               call MPI_IRECV(f2(il-1,jl-1), 1, MPI_REALTYPE,ll,tag, &
+                                 active_comm, req(5), ierr)
+               call MPI_IRECV(f2(ih+1,jl-1), 1, MPI_REALTYPE,lr,tag, &
+                                 active_comm, req(6), ierr)
+               call MPI_IRECV(f2(ih+1,jh+1), 1, MPI_REALTYPE,ur,tag, &
+                                 active_comm, req(7), ierr)
+               call MPI_IRECV(f2(il-1,jh+1), 1, MPI_REALTYPE,ul,tag, &
+                                 active_comm, req(8), ierr)
+
+!              Sending x_line
+               call MPI_ISEND(f1(il,jl), 1, x_line, down,  tag, &
+                                 active_comm, req(9), ierr)
+               call MPI_ISEND(f1(il,jh), 1, x_line, up,    tag, &
+                                 active_comm, req(10), ierr)
+
+!              Sending y_line
+               call MPI_ISEND(f1(il,jl), 1, y_line, left,  tag, &
+                                 active_comm, req(11), ierr)
+               call MPI_ISEND(f1(ih,jl), 1, y_line, right, tag, &
+                                 active_comm, req(12), ierr)
+
+!              Sending corner points
+               call MPI_ISEND(f1(ih,jh), 1, MPI_REALTYPE, ur,tag, &
+                                 active_comm, req(13), ierr)
+
+               call MPI_ISEND(f1(il,jh), 1, MPI_REALTYPE, ul,tag, &
+                                 active_comm, req(14), ierr)
+
+               call MPI_ISEND(f1(il,jl), 1, MPI_REALTYPE, ll,tag, &
+                                 active_comm, req(15), ierr)
+
+               call MPI_ISEND(f1(ih,jl), 1, MPI_REALTYPE, lr,tag, &
+                                 active_comm, req(16), ierr)
+            case (_WE_ROW_)
+!              Recieving y_line
+               call MPI_IRECV(f2(il-1,jl), 1, y_line, left,  tag, &
+                                 active_comm, req(1), ierr)
+               call MPI_IRECV(f2(ih+1,jl), 1, y_line, right, tag, &
+                                 active_comm, req(2), ierr)
+
+!              Recieving corner points
+               call MPI_IRECV(f2(il-1,jl-1), 1, MPI_REALTYPE,ll,tag, &
+                                 active_comm, req(3), ierr)
+               call MPI_IRECV(f2(ih+1,jl-1), 1, MPI_REALTYPE,lr,tag, &
+                                 active_comm, req(4), ierr)
+               call MPI_IRECV(f2(ih+1,jh+1), 1, MPI_REALTYPE,ur,tag, &
+                                 active_comm, req(5), ierr)
+               call MPI_IRECV(f2(il-1,jh+1), 1, MPI_REALTYPE,ul,tag, &
+                                 active_comm, req(6), ierr)
+
+!              Sending y_line
+               call MPI_ISEND(f1(il,jl), 1, y_line, left,  tag, &
+                                 active_comm, req(7), ierr)
+               call MPI_ISEND(f1(ih,jl), 1, y_line, right, tag, &
+                                 active_comm, req(8), ierr)
+
+!              Sending corner points
+               call MPI_ISEND(f1(ih,jh), 1, MPI_REALTYPE, ur,tag, &
+                                 active_comm, req(9), ierr)
+
+               call MPI_ISEND(f1(il,jh), 1, MPI_REALTYPE, ul,tag, &
+                                 active_comm, req(10), ierr)
+
+               call MPI_ISEND(f1(il,jl), 1, MPI_REALTYPE, ll,tag, &
+                                 active_comm, req(11), ierr)
+
+               call MPI_ISEND(f1(ih,jl), 1, MPI_REALTYPE, lr,tag, &
+                                 active_comm, req(12), ierr)
+            case (_SN_ROW_)
+!              Recieving x_line
+               call MPI_IRECV(f2(il,jl-1), 1, x_line, down,  tag, &
+                                 active_comm, req(1), ierr)
+               call MPI_IRECV(f2(il,jh+1), 1, x_line, up,    tag, &
+                                 active_comm, req(2), ierr)
+
+!              Recieving corner points
+               call MPI_IRECV(f2(il-1,jl-1), 1, MPI_REALTYPE,ll,tag, &
+                                 active_comm, req(3), ierr)
+               call MPI_IRECV(f2(ih+1,jl-1), 1, MPI_REALTYPE,lr,tag, &
+                                 active_comm, req(4), ierr)
+               call MPI_IRECV(f2(ih+1,jh+1), 1, MPI_REALTYPE,ur,tag, &
+                                 active_comm, req(5), ierr)
+               call MPI_IRECV(f2(il-1,jh+1), 1, MPI_REALTYPE,ul,tag, &
+                                 active_comm, req(6), ierr)
+
+!              Sending x_line
+               call MPI_ISEND(f1(il,jl), 1, x_line, down,  tag, &
+                                 active_comm, req(7), ierr)
+               call MPI_ISEND(f1(il,jh), 1, x_line, up,    tag, &
+                                 active_comm, req(8), ierr)
+
+!              Sending corner points
+               call MPI_ISEND(f1(ih,jh), 1, MPI_REALTYPE, ur,tag, &
+                                 active_comm, req(9), ierr)
+
+               call MPI_ISEND(f1(il,jh), 1, MPI_REALTYPE, ul,tag, &
+                                 active_comm, req(10), ierr)
+
+               call MPI_ISEND(f1(il,jl), 1, MPI_REALTYPE, ll,tag, &
+                                 active_comm, req(11), ierr)
+
+               call MPI_ISEND(f1(ih,jl), 1, MPI_REALTYPE, lr,tag, &
+                                 active_comm, req(12), ierr)
+         end select
       case default
          FATAL 'A non valid communication method has been chosen'
          stop 'update_2d_halo_mpi'
@@ -889,7 +1153,8 @@ STDERR 'TWOD_SENDRECV'
 ! !IROUTINE: update_3d_halo_mpi - updates the halo zones for 3D fields.
 !
 ! !INTERFACE:
-   SUBROUTINE update_3d_halo_mpi(f1,f2,imin,jmin,imax,jmax,kmax,tag)
+   SUBROUTINE update_3d_halo_mpi(f1,f2,imin,jmin,imax,jmax,kmax,tag, &
+                                 halo_strategy)
    use getm_timers, only: tic, toc, TIM_HALO3D
    IMPLICIT NONE
 !
@@ -899,6 +1164,7 @@ STDERR 'TWOD_SENDRECV'
 ! !INPUT PARAMTERS:
    integer, intent(in)                 :: imin,jmin,imax,jmax,kmax
    integer, intent(in)                 :: tag
+   integer, intent(in), optional       :: halo_strategy
 !
 ! !INPUT/OUTPUT PARAMTERS:
    REALTYPE, intent(inout), DIMENSION(I3DFIELD) :: f1,f2
@@ -908,6 +1174,7 @@ STDERR 'TWOD_SENDRECV'
 !
 ! !LOCAL VARIABLES:
    integer                   :: il,jl,ih,jh
+   integer                   :: strategy
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -917,6 +1184,17 @@ STDERR 'TWOD_SENDRECV'
    end if
    call tic(TIM_HALO3D)
    il=imin;ih=imax;jl=jmin;jh=jmax
+
+#if 0
+   if ( present(halo_strategy) ) then
+      strategy = halo_strategy
+   else
+      strategy = _ALL_HALOS_
+   end if
+#else
+      strategy = _ALL_HALOS_
+#endif
+
    select case (comm_method)
       case(ONE_PROCESS)
          f1(il-1, :, : )  = f2(il, :, :  )
@@ -1005,52 +1283,254 @@ STDERR 'TWOD_SENDRECV'
 #ifdef DEBUG
 STDERR 'TWOD_NONBLOCKING'
 #endif
-!        Recieving xz_slices
-         call MPI_IRECV(f2(il,jl-HALO,0), 1, xz_slices, down, tag, &
-                           active_comm, req(1), ierr)
-         call MPI_IRECV(f2(il,jh+1,0),    1, xz_slices, up,   tag, &
-                           active_comm, req(2), ierr)
+STDERR '3D - ',strategy
+         select case (strategy)
+            case (_ALL_HALOS_)
+STDERR '3D - _ALL_HALOS_'
+!              Recieving xz_slices
+               call MPI_IRECV(f2(il,jl-HALO,0), 1, xz_slices, down, tag, &
+                                 active_comm, req(1), ierr)
+               call MPI_IRECV(f2(il,jh+1,0),    1, xz_slices, up,   tag, &
+                                 active_comm, req(2), ierr)
 
-!        Recieving yz_slices
-         call MPI_IRECV(f2(il-HALO,jl,0), 1, yz_slices, left,  tag, &
-                           active_comm, req(3), ierr)
-         call MPI_IRECV(f2(ih+1,jl,0),    1, yz_slices, right, tag, &
-                           active_comm, req(4), ierr)
+!              Recieving yz_slices
+               call MPI_IRECV(f2(il-HALO,jl,0), 1, yz_slices, left,  tag, &
+                                 active_comm, req(3), ierr)
+               call MPI_IRECV(f2(ih+1,jl,0),    1, yz_slices, right, tag, &
+                                 active_comm, req(4), ierr)
 
-!        Recieving corner columns
-         call MPI_IRECV(f2(il-HALO,jl-HALO,0), 1, halo_columns,ll,tag, &
-                           active_comm, req(5), ierr)
-         call MPI_IRECV(f2(ih+1,jl-HALO,0), 1, halo_columns,lr,tag, &
-                           active_comm, req(6), ierr)
-         call MPI_IRECV(f2(ih+1,jh+1,0), 1, halo_columns,ur,tag, &
-                           active_comm, req(7), ierr)
-         call MPI_IRECV(f2(il-HALO,jh+1,0), 1, halo_columns,ul,tag, &
-                           active_comm, req(8), ierr)
+!              Recieving corner columns
+               call MPI_IRECV(f2(il-HALO,jl-HALO,0), 1, halo_columns,ll,tag, &
+                                 active_comm, req(5), ierr)
+               call MPI_IRECV(f2(ih+1,jl-HALO,0), 1, halo_columns,lr,tag, &
+                                 active_comm, req(6), ierr)
+               call MPI_IRECV(f2(ih+1,jh+1,0), 1, halo_columns,ur,tag, &
+                                 active_comm, req(7), ierr)
+               call MPI_IRECV(f2(il-HALO,jh+1,0), 1, halo_columns,ul,tag, &
+                                 active_comm, req(8), ierr)
 
-!        Sending xz_slices
-         call MPI_ISEND(f1(il,jl,0),          1, xz_slices, down,  tag, &
-                           active_comm,  req(9), ierr)
-         call MPI_ISEND(f1(il,jh-(HALO-1),0), 1, xz_slices, up,    tag, &
-                           active_comm, req(10), ierr)
+!              Sending xz_slices
+               call MPI_ISEND(f1(il,jl,0),          1, xz_slices, down,  tag, &
+                                 active_comm,  req(9), ierr)
+               call MPI_ISEND(f1(il,jh-(HALO-1),0), 1, xz_slices, up,    tag, &
+                                 active_comm, req(10), ierr)
 
-!        Sending yz_slices
-         call MPI_ISEND(f1(il,jl,0),          1, yz_slices, left,  tag, &
-                           active_comm, req(11), ierr)
-         call MPI_ISEND(f1(ih-(HALO-1),jl,0), 1, yz_slices, right, tag, &
-                           active_comm, req(12), ierr)
+!              Sending yz_slices
+               call MPI_ISEND(f1(il,jl,0),          1, yz_slices, left,  tag, &
+                                 active_comm, req(11), ierr)
+               call MPI_ISEND(f1(ih-(HALO-1),jl,0), 1, yz_slices, right, tag, &
+                                 active_comm, req(12), ierr)
 
-!        Sending corner columns
-         call MPI_ISEND(f1(ih-(HALO-1),jh-(HALO-1),0), 1, halo_columns, ur, tag, &
-                           active_comm, req(13), ierr)
+!              Sending corner columns
+               call MPI_ISEND(f1(ih-(HALO-1),jh-(HALO-1),0), 1, halo_columns, ur, tag, &
+                                 active_comm, req(13), ierr)
 
-         call MPI_ISEND(f1(il,jh-(HALO-1),0), 1, halo_columns, ul, tag, &
-                           active_comm, req(14), ierr)
+               call MPI_ISEND(f1(il,jh-(HALO-1),0), 1, halo_columns, ul, tag, &
+                                 active_comm, req(14), ierr)
 
-         call MPI_ISEND(f1(il,jl,0), 1, halo_columns, ll, tag, &
-                           active_comm, req(15), ierr)
+               call MPI_ISEND(f1(il,jl,0), 1, halo_columns, ll, tag, &
+                                 active_comm, req(15), ierr)
 
-         call MPI_ISEND(f1(ih-(HALO-1),jl,0), 1, halo_columns, lr, tag, &
-                           active_comm, req(16), ierr)
+               call MPI_ISEND(f1(ih-(HALO-1),jl,0), 1, halo_columns, lr, tag, &
+                                 active_comm, req(16), ierr)
+
+               all_3d_exchange =  all_3d_exchange &
+                                + (kmax+1)*       &
+                                ( HALO*size_left  &
+                                + HALO*size_up    &
+                                + HALO*size_right &
+                                + HALO*size_down  &
+                                + 4*HALO*HALO*size_point &
+                                )
+
+            case (_WE_HALOS_)
+!              Recieving yz_slices
+               call MPI_IRECV(f2(il-HALO,jl,0), 1, yz_slices, left,  tag, &
+                                 active_comm, req(1), ierr)
+               call MPI_IRECV(f2(ih+1,jl,0),    1, yz_slices, right, tag, &
+                                 active_comm, req(2), ierr)
+
+!              Recieving corner columns
+               call MPI_IRECV(f2(il-HALO,jl-HALO,0), 1, halo_columns,ll,tag, &
+                                 active_comm, req(3), ierr)
+               call MPI_IRECV(f2(ih+1,jl-HALO,0), 1, halo_columns,lr,tag, &
+                                 active_comm, req(4), ierr)
+               call MPI_IRECV(f2(ih+1,jh+1,0), 1, halo_columns,ur,tag, &
+                                 active_comm, req(5), ierr)
+               call MPI_IRECV(f2(il-HALO,jh+1,0), 1, halo_columns,ul,tag, &
+                                 active_comm, req(6), ierr)
+
+!              Sending yz_slices
+               call MPI_ISEND(f1(il,jl,0),          1, yz_slices, left,  tag, &
+                                 active_comm, req(7), ierr)
+               call MPI_ISEND(f1(ih-(HALO-1),jl,0), 1, yz_slices, right, tag, &
+                                 active_comm, req(8), ierr)
+
+!              Sending corner columns
+               call MPI_ISEND(f1(ih-(HALO-1),jh-(HALO-1),0), 1, halo_columns, ur, tag, &
+                                 active_comm, req(9), ierr)
+
+               call MPI_ISEND(f1(il,jh-(HALO-1),0), 1, halo_columns, ul, tag, &
+                                 active_comm, req(10), ierr)
+
+               call MPI_ISEND(f1(il,jl,0), 1, halo_columns, ll, tag, &
+                                 active_comm, req(11), ierr)
+
+               call MPI_ISEND(f1(ih-(HALO-1),jl,0), 1, halo_columns, lr, tag, &
+                                 active_comm, req(12), ierr)
+            case (_SN_HALOS_)
+!              Recieving xz_slices
+               call MPI_IRECV(f2(il,jl-HALO,0), 1, xz_slices, down, tag, &
+                                 active_comm, req(1), ierr)
+               call MPI_IRECV(f2(il,jh+1,0),    1, xz_slices, up,   tag, &
+                                 active_comm, req(2), ierr)
+
+!              Recieving corner columns
+               call MPI_IRECV(f2(il-HALO,jl-HALO,0), 1, halo_columns,ll,tag, &
+                                 active_comm, req(3), ierr)
+               call MPI_IRECV(f2(ih+1,jl-HALO,0), 1, halo_columns,lr,tag, &
+                                 active_comm, req(4), ierr)
+               call MPI_IRECV(f2(ih+1,jh+1,0), 1, halo_columns,ur,tag, &
+                                 active_comm, req(5), ierr)
+               call MPI_IRECV(f2(il-HALO,jh+1,0), 1, halo_columns,ul,tag, &
+                                 active_comm, req(6), ierr)
+
+!              Sending xz_slices
+               call MPI_ISEND(f1(il,jl,0),          1, xz_slices, down,  tag, &
+                                 active_comm,  req(7), ierr)
+               call MPI_ISEND(f1(il,jh-(HALO-1),0), 1, xz_slices, up,    tag, &
+                                 active_comm, req(8), ierr)
+
+!              Sending corner columns
+               call MPI_ISEND(f1(ih-(HALO-1),jh-(HALO-1),0), 1, halo_columns, ur, tag, &
+                                 active_comm, req(9), ierr)
+
+               call MPI_ISEND(f1(il,jh-(HALO-1),0), 1, halo_columns, ul, tag, &
+                                 active_comm, req(10), ierr)
+
+               call MPI_ISEND(f1(il,jl,0), 1, halo_columns, ll, tag, &
+                                 active_comm, req(11), ierr)
+
+               call MPI_ISEND(f1(ih-(HALO-1),jl,0), 1, halo_columns, lr, tag, &
+                                 active_comm, req(12), ierr)
+            case (_ALL_ROW_)
+!              Recieving xz_slice
+               call MPI_IRECV(f2(il,jl-1,0), 1, xz_slice, down, tag, &
+                                 active_comm, req(1), ierr)
+               call MPI_IRECV(f2(il,jh+1,0), 1, xz_slice, up,   tag, &
+                                 active_comm, req(2), ierr)
+
+!              Recieving yz_slice
+               call MPI_IRECV(f2(il-1,jl,0), 1, yz_slice, left,  tag, &
+                                 active_comm, req(3), ierr)
+               call MPI_IRECV(f2(ih+1,jl,0), 1, yz_slice, right, tag, &
+                                 active_comm, req(4), ierr)
+
+!              Recieving corner column
+               call MPI_IRECV(f2(il-1,jl-1,0), 1, z_column,ll,tag, &
+                                 active_comm, req(5), ierr)
+               call MPI_IRECV(f2(ih+1,jl-1,0), 1, z_column,lr,tag, &
+                                 active_comm, req(6), ierr)
+               call MPI_IRECV(f2(ih+1,jh+1,0), 1, z_column,ur,tag, &
+                                 active_comm, req(7), ierr)
+               call MPI_IRECV(f2(il-1,jh+1,0), 1, z_column,ul,tag, &
+                                 active_comm, req(8), ierr)
+
+!              Sending xz_slice
+               call MPI_ISEND(f1(il,jl,0), 1, xz_slice, down,  tag, &
+                                 active_comm,  req(9), ierr)
+               call MPI_ISEND(f1(il,jh,0), 1, xz_slice, up,    tag, &
+                                 active_comm, req(10), ierr)
+
+!              Sending yz_slice
+               call MPI_ISEND(f1(il,jl,0), 1, yz_slice, left,  tag, &
+                                 active_comm, req(11), ierr)
+               call MPI_ISEND(f1(ih,jl,0), 1, yz_slice, right, tag, &
+                                 active_comm, req(12), ierr)
+
+!              Sending corner column
+               call MPI_ISEND(f1(ih,jh,0), 1, z_column, ur, tag, &
+                                 active_comm, req(13), ierr)
+
+               call MPI_ISEND(f1(il,jh,0), 1, z_column, ul, tag, &
+                                 active_comm, req(14), ierr)
+
+               call MPI_ISEND(f1(il,jl,0), 1, z_column, ll, tag, &
+                                 active_comm, req(15), ierr)
+
+               call MPI_ISEND(f1(ih,jl,0), 1, z_column, lr, tag, &
+                                 active_comm, req(16), ierr)
+            case (_WE_ROW_)
+!              Recieving yz_slice
+               call MPI_IRECV(f2(il-1,jl,0), 1, yz_slice, left,  tag, &
+                                 active_comm, req(1), ierr)
+               call MPI_IRECV(f2(ih+1,jl,0), 1, yz_slice, right, tag, &
+                                 active_comm, req(2), ierr)
+
+!              Recieving corner column
+               call MPI_IRECV(f2(il-1,jl-1,0), 1, z_column,ll,tag, &
+                                 active_comm, req(3), ierr)
+               call MPI_IRECV(f2(ih+1,jl-1,0), 1, z_column,lr,tag, &
+                                 active_comm, req(4), ierr)
+               call MPI_IRECV(f2(ih+1,jh+1,0), 1, z_column,ur,tag, &
+                                 active_comm, req(5), ierr)
+               call MPI_IRECV(f2(il-1,jh+1,0), 1, z_column,ul,tag, &
+                                 active_comm, req(6), ierr)
+
+!              Sending yz_slice
+               call MPI_ISEND(f1(il,jl,0), 1, yz_slice, left,  tag, &
+                                 active_comm, req(7), ierr)
+               call MPI_ISEND(f1(ih,jl,0), 1, yz_slice, right, tag, &
+                                 active_comm, req(8), ierr)
+
+!              Sending corner column
+               call MPI_ISEND(f1(ih,jh,0), 1, z_column, ur, tag, &
+                                 active_comm, req(9), ierr)
+
+               call MPI_ISEND(f1(il,jh,0), 1, z_column, ul, tag, &
+                                 active_comm, req(10), ierr)
+
+               call MPI_ISEND(f1(il,jl,0), 1, z_column, ll, tag, &
+                                 active_comm, req(11), ierr)
+
+               call MPI_ISEND(f1(ih,jl,0), 1, z_column, lr, tag, &
+                                 active_comm, req(12), ierr)
+            case (_SN_ROW_)
+!              Recieving xz_slice
+               call MPI_IRECV(f2(il,jl-1,0), 1, xz_slice, down, tag, &
+                                 active_comm, req(1), ierr)
+               call MPI_IRECV(f2(il,jh+1,0), 1, xz_slice, up,   tag, &
+                                 active_comm, req(2), ierr)
+
+!              Recieving corner column
+               call MPI_IRECV(f2(il-1,jl-1,0), 1, z_column,ll,tag, &
+                                 active_comm, req(3), ierr)
+               call MPI_IRECV(f2(ih+1,jl-1,0), 1, z_column,lr,tag, &
+                                 active_comm, req(4), ierr)
+               call MPI_IRECV(f2(ih+1,jh+1,0), 1, z_column,ur,tag, &
+                                 active_comm, req(5), ierr)
+               call MPI_IRECV(f2(il-1,jh+1,0), 1, z_column,ul,tag, &
+                                 active_comm, req(6), ierr)
+
+!              Sending xz_slice
+               call MPI_ISEND(f1(il,jl,0), 1, xz_slice, down,  tag, &
+                                 active_comm, req(7), ierr)
+               call MPI_ISEND(f1(il,jh,0), 1, xz_slice, up,    tag, &
+                                 active_comm, req(8), ierr)
+
+!              Sending corner column
+               call MPI_ISEND(f1(ih,jh,0), 1, z_column, ur, tag, &
+                                 active_comm, req(9), ierr)
+
+               call MPI_ISEND(f1(il,jh,0), 1, z_column, ul, tag, &
+                                 active_comm, req(10), ierr)
+
+               call MPI_ISEND(f1(il,jl,0), 1, z_column, ll, tag, &
+                                 active_comm, req(11), ierr)
+
+               call MPI_ISEND(f1(ih,jl,0), 1, z_column, lr, tag, &
+                                 active_comm, req(12), ierr)
+         end select
       case default
          FATAL 'A non valid communication method has been chosen'
          stop 'update_3d_halo_mpi'
@@ -1082,7 +1562,7 @@ STDERR 'TWOD_NONBLOCKING'
 ! !IROUTINE: wait_halo_mpi - wait for any un-finished communications
 !
 ! !INTERFACE:
-   SUBROUTINE wait_halo_mpi(tag)
+   SUBROUTINE wait_halo_mpi(tag,halo_strategy)
    use getm_timers, only: tic, toc, TIM_HALOWAIT
    IMPLICIT NONE
 !
@@ -1092,10 +1572,13 @@ STDERR 'TWOD_NONBLOCKING'
 !
 ! !INPUT PARAMTERS:
    integer, intent(in)                 :: tag
+   integer, intent(in), optional       :: halo_strategy
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
+! !LOCAL VARIABLES:
+   integer                   :: strategy
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -1103,6 +1586,13 @@ STDERR 'TWOD_NONBLOCKING'
       FATAL 'Last action was not sending - nothing to wait for'
       call MPI_ABORT(active_comm,-1,ierr)
    end if
+
+   if ( .not. present(halo_strategy) ) then
+      strategy = _ALL_HALOS_
+   else
+      strategy = halo_strategy
+   end if
+
    call tic(TIM_HALOWAIT)
    select case (comm_method)
       case(ONE_PROCESS)
@@ -1114,8 +1604,14 @@ STDERR 'TWOD_NONBLOCKING'
       case(TWOD_NONBLOCKING)
          if(last_action .ne. SENDING) then
          end if
-         !Waiting for 8 sends and 8 recieves.
-         call MPI_WAITALL (16,req,status_array,ierr)
+         select case (strategy)
+            case (_ALL_HALOS_, _ALL_ROW_)
+!              Waiting for 8 sends and 8 recieves.
+               call MPI_WAITALL (16,req,status_array,ierr)
+            case (_WE_HALOS_, _SN_HALOS_, _WE_ROW_, _SN_ROW_)
+!              Waiting for 6 sends and 6 recieves.
+               call MPI_WAITALL (12,req,status_array,ierr)
+         end select
       case default
          FATAL 'A non valid communication method has been chosen'
          stop 'wait_mpi'

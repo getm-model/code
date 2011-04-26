@@ -132,6 +132,12 @@
 
 ! The width of the HALO zones
 #define HALO	  2
+#define _ALL_HALOS_ 1
+#define _WE_HALOS_  2
+#define _SN_HALOS_  3
+#define _ALL_ROW_   4
+#define _WE_ROW_    5
+#define _SN_ROW_    6
 
 ! Size of dimensions with and without HALO-zones:
 #define _IRANGE_HALO_ imin-HALO:imax+HALO
