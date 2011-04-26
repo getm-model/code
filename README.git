@@ -10,6 +10,9 @@ git branch <name>
 # Change to branch
 git checkout <name>
 
+# Push a local branch
+git push origin <branch_name>
+
 # Commit
 git commit -m "..." <files>
 
