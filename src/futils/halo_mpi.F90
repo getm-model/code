@@ -151,6 +151,10 @@
       call MPI_Abort(MPI_COMM_WORLD,-1,ierr)
    end if
 
+   all_2d_exchange = 0
+   all_3d_exchange = 0
+
+
 #ifdef DEBUG
    write(debug,*) 'Leaving init_mpi()'
    write(debug,*)
@@ -686,7 +690,7 @@
    if (left  .eq. MPI_PROC_NULL) then
       size_left = 0
    else
-      size_left = m*sizeof_realtype
+      size_left = n*sizeof_realtype
    end if
 
    if (ul    .eq. MPI_PROC_NULL) then
@@ -698,7 +702,7 @@
    if (up    .eq. MPI_PROC_NULL) then
       size_up = 0
    else
-      size_up = n*sizeof_realtype
+      size_up = m*sizeof_realtype
    end if
 
    if (ur    .eq. MPI_PROC_NULL) then
@@ -710,11 +714,11 @@
    if (right .eq. MPI_PROC_NULL) then
       size_right = 0
    else
-      size_left = m*sizeof_realtype
+      size_right = n*sizeof_realtype
    end if
 
    if (lr    .eq. MPI_PROC_NULL) then
-      size_up = 0
+      size_lr = 0
    else
       size_lr = sizeof_realtype
    end if
@@ -722,7 +726,7 @@
    if (down  .eq. MPI_PROC_NULL) then
       size_down = 0
    else
-      size_down = n*sizeof_realtype
+      size_down = m*sizeof_realtype
    end if
 
    if (ll    .eq. MPI_PROC_NULL) then
