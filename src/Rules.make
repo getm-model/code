@@ -118,7 +118,7 @@ EXTRA_LIBS	=
 ifeq ($(FABM),true)
 DEFINES += -D_FABM_
 ifndef FABMDIR
-FABMDIR = $(HOME)/FABM/fabm-svn
+FABMDIR = $(HOME)/FABM/fabm-git
 endif
 INCDIRS    += -I$(FABMDIR)/include -I$(FABMDIR)/modules/gotm/$(FORTRAN_COMPILER) -I$(FABMDIR)/src/drivers/gotm
 LINKDIRS   += -L$(FABMDIR)/lib/gotm/$(FORTRAN_COMPILER)
