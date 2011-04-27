@@ -54,7 +54,7 @@ VER=2.1.0
 
 all: VERSION
 
-VERSION: Makefile
+VERSION: Makefile src/Makefile src/Rules.make
 	$(MAKE) distclean
 	@echo $(VER) > $@
 	@date > timestamp

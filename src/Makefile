@@ -43,7 +43,7 @@ LIBS		= $(CORE_LIBS) $(EXTRA_LIBS)
 
 all: ../VERSION getm$(buildtype)_$(FORTRAN_COMPILER) install
 
-../VERSION: ../Makefile
+../VERSION: ../Makefile Makefile Rules.make
 	$(MAKE) -C ..
 
 getm$(buildtype)_$(FORTRAN_COMPILER): makedirs subdirs
