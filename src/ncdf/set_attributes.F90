@@ -44,16 +44,17 @@
 !  See ncdfout module
 !
 ! !LOCAL VARIABLES:
+   integer, parameter :: kind_real_single = SELECTED_REAL_KIND(p=5)
+   integer, parameter :: kind_real_double = SELECTED_REAL_KIND(p=14)
    integer                   :: iret
    integer                   :: ft
-   REAL_4B                   :: vals(2)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
    if(present(netcdf_real)) then
       ft=netcdf_real
    else
-      ft=NF90_FLOAT
+      ft=NCDF_FLOAT_PRECISION
    end if
 
    if(present(units)) then
@@ -73,35 +74,59 @@
    end if
 
    if(present(valid_min)) then
-      iret = nf90_put_att(ncid,id,'valid_min',valid_min)
+      if (ft .eq. NF90_DOUBLE) then
+         iret = nf90_put_att(ncid,id,'valid_min',real(valid_min,kind=kind_real_double))
+      else
+         iret = nf90_put_att(ncid,id,'valid_min',real(valid_min,kind=kind_real_single))
+      end if
    end if
 
    if(present(valid_max)) then
-      iret = nf90_put_att(ncid,id,'valid_max',valid_max)
+      if (ft .eq. NF90_DOUBLE) then
+         iret = nf90_put_att(ncid,id,'valid_max',real(valid_max,kind=kind_real_double))
+      else
+         iret = nf90_put_att(ncid,id,'valid_max',real(valid_max,kind=kind_real_single))
+      end if
    end if
 
    if(present(valid_range)) then
-      iret = nf90_put_att(ncid,id,'valid_range',valid_range)
+      if (ft .eq. NF90_DOUBLE) then
+         iret = nf90_put_att(ncid,id,'valid_range',real(valid_range,kind=kind_real_double))
+      else
+         iret = nf90_put_att(ncid,id,'valid_range',real(valid_range,kind=kind_real_single))
+      end if
    end if
 
    if(present(scale_factor)) then
-      iret = nf90_put_att(ncid,id,'scale_factor',scale_factor)
+      if (ft .eq. NF90_DOUBLE) then
+         iret = nf90_put_att(ncid,id,'scale_factor',real(scale_factor,kind=kind_real_double))
+      else
+         iret = nf90_put_att(ncid,id,'scale_factor',real(scale_factor,kind=kind_real_single))
+      end if
    end if
 
    if(present(add_offset)) then
-      iret = nf90_put_att(ncid,id,'add_offset',add_offset)
+      if (ft .eq. NF90_DOUBLE) then
+         iret = nf90_put_att(ncid,id,'add_offset',real(add_offset,kind=kind_real_double))
+      else
+         iret = nf90_put_att(ncid,id,'add_offset',real(add_offset,kind=kind_real_single))
+      end if
    end if
 
    if(present(FillValue)) then
       if (ft .eq. NF90_DOUBLE) then
-         iret = nf90_put_att(ncid,id,'_FillValue',FillValue)
+         iret = nf90_put_att(ncid,id,'_FillValue',real(FillValue,kind=kind_real_double))
       else
-         iret = nf90_put_att(ncid,id,'_FillValue',real(FillValue))
+         iret = nf90_put_att(ncid,id,'_FillValue',real(FillValue,kind=kind_real_single))
       end if
    end if
 
    if(present(missing_value)) then
-      iret = nf90_put_att(ncid,id,'missing_value',missing_value)
+      if (ft .eq. NF90_DOUBLE) then
+         iret = nf90_put_att(ncid,id,'missing_value',real(missing_value,kind=kind_real_double))
+      else
+         iret = nf90_put_att(ncid,id,'missing_value',real(missing_value,kind=kind_real_single))
+      end if
    end if
 
    return

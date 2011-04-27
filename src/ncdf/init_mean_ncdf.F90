@@ -78,7 +78,7 @@
 
 !  short wave radiation
    fv = swr_missing; mv = swr_missing; vr(1) = 0; vr(2) = 1500.
-   err = nf90_def_var(ncid,'swrmean',NF90_REAL,f3_dims,swrmean_id)
+   err = nf90_def_var(ncid,'swrmean',NCDF_FLOAT_PRECISION,f3_dims,swrmean_id)
    if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,swrmean_id,  &
           long_name='mean short wave radiation',units='W/m2', &
@@ -86,7 +86,7 @@
 
 ! Ustar at bottom
    fv = vel_missing; mv = vel_missing; vr(1) = -1; vr(2) = 1.
-   err = nf90_def_var(ncid,'ustarmean',NF90_REAL,f3_dims,ustarmean_id)
+   err = nf90_def_var(ncid,'ustarmean',NCDF_FLOAT_PRECISION,f3_dims,ustarmean_id)
    if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,ustarmean_id,  &
           long_name='bottom friction velocity',units='m/s', &
@@ -94,7 +94,7 @@
 
 ! Standard deviation of ustar
    fv = vel_missing; mv = vel_missing; vr(1) = 0; vr(2) = 1.
-   err = nf90_def_var(ncid,'ustar2mean',NF90_REAL,f3_dims,ustar2mean_id)
+   err = nf90_def_var(ncid,'ustar2mean',NCDF_FLOAT_PRECISION,f3_dims,ustar2mean_id)
    if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,ustar2mean_id,  &
           long_name='stdev of bottom friction velocity',units='m/s', &
@@ -107,7 +107,7 @@
       case default
          fv = hh_missing
          mv = hh_missing
-         err = nf90_def_var(ncid,'hmean',NF90_REAL,f4_dims,hmean_id)
+         err = nf90_def_var(ncid,'hmean',NCDF_FLOAT_PRECISION,f4_dims,hmean_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,hmean_id, &
                              long_name='mean layer thickness',  &
@@ -120,21 +120,21 @@
    vr(2) =  3.
 
 !  zonal velocity
-   err = nf90_def_var(ncid,'uumean',NF90_REAL,f4_dims,uumean_id)
+   err = nf90_def_var(ncid,'uumean',NCDF_FLOAT_PRECISION,f4_dims,uumean_id)
    if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,uumean_id, &
           long_name='mean zonal vel.',units='m/s', &
           FillValue=fv,missing_value=mv,valid_range=vr)
 
 !  meridional velocity
-   err = nf90_def_var(ncid,'vvmean',NF90_REAL,f4_dims,vvmean_id)
+   err = nf90_def_var(ncid,'vvmean',NCDF_FLOAT_PRECISION,f4_dims,vvmean_id)
    if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,vvmean_id, &
           long_name='mean meridional vel.',units='m/s', &
           FillValue=fv,missing_value=mv,valid_range=vr)
 
 !  vertical velocity
-   err = nf90_def_var(ncid,'wmean',NF90_REAL,f4_dims,wmean_id)
+   err = nf90_def_var(ncid,'wmean',NCDF_FLOAT_PRECISION,f4_dims,wmean_id)
    if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,wmean_id, &
           long_name='mean vertical vel.',units='m/s', &
@@ -146,7 +146,7 @@
       mv = salt_missing
       vr(1) =  0.
       vr(2) = 40.
-      err = nf90_def_var(ncid,'saltmean',NF90_REAL,f4_dims,saltmean_id)
+      err = nf90_def_var(ncid,'saltmean',NCDF_FLOAT_PRECISION,f4_dims,saltmean_id)
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,saltmean_id, &
              long_name='mean salinity',units='PSU', &
@@ -158,7 +158,7 @@
       mv = temp_missing
       vr(1) =  0.
       vr(2) = 40.
-      err = nf90_def_var(ncid,'tempmean',NF90_REAL,f4_dims,tempmean_id)
+      err = nf90_def_var(ncid,'tempmean',NCDF_FLOAT_PRECISION,f4_dims,tempmean_id)
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,tempmean_id, &
              long_name='mean temperature',units='degC',&
@@ -172,28 +172,28 @@
       vr(2) =  100.0
 
       if (calc_salt) then
-         err = nf90_def_var(ncid,'nummix3d_S',NF90_REAL,f4_dims,nm3dS_id)
+         err = nf90_def_var(ncid,'nummix3d_S',NCDF_FLOAT_PRECISION,f4_dims,nm3dS_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nm3dS_id, &
              long_name='mean numerical mixing of salinity', &
              units='psu**2/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
 
-         err = nf90_def_var(ncid,'phymix3d_S',NF90_REAL,f4_dims,pm3dS_id)
+         err = nf90_def_var(ncid,'phymix3d_S',NCDF_FLOAT_PRECISION,f4_dims,pm3dS_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,pm3dS_id, &
              long_name='mean physical mixing of salinity', &
              units='psu**2/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
 
-         err = nf90_def_var(ncid,'nummix2d_S',NF90_REAL,f3_dims,nm2dS_id)
+         err = nf90_def_var(ncid,'nummix2d_S',NCDF_FLOAT_PRECISION,f3_dims,nm2dS_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nm2dS_id, &
              long_name='mean, vert.integrated numerical mixing of salinity', &
              units='psu**2 m/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
 
-         err = nf90_def_var(ncid,'phymix2d_S',NF90_REAL,f3_dims,pm2dS_id)
+         err = nf90_def_var(ncid,'phymix2d_S',NCDF_FLOAT_PRECISION,f3_dims,pm2dS_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,pm2dS_id, &
              long_name='mean, vert.integrated physical mixing of salinity', &
@@ -202,28 +202,28 @@
       end if
 
       if (calc_temp) then
-         err = nf90_def_var(ncid,'nummix3d_T',NF90_REAL,f4_dims,nm3dT_id)
+         err = nf90_def_var(ncid,'nummix3d_T',NCDF_FLOAT_PRECISION,f4_dims,nm3dT_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nm3dT_id, &
              long_name='mean numerical mixing of temperature', &
              units='degC**2/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
 
-         err = nf90_def_var(ncid,'phymix3d_T',NF90_REAL,f4_dims,pm3dT_id)
+         err = nf90_def_var(ncid,'phymix3d_T',NCDF_FLOAT_PRECISION,f4_dims,pm3dT_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,pm3dT_id, &
              long_name='mean physical mixing of temperature', &
              units='degC**2/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
 
-         err = nf90_def_var(ncid,'nummix2d_T',NF90_REAL,f3_dims,nm2dT_id)
+         err = nf90_def_var(ncid,'nummix2d_T',NCDF_FLOAT_PRECISION,f3_dims,nm2dT_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nm2dT_id, &
              long_name='mean, vert.integrated numerical mixing of temperature', &
              units='degC**2 m/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
 
-         err = nf90_def_var(ncid,'phymix2d_T',NF90_REAL,f3_dims,pm2dT_id)
+         err = nf90_def_var(ncid,'phymix2d_T',NCDF_FLOAT_PRECISION,f3_dims,pm2dT_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,pm2dT_id, &
              long_name='mean, vert.integrated physical mixing of temperature', &
@@ -242,7 +242,7 @@
    vr(1) = -50.
    vr(2) = 9999.
    do n=1,numc
-      err = nf90_def_var(ncid,trim(var_names(n)) // '_mean',NF90_REAL, &
+      err = nf90_def_var(ncid,trim(var_names(n)) // '_mean',NCDF_FLOAT_PRECISION, &
                          f4_dims,biomean_id(n))
       if (err .NE.  NF90_NOERR) go to 10
       call set_attributes(ncid,biomean_id(n), &
