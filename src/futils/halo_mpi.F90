@@ -38,6 +38,7 @@
 ! !PUBLIC DATA MEMBERS:
    integer, public                     :: myid=-1, nprocs=1
    integer, public                     :: comm_hd=MPI_COMM_WORLD
+   integer, public                     :: all_2d_exchange, all_3d_exchange
 !   integer, public                    :: comm_wave=MPI_COMM_WORLD
 !   integer, public                    :: comm_biology=MPI_COMM_WORLD
 !
