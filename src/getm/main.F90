@@ -159,7 +159,11 @@
 
 !-----------------------------------------------------------------------
    subroutine print_help()
-     print '(a)', 'usage: getm [OPTIONS]'
+     character(len=255) :: cmd
+     call get_command_argument(0, cmd)
+
+     print '(a)', ''
+     print '(a,a,a)', 'usage: ',trim(cmd),' [OPTIONS]'
      print '(a)', ''
      print '(a)', 'Without any options, getm will continue execution.'
      print '(a)', ''
