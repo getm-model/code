@@ -47,8 +47,8 @@
 #endif
    integer, public, parameter          :: UPSTREAM=1,UPSTREAM_SPLIT=2,P2=3
    integer, public, parameter          :: Superbee=4,MUSCL=5,P2_PDM=6,FCT=7
-   REALTYPE, public, parameter         :: one6th=1./6.
-   REALTYPE, public, parameter         :: ONE=_ONE_,TWO=2.*_ONE_
+   REALTYPE, public, parameter         :: one6th=_ONE_/6
+   REALTYPE, public, parameter         :: ONE=_ONE_,TWO=_TWO_
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard

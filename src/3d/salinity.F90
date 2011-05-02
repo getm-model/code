@@ -33,12 +33,12 @@
    character(len=PATH_MAX)   :: salt_file="t_and_s.nc"
    integer                   :: salt_field_no=1
    character(len=32)         :: salt_name='salt'
-   REALTYPE                  :: salt_const=35.
+   REALTYPE                  :: salt_const=35*_ONE_
    integer                   :: salt_hor_adv=1,salt_ver_adv=1
    integer                   :: salt_adv_split=0
    REALTYPE                  :: salt_AH=-_ONE_
    integer                   :: salt_check=0
-   REALTYPE                  :: min_salt=0.,max_salt=40.
+   REALTYPE                  :: min_salt=_ZERO_,max_salt=40*_ONE_
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -265,7 +265,8 @@ salt_field_no=1
          S =  _ZERO_
          do i=1,100
             do k=1,kmax
-               S(i,2,k)=30.*(1.- tanh(float(i-1)*0.05))
+!               S(i,2,k)=30.*(1.- tanh(float(i-1)*0.05))
+               S(i,2,k)=(30*_ONE_)*(_ONE_- tanh((i-1)*_ONE_/20))
             end do      
          end do   
 #endif
@@ -277,22 +278,22 @@ salt_field_no=1
 #ifdef ARKONA_TEST
    do i=100,135
       do j=256,257
-         if (az(i,j).ge.1) S(i,j,0:kmax) = 25.
+         if (az(i,j).ge.1) S(i,j,0:kmax) = 25*_ONE_
       end do
    end do
    do i=26,27
       do j=77,100
-         S(i,j,0:kmax) = 8.
+         S(i,j,0:kmax) = 8*_ONE_
       end do
    end do
 #endif
 #ifdef INTERLEAVING_TEST
-   S(2:6,2,1:20) = 12.
+   S(2:6,2,1:20) = 12*_ONE_
 #endif
 #ifdef SLOPE_TEST
    do i=81,82
       do j=42,43
-      S(i,j,0:kmax) = 25.
+      S(i,j,0:kmax) = 25*_ONE_
       end do
    end do
 #endif
@@ -300,17 +301,17 @@ salt_field_no=1
   j=2
    if (imax.eq.102) then
       do i=2,21
-        S(i,j,0:kmax) = 25.
+        S(i,j,0:kmax) = 25*_ONE_
       end do
    end if
    if (imax.eq.302) then
       do i=2,61
-        S(i,j,0:kmax) = 25.
+        S(i,j,0:kmax) = 25*_ONE_
       end do
    end if
    if (imax.eq.902) then
       do i=2,181
-        S(i,j,0:kmax) = 25.
+        S(i,j,0:kmax) = 25*_ONE_
       end do
    end if
 #endif
@@ -469,11 +470,12 @@ salt_field_no=1
    j=2
    do k=1,kmax
       do i=1,100
-         kk=  1.- tanh(float(i-1)*0.05)
-         S(i,j,k)=(1.-kk)*S(i,j,k)+kk*SRelax
+!         kk=  1.- tanh(float(i-1)*0.05)
+         kk=  _ONE_- tanh((i-1)*_ONE_/20)
+         S(i,j,k)=(_ONE_-kk)*S(i,j,k)+kk*SRelax
       end do
    end do
-   S(imax-1,2,:)=0. !river
+   S(imax-1,2,:)=_ZERO_ !river
 #endif
 
 
@@ -512,9 +514,9 @@ salt_field_no=1
             if (kmax.gt.1) then
 !     Auxilury terms, old and new time level,
                do k=1,kmax-1
-                  auxo(k)=2*(1-cnpar)*dt*(nuh(i,j,k)+avmols)/ &
+                  auxo(k)=_TWO_*(1-cnpar)*dt*(nuh(i,j,k)+avmols)/ &
                              (hn(i,j,k+1)+hn(i,j,k))
-                  auxn(k)=2*   cnpar *dt*(nuh(i,j,k)+avmols)/ &
+                  auxn(k)=_TWO_*   cnpar *dt*(nuh(i,j,k)+avmols)/ &
                              (hn(i,j,k+1)+hn(i,j,k))
                end do
 
@@ -574,12 +576,12 @@ salt_field_no=1
 #ifdef ARKONA_TEST
    do i=100,135
       do j=256,257
-         if (az(i,j).ge.1) S(i,j,0:kmax) = 25.
+         if (az(i,j).ge.1) S(i,j,0:kmax) = 25*_ONE_
       end do
    end do
    do i=26,27
       do j=77,100
-      S(i,j,0:kmax) = 8.
+      S(i,j,0:kmax) = 8*_ONE_
       end do
    end do
 #endif
@@ -587,7 +589,7 @@ salt_field_no=1
 #ifdef SLOPE_TEST
    do i=81,82
       do j=42,43
-      S(i,j,0:kmax) = 25.
+      S(i,j,0:kmax) = 25*_ONE_
       end do
    end do
 #endif

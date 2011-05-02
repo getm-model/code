@@ -128,10 +128,10 @@
                         end if
                         fc=f(i,j  ,k)            ! central
                         fd=f(i,j+1,k)            ! downstream
-                        if (abs(fd-fc) .gt. 1e-10) then
+                        if (abs(fd-fc) .gt. 1.d-10) then
                            r=(fc-fu)/(fd-fc)     ! slope ratio
                         else
-                           r=(fc-fu)*1.e10
+                           r=(fc-fu)*1.d10
                         end if
                      else
                         c=-vv(i,j,k)/hvn(i,j,k)*dt/delyv(i,j)
@@ -142,10 +142,10 @@
                         end if
                         fc=f(i,j+1,k)            ! central
                         fd=f(i,j  ,k)            ! downstream
-                        if (abs(fc-fd) .gt. 1e-10) then
+                        if (abs(fc-fd) .gt. 1.d-10) then
                            r=(fu-fc)/(fc-fd)     ! slope ratio
                         else
-                           r=(fu-fc)*1.e10
+                           r=(fu-fc)*1.d10
                         end if
                      end if
                      select case (method)
@@ -155,7 +155,7 @@
                            if (method.eq.P2) then
                            limit=Phi
                            else
-                           limit=max(_ZERO_,min(Phi,_TWO_/(_ONE_-c),_TWO_*r/(c+1.e-10)))
+                           limit=max(_ZERO_,min(Phi,_TWO_/(_ONE_-c),_TWO_*r/(c+1.d-10)))
                            end if
                         case (Superbee)
                            limit=max(_ZERO_, min(_ONE_,_TWO_*r), min(r,_TWO_) )

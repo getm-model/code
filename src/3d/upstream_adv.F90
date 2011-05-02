@@ -145,7 +145,7 @@
             else
                cu(i,j,k)=uu(i,j,k)*f(i+1,j,k)
             end if
-            if ((AH.gt.0.).and.(az(i,j).gt.0).and.(az(i+1,j).gt.0))    &
+            if ((AH.gt._ZERO_).and.(az(i,j).gt.0).and.(az(i+1,j).gt.0))    &
                cu(i,j,k)=cu(i,j,k)-AH*(f(i+1,j,k)-f(i,j,k))/delxu(i,j) &
                          *_HALF_*(hn(i+1,j,k)+hn(i,j,k))
          end do
@@ -176,7 +176,7 @@
             else
                cu(i,j,k)=vv(i,j,k)*f(i,j+1,k)
             end if
-            if ((AH.gt.0.).and.(az(i,j).gt.0).and.(az(i,j+1).gt.0))   &
+            if ((AH.gt._ZERO_).and.(az(i,j).gt.0).and.(az(i,j+1).gt.0))   &
                cu(i,j,k)=cu(i,j,k)-AH*(f(i,j+1,k)-f(i,j,k))/delyv(i,j)   &
                          *_HALF_*(hn(i,j+1,k)+hn(i,j,k))
          end do

@@ -102,15 +102,15 @@
        if ((((i.eq.1).or.(i.eq.imax)).and.(j.ge.1).and.(j.le.jmax)).or. &
            (((j.eq.1).or.(j.eq.jmax)).and.(i.ge.1).and.(i.le.imax)))    &
           z(i,j)=(1.-kk)*z(i,j)
-       kk=0.5625
+       kk=0.5625d0
        if ((((i.eq.2).or.(i.eq.imax-1)).and.(j.ge.2).and.(j.le.jmax-1)).or. &
            (((j.eq.2).or.(j.eq.jmax-1)).and.(i.ge.2).and.(i.le.imax-1)))    &
           z(i,j)=(1.-kk)*z(i,j)
-       kk=0.25
+       kk=0.25d0
        if ((((i.eq.3).or.(i.eq.imax-2)).and.(j.ge.3).and.(j.le.jmax-2)).or. &
            (((j.eq.3).or.(j.eq.jmax-2)).and.(i.ge.3).and.(i.le.imax-2)))    &
            z(i,j)=(1.-kk)*z(i,j)
-       kk=0.0625
+       kk=0.0625d0
        if ((((i.eq.4).or.(i.eq.imax-3)).and.(j.ge.4).and.(j.le.jmax-3)).or. &
            (((j.eq.4).or.(j.eq.jmax-3)).and.(i.ge.4).and.(i.le.imax-3)))    &
            z(i,j)=(1.-kk)*z(i,j)
@@ -118,7 +118,7 @@
 #endif
 
 #ifdef USE_BREAKS
-            if (z(i,j)+H(i,j) .lt. 0.9*min_depth .and. &
+            if (z(i,j)+H(i,j) .lt. 0.9d0*min_depth .and. &
                 break_mask(i,j) .eq. 0 ) then
                break_mask(i,j)=1
                break_stat(i,j)=break_stat(i,j)+1

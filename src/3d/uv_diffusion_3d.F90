@@ -137,7 +137,7 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'D3uvDiff() # ',Ncall
+   write(debug,*) 'uv_diffusion_3d() # ',Ncall
 #endif
    call tic(TIM_UVDIFF3D)
 
@@ -152,7 +152,7 @@
             PP(i,j,k)=_ZERO_
             if (az(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
-                  PP(i,j,k)=2.*Am*DYC*hn(i,j,k)               &
+                  PP(i,j,k)=_TWO_*Am*DYC*hn(i,j,k)               &
                       *(uu(i,j,k)/hun(i,j,k)-uu(i-1,j,k)/hun(i-1,j,k))/DXC
                end if
             end if
@@ -219,7 +219,7 @@
             PP(i,j,k)=_ZERO_
             if (ax(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
-                  PP(i,j,k)=Am*0.5*(hvn(i+1,j,k)+hvn(i,j,k))*DXX  &
+                  PP(i,j,k)=Am*_HALF_*(hvn(i+1,j,k)+hvn(i,j,k))*DXX  &
                       *((uu(i,j+1,k)/hun(i,j+1,k)-uu(i,j,k)/hun(i,j,k))/DYX &
                        +(vv(i+1,j,k)/hvn(i+1,j,k)-vv(i,j,k)/hvn(i,j,k))/DXX )
                end if
@@ -252,7 +252,7 @@
          do i=imin,imax          ! PP defined on T-points
             if (az(i,j) .ge. 1) then
                if (k .ge. kvmin(i,j)) then
-                  PP(i,j,k)=2.*Am*DXC*hn(i,j,k)               &
+                  PP(i,j,k)=_TWO_*Am*DXC*hn(i,j,k)               &
                       *(vv(i,j,k)/hvn(i,j,k)-vv(i,j-1,k)/hvn(i,j-1,k))/DYC
                end if
             end if

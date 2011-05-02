@@ -56,7 +56,7 @@
    character(len=PATH_MAX)             :: bdyfile_3d
    REALTYPE                            :: ip_fac=_ONE_
    integer                             :: vel_check=0
-   REALTYPE                            :: min_vel=-4.,max_vel=4.
+   REALTYPE                            :: min_vel=-4*_ONE_,max_vel=4*_ONE_
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -249,8 +249,8 @@
    num=avmback
    nuh=avhback
 #else
-   num=1.e-15
-   nuh=1.e-15
+   num=1.d-15
+   nuh=1.d-15
 #endif
 
 !  Needed for interpolation of temperature and salinity
