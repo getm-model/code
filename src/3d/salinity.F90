@@ -409,11 +409,13 @@ salt_field_no=1
 #endif
    call tic(TIM_SALT)
 
-   do j=jmin,jmax
-      do i=imin,imax
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
          if (az(i,j) .eq. 1) then
-            S(i,j,kmax) = S(i,j,kmax)*hn(i,j,kmax) &
-                          /(hn(i,j,kmax)+fwf_int(i,j))
+! Developers note: 
+!  The parentheses are set to minimize truncation errors for fwf_int=0
+            S(i,j,kmax) = S(i,j,kmax)*            &
+                          ( hn(i,j,kmax) / (hn(i,j,kmax)+fwf_int(i,j)) )
          end if
       end do
    end do
