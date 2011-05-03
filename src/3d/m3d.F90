@@ -26,7 +26,7 @@
    use exceptions
    use parameters, only: avmmol
    use domain, only: openbdy,maxdepth,vert_cord,az
-   use m2d, only: Am
+   use m2d, only: Am_method
    use variables_2d, only: D,z,UEx,VEx
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
@@ -304,6 +304,9 @@
 ! !INTERFACE:
    subroutine integrate_3d(runtype,n)
    use getm_timers, only: tic, toc, TIM_INTEGR3D
+#ifdef _LES_
+   use les, only: do_les_3d
+#endif
 #ifndef NO_BAROCLINIC
    use getm_timers, only: TIM_TEMPH, TIM_SALTH
 #endif
@@ -446,11 +449,14 @@
    if (kmax .gt. 1) then
       call ww_momentum_3d()
    end if
+#ifdef _LES_
+   if (Am_method .eq. 2) call do_les_3d(uu,vv,hun,hvn)
+#endif
 #ifndef NO_ADVECT
    if (kmax .gt. 1) then
       call uv_advect_3d(vel_hor_adv,vel_ver_adv,vel_adv_split)
-      if (Am .gt. _ZERO_) then
-         call uv_diffusion_3d(Am)  ! Must be called after uv_advect_3d
+      if (Am_method .gt. 0) then
+         call uv_diffusion_3d()  ! Must be called after uv_advect_3d
       end if
    end if
 #else
@@ -513,8 +519,8 @@
 #ifndef NO_ADVECT
 #ifndef UV_ADV_DIRECT
       call slow_advection()
-      if (Am .gt. _ZERO_) then
-         call slow_diffusion(Am) ! Has to be called after slow_advection.
+      if (Am_method .gt. 0) then
+         call slow_diffusion() ! Has to be called after slow_advection.
       end if
 #endif
 #endif

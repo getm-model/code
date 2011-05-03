@@ -6,7 +6,7 @@
 ! \label{sec-uv-diffusion-3d}
 !
 ! !INTERFACE:
-   subroutine uv_diffusion_3d(Am)
+   subroutine uv_diffusion_3d()
 !
 ! !DESCRIPTION:
 !
@@ -118,13 +118,16 @@
    use domain, only: dx,dy,ard1
 #endif
    use variables_3d, only: kumin,kvmin,uu,vv,ww,hn,hun,hvn,uuEx,vvEx
+#ifdef _LES_
+   use variables_les, only: Am3d,AmX3d
+#else
+   use m2d, only: Am_const
+#endif
    use getm_timers, only: tic, toc, TIM_UVDIFF3D
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-  REALTYPE, intent(in) :: Am
-
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
@@ -152,8 +155,10 @@
             PP(i,j,k)=_ZERO_
             if (az(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
-                  PP(i,j,k)=_TWO_*Am*DYC*hn(i,j,k)               &
-                      *(uu(i,j,k)/hun(i,j,k)-uu(i-1,j,k)/hun(i-1,j,k))/DXC
+                  if (_AM3D_ .gt. _ZERO_) then
+                     PP(i,j,k)=_TWO_*_AM3D_*DYC*hn(i,j,k)               &
+                         *(uu(i,j,k)/hun(i,j,k)-uu(i-1,j,k)/hun(i-1,j,k))/DXC
+                  end if
                end if
             end if
          end do
@@ -185,9 +190,11 @@
             PP(i,j,k)=_ZERO_
             if (ax(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
-                  PP(i,j,k)=Am*0.5*(hun(i,j,k)+hun(i,j+1,k))*DXX  &
-                      *((uu(i,j+1,k)/hun(i,j+1,k)-uu(i,j,k)/hun(i,j,k))/DYX &
-                       +(vv(i+1,j,k)/hvn(i+1,j,k)-vv(i,j,k)/hvn(i,j,k))/DXX )
+                  if (_AMX3D_ .gt. _ZERO_) then
+                     PP(i,j,k)=_AMX3D_*_HALF_*(hun(i,j,k)+hun(i,j+1,k))*DXX  &
+                         *((uu(i,j+1,k)/hun(i,j+1,k)-uu(i,j,k)/hun(i,j,k))/DYX &
+                          +(vv(i+1,j,k)/hvn(i+1,j,k)-vv(i,j,k)/hvn(i,j,k))/DXX )
+                  end if
                end if
             end if
          end do
@@ -219,9 +226,11 @@
             PP(i,j,k)=_ZERO_
             if (ax(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
-                  PP(i,j,k)=Am*_HALF_*(hvn(i+1,j,k)+hvn(i,j,k))*DXX  &
-                      *((uu(i,j+1,k)/hun(i,j+1,k)-uu(i,j,k)/hun(i,j,k))/DYX &
-                       +(vv(i+1,j,k)/hvn(i+1,j,k)-vv(i,j,k)/hvn(i,j,k))/DXX )
+                  if(_AMX3D_ .gt. _ZERO_) then
+                     PP(i,j,k)=_AMX3D_*_HALF_*(hvn(i+1,j,k)+hvn(i,j,k))*DXX  &
+                         *((uu(i,j+1,k)/hun(i,j+1,k)-uu(i,j,k)/hun(i,j,k))/DYX &
+                          +(vv(i+1,j,k)/hvn(i+1,j,k)-vv(i,j,k)/hvn(i,j,k))/DXX )
+                  end if
                end if
             end if
          end do
@@ -252,8 +261,10 @@
          do i=imin,imax          ! PP defined on T-points
             if (az(i,j) .ge. 1) then
                if (k .ge. kvmin(i,j)) then
-                  PP(i,j,k)=_TWO_*Am*DXC*hn(i,j,k)               &
-                      *(vv(i,j,k)/hvn(i,j,k)-vv(i,j-1,k)/hvn(i,j-1,k))/DYC
+                  if (_AM3D_ .gt. _ZERO_) then
+                     PP(i,j,k)=_TWO_*_AM3D_*DXC*hn(i,j,k)               &
+                         *(vv(i,j,k)/hvn(i,j,k)-vv(i,j-1,k)/hvn(i,j-1,k))/DYC
+                  end if
                end if
             end if
          end do

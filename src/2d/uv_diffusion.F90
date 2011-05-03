@@ -5,7 +5,7 @@
 ! !ROUTINE: uv_diffusion - 2D diffusion of momentum \label{sec-uv-diffusion}
 !
 ! !INTERFACE:
-   subroutine uv_diffusion(Am,An_method,An,AnX)
+   subroutine uv_diffusion(Am_method,An_method,An,AnX)
 !
 ! !DESCRIPTION:
 !
@@ -162,13 +162,17 @@
    use domain, only: dx,dy,ard1
 #endif
    use variables_2d, only: D,U,DU,UEx,V,DV,VEx,PP
+#ifdef _LES_
+   use variables_les, only: Am2d, AmX2d
+#else
+   use m2d, only: Am_const
+#endif
    use getm_timers,  only: tic,toc,TIM_UVDIFFUS
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-  REALTYPE, intent(in) :: Am
-  integer, intent(in)  :: An_method
+  integer, intent(in)  :: Am_method,An_method
   REALTYPE, intent(in) :: An(E2DFIELD),AnX(E2DFIELD)
 !
 ! !REVISION HISTORY:
@@ -195,9 +199,11 @@
       do i=imin,imax+1          ! PP defined on T-points
          PP(i,j)=_ZERO_
          if (az(i,j) .ge. 1) then
-            if(Am .gt. _ZERO_) then
-               PP(i,j)=2.*Am*DYC*D(i,j)               &
-                       *(U(i,j)/DU(i,j)-U(i-1,j)/DU(i-1,j))/DXC
+            if (Am_method .gt. 0) then
+               if(_AM2D_ .gt. _ZERO_) then
+                  PP(i,j)=_TWO_*_AM2D_*DYC*D(i,j)               &
+                          *(U(i,j)/DU(i,j)-U(i-1,j)/DU(i-1,j))/DXC
+               end if
             end if
             if (An_method .gt. 0) then
                PP(i,j)=PP(i,j)+An(i,j)*DYC*(U(i,j)-U(i-1,j))/DXC
@@ -223,10 +229,12 @@
       do i=imin,imax
          PP(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
-            if(Am .gt. _ZERO_) then
-               PP(i,j)=Am*0.5*(DU(i,j)+DU(i,j+1))*DXX  &
-                       *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
-                        +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
+            if (Am_method .gt. 0) then
+               if(_AMX2D_ .gt. _ZERO_) then
+                  PP(i,j)=_AMX2D_*_HALF_*(DU(i,j)+DU(i,j+1))*DXX  &
+                          *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
+                           +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
+               end if
             end if
             if (An_method .gt. 0) then
                PP(i,j)=PP(i,j)+AnX(i,j)*(U(i,j+1)-U(i,j))*DXX/DYX
@@ -252,10 +260,12 @@
       do i=imin-1,imax
          PP(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
-            if(Am .gt. _ZERO_) then
-               PP(i,j)=Am*0.5*(DV(i,j)+DV(i+1,j))*DYX  &
-                       *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
-                        +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
+            if(Am_method .gt. 0) then
+               if(_AMX2D_ .gt. _ZERO_) then
+                  PP(i,j)=_AMX2D_*_HALF_*(DV(i,j)+DV(i+1,j))*DYX  &
+                          *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
+                           +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
+               end if
             end if
             if (An_method .gt. 0) then
                PP(i,j)=PP(i,j)+AnX(i,j)*(V(i+1,j)-V(i,j))*DYX/DXX
@@ -281,9 +291,11 @@
       do i=imin,imax
          PP(i,j)=_ZERO_
          if (az(i,j) .ge. 1) then
-            if(Am .gt. _ZERO_) then
-               PP(i,j)=2.*Am*DXC*D(i,j)               &
-                       *(V(i,j)/DV(i,j)-V(i,j-1)/DV(i,j-1))/DYC
+            if(Am_method .gt. 0) then
+               if(_AM2D_ .gt. _ZERO_) then
+                  PP(i,j)=_TWO_*_AM2D_*DXC*D(i,j)               &
+                          *(V(i,j)/DV(i,j)-V(i,j-1)/DV(i,j-1))/DYC
+               end if
             end if
             if (An_method .gt. 0) then
                PP(i,j)=PP(i,j)+An(i,j)*DXC*(V(i,j)-V(i,j-1))/DYC

@@ -314,6 +314,9 @@
 #ifdef _NCDF_SAVE_DOUBLE_
    LEVEL1 '_NCDF_SAVE_DOUBLE_'
 #endif
+#ifdef _LES_
+   LEVEL1 '_LES_'
+#endif
 
    STDERR LINE
 

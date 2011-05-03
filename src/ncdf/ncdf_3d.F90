@@ -28,6 +28,9 @@
    integer                             :: rad_id
    integer                             :: tke_id,num_id,nuh_id,eps_id
    integer                             :: SS_id,NN_id
+#ifdef _LES_
+   integer                             :: Am3d_id
+#endif
 #ifdef SPM
    integer                             :: spmpool_id,spm_id
 #endif
@@ -57,6 +60,9 @@
    REALTYPE, parameter                 :: eps_missing    =-9999.0
    REALTYPE, parameter                 :: SS_missing     =-9999.0
    REALTYPE, parameter                 :: NN_missing     =-9999.0
+#ifdef _LES_
+   REALTYPE, parameter                 :: Am3d_missing   =-9999.0
+#endif
 #ifdef SPM
    REALTYPE, parameter                 :: spmpool_missing=-9999.0
    REALTYPE, parameter                 :: spm_missing    =-9999.0

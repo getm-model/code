@@ -26,6 +26,9 @@
    integer                             :: airp_id,t2_id,hum_id,tcc_id
    integer                             :: tausx_id,tausy_id,swr_id,shf_id
    integer                             :: evap_id=-1,precip_id=-1
+#ifdef _LES_
+   integer                             :: Am2d_id
+#endif
    integer                             :: break_stat_id=-1
 
    REALTYPE, dimension(:,:), allocatable :: ws
@@ -43,6 +46,9 @@
    REALTYPE, parameter                 :: divergence_missing =-9999.0
    REALTYPE, parameter                 :: evap_missing       =-9999.0
    REALTYPE, parameter                 :: precip_missing     =-9999.0
+#ifdef _LES_
+   REALTYPE, parameter                 :: Am2d_missing       =-9999.0
+#endif
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard

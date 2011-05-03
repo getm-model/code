@@ -32,6 +32,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
+   use exceptions
    IMPLICIT NONE
 !
    private
@@ -44,6 +45,14 @@
    REALTYPE, public                    :: hio(I3DFIELD)
 #else
    REALTYPE, public, dimension(:,:,:), allocatable       :: hi,hio,cu
+#endif
+#ifdef _LES_
+#ifdef STATIC
+   REALTYPE, public                    :: AHU(I3DFIELD)
+   REALTYPE, public                    :: AHV(I3DFIELD)
+#else
+   REALTYPE, public, dimension(:,:,:), allocatable       :: AHU,AHV
+#endif
 #endif
    integer, public, parameter          :: UPSTREAM=1,UPSTREAM_SPLIT=2,P2=3
    integer, public, parameter          :: Superbee=4,MUSCL=5,P2_PDM=6,FCT=7
@@ -101,6 +110,14 @@
 
    allocate(hio(I3DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection_3d: Error allocating memory (hio)'
+
+#ifdef _LES_
+   allocate(AHU(I3DFIELD),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection_3d: Error allocating memory (AHU)'
+
+   allocate(AHV(I3DFIELD),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection_3d: Error allocating memory (AHV)'
+#endif
 #endif
 
    cu  = _ZERO_ ; hi  = _ZERO_ ; hio = _ZERO_
@@ -121,7 +138,7 @@
 ! !INTERFACE:
    subroutine do_advection_3d(dt,f,uu,vv,ww,hun,hvn,ho,hn,      &
                              delxu,delxv,delyu,delyv,area_inv,  &
-                             az,au,av,hor_adv,ver_adv,adv_split,AH)
+                             az,au,av,hor_adv,ver_adv,adv_split,AH_method,AH_const,AH_Prt)
 !
 ! !DESCRIPTION:
 !
@@ -211,6 +228,10 @@
 !
 !
 ! !USES:
+#ifdef _LES_
+   use m2d, only: Am_method
+   use variables_les, only: AmU3d,AmV3d
+#endif
    use getm_timers, only: tic, toc, TIM_ADVECT3DTOT, TIM_ADVECT3DH
    IMPLICIT NONE
 !
@@ -228,7 +249,9 @@
    REALTYPE, intent(in) :: delyv(I2DFIELD)    ! dy centered on v-transport pt.
    REALTYPE, intent(in) :: area_inv(I2DFIELD) ! inverse of horizontal box area
    REALTYPE, intent(in) :: dt                 ! advection time step
-   REALTYPE, intent(in) :: AH                 ! constant horizontal diffusivity
+   integer, intent(in)  :: AH_method          ! method for horizontal diffusivity
+   REALTYPE, intent(in) :: AH_const           ! constant horizontal diffusivity
+   REALTYPE, intent(in), optional :: AH_Prt   ! turbulent Prandtl number
    integer, intent(in)  :: az(E2DFIELD)       ! mask for box centre (1: water)
    integer, intent(in)  :: au(E2DFIELD)       ! mask for u-transport (1: water)
    integer, intent(in)  :: av(E2DFIELD)       ! mask for v-transport (1: water)
@@ -252,16 +275,45 @@
 #endif
    call tic(TIM_ADVECT3DTOT)
 
+   select case (AH_method)
+      case (0)
+      case (1)
+#ifdef _LES_
+         AHU = AH_const
+         AHV = AH_const
+#endif
+      case (2)
+#ifdef _LES_
+         if (Am_method .ne. 2) then
+            call getm_error("do_advection_3d()", &
+                            "Am_method precludes LES parameterisation");
+         end if
+         if (present(AH_Prt)) then
+            AHU = AmU3d/AH_Prt
+            AHV = AmV3d/AH_Prt
+         else
+            AHU = AmU3d
+            AHV = AmV3d
+         end if
+#else
+         call getm_error("do_advection_3d()", &
+                         "GETM not compiled for LES parameterisation");
+#endif
+      case default
+         call getm_error("do_advection_3d()", &
+                         "A non valid AH_method has been chosen");
+   end select
+
    select case (hor_adv)
       case (UPSTREAM)
          call upstream_adv(dt,f,uu,vv,ww,ho,hn, &
-                           delxv,delyu,delxu,delyv,area_inv,az,AH)
+                           delxv,delyu,delxu,delyv,area_inv,az,AH_method,AH_const)
       case ((UPSTREAM_SPLIT),(P2),(Superbee),(MUSCL),(P2_PDM),(FCT))
          hi=ho
          select case (adv_split)
             case (0)
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a2,&
-                                hor_adv,az,AH)
+                                hor_adv,az,AH_method,AH_const)
                call tic(TIM_ADVECT3DH)
                call update_3d_halo(f,f,az,&
                                    imin,jmin,imax,jmax,kmax,D_TAG)
@@ -270,7 +322,7 @@
 
 #ifndef SLICE_MODEL
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a2,&
-                                hor_adv,az,AH)
+                                hor_adv,az,AH_method,AH_const)
                call tic(TIM_ADVECT3DH)
                call update_3d_halo(f,f,az,&
                                    imin,jmin,imax,jmax,kmax,D_TAG)
@@ -287,7 +339,7 @@
                end if
             case (1)
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
-                                hor_adv,az,AH)
+                                hor_adv,az,AH_method,AH_const)
                call tic(TIM_ADVECT3DH)
                call update_3d_halo(f,f,az, &
                                    imin,jmin,imax,jmax,kmax,D_TAG)
@@ -296,7 +348,7 @@
 
 #ifndef SLICE_MODEL
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
-                                hor_adv,az,AH)
+                                hor_adv,az,AH_method,AH_const)
                call tic(TIM_ADVECT3DH)
                call update_3d_halo(f,f,az, &
                                    imin,jmin,imax,jmax,kmax,D_TAG)
@@ -319,7 +371,7 @@
                end if
 #ifndef SLICE_MODEL
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
-                                hor_adv,az,AH)
+                                hor_adv,az,AH_method,AH_const)
                call tic(TIM_ADVECT3DH)
                call update_3d_halo(f,f,az, &
                                    imin,jmin,imax,jmax,kmax,D_TAG)
@@ -328,7 +380,7 @@
 #endif
 
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
-                                hor_adv,az,AH)
+                                hor_adv,az,AH_method,AH_const)
                call tic(TIM_ADVECT3DH)
                call update_3d_halo(f,f,az, &
                                    imin,jmin,imax,jmax,kmax,D_TAG)
@@ -339,10 +391,10 @@
                select case (hor_adv)
                   case (UPSTREAM_SPLIT)
                      call upstream_2dh_adv(dt,f,uu,vv,ho,hn,hun,hvn, &
-                               delxv,delyu,delxu,delyv,area_inv,az,AH)
+                               delxv,delyu,delxu,delyv,area_inv,az,AH_method,AH_const)
                   case (FCT)
                      call fct_2dh_adv(dt,f,uu,vv,ho,hn,hun,hvn, &
-                               delxv,delyu,delxu,delyv,area_inv,az,AH)
+                               delxv,delyu,delxu,delyv,area_inv,az,AH_method,AH_const)
                   case default
                      FATAL 'For adv_split=2, hor_adv must be 2 (upstream) or 7 (fct)'
                end select

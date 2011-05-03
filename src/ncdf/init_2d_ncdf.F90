@@ -184,9 +184,19 @@
 
    end if
 
+#ifdef _LES_
+   if (Am_method .eq. 2 .and. save_Am2d) then
+      fv = Am2d_missing; mv = Am2d_missing; vr(1) = 0.; vr(2) =  500.
+      err = nf90_def_var(ncid,'Am2d',NCDF_FLOAT_PRECISION,f3_dims,Am2d_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,Am2d_id,long_name='hor. eddy viscosity',units='m2/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
+#endif
+
+!  divergence
    fv = divergence_missing; mv = divergence_missing
    vr(1) = -3.; vr(2) =  3.
-!  divergence
    err = nf90_def_var(ncid,'div',NCDF_FLOAT_PRECISION,f3_dims,surfdiv_id)
    if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,surfdiv_id,long_name='divergence',units='s-1', &

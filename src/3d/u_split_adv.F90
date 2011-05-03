@@ -5,7 +5,7 @@
 !
 ! !INTERFACE:
    subroutine u_split_adv(dt,f,uu,hun, &
-                          delxu,delyu,area_inv,au,splitfac,method,az,AH)
+                          delxu,delyu,area_inv,au,splitfac,method,az,AH_method,AH)
 ! !DESCRIPTION:
 !
 ! Here, the $x$-directional split 1D advection step is executed
@@ -152,6 +152,9 @@
    use advection_3d, only: hi,hio,cu
    use advection_3d, only: UPSTREAM_SPLIT,P2,SUPERBEE,MUSCL,P2_PDM
    use advection_3d, only: one6th
+#ifdef _LES_
+   use advection_3d, only: AHU
+#endif
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -161,7 +164,7 @@
    REALTYPE, intent(in)      :: area_inv(I2DFIELD),dt
    integer, intent(in)       :: au(E2DFIELD), az(E2DFIELD)
    REALTYPE, intent(in)      :: splitfac
-   integer, intent(in)       :: method
+   integer, intent(in)       :: method,AH_method
    REALTYPE, intent(in)      :: AH
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -260,9 +263,11 @@
                      end select
                      cu(i,j,k)=uu(i,j,k)*(fc+_HALF_*limit*(_ONE_-c)*(fd-fc))
 !Horizontal diffusion
-                     if ( AH.gt._ZERO_ .and. az(i,j).gt.0 .and. az(i+1,j).gt.0 ) then
-                        cu(i,j,k) = cu(i,j,k)-AH*hun(i,j,k) &
-                                     *(f(i+1,j,k)-f(i,j,k))/delxu(i,j)
+                     if (AH_method .gt. 0) then
+                        if ( _AHU_ .gt. _ZERO_ .and. az(i,j).gt.0 .and. az(i+1,j).gt.0 ) then
+                           cu(i,j,k) = cu(i,j,k)-_AHU_*hun(i,j,k) &
+                                        *(f(i+1,j,k)-f(i,j,k))/delxu(i,j)
+                        end if
                      end if
                   else
                      cu(i,j,k) = _ZERO_

@@ -44,6 +44,10 @@ endif
 ifeq ($(GETM_NO_BAROCLINIC),true)
 DEFINES += -DNO_BAROCLINIC
 endif
+# LES
+ifeq ($(GETM_LES),true)
+DEFINES += -D_LES_
+endif
 
 # Suspended matter
 ifeq ($(GETM_SPM),true)

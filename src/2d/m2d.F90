@@ -41,7 +41,9 @@
 !
 ! !PUBLIC DATA MEMBERS:
    logical                   :: have_boundaries
-   REALTYPE                  :: dtm,Am=-_ONE_
+   REALTYPE                  :: dtm
+   integer                   :: Am_method=0
+   REALTYPE                  :: Am_const=1.8d-6
 !  method for specifying horizontal numerical diffusion coefficient
 !     (0=const, 1=from named nc-file)
    integer                   :: An_method=0
@@ -102,7 +104,7 @@
    integer                   :: i,j
    integer                   :: vel_depth_method=0
    namelist /m2d/ &
-          MM,vel_depth_method,Am,An_method,An_const,An_file,residual, &
+          MM,vel_depth_method,Am_method,Am_const,An_method,An_const,An_file,residual, &
           sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
@@ -130,9 +132,27 @@
    call cfl_check()
 #endif
 
-   if (Am .lt. _ZERO_) then
-      LEVEL2 'Am < 0 --> horizontal momentum diffusion not included'
-   end if
+   select case (Am_method)
+      case(0)
+         LEVEL2 'Am_method=0 -> horizontal momentum diffusion not included'
+      case(1)
+         LEVEL2 'Am_method=1 -> Using constant horizontal momentum diffusion'
+         if (Am_const .lt. _ZERO_) then
+              call getm_error("init_2d()", &
+                         "Constant horizontal momentum diffusion <0");
+         end if
+         LEVEL3 Am_const
+      case(2)
+#ifdef _LES_
+         LEVEL2 'Am_method=2 -> using LES parameterisation'
+#else
+         call getm_error("init_2d()", &
+                         "GETM not compiled for LES parameterisation");
+#endif
+      case default
+         call getm_error("init_2d()", &
+                         "A non valid Am_method has been chosen");
+   end select
 
    select case (An_method)
       case(0)
@@ -274,6 +294,10 @@
 ! !INTERFACE:
    subroutine integrate_2d(runtype,loop,tausx,tausy,airp)
    use getm_timers, only: tic, toc, TIM_INTEGR2D
+#ifdef _LES_
+   use les, only: do_les_2d
+#endif
+
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -328,8 +352,11 @@
 #else
 #ifndef UV_ADV_DIRECT
    call uv_advect()
-   if (Am .gt. _ZERO_ .or. An_method .gt. 0) then
-      call uv_diffusion(Am,An_method,An,AnX) ! Has to be called after uv_advect.
+   if (Am_method .gt. 0 .or. An_method .gt. 0) then
+#ifdef _LES_
+      if (Am_method .eq. 2) call do_les_2d(U,V,DU,DV)
+#endif
+      call uv_diffusion(Am_method,An_method,An,AnX) ! Has to be called after uv_advect.
    end if
    call tic(TIM_INTEGR2D)
    call mirror_bdy_2d(UEx,U_TAG)

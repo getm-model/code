@@ -226,7 +226,16 @@
 					<option value="2" label="use mixture of mean and minimum values: see code for details"/>
 				</options>
 			</element>
-			<element name="Am" type="float" label="constant horizontal momentum diffusion coefficient" unit="m²/s"/>
+			<element name="Am_method" type="int" label="method for horizontal momentum diffusion coefficient">
+				<options>
+					<option value="0" label="disabled"/>
+					<option value="1" label="constant value Am_const"/>
+					<option value="2" label="LES parameterisation, see namelist les (requires compilation with 'export GETM_LES=true')"/>
+				</options>
+			</element>
+			<element name="Am_const" type="float" label="constant horizontal momentum diffusion coefficient" unit="m²/s">
+				<condition type="eq" variable="./Am_method" value="1"/>
+			</element>
 			<element name="An_method" type="int" label="method for constant horizontal numerical diffusion coefficient (m²/s) used to filter the surface elevation">
 				<options>
 					<option value="0" label="disabled"/>
@@ -263,6 +272,18 @@
 						<condition type="eq" variable="./bdyfmt_2d" value="2"/>
 					</condition>
 				</condition>
+			</element>
+		</element>
+
+		<element name="les" label="variables related to LES (requires compilation with 'export GETM_LES=true')">
+			<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
+			<element name="les_method" type="int" label="LES method">
+				<options>
+					<option value="1" label="Smagorinsky parameterisation"/>
+				</options>
+			</element>
+			<element name="smag_const" type="float" label="Smagorinsky constant" minInclusive="0.0">
+				<condition type="eq" variable="./les_method" value="1"/>
 			</element>
 		</element>
 
@@ -415,7 +436,20 @@
 					<option value="2" label="2D-hor-1D-vert split --> full uv, full w"/>
 				</options>
 			</element>
-			<element name="temp_AH" type="float" label="horizontal diffusivity of heat" unit="m²/s"/>
+			<element name="temp_AH_method" type="int" label="method for horizontal diffusivity of heat">
+				<options>
+					<option value="0" label="disabled"/>
+					<option value="1" label="constant value temp_AH_const"/>
+					<option value="2" label="LES parameterisation"/>
+						<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
+				</options>
+			</element>
+			<element name="temp_AH_const" type="float" label="constant horizontal diffusivity of heat" unit="m²/s">
+				<condition type="eq" variable="./temp_AH_method" value="1"/>
+			</element>
+			<element name="temp_AH_Prt" type="float" label="turbulent Prandtl number of heat">
+				<condition type="eq" variable="./temp_AH_method" value="2"/>
+			</element>
 			<element name="attenuation_method" type="int" label="light attenuation method">
 				<options>
 					<option value="0" label="spatially constant coefficients"/>
@@ -533,7 +567,20 @@
 					<option value="2" label="2D-hor-1D-vert split --> full uv, full w"/>
 				</options>
 			</element>
-			<element name="salt_AH" type="float" label="horizontal diffusivity of salt" unit="m²/s"/>
+			<element name="salt_AH_method" type="int" label="method for horizontal diffusivity of salt">
+				<options>
+					<option value="0" label="disabled"/>
+					<option value="1" label="constant value salt_AH_const"/>
+					<option value="2" label="LES parameterisation"/>
+						<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
+				</options>
+			</element>
+			<element name="salt_AH_const" type="float" label="constant horizontal diffusivity of salt" unit="m²/s">
+				<condition type="eq" variable="./salt_AH_method" value="1"/>
+			</element>
+			<element name="salt_AH_Prt" type="float" label="turbulent Prandtl number of salt">
+				<condition type="eq" variable="./salt_AH_method" value="2"/>
+			</element>
 			<element name="salt_check" type="int" label="interval between checks for out-of-bounds salinities" description="Interval between checks for out-of-bounds salinities. 0: disabled, &gt;0: check every salt_check step, abort if check fails, &lt;0: check every abs(salt_check) step, warn if check fails"/>
 			<element name="min_salt"   type="float" label="minimum valid salinity" unit="psu">
 				<condition type="ne" variable="./salt_check" value="0"/>
@@ -608,6 +655,15 @@
 			<element name="save_eps" type="bool" label="save turbulence dissipation rate"/>
 			<element name="save_num" type="bool" label="save turbulent diffusivity of momentum"/>
 			<element name="save_nuh" type="bool" label="save turbulent diffusivity of heat"/>
+			<element name="save_Am2d" type="bool" label="save 2D horizontal eddy viscosity">
+				<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
+			</element>
+			<element name="save_Am3d" type="bool" label="save 3D horizontal eddy viscosity">
+				<condition type="and">
+					<condition type="ne" variable="/getm/param/runtype" value="1"/>
+					<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
+				</condition>
+			</element>
 			<element name="save_ss_nn" type="bool" label="save shear stress and Brunt-Vaisala frequency"/>
 			<element name="save_taub" type="bool" label="save bottom friction velocity"/>
 			<element name="save_mix_analysis" type="bool" label="calculate/save mixing analysis"/>

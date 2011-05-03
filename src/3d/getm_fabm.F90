@@ -305,7 +305,7 @@
 
       call do_advection_3d(dt,ff,uu,vv,ww,hun,hvn,ho,hn, &
               delxu,delxv,delyu,delyv,area_inv,az,au,av, &
-              fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH)
+              fabm_hor_adv,fabm_ver_adv,fabm_adv_split,1,fabm_AH)
 
       cc_pel(n,:,:,:) = ff
 #else
@@ -315,7 +315,7 @@
 
       call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn, &
               delxu,delxv,delyu,delyv,area_inv,az,au,av, &
-              fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH)
+              fabm_hor_adv,fabm_ver_adv,fabm_adv_split,1,fabm_AH)
 #endif
    end do
 

@@ -36,7 +36,9 @@
    REALTYPE                  :: salt_const=35*_ONE_
    integer                   :: salt_hor_adv=1,salt_ver_adv=1
    integer                   :: salt_adv_split=0
-   REALTYPE                  :: salt_AH=-_ONE_
+   integer                   :: salt_AH_method=0
+   REALTYPE                  :: salt_AH_const=1.1d-9
+   REALTYPE                  :: salt_AH_Prt=_TWO_
    integer                   :: salt_check=0
    REALTYPE                  :: min_salt=_ZERO_,max_salt=40*_ONE_
 !
@@ -74,6 +76,9 @@
 ! conditions which are selected by means of compiler options.
 !
 ! !USES:
+#ifdef _LES_
+   use m2d, only: Am_method
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -89,7 +94,8 @@
    NAMELIST /salt/                                            &
             salt_method,salt_const,salt_file,                 &
             salt_format,salt_name,salt_field_no,              &
-            salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH, &
+            salt_hor_adv,salt_ver_adv,salt_adv_split,         &
+            salt_AH_method,salt_AH_const,salt_AH_Prt,         &
             salt_check,min_salt,max_salt
 !EOP
 !-------------------------------------------------------------------------
@@ -164,6 +170,33 @@
          end select
          LEVEL3 "2D-hor, 1D-vert split --> full uv, full w"
       case default
+   end select
+
+   select case (salt_AH_method)
+      case(0)
+         LEVEL3 'salt_AH_method=0 -> horizontal diffusion of salt disabled'
+      case(1)
+         LEVEL3 'salt_AH_method=1 -> Using constant horizontal diffusivity of salt'
+         if (salt_AH_const .lt. _ZERO_) then
+              call getm_error("init_salinity()", &
+                         "Constant horizontal diffusivity of salt <0");
+         end if
+         LEVEL4 salt_AH_const
+      case(2)
+#ifdef _LES_
+         LEVEL3 'salt_AH_method=2 -> using LES parameterisation'
+         if (Am_method .ne. 2) then
+              call getm_error("init_salinity()", &
+                         "Am_method precludes LES parameterisation");
+         end if
+         LEVEL4 'turbulent Prandtl number: ',salt_AH_Prt
+#else
+         call getm_error("init_salinity()", &
+                         "GETM not compiled for LES parameterisation");
+#endif
+      case default
+         call getm_error("init_salinity()", &
+                         "A non valid salt_AH_method has been chosen");
    end select
 
    LEVEL3 'salt_check=',salt_check
@@ -444,14 +477,14 @@ salt_field_no=1
       S2 = S**2
       call do_advection_3d(dt,S2,uu,vv,ww,hun,hvn,ho,hn,    &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
-                        salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH)
+                        salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH_method,salt_AH_const,salt_AH_Prt)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_SALT)
    end if
 
    call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,    &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
-                        salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH)
+                        salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH_method,salt_AH_const,salt_AH_Prt)
 
    if (do_mixing_analysis) then
       call toc(TIM_SALT)

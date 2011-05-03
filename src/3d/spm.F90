@@ -493,7 +493,7 @@
    end do
    call do_advection_3d(dt,spm,uu,vv,ww_aux,hun,hvn,ho,hn,   &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
-                        spm_hor_adv,spm_ver_adv,spm_adv_split,spm_AH)
+                        spm_hor_adv,spm_ver_adv,spm_adv_split,1,spm_AH)
 #ifdef TRACER_POSITIVE
    kk= .false.
    do i=imin,imax

@@ -371,7 +371,7 @@
 
    call do_advection_3d(dt,uuEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
-                        azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
+                        azadv,auadv,avadv,hor_adv,ver_adv,adv_split,0,AH)
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
 
@@ -444,7 +444,7 @@
 
    call do_advection_3d(dt,vvEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
-                        azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
+                        azadv,auadv,avadv,hor_adv,ver_adv,adv_split,0,AH)
 
 ! OMP-NOTE: It might not pay off to thread this loop (due to OMP overhead)
 !   vvEx=-(vvEx*hvn-vv)*dti ! Here, vvEx is the advection term.

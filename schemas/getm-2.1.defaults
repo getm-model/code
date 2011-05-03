@@ -192,9 +192,12 @@
 			<vel_depth_method>
 				0
 			</vel_depth_method>
-			<Am>
-				-1.0
-			</Am>
+			<Am_method>
+				0
+			</Am_method>
+			<Am_const>
+				1.8e-6
+			</Am_const>
 			<An_method>
 				0
 			</An_method>
@@ -223,6 +226,14 @@
 				bdy_2d.nc
 			</bdyfile_2d>
 		</m2d>
+		<les>
+			<les_method>
+				1
+			</les_method>
+			<smag_const>
+				0.28
+			</smag_const>
+		</les>
 		<m3d>
 			<M>
 				60
@@ -322,9 +333,15 @@
 			<temp_adv_split>
 				0
 			</temp_adv_split>
-			<temp_AH>
-				-1.0
-			</temp_AH>
+			<temp_AH_method>
+				0
+			</temp_AH_method>
+			<temp_AH_const>
+				1.4e-7
+			</temp_AH_const>
+			<temp_AH_Prt>
+				2.0
+			</temp_AH_Prt>
 			<attenuation_method>
 				0
 			</attenuation_method>
@@ -387,9 +404,15 @@
 			<salt_adv_split>
 				0
 			</salt_adv_split>
-			<salt_AH>
-				-1.0
-			</salt_AH>
+			<salt_AH_method>
+				0
+			</salt_AH_method>
+			<salt_AH_const>
+				1.1e-9
+			</salt_AH_const>
+			<salt_AH_Prt>
+				2.0
+			</salt_AH_Prt>
 			<salt_check>
 				0
 			</salt_check>
@@ -487,6 +510,12 @@
 			<save_nuh>
 				True
 			</save_nuh>
+			<save_Am2d>
+				False
+			</save_Am2d>
+			<save_Am3d>
+				False
+			</save_Am3d>
 			<save_ss_nn>
 				True
 			</save_ss_nn>

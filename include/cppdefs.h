@@ -51,6 +51,26 @@
 #define ARVD1 ard1
 #endif
 
+#ifdef _LES_
+#define _AM2D_  Am2d(i,j)
+#define _AMX2D_ AmX2d(i,j)
+#define _AM3D_  Am3d(i,j,k)
+#define _AMX3D_ AmX3d(i,j,k)
+#define _AMU3D_ AmU3d(i,j,k)
+#define _AMV3D_ AmV3d(i,j,k)
+#define _AHU_   AHU(i,j,k)
+#define _AHV_   AHV(i,j,k)
+#else
+#define _AM2D_  Am_const
+#define _AMX2D_ Am_const
+#define _AM3D_  Am_const
+#define _AMX3D_ Am_const
+#define _AMU3D_ Am_const
+#define _AMV3D_ Am_const
+#define _AHU_   AH
+#define _AHV_   AH
+#endif
+
 ! For 2D boundary conditions
 #define ZERO_GRADIENT 1
 #define SOMMERFELDT   2

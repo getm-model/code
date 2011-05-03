@@ -114,11 +114,11 @@
 
    call do_advection_3d(dt,tke,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv, &
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
-                        az,au,av,hor_adv,ver_adv,adv_split,AH)
+                        az,au,av,hor_adv,ver_adv,adv_split,1,AH)
 
    call do_advection_3d(dt,eps,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv, &
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
-                        az,au,av,hor_adv,ver_adv,adv_split,AH)
+                        az,au,av,hor_adv,ver_adv,adv_split,1,AH)
 
 #endif
 

@@ -5,7 +5,7 @@
 ! !ROUTINE: slow_diffusion - slow diffusion terms \label{sec-slow-diffusion}
 !
 ! !INTERFACE:
-   subroutine slow_diffusion(AM)
+   subroutine slow_diffusion()
 !
 ! !DESCRIPTION:
 !
@@ -30,11 +30,13 @@
 #endif
    use variables_2d, only: D,U,V,UEx,VEx,Uint,Vint,PP
    use variables_3d, only: ssen,ssun,ssvn
+#ifdef _LES_
+   use variables_les, only: Am2d,AmX2d
+#else
+   use m2d, only: Am_const
+#endif
    use getm_timers, only: tic, toc, TIM_SLOWDIFF
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-   REALTYPE, intent(in)                 :: AM
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,ii,jj
@@ -72,11 +74,12 @@
 ! Central for dx(2*AM*dx(U^2/HU))
    do j=jmin,jmax
       do i=imin,imax+1          ! PP defined on T-points
+         PP(i,j)=_ZERO_
          if (az(i,j) .ge. 1) then
-            PP(i,j)=2.*AM*DYC*Di(i,j)               &
-               *(Uint(i,j)/DUi(i,j)-Uint(i-1,j)/DUi(i-1,j))/DXC
-         else
-            PP(i,j)=_ZERO_
+            if (_AM2D_ .gt. _ZERO_) then
+               PP(i,j)=_TWO_*_AM2D_*DYC*Di(i,j)               &
+                      *(Uint(i,j)/DUi(i,j)-Uint(i-1,j)/DUi(i-1,j))/DXC
+            end if
          end if
       end do
    end do
@@ -92,12 +95,13 @@
 ! Central for dy(AM*(dy(U^2/DU)+dx(V^2/DV)))
    do j=jmin-1,jmax        ! PP defined on X-points
       do i=imin,imax
+         PP(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
-            PP(i,j)=AM*0.5*(DUi(i,j)+DUi(i,j+1))*DXX  &
-                   *((Uint(i,j+1)/DUi(i,j+1)-Uint(i,j)/DUi(i,j))/DYX &
-                    +(Vint(i+1,j)/DVi(i+1,j)-Vint(i,j)/DVi(i,j))/DXX )
-         else
-            PP(i,j)=_ZERO_
+            if (_AMX2D_ .gt. _ZERO_) then
+               PP(i,j)=_AMX2D_*_HALF_*(DUi(i,j)+DUi(i,j+1))*DXX  &
+                      *((Uint(i,j+1)/DUi(i,j+1)-Uint(i,j)/DUi(i,j))/DYX &
+                       +(Vint(i+1,j)/DVi(i+1,j)-Vint(i,j)/DVi(i,j))/DXX )
+            end if
          end if
       end do
    end do
@@ -113,12 +117,13 @@
 ! Central for dx(AM*(dy(U^2/DU)+dx(V^2/DV)))
    do j=jmin,jmax      ! PP defined on X-points
       do i=imin-1,imax
+         PP(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
-            PP(i,j)=AM*0.5*(DVi(i,j)+DVi(i+1,j))*DXX  &
-                   *((Uint(i,j+1)/DUi(i,j+1)-Uint(i,j)/DUi(i,j))/DYX &
-                    +(Vint(i+1,j)/DVi(i+1,j)-Vint(i,j)/DVi(i,j))/DXX )
-         else
-            PP(i,j)=_ZERO_
+            if (_AMX2D_ .gt. _ZERO_) then
+               PP(i,j)=_AMX2D_*_HALF_*(DVi(i,j)+DVi(i+1,j))*DXX  &
+                      *((Uint(i,j+1)/DUi(i,j+1)-Uint(i,j)/DUi(i,j))/DYX &
+                       +(Vint(i+1,j)/DVi(i+1,j)-Vint(i,j)/DVi(i,j))/DXX )
+            end if
          end if
       end do
    end do
@@ -134,11 +139,12 @@
 ! Central for dy(2*AM*dy(V^2/DV))
    do j=jmin,jmax+1     ! PP defined on T-points
       do i=imin,imax
+         PP(i,j)=_ZERO_
          if (az(i,j) .ge. 1) then
-            PP(i,j)=2.*AM*DXC*Di(i,j)               &
-                   *(Vint(i,j)/DVi(i,j)-Vint(i,j-1)/DVi(i,j-1))/DYC
-         else
-            PP(i,j)=_ZERO_
+            if(_AM2D_ .gt. _ZERO_) then
+               PP(i,j)=_TWO_*_AM2D_*DXC*Di(i,j)               &
+                      *(Vint(i,j)/DVi(i,j)-Vint(i,j-1)/DVi(i,j-1))/DYC
+            end if
          end if
       end do
    end do

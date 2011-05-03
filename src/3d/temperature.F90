@@ -35,7 +35,9 @@
    REALTYPE                  :: temp_const=20.
    integer                   :: temp_hor_adv=1,temp_ver_adv=1
    integer                   :: temp_adv_split=0
-   REALTYPE                  :: temp_AH=-1.
+   integer                   :: temp_AH_method=0
+   REALTYPE                  :: temp_AH_const=1.4d-7
+   REALTYPE                  :: temp_AH_Prt=_TWO_
    integer                   :: attenuation_method=0,jerlov=1
    character(len=PATH_MAX)   :: attenuation_file="attenuation.nc"
    REALTYPE                  :: A_const=0.58,g1_const=0.35,g2_const=23.0
@@ -75,6 +77,9 @@
 ! temperature advection schemes.
 !
 ! !USES:
+#ifdef _LES_
+   use m2d, only: Am_method
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -86,7 +91,8 @@
    namelist /temp/ &
             temp_method,temp_const,temp_file,                 &
             temp_format,temp_name,temp_field_no,              &
-            temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH, &
+            temp_hor_adv,temp_ver_adv,temp_adv_split,         &
+            temp_AH_method,temp_AH_const,temp_AH_Prt,         &
             attenuation_method,attenuation_file,jerlov,       &
             A_const,g1_const,g2_const,                        &
             swr_bot_refl_frac, swr_min_bot_frac,              &
@@ -167,6 +173,32 @@
       case default
    end select
 
+   select case (temp_AH_method)
+      case(0)
+         LEVEL3 'temp_AH_method=0 -> horizontal diffusion of heat disabled'
+      case(1)
+         LEVEL3 'temp_AH_method=1 -> Using constant horizontal diffusivity of heat'
+         if (temp_AH_const .lt. _ZERO_) then
+              call getm_error("init_temperature()", &
+                         "Constant horizontal diffusivity of heat <0");
+         end if
+         LEVEL4 temp_AH_const
+      case(2)
+#ifdef _LES_
+         LEVEL3 'temp_AH_method=2 -> using LES parameterisation'
+         if (Am_method .ne. 2) then
+              call getm_error("init_temperature()", &
+                         "Am_method precludes LES parameterisation");
+         end if
+         LEVEL4 'Turbulent Prandtl number: ',temp_AH_Prt
+#else
+         call getm_error("init_temperature()", &
+                         "GETM not compiled for LES parameterisation");
+#endif
+      case default
+         call getm_error("init_temperature()", &
+                         "A non valid temp_AH_method has been chosen");
+   end select
    select case (attenuation_method)
       case (0)
          LEVEL3 'setting attenuation coefficients to constant values:'
@@ -434,14 +466,14 @@ temp_field_no=1
       T2 = T**2
       call do_advection_3d(dt,T2,uu,vv,ww,hun,hvn,ho,hn,    &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
-                        temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH)
+                        temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH_method,temp_AH_const,temp_AH_Prt)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
    end if
 
    call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,   &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
-                        temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH)
+                        temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH_method,temp_AH_const,temp_AH_Prt)
 
    if (do_mixing_analysis) then
       call toc(TIM_TEMP)
