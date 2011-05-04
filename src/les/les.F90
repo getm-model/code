@@ -114,8 +114,6 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain, only: az,ax,au,av
-   use halo_zones, only : update_2d_halo,wait_halo,H_TAG
 
    IMPLICIT NONE
 !
@@ -146,12 +144,6 @@
          stop 'do_les_2d()'
    end select
 
-   call update_2d_halo(Am2d,Am2d,az,imin,jmin,imax,jmax,H_TAG)
-   call wait_halo(H_TAG)
-
-   call update_2d_halo(AmX2d,AmX2d,ax,imin,jmin,imax,jmax,H_TAG)
-   call wait_halo(H_TAG)
-
 #ifdef DEBUG
    write(debug,*) 'Leaving do_les_2d()'
    write(debug,*)
@@ -172,8 +164,6 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain, only: az,ax,au,av
-   use halo_zones, only: update_3d_halo,wait_halo,z_TAG,U_TAG,V_TAG
 
    IMPLICIT NONE
 !
@@ -208,18 +198,6 @@
          FATAL 'No valid les_method specified'
          stop 'do_les_3d()'
    end select
-
-   call update_3d_halo(Am3d,Am3d,az,imin,jmin,imax,jmax,kmax,z_TAG)
-   call wait_halo(z_TAG)
-
-   call update_3d_halo(AmX3d,AmX3d,ax,imin,jmin,imax,jmax,kmax,z_TAG)
-   call wait_halo(z_TAG)
-
-   call update_3d_halo(AmU3d,AmU3d,au,imin,jmin,imax,jmax,kmax,U_TAG)
-   call wait_halo(U_TAG)
-
-   call update_3d_halo(AmV3d,AmV3d,av,imin,jmin,imax,jmax,kmax,V_TAG)
-   call wait_halo(V_TAG)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_les_3d()'
