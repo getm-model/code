@@ -81,6 +81,9 @@
    integer, parameter :: TIM_HALO2D      = 110  ! do halo 2d (initialize comm)
    integer, parameter :: TIM_HALO3D      = 111  ! do halo 3d (initialize comm)
    integer, parameter :: TIM_HALOWAIT    = 112  ! wait_halo (2d+3d both)
+!  LES timers
+   integer, parameter :: TIM_LES2D       = 152  ! do_les_2d
+   integer, parameter :: TIM_LES3D       = 153  ! do_les_3d
    ! This is test timers for temporary coding purposes:
    !  Note: All timers with index 170+ (test_timer_first) are
    !  considered test timers, so dont implement your timers here
@@ -162,6 +165,7 @@
    timernames(TIM_BOTTFRICT)   = 'bottom_friction'
    timernames(TIM_MOMENTUM)    = 'momentum'
    timernames(TIM_UVDEPTHS)    = 'uv_depths'
+   timernames(TIM_LES2D)       = 'do_les_2d'
    timernames(TIM_UVADVECT)    = 'uv_advect'
    timernames(TIM_UVDIFFUS)    = 'uv_diffusion'
    timernames(TIM_DPTHUPDATE)  = 'depth_update'
@@ -184,6 +188,7 @@
    timernames(TIM_GOTM)        = 'gotm'
    ! do_turbulence is deeply nested and requires *many* calls to time
    !timernames(TIM_GOTMTURB)    = ' gotm-turbulence'
+   timernames(TIM_LES3D)       = 'do_les_3d'
    timernames(TIM_UVADV3D)     = 'uv_advect_3d'
    timernames(TIM_UVDIFF3D)    = 'uv_diffusion_3d'
    timernames(TIM_VVMOMENTUM)  = 'vv_momentum_3d'

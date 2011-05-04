@@ -114,6 +114,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use getm_timers, only: tic,toc,TIM_LES2D
 
    IMPLICIT NONE
 !
@@ -136,6 +137,7 @@
    write(debug,*) 'do_les_2d() # ',Ncall
 #endif
 
+   call tic(TIM_LES2D)
    select case (les_method)
       case(SMAGORINSKY)
          call les_smagorinsky(U,V,DU,DV,Am2d,AmX2d)
@@ -143,6 +145,7 @@
          FATAL 'No valid les_method specified'
          stop 'do_les_2d()'
    end select
+   call toc(TIM_LES2D)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_les_2d()'
@@ -164,6 +167,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use getm_timers, only: tic,toc,TIM_LES2D
 
    IMPLICIT NONE
 !
@@ -187,6 +191,7 @@
    write(debug,*) 'do_les_3d() # ',Ncall
 #endif
 
+   call tic(TIM_LES3D)
    select case (les_method)
       case(SMAGORINSKY)
          do k=1,kmax
@@ -198,6 +203,7 @@
          FATAL 'No valid les_method specified'
          stop 'do_les_3d()'
    end select
+   call toc(TIM_LES3D)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_les_3d()'
