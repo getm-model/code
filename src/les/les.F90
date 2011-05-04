@@ -167,7 +167,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use getm_timers, only: tic,toc,TIM_LES2D
+   use getm_timers, only: tic,toc,TIM_LES3D
 
    IMPLICIT NONE
 !
