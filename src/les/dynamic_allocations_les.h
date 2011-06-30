@@ -1,21 +1,21 @@
-   allocate(Am2d(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (Am2d)'
+   allocate(Am_2d(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (Am_2d)'
 
-   allocate(AmX2d(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (AmX2d)'
+   allocate(AmX_2d(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (AmX_2d)'
 
 #ifndef NO_3D
    if (runtype .ne. 1) then
-      allocate(Am3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (Am3d)'
+      allocate(Am_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (Am_3d)'
 
-      allocate(AmX3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (AmX3d)'
+      allocate(AmX_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (AmX_3d)'
 
-      allocate(AmU3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (AmU3d)'
+      allocate(AmU_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (AmU_3d)'
 
-      allocate(AmV3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (AmV3d)'
+      allocate(AmV_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (AmV_3d)'
    end if
 #endif

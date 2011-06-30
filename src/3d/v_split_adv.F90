@@ -6,7 +6,7 @@
 !
 ! !INTERFACE:
    subroutine v_split_adv(dt,f,vv,hvn, &
-                          delxv,delyv,area_inv,av,splitfac,method,az,AH_method,AH)
+                          delxv,delyv,area_inv,av,splitfac,method,az)
 ! !DESCRIPTION:
 !
 ! Here, the $y$-directional split 1D advection step is executed
@@ -60,9 +60,6 @@
    use advection_3d, only: hi,hio,cu
    use advection_3d, only: UPSTREAM_SPLIT,P2,SUPERBEE,MUSCL,P2_PDM
    use advection_3d, only: one6th
-#ifdef _LES_
-   use advection_3d, only: AHV
-#endif
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -72,8 +69,7 @@
    REALTYPE, intent(in) :: area_inv(I2DFIELD),dt
    integer, intent(in)  :: av(E2DFIELD),az(E2DFIELD)
    REALTYPE, intent(in) :: splitfac
-   integer, intent(in)  :: method,AH_method
-   REALTYPE, intent(in) :: AH
+   integer, intent(in)  :: method
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)             :: f(I3DFIELD)
@@ -169,11 +165,6 @@
                            stop 'v_split_adv'
                      end select
                      cu(i,j,k)=vv(i,j,k)*(fc+_HALF_*limit*(_ONE_-c)*(fd-fc))
-!Horizontal diffusion
-                     if (AH_method .gt. 0) then
-                        if ( _AHV_ .gt. _ZERO_ .and. az(i,j).gt.0 .and. az(i,j+1).gt.0 ) &
-                           cu(i,j,k)=cu(i,j,k)-_AHV_*hvn(i,j,k)*(f(i,j+1,k)-f(i,j,k))/delyv(i,j)
-                     end if
                   else
                      cu(i,j,k) = _ZERO_
                   end if

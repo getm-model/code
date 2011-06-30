@@ -23,6 +23,9 @@
   REALTYPE                             :: uu(I3DFIELD)
   REALTYPE                             :: vv(I3DFIELD)
   REALTYPE, target                     :: ww(I3DFIELD)
+  REALTYPE                             :: dudxC_3d(I3DFIELD)
+  REALTYPE                             :: dvdyC_3d(I3DFIELD)
+  REALTYPE                             :: shearX_3d(I3DFIELD)
 #ifdef STRUCTURE_FRICTION
   REALTYPE                             :: sf(I3DFIELD)
 #endif
@@ -87,10 +90,13 @@
 ! 2D fields in 3D domain
   REALTYPE                             :: sseo(I2DFIELD)
   REALTYPE                             :: ssen(I2DFIELD)
+  REALTYPE                             :: Dn(I2DFIELD)
   REALTYPE                             :: ssuo(I2DFIELD)
   REALTYPE                             :: ssun(I2DFIELD)
+  REALTYPE                             :: Dun(I2DFIELD)
   REALTYPE                             :: ssvo(I2DFIELD)
   REALTYPE                             :: ssvn(I2DFIELD)
+  REALTYPE                             :: Dvn(I2DFIELD)
 
 ! 3D friction in 3D domain
   REALTYPE                             :: rru(I2DFIELD)

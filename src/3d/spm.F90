@@ -493,7 +493,16 @@
    end do
    call do_advection_3d(dt,spm,uu,vv,ww_aux,hun,hvn,ho,hn,   &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
-                        spm_hor_adv,spm_ver_adv,spm_adv_split,1,spm_AH)
+                        spm_hor_adv,spm_ver_adv,spm_adv_split)
+
+   if (spm_AH .gt. _ZERO_) then
+!     spm is not halo updated after advection
+      call update_3d_halo(spm,spm,az,imin,jmin,imax,jmax,kmax,D_TAG)
+      call wait_halo(D_TAG)
+
+      call tracer_diffusion(spm,1,spm_AH,_ONE_/SMALL,_ZERO_)
+   end if
+
 #ifdef TRACER_POSITIVE
    kk= .false.
    do i=imin,imax

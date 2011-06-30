@@ -29,7 +29,9 @@
    use halo_zones, only : update_2d_halo,wait_halo
    use halo_zones, only : U_TAG,V_TAG,H_TAG
    use variables_2d
+
    IMPLICIT NONE
+
 ! Temporary interface (should be read from module):
    interface
       subroutine get_2d_field(fn,varname,il,ih,jl,jh,f)
@@ -65,8 +67,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-  integer                    :: num_neighbors
-  REALTYPE                   :: An_sum
+   integer                   :: num_neighbors
+   REALTYPE                  :: An_sum
+   logical                   :: deformUV=.false.
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -145,6 +148,7 @@
       case(2)
 #ifdef _LES_
          LEVEL2 'Am_method=2 -> using LES parameterisation'
+         deformUV=.true.
 #else
          call getm_error("init_2d()", &
                          "GETM not compiled for LES parameterisation");
@@ -239,6 +243,20 @@
       end if
       LEVEL2 TRIM(bdyfile_2d)
       LEVEL2 'Format=',bdyfmt_2d
+   end if
+
+   if (deformUV) then
+      allocate(dudxU(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (dudxU)'
+      dudxU=_ZERO_
+
+      allocate(dvdyV(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyV)'
+      dvdyV=_ZERO_
+
+      allocate(shearU(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (shearU)'
+      shearU=_ZERO_
    end if
 
    call uv_depths(vel_depth_method)
@@ -346,18 +364,13 @@
       call bottom_friction(runtype)
 #endif
    end if
+
    UEx=_ZERO_ ; VEx=_ZERO_
 #ifdef NO_ADVECT
    STDERR 'NO_ADVECT 2D'
 #else
 #ifndef UV_ADV_DIRECT
-   call uv_advect()
-   if (Am_method .gt. 0 .or. An_method .gt. 0) then
-#ifdef _LES_
-      if (Am_method .eq. 2) call do_les_2d(U,V,DU,DV)
-#endif
-      call uv_diffusion(Am_method,An_method,An,AnX) ! Has to be called after uv_advect.
-   end if
+   call calc_uvex(U,V,D,DU,DV)
    call tic(TIM_INTEGR2D)
    call mirror_bdy_2d(UEx,U_TAG)
    call mirror_bdy_2d(VEx,V_TAG)

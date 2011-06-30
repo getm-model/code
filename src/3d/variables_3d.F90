@@ -126,6 +126,14 @@
 #include "dynamic_declarations_3d.h"
 #endif
 
+! the following fields will only be allocated if deformUV=.true.
+   REALTYPE,dimension(:,:,:),allocatable :: dudxU_3d,dvdyV_3d,shearU_3d
+
+#ifndef NO_BAROCLINIC
+! the following fields will only be allocated if calc_stirring=.true.
+   REALTYPE,dimension(:,:,:),allocatable :: diffxx,diffxy,diffyx,diffyy
+#endif
+
 #ifdef GETM_BIO
    REALTYPE, allocatable               :: cc3d(:,:,:,:)
    REALTYPE, allocatable               :: ws3d(:,:,:,:)
@@ -183,7 +191,9 @@
 
    hn = _ZERO_ ; hun = _ZERO_ ; hvn = _ZERO_
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
+   dudxC_3d=_ZERO_; dvdyC_3d=_ZERO_; shearX_3d=_ZERO_
    ssen = _ZERO_ ; ssun = _ZERO_ ; ssvn = _ZERO_
+   Dn = _ZERO_ ; Dun = _ZERO_ ; Dvn = _ZERO_
    rru= _ZERO_ ; rrv= _ZERO_
    uuEx= _ZERO_ ; vvEx= _ZERO_
    tke=1.e-10 ; eps=1.e-10

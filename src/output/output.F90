@@ -52,8 +52,8 @@
    logical                             :: save_eps=.true.
    logical                             :: save_num=.true.
    logical                             :: save_nuh=.true.
-   logical                             :: save_Am2d=.false.
-   logical                             :: save_Am3d=.false.
+   logical                             :: save_Am_2d=.false.
+   logical                             :: save_Am_3d=.false.
    logical                             :: save_ss_nn=.false.
    logical                             :: save_taub=.false.
    integer                             :: first_2d=1
@@ -100,7 +100,7 @@
              save_2d,save_3d,save_vel,destag, &
              save_strho,save_s,save_t,save_rho,save_rad, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
-             save_Am2d,save_Am3d,save_ss_nn,save_taub, &
+             save_Am_2d,save_Am_3d,save_ss_nn,save_taub, &
              first_2d,step_2d,first_3d,step_3d,hotout,meanout, &
              save_meteo, save_mix_analysis
 !   logical :: nesting=.true.

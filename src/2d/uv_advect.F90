@@ -5,7 +5,7 @@
 ! !IROUTINE: uv_advect - 2D advection of momentum \label{sec-uv-advect}
 !
 ! !INTERFACE:
-   subroutine uv_advect
+   subroutine uv_advect(U,V,DU,DV)
 !
 ! !DESCRIPTION:
 !
@@ -150,10 +150,13 @@
 #else
    use domain, only: dx,dy,ard1
 #endif
-   use variables_2d, only: U,DU,UEx,V,DV,VEx,PP
+   use variables_2d, only: UEx,VEx,PP
    use getm_timers, only: tic, toc, TIM_UVADVECT
 !$ use omp_lib
    IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   REALTYPE,dimension(E2DFIELD),intent(in) :: U,V,DU,DV
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding

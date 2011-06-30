@@ -31,7 +31,7 @@
    use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth
    use m2d, only: z,Uint,Vint
    use m3d, only: M
-   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
+   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn,Dn,Dun,Dvn
    use getm_timers, only: tic, toc, TIM_STARTMCR
    IMPLICIT NONE
 !
@@ -55,6 +55,8 @@
       do i=imin-HALO,imax+HALO      ! elevation for macro time step
          sseo(i,j)=ssen(i,j)
          ssen(i,j)=z(i,j)
+         Dn = ssen(i,j) + H(i,j)
+!        KK-TODO: use of Dn & Co. in more routines (coordinates,...)
       end do
    end do
 
@@ -63,6 +65,7 @@
          ssuo(i,j)=ssun(i,j)
          ssun(i,j)=0.25*(sseo(i,j)+sseo(i+1,j)+ssen(i,j)+ssen(i+1,j))
          ssun(i,j)=max(ssun(i,j),-HU(i,j)+min_depth)
+         Dun(i,j) = ssun(i,j) + HU(i,j)
       end do
    end do
 
@@ -71,6 +74,7 @@
          ssvo(i,j)=ssvn(i,j)
          ssvn(i,j)=0.25*(sseo(i,j)+sseo(i,j+1)+ssen(i,j)+ssen(i,j+1))
          ssvn(i,j)=max(ssvn(i,j),-HV(i,j)+min_depth)
+         Dvn(i,j) = ssvn(i,j) + HV(i,j)
       end do
    end do
 

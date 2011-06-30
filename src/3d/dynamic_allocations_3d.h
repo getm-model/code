@@ -7,6 +7,15 @@
   allocate(ww(I3DFIELD),stat=rc)    ! 3D field for w-velocity
   if (rc /= 0) stop 'init_3d: Error allocating memory (ww)'
 
+  allocate(dudxC_3d(I3DFIELD),stat=rc) ! zonal tension rate (T-points)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (dudxC_3d)'
+
+  allocate(dvdyC_3d(I3DFIELD),stat=rc) ! meridional tension rate (T-points)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (dvdyC_3d)'
+
+  allocate(shearX_3d(I3DFIELD),stat=rc) ! horizontal shear rate (X-points)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (shearX_3d)'
+
 #ifdef STRUCTURE_FRICTION
   allocate(sf(I3DFIELD),stat=rc)    ! 3D field for velocity in T-points
   if (rc /= 0) stop 'init_3d: Error allocating memory (sf)'
@@ -156,17 +165,26 @@
   allocate(ssen(I2DFIELD),stat=rc)  ! Elevation after  macro time step (z-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (ssen)'
 
+  allocate(Dn(I2DFIELD),stat=rc)  ! depth after  macro time step (z-column)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (Dn)'
+
   allocate(ssuo(I2DFIELD),stat=rc)  ! Elevation before macro time step (u-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (ssuo)'
 
   allocate(ssun(I2DFIELD),stat=rc)  ! Elevation after  macro time step (u-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (ssun)'
 
+  allocate(Dun(I2DFIELD),stat=rc)  ! depth after  macro time step (u-column)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (Dun)'
+
   allocate(ssvo(I2DFIELD),stat=rc)  ! Elevation before macro time step (v-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (ssvo)'
 
   allocate(ssvn(I2DFIELD),stat=rc)  ! Elevation after  macro time step (v-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (ssvn)'
+
+  allocate(Dvn(I2DFIELD),stat=rc)  ! depth after  macro time step (v-column)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (Dvn)'
 
   allocate(rru(I2DFIELD),stat=rc)   ! Bottom drag term in u-vel. points (3D)   
   if (rc /= 0) stop 'init_3d: Error allocating memory (rru)'

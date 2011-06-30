@@ -11,6 +11,7 @@
 #define DXCIM1 dxc(i-1,j)
 #define DXCJP1 dxc(i,j+1)
 #define DXU dxu(i,j)
+#define DXUJP1 dxu(i,j+1)
 #define DXV dxv(i,j)
 #define DXVJM1 dxv(i,j-1)
 #define DXX dxx(i,j)
@@ -22,6 +23,7 @@
 #define DYU dyu(i,j)
 #define DYUIM1 dyu(i-1,j)
 #define DYV dyv(i,j)
+#define DYVIP1 dyv(i+1,j)
 #define DYX dyx(i,j)
 #define DYXIM1 dyx(i-1,j)
 #define ARCD1 arcd1(i,j)
@@ -33,6 +35,7 @@
 #define DXCIM1 dx
 #define DXCJP1 dx
 #define DXU dx
+#define DXUJP1 dx
 #define DXV dx
 #define DXVJM1 dx
 #define DXX dx
@@ -44,6 +47,7 @@
 #define DYU dy
 #define DYUIM1 dy
 #define DYV dy
+#define DYVIP1 dy
 #define DYX dy
 #define DYXIM1 dy
 #define ARCD1 ard1
@@ -52,23 +56,11 @@
 #endif
 
 #ifdef _LES_
-#define _AM2D_  Am2d(i,j)
-#define _AMX2D_ AmX2d(i,j)
-#define _AM3D_  Am3d(i,j,k)
-#define _AMX3D_ AmX3d(i,j,k)
-#define _AMU3D_ AmU3d(i,j,k)
-#define _AMV3D_ AmV3d(i,j,k)
-#define _AHU_   AHU(i,j,k)
-#define _AHV_   AHV(i,j,k)
+#define _AM_  Am(i,j)
+#define _AMX_ AmX(i,j)
 #else
-#define _AM2D_  Am_const
-#define _AMX2D_ Am_const
-#define _AM3D_  Am_const
-#define _AMX3D_ Am_const
-#define _AMU3D_ Am_const
-#define _AMV3D_ Am_const
-#define _AHU_   AH
-#define _AHV_   AH
+#define _AM_  Am_const
+#define _AMX_ Am_const
 #endif
 
 ! For 2D boundary conditions

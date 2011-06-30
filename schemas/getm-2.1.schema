@@ -442,6 +442,7 @@
 					<option value="1" label="constant value temp_AH_const"/>
 					<option value="2" label="LES parameterisation"/>
 						<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
+					<option value="3" label="SGS stirring"/>
 				</options>
 			</element>
 			<element name="temp_AH_const" type="float" label="constant horizontal diffusivity of heat" unit="m²/s">
@@ -449,6 +450,9 @@
 			</element>
 			<element name="temp_AH_Prt" type="float" label="turbulent Prandtl number of heat">
 				<condition type="eq" variable="./temp_AH_method" value="2"/>
+			</element>
+			<element name="temp_AH_stirr_const" type="float" label="temperature stirring constant">
+				<condition type="eq" variable="./temp_AH_method" value="3"/>
 			</element>
 			<element name="attenuation_method" type="int" label="light attenuation method">
 				<options>
@@ -573,6 +577,7 @@
 					<option value="1" label="constant value salt_AH_const"/>
 					<option value="2" label="LES parameterisation"/>
 						<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
+					<option value="3" label="SGS stirring"/>
 				</options>
 			</element>
 			<element name="salt_AH_const" type="float" label="constant horizontal diffusivity of salt" unit="m²/s">
@@ -580,6 +585,9 @@
 			</element>
 			<element name="salt_AH_Prt" type="float" label="turbulent Prandtl number of salt">
 				<condition type="eq" variable="./salt_AH_method" value="2"/>
+			</element>
+			<element name="salt_AH_stirr_const" type="float" label="salt stirring constant">
+				<condition type="eq" variable="./salt_AH_method" value="3"/>
 			</element>
 			<element name="salt_check" type="int" label="interval between checks for out-of-bounds salinities" description="Interval between checks for out-of-bounds salinities. 0: disabled, &gt;0: check every salt_check step, abort if check fails, &lt;0: check every abs(salt_check) step, warn if check fails"/>
 			<element name="min_salt"   type="float" label="minimum valid salinity" unit="psu">
@@ -655,10 +663,10 @@
 			<element name="save_eps" type="bool" label="save turbulence dissipation rate"/>
 			<element name="save_num" type="bool" label="save turbulent diffusivity of momentum"/>
 			<element name="save_nuh" type="bool" label="save turbulent diffusivity of heat"/>
-			<element name="save_Am2d" type="bool" label="save 2D horizontal eddy viscosity">
+			<element name="save_Am_2d" type="bool" label="save 2D horizontal eddy viscosity">
 				<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
 			</element>
-			<element name="save_Am3d" type="bool" label="save 3D horizontal eddy viscosity">
+			<element name="save_Am_3d" type="bool" label="save 3D horizontal eddy viscosity">
 				<condition type="and">
 					<condition type="ne" variable="/getm/param/runtype" value="1"/>
 					<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>

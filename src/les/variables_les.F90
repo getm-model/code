@@ -79,25 +79,25 @@
 #endif
 
    if (Am_method .eq. 1) then
-      Am2d  = Am_const
-      AmX2d = Am_const
+      Am_2d  = Am_const
+      AmX_2d = Am_const
 #ifndef NO_3D
       if (runtype .ne. 1) then
-         Am3d  = Am_const
-         AmX3d = Am_const
-         AmU3d = Am_const
-         AmV3d = Am_const
+         Am_3d  = Am_const
+         AmX_3d = Am_const
+         AmU_3d = Am_const
+         AmV_3d = Am_const
       end if
 #endif
    else
-      Am2d  = _ZERO_
-      AmX2d = _ZERO_
+      Am_2d  = _ZERO_
+      AmX_2d = _ZERO_
 #ifndef NO_3D
       if (runtype .ne. 1) then
-         Am3d  = _ZERO_
-         AmX3d = _ZERO_
-         AmU3d = _ZERO_
-         AmV3d = _ZERO_
+         Am_3d  = _ZERO_
+         AmX_3d = _ZERO_
+         AmU_3d = _ZERO_
+         AmV_3d = _ZERO_
       end if
 #endif
    end if

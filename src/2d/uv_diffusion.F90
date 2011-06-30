@@ -5,7 +5,8 @@
 ! !ROUTINE: uv_diffusion - 2D diffusion of momentum \label{sec-uv-diffusion}
 !
 ! !INTERFACE:
-   subroutine uv_diffusion(Am_method,An_method,An,AnX)
+   subroutine uv_diffusion(Am_method,An_method,UEx,VEx,         &
+                           U,V,dudxC,dvdyC,shearX,D,DU,DV,Am,AmX)
 !
 ! !DESCRIPTION:
 !
@@ -161,19 +162,21 @@
 #else
    use domain, only: dx,dy,ard1
 #endif
-   use variables_2d, only: D,U,DU,UEx,V,DV,VEx,PP
-#ifdef _LES_
-   use variables_les, only: Am2d, AmX2d
-#else
+   use variables_2d, only: PP,An,AnX
    use m2d, only: Am_const
-#endif
    use getm_timers,  only: tic,toc,TIM_UVDIFFUS
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-  integer, intent(in)  :: Am_method,An_method
-  REALTYPE, intent(in) :: An(E2DFIELD),AnX(E2DFIELD)
+   integer,intent(in)                               :: Am_method,An_method
+   REALTYPE,dimension(E2DFIELD),intent(in),optional :: U,V
+   REALTYPE,dimension(E2DFIELD),intent(in),optional :: dudxC,dvdyC,shearX
+   REALTYPE,dimension(E2DFIELD),intent(in),optional :: D,DU,DV
+   REALTYPE,dimension(E2DFIELD),intent(in),optional :: Am,AmX
+!
+! !INPUT/OUTPUT PARAMETERS:
+   REALTYPE,dimension(E2DFIELD),intent(inout)       :: UEx,VEx
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard
@@ -193,20 +196,24 @@
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j)
 
-! Central for dx(2*Am*dx(U/DU))
+!  see Kantha and Clayson 2000, page 591 for approximation of diffusion terms
+!  Central for dx(2*Am*dx(U/DU))
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax+1          ! PP defined on T-points
          PP(i,j)=_ZERO_
          if (az(i,j) .ge. 1) then
             if (Am_method .gt. 0) then
-               if(_AM2D_ .gt. _ZERO_) then
-                  PP(i,j)=_TWO_*_AM2D_*DYC*D(i,j)               &
-                          *(U(i,j)/DU(i,j)-U(i-1,j)/DU(i-1,j))/DXC
+               if (_AM_ .gt. _ZERO_) then
+!                 KK-TODO: center depth at velocity time stage
+                  PP(i,j)=_TWO_*_AM_*DYC*D(i,j)*dudxC(i,j)
                end if
             end if
             if (An_method .gt. 0) then
-               PP(i,j)=PP(i,j)+An(i,j)*DYC*(U(i,j)-U(i-1,j))/DXC
+               if (An(i,j) .gt. _ZERO_) then
+!              KK-TODO: gradient of velocity instead of transport also accepted?
+                  PP(i,j)=PP(i,j)+An(i,j)*DYC*(U(i,j)-U(i-1,j))/DXC
+               end if
             end if
          end if
       end do
@@ -223,21 +230,23 @@
 !$OMP END DO
 
 #ifndef SLICE_MODEL
-! Central for dy(Am*(dy(U/DU)+dx(V/DV)))
+!  Central for dy(Am*(dy(U/DU)+dx(V/DV)))
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-1,jmax        ! PP defined on X-points
       do i=imin,imax
          PP(i,j)=_ZERO_
-         if (ax(i,j) .ge. 1) then
-            if (Am_method .gt. 0) then
-               if(_AMX2D_ .gt. _ZERO_) then
-                  PP(i,j)=_AMX2D_*_HALF_*(DU(i,j)+DU(i,j+1))*DXX  &
-                          *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
-                           +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
-               end if
+         if (Am_method .gt. 0) then
+            if (_AMX_ .gt. _ZERO_) then
+!              KK-TODO: calculation of depthX in the beginning
+!                       (also used for shear term of VEx)
+               PP(i,j)=_AMX_*_HALF_*(DU(i,j)+DU(i,j+1))*DXX*shearX(i,j)
             end if
+         end if
+         if (ax(i,j) .ge. 1) then ! can we skip this test (set AnX to _ZERO_)?
             if (An_method .gt. 0) then
-               PP(i,j)=PP(i,j)+AnX(i,j)*(U(i,j+1)-U(i,j))*DXX/DYX
+               if (AnX(i,j) .gt. _ZERO_) then
+                  PP(i,j)=PP(i,j)+AnX(i,j)*(U(i,j+1)-U(i,j))*DXX/DYX
+               end if
             end if
          end if
       end do
@@ -259,16 +268,16 @@
    do j=jmin,jmax      ! PP defined on X-points
       do i=imin-1,imax
          PP(i,j)=_ZERO_
-         if (ax(i,j) .ge. 1) then
-            if(Am_method .gt. 0) then
-               if(_AMX2D_ .gt. _ZERO_) then
-                  PP(i,j)=_AMX2D_*_HALF_*(DV(i,j)+DV(i+1,j))*DYX  &
-                          *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
-                           +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
-               end if
+         if(Am_method .gt. 0) then
+            if(_AMX_ .gt. _ZERO_) then
+               PP(i,j)=_AMX_*_HALF_*(DV(i,j)+DV(i+1,j))*DYX*shearX(i,j)
             end if
+         end if
+         if (ax(i,j) .ge. 1) then
             if (An_method .gt. 0) then
-               PP(i,j)=PP(i,j)+AnX(i,j)*(V(i+1,j)-V(i,j))*DYX/DXX
+               if (AnX(i,j) .gt. _ZERO_) then
+                  PP(i,j)=PP(i,j)+AnX(i,j)*(V(i+1,j)-V(i,j))*DYX/DXX
+               end if
             end if
          end if
       end do
@@ -291,14 +300,15 @@
       do i=imin,imax
          PP(i,j)=_ZERO_
          if (az(i,j) .ge. 1) then
-            if(Am_method .gt. 0) then
-               if(_AM2D_ .gt. _ZERO_) then
-                  PP(i,j)=_TWO_*_AM2D_*DXC*D(i,j)               &
-                          *(V(i,j)/DV(i,j)-V(i,j-1)/DV(i,j-1))/DYC
+            if (Am_method .gt. 0) then
+               if(_AM_ .gt. _ZERO_) then
+                  PP(i,j)=_TWO_*_AM_*DXC*D(i,j)*dvdyC(i,j)
                end if
             end if
             if (An_method .gt. 0) then
-               PP(i,j)=PP(i,j)+An(i,j)*DXC*(V(i,j)-V(i,j-1))/DYC
+               if (An(i,j) .gt. _ZERO_) then
+                  PP(i,j)=PP(i,j)+An(i,j)*DXC*(V(i,j)-V(i,j-1))/DYC
+               end if
             end if
          end if
       end do

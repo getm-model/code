@@ -22,21 +22,26 @@
 #ifndef NO_3D
    public do_les_3d
 #endif
-   integer  :: les_method=1
-   REALTYPE :: smag_const=0.28d0
+   REALTYPE          :: smag_const=0.28d0
+#ifndef NO_3D
+   integer           :: les_3d_mode=0
+   integer,parameter :: MOMENTUM=1,TRACER=2,BOTH=3
+#endif
 !
 ! !PRIVATE DATA MEMBERS:
-   integer, private, parameter         :: SMAGORINSKY=1
+   integer,private,parameter :: SMAG_2D=1
+   integer,private           :: les_method=SMAG_2D
 
 !  explicit interface needed due to optional arguments
    interface
-      subroutine les_smagorinsky(U,V,DU,DV,Am,AmX,AmU,AmV)
+      subroutine les_smagorinsky(dudxC,dudxU,dvdyC,dvdyV,shearX,shearU,&
+                                 Am,AmX,AmU,AmV)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,intent(in)           :: U(E2DFIELD),V(E2DFIELD)
-         REALTYPE,intent(in)           :: DU(E2DFIELD),DV(E2DFIELD)
-         REALTYPE,intent(out)          :: Am(E2DFIELD),AmX(E2DFIELD)
-         REALTYPE,intent(out),optional :: AmU(E2DFIELD),AmV(E2DFIELD)
+         REALTYPE,dimension(E2DFIELD),intent(in)           :: dudxC,dudxU
+         REALTYPE,dimension(E2DFIELD),intent(in)           :: dvdyC,dvdyV
+         REALTYPE,dimension(E2DFIELD),intent(in)           :: shearX,shearU
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: Am,AmX,AmU,AmV
       end subroutine les_smagorinsky
    end interface
 !
@@ -84,13 +89,12 @@
 
    if (Am_method .eq. 2) LEVEL1 'init_les()'
 
-!  Allocates memory for the public data members - if not static
    call init_variables_les(runtype,Am_method,Am_const)
 
    if (Am_method .eq. 2) then
       read(NAMLST,nml=les)
       select case (les_method)
-         case(SMAGORINSKY)
+         case(SMAG_2D)
             LEVEL2 'Smagorinsky (1963) parameterisation'
             LEVEL3 'Smagorinsky constant: ',smag_const
          case default
@@ -109,7 +113,7 @@
 ! \label{sec-do-les_2d}
 !
 ! !INTERFACE:
-   subroutine do_les_2d(U,V,DU,DV)
+   subroutine do_les_2d(dudxC,dudxU,dvdyC,dvdyV,shearX,shearU)
 !
 ! !DESCRIPTION:
 !
@@ -119,8 +123,9 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in) :: U(E2DFIELD),V(E2DFIELD)
-   REALTYPE, intent(in) :: DU(E2DFIELD),DV(E2DFIELD)
+   REALTYPE,dimension(E2DFIELD),intent(in) :: dudxC,dudxU
+   REALTYPE,dimension(E2DFIELD),intent(in) :: dvdyC,dvdyV
+   REALTYPE,dimension(E2DFIELD),intent(in) :: shearX,shearU
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -139,8 +144,9 @@
 
    call tic(TIM_LES2D)
    select case (les_method)
-      case(SMAGORINSKY)
-         call les_smagorinsky(U,V,DU,DV,Am2d,AmX2d)
+      case(SMAG_2D)
+         call les_smagorinsky(dudxC,dudxU,dvdyC,dvdyV,shearX,shearU,&
+                              Am=Am_2d,AmX=AmX_2d)
       case default
          FATAL 'No valid les_method specified'
          stop 'do_les_2d()'
@@ -162,9 +168,10 @@
 ! \label{sec-do-les_3d}
 !
 ! !INTERFACE:
-   subroutine do_les_3d(uu,vv,hu,hv)
+   subroutine do_les_3d(dudxC,dudxU,dvdyC,dvdyV,shearX,shearU)
 !
 ! !DESCRIPTION:
+!
 !
 ! !USES:
    use getm_timers, only: tic,toc,TIM_LES3D
@@ -172,8 +179,9 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in) :: uu(I3DFIELD),vv(I3DFIELD)
-   REALTYPE, intent(in) :: hu(I3DFIELD),hv(I3DFIELD)
+   REALTYPE,dimension(I3DFIELD),intent(in) :: dudxC,dudxU
+   REALTYPE,dimension(I3DFIELD),intent(in) :: dvdyC,dvdyV
+   REALTYPE,dimension(I3DFIELD),intent(in) :: shearX,shearU
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -192,13 +200,36 @@
 #endif
 
    call tic(TIM_LES3D)
+
    select case (les_method)
-      case(SMAGORINSKY)
-         do k=1,kmax
-            call les_smagorinsky(uu(:,:,k),vv(:,:,k),hu(:,:,k),hv(:,:,k), &
-                                 Am3d(:,:,k),AmX3d(:,:,k), &
-                                 AmU3d(:,:,k),AmV3d(:,:,k))
-         end do
+      case(SMAG_2D)
+         select case (les_3d_mode)
+            case(MOMENTUM)
+               do k=1,kmax
+                  call les_smagorinsky(   dudxC(:,:,k),     dudxU(:,:,k),&
+                                          dvdyC(:,:,k),     dvdyV(:,:,k),&
+                                         shearX(:,:,k),    shearU(:,:,k),&
+                                       Am=Am_3d(:,:,k),AmX=AmX_3d(:,:,k))
+               end do
+            case(TRACER)
+               do k=1,kmax
+                  call les_smagorinsky(     dudxC(:,:,k),     dudxU(:,:,k),&
+                                            dvdyC(:,:,k),     dvdyV(:,:,k),&
+                                           shearX(:,:,k),    shearU(:,:,k),&
+                                       AmU=AmU_3d(:,:,k),AmV=AmV_3d(:,:,k))
+               end do
+            case(BOTH)
+               do k=1,kmax
+                  call les_smagorinsky(     dudxC(:,:,k),     dudxU(:,:,k),&
+                                            dvdyC(:,:,k),     dvdyV(:,:,k),&
+                                           shearX(:,:,k),    shearU(:,:,k),&
+                                       Am =Am_3d (:,:,k),AmX=AmX_3d(:,:,k),&
+                                       AmU=AmU_3d(:,:,k),AmV=AmV_3d(:,:,k))
+               end do
+            case default
+               FATAL 'No valid les_3d_mode specified'
+               stop 'do_les_3d()'
+         end select
       case default
          FATAL 'No valid les_method specified'
          stop 'do_les_3d()'

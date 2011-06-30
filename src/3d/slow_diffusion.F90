@@ -31,7 +31,7 @@
    use variables_2d, only: D,U,V,UEx,VEx,Uint,Vint,PP
    use variables_3d, only: ssen,ssun,ssvn
 #ifdef _LES_
-   use variables_les, only: Am2d,AmX2d
+   use variables_les, only: Am_2d,AmX_2d
 #else
    use m2d, only: Am_const
 #endif

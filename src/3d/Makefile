@@ -4,7 +4,7 @@
 
 include ../Rules.make
 
-INCS	= static_3d.h dynamic_declarations_3d.h dynamic_allocations_3d.h
+INCS	= static_3d.h dynamic_declarations_3d.h dynamic_allocations_3d.h ../2d/deformation_rates.h ../2d/uv_diffusion.h
 LIB	= $(LIBDIR)/lib3d${buildtype}.a
 
 MODSRC	= m3d.F90 variables_3d.F90 advection_3d.F90 eqstate.F90 \
@@ -57,7 +57,7 @@ OBJ += \
 $(LIB)(structure_friction_3d.o)
 endif
 OBJ += \
-OBJ += \
+$(LIB)(deformation_rates_3d.o)		\
 $(LIB)(uv_advect_3d.o)			\
 $(LIB)(uv_diffusion_3d.o)               \
 $(LIB)(adaptive_coordinates.o)          \
@@ -72,13 +72,13 @@ $(LIB)(ip_shchepetkin_mcwilliams.o)     \
 $(LIB)(ip_stelling_vankester.o)		\
 $(LIB)(ip_chu_fan.o)            	\
 $(LIB)(numerical_mixing.o)		\
-$(LIB)(physical_mixing.o)
+$(LIB)(physical_mixing.o)		\
+$(LIB)(tracer_stirring.o)		\
+$(LIB)(tracer_diffusion.o)
 endif
 OBJ += \
 $(LIB)(eddyviscosity.o)			\
 $(LIB)(slow_bottom_friction.o)		\
-$(LIB)(slow_advection.o)		\
-$(LIB)(slow_diffusion.o)		\
 $(LIB)(slow_terms.o)			\
 $(LIB)(upstream_adv.o)			\
 $(LIB)(u_split_adv.o)			\

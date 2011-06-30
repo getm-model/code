@@ -35,9 +35,10 @@
    REALTYPE                  :: temp_const=20.
    integer                   :: temp_hor_adv=1,temp_ver_adv=1
    integer                   :: temp_adv_split=0
-   integer                   :: temp_AH_method=0
+   integer, public           :: temp_AH_method=0
    REALTYPE                  :: temp_AH_const=1.4d-7
    REALTYPE                  :: temp_AH_Prt=_TWO_
+   REALTYPE                  :: temp_AH_stirr_const=_ONE_
    integer                   :: attenuation_method=0,jerlov=1
    character(len=PATH_MAX)   :: attenuation_file="attenuation.nc"
    REALTYPE                  :: A_const=0.58,g1_const=0.35,g2_const=23.0
@@ -93,6 +94,7 @@
             temp_format,temp_name,temp_field_no,              &
             temp_hor_adv,temp_ver_adv,temp_adv_split,         &
             temp_AH_method,temp_AH_const,temp_AH_Prt,         &
+            temp_AH_stirr_const,                              &
             attenuation_method,attenuation_file,jerlov,       &
             A_const,g1_const,g2_const,                        &
             swr_bot_refl_frac, swr_min_bot_frac,              &
@@ -195,6 +197,13 @@
          call getm_error("init_temperature()", &
                          "GETM not compiled for LES parameterisation");
 #endif
+      case(3)
+         LEVEL3 'temp_AH_method=3 -> SGS stirring parameterisation'
+         if (temp_AH_stirr_const .lt. _ZERO_) then
+              call getm_error("init_temperature()", &
+                         "temp_AH_stirr_const <0");
+         end if
+         LEVEL4 'stirring constant: ',temp_AH_stirr_const
       case default
          call getm_error("init_temperature()", &
                          "A non valid temp_AH_method has been chosen");
@@ -403,7 +412,7 @@ temp_field_no=1
    use domain, only: dx,dy,ard1
 #endif
    use parameters, only: avmolt
-   use getm_timers, only: tic, toc, TIM_TEMP, TIM_MIXANALYSIS
+   use getm_timers, only: tic,toc,TIM_TEMP,TIM_TEMPH,TIM_MIXANALYSIS
    use variables_3d, only: do_mixing_analysis
    use variables_3d, only: nummix3d_T,nummix2d_T
    use variables_3d, only: phymix3d_T,phymix2d_T
@@ -466,14 +475,14 @@ temp_field_no=1
       T2 = T**2
       call do_advection_3d(dt,T2,uu,vv,ww,hun,hvn,ho,hn,    &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
-                        temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH_method,temp_AH_const,temp_AH_Prt)
+                        temp_hor_adv,temp_ver_adv,temp_adv_split)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
    end if
 
    call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,   &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
-                        temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH_method,temp_AH_const,temp_AH_Prt)
+                        temp_hor_adv,temp_ver_adv,temp_adv_split)
 
    if (do_mixing_analysis) then
       call toc(TIM_TEMP)
@@ -482,6 +491,16 @@ temp_field_no=1
       call physical_mixing(T,avmolt,phymix3d_T,phymix2d_T)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
+   end if
+
+   if (temp_AH_method .gt. 0) then
+!     T is not halo updated after advection
+      call tic(TIM_TEMPH)
+      call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
+      call wait_halo(D_TAG)
+      call toc(TIM_TEMPH)
+
+      call tracer_diffusion(T,temp_AH_method,temp_AH_const,temp_AH_Prt,temp_AH_stirr_const)
    end if
 
 ! OMP-NOTE: Pointer definitions and allocation so that each thread can

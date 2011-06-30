@@ -342,6 +342,9 @@
 			<temp_AH_Prt>
 				2.0
 			</temp_AH_Prt>
+			<temp_AH_stirr_const>
+				1.0
+			</temp_AH_stirr_const>
 			<attenuation_method>
 				0
 			</attenuation_method>
@@ -413,6 +416,9 @@
 			<salt_AH_Prt>
 				2.0
 			</salt_AH_Prt>
+			<salt_AH_stirr_const>
+				1.0
+			</salt_AH_stirr_const>
 			<salt_check>
 				0
 			</salt_check>
@@ -510,12 +516,12 @@
 			<save_nuh>
 				True
 			</save_nuh>
-			<save_Am2d>
+			<save_Am_2d>
 				False
-			</save_Am2d>
-			<save_Am3d>
+			</save_Am_2d>
+			<save_Am_3d>
 				False
-			</save_Am3d>
+			</save_Am_3d>
 			<save_ss_nn>
 				True
 			</save_ss_nn>

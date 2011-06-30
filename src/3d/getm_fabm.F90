@@ -305,7 +305,13 @@
 
       call do_advection_3d(dt,ff,uu,vv,ww,hun,hvn,ho,hn, &
               delxu,delxv,delyu,delyv,area_inv,az,au,av, &
-              fabm_hor_adv,fabm_ver_adv,fabm_adv_split,1,fabm_AH)
+              fabm_hor_adv,fabm_ver_adv,fabm_adv_split)
+
+      if (fabm_AH .gt. _ZERO_) then
+         call update_3d_halo(ff,ff,az,imin,jmin,imax,jmax,kmax,D_TAG)
+         call wait_halo(D_TAG)
+         call tracer_diffusion(ff,1,fabm_AH,_ONE_/SMALL,_ZERO_)
+      end if
 
       cc_pel(n,:,:,:) = ff
 #else
@@ -315,7 +321,13 @@
 
       call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn, &
               delxu,delxv,delyu,delyv,area_inv,az,au,av, &
-              fabm_hor_adv,fabm_ver_adv,fabm_adv_split,1,fabm_AH)
+              fabm_hor_adv,fabm_ver_adv,fabm_adv_split)
+
+      if (fabm_AH .gt. _ZERO_) then
+         call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az,imin,jmin,imax,jmax,kmax,D_TAG)
+         call wait_halo(D_TAG)
+         call tracer_diffusion(cc3d(n,:,:,:),1,fabm_AH,_ONE_/SMALL,_ZERO_)
+      end if
 #endif
    end do
 

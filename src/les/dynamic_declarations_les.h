@@ -1,4 +1,4 @@
-  REALTYPE,dimension(:,:),allocatable  :: Am2d,AmX2d
+  REALTYPE,dimension(:,:),allocatable  :: Am_2d,AmX_2d
 #ifndef NO_3D
-  REALTYPE,dimension(:,:,:),allocatable  :: Am3d,AmX3d,AmU3d,AmV3d
+  REALTYPE,dimension(:,:,:),allocatable  :: Am_3d,AmX_3d,AmU_3d,AmV_3d
 #endif

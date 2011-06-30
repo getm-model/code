@@ -26,6 +26,10 @@
 #else
 #include "dynamic_declarations_2d.h"
 #endif
+!  the following fields will only be allocated if deformUV=.true.
+!  (depending on Am_method)
+   REALTYPE,dimension(:,:),allocatable  :: dudxU,dvdyV,shearU
+
    integer                             :: size2d_field
    integer                             :: mem2d
 !
@@ -122,6 +126,8 @@
    D = _ZERO_;
    U = _ZERO_; DU = _ZERO_; fU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; DV = _ZERO_; fV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
+
+   dudxC=_ZERO_; dvdyC=_ZERO_; shearX=_ZERO_
 
    ru = _ZERO_; ruu=_ZERO_; Uinto=_ZERO_
    rv = _ZERO_; rvv=_ZERO_; Vinto=_ZERO_

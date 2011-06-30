@@ -6,7 +6,7 @@
 !
 ! !INTERFACE:
    subroutine upstream_2dh_adv(dt,f,uu,vv,ho,hn,hun,hvn, &
-                           delxv,delyu,delxu,delyv,area_inv,az,AH_method,AH)
+                           delxv,delyu,delxu,delyv,area_inv,az)
 !
 ! !DESCRIPTION:
 ! In this routine, the first-order upstream advection scheme
@@ -79,9 +79,6 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
    use advection_3d, only: hi,hio
-#ifdef _LES_
-   use advection_3d, only: AHU,AHV
-#endif
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -91,8 +88,8 @@
    REALTYPE, intent(in) :: hun(I3DFIELD),hvn(I3DFIELD)
    REALTYPE, intent(in) :: delxv(I2DFIELD),delyu(I2DFIELD)
    REALTYPE, intent(in) :: delxu(I2DFIELD),delyv(I2DFIELD)
-   REALTYPE, intent(in) :: area_inv(I2DFIELD),dt,AH
-   integer, intent(in)  :: az(E2DFIELD),AH_method
+   REALTYPE, intent(in) :: area_inv(I2DFIELD),dt
+   integer, intent(in)  :: az(E2DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)             :: f(I3DFIELD)
@@ -159,11 +156,6 @@
             else
                flx(i,j,k)=uu(i,j,k)*f(i+1,j,k)
             end if
-            if (AH_method .gt. 0) then
-               if ((_AHU_ .gt. _ZERO_).and.(az(i,j).gt.0).and.(az(i+1,j).gt.0))    &
-                  flx(i,j,k)=flx(i,j,k)-_AHU_*(f(i+1,j,k)-f(i,j,k))/delxu(i,j) &
-                            *_HALF_*(hn(i+1,j,k)+hn(i,j,k))
-            end if
          end do
       end do
 !$OMP END DO NOWAIT
@@ -177,11 +169,6 @@
                fly(i,j,k)=vv(i,j,k)*f(i,j,k)
             else
                fly(i,j,k)=vv(i,j,k)*f(i,j+1,k)
-            end if
-            if (AH_method .gt. 0) then
-               if ((_AHV_ .gt. _ZERO_).and.(az(i,j).gt.0).and.(az(i,j+1).gt.0))   &
-                  fly(i,j,k)=fly(i,j,k)-_AHV_*(f(i,j+1,k)-f(i,j,k))/delyv(i,j)   &
-                            *_HALF_*(hn(i,j+1,k)+hn(i,j,k))
             end if
          end do
       end do

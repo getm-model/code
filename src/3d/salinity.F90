@@ -36,9 +36,10 @@
    REALTYPE                  :: salt_const=35*_ONE_
    integer                   :: salt_hor_adv=1,salt_ver_adv=1
    integer                   :: salt_adv_split=0
-   integer                   :: salt_AH_method=0
+   integer, public           :: salt_AH_method=0
    REALTYPE                  :: salt_AH_const=1.1d-9
    REALTYPE                  :: salt_AH_Prt=_TWO_
+   REALTYPE                  :: salt_AH_stirr_const=_ONE_
    integer                   :: salt_check=0
    REALTYPE                  :: min_salt=_ZERO_,max_salt=40*_ONE_
 !
@@ -194,6 +195,13 @@
          call getm_error("init_salinity()", &
                          "GETM not compiled for LES parameterisation");
 #endif
+      case(3)
+         LEVEL3 'salt_AH_method=3 -> SGS stirring parameterisation'
+         if (salt_AH_stirr_const .lt. _ZERO_) then
+              call getm_error("init_salinity()", &
+                         "salt_AH_stirr_const <0");
+         end if
+         LEVEL4 'stirring constant: ',salt_AH_stirr_const
       case default
          call getm_error("init_salinity()", &
                          "A non valid salt_AH_method has been chosen");
@@ -409,7 +417,7 @@ salt_field_no=1
    use domain, only: dx,dy,ard1
 #endif
    use parameters, only: avmols
-   use getm_timers, only: tic, toc, TIM_SALT, TIM_MIXANALYSIS
+   use getm_timers, only: tic,toc,TIM_SALT,TIM_SALTH,TIM_MIXANALYSIS
    use variables_3d, only: do_mixing_analysis
    use variables_3d, only: nummix3d_S,nummix2d_S
    use variables_3d, only: phymix3d_S,phymix2d_S
@@ -477,14 +485,14 @@ salt_field_no=1
       S2 = S**2
       call do_advection_3d(dt,S2,uu,vv,ww,hun,hvn,ho,hn,    &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
-                        salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH_method,salt_AH_const,salt_AH_Prt)
+                        salt_hor_adv,salt_ver_adv,salt_adv_split)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_SALT)
    end if
 
    call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,    &
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
-                        salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH_method,salt_AH_const,salt_AH_Prt)
+                        salt_hor_adv,salt_ver_adv,salt_adv_split)
 
    if (do_mixing_analysis) then
       call toc(TIM_SALT)
@@ -493,6 +501,16 @@ salt_field_no=1
       call physical_mixing(S,avmols,phymix3d_S,phymix2d_S)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_SALT)
+   end if
+
+   if (salt_AH_method .gt. 0) then
+!     S is not halo updated after advection
+      call tic(TIM_SALTH)
+      call update_3d_halo(S,S,az,imin,jmin,imax,jmax,kmax,D_TAG)
+      call wait_halo(D_TAG)
+      call toc(TIM_SALTH)
+
+      call tracer_diffusion(S,salt_AH_method,salt_AH_const,salt_AH_Prt,salt_AH_stirr_const)
    end if
 
 #ifdef PECS_TEST

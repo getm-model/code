@@ -5,7 +5,7 @@
 !
 ! !INTERFACE:
    subroutine fct_2dh_adv(dt,f,uu,vv,ho,hn,hun,hvn, &
-                           delxv,delyu,delxu,delyv,area_inv,az,AH_method,AH)
+                           delxv,delyu,delxu,delyv,area_inv,az)
 ! !DESCRIPTION:
 ! In this routine, the flux corrected transport advection scheme by
 ! \cite{ZALEZAK79} is applied for the two horizontal directions in
@@ -34,9 +34,6 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
    use advection_3d, only: hi,hio
-#ifdef _LES_
-   use advection_3d, only: AHU,AHV
-#endif
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -46,8 +43,8 @@
    REALTYPE, intent(in) :: hun(I3DFIELD),hvn(I3DFIELD)
    REALTYPE, intent(in) :: delxv(I2DFIELD),delyu(I2DFIELD)
    REALTYPE, intent(in) :: delxu(I2DFIELD),delyv(I2DFIELD)
-   REALTYPE, intent(in) :: area_inv(I2DFIELD),dt,AH
-   integer, intent(in)  :: az(E2DFIELD),AH_method
+   REALTYPE, intent(in) :: area_inv(I2DFIELD),dt
+   integer, intent(in)  :: az(E2DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)             :: f(I3DFIELD)
@@ -543,11 +540,6 @@
                fac=min(rm(i+1,j,k),rp(i,j,k))
             end if
             fhx(i,j,k)=(1.-fac)*flx(i,j,k)+fac*fhx(i,j,k)
-            if (AH_method .gt. 0) then
-               if ((_AHU_ .gt. _ZERO_) .and. (az(i,j) .gt. 0) .and. (az(i+1,j) .gt. 0)) &
-                  fhx(i,j,k)=fhx(i,j,k)-_AHU_*(f(i+1,j,k)-f(i,j,k))/delxu(i,j) &
-                            *0.5*(hn(i+1,j,k)+hn(i,j,k))
-            end if
          end do
       end do
 !$OMP END DO NOWAIT
@@ -566,11 +558,6 @@
                fac=min(rm(i,j+1,k),rp(i,j,k))
             end if
             fhy(i,j,k)=(1.-fac)*fly(i,j,k)+fac*fhy(i,j,k)
-            if (AH_method .gt. 0) then
-               if ((_AHV_ .gt. 0.) .and. (az(i,j) .gt. 0) .and. (az(i,j+1) .gt. 0))   &
-                  fhy(i,j,k)=fhy(i,j,k)-_AHV_*(f(i,j+1,k)-f(i,j,k))/delyv(i,j)   &
-                            *0.5*(hn(i,j+1,k)+hn(i,j,k))
-            end if
          end do
       end do
 !$OMP END DO NOWAIT
