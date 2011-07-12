@@ -1,4 +1,3 @@
-!$Id: les_smagorinsky.F90,v 1.11 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -6,8 +5,14 @@
 ! !ROUTINE: les_smagorinsky - \label{les_smagorinsky}
 !
 ! !INTERFACE:
-   subroutine les_smagorinsky(dudxC,dudxU,dvdyC,dvdyV,shearX,shearU,&
-                              Am,AmX,AmU,AmV)
+   subroutine les_smagorinsky(dudxC,dudxV,   &
+#ifndef SLICE_MODEL
+                              dvdyC,dvdyU,   &
+#endif
+                              shearX,shearU, &
+                              AmC,AmX,AmU,AmV)
+
+!  Note (KK): keep in sync with interface in les.F90
 !
 ! !DESCRIPTION:
 !
@@ -20,20 +25,26 @@
 #else
    use domain, only: dx,dy
 #endif
+   use getm_timers, only: tic,toc,TIM_SMAG2D
 
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(in)           :: dudxC,dudxU
-   REALTYPE,dimension(E2DFIELD),intent(in)           :: dvdyC,dvdyV
-   REALTYPE,dimension(E2DFIELD),intent(in)           :: shearX,shearU
-   REALTYPE,dimension(E2DFIELD),intent(out),optional :: Am,AmX,AmU,AmV
+   REALTYPE,dimension(E2DFIELD),intent(in) :: dudxC,dudxV
+#ifndef SLICE_MODEL
+   REALTYPE,dimension(E2DFIELD),intent(in) :: dvdyC,dvdyU
+#endif
+   REALTYPE,dimension(E2DFIELD),intent(in) :: shearX,shearU
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE,dimension(E2DFIELD),intent(out),optional :: AmC,AmX,AmU,AmV
 !
 ! !REVISION HISTORY:
 !  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
-   integer                                  :: i,j
+   REALTYPE                                          :: rate
+   integer                                           :: i,j
 
 !EOP
 !-----------------------------------------------------------------------
@@ -43,27 +54,35 @@
    Ncall = Ncall+1
    write(debug,*) 'les_smagorinsky() # ',Ncall
 #endif
+   call tic(TIM_SMAG2D)
 
-   if (present(Am)) then
+   if (present(AmC)) then
 #ifdef SLICE_MODEL
       j=jmax/2
 #else
       do j=jmin-1,jmax+1
 #endif
          do i=imin-1,imax+1
-            if (az(i,j) .ge. 1) then
-               Am(i,j) =  dudxC(i,j)**2                           &
+!           Note (KK): AmC(az=1) needed in uv_diffusion
+            if (az(i,j) .eq. 1) then
+!              interpolate shearC
+!              Note (KK): in W/E open boundary cells shearC(az=2) would
+!                         require shearU outside open boundary
+!                         in N/S open boundary cells shearC(az=2) would
+!                         require shearU(au=3)
+!                         however shearC(az=2) not needed
+               AmC(i,j) =  dudxC(i,j)**2                                    &
 #ifndef SLICE_MODEL
-                        + dvdyC(i,j)**2                           &
+                         + dvdyC(i,j)**2                                    &
 #endif
-                        + _HALF_*(_HALF_*(shearU(i-1,j) + shearU(i,j)))**2
-               Am(i,j) = (smag_const**2)*DXC*DYC*sqrt(_TWO_*Am(i,j))
+                         + _HALF_*(_HALF_*(shearU(i-1,j) + shearU(i,j)))**2
+               AmC(i,j) = (smag_const**2)*DXC*DYC*sqrt(_TWO_*AmC(i,j))
             end if
          end do
 #ifndef SLICE_MODEL
       end do
 #else
-      Am(imin-1:imax+1,jmax/2+1) =  Am(imin-1:imax+1,jmax/2)
+      AmC(imin-1:imax+1,jmax/2+1) =  AmC(imin-1:imax+1,jmax/2)
 #endif
    end if
 
@@ -74,13 +93,56 @@
       do j=jmin-1,jmax
 #endif
          do i=imin-1,imax
-            if (ax(i,j) .ge. 1) then
-               AmX(i,j) =  (_HALF_*(dudxU(i,j) + dudxU(i  ,j+1)))**2 &
+            if (ax(i,j) .eq. 1) then
+!              interpolate dudxX and dvdyX
+               AmX(i,j) =  (_HALF_*(dudxV(i,j) + dudxV(i+1,j  )))**2 &
 #ifndef SLICE_MODEL
-                         + (_HALF_*(dvdyV(i,j) + dvdyV(i+1,j  )))**2 &
+                         + (_HALF_*(dvdyU(i,j) + dvdyU(i  ,j+1)))**2 &
 #endif
                          + _HALF_*shearX(i,j)**2
                AmX(i,j) = (smag_const**2)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
+#ifdef CORRECT_METRICS
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+            else
+!              Note (KK): shearX at corners already set to 0, there no AmX needed
+               if (av(i,j).eq.0 .and. av(i+1,j).eq.0) then
+                  if (au(i,j) .eq. 1) then ! northern closed boundary
+                     AmX(i,j) =  (_HALF_*(dudxV(i,j) + dudxV(i+1,j)))**2 &
+#ifndef SLICE_MODEL
+                               + dvdyU(i,j  )**2                         &
+#endif
+                               + _HALF_*shearX(i,j)**2
+                     AmX(i,j) = (smag_const**2)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
+                  end if
+                  if (au(i,j+1) .eq. 1) then ! southern closed boundary
+                     AmX(i,j) =  (_HALF_*(dudxV(i,j) + dudxV(i+1,j)))**2 &
+#ifndef SLICE_MODEL
+                               + dvdyU(i,j+1)**2                         &
+#endif
+                               + _HALF_*shearX(i,j)**2
+                     AmX(i,j) = (smag_const**2)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
+                  end if
+               end if
+               if (au(i,j).eq.0 .and. au(i,j+1).eq.0) then
+                  if (av(i,j) .eq. 1) then ! eastern closed boundary
+                     AmX(i,j) =  dudxV(i  ,j)**2                         &
+#ifndef SLICE_MODEL
+                               + (_HALF_*(dvdyU(i,j) + dvdyU(i,j+1)))**2 &
+#endif
+                               + _HALF_*shearX(i,j)**2
+                     AmX(i,j) = (smag_const**2)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
+                  end if
+                  if (av(i+1,j) .eq. 1) then ! western closed boundary
+                     AmX(i,j) =  dudxV(i+1,j)**2                         &
+#ifndef SLICE_MODEL
+                               + (_HALF_*(dvdyU(i,j) + dvdyU(i,j+1)))**2 &
+#endif
+                               + _HALF_*shearX(i,j)**2
+                     AmX(i,j) = (smag_const**2)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
+                  end if
+               end if
+#endif
+#endif
             end if
          end do
 #ifndef SLICE_MODEL
@@ -98,10 +160,18 @@
       do j=jmin-1,jmax+1
 #endif
          do i=imin-1,imax
-            if (au(i,j) .ge. 1) then
-               AmU(i,j) =  dudxU(i,j)**2                           &
+!           Note (KK): shearU(au=3) not available
+!                      (however we only need AmU(au=[1|2]) in tracer_diffusion)
+            if(au(i,j).eq.1 .or. au(i,j).eq.2) then
+!              interpolate dudxU (see deformation_rates)
+               if (au(i,j) .eq. 1) then
+                  rate = _HALF_*(dudxC(i,j) + dudxC(i+1,j))
+               else
+                  rate = _ZERO_
+               end if
+               AmU(i,j) =  rate**2                                     &
 #ifndef SLICE_MODEL
-                         + (_HALF_*(dvdyC(i,j) + dvdyC(i+1,j)))**2 &
+                         + dvdyU(i,j)**2                               &
 #endif
                          + _HALF_*shearU(i,j)**2
                AmU(i,j) = (smag_const**2)*DXU*DYU*sqrt(_TWO_*AmU(i,j))
@@ -114,34 +184,30 @@
 #endif
    end if
 
-   if (present(AmV)) then
-#ifdef SLICE_MODEL
-      j=jmax/2
-#else
-      do j=jmin-1,jmax
-#endif
-         do i=imin-1,imax+1
-!           average of shearX to shearV is not straight-forward at av=3
-!           however AmV(av=3) is not used in tracer_diffusion
-            if (av(i,j).eq.1 .or. av(i,j).eq.2) then
-!                             average of dudxC to dudxV is straight-forward
-                  AmV(i,j) =  (_HALF_*(dudxC(i,j) + dudxC(i,j+1)))**2          &
 #ifndef SLICE_MODEL
-                            + dvdyV(i,j)**2                                    &
-#endif
-!                              average of shearX to shearV is straight-forward
-                            + _HALF_*(_HALF_*(shearX(i-1,j) + shearX(i,j)))**2
-                  AmV(i,j) = (smag_const**2)*DXV*DYV*sqrt(_TWO_*AmV(i,j))
+   if (present(AmV)) then
+      do j=jmin-1,jmax
+         do i=imin-1,imax+1
+!           Note (KK): we only need AmV(av=[1|2]) in tracer_diffusion
+!                      (shearV(av=3) cannot be calculated anyway)
+            if(av(i,j).eq.1 .or. av(i,j).eq.2) then
+!              interpolate dvdyV and shearV (see deformation_rates)
+               if (av(i,j) .eq. 1) then
+                  rate = _HALF_*(dvdyC(i,j) + dvdyC(i,j+1))
+               else
+                  rate = _ZERO_
+               end if
+               AmV(i,j) =  dudxV(i,j)**2                                    &
+                         + rate**2                                          &
+                         + _HALF_*(_HALF_*(shearX(i-1,j) + shearX(i,j)))**2
+               AmV(i,j) = (smag_const**2)*DXV*DYV*sqrt(_TWO_*AmV(i,j))
             end if
          end do
-#ifndef SLICE_MODEL
       end do
-#else
-      AmV(imin-1:imax+1,jmax/2-1) = AmV(imin-1:imax+1,jmax/2)
-      AmV(imin-1:imax+1,jmax/2+1) = AmV(imin-1:imax+1,jmax/2)
-#endif
    end if
+#endif
 
+   call toc(TIM_SMAG2D)
 #ifdef DEBUG
    write(debug,*) 'Leaving les_smagorinsky()'
    write(debug,*)
@@ -151,5 +217,5 @@
 
 !EOC
 !-----------------------------------------------------------------------
-! Copyright (C) 2011 - Knut Klingbeil                                  !
+! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------

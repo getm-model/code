@@ -5,7 +5,7 @@
 
 include ../Rules.make
 
-INCS	= static_les.h dynamic_declarations_les.h dynamic_allocations_les.h
+INCS	= 
 LIB	= $(LIBDIR)/libles${buildtype}.a
 
 MODSRC	= les.F90 variables_les.F90

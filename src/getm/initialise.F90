@@ -46,10 +46,7 @@
    use time, only: init_time,update_time,write_time_string
    use time, only: start,timestr,timestep
    use m2d, only: init_2d,z,zu,zv
-#ifdef _LES_
-   use m2d, only: Am_method,Am_const
    use les, only: init_les
-#endif
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
 #ifndef NO_3D
    use m2d, only: Uint,Vint
@@ -223,10 +220,6 @@
 
    call init_2d(runtype,timestep,hotstart)
 
-#ifdef _LES_
-   call init_les(runtype,Am_method,Am_const)
-#endif
-
 #ifndef NO_3D
    if (runtype .gt. 1) then
       call init_3d(runtype,timestep,hotstart)
@@ -252,6 +245,8 @@
 #endif
    end if
 #endif
+
+   call init_les(runtype)
 
    call init_output(runid,title,start,runtype,dryrun,myid)
 

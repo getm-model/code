@@ -26,11 +26,9 @@
    use exceptions
    use parameters, only: avmmol
    use domain, only: openbdy,maxdepth,vert_cord,az
-#ifdef _LES_
    use les, only: do_les_3d
-   use les, only: les_3d_mode,MOMENTUM,TRACER,BOTH
-#endif
-   use m2d, only: Am_method
+   use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
+   use m2d, only: deformCX,deformUV,Am_method,NO_AM,AM_LES
    use variables_2d, only: D,z,UEx,VEx,Uint,Vint
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
@@ -56,19 +54,20 @@
    REALTYPE                            :: cord_relax=_ZERO_
    logical                             :: calc_temp=.true.
    logical                             :: calc_salt=.true.
+   logical                             :: calc_stirr=.false.
    logical                             :: bdy3d=.false.
    integer                             :: bdyfmt_3d,bdyramp_3d
    character(len=PATH_MAX)             :: bdyfile_3d
    REALTYPE                            :: ip_fac=_ONE_
    integer                             :: vel_check=0
    REALTYPE                            :: min_vel=-4*_ONE_,max_vel=4*_ONE_
+   logical                             :: deformCX_3d=.false.,deformUV_3d=.false.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
    integer         :: vel_hor_adv=1,vel_ver_adv=1,vel_adv_split=0
-   logical         :: deformUV=.false.,calc_stirring=.false.
 #ifdef NO_BAROCLINIC
    integer         :: ip_method
 #endif
@@ -138,12 +137,8 @@
    read(NAMLST,m3d)
 !   rewind(NAMLST)
 
-#ifdef _LES_
-   if (Am_method.eq.2) then
-      deformUV=.true.
-      les_3d_mode = MOMENTUM
-   end if
-#endif
+   deformCX_3d=deformCX
+   deformUV_3d=deformUV
 
    if (avmback .lt. _ZERO_) then
       LEVEL2 "setting avmback to 0."
@@ -282,39 +277,42 @@
    if (runtype .eq. 4) then
       if (calc_temp) then
          select case(temp_AH_method)
-#ifdef _LES_
             case(2)
-               deformUV=.true.
-               if (Am_method .eq. 2) then
-                  les_3d_mode = BOTH
+               deformCX_3d=.true.
+               deformUV_3d=.true.
+               if (Am_method .eq. AM_LES) then
+                  les_mode = LES_BOTH
                else
-                  les_3d_mode = TRACER
+                  les_mode = LES_TRACER
                end if
-#endif
             case(3)
-               calc_stirring=.true.
+               deformCX_3d=.true.
+               deformUV_3d=.true.
+               calc_stirr=.true.
          end select
       end if
       if (calc_salt) then
          select case(salt_AH_method)
-#ifdef _LES_
             case(2)
-               deformUV=.true.
-               if (Am_method .eq. 2) then
-                  les_3d_mode = BOTH
+               deformCX_3d=.true.
+               deformUV_3d=.true.
+               if (Am_method .eq. AM_LES) then
+                  les_mode = LES_BOTH
                else
-                  les_3d_mode = TRACER
+                  les_mode = LES_TRACER
                end if
-#endif
             case(3)
-               calc_stirring=.true.
+               deformCX_3d=.true.
+               deformUV_3d=.true.
+               calc_stirr=.true.
          end select
       end if
-      if (calc_stirring) then
+      if (calc_stirr) then
          allocate(diffxx(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'init_3d: Error allocating memory (diffxx)'
          diffxx=_ZERO_
 
+#ifndef SLICE_MODEL
          allocate(diffxy(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'init_3d: Error allocating memory (diffxy)'
          diffxy=_ZERO_
@@ -326,23 +324,46 @@
          allocate(diffyy(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'init_3d: Error allocating memory (diffyy)'
          diffyy=_ZERO_
+#endif
       end if
    end if
 #endif
 
-   if (deformUV) then
-      allocate(dudxU_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_3d: Error allocating memory (dudxU_3d)'
-      dudxU_3d=_ZERO_
 
-      allocate(dvdyV_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_3d: Error allocating memory (dvdyV_3d)'
-      dvdyV_3d=_ZERO_
+   if (deformCX_3d) then
 
-      allocate(shearU_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_3d: Error allocating memory (shearU_3d)'
-      shearU_3d=_ZERO_
+      allocate(dudxC_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (dudxC_3d)'
+      dudxC_3d=_ZERO_
+
+#ifndef SLICE_MODEL
+      allocate(dvdyC_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyC_3d)'
+      dvdyC_3d=_ZERO_
+#endif
+
+      allocate(shearX_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (shearX_3d)'
+      shearX_3d=_ZERO_
+   
+      if (deformUV_3d) then
+         allocate(dudxV_3d(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_3d: Error allocating memory (dudxV_3d)'
+         dudxV_3d=_ZERO_
+
+#ifndef SLICE_MODEL
+         allocate(dvdyU_3d(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_3d: Error allocating memory (dvdyU_3d)'
+         dvdyU_3d=_ZERO_
+#endif
+
+         allocate(shearU_3d(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_3d: Error allocating memory (shearU_3d)'
+         shearU_3d=_ZERO_
+      end if
+
    end if
+
 
    call init_advection_3d(2)
 
@@ -526,16 +547,16 @@
 
    call deformation_rates_3d()
 
-#ifdef _LES_
-   if (les_3d_mode .ge. 1) call do_les_3d(dudxC_3d,dudxU_3d, &
-                                          dvdyC_3d,dvdyV_3d, &
-                                          shearX_3d,shearU_3d)
+   if (les_mode .ne. NO_LES) call do_les_3d(dudxC_3d,dudxV_3d, &
+#ifndef SLICE_MODEL
+                                            dvdyC_3d,dvdyU_3d, &
 #endif
+                                            shearX_3d,shearU_3d)
 
 #ifndef NO_ADVECT
    if (kmax .gt. 1) then
       call uv_advect_3d(vel_hor_adv,vel_ver_adv,vel_adv_split)
-      if (Am_method .gt. 0) call uv_diffusion_3d() ! Must be called after uv_advect_3d
+      if (Am_method .ne. NO_AM) call uv_diffusion_3d() ! Must be called after uv_advect_3d
    end if
 #else
    STDERR 'NO_ADVECT 3D'
@@ -556,7 +577,7 @@
    end if
 #ifndef NO_BAROCLINIC
    if(runtype .eq. 4) then        ! prognostic T and S
-      if (calc_stirring) call tracer_stirring()
+      if (calc_stirr) call tracer_stirring()
       if (calc_temp) call do_temperature(n)
       if (calc_salt) call do_salinity(n)
 
@@ -600,7 +621,9 @@
 
 #ifndef NO_ADVECT
 #ifndef UV_ADV_DIRECT
+      call tic(TIM_INTEGR3D)
       call calc_uvex(Uint,Vint,Dn,Dun,Dvn)
+      call toc(TIM_INTEGR3D)
 #endif
 #endif
 

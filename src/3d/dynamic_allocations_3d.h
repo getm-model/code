@@ -7,15 +7,6 @@
   allocate(ww(I3DFIELD),stat=rc)    ! 3D field for w-velocity
   if (rc /= 0) stop 'init_3d: Error allocating memory (ww)'
 
-  allocate(dudxC_3d(I3DFIELD),stat=rc) ! zonal tension rate (T-points)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (dudxC_3d)'
-
-  allocate(dvdyC_3d(I3DFIELD),stat=rc) ! meridional tension rate (T-points)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (dvdyC_3d)'
-
-  allocate(shearX_3d(I3DFIELD),stat=rc) ! horizontal shear rate (X-points)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (shearX_3d)'
-
 #ifdef STRUCTURE_FRICTION
   allocate(sf(I3DFIELD),stat=rc)    ! 3D field for velocity in T-points
   if (rc /= 0) stop 'init_3d: Error allocating memory (sf)'

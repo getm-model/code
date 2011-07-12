@@ -30,11 +30,8 @@
 #endif
    use variables_2d, only: D,U,V,UEx,VEx,Uint,Vint,PP
    use variables_3d, only: ssen,ssun,ssvn
-#ifdef _LES_
-   use variables_les, only: Am_2d,AmX_2d
-#else
+   use variables_les, only: AmC_2d,AmX_2d
    use m2d, only: Am_const
-#endif
    use getm_timers, only: tic, toc, TIM_SLOWDIFF
    IMPLICIT NONE
 !

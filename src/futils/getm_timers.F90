@@ -29,7 +29,9 @@
    integer, parameter :: TIM_MOMENTUM    =  4   ! 2d momentum
    integer, parameter :: TIM_MOMENTUMH   =  5   ! 2d momentum - halo part only
    integer, parameter :: TIM_UVDEPTHS    =  6   ! 2d uv_depths
+   integer, parameter :: TIM_UVEX        =  7   ! wrapper for hor. adv+diff
    integer, parameter :: TIM_UVADVECT    =  8   ! 2d uv_advect
+   integer, parameter :: TIM_DEFORM      =  9   ! 2d deformation rates
    integer, parameter :: TIM_UVDIFFUS    = 10   ! 2d uv_diffusion
    integer, parameter :: TIM_DPTHUPDATE  = 12   ! 2d depth_update
    integer, parameter :: TIM_SEALEVEL    = 14   ! 2d sealevel
@@ -39,7 +41,8 @@
    integer, parameter :: TIM_GOTMH       = 23   ! 3d gotm - halo part onl
    integer, parameter :: TIM_UVADV3D     = 30   ! 3d uv_advect_3d
    integer, parameter :: TIM_UVADV3DH    = 31   ! 3d uv_advect_3d - halo part only
-   integer, parameter :: TIM_UVDIFF3D    = 32   ! 3d uv_diffusion_3d
+   integer, parameter :: TIM_DEFORM3D    = 32   ! 3d deformation rates
+   integer, parameter :: TIM_UVDIFF3D    = 33   ! 3d uv_diffusion_3d
    integer, parameter :: TIM_VVMOMENTUM  = 34   ! 3d vv_momentum_3d
    integer, parameter :: TIM_VVMOMENTUMH = 35   ! 3d vv_momentum_3d - halo part only
    integer, parameter :: TIM_UUMOMENTUM  = 36   ! 3d uu_momentum_3d
@@ -63,7 +66,9 @@
    integer, parameter :: TIM_STARTMCR    = 60   ! 3d start_macro
    integer, parameter :: TIM_STOPMCR     = 62   ! 3d stop_macro
    integer, parameter :: TIM_STRCTFRICT  = 64   ! 3d structure_friction_3d
-   integer, parameter :: TIM_EQSTATE     = 66   ! 3d do_eqstate
+   integer, parameter :: TIM_EQSTATE     = 65   ! 3d do_eqstate
+   integer, parameter :: TIM_STIRR       = 66   ! tracer_stirring
+   integer, parameter :: TIM_TRACEDIFF   = 67   ! tracer_diffusion
    integer, parameter :: TIM_CALCMEANF   = 68   ! 3d calc_mean_fields
    integer, parameter :: TIM_METEO       = 70   ! do_meteo (could use + halo)
    integer, parameter :: TIM_GETM_BIO    = 72   ! do_getm_bio
@@ -84,6 +89,7 @@
 !  LES timers
    integer, parameter :: TIM_LES2D       = 152  ! do_les_2d
    integer, parameter :: TIM_LES3D       = 153  ! do_les_3d
+   integer, parameter :: TIM_SMAG2D      = 154  ! les_smagorinsky
    ! This is test timers for temporary coding purposes:
    !  Note: All timers with index 170+ (test_timer_first) are
    !  considered test timers, so dont implement your timers here
@@ -166,8 +172,11 @@
    timernames(TIM_MOMENTUM)    = 'momentum'
    timernames(TIM_UVDEPTHS)    = 'uv_depths'
    timernames(TIM_LES2D)       = 'do_les_2d'
-   timernames(TIM_UVADVECT)    = 'uv_advect'
-   timernames(TIM_UVDIFFUS)    = 'uv_diffusion'
+   timernames(TIM_SMAG2D)      = ' les_smagorinsky'
+   timernames(TIM_UVEX)        = ' calc_uvex'
+   timernames(TIM_UVADVECT)    = ' uv_advect'
+   timernames(TIM_DEFORM)      = ' deformation_rates'
+   timernames(TIM_UVDIFFUS)    = ' uv_diffusion'
    timernames(TIM_DPTHUPDATE)  = 'depth_update'
    timernames(TIM_SEALEVEL)    = 'sealevel'
 
@@ -190,6 +199,7 @@
    !timernames(TIM_GOTMTURB)    = ' gotm-turbulence'
    timernames(TIM_LES3D)       = 'do_les_3d'
    timernames(TIM_UVADV3D)     = 'uv_advect_3d'
+   timernames(TIM_DEFORM3D)    = 'deformation_rates_3d'
    timernames(TIM_UVDIFF3D)    = 'uv_diffusion_3d'
    timernames(TIM_VVMOMENTUM)  = 'vv_momentum_3d'
    timernames(TIM_UUMOMENTUM)  = 'uu_momentum_3d'
@@ -209,6 +219,8 @@
    timernames(TIM_INTPRESS)    = 'do_internal_pressure'
    timernames(TIM_STARTMCR)    = 'start_macro'
    timernames(TIM_EQSTATE)     = 'eq_state'
+   timernames(TIM_STIRR)       = 'tracer_stirring'
+   timernames(TIM_TRACEDIFF)   = ' tracer_diffusion'
    timernames(TIM_CALCMEANF)   = 'calc_mean_fields'
 
    timernames(TIM_CHECK3DF)    = ' sum check_3d_fields'

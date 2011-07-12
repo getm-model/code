@@ -76,10 +76,6 @@
 ! Apart from this, there are various options for specific initial
 ! conditions which are selected by means of compiler options.
 !
-! !USES:
-#ifdef _LES_
-   use m2d, only: Am_method
-#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -97,7 +93,7 @@
             salt_format,salt_name,salt_field_no,              &
             salt_hor_adv,salt_ver_adv,salt_adv_split,         &
             salt_AH_method,salt_AH_const,salt_AH_Prt,         &
-            salt_check,min_salt,max_salt
+            salt_AH_stirr_const,salt_check,min_salt,max_salt
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -184,17 +180,8 @@
          end if
          LEVEL4 salt_AH_const
       case(2)
-#ifdef _LES_
          LEVEL3 'salt_AH_method=2 -> using LES parameterisation'
-         if (Am_method .ne. 2) then
-              call getm_error("init_salinity()", &
-                         "Am_method precludes LES parameterisation");
-         end if
          LEVEL4 'turbulent Prandtl number: ',salt_AH_Prt
-#else
-         call getm_error("init_salinity()", &
-                         "GETM not compiled for LES parameterisation");
-#endif
       case(3)
          LEVEL3 'salt_AH_method=3 -> SGS stirring parameterisation'
          if (salt_AH_stirr_const .lt. _ZERO_) then

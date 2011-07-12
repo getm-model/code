@@ -9,12 +9,8 @@ include Rules.make
 SUBDIRS = \
 $(GETMDIR)/src/futils		\
 $(GETMDIR)/src/domain		\
-$(GETMDIR)/src/meteo
-ifeq ($(GETM_LES),true)
-SUBDIRS += \
-$(GETMDIR)/src/les
-endif
-SUBDIRS += \
+$(GETMDIR)/src/meteo		\
+$(GETMDIR)/src/les		\
 $(GETMDIR)/src/2d
 ifneq ($(GETM_NO_3D),true)
 SUBDIRS += \
@@ -36,11 +32,8 @@ ifneq ($(GETM_NO_3D),true)
 CORE_LIBS	+=	\
 		-l3d${buildtype}
 endif
-ifeq ($(GETM_LES),true)
 CORE_LIBS	+=	\
-		-lles${buildtype}
-endif
-CORE_LIBS	+=	\
+		-lles${buildtype}	\
 		-ldomain${buildtype} 	\
 		-linput${buildtype}	\
 		-lncdfio${buildtype}	\

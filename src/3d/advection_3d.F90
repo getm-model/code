@@ -212,10 +212,6 @@
 !
 !
 ! !USES:
-#ifdef _LES_
-   use m2d, only: Am_method
-   use variables_les, only: AmU_3d,AmV_3d
-#endif
    use getm_timers, only: tic, toc, TIM_ADVECT3DTOT, TIM_ADVECT3DH
    IMPLICIT NONE
 !

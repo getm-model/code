@@ -226,14 +226,6 @@
 				bdy_2d.nc
 			</bdyfile_2d>
 		</m2d>
-		<les>
-			<les_method>
-				1
-			</les_method>
-			<smag_const>
-				0.28
-			</smag_const>
-		</les>
 		<m3d>
 			<M>
 				60
@@ -449,6 +441,14 @@
 				0.78
 			</dsr0>
 		</eqstate>
+		<les>
+			<les_method>
+				1
+			</les_method>
+			<smag_const>
+				0.28
+			</smag_const>
+		</les>
 		<io_spec>
 			<out_fmt>
 				2
@@ -516,12 +516,15 @@
 			<save_nuh>
 				True
 			</save_nuh>
-			<save_Am_2d>
+			<save_AmC_2d>
 				False
-			</save_Am_2d>
-			<save_Am_3d>
+			</save_AmC_2d>
+			<save_AmC_3d>
 				False
-			</save_Am_3d>
+			</save_AmC_3d>
+			<save_stirr>
+				False
+			</save_stirr>
 			<save_ss_nn>
 				True
 			</save_ss_nn>

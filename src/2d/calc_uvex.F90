@@ -11,14 +11,15 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use m2d, only: Am_method,An_method
+   use m2d, only: Am_method,An_method,NO_AM,AM_CONSTANT,AM_LES
    use variables_2d, only: UEx,VEx
-   use variables_2d, only: dudxC,dvdyC,shearX
-   use variables_2d, only: dudxU,dvdyV,shearU
-#ifdef _LES_
-   use les, only: do_les_2d
-   use variables_les, only: Am_2d,AmX_2d
+   use variables_2d, only: dudxC,dudxV,shearX,shearU
+#ifndef SLICE_MODEL
+   use variables_2d, only: dvdyC,dvdyU
 #endif
+   use les, only: do_les_2d
+   use variables_les, only: AmC_2d,AmX_2d
+   use getm_timers,  only: tic,toc,TIM_UVEX
 !  needed by interface headers!
    use domain, only: imin,imax,jmin,jmax
 
@@ -36,7 +37,6 @@
 !
 ! !LOCAL VARIABLES:
 !
-
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -45,29 +45,50 @@
    Ncall = Ncall+1
    write(debug,*) 'calc_uvex() # ',Ncall
 #endif
+   CALL tic(TIM_UVEX)
 
       call uv_advect(U,V,DU,DV)
       select case(Am_method)
-         case(0)
+         case(NO_AM)
             if (An_method .gt. 0) then
-               call uv_diffusion(0,An_method,UEx,VEx,U=U,V=V)
+               call uv_diffusion(UEx,VEx,U=U,V=V)
             end if
-         case(1)
-            call deformation_rates(U,V,DU,DV,dudxC,dvdyC,shearX=shearX)
-            call uv_diffusion(1,An_method,UEx,VEx,U=U,V=V,           &
-                              dudxC=dudxC,dvdyC=dvdyC,shearX=shearX, &
-                              D=D,DU=DU,DV=DV)
-#ifdef _LES_
-         case(2)
-            call deformation_rates(U,V,DU,DV,dudxC,dvdyC,shearX=shearX, &
-                                   dudxU=dudxU,dvdyV=dvdyV,shearU=shearU)
-            call do_les_2d(dudxC,dudxU,dvdyC,dvdyV,shearX,shearU)
-            call uv_diffusion(2,An_method,UEx,VEx,U=U,V=V,           &
-                              dudxC=dudxC,dvdyC=dvdyC,shearX=shearX, &
-                              D=D,DU=DU,DV=DV,Am=Am_2d,AmX=AmX_2d)
+         case(AM_CONSTANT)
+            call deformation_rates(U,V,DU,DV,   &
+                                   dudxC=dudxC, &
+#ifndef SLICE_MODEL
+                                   dvdyC=dvdyC, &
 #endif
+                                   shearX=shearX)
+            call uv_diffusion(UEx,VEx,U=U,V=V,D=D,DU=DU,DV=DV, &
+                              dudxC=dudxC,                     &
+#ifndef SLICE_MODEL
+                              dvdyC=dvdyC,                     &
+#endif
+                              shearX=shearX)
+         case(AM_LES)
+            call deformation_rates(U,V,DU,DV,                 &
+                                   dudxC=dudxC,dudxV=dudxV,   &
+#ifndef SLICE_MODEL
+                                   dvdyC=dvdyC,dvdyU=dvdyU,   &
+#endif
+                                   shearX=shearX,shearU=shearU)
+            CALL toc(TIM_UVEX)
+            call do_les_2d(dudxC,dudxV, &
+#ifndef SLICE_MODEL
+                           dvdyC,dvdyU, &
+#endif
+                           shearX,shearU)
+            CALL tic(TIM_UVEX)
+            call uv_diffusion(UEx,VEx,U=U,V=V,D=D,DU=DU,DV=DV,   &
+                              dudxC=dudxC,                       &
+#ifndef SLICE_MODEL
+                              dvdyC=dvdyC,                       &
+#endif
+                              shearX=shearX,AmC=AmC_2d,AmX=AmX_2d)
       end select
 
+   CALL toc(TIM_UVEX)
 #ifdef DEBUG
    write(debug,*) 'Leaving calc_uvex()'
    write(debug,*)

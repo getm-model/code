@@ -230,7 +230,7 @@
 				<options>
 					<option value="0" label="disabled"/>
 					<option value="1" label="constant value Am_const"/>
-					<option value="2" label="LES parameterisation, see namelist les (requires compilation with 'export GETM_LES=true')"/>
+					<option value="2" label="LES parameterisation, see namelist les"/>
 				</options>
 			</element>
 			<element name="Am_const" type="float" label="constant horizontal momentum diffusion coefficient" unit="m²/s">
@@ -272,18 +272,6 @@
 						<condition type="eq" variable="./bdyfmt_2d" value="2"/>
 					</condition>
 				</condition>
-			</element>
-		</element>
-
-		<element name="les" label="variables related to LES (requires compilation with 'export GETM_LES=true')">
-			<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
-			<element name="les_method" type="int" label="LES method">
-				<options>
-					<option value="1" label="Smagorinsky parameterisation"/>
-				</options>
-			</element>
-			<element name="smag_const" type="float" label="Smagorinsky constant" minInclusive="0.0">
-				<condition type="eq" variable="./les_method" value="1"/>
 			</element>
 		</element>
 
@@ -441,7 +429,6 @@
 					<option value="0" label="disabled"/>
 					<option value="1" label="constant value temp_AH_const"/>
 					<option value="2" label="LES parameterisation"/>
-						<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
 					<option value="3" label="SGS stirring"/>
 				</options>
 			</element>
@@ -576,7 +563,6 @@
 					<option value="0" label="disabled"/>
 					<option value="1" label="constant value salt_AH_const"/>
 					<option value="2" label="LES parameterisation"/>
-						<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
 					<option value="3" label="SGS stirring"/>
 				</options>
 			</element>
@@ -623,6 +609,22 @@
 			</element>
 		</element>
 
+		<element name="les" label="variables related to LES">
+			<condition type="or">
+				<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
+				<condition type="eq" variable="/getm/temp/temp_AH_method" value="2"/>
+				<condition type="eq" variable="/getm/salt/salt_AH_method" value="2"/>
+			</condition>
+			<element name="les_method" type="int" label="LES method">
+				<options>
+					<option value="1" label="Smagorinsky parameterisation"/>
+				</options>
+			</element>
+			<element name="smag_const" type="float" label="Smagorinsky constant" minInclusive="0.0">
+				<condition type="eq" variable="./les_method" value="1"/>
+			</element>
+		</element>
+
 		<element name="io_spec" label="format for output and filename(s)">
 			<element name="out_fmt" type="int" label="output format">
 				<options>
@@ -663,13 +665,22 @@
 			<element name="save_eps" type="bool" label="save turbulence dissipation rate"/>
 			<element name="save_num" type="bool" label="save turbulent diffusivity of momentum"/>
 			<element name="save_nuh" type="bool" label="save turbulent diffusivity of heat"/>
-			<element name="save_Am_2d" type="bool" label="save 2D horizontal eddy viscosity">
+			<element name="save_AmC_2d" type="bool" label="save 2D horizontal eddy viscosity">
 				<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
 			</element>
-			<element name="save_Am_3d" type="bool" label="save 3D horizontal eddy viscosity">
+			<element name="save_AmC_3d" type="bool" label="save 3D horizontal eddy viscosity">
 				<condition type="and">
 					<condition type="ne" variable="/getm/param/runtype" value="1"/>
 					<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
+				</condition>
+			</element>
+			<element name="save_stirr" type="bool" label="save stirring diffusivities">
+				<condition type="and">
+					<condition type="eq" variable="/getm/param/runtype" value="4"/>
+					<condition type="or">
+						<condition type="eq" variable="/getm/temp/temp_AH_method" value="3"/>
+						<condition type="eq" variable="/getm/salt/salt_AH_method" value="3"/>
+					</condition>
 				</condition>
 			</element>
 			<element name="save_ss_nn" type="bool" label="save shear stress and Brunt-Vaisala frequency"/>

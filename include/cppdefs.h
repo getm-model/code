@@ -7,8 +7,6 @@
 
 #if defined(SPHERICAL) || defined(CURVILINEAR)
 #define DXC dxc(i,j)
-#define DXCIP1 dxc(i+1,j)
-#define DXCIM1 dxc(i-1,j)
 #define DXCJP1 dxc(i,j+1)
 #define DXU dxu(i,j)
 #define DXUJP1 dxu(i,j+1)
@@ -18,8 +16,6 @@
 #define DXXJM1 dxx(i,j-1)
 #define DYC dyc(i,j)
 #define DYCIP1 dyc(i+1,j)
-#define DYCJP1 dyc(i,j+1)
-#define DYCJM1 dyc(i,j-1)
 #define DYU dyu(i,j)
 #define DYUIM1 dyu(i-1,j)
 #define DYV dyv(i,j)
@@ -31,8 +27,6 @@
 #define ARVD1 arvd1(i,j)
 #else
 #define DXC dx
-#define DXCIP1 dx
-#define DXCIM1 dx
 #define DXCJP1 dx
 #define DXU dx
 #define DXUJP1 dx
@@ -42,8 +36,6 @@
 #define DXXJM1 dx
 #define DYC dy
 #define DYCIP1 dy
-#define DYCJP1 dy
-#define DYCJM1 dy
 #define DYU dy
 #define DYUIM1 dy
 #define DYV dy
@@ -53,14 +45,6 @@
 #define ARCD1 ard1
 #define ARUD1 ard1
 #define ARVD1 ard1
-#endif
-
-#ifdef _LES_
-#define _AM_  Am(i,j)
-#define _AMX_ AmX(i,j)
-#else
-#define _AM_  Am_const
-#define _AMX_ Am_const
 #endif
 
 ! For 2D boundary conditions

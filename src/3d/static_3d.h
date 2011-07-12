@@ -23,9 +23,6 @@
   REALTYPE                             :: uu(I3DFIELD)
   REALTYPE                             :: vv(I3DFIELD)
   REALTYPE, target                     :: ww(I3DFIELD)
-  REALTYPE                             :: dudxC_3d(I3DFIELD)
-  REALTYPE                             :: dvdyC_3d(I3DFIELD)
-  REALTYPE                             :: shearX_3d(I3DFIELD)
 #ifdef STRUCTURE_FRICTION
   REALTYPE                             :: sf(I3DFIELD)
 #endif

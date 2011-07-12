@@ -11,9 +11,6 @@
 
   REALTYPE, dimension(:,:,:), allocatable   :: uu,vv
   REALTYPE, dimension(:,:,:), allocatable, target :: ww
-
-  REALTYPE,dimension(:,:,:),allocatable :: dudxC_3d,dvdyC_3d,shearX_3d
-
 #ifdef STRUCTURE_FRICTION
   REALTYPE, dimension(:,:,:), allocatable   :: sf
 #endif

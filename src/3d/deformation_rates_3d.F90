@@ -1,4 +1,3 @@
-!$Id: deformation_rates_3d.F90,v 1.11 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -12,22 +11,24 @@
 !
 ! !USES:
    use domain, only: kmax
-   use m3d, only: deformUV
+   use m3d, only: deformCX_3d,deformUV_3d
    use variables_3d, only: uu,vv,hun,hvn
-   use variables_3d, only: dudxC_3d,dvdyC_3d,shearX_3d
-   use variables_3d, only: dudxU_3d,dvdyV_3d,shearU_3d
+   use variables_3d, only: dudxC_3d,dudxV_3d
+#ifndef SLICE_MODEL
+   use variables_3d, only: dvdyC_3d,dvdyU_3d
+#endif
+   use variables_3d, only: shearX_3d,shearU_3d
+   use getm_timers, only: tic,toc,TIM_DEFORM3D
 
    IMPLICIT NONE
 
 #include "../2d/deformation_rates.h"
 !
-! !INPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
 !  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
-   integer                                           :: k
+   integer :: k
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -36,21 +37,31 @@
    Ncall = Ncall+1
    write(debug,*) 'deformation_rates_3d() # ',Ncall
 #endif
+   call tic(TIM_DEFORM3D)
 
-!  KK-TODO: timer
-   do k=1,kmax
-      if (deformUV) then
-         call deformation_rates(uu(:,:,k),vv(:,:,k),hun(:,:,k),hvn(:,:,k),     &
-                                dudxC_3d(:,:,k),dvdyC_3d(:,:,k),               &
-                                dudxU=dudxU_3d(:,:,k),dvdyV=dvdyV_3d(:,:,k),   &
-                                shearX=shearX_3d(:,:,k),shearU=shearU_3d(:,:,k))
+   if (deformCX_3d) then
+      if (deformUV_3d) then
+         do k=1,kmax
+            call deformation_rates(uu(:,:,k),vv(:,:,k),hun(:,:,k),hvn(:,:,k),     &
+                                   dudxC=dudxC_3d(:,:,k),dudxV=dudxV_3d(:,:,k),   &
+#ifndef SLICE_MODEL
+                                   dvdyC=dvdyC_3d(:,:,k),dvdyU=dvdyU_3d(:,:,k),   &
+#endif
+                                   shearX=shearX_3d(:,:,k),shearU=shearU_3d(:,:,k))
+         end do
       else
-         call deformation_rates(uu(:,:,k),vv(:,:,k),hun(:,:,k),hvn(:,:,k), &
-                                dudxC_3d(:,:,k),dvdyC_3d(:,:,k),           &
-                                shearX=shearX_3d(:,:,k))
+         do k=1,kmax
+            call deformation_rates(uu(:,:,k),vv(:,:,k),hun(:,:,k),hvn(:,:,k), &
+                                   dudxC=dudxC_3d(:,:,k),                     &
+#ifndef SLICE_MODEL
+                                   dvdyC=dvdyC_3d(:,:,k),                     &
+#endif
+                                   shearX=shearX_3d(:,:,k))
+         end do
       end if
-   end do
+   end if
 
+   call toc(TIM_DEFORM3D)
 #ifdef DEBUG
    write(debug,*) 'Leaving deformation_rates_3d()'
    write(debug,*)
@@ -60,5 +71,5 @@
 
 !EOC
 !-----------------------------------------------------------------------
-! Copyright (C) 2011 - Knut Klingbeil                                  !
+! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------

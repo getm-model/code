@@ -33,15 +33,6 @@
    allocate(V(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (V)'
 
-   allocate(dudxC(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (dudxC)'
-
-   allocate(dvdyC(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyC)'
-
-   allocate(shearX(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (shearX)'
-
    allocate(UEx(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (UEx)'
 

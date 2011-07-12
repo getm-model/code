@@ -26,6 +26,7 @@
    use domain, only: ill,ihl,jll,jhl
    use domain, only: openbdy,z0_method,z0_const,z0
    use domain, only: az,ax
+   use les, only: les_mode,LES_MOMENTUM
    use halo_zones, only : update_2d_halo,wait_halo
    use halo_zones, only : U_TAG,V_TAG,H_TAG
    use variables_2d
@@ -44,7 +45,9 @@
 ! !PUBLIC DATA MEMBERS:
    logical                   :: have_boundaries
    REALTYPE                  :: dtm
-   integer                   :: Am_method=0
+   logical                   :: deformCX=.false.,deformUV=.false.
+   integer,parameter         :: NO_AM=0,AM_CONSTANT=1,AM_LES=2
+   integer                   :: Am_method=NO_AM
    REALTYPE                  :: Am_const=1.8d-6
 !  method for specifying horizontal numerical diffusion coefficient
 !     (0=const, 1=from named nc-file)
@@ -69,7 +72,6 @@
 ! !LOCAL VARIABLES:
    integer                   :: num_neighbors
    REALTYPE                  :: An_sum
-   logical                   :: deformUV=.false.
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -136,23 +138,21 @@
 #endif
 
    select case (Am_method)
-      case(0)
+      case(NO_AM)
          LEVEL2 'Am_method=0 -> horizontal momentum diffusion not included'
-      case(1)
+      case(AM_CONSTANT)
          LEVEL2 'Am_method=1 -> Using constant horizontal momentum diffusion'
          if (Am_const .lt. _ZERO_) then
               call getm_error("init_2d()", &
                          "Constant horizontal momentum diffusion <0");
          end if
          LEVEL3 Am_const
-      case(2)
-#ifdef _LES_
+         deformCX=.true.
+      case(AM_LES)
          LEVEL2 'Am_method=2 -> using LES parameterisation'
+         les_mode=LES_MOMENTUM
+         deformCX=.true.
          deformUV=.true.
-#else
-         call getm_error("init_2d()", &
-                         "GETM not compiled for LES parameterisation");
-#endif
       case default
          call getm_error("init_2d()", &
                          "A non valid Am_method has been chosen");
@@ -161,7 +161,6 @@
    select case (An_method)
       case(0)
          LEVEL2 'An_method=0 -> horizontal numerical diffusion not included'
-         An = _ZERO_
       case(1)
          LEVEL2 'An_method=1 -> Using constant horizontal numerical diffusion'
          if (An_const .lt. _ZERO_) then
@@ -245,19 +244,41 @@
       LEVEL2 'Format=',bdyfmt_2d
    end if
 
-   if (deformUV) then
-      allocate(dudxU(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (dudxU)'
-      dudxU=_ZERO_
 
-      allocate(dvdyV(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyV)'
-      dvdyV=_ZERO_
+   if (deformCX) then
 
-      allocate(shearU(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (shearU)'
-      shearU=_ZERO_
+      allocate(dudxC(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (dudxC)'
+      dudxC=_ZERO_
+
+#ifndef SLICE_MODEL
+      allocate(dvdyC(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyC)'
+      dvdyC=_ZERO_
+#endif
+
+      allocate(shearX(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (shearX)'
+      shearX=_ZERO_
+
+      if (deformUV) then
+         allocate(dudxV(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (dudxV)'
+         dudxV=_ZERO_
+
+#ifndef SLICE_MODEL
+         allocate(dvdyU(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyU)'
+         dvdyU=_ZERO_
+#endif
+
+         allocate(shearU(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (shearU)'
+         shearU=_ZERO_
+      end if
+
    end if
+
 
    call uv_depths(vel_depth_method)
 
@@ -312,9 +333,6 @@
 ! !INTERFACE:
    subroutine integrate_2d(runtype,loop,tausx,tausy,airp)
    use getm_timers, only: tic, toc, TIM_INTEGR2D
-#ifdef _LES_
-   use les, only: do_les_2d
-#endif
 
    IMPLICIT NONE
 !
@@ -370,8 +388,8 @@
    STDERR 'NO_ADVECT 2D'
 #else
 #ifndef UV_ADV_DIRECT
-   call calc_uvex(U,V,D,DU,DV)
    call tic(TIM_INTEGR2D)
+   call calc_uvex(U,V,D,DU,DV)
    call mirror_bdy_2d(UEx,U_TAG)
    call mirror_bdy_2d(VEx,V_TAG)
    call toc(TIM_INTEGR2D)

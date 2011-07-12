@@ -17,9 +17,7 @@
    use domain,       only: ioff,joff,imin,imax,jmin,jmax
    use domain,       only: H,az,au,av,crit_depth
    use variables_2d, only: z,D,U,DU,V,DV,res_u,res_v,surfdiv
-#ifdef _LES_
-   use variables_les, only: Am_2d
-#endif
+   use variables_les, only: AmC_2d
 #if USE_BREAKS
    use variables_2d, only: break_stat
 #endif
@@ -171,14 +169,12 @@
          if (err .NE. NF90_NOERR) go to 10
 
       end if
-#ifdef _LES_
-      if (Am_method .eq. 2 .and. save_Am_2d) then
-         call cnv_2d(imin,jmin,imax,jmax,az,Am_2d,Am_2d_missing, &
+      if (Am_method.eq.AM_LES .and. save_AmC_2d) then
+         call cnv_2d(imin,jmin,imax,jmax,az,AmC_2d,AmC_2d_missing, &
                      imin,jmin,imax,jmax,ws)
-         err = nf90_put_var(ncid,Am_2d_id,ws(_2D_W_),start,edges)
+         err = nf90_put_var(ncid,AmC_2d_id,ws(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
-#endif
 
    else ! residual velocities
 

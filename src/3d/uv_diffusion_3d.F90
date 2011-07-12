@@ -13,12 +13,13 @@
 !
 ! !USES:
    use domain, only: kmax
-   use m2d, only: Am_method
-   use variables_3d, only: uuEx,vvEx,hn,hun,hvn
-   use variables_3d, only: dudxC_3d,dvdyc_3d,shearX_3d
-#ifdef _LES_
-   use variables_les, only: Am_3d,AmX_3d
+   use m2d, only: Am_method,AM_CONSTANT,AM_LES
+   use variables_3d, only: uu,vv,uuEx,vvEx,hn,hun,hvn
+   use variables_3d, only: dudxC_3d,shearX_3d
+#ifndef SLICE_MODEL
+   use variables_3d, only: dvdyc_3d
 #endif
+   use variables_les, only: AmC_2d,AmX_2d,AmC_3d,AmX_3d
    use getm_timers, only: tic, toc, TIM_UVDIFF3D
 
    IMPLICIT NONE
@@ -28,10 +29,10 @@
 ! !INPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
+!  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
-   integer                   :: k
+   integer :: k
 
 !EOP
 !-----------------------------------------------------------------------
@@ -43,24 +44,29 @@
 #endif
    call tic(TIM_UVDIFF3D)
 
-!  KK-TODO: correct timers
-   do k=1,kmax
-      select case(Am_method)
-         case(1)
-            call uv_diffusion(1,0,uuEx(:,:,k),vvEx(:,:,k),                 &
-                              dudxC=dudxC_3d(:,:,k),dvdyC=dvdyC_3d(:,:,k), &
-                              shearX=shearX_3d(:,:,k),                     &
-                              D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k))
-#ifdef _LES_
-         case(2)
-            call uv_diffusion(2,0,uuEx(:,:,k),vvEx(:,:,k),                 &
-                              dudxC=dudxC_3d(:,:,k),dvdyC=dvdyC_3d(:,:,k), &
-                              shearX=shearX_3d(:,:,k),                     &
-                              D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),     &
-                              Am=Am_3d(:,:,k),AmX=AmX_3d(:,:,k))
+   select case(Am_method)
+      case(AM_CONSTANT)
+         do k=1,kmax
+            call uv_diffusion(uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                              D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),         &
+                              dudxC=dudxC_3d(:,:,k),                           &
+#ifndef SLICE_MODEL
+                              dvdyC=dvdyC_3d(:,:,k),                           &
 #endif
-      end select
-   end do
+                              shearX=shearX_3d(:,:,k))
+         end do
+      case(AM_LES)
+         do k=1,kmax
+            call uv_diffusion(uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                              D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),         &
+                              dudxC=dudxC_3d(:,:,k),                           &
+#ifndef SLICE_MODEL
+                              dvdyC=dvdyC_3d(:,:,k),                           &
+#endif
+                              shearX=shearX_3d(:,:,k),                         &
+                              AmC=AmC_3d(:,:,k),AmX=AmX_3d(:,:,k))
+         end do
+   end select
 
    call toc(TIM_UVDIFF3D)
 #ifdef DEBUG

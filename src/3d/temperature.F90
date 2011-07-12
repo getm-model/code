@@ -77,10 +77,6 @@
 ! Finally, a number of sanity checks are performed for the chosen
 ! temperature advection schemes.
 !
-! !USES:
-#ifdef _LES_
-   use m2d, only: Am_method
-#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -186,17 +182,8 @@
          end if
          LEVEL4 temp_AH_const
       case(2)
-#ifdef _LES_
          LEVEL3 'temp_AH_method=2 -> using LES parameterisation'
-         if (Am_method .ne. 2) then
-              call getm_error("init_temperature()", &
-                         "Am_method precludes LES parameterisation");
-         end if
          LEVEL4 'Turbulent Prandtl number: ',temp_AH_Prt
-#else
-         call getm_error("init_temperature()", &
-                         "GETM not compiled for LES parameterisation");
-#endif
       case(3)
          LEVEL3 'temp_AH_method=3 -> SGS stirring parameterisation'
          if (temp_AH_stirr_const .lt. _ZERO_) then
