@@ -276,12 +276,12 @@
 !                         at N/S closed boundaries slip condition dudyX=0
                PP(i,j)=PP(i,j)+AnX(i,j)*DXX*(U(i,j+1)-U(i,j))/DYX
             end if
-#ifdef CORRECT_METRICS
+#ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
         else if (av(i,j).eq.0 .and. av(i+1,j).eq.0) then
 !           Note (KK): exclude convex corners (shearX=0)
 !                      exclude W/E closed boundaries (not needed)
-            if (au(i,j  ) .eq. 1) then ! northern closed boundary
+            if (au(i,j) .eq. 1) then ! northern closed boundary
                select case(Am_method)
                   case (AM_CONSTANT)
                      PP(i,j)=Am_const*DXX*DU(i,j)*shearX(i,j)
@@ -326,8 +326,6 @@
 #endif
       do i=imin-1,imax      ! PP defined on X-points
          PP(i,j)=_ZERO_
-!        Note (KK): shear(ax=0)=0 (depthX at closed boundaries cannot
-!                                  be calculated anyway)
          if (ax(i,j) .eq. 1) then
             select case(Am_method)
                case (AM_CONSTANT)
@@ -342,7 +340,7 @@
 !                         at W/E closed boundaries slip condition dvdxX=0
                PP(i,j)=PP(i,j)+AnX(i,j)*DYX*(V(i+1,j)-V(i,j))/DXX
             end if
-#ifdef CORRECT_METRICS
+#ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
         else if (au(i,j).eq.0 .and. au(i,j+1).eq.0) then
 !           Note (KK): exclude convex corners (shearX=0)

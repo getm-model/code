@@ -108,7 +108,7 @@
    v_vel(:,jmax/2+1) = v_vel(:,jmax/2)
 #endif
 
-#ifdef CORRECT_METRICS
+#ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
 !  mirror velocities based on ouflow condition for transverse velocity
    do n = 1,NNB ! northern open boundaries (dudyX=0)
@@ -198,7 +198,7 @@
             if (az(i,j) .eq. 1) then
 !              Note (KK): since U(au=0)=0, dudxC can also be calculated near closed boundaries
                dudxC(i,j) = (u_vel(i,j) - u_vel(i-1,j)) / DXC
-#ifdef CORRECT_METRICS
+#ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dudxC(i,j) = dudxC(i,j) + _HALF_*(v_vel(i,j)+v_vel(i,j-1))*(DXV-DXVJM1)*ARCD1
 #endif
@@ -208,7 +208,7 @@
 !                         v_vel outside N/S open boundary from outflow condition dvdyC=0
                if (av(i,j-1) .eq. 2) then ! northern open boundary
                   dudxC(i,j) = (u_vel(i,j) - u_vel(i-1,j)) / DXC
-#ifdef CORRECT_METRICS
+#ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   vel = v_vel(i,j-1) - _HALF_*(u_vel(i,j)+u_vel(i-1,j))*(DYU-DYUIM1)/DXC
                   dudxC(i,j) = dudxC(i,j) + _HALF_*(vel+v_vel(i,j-1))*(DXV-DXVJM1)*ARCD1
@@ -216,7 +216,7 @@
 #endif
                else if (av(i,j) .eq. 2) then ! southern open boundary
                   dudxC(i,j) = (u_vel(i,j) - u_vel(i-1,j)) / DXC
-#ifdef CORRECT_METRICS
+#ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   vel = v_vel(i,j) + _HALF_*(u_vel(i,j)+u_vel(i-1,j))*(DYU-DYUIM1)/DXC
                   dudxC(i,j) = dudxC(i,j) + _HALF_*(v_vel(i,j)+vel)*(DXV-DXVJM1)*ARCD1
@@ -247,7 +247,7 @@
                if (az(i,j+1) .ge. 1) dudxV(i,j) = (u_vel(i,j+1) - u_vel(i-1,j+1))/DXV
             else if (av(i,j).eq.1 .or. av(i,j).eq.2) then
                dudxV(i,j) = _HALF_*((u_vel(i,j)+u_vel(i,j+1)) - (u_vel(i-1,j)+u_vel(i-1,j+1)))/DXV
-#ifdef CORRECT_METRICS
+#ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dudxV(i,j) = dudxV(i,j) + v_vel(i,j)*(DXCJP1-DXC)*ARVD1
 #endif
@@ -298,7 +298,7 @@
             if (az(i,j) .eq. 1) then
 !              Note (KK): since V(av=0)=0, dvdyC can also be calculated near closed boundaries
                dvdyC(i,j) = (v_vel(i,j) - v_vel(i,j-1)) / DYC
-#ifdef CORRECT_METRICS
+#ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dvdyC(i,j) = dvdyC(i,j) + _HALF_*(u_vel(i,j)+u_vel(i-1,j))*(DYU-DYUIM1)*ARCD1
 #endif
@@ -309,7 +309,7 @@
 !                         dvdyC in W/E open boundary needed for dvdyV(av=3)
                if (au(i-1,j) .eq. 2) then ! eastern open boundary
                   dvdyC(i,j) = (v_vel(i,j) - v_vel(i,j-1)) / DYC
-#ifdef CORRECT_METRICS
+#ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   vel = u_vel(i-1,j) - _HALF_*(v_vel(i,j)+v_vel(i,j-1))*(DXV-DXVJM1)/DYC
                   dvdyC(i,j) = dvdyC(i,j) + _HALF_*(vel+u_vel(i-1,j))*(DYU-DYUIM1)*ARCD1
@@ -317,7 +317,7 @@
 #endif
                else if (au(i,j) .eq. 2) then ! western open boundary
                   dvdyC(i,j) = (v_vel(i,j) - v_vel(i,j-1)) / DYC
-#ifdef CORRECT_METRICS
+#ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   vel = u_vel(i,j) + _HALF_*(v_vel(i,j)+v_vel(i,j-1))*(DXV-DXVJM1)/DYC
                   dvdyC(i,j) = dvdyC(i,j) + _HALF_*(u_vel(i,j)+vel)*(DYU-DYUIM1)*ARCD1
@@ -341,7 +341,7 @@
                if (az(i+1,j) .ge. 1) dvdyU(i,j) = (v_vel(i+1,j) - v_vel(i+1,j-1))/DYU
             else if (au(i,j).eq.1 .or. au(i,j).eq.2) then
                dvdyU(i,j) = _HALF_*((v_vel(i,j)+v_vel(i+1,j)) - (v_vel(i,j-1)+v_vel(i+1,j-1)))/DYU
-#ifdef CORRECT_METRICS
+#ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dvdyU(i,j) = dvdyU(i,j) + u_vel(i,j)*(DYCIP1-DYC)*ARUD1
 #endif
@@ -397,13 +397,13 @@
                velgrad = (v_vel(i+1,j) - v_vel(i,j)) / DXX
                if (present(dvdxX)) then
                   dvdxX(i,j) = velgrad
-#ifdef CORRECT_METRICS
+#ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   dvdxX(i,j) = dvdxX(i,j) - _HALF_*(u_vel(i,j)+u_vel(i,j+1))/DXX*(DXUJP1-DXU)/DYX
 #endif
 #endif
                end if
-#if !(defined(CORRECT_METRICS) && (defined(SPHERICAL) || defined(CURVILINEAR)))
+#if !(defined(_CORRECT_METRICS_) && (defined(SPHERICAL) || defined(CURVILINEAR)))
               if (present(shearX)) shearX(i,j) = velgrad
 #endif
             end if
@@ -416,19 +416,19 @@
                velgrad = (u_vel(i,j+1) - u_vel(i,j)) / DYX
                if (present(dudyX)) then
                   dudyX(i,j) = velgrad
-#ifdef CORRECT_METRICS
+#ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   dudyX(i,j) = dudyX(i,j) - _HALF_*(v_vel(i,j)+v_vel(i+1,j))/DYX*(DYVIP1-DYV)/DXX
 #endif
 #endif
                end if
-#if !(defined(CORRECT_METRICS) && (defined(SPHERICAL) || defined(CURVILINEAR)))
+#if !(defined(_CORRECT_METRICS_) && (defined(SPHERICAL) || defined(CURVILINEAR)))
                if (present(shearX)) shearX(i,j) = shearX(i,j) + velgrad
 #endif
             end if
 #endif
 
-#ifdef CORRECT_METRICS
+#ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             if (present(shearX)) then
 !              Note (KK): although sum of dvdxX and dudyX would give shearX

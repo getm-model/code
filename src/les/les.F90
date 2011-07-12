@@ -76,7 +76,6 @@
 !
 ! !LOCAL VARIABLES
    namelist /les/ les_method,smag_const
-   integer :: rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC

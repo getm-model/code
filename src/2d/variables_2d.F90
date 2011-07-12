@@ -27,9 +27,9 @@
 #include "dynamic_declarations_2d.h"
 #endif
 !  the following fields will only be allocated if deformCX=.true.
-   REALTYPE,dimension(:,:),allocatable  :: dudxC,dvdyC,shearX
+   REALTYPE,dimension(:,:),allocatable :: dudxC,dvdyC,shearX
 !  the following fields will only be allocated if deformUV=.true.
-   REALTYPE,dimension(:,:),allocatable  :: dudxV,dvdyU,shearU
+   REALTYPE,dimension(:,:),allocatable :: dudxV,dvdyU,shearU
 
    integer                             :: size2d_field
    integer                             :: mem2d

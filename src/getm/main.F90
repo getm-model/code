@@ -245,6 +245,9 @@
 #ifdef CURVILINEAR
    LEVEL1 'CURVILINEAR'
 #endif
+#ifdef _CORRECT_METRICS_
+   LEVEL1 'CORRECT_METRICS'
+#endif
 #ifdef TURB_ADV
    LEVEL1 'TURB_ADV'
 #endif

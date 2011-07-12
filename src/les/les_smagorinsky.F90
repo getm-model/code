@@ -101,7 +101,7 @@
 #endif
                          + _HALF_*shearX(i,j)**2
                AmX(i,j) = (smag_const**2)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
-#ifdef CORRECT_METRICS
+#ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             else
 !              Note (KK): shearX at corners already set to 0, there no AmX needed

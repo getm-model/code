@@ -15,10 +15,7 @@
    use domain, only: kmax
    use m2d, only: Am_method,AM_CONSTANT,AM_LES
    use variables_3d, only: uu,vv,uuEx,vvEx,hn,hun,hvn
-   use variables_3d, only: dudxC_3d,shearX_3d
-#ifndef SLICE_MODEL
-   use variables_3d, only: dvdyc_3d
-#endif
+   use variables_3d, only: dudxC_3d,dvdyC_3d,shearX_3d
    use variables_les, only: AmC_2d,AmX_2d,AmC_3d,AmX_3d
    use getm_timers, only: tic, toc, TIM_UVDIFF3D
 
