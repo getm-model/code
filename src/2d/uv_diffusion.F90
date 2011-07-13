@@ -5,7 +5,7 @@
 ! !ROUTINE: uv_diffusion - 2D diffusion of momentum \label{sec-uv-diffusion}
 !
 ! !INTERFACE:
-   subroutine uv_diffusion(UEx,VEx,U,V,D,DU,DV, &
+   subroutine uv_diffusion(An_method,UEx,VEx,U,V,D,DU,DV, &
                            dudxC,dvdyC,shearX,AmC,AmX)
 
 !  Note (KK): keep in sync with uv_diffusion.h
@@ -164,13 +164,14 @@
 #else
    use domain, only: dx,dy,ard1
 #endif
-   use variables_2d, only: PP,An,AnX
-   use m2d, only: Am_method,Am_const,AM_CONSTANT,AM_LES
+   use variables_2d, only: PP,AnC,AnX
+   use m2d, only: Am_method,Am_const,AM_CONSTANT,AM_LES,An_const
    use getm_timers,  only: tic,toc,TIM_UVDIFFUS
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   integer,intent(in)                               :: An_method
    REALTYPE,dimension(E2DFIELD),intent(in),optional :: U,V,D,DU,DV
    REALTYPE,dimension(E2DFIELD),intent(in),optional :: dudxC,dvdyC,shearX
    REALTYPE,dimension(E2DFIELD),intent(in),optional :: AmC,AmX
@@ -225,10 +226,15 @@
                case(AM_LES)
                   PP(i,j)=_TWO_*AmC(i,j)*DYC*D(i,j)*dudxC(i,j)
             end select
-            if (An(i,j) .gt. _ZERO_) then
+            select case(An_method)
 !              KK-TODO: if gradient of velocity also accepted use of dudxC possible !?
-               PP(i,j)=PP(i,j)+An(i,j)*DYC*(U(i,j)-U(i-1,j))/DXC
-            end if
+               case(1)
+                  PP(i,j)=PP(i,j)+An_const*DYC*(U(i,j)-U(i-1,j))/DXC
+               case(2)
+                  if (AnC(i,j) .gt. _ZERO_) then
+                     PP(i,j)=PP(i,j)+AnC(i,j)*DYC*(U(i,j)-U(i-1,j))/DXC
+                  end if
+            end select
          end if
       end do
 #ifndef SLICE_MODEL
@@ -269,13 +275,18 @@
                case (AM_LES)
                   PP(i,j)=AmX(i,j)*DXX*_HALF_*(DU(i,j)+DU(i,j+1))*shearX(i,j)
             end select
-            if (AnX(i,j) .gt. _ZERO_) then
+            select case(An_method)
 !              Note (KK): outflow condition must be fulfilled !
 !                         (use of mirrored transports or use of dudyX
 !                          from deformation_rates, otherwise extended condition)
 !                         at N/S closed boundaries slip condition dudyX=0
-               PP(i,j)=PP(i,j)+AnX(i,j)*DXX*(U(i,j+1)-U(i,j))/DYX
-            end if
+               case(1)
+                  PP(i,j)=PP(i,j)+An_const*DXX*(U(i,j+1)-U(i,j))/DYX
+               case(2)
+                  if (AnX(i,j) .gt. _ZERO_) then
+                     PP(i,j)=PP(i,j)+AnX(i,j)*DXX*(U(i,j+1)-U(i,j))/DYX
+                  end if
+            end select
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
         else if (av(i,j).eq.0 .and. av(i+1,j).eq.0) then
@@ -333,13 +344,18 @@
                case (AM_LES)
                   PP(i,j)=AmX(i,j)*DYX*_HALF_*(DV(i,j)+DV(i+1,j))*shearX(i,j)
             end select
-            if (AnX(i,j) .gt. _ZERO_) then
+            select case(An_method)
 !              Note (KK): outflow condition must be fulfilled !
 !                         (use of mirrored transports or use of dvdxX
 !                          from deformation_rates, otherwise extended condition)
 !                         at W/E closed boundaries slip condition dvdxX=0
-               PP(i,j)=PP(i,j)+AnX(i,j)*DYX*(V(i+1,j)-V(i,j))/DXX
-            end if
+               case(1)
+                  PP(i,j)=PP(i,j)+An_const*DYX*(V(i+1,j)-V(i,j))/DXX
+               case(2)
+                  if (AnX(i,j) .gt. _ZERO_) then
+                     PP(i,j)=PP(i,j)+AnX(i,j)*DYX*(V(i+1,j)-V(i,j))/DXX
+                  end if
+            end select
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
         else if (au(i,j).eq.0 .and. au(i,j+1).eq.0) then
@@ -408,10 +424,15 @@
                case (AM_LES)
                   PP(i,j)=_TWO_*AmC(i,j)*DXC*D(i,j)*dvdyC(i,j)
             end select
-            if (An(i,j) .gt. _ZERO_) then
+            select case(An_method)
 !              KK-TODO: if gradient of velocity also accepted use of dvdyC possible !?
-               PP(i,j)=PP(i,j)+An(i,j)*DXC*(V(i,j)-V(i,j-1))/DYC
-            end if
+               case(1)
+                  PP(i,j)=PP(i,j)+An_const*DXC*(V(i,j)-V(i,j-1))/DYC
+               case(2)
+                  if (AnC(i,j) .gt. _ZERO_) then
+                     PP(i,j)=PP(i,j)+AnC(i,j)*DXC*(V(i,j)-V(i,j-1))/DYC
+                  end if
+            end select
          end if
       end do
    end do

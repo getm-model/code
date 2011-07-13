@@ -30,6 +30,8 @@
    REALTYPE,dimension(:,:),allocatable :: dudxC,dvdyC,shearX
 !  the following fields will only be allocated if deformUV=.true.
    REALTYPE,dimension(:,:),allocatable :: dudxV,dvdyU,shearU
+!  the followinf fields will only be allocated if An_method=2
+   REALTYPE,dimension(:,:),allocatable :: AnC,AnX
 
    integer                             :: size2d_field
    integer                             :: mem2d
@@ -140,9 +142,6 @@
    PP      = _ZERO_
    fwf     = _ZERO_
    fwf_int = _ZERO_
-
-   An  = _ZERO_
-   AnX = _ZERO_
 
    surfdiv=_ZERO_
    EWbdy=_ZERO_

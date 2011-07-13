@@ -166,60 +166,64 @@
          if (An_const .lt. _ZERO_) then
               call getm_error("init_2d()", &
                          "Constant horizontal numerical diffusion <0");
-         else
-            An  = An_const
-            AnX = An_const
          end if
       case(2)
          LEVEL2 'An_method=2 -> Using space varying horizontal numerical diffusion'
          LEVEL2 '..  will read An from An_file ',trim(An_file)
          ! Initialize and then read field:
-         An = _ZERO_
-         call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,An(ill:ihl,jll:jhl))
-         call update_2d_halo(An,An,az,imin,jmin,imax,jmax,H_TAG)
+         allocate(AnC(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (AnC)'
+         AnC=_ZERO_ ! initialisation needed for check below
+
+         call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,AnC(ill:ihl,jll:jhl))
+         call update_2d_halo(AnC,AnC,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
-         ! Compute AnX (An in X-points) based on An and the X- and T- masks
-         AnX = _ZERO_
-         ! We loop over the X-points in the present domain.
-         do j=jmin-1,jmax
-            do i=imin-1,imax
-               if (ax(i,j) .ge. 1) then
-                  num_neighbors = 0
-                  An_sum = _ZERO_
-                  ! Each AnX should have up to 4 T-point neighbours.
-                  if ( az(i,j) .ge. 1 ) then
-                     An_sum        = An_sum + An(i,j)
-                     num_neighbors = num_neighbors +1
-                  end if
-                  if ( az(i,j+1) .ge. 1 ) then
-                     An_sum        = An_sum + An(i,j+1)
-                     num_neighbors = num_neighbors +1
-                  end if
-                  if ( az(i+1,j) .ge. 1 ) then
-                     An_sum        = An_sum + An(i+1,j)
-                     num_neighbors = num_neighbors +1
-                  end if
-                  if ( az(i+1,j+1) .ge. 1 ) then
-                     An_sum        = An_sum + An(i+1,j+1)
-                     num_neighbors = num_neighbors +1
-                  end if
-                  ! Take average of actual neighbours:
-                  if (num_neighbors .gt. 0) then
-                     AnX(i,j) = An_sum/num_neighbors
-                  end if
-               end if
-            end do
-         end do
-         call update_2d_halo(AnX,AnX,ax,imin,jmin,imax,jmax,H_TAG)
-         call wait_halo(H_TAG)
-         !
-         ! If all An values are really zero, then we should not use An-smoothing at all...
-         ! Note that smoothing may be on in other subdomains.
-         if ( MAXVAL(ABS(An)) .eq. _ZERO_ ) then
+
+!        Note (BJB): If all An values are really zero, then we should not use An-smoothing at all...
+!                    Note that smoothing may be on in other subdomains.
+         if ( MAXVAL(ABS(AnC)) .eq. _ZERO_ ) then
             LEVEL2 '  All An is zero for this (sub)domain - switching to An_method=0'
             An_method=0
-         end if
+         else
+            allocate(AnX(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_2d: Error allocating memory (AnX)'
+            AnX=_ZERO_
 
+            ! Compute AnX (An in X-points) based on AnC and the X- and T- masks
+            ! We loop over the X-points in the present domain.
+            do j=jmin-1,jmax
+               do i=imin-1,imax
+                  if (ax(i,j) .ge. 1) then
+                     num_neighbors = 0
+                     An_sum = _ZERO_
+                     ! Each AnX should have up to 4 T-point neighbours.
+                     if ( az(i,j) .ge. 1 ) then
+                        An_sum        = An_sum + AnC(i,j)
+                        num_neighbors = num_neighbors +1
+                     end if
+                     if ( az(i,j+1) .ge. 1 ) then
+                        An_sum        = An_sum + AnC(i,j+1)
+                        num_neighbors = num_neighbors +1
+                     end if
+                     if ( az(i+1,j) .ge. 1 ) then
+                        An_sum        = An_sum + AnC(i+1,j)
+                        num_neighbors = num_neighbors +1
+                     end if
+                     if ( az(i+1,j+1) .ge. 1 ) then
+                        An_sum        = An_sum + AnC(i+1,j+1)
+                        num_neighbors = num_neighbors +1
+                     end if
+                     ! Take average of actual neighbours:
+                     if (num_neighbors .gt. 0) then
+                        AnX(i,j) = An_sum/num_neighbors
+                     end if
+                  end if
+               end do
+            end do
+!           Note (KK): probably we do not need this halo update
+            call update_2d_halo(AnX,AnX,ax,imin,jmin,imax,jmax,H_TAG)
+            call wait_halo(H_TAG)
+         end if
       case default
          call getm_error("init_2d()", &
                          "A non valid An method has been chosen");
@@ -383,18 +387,10 @@
 #endif
    end if
 
-   UEx=_ZERO_ ; VEx=_ZERO_
-#ifdef NO_ADVECT
-   STDERR 'NO_ADVECT 2D'
-#else
-#ifndef UV_ADV_DIRECT
    call tic(TIM_INTEGR2D)
    call calc_uvex(U,V,D,DU,DV)
-   call mirror_bdy_2d(UEx,U_TAG)
-   call mirror_bdy_2d(VEx,V_TAG)
    call toc(TIM_INTEGR2D)
-#endif
-#endif
+
    call momentum(loop,tausx,tausy,airp)
    if (runtype .gt. 1) then
       call tic(TIM_INTEGR2D)

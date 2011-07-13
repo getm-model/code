@@ -44,23 +44,23 @@
    select case(Am_method)
       case(AM_CONSTANT)
          do k=1,kmax
-            call uv_diffusion(uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
-                              D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),         &
-                              dudxC=dudxC_3d(:,:,k),                           &
+            call uv_diffusion(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                              D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
+                              dudxC=dudxC_3d(:,:,k),                             &
 #ifndef SLICE_MODEL
-                              dvdyC=dvdyC_3d(:,:,k),                           &
+                              dvdyC=dvdyC_3d(:,:,k),                             &
 #endif
                               shearX=shearX_3d(:,:,k))
          end do
       case(AM_LES)
          do k=1,kmax
-            call uv_diffusion(uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
-                              D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),         &
-                              dudxC=dudxC_3d(:,:,k),                           &
+            call uv_diffusion(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                              D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
+                              dudxC=dudxC_3d(:,:,k),                             &
 #ifndef SLICE_MODEL
-                              dvdyC=dvdyC_3d(:,:,k),                           &
+                              dvdyC=dvdyC_3d(:,:,k),                             &
 #endif
-                              shearX=shearX_3d(:,:,k),                         &
+                              shearX=shearX_3d(:,:,k),                           &
                               AmC=AmC_3d(:,:,k),AmX=AmX_3d(:,:,k))
          end do
    end select

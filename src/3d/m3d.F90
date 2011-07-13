@@ -345,7 +345,7 @@
       allocate(shearX_3d(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (shearX_3d)'
       shearX_3d=_ZERO_
-   
+
       if (deformUV_3d) then
          allocate(dudxV_3d(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'init_3d: Error allocating memory (dudxV_3d)'
@@ -608,10 +608,6 @@
    end if
 #endif
 
-   call tic(TIM_INTEGR3D)
-   UEx=_ZERO_ ; VEx=_ZERO_
-   call toc(TIM_INTEGR3D)
-
 #ifndef NO_BAROTROPIC
    if (kmax .gt. 1) then
 
@@ -619,13 +615,9 @@
       call slow_bottom_friction()
 #endif
 
-#ifndef NO_ADVECT
-#ifndef UV_ADV_DIRECT
       call tic(TIM_INTEGR3D)
       call calc_uvex(Uint,Vint,Dn,Dun,Dvn)
       call toc(TIM_INTEGR3D)
-#endif
-#endif
 
    end if
    call slow_terms()
