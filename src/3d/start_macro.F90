@@ -55,7 +55,7 @@
       do i=imin-HALO,imax+HALO      ! elevation for macro time step
          sseo(i,j)=ssen(i,j)
          ssen(i,j)=z(i,j)
-         Dn = ssen(i,j) + H(i,j)
+         Dn(i,j) = ssen(i,j) + H(i,j)
 !        KK-TODO: use of Dn & Co. in more routines (coordinates,...)
       end do
    end do
