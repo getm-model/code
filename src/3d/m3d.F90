@@ -26,8 +26,8 @@
    use exceptions
    use parameters, only: avmmol
    use domain, only: openbdy,maxdepth,vert_cord,az
-   use m2d, only: Am
-   use variables_2d, only: D,z,UEx,VEx
+   use m2d_general, only: calc_uvex
+   use variables_2d, only: Uint,Vint
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
             init_temperature_field
@@ -449,9 +449,7 @@
 #ifndef NO_ADVECT
    if (kmax .gt. 1) then
       call uv_advect_3d(vel_hor_adv,vel_ver_adv,vel_adv_split)
-      if (Am .gt. _ZERO_) then
-         call uv_diffusion_3d(Am)  ! Must be called after uv_advect_3d
-      end if
+      call uv_diffusion_3d()  ! Must be called after uv_advect_3d
    end if
 #else
    STDERR 'NO_ADVECT 3D'
@@ -502,22 +500,16 @@
    end if
 #endif
 
-   call tic(TIM_INTEGR3D)
-   UEx=_ZERO_ ; VEx=_ZERO_
-   call toc(TIM_INTEGR3D)
 #ifndef NO_BAROTROPIC
    if (kmax .gt. 1) then
 #ifndef NO_BOTTFRIC
       call slow_bottom_friction()
 #endif
-#ifndef NO_ADVECT
-#ifndef UV_ADV_DIRECT
-      call slow_advection()
-      if (Am .gt. _ZERO_) then
-         call slow_diffusion(Am) ! Has to be called after slow_advection.
-      end if
-#endif
-#endif
+
+      call tic(TIM_INTEGR3D)
+      call calc_uvex(Uint,Vint,Dn,Dun,Dvn)
+      call toc(TIM_INTEGR3D)
+
    end if
 
    call slow_terms()

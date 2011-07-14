@@ -184,6 +184,7 @@
    hn = _ZERO_ ; hun = _ZERO_ ; hvn = _ZERO_
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
    ssen = _ZERO_ ; ssun = _ZERO_ ; ssvn = _ZERO_
+   Dn = SMALL ; Dun = SMALL ; Dvn = SMALL
    rru= _ZERO_ ; rrv= _ZERO_
    uuEx= _ZERO_ ; vvEx= _ZERO_
    tke=1.e-10 ; eps=1.e-10

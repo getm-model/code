@@ -77,8 +77,6 @@ endif
 OBJ += \
 $(LIB)(eddyviscosity.o)			\
 $(LIB)(slow_bottom_friction.o)		\
-$(LIB)(slow_advection.o)		\
-$(LIB)(slow_diffusion.o)		\
 $(LIB)(slow_terms.o)			\
 $(LIB)(upstream_adv.o)			\
 $(LIB)(u_split_adv.o)			\

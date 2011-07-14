@@ -29,6 +29,7 @@
    integer, parameter :: TIM_MOMENTUM    =  4   ! 2d momentum
    integer, parameter :: TIM_MOMENTUMH   =  5   ! 2d momentum - halo part only
    integer, parameter :: TIM_UVDEPTHS    =  6   ! 2d uv_depths
+   integer, parameter :: TIM_UVEX        =  7   ! wrapper for hor. adv+diff
    integer, parameter :: TIM_UVADVECT    =  8   ! 2d uv_advect
    integer, parameter :: TIM_UVDIFFUS    = 10   ! 2d uv_diffusion
    integer, parameter :: TIM_DPTHUPDATE  = 12   ! 2d depth_update
@@ -162,8 +163,9 @@
    timernames(TIM_BOTTFRICT)   = 'bottom_friction'
    timernames(TIM_MOMENTUM)    = 'momentum'
    timernames(TIM_UVDEPTHS)    = 'uv_depths'
-   timernames(TIM_UVADVECT)    = 'uv_advect'
-   timernames(TIM_UVDIFFUS)    = 'uv_diffusion'
+   timernames(TIM_UVEX)        = ' calc_uvex'
+   timernames(TIM_UVADVECT)    = ' uv_advect'
+   timernames(TIM_UVDIFFUS)    = ' uv_diffusion'
    timernames(TIM_DPTHUPDATE)  = 'depth_update'
    timernames(TIM_SEALEVEL)    = 'sealevel'
 

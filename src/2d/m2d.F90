@@ -322,21 +322,13 @@
       call bottom_friction(runtype)
 #endif
    end if
-   UEx=_ZERO_ ; VEx=_ZERO_
-#ifdef NO_ADVECT
-   STDERR 'NO_ADVECT 2D'
-#else
-#ifndef UV_ADV_DIRECT
-   call uv_advect()
-   if (Am .gt. _ZERO_ .or. An_method .gt. 0) then
-      call uv_diffusion(Am,An_method,An,AnX) ! Has to be called after uv_advect.
-   end if
+
    call tic(TIM_INTEGR2D)
+   call calc_uvex(U,V,D,DU,DV)
    call mirror_bdy_2d(UEx,U_TAG)
    call mirror_bdy_2d(VEx,V_TAG)
    call toc(TIM_INTEGR2D)
-#endif
-#endif
+
    call momentum(loop,tausx,tausy,airp)
    if (runtype .gt. 1) then
       call tic(TIM_INTEGR2D)

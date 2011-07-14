@@ -15,7 +15,8 @@ SRC	= $(MODSRC) $(LIBSRC)
 
 MOD   = \
 ${LIB}(variables_2d.o)		\
-${LIB}(m2d.o)
+${LIB}(m2d.o)			\
+${LIB}(m2d_general.o)
 
 OBJ   = \
 ${LIB}(cfl_check.o)	\
@@ -25,6 +26,7 @@ ${LIB}(momentum.o)		\
 ${LIB}(sealevel.o)		\
 ${LIB}(uv_advect.o)		\
 ${LIB}(uv_diffusion.o)		\
+${LIB}(calc_uvex.o)		\
 ${LIB}(uv_depths.o)		\
 ${LIB}(have_bdy.o)		\
 ${LIB}(residual.o)		\

@@ -52,9 +52,9 @@
 #endif
 
 ! 2D fields in 3D domain
-  REALTYPE, dimension(:,:), allocatable     :: sseo,ssen
-  REALTYPE, dimension(:,:), allocatable     :: ssuo,ssun
-  REALTYPE, dimension(:,:), allocatable     :: ssvo,ssvn
+  REALTYPE, dimension(:,:), allocatable     :: sseo,ssen,Dn
+  REALTYPE, dimension(:,:), allocatable     :: ssuo,ssun,Dun
+  REALTYPE, dimension(:,:), allocatable     :: ssvo,ssvn,Dvn
 
 ! 3D friction in 3D domain
   REALTYPE, dimension(:,:), allocatable     :: rru,rrv

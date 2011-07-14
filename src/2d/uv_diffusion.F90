@@ -5,7 +5,9 @@
 ! !ROUTINE: uv_diffusion - 2D diffusion of momentum \label{sec-uv-diffusion}
 !
 ! !INTERFACE:
-   subroutine uv_diffusion(Am,An_method,An,AnX)
+   subroutine uv_diffusion(An_method,UEx,VEx,U,V,D,DU,DV)
+
+!  Note (KK): keep in sync with interface in m2d_general.F90
 !
 ! !DESCRIPTION:
 !
@@ -161,21 +163,25 @@
 #else
    use domain, only: dx,dy,ard1
 #endif
-   use variables_2d, only: D,U,DU,UEx,V,DV,VEx,PP
+   use m2d, only: Am
+   use variables_2d, only: PP,An,AnX
    use getm_timers,  only: tic,toc,TIM_UVDIFFUS
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-  REALTYPE, intent(in) :: Am
-  integer, intent(in)  :: An_method
-  REALTYPE, intent(in) :: An(E2DFIELD),AnX(E2DFIELD)
+   integer,intent(in)                               :: An_method
+   REALTYPE,dimension(E2DFIELD),intent(in),optional :: U,V,D,DU,DV
+!
+! !INPUT/OUTPUT PARAMETERS:
+   REALTYPE,dimension(E2DFIELD),intent(inout)       :: UEx,VEx
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard
+!  Modified by       : Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j
+   integer                                          :: i,j
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -189,7 +195,7 @@
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j)
 
-! Central for dx(2*Am*dx(U/DU))
+!  Central for dx(2*Am*dx(U/DU))
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax+1          ! PP defined on T-points
@@ -213,8 +219,9 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax      ! UEx defined on U-points
       do i=imin,imax
-         if (au(i,j) .ge. 1) then
-!           Note (KK): UEx(au=3) will be trash, but not used
+!        Note (KK): since U(au=3) will be obtained from mirroring
+!                   we do not need PP in N/S open boundary cells
+         if (au(i,j).eq.1 .or. au(i,j).eq.2) then
             UEx(i,j)=UEx(i,j)-(PP(i+1,j)-PP(i  ,j))*ARUD1
          end if
       end do
@@ -222,7 +229,7 @@
 !$OMP END DO
 
 #ifndef SLICE_MODEL
-! Central for dy(Am*(dy(U/DU)+dx(V/DV)))
+!  Central for dy(Am*(dy(U/DU)+dx(V/DV)))
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-1,jmax        ! PP defined on X-points
       do i=imin,imax
@@ -243,8 +250,9 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax        !UEx defined on U-points
       do i=imin,imax
-         if (au(i,j) .ge. 1) then
-!           Note (KK): UEx(au=3) will be trash, but not used
+!        Note (KK): since U(au=3) will be obtained from mirroring
+!                   we do not need PP at ax outside au=3
+         if (au(i,j).eq.1 .or. au(i,j).eq.2) then
             UEx(i,j)=UEx(i,j)-(PP(i,j  )-PP(i,j-1))*ARUD1
          end if
       end do
@@ -252,7 +260,7 @@
 !$OMP END DO
 #endif
 
-! Central for dx(Am*(dy(U/DU)+dx(V/DV)))
+!  Central for dx(Am*(dy(U/DU)+dx(V/DV)))
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax      ! PP defined on X-points
       do i=imin-1,imax
@@ -273,8 +281,9 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax          ! VEx defined on V-points
       do i=imin,imax
-         if (av(i,j) .ge. 1) then
-!           Note (KK): VEx(av=3) will be trash, but not used
+!        Note (KK): since V(av=3) will be obtained from mirroring
+!                   we do not need PP at ax outside av=3
+         if (av(i,j).eq.1 .or. av(i,j).eq.2) then
             VEx(i,j)=VEx(i,j)-(PP(i  ,j)-PP(i-1,j))*ARVD1
          end if
       end do
@@ -282,7 +291,7 @@
 !$OMP END DO
 
 #ifndef SLICE_MODEL
-! Central for dy(2*Am*dy(V/DV))
+!  Central for dy(2*Am*dy(V/DV))
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax+1     ! PP defined on T-points
       do i=imin,imax
@@ -306,8 +315,9 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax             ! VEx defined on V-points
       do i=imin,imax
-         if (av(i,j) .ge. 1) then
-!           Note (KK): VEx(av=3) will be trash, but not used
+!        Note (KK): since V(av=3) will be obtained from mirroring
+!                   we do not need PP in W/E open boundary cells
+         if (av(i,j).eq.1 .or. av(i,j).eq.2) then
             VEx(i,j)=VEx(i,j)-(PP(i,j+1)-PP(i,j  ))*ARVD1
          end if
       end do
@@ -328,4 +338,4 @@
 
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
-!-----------------------------------------------------------------------p
+!-----------------------------------------------------------------------
