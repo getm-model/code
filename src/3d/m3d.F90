@@ -30,7 +30,7 @@
    use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
    use m2d_general, only: calc_uvex
    use m2d, only: deformCX,deformUV,Am_method,NO_AM,AM_LES
-   use variables_2d, only: D,z,UEx,VEx,Uint,Vint
+   use variables_2d, only: Uint,Vint
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
             init_temperature_field, temp_AH_method
