@@ -13,6 +13,7 @@
 !
 ! !USES:
    use domain, only: kmax
+   use m2d_general, only: uv_diffusion
    use m2d, only: Am_method,AM_CONSTANT,AM_LES
    use variables_3d, only: uu,vv,uuEx,vvEx,hn,hun,hvn
    use variables_3d, only: dudxC_3d,dvdyC_3d,shearX_3d
@@ -21,7 +22,6 @@
 
    IMPLICIT NONE
 
-#include "../2d/uv_diffusion.h"
 !
 ! !INPUT PARAMETERS:
 !

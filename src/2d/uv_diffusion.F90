@@ -8,7 +8,7 @@
    subroutine uv_diffusion(An_method,UEx,VEx,U,V,D,DU,DV, &
                            dudxC,dvdyC,shearX,AmC,AmX)
 
-!  Note (KK): keep in sync with uv_diffusion.h
+!  Note (KK): keep in sync with interface in m2d_general.F90
 !
 ! !DESCRIPTION:
 !

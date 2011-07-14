@@ -10,7 +10,7 @@
                                           dudyX,dvdxX,        &
                                           shearX,shearU,shearV)
                                           
-!  Note (KK): keep in sync with deformation_rates.h
+!  Note (KK): keep in sync with interface in m2d_general.F90
 !
 ! !DESCRIPTION:
 !

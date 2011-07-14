@@ -4,7 +4,7 @@
 
 include ../Rules.make
 
-INCS	= static_3d.h dynamic_declarations_3d.h dynamic_allocations_3d.h ../2d/deformation_rates.h ../2d/uv_diffusion.h
+INCS	= static_3d.h dynamic_declarations_3d.h dynamic_allocations_3d.h
 LIB	= $(LIBDIR)/lib3d${buildtype}.a
 
 MODSRC	= m3d.F90 variables_3d.F90 advection_3d.F90 eqstate.F90 \

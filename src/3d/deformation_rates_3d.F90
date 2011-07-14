@@ -11,6 +11,7 @@
 !
 ! !USES:
    use domain, only: kmax
+   use m2d_general, only: deformation_rates
    use m3d, only: deformCX_3d,deformUV_3d
    use variables_3d, only: uu,vv,hun,hvn
    use variables_3d, only: dudxC_3d,dudxV_3d
@@ -22,7 +23,6 @@
 
    IMPLICIT NONE
 
-#include "../2d/deformation_rates.h"
 !
 ! !REVISION HISTORY:
 !  Original author(s): Knut Klingbeil

@@ -1,4 +1,3 @@
-!$Id: calc_uvex.F90,v 1.11 2009-09-30 11:28:45 bjb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -7,26 +6,21 @@
 !
 ! !INTERFACE:
    subroutine calc_uvex(U,V,D,DU,DV)
+!  Note (KK): keep in sync with interface in m2d_general.F90
 !
 ! !DESCRIPTION:
 !
 ! !USES:
+   use domain, only: imin,imax,jmin,jmax
+   use m2d_general, only: deformation_rates,uv_diffusion
    use m2d, only: Am_method,An_method,NO_AM,AM_CONSTANT,AM_LES
    use variables_2d, only: UEx,VEx
-   use variables_2d, only: dudxC,dudxV,shearX,shearU
-#ifndef SLICE_MODEL
-   use variables_2d, only: dvdyC,dvdyU
-#endif
+   use variables_2d, only: dudxC,dudxV,dvdyC,dvdyU,shearX,shearU
    use les, only: do_les_2d
    use variables_les, only: AmC_2d,AmX_2d
    use getm_timers,  only: tic,toc,TIM_UVEX
-!  needed by interface headers!
-   use domain, only: imin,imax,jmin,jmax
 
    IMPLICIT NONE
-
-#include "deformation_rates.h"
-#include "uv_diffusion.h"
 
 !
 ! !INPUT PARAMETERS:
@@ -107,5 +101,5 @@
 
 !EOC
 !-----------------------------------------------------------------------
-! Copyright (C) 2011 - Knut Klingbeil                                  !
+! Copyright (C) 2001 - Karsten Bolding and Hans Burchard (BBH)         !
 !-----------------------------------------------------------------------
