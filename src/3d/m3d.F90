@@ -614,9 +614,11 @@
 #ifndef NO_BOTTFRIC
       call slow_bottom_friction()
 #endif
+
       call tic(TIM_INTEGR3D)
       call calc_uvex(0,Uint,Vint,Dn,Dun,Dvn)
       call toc(TIM_INTEGR3D)
+
    end if
 
    call slow_terms()

@@ -6,7 +6,6 @@
 !
 ! !INTERFACE:
    subroutine calc_uvex(An_method,U,V,D,DU,DV)
-
 !  Note (KK): keep in sync with interface in m2d_general.F90
 !
 ! !DESCRIPTION:
