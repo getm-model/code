@@ -14,7 +14,6 @@
 ! !USES:
    use domain, only: kmax
    use m2d_general, only: uv_diffusion
-   use m2d, only: Am
    use variables_3d, only: uu,vv,uuEx,vvEx,hn,hun,hvn
    use getm_timers, only: tic, toc, TIM_UVDIFF3D
 
@@ -36,12 +35,10 @@
 #endif
    call tic(TIM_UVDIFF3D)
 
-   if (Am .gt. _ZERO_) then
-      do k=1,kmax
-         call uv_diffusion(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
-                           D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k))
-      end do
-   end if
+   do k=1,kmax
+      call uv_diffusion(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                        D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k))
+   end do
 
    call toc(TIM_UVDIFF3D)
 #ifdef DEBUG

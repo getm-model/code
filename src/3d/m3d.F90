@@ -27,6 +27,7 @@
    use parameters, only: avmmol
    use domain, only: openbdy,maxdepth,vert_cord,az
    use m2d_general, only: calc_uvex
+   use m2d, only: Am
    use variables_2d, only: Uint,Vint
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
@@ -449,7 +450,7 @@
 #ifndef NO_ADVECT
    if (kmax .gt. 1) then
       call uv_advect_3d(vel_hor_adv,vel_ver_adv,vel_adv_split)
-      call uv_diffusion_3d()  ! Must be called after uv_advect_3d
+      if (Am .gt. _ZERO_) call uv_diffusion_3d()  ! Must be called after uv_advect_3d
    end if
 #else
    STDERR 'NO_ADVECT 3D'
