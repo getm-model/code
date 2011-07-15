@@ -665,10 +665,10 @@
 			<element name="save_eps" type="bool" label="save turbulence dissipation rate"/>
 			<element name="save_num" type="bool" label="save turbulent diffusivity of momentum"/>
 			<element name="save_nuh" type="bool" label="save turbulent diffusivity of heat"/>
-			<element name="save_AmC_2d" type="bool" label="save 2D horizontal eddy viscosity">
+			<element name="save_Am_2d" type="bool" label="save 2D horizontal eddy viscosity">
 				<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
 			</element>
-			<element name="save_AmC_3d" type="bool" label="save 3D horizontal eddy viscosity">
+			<element name="save_Am_3d" type="bool" label="save 3D horizontal eddy viscosity">
 				<condition type="and">
 					<condition type="ne" variable="/getm/param/runtype" value="1"/>
 					<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>

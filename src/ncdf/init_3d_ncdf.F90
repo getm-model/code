@@ -378,14 +378,14 @@
       end if
    end if
 #endif
-   if (Am_method.eq.AM_LES .and. save_AmC_3d) then
-      fv = AmC_3d_missing
-      mv = AmC_3d_missing
+   if (Am_method.eq.AM_LES .and. save_Am_3d) then
+      fv = Am_3d_missing
+      mv = Am_3d_missing
       vr(1) = 0.
       vr(2) = 500.
-      err = nf90_def_var(ncid,'AmC_3d',NCDF_FLOAT_PRECISION,f4_dims,AmC_3d_id)
+      err = nf90_def_var(ncid,'Am_3d',NCDF_FLOAT_PRECISION,f4_dims,Am_3d_id)
       if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,AmC_3d_id,long_name='hor. eddy viscosity',units='m2/s',&
+      call set_attributes(ncid,Am_3d_id,long_name='hor. eddy viscosity',units='m2/s',&
                           FillValue=fv,missing_value=mv,valid_range=vr)
    end if
 

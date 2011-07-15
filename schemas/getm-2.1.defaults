@@ -516,12 +516,12 @@
 			<save_nuh>
 				True
 			</save_nuh>
-			<save_AmC_2d>
+			<save_Am_2d>
 				False
-			</save_AmC_2d>
-			<save_AmC_3d>
+			</save_Am_2d>
+			<save_Am_3d>
 				False
-			</save_AmC_3d>
+			</save_Am_3d>
 			<save_stirr>
 				False
 			</save_stirr>

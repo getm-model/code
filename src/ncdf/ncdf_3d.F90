@@ -29,7 +29,7 @@
    integer                             :: diffxx_id,diffyy_id,diffxy_id
    integer                             :: tke_id,num_id,nuh_id,eps_id
    integer                             :: SS_id,NN_id
-   integer                             :: AmC_3d_id
+   integer                             :: Am_3d_id
 #ifdef SPM
    integer                             :: spmpool_id,spm_id
 #endif
@@ -60,7 +60,7 @@
    REALTYPE, parameter                 :: eps_missing    =-9999.0
    REALTYPE, parameter                 :: SS_missing     =-9999.0
    REALTYPE, parameter                 :: NN_missing     =-9999.0
-   REALTYPE, parameter                 :: AmC_3d_missing   =-9999.0
+   REALTYPE, parameter                 :: Am_3d_missing  =-9999.0
 #ifdef SPM
    REALTYPE, parameter                 :: spmpool_missing=-9999.0
    REALTYPE, parameter                 :: spm_missing    =-9999.0

@@ -268,7 +268,7 @@
    do j=jmin-1,jmax
       do i=imin,imax        ! PP defined on X-points
          PP(i,j)=_ZERO_
-         if (ax(i,j) .eq. 1) then
+         if (ax(i,j) .ge. 1) then
             select case(Am_method)
                case (AM_CONSTANT)
                   PP(i,j)=Am_const*DXX*_HALF_*(DU(i,j)+DU(i,j+1))*shearX(i,j)
@@ -337,7 +337,7 @@
 #endif
       do i=imin-1,imax      ! PP defined on X-points
          PP(i,j)=_ZERO_
-         if (ax(i,j) .eq. 1) then
+         if (ax(i,j) .ge. 1) then
             select case(Am_method)
                case (AM_CONSTANT)
                   PP(i,j)=Am_const*DYX*_HALF_*(DV(i,j)+DV(i+1,j))*shearX(i,j)

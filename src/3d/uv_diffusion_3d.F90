@@ -9,7 +9,7 @@
    subroutine uv_diffusion_3d()
 !
 ! !DESCRIPTION:
-!
+!  This wrapper calls uv_diffusion for each layer.
 !
 ! !USES:
    use domain, only: kmax
@@ -22,8 +22,6 @@
 
    IMPLICIT NONE
 
-!
-! !INPUT PARAMETERS:
 !
 ! !REVISION HISTORY:
 !  Original author(s): Knut Klingbeil

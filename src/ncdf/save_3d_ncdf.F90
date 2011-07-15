@@ -340,10 +340,10 @@
    end if ! save_mix_analysis
 #endif
 
-   if (Am_method.eq.AM_LES .and. save_AmC_3d) then
-      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,AmC_3d,AmC_3d_missing, &
+   if (Am_method.eq.AM_LES .and. save_Am_3d) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,AmC_3d,Am_3d_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf90_put_var(ncid,AmC_3d_id,ws(_3D_W_),start,edges)
+      err = nf90_put_var(ncid,Am_3d_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
 

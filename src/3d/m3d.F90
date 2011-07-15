@@ -270,10 +270,10 @@
    end if
 
 #ifndef NO_BAROCLINIC
-   if (runtype.eq.3 .or. runtype.eq.4) then
+   if (runtype .eq. 3 .or. runtype .eq. 4) then
       T = _ZERO_ ; S = _ZERO_ ; rho = _ZERO_
-      if (calc_temp) call init_temperature(1)
-      if (calc_salt) call init_salinity(1)
+      if(calc_temp) call init_temperature(1)
+      if(calc_salt) call init_salinity(1)
    end if
    if (runtype .eq. 4) then
       if (calc_temp) then
@@ -611,16 +611,14 @@
 
 #ifndef NO_BAROTROPIC
    if (kmax .gt. 1) then
-
 #ifndef NO_BOTTFRIC
       call slow_bottom_friction()
 #endif
-
       call tic(TIM_INTEGR3D)
-      call calc_uvex(Uint,Vint,Dn,Dun,Dvn)
+      call calc_uvex(0,Uint,Vint,Dn,Dun,Dvn)
       call toc(TIM_INTEGR3D)
-
    end if
+
    call slow_terms()
 #endif
 

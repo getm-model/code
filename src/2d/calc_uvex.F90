@@ -5,7 +5,8 @@
 ! !ROUTINE: calc_uvex
 !
 ! !INTERFACE:
-   subroutine calc_uvex(U,V,D,DU,DV)
+   subroutine calc_uvex(An_method,U,V,D,DU,DV)
+
 !  Note (KK): keep in sync with interface in m2d_general.F90
 !
 ! !DESCRIPTION:
@@ -13,7 +14,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
    use m2d_general, only: deformation_rates,uv_diffusion
-   use m2d, only: Am_method,An_method,NO_AM,AM_CONSTANT,AM_LES
+   use m2d, only: Am_method,NO_AM,AM_CONSTANT,AM_LES
    use variables_2d, only: UEx,VEx
    use variables_2d, only: dudxC,dudxV,dvdyC,dvdyU,shearX,shearU
    use les, only: do_les_2d
@@ -24,6 +25,7 @@
 
 !
 ! !INPUT PARAMETERS:
+   integer,intent(in)                      :: An_method
    REALTYPE,dimension(E2DFIELD),intent(in) :: U,V,D,DU,DV
 !
 ! !REVISION HISTORY:
