@@ -26,9 +26,10 @@
          REALTYPE,dimension(E2DFIELD),intent(inout)       :: UEx,VEx
       end subroutine uv_diffusion
       
-      subroutine calc_uvex(U,V,D,DU,DV)
+      subroutine calc_uvex(An_method,U,V,D,DU,DV)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
+         integer,intent(in)                      :: An_method
          REALTYPE,dimension(E2DFIELD),intent(in) :: U,V,D,DU,DV
       end subroutine calc_uvex
    end interface

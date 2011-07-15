@@ -507,7 +507,7 @@
 #endif
 
       call tic(TIM_INTEGR3D)
-      call calc_uvex(Uint,Vint,Dn,Dun,Dvn)
+      call calc_uvex(0,Uint,Vint,Dn,Dun,Dvn)
       call toc(TIM_INTEGR3D)
 
    end if

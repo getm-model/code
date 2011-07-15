@@ -5,7 +5,7 @@
 ! !ROUTINE: calc_uvex
 !
 ! !INTERFACE:
-   subroutine calc_uvex(U,V,D,DU,DV)
+   subroutine calc_uvex(An_method,U,V,D,DU,DV)
 !  Note (KK): keep in sync with interface in m2d_general.F90
 !
 ! !DESCRIPTION:
@@ -13,7 +13,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
    use m2d_general, only: uv_diffusion
-   use m2d, only: Am,An_method
+   use m2d, only: Am
    use variables_2d, only: UEx,VEx
    use getm_timers,  only: tic,toc,TIM_UVEX
 
@@ -21,6 +21,7 @@
 
 !
 ! !INPUT PARAMETERS:
+   integer,intent(in)                      :: An_method
    REALTYPE,dimension(E2DFIELD),intent(in) :: U,V,D,DU,DV
 !
 ! !REVISION HISTORY:

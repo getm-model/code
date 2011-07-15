@@ -324,7 +324,7 @@
    end if
 
    call tic(TIM_INTEGR2D)
-   call calc_uvex(U,V,D,DU,DV)
+   call calc_uvex(An_method,U,V,D,DU,DV)
    call mirror_bdy_2d(UEx,U_TAG)
    call mirror_bdy_2d(VEx,V_TAG)
    call toc(TIM_INTEGR2D)
