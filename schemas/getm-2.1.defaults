@@ -196,7 +196,7 @@
 				0
 			</Am_method>
 			<Am_const>
-				1.8e-6
+				-1.0
 			</Am_const>
 			<An_method>
 				0
@@ -329,7 +329,7 @@
 				0
 			</temp_AH_method>
 			<temp_AH_const>
-				1.4e-7
+				-1.0
 			</temp_AH_const>
 			<temp_AH_Prt>
 				2.0
@@ -403,7 +403,7 @@
 				0
 			</salt_AH_method>
 			<salt_AH_const>
-				1.1e-9
+				-1.0
 			</salt_AH_const>
 			<salt_AH_Prt>
 				2.0

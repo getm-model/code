@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<converter source="getm-1.9" target="getm-2.1">
+	<links>
+		<link source="/getm/m2d/Am" target="/getm/m2d/Am_const"/>
+		<link source="/getm/temp/temp_AH" target="/getm/temp/temp_AH_const"/>
+		<link source="/getm/salt/salt_AH" target="/getm/salt/salt_AH_const"/>
+	</links>
+	<custom>
+		<forward>
+<![CDATA[
+if source['getm/m2d/Am'].getValue(usedefault=True)>0.0:
+	target['getm/m2d/Am_method'].setValue(1)
+else:
+	target['getm/m2d/Am_method'].setValue(0)
+if source['getm/temp/temp_AH'].getValue(usedefault=True)>0.0:
+	target['getm/temp/temp_AH_method'].setValue(1)
+else:
+	target['getm/temp/temp_AH_method'].setValue(0)
+if source['getm/salt/salt_AH'].getValue(usedefault=True)>0.0:
+	target['getm/salt/salt_AH_method'].setValue(1)
+else:
+	target['getm/salt/salt_AH_method'].setValue(0)
+]]>
+		</forward>
+		<backward>
+<![CDATA[
+if source['getm/m2d/Am_method'].getValue(usedefault=True)==0:
+	target['getm/m2d/Am'].setValue(-1.0)
+if source['getm/temp/temp_AH_method'].getValue(usedefault=True)==0:
+	target['getm/temp/temp_AH'].setValue(-1.0)
+if source['getm/salt/salt_AH_method'].getValue(usedefault=True)==0:
+	target['getm/salt/salt_AH'].setValue(-1.0)
+]]>
+		</backward>
+	</custom>
+</converter>
