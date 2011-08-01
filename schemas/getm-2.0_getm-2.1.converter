@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<converter source="getm-1.9" target="getm-2.1">
+<converter source="getm-2.0" target="getm-2.1">
 	<links>
 		<link source="/getm/m2d/Am" target="/getm/m2d/Am_const"/>
 		<link source="/getm/temp/temp_AH" target="/getm/temp/temp_AH_const"/>
