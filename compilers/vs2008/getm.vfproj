@@ -194,5 +194,5 @@
 		<File RelativePath="..\..\src\output\output.F90"/>
 		<File RelativePath="..\..\src\output\parser.F90"/>
 		<File RelativePath="..\..\src\output\variable_info.F90"/></Filter>
-		<File RelativePath="..\..\..\..\Program Files\Microsoft HPC Pack 2008 R2\Inc\mpi.f90"/></Filter></Files>
+		<File RelativePath="C:\Program Files\Microsoft HPC Pack 2008 R2\Inc\mpi.f90"/></Filter></Files>
 	<Globals/></VisualStudioProject>
