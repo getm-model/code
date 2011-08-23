@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioProject ProjectCreator="Intel Fortran" Keyword="Console Application" Version="11.0" ProjectIdGuid="{11CB0AE4-E1DF-474C-98EB-AEED4E2B6E42}">
+	<Platforms>
+		<Platform Name="Win32"/></Platforms>
+	<Configurations>
+		<Configuration Name="Debug|Win32" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\src\domain;..\..\src\3d;..\..\src\2d;$(GOTMDIR)\extras\netcdf\win32\3.6.3\include;$(MSMPI_INC)" PreprocessorDefinitions="STATIC;REAL_4B=real(kind=4);GETM_BIO;GETM_PARALLEL" Interfaces="true" WarnInterfaces="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(GOTMDIR)\extras\netcdf\win32\3.6.3\lib;$(MSMPI_LIB32);$(GOTMDIR)\compilers\vs2008\Debug\gotm" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="netcdfs.lib msmpi.lib msmpifec.lib gotm.lib"/>
+				<Tool Name="VFLibrarianTool" LinkLibraryDependencies="true"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="copy C:\Temp\getm-setups\box_cartesian\box_cartesian.4p.dim .\dimensions.h"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|Win32" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\src\domain;..\..\src\3d;..\..\src\2d;$(GOTMDIR)\extras\netcdf\win32\3.6.3\include;$(MSMPI_INC)" PreprocessorDefinitions="STATIC;REAL_4B=real(kind=4);GETM_BIO;GETM_PARALLEL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(GOTMDIR)\extras\netcdf\win32\3.6.3\lib;$(MSMPI_LIB32)" SubSystem="subSystemConsole" AdditionalDependencies="netcdfs.lib msmpi.lib msmpifec.lib"/>
+				<Tool Name="VFLibrarianTool" LinkLibraryDependencies="true"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="copy C:\Temp\getm-setups\box_cartesian\box_cartesian.4p.dim .\dimensions.h"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
+	<Files>
+		<Filter Name="Header Files" Filter="fi;fd"/>
+		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
+		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
+		<Filter Name="2d">
+		<File RelativePath="..\..\src\2d\bottom_friction.F90"/>
+		<File RelativePath="..\..\src\2d\cfl_check.F90"/>
+		<File RelativePath="..\..\src\2d\depth_update.F90"/>
+		<File RelativePath="..\..\src\2d\have_bdy.F90"/>
+		<File RelativePath="..\..\src\2d\m2d.F90"/>
+		<File RelativePath="..\..\src\2d\momentum.F90"/>
+		<File RelativePath="..\..\src\2d\residual.F90"/>
+		<File RelativePath="..\..\src\2d\sealevel.F90"/>
+		<File RelativePath="..\..\src\2d\update_2d_bdy.F90"/>
+		<File RelativePath="..\..\src\2d\uv_advect.F90"/>
+		<File RelativePath="..\..\src\2d\uv_depths.F90"/>
+		<File RelativePath="..\..\src\2d\uv_diffusion.F90"/>
+		<File RelativePath="..\..\src\2d\variables_2d.F90"/></Filter>
+		<Filter Name="3d">
+		<File RelativePath="..\..\src\3d\adaptive_coordinates.F90"/>
+		<File RelativePath="..\..\src\3d\advection_3d.F90"/>
+		<File RelativePath="..\..\src\3d\bdy_3d.F90"/>
+		<File RelativePath="..\..\src\3d\bottom_friction_3d.F90"/>
+		<File RelativePath="..\..\src\3d\check_h.F90"/>
+		<File RelativePath="..\..\src\3d\coordinates.F90"/>
+		<File RelativePath="..\..\src\3d\divergence.F90"/>
+		<File RelativePath="..\..\src\3d\eqstate.F90"/>
+		<File RelativePath="..\..\src\3d\fct_2dh_adv.F90"/>
+		<File RelativePath="..\..\src\3d\general_coordinates.F90"/>
+		<File RelativePath="..\..\src\3d\getm_bio.F90"/>
+		<File RelativePath="..\..\src\3d\gotm.F90"/>
+		<File RelativePath="..\..\src\3d\hcc_check.F90"/>
+		<File RelativePath="..\..\src\3d\hybrid_coordinates.F90"/>
+		<File RelativePath="..\..\src\3d\internal_pressure.F90"/>
+		<File RelativePath="..\..\src\3d\ip_blumberg_mellor.F90"/>
+		<File RelativePath="..\..\src\3d\ip_blumberg_mellor_lin.F90"/>
+		<File RelativePath="..\..\src\3d\ip_chu_fan.F90"/>
+		<File RelativePath="..\..\src\3d\ip_shchepetkin_mcwilliams.F90"/>
+		<File RelativePath="..\..\src\3d\ip_song_wright.F90"/>
+		<File RelativePath="..\..\src\3d\ip_stelling_vankester.F90"/>
+		<File RelativePath="..\..\src\3d\ip_z_interpol.F90"/>
+		<File RelativePath="..\..\src\3d\m3d.F90"/>
+		<File RelativePath="..\..\src\3d\numerical_mixing.F90"/>
+		<File RelativePath="..\..\src\3d\physical_mixing.F90"/>
+		<File RelativePath="..\..\src\3d\preadapt_coordinates.F90"/>
+		<File RelativePath="..\..\src\3d\rivers.F90"/>
+		<File RelativePath="..\..\src\3d\salinity.F90"/>
+		<File RelativePath="..\..\src\3d\sigma_coordinates.F90"/>
+		<File RelativePath="..\..\src\3d\slow_advection.F90"/>
+		<File RelativePath="..\..\src\3d\slow_bottom_friction.F90"/>
+		<File RelativePath="..\..\src\3d\slow_diffusion.F90"/>
+		<File RelativePath="..\..\src\3d\slow_terms.F90"/>
+		<File RelativePath="..\..\src\3d\ss_nn.F90"/>
+		<File RelativePath="..\..\src\3d\start_macro.F90"/>
+		<File RelativePath="..\..\src\3d\stop_macro.F90"/>
+		<File RelativePath="..\..\src\3d\stresses_3d.F90"/>
+		<File RelativePath="..\..\src\3d\temperature.F90"/>
+		<File RelativePath="..\..\src\3d\tke_eps_advect_3d.F90"/>
+		<File RelativePath="..\..\src\3d\u_split_adv.F90"/>
+		<File RelativePath="..\..\src\3d\upstream_2dh_adv.F90"/>
+		<File RelativePath="..\..\src\3d\upstream_adv.F90"/>
+		<File RelativePath="..\..\src\3d\uu_momentum_3d.F90"/>
+		<File RelativePath="..\..\src\3d\uv_advect_3d.F90"/>
+		<File RelativePath="..\..\src\3d\uv_diffusion_3d.F90"/>
+		<File RelativePath="..\..\src\3d\v_split_adv.F90"/>
+		<File RelativePath="..\..\src\3d\variables_3d.F90"/>
+		<File RelativePath="..\..\src\3d\vv_momentum_3d.F90"/>
+		<File RelativePath="..\..\src\3d\w_split_adv.F90"/>
+		<File RelativePath="..\..\src\3d\w_split_it_adv.F90"/>
+		<File RelativePath="..\..\src\3d\ww_momentum_3d.F90"/></Filter>
+		<Filter Name="domain">
+		<File RelativePath="..\..\src\domain\bdy_spec.F90"/>
+		<File RelativePath="..\..\src\domain\domain.F90"/>
+		<File RelativePath="..\..\src\domain\mirror_bdy_2d.F90"/>
+		<File RelativePath="..\..\src\domain\mirror_bdy_3d.F90"/>
+		<File RelativePath="..\..\src\domain\part_domain.F90"/>
+		<File RelativePath="..\..\src\domain\print_bdy.F90"/></Filter>
+		<Filter Name="futil">
+		<File RelativePath="..\..\src\futils\c2x.F90"/>
+		<File RelativePath="..\..\src\futils\check_3d_fields.F90"/>
+		<File RelativePath="..\..\src\futils\cnv_2d.F90"/>
+		<File RelativePath="..\..\src\futils\cnv_3d.F90"/>
+		<File RelativePath="..\..\src\futils\col_interpol.F90"/>
+		<File RelativePath="..\..\src\futils\eta_mask.F90"/>
+		<File RelativePath="..\..\src\futils\exceptions.F90"/>
+		<File RelativePath="..\..\src\futils\getm_error.F90"/>
+		<File RelativePath="..\..\src\futils\getm_timers.F90"/>
+		<File RelativePath="..\..\src\futils\grid_interpol.F90"/>
+		<File RelativePath="..\..\src\futils\halo_mpi.F90"/>
+		<File RelativePath="..\..\src\futils\halo_zones.F90"/>
+		<File RelativePath="..\..\src\futils\kbk_interpol.F90"/>
+		<File RelativePath="..\..\src\futils\parallel.F90"/>
+		<File RelativePath="..\..\src\futils\parameters.F90"/>
+		<File RelativePath="..\..\src\futils\pos.F90"/>
+		<File RelativePath="..\..\src\futils\read_par_setup.F90"/>
+		<File RelativePath="..\..\src\futils\time.F90"/>
+		<File RelativePath="..\..\src\futils\to_2d_u.F90"/>
+		<File RelativePath="..\..\src\futils\to_2d_v.F90"/>
+		<File RelativePath="..\..\src\futils\to_2d_vel.F90"/>
+		<File RelativePath="..\..\src\futils\to_3d_uu.F90"/>
+		<File RelativePath="..\..\src\futils\to_3d_vel.F90"/>
+		<File RelativePath="..\..\src\futils\to_3d_vv.F90"/>
+		<File RelativePath="..\..\src\futils\tow.F90"/>
+		<File RelativePath="..\..\src\futils\tridiagonal.F90"/>
+		<File RelativePath="..\..\src\futils\ver_interpol.F90"/></Filter>
+		<Filter Name="getm">
+		<File RelativePath="..\..\src\getm\cleanup.F90"/>
+		<File RelativePath="..\..\src\getm\initialise.F90"/>
+		<File RelativePath="..\..\src\getm\integration.F90"/>
+		<File RelativePath="..\..\src\getm\main.F90"/></Filter>
+		<Filter Name="input">
+		<File RelativePath="..\..\src\input\get_2d_bdy.F90"/>
+		<File RelativePath="..\..\src\input\get_2d_field.F90"/>
+		<File RelativePath="..\..\src\input\get_3d_bdy.F90"/>
+		<File RelativePath="..\..\src\input\get_field.F90"/>
+		<File RelativePath="..\..\src\input\get_meteo_data.F90"/>
+		<File RelativePath="..\..\src\input\get_river_data.F90"/>
+		<File RelativePath="..\..\src\input\init_2d_bdy.F90"/>
+		<File RelativePath="..\..\src\input\init_3d_bdy.F90"/>
+		<File RelativePath="..\..\src\input\init_meteo_input.F90"/>
+		<File RelativePath="..\..\src\input\init_river_input.F90"/>
+		<File RelativePath="..\..\src\input\input.F90"/>
+		<File RelativePath="..\..\src\input\read_profile.F90"/>
+		<File RelativePath="..\..\src\input\read_topo_file.F90"/></Filter>
+		<Filter Name="meteo">
+		<File RelativePath="..\..\src\meteo\exchange_coefficients.F90"/>
+		<File RelativePath="..\..\src\meteo\fluxes.F90"/>
+		<File RelativePath="..\..\src\meteo\meteo.F90"/>
+		<File RelativePath="..\..\src\meteo\short_wave_radiation.F90"/></Filter>
+		<Filter Name="ncdf">
+		<File RelativePath="..\..\src\ncdf\create_restart_ncdf.F90"/>
+		<File RelativePath="..\..\src\ncdf\get_2d_field_ncdf.F90"/>
+		<File RelativePath="..\..\src\ncdf\get_field_ncdf.F90"/>
+		<File RelativePath="..\..\src\ncdf\grid_ncdf.F90"/>
+		<File RelativePath="..\..\src\ncdf\init_2d_ncdf.F90"/>
+		<File RelativePath="..\..\src\ncdf\init_3d_ncdf.F90"/>
+		<File RelativePath="..\..\src\ncdf\init_grid_ncdf.F90"/>
+		<File RelativePath="..\..\src\ncdf\init_mean_ncdf.F90"/>
+		<File RelativePath="..\..\src\ncdf\ncdf_2d.F90"/>
+		<File RelativePath="..\..\src\ncdf\ncdf_2d_bdy.F90"/>
+		<File RelativePath="..\..\src\ncdf\ncdf_3d.F90"/>
+		<File RelativePath="..\..\src\ncdf\ncdf_3d_bdy.F90"/>
+		<File RelativePath="..\..\src\ncdf\ncdf_close.F90"/>
+		<File RelativePath="..\..\src\ncdf\ncdf_common.F90"/>
+		<File RelativePath="..\..\src\ncdf\ncdf_in.F90"/>
+		<File RelativePath="..\..\src\ncdf\ncdf_mean.F90"/>
+		<File RelativePath="..\..\src\ncdf\ncdf_meteo.F90"/>
+		<File RelativePath="..\..\src\ncdf\ncdf_restart.F90"/>
+		<File RelativePath="..\..\src\ncdf\ncdf_rivers.F90"/>
+		<File RelativePath="..\..\src\ncdf\ncdf_topo.F90"/>
+		<File RelativePath="..\..\src\ncdf\open_restart_ncdf.F90"/>
+		<File RelativePath="..\..\src\ncdf\read_field_ncdf.F90"/>
+		<File RelativePath="..\..\src\ncdf\read_restart_ncdf.F90"/>
+		<File RelativePath="..\..\src\ncdf\save_2d_ncdf.F90"/>
+		<File RelativePath="..\..\src\ncdf\save_3d_ncdf.F90"/>
+		<File RelativePath="..\..\src\ncdf\save_grid_ncdf.F90"/>
+		<File RelativePath="..\..\src\ncdf\save_mean_ncdf.F90"/>
+		<File RelativePath="..\..\src\ncdf\set_attributes.F90"/>
+		<File RelativePath="..\..\src\ncdf\write_restart_ncdf.F90"/></Filter>
+		<Filter Name="output">
+		<File RelativePath="..\..\src\output\ascii_out.F90"/>
+		<File RelativePath="..\..\src\output\calc_mean_fields.F90"/>
+		<File RelativePath="..\..\src\output\diagnose.F90"/>
+		<File RelativePath="..\..\src\output\diagnostic_variables.F90"/>
+		<File RelativePath="..\..\src\output\ncdf_out.F90"/>
+		<File RelativePath="..\..\src\output\nesting.F90"/>
+		<File RelativePath="..\..\src\output\output.F90"/>
+		<File RelativePath="..\..\src\output\parser.F90"/>
+		<File RelativePath="..\..\src\output\variable_info.F90"/></Filter>
+		<File RelativePath="..\..\..\..\Program Files\Microsoft HPC Pack 2008 R2\Inc\mpi.f90"/></Filter></Files>
+	<Globals/></VisualStudioProject>
