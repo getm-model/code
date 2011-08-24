@@ -90,7 +90,7 @@
          integer,dimension(E2DFIELD),intent(in)     :: av,az
          integer,intent(in)                         :: method
       end subroutine v_split_adv
-      
+
       subroutine upstream_adv(dt,f,U,V,Do,Dn, &
                               delxv,delyu,delxu,delyv,area_inv,az,AH)
          use domain, only: imin,imax,jmin,jmax
@@ -102,7 +102,7 @@
          REALTYPE,dimension(E2DFIELD),intent(in)    :: area_inv
          integer,dimension(E2DFIELD),intent(in)     :: az
       end subroutine upstream_adv
-      
+
       subroutine upstream_2dh_adv(dt,f,U,V,Do,Dn,DU,DV, &
                                   delxv,delyu,delxu,delyv,area_inv,az,AH)
          use domain, only: imin,imax,jmin,jmax
@@ -115,7 +115,7 @@
          integer,dimension(E2DFIELD),intent(in)     :: az
       end subroutine upstream_2dh_adv
    end interface
-   
+
    contains
 
 !-----------------------------------------------------------------------
