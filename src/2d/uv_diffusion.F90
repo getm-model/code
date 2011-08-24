@@ -165,7 +165,7 @@
 #endif
    use m2d, only: Am
    use variables_2d, only: PP,An,AnX
-   use getm_timers,  only: tic,toc,TIM_UVDIFFUS
+   use getm_timers,  only: tic,toc,TIM_UVDIFF
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -190,7 +190,7 @@
    Ncall = Ncall+1
    write(debug,*) 'uv_diffusion() # ',Ncall
 #endif
-   CALL tic(TIM_UVDIFFUS)
+   CALL tic(TIM_UVDIFF)
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j)
@@ -327,7 +327,7 @@
 
 !$OMP END PARALLEL
 
-   CALL toc(TIM_UVDIFFUS)
+   CALL toc(TIM_UVDIFF)
 #ifdef DEBUG
      write(debug,*) 'Leaving uv_diffusion()'
      write(debug,*)

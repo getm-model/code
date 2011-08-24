@@ -151,7 +151,7 @@
    use domain, only: dx,dy,ard1
 #endif
    use variables_2d, only: UEx,VEx,PP
-   use getm_timers, only: tic, toc, TIM_UVADVECT
+   use getm_timers, only: tic, toc, TIM_UVADV
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -171,7 +171,7 @@
    Ncall = Ncall+1
    write(debug,*) 'uv_advect() # ',Ncall
 #endif
-   CALL tic(TIM_UVADVECT)
+   CALL tic(TIM_UVADV)
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,ii,jj)
 
@@ -293,7 +293,7 @@
 
 !$OMP END PARALLEL
 
-   CALL toc(TIM_UVADVECT)
+   CALL toc(TIM_UVADV)
 #ifdef DEBUG
      write(debug,*) 'Leaving uv_advect()'
      write(debug,*)

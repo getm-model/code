@@ -196,7 +196,7 @@
 !
 !
 ! !USES:
-   use getm_timers, only: tic, toc, TIM_ADVECTTOT, TIM_ADVECTH
+   use getm_timers, only: tic, toc, TIM_ADV, TIM_ADVH
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -236,7 +236,7 @@
    Ncall = Ncall+1
    write(debug,*) 'do_advection() # ',Ncall
 #endif
-   call tic(TIM_ADVECTTOT)
+   call tic(TIM_ADV)
 
    select case (hor_adv)
       case (UPSTREAM)
@@ -249,43 +249,43 @@
             case (0)
                call u_split_adv(dt,f,U,DU,delxu,delyu,area_inv,au,a2,&
                                 hor_adv,az,AH)
-               call tic(TIM_ADVECTH)
+               call tic(TIM_ADVH)
                call update_2d_halo(f,f,az,imin,jmin,imax,jmax,D_TAG)
                call wait_halo(D_TAG)
-               call toc(TIM_ADVECTH)
+               call toc(TIM_ADVH)
 
 #ifndef SLICE_MODEL
                call v_split_adv(dt,f,V,DV,delxv,delyv,area_inv,av,a2,&
                                 hor_adv,az,AH)
-               call tic(TIM_ADVECTH)
+               call tic(TIM_ADVH)
                call update_2d_halo(f,f,az,imin,jmin,imax,jmax,D_TAG)
                call wait_halo(D_TAG)
-               call toc(TIM_ADVECTH)
+               call toc(TIM_ADVH)
 #endif
 
             case (1)
                call u_split_adv(dt,f,U,DU,delxu,delyu,area_inv,au,a1,&
                                 hor_adv,az,AH)
-               call tic(TIM_ADVECTH)
+               call tic(TIM_ADVH)
                call update_2d_halo(f,f,az,imin,jmin,imax,jmax,D_TAG)
                call wait_halo(D_TAG)
-               call toc(TIM_ADVECTH)
+               call toc(TIM_ADVH)
 
 #ifndef SLICE_MODEL
                call v_split_adv(dt,f,V,DV,delxv,delyv,area_inv,av,a2,&
                                 hor_adv,az,AH)
-               call tic(TIM_ADVECTH)
+               call tic(TIM_ADVH)
                call update_2d_halo(f,f,az,imin,jmin,imax,jmax,D_TAG)
                call wait_halo(D_TAG)
-               call toc(TIM_ADVECTH)
+               call toc(TIM_ADVH)
 #endif
 
                call u_split_adv(dt,f,U,DU,delxu,delyu,area_inv,au,a1,&
                                 hor_adv,az,AH)
-               call tic(TIM_ADVECTH)
+               call tic(TIM_ADVH)
                call update_2d_halo(f,f,az,imin,jmin,imax,jmax,D_TAG)
                call wait_halo(D_TAG)
-               call toc(TIM_ADVECTH)
+               call toc(TIM_ADVH)
 
             case (2)
                select case (hor_adv)
@@ -309,7 +309,7 @@
          stop
    end select
 
-   call toc(TIM_ADVECTTOT)
+   call toc(TIM_ADV)
 #ifdef DEBUG
    write(debug,*) 'Leaving do_advection()'
    write(debug,*)
