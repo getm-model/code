@@ -2,10 +2,10 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  v_split_adv - 1D y-advection \label{sec-v-split-adv}
+! !IROUTINE:  adv_v_split - 1D y-advection \label{sec-v-split-adv}
 !
 ! !INTERFACE:
-   subroutine v_split_adv(dt,f,vv,hvn, &
+   subroutine adv_v_split(dt,f,vv,hvn, &
                           delxv,delyv,area_inv,av,splitfac,method,az,AH)
 ! !DESCRIPTION:
 !
@@ -87,7 +87,7 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'v_split_adv() # ',Ncall
+   write(debug,*) 'adv_v_split() # ',Ncall
 #endif
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,c,x,r,Phi,limit,fu,fc,fd)
@@ -163,7 +163,7 @@
                            limit=max(_ZERO_,min(_TWO_,_TWO_*r,_HALF_*(_ONE_+r)))
                         case default
                            FATAL 'This is not so good - do_advection_3d()'
-                           stop 'v_split_adv'
+                           stop 'adv_v_split'
                      end select
                      cu(i,j,k)=vv(i,j,k)*(fc+_HALF_*limit*(_ONE_-c)*(fd-fc))
 !Horizontal diffusion
@@ -199,11 +199,11 @@
 !$OMP END PARALLEL
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving v_split_adv()'
+   write(debug,*) 'Leaving adv_v_split()'
    write(debug,*)
 #endif
    return
-   end subroutine v_split_adv
+   end subroutine adv_v_split
 
 !-----------------------------------------------------------------------
 ! Copyright (C) 2004 - Hans Burchard and Karsten Bolding               !

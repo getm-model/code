@@ -691,7 +691,7 @@
 
 #ifdef FORTRAN90
    deallocate(ww_aux,stat=rc)
-   if (rc /= 0) stop 'upstream_adv: Error de-allocating memory (ww_aux)'
+   if (rc /= 0) stop 'do_spm: Error de-allocating memory (ww_aux)'
 #endif
 
 #ifdef DEBUG

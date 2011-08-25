@@ -1,10 +1,10 @@
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  w_split_adv - 1D z-advection \label{sec-w-split-adv}
+! !IROUTINE:  adv_w_split - 1D z-advection \label{sec-w-split-adv}
 !
 ! !INTERFACE:
-   subroutine w_split_adv(dt,f,ww,az,splitfac,method)
+   subroutine adv_w_split(dt,f,ww,az,splitfac,method)
 !
 ! !DESCRIPTION:
 !
@@ -68,12 +68,12 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'w_split_adv() # ',Ncall
+   write(debug,*) 'adv_w_split() # ',Ncall
 #endif
 #ifdef NO_BAROTROPIC
-   STDERR 'Do not use w_split_adv() with the compiler option NO_BAROTROPIC'
-   STDERR 'Use w_split_it_adv() instead, choose option ITERATE_VERT_ADV'
-   stop 'w_split_adv()'
+   STDERR 'Do not use adv_w_split() with the compiler option NO_BAROTROPIC'
+   STDERR 'Use adv_w_split_it() instead, choose option ITERATE_VERT_ADV'
+   stop 'adv_w_split()'
 #endif
 
    cu(:,:,kmax)=_ZERO_
@@ -152,7 +152,7 @@
                            limit=max(_ZERO_,min(_TWO_,_TWO_*r,_HALF_*(_ONE_+r)))
                         case default
                            FATAL 'This is not so good - do_advection_3d()'
-                           stop 'w_split_adv'
+                           stop 'adv_w_split'
                      end select
                      cu(i,j,k)=ww(i,j,k)*(fc+_HALF_*limit*(_ONE_-c)*(fd-fc))
                   else
@@ -182,11 +182,11 @@
 !$OMP END PARALLEL
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving w_split_adv()'
+   write(debug,*) 'Leaving adv_w_split()'
    write(debug,*)
 #endif
    return
-   end subroutine w_split_adv
+   end subroutine adv_w_split
 
 !-----------------------------------------------------------------------
 ! Copyright (C) 2004 - Hans Burchard and Karsten Bolding               !

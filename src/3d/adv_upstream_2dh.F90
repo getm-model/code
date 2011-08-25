@@ -1,11 +1,11 @@
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  upstream_2dh_adv - 2D upstream advection
+! !IROUTINE:  adv_upstream_2dh - 2D upstream advection
 ! \label{sec-upstream-2dh-adv}
 !
 ! !INTERFACE:
-   subroutine upstream_2dh_adv(dt,f,uu,vv,ho,hn,hun,hvn, &
+   subroutine adv_upstream_2dh(dt,f,uu,vv,ho,hn,hun,hvn, &
                            delxv,delyu,delxu,delyv,area_inv,az,AH)
 !
 ! !DESCRIPTION:
@@ -112,14 +112,14 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'upstream_2dh_adv() # ',Ncall
+   write(debug,*) 'adv_upstream_2dh() # ',Ncall
 #endif
 #ifdef USE_ALLOCATED_ARRAYS
    allocate(flx(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'upstream_2dh_adv: Error allocating memory (flx)'
+   if (rc /= 0) stop 'adv_upstream_2dh: Error allocating memory (flx)'
 
    allocate(fly(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'upstream_2dh_adv: Error allocating memory (fly)'
+   if (rc /= 0) stop 'adv_upstream_2dh: Error allocating memory (fly)'
 
    allocate(cmax(I3DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'fct_2dh: Error allocating memory (cmax)'
@@ -128,7 +128,7 @@
    if (rc /= 0) stop 'fct_2dh: Error allocating memory (cmin)'
 #endif
 #ifdef SLICE_MODEL
- FATAL 'upstream_2dh_adv(): Do not use upstream_2dh_adv in SLICE_MODEL mode'
+ FATAL 'adv_upstream_2dh(): Do not use adv_upstream_2dh in SLICE_MODEL mode'
  stop
 #endif
 
@@ -235,18 +235,18 @@
 #ifdef USE_ALLOCATED_ARRAYS
 #ifdef FORTRAN90
    deallocate(flx,stat=rc)    ! work array
-   if (rc /= 0) stop 'upstream_2dh_adv: Error de-allocating memory (flx)'
+   if (rc /= 0) stop 'adv_upstream_2dh: Error de-allocating memory (flx)'
    deallocate(fly,stat=rc)    ! work array
-   if (rc /= 0) stop 'upstream_2dh_adv: Error de-allocating memory (fly)'
+   if (rc /= 0) stop 'adv_upstream_2dh: Error de-allocating memory (fly)'
 #endif
 #endif
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving upstream_2dh_adv()'
+   write(debug,*) 'Leaving adv_upstream_2dh()'
    write(debug,*)
 #endif
    return
-   end subroutine upstream_2dh_adv
+   end subroutine adv_upstream_2dh
 !EOC
 
 !-----------------------------------------------------------------------
