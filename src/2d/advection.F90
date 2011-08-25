@@ -67,7 +67,7 @@
 !-----------------------------------------------------------------------
 
    interface
-      subroutine u_split_adv(dt,f,U,DU, &
+      subroutine adv_u_split(dt,f,U,DU, &
                              delxu,delyu,area_inv,au,splitfac,method,az,AH)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
@@ -77,9 +77,9 @@
          REALTYPE,dimension(E2DFIELD),intent(in)    :: delxu,delyu,area_inv
          integer,dimension(E2DFIELD),intent(in)     :: au,az
          integer,intent(in)                         :: method
-      end subroutine u_split_adv
+      end subroutine adv_u_split
 
-      subroutine v_split_adv(dt,f,V,DV, &
+      subroutine adv_v_split(dt,f,V,DV, &
                              delxv,delyv,area_inv,av,splitfac,method,az,AH)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
@@ -89,9 +89,9 @@
          REALTYPE,dimension(E2DFIELD),intent(in)    :: delxv,delyv,area_inv
          integer,dimension(E2DFIELD),intent(in)     :: av,az
          integer,intent(in)                         :: method
-      end subroutine v_split_adv
+      end subroutine adv_v_split
 
-      subroutine upstream_adv(dt,f,U,V,Do,Dn, &
+      subroutine adv_upstream(dt,f,U,V,Do,Dn, &
                               delxv,delyu,delxu,delyv,area_inv,az,AH)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
@@ -101,9 +101,9 @@
          REALTYPE,dimension(E2DFIELD),intent(in)    :: delxv,delyu,delxu,delyv
          REALTYPE,dimension(E2DFIELD),intent(in)    :: area_inv
          integer,dimension(E2DFIELD),intent(in)     :: az
-      end subroutine upstream_adv
+      end subroutine adv_upstream
 
-      subroutine upstream_2dh_adv(dt,f,U,V,Do,Dn,DU,DV, &
+      subroutine adv_upstream_2dh(dt,f,U,V,Do,Dn,DU,DV, &
                                   delxv,delyu,delxu,delyv,area_inv,az,AH)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
@@ -113,7 +113,7 @@
          REALTYPE,dimension(E2DFIELD),intent(in)    :: delxv,delyu,delxu,delyv
          REALTYPE,dimension(E2DFIELD),intent(in)    :: area_inv
          integer,dimension(E2DFIELD),intent(in)     :: az
-      end subroutine upstream_2dh_adv
+      end subroutine adv_upstream_2dh
    end interface
 
    contains
@@ -240,14 +240,14 @@
 
    select case (hor_adv)
       case (UPSTREAM)
-         call upstream_adv(dt,f,U,V,Do,Dn, &
+         call adv_upstream(dt,f,U,V,Do,Dn, &
                            delxv,delyu,delxu,delyv,area_inv,az,AH)
          if(present(Dni)) Dni=Dn
       case ((UPSTREAM_SPLIT),(P2),(Superbee),(MUSCL),(P2_PDM),(FCT))
          Di=Do
          select case (adv_split)
             case (0)
-               call u_split_adv(dt,f,U,DU,delxu,delyu,area_inv,au,a2,&
+               call adv_u_split(dt,f,U,DU,delxu,delyu,area_inv,au,a2,&
                                 hor_adv,az,AH)
                call tic(TIM_ADVH)
                call update_2d_halo(f,f,az,imin,jmin,imax,jmax,D_TAG)
@@ -255,7 +255,7 @@
                call toc(TIM_ADVH)
 
 #ifndef SLICE_MODEL
-               call v_split_adv(dt,f,V,DV,delxv,delyv,area_inv,av,a2,&
+               call adv_v_split(dt,f,V,DV,delxv,delyv,area_inv,av,a2,&
                                 hor_adv,az,AH)
                call tic(TIM_ADVH)
                call update_2d_halo(f,f,az,imin,jmin,imax,jmax,D_TAG)
@@ -264,7 +264,7 @@
 #endif
 
             case (1)
-               call u_split_adv(dt,f,U,DU,delxu,delyu,area_inv,au,a1,&
+               call adv_u_split(dt,f,U,DU,delxu,delyu,area_inv,au,a1,&
                                 hor_adv,az,AH)
                call tic(TIM_ADVH)
                call update_2d_halo(f,f,az,imin,jmin,imax,jmax,D_TAG)
@@ -272,7 +272,7 @@
                call toc(TIM_ADVH)
 
 #ifndef SLICE_MODEL
-               call v_split_adv(dt,f,V,DV,delxv,delyv,area_inv,av,a2,&
+               call adv_v_split(dt,f,V,DV,delxv,delyv,area_inv,av,a2,&
                                 hor_adv,az,AH)
                call tic(TIM_ADVH)
                call update_2d_halo(f,f,az,imin,jmin,imax,jmax,D_TAG)
@@ -280,7 +280,7 @@
                call toc(TIM_ADVH)
 #endif
 
-               call u_split_adv(dt,f,U,DU,delxu,delyu,area_inv,au,a1,&
+               call adv_u_split(dt,f,U,DU,delxu,delyu,area_inv,au,a1,&
                                 hor_adv,az,AH)
                call tic(TIM_ADVH)
                call update_2d_halo(f,f,az,imin,jmin,imax,jmax,D_TAG)
@@ -290,7 +290,7 @@
             case (2)
                select case (hor_adv)
                   case (UPSTREAM_SPLIT)
-                     call upstream_2dh_adv(dt,f,U,V,Do,Dn,DU,DV, &
+                     call adv_upstream_2dh(dt,f,U,V,Do,Dn,DU,DV, &
                                delxv,delyu,delxu,delyv,area_inv,az,AH)
                   case (FCT)
                      FATAL 'There is a bug in fct_2dh_adv.'

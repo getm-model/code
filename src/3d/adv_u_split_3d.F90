@@ -1,10 +1,10 @@
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  adv_u_split - 1D x-advection \label{sec-u-split-adv}
+! !IROUTINE:  adv_u_split_3d - 1D x-advection \label{sec-u-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_u_split(dt,f,uu,hun, &
+   subroutine adv_u_split_3d(dt,f,uu,hun, &
                           delxu,delyu,area_inv,au,splitfac,method,az,AH)
 ! !DESCRIPTION:
 !
@@ -179,7 +179,7 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'adv_u_split() # ',Ncall
+   write(debug,*) 'adv_u_split_3d() # ',Ncall
 #endif
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,c,x,r,Phi,limit,fu,fc,fd)
@@ -256,7 +256,7 @@
                            limit=max(_ZERO_,min(_TWO_,_TWO_*r,_HALF_*(_ONE_+r)))
                         case default
                            FATAL 'Not so good - do_advection_3d()'
-                           stop 'adv_u_split'
+                           stop 'adv_u_split_3d'
                      end select
                      cu(i,j,k)=uu(i,j,k)*(fc+_HALF_*limit*(_ONE_-c)*(fd-fc))
 !Horizontal diffusion
@@ -296,11 +296,11 @@
 !$OMP END PARALLEL
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving adv_u_split()'
+   write(debug,*) 'Leaving adv_u_split_3d()'
    write(debug,*)
 #endif
    return
-   end subroutine adv_u_split
+   end subroutine adv_u_split_3d
 
 !-----------------------------------------------------------------------
 ! Copyright (C) 2004 - Hans Burchard and Karsten Bolding               !

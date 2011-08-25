@@ -1,10 +1,10 @@
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  adv_fct_2dh - 2D flux-corrected transport \label{sec-fct-2dh-adv}
+! !IROUTINE:  adv_fct_2dh_3d - 2D flux-corrected transport \label{sec-fct-2dh-adv}
 !
 ! !INTERFACE:
-   subroutine adv_fct_2dh(dt,f,uu,vv,ho,hn,hun,hvn, &
+   subroutine adv_fct_2dh_3d(dt,f,uu,vv,ho,hn,hun,hvn, &
                            delxv,delyu,delxu,delyv,area_inv,az,AH)
 ! !DESCRIPTION:
 ! In this routine, the flux corrected transport advection scheme by
@@ -75,36 +75,36 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'adv_fct_2dh() # ',Ncall
+   write(debug,*) 'adv_fct_2dh_3d() # ',Ncall
 #endif
 
 #ifdef USE_ALLOCATED_ARRAYS
    allocate(flx(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (flx)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error allocating memory (flx)'
 
    allocate(fly(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (fly)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error allocating memory (fly)'
 
    allocate(fhx(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (fhx)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error allocating memory (fhx)'
 
    allocate(fhy(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (fhy)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error allocating memory (fhy)'
 
    allocate(fi(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (fi)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error allocating memory (fi)'
 
    allocate(rp(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (rp)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error allocating memory (rp)'
 
    allocate(rm(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (rm)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error allocating memory (rm)'
 
    allocate(cmax(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (cmax)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error allocating memory (cmax)'
 
    allocate(cmin(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (cmin)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error allocating memory (cmin)'
 #endif
 
 ! NOTE: With the present implementation it is not necessary
@@ -599,28 +599,28 @@
 #ifdef USE_ALLOCATED_ARRAYS
 #ifdef FORTRAN90
    deallocate(flx,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (flx)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error de-allocating memory (flx)'
    deallocate(fly,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (fly)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error de-allocating memory (fly)'
    deallocate(fhx,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (fhx)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error de-allocating memory (fhx)'
    deallocate(fhy,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (fhy)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error de-allocating memory (fhy)'
    deallocate(fi,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (fi)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error de-allocating memory (fi)'
    deallocate(rp,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (rp)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error de-allocating memory (rp)'
    deallocate(rm,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (rm)'
+   if (rc /= 0) stop 'adv_fct_2dh_3d: Error de-allocating memory (rm)'
 #endif
 #endif
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving adv_fct_2dh()'
+   write(debug,*) 'Leaving adv_fct_2dh_3d()'
    write(debug,*)
 #endif
    return
-   end subroutine adv_fct_2dh
+   end subroutine adv_fct_2dh_3d
 !EOC
 
 !-----------------------------------------------------------------------

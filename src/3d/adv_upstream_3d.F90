@@ -1,10 +1,10 @@
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  adv_upstream - 3D upstream advection \label{sec-upstream-adv}
+! !IROUTINE:  adv_upstream_3d - 3D upstream advection \label{sec-upstream-adv}
 !
 ! !INTERFACE:
-   subroutine adv_upstream(dt,f,uu,vv,ww,ho,hn, &
+   subroutine adv_upstream_3d(dt,f,uu,vv,ww,ho,hn, &
                            delxv,delyu,delxu,delyv,area_inv,az,AH)
 ! !DESCRIPTION:
 !
@@ -111,17 +111,17 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'adv_upstream() # ',Ncall
+   write(debug,*) 'adv_upstream_3d() # ',Ncall
 #endif
 #ifdef NO_BAROTROPIC
-   STDERR 'Do not use adv_upstream() with the compiler option NO_BAROTROPIC'
-   STDERR 'Use adv_w_split_it() instead, choose option ITERATE_VERT_ADV'
-   stop 'adv_upstream()'
+   STDERR 'Do not use adv_upstream_3d() with the compiler option NO_BAROTROPIC'
+   STDERR 'Use adv_w_split_it_3d() instead, choose option ITERATE_VERT_ADV'
+   stop 'adv_upstream_3d()'
 #endif
 
 #ifdef USE_ALLOCATED_ARRAYS
    allocate(adv(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_upstream: Error allocating memory (adv)'
+   if (rc /= 0) stop 'adv_upstream_3d: Error allocating memory (adv)'
 #endif
 
 ! Note: We do not need to initialize adv.
@@ -247,16 +247,16 @@
 #ifdef USE_ALLOCATED_ARRAYS
 #ifdef FORTRAN90
    deallocate(adv,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_upstream: Error de-allocating memory (adv)'
+   if (rc /= 0) stop 'adv_upstream_3d: Error de-allocating memory (adv)'
 #endif
 #endif
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving adv_upstream()'
+   write(debug,*) 'Leaving adv_upstream_3d()'
    write(debug,*)
 #endif
    return
-   end subroutine adv_upstream
+   end subroutine adv_upstream_3d
 !EOC
 
 !-----------------------------------------------------------------------
