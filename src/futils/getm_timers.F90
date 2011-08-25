@@ -172,7 +172,7 @@
    timernames(TIM_SEALEVEL)    = 'sealevel'
 
    timernames(TIM_INTEGR2D)    = 'integrate_2d other'
-   timernames(TIM_ADV2D)       = ' sum do_advection'
+   timernames(TIM_ADV)         = ' sum do_advection'
 
    timernames(TIM_METEO)       = 'do_meteo'
    timernames(TIM_INPUT)       = 'do_input'
