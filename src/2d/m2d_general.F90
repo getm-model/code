@@ -17,6 +17,7 @@
 !
 !EOP
 !-----------------------------------------------------------------------
+
    interface
       subroutine uv_diffusion(An_method,UEx,VEx,U,V,D,DU,DV)
          use domain, only: imin,imax,jmin,jmax
@@ -33,7 +34,7 @@
          REALTYPE,dimension(E2DFIELD),intent(in) :: U,V,D,DU,DV
       end subroutine calc_uvex
    end interface
-!
+
 !-----------------------------------------------------------------------
 
    end module m2d_general

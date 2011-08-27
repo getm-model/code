@@ -5,8 +5,9 @@
 ! \label{sec-upstream-2dh-adv}
 !
 ! !INTERFACE:
-   subroutine adv_upstream_2dh(dt,f,U,V,Do,Dn,DU,DV, &
+   subroutine adv_upstream_2dh(dt,f,Di,U,V,Do,Dn,DU,DV, &
                                delxv,delyu,delxu,delyv,area_inv,az,AH)
+!  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
 ! In this routine, the first-order upstream advection scheme
@@ -26,7 +27,6 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
-   use advection, only: Di,Dio
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -38,13 +38,14 @@
    integer,dimension(E2DFIELD),intent(in)     :: az
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(inout) :: f
+   REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer         :: rc,i,j,ii,jj
+   REALTYPE        :: Dio
 #ifdef USE_ALLOCATED_ARRAYS
    REALTYPE, dimension(:,:), allocatable       :: flx,fly
    REALTYPE, dimension(:,:), allocatable       :: cmin,cmax
@@ -84,7 +85,7 @@
 !      BJB 2009-09-25.
 
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(rc,i,j,ii,jj)
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(rc,i,j,ii,jj,Dio)
 
 ! OMP-NOTE: Master thread initializes, while other threads can
 !    start on the following two loops.
@@ -155,12 +156,12 @@
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .eq. 1)  then
-            Dio(i,j)=Di(i,j)
-            Di(i,j)=Dio(i,j)                               &
+            Dio=Di(i,j)
+            Di(i,j)=Dio                               &
             -dt*((U(i  ,j)*delyu(i  ,j)-U(i-1,j)*delyu(i-1,j)  &
                  +V(i,j  )*delxv(i,j  )-V(i,j-1)*delxv(i,j-1)  &
                  )*area_inv(i,j))
-            f(i,j)=(f(i,j)*Dio(i,j)                               &
+            f(i,j)=(f(i,j)*Dio                               &
             -dt*((flx(i  ,j)*delyu(i  ,j)-flx(i-1,j)*delyu(i-1,j)  &
                  +fly(i,j  )*delxv(i,j  )-fly(i,j-1)*delxv(i,j-1)  &
                  )*area_inv(i,j)))/Di(i,j)

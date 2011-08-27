@@ -4,7 +4,7 @@
 ! !IROUTINE:  adv_w_split_3d - 1D z-advection \label{sec-w-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_w_split_3d(dt,f,ww,az,splitfac,method)
+   subroutine adv_w_split_3d(dt,f,hi,ww,az,splitfac,method)
 !
 ! !DESCRIPTION:
 !
@@ -41,27 +41,27 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
-   use advection_3d, only: hi,hio,cu
+   use advection_3d, only: cu
    use advection_3d, only: UPSTREAM_SPLIT,P2,SUPERBEE,MUSCL,P2_PDM
-   use advection_3d, only: ONE6TH
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE , intent(in)               :: ww(I3DFIELD),dt
-   integer , intent(in)                :: az(E2DFIELD)
-   REALTYPE, intent(in)                :: splitfac
-   integer, intent(in)                 :: method
+   REALTYPE,intent(in)                        :: dt,splitfac
+   REALTYPE,dimension(I3DFIELD),intent(in)    :: ww
+   integer,dimension(E2DFIELD),intent(in)     :: az
+   integer,intent(in)                         :: method
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE, intent(inout)             :: f(I3DFIELD)
+   REALTYPE,dimension(I3DFIELD),intent(inout) :: f,hi
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer         :: i,j,k
-   REALTYPE        :: c,x,r,Phi,limit,fu,fc,fd
+   REALTYPE        :: hio,c,x,r,Phi,limit,fu,fc,fd
+   REALTYPE,parameter :: one6th=_ONE_/6
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -78,7 +78,7 @@
 
    cu(:,:,kmax)=_ZERO_
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,c,x,r,Phi,limit,fu,fc,fd)
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,hio,c,x,r,Phi,limit,fu,fc,fd)
 
 ! Calculating w-interface fluxes !
 
@@ -170,9 +170,9 @@
       do j=jmin,jmax
          do i=imin,imax
             if (az(i,j) .eq. 1) then
-               hio(i,j,k)=hi(i,j,k)
-               hi(i,j,k)=hio(i,j,k)-splitfac*dt*(ww(i,j,k)-ww(i,j,k-1))
-               f(i,j,k)=(f(i,j,k)*hio(i,j,k)-        &
+               hio=hi(i,j,k)
+               hi(i,j,k)=hio-splitfac*dt*(ww(i,j,k)-ww(i,j,k-1))
+               f(i,j,k)=(f(i,j,k)*hio-        &
                          splitfac*dt*(cu(i,j,k)-cu(i,j,k-1)))/hi(i,j,k)
             end if
          end do

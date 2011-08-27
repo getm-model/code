@@ -6,6 +6,8 @@
 ! !INTERFACE:
    subroutine adv_upstream(dt,f,U,V,Do,Dn, &
                            delxv,delyu,delxu,delyv,area_inv,az,AH)
+!  Note (KK): Keep in sync with interface in advection.F90
+!
 ! !DESCRIPTION:
 !
 ! Here the advection terms are calculated by a upstream scheme and

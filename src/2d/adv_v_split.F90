@@ -5,8 +5,10 @@
 ! !IROUTINE:  adv_v_split - 1D y-advection \label{sec-v-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_v_split(dt,f,V,DV, &
+   subroutine adv_v_split(dt,f,Di,V,DV, &
                           delxv,delyv,area_inv,av,splitfac,method,az,AH)
+!  Note (KK): Keep in sync with interface in advection.F90
+!
 ! !DESCRIPTION:
 !
 ! Here, the $y$-directional split 1D advection step is executed
@@ -30,9 +32,8 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
-   use advection, only: Di,Dio,cu
+   use advection, only: cu
    use advection, only: UPSTREAM_SPLIT,P2,SUPERBEE,MUSCL,P2_PDM
-   use advection, only: one6th
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -44,14 +45,15 @@
    integer,intent(in)                         :: method
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(inout) :: f
+   REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer         :: i,j
-   REALTYPE        :: c,x,r,Phi,limit,fu,fc,fd
+   REALTYPE        :: Dio,c,x,r,Phi,limit,fu,fc,fd
+   REALTYPE,parameter :: one6th=_ONE_/6
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -61,7 +63,7 @@
    write(debug,*) 'adv_v_split() # ',Ncall
 #endif
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,c,x,r,Phi,limit,fu,fc,fd)
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,Dio,c,x,r,Phi,limit,fu,fc,fd)
 
 ! Calculating v-interface fluxes !
 
@@ -151,11 +153,11 @@
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j).eq.1) then
-            Dio(i,j)=Di(i,j)
-            Di(i,j)=Dio(i,j)              &
+            Dio=Di(i,j)
+            Di(i,j)=Dio              &
                      -splitfac*dt*(V(i,j)*delxv(i,j)    &
                      -V(i,j-1)*delxv(i,j-1))*area_inv(i,j)
-            f(i,j)=(f(i,j)*Dio(i,j)        &
+            f(i,j)=(f(i,j)*Dio        &
                     -splitfac*dt*(cu(i,j)*delxv(i,j)    &
                     -cu(i,j-1)*delxv(i,j-1))*area_inv(i,j))/Di(i,j)
          end if

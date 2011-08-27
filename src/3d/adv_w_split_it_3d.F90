@@ -5,7 +5,7 @@
 !             \label{sec-w-split-it-adv}
 !
 ! !INTERFACE:
-   subroutine adv_w_split_it_3d(dt,f,ww,az,splitfac,method)
+   subroutine adv_w_split_it_3d(dt,f,hi,ww,az,splitfac,method)
 !
 ! !DESCRIPTION:
 !
@@ -45,28 +45,28 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
-   use advection_3d, only: hi,hio,cu
+   use advection_3d, only: cu
    use advection_3d, only: UPSTREAM_SPLIT,P2,SUPERBEE,MUSCL,P2_PDM
-   use advection_3d, only: ONE6TH
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE , intent(in)               :: ww(I3DFIELD),dt
-   integer , intent(in)                :: az(E2DFIELD)
-   REALTYPE, intent(in)                :: splitfac
-   integer, intent(in)                 :: method
+   REALTYPE,intent(in)                        :: dt,splitfac
+   REALTYPE,dimension(I3DFIELD),intent(in)    :: ww
+   integer,dimension(E2DFIELD),intent(in)     :: az
+   integer,intent(in)                         :: method
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE, intent(inout)             :: f(I3DFIELD)
+   REALTYPE,dimension(I3DFIELD),intent(inout) :: f,hi
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer         :: i,ii,j,jj,k,kk,it
-   REALTYPE        :: c,alpha,beta,x,r,Phi,limit,fu,fc,fd,cmax
+   REALTYPE        :: hio,c,alpha,beta,x,r,Phi,limit,fu,fc,fd,cmax
    logical         :: READY
+   REALTYPE,parameter :: one6th=_ONE_/6
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -81,7 +81,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                          &
 !$OMP       PRIVATE(i,ii,j,jj,k,kk,it,READY)                            &
-!$OMP       PRIVATE(c,alpha,beta,x,r,Phi,limit,fu,fc,fd,cmax)
+!$OMP       PRIVATE(hio,c,alpha,beta,x,r,Phi,limit,fu,fc,fd,cmax)
 
 ! OMP TODO: The present loops (j-i-k) gains only a small speedup from
 !  threading. Likely, the many jumps in memory limits the performance.
@@ -125,10 +125,10 @@
                         goto 222
                      end if
                      do k=1,kmax   ! Doing a w-advection step
-                        hio(i,j,k)=hi(i,j,k)
-                        hi(i,j,k)=hio(i,j,k)-splitfac/float(it)               &
+                        hio=hi(i,j,k)
+                        hi(i,j,k)=hio-splitfac/float(it)               &
                                   *dt*(ww(i,j,k)-ww(i,j,k-1))
-                        f(i,j,k)=(f(i,j,k)*hio(i,j,k)-splitfac/float(it)      &
+                        f(i,j,k)=(f(i,j,k)*hio-splitfac/float(it)      &
                                   *dt*(cu(i,j,k)-cu(i,j,k-1)))/hi(i,j,k)
                      end do
                   end do
@@ -234,10 +234,10 @@
                      end if
 
                      do k=1,kmax   ! Doing a w-advection step
-                        hio(i,j,k)=hi(i,j,k)
-                        hi(i,j,k)=hio(i,j,k)                  &
+                        hio=hi(i,j,k)
+                        hi(i,j,k)=hio                  &
                                  -splitfac/float(it)*dt*(ww(i,j,k)-ww(i,j,k-1))
-                        f(i,j,k)=(f(i,j,k)*hio(i,j,k)         &
+                        f(i,j,k)=(f(i,j,k)*hio         &
                                 -splitfac/float(it)*dt*(cu(i,j,k)-cu(i,j,k-1)))/hi(i,j,k)
                      end do
                   end do

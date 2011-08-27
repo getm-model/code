@@ -32,6 +32,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
+   use advection, only: adv_u_split,adv_v_split,adv_upstream_2dh,adv_fct_2dh
    IMPLICIT NONE
 !
    private
@@ -41,14 +42,11 @@
 #ifdef STATIC
    REALTYPE, public                    :: cu(I3DFIELD)
    REALTYPE, public                    :: hi(I3DFIELD)
-   REALTYPE, public                    :: hio(I3DFIELD)
 #else
-   REALTYPE, public, dimension(:,:,:), allocatable       :: hi,hio,cu
+   REALTYPE, public, dimension(:,:,:), allocatable       :: hi,cu
 #endif
    integer, public, parameter          :: UPSTREAM=1,UPSTREAM_SPLIT=2,P2=3
    integer, public, parameter          :: Superbee=4,MUSCL=5,P2_PDM=6,FCT=7
-   REALTYPE, public, parameter         :: one6th=_ONE_/6
-   REALTYPE, public, parameter         :: ONE=_ONE_,TWO=_TWO_
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -98,12 +96,9 @@
 
    allocate(hi(I3DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection_3d: Error allocating memory (hi)'
-
-   allocate(hio(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection_3d: Error allocating memory (hio)'
 #endif
 
-   cu  = _ZERO_ ; hi  = _ZERO_ ; hio = _ZERO_
+   cu  = _ZERO_ ; hi  = _ZERO_
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_advection_3d()'
@@ -121,7 +116,7 @@
 ! !INTERFACE:
    subroutine do_advection_3d(dt,f,uu,vv,ww,hun,hvn,ho,hn,      &
                              delxu,delxv,delyu,delyv,area_inv,  &
-                             az,au,av,hor_adv,ver_adv,adv_split,AH)
+                             az,au,av,hor_adv,ver_adv,adv_split,AH,hni)
 !
 ! !DESCRIPTION:
 !
@@ -239,8 +234,11 @@
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout)   :: f(I3DFIELD)
 !
+! !OUTPUT PARAMETERS:
+   REALTYPE, intent(out), optional   :: hni(I3DFIELD)
+!
 ! !LOCAL VARIABLES:
-   REALTYPE, parameter       :: a1=0.5*ONE,a2=ONE
+   REALTYPE, parameter       :: a1=_HALF_,a2=_ONE_
    integer         :: k
 !EOP
 !-----------------------------------------------------------------------
@@ -256,12 +254,15 @@
       case (UPSTREAM)
          call adv_upstream_3d(dt,f,uu,vv,ww,ho,hn, &
                            delxv,delyu,delxu,delyv,area_inv,az,AH)
+         if(present(hni)) hni=hn
       case ((UPSTREAM_SPLIT),(P2),(Superbee),(MUSCL),(P2_PDM),(FCT))
          hi=ho
          select case (adv_split)
             case (0)
-               call adv_u_split_3d(dt,f,uu,hun,delxu,delyu,area_inv,au,a2,&
-                                hor_adv,az,AH)
+               do k=1,kmax
+                  call adv_u_split(dt,f(:,:,k),hi(:,:,k),uu(:,:,k),hun(:,:,k), &
+                                   delxu,delyu,area_inv,au,a2,hor_adv,az,AH)
+               end do
                call tic(TIM_ADV3DH)
                call update_3d_halo(f,f,az,&
                                    imin,jmin,imax,jmax,kmax,D_TAG)
@@ -269,8 +270,10 @@
                call toc(TIM_ADV3DH)
 
 #ifndef SLICE_MODEL
-               call adv_v_split_3d(dt,f,vv,hvn,delxv,delyv,area_inv,av,a2,&
-                                hor_adv,az,AH)
+               do k=1,kmax
+                  call adv_v_split(dt,f(:,:,k),hi(:,:,k),vv(:,:,k),hvn(:,:,k), &
+                                   delxv,delyv,area_inv,av,a2,hor_adv,az,AH)
+               end do
                call tic(TIM_ADV3DH)
                call update_3d_halo(f,f,az,&
                                    imin,jmin,imax,jmax,kmax,D_TAG)
@@ -280,14 +283,16 @@
 
                if (kmax.gt.1) then
 #ifdef ITERATE_VERT_ADV
-                  call adv_w_split_it_3d(dt,f,ww,az,a2,ver_adv)
+                  call adv_w_split_it_3d(dt,f,hi,ww,az,a2,ver_adv)
 #else
-                  call adv_w_split_3d(dt,f,ww,az,a2,ver_adv)
+                  call adv_w_split_3d(dt,f,hi,ww,az,a2,ver_adv)
 #endif
                end if
             case (1)
-               call adv_u_split_3d(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
-                                hor_adv,az,AH)
+               do k=1,kmax
+                  call adv_u_split(dt,f(:,:,k),hi(:,:,k),uu(:,:,k),hun(:,:,k), &
+                                   delxu,delyu,area_inv,au,a1,hor_adv,az,AH)
+               end do
                call tic(TIM_ADV3DH)
                call update_3d_halo(f,f,az, &
                                    imin,jmin,imax,jmax,kmax,D_TAG)
@@ -295,8 +300,10 @@
                call toc(TIM_ADV3DH)
 
 #ifndef SLICE_MODEL
-               call adv_v_split_3d(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
-                                hor_adv,az,AH)
+               do k=1,kmax
+                  call adv_v_split(dt,f(:,:,k),hi(:,:,k),vv(:,:,k),hvn(:,:,k), &
+                                   delxv,delyv,area_inv,av,a1,hor_adv,az,AH)
+               end do
                call tic(TIM_ADV3DH)
                call update_3d_halo(f,f,az, &
                                    imin,jmin,imax,jmax,kmax,D_TAG)
@@ -306,9 +313,9 @@
 
                if (kmax.gt.1) then
 #ifdef ITERATE_VERT_ADV
-                  call adv_w_split_it_3d(dt,f,ww,az,a2,ver_adv)
+                  call adv_w_split_it_3d(dt,f,hi,ww,az,a2,ver_adv)
 #else
-                  call adv_w_split_3d(dt,f,ww,az,a2,ver_adv)
+                  call adv_w_split_3d(dt,f,hi,ww,az,a2,ver_adv)
 #endif
                   call tic(TIM_ADV3DH)
                   call update_3d_halo(f,f,az, &
@@ -318,8 +325,10 @@
 
                end if
 #ifndef SLICE_MODEL
-               call adv_v_split_3d(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
-                                hor_adv,az,AH)
+               do k=1,kmax
+                  call adv_v_split(dt,f(:,:,k),hi(:,:,k),vv(:,:,k),hvn(:,:,k), &
+                                   delxv,delyv,area_inv,av,a1,hor_adv,az,AH)
+               end do
                call tic(TIM_ADV3DH)
                call update_3d_halo(f,f,az, &
                                    imin,jmin,imax,jmax,kmax,D_TAG)
@@ -327,8 +336,10 @@
                call toc(TIM_ADV3DH)
 #endif
 
-               call adv_u_split_3d(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
-                                hor_adv,az,AH)
+               do k=1,kmax
+                  call adv_u_split(dt,f(:,:,k),hi(:,:,k),uu(:,:,k),hun(:,:,k), &
+                                   delxu,delyu,area_inv,au,a1,hor_adv,az,AH)
+               end do
                call tic(TIM_ADV3DH)
                call update_3d_halo(f,f,az, &
                                    imin,jmin,imax,jmax,kmax,D_TAG)
@@ -338,24 +349,37 @@
             case (2)
                select case (hor_adv)
                   case (UPSTREAM_SPLIT)
-                     call adv_upstream_2dh_3d(dt,f,uu,vv,ho,hn,hun,hvn, &
-                               delxv,delyu,delxu,delyv,area_inv,az,AH)
+                     do k=1,kmax
+                        call adv_upstream_2dh(dt,f(:,:,k),hi(:,:,k),   &
+                                              uu(:,:,k),vv(:,:,k),     &
+                                              ho(:,:,k),hn(:,:,k),     &
+                                              hun(:,:,k),hvn(:,:,k),   &
+                                              delxv,delyu,delxu,delyv, &
+                                              area_inv,az,AH)
+                     end do
                   case (FCT)
-                     call adv_fct_2dh_3d(dt,f,uu,vv,ho,hn,hun,hvn, &
-                               delxv,delyu,delxu,delyv,area_inv,az,AH)
+                     do k=1,kmax
+                        call adv_fct_2dh(dt,f(:,:,k),hi(:,:,k),   &
+                                         uu(:,:,k),vv(:,:,k),     &
+                                         ho(:,:,k),hn(:,:,k),     &
+                                         hun(:,:,k),hvn(:,:,k),   &
+                                         delxv,delyu,delxu,delyv, &
+                                         area_inv,az,AH)
+                     end do
                   case default
                      FATAL 'For adv_split=2, hor_adv must be 2 (upstream) or 7 (fct)'
                end select
                if (kmax .gt. 1) then
 #ifdef ITERATE_VERT_ADV
-                  call adv_w_split_it_3d(dt,f,ww,az,a2,ver_adv)
+                  call adv_w_split_it_3d(dt,f,hi,ww,az,a2,ver_adv)
 #else
-                  call adv_w_split_3d(dt,f,ww,az,a2,ver_adv)
+                  call adv_w_split_3d(dt,f,hi,ww,az,a2,ver_adv)
 #endif
                end if
             case default
                FATAL 'Not valid adv_split parameter'
          end select
+         if(present(hni)) hni=hi
       case default
          FATAL 'This is not so good - do_advection_3d()'
          stop

@@ -26,6 +26,7 @@
    use exceptions
    use parameters, only: avmmol
    use domain, only: openbdy,maxdepth,vert_cord,az
+!  we do not need to include calc_uvex
    use m2d_general, only: calc_uvex
    use m2d, only: Am
    use variables_2d, only: Uint,Vint
