@@ -35,7 +35,8 @@ ${LIB}(update_2d_bdy.o)		\
 ${LIB}(adv_upstream.o)		\
 ${LIB}(adv_u_split.o)		\
 ${LIB}(adv_v_split.o)		\
-${LIB}(adv_upstream_2dh.o)
+${LIB}(adv_upstream_2dh.o)	\
+${LIB}(adv_fct_2dh.o)
 
 
 all: modules objects

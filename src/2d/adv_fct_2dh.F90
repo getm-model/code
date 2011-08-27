@@ -35,7 +35,6 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
-   
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -292,7 +291,7 @@
          end if
          uuu=abs(uuu)
          vvv=abs(vvv)
-         fhx(i,j) = (
+         fhx(i,j) = (                                                    &
                        _HALF_                                            &
                        * ( CC + CW )                                     &
                      - _HALF_*uuu                                        &

@@ -301,7 +301,7 @@
                      call adv_upstream_2dh(dt,f,Di,U,V,Do,Dn,DU,DV, &
                                delxv,delyu,delxu,delyv,area_inv,az,AH)
                   case (FCT)
-                     call fct_2dh_adv(dt,f,Di,U,V,Do,Dn,DU,DV, &
+                     call adv_fct_2dh(dt,f,Di,U,V,Do,Dn,DU,DV, &
                                delxv,delyu,delxu,delyv,area_inv,az,AH)
                   case default
                      FATAL 'For adv_split=2, hor_adv must be 2 (upstream) or 7 (fct)'
