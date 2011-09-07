@@ -95,6 +95,8 @@
          do i=imin-1,imax
             if (ax(i,j) .eq. 1) then
 !              interpolate dudxX and dvdyX
+!              TODO (KK): Why dudxX not 0 across W/E open bdys?
+!                         Why dvdyX not 0 across N/S open bdys?
                AmX(i,j) =  (_HALF_*(dudxV(i,j) + dudxV(i+1,j  )))**2 &
 #ifndef SLICE_MODEL
                          + (_HALF_*(dvdyU(i,j) + dvdyU(i  ,j+1)))**2 &
