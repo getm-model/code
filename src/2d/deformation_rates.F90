@@ -270,7 +270,7 @@
       do j=jmin-1,jmax+1
 #endif
          do i=imin-1,imax
-!           Note (KK): outflow condition dudxU(au=2)=0
+!           KK-TODO: outflow condition dudxU(au=2)=0 ?
             if (au(i,j).eq.1 .or. au(i,j).eq.3) then
                dudxU(i,j) = _HALF_*(dudxC(i,j) + dudxC(i+1,j))
             else if (au(i,j) .eq. 0) then
@@ -355,7 +355,7 @@
 !     interpolation of meridional strain rate to V-points
       do j=jmin-1,jmax
          do i=imin-1,imax+1
-!           Note (KK): outflow condition dvdyV(av=2)=0
+!           KK-TODO: outflow condition dvdyV(av=2)=0 ?
             if (av(i,j).eq.1 .or. av(i,j).eq.3) then
 !              KK-TODO: for dvdyV(av=3) average of nonlinear metric
 !                       correction might cause violation of outflow
