@@ -10,7 +10,7 @@
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="copy C:\Temp\getm-setups\box_cartesian\box_cartesian.1p.dim .\dimensions.h"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32">
@@ -20,7 +20,7 @@
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="copy  &quot;C:\Users\bold\getm-setups\box_cartesian\box_cartesian.1p.dim&quot; .\dimensions.h"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
 	<Files>
