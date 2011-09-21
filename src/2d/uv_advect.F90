@@ -144,14 +144,17 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,az,au,av,ax
-   use domain, only: ioff,joff
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dyc,arud1,dxx,dyx,arvd1,dxc
-#else
-   use domain, only: dx,dy,ard1
+   use domain, only: dxc,dyc,dxx,dyx,arud1,arvd1
 #endif
-   use variables_2d, only: UEx,VEx,PP
-   use getm_timers, only: tic, toc, TIM_UVADV
+   use variables_2d, only: UEx,VEx
+   use advection, only: do_advection
+   use advection, only: Uadv,Vadv,DUadv,DVadv,maskadv,fadv
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+   use advection, only: dxadv,dyadv
+#endif
+   use halo_zones, only: update_2d_halo,wait_halo,U_TAG,V_TAG
+   use getm_timers, only: tic,toc,TIM_UVADV,TIM_UVADVH
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -162,7 +165,7 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,ii,jj
+   integer :: i,j
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -171,137 +174,91 @@
    Ncall = Ncall+1
    write(debug,*) 'uv_advect() # ',Ncall
 #endif
-   CALL tic(TIM_UVADV)
+   call tic(TIM_UVADV)
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,ii,jj)
+!  Here begins dimensional split advection for u-velocity
 
-!  Upstream for dx(U^2/D)
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j)
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax         ! PP defined on T-points
-      do i=imin,imax+1
-         if (az(i,j) .ge. 1) then
-            PP(i,j)=0.5*(U(i-1,j)+U(i,j))
-            if (PP(i,j) .gt. _ZERO_) then
-               ii=i-1
-            else
-               ii=i
-            end if
-            PP(i,j)=PP(i,j)*U(ii,j)/DU(ii,j)*DYC
-         else
-            PP(i,j) = _ZERO_
-         end if
-      end do
-   end do
-!$OMP END DO
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax      ! UEx defined on U-points
-      do i=imin,imax
-         if (au(i,j) .eq. 1) then
-            UEx(i,j)=(PP(i+1,j)-PP(i  ,j))*ARUD1
-         end if
-      end do
-   end do
-!$OMP END DO
-
-#ifndef SLICE_MODEL
-!  Upstream for dy(UV/D)
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-1,jmax        ! PP defined on X-points
-      do i=imin,imax
-         if (ax(i,j) .ge. 1) then
-            PP(i,j)=0.5*(V(i+1,j)+V(i,j))
-            if (PP(i,j) .gt. _ZERO_) then
-               jj=j
-            else
-               jj=j+1
-            end if
-            PP(i,j)=PP(i,j)*U(i,jj)/DU(i,jj)*DXX
-         else
-            PP(i,j) = _ZERO_
-         end if
-      end do
-   end do
-!$OMP END DO
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax        !UEx defined on U-points
-      do i=imin,imax
-         if (au(i,j) .eq. 1) then
-            UEx(i,j)=UEx(i,j)+(PP(i,j  )-PP(i,j-1))*ARUD1
-         end if
-      end do
-   end do
-!$OMP END DO
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO-1
+         Uadv(i,j) = _HALF_*( U(i  ,j) + U(i+1,j) )
+         Vadv(i,j) = _HALF_*( V(i  ,j) + V(i+1,j) )
+!        Note (KK): DU only valid until imax+1
+!                   therefore DUadv only valid until imax
+         DUadv(i,j) = _HALF_*( DU(i  ,j) + DU(i+1,j) )
+!        Note (KK): DV only valid until jmax+1
+!                   therefore DVadv only valid until jmax+1
+         DVadv(i,j) = _HALF_*( DV(i  ,j) + DV(i+1,j) )
+         maskadv(i,j) = az(i+1,j)
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+         dxadv(i,j) = dxc(i+1,j)
+         dyadv(i,j) = dyc(i+1,j)
 #endif
-
-! Upstream for dx(UV/D)
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax      ! PP defined on X-points
-      do i=imin-1,imax
-         if (ax(i,j) .ge. 1) then
-            PP(i,j)=0.5*(U(i,j)+U(i,j+1))
-            if (PP(i,j) .gt. _ZERO_) then
-               ii=i
-            else
-               ii=i+1
-            end if
-            PP(i,j)=PP(i,j)*V(ii,j)/DV(ii,j)*DYX
-         else
-            PP(i,j) = _ZERO_
-         end if
+!        the velocity to be transported
+         fadv(i,j) = U(i,j)/DU(i,j)
       end do
    end do
 !$OMP END DO
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax          ! VEx defined on V-points
-      do i=imin,imax
-         if (av(i,j) .eq. 1) then
-            VEx(i,j)=(PP(i  ,j)-PP(i-1,j))*ARVD1
-         end if
-      end do
-   end do
-!$OMP END DO
-
-#ifndef SLICE_MODEL
-!  Upstream for dy(V^2/D)
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax+1     ! PP defined on T-points
-      do i=imin,imax
-         if (az(i,j) .ge. 1) then
-            PP(i,j)=0.5*(V(i,j-1)+V(i,j))
-            if (PP(i,j) .gt. _ZERO_) then
-               jj=j-1
-            else
-               jj=j
-            end if
-            PP(i,j)=PP(i,j)*V(i,jj)/DV(i,jj)*DXC
-         else
-            PP(i,j) = _ZERO_
-         end if
-      end do
-   end do
-!$OMP END DO
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax             ! VEx defined on V-points
-      do i=imin,imax
-         if (av(i,j) .eq. 1) then
-            VEx(i,j)=VEx(i,j)+(PP(i,j+1)-PP(i,j  ))*ARVD1
-         end if
-      end do
-   end do
-!$OMP END DO
-#endif
-
 !$OMP END PARALLEL
 
-   CALL toc(TIM_UVADV)
+   call tic(TIM_UVADVH)
+   call update_2d_halo(fadv,fadv,au,imin,jmin,imax,jmax,U_TAG)
+   call wait_halo(U_TAG)
+   call toc(TIM_UVADVH)
+
+   call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DU,DU,          &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                     dxadv,dxx,dyadv,dyx,arud1,                     &
+#endif
+                     au,maskadv,ax,hor_adv,adv_split,AH,advres=UEx)
+
+
+!  Here begins dimensional split advection for v-velocity
+
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j)
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO,jmax+HALO-1
+      do i=imin-HALO,imax+HALO
+         Uadv(i,j) = _HALF_*( U(i,j+1) + U(i,j  ) )
+         Vadv(i,j) = _HALF_*( V(i,j+1) + V(i,j  ) )
+!        Note (KK): DU only valid until imax+1
+!                   therefore DUadv only valid until imax+1
+         DUadv(i,j) = _HALF_*( DU(i,j+1) + DU(i,j  ) )
+!        Note (KK): DV only valid until jmax+1
+!                   therefore DVadv only valid until jmax
+         DVadv(i,j) = _HALF_*( DV(i,j+1) + DV(i,j  ) )
+         maskadv(i,j) = az(i,j+1)
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+         dxadv(i,j) = dxc(i,j+1)
+         dyadv(i,j) = dyc(i,j+1)
+#endif
+!        the velocity to be transported
+         fadv(i,j)=V(i,j)/DV(i,j)
+      end do
+   end do
+!$OMP END DO
+!$OMP END PARALLEL
+
+   call tic(TIM_UVADVH)
+   call update_2d_halo(fadv,fadv,av,imin,jmin,imax,jmax,V_TAG)
+   call wait_halo(V_TAG)
+   call toc(TIM_UVADVH)
+
+   call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DV,DV,          &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                     dxx,dxadv,dyx,dyadv,arvd1,                     &
+#endif
+                     av,ax,maskadv,hor_adv,adv_split,AH,advres=VEx)
+
+   call toc(TIM_UVADV)
 #ifdef DEBUG
-     write(debug,*) 'Leaving uv_advect()'
-     write(debug,*)
+   write(debug,*) 'Leaving uv_advect()'
+   write(debug,*)
 #endif
    return
    end subroutine uv_advect
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------

@@ -4,8 +4,11 @@
 ! !IROUTINE:  adv_fct_2dh - 2D flux-corrected transport \label{sec-fct-2dh-adv}
 !
 ! !INTERFACE:
-   subroutine adv_fct_2dh(dt,f,Di,U,V,Do,Dn,DU,DV, &
-                          delxv,delyu,delxu,delyv,area_inv,az,AH)
+   subroutine adv_fct_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                          dxv,dyu,dxu,dyv,arcd1,       &
+#endif
+                          az,AH)
 !  Note (KK): keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -35,18 +38,22 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
+#if !( defined(SPHERICAL) || defined(CURVILINEAR) )
+   use domain, only: dx,dy,ard1
+#endif
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    REALTYPE,intent(in)                        :: dt,AH
    REALTYPE,dimension(E2DFIELD),intent(in)    :: U,V,Do,Dn,DU,DV
-   REALTYPE,dimension(E2DFIELD),intent(in)    :: delxv,delyu,delxu,delyv
-   REALTYPE,dimension(E2DFIELD),intent(in)    :: area_inv
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+   REALTYPE,dimension(E2DFIELD),intent(in)    :: dxv,dyu,dxu,dyv,arcd1
+#endif
    integer,dimension(E2DFIELD),intent(in)     :: az
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di
+   REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -56,20 +63,24 @@
    integer         :: rc,i,ii,j,jj
    REALTYPE,dimension(:,:),allocatable         :: Dio
 #ifdef USE_ALLOCATED_ARRAYS
-   REALTYPE, dimension(:,:), allocatable       :: flx,fly
-   REALTYPE, dimension(:,:), allocatable       :: fhx,fhy
+   REALTYPE, dimension(:,:), allocatable       :: flx,fhx
+#ifndef SLICE_MODEL
+   REALTYPE, dimension(:,:), allocatable       :: fly,fhy
+#endif
    REALTYPE, dimension(:,:), allocatable       :: fi
    REALTYPE, dimension(:,:), allocatable       :: rp,rm
    REALTYPE, dimension(:,:), allocatable       :: cmin,cmax
 #else
-   REALTYPE        :: flx(E2DFIELD),fly(E2DFIELD)
-   REALTYPE        :: fhx(E2DFIELD),fhy(E2DFIELD)
+   REALTYPE        :: flx(E2DFIELD),fhx(E2DFIELD)
+#ifndef SLICE_MODEL
+   REALTYPE        :: fly(E2DFIELD),fhy(E2DFIELD)
+#endif
    REALTYPE        :: fi(E2DFIELD)
    REALTYPE        :: rp(E2DFIELD),rm(E2DFIELD)
    REALTYPE        :: cmin(E2DFIELD),cmax(E2DFIELD)
 #endif
    REALTYPE        :: CNW,CW,CSW,CSSW,CWW,CSWW,CC,CS
-   REALTYPE        :: uuu,vvv,x,CExx,Cl,Cu,fac
+   REALTYPE        :: advn,uuu,vvv,x,CExx,Cl,Cu,fac
    REALTYPE,parameter :: one12th=_ONE_/12,one6th=_ONE_/6,one3rd=_ONE_/3
 !EOP
 !-----------------------------------------------------------------------
@@ -93,14 +104,16 @@
    allocate(flx(E2DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (flx)'
 
-   allocate(fly(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (fly)'
-
    allocate(fhx(E2DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (fhx)'
 
+#ifndef SLICE_MODEL
+   allocate(fly(E2DFIELD),stat=rc)    ! work array
+   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (fly)'
+
    allocate(fhy(E2DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (fhy)'
+#endif
 
    allocate(fi(E2DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (fi)'
@@ -131,7 +144,7 @@
 !      BJB 2009-09-25.
 
 !$OMP PARALLEL DEFAULT(SHARED) &
-!$OMP   PRIVATE(i,j,CNW,CW,CSW,CSSW,CWW,CSWW,CC,CS,uuu,vvv,x,CExx,Cl,Cu,fac)
+!$OMP   PRIVATE(i,j,CNW,CW,CSW,CSSW,CWW,CSWW,CC,CS,advn,uuu,vvv,x,CExx,Cl,Cu,fac)
 
 !  Calculating u-interface low-order fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
@@ -161,21 +174,21 @@
 !$OMP END DO NOWAIT
 #endif
 
-!  Calculating u-interface high-order fluxes !
 ! OMP-TODO: The following loop gives errornous results when
 !   threaded. - tried both at k,j, adn i. And I cant see what
 !   should be wrong. Further, the original code needs an update
 !   in any case, so for now I'll leave it in serial.
 !   BJB 2009-09-23.
 !$OMP MASTER
+!  Calculating u-interface high-order fluxes !
    do j=jmin,jmax
       do i=imin-1,imax
 !        KK-TODO: calculation of uvel and vvel only once at start
-         uuu=U(i,j)/DU(i,j)*dt/delxu(i,j)
-         vvv=_QUART_*(  V(i  ,j-1)/DV(i  ,j-1)                &
-                      + V(i  ,j  )/DV(i  ,j  )                &
-                      + V(i+1,j-1)/DV(i+1,j-1)                &
-                      + V(i+1,j  )/DV(i+1,j  ))*dt/delyu(i,j)
+         uuu=U(i,j)/DU(i,j)*dt/DXU
+         vvv=_QUART_*(  V(i  ,j-1)/DV(i  ,j-1)         &
+                      + V(i  ,j  )/DV(i  ,j  )         &
+                      + V(i+1,j-1)/DV(i+1,j-1)         &
+                      + V(i+1,j  )/DV(i+1,j  ))*dt/DYU
          if (uuu .gt. _ZERO_) then
             if (vvv .gt. _ZERO_) then
                CNW =f(i  ,j+1)
@@ -312,24 +325,17 @@
                     *U(i,j)
       end do
    end do
-!  KK-TODO: Why do we close the master part here and open it again?
-!           Why not close master part and set BARRIER after the next #endif SLICE_MODEL?
-!$OMP END MASTER
-!$OMP BARRIER
 
 #ifndef SLICE_MODEL
 !  Calculating v-interface high-order fluxes !
-! OMP-TODO: This loop has the same issue as for the x-direction.
-!   It will stay in serial until later. BJB 2009-09-23.
-!$OMP MASTER
    do j=jmin-1,jmax
       do i=imin,imax
 !        Note (KK): added division by DV
-         uuu=V(i,j)/DV(i,j)*dt/delyv(i,j)
-         vvv=_QUART_*(  U(i-1,j  )/DU(i-1,j  )                &
-                      + U(i-1,j+1)/DU(i-1,j+1)                &
-                      + U(i  ,j  )/DU(i  ,j  )                &
-                      + U(i  ,j+1)/DU(i  ,j+1))*dt/delxv(i,j)
+         uuu=V(i,j)/DV(i,j)*dt/DYV
+         vvv=_QUART_*(  U(i-1,j  )/DU(i-1,j  )         &
+                      + U(i-1,j+1)/DU(i-1,j+1)         &
+                      + U(i  ,j  )/DU(i  ,j  )         &
+                      + U(i  ,j+1)/DU(i  ,j+1))*dt/DXV
          if (uuu .gt. _ZERO_) then
             if (vvv .gt. _ZERO_) then
                CNW =f(i+1,j  )
@@ -466,28 +472,29 @@
                     *V(i,j)
       end do
    end do
-!$OMP END MASTER
-!$OMP BARRIER
 #endif
+!$OMP END MASTER
+
+!$OMP BARRIER
 
 !  Calculate intermediate low resolution solution fi
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .eq. 1)  then
-            Dio(i,j)=Di(i,j)
-            Di(i,j)=Dio(i,j)                               &
-            -dt*((U(i  ,j)*delyu(i  ,j)-U(i-1,j)*delyu(i-1,j)  &
+            Dio(i,j) = Di(i,j)
+            Di(i,j) = Dio(i,j) - dt*(                                &
+                                      U(i  ,j)*DYU - U(i-1,j)*DYUIM1 &
 #ifndef SLICE_MODEL
-                 +V(i,j  )*delxv(i,j  )-V(i,j-1)*delxv(i,j-1)  &
+                                     +V(i,j  )*DXV - V(i,j-1)*DXVJM1 &
 #endif
-                 )*area_inv(i,j))
-            fi(i,j)=(f(i,j)*Dio(i,j)                               &
-            -dt*((flx(i  ,j)*delyu(i  ,j)-flx(i-1,j)*delyu(i-1,j)  &
+                                    )*ARCD1
+            fi(i,j) = ( f(i,j)*Dio(i,j) - dt*(                                  &
+                                               flx(i  ,j)*DYU-flx(i-1,j)*DYUIM1 &
 #ifndef SLICE_MODEL
-                 +fly(i,j  )*delxv(i,j  )-fly(i,j-1)*delxv(i,j-1)  &
+                                              +fly(i,j  )*DXV-fly(i,j-1)*DXVJM1 &
 #endif
-                 )*area_inv(i,j)))/Di(i,j)
+                                             )*ARCD1 )/Di(i,j)
          end if
       end do
    end do
@@ -513,22 +520,22 @@
             end do
 
 ! max (Cu) and min (Cl) possible concentration after a time step
-            CExx=(                                                     &
-                   ( min(fhx(i  ,j  )-flx(i  ,j  ),_ZERO_)             &
-                    -max(fhx(i-1,j  )-flx(i-1,j  ),_ZERO_))/delxu(i,j) &
+            CExx=(                                              &
+                   ( min(fhx(i  ,j  )-flx(i  ,j  ),_ZERO_)      &
+                    -max(fhx(i-1,j  )-flx(i-1,j  ),_ZERO_))/DXU &
 #ifndef SLICE_MODEL
-                  +( min(fhy(i  ,j  )-fly(i  ,j  ),_ZERO_)             &
-                    -max(fhy(i  ,j-1)-fly(i  ,j-1),_ZERO_))/delyv(i,j) &
+                  +( min(fhy(i  ,j  )-fly(i  ,j  ),_ZERO_)      &
+                    -max(fhy(i  ,j-1)-fly(i  ,j-1),_ZERO_))/DYV &
 #endif
                  )
             Cu=(fi(i,j)*Di(i,j)-dt*CExx)/Di(i,j)
 
-            CExx=(                                                     &
-                   ( max(fhx(i  ,j  )-flx(i  ,j  ),_ZERO_)             &
-                    -min(fhx(i-1,j  )-flx(i-1,j  ),_ZERO_))/delxu(i,j) &
+            CExx=(                                              &
+                   ( max(fhx(i  ,j  )-flx(i  ,j  ),_ZERO_)      &
+                    -min(fhx(i-1,j  )-flx(i-1,j  ),_ZERO_))/DXU &
 #ifndef SLICE_MODEL
-                  +( max(fhy(i  ,j  )-fly(i  ,j  ),_ZERO_)             &
-                    -min(fhy(i  ,j-1)-fly(i  ,j-1),_ZERO_))/delyv(i,j) &
+                  +( max(fhy(i  ,j  )-fly(i  ,j  ),_ZERO_)      &
+                    -min(fhy(i  ,j-1)-fly(i  ,j-1),_ZERO_))/DYV &
 #endif
                  )
             Cl=(fi(i,j)*Di(i,j)-dt*CExx)/Di(i,j)
@@ -559,9 +566,10 @@
             fac=min(rm(i+1,j),rp(i,j))
          end if
          fhx(i,j) = (_ONE_-fac)*flx(i,j) + fac*fhx(i,j)
-         if ((AH .gt. _ZERO_) .and. (az(i,j) .gt. 0) .and. (az(i+1,j) .gt. 0)) &
-            fhx(i,j)=fhx(i,j)-AH*(f(i+1,j)-f(i,j))/delxu(i,j) &
-                      *_HALF_*(Dn(i+1,j)+Dn(i,j))
+         if ((AH .gt. _ZERO_) .and. (az(i,j) .gt. 0) .and. (az(i+1,j) .gt. 0)) then
+            fhx(i,j) = fhx(i,j) - AH*( f(i+1,j)                                 &
+                                      -f(i  ,j))/DXU*_HALF_*(Dn(i+1,j)+Dn(i,j))
+         end if
       end do
    end do
 !$OMP END DO
@@ -577,9 +585,10 @@
             fac=min(rm(i,j+1),rp(i,j))
          end if
          fhy(i,j) = (_ONE_-fac)*fly(i,j) + fac*fhy(i,j)
-         if ((AH .gt. _ZERO_) .and. (az(i,j) .gt. 0) .and. (az(i,j+1) .gt. 0))   &
-            fhy(i,j)=fhy(i,j)-AH*(f(i,j+1)-f(i,j))/delyv(i,j)   &
-                      *_HALF_*(Dn(i,j+1)+Dn(i,j))
+         if ((AH .gt. _ZERO_) .and. (az(i,j) .gt. 0) .and. (az(i,j+1) .gt. 0)) then
+            fhy(i,j) = fhy(i,j) - AH*( f(i,j+1)                                 &
+                                      -f(i,j  ))/DYV*_HALF_*(Dn(i,j+1)+Dn(i,j))
+         end if
       end do
    end do
 !$OMP END DO
@@ -590,14 +599,16 @@
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .eq. 1)  then
-! CAUTION: Di(i,j) already calculated above
-            f(i,j)=(f(i,j)*Dio(i,j)                              &
-            -dt*((fhx(i  ,j)*delyu(i  ,j)-fhx(i-1,j)*delyu(i-1,j)  &
+            advn = (                                     &
+                      fhx(i,j)*DYU - fhx(i-1,j  )*DYUIM1 &
 #ifndef SLICE_MODEL
-                 +fhy(i,j  )*delxv(i,j  )-fhy(i,j-1)*delxv(i,j-1)  &
+                    + fhy(i,j)*DXV - fhy(i  ,j-1)*DXVJM1 &
 #endif
-                 )*area_inv(i,j)))/Di(i,j)
-! Force monotonicity, this is needed here for correcting truncations errors:
+                   )*ARCD1
+            adv(i,j) = adv(i,j) + advn
+!           CAUTION: Di(i,j) already calculated above
+            f(i,j) = ( Dio(i,j)*f(i,j) - dt*advn ) / Di(i,j)
+!           Force monotonicity, this is needed here for correcting truncations errors:
             if (f(i,j) .gt. cmax(i,j)) f(i,j)=cmax(i,j)
             if (f(i,j) .lt. cmin(i,j)) f(i,j)=cmin(i,j)
          end if
@@ -611,12 +622,14 @@
 #ifdef FORTRAN90
    deallocate(flx,stat=rc)    ! work array
    if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (flx)'
-   deallocate(fly,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (fly)'
    deallocate(fhx,stat=rc)    ! work array
    if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (fhx)'
+#ifndef SLICE_MODEL
+   deallocate(fly,stat=rc)    ! work array
+   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (fly)'
    deallocate(fhy,stat=rc)    ! work array
    if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (fhy)'
+#endif
    deallocate(fi,stat=rc)    ! work array
    if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (fi)'
    deallocate(rp,stat=rc)    ! work array

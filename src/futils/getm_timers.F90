@@ -31,6 +31,7 @@
    integer, parameter :: TIM_UVDEPTHS    =  6   ! 2d uv_depths
    integer, parameter :: TIM_UVEX        =  7   ! wrapper for hor. adv+diff
    integer, parameter :: TIM_UVADV       =  8   ! 2d uv_advect
+   integer, parameter :: TIM_UVADVH      =  9   ! 2d uv_advect - halo part only
    integer, parameter :: TIM_UVDIFF      = 10   ! 2d uv_diffusion
    integer, parameter :: TIM_DPTHUPDATE  = 12   ! 2d depth_update
    integer, parameter :: TIM_SEALEVEL    = 14   ! 2d sealevel
@@ -180,6 +181,7 @@
 
 #ifdef GETM_PARALLEL
    timernames(TIM_MOMENTUMH)   = ' momentum-halo'
+   timernames(TIM_UVADVH)      = ' uv_advect-halo'
    timernames(TIM_SEALEVELH)   = ' sealevel-halo'
    timernames(TIM_ADVH)        = ' do_advection-halo'
    timernames(TIM_HALO2D)      = ' sum do_halo_2d'

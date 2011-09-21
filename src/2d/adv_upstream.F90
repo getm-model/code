@@ -73,9 +73,7 @@
                       *_HALF_*(Dn(i+1,j)+Dn(i,j))
       end do
    end do
-!$OMP END DO NOWAIT
-
-!$OMP BARRIER
+!$OMP END DO
 
 !  Updating the advection term for u-advection !
 !$OMP DO SCHEDULE(RUNTIME)
@@ -85,9 +83,7 @@
                    -cu(i-1,j)*delyu(i-1,j))*area_inv(i,j)
       end do
    end do
-!$OMP END DO NOWAIT
-
-!$OMP BARRIER
+!$OMP END DO
 
 #ifndef SLICE_MODEL
 !  Calculating v-interface fluxes !
@@ -104,9 +100,7 @@
                       *_HALF_*(Dn(i,j+1)+Dn(i,j))
       end do
    end do
-!$OMP END DO NOWAIT
-
-!$OMP BARRIER
+!$OMP END DO
 
 !  Updating the advection term for v-advection !
 !$OMP DO SCHEDULE(RUNTIME)
@@ -116,10 +110,8 @@
                             -cu(i,j-1)*delxv(i,j-1))*area_inv(i,j)
       end do
    end do
-!$OMP END DO NOWAIT
+!$OMP END DO
 #endif
-
-!$OMP BARRIER
 
 !  Doing the full advection in one step
 !$OMP DO SCHEDULE(RUNTIME)
