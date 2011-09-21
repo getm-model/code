@@ -78,7 +78,7 @@ clean:
 distclean:
 	$(MAKE) -C doc $@
 	$(MAKE) -C src $@
-	$(RM) timestep VERSION include/version.h
+	$(RM) timestamp VERSION include/version.h
 	$(RM) -r bin/ lib/ modules/
 
 #-----------------------------------------------------------------------
