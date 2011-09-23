@@ -106,23 +106,22 @@
                         !cu(i,j,k) = _ZERO_
                         if (ww(i,j,k) .gt. _ZERO_) then
                            c=ww(i,j,k)/it*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
-                           if (c .gt. cmax) cmax=c
                            cu(i,j,k)=ww(i,j,k)*f(i,j,k)
                         else
                            c=-ww(i,j,k)/it*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
-                           if (c .gt. cmax) cmax=c
                            cu(i,j,k)=ww(i,j,k)*f(i,j,k+1)
                         end if
+                        if (c .gt. cmax) cmax=c
                      end do
-                     if (.not. READY) then
-                        it=min(200,int(cmax)+1)
+                     if (.not. READY) then ! initial cycle
+                        it = min(200,int(cmax)+1)
+                        if (it .gt. 1) then ! if cmax.ge._ONE_ decrease dt
 #ifdef DEBUG
-                        if (it .gt. 1) write(95,*) i,j,it,cmax
+                           write(95,*) i,j,it,cmax
 #endif
-                     end if
-                     if ((it .gt. 1) .and. (.not. READY)) then
-                        READY=.true.
-                        goto 222
+                           READY=.true. ! next dt will be decreased by factor of 1/it and cmax will be .lt._ONE_
+                           goto 222
+                        end if
                      end if
                      do k=1,kmax   ! Doing a w-advection step
                         hio=hi(i,j,k)
@@ -156,9 +155,9 @@
                            if (k.lt.kmax) then
                               c=ww(i,j,k)/float(it)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                            else
+!                             KK-TODO: ww(:,:,kmax)=0 !?
                               c=ww(i,j,k)/float(it)*dt/hi(i,j,k)
                            end if
-                           if (c .gt. cmax) cmax=c
                            if (k .gt. 1) then
                               fu=f(i,j,k-1)         ! upstream
                            else
@@ -181,7 +180,6 @@
                            else
                               c=-ww(i,j,k)/float(it)*dt/hi(i,j,k)
                            end if
-                           if (c .gt. cmax) cmax=c
                            if (k .lt. kmax-1) then
                               fu=f(i,j,k+2)         ! upstream
                            else
@@ -203,6 +201,7 @@
                            r=   (fu-fc)*1.d10
                            end if
                         end if
+                        if (c .gt. cmax) cmax=c
                         select case (method)
                            case ((P2),(P2_PDM))
                               x = one6th*(_ONE_-_TWO_*c)

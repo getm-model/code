@@ -5,11 +5,11 @@
 ! !IROUTINE:  adv_v_split - 1D y-advection \label{sec-v-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_v_split(dt,f,Di,adv,V,Do,DV,                           &
+   subroutine adv_v_split(dt,f,Di,adv,V,Do,DV,                       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                          dxv,dyv,arcd1,                                 &
+                          dxv,dyv,arcd1,                             &
 #endif
-                          av,splitfac,adv_scheme,az,AH,onestep_finalise)
+                          av,splitfac,scheme,az,AH,onestep_finalise)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -38,7 +38,7 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
-   use advection, only: cu
+   use advection, only: flux
    use advection, only: UPSTREAM,P2,SUPERBEE,MUSCL,P2_PDM
 !$ use omp_lib
    IMPLICIT NONE
@@ -50,7 +50,7 @@
    REALTYPE,dimension(E2DFIELD),intent(in)    :: dxv,dyv,arcd1
 #endif
    integer,dimension(E2DFIELD),intent(in)     :: av,az
-   integer,intent(in)                         :: adv_scheme
+   integer,intent(in)                         :: scheme
    logical,intent(in),optional                :: onestep_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -61,7 +61,7 @@
 !
 ! !LOCAL VARIABLES:
    integer            :: i,j
-   REALTYPE           :: Dio,advn,c,x,r,Phi,limit,fu,fc,fd
+   REALTYPE           :: Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd
    REALTYPE,parameter :: one6th=_ONE_/6
 !EOP
 !-----------------------------------------------------------------------
@@ -72,7 +72,7 @@
    write(debug,*) 'adv_v_split() # ',Ncall
 #endif
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,Dio,advn,c,x,r,Phi,limit,fu,fc,fd)
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
 
 ! Calculating v-interface fluxes !
 
@@ -82,74 +82,73 @@
          if (av(i,j).eq.1 .or. (av(i,j).eq.2 .and. (az(i,j).eq.1 .or. az(i,j+1).eq.1))) then
 !           Note (KK): exclude advection/diffusion of normal velocity at open bdys
             if (V(i,j) .gt. _ZERO_) then
-               fc=f(i,j  )            ! central
-               if (adv_scheme .ne. UPSTREAM) then
-                  c=V(i,j)/DV(i,j)*dt/DYV
+               fc = f(i,j  )               ! central
+               if (scheme .ne. UPSTREAM) then
+                  cfl = V(i,j)/DV(i,j)*dt/DYV
                   if (av(i,j-1) .gt. 0) then
-                     fu=f(i,j-1)         ! upstream
+                     fu = f(i,j-1)         ! upstream
                   else
-                     fu=f(i,j  )
+                     fu = f(i,j  )
                   end if
-                  fd=f(i,j+1)            ! downstream
+                  fd = f(i,j+1)            ! downstream
                   if (abs(fd-fc) .gt. 1.d-10) then
-                     r=(fc-fu)/(fd-fc)     ! slope ratio
+                     r = (fc-fu)/(fd-fc)   ! slope ratio
                   else
-                     r=(fc-fu)*1.d10
+                     r = (fc-fu)*1.d10
                   end if
                end if
             else
-               fc=f(i,j+1)            ! central
-               if (adv_scheme .ne. UPSTREAM) then
-                  c=-V(i,j)/DV(i,j)*dt/DYV
+               fc = f(i,j+1)               ! central
+               if (scheme .ne. UPSTREAM) then
+                  cfl = -V(i,j)/DV(i,j)*dt/DYV
                   if (av(i,j+1) .gt. 0) then
-                     fu=f(i,j+2)         ! upstream
+                     fu = f(i,j+2)         ! upstream
                   else
-                     fu=f(i,j+1)
+                     fu = f(i,j+1)
                   end if
-                  fd=f(i,j  )            ! downstream
+                  fd = f(i,j  )            ! downstream
                   if (abs(fc-fd) .gt. 1.d-10) then
-                     r=(fu-fc)/(fc-fd)     ! slope ratio
+                     r = (fu-fc)/(fc-fd)   ! slope ratio
                   else
-                     r=(fu-fc)*1.d10
+                     r = (fu-fc)*1.d10
                   end if
                end if
             end if
-            cu(i,j) = V(i,j)*fc
-            if (adv_scheme .ne. UPSTREAM) then
-               select case (adv_scheme)
+            flux(i,j) = V(i,j)*fc
+            if (scheme .ne. UPSTREAM) then
+               select case (scheme)
                   case ((P2),(P2_PDM))
-                     x = one6th*(_ONE_-_TWO_*c)
-                     Phi=(_HALF_+x)+(_HALF_-x)*r
-                     if (adv_scheme.eq.P2) then
-                        limit=Phi
+                     x = one6th*(_ONE_-_TWO_*cfl)
+                     Phi = (_HALF_+x) + (_HALF_-x)*r
+                     if (scheme.eq.P2) then
+                        limit = Phi
                      else
-                        limit=max(_ZERO_,min(Phi,_TWO_/(_ONE_-c),_TWO_*r/(c+1.d-10)))
+                        limit = max(_ZERO_,min(Phi,_TWO_/(_ONE_-cfl),_TWO_*r/(cfl+1.d-10)))
                      end if
                   case (SUPERBEE)
-                     limit=max(_ZERO_,min(_ONE_,_TWO_*r),min(r,_TWO_))
+                     limit = max(_ZERO_,min(_ONE_,_TWO_*r),min(r,_TWO_))
                   case (MUSCL)
-                     limit=max(_ZERO_,min(_TWO_,_TWO_*r,_HALF_*(_ONE_+r)))
+                     limit = max(_ZERO_,min(_TWO_,_TWO_*r,_HALF_*(_ONE_+r)))
                   case default
-                     FATAL 'Invalid adv_scheme'
-                     stop
+                     stop 'adv_v_split: invalid scheme'
                end select
-               cu(i,j) = cu(i,j) + V(i,j)*_HALF_*limit*(_ONE_-c)*(fd-fc)
+               flux(i,j) = flux(i,j) + V(i,j)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
             end if
             if (AH .gt. _ZERO_) then
 !              Horizontal diffusion
-               cu(i,j) = cu(i,j) - AH*DV(i,j)*(f(i,j+1)-f(i,j  ))/DYV
+               flux(i,j) = flux(i,j) - AH*DV(i,j)*(f(i,j+1)-f(i,j  ))/DYV
             end if
          else if (AH.gt._ZERO_ .and. av(i,j).eq.2 .and. (az(i,j).eq.2 .or. az(i,j+1).eq.2)) then
 !           Note (KK): special handling for advection/diffusion of normal velocity at open bdys
-!                      (advection/diffusion of tracers at open bdys already included in former case)
+!                      (advection/diffusion of tracers near open bdys already included in former case)
 !                      outflow condition implies no advection across open bdy
             if (az(i,j) .eq. 2) then ! eastern open bdy (az(i,j).ne.1.and.az(i,j+1).ne.1.and.av(i,j-1).eq.1)
-               cu(i,j) = AH*DV(i,j-1)*(f(i,j  )-f(i,j-1))/DYVJM1
+               flux(i,j) = AH*DV(i,j-1)*(f(i,j  )-f(i,j-1))/DYVJM1
             else ! western open bdy (az(i,j).ne.1.and.az(i,j+1).ne.1.and.av(i,j+1).eq.1)
-               cu(i,j) = AH*DV(i,j+1)*(f(i,j+2)-f(i,j+1))/DYVJP1
+               flux(i,j) = AH*DV(i,j+1)*(f(i,j+2)-f(i,j+1))/DYVJP1
             end if
          else
-            cu(i,j) = _ZERO_
+            flux(i,j) = _ZERO_
          end if
       end do
    end do
@@ -163,28 +162,37 @@
 !           Note (KK): exclude advection/diffusion of tracers at open bdy cells
 !                      special handling for advection/diffusion of normal velocity at open bdys
 !                      vanishing diffusive flux across exterior interface must be explicitely prescribed
-!                      diffusive flux across interior interface is isolated at exterior cu
+!                      diffusive flux across interior interface is isolated at exterior flux
             Dio = Di(i,j)
             if (az(i,j) .eq. 1) then
                Di(i,j) =  Dio - splitfac*dt*( V(i,j  )*DXV           &
                                              -V(i,j-1)*DXVJM1)*ARCD1
-               advn = splitfac*( cu(i,j  )*DXV           &
-                                -cu(i,j-1)*DXVJM1)*ARCD1
+               advn = splitfac*( flux(i,j  )*DXV           &
+                                -flux(i,j-1)*DXVJM1)*ARCD1
             else if (av(i,j-1) .eq. 1) then ! eastern open bdy
 !              Note (KK): interior advection/diffusion already included in first case
-               advn = -splitfac*cu(i,j  )*DXVJM1*ARCD1
+               advn = -splitfac*flux(i,j  )*DXVJM1*ARCD1
             else ! western open bdy (av(i,j) .eq. 1)
 !              Note (KK): interior advection/diffusion already included in first case
-               advn =  splitfac*cu(i,j-1)*DXV*ARCD1
+               advn =  splitfac*flux(i,j-1)*DXV*ARCD1
             end if
             adv(i,j) = adv(i,j) + advn
-            if (present(onestep_finalise)) then
-!              Note (KK): do not update f in case of onestep_finalise=.false. !!!
-               if (onestep_finalise) then
+            if (.not. present(onestep_finalise)) then
+!              Note (KK): do the splitting step
+               f(i,j) = ( Dio*f(i,j) - dt*advn ) / Di(i,j)
+            end if
+         end if
+         if (present(onestep_finalise)) then
+!           Note (KK): do not update f in case of onestep_finalise=.false. !!!
+            if (onestep_finalise) then
+               if (az(i,j).eq.1 .or. (az(i,j).eq.2 .and. (    au(i-1,j  ).eq.1 &
+                                                          .or.au(i  ,j  ).eq.1 &
+                                                          .or.av(i  ,j-1).eq.1 &
+                                                          .or.av(i  ,j  ).eq.1 ))) then
+!                 Note (KK): exclude tracer open bdy cells but
+!                            include all velocity open bdys
                   f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
                end if
-            else
-               f(i,j) = ( Dio*f(i,j) - dt*advn ) / Di(i,j)
             end if
          end if
       end do

@@ -4,9 +4,11 @@
 ! !IROUTINE:  adv_upstream - 2D upstream advection \label{sec-upstream-adv}
 !
 ! !INTERFACE:
-   subroutine adv_upstream(dt,f,U,V,Do,Dn, &
-                           delxv,delyu,delxu,delyv,area_inv,az,AH)
-!  Note (KK): Keep in sync with interface in advection.F90
+   subroutine adv_upstream(dt,f,Di,adv,U,V,Do,Dn, &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                           dxv,dyu,dxu,dyv,arcd1, &
+#endif
+                           az,AH)
 !
 ! !DESCRIPTION:
 !
@@ -15,30 +17,29 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
-   use advection, only: cu
+#if !( defined(SPHERICAL) || defined(CURVILINEAR) )
+   use domain, only: dx,dy,ard1
+#endif
+   use advection, only: flux
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    REALTYPE,intent(in)                        :: dt,AH
    REALTYPE,dimension(E2DFIELD),intent(in)    :: U,V,Do,Dn
-   REALTYPE,dimension(E2DFIELD),intent(in)    :: delxv,delyu,delxu,delyv
-   REALTYPE,dimension(E2DFIELD),intent(in)    :: area_inv
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+   REALTYPE,dimension(E2DFIELD),intent(in)    :: dxv,dyu,dxu,dyv,arcd1
+#endif
    integer,dimension(E2DFIELD),intent(in)     :: az
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(inout) :: f
+   REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   integer         :: rc,i,ii,j,jj
-#ifdef USE_ALLOCATED_ARRAYS
-   REALTYPE, dimension(:,:), allocatable       :: adv
-#else
-   REALTYPE        :: adv(I2DFIELD)
-#endif
+   integer :: i,j
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -48,15 +49,6 @@
    write(debug,*) 'adv_upstream() # ',Ncall
 #endif
 
-#ifdef USE_ALLOCATED_ARRAYS
-   allocate(adv(I2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_upstream: Error allocating memory (adv)'
-#endif
-
-! Note: We do not need to initialize adv.
-!   Tested BJB 2009-09-25.
-
-
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j)
 
 !  Calculating u-interface fluxes !
@@ -64,13 +56,14 @@
    do j=jmin,jmax
       do i=imin-1,imax
          if (U(i,j) .gt. _ZERO_) then
-            cu(i,j)=U(i,j)*f(i,j)
+            flux(i,j) = U(i,j)*f(i,j)
          else
-            cu(i,j)=U(i,j)*f(i+1,j)
+            flux(i,j) = U(i,j)*f(i+1,j)
          end if
-         if ((AH.gt._ZERO_).and.(az(i,j).gt.0).and.(az(i+1,j).gt.0))    &
-            cu(i,j)=cu(i,j)-AH*(f(i+1,j)-f(i,j))/delxu(i,j) &
-                      *_HALF_*(Dn(i+1,j)+Dn(i,j))
+         if ((AH.gt._ZERO_).and.(az(i,j).gt.0).and.(az(i+1,j).gt.0)) then
+            flux(i,j) = flux(i,j) - AH*( f(i+1,j)                                 &
+                                        -f(i  ,j))/DXU*_HALF_*(Dn(i+1,j)+Dn(i,j))
+         end if
       end do
    end do
 !$OMP END DO
@@ -79,8 +72,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
-         adv(i,j)=( cu(i  ,j)*delyu(i  ,j)    &
-                   -cu(i-1,j)*delyu(i-1,j))*area_inv(i,j)
+         adv(i,j) = (flux(i  ,j)*DYU - flux(i-1,j)*DYUIM1)*ARCD1
       end do
    end do
 !$OMP END DO
@@ -91,13 +83,14 @@
    do j=jmin-1,jmax
       do i=imin,imax
          if (V(i,j) .gt. _ZERO_) then
-            cu(i,j)=V(i,j)*f(i,j)
+            flux(i,j) = V(i,j)*f(i,j)
          else
-            cu(i,j)=V(i,j)*f(i,j+1)
+            flux(i,j) = V(i,j)*f(i,j+1)
          end if
-         if ((AH.gt._ZERO_).and.(az(i,j).gt.0).and.(az(i,j+1).gt.0))   &
-            cu(i,j)=cu(i,j)-AH*(f(i,j+1)-f(i,j))/delyv(i,j)   &
-                      *_HALF_*(Dn(i,j+1)+Dn(i,j))
+         if ((AH.gt._ZERO_).and.(az(i,j).gt.0).and.(az(i,j+1).gt.0)) then
+            flux(i,j) = flux(i,j) - AH*( f(i,j+1)                                 &
+                                        -f(i,j  ))/DYV*_HALF_*(Dn(i,j+1)+Dn(i,j))
+         end if
       end do
    end do
 !$OMP END DO
@@ -106,8 +99,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
-         adv(i,j)=adv(i,j)+( cu(i,j  )*delxv(i,j  )   &
-                            -cu(i,j-1)*delxv(i,j-1))*area_inv(i,j)
+         adv(i,j) = adv(i,j) + (flux(i,j  )*DXV - flux(i,j-1)*DXVJM1)*ARCD1
       end do
    end do
 !$OMP END DO
@@ -117,20 +109,14 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
-         if (az(i,j) .eq. 1)                                        &
+         if (az(i,j) .eq. 1) then
             f(i,j)=(f(i,j)*Do(i,j)-dt*adv(i,j))/Dn(i,j)
+         end if
       end do
    end do
 !$OMP END DO
 
 !$OMP END PARALLEL
-
-#ifdef USE_ALLOCATED_ARRAYS
-#ifdef FORTRAN90
-   deallocate(adv,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_upstream: Error de-allocating memory (adv)'
-#endif
-#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving adv_upstream()'
@@ -139,7 +125,6 @@
    return
    end subroutine adv_upstream
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2004 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------

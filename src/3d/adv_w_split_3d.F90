@@ -4,7 +4,8 @@
 ! !IROUTINE:  adv_w_split_3d - 1D z-advection \label{sec-w-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_w_split_3d(dt,f,hi,ww,az,splitfac,method)
+   subroutine adv_w_split_3d(dt,f,hi,adv3d,ww,                             &
+                             az,splitfac,scheme,itersmax,onestep_finalise)
 !
 ! !DESCRIPTION:
 !
@@ -41,8 +42,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
-   use advection_3d, only: cu
-   use advection_3d, only: UPSTREAM_SPLIT,P2,SUPERBEE,MUSCL,P2_PDM
+   use advection, only: UPSTREAM,P2,SUPERBEE,MUSCL,P2_PDM
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -50,17 +50,21 @@
    REALTYPE,intent(in)                        :: dt,splitfac
    REALTYPE,dimension(I3DFIELD),intent(in)    :: ww
    integer,dimension(E2DFIELD),intent(in)     :: az
-   integer,intent(in)                         :: method
+   integer,intent(in)                         :: scheme
+   integer,intent(in),optional                :: itersmax
+   logical,intent(in),optional                :: onestep_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(I3DFIELD),intent(inout) :: f,hi
+   REALTYPE,dimension(I3DFIELD),intent(inout) :: f,hi,adv3d
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   integer         :: i,j,k
-   REALTYPE        :: hio,c,x,r,Phi,limit,fu,fc,fd
+   logical            :: iterate
+   integer            :: i,j,k,it,iters,rc
+   REALTYPE           :: hio,advn,cfl,x,r,Phi,limit,fu,fc,fd,itersm1
+   REALTYPE,dimension(:),allocatable :: flux1d
    REALTYPE,parameter :: one6th=_ONE_/6
 !EOP
 !-----------------------------------------------------------------------
@@ -70,115 +74,133 @@
    Ncall = Ncall+1
    write(debug,*) 'adv_w_split_3d() # ',Ncall
 #endif
+
+   iterate=.false.
+   if (.not.present(onestep_finalise) .and. present(itersmax)) then
+      if (itersmax .gt. 1) iterate=.true.
+   end if
+
+   if (.not. iterate) then
 #ifdef NO_BAROTROPIC
-   STDERR 'Do not use adv_w_split_3d() with the compiler option NO_BAROTROPIC'
-   STDERR 'Use adv_w_split_it_3d() instead, choose option ITERATE_VERT_ADV'
-   stop 'adv_w_split_3d()'
+      stop 'adv_w_split_3d: do enable iterations with compiler option NO_BAROTROPIC'
 #endif
+      iters = 1
+      itersm1 = _ONE_
+   end if
 
-   cu(:,:,kmax)=_ZERO_
+!$OMP PARALLEL DEFAULT(SHARED)                                        &
+!$OMP FIRSTPRIVATE(iters,itersm1)                                     &
+!$OMP PRIVATE(i,j,k,it,rc,flux1d,hio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,hio,c,x,r,Phi,limit,fu,fc,fd)
+!  Each thread allocates its own HEAP storage:
+   allocate(flux1d(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'adv_w_split_3d: Error allocating memory (flux1d)'
 
-! Calculating w-interface fluxes !
+   flux1d(0) = _ZERO_
+   flux1d(kmax) = _ZERO_
 
-   select case (method)
-      case (UPSTREAM_SPLIT)
-         do k=1,kmax-1
 !$OMP DO SCHEDULE(RUNTIME)
-            do j=jmin,jmax
-               do i=imin,imax
-                  if (az(i,j) .eq. 1) then
-                     if (ww(i,j,k) .gt. _ZERO_) then
-                        cu(i,j,k)=ww(i,j,k)*f(i,j,k)
-                     else
-                        cu(i,j,k)=ww(i,j,k)*f(i,j,k+1)
-                     end if
-                  else
-                     cu(i,j,k) = _ZERO_
-                  end if
+   do j=jmin,jmax
+      do i=imin,imax
+         if (az(i,j).eq.1 .or. (az(i,j).eq.2 .and. (    au(i-1,j  ).eq.1 &
+                                                    .or.au(i  ,j  ).eq.1 &
+                                                    .or.av(i  ,j-1).eq.1 &
+                                                    .or.av(i  ,j  ).eq.1 ))) then
+!           Note (KK): exclude tracer open bdy cells but
+!                      include all velocity open bdys
+            if (iterate) then
+!              estimate number of iterations by maximum cfl number in water column
+               cfl = _ZERO_
+               do k=1,kmax-1
+                  cfl = max(cfl,abs(ww(i,j,k))*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1))))
                end do
-            end do
-!$OMP END DO NOWAIT
-         end do
-      case ((P2),(Superbee),(MUSCL),(P2_PDM))
-         do k=1,kmax-1
-!$OMP DO SCHEDULE(RUNTIME)
-            do j=jmin,jmax
-               do i=imin,imax
-                  cu(i,j,k) = _ZERO_
-                  if (az(i,j) .eq. 1) then
-                     if (ww(i,j,k) .gt. _ZERO_) then
-                        c=ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
-                        if (k .gt. 1) then
-                           fu=f(i,j,k-1)         ! upstream
-                        else
-                           fu=f(i,j,k)
-                        end if
-                        fc=f(i,j,k  )            ! central
-                        fd=f(i,j,k+1)            ! downstream
-                        if (abs(fd-fc) .gt. 1.d-10) then
-                           r=(fc-fu)/(fd-fc)     ! slope ratio
-                        else
-                           r=(fc-fu)*1.d10
-                        end if
-                     else
-                        c=-ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
-                        if (k .lt. kmax-1) then
-                           fu=f(i,j,k+2)         ! upstream
-                        else
-                           fu=f(i,j,k+1)
-                        end if
-                        fc=f(i,j,k+1)            ! central
-                        fd=f(i,j,k  )            ! downstream
-                        if (abs(fc-fd) .gt. 1.d-10) then
-                           r=(fu-fc)/(fc-fd)     ! slope ratio
-                        else
-                           r=(fu-fc)*1.d10
-                        end if
-                     end if
-                     select case (method)
-                        case ((P2),(P2_PDM))
-                           x = one6th*(_ONE_-_TWO_*c)
-                           Phi=(_HALF_+x)+(_HALF_-x)*r
-                           if (method.eq.P2) then
-                              limit=Phi
-                           else
-                              limit=max(_ZERO_,min(Phi,_TWO_/(_ONE_-c),_TWO_*r/(c+1.d-10)))
-                           end if
-                        case (Superbee)
-                           limit=max(_ZERO_, min(_ONE_, _TWO_*r), min(r,_TWO_) )
-                        case (MUSCL)
-                           limit=max(_ZERO_,min(_TWO_,_TWO_*r,_HALF_*(_ONE_+r)))
-                        case default
-                           FATAL 'This is not so good - do_advection_3d()'
-                           stop 'adv_w_split_3d'
-                     end select
-                     cu(i,j,k)=ww(i,j,k)*(fc+_HALF_*limit*(_ONE_-c)*(fd-fc))
-                  else
-                     cu(i,j,k) = _ZERO_
-                  end if
-               end do
-            end do
-!$OMP END DO NOWAIT
-         end do
-   end select
-
-!$OMP BARRIER
-   do k=1,kmax   ! Doing a w-advection step
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin,jmax
-         do i=imin,imax
-            if (az(i,j) .eq. 1) then
-               hio=hi(i,j,k)
-               hi(i,j,k)=hio-splitfac*dt*(ww(i,j,k)-ww(i,j,k-1))
-               f(i,j,k)=(f(i,j,k)*hio-        &
-                         splitfac*dt*(cu(i,j,k)-cu(i,j,k-1)))/hi(i,j,k)
+               !iters =  min(200,int(cfl)+1) !original
+               iters = min(max(1,ceiling(cfl)),itersmax)
+               itersm1 = _ONE_/iters
             end if
-         end do
+            do it=1,iters
+!              Calculating w-interface fluxes !
+               do k=1,kmax-1
+                  if (ww(i,j,k) .gt. _ZERO_) then
+                     fc = f(i,j,k  )               ! central
+                     if (scheme .ne. UPSTREAM) then
+                        cfl = itersm1*ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
+                        if (k .gt. 1) then
+                           fu = f(i,j,k-1)         ! upstream
+                        else
+                           fu = f(i,j,k)
+                        end if
+                        fd = f(i,j,k+1)            ! downstream
+                        if (abs(fd-fc) .gt. 1.d-10) then
+                           r = (fc-fu)/(fd-fc)     ! slope ratio
+                        else
+                           r = (fc-fu)*1.d10
+                        end if
+                     end if
+                  else
+                     fc = f(i,j,k+1)               ! central
+                     if (scheme .ne. UPSTREAM) then
+                        cfl = -itersm1*ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
+                        if (k .lt. kmax-1) then
+                           fu = f(i,j,k+2)         ! upstream
+                        else
+                           fu = f(i,j,k+1)
+                        end if
+                        fd = f(i,j,k  )            ! downstream
+                        if (abs(fc-fd) .gt. 1.d-10) then
+                           r = (fu-fc)/(fc-fd)     ! slope ratio
+                        else
+                           r = (fu-fc)*1.d10
+                        end if
+                     end if
+                  end if
+                  flux1d(k) = ww(i,j,k)*fc
+                  if (scheme .ne. UPSTREAM) then
+                     select case (scheme)
+                        case ((P2),(P2_PDM))
+                           x = one6th*(_ONE_-_TWO_*cfl)
+                           Phi = (_HALF_+x) + (_HALF_-x)*r
+                           if (scheme.eq.P2) then
+                              limit = Phi
+                           else
+                              limit = max(_ZERO_,min(Phi,_TWO_/(_ONE_-cfl),_TWO_*r/(cfl+1.d-10)))
+                           end if
+                        case (SUPERBEE)
+                           limit = max(_ZERO_,min(_ONE_, _TWO_*r),min(r,_TWO_))
+                        case (MUSCL)
+                           limit = max(_ZERO_,min(_TWO_,_TWO_*r,_HALF_*(_ONE_+r)))
+                        case default
+                           stop 'adv_w_split_3d: invalid scheme'
+                     end select
+                     flux1d(k) = flux1d(k) + ww(i,j,k)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
+                  end if
+               end do
+
+!              Doing the w-advection step
+               do k=1,kmax
+                  hio = hi(i,j,k)
+                  hi(i,j,k) = hio - itersm1*splitfac*dt*(ww(i,j,k  )-ww(i,j,k-1))
+                  advn = itersm1*splitfac*(flux1d(k  )-flux1d(k-1))
+                  adv3d(i,j,k) = adv3d(i,j,k) + advn
+                  if (present(onestep_finalise)) then
+!                    Note (KK): do not update f in case of onestep_finalise=.false. !!!
+                     if (onestep_finalise) then
+                        f(i,j,k) = ( ho(i,j,k)*f(i,j,k) - dt*adv3d(i,j,k) ) / hi(i,j,k)
+                     end if
+                  else
+                     f(i,j,k) = ( hio*f(i,j,k) - dt*advn ) / hi(i,j,k)
+                  end if
+               end do
+            end do
+         end if
       end do
-!$OMP END DO
    end do
+!$OMP END DO
+
+!  Each thread must deallocate its own HEAP storage:
+   deallocate(flux1d,stat=rc)
+   if (rc /= 0) stop 'adv_w_split_3d: Error deallocating memory (flux1d)'
+
 !$OMP END PARALLEL
 
 #ifdef DEBUG
@@ -187,7 +209,7 @@
 #endif
    return
    end subroutine adv_w_split_3d
-
+!EOC
 !-----------------------------------------------------------------------
 ! Copyright (C) 2004 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------

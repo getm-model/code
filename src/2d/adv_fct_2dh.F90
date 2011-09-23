@@ -8,7 +8,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                           dxv,dyu,dxu,dyv,arcd1,       &
 #endif
-                          az,AH)
+                          az,AH,onestep_finalise)
 !  Note (KK): keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -51,6 +51,7 @@
    REALTYPE,dimension(E2DFIELD),intent(in)    :: dxv,dyu,dxu,dyv,arcd1
 #endif
    integer,dimension(E2DFIELD),intent(in)     :: az
+   logical,intent(in),optional                :: onestep_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
@@ -60,8 +61,9 @@
 !
 ! !LOCAL VARIABLES:
    logical,save    :: first=.true.
+   logical         :: update_f
    integer         :: rc,i,ii,j,jj
-   REALTYPE,dimension(:,:),allocatable         :: Dio
+   REALTYPE,dimension(:,:),allocatable,save    :: Dio
 #ifdef USE_ALLOCATED_ARRAYS
    REALTYPE, dimension(:,:), allocatable       :: flx,fhx
 #ifndef SLICE_MODEL
@@ -91,13 +93,18 @@
    write(debug,*) 'adv_fct_2dh() # ',Ncall
 #endif
 
-   stop 'adv_fct_2dh(): This routine is buggy (KK).'
+   stop 'adv_fct_2dh: This routine is buggy (KK)'
    if (first) then
       allocate(Dio(E2DFIELD),stat=rc)    ! work array
       if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (Dio)'
       Dio = _ZERO_
 
       first = .false.
+   end if
+
+   update_f = .true.
+   if (present(onestep_finalise)) then
+      if (.not. onestep_finalise) update_f = .false.
    end if
 
 #ifdef USE_ALLOCATED_ARRAYS
@@ -474,7 +481,6 @@
    end do
 #endif
 !$OMP END MASTER
-
 !$OMP BARRIER
 
 !  Calculate intermediate low resolution solution fi
@@ -599,6 +605,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .eq. 1)  then
+!           CAUTION: Di(i,j) already calculated above
             advn = (                                     &
                       fhx(i,j)*DYU - fhx(i-1,j  )*DYUIM1 &
 #ifndef SLICE_MODEL
@@ -606,11 +613,19 @@
 #endif
                    )*ARCD1
             adv(i,j) = adv(i,j) + advn
-!           CAUTION: Di(i,j) already calculated above
-            f(i,j) = ( Dio(i,j)*f(i,j) - dt*advn ) / Di(i,j)
-!           Force monotonicity, this is needed here for correcting truncations errors:
-            if (f(i,j) .gt. cmax(i,j)) f(i,j)=cmax(i,j)
-            if (f(i,j) .lt. cmin(i,j)) f(i,j)=cmin(i,j)
+            if (present(onestep_finalise)) then
+!              Note (KK): do not update f in case of onestep_finalise=.false. !!!
+               if (onestep_finalise) then
+                  f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
+               end if
+            else
+               f(i,j) = ( Dio(i,j)*f(i,j) - dt*advn ) / Di(i,j)
+            end if
+            if (update_f) then
+!              Force monotonicity, this is needed here for correcting truncations errors:
+               if (f(i,j).gt.cmax(i,j)) f(i,j)=cmax(i,j)
+               if (f(i,j).lt.cmin(i,j)) f(i,j)=cmin(i,j)
+            end if
          end if
       end do
    end do

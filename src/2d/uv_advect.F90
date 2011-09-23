@@ -176,9 +176,9 @@
 #endif
    call tic(TIM_UVADV)
 
-!  Here begins dimensional split advection for u-velocity
-
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j)
+
+!  Here begins dimensional split advection for u-velocity
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO-1
@@ -200,23 +200,22 @@
       end do
    end do
 !$OMP END DO
-!$OMP END PARALLEL
-
+!$OMP MASTER
    call tic(TIM_UVADVH)
    call update_2d_halo(fadv,fadv,au,imin,jmin,imax,jmax,U_TAG)
    call wait_halo(U_TAG)
    call toc(TIM_UVADVH)
 
-   call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DU,DU,          &
+   call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DU,DU,             &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                     dxadv,dxx,dyadv,dyx,arud1,                     &
+                     dxadv,dxx,dyadv,dyx,arud1,                        &
 #endif
-                     au,maskadv,ax,hor_adv,adv_split,AH,advres=UEx)
-
+                     au,maskadv,ax,adv_scheme,adv_split,AH,advres=UEx)
+!$OMP END MASTER
+!  OMP-NOTE: MASTER does not imply BARRIER
+!$OMP BARRIER
 
 !  Here begins dimensional split advection for v-velocity
-
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j)
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO-1
       do i=imin-HALO,imax+HALO
@@ -234,7 +233,7 @@
          dyadv(i,j) = dyc(i,j+1)
 #endif
 !        the velocity to be transported
-         fadv(i,j)=V(i,j)/DV(i,j)
+         fadv(i,j) = V(i,j)/DV(i,j)
       end do
    end do
 !$OMP END DO
@@ -245,11 +244,11 @@
    call wait_halo(V_TAG)
    call toc(TIM_UVADVH)
 
-   call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DV,DV,          &
+   call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DV,DV,             &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                     dxx,dxadv,dyx,dyadv,arvd1,                     &
+                     dxx,dxadv,dyx,dyadv,arvd1,                        &
 #endif
-                     av,ax,maskadv,hor_adv,adv_split,AH,advres=VEx)
+                     av,ax,maskadv,adv_scheme,adv_split,AH,advres=VEx)
 
    call toc(TIM_UVADV)
 #ifdef DEBUG
