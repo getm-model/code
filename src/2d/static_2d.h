@@ -46,5 +46,11 @@
    REALTYPE surfdiv(E2DFIELD)
    REALTYPE fwf(E2DFIELD)
    REALTYPE fwf_int(E2DFIELD)
-   REALTYPE EWbdy(jmax),ENbdy(imax),EEbdy(jmax),ESbdy(imax)   
-  
+   REALTYPE EWbdy(jmax),ENbdy(imax),EEbdy(jmax),ESbdy(imax)
+
+!  input arrays for do_advection
+   REALTYPE,dimension(E2DFIELD) :: fadv,Uadv,Vadv,DUadv,DVadv,maskadv
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+   REALTYPE,dimension(E2DFIELD) :: dxadv,dyadv
+#endif
+

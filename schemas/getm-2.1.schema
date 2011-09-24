@@ -226,6 +226,29 @@
 					<option value="2" label="use mixture of mean and minimum values: see code for details"/>
 				</options>
 			</element>
+			<element name="vel_adv_split" type="int" label="advection splitting for depth-averaged velocities">
+				<options>
+					<option value="0" label="no split: one 2D uv step"/>
+					<option value="1" label="full step splitting: u + v"/>
+					<option value="2" label="half step splitting: u/2 + v + u/2"/>
+				</options>
+			</element>
+			<element name="vel_adv_scheme" type="int" label="advection scheme for depth-averaged velocities">
+				<options>
+					<option value="1" label="upstream (first-order, monotone)"/>
+					<option value="2" label="2DH-upstream with forced monotonicity">
+						<condition type="eq" variable="./vel_adv_split" value="0"/>
+					</option>
+					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
+					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
+					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
+					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+					<option value="7" label="2DH-FCT">
+						<condition type="eq" variable="./vel_adv_split" value="0"/>
+					</option>
+				</options>
+			</element>
+			<element name="vel_AH" type="float" label="Laplacian horizontal diffusivity of velocity" unit="m²/s"/>
 			<element name="Am" type="float" label="constant horizontal momentum diffusion coefficient" unit="m²/s"/>
 			<element name="An_method" type="int" label="method for constant horizontal numerical diffusion coefficient (m²/s) used to filter the surface elevation">
 				<options>
@@ -272,6 +295,7 @@
 			<element name="cord_relax" type="float" label="coordinate relaxation time scale" minInclusive="0.0" unit="s" description="Coordinate relaxation time scale. The parameter r=cord_relax/dt*H(i,j)/maxdepth regulates how strongly new layer distribution is relaxed to the old one.">
 				<condition type="eq" variable="../domain/vert_cord" value="3"/>
 			</element>
+			<element name="itersmax_adv" type="int" label="max number of iterations of vertical advection" minInclusive="0"/>
 			<element name="bdy3d" type="bool" label="open boundaries exist"/>
 			<element name="bdyfmt_3d" type="int" label="format of boundary specifications">
 				<condition type="eq" variable="./bdy3d" value="True"/>
@@ -298,33 +322,42 @@
 			<element name="bdy3d_tmrlx_ucut" type="float" label="velocity threshold" unit="m/s" minInclusive="0.0">
 				<condition type="eq" variable="./bdy3d_tmrlx" value="True"/>
 			</element>
-			<element name="vel_hor_adv" type="int" label="horizontal advection method for momentum">
+			<element name="vel_adv_split3d" type="int" label="advection splitting for horizontal 3D velocities">
+				<options>
+					<option value="0" label="no split: one 3D uvw step"/>
+					<option value="1" label="full step splitting: u + v + w"/>
+					<option value="2" label="half step splitting: u/2 + v/2 + w + v/2 + u/2"/>
+					<option value="3" label="hor/ver splitting: uv + w"/>
+				</options>
+			</element>
+			<element name="vel_hor_adv" type="int" label="horizontal advection scheme for horizontal 3D velocities">
 				<options>
 					<option value="1" label="upstream (first-order, monotone)"/>
-					<option value="2" label="2D upstream (first-order, monotone)"/>
+					<option value="2" label="2DH-upstream with forced monotonicity">
+						<condition type="or">
+							<condition type="eq" variable="./vel_adv_split3d" value="0"/>
+							<condition type="eq" variable="./vel_adv_split3d" value="3"/>
+						</condition>
+					</option>
 					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
-					<option value="7" label="2D-FCT"/>
+					<option value="7" label="2DH-FCT">
+						<condition type="or">
+							<condition type="eq" variable="./vel_adv_split3d" value="0"/>
+							<condition type="eq" variable="./vel_adv_split3d" value="3"/>
+						</condition>
+					</option>
 				</options>
 			</element>
-			<element name="vel_ver_adv" type="int" label="vertical advection method for momentum">
+			<element name="vel_ver_adv" type="int" label="vertical advection scheme for horizontal 3D velocities">
 				<options>
 					<option value="1" label="upstream (first-order, monotone)"/>
-					<option value="2" label="2D upstream (first-order, monotone)"/>
 					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
-					<option value="7" label="2D-FCT"/>
-				</options>
-			</element>
-			<element name="vel_adv_split" type="int" label="splitting scheme for advection">
-				<options>
-					<option value="0" label="1D split --> full u, full v, full w"/>
-					<option value="1" label="1D split --> half u, half v, full w, half v, half u"/>
-					<option value="2" label="2D-hor-1D-vert split --> full uv, full w"/>
 				</options>
 			</element>
 			<element name="calc_temp" type="bool" label="solve temperature equation"/>
@@ -386,33 +419,42 @@
 					<condition type="eq" variable="./temp_format" value="2"/>
 				</condition>
 			</element>
-			<element name="temp_hor_adv" type="int" label="horizontal advection method for temperature">
+			<element name="temp_adv_split" type="int" label="advection splitting for temperature">
+				<options>
+					<option value="0" label="no split: one 3D uvw step"/>
+					<option value="1" label="full step splitting: u + v + w"/>
+					<option value="2" label="half step splitting: u/2 + v/2 + w + v/2 + u/2"/>
+					<option value="3" label="hor/ver splitting: uv + w"/>
+				</options>
+			</element>
+			<element name="temp_hor_adv" type="int" label="horizontal advection scheme for temperature">
 				<options>
 					<option value="1" label="upstream (first-order, monotone)"/>
-					<option value="2" label="2D upstream (first-order, monotone)"/>
+					<option value="2" label="2DH-upstream with forced monotonicity">
+						<condition type="or">
+							<condition type="eq" variable="./temp_adv_split" value="0"/>
+							<condition type="eq" variable="./temp_adv_split" value="3"/>
+						</condition>
+					</option>
 					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
-					<option value="7" label="2D-FCT"/>
+					<option value="7" label="2DH-FCT">
+						<condition type="or">
+							<condition type="eq" variable="./temp_adv_split" value="0"/>
+							<condition type="eq" variable="./temp_adv_split" value="3"/>
+						</condition>
+					</option>
 				</options>
 			</element>
-			<element name="temp_ver_adv" type="int" label="vertical advection method for temperature">
+			<element name="temp_ver_adv" type="int" label="vertical advection scheme for temperature">
 				<options>
 					<option value="1" label="upstream (first-order, monotone)"/>
-					<option value="2" label="2D upstream (first-order, monotone)"/>
 					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
-					<option value="7" label="2D-FCT"/>
-				</options>
-			</element>
-			<element name="temp_adv_split" type="int" label="splitting scheme for advection of temperature">
-				<options>
-					<option value="0" label="1D split --> full u, full v, full w"/>
-					<option value="1" label="1D split --> half u, half v, full w, half v, half u"/>
-					<option value="2" label="2D-hor-1D-vert split --> full uv, full w"/>
 				</options>
 			</element>
 			<element name="temp_AH" type="float" label="horizontal diffusivity of heat" unit="m²/s"/>
@@ -504,33 +546,42 @@
 					<condition type="eq" variable="./salt_format" value="2"/>
 				</condition>
 			</element>
-			<element name="salt_hor_adv" type="int" label="horizontal advection method for salinity">
+			<element name="salt_adv_split" type="int" label="advection splitting for salinity">
+				<options>
+					<option value="0" label="no split: one 3D uvw step"/>
+					<option value="1" label="full step splitting: u + v + w"/>
+					<option value="2" label="half step splitting: u/2 + v/2 + w + v/2 + u/2"/>
+					<option value="3" label="hor/ver splitting: uv + w"/>
+				</options>
+			</element>
+			<element name="salt_hor_adv" type="int" label="horizontal advection scheme for salinity">
 				<options>
 					<option value="1" label="upstream (first-order, monotone)"/>
-					<option value="2" label="2D upstream (first-order, monotone)"/>
+					<option value="2" label="2DH-upstream with forced monotonicity">
+						<condition type="or">
+							<condition type="eq" variable="./temp_adv_split" value="0"/>
+							<condition type="eq" variable="./temp_adv_split" value="3"/>
+						</condition>
+					</option>
 					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
-					<option value="7" label="2D-FCT"/>
+					<option value="7" label="2DH-FCT">
+						<condition type="or">
+							<condition type="eq" variable="./temp_adv_split" value="0"/>
+							<condition type="eq" variable="./temp_adv_split" value="3"/>
+						</condition>
+					</option>
 				</options>
 			</element>
-			<element name="salt_ver_adv" type="int" label="vertical advection method for salinity">
+			<element name="salt_ver_adv" type="int" label="vertical advection scheme for salinity">
 				<options>
 					<option value="1" label="upstream (first-order, monotone)"/>
-					<option value="2" label="2D upstream (first-order, monotone)"/>
 					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
-					<option value="7" label="2D-FCT"/>
-				</options>
-			</element>
-			<element name="salt_adv_split" type="int" label="splitting scheme for advection of salinity">
-				<options>
-					<option value="0" label="1D split --> full u, full v, full w"/>
-					<option value="1" label="1D split --> half u, half v, full w, half v, half u"/>
-					<option value="2" label="2D-hor-1D-vert split --> full uv, full w"/>
 				</options>
 			</element>
 			<element name="salt_AH" type="float" label="horizontal diffusivity of salt" unit="m²/s"/>

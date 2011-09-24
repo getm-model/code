@@ -19,7 +19,7 @@
    use domain, only: imin,jmin,imax,jmax,kmax,ioff,joff
    use domain, only: H,az
    use variables_2d, only: fwf_int
-   use variables_3d, only: S,hn,adv_schemes,kmin
+   use variables_3d, only: S,hn,kmin
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
 !
@@ -34,8 +34,9 @@
    integer                   :: salt_field_no=1
    character(len=32)         :: salt_name='salt'
    REALTYPE                  :: salt_const=35*_ONE_
-   integer                   :: salt_hor_adv=1,salt_ver_adv=1
    integer                   :: salt_adv_split=0
+   integer                   :: salt_hor_adv=1
+   integer                   :: salt_ver_adv=1
    REALTYPE                  :: salt_AH=-_ONE_
    integer                   :: salt_check=0
    REALTYPE                  :: min_salt=_ZERO_,max_salt=40*_ONE_
@@ -55,7 +56,7 @@
 ! \label{sec-init-salinity}
 !
 ! !INTERFACE:
-   subroutine init_salinity(adv_method)
+   subroutine init_salinity()
 !
 ! !DESCRIPTION:
 !
@@ -74,10 +75,8 @@
 ! conditions which are selected by means of compiler options.
 !
 ! !USES:
+   use advection_3d, only: print_adv_settings_3d
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-   integer, intent(in)                 :: adv_method
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -89,7 +88,7 @@
    NAMELIST /salt/                                            &
             salt_method,salt_const,salt_file,                 &
             salt_format,salt_name,salt_field_no,              &
-            salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH, &
+            salt_adv_split,salt_hor_adv,salt_ver_adv,salt_AH, &
             salt_check,min_salt,max_salt
 !EOP
 !-------------------------------------------------------------------------
@@ -106,65 +105,8 @@
    call init_salinity_field()
    
 !  Sanity checks for advection specifications
-   LEVEL3 'salt_hor_adv=   ',salt_hor_adv
-   LEVEL3 'salt_ver_adv=   ',salt_ver_adv
-   LEVEL3 'salt_adv_split= ',salt_adv_split
-   if(salt_hor_adv .eq. 1) then
-      salt_adv_split=-1
-      if(salt_ver_adv .ne. 1) then
-         LEVEL3 "setting salt_ver_adv to 1 - since salt_hor_adv is 1"
-         salt_ver_adv=1
-      end if
-   end if
-   LEVEL3 "horizontal: ",trim(adv_schemes(salt_hor_adv))
-   LEVEL3 "vertical:   ",trim(adv_schemes(salt_ver_adv))
-
-   select case (salt_adv_split)
-      case (-1)
-      case (0)
-         select case (salt_hor_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "salt_adv_split=0: salt_hor_adv not valid (2-6)")
-         end select
-         select case (salt_ver_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "salt_adv_split=0: salt_ver_adv not valid (2-6)")
-         end select
-         LEVEL3 "1D split --> full u, full v, full w"
-      case (1)
-         select case (salt_hor_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "salt_adv_split=1: salt_hor_adv not valid (2-6)")
-         end select
-         select case (salt_ver_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "salt_adv_split=1: salt_ver_adv not valid (2-6)")
-         end select
-         LEVEL3 "1D split --> half u, half v, full w, half v, half u"
-      case (2)
-         select case (salt_hor_adv)
-            case (2,7)
-            case default
-               call getm_error("init_3d()", &
-                    "salt_adv_split=2: salt_hor_adv not valid (2,7)")
-         end select
-         select case (salt_ver_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "salt_adv_split=2: salt_ver_adv not valid (2-6)")
-         end select
-         LEVEL3 "2D-hor, 1D-vert split --> full uv, full w"
-      case default
-   end select
+   LEVEL3 'Advection of salinity'
+   call print_adv_settings_3d(salt_adv_split,salt_hor_adv,salt_ver_adv,salt_AH)
 
    LEVEL3 'salt_check=',salt_check
    if (salt_check .ne. 0) then
@@ -372,8 +314,6 @@ salt_field_no=1
    use domain,       only: imin,imax,jmin,jmax,kmax,az,au,av
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dxv,dyu,dyv,arcd1
-#else
-   use domain, only: dx,dy,ard1
 #endif
    use parameters, only: avmols
    use getm_timers, only: tic, toc, TIM_SALT, TIM_MIXANALYSIS
@@ -395,9 +335,6 @@ salt_field_no=1
    REALTYPE                  :: SRelax,kk
 #endif
   REALTYPE                   :: S2(I3DFIELD)
-  REALTYPE                   :: delxu(I2DFIELD),delxv(I2DFIELD)
-  REALTYPE                   :: delyu(I2DFIELD),delyv(I2DFIELD)
-  REALTYPE                   :: area_inv(I2DFIELD)
   integer                    :: status
 !EOP
 !-----------------------------------------------------------------------
@@ -420,20 +357,6 @@ salt_field_no=1
       end do
    end do
 
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   delxu=dxu
-   delxv=dxv
-   delyu=dyu
-   delyv=dyv
-   area_inv=arcd1
-#else
-   delxu=dx
-   delxv=dx
-   delyu=dy
-   delyv=dy
-   area_inv=ard1
-#endif
-
    if (do_mixing_analysis) then
       call toc(TIM_SALT)
       call tic(TIM_MIXANALYSIS)
@@ -442,15 +365,21 @@ salt_field_no=1
 !    PARALLEL region (as the various advection schemes have their own regions),
 !    so the overhead of the contruct would be rather large.
       S2 = S**2
-      call do_advection_3d(dt,S2,uu,vv,ww,hun,hvn,ho,hn,    &
-                        delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
-                        salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH)
+      call do_advection_3d(dt,S2,uu,vv,ww,hun,hvn,ho,hn,                     &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                           dxu,dxv,dyu,dyv,arcd1,                            &
+#endif
+                           az,au,av,                                         &
+                           salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_SALT)
    end if
 
-   call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,    &
-                        delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
+   call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,                      &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                        dxu,dxv,dyu,dyv,arcd1,                            &
+#endif
+                        az,au,av,                                         &
                         salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH)
 
    if (do_mixing_analysis) then

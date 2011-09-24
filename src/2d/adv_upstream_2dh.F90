@@ -167,9 +167,7 @@
          end if
       end do
    end do
-!$OMP END DO NOWAIT
-
-!$OMP BARRIER
+!$OMP END DO
 
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax

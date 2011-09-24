@@ -4,8 +4,7 @@
 ! !IROUTINE:  adv_w_split_3d - 1D z-advection \label{sec-w-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_w_split_3d(dt,f,hi,adv3d,ww,                             &
-                             az,splitfac,scheme,itersmax,onestep_finalise)
+   subroutine adv_w_split_3d(dt,f,hi,adv3d,ww,az,splitfac,scheme,onestep_finalise)
 !
 ! !DESCRIPTION:
 !
@@ -43,6 +42,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
    use advection, only: UPSTREAM,P2,SUPERBEE,MUSCL,P2_PDM
+   use advection_3d, only: itersmax_adv
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -51,7 +51,6 @@
    REALTYPE,dimension(I3DFIELD),intent(in)    :: ww
    integer,dimension(E2DFIELD),intent(in)     :: az
    integer,intent(in)                         :: scheme
-   integer,intent(in),optional                :: itersmax
    logical,intent(in),optional                :: onestep_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -76,8 +75,8 @@
 #endif
 
    iterate=.false.
-   if (.not.present(onestep_finalise) .and. present(itersmax)) then
-      if (itersmax .gt. 1) iterate=.true.
+   if (.not.present(onestep_finalise)) then
+      if (itersmax_adv .gt. 1) iterate=.true.
    end if
 
    if (.not. iterate) then
@@ -115,7 +114,7 @@
                   cfl = max(cfl,abs(ww(i,j,k))*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1))))
                end do
                !iters =  min(200,int(cfl)+1) !original
-               iters = min(max(1,ceiling(cfl)),itersmax)
+               iters = min(max(1,ceiling(cfl)),itersmax_adv)
                itersm1 = _ONE_/iters
             end if
             do it=1,iters

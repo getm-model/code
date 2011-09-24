@@ -5,7 +5,7 @@
 ! !ROUTINE: uv_advect_3d - 3D momentum advection \label{sec-uv-advect-3d}
 !
 ! !INTERFACE:
-   subroutine uv_advect_3d(hor_adv,ver_adv,adv_split)
+   subroutine uv_advect_3d()
 !
 ! !DESCRIPTION:
 !
@@ -254,31 +254,25 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxc,dyc,dxx,dyx,arud1,arvd1
 #endif
+   use m2d, only: vel_AH
+   use m3d, only: vel_adv_split3d,vel_hor_adv,vel_ver_adv
    use variables_3d, only: dt,uu,vv,ww,hun,hvn,uuEx,vvEx
-   use advection_3d, only: do_advection_3d
-   use advection_3d, only: uuadv,vvadv,wwadv,huadv,hvadv,fadv3d
+   use variables_3d, only: fadv3d,uuadv,vvadv,wwadv,huadv,hvadv
    use advection, only: maskadv
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use advection, only: dxadv,dyadv
 #endif
-!!!! KK-TODO: clean variables_3d !!!
-#ifdef UV_TVD
-   use variables_3d, only: uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv
-#endif
+   use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
    use getm_timers, only: tic,toc,TIM_UVADV3D,TIM_UVADV3DH
 !$ use omp_lib
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-   integer, intent(in)  :: hor_adv,ver_adv,adv_split
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer  :: i,j,k
-   REALTYPE :: AH=_ZERO_
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -296,17 +290,17 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO-1
+!           the velocity to be transported
+            fadv3d(i,j,k) = uu(i,j,k)/hun(i,j,k)
             uuadv(i,j,k) = _HALF_*( uu(i  ,j,k) + uu(i+1,j,k) )
             vvadv(i,j,k) = _HALF_*( vv(i  ,j,k) + vv(i+1,j,k) )
-            wwadv(i,j,k) = _HALF_*( ww(i+1,j,k) + ww(i,j,k  ) )
+            wwadv(i,j,k) = _HALF_*( ww(i+1,j,k) + ww(i  ,j,k) ) )
 !           Note (KK): hun only valid until imax+1
 !                      therefore huadv only valid until imax
             huadv(i,j,k) = _HALF_*( hun(i  ,j,k) + hun(i+1,j,k) )
 !           Note (KK): hvn only valid until jmax+1
 !                      therefore hvadv only valid until jmax+1
             hvadv(i,j,k) = _HALF_*( hvn(i  ,j,k) + hvn(i+1,j,k) )
-!           the velocity to be transported
-            fadv3d(i,j,k) = uu(i,j,k)/hun(i,j,k)
          end do
       end do
 !$OMP END DO NOWAIT
@@ -330,11 +324,13 @@
    call wait_halo(U_TAG)
    call toc(TIM_UVADV3DH)
 
-   call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hun,hun,        &
+   call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hun,hun, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                        dxadv,dxx,dyadv,dyx,arud1,                              &
+                        dxadv,dxx,dyadv,dyx,arud1,                       &
 #endif
-                        au,maskadv,ax,hor_adv,ver_adv,adv_split,AH,advres=uuEx)
+                        au,maskadv,ax,                                   &
+                        vel_hor_adv,vel_ver_adv,vel_adv_split3d,vel_AH,  &
+                        advres=uuEx)
 !$OMP END MASTER
 !  OMP-NOTE: MASTER does not imply BARRIER
 !$OMP BARRIER
@@ -344,6 +340,8 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO
+!           the velocity to be transported
+            fadv3d(i,j,k) = vv(i,j,k)/hvn(i,j,k)
             uuadv(i,j,k) = _HALF_*( uu(i,j+1,k) + uu(i,j  ,k) )
             vvadv(i,j,k) = _HALF_*( vv(i,j+1,k) + vv(i,j  ,k) )
             wwadv(i,j,k) = _HALF_*( ww(i,j+1,k) + ww(i,j  ,k) )
@@ -353,8 +351,6 @@
 !           Note (KK): hvn only valid until jmax+1
 !                      therefore hvadv only valid until jmax
             hvadv(i,j,k) = _HALF_*( hvn(i,j+1,k) + hvn(i,j  ,k) )
-!           the velocity to be transported
-            fadv3d(i,j,k) = vv(i,j,k)/hvn(i,j,k)
          end do
       end do
 !$OMP END DO NOWAIT
@@ -378,11 +374,13 @@
    call wait_halo(V_TAG)
    call toc(TIM_UVADV3DH)
 
-   call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hvn,hvn,        &
+   call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hvn,hvn, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                        dxx,dxadv,dyx,dyadv,arvd1,                              &
+                        dxx,dxadv,dyx,dyadv,arvd1,                       &
 #endif
-                        av,ax,maskadv,hor_adv,ver_adv,adv_split,AH,advres=vvEx)
+                        av,ax,maskadv,                                   &
+                        vel_hor_adv,vel_ver_adv,vel_adv_split3d,vel_AH,  &
+                        advres=vvEx)
 
    call toc(TIM_UVADV3D)
 #ifdef DEBUG

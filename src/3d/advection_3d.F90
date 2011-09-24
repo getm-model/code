@@ -39,20 +39,18 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_advection_3d, do_advection_3d
+   integer,public                      :: itersmax_adv=200
 !  Note (KK): hi and adv3d are used only in do_advection_3d
-!             the other fields are provided for e.g. uv_advect_3d
 #ifdef STATIC
-   REALTYPE,dimension(I3DFIELD)               :: hi,adv3d
-   REALTYPE,public,dimension(I3DFIELD)        :: uuadv,vvadv,huadv,hvadv,fadv3d
+   REALTYPE,dimension(I3DFIELD)        :: hi,adv3d
 #else
-   REALTYPE,dimension(:,:),allocatable        :: hi,adv3d
-   REALTYPE,public,dimension(:,:),allocatable :: uuadv,vvadv,huadv,hvadv,fadv3d
+   REALTYPE,dimension(:,:),allocatable :: hi,adv3d
 #endif
-   integer,public,parameter           :: HVSPLIT=3
-   character(len=64),public,parameter :: adv_splits_3d(0:3) = &
-      (/"no split: one 3D step",                              &
-        "full step splitting: u + v + w",                     &
-        "half step splitting: u/2 + v/2 + w + v/2 + u/2",     &
+   integer,public,parameter            :: HVSPLIT=3
+   character(len=64),public,parameter  :: adv_splits_3d(0:3) = &
+      (/"no split: one 3D uvw step",                           &
+        "full step splitting: u + v + w",                      &
+        "half step splitting: u/2 + v/2 + w + v/2 + u/2",      &
         "hor/ver splitting: uv + w"/)
 !
 ! !REVISION HISTORY:
@@ -69,7 +67,7 @@
 ! !IROUTINE:  init_advection_3d
 !
 ! !INTERFACE:
-   subroutine init_advection_3d(method)
+   subroutine init_advection_3d()
 !
 ! !DESCRIPTION:
 !
@@ -79,11 +77,8 @@
 ! !USES
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-   integer, intent(in)                 :: method
-!
 ! !LOCAL VARIABLES:
-   integer                   :: rc
+   integer :: rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -101,21 +96,6 @@
 
    allocate(adv3d(I3DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (adv3d)'
-
-   allocate(uuadv(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (uuadv)'
-
-   allocate(vvadv(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (vvadv)'
-
-   allocate(huadv(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (huadv)'
-
-   allocate(hvadv(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (hvadv)'
-
-   allocate(fadv3d(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (fadv3d)'
 #endif
 
 #ifdef DEBUG
@@ -131,11 +111,11 @@
 ! !IROUTINE:  do_advection_3d - 3D advection schemes \label{sec-do-advection-3d}
 !
 ! !INTERFACE:
-   subroutine do_advection_3d(dt,f,uu,vv,ww,hu,hv,ho,hn,                          &
+   subroutine do_advection_3d(dt,f,uu,vv,ww,hu,hv,ho,hn,                      &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                              dxu,dxv,dyu,dyv,arcd1,                              &
+                              dxu,dxv,dyu,dyv,arcd1,                          &
 #endif
-                              az,au,av,hor_adv,ver_adv,adv_split,AH,hires,advres)
+                              az,au,av,hscheme,vscheme,split,AH,hires,advres)
 !
 ! !DESCRIPTION:
 !
@@ -235,7 +215,7 @@
    REALTYPE,dimension(I2DFIELD),intent(in)           :: dxu,dxv,dyu,dyv,arcd1
 #endif
    integer,dimension(E2DFIELD),intent(in)            :: az,au,av
-   integer,intent(in)                                :: adv_split,hor_adv,ver_adv
+   integer,intent(in)                                :: split,hscheme,vscheme
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(I3DFIELD),intent(inout)        :: f(I3DFIELD)
@@ -258,11 +238,11 @@
    hi = ho
    adv3d = _ZERO_
 
-    select case (adv_split)
+    select case (split)
 
       case(NOSPLIT)
 
-         select case (hor_adv)
+         select case (hscheme)
 
             case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
@@ -272,7 +252,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxu,dyu,arcd1,                      &
 #endif
-                                   au,_ONE_,hor_adv,az,AH,             &
+                                   au,_ONE_,hscheme,az,AH,             &
                                    onestep_finalise=.false.)
                end do
 #ifndef SLICE_MODEL
@@ -282,7 +262,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxv,dyv,arcd1,                      &
 #endif
-                                   av,_ONE_,hor_adv,az,AH,             &
+                                   av,_ONE_,hscheme,az,AH,             &
                                    onestep_finalise=.false.)
                end do
 #endif
@@ -315,11 +295,11 @@
 
             case default
 
-               FATAL 'hor_adv=',hor_adv,' is invalid'
+               FATAL 'hscheme=',hscheme,' is invalid'
                stop
 
          end select
-         call adv_w_split_3d(dt,f,hi,adv3d,ww,az,_ONE_,ver_adv,itersmax, &
+         call adv_w_split_3d(dt,f,hi,adv3d,ww,az,_ONE_,vscheme, &
                              onestep_finalise=.true.)
 
       case(FULLSPLIT)
@@ -330,7 +310,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                               dxu,dxv,dyu,dyv,arcd1,                   &
 #endif
-                              az,au,av,hor_adv,adv_split,AH,           &
+                              az,au,av,hscheme,split,AH,               &
                               Dires=hi(:,:,k),advres=adv3d(:,:,k))
          end do
          if (kmax .gt. 1) then
@@ -338,7 +318,7 @@
             call update_3d_halo(f,f,az,imin,jmin,imax,jmax,kmax,D_TAG)
             call wait_halo(D_TAG)
             call toc(TIM_ADV3DH)
-            call adv_w_split_3d(dt,f,hi,adv3d,ww,az,_ONE_,ver_adv,itersmax)
+            call adv_w_split_3d(dt,f,hi,adv3d,ww,az,_ONE_,vscheme)
          end if
 
       case(HALFSPLIT)
@@ -353,7 +333,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxu,dyu,arcd1,                      &
 #endif
-                                   au,_HALF_,hor_adv,az,AH)
+                                   au,_HALF_,hscheme,az,AH)
                end do
 #ifndef SLICE_MODEL
                call tic(TIM_ADV3DH)
@@ -366,7 +346,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxv,dyv,arcd1,                      &
 #endif
-                                   av,_HALF_,hor_adv,az,AH)
+                                   av,_HALF_,hscheme,az,AH)
                end do
 #endif
                if (kmax .gt. 1) then
@@ -374,7 +354,7 @@
                   call update_3d_halo(f,f,az,imin,jmin,imax,jmax,kmax,D_TAG)
                   call wait_halo(D_TAG)
                   call toc(TIM_ADV3DH)
-                  call adv_w_split_3d(dt,f,hi,adv3d,ww,az,_ONE_,ver_adv,itersmax)
+                  call adv_w_split_3d(dt,f,hi,adv3d,ww,az,_ONE_,vscheme)
                end if
 #ifndef SLICE_MODEL
                call tic(TIM_ADV3DH)
@@ -387,7 +367,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxv,dyv,arcd1,                      &
 #endif
-                                   av,_HALF_,hor_adv,az,AH)
+                                   av,_HALF_,hscheme,az,AH)
                end do
 #endif
                call tic(TIM_ADV3DH)
@@ -400,16 +380,16 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxu,dyu,arcd1,                      &
 #endif
-                                   au,_HALF_,hor_adv,az,AH)
+                                   au,_HALF_,hscheme,az,AH)
                end do
 
             case((UPSTREAM_2DH),(FCT))
 
-               stop 'do_advection_3d: hor_adv=',hor_adv,' not valid for adv_split=',adv_split
+               stop 'do_advection_3d: hscheme=',hscheme,' not valid for split=',split
 
             case default
 
-               stop 'do_advection_3d: hor_adv=',hor_adv,' is invalid'
+               stop 'do_advection_3d: hscheme=',hscheme,' is invalid'
 
          end select
 
@@ -421,7 +401,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                               dxu,dxv,dyu,dyv,arcd1,                   &
 #endif
-                              az,au,av,hor_adv,NOSPLIT,AH,             &
+                              az,au,av,hscheme,NOSPLIT,AH,             &
                               Dires=hi(:,:,k),advres=adv3d(:,:,k))
          end do
          if (kmax .gt. 1) then
@@ -429,12 +409,12 @@
             call update_3d_halo(f,f,az,imin,jmin,imax,jmax,kmax,D_TAG)
             call wait_halo(D_TAG)
             call toc(TIM_ADV3DH)
-            call adv_w_split_3d(dt,f,hi,adv3d,ww,az,_ONE_,ver_adv,itersmax)
+            call adv_w_split_3d(dt,f,hi,adv3d,ww,az,_ONE_,vscheme)
          end if
 
       case default
 
-         stop 'do_advection_3d: adv_split=',adv_split,' is invalid'
+         stop 'do_advection_3d: split=',split,' is invalid'
 
    end select
 
@@ -455,7 +435,7 @@
 ! !IROUTINE:  print_adv_settings_3d
 !
 ! !INTERFACE:
-   subroutine print_adv_settings_3d(adv_split,hor_adv,ver_adv,itersmax)
+   subroutine print_adv_settings_3d(split,hscheme,vscheme,AH)
 !
 ! !DESCRIPTION:
 !
@@ -465,7 +445,8 @@
    IMPLICIT NONE
 
 ! !INPUT PARAMETERS:
-   integer,intent(in) :: adv_split,hor_adv,ver_adv,itersmax
+   integer,intent(in)  :: split,hscheme,vscheme
+   REALTYPE,intent(in) :: AH
 !
 ! !LOCAL VARIABLES:
 !
@@ -478,45 +459,52 @@
    write(debug,*) 'print_adv_settings_3d() # ',Ncall
 #endif
 
-   select case (adv_split)
+   select case (split)
       case((NOSPLIT),(FULLSPLIT),(HALFSPLIT),(HVSPLIT))
       case default
-         FATAL 'adv_split=',adv_split,' is invalid'
+         FATAL 'adv_split=',split,' is invalid'
          stop
    end select
 
-   select case (hor_adv)
+   select case (hscheme)
       case((UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(FCT))
       case default
-         FATAL 'hor_adv=',hor_adv,' is invalid'
+         FATAL 'hor_adv=',hscheme,' is invalid'
          stop
    end select
 
-   select case (ver_adv)
+   select case (vscheme)
       case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
       case default
-         FATAL 'ver_adv=',ver_adv,' is invalid'
+         FATAL 'ver_adv=',vscheme,' is invalid'
          stop
    end select
 
-   select case (adv_split)
+   select case (split)
       case((FULLSPLIT),(HALFSPLIT))
-         select case (hor_adv)
+         select case (hscheme)
             case((UPSTREAM_2DH),(FCT))
-               FATAL 'hor_adv=',hor_adv,' not valid for adv_split=',adv_split
+               FATAL 'hor_adv=',hscheme,' not valid for adv_split=',split
                stop
          end select
    end select
 
-   LEVEL3 adv_splits_3d(adv_split)
-   LEVEL3 ' horizontal: ',adv_schemes(hor_adv)
-   LEVEL3 ' vertical  : ',adv_schemes(ver_adv)
+   LEVEL3 trim(adv_splits_3d(split))
+   LEVEL3 ' horizontal: ',trim(adv_schemes(hscheme))
 
-   if (adv_split .eq. NOSPLIT) then
-      LEVEL3 '             adv_split=',adv_split,' disables iteration
+   if (AH .gt. _ZERO_) then
+      LEVEL3 '            with AH=',AH
    else
-      if (itersmax .gt. 1) then
-         LEVEL3 '             with max ',itersmax,' iterations'
+      LEVEL3 '            without diffusion'
+   end if
+
+   LEVEL3 ' vertical  : ',trim(adv_schemes(vscheme))
+
+   if (split .eq. NOSPLIT) then
+      LEVEL3 '             adv_split=',split,' disables iteration
+   else
+      if (itersmax_adv .gt. 1) then
+         LEVEL3 '             with max ',itersmax_adv,' iterations'
       else
          LEVEL3 '             without iteration'
       end if

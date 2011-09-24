@@ -26,6 +26,7 @@
    use domain, only: ill,ihl,jll,jhl
    use domain, only: openbdy,z0_method,z0_const,z0
    use domain, only: az,ax
+   use advection, only: init_advection,print_adv_settings
    use halo_zones, only : update_2d_halo,wait_halo
    use halo_zones, only : U_TAG,V_TAG,H_TAG
    use variables_2d
@@ -41,7 +42,10 @@
 !
 ! !PUBLIC DATA MEMBERS:
    logical                   :: have_boundaries
-   REALTYPE                  :: dtm,Am=-_ONE_
+   REALTYPE                  :: dtm
+   integer                   :: vel_adv_split=0,vel_adv_scheme=1
+   integer                   :: vel_adv_scheme=1
+   REALTYPE                  :: vel_AH=-_ONE_,Am=-_ONE_
 !  method for specifying horizontal numerical diffusion coefficient
 !     (0=const, 1=from named nc-file)
    integer                   :: An_method=0
@@ -102,7 +106,8 @@
    integer                   :: i,j
    integer                   :: vel_depth_method=0
    namelist /m2d/ &
-          MM,vel_depth_method,Am,An_method,An_const,An_file,residual, &
+          MM,vel_depth_method,vel_adv_split,vel_adv_scheme,vel_AH, &
+          Am,An_method,An_const,An_file,residual, &
           sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
@@ -122,6 +127,10 @@
 
 !  Allocates memory for the public data members - if not static
    call init_variables_2d(runtype)
+   call init_advection()
+
+   LEVEL2 'Advection of depth-averaged velocities'
+   call print_adv_settings(vel_adv_split,vel_adv_scheme,vel_AH)
 
 #if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
 !   STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'

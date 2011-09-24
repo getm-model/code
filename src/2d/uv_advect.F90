@@ -147,12 +147,12 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxc,dyc,dxx,dyx,arud1,arvd1
 #endif
-   use variables_2d, only: UEx,VEx
-   use advection, only: do_advection
-   use advection, only: Uadv,Vadv,DUadv,DVadv,maskadv,fadv
+   use m2d, only: vel_adv_split,vel_adv_scheme,vel_AH
+   use variables_2d, only: UEx,VEx,fadv,Uadv,Vadv,DUadv,DVadv,maskadv
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   use advection, only: dxadv,dyadv
+   use variables_2d, only: dxadv,dyadv
 #endif
+   use advection, only: do_advection
    use halo_zones, only: update_2d_halo,wait_halo,U_TAG,V_TAG
    use getm_timers, only: tic,toc,TIM_UVADV,TIM_UVADVH
 !$ use omp_lib
@@ -182,6 +182,8 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO-1
+!        the velocity to be transported
+         fadv(i,j) = U(i,j)/DU(i,j)
          Uadv(i,j) = _HALF_*( U(i  ,j) + U(i+1,j) )
          Vadv(i,j) = _HALF_*( V(i  ,j) + V(i+1,j) )
 !        Note (KK): DU only valid until imax+1
@@ -195,8 +197,6 @@
          dxadv(i,j) = dxc(i+1,j)
          dyadv(i,j) = dyc(i+1,j)
 #endif
-!        the velocity to be transported
-         fadv(i,j) = U(i,j)/DU(i,j)
       end do
    end do
 !$OMP END DO
@@ -206,11 +206,12 @@
    call wait_halo(U_TAG)
    call toc(TIM_UVADVH)
 
-   call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DU,DU,             &
+   call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DU,DU,           &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                     dxadv,dxx,dyadv,dyx,arud1,                        &
+                     dxadv,dxx,dyadv,dyx,arud1,                      &
 #endif
-                     au,maskadv,ax,adv_scheme,adv_split,AH,advres=UEx)
+                     au,maskadv,ax,                                  &
+                     vel_adv_scheme,vel_adv_split,vel_AH,advres=UEx)
 !$OMP END MASTER
 !  OMP-NOTE: MASTER does not imply BARRIER
 !$OMP BARRIER
@@ -219,6 +220,8 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO-1
       do i=imin-HALO,imax+HALO
+!        the velocity to be transported
+         fadv(i,j) = V(i,j)/DV(i,j)
          Uadv(i,j) = _HALF_*( U(i,j+1) + U(i,j  ) )
          Vadv(i,j) = _HALF_*( V(i,j+1) + V(i,j  ) )
 !        Note (KK): DU only valid until imax+1
@@ -232,8 +235,6 @@
          dxadv(i,j) = dxc(i,j+1)
          dyadv(i,j) = dyc(i,j+1)
 #endif
-!        the velocity to be transported
-         fadv(i,j) = V(i,j)/DV(i,j)
       end do
    end do
 !$OMP END DO
@@ -244,11 +245,12 @@
    call wait_halo(V_TAG)
    call toc(TIM_UVADVH)
 
-   call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DV,DV,             &
+   call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DV,DV,           &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                     dxx,dxadv,dyx,dyadv,arvd1,                        &
+                     dxx,dxadv,dyx,dyadv,arvd1,                      &
 #endif
-                     av,ax,maskadv,adv_scheme,adv_split,AH,advres=VEx)
+                     av,ax,maskadv,                                  &
+                     vel_adv_scheme,vel_adv_split,vel_AH,advres=VEx)
 
    call toc(TIM_UVADV)
 #ifdef DEBUG

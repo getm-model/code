@@ -1,17 +1,10 @@
 ! Remember to update this value if you add more 3D arrays.
-#ifdef UV_TVD
 #ifdef SPM
   integer, parameter                   :: n3d_fields=36
 #else
   integer, parameter                   :: n3d_fields=33 
 #endif  
-#else
-#ifdef SPM
-  integer, parameter                   :: n3d_fields=29
-#else
-  integer, parameter                   :: n3d_fields=26
-#endif
-#endif
+
 ! Number of vertical layers in z,u,v columns
   INTEGER                              :: kmin(I2DFIELD)
   INTEGER                              :: kumin(I2DFIELD)
@@ -74,15 +67,8 @@
   REALTYPE                             :: spm_pool(I2DFIELD)
 #endif
 
-#ifdef UV_TVD
-  REALTYPE                             :: uadv(I3DFIELD)
-  REALTYPE                             :: vadv(I3DFIELD)
-  REALTYPE                             :: wadv(I3DFIELD)
-  REALTYPE                             :: huadv(I3DFIELD)
-  REALTYPE                             :: hvadv(I3DFIELD)
-  REALTYPE                             :: hoadv(I3DFIELD)
-  REALTYPE                             :: hnadv(I3DFIELD)
-#endif
+! input arrays for do_advection_3d
+  REALTYPE,dimension(I3DFIELD) :: fadv3d,uuadv,vvadv,wwadv,hoadv,hnadv,huadv,hvadv
 
 ! 2D fields in 3D domain
   REALTYPE                             :: sseo(I2DFIELD)

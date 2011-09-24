@@ -5,7 +5,7 @@
 ! !ROUTINE: tke_eps_advect_3d - 3D turbulence advection
 !
 ! !INTERFACE:
-   subroutine tke_eps_advect_3d(hor_adv,ver_adv,adv_split)
+   subroutine tke_eps_advect_3d()
 !
 ! !DESCRIPTION:
 !
@@ -19,35 +19,20 @@
    use domain, only: imin,imax,jmin,jmax,kmax,az,au,av
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dxv,dyu,dyv,arcd1
-#else
-   use domain, only: dx,dy,ard1
 #endif
-   use variables_3d, only: dt,kumin,kvmin,uu,vv,ww,hun,hvn,ho,hn,uuEx,vvEx
-#ifdef UV_TVD
-   use variables_3d, only: uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv
-#endif
-   use variables_3d, only: tke,eps
+   use m2d, only: vel_AH
+   use m3d, only: vel_adv_split3d,vel_hor_adv,vel_ver_adv
+   use variables_3d, only: tke,eps,dt,uu,vv,ww,hun,hvn,ho,hn
+   use variables_3d, only: uuadv,vvadv,wwadv,hoadv,hnadv,huadv,hvadv
    use advection_3d, only: do_advection_3d
-   use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
+!$ use omp_lib
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-   integer, intent(in)  :: hor_adv,ver_adv,adv_split
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k
-#ifdef UV_TVD
-   REALTYPE                  :: dxuadv(I2DFIELD)
-   REALTYPE                  :: dxvadv(I2DFIELD)
-   REALTYPE                  :: dyuadv(I2DFIELD)
-   REALTYPE                  :: dyvadv(I2DFIELD)
-   REALTYPE                  :: area_inv(I2DFIELD)
-   REALTYPE                  :: AH=_ZERO_
-   REALTYPE                  :: dxdyi
-#endif
+   integer  :: i,j,k
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -57,70 +42,59 @@
    write(debug,*) 'tke_eps_advect_3d() # ',Ncall
 #endif
 
-#ifndef UV_TVD
-   STDERR 'Do not use tke_eps_advect_3d() without the compiler option UV_TVD'
-   stop 'tke_eps_advect_3d()'
-#else
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
 
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-#else
-   dxdyi = _ONE_/(dx*dy)
-#endif
-
-! Here begins dimensional split advection for tke and eps
    do k=1,kmax-1
-     do j=jmin-HALO,jmax+HALO
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
-            uadv(i,j,k)=_HALF_*(uu(i,j,k)+uu(i,j,k+1))
-            vadv(i,j,k)=_HALF_*(vv(i,j,k)+vv(i,j,k+1))
-            wadv(i,j,k)=_HALF_*(ww(i,j,k)+ww(i,j,k+1))
-            huadv(i,j,k)=_HALF_*(hun(i,j,k)+hun(i,j,k+1))
-            hvadv(i,j,k)=_HALF_*(hvn(i,j,k)+hvn(i,j,k+1))
-            hoadv(i,j,k)=_HALF_*(ho(i,j,k)+ho(i,j,k+1))
-            hnadv(i,j,k)=_HALF_*(hn(i,j,k)+hn(i,j,k+1))
+            uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i,j,k+1) )
+            vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i,j,k+1) )
+            wwadv(i,j,k) = _HALF_*( ww(i,j,k) + ww(i,j,k+1) )
+            hoadv(i,j,k) = _HALF_*( ho(i,j,k) + ho(i,j,k+1) )
+            hnadv(i,j,k) = _HALF_*( hn(i,j,k) + hn(i,j,k+1) )
+!           Note (KK): hun only valid until imax+1
+!                      therefore huadv only valid until imax+1
+            huadv(i,j,k) = _HALF_*( hun(i,j,k) + hun(i,j,k+1) )
+!           Note (KK): hvn only valid until jmax+1
+!                      therefore hvadv only valid until jmax+1
+            hvadv(i,j,k) = _HALF_*( hvn(i,j,k) + hvn(i,j,k+1) )
          end do
       end do
-   end do
-   k=kmax  ! Only needed to allow for advection of k=kmax
-   do j=jmin-HALO,jmax+HALO
-      do i=imin-HALO,imax+HALO
-         uadv(i,j,k)=_HALF_*(uu(i,j,k))
-         vadv(i,j,k)=_HALF_*(vv(i,j,k))
-         wadv(i,j,k)=_HALF_*(ww(i,j,k))
-         huadv(i,j,k)=_HALF_*(hun(i,j,k))
-         hvadv(i,j,k)=_HALF_*(hvn(i,j,k))
-         hoadv(i,j,k)=_HALF_*(ho(i,j,k))
-         hnadv(i,j,k)=_HALF_*(hn(i,j,k))
-      end do
+!$OMP END DO NOWAIT
    end do
 
+!  only needed to allow for advection of k=kmax
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
+!        KK-TODO: does _HALF_ transports make sense?
+         uuadv(i,j,kmax) = _HALF_*uu(i,j,kmax)
+         vvadv(i,j,kmax) = _HALF_*vv(i,j,kmax)
+         wwadv(i,j,kmax) = _HALF_*ww(i,j,kmax)
+         hoadv(i,j,kmax) = _HALF_*ho(i,j,kmax)
+         hnadv(i,j,kmax) = _HALF_*hn(i,j,kmax)
+         huadv(i,j,kmax) = _HALF_*hun(i,j,kmax)
+         hvadv(i,j,kmax) = _HALF_*hvn(i,j,kmax)
+      end do
+   end do
+!$OMP END DO
+
+!$OMP END PARALLEL
+
+   call do_advection_3d(dt,tke,uuadv,vvadv,wwadv,huadv,hvadv,hoadv,hnadv, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         dxuadv(i,j)=dxu(i,j)
-         dxvadv(i,j)=dxv(i,j)
-         dyuadv(i,j)=dyu(i,j)
-         dyvadv(i,j)=dyv(i,j)
-         area_inv(i,j)=arcd1(i,j)
-#else
-         dxuadv(i,j)=dx
-         dxvadv(i,j)=dx
-         dyuadv(i,j)=dy
-         dyvadv(i,j)=dy
-         area_inv(i,j)=dxdyi
+                        dxu,dxv,dyu,dyv,arcd1,                            &
 #endif
-      end do
-   end do
+                        az,au,av,                                         &
+                        vel_hor_adv,vel_ver_adv,vel_adv_split3d,vel_AH)
 
-   call do_advection_3d(dt,tke,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv, &
-                        dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
-                        az,au,av,hor_adv,ver_adv,adv_split,AH)
-
-   call do_advection_3d(dt,eps,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv, &
-                        dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
-                        az,au,av,hor_adv,ver_adv,adv_split,AH)
-
+   call do_advection_3d(dt,eps,uuadv,vvadv,wwadv,huadv,hvadv,hoadv,hnadv, &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                        dxu,dxv,dyu,dyv,arcd1,                            &
 #endif
+                        az,au,av,                                         &
+                        vel_hor_adv,vel_ver_adv,vel_adv_split3d,vel_AH)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving tke_eps_advect_3d()'
@@ -129,7 +103,6 @@
    return
    end subroutine tke_eps_advect_3d
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2010 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------

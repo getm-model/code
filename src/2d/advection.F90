@@ -41,25 +41,16 @@
 
 !  Note (KK): flux is used from the advection routines
 !             Di and adv are used only in do_advection
-!             the other fields are provided for uv_advect
 #ifdef STATIC
    REALTYPE,public,dimension(E2DFIELD)        :: flux
    REALTYPE,dimension(E2DFIELD)               :: Di,adv
-   REALTYPE,public,dimension(E2DFIELD)        :: Uadv,Vadv,DUadv,DVadv,maskadv,fadv
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   REALTYPE,public,dimension(E2DFIELD)        :: dxadv,dyadv
-#endif
 #else
    REALTYPE,public,dimension(:,:),allocatable :: flux
    REALTYPE,dimension(:,:),allocatable        :: Di,adv
-   REALTYPE,public,dimension(:,:),allocatable :: Uadv,Vadv,DUadv,DVadv,maskadv,fadv
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   REALTYPE,public,dimension(:,:),allocatable :: dxadv,dyadv
-#endif
 #endif
    integer,public,parameter           :: NOSPLIT=0,FULLSPLIT=1,HALFSPLIT=2
    character(len=64),public,parameter :: adv_splits(0:2) = &
-     (/"no split: one 2D step",                            &
+     (/"no split: one 2D uv step",                         &
        "full step splitting: u + v",                       &
        "half step splitting: u/2 + v + u/2"/)
    integer,public,parameter           :: UPSTREAM=1,UPSTREAM_2DH=2,P2=3
@@ -171,7 +162,7 @@
    IMPLICIT NONE
 !
 ! !LOCAL VARIABLES:
-   integer                   :: rc
+   integer :: rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -192,32 +183,6 @@
 
    allocate(adv(E2DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (adv)'
-
-   allocate(Uadv(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (Uadv)'
-
-   allocate(Vadv(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (Vadv)'
-
-   allocate(DUadv(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (DUadv)'
-
-   allocate(DVadv(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (DVadv)'
-
-   allocate(maskadv(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (maskadv)'
-
-   allocate(fadv(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (fadv)'
-
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   allocate(dxadv(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (dxadv)'
-
-   allocate(dyadv(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (dyadv)'
-#endif
 #endif
 
 #ifdef DEBUG
@@ -233,11 +198,11 @@
 ! !IROUTINE:  do_advection - 2D advection schemes \label{sec-do-advection}
 !
 ! !INTERFACE:
-   subroutine do_advection(dt,f,U,V,DU,DV,Do,Dn,                          &
+   subroutine do_advection(dt,f,U,V,DU,DV,Do,Dn,                  &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                           dxu,dxv,dyu,dyv,arcd1,                         &
+                           dxu,dxv,dyu,dyv,arcd1,                 &
 #endif
-                           az,au,av,adv_scheme,adv_split,AH,Dires,advres)
+                           az,au,av,scheme,split,AH,Dires,advres)
 !
 ! !DESCRIPTION:
 !
@@ -268,7 +233,7 @@
    REALTYPE,dimension(E2DFIELD),intent(in)           :: dxu,dxv,dyu,dyv,arcd1
 #endif
    integer,dimension(E2DFIELD),intent(in)            :: az,au,av
-   integer,intent(in)                                :: adv_split,adv_scheme
+   integer,intent(in)                                :: split,scheme
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout)        :: f
@@ -291,18 +256,18 @@
    Di = Do
    adv = _ZERO_
 
-   select case (adv_split)
+   select case (split)
 
       case(NOSPLIT)
 
-         select case (adv_scheme)
+         select case (scheme)
             case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
-               call adv_u_split(dt,f,Di,adv,U,Do,DU,         &
+               call adv_u_split(dt,f,Di,adv,U,Do,DU,      &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                dxu,dyu,arcd1,               &
+                                dxu,dyu,arcd1,            &
 #endif
-                                au,_ONE_,adv_scheme,az,AH,   &
+                                au,_ONE_,scheme,az,AH,    &
 #ifdef SLICE_MODEL
                                 onestep_finalise=.true.)
 #else
@@ -310,11 +275,11 @@
 #endif
 
 #ifndef SLICE_MODEL
-               call adv_v_split(dt,f,Di,adv,V,Do,DV,        &
+               call adv_v_split(dt,f,Di,adv,V,Do,DV,     &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                dxv,dyv,arcd1,              &
+                                dxv,dyv,arcd1,           &
 #endif
-                                av,_ONE_,adv_scheme,az,AH,  &
+                                av,_ONE_,scheme,az,AH,   &
                                 onestep_finalise=.true.)
 #endif
 
@@ -335,84 +300,84 @@
                                 az,AH)
 
             case default
-               stop 'do_advection: adv_scheme=',adv_scheme,' is invalid'
+               stop 'do_advection: scheme=',scheme,' is invalid'
          end select
 
       case(FULLSPLIT)
 
-         select case (adv_scheme)
+         select case (scheme)
             case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
-               call adv_u_split(dt,f,Di,adv,U,Do,DU,       &
+               call adv_u_split(dt,f,Di,adv,U,Do,DU,   &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                dxu,dyu,arcd1,             &
+                                dxu,dyu,arcd1,         &
 #endif
-                                au,_ONE_,adv_scheme,az,AH)
+                                au,_ONE_,scheme,az,AH)
 
 #ifndef SLICE_MODEL
                call tic(TIM_ADVH)
                call update_2d_halo(f,f,az,imin,jmin,imax,jmax,D_TAG)
                call wait_halo(D_TAG)
                call toc(TIM_ADVH)
-               call adv_v_split(dt,f,Di,adv,V,Do,DV,       &
+               call adv_v_split(dt,f,Di,adv,V,Do,DV,   &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                dxv,dyv,arcd1,             &
+                                dxv,dyv,arcd1,         &
 #endif
-                                av,_ONE_,adv_scheme,az,AH)
+                                av,_ONE_,scheme,az,AH)
 #endif
 
             case((UPSTREAM_2DH),(FCT))
-               stop 'do_advection: adv_scheme=',adv_scheme,' not valid for adv_split=',adv_split
+               stop 'do_advection: scheme=',scheme,' not valid for split=',split
             case default
-               stop 'do_advection: adv_scheme=',adv_scheme,' is invalid'
+               stop 'do_advection: scheme=',scheme,' is invalid'
          end select
 
       case(HALFSPLIT)
 
-         select case (adv_scheme)
+         select case (scheme)
             case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
-               call adv_u_split(dt,f,Di,adv,U,Do,DU,        &
+               call adv_u_split(dt,f,Di,adv,U,Do,DU,    &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                dxu,dyu,arcd1,              &
+                                dxu,dyu,arcd1,          &
 #endif
-                                au,_HALF_,adv_scheme,az,AH)
+                                au,_HALF_,scheme,az,AH)
 
 #ifndef SLICE_MODEL
                call tic(TIM_ADVH)
                call update_2d_halo(f,f,az,imin,jmin,imax,jmax,D_TAG)
                call wait_halo(D_TAG)
                call toc(TIM_ADVH)
-               call adv_v_split(dt,f,Di,adv,V,Do,DV,       &
+               call adv_v_split(dt,f,Di,adv,V,Do,DV,   &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                dxv,dyv,arcd1,             &
+                                dxv,dyv,arcd1,         &
 #endif
-                                av,_ONE_,adv_scheme,az,AH)
+                                av,_ONE_,scheme,az,AH)
 #endif
 
                call tic(TIM_ADVH)
                call update_2d_halo(f,f,az,imin,jmin,imax,jmax,D_TAG)
                call wait_halo(D_TAG)
                call toc(TIM_ADVH)
-               call adv_u_split(dt,f,Di,adv,U,Do,DU,        &
+               call adv_u_split(dt,f,Di,adv,U,Do,DU,    &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                dxu,dyu,arcd1,              &
+                                dxu,dyu,arcd1,          &
 #endif
-                                au,_HALF_,adv_scheme,az,AH)
+                                au,_HALF_,scheme,az,AH)
 
             case((UPSTREAM_2DH),(FCT))
 
-               stop 'do_advection: adv_scheme=',adv_scheme,' not valid for adv_split=',adv_split
+               stop 'do_advection: scheme=',scheme,' not valid for split=',split
 
             case default
 
-               stop 'do_advection: adv_scheme=',adv_scheme,' is invalid'
+               stop 'do_advection: scheme=',scheme,' is invalid'
 
          end select
 
       case default
 
-         stop 'do_advection: adv_split=',adv_split,' is invalid'
+         stop 'do_advection: split=',split,' is invalid'
 
    end select
 
@@ -433,7 +398,7 @@
 ! !IROUTINE:  print_adv_settings
 !
 ! !INTERFACE:
-   subroutine print_adv_settings(adv_split,adv_scheme)
+   subroutine print_adv_settings(split,scheme,AH)
 !
 ! !DESCRIPTION:
 !
@@ -443,7 +408,8 @@
    IMPLICIT NONE
 
 ! !INPUT PARAMETERS:
-   integer,intent(in) :: adv_split,hor_adv
+   integer,intent(in)   :: split,scheme
+   REALTYPE,intent(in) :: AH
 !
 ! !LOCAL VARIABLES:
 !
@@ -456,31 +422,37 @@
    write(debug,*) 'print_adv_settings() # ',Ncall
 #endif
 
-   select case (adv_split)
+   select case (split)
       case((NOSPLIT),(FULLSPLIT),(HALFSPLIT))
       case default
-         FATAL 'adv_split=',adv_split,' is invalid'
+         FATAL 'adv_split=',split,' is invalid'
          stop
    end select
 
-   select case (adv_scheme)
+   select case (scheme)
       case((UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(FCT))
       case default
-         FATAL 'adv_scheme=',adv_scheme,' is invalid'
+         FATAL 'adv_scheme=',scheme,' is invalid'
          stop
    end select
 
-   select case (adv_split)
+   select case (split)
       case((FULLSPLIT),(HALFSPLIT))
-         select case (adv_scheme)
+         select case (scheme)
             case((UPSTREAM_2DH),(FCT))
-               FATAL 'adv_scheme=',adv_scheme,' not valid for adv_split=',adv_split
+               FATAL 'adv_scheme=',scheme,' not valid for adv_split=',split
                stop
          end select
    end select
 
-   LEVEL3 adv_splits(adv_split)
-   LEVEL3 ' ',adv_schemes(adv_scheme)
+   LEVEL3 trim(adv_splits(split))
+   LEVEL3 ' ',trim(adv_schemes(scheme))
+
+   if (AH .gt. _ZERO_) then
+      LEVEL3 ' with AH=',AH
+   else
+      LEVEL3 ' without diffusion'
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving print_adv_settings()'

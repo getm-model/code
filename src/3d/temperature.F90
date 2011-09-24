@@ -33,9 +33,10 @@
    integer                   :: temp_field_no=1
    character(len=32)         :: temp_name='temp'
    REALTYPE                  :: temp_const=20.
-   integer                   :: temp_hor_adv=1,temp_ver_adv=1
    integer                   :: temp_adv_split=0
-   REALTYPE                  :: temp_AH=-1.
+   integer                   :: temp_hor_adv=1
+   integer                   :: temp_ver_adv=1
+   REALTYPE                  :: temp_AH=-_ONE_
    integer                   :: attenuation_method=0,jerlov=1
    character(len=PATH_MAX)   :: attenuation_file="attenuation.nc"
    REALTYPE                  :: A_const=0.58,g1_const=0.35,g2_const=23.0
@@ -59,7 +60,7 @@
 ! \label{sec-init-temperature}
 !
 ! !INTERFACE:
-   subroutine init_temperature(adv_method)
+   subroutine init_temperature()
 !
 ! !DESCRIPTION:
 !
@@ -75,10 +76,8 @@
 ! temperature advection schemes.
 !
 ! !USES:
+   use advection_3d, only: print_adv_settings_3d
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-   integer, intent(in)                 :: adv_method
 !
 ! !LOCAL VARIABLES:
    integer                   :: k,i,j,n
@@ -86,7 +85,7 @@
    namelist /temp/ &
             temp_method,temp_const,temp_file,                 &
             temp_format,temp_name,temp_field_no,              &
-            temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH, &
+            temp_adv_split,temp_hor_adv,temp_ver_adv,temp_AH, &
             attenuation_method,attenuation_file,jerlov,       &
             A_const,g1_const,g2_const,                        &
             swr_bot_refl_frac, swr_min_bot_frac,              &
@@ -106,66 +105,8 @@
    call init_temperature_field()
 
 !  Sanity checks for advection specifications
-   LEVEL3 'temp_hor_adv=   ',temp_hor_adv
-   LEVEL3 'temp_ver_adv=   ',temp_ver_adv
-   LEVEL3 'temp_adv_split= ',temp_adv_split
-   if(temp_hor_adv .eq. 1) then
-      temp_adv_split=-1
-      if(temp_ver_adv .ne. 1) then
-         LEVEL3 "setting temp_ver_adv to 1 - since temp_hor_adv is 1"
-         temp_ver_adv=1
-      end if
-   end if
-   LEVEL3 "horizontal: ",trim(adv_schemes(temp_hor_adv))
-   LEVEL3 "vertical:   ",trim(adv_schemes(temp_ver_adv))
-
-   select case (temp_adv_split)
-      case (-1)
-      case (0)
-         select case (temp_hor_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "temp_adv_split=0: temp_hor_adv not valid (2-6)")
-
-         end select
-         select case (temp_ver_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "temp_adv_split=0: temp_ver_adv not valid (2-6)")
-         end select
-         LEVEL3 "1D split --> full u, full v, full w"
-      case (1)
-         select case (temp_hor_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "temp_adv_split=1: temp_hor_adv not valid (2-6)")
-         end select
-         select case (temp_ver_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "temp_adv_split=1: temp_ver_adv not valid (2-6)")
-         end select
-         LEVEL3 "1D split --> half u, half v, full w, half v, half u"
-      case (2)
-         select case (temp_hor_adv)
-            case (2,7)
-            case default
-               call getm_error("init_3d()", &
-                    "temp_adv_split=2: temp_hor_adv not valid (2,7)")
-         end select
-         select case (temp_ver_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "temp_adv_split=2: temp_ver_adv not valid (2-6)")
-         end select
-         LEVEL3 "2D-hor, 1D-vert split --> full uv, full w"
-      case default
-   end select
+   LEVEL3 'Advection of temperature'
+   call print_adv_settings_3d(temp_adv_split,temp_hor_adv,temp_ver_adv,temp_AH)
 
    select case (attenuation_method)
       case (0)
@@ -367,8 +308,6 @@ temp_field_no=1
    use parameters,   only: rho_0,cp
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dxv,dyu,dyv,arcd1
-#else
-   use domain, only: dx,dy,ard1
 #endif
    use parameters, only: avmolt
    use getm_timers, only: tic, toc, TIM_TEMP, TIM_MIXANALYSIS
@@ -384,9 +323,6 @@ temp_field_no=1
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc
    REALTYPE                  :: T2(I3DFIELD)
-   REALTYPE                  :: delxu(I2DFIELD),delxv(I2DFIELD)
-   REALTYPE                  :: delyu(I2DFIELD),delyv(I2DFIELD)
-   REALTYPE                  :: area_inv(I2DFIELD)
 ! OMP-NOTE: The pointer declarations is to allow each omp thread to
 !   have its own work storage (over a vertical).
    REALTYPE, POINTER         :: Res(:)
@@ -408,22 +344,6 @@ temp_field_no=1
    call tic(TIM_TEMP)
    rho_0_cpi = _ONE_/(rho_0*cp)
 
-! OMP-NOTE: It is likely not worthwhile to thread memory copy.
-!      BJB 2009-09-25.
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   delxu=dxu
-   delxv=dxv
-   delyu=dyu
-   delyv=dyv
-   area_inv=arcd1
-#else
-   delxu=dx
-   delxv=dx
-   delyu=dy
-   delyv=dy
-   area_inv=ard1
-#endif
-
    if (do_mixing_analysis) then
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
@@ -432,15 +352,21 @@ temp_field_no=1
 !    PARALLEL region (as the various advection schemes have their own regions),
 !    so the overhead of the contruct would be rather large.
       T2 = T**2
-      call do_advection_3d(dt,T2,uu,vv,ww,hun,hvn,ho,hn,    &
-                        delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
-                        temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH)
+      call do_advection_3d(dt,T2,uu,vv,ww,hun,hvn,ho,hn,                     &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                           dxu,dxv,dyu,dyv,arcd1,                            &
+#endif
+                           az,au,av,                                         &
+                           temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
    end if
 
-   call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,   &
-                        delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
+   call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,                      &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                        dxu,dxv,dyu,dyv,arcd1,                            &
+#endif
+                        az,au,av,                                         &
                         temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH)
 
    if (do_mixing_analysis) then
