@@ -507,9 +507,9 @@
    LEVEL3 ' horizontal: ',trim(adv_schemes(hscheme))
 
    if (AH .gt. _ZERO_) then
-      LEVEL3 '            with AH=',AH
+      LEVEL3 '             with AH=',AH
    else
-      LEVEL3 '            without diffusion'
+      LEVEL3 '             without diffusion'
    end if
 
    LEVEL3 ' vertical  : ',trim(adv_schemes(vscheme))
