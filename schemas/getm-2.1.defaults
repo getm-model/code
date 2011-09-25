@@ -192,9 +192,9 @@
 			<vel_depth_method>
 				0
 			</vel_depth_method>
-			<vel_adv_split>
+			<vel_adv_split2d>
 				0
-			</vel_adv_split>
+			</vel_adv_split2d>
 			<vel_adv_scheme>
 				1
 			</vel_adv_scheme>
@@ -269,9 +269,9 @@
 			<bdy3d_tmrlx_ucut>
 				0.02
 			</bdy3d_tmrlx_ucut>
-			<vel_adv_split3d>
+			<vel_adv_split>
 				0
-			</vel_adv_split3d>
+			</vel_adv_split>
 			<vel_hor_adv>
 				1
 			</vel_hor_adv>

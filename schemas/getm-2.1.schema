@@ -226,7 +226,7 @@
 					<option value="2" label="use mixture of mean and minimum values: see code for details"/>
 				</options>
 			</element>
-			<element name="vel_adv_split" type="int" label="advection splitting for depth-averaged velocities">
+			<element name="vel_adv_split2d" type="int" label="advection splitting for depth-averaged velocities">
 				<options>
 					<option value="0" label="no split: one 2D uv step"/>
 					<option value="1" label="full step splitting: u + v"/>
@@ -237,14 +237,14 @@
 				<options>
 					<option value="1" label="upstream (first-order, monotone)"/>
 					<option value="2" label="2DH-upstream with forced monotonicity">
-						<condition type="eq" variable="./vel_adv_split" value="0"/>
+						<condition type="eq" variable="./vel_adv_split2d" value="0"/>
 					</option>
 					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
 					<option value="7" label="2DH-FCT">
-						<condition type="eq" variable="./vel_adv_split" value="0"/>
+						<condition type="eq" variable="./vel_adv_split2d" value="0"/>
 					</option>
 				</options>
 			</element>
@@ -322,7 +322,7 @@
 			<element name="bdy3d_tmrlx_ucut" type="float" label="velocity threshold" unit="m/s" minInclusive="0.0">
 				<condition type="eq" variable="./bdy3d_tmrlx" value="True"/>
 			</element>
-			<element name="vel_adv_split3d" type="int" label="advection splitting for horizontal 3D velocities">
+			<element name="vel_adv_split" type="int" label="advection splitting for horizontal 3D velocities">
 				<options>
 					<option value="0" label="no split: one 3D uvw step"/>
 					<option value="1" label="full step splitting: u + v + w"/>
@@ -335,8 +335,8 @@
 					<option value="1" label="upstream (first-order, monotone)"/>
 					<option value="2" label="2DH-upstream with forced monotonicity">
 						<condition type="or">
-							<condition type="eq" variable="./vel_adv_split3d" value="0"/>
-							<condition type="eq" variable="./vel_adv_split3d" value="3"/>
+							<condition type="eq" variable="./vel_adv_split" value="0"/>
+							<condition type="eq" variable="./vel_adv_split" value="3"/>
 						</condition>
 					</option>
 					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
@@ -345,8 +345,8 @@
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
 					<option value="7" label="2DH-FCT">
 						<condition type="or">
-							<condition type="eq" variable="./vel_adv_split3d" value="0"/>
-							<condition type="eq" variable="./vel_adv_split3d" value="3"/>
+							<condition type="eq" variable="./vel_adv_split" value="0"/>
+							<condition type="eq" variable="./vel_adv_split" value="3"/>
 						</condition>
 					</option>
 				</options>

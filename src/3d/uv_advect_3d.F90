@@ -255,7 +255,7 @@
    use domain, only: dxc,dyc,dxx,dyx,arud1,arvd1
 #endif
    use m2d, only: vel_AH
-   use m3d, only: vel_adv_split3d,vel_hor_adv,vel_ver_adv
+   use m3d, only: vel_adv_split,vel_hor_adv,vel_ver_adv
    use variables_3d, only: dt,uu,vv,ww,hun,hvn,uuEx,vvEx
    use variables_3d, only: fadv3d,uuadv,vvadv,wwadv,huadv,hvadv
    use variables_2d, only: maskadv
@@ -329,7 +329,7 @@
                         dxadv,dxx,dyadv,dyx,arud1,                       &
 #endif
                         au,maskadv,ax,                                   &
-                        vel_hor_adv,vel_ver_adv,vel_adv_split3d,vel_AH,  &
+                        vel_hor_adv,vel_ver_adv,vel_adv_split,vel_AH,  &
                         advres=uuEx)
 !$OMP END MASTER
 !  OMP-NOTE: MASTER does not imply BARRIER
@@ -379,7 +379,7 @@
                         dxx,dxadv,dyx,dyadv,arvd1,                       &
 #endif
                         av,ax,maskadv,                                   &
-                        vel_hor_adv,vel_ver_adv,vel_adv_split3d,vel_AH,  &
+                        vel_hor_adv,vel_ver_adv,vel_adv_split,vel_AH,  &
                         advres=vvEx)
 
    call toc(TIM_UVADV3D)

@@ -147,7 +147,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxc,dyc,dxx,dyx,arud1,arvd1
 #endif
-   use m2d, only: dtm,vel_adv_split,vel_adv_scheme,vel_AH
+   use m2d, only: dtm,vel_adv_split2d,vel_adv_scheme,vel_AH
    use variables_2d, only: UEx,VEx,fadv,Uadv,Vadv,DUadv,DVadv,maskadv
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use variables_2d, only: dxadv,dyadv
@@ -211,7 +211,7 @@
                      dxadv,dxx,dyadv,dyx,arud1,                      &
 #endif
                      au,maskadv,ax,                                  &
-                     vel_adv_scheme,vel_adv_split,vel_AH,advres=UEx)
+                     vel_adv_scheme,vel_adv_split2d,vel_AH,advres=UEx)
 !$OMP END MASTER
 !  OMP-NOTE: MASTER does not imply BARRIER
 !$OMP BARRIER
@@ -250,7 +250,7 @@
                      dxx,dxadv,dyx,dyadv,arvd1,                      &
 #endif
                      av,ax,maskadv,                                  &
-                     vel_adv_scheme,vel_adv_split,vel_AH,advres=VEx)
+                     vel_adv_scheme,vel_adv_split2d,vel_AH,advres=VEx)
 
    call toc(TIM_UVADV)
 #ifdef DEBUG

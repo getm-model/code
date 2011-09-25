@@ -64,7 +64,7 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer         :: vel_adv_split3d=0,vel_hor_adv=1,vel_ver_adv=1
+   integer         :: vel_adv_split=0,vel_hor_adv=1,vel_ver_adv=1
 #ifdef NO_BAROCLINIC
    integer         :: ip_method
 #endif
@@ -116,7 +116,7 @@
              bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,     &
              bdy3d_tmrlx,bdy3d_tmrlx_ucut,              &
              bdy3d_tmrlx_max,bdy3d_tmrlx_min,           &
-             vel_adv_split3d,vel_hor_adv,vel_ver_adv,   &
+             vel_adv_split,vel_hor_adv,vel_ver_adv,   &
              calc_temp,calc_salt,                       &
              avmback,avhback,ip_method,ip_ramp,         &
              vel_check,min_vel,max_vel
@@ -149,7 +149,7 @@
 
 !  Sanity checks for advection specifications
    LEVEL2 'Advection of horizontal 3D velocities'
-   call print_adv_settings_3d(vel_adv_split3d,vel_hor_adv,vel_ver_adv,vel_AH)
+   call print_adv_settings_3d(vel_adv_split,vel_hor_adv,vel_ver_adv,vel_AH)
 
 !  Sanity checks for bdy 3d
    if (bdy3d .and. bdy3d_tmrlx) then

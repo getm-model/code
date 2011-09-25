@@ -21,7 +21,7 @@
    use domain, only: dxu,dxv,dyu,dyv,arcd1
 #endif
    use m2d, only: vel_AH
-   use m3d, only: vel_adv_split3d,vel_hor_adv,vel_ver_adv
+   use m3d, only: vel_adv_split,vel_hor_adv,vel_ver_adv
    use variables_3d, only: tke,eps,dt,uu,vv,ww,hun,hvn,ho,hn
    use variables_3d, only: uuadv,vvadv,wwadv,hoadv,hnadv,huadv,hvadv
    use advection_3d, only: do_advection_3d
@@ -87,14 +87,14 @@
                         dxu,dxv,dyu,dyv,arcd1,                            &
 #endif
                         az,au,av,                                         &
-                        vel_hor_adv,vel_ver_adv,vel_adv_split3d,vel_AH)
+                        vel_hor_adv,vel_ver_adv,vel_adv_split,vel_AH)
 
    call do_advection_3d(dt,eps,uuadv,vvadv,wwadv,huadv,hvadv,hoadv,hnadv, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                         dxu,dxv,dyu,dyv,arcd1,                            &
 #endif
                         az,au,av,                                         &
-                        vel_hor_adv,vel_ver_adv,vel_adv_split3d,vel_AH)
+                        vel_hor_adv,vel_ver_adv,vel_adv_split,vel_AH)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving tke_eps_advect_3d()'

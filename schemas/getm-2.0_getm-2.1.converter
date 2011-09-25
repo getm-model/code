@@ -1,6 +1,42 @@
 <?xml version="1.0" ?>
 <converter source="getm-2.0" target="getm-2.1">
-	<links>
-		<link source="/getm/m3d/vel_adv_split" target="/getm/m3d/vel_adv_split3d"/>
-	</links>
+	<custom>
+		<forward>
+<![CDATA[
+nmls = ('getm/m3d/vel_','getm/temp/temp_','getm/salt/salt_')
+for nml in nmls:
+	adv_split = source[nml+'adv_split'].getValue(usedefault=True)
+	hor_adv = source[nml+'hor_adv'].getValue(usedefault=True)
+	ver_adv = source[nml+'hor_adv'].getValue(usedefault=True)
+	target['nml+'adv_split'].setValue(adv_split+1)
+	if hor_adv = 1:
+		target[nml+'adv_split'].setValue(0)
+		target[nml+'ver_adv'].setValue(1)
+	elif hor_adv = 2:
+		if adv_split in (0,1):
+			target[nml+'hor_adv'].setValue(1)
+	if ver_adv = 2:
+		target[nml+'ver_adv'].setValue(1)
+]]>
+		</forward>
+		<backward>
+<![CDATA[
+nmls = ('getm/m3d/vel_','getm/temp/temp_','getm/salt/salt_')
+for nml in nmls:
+	adv_split = source[nml+'adv_split'].getValue(usedefault=True)
+	hor_adv = source[nml+'hor_adv'].getValue(usedefault=True)
+	ver_adv = source[nml+'hor_adv'].getValue(usedefault=True)
+	if adv_split = 0:
+		if hor_adv in (2,7):
+			target[nml+'adv_split'].setValue(2)
+	else:
+		target[nml+'adv_split'].setValue(adv_split-1)
+	if hor_adv = 1:
+		if adv_split in (1,2):
+			target[nml+'hor_adv'].setValue(2)
+	if ver_adv = 1:
+		target[nml+'ver_adv'].setValue(2)
+]]>
+		</backward>
+	</custom>
 </converter>
