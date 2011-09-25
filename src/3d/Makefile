@@ -78,9 +78,7 @@ OBJ += \
 $(LIB)(eddyviscosity.o)			\
 $(LIB)(slow_bottom_friction.o)		\
 $(LIB)(slow_terms.o)			\
-$(LIB)(adv_upstream_3d.o)		\
 $(LIB)(adv_w_split_3d.o)		\
-$(LIB)(adv_w_split_it_3d.o)		\
 $(LIB)(stresses_3d.o)			\
 $(LIB)(ss_nn.o)				\
 $(LIB)(gotm.o)				\

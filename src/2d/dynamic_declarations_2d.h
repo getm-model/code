@@ -28,7 +28,8 @@
   REALTYPE,dimension(:),  allocatable:: EWbdy,ENbdy,EEbdy,ESbdy   
 
 ! input arrays for do_advection
-  REALTYPE,dimension(:,:),allocatable :: fadv,Uadv,Vadv,DUadv,DVadv,maskadv
+  REALTYPE,dimension(:,:),allocatable :: fadv,Uadv,Vadv,DUadv,DVadv
+  integer,dimension(:,:),allocatable  :: maskadv
 #if defined(SPHERICAL) || defined(CURVILINEAR)
   REALTYPE,dimension(:,:),allocatable :: dxadv,dyadv
 #endif

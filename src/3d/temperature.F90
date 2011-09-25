@@ -18,7 +18,7 @@
 ! !USES:
    use exceptions
    use domain, only: imin,jmin,imax,kmax,jmax,H,az,dry_z
-   use variables_3d, only: T,rad,hn,adv_schemes,kmin,A,g1,g2
+   use variables_3d, only: T,rad,hn,kmin,A,g1,g2
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
 !

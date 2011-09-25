@@ -43,7 +43,8 @@
 #endif
 
 ! input arrays for do_advection_3d
-  REALTYPE,dimension(:,:),allocatable :: fadv3d,uuadv,vvadv,wwadv,hoadv,hnadv,huadv,hvadv
+  REALTYPE,dimension(:,:,:),allocatable :: fadv3d,uuadv,vvadv,wwadv
+  REALTYPE,dimension(:,:,:),allocatable :: hoadv,hnadv,huadv,hvadv
 
 ! 2D fields in 3D domain
   REALTYPE, dimension(:,:), allocatable     :: sseo,ssen,Dn

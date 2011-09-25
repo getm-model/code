@@ -38,13 +38,13 @@
    private
 !
 ! !PUBLIC DATA MEMBERS:
-   public init_advection_3d, do_advection_3d
+   public init_advection_3d, do_advection_3d,print_adv_settings_3d
    integer,public                      :: itersmax_adv=200
 !  Note (KK): hi and adv3d are used only in do_advection_3d
 #ifdef STATIC
-   REALTYPE,dimension(I3DFIELD)        :: hi,adv3d
+   REALTYPE,dimension(I3DFIELD)          :: hi,adv3d
 #else
-   REALTYPE,dimension(:,:),allocatable :: hi,adv3d
+   REALTYPE,dimension(:,:,:),allocatable :: hi,adv3d
 #endif
    integer,public,parameter            :: HVSPLIT=3
    character(len=64),public,parameter  :: adv_splits_3d(0:3) = &
@@ -58,6 +58,20 @@
 !
 !EOP
 !-----------------------------------------------------------------------
+
+   interface
+      subroutine adv_w_split_3d(dt,f,hi,adv3d,ww,ho,                       &
+                                az,au,av,splitfac,scheme,onestep_finalise)
+         use domain, only: imin,imax,jmin,jmax,kmax
+         IMPLICIT NONE
+         REALTYPE,intent(in)                        :: dt,splitfac
+         REALTYPE,dimension(I3DFIELD),intent(in)    :: ww,ho
+         integer,dimension(E2DFIELD),intent(in)     :: az,au,av
+         integer,intent(in)                         :: scheme
+         logical,intent(in),optional                :: onestep_finalise
+         REALTYPE,dimension(I3DFIELD),intent(inout) :: f,hi,adv3d
+      end subroutine adv_w_split_3d
+   end interface
 
    contains
 
@@ -252,7 +266,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxu,dyu,arcd1,                      &
 #endif
-                                   au,_ONE_,hscheme,az,AH,             &
+                                   az,au,av,_ONE_,hscheme,AH,          &
                                    onestep_finalise=.false.)
                end do
 #ifndef SLICE_MODEL
@@ -262,7 +276,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxv,dyv,arcd1,                      &
 #endif
-                                   av,_ONE_,hscheme,az,AH,             &
+                                   az,au,av,_ONE_,hscheme,AH,          &
                                    onestep_finalise=.false.)
                end do
 #endif
@@ -295,11 +309,11 @@
 
             case default
 
-               FATAL 'hscheme=',hscheme,' is invalid'
-               stop
+               stop 'do_advection_3d: hscheme is invalid'
 
          end select
-         call adv_w_split_3d(dt,f,hi,adv3d,ww,az,_ONE_,vscheme, &
+!        Note (KK): here adv_w_split_3d must be called even for kmax=1 !!!
+         call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,az,au,av,_ONE_,vscheme, &
                              onestep_finalise=.true.)
 
       case(FULLSPLIT)
@@ -318,12 +332,12 @@
             call update_3d_halo(f,f,az,imin,jmin,imax,jmax,kmax,D_TAG)
             call wait_halo(D_TAG)
             call toc(TIM_ADV3DH)
-            call adv_w_split_3d(dt,f,hi,adv3d,ww,az,_ONE_,vscheme)
+            call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,az,au,av,_ONE_,vscheme)
          end if
 
       case(HALFSPLIT)
 
-         select case (adv_scheme)
+         select case (hscheme)
 
             case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
@@ -333,7 +347,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxu,dyu,arcd1,                      &
 #endif
-                                   au,_HALF_,hscheme,az,AH)
+                                   az,au,av,_HALF_,hscheme,AH)
                end do
 #ifndef SLICE_MODEL
                call tic(TIM_ADV3DH)
@@ -346,7 +360,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxv,dyv,arcd1,                      &
 #endif
-                                   av,_HALF_,hscheme,az,AH)
+                                   az,au,av,_HALF_,hscheme,AH)
                end do
 #endif
                if (kmax .gt. 1) then
@@ -354,7 +368,7 @@
                   call update_3d_halo(f,f,az,imin,jmin,imax,jmax,kmax,D_TAG)
                   call wait_halo(D_TAG)
                   call toc(TIM_ADV3DH)
-                  call adv_w_split_3d(dt,f,hi,adv3d,ww,az,_ONE_,vscheme)
+                  call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,az,au,av,_ONE_,vscheme)
                end if
 #ifndef SLICE_MODEL
                call tic(TIM_ADV3DH)
@@ -367,7 +381,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxv,dyv,arcd1,                      &
 #endif
-                                   av,_HALF_,hscheme,az,AH)
+                                   az,au,av,_HALF_,hscheme,AH)
                end do
 #endif
                call tic(TIM_ADV3DH)
@@ -380,16 +394,16 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxu,dyu,arcd1,                      &
 #endif
-                                   au,_HALF_,hscheme,az,AH)
+                                   az,au,av,_HALF_,hscheme,AH)
                end do
 
             case((UPSTREAM_2DH),(FCT))
 
-               stop 'do_advection_3d: hscheme=',hscheme,' not valid for split=',split
+               stop 'do_advection_3d: hscheme not valid for split'
 
             case default
 
-               stop 'do_advection_3d: hscheme=',hscheme,' is invalid'
+               stop 'do_advection_3d: hscheme is invalid'
 
          end select
 
@@ -409,12 +423,12 @@
             call update_3d_halo(f,f,az,imin,jmin,imax,jmax,kmax,D_TAG)
             call wait_halo(D_TAG)
             call toc(TIM_ADV3DH)
-            call adv_w_split_3d(dt,f,hi,adv3d,ww,az,_ONE_,vscheme)
+            call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,az,au,av,_ONE_,vscheme)
          end if
 
       case default
 
-         stop 'do_advection_3d: split=',split,' is invalid'
+         stop 'do_advection_3d: split is invalid'
 
    end select
 
@@ -501,7 +515,7 @@
    LEVEL3 ' vertical  : ',trim(adv_schemes(vscheme))
 
    if (split .eq. NOSPLIT) then
-      LEVEL3 '             adv_split=',split,' disables iteration
+      LEVEL3 '             adv_split=',split,' disables iteration'
    else
       if (itersmax_adv .gt. 1) then
          LEVEL3 '             with max ',itersmax_adv,' iterations'

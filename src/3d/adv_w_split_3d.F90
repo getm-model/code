@@ -4,7 +4,9 @@
 ! !IROUTINE:  adv_w_split_3d - 1D z-advection \label{sec-w-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_w_split_3d(dt,f,hi,adv3d,ww,az,splitfac,scheme,onestep_finalise)
+   subroutine adv_w_split_3d(dt,f,hi,adv3d,ww,ho,                       &
+                             az,au,av,splitfac,scheme,onestep_finalise)
+!  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
 !
@@ -48,8 +50,8 @@
 !
 ! !INPUT PARAMETERS:
    REALTYPE,intent(in)                        :: dt,splitfac
-   REALTYPE,dimension(I3DFIELD),intent(in)    :: ww
-   integer,dimension(E2DFIELD),intent(in)     :: az
+   REALTYPE,dimension(I3DFIELD),intent(in)    :: ww,ho
+   integer,dimension(E2DFIELD),intent(in)     :: az,au,av
    integer,intent(in)                         :: scheme
    logical,intent(in),optional                :: onestep_finalise
 !

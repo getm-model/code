@@ -49,7 +49,8 @@
    REALTYPE EWbdy(jmax),ENbdy(imax),EEbdy(jmax),ESbdy(imax)
 
 !  input arrays for do_advection
-   REALTYPE,dimension(E2DFIELD) :: fadv,Uadv,Vadv,DUadv,DVadv,maskadv
+   REALTYPE,dimension(E2DFIELD) :: fadv,Uadv,Vadv,DUadv,DVadv
+   integer,dimension(E2DFIELD)  :: maskadv
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    REALTYPE,dimension(E2DFIELD) :: dxadv,dyadv
 #endif

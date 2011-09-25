@@ -68,7 +68,8 @@
 #endif
 
 ! input arrays for do_advection_3d
-  REALTYPE,dimension(I3DFIELD) :: fadv3d,uuadv,vvadv,wwadv,hoadv,hnadv,huadv,hvadv
+  REALTYPE,dimension(I3DFIELD) :: fadv3d,uuadv,vvadv,wwadv
+  REALTYPE,dimension(I3DFIELD) :: hoadv,hnadv,huadv,hvadv
 
 ! 2D fields in 3D domain
   REALTYPE                             :: sseo(I2DFIELD)

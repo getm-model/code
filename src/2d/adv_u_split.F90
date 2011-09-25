@@ -5,11 +5,11 @@
 ! !IROUTINE:  adv_u_split - 1D x-advection \label{sec-u-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_u_split(dt,f,Di,adv,U,Do,DU,                       &
+   subroutine adv_u_split(dt,f,Di,adv,U,Do,DU,                          &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                          dxu,dyu,arcd1,                             &
+                          dxu,dyu,arcd1,                                &
 #endif
-                          au,splitfac,scheme,az,AH,onestep_finalise)
+                          az,au,av,splitfac,scheme,AH,onestep_finalise)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -65,7 +65,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    REALTYPE,dimension(E2DFIELD),intent(in)    :: dxu,dyu,arcd1
 #endif
-   integer,dimension(E2DFIELD),intent(in)     :: au,az
+   integer,dimension(E2DFIELD),intent(in)     :: az,au,av
    integer,intent(in)                         :: scheme
    logical,intent(in),optional                :: onestep_finalise
 !

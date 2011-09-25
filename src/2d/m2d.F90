@@ -43,7 +43,7 @@
 ! !PUBLIC DATA MEMBERS:
    logical                   :: have_boundaries
    REALTYPE                  :: dtm
-   integer                   :: vel_adv_split=0,vel_adv_scheme=1
+   integer                   :: vel_adv_split=0
    integer                   :: vel_adv_scheme=1
    REALTYPE                  :: vel_AH=-_ONE_,Am=-_ONE_
 !  method for specifying horizontal numerical diffusion coefficient

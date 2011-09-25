@@ -147,7 +147,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxc,dyc,dxx,dyx,arud1,arvd1
 #endif
-   use m2d, only: vel_adv_split,vel_adv_scheme,vel_AH
+   use m2d, only: dtm,vel_adv_split,vel_adv_scheme,vel_AH
    use variables_2d, only: UEx,VEx,fadv,Uadv,Vadv,DUadv,DVadv,maskadv
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use variables_2d, only: dxadv,dyadv

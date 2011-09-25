@@ -145,7 +145,7 @@
 !  input arrays for do_advection
    fadv = _ZERO_ ; Uadv = _ZERO_ ; Vadv = _ZERO_
    DUadv = _ZERO_ ; DVadv = _ZERO_
-   maskadv = _ZERO_
+   maskadv = 0
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    dxadv = _ZERO_ ; dyadv = _ZERO_
 #endif

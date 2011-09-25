@@ -258,9 +258,9 @@
    use m3d, only: vel_adv_split3d,vel_hor_adv,vel_ver_adv
    use variables_3d, only: dt,uu,vv,ww,hun,hvn,uuEx,vvEx
    use variables_3d, only: fadv3d,uuadv,vvadv,wwadv,huadv,hvadv
-   use advection, only: maskadv
+   use variables_2d, only: maskadv
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   use advection, only: dxadv,dyadv
+   use variables_2d, only: dxadv,dyadv
 #endif
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
@@ -294,7 +294,7 @@
             fadv3d(i,j,k) = uu(i,j,k)/hun(i,j,k)
             uuadv(i,j,k) = _HALF_*( uu(i  ,j,k) + uu(i+1,j,k) )
             vvadv(i,j,k) = _HALF_*( vv(i  ,j,k) + vv(i+1,j,k) )
-            wwadv(i,j,k) = _HALF_*( ww(i+1,j,k) + ww(i  ,j,k) ) )
+            wwadv(i,j,k) = _HALF_*( ww(i+1,j,k) + ww(i  ,j,k) )
 !           Note (KK): hun only valid until imax+1
 !                      therefore huadv only valid until imax
             huadv(i,j,k) = _HALF_*( hun(i  ,j,k) + hun(i+1,j,k) )
