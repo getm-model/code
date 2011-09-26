@@ -1,5 +1,5 @@
 ! Remember to update this value if you add more 3D arrays.
-  integer,parameter                    :: n3d_fields=29
+  integer,parameter                    :: n3d_fields=37
 
 ! Number of vertical layers in z,u,v columns
   integer, dimension(:,:), allocatable:: kmin,kumin,kvmin

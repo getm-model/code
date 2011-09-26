@@ -45,7 +45,8 @@
    REALTYPE                  :: dtm
    integer                   :: vel_adv_split2d=0
    integer                   :: vel_adv_scheme=1
-   REALTYPE                  :: vel_AH=-_ONE_,Am=-_ONE_
+   REALTYPE                  :: vel_AH=-_ONE_
+   REALTYPE                  :: Am=-_ONE_
 !  method for specifying horizontal numerical diffusion coefficient
 !     (0=const, 1=from named nc-file)
    integer                   :: An_method=0
