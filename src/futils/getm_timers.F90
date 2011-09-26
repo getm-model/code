@@ -54,8 +54,6 @@
    integer, parameter :: TIM_STRESSES3DH = 45   ! 3d stresses_3d - halo part only
    integer, parameter :: TIM_SLOWTERMS   = 46   ! 3d slow_terms
    integer, parameter :: TIM_SLOWBFRICT  = 48   ! 3d slow_bottom_friction
-   integer, parameter :: TIM_SLOWADV     = 50   ! 3d slow_advection
-   integer, parameter :: TIM_SLOWDIFF    = 51   ! 3d slow_diffusion
    integer, parameter :: TIM_TEMP        = 52   ! 3d do_temperature
    integer, parameter :: TIM_TEMPH       = 53   ! 3d temperature halo (presently in m3d/do_integrate_3d)
    integer, parameter :: TIM_SALT        = 54   ! 3d do_salinity
@@ -202,12 +200,8 @@
    timernames(TIM_STRESSES3D)  = 'stresses_3d'
    timernames(TIM_SLOWTERMS)   = 'slow_terms'
    timernames(TIM_SLOWBFRICT)  = 'slow_bottom_friction'
-   timernames(TIM_SLOWADV)     = 'slow_advection'
-   timernames(TIM_SLOWDIFF)    = 'slow_diffusion'
    timernames(TIM_TEMP)        = 'do_temperature'
-   timernames(TIM_TEMPH)       = ' temperature-halo'
    timernames(TIM_SALT)        = 'do_salinity'
-   timernames(TIM_SALTH)       = ' salinity-halo'
    timernames(TIM_COORDS)      = 'coordinates'
    timernames(TIM_INTPRESS)    = 'do_internal_pressure'
    timernames(TIM_STARTMCR)    = 'start_macro'
@@ -227,6 +221,8 @@
    timernames(TIM_VVMOMENTUMH) = ' vv_momentum_3d-halo'
    timernames(TIM_WWMOMENTUMH) = ' ww_momentum_3d-halo'
    timernames(TIM_STRESSES3DH) = ' stresses_3d-halo'
+   timernames(TIM_TEMPH)       = ' temperature-halo'
+   timernames(TIM_SALTH)       = ' salinity-halo'
    timernames(TIM_ADV3DH)      = ' do_advection_3d-halo'
    timernames(TIM_HALO3D)      = ' sum do_halo_3d'
 #endif

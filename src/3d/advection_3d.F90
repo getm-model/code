@@ -268,9 +268,7 @@
 #endif
                                    az,au,av,_ONE_,hscheme,AH,          &
                                    onestep_finalise=.false.)
-               end do
 #ifndef SLICE_MODEL
-               do k=1,kmax
                   call adv_v_split(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k), &
                                    vv(:,:,k),ho(:,:,k),hv(:,:,k),      &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -278,8 +276,8 @@
 #endif
                                    az,au,av,_ONE_,hscheme,AH,          &
                                    onestep_finalise=.false.)
-               end do
 #endif
+               end do
 
             case (UPSTREAM_2DH)
 
