@@ -158,9 +158,9 @@
 !                      (advection/diffusion of tracers near open bdys already included in former case)
 !                      outflow condition implies no advection across open bdy
             if (az(i,j) .eq. 2) then ! eastern open bdy (az(i,j).ne.1.and.az(i+1,j).ne.1.and.au(i-1,j).eq.1)
-               flux(i,j) = AH*DU(i-1,j)*(f(i  ,j)-f(i-1,j))/DXUIM1
+               flux(i,j) = AH*DU(i-1,j)*(f(i  ,j)-f(i-1,j))/DXUIM1 ! not used for i=imin-1
             else ! western open bdy (az(i,j).ne.1.and.az(i+1,j).ne.1.and.au(i+1,j).eq.1)
-               flux(i,j) = AH*DU(i+1,j)*(f(i+2,j)-f(i+1,j))/DXUIP1
+               flux(i,j) = AH*DU(i+1,j)*(f(i+2,j)-f(i+1,j))/DXUIP1 ! not used for i=imax
             end if
          else
             flux(i,j) = _ZERO_
