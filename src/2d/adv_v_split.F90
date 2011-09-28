@@ -85,10 +85,10 @@
                fc = f(i,j  )               ! central
                if (scheme .ne. UPSTREAM) then
                   cfl = V(i,j)/DV(i,j)*dt/DYV
-                  if (av(i,j-1) .gt. 0) then
-                     fu = f(i,j-1)         ! upstream
-                  else
+                  if (av(i,j-1) .eq. 0) then
                      fu = f(i,j  )
+                  else
+                     fu = f(i,j-1)         ! upstream
                   end if
                   fd = f(i,j+1)            ! downstream
                   if (abs(fd-fc) .gt. 1.d-10) then
@@ -101,10 +101,10 @@
                fc = f(i,j+1)               ! central
                if (scheme .ne. UPSTREAM) then
                   cfl = -V(i,j)/DV(i,j)*dt/DYV
-                  if (av(i,j+1) .gt. 0) then
-                     fu = f(i,j+2)         ! upstream
-                  else
+                  if (av(i,j+1) .eq. 0) then
                      fu = f(i,j+1)
+                  else
+                     fu = f(i,j+2)         ! upstream
                   end if
                   fd = f(i,j  )            ! downstream
                   if (abs(fc-fd) .gt. 1.d-10) then

@@ -92,7 +92,7 @@
 
 ! Calculating u-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax
+   do j=jmin-1,jmax+1
       do i=imin-1,imax
          if (au(i,j).eq.1 .or. (au(i,j).eq.2 .and. (az(i,j).eq.1 .or. az(i+1,j).eq.1))) then
 !           Note (KK): exclude advection/diffusion of normal velocity at open bdys
@@ -100,10 +100,10 @@
                fc = f(i  ,j)               ! central
                if (scheme .ne. UPSTREAM) then
                   cfl = U(i,j)/DU(i,j)*dt/DXU
-                  if (au(i-1,j) .gt. 0) then
-                     fu = f(i-1,j)         ! upstream
-                  else
+                  if (au(i-1,j) .eq. 0) then
                      fu = f(i  ,j)
+                  else
+                     fu = f(i-1,j)         ! upstream
                   end if
                   fd = f(i+1,j)            ! downstream
                   if (abs(fd-fc) .gt. 1.d-10) then
@@ -116,10 +116,10 @@
                fc = f(i+1,j)               ! central
                if (scheme .ne. UPSTREAM) then
                   cfl = -U(i,j)/DU(i,j)*dt/DXU
-                  if (au(i+1,j) .gt. 0) then
-                     fu = f(i+2,j)         ! upstream
-                  else
+                  if (au(i+1,j) .eq. 0) then
                      fu = f(i+1,j)
+                  else
+                     fu = f(i+2,j)         ! upstream
                   end if
                   fd = f(i  ,j)            ! downstream
                   if (abs(fc-fd) .gt. 1.d-10) then
@@ -171,7 +171,7 @@
 
 !  Doing the u-advection step
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax
+   do j=jmin-1,jmax+1
       do i=imin,imax
          if (az(i,j).eq.1 .or. (AH.gt._ZERO_ .and. az(i,j).eq.2 .and. (au(i-1,j).eq.1 .or. au(i,j).eq.1))) then
 !           Note (KK): exclude advection/diffusion of tracers at open bdy cells
