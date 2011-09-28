@@ -405,9 +405,7 @@
    end select
 !  The vertical velocity to be used in the advection routine for spm is ww-ws
 !  In drying grid boxes, the settling velocity is reduced.
-!  Note (KK): although in the present implementation of adv_w_split
-!             wwadv(:,:,kmax) is not accessed, it might be a good idea to
-!             assign it
+!  Note (KK): why is wwadv(:,:,0|kmax) not assigned (spm_ws .ne. _ZERO_) ?!
    do i=imin,imax
       do j=jmin,jmax
          do k=1,kmax-1
