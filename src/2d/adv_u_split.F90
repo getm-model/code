@@ -99,8 +99,8 @@
             if (U(i,j) .gt. _ZERO_) then
                fc = f(i  ,j)               ! central
                if (scheme .ne. UPSTREAM) then
-                  cfl = U(i,j)/DU(i,j)*dt/DXU
-                  if (au(i-1,j) .eq. 0) then
+                  cfl = splitfac*U(i,j)/DU(i,j)*dt/DXU
+                  if (az(i-1,j) .eq. 0) then
                      fu = f(i  ,j)
                   else
                      fu = f(i-1,j)         ! upstream
@@ -115,8 +115,8 @@
             else
                fc = f(i+1,j)               ! central
                if (scheme .ne. UPSTREAM) then
-                  cfl = -U(i,j)/DU(i,j)*dt/DXU
-                  if (au(i+1,j) .eq. 0) then
+                  cfl = -splitfac*U(i,j)/DU(i,j)*dt/DXU
+                  if (az(i+2,j) .eq. 0) then
                      fu = f(i+1,j)
                   else
                      fu = f(i+2,j)         ! upstream

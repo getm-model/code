@@ -76,14 +76,19 @@
       do j=jmin,jmax
          do i=imin,imax
 #endif
-            if (k .lt. kmin(i,j)) then
-               ww(i,j,kmin(i,j))= _ZERO_
-            else
-               ww(i,j,k)=ww(i,j,k-1)                                   &
-                        -(hn(i,j,k)-ho(i  ,j  ,k))*dtm1 &
-                        -((uu(i,j,k)*DYU-uu(i-1,j  ,k)*DYUIM1) &
-                        +(vv(i,j,k)*DXV-vv(i  ,j-1,k)*DXVJM1))*ARCD1
-           end if
+            if (az(i,j) .eq. 1) then
+!              Note (KK): we need ww(az=2) for wwadv in uv_advect_3d
+!              KK-TODO: what is ww in open bdy cells ???
+!                       _ZERO_ or mirror ???
+               if (k .lt. kmin(i,j)) then
+                  ww(i,j,kmin(i,j))= _ZERO_
+               else
+                  ww(i,j,k)=ww(i,j,k-1)                                   &
+                           -(hn(i,j,k)-ho(i  ,j  ,k))*dtm1 &
+                           -((uu(i,j,k)*DYU-uu(i-1,j  ,k)*DYUIM1) &
+                           +(vv(i,j,k)*DXV-vv(i  ,j-1,k)*DXVJM1))*ARCD1
+               end if
+            end if
          end do
       end do
 !$OMP END DO

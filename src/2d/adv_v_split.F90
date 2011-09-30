@@ -78,14 +78,14 @@
 
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-1,jmax
-      do i=imin,imax
+      do i=imin-1,imax+1
          if (av(i,j).eq.1 .or. (av(i,j).eq.2 .and. (az(i,j).eq.1 .or. az(i,j+1).eq.1))) then
 !           Note (KK): exclude advection/diffusion of normal velocity at open bdys
             if (V(i,j) .gt. _ZERO_) then
                fc = f(i,j  )               ! central
                if (scheme .ne. UPSTREAM) then
-                  cfl = V(i,j)/DV(i,j)*dt/DYV
-                  if (av(i,j-1) .eq. 0) then
+                  cfl = splitfac*V(i,j)/DV(i,j)*dt/DYV
+                  if (az(i,j-1) .eq. 0) then
                      fu = f(i,j  )
                   else
                      fu = f(i,j-1)         ! upstream
@@ -100,8 +100,8 @@
             else
                fc = f(i,j+1)               ! central
                if (scheme .ne. UPSTREAM) then
-                  cfl = -V(i,j)/DV(i,j)*dt/DYV
-                  if (av(i,j+1) .eq. 0) then
+                  cfl = -splitfac*V(i,j)/DV(i,j)*dt/DYV
+                  if (az(i,j+2) .eq. 0) then
                      fu = f(i,j+1)
                   else
                      fu = f(i,j+2)         ! upstream
@@ -157,7 +157,7 @@
 !  Doing the v-advection step
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
-      do i=imin,imax
+      do i=imin-1,imax+1
          if (az(i,j).eq.1 .or. (AH.gt._ZERO_ .and. az(i,j).eq.2 .and. (av(i,j-1).eq.1 .or. av(i,j).eq.1))) then
 !           Note (KK): exclude advection/diffusion of tracers at open bdy cells
 !                      special handling for advection/diffusion of normal velocity at open bdys

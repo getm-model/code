@@ -326,10 +326,6 @@
                               Dires=hi(:,:,k),advres=adv3d(:,:,k))
          end do
          if (kmax .gt. 1) then
-            call tic(TIM_ADV3DH)
-            call update_3d_halo(f,f,az,imin,jmin,imax,jmax,kmax,D_TAG)
-            call wait_halo(D_TAG)
-            call toc(TIM_ADV3DH)
             call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,az,au,av,_ONE_,vscheme)
          end if
 
@@ -348,10 +344,14 @@
                                    az,au,av,_HALF_,hscheme,AH)
                end do
 #ifndef SLICE_MODEL
-               call tic(TIM_ADV3DH)
-               call update_3d_halo(f,f,az,imin,jmin,imax,jmax,kmax,D_TAG)
-               call wait_halo(D_TAG)
-               call toc(TIM_ADV3DH)
+               if (hscheme .ne. UPSTREAM) then
+!                 we need to update f(imin:imax,jmin-HALO)
+!                 we need to update f(imin:imax,jmax+HALO)
+                  call tic(TIM_ADV3DH)
+                  call update_3d_halo(f,f,az,imin,jmin,imax,jmax,kmax,D_TAG)
+                  call wait_halo(D_TAG)
+                  call toc(TIM_ADV3DH)
+               end if
                do k=1,kmax
                   call adv_v_split(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k), &
                                    vv(:,:,k),ho(:,:,k),hv(:,:,k),      &
@@ -362,17 +362,20 @@
                end do
 #endif
                if (kmax .gt. 1) then
-                  call tic(TIM_ADV3DH)
-                  call update_3d_halo(f,f,az,imin,jmin,imax,jmax,kmax,D_TAG)
-                  call wait_halo(D_TAG)
-                  call toc(TIM_ADV3DH)
                   call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,az,au,av,_ONE_,vscheme)
                end if
-#ifndef SLICE_MODEL
+!              if (hscheme .eq. UPSTREAM) then
+!                 we need to update f(imin-1:imax+1,jmin-1)
+!                 we need to update f(imin-1:imax+1,jmax+1)
+!              else
+!                 we need to update f(imin:imax,jmin-HALO:jmin-1)
+!                 we need to update f(imin:imax,jmax+1:jmax+HALO)
+!              end if
                call tic(TIM_ADV3DH)
                call update_3d_halo(f,f,az,imin,jmin,imax,jmax,kmax,D_TAG)
                call wait_halo(D_TAG)
                call toc(TIM_ADV3DH)
+#ifndef SLICE_MODEL
                do k=1,kmax
                   call adv_v_split(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k), &
                                    vv(:,:,k),ho(:,:,k),hv(:,:,k),      &
@@ -382,10 +385,14 @@
                                    az,au,av,_HALF_,hscheme,AH)
                end do
 #endif
-               call tic(TIM_ADV3DH)
-               call update_3d_halo(f,f,az,imin,jmin,imax,jmax,kmax,D_TAG)
-               call wait_halo(D_TAG)
-               call toc(TIM_ADV3DH)
+               if (hscheme .ne. UPSTREAM) then
+!                 we need to update f(imin-HALO,jmin:jmax)
+!                 we need to update f(imax+HALO,jmin:jmax)
+                  call tic(TIM_ADV3DH)
+                  call update_3d_halo(f,f,az,imin,jmin,imax,jmax,kmax,D_TAG)
+                  call wait_halo(D_TAG)
+                  call toc(TIM_ADV3DH)
+               end if
                do k=1,kmax
                   call adv_u_split(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k), &
                                    uu(:,:,k),ho(:,:,k),hu(:,:,k),      &
@@ -417,10 +424,6 @@
                               Dires=hi(:,:,k),advres=adv3d(:,:,k))
          end do
          if (kmax .gt. 1) then
-            call tic(TIM_ADV3DH)
-            call update_3d_halo(f,f,az,imin,jmin,imax,jmax,kmax,D_TAG)
-            call wait_halo(D_TAG)
-            call toc(TIM_ADV3DH)
             call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,az,au,av,_ONE_,vscheme)
          end if
 

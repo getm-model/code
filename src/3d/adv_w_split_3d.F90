@@ -113,7 +113,7 @@
 !              estimate number of iterations by maximum cfl number in water column
                cfl = _ZERO_
                do k=1,kmax-1
-                  cfl = max(cfl,abs(ww(i,j,k))*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1))))
+                  cfl = max(cfl,abs(splitfac*ww(i,j,k))*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1))))
                end do
                !iters =  min(200,int(cfl)+1) !original
                iters = min(max(1,ceiling(cfl)),itersmax_adv)
@@ -125,11 +125,11 @@
                   if (ww(i,j,k) .gt. _ZERO_) then
                      fc = f(i,j,k  )               ! central
                      if (scheme .ne. UPSTREAM) then
-                        cfl = itersm1*ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
-                        if (k .gt. 1) then
-                           fu = f(i,j,k-1)         ! upstream
+                        cfl = itersm1*splitfac*ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
+                        if (k .eq. 1) then
+                           fu = f(i,j,1)
                         else
-                           fu = f(i,j,k)
+                           fu = f(i,j,k-1)         ! upstream
                         end if
                         fd = f(i,j,k+1)            ! downstream
                         if (abs(fd-fc) .gt. 1.d-10) then
@@ -141,11 +141,11 @@
                   else
                      fc = f(i,j,k+1)               ! central
                      if (scheme .ne. UPSTREAM) then
-                        cfl = -itersm1*ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
-                        if (k .lt. kmax-1) then
-                           fu = f(i,j,k+2)         ! upstream
+                        cfl = -itersm1*splitfac*ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
+                        if (k .eq. kmax-1) then
+                           fu = f(i,j,kmax)
                         else
-                           fu = f(i,j,k+1)
+                           fu = f(i,j,k+2)         ! upstream
                         end if
                         fd = f(i,j,k  )            ! downstream
                         if (abs(fc-fd) .gt. 1.d-10) then

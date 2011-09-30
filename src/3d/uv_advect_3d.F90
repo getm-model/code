@@ -262,6 +262,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use variables_2d, only: dxadv,dyadv
 #endif
+   use advection, only: UPSTREAM
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
    use getm_timers, only: tic,toc,TIM_UVADV3D,TIM_UVADV3DH
@@ -319,10 +320,13 @@
 !$OMP END DO
 
 !$OMP MASTER
-   call tic(TIM_UVADV3DH)
-   call update_3d_halo(fadv3d,fadv3d,au,imin,jmin,imax,jmax,kmax,U_TAG)
-   call wait_halo(U_TAG)
-   call toc(TIM_UVADV3DH)
+   if (vel_hor_adv .ne. UPSTREAM) then
+!     we need to update fadv3d(imax+HALO,jmin-HALO:jmax+HALO)
+      call tic(TIM_UVADV3DH)
+      call update_3d_halo(fadv3d,fadv3d,au,imin,jmin,imax,jmax,kmax,U_TAG)
+      call wait_halo(U_TAG)
+      call toc(TIM_UVADV3DH)
+   end if
 
    call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hun,hun, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -369,10 +373,13 @@
 !$OMP END DO
 !$OMP END PARALLEL
 
-   call tic(TIM_UVADV3DH)
-   call update_3d_halo(fadv3d,fadv3d,av,imin,jmin,imax,jmax,kmax,V_TAG)
-   call wait_halo(V_TAG)
-   call toc(TIM_UVADV3DH)
+   if (vel_hor_adv .ne. UPSTREAM) then
+!     we need to update fadv3d(imin-HALO:imax+HALO,jmax+HALO)
+      call tic(TIM_UVADV3DH)
+      call update_3d_halo(fadv3d,fadv3d,av,imin,jmin,imax,jmax,kmax,V_TAG)
+      call wait_halo(V_TAG)
+      call toc(TIM_UVADV3DH)
+   end if
 
    call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hvn,hvn, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)

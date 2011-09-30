@@ -274,7 +274,6 @@
 #else
                                 onestep_finalise=.false.)
 #endif
-
 #ifndef SLICE_MODEL
                call adv_v_split(dt,f,Di,adv,V,Do,DV,      &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -317,7 +316,6 @@
                                 dxu,dyu,arcd1,            &
 #endif
                                 az,au,av,_ONE_,scheme,AH)
-
 #ifndef SLICE_MODEL
                if (scheme .ne. UPSTREAM) then
 !                 we need to update f(imin:imax,jmin-HALO)
@@ -355,7 +353,6 @@
                                 dxu,dyu,arcd1,             &
 #endif
                                 az,au,av,_HALF_,scheme,AH)
-
 #ifndef SLICE_MODEL
                if (scheme .ne. UPSTREAM) then
 !                 we need to update f(imin:imax,jmin-HALO)
@@ -371,7 +368,6 @@
 #endif
                                 az,au,av,_ONE_,scheme,AH)
 #endif
-
 !              if (scheme .eq. UPSTREAM) then
 !                 we need to update f(imin-1,jmin:jmax)
 !                 we need to update f(imax+1,jmin:jmax)

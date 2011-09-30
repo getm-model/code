@@ -152,7 +152,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use variables_2d, only: dxadv,dyadv
 #endif
-   use advection, only: do_advection
+   use advection, only: UPSTREAM,do_advection
    use halo_zones, only: update_2d_halo,wait_halo,U_TAG,V_TAG
    use getm_timers, only: tic,toc,TIM_UVADV,TIM_UVADVH
 !$ use omp_lib
@@ -201,10 +201,13 @@
    end do
 !$OMP END DO
 !$OMP MASTER
-   call tic(TIM_UVADVH)
-   call update_2d_halo(fadv,fadv,au,imin,jmin,imax,jmax,U_TAG)
-   call wait_halo(U_TAG)
-   call toc(TIM_UVADVH)
+   if (vel_adv_scheme .ne. UPSTREAM) then
+!     we need to update fadv(imax+HALO,jmin-HALO:jmax+HALO)
+      call tic(TIM_UVADVH)
+      call update_2d_halo(fadv,fadv,au,imin,jmin,imax,jmax,U_TAG)
+      call wait_halo(U_TAG)
+      call toc(TIM_UVADVH)
+   end if
 
    call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DU,DU,           &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -240,10 +243,13 @@
 !$OMP END DO
 !$OMP END PARALLEL
 
-   call tic(TIM_UVADVH)
-   call update_2d_halo(fadv,fadv,av,imin,jmin,imax,jmax,V_TAG)
-   call wait_halo(V_TAG)
-   call toc(TIM_UVADVH)
+   if (vel_adv_scheme .ne. UPSTREAM) then
+!     we need to update fadv(imin-HALO:imax+HALO,jmax+HALO)
+      call tic(TIM_UVADVH)
+      call update_2d_halo(fadv,fadv,av,imin,jmin,imax,jmax,V_TAG)
+      call wait_halo(V_TAG)
+      call toc(TIM_UVADVH)
+   end if
 
    call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DV,DV,           &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
