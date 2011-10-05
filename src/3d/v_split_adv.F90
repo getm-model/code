@@ -120,7 +120,7 @@
                do i=imin,imax
                   if (av(i,j) .gt. 0) then
                      if (vv(i,j,k) .gt. _ZERO_) then
-                        c=vv(i,j,k)/hvn(i,j,k)*dt/delyv(i,j)
+                        c=splitfac*vv(i,j,k)/hvn(i,j,k)*dt/delyv(i,j)
                         if (av(i,j-1) .gt. 0) then
                            fu=f(i,j-1,k)         ! upstream
                         else
@@ -134,7 +134,7 @@
                            r=(fc-fu)*1.d10
                         end if
                      else
-                        c=-vv(i,j,k)/hvn(i,j,k)*dt/delyv(i,j)
+                        c=-splitfac*vv(i,j,k)/hvn(i,j,k)*dt/delyv(i,j)
                         if (av(i,j+1) .gt. 0) then
                            fu=f(i,j+2,k)         ! upstream
                         else
