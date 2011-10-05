@@ -39,19 +39,19 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_advection_3d, do_advection_3d,print_adv_settings_3d
-   integer,public                      :: itersmax_adv=200
+   integer,public                        :: itersmax_adv=200
 !  Note (KK): hi and adv3d are used only in do_advection_3d
 #ifdef STATIC
    REALTYPE,dimension(I3DFIELD)          :: hi,adv3d
 #else
    REALTYPE,dimension(:,:,:),allocatable :: hi,adv3d
 #endif
-   integer,public,parameter            :: HVSPLIT=3
-   character(len=64),public,parameter  :: adv_splits_3d(0:3) = &
-      (/"no split: one 3D uvw step",                           &
-        "full step splitting: u + v + w",                      &
-        "half step splitting: u/2 + v/2 + w + v/2 + u/2",      &
-        "hor/ver splitting: uv + w"/)
+   integer,public,parameter              :: HVSPLIT=3
+   character(len=64),public,parameter    :: adv_splits_3d(0:3) = &
+             (/"no split: one 3D uvw step",                      &
+               "full step splitting: u + v + w",                 &
+               "half step splitting: u/2 + v/2 + w + v/2 + u/2", &
+               "hor/ver splitting: uv + w"/)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard

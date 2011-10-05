@@ -50,9 +50,9 @@
 #endif
    integer,public,parameter           :: NOSPLIT=0,FULLSPLIT=1,HALFSPLIT=2
    character(len=64),public,parameter :: adv_splits(0:2) = &
-     (/"no split: one 2D uv step",                         &
-       "full step splitting: u + v",                       &
-       "half step splitting: u/2 + v + u/2"/)
+                  (/"no split: one 2D uv step",            &
+                    "full step splitting: u + v",          &
+                    "half step splitting: u/2 + v + u/2"/)
    integer,public,parameter           :: UPSTREAM=1,UPSTREAM_2DH=2,P2=3
    integer,public,parameter           :: SUPERBEE=4,MUSCL=5,P2_PDM=6,FCT=7
    character(len=64),public,parameter :: adv_schemes(7) =  &

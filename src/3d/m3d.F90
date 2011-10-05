@@ -116,7 +116,7 @@
              bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,     &
              bdy3d_tmrlx,bdy3d_tmrlx_ucut,              &
              bdy3d_tmrlx_max,bdy3d_tmrlx_min,           &
-             vel_adv_split,vel_hor_adv,vel_ver_adv,   &
+             vel_adv_split,vel_hor_adv,vel_ver_adv,     &
              calc_temp,calc_salt,                       &
              avmback,avhback,ip_method,ip_ramp,         &
              vel_check,min_vel,max_vel
