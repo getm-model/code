@@ -229,9 +229,7 @@
             dRx(i,j)=buoy(i,j,k)-buoy(i,j-1,k)
          end do
       end do
-#ifdef GETM_OMP
 !$OMP END DO
-#endif
 
 #ifdef GETM_OMP
 !$OMP DO SCHEDULE(RUNTIME)
@@ -257,9 +255,7 @@
             end if
          end do
       end do
-#ifdef GETM_OMP
 !$OMP END DO
-#endif
 
 #ifdef GETM_OMP
 !$OMP DO SCHEDULE(RUNTIME)
@@ -284,9 +280,7 @@
             end if
          end do
       end do
-#ifdef GETM_OMP
 !$OMP END DO
-#endif
    end do
 
 !$OMP END PARALLEL
