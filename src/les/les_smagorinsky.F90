@@ -43,8 +43,11 @@
 !  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
-   REALTYPE                                          :: rate
-   integer                                           :: i,j
+   REALTYPE :: dudx
+#ifndef SLICE_MODEL
+   REALTYPE :: dvdy
+#endif
+   integer  :: i,j
 
 !EOP
 !-----------------------------------------------------------------------
@@ -95,11 +98,23 @@
          do i=imin-1,imax
             if (ax(i,j) .eq. 1) then
 !              interpolate dudxX and dvdyX
-!              KK-TODO: Why dudxX not 0 across W/E open bdys?
-!                       Why dvdyX not 0 across N/S open bdys?
-               AmX(i,j) =  (_HALF_*(dudxV(i,j) + dudxV(i+1,j  )))**2 &
+               if (av(i,j).eq.3 .or. av(i+1,j).eq.3) then
+!                 Note (KK): western/eastern open bdy
+                  dudx = _ZERO_
+               else
+                  dudx = _HALF_*(dudxV(i,j) + dudxV(i+1,j  ))
+               end if
 #ifndef SLICE_MODEL
-                         + (_HALF_*(dvdyU(i,j) + dvdyU(i  ,j+1)))**2 &
+               if (au(i,j).eq.3 .or. au(i,j+1).eq.3) then
+!                 Note (KK): northern/southern open bdy
+                  dvdy = _ZERO_
+               else
+                  dvdy = _HALF_*(dvdyU(i,j) + dvdyU(i  ,j+1))
+               end if
+#endif
+               AmX(i,j) =  dudx**2 &
+#ifndef SLICE_MODEL
+                         + dvdy**2 &
 #endif
                          + _HALF_*shearX(i,j)**2
                AmX(i,j) = (smag_const**2)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
@@ -167,11 +182,11 @@
             if(au(i,j).eq.1 .or. au(i,j).eq.2) then
 !              interpolate dudxU (see deformation_rates)
                if (au(i,j) .eq. 1) then
-                  rate = _HALF_*(dudxC(i,j) + dudxC(i+1,j))
+                  dudx = _HALF_*(dudxC(i,j) + dudxC(i+1,j))
                else
-                  rate = _ZERO_
+                  dudx = _ZERO_
                end if
-               AmU(i,j) =  rate**2                                     &
+               AmU(i,j) =  dudx**2                                     &
 #ifndef SLICE_MODEL
                          + dvdyU(i,j)**2                               &
 #endif
@@ -195,12 +210,12 @@
             if(av(i,j).eq.1 .or. av(i,j).eq.2) then
 !              interpolate dvdyV and shearV (see deformation_rates)
                if (av(i,j) .eq. 1) then
-                  rate = _HALF_*(dvdyC(i,j) + dvdyC(i,j+1))
+                  dvdy = _HALF_*(dvdyC(i,j) + dvdyC(i,j+1))
                else
-                  rate = _ZERO_
+                  dvdy = _ZERO_
                end if
                AmV(i,j) =  dudxV(i,j)**2                                    &
-                         + rate**2                                          &
+                         + dvdy**2                                          &
                          + _HALF_*(_HALF_*(shearX(i-1,j) + shearX(i,j)))**2
                AmV(i,j) = (smag_const**2)*DXV*DYV*sqrt(_TWO_*AmV(i,j))
             end if
