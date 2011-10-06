@@ -84,7 +84,7 @@
 #endif
    use domain, only: H,az
    use parameters, only: rho_0,g
-   use variables_3d, only: hn,taub,adv_schemes,spm,spm_ws,spm_pool
+   use variables_3d, only: hn,taub,spm,spm_ws,spm_pool
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
    IMPLICIT NONE
 !
