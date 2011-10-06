@@ -76,6 +76,7 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
+   logical            :: use_limiter
    integer            :: i,j
    REALTYPE           :: Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd
    REALTYPE,parameter :: one6th=_ONE_/6
@@ -88,7 +89,7 @@
    write(debug,*) 'adv_u_split() # ',Ncall
 #endif
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(use_limiter,i,j,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
 
 ! Calculating u-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
@@ -98,13 +99,12 @@
 !           Note (KK): exclude advection/diffusion of normal velocity at open bdys
             if (U(i,j) .gt. _ZERO_) then
                fc = f(i  ,j)               ! central
-               if (scheme .ne. UPSTREAM) then
+!              Note (KK): also fall back to upstream near boundaries
+               use_limiter = ( scheme.ne.UPSTREAM .and.
+                               (au(i-1,j).eq.1 .or. (au(i-1,j).eq.2 .and. az(i,j).eq.1)) )
+               if (use_limiter) then
                   cfl = splitfac*U(i,j)/DU(i,j)*dt/DXU
-                  if (az(i-1,j) .eq. 0) then
-                     fu = f(i  ,j)
-                  else
-                     fu = f(i-1,j)         ! upstream
-                  end if
+                  fu = f(i-1,j)            ! upstream
                   fd = f(i+1,j)            ! downstream
                   if (abs(fd-fc) .gt. 1.d-10) then
                      r = (fc-fu)/(fd-fc)   ! slope ratio
@@ -114,13 +114,11 @@
                end if
             else
                fc = f(i+1,j)               ! central
-               if (scheme .ne. UPSTREAM) then
+               use_limiter = ( scheme.ne.UPSTREAM .and.
+                               (au(i+1,j).eq.1 .or. (au(i+1,j).eq.2 .and. az(i+1,j).eq.1)) )
+               if (use_limiter) then
                   cfl = -splitfac*U(i,j)/DU(i,j)*dt/DXU
-                  if (az(i+2,j) .eq. 0) then
-                     fu = f(i+1,j)
-                  else
-                     fu = f(i+2,j)         ! upstream
-                  end if
+                  fu = f(i+2,j)            ! upstream
                   fd = f(i  ,j)            ! downstream
                   if (abs(fc-fd) .gt. 1.d-10) then
                      r = (fu-fc)/(fc-fd)   ! slope ratio
@@ -130,12 +128,13 @@
                end if
             end if
             flux(i,j) = U(i,j)*fc
-            if (scheme .ne. UPSTREAM) then
+            if (use_limiter) then
                select case (scheme)
                   case ((P2),(P2_PDM))
                      x = one6th*(_ONE_-_TWO_*cfl)
                      Phi = (_HALF_+x) + (_HALF_-x)*r
                      if (scheme.eq.P2) then
+!                       KK-TODO: for r=0 limit might be non-zero?!
                         limit = Phi
                      else
                         limit = max(_ZERO_,min(Phi,_TWO_/(_ONE_-cfl),_TWO_*r/(cfl+1.d-10)))

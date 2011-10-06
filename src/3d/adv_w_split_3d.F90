@@ -62,7 +62,7 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   logical            :: iterate
+   logical            :: iterate,use_limiter
    integer            :: i,j,k,it,iters,rc
    REALTYPE           :: hio,advn,cfl,x,r,Phi,limit,fu,fc,fd,itersm1
    REALTYPE,dimension(:),allocatable :: flux1d
@@ -91,7 +91,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                        &
 !$OMP FIRSTPRIVATE(iters,itersm1)                                     &
-!$OMP PRIVATE(i,j,k,it,rc,flux1d,hio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
+!$OMP PRIVATE(use_limiter,i,j,k,it,rc,flux1d,hio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
 
 !  Each thread allocates its own HEAP storage:
    allocate(flux1d(0:kmax),stat=rc)    ! work array
@@ -124,13 +124,11 @@
                do k=1,kmax-1
                   if (ww(i,j,k) .gt. _ZERO_) then
                      fc = f(i,j,k  )               ! central
-                     if (scheme .ne. UPSTREAM) then
+!                    Note (KK): also fall back to upstream near boundaries
+                     use_limiter = ( scheme.ne.UPSTREAM .and. k.gt.1 )
+                     if (use_limiter) then
                         cfl = itersm1*splitfac*ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
-                        if (k .eq. 1) then
-                           fu = f(i,j,1)
-                        else
-                           fu = f(i,j,k-1)         ! upstream
-                        end if
+                        fu = f(i,j,k-1)            ! upstream
                         fd = f(i,j,k+1)            ! downstream
                         if (abs(fd-fc) .gt. 1.d-10) then
                            r = (fc-fu)/(fd-fc)     ! slope ratio
@@ -140,13 +138,10 @@
                      end if
                   else
                      fc = f(i,j,k+1)               ! central
-                     if (scheme .ne. UPSTREAM) then
+                     use_limiter = ( scheme.ne.UPSTREAM .and. k.lt.kmax-1 )
+                     if (use_limiter) then
                         cfl = -itersm1*splitfac*ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
-                        if (k .eq. kmax-1) then
-                           fu = f(i,j,kmax)
-                        else
-                           fu = f(i,j,k+2)         ! upstream
-                        end if
+                        fu = f(i,j,k+2)            ! upstream
                         fd = f(i,j,k  )            ! downstream
                         if (abs(fc-fd) .gt. 1.d-10) then
                            r = (fu-fc)/(fc-fd)     ! slope ratio
@@ -156,12 +151,13 @@
                      end if
                   end if
                   flux1d(k) = ww(i,j,k)*fc
-                  if (scheme .ne. UPSTREAM) then
+                  if (use_limiter) then
                      select case (scheme)
                         case ((P2),(P2_PDM))
                            x = one6th*(_ONE_-_TWO_*cfl)
                            Phi = (_HALF_+x) + (_HALF_-x)*r
                            if (scheme.eq.P2) then
+!                             KK-TODO: for r=0 limit might be non-zero?!
                               limit = Phi
                            else
                               limit = max(_ZERO_,min(Phi,_TWO_/(_ONE_-cfl),_TWO_*r/(cfl+1.d-10)))
