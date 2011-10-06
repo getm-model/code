@@ -100,7 +100,7 @@
             if (U(i,j) .gt. _ZERO_) then
                fc = f(i  ,j)               ! central
 !              Note (KK): also fall back to upstream near boundaries
-               use_limiter = ( scheme.ne.UPSTREAM .and.
+               use_limiter = ( scheme.ne.UPSTREAM .and. &
                                (au(i-1,j).eq.1 .or. (au(i-1,j).eq.2 .and. az(i,j).eq.1)) )
                if (use_limiter) then
                   cfl = splitfac*U(i,j)/DU(i,j)*dt/DXU
@@ -114,7 +114,7 @@
                end if
             else
                fc = f(i+1,j)               ! central
-               use_limiter = ( scheme.ne.UPSTREAM .and.
+               use_limiter = ( scheme.ne.UPSTREAM .and. &
                                (au(i+1,j).eq.1 .or. (au(i+1,j).eq.2 .and. az(i+1,j).eq.1)) )
                if (use_limiter) then
                   cfl = -splitfac*U(i,j)/DU(i,j)*dt/DXU

@@ -85,7 +85,7 @@
             if (V(i,j) .gt. _ZERO_) then
                fc = f(i,j  )               ! central
 !              Note (KK): also fall back to upstream near boundaries
-               use_limiter = ( scheme.ne.UPSTREAM .and.
+               use_limiter = ( scheme.ne.UPSTREAM .and. &
                                (av(i,j-1).eq.1 .or. (av(i,j-1).eq.2 .and. az(i,j).eq.1)) )
                if (use_limiter) then
                   cfl = splitfac*V(i,j)/DV(i,j)*dt/DYV
@@ -99,7 +99,7 @@
                end if
             else
                fc = f(i,j+1)               ! central
-               use_limiter = ( scheme.ne.UPSTREAM .and.
+               use_limiter = ( scheme.ne.UPSTREAM .and. &
                                (av(i,j+1).eq.1 .or. (av(i,j+1).eq.2 .and. az(i,j+1).eq.1)) )
                if (use_limiter) then
                   cfl = -splitfac*V(i,j)/DV(i,j)*dt/DYV
