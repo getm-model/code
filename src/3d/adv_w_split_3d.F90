@@ -64,7 +64,7 @@
 ! !LOCAL VARIABLES:
    logical            :: iterate,use_limiter
    integer            :: i,j,k,it,iters,rc
-   REALTYPE           :: hio,advn,cfl,x,r,Phi,limit,fu,fc,fd,itersm1
+   REALTYPE           :: dti,dtik,hio,advn,cfl,x,r,Phi,limit,fu,fc,fd,splitfack
    REALTYPE,dimension(:),allocatable :: flux1d
    REALTYPE,parameter :: one6th=_ONE_/6
 !EOP
@@ -76,6 +76,9 @@
    write(debug,*) 'adv_w_split_3d() # ',Ncall
 #endif
 
+   use_limiter = .false.
+   dti = splitfac*dt
+
    iterate=.false.
    if (.not.present(onestep_finalise)) then
       if (itersmax_adv .gt. 1) iterate=.true.
@@ -86,13 +89,12 @@
       stop 'adv_w_split_3d: do enable iterations with compiler option NO_BAROTROPIC'
 #endif
       iters = 1
-      itersm1 = _ONE_
+      dtik = dti
+      splitfack = splitfac
    end if
 
-   use_limiter = (scheme .ne. UPSTREAM)
-
 !$OMP PARALLEL DEFAULT(SHARED)                                        &
-!$OMP FIRSTPRIVATE(use_limiter,iters,itersm1)                         &
+!$OMP FIRSTPRIVATE(use_limiter,iters,dtik,splitfack)                  &
 !$OMP PRIVATE(i,j,k,it,rc,flux1d,hio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
 
 !  Each thread allocates its own HEAP storage:
@@ -115,11 +117,12 @@
 !              estimate number of iterations by maximum cfl number in water column
                cfl = _ZERO_
                do k=1,kmax-1
-                  cfl = max(cfl,abs(splitfac*ww(i,j,k))*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1))))
+                  cfl = max(cfl,abs(ww(i,j,k))*dti/(_HALF_*(hi(i,j,k)+hi(i,j,k+1))))
                end do
                !iters =  min(200,int(cfl)+1) !original
                iters = min(max(1,ceiling(cfl)),itersmax_adv)
-               itersm1 = _ONE_/iters
+               dtik = dti/iters
+               splitfack = splitfac/iters
             end if
             do it=1,iters
 !              Calculating w-interface fluxes !
@@ -131,7 +134,7 @@
                         use_limiter = (k .gt. 1)
                      end if
                      if (use_limiter) then
-                        cfl = itersm1*splitfac*ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
+                        cfl = ww(i,j,k)*dtik/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                         fu = f(i,j,k-1)            ! upstream
                         fd = f(i,j,k+1)            ! downstream
                         if (abs(fd-fc) .gt. 1.d-10) then
@@ -147,7 +150,7 @@
                         use_limiter = (k .lt. kmax-1)
                      end if
                      if (use_limiter) then
-                        cfl = -itersm1*splitfac*ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
+                        cfl = -ww(i,j,k)*dtik/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                         fu = f(i,j,k+2)            ! upstream
                         fd = f(i,j,k  )            ! downstream
                         if (abs(fc-fd) .gt. 1.d-10) then
@@ -183,8 +186,8 @@
 !              Doing the w-advection step
                do k=1,kmax
                   hio = hi(i,j,k)
-                  hi(i,j,k) = hio - itersm1*splitfac*dt*(ww(i,j,k  )-ww(i,j,k-1))
-                  advn = itersm1*splitfac*(flux1d(k  )-flux1d(k-1))
+                  hi(i,j,k) = hio - dtik*(ww(i,j,k  )-ww(i,j,k-1))
+                  advn = splitfack*(flux1d(k  )-flux1d(k-1))
                   adv3d(i,j,k) = adv3d(i,j,k) + advn
                   if (present(onestep_finalise)) then
 !                    Note (KK): do not update f in case of onestep_finalise=.false. !!!

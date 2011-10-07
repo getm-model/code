@@ -62,7 +62,7 @@
 ! !LOCAL VARIABLES:
    logical            :: use_limiter,use_AH
    integer            :: i,j
-   REALTYPE           :: Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd
+   REALTYPE           :: dti,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd
    REALTYPE,parameter :: one6th=_ONE_/6
 !EOP
 !-----------------------------------------------------------------------
@@ -73,8 +73,9 @@
    write(debug,*) 'adv_v_split() # ',Ncall
 #endif
 
-   use_limiter = (scheme .ne. UPSTREAM)
+   use_limiter = .false.
    use_AH = (AH .gt. _ZERO_)
+   dti = splitfac*dt
 
 !$OMP PARALLEL DEFAULT(SHARED)                                  &
 !$OMP PARALLEL FIRSTPRIVATE(use_limiter)                        &
@@ -94,7 +95,7 @@
                   use_limiter = (av(i,j-1).eq.1 .or. (av(i,j-1).eq.2 .and. az(i,j).eq.1))
                end if
                if (use_limiter) then
-                  cfl = splitfac*V(i,j)/DV(i,j)*dt/DYV
+                  cfl = V(i,j)/DV(i,j)*dti/DYV
                   fu = f(i,j-1)            ! upstream
                   fd = f(i,j+1)            ! downstream
                   if (abs(fd-fc) .gt. 1.d-10) then
@@ -110,7 +111,7 @@
                   use_limiter = (av(i,j+1).eq.1 .or. (av(i,j+1).eq.2 .and. az(i,j+1).eq.1))
                end if
                if (use_limiter) then
-                  cfl = -splitfac*V(i,j)/DV(i,j)*dt/DYV
+                  cfl = -V(i,j)/DV(i,j)*dti/DYV
                   fu = f(i,j+2)            ! upstream
                   fd = f(i,j  )            ! downstream
                   if (abs(fc-fd) .gt. 1.d-10) then
@@ -172,8 +173,8 @@
 !                      diffusive flux across interior interface is isolated at exterior flux
             Dio = Di(i,j)
             if (az(i,j) .eq. 1) then
-               Di(i,j) =  Dio - splitfac*dt*( V(i,j  )*DXV           &
-                                             -V(i,j-1)*DXVJM1)*ARCD1
+               Di(i,j) =  Dio - dti*( V(i,j  )*DXV           &
+                                     -V(i,j-1)*DXVJM1)*ARCD1
                advn = splitfac*( flux(i,j  )*DXV           &
                                 -flux(i,j-1)*DXVJM1)*ARCD1
             else if (av(i,j-1) .eq. 1) then ! eastern open bdy
