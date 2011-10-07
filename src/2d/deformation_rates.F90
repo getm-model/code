@@ -392,7 +392,6 @@
          if (ax(i,j) .eq. 1) then
             if (au(i,j).eq.1 .or. au(i,j+1).eq.1) then
 !              Note (KK): excludes concave and W/E open boundaries (dvdxX=0)
-!                         (however calculation would give correct result)
 !                         includes convex open boundaries (no mirroring)
                velgrad = (v_vel(i+1,j) - v_vel(i,j)) / DXX
                if (present(dvdxX)) then
@@ -411,7 +410,6 @@
 #ifndef SLICE_MODEL
             if (av(i,j).eq.1 .or. av(i+1,j).eq.1) then
 !              Note (KK): excludes concave and N/S open boundaries (dudyX=0)
-!                         (however calculation would give correct result)
 !                         includes convex open boundaries (no mirroring)
                velgrad = (u_vel(i,j+1) - u_vel(i,j)) / DYX
                if (present(dudyX)) then
