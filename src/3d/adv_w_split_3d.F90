@@ -89,9 +89,11 @@
       itersm1 = _ONE_
    end if
 
+   use_limiter = (scheme .ne. UPSTREAM)
+
 !$OMP PARALLEL DEFAULT(SHARED)                                        &
-!$OMP FIRSTPRIVATE(iters,itersm1)                                     &
-!$OMP PRIVATE(use_limiter,i,j,k,it,rc,flux1d,hio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
+!$OMP FIRSTPRIVATE(use_limiter,iters,itersm1)                         &
+!$OMP PRIVATE(i,j,k,it,rc,flux1d,hio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
 
 !  Each thread allocates its own HEAP storage:
    allocate(flux1d(0:kmax),stat=rc)    ! work array
@@ -124,8 +126,10 @@
                do k=1,kmax-1
                   if (ww(i,j,k) .gt. _ZERO_) then
                      fc = f(i,j,k  )               ! central
-!                    Note (KK): also fall back to upstream near boundaries
-                     use_limiter = ( scheme.ne.UPSTREAM .and. k.gt.1 )
+                     if (scheme .ne. UPSTREAM) then
+!                       Note (KK): also fall back to upstream near boundaries
+                        use_limiter = (k .gt. 1)
+                     end if
                      if (use_limiter) then
                         cfl = itersm1*splitfac*ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                         fu = f(i,j,k-1)            ! upstream
@@ -138,7 +142,10 @@
                      end if
                   else
                      fc = f(i,j,k+1)               ! central
-                     use_limiter = ( scheme.ne.UPSTREAM .and. k.lt.kmax-1 )
+                     if (scheme .ne. UPSTREAM) then
+!                       Note (KK): also fall back to upstream near boundaries
+                        use_limiter = (k .lt. kmax-1)
+                     end if
                      if (use_limiter) then
                         cfl = -itersm1*splitfac*ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                         fu = f(i,j,k+2)            ! upstream
