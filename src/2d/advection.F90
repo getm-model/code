@@ -58,7 +58,7 @@
    character(len=64),public,parameter :: adv_schemes(7) =  &
       (/"upstream advection (first-order, monotone)",      &
         "2DH-upstream advection with forced monotonicity", &
-        "P2-PDM advection (third-order, non-monotone)",    &
+        "P2 advection (third-order, non-monotone)",        &
         "TVD-Superbee advection (second-order, monotone)", &
         "TVD-MUSCL advection (second-order, monotone)",    &
         "TVD-P2-PDM advection (third-order, monotone)",    &

@@ -239,7 +239,7 @@
 					<option value="2" label="2DH-upstream with forced monotonicity">
 						<condition type="eq" variable="./vel_adv_split2d" value="0"/>
 					</option>
-					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
@@ -339,7 +339,7 @@
 							<condition type="eq" variable="./vel_adv_split" value="3"/>
 						</condition>
 					</option>
-					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
@@ -354,7 +354,7 @@
 			<element name="vel_ver_adv" type="int" label="vertical advection scheme for horizontal 3D velocities">
 				<options>
 					<option value="1" label="upstream (first-order, monotone)"/>
-					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
@@ -436,7 +436,7 @@
 							<condition type="eq" variable="./temp_adv_split" value="3"/>
 						</condition>
 					</option>
-					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
@@ -451,7 +451,7 @@
 			<element name="temp_ver_adv" type="int" label="vertical advection scheme for temperature">
 				<options>
 					<option value="1" label="upstream (first-order, monotone)"/>
-					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
@@ -563,7 +563,7 @@
 							<condition type="eq" variable="./temp_adv_split" value="3"/>
 						</condition>
 					</option>
-					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
@@ -578,7 +578,7 @@
 			<element name="salt_ver_adv" type="int" label="vertical advection scheme for salinity">
 				<options>
 					<option value="1" label="upstream (first-order, monotone)"/>
-					<option value="3" label="P2-PDM (third-order, non-monotone)"/>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
