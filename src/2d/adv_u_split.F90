@@ -76,7 +76,7 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   logical            :: use_limiter
+   logical            :: use_limiter,use_AH
    integer            :: i,j
    REALTYPE           :: Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd
    REALTYPE,parameter :: one6th=_ONE_/6
@@ -89,7 +89,12 @@
    write(debug,*) 'adv_u_split() # ',Ncall
 #endif
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(use_limiter,i,j,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
+   use_limiter = (scheme .ne. UPSTREAM)
+   use_AH = (AH .gt. _ZERO_)
+
+!$OMP PARALLEL DEFAULT(SHARED)                                  &
+!$OMP PARALLEL FIRSTPRIVATE(use_limiter)                        &
+!$OMP PARALLEL PRIVATE(i,j,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
 
 ! Calculating u-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
@@ -99,9 +104,10 @@
 !           Note (KK): exclude advection/diffusion of normal velocity at open bdys
             if (U(i,j) .gt. _ZERO_) then
                fc = f(i  ,j)               ! central
-!              Note (KK): also fall back to upstream near boundaries
-               use_limiter = ( scheme.ne.UPSTREAM .and. &
-                               (au(i-1,j).eq.1 .or. (au(i-1,j).eq.2 .and. az(i,j).eq.1)) )
+               if (scheme .ne. UPSTREAM) then
+!                 Note (KK): also fall back to upstream near boundaries
+                  use_limiter = (au(i-1,j).eq.1 .or. (au(i-1,j).eq.2 .and. az(i,j).eq.1))
+               end if
                if (use_limiter) then
                   cfl = splitfac*U(i,j)/DU(i,j)*dt/DXU
                   fu = f(i-1,j)            ! upstream
@@ -114,8 +120,10 @@
                end if
             else
                fc = f(i+1,j)               ! central
-               use_limiter = ( scheme.ne.UPSTREAM .and. &
-                               (au(i+1,j).eq.1 .or. (au(i+1,j).eq.2 .and. az(i+1,j).eq.1)) )
+               if (scheme .ne. UPSTREAM) then
+!                 Note (KK): also fall back to upstream near boundaries
+                  use_limiter = (au(i+1,j).eq.1 .or. (au(i+1,j).eq.2 .and. az(i+1,j).eq.1))
+               end if
                if (use_limiter) then
                   cfl = -splitfac*U(i,j)/DU(i,j)*dt/DXU
                   fu = f(i+2,j)            ! upstream
@@ -148,11 +156,11 @@
                end select
                flux(i,j) = flux(i,j) + U(i,j)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
             end if
-            if (AH .gt. _ZERO_) then
+            if (use_AH) then
 !              Horizontal diffusion
                flux(i,j) = flux(i,j) - AH*DU(i,j)*(f(i+1,j)-f(i  ,j))/DXU
             end if
-         else if (AH.gt._ZERO_ .and. au(i,j).eq.2 .and. (az(i,j).eq.2 .or. az(i+1,j).eq.2)) then
+         else if (use_AH .and. au(i,j).eq.2 .and. (az(i,j).eq.2 .or. az(i+1,j).eq.2)) then
 !           Note (KK): special handling for advection/diffusion of normal velocity at open bdys
 !                      (advection/diffusion of tracers near open bdys already included in former case)
 !                      outflow condition implies no advection across open bdy
@@ -172,7 +180,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-1,jmax+1
       do i=imin,imax
-         if (az(i,j).eq.1 .or. (AH.gt._ZERO_ .and. az(i,j).eq.2 .and. (au(i-1,j).eq.1 .or. au(i,j).eq.1))) then
+         if (az(i,j).eq.1 .or. (use_AH .and. az(i,j).eq.2 .and. (au(i-1,j).eq.1 .or. au(i,j).eq.1))) then
 !           Note (KK): exclude advection/diffusion of tracers at open bdy cells
 !                      special handling for advection/diffusion of normal velocity at open bdys
 !                      vanishing diffusive flux across exterior interface must be explicitely prescribed
