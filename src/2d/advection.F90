@@ -428,7 +428,7 @@
    IMPLICIT NONE
 
 ! !INPUT PARAMETERS:
-   integer,intent(in)   :: split,scheme
+   integer,intent(in)  :: split,scheme
    REALTYPE,intent(in) :: AH
 !
 ! !LOCAL VARIABLES:

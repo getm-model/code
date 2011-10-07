@@ -181,7 +181,8 @@
 !  Modified by       : Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
-   integer                                          :: i,j
+   logical :: use_Am
+   integer :: i,j
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -192,6 +193,7 @@
 #endif
    CALL tic(TIM_UVDIFF)
 
+   use_Am = (Am .gt. _ZERO_)
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j)
 
@@ -204,7 +206,7 @@
 !                   in W/E open bdy cells outflow condition must be
 !                   explicitely prescribed (U(i,:) = U(i-1,:))
          if (az(i,j) .eq. 1) then
-            if(Am .gt. _ZERO_) then
+            if(use_Am) then
 !              KK-TODO: we need center depth at velocity time stage
                PP(i,j)=_TWO_*Am*DYC*D(i,j)               &
                        *(U(i,j)/DU(i,j)-U(i-1,j)/DU(i-1,j))/DXC
@@ -235,7 +237,7 @@
       do i=imin,imax
          PP(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
-            if(Am .gt. _ZERO_) then
+            if(use_Am) then
                PP(i,j)=Am*_HALF_*(DU(i,j)+DU(i,j+1))*DXX  &
                        *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
                         +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
@@ -266,7 +268,7 @@
       do i=imin-1,imax
          PP(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
-            if(Am .gt. _ZERO_) then
+            if(use_Am) then
                PP(i,j)=Am*_HALF_*(DV(i,j)+DV(i+1,j))*DYX  &
                        *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
                         +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
@@ -300,7 +302,7 @@
 !                   in N/S open bdy cells outflow condition must be
 !                   explicitely prescribed (V(:,j) = V(:,j-1))
          if (az(i,j) .eq. 1) then
-            if(Am .gt. _ZERO_) then
+            if(use_Am) then
 !              KK-TODO: we need center depth at velocity time stage
                PP(i,j)=_TWO_*Am*DXC*D(i,j)               &
                        *(V(i,j)/DV(i,j)-V(i,j-1)/DV(i,j-1))/DYC

@@ -225,14 +225,14 @@
       do i=imin-HALO,imax+HALO
 !        the velocity to be transported
          fadv(i,j) = V(i,j)/DV(i,j)
-         Uadv(i,j) = _HALF_*( U(i,j+1) + U(i,j  ) )
-         Vadv(i,j) = _HALF_*( V(i,j+1) + V(i,j  ) )
+         Uadv(i,j) = _HALF_*( U(i,j) + U(i,j+1) )
+         Vadv(i,j) = _HALF_*( V(i,j) + V(i,j+1) )
 !        Note (KK): DU only valid until imax+1
 !                   therefore DUadv only valid until imax+1
-         DUadv(i,j) = _HALF_*( DU(i,j+1) + DU(i,j  ) )
+         DUadv(i,j) = _HALF_*( DU(i,j) + DU(i,j+1) )
 !        Note (KK): DV only valid until jmax+1
 !                   therefore DVadv only valid until jmax
-         DVadv(i,j) = _HALF_*( DV(i,j+1) + DV(i,j  ) )
+         DVadv(i,j) = _HALF_*( DV(i,j) + DV(i,j+1) )
          maskadv(i,j) = az(i,j+1)
 #if defined(SPHERICAL) || defined(CURVILINEAR)
          dxadv(i,j) = dxc(i,j+1)
