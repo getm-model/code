@@ -60,7 +60,7 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   logical            :: use_limiter,use_AH
+   logical            :: use_limiter,use_AH,good_adv
    integer            :: i,j
    REALTYPE           :: dti,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd
    REALTYPE,parameter :: one6th=_ONE_/6
@@ -77,9 +77,9 @@
    use_AH = (AH .gt. _ZERO_)
    dti = splitfac*dt
 
-!$OMP PARALLEL DEFAULT(SHARED)                                  &
-!$OMP PARALLEL FIRSTPRIVATE(use_limiter)                        &
-!$OMP PARALLEL PRIVATE(i,j,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
+!$OMP PARALLEL DEFAULT(SHARED)                                           &
+!$OMP PARALLEL FIRSTPRIVATE(use_limiter)                                 &
+!$OMP PARALLEL PRIVATE(good_adv,i,j,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
 
 ! Calculating v-interface fluxes !
 
@@ -166,13 +166,15 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin-1,imax+1
-         if (az(i,j).eq.1 .or. (use_AH .and. az(i,j).eq.2 .and. (av(i,j-1).eq.1 .or. av(i,j).eq.1))) then
-!           Note (KK): exclude advection/diffusion of tracers at open bdy cells
+         good_adv = (az(i,j).eq.1 .or. (az(i,j).eq.2 .and. (au(i-1,j).eq.2 .or. au(i,j).eq.2)))
+         if (good_adv .or. (use_AH .and. az(i,j).eq.2 .and. (av(i,j-1).eq.1 .or. av(i,j).eq.1))) then
+!           Note (KK): exclude tracer open bdy cells but include all velocity open bdys
 !                      special handling for advection/diffusion of normal velocity at open bdys
 !                      vanishing diffusive flux across exterior interface must be explicitely prescribed
 !                      diffusive flux across interior interface is isolated at exterior flux
             Dio = Di(i,j)
-            if (az(i,j) .eq. 1) then
+            if (good_adv) then
+!              Note (KK): exclude advection/diffusion of normal velocity at open bdys
                Di(i,j) =  Dio - dti*( V(i,j  )*DXV           &
                                      -V(i,j-1)*DXVJM1)*ARCD1
                advn = splitfac*( flux(i,j  )*DXV           &
@@ -185,22 +187,14 @@
                advn =  splitfac*flux(i,j-1)*DXV*ARCD1
             end if
             adv(i,j) = adv(i,j) + advn
-            if (.not. present(onestep_finalise)) then
-!              Note (KK): do the splitting step
-               f(i,j) = ( Dio*f(i,j) - dt*advn ) / Di(i,j)
-            end if
-         end if
-         if (present(onestep_finalise)) then
-!           Note (KK): do not update f in case of onestep_finalise=.false. !!!
-            if (onestep_finalise) then
-               if (az(i,j).eq.1 .or. (az(i,j).eq.2 .and. (    au(i-1,j  ).eq.1 &
-                                                          .or.au(i  ,j  ).eq.1 &
-                                                          .or.av(i  ,j-1).eq.1 &
-                                                          .or.av(i  ,j  ).eq.1 ))) then
-!                 Note (KK): exclude tracer open bdy cells but
-!                            include all velocity open bdys
+            if (present(onestep_finalise)) then
+!              Note (KK): do not update f in case of onestep_finalise=.false. !!!
+               if (onestep_finalise) then
                   f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
                end if
+            else
+!              Note (KK): do the splitting step
+               f(i,j) = ( Dio*f(i,j) - dt*advn ) / Di(i,j)
             end if
          end if
       end do
