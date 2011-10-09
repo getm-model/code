@@ -25,7 +25,7 @@
    use variables_3d, only: nuh,T,S,rad,rho,light
    use variables_3d, only: cc3d
    use meteo, only: swr,u10,v10
-   use halo_zones, only: update_3d_halo,wait_halo,D_TAG
+   use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
    use bio, only: init_bio, init_var_bio, set_env_bio, do_bio
    use bio, only: bio_calc
    use bio_var, only: numc
@@ -224,24 +224,24 @@
 
 #if 1
       fadv3d = cc3d(n,:,:,:)
-      call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,             &
+      call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                   &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                           dxu,dxv,dyu,dyv,arcd1,                        &
+                           dxu,dxv,dyu,dyv,arcd1,                              &
 #endif
-                           az,au,av,                                     &
-                           bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH)
+                           az,au,av,                                           &
+                           bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH,H_TAG)
 
       call update_3d_halo(fadv3d,fadv3d,az, &
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
       cc3d(n,:,:,:) = fadv3d
 #else
-      call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn,      &
+      call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn,            &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                           dxu,dxv,dyu,dyv,arcd1,                        &
+                           dxu,dxv,dyu,dyv,arcd1,                              &
 #endif
-                           az,au,av,                                     &
-                           bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH)
+                           az,au,av,                                           &
+                           bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH,H_TAG)
 
       call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az, &
                           imin,jmin,imax,jmax,kmax,D_TAG)

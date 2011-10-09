@@ -248,7 +248,6 @@
 					</option>
 				</options>
 			</element>
-			<element name="vel_AH" type="float" label="Laplacian horizontal diffusivity of velocity" unit="m²/s"/>
 			<element name="Am" type="float" label="constant horizontal momentum diffusion coefficient" unit="m²/s"/>
 			<element name="An_method" type="int" label="method for constant horizontal numerical diffusion coefficient (m²/s) used to filter the surface elevation">
 				<options>

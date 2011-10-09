@@ -147,7 +147,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxc,dyc,dxx,dyx,arud1,arvd1
 #endif
-   use m2d, only: dtm,vel_adv_split2d,vel_adv_scheme,vel_AH
+   use m2d, only: dtm,vel_adv_split2d,vel_adv_scheme
    use variables_2d, only: UEx,VEx,fadv,Uadv,Vadv,DUadv,DVadv,maskadv
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use variables_2d, only: dxadv,dyadv
@@ -209,12 +209,13 @@
       call toc(TIM_UVADVH)
    end if
 
-   call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DU,DU,           &
+   call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DU,DU,        &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                     dxadv,dxx,dyadv,dyx,arud1,                      &
+                     dxadv,dxx,dyadv,dyx,arud1,                   &
 #endif
-                     au,maskadv,ax,                                  &
-                     vel_adv_scheme,vel_adv_split2d,vel_AH,advres=UEx)
+                     au,maskadv,ax,                               &
+                     vel_adv_scheme,vel_adv_split2d,_ZERO_,U_TAG, &
+                     advres=UEx)
 !$OMP END MASTER
 !  OMP-NOTE: MASTER does not imply BARRIER
 !$OMP BARRIER
@@ -251,12 +252,13 @@
       call toc(TIM_UVADVH)
    end if
 
-   call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DV,DV,           &
+   call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DV,DV,        &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                     dxx,dxadv,dyx,dyadv,arvd1,                      &
+                     dxx,dxadv,dyx,dyadv,arvd1,                   &
 #endif
-                     av,ax,maskadv,                                  &
-                     vel_adv_scheme,vel_adv_split2d,vel_AH,advres=VEx)
+                     av,ax,maskadv,                               &
+                     vel_adv_scheme,vel_adv_split2d,_ZERO_,V_TAG, &
+                     advres=VEx)
 
    call toc(TIM_UVADV)
 #ifdef DEBUG

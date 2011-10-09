@@ -85,7 +85,7 @@
    use domain, only: H,az
    use parameters, only: rho_0,g
    use variables_3d, only: hn,taub,spm,spm_ws,spm_pool
-   use halo_zones, only: update_3d_halo,wait_halo,D_TAG
+   use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
    IMPLICIT NONE
 !
    private
@@ -414,12 +414,12 @@
       end do
    end do
 
-   call do_advection_3d(dt,spm,uu,vv,wwadv,hun,hvn,ho,hn,             &
+   call do_advection_3d(dt,spm,uu,vv,wwadv,hun,hvn,ho,hn,                   &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                        dxu,dxv,dyu,dyv,arcd1,                        &
+                        dxu,dxv,dyu,dyv,arcd1,                              &
 #endif
-                        az,au,av,                                     &
-                        spm_hor_adv,spm_ver_adv,spm_adv_split,spm_AH)
+                        az,au,av,                                           &
+                        spm_hor_adv,spm_ver_adv,spm_adv_split,spm_AH,H_TAG)
 
 #ifdef TRACER_POSITIVE
    kk= .false.

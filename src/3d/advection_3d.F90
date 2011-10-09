@@ -60,15 +60,15 @@
 !-----------------------------------------------------------------------
 
    interface
-      subroutine adv_w_split_3d(dt,f,hi,adv3d,ww,ho,                       &
-                                az,au,av,splitfac,scheme,onestep_finalise)
+      subroutine adv_w_split_3d(dt,f,hi,adv3d,ww,ho,                     &
+                                az,splitfac,scheme,tag,nosplit_finalise)
          use domain, only: imin,imax,jmin,jmax,kmax
          IMPLICIT NONE
          REALTYPE,intent(in)                        :: dt,splitfac
          REALTYPE,dimension(I3DFIELD),intent(in)    :: ww,ho
-         integer,dimension(E2DFIELD),intent(in)     :: az,au,av
-         integer,intent(in)                         :: scheme
-         logical,intent(in),optional                :: onestep_finalise
+         integer,dimension(E2DFIELD),intent(in)     :: az
+         integer,intent(in)                         :: scheme,tag
+         logical,intent(in),optional                :: nosplit_finalise
          REALTYPE,dimension(I3DFIELD),intent(inout) :: f,hi,adv3d
       end subroutine adv_w_split_3d
    end interface
@@ -125,11 +125,12 @@
 ! !IROUTINE:  do_advection_3d - 3D advection schemes \label{sec-do-advection-3d}
 !
 ! !INTERFACE:
-   subroutine do_advection_3d(dt,f,uu,vv,ww,hu,hv,ho,hn,                      &
+   subroutine do_advection_3d(dt,f,uu,vv,ww,hu,hv,ho,hn,             &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                              dxu,dxv,dyu,dyv,arcd1,                          &
+                              dxu,dxv,dyu,dyv,arcd1,                 &
 #endif
-                              az,au,av,hscheme,vscheme,split,AH,hires,advres)
+                              az,au,av,hscheme,vscheme,split,AH,tag, &
+                              hires,advres)
 !
 ! !DESCRIPTION:
 !
@@ -229,7 +230,7 @@
    REALTYPE,dimension(I2DFIELD),intent(in)           :: dxu,dxv,dyu,dyv,arcd1
 #endif
    integer,dimension(E2DFIELD),intent(in)            :: az,au,av
-   integer,intent(in)                                :: split,hscheme,vscheme
+   integer,intent(in)                                :: split,hscheme,vscheme,tag
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(I3DFIELD),intent(inout)        :: f(I3DFIELD)
@@ -266,16 +267,16 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxu,dyu,arcd1,                      &
 #endif
-                                   az,au,av,_ONE_,hscheme,AH,          &
-                                   onestep_finalise=.false.)
+                                   az,au,_ONE_,hscheme,AH,tag,         &
+                                   nosplit_finalise=.false.)
 #ifndef SLICE_MODEL
                   call adv_v_split(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k), &
                                    vv(:,:,k),ho(:,:,k),hv(:,:,k),      &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxv,dyv,arcd1,                      &
 #endif
-                                   az,au,av,_ONE_,hscheme,AH,          &
-                                   onestep_finalise=.false.)
+                                   az,av,_ONE_,hscheme,AH,tag,         &
+                                   nosplit_finalise=.false.)
 #endif
                end do
 
@@ -289,7 +290,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                         dxv,dyu,dxu,dyv,arcd1,              &
 #endif
-                                        az,AH,onestep_finalise=.false.)
+                                        az,AH,nosplit_finalise=.false.)
                end do
 
             case (FCT)
@@ -302,7 +303,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxv,dyu,dxu,dyv,arcd1,              &
 #endif
-                                   az,AH,onestep_finalise=.false.)
+                                   az,AH,nosplit_finalise=.false.)
                end do
 
             case default
@@ -311,8 +312,8 @@
 
          end select
 !        Note (KK): here adv_w_split_3d must be called even for kmax=1 !!!
-         call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,az,au,av,_ONE_,vscheme, &
-                             onestep_finalise=.true.)
+         call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,az,_ONE_,vscheme,tag, &
+                             nosplit_finalise=.true.)
 
       case(FULLSPLIT)
 
@@ -322,11 +323,11 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                               dxu,dxv,dyu,dyv,arcd1,                   &
 #endif
-                              az,au,av,hscheme,split,AH,               &
+                              az,au,av,hscheme,split,AH,tag,           &
                               Dires=hi(:,:,k),advres=adv3d(:,:,k))
          end do
          if (kmax .gt. 1) then
-            call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,az,au,av,_ONE_,vscheme)
+            call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,az,_ONE_,vscheme,tag)
          end if
 
       case(HALFSPLIT)
@@ -341,7 +342,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxu,dyu,arcd1,                      &
 #endif
-                                   az,au,av,_HALF_,hscheme,AH)
+                                   az,au,_HALF_,hscheme,AH,tag)
                end do
 #ifndef SLICE_MODEL
                if (hscheme .ne. UPSTREAM) then
@@ -358,11 +359,11 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxv,dyv,arcd1,                      &
 #endif
-                                   az,au,av,_HALF_,hscheme,AH)
+                                   az,av,_HALF_,hscheme,AH,tag)
                end do
 #endif
                if (kmax .gt. 1) then
-                  call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,az,au,av,_ONE_,vscheme)
+                  call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,az,_ONE_,vscheme,tag)
                end if
 !              if (hscheme .eq. UPSTREAM) then
 !                 we need to update f(imin-1:imax+1,jmin-1)
@@ -382,7 +383,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxv,dyv,arcd1,                      &
 #endif
-                                   az,au,av,_HALF_,hscheme,AH)
+                                   az,av,_HALF_,hscheme,AH,tag)
                end do
 #endif
                if (hscheme .ne. UPSTREAM) then
@@ -399,7 +400,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    dxu,dyu,arcd1,                      &
 #endif
-                                   az,au,av,_HALF_,hscheme,AH)
+                                   az,au,_HALF_,hscheme,AH,tag)
                end do
 
             case((UPSTREAM_2DH),(FCT))
@@ -420,11 +421,11 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                               dxu,dxv,dyu,dyv,arcd1,                   &
 #endif
-                              az,au,av,hscheme,NOSPLIT,AH,             &
+                              az,au,av,hscheme,NOSPLIT,AH,tag,         &
                               Dires=hi(:,:,k),advres=adv3d(:,:,k))
          end do
          if (kmax .gt. 1) then
-            call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,az,au,av,_ONE_,vscheme)
+            call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,az,_ONE_,vscheme,tag)
          end if
 
       case default

@@ -8,7 +8,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                           dxv,dyu,dxu,dyv,arcd1,       &
 #endif
-                          az,AH,onestep_finalise)
+                          az,AH,nosplit_finalise)
 !  Note (KK): keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -51,7 +51,7 @@
    REALTYPE,dimension(E2DFIELD),intent(in)    :: dxv,dyu,dxu,dyv,arcd1
 #endif
    integer,dimension(E2DFIELD),intent(in)     :: az
-   logical,intent(in),optional                :: onestep_finalise
+   logical,intent(in),optional                :: nosplit_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
@@ -103,8 +103,8 @@
    end if
 
    update_f = .true.
-   if (present(onestep_finalise)) then
-      if (.not. onestep_finalise) update_f = .false.
+   if (present(nosplit_finalise)) then
+      if (.not. nosplit_finalise) update_f = .false.
    end if
 
 #ifdef USE_ALLOCATED_ARRAYS
@@ -613,9 +613,9 @@
 #endif
                    )*ARCD1
             adv(i,j) = adv(i,j) + advn
-            if (present(onestep_finalise)) then
-!              Note (KK): do not update f in case of onestep_finalise=.false. !!!
-               if (onestep_finalise) then
+            if (present(nosplit_finalise)) then
+!              Note (KK): do not update f in case of nosplit_finalise=.false. !!!
+               if (nosplit_finalise) then
                   f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
                end if
             else

@@ -20,7 +20,7 @@
    use domain, only: H,az
    use variables_2d, only: fwf_int
    use variables_3d, only: S,hn,kmin
-   use halo_zones, only: update_3d_halo,wait_halo,D_TAG
+   use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
    IMPLICIT NONE
 !
    private
@@ -365,22 +365,22 @@ salt_field_no=1
 !    PARALLEL region (as the various advection schemes have their own regions),
 !    so the overhead of the contruct would be rather large.
       S2 = S**2
-      call do_advection_3d(dt,S2,uu,vv,ww,hun,hvn,ho,hn,                     &
+      call do_advection_3d(dt,S2,uu,vv,ww,hun,hvn,ho,hn,                           &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                           dxu,dxv,dyu,dyv,arcd1,                            &
+                           dxu,dxv,dyu,dyv,arcd1,                                  &
 #endif
-                           az,au,av,                                         &
-                           salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH)
+                           az,au,av,                                               &
+                           salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH,H_TAG)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_SALT)
    end if
 
-   call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,                      &
+   call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,                            &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                        dxu,dxv,dyu,dyv,arcd1,                            &
+                        dxu,dxv,dyu,dyv,arcd1,                                  &
 #endif
-                        az,au,av,                                         &
-                        salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH)
+                        az,au,av,                                               &
+                        salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH,H_TAG)
 
    if (do_mixing_analysis) then
       call toc(TIM_SALT)

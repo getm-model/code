@@ -20,7 +20,7 @@
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn,fadv3d
    use variables_3d, only: nuh,T,S,rho,a,g1,g2
    use meteo, only: swr,u10,v10,evap,precip
-   use halo_zones, only: update_3d_halo,wait_halo,D_TAG
+   use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
 ! JORN_FABM
    use gotm_fabm, only: init_gotm_fabm,set_env_gotm_fabm,do_gotm_fabm
    use gotm_fabm, only: fabm_calc, model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz
@@ -259,12 +259,12 @@
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
 
-      call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                 &
+      call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                           dxu,dxv,dyu,dyv,arcd1,                            &
+                           dxu,dxv,dyu,dyv,arcd1,                                  &
 #endif
-                           az,au,av,                                         &
-                           fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH)
+                           az,au,av,                                               &
+                           fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH,H_TAG)
 
       cc_pel(n,:,:,:) = fadv3d
 #else
@@ -272,12 +272,12 @@
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
 
-      call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn,          &
+      call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn,                &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                           dxu,dxv,dyu,dyv,arcd1,                            &
+                           dxu,dxv,dyu,dyv,arcd1,                                  &
 #endif
-                           az,au,av,                                         &
-                           fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH)
+                           az,au,av,                                               &
+                           fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH,H_TAG)
 #endif
    end do
 

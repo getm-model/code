@@ -4,8 +4,9 @@
 ! !IROUTINE:  adv_w_split_3d - 1D z-advection \label{sec-w-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_w_split_3d(dt,f,hi,adv3d,ww,ho,                       &
-                             az,au,av,splitfac,scheme,onestep_finalise)
+   subroutine adv_w_split_3d(dt,f,hi,adv3d,ww,ho,    &
+                             az,splitfac,scheme,tag, &
+                             nosplit_finalise)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -45,15 +46,16 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use advection, only: UPSTREAM,P2,SUPERBEE,MUSCL,P2_PDM
    use advection_3d, only: itersmax_adv
+   use halo_zones, only: U_TAG,V_TAG
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    REALTYPE,intent(in)                        :: dt,splitfac
    REALTYPE,dimension(I3DFIELD),intent(in)    :: ww,ho
-   integer,dimension(E2DFIELD),intent(in)     :: az,au,av
-   integer,intent(in)                         :: scheme
-   logical,intent(in),optional                :: onestep_finalise
+   integer,dimension(E2DFIELD),intent(in)     :: az
+   integer,intent(in)                         :: scheme,tag
+   logical,intent(in),optional                :: nosplit_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(I3DFIELD),intent(inout) :: f,hi,adv3d
@@ -80,7 +82,7 @@
    dti = splitfac*dt
 
    iterate=.false.
-   if (.not.present(onestep_finalise)) then
+   if (.not.present(nosplit_finalise)) then
       if (itersmax_adv .gt. 1) iterate=.true.
    end if
 
@@ -107,10 +109,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
-         if (az(i,j).eq.1 .or. (az(i,j).eq.2 .and. (    au(i-1,j  ).eq.1 &
-                                                    .or.au(i  ,j  ).eq.1 &
-                                                    .or.av(i  ,j-1).eq.1 &
-                                                    .or.av(i  ,j  ).eq.1 ))) then
+         if (az(i,j).eq.1 .or. ((tag.eq.U_TAG .or. tag.eq.V_TAG) .and. az(i,j).eq.2)) then
 !           Note (KK): exclude tracer open bdy cells but
 !                      include all velocity open bdys
             if (iterate) then
@@ -119,8 +118,12 @@
                do k=1,kmax-1
                   cfl = max(cfl,abs(ww(i,j,k))*dti/(_HALF_*(hi(i,j,k)+hi(i,j,k+1))))
                end do
+               iters = max(1,ceiling(cfl))
+#ifdef DEBUG
+               if (iters .gt. 1) write(95,*) i,j,iters,cfl
+#endif
                !iters =  min(200,int(cfl)+1) !original
-               iters = min(max(1,ceiling(cfl)),itersmax_adv)
+               iters = min(iters,itersmax_adv)
                dtik = dti/iters
                splitfack = splitfac/iters
             end if
@@ -167,7 +170,6 @@
                            x = one6th*(_ONE_-_TWO_*cfl)
                            Phi = (_HALF_+x) + (_HALF_-x)*r
                            if (scheme.eq.P2) then
-!                             KK-TODO: for r=0 limit might be non-zero?!
                               limit = Phi
                            else
                               limit = max(_ZERO_,min(Phi,_TWO_/(_ONE_-cfl),_TWO_*r/(cfl+1.d-10)))
@@ -189,9 +191,8 @@
                   hi(i,j,k) = hio - dtik*(ww(i,j,k  )-ww(i,j,k-1))
                   advn = splitfack*(flux1d(k  )-flux1d(k-1))
                   adv3d(i,j,k) = adv3d(i,j,k) + advn
-                  if (present(onestep_finalise)) then
-!                    Note (KK): do not update f in case of onestep_finalise=.false. !!!
-                     if (onestep_finalise) then
+                  if (present(nosplit_finalise)) then
+                     if (nosplit_finalise) then
                         f(i,j,k) = ( ho(i,j,k)*f(i,j,k) - dt*adv3d(i,j,k) ) / hi(i,j,k)
                      end if
                   else

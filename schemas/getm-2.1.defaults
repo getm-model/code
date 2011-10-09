@@ -198,9 +198,6 @@
 			<vel_adv_scheme>
 				1
 			</vel_adv_scheme>
-			<vel_AH>
-				-1.0
-			</vel_AH>
 			<Am>
 				-1.0
 			</Am>

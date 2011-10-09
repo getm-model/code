@@ -28,7 +28,7 @@
    use domain, only: openbdy,maxdepth,vert_cord,az
 !  we do not need to include calc_uvex
    use m2d_general, only: calc_uvex
-   use m2d, only: vel_AH,Am
+   use m2d, only: Am
    use variables_2d, only: Uint,Vint
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
@@ -149,7 +149,7 @@
 
 !  Sanity checks for advection specifications
    LEVEL2 'Advection of horizontal 3D velocities'
-   call print_adv_settings_3d(vel_adv_split,vel_hor_adv,vel_ver_adv,vel_AH)
+   call print_adv_settings_3d(vel_adv_split,vel_hor_adv,vel_ver_adv,_ZERO_)
 
 !  Sanity checks for bdy 3d
    if (bdy3d .and. bdy3d_tmrlx) then

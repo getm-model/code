@@ -45,7 +45,6 @@
    REALTYPE                  :: dtm
    integer                   :: vel_adv_split2d=0
    integer                   :: vel_adv_scheme=1
-   REALTYPE                  :: vel_AH=-_ONE_
    REALTYPE                  :: Am=-_ONE_
 !  method for specifying horizontal numerical diffusion coefficient
 !     (0=const, 1=from named nc-file)
@@ -107,7 +106,7 @@
    integer                   :: i,j
    integer                   :: vel_depth_method=0
    namelist /m2d/ &
-          MM,vel_depth_method,vel_adv_split2d,vel_adv_scheme,vel_AH, &
+          MM,vel_depth_method,vel_adv_split2d,vel_adv_scheme, &
           Am,An_method,An_const,An_file,residual, &
           sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
@@ -131,7 +130,7 @@
    call init_advection()
 
    LEVEL2 'Advection of depth-averaged velocities'
-   call print_adv_settings(vel_adv_split2d,vel_adv_scheme,vel_AH)
+   call print_adv_settings(vel_adv_split2d,vel_adv_scheme,_ZERO_)
 
 #if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
 !   STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'

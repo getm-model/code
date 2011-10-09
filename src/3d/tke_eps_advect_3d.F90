@@ -20,11 +20,11 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dxv,dyu,dyv,arcd1
 #endif
-   use m2d, only: vel_AH
    use m3d, only: vel_adv_split,vel_hor_adv,vel_ver_adv
    use variables_3d, only: tke,eps,dt,uu,vv,ww,hun,hvn,ho,hn
    use variables_3d, only: uuadv,vvadv,wwadv,hoadv,hnadv,huadv,hvadv
    use advection_3d, only: do_advection_3d
+   use halo_zones, only: H_TAG
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -82,19 +82,19 @@
 
 !$OMP END PARALLEL
 
-   call do_advection_3d(dt,tke,uuadv,vvadv,wwadv,huadv,hvadv,hoadv,hnadv, &
+   call do_advection_3d(dt,tke,uuadv,vvadv,wwadv,huadv,hvadv,hoadv,hnadv,   &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                        dxu,dxv,dyu,dyv,arcd1,                            &
+                        dxu,dxv,dyu,dyv,arcd1,                              &
 #endif
-                        az,au,av,                                         &
-                        vel_hor_adv,vel_ver_adv,vel_adv_split,vel_AH)
+                        az,au,av,                                           &
+                        vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,H_TAG)
 
-   call do_advection_3d(dt,eps,uuadv,vvadv,wwadv,huadv,hvadv,hoadv,hnadv, &
+   call do_advection_3d(dt,eps,uuadv,vvadv,wwadv,huadv,hvadv,hoadv,hnadv,   &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                        dxu,dxv,dyu,dyv,arcd1,                            &
+                        dxu,dxv,dyu,dyv,arcd1,                              &
 #endif
-                        az,au,av,                                         &
-                        vel_hor_adv,vel_ver_adv,vel_adv_split,vel_AH)
+                        az,au,av,                                           &
+                        vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,H_TAG)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving tke_eps_advect_3d()'

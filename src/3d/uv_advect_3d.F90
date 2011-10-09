@@ -254,7 +254,6 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxc,dyc,dxx,dyx,arud1,arvd1
 #endif
-   use m2d, only: vel_AH
    use m3d, only: vel_adv_split,vel_hor_adv,vel_ver_adv
    use variables_3d, only: dt,uu,vv,ww,hun,hvn,uuEx,vvEx
    use variables_3d, only: fadv3d,uuadv,vvadv,wwadv,huadv,hvadv
@@ -328,12 +327,12 @@
       call toc(TIM_UVADV3DH)
    end if
 
-   call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hun,hun, &
+   call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hun,hun,    &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                        dxadv,dxx,dyadv,dyx,arud1,                       &
+                        dxadv,dxx,dyadv,dyx,arud1,                          &
 #endif
-                        au,maskadv,ax,                                   &
-                        vel_hor_adv,vel_ver_adv,vel_adv_split,vel_AH,  &
+                        au,maskadv,ax,                                      &
+                        vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,U_TAG, &
                         advres=uuEx)
 !$OMP END MASTER
 !  OMP-NOTE: MASTER does not imply BARRIER
@@ -381,12 +380,12 @@
       call toc(TIM_UVADV3DH)
    end if
 
-   call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hvn,hvn, &
+   call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hvn,hvn,    &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                        dxx,dxadv,dyx,dyadv,arvd1,                       &
+                        dxx,dxadv,dyx,dyadv,arvd1,                          &
 #endif
-                        av,ax,maskadv,                                   &
-                        vel_hor_adv,vel_ver_adv,vel_adv_split,vel_AH,  &
+                        av,ax,maskadv,                                      &
+                        vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,V_TAG, &
                         advres=vvEx)
 
    call toc(TIM_UVADV3D)

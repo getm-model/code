@@ -5,11 +5,12 @@
 ! !IROUTINE:  adv_v_split - 1D y-advection \label{sec-v-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_v_split(dt,f,Di,adv,V,Do,DV,                          &
+   subroutine adv_v_split(dt,f,Di,adv,V,Do,DV,          &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                          dxv,dyv,arcd1,                                &
+                          dxv,dyv,arcd1,                &
 #endif
-                          az,au,av,splitfac,scheme,AH,onestep_finalise)
+                          az,av,splitfac,scheme,AH,tag, &
+                          nosplit_finalise)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -38,8 +39,9 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
-   use advection, only: flux
+   use advection, only: mask_flux,mask_update,mask_finalise,flux
    use advection, only: UPSTREAM,P2,SUPERBEE,MUSCL,P2_PDM
+   use halo_zones, only: H_TAG,U_TAG,V_TAG
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -49,9 +51,9 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    REALTYPE,dimension(E2DFIELD),intent(in)    :: dxv,dyv,arcd1
 #endif
-   integer,dimension(E2DFIELD),intent(in)     :: az,au,av
-   integer,intent(in)                         :: scheme
-   logical,intent(in),optional                :: onestep_finalise
+   integer,dimension(E2DFIELD),intent(in)     :: az,av
+   integer,intent(in)                         :: scheme,tag
+   logical,intent(in),optional                :: nosplit_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
@@ -77,22 +79,38 @@
    use_AH = (AH .gt. _ZERO_)
    dti = splitfac*dt
 
+!  Note (KK): last term in mask_flux includes y-advection of tracers across N/S open bdys
+!             u_split and v_split must have their own mask_flux!
+   mask_flux = (av.eq.1 .or. (tag.eq.H_TAG .and. av.eq.2))
+
+!  Note (KK): last term in mask_update includes y-advection of u along W/E open bdys
+!             u_split and v_split must have their own mask_flux!
+   mask_update = (az.eq.1 .or. (tag.eq.U_TAG .and. az.eq.2))
+
+!  Note (KK): last term in mask_finalise includes x-advection of v along N/S open bdys
+!             u_split and v_split can use the same mask_finalise!
+   mask_finalise = .false.
+   if (present(nosplit_finalise)) then
+      if (nosplit_finalise) then
+         mask_finalise = (mask_update .or. (tag.eq.V_TAG .and. az.eq.2))
+      end if
+   end if
+
 !$OMP PARALLEL DEFAULT(SHARED)                                           &
 !$OMP PARALLEL FIRSTPRIVATE(use_limiter)                                 &
 !$OMP PARALLEL PRIVATE(good_adv,i,j,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
 
 ! Calculating v-interface fluxes !
-
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-1,jmax
       do i=imin-1,imax+1
-         if (av(i,j).eq.1 .or. (av(i,j).eq.2 .and. (az(i,j).eq.1 .or. az(i,j+1).eq.1))) then
-!           Note (KK): exclude advection/diffusion of normal velocity at open bdys
+         if (mask_flux(i,j)) then
+!           Note (KK): exclude y-advection of v across N/S open bdys
             if (V(i,j) .gt. _ZERO_) then
                fc = f(i,j  )               ! central
                if (scheme .ne. UPSTREAM) then
 !                 Note (KK): also fall back to upstream near boundaries
-                  use_limiter = (av(i,j-1).eq.1 .or. (av(i,j-1).eq.2 .and. az(i,j).eq.1))
+                  use_limiter = mask_flux(i,j-1)
                end if
                if (use_limiter) then
                   cfl = V(i,j)/DV(i,j)*dti/DYV
@@ -108,7 +126,7 @@
                fc = f(i,j+1)               ! central
                if (scheme .ne. UPSTREAM) then
 !                 Note (KK): also fall back to upstream near boundaries
-                  use_limiter = (av(i,j+1).eq.1 .or. (av(i,j+1).eq.2 .and. az(i,j+1).eq.1))
+                  use_limiter = mask_flux(i,j+1)
                end if
                if (use_limiter) then
                   cfl = -V(i,j)/DV(i,j)*dti/DYV
@@ -128,7 +146,6 @@
                      x = one6th*(_ONE_-_TWO_*cfl)
                      Phi = (_HALF_+x) + (_HALF_-x)*r
                      if (scheme.eq.P2) then
-!                       KK-TODO: for r=0 limit might be non-zero?!
                         limit = Phi
                      else
                         limit = max(_ZERO_,min(Phi,_TWO_/(_ONE_-cfl),_TWO_*r/(cfl+1.d-10)))
@@ -146,15 +163,6 @@
 !              Horizontal diffusion
                flux(i,j) = flux(i,j) - AH*DV(i,j)*(f(i,j+1)-f(i,j  ))/DYV
             end if
-         else if (use_AH .and. av(i,j).eq.2 .and. (az(i,j).eq.2 .or. az(i,j+1).eq.2)) then
-!           Note (KK): special handling for advection/diffusion of normal velocity at open bdys
-!                      (advection/diffusion of tracers near open bdys already included in former case)
-!                      outflow condition implies no advection across open bdy
-            if (az(i,j) .eq. 2) then ! eastern open bdy (az(i,j).ne.1.and.az(i,j+1).ne.1.and.av(i,j-1).eq.1)
-               flux(i,j) = AH*DV(i,j-1)*(f(i,j  )-f(i,j-1))/DYVJM1 ! not used for j=jmin-1
-            else ! western open bdy (az(i,j).ne.1.and.az(i,j+1).ne.1.and.av(i,j+1).eq.1)
-               flux(i,j) = AH*DV(i,j+1)*(f(i,j+2)-f(i,j+1))/DYVJP1 ! not used for j=jmax
-            end if
          else
             flux(i,j) = _ZERO_
          end if
@@ -162,40 +170,25 @@
    end do
 !$OMP END DO
 
-!  Doing the v-advection step
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin-1,imax+1
-         good_adv = (az(i,j).eq.1 .or. (az(i,j).eq.2 .and. (au(i-1,j).eq.2 .or. au(i,j).eq.2)))
-         if (good_adv .or. (use_AH .and. az(i,j).eq.2 .and. (av(i,j-1).eq.1 .or. av(i,j).eq.1))) then
-!           Note (KK): exclude tracer open bdy cells but include all velocity open bdys
-!                      special handling for advection/diffusion of normal velocity at open bdys
-!                      vanishing diffusive flux across exterior interface must be explicitely prescribed
-!                      diffusive flux across interior interface is isolated at exterior flux
+         if (mask_update(i,j)) then
+!           Note (KK): exclude y-advection of tracer and v across N/S open bdys
             Dio = Di(i,j)
-            if (good_adv) then
-!              Note (KK): exclude advection/diffusion of normal velocity at open bdys
-               Di(i,j) =  Dio - dti*( V(i,j  )*DXV           &
-                                     -V(i,j-1)*DXVJM1)*ARCD1
-               advn = splitfac*( flux(i,j  )*DXV           &
-                                -flux(i,j-1)*DXVJM1)*ARCD1
-            else if (av(i,j-1) .eq. 1) then ! eastern open bdy
-!              Note (KK): interior advection/diffusion already included in first case
-               advn = -splitfac*flux(i,j  )*DXVJM1*ARCD1
-            else ! western open bdy (av(i,j) .eq. 1)
-!              Note (KK): interior advection/diffusion already included in first case
-               advn =  splitfac*flux(i,j-1)*DXV*ARCD1
-            end if
+            Di(i,j) =  Dio - dti*( V(i,j  )*DXV           &
+                                  -V(i,j-1)*DXVJM1)*ARCD1
+            advn = splitfac*( flux(i,j  )*DXV           &
+                             -flux(i,j-1)*DXVJM1)*ARCD1
             adv(i,j) = adv(i,j) + advn
-            if (present(onestep_finalise)) then
-!              Note (KK): do not update f in case of onestep_finalise=.false. !!!
-               if (onestep_finalise) then
-                  f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
-               end if
-            else
-!              Note (KK): do the splitting step
+            if (.not. present(nosplit_finalise)) then
+!              do the y-advection splitting step
                f(i,j) = ( Dio*f(i,j) - dt*advn ) / Di(i,j)
             end if
+         end if
+         if (mask_finalise(i,j)) then
+!           Note (KK): do not modify tracer inside open bdy cells
+            f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
          end if
       end do
    end do

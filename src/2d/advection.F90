@@ -39,12 +39,14 @@
    public init_advection,do_advection,print_adv_settings
    public adv_u_split,adv_v_split,adv_upstream_2dh,adv_fct_2dh
 
-!  Note (KK): flux is used from the advection routines
-!             Di and adv are used only in do_advection
+!  Note (KK): masks and flux used from the advection routines
+!             Di and adv used only in do_advection
 #ifdef STATIC
+   logical,public,dimension(E2DFIELD)         :: mask_flux,mask_update,mask_finalise
    REALTYPE,public,dimension(E2DFIELD)        :: flux
    REALTYPE,dimension(E2DFIELD)               :: Di,adv
 #else
+   logical,public,dimension(:,:),allocatable  :: mask_flux,mask_update,mask_finalise
    REALTYPE,public,dimension(:,:),allocatable :: flux
    REALTYPE,dimension(:,:),allocatable        :: Di,adv
 #endif
@@ -72,11 +74,12 @@
 !-----------------------------------------------------------------------
 
    interface
-      subroutine adv_u_split(dt,f,Di,adv,U,Do,DU,                          &
+      subroutine adv_u_split(dt,f,Di,adv,U,Do,DU,          &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                             dxu,dyu,arcd1,                                &
+                             dxu,dyu,arcd1,                &
 #endif
-                             az,au,av,splitfac,scheme,AH,onestep_finalise)
+                             az,au,splitfac,scheme,AH,tag, &
+                             nosplit_finalise)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,intent(in)                        :: dt,splitfac,AH
@@ -84,17 +87,18 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
          REALTYPE,dimension(E2DFIELD),intent(in)    :: dxu,dyu,arcd1
 #endif
-         integer,dimension(E2DFIELD),intent(in)     :: az,au,av
-         integer,intent(in)                         :: scheme
-         logical,intent(in),optional                :: onestep_finalise
+         integer,dimension(E2DFIELD),intent(in)     :: az,au
+         integer,intent(in)                         :: scheme,tag
+         logical,intent(in),optional                :: nosplit_finalise
          REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
       end subroutine adv_u_split
 
-      subroutine adv_v_split(dt,f,Di,adv,V,Do,DV,                          &
+      subroutine adv_v_split(dt,f,Di,adv,V,Do,DV,          &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                             dxv,dyv,arcd1,                                &
+                             dxv,dyv,arcd1,                &
 #endif
-                             az,au,av,splitfac,scheme,AH,onestep_finalise)
+                             az,av,splitfac,scheme,AH,tag, &
+                             nosplit_finalise)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,intent(in)                        :: dt,splitfac,AH
@@ -102,9 +106,9 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
          REALTYPE,dimension(E2DFIELD),intent(in)    :: dxv,dyv,arcd1
 #endif
-         integer,dimension(E2DFIELD),intent(in)     :: az,au,av
-         integer,intent(in)                         :: scheme
-         logical,intent(in),optional                :: onestep_finalise
+         integer,dimension(E2DFIELD),intent(in)     :: az,av
+         integer,intent(in)                         :: scheme,tag
+         logical,intent(in),optional                :: nosplit_finalise
          REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
       end subroutine adv_v_split
 
@@ -112,7 +116,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                   dxv,dyu,dxu,dyv,arcd1,       &
 #endif
-                                  az,AH,onestep_finalise)
+                                  az,AH,nosplit_finalise)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,intent(in)                        :: dt,AH
@@ -121,7 +125,7 @@
          REALTYPE,dimension(E2DFIELD),intent(in)    :: dxv,dyu,dxu,dyv,arcd1
 #endif
          integer,dimension(E2DFIELD),intent(in)     :: az
-         logical,intent(in),optional                :: onestep_finalise
+         logical,intent(in),optional                :: nosplit_finalise
          REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
       end subroutine adv_upstream_2dh
 
@@ -129,7 +133,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                              dxv,dyu,dxu,dyv,arcd1,       &
 #endif
-                             az,AH,onestep_finalise)
+                             az,AH,nosplit_finalise)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,intent(in)                        :: dt,AH
@@ -138,7 +142,7 @@
          REALTYPE,dimension(E2DFIELD),intent(in)    :: dxv,dyu,dxu,dyv,arcd1
 #endif
          integer,dimension(E2DFIELD),intent(in)     :: az
-         logical,intent(in),optional                :: onestep_finalise
+         logical,intent(in),optional                :: nosplit_finalise
          REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
       end subroutine adv_fct_2dh
    end interface
@@ -175,6 +179,15 @@
    LEVEL2 'init_advection'
 
 #ifndef STATIC
+   allocate(mask_flux(E2DFIELD),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (mask_flux)'
+
+   allocate(mask_update(E2DFIELD),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (mask_update)'
+
+   allocate(mask_finalise(E2DFIELD),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (mask_finalise)'
+
    allocate(flux(E2DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (flux)'
 
@@ -198,11 +211,12 @@
 ! !IROUTINE:  do_advection - 2D advection schemes \label{sec-do-advection}
 !
 ! !INTERFACE:
-   subroutine do_advection(dt,f,U,V,DU,DV,Do,Dn,                  &
+   subroutine do_advection(dt,f,U,V,DU,DV,Do,Dn,         &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                           dxu,dxv,dyu,dyv,arcd1,                 &
+                           dxu,dxv,dyu,dyv,arcd1,        &
 #endif
-                           az,au,av,scheme,split,AH,Dires,advres)
+                           az,au,av,scheme,split,AH,tag, &
+                           Dires,advres)
 !
 ! !DESCRIPTION:
 !
@@ -233,7 +247,7 @@
    REALTYPE,dimension(E2DFIELD),intent(in)           :: dxu,dxv,dyu,dyv,arcd1
 #endif
    integer,dimension(E2DFIELD),intent(in)            :: az,au,av
-   integer,intent(in)                                :: split,scheme
+   integer,intent(in)                                :: split,scheme,tag
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout)        :: f
@@ -264,23 +278,23 @@
 
             case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
-               call adv_u_split(dt,f,Di,adv,U,Do,DU,      &
+               call adv_u_split(dt,f,Di,adv,U,Do,DU,       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                dxu,dyu,arcd1,            &
+                                dxu,dyu,arcd1,             &
 #endif
-                                az,au,av,_ONE_,scheme,AH, &
+                                az,au,_ONE_,scheme,AH,tag, &
 #ifdef SLICE_MODEL
-                                onestep_finalise=.true.)
+                                nosplit_finalise=.true.)
 #else
-                                onestep_finalise=.false.)
+                                nosplit_finalise=.false.)
 #endif
 #ifndef SLICE_MODEL
-               call adv_v_split(dt,f,Di,adv,V,Do,DV,      &
+               call adv_v_split(dt,f,Di,adv,V,Do,DV,       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                dxv,dyv,arcd1,            &
+                                dxv,dyv,arcd1,             &
 #endif
-                                az,au,av,_ONE_,scheme,AH, &
-                                onestep_finalise=.true.)
+                                az,av,_ONE_,scheme,AH,tag, &
+                                nosplit_finalise=.true.)
 #endif
 
             case(UPSTREAM_2DH)
@@ -311,11 +325,11 @@
 
             case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
-               call adv_u_split(dt,f,Di,adv,U,Do,DU,      &
+               call adv_u_split(dt,f,Di,adv,U,Do,DU,       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                dxu,dyu,arcd1,            &
+                                dxu,dyu,arcd1,             &
 #endif
-                                az,au,av,_ONE_,scheme,AH)
+                                az,au,_ONE_,scheme,AH,tag)
 #ifndef SLICE_MODEL
                if (scheme .ne. UPSTREAM) then
 !                 we need to update f(imin:imax,jmin-HALO)
@@ -325,11 +339,11 @@
                   call wait_halo(D_TAG)
                   call toc(TIM_ADVH)
                end if
-               call adv_v_split(dt,f,Di,adv,V,Do,DV,      &
+               call adv_v_split(dt,f,Di,adv,V,Do,DV,       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                dxv,dyv,arcd1,            &
+                                dxv,dyv,arcd1,             &
 #endif
-                                az,au,av,_ONE_,scheme,AH)
+                                az,av,_ONE_,scheme,AH,tag)
 #endif
 
             case((UPSTREAM_2DH),(FCT))
@@ -348,11 +362,11 @@
 
             case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
-               call adv_u_split(dt,f,Di,adv,U,Do,DU,       &
+               call adv_u_split(dt,f,Di,adv,U,Do,DU,        &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                dxu,dyu,arcd1,             &
+                                dxu,dyu,arcd1,              &
 #endif
-                                az,au,av,_HALF_,scheme,AH)
+                                az,au,_HALF_,scheme,AH,tag)
 #ifndef SLICE_MODEL
                if (scheme .ne. UPSTREAM) then
 !                 we need to update f(imin:imax,jmin-HALO)
@@ -362,11 +376,11 @@
                   call wait_halo(D_TAG)
                   call toc(TIM_ADVH)
                end if
-               call adv_v_split(dt,f,Di,adv,V,Do,DV,      &
+               call adv_v_split(dt,f,Di,adv,V,Do,DV,       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                dxv,dyv,arcd1,            &
+                                dxv,dyv,arcd1,             &
 #endif
-                                az,au,av,_ONE_,scheme,AH)
+                                az,av,_ONE_,scheme,AH,tag)
 #endif
 !              if (scheme .eq. UPSTREAM) then
 !                 we need to update f(imin-1,jmin:jmax)
@@ -379,11 +393,11 @@
                call update_2d_halo(f,f,az,imin,jmin,imax,jmax,D_TAG)
                call wait_halo(D_TAG)
                call toc(TIM_ADVH)
-               call adv_u_split(dt,f,Di,adv,U,Do,DU,       &
+               call adv_u_split(dt,f,Di,adv,U,Do,DU,        &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                dxu,dyu,arcd1,             &
+                                dxu,dyu,arcd1,              &
 #endif
-                                az,au,av,_HALF_,scheme,AH)
+                                az,au,_HALF_,scheme,AH,tag)
 
             case((UPSTREAM_2DH),(FCT))
 
