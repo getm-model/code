@@ -5,10 +5,10 @@
 ! !ROUTINE: deformation_rates - \label{deformation_rates}
 !
 ! !INTERFACE:
-   subroutine deformation_rates(U,V,DU,DV,dudxC,dudxV,dudxU,  &
-                                          dvdyC,dvdyU,dvdyV,  &
-                                          dudyX,dvdxX,        &
-                                          shearX,shearU,shearV)
+   subroutine deformation_rates(U,V,DU,DV,dudxC,dudxV,dudxU,         &
+                                          dvdyC,dvdyU,dvdyV,         &
+                                          dudyX,dvdxX,shearX,        &
+                                          dvdxU,shearU,dudyV,shearV)
                                           
 !  Note (KK): keep in sync with interface in m2d_general.F90
 !
@@ -33,8 +33,9 @@
 ! !OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudxC,dudxV,dudxU
    REALTYPE,dimension(E2DFIELD),intent(out),optional :: dvdyC,dvdyU,dvdyV
-   REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudyX,dvdxX
-   REALTYPE,dimension(E2DFIELD),intent(out),optional :: shearX,shearU,shearV
+   REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudyX,dvdxX,shearX
+   REALTYPE,dimension(E2DFIELD),intent(out),optional :: dvdxU,shearU
+   REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudyV,shearV
 !
 ! !REVISION HISTORY:
 !  Original author(s): Knut Klingbeil
@@ -487,6 +488,34 @@
    end if
 #endif
 
+!  shear rate at U-points
+   if (present(dvdxU)) then
+#ifdef SLICE_MODEL
+      j=jmax/2
+#else
+      do j=jmin-1,jmax+1
+#endif
+         do i=imin-HALO,imax+1
+!           Note (KK): slip condition dvdxU(au=0)=0
+!                      outflow condition at W/E open bdys dvdxU(au=2)=0
+!           KK-TODO: metric correction
+            if (au(i,j) .eq. 1) then
+               dvdxU(i,j) = _HALF_*( (v_vel(i+1,j-1) + v_vel(i+1,j))      &
+                                    -(v_vel(i  ,j-1) + v_vel(i  ,j)))/DXU
+            else if (au(i,j) .eq. 3) then
+               if (au(i,j-1) .eq. 1) then ! northern open bdy
+                  dvdxU(i,j) = (v_vel(i+1,j-1) - v_vel(i  ,j-1))/DXU
+               else ! southern open bdy
+                  dvdxU(i,j) = (v_vel(i+1,j  ) - v_vel(i  ,j  ))/DXU
+               end if
+            end if
+         end do
+#ifndef SLICE_MODEL
+      end do
+#else
+      dvdxU(imin-HALO:imax+1,jmax/2+1) = dvdxU(imin-HALO:imax+1,jmax/2)
+#endif
+   end if
    if (present(shearU)) then
 !     interpolation of shear rate to U-points
 #ifdef SLICE_MODEL
@@ -510,6 +539,28 @@
 #endif
    end if
 
+!  shear rate at V-points
+#ifndef SLICE_MODEL
+   if (present(dudyV)) then
+      do j=jmin-HALO,jmax+1
+         do i=imin-1,imax+1
+!           Note (KK): slip condition dudyV(av=0)=0
+!                      outflow condition at N/S open bdys dudyV(av=2)=0
+!           KK-TODO: metric correction
+            if (av(i,j) .eq. 1) then
+               dudyV(i,j) = _HALF_*( (u_vel(i-1,j+1) + u_vel(i  ,j+1))      &
+                                    -(u_vel(i-1,j  ) + u_vel(i  ,j  )))/DYV
+            else if (av(i,j) .eq. 3) then
+               if (av(i-1,j) .eq. 1) then ! eastern open bdy
+                  dudyV(i,j) = (u_vel(i-1,j+1) - u_vel(i-1,j  ))/DYV
+               else ! western open bdy
+                  dudyV(i,j) = (u_vel(i  ,j+1) - u_vel(i  ,j  ))/DYV
+               end if
+            end if
+         end do
+      end do
+   end if
+#endif
    if (present(shearV)) then
 !     interpolation of shear rate to V-points
 #ifdef SLICE_MODEL

@@ -18,17 +18,18 @@
 !EOP
 !-----------------------------------------------------------------------
    interface
-      subroutine deformation_rates(U,V,DU,DV,dudxC,dudxV,dudxU,  &
-                                             dvdyC,dvdyU,dvdyV,  &
-                                             dudyX,dvdxX,        &
-                                             shearX,shearU,shearV)
+      subroutine deformation_rates(U,V,DU,DV,dudxC,dudxV,dudxU,         &
+                                             dvdyC,dvdyU,dvdyV,         &
+                                             dudyX,dvdxX,shearX,        &
+                                             dvdxU,shearU,dudyV,shearV)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,DU,DV
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudxC,dudxV,dudxU
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: dvdyC,dvdyU,dvdyV
-         REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudyX,dvdxX
-         REALTYPE,dimension(E2DFIELD),intent(out),optional :: shearX,shearU,shearV
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudyX,dvdxX,shearX
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: dvdxU,shearU
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudyV,shearV
       end subroutine deformation_rates
 
       subroutine uv_diffusion(An_method,UEx,VEx,U,V,D,DU,DV, &
