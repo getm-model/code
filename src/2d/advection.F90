@@ -262,12 +262,12 @@
    adv_gridU%mask_uflux    => mask_updateH(1+_IRANGE_HALO_,_JRANGE_HALO_)
    adv_gridU%mask_uupdate  => mask_uupdateU
    adv_gridU%mask_vflux    => mask_vfluxU
-   adv_gridU%mask_vupdate  => mask_vupdateU
+   adv_gridU%mask_vupdate  => mask_vupdateU ! now also includes y-advection of u along W/E open bdys
    adv_gridU%mask_finalise => mask_vupdateU
    adv_gridU%az            => au
 
    adv_gridV%mask_uflux    => mask_ufluxV
-   adv_gridV%mask_uupdate  => mask_uupdateV
+   adv_gridV%mask_uupdate  => mask_uupdateV ! now also includes x-advection of v along N/S open bdys
    adv_gridV%mask_vflux    => mask_updateH(_IRANGE_HALO_,1+_JRANGE_HALO_)
    adv_gridV%mask_vupdate  => mask_vupdateV
    adv_gridV%mask_finalise => mask_uupdateV
