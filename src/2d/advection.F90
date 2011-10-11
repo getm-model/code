@@ -288,8 +288,8 @@
 
    adv_gridV%dxu   => dxx(_IRANGE_HALO_-1,_JRANGE_HALO_)
    adv_gridV%dyu   => dyx(_IRANGE_HALO_-1,_JRANGE_HALO_)
-   adv_gridV%dxv   => dxc(1+_IRANGE_HALO_,_JRANGE_HALO_)
-   adv_gridV%dyv   => dyc(1+_IRANGE_HALO_,_JRANGE_HALO_)
+   adv_gridV%dxv   => dxc(_IRANGE_HALO_,1+_JRANGE_HALO_)
+   adv_gridV%dyv   => dyc(_IRANGE_HALO_,1+_JRANGE_HALO_)
    adv_gridV%arcd1 => arvd1
 #endif
 
