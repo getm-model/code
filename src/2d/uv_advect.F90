@@ -143,15 +143,9 @@
 ! all gradients in $y$-direction is suppressed.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,az,au,av,ax
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxc,dyc,dxx,dyx,arud1,arvd1
-#endif
+   use domain, only: imin,imax,jmin,jmax,au,av
    use m2d, only: dtm,vel_adv_split2d,vel_adv_scheme
-   use variables_2d, only: UEx,VEx,fadv,Uadv,Vadv,DUadv,DVadv,maskadv
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   use variables_2d, only: dxadv,dyadv
-#endif
+   use variables_2d, only: UEx,VEx,fadv,Uadv,Vadv,DUadv,DVadv
    use advection, only: UPSTREAM,do_advection
    use halo_zones, only: update_2d_halo,wait_halo,U_TAG,V_TAG
    use getm_timers, only: tic,toc,TIM_UVADV,TIM_UVADVH
@@ -192,11 +186,6 @@
 !        Note (KK): DV only valid until jmax+1
 !                   therefore DVadv only valid until jmax+1
          DVadv(i,j) = _HALF_*( DV(i  ,j) + DV(i+1,j) )
-         maskadv(i,j) = az(i+1,j)
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-         dxadv(i,j) = dxc(i+1,j)
-         dyadv(i,j) = dyc(i+1,j)
-#endif
       end do
    end do
 !$OMP END DO
@@ -210,10 +199,6 @@
    end if
 
    call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DU,DU,        &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                     dxadv,dxx,dyadv,dyx,arud1,                   &
-#endif
-                     au,maskadv,ax,                               &
                      vel_adv_scheme,vel_adv_split2d,_ZERO_,U_TAG, &
                      advres=UEx)
 !$OMP END MASTER
@@ -234,11 +219,6 @@
 !        Note (KK): DV only valid until jmax+1
 !                   therefore DVadv only valid until jmax
          DVadv(i,j) = _HALF_*( DV(i,j) + DV(i,j+1) )
-         maskadv(i,j) = az(i,j+1)
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-         dxadv(i,j) = dxc(i,j+1)
-         dyadv(i,j) = dyc(i,j+1)
-#endif
       end do
    end do
 !$OMP END DO
@@ -253,10 +233,6 @@
    end if
 
    call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,DV,DV,        &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                     dxx,dxadv,dyx,dyadv,arvd1,                   &
-#endif
-                     av,ax,maskadv,                               &
                      vel_adv_scheme,vel_adv_split2d,_ZERO_,V_TAG, &
                      advres=VEx)
 

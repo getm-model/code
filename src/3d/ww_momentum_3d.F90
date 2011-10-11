@@ -77,9 +77,6 @@
          do i=imin,imax
 #endif
             if (az(i,j) .eq. 1) then
-!              Note (KK): we need ww(az=2) for wwadv in uv_advect_3d
-!              KK-TODO: what is ww in open bdy cells ???
-!                       _ZERO_ or mirror ???
                if (k .lt. kmin(i,j)) then
                   ww(i,j,kmin(i,j))= _ZERO_
                else

@@ -16,10 +16,7 @@
 ! schemes are used which are also used for the momentum advection.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,kmax,az,au,av
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxu,dxv,dyu,dyv,arcd1
-#endif
+   use domain, only: imin,imax,jmin,jmax,kmax,az
    use m3d, only: vel_adv_split,vel_hor_adv,vel_ver_adv
    use variables_3d, only: tke,eps,dt,uu,vv,ww,hun,hvn,ho,hn
    use variables_3d, only: uuadv,vvadv,wwadv,hoadv,hnadv,huadv,hvadv
@@ -83,17 +80,9 @@
 !$OMP END PARALLEL
 
    call do_advection_3d(dt,tke,uuadv,vvadv,wwadv,huadv,hvadv,hoadv,hnadv,   &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                        dxu,dxv,dyu,dyv,arcd1,                              &
-#endif
-                        az,au,av,                                           &
                         vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,H_TAG)
 
    call do_advection_3d(dt,eps,uuadv,vvadv,wwadv,huadv,hvadv,hoadv,hnadv,   &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                        dxu,dxv,dyu,dyv,arcd1,                              &
-#endif
-                        az,au,av,                                           &
                         vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,H_TAG)
 
 #ifdef DEBUG

@@ -311,10 +311,7 @@ salt_field_no=1
 ! !USES:
    use advection_3d, only: do_advection_3d
    use variables_3d, only: dt,cnpar,hn,ho,nuh,uu,vv,ww,hun,hvn
-   use domain,       only: imin,imax,jmin,jmax,kmax,az,au,av
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxu,dxv,dyu,dyv,arcd1
-#endif
+   use domain,       only: imin,imax,jmin,jmax,kmax,az
    use parameters, only: avmols
    use getm_timers, only: tic, toc, TIM_SALT, TIM_MIXANALYSIS
    use variables_3d, only: do_mixing_analysis
@@ -366,20 +363,12 @@ salt_field_no=1
 !    so the overhead of the contruct would be rather large.
       S2 = S**2
       call do_advection_3d(dt,S2,uu,vv,ww,hun,hvn,ho,hn,                           &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                           dxu,dxv,dyu,dyv,arcd1,                                  &
-#endif
-                           az,au,av,                                               &
                            salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH,H_TAG)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_SALT)
    end if
 
    call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,                            &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                        dxu,dxv,dyu,dyv,arcd1,                                  &
-#endif
-                        az,au,av,                                               &
                         salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH,H_TAG)
 
    if (do_mixing_analysis) then

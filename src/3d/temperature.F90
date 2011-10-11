@@ -303,12 +303,9 @@ temp_field_no=1
 ! !USES:
    use advection_3d, only: do_advection_3d
    use variables_3d, only: dt,cnpar,hn,ho,nuh,uu,vv,ww,hun,hvn,S
-   use domain,       only: imin,imax,jmin,jmax,kmax,az,au,av
+   use domain,       only: imin,imax,jmin,jmax,kmax,az
    use meteo,        only: swr,shf
    use parameters,   only: rho_0,cp
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxu,dxv,dyu,dyv,arcd1
-#endif
    use parameters, only: avmolt
    use getm_timers, only: tic, toc, TIM_TEMP, TIM_MIXANALYSIS
    use variables_3d, only: do_mixing_analysis
@@ -353,20 +350,12 @@ temp_field_no=1
 !    so the overhead of the contruct would be rather large.
       T2 = T**2
       call do_advection_3d(dt,T2,uu,vv,ww,hun,hvn,ho,hn,                           &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                           dxu,dxv,dyu,dyv,arcd1,                                  &
-#endif
-                           az,au,av,                                               &
                            temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH,H_TAG)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
    end if
 
    call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,                            &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                        dxu,dxv,dyu,dyv,arcd1,                                  &
-#endif
-                        az,au,av,                                               &
                         temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH,H_TAG)
 
    if (do_mixing_analysis) then

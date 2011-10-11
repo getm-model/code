@@ -12,12 +12,7 @@
 ! !USES:
    use parameters, only: g,rho_0
    use domain, only: imin,imax,jmin,jmax,kmax
-   use domain, only: az,au,av
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxu,dxv,dyu,dyv,arcd1
-#else
-   use domain, only: dx,dy,ard1
-#endif
+   use domain, only: az
    use time, only: secondsofday
    use variables_2d, only: D
    use variables_3d, only: taub
@@ -225,10 +220,6 @@
 #if 1
       fadv3d = cc3d(n,:,:,:)
       call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                   &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                           dxu,dxv,dyu,dyv,arcd1,                              &
-#endif
-                           az,au,av,                                           &
                            bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH,H_TAG)
 
       call update_3d_halo(fadv3d,fadv3d,az, &
@@ -237,10 +228,6 @@
       cc3d(n,:,:,:) = fadv3d
 #else
       call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn,            &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                           dxu,dxv,dyu,dyv,arcd1,                              &
-#endif
-                           az,au,av,                                           &
                            bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH,H_TAG)
 
       call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az, &

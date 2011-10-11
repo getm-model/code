@@ -250,17 +250,10 @@
 !
 ! !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,ax
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxc,dyc,dxx,dyx,arud1,arvd1
-#endif
+   use domain, only: imin,imax,jmin,jmax,kmax,au,av
    use m3d, only: vel_adv_split,vel_hor_adv,vel_ver_adv
    use variables_3d, only: dt,uu,vv,ww,hun,hvn,uuEx,vvEx
    use variables_3d, only: fadv3d,uuadv,vvadv,wwadv,huadv,hvadv
-   use variables_2d, only: maskadv
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   use variables_2d, only: dxadv,dyadv
-#endif
    use advection, only: UPSTREAM
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
@@ -306,18 +299,7 @@
 !$OMP END DO NOWAIT
    end do
 
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-HALO,jmax+HALO
-      do i=imin-HALO,imax+HALO-1
-         maskadv(i,j) = az(i+1,j)
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-         dxadv(i,j) = dxc(i+1,j)
-         dyadv(i,j) = dyc(i+1,j)
-#endif
-      end do
-   end do
-!$OMP END DO
-
+!$OMP BARRIER
 !$OMP MASTER
    if (vel_hor_adv .ne. UPSTREAM) then
 !     we need to update fadv3d(imax+HALO,jmin-HALO:jmax+HALO)
@@ -328,10 +310,6 @@
    end if
 
    call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hun,hun,    &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                        dxadv,dxx,dyadv,dyx,arud1,                          &
-#endif
-                        au,maskadv,ax,                                      &
                         vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,U_TAG, &
                         advres=uuEx)
 !$OMP END MASTER
@@ -359,17 +337,6 @@
 !$OMP END DO NOWAIT
    end do
 
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-HALO,jmax+HALO-1
-      do i=imin-HALO,imax+HALO
-         maskadv(i,j) = az(i,j+1)
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-         dxadv(i,j) = dxc(i,j+1)
-         dyadv(i,j) = dyc(i,j+1)
-#endif
-      end do
-   end do
-!$OMP END DO
 !$OMP END PARALLEL
 
    if (vel_hor_adv .ne. UPSTREAM) then
@@ -381,10 +348,6 @@
    end if
 
    call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hvn,hvn,    &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                        dxx,dxadv,dyx,dyadv,arvd1,                          &
-#endif
-                        av,ax,maskadv,                                      &
                         vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,V_TAG, &
                         advres=vvEx)
 

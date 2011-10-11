@@ -347,10 +347,6 @@
 #ifndef NO_BAROCLINIC
    use variables_3d, only: rho
 #endif
-   use domain,       only: au,av
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxu,dxv,dyu,dyv,arcd1
-#endif
    use domain, only: dry_z
    IMPLICIT NONE
 !
@@ -415,10 +411,6 @@
    end do
 
    call do_advection_3d(dt,spm,uu,vv,wwadv,hun,hvn,ho,hn,                   &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                        dxu,dxv,dyu,dyv,arcd1,                              &
-#endif
-                        az,au,av,                                           &
                         spm_hor_adv,spm_ver_adv,spm_adv_split,spm_AH,H_TAG)
 
 #ifdef TRACER_POSITIVE
@@ -555,26 +547,6 @@
    do j=jmin,jmax
       if (az(imin,j).eq.2) spm(imin,j,:)=spm(imin+1,j,:)
       if (az(imax,j).eq.2) spm(imax,j,:)=spm(imax-1,j,:)
-   end do
-#endif
-
-#ifdef ELBE_TEST
-   do j=jmin,jmax
-      if(az(1,j) /= 0) then
-          do k=1 ,kmax
-             if (uu(1,j,k) .gt. _ZERO_) then
-                spm(1,j,k)=max(spm(1,j,k),_ZERO_)
-             else
-                spm(1,j,k)=spm(1,j,k)-dt*arcd1(1,j)*dyu(1,j)*uu(1,j,k)/hun(1,j,k)*(spm(2,j,k)-spm(1,j,k))
-             end if
-          end do
-      end if
-!     River boundary
-      if(az(imax,j) /= 0) then
-         do k=1,kmax
-            spm(imax,j,k)=_ZERO_
-         end do
-      end if
    end do
 #endif
 

@@ -11,12 +11,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
-   use domain, only: az,au,av
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxu,dxv,dyu,dyv,arcd1
-#else
-   use domain, only: dx,dy,ard1
-#endif
+   use domain, only: az
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn,fadv3d
    use variables_3d, only: nuh,T,S,rho,a,g1,g2
    use meteo, only: swr,u10,v10,evap,precip
@@ -260,10 +255,6 @@
       call wait_halo(D_TAG)
 
       call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                       &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                           dxu,dxv,dyu,dyv,arcd1,                                  &
-#endif
-                           az,au,av,                                               &
                            fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH,H_TAG)
 
       cc_pel(n,:,:,:) = fadv3d
@@ -273,10 +264,6 @@
       call wait_halo(D_TAG)
 
       call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn,                &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                           dxu,dxv,dyu,dyv,arcd1,                                  &
-#endif
-                           az,au,av,                                               &
                            fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH,H_TAG)
 #endif
    end do

@@ -156,14 +156,3 @@
    allocate(DVadv(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (DVadv)'
 
-   allocate(maskadv(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (maskadv)'
-
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   allocate(dxadv(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (dxadv)'
-
-   allocate(dyadv(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (dyadv)'
-#endif
-

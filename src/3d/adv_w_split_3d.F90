@@ -4,9 +4,9 @@
 ! !IROUTINE:  adv_w_split_3d - 1D z-advection \label{sec-w-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_w_split_3d(dt,f,hi,adv3d,ww,ho,    &
-                             az,splitfac,scheme,tag, &
-                             nosplit_finalise)
+   subroutine adv_w_split_3d(dt,f,hi,adv3d,ww,ho,            &
+                             az,splitfac,scheme,             &
+                             nosplit_finalise,mask_finalise)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -51,14 +51,15 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,intent(in)                        :: dt,splitfac
-   REALTYPE,dimension(I3DFIELD),intent(in)    :: ww,ho
-   integer,dimension(E2DFIELD),intent(in)     :: az
-   integer,intent(in)                         :: scheme,tag
-   logical,intent(in),optional                :: nosplit_finalise
+   REALTYPE,intent(in)                             :: dt,splitfac
+   REALTYPE,dimension(I3DFIELD),intent(in)         :: ww,ho
+   integer,dimension(E2DFIELD),intent(in)          :: az
+   integer,intent(in)                              :: scheme
+   logical,intent(in),optional                     :: nosplit_finalise
+   logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(I3DFIELD),intent(inout) :: f,hi,adv3d
+   REALTYPE,dimension(I3DFIELD),intent(inout)      :: f,hi,adv3d
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -107,11 +108,10 @@
    flux1d(kmax) = _ZERO_
 
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax
-      do i=imin,imax
-         if (az(i,j).eq.1 .or. ((tag.eq.U_TAG .or. tag.eq.V_TAG) .and. az(i,j).eq.2)) then
-!           Note (KK): exclude tracer open bdy cells but
-!                      include all velocity open bdys
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
+         if (az(i,j) .eq.1 ) then
+!           Note (KK): exclude vertical advection of normal velocity at open bdys
             if (iterate) then
 !              estimate number of iterations by maximum cfl number in water column
                cfl = _ZERO_
@@ -133,7 +133,7 @@
                   if (ww(i,j,k) .gt. _ZERO_) then
                      fc = f(i,j,k  )               ! central
                      if (scheme .ne. UPSTREAM) then
-!                       Note (KK): also fall back to upstream near boundaries
+!                       also fall back to upstream near boundaries
                         use_limiter = (k .gt. 1)
                      end if
                      if (use_limiter) then
@@ -149,7 +149,7 @@
                   else
                      fc = f(i,j,k+1)               ! central
                      if (scheme .ne. UPSTREAM) then
-!                       Note (KK): also fall back to upstream near boundaries
+!                       also fall back to upstream near boundaries
                         use_limiter = (k .lt. kmax-1)
                      end if
                      if (use_limiter) then
@@ -184,18 +184,13 @@
                      flux1d(k) = flux1d(k) + ww(i,j,k)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
                   end if
                end do
-
-!              Doing the w-advection step
                do k=1,kmax
                   hio = hi(i,j,k)
                   hi(i,j,k) = hio - dtik*(ww(i,j,k  )-ww(i,j,k-1))
                   advn = splitfack*(flux1d(k  )-flux1d(k-1))
                   adv3d(i,j,k) = adv3d(i,j,k) + advn
-                  if (present(nosplit_finalise)) then
-                     if (nosplit_finalise) then
-                        f(i,j,k) = ( ho(i,j,k)*f(i,j,k) - dt*adv3d(i,j,k) ) / hi(i,j,k)
-                     end if
-                  else
+                  if (.not. present(nosplit_finalise)) then
+!                    do the z-advection splitting step
                      f(i,j,k) = ( hio*f(i,j,k) - dt*advn ) / hi(i,j,k)
                   end if
                end do
@@ -204,6 +199,22 @@
       end do
    end do
 !$OMP END DO
+
+   if (present(nosplit_finalise)) then
+      if (nosplit_finalise) then
+         do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+            do j=jmin-HALO,jmax+HALO
+               do i=imin-HALO,imax+HALO
+                  if (mask_finalise(i,j)) then
+                     f(i,j,k) = ( ho(i,j,k)*f(i,j,k) - dt*adv3d(i,j,k) ) / hi(i,j,k)
+                  end if
+               end do
+            end do
+!$OMP END DO NOWAIT
+         end do
+      end if
+   end if
 
 !  Each thread must deallocate its own HEAP storage:
    deallocate(flux1d,stat=rc)

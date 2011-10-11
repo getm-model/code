@@ -5,12 +5,13 @@
 ! !IROUTINE:  adv_v_split - 1D y-advection \label{sec-v-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_v_split(dt,f,Di,adv,V,Do,DV,          &
+   subroutine adv_v_split(dt,f,Di,adv,V,Do,DV,            &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                          dxv,dyv,arcd1,                &
+                          dxv,dyv,arcd1,                  &
 #endif
-                          az,av,splitfac,scheme,AH,tag, &
-                          nosplit_finalise)
+                          splitfac,scheme,AH,             &
+                          mask_flux,mask_update,          &
+                          nosplit_finalise,mask_finalise)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -41,29 +42,31 @@
 #endif
    use advection, only: mask_flux,mask_update,mask_finalise,flux
    use advection, only: UPSTREAM,P2,SUPERBEE,MUSCL,P2_PDM
-   use halo_zones, only: H_TAG,U_TAG,V_TAG
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,intent(in)                        :: dt,splitfac,AH
-   REALTYPE,dimension(E2DFIELD),intent(in)    :: V,Do,DV
+   REALTYPE,intent(in)                             :: dt,splitfac,AH
+   REALTYPE,dimension(E2DFIELD),intent(in)         :: V,Do,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   REALTYPE,dimension(E2DFIELD),intent(in)    :: dxv,dyv,arcd1
+   REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
+   REALTYPE,dimension(E2DFIELD),intent(in)         :: arcd1
 #endif
-   integer,dimension(E2DFIELD),intent(in)     :: az,av
-   integer,intent(in)                         :: scheme,tag
-   logical,intent(in),optional                :: nosplit_finalise
+   integer,intent(in)                              :: scheme
+   logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_flux
+   logical,dimension(E2DFIELD),intent(in)          :: mask_update
+   logical,intent(in),optional                     :: nosplit_finalise
+   logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
+   REALTYPE,dimension(E2DFIELD),intent(inout)      :: f,Di,adv
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   logical            :: use_limiter,use_AH,good_adv
-   integer            :: i,j
+   logical            :: use_limiter,use_AH
+   integer            :: i,j,jadd
    REALTYPE           :: dti,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd
    REALTYPE,parameter :: one6th=_ONE_/6
 !EOP
@@ -75,35 +78,24 @@
    write(debug,*) 'adv_v_split() # ',Ncall
 #endif
 
+   if (scheme .eq. UPSTREAM) then
+      jadd = 1
+   else
+      jadd = 0
+   end if
+
    use_limiter = .false.
    use_AH = (AH .gt. _ZERO_)
    dti = splitfac*dt
 
-!  Note (KK): last term in mask_flux includes y-advection of tracers across N/S open bdys
-!             u_split and v_split must have their own mask_flux!
-   mask_flux = (av.eq.1 .or. (tag.eq.H_TAG .and. av.eq.2))
-
-!  Note (KK): last term in mask_update includes y-advection of u along W/E open bdys
-!             u_split and v_split must have their own mask_flux!
-   mask_update = (az.eq.1 .or. (tag.eq.U_TAG .and. az.eq.2))
-
-!  Note (KK): last term in mask_finalise includes x-advection of v along N/S open bdys
-!             u_split and v_split can use the same mask_finalise!
-   mask_finalise = .false.
-   if (present(nosplit_finalise)) then
-      if (nosplit_finalise) then
-         mask_finalise = (mask_update .or. (tag.eq.V_TAG .and. az.eq.2))
-      end if
-   end if
-
-!$OMP PARALLEL DEFAULT(SHARED)                                           &
-!$OMP PARALLEL FIRSTPRIVATE(use_limiter)                                 &
-!$OMP PARALLEL PRIVATE(good_adv,i,j,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
+!$OMP PARALLEL DEFAULT(SHARED)                                  &
+!$OMP PARALLEL FIRSTPRIVATE(use_limiter)                        &
+!$OMP PARALLEL PRIVATE(i,j,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
 
 ! Calculating v-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-1,jmax
-      do i=imin-1,imax+1
+   do j=jmin-1-jadd,jmax+jadd
+      do i=imin-HALO,imax+HALO
          if (mask_flux(i,j)) then
 !           Note (KK): exclude y-advection of v across N/S open bdys
             if (V(i,j) .gt. _ZERO_) then
@@ -171,8 +163,8 @@
 !$OMP END DO
 
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax
-      do i=imin-1,imax+1
+   do j=jmin-jadd,jmax+jadd
+      do i=imin-HALO,imax+HALO
          if (mask_update(i,j)) then
 !           Note (KK): exclude y-advection of tracer and v across N/S open bdys
             Dio = Di(i,j)
@@ -186,9 +178,11 @@
                f(i,j) = ( Dio*f(i,j) - dt*advn ) / Di(i,j)
             end if
          end if
-         if (mask_finalise(i,j)) then
-!           Note (KK): do not modify tracer inside open bdy cells
-            f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
+         if (present(nosplit_finalise)) then
+            if (nosplit_finalise .and. mask_finalise(i,j)) then
+!              Note (KK): do not modify tracer inside open bdy cells
+               f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
+            end if
          end if
       end do
    end do
