@@ -31,5 +31,5 @@
   REALTYPE,dimension(:,:),allocatable :: fadv,Uadv,Vadv,DUadv,DVadv
 
 ! Remember to update this value if you add more 2D arrays.
-  integer, parameter :: n2d_fields=45
+  integer, parameter :: n2d_fields=42
 

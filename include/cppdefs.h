@@ -11,8 +11,6 @@
 #define DXCIM1 dxc(i-1,j)
 #define DXCJP1 dxc(i,j+1)
 #define DXU dxu(i,j)
-#define DXUIM1 dxu(i-1,j)
-#define DXUIP1 dxu(i+1,j)
 #define DXV dxv(i,j)
 #define DXVJM1 dxv(i,j-1)
 #define DXX dxx(i,j)
@@ -24,8 +22,6 @@
 #define DYU dyu(i,j)
 #define DYUIM1 dyu(i-1,j)
 #define DYV dyv(i,j)
-#define DYVJM1 dyv(i,j-1)
-#define DYVJP1 dyv(i,j+1)
 #define DYX dyx(i,j)
 #define DYXIM1 dyx(i-1,j)
 #define ARCD1 arcd1(i,j)
@@ -37,8 +33,6 @@
 #define DXCIM1 dx
 #define DXCJP1 dx
 #define DXU dx
-#define DXUIM1 dx
-#define DXUIP1 dx
 #define DXV dx
 #define DXVJM1 dx
 #define DXX dx
@@ -50,8 +44,6 @@
 #define DYU dy
 #define DYUIM1 dy
 #define DYV dy
-#define DYVJM1 dy
-#define DYVJP1 dy
 #define DYX dy
 #define DYXIM1 dy
 #define ARCD1 ard1
