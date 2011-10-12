@@ -111,7 +111,7 @@
 
 !  Sanity checks for advection specifications
    LEVEL3 'Advection of temperature'
-   call print_adv_settings_3d(temp_adv_split,temp_hor_adv,temp_ver_adv,temp_AH)
+   call print_adv_settings_3d(temp_adv_split,temp_hor_adv,temp_ver_adv,_ZERO_)
 
    select case (temp_AH_method)
       case(0)
@@ -379,13 +379,13 @@ temp_field_no=1
 !    so the overhead of the contruct would be rather large.
       T2 = T**2
       call do_advection_3d(dt,T2,uu,vv,ww,hun,hvn,ho,hn,                           &
-                           temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH,H_TAG)
+                           temp_hor_adv,temp_ver_adv,temp_adv_split,_ZERO_,H_TAG)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
    end if
 
    call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,                            &
-                        temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH,H_TAG)
+                        temp_hor_adv,temp_ver_adv,temp_adv_split,_ZERO_,H_TAG)
 
    if (do_mixing_analysis) then
       call toc(TIM_TEMP)

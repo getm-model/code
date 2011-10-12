@@ -110,7 +110,7 @@
    
 !  Sanity checks for advection specifications
    LEVEL3 'Advection of salinity'
-   call print_adv_settings_3d(salt_adv_split,salt_hor_adv,salt_ver_adv,salt_AH)
+   call print_adv_settings_3d(salt_adv_split,salt_hor_adv,salt_ver_adv,_ZERO_)
 
    select case (salt_AH_method)
       case(0)
@@ -392,13 +392,13 @@ salt_field_no=1
 !    so the overhead of the contruct would be rather large.
       S2 = S**2
       call do_advection_3d(dt,S2,uu,vv,ww,hun,hvn,ho,hn,                           &
-                           salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH,H_TAG)
+                           salt_hor_adv,salt_ver_adv,salt_adv_split,_ZERO_,H_TAG)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_SALT)
    end if
 
    call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,                            &
-                        salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH,H_TAG)
+                        salt_hor_adv,salt_ver_adv,salt_adv_split,_ZERO_,H_TAG)
 
    if (do_mixing_analysis) then
       call toc(TIM_SALT)
