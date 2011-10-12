@@ -212,7 +212,7 @@
                do i=imin-1,imax
                   if (au(i,j) .gt. 0) then
                      if (uu(i,j,k) .gt. _ZERO_) then
-                        c=uu(i,j,k)/hun(i,j,k)*dt/delxu(i,j)
+                        c=splitfac*uu(i,j,k)/hun(i,j,k)*dt/delxu(i,j)
                         if (au(i-1,j) .gt. 0) then
                            fu=f(i-1,j,k)         ! upstream
                         else
@@ -226,7 +226,7 @@
                            r=(fc-fu)*1.d10
                         end if
                      else
-                        c=-uu(i,j,k)/hun(i,j,k)*dt/delxu(i,j)
+                        c=-splitfac*uu(i,j,k)/hun(i,j,k)*dt/delxu(i,j)
                         if (au(i+1,j) .gt. 0) then
                            fu=f(i+2,j,k)         ! upstream
                         else

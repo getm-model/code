@@ -105,11 +105,11 @@
                      do k=1,kmax-1
                         !cu(i,j,k) = _ZERO_
                         if (ww(i,j,k) .gt. _ZERO_) then
-                           c=ww(i,j,k)/it*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
+                           c=splitfac*ww(i,j,k)/it*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                            if (c .gt. cmax) cmax=c
                            cu(i,j,k)=ww(i,j,k)*f(i,j,k)
                         else
-                           c=-ww(i,j,k)/it*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
+                           c=-splitfac*ww(i,j,k)/it*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                            if (c .gt. cmax) cmax=c
                            cu(i,j,k)=ww(i,j,k)*f(i,j,k+1)
                         end if
@@ -154,9 +154,9 @@
                         cu(i,j,k) = _ZERO_
                         if (ww(i,j,k) .gt. _ZERO_) then
                            if (k.lt.kmax) then
-                              c=ww(i,j,k)/float(it)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
+                              c=splitfac*ww(i,j,k)/float(it)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                            else
-                              c=ww(i,j,k)/float(it)*dt/hi(i,j,k)
+                              c=splitfac*ww(i,j,k)/float(it)*dt/hi(i,j,k)
                            end if
                            if (c .gt. cmax) cmax=c
                            if (k .gt. 1) then
@@ -177,9 +177,9 @@
                            end if
                         else
                            if (k.lt.kmax) then
-                              c=-ww(i,j,k)/float(it)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
+                              c=-splitfac*ww(i,j,k)/float(it)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                            else
-                              c=-ww(i,j,k)/float(it)*dt/hi(i,j,k)
+                              c=-splitfac*ww(i,j,k)/float(it)*dt/hi(i,j,k)
                            end if
                            if (c .gt. cmax) cmax=c
                            if (k .lt. kmax-1) then

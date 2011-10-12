@@ -109,7 +109,7 @@
                   cu(i,j,k) = _ZERO_
                   if (az(i,j) .eq. 1) then
                      if (ww(i,j,k) .gt. _ZERO_) then
-                        c=ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
+                        c=splitfac*ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                         if (k .gt. 1) then
                            fu=f(i,j,k-1)         ! upstream
                         else
@@ -123,7 +123,7 @@
                            r=(fc-fu)*1.d10
                         end if
                      else
-                        c=-ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
+                        c=-splitfac*ww(i,j,k)*dt/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                         if (k .lt. kmax-1) then
                            fu=f(i,j,k+2)         ! upstream
                         else
