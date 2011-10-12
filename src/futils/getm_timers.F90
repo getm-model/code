@@ -220,7 +220,7 @@
    timernames(TIM_STARTMCR)    = 'start_macro'
    timernames(TIM_EQSTATE)     = 'eq_state'
    timernames(TIM_STIRR)       = 'tracer_stirring'
-   timernames(TIM_TRACEDIFF)   = ' tracer_diffusion'
+   timernames(TIM_TRACEDIFF)   = ' sum tracer_diffusion'
    timernames(TIM_CALCMEANF)   = 'calc_mean_fields'
 
    timernames(TIM_CHECK3DF)    = ' sum check_3d_fields'
