@@ -11,17 +11,11 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
-   use domain, only: az,au,av
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxu,dxv,dyu,dyv,arcd1
-#else
-   use domain, only: dx,dy,ard1
-#endif
-   use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
+   use domain, only: az
+   use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn,fadv3d
    use variables_3d, only: nuh,T,S,rho,a,g1,g2
-   use advection_3d, only: do_advection_3d
    use meteo, only: swr,u10,v10,evap,precip
-   use halo_zones, only: update_3d_halo,wait_halo,D_TAG
+   use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
 ! JORN_FABM
    use gotm_fabm, only: init_gotm_fabm,set_env_gotm_fabm,do_gotm_fabm
    use gotm_fabm, only: fabm_calc, model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz
@@ -34,22 +28,10 @@
    integer, public           :: fabm_init_method=0
 !
 ! !PRIVATE DATA MEMBERS:
+   integer         :: fabm_adv_split=0
    integer         :: fabm_hor_adv=1
    integer         :: fabm_ver_adv=1
-   integer         :: fabm_adv_split=1
-   REALTYPE        :: fabm_AH=-1.
-#ifdef STATIC
-   REALTYPE        :: delxu(I2DFIELD),delxv(I2DFIELD)
-   REALTYPE        :: delyu(I2DFIELD),delyv(I2DFIELD)
-   REALTYPE        :: area_inv(I2DFIELD)
-   REALTYPE        :: ff(I3DFIELD)
-#else
-   REALTYPE, dimension(:,:), allocatable :: delxu,delxv
-   REALTYPE, dimension(:,:), allocatable :: delyu,delyv
-   REALTYPE, dimension(:,:), allocatable :: area_inv
-   REALTYPE, dimension(:,:,:), allocatable :: ff
-#endif
-
+   REALTYPE        :: fabm_AH=-_ONE_
    REALTYPE, allocatable, dimension(:,:,:,:) :: cc_pel,cc_diag
    REALTYPE, allocatable, dimension(:,:,:)   :: cc_ben,cc_diag_hz
 !
@@ -68,11 +50,14 @@
 !
 ! !INTERFACE:
    subroutine init_getm_fabm(nml_file)
-   IMPLICIT NONE
 !
 ! !DESCRIPTION:
 !  Reads the namelist and makes calls to the init functions of the
 !  various model components.
+!
+! !USES:
+   use advection_3d, only: print_adv_settings_3d
+   IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)   :: nml_file
@@ -135,11 +120,8 @@
       close(NAMLST2)
 
 !     Show settings specific to GETM-FABM interaction.
-      LEVEL2 "settings related to FABM calculations"
-      LEVEL3 'fabm_hor_adv=   ',fabm_hor_adv
-      LEVEL3 'fabm_ver_adv=   ',fabm_ver_adv
-      LEVEL3 'fabm_adv_split= ',fabm_adv_split
-      LEVEL3 'fabm_AH=        ',fabm_AH
+      LEVEL2 'Advection of FABM variables'
+      call print_adv_settings_3d(fabm_adv_split,fabm_hor_adv,fabm_ver_adv,fabm_AH)
 
 !     Initialize biogeochemical state variables.
       select case (fabm_init_method)
@@ -174,38 +156,6 @@
          call wait_halo(D_TAG)
       end do
 
-#ifndef STATIC
-      allocate(delxu(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (delxu)'
-
-      allocate(delxv(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (delxv)'
-
-      allocate(delyu(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (delyu)'
-
-      allocate(delyv(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (delyv)'
-
-      allocate(area_inv(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (area_inv)'
-
-      allocate(ff(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (ff)'
-#endif
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-      delxu=dxu
-      delxv=dxv
-      delyu=dyu
-      delyv=dyv
-      area_inv=arcd1
-#else
-      delxu=dx
-      delxv=dx
-      delyu=dy
-      delyv=dy
-      area_inv=ard1
-#endif
    end if
 
    return
@@ -223,6 +173,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use advection_3d, only: do_advection_3d
    use getm_timers, only: tic, toc, TIM_GETM_BIO
    IMPLICIT NONE
 !
@@ -297,31 +248,29 @@
    do n=1,ubound(model%info%state_variables,1)
 
 #if 1
-      ff = cc_pel(n,:,:,:)
+      fadv3d = cc_pel(n,:,:,:)
 
-      call update_3d_halo(ff,ff,az, &
+      call update_3d_halo(fadv3d,fadv3d,az, &
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
 
-      call do_advection_3d(dt,ff,uu,vv,ww,hun,hvn,ho,hn, &
-              delxu,delxv,delyu,delyv,area_inv,az,au,av, &
-              fabm_hor_adv,fabm_ver_adv,fabm_adv_split)
+      call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                       &
+                           fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH,H_TAG)
 
       if (fabm_AH .gt. _ZERO_) then
-         call update_3d_halo(ff,ff,az,imin,jmin,imax,jmax,kmax,D_TAG)
+         call update_3d_halo(fadv3d,fadv3d,az,imin,jmin,imax,jmax,kmax,D_TAG)
          call wait_halo(D_TAG)
          call tracer_diffusion(ff,1,fabm_AH,_ONE_/SMALL,_ZERO_)
       end if
 
-      cc_pel(n,:,:,:) = ff
+      cc_pel(n,:,:,:) = fadv3d
 #else
       call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az, &
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
 
-      call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn, &
-              delxu,delxv,delyu,delyv,area_inv,az,au,av, &
-              fabm_hor_adv,fabm_ver_adv,fabm_adv_split)
+      call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn,                &
+                           fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH,H_TAG)
 
       if (fabm_AH .gt. _ZERO_) then
          call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az,imin,jmin,imax,jmax,kmax,D_TAG)

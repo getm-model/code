@@ -84,8 +84,8 @@
 #endif
    use domain, only: H,az
    use parameters, only: rho_0,g
-   use variables_3d, only: hn,taub,adv_schemes,spm,spm_ws,spm_pool
-   use halo_zones, only: update_3d_halo,wait_halo,D_TAG
+   use variables_3d, only: hn,taub,spm,spm_ws,spm_pool
+   use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
    IMPLICIT NONE
 !
    private
@@ -101,7 +101,9 @@
    integer                 :: spm_init_method=1, spm_format=2
    character(len=PATH_MAX) :: spm_file="spm.nc"
    character(len=32)       :: spm_name='spm'
-   integer                 :: spm_hor_adv=1,spm_ver_adv=1,spm_adv_split=0
+   integer                 :: spm_adv_split=0
+   integer                 :: spm_hor_adv=1
+   integer                 :: spm_ver_adv=1
    REALTYPE                :: spm_AH = -_ONE_
    REALTYPE                :: spm_const= _ZERO_
    REALTYPE                :: spm_init= _ZERO_
@@ -161,6 +163,7 @@
 ! !USES:
 !  For initialization of spm in intertidal flats
    use domain,only: min_depth
+   use advection_3d, only: print_adv_settings_3d
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -194,7 +197,7 @@
    write(debug,*) 'init_spm() # ',Ncall
 #endif
 
-   LEVEL1 'init_spm()'
+   LEVEL1 'init_spm'
    open(NAMLST2,status='unknown',file=trim(nml_file))
    read(NAMLST2,spm_nml)
    close(NAMLST2)
@@ -247,66 +250,9 @@
              stop 'init_spm'
       end select
 
-      LEVEL2 'spm_hor_adv=   ',spm_hor_adv
-      LEVEL2 'spm_ver_adv=   ',spm_ver_adv
-      LEVEL2 'spm_adv_split= ',spm_adv_split
+      LEVEL2 'Advection of SPM'
+      call print_adv_settings_3d(spm_adv_split,spm_hor_adv,spm_ver_adv,spm_AH)
 
-      if(spm_hor_adv .eq. 1) then
-         spm_adv_split=-1
-         if(spm_ver_adv .ne. 1) then
-            LEVEL3 "setting spm_ver_adv to 1 - since spm_hor_adv is 1"
-            spm_ver_adv=1
-         end if
-      end if
-      LEVEL3 "horizontal: ",trim(adv_schemes(spm_hor_adv))," of spm"
-      LEVEL3 "vertical:   ",trim(adv_schemes(spm_ver_adv))," of spm"
-
-      select case (spm_adv_split)
-         case (-1)
-         case (0)
-            select case (spm_hor_adv)
-               case (2,3,4,5,6)
-               case default
-                  call getm_error("init_3d()", &
-                       "spm_adv_split=0: spm_hor_adv not valid (2-6)")
-            end select
-            select case (spm_ver_adv)
-               case (2,3,4,5,6)
-               case default
-                  call getm_error("init_3d()", &
-                       "spm_adv_split=0: spm_ver_adv not valid (2-6)")
-            end select
-            LEVEL3 "1D split --> full u, full v, full w"
-         case (1)
-            select case (spm_hor_adv)
-               case (2,3,4,5,6)
-               case default
-                  call getm_error("init_3d()", &
-                       "spm_adv_split=1: spm_hor_adv not valid (2-6)")
-            end select
-            select case (spm_ver_adv)
-               case (2,3,4,5,6)
-               case default
-                  call getm_error("init_3d()", &
-                       "spm_adv_split=1: spm_ver_adv not valid (2-6)")
-            end select
-            LEVEL3 "1D split --> half u, half v, full w, half v, half u"
-         case (2)
-            select case (spm_hor_adv)
-            case (2,7)
-            case default
-               call getm_error("init_3d()", &
-                       "spm_adv_split=2: spm_hor_adv not valid (2,7)")
-            end select
-            select case (spm_ver_adv)
-               case (2,3,4,5,6)
-               case default
-                  call getm_error("init_3d()", &
-                       "spm_adv_split=2: spm_ver_adv not valid (2-6)")
-            end select
-            LEVEL3 "2D-hor, 1D-vert split --> full uv, full w"
-         case default
-      end select
       spm_ws = _ZERO_
 
 !  Compute settling velocity
@@ -397,18 +343,9 @@
 !
 ! !USES:
    use advection_3d, only: do_advection_3d
-   use variables_3d, only: dt,cnpar,hun,hvn,ho,nuh,uu,vv,ww
+   use variables_3d, only: dt,cnpar,hun,hvn,ho,nuh,uu,vv,ww,wwadv
 #ifndef NO_BAROCLINIC
    use variables_3d, only: rho
-#endif
-   use domain,       only: au,av
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxu,dxv,dyu,dyv,arcd1
-#ifdef ELBE_TEST
-   use domain, only :dxc
-#endif
-#else
-   use domain, only: dx,dy,ard1
 #endif
    use domain, only: dry_z
    IMPLICIT NONE
@@ -420,9 +357,6 @@
    REALTYPE        :: auxn(1:kmax-1),auxo(1:kmax-1)
    REALTYPE        :: a1(0:kmax),a2(0:kmax)
    REALTYPE        :: a3(0:kmax),a4(0:kmax)
-   REALTYPE        :: delxu(I2DFIELD),delxv(I2DFIELD)
-   REALTYPE        :: delyu(I2DFIELD),delyv(I2DFIELD)
-   REALTYPE        :: area_inv(I2DFIELD)
    REALTYPE        :: bed_flux
    REALTYPE        :: c
    REALTYPE        :: volCmud,volCpart
@@ -431,7 +365,6 @@
 #ifdef TRACER_POSITIVE
    logical         :: kk
 #endif
-   REALTYPE, allocatable, dimension (:,:,:) :: ww_aux
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -441,22 +374,6 @@
    Ncall = Ncall+1
    write(debug,*) 'do_spm() # ',Ncall
 #endif
-
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   delxu=dxu
-   delxv=dxv
-   delyu=dyu
-   delyv=dyv
-   area_inv=arcd1
-#else
-   delxu=dx
-   delxv=dx
-   delyu=dy
-   delyv=dy
-   area_inv=ard1
-#endif
-   allocate(ww_aux(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_spm: Error allocating memory (ww_aux)'
 
 !  Update settling velocity if flocculation is considered
    select case(spm_ws_method)
@@ -484,16 +401,17 @@
    end select
 !  The vertical velocity to be used in the advection routine for spm is ww-ws
 !  In drying grid boxes, the settling velocity is reduced.
+!  Note (KK): why is wwadv(:,:,0|kmax) not assigned (spm_ws .ne. _ZERO_) ?!
    do i=imin,imax
       do j=jmin,jmax
          do k=1,kmax-1
-            ww_aux(i,j,k) = ww(i,j,k) - spm_ws(i,j,k)*dry_z(i,j)
+            wwadv(i,j,k) = ww(i,j,k) - spm_ws(i,j,k)*dry_z(i,j)
          end do
       end do
    end do
-   call do_advection_3d(dt,spm,uu,vv,ww_aux,hun,hvn,ho,hn,   &
-                        delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
-                        spm_hor_adv,spm_ver_adv,spm_adv_split)
+
+   call do_advection_3d(dt,spm,uu,vv,wwadv,hun,hvn,ho,hn,                   &
+                        spm_hor_adv,spm_ver_adv,spm_adv_split,spm_AH,H_TAG)
 
    if (spm_AH .gt. _ZERO_) then
 !     spm is not halo updated after advection
@@ -640,26 +558,6 @@
    end do
 #endif
 
-#ifdef ELBE_TEST
-   do j=jmin,jmax
-      if(az(1,j) /= 0) then
-          do k=1 ,kmax
-             if (uu(1,j,k) .gt. _ZERO_) then
-                spm(1,j,k)=max(spm(1,j,k),_ZERO_)
-             else
-                spm(1,j,k)=spm(1,j,k)-dt*area_inv(1,j)*dyu(1,j)*uu(1,j,k)/hun(1,j,k)*(spm(2,j,k)-spm(1,j,k))
-             end if
-          end do
-      end if
-!     River boundary
-      if(az(imax,j) /= 0) then
-         do k=1,kmax
-            spm(imax,j,k)=_ZERO_
-         end do
-      end if
-   end do
-#endif
-
 #endif
 !  End of BC
 
@@ -697,11 +595,6 @@
 
    call update_3d_halo(spm,spm,az,imin,jmin,imax,jmax,kmax,D_TAG)
    call wait_halo(D_TAG)
-
-#ifdef FORTRAN90
-   deallocate(ww_aux,stat=rc)
-   if (rc /= 0) stop 'upstream_adv: Error de-allocating memory (ww_aux)'
-#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_spm()'

@@ -17,6 +17,7 @@
 !
 !EOP
 !-----------------------------------------------------------------------
+
    interface
       subroutine deformation_rates(U,V,DU,DV,dudxC,dudxV,dudxU,         &
                                              dvdyC,dvdyU,dvdyV,         &
@@ -50,7 +51,7 @@
          REALTYPE,dimension(E2DFIELD),intent(in) :: U,V,D,DU,DV
       end subroutine calc_uvex
    end interface
-!
+
 !-----------------------------------------------------------------------
 
    end module m2d_general

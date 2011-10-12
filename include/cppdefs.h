@@ -105,22 +105,24 @@
 #ifdef SINGLE
 #define REAL_SIZE 4
 #define REALTYPE real(kind=4)
-#define _ZERO_ 0.0
+#define _ZERO_  0.0
 #define _TENTH_ 0.1
 #define _QUART_ 0.25
-#define _HALF_ 0.5
-#define _ONE_  1.0
-#define _TWO_  2.0
+#define _HALF_  0.5
+#define _ONE_   1.0
+#define _TWO_   2.0
+#define _THREE_ 3.0
 #else
 #define REAL_SIZE 8
 #define REALTYPE real(kind=8)
 #define MPI_REALTYPE MPI_DOUBLE_PRECISION
-#define _ZERO_ 0.0d0
+#define _ZERO_  0.0d0
 #define _TENTH_ 0.1d0
 #define _QUART_ 0.25d0
-#define _HALF_ 0.5d0
-#define _ONE_  1.0d0
-#define _TWO_  2.0d0
+#define _HALF_  0.5d0
+#define _ONE_   1.0d0
+#define _TWO_   2.0d0
+#define _THREE_ 3.0d0
 #endif
 
 ! Rare use of long integers (e.g. timers):

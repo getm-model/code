@@ -192,6 +192,12 @@
 			<vel_depth_method>
 				0
 			</vel_depth_method>
+			<vel_adv_split2d>
+				0
+			</vel_adv_split2d>
+			<vel_adv_scheme>
+				1
+			</vel_adv_scheme>
 			<Am_method>
 				0
 			</Am_method>
@@ -236,6 +242,9 @@
 			<cord_relax>
 				0.0
 			</cord_relax>
+			<itersmax_adv>
+				200
+			</itersmax_adv>
 			<bdy3d>
 				False
 			</bdy3d>
@@ -260,15 +269,15 @@
 			<bdy3d_tmrlx_ucut>
 				0.02
 			</bdy3d_tmrlx_ucut>
+			<vel_adv_split>
+				0
+			</vel_adv_split>
 			<vel_hor_adv>
 				1
 			</vel_hor_adv>
 			<vel_ver_adv>
 				1
 			</vel_ver_adv>
-			<vel_adv_split>
-				0
-			</vel_adv_split>
 			<calc_temp>
 				True
 			</calc_temp>
@@ -316,15 +325,15 @@
 			<temp_field_no>
 				1
 			</temp_field_no>
+			<temp_adv_split>
+				0
+			</temp_adv_split>
 			<temp_hor_adv>
 				1
 			</temp_hor_adv>
 			<temp_ver_adv>
 				1
 			</temp_ver_adv>
-			<temp_adv_split>
-				0
-			</temp_adv_split>
 			<temp_AH_method>
 				0
 			</temp_AH_method>
@@ -390,15 +399,15 @@
 			<salt_field_no>
 				1
 			</salt_field_no>
+			<salt_adv_split>
+				0
+			</salt_adv_split>
 			<salt_hor_adv>
 				1
 			</salt_hor_adv>
 			<salt_ver_adv>
 				1
 			</salt_ver_adv>
-			<salt_adv_split>
-				0
-			</salt_adv_split>
 			<salt_AH_method>
 				0
 			</salt_AH_method>

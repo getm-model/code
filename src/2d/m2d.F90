@@ -26,6 +26,7 @@
    use domain, only: ill,ihl,jll,jhl
    use domain, only: openbdy,z0_method,z0_const,z0
    use domain, only: az,ax
+   use advection, only: init_advection,print_adv_settings
    use les, only: les_mode,LES_MOMENTUM
    use halo_zones, only : update_2d_halo,wait_halo
    use halo_zones, only : U_TAG,V_TAG,H_TAG
@@ -45,6 +46,8 @@
 ! !PUBLIC DATA MEMBERS:
    logical                   :: have_boundaries
    REALTYPE                  :: dtm
+   integer                   :: vel_adv_split2d=0
+   integer                   :: vel_adv_scheme=1
    logical                   :: deformCX=.false.,deformUV=.false.
    integer,parameter         :: NO_AM=0,AM_CONSTANT=1,AM_LES=2
    integer                   :: Am_method=NO_AM
@@ -109,7 +112,8 @@
    integer                   :: i,j
    integer                   :: vel_depth_method=0
    namelist /m2d/ &
-          MM,vel_depth_method,Am_method,Am_const,An_method,An_const,An_file,residual, &
+          MM,vel_depth_method,vel_adv_split2d,vel_adv_scheme,     &
+          Am_method,Am_const,An_method,An_const,An_file,residual, &
           sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
@@ -129,6 +133,10 @@
 
 !  Allocates memory for the public data members - if not static
    call init_variables_2d(runtype)
+   call init_advection()
+
+   LEVEL2 'Advection of depth-averaged velocities'
+   call print_adv_settings(vel_adv_split2d,vel_adv_scheme,_ZERO_)
 
 #if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
 !   STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'

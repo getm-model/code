@@ -125,29 +125,30 @@
   allocate(light(I3DFIELD),stat=rc) ! light advection velocity
   if (rc /= 0) stop 'init_3d: Error allocating memory (light)'
 
-#ifdef UV_TVD
-  allocate(uadv(I3DFIELD),stat=rc) ! u advection velocity
-  if (rc /= 0) stop 'init_3d: Error allocating memory (uadv)'
+! input arrays for do_advection_3d
+  allocate(fadv3d(I3DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (fadv3d)'
 
-  allocate(vadv(I3DFIELD),stat=rc) ! v advection velocity
-  if (rc /= 0) stop 'init_3d: Error allocating memory (vadv)'
+  allocate(uuadv(I3DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (uuadv)'
 
-  allocate(wadv(I3DFIELD),stat=rc) ! w advection velocity
-  if (rc /= 0) stop 'init_3d: Error allocating memory (wadv)'
+  allocate(vvadv(I3DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (vvadv)'
 
-  allocate(huadv(I3DFIELD),stat=rc) ! layer height for u advection
-  if (rc /= 0) stop 'init_3d: Error allocating memory (huadv)'
+  allocate(wwadv(I3DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (wwadv)'
 
-  allocate(hvadv(I3DFIELD),stat=rc) ! layer height for v advection
-  if (rc /= 0) stop 'init_3d: Error allocating memory (hvadv)'
-
-  allocate(hoadv(I3DFIELD),stat=rc) ! old layer height for advection
+  allocate(hoadv(I3DFIELD),stat=rc)
   if (rc /= 0) stop 'init_3d: Error allocating memory (hoadv)'
 
-  allocate(hnadv(I3DFIELD),stat=rc) ! new layer height for advection
+  allocate(hnadv(I3DFIELD),stat=rc)
   if (rc /= 0) stop 'init_3d: Error allocating memory (hnadv)'
-#endif
 
+  allocate(huadv(I3DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (huadv)'
+
+  allocate(hvadv(I3DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (hvadv)'
 
 ! 2D fields in the 3D domain
   allocate(sseo(I2DFIELD),stat=rc)  ! Elevation before macro time step (z-column)

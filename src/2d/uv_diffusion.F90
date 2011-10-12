@@ -166,7 +166,7 @@
 #endif
    use variables_2d, only: PP,AnC,AnX
    use m2d, only: Am_method,Am_const,AM_CONSTANT,AM_LES,An_const
-   use getm_timers,  only: tic,toc,TIM_UVDIFFUS
+   use getm_timers,  only: tic,toc,TIM_UVDIFF
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -184,8 +184,8 @@
 !  Modified by       : Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
-   REALTYPE                                         :: depth
-   integer                                          :: i,j
+   integer  :: i,j
+   REALTYPE :: depth
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -194,7 +194,7 @@
    Ncall = Ncall+1
    write(debug,*) 'uv_diffusion() # ',Ncall
 #endif
-   CALL tic(TIM_UVDIFFUS)
+   CALL tic(TIM_UVDIFF)
 
 #ifndef SLICE_MODEL
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
@@ -454,7 +454,7 @@
 !$OMP END PARALLEL
 #endif
 
-   CALL toc(TIM_UVDIFFUS)
+   CALL toc(TIM_UVDIFF)
 #ifdef DEBUG
      write(debug,*) 'Leaving uv_diffusion()'
      write(debug,*)
