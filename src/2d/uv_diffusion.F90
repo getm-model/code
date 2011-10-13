@@ -221,8 +221,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax      ! UEx defined on U-points
       do i=imin,imax
-!        Note (KK): since U(au=3) will be obtained from mirroring
-!                   we do not need PP in N/S open boundary cells
+!        Note (KK): we do not need UEx(au=3)
          if (au(i,j).eq.1 .or. au(i,j).eq.2) then
             UEx(i,j)=UEx(i,j)-(PP(i+1,j)-PP(i  ,j))*ARUD1
          end if
@@ -252,8 +251,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax        !UEx defined on U-points
       do i=imin,imax
-!        Note (KK): since U(au=3) will be obtained from mirroring
-!                   we do not need PP at ax outside au=3
+!        Note (KK): we do not need UEx(au=3)
          if (au(i,j).eq.1 .or. au(i,j).eq.2) then
             UEx(i,j)=UEx(i,j)-(PP(i,j  )-PP(i,j-1))*ARUD1
          end if
@@ -283,8 +281,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax          ! VEx defined on V-points
       do i=imin,imax
-!        Note (KK): since V(av=3) will be obtained from mirroring
-!                   we do not need PP at ax outside av=3
+!        Note (KK): we do not need VEx(av=3)
          if (av(i,j).eq.1 .or. av(i,j).eq.2) then
             VEx(i,j)=VEx(i,j)-(PP(i  ,j)-PP(i-1,j))*ARVD1
          end if
@@ -317,8 +314,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax             ! VEx defined on V-points
       do i=imin,imax
-!        Note (KK): since V(av=3) will be obtained from mirroring
-!                   we do not need PP in W/E open boundary cells
+!        Note (KK): we do not need VEx(av=3)
          if (av(i,j).eq.1 .or. av(i,j).eq.2) then
             VEx(i,j)=VEx(i,j)-(PP(i,j+1)-PP(i,j  ))*ARVD1
          end if
@@ -337,7 +333,6 @@
    return
    end subroutine uv_diffusion
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------
