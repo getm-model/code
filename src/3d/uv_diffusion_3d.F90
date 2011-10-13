@@ -165,7 +165,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax         ! uuEx defined on U-points
          do i=imin,imax
-            if (au(i,j) .ge. 1) then
+            if (au(i,j).eq.1 .or. au(i,j).eq.2) then
                if (k .ge. kumin(i,j)) then
                   uuEx(i,j,k)=uuEx(i,j,k)-(PP(i+1,j,k)-PP(i,j,k))*ARUD1
                end if
@@ -199,7 +199,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
-            if (au(i,j) .ge. 1) then
+            if (au(i,j).eq.1 .or. au(i,j).eq.2) then
                if (k .ge. kumin(i,j)) then
                   uuEx(i,j,k)=uuEx(i,j,k)-(PP(i,j,k)-PP(i,j-1,k))*ARUD1
                end if
@@ -233,7 +233,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax          ! vvEx defined on V-points
          do i=imin,imax
-            if (av(i,j) .ge. 1) then
+            if (av(i,j).eq.1 .or. av(i,j).eq.2) then
                if (k .ge. kvmin(i,j)) then
                   vvEx(i,j,k)=vvEx(i,j,k)-(PP(i,j,k)-PP(i-1,j,k))*ARVD1
                end if
@@ -267,7 +267,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax          ! vvEx defined on V-points
          do i=imin,imax
-            if (av(i,j) .ge. 1) then
+            if (av(i,j).eq.1 .or. av(i,j).eq.2) then
                if (k .ge. kvmin(i,j)) then
                   vvEx(i,j,k)=(vvEx(i,j,k)-(PP(i,j+1,k)-PP(i,j,k))*ARVD1)
                end if
@@ -287,7 +287,6 @@
    return
    end subroutine uv_diffusion_3d
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------
