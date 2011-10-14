@@ -28,8 +28,7 @@
    use domain, only: az,ax
    use advection, only: init_advection,print_adv_settings
    use les, only: les_mode,LES_MOMENTUM
-   use halo_zones, only : update_2d_halo,wait_halo
-   use halo_zones, only : U_TAG,V_TAG,H_TAG
+   use halo_zones, only : update_2d_halo,wait_halo,H_TAG
    use variables_2d
 
    IMPLICIT NONE
