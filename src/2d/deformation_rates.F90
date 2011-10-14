@@ -45,7 +45,7 @@
    REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel
    integer                                  :: rc
    logical,save                             :: first=.true.
-   REALTYPE                                 :: dxdy,dydx,vel,velgrad
+   REALTYPE                                 :: dxdy,dydx,tmp,velgrad
    integer                                  :: i,j,n
 !EOP
 !-----------------------------------------------------------------------
@@ -74,10 +74,15 @@
 !             for exact 3D deformation tensor in horizontal orthogonal coordinates
 !             see e.g. Kantha and Clayson 2000, page 35
 
+#ifndef SLICE_MODEL
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,tmp,velgrad)
+#endif
+
 !  zonal velocity
 #ifdef SLICE_MODEL
    j=jmax/2
 #else
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
 #endif
       do i=imin-HALO,imax+1
@@ -87,6 +92,7 @@
       end do
 #ifndef SLICE_MODEL
    end do
+!$OMP END DO NOWAIT
 #else
    u_vel(imin-HALO:imax+1,jmax/2+1) = u_vel(imin-HALO:imax+1,jmax/2)
 #endif
@@ -95,6 +101,7 @@
 #ifdef SLICE_MODEL
    j=jmax/2
 #else
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+1
 #endif
       do i=imin-HALO,imax+HALO
@@ -104,6 +111,7 @@
       end do
 #ifndef SLICE_MODEL
    end do
+!$OMP END DO
 #else
    v_vel(:,jmax/2-1) = v_vel(:,jmax/2)
    v_vel(:,jmax/2+1) = v_vel(:,jmax/2)
@@ -111,6 +119,9 @@
 
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
+#ifndef SLICE_MODEL
+!$OMP MASTER
+#endif
 !  mirror velocities based on ouflow condition for transverse velocity
    do n = 1,NNB ! northern open boundaries (dudyX=0)
       j = nj(n)-1
@@ -180,6 +191,10 @@
          end if
       end do
    end do
+#ifndef SLICE_MODEL
+!$OMP END MASTER
+!$OMP BARRIER
+#endif
 #endif
 #endif
 
@@ -193,6 +208,7 @@
 #ifdef SLICE_MODEL
       j=jmax/2
 #else
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax+1
 #endif
          do i=imin-1,imax+1
@@ -211,16 +227,16 @@
                   dudxC(i,j) = (u_vel(i,j) - u_vel(i-1,j)) / DXC
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                  vel = v_vel(i,j-1) - _HALF_*(u_vel(i,j)+u_vel(i-1,j))*(DYU-DYUIM1)/DXC
-                  dudxC(i,j) = dudxC(i,j) + _HALF_*(vel+v_vel(i,j-1))*(DXV-DXVJM1)*ARCD1
+                  tmp = v_vel(i,j-1) - _HALF_*(u_vel(i,j)+u_vel(i-1,j))*(DYU-DYUIM1)/DXC
+                  dudxC(i,j) = dudxC(i,j) + _HALF_*(tmp+v_vel(i,j-1))*(DXV-DXVJM1)*ARCD1
 #endif
 #endif
                else if (av(i,j) .eq. 2) then ! southern open boundary
                   dudxC(i,j) = (u_vel(i,j) - u_vel(i-1,j)) / DXC
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                  vel = v_vel(i,j) + _HALF_*(u_vel(i,j)+u_vel(i-1,j))*(DYU-DYUIM1)/DXC
-                  dudxC(i,j) = dudxC(i,j) + _HALF_*(v_vel(i,j)+vel)*(DXV-DXVJM1)*ARCD1
+                  tmp = v_vel(i,j) + _HALF_*(u_vel(i,j)+u_vel(i-1,j))*(DYU-DYUIM1)/DXC
+                  dudxC(i,j) = dudxC(i,j) + _HALF_*(v_vel(i,j)+tmp)*(DXV-DXVJM1)*ARCD1
 #endif
 #endif
                end if
@@ -228,16 +244,47 @@
          end do
 #ifndef SLICE_MODEL
       end do
+!$OMP END DO NOWAIT
 #else
       dudxC(imin-1:imax+1,jmax/2+1) = dudxC(imin-1:imax+1,jmax/2)
 #endif
+
+      if (present(dudxU)) then
+   !     interpolation of zonal strain rate to U-points
+#ifdef SLICE_MODEL
+         j=jmax/2
+#else
+!$OMP BARRIER
+!$OMP DO SCHEDULE(RUNTIME)
+         do j=jmin-1,jmax+1
+#endif
+            do i=imin-1,imax
+!              KK-TODO: outflow condition dudxU(au=2)=0 ?
+               if (au(i,j).eq.1 .or. au(i,j).eq.3) then
+                  dudxU(i,j) = _HALF_*(dudxC(i,j) + dudxC(i+1,j))
+               else if (au(i,j) .eq. 0) then
+!                 KK-TODO: is this correct (U(au=0)=0 + slip condition) ?
+                  if (az(i  ,j) .eq. 1) dudxU(i,j) = dudxC(i  ,j)
+                  if (az(i+1,j) .eq. 1) dudxU(i,j) = dudxC(i+1,j)
+               end if
+            end do
+#ifndef SLICE_MODEL
+         end do
+!$OMP END DO NOWAIT
+#else
+         dudxU(imin-1:imax,jmax/2+1) = dudxU(imin-1:imax,jmax/2)
+#endif
+      end if
+
    end if
+
 
    if (present(dudxV)) then
 !     zonal strain rate at V-points
 #ifdef SLICE_MODEL
       j=jmax/2
 #else
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax
 #endif
          do i=imin-1,imax+1
@@ -257,33 +304,10 @@
          end do
 #ifndef SLICE_MODEL
       end do
+!$OMP END DO NOWAIT
 #else
       dudxV(imin-1:imax+1,jmax/2-1) = dudxV(imin-1:imax+1,jmax/2)
       dudxV(imin-1:imax+1,jmax/2+1) = dudxV(imin-1:imax+1,jmax/2)
-#endif
-   end if
-
-   if (present(dudxU)) then
-!     interpolation of zonal strain rate to U-points
-#ifdef SLICE_MODEL
-      j=jmax/2
-#else
-      do j=jmin-1,jmax+1
-#endif
-         do i=imin-1,imax
-!           KK-TODO: outflow condition dudxU(au=2)=0 ?
-            if (au(i,j).eq.1 .or. au(i,j).eq.3) then
-               dudxU(i,j) = _HALF_*(dudxC(i,j) + dudxC(i+1,j))
-            else if (au(i,j) .eq. 0) then
-!              KK-TODO: is this correct (U(au=0)=0 + slip condition) ?
-               if (az(i  ,j) .eq. 1) dudxU(i,j) = dudxC(i  ,j)
-               if (az(i+1,j) .eq. 1) dudxU(i,j) = dudxC(i+1,j)
-            end if
-         end do
-#ifndef SLICE_MODEL
-      end do
-#else
-      dudxU(imin-1:imax,jmax/2+1) = dudxU(imin-1:imax,jmax/2)
 #endif
    end if
 
@@ -294,6 +318,7 @@
 
    if (present(dvdyC)) then
 !     meridional strain rate at T-points
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax+1
          do i=imin-1,imax+1
             if (az(i,j) .eq. 1) then
@@ -312,26 +337,51 @@
                   dvdyC(i,j) = (v_vel(i,j) - v_vel(i,j-1)) / DYC
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                  vel = u_vel(i-1,j) - _HALF_*(v_vel(i,j)+v_vel(i,j-1))*(DXV-DXVJM1)/DYC
-                  dvdyC(i,j) = dvdyC(i,j) + _HALF_*(vel+u_vel(i-1,j))*(DYU-DYUIM1)*ARCD1
+                  tmp = u_vel(i-1,j) - _HALF_*(v_vel(i,j)+v_vel(i,j-1))*(DXV-DXVJM1)/DYC
+                  dvdyC(i,j) = dvdyC(i,j) + _HALF_*(tmp+u_vel(i-1,j))*(DYU-DYUIM1)*ARCD1
 #endif
 #endif
                else if (au(i,j) .eq. 2) then ! western open boundary
                   dvdyC(i,j) = (v_vel(i,j) - v_vel(i,j-1)) / DYC
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                  vel = u_vel(i,j) + _HALF_*(v_vel(i,j)+v_vel(i,j-1))*(DXV-DXVJM1)/DYC
-                  dvdyC(i,j) = dvdyC(i,j) + _HALF_*(u_vel(i,j)+vel)*(DYU-DYUIM1)*ARCD1
+                  tmp = u_vel(i,j) + _HALF_*(v_vel(i,j)+v_vel(i,j-1))*(DXV-DXVJM1)/DYC
+                  dvdyC(i,j) = dvdyC(i,j) + _HALF_*(u_vel(i,j)+tmp)*(DYU-DYUIM1)*ARCD1
 #endif
 #endif
                end if
             end if
          end do
       end do
+!$OMP END DO NOWAIT
+
+      if (present(dvdyV)) then
+!        interpolation of meridional strain rate to V-points
+!$OMP BARRIER
+!$OMP DO SCHEDULE(RUNTIME)
+         do j=jmin-1,jmax
+            do i=imin-1,imax+1
+!              KK-TODO: outflow condition dvdyV(av=2)=0 ?
+               if (av(i,j).eq.1 .or. av(i,j).eq.3) then
+!                 KK-TODO: for dvdyV(av=3) average of nonlinear metric
+!                          correction might cause violation of outflow
+!                          condition dvdx=0?
+                  dvdyV(i,j) = _HALF_*(dvdyC(i,j) + dvdyC(i,j+1))
+               else if (av(i,j) .eq. 0) then
+!                 KK-TODO: is this correct (V(av=0)=0 + slip condition) ?
+                  if (az(i,j  ) .eq. 1) dvdyV(i,j) = dvdyC(i,j  )
+                  if (az(i,j+1) .eq. 1) dvdyV(i,j) = dvdyC(i,j+1)
+               end if
+            end do
+         end do
+!$OMP END DO NOWAIT
+      end if
+
    end if
 
    if (present(dvdyU)) then
 !     meriodional strain rate at U-points
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax+1
          do i=imin-HALO,imax+1
 !           Note (KK): outflow condition dvdyU(au=3)=0
@@ -350,26 +400,9 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end if
 
-   if (present(dvdyV)) then
-!     interpolation of meridional strain rate to V-points
-      do j=jmin-1,jmax
-         do i=imin-1,imax+1
-!           KK-TODO: outflow condition dvdyV(av=2)=0 ?
-            if (av(i,j).eq.1 .or. av(i,j).eq.3) then
-!              KK-TODO: for dvdyV(av=3) average of nonlinear metric
-!                       correction might cause violation of outflow
-!                       condition dvdx=0?
-               dvdyV(i,j) = _HALF_*(dvdyC(i,j) + dvdyC(i,j+1))
-            else if (av(i,j) .eq. 0) then
-!              KK-TODO: is this correct (V(av=0)=0 + slip condition) ?
-               if (az(i,j  ) .eq. 1) dvdyV(i,j) = dvdyC(i,j  )
-               if (az(i,j+1) .eq. 1) dvdyV(i,j) = dvdyC(i,j+1)
-            end if
-         end do
-      end do
-   end if
 #endif
 
 
@@ -378,121 +411,133 @@
 !!!!!!!!!!!!!!!!
 
 !  shear rate at X-points
+
+   if (present(dvdxX) .or. present(dudyX) .or. present(shearX)) then
+
 #ifdef SLICE_MODEL
-   j=jmax/2
+      j=jmax/2
 #else
-   do j=jmin-HALO,jmax+1
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin-HALO,jmax+1
 #endif
-      do i=imin-HALO,imax+1
-!        Note (KK): at closed boundaries slip condition for tangential
-!                   velocity in terms of covariant derivative
-!                   no normal flow through closed boundaries does only imply
-!                   vanishing partial derivative!!!
-!                   at concave and at convex corners shearX(ax=0) is set to zero
-!                   (despite discontinuous velocities for the latter!?)
-         if (ax(i,j) .eq. 1) then
-            if (au(i,j).eq.1 .or. au(i,j+1).eq.1) then
-!              Note (KK): excludes concave and W/E open boundaries (dvdxX=0)
-!                         includes convex open boundaries (no mirroring)
-               velgrad = (v_vel(i+1,j) - v_vel(i,j)) / DXX
-               if (present(dvdxX)) then
-                  dvdxX(i,j) = velgrad
+         do i=imin-HALO,imax+1
+!           Note (KK): at closed boundaries slip condition for tangential
+!                      velocity in terms of covariant derivative
+!                      no normal flow through closed boundaries does only imply
+!                      vanishing partial derivative!!!
+!                      at concave and at convex corners shearX(ax=0) is set to zero
+!                      (despite discontinuous velocities for the latter!?)
+            tmp = _ZERO_
+            if (ax(i,j) .eq. 1) then
+               if (au(i,j).eq.1 .or. au(i,j+1).eq.1) then
+!                 Note (KK): excludes concave and W/E open boundaries (dvdxX=0)
+!                            includes convex open boundaries (no mirroring)
+                  velgrad = (v_vel(i+1,j) - v_vel(i,j)) / DXX
+                  if (present(dvdxX)) then
+                     dvdxX(i,j) = velgrad
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                  dvdxX(i,j) = dvdxX(i,j) - _HALF_*(u_vel(i,j)+u_vel(i,j+1))/DXX*(DXUJP1-DXU)/DYX
+                     dvdxX(i,j) = dvdxX(i,j) - _HALF_*(u_vel(i,j)+u_vel(i,j+1))/DXX*(DXUJP1-DXU)/DYX
 #endif
 #endif
+                  end if
+                  tmp = velgrad
                end if
+
+#ifndef SLICE_MODEL
+               if (av(i,j).eq.1 .or. av(i+1,j).eq.1) then
+!                 Note (KK): excludes concave and N/S open boundaries (dudyX=0)
+!                            includes convex open boundaries (no mirroring)
+                  velgrad = (u_vel(i,j+1) - u_vel(i,j)) / DYX
+                  if (present(dudyX)) then
+                     dudyX(i,j) = velgrad
+#ifdef _CORRECT_METRICS_
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                     dudyX(i,j) = dudyX(i,j) - _HALF_*(v_vel(i,j)+v_vel(i+1,j))/DYX*(DYVIP1-DYV)/DXX
+#endif
+#endif
+                  end if
+                  tmp = tmp + velgrad
+               end if
+#endif
+
+               if (present(shearX)) then
 #if !(defined(_CORRECT_METRICS_) && (defined(SPHERICAL) || defined(CURVILINEAR)))
-              if (present(shearX)) shearX(i,j) = velgrad
-#endif
-            end if
-
+                  shearX(i,j) = tmp
+#else
+!                 Note (KK): although sum of dvdxX and dudyX would give shearX
+!                            a combined formula that does not involve averages
+!                            is used
+                  shearX(i,j) = DYX * (v_vel(i+1,j)/DYVIP1 - v_vel(i,j)/DYV) / DXX
 #ifndef SLICE_MODEL
-            if (av(i,j).eq.1 .or. av(i+1,j).eq.1) then
-!              Note (KK): excludes concave and N/S open boundaries (dudyX=0)
-!                         includes convex open boundaries (no mirroring)
-               velgrad = (u_vel(i,j+1) - u_vel(i,j)) / DYX
-               if (present(dudyX)) then
-                  dudyX(i,j) = velgrad
-#ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                  dudyX(i,j) = dudyX(i,j) - _HALF_*(v_vel(i,j)+v_vel(i+1,j))/DYX*(DYVIP1-DYV)/DXX
+                  shearX(i,j) = shearX(i,j) + DXX * (u_vel(i,j+1)/DXUJP1 - u_vel(i,j)/DXU) / DYX
 #endif
 #endif
                end if
-#if !(defined(_CORRECT_METRICS_) && (defined(SPHERICAL) || defined(CURVILINEAR)))
-               if (present(shearX)) shearX(i,j) = shearX(i,j) + velgrad
-#endif
-            end if
-#endif
 
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-            if (present(shearX)) then
-!              Note (KK): although sum of dvdxX and dudyX would give shearX
-!                         a combined formula that does not involve averages
-!                         is used
-               shearX(i,j) = DYX * (v_vel(i+1,j)/DYVIP1 - v_vel(i,j)/DYV) / DXX
-#ifndef SLICE_MODEL
-               shearX(i,j) = shearX(i,j) + DXX * (u_vel(i,j+1)/DXUJP1 - u_vel(i,j)/DXU) / DYX
-#endif
-            end if
-         else
-            if (av(i,j).eq.0 .and. av(i+1,j).eq.0) then
-!              Note (KK): exclude convex corners
-!                         at W/E closed boundaries slip condition dvdx=0
-               if (au(i,j) .eq. 1) then ! northern closed boundary
-                  velgrad = - u_vel(i,j)/DXX*(DXUJP1-DXU)/DYX
-                  if (present(dvdxX)) dvdxX(i,j) = velgrad
-                  if (present(shearX)) shearX(i,j) = velgrad
+            else
+
+               if (av(i,j).eq.0 .and. av(i+1,j).eq.0) then
+!                 Note (KK): exclude convex corners
+!                            at W/E closed boundaries slip condition dvdx=0
+                  if (au(i,j) .eq. 1) then ! northern closed boundary
+                     velgrad = - u_vel(i,j)/DXX*(DXUJP1-DXU)/DYX
+                     if (present(dvdxX)) dvdxX(i,j) = velgrad
+                     if (present(shearX)) shearX(i,j) = velgrad
+                  end if
+                  if (au(i,j+1) .eq. 1) then ! southern closed boundary
+                     velgrad = - u_vel(i,j+1)/DXX*(DXUJP1-DXU)/DYX
+                     if (present(dvdxX)) dvdxX(i,j) = velgrad
+                     if (present(shearX)) shearX(i,j) = velgrad
+                  end if
                end if
-               if (au(i,j+1) .eq. 1) then ! southern closed boundary
-                  velgrad = - u_vel(i,j+1)/DXX*(DXUJP1-DXU)/DYX
-                  if (present(dvdxX)) dvdxX(i,j) = velgrad
-                  if (present(shearX)) shearX(i,j) = velgrad
-               end if
-            end if
 
 #ifndef SLICE_MODEL
-            if (au(i,j).eq.0 .and. au(i,j+1).eq.0) then
-!              Note (KK): exclude convex corners
-!                         at N/S closed boundaries slip condition dudy=0
-               if (av(i,j) .eq. 1) then ! eastern closed boundary
-                  velgrad = - v_vel(i,j)/DYX*(DYVIP1-DYV)/DXX
-                  if (present(dudyX)) dudyX(i,j) = velgrad
-                  if (present(shearX)) shearX(i,j) = shearX(i,j) + velgrad
+               if (au(i,j).eq.0 .and. au(i,j+1).eq.0) then
+!                 Note (KK): exclude convex corners
+!                            at N/S closed boundaries slip condition dudy=0
+                  if (av(i,j) .eq. 1) then ! eastern closed boundary
+                     velgrad = - v_vel(i,j)/DYX*(DYVIP1-DYV)/DXX
+                     if (present(dudyX)) dudyX(i,j) = velgrad
+                     if (present(shearX)) shearX(i,j) = shearX(i,j) + velgrad
+                  end if
+                  if (av(i+1,j) .eq. 1) then ! western closed boundary
+                     velgrad = - v_vel(i+1,j)/DYX*(DYVIP1-DYV)/DXX
+                     if (present(dudyX)) dudyX(i,j) = velgrad
+                     if (present(shearX)) shearX(i,j) = shearX(i,j) + velgrad
+                  end if
                end if
-               if (av(i+1,j) .eq. 1) then ! western closed boundary
-                  velgrad = - v_vel(i+1,j)/DYX*(DYVIP1-DYV)/DXX
-                  if (present(dudyX)) dudyX(i,j) = velgrad
-                  if (present(shearX)) shearX(i,j) = shearX(i,j) + velgrad
-               end if
-            end if
 #endif
 
 #endif
 #endif
-         end if
+
+            end if
+         end do
+#ifndef SLICE_MODEL
       end do
-#ifndef SLICE_MODEL
-   end do
+!$OMP END DO
 #else
-   if (present(dvdxX)) then
-      dvdxX(imin-HALO:imax+1,jmax/2-1) = dvdxX(imin-HALO:imax+1,jmax/2)
-      dvdxX(imin-HALO:imax+1,jmax/2+1) = dvdxX(imin-HALO:imax+1,jmax/2)
-   end if
-   if (present(shearX)) then
-      shearX(imin-HALO:imax+1,jmax/2-1) = shearX(imin-HALO:imax+1,jmax/2)
-      shearX(imin-HALO:imax+1,jmax/2+1) = shearX(imin-HALO:imax+1,jmax/2)
-   end if
+      if (present(dvdxX)) then
+         dvdxX(imin-HALO:imax+1,jmax/2-1) = dvdxX(imin-HALO:imax+1,jmax/2)
+         dvdxX(imin-HALO:imax+1,jmax/2+1) = dvdxX(imin-HALO:imax+1,jmax/2)
+      end if
+      if (present(shearX)) then
+         shearX(imin-HALO:imax+1,jmax/2-1) = shearX(imin-HALO:imax+1,jmax/2)
+         shearX(imin-HALO:imax+1,jmax/2+1) = shearX(imin-HALO:imax+1,jmax/2)
+      end if
 #endif
+
+   end if
 
 !  shear rate at U-points
    if (present(dvdxU)) then
 #ifdef SLICE_MODEL
       j=jmax/2
 #else
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax+1
 #endif
          do i=imin-HALO,imax+1
@@ -512,15 +557,17 @@
          end do
 #ifndef SLICE_MODEL
       end do
+!$OMP END DO NOWAIT
 #else
       dvdxU(imin-HALO:imax+1,jmax/2+1) = dvdxU(imin-HALO:imax+1,jmax/2)
 #endif
    end if
-   if (present(shearU)) then
+   if (present(shearX) .and. present(shearU)) then
 !     interpolation of shear rate to U-points
 #ifdef SLICE_MODEL
       j=jmax/2
 #else
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax+1
 #endif
          do i=imin-HALO,imax+1
@@ -534,6 +581,7 @@
          end do
 #ifndef SLICE_MODEL
       end do
+!$OMP END DO
 #else
       shearU(imin-HALO:imax+1,jmax/2+1) = shearU(imin-HALO:imax+1,jmax/2)
 #endif
@@ -542,6 +590,7 @@
 !  shear rate at V-points
 #ifndef SLICE_MODEL
    if (present(dudyV)) then
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+1
          do i=imin-1,imax+1
 !           Note (KK): slip condition dudyV(av=0)=0
@@ -559,13 +608,15 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end if
 #endif
-   if (present(shearV)) then
+   if (present(shearX) .and. present(shearV)) then
 !     interpolation of shear rate to V-points
 #ifdef SLICE_MODEL
       j=jmax/2
 #else
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+1
 #endif
          do i=imin-1,imax+1
@@ -579,11 +630,16 @@
          end do
 #ifndef SLICE_MODEL
       end do
+!$OMP END DO NOWAIT
 #else
       shearV(imin-1:imax+1,jmax/2-1) = shearV(imin-1:imax+1,jmax/2)
       shearV(imin-1:imax+1,jmax/2+1) = shearV(imin-1:imax+1,jmax/2)
 #endif
    end if
+
+#ifndef SLICE_MODEL
+!$OMP END PARALLEL
+#endif
 
    call toc(TIM_DEFORM)
 #ifdef DEBUG
