@@ -27,8 +27,7 @@
    use domain, only: openbdy,z0_method,z0_const,z0
    use domain, only: az,ax
    use advection, only: init_advection,print_adv_settings
-   use halo_zones, only : update_2d_halo,wait_halo
-   use halo_zones, only : U_TAG,V_TAG,H_TAG
+   use halo_zones, only : update_2d_halo,wait_halo,H_TAG
    use variables_2d
    IMPLICIT NONE
 ! Temporary interface (should be read from module):
@@ -334,8 +333,6 @@
 
    call tic(TIM_INTEGR2D)
    call calc_uvex(An_method,U,V,D,DU,DV)
-   call mirror_bdy_2d(UEx,U_TAG)
-   call mirror_bdy_2d(VEx,V_TAG)
    call toc(TIM_INTEGR2D)
 
    call momentum(loop,tausx,tausy,airp)
