@@ -96,9 +96,9 @@
       splitfack = splitfac
    end if
 
-!$OMP PARALLEL DEFAULT(SHARED)                                        &
-!$OMP FIRSTPRIVATE(use_limiter,iters,dtik,splitfack)                  &
-!$OMP PRIVATE(i,j,k,it,rc,flux1d,hio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
+!$OMP PARALLEL DEFAULT(SHARED)                                                 &
+!$OMP          FIRSTPRIVATE(use_limiter,iters,dtik,splitfack)                  &
+!$OMP          PRIVATE(i,j,k,it,rc,flux1d,hio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
 
 !  Each thread allocates its own HEAP storage:
    allocate(flux1d(0:kmax),stat=rc)    ! work array

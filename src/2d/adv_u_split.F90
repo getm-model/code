@@ -108,8 +108,8 @@
    dti = splitfac*dt
 
 !$OMP PARALLEL DEFAULT(SHARED)                                  &
-!$OMP PARALLEL FIRSTPRIVATE(use_limiter)                        &
-!$OMP PARALLEL PRIVATE(i,j,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
+!$OMP          FIRSTPRIVATE(use_limiter)                        &
+!$OMP          PRIVATE(i,j,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
 
 ! Calculating u-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
