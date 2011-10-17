@@ -119,11 +119,11 @@
                   cfl = max(cfl,abs(ww(i,j,k))*dti/(_HALF_*(hi(i,j,k)+hi(i,j,k+1))))
                end do
                iters = max(1,ceiling(cfl))
+#ifdef DEBUG
                if (iters .gt. itersmax_adv) then
                   FATAL 'adv_w_split_3d: too many iterations needed at'
                   FATAL 'i=',i,' j=',j,':',iters
                end if
-#ifdef DEBUG
                if (iters .gt. 1) write(95,*) i,j,iters,cfl
 #endif
                !iters =  min(200,int(cfl)+1) !original
