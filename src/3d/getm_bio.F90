@@ -219,28 +219,34 @@
 
 #if 1
       fadv3d = cc3d(n,:,:,:)
+
+!  KK-TODO: bio_AH_method + include bio_AH_method=1 into advection
+
       call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                   &
                            bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH,H_TAG)
 
-      if (bio_AH .gt. _ZERO_) then
-         call update_3d_halo(fadv3d,fadv3d,az,imin,jmin,imax,jmax,kmax,D_TAG)
-         call wait_halo(D_TAG)
-         call tracer_diffusion(ff,1,bio_AH,_ONE_/SMALL,_ZERO_)
-      end if
+!      if (bio_AH_method .gt. 1) then
+!         call update_3d_halo(fadv3d,fadv3d,az,imin,jmin,imax,jmax,kmax,D_TAG)
+!         call wait_halo(D_TAG)
+!         call tracer_diffusion(ff,bio_AH_method,bio_AH_const,bio_AH_Prt,bio_AH_stirr_const)
+!      end if
 
       call update_3d_halo(fadv3d,fadv3d,az, &
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
       cc3d(n,:,:,:) = fadv3d
 #else
+
+!  KK-TODO: bio_AH_method + include bio_AH_method=1 into advection
+
       call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn,            &
                            bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH,H_TAG)
 
-      if (bio_AH .gt. _ZERO_) then
-         call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az,imin,jmin,imax,jmax,kmax,D_TAG)
-         call wait_halo(D_TAG)
-         call tracer_diffusion(cc3d(n,:,:,:),1,bio_AH,_ONE_/SMALL,_ZERO_)
-      end if
+!      if (bio_AH_method .gt. 1) then
+!         call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az,imin,jmin,imax,jmax,kmax,D_TAG)
+!         call wait_halo(D_TAG)
+!         call tracer_diffusion(cc3d(n,:,:,:),bio_AH_method,bio_AH_const,bio_AH_Prt,bio_AH_stirr_const)
+!      end if
 
       call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az, &
                           imin,jmin,imax,jmax,kmax,D_TAG)

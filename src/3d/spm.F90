@@ -410,16 +410,18 @@
       end do
    end do
 
+!  KK-TODO: spm_AH_method + include spm_AH_method=1 into advection
+
    call do_advection_3d(dt,spm,uu,vv,wwadv,hun,hvn,ho,hn,                   &
                         spm_hor_adv,spm_ver_adv,spm_adv_split,spm_AH,H_TAG)
 
-   if (spm_AH .gt. _ZERO_) then
+!   if (spm_AH_method .gt. 1) then
 !     spm is not halo updated after advection
-      call update_3d_halo(spm,spm,az,imin,jmin,imax,jmax,kmax,D_TAG)
-      call wait_halo(D_TAG)
-
-      call tracer_diffusion(spm,1,spm_AH,_ONE_/SMALL,_ZERO_)
-   end if
+!      call update_3d_halo(spm,spm,az,imin,jmin,imax,jmax,kmax,D_TAG)
+!      call wait_halo(D_TAG)
+!
+!      call tracer_diffusion(spm,spm_AH_method,spm_AH_const,spm_AH_Prt,spm_AH_stirr_const)
+!   end if
 
 #ifdef TRACER_POSITIVE
    kk= .false.

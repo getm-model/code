@@ -254,14 +254,16 @@
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
 
+!  KK-TODO: fabm_AH_method + include fabm_AH_method=1 into advection
+
       call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                       &
                            fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH,H_TAG)
 
-      if (fabm_AH .gt. _ZERO_) then
-         call update_3d_halo(fadv3d,fadv3d,az,imin,jmin,imax,jmax,kmax,D_TAG)
-         call wait_halo(D_TAG)
-         call tracer_diffusion(ff,1,fabm_AH,_ONE_/SMALL,_ZERO_)
-      end if
+!      if (fabm_AH_method .gt. 1) then
+!         call update_3d_halo(fadv3d,fadv3d,az,imin,jmin,imax,jmax,kmax,D_TAG)
+!         call wait_halo(D_TAG)
+!         call tracer_diffusion(ff,fabm_AH_method,fabm_AH_const,fabm_AH_Prt,fabm_AH_stirr_const)
+!      end if
 
       cc_pel(n,:,:,:) = fadv3d
 #else
@@ -269,14 +271,16 @@
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
 
+!  KK-TODO: fabm_AH_method + include fabm_AH_method=1 into advection
+
       call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn,                &
                            fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH,H_TAG)
 
-      if (fabm_AH .gt. _ZERO_) then
-         call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az,imin,jmin,imax,jmax,kmax,D_TAG)
-         call wait_halo(D_TAG)
-         call tracer_diffusion(cc3d(n,:,:,:),1,fabm_AH,_ONE_/SMALL,_ZERO_)
-      end if
+!      if (fabm_AH_method .gt. 1) then
+!         call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az,imin,jmin,imax,jmax,kmax,D_TAG)
+!         call wait_halo(D_TAG)
+!         call tracer_diffusion(cc3d(n,:,:,:),fabm_AH_method,fabm_AH_const,fabm_AH_Prt,fabm_AH_stirr_const)
+!      end if
 #endif
    end do
 
