@@ -236,7 +236,7 @@
    integer,intent(in)                                :: split,hscheme,vscheme,tag
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(I3DFIELD),intent(inout)        :: f(I3DFIELD)
+   REALTYPE,dimension(I3DFIELD),intent(inout)        :: f
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE,dimension(I3DFIELD),intent(out),optional :: hires,advres
