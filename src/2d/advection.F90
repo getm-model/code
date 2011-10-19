@@ -377,18 +377,16 @@
 
             case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
-               call adv_u_split(dt,f,Di,adv,U,Do,DU,                       &
+               call adv_u_split(dt,f,Di,adv,U,Do,DU,                      &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
+                                adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1, &
 #endif
-                                _ONE_,scheme,AH,                           &
-                                adv_grid%mask_uflux,adv_grid%mask_uupdate, &
-#ifdef SLICE_MODEL
-                                nosplit_finalise=.true.,                   &
-                                mask_finalise=adv_grid%mask_finalise)
-#else
-                                nosplit_finalise=.false.)
+                                _ONE_,scheme,AH,                          &
+                                adv_grid%mask_uflux,adv_grid%mask_uupdate &
+#ifndef SLICE_MODEL
+                                ,nosplit_finalise=.false.                 &
 #endif
+                               )
 #ifndef SLICE_MODEL
                call adv_v_split(dt,f,Di,adv,V,Do,DV,                       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
