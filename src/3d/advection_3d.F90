@@ -236,7 +236,7 @@
    integer,intent(in)                                :: split,hscheme,vscheme,tag
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(I3DFIELD),intent(inout)        :: f(I3DFIELD)
+   REALTYPE,dimension(I3DFIELD),intent(inout)        :: f
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE,dimension(I3DFIELD),intent(out),optional :: hires,advres
@@ -345,7 +345,7 @@
          do k=1,kmax
             call do_advection(dt,f(:,:,k),uu(:,:,k),vv(:,:,k),         &
                               hu(:,:,k),hv(:,:,k),ho(:,:,k),hn(:,:,k), &
-                              hscheme,split,AH,tag,                    &
+                              hscheme,FULLSPLIT,AH,tag,                &
                               Dires=hi(:,:,k),advres=adv3d(:,:,k))
          end do
          if (kmax .gt. 1) then

@@ -178,14 +178,14 @@
       do i=imin-HALO,imax+HALO-1
 !        the velocity to be transported
          fadv(i,j) = U(i,j)/DU(i,j)
-         Uadv(i,j) = _HALF_*( U(i  ,j) + U(i+1,j) )
-         Vadv(i,j) = _HALF_*( V(i  ,j) + V(i+1,j) )
+         Uadv(i,j) = _HALF_*( U(i,j) + U(i+1,j) )
+         Vadv(i,j) = _HALF_*( V(i,j) + V(i+1,j) )
 !        Note (KK): DU only valid until imax+1
 !                   therefore DUadv only valid until imax
-         DUadv(i,j) = _HALF_*( DU(i  ,j) + DU(i+1,j) )
+         DUadv(i,j) = _HALF_*( DU(i,j) + DU(i+1,j) )
 !        Note (KK): DV only valid until jmax+1
 !                   therefore DVadv only valid until jmax+1
-         DVadv(i,j) = _HALF_*( DV(i  ,j) + DV(i+1,j) )
+         DVadv(i,j) = _HALF_*( DV(i,j) + DV(i+1,j) )
       end do
    end do
 !$OMP END DO
