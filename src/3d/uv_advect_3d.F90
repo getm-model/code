@@ -285,15 +285,15 @@
          do i=imin-HALO,imax+HALO-1
 !           the velocity to be transported
             fadv3d(i,j,k) = uu(i,j,k)/hun(i,j,k)
-            uuadv(i,j,k) = _HALF_*( uu(i  ,j,k) + uu(i+1,j,k) )
-            vvadv(i,j,k) = _HALF_*( vv(i  ,j,k) + vv(i+1,j,k) )
-            wwadv(i,j,k) = _HALF_*( ww(i+1,j,k) + ww(i  ,j,k) )
+            uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i+1,j,k) )
+            vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i+1,j,k) )
+            wwadv(i,j,k) = _HALF_*( ww(i,j,k) + ww(i+1,j,k) )
 !           Note (KK): hun only valid until imax+1
 !                      therefore huadv only valid until imax
-            huadv(i,j,k) = _HALF_*( hun(i  ,j,k) + hun(i+1,j,k) )
+            huadv(i,j,k) = _HALF_*( hun(i,j,k) + hun(i+1,j,k) )
 !           Note (KK): hvn only valid until jmax+1
 !                      therefore hvadv only valid until jmax+1
-            hvadv(i,j,k) = _HALF_*( hvn(i  ,j,k) + hvn(i+1,j,k) )
+            hvadv(i,j,k) = _HALF_*( hvn(i,j,k) + hvn(i+1,j,k) )
          end do
       end do
 !$OMP END DO NOWAIT
@@ -323,15 +323,15 @@
          do i=imin-HALO,imax+HALO
 !           the velocity to be transported
             fadv3d(i,j,k) = vv(i,j,k)/hvn(i,j,k)
-            uuadv(i,j,k) = _HALF_*( uu(i,j+1,k) + uu(i,j  ,k) )
-            vvadv(i,j,k) = _HALF_*( vv(i,j+1,k) + vv(i,j  ,k) )
-            wwadv(i,j,k) = _HALF_*( ww(i,j+1,k) + ww(i,j  ,k) )
+            uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i,j+1,k) )
+            vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i,j+1,k) )
+            wwadv(i,j,k) = _HALF_*( ww(i,j,k) + ww(i,j+1,k) )
 !           Note (KK): hun only valid until imax+1
 !                      therefore huadv only valid until imax+1
-            huadv(i,j,k) = _HALF_*( hun(i,j+1,k) + hun(i,j  ,k) )
+            huadv(i,j,k) = _HALF_*( hun(i,j,k) + hun(i,j+1,k) )
 !           Note (KK): hvn only valid until jmax+1
 !                      therefore hvadv only valid until jmax
-            hvadv(i,j,k) = _HALF_*( hvn(i,j+1,k) + hvn(i,j  ,k) )
+            hvadv(i,j,k) = _HALF_*( hvn(i,j,k) + hvn(i,j+1,k) )
          end do
       end do
 !$OMP END DO NOWAIT
