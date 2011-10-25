@@ -231,7 +231,7 @@
    REAL_4B                   :: x(1)
    logical, save             :: first=.true.
    integer, save             :: save_n=1,last_indx=-1
-   REALTYPE, save            :: t_1,t_2
+   REALTYPE, save            :: t_1,t_2,loop0
 !EOP
 !-------------------------------------------------------------------------
 #ifdef DEBUG
@@ -243,7 +243,11 @@
 #define NO_INTERPOL
 
 #ifdef NO_INTERPOL
-   t = (loop-1)*timestep
+   if (first) then
+      loop0=loop-1
+      first = .false.
+   endif
+   t = (loop-loop0)*timestep
    do indx=save_n,textr
       if (river_times(indx) .ge. real(t + offset)) EXIT
    end do
