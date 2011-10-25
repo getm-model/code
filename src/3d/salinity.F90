@@ -121,17 +121,17 @@
               call getm_error("init_salinity()", &
                          "Constant horizontal diffusivity of salt <0");
          end if
-         LEVEL4 salt_AH_const
+         LEVEL4 real(salt_AH_const)
       case(2)
          LEVEL3 'salt_AH_method=2 -> using LES parameterisation'
-         LEVEL4 'turbulent Prandtl number: ',salt_AH_Prt
+         LEVEL4 'turbulent Prandtl number: ',real(salt_AH_Prt)
       case(3)
          LEVEL3 'salt_AH_method=3 -> SGS stirring parameterisation'
          if (salt_AH_stirr_const .lt. _ZERO_) then
               call getm_error("init_salinity()", &
                          "salt_AH_stirr_const <0");
          end if
-         LEVEL4 'stirring constant: ',salt_AH_stirr_const
+         LEVEL4 'stirring constant: ',real(salt_AH_stirr_const)
       case default
          call getm_error("init_salinity()", &
                          "A non valid salt_AH_method has been chosen");

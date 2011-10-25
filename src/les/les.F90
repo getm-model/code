@@ -94,7 +94,7 @@
       select case (les_method)
          case(SMAG_2D)
             LEVEL2 'Smagorinsky (1963) parameterisation'
-            LEVEL3 'Smagorinsky constant: ',smag_const
+            LEVEL3 'Smagorinsky constant: ',real(smag_const)
          case default
             FATAL 'No valid les_method specified'
             stop 'init_internal_pressure()'

@@ -122,17 +122,17 @@
               call getm_error("init_temperature()", &
                          "Constant horizontal diffusivity of heat <0");
          end if
-         LEVEL4 temp_AH_const
+         LEVEL4 real(temp_AH_const)
       case(2)
          LEVEL3 'temp_AH_method=2 -> using LES parameterisation'
-         LEVEL4 'Turbulent Prandtl number: ',temp_AH_Prt
+         LEVEL4 'Turbulent Prandtl number: ',real(temp_AH_Prt)
       case(3)
          LEVEL3 'temp_AH_method=3 -> SGS stirring parameterisation'
          if (temp_AH_stirr_const .lt. _ZERO_) then
               call getm_error("init_temperature()", &
                          "temp_AH_stirr_const <0");
          end if
-         LEVEL4 'stirring constant: ',temp_AH_stirr_const
+         LEVEL4 'stirring constant: ',real(temp_AH_stirr_const)
       case default
          call getm_error("init_temperature()", &
                          "A non valid temp_AH_method has been chosen");

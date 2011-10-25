@@ -153,7 +153,7 @@
               call getm_error("init_2d()", &
                          "Constant horizontal momentum diffusion <0");
          end if
-         LEVEL3 Am_const
+         LEVEL3 real(Am_const)
          deformCX=.true.
       case(AM_LES)
          LEVEL2 'Am_method=2 -> using LES parameterisation'
