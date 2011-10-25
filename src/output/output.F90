@@ -590,11 +590,12 @@
       call restart_file(WRITING,trim(hot_out),loop,runtype)
    end if
 
-   if (meanout .eq. 0) then
+   if (save_mean .and. meanout.eq.0) then
       select case (out_fmt)
          case(NETCDF)
             dummy=-_ZERO_
 #ifndef NO_3D
+            LEVEL3 timestr, ': saving mean fields .... '
             call save_mean_ncdf(dummy)
 #endif
       end select
