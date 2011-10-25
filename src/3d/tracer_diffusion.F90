@@ -85,7 +85,7 @@
 #else
       do j=jmin-HALO,jmax+HALO
 #endif
-         do i=imin-HALO,imax+1
+         do i=imin-HALO,imax+HALO-1
             if (au(i,j) .ge. 1) then ! zero gradient across closed boundary
                dfdxU(i,j) = ( f(i+1,j,k) - f(i,j,k) ) / DXU
             end if
@@ -97,30 +97,29 @@
 #ifndef SLICE_MODEL
       if (AH_method .eq. 3) then
 !        interpolation of dfdxU to V-points
-         do j=jmin-HALO,jmax+HALO
-            do i=imin-1,imax+1
-               if(az(i,j) .ge. 1) then
-!                 Note (KK): not valid in W/E open boundary cells (zero gradient???)
-!                            but not used there anyway
-                  dfdxV(i,j) = _HALF_ * ( dfdxU(i-1,j) + dfdxU(i,j) ) !T-points
+         do j=jmin-HALO,jmax+HALO-1
+            do i=imin-HALO,imax+HALO-1
+!              Note (KK): dfdxX at corners set to 0
+!                         dfdxX at closed N/S open boundaries not 0, but not needed
+               if(ax(i,j) .ge. 1) then
+                  dfdxV(i,j) = _HALF_ * ( dfdxU(i,j) + dfdxU(i,j+1) ) !X-points
                end if
             end do
          end do
-         do j=jmin-HALO,jmax+1
-            do i=imin-1,imax+1
+         do j=jmin-HALO,jmax+HALO-1
+            do i=imin-HALO+1,imax+HALO-1
 !              Note (KK): we only need dfdxV(av=[1|2]), therefore settings for
 !                         av=0 (due to zero gradient use of dfdxC) and for
 !                         av=3 (zero gradient???) can be skipped
-!                         this does not overwrite dfdx(az=0)=0
                if (av(i,j).eq.1 .or. av(i,j).eq.2) then
-                  dfdxV(i,j) = _HALF_ * ( dfdxV(i,j) + dfdxV(i,j+1) ) !V-points
+                  dfdxV(i,j) = _HALF_ * ( dfdxV(i-1,j) + dfdxV(i,j) ) !V-points
                end if
             end do
          end do
       end if
 
 !     y-change at V-points
-      do j=jmin-HALO,jmax+1
+      do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO
             if (av(i,j) .ge. 1) then ! zero normal gradient across closed boundary
                dfdyV(i,j) = ( f(i,j+1,k) - f(i,j,k) ) / DYV
@@ -130,23 +129,22 @@
 
       if (AH_method .eq. 3) then
 !        interpolation of dfdyV to U-points
-         do j=jmin-1,jmax+1
-            do i=imin-HALO,imax+HALO
-               if(az(i,j) .ge. 1) then
-!                 Note (KK): not valid in N/S open boundary cells (zero gradient???)
-!                            but not used there anyway
-                  dfdyU(i,j) = _HALF_ * ( dfdyV(i,j-1) + dfdyV(i,j) ) !T-points
+         do j=jmin-HALO,jmax+HALO-1
+            do i=imin-HALO,imax+HALO-1
+!              Note (KK): dfdxX at corners set to 0
+!                         dfdxX at closed N/S open boundaries not 0, but not needed
+               if(ax(i,j) .ge. 1) then
+                  dfdyU(i,j) = _HALF_ * ( dfdyV(i,j) + dfdyV(i+1,j) ) !X-points
                end if
             end do
          end do
-         do j=jmin-1,jmax+1
-            do i=imin-HALO,imax+1
+         do j=jmin-HALO+1,jmax+HALO-1
+            do i=imin-HALO,imax+HALO-1
 !              Note (KK): we only need dfdyU(au=[1|2]), therefore settings for
 !                         au=0 (due to zero gradient use of dfdyC) and for
 !                         au=3 (zero gradient???) can be skipped
-!                         this does not overwrite dfdy(az=0)=0
                if (au(i,j).eq.1 .or. au(i,j).eq.2) then
-                  dfdyU(i,j) = _HALF_ * ( dfdyU(i,j) + dfdyU(i+1,j) ) !U-points
+                  dfdyU(i,j) = _HALF_ * ( dfdyU(i,j-1) + dfdyU(i,j) ) !U-points
                end if
             end do
          end do
@@ -163,7 +161,6 @@
 !           Note (KK): flux at au=3 is not needed (AmU would be trash anyway),
 !                      at closed boundaries dfdxU and diffxy are already 0
 !                      therefore only flux calculation at au=[1|2]
-!                      this does not overwrite dfdx(au=0)=0
             if(au(i,j).eq.1 .or. au(i,j).eq.2) then
                select case (AH_method)
                   case(1)
@@ -193,7 +190,6 @@
 !           Note (KK): flux at av=3 is not needed (AmV would be trash anyway),
 !                      at closed boundaries dfdyV and diffyx are already 0,
 !                      therefore only flux calculation at av=[1|2]
-!                      this does not overwrite dfdy(av=0)=0
             if(av(i,j).eq.1 .or. av(i,j).eq.2) then
                select case (AH_method)
                   case(1)
