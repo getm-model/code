@@ -43,6 +43,7 @@
 ! !LOCAL VARIABLES:
 !  allocated outside a module, therefore saved
    REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel
+   REALTYPE,dimension(:,:),allocatable      :: vel_temp
    integer                                  :: rc
    logical,save                             :: first=.true.
    REALTYPE                                 :: dxdy,dydx,tmp,velgrad
@@ -66,6 +67,9 @@
       if (rc /= 0) stop 'init_2d: Error allocating memory (v_vel)'
       v_vel=_ZERO_
 
+      allocate(vel_temp(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (vel_temp)'
+
       first = .false.
    end if
 
@@ -85,7 +89,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
 #endif
-      do i=imin-HALO,imax+1
+      do i=imin-HALO,imax+HALO-1
          if (au(i,j) .ge. 1) then
             u_vel(i,j) = U(i,j)/DU(i,j)
          end if
@@ -94,7 +98,7 @@
    end do
 !$OMP END DO NOWAIT
 #else
-   u_vel(imin-HALO:imax+1,jmax/2+1) = u_vel(imin-HALO:imax+1,jmax/2)
+   u_vel(imin-HALO:imax+HALO-1,jmax/2+1) = u_vel(imin-HALO:imax+HALO-1,jmax/2)
 #endif
 
 !  meridional velocity
@@ -102,7 +106,7 @@
    j=jmax/2
 #else
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-HALO,jmax+1
+   do j=jmin-HALO,jmax+HALO-1
 #endif
       do i=imin-HALO,imax+HALO
          if (av(i,j) .ge. 1) then
@@ -125,7 +129,7 @@
 !  mirror velocities based on ouflow condition for transverse velocity
    do n = 1,NNB ! northern open boundaries (dudyX=0)
       j = nj(n)-1
-      do i = nfi(n)-HALO,nli(n)+1
+      do i = nfi(n)-HALO,nli(n)+HALO-1
          if (au(i,j+1) .eq. 3) then
             dydx = ( DYVIP1 - DYV ) / DXX
             if (av(i,j) .eq. 3) then ! concave W\N
@@ -150,7 +154,7 @@
    end do
    do n = 1,NSB ! southern open boundaries (dudyX=0)
       j = sj(n)
-      do i = sfi(n)-HALO,sli(n)+1
+      do i = sfi(n)-HALO,sli(n)+HALO-1
          if (au(i,j) .eq. 3) then
             dydx = ( DYVIP1 - DYV ) / DXX
             if (av(i,j) .eq. 3) then ! concave W/S
@@ -175,7 +179,7 @@
    end do
    do n = 1,NWB ! western open boundaries (dvdxX=0)
       i = wi(n)
-      do j = wfj(n)-HALO,wlj(n)+1
+      do j = wfj(n)-HALO,wlj(n)+HALO-1
          if (av(i,j) .eq. 3) then
             dxdy = ( DXUJP1 - DXU ) / DYX
             v_vel(i,j) = v_vel(i+1,j) - _HALF_*(u_vel(i,j)+u_vel(i,j+1))*dxdy
@@ -184,7 +188,7 @@
    end do
    do n = 1,NEB ! eastern open boundaries (dvdxX=0)
       i = ei(n)-1
-      do j = efj(n)-HALO,elj(n)+1
+      do j = efj(n)-HALO,elj(n)+HALO-1
          if (av(i+1,j) .eq. 3) then
             dxdy = ( DXUJP1 - DXU ) / DYX
             v_vel(i+1,j) = v_vel(i,j) + _HALF_*(u_vel(i,j)+u_vel(i,j+1))*dxdy
@@ -209,9 +213,9 @@
       j=jmax/2
 #else
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-1,jmax+1
+      do j=jmin-HALO+1,jmax+HALO-1
 #endif
-         do i=imin-1,imax+1
+         do i=imin-HALO+1,imax+HALO-1
             if (az(i,j) .eq. 1) then
 !              Note (KK): since U(au=0)=0, dudxC can also be calculated near closed boundaries
                dudxC(i,j) = (u_vel(i,j) - u_vel(i-1,j)) / DXC
@@ -246,7 +250,7 @@
       end do
 !$OMP END DO NOWAIT
 #else
-      dudxC(imin-1:imax+1,jmax/2+1) = dudxC(imin-1:imax+1,jmax/2)
+      dudxC(imin-HALO+1:imax+HALO-1,jmax/2+1) = dudxC(imin-HALO+1:imax+HALO-1,jmax/2)
 #endif
 
       if (present(dudxU)) then
@@ -256,9 +260,9 @@
 #else
 !$OMP BARRIER
 !$OMP DO SCHEDULE(RUNTIME)
-         do j=jmin-1,jmax+1
+         do j=jmin-HALO+1,jmax+HALO-1
 #endif
-            do i=imin-1,imax
+            do i=imin-HALO+1,imax+HALO-2
 !              KK-TODO: outflow condition dudxU(au=2)=0 ?
                if (au(i,j).eq.1 .or. au(i,j).eq.3) then
                   dudxU(i,j) = _HALF_*(dudxC(i,j) + dudxC(i+1,j))
@@ -272,7 +276,7 @@
          end do
 !$OMP END DO NOWAIT
 #else
-         dudxU(imin-1:imax,jmax/2+1) = dudxU(imin-1:imax,jmax/2)
+         dudxU(imin-HALO+1:imax+HALO-2,jmax/2+1) = dudxU(imin-HALO+1:imax+HALO-2,jmax/2)
 #endif
       end if
 
@@ -285,29 +289,42 @@
       j=jmax/2
 #else
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax
+      do j=jmin-HALO,jmax+HALO-1
 #endif
-         do i=imin-1,imax+1
+!        calculate u_velX
+         do i=imin-HALO,imax+HALO-1
+            if (ax(i,j) .eq. 0) then
+!              Note (KK): here we only set u_velX near convex closed bdys
+               if (     av(i  ,j).eq.1 .or. av(i  ,j).eq.2 &
+                   .or. av(i+1,j).eq.1 .or. av(i+1,j).eq.2 ) then
+                 vel_temp(i,j) = _ZERO_
+               end if
+            else
+               vel_temp(i,j) = _HALF_ * ( u_vel(i,j) + u_vel(i,j+1) )
+            end if
+         end do
+!        set dudxV
+         do i=imin-HALO+1,imax+HALO-1
 !           Note (KK): outflow condition dudxV(av=3)=0
-            if (av(i,j) .eq. 0) then
-!              Note (KK): V(av=0)=0 and slip condition dudyV(av=0)=0
-               if (az(i,j  ) .ge. 1) dudxV(i,j) = (u_vel(i,j  ) - u_vel(i-1,j  ))/DXV
-               if (az(i,j+1) .ge. 1) dudxV(i,j) = (u_vel(i,j+1) - u_vel(i-1,j+1))/DXV
-            else if (av(i,j).eq.1 .or. av(i,j).eq.2) then
-               dudxV(i,j) = _HALF_*((u_vel(i,j)+u_vel(i,j+1)) - (u_vel(i-1,j)+u_vel(i-1,j+1)))/DXV
+            if (av(i,j).eq.1 .or. av(i,j).eq.2) then
+               dudxV(i,j) = ( vel_temp(i,j) - vel_temp(i-1,j) )/DXV
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dudxV(i,j) = dudxV(i,j) + v_vel(i,j)*(DXCJP1-DXC)*ARVD1
 #endif
 #endif
+            else if (av(i,j) .eq. 0) then
+!              Note (KK): V(av=0)=0 and slip condition dudyV(av=0)=0 at N/S closed bdys
+               if (az(i,j  ).eq.1 .or. az(i,j  ).eq.2) dudxV(i,j) = (u_vel(i,j  ) - u_vel(i-1,j  ))/DXV
+               if (az(i,j+1).eq.1 .or. az(i,j+1).eq.2) dudxV(i,j) = (u_vel(i,j+1) - u_vel(i-1,j+1))/DXV
             end if
          end do
 #ifndef SLICE_MODEL
       end do
 !$OMP END DO NOWAIT
 #else
-      dudxV(imin-1:imax+1,jmax/2-1) = dudxV(imin-1:imax+1,jmax/2)
-      dudxV(imin-1:imax+1,jmax/2+1) = dudxV(imin-1:imax+1,jmax/2)
+      dudxV(imin-HALO+1:imax+HALO-1,jmax/2-1) = dudxV(imin-HALO+1:imax+HALO-1,jmax/2)
+      dudxV(imin-HALO+1:imax+HALO-1,jmax/2+1) = dudxV(imin-HALO+1:imax+HALO-1,jmax/2)
 #endif
    end if
 
@@ -319,8 +336,8 @@
    if (present(dvdyC)) then
 !     meridional strain rate at T-points
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-1,jmax+1
-         do i=imin-1,imax+1
+      do j=jmin-HALO+1,jmax+HALO-1
+         do i=imin-HALO+1,imax+HALO-1
             if (az(i,j) .eq. 1) then
 !              Note (KK): since V(av=0)=0, dvdyC can also be calculated near closed boundaries
                dvdyC(i,j) = (v_vel(i,j) - v_vel(i,j-1)) / DYC
@@ -359,8 +376,8 @@
 !        interpolation of meridional strain rate to V-points
 !$OMP BARRIER
 !$OMP DO SCHEDULE(RUNTIME)
-         do j=jmin-1,jmax
-            do i=imin-1,imax+1
+         do j=jmin-HALO+1,jmax+HALO-2
+            do i=imin-HALO+1,imax+HALO-1
 !              KK-TODO: outflow condition dvdyV(av=2)=0 ?
                if (av(i,j).eq.1 .or. av(i,j).eq.3) then
 !                 KK-TODO: for dvdyV(av=3) average of nonlinear metric
@@ -381,22 +398,40 @@
 
    if (present(dvdyU)) then
 !     meriodional strain rate at U-points
+!     calculate v_velX
+!$OMP BARRIER
+!     Note (KK): we might need omp barrier because velX is used before with nowait
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-1,jmax+1
-         do i=imin-HALO,imax+1
+      do j=jmin-HALO,jmax+HALO-1
+         do i=imin-HALO,imax+HALO-1
+            if (ax(i,j) .eq. 0) then
+!              Note (KK): here we only set v_velX near convex closed bdys
+               if (     au(i,j  ).eq.1 .or. au(i,j  ).eq.2 &
+                   .or. au(i,j+1).eq.1 .or. au(i,j+1).eq.2 ) then
+                 vel_temp(i,j) = _ZERO_
+               end if
+            else
+               vel_temp(i,j) = _HALF_ * ( v_vel(i,j) + v_vel(i+1,j) )
+            end if
+         end do
+      end do
+!$OMP END DO
+!     set dvdyU
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin-HALO+1,jmax+HALO-1
+         do i=imin-HALO,imax+HALO-1
 !           Note (KK): outflow condition dvdyU(au=3)=0
-            if (au(i,j) .eq. 0) then
-!              Note (KK): U(au=0)=0 and slip condition dvdxU(au=0)=0
-!                         (however not needed in les_smagorinsky and tracer_stirring)
-               if (az(i  ,j) .ge. 1) dvdyU(i,j) = (v_vel(i  ,j) - v_vel(i  ,j-1))/DYU
-               if (az(i+1,j) .ge. 1) dvdyU(i,j) = (v_vel(i+1,j) - v_vel(i+1,j-1))/DYU
-            else if (au(i,j).eq.1 .or. au(i,j).eq.2) then
-               dvdyU(i,j) = _HALF_*((v_vel(i,j)+v_vel(i+1,j)) - (v_vel(i,j-1)+v_vel(i+1,j-1)))/DYU
+            if (au(i,j).eq.1 .or. au(i,j).eq.2) then
+               dvdyU(i,j) = ( vel_temp(i,j-1) - vel_temp(i,j) ) / DYU
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dvdyU(i,j) = dvdyU(i,j) + u_vel(i,j)*(DYCIP1-DYC)*ARUD1
 #endif
 #endif
+            else if (au(i,j) .eq. 0) then
+!              Note (KK): U(au=0)=0 and slip condition dvdxU(au=0)=0
+               if (az(i  ,j) .ge. 1) dvdyU(i,j) = (v_vel(i  ,j) - v_vel(i  ,j-1))/DYU
+               if (az(i+1,j) .ge. 1) dvdyU(i,j) = (v_vel(i+1,j) - v_vel(i+1,j-1))/DYU
             end if
          end do
       end do
@@ -418,9 +453,9 @@
       j=jmax/2
 #else
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+1
+      do j=jmin-HALO,jmax+HALO-1
 #endif
-         do i=imin-HALO,imax+1
+         do i=imin-HALO,imax+HALO-1
 !           Note (KK): at closed boundaries slip condition for tangential
 !                      velocity in terms of covariant derivative
 !                      no normal flow through closed boundaries does only imply
@@ -521,12 +556,12 @@
 !$OMP END DO
 #else
       if (present(dvdxX)) then
-         dvdxX(imin-HALO:imax+1,jmax/2-1) = dvdxX(imin-HALO:imax+1,jmax/2)
-         dvdxX(imin-HALO:imax+1,jmax/2+1) = dvdxX(imin-HALO:imax+1,jmax/2)
+         dvdxX(imin-HALO:imax+HALO-1,jmax/2-1) = dvdxX(imin-HALO:imax+HALO-1,jmax/2)
+         dvdxX(imin-HALO:imax+HALO-1,jmax/2+1) = dvdxX(imin-HALO:imax+HALO-1,jmax/2)
       end if
       if (present(shearX)) then
-         shearX(imin-HALO:imax+1,jmax/2-1) = shearX(imin-HALO:imax+1,jmax/2)
-         shearX(imin-HALO:imax+1,jmax/2+1) = shearX(imin-HALO:imax+1,jmax/2)
+         shearX(imin-HALO:imax+HALO-1,jmax/2-1) = shearX(imin-HALO:imax+HALO-1,jmax/2)
+         shearX(imin-HALO:imax+HALO-1,jmax/2+1) = shearX(imin-HALO:imax+HALO-1,jmax/2)
       end if
 #endif
 
@@ -537,16 +572,25 @@
 #ifdef SLICE_MODEL
       j=jmax/2
 #else
+!$OMP BARRIER
+!     Note (KK): we need omp barrier here, because vel_temp was used with nowait
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-1,jmax+1
+      do j=jmin-HALO+1,jmax+HALO-1
 #endif
-         do i=imin-HALO,imax+1
+!        calculate v_velC
+         do i=imin-HALO,imax+HALO
+!           Note (KK): we only need v_velC(az=1)
+            if (az(i,j) .eq. 1) then
+               vel_temp(i,j) = _HALF_ * ( v_vel(i,j-1) + v_vel(i,j) )
+            end if
+         end do
+!        calculate dvdxU
+         do i=imin-HALO,imax+HALO-1
 !           Note (KK): slip condition dvdxU(au=0)=0
 !                      outflow condition at W/E open bdys dvdxU(au=2)=0
 !           KK-TODO: metric correction
             if (au(i,j) .eq. 1) then
-               dvdxU(i,j) = _HALF_*( (v_vel(i+1,j-1) + v_vel(i+1,j))      &
-                                    -(v_vel(i  ,j-1) + v_vel(i  ,j)))/DXU
+               dvdxU(i,j) = ( vel_temp(i+1,j) - vel_temp(i,j) ) /DXU
             else if (au(i,j) .eq. 3) then
                if (au(i,j-1) .eq. 1) then ! northern open bdy
                   dvdxU(i,j) = (v_vel(i+1,j-1) - v_vel(i  ,j-1))/DXU
@@ -559,7 +603,7 @@
       end do
 !$OMP END DO NOWAIT
 #else
-      dvdxU(imin-HALO:imax+1,jmax/2+1) = dvdxU(imin-HALO:imax+1,jmax/2)
+      dvdxU(imin-HALO:imax+HALO-1,jmax/2+1) = dvdxU(imin-HALO:imax+HALO-1,jmax/2)
 #endif
    end if
    if (present(shearX) .and. present(shearU)) then
@@ -568,9 +612,9 @@
       j=jmax/2
 #else
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-1,jmax+1
+      do j=jmin-HALO+1,jmax+HALO-1
 #endif
-         do i=imin-HALO,imax+1
+         do i=imin-HALO,imax+HALO-1
 !           Note (KK): slip condition dvdxU(au=0)=0
 !                      prolonged outflow condition dudyU(au=3)=0
 !                      shearU(au=3) would require shearX outside open boundary
@@ -583,22 +627,35 @@
       end do
 !$OMP END DO
 #else
-      shearU(imin-HALO:imax+1,jmax/2+1) = shearU(imin-HALO:imax+1,jmax/2)
+      shearU(imin-HALO:imax+HALO-1,jmax/2+1) = shearU(imin-HALO:imax+HALO-1,jmax/2)
 #endif
    end if
 
 !  shear rate at V-points
 #ifndef SLICE_MODEL
    if (present(dudyV)) then
+!     calculate u_velC
+!$OMP BARRIER
+!     Note (KK): we need omp barrier here, because vel_temp was in use with nowait
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+1
-         do i=imin-1,imax+1
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO+1,imax+HALO-1
+!           Note (KK): we only need u_velC(az=1)
+            if (az(i,j) .eq. 1) then
+               vel_temp(i,j) = _HALF_ * ( u_vel(i-1,j) + u_vel(i,j) )
+            end if
+         end do
+      end do
+!$OMP END DO
+!     calculate dudyV
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin-HALO,jmax+HALO-1
+         do i=imin-HALO+1,imax+HALO-1
 !           Note (KK): slip condition dudyV(av=0)=0
 !                      outflow condition at N/S open bdys dudyV(av=2)=0
 !           KK-TODO: metric correction
             if (av(i,j) .eq. 1) then
-               dudyV(i,j) = _HALF_*( (u_vel(i-1,j+1) + u_vel(i  ,j+1))      &
-                                    -(u_vel(i-1,j  ) + u_vel(i  ,j  )))/DYV
+               dudyV(i,j) = ( vel_temp(i,j+1) - vel_temp(i,j) ) / DYV
             else if (av(i,j) .eq. 3) then
                if (av(i-1,j) .eq. 1) then ! eastern open bdy
                   dudyV(i,j) = (u_vel(i-1,j+1) - u_vel(i-1,j  ))/DYV
@@ -617,9 +674,9 @@
       j=jmax/2
 #else
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+1
+      do j=jmin-HALO,jmax+HALO-1
 #endif
-         do i=imin-1,imax+1
+         do i=imin-HALO+1,imax+HALO-1
 !           Note (KK): slip condition dudyV(av=0)=0
 !                      prolonged outflow condition dvdxV(av=3)=0
 !                      shearV(av=3) would require shearX outside open boundary
@@ -632,8 +689,8 @@
       end do
 !$OMP END DO NOWAIT
 #else
-      shearV(imin-1:imax+1,jmax/2-1) = shearV(imin-1:imax+1,jmax/2)
-      shearV(imin-1:imax+1,jmax/2+1) = shearV(imin-1:imax+1,jmax/2)
+      shearV(imin-HALO+1:imax+HALO-1,jmax/2-1) = shearV(imin-HALO+1:imax+HALO-1,jmax/2)
+      shearV(imin-HALO+1:imax+HALO-1,jmax/2+1) = shearV(imin-HALO+1:imax+HALO-1,jmax/2)
 #endif
    end if
 

@@ -11,7 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,kmax,az,au,av
+   use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,ax
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dyu,dxv,dyv,arcd1
 #else
