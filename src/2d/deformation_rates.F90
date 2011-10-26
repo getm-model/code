@@ -42,8 +42,7 @@
 !
 ! !LOCAL VARIABLES:
 !  allocated outside a module, therefore saved
-   REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel
-   REALTYPE,dimension(:,:),allocatable      :: vel_temp
+   REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel,vel_temp
    integer                                  :: rc
    logical,save                             :: first=.true.
    REALTYPE                                 :: dxdy,dydx,tmp,velgrad
