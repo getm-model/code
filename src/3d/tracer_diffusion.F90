@@ -20,6 +20,7 @@
    use variables_3d, only: dt,hn
    use variables_3d, only: diffxx,diffxy,diffyx,diffyy
    use variables_les, only: AmU_3d,AmV_3d
+   use_variables_2d, only: PP
    use getm_timers, only: tic,toc,TIM_TRACEDIFF
 
    IMPLICIT NONE
@@ -95,29 +96,6 @@
 #endif
    
 #ifndef SLICE_MODEL
-      if (AH_method .eq. 3) then
-!        interpolation of dfdxU to V-points
-         do j=jmin-HALO,jmax+HALO-1
-            do i=imin-HALO,imax+HALO-1
-!              Note (KK): dfdxX at corners set to 0
-!                         dfdxX at closed N/S open boundaries not 0, but not needed
-               if(ax(i,j) .ge. 1) then
-                  dfdxV(i,j) = _HALF_ * ( dfdxU(i,j) + dfdxU(i,j+1) ) !X-points
-               end if
-            end do
-         end do
-         do j=jmin-HALO,jmax+HALO-1
-            do i=imin-HALO+1,imax+HALO-1
-!              Note (KK): we only need dfdxV(av=[1|2]), therefore settings for
-!                         av=0 (due to zero gradient use of dfdxC) and for
-!                         av=3 (zero gradient???) can be skipped
-               if (av(i,j).eq.1 .or. av(i,j).eq.2) then
-                  dfdxV(i,j) = _HALF_ * ( dfdxV(i-1,j) + dfdxV(i,j) ) !V-points
-               end if
-            end do
-         end do
-      end if
-
 !     y-change at V-points
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO
@@ -128,23 +106,50 @@
       end do
 
       if (AH_method .eq. 3) then
-!        interpolation of dfdyV to U-points
+!        interpolation of dfdxU to X-points
          do j=jmin-HALO,jmax+HALO-1
             do i=imin-HALO,imax+HALO-1
-!              Note (KK): dfdxX at corners set to 0
-!                         dfdxX at closed N/S open boundaries not 0, but not needed
                if(ax(i,j) .ge. 1) then
-                  dfdyU(i,j) = _HALF_ * ( dfdyV(i,j) + dfdyV(i+1,j) ) !X-points
+                  PP(i,j) = _HALF_ * ( dfdxU(i,j) + dfdxU(i,j+1) )
+               else
+!                 Note (KK): dfdxX at corners set to 0
+!                            dfdxX at closed N/S open boundaries not 0, but not needed
+                  PP(i,j) = _ZERO_
                end if
             end do
          end do
+!        interpolation of dfdxX to V-points
+         do j=jmin-HALO,jmax+HALO-1
+            do i=imin-HALO+1,imax+HALO-1
+!              Note (KK): we only need dfdxV(av=[1|2]), therefore settings for
+!                         av=0 (due to zero gradient use of dfdxC) and for
+!                         av=3 (zero gradient???) can be skipped
+               if (av(i,j).eq.1 .or. av(i,j).eq.2) then
+                  dfdxV(i,j) = _HALF_ * ( PP(i-1,j) + PP(i,j) )
+               end if
+            end do
+         end do
+
+!        interpolation of dfdyV to X-points
+         do j=jmin-HALO,jmax+HALO-1
+            do i=imin-HALO,imax+HALO-1
+               if(ax(i,j) .ge. 1) then
+                  PP(i,j) = _HALF_ * ( dfdyV(i,j) + dfdyV(i+1,j) )
+               else
+!                 Note (KK): dfdxX at corners set to 0
+!                            dfdxX at closed N/S open boundaries not 0, but not needed
+                  PP(i,j) = _ZERO_
+               end if
+            end do
+         end do
+!        interpolation of dfdyX to U-points
          do j=jmin-HALO+1,jmax+HALO-1
             do i=imin-HALO,imax+HALO-1
 !              Note (KK): we only need dfdyU(au=[1|2]), therefore settings for
 !                         au=0 (due to zero gradient use of dfdyC) and for
 !                         au=3 (zero gradient???) can be skipped
                if (au(i,j).eq.1 .or. au(i,j).eq.2) then
-                  dfdyU(i,j) = _HALF_ * ( dfdyU(i,j-1) + dfdyU(i,j) ) !U-points
+                  dfdyU(i,j) = _HALF_ * ( PP(i,j-1) + PP(i,j) )
                end if
             end do
          end do
@@ -245,7 +250,6 @@
    return
    end subroutine tracer_diffusion
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------
