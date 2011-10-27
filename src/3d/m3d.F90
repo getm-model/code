@@ -331,6 +331,81 @@
 !-----------------------------------------------------------------------
 !BOP
 !
+! !IROUTINE: postinit_3d - re-initialise some 3D after hotstart read.
+!
+! !INTERFACE:
+   subroutine postinit_3d(runtype)
+! !USES:
+   use domain, only: imin,imax,jmin,jmax, az,au,av
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)                 :: runtype
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !DESCRIPTION:
+!  This routine provides possibility to reset/initialize 3D variables to 
+!  ensure that velocities are correctly set on land cells after read 
+!  of a hotstart file.
+!
+! !LOCAL VARIABLES:
+   integer                   :: i,j
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'postinit_3d() # ',Ncall
+#endif
+
+   LEVEL1 'postinit_3d'
+
+! Go over mask and make sure that velocities are zero on land.
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
+         if(az(i,j) .eq. 0) then
+            ho(i,j,:)  = _ZERO_
+            hn(i,j,:)  = _ZERO_
+            tke(i,j,:) = _ZERO_
+            num(i,j,:) = 1.e-15
+            nuh(i,j,:) = 1.e-15
+#ifndef NO_BAROCLINIC
+            S(i,j,:)   = _ZERO_
+            T(i,j,:)   = _ZERO_
+#endif
+         end if
+      end do
+   end do
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
+         if (au(i,j) .eq. 0) then
+            uu(i,j,:)  = _ZERO_
+            huo(i,j,:) = _ZERO_
+            hun(i,j,:) = _ZERO_
+         end if
+      end do
+   end do
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
+         if (av(i,j) .eq. 0) then
+            vv(i,j,:)  = _ZERO_
+            hvo(i,j,:) = _ZERO_
+            hvn(i,j,:) = _ZERO_
+         end if
+      end do
+   end do
+
+   return
+   end subroutine postinit_3d
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: integrate_3d - calls to do 3D model integration
 ! \label{sec-integrate-3d}
 !
