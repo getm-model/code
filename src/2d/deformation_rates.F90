@@ -23,6 +23,7 @@
 #endif
    use domain, only: NWB,NNB,NEB,NSB
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
+   use variables_2d, only: PP
    use getm_timers, only: tic,toc,TIM_DEFORM
 
    IMPLICIT NONE
@@ -42,7 +43,7 @@
 !
 ! !LOCAL VARIABLES:
 !  allocated outside a module, therefore saved
-   REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel,vel_temp
+   REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel
    integer                                  :: rc
    logical,save                             :: first=.true.
    REALTYPE                                 :: dxdy,dydx,tmp,velgrad
@@ -65,9 +66,6 @@
       allocate(v_vel(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (v_vel)'
       v_vel=_ZERO_
-
-      allocate(vel_temp(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (vel_temp)'
 
       first = .false.
    end if
@@ -292,21 +290,21 @@
 #endif
 !        calculate u_velX
          do i=imin-HALO,imax+HALO-1
+!           Note (KK): we do not need u_velX at closed N/S bdys
             if (ax(i,j) .eq. 0) then
-!              Note (KK): here we only set u_velX near convex closed bdys
                if (     av(i  ,j).eq.1 .or. av(i  ,j).eq.2 &
                    .or. av(i+1,j).eq.1 .or. av(i+1,j).eq.2 ) then
-                 vel_temp(i,j) = _ZERO_
+                 PP(i,j) = _ZERO_
                end if
             else
-               vel_temp(i,j) = _HALF_ * ( u_vel(i,j) + u_vel(i,j+1) )
+               PP(i,j) = _HALF_ * ( u_vel(i,j) + u_vel(i,j+1) )
             end if
          end do
 !        set dudxV
          do i=imin-HALO+1,imax+HALO-1
 !           Note (KK): outflow condition dudxV(av=3)=0
             if (av(i,j).eq.1 .or. av(i,j).eq.2) then
-               dudxV(i,j) = ( vel_temp(i,j) - vel_temp(i-1,j) )/DXV
+               dudxV(i,j) = ( PP(i,j) - PP(i-1,j) )/DXV
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dudxV(i,j) = dudxV(i,j) + v_vel(i,j)*(DXCJP1-DXC)*ARVD1
@@ -399,18 +397,18 @@
 !     meriodional strain rate at U-points
 !     calculate v_velX
 !$OMP BARRIER
-!     Note (KK): we might need omp barrier because velX is used before with nowait
+!     Note (KK): we might need omp barrier because PP was used before with nowait
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO-1
+!           Note (KK): we do not need v_velX at closed W/E bdys
             if (ax(i,j) .eq. 0) then
-!              Note (KK): here we only set v_velX near convex closed bdys
                if (     au(i,j  ).eq.1 .or. au(i,j  ).eq.2 &
                    .or. au(i,j+1).eq.1 .or. au(i,j+1).eq.2 ) then
-                 vel_temp(i,j) = _ZERO_
+                 PP(i,j) = _ZERO_
                end if
             else
-               vel_temp(i,j) = _HALF_ * ( v_vel(i,j) + v_vel(i+1,j) )
+               PP(i,j) = _HALF_ * ( v_vel(i,j) + v_vel(i+1,j) )
             end if
          end do
       end do
@@ -421,7 +419,7 @@
          do i=imin-HALO,imax+HALO-1
 !           Note (KK): outflow condition dvdyU(au=3)=0
             if (au(i,j).eq.1 .or. au(i,j).eq.2) then
-               dvdyU(i,j) = ( vel_temp(i,j-1) - vel_temp(i,j) ) / DYU
+               dvdyU(i,j) = ( PP(i,j-1) - PP(i,j) ) / DYU
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dvdyU(i,j) = dvdyU(i,j) + u_vel(i,j)*(DYCIP1-DYC)*ARUD1
@@ -572,7 +570,7 @@
       j=jmax/2
 #else
 !$OMP BARRIER
-!     Note (KK): we need omp barrier here, because vel_temp was used with nowait
+!     Note (KK): we need omp barrier here, because PP was used with nowait
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO+1,jmax+HALO-1
 #endif
@@ -580,7 +578,7 @@
          do i=imin-HALO,imax+HALO
 !           Note (KK): we only need v_velC(az=1)
             if (az(i,j) .eq. 1) then
-               vel_temp(i,j) = _HALF_ * ( v_vel(i,j-1) + v_vel(i,j) )
+               PP(i,j) = _HALF_ * ( v_vel(i,j-1) + v_vel(i,j) )
             end if
          end do
 !        calculate dvdxU
@@ -589,7 +587,7 @@
 !                      outflow condition at W/E open bdys dvdxU(au=2)=0
 !           KK-TODO: metric correction
             if (au(i,j) .eq. 1) then
-               dvdxU(i,j) = ( vel_temp(i+1,j) - vel_temp(i,j) ) /DXU
+               dvdxU(i,j) = ( PP(i+1,j) - PP(i,j) ) /DXU
             else if (au(i,j) .eq. 3) then
                if (au(i,j-1) .eq. 1) then ! northern open bdy
                   dvdxU(i,j) = (v_vel(i+1,j-1) - v_vel(i  ,j-1))/DXU
@@ -635,13 +633,13 @@
    if (present(dudyV)) then
 !     calculate u_velC
 !$OMP BARRIER
-!     Note (KK): we need omp barrier here, because vel_temp was in use with nowait
+!     Note (KK): we need omp barrier here, because PP was used with nowait
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO+1,imax+HALO-1
 !           Note (KK): we only need u_velC(az=1)
             if (az(i,j) .eq. 1) then
-               vel_temp(i,j) = _HALF_ * ( u_vel(i-1,j) + u_vel(i,j) )
+               PP(i,j) = _HALF_ * ( u_vel(i-1,j) + u_vel(i,j) )
             end if
          end do
       end do
@@ -654,7 +652,7 @@
 !                      outflow condition at N/S open bdys dudyV(av=2)=0
 !           KK-TODO: metric correction
             if (av(i,j) .eq. 1) then
-               dudyV(i,j) = ( vel_temp(i,j+1) - vel_temp(i,j) ) / DYV
+               dudyV(i,j) = ( PP(i,j+1) - PP(i,j) ) / DYV
             else if (av(i,j) .eq. 3) then
                if (av(i-1,j) .eq. 1) then ! eastern open bdy
                   dudyV(i,j) = (u_vel(i-1,j+1) - u_vel(i-1,j  ))/DYV
