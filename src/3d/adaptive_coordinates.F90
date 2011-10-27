@@ -163,8 +163,10 @@ STDERR 'adaptive_coordinates()'
       read(ADAPTNML,adapt_coord)
       close(ADAPTNML)
 
-      if (.not. allocated(ga)) allocate(ga(0:kmax),stat=rc)
+      if (.not. allocated(ga)) then
+         allocate(ga(0:kmax),stat=rc)
          if (rc /= 0) stop 'coordinates: Error allocating (ga)'
+      end if
       do k=0,kmax
          ga(k) = k
       end do
@@ -252,11 +254,11 @@ STDERR 'adaptive_coordinates()'
          c4ad=max(_ZERO_,(_ONE_-c1ad-c2ad-c3ad))
       end if
       csum=c1ad+c2ad+c3ad+c4ad
-         if (csum .gt. _ONE_) then
-            c1ad=c1ad/csum
-            c2ad=c2ad/csum
-            c3ad=c3ad/csum
-         end if
+      if (csum .gt. _ONE_) then
+         c1ad=c1ad/csum
+         c2ad=c2ad/csum
+         c3ad=c3ad/csum
+      end if
 
       ! possibly useful:
       !tfac_hor=dt*kmax/tgrid
@@ -492,22 +494,22 @@ STDERR 'adaptive_coordinates()'
    do k=1,kmax
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO-1
-            hun(i,j,k)=_HALF_*(hn(i,j,k)+hn(i+1,j,k))
+            hun(i,j,k)=_QUART_*(ho(i,j,k)+ho(i+1,j,k)+hn(i,j,k)+hn(i+1,j,k))
          end do
       end do
    end do
-   call hcheck(hun,ssun,HU)
+   !call hcheck(hun,ssun,HU)
 
 ! vv
    hvo=hvn
    do k=1,kmax
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO
-            hvn(i,j,k)=_HALF_*(hn(i,j,k)+hn(i,j+1,k))
+            hvn(i,j,k)=_QUART_*(ho(i,j,k)+ho(i,j+1,k)+hn(i,j,k)+hn(i,j+1,k))
          end do
       end do
    end do
-   call hcheck(hvn,ssvn,HV)
+   !call hcheck(hvn,ssvn,HV)
 
 !  Update the halo zones for hun
    call update_3d_halo(hun,hun,au,imin,jmin,imax,jmax,kmax,U_TAG)
