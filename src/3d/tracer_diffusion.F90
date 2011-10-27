@@ -20,7 +20,7 @@
    use variables_3d, only: dt,hn
    use variables_3d, only: diffxx,diffxy,diffyx,diffyy
    use variables_les, only: AmU_3d,AmV_3d
-   use_variables_2d, only: PP
+   use variables_2d, only: PP
    use getm_timers, only: tic,toc,TIM_TRACEDIFF
 
    IMPLICIT NONE
@@ -113,7 +113,7 @@
                   PP(i,j) = _HALF_ * ( dfdxU(i,j) + dfdxU(i,j+1) )
                else
 !                 Note (KK): dfdxX at corners set to 0
-!                            dfdxX at closed N/S open boundaries not 0, but not needed
+!                            dfdxX at closed N/S open bdys not 0, but not needed
                   PP(i,j) = _ZERO_
                end if
             end do
@@ -136,8 +136,8 @@
                if(ax(i,j) .ge. 1) then
                   PP(i,j) = _HALF_ * ( dfdyV(i,j) + dfdyV(i+1,j) )
                else
-!                 Note (KK): dfdxX at corners set to 0
-!                            dfdxX at closed N/S open boundaries not 0, but not needed
+!                 Note (KK): dfdyX at corners set to 0
+!                            dfdyX at closed W/E open bdys not 0, but not needed
                   PP(i,j) = _ZERO_
                end if
             end do
