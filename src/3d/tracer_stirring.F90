@@ -54,7 +54,7 @@
          do i=imin-1,imax
 !           Note (KK): we only need diffx[x|y](au=[1|2]) in tracer_diffusion
             if(au(i,j).eq.1 .or. au(i,j).eq.2) then
-!              interpolate dudxU (see deformation_rates)
+!              interpolate dudxC to U-points (see deformation_rates)
                if (au(i,j) .eq. 1) then
                   velgrad = _HALF_*(dudxC_3d(i,j,k) + dudxC_3d(i+1,j,k))
                else
@@ -83,7 +83,7 @@
          do i=imin-1,imax+1
 !           Note (KK): we only need diffy[x|y](av=[1|2]) in tracer_diffusion
             if(av(i,j).eq.1 .or. av(i,j).eq.2) then
-!              interpolate dvdyV and shearV (see deformation_rates)
+!              interpolate dvdyC and shearX to V-points (see deformation_rates)
                if (av(i,j) .eq. 1) then
                   velgrad = _HALF_*(dvdyC_3d(i,j,k) + dvdyC_3d(i,j+1,k))
                else
@@ -111,7 +111,6 @@
    return
    end subroutine tracer_stirring
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------
