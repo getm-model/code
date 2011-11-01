@@ -459,8 +459,8 @@
 !                      vanishing partial derivative!!!
 !                      at concave and at convex corners shearX(ax=0) is set to zero
 !                      (despite discontinuous velocities for the latter!?)
-            tmp = _ZERO_
             if (ax(i,j) .eq. 1) then
+               tmp = _ZERO_
                if (au(i,j).eq.1 .or. au(i,j+1).eq.1) then
 !                 Note (KK): excludes concave and W/E open boundaries (dvdxX=0)
 !                            includes convex open boundaries (no mirroring)
