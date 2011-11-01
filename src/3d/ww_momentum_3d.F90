@@ -69,8 +69,8 @@
    do k=1,kmax
 #ifdef CALC_HALO_WW
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-1,jmax+1
-         do i=imin-1,imax+1
+      do j=jmin-1,jmax+HALO
+         do i=imin-1,imax+HALO
 #else
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
