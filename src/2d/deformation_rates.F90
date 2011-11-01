@@ -419,7 +419,7 @@
          do i=imin-HALO,imax+HALO-1
 !           Note (KK): outflow condition dvdyU(au=3)=0
             if (au(i,j).eq.1 .or. au(i,j).eq.2) then
-               dvdyU(i,j) = ( PP(i,j-1) - PP(i,j) ) / DYU
+               dvdyU(i,j) = ( PP(i,j) - PP(i,j-1) ) / DYU
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dvdyU(i,j) = dvdyU(i,j) + u_vel(i,j)*(DYCIP1-DYC)*ARUD1
