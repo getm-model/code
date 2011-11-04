@@ -26,7 +26,7 @@
    use exceptions
    use parameters, only: avmmol
    use domain, only: openbdy,maxdepth,vert_cord,az
-   use m2d, only: Am
+   use m2d, only: no_2d,Am
    use variables_2d, only: D,z,UEx,VEx
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
@@ -577,26 +577,29 @@
    end if
 #endif
 
-   call tic(TIM_INTEGR3D)
-   UEx=_ZERO_ ; VEx=_ZERO_
-   call toc(TIM_INTEGR3D)
+   if (.not. no_2d) then
+      call tic(TIM_INTEGR3D)
+      UEx=_ZERO_ ; VEx=_ZERO_
+      call toc(TIM_INTEGR3D)
 #ifndef NO_BAROTROPIC
-   if (kmax .gt. 1) then
+      if (kmax .gt. 1) then
 #ifndef NO_BOTTFRIC
-      call slow_bottom_friction()
+         call slow_bottom_friction()
 #endif
 #ifndef NO_ADVECT
 #ifndef UV_ADV_DIRECT
-      call slow_advection()
-      if (Am .gt. _ZERO_) then
-         call slow_diffusion(Am) ! Has to be called after slow_advection.
-      end if
+         call slow_advection()
+         if (Am .gt. _ZERO_) then
+            call slow_diffusion(Am) ! Has to be called after slow_advection.
+         end if
 #endif
+#endif
+      end if
+
+      call slow_terms()
 #endif
    end if
 
-   call slow_terms()
-#endif
    call tic(TIM_INTEGR3D)
    call stop_macro()
    call toc(TIM_INTEGR3D)

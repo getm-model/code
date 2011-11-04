@@ -54,6 +54,9 @@
 			<bathymetry>
 				topo.nc
 			</bathymetry>
+			<rigid_lid>
+				False
+			</rigid_lid>
 			<longitude>
 				0.0
 			</longitude>

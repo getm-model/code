@@ -21,10 +21,10 @@
    use exceptions
    use time, only: julianday,secondsofday
    use parameters, only: avmmol
-   use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV,min_depth
+   use domain, only: imin,imax,iextr,jmin,jmax,jextr,az,au,av,H,HU,HV,min_depth
    use domain, only: ilg,ihg,jlg,jhg
    use domain, only: ill,ihl,jll,jhl
-   use domain, only: openbdy,z0_method,z0_const,z0
+   use domain, only: rigid_lid,openbdy,z0_method,z0_const,z0
    use domain, only: az,ax
    use halo_zones, only : update_2d_halo,wait_halo
    use halo_zones, only : U_TAG,V_TAG,H_TAG
@@ -40,6 +40,7 @@
    end interface
 !
 ! !PUBLIC DATA MEMBERS:
+   logical                   :: no_2d
    logical                   :: have_boundaries
    REALTYPE                  :: dtm,Am=-_ONE_
 !  method for specifying horizontal numerical diffusion coefficient
@@ -127,7 +128,7 @@
 !   STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'
 !   call cfl_check()
 #else
-   call cfl_check()
+   if (.not. rigid_lid) call cfl_check()
 #endif
 
    if (Am .lt. _ZERO_) then
@@ -202,23 +203,25 @@
                          "A non valid An method has been chosen");
    end select
 
-   if (sealevel_check .eq. 0) then
-      LEVEL2 'sealevel_check=0 --> NaN checks disabled'
-   else if (sealevel_check .gt. 0) then
-      LEVEL2 'sealevel_check>0 --> NaN values will result in error conditions'
-   else
-      LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
-   end if
-
-   if (.not. openbdy)  bdy2d=.false.
-   LEVEL2 'Open boundary=',bdy2d
-   if (bdy2d) then
-      if (hotstart .and. bdyramp_2d .gt. 0) then
-          LEVEL2 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
-          LEVEL2 'WARNING: .. be sure you know what you are doing ..'
+   if (.not. rigid_lid) then
+      if (sealevel_check .eq. 0) then
+         LEVEL2 'sealevel_check=0 --> NaN checks disabled'
+      else if (sealevel_check .gt. 0) then
+         LEVEL2 'sealevel_check>0 --> NaN values will result in error conditions'
+      else
+         LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
       end if
-      LEVEL2 TRIM(bdyfile_2d)
-      LEVEL2 'Format=',bdyfmt_2d
+
+      if (.not. openbdy)  bdy2d=.false.
+      LEVEL2 'Open boundary=',bdy2d
+      if (bdy2d) then
+         if (hotstart .and. bdyramp_2d .gt. 0) then
+             LEVEL2 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
+             LEVEL2 'WARNING: .. be sure you know what you are doing ..'
+         end if
+         LEVEL2 TRIM(bdyfile_2d)
+         LEVEL2 'Format=',bdyfmt_2d
+      end if
    end if
 
    call uv_depths(vel_depth_method)
@@ -257,6 +260,15 @@
    zvb=zvb0
 
    call depth_update()
+
+#ifdef SLICE_MODEL
+!  Note (KK): sse=0,U=0,dyV=0,V set in 3d
+   no_2d = rigid_lid
+#else
+!  Note (KK): sse=0,U=V=0
+   no_2d = rigid_lid .and. (imin.eq.iextr .or. jmin.eq.jextr)
+#endif
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_2d()'
@@ -415,15 +427,24 @@
 #endif
 #endif
    call momentum(loop,tausx,tausy,airp)
+
+   if (rigid_lid) then
+!     Note (KK): we need to solve Poisson equation to get final transports
+!                that fulfill dxU+dyV=0
+      stop 'integrate_2d(): Poisson solver for rigid lid computations not implemented yet!'
+   end if
+
    if (runtype .gt. 1) then
       call tic(TIM_INTEGR2D)
       Uint=Uint+U
       Vint=Vint+V
       call toc(TIM_INTEGR2D)
    end if
-   if (have_boundaries) call update_2d_bdy(loop,bdyramp_2d)
-   call sealevel()
-   call depth_update()
+   if (.not. rigid_lid) then
+      if (have_boundaries) call update_2d_bdy(loop,bdyramp_2d)
+      call sealevel()
+      call depth_update()
+   end if
 
    if(residual .gt. 0 .and. loop .ge. residual) then
       call tic(TIM_INTEGR2D)

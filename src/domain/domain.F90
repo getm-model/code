@@ -61,6 +61,8 @@
    REALTYPE                            :: latitude       = _ZERO_
    logical                             :: f_plane        = .true.
 
+   logical                             :: rigid_lid=.false.
+
 #ifdef STATIC
 #include "static_domain.h"
 #else
@@ -154,9 +156,9 @@
    character(len=PATH_MAX)   :: mask_adjust_file         = 'mask.adjust'
    integer                   :: il=-1,ih=-1,jl=-1,jh=-1
    namelist /domain/ &
-             vert_cord,maxdepth,bathy_format,bathymetry,       &
-             longitude,latitude,f_plane,openbdy,bdyinfofile,   &
-             crit_depth,min_depth,kdum,ddu,ddl,                &
+             vert_cord,maxdepth,bathy_format,bathymetry,rigid_lid, &
+             longitude,latitude,f_plane,openbdy,bdyinfofile,       &
+             crit_depth,min_depth,kdum,ddu,ddl,                    &
              d_gamma,gamma_surf,il,ih,jl,jh,z0_method,z0_const
 !EOP
 !-------------------------------------------------------------------------
