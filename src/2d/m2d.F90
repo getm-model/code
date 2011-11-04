@@ -203,16 +203,14 @@
                          "A non valid An method has been chosen");
    end select
 
-   if (.not. rigid_lid) then
-      if (sealevel_check .eq. 0) then
-         LEVEL2 'sealevel_check=0 --> NaN checks disabled'
-      else if (sealevel_check .gt. 0) then
-         LEVEL2 'sealevel_check>0 --> NaN values will result in error conditions'
-      else
-         LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
-      end if
+   if (.not. openbdy)  bdy2d=.false.
 
-      if (.not. openbdy)  bdy2d=.false.
+   if (rigid_lid) then
+      if (bdy2d) then
+         LEVEL2 'Reset bdy2d=F because of rigid lid'
+         bdy2d=.false.
+      end if
+   else
       LEVEL2 'Open boundary=',bdy2d
       if (bdy2d) then
          if (hotstart .and. bdyramp_2d .gt. 0) then
@@ -221,6 +219,13 @@
          end if
          LEVEL2 TRIM(bdyfile_2d)
          LEVEL2 'Format=',bdyfmt_2d
+      end if
+      if (sealevel_check .eq. 0) then
+         LEVEL2 'sealevel_check=0 --> NaN checks disabled'
+      else if (sealevel_check .gt. 0) then
+         LEVEL2 'sealevel_check>0 --> NaN values will result in error conditions'
+      else
+         LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
       end if
    end if
 

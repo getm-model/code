@@ -195,6 +195,8 @@
 #include "dynamic_allocations_domain_2.h"
 #endif
 
+   if (rigid_lid) LEVEL2 'using rigid lid'
+
    select case (vert_cord)
       case(_SIGMA_COORDS_)
          LEVEL2 'Using sigma coordinates'
