@@ -38,6 +38,7 @@
 #ifdef GETM_PARALLEL
    use halo_mpi, only: init_mpi,print_MPI_info
 #endif
+   use parameters, only: init_parameters
    use output, only: init_output,do_output,restart_file,out_dir
    use input,  only: init_input
    use domain, only: init_domain
@@ -203,6 +204,8 @@
          FATAL 'A non valid runtype has been specified.'
          stop 'initialise()'
    end select
+
+   call init_parameters()
 
    call init_time(MinN,MaxN)
    if(use_epoch) then

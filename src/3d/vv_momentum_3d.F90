@@ -94,6 +94,7 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
+   logical, save             :: first=.true.
    integer                   :: i,j,k,rc
    REALTYPE, POINTER         :: dif(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
@@ -101,9 +102,8 @@
    REALTYPE, POINTER         :: a3(:),a4(:)
    REALTYPE, POINTER         :: Res(:),ex(:)
    REALTYPE                  :: zp,zm,zy,ResInt,Diff,Uloc
-   REALTYPE                  :: gamma=g*rho_0
    REALTYPE                  :: cord_curv=_ZERO_
-   REALTYPE                  :: gammai,rho_0i
+   REALTYPE, save            :: gammai,rho_0i
 #ifdef XZ_PLUME_TEST
    REALTYPE                  :: yslope=0.001
 #endif
@@ -118,9 +118,11 @@
 #endif
    call tic(TIM_VVMOMENTUM)
 
-   gammai=_ONE_/gamma
-   rho_0i=_ONE_/rho_0
-
+   if (first) then
+      rho_0i = _ONE_ / rho_0
+      gammai = rho_0i / g
+      first = .false.
+   end if
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j,k,rc,zp,zm,zy,ResInt,Diff,Uloc,cord_curv)         &
@@ -194,7 +196,7 @@
 #endif
                end do
                ex(kmax)=ex(kmax)                                      &
-                       +dry_v(i,j)*_HALF_*(tausy(i,j)+tausy(i,j+1))/rho_0
+                       +dry_v(i,j)*_HALF_*(tausy(i,j)+tausy(i,j+1))*rho_0i
 !     Eddy viscosity
                do k=kvmin(i,j),kmax-1
                   dif(k)=_HALF_*(num(i,j,k)+num(i,j+1,k)) + avmmol
@@ -211,7 +213,7 @@
 #ifndef NO_BAROTROPIC
                zp=max(sseo(i,j+1),-H(i,j  )+min(min_depth,D(i,j+1)))
                zm=max(sseo(i,j  ),-H(i,j+1)+min(min_depth,D(i,j  )))
-               zy=(zp-zm+(airp(i,j+1)-airp(i,j))/gamma)/DYV
+               zy=(zp-zm+(airp(i,j+1)-airp(i,j))*gammai)/DYV
 #else
                zy=_ZERO_
 #endif

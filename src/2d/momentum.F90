@@ -135,14 +135,14 @@
    REALTYPE, intent(in)                :: tausx(E2DFIELD),airp(E2DFIELD)
 !
 ! !LOCAL VARIABLES:
+   logical, save             :: first=.true.
    integer                   :: i,j
    REALTYPE                  :: zx(E2DFIELD)
    REALTYPE                  :: tausu(E2DFIELD)
    REALTYPE                  :: Slr(E2DFIELD)
    REALTYPE                  :: zp,zm,Uloc
-   REALTYPE                  :: gamma=rho_0*g
    REALTYPE                  :: cord_curv=_ZERO_
-   REALTYPE                  :: gammai
+   REALTYPE, save            :: gammai,rho_0i
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -152,7 +152,11 @@
    write(debug,*) 'umomentum() # ',Ncall
 #endif
 
-   gammai = _ONE_/gamma
+   if (first) then
+      rho_0i = _ONE_ / rho_0
+      gammai = rho_0i / g
+      first = .false.
+   end if
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,Uloc)
 
@@ -180,7 +184,7 @@
          end if
          if ((au(i,j) .eq. 1) .or. (au(i,j) .eq. 2)) then
             U(i,j)=(U(i,j)-dtm*(g*DU(i,j)*zx(i,j)+dry_u(i,j)*&
-                 (-tausu(i,j)/rho_0-fV(i,j)+UEx(i,j)+SlUx(i,j)+Slr(i,j))))/&
+                 (-tausu(i,j)*rho_0i-fV(i,j)+UEx(i,j)+SlUx(i,j)+Slr(i,j))))/&
                  (_ONE_+dtm*ru(i,j)/DU(i,j))
          end if
       end do
@@ -311,14 +315,14 @@
    REALTYPE, intent(in)                :: tausy(E2DFIELD),airp(E2DFIELD)
 !
 ! !LOCAL VARIABLES:
+   logical, save             :: first=.true.
    integer                   :: i,j
    REALTYPE                  :: zy(E2DFIELD)
    REALTYPE                  :: tausv(E2DFIELD)
    REALTYPE                  :: Slr(E2DFIELD)
    REALTYPE                  :: zp,zm,Vloc
-   REALTYPE                  :: gamma=rho_0*g
    REALTYPE                  :: cord_curv=_ZERO_
-   REALTYPE                  :: gammai
+   REALTYPE, save            :: gammai,rho_0i
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -328,7 +332,11 @@
    write(debug,*) 'vmomentum() # ',Ncall
 #endif
 
-   gammai = _ONE_/gamma
+   if (first) then
+      rho_0i = _ONE_ / rho_0
+      gammai = rho_0i / g
+      first = .false.
+   end if
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,Vloc)
 
@@ -356,7 +364,7 @@
          end if
          if ((av(i,j) .eq. 1) .or. (av(i,j) .eq. 2)) then
             V(i,j)=(V(i,j)-dtm*(g*DV(i,j)*zy(i,j)+dry_v(i,j)*&
-                 (-tausv(i,j)/rho_0+fU(i,j)+VEx(i,j)+SlVx(i,j)+Slr(i,j))))/&
+                 (-tausv(i,j)*rho_0i+fU(i,j)+VEx(i,j)+SlVx(i,j)+Slr(i,j))))/&
                  (_ONE_+dtm*rv(i,j)/DV(i,j))
          end if
       end do

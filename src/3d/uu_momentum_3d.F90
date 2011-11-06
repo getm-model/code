@@ -86,6 +86,7 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
+   logical, save             :: first=.true.
    integer                   :: i,j,k,rc
    REALTYPE, POINTER         :: dif(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
@@ -93,9 +94,8 @@
    REALTYPE, POINTER         :: a3(:),a4(:)
    REALTYPE, POINTER         :: Res(:),ex(:)
    REALTYPE                  :: zp,zm,zx,ResInt,Diff,Vloc
-   REALTYPE                  :: gamma=g*rho_0
    REALTYPE                  :: cord_curv=_ZERO_
-   REALTYPE                  :: gammai,rho_0i
+   REALTYPE, save            :: gammai,rho_0i
    integer                   :: status
 !EOP
 !-----------------------------------------------------------------------
@@ -107,8 +107,12 @@
 #endif
    call tic(TIM_UUMOMENTUM)
 
-   gammai=_ONE_/gamma
-   rho_0i=_ONE_/rho_0
+   if (first) then
+      rho_0i = _ONE_ / rho_0
+      gammai = rho_0i / g
+      first = .false.
+   end if
+
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j,k,rc,zp,zm,zx,ResInt,Diff,Vloc,cord_curv)         &
 !$OMP    PRIVATE(dif,auxn,auxo,a1,a2,a3,a4,Res,ex)
