@@ -109,7 +109,7 @@
 
    if (first) then
       rho_0i = _ONE_ / rho_0
-      gammai = rho_0i / g
+      gammai = rho_0i / max(SMALL,g)
       first = .false.
    end if
 

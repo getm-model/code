@@ -64,6 +64,10 @@
 
    read(NAMLST,parameters)
 
+   if (g .lt. _ZERO_) then
+      LEVEL2 'changed sign of negative g'
+      g = -g
+   end if
    LEVEL2 'g = ',real(g)
 
    if (rho_0 .le. _ZERO_) then
