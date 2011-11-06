@@ -27,6 +27,29 @@
 				True
 			</save_initial>
 		</param>
+		<parameters>
+			<g>
+				9.81
+			</g>
+			<rho_0>
+				1025.0
+			</rho_0>
+			<cp>
+				3985.0
+			</cp>
+			<kappa>
+				0.4
+			</kappa>
+			<avmmol>
+				1.8e-6
+			</avmmol>
+			<avmolt>
+				1.4e-7
+			</avmolt>
+			<avmols>
+				1.1e-9
+			</avmols>
+		</parameters>
 		<time>
 			<timestep>
 				3.0

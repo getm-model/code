@@ -18,7 +18,17 @@
 			<element name="use_epoch"    type="bool"   label="use a common time origin for a series of hotstart simulations" />
 			<element name="save_initial" type="bool"   label="save initial values i.e. before entering the time loop" />
 		</element>
-		
+
+		<element name="parameters" label="model constants">
+			<element name="g" type="float" unit="m/s²" label="gravitational acceleration"/>
+			<element name="rho_0" type="float" unit="kg/m³" label="reference density"/>
+			<element name="cp" type="float" unit="J/(kg*K)" label="spec. heat capacity at const. pressure"/>
+			<element name="kappa" type="float" label="von-Karman constant"/>
+			<element name="avmmol" type="float" unit="m²/s" label="molecular viscosity"/>
+			<element name="avmolt" type="float" unit="m²/s" label="molecular diffusivity of heat"/>
+			<element name="avmols" type="float" unit="m²/s" label="molecular diffusivity of salt"/>
+		</element>
+
 		<element name="time" label="time related formats and variables">
 			<element name="timestep" type="float"    label="micro timestep" unit="s"/>
 			<element name="timefmt"  type="int"      label="time format">
