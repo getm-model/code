@@ -60,11 +60,6 @@ ifeq ($(GETM_NO_TIMERS),true)
 DEFINES += -DNO_TIMERS
 endif
 
-# OpenMP computation (mostly with compiler directives anyway):
-ifeq ($(GETM_OMP),true)
-DEFINES += -DGETM_OMP
-endif
-
 # Compile for parallel execution
 ifeq ($(GETM_PARALLEL),true)
 parallel=true
@@ -235,7 +230,9 @@ DEFINES += -DPRODUCTION $(STATIC)
 FLAGS   = $(PROD_FLAGS) 
 endif
 
-ifdef GETM_OMP
+# OpenMP computation (mostly with compiler directives anyway):
+ifeq ($(GETM_OMP),true)
+DEFINES += -DGETM_OMP
 FLAGS   += $(OMP_FLAGS)
 endif
 
@@ -255,9 +252,6 @@ CPPFLAGS	= $(DEFINES) $(INCDIRS)
 FFLAGS  	= $(DEFINES) $(FLAGS) $(MODULES) $(INCDIRS) $(EXTRAS)
 F90FLAGS  	= $(FFLAGS)
 LDFLAGS		= $(FFLAGS) $(LINKDIRS)
-ifdef GETM_OMP
-LDFLAGS += $(OMP_FLAGS)
-endif
 
 #
 # Special variables which should not be exported
