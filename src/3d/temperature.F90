@@ -35,6 +35,7 @@
    REALTYPE                  :: temp_const=20.
    integer                   :: temp_hor_adv=1,temp_ver_adv=1
    integer                   :: temp_adv_split=0
+   REALTYPE                  :: avmolt = 1.4d-7
    REALTYPE                  :: temp_AH=-1.
    integer                   :: attenuation_method=0,jerlov=1
    character(len=PATH_MAX)   :: attenuation_file="attenuation.nc"
@@ -86,7 +87,8 @@
    namelist /temp/ &
             temp_method,temp_const,temp_file,                 &
             temp_format,temp_name,temp_field_no,              &
-            temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH, &
+            temp_hor_adv,temp_ver_adv,temp_adv_split,         &
+            avmolt,temp_AH,                                   &
             attenuation_method,attenuation_file,jerlov,       &
             A_const,g1_const,g2_const,                        &
             swr_bot_refl_frac, swr_min_bot_frac,              &
@@ -102,6 +104,13 @@
 
    LEVEL2 'init_temperature()'
    read(NAMLST,temp)
+
+   if (avmolt .lt. _ZERO_) then
+      LEVEL3 'setting avmolt to 0.'
+      avmolt = _ZERO_
+   else
+      LEVEL3 'avmolt = ',real(avmolt)
+   end if
 
    call init_temperature_field()
 
@@ -370,7 +379,6 @@ temp_field_no=1
 #else
    use domain, only: dx,dy,ard1
 #endif
-   use parameters, only: avmolt
    use getm_timers, only: tic, toc, TIM_TEMP, TIM_MIXANALYSIS
    use variables_3d, only: do_mixing_analysis
    use variables_3d, only: nummix3d_T,nummix2d_T

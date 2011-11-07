@@ -36,6 +36,7 @@
    REALTYPE                  :: salt_const=35*_ONE_
    integer                   :: salt_hor_adv=1,salt_ver_adv=1
    integer                   :: salt_adv_split=0
+   REALTYPE                  :: avmols = 1.1d-9
    REALTYPE                  :: salt_AH=-_ONE_
    integer                   :: salt_check=0
    REALTYPE                  :: min_salt=_ZERO_,max_salt=40*_ONE_
@@ -89,8 +90,8 @@
    NAMELIST /salt/                                            &
             salt_method,salt_const,salt_file,                 &
             salt_format,salt_name,salt_field_no,              &
-            salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH, &
-            salt_check,min_salt,max_salt
+            salt_hor_adv,salt_ver_adv,salt_adv_split,         &
+            avmols,salt_AH,salt_check,min_salt,max_salt
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -102,6 +103,13 @@
 
    LEVEL2 'init_salinity()'
    read(NAMLST,salt)
+
+   if (avmols .lt. _ZERO_) then
+      LEVEL3 'setting avmols to 0.'
+      avmols = _ZERO_
+   else
+      LEVEL3 'avmols = ',real(avmols)
+   end if
 
    call init_salinity_field()
    
@@ -375,7 +383,6 @@ salt_field_no=1
 #else
    use domain, only: dx,dy,ard1
 #endif
-   use parameters, only: avmols
    use getm_timers, only: tic, toc, TIM_SALT, TIM_MIXANALYSIS
    use variables_3d, only: do_mixing_analysis
    use variables_3d, only: nummix3d_S,nummix2d_S

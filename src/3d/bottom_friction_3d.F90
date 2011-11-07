@@ -44,7 +44,8 @@
 ! page \pageref{SectionBedFric}.
 !
 ! !USES:
-   use parameters, only: kappa,avmmol
+   use parameters, only: kappa
+   use m2d, only: avmmol
    use domain, only: imin,imax,jmin,jmax,kmax,au,av,min_depth
    use variables_2d, only: zub,zvb,zub0,zvb0
    use variables_3d, only: kumin,kvmin,uu,vv,huo,hun,hvo,hvn,rru,rrv

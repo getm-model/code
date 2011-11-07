@@ -20,7 +20,6 @@
 ! !USES:
    use exceptions
    use time, only: julianday,secondsofday
-   use parameters, only: avmmol
    use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV,min_depth
    use domain, only: ilg,ihg,jlg,jhg
    use domain, only: ill,ihl,jll,jhl
@@ -41,7 +40,9 @@
 !
 ! !PUBLIC DATA MEMBERS:
    logical                   :: have_boundaries
-   REALTYPE                  :: dtm,Am=-_ONE_
+   REALTYPE                  :: dtm
+   REALTYPE                  :: avmmol=1.8d-6
+   REALTYPE                  :: Am=-_ONE_
 !  method for specifying horizontal numerical diffusion coefficient
 !     (0=const, 1=from named nc-file)
    integer                   :: An_method=0
@@ -102,8 +103,8 @@
    integer                   :: i,j
    integer                   :: vel_depth_method=0
    namelist /m2d/ &
-          MM,vel_depth_method,Am,An_method,An_const,An_file,residual, &
-          sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
+          MM,vel_depth_method,avmmol,Am,An_method,An_const,An_file,     &
+          residual,sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -129,6 +130,13 @@
 #else
    call cfl_check()
 #endif
+
+   if (avmmol .lt. _ZERO_) then
+      LEVEL2 'setting avmmol to 0.'
+      avmmol = _ZERO_
+   else
+      LEVEL2 'avmmol = ',real(avmmol)
+   end if
 
    if (Am .lt. _ZERO_) then
       LEVEL2 'Am < 0 --> horizontal momentum diffusion not included'

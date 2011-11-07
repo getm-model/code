@@ -40,15 +40,6 @@
 			<kappa>
 				0.4
 			</kappa>
-			<avmmol>
-				1.8e-6
-			</avmmol>
-			<avmolt>
-				1.4e-7
-			</avmolt>
-			<avmols>
-				1.1e-9
-			</avmols>
 		</parameters>
 		<time>
 			<timestep>
@@ -215,6 +206,9 @@
 			<vel_depth_method>
 				0
 			</vel_depth_method>
+			<avmmol>
+				1.8e-6
+			</avmmol>
 			<Am>
 				-1.0
 			</Am>
@@ -345,6 +339,9 @@
 			<temp_adv_split>
 				0
 			</temp_adv_split>
+			<avmolt>
+				1.4e-7
+			</avmolt>
 			<temp_AH>
 				-1.0
 			</temp_AH>
@@ -410,6 +407,9 @@
 			<salt_adv_split>
 				0
 			</salt_adv_split>
+			<avmols>
+				1.1e-9
+			</avmols>
 			<salt_AH>
 				-1.0
 			</salt_AH>

@@ -24,9 +24,6 @@
 			<element name="rho_0" type="float" unit="kg/m³" label="reference density"/>
 			<element name="cp" type="float" unit="J/(kg*K)" label="spec. heat capacity at const. pressure"/>
 			<element name="kappa" type="float" label="von-Karman constant"/>
-			<element name="avmmol" type="float" unit="m²/s" label="molecular viscosity"/>
-			<element name="avmolt" type="float" unit="m²/s" label="molecular diffusivity of heat"/>
-			<element name="avmols" type="float" unit="m²/s" label="molecular diffusivity of salt"/>
 		</element>
 
 		<element name="time" label="time related formats and variables">
@@ -236,6 +233,7 @@
 					<option value="2" label="use mixture of mean and minimum values: see code for details"/>
 				</options>
 			</element>
+			<element name="avmmol" type="float" label="molecular momentum viscosity" unit="m²/s"/>
 			<element name="Am" type="float" label="constant horizontal momentum diffusion coefficient" unit="m²/s"/>
 			<element name="An_method" type="int" label="method for constant horizontal numerical diffusion coefficient (m²/s) used to filter the surface elevation">
 				<options>
@@ -425,6 +423,7 @@
 					<option value="2" label="2D-hor-1D-vert split --> full uv, full w"/>
 				</options>
 			</element>
+			<element name="avmolt" type="float" label="molecular diffusivity of heat" unit="m²/s"/>
 			<element name="temp_AH" type="float" label="horizontal diffusivity of heat" unit="m²/s"/>
 			<element name="attenuation_method" type="int" label="light attenuation method">
 				<options>
@@ -543,6 +542,7 @@
 					<option value="2" label="2D-hor-1D-vert split --> full uv, full w"/>
 				</options>
 			</element>
+			<element name="avmols" type="float" label="molecular diffusivity of salt" unit="m²/s"/>
 			<element name="salt_AH" type="float" label="horizontal diffusivity of salt" unit="m²/s"/>
 			<element name="salt_check" type="int" label="interval between checks for out-of-bounds salinities" description="Interval between checks for out-of-bounds salinities. 0: disabled, &gt;0: check every salt_check step, abort if check fails, &lt;0: check every abs(salt_check) step, warn if check fails"/>
 			<element name="min_salt"   type="float" label="minimum valid salinity" unit="psu">

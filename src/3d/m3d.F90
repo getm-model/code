@@ -24,7 +24,6 @@
 !
 ! !USES:
    use exceptions
-   use parameters, only: avmmol
    use domain, only: openbdy,maxdepth,vert_cord,az
    use m2d, only: Am
    use variables_2d, only: D,z,UEx,VEx
