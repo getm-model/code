@@ -154,7 +154,7 @@
 
    if (first) then
       rho_0i = _ONE_ / rho_0
-      gammai = rho_0i / max(SMALL,g)
+      gammai = _ONE_ / (rho_0*max(SMALL,g))
       first = .false.
    end if
 
@@ -334,7 +334,7 @@
 
    if (first) then
       rho_0i = _ONE_ / rho_0
-      gammai = rho_0i / max(SMALL,g)
+      gammai = _ONE_ / (rho_0*max(SMALL,g))
       first = .false.
    end if
 
