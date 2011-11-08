@@ -120,8 +120,11 @@
                end do
                iters = max(1,ceiling(cfl))
                if (iters .gt. itersmax_adv) then
-                  FATAL 'adv_w_split_3d: too many iterations needed at'
-                  FATAL 'i=',i,' j=',j,':',iters
+                  if (      imin-HALO.ne.i .and. i.ne.imax+HALO &
+                      .and. jmin-HALO.ne.j .and. j.ne.jmax+HALO ) then
+                     FATAL 'adv_w_split_3d: too many iterations needed at'
+                     FATAL 'i=',i,' j=',j,':',iters
+                  end if
                end if
 #ifdef DEBUG
                if (iters .gt. 1) write(95,*) i,j,iters,cfl
