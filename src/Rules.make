@@ -60,15 +60,6 @@ ifeq ($(GETM_NO_TIMERS),true)
 DEFINES += -DNO_TIMERS
 endif
 
-# Compile for parallel execution
-ifeq ($(GETM_PARALLEL),true)
-parallel=true
-set par=par
-else
-parallel=false
-set par=ser
-endif
-
 # Here you can put defines for the [c|f]pp - some will also be set depending
 # on compilation mode - if STATIC is defined be careful.
 
@@ -162,8 +153,8 @@ endif
 EXTRA_LIBS	+= $(NETCDFLIB)
 # NetCDF/HDF configuration done
 
-# Where does the MPI library reside.
-ifeq ($(parallel),true)
+# Compile for parallel execution
+ifeq ($(GETM_PARALLEL),true)
 DEFINES += -DGETM_PARALLEL
 
 # OPENMPI - set FC to mpif90
@@ -182,6 +173,7 @@ EXTRA_LIBS      += -lmpi
 endif
 
 # obsolete - use either OPenMPI or MPICH2
+# Where does the MPI library reside.
 ifeq ($(MPI),MPICH)
 ifdef MPIINC
 INCDIRS		+= -I$(MPIINC)
