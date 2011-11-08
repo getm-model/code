@@ -1016,7 +1016,6 @@ STDERR 'ONED_SENDRECV - xz_slices'
 #ifdef DEBUG
 STDERR 'ONED_NONBLOCKING - yz_slices'
 #endif
-STDERR 'yz_slices'
             call MPI_IRECV(f2(il-HALO,jl,0),     1, yz_slices, left,  tag, &
                               active_comm, req(1), ierr)
             call MPI_IRECV(f2(ih+1,jl,0),        1, yz_slices, right, tag, &
