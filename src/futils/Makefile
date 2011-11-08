@@ -17,12 +17,12 @@ LIBSRC	= ver_interpol.F90 kbk_interpol.F90 tridiagonal.F90 pos.F90 \
 
 SRC	= $(MODSRC) $(LIBSRC)
 
-ifeq ($(parallel),false)
-MOD = ${LIB}(getm_timers.o) 
-else
-MOD = ${LIB}(getm_timers.o) ${LIB}(halo_mpi.o) ${LIB}(read_par_setup.o)
+MOD = ${LIB}(getm_timers.o)
+ifeq ($(GETM_PARALLEL),true)
+MOD += \
+${LIB}(halo_mpi.o)	\
+${LIB}(read_par_setup.o)
 endif
-
 MOD += \
 ${LIB}(exceptions.o)	\
 ${LIB}(parallel.o)	\
