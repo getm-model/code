@@ -163,8 +163,7 @@
             zp=max(z(i+1,j),-H(i  ,j)+min(min_depth,D(i+1,j)))
             zm=max(z(i  ,j),-H(i+1,j)+min(min_depth,D(i  ,j)))
             zx(i,j)=(zp-zm+(airp(i+1,j)-airp(i,j))*gammai)/DXU
-! BJB-TODO: Change 0.5 -> _HALF_
-            tausu(i,j)=0.5*(tausx(i,j)+tausx(i+1,j))
+            tausu(i,j)=_HALF_*(tausx(i,j)+tausx(i+1,j))
          end if
       end do
    end do
@@ -173,7 +172,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
-         if (U(i,j) .gt. 0) then
+         if (U(i,j) .gt. _ZERO_) then
             Slr(i,j)=max(Slru(i,j), _ZERO_ )
          else
             Slr(i,j)=min(Slru(i,j), _ZERO_ )
@@ -208,13 +207,12 @@
          if(av(i,j) .ge. 1) then
 ! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
-! BJB-TODO: Change 0.25 -> _QUART_
             Uloc= &
              ( U(i,j  )/sqrt(DU(i,j  ))+ U(i-1,j  )/sqrt(DU(i-1,j  ))  &
              + U(i,j+1)/sqrt(DU(i,j+1))+ U(i-1,j+1)/sqrt(DU(i-1,j+1))) &
-               *0.25*sqrt(DV(i,j))
+               *_QUART_*sqrt(DV(i,j))
 #else
-            Uloc=0.25*( U(i-1,j)+U(i,j)+U(i-1,j+1)+U(i,j+1))
+            Uloc=_QUART_*( U(i-1,j)+U(i,j)+U(i-1,j+1)+U(i,j+1))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             cord_curv=(V(i,j)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC)) &
@@ -339,8 +337,7 @@
             zp=max(z(i,j+1),-H(i,j  )+min(min_depth,D(i,j+1)))
             zm=max(z(i,j  ),-H(i,j+1)+min(min_depth,D(i,j  )))
             zy(i,j)=(zp-zm+(airp(i,j+1)-airp(i,j))*gammai)/DYV
-! BJB-TODO: Change 0.5 -> _HALF_
-            tausv(i,j)=0.5*(tausy(i,j)+tausy(i,j+1))
+            tausv(i,j)=_HALF_*(tausy(i,j)+tausy(i,j+1))
          end if
       end do
    end do
@@ -349,7 +346,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
-         if (V(i,j).gt.0) then
+         if (V(i,j) .gt. _ZERO_) then
             Slr(i,j)=max(Slrv(i,j), _ZERO_ )
          else
             Slr(i,j)=min(Slrv(i,j), _ZERO_ )
@@ -385,13 +382,12 @@
          if(au(i,j) .ge. 1) then
 ! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
-! BJB-TODO: Change 0.25 -> _QUART_
             Vloc = &
             ( V(i,j  )/sqrt(DV(i,j  ))+ V(i+1,j  )/sqrt(DV(i+1,j  )) + &
               V(i,j-1)/sqrt(DV(i,j-1))+ V(i+1,j-1)/sqrt(DV(i+1,j-1)))  &
-              *0.25*sqrt(DU(i,j))
+              *_QUART_*sqrt(DU(i,j))
 #else
-            Vloc = 0.25*( V(i,j-1)+ V(i+1,j-1)+V(i,j)+V(i+1,j))
+            Vloc = _QUART_*( V(i,j-1)+ V(i+1,j-1)+V(i,j)+V(i+1,j))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             cord_curv=(Vloc*(DYCIP1-DYC)-U(i,j)*(DXX-DXXJM1)) &
