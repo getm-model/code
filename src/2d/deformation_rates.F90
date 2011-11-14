@@ -290,14 +290,10 @@
 #endif
 !        calculate u_velX
          do i=imin-HALO,imax+HALO-1
-!           Note (KK): we do not need u_velX at closed N/S bdys
-            if (ax(i,j) .eq. 0) then
-               if (     av(i  ,j).eq.1 .or. av(i  ,j).eq.2 &
-                   .or. av(i+1,j).eq.1 .or. av(i+1,j).eq.2 ) then
-                 PP(i,j) = _ZERO_
-               end if
-            else
+            if (ax(i,j) .ne. 0) then
                PP(i,j) = _HALF_ * ( u_vel(i,j) + u_vel(i,j+1) )
+            else
+               PP(i,j) = _ZERO_
             end if
          end do
 !        set dudxV
@@ -401,14 +397,10 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO-1
-!           Note (KK): we do not need v_velX at closed W/E bdys
-            if (ax(i,j) .eq. 0) then
-               if (     au(i,j  ).eq.1 .or. au(i,j  ).eq.2 &
-                   .or. au(i,j+1).eq.1 .or. au(i,j+1).eq.2 ) then
-                 PP(i,j) = _ZERO_
-               end if
-            else
+            if (ax(i,j) .ne. 0) then
                PP(i,j) = _HALF_ * ( v_vel(i,j) + v_vel(i+1,j) )
+            else
+               PP(i,j) = _ZERO_
             end if
          end do
       end do
