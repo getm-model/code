@@ -188,6 +188,9 @@
 
 !        Note (BJB): If all An values are really zero, then we should not use An-smoothing at all...
 !                    Note that smoothing may be on in other subdomains.
+!        Note (KK): since a HALO update of AnX is not needed,
+!                   the allocation of AnX can be done locally
+!                   and dependent on the following test
          if ( MAXVAL(ABS(AnC)) .eq. _ZERO_ ) then
             LEVEL2 '  All An is zero for this (sub)domain - switching to An_method=0'
             An_method=0
@@ -227,9 +230,6 @@
                   end if
                end do
             end do
-!           Note (KK): probably we do not need this halo update
-            call update_2d_halo(AnX,AnX,ax,imin,jmin,imax,jmax,H_TAG)
-            call wait_halo(H_TAG)
          end if
       case default
          call getm_error("init_2d()", &
