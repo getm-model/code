@@ -498,7 +498,10 @@ STDERR 'adaptive_coordinates()'
          end do
       end do
    end do
-   !call hcheck(hun,ssun,HU)
+!  KK-TODO: although the layer heights in the center points are consistent
+!           with the total water depth, in the present implementation we
+!           cannot rely on depth-coinciding layer heights in velocity points
+   call hcheck(hun,ssun,HU)
 
 ! vv
    hvo=hvn
@@ -509,7 +512,10 @@ STDERR 'adaptive_coordinates()'
          end do
       end do
    end do
-   !call hcheck(hvn,ssvn,HV)
+!  KK-TODO: although the layer heights in the center points are consistent
+!           with the total water depth, in the present implementation we
+!           cannot rely on depth-coinciding layer heights in velocity points
+   call hcheck(hvn,ssvn,HV)
 
 !  Update the halo zones for hun
    call update_3d_halo(hun,hun,au,imin,jmin,imax,jmax,kmax,U_TAG)
