@@ -150,8 +150,8 @@
       case(AM_CONSTANT)
          LEVEL2 'Am_method=1 -> Using constant horizontal momentum diffusion'
          if (Am_const .lt. _ZERO_) then
-              call getm_error("init_2d()", &
-                         "Constant horizontal momentum diffusion <0");
+           call getm_error("init_2d()", &
+                           "Constant horizontal momentum diffusion <0");
          end if
          LEVEL3 real(Am_const)
          deformCX=.true.
@@ -171,33 +171,49 @@
       case(1)
          LEVEL2 'An_method=1 -> Using constant horizontal numerical diffusion'
          if (An_const .lt. _ZERO_) then
-              call getm_error("init_2d()", &
-                         "Constant horizontal numerical diffusion <0");
+            call getm_error("init_2d()", &
+                            "Constant horizontal numerical diffusion <0");
          end if
       case(2)
          LEVEL2 'An_method=2 -> Using space varying horizontal numerical diffusion'
          LEVEL2 '..  will read An from An_file ',trim(An_file)
-         ! Initialize and then read field:
+
          allocate(AnC(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_2d: Error allocating memory (AnC)'
-         AnC=_ZERO_ ! initialisation needed for check below
 
+!        Note (KK): due to the use of [i|j][l|h]l we will read in also the halo zones
          call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,AnC(ill:ihl,jll:jhl))
-         call update_2d_halo(AnC,AnC,az,imin,jmin,imax,jmax,H_TAG)
-         call wait_halo(H_TAG)
 
-!        Note (BJB): If all An values are really zero, then we should not use An-smoothing at all...
-!                    Note that smoothing may be on in other subdomains.
-!        Note (KK): since a HALO update of AnX is not needed,
-!                   the allocation of AnX can be done locally
-!                   and dependent on the following test
-         if ( MAXVAL(ABS(AnC)) .eq. _ZERO_ ) then
+         if (MINVAL(AnC(imin:imax,jmin:jmax),mask=(az(imin:imax,jmin:jmax).ge.1)) .lt. _ZERO_) then
+            call getm_error("init_2d()", &
+                            "negative numerical diffusivity in An field");
+         end if
+
+         if (ihl .eq. imax) then
+            AnC(imax+1,jmin:jmax) = _ZERO_
+            if (jhl .eq. jmax) then
+               AnC(imax+1,jmax+1) = _ZERO_
+            end if
+         end if
+         if (jhl .eq. jmax) then
+            AnC(imin:imax,jmax+1) = _ZERO_
+            if (ihl .eq. imax) then
+               AnC(imax+1,jmax+1) = _ZERO_
+            end if
+         end if
+
+         if (MAXVAL(AnC(imin:imax+1,jmin:jmax+1),mask=(az(imin:imax+1,jmin:jmax+1).ge.1)) .eq. _ZERO_) then
+!           Note (BJB): If all An values are really zero, then we should not use An-smoothing at all...
+!                       Note that smoothing may be on in other subdomains.
             LEVEL2 '  All An is zero for this (sub)domain - switching to An_method=0'
             An_method=0
          else
+!           Note (KK): since a HALO update of AnX is not needed,
+!                      the allocation of AnX can be done locally
+!                      and dependent on the test above
+
             allocate(AnX(E2DFIELD),stat=rc)
             if (rc /= 0) stop 'init_2d: Error allocating memory (AnX)'
-            AnX=_ZERO_
 
             ! Compute AnX (An in X-points) based on AnC and the X- and T- masks
             ! We loop over the X-points in the present domain.
@@ -207,6 +223,7 @@
                      num_neighbors = 0
                      An_sum = _ZERO_
                      ! Each AnX should have up to 4 T-point neighbours.
+!                    Note (KK): right, so why do we need this An_sum stuff?
                      if ( az(i,j) .ge. 1 ) then
                         An_sum        = An_sum + AnC(i,j)
                         num_neighbors = num_neighbors +1
