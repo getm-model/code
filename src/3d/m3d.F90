@@ -152,6 +152,7 @@
    call print_adv_settings_3d(vel_adv_split,vel_hor_adv,vel_ver_adv,_ZERO_)
 
 !  Sanity checks for bdy 3d
+   if (.not.openbdy .or. runtype.eq.2) bdy3d=.false.
    if (bdy3d .and. bdy3d_tmrlx) then
       LEVEL2 'bdy3d_tmrlx=.true.'
       LEVEL2 'bdy3d_tmrlx_max=   ',bdy3d_tmrlx_max
@@ -216,7 +217,6 @@
       call ss_nn()
 #endif
 
-      if (.not. openbdy) bdy3d=.false.
       if (bdy3d) call init_bdy_3d()
       if (runtype .ge. 3) call init_internal_pressure()
       if (runtype .eq. 3) call do_internal_pressure()
