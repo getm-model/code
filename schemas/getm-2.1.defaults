@@ -189,6 +189,15 @@
 			</use_river_temp>
 		</rivers>
 		<m2d>
+         <elev_method>
+            1
+         </elev_method>
+         <elev_const>
+            0.0
+         </elev_const>
+         <elev_file>
+            elev.nc
+         </elev_file>
 			<MM>
 				1
 			</MM>

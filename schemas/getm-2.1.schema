@@ -219,6 +219,18 @@
 		</element>
 
 		<element name="m2d" label="variables related to 2D model">
+			<element name="elev_method" type="int" label="method for initial surface elevation">
+				<options>
+					<option value="1" label="constant"/>
+					<option value="2" label="from 2D field"/>
+				</options>
+			</element>
+			<element name="elev_const" type="float" label="constant initial surface elevation">
+				<condition type="eq" variable="./elev_method" value="1"/>
+			</element>
+			<element name="elev_file" type="string" label="name of file with initial surface elevation">
+				<condition type="eq" variable="./elev_method" value="3"/>
+			</element>
 			<element name="MM" type="int" label="time steps between calls to bottom_friction()" unit="micro time steps" minInclusive="0"/>
 			<element name="vel_depth_method" type="int" label="vel_depth_method">
 				<options>
