@@ -425,7 +425,7 @@
 !
 ! !DESCRIPTION:
 !  Write IDs of active timers.
-!  This is mostly useful for debugging and location of where certain 
+!  This is mostly useful for debugging and location of where certain
 !  timers are set or should be set.
 !
 ! !REVISION HISTORY:

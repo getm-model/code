@@ -392,7 +392,7 @@ STDERR 'adaptive_coordinates()'
                end do
             end do
          end do
- 
+
          call ztoh(zpos,hn,depthmin)
          call hcheck(hn,ssen,H)
 
@@ -415,13 +415,13 @@ STDERR 'adaptive_coordinates()'
                do k=0,kmax
                   gaa(k)   =( zpos(i,j,k)-ssen(i,j))/(ssen(i,j)+H(i,j))
                   gaaold(k)=(zposo(i,j,k)-ssen(i,j))/(ssen(i,j)+H(i,j))
-               end do 
+               end do
                do ii=1,split
 #ifndef NO_BAROCLINIC
 !                 Stratification
                   call col_interpol(kmax-1,1,gaaold,NN(i,j,:),kmax-1,gaa,NNloc)
-                  NNloc(kmax)=NNloc(kmax-1)       
-                  NNloc(0)=NNloc(1)       
+                  NNloc(kmax)=NNloc(kmax-1)
+                  NNloc(0)=NNloc(1)
                   do k=1,kmax
                      avn(k)=min(_ONE_,max(_ZERO_,_HALF_*(NNloc(k)+NNloc(k-1)))/g &
                            *rho_0/d_dens)
@@ -429,8 +429,8 @@ STDERR 'adaptive_coordinates()'
 #endif
 !                 Shear
                   call col_interpol(kmax-1,1,gaaold,SS(i,j,:),kmax-1,gaa,SSloc)
-                  SSloc(kmax)=SSloc(kmax-1)       
-                  SSloc(0)=SSloc(1)       
+                  SSloc(kmax)=SSloc(kmax-1)
+                  SSloc(0)=SSloc(1)
                   do k=1,kmax
                      avs(k)=min(_ONE_,sqrt(max(_ZERO_,_HALF_*  &
                             (SSloc(k)+SSloc(k-1))))/d_vel)
@@ -467,7 +467,7 @@ STDERR 'adaptive_coordinates()'
                   du(kmax)=0.
 
                   call getm_tridiagonal(kmax,0,kmax,aau,bu,cu,du,gaa)
-                 
+
                end do !split
                zpos(i,j,:)=gaa*(ssen(i,j)+H(i,j))+ssen(i,j)
             end if

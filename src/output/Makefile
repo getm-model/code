@@ -1,4 +1,4 @@
-# 
+#
 # Makefile to build the output module
 #
 
@@ -8,7 +8,7 @@ LIB	= $(LIBDIR)/liboutput${buildtype}.a
 
 MODSRC	= output.F90 parser.F90 variable_info.F90 \
           ncdf_out.F90 ascii_out.F90 \
-          diagnostic_variables.F90 nesting.F90 
+          diagnostic_variables.F90 nesting.F90
 
 LIBSRC	= diagnose.F90
 
@@ -23,7 +23,7 @@ endif
 MOD += \
 ${LIB}(ncdf_out.o)		\
 ${LIB}(ascii_out.o)		\
-${LIB}(output.o)		
+${LIB}(output.o)
 
 #$(LIB)(variable_info.o)		\
 #$(LIB)(parser.o)		\

@@ -128,7 +128,7 @@
       allocate(cc_diag_hz(ubound(model%info%diagnostic_variables_hz,1),I2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (cc_diag_hz)'
       cc_diag_hz = _ZERO_
-      
+
 !     Read settings specific to GETM-FABM interaction.
       open(NAMLST2,status='unknown',file=trim(nml_file))
       read(NAMLST2,NML=getm_fabm_nml)
@@ -255,7 +255,7 @@
             else
                wind_speed = _ZERO_
             end if
-            
+
 !           Get surface short-wave radiation.
             if (allocated(swr)) then
                I_0 = swr(i,j)
@@ -268,13 +268,13 @@
             do k=kmax-1,1,-1
                z(k) = z(k+1) - _HALF_*(hn(i,j,k+1)+hn(i,j,k))
             end do
-            
+
 !           Copy current values of biogeochemical variables from full 3D field to columns.
             cc_col(1:ubound(model%info%state_variables,1) ,:) = cc_pel(:,i,j,:)
             cc_col(ubound(model%info%state_variables,1)+1:,1) = cc_ben(:,i,j)
             cc_diag_col    = cc_diag(:,i,j,:)
             cc_diag_hz_col = cc_diag_hz(:,i,j)
-            
+
 !           Transfer pointers to physcial environment variables to FABM.
             call set_env_gotm_fabm(dt,0,0,T(i,j,1:),S(i,j,1:), &
                                    rho(i,j,1:),nuh(i,j,0:),hn(i,j,0:),ww(i,j,0:), &
@@ -288,7 +288,7 @@
             cc_ben    (:,i,j)   = cc_col(ubound(model%info%state_variables,1)+1:,1)
             cc_diag   (:,i,j,:) = cc_diag_col
             cc_diag_hz(:,i,j)   = cc_diag_hz_col
-            
+
          end if
       end do
    end do
