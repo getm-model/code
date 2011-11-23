@@ -25,7 +25,7 @@
   REALTYPE,dimension(:,:),allocatable  :: surfdiv
   REALTYPE,dimension(:,:),allocatable  :: fwf,fwf_int
 
-  REALTYPE,dimension(:),  allocatable:: EWbdy,ENbdy,EEbdy,ESbdy   
+  REALTYPE,dimension(:),  allocatable:: EWbdy,ENbdy,EEbdy,ESbdy
 
 ! Remember to update this value if you add more 2D arrays.
   integer, parameter :: n2d_fields=37

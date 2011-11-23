@@ -46,5 +46,5 @@
    REALTYPE surfdiv(E2DFIELD)
    REALTYPE fwf(E2DFIELD)
    REALTYPE fwf_int(E2DFIELD)
-   REALTYPE EWbdy(jmax),ENbdy(imax),EEbdy(jmax),ESbdy(imax)   
-  
+   REALTYPE EWbdy(jmax),ENbdy(imax),EEbdy(jmax),ESbdy(imax)
+

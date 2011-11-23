@@ -112,7 +112,7 @@
    end if
 
    call init_salinity_field()
-   
+
 !  Sanity checks for advection specifications
    LEVEL3 'salt_hor_adv=   ',salt_hor_adv
    LEVEL3 'salt_ver_adv=   ',salt_ver_adv
@@ -275,8 +275,8 @@ salt_field_no=1
             do k=1,kmax
 !               S(i,2,k)=30.*(1.- tanh(float(i-1)*0.05))
                S(i,2,k)=(30*_ONE_)*(_ONE_- tanh((i-1)*_ONE_/20))
-            end do      
-         end do   
+            end do
+         end do
 #endif
       case default
          FATAL 'Not valid salt_method specified'
@@ -419,7 +419,7 @@ salt_field_no=1
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
          if (az(i,j) .eq. 1) then
-! Developers note: 
+! Developers note:
 !  The parentheses are set to minimize truncation errors for fwf_int=0
             S(i,j,kmax) = S(i,j,kmax)*            &
                           ( hn(i,j,kmax) / (hn(i,j,kmax)+fwf_int(i,j)) )

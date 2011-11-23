@@ -14,7 +14,7 @@ Project("{6989167D-11E4-40FE-8C1A-2192A86A7E90}") = "getmmain", "getmmain.vfproj
 		{11CB0AE4-E1DF-474C-98EB-AEED4E2B6E42} = {11CB0AE4-E1DF-474C-98EB-AEED4E2B6E42}
 	EndProjectSection
 EndProject
-Project("{6989167D-11E4-40FE-8C1A-2192A86A7E90}") = "fabm", "%FABMDIR%\compilers\vs2008\fabm.vfproj", "{923D4213-3474-4196-94E7-A6973DA8505A}"
+Project("{6989167D-11E4-40FE-8C1A-2192A86A7E90}") = "fabm", "%FABMDIR%\compilers\vs2008\fabm-gotm.vfproj", "{923D4213-3474-4196-94E7-A6973DA8505A}"
 EndProject
 Project("{6989167D-11E4-40FE-8C1A-2192A86A7E90}") = "turbulence", "%GOTMDIR%\compilers\vs2008\turbulence.vfproj", "{7D63F885-F1D8-469C-A076-488A23EB592B}"
 	ProjectSection(ProjectDependencies) = postProject

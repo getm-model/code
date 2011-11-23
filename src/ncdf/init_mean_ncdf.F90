@@ -102,7 +102,7 @@
 
    select case (vert_cord)
       case (_SIGMA_COORDS_)
-      case (_Z_COORDS_)    
+      case (_Z_COORDS_)
          call getm_error("init_3d_ncdf()","saving of z-levels disabled")
       case default
          fv = hh_missing
