@@ -24,7 +24,7 @@ MOD += \
 $(LIB)(temperature.o)			\
 $(LIB)(salinity.o)			\
 $(LIB)(eqstate.o)			\
-$(LIB)(internal_pressure.o)	
+$(LIB)(internal_pressure.o)
 endif
 ifeq ($(GETM_SPM),true)
 MOD += \
@@ -51,7 +51,7 @@ $(LIB)(hybrid_coordinates.o)		\
 $(LIB)(bottom_friction_3d.o)		\
 $(LIB)(uu_momentum_3d.o)		\
 $(LIB)(vv_momentum_3d.o)		\
-$(LIB)(ww_momentum_3d.o)		
+$(LIB)(ww_momentum_3d.o)
 ifeq ($(GETM_STRUCTURE_FRICTION),true)
 OBJ += \
 $(LIB)(structure_friction_3d.o)

@@ -1,4 +1,4 @@
-# 
+#
 # Makefile to build utilities written in C - libmcutils.a
 #
 
