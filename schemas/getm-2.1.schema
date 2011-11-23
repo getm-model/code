@@ -229,7 +229,7 @@
 				<condition type="eq" variable="./elev_method" value="1"/>
 			</element>
 			<element name="elev_file" type="string" label="name of file with initial surface elevation">
-				<condition type="eq" variable="./elev_method" value="3"/>
+				<condition type="eq" variable="./elev_method" value="2"/>
 			</element>
 			<element name="MM" type="int" label="time steps between calls to bottom_friction()" unit="micro time steps" minInclusive="0"/>
 			<element name="vel_depth_method" type="int" label="vel_depth_method">

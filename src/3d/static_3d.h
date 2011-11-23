@@ -3,8 +3,8 @@
 #ifdef SPM
   integer, parameter                   :: n3d_fields=36
 #else
-  integer, parameter                   :: n3d_fields=33 
-#endif  
+  integer, parameter                   :: n3d_fields=33
+#endif
 #else
 #ifdef SPM
   integer, parameter                   :: n3d_fields=29
