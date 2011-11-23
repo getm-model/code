@@ -13,7 +13,8 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: az
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn,fadv3d
-   use variables_3d, only: nuh,T,S,rho,a,g1,g2
+   use variables_3d, only: nuh,T,S,rho,a,g1,g2,taub
+   use advection_3d, only: print_adv_settings_3d,do_advection_3d
    use meteo, only: swr,u10,v10,evap,precip
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
 ! JORN_FABM
@@ -56,7 +57,6 @@
 !  various model components.
 !
 ! !USES:
-   use advection_3d, only: print_adv_settings_3d
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -173,7 +173,6 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use advection_3d, only: do_advection_3d
    use getm_timers, only: tic, toc, TIM_GETM_BIO
    IMPLICIT NONE
 !
@@ -226,10 +225,11 @@
             cc_diag_col    = cc_diag(:,i,j,:)
             cc_diag_hz_col = cc_diag_hz(:,i,j)
 
-!           Transfer pointers to physcial environment variables to FABM.
+!           Transfer pointers to physical environment variables to FABM.
             call set_env_gotm_fabm(dt,0,0,T(i,j,1:),S(i,j,1:), &
                                    rho(i,j,1:),nuh(i,j,0:),hn(i,j,0:),ww(i,j,0:), &
-                                bioshade,I_0,wind_speed,precip(i,j),evap(i,j),z,A(i,j),g1(i,j),g2(i,j))
+                                   bioshade,I_0,taub(i,j),wind_speed,precip(i,j),evap(i,j), &
+                                   z,A(i,j),g1(i,j),g2(i,j))
 
 !           Update biogeochemical variable values.
             call do_gotm_fabm(kmax)
