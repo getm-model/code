@@ -23,9 +23,10 @@ endif
 MOD += \
 ${LIB}(ncdf_out.o)		\
 ${LIB}(ascii_out.o)		\
-$(LIB)(parser.o)		\
-$(LIB)(variable_info.o)		\
 ${LIB}(output.o)		
+
+#$(LIB)(variable_info.o)		\
+#$(LIB)(parser.o)		\
 
 OBJ     =
 ifneq ($(GETM_NO_3D),true)
