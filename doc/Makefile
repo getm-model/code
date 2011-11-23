@@ -1,5 +1,5 @@
 #
-# Makefile for the GETM source code documentation. 
+# Makefile for the GETM source code documentation.
 #
 
 SHELL	   = /bin/sh

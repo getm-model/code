@@ -44,7 +44,7 @@
 STDERR 'hybrid_coordinates()'
 
    if (first) then
-!  do the initialisation 
+!  do the initialisation
    end if ! first
 
 ! and here do the updates

@@ -283,8 +283,8 @@
 ! !OUTPUT PARAMETERS:
 !
 ! !DESCRIPTION:
-!  This routine provides possibility to reset/initialize 2D variables to 
-!  ensure that velocities are correctly set on land cells after read 
+!  This routine provides possibility to reset/initialize 2D variables to
+!  ensure that velocities are correctly set on land cells after read
 !  of a hotstart file.
 !
 ! !LOCAL VARIABLES:

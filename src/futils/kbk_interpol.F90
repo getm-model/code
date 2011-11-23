@@ -19,8 +19,8 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: nlev
    REALTYPE, intent(in)                :: zlev(nlev)
-   REALTYPE, intent(in)                :: salt_z(imin:imax,jmin:jmax,nlev)
    integer, intent(in)                 :: imin,imax,jmin,jmax,kmax
+   REALTYPE, intent(in)                :: salt_z(imin:imax,jmin:jmax,nlev)
    integer, intent(in)                 :: mask(E2DFIELD)
    REALTYPE, intent(in)                :: H(E2DFIELD)
    REALTYPE, intent(in)                :: hn(I3DFIELD)
