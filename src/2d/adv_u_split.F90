@@ -62,17 +62,18 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+!  Note (KK): dxu, dyu and mask_flux are only available within
+!             (_IRANGE_HALO_-1,_JRANGE_HALO_). Since they may be provided
+!             non-contiguously, they must be declared as pointers here
+!             as well to avoid copying into a contiguous temporarily array
    REALTYPE,intent(in)                             :: dt,splitfac,AH
    REALTYPE,dimension(E2DFIELD),intent(in)         :: U,Do,DU
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   REALTYPE,dimension(_IRANGE_HALO_-1,_JRANGE_HALO_),intent(in) :: dxu,dyu
+   REALTYPE,dimension(:,:),pointer,intent(in)      :: dxu,dyu
    REALTYPE,dimension(E2DFIELD),intent(in)         :: arcd1
 #endif
-
-#endif
    integer,intent(in)                              :: scheme
-   logical,dimension(_IRANGE_HALO_-1,_JRANGE_HALO_),intent(in) :: mask_flux
+   logical,dimension(:,:),pointer,intent(in)       :: mask_flux
    logical,dimension(E2DFIELD),intent(in)          :: mask_update
    logical,intent(in),optional                     :: nosplit_finalise
    logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise

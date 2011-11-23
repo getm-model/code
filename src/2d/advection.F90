@@ -67,6 +67,11 @@
    REALTYPE,public,dimension(:,:),allocatable :: flux
    REALTYPE,dimension(:,:),allocatable        :: Di,adv
 #endif
+#define NO_POINTER_REMAP
+#ifdef NO_POINTER_REMAP
+   logical,dimension(:,:),allocatable,target  :: mask_ufluxU
+   REALTYPE,dimension(:,:),allocatable,target :: dxuU,dyuU
+#endif
    integer,public,parameter           :: NOSPLIT=0,FULLSPLIT=1,HALFSPLIT=2
    character(len=64),public,parameter :: adv_splits(0:2) = &
                   (/"no split: one 2D uv step",            &
@@ -103,11 +108,11 @@
          REALTYPE,intent(in)                             :: dt,splitfac,AH
          REALTYPE,dimension(E2DFIELD),intent(in)         :: U,Do,DU
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         REALTYPE,dimension(_IRANGE_HALO_-1,_JRANGE_HALO_),intent(in) :: dxu,dyu
+         REALTYPE,dimension(:,:),pointer,intent(in)      :: dxu,dyu
          REALTYPE,dimension(E2DFIELD),intent(in)         :: arcd1
 #endif
          integer,intent(in)                              :: scheme
-         logical,dimension(_IRANGE_HALO_-1,_JRANGE_HALO_),intent(in) :: mask_flux
+         logical,dimension(:,:),pointer,intent(in)       :: mask_flux
          logical,dimension(E2DFIELD),intent(in)          :: mask_update
          logical,intent(in),optional                     :: nosplit_finalise
          logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
@@ -147,7 +152,7 @@
          REALTYPE,intent(in)                        :: dt,AH
          REALTYPE,dimension(E2DFIELD),intent(in)    :: U,V,Do,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         REALTYPE,dimension(_IRANGE_HALO_-1,_JRANGE_HALO_),intent(in) :: dxu,dyu
+         REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
          REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
@@ -166,7 +171,7 @@
          REALTYPE,intent(in)                        :: dt,AH
          REALTYPE,dimension(E2DFIELD),intent(in)    :: U,V,Do,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         REALTYPE,dimension(_IRANGE_HALO_-1,_JRANGE_HALO_),intent(in) :: dxu,dyu
+         REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
          REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
@@ -186,7 +191,7 @@
 ! !INTERFACE:
    subroutine init_advection()
 !
-! !DESCRIvPTION:
+! !DESCRIPTION:
 !
 ! Here, memory for some variables is allocated, which are then initialised to
 ! zero.
@@ -252,14 +257,21 @@
    mask_ufluxV = ( ax(_IRANGE_HALO_-1,_JRANGE_HALO_).eq.1 )
    mask_vfluxU = ( ax(_IRANGE_HALO_,_JRANGE_HALO_-1).eq.1 )
 
-   adv_gridH%mask_uflux    => mask_vupdateU(_IRANGE_HALO_-1,_JRANGE_HALO_)
+   adv_gridH%mask_uflux    => mask_vupdateU
    adv_gridH%mask_uupdate  => mask_updateH
    adv_gridH%mask_vflux    => mask_uupdateV(_IRANGE_HALO_,_JRANGE_HALO_-1)
    adv_gridH%mask_vupdate  => mask_updateH
    adv_gridH%mask_finalise => mask_updateH
    adv_gridH%az            => az
 
-   adv_gridU%mask_uflux    => mask_updateH(1+_IRANGE_HALO_,_JRANGE_HALO_)
+#ifdef NO_POINTER_REMAP
+   allocate(mask_ufluxU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (mask_ufluxU)'
+   mask_ufluxU = mask_updateH(1+_IRANGE_HALO_,_JRANGE_HALO_)
+   adv_gridU%mask_uflux    => mask_ufluxU
+#else
+   adv_gridU%mask_uflux(_IRANGE_HALO_-1,_JRANGE_HALO_) => mask_updateH(1+_IRANGE_HALO_,_JRANGE_HALO_)
+#endif
    adv_gridU%mask_uupdate  => mask_uupdateU
    adv_gridU%mask_vflux    => mask_vfluxU
    adv_gridU%mask_vupdate  => mask_vupdateU ! now also includes y-advection of u along W/E open bdys
@@ -274,20 +286,31 @@
    adv_gridV%az            => av
 
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   adv_gridH%dxu   => dxu(_IRANGE_HALO_-1,_JRANGE_HALO_)
-   adv_gridH%dyu   => dyu(_IRANGE_HALO_-1,_JRANGE_HALO_)
+   adv_gridH%dxu   => dxu
+   adv_gridH%dyu   => dyu
    adv_gridH%dxv   => dxv(_IRANGE_HALO_,_JRANGE_HALO_-1)
    adv_gridH%dyv   => dyv(_IRANGE_HALO_,_JRANGE_HALO_-1)
    adv_gridH%arcd1 => arcd1
 
-   adv_gridU%dxu   => dxc(1+_IRANGE_HALO_,_JRANGE_HALO_)
-   adv_gridU%dyu   => dyc(1+_IRANGE_HALO_,_JRANGE_HALO_)
+#ifdef NO_POINTER_REMAP
+   allocate(dxuU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (dxuU)'
+   allocate(dyuU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (dyuU)'
+   dxuU = dxc(1+_IRANGE_HALO_,_JRANGE_HALO_)
+   dyuU = dyc(1+_IRANGE_HALO_,_JRANGE_HALO_)
+   adv_gridU%dxu   => dxuU
+   adv_gridU%dyu   => dyuU
+#else
+   adv_gridU%dxu(_IRANGE_HALO_-1,_JRANGE_HALO_) => dxc(1+_IRANGE_HALO_,_JRANGE_HALO_)
+   adv_gridU%dyu(_IRANGE_HALO_-1,_JRANGE_HALO_) => dyc(1+_IRANGE_HALO_,_JRANGE_HALO_)
+#endif
    adv_gridU%dxv   => dxx(_IRANGE_HALO_,_JRANGE_HALO_-1)
    adv_gridU%dyv   => dyx(_IRANGE_HALO_,_JRANGE_HALO_-1)
    adv_gridU%arcd1 => arud1
 
-   adv_gridV%dxu   => dxx(_IRANGE_HALO_-1,_JRANGE_HALO_)
-   adv_gridV%dyu   => dyx(_IRANGE_HALO_-1,_JRANGE_HALO_)
+   adv_gridV%dxu   => dxx
+   adv_gridV%dyu   => dyx
    adv_gridV%dxv   => dxc(_IRANGE_HALO_,1+_JRANGE_HALO_)
    adv_gridV%dyv   => dyc(_IRANGE_HALO_,1+_JRANGE_HALO_)
    adv_gridV%arcd1 => arvd1
