@@ -48,7 +48,7 @@
    REALTYPE,intent(in)                        :: dt,AH
    REALTYPE,dimension(E2DFIELD),intent(in)    :: U,V,Do,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   REALTYPE,dimension(_IRANGE_HALO_-1,_JRANGE_HALO_),intent(in) :: dxu,dyu
+   REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
    REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
    REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
