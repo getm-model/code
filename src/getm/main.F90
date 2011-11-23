@@ -49,7 +49,9 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+#ifdef IFORT
    call cmdline
+#endif
 
 #ifdef FORTRAN95
    call CPU_Time(t1)
@@ -120,6 +122,7 @@
 
 !-----------------------------------------------------------------------
    subroutine cmdline
+#ifdef IFORT
    use initialise, only: dryrun
    IMPLICIT NONE
    character(len=64)    :: arg
@@ -154,11 +157,13 @@
          stop
       end select
    end do
+#endif
    return
    end
 
 !-----------------------------------------------------------------------
    subroutine print_help()
+#ifdef IFORT
      character(len=255) :: cmd
      call get_command_argument(0, cmd)
 
@@ -176,6 +181,7 @@
      print '(a)', 'visit getm.eu for further info'
      print '(a)', 'consider subscribing to getm-users@googlegroups.com'
      print '(a)', ''
+#endif
   end subroutine print_help
 
 !-----------------------------------------------------------------------

@@ -4,7 +4,7 @@
 		<Platform Name="Win32"/></Platforms>
 	<Configurations>
 		<Configuration Name="Debug|Win32" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\src\domain;..\..\src\3d;..\..\src\2d;$(GOTMDIR)\extras\netcdf\win32\3.6.3\include;$(MSMPI_INC)" PreprocessorDefinitions="STATIC;REAL_4B=real(kind=4);GETM_BIO;GETM_PARALLEL" Interfaces="true" WarnInterfaces="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\src\domain;..\..\src\3d;..\..\src\2d;$(GOTMDIR)\extras\netcdf\win32\3.6.3\include;$(MSMPI_INC)" PreprocessorDefinitions="STATIC;REAL_4B=real(kind=4);GETM_BIO;GETM_PARALLEL" WarnInterfaces="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug" Interfaces="true"/>
 				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(GOTMDIR)\extras\netcdf\win32\3.6.3\lib;$(MSMPI_LIB32);$(GOTMDIR)\compilers\vs2008\Debug\gotm" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="netcdfs.lib msmpi.lib msmpifec.lib gotm.lib"/>
 				<Tool Name="VFLibrarianTool" LinkLibraryDependencies="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
@@ -55,6 +55,7 @@
 		<File RelativePath="..\..\src\3d\fct_2dh_adv.F90"/>
 		<File RelativePath="..\..\src\3d\general_coordinates.F90"/>
 		<File RelativePath="..\..\src\3d\getm_bio.F90"/>
+		<File RelativePath="..\..\src\3d\getm_fabm.F90"/>
 		<File RelativePath="..\..\src\3d\gotm.F90"/>
 		<File RelativePath="..\..\src\3d\hcc_check.F90"/>
 		<File RelativePath="..\..\src\3d\hybrid_coordinates.F90"/>

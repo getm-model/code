@@ -168,10 +168,10 @@
   allocate(ssvn(I2DFIELD),stat=rc)  ! Elevation after  macro time step (v-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (ssvn)'
 
-  allocate(rru(I2DFIELD),stat=rc)   ! Bottom drag term in u-vel. points (3D)   
+  allocate(rru(I2DFIELD),stat=rc)   ! Bottom drag term in u-vel. points (3D)
   if (rc /= 0) stop 'init_3d: Error allocating memory (rru)'
 
-  allocate(rrv(I2DFIELD),stat=rc)   ! Bottom drag term in v-vel. points (3D)   
+  allocate(rrv(I2DFIELD),stat=rc)   ! Bottom drag term in v-vel. points (3D)
   if (rc /= 0) stop 'init_3d: Error allocating memory (rrv)'
 
   allocate(taus(I2DFIELD),stat=rc)  ! Absolute Value of surface stress
@@ -186,10 +186,10 @@
   allocate(taub(I2DFIELD),stat=rc)  ! Absolute Value of bottom stress
   if (rc /= 0) stop 'init_3d: Error allocating memory (taub)'
 
-  allocate(kmin(I2DFIELD),stat=rc) ! Bottom index for vertical z-columns    
+  allocate(kmin(I2DFIELD),stat=rc) ! Bottom index for vertical z-columns
   if (rc /= 0) stop 'init_3d: Error allocating memory (kmin)'
 
-  allocate(kumin(I2DFIELD),stat=rc) ! Bottom index for vertical u-columns    
+  allocate(kumin(I2DFIELD),stat=rc) ! Bottom index for vertical u-columns
   if (rc /= 0) stop 'init_3d: Error allocating memory (kumin)'
 
   allocate(kvmin(I2DFIELD),stat=rc) ! Bottom index for vertical v-columns

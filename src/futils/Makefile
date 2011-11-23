@@ -1,5 +1,5 @@
-# 
-# Makefile to build utilities written in Fortran90 - libfutils.a 
+#
+# Makefile to build utilities written in Fortran90 - libfutils.a
 #
 
 include ../Rules.make

@@ -1,4 +1,4 @@
-# 
+#
 # Makefile to build the domain library - libdomain.a
 #
 
@@ -8,7 +8,7 @@ INCS	= static_domain.h dynamic_declarations_domain.h 	\
           dynamic_allocations_domain_1.h dynamic_allocations_domain_2.h
 LIB	= $(LIBDIR)/libdomain${buildtype}.a
 
-MODSRC	= domain.F90 
+MODSRC	= domain.F90
 
 LIBSRC	= part_domain.F90 bdy_spec.F90 print_bdy.F90 \
           mirror_bdy_2d.F90 mirror_bdy_3d.F90
@@ -16,7 +16,7 @@ LIBSRC	= part_domain.F90 bdy_spec.F90 print_bdy.F90 \
 SRC	= $(MODSRC) $(LIBSRC)
 
 MOD   = \
-${LIB}(domain.o)        
+${LIB}(domain.o)
 
 
 OBJ   = \
@@ -44,7 +44,7 @@ clean:
 	$(RM) $(LIB) $(MODDIR)/domain.{m.mod} $(MODDIR)/topo_interface.{m.mod}
 
 realclean: clean
-	$(RM) *.o doc 
+	$(RM) *.o doc
 
 distclean: realclean
 

@@ -33,7 +33,7 @@ realclean: clean
 	$(RM) *.o doc
 
 distclean: realclean
-	$(RM) work.pc *.d 
+	$(RM) work.pc *.d
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 - Hans Burchard and Karsten Bolding (BBH)         !

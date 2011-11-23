@@ -36,7 +36,7 @@ MOD	+= 	\
 ${LIB}(ncdf_meteo.o)		\
 ${LIB}(ncdf_topo.o)		\
 ${LIB}(ncdf_restart.o)		\
-${LIB}(ncdf_mean.o)		
+${LIB}(ncdf_mean.o)
 
 OBJ	= 	\
 ${LIB}(set_attributes.o)	\
@@ -61,7 +61,7 @@ ${LIB}(open_restart_ncdf.o)	\
 ${LIB}(read_restart_ncdf.o)	\
 ${LIB}(ncdf_close.o)
 
-all: modules objects 
+all: modules objects
 
 modules: $(MOD)
 
@@ -72,7 +72,7 @@ doc: $(SRC)
 	touch doc
 
 clean:
-	$(RM) $(LIB) 
+	$(RM) $(LIB)
 
 realclean: clean
 	$(RM) *.o doc
