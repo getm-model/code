@@ -57,4 +57,4 @@
 
 ! attenuation
   REALTYPE, dimension(:,:), allocatable     :: A,g1,g2
-  
+

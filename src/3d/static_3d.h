@@ -2,9 +2,8 @@
 #ifdef SPM
   integer, parameter                   :: n3d_fields=36
 #else
-  integer, parameter                   :: n3d_fields=33 
-#endif  
-
+  integer, parameter                   :: n3d_fields=33
+#endif
 ! Number of vertical layers in z,u,v columns
   INTEGER                              :: kmin(I2DFIELD)
   INTEGER                              :: kumin(I2DFIELD)

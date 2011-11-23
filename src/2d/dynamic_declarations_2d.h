@@ -24,7 +24,7 @@
   REALTYPE,dimension(:,:),allocatable  :: surfdiv
   REALTYPE,dimension(:,:),allocatable  :: fwf,fwf_int
 
-  REALTYPE,dimension(:),  allocatable:: EWbdy,ENbdy,EEbdy,ESbdy   
+  REALTYPE,dimension(:),  allocatable:: EWbdy,ENbdy,EEbdy,ESbdy
 
 ! input arrays for do_advection
   REALTYPE,dimension(:,:),allocatable :: fadv,Uadv,Vadv,DUadv,DVadv

@@ -186,7 +186,7 @@
    il=imin ; ih=imax ; jl=jmin ; jh=jmax
 
 !  check grid and dimensions
-!  dynamic_allocations_domain_1.h will be included when reading 
+!  dynamic_allocations_domain_1.h will be included when reading
 !  the topo file
    call read_topo_file(bathy_format,bathymetry)
 #ifndef STATIC
