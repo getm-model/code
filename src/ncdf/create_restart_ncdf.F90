@@ -106,10 +106,6 @@
                             (/ xdim_id, ydim_id /), U_id)
    if (status .NE. NF90_NOERR) go to 10
 
-   status = nf90_def_var(ncid, "zu", nf90_double, &
-                            (/ xdim_id, ydim_id /), zu_id)
-   if (status .NE. NF90_NOERR) go to 10
-
    status = nf90_def_var(ncid, "SlUx", nf90_double, &
                             (/ xdim_id, ydim_id /), SlUx_id)
    if (status .NE. NF90_NOERR) go to 10
@@ -120,10 +116,6 @@
 
    status = nf90_def_var(ncid, "V", nf90_double, &
                             (/ xdim_id, ydim_id /), V_id)
-   if (status .NE. NF90_NOERR) go to 10
-
-   status = nf90_def_var(ncid, "zv", nf90_double, &
-                            (/ xdim_id, ydim_id /), zv_id)
    if (status .NE. NF90_NOERR) go to 10
 
    status = nf90_def_var(ncid, "SlVx", nf90_double, &
