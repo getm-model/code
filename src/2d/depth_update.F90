@@ -12,8 +12,7 @@
 ! This routine which is called at every micro time step updates all
 ! necessary depth related information. These are the water depths in the
 ! T-, U- and V-points, {\tt D}, {\tt DU} and {\tt DV}, respectively,
-! the sea surface elevation in the U- and V-points, {\tt zu} and {\tt zv},
-! respectively, and the drying value $\alpha$ defined in equation (\ref{alpha})
+! and the drying value $\alpha$ defined in equation (\ref{alpha})
 ! on page \pageref{alpha} in the T-, the U- and the V-points
 ! ({\tt dry\_z}, {\tt dry\_u} and {\tt dry\_v}).
 !
@@ -23,7 +22,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth,crit_depth
    use domain, only: az,au,av,dry_z,dry_u,dry_v
-   use variables_2d, only: D,z,zo,DU,zu,DV,zv
+   use variables_2d, only: D,z,zo,DU,DV
    use getm_timers,  only: tic, toc, TIM_DPTHUPDATE
 !$ use omp_lib
    IMPLICIT NONE
@@ -68,7 +67,6 @@
          if(au(i,j) .gt. 0) then
 #endif
          x=max(_QUART_*(zo(i,j)+zo(i+1,j)+z(i,j)+z(i+1,j)),-HU(i,j)+min_depth)
-         zu(i,j) = x
          DU(i,j) = x+HU(i,j)
 #ifdef USE_MASK
          end if
@@ -85,7 +83,6 @@
          if(av(i,j) .gt. 0) then
 #endif
          x = max(_QUART_*(zo(i,j)+zo(i,j+1)+z(i,j)+z(i,j+1)),-HV(i,j)+min_depth)
-         zv(i,j) = x
          DV(i,j) = x+HV(i,j)
 #ifdef USE_MASK
          end if
