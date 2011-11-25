@@ -315,14 +315,6 @@
    end where
    zo=z
 
-   where (-HU+min_depth .gt. _ZERO_ )
-      zu = -HU+min_depth
-   end where
-
-   where (-HV+min_depth .gt. _ZERO_ )
-      zv = -HV+min_depth
-   end where
-
 !  bottom roughness
    if (z0_method .eq. 0) then
       zub0 = z0_const

@@ -332,11 +332,11 @@
    use domain, only: au,av
    use domain, only: imin,imax,jmin,jmax
 #ifdef ZUB_ZVB
-   use variables_2d, only: U,fU,zu,res_du,SlUx,Slru
-   use variables_2d, only: V,fV,zv,res_dv,SlVx,Slrv
+   use variables_2d, only: U,fU,res_du,SlUx,Slru
+   use variables_2d, only: V,fV,res_dv,SlVx,Slrv
 #else
-   use variables_2d, only: U,fU,zu,SlUx,Slru
-   use variables_2d, only: V,fV,zv,SlVx,Slrv
+   use variables_2d, only: U,fU,SlUx,Slru
+   use variables_2d, only: V,fV,SlVx,Slrv
 #endif
    use variables_2d, only: Uinto,Vinto
 #ifndef NO_3D
@@ -380,6 +380,9 @@
    integer                   :: jd,secs
    character(len=19)         :: timestr_out
    REALTYPE                  :: dt
+#ifdef _HOT_ZU_ZV_
+   REALTYPE,dimension(E2DFIELD) :: wrk2d
+#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -403,11 +406,25 @@
             LEVEL3 'saving loop, julianday, secondsofday and timestep'
             write(RESTART) loop,julianday,secondsofday,timestep
             LEVEL3 'saving basic variables'
-#ifdef ZUB_ZVB
-            write(RESTART) z,zo,U,zu,res_du,SlUx,Slru,V,zv,res_dv,SlVx,Slrv
-#else
-            write(RESTART) z,zo,U,zu,SlUx,Slru,V,zv,SlVx,Slrv
+            write(RESTART) z,zo,U
+#ifdef _HOT_ZU_ZV_
+            LEVEL3 'obsolete saving of placeholder for zu'
+            write(RESTART) wrk2d
 #endif
+#ifdef ZUB_ZVB
+            LEVEL3 'obsolete saving of res_du'
+            write(RESTART) res_du
+#endif
+            write(RESTART) SlUx,Slru,V
+#ifdef _HOT_ZU_ZV_
+            LEVEL3 'obsolete saving of placeholder for zv'
+            write(RESTART) wrk2d
+#endif
+#ifdef ZUB_ZVB
+            LEVEL3 'obsolete saving of res_dv'
+            write(RESTART) res_dv
+#endif
+            write(RESTART) SlVx,Slrv
 #ifndef NO_3D
             if (runtype .ge. 2)  then
                LEVEL3 'saving 3D barotropic variables'
@@ -459,12 +476,27 @@
             LEVEL3 'reading loop, julianday, secondsofday and timestep'
             read(RESTART) j,jd,secs,dt
             LEVEL3 'reading basic variables'
-#ifdef ZUB_ZVB
-            read(RESTART) z,zo,U,zu,res_du,SlUx,Slru,V,zv,res_dv,SlVx,Slrv
-            res_du=_ZERO_ ; res_dv=_ZERO_
-#else
-            read(RESTART) z,zo,U,zu,SlUx,Slru,V,zv,SlVx,Slrv
+            read(RESTART) z,zo,U
+#ifdef _HOT_ZU_ZV_
+            LEVEL3 'obsolete reading of placeholder for zu'
+            read(RESTART) wrk2d
 #endif
+#ifdef ZUB_ZVB
+            LEVEL3 'obsolete reading of placeholder for res_du'
+            read(RESTART) res_du
+            res_du=_ZERO_
+#endif
+            read(RESTART) SlUx,Slru,V
+#ifdef _HOT_ZU_ZV_
+            LEVEL3 'obsolete reading of placeholder for zv'
+            read(RESTART) wrk2d
+#endif
+#ifdef ZUB_ZVB
+            LEVEL3 'obsolete reading of placeholder for res_dv'
+            read(RESTART) res_dv
+            res_dv=_ZERO_
+#endif
+            read(RESTART) SlVx,Slrv
             where(au .eq. 0) U=_ZERO_
             where(av .eq. 0) V=_ZERO_
 #ifndef NO_3D

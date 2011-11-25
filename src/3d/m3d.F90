@@ -368,8 +368,6 @@
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
          if(az(i,j) .eq. 0) then
-            ho(i,j,:)  = _ZERO_
-            hn(i,j,:)  = _ZERO_
             tke(i,j,:) = _ZERO_
             num(i,j,:) = 1.e-15
             nuh(i,j,:) = 1.e-15
@@ -384,8 +382,6 @@
       do i=imin-HALO,imax+HALO
          if (au(i,j) .eq. 0) then
             uu(i,j,:)  = _ZERO_
-            huo(i,j,:) = _ZERO_
-            hun(i,j,:) = _ZERO_
          end if
       end do
    end do
@@ -393,8 +389,6 @@
       do i=imin-HALO,imax+HALO
          if (av(i,j) .eq. 0) then
             vv(i,j,:)  = _ZERO_
-            hvo(i,j,:) = _ZERO_
-            hvn(i,j,:) = _ZERO_
          end if
       end do
    end do

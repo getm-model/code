@@ -65,8 +65,6 @@
 !  \begin{center}
 !  \begin{tabular}{lll}
 ! {\tt z } & sea surface elevation in T-point & [m] \\
-! {\tt zu } & sea surface elevation in U-point & [m]\\
-! {\tt zv } & sea surface elevation in V-point & [m]\\
 ! {\tt U } & $x$ component of transport in U-point & [m$^2$s$^{-1}$] \\
 ! {\tt DU } & water depth in U-point & [m] \\
 ! {\tt fU } & Coriolis term for $V$-equation in V-point & [m$^2$s$^{-2}$] \\
@@ -124,8 +122,8 @@
 #endif
 
    z  = _ZERO_; zo =_ZERO_
-   zu = _ZERO_; zub=_ZERO_ ; zub0=_ZERO_
-   zv = _ZERO_; zvb=_ZERO_ ; zvb0=_ZERO_
+   zub=_ZERO_ ; zub0=_ZERO_
+   zvb=_ZERO_ ; zvb0=_ZERO_
    D = _ZERO_;
    U = _ZERO_; DU = _ZERO_; fU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; DV = _ZERO_; fV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
