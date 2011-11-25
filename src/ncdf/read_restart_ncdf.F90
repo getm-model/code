@@ -142,16 +142,6 @@
    end if
 
    status = &
-   nf90_get_var(ncid,zu_id,zu(iloc:ilen,jloc:jlen),start,edges)
-   if (status .NE. NF90_NOERR) then
-      LEVEL3 "read_restart_ncdf(): setting zu=0"
-      zu=_ZERO_
-   else
-      call update_2d_halo(zu,zu,au,imin,jmin,imax,jmax,U_TAG)
-      call wait_halo(U_TAG)
-   end if
-
-   status = &
    nf90_get_var(ncid,SlUx_id,SlUx(iloc:ilen,jloc:jlen),start,edges)
    if (status .NE. NF90_NOERR) then
       LEVEL3 "read_restart_ncdf(): setting SlUx=0"
@@ -178,16 +168,6 @@
    else
       where(av .eq. 0) V=_ZERO_
       call update_2d_halo(V,V,av,imin,jmin,imax,jmax,V_TAG)
-      call wait_halo(V_TAG)
-   end if
-
-   status = &
-   nf90_get_var(ncid,zv_id,zv(iloc:ilen,jloc:jlen),start,edges)
-   if (status .NE. NF90_NOERR) then
-      LEVEL3 "read_restart_ncdf(): setting zv=0"
-      zv=_ZERO_
-   else
-      call update_2d_halo(zv,zv,av,imin,jmin,imax,jmax,V_TAG)
       call wait_halo(V_TAG)
    end if
 
