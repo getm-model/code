@@ -4,7 +4,6 @@
 #endif
   REALTYPE,dimension(:,:),allocatable  :: D,DU,DV
   REALTYPE,dimension(:,:),allocatable  :: z,zo
-  REALTYPE,dimension(:,:),allocatable  :: zu,zv
   REALTYPE,dimension(:,:),allocatable  :: U,V
   REALTYPE,dimension(:,:),allocatable  :: UEx,VEx
   REALTYPE,dimension(:,:),allocatable  :: fU,fV
@@ -28,4 +27,4 @@
   REALTYPE,dimension(:),  allocatable:: EWbdy,ENbdy,EEbdy,ESbdy
 
 ! Remember to update this value if you add more 2D arrays.
-  integer, parameter :: n2d_fields=37
+  integer, parameter :: n2d_fields=35
