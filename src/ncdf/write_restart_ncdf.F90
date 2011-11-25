@@ -104,10 +104,6 @@
    if (status .NE. NF90_NOERR) go to 10
 
    status = &
-   nf90_put_var(ncid,zu_id,zu(_2D_W_HOT_),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-
-   status = &
    nf90_put_var(ncid,SlUx_id,SlUx(_2D_W_HOT_),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
@@ -117,10 +113,6 @@
 
    status = &
    nf90_put_var(ncid,V_id,V(_2D_W_HOT_),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-
-   status = &
-   nf90_put_var(ncid,zv_id,zv(_2D_W_HOT_),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
    status = &

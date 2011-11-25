@@ -10,6 +10,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use parameters, only: rho_0
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: az,au,av
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -18,7 +19,7 @@
    use domain, only: dx,dy,ard1
 #endif
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
-   use variables_3d, only: nuh,T,S,rho,a,g1,g2
+   use variables_3d, only: nuh,T,S,rho,a,g1,g2,taub
    use advection_3d, only: do_advection_3d
    use meteo, only: swr,u10,v10,evap,precip
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
@@ -236,7 +237,7 @@
    integer         :: n
    integer         :: i,j,k
    REALTYPE        :: bioshade(1:kmax)
-   REALTYPE        :: wind_speed,I_0
+   REALTYPE        :: wind_speed,I_0,taub_nonnorm
    REALTYPE        :: z(1:kmax)
 !EOP
 !-----------------------------------------------------------------------
@@ -268,6 +269,9 @@
             do k=kmax-1,1,-1
                z(k) = z(k+1) - _HALF_*(hn(i,j,k+1)+hn(i,j,k))
             end do
+            
+!           Calculate actual bottom stress from normalized bottom stress (taub/rho_0)
+            taub_nonnorm = taub(i,j)*rho_0
 
 !           Copy current values of biogeochemical variables from full 3D field to columns.
             cc_col(1:ubound(model%info%state_variables,1) ,:) = cc_pel(:,i,j,:)
@@ -275,10 +279,11 @@
             cc_diag_col    = cc_diag(:,i,j,:)
             cc_diag_hz_col = cc_diag_hz(:,i,j)
 
-!           Transfer pointers to physcial environment variables to FABM.
+!           Transfer pointers to physical environment variables to FABM.
             call set_env_gotm_fabm(dt,0,0,T(i,j,1:),S(i,j,1:), &
                                    rho(i,j,1:),nuh(i,j,0:),hn(i,j,0:),ww(i,j,0:), &
-                                bioshade,I_0,wind_speed,precip(i,j),evap(i,j),z,A(i,j),g1(i,j),g2(i,j))
+                                   bioshade,I_0,taub_nonnorm,wind_speed,precip(i,j),evap(i,j), &
+                                   z,A(i,j),g1(i,j),g2(i,j))
 
 !           Update biogeochemical variable values.
             call do_gotm_fabm(kmax)
