@@ -136,7 +136,6 @@
       LEVEL3 "read_restart_ncdf(): setting U=0"
       U=_ZERO_
    else
-      where(au .eq. 0) U=_ZERO_
       call update_2d_halo(U,U,au,imin,jmin,imax,jmax,U_TAG)
       call wait_halo(U_TAG)
    end if
@@ -166,7 +165,6 @@
       LEVEL3 "read_restart_ncdf(): setting V=0"
       V=_ZERO_
    else
-      where(av .eq. 0) V=_ZERO_
       call update_2d_halo(V,V,av,imin,jmin,imax,jmax,V_TAG)
       call wait_halo(V_TAG)
    end if
@@ -285,8 +283,6 @@
          LEVEL3 "read_restart_ncdf(): setting uu=0"
          uu=_ZERO_
       else
-         forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO, au(i,j).eq.0) &
-              uu(i,j,:)=_ZERO_
          call update_3d_halo(uu,uu,au,imin,jmin,imax,jmax,kmax,U_TAG)
          call wait_halo(U_TAG)
       end if
@@ -297,8 +293,6 @@
          LEVEL3 "read_restart_ncdf(): setting vv=0"
          vv=_ZERO_
       else
-         forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO, av(i,j).eq.0) &
-              vv(i,j,:)=_ZERO_
          call update_3d_halo(vv,vv,av,imin,jmin,imax,jmax,kmax,V_TAG)
          call wait_halo(V_TAG)
       end if
