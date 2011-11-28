@@ -268,9 +268,9 @@
       hot_in = trim(out_dir) //'/'// 'restart' // trim(buf)
       call restart_file(READING,trim(hot_in),MinN,runtype,use_epoch)
       LEVEL3 'MinN adjusted to ',MinN
-      call postinit_2d(runtype)
+      call postinit_2d(runtype,timestep,hotstart)
 #ifndef NO_3D
-      call postinit_3d(runtype)
+      call postinit_3d(runtype,timestep,hotstart)
 #endif
       call depth_update
 #ifndef NO_3D
