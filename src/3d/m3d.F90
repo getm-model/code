@@ -301,13 +301,15 @@
 ! !IROUTINE: postinit_3d - re-initialise some 3D after hotstart read.
 !
 ! !INTERFACE:
-   subroutine postinit_3d(runtype)
+   subroutine postinit_3d(runtype,timestep,hotstart)
 ! !USES:
    use domain, only: imin,imax,jmin,jmax, az,au,av
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
+   REALTYPE, intent(in)                :: timestep
+   logical, intent(in)                 :: hotstart
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -331,34 +333,37 @@
 
    LEVEL1 'postinit_3d'
 
-! Go over mask and make sure that velocities are zero on land.
-   do j=jmin-HALO,jmax+HALO
-      do i=imin-HALO,imax+HALO
-         if(az(i,j) .eq. 0) then
-            tke(i,j,:) = _ZERO_
-            num(i,j,:) = 1.e-15
-            nuh(i,j,:) = 1.e-15
+! Hotstart fix - see postinit_2d
+   if (hotstart) then
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if (au(i,j) .eq. 0) then
+               uu(i,j,:)  = _ZERO_
+            end if
+         end do
+      end do
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if (av(i,j) .eq. 0) then
+               vv(i,j,:)  = _ZERO_
+            end if
+         end do
+      end do
+!     These may not be necessary, but we clean up anyway just in case.
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if(az(i,j) .eq. 0) then
+               tke(i,j,:) = _ZERO_
+               num(i,j,:) = 1.e-15
+               nuh(i,j,:) = 1.e-15
 #ifndef NO_BAROCLINIC
-            S(i,j,:)   = _ZERO_
-            T(i,j,:)   = _ZERO_
+               S(i,j,:)   = _ZERO_
+               T(i,j,:)   = _ZERO_
 #endif
-         end if
+            end if
+         end do
       end do
-   end do
-   do j=jmin-HALO,jmax+HALO
-      do i=imin-HALO,imax+HALO
-         if (au(i,j) .eq. 0) then
-            uu(i,j,:)  = _ZERO_
-         end if
-      end do
-   end do
-   do j=jmin-HALO,jmax+HALO
-      do i=imin-HALO,imax+HALO
-         if (av(i,j) .eq. 0) then
-            vv(i,j,:)  = _ZERO_
-         end if
-      end do
-   end do
+   end if
 
    return
    end subroutine postinit_3d
