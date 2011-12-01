@@ -373,7 +373,11 @@
       if (rc /= 0) stop 'rivers: Error allocating memory (river_fabm)'
 
       do m=1,size(model%info%state_variables)
-         river_fabm(:,m) = model%info%state_variables(m)%missing_value
+         if (model%info%state_variables(m)%no_river_dilution) then
+            river_fabm(:,m) = model%info%state_variables(m)%missing_value
+         else
+            river_fabm(:,m) = _ZERO_
+         end if
       end do
    end if
 

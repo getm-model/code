@@ -24,7 +24,6 @@
    use rivers, only: river_bio
 #endif
 #ifdef _FABM_
-   !use gotm_fabm, only: fabm_calc
    use gotm_fabm, only: model
    use rivers, only: river_fabm
 #endif
@@ -180,19 +179,14 @@
 #endif
 #ifdef _FABM_
       do m=1,size(model%info%state_variables)
-         if (model%info%state_variables(m)%no_river_dilution) then
-            fabm_id(n,m)= -1
+         fabm_name=trim(real_river_name(n))//'_'// &
+                        trim(model%info%state_variables(m)%name)
+         err =  nf90_inq_varid(ncid,trim(fabm_name),fabm_id(n,m))
+         if (err .ne. NF90_NOERR) then
+            fabm_id(n,m) = -1
          else
-            fabm_name=trim(real_river_name(n))//'_'// &
-                           trim(model%info%state_variables(m)%name)
-            err =  nf90_inq_varid(ncid,trim(fabm_name),fabm_id(n,m))
-            if (err .ne. NF90_NOERR) then
-               fabm_id(n,m) = -1
-            end if
-            if ( fabm_id(n,m) .ne. -1 ) then
-               LEVEL4 trim(real_river_name(n)),': ', &
-                           trim(model%info%state_variables(m)%name)
-            end if
+            LEVEL4 trim(real_river_name(n)),': ', &
+                        trim(model%info%state_variables(m)%name)
          end if
       end do
 #endif
