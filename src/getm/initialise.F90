@@ -45,7 +45,7 @@
    use domain, only: vert_cord,maxdepth
    use time, only: init_time,update_time,write_time_string
    use time, only: start,timestr,timestep
-   use m2d, only: init_2d,postinit_2d, z,zu,zv
+   use m2d, only: init_2d,postinit_2d, z
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
 #ifndef NO_3D
    use m2d, only: Uint,Vint
@@ -266,9 +266,9 @@
       hot_in = trim(out_dir) //'/'// 'restart' // trim(buf)
       call restart_file(READING,trim(hot_in),MinN,runtype,use_epoch)
       LEVEL3 'MinN adjusted to ',MinN
-      call postinit_2d(runtype)
+      call postinit_2d(runtype,timestep,hotstart)
 #ifndef NO_3D
-      call postinit_3d(runtype)
+      call postinit_3d(runtype,timestep,hotstart)
 #endif
       call depth_update
 #ifndef NO_3D

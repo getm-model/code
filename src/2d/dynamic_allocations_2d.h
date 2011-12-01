@@ -21,12 +21,6 @@
    allocate(zo(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (zo)'
 
-   allocate(zu(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (zu)'
-
-   allocate(zv(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (zv)'
-
    allocate(U(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (U)'
 
