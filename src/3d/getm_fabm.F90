@@ -334,7 +334,7 @@
    call tic(TIM_ADVECTFABM)
    do n=1,size(model%info%state_variables)
 
-#if 1
+#if 0
       ff = fabm_pel(:,:,:,n)
 
       call update_3d_halo(ff,ff,az, &
