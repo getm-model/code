@@ -23,6 +23,11 @@
    use bio_var, only: numc,var_names
    use rivers, only: river_bio
 #endif
+#ifdef _FABM_
+   !use gotm_fabm, only: fabm_calc
+   use gotm_fabm, only: model
+   use rivers, only: river_fabm
+#endif
    IMPLICIT NONE
 !
    private
@@ -44,6 +49,10 @@
 #ifdef GETM_BIO
    integer, allocatable                :: bio_id(:,:)
    integer, allocatable                :: r_bio(:,:)
+#endif
+#ifdef _FABM_
+   integer, allocatable                :: fabm_id(:,:)
+   integer, allocatable                :: r_fabm(:,:)
 #endif
 !
 ! !REVISION HISTORY:
@@ -80,6 +89,9 @@
    integer                   :: j1,s1,j2,s2
    character(len=256)        :: time_units
    character(len=256)        :: bio_name
+#ifdef _FABM_
+   character(len=256)        :: fabm_name
+#endif
 !EOP
 !-------------------------------------------------------------------------
 #ifdef DEBUG
@@ -109,6 +121,13 @@
    allocate(bio_id(rriver,numc),stat=err)
    if (err /= 0) stop 'ncdf_river: Error allocating memory (bio_id)'
    bio_id = -1
+#endif
+#ifdef _FABM_
+   allocate(r_fabm(rriver,size(model%info%state_variables)),stat=err)
+   if (err /= 0) stop 'ncdf_river: Error allocating memory (r_fabm)'
+   allocate(fabm_id(rriver,size(model%info%state_variables)),stat=err)
+   if (err /= 0) stop 'ncdf_river: Error allocating memory (fabm_id)'
+   fabm_id = -1
 #endif
 
    err = nf90_open(fn,NF90_NOWRITE,ncid)
@@ -156,6 +175,24 @@
          end if
          if ( bio_id(n,m) .ne. -1 ) then
             LEVEL4 trim(real_river_name(n)),': ',trim(var_names(m))
+         end if
+      end do
+#endif
+#ifdef _FABM_
+      do m=1,size(model%info%state_variables)
+         if (model%info%state_variables(m)%no_river_dilution) then
+            fabm_id(n,m)= -1
+         else
+            fabm_name=trim(real_river_name(n))//'_'// &
+                           trim(model%info%state_variables(m)%name)
+            err =  nf90_inq_varid(ncid,trim(fabm_name),fabm_id(n,m))
+            if (err .ne. NF90_NOERR) then
+               fabm_id(n,m) = -1
+            end if
+            if ( fabm_id(n,m) .ne. -1 ) then
+               LEVEL4 trim(real_river_name(n)),': ', &
+                           trim(model%info%state_variables(m)%name)
+            end if
          end if
       end do
 #endif
@@ -289,6 +326,17 @@
                      if (err .ne. NF90_NOERR) go to 10
                      do m=1,river_split(ni)
                         river_bio(ni+m-1,j) = x(1)
+                     end do
+                  end if
+               end do
+#endif
+#ifdef _FABM_
+               do j=1,ubound(fabm_id,2)
+                  if (fabm_id(nn,j) .gt. 0) then
+                     err = nf90_get_var(ncid,fabm_id(nn,j),x,start,edges)
+                     if (err .ne. NF90_NOERR) go to 10
+                     do m=1,river_split(ni)
+                        river_fabm(ni+m-1,j) = x(1)
                      end do
                   end if
                end do

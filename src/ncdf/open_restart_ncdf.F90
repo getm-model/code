@@ -19,6 +19,10 @@
    use bio, only: bio_calc
    use getm_bio, only: bio_init_method
 #endif
+#ifdef _FABM_
+   use gotm_fabm, only: fabm_calc
+   use getm_fabm, only: fabm_init_method
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -286,6 +290,18 @@
          varnam="bio"
          status = nf90_inq_varid(ncid, "bio", bio_id)
          if (status .NE. NF90_NOERR) go to 10
+      end if
+#endif
+
+#ifdef _FABM_
+      if (fabm_calc .and. fabm_init_method .eq. 0) then
+         varnam="fabm_pel"
+         status = nf90_inq_varid(ncid,varnam,fabm_pel_id)
+         if (status .NE. NF90_NOERR) go to 10
+
+         varnam="fabm_ben"
+         status = nf90_inq_varid(ncid,varnam,fabm_ben_id)
+         if (status .NE. NF90_NOERR) fabm_ben_id=0 !go to 10
       end if
 #endif
    end if

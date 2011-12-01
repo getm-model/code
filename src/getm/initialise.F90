@@ -62,6 +62,7 @@
 #endif
 #ifdef _FABM_
    use getm_fabm, only: init_getm_fabm
+   use rivers, only: init_rivers_fabm 
 #endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
@@ -236,7 +237,7 @@
 #endif
 #ifdef _FABM_
       call init_getm_fabm(trim(input_dir) // 'getm_fabm.inp')
-!KB      call init_rivers_bio
+      call init_rivers_fabm
 #endif
 #ifdef GETM_BIO
       call init_getm_bio(trim(input_dir) // 'getm_bio.inp')
