@@ -62,7 +62,7 @@
 #endif
 #ifdef _FABM_
    use getm_fabm, only: init_getm_fabm
-   use rivers, only: init_rivers_fabm 
+   use rivers, only: init_rivers_fabm
 #endif
 #ifdef GETM_BIO
    use bio, only: bio_calc

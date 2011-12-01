@@ -276,7 +276,7 @@
             do k=kmax-1,1,-1
                z(k) = z(k+1) - _HALF_*(hn(i,j,k+1)+hn(i,j,k))
             end do
-            
+
 !           Calculate actual bottom stress from normalized bottom stress (taub/rho_0)
             taub_nonnorm = taub(i,j)*rho_0
 
