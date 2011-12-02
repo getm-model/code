@@ -245,13 +245,13 @@
 #ifdef _FABM_
       if (fabm_calc) then
          status = nf90_def_var(ncid, "fabm_pel", nf90_double, &
-                               (/ fabmpeldim_id, xdim_id, ydim_id, zdim_id /), &
+                               (/ xdim_id, ydim_id, zdim_id, fabmpeldim_id /), &
                                 fabm_pel_id)
          if (status .NE. NF90_NOERR) go to 10
 
          if (fabmbendim_id.gt.0) then
             status = nf90_def_var(ncid, "fabm_ben", nf90_double, &
-                               (/ fabmbendim_id, xdim_id, ydim_id /), &
+                               (/ xdim_id, ydim_id, fabmbendim_id /), &
                                 fabm_ben_id)
             if (status .NE. NF90_NOERR) go to 10
          endif
