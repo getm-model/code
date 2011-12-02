@@ -420,7 +420,7 @@
          if (status .NE. NF90_NOERR) go to 10
 
          start(3) = 1;  edges(3) = size(fabm_ben,3)
-         
+
          if (fabm_ben_id .gt. 0) then
             status = &
             nf90_get_var(ncid,fabm_ben_id,fabm_ben(iloc:ilen,jloc:jlen,:),start,edges)

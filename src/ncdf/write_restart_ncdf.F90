@@ -228,7 +228,7 @@
          status = &
          nf90_put_var(ncid,fabm_pel_id,fabm_pel(_3D_W_HOT_,:),start,edges)
          if  (status .NE. NF90_NOERR) go to 10
-         
+
          start(3) = 1; edges(3) = size(fabm_ben,3)
          if (edges(1).gt.0) then
             status = &
