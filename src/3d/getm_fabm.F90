@@ -45,12 +45,10 @@
    REALTYPE        :: delxu(I2DFIELD),delxv(I2DFIELD)
    REALTYPE        :: delyu(I2DFIELD),delyv(I2DFIELD)
    REALTYPE        :: area_inv(I2DFIELD)
-   REALTYPE        :: ff(I3DFIELD)
 #else
    REALTYPE, dimension(:,:), allocatable :: delxu,delxv
    REALTYPE, dimension(:,:), allocatable :: delyu,delyv
    REALTYPE, dimension(:,:), allocatable :: area_inv
-   REALTYPE, dimension(:,:,:), allocatable :: ff
 #endif
 
 !
@@ -194,9 +192,6 @@
 
       allocate(area_inv(I2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (area_inv)'
-
-      allocate(ff(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (ff)'
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
       delxu=dxu
@@ -329,25 +324,10 @@
       end do
 #endif
 
-
-
 !  Advect pelagic biogeochemical variables.
    call tic(TIM_ADVECTFABM)
    do n=1,size(model%info%state_variables)
 
-#if 0
-      ff = fabm_pel(:,:,:,n)
-
-      call update_3d_halo(ff,ff,az, &
-                          imin,jmin,imax,jmax,kmax,D_TAG)
-      call wait_halo(D_TAG)
-
-      call do_advection_3d(dt,ff,uu,vv,ww,hun,hvn,ho,hn, &
-              delxu,delxv,delyu,delyv,area_inv,az,au,av, &
-              fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH)
-
-      fabm_pel(:,:,:,n) = ff
-#else
       call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az, &
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
@@ -355,7 +335,7 @@
       call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn, &
               delxu,delxv,delyu,delyv,area_inv,az,au,av, &
               fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH)
-#endif
+
    end do
    call toc(TIM_ADVECTFABM)
 

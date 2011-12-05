@@ -47,11 +47,9 @@
    REAL_4B, allocatable                :: river_times(:)
 #ifdef GETM_BIO
    integer, allocatable                :: bio_id(:,:)
-   integer, allocatable                :: r_bio(:,:)
 #endif
 #ifdef _FABM_
    integer, allocatable                :: fabm_id(:,:)
-   integer, allocatable                :: r_fabm(:,:)
 #endif
 !
 ! !REVISION HISTORY:
@@ -115,15 +113,11 @@
    if (err /= 0) stop 'ncdf_river: Error allocating memory (temp_id)'
 
 #ifdef GETM_BIO
-   allocate(r_bio(rriver,numc),stat=err)
-   if (err /= 0) stop 'ncdf_river: Error allocating memory (r_bio)'
    allocate(bio_id(rriver,numc),stat=err)
    if (err /= 0) stop 'ncdf_river: Error allocating memory (bio_id)'
    bio_id = -1
 #endif
 #ifdef _FABM_
-   allocate(r_fabm(rriver,size(model%info%state_variables)),stat=err)
-   if (err /= 0) stop 'ncdf_river: Error allocating memory (r_fabm)'
    allocate(fabm_id(rriver,size(model%info%state_variables)),stat=err)
    if (err /= 0) stop 'ncdf_river: Error allocating memory (fabm_id)'
    fabm_id = -1
