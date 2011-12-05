@@ -195,7 +195,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use getm_timers, only: tic, toc, TIM_GETM_BIO
+   use getm_timers, only: tic, toc, TIM_GETM_BIO, TIM_ADVECTBIO
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -263,6 +263,7 @@
    end do
 
 !  then we do the advection of the biological variables
+   call tic(TIM_ADVECTBIO)
    do n=1,numc
 
 #if 1
@@ -286,6 +287,7 @@
 #endif
    end do
 
+   call toc(TIM_ADVECTBIO)
    call toc(TIM_GETM_BIO)
 
    return
