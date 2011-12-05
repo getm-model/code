@@ -69,6 +69,7 @@
    status = nf90_def_dim(ncid, "zax", zlen, zdim_id)
    if (status .NE. NF90_NOERR) go to 10
 
+#ifndef NO_3D
 #ifdef GETM_BIO
    if (bio_calc) then
       status = nf90_def_dim(ncid, "biodim", numc, biodim_id)
@@ -87,6 +88,7 @@
          fabmbendim_id = 0
       end if
    end if
+#endif
 #endif
 
    status = nf90_def_var(ncid, "loop", nf90_int, loop_id)
