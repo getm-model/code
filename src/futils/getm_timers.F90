@@ -71,6 +71,7 @@
    integer, parameter :: TIM_CALCMEANF   = 68   ! 3d calc_mean_fields
    integer, parameter :: TIM_METEO       = 70   ! do_meteo (could use + halo)
    integer, parameter :: TIM_GETM_BIO    = 72   ! do_getm_bio
+   integer, parameter :: TIM_GETM_FABM   = 73   ! do_getm_fabm
    ! These catch compuations in integrate_[23]d, which are not in other timers:
    integer, parameter :: TIM_INTEGR2D    = 80   ! 2d integrate_2d - remaining stuff
    integer, parameter :: TIM_INTEGR3D    = 81   ! 3d integrate_3d - remaining stuff
@@ -87,6 +88,8 @@
    integer, parameter :: TIM_HALO2D      = 110  ! do halo 2d (initialize comm)
    integer, parameter :: TIM_HALO3D      = 111  ! do halo 3d (initialize comm)
    integer, parameter :: TIM_HALOWAIT    = 112  ! wait_halo (2d+3d both)
+   integer, parameter :: TIM_ADVECTBIO   = 113  ! advection_3d bio
+   integer, parameter :: TIM_ADVECTFABM  = 114  ! advection_3d fabm
 !  LES timers
    integer, parameter :: TIM_LES2D       = 152  ! do_les_2d
    integer, parameter :: TIM_LES3D       = 153  ! do_les_3d
@@ -240,6 +243,15 @@
    timernames(TIM_SALTH)       = ' salinity-halo'
    timernames(TIM_ADV3DH)      = ' do_advection_3d-halo'
    timernames(TIM_HALO3D)      = ' sum do_halo_3d'
+#endif
+
+#ifdef GETM_BIO
+   timernames(TIM_GETM_BIO)    = 'getm_bio'
+   timernames(TIM_ADVECTBIO)   = ' advection getm_bio'
+#endif
+#ifdef _FABM_
+   timernames(TIM_GETM_FABM)   = 'getm_fabm'
+   timernames(TIM_ADVECTFABM)  = ' advection getm_fabm'
 #endif
 
 #ifdef STRUCTURE_FRICTION

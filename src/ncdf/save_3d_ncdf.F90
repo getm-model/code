@@ -45,7 +45,7 @@
 #endif
 #ifdef _FABM_
    use gotm_fabm,only: model
-   use getm_fabm,only: cc_pel,cc_ben,cc_diag,cc_diag_hz
+   use getm_fabm,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
 #endif
    use parameters,   only: g,rho_0
    use m3d, only: calc_temp,calc_salt
@@ -387,7 +387,7 @@
 #endif
 
 #ifdef _FABM_
-!   if (save_bio) then
+    if (allocated(fabm_pel)) then
       start(1) = 1
       start(2) = 1
       start(3) = 1
@@ -396,33 +396,33 @@
       edges(2) = ylen
       edges(3) = zlen
       edges(4) = 1
-      do n=1,ubound(model%info%state_variables,1)
-         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,cc_pel(n,:,:,:), &
-                     bio_missing,imin,imax,jmin,jmax,0,kmax,ws)
+      do n=1,size(model%info%state_variables)
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,fabm_pel(:,:,:,n), &
+                     model%info%state_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
          err = nf90_put_var(ncid,fabm_ids(n),ws(_3D_W_),start,edges)
          if (err .NE.  NF90_NOERR) go to 10
       end do
-      do n=1,ubound(model%info%diagnostic_variables,1)
-         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,cc_diag(n,:,:,:), &
-                     bio_missing,imin,imax,jmin,jmax,0,kmax,ws)
+      do n=1,size(model%info%diagnostic_variables)
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,fabm_diag(:,:,:,n), &
+                     model%info%diagnostic_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
          err = nf90_put_var(ncid,fabm_ids_diag(n),ws(_3D_W_),start,edges)
          if (err .NE.  NF90_NOERR) go to 10
       end do
       start(3) = n3d
       edges(3) = 1
-      do n=1,ubound(model%info%state_variables_ben,1)
-         call cnv_2d(imin,jmin,imax,jmax,az,cc_ben(n,:,:), &
-                     bio_missing,imin,imax,jmin,jmax,ws)
+      do n=1,size(model%info%state_variables_ben)
+         call cnv_2d(imin,jmin,imax,jmax,az,fabm_ben(:,:,n), &
+                     model%info%state_variables_ben(n)%missing_value,imin,jmin,imax,jmax,ws2d)
          err = nf90_put_var(ncid,fabm_ids_ben(n),ws2d(_2D_W_),start(1:3),edges(1:3))
          if (err .NE.  NF90_NOERR) go to 10
       end do
-      do n=1,ubound(model%info%diagnostic_variables_hz,1)
-         call cnv_2d(imin,jmin,imax,jmax,az,cc_diag_hz(n,:,:), &
-                     bio_missing,imin,imax,jmin,jmax,ws)
+      do n=1,size(model%info%diagnostic_variables_hz)
+         call cnv_2d(imin,jmin,imax,jmax,az,fabm_diag_hz(:,:,n), &
+                     model%info%diagnostic_variables_hz(n)%missing_value,imin,jmin,imax,jmax,ws2d)
          err = nf90_put_var(ncid,fabm_ids_diag_hz(n),ws2d(_2D_W_),start(1:3),edges(1:3))
          if (err .NE.  NF90_NOERR) go to 10
       end do
-!   end if
+   end if
 #endif
 
    err = nf90_sync(ncid)

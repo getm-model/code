@@ -4,7 +4,7 @@
 		<Platform Name="Win32"/></Platforms>
 	<Configurations>
 		<Configuration Name="Debug|Win32" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\src\domain;..\..\src\3d;..\..\src\2d;$(GOTMDIR)\extras\netcdf\win32\3.6.3\include;$(MSMPI_INC)" PreprocessorDefinitions="STATIC;REAL_4B=real(kind=4);GETM_BIO;GETM_PARALLEL" WarnInterfaces="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug" Interfaces="true"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\src\domain;..\..\src\3d;..\..\src\2d;$(GOTMDIR)\extras\netcdf\win32\3.6.3\include;$(MSMPI_INC)" PreprocessorDefinitions="REAL_4B=real(kind=4);GETM_BIO;GETM_PARALLEL;_FABM_" WarnInterfaces="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug" Interfaces="true"/>
 				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(GOTMDIR)\extras\netcdf\win32\3.6.3\lib;$(MSMPI_LIB32);$(GOTMDIR)\compilers\vs2008\Debug\gotm" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="netcdfs.lib msmpi.lib msmpifec.lib gotm.lib"/>
 				<Tool Name="VFLibrarianTool" LinkLibraryDependencies="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
@@ -15,7 +15,7 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\src\domain;..\..\src\3d;..\..\src\2d;$(GOTMDIR)\extras\netcdf\win32\3.6.3\include;$(MSMPI_INC)" PreprocessorDefinitions="STATIC;REAL_4B=real(kind=4);GETM_BIO;GETM_PARALLEL"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\src\domain;..\..\src\3d;..\..\src\2d;$(GOTMDIR)\extras\netcdf\win32\3.6.3\include;$(MSMPI_INC)" PreprocessorDefinitions="REAL_4B=real(kind=4);GETM_BIO;GETM_PARALLEL;_FABM_"/>
 				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(GOTMDIR)\extras\netcdf\win32\3.6.3\lib;$(MSMPI_LIB32)" SubSystem="subSystemConsole" AdditionalDependencies="netcdfs.lib msmpi.lib msmpifec.lib"/>
 				<Tool Name="VFLibrarianTool" LinkLibraryDependencies="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
@@ -26,7 +26,16 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
 	<Files>
-		<Filter Name="Header Files" Filter="fi;fd"/>
+		<Filter Name="Header Files" Filter="fi;fd">
+		<Filter Name="3d">
+		<File RelativePath="..\..\src\domain\dynamic_allocations_domain_1.h"/>
+		<File RelativePath="..\..\src\domain\dynamic_allocations_domain_2.h"/>
+		<File RelativePath="..\..\src\domain\dynamic_declarations_domain.h"/>
+		<File RelativePath="..\..\src\domain\static_domain.h"/></Filter>
+		<Filter Name="2d">
+		<File RelativePath="..\..\src\2d\dynamic_allocations_2d.h"/>
+		<File RelativePath="..\..\src\2d\dynamic_declarations_2d.h"/>
+		<File RelativePath="..\..\src\2d\static_2d.h"/></Filter></Filter>
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
 		<Filter Name="2d">

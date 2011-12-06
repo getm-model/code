@@ -91,7 +91,9 @@
          select case (bdy_2d_type(l))
             case (ZERO_GRADIENT)
                z(i,j) = z(i+1,j)
-            case (SOMMERFELDT)
+            case (SOMMERFELD)
+!              KK-TODO: change DXC to DXU ?!
+!                       change D(i,j) to _HALF_*(D(i,j)+D(i+1,j)) ?
                z(i,j) = z(i,j) + dtm/DXC*sqrt(9.81*D(i,j))*(z(i+1,j)-z(i,j))
             case (CLAMPED)
                z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
@@ -114,8 +116,10 @@
          select case (bdy_2d_type(l))
             case (ZERO_GRADIENT)
                z(i,j) = z(i,j-1)
-            case (SOMMERFELDT)
-               z(i,j) = z(i,j) - dtm/DXC*sqrt(9.81*D(i,j))*(z(i,j)-z(i,j-1))
+            case (SOMMERFELD)
+!              KK-TODO: change DYC to DYVJM1 ?! (not yet in cppdefs.h!)
+!                       change D(i,j) to _HALF_*(D(i,j-1)+D(i,j)) ?
+               z(i,j) = z(i,j) - dtm/DYC*sqrt(9.81*D(i,j))*(z(i,j)-z(i,j-1))
             case (CLAMPED)
                z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
             case (FLATHER_ELEV)
@@ -137,7 +141,9 @@
          select case (bdy_2d_type(l))
             case (ZERO_GRADIENT)
                z(i,j) = z(i-1,j)
-            case (SOMMERFELDT)
+            case (SOMMERFELD)
+!              KK-TODO: change DXC to DXUIM1 ?! (not yet in cppdefs.h!)
+!                       change D(i,j) to _HALF_*(D(i-1,j)+D(i,j)) ?
                z(i,j) = z(i,j) - dtm/DXC*sqrt(9.81*D(i,j))*(z(i,j)-z(i-1,j))
             case (CLAMPED)
                z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
@@ -160,8 +166,10 @@
          select case (bdy_2d_type(l))
             case (ZERO_GRADIENT)
                z(i,j) = z(i,j+1)
-            case (SOMMERFELDT)
-               z(i,j) = z(i,j) + dtm/DXC*sqrt(9.81*D(i,j))*(z(i,j+1)-z(i,j))
+            case (SOMMERFELD)
+!              KK-TODO: change DYC to DYV ?!
+!                       change D(i,j) to _HALF_*(D(i,j)+D(i,j+1)) ?
+               z(i,j) = z(i,j) + dtm/DYC*sqrt(9.81*D(i,j))*(z(i,j+1)-z(i,j))
             case (CLAMPED)
                z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
             case (FLATHER_ELEV)

@@ -1,3 +1,4 @@
+#ifdef _FABM_
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -13,7 +14,8 @@
    use parameters, only: rho_0
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: az
-   use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn,fadv3d
+   use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
+   use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
    use variables_3d, only: nuh,T,S,rho,a,g1,g2,taub
    use advection_3d, only: print_adv_settings_3d,do_advection_3d
    use meteo, only: swr,u10,v10,evap,precip
@@ -82,38 +84,38 @@
    LEVEL2 'init_getm_fabm()'
 
 !  Initialize FABM.
-   call init_gotm_fabm(kmax,NAMLST2,'fabm.nml')
+   call init_gotm_fabm(kmax,NAMLST2,'gotm_fabm.nml')
 
    if (fabm_calc) then
 !     Temporary: make sure diagnostic variables store the last value,
 !     not their time integral. This will be redundant when time-integrating/averaging
 !     is moved from FABM to the physical host.
-      do n=1,ubound(model%info%diagnostic_variables,1)
+      do n=1,size(model%info%diagnostic_variables)
          model%info%diagnostic_variables(n)%time_treatment = time_treatment_last
       end do
-      do n=1,ubound(model%info%diagnostic_variables_hz,1)
+      do n=1,size(model%info%diagnostic_variables_hz)
          model%info%diagnostic_variables_hz(n)%time_treatment = time_treatment_last
       end do
 
 !     Allocate memory for pelagic state variables.
-      allocate(cc_pel(ubound(model%info%state_variables,1),I3DFIELD),stat=rc)
+      allocate(fabm_pel(I3DFIELD,size(model%info%state_variables)),stat=rc)
       if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (cc_pel)'
-      cc_pel = _ZERO_
+      fabm_pel = _ZERO_
 
 !     Allocate memory for benthic state variables.
-      allocate(cc_ben(ubound(model%info%state_variables_ben,1),I2DFIELD),stat=rc)
+      allocate(fabm_ben(I2DFIELD,size(model%info%state_variables_ben)),stat=rc)
       if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (cc_ben)'
-      cc_ben = _ZERO_
+      fabm_ben = _ZERO_
 
 !     Allocate memory for 3D diagnostic variables.
-      allocate(cc_diag(ubound(model%info%diagnostic_variables,1),I3DFIELD),stat=rc)
+      allocate(fabm_diag(I3DFIELD,size(model%info%diagnostic_variables)),stat=rc)
       if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (cc_diag)'
-      cc_diag = _ZERO_
+      fabm_diag = _ZERO_
 
 !     Allocate memory for 2D [horizontal-only] diagnostic variables.
-      allocate(cc_diag_hz(ubound(model%info%diagnostic_variables_hz,1),I2DFIELD),stat=rc)
+      allocate(fabm_diag_hz(I2DFIELD,size(model%info%diagnostic_variables_hz)),stat=rc)
       if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (cc_diag_hz)'
-      cc_diag_hz = _ZERO_
+      fabm_diag_hz = _ZERO_
 
 !     Read settings specific to GETM-FABM interaction.
       open(NAMLST2,status='unknown',file=trim(nml_file))
@@ -133,17 +135,21 @@
             do j=jmin,jmax
                do i=imin,imax
                   if (az(i,j) .ge. 1 ) then
-                     cc_pel(:,i,j,:) = cc_col(1:ubound(model%info%state_variables,1) ,:)
-                     cc_ben(:,i,j)   = cc_col(ubound(model%info%state_variables,1)+1:,1)
+                     do n=1,size(model%info%state_variables)
+                        fabm_pel(i,j,:,n) = cc_col(n,:)
+                     end do
+                     do n=1,size(model%info%state_variables_ben)
+                        fabm_ben(i,j,  n) = cc_col(size(model%info%state_variables)+n,1)
+                     end do
                   end if
                end do
             end do
          case(2)
             LEVEL3 'reading initial biogeochemical fields from ',trim(fabm_init_file)
-            do n=1,ubound(model%info%state_variables,1)
+            do n=1,size(model%info%state_variables)
                LEVEL4 'inquiring ',trim(model%info%state_variables(n)%name)
                call get_field(fabm_init_file,trim(model%info%state_variables(n)%name),fabm_field_no, &
-                              cc_pel(n,:,:,:))
+                              fabm_pel(:,:,:,n))
             end do
          case default
             FATAL 'Not valid fabm_init_method specified'
@@ -151,8 +157,8 @@
       end select
 
 !     Update halos with biogeochemical variable values (distribute initial values).
-      do n=1,ubound(model%info%state_variables,1)
-         call update_3d_halo(cc_pel(n,:,:,:),cc_pel(n,:,:,:),az, &
+      do n=1,size(model%info%state_variables)
+         call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az, &
                              imin,jmin,imax,jmax,kmax,D_TAG)
          call wait_halo(D_TAG)
       end do
@@ -174,7 +180,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use getm_timers, only: tic, toc, TIM_GETM_BIO
+   use getm_timers, only: tic, toc, TIM_GETM_FABM, TIM_ADVECTFABM
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -193,10 +199,14 @@
 !-----------------------------------------------------------------------
 !BOC
 
-   call tic(TIM_GETM_BIO)
+   call tic(TIM_GETM_FABM)
 
 !  First we do all the vertical processes
+#ifdef SLICE_MODEL
+   do j=2,2
+#else
    do j=jmin,jmax
+#endif
       do i=imin,imax
          if (az(i,j) .ge. 1 ) then
 
@@ -219,15 +229,23 @@
             do k=kmax-1,1,-1
                z(k) = z(k+1) - _HALF_*(hn(i,j,k+1)+hn(i,j,k))
             end do
-            
+
 !           Calculate actual bottom stress from normalized bottom stress (taub/rho_0)
             taub_nonnorm = taub(i,j)*rho_0
 
 !           Copy current values of biogeochemical variables from full 3D field to columns.
-            cc_col(1:ubound(model%info%state_variables,1) ,:) = cc_pel(:,i,j,:)
-            cc_col(ubound(model%info%state_variables,1)+1:,1) = cc_ben(:,i,j)
-            cc_diag_col    = cc_diag(:,i,j,:)
-            cc_diag_hz_col = cc_diag_hz(:,i,j)
+            do n=1,size(model%info%state_variables)
+               cc_col(n,:) = fabm_pel(i,j,:,n)
+            end do
+            do n=1,size(model%info%state_variables_ben)
+               cc_col(size(model%info%state_variables)+n,1) = fabm_ben(i,j,n)
+            end do
+            do n=1,size(model%info%diagnostic_variables)
+               cc_diag_col(n,:) = fabm_diag(i,j,:,n)
+            end do
+            do n=1,size(model%info%diagnostic_variables_hz)
+               cc_diag_hz_col(n) = fabm_diag_hz(i,j,n)
+            end do
 
 !           Transfer pointers to physical environment variables to FABM.
             call set_env_gotm_fabm(dt,0,0,T(i,j,1:),S(i,j,1:), &
@@ -239,56 +257,52 @@
             call do_gotm_fabm(kmax)
 
 !           Copy updated column values of biogeochemical variables to full 3D field.
-            cc_pel    (:,i,j,:) = cc_col(1:ubound(model%info%state_variables,1) ,:)
-            cc_ben    (:,i,j)   = cc_col(ubound(model%info%state_variables,1)+1:,1)
-            cc_diag   (:,i,j,:) = cc_diag_col
-            cc_diag_hz(:,i,j)   = cc_diag_hz_col
+            do n=1,size(model%info%state_variables)
+               fabm_pel(i,j,:,n) = cc_col(n,:)
+            end do
+            do n=1,size(model%info%state_variables_ben)
+               fabm_ben(i,j,n) = cc_col(size(model%info%state_variables)+n,1)
+            end do
+            do n=1,size(model%info%diagnostic_variables)
+               fabm_diag(i,j,:,n) = cc_diag_col(n,:)
+            end do
+            do n=1,size(model%info%diagnostic_variables_hz)
+               fabm_diag_hz(i,j,n) = cc_diag_hz_col(n)
+            end do
 
          end if
       end do
    end do
 
-!  Advect pelagic biogeochemical variables.
-   do n=1,ubound(model%info%state_variables,1)
-
-#if 1
-      fadv3d = cc_pel(n,:,:,:)
-
-      call update_3d_halo(fadv3d,fadv3d,az, &
-                          imin,jmin,imax,jmax,kmax,D_TAG)
-      call wait_halo(D_TAG)
-
-!  KK-TODO: fabm_AH_method + include fabm_AH_method=1 into advection
-
-      call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                       &
-                           fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH,H_TAG)
-
-!      if (fabm_AH_method .gt. 1) then
-!         call update_3d_halo(fadv3d,fadv3d,az,imin,jmin,imax,jmax,kmax,D_TAG)
-!         call wait_halo(D_TAG)
-!         call tracer_diffusion(ff,fabm_AH_method,fabm_AH_const,fabm_AH_Prt,fabm_AH_stirr_const)
-!      end if
-
-      cc_pel(n,:,:,:) = fadv3d
-#else
-      call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az, &
-                          imin,jmin,imax,jmax,kmax,D_TAG)
-      call wait_halo(D_TAG)
-
-!  KK-TODO: fabm_AH_method + include fabm_AH_method=1 into advection
-
-      call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn,                &
-                           fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH,H_TAG)
-
-!      if (fabm_AH_method .gt. 1) then
-!         call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az,imin,jmin,imax,jmax,kmax,D_TAG)
-!         call wait_halo(D_TAG)
-!         call tracer_diffusion(cc3d(n,:,:,:),fabm_AH_method,fabm_AH_const,fabm_AH_Prt,fabm_AH_stirr_const)
-!      end if
+#ifdef SLICE_MODEL
+      do i=imin,imax
+         cc_pel(:,i,3,:)=cc_pel(:,i,2,:)
+         cc_ben(:,i,3)  =cc_ben(:,i,2)
+      end do
 #endif
-   end do
 
-   call toc(TIM_GETM_BIO)
+!  Advect pelagic biogeochemical variables.
+   call tic(TIM_ADVECTFABM)
+   do n=1,size(model%info%state_variables)
+
+      call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az, &
+                          imin,jmin,imax,jmax,kmax,D_TAG)
+      call wait_halo(D_TAG)
+
+!     KK-TODO: fabm_AH_method + include fabm_AH_method=1 into advection
+
+      call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn,                       &
+                           fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH,H_TAG)
+
+!      if (fabm_AH_method .gt. 1) then
+!         call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az,imin,jmin,imax,jmax,kmax,D_TAG)
+!         call wait_halo(D_TAG)
+!         call tracer_diffusion(fabm_pel(:,:,:,n),fabm_AH_method,fabm_AH_const,fabm_AH_Prt,fabm_AH_stirr_const)
+!      end if
+   end do
+   call toc(TIM_ADVECTFABM)
+
+   call toc(TIM_GETM_FABM)
 
    return
    end subroutine do_getm_fabm
@@ -297,6 +311,7 @@
 !-----------------------------------------------------------------------
 
    end module getm_fabm
+#endif
 
 !-----------------------------------------------------------------------
 ! Copyright (C) 2007 - Karsten Bolding and Hans Burchard               !

@@ -58,6 +58,12 @@
    integer                             :: biodim_id
    integer                             :: bio_id
 #endif
+#ifdef _FABM_
+   integer                             :: fabmpeldim_id
+   integer                             :: fabmbendim_id
+   integer                             :: fabm_pel_id
+   integer                             :: fabm_ben_id
+#endif
 #endif
 
    integer                             :: xlen,ylen,zlen
