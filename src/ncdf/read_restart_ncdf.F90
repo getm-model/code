@@ -32,11 +32,15 @@
    use variables_2d
 #ifndef NO_3D
    use variables_3d
-#endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use bio_var, only: numc
    use getm_bio, only: bio_init_method
+#endif
+#ifdef _FABM_
+   use getm_fabm, only: fabm_init_method
+   use getm_fabm, only: fabm_pel,fabm_ben
+#endif
 #endif
 #ifdef SPM
    use suspended_matter
@@ -406,6 +410,22 @@
          LEVEL3 'spm variables not read from hotstart file'
          LEVEL3 'set spm_init_method=0 to read them from hotstart file'
         end if
+      end if
+#endif
+#ifdef _FABM_
+      if(allocated(fabm_pel) .and. fabm_init_method .eq. 0) then
+         start(4) = 1;  edges(4) = size(fabm_pel,4)
+         status = &
+         nf90_get_var(ncid,fabm_pel_id,fabm_pel(iloc:ilen,jloc:jlen,0:kmax,:),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+
+         start(3) = 1;  edges(3) = size(fabm_ben,3)
+
+         if (fabm_ben_id .gt. 0) then
+            status = &
+            nf90_get_var(ncid,fabm_ben_id,fabm_ben(iloc:ilen,jloc:jlen,:),start,edges)
+            if (status .NE. NF90_NOERR) go to 10
+         end if
       end if
 #endif
 #ifdef GETM_BIO
