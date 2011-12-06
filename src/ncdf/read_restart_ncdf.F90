@@ -32,7 +32,6 @@
    use variables_2d
 #ifndef NO_3D
    use variables_3d
-#endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use bio_var, only: numc
@@ -41,6 +40,7 @@
 #ifdef _FABM_
    use getm_fabm, only: fabm_init_method
    use getm_fabm, only: fabm_pel,fabm_ben
+#endif
 #endif
 #ifdef SPM
    use suspended_matter

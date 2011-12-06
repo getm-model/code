@@ -266,10 +266,6 @@
       hot_in = trim(out_dir) //'/'// 'restart' // trim(buf)
       call restart_file(READING,trim(hot_in),MinN,runtype,use_epoch)
       LEVEL3 'MinN adjusted to ',MinN
-      call postinit_2d(runtype,timestep,hotstart)
-#ifndef NO_3D
-      call postinit_3d(runtype,timestep,hotstart)
-#endif
       call depth_update
 #ifndef NO_3D
       if (runtype .ge. 2) then
@@ -287,6 +283,11 @@
       LEVEL3 timestr
       MinN = MinN+1
    end if
+
+   call postinit_2d(runtype,timestep,hotstart)
+#ifndef NO_3D
+   call postinit_3d(runtype,timestep,hotstart)
+#endif
 
    call init_input(input_dir,MinN)
 

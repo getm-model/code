@@ -15,6 +15,7 @@
 ! !USES:
    use netcdf
    use ncdf_restart
+#ifndef NO_3D
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use getm_bio, only: bio_init_method
@@ -22,6 +23,7 @@
 #ifdef _FABM_
    use gotm_fabm, only: fabm_calc
    use getm_fabm, only: fabm_init_method
+#endif
 #endif
    IMPLICIT NONE
 !
