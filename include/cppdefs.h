@@ -53,7 +53,7 @@
 
 ! For 2D boundary conditions
 #define ZERO_GRADIENT 1
-#define SOMMERFELDT   2
+#define SOMMERFELD    2
 #define CLAMPED       3
 #define FLATHER_ELEV  4
 #define FLATHER_VEL   5

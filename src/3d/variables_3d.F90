@@ -129,6 +129,10 @@
    REALTYPE, allocatable               :: cc3d(:,:,:,:)
    REALTYPE, allocatable               :: ws3d(:,:,:,:)
 #endif
+#ifdef _FABM_
+   REALTYPE, allocatable, dimension(:,:,:,:) :: fabm_pel,fabm_diag
+   REALTYPE, allocatable, dimension(:,:,:)   :: fabm_ben,fabm_diag_hz
+#endif
    integer                             :: size3d_field
    integer                             :: mem3d
    integer                             :: preadapt

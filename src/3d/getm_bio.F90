@@ -147,7 +147,8 @@
 !
 ! !USES:
    use advection_3d, only: do_advection_3d
-   use getm_timers, only: tic, toc, TIM_GETM_BIO
+   use getm_timers, only: tic, toc, TIM_GETM_BIO, TIM_ADVECTBIO
+
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -215,27 +216,27 @@
    end do
 
 !  then we do the advection of the biological variables
+   call tic(TIM_ADVECTBIO)
    do n=1,numc
 
 #if 1
       fadv3d = cc3d(n,:,:,:)
-      call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                   &
-                           bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH,H_TAG)
-
       call update_3d_halo(fadv3d,fadv3d,az, &
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
+      call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                   &
+                           bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH,H_TAG)
       cc3d(n,:,:,:) = fadv3d
 #else
-      call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn,            &
-                           bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH,H_TAG)
-
       call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az, &
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
+      call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn,            &
+                           bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH,H_TAG)
 #endif
    end do
 
+   call toc(TIM_ADVECTBIO)
    call toc(TIM_GETM_BIO)
 
    return
