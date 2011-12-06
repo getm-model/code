@@ -168,7 +168,7 @@
 #endif
 
    bdy_2d_desc(ZERO_GRADIENT)           = "Zero gradient"
-   bdy_2d_desc(SOMMERFELDT)             = "Sommerfeldt rad."
+   bdy_2d_desc(SOMMERFELD)              = "Sommerfeld rad."
    bdy_2d_desc(CLAMPED)                 = "Clamped"
    bdy_2d_desc(FLATHER_ELEV)            = "Flather (elev)"
    bdy_2d_desc(FLATHER_VEL)             = "Flather (vel)"
