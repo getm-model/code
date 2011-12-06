@@ -48,10 +48,6 @@
    use variables_3d, only: T
 #endif
    use rivers,   only: do_rivers
-#endif
-#ifdef SPM
-   use suspended_matter, only: spm_calc,do_spm
-#endif
 #ifdef _FABM_
    use gotm_fabm, only: fabm_calc
    use getm_fabm, only: do_getm_fabm
@@ -59,6 +55,10 @@
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use getm_bio, only: do_getm_bio
+#endif
+#endif
+#ifdef SPM
+   use suspended_matter, only: spm_calc,do_spm
 #endif
    use input,    only: do_input
    use output,   only: do_output,meanout

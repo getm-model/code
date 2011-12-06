@@ -43,6 +43,10 @@
    use bio_var, only: numc
    use variables_3d, only: cc3d
 #endif
+#ifdef _FABM_
+   use gotm_fabm, only: model
+   use getm_fabm, only: fabm_pel
+#endif
    IMPLICIT NONE
 !
    private
@@ -51,6 +55,9 @@
    public init_rivers, do_rivers, clean_rivers
 #ifdef GETM_BIO
    public init_rivers_bio
+#endif
+#ifdef _FABM_
+   public init_rivers_fabm
 #endif
    integer, public                     :: river_method=0,nriver=0,rriver=0
    logical,public                      :: use_river_temp = .false.
@@ -70,6 +77,9 @@
 #ifdef GETM_BIO
    REALTYPE, public, allocatable       :: river_bio(:,:)
    REALTYPE, public, parameter         :: bio_missing=-9999.0
+#endif
+#ifdef _FABM_
+   REALTYPE, public, allocatable       :: river_fabm(:,:)
 #endif
 !
 ! !PRIVATE DATA MEMBERS:
@@ -327,6 +337,59 @@
 !EOC
 #endif
 
+#ifdef _FABM_
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: init_rivers_fabm
+!
+! !INTERFACE:
+   subroutine init_rivers_fabm()
+!
+! !DESCRIPTION:
+! First, memory for storing the biological loads from rivers is
+! allocated.
+! The variable - {\tt river\_fabm} - is initialised to  - variable-
+! specific missing values obtained provided by FABM.
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !LOCAL VARIABLES:
+   integer                   :: rc,m
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'init_rivers_fabm() # ',Ncall
+#endif
+
+   if (allocated(fabm_pel)) then
+      LEVEL1 'init_rivers_fabm()'
+
+      allocate(river_fabm(nriver,size(model%info%state_variables)),stat=rc)
+      if (rc /= 0) stop 'rivers: Error allocating memory (river_fabm)'
+
+      do m=1,size(model%info%state_variables)
+         if (model%info%state_variables(m)%no_river_dilution) then
+            river_fabm(:,m) = model%info%state_variables(m)%missing_value
+         else
+            river_fabm(:,m) = _ZERO_
+         end if
+      end do
+   end if
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving init_rivers_fabm()'
+   write(debug,*)
+#endif
+   return
+   end subroutine init_rivers_fabm
+!EOC
+#endif
+
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -415,6 +478,18 @@
                      end do
                   end if
 #endif
+#ifdef _FABM_
+                  if (allocated(fabm_pel)) then
+                     do m=1,size(model%info%state_variables)
+                        if ( river_fabm(n,m) .ne. model%info%state_variables(m)%missing_value ) then
+                           fabm_pel(i,j,1:kmax,m) = &
+                                 (fabm_pel(i,j,1:kmax,m)*(H(i,j)+ssen(i,j)) &
+                                 + river_fabm(n,m)*macro_height(n))      &
+                                 / (H(i,j)+ssen(i,j)+macro_height(n))
+                        end if
+                     end do
+                  end if
+#endif
 !                 Changes of total and layer height due to river inflow:
                   hn(i,j,1:kmax) = hn(i,j,1:kmax)/(H(i,j)+ssen(i,j)) &
                                   *(H(i,j)+ssen(i,j)+macro_height(n))
@@ -475,6 +550,9 @@
                tot = tot+irr(n)
             end if
          end do
+#ifdef _FABM_
+         if (allocated(river_fabm)) deallocate(river_fabm)
+#endif
       case default
          FATAL 'Not valid rivers_method specified'
          stop 'clean_rivers'
