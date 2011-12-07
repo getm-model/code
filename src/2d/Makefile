@@ -9,7 +9,7 @@ LIB	= $(LIBDIR)/lib2d${buildtype}.a
 
 MODSRC	= m2d.F90 variables_2d.F90
 
-LIBSRC	= momentum.F90 uv_advect.F90  uv_diffusion.F90 bottom_friction.F90 sealevel.F90 depth_update.F90 uv_depths.F90 update_2d_bdy.F90  cfl_check.F90 have_bdy.F90 residual.F90
+LIBSRC	= momentum.F90 uv_advect.F90  uv_diffusion.F90 bottom_friction.F90 sealevel.F90 depth_update.F90 update_2d_bdy.F90  cfl_check.F90 have_bdy.F90 residual.F90
 
 SRC	= $(MODSRC) $(LIBSRC)
 
@@ -25,7 +25,6 @@ ${LIB}(momentum.o)		\
 ${LIB}(sealevel.o)		\
 ${LIB}(uv_advect.o)		\
 ${LIB}(uv_diffusion.o)		\
-${LIB}(uv_depths.o)		\
 ${LIB}(have_bdy.o)		\
 ${LIB}(residual.o)		\
 ${LIB}(update_2d_bdy.o)

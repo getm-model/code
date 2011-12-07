@@ -54,6 +54,9 @@
 			<bathymetry>
 				topo.nc
 			</bathymetry>
+			<vel_depth_method>
+				0
+			</vel_depth_method>
 			<longitude>
 				0.0
 			</longitude>
@@ -189,9 +192,6 @@
 			<MM>
 				1
 			</MM>
-			<vel_depth_method>
-				0
-			</vel_depth_method>
 			<Am>
 				-1.0
 			</Am>
