@@ -45,7 +45,6 @@
 ! !USES:
    use exceptions
    use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV
-   use variables_2d, only: DU,DV
    use getm_timers, only: tic,toc,TIM_UVDEPTHS
    IMPLICIT NONE
 !
