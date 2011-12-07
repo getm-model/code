@@ -3,5 +3,5 @@
 <converter source="getm-2.0" target="getm-2.1">
 	<links>
                 <link source="/getm/m2d/vel_depth_method" target="/getm/domain/vel_depth_method"/>
-        </links
+        </links>
 </converter>
