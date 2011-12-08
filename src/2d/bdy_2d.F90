@@ -146,7 +146,7 @@
                z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
             case default
                FATAL 'Illegal NWB 2D boundary type selection'
-               stop 'update_2d_bdy()'
+               stop 'do_bdy_2d()'
          end select
          k = k+1
       end do
@@ -171,7 +171,7 @@
                z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
             case default
                FATAL 'Illegal NNB 2D boundary type selection'
-               stop 'update_2d_bdy()'
+               stop 'do_bdy_2d()'
          end select
          k = k+1
       end do
@@ -196,7 +196,7 @@
                z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
             case default
                FATAL 'Illegal NEB 2D boundary type selection'
-               stop 'update_2d_bdy()'
+               stop 'do_bdy_2d()'
          end select
          k = k+1
       end do
@@ -221,7 +221,7 @@
                z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
             case default
                FATAL 'Illegal NSB 2D boundary type selection'
-               stop 'update_2d_bdy()'
+               stop 'do_bdy_2d()'
          end select
          k = k+1
       end do

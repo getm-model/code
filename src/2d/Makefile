@@ -28,8 +28,7 @@ ${LIB}(uv_advect.o)		\
 ${LIB}(uv_diffusion.o)		\
 ${LIB}(uv_depths.o)		\
 ${LIB}(have_bdy.o)		\
-${LIB}(residual.o)		\
-${LIB}(update_2d_bdy.o)
+${LIB}(residual.o)
 
 all: modules objects
 
