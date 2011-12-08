@@ -110,6 +110,7 @@
    write(debug,*) 'do_bdy_2d() # ',Ncall
 #endif
 
+#if 0
    select case (bdyfmt_2d)
       case (NO_DATA)
       case (ANALYTICAL)
@@ -117,9 +118,9 @@
       case (NETCDF)
 !        Read in get_2d_bdy() via get_2d_bdy_ncdf()
       case default
-         FATAL 'A non valid communication method has been chosen'
-         stop 'update2dbdy'
+         stop 'do_bdy_2d(): invalid bdyfmt_2d'
    end select
+#endif
 
 !  Data read - do time interpolation
 
@@ -145,8 +146,7 @@
                a = sqrt(DU(i,j)/9.81)*(U(i,j)/DU(i,j)-bdy_data_u(k))
                z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
             case default
-               FATAL 'Illegal NWB 2D boundary type selection'
-               stop 'do_bdy_2d()'
+               stop 'do_bdy_2d(): Illegal NWB 2D boundary type selection'
          end select
          k = k+1
       end do
@@ -170,8 +170,7 @@
                a = sqrt(DV(i,j)/9.81)*(V(i,j-1)/DV(i,j-1)-bdy_data_v(k))
                z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
             case default
-               FATAL 'Illegal NNB 2D boundary type selection'
-               stop 'do_bdy_2d()'
+               stop 'do_bdy_2d(): Illegal NNB 2D boundary type selection'
          end select
          k = k+1
       end do
@@ -195,8 +194,7 @@
                a = sqrt(DU(i,j)/9.81)*(U(i-1,j)/DU(i-1,j)-bdy_data_u(k))
                z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
             case default
-               FATAL 'Illegal NEB 2D boundary type selection'
-               stop 'do_bdy_2d()'
+               stop 'do_bdy_2d(): Illegal NEB 2D boundary type selection'
          end select
          k = k+1
       end do
@@ -220,8 +218,7 @@
                a = sqrt(DV(i,j)/9.81)*(V(i,j)/DV(i,j)-bdy_data_v(k))
                z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
             case default
-               FATAL 'Illegal NSB 2D boundary type selection'
-               stop 'do_bdy_2d()'
+               stop 'do_bdy_2d(): Illegal NSB 2D boundary type selection'
          end select
          k = k+1
       end do
