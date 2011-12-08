@@ -27,9 +27,9 @@
    use domain, only: openbdy,z0_method,z0_const,z0
    use domain, only: az,ax
    use halo_zones, only : update_2d_halo,wait_halo
-   use halo_zones, only : U_TAG,V_TAG,H_TAG,z_TAG
+   use halo_zones, only : U_TAG,V_TAG,H_TAG
    use variables_2d
-   use bdy_2d, only: bdyfmt_2d,bdyramp_2d,do_bdy_2d
+   use bdy_2d, only: bdyfmt_2d,bdyramp_2d
    IMPLICIT NONE
 ! Temporary interface (should be read from module):
    interface
@@ -412,8 +412,8 @@
       Vint=Vint+V
       call toc(TIM_INTEGR2D)
    end if
-   if (have_boundaries) call do_bdy_2d(loop,z_TAG)
-   call sealevel()
+
+   call sealevel(loop)
    call depth_update()
 
    if(residual .gt. 0 .and. loop .ge. residual) then
