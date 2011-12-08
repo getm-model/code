@@ -141,7 +141,7 @@
 !                       change D(i,j) to _HALF_*(D(i,j)+D(i+1,j)) ?
 !                       change to (semi-)implicit treatment ?!
                z(i,j) = z(i,j) + dtm/DXC*sqrt(9.81*D(i,j))*(zo(i+1,j)-zo(i,j))
-            case (CLAMPED)
+            case (CLAMPED_ELEV)
                z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
             case (FLATHER_ELEV)
                a = sqrt(DU(i,j)/9.81)*(U(i,j)/DU(i,j)-bdy_data_u(k))
@@ -166,7 +166,7 @@
 !                       change D(i,j) to _HALF_*(D(i,j-1)+D(i,j)) ?
 !                       change to (semi-)implicit treatment ?!
                z(i,j) = z(i,j) - dtm/DYC*sqrt(9.81*D(i,j))*(zo(i,j)-zo(i,j-1))
-            case (CLAMPED)
+            case (CLAMPED_ELEV)
                z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
             case (FLATHER_ELEV)
                a = sqrt(DV(i,j)/9.81)*(V(i,j-1)/DV(i,j-1)-bdy_data_v(k))
@@ -191,7 +191,7 @@
 !                       change D(i,j) to _HALF_*(D(i-1,j)+D(i,j)) ?
 !                       change to (semi-)implicit treatment ?!
                z(i,j) = z(i,j) - dtm/DXC*sqrt(9.81*D(i,j))*(zo(i,j)-zo(i-1,j))
-            case (CLAMPED)
+            case (CLAMPED_ELEV)
                z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
             case (FLATHER_ELEV)
                a = sqrt(DU(i,j)/9.81)*(U(i-1,j)/DU(i-1,j)-bdy_data_u(k))
@@ -216,7 +216,7 @@
 !                       change D(i,j) to _HALF_*(D(i,j)+D(i,j+1)) ?
 !                       change to (semi-)implicit treatment ?!
                z(i,j) = z(i,j) + dtm/DYC*sqrt(9.81*D(i,j))*(zo(i,j+1)-zo(i,j))
-            case (CLAMPED)
+            case (CLAMPED_ELEV)
                z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
             case (FLATHER_ELEV)
                a = sqrt(DV(i,j)/9.81)*(V(i,j)/DV(i,j)-bdy_data_v(k))

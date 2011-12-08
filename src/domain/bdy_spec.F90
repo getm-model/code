@@ -86,7 +86,7 @@
          end if
       end do
       do n = 1,NWB
-         if (type_2d(1,n) .eq. CLAMPED) need_2d_bdy_elev = .true.
+         if (type_2d(1,n) .eq. CLAMPED_ELEV) need_2d_bdy_elev = .true.
          if (type_2d(1,n) .eq. FLATHER_ELEV) then
             need_2d_bdy_elev = .true.
             need_2d_bdy_u    = .true.
@@ -130,7 +130,7 @@
          end if
       end do
       do n = 1,NNB
-         if (type_2d(2,n) .eq. CLAMPED) need_2d_bdy_elev = .true.
+         if (type_2d(2,n) .eq. CLAMPED_ELEV) need_2d_bdy_elev = .true.
          if (type_2d(2,n) .eq. FLATHER_ELEV) then
             need_2d_bdy_elev = .true.
             need_2d_bdy_v    = .true.
@@ -172,7 +172,7 @@
          end if
       end do
       do n = 1,NEB
-         if (type_2d(3,n) .eq. CLAMPED) need_2d_bdy_elev = .true.
+         if (type_2d(3,n) .eq. CLAMPED_ELEV) need_2d_bdy_elev = .true.
          if (type_2d(3,n) .eq. FLATHER_ELEV) then
             need_2d_bdy_elev = .true.
             need_2d_bdy_u    = .true.
@@ -214,7 +214,7 @@
          end if
       end do
       do n=1,NSB
-         if (type_2d(4,n) .eq. CLAMPED) need_2d_bdy_elev = .true.
+         if (type_2d(4,n) .eq. CLAMPED_ELEV) need_2d_bdy_elev = .true.
          if (type_2d(4,n) .eq. FLATHER_ELEV) then
             need_2d_bdy_elev = .true.
             need_2d_bdy_v    = .true.
