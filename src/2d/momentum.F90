@@ -124,8 +124,7 @@
 #else
    use domain, only: dx
 #endif
-   use m2d, only: dtm
-   use variables_2d, only: D,z,UEx,U,DU,fV,SlUx,Slru,ru,fU,DV
+   use variables_2d, only: dtm,D,z,UEx,U,DU,fV,SlUx,Slru,ru,fU,DV
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,U_TAG
 !$ use omp_lib
@@ -287,8 +286,7 @@
 #else
    use domain, only: dy
 #endif
-   use m2d, only: dtm
-   use variables_2d, only: D,z,VEx,V,DV,fU,SlVx,Slrv,rv,fV,DU
+   use variables_2d, only: dtm,D,z,VEx,V,DV,fU,SlVx,Slrv,rv,fV,DU
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,V_TAG
    IMPLICIT NONE

@@ -39,6 +39,7 @@
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
 		<Filter Name="2d">
+		<File RelativePath="..\..\src\2d\bdy_2d.F90"/>
 		<File RelativePath="..\..\src\2d\bottom_friction.F90"/>
 		<File RelativePath="..\..\src\2d\cfl_check.F90"/>
 		<File RelativePath="..\..\src\2d\depth_update.F90"/>
@@ -47,7 +48,6 @@
 		<File RelativePath="..\..\src\2d\momentum.F90"/>
 		<File RelativePath="..\..\src\2d\residual.F90"/>
 		<File RelativePath="..\..\src\2d\sealevel.F90"/>
-		<File RelativePath="..\..\src\2d\update_2d_bdy.F90"/>
 		<File RelativePath="..\..\src\2d\uv_advect.F90"/>
 		<File RelativePath="..\..\src\2d\uv_depths.F90"/>
 		<File RelativePath="..\..\src\2d\uv_diffusion.F90"/>

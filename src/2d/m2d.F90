@@ -27,8 +27,9 @@
    use domain, only: openbdy,z0_method,z0_const,z0
    use domain, only: az,ax
    use halo_zones, only : update_2d_halo,wait_halo
-   use halo_zones, only : U_TAG,V_TAG,H_TAG
+   use halo_zones, only : U_TAG,V_TAG,H_TAG,z_TAG
    use variables_2d
+   use bdy_2d, only: bdyfmt_2d,bdyramp_2d,do_bdy_2d
    IMPLICIT NONE
 ! Temporary interface (should be read from module):
    interface
@@ -41,22 +42,16 @@
 !
 ! !PUBLIC DATA MEMBERS:
    logical                   :: have_boundaries
-   REALTYPE                  :: dtm,Am=-_ONE_
+   REALTYPE                  :: Am=-_ONE_
 !  method for specifying horizontal numerical diffusion coefficient
 !     (0=const, 1=from named nc-file)
    integer                   :: An_method=0
    REALTYPE                  :: An_const=-_ONE_
    character(LEN = PATH_MAX) :: An_file
-
    integer                   :: MM=1,residual=-1
    integer                   :: sealevel_check=0
    logical                   :: bdy2d=.false.
-   integer                   :: bdyfmt_2d,bdytype,bdyramp_2d=-1
    character(len=PATH_MAX)   :: bdyfile_2d
-   REAL_4B                   :: bdy_data(1500)
-   REAL_4B                   :: bdy_data_u(1500)
-   REAL_4B                   :: bdy_data_v(1500)
-   REAL_4B, allocatable      :: bdy_times(:)
    integer, parameter        :: comm_method=-1
 !
 ! !REVISION HISTORY:
@@ -417,7 +412,7 @@
       Vint=Vint+V
       call toc(TIM_INTEGR2D)
    end if
-   if (have_boundaries) call update_2d_bdy(loop,bdyramp_2d)
+   if (have_boundaries) call do_bdy_2d(loop,z_TAG)
    call sealevel()
    call depth_update()
 

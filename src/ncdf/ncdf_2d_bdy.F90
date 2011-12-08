@@ -11,7 +11,8 @@
 !
 ! !USES:
    use netcdf
-   use m2d, only: dtm,bdy_times,bdy_data,bdy_data_u,bdy_data_v
+   use variables_2d, only: dtm
+   use bdy_2d, only: bdy_data,bdy_data_u,bdy_data_v
    use time, only: string_to_julsecs,time_diff,add_secs
    use time, only: julianday,secondsofday,juln,secsn
    use time, only: write_time_string,timestr
@@ -29,6 +30,7 @@
    integer                             :: start(2),edges(2)
    REALTYPE                            :: offset
 
+   REAL_4B,dimension(:),allocatable   :: bdy_times
    REAL_4B                            :: bdy_old(1500)
    REAL_4B                            :: bdy_new(1500)
    REAL_4B                            :: bdy_old_u(1500)
