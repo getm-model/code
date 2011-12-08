@@ -127,116 +127,105 @@
    if(bdyramp_2d .gt. 1) fac=min( _ONE_ ,FOUR*loop/float(bdyramp_2d))
 
    l = 0
-   if (tag .ne. V_TAG) then
-      do n = 1,NWB
-         l = l+1
-         k = bdy_index(l)
-         i = wi(n)
-         do j = wfj(n),wlj(n)
-            select case (bdy_2d_type(l))
-               case (ZERO_GRADIENT)
-                  z(i,j) = z(i+1,j)
-               case (SOMMERFELD)
-   !              KK-TODO: change DXC to DXU ?!
-   !                       change D(i,j) to _HALF_*(D(i,j)+D(i+1,j)) ?
-                  z(i,j) = z(i,j) + dtm/DXC*sqrt(9.81*D(i,j))*(z(i+1,j)-z(i,j))
-               case (CLAMPED)
-                  z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
-               case (FLATHER_ELEV)
-                  a = sqrt(DU(i,j)/9.81)*(U(i,j)/DU(i,j)-bdy_data_u(k))
-                  z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
-               case default
-                  FATAL 'Illegal NWB 2D boundary type selection'
-                  stop 'update_2d_bdy()'
-            end select
-            k = k+1
-         end do
+   do n = 1,NWB
+      l = l+1
+      k = bdy_index(l)
+      i = wi(n)
+      do j = wfj(n),wlj(n)
+         select case (bdy_2d_type(l))
+            case (ZERO_GRADIENT)
+               z(i,j) = z(i+1,j)
+            case (SOMMERFELD)
+!              KK-TODO: change DXC to DXU ?!
+!                       change D(i,j) to _HALF_*(D(i,j)+D(i+1,j)) ?
+               z(i,j) = z(i,j) + dtm/DXC*sqrt(9.81*D(i,j))*(z(i+1,j)-z(i,j))
+            case (CLAMPED)
+               z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+            case (FLATHER_ELEV)
+               a = sqrt(DU(i,j)/9.81)*(U(i,j)/DU(i,j)-bdy_data_u(k))
+               z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
+            case default
+               FATAL 'Illegal NWB 2D boundary type selection'
+               stop 'update_2d_bdy()'
+         end select
+         k = k+1
       end do
-   end if
+   end do
 
-   l = NWB
-   if (tag .ne. U_TAG) then
-      do n = 1,NNB
-         l = l+1
-         k = bdy_index(l)
-         j = nj(n)
-         do i = nfi(n),nli(n)
-            select case (bdy_2d_type(l))
-               case (ZERO_GRADIENT)
-                  z(i,j) = z(i,j-1)
-               case (SOMMERFELD)
-   !              KK-TODO: change DYC to DYVJM1 ?! (not yet in cppdefs.h!)
-   !                       change D(i,j) to _HALF_*(D(i,j-1)+D(i,j)) ?
-                  z(i,j) = z(i,j) - dtm/DYC*sqrt(9.81*D(i,j))*(z(i,j)-z(i,j-1))
-               case (CLAMPED)
-                  z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
-               case (FLATHER_ELEV)
-                  a = sqrt(DV(i,j)/9.81)*(V(i,j-1)/DV(i,j-1)-bdy_data_v(k))
-                  z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
-               case default
-                  FATAL 'Illegal NNB 2D boundary type selection'
-                  stop 'update_2d_bdy()'
-            end select
-            k = k+1
-         end do
+   do n = 1,NNB
+      l = l+1
+      k = bdy_index(l)
+      j = nj(n)
+      do i = nfi(n),nli(n)
+         select case (bdy_2d_type(l))
+            case (ZERO_GRADIENT)
+               z(i,j) = z(i,j-1)
+            case (SOMMERFELD)
+!              KK-TODO: change DYC to DYVJM1 ?! (not yet in cppdefs.h!)
+!                       change D(i,j) to _HALF_*(D(i,j-1)+D(i,j)) ?
+               z(i,j) = z(i,j) - dtm/DYC*sqrt(9.81*D(i,j))*(z(i,j)-z(i,j-1))
+            case (CLAMPED)
+               z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+            case (FLATHER_ELEV)
+               a = sqrt(DV(i,j)/9.81)*(V(i,j-1)/DV(i,j-1)-bdy_data_v(k))
+               z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
+            case default
+               FATAL 'Illegal NNB 2D boundary type selection'
+               stop 'update_2d_bdy()'
+         end select
+         k = k+1
       end do
-   end if
+   end do
 
-   l = NWB+NNB
-   if (tag .ne. V_TAG) then
-      do n = 1,NEB
-         l = l+1
-         k = bdy_index(l)
-         i = ei(n)
-         do j = efj(n),elj(n)
-            select case (bdy_2d_type(l))
-               case (ZERO_GRADIENT)
-                  z(i,j) = z(i-1,j)
-               case (SOMMERFELD)
-   !              KK-TODO: change DXC to DXUIM1 ?! (not yet in cppdefs.h!)
-   !                       change D(i,j) to _HALF_*(D(i-1,j)+D(i,j)) ?
-                  z(i,j) = z(i,j) - dtm/DXC*sqrt(9.81*D(i,j))*(z(i,j)-z(i-1,j))
-               case (CLAMPED)
-                  z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
-               case (FLATHER_ELEV)
-                  a = sqrt(DU(i,j)/9.81)*(U(i-1,j)/DU(i-1,j)-bdy_data_u(k))
-                  z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
-               case default
-                  FATAL 'Illegal NEB 2D boundary type selection'
-                  stop 'update_2d_bdy()'
-            end select
-            k = k+1
-         end do
+   do n = 1,NEB
+      l = l+1
+      k = bdy_index(l)
+      i = ei(n)
+      do j = efj(n),elj(n)
+         select case (bdy_2d_type(l))
+            case (ZERO_GRADIENT)
+               z(i,j) = z(i-1,j)
+            case (SOMMERFELD)
+!              KK-TODO: change DXC to DXUIM1 ?! (not yet in cppdefs.h!)
+!                       change D(i,j) to _HALF_*(D(i-1,j)+D(i,j)) ?
+               z(i,j) = z(i,j) - dtm/DXC*sqrt(9.81*D(i,j))*(z(i,j)-z(i-1,j))
+            case (CLAMPED)
+               z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+            case (FLATHER_ELEV)
+               a = sqrt(DU(i,j)/9.81)*(U(i-1,j)/DU(i-1,j)-bdy_data_u(k))
+               z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
+            case default
+               FATAL 'Illegal NEB 2D boundary type selection'
+               stop 'update_2d_bdy()'
+         end select
+         k = k+1
       end do
-   end if
+   end do
 
-   l = NWB+NNB+NEB
-   if (tag .ne. U_TAG) then
-      do n = 1,NSB
-         l = l+1
-         k = bdy_index(l)
-         j = sj(n)
-         do i = sfi(n),sli(n)
-            select case (bdy_2d_type(l))
-               case (ZERO_GRADIENT)
-                  z(i,j) = z(i,j+1)
-               case (SOMMERFELD)
-   !              KK-TODO: change DYC to DYV ?!
-   !                       change D(i,j) to _HALF_*(D(i,j)+D(i,j+1)) ?
-                  z(i,j) = z(i,j) + dtm/DYC*sqrt(9.81*D(i,j))*(z(i,j+1)-z(i,j))
-               case (CLAMPED)
-                  z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
-               case (FLATHER_ELEV)
-                  a = sqrt(DV(i,j)/9.81)*(V(i,j)/DV(i,j)-bdy_data_v(k))
-                  z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
-               case default
-                  FATAL 'Illegal NSB 2D boundary type selection'
-                  stop 'update_2d_bdy()'
-            end select
-            k = k+1
-         end do
+   do n = 1,NSB
+      l = l+1
+      k = bdy_index(l)
+      j = sj(n)
+      do i = sfi(n),sli(n)
+         select case (bdy_2d_type(l))
+            case (ZERO_GRADIENT)
+               z(i,j) = z(i,j+1)
+            case (SOMMERFELD)
+!              KK-TODO: change DYC to DYV ?!
+!                       change D(i,j) to _HALF_*(D(i,j)+D(i,j+1)) ?
+               z(i,j) = z(i,j) + dtm/DYC*sqrt(9.81*D(i,j))*(z(i,j+1)-z(i,j))
+            case (CLAMPED)
+               z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+            case (FLATHER_ELEV)
+               a = sqrt(DV(i,j)/9.81)*(V(i,j)/DV(i,j)-bdy_data_v(k))
+               z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
+            case default
+               FATAL 'Illegal NSB 2D boundary type selection'
+               stop 'update_2d_bdy()'
+         end select
+         k = k+1
       end do
-   end if
+   end do
 
 #ifdef DEBUG
    write(debug,*) 'leaving do_bdy_2d()'
