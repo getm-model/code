@@ -132,25 +132,46 @@
          l = l+1
          k = bdy_index(l)
          i = wi(n)
-         do j = wfj(n),wlj(n)
-            select case (bdy_2d_type(l))
-               case (ZERO_GRADIENT)
-                  z(i,j) = z(i+1,j)
-               case (SOMMERFELD)
-   !              KK-TODO: change DXC to DXU ?!
-   !                       change D(i,j) to _HALF_*(D(i,j)+D(i+1,j)) ?
-                  z(i,j) = z(i,j) + dtm/DXC*sqrt(9.81*D(i,j))*(z(i+1,j)-z(i,j))
-               case (CLAMPED)
-                  z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
-               case (FLATHER_ELEV)
-                  a = sqrt(DU(i,j)/9.81)*(U(i,j)/DU(i,j)-bdy_data_u(k))
-                  z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
-               case default
-                  FATAL 'Illegal NWB 2D boundary type selection'
-                  stop 'update_2d_bdy()'
-            end select
-            k = k+1
-         end do
+         select case (tag)
+            case (z_TAG,H_TAG)
+               select case (bdy_2d_type(l))
+                  case (ZERO_GRADIENT)
+                     do j = wfj(n),wlj(n)
+                        z(i,j) = z(i+1,j)
+                     end do
+                  case (SOMMERFELD)
+                     do j = wfj(n),wlj(n)
+!                       KK-TODO: change DXC to DXU ?!
+!                                change D(i,j) to _HALF_*(D(i,j)+D(i+1,j)) ?
+                        z(i,j) = z(i,j) + dtm/DXC*sqrt(9.81*D(i,j))*(z(i+1,j)-z(i,j))
+                     end do
+                  case (CLAMPED_ELEV)
+                     do j = wfj(n),wlj(n)
+                        z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+                        k = k+1
+                     end do
+                  case (FLATHER_ELEV)
+                     do j = wfj(n),wlj(n)
+                        a = sqrt(DU(i,j)/9.81)*(U(i,j)/DU(i,j)-bdy_data_u(k))
+                        z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
+                        k = k+1
+                     end do
+               end select
+            case (U_TAG)
+               select case (bdy_2d_type(l))
+                  case (CLAMPED_VEL)
+                     do j = wfj(n),wlj(n)
+                        U(i,j) = bdy_data_u(k)
+                        k = k+1
+                     end do
+                  case (FLATHER_VEL)
+                     do j = wfj(n),wlj(n)
+                        a = sqrt(DU(i,j)/9.81)*(U(i,j)/DU(i,j)-bdy_data_u(k))
+                        z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
+                        k = k+1
+                     end do
+               end select
+         end select
       end do
    end if
 
