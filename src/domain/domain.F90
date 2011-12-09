@@ -77,7 +77,7 @@
    integer, dimension(:), allocatable  :: sj,sfi,sli
    integer, allocatable                :: bdy_index(:),bdy_map(:,:)
 
-   character(len=64)                   :: bdy_2d_desc(5)
+   character(len=64)                   :: bdy_2d_desc(7)
    logical                             :: need_2d_bdy_elev = .false.
    logical                             :: need_2d_bdy_u    = .false.
    logical                             :: need_2d_bdy_v    = .false.
@@ -173,6 +173,7 @@
    bdy_2d_desc(FLATHER_ELEV)            = "Flather (elev)"
    bdy_2d_desc(FLATHER_VEL)             = "Flather (vel)"
    bdy_2d_desc(CLAMPED_VEL)             = "Clamped (vel)"
+   bdy_2d_desc(CLAMPED)                 = "Clamped (elev + normal vel)"
 
    LEVEL1 'init_domain'
 

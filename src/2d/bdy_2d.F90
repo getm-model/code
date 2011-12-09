@@ -150,7 +150,7 @@
                                -(_ONE_ - _TWO_*cfl*theta        )*z (i+1,j) &
                               )/(_ONE_ + _TWO_*cfl*theta        )
                   end do
-               case (CLAMPED_ELEV)
+               case (CLAMPED_ELEV,CLAMPED)
                   do j = wfj(n),wlj(n)
                      z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
                      k = k+1
@@ -179,7 +179,7 @@
                               - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
                      k = k+1
                   end do
-               case (CLAMPED_VEL)
+               case (CLAMPED_VEL,CLAMPED)
                   do j = wfj(n),wlj(n)
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
@@ -211,7 +211,7 @@
                                -(_ONE_ - _TWO_*cfl*theta        )*z (i,j-1) &
                               )/(_ONE_ + _TWO_*cfl*theta        )
                   end do
-               case (CLAMPED_ELEV)
+               case (CLAMPED_ELEV,CLAMPED)
                   do i = nfi(n),nli(n)
                      z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
                      k = k+1
@@ -240,7 +240,7 @@
                                 + _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
                      k = k+1
                   end do
-               case (CLAMPED_VEL)
+               case (CLAMPED_VEL,CLAMPED)
                   do i = nfi(n),nli(n)
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
@@ -272,7 +272,7 @@
                                -(_ONE_ - _TWO_*cfl*theta        )*z (i-1,j) &
                               )/(_ONE_ + _TWO_*cfl*theta        )
                   end do
-               case (CLAMPED_ELEV)
+               case (CLAMPED_ELEV,CLAMPED)
                   do j = efj(n),elj(n)
                      z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
                      k = k+1
@@ -301,7 +301,7 @@
                                 + _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
                      k = k+1
                   end do
-               case (CLAMPED_VEL)
+               case (CLAMPED_VEL,CLAMPED)
                   do j = efj(n),elj(n)
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
@@ -333,7 +333,7 @@
                                -(_ONE_ - _TWO_*cfl*theta        )*z (i,j+1) &
                               )/(_ONE_ + _TWO_*cfl*theta        )
                   end do
-               case (CLAMPED_ELEV)
+               case (CLAMPED_ELEV,CLAMPED)
                   do i = sfi(n),sli(n)
                      z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
                      k = k+1
@@ -362,7 +362,7 @@
                               - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
                      k = k+1
                   end do
-               case (CLAMPED_VEL)
+               case (CLAMPED_VEL,CLAMPED)
                   do i = sfi(n),sli(n)
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage

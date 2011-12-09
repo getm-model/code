@@ -62,6 +62,7 @@
 #define FLATHER_ELEV  4
 #define FLATHER_VEL   5
 #define CLAMPED_VEL   6
+#define CLAMPED       7
 
 ! Reserved Fortran units
 #define stdin  		5
