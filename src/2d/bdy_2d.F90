@@ -21,7 +21,7 @@
    use domain, only: min_depth
    use variables_2d, only: dtm,z,zo,D,U,DU,V,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxc,dyc
+   use domain, only: dxu,dyv
 #else
    use domain, only: dx,dy
 #endif
