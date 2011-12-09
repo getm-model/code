@@ -154,9 +154,13 @@
                   end do
                case (FLATHER_ELEV)
                   do j = wfj(n),wlj(n)
-!                    KK-TODO: make it consistent!
-                     a = sqrt(DU(i,j)/9.81)*(U(i,j)/DU(i,j)-bdy_data_u(k))
-                     z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i,j)+D(i+1,j))
+!                    Note (KK): note approximation of sse at vel-time stage
+                     a = fac*bdy_data(k) &
+                         - _TWO_/sqrt(g*depth)*(U(i,j)-fac*bdy_data_u(k)*depth)
+                     z(i,j) = max(a,-H(i,j)+min_depth)
                      k = k+1
                   end do
             end select
@@ -209,9 +213,13 @@
                   end do
                case (FLATHER_ELEV)
                   do i = nfi(n),nli(n)
-!                    KK-TODO: make it consistent!
-                     a = sqrt(DV(i,j)/9.81)*(V(i,j-1)/DV(i,j-1)-bdy_data_v(k))
-                     z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i,j-1)+D(i,j))
+!                    Note (KK): note approximation of sse at vel-time stage
+                     a = fac*bdy_data(k) &
+                         + _TWO_/sqrt(g*depth)*(V(i,j-1)-fac*bdy_data_v(k)*depth)
+                     z(i,j) = max(a,-H(i,j)+min_depth)
                      k = k+1
                   end do
             end select
@@ -264,9 +272,13 @@
                   end do
                case (FLATHER_ELEV)
                   do j = efj(n),elj(n)
-!                    KK-TODO: make it consistent!
-                     a = sqrt(DU(i,j)/9.81)*(U(i-1,j)/DU(i-1,j)-bdy_data_u(k))
-                     z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i-1,j)+D(i,j))
+!                    Note (KK): note approximation of sse at vel-time stage
+                     a = fac*bdy_data(k) &
+                         + _TWO_/sqrt(g*depth)*(U(i-1,j)-fac*bdy_data_u(k)*depth)
+                     z(i,j) = max(a,-H(i,j)+min_depth)
                      k = k+1
                   end do
             end select
@@ -319,9 +331,13 @@
                   end do
                case (FLATHER_ELEV)
                   do i = sfi(n),sli(n)
-!                    KK-TODO: make it consistent!
-                     a = sqrt(DV(i,j)/9.81)*(V(i,j)/DV(i,j)-bdy_data_v(k))
-                     z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i,j)+D(i,j+1))
+!                    Note (KK): note approximation of sse at vel-time stage
+                     a = fac*bdy_data(k) &
+                         - _TWO_/sqrt(g*depth)*(V(i,j)-fac*bdy_data_v(k)*depth)
+                     z(i,j) = max(a,-H(i,j)+min_depth)
                      k = k+1
                   end do
             end select
