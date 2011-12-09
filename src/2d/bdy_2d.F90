@@ -224,7 +224,7 @@
                      depth = _HALF_*(D(i,j-1)+D(i,j))
 !                    Note (KK): note approximation of sse at vel-time stage
                      V(i,j-1) = fac*bdy_data_v(k)*depth &
-                              - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
+                                + _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
                      k = k+1
                   end do
                case (CLAMPED_VEL)
@@ -279,7 +279,7 @@
                      depth = _HALF_*(D(i-1,j)+D(i,j))
 !                    Note (KK): note approximation of sse at vel-time stage
                      U(i-1,j) = fac*bdy_data_u(k)*depth &
-                              - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
+                                + _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
                      k = k+1
                   end do
                case (CLAMPED_VEL)
