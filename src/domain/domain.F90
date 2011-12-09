@@ -172,6 +172,7 @@
    bdy_2d_desc(CLAMPED_ELEV)            = "Clamped (elev)"
    bdy_2d_desc(FLATHER_ELEV)            = "Flather (elev)"
    bdy_2d_desc(FLATHER_VEL)             = "Flather (vel)"
+   bdy_2d_desc(CLAMPED_VEL)             = "Clamped (vel)"
 
    LEVEL1 'init_domain'
 

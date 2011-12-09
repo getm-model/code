@@ -42,12 +42,12 @@
    CALL tic(TIM_MOMENTUM)
 
    if(ufirst) then
-      call umomentum(tausx,airp)
-      call vmomentum(tausy,airp)
+      call umomentum(n,tausx,airp)
+      call vmomentum(n,tausy,airp)
       ufirst = .false.
    else
-      call vmomentum(tausy,airp)
-      call umomentum(tausx,airp)
+      call vmomentum(n,tausy,airp)
+      call umomentum(n,tausx,airp)
       ufirst = .true.
    end if
 
@@ -66,7 +66,7 @@
 ! !IROUTINE: umomentum - 2D-momentum for all interior points.
 !
 ! !INTERFACE:
-   subroutine umomentum(tausx,airp)
+   subroutine umomentum(n,tausx,airp)
 !
 ! !DESCRIPTION:
 !
@@ -125,12 +125,15 @@
    use domain, only: dx
 #endif
    use variables_2d, only: dtm,D,z,UEx,U,DU,fV,SlUx,Slru,ru,fU,DV
+   use bdy_2d, only: do_bdy_2d
+   use m2d, only: have_boundaries
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,U_TAG
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   integer, intent(in)                 :: n
    REALTYPE, intent(in)                :: tausx(E2DFIELD),airp(E2DFIELD)
 !
 ! !LOCAL VARIABLES:
@@ -174,6 +177,8 @@
 !$OMP END DO
 !$OMP END PARALLEL
 ! The rest of this sub is not easy to thread.
+
+   if (have_boundaries) call do_bdy_2d(n,U_TAG)
 
 #ifdef SLICE_MODEL
    do i=imin,imax
@@ -228,7 +233,7 @@
 ! !IROUTINE: vmomentum - 2D-momentum for all interior points.
 !
 ! !INTERFACE:
-   subroutine vmomentum(tausy,airp)
+   subroutine vmomentum(n,tausy,airp)
 !
 ! !DESCRIPTION:
 !
@@ -287,11 +292,14 @@
    use domain, only: dy
 #endif
    use variables_2d, only: dtm,D,z,VEx,V,DV,fU,SlVx,Slrv,rv,fV,DU
+   use bdy_2d, only: do_bdy_2d
+   use m2d, only: have_boundaries
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,V_TAG
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   integer, intent(in)                 :: n
    REALTYPE, intent(in)                :: tausy(E2DFIELD),airp(E2DFIELD)
 !
 ! !LOCAL VARIABLES:
@@ -335,6 +343,8 @@
 !$OMP END DO
 !$OMP END PARALLEL
 ! The rest of this sub is not easy to thread.
+
+   if (have_boundaries) call do_bdy_2d(n,V_TAG)
 
 #ifdef SLICE_MODEL
    do i=imin,imax

@@ -13,6 +13,7 @@
 ! conditions for sea surface elevation and transports are handled.
 !
 ! !USES:
+   use parameters,only: g
    use halo_zones, only : z_TAG,H_TAG,U_TAG,V_TAG
    use domain, only: imin,jmin,imax,jmax,kmax,H,az,au,av
    use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index,bdy_2d_type
@@ -97,7 +98,7 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
-   REALTYPE                  :: a,fac
+   REALTYPE                  :: cfl,depth,a,fac
    integer                   :: i,j,k,l,n
    REALTYPE, parameter       :: FOUR=4.*_ONE_
 !
@@ -132,100 +133,220 @@
       l = l+1
       k = bdy_index(l)
       i = wi(n)
-      do j = wfj(n),wlj(n)
-         select case (bdy_2d_type(l))
-            case (ZERO_GRADIENT)
-               z(i,j) = z(i+1,j)
-            case (SOMMERFELD)
-!              KK-TODO: change DXC to DXU ?!
-!                       change D(i,j) to _HALF_*(D(i,j)+D(i+1,j)) ?
-!                       change to (semi-)implicit treatment ?!
-               z(i,j) = z(i,j) + dtm/DXC*sqrt(9.81*D(i,j))*(zo(i+1,j)-zo(i,j))
-            case (CLAMPED_ELEV)
-               z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
-            case (FLATHER_ELEV)
-               a = sqrt(DU(i,j)/9.81)*(U(i,j)/DU(i,j)-bdy_data_u(k))
-               z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
-            case default
-               stop 'do_bdy_2d(): Illegal NWB 2D boundary type selection'
-         end select
-         k = k+1
-      end do
+      select case (tag)
+         case (z_TAG,H_TAG)
+            select case (bdy_2d_type(l))
+               case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
+                  do j = wfj(n),wlj(n)
+                     z(i,j) = z(i+1,j)
+                  end do
+               case (SOMMERFELD)
+                  do j = wfj(n),wlj(n)
+!                    KK-TODO: change DXC to DXU ?!
+!                             change D(i,j) to _HALF_*(D(i,j)+D(i+1,j)) ?
+!                             change to (semi-)implicit treatment ?!
+                     z(i,j) = z(i,j) + dtm/DXC*sqrt(9.81*D(i,j))*(zo(i+1,j)-zo(i,j))
+                  end do
+               case (CLAMPED_ELEV)
+                  do j = wfj(n),wlj(n)
+                     z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+                     k = k+1
+                  end do
+               case (FLATHER_ELEV)
+                  do j = wfj(n),wlj(n)
+!                    KK-TODO: make it consistent!
+                     a = sqrt(DU(i,j)/9.81)*(U(i,j)/DU(i,j)-bdy_data_u(k))
+                     z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
+                     k = k+1
+                  end do
+            end select
+         case (U_TAG)
+            select case (bdy_2d_type(l))
+               case (FLATHER_VEL)
+                  do j = wfj(n),wlj(n)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i,j)+D(i+1,j))
+!                    Note (KK): note approximation of sse at vel-time stage
+                     U(i,j) = fac*bdy_data_u(k)*depth &
+                              - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
+                     k = k+1
+                  end do
+               case (CLAMPED_VEL)
+                  do j = wfj(n),wlj(n)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i,j)+D(i+1,j))
+                     U(i,j) = fac*bdy_data_u(k)*depth
+                     k = k+1
+                  end do
+            end select
+      end select
    end do
 
    do n = 1,NNB
       l = l+1
       k = bdy_index(l)
       j = nj(n)
-      do i = nfi(n),nli(n)
-         select case (bdy_2d_type(l))
-            case (ZERO_GRADIENT)
-               z(i,j) = z(i,j-1)
-            case (SOMMERFELD)
-!              KK-TODO: change DYC to DYVJM1 ?! (not yet in cppdefs.h!)
-!                       change D(i,j) to _HALF_*(D(i,j-1)+D(i,j)) ?
-!                       change to (semi-)implicit treatment ?!
-               z(i,j) = z(i,j) - dtm/DYC*sqrt(9.81*D(i,j))*(zo(i,j)-zo(i,j-1))
-            case (CLAMPED_ELEV)
-               z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
-            case (FLATHER_ELEV)
-               a = sqrt(DV(i,j)/9.81)*(V(i,j-1)/DV(i,j-1)-bdy_data_v(k))
-               z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
-            case default
-               stop 'do_bdy_2d(): Illegal NNB 2D boundary type selection'
-         end select
-         k = k+1
-      end do
+      select case (tag)
+         case (z_TAG,H_TAG)
+            select case (bdy_2d_type(l))
+               case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
+                  do i = nfi(n),nli(n)
+                     z(i,j) = z(i,j-1)
+                  end do
+               case (SOMMERFELD)
+                  do i = nfi(n),nli(n)
+!                    KK-TODO: change DYC to DYVJM1 ?! (not yet in cppdefs.h!)
+!                             change D(i,j) to _HALF_*(D(i,j-1)+D(i,j)) ?
+!                             change to (semi-)implicit treatment ?!
+                     z(i,j) = z(i,j) - dtm/DYC*sqrt(9.81*D(i,j))*(zo(i,j)-zo(i,j-1))
+                  end do
+               case (CLAMPED_ELEV)
+                  do i = nfi(n),nli(n)
+                     z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+                     k = k+1
+                  end do
+               case (FLATHER_ELEV)
+                  do i = nfi(n),nli(n)
+!                    KK-TODO: make it consistent!
+                     a = sqrt(DV(i,j)/9.81)*(V(i,j-1)/DV(i,j-1)-bdy_data_v(k))
+                     z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
+                     k = k+1
+                  end do
+            end select
+         case (V_TAG)
+            select case (bdy_2d_type(l))
+               case (FLATHER_VEL)
+                  do i = nfi(n),nli(n)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i,j-1)+D(i,j))
+!                    Note (KK): note approximation of sse at vel-time stage
+                     V(i,j-1) = fac*bdy_data_v(k)*depth &
+                              - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
+                     k = k+1
+                  end do
+               case (CLAMPED_VEL)
+                  do i = nfi(n),nli(n)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i,j-1)+D(i,j))
+                     V(i,j-1) = fac*bdy_data_v(k)*depth
+                     k = k+1
+                  end do
+            end select
+      end select
    end do
 
    do n = 1,NEB
       l = l+1
       k = bdy_index(l)
       i = ei(n)
-      do j = efj(n),elj(n)
-         select case (bdy_2d_type(l))
-            case (ZERO_GRADIENT)
-               z(i,j) = z(i-1,j)
-            case (SOMMERFELD)
-!              KK-TODO: change DXC to DXUIM1 ?! (not yet in cppdefs.h!)
-!                       change D(i,j) to _HALF_*(D(i-1,j)+D(i,j)) ?
-!                       change to (semi-)implicit treatment ?!
-               z(i,j) = z(i,j) - dtm/DXC*sqrt(9.81*D(i,j))*(zo(i,j)-zo(i-1,j))
-            case (CLAMPED_ELEV)
-               z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
-            case (FLATHER_ELEV)
-               a = sqrt(DU(i,j)/9.81)*(U(i-1,j)/DU(i-1,j)-bdy_data_u(k))
-               z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
-            case default
-               stop 'do_bdy_2d(): Illegal NEB 2D boundary type selection'
-         end select
-         k = k+1
-      end do
+      select case (tag)
+         case (z_TAG,H_TAG)
+            select case (bdy_2d_type(l))
+               case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
+                  do j = efj(n),elj(n)
+                     z(i,j) = z(i-1,j)
+                  end do
+               case (SOMMERFELD)
+                  do j = efj(n),elj(n)
+!                    KK-TODO: change DXC to DXUIM1 ?! (not yet in cppdefs.h!)
+!                             change D(i,j) to _HALF_*(D(i-1,j)+D(i,j)) ?
+!                             change to (semi-)implicit treatment ?!
+                     z(i,j) = z(i,j) - dtm/DXC*sqrt(9.81*D(i,j))*(zo(i,j)-zo(i-1,j))
+                  end do
+               case (CLAMPED_ELEV)
+                  do j = efj(n),elj(n)
+                     z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+                     k = k+1
+                  end do
+               case (FLATHER_ELEV)
+                  do j = efj(n),elj(n)
+!                    KK-TODO: make it consistent!
+                     a = sqrt(DU(i,j)/9.81)*(U(i-1,j)/DU(i-1,j)-bdy_data_u(k))
+                     z(i,j) = max(fac*(bdy_data(k) + a),-H(i,j)+min_depth)
+                     k = k+1
+                  end do
+            end select
+         case (U_TAG)
+            select case (bdy_2d_type(l))
+               case (FLATHER_VEL)
+                  do j = efj(n),elj(n)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i-1,j)+D(i,j))
+!                    Note (KK): note approximation of sse at vel-time stage
+                     U(i-1,j) = fac*bdy_data_u(k)*depth &
+                              - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
+                     k = k+1
+                  end do
+               case (CLAMPED_VEL)
+                  do j = efj(n),elj(n)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i-1,j)+D(i,j))
+                     U(i-1,j) = fac*bdy_data_u(k)*depth
+                     k = k+1
+                  end do
+            end select
+      end select
    end do
 
    do n = 1,NSB
       l = l+1
       k = bdy_index(l)
       j = sj(n)
-      do i = sfi(n),sli(n)
-         select case (bdy_2d_type(l))
-            case (ZERO_GRADIENT)
-               z(i,j) = z(i,j+1)
-            case (SOMMERFELD)
-!              KK-TODO: change DYC to DYV ?!
-!                       change D(i,j) to _HALF_*(D(i,j)+D(i,j+1)) ?
-!                       change to (semi-)implicit treatment ?!
-               z(i,j) = z(i,j) + dtm/DYC*sqrt(9.81*D(i,j))*(zo(i,j+1)-zo(i,j))
-            case (CLAMPED_ELEV)
-               z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
-            case (FLATHER_ELEV)
-               a = sqrt(DV(i,j)/9.81)*(V(i,j)/DV(i,j)-bdy_data_v(k))
-               z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
-            case default
-               stop 'do_bdy_2d(): Illegal NSB 2D boundary type selection'
-         end select
-         k = k+1
-      end do
+      select case (tag)
+         case (z_TAG,H_TAG)
+            select case (bdy_2d_type(l))
+               case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
+                  do i = sfi(n),sli(n)
+                     z(i,j) = z(i,j+1)
+                  end do
+               case (SOMMERFELD)
+                  do i = sfi(n),sli(n)
+!                    KK-TODO: change DYC to DYV ?!
+!                             change D(i,j) to _HALF_*(D(i,j)+D(i,j+1)) ?
+!                             change to (semi-)implicit treatment ?!
+                     z(i,j) = z(i,j) + dtm/DYC*sqrt(9.81*D(i,j))*(zo(i,j+1)-zo(i,j))
+                  end do
+               case (CLAMPED_ELEV)
+                  do i = sfi(n),sli(n)
+                     z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+                     k = k+1
+                  end do
+               case (FLATHER_ELEV)
+                  do i = sfi(n),sli(n)
+!                    KK-TODO: make it consistent!
+                     a = sqrt(DV(i,j)/9.81)*(V(i,j)/DV(i,j)-bdy_data_v(k))
+                     z(i,j) = max(fac*(bdy_data(k) - a),-H(i,j)+min_depth)
+                     k = k+1
+                  end do
+            end select
+         case (V_TAG)
+            select case (bdy_2d_type(l))
+               case (FLATHER_VEL)
+                  do i = sfi(n),sli(n)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i,j)+D(i,j+1))
+!                    Note (KK): note approximation of sse at vel-time stage
+                     V(i,j) = fac*bdy_data_v(k)*depth &
+                              - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
+                     k = k+1
+                  end do
+               case (CLAMPED_VEL)
+                  do i = sfi(n),sli(n)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i,j)+D(i,j+1))
+                     V(i,j) = fac*bdy_data_v(k)*depth
+                     k = k+1
+                  end do
+            end select
+      end select
    end do
 
 #ifdef DEBUG
