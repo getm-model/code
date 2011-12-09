@@ -100,6 +100,7 @@
 ! !LOCAL VARIABLES:
    REALTYPE                  :: cfl,depth,a,fac
    integer                   :: i,j,k,l,n
+   REALTYPE, parameter       :: theta = _HALF_
    REALTYPE, parameter       :: FOUR=4.*_ONE_
 !
 !EOP
@@ -142,10 +143,12 @@
                   end do
                case (SOMMERFELD)
                   do j = wfj(n),wlj(n)
-!                    KK-TODO: change DXC to DXU ?!
-!                             change D(i,j) to _HALF_*(D(i,j)+D(i+1,j)) ?
-!                             change to (semi-)implicit treatment ?!
-                     z(i,j) = z(i,j) + dtm/DXC*sqrt(9.81*D(i,j))*(zo(i+1,j)-zo(i,j))
+                     cfl = sqrt(g*_HALF_*(D(i,j)+D(i+1,j)))*dtm/DXU
+                     z(i,j) = (                                             &
+                                (_ONE_ - _TWO_*cfl*(_ONE_-theta))*z (i  ,j) &
+                               +(_ONE_ + _TWO_*cfl*(_ONE_-theta))*zo(i+1,j) &
+                               -(_ONE_ - _TWO_*cfl*theta        )*z (i+1,j) &
+                              )/(_ONE_ + _TWO_*cfl*theta        )
                   end do
                case (CLAMPED_ELEV)
                   do j = wfj(n),wlj(n)
@@ -201,10 +204,12 @@
                   end do
                case (SOMMERFELD)
                   do i = nfi(n),nli(n)
-!                    KK-TODO: change DYC to DYVJM1 ?! (not yet in cppdefs.h!)
-!                             change D(i,j) to _HALF_*(D(i,j-1)+D(i,j)) ?
-!                             change to (semi-)implicit treatment ?!
-                     z(i,j) = z(i,j) - dtm/DYC*sqrt(9.81*D(i,j))*(zo(i,j)-zo(i,j-1))
+                     cfl = sqrt(g*_HALF_*(D(i,j-1)+D(i,j)))*dtm/DYVJM1
+                     z(i,j) = (                                             &
+                                (_ONE_ - _TWO_*cfl*(_ONE_-theta))*z (i,j  ) &
+                               +(_ONE_ + _TWO_*cfl*(_ONE_-theta))*zo(i,j-1) &
+                               -(_ONE_ - _TWO_*cfl*theta        )*z (i,j-1) &
+                              )/(_ONE_ + _TWO_*cfl*theta        )
                   end do
                case (CLAMPED_ELEV)
                   do i = nfi(n),nli(n)
@@ -260,10 +265,12 @@
                   end do
                case (SOMMERFELD)
                   do j = efj(n),elj(n)
-!                    KK-TODO: change DXC to DXUIM1 ?! (not yet in cppdefs.h!)
-!                             change D(i,j) to _HALF_*(D(i-1,j)+D(i,j)) ?
-!                             change to (semi-)implicit treatment ?!
-                     z(i,j) = z(i,j) - dtm/DXC*sqrt(9.81*D(i,j))*(zo(i,j)-zo(i-1,j))
+                     cfl = sqrt(g*_HALF_*(D(i-1,j)+D(i,j)))*dtm/DXUIM1
+                     z(i,j) = (                                             &
+                                (_ONE_ - _TWO_*cfl*(_ONE_-theta))*z (i  ,j) &
+                               +(_ONE_ + _TWO_*cfl*(_ONE_-theta))*zo(i-1,j) &
+                               -(_ONE_ - _TWO_*cfl*theta        )*z (i-1,j) &
+                              )/(_ONE_ + _TWO_*cfl*theta        )
                   end do
                case (CLAMPED_ELEV)
                   do j = efj(n),elj(n)
@@ -319,10 +326,12 @@
                   end do
                case (SOMMERFELD)
                   do i = sfi(n),sli(n)
-!                    KK-TODO: change DYC to DYV ?!
-!                             change D(i,j) to _HALF_*(D(i,j)+D(i,j+1)) ?
-!                             change to (semi-)implicit treatment ?!
-                     z(i,j) = z(i,j) + dtm/DYC*sqrt(9.81*D(i,j))*(zo(i,j+1)-zo(i,j))
+                     cfl = sqrt(g*_HALF_*(D(i,j)+D(i,j+1)))*dtm/DYV
+                     z(i,j) = (                                             &
+                                (_ONE_ - _TWO_*cfl*(_ONE_-theta))*z (i,j  ) &
+                               +(_ONE_ + _TWO_*cfl*(_ONE_-theta))*zo(i,j+1) &
+                               -(_ONE_ - _TWO_*cfl*theta        )*z (i,j+1) &
+                              )/(_ONE_ + _TWO_*cfl*theta        )
                   end do
                case (CLAMPED_ELEV)
                   do i = sfi(n),sli(n)
