@@ -37,10 +37,10 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_advection,do_advection,print_adv_settings
-   public adv_u_split,adv_v_split,adv_upstream_2dh,adv_fct_2dh
+   public adv_u_split,adv_v_split,adv_upstream_2dh,adv_fct_2dh,adv_arakawa_j7_2dh
 
    type, public :: t_adv_grid
-      logical,dimension(:,:),pointer :: mask_uflux,mask_vflux
+      logical,dimension(:,:),pointer :: mask_uflux,mask_vflux,mask_xflux
       logical,dimension(:,:),pointer :: mask_uupdate,mask_vupdate
       logical,dimension(:,:),pointer :: mask_finalise
       integer,dimension(:,:),pointer :: az
@@ -65,7 +65,7 @@
    REALTYPE,dimension(:,:),allocatable        :: Di,adv
 #endif
 #ifndef _POINTER_REMAP_
-   logical,dimension(:,:),allocatable,target  :: mask_ufluxU
+   logical,dimension(:,:),allocatable,target  :: mask_ufluxU,mask_xfluxU,mask_xfluxV
    REALTYPE,dimension(:,:),allocatable,target :: dxuU,dyuU
 #endif
    integer,public,parameter           :: NOSPLIT=0,FULLSPLIT=1,HALFSPLIT=2
@@ -75,14 +75,16 @@
                     "half step splitting: u/2 + v + u/2"/)
    integer,public,parameter           :: UPSTREAM=1,UPSTREAM_2DH=2,P2=3
    integer,public,parameter           :: SUPERBEE=4,MUSCL=5,P2_PDM=6,FCT=7
-   character(len=64),public,parameter :: adv_schemes(7) =  &
+   integer,public,parameter           :: J7=8
+   character(len=64),public,parameter :: adv_schemes(8) =  &
       (/"upstream advection (first-order, monotone)",      &
         "2DH-upstream advection with forced monotonicity", &
         "P2 advection (third-order, non-monotone)",        &
         "TVD-Superbee advection (second-order, monotone)", &
         "TVD-MUSCL advection (second-order, monotone)",    &
         "TVD-P2-PDM advection (third-order, monotone)",    &
-        "2DH-FCT advection"/)
+        "2DH-FCT advection",                               &
+        "2DH-J7 advection (Arakawa and Lamb, 1977)"/)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -137,6 +139,29 @@
          logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
          REALTYPE,dimension(E2DFIELD),intent(inout)      :: f,Di,adv
       end subroutine adv_v_split
+
+      subroutine adv_arakawa_j7_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV,      &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                    dxv,dyu,dxu,dyv,arcd1,            &
+#endif
+                                    az,AH,                            &
+                                    mask_uflux,mask_vflux,mask_xflux, &
+                                    nosplit_finalise)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         REALTYPE,intent(in)                        :: dt,AH
+         REALTYPE,dimension(E2DFIELD),intent(in)    :: U,V,Do,Dn,DU,DV
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+         REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
+         REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
+         REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
+#endif
+         integer,dimension(E2DFIELD),intent(in)     :: az
+         logical,dimension(:,:),pointer,intent(in)  :: mask_uflux,mask_xflux
+         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
+         logical,intent(in),optional                :: nosplit_finalise
+         REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
+      end subroutine adv_arakawa_j7_2dh
 
       subroutine adv_upstream_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -253,6 +278,7 @@
 
    adv_gridH%mask_uflux    => mask_uflux
    adv_gridH%mask_vflux    => mask_vflux(_IRANGE_HALO_,_JRANGE_HALO_-1)
+   adv_gridH%mask_xflux    => mask_xflux
    adv_gridH%mask_uupdate  => mask_updateH
    adv_gridH%mask_vupdate  => mask_updateH
    adv_gridH%mask_finalise => mask_updateH
@@ -267,6 +293,14 @@
    adv_gridU%mask_uflux    => mask_ufluxU
 #endif
    adv_gridU%mask_vflux    => mask_xflux(_IRANGE_HALO_,_JRANGE_HALO_-1)
+#ifdef _POINTER_REMAP_
+   adv_gridU%mask_xflux(_IRANGE_HALO_-1,_JRANGE_HALO_) => mask_vflux(1+_IRANGE_HALO_,_JRANGE_HALO_)
+#else
+   allocate(mask_xfluxU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (mask_xfluxU)'
+   mask_xfluxU = mask_vflux(1+_IRANGE_HALO_,_JRANGE_HALO_)
+   adv_gridU%mask_xflux    => mask_xfluxU
+#endif
    adv_gridU%mask_uupdate  => mask_uupdateU
    adv_gridU%mask_vupdate  => mask_uflux ! now also includes y-advection of u along W/E open bdys
    adv_gridU%mask_finalise => mask_uflux
@@ -274,6 +308,14 @@
 
    adv_gridV%mask_uflux    => mask_xflux
    adv_gridV%mask_vflux    => mask_updateH(_IRANGE_HALO_,1+_JRANGE_HALO_)
+#ifdef _POINTER_REMAP_
+   adv_gridV%mask_xflux(_IRANGE_HALO_,_JRANGE_HALO_-1) => mask_uflux(_IRANGE_HALO_,1+_JRANGE_HALO_)
+#else
+   allocate(mask_xfluxV(_IRANGE_HALO_,_JRANGE_HALO_-1),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (mask_xfluxV)'
+   mask_xfluxV = mask_uflux(_IRANGE_HALO_,1+_JRANGE_HALO_)
+   adv_gridV%mask_xflux    => mask_xfluxV
+#endif
    adv_gridV%mask_uupdate  => mask_vflux ! now also includes x-advection of v along N/S open bdys
    adv_gridV%mask_vupdate  => mask_vupdateV
    adv_gridV%mask_finalise => mask_vflux
@@ -435,6 +477,19 @@
 #endif
                                 adv_grid%az,AH)
 
+            case(J7)
+
+               call adv_arakawa_j7_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                       adv_grid%dxv,adv_grid%dyu,   &
+                                       adv_grid%dxu,adv_grid%dyv,   &
+                                       adv_grid%arcd1,              &
+#endif
+                                       adv_grid%az,AH,              &
+                                       adv_grid%mask_uflux,         &
+                                       adv_grid%mask_vflux,         &
+                                       adv_grid%mask_xflux)
+
             case default
 
                stop 'do_advection: scheme is invalid'
@@ -471,7 +526,7 @@
                                 adv_grid%mask_vflux,adv_grid%mask_vupdate)
 #endif
 
-            case((UPSTREAM_2DH),(FCT))
+            case((UPSTREAM_2DH),(FCT),(J7))
 
                stop 'do_advection: scheme not valid for split'
 
@@ -536,7 +591,7 @@
                                 _HALF_,scheme,AH,                          &
                                 adv_grid%mask_uflux,adv_grid%mask_uupdate)
 
-            case((UPSTREAM_2DH),(FCT))
+            case((UPSTREAM_2DH),(FCT),(J7))
 
                stop 'do_advection: scheme not valid for split'
 
@@ -601,7 +656,7 @@
    end select
 
    select case (scheme)
-      case((UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(FCT))
+      case((UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(FCT),(J7))
       case default
          FATAL 'adv_scheme=',scheme,' is invalid'
          stop
@@ -610,7 +665,7 @@
    select case (split)
       case((FULLSPLIT),(HALFSPLIT))
          select case (scheme)
-            case((UPSTREAM_2DH),(FCT))
+            case((UPSTREAM_2DH),(FCT),(J7))
                FATAL 'adv_scheme=',scheme,' not valid for adv_split=',split
                stop
          end select

@@ -60,6 +60,7 @@
 !  various model components.
 !
 ! !USES:
+   use advection, only: J7
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -124,6 +125,7 @@
 
 !     Show settings specific to GETM-FABM interaction.
       LEVEL2 'Advection of FABM variables'
+      if (fabm_hor_adv .eq. J7) stop 'init_getm_fabm: J7 not implemented yet'
       call print_adv_settings_3d(fabm_adv_split,fabm_hor_adv,fabm_ver_adv,fabm_AH)
 
 !     Initialize biogeochemical state variables.
