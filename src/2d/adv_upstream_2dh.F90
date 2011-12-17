@@ -33,6 +33,7 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
+   use advection, only: uflux,vflux
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -54,22 +55,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   logical         :: update_f
-   integer         :: rc,i,j,ii,jj
-   REALTYPE        :: Dio,advn
-#ifdef USE_ALLOCATED_ARRAYS
-   REALTYPE, dimension(:,:), allocatable       :: flx
-#ifndef SLICE_MODEL
-   REALTYPE, dimension(:,:), allocatable       :: fly
-#endif
-   REALTYPE, dimension(:,:), allocatable       :: cmin,cmax
-#else
-   REALTYPE        :: flx(I2DFIELD)
-#ifndef SLICE_MODEL
-   REALTYPE        :: fly(I2DFIELD)
-#endif
-   REALTYPE        :: cmin(I2DFIELD),cmax(I2DFIELD)
-#endif
+   logical                      :: update_f
+   integer                      :: i,j,ii,jj
+   REALTYPE                     :: Dio,advn
+   REALTYPE,dimension(E2DFIELD) :: cmin,cmax
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -84,24 +73,8 @@
       if (.not. nosplit_finalise) update_f = .false.
    end if
 
-#ifdef USE_ALLOCATED_ARRAYS
-   allocate(flx(I2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_upstream_2dh: Error allocating memory (flx)'
-
-#ifndef SLICE_MODEL
-   allocate(fly(I2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_upstream_2dh: Error allocating memory (fly)'
-#endif
-
-   allocate(cmax(I2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_upstream_2dh: Error allocating memory (cmax)'
-
-   allocate(cmin(I2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_upstream_2dh: Error allocating memory (cmin)'
-#endif
 #ifdef SLICE_MODEL
- FATAL 'adv_upstream_2dh(): Do not use adv_upstream_2dh in SLICE_MODEL mode'
- stop
+ stop 'adv_upstream_2dh(): Do not use adv_upstream_2dh in SLICE_MODEL mode'
 #endif
 
 ! NOTE: With the present implementation it is not necessary
@@ -117,13 +90,13 @@
    do j=jmin,jmax
       do i=imin-1,imax
          if (U(i,j) .gt. _ZERO_) then
-            flx(i,j)=U(i,j)*f(i,j)
+            uflux(i,j)=U(i,j)*f(i,j)
          else
-            flx(i,j)=U(i,j)*f(i+1,j)
+            uflux(i,j)=U(i,j)*f(i+1,j)
          end if
          if ((AH.gt._ZERO_).and.(az(i,j).gt.0).and.(az(i+1,j).gt.0)) then
-            flx(i,j) = flx(i,j) - AH*( f(i+1,j)                                 &
-                                      -f(i  ,j))/DXU*_HALF_*(Dn(i+1,j)+Dn(i,j))
+            uflux(i,j) = uflux(i,j) - AH*( f(i+1,j)                                 &
+                                          -f(i  ,j))/DXU*_HALF_*(Dn(i+1,j)+Dn(i,j))
          end if
       end do
    end do
@@ -135,13 +108,13 @@
    do j=jmin-1,jmax
       do i=imin,imax
          if (V(i,j) .gt. _ZERO_) then
-            fly(i,j)=V(i,j)*f(i,j)
+            vflux(i,j)=V(i,j)*f(i,j)
          else
-            fly(i,j)=V(i,j)*f(i,j+1)
+            vflux(i,j)=V(i,j)*f(i,j+1)
          end if
          if ((AH.gt._ZERO_).and.(az(i,j).gt.0).and.(az(i,j+1).gt.0)) then
-            fly(i,j) = fly(i,j) - AH*( f(i,j+1)                                 &
-                                      -f(i,j  ))/DYV*_HALF_*(Dn(i,j+1)+Dn(i,j))
+            vflux(i,j) = vflux(i,j) - AH*( f(i,j+1)                                 &
+                                          -f(i,j  ))/DYV*_HALF_*(Dn(i,j+1)+Dn(i,j))
          end if
       end do
    end do
@@ -183,9 +156,9 @@
 #endif
                                 )*ARCD1
             advn = (                                     &
-                      flx(i,j)*DYU - flx(i-1,j  )*DYUIM1 &
+                      uflux(i,j)*DYU - uflux(i-1,j  )*DYUIM1 &
 #ifndef SLICE_MODEL
-                    + fly(i,j)*DXV - fly(i  ,j-1)*DXVJM1 &
+                    + vflux(i,j)*DXV - vflux(i  ,j-1)*DXVJM1 &
 #endif
                    )*ARCD1
             adv(i,j) = adv(i,j) + advn
@@ -209,17 +182,6 @@
 
 !$OMP END PARALLEL
 
-#ifdef USE_ALLOCATED_ARRAYS
-#ifdef FORTRAN90
-   deallocate(flx,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_upstream_2dh: Error de-allocating memory (flx)'
-#ifndef SLICE_MODEL
-   deallocate(fly,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_upstream_2dh: Error de-allocating memory (fly)'
-#endif
-#endif
-#endif
-
 #ifdef DEBUG
    write(debug,*) 'Leaving adv_upstream_2dh()'
    write(debug,*)
@@ -227,7 +189,6 @@
    return
    end subroutine adv_upstream_2dh
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2004 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------

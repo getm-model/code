@@ -299,7 +299,6 @@
 !$OMP END DO NOWAIT
    end do
 
-!$OMP BARRIER
 !$OMP MASTER
    if (vel_hor_adv .ne. UPSTREAM) then
 !     we need to update fadv3d(imax+HALO,jmin-HALO:jmax+HALO)

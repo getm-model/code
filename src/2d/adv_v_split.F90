@@ -40,7 +40,7 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
-   use advection, only: mask_flux,mask_update,mask_finalise,flux
+   use advection, only: vflux
    use advection, only: UPSTREAM,P2,SUPERBEE,MUSCL,P2_PDM
 !$ use omp_lib
    IMPLICIT NONE
@@ -131,7 +131,7 @@
                   end if
                end if
             end if
-            flux(i,j) = V(i,j)*fc
+            vflux(i,j) = V(i,j)*fc
             if (use_limiter) then
                select case (scheme)
                   case ((P2),(P2_PDM))
@@ -149,14 +149,14 @@
                   case default
                      stop 'adv_v_split: invalid scheme'
                end select
-               flux(i,j) = flux(i,j) + V(i,j)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
+               vflux(i,j) = vflux(i,j) + V(i,j)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
             end if
             if (use_AH) then
 !              Horizontal diffusion
-               flux(i,j) = flux(i,j) - AH*DV(i,j)*(f(i,j+1)-f(i,j  ))/DYV
+               vflux(i,j) = vflux(i,j) - AH*DV(i,j)*(f(i,j+1)-f(i,j  ))/DYV
             end if
          else
-            flux(i,j) = _ZERO_
+            vflux(i,j) = _ZERO_
          end if
       end do
    end do
@@ -170,8 +170,8 @@
             Dio = Di(i,j)
             Di(i,j) =  Dio - dti*( V(i,j  )*DXV           &
                                   -V(i,j-1)*DXVJM1)*ARCD1
-            advn = splitfac*( flux(i,j  )*DXV           &
-                             -flux(i,j-1)*DXVJM1)*ARCD1
+            advn = splitfac*( vflux(i,j  )*DXV           &
+                             -vflux(i,j-1)*DXVJM1)*ARCD1
             adv(i,j) = adv(i,j) + advn
             if (.not. present(nosplit_finalise)) then
 !              do the y-advection splitting step

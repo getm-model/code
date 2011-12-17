@@ -68,7 +68,7 @@
    logical            :: iterate,use_limiter
    integer            :: i,j,k,it,iters,rc
    REALTYPE           :: dti,dtik,hio,advn,cfl,x,r,Phi,limit,fu,fc,fd,splitfack
-   REALTYPE,dimension(:),allocatable :: flux1d
+   REALTYPE,dimension(:),allocatable :: wflux
    REALTYPE,parameter :: one6th=_ONE_/6
 !EOP
 !-----------------------------------------------------------------------
@@ -98,19 +98,19 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                                 &
 !$OMP          FIRSTPRIVATE(use_limiter,iters,dtik,splitfack)                  &
-!$OMP          PRIVATE(i,j,k,it,rc,flux1d,hio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
+!$OMP          PRIVATE(i,j,k,it,rc,wflux,hio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
 
 !  Each thread allocates its own HEAP storage:
-   allocate(flux1d(0:kmax),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_w_split_3d: Error allocating memory (flux1d)'
+   allocate(wflux(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'adv_w_split_3d: Error allocating memory (wflux)'
 
-   flux1d(0) = _ZERO_
-   flux1d(kmax) = _ZERO_
+   wflux(0) = _ZERO_
+   wflux(kmax) = _ZERO_
 
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
-         if (az(i,j) .eq.1 ) then
+         if (az(i,j) .eq. 1) then
 !           Note (KK): exclude vertical advection of normal velocity at open bdys
             if (iterate) then
 !              estimate number of iterations by maximum cfl number in water column
@@ -170,7 +170,7 @@
                         end if
                      end if
                   end if
-                  flux1d(k) = ww(i,j,k)*fc
+                  wflux(k) = ww(i,j,k)*fc
                   if (use_limiter) then
                      select case (scheme)
                         case ((P2),(P2_PDM))
@@ -188,13 +188,13 @@
                         case default
                            stop 'adv_w_split_3d: invalid scheme'
                      end select
-                     flux1d(k) = flux1d(k) + ww(i,j,k)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
+                     wflux(k) = wflux(k) + ww(i,j,k)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
                   end if
                end do
                do k=1,kmax
                   hio = hi(i,j,k)
                   hi(i,j,k) = hio - dtik*(ww(i,j,k  )-ww(i,j,k-1))
-                  advn = splitfack*(flux1d(k  )-flux1d(k-1))
+                  advn = splitfack*(wflux(k  )-wflux(k-1))
                   adv3d(i,j,k) = adv3d(i,j,k) + advn
                   if (.not. present(nosplit_finalise)) then
 !                    do the z-advection splitting step
@@ -224,8 +224,8 @@
    end if
 
 !  Each thread must deallocate its own HEAP storage:
-   deallocate(flux1d,stat=rc)
-   if (rc /= 0) stop 'adv_w_split_3d: Error deallocating memory (flux1d)'
+   deallocate(wflux,stat=rc)
+   if (rc /= 0) stop 'adv_w_split_3d: Error deallocating memory (wflux)'
 
 !$OMP END PARALLEL
 
