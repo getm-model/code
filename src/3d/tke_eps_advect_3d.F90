@@ -20,6 +20,7 @@
    use m3d, only: vel_adv_split,vel_hor_adv,vel_ver_adv
    use variables_3d, only: tke,eps,dt,uu,vv,ww,hun,hvn,ho,hn
    use variables_3d, only: uuadv,vvadv,wwadv,hoadv,hnadv,huadv,hvadv
+   use advection, only: J7
    use advection_3d, only: do_advection_3d
    use halo_zones, only: H_TAG
 !$ use omp_lib
@@ -38,6 +39,8 @@
    Ncall = Ncall+1
    write(debug,*) 'tke_eps_advect_3d() # ',Ncall
 #endif
+
+   if (vel_hor_adv .eq. J7) stop 'tke_eps_advect_3d: J7 not implemented yet'
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
 

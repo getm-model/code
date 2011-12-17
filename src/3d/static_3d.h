@@ -21,9 +21,9 @@
   REALTYPE                             :: ho(I3DFIELD)
   REALTYPE, target                     :: hn(I3DFIELD)
   REALTYPE                             :: huo(I3DFIELD)
-  REALTYPE                             :: hun(I3DFIELD)
+  REALTYPE, target                     :: hun(I3DFIELD)
   REALTYPE                             :: hvo(I3DFIELD)
-  REALTYPE                             :: hvn(I3DFIELD)
+  REALTYPE, target                     :: hvn(I3DFIELD)
   REALTYPE                             :: hcc(I3DFIELD)
   REALTYPE                             :: uuEx(I3DFIELD)
   REALTYPE                             :: vvEx(I3DFIELD)
@@ -67,8 +67,9 @@
 #endif
 
 ! input arrays for do_advection_3d
-  REALTYPE,dimension(I3DFIELD) :: fadv3d,uuadv,vvadv,wwadv
-  REALTYPE,dimension(I3DFIELD) :: hoadv,hnadv,huadv,hvadv
+  REALTYPE,dimension(I3DFIELD)        :: fadv3d,uuadv,vvadv,wwadv
+  REALTYPE,dimension(I3DFIELD)        :: hoadv,huadv,hvadv
+  REALTYPE,dimension(I3DFIELD),target :: hnadv
 
 ! 2D fields in 3D domain
   REALTYPE                             :: sseo(I2DFIELD)
@@ -76,10 +77,9 @@
   REALTYPE                             :: Dn(I2DFIELD)
   REALTYPE                             :: ssuo(I2DFIELD)
   REALTYPE                             :: ssun(I2DFIELD)
-  REALTYPE                             :: Dun(I2DFIELD)
   REALTYPE                             :: ssvo(I2DFIELD)
   REALTYPE                             :: ssvn(I2DFIELD)
-  REALTYPE                             :: Dvn(I2DFIELD)
+  REALTYPE,dimension(I2DFIELD),target  :: Dun,Dvn
 
 ! 3D friction in 3D domain
   REALTYPE                             :: rru(I2DFIELD)

@@ -163,6 +163,7 @@
 ! !USES:
 !  For initialization of spm in intertidal flats
    use domain,only: min_depth
+   use advection, only: J7
    use advection_3d, only: print_adv_settings_3d
    IMPLICIT NONE
 !
@@ -251,6 +252,7 @@
       end select
 
       LEVEL2 'Advection of SPM'
+      if (spm_hor_adv .eq. J7) stop 'init_spm: J7 not implemented yet'
       call print_adv_settings_3d(spm_adv_split,spm_hor_adv,spm_ver_adv,spm_AH)
 
       spm_ws = _ZERO_

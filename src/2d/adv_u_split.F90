@@ -56,16 +56,21 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
-   use advection, only: flux
+   use advection, only: uflux
    use advection, only: UPSTREAM,P2,SUPERBEE,MUSCL,P2_PDM
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-!  Note (KK): dxu, dyu and mask_flux are only available within
-!             (_IRANGE_HALO_-1,_JRANGE_HALO_). Since they may be provided
-!             non-contiguously, they must be declared as pointers here
-!             as well to avoid copying into a contiguous temporarily array
+!  Note (KK): in general dxu, dyu and mask_flux do only have valid data
+!             within (_IRANGE_HALO_-1,_JRANGE_HALO_). In some cases the
+!             original field extension may even be _IRANGE_HALO_. Then
+!             explicit declared array bounds _IRANGE_HALO_-1 require a
+!             provision of the corresponding subarray and will cause
+!             copying of the non-contiguously data into a temporarily
+!             array. Therefore they are declared as pointers here. This
+!             however requires, that the provided pointers already carry
+!             the correct bounds.
    REALTYPE,intent(in)                             :: dt,splitfac,AH
    REALTYPE,dimension(E2DFIELD),intent(in)         :: U,Do,DU
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -151,7 +156,7 @@
                   end if
                end if
             end if
-            flux(i,j) = U(i,j)*fc
+            uflux(i,j) = U(i,j)*fc
             if (use_limiter) then
                select case (scheme)
                   case ((P2),(P2_PDM))
@@ -169,14 +174,14 @@
                   case default
                      stop 'adv_u_split: invalid scheme'
                end select
-               flux(i,j) = flux(i,j) + U(i,j)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
+               uflux(i,j) = uflux(i,j) + U(i,j)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
             end if
             if (use_AH) then
 !              Horizontal diffusion
-               flux(i,j) = flux(i,j) - AH*DU(i,j)*(f(i+1,j)-f(i  ,j))/DXU
+               uflux(i,j) = uflux(i,j) - AH*DU(i,j)*(f(i+1,j)-f(i  ,j))/DXU
             end if
          else
-            flux(i,j) = _ZERO_
+            uflux(i,j) = _ZERO_
          end if
       end do
    end do
@@ -190,8 +195,8 @@
             Dio = Di(i,j)
             Di(i,j) =  Dio - dti*( U(i  ,j)*DYU           &
                                   -U(i-1,j)*DYUIM1)*ARCD1
-            advn = splitfac*( flux(i  ,j)*DYU           &
-                             -flux(i-1,j)*DYUIM1)*ARCD1
+            advn = splitfac*( uflux(i  ,j)*DYU           &
+                             -uflux(i-1,j)*DYUIM1)*ARCD1
             adv(i,j) = adv(i,j) + advn
             if (.not. present(nosplit_finalise)) then
 !              do the x-advection splitting step

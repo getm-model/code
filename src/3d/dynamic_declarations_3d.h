@@ -10,10 +10,8 @@
 #ifdef STRUCTURE_FRICTION
   REALTYPE, dimension(:,:,:), allocatable   :: sf
 #endif
-  REALTYPE, dimension(:,:,:), allocatable, target :: hn
-  REALTYPE, dimension(:,:,:), allocatable   :: ho
-  REALTYPE, dimension(:,:,:), allocatable   :: huo,hun
-  REALTYPE, dimension(:,:,:), allocatable   :: hvo,hvn
+  REALTYPE, dimension(:,:,:), allocatable, target :: hn,hun,hvn
+  REALTYPE, dimension(:,:,:), allocatable   :: ho,huo,hvo
   REALTYPE, dimension(:,:,:), allocatable   :: hcc
   REALTYPE, dimension(:,:,:), allocatable   :: uuEx,vvEx
   REALTYPE, dimension(:,:,:), allocatable, target :: nuh
@@ -43,13 +41,15 @@
 #endif
 
 ! input arrays for do_advection_3d
-  REALTYPE,dimension(:,:,:),allocatable :: fadv3d,uuadv,vvadv,wwadv
-  REALTYPE,dimension(:,:,:),allocatable :: hoadv,hnadv,huadv,hvadv
+  REALTYPE,dimension(:,:,:),allocatable        :: fadv3d,uuadv,vvadv,wwadv
+  REALTYPE,dimension(:,:,:),allocatable        :: hoadv,huadv,hvadv
+  REALTYPE,dimension(:,:,:),allocatable,target :: hnadv
 
 ! 2D fields in 3D domain
   REALTYPE, dimension(:,:), allocatable     :: sseo,ssen,Dn
-  REALTYPE, dimension(:,:), allocatable     :: ssuo,ssun,Dun
-  REALTYPE, dimension(:,:), allocatable     :: ssvo,ssvn,Dvn
+  REALTYPE, dimension(:,:), allocatable     :: ssuo,ssun
+  REALTYPE, dimension(:,:), allocatable     :: ssvo,ssvn
+  REALTYPE,dimension(:,:),allocatable,target :: Dun,Dvn
 
 ! 3D friction in 3D domain
   REALTYPE, dimension(:,:), allocatable     :: rru,rrv

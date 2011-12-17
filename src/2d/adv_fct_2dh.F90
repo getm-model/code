@@ -41,6 +41,7 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
+   use advection, only: uflux,vflux
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -66,23 +67,11 @@
    logical         :: update_f
    integer         :: rc,i,ii,j,jj
    REALTYPE,dimension(:,:),allocatable,save    :: Dio
-#ifdef USE_ALLOCATED_ARRAYS
-   REALTYPE, dimension(:,:), allocatable       :: flx,fhx
+   REALTYPE,dimension(E2DFIELD) :: flx
 #ifndef SLICE_MODEL
-   REALTYPE, dimension(:,:), allocatable       :: fly,fhy
+   REALTYPE,dimension(E2DFIELD) :: fly
 #endif
-   REALTYPE, dimension(:,:), allocatable       :: fi
-   REALTYPE, dimension(:,:), allocatable       :: rp,rm
-   REALTYPE, dimension(:,:), allocatable       :: cmin,cmax
-#else
-   REALTYPE        :: flx(E2DFIELD),fhx(E2DFIELD)
-#ifndef SLICE_MODEL
-   REALTYPE        :: fly(E2DFIELD),fhy(E2DFIELD)
-#endif
-   REALTYPE        :: fi(E2DFIELD)
-   REALTYPE        :: rp(E2DFIELD),rm(E2DFIELD)
-   REALTYPE        :: cmin(E2DFIELD),cmax(E2DFIELD)
-#endif
+   REALTYPE,dimension(E2DFIELD) :: fi,rp,rm,cmin,cmax
    REALTYPE        :: CNW,CW,CSW,CSSW,CWW,CSWW,CC,CS
    REALTYPE        :: advn,uuu,vvv,x,CExx,Cl,Cu,fac
    REALTYPE,parameter :: one12th=_ONE_/12,one6th=_ONE_/6,one3rd=_ONE_/3
@@ -108,37 +97,6 @@
    if (present(nosplit_finalise)) then
       if (.not. nosplit_finalise) update_f = .false.
    end if
-
-#ifdef USE_ALLOCATED_ARRAYS
-   allocate(flx(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (flx)'
-
-   allocate(fhx(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (fhx)'
-
-#ifndef SLICE_MODEL
-   allocate(fly(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (fly)'
-
-   allocate(fhy(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (fhy)'
-#endif
-
-   allocate(fi(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (fi)'
-
-   allocate(rp(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (rp)'
-
-   allocate(rm(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (rm)'
-
-   allocate(cmax(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (cmax)'
-
-   allocate(cmin(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (cmin)'
-#endif
 
 ! NOTE: With the present implementation it is not necessary
 !   to initialize flx, fly, fhx, fhy, cmin and cmax. Even if they
@@ -313,25 +271,25 @@
          end if
          uuu=abs(uuu)
          vvv=abs(vvv)
-         fhx(i,j) = (                                                    &
-                       _HALF_                                            &
-                       * ( CC + CW )                                     &
-                     - _HALF_*uuu                                        &
-                       * ( CC - CW )                                     &
-                     - one6th*(_ONE_-uuu*uuu)                            &
-                       * ( CC - _TWO_*CW + CWW )                         &
-                     - _HALF_*vvv                                        &
-                       * ( CW - CSW )                                    &
-                     - vvv*(_QUART_-one3rd*uuu)                          &
-                       * ( CC - CW - CS + CSW )                          &
-                     - _HALF_*vvv*(_HALF_ -one3rd*vvv)                   &
-                       * ( CNW - _TWO_*CW + CSW )                        &
-                     + _QUART_*vvv*(one3rd-_HALF_*uuu*uuu)               &
-                       * ( CC - _TWO_*CW + CWW - CS - _TWO_*CSW + CSWW ) &
-                     + one12th*vvv*(_ONE_-_HALF_*vvv*vvv)                &
-                       * ( CNW - _THREE_*CW + _THREE_*CSW - CSSW )       &
-                    )                                                    &
-                    *U(i,j)
+         uflux(i,j) = (                                                    &
+                         _HALF_                                            &
+                         * ( CC + CW )                                     &
+                       - _HALF_*uuu                                        &
+                         * ( CC - CW )                                     &
+                       - one6th*(_ONE_-uuu*uuu)                            &
+                         * ( CC - _TWO_*CW + CWW )                         &
+                       - _HALF_*vvv                                        &
+                         * ( CW - CSW )                                    &
+                       - vvv*(_QUART_-one3rd*uuu)                          &
+                         * ( CC - CW - CS + CSW )                          &
+                       - _HALF_*vvv*(_HALF_ -one3rd*vvv)                   &
+                         * ( CNW - _TWO_*CW + CSW )                        &
+                       + _QUART_*vvv*(one3rd-_HALF_*uuu*uuu)               &
+                         * ( CC - _TWO_*CW + CWW - CS - _TWO_*CSW + CSWW ) &
+                       + one12th*vvv*(_ONE_-_HALF_*vvv*vvv)                &
+                         * ( CNW - _THREE_*CW + _THREE_*CSW - CSSW )       &
+                      )                                                    &
+                      *U(i,j)
       end do
    end do
 
@@ -460,25 +418,25 @@
          end if
          uuu=abs(uuu)
          vvv=abs(vvv)
-         fhy(i,j) = (                                                    &
-                       _HALF_                                            &
-                       * ( CC + CW )                                     &
-                     - _HALF_*uuu                                        &
-                       * ( CC - CW )                                     &
-                     - one6th*(_ONE_-uuu*uuu)                            &
-                       * ( CC - _TWO_*CW + CWW )                         &
-                     - _HALF_*vvv                                        &
-                       * ( CW - CSW )                                    &
-                     - vvv*(_QUART_-one3rd*uuu)                          &
-                       * ( CC - CW - CS + CSW )                          &
-                     - _HALF_*vvv*(_HALF_-one3rd*vvv)                    &
-                       * ( CNW - _TWO_*CW + CSW )                        &
-                     + _QUART_*vvv*(one3rd-_HALF_*uuu*uuu)               &
-                       * ( CC - _TWO_*CW + CWW - CS - _TWO_*CSW + CSWW ) &
-                     + one12th*vvv*(_ONE_-_HALF_*vvv*vvv)                &
-                       * ( CNW - _THREE_*CW + _THREE_*CSW - CSSW )       &
-                    )                                                    &
-                    *V(i,j)
+         vflux(i,j) = (                                                    &
+                         _HALF_                                            &
+                         * ( CC + CW )                                     &
+                       - _HALF_*uuu                                        &
+                         * ( CC - CW )                                     &
+                       - one6th*(_ONE_-uuu*uuu)                            &
+                         * ( CC - _TWO_*CW + CWW )                         &
+                       - _HALF_*vvv                                        &
+                         * ( CW - CSW )                                    &
+                       - vvv*(_QUART_-one3rd*uuu)                          &
+                         * ( CC - CW - CS + CSW )                          &
+                       - _HALF_*vvv*(_HALF_-one3rd*vvv)                    &
+                         * ( CNW - _TWO_*CW + CSW )                        &
+                       + _QUART_*vvv*(one3rd-_HALF_*uuu*uuu)               &
+                         * ( CC - _TWO_*CW + CWW - CS - _TWO_*CSW + CSWW ) &
+                       + one12th*vvv*(_ONE_-_HALF_*vvv*vvv)                &
+                         * ( CNW - _THREE_*CW + _THREE_*CSW - CSSW )       &
+                      )                                                    &
+                      *V(i,j)
       end do
    end do
 #endif
@@ -529,21 +487,21 @@
 
 ! max (Cu) and min (Cl) possible concentration after a time step
             CExx=(                                              &
-                   ( min(fhx(i  ,j  )-flx(i  ,j  ),_ZERO_)      &
-                    -max(fhx(i-1,j  )-flx(i-1,j  ),_ZERO_))/DXU &
+                   ( min(uflux(i  ,j  )-flx(i  ,j  ),_ZERO_)      &
+                    -max(uflux(i-1,j  )-flx(i-1,j  ),_ZERO_))/DXU &
 #ifndef SLICE_MODEL
-                  +( min(fhy(i  ,j  )-fly(i  ,j  ),_ZERO_)      &
-                    -max(fhy(i  ,j-1)-fly(i  ,j-1),_ZERO_))/DYV &
+                  +( min(vflux(i  ,j  )-fly(i  ,j  ),_ZERO_)      &
+                    -max(vflux(i  ,j-1)-fly(i  ,j-1),_ZERO_))/DYV &
 #endif
                  )
             Cu=(fi(i,j)*Di(i,j)-dt*CExx)/Di(i,j)
 
             CExx=(                                              &
-                   ( max(fhx(i  ,j  )-flx(i  ,j  ),_ZERO_)      &
-                    -min(fhx(i-1,j  )-flx(i-1,j  ),_ZERO_))/DXU &
+                   ( max(uflux(i  ,j  )-flx(i  ,j  ),_ZERO_)      &
+                    -min(uflux(i-1,j  )-flx(i-1,j  ),_ZERO_))/DXU &
 #ifndef SLICE_MODEL
-                  +( max(fhy(i  ,j  )-fly(i  ,j  ),_ZERO_)      &
-                    -min(fhy(i  ,j-1)-fly(i  ,j-1),_ZERO_))/DYV &
+                  +( max(vflux(i  ,j  )-fly(i  ,j  ),_ZERO_)      &
+                    -min(vflux(i  ,j-1)-fly(i  ,j-1),_ZERO_))/DYV &
 #endif
                  )
             Cl=(fi(i,j)*Di(i,j)-dt*CExx)/Di(i,j)
@@ -568,15 +526,15 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin-1,imax
-         if (fhx(i,j)-flx(i,j) .ge. _ZERO_) then
+         if (uflux(i,j)-flx(i,j) .ge. _ZERO_) then
             fac=min(rm(i,j),rp(i+1,j))
          else
             fac=min(rm(i+1,j),rp(i,j))
          end if
-         fhx(i,j) = (_ONE_-fac)*flx(i,j) + fac*fhx(i,j)
+         uflux(i,j) = (_ONE_-fac)*flx(i,j) + fac*uflux(i,j)
          if ((AH .gt. _ZERO_) .and. (az(i,j) .gt. 0) .and. (az(i+1,j) .gt. 0)) then
-            fhx(i,j) = fhx(i,j) - AH*( f(i+1,j)                                 &
-                                      -f(i  ,j))/DXU*_HALF_*(Dn(i+1,j)+Dn(i,j))
+            uflux(i,j) = uflux(i,j) - AH*( f(i+1,j)                                 &
+                                          -f(i  ,j))/DXU*_HALF_*(Dn(i+1,j)+Dn(i,j))
          end if
       end do
    end do
@@ -587,15 +545,15 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-1,jmax
       do i=imin,imax
-         if (fhy(i,j)-fly(i,j) .ge. _ZERO_) then
+         if (vflux(i,j)-fly(i,j) .ge. _ZERO_) then
             fac=min(rm(i,j),rp(i,j+1))
          else
             fac=min(rm(i,j+1),rp(i,j))
          end if
-         fhy(i,j) = (_ONE_-fac)*fly(i,j) + fac*fhy(i,j)
+         vflux(i,j) = (_ONE_-fac)*fly(i,j) + fac*vflux(i,j)
          if ((AH .gt. _ZERO_) .and. (az(i,j) .gt. 0) .and. (az(i,j+1) .gt. 0)) then
-            fhy(i,j) = fhy(i,j) - AH*( f(i,j+1)                                 &
-                                      -f(i,j  ))/DYV*_HALF_*(Dn(i,j+1)+Dn(i,j))
+            vflux(i,j) = vflux(i,j) - AH*( f(i,j+1)                                 &
+                                          -f(i,j  ))/DYV*_HALF_*(Dn(i,j+1)+Dn(i,j))
          end if
       end do
    end do
@@ -609,9 +567,9 @@
          if (az(i,j) .eq. 1)  then
 !           CAUTION: Di(i,j) already calculated above
             advn = (                                     &
-                      fhx(i,j)*DYU - fhx(i-1,j  )*DYUIM1 &
+                      uflux(i,j)*DYU - uflux(i-1,j  )*DYUIM1 &
 #ifndef SLICE_MODEL
-                    + fhy(i,j)*DXV - fhy(i  ,j-1)*DXVJM1 &
+                    + vflux(i,j)*DXV - vflux(i  ,j-1)*DXVJM1 &
 #endif
                    )*ARCD1
             adv(i,j) = adv(i,j) + advn
@@ -635,27 +593,6 @@
 
 !$OMP END PARALLEL
 
-#ifdef USE_ALLOCATED_ARRAYS
-#ifdef FORTRAN90
-   deallocate(flx,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (flx)'
-   deallocate(fhx,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (fhx)'
-#ifndef SLICE_MODEL
-   deallocate(fly,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (fly)'
-   deallocate(fhy,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (fhy)'
-#endif
-   deallocate(fi,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (fi)'
-   deallocate(rp,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (rp)'
-   deallocate(rm,stat=rc)    ! work array
-   if (rc /= 0) stop 'adv_fct_2dh: Error de-allocating memory (rm)'
-#endif
-#endif
-
 #ifdef DEBUG
    write(debug,*) 'Leaving adv_fct_2dh()'
    write(debug,*)
@@ -663,7 +600,6 @@
    return
    end subroutine adv_fct_2dh
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2004 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------

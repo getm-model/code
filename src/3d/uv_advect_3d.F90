@@ -250,11 +250,16 @@
 !
 ! !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,kmax,au,av
+   use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,ax
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+   use domain, only: dxv,dyu
+#else
+   use domain, only: dx,dy
+#endif
    use m3d, only: vel_adv_split,vel_hor_adv,vel_ver_adv
    use variables_3d, only: dt,uu,vv,ww,hun,hvn,uuEx,vvEx
-   use variables_3d, only: fadv3d,uuadv,vvadv,wwadv,huadv,hvadv
-   use advection, only: UPSTREAM
+   use variables_3d, only: fadv3d,uuadv,vvadv,wwadv,hnadv,huadv,hvadv
+   use advection, only: UPSTREAM,J7
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
    use getm_timers, only: tic,toc,TIM_UVADV3D,TIM_UVADV3DH
@@ -265,7 +270,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   integer  :: i,j,k
+   integer                           :: i,j,k
+   REALTYPE,dimension(:,:,:),pointer :: phadv
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -285,8 +291,37 @@
          do i=imin-HALO,imax+HALO-1
 !           the velocity to be transported
             fadv3d(i,j,k) = uu(i,j,k)/hun(i,j,k)
-            uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i+1,j,k) )
-            vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i+1,j,k) )
+            if (vel_hor_adv .eq. J7) then
+!              Note (KK): [uu|vv]adv defined on T-points (future U-points)
+!                         hnadv defined on X-points (future V-points)
+!                         note that hnadv is shifted to j+1 !!!
+               uuadv(i,j,k) = _HALF_*( uu(i,j,k)*DYU + uu(i+1,j,k)*DYUIP1 )
+               if (j .ne. jmin-HALO) then
+                  if (az(i+1,j) .eq. 1) then
+                     vvadv(i,j,k) = _HALF_*( vv(i+1,j-1,k)*DXVPM + vv(i+1,j,k)*DXVIP1 )
+                  else if(az(i+1,j) .eq. 2) then
+!                    Note (KK): can be included into case above, when
+!                               vv is properly mirrored across n/s open bdys
+                     if (av(i+1,j) .eq. 2) then ! southern open bdy
+                        vvadv(i,j,k) = vv(i+1,j,k)*_HALF_*( DXVPM + DXVIP1 )
+                     else if (av(i+1,j-1) .eq. 2) then ! northern open bdy
+                        vvadv(i,j,k) = vv(i+1,j-1,k)*_HALF_*( DXVPM + DXVIP1 )
+                     end if
+                  end if
+                  if (ax(i,j) .eq. 0) then
+                     if (au(i,j-1) .ne. 0) then
+                        hnadv(i,j,k) = hun(i,j-1,k)
+                     else if (au(i,j) .ne. 0) then
+                        hnadv(i,j,k) = hun(i,j,k)
+                     end if
+                  else
+                     hnadv(i,j,k) = _HALF_*( hun(i,j-1,k) + hun(i,j,k) )
+                  end if
+               end if
+            else
+               uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i+1,j,k) )
+               vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i+1,j,k) )
+            end if
             wwadv(i,j,k) = _HALF_*( ww(i,j,k) + ww(i+1,j,k) )
 !           Note (KK): hun only valid until imax+1
 !                      therefore huadv only valid until imax
@@ -299,9 +334,33 @@
 !$OMP END DO NOWAIT
    end do
 
-!$OMP BARRIER
 !$OMP MASTER
-   if (vel_hor_adv .ne. UPSTREAM) then
+   if (vel_hor_adv .eq. J7) then
+      do k=1,kmax
+!        OMP-NOTE (KK): j loop must not be changed and cannot be threaded!
+         do j=jmin-HALO,jmax+HALO-1
+            do i=imin-HALO,imax+HALO-1
+!              Note (KK): [uu|vv]adv defined on V-points (future X-points)
+!                         no change of uuadv for northern closed bdy
+!                         hnadv defined on U-points (future T-points)
+!                         note that hnadv is not shifted anymore !
+!              KK-TODO: hadv for western/eastern open bdys ?
+               if (az(i+1,j) .eq. 0) then ! southern closed bdy
+                  uuadv(i,j,k) = uuadv(i,j+1,k)
+               else if (az(i+1,j+1) .ne. 0) then
+                  uuadv(i,j,k) = _HALF_*( uuadv(i,j,k) + uuadv(i,j+1,k) )
+                  vvadv(i,j,k) = _HALF_*( vvadv(i,j,k) + vvadv(i,j+1,k) )
+               end if
+               hnadv(i,j,k) = _HALF_*( hnadv(i,j,k) + hnadv(i,j+1,k) )
+            end do
+         end do
+      end do
+      phadv => hnadv
+   else
+      phadv => hun
+   end if
+
+   if (vel_hor_adv.ne.UPSTREAM .and. vel_hor_adv.ne.J7) then
 !     we need to update fadv3d(imax+HALO,jmin-HALO:jmax+HALO)
       call tic(TIM_UVADV3DH)
       call update_3d_halo(fadv3d,fadv3d,au,imin,jmin,imax,jmax,kmax,U_TAG)
@@ -309,8 +368,8 @@
       call toc(TIM_UVADV3DH)
    end if
 
-   call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hun,hun,    &
-                        vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,U_TAG, &
+   call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv, &
+                        vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,U_TAG,  &
                         advres=uuEx)
 !$OMP END MASTER
 !  OMP-NOTE: MASTER does not imply BARRIER
@@ -323,8 +382,37 @@
          do i=imin-HALO,imax+HALO
 !           the velocity to be transported
             fadv3d(i,j,k) = vv(i,j,k)/hvn(i,j,k)
-            uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i,j+1,k) )
-            vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i,j+1,k) )
+            if (vel_hor_adv .eq. J7) then
+!              Note (KK): [uu|vv]adv defined on T-points (future V-points)
+!                         hnadv defined on X-points (future U-points)
+!                         note that hnadv is shifted to i+1 !!!
+               if (i .ne. imin-HALO) then
+                  if (az(i,j+1) .eq. 1) then
+                     uuadv(i,j,k) = _HALF_*( uu(i-1,j+1,k)*DYUMP + uu(i,j+1,k)*DYUJP1 )
+                  else if(az(i,j+1) .eq. 2) then
+!                    Note (KK): can be included into case above, when
+!                               uu is properly mirrored across w/e open bdys
+                     if (au(i,j+1) .eq. 2) then ! western open bdy
+                        uuadv(i,j,k) = uu(i,j+1,k)*_HALF_*( DYUMP + DYUJP1 )
+                     else if (au(i-1,j+1) .eq. 2) then ! eastern open bdy
+                        uuadv(i,j,k) = uu(i-1,j+1,k)*_HALF_*( DYUMP + DYUJP1 )
+                     end if
+                  end if
+                  if (ax(i,j) .eq. 0) then
+                     if (av(i-1,j) .ne. 0) then
+                        hnadv(i,j,k) = hvn(i-1,j,k)
+                     else if (av(i,j) .ne. 0) then
+                        hnadv(i,j,k) = hvn(i,j,k)
+                     end if
+                  else
+                     hnadv(i,j,k) = _HALF_*( hvn(i-1,j,k) + hvn(i,j,k) )
+                  end if
+               end if
+               vvadv(i,j,k) = _HALF_*( vv(i,j,k)*DXV + vv(i,j+1,k)*DXVJP1 )
+            else
+               uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i,j+1,k) )
+               vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i,j+1,k) )
+            end if
             wwadv(i,j,k) = _HALF_*( ww(i,j,k) + ww(i,j+1,k) )
 !           Note (KK): hun only valid until imax+1
 !                      therefore huadv only valid until imax+1
@@ -337,9 +425,37 @@
 !$OMP END DO NOWAIT
    end do
 
+   if (vel_hor_adv .eq. J7) then
+!$OMP BARRIER
+      do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+         do j=jmin-HALO,jmax+HALO-1
+!           OMP-NOTE (KK): i loop must not be changed and cannot be threaded!
+            do i=imin-HALO,imax+HALO-1
+!              Note (KK): [uu|vv]adv defined on U-points (future X-points)
+!                         no change of vvadv for eastern closed bdy
+!                         hnadv defined on V-points (future T-points)
+!                         note that hnadv is not shifted anymore !
+!              KK-TODO: uuadv for northern/southern open bdys ?
+               if (az(i,j+1) .eq. 0) then ! western closed bdy
+                  vvadv(i,j,k) = vvadv(i+1,j,k)
+               else if (az(i+1,j+1) .ne. 0) then
+                  uuadv(i,j,k) = _HALF_*( uuadv(i,j,k) + uuadv(i+1,j,k) )
+                  vvadv(i,j,k) = _HALF_*( vvadv(i,j,k) + vvadv(i+1,j,k) )
+               end if
+               hnadv(i,j,k) = _HALF_*( hnadv(i,j,k) + hnadv(i+1,j,k) )
+            end do
+         end do
+!$OMP END DO NOWAIT
+      end do
 !$OMP END PARALLEL
+      phadv => hnadv
+   else
+!$OMP END PARALLEL
+      phadv => hvn
+   end if
 
-   if (vel_hor_adv .ne. UPSTREAM) then
+   if (vel_hor_adv.ne.UPSTREAM .and. vel_hor_adv.ne.J7) then
 !     we need to update fadv3d(imin-HALO:imax+HALO,jmax+HALO)
       call tic(TIM_UVADV3DH)
       call update_3d_halo(fadv3d,fadv3d,av,imin,jmin,imax,jmax,kmax,V_TAG)
@@ -347,8 +463,8 @@
       call toc(TIM_UVADV3DH)
    end if
 
-   call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hvn,hvn,    &
-                        vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,V_TAG, &
+   call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv, &
+                        vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,V_TAG,  &
                         advres=vvEx)
 
    call toc(TIM_UVADV3D)

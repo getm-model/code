@@ -37,11 +37,11 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_advection,do_advection,print_adv_settings
-   public adv_u_split,adv_v_split,adv_upstream_2dh,adv_fct_2dh
+   public adv_u_split,adv_v_split,adv_upstream_2dh,adv_fct_2dh,adv_arakawa_j7_2dh
 
    type, public :: t_adv_grid
-      logical,dimension(:,:),pointer :: mask_uflux,mask_uupdate
-      logical,dimension(:,:),pointer :: mask_vflux,mask_vupdate
+      logical,dimension(:,:),pointer :: mask_uflux,mask_vflux,mask_xflux
+      logical,dimension(:,:),pointer :: mask_uupdate,mask_vupdate
       logical,dimension(:,:),pointer :: mask_finalise
       integer,dimension(:,:),pointer :: az
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -53,23 +53,19 @@
 
 #ifdef STATIC
    logical,dimension(E2DFIELD),target         :: mask_updateH
-   logical,dimension(E2DFIELD),target         :: mask_uupdateU,mask_uupdateV
-   logical,dimension(E2DFIELD),target         :: mask_vupdateU,mask_vupdateV
-   logical,dimension(_IRANGE_HALO_-1,_JRANGE_HALO_),target :: mask_ufluxV
-   logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),target :: mask_vfluxU
-   REALTYPE,public,dimension(E2DFIELD)        :: flux
+   logical,dimension(E2DFIELD),target         :: mask_uflux,mask_vflux,mask_xflux
+   logical,dimension(E2DFIELD),target         :: mask_uupdateU,mask_vupdateV
+   REALTYPE,public,dimension(E2DFIELD)        :: uflux,vflux
    REALTYPE,dimension(E2DFIELD)               :: Di,adv
 #else
    logical,dimension(:,:),allocatable,target  :: mask_updateH
-   logical,dimension(:,:),allocatable,target  :: mask_uupdateU,mask_uupdateV
-   logical,dimension(:,:),allocatable,target  :: mask_vupdateU,mask_vupdateV
-   logical,dimension(:,:),allocatable,target  :: mask_ufluxV,mask_vfluxU
-   REALTYPE,public,dimension(:,:),allocatable :: flux
+   logical,dimension(:,:),allocatable,target  :: mask_uflux,mask_vflux,mask_xflux
+   logical,dimension(:,:),allocatable,target  :: mask_uupdateU,mask_vupdateV
+   REALTYPE,public,dimension(:,:),allocatable :: uflux,vflux
    REALTYPE,dimension(:,:),allocatable        :: Di,adv
 #endif
-#define NO_POINTER_REMAP
-#ifdef NO_POINTER_REMAP
-   logical,dimension(:,:),allocatable,target  :: mask_ufluxU
+#ifndef _POINTER_REMAP_
+   logical,dimension(:,:),allocatable,target  :: mask_ufluxU,mask_xfluxU,mask_xfluxV
    REALTYPE,dimension(:,:),allocatable,target :: dxuU,dyuU
 #endif
    integer,public,parameter           :: NOSPLIT=0,FULLSPLIT=1,HALFSPLIT=2
@@ -79,14 +75,16 @@
                     "half step splitting: u/2 + v + u/2"/)
    integer,public,parameter           :: UPSTREAM=1,UPSTREAM_2DH=2,P2=3
    integer,public,parameter           :: SUPERBEE=4,MUSCL=5,P2_PDM=6,FCT=7
-   character(len=64),public,parameter :: adv_schemes(7) =  &
+   integer,public,parameter           :: J7=8
+   character(len=64),public,parameter :: adv_schemes(8) =  &
       (/"upstream advection (first-order, monotone)",      &
         "2DH-upstream advection with forced monotonicity", &
         "P2 advection (third-order, non-monotone)",        &
         "TVD-Superbee advection (second-order, monotone)", &
         "TVD-MUSCL advection (second-order, monotone)",    &
         "TVD-P2-PDM advection (third-order, monotone)",    &
-        "2DH-FCT advection"/)
+        "2DH-FCT advection",                               &
+        "2DH-J7 advection (Arakawa and Lamb, 1977)"/)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -141,6 +139,29 @@
          logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
          REALTYPE,dimension(E2DFIELD),intent(inout)      :: f,Di,adv
       end subroutine adv_v_split
+
+      subroutine adv_arakawa_j7_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV,      &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                    dxv,dyu,dxu,dyv,arcd1,            &
+#endif
+                                    az,AH,                            &
+                                    mask_uflux,mask_vflux,mask_xflux, &
+                                    nosplit_finalise)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         REALTYPE,intent(in)                        :: dt,AH
+         REALTYPE,dimension(E2DFIELD),intent(in)    :: U,V,Do,Dn,DU,DV
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+         REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
+         REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
+         REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
+#endif
+         integer,dimension(E2DFIELD),intent(in)     :: az
+         logical,dimension(:,:),pointer,intent(in)  :: mask_uflux,mask_xflux
+         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
+         logical,intent(in),optional                :: nosplit_finalise
+         REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
+      end subroutine adv_arakawa_j7_2dh
 
       subroutine adv_upstream_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -220,26 +241,26 @@
    allocate(mask_updateH(E2DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (mask_updateH)'
 
+   allocate(mask_uflux(E2DFIELD),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (mask_uflux)'
+
+   allocate(mask_vflux(E2DFIELD),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (mask_vflux)'
+
+   allocate(mask_xflux(E2DFIELD),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (mask_xflux)'
+
    allocate(mask_uupdateU(E2DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (mask_uupdateU)'
-
-   allocate(mask_uupdateV(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (mask_uupdateV)'
-
-   allocate(mask_vupdateU(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (mask_vupdateU)'
 
    allocate(mask_vupdateV(E2DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (mask_vupdateV)'
 
-   allocate(mask_ufluxV(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (mask_ufluxV)'
+   allocate(uflux(E2DFIELD),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (uflux)'
 
-   allocate(mask_vfluxU(_IRANGE_HALO_,_JRANGE_HALO_-1),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (mask_vfluxU)'
-
-   allocate(flux(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (flux)'
+   allocate(vflux(E2DFIELD),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (vflux)'
 
    allocate(Di(E2DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (Di)'
@@ -249,40 +270,55 @@
 #endif
 
    mask_updateH  = (az.eq.1)
+   mask_uflux    = (au.eq.1 .or. au.eq.2)
+   mask_vflux    = (av.eq.1 .or. av.eq.2)
+   mask_xflux    = (ax.eq.1)
    mask_uupdateU = (au.eq.1)
-   mask_uupdateV = (av.eq.1 .or. av.eq.2)
-   mask_vupdateU = (au.eq.1 .or. au.eq.2)
    mask_vupdateV = (av.eq.1)
 
-   mask_ufluxV = ( ax(_IRANGE_HALO_-1,_JRANGE_HALO_).eq.1 )
-   mask_vfluxU = ( ax(_IRANGE_HALO_,_JRANGE_HALO_-1).eq.1 )
-
-   adv_gridH%mask_uflux    => mask_vupdateU
+   adv_gridH%mask_uflux    => mask_uflux
+   adv_gridH%mask_vflux    => mask_vflux(_IRANGE_HALO_,_JRANGE_HALO_-1)
+   adv_gridH%mask_xflux    => mask_xflux
    adv_gridH%mask_uupdate  => mask_updateH
-   adv_gridH%mask_vflux    => mask_uupdateV(_IRANGE_HALO_,_JRANGE_HALO_-1)
    adv_gridH%mask_vupdate  => mask_updateH
    adv_gridH%mask_finalise => mask_updateH
    adv_gridH%az            => az
 
-#ifdef NO_POINTER_REMAP
+#ifdef _POINTER_REMAP_
+   adv_gridU%mask_uflux(_IRANGE_HALO_-1,_JRANGE_HALO_) => mask_updateH(1+_IRANGE_HALO_,_JRANGE_HALO_)
+#else
    allocate(mask_ufluxU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (mask_ufluxU)'
    mask_ufluxU = mask_updateH(1+_IRANGE_HALO_,_JRANGE_HALO_)
    adv_gridU%mask_uflux    => mask_ufluxU
+#endif
+   adv_gridU%mask_vflux    => mask_xflux(_IRANGE_HALO_,_JRANGE_HALO_-1)
+#ifdef _POINTER_REMAP_
+   adv_gridU%mask_xflux(_IRANGE_HALO_-1,_JRANGE_HALO_) => mask_vflux(1+_IRANGE_HALO_,_JRANGE_HALO_)
 #else
-   adv_gridU%mask_uflux(_IRANGE_HALO_-1,_JRANGE_HALO_) => mask_updateH(1+_IRANGE_HALO_,_JRANGE_HALO_)
+   allocate(mask_xfluxU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (mask_xfluxU)'
+   mask_xfluxU = mask_vflux(1+_IRANGE_HALO_,_JRANGE_HALO_)
+   adv_gridU%mask_xflux    => mask_xfluxU
 #endif
    adv_gridU%mask_uupdate  => mask_uupdateU
-   adv_gridU%mask_vflux    => mask_vfluxU
-   adv_gridU%mask_vupdate  => mask_vupdateU ! now also includes y-advection of u along W/E open bdys
-   adv_gridU%mask_finalise => mask_vupdateU
+   adv_gridU%mask_vupdate  => mask_uflux ! now also includes y-advection of u along W/E open bdys
+   adv_gridU%mask_finalise => mask_uflux
    adv_gridU%az            => au
 
-   adv_gridV%mask_uflux    => mask_ufluxV
-   adv_gridV%mask_uupdate  => mask_uupdateV ! now also includes x-advection of v along N/S open bdys
+   adv_gridV%mask_uflux    => mask_xflux
    adv_gridV%mask_vflux    => mask_updateH(_IRANGE_HALO_,1+_JRANGE_HALO_)
+#ifdef _POINTER_REMAP_
+   adv_gridV%mask_xflux(_IRANGE_HALO_,_JRANGE_HALO_-1) => mask_uflux(_IRANGE_HALO_,1+_JRANGE_HALO_)
+#else
+   allocate(mask_xfluxV(_IRANGE_HALO_,_JRANGE_HALO_-1),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (mask_xfluxV)'
+   mask_xfluxV = mask_uflux(_IRANGE_HALO_,1+_JRANGE_HALO_)
+   adv_gridV%mask_xflux    => mask_xfluxV
+#endif
+   adv_gridV%mask_uupdate  => mask_vflux ! now also includes x-advection of v along N/S open bdys
    adv_gridV%mask_vupdate  => mask_vupdateV
-   adv_gridV%mask_finalise => mask_uupdateV
+   adv_gridV%mask_finalise => mask_vflux
    adv_gridV%az            => av
 
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -292,7 +328,10 @@
    adv_gridH%dyv   => dyv(_IRANGE_HALO_,_JRANGE_HALO_-1)
    adv_gridH%arcd1 => arcd1
 
-#ifdef NO_POINTER_REMAP
+#ifdef _POINTER_REMAP_
+   adv_gridU%dxu(_IRANGE_HALO_-1,_JRANGE_HALO_) => dxc(1+_IRANGE_HALO_,_JRANGE_HALO_)
+   adv_gridU%dyu(_IRANGE_HALO_-1,_JRANGE_HALO_) => dyc(1+_IRANGE_HALO_,_JRANGE_HALO_)
+#else
    allocate(dxuU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (dxuU)'
    allocate(dyuU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
@@ -301,9 +340,6 @@
    dyuU = dyc(1+_IRANGE_HALO_,_JRANGE_HALO_)
    adv_gridU%dxu   => dxuU
    adv_gridU%dyu   => dyuU
-#else
-   adv_gridU%dxu(_IRANGE_HALO_-1,_JRANGE_HALO_) => dxc(1+_IRANGE_HALO_,_JRANGE_HALO_)
-   adv_gridU%dyu(_IRANGE_HALO_-1,_JRANGE_HALO_) => dyc(1+_IRANGE_HALO_,_JRANGE_HALO_)
 #endif
    adv_gridU%dxv   => dxx(_IRANGE_HALO_,_JRANGE_HALO_-1)
    adv_gridU%dyv   => dyx(_IRANGE_HALO_,_JRANGE_HALO_-1)
@@ -441,6 +477,19 @@
 #endif
                                 adv_grid%az,AH)
 
+            case(J7)
+
+               call adv_arakawa_j7_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                       adv_grid%dxv,adv_grid%dyu,   &
+                                       adv_grid%dxu,adv_grid%dyv,   &
+                                       adv_grid%arcd1,              &
+#endif
+                                       adv_grid%az,AH,              &
+                                       adv_grid%mask_uflux,         &
+                                       adv_grid%mask_vflux,         &
+                                       adv_grid%mask_xflux)
+
             case default
 
                stop 'do_advection: scheme is invalid'
@@ -477,7 +526,7 @@
                                 adv_grid%mask_vflux,adv_grid%mask_vupdate)
 #endif
 
-            case((UPSTREAM_2DH),(FCT))
+            case((UPSTREAM_2DH),(FCT),(J7))
 
                stop 'do_advection: scheme not valid for split'
 
@@ -542,7 +591,7 @@
                                 _HALF_,scheme,AH,                          &
                                 adv_grid%mask_uflux,adv_grid%mask_uupdate)
 
-            case((UPSTREAM_2DH),(FCT))
+            case((UPSTREAM_2DH),(FCT),(J7))
 
                stop 'do_advection: scheme not valid for split'
 
@@ -607,7 +656,7 @@
    end select
 
    select case (scheme)
-      case((UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(FCT))
+      case((UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(FCT),(J7))
       case default
          FATAL 'adv_scheme=',scheme,' is invalid'
          stop
@@ -616,7 +665,7 @@
    select case (split)
       case((FULLSPLIT),(HALFSPLIT))
          select case (scheme)
-            case((UPSTREAM_2DH),(FCT))
+            case((UPSTREAM_2DH),(FCT),(J7))
                FATAL 'adv_scheme=',scheme,' not valid for adv_split=',split
                stop
          end select

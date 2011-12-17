@@ -58,6 +58,7 @@
 !  various model components.
 !
 ! !USES:
+   use advection, only: J7
    use advection_3d, only: print_adv_settings_3d
    IMPLICIT NONE
 !
@@ -97,6 +98,7 @@
       close(NAMLST2)
 
       LEVEL2 'Advection of biological fields'
+      if (bio_hor_adv .eq. J7) stop 'init_bio: J7 not implemented yet'
       call print_adv_settings_3d(bio_adv_split,bio_hor_adv,bio_ver_adv,bio_AH)
 
       select case (bio_init_method)

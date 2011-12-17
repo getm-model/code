@@ -79,6 +79,7 @@
 ! temperature advection schemes.
 !
 ! !USES:
+   use advection, only: J7
    use advection_3d, only: print_adv_settings_3d
    IMPLICIT NONE
 !
@@ -111,6 +112,7 @@
 
 !  Sanity checks for advection specifications
    LEVEL3 'Advection of temperature'
+   if (temp_hor_adv .eq. J7) stop 'init_temperature: J7 not implemented yet'
    call print_adv_settings_3d(temp_adv_split,temp_hor_adv,temp_ver_adv,_ZERO_)
 
    select case (temp_AH_method)

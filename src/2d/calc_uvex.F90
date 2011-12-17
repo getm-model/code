@@ -24,8 +24,9 @@
 
 !
 ! !INPUT PARAMETERS:
-   integer,intent(in)                      :: An_method
-   REALTYPE,dimension(E2DFIELD),intent(in) :: U,V,D,DU,DV
+   integer,intent(in)                             :: An_method
+   REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V,D
+   REALTYPE,dimension(E2DFIELD),target,intent(in) :: DU,DV
 !
 ! !REVISION HISTORY:
 !  Original author(s): Knut Klingbeil

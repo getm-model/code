@@ -138,6 +138,9 @@
    allocate(Vadv(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (Vadv)'
 
+   allocate(Dadv(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (Dadv)'
+
    allocate(DUadv(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (DUadv)'
 
