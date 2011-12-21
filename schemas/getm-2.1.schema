@@ -381,6 +381,7 @@
 			<element name="calc_salt" type="bool" label="solve salinity equation"/>
 			<element name="avmback"   type="float" label="background viscosity" unit="m²/s"/>
 			<element name="avhback"   type="float" label="background diffusivity" unit="m²/s"/>
+			<element name="turb_adv"  type="bool"  label="advect TKE and eps"/>
 			<element name="ip_method" type="int" label="internal pressure method">
 				<options>
 					<option value="1" label="Blumberg and Mellor"/>

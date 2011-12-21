@@ -66,7 +66,7 @@
 
 ! OMP-NOTE: k-1 is used at layer k, so we have to conclude
 !    one layer at a time (wait after each later).
-   do k=1,kmax
+   do k=1,kmax-1
 #ifdef CALC_HALO_WW
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax+HALO

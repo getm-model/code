@@ -69,6 +69,7 @@
 !
 ! !LOCAL VARIABLES:
    integer         :: vel_adv_split=0,vel_hor_adv=1,vel_ver_adv=1
+   logical         :: turb_adv=.false.
 #ifdef NO_BAROCLINIC
    integer         :: ip_method
 #endif
@@ -122,7 +123,8 @@
              bdy3d_tmrlx_max,bdy3d_tmrlx_min,           &
              vel_adv_split,vel_hor_adv,vel_ver_adv,     &
              calc_temp,calc_salt,                       &
-             avmback,avhback,ip_method,ip_ramp,         &
+             avmback,avhback,turb_adv,                  &
+             ip_method,ip_ramp,                         &
              vel_check,min_vel,max_vel
 !EOP
 !-------------------------------------------------------------------------
@@ -199,6 +201,18 @@
 #else
    num=1.d-15
    nuh=1.d-15
+
+#ifdef TURB_ADV
+   if (.not. turb_adv) then
+      LEVEL2 "reenabled advection of TKE and eps due to"
+      LEVEL2 "obsolete TURB_ADV macro. Note that this"
+      LEVEL2 "behaviour will be removed in the future!"
+      turb_adv = .true.
+   end if
+#endif
+
+   LEVEL2 "turb_adv = ",turb_adv
+
 #endif
 
 !  Needed for interpolation of temperature and salinity
@@ -580,9 +594,7 @@
       if (vert_cord .ne. _ADAPTIVE_COORDS_) call ss_nn()
 #endif
       call gotm()
-#ifdef TURB_ADV
-      call tke_eps_advect_3d()
-#endif
+      if (turb_adv) call tke_eps_advect_3d()
 #endif
    end if
 #ifndef NO_BAROCLINIC
