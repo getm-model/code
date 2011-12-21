@@ -45,7 +45,7 @@
 #else
    REALTYPE,dimension(:,:,:),allocatable :: hi,adv3d
 #endif
-   integer,public,parameter              :: HVSPLIT=3
+   integer,public,parameter              :: HVSPLIT=3,W_TAG=33
    character(len=64),public,parameter    :: adv_splits_3d(0:3) = &
              (/"no split: one 3D uvw step",                      &
                "full step splitting: u + v + w",                 &
@@ -60,14 +60,14 @@
 
    interface
       subroutine adv_w_split_3d(dt,f,hi,adv3d,ww,ho,            &
-                                az,splitfac,scheme,             &
+                                az,splitfac,scheme,kshift,      &
                                 nosplit_finalise,mask_finalise)
          use domain, only: imin,imax,jmin,jmax,kmax
          IMPLICIT NONE
          REALTYPE,intent(in)                             :: dt,splitfac
          REALTYPE,dimension(I3DFIELD),intent(in)         :: ww,ho
          integer,dimension(E2DFIELD),intent(in)          :: az
-         integer,intent(in)                              :: scheme
+         integer,intent(in)                              :: scheme,kshift
          logical,intent(in),optional                     :: nosplit_finalise
          logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
          REALTYPE,dimension(I3DFIELD),intent(inout)      :: f,hi,adv3d
@@ -135,7 +135,7 @@
 ! !IROUTINE:  do_advection_3d - 3D advection schemes \label{sec-do-advection-3d}
 !
 ! !INTERFACE:
-   subroutine do_advection_3d(dt,f,uu,vv,ww,hu,hv,ho,hn,hscheme,vscheme,split,AH,tag, &
+   subroutine do_advection_3d(dt,f,uu,vv,ww,hu,hv,ho,hn,hscheme,vscheme,split,AH,tag_3d, &
                               hires,advres)
 !
 ! !DESCRIPTION:
@@ -233,7 +233,7 @@
 ! !INPUT PARAMETERS:
    REALTYPE,intent(in)                               :: dt,AH
    REALTYPE,dimension(I3DFIELD),intent(in)           :: uu,vv,ww,ho,hn,hu,hv
-   integer,intent(in)                                :: split,hscheme,vscheme,tag
+   integer,intent(in)                                :: split,hscheme,vscheme,tag_3d
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(I3DFIELD),intent(inout)        :: f
@@ -242,7 +242,7 @@
    REALTYPE,dimension(I3DFIELD),intent(out),optional :: hires,advres
 !
 ! !LOCAL VARIABLES:
-   integer                  :: k
+   integer                  :: tag,k,kshift
    type(t_adv_grid),pointer :: adv_grid
 !EOP
 !-----------------------------------------------------------------------
@@ -253,6 +253,14 @@
    write(debug,*) 'do_advection_3d() # ',Ncall
 #endif
    call tic(TIM_ADV3D)
+
+   if (tag_3d .eq. W_TAG) then
+      tag = H_TAG
+      kshift = 1
+   else
+      tag = tag_3d
+      kshift = 0
+   end if
 
    select case (tag)
       case(H_TAG,D_TAG)
@@ -355,7 +363,7 @@
          end select
 !        Note (KK): here adv_w_split_3d must be called even for kmax=1 !!!
          call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,                  &
-                             adv_grid%az,_ONE_,vscheme,            &
+                             adv_grid%az,_ONE_,vscheme,kshift,     &
                              nosplit_finalise=.true.,              &
                              mask_finalise=adv_grid%mask_finalise)
 
@@ -368,8 +376,8 @@
                               Dires=hi(:,:,k),advres=adv3d(:,:,k))
          end do
          if (kmax .gt. 1) then
-            call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,       &
-                                adv_grid%az,_ONE_,vscheme)
+            call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,              &
+                                adv_grid%az,_ONE_,vscheme,kshift)
          end if
 
       case(HALFSPLIT)
@@ -389,7 +397,7 @@
                end do
 #ifndef SLICE_MODEL
 #ifdef GETM_PARALLEL
-               if (hscheme.ne.UPSTREAM .and. tag.eq.V_TAG) then
+               if (hscheme.ne.UPSTREAM .and. tag_3d.eq.V_TAG) then
 !                 we need to update f(imin:imax,jmax+HALO)
                   call tic(TIM_ADV3DH)
                   call update_3d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,kmax,D_TAG)
@@ -408,13 +416,13 @@
                end do
 #endif
                if (kmax .gt. 1) then
-                  call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,        &
-                                      adv_grid%az,_ONE_,vscheme)
+                  call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,              &
+                                      adv_grid%az,_ONE_,vscheme,kshift)
                end if
 #ifndef SLICE_MODEL
 #ifdef GETM_PARALLEL
                if (hscheme .eq. UPSTREAM) then
-                  if (tag .eq. V_TAG) then
+                  if (tag_3d .eq. V_TAG) then
 !                    we need to update f(imin-1:imax+1,jmax+1)
 !                    KK-TODO: if external hv was halo-updated this halo-update is not necessary
                      call tic(TIM_ADV3DH)
@@ -443,7 +451,7 @@
 #endif
 #ifdef GETM_PARALLEL
                if (hscheme .eq. UPSTREAM) then
-                  if (tag .eq. U_TAG) then
+                  if (tag_3d .eq. U_TAG) then
 !                    we need to update f(imax+1,jmin:jmax)
 !                    KK-TODO: if external hu was halo-updated this halo-update is not necessary
                      call tic(TIM_ADV3DH)
@@ -489,8 +497,8 @@
                               Dires=hi(:,:,k),advres=adv3d(:,:,k))
          end do
          if (kmax .gt. 1) then
-            call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,        &
-                                adv_grid%az,_ONE_,vscheme)
+            call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,              &
+                                adv_grid%az,_ONE_,vscheme,kshift)
          end if
 
       case default

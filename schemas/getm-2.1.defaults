@@ -287,6 +287,9 @@
 			<avhback>
 				0.0
 			</avhback>
+			<turb_adv>
+				False
+			</turb_adv>
 			<ip_method>
 				1
 			</ip_method>

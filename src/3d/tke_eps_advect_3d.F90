@@ -16,13 +16,19 @@
 ! schemes are used which are also used for the momentum advection.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,kmax,az
+   use domain, only: imin,imax,jmin,jmax,kmax,az,ax
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+   use domain, only: dxv,dyu
+#else
+   use domain, only: dx,dy
+#endif
    use m3d, only: vel_adv_split,vel_hor_adv,vel_ver_adv
    use variables_3d, only: tke,eps,dt,uu,vv,ww,hun,hvn,ho,hn
    use variables_3d, only: uuadv,vvadv,wwadv,hoadv,hnadv,huadv,hvadv
    use advection, only: J7
-   use advection_3d, only: do_advection_3d
-   use halo_zones, only: H_TAG
+   use advection_3d, only: do_advection_3d,W_TAG
+   use halo_zones, only: update_3d_halo,wait_halo,H_TAG
+   use turbulence, only: k_min,eps_min
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -39,8 +45,6 @@
    Ncall = Ncall+1
    write(debug,*) 'tke_eps_advect_3d() # ',Ncall
 #endif
-
-   if (vel_hor_adv .eq. J7) stop 'tke_eps_advect_3d: J7 not implemented yet'
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
 
@@ -64,29 +68,63 @@
 !$OMP END DO NOWAIT
    end do
 
-!  only needed to allow for advection of k=kmax
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-HALO,jmax+HALO
-      do i=imin-HALO,imax+HALO
-!        KK-TODO: does _HALF_ transports make sense?
-         uuadv(i,j,kmax) = _HALF_*uu(i,j,kmax)
-         vvadv(i,j,kmax) = _HALF_*vv(i,j,kmax)
-         wwadv(i,j,kmax) = _HALF_*ww(i,j,kmax)
-         hoadv(i,j,kmax) = _HALF_*ho(i,j,kmax)
-         hnadv(i,j,kmax) = _HALF_*hn(i,j,kmax)
-         huadv(i,j,kmax) = _HALF_*hun(i,j,kmax)
-         hvadv(i,j,kmax) = _HALF_*hvn(i,j,kmax)
-      end do
-   end do
-!$OMP END DO
-
 !$OMP END PARALLEL
 
+!  Note (KK): [uu|vv]adv(k=0) already initialised to 0
+!             we need wwadv(k=0)
+!             (no change of k=0 by vertical advection by default)
+   wwadv(:,:,0) = _HALF_*ww(:,:,1)
+   hoadv(:,:,0) = _HALF_*ho(:,:,1)
+   hnadv(:,:,0) = _HALF_*hn(:,:,1)
+   huadv(:,:,0) = _HALF_*hun(:,:,1)
+   hvadv(:,:,0) = _HALF_*hvn(:,:,1)
+
+!  Note (KK): we do not want horizontal advection for k=kmax
+!             (no change of k=kmax by vertical advection by default)
+   uuadv(:,:,kmax) = _ZERO_
+   vvadv(:,:,kmax) = _ZERO_
+   hoadv(:,:,kmax) = _HALF_*ho(:,:,kmax)
+   hnadv(:,:,kmax) = _HALF_*hn(:,:,kmax)
+   huadv(:,:,kmax) = _HALF_*hun(:,:,kmax)
+   hvadv(:,:,kmax) = _HALF_*hvn(:,:,kmax)
+
+   if (vel_hor_adv .eq. J7) then
+      do k=1,kmax-1
+!        OMP-NOTE: these loops cannot be threaded!
+         do j=jmin-HALO,jmax+HALO-1
+            do i=imin-HALO,imax+HALO-1
+               if (ax(i,j) .eq. 0) then
+                  uuadv(i,j,k) = _ZERO_
+                  vvadv(i,j,k) = _ZERO_
+               else
+!                 Note (KK): due to mirroring open bdys are already included here
+                  uuadv(i,j,k) = _HALF_*( uuadv(i,j,k)*DYU + uuadv(i,j+1,k)*DYUJP1 )
+                  vvadv(i,j,k) = _HALF_*( vvadv(i,j,k)*DXV + vvadv(i+1,j,k)*DXVIP1 )
+               end if
+!              KK-TODO: do we have to average h[o|n]adv as well?
+            end do
+         end do
+      end do
+   end if
+
+!  Note (KK): tke and eps are not halo-updated yet
+   call update_3d_halo(tke,tke,az,imin,jmin,imax,jmax,kmax,H_TAG)
+   call wait_halo(H_TAG)
+
+   call update_3d_halo(eps,eps,az,imin,jmin,imax,jmax,kmax,H_TAG)
+   call wait_halo(H_TAG)
+
    call do_advection_3d(dt,tke,uuadv,vvadv,wwadv,huadv,hvadv,hoadv,hnadv,   &
-                        vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,H_TAG)
+                        vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,W_TAG)
 
    call do_advection_3d(dt,eps,uuadv,vvadv,wwadv,huadv,hvadv,hoadv,hnadv,   &
-                        vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,H_TAG)
+                        vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,W_TAG)
+
+   tke = max(k_min,tke)
+   eps = max(eps_min,eps)
+
+!  Note (KK): all other routines expect wwadv(k=0)=0
+   wwadv(:,:,0) = _ZERO_
 
 #ifdef DEBUG
    write(debug,*) 'Leaving tke_eps_advect_3d()'

@@ -5,7 +5,7 @@
 !
 ! !INTERFACE:
    subroutine adv_w_split_3d(dt,f,hi,adv3d,ww,ho,            &
-                             az,splitfac,scheme,             &
+                             az,splitfac,scheme,kshift,      &
                              nosplit_finalise,mask_finalise)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
@@ -54,7 +54,7 @@
    REALTYPE,intent(in)                             :: dt,splitfac
    REALTYPE,dimension(I3DFIELD),intent(in)         :: ww,ho
    integer,dimension(E2DFIELD),intent(in)          :: az
-   integer,intent(in)                              :: scheme
+   integer,intent(in)                              :: scheme,kshift
    logical,intent(in),optional                     :: nosplit_finalise
    logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
 !
@@ -115,7 +115,7 @@
             if (iterate) then
 !              estimate number of iterations by maximum cfl number in water column
                cfl = _ZERO_
-               do k=1,kmax-1
+               do k=1-kshift,kmax-1
                   cfl = max(cfl,abs(ww(i,j,k))*dti/(_HALF_*(hi(i,j,k)+hi(i,j,k+1))))
                end do
                iters = max(1,ceiling(cfl))
@@ -136,12 +136,12 @@
             end if
             do it=1,iters
 !              Calculating w-interface fluxes !
-               do k=1,kmax-1
+               do k=1-kshift,kmax-1
                   if (ww(i,j,k) .gt. _ZERO_) then
                      fc = f(i,j,k  )               ! central
                      if (scheme .ne. UPSTREAM) then
 !                       also fall back to upstream near boundaries
-                        use_limiter = (k .gt. 1)
+                        use_limiter = (k .gt. 1-kshift)
                      end if
                      if (use_limiter) then
                         cfl = ww(i,j,k)*dtik/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
@@ -191,7 +191,7 @@
                      wflux(k) = wflux(k) + ww(i,j,k)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
                   end if
                end do
-               do k=1,kmax
+               do k=1,kmax-kshift
                   hio = hi(i,j,k)
                   hi(i,j,k) = hio - dtik*(ww(i,j,k  )-ww(i,j,k-1))
                   advn = splitfack*(wflux(k  )-wflux(k-1))
@@ -209,7 +209,7 @@
 
    if (present(nosplit_finalise)) then
       if (nosplit_finalise) then
-         do k=1,kmax
+         do k=1,kmax-kshift
 !$OMP DO SCHEDULE(RUNTIME)
             do j=jmin-HALO,jmax+HALO
                do i=imin-HALO,imax+HALO
