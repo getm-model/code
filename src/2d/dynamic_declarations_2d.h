@@ -21,7 +21,6 @@
   REALTYPE,dimension(:,:),allocatable  :: Slru,Slrv
   REALTYPE,dimension(:,:),allocatable  :: zub,zvb
   REALTYPE,dimension(:,:),allocatable  :: zub0,zvb0
-  REALTYPE,dimension(:,:),allocatable  :: surfdiv
   REALTYPE,dimension(:,:),allocatable  :: fwf,fwf_int
 
   REALTYPE,dimension(:),  allocatable:: EWbdy,ENbdy,EEbdy,ESbdy
@@ -31,5 +30,5 @@
   REALTYPE,dimension(:,:),allocatable,target :: Dadv
 
 ! Remember to update this value if you add more 2D arrays.
-  integer, parameter :: n2d_fields=41
+  integer, parameter :: n2d_fields=38
 

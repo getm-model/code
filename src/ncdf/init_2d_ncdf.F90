@@ -192,14 +192,6 @@
                           FillValue=fv,missing_value=mv,valid_range=vr)
    end if
 
-!  divergence
-   fv = divergence_missing; mv = divergence_missing
-   vr(1) = -3.; vr(2) =  3.
-   err = nf90_def_var(ncid,'div',NCDF_FLOAT_PRECISION,f3_dims,surfdiv_id)
-   if (err .NE. NF90_NOERR) go to 10
-   call set_attributes(ncid,surfdiv_id,long_name='divergence',units='s-1', &
-                       FillValue=fv,missing_value=mv,valid_range=vr)
-
    fv = vel_missing; mv = vel_missing; vr(1) = -3.; vr(2) =  3.
 !  residual currents - u and v
    err = nf90_def_var(ncid,'res_u',NCDF_FLOAT_PRECISION,f3_dims,res_u_id)
