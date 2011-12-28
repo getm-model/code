@@ -50,7 +50,6 @@
 		<File RelativePath="..\..\src\3d\bottom_friction_3d.F90"/>
 		<File RelativePath="..\..\src\3d\check_h.F90"/>
 		<File RelativePath="..\..\src\3d\coordinates.F90"/>
-		<File RelativePath="..\..\src\3d\divergence.F90"/>
 		<File RelativePath="..\..\src\3d\eqstate.F90"/>
 		<File RelativePath="..\..\src\3d\fct_2dh_adv.F90"/>
 		<File RelativePath="..\..\src\3d\general_coordinates.F90"/>
