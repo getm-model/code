@@ -83,7 +83,6 @@
 ! {\tt res\_dv } & residual depth in V-point & [m] \\
 ! {\tt res\_v } &$y$-component of residual transport in V-point &
 ! [m$^2$s$^{-1}$]\\
-! {\tt surfdiv } &divergence of surface currents in T-point & [s$^{-1}$]\\
 ! \end{tabular}
 ! \caption{Public 2D variables.}
 ! \label{table_2d_variables}
@@ -135,7 +134,6 @@
    fwf     = _ZERO_
    fwf_int = _ZERO_
 
-   surfdiv=_ZERO_
    EWbdy=_ZERO_
    ENbdy=_ZERO_
    EEbdy=_ZERO_
