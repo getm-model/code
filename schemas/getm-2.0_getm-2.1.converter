@@ -1,5 +1,4 @@
 <?xml version="1.0" ?>
-<<<<<<< HEAD:schemas/getm-2.0_getm-2.1.converter
 <converter source="getm-2.0" target="getm-2.1">
 	<links>
 		<link source="/getm/m2d/vel_depth_method" target="/getm/domain/vel_depth_method"/>
