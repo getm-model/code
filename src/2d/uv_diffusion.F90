@@ -5,7 +5,9 @@
 ! !ROUTINE: uv_diffusion - 2D diffusion of momentum \label{sec-uv-diffusion}
 !
 ! !INTERFACE:
-   subroutine uv_diffusion(Am,An_method,An,AnX)
+   subroutine uv_diffusion(An_method,UEx,VEx,U,V,D,DU,DV)
+
+!  Note (KK): keep in sync with interface in m2d_general.F90
 !
 ! !DESCRIPTION:
 !
@@ -161,21 +163,26 @@
 #else
    use domain, only: dx,dy,ard1
 #endif
-   use variables_2d, only: D,U,DU,UEx,V,DV,VEx,PP
-   use getm_timers,  only: tic,toc,TIM_UVDIFFUS
+   use m2d, only: Am
+   use variables_2d, only: PP,An,AnX
+   use getm_timers,  only: tic,toc,TIM_UVDIFF
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-  REALTYPE, intent(in) :: Am
-  integer, intent(in)  :: An_method
-  REALTYPE, intent(in) :: An(E2DFIELD),AnX(E2DFIELD)
+   integer,intent(in)                               :: An_method
+   REALTYPE,dimension(E2DFIELD),intent(in),optional :: U,V,D,DU,DV
+!
+! !INPUT/OUTPUT PARAMETERS:
+   REALTYPE,dimension(E2DFIELD),intent(inout)       :: UEx,VEx
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard
+!  Modified by       : Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j
+   logical :: use_Am
+   integer :: i,j
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -184,19 +191,24 @@
    Ncall = Ncall+1
    write(debug,*) 'uv_diffusion() # ',Ncall
 #endif
-   CALL tic(TIM_UVDIFFUS)
+   CALL tic(TIM_UVDIFF)
 
+   use_Am = (Am .gt. _ZERO_)
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j)
 
-! Central for dx(2*Am*dx(U/DU))
+!  Central for dx(2*Am*dx(U/DU))
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax+1          ! PP defined on T-points
          PP(i,j)=_ZERO_
-         if (az(i,j) .ge. 1) then
-            if(Am .gt. _ZERO_) then
-               PP(i,j)=2.*Am*DYC*D(i,j)               &
+!        Note (KK): we do not need N/S open bdy cells
+!                   in W/E open bdy cells outflow condition must be
+!                   explicitely prescribed (U(i,:) = U(i-1,:))
+         if (az(i,j) .eq. 1) then
+            if(use_Am) then
+!              KK-TODO: we need center depth at velocity time stage
+               PP(i,j)=_TWO_*Am*DYC*D(i,j)               &
                        *(U(i,j)/DU(i,j)-U(i-1,j)/DU(i-1,j))/DXC
             end if
             if (An_method .gt. 0) then
@@ -209,7 +221,8 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax      ! UEx defined on U-points
       do i=imin,imax
-         if (au(i,j) .ge. 1) then
+!        Note (KK): we do not need UEx(au=3)
+         if (au(i,j).eq.1 .or. au(i,j).eq.2) then
             UEx(i,j)=UEx(i,j)-(PP(i+1,j)-PP(i  ,j))*ARUD1
          end if
       end do
@@ -217,14 +230,14 @@
 !$OMP END DO
 
 #ifndef SLICE_MODEL
-! Central for dy(Am*(dy(U/DU)+dx(V/DV)))
+!  Central for dy(Am*(dy(U/DU)+dx(V/DV)))
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-1,jmax        ! PP defined on X-points
       do i=imin,imax
          PP(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
-            if(Am .gt. _ZERO_) then
-               PP(i,j)=Am*0.5*(DU(i,j)+DU(i,j+1))*DXX  &
+            if(use_Am) then
+               PP(i,j)=Am*_HALF_*(DU(i,j)+DU(i,j+1))*DXX  &
                        *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
                         +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
             end if
@@ -238,7 +251,8 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax        !UEx defined on U-points
       do i=imin,imax
-         if (au(i,j) .ge. 1) then
+!        Note (KK): we do not need UEx(au=3)
+         if (au(i,j).eq.1 .or. au(i,j).eq.2) then
             UEx(i,j)=UEx(i,j)-(PP(i,j  )-PP(i,j-1))*ARUD1
          end if
       end do
@@ -246,14 +260,14 @@
 !$OMP END DO
 #endif
 
-! Central for dx(Am*(dy(U^2/DU)+dx(V^2/DV)))
+!  Central for dx(Am*(dy(U/DU)+dx(V/DV)))
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax      ! PP defined on X-points
       do i=imin-1,imax
          PP(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
-            if(Am .gt. _ZERO_) then
-               PP(i,j)=Am*0.5*(DV(i,j)+DV(i+1,j))*DYX  &
+            if(use_Am) then
+               PP(i,j)=Am*_HALF_*(DV(i,j)+DV(i+1,j))*DYX  &
                        *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
                         +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
             end if
@@ -267,7 +281,8 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax          ! VEx defined on V-points
       do i=imin,imax
-         if (av(i,j) .ge. 1) then
+!        Note (KK): we do not need VEx(av=3)
+         if (av(i,j).eq.1 .or. av(i,j).eq.2) then
             VEx(i,j)=VEx(i,j)-(PP(i  ,j)-PP(i-1,j))*ARVD1
          end if
       end do
@@ -275,14 +290,18 @@
 !$OMP END DO
 
 #ifndef SLICE_MODEL
-! Central for dy(2*Am*dy(V^2/DV))
+!  Central for dy(2*Am*dy(V/DV))
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax+1     ! PP defined on T-points
       do i=imin,imax
          PP(i,j)=_ZERO_
-         if (az(i,j) .ge. 1) then
-            if(Am .gt. _ZERO_) then
-               PP(i,j)=2.*Am*DXC*D(i,j)               &
+!        Note (KK): we do not need W/E open bdy cells
+!                   in N/S open bdy cells outflow condition must be
+!                   explicitely prescribed (V(:,j) = V(:,j-1))
+         if (az(i,j) .eq. 1) then
+            if(use_Am) then
+!              KK-TODO: we need center depth at velocity time stage
+               PP(i,j)=_TWO_*Am*DXC*D(i,j)               &
                        *(V(i,j)/DV(i,j)-V(i,j-1)/DV(i,j-1))/DYC
             end if
             if (An_method .gt. 0) then
@@ -295,7 +314,8 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax             ! VEx defined on V-points
       do i=imin,imax
-         if (av(i,j) .ge. 1) then
+!        Note (KK): we do not need VEx(av=3)
+         if (av(i,j).eq.1 .or. av(i,j).eq.2) then
             VEx(i,j)=VEx(i,j)-(PP(i,j+1)-PP(i,j  ))*ARVD1
          end if
       end do
@@ -305,7 +325,7 @@
 
 !$OMP END PARALLEL
 
-   CALL toc(TIM_UVDIFFUS)
+   CALL toc(TIM_UVDIFF)
 #ifdef DEBUG
      write(debug,*) 'Leaving uv_diffusion()'
      write(debug,*)
@@ -313,7 +333,6 @@
    return
    end subroutine uv_diffusion
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------

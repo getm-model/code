@@ -26,8 +26,8 @@
    use domain, only: ill,ihl,jll,jhl
    use domain, only: openbdy,z0_method,z0_const,z0
    use domain, only: az,ax
-   use halo_zones, only : update_2d_halo,wait_halo
-   use halo_zones, only : U_TAG,V_TAG,H_TAG
+   use advection, only: init_advection,print_adv_settings
+   use halo_zones, only : update_2d_halo,wait_halo,H_TAG
    use variables_2d
    use bdy_2d, only: bdyfmt_2d,bdyramp_2d
    IMPLICIT NONE
@@ -42,6 +42,9 @@
 !
 ! !PUBLIC DATA MEMBERS:
    logical                   :: have_boundaries
+   REALTYPE                  :: dtm
+   integer                   :: vel_adv_split2d=0
+   integer                   :: vel_adv_scheme=1
    REALTYPE                  :: Am=-_ONE_
 !  method for specifying horizontal numerical diffusion coefficient
 !     (0=const, 1=from named nc-file)
@@ -95,9 +98,13 @@
 ! !LOCAL VARIABLES:
    integer                   :: rc
    integer                   :: i,j
-   integer                   :: vel_depth_method=0
+   integer                   :: elev_method=1
+   REALTYPE                  :: elev_const=_ZERO_
+   character(LEN = PATH_MAX) :: elev_file='elev.nc'
    namelist /m2d/ &
-          MM,vel_depth_method,Am,An_method,An_const,An_file,residual, &
+          elev_method,elev_const,elev_file,                    &
+          MM,vel_adv_split2d,vel_adv_scheme,                   &
+          Am,An_method,An_const,An_file,residual,              &
           sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
@@ -110,18 +117,42 @@
 
    LEVEL1 'init_2d'
 
+   dtm = timestep
+
 !  Read 2D-model specific things from the namelist.
    read(NAMLST,m2d)
 
-   dtm = timestep
-
 !  Allocates memory for the public data members - if not static
    call init_variables_2d(runtype)
+   call init_advection()
+
+   LEVEL2 'Advection of depth-averaged velocities'
+   call print_adv_settings(vel_adv_split2d,vel_adv_scheme,_ZERO_)
+
+   if (.not. hotstart) then
+      select case (elev_method)
+         case(1)
+            LEVEL2 'setting initial surface elevation to ',real(elev_const)
+            z = elev_const
+         case(2)
+            LEVEL2 'getting initial surface elevation from ',trim(elev_file)
+            call get_2d_field(trim(elev_file),"elev",ilg,ihg,jlg,jhg,z(ill:ihl,jll:jhl))
+         case default
+            stop 'init_2d(): invalid elev_method'
+      end select
+
+      where ( z .lt. -H+min_depth)
+         z = -H+min_depth
+      end where
+      zo = z
+      call depth_update()
+   end if
 
 #if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
 !   STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'
 !   call cfl_check()
 #else
+!  KK-TODO: why is cfl_check not in terms of D?
    call cfl_check()
 #endif
 
@@ -216,13 +247,6 @@
       LEVEL2 'Format=',bdyfmt_2d
    end if
 
-   call uv_depths(vel_depth_method)
-
-   where ( -H+min_depth .gt. _ZERO_ )
-      z = -H+min_depth
-   end where
-   zo=z
-
 !  bottom roughness
    if (z0_method .eq. 0) then
       zub0 = z0_const
@@ -242,8 +266,6 @@
    end if
    zub=zub0
    zvb=zvb0
-
-   call depth_update()
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_2d()'
@@ -390,21 +412,11 @@
       call bottom_friction(runtype)
 #endif
    end if
-   UEx=_ZERO_ ; VEx=_ZERO_
-#ifdef NO_ADVECT
-   STDERR 'NO_ADVECT 2D'
-#else
-#ifndef UV_ADV_DIRECT
-   call uv_advect()
-   if (Am .gt. _ZERO_ .or. An_method .gt. 0) then
-      call uv_diffusion(Am,An_method,An,AnX) ! Has to be called after uv_advect.
-   end if
+
    call tic(TIM_INTEGR2D)
-   call mirror_bdy_2d(UEx,U_TAG)
-   call mirror_bdy_2d(VEx,V_TAG)
+   call calc_uvex(An_method,U,V,D,DU,DV)
    call toc(TIM_INTEGR2D)
-#endif
-#endif
+
    call momentum(loop,tausx,tausy,airp)
    if (runtype .gt. 1) then
       call tic(TIM_INTEGR2D)

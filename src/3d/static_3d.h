@@ -1,16 +1,8 @@
 ! Remember to update this value if you add more 3D arrays.
-#ifdef UV_TVD
 #ifdef SPM
   integer, parameter                   :: n3d_fields=36
 #else
   integer, parameter                   :: n3d_fields=33
-#endif
-#else
-#ifdef SPM
-  integer, parameter                   :: n3d_fields=29
-#else
-  integer, parameter                   :: n3d_fields=26
-#endif
 #endif
 ! Number of vertical layers in z,u,v columns
   INTEGER                              :: kmin(I2DFIELD)
@@ -29,9 +21,9 @@
   REALTYPE                             :: ho(I3DFIELD)
   REALTYPE, target                     :: hn(I3DFIELD)
   REALTYPE                             :: huo(I3DFIELD)
-  REALTYPE                             :: hun(I3DFIELD)
+  REALTYPE, target                     :: hun(I3DFIELD)
   REALTYPE                             :: hvo(I3DFIELD)
-  REALTYPE                             :: hvn(I3DFIELD)
+  REALTYPE, target                     :: hvn(I3DFIELD)
   REALTYPE                             :: hcc(I3DFIELD)
   REALTYPE                             :: uuEx(I3DFIELD)
   REALTYPE                             :: vvEx(I3DFIELD)
@@ -74,23 +66,20 @@
   REALTYPE                             :: spm_pool(I2DFIELD)
 #endif
 
-#ifdef UV_TVD
-  REALTYPE                             :: uadv(I3DFIELD)
-  REALTYPE                             :: vadv(I3DFIELD)
-  REALTYPE                             :: wadv(I3DFIELD)
-  REALTYPE                             :: huadv(I3DFIELD)
-  REALTYPE                             :: hvadv(I3DFIELD)
-  REALTYPE                             :: hoadv(I3DFIELD)
-  REALTYPE                             :: hnadv(I3DFIELD)
-#endif
+! input arrays for do_advection_3d
+  REALTYPE,dimension(I3DFIELD)        :: fadv3d,uuadv,vvadv,wwadv
+  REALTYPE,dimension(I3DFIELD)        :: hoadv,huadv,hvadv
+  REALTYPE,dimension(I3DFIELD),target :: hnadv
 
 ! 2D fields in 3D domain
   REALTYPE                             :: sseo(I2DFIELD)
   REALTYPE                             :: ssen(I2DFIELD)
+  REALTYPE                             :: Dn(I2DFIELD)
   REALTYPE                             :: ssuo(I2DFIELD)
   REALTYPE                             :: ssun(I2DFIELD)
   REALTYPE                             :: ssvo(I2DFIELD)
   REALTYPE                             :: ssvn(I2DFIELD)
+  REALTYPE,dimension(I2DFIELD),target  :: Dun,Dvn
 
 ! 3D friction in 3D domain
   REALTYPE                             :: rru(I2DFIELD)

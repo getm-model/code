@@ -117,7 +117,6 @@
 ! !PUBLIC DATA MEMBERS:
    REALTYPE                            :: dt,cnpar=0.9
    REALTYPE                            :: avmback=_ZERO_,avhback=_ZERO_
-   character(len=64)                   :: adv_schemes(7)
    logical                             :: do_mixing_analysis=.false.
 !
 #ifdef STATIC
@@ -188,6 +187,7 @@
    hn = _ZERO_ ; hun = _ZERO_ ; hvn = _ZERO_
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
    ssen = _ZERO_ ; ssun = _ZERO_ ; ssvn = _ZERO_
+   Dn = SMALL ; Dun = SMALL ; Dvn = SMALL
    rru= _ZERO_ ; rrv= _ZERO_
    uuEx= _ZERO_ ; vvEx= _ZERO_
    tke=1.e-10 ; eps=1.e-10
@@ -198,11 +198,9 @@
    light=_ONE_
 #endif
 
-#ifdef UV_TVD
-   uadv = _ZERO_ ; vadv = _ZERO_ ; wadv = _ZERO_
-   hnadv = _ZERO_ ; hoadv = _ZERO_
-   huadv = _ZERO_ ; hvadv = _ZERO_
-#endif
+!  input arrays for do_advection_3d
+   fadv3d = _ZERO_ ; uuadv = _ZERO_ ; vvadv = _ZERO_ ; wwadv = _ZERO_
+   hoadv = _ZERO_ ; hnadv = _ZERO_ ; huadv = _ZERO_ ; hvadv = _ZERO_
 
 #ifndef NO_BAROCLINIC
    idpdx=_ZERO_
@@ -210,14 +208,6 @@
    nummix3d_S = _ZERO_ ; nummix2d_S = _ZERO_
    nummix3d_T = _ZERO_ ; nummix2d_T = _ZERO_
 #endif
-
-   adv_schemes(1) = "3D first-order upstream advection"
-   adv_schemes(2) = "upstream advection (first-order, monotone)"
-   adv_schemes(3) = "P2-PDM advection (third-order, non-monotone)"
-   adv_schemes(4) = "TVD-Superbee advection (second-order, monotone)"
-   adv_schemes(5) = "TVD-MUSCL advection (second-order, monotone)"
-   adv_schemes(6) = "TVD-P2-PDM advection (third-order, monotone)"
-   adv_schemes(7) = "2D-FCT advection"
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_variables_3d()'

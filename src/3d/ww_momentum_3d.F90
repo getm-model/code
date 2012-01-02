@@ -66,24 +66,26 @@
 
 ! OMP-NOTE: k-1 is used at layer k, so we have to conclude
 !    one layer at a time (wait after each later).
-   do k=1,kmax
+   do k=1,kmax-1
 #ifdef CALC_HALO_WW
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-1,jmax+1
-         do i=imin-1,imax+1
+      do j=jmin-1,jmax+HALO
+         do i=imin-1,imax+HALO
 #else
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
 #endif
-            if (k .lt. kmin(i,j)) then
-               ww(i,j,kmin(i,j))= _ZERO_
-            else
-               ww(i,j,k)=ww(i,j,k-1)                                   &
-                        -(hn(i,j,k)-ho(i  ,j  ,k))*dtm1 &
-                        -((uu(i,j,k)*DYU-uu(i-1,j  ,k)*DYUIM1) &
-                        +(vv(i,j,k)*DXV-vv(i  ,j-1,k)*DXVJM1))*ARCD1
-           end if
+            if (az(i,j) .eq. 1) then
+               if (k .lt. kmin(i,j)) then
+                  ww(i,j,kmin(i,j))= _ZERO_
+               else
+                  ww(i,j,k)=ww(i,j,k-1)                                   &
+                           -(hn(i,j,k)-ho(i  ,j  ,k))*dtm1 &
+                           -((uu(i,j,k)*DYU-uu(i-1,j  ,k)*DYUIM1) &
+                           +(vv(i,j,k)*DXV-vv(i  ,j-1,k)*DXVJM1))*ARCD1
+               end if
+            end if
          end do
       end do
 !$OMP END DO
