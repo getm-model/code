@@ -45,7 +45,6 @@
 ! !PUBLIC DATA MEMBERS:
    logical                   :: no_2d
    logical                   :: have_boundaries
-   REALTYPE                  :: dtm
    integer                   :: vel_adv_split2d=0
    integer                   :: vel_adv_scheme=1
    logical                   :: deformCX=.false.,deformUV=.false.
