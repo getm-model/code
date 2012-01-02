@@ -5,7 +5,7 @@
 ! !IROUTINE: sealevel - using the cont. eq. to get the sealevel.
 !
 ! !INTERFACE:
-   subroutine sealevel
+   subroutine sealevel(loop)
 !
 ! !DESCRIPTION:
 !
@@ -26,8 +26,9 @@
 #else
    use domain, only : dx,dy,ard1
 #endif
-   use m2d, only: dtm
-   use variables_2d, only: z,zo,U,V,fwf
+   use variables_2d, only: dtm,z,zo,U,V,fwf
+   use bdy_2d, only: do_bdy_2d
+   use m2d, only: have_boundaries
    use getm_timers, only: tic, toc, TIM_SEALEVEL, TIM_SEALEVELH
    use halo_zones, only : update_2d_halo,wait_halo,z_TAG
 #ifdef USE_BREAKS
@@ -37,6 +38,9 @@
 #endif
 !$ use omp_lib
    IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)                 :: loop
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -164,6 +168,7 @@
    end do                    !end do while(break_flag>0)
 #endif
 
+   if (have_boundaries) call do_bdy_2d(loop,z_TAG)
    call sealevel_nan_check()
 
 #ifdef SLICE_MODEL

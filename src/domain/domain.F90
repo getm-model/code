@@ -79,7 +79,7 @@
    integer, dimension(:), allocatable  :: sj,sfi,sli
    integer, allocatable                :: bdy_index(:),bdy_map(:,:)
 
-   character(len=64)                   :: bdy_2d_desc(5)
+   character(len=64)                   :: bdy_2d_desc(7)
    logical                             :: need_2d_bdy_elev = .false.
    logical                             :: need_2d_bdy_u    = .false.
    logical                             :: need_2d_bdy_v    = .false.
@@ -150,15 +150,17 @@
    integer                   :: i,j,n
    integer                   :: kdum
    character(len=PATH_MAX)   :: bathymetry               = 'topo.nc'
+   integer                   :: vel_depth_method=0
    character(len=PATH_MAX)   :: bdyinfofile              = 'bdyinfo.dat'
    character(len=PATH_MAX)   :: min_depth_file           = 'minimum_depth.dat'
    character(len=PATH_MAX)   :: bathymetry_adjust_file   = 'bathymetry.adjust'
    character(len=PATH_MAX)   :: mask_adjust_file         = 'mask.adjust'
    integer                   :: il=-1,ih=-1,jl=-1,jh=-1
    namelist /domain/ &
-             vert_cord,maxdepth,bathy_format,bathymetry,rigid_lid, &
-             longitude,latitude,f_plane,openbdy,bdyinfofile,       &
-             crit_depth,min_depth,kdum,ddu,ddl,                    &
+             vert_cord,maxdepth,                                 &
+             bathy_format,bathymetry,vel_depth_method,rigid_lid, &
+             longitude,latitude,f_plane,openbdy,bdyinfofile,     &
+             crit_depth,min_depth,kdum,ddu,ddl,                  &
              d_gamma,gamma_surf,il,ih,jl,jh,z0_method,z0_const
 !EOP
 !-------------------------------------------------------------------------
@@ -171,9 +173,11 @@
 
    bdy_2d_desc(ZERO_GRADIENT)           = "Zero gradient"
    bdy_2d_desc(SOMMERFELD)              = "Sommerfeld rad."
-   bdy_2d_desc(CLAMPED)                 = "Clamped"
+   bdy_2d_desc(CLAMPED_ELEV)            = "Clamped (elev)"
    bdy_2d_desc(FLATHER_ELEV)            = "Flather (elev)"
    bdy_2d_desc(FLATHER_VEL)             = "Flather (vel)"
+   bdy_2d_desc(CLAMPED_VEL)             = "Clamped (vel)"
+   bdy_2d_desc(CLAMPED)                 = "Clamped (elev + normal vel)"
 
    LEVEL1 'init_domain'
 
@@ -232,6 +236,8 @@
 
    call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG,mirror=.true.)
    call wait_halo(H_TAG)
+
+   call uv_depths(vel_depth_method)
 
 !  Reads boundary location information
    if (openbdy) then
