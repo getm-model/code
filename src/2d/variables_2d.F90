@@ -21,12 +21,12 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
+   REALTYPE                            :: dtm
 #ifdef STATIC
 #include "static_2d.h"
 #else
 #include "dynamic_declarations_2d.h"
 #endif
-   REALTYPE                            :: dtm
    integer                             :: size2d_field
    integer                             :: mem2d
 !
