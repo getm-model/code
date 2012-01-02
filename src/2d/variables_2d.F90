@@ -21,6 +21,7 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
+   REALTYPE                            :: dtm
 #ifdef STATIC
 #include "static_2d.h"
 #else
