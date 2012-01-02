@@ -32,7 +32,6 @@
    REALTYPE,dimension(:,:),allocatable :: dudxV,dvdyU,shearU
 !  the followinf fields will only be allocated if An_method=2
    REALTYPE,dimension(:,:),allocatable :: AnC,AnX
-
    integer                             :: size2d_field
    integer                             :: mem2d
 !

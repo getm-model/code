@@ -21,16 +21,16 @@
    use exceptions
    use time, only: julianday,secondsofday
    use parameters, only: avmmol
-   use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV,min_depth
+   use domain, only: imin,imax,iextr,jmin,jmax,jextr,az,au,av,H,HU,HV,min_depth
    use domain, only: ilg,ihg,jlg,jhg
    use domain, only: ill,ihl,jll,jhl
-   use domain, only: openbdy,z0_method,z0_const,z0
+   use domain, only: rigid_lid,openbdy,z0_method,z0_const,z0
    use domain, only: az,ax
    use advection, only: init_advection,print_adv_settings
    use les, only: les_mode,LES_MOMENTUM
    use halo_zones, only : update_2d_halo,wait_halo,H_TAG
    use variables_2d
-
+   use bdy_2d, only: bdyfmt_2d,bdyramp_2d
    IMPLICIT NONE
 
 ! Temporary interface (should be read from module):
@@ -43,6 +43,7 @@
    end interface
 !
 ! !PUBLIC DATA MEMBERS:
+   logical                   :: no_2d
    logical                   :: have_boundaries
    REALTYPE                  :: dtm
    integer                   :: vel_adv_split2d=0
@@ -56,16 +57,10 @@
    integer                   :: An_method=0
    REALTYPE                  :: An_const=-_ONE_
    character(LEN = PATH_MAX) :: An_file
-
    integer                   :: MM=1,residual=-1
    integer                   :: sealevel_check=0
    logical                   :: bdy2d=.false.
-   integer                   :: bdyfmt_2d,bdytype,bdyramp_2d=-1
    character(len=PATH_MAX)   :: bdyfile_2d
-   REAL_4B                   :: bdy_data(1500)
-   REAL_4B                   :: bdy_data_u(1500)
-   REAL_4B                   :: bdy_data_v(1500)
-   REAL_4B, allocatable      :: bdy_times(:)
    integer, parameter        :: comm_method=-1
 !
 ! !REVISION HISTORY:
@@ -109,11 +104,15 @@
 ! !LOCAL VARIABLES:
    integer                   :: rc
    integer                   :: i,j
-   integer                   :: vel_depth_method=0
+   integer                   :: elev_method=1
+   REALTYPE                  :: elev_const=_ZERO_
+   character(LEN = PATH_MAX) :: elev_file='elev.nc'
    namelist /m2d/ &
-          MM,vel_depth_method,vel_adv_split2d,vel_adv_scheme,     &
-          Am_method,Am_const,An_method,An_const,An_file,residual, &
-          sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
+          elev_method,elev_const,elev_file,              &
+          MM,vel_adv_split2d,vel_adv_scheme,             &
+          Am_method,Am_const,An_method,An_const,An_file, &
+          residual,sealevel_check,                       &
+          bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -125,10 +124,10 @@
 
    LEVEL1 'init_2d'
 
+   dtm = timestep
+
 !  Read 2D-model specific things from the namelist.
    read(NAMLST,m2d)
-
-   dtm = timestep
 
 !  Allocates memory for the public data members - if not static
    call init_variables_2d(runtype)
@@ -137,11 +136,31 @@
    LEVEL2 'Advection of depth-averaged velocities'
    call print_adv_settings(vel_adv_split2d,vel_adv_scheme,_ZERO_)
 
+   if (.not. hotstart) then
+      select case (elev_method)
+         case(1)
+            LEVEL2 'setting initial surface elevation to ',real(elev_const)
+            z = elev_const
+         case(2)
+            LEVEL2 'getting initial surface elevation from ',trim(elev_file)
+            call get_2d_field(trim(elev_file),"elev",ilg,ihg,jlg,jhg,z(ill:ihl,jll:jhl))
+         case default
+            stop 'init_2d(): invalid elev_method'
+      end select
+
+      where ( z .lt. -H+min_depth)
+         z = -H+min_depth
+      end where
+      zo = z
+      call depth_update()
+   end if
+
 #if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
 !   STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'
 !   call cfl_check()
 #else
-   call cfl_check()
+!  KK-TODO: why is cfl_check not in terms of D?
+   if (.not. rigid_lid) call cfl_check()
 #endif
 
    select case (Am_method)
@@ -253,25 +272,31 @@
                          "A non valid An method has been chosen");
    end select
 
-   if (sealevel_check .eq. 0) then
-      LEVEL2 'sealevel_check=0 --> NaN checks disabled'
-   else if (sealevel_check .gt. 0) then
-      LEVEL2 'sealevel_check>0 --> NaN values will result in error conditions'
-   else
-      LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
-   end if
-
    if (.not. openbdy)  bdy2d=.false.
-   LEVEL2 'Open boundary=',bdy2d
-   if (bdy2d) then
-      if (hotstart .and. bdyramp_2d .gt. 0) then
-          LEVEL2 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
-          LEVEL2 'WARNING: .. be sure you know what you are doing ..'
-      end if
-      LEVEL2 TRIM(bdyfile_2d)
-      LEVEL2 'Format=',bdyfmt_2d
-   end if
 
+   if (rigid_lid) then
+      if (bdy2d) then
+         LEVEL2 'Reset bdy2d=F because of rigid lid'
+         bdy2d=.false.
+      end if
+   else
+      LEVEL2 'Open boundary=',bdy2d
+      if (bdy2d) then
+         if (hotstart .and. bdyramp_2d .gt. 0) then
+             LEVEL2 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
+             LEVEL2 'WARNING: .. be sure you know what you are doing ..'
+         end if
+         LEVEL2 TRIM(bdyfile_2d)
+         LEVEL2 'Format=',bdyfmt_2d
+      end if
+      if (sealevel_check .eq. 0) then
+         LEVEL2 'sealevel_check=0 --> NaN checks disabled'
+      else if (sealevel_check .gt. 0) then
+         LEVEL2 'sealevel_check>0 --> NaN values will result in error conditions'
+      else
+         LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
+      end if
+   end if
 
    if (deformCX) then
 
@@ -307,14 +332,6 @@
 
    end if
 
-
-   call uv_depths(vel_depth_method)
-
-   where ( -H+min_depth .gt. _ZERO_ )
-      z = -H+min_depth
-   end where
-   zo=z
-
 !  bottom roughness
    if (z0_method .eq. 0) then
       zub0 = z0_const
@@ -335,7 +352,13 @@
    zub=zub0
    zvb=zvb0
 
-   call depth_update()
+#ifdef SLICE_MODEL
+!  Note (KK): sse=0,U=0,dyV=0,V set in 3d
+   no_2d = rigid_lid
+#else
+!  Note (KK): sse=0,U=V=0
+   no_2d = (rigid_lid .and. (imin.eq.iextr .or. jmin.eq.jextr))
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_2d()'
@@ -489,15 +512,24 @@
    call toc(TIM_INTEGR2D)
 
    call momentum(loop,tausx,tausy,airp)
+
+   if (rigid_lid) then
+!     Note (KK): we need to solve Poisson equation to get final transports
+!                that fulfill dxU+dyV=0
+      stop 'integrate_2d(): Poisson solver for rigid lid computations not implemented yet!'
+   end if
+
    if (runtype .gt. 1) then
       call tic(TIM_INTEGR2D)
       Uint=Uint+U
       Vint=Vint+V
       call toc(TIM_INTEGR2D)
    end if
-   if (have_boundaries) call update_2d_bdy(loop,bdyramp_2d)
-   call sealevel()
-   call depth_update()
+
+   if (.not. rigid_lid) then
+      call sealevel(loop)
+      call depth_update()
+   end if
 
    if(residual .gt. 0 .and. loop .ge. residual) then
       call tic(TIM_INTEGR2D)

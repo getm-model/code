@@ -54,6 +54,12 @@
 			<bathymetry>
 				topo.nc
 			</bathymetry>
+			<vel_depth_method>
+				0
+			</vel_depth_method>
+			<rigid_lid>
+				False
+			</rigid_lid>
 			<longitude>
 				0.0
 			</longitude>
@@ -186,12 +192,18 @@
 			</use_river_temp>
 		</rivers>
 		<m2d>
+			<elev_method>
+				1
+			</elev_method>
+			<elev_const>
+				0.0
+			</elev_const>
+			<elev_file>
+				elev.nc
+			</elev_file>
 			<MM>
 				1
 			</MM>
-			<vel_depth_method>
-				0
-			</vel_depth_method>
 			<vel_adv_split2d>
 				0
 			</vel_adv_split2d>

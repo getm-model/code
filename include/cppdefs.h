@@ -9,6 +9,7 @@
 #define DXC dxc(i,j)
 #define DXCJP1 dxc(i,j+1)
 #define DXU dxu(i,j)
+#define DXUIM1 dxu(i-1,j)
 #define DXUJP1 dxu(i,j+1)
 #define DXV dxv(i,j)
 #define DXVIP1 dxv(i+1,j)
@@ -26,6 +27,7 @@
 #define DYUMP dyu(i-1,j+1)
 #define DYV dyv(i,j)
 #define DYVIP1 dyv(i+1,j)
+#define DYVJM1 dyv(i,j-1)
 #define DYX dyx(i,j)
 #define DYXIM1 dyx(i-1,j)
 #define ARCD1 arcd1(i,j)
@@ -35,6 +37,7 @@
 #define DXC dx
 #define DXCJP1 dx
 #define DXU dx
+#define DXUIM1 dx
 #define DXUJP1 dx
 #define DXV dx
 #define DXVIP1 dx
@@ -52,6 +55,7 @@
 #define DYUMP dy
 #define DYV dy
 #define DYVIP1 dy
+#define DYVJM1 dy
 #define DYX dy
 #define DYXIM1 dy
 #define ARCD1 ard1
@@ -62,9 +66,11 @@
 ! For 2D boundary conditions
 #define ZERO_GRADIENT 1
 #define SOMMERFELD    2
-#define CLAMPED       3
+#define CLAMPED_ELEV  3
 #define FLATHER_ELEV  4
 #define FLATHER_VEL   5
+#define CLAMPED_VEL   6
+#define CLAMPED       7
 
 ! Reserved Fortran units
 #define stdin  		5

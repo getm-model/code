@@ -29,7 +29,7 @@
    use les, only: do_les_3d
    use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
    use m2d_general, only: calc_uvex
-   use m2d, only: deformCX,deformUV,Am_method,NO_AM,AM_LES
+   use m2d, only: no_2d,deformCX,deformUV,Am_method,NO_AM,AM_LES
    use variables_2d, only: Uint,Vint
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
@@ -631,18 +631,17 @@
 #endif
 
 #ifndef NO_BAROTROPIC
-   if (kmax .gt. 1) then
+   if (.not. no_2d) then
+      if (kmax .gt. 1) then
 #ifndef NO_BOTTFRIC
-      call slow_bottom_friction()
+         call slow_bottom_friction()
 #endif
-
-      call tic(TIM_INTEGR3D)
-      call calc_uvex(0,Uint,Vint,Dn,Dun,Dvn)
-      call toc(TIM_INTEGR3D)
-
+         call tic(TIM_INTEGR3D)
+         call calc_uvex(0,Uint,Vint,Dn,Dun,Dvn)
+         call toc(TIM_INTEGR3D)
+      end if
+      call slow_terms()
    end if
-
-   call slow_terms()
 #endif
 
    call tic(TIM_INTEGR3D)

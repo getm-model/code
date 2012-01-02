@@ -40,7 +40,7 @@
    use time,     only: update_time,timestep
    use domain,   only: kmax
    use meteo,    only: do_meteo,tausx,tausy,airp,fwf_method,evap,precip
-   use m2d,      only: integrate_2d
+   use m2d,      only: no_2d,integrate_2d
    use variables_2d, only: fwf,fwf_int
 #ifndef NO_3D
    use m3d,      only: integrate_3d,M
@@ -120,7 +120,7 @@
       end if
 
 #ifndef NO_BAROTROPIC
-      call integrate_2d(runtype,n,tausx,tausy,airp)
+      if (.not. no_2d) call integrate_2d(runtype,n,tausx,tausy,airp)
 #endif
 #ifndef NO_3D
       call do_rivers(do_3d)

@@ -54,6 +54,7 @@
 ! !USES:
    use exceptions
    use parameters, only: g,avmmol,rho_0
+   use domain, only: rigid_lid
    use domain, only: imin,imax,jmin,jmax,kmax,H,HV,min_depth
    use domain, only: dry_v,corv,au,av,az,ax
 #if defined CURVILINEAR || defined SPHERICAL
@@ -91,6 +92,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
+   logical,save              :: first=.true.
+   logical,save              :: no_shift=.false.
    integer                   :: i,j,k,rc
    REALTYPE, POINTER         :: dif(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
@@ -114,6 +117,17 @@
    write(debug,*) 'vv_momentum_3d() # ',Ncall
 #endif
    call tic(TIM_VVMOMENTUM)
+
+   if (first) then
+#ifdef NO_BAROTROPIC
+      no_shift = .true.
+#else
+#ifdef SLICE_MODEL
+      no_shift = rigid_lid
+#endif
+#endif
+      first = .false.
+   end if
 
    gammai=_ONE_/gamma
    rho_0i=_ONE_/rho_0
@@ -266,14 +280,16 @@
                Diff=(Vint(i,j)-ResInt)/(ssvo(i,j)+HV(i,j))
 #endif
 
+               if (no_shift) then
+                  do k=kvmin(i,j),kmax
+                     vv(i,j,k)=Res(k)
+                  end do
+               else
+                  do k=kvmin(i,j),kmax
+                     vv(i,j,k)=Res(k)+hvn(i,j,k)*Diff
+                  end do
+               end if
 
-               do k=kvmin(i,j),kmax
-#ifndef NO_BAROTROPIC
-                  vv(i,j,k)=Res(k)+hvn(i,j,k)*Diff
-#else
-                  vv(i,j,k)=Res(k)
-#endif
-               end do
             else ! (kmax .eq. kvmin(i,j))
                vv(i,j,kmax)=Vint(i,j)
             end if
