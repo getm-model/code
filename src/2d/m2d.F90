@@ -42,7 +42,6 @@
 !
 ! !PUBLIC DATA MEMBERS:
    logical                   :: have_boundaries
-   REALTYPE                  :: dtm
    integer                   :: vel_adv_split2d=0
    integer                   :: vel_adv_scheme=1
    REALTYPE                  :: Am=-_ONE_
