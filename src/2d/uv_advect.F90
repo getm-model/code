@@ -149,8 +149,8 @@
 #else
    use domain, only: dx,dy
 #endif
-   use m2d, only: dtm,vel_adv_split2d,vel_adv_scheme
-   use variables_2d, only: UEx,VEx,fadv,Uadv,Vadv,Dadv,DUadv,DVadv
+   use m2d, only: vel_adv_split2d,vel_adv_scheme
+   use variables_2d, only: dtm,UEx,VEx,fadv,Uadv,Vadv,Dadv,DUadv,DVadv
    use advection, only: UPSTREAM,J7,do_advection
    use halo_zones, only: update_2d_halo,wait_halo,U_TAG,V_TAG
    use getm_timers, only: tic,toc,TIM_UVADV,TIM_UVADVH
