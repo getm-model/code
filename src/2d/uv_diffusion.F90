@@ -194,9 +194,13 @@
    do j=jmin,jmax
       do i=imin,imax+1          ! PP defined on T-points
          PP(i,j)=_ZERO_
-         if (az(i,j) .ge. 1) then
+!        Note (KK): we do not need N/S open bdy cells
+!                   in W/E open bdy cells outflow condition must be
+!                   explicitely prescribed (U(i,:) = U(i-1,:))
+         if (az(i,j) .eq. 1) then
             if(Am .gt. _ZERO_) then
-               PP(i,j)=2.*Am*DYC*D(i,j)               &
+!              KK-TODO: we need center depth at velocity time stage
+               PP(i,j)=_TWO_*Am*DYC*D(i,j)               &
                        *(U(i,j)/DU(i,j)-U(i-1,j)/DU(i-1,j))/DXC
             end if
             if (An_method .gt. 0) then
@@ -209,7 +213,8 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax      ! UEx defined on U-points
       do i=imin,imax
-         if (au(i,j) .ge. 1) then
+!        Note (KK): we do not need UEx(au=3)
+         if (au(i,j).eq.1 .or. au(i,j).eq.2) then
             UEx(i,j)=UEx(i,j)-(PP(i+1,j)-PP(i  ,j))*ARUD1
          end if
       end do
@@ -224,7 +229,7 @@
          PP(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
             if(Am .gt. _ZERO_) then
-               PP(i,j)=Am*0.5*(DU(i,j)+DU(i,j+1))*DXX  &
+               PP(i,j)=Am*_HALF_*(DU(i,j)+DU(i,j+1))*DXX  &
                        *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
                         +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
             end if
@@ -238,7 +243,8 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax        !UEx defined on U-points
       do i=imin,imax
-         if (au(i,j) .ge. 1) then
+!        Note (KK): we do not need UEx(au=3)
+         if (au(i,j).eq.1 .or. au(i,j).eq.2) then
             UEx(i,j)=UEx(i,j)-(PP(i,j  )-PP(i,j-1))*ARUD1
          end if
       end do
@@ -246,14 +252,14 @@
 !$OMP END DO
 #endif
 
-! Central for dx(Am*(dy(U^2/DU)+dx(V^2/DV)))
+! Central for dx(Am*(dy(U/DU)+dx(V/DV)))
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax      ! PP defined on X-points
       do i=imin-1,imax
          PP(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
             if(Am .gt. _ZERO_) then
-               PP(i,j)=Am*0.5*(DV(i,j)+DV(i+1,j))*DYX  &
+               PP(i,j)=Am*_HALF_*(DV(i,j)+DV(i+1,j))*DYX  &
                        *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
                         +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
             end if
@@ -267,7 +273,8 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax          ! VEx defined on V-points
       do i=imin,imax
-         if (av(i,j) .ge. 1) then
+!        Note (KK): we do not need VEx(av=3)
+         if (av(i,j).eq.1 .or. av(i,j).eq.2) then
             VEx(i,j)=VEx(i,j)-(PP(i  ,j)-PP(i-1,j))*ARVD1
          end if
       end do
@@ -275,14 +282,18 @@
 !$OMP END DO
 
 #ifndef SLICE_MODEL
-! Central for dy(2*Am*dy(V^2/DV))
+! Central for dy(2*Am*dy(V/DV))
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax+1     ! PP defined on T-points
       do i=imin,imax
          PP(i,j)=_ZERO_
-         if (az(i,j) .ge. 1) then
+!        Note (KK): we do not need W/E open bdy cells
+!                   in N/S open bdy cells outflow condition must be
+!                   explicitely prescribed (V(:,j) = V(:,j-1))
+         if (az(i,j) .eq. 1) then
             if(Am .gt. _ZERO_) then
-               PP(i,j)=2.*Am*DXC*D(i,j)               &
+!              KK-TODO: we need center depth at velocity time stage
+               PP(i,j)=_TWO_*Am*DXC*D(i,j)               &
                        *(V(i,j)/DV(i,j)-V(i,j-1)/DV(i,j-1))/DYC
             end if
             if (An_method .gt. 0) then
@@ -295,7 +306,8 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax             ! VEx defined on V-points
       do i=imin,imax
-         if (av(i,j) .ge. 1) then
+!        Note (KK): we do not need VEx(av=3)
+         if (av(i,j).eq.1 .or. av(i,j).eq.2) then
             VEx(i,j)=VEx(i,j)-(PP(i,j+1)-PP(i,j  ))*ARVD1
          end if
       end do
@@ -313,7 +325,6 @@
    return
    end subroutine uv_diffusion
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------
