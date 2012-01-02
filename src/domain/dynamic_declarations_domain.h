@@ -10,7 +10,7 @@
 
 !  mask
    REALTYPE, dimension(:,:), allocatable    :: mask
-   integer, dimension(:,:), allocatable     :: az,au,av,ax
+   integer,dimension(:,:),allocatable,target :: az,au,av,ax
 
 !  bathymetry
    REALTYPE, dimension(:,:), allocatable    :: H,HU,HV
@@ -38,10 +38,10 @@
 !  metric parameters
    REALTYPE                                 :: dx=-_ONE_,dy=-_ONE_,ard1
    REALTYPE                                 :: dlon=-_ONE_,dlat=-_ONE_
-   REALTYPE, dimension(:,:), allocatable    :: dxdyc,dydxc
-   REALTYPE, dimension(:,:), allocatable    :: dxc,dxu,dxv,dxx
-   REALTYPE, dimension(:,:), allocatable    :: dyc,dyu,dyv,dyx
-   REALTYPE, dimension(:,:), allocatable    :: arcd1,arud1,arvd1
+   REALTYPE,dimension(:,:),allocatable,target :: dxdyc,dydxc
+   REALTYPE,dimension(:,:),allocatable,target :: dxc,dxu,dxv,dxx
+   REALTYPE,dimension(:,:),allocatable,target :: dyc,dyu,dyv,dyx
+   REALTYPE,dimension(:,:),allocatable,target :: arcd1,arud1,arvd1
 
 !  bottom roughness
    REALTYPE, dimension(:,:), allocatable    :: z0

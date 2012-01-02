@@ -28,8 +28,10 @@
    use variables_3d, only: taubx,tauby
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho,rad,NN
+   use variables_3d, only: diffxx,diffyy,diffxy
    use variables_3d, only: nummix3d_S,nummix3d_T,phymix3d_S,phymix3d_T
 #endif
+   use variables_les, only: AmC_3d
    use variables_3d, only: tke,num,nuh,eps
 #ifdef SPM
    use variables_3d, only: spm_pool,spm
@@ -241,6 +243,25 @@
       end if
 
    end if ! save_strho
+
+   if (calc_stirr .and. save_stirr) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,diffxx,stirr_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,diffxx_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+#ifndef SLICE_MODEL
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,diffyy,stirr_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,diffyy_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,diffxy,stirr_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,diffxy_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+#endif
+   end if
 #endif
 
    if (save_turb) then
@@ -318,6 +339,13 @@
       end if
    end if ! save_mix_analysis
 #endif
+
+   if (Am_method.eq.AM_LES .and. save_Am_3d) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,AmC_3d,Am_3d_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,Am_3d_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
 
 #ifdef SPM
    if (spm_save) then

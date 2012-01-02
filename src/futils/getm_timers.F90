@@ -29,8 +29,11 @@
    integer, parameter :: TIM_MOMENTUM    =  4   ! 2d momentum
    integer, parameter :: TIM_MOMENTUMH   =  5   ! 2d momentum - halo part only
    integer, parameter :: TIM_UVDEPTHS    =  6   ! 2d uv_depths
-   integer, parameter :: TIM_UVADVECT    =  8   ! 2d uv_advect
-   integer, parameter :: TIM_UVDIFFUS    = 10   ! 2d uv_diffusion
+   integer, parameter :: TIM_UVEX        =  7   ! wrapper for hor. adv+diff
+   integer, parameter :: TIM_UVADV       =  8   ! 2d uv_advect
+   integer, parameter :: TIM_UVADVH      =  9   ! 2d uv_advect - halo part only
+   integer, parameter :: TIM_DEFORM      = 10   ! 2d deformation rates
+   integer, parameter :: TIM_UVDIFF      = 11   ! 2d uv_diffusion
    integer, parameter :: TIM_DPTHUPDATE  = 12   ! 2d depth_update
    integer, parameter :: TIM_SEALEVEL    = 14   ! 2d sealevel
    integer, parameter :: TIM_SEALEVELH   = 15   ! 2d sealevel - halo part only
@@ -39,7 +42,8 @@
    integer, parameter :: TIM_GOTMH       = 23   ! 3d gotm - halo part onl
    integer, parameter :: TIM_UVADV3D     = 30   ! 3d uv_advect_3d
    integer, parameter :: TIM_UVADV3DH    = 31   ! 3d uv_advect_3d - halo part only
-   integer, parameter :: TIM_UVDIFF3D    = 32   ! 3d uv_diffusion_3d
+   integer, parameter :: TIM_DEFORM3D    = 32   ! 3d deformation rates
+   integer, parameter :: TIM_UVDIFF3D    = 33   ! 3d uv_diffusion_3d
    integer, parameter :: TIM_VVMOMENTUM  = 34   ! 3d vv_momentum_3d
    integer, parameter :: TIM_VVMOMENTUMH = 35   ! 3d vv_momentum_3d - halo part only
    integer, parameter :: TIM_UUMOMENTUM  = 36   ! 3d uu_momentum_3d
@@ -52,8 +56,6 @@
    integer, parameter :: TIM_STRESSES3DH = 45   ! 3d stresses_3d - halo part only
    integer, parameter :: TIM_SLOWTERMS   = 46   ! 3d slow_terms
    integer, parameter :: TIM_SLOWBFRICT  = 48   ! 3d slow_bottom_friction
-   integer, parameter :: TIM_SLOWADV     = 50   ! 3d slow_advection
-   integer, parameter :: TIM_SLOWDIFF    = 51   ! 3d slow_diffusion
    integer, parameter :: TIM_TEMP        = 52   ! 3d do_temperature
    integer, parameter :: TIM_TEMPH       = 53   ! 3d temperature halo (presently in m3d/do_integrate_3d)
    integer, parameter :: TIM_SALT        = 54   ! 3d do_salinity
@@ -63,7 +65,9 @@
    integer, parameter :: TIM_STARTMCR    = 60   ! 3d start_macro
    integer, parameter :: TIM_STOPMCR     = 62   ! 3d stop_macro
    integer, parameter :: TIM_STRCTFRICT  = 64   ! 3d structure_friction_3d
-   integer, parameter :: TIM_EQSTATE     = 66   ! 3d do_eqstate
+   integer, parameter :: TIM_EQSTATE     = 65   ! 3d do_eqstate
+   integer, parameter :: TIM_STIRR       = 66   ! tracer_stirring
+   integer, parameter :: TIM_TRACEDIFF   = 67   ! tracer_diffusion
    integer, parameter :: TIM_CALCMEANF   = 68   ! 3d calc_mean_fields
    integer, parameter :: TIM_METEO       = 70   ! do_meteo (could use + halo)
    integer, parameter :: TIM_GETM_BIO    = 72   ! do_getm_bio
@@ -75,16 +79,21 @@
    integer, parameter :: TIM_INPUT       = 90   ! input
    integer, parameter :: TIM_OUTPUT      = 92   ! output
    ! These catch stuff that are *also* measured somewhere else:
-   integer, parameter :: TIM_ADVECT3DTOT = 100  ! advection_3d (uv+tracers)
-   integer, parameter :: TIM_ADVECT3DH   = 101  ! advection_3d halo-part only
-   integer, parameter :: TIM_CHECK3DF    = 102  ! check_3d_fields
-   integer, parameter :: TIM_MIXANALYSIS = 103  ! (numerical) mixing analysis
+   integer, parameter :: TIM_ADV         = 100  ! 2d advection
+   integer, parameter :: TIM_ADVH        = 101  ! 2d advection halo parts
+   integer, parameter :: TIM_ADV3D       = 102  ! 3d advection
+   integer, parameter :: TIM_ADV3DH      = 103  ! 3d advection halo parts
+   integer, parameter :: TIM_CHECK3DF    = 104  ! check_3d_fields
+   integer, parameter :: TIM_MIXANALYSIS = 105  ! (numerical) mixing analysis
    integer, parameter :: TIM_HALO2D      = 110  ! do halo 2d (initialize comm)
    integer, parameter :: TIM_HALO3D      = 111  ! do halo 3d (initialize comm)
    integer, parameter :: TIM_HALOWAIT    = 112  ! wait_halo (2d+3d both)
    integer, parameter :: TIM_ADVECTBIO   = 113  ! advection_3d bio
    integer, parameter :: TIM_ADVECTFABM  = 114  ! advection_3d fabm
-
+!  LES timers
+   integer, parameter :: TIM_LES2D       = 152  ! do_les_2d
+   integer, parameter :: TIM_LES3D       = 153  ! do_les_3d
+   integer, parameter :: TIM_SMAG2D      = 154  ! les_smagorinsky
    ! This is test timers for temporary coding purposes:
    !  Note: All timers with index 170+ (test_timer_first) are
    !  considered test timers, so dont implement your timers here
@@ -166,12 +175,17 @@
    timernames(TIM_BOTTFRICT)   = 'bottom_friction'
    timernames(TIM_MOMENTUM)    = 'momentum'
    timernames(TIM_UVDEPTHS)    = 'uv_depths'
-   timernames(TIM_UVADVECT)    = 'uv_advect'
-   timernames(TIM_UVDIFFUS)    = 'uv_diffusion'
+   timernames(TIM_LES2D)       = 'do_les_2d'
+   timernames(TIM_SMAG2D)      = ' sum les_smagorinsky'
+   timernames(TIM_UVEX)        = ' sum calc_uvex'
+   timernames(TIM_UVADV)       = ' sum uv_advect'
+   timernames(TIM_DEFORM)      = ' sum deformation_rates'
+   timernames(TIM_UVDIFF)      = ' sum uv_diffusion'
    timernames(TIM_DPTHUPDATE)  = 'depth_update'
    timernames(TIM_SEALEVEL)    = 'sealevel'
 
    timernames(TIM_INTEGR2D)    = 'integrate_2d other'
+   timernames(TIM_ADV)         = ' sum do_advection'
 
    timernames(TIM_METEO)       = 'do_meteo'
    timernames(TIM_INPUT)       = 'do_input'
@@ -179,7 +193,9 @@
 
 #ifdef GETM_PARALLEL
    timernames(TIM_MOMENTUMH)   = ' momentum-halo'
+   timernames(TIM_UVADVH)      = ' uv_advect-halo'
    timernames(TIM_SEALEVELH)   = ' sealevel-halo'
+   timernames(TIM_ADVH)        = ' do_advection-halo'
    timernames(TIM_HALO2D)      = ' sum do_halo_2d'
    timernames(TIM_HALOWAIT)    = ' sum wait_halo'
 #endif
@@ -188,7 +204,9 @@
    timernames(TIM_GOTM)        = 'gotm'
    ! do_turbulence is deeply nested and requires *many* calls to time
    !timernames(TIM_GOTMTURB)    = ' gotm-turbulence'
+   timernames(TIM_LES3D)       = 'do_les_3d'
    timernames(TIM_UVADV3D)     = 'uv_advect_3d'
+   timernames(TIM_DEFORM3D)    = 'deformation_rates_3d'
    timernames(TIM_UVDIFF3D)    = 'uv_diffusion_3d'
    timernames(TIM_VVMOMENTUM)  = 'vv_momentum_3d'
    timernames(TIM_UUMOMENTUM)  = 'uu_momentum_3d'
@@ -198,20 +216,18 @@
    timernames(TIM_STRESSES3D)  = 'stresses_3d'
    timernames(TIM_SLOWTERMS)   = 'slow_terms'
    timernames(TIM_SLOWBFRICT)  = 'slow_bottom_friction'
-   timernames(TIM_SLOWADV)     = 'slow_advection'
-   timernames(TIM_SLOWDIFF)    = 'slow_diffusion'
    timernames(TIM_TEMP)        = 'do_temperature'
-   timernames(TIM_TEMPH)       = ' temperature-halo'
    timernames(TIM_SALT)        = 'do_salinity'
-   timernames(TIM_SALTH)       = ' salinity-halo'
    timernames(TIM_COORDS)      = 'coordinates'
    timernames(TIM_INTPRESS)    = 'do_internal_pressure'
    timernames(TIM_STARTMCR)    = 'start_macro'
    timernames(TIM_EQSTATE)     = 'eq_state'
+   timernames(TIM_STIRR)       = 'tracer_stirring'
+   timernames(TIM_TRACEDIFF)   = ' sum tracer_diffusion'
    timernames(TIM_CALCMEANF)   = 'calc_mean_fields'
 
    timernames(TIM_CHECK3DF)    = ' sum check_3d_fields'
-   timernames(TIM_ADVECT3DTOT) = ' sum do_advection_3d'
+   timernames(TIM_ADV3D)       = ' sum do_advection_3d'
    timernames(TIM_INTEGR3D)    = 'integrate_3d other'
    timernames(TIM_MIXANALYSIS) = 'numerical mixing analysis'
 
@@ -223,7 +239,9 @@
    timernames(TIM_VVMOMENTUMH) = ' vv_momentum_3d-halo'
    timernames(TIM_WWMOMENTUMH) = ' ww_momentum_3d-halo'
    timernames(TIM_STRESSES3DH) = ' stresses_3d-halo'
-   timernames(TIM_ADVECT3DH)   = ' do_advection_3d halo'
+   timernames(TIM_TEMPH)       = ' temperature-halo'
+   timernames(TIM_SALTH)       = ' salinity-halo'
+   timernames(TIM_ADV3DH)      = ' do_advection_3d-halo'
    timernames(TIM_HALO3D)      = ' sum do_halo_3d'
 #endif
 

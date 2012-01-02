@@ -32,8 +32,7 @@
 #else
    use domain, only: H,az,kmax,ard1
 #endif
-   use m2d, only: dtm
-   use variables_2d, only: z
+   use variables_2d, only: dtm,z
 #ifndef NO_BAROCLINIC
    use m3d, only: calc_salt,calc_temp
    use variables_3d, only: hn,ssen,T,S

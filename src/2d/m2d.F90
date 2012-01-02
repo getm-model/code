@@ -20,15 +20,18 @@
 ! !USES:
    use exceptions
    use time, only: julianday,secondsofday
-   use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV,min_depth
+   use domain, only: imin,imax,iextr,jmin,jmax,jextr,az,au,av,H,HU,HV,min_depth
    use domain, only: ilg,ihg,jlg,jhg
    use domain, only: ill,ihl,jll,jhl
-   use domain, only: openbdy,z0_method,z0_const,z0
+   use domain, only: rigid_lid,openbdy,z0_method,z0_const,z0
    use domain, only: az,ax
-   use halo_zones, only : update_2d_halo,wait_halo
-   use halo_zones, only : U_TAG,V_TAG,H_TAG
+   use advection, only: init_advection,print_adv_settings
+   use les, only: les_mode,LES_MOMENTUM
+   use halo_zones, only : update_2d_halo,wait_halo,H_TAG
    use variables_2d
+   use bdy_2d, only: bdyfmt_2d,bdyramp_2d
    IMPLICIT NONE
+
 ! Temporary interface (should be read from module):
    interface
       subroutine get_2d_field(fn,varname,il,ih,jl,jh,f)
@@ -39,33 +42,33 @@
    end interface
 !
 ! !PUBLIC DATA MEMBERS:
+   logical                   :: no_2d
    logical                   :: have_boundaries
    REALTYPE                  :: dtm
+   integer                   :: vel_adv_split2d=0
+   integer                   :: vel_adv_scheme=1
    REALTYPE                  :: avmmol=1.8d-6
-   REALTYPE                  :: Am=-_ONE_
+   logical                   :: deformCX=.false.,deformUV=.false.
+   integer,parameter         :: NO_AM=0,AM_CONSTANT=1,AM_LES=2
+   integer                   :: Am_method=NO_AM
+   REALTYPE                  :: Am_const=1.8d-6
 !  method for specifying horizontal numerical diffusion coefficient
 !     (0=const, 1=from named nc-file)
    integer                   :: An_method=0
    REALTYPE                  :: An_const=-_ONE_
    character(LEN = PATH_MAX) :: An_file
-
    integer                   :: MM=1,residual=-1
    integer                   :: sealevel_check=0
    logical                   :: bdy2d=.false.
-   integer                   :: bdyfmt_2d,bdytype,bdyramp_2d=-1
    character(len=PATH_MAX)   :: bdyfile_2d
-   REAL_4B                   :: bdy_data(1500)
-   REAL_4B                   :: bdy_data_u(1500)
-   REAL_4B                   :: bdy_data_v(1500)
-   REAL_4B, allocatable      :: bdy_times(:)
    integer, parameter        :: comm_method=-1
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-  integer                    :: num_neighbors
-  REALTYPE                   :: An_sum
+   integer                   :: num_neighbors
+   REALTYPE                  :: An_sum
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -101,10 +104,15 @@
 ! !LOCAL VARIABLES:
    integer                   :: rc
    integer                   :: i,j
-   integer                   :: vel_depth_method=0
+   integer                   :: elev_method=1
+   REALTYPE                  :: elev_const=_ZERO_
+   character(LEN = PATH_MAX) :: elev_file='elev.nc'
    namelist /m2d/ &
-          MM,vel_depth_method,avmmol,Am,An_method,An_const,An_file,     &
-          residual,sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
+          elev_method,elev_const,elev_file,              &
+          MM,vel_adv_split2d,vel_adv_scheme,avmmol,      &
+          Am_method,Am_const,An_method,An_const,An_file, &
+          residual,sealevel_check,                       &
+          bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -116,19 +124,43 @@
 
    LEVEL1 'init_2d'
 
+   dtm = timestep
+
 !  Read 2D-model specific things from the namelist.
    read(NAMLST,m2d)
 
-   dtm = timestep
-
 !  Allocates memory for the public data members - if not static
    call init_variables_2d(runtype)
+   call init_advection()
+
+   LEVEL2 'Advection of depth-averaged velocities'
+   call print_adv_settings(vel_adv_split2d,vel_adv_scheme,_ZERO_)
+
+   if (.not. hotstart) then
+      select case (elev_method)
+         case(1)
+            LEVEL2 'setting initial surface elevation to ',real(elev_const)
+            z = elev_const
+         case(2)
+            LEVEL2 'getting initial surface elevation from ',trim(elev_file)
+            call get_2d_field(trim(elev_file),"elev",ilg,ihg,jlg,jhg,z(ill:ihl,jll:jhl))
+         case default
+            stop 'init_2d(): invalid elev_method'
+      end select
+
+      where ( z .lt. -H+min_depth)
+         z = -H+min_depth
+      end where
+      zo = z
+      call depth_update()
+   end if
 
 #if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
 !   STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'
 !   call cfl_check()
 #else
-   call cfl_check()
+!  KK-TODO: why is cfl_check not in terms of D?
+   if (.not. rigid_lid) call cfl_check()
 #endif
 
    if (avmmol .lt. _ZERO_) then
@@ -138,103 +170,174 @@
       LEVEL2 'avmmol = ',real(avmmol)
    end if
 
-   if (Am .lt. _ZERO_) then
-      LEVEL2 'Am < 0 --> horizontal momentum diffusion not included'
-   end if
+   select case (Am_method)
+      case(NO_AM)
+         LEVEL2 'Am_method=0 -> horizontal momentum diffusion not included'
+      case(AM_CONSTANT)
+         LEVEL2 'Am_method=1 -> Using constant horizontal momentum diffusion'
+         if (Am_const .lt. _ZERO_) then
+           call getm_error("init_2d()", &
+                           "Constant horizontal momentum diffusion <0");
+         end if
+         LEVEL3 real(Am_const)
+         deformCX=.true.
+      case(AM_LES)
+         LEVEL2 'Am_method=2 -> using LES parameterisation'
+         les_mode=LES_MOMENTUM
+         deformCX=.true.
+         deformUV=.true.
+      case default
+         call getm_error("init_2d()", &
+                         "A non valid Am_method has been chosen");
+   end select
 
    select case (An_method)
       case(0)
          LEVEL2 'An_method=0 -> horizontal numerical diffusion not included'
-         An = _ZERO_
       case(1)
          LEVEL2 'An_method=1 -> Using constant horizontal numerical diffusion'
          if (An_const .lt. _ZERO_) then
-              call getm_error("init_2d()", &
-                         "Constant horizontal numerical diffusion <0");
-         else
-            An  = An_const
-            AnX = An_const
+            call getm_error("init_2d()", &
+                            "Constant horizontal numerical diffusion <0");
          end if
       case(2)
          LEVEL2 'An_method=2 -> Using space varying horizontal numerical diffusion'
          LEVEL2 '..  will read An from An_file ',trim(An_file)
-         ! Initialize and then read field:
-         An = _ZERO_
-         call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,An(ill:ihl,jll:jhl))
-         call update_2d_halo(An,An,az,imin,jmin,imax,jmax,H_TAG)
-         call wait_halo(H_TAG)
-         ! Compute AnX (An in X-points) based on An and the X- and T- masks
-         AnX = _ZERO_
-         ! We loop over the X-points in the present domain.
-         do j=jmin-1,jmax
-            do i=imin-1,imax
-               if (ax(i,j) .ge. 1) then
-                  num_neighbors = 0
-                  An_sum = _ZERO_
-                  ! Each AnX should have up to 4 T-point neighbours.
-                  if ( az(i,j) .ge. 1 ) then
-                     An_sum        = An_sum + An(i,j)
-                     num_neighbors = num_neighbors +1
-                  end if
-                  if ( az(i,j+1) .ge. 1 ) then
-                     An_sum        = An_sum + An(i,j+1)
-                     num_neighbors = num_neighbors +1
-                  end if
-                  if ( az(i+1,j) .ge. 1 ) then
-                     An_sum        = An_sum + An(i+1,j)
-                     num_neighbors = num_neighbors +1
-                  end if
-                  if ( az(i+1,j+1) .ge. 1 ) then
-                     An_sum        = An_sum + An(i+1,j+1)
-                     num_neighbors = num_neighbors +1
-                  end if
-                  ! Take average of actual neighbours:
-                  if (num_neighbors .gt. 0) then
-                     AnX(i,j) = An_sum/num_neighbors
-                  end if
-               end if
-            end do
-         end do
-         call update_2d_halo(AnX,AnX,ax,imin,jmin,imax,jmax,H_TAG)
-         call wait_halo(H_TAG)
-         !
-         ! If all An values are really zero, then we should not use An-smoothing at all...
-         ! Note that smoothing may be on in other subdomains.
-         if ( MAXVAL(ABS(An)) .eq. _ZERO_ ) then
-            LEVEL2 '  All An is zero for this (sub)domain - switching to An_method=0'
-            An_method=0
+
+         allocate(AnC(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (AnC)'
+
+!        Note (KK): due to the use of [i|j][l|h]l we will read in also the halo zones
+         call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,AnC(ill:ihl,jll:jhl))
+
+         if (MINVAL(AnC(imin:imax,jmin:jmax),mask=(az(imin:imax,jmin:jmax).ge.1)) .lt. _ZERO_) then
+            call getm_error("init_2d()", &
+                            "negative numerical diffusivity in An field");
          end if
 
+         if (ihl .eq. imax) then
+            AnC(imax+1,jmin:jmax) = _ZERO_
+            if (jhl .eq. jmax) then
+               AnC(imax+1,jmax+1) = _ZERO_
+            end if
+         end if
+         if (jhl .eq. jmax) then
+            AnC(imin:imax,jmax+1) = _ZERO_
+            if (ihl .eq. imax) then
+               AnC(imax+1,jmax+1) = _ZERO_
+            end if
+         end if
+
+         if (MAXVAL(AnC(imin:imax+1,jmin:jmax+1),mask=(az(imin:imax+1,jmin:jmax+1).ge.1)) .eq. _ZERO_) then
+!           Note (BJB): If all An values are really zero, then we should not use An-smoothing at all...
+!                       Note that smoothing may be on in other subdomains.
+            LEVEL2 '  All An is zero for this (sub)domain - switching to An_method=0'
+            An_method=0
+         else
+!           Note (KK): since a HALO update of AnX is not needed,
+!                      the allocation of AnX can be done locally
+!                      and dependent on the test above
+
+            allocate(AnX(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_2d: Error allocating memory (AnX)'
+
+            ! Compute AnX (An in X-points) based on AnC and the X- and T- masks
+            ! We loop over the X-points in the present domain.
+            do j=jmin-1,jmax
+               do i=imin-1,imax
+                  if (ax(i,j) .ge. 1) then
+                     num_neighbors = 0
+                     An_sum = _ZERO_
+                     ! Each AnX should have up to 4 T-point neighbours.
+!                    Note (KK): right, so why do we need this An_sum stuff?
+                     if ( az(i,j) .ge. 1 ) then
+                        An_sum        = An_sum + AnC(i,j)
+                        num_neighbors = num_neighbors +1
+                     end if
+                     if ( az(i,j+1) .ge. 1 ) then
+                        An_sum        = An_sum + AnC(i,j+1)
+                        num_neighbors = num_neighbors +1
+                     end if
+                     if ( az(i+1,j) .ge. 1 ) then
+                        An_sum        = An_sum + AnC(i+1,j)
+                        num_neighbors = num_neighbors +1
+                     end if
+                     if ( az(i+1,j+1) .ge. 1 ) then
+                        An_sum        = An_sum + AnC(i+1,j+1)
+                        num_neighbors = num_neighbors +1
+                     end if
+                     ! Take average of actual neighbours:
+                     if (num_neighbors .gt. 0) then
+                        AnX(i,j) = An_sum/num_neighbors
+                     end if
+                  end if
+               end do
+            end do
+         end if
       case default
          call getm_error("init_2d()", &
                          "A non valid An method has been chosen");
    end select
 
-   if (sealevel_check .eq. 0) then
-      LEVEL2 'sealevel_check=0 --> NaN checks disabled'
-   else if (sealevel_check .gt. 0) then
-      LEVEL2 'sealevel_check>0 --> NaN values will result in error conditions'
-   else
-      LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
-   end if
-
    if (.not. openbdy)  bdy2d=.false.
-   LEVEL2 'Open boundary=',bdy2d
-   if (bdy2d) then
-      if (hotstart .and. bdyramp_2d .gt. 0) then
-          LEVEL2 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
-          LEVEL2 'WARNING: .. be sure you know what you are doing ..'
+
+   if (rigid_lid) then
+      if (bdy2d) then
+         LEVEL2 'Reset bdy2d=F because of rigid lid'
+         bdy2d=.false.
       end if
-      LEVEL2 TRIM(bdyfile_2d)
-      LEVEL2 'Format=',bdyfmt_2d
+   else
+      LEVEL2 'Open boundary=',bdy2d
+      if (bdy2d) then
+         if (hotstart .and. bdyramp_2d .gt. 0) then
+             LEVEL2 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
+             LEVEL2 'WARNING: .. be sure you know what you are doing ..'
+         end if
+         LEVEL2 TRIM(bdyfile_2d)
+         LEVEL2 'Format=',bdyfmt_2d
+      end if
+      if (sealevel_check .eq. 0) then
+         LEVEL2 'sealevel_check=0 --> NaN checks disabled'
+      else if (sealevel_check .gt. 0) then
+         LEVEL2 'sealevel_check>0 --> NaN values will result in error conditions'
+      else
+         LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
+      end if
    end if
 
-   call uv_depths(vel_depth_method)
+   if (deformCX) then
 
-   where ( -H+min_depth .gt. _ZERO_ )
-      z = -H+min_depth
-   end where
-   zo=z
+      allocate(dudxC(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (dudxC)'
+      dudxC=_ZERO_
+
+#ifndef SLICE_MODEL
+      allocate(dvdyC(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyC)'
+      dvdyC=_ZERO_
+#endif
+
+      allocate(shearX(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (shearX)'
+      shearX=_ZERO_
+
+      if (deformUV) then
+         allocate(dudxV(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (dudxV)'
+         dudxV=_ZERO_
+
+#ifndef SLICE_MODEL
+         allocate(dvdyU(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyU)'
+         dvdyU=_ZERO_
+#endif
+
+         allocate(shearU(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (shearU)'
+         shearU=_ZERO_
+      end if
+
+   end if
 
 !  bottom roughness
    if (z0_method .eq. 0) then
@@ -256,7 +359,13 @@
    zub=zub0
    zvb=zvb0
 
-   call depth_update()
+#ifdef SLICE_MODEL
+!  Note (KK): sse=0,U=0,dyV=0,V set in 3d
+   no_2d = rigid_lid
+#else
+!  Note (KK): sse=0,U=V=0
+   no_2d = (rigid_lid .and. (imin.eq.iextr .or. jmin.eq.jextr))
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_2d()'
@@ -355,6 +464,7 @@
 ! !INTERFACE:
    subroutine integrate_2d(runtype,loop,tausx,tausy,airp)
    use getm_timers, only: tic, toc, TIM_INTEGR2D
+
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -403,31 +513,30 @@
       call bottom_friction(runtype)
 #endif
    end if
-   UEx=_ZERO_ ; VEx=_ZERO_
-#ifdef NO_ADVECT
-   STDERR 'NO_ADVECT 2D'
-#else
-#ifndef UV_ADV_DIRECT
-   call uv_advect()
-   if (Am .gt. _ZERO_ .or. An_method .gt. 0) then
-      call uv_diffusion(Am,An_method,An,AnX) ! Has to be called after uv_advect.
-   end if
+
    call tic(TIM_INTEGR2D)
-   call mirror_bdy_2d(UEx,U_TAG)
-   call mirror_bdy_2d(VEx,V_TAG)
+   call calc_uvex(An_method,U,V,D,DU,DV)
    call toc(TIM_INTEGR2D)
-#endif
-#endif
+
    call momentum(loop,tausx,tausy,airp)
+
+   if (rigid_lid) then
+!     Note (KK): we need to solve Poisson equation to get final transports
+!                that fulfill dxU+dyV=0
+      stop 'integrate_2d(): Poisson solver for rigid lid computations not implemented yet!'
+   end if
+
    if (runtype .gt. 1) then
       call tic(TIM_INTEGR2D)
       Uint=Uint+U
       Vint=Vint+V
       call toc(TIM_INTEGR2D)
    end if
-   if (have_boundaries) call update_2d_bdy(loop,bdyramp_2d)
-   call sealevel()
-   call depth_update()
+
+   if (.not. rigid_lid) then
+      call sealevel(loop)
+      call depth_update()
+   end if
 
    if(residual .gt. 0 .and. loop .ge. residual) then
       call tic(TIM_INTEGR2D)

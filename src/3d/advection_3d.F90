@@ -31,42 +31,58 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
-   use halo_zones, only: update_3d_halo,wait_halo,D_TAG
+   use advection
    IMPLICIT NONE
 !
    private
 !
 ! !PUBLIC DATA MEMBERS:
-   public init_advection_3d, do_advection_3d
+   public init_advection_3d, do_advection_3d,print_adv_settings_3d
+   integer,public                        :: itersmax_adv=1
+!  Note (KK): hi and adv3d are used only in do_advection_3d
 #ifdef STATIC
-   REALTYPE, public                    :: cu(I3DFIELD)
-   REALTYPE, public                    :: hi(I3DFIELD)
-   REALTYPE, public                    :: hio(I3DFIELD)
+   REALTYPE,dimension(I3DFIELD)          :: hi,adv3d
 #else
-   REALTYPE, public, dimension(:,:,:), allocatable       :: hi,hio,cu
+   REALTYPE,dimension(:,:,:),allocatable :: hi,adv3d
 #endif
-   integer, public, parameter          :: UPSTREAM=1,UPSTREAM_SPLIT=2,P2=3
-   integer, public, parameter          :: Superbee=4,MUSCL=5,P2_PDM=6,FCT=7
-   REALTYPE, public, parameter         :: one6th=_ONE_/6
-   REALTYPE, public, parameter         :: ONE=_ONE_,TWO=_TWO_
+   integer,public,parameter              :: HVSPLIT=3,W_TAG=33
+   character(len=64),public,parameter    :: adv_splits_3d(0:3) = &
+             (/"no split: one 3D uvw step",                      &
+               "full step splitting: u + v + w",                 &
+               "half step splitting: u/2 + v/2 + w + v/2 + u/2", &
+               "hor/ver splitting: uv + w"/)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
-   integer :: advection_method
 !EOP
 !-----------------------------------------------------------------------
+
+   interface
+      subroutine adv_w_split_3d(dt,f,hi,adv3d,ww,ho,            &
+                                az,splitfac,scheme,kshift,      &
+                                nosplit_finalise,mask_finalise)
+         use domain, only: imin,imax,jmin,jmax,kmax
+         IMPLICIT NONE
+         REALTYPE,intent(in)                             :: dt,splitfac
+         REALTYPE,dimension(I3DFIELD),intent(in)         :: ww,ho
+         integer,dimension(E2DFIELD),intent(in)          :: az
+         integer,intent(in)                              :: scheme,kshift
+         logical,intent(in),optional                     :: nosplit_finalise
+         logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
+         REALTYPE,dimension(I3DFIELD),intent(inout)      :: f,hi,adv3d
+      end subroutine adv_w_split_3d
+   end interface
 
    contains
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: init_advection_3d
+! !IROUTINE:  init_advection_3d
 !
 ! !INTERFACE:
-   subroutine init_advection_3d(method)
+   subroutine init_advection_3d()
 !
 ! !DESCRIPTION:
 !
@@ -76,11 +92,8 @@
 ! !USES
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-   integer, intent(in)                 :: method
-!
 ! !LOCAL VARIABLES:
-   integer                   :: rc
+   integer :: rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -90,20 +103,24 @@
    write(debug,*) 'init_advection_3d() # ',Ncall
 #endif
 
-   LEVEL1 'init_advection_3d()'
+   LEVEL2 'init_advection_3d'
 
 #ifndef STATIC
-   allocate(cu(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection_3d: Error allocating memory (cu)'
-
    allocate(hi(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection_3d: Error allocating memory (hi)'
+   if (rc /= 0) stop 'init_advection: Error allocating memory (hi)'
 
-   allocate(hio(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection_3d: Error allocating memory (hio)'
+   allocate(adv3d(I3DFIELD),stat=rc)    ! work array
+   if (rc /= 0) stop 'init_advection: Error allocating memory (adv3d)'
 #endif
 
-   cu  = _ZERO_ ; hi  = _ZERO_ ; hio = _ZERO_
+#ifdef ITERATE_VERT_ADV
+   if (itersmax_adv .eq. 1) then
+      itersmax_adv = 200
+      LEVEL3 'changed number of maximum iterations'
+      LEVEL3 'from 1 to 200 because of obsolete'
+      LEVEL3 'compiler option -DITERATE_VERT_ADV'
+   end if
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_advection_3d()'
@@ -112,16 +129,14 @@
    return
    end subroutine init_advection_3d
 !EOC
-
 !-----------------------------------------------------------------------
 !BOP
 !
 ! !IROUTINE:  do_advection_3d - 3D advection schemes \label{sec-do-advection-3d}
 !
 ! !INTERFACE:
-   subroutine do_advection_3d(dt,f,uu,vv,ww,hun,hvn,ho,hn,      &
-                             delxu,delxv,delyu,delyv,area_inv,  &
-                             az,au,av,hor_adv,ver_adv,adv_split,AH)
+   subroutine do_advection_3d(dt,f,uu,vv,ww,hu,hv,ho,hn,hscheme,vscheme,split,AH,tag_3d, &
+                              hires,advres)
 !
 ! !DESCRIPTION:
 !
@@ -211,37 +226,24 @@
 !
 !
 ! !USES:
-   use getm_timers, only: tic, toc, TIM_ADVECT3DTOT, TIM_ADVECT3DH
+   use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG,U_TAG,V_TAG
+   use getm_timers, only: tic,toc,TIM_ADV3D,TIM_ADV3DH
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in) :: uu(I3DFIELD)       ! layer-integrated x-transport
-   REALTYPE, intent(in) :: vv(I3DFIELD)       ! layer-integrated y-transport
-   REALTYPE, intent(in) :: ww(I3DFIELD)       ! grid-related vertical velocity
-   REALTYPE, intent(in) :: ho(I3DFIELD)       ! old height of finite volume box
-   REALTYPE, intent(in) :: hn(I3DFIELD)       ! new height of finite volume box
-   REALTYPE, intent(in) :: hun(I3DFIELD)      ! height of x-interfaces
-   REALTYPE, intent(in) :: hvn(I3DFIELD)      ! height of y-interfaces
-   REALTYPE, intent(in) :: delxu(I2DFIELD)    ! dx centered on u-transport pt.
-   REALTYPE, intent(in) :: delxv(I2DFIELD)    ! length of y-interface
-   REALTYPE, intent(in) :: delyu(I2DFIELD)    ! length of u-interface
-   REALTYPE, intent(in) :: delyv(I2DFIELD)    ! dy centered on v-transport pt.
-   REALTYPE, intent(in) :: area_inv(I2DFIELD) ! inverse of horizontal box area
-   REALTYPE, intent(in) :: dt                 ! advection time step
-   REALTYPE, intent(in) :: AH                 ! constant horizontal diffusivity
-   integer, intent(in)  :: az(E2DFIELD)       ! mask for box centre (1: water)
-   integer, intent(in)  :: au(E2DFIELD)       ! mask for u-transport (1: water)
-   integer, intent(in)  :: av(E2DFIELD)       ! mask for v-transport (1: water)
-   integer, intent(in)  :: hor_adv            ! selection for horizontal scheme
-   integer, intent(in)  :: ver_adv            ! selection for vertical scheme
-   integer, intent(in)  :: adv_split          ! selection for split mode
+   REALTYPE,intent(in)                               :: dt,AH
+   REALTYPE,dimension(I3DFIELD),intent(in)           :: uu,vv,ww,ho,hn,hu,hv
+   integer,intent(in)                                :: split,hscheme,vscheme,tag_3d
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE, intent(inout)   :: f(I3DFIELD)
+   REALTYPE,dimension(I3DFIELD),intent(inout)        :: f
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE,dimension(I3DFIELD),intent(out),optional :: hires,advres
 !
 ! !LOCAL VARIABLES:
-   REALTYPE, parameter       :: a1=0.5*ONE,a2=ONE
-   integer         :: k
+   integer                  :: tag,k,kshift
+   type(t_adv_grid),pointer :: adv_grid
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -250,118 +252,265 @@
    Ncall = Ncall+1
    write(debug,*) 'do_advection_3d() # ',Ncall
 #endif
-   call tic(TIM_ADVECT3DTOT)
+   call tic(TIM_ADV3D)
 
-   select case (hor_adv)
-      case (UPSTREAM)
-         call upstream_adv(dt,f,uu,vv,ww,ho,hn, &
-                           delxv,delyu,delxu,delyv,area_inv,az,AH)
-      case ((UPSTREAM_SPLIT),(P2),(Superbee),(MUSCL),(P2_PDM),(FCT))
-         hi=ho
-         select case (adv_split)
-            case (0)
-               call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a2,&
-                                hor_adv,az,AH)
-               call tic(TIM_ADVECT3DH)
-               call update_3d_halo(f,f,az,&
-                                   imin,jmin,imax,jmax,kmax,D_TAG)
-               call wait_halo(D_TAG)
-               call toc(TIM_ADVECT3DH)
+   if (tag_3d .eq. W_TAG) then
+      tag = H_TAG
+      kshift = 1
+   else
+      tag = tag_3d
+      kshift = 0
+   end if
 
-#ifndef SLICE_MODEL
-               call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a2,&
-                                hor_adv,az,AH)
-               call tic(TIM_ADVECT3DH)
-               call update_3d_halo(f,f,az,&
-                                   imin,jmin,imax,jmax,kmax,D_TAG)
-               call wait_halo(D_TAG)
-               call toc(TIM_ADVECT3DH)
-#endif
-
-               if (kmax.gt.1) then
-#ifdef ITERATE_VERT_ADV
-                  call w_split_it_adv(dt,f,ww,az,a2,ver_adv)
-#else
-                  call w_split_adv(dt,f,ww,az,a2,ver_adv)
-#endif
-               end if
-            case (1)
-               call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
-                                hor_adv,az,AH)
-               call tic(TIM_ADVECT3DH)
-               call update_3d_halo(f,f,az, &
-                                   imin,jmin,imax,jmax,kmax,D_TAG)
-               call wait_halo(D_TAG)
-               call toc(TIM_ADVECT3DH)
-
-#ifndef SLICE_MODEL
-               call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
-                                hor_adv,az,AH)
-               call tic(TIM_ADVECT3DH)
-               call update_3d_halo(f,f,az, &
-                                   imin,jmin,imax,jmax,kmax,D_TAG)
-               call wait_halo(D_TAG)
-               call toc(TIM_ADVECT3DH)
-#endif
-
-               if (kmax.gt.1) then
-#ifdef ITERATE_VERT_ADV
-                  call w_split_it_adv(dt,f,ww,az,a2,ver_adv)
-#else
-                  call w_split_adv(dt,f,ww,az,a2,ver_adv)
-#endif
-                  call tic(TIM_ADVECT3DH)
-                  call update_3d_halo(f,f,az, &
-                                      imin,jmin,imax,jmax,kmax,D_TAG)
-                  call wait_halo(D_TAG)
-                  call toc(TIM_ADVECT3DH)
-
-               end if
-#ifndef SLICE_MODEL
-               call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
-                                hor_adv,az,AH)
-               call tic(TIM_ADVECT3DH)
-               call update_3d_halo(f,f,az, &
-                                   imin,jmin,imax,jmax,kmax,D_TAG)
-               call wait_halo(D_TAG)
-               call toc(TIM_ADVECT3DH)
-#endif
-
-               call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
-                                hor_adv,az,AH)
-               call tic(TIM_ADVECT3DH)
-               call update_3d_halo(f,f,az, &
-                                   imin,jmin,imax,jmax,kmax,D_TAG)
-               call wait_halo(D_TAG)
-               call toc(TIM_ADVECT3DH)
-
-            case (2)
-               select case (hor_adv)
-                  case (UPSTREAM_SPLIT)
-                     call upstream_2dh_adv(dt,f,uu,vv,ho,hn,hun,hvn, &
-                               delxv,delyu,delxu,delyv,area_inv,az,AH)
-                  case (FCT)
-                     call fct_2dh_adv(dt,f,uu,vv,ho,hn,hun,hvn, &
-                               delxv,delyu,delxu,delyv,area_inv,az,AH)
-                  case default
-                     FATAL 'For adv_split=2, hor_adv must be 2 (upstream) or 7 (fct)'
-               end select
-               if (kmax .gt. 1) then
-#ifdef ITERATE_VERT_ADV
-                  call w_split_it_adv(dt,f,ww,az,a2,ver_adv)
-#else
-                  call w_split_adv(dt,f,ww,az,a2,ver_adv)
-#endif
-               end if
-            case default
-               FATAL 'Not valid adv_split parameter'
-         end select
+   select case (tag)
+      case(H_TAG,D_TAG)
+         adv_grid => adv_gridH
+      case(U_TAG)
+         adv_grid => adv_gridU
+      case(V_TAG)
+         adv_grid => adv_gridV
       case default
-         FATAL 'This is not so good - do_advection_3d()'
-         stop
+         stop 'do_advection: tag is invalid'
    end select
 
-   call toc(TIM_ADVECT3DTOT)
+   hi = ho
+   adv3d = _ZERO_
+
+    select case (split)
+
+      case(NOSPLIT)
+
+         select case (hscheme)
+
+            case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
+
+               do k=1,kmax
+                  call adv_u_split(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k),        &
+                                   uu(:,:,k),ho(:,:,k),hu(:,:,k),             &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                   adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
+#endif
+                                   _ONE_,hscheme,AH,                          &
+                                   adv_grid%mask_uflux,adv_grid%mask_uupdate, &
+                                   nosplit_finalise=.false.)
+#ifndef SLICE_MODEL
+                  call adv_v_split(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k),        &
+                                   vv(:,:,k),ho(:,:,k),hv(:,:,k),             &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                   adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
+#endif
+                                   _ONE_,hscheme,AH,                          &
+                                   adv_grid%mask_vflux,adv_grid%mask_vupdate, &
+                                   nosplit_finalise=.false.)
+#endif
+               end do
+
+            case (UPSTREAM_2DH)
+
+               do k=1,kmax
+                  call adv_upstream_2dh(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k), &
+                                        uu(:,:,k),vv(:,:,k),                &
+                                        ho(:,:,k),hn(:,:,k),                &
+                                        hu(:,:,k),hv(:,:,k),                &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                        adv_grid%dxv,adv_grid%dyu,          &
+                                        adv_grid%dxu,adv_grid%dyv,          &
+                                        adv_grid%arcd1,                     &
+#endif
+                                        adv_grid%az,AH,                     &
+                                        nosplit_finalise=.false.)
+               end do
+
+            case (FCT)
+
+               do k=1,kmax
+                  call adv_fct_2dh(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k), &
+                                   uu(:,:,k),vv(:,:,k),                &
+                                   ho(:,:,k),hn(:,:,k),                &
+                                   hu(:,:,k),hv(:,:,k),                &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                   adv_grid%dxv,adv_grid%dyu,          &
+                                   adv_grid%dxu,adv_grid%dyv,          &
+                                   adv_grid%arcd1,                     &
+#endif
+                                   adv_grid%az,AH,                     &
+                                   nosplit_finalise=.false.)
+               end do
+
+            case(J7)
+
+               do k=1,kmax
+                  call adv_arakawa_j7_2dh(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k), &
+                                          uu(:,:,k),vv(:,:,k),                &
+                                          ho(:,:,k),hn(:,:,k),                &
+                                          hu(:,:,k),hv(:,:,k),                &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                          adv_grid%dxv,adv_grid%dyu,          &
+                                          adv_grid%dxu,adv_grid%dyv,          &
+                                          adv_grid%arcd1,                     &
+#endif
+                                          adv_grid%az,AH,                     &
+                                          adv_grid%mask_uflux,                &
+                                          adv_grid%mask_vflux,                &
+                                          adv_grid%mask_xflux,                &
+                                          nosplit_finalise=.false.)
+               end do
+
+            case default
+
+               stop 'do_advection_3d: hscheme is invalid'
+
+         end select
+!        Note (KK): here adv_w_split_3d must be called even for kmax=1 !!!
+         call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,                  &
+                             adv_grid%az,_ONE_,vscheme,kshift,     &
+                             nosplit_finalise=.true.,              &
+                             mask_finalise=adv_grid%mask_finalise)
+
+      case(FULLSPLIT)
+
+         do k=1,kmax
+            call do_advection(dt,f(:,:,k),uu(:,:,k),vv(:,:,k),         &
+                              hu(:,:,k),hv(:,:,k),ho(:,:,k),hn(:,:,k), &
+                              hscheme,FULLSPLIT,AH,tag,                &
+                              Dires=hi(:,:,k),advres=adv3d(:,:,k))
+         end do
+         if (kmax .gt. 1) then
+            call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,              &
+                                adv_grid%az,_ONE_,vscheme,kshift)
+         end if
+
+      case(HALFSPLIT)
+
+         select case (hscheme)
+
+            case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
+
+               do k=1,kmax
+                  call adv_u_split(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k),        &
+                                   uu(:,:,k),ho(:,:,k),hu(:,:,k),             &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                   adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
+#endif
+                                   _HALF_,hscheme,AH,                         &
+                                   adv_grid%mask_uflux,adv_grid%mask_uupdate)
+               end do
+#ifndef SLICE_MODEL
+#ifdef GETM_PARALLEL
+               if (hscheme.ne.UPSTREAM .and. tag_3d.eq.V_TAG) then
+!                 we need to update f(imin:imax,jmax+HALO)
+                  call tic(TIM_ADV3DH)
+                  call update_3d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,kmax,D_TAG)
+                  call wait_halo(D_TAG)
+                  call toc(TIM_ADV3DH)
+               end if
+#endif
+               do k=1,kmax
+                  call adv_v_split(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k),        &
+                                   vv(:,:,k),ho(:,:,k),hv(:,:,k),             &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                   adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
+#endif
+                                   _HALF_,hscheme,AH,                         &
+                                   adv_grid%mask_vflux,adv_grid%mask_vupdate)
+               end do
+#endif
+               if (kmax .gt. 1) then
+                  call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,              &
+                                      adv_grid%az,_ONE_,vscheme,kshift)
+               end if
+#ifndef SLICE_MODEL
+#ifdef GETM_PARALLEL
+               if (hscheme .eq. UPSTREAM) then
+                  if (tag_3d .eq. V_TAG) then
+!                    we need to update f(imin-1:imax+1,jmax+1)
+!                    KK-TODO: if external hv was halo-updated this halo-update is not necessary
+                     call tic(TIM_ADV3DH)
+                     call update_3d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,kmax,D_TAG)
+                     call wait_halo(D_TAG)
+                     call toc(TIM_ADV3DH)
+                  end if
+               else
+!                 we need to update f(imin:imax,jmin-HALO:jmin-1)
+!                 we need to update f(imin:imax,jmax+1:jmax+HALO)
+                  call tic(TIM_ADV3DH)
+                  call update_3d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,kmax,D_TAG)
+                  call wait_halo(D_TAG)
+                  call toc(TIM_ADV3DH)
+               end if
+#endif
+               do k=1,kmax
+                  call adv_v_split(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k),        &
+                                   vv(:,:,k),ho(:,:,k),hv(:,:,k),             &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                   adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
+#endif
+                                   _HALF_,hscheme,AH,                         &
+                                   adv_grid%mask_vflux,adv_grid%mask_vupdate)
+               end do
+#endif
+#ifdef GETM_PARALLEL
+               if (hscheme .eq. UPSTREAM) then
+                  if (tag_3d .eq. U_TAG) then
+!                    we need to update f(imax+1,jmin:jmax)
+!                    KK-TODO: if external hu was halo-updated this halo-update is not necessary
+                     call tic(TIM_ADV3DH)
+                     call update_3d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,kmax,D_TAG)
+                     call wait_halo(D_TAG)
+                     call toc(TIM_ADV3DH)
+                  end if
+               else
+!                 we need to update f(imin-HALO:imin-1,jmin:jmax)
+!                 we need to update f(imax+1:imax+HALO,jmin:jmax)
+                  call tic(TIM_ADV3DH)
+                  call update_3d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,kmax,D_TAG)
+                  call wait_halo(D_TAG)
+                  call toc(TIM_ADV3DH)
+               end if
+#endif
+               do k=1,kmax
+                  call adv_u_split(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k),        &
+                                   uu(:,:,k),ho(:,:,k),hu(:,:,k),             &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                   adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
+#endif
+                                   _HALF_,hscheme,AH,                         &
+                                   adv_grid%mask_uflux,adv_grid%mask_uupdate)
+               end do
+
+            case((UPSTREAM_2DH),(FCT),(J7))
+
+               stop 'do_advection_3d: hscheme not valid for split'
+
+            case default
+
+               stop 'do_advection_3d: hscheme is invalid'
+
+         end select
+
+      case(HVSPLIT)
+
+         do k=1,kmax
+            call do_advection(dt,f(:,:,k),uu(:,:,k),vv(:,:,k),         &
+                              hu(:,:,k),hv(:,:,k),ho(:,:,k),hn(:,:,k), &
+                              hscheme,NOSPLIT,AH,tag,                  &
+                              Dires=hi(:,:,k),advres=adv3d(:,:,k))
+         end do
+         if (kmax .gt. 1) then
+            call adv_w_split_3d(dt,f,hi,adv3d,ww,ho,              &
+                                adv_grid%az,_ONE_,vscheme,kshift)
+         end if
+
+      case default
+
+         stop 'do_advection_3d: split is invalid'
+
+   end select
+
+   if (present(hires)) hires = hi
+   if (present(advres)) advres = adv3d
+
+   call toc(TIM_ADV3D)
 #ifdef DEBUG
    write(debug,*) 'Leaving do_advection_3d()'
    write(debug,*)
@@ -369,7 +518,94 @@
    return
    end subroutine do_advection_3d
 !EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  print_adv_settings_3d
+!
+! !INTERFACE:
+   subroutine print_adv_settings_3d(split,hscheme,vscheme,AH)
+!
+! !DESCRIPTION:
+!
+! Checks and prints out settings for 3D advection.
+!
+! !USES
+   IMPLICIT NONE
 
+! !INPUT PARAMETERS:
+   integer,intent(in)  :: split,hscheme,vscheme
+   REALTYPE,intent(in) :: AH
+!
+! !LOCAL VARIABLES:
+!
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'print_adv_settings_3d() # ',Ncall
+#endif
+
+   select case (split)
+      case((NOSPLIT),(FULLSPLIT),(HALFSPLIT),(HVSPLIT))
+      case default
+         FATAL 'adv_split=',split,' is invalid'
+         stop
+   end select
+
+   select case (hscheme)
+      case((UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(FCT),(J7))
+      case default
+         FATAL 'hor_adv=',hscheme,' is invalid'
+         stop
+   end select
+
+   select case (vscheme)
+      case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
+      case default
+         FATAL 'ver_adv=',vscheme,' is invalid'
+         stop
+   end select
+
+   select case (split)
+      case((FULLSPLIT),(HALFSPLIT))
+         select case (hscheme)
+            case((UPSTREAM_2DH),(FCT),(J7))
+               FATAL 'hor_adv=',hscheme,' not valid for adv_split=',split
+               stop
+         end select
+   end select
+
+   LEVEL3 trim(adv_splits_3d(split))
+   LEVEL3 ' horizontal: ',trim(adv_schemes(hscheme))
+
+   if (AH .gt. _ZERO_) then
+      LEVEL3 '             with AH=',AH
+   else
+      LEVEL3 '             without diffusion'
+   end if
+
+   LEVEL3 ' vertical  : ',trim(adv_schemes(vscheme))
+
+   if (split .eq. NOSPLIT) then
+      LEVEL3 '             adv_split=',split,' disables iteration'
+   else
+      if (itersmax_adv .gt. 1) then
+         LEVEL3 '             with max ',itersmax_adv,' iterations'
+      else
+         LEVEL3 '             without iteration'
+      end if
+   end if
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving print_adv_settings_3d()'
+   write(debug,*)
+#endif
+   return
+   end subroutine print_adv_settings_3d
+!EOC
 !-----------------------------------------------------------------------
 
    end module advection_3d

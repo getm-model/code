@@ -26,6 +26,12 @@
 #else
 #include "dynamic_declarations_2d.h"
 #endif
+!  the following fields will only be allocated if deformCX=.true.
+   REALTYPE,dimension(:,:),allocatable :: dudxC,dvdyC,shearX
+!  the following fields will only be allocated if deformUV=.true.
+   REALTYPE,dimension(:,:),allocatable :: dudxV,dvdyU,shearU
+!  the followinf fields will only be allocated if An_method=2
+   REALTYPE,dimension(:,:),allocatable :: AnC,AnX
    integer                             :: size2d_field
    integer                             :: mem2d
 !
@@ -137,6 +143,10 @@
    ENbdy=_ZERO_
    EEbdy=_ZERO_
    ESbdy=_ZERO_
+
+!  input arrays for do_advection
+   fadv = _ZERO_ ; Uadv = _ZERO_ ; Vadv = _ZERO_
+   DUadv = _ZERO_ ; DVadv = _ZERO_
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_variables_2d()'

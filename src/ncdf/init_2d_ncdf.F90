@@ -184,6 +184,14 @@
 
    end if
 
+   if (Am_method.eq.AM_LES .and. save_Am_2d) then
+      fv = Am_2d_missing; mv = Am_2d_missing; vr(1) = 0.; vr(2) =  500.
+      err = nf90_def_var(ncid,'Am_2d',NCDF_FLOAT_PRECISION,f3_dims,Am_2d_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,Am_2d_id,long_name='hor. eddy viscosity',units='m2/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
+
    fv = vel_missing; mv = vel_missing; vr(1) = -3.; vr(2) =  3.
 !  residual currents - u and v
    err = nf90_def_var(ncid,'res_u',NCDF_FLOAT_PRECISION,f3_dims,res_u_id)

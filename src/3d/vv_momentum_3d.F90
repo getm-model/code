@@ -55,6 +55,7 @@
    use exceptions
    use parameters, only: g,rho_0
    use m2d, only: avmmol
+   use domain, only: rigid_lid
    use domain, only: imin,imax,jmin,jmax,kmax,H,HV,min_depth
    use domain, only: dry_v,corv,au,av,az,ax
 #if defined CURVILINEAR || defined SPHERICAL
@@ -76,9 +77,6 @@
 #ifndef NO_BAROCLINIC
    use variables_3d, only: idpdy
 #endif
-#ifdef UV_TVD
-   use variables_3d, only: uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv
-#endif
    use halo_zones, only: update_3d_halo,wait_halo,V_TAG
    use meteo, only: tausy,airp
    use m3d, only: ip_fac
@@ -95,7 +93,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   logical, save             :: first=.true.
+   logical,save              :: first=.true.
+   logical,save              :: no_shift=.false.
    integer                   :: i,j,k,rc
    REALTYPE, POINTER         :: dif(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
@@ -122,6 +121,14 @@
    if (first) then
       rho_0i = _ONE_ / rho_0
       gammai = _ONE_ / (rho_0*max(SMALL,g))
+
+#ifdef NO_BAROTROPIC
+      no_shift = .true.
+#else
+#ifdef SLICE_MODEL
+      no_shift = rigid_lid
+#endif
+#endif
       first = .false.
    end if
 
@@ -272,14 +279,16 @@
                Diff=(Vint(i,j)-ResInt)/(ssvo(i,j)+HV(i,j))
 #endif
 
+               if (no_shift) then
+                  do k=kvmin(i,j),kmax
+                     vv(i,j,k)=Res(k)
+                  end do
+               else
+                  do k=kvmin(i,j),kmax
+                     vv(i,j,k)=Res(k)+hvn(i,j,k)*Diff
+                  end do
+               end if
 
-               do k=kvmin(i,j),kmax
-#ifndef NO_BAROTROPIC
-                  vv(i,j,k)=Res(k)+hvn(i,j,k)*Diff
-#else
-                  vv(i,j,k)=Res(k)
-#endif
-               end do
             else ! (kmax .eq. kvmin(i,j))
                vv(i,j,kmax)=Vint(i,j)
             end if
