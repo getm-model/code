@@ -103,10 +103,9 @@
    integer                   :: elev_method=1
    REALTYPE                  :: elev_const=_ZERO_
    character(LEN = PATH_MAX) :: elev_file='elev.nc'
-   integer                   :: vel_depth_method=0
    namelist /m2d/ &
-          elev_method,elev_const,elev_file,                           &
-          MM,vel_depth_method,Am,An_method,An_const,An_file,residual, &
+          elev_method,elev_const,elev_file,                    &
+          MM,Am,An_method,An_const,An_file,residual,           &
           sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
@@ -118,9 +117,6 @@
 #endif
 
    LEVEL1 'init_2d'
-
-!  KK-TODO: why is uv_depths not in init_domain()?
-   call uv_depths(vel_depth_method)
 
    dtm = timestep
 
