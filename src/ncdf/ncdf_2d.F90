@@ -21,6 +21,9 @@
    integer                             :: time_id
 
    integer                             :: elev_id,u_id,v_id
+#if defined(CURVILINEAR)
+   integer                             :: urot_id,vrot_id
+#endif
    integer                             :: res_u_id,res_v_id,surfdiv_id
    integer                             :: u10_id,v10_id
    integer                             :: airp_id,t2_id,hum_id,tcc_id
