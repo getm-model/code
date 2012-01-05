@@ -17,6 +17,7 @@
    use grid_ncdf,    only: xlen,ylen,zlen
    use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
    use domain,       only: H,HU,HV,az,au,av,min_depth
+   use domain,       only: convc
 #if defined CURVILINEAR || defined SPHERICAL
    use domain,       only: dxv,dyu,arcd1
 #else
@@ -64,6 +65,13 @@
    integer, save             :: n3d=0
    REALTYPE                  :: DONE(E2DFIELD)
    REALTYPE                  :: dum(1)
+   integer                   :: i,j
+   REALTYPE                  :: uutmp(I3DFIELD),vvtmp(I3DFIELD)
+#if defined(CURVILINEAR)
+   REALTYPE                  :: uurot(I3DFIELD),vvrot(I3DFIELD)
+   REALTYPE                  :: deg2rad = 3.141592654/180.
+   REALTYPE                  :: cosconv,sinconv
+#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -151,9 +159,7 @@
       err = nf90_put_var(ncid,tauby_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 
-
    endif
-
 
    start(1) = 1
    start(2) = 1
@@ -176,26 +182,20 @@
 
       if (destag) then
          call to_3d_uu(imin,jmin,imax,jmax,kmin,kmax,az, &
-                       hun,uu,vel_missing,ws)
+                       hun,uu,vel_missing,uutmp)
+         call to_3d_vv (imin,jmin,imax,jmax,kmin,kmax,az, &
+                        hvn,vv,vel_missing,vvtmp)
       else
          call to_3d_vel(imin,jmin,imax,jmax,kmin,kmax,au, &
-                        hun,uu,vel_missing,ws)
-      endif
-
-      err = nf90_put_var(ncid,uu_id,ws(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
-
-
-      if (destag) then
-         call to_3d_vv (imin,jmin,imax,jmax,kmin,kmax,az, &
-                        hvn,vv,vel_missing,ws)
-      else
+                        hun,uu,vel_missing,uutmp)
          call to_3d_vel(imin,jmin,imax,jmax,kmin,kmax,av, &
-                        hvn,vv,vel_missing,ws)
+                        hvn,vv,vel_missing,vvtmp)
       endif
-
-      err = nf90_put_var(ncid,vv_id,ws(_3D_W_),start,edges)
+      err = nf90_put_var(ncid,uu_id,uutmp(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
+      err = nf90_put_var(ncid,vv_id,vvtmp(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
       call tow(imin,jmin,imax,jmax,kmin,kmax,az, &
                dt,                               &
 #if defined CURVILINEAR || defined SPHERICAL
@@ -206,6 +206,27 @@
                H,HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,ws)
       err = nf90_put_var(ncid,w_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
+
+#if defined(CURVILINEAR)
+! rotated zonal and meridional velocities
+      do j=jmin,jmax
+         do i=imin,imax
+            if (az(i,j) .gt. 0) then
+               cosconv = cos(deg2rad*convc(i,j))
+               sinconv = sin(deg2rad*convc(i,j))
+               uurot(i,j,:) = uutmp(i,j,:)*cosconv-vvtmp(i,j,:)*sinconv
+               vvrot(i,j,:) = uutmp(i,j,:)*sinconv+vvtmp(i,j,:)*cosconv
+            else
+               uurot(i,j,:) = vel_missing
+               vvrot(i,j,:) = vel_missing
+            end if
+         end do
+      end do
+      err = nf90_put_var(ncid,uurot_id,uurot(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+      err = nf90_put_var(ncid,vvrot_id,vvrot(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+#endif
 
    end if
 
