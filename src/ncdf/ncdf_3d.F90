@@ -24,6 +24,9 @@
    integer                             :: elev_id,u_id,v_id
    integer                             :: taubx_id,tauby_id
    integer                             :: uu_id,vv_id,w_id
+#if defined(CURVILINEAR)
+   integer                             :: uurot_id,vvrot_id
+#endif
    integer                             :: salt_id,temp_id,sigma_t_id
    integer                             :: rad_id
    integer                             :: diffxx_id,diffyy_id,diffxy_id
