@@ -23,19 +23,19 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer,intent(in)                      :: imin,jmin,imax,jmax,kmax
-   integer,dimension(I2DFIELD),intent(in)  :: kmin
-   integer,dimension(E2DFIELD),intent(in)  :: az
-   REALTYPE,intent(in)                     :: dt
+   integer,intent(in)                       :: imin,jmin,imax,jmax,kmax
+   integer,dimension(I2DFIELD),intent(in)   :: kmin
+   integer,dimension(E2DFIELD),intent(in)   :: az
+   REALTYPE,intent(in)                      :: dt
 #if defined(CURVILINEAR) || defined(SPHERICAL)
-   REALTYPE,dimension(E2DFIELD),intent(in) :: dxv,dyu,arcd1
+   REALTYPE,dimension(E2DFIELD),intent(in)  :: dxv,dyu,arcd1
 #else
-   REALTYPE,intent(in)                     :: dx,dy,ard1
+   REALTYPE,intent(in)                      :: dx,dy,ard1
 #endif
-   REALTYPE,dimension(E2DFIELD),intent(in) :: H,HU,HV
+   REALTYPE,dimension(E2DFIELD),intent(in)  :: H,HU,HV
    REALTYPE,dimension(I3DFIELD),intent(inout) :: hn,ho,hun,hvn
-   REALTYPE,dimension(I3DFIELD),intent(in) :: uu,vv,ww
-   REALTYPE,intent(in)                     :: missing
+   REALTYPE,dimension(I3DFIELD),intent(in)  :: uu,vv,ww
+   REALTYPE,intent(in)                      :: missing
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE,dimension(I3DFIELD),intent(out) :: wc
@@ -44,18 +44,17 @@
 !  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
-   REALTYPE,dimension(I2DFIELD)            :: hwc,zco,zcn,zu
+   REALTYPE,dimension(I2DFIELD)             :: hwc,zco,zcn,zu
 #ifndef SLICE_MODEL
-   REALTYPE,dimension(I2DFIELD)            :: zv
+   REALTYPE,dimension(I2DFIELD)             :: zv
 #endif
-   REALTYPE,dimension(I2DFIELD,0:1),target :: zw
-   REALTYPE,dimension(:,:),pointer         :: zwd,zwu
-   REALTYPE                                :: dtm1
-   integer                                 :: i,k,kk
+   REALTYPE,dimension(I2DFIELD,0:1)         :: zw
+   REALTYPE                                 :: dtm1
+   integer                                  :: i,k,kp,km
 #ifdef SLICE_MODEL
-   integer,parameter                       :: j=2
+   integer,parameter                        :: j=2
 #else
-   integer                                 :: j
+   integer                                  :: j
 #endif
 !EOP
 !-----------------------------------------------------------------------
@@ -66,8 +65,8 @@
    write(debug,*) 'tow() # ',Ncall
 #endif
 
-!  until this is not implemented for coordinates
-!  we have to do it here
+!  KK-TODO: this should be part of do_coordinates
+!           ( 0 <= k < k[ |u|v]min-1 )
    ho(:,:,0) = _ZERO_
    hn(:,:,0) = _ZERO_
    hun(:,:,0) = _ZERO_
@@ -83,7 +82,7 @@
    zv = -HV
 #endif
    zw(:,:,0) = -H
-   kk = 0
+   kp = 0
 
    do k=1,kmax
 
@@ -96,10 +95,9 @@
 #ifndef SLICE_MODEL
       zv  = zv  + _HALF_*( hvn(:,:,k-1) + hvn(:,:,k) )
 #endif
-      zwd=>zw(:,:,kk)
-      kk = 1-kk
-      zwu=>zw(:,:,kk)
-      zwu = zwd + hwc
+      km = kp
+      kp = 1-kp
+      zw(:,:,kp) = zw(:,:,km) + hwc
 
 !     calculate wc
 #ifndef SLICE_MODEL
@@ -124,8 +122,8 @@
                      )                                   &
                      *ARCD1                              &
                    + (                                   &
-                        ww(i,j,k  )*zwu(i,j)             &
-                      - ww(i,j,k-1)*zwd(i,j)             &
+                        ww(i,j,k  )*zw(i,j,kp)           &
+                      - ww(i,j,k-1)*zw(i,j,km)           &
                      )                                   &
                   )                                      &
                   /hwc(i,j)
