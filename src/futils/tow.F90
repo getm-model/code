@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: tow() - calculates cell centered physical velocity
+! !ROUTINE: tow() - calculates cell centered physical vertical velocity
 !
 ! !INTERFACE:
    subroutine tow(imin,jmin,imax,jmax,kmin,kmax,az,                    &
@@ -27,7 +27,7 @@
    integer,dimension(I2DFIELD),intent(in)  :: kmin
    integer,dimension(E2DFIELD),intent(in)  :: az
    REALTYPE,intent(in)                     :: dt
-#if defined CURVILINEAR || defined SPHERICAL
+#if defined(CURVILINEAR) || defined(SPHERICAL)
    REALTYPE,dimension(E2DFIELD),intent(in) :: dxv,dyu,arcd1
 #else
    REALTYPE,intent(in)                     :: dx,dy,ard1
@@ -63,7 +63,7 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'ww2wc() # ',Ncall
+   write(debug,*) 'tow() # ',Ncall
 #endif
 
 !  until this is not implemented for coordinates
@@ -82,8 +82,8 @@
 #ifndef SLICE_MODEL
    zv = -HV
 #endif
-   kk = 1
    zw(:,:,0) = -H
+   kk = 0
 
    do k=1,kmax
 
@@ -96,9 +96,9 @@
 #ifndef SLICE_MODEL
       zv  = zv  + _HALF_*( hvn(:,:,k-1) + hvn(:,:,k) )
 #endif
-      zwu=>zw(:,:,kk)
-      kk = 1-kk
       zwd=>zw(:,:,kk)
+      kk = 1-kk
+      zwu=>zw(:,:,kk)
       zwu = zwd + hwc
 
 !     calculate wc
