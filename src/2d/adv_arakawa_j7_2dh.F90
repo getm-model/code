@@ -42,7 +42,7 @@
    REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
 !
 ! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
+!  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
    logical                      :: use_AH
@@ -178,5 +178,5 @@
    end subroutine adv_arakawa_j7_2dh
 !EOC
 !-----------------------------------------------------------------------
-! Copyright (C) 2004 - Hans Burchard and Karsten Bolding               !
+! Copyright (C) 2012 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------
