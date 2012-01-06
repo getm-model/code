@@ -74,43 +74,58 @@
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,advn)
 
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO,jmax+HALO-1
+      do i=imin-HALO,imax+HALO-1
+
+         if (mask_uflux(i,j) .and. j.ne.jmin-HALO) then
+            flux_e(i,j) = one3rd*( vfU(i,j-1) + vfU(i,j) )
+         else
+            flux_e(i,j) = _ZERO_
+         end if
+
+         if (mask_vflux(i,j) .and. i.ne.imin-HALO) then
+            flux_n(i,j) = one3rd*( vfV(i-1,j) + vfV(i,j) )
+         else
+            flux_n(i,j) = _ZERO_
+         end if
+
+         if (mask_xflux(i,j)) then
+            flux_ne(i,j) = one6th*( vfV(i,j) + vfU(i,j) )
+            flux_nw(i,j) = one6th*( vfV(i,j) - vfU(i,j) )
+         else
+            flux_ne(i,j) = _ZERO_
+            flux_nw(i,j) = _ZERO_
+         end if
+
+      end do
+   end do
+!$OMP END DO
+
   do matsuno_it = 0,1
 
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO-1
 
-            if (mask_uflux(i,j) .and. j.ne.jmin-HALO) then
-               flux_e(i,j) = one3rd*( vfU(i,j-1) + vfU(i,j) )
-               if (use_AH) then
-!                 Horizontal diffusion
+            f_e(i,j)  = _HALF_*( f(i  ,j) + f(i+1,j  ) )
+            f_n(i,j)  = _HALF_*( f(i  ,j) + f(i  ,j+1) )
+            f_ne(i,j) = _HALF_*( f(i  ,j) + f(i+1,j+1) )
+            f_nw(i,j) = _HALF_*( f(i+1,j) + f(i  ,j+1) )
+
+!           Horizontal diffusion
+            if (use_AH) then
+               if (mask_uflux(i,j) .and. j.ne.jmin-HALO) then
                   uflux(i,j) = - AH*DU(i,j)*(f(i+1,j)-f(i  ,j))/DXU
+               else
+                  uflux(i,j) = _ZERO_
                end if
-            else
-               flux_e(i,j) = _ZERO_
-            end if
-            f_e(i,j) = _HALF_*( f(i,j) + f(i+1,j) )
-
-            if (mask_vflux(i,j) .and. i.ne.imin-HALO) then
-               flux_n(i,j) = one3rd*( vfV(i-1,j) + vfV(i,j) )
-               if (use_AH) then
-!                 Horizontal diffusion
+               if (mask_vflux(i,j) .and. i.ne.imin-HALO) then
                   vflux(i,j) = - AH*DV(i,j)*(f(i,j+1)-f(i  ,j))/DYV
+               else
+                  vflux(i,j) = _ZERO_
                end if
-            else
-               flux_n(i,j) = _ZERO_
             end if
-            f_n(i,j) = _HALF_*( f(i,j) + f(i,j+1) )
-
-            if (mask_xflux(i,j)) then
-               flux_ne(i,j) = one6th*( vfV(i,j) + vfU(i,j) )
-               flux_nw(i,j) = one6th*( vfV(i,j) - vfU(i,j) )
-            else
-               flux_ne(i,j) = _ZERO_
-               flux_nw(i,j) = _ZERO_
-            end if
-            f_ne(i,j) = _HALF_*( f(i,j) + f(i+1,j+1) )
-            f_nw(i,j) = _HALF_*( f(i+1,j) + f(i,j+1) )
 
          end do
       end do
