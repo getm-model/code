@@ -60,7 +60,7 @@
    write(debug,*) 'tow() # ',Ncall
 #endif
 #ifdef SLICE_MODEL
-   Note (KK): this value MUST NOT be changed !!!
+!  Note (KK): this value MUST NOT be changed !!!
    j = jmax/2
 #endif
 
