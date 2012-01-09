@@ -50,12 +50,7 @@
 #endif
    REALTYPE,dimension(I2DFIELD,0:1)         :: zw
    REALTYPE                                 :: dtm1
-   integer                                  :: i,k,kp,km
-#ifdef SLICE_MODEL
-   integer,parameter                        :: j=2
-#else
-   integer                                  :: j
-#endif
+   integer                                  :: i,j,k,kp,km
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -63,6 +58,10 @@
    integer, save :: Ncall = 0
    Ncall = Ncall+1
    write(debug,*) 'tow() # ',Ncall
+#endif
+#ifdef SLICE_MODEL
+   Note (KK): this value MUST NOT be changed !!!
+   j = jmax/2
 #endif
 
 !  KK-TODO: this should be part of do_coordinates
