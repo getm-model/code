@@ -189,14 +189,12 @@
 !$OMP END DO
 #endif
       case (3)
-! fisrt calculate potential density
+!        first calculate potential density
+         do k = 1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
-         do j = jmin-HALO,jmax+HALO
-            do i = imin-HALO,imax+HALO
-               if (az(i,j) .gt. 0) then
-
-                  do k = 1,kmax
-                     th = T(i,j,k)
+            do j = jmin-HALO,jmax+HALO
+               do i = imin-HALO,imax+HALO
+                  if (az(i,j) .gt. 0) then
                      s1 = S(i,j,k)
 #ifdef NONNEGSALT
                      if (s1 .lt. _ZERO_) then
@@ -211,12 +209,12 @@
                         s1 = _ZERO_
                      end if
 #endif  !NONNEGSALT
-                     call rho_from_theta(s1,th,_ZERO_,rho(i,j,k),densp)
-                  end do
-               end if
+                     call rho_from_theta(s1,T(i,j,k),_ZERO_,rho(i,j,k),densp)
+                  end if
+               end do
             end do
-         end do
 !$OMP END DO
+         end do
 #undef BUOYANCY
 
 #ifndef _OLD_BVF_
