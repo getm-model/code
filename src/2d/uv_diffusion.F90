@@ -194,6 +194,10 @@
    Ncall = Ncall+1
    write(debug,*) 'uv_diffusion() # ',Ncall
 #endif
+#ifdef SLICE_MODEL
+   j = jmax/2
+#endif
+
    CALL tic(TIM_UVDIFF)
 
 #ifndef SLICE_MODEL
@@ -208,9 +212,7 @@
 !             and resulting forces
 
 !  Central for dx(2*Am*dx(U/DU))
-#ifdef SLICE_MODEL
-   j = jmax/2
-#else
+#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
 #endif
@@ -242,9 +244,7 @@
 !$OMP END DO
 #endif
 
-#ifdef SLICE_MODEL
-   j = jmax/2
-#else
+#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
 #endif
@@ -258,7 +258,7 @@
    end do
 !$OMP END DO
 #else
-   UEx(imin:imax,jmax/2+1) = UEx(imin:imax,jmax/2)
+   UEx(imin:imax,j+1) = UEx(imin:imax,j)
 #endif
 
 #ifndef SLICE_MODEL
@@ -326,9 +326,7 @@
 #endif
 
 !  Central for dx(Am*(dy(U/DU)+dx(V/DV)))
-#ifdef SLICE_MODEL
-   j = jmax/2
-#else
+#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
 #endif
@@ -383,9 +381,7 @@
 !$OMP END DO
 #endif
 
-#ifdef SLICE_MODEL
-   j = jmax/2
-#else
+#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
 #endif
@@ -399,8 +395,8 @@
    end do
 !$OMP END DO
 #else
-   VEx(imin:imax,jmax/2-1) = VEx(imin:imax,jmax/2)
-   VEx(imin:imax,jmax/2+1) = VEx(imin:imax,jmax/2)
+   VEx(imin:imax,j-1) = VEx(imin:imax,j)
+   VEx(imin:imax,j+1) = VEx(imin:imax,j)
 #endif
 
 #ifndef SLICE_MODEL

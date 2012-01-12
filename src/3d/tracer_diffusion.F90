@@ -52,6 +52,9 @@
    Ncall = Ncall+1
    write(debug,*) 'tracer_diffusion() # ',Ncall
 #endif
+#ifdef SLICE_MODEL
+      j=jmax/2
+#endif
    call tic(TIM_TRACEDIFF)
 
    if (first) then
@@ -81,9 +84,7 @@
    do k=1,kmax
 
 !     x-change at U-points
-#ifdef SLICE_MODEL
-      j=jmax/2
-#else
+#ifndef SLICE_MODEL
       do j=jmin-HALO,jmax+HALO
 #endif
          do i=imin-HALO,imax+HALO-1
@@ -94,7 +95,7 @@
 #ifndef SLICE_MODEL
       end do
 #endif
-   
+
 #ifndef SLICE_MODEL
 !     y-change at V-points
       do j=jmin-HALO,jmax+HALO-1
@@ -156,9 +157,7 @@
       end if
 #endif
 
-#ifdef SLICE_MODEL
-      j = jmax/2
-#else
+#ifndef SLICE_MODEL
       do j=jmin,jmax
 #endif
          do i=imin-1,imax
@@ -214,9 +213,7 @@
       end do
 #endif
 
-#ifdef SLICE_MODEL
-      j = jmax/2
-#else
+#ifndef SLICE_MODEL
       do j=jmin,jmax
 #endif
          do i=imin,imax
@@ -236,7 +233,7 @@
 #ifndef SLICE_MODEL
       end do
 #else
-      f(imin:imax,jmax/2+1,k)=f(imin:imax,jmax/2,k)
+      f(imin:imax,j+1,k)=f(imin:imax,j,k)
 #endif
 
    end do

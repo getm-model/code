@@ -56,6 +56,9 @@
    Ncall = Ncall+1
    write(debug,*) 'deformation_rates() # ',Ncall
 #endif
+#ifdef SLICE_MODEL
+   j=jmax/2
+#endif
    call tic(TIM_DEFORM)
 
    if (first) then
@@ -80,9 +83,7 @@
 #endif
 
 !  zonal velocity
-#ifdef SLICE_MODEL
-   j=jmax/2
-#else
+#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
 #endif
@@ -95,13 +96,11 @@
    end do
 !$OMP END DO NOWAIT
 #else
-   u_vel(imin-HALO:imax+HALO-1,jmax/2+1) = u_vel(imin-HALO:imax+HALO-1,jmax/2)
+   u_vel(imin-HALO:imax+HALO-1,j+1) = u_vel(imin-HALO:imax+HALO-1,j)
 #endif
 
 !  meridional velocity
-#ifdef SLICE_MODEL
-   j=jmax/2
-#else
+#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO-1
 #endif
@@ -114,8 +113,8 @@
    end do
 !$OMP END DO
 #else
-   v_vel(:,jmax/2-1) = v_vel(:,jmax/2)
-   v_vel(:,jmax/2+1) = v_vel(:,jmax/2)
+   v_vel(:,j-1) = v_vel(:,j)
+   v_vel(:,j+1) = v_vel(:,j)
 #endif
 
 #ifdef _CORRECT_METRICS_
@@ -206,9 +205,7 @@
 
    if (present(dudxC)) then
 !     zonal strain rate at T-points
-#ifdef SLICE_MODEL
-      j=jmax/2
-#else
+#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO+1,jmax+HALO-1
 #endif
@@ -247,14 +244,12 @@
       end do
 !$OMP END DO NOWAIT
 #else
-      dudxC(imin-HALO+1:imax+HALO-1,jmax/2+1) = dudxC(imin-HALO+1:imax+HALO-1,jmax/2)
+      dudxC(imin-HALO+1:imax+HALO-1,j+1) = dudxC(imin-HALO+1:imax+HALO-1,j)
 #endif
 
       if (present(dudxU)) then
    !     interpolation of zonal strain rate to U-points
-#ifdef SLICE_MODEL
-         j=jmax/2
-#else
+#ifndef SLICE_MODEL
 !$OMP BARRIER
 !$OMP DO SCHEDULE(RUNTIME)
          do j=jmin-HALO+1,jmax+HALO-1
@@ -273,7 +268,7 @@
          end do
 !$OMP END DO NOWAIT
 #else
-         dudxU(imin-HALO+1:imax+HALO-2,jmax/2+1) = dudxU(imin-HALO+1:imax+HALO-2,jmax/2)
+         dudxU(imin-HALO+1:imax+HALO-2,j+1) = dudxU(imin-HALO+1:imax+HALO-2,j)
 #endif
       end if
 
@@ -282,9 +277,7 @@
 
    if (present(dudxV)) then
 !     zonal strain rate at V-points
-#ifdef SLICE_MODEL
-      j=jmax/2
-#else
+#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO-1
 #endif
@@ -316,8 +309,8 @@
       end do
 !$OMP END DO NOWAIT
 #else
-      dudxV(imin-HALO+1:imax+HALO-1,jmax/2-1) = dudxV(imin-HALO+1:imax+HALO-1,jmax/2)
-      dudxV(imin-HALO+1:imax+HALO-1,jmax/2+1) = dudxV(imin-HALO+1:imax+HALO-1,jmax/2)
+      dudxV(imin-HALO+1:imax+HALO-1,j-1) = dudxV(imin-HALO+1:imax+HALO-1,j)
+      dudxV(imin-HALO+1:imax+HALO-1,j+1) = dudxV(imin-HALO+1:imax+HALO-1,j)
 #endif
    end if
 
@@ -438,9 +431,7 @@
 
    if (present(dvdxX) .or. present(dudyX) .or. present(shearX)) then
 
-#ifdef SLICE_MODEL
-      j=jmax/2
-#else
+#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO-1
 #endif
@@ -545,12 +536,12 @@
 !$OMP END DO
 #else
       if (present(dvdxX)) then
-         dvdxX(imin-HALO:imax+HALO-1,jmax/2-1) = dvdxX(imin-HALO:imax+HALO-1,jmax/2)
-         dvdxX(imin-HALO:imax+HALO-1,jmax/2+1) = dvdxX(imin-HALO:imax+HALO-1,jmax/2)
+         dvdxX(imin-HALO:imax+HALO-1,j-1) = dvdxX(imin-HALO:imax+HALO-1,j)
+         dvdxX(imin-HALO:imax+HALO-1,j+1) = dvdxX(imin-HALO:imax+HALO-1,j)
       end if
       if (present(shearX)) then
-         shearX(imin-HALO:imax+HALO-1,jmax/2-1) = shearX(imin-HALO:imax+HALO-1,jmax/2)
-         shearX(imin-HALO:imax+HALO-1,jmax/2+1) = shearX(imin-HALO:imax+HALO-1,jmax/2)
+         shearX(imin-HALO:imax+HALO-1,j-1) = shearX(imin-HALO:imax+HALO-1,j)
+         shearX(imin-HALO:imax+HALO-1,j+1) = shearX(imin-HALO:imax+HALO-1,j)
       end if
 #endif
 
@@ -558,9 +549,7 @@
 
 !  shear rate at U-points
    if (present(dvdxU)) then
-#ifdef SLICE_MODEL
-      j=jmax/2
-#else
+#ifndef SLICE_MODEL
 !$OMP BARRIER
 !     Note (KK): we need omp barrier here, because PP was used with nowait
 !$OMP DO SCHEDULE(RUNTIME)
@@ -592,14 +581,12 @@
       end do
 !$OMP END DO NOWAIT
 #else
-      dvdxU(imin-HALO:imax+HALO-1,jmax/2+1) = dvdxU(imin-HALO:imax+HALO-1,jmax/2)
+      dvdxU(imin-HALO:imax+HALO-1,j+1) = dvdxU(imin-HALO:imax+HALO-1,j)
 #endif
    end if
    if (present(shearX) .and. present(shearU)) then
 !     interpolation of shear rate to U-points
-#ifdef SLICE_MODEL
-      j=jmax/2
-#else
+#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO+1,jmax+HALO-1
 #endif
@@ -616,7 +603,7 @@
       end do
 !$OMP END DO
 #else
-      shearU(imin-HALO:imax+HALO-1,jmax/2+1) = shearU(imin-HALO:imax+HALO-1,jmax/2)
+      shearU(imin-HALO:imax+HALO-1,j+1) = shearU(imin-HALO:imax+HALO-1,j)
 #endif
    end if
 
@@ -659,9 +646,7 @@
 #endif
    if (present(shearX) .and. present(shearV)) then
 !     interpolation of shear rate to V-points
-#ifdef SLICE_MODEL
-      j=jmax/2
-#else
+#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO-1
 #endif
@@ -678,8 +663,8 @@
       end do
 !$OMP END DO NOWAIT
 #else
-      shearV(imin-HALO+1:imax+HALO-1,jmax/2-1) = shearV(imin-HALO+1:imax+HALO-1,jmax/2)
-      shearV(imin-HALO+1:imax+HALO-1,jmax/2+1) = shearV(imin-HALO+1:imax+HALO-1,jmax/2)
+      shearV(imin-HALO+1:imax+HALO-1,j-1) = shearV(imin-HALO+1:imax+HALO-1,j)
+      shearV(imin-HALO+1:imax+HALO-1,j+1) = shearV(imin-HALO+1:imax+HALO-1,j)
 #endif
    end if
 

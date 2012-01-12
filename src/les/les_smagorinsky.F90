@@ -57,12 +57,13 @@
    Ncall = Ncall+1
    write(debug,*) 'les_smagorinsky() # ',Ncall
 #endif
+#ifdef SLICE_MODEL
+   j = jmax/2
+#endif
    call tic(TIM_SMAG2D)
 
    if (present(AmC)) then
-#ifdef SLICE_MODEL
-      j=jmax/2
-#else
+#ifndef SLICE_MODEL
       do j=jmin-1,jmax+1
 #endif
          do i=imin-1,imax+1
@@ -85,14 +86,12 @@
 #ifndef SLICE_MODEL
       end do
 #else
-      AmC(imin-1:imax+1,jmax/2+1) =  AmC(imin-1:imax+1,jmax/2)
+      AmC(imin-1:imax+1,j+1) =  AmC(imin-1:imax+1,j)
 #endif
    end if
 
    if (present(AmX)) then
-#ifdef SLICE_MODEL
-      j=jmax/2
-#else
+#ifndef SLICE_MODEL
       do j=jmin-1,jmax
 #endif
          do i=imin-1,imax
@@ -165,15 +164,13 @@
 #ifndef SLICE_MODEL
       end do
 #else
-      AmX(imin-1:imax,jmax/2-1) = AmX(imin-1:imax,jmax/2)
-      AmX(imin-1:imax,jmax/2+1) = AmX(imin-1:imax,jmax/2)
+      AmX(imin-1:imax,j-1) = AmX(imin-1:imax,j)
+      AmX(imin-1:imax,j+1) = AmX(imin-1:imax,j)
 #endif
    end if
 
    if (present(AmU)) then
-#ifdef SLICE_MODEL
-      j=jmax/2
-#else
+#ifndef SLICE_MODEL
       do j=jmin-1,jmax+1
 #endif
          do i=imin-1,imax
@@ -197,7 +194,7 @@
 #ifndef SLICE_MODEL
       end do
 #else
-      AmU(imin-1:imax,jmax/2+1) = AmU(imin-1:imax,jmax/2)
+      AmU(imin-1:imax,j+1) = AmU(imin-1:imax,j)
 #endif
    end if
 
