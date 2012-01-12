@@ -297,7 +297,9 @@
 !BOC
 
    if (nonnegsalt .and. S.lt._ZERO_) then
+#ifdef DEBUG
       STDERR 'clipped negative salinity to zero inside EOS'
+#endif
       S1 = _ZERO_
    else
       S1 = S
@@ -373,7 +375,9 @@
 !BOC
 
    if (nonnegsalt .and. salt.lt._ZERO_) then
+#ifdef DEBUG
       STDERR 'clipped negative salinity to zero inside EOS'
+#endif
       s = _ZERO_
    else
       s = salt
@@ -478,7 +482,9 @@
 !BOC
 
    if (nonnegsalt .and. salt.lt._ZERO_) then
+#ifdef DEBUG
       STDERR 'clipped negative salinity to zero inside EOS'
+#endif
       s = _ZERO_
    else
       s = salt
