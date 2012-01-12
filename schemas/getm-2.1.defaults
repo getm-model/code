@@ -419,6 +419,9 @@
 			<dsr0>
 				0.78
 			</dsr0>
+			<nonnegsalt>
+				False
+			</nonnegsalt>
 		</eqstate>
 		<io_spec>
 			<out_fmt>
