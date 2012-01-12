@@ -69,11 +69,11 @@
       end do
    end do
 
-! Central for dx(2*AM*dx(U^2/HU))
+! Central for dx(2*AM*dx(U/HU))
    do j=jmin,jmax
       do i=imin,imax+1          ! PP defined on T-points
-         if (az(i,j) .ge. 1) then
-            PP(i,j)=2.*AM*DYC*Di(i,j)               &
+         if (az(i,j) .eq. 1) then
+            PP(i,j)=_TWO_*AM*DYC*Di(i,j)               &
                *(Uint(i,j)/DUi(i,j)-Uint(i-1,j)/DUi(i-1,j))/DXC
          else
             PP(i,j)=_ZERO_
@@ -82,18 +82,18 @@
    end do
    do j=jmin,jmax      ! UEx defined on U-points
       do i=imin,imax
-         if (au(i,j) .ge. 1) then
+         if (au(i,j).eq.1 .or. au(i,j).eq.2) then
             UEx(i,j)=UEx(i,j)-(PP(i+1,j)-PP(i  ,j))*ARUD1
          end if
       end do
    end do
 
 #ifndef SLICE_MODEL
-! Central for dy(AM*(dy(U^2/DU)+dx(V^2/DV)))
+! Central for dy(AM*(dy(U/DU)+dx(V/DV)))
    do j=jmin-1,jmax        ! PP defined on X-points
       do i=imin,imax
          if (ax(i,j) .ge. 1) then
-            PP(i,j)=AM*0.5*(DUi(i,j)+DUi(i,j+1))*DXX  &
+            PP(i,j)=AM*_HALF_*(DUi(i,j)+DUi(i,j+1))*DXX  &
                    *((Uint(i,j+1)/DUi(i,j+1)-Uint(i,j)/DUi(i,j))/DYX &
                     +(Vint(i+1,j)/DVi(i+1,j)-Vint(i,j)/DVi(i,j))/DXX )
          else
@@ -103,18 +103,18 @@
    end do
    do j=jmin,jmax        !UEx defined on U-points
       do i=imin,imax
-         if (au(i,j) .ge. 1) then
+         if (au(i,j).eq.1 .or. au(i,j).eq.2) then
             UEx(i,j)=UEx(i,j)-(PP(i,j  )-PP(i,j-1))*ARUD1
          end if
       end do
    end do
 #endif
 
-! Central for dx(AM*(dy(U^2/DU)+dx(V^2/DV)))
+! Central for dx(AM*(dy(U/DU)+dx(V/DV)))
    do j=jmin,jmax      ! PP defined on X-points
       do i=imin-1,imax
          if (ax(i,j) .ge. 1) then
-            PP(i,j)=AM*0.5*(DVi(i,j)+DVi(i+1,j))*DXX  &
+            PP(i,j)=AM*_HALF_*(DVi(i,j)+DVi(i+1,j))*DYX  &
                    *((Uint(i,j+1)/DUi(i,j+1)-Uint(i,j)/DUi(i,j))/DYX &
                     +(Vint(i+1,j)/DVi(i+1,j)-Vint(i,j)/DVi(i,j))/DXX )
          else
@@ -124,18 +124,18 @@
    end do
    do j=jmin,jmax          ! VEx defined on V-points
       do i=imin,imax
-         if (av(i,j) .ge. 1) then
+         if (av(i,j).eq.1 .or. av(i,j).eq.2) then
             VEx(i,j)=VEx(i,j)-(PP(i  ,j)-PP(i-1,j))*ARVD1
          end if
       end do
    end do
 
 #ifndef SLICE_MODEL
-! Central for dy(2*AM*dy(V^2/DV))
+! Central for dy(2*AM*dy(V/DV))
    do j=jmin,jmax+1     ! PP defined on T-points
       do i=imin,imax
-         if (az(i,j) .ge. 1) then
-            PP(i,j)=2.*AM*DXC*Di(i,j)               &
+         if (az(i,j) .eq. 1) then
+            PP(i,j)=_TWO_*AM*DXC*Di(i,j)               &
                    *(Vint(i,j)/DVi(i,j)-Vint(i,j-1)/DVi(i,j-1))/DYC
          else
             PP(i,j)=_ZERO_
@@ -144,7 +144,7 @@
    end do
    do j=jmin,jmax             ! VEx defined on V-points
       do i=imin,imax
-         if (av(i,j) .ge. 1) then
+         if (av(i,j).eq.1 .or. av(i,j).eq.2) then
             VEx(i,j)=VEx(i,j)-(PP(i,j+1)-PP(i,j  ))*ARVD1
          end if
       end do
@@ -159,7 +159,6 @@
    return
    end subroutine slow_diffusion
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------

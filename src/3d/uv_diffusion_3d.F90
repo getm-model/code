@@ -144,13 +144,13 @@
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j,k,ii,jj,kk)
 
-! Central for dx(2*Am*dx(uu^2/hun))
+! Central for dx(2*Am*dx(uu/hun))
    do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax+1          ! PP defined on T-points
             PP(i,j,k)=_ZERO_
-            if (az(i,j) .ge. 1) then
+            if (az(i,j) .eq. 1) then
                if (k .ge. kumin(i,j)) then
                   PP(i,j,k)=_TWO_*Am*DYC*hn(i,j,k)               &
                       *(uu(i,j,k)/hun(i,j,k)-uu(i-1,j,k)/hun(i-1,j,k))/DXC
@@ -165,7 +165,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax         ! uuEx defined on U-points
          do i=imin,imax
-            if (au(i,j) .ge. 1) then
+            if (au(i,j).eq.1 .or. au(i,j).eq.2) then
                if (k .ge. kumin(i,j)) then
                   uuEx(i,j,k)=uuEx(i,j,k)-(PP(i+1,j,k)-PP(i,j,k))*ARUD1
                end if
@@ -177,7 +177,7 @@
 !$OMP BARRIER
 
 #ifndef SLICE_MODEL
-! Central for dy(Am*(dy(uu^2/hun)+dx(vv^2/hvn)))
+! Central for dy(Am*(dy(uu/hun)+dx(vv/hvn)))
    do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax          ! PP defined on X-points
@@ -185,7 +185,7 @@
             PP(i,j,k)=_ZERO_
             if (ax(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
-                  PP(i,j,k)=Am*0.5*(hun(i,j,k)+hun(i,j+1,k))*DXX  &
+                  PP(i,j,k)=Am*_HALF_*(hun(i,j,k)+hun(i,j+1,k))*DXX  &
                       *((uu(i,j+1,k)/hun(i,j+1,k)-uu(i,j,k)/hun(i,j,k))/DYX &
                        +(vv(i+1,j,k)/hvn(i+1,j,k)-vv(i,j,k)/hvn(i,j,k))/DXX )
                end if
@@ -199,7 +199,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
-            if (au(i,j) .ge. 1) then
+            if (au(i,j).eq.1 .or. au(i,j).eq.2) then
                if (k .ge. kumin(i,j)) then
                   uuEx(i,j,k)=uuEx(i,j,k)-(PP(i,j,k)-PP(i,j-1,k))*ARUD1
                end if
@@ -211,7 +211,7 @@
 !$OMP BARRIER
 #endif
 
-! Central for dx(Am*(dy(uu^2/hun)+dx(vv^2/hvn)))
+! Central for dx(Am*(dy(uu/hun)+dx(vv/hvn)))
    do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax          ! PP defined on X-points
@@ -219,7 +219,7 @@
             PP(i,j,k)=_ZERO_
             if (ax(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
-                  PP(i,j,k)=Am*_HALF_*(hvn(i+1,j,k)+hvn(i,j,k))*DXX  &
+                  PP(i,j,k)=Am*_HALF_*(hvn(i+1,j,k)+hvn(i,j,k))*DYX  &
                       *((uu(i,j+1,k)/hun(i,j+1,k)-uu(i,j,k)/hun(i,j,k))/DYX &
                        +(vv(i+1,j,k)/hvn(i+1,j,k)-vv(i,j,k)/hvn(i,j,k))/DXX )
                end if
@@ -233,7 +233,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax          ! vvEx defined on V-points
          do i=imin,imax
-            if (av(i,j) .ge. 1) then
+            if (av(i,j).eq.1 .or. av(i,j).eq.2) then
                if (k .ge. kvmin(i,j)) then
                   vvEx(i,j,k)=vvEx(i,j,k)-(PP(i,j,k)-PP(i-1,j,k))*ARVD1
                end if
@@ -250,7 +250,8 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax+1
          do i=imin,imax          ! PP defined on T-points
-            if (az(i,j) .ge. 1) then
+            PP(i,j,k)=_ZERO_
+            if (az(i,j) .eq. 1) then
                if (k .ge. kvmin(i,j)) then
                   PP(i,j,k)=_TWO_*Am*DXC*hn(i,j,k)               &
                       *(vv(i,j,k)/hvn(i,j,k)-vv(i,j-1,k)/hvn(i,j-1,k))/DYC
@@ -266,7 +267,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax          ! vvEx defined on V-points
          do i=imin,imax
-            if (av(i,j) .ge. 1) then
+            if (av(i,j).eq.1 .or. av(i,j).eq.2) then
                if (k .ge. kvmin(i,j)) then
                   vvEx(i,j,k)=(vvEx(i,j,k)-(PP(i,j+1,k)-PP(i,j,k))*ARVD1)
                end if
@@ -286,7 +287,6 @@
    return
    end subroutine uv_diffusion_3d
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------

@@ -100,9 +100,12 @@
 ! !LOCAL VARIABLES:
    integer                   :: rc
    integer                   :: i,j
-   integer                   :: vel_depth_method=0
+   integer                   :: elev_method=1
+   REALTYPE                  :: elev_const=_ZERO_
+   character(LEN = PATH_MAX) :: elev_file='elev.nc'
    namelist /m2d/ &
-          MM,vel_depth_method,Am,An_method,An_const,An_file,residual, &
+          elev_method,elev_const,elev_file,                    &
+          MM,Am,An_method,An_const,An_file,residual,           &
           sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
@@ -115,18 +118,38 @@
 
    LEVEL1 'init_2d'
 
+   dtm = timestep
+
 !  Read 2D-model specific things from the namelist.
    read(NAMLST,m2d)
 
-   dtm = timestep
-
 !  Allocates memory for the public data members - if not static
    call init_variables_2d(runtype)
+
+   if (.not. hotstart) then
+      select case (elev_method)
+         case(1)
+            LEVEL2 'setting initial surface elevation to ',real(elev_const)
+            z = elev_const
+         case(2)
+            LEVEL2 'getting initial surface elevation from ',trim(elev_file)
+            call get_2d_field(trim(elev_file),"elev",ilg,ihg,jlg,jhg,z(ill:ihl,jll:jhl))
+         case default
+            stop 'init_2d(): invalid elev_method'
+      end select
+
+      where ( z .lt. -H+min_depth)
+         z = -H+min_depth
+      end where
+      zo = z
+      call depth_update()
+   end if
 
 #if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
 !   STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'
 !   call cfl_check()
 #else
+!  KK-TODO: why is cfl_check not in terms of D?
    call cfl_check()
 #endif
 
@@ -221,13 +244,6 @@
       LEVEL2 'Format=',bdyfmt_2d
    end if
 
-   call uv_depths(vel_depth_method)
-
-   where ( -H+min_depth .gt. _ZERO_ )
-      z = -H+min_depth
-   end where
-   zo=z
-
 !  bottom roughness
    if (z0_method .eq. 0) then
       zub0 = z0_const
@@ -247,8 +263,6 @@
    end if
    zub=zub0
    zvb=zvb0
-
-   call depth_update()
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_2d()'

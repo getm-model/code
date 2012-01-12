@@ -49,7 +49,6 @@
 		<File RelativePath="..\..\src\2d\sealevel.F90"/>
 		<File RelativePath="..\..\src\2d\update_2d_bdy.F90"/>
 		<File RelativePath="..\..\src\2d\uv_advect.F90"/>
-		<File RelativePath="..\..\src\2d\uv_depths.F90"/>
 		<File RelativePath="..\..\src\2d\uv_diffusion.F90"/>
 		<File RelativePath="..\..\src\2d\variables_2d.F90"/></Filter>
 		<Filter Name="3d">
@@ -107,6 +106,7 @@
 		<Filter Name="domain">
 		<File RelativePath="..\..\src\domain\bdy_spec.F90"/>
 		<File RelativePath="..\..\src\domain\domain.F90"/>
+		<File RelativePath="..\..\src\domain\uv_depths.F90"/>
 		<File RelativePath="..\..\src\domain\mirror_bdy_2d.F90"/>
 		<File RelativePath="..\..\src\domain\mirror_bdy_3d.F90"/>
 		<File RelativePath="..\..\src\domain\part_domain.F90"/>
