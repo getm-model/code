@@ -122,8 +122,10 @@
                if (iters .gt. itersmax_adv) then
                   if (      imin-HALO.ne.i .and. i.ne.imax+HALO &
                       .and. jmin-HALO.ne.j .and. j.ne.jmax+HALO ) then
-                     FATAL 'adv_w_split_3d: too many iterations needed at'
-                     FATAL 'i=',i,' j=',j,':',iters
+!$OMP CRITICAL
+                     STDERR 'adv_w_split_3d: too many iterations needed at'
+                     STDERR 'i=',i,' j=',j,':',iters
+!$OMP END CRITICAL
                   end if
                end if
 #ifdef DEBUG
