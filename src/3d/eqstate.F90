@@ -25,6 +25,7 @@
    integer                   :: eqstate_method=3
    REALTYPE                  :: T0 = 10., S0 = 33.75, p0 = 0.
    REALTYPE                  :: dtr0 = -0.17, dsr0 = 0.78
+   logical                   :: nonnegsalt=.false.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -48,7 +49,7 @@
 !  various model components.
 !
 ! !LOCAL VARIABLES:
-   namelist /eqstate/ eqstate_method,T0,S0,p0,dtr0,dsr0
+   namelist /eqstate/ eqstate_method,T0,S0,p0,dtr0,dsr0,nonnegsalt
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -76,6 +77,17 @@
          FATAL 'init_eqstate(): not a valid eqstate_method'
          stop 'init_eqstate()'
    end select
+
+#ifdef NONNEGSALT
+   if (.not. nonnegsalt) then
+      LEVEL3 "reenabled clipping of negative salinities inside EOS"
+      LEVEL3 "due to obsolete NONNEGSALT macro. Note that this"
+      LEVEL3 "behaviour will be removed in the future!"
+      nonnegsalt=.true.
+   end if
+#endif
+
+   LEVEL3 'nonnegsalt = ',nonnegsalt
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_eqstate()'
@@ -189,34 +201,18 @@
 !$OMP END DO
 #endif
       case (3)
-! fisrt calculate potential density
+!        first calculate potential density
+         do k = 1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
-         do j = jmin-HALO,jmax+HALO
-            do i = imin-HALO,imax+HALO
-               if (az(i,j) .gt. 0) then
-
-                  do k = 1,kmax
-                     th = T(i,j,k)
-                     s1 = S(i,j,k)
-#ifdef NONNEGSALT
-                     if (s1 .lt. _ZERO_) then
-#ifdef DEBUG
-!$OMP CRITICAL
-                        STDERR 'Salinity at point ',i,',',j,',',k,' < 0.'
-                        STDERR 'Value is S = ',S(i,j,k)
-                        STDERR 'Programm continued, value set to zero ...'
-!$OMP END CRITICAL
-#endif
-! Ulf, Richard, Hans, kb                        S(i,j,k)= _ZERO_
-                        s1 = _ZERO_
-                     end if
-#endif  !NONNEGSALT
-                     call rho_from_theta(s1,th,_ZERO_,rho(i,j,k),densp)
-                  end do
-               end if
+            do j = jmin-HALO,jmax+HALO
+               do i = imin-HALO,imax+HALO
+                  if (az(i,j) .gt. 0) then
+                     call rho_from_theta(S(i,j,k),T(i,j,k),_ZERO_,rho(i,j,k),densp)
+                  end if
+               end do
             end do
-         end do
 !$OMP END DO
+         end do
 #undef BUOYANCY
 
 #ifndef _OLD_BVF_
@@ -299,22 +295,19 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+
+   if (nonnegsalt .and. S.lt._ZERO_) then
+      STDERR 'clipped negative salinity to zero inside EOS'
+      S1 = _ZERO_
+   else
+      S1 = S
+   end if
+
    T1 = T
    T2 = T1*T1
    T3 = T1*T2
    T4 = T2*T2
    T5 = T1*T4
-   S1 = S
-
-#ifdef NONNEGSALT
-   if (S1 .lt. _ZERO_) then
-#ifdef DEBUG
-      STDERR 'Value is S = ',S
-      STDERR 'Programm continued, value set to zero ...'
-#endif
-      S1 = _ZERO_
-   end if
-#endif
    S2 = S1*S1
    S3 = S1*S2
 
@@ -335,7 +328,7 @@
 ! !IROUTINE: rho_from_theta
 !
 ! !INTERFACE:
-   subroutine rho_from_theta(s,th,p,dens0,densp)
+   subroutine rho_from_theta(salt,th,p,dens0,densp)
 !
 ! !DESCRIPTION:
 ! Here, the equation of state is calculated
@@ -362,7 +355,7 @@
 !
 ! !INPUT PARAMETERS:
    REALTYPE, intent(in)      :: th  ! potential temperature degC
-   REALTYPE, intent(in)      :: s  ! in situ salinity PSU
+   REALTYPE, intent(in)      :: salt  ! in situ salinity PSU
    REALTYPE, intent(in)      :: p  ! pressure in dbars
 !
 ! !OUTPUT PARAMETERS:
@@ -374,10 +367,18 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES
-   REALTYPE th2,sqrts,anum,aden,pth
+   REALTYPE s,th2,sqrts,anum,aden,pth
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+
+   if (nonnegsalt .and. salt.lt._ZERO_) then
+      STDERR 'clipped negative salinity to zero inside EOS'
+      s = _ZERO_
+   else
+      s = salt
+   end if
+
    th2 = th*th; sqrts = sqrt(s)
 
    anum =          9.9984085444849347d+02 +    &
@@ -429,7 +430,7 @@
 ! !IROUTINE: eosall_from_theta
 !
 ! !INTERFACE:
-   subroutine eosall_from_theta(s,th,p,rho_s,rho_th)
+   subroutine eosall_from_theta(salt,th,p,rho_s,rho_th)
 !
 ! !DESCRIPTION:
 !   in-situ density and its derivatives (only 2) as functions of
@@ -458,7 +459,7 @@
 !
 ! !INPUT PARAMETERS:
    REALTYPE, intent(in)      :: th ! potential temperature degC
-   REALTYPE, intent(in)      :: s  ! in situ salinity PSU
+   REALTYPE, intent(in)      :: salt  ! in situ salinity PSU
    REALTYPE, intent(in)      :: p  ! pressure in dbars
 !
 ! !OUTPUT PARAMETERS:
@@ -470,11 +471,19 @@
 !  See the log for the module
 !
 ! !LOCAL VARIABLES
-   REALTYPE        :: th2,sqrts,anum,aden,pth
+   REALTYPE        :: s,th2,sqrts,anum,aden,pth
    REALTYPE        :: rho,anum_s,aden_s,anum_th,aden_th,rec_aden
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+
+   if (nonnegsalt .and. salt.lt._ZERO_) then
+      STDERR 'clipped negative salinity to zero inside EOS'
+      s = _ZERO_
+   else
+      s = salt
+   end if
+
    th2 = th*th; sqrts = sqrt(s)
 
    anum =       9.9984085444849347d+02 +         &
