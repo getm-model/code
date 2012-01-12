@@ -213,8 +213,9 @@
                   end if
                end do
             end do
-!$OMP END DO
+!$OMP END DO NOWAIT
          end do
+!$OMP BARRIER
 #undef BUOYANCY
 
 #ifndef _OLD_BVF_
