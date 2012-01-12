@@ -333,6 +333,7 @@
       end do
 !$OMP END DO NOWAIT
    end do
+!$OMP BARRIER
 
 !$OMP MASTER
    if (vel_hor_adv .eq. J7) then
@@ -448,12 +449,16 @@
          end do
 !$OMP END DO NOWAIT
       end do
-!$OMP END PARALLEL
+!$OMP SINGLE
       phadv => hnadv
+!$OMP END SINGLE
    else
-!$OMP END PARALLEL
+!$OMP SINGLE
       phadv => hvn
+!$OMP END SINGLE
    end if
+
+!$OMP END PARALLEL
 
    if (vel_hor_adv.ne.UPSTREAM .and. vel_hor_adv.ne.J7) then
 !     we need to update fadv3d(imin-HALO:imax+HALO,jmax+HALO)

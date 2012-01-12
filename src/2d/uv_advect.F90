@@ -227,6 +227,7 @@
       end do
    end do
 !$OMP END DO
+
 !$OMP MASTER
    if (vel_adv_scheme .eq. J7) then
 !     OMP-NOTE (KK): j loop must not be changed and cannot be threaded!
@@ -250,6 +251,7 @@
    else
       pDadv => DU
    end if
+
    if (vel_adv_scheme.ne.UPSTREAM .and. vel_adv_scheme.ne.J7) then
 !     we need to update fadv(imax+HALO,jmin-HALO:jmax+HALO)
       call tic(TIM_UVADVH)
@@ -313,6 +315,7 @@
       end do
    end do
 !$OMP END DO
+
    if (vel_adv_scheme .eq. J7) then
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO-1
@@ -333,10 +336,15 @@
          end do
       end do
 !$OMP END DO
+!$OMP SINGLE
       pDadv => Dadv
+!$OMP END SINGLE
    else
+!$OMP SINGLE
       pDadv => DV
+!$OMP END SINGLE
    end if
+
 !$OMP END PARALLEL
 
    if (vel_adv_scheme.ne.UPSTREAM .and. vel_adv_scheme.ne.J7) then
