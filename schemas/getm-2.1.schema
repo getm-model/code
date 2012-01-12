@@ -566,7 +566,7 @@
 			<element name="dsr0" type="float" label="saline expansion coefficient for linear equation of state">
 				<condition type="eq" variable="./eqstate_method" value="1" />
 			</element>
-			<element name="nonnegsalt" type="boot" label="negative salt clipping in eos">
+			<element name="nonnegsalt" type="bool" label="negative salt clipping in eos">
 				<condition type="or">
 					<condition type="eq" variable="./eqstate_method" value="2"/>
 					<condition type="eq" variable="./eqstate_method" value="3"/>
