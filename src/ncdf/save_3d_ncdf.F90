@@ -19,9 +19,9 @@
    use domain,       only: H,HU,HV,az,au,av,min_depth
    use domain,       only: convc
 #if defined CURVILINEAR || defined SPHERICAL
-   use domain,       only: dxc,dyc
+   use domain,       only: dxv,dyu,arcd1
 #else
-   use domain,       only: dx,dy
+   use domain,       only: dx,dy,ard1
 #endif
    use variables_2d, only: z,D
    use variables_2d, only: U,V,DU,DV
@@ -201,11 +201,11 @@
       call tow(imin,jmin,imax,jmax,kmin,kmax,az, &
                dt,                               &
 #if defined CURVILINEAR || defined SPHERICAL
-               dxc,dyc,                          &
+               dxv,dyu,arcd1,                    &
 #else
-               dx,dy,                            &
+               dx,dy,ard1,                       &
 #endif
-               HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,destag,ws)
+               H,HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,ws)
       err = nf90_put_var(ncid,w_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 

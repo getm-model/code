@@ -38,6 +38,9 @@
    Ncall = Ncall+1
    write(debug,*) 'tracer_stirring() # ',Ncall
 #endif
+#ifdef SLICE_MODEL
+      j=jmax/2
+#endif
    call tic(TIM_STIRR)
 
 !  Note (KK): in case of SLICE_MODEL only diffxx
@@ -46,9 +49,7 @@
 
    do k=1,kmax
 
-#ifdef SLICE_MODEL
-      j=jmax/2
-#else
+#ifndef SLICE_MODEL
       do j=jmin-1,jmax+1
 #endif
          do i=imin-1,imax
@@ -75,7 +76,7 @@
 #ifndef SLICE_MODEL
       end do
 #else
-      diffxx(imin-1:imax,jmax/2+1,k) = diffxx(imin-1:imax,jmax/2,k)
+      diffxx(imin-1:imax,j+1,k) = diffxx(imin-1:imax,j,k)
 #endif
 
 #ifndef SLICE_MODEL
