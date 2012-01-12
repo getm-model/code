@@ -2,131 +2,169 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: tow() - calculates vertical velocities and store in real*4.
+! !ROUTINE: tow() - calculates cell centered physical vertical velocity
 !
 ! !INTERFACE:
-   subroutine tow(imin,jmin,imax,jmax,kmin,kmax,mask,                  &
+   subroutine tow(imin,jmin,imax,jmax,kmin,kmax,az,                    &
                   dt,                                                  &
-#if defined CURVILINEAR || defined SPHERICAL
-                  dxc,dyc,                                             &
+#if defined(CURVILINEAR) || defined(SPHERICAL)
+                  dxv,dyu,arcd1,                                       &
 #else
-                  dx,dy,                                               &
+                  dx,dy,ard1,                                          &
 #endif
-                  HU,HV,hn,ho,uu,hun,vv,hvn,ww,missing,destag,ws)
-   IMPLICIT NONE
+                  H,HU,HV,hn,ho,uu,hun,vv,hvn,ww,missing,wc)
 !
 ! !DESCRIPTION:
 !
+! Here the physical vertical velocity at cell centres (but velocity time
+! stages) is calculated.
+!
 ! !USES:
+   IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: imin,jmin,imax,jmax
-   integer, intent(in)                 :: kmin(I2DFIELD)
-   integer, intent(in)                 :: kmax
-   integer, intent(in)                 :: mask(E2DFIELD)
-   REALTYPE, intent(in)                :: dt
-#if defined CURVILINEAR || defined SPHERICAL
-   REALTYPE, intent(in)                :: dxc(E2DFIELD)
-   REALTYPE, intent(in)                :: dyc(E2DFIELD)
+   integer,intent(in)                       :: imin,jmin,imax,jmax,kmax
+   integer,dimension(I2DFIELD),intent(in)   :: kmin
+   integer,dimension(E2DFIELD),intent(in)   :: az
+   REALTYPE,intent(in)                      :: dt
+#if defined(CURVILINEAR) || defined(SPHERICAL)
+   REALTYPE,dimension(E2DFIELD),intent(in)  :: dxv,dyu,arcd1
 #else
-   REALTYPE, intent(in)                :: dx,dy
+   REALTYPE,intent(in)                      :: dx,dy,ard1
 #endif
-   REALTYPE, intent(in)                :: HU(E2DFIELD)
-   REALTYPE, intent(in)                :: HV(E2DFIELD)
-   REALTYPE, intent(in)                :: hn(I3DFIELD)
-   REALTYPE, intent(in)                :: ho(I3DFIELD)
-   REALTYPE, intent(in)                :: uu(I3DFIELD)
-   REALTYPE, intent(in)                :: hun(I3DFIELD)
-   REALTYPE, intent(in)                :: vv(I3DFIELD)
-   REALTYPE, intent(in)                :: hvn(I3DFIELD)
-   REALTYPE, intent(in)                :: ww(I3DFIELD)
-   REALTYPE, intent(in)                :: missing
-   logical, intent(in)                 :: destag
+   REALTYPE,dimension(E2DFIELD),intent(in)  :: H,HU,HV
+   REALTYPE,dimension(I3DFIELD),intent(inout) :: hn,ho,hun,hvn
+   REALTYPE,dimension(I3DFIELD),intent(in)  :: uu,vv,ww
+   REALTYPE,intent(in)                      :: missing
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, intent(out)               :: ws(I3DFIELD)
+   REALTYPE,dimension(I3DFIELD),intent(out) :: wc
 !
 ! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Hans Burchard
+!  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k
-   REALTYPE                  :: dtz,dxz,dyz
-   REALTYPE                  :: u,v
-   logical, save             :: physical_vel=.true.
+   REALTYPE,dimension(I2DFIELD)             :: hwc,zco,zcn,zu
+#ifndef SLICE_MODEL
+   REALTYPE,dimension(I2DFIELD)             :: zv
+#endif
+   REALTYPE,dimension(I2DFIELD,0:1)         :: zw
+   REALTYPE                                 :: dtm1
+   integer                                  :: i,j,k,kp,km
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'tow() # ',Ncall
+#endif
+#ifdef SLICE_MODEL
+!  Note (KK): this value MUST NOT be changed !!!
+   j = jmax/2
+#endif
 
-   if (physical_vel) then
+!  KK-TODO: this should be part of do_coordinates
+!           ( 0 <= k < k[ |u|v]min-1 )
+   ho(:,:,0) = _ZERO_
+   hn(:,:,0) = _ZERO_
+   hun(:,:,0) = _ZERO_
+   hvn(:,:,0) = _ZERO_
 
-!  save physical velocities
-   do j=jmin,jmax
-      do i=imin,imax
-         if(mask(i,j) .gt. 0) then
-!           bottom - normally k=0
-            k=kmin(i,j)-1
-            dtz=_ZERO_
-            dxz=-(HU(i,j)-HU(i-1,j))/DXC
+   dtm1 = _ONE_/dt
+
+!  initialise
+   zco = -H
+   zcn = -H
+   zu = -HU
 #ifndef SLICE_MODEL
-            dyz=-(HV(i,j)-HV(i,j-1))/DYC
-#else
-            dyz=_ZERO_
+   zv = -HV
 #endif
-            u=0.5*(uu(i,j,k+1)/hun(i,j,k+1)+uu(i-1,j,k+1)/hun(i-1,j,k+1))
-            v=0.5*(vv(i,j,k+1)/hvn(i,j,k+1)+vv(i,j-1,k+1)/hvn(i,j-1,k+1))
-            ws(i,j,k) = ww(i,j,k) + dtz + u*dxz + v*dyz
-!           interior points
-            do k=kmin(i,j),kmax-1
-               dtz=dtz+(hn(i,j,k)-ho(i,j,k))/dt
-               dxz=dxz+(hun(i,j,k)-hun(i-1,j,k))/DXC
+   zw(:,:,0) = -H
+   kp = 0
+
+   do k=1,kmax
+
+      hwc = _HALF_*( ho(:,:,k) + hn(:,:,k) )
+
+!     update z-levels
+      zco = zco + _HALF_*(  ho(:,:,k-1) +  ho(:,:,k) )
+      zcn = zcn + _HALF_*(  hn(:,:,k-1) +  hn(:,:,k) )
+      zu  = zu  + _HALF_*( hun(:,:,k-1) + hun(:,:,k) )
 #ifndef SLICE_MODEL
-               dyz=dyz+(hvn(i,j,k)-hvn(i,j-1,k))/DYC
-#else
-               dyz=_ZERO_
+      zv  = zv  + _HALF_*( hvn(:,:,k-1) + hvn(:,:,k) )
 #endif
-               u=0.25*(uu(i,j,k  )/hun(i,j,k  )+uu(i-1,j,k  )/hun(i-1,j,k  )+&
-                       uu(i,j,k+1)/hun(i,j,k+1)+uu(i-1,j,k+1)/hun(i-1,j,k+1) )
-               v=0.25*(vv(i,j,k  )/hvn(i,j,k  )+vv(i,j-1,k  )/hvn(i,j-1,k  )+&
-                       vv(i,j,k+1)/hvn(i,j,k+1)+vv(i,j-1,k+1)/hvn(i,j-1,k+1) )
-               ws(i,j,k) = ww(i,j,k) + dtz + u*dxz + v*dyz
-            end do
-!           surface
-            k=kmax
-            dtz=dtz+(hn(i,j,k)-ho(i,j,k))/dt
-            dxz=dxz+(hun(i,j,k)-hun(i-1,j,k))/DXC
+      km = kp
+      kp = 1-kp
+      zw(:,:,kp) = zw(:,:,km) + hwc
+
+!     calculate wc
 #ifndef SLICE_MODEL
-            dyz=dyz+(hvn(i,j,k)-hvn(i,j-1,k))/DYC
-#else
-               dyz=_ZERO_
+      do j=jmin,jmax
 #endif
-            u=0.5*(uu(i,j,k)/hun(i,j,k)+uu(i-1,j,k)/hun(i-1,j,k))
-            v=0.5*(vv(i,j,k)/hvn(i,j,k)+vv(i,j-1,k)/hvn(i,j-1,k))
-            ws(i,j,k) = ww(i,j,k) + dtz  + u*dxz + v*dyz
-            if (destag) then
-               do k=kmax,kmin(i,j),-1
-                  ws(i,j,k)=0.5*(ws(i,j,k)+ws(i,j,k-1))
-               end do
-               ws(i,j,k) = missing
+         do i=imin,imax
+            if (az(i,j) .eq. 1) then
+               wc(i,j,k) =                               &
+                  (                                      &
+                     (                                   &
+                        hn(i,j,k)*zcn(i,j)               &
+                      - ho(i,j,k)*zco(i,j)               &
+                     )                                   &
+                     *dtm1                               &
+                   + (                                   &
+                        uu(i  ,j  ,k)*zu(i  ,j  )*DYU    &
+                      - uu(i-1,j  ,k)*zu(i-1,j  )*DYUIM1 &
+#ifndef SLICE_MODEL
+                      + vv(i  ,j  ,k)*zv(i  ,j  )*DXV    &
+                      - vv(i  ,j-1,k)*zv(i  ,j-1)*DXVJM1 &
+#endif
+                     )                                   &
+                     *ARCD1                              &
+                   + (                                   &
+                        ww(i,j,k  )*zw(i,j,kp)           &
+                      - ww(i,j,k-1)*zw(i,j,km)           &
+                     )                                   &
+                  )                                      &
+                  /hwc(i,j)
             end if
+         end do
+#ifndef SLICE_MODEL
+      end do
+#endif
+
+   end do
+
+#ifndef SLICE_MODEL
+   do j=jmin,jmax
+#endif
+      do i=imin,imax
+         if (az(i,j) .eq. 2) then
+            wc(i,j,:) = _ZERO_
+         end if
+         if (az(i,j) .eq. 0) then
+!           Note (KK): can be skipped if wc is initialised with missing
+            wc(i,j,:) = missing
+         else
+            do k=0,kmin(i,j)-1
+               wc(i,j,k) = missing
+            end do
          end if
       end do
+#ifndef SLICE_MODEL
    end do
-   else
-!     save grid-related velocities
-      do k=0,kmax
-         do j=jmin,jmax
-            do i=imin,imax
-               ws(i,j,k) = ww(i,j,k)
-            end do
-         end do
-      end do
-   end if
+#endif
 
+#ifdef SLICE_MODEL
+   wc(:,j+1,:) = wc(:,j,:)
+#endif
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving tow()'
+   write(debug,*)
+#endif
    return
    end subroutine tow
 !EOC
-
 !-----------------------------------------------------------------------
-! Copyright (C) 2001 - Hans Burchard and Karsten Bolding (BBH)         !
+! Copyright (C) 2012 - Hans Burchard and Karsten Bolding (BBH)         !
 !-----------------------------------------------------------------------
