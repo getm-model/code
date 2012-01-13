@@ -25,6 +25,9 @@
    integer                   :: eqstate_method=3
    REALTYPE                  :: T0 = 10., S0 = 33.75, p0 = 0.
    REALTYPE                  :: dtr0 = -0.17, dsr0 = 0.78
+   logical                   :: nonnegsalt=.false.
+   REALTYPE,dimension(:,:,:),allocatable :: S_eos
+   REALTYPE,dimension(:,:,:),pointer     :: pS
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -48,7 +51,8 @@
 !  various model components.
 !
 ! !LOCAL VARIABLES:
-   namelist /eqstate/ eqstate_method,T0,S0,p0,dtr0,dsr0
+   integer :: rc
+   namelist /eqstate/ eqstate_method,T0,S0,p0,dtr0,dsr0,nonnegsalt
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -76,6 +80,28 @@
          FATAL 'init_eqstate(): not a valid eqstate_method'
          stop 'init_eqstate()'
    end select
+
+   if (eqstate_method .ne. 1) then
+#ifdef NONNEGSALT
+      if (.not. nonnegsalt) then
+         LEVEL3 "reenabled clipping of negative salinities inside EOS"
+         LEVEL3 "due to obsolete NONNEGSALT macro. Note that this"
+         LEVEL3 "behaviour will be removed in the future!"
+         nonnegsalt=.true.
+      end if
+#endif
+      LEVEL3 'nonnegsalt = ',nonnegsalt
+   else
+      nonnegsalt=.false.
+   end if
+
+   if (nonnegsalt) then
+      allocate(S_eos(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_eqstate: Error allocating memory (S_eos)'
+      pS => S_eos
+   else
+      pS => S
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_eqstate()'
@@ -106,6 +132,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
+   integer                   :: negpoints
    REALTYPE                  :: x
    REALTYPE                  :: p1,s1,t1
    REALTYPE                  :: th,densp
@@ -122,6 +149,38 @@
 !$OMP PARALLEL DEFAULT(SHARED)          &
 !$OMP PRIVATE(i,j,k, x,p1,s1,t1,th,densp)
 
+   if (nonnegsalt) then
+!$OMP SINGLE
+      negpoints = 0
+!$OMP END SINGLE
+! OMP-NOTE (KK): SINGLE implies BARRIER
+      do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+         do j=jmin,jmax
+            do i=imin,imax
+               if (az(i,j) .ne. 0) then
+                  if (S(i,j,k) .lt. _ZERO_) then
+                     pS(i,j,k) = _ZERO_
+!$OMP ATOMIC
+                     negpoints = negpoints+1
+!$OMP END ATOMIC
+                  else
+                     pS(i,j,k) = S(i,j,k)
+                  end if
+               end if
+            end do
+         end do
+!$OMP END DO NOWAIT
+      end do
+!$OMP BARRIER
+!$OMP MASTER
+      if (negpoints .gt. 0) then
+         STDERR "clipped ",negpoints," negative salinities to 0 inside EOS"
+      end if
+!$OMP END MASTER
+   end if
+
+!  KK-TODO: do we still need BUOYANCY ?!
 #define BUOYANCY
    select case (eqstate_method)
       case (1)
@@ -130,7 +189,7 @@
             do j=jmin-HALO,jmax+HALO
                do i=imin-HALO,imax+HALO
                   rho(i,j,k) = rho_0 +                                 &
-                       dtr0*(T(i,j,k)-T0) + dsr0*(S(i,j,k)-S0)
+                       dtr0*(T(i,j,k)-T0) + dsr0*(pS(i,j,k)-S0)
                end do
             end do
 !$OMP END DO NOWAIT
@@ -154,7 +213,7 @@
             do j = jmin-HALO,jmax+HALO
                do i = imin-HALO,imax+HALO
                   if (az(i,j) .gt. 0) then
-                     call rho_from_theta_unesco80(T(i,j,k),S(i,j,k), &
+                     call rho_from_theta_unesco80(T(i,j,k),pS(i,j,k), &
                                                   rho(i,j,k))
                   end if
                end do
@@ -162,6 +221,7 @@
 !$OMP END DO NOWAIT
          end do
 ! This OMP barrier is necessary for the NOWAIT speedup of the previous loop:
+! OMP-TODO (KK): why not move this barrier behind #ifdef _OLD_BVF_ ?!
 !$OMP BARRIER
 #undef BUOYANCY
 
@@ -178,7 +238,7 @@
                   p1 = _ZERO_
                   do k = kmax-1,kmin(i,j),-1
                      th = _HALF_ * (T(i,j,k+1)+T(i,j,k))
-                     s1 = _HALF_ * (S(i,j,k+1)+S(i,j,k))
+                     s1 = _HALF_ * (pS(i,j,k+1)+pS(i,j,k))
                      p1 = p1+hn(i,j,k+1)
                      call eosall_from_theta(s1,th,p1,  &
                                             beta(i,j,k),alpha(i,j,k))
@@ -189,34 +249,19 @@
 !$OMP END DO
 #endif
       case (3)
-! fisrt calculate potential density
+!        first calculate potential density
+         do k = 1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
-         do j = jmin-HALO,jmax+HALO
-            do i = imin-HALO,imax+HALO
-               if (az(i,j) .gt. 0) then
-
-                  do k = 1,kmax
-                     th = T(i,j,k)
-                     s1 = S(i,j,k)
-#ifdef NONNEGSALT
-                     if (s1 .lt. _ZERO_) then
-#ifdef DEBUG
-!$OMP CRITICAL
-                        STDERR 'Salinity at point ',i,',',j,',',k,' < 0.'
-                        STDERR 'Value is S = ',S(i,j,k)
-                        STDERR 'Programm continued, value set to zero ...'
-!$OMP END CRITICAL
-#endif
-! Ulf, Richard, Hans, kb                        S(i,j,k)= _ZERO_
-                        s1 = _ZERO_
-                     end if
-#endif  !NONNEGSALT
-                     call rho_from_theta(s1,th,_ZERO_,rho(i,j,k),densp)
-                  end do
-               end if
+            do j = jmin-HALO,jmax+HALO
+               do i = imin-HALO,imax+HALO
+                  if (az(i,j) .gt. 0) then
+                     call rho_from_theta(pS(i,j,k),T(i,j,k),_ZERO_,rho(i,j,k),densp)
+                  end if
+               end do
             end do
+!$OMP END DO NOWAIT
          end do
-!$OMP END DO
+
 #undef BUOYANCY
 
 #ifndef _OLD_BVF_
@@ -233,7 +278,7 @@
                   p1 = _ZERO_
                   do k = kmax-1,kmin(i,j),-1
                      th = _HALF_ * (T(i,j,k+1)+T(i,j,k))
-                     s1 = _HALF_ * (S(i,j,k+1)+S(i,j,k))
+                     s1 = _HALF_ * (pS(i,j,k+1)+pS(i,j,k))
                      p1 = p1+hn(i,j,k+1)
                      call eosall_from_theta(s1,th,p1,  &
                                             beta(i,j,k),alpha(i,j,k))
@@ -241,8 +286,11 @@
                end if
             end do
          end do
-!$OMP END DO
+!$OMP END DO NOWAIT
 #endif
+
+! This OMP barrier is necessary for the NOWAIT speedup of the rho-loop above
+!$OMP BARRIER
 
       case default
    end select
@@ -305,16 +353,6 @@
    T4 = T2*T2
    T5 = T1*T4
    S1 = S
-
-#ifdef NONNEGSALT
-   if (S1 .lt. _ZERO_) then
-#ifdef DEBUG
-      STDERR 'Value is S = ',S
-      STDERR 'Programm continued, value set to zero ...'
-#endif
-      S1 = _ZERO_
-   end if
-#endif
    S2 = S1*S1
    S3 = S1*S2
 
