@@ -26,7 +26,7 @@
    REALTYPE                  :: T0 = 10., S0 = 33.75, p0 = 0.
    REALTYPE                  :: dtr0 = -0.17, dsr0 = 0.78
    logical                   :: nonnegsalt=.false.
-   REALTYPE,dimension(:,:,:),allocatable :: salt_eos
+   REALTYPE,dimension(:,:,:),allocatable :: S_eos
    REALTYPE,dimension(:,:,:),pointer     :: pS
 !
 ! !REVISION HISTORY:
@@ -96,9 +96,9 @@
    end if
 
    if (nonnegsalt) then
-      allocate(salt_eos(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_eqstate: Error allocating memory (salt_eos)'
-      pS => salt_eos
+      allocate(S_eos(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_eqstate: Error allocating memory (S_eos)'
+      pS => S_eos
    else
       pS => S
    end if
@@ -161,10 +161,9 @@
                if (az(i,j) .ne. 0) then
                   if (S(i,j,k) .lt. _ZERO_) then
                      pS(i,j,k) = _ZERO_
-!$OMP CRITICAL
-! OMP-NOTE (KK): CRITICAL might be replaced by ATOMIC which allows for more optimisation
+!$OMP ATOMIC
                      negpoints = negpoints+1
-!$OMP END CRITICAL
+!$OMP END ATOMIC
                   else
                      pS(i,j,k) = S(i,j,k)
                   end if
@@ -181,6 +180,7 @@
 !$OMP END MASTER
    end if
 
+!  KK-TODO: do we still need BUOYANCY ?!
 #define BUOYANCY
    select case (eqstate_method)
       case (1)
@@ -221,6 +221,7 @@
 !$OMP END DO NOWAIT
          end do
 ! This OMP barrier is necessary for the NOWAIT speedup of the previous loop:
+! OMP-TODO (KK): why not move this barrier behind #ifdef _OLD_BVF_ ?!
 !$OMP BARRIER
 #undef BUOYANCY
 
