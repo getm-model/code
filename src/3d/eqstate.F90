@@ -26,8 +26,8 @@
    REALTYPE                  :: T0 = 10., S0 = 33.75, p0 = 0.
    REALTYPE                  :: dtr0 = -0.17, dsr0 = 0.78
    logical                   :: nonnegsalt=.false.
-   REALTYPE,dimension(:,:,:),allocatable :: S_eos
-   REALTYPE,dimension(:,:,:),pointer     :: pS
+   REALTYPE,dimension(:,:,:),allocatable,target :: S_eos
+   REALTYPE,dimension(:,:,:),pointer            :: pS
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
