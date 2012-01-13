@@ -133,6 +133,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
    integer                   :: negpoints
+   REALTYPE                  :: negsalt
    REALTYPE                  :: x
    REALTYPE                  :: p1,s1,t1
    REALTYPE                  :: th,densp
@@ -152,6 +153,7 @@
    if (nonnegsalt) then
 !$OMP SINGLE
       negpoints = 0
+      negsalt = _ZERO_
 !$OMP END SINGLE
 ! OMP-NOTE (KK): SINGLE implies BARRIER
       do k=1,kmax
@@ -164,13 +166,14 @@
 !$OMP ATOMIC
                      negpoints = negpoints+1
 !$OMP END ATOMIC
-#ifdef DEBUG
 !$OMP CRITICAL
+                     negsalt = min(S(i,j,k),negsalt)
+#ifdef DEBUG
                      STDERR 'Salinity at point ',i,',',j,',',k,' < 0.'
                      STDERR 'Value is S = ',S(i,j,k)
                      STDERR 'Programm continued, value set to zero ...'
-!$OMP END CRITICAL
 #endif
+!$OMP END CRITICAL
                   else
                      pS(i,j,k) = S(i,j,k)
                   end if
@@ -182,7 +185,8 @@
 !$OMP BARRIER
 !$OMP MASTER
       if (negpoints .gt. 0) then
-         STDERR "clipped ",negpoints," negative salinities to 0 inside EOS"
+         STDERR "clipped ",negpoints," negative salinities inside EOS"
+         STDERR "(minimum salinity: ",real(negsalt)," )"
       end if
 !$OMP END MASTER
    end if
