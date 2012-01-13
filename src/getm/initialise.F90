@@ -178,11 +178,6 @@
 #endif
    end if
 
-#if (defined GETM_PARALLEL && defined SLICE_MODEL)
-    call getm_error('init_model()', &
-         'SLICE_MODEL does not work with GETM_PARALLEL - for now')
-#endif
-
    STDERR LINE
    STDERR 'getm ver. ',RELEASE,': Started on  ',dstr,' ',tstr
    STDERR LINE
