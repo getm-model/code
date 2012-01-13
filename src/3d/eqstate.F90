@@ -164,6 +164,13 @@
 !$OMP ATOMIC
                      negpoints = negpoints+1
 !$OMP END ATOMIC
+#ifdef DEBUG
+!$OMP CRITICAL
+                     STDERR 'Salinity at point ',i,',',j,',',k,' < 0.'
+                     STDERR 'Value is S = ',S(i,j,k)
+                     STDERR 'Programm continued, value set to zero ...'
+!$OMP END CRITICAL
+#endif
                   else
                      pS(i,j,k) = S(i,j,k)
                   end if
