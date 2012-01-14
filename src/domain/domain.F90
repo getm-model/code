@@ -206,7 +206,6 @@
 #endif
 #endif
 
-
    select case (vert_cord)
       case(_SIGMA_COORDS_)
          LEVEL2 'Using sigma coordinates'
