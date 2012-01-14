@@ -195,13 +195,13 @@
 
 #ifdef SLICE_MODEL
    if (jmax.ne.2 .and. jmax.ne.4) then
-         call getm_error("init_domain()", &
-                         "SLICE_MODEL requires jmax=4");
+      call getm_error("init_domain()", &
+                      "SLICE_MODEL requires jmax=4");
    end if
 #ifdef GETM_PARALLEL
    if (jmax .ne. jextr) then
-         call getm_error("init_domain()", &
-                         "parallel SLICE_MODEL requires jmax=jextr");
+      call getm_error("init_domain()", &
+                      "parallel SLICE_MODEL requires jmax=jextr");
    end if
 #endif
 #endif
