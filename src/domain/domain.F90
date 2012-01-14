@@ -193,6 +193,20 @@
 #include "dynamic_allocations_domain_2.h"
 #endif
 
+#ifdef SLICE_MODEL
+   if (jmax.ne.2 .and. jmax.ne.4) then
+         call getm_error("init_domain()", &
+                         "SLICE_MODEL requires jmax=4");
+   end if
+#ifdef GETM_PARALLEL
+   if (jmax .ne. jextr) then
+         call getm_error("init_domain()", &
+                         "parallel SLICE_MODEL requires jmax=jextr");
+   end if
+#endif
+#endif
+
+
    select case (vert_cord)
       case(_SIGMA_COORDS_)
          LEVEL2 'Using sigma coordinates'

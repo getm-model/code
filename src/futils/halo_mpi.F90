@@ -519,13 +519,6 @@
       joff=coords(1)*jmax
    end if
 
-#ifdef SLICE_MODEL
-   if (up .ne. MPI_PROC_NULL) then
-      FATAL 'parallel SLICE_MODEL must not contain DOWN-UP communication'
-      call MPI_ABORT(MPI_COMM_WORLD,-1,ierr)
-   end if
-#endif
-
    call MPI_data_types(imin,imax,jmin,jmax,kmax)
 
    STDERR LINE
