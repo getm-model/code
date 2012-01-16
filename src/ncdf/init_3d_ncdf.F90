@@ -257,6 +257,32 @@
 
    end if
 
+#ifndef NO_BAROCLINIC
+   if (calc_stirr .and. save_stirr) then
+      fv = stirr_missing
+      mv = stirr_missing
+      vr(1) = -500.
+      vr(2) =  500.
+
+      err = nf90_def_var(ncid,'diffxx',NCDF_FLOAT_PRECISION,f4_dims,diffxx_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,diffxx_id,long_name='zonal stirring diffusivity',units='m2/s',&
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+#ifndef SLICE_MODEL
+      err = nf90_def_var(ncid,'diffyy',NCDF_FLOAT_PRECISION,f4_dims,diffyy_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,diffyy_id,long_name='meridional stirring diffusivity',units='m2/s',&
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'diffxy',NCDF_FLOAT_PRECISION,f4_dims,diffxy_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,diffxy_id,long_name='cross stirring diffusivity',units='m2/s',&
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+#endif
+   end if
+#endif
+
    if (save_turb) then
 
       if (save_tke) then
@@ -368,6 +394,17 @@
       end if
    end if
 #endif
+   if (Am_method.eq.AM_LES .and. save_Am_3d) then
+      fv = Am_3d_missing
+      mv = Am_3d_missing
+      vr(1) = 0.
+      vr(2) = 500.
+      err = nf90_def_var(ncid,'Am_3d',NCDF_FLOAT_PRECISION,f4_dims,Am_3d_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,Am_3d_id,long_name='hor. eddy viscosity',units='m2/s',&
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
+
 #ifdef SPM
    if (spm_save) then
       fv = spm_missing

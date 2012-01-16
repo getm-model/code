@@ -48,7 +48,8 @@
 !
 ! !USES:
    use exceptions
-   use parameters, only: g,avmmol,rho_0
+   use parameters, only: g,rho_0
+   use m2d, only: avmmol
    use domain, only: imin,imax,jmin,jmax,kmax,H,HU,min_depth
    use domain, only: dry_u,coru,au,av,az,ax
 #if defined CURVILINEAR || defined SPHERICAL
@@ -67,9 +68,6 @@
 #ifndef NO_BAROCLINIC
    use variables_3d, only: idpdx
 #endif
-#ifdef UV_TVD
-   use variables_3d, only: uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv
-#endif
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG
    use meteo, only: tausx,airp
    use m3d, only: ip_fac
@@ -86,6 +84,7 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
+   logical, save             :: first=.true.
    integer                   :: i,j,k,rc
    REALTYPE, POINTER         :: dif(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
@@ -93,9 +92,8 @@
    REALTYPE, POINTER         :: a3(:),a4(:)
    REALTYPE, POINTER         :: Res(:),ex(:)
    REALTYPE                  :: zp,zm,zx,ResInt,Diff,Vloc
-   REALTYPE                  :: gamma=g*rho_0
    REALTYPE                  :: cord_curv=_ZERO_
-   REALTYPE                  :: gammai,rho_0i
+   REALTYPE, save            :: gammai,rho_0i
    integer                   :: status
 !EOP
 !-----------------------------------------------------------------------
@@ -107,8 +105,12 @@
 #endif
    call tic(TIM_UUMOMENTUM)
 
-   gammai=_ONE_/gamma
-   rho_0i=_ONE_/rho_0
+   if (first) then
+      rho_0i = _ONE_ / rho_0
+      gammai = _ONE_ / (rho_0*max(SMALL,g))
+      first = .false.
+   end if
+
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j,k,rc,zp,zm,zx,ResInt,Diff,Vloc,cord_curv)         &
 !$OMP    PRIVATE(dif,auxn,auxo,a1,a2,a3,a4,Res,ex)

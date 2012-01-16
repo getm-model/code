@@ -32,7 +32,8 @@
 ! this quantity on the V-points.
 !
 ! !USES:
-   use parameters, only: kappa,avmmol
+   use parameters, only: kappa
+   use m2d, only: avmmol
    use domain, only: imin,imax,jmin,jmax,au,av,min_depth
    use variables_2d
    use getm_timers,  only: tic, toc, TIM_BOTTFRICT

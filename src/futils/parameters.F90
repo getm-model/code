@@ -18,13 +18,10 @@
 !
 ! !PUBLIC DATA MEMBERS:
 !  Physical Constants
-   REALTYPE, parameter                 :: g = 9.81
-   REALTYPE, parameter                 :: rho_0 = 1025.
-   REALTYPE, parameter                 :: cp = 3985.
-   REALTYPE, parameter                 :: kappa = 0.4
-   REALTYPE, parameter                 :: avmmol = 1.8e-6
-   REALTYPE, parameter                 :: avmolt=  1.4e-7
-   REALTYPE, parameter                 :: avmols = 1.1e-9
+   REALTYPE :: g = 9.81d0
+   REALTYPE :: rho_0 = 1025.0d0
+   REALTYPE :: cp = 3985.0d0
+   REALTYPE :: kappa = 0.4d0
 !
 !  Turbulence related constants - see www.gotm.net
 !
@@ -32,6 +29,60 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !EOP
+!-----------------------------------------------------------------------
+
+   contains
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: init_parameters - reads in parameters from namelist
+!
+! !INTERFACE:
+   subroutine init_parameters()
+   IMPLICIT NONE
+!
+! !DESCRIPTION:
+!  Reads the namelist.
+!
+! !LOCAL VARIABLES:
+   namelist /parameters/ &
+             g,rho_0,cp,kappa
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'init_parameters() # ',Ncall
+#endif
+
+   LEVEL1 'init_parameters'
+
+   read(NAMLST,parameters)
+
+   if (g .lt. _ZERO_) then
+      LEVEL2 'changed sign of negative g'
+      g = -g
+   end if
+   LEVEL2 'g = ',real(g)
+
+   if (rho_0 .le. _ZERO_) then
+      stop 'init_parameters(): invalid rho_0'
+   else
+      LEVEL2 'rho_0 = ',real(rho_0)
+   end if
+
+   LEVEL2 'cp = ',real(cp)
+   LEVEL2 'kappa = ',real(kappa)
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving init_parameters()'
+   write(debug,*)
+#endif
+   return
+   end subroutine init_parameters
+!EOC
 !-----------------------------------------------------------------------
 
    end module parameters

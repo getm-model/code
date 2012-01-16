@@ -15,7 +15,7 @@
    use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: H
-   use m2d, only: dtm
+   use variables_2d, only: dtm
    use variables_3d, only: hn
    use bdy_3d, only: T_bdy,S_bdy
    use time, only: string_to_julsecs,time_diff,add_secs

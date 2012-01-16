@@ -1,4 +1,59 @@
 <?xml version="1.0" ?>
-<!-- this converter is currently an empty placeholder, but it is needed to tell xmlstore that direct conversion between 2.0 and 2.1 is permitted. -->
-<converter source="getm-2.0" target="getm-2.1"/>
+<converter source="getm-2.0" target="getm-2.1">
+	<links>
+		<link source="/getm/m2d/vel_depth_method" target="/getm/domain/vel_depth_method"/>
+		<link source="/getm/m2d/Am" target="/getm/m2d/Am_const"/>
+		<link source="/getm/temp/temp_AH" target="/getm/temp/temp_AH_const"/>
+		<link source="/getm/salt/salt_AH" target="/getm/salt/salt_AH_const"/>
+	</links>
+	<custom>
+		<forward>
+<![CDATA[
+diffs = ('getm/m2d/Am','getm/temp/temp_AH','getm/salt/salt_AH')
+for diff in diffs:
+	if source[diff].getValue(usedefault=True)>0.0:
+		target[diff+'_method'].setValue(1)
+	else:
+		target[diff+'_method'].setValue(0)
+nmls = ('getm/m3d/vel_','getm/temp/temp_','getm/salt/salt_')
+for nml in nmls:
+	adv_split = source[nml+'adv_split'].getValue(usedefault=True)
+	hor_adv = source[nml+'hor_adv'].getValue(usedefault=True)
+	ver_adv = source[nml+'hor_adv'].getValue(usedefault=True)
+	target[nml+'adv_split'].setValue(adv_split+1)
+	if hor_adv == 1:
+		target[nml+'adv_split'].setValue(0)
+		target[nml+'ver_adv'].setValue(1)
+	elif hor_adv == 2:
+		if adv_split in (0,1):
+			target[nml+'hor_adv'].setValue(1)
+	if ver_adv == 2:
+		target[nml+'ver_adv'].setValue(1)
+]]>
+		</forward>
+		<backward>
+<![CDATA[
+diffs = ('getm/m2d/Am','getm/temp/temp_AH','getm/salt/salt_AH')
+for diff in diffs:
+	if source[diff+'_method'].getValue(usedefault=True)==0:
+		target[diff].setValue(-1.0)
+nmls = ('getm/m3d/vel_','getm/temp/temp_','getm/salt/salt_')
+for nml in nmls:
+	adv_split = source[nml+'adv_split'].getValue(usedefault=True)
+	hor_adv = source[nml+'hor_adv'].getValue(usedefault=True)
+	ver_adv = source[nml+'hor_adv'].getValue(usedefault=True)
+	if adv_split == 0:
+		if hor_adv in (2,7):
+			target[nml+'adv_split'].setValue(2)
+	else:
+		target[nml+'adv_split'].setValue(adv_split-1)
+	if hor_adv == 1:
+		if adv_split in (1,2):
+			target[nml+'hor_adv'].setValue(2)
+	if ver_adv == 1:
+		target[nml+'ver_adv'].setValue(2)
+]]>
+		</backward>
+	</custom>
+</converter>
 

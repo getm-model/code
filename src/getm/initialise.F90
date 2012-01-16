@@ -38,6 +38,7 @@
 #ifdef GETM_PARALLEL
    use halo_mpi, only: init_mpi,print_MPI_info
 #endif
+   use parameters, only: init_parameters
    use output, only: init_output,do_output,restart_file,out_dir
    use input,  only: init_input
    use domain, only: init_domain
@@ -46,6 +47,7 @@
    use time, only: init_time,update_time,write_time_string
    use time, only: start,timestr,timestep
    use m2d, only: init_2d,postinit_2d, z
+   use les, only: init_les
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
 #ifndef NO_3D
    use m2d, only: Uint,Vint
@@ -200,6 +202,8 @@
          stop 'initialise()'
    end select
 
+   call init_parameters()
+
    call init_time(MinN,MaxN)
    if(use_epoch) then
       LEVEL2 'using "',start,'" as time reference'
@@ -240,6 +244,8 @@
 #endif
    end if
 #endif
+
+   call init_les(runtype)
 
    call init_output(runid,title,start,runtype,dryrun,myid)
 

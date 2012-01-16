@@ -53,7 +53,9 @@
 !
 ! !USES:
    use exceptions
-   use parameters, only: g,avmmol,rho_0
+   use parameters, only: g,rho_0
+   use m2d, only: avmmol
+   use domain, only: rigid_lid
    use domain, only: imin,imax,jmin,jmax,kmax,H,HV,min_depth
    use domain, only: dry_v,corv,au,av,az,ax
 #if defined CURVILINEAR || defined SPHERICAL
@@ -75,9 +77,6 @@
 #ifndef NO_BAROCLINIC
    use variables_3d, only: idpdy
 #endif
-#ifdef UV_TVD
-   use variables_3d, only: uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv
-#endif
    use halo_zones, only: update_3d_halo,wait_halo,V_TAG
    use meteo, only: tausy,airp
    use m3d, only: ip_fac
@@ -94,6 +93,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
+   logical,save              :: first=.true.
+   logical,save              :: no_shift=.false.
    integer                   :: i,j,k,rc
    REALTYPE, POINTER         :: dif(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
@@ -101,9 +102,8 @@
    REALTYPE, POINTER         :: a3(:),a4(:)
    REALTYPE, POINTER         :: Res(:),ex(:)
    REALTYPE                  :: zp,zm,zy,ResInt,Diff,Uloc
-   REALTYPE                  :: gamma=g*rho_0
    REALTYPE                  :: cord_curv=_ZERO_
-   REALTYPE                  :: gammai,rho_0i
+   REALTYPE, save            :: gammai,rho_0i
 #ifdef XZ_PLUME_TEST
    REALTYPE                  :: yslope=0.001
 #endif
@@ -118,9 +118,19 @@
 #endif
    call tic(TIM_VVMOMENTUM)
 
-   gammai=_ONE_/gamma
-   rho_0i=_ONE_/rho_0
+   if (first) then
+      rho_0i = _ONE_ / rho_0
+      gammai = _ONE_ / (rho_0*max(SMALL,g))
 
+#ifdef NO_BAROTROPIC
+      no_shift = .true.
+#else
+#ifdef SLICE_MODEL
+      no_shift = rigid_lid
+#endif
+#endif
+      first = .false.
+   end if
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j,k,rc,zp,zm,zy,ResInt,Diff,Uloc,cord_curv)         &
@@ -194,7 +204,7 @@
 #endif
                end do
                ex(kmax)=ex(kmax)                                      &
-                       +dry_v(i,j)*_HALF_*(tausy(i,j)+tausy(i,j+1))/rho_0
+                       +dry_v(i,j)*_HALF_*(tausy(i,j)+tausy(i,j+1))*rho_0i
 !     Eddy viscosity
                do k=kvmin(i,j),kmax-1
                   dif(k)=_HALF_*(num(i,j,k)+num(i,j+1,k)) + avmmol
@@ -211,7 +221,7 @@
 #ifndef NO_BAROTROPIC
                zp=max(sseo(i,j+1),-H(i,j  )+min(min_depth,D(i,j+1)))
                zm=max(sseo(i,j  ),-H(i,j+1)+min(min_depth,D(i,j  )))
-               zy=(zp-zm+(airp(i,j+1)-airp(i,j))/gamma)/DYV
+               zy=(zp-zm+(airp(i,j+1)-airp(i,j))*gammai)/DYV
 #else
                zy=_ZERO_
 #endif
@@ -269,14 +279,16 @@
                Diff=(Vint(i,j)-ResInt)/(ssvo(i,j)+HV(i,j))
 #endif
 
+               if (no_shift) then
+                  do k=kvmin(i,j),kmax
+                     vv(i,j,k)=Res(k)
+                  end do
+               else
+                  do k=kvmin(i,j),kmax
+                     vv(i,j,k)=Res(k)+hvn(i,j,k)*Diff
+                  end do
+               end if
 
-               do k=kvmin(i,j),kmax
-#ifndef NO_BAROTROPIC
-                  vv(i,j,k)=Res(k)+hvn(i,j,k)*Diff
-#else
-                  vv(i,j,k)=Res(k)
-#endif
-               end do
             else ! (kmax .eq. kvmin(i,j))
                vv(i,j,kmax)=Vint(i,j)
             end if

@@ -42,12 +42,12 @@
    CALL tic(TIM_MOMENTUM)
 
    if(ufirst) then
-      call umomentum(tausx,airp)
-      call vmomentum(tausy,airp)
+      call umomentum(n,tausx,airp)
+      call vmomentum(n,tausy,airp)
       ufirst = .false.
    else
-      call vmomentum(tausy,airp)
-      call umomentum(tausx,airp)
+      call vmomentum(n,tausy,airp)
+      call umomentum(n,tausx,airp)
       ufirst = .true.
    end if
 
@@ -66,7 +66,7 @@
 ! !IROUTINE: umomentum - 2D-momentum for all interior points.
 !
 ! !INTERFACE:
-   subroutine umomentum(tausx,airp)
+   subroutine umomentum(n,tausx,airp)
 !
 ! !DESCRIPTION:
 !
@@ -124,22 +124,24 @@
 #else
    use domain, only: dx
 #endif
-   use m2d, only: dtm
-   use variables_2d, only: D,z,UEx,U,DU,fV,SlUx,Slru,ru,fU,DV
+   use variables_2d, only: dtm,D,z,UEx,U,DU,fV,SlUx,Slru,ru,fU,DV
+   use bdy_2d, only: do_bdy_2d
+   use m2d, only: have_boundaries
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,U_TAG
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   integer, intent(in)                 :: n
    REALTYPE, intent(in)                :: tausx(E2DFIELD),airp(E2DFIELD)
 !
 ! !LOCAL VARIABLES:
+   logical, save             :: first=.true.
    integer                   :: i,j
    REALTYPE                  :: zp,zm,zx,tausu,Slr,Uloc
-   REALTYPE                  :: gamma=rho_0*g
    REALTYPE                  :: cord_curv=_ZERO_
-   REALTYPE                  :: gammai
+   REALTYPE, save            :: gammai,rho_0i
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -149,7 +151,11 @@
    write(debug,*) 'umomentum() # ',Ncall
 #endif
 
-   gammai = _ONE_/gamma
+   if (first) then
+      rho_0i = _ONE_ / rho_0
+      gammai = _ONE_ / (rho_0*max(SMALL,g))
+      first = .false.
+   end if
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zx,tausu,Slr,Uloc)
 
@@ -167,7 +173,7 @@
                Slr = min( Slru(i,j) , _ZERO_ )
             end if
             U(i,j)=(U(i,j)-dtm*(g*DU(i,j)*zx+dry_u(i,j)*&
-                 (-tausu/rho_0-fV(i,j)+UEx(i,j)+SlUx(i,j)+Slr)))/&
+                 (-tausu*rho_0i-fV(i,j)+UEx(i,j)+SlUx(i,j)+Slr)))/&
                  (_ONE_+dtm*ru(i,j)/DU(i,j))
          end if
       end do
@@ -175,6 +181,8 @@
 !$OMP END DO
 !$OMP END PARALLEL
 ! The rest of this sub is not easy to thread.
+
+   if (have_boundaries) call do_bdy_2d(n,U_TAG)
 
 #ifdef SLICE_MODEL
    do i=imin,imax
@@ -229,7 +237,7 @@
 ! !IROUTINE: vmomentum - 2D-momentum for all interior points.
 !
 ! !INTERFACE:
-   subroutine vmomentum(tausy,airp)
+   subroutine vmomentum(n,tausy,airp)
 !
 ! !DESCRIPTION:
 !
@@ -287,21 +295,23 @@
 #else
    use domain, only: dy
 #endif
-   use m2d, only: dtm
-   use variables_2d, only: D,z,VEx,V,DV,fU,SlVx,Slrv,rv,fV,DU
+   use variables_2d, only: dtm,D,z,VEx,V,DV,fU,SlVx,Slrv,rv,fV,DU
+   use bdy_2d, only: do_bdy_2d
+   use m2d, only: have_boundaries
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,V_TAG
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   integer, intent(in)                 :: n
    REALTYPE, intent(in)                :: tausy(E2DFIELD),airp(E2DFIELD)
 !
 ! !LOCAL VARIABLES:
+   logical, save             :: first=.true.
    integer                   :: i,j
    REALTYPE                  :: zp,zm,zy,tausv,Slr,Vloc
-   REALTYPE                  :: gamma=rho_0*g
    REALTYPE                  :: cord_curv=_ZERO_
-   REALTYPE                  :: gammai
+   REALTYPE, save            :: gammai,rho_0i
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -311,7 +321,11 @@
    write(debug,*) 'vmomentum() # ',Ncall
 #endif
 
-   gammai = _ONE_/gamma
+   if (first) then
+      rho_0i = _ONE_ / rho_0
+      gammai = _ONE_ / (rho_0*max(SMALL,g))
+      first = .false.
+   end if
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zy,tausv,Slr,Vloc)
 
@@ -329,7 +343,7 @@
                Slr = min( Slrv(i,j) , _ZERO_ )
             end if
             V(i,j)=(V(i,j)-dtm*(g*DV(i,j)*zy+dry_v(i,j)*&
-                 (-tausv/rho_0+fU(i,j)+VEx(i,j)+SlVx(i,j)+Slr)))/&
+                 (-tausv*rho_0i+fU(i,j)+VEx(i,j)+SlVx(i,j)+Slr)))/&
                  (_ONE_+dtm*rv(i,j)/DV(i,j))
          end if
       end do
@@ -337,6 +351,8 @@
 !$OMP END DO
 !$OMP END PARALLEL
 ! The rest of this sub is not easy to thread.
+
+   if (have_boundaries) call do_bdy_2d(n,V_TAG)
 
 #ifdef SLICE_MODEL
    do i=imin,imax

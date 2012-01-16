@@ -19,9 +19,9 @@
    use domain,       only: H,HU,HV,az,au,av,min_depth
    use domain,       only: convc
 #if defined CURVILINEAR || defined SPHERICAL
-   use domain,       only: dxc,dyc
+   use domain,       only: dxv,dyu,arcd1
 #else
-   use domain,       only: dx,dy
+   use domain,       only: dx,dy,ard1
 #endif
    use variables_2d, only: z,D
    use variables_2d, only: U,V,DU,DV
@@ -29,8 +29,10 @@
    use variables_3d, only: taubx,tauby
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho,rad,NN
+   use variables_3d, only: diffxx,diffyy,diffxy
    use variables_3d, only: nummix3d_S,nummix3d_T,phymix3d_S,phymix3d_T
 #endif
+   use variables_les, only: AmC_3d
    use variables_3d, only: tke,num,nuh,eps
 #ifdef SPM
    use variables_3d, only: spm_pool,spm
@@ -199,11 +201,11 @@
       call tow(imin,jmin,imax,jmax,kmin,kmax,az, &
                dt,                               &
 #if defined CURVILINEAR || defined SPHERICAL
-               dxc,dyc,                          &
+               dxv,dyu,arcd1,                    &
 #else
-               dx,dy,                            &
+               dx,dy,ard1,                       &
 #endif
-               HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,destag,ws)
+               H,HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,ws)
       err = nf90_put_var(ncid,w_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 
@@ -262,6 +264,25 @@
       end if
 
    end if ! save_strho
+
+   if (calc_stirr .and. save_stirr) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,diffxx,stirr_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,diffxx_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+#ifndef SLICE_MODEL
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,diffyy,stirr_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,diffyy_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,diffxy,stirr_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,diffxy_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+#endif
+   end if
 #endif
 
    if (save_turb) then
@@ -339,6 +360,13 @@
       end if
    end if ! save_mix_analysis
 #endif
+
+   if (Am_method.eq.AM_LES .and. save_Am_3d) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,AmC_3d,Am_3d_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,Am_3d_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
 
 #ifdef SPM
    if (spm_save) then

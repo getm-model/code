@@ -39,7 +39,7 @@
 #else
    use domain, only: dy,dx
 #endif
-   use m2d, only: dtm
+   use variables_2d, only: dtm
    IMPLICIT NONE
 !
 ! !REVISION HISTORY:

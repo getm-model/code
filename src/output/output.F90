@@ -15,6 +15,8 @@
 #ifndef NO_3D
    use variables_3d, only: do_mixing_analysis
 #endif
+   use m2d, only: Am_method,AM_LES
+   use m3d, only: calc_stirr
 #ifdef TEST_NESTING
    use nesting
 #endif
@@ -49,6 +51,9 @@
    logical                             :: save_eps=.true.
    logical                             :: save_num=.true.
    logical                             :: save_nuh=.true.
+   logical                             :: save_Am_2d=.false.
+   logical                             :: save_Am_3d=.false.
+   logical                             :: save_stirr=.false.
    logical                             :: save_ss_nn=.false.
    logical                             :: save_taub=.false.
    integer                             :: first_2d=1
@@ -95,7 +100,7 @@
              save_2d,save_3d,save_vel,destag, &
              save_strho,save_s,save_t,save_rho,save_rad, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
-             save_ss_nn,save_taub, &
+             save_Am_2d,save_Am_3d,save_stirr,save_ss_nn,save_taub, &
              first_2d,step_2d,first_3d,step_3d,hotout,meanout, &
              save_meteo, save_mix_analysis
 !   logical :: nesting=.true.
