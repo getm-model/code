@@ -158,22 +158,25 @@
 ! OMP-NOTE (KK): SINGLE implies BARRIER
       do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
-         do j=jmin,jmax
-            do i=imin,imax
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO
                if (az(i,j) .ne. 0) then
                   if (S(i,j,k) .lt. _ZERO_) then
                      pS(i,j,k) = _ZERO_
+                     if (      imin.le.i .and. i.le.imax &
+                         .and. jmin.le.j .and. j.le.jmax ) then
 !$OMP ATOMIC
-                     negpoints = negpoints+1
+                        negpoints = negpoints+1
 !$OMP END ATOMIC
 !$OMP CRITICAL
-                     negsalt = min(S(i,j,k),negsalt)
+                        negsalt = min(S(i,j,k),negsalt)
 #ifdef DEBUG
-                     STDERR 'Salinity at point ',i,',',j,',',k,' < 0.'
-                     STDERR 'Value is S = ',S(i,j,k)
-                     STDERR 'Programm continued, value set to zero ...'
+                        STDERR 'Salinity at point ',i,',',j,',',k,' < 0.'
+                        STDERR 'Value is S = ',S(i,j,k)
+                        STDERR 'Programm continued, value set to zero ...'
 #endif
 !$OMP END CRITICAL
+                     end if
                   else
                      pS(i,j,k) = S(i,j,k)
                   end if
