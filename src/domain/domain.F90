@@ -194,7 +194,9 @@
 #endif
 
 #ifdef SLICE_MODEL
-   if (jmax.ne.2 .and. jmax.ne.4) then
+   if (jmax.eq.2 .or. jmax.eq.4) then
+      LEVEL2 "SLICE_MODEL with slice at j = ",jmax/2
+   else
       call getm_error("init_domain()", &
                       "SLICE_MODEL requires jmax=4");
    end if
