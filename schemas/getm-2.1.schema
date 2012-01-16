@@ -665,7 +665,7 @@
 			<element name="max_salt"   type="float" label="maximum valid salinity" unit="psu">
 				<condition type="ne" variable="./salt_check" value="0"/>
 			</element>
-			<element name="nonnegsalt" type="int" label="negative salt clipping">
+			<element name="nonnegsalt_method" type="int" label="negative salt clipping">
 				<options>
 					<option value="0" label="disabled"/>
 					<option value="1" label="only inside EOS"/>
