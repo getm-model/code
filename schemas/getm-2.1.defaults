@@ -467,6 +467,9 @@
 			<max_salt>
 				40.0
 			</max_salt>
+			<nonnegsalt_method>
+				0
+			</nonnegsalt_method>
 		</salt>
 		<eqstate>
 			<eqstate_method>
@@ -487,9 +490,6 @@
 			<dsr0>
 				0.78
 			</dsr0>
-			<nonnegsalt>
-				False
-			</nonnegsalt>
 		</eqstate>
 		<les>
 			<les_method>

@@ -44,6 +44,7 @@
    REALTYPE                  :: salt_AH_stirr_const=_ONE_
    integer                   :: salt_check=0
    REALTYPE                  :: min_salt=_ZERO_,max_salt=40*_ONE_
+   integer,public            :: nonnegsalt_method=0
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -95,7 +96,8 @@
             salt_format,salt_name,salt_field_no,              &
             salt_adv_split,salt_hor_adv,salt_ver_adv,         &
             avmols,salt_AH_method,salt_AH_const,salt_AH_Prt,  &
-            salt_AH_stirr_const,salt_check,min_salt,max_salt
+            salt_AH_stirr_const,salt_check,min_salt,max_salt, &
+            nonnegsalt_method
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -174,6 +176,16 @@
 
    end if
 
+#ifdef NONNEGSALT
+   if (nonnegsalt_method .ne. 1) then
+      LEVEL3 "reset nonnegsalt_method=1 due to obsolete"
+      LEVEL3 "NONNEGSALT macro. Note that this behaviour"
+      LEVEL3 "will be removed in the future!"
+      nonnegsalt_method = 1
+   end if
+#endif
+
+   LEVEL3 'nonnegsalt_method = ',nonnegsalt_method
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_salinity()'

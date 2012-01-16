@@ -16,6 +16,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax,az
    use  parameters, only:   g,rho_0
    use  variables_3d, only: T,S,rho
+   use salinity, only: nonnegsalt_method
 !  IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -25,7 +26,6 @@
    integer                   :: eqstate_method=3
    REALTYPE                  :: T0 = 10., S0 = 33.75, p0 = 0.
    REALTYPE                  :: dtr0 = -0.17, dsr0 = 0.78
-   logical                   :: nonnegsalt=.false.
    REALTYPE,dimension(:,:,:),allocatable,target :: S_eos
    REALTYPE,dimension(:,:,:),pointer            :: pS
 !
@@ -52,7 +52,7 @@
 !
 ! !LOCAL VARIABLES:
    integer :: rc
-   namelist /eqstate/ eqstate_method,T0,S0,p0,dtr0,dsr0,nonnegsalt
+   namelist /eqstate/ eqstate_method,T0,S0,p0,dtr0,dsr0
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -81,21 +81,7 @@
          stop 'init_eqstate()'
    end select
 
-   if (eqstate_method .ne. 1) then
-#ifdef NONNEGSALT
-      if (.not. nonnegsalt) then
-         LEVEL3 "reenabled clipping of negative salinities inside EOS"
-         LEVEL3 "due to obsolete NONNEGSALT macro. Note that this"
-         LEVEL3 "behaviour will be removed in the future!"
-         nonnegsalt=.true.
-      end if
-#endif
-      LEVEL3 'nonnegsalt = ',nonnegsalt
-   else
-      nonnegsalt=.false.
-   end if
-
-   if (nonnegsalt) then
+   if (nonnegsalt_method .eq. 1) then
       allocate(S_eos(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'init_eqstate: Error allocating memory (S_eos)'
       pS => S_eos
@@ -124,7 +110,13 @@
 ! Here, the equation of state is calculated for every 3D grid point.
 !
 ! !USES:
+   use parameters, only: rho_0
    use domain, only: imin,imax,jmin,jmax,kmax,az
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+   use domain, only: arcd1
+#else
+   use domain, only: ard1
+#endif
    use variables_3d, only: kmin,T,S,rho,buoy,hn,alpha,beta
    use getm_timers, only: tic, toc, TIM_EQSTATE
 !$ use omp_lib
@@ -133,7 +125,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
    integer                   :: negpoints
-   REALTYPE                  :: negsalt
+   REALTYPE                  :: negsalt,negsalt_min
    REALTYPE                  :: x
    REALTYPE                  :: p1,s1,t1
    REALTYPE                  :: th,densp
@@ -150,10 +142,11 @@
 !$OMP PARALLEL DEFAULT(SHARED)          &
 !$OMP PRIVATE(i,j,k, x,p1,s1,t1,th,densp)
 
-   if (nonnegsalt) then
+   if (nonnegsalt_method .gt. 0) then
 !$OMP SINGLE
       negpoints = 0
       negsalt = _ZERO_
+      negsalt_min = _ZERO_
 !$OMP END SINGLE
 ! OMP-NOTE (KK): SINGLE implies BARRIER
       do k=1,kmax
@@ -161,24 +154,28 @@
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO
                if (az(i,j) .ne. 0) then
-                  if (S(i,j,k) .lt. _ZERO_) then
+                  s1 = S(i,j,k)
+                  if (s1 .lt. _ZERO_) then
                      pS(i,j,k) = _ZERO_
                      if (      imin.le.i .and. i.le.imax &
                          .and. jmin.le.j .and. j.le.jmax ) then
 !$OMP ATOMIC
                         negpoints = negpoints+1
 !$OMP END ATOMIC
+!$OMP ATOMIC
+                        negsalt = negsalt + s1*hn(i,j,k)/ARCD1
+!$OMP END ATOMIC
 !$OMP CRITICAL
-                        negsalt = min(S(i,j,k),negsalt)
+                        negsalt_min = min(s1,negsalt_min)
 #ifdef DEBUG
                         STDERR 'Salinity at point ',i,',',j,',',k,' < 0.'
-                        STDERR 'Value is S = ',S(i,j,k)
+                        STDERR 'Value is S = ',s1
                         STDERR 'Programm continued, value set to zero ...'
 #endif
 !$OMP END CRITICAL
                      end if
-                  else
-                     pS(i,j,k) = S(i,j,k)
+                  else if(nonnegsalt_method .eq. 1) then
+                     pS(i,j,k) = s1
                   end if
                end if
             end do
@@ -188,8 +185,13 @@
 !$OMP BARRIER
 !$OMP MASTER
       if (negpoints .gt. 0) then
-         STDERR "clipped ",negpoints," negative salinities inside EOS"
-         STDERR "(minimum salinity: ",real(negsalt)," )"
+         if (nonnegsalt_method .eq. 1) then
+            STDERR "clipped ",negpoints," negative salinities (only inside EOS)"
+         else
+            STDERR "clipped ",negpoints," negative salinities"
+         end if
+         STDERR "... approx. amount of salt: ",real(negsalt*rho_0)," kg)"
+         STDERR "... minimum salinity: ",real(negsalt_min)," psu)"
       end if
 !$OMP END MASTER
    end if

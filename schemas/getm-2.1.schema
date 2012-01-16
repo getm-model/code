@@ -665,6 +665,13 @@
 			<element name="max_salt"   type="float" label="maximum valid salinity" unit="psu">
 				<condition type="ne" variable="./salt_check" value="0"/>
 			</element>
+			<element name="nonnegsalt" type="int" label="negative salt clipping">
+				<options>
+					<option value="0" label="disabled"/>
+					<option value="1" label="only inside EOS"/>
+					<option value="2" label="within raw salt distribution"/>
+				</options>
+			</element>
 		</element>
 		
 		<element name="eqstate" label="equation of state">
@@ -689,12 +696,6 @@
 			</element>
 			<element name="dsr0" type="float" label="saline expansion coefficient for linear equation of state">
 				<condition type="eq" variable="./eqstate_method" value="1" />
-			</element>
-			<element name="nonnegsalt" type="bool" label="negative salt clipping in eos">
-				<condition type="or">
-					<condition type="eq" variable="./eqstate_method" value="2"/>
-					<condition type="eq" variable="./eqstate_method" value="3"/>
-				</condition>
 			</element>
 		</element>
 
