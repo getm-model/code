@@ -196,8 +196,8 @@
             STDERR "clipped ",negpoints," negative salinities"
          end if
          STDERR "(min:",real(negsalt_min)," psu", &
-                ",mean:",real(negsalt/x)," psu",  &
-                ",sum:",real(negsalt*rho_0/1000.0d0)," kg)"
+                ",mean:",real(negsalt/negvol)," psu",  &
+                ",sum:",real(-negsalt*rho_0/1000.0d0)," kg)"
       end if
 !$OMP END MASTER
    end if
