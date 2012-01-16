@@ -229,7 +229,7 @@
 #ifdef PECS_TEST
    integer                   :: cc(1:30)
 #endif
-   integer, parameter        :: nmax=100
+   integer, parameter        :: nmax=10000
    REALTYPE                  :: zlev(nmax),prof(nmax)
    integer                   :: salt_field_no=1
    integer                   :: status
