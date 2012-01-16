@@ -125,7 +125,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
    integer                   :: negpoints
-   REALTYPE                  :: negsalt,negsalt_min
+   REALTYPE                  :: negvol,negsalt,negsalt_min
    REALTYPE                  :: x
    REALTYPE                  :: p1,s1,t1
    REALTYPE                  :: th,densp
@@ -145,6 +145,7 @@
    if (nonnegsalt_method .gt. 0) then
 !$OMP SINGLE
       negpoints = 0
+      negvol = _ZERO_
       negsalt = _ZERO_
       negsalt_min = _ZERO_
 !$OMP END SINGLE
@@ -162,8 +163,12 @@
 !$OMP ATOMIC
                         negpoints = negpoints+1
 !$OMP END ATOMIC
+                        x = hn(i,j,k)/ARCD1
 !$OMP ATOMIC
-                        negsalt = negsalt + s1*hn(i,j,k)/ARCD1
+                        negvol = negvol + x
+!$OMP END ATOMIC
+!$OMP ATOMIC
+                        negsalt = negsalt + s1*x
 !$OMP END ATOMIC
 !$OMP CRITICAL
                         negsalt_min = min(s1,negsalt_min)
@@ -190,8 +195,9 @@
          else
             STDERR "clipped ",negpoints," negative salinities"
          end if
-         STDERR "... approx. amount of salt: ",real(negsalt*rho_0)," kg)"
-         STDERR "... minimum salinity: ",real(negsalt_min)," psu)"
+         STDERR "(min:",real(negsalt_min)," psu", &
+                ",mean:",real(negsalt/x)," psu",  &
+                ",sum:",real(negsalt*rho_0/1000.0d0)," kg)"
       end if
 !$OMP END MASTER
    end if
