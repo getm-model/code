@@ -26,7 +26,7 @@
    use domain, only: ill,ihl,jll,jhl
    use domain, only: rigid_lid,openbdy,z0_method,z0_const,z0
    use domain, only: az,ax
-   use advection, only: init_advection,print_adv_settings
+   use advection, only: init_advection,print_adv_settings,NOADV
    use halo_zones, only : update_2d_halo,wait_halo,H_TAG
    use variables_2d
    use bdy_2d, only: bdyfmt_2d,bdyramp_2d
@@ -127,6 +127,14 @@
    call init_advection()
 
    LEVEL2 'Advection of depth-averaged velocities'
+#ifdef NO_ADVECT
+   if (vel_adv_scheme .ne. NOADV) then
+      LEVEL2 "reset vel_adv_scheme= ",NOADV," because of"
+      LEVEL2 "obsolete NO_ADVECT macro. Note that this"
+      LEVEL2 "behaviour will be removed in the future."
+      vel_adv_scheme = NOADV
+   end if
+#endif
    call print_adv_settings(vel_adv_split2d,vel_adv_scheme,_ZERO_)
 
    if (.not. hotstart) then

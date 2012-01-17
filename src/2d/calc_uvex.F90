@@ -42,16 +42,10 @@
 
    UEx=_ZERO_ ; VEx=_ZERO_
 
-#ifdef NO_ADVECT
-   STDERR 'NO_ADVECT 2D'
-#else
-#ifndef UV_ADV_DIRECT
    call uv_advect(U,V,DU,DV)
    if (Am.gt._ZERO_ .or. An_method.gt.0) then
       call uv_diffusion(An_method,UEx,VEx,U=U,V=V,D=D,DU=DU,DV=DV)
    end if
-#endif
-#endif
 
    CALL toc(TIM_UVEX)
 #ifdef DEBUG
