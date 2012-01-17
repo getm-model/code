@@ -45,11 +45,8 @@
 
    UEx=_ZERO_ ; VEx=_ZERO_
 
-#ifdef NO_ADVECT
-   STDERR 'NO_ADVECT 2D'
-#else
-#ifndef UV_ADV_DIRECT
    call uv_advect(U,V,DU,DV)
+
    select case(Am_method)
       case(NO_AM)
          if (An_method .gt. 0) then
@@ -89,9 +86,6 @@
 #endif
                            shearX=shearX,AmC=AmC_2d,AmX=AmX_2d)
    end select
-
-#endif
-#endif
 
    CALL toc(TIM_UVEX)
 #ifdef DEBUG

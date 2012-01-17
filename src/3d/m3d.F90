@@ -40,6 +40,7 @@
    use internal_pressure, only: ip_method
 #endif
    use variables_3d
+   use advection, only: NOADV
    use advection_3d, only: init_advection_3d,print_adv_settings_3d,itersmax_adv
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
    use bdy_3d, only: bdy3d_tmrlx, bdy3d_tmrlx_ucut, bdy3d_tmrlx_max, bdy3d_tmrlx_min
@@ -157,6 +158,20 @@
 
 !  Sanity checks for advection specifications
    LEVEL2 'Advection of horizontal 3D velocities'
+#ifdef NO_ADVECT
+   if (vel_hor_adv .ne. NOADV) then
+      LEVEL2 "reset vel_hor_adv= ",NOADV," because of"
+      LEVEL2 "obsolete NO_ADVECT macro. Note that this"
+      LEVEL2 "behaviour will be removed in the future."
+      vel_hor_adv = NOADV
+   end if
+   if (vel_ver_adv .ne. NOADV) then
+      LEVEL2 "reset vel_ver_adv= ",NOADV," because of"
+      LEVEL2 "obsolete NO_ADVECT macro. Note that this"
+      LEVEL2 "behaviour will be removed in the future."
+      vel_ver_adv = NOADV
+   end if
+#endif
    call print_adv_settings_3d(vel_adv_split,vel_hor_adv,vel_ver_adv,_ZERO_)
 
 !  Sanity checks for bdy 3d
@@ -576,14 +591,11 @@
 #endif
                                             shearX_3d,shearU_3d)
 
-#ifndef NO_ADVECT
    if (kmax .gt. 1) then
       call uv_advect_3d()
       if (Am_method .ne. NO_AM) call uv_diffusion_3d() ! Must be called after uv_advect_3d
    end if
-#else
-   STDERR 'NO_ADVECT 3D'
-#endif
+
    if (kmax .gt. 1) then
 #ifndef NO_BOTTFRIC
       call stresses_3d()
