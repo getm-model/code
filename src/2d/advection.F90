@@ -73,17 +73,18 @@
                   (/"no split: one 2D uv step",            &
                     "full step splitting: u + v",          &
                     "half step splitting: u/2 + v + u/2"/)
-   integer,public,parameter           :: UPSTREAM=1,UPSTREAM_2DH=2,P2=3
-   integer,public,parameter           :: SUPERBEE=4,MUSCL=5,P2_PDM=6,FCT=7
+   integer,public,parameter           :: NOADV=0,UPSTREAM=1,UPSTREAM_2DH=2
+   integer,public,parameter           :: P2=3,SUPERBEE=4,MUSCL=5,P2_PDM=6,FCT=7
    integer,public,parameter           :: J7=8
-   character(len=64),public,parameter :: adv_schemes(8) =  &
-      (/"upstream advection (first-order, monotone)",      &
-        "2DH-upstream advection with forced monotonicity", &
-        "P2 advection (third-order, non-monotone)",        &
-        "TVD-Superbee advection (second-order, monotone)", &
-        "TVD-MUSCL advection (second-order, monotone)",    &
-        "TVD-P2-PDM advection (third-order, monotone)",    &
-        "2DH-FCT advection",                               &
+   character(len=64),public,parameter :: adv_schemes(0:8) = &
+      (/"advection disabled",                               &
+        "upstream advection (first-order, monotone)",       &
+        "2DH-upstream advection with forced monotonicity",  &
+        "P2 advection (third-order, non-monotone)",         &
+        "TVD-Superbee advection (second-order, monotone)",  &
+        "TVD-MUSCL advection (second-order, monotone)",     &
+        "TVD-P2-PDM advection (third-order, monotone)",     &
+        "2DH-FCT advection",                                &
         "2DH-J7 advection (Arakawa and Lamb, 1977)"/)
 !
 ! !REVISION HISTORY:
@@ -428,184 +429,188 @@
    Di = Do
    adv = _ZERO_
 
-   select case (split)
+   if (scheme .ne. NOADV) then
 
-      case(NOSPLIT)
+      select case (split)
 
-         select case (scheme)
+         case(NOSPLIT)
 
-            case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
+            select case (scheme)
 
-               call adv_u_split(dt,f,Di,adv,U,Do,DU,                      &
+               case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
+
+                  call adv_u_split(dt,f,Di,adv,U,Do,DU,                      &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1, &
+                                   adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1, &
 #endif
-                                _ONE_,scheme,AH,                          &
-                                adv_grid%mask_uflux,adv_grid%mask_uupdate &
+                                   _ONE_,scheme,AH,                          &
+                                   adv_grid%mask_uflux,adv_grid%mask_uupdate &
 #ifndef SLICE_MODEL
-                                ,nosplit_finalise=.false.                 &
+                                   ,nosplit_finalise=.false.                 &
 #endif
-                               )
+                                  )
 #ifndef SLICE_MODEL
-               call adv_v_split(dt,f,Di,adv,V,Do,DV,                       &
+                  call adv_v_split(dt,f,Di,adv,V,Do,DV,                       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
+                                   adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
-                                _ONE_,scheme,AH,                           &
-                                adv_grid%mask_vflux,adv_grid%mask_vupdate, &
-                                nosplit_finalise=.true.,                   &
-                                mask_finalise=adv_grid%mask_finalise)
+                                   _ONE_,scheme,AH,                           &
+                                   adv_grid%mask_vflux,adv_grid%mask_vupdate, &
+                                   nosplit_finalise=.true.,                   &
+                                   mask_finalise=adv_grid%mask_finalise)
 #endif
 
-            case(UPSTREAM_2DH)
+               case(UPSTREAM_2DH)
 
-               call adv_upstream_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
+                  call adv_upstream_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                     adv_grid%dxv,adv_grid%dyu,   &
-                                     adv_grid%dxu,adv_grid%dyv,   &
-                                     adv_grid%arcd1,              &
+                                        adv_grid%dxv,adv_grid%dyu,   &
+                                        adv_grid%dxu,adv_grid%dyv,   &
+                                        adv_grid%arcd1,              &
 #endif
-                                     adv_grid%az,AH)
+                                        adv_grid%az,AH)
 
-            case(FCT)
+               case(FCT)
 
-               call adv_fct_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
+                  call adv_fct_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                adv_grid%dxv,adv_grid%dyu,   &
-                                adv_grid%dxu,adv_grid%dyv,   &
-                                adv_grid%arcd1,              &
+                                   adv_grid%dxv,adv_grid%dyu,   &
+                                   adv_grid%dxu,adv_grid%dyv,   &
+                                   adv_grid%arcd1,              &
 #endif
-                                adv_grid%az,AH)
+                                   adv_grid%az,AH)
 
-            case(J7)
+               case(J7)
 
-               call adv_arakawa_j7_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
+                  call adv_arakawa_j7_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                       adv_grid%dxv,adv_grid%dyu,   &
-                                       adv_grid%dxu,adv_grid%dyv,   &
-                                       adv_grid%arcd1,              &
+                                          adv_grid%dxv,adv_grid%dyu,   &
+                                          adv_grid%dxu,adv_grid%dyv,   &
+                                          adv_grid%arcd1,              &
 #endif
-                                       adv_grid%az,AH,              &
-                                       adv_grid%mask_uflux,         &
-                                       adv_grid%mask_vflux,         &
-                                       adv_grid%mask_xflux)
+                                          adv_grid%az,AH,              &
+                                          adv_grid%mask_uflux,         &
+                                          adv_grid%mask_vflux,         &
+                                          adv_grid%mask_xflux)
 
-            case default
+               case default
 
-               stop 'do_advection: scheme is invalid'
+                  stop 'do_advection: scheme is invalid'
 
-         end select
+            end select
 
-      case(FULLSPLIT)
+         case(FULLSPLIT)
 
-         select case (scheme)
+            select case (scheme)
 
-            case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
+               case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
-               call adv_u_split(dt,f,Di,adv,U,Do,DU,                       &
+                  call adv_u_split(dt,f,Di,adv,U,Do,DU,                       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
+                                   adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
-                                _ONE_,scheme,AH,                           &
-                                adv_grid%mask_uflux,adv_grid%mask_uupdate)
-#ifndef SLICE_MODEL
-#ifdef GETM_PARALLEL
-               if (scheme.ne.UPSTREAM .and. tag.eq.V_TAG) then
-!                 we need to update f(imin:imax,jmax+HALO)
-                  call tic(TIM_ADVH)
-                  call update_2d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,H_TAG)
-                  call wait_halo(H_TAG)
-                  call toc(TIM_ADVH)
-               end if
-#endif
-               call adv_v_split(dt,f,Di,adv,V,Do,DV,                       &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                                adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
-#endif
-                                _ONE_,scheme,AH,                           &
-                                adv_grid%mask_vflux,adv_grid%mask_vupdate)
-#endif
-
-            case((UPSTREAM_2DH),(FCT),(J7))
-
-               stop 'do_advection: scheme not valid for split'
-
-            case default
-
-               stop 'do_advection: scheme is invalid'
-
-         end select
-
-      case(HALFSPLIT)
-
-         select case (scheme)
-
-            case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
-
-               call adv_u_split(dt,f,Di,adv,U,Do,DU,                       &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                                adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
-#endif
-                                _HALF_,scheme,AH,                          &
-                                adv_grid%mask_uflux,adv_grid%mask_uupdate)
+                                   _ONE_,scheme,AH,                           &
+                                   adv_grid%mask_uflux,adv_grid%mask_uupdate)
 #ifndef SLICE_MODEL
 #ifdef GETM_PARALLEL
-               if (scheme.ne.UPSTREAM .and. tag.eq.V_TAG) then
-!                 we need to update f(imin:imax,jmax+HALO)
-                  call tic(TIM_ADVH)
-                  call update_2d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,H_TAG)
-                  call wait_halo(H_TAG)
-                  call toc(TIM_ADVH)
-               end if
-#endif
-               call adv_v_split(dt,f,Di,adv,V,Do,DV,                       &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                                adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
-#endif
-                                _ONE_,scheme,AH,                           &
-                                adv_grid%mask_vflux,adv_grid%mask_vupdate)
-#endif
-#ifdef GETM_PARALLEL
-               if (scheme .eq. UPSTREAM) then
-                  if (tag .eq. U_TAG) then
-!                    we need to update f(imax+1,jmin:jmax)
-!                    KK-TODO: if external DU was halo-updated this halo-update is not necessary
+                  if (scheme.ne.UPSTREAM .and. tag.eq.V_TAG) then
+!                    we need to update f(imin:imax,jmax+HALO)
                      call tic(TIM_ADVH)
                      call update_2d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,H_TAG)
                      call wait_halo(H_TAG)
                      call toc(TIM_ADVH)
                   end if
-               else
-!                 we need to update f(imin-HALO:imin-1,jmin:jmax)
-!                 we need to update f(imax+1:imax+HALO,jmin:jmax)
-                  call tic(TIM_ADVH)
-                  call update_2d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,H_TAG)
-                  call wait_halo(H_TAG)
-                  call toc(TIM_ADVH)
-               end if
 #endif
-               call adv_u_split(dt,f,Di,adv,U,Do,DU,                       &
+                  call adv_v_split(dt,f,Di,adv,V,Do,DV,                       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
+                                   adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
-                                _HALF_,scheme,AH,                          &
-                                adv_grid%mask_uflux,adv_grid%mask_uupdate)
+                                   _ONE_,scheme,AH,                           &
+                                   adv_grid%mask_vflux,adv_grid%mask_vupdate)
+#endif
 
-            case((UPSTREAM_2DH),(FCT),(J7))
+               case((UPSTREAM_2DH),(FCT),(J7))
 
-               stop 'do_advection: scheme not valid for split'
+                  stop 'do_advection: scheme not valid for split'
 
-            case default
+               case default
 
-               stop 'do_advection: scheme is invalid'
+                  stop 'do_advection: scheme is invalid'
 
-         end select
+            end select
 
-      case default
+         case(HALFSPLIT)
 
-         stop 'do_advection: split is invalid'
+            select case (scheme)
 
-   end select
+               case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
+
+                  call adv_u_split(dt,f,Di,adv,U,Do,DU,                       &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                   adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
+#endif
+                                   _HALF_,scheme,AH,                          &
+                                   adv_grid%mask_uflux,adv_grid%mask_uupdate)
+#ifndef SLICE_MODEL
+#ifdef GETM_PARALLEL
+                  if (scheme.ne.UPSTREAM .and. tag.eq.V_TAG) then
+!                    we need to update f(imin:imax,jmax+HALO)
+                     call tic(TIM_ADVH)
+                     call update_2d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,H_TAG)
+                     call wait_halo(H_TAG)
+                     call toc(TIM_ADVH)
+                  end if
+#endif
+                  call adv_v_split(dt,f,Di,adv,V,Do,DV,                       &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                   adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
+#endif
+                                   _ONE_,scheme,AH,                           &
+                                   adv_grid%mask_vflux,adv_grid%mask_vupdate)
+#endif
+#ifdef GETM_PARALLEL
+                  if (scheme .eq. UPSTREAM) then
+                     if (tag .eq. U_TAG) then
+!                       we need to update f(imax+1,jmin:jmax)
+!                       KK-TODO: if external DU was halo-updated this halo-update is not necessary
+                        call tic(TIM_ADVH)
+                        call update_2d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,H_TAG)
+                        call wait_halo(H_TAG)
+                        call toc(TIM_ADVH)
+                     end if
+                  else
+!                    we need to update f(imin-HALO:imin-1,jmin:jmax)
+!                    we need to update f(imax+1:imax+HALO,jmin:jmax)
+                     call tic(TIM_ADVH)
+                     call update_2d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,H_TAG)
+                     call wait_halo(H_TAG)
+                     call toc(TIM_ADVH)
+                  end if
+#endif
+                  call adv_u_split(dt,f,Di,adv,U,Do,DU,                       &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                   adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
+#endif
+                                   _HALF_,scheme,AH,                          &
+                                   adv_grid%mask_uflux,adv_grid%mask_uupdate)
+
+               case((UPSTREAM_2DH),(FCT),(J7))
+
+                  stop 'do_advection: scheme not valid for split'
+
+               case default
+
+                  stop 'do_advection: scheme is invalid'
+
+            end select
+
+         case default
+
+            stop 'do_advection: split is invalid'
+
+      end select
+
+   end if
 
    if (present(Dires)) Dires = Di
    if (present(advres)) advres = adv
@@ -648,36 +653,42 @@
    write(debug,*) 'print_adv_settings() # ',Ncall
 #endif
 
-   select case (split)
-      case((NOSPLIT),(FULLSPLIT),(HALFSPLIT))
-      case default
-         FATAL 'adv_split=',split,' is invalid'
-         stop
-   end select
+   if (scheme .ne. NOADV) then
+      select case (split)
+         case((NOSPLIT),(FULLSPLIT),(HALFSPLIT))
+         case default
+            FATAL 'adv_split=',split,' is invalid'
+            stop
+      end select
+   end if
 
    select case (scheme)
-      case((UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(FCT),(J7))
+      case((NOADV),(UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(FCT),(J7))
       case default
          FATAL 'adv_scheme=',scheme,' is invalid'
          stop
    end select
 
-   select case (split)
-      case((FULLSPLIT),(HALFSPLIT))
-         select case (scheme)
-            case((UPSTREAM_2DH),(FCT),(J7))
-               FATAL 'adv_scheme=',scheme,' not valid for adv_split=',split
-               stop
-         end select
-   end select
+   if (scheme .ne. NOADV) then
+      select case (split)
+         case((FULLSPLIT),(HALFSPLIT))
+            select case (scheme)
+               case((UPSTREAM_2DH),(FCT),(J7))
+                  FATAL 'adv_scheme=',scheme,' not valid for adv_split=',split
+                  stop
+            end select
+      end select
+      LEVEL3 trim(adv_splits(split))
+   end if
 
-   LEVEL3 trim(adv_splits(split))
    LEVEL3 ' ',trim(adv_schemes(scheme))
 
-   if (AH .gt. _ZERO_) then
-      LEVEL3 ' with AH=',AH
-   else
-      LEVEL3 ' without diffusion'
+   if (scheme .ne. NOADV) then
+      if (AH .gt. _ZERO_) then
+         LEVEL3 ' with AH=',AH
+      else
+         LEVEL3 ' without diffusion'
+      end if
    end if
 
 #ifdef DEBUG
