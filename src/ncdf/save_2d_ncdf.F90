@@ -16,7 +16,8 @@
    use grid_ncdf,    only: xlen,ylen
    use domain,       only: ioff,joff,imin,imax,jmin,jmax
    use domain,       only: H,az,au,av,crit_depth
-   use variables_2d, only: z,D,U,DU,V,DV,res_u,res_v,surfdiv
+   use domain,       only: convc
+   use variables_2d, only: z,D,U,DU,V,DV,res_u,res_v
 #if USE_BREAKS
    use variables_2d, only: break_stat
 #endif
@@ -41,6 +42,13 @@
    integer                   :: start(3),edges(3)
    integer, save             :: n2d=0
    REALTYPE                  :: dum(1)
+   integer                   :: i,j
+   REALTYPE                  :: Utmp(E2DFIELD),Vtmp(E2DFIELD)
+#if defined(CURVILINEAR)
+   REALTYPE                  :: Urot(E2DFIELD),Vrot(E2DFIELD)
+   REALTYPE                  :: deg2rad = 3.141592654/180.
+   REALTYPE                  :: cosconv,sinconv
+#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -70,33 +78,43 @@
       err = nf90_put_var(ncid,elev_id,ws(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 
-! average zonal velocity
+! grid-related zonal and meridional velocities
       if (destag) then
-         call to_2d_u(imin,jmin,imax,jmax,az,u,DU,vel_missing,         &
-                      imin,jmin,imax,jmax,ws)
+         call to_2d_u(imin,jmin,imax,jmax,az,U,DU,vel_missing,      &
+                      imin,jmin,imax,jmax,Utmp)
+         call to_2d_v(imin,jmin,imax,jmax,az,V,DV,vel_missing,      &
+                      imin,jmin,imax,jmax,Vtmp)
       else
-         call to_2d_vel(imin,jmin,imax,jmax,au,u,DU,vel_missing,       &
-                        imin,jmin,imax,jmax,ws)
+         call to_2d_vel(imin,jmin,imax,jmax,au,U,DU,vel_missing,       &
+                        imin,jmin,imax,jmax,Utmp)
+         call to_2d_vel(imin,jmin,imax,jmax,av,V,DV,vel_missing,       &
+                        imin,jmin,imax,jmax,Vtmp)
       endif
-      err = nf90_put_var(ncid,u_id,ws(_2D_W_),start,edges)
+      err = nf90_put_var(ncid,u_id,Utmp(_2D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+      err = nf90_put_var(ncid,v_id,Vtmp(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 
-! average meridional velocity
-      if (destag) then
-         call to_2d_v(imin,jmin,imax,jmax,az,v,DV,vel_missing,         &
-                      imin,jmin,imax,jmax,ws)
-      else
-         call to_2d_vel(imin,jmin,imax,jmax,av,v,DV,vel_missing,       &
-              imin,jmin,imax,jmax,ws)
-      endif
-      err = nf90_put_var(ncid,v_id,ws(_2D_W_),start,edges)
+#if defined(CURVILINEAR)
+! rotated zonal and meridional velocities
+      do j=jmin,jmax
+         do i=imin,imax
+            if (az(i,j) .gt. 0) then
+               cosconv = cos(deg2rad*convc(i,j))
+               sinconv = sin(deg2rad*convc(i,j))
+               Urot(i,j) = Utmp(i,j)*cosconv-Vtmp(i,j)*sinconv
+               Vrot(i,j) = Utmp(i,j)*sinconv+Vtmp(i,j)*cosconv
+            else
+               Urot(i,j) = vel_missing
+               Vrot(i,j) = vel_missing
+            end if
+         end do
+      end do
+      err = nf90_put_var(ncid,urot_id,Urot(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
-
-! divergence
-      call cnv_2d(imin,jmin,imax,jmax,az,surfdiv,divergence_missing, &
-                  imin,jmin,imax,jmax,ws)
-      err = nf90_put_var(ncid, surfdiv_id,ws(_2D_W_),start,edges)
+      err = nf90_put_var(ncid,vrot_id,Vrot(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
+#endif
 
       if (metforcing .and. save_meteo) then
 
