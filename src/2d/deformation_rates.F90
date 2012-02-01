@@ -260,6 +260,7 @@
                   dudxU(i,j) = _HALF_*(dudxC(i,j) + dudxC(i+1,j))
                else if (au(i,j) .eq. 0) then
 !                 KK-TODO: is this correct (U(au=0)=0 + slip condition) ?
+!                 Note (KK): in case of no-slip dudxU=0
                   if (az(i  ,j) .eq. 1) dudxU(i,j) = dudxC(i  ,j)
                   if (az(i+1,j) .eq. 1) dudxU(i,j) = dudxC(i+1,j)
                end if
@@ -372,6 +373,7 @@
                   dvdyV(i,j) = _HALF_*(dvdyC(i,j) + dvdyC(i,j+1))
                else if (av(i,j) .eq. 0) then
 !                 KK-TODO: is this correct (V(av=0)=0 + slip condition) ?
+!                 Note (KK): in case of no-slip dvdyV=0
                   if (az(i,j  ) .eq. 1) dvdyV(i,j) = dvdyC(i,j  )
                   if (az(i,j+1) .eq. 1) dvdyV(i,j) = dvdyC(i,j+1)
                end if
