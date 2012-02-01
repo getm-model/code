@@ -120,7 +120,10 @@
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             else
-!              Note (KK): shearX at corners already set to 0, there no AmX needed
+!              Note (KK): in case of _CORRECT_METRICS_ *NOT* defined shearX(ax=0)=0
+!                         and AmX not needed, therefore nonzero dudxX and dvdyX
+!                         need to be considered only in case of _CORRECT_METRICS_
+!                         shearX at corners already set to 0, there no AmX needed
                if (av(i,j).eq.0 .and. av(i+1,j).eq.0) then
                   if (au(i,j) .eq. 1) then ! northern closed boundary
                      AmX(i,j) =  (_HALF_*(dudxV(i,j) + dudxV(i+1,j)))**2 &

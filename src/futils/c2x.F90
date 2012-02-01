@@ -59,7 +59,7 @@
       xfield(i,jmax  ) = 2.0*ufield(i,jmax) - xfield(i,jmax-1)
    end do
 
-   do i=jmin,jmax-1
+   do j=jmin,jmax-1
       xfield(imin-1,j) = 2.0*vfield(imin,j) - xfield(imin,j  )
       xfield(imax  ,j) = 2.0*vfield(imax,j) - xfield(imax-1,j)
    end do
