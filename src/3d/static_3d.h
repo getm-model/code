@@ -84,6 +84,7 @@
 ! 3D friction in 3D domain
   REALTYPE                             :: rru(I2DFIELD)
   REALTYPE                             :: rrv(I2DFIELD)
+  REALTYPE,dimension(I2DFIELD)         :: zub,zvb
   REALTYPE                             :: taus(I2DFIELD)
   REALTYPE                             :: taubx(I2DFIELD)
   REALTYPE                             :: tauby(I2DFIELD)

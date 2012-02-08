@@ -222,8 +222,7 @@
 !     Matrix elements for bottom layer
                k=kumin(i,j)
                a3(k)=-auxn(k  )/hun(i,j,k+1)
-               a2(k)=_ONE_+auxn(k)/hun(i,j,k)                          &
-                     +dt*rru(i,j)/(_HALF_*(hun(i,j,k)+huo(i,j,k)))
+               a2(k) = _ONE_ + ( auxn(k) + dt*rru(i,j) )/hun(i,j,k)
                a4(k)=uu(i,j,k+1)*auxo(k)/huo(i,j,k+1)                  &
                     +uu(i,j,k  )*(1-auxo(k)/huo(i,j,k))                &
                     +dt*ex(k)                                          &

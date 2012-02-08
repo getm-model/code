@@ -71,4 +71,5 @@
    REALTYPE,target                     :: arvd1(E2DFIELD)
 
 !  bottom roughness
-   REALTYPE                            :: z0(E2DFIELD)
+   REALTYPE,dimension(E2DFIELD)        :: z0,zub0,zvb0
+
