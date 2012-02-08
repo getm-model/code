@@ -26,10 +26,8 @@
    use exceptions
    use parameters, only: avmmol
    use domain, only: openbdy,maxdepth,vert_cord,az
-!  we do not need to include calc_uvex
-   use m2d_general, only: bottom_friction,calc_uvex
+   use m2d_general, only: bottom_friction
    use m2d, only: Am
-   use variables_2d, only: Uint,Vint,ru,rv
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
             init_temperature_field
@@ -541,21 +539,9 @@
 #endif
 
 #ifndef NO_BAROTROPIC
-   if (kmax .gt. 1) then
-
-      call tic(TIM_INTEGR3D)
-
-#ifndef NO_BOTTFRIC
-      call bottom_friction(Uint,Vint,Dun,Dvn,ru,rv)
-#endif
-      call calc_uvex(0,Uint,Vint,Dn,Dun,Dvn)
-
-      call toc(TIM_INTEGR3D)
-
-   end if
-
    call slow_terms()
 #endif
+
    call tic(TIM_INTEGR3D)
    call stop_macro()
    call toc(TIM_INTEGR3D)

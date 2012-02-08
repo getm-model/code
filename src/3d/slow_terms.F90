@@ -21,16 +21,17 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,au,av
    use variables_2d, only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
-   use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,Dun,Dvn
+   use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,Dn,Dun,Dvn
    use variables_3d, only: uuEx,vvEx,rru,rrv
-   use m3d, only: ip_fac
-   use getm_timers, only: tic, toc, TIM_SLOWTERMS
 #ifndef NO_BAROCLINIC
    use variables_3d, only: idpdx,idpdy
 #endif
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
 #endif
+   use m3d, only: ip_fac
+   use m2d_general, only: bottom_friction,calc_uvex
+   use getm_timers, only: tic, toc, TIM_SLOWTERMS
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -53,6 +54,11 @@
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,vertsum)
 
    if (kmax .gt. 1) then
+
+#ifndef NO_BOTTFRIC
+      call bottom_friction(Uint,Vint,Dun,Dvn,ru,rv)
+#endif
+      call calc_uvex(0,Uint,Vint,Dn,Dun,Dvn)
 
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
@@ -121,6 +127,7 @@
 !$OMP END DO
 
 #ifndef NO_BAROCLINIC
+
    else
 !
 ! Here kmax=1, so the loops degenerate and there is no need
