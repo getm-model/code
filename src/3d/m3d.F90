@@ -24,10 +24,10 @@
 !
 ! !USES:
    use exceptions
-   use domain, only: openbdy,maxdepth,vert_cord,az
+   use domain, only: openbdy,maxdepth,vert_cord,az,z0_method
    use les, only: do_les_3d
    use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
-   use m2d_general, only: calc_uvex
+   use m2d_general, only: bottom_friction
    use m2d, only: no_2d,deformCX,deformUV,Am_method,NO_AM,AM_LES
    use variables_2d, only: Uint,Vint
 #ifndef NO_BAROCLINIC
@@ -426,6 +426,10 @@
       end do
    end if
 
+   if (z0_method .ne. 0) then
+      call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
+   end if
+
    return
    end subroutine postinit_3d
 !EOC
@@ -540,11 +544,6 @@
 #ifdef MUDFLAT
    call coordinates(.false.)
 #endif
-#ifndef NO_BOTTFRIC
-   if (kmax .gt. 1) then
-      call bottom_friction_3d()
-   end if
-#endif
    call tic(TIM_INTEGR3D)
    SS = _ZERO_
    call toc(TIM_INTEGR3D)
@@ -579,6 +578,7 @@
    end if
    call coordinates(.false.)
 #endif
+
    if (kmax .gt. 1) then
       call ww_momentum_3d()
    end if
@@ -592,14 +592,17 @@
                                             shearX_3d,shearU_3d)
 
    if (kmax .gt. 1) then
+
       call uv_advect_3d()
       if (Am_method .ne. NO_AM) call uv_diffusion_3d() ! Must be called after uv_advect_3d
-   end if
 
-   if (kmax .gt. 1) then
-#ifndef NO_BOTTFRIC
-      call stresses_3d()
-#endif
+      if (z0_method .ne. 0) then
+         call tic(TIM_INTEGR3D)
+         call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv,zub,zvb)
+         call toc(TIM_INTEGR3D)
+         call stresses_3d()
+      end if
+
 #ifndef CONSTANT_VISCOSITY
 #ifndef PARABOLIC_VISCOSITY
       if (vert_cord .ne. _ADAPTIVE_COORDS_) call ss_nn()
@@ -607,7 +610,9 @@
       call gotm()
       if (turb_adv) call tke_eps_advect_3d()
 #endif
+
    end if
+
 #ifndef NO_BAROCLINIC
    if(runtype .eq. 4) then        ! prognostic T and S
       if (calc_stirr) call tracer_stirring()
@@ -642,17 +647,7 @@
 #endif
 
 #ifndef NO_BAROTROPIC
-   if (.not. no_2d) then
-      if (kmax .gt. 1) then
-#ifndef NO_BOTTFRIC
-         call slow_bottom_friction()
-#endif
-         call tic(TIM_INTEGR3D)
-         call calc_uvex(0,Uint,Vint,Dn,Dun,Dvn)
-         call toc(TIM_INTEGR3D)
-      end if
-      call slow_terms()
-   end if
+   call slow_terms()
 #endif
 
    call tic(TIM_INTEGR3D)

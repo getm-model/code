@@ -20,12 +20,12 @@
 ! !USES:
    use exceptions
    use time, only: julianday,secondsofday
-   use domain, only: imin,imax,iextr,jmin,jmax,jextr,az,au,av,H,HU,HV,min_depth
+   use domain, only: imin,imax,iextr,jmin,jmax,jextr,az,au,av,ax,H,HU,HV,min_depth,z0_method
    use domain, only: ilg,ihg,jlg,jhg
    use domain, only: ill,ihl,jll,jhl
-   use domain, only: rigid_lid,openbdy,z0_method,z0_const,z0
-   use domain, only: az,ax
+   use domain, only: rigid_lid,openbdy
    use advection, only: init_advection,print_adv_settings,NOADV
+   use m2d_general, only: bottom_friction,calc_uvex
    use les, only: les_mode,LES_MOMENTUM
    use halo_zones, only : update_2d_halo,wait_halo,H_TAG
    use variables_2d
@@ -346,26 +346,6 @@
 
    end if
 
-!  bottom roughness
-   if (z0_method .eq. 0) then
-      zub0 = z0_const
-      zvb0 = z0_const
-   end if
-   if (z0_method .eq. 1) then
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO-1
-           if (au(i,j) .gt. 0) zub0(i,j) = 0.5*(z0(i,j)+z0(i+1,j))
-         end do
-      end do
-      do j=jmin-HALO,jmax+HALO-1
-         do i=imin-HALO,imax+HALO
-           if (av(i,j) .gt. 0) zvb0(i,j) = 0.5*(z0(i,j)+z0(i,j+1))
-         end do
-      end do
-   end if
-   zub=zub0
-   zvb=zvb0
-
 #ifdef SLICE_MODEL
 !  Note (KK): sse=0,U=0,dyV=0,V set in 3d
    no_2d = rigid_lid
@@ -446,11 +426,9 @@
       if (ischange.ne.0) then
          where (au .eq. 0)
             U     = _ZERO_
-            Uinto = _ZERO_
          end where
          where (av .eq. 0)
             V     = _ZERO_
-            Vinto = _ZERO_
          end where
 !        This is probably not absolutely necessary:
          where (az .eq. 0)
@@ -515,14 +493,16 @@
    Ncall = Ncall+1
    write(debug,*) 'integrate_2d() # ',Ncall
 #endif
+   call tic(TIM_INTEGR2D)
+
    if (mod(loop-1,MM) .eq. 0) then        ! MacroMicro time step
-#ifndef NO_BOTTFRIC
-      call bottom_friction(runtype)
-#endif
+      if (z0_method .ne. 0) then
+         call bottom_friction(U,V,DU,DV,ru,rv)
+      end if
    end if
 
-   call tic(TIM_INTEGR2D)
    call calc_uvex(An_method,U,V,D,DU,DV)
+
    call toc(TIM_INTEGR2D)
 
    call momentum(loop,tausx,tausy,airp)

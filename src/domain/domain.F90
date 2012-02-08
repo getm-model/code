@@ -86,9 +86,11 @@
 
    REALTYPE                            :: cori= _ZERO_
 
-!  method for specifying bottom roughness (0=const, 1=from topo.nc)
-   integer                             :: z0_method=0
-   REALTYPE                            :: z0_const=0.001
+   REALTYPE                            :: cd_min=_ZERO_
+!  method for specifying bottom roughness (0=disable, 1=const, 2=from topo.nc)
+   integer                             :: z0_method=1
+   REALTYPE                            :: z0_const=0.001d0
+   integer                             :: z0d_iters=0
 
 ! !DEFINED PARAMETERS:
    integer,           parameter        :: INNER          = 1
@@ -161,7 +163,8 @@
              bathy_format,bathymetry,vel_depth_method,rigid_lid, &
              longitude,latitude,f_plane,openbdy,bdyinfofile,     &
              crit_depth,min_depth,kdum,ddu,ddl,                  &
-             d_gamma,gamma_surf,il,ih,jl,jh,z0_method,z0_const
+             d_gamma,gamma_surf,il,ih,jl,jh,                     &
+             cd_min,z0_method,z0_const,z0d_iters
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -385,18 +388,55 @@
    call update_2d_halo(corv,corv,av,imin,jmin,imax,jmax,V_TAG)
    call wait_halo(V_TAG)
 
+   LEVEL2 'bottom friction specification'
+#ifdef NO_BOTTFRIC
+   if (cd_min.gt._ZERO_ .or. z0_method.ne.0) then
+      LEVEL3 'Reset cd_min=0.0 and z0_method=0 due to obsolete -DNO_BOTTFRIC.'
+      LEVEL3 'Note that this behaviour will be removed in the future!'
+      cd_min = _ZERO_
+      z0_method = 0
+   end if
+#endif
+   if (cd_min .lt. _ZERO_) then
+      cd_min = _ZERO_
+   end if
    select case (z0_method)
       case(0)
-         LEVEL2 'Using constant bottom roughness'
+         if (cd_min .gt. _ZERO_) then
+            LEVEL3 'linear bottom friction with drag coefficient cd = ',real(cd_min)
+         else
+            LEVEL3 'disabled bottom friction'
+         end if
       case(1)
-         LEVEL2 'Using space varying bottom roughness'
-         LEVEL2 '..  will read z0 from the topo file ..'
+         LEVEL3 'quadratic bottom friction with constant z0 = ',real(z0_const)
+         zub0 = z0_const
+         zvb0 = z0_const
+      case(2)
+         LEVEL3 'quadratic bottom friction with z0 field read from topo file'
+!        Note (KK): we need halo update only for periodic domains
          call update_2d_halo(z0,z0,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO-1
+               if (au(i,j) .ge. 1) then
+                  zub0(i,j) = _HALF_ * ( z0(i,j) + z0(i+1,j) )
+               end if
+            end do
+         end do
+         do j=jmin-HALO,jmax+HALO-1
+            do i=imin-HALO,imax+HALO
+               if (av(i,j) .ge. 1) then
+                  zvb0(i,j) = _HALF_ * ( z0(i,j) + z0(i,j+1) )
+               end if
+            end do
+         end do
       case default
          call getm_error("init_domain()", &
                          "A non valid z0 method has been chosen");
    end select
+   if (z0_method.ne.0 .and. cd_min.gt._ZERO_) then
+      LEVEL3 'min. drag coefficient: ',real(cd_min)
+   end if
 
 #ifdef DEBUG
    STDERR 'az'

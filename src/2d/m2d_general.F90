@@ -50,6 +50,14 @@
          integer,intent(in)                      :: An_method
          REALTYPE,dimension(E2DFIELD),intent(in) :: U,V,D,DU,DV
       end subroutine calc_uvex
+
+      subroutine bottom_friction(U,V,DU,DV,ru,rv,zub,zvb)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,DU,DV
+         REALTYPE,dimension(E2DFIELD),intent(out)          :: ru,rv
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: zub,zvb
+      end subroutine bottom_friction
    end interface
 
 !-----------------------------------------------------------------------

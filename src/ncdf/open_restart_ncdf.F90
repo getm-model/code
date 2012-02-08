@@ -93,13 +93,6 @@
       U_id=-1
    end if
 
-   varnam="zu"
-   status = nf90_inq_varid(ncid, "zu", zu_id)
-   if (status .NE. NF90_NOERR) then
-      LEVEL3 'variable missing in restart file. Skipping ',varnam
-      zu_id=-1
-   end if
-
    varnam="SlUx"
    status = nf90_inq_varid(ncid, "SlUx", SlUx_id)
    if (status .NE. NF90_NOERR) then
@@ -119,13 +112,6 @@
    if (status .NE. NF90_NOERR) then
       LEVEL3 'variable missing in restart file. Skipping ',varnam
       V_id=-1
-   end if
-
-   varnam="zv"
-   status = nf90_inq_varid(ncid, "zv", zv_id)
-   if (status .NE. NF90_NOERR) then
-      LEVEL3 'variable missing in restart file. Skipping ',varnam
-      zv_id=-1
    end if
 
    varnam="SlVx"
@@ -184,20 +170,6 @@
       if (status .NE. NF90_NOERR) then
          LEVEL3 'variable missing in restart file. Skipping ',varnam
          ssvo_id=-1
-      end if
-
-      varnam=""
-      status = nf90_inq_varid(ncid, "Uinto", Uinto_id)
-      if (status .NE. NF90_NOERR) then
-         LEVEL3 'variable missing in restart file. Skipping ',varnam
-         Uinto_id=-1
-      end if
-
-      varnam="Vinto"
-      status = nf90_inq_varid(ncid, "Vinto", Vinto_id)
-      if (status .NE. NF90_NOERR) then
-         LEVEL3 'variable missing in restart file. Skipping ',varnam
-         Vinto_id=-1
       end if
 
       varnam="uu"
