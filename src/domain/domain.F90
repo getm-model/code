@@ -390,10 +390,19 @@
          end if
       case(1)
          LEVEL3 'quadratic bottom friction with constant z0 = ',real(z0_const)
+         if (z0_const .le. _ZERO_) then
+            call getm_error("init_domain()", &
+                            "non-positive bottom roughness");
+         end if
          zub0 = z0_const
          zvb0 = z0_const
       case(2)
          LEVEL3 'quadratic bottom friction with z0 field read from topo file'
+         if (MINVAL(z0(imin:imax,jmin:jmax),mask=(az(imin:imax,jmin:jmax).ge.1)) .le. _ZERO_) then
+            call getm_error("init_domain()", &
+                            "non-positive bottom roughness in z0 field");
+         end if
+
 !        Note (KK): we need halo update only for periodic domains
          call update_2d_halo(z0,z0,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)

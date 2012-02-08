@@ -144,6 +144,9 @@
          case(2)
             LEVEL2 'getting initial surface elevation from ',trim(elev_file)
             call get_2d_field(trim(elev_file),"elev",ilg,ihg,jlg,jhg,z(ill:ihl,jll:jhl))
+!           Note (KK): we need halo update only for periodic domains
+            call update_2d_halo(z,z,az,imin,jmin,imax,jmax,H_TAG)
+            call wait_halo(H_TAG)
          case default
             stop 'init_2d(): invalid elev_method'
       end select
