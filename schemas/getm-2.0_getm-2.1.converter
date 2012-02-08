@@ -6,6 +6,9 @@
 	<custom>
 		<forward>
 <![CDATA[
+z0_method = source['getm/domain/z0_method'].getValue(usedefault=True)
+target['getm/domain/z0_method'].setValue(z0_method+1)
+
 nmls = ('getm/m3d/vel_','getm/temp/temp_','getm/salt/salt_')
 for nml in nmls:
 	adv_split = source[nml+'adv_split'].getValue(usedefault=True)
@@ -24,6 +27,9 @@ for nml in nmls:
 		</forward>
 		<backward>
 <![CDATA[
+z0_method = source['getm/domain/z0_method'].getValue(usedefault=True)
+target['getm/domain/z0_method'].setValue(z0_method-1)
+
 nmls = ('getm/m3d/vel_','getm/temp/temp_','getm/salt/salt_')
 for nml in nmls:
 	adv_split = source[nml+'adv_split'].getValue(usedefault=True)

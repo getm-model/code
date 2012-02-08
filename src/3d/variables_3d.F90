@@ -111,7 +111,7 @@
 ! {\tt init\_variables\_3d}) and cleanup (see {\tt clean\_variables\_3d}).
 !
 ! !USES:
-   use domain,     only: imin,imax,jmin,jmax,kmax
+   use domain,     only: imin,imax,jmin,jmax,kmax,cd_min
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -184,11 +184,11 @@
 #include "dynamic_allocations_3d.h"
 #endif
 
-   hn = _ZERO_ ; hun = _ZERO_ ; hvn = _ZERO_
+   hn = SMALL ; hun = SMALL ; hvn = SMALL
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
    ssen = _ZERO_ ; ssun = _ZERO_ ; ssvn = _ZERO_
    Dn = SMALL ; Dun = SMALL ; Dvn = SMALL
-   rru= _ZERO_ ; rrv= _ZERO_
+   rru= cd_min ; rrv= cd_min
    uuEx= _ZERO_ ; vvEx= _ZERO_
    tke=1.e-10 ; eps=1.e-10
    preadapt=0
@@ -200,7 +200,7 @@
 
 !  input arrays for do_advection_3d
    fadv3d = _ZERO_ ; uuadv = _ZERO_ ; vvadv = _ZERO_ ; wwadv = _ZERO_
-   hoadv = _ZERO_ ; hnadv = _ZERO_ ; huadv = _ZERO_ ; hvadv = _ZERO_
+   hoadv = SMALL ; hnadv = SMALL ; huadv = SMALL ; hvadv = SMALL
 
 #ifndef NO_BAROCLINIC
    idpdx=_ZERO_

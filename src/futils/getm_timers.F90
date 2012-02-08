@@ -25,7 +25,7 @@
 ! without having to renumber the entire list
 ! Indices into common arrays:                  ! Subroutine to time:
    integer, parameter :: TIM_INITIALIZE  =  1   ! initialize
-   integer, parameter :: TIM_BOTTFRICT   =  2   ! 2d bottom_friction
+   integer, parameter :: TIM_BOTTFRIC    =  2   ! bottom_friction
    integer, parameter :: TIM_MOMENTUM    =  4   ! 2d momentum
    integer, parameter :: TIM_MOMENTUMH   =  5   ! 2d momentum - halo part only
    integer, parameter :: TIM_UVDEPTHS    =  6   ! 2d uv_depths
@@ -49,11 +49,8 @@
    integer, parameter :: TIM_WWMOMENTUM  = 38   ! 3d ww_momentum_3d
    integer, parameter :: TIM_WWMOMENTUMH = 39   ! 3d ww_momentum_3d - halo part only
    integer, parameter :: TIM_SSNN        = 40   ! 3d ss_nn
-   integer, parameter :: TIM_BOTTFRICT3D = 42   ! 3d bottom_friction_3d
    integer, parameter :: TIM_STRESSES3D  = 44   ! 3d stresses_3d
-   integer, parameter :: TIM_STRESSES3DH = 45   ! 3d stresses_3d - halo part only
    integer, parameter :: TIM_SLOWTERMS   = 46   ! 3d slow_terms
-   integer, parameter :: TIM_SLOWBFRICT  = 48   ! 3d slow_bottom_friction
    integer, parameter :: TIM_TEMP        = 52   ! 3d do_temperature
    integer, parameter :: TIM_TEMPH       = 53   ! 3d temperature halo (presently in m3d/do_integrate_3d)
    integer, parameter :: TIM_SALT        = 54   ! 3d do_salinity
@@ -165,7 +162,7 @@
 !                                0123456789012345678901234
    timernames(TIM_INITIALIZE)  = 'initialize'
 
-   timernames(TIM_BOTTFRICT)   = 'bottom_friction'
+   timernames(TIM_BOTTFRIC)    = ' sum bottom_friction'
    timernames(TIM_MOMENTUM)    = 'momentum'
    timernames(TIM_UVDEPTHS)    = 'uv_depths'
    timernames(TIM_UVEX)        = ' sum calc_uvex'
@@ -200,10 +197,8 @@
    timernames(TIM_UUMOMENTUM)  = 'uu_momentum_3d'
    timernames(TIM_WWMOMENTUM)  = 'ww_momentum_3d'
    timernames(TIM_SSNN)        = 'ss_nn'
-   timernames(TIM_BOTTFRICT3D) = 'bottom_friction_3d'
    timernames(TIM_STRESSES3D)  = 'stresses_3d'
    timernames(TIM_SLOWTERMS)   = 'slow_terms'
-   timernames(TIM_SLOWBFRICT)  = 'slow_bottom_friction'
    timernames(TIM_TEMP)        = 'do_temperature'
    timernames(TIM_SALT)        = 'do_salinity'
    timernames(TIM_COORDS)      = 'coordinates'
@@ -224,7 +219,6 @@
    timernames(TIM_UUMOMENTUMH) = ' uu_momentum_3d-halo'
    timernames(TIM_VVMOMENTUMH) = ' vv_momentum_3d-halo'
    timernames(TIM_WWMOMENTUMH) = ' ww_momentum_3d-halo'
-   timernames(TIM_STRESSES3DH) = ' stresses_3d-halo'
    timernames(TIM_TEMPH)       = ' temperature-halo'
    timernames(TIM_SALTH)       = ' salinity-halo'
    timernames(TIM_ADV3DH)      = ' do_advection_3d-halo'
@@ -286,19 +280,9 @@
 !-----------------------------------------------------------------------
 !BOC
 #ifndef NO_TIMERS
-#ifdef DEBUG
-   integer, save :: Ncall = 0
-   Ncall = Ncall+1
-   write(debug,*) 'tic() # ',Ncall
-#endif
-!
    CALL SYSTEM_CLOCK(timertics(timerindex))
    num_clock_calls = num_clock_calls+1
    sysclockcalls(timerindex) = sysclockcalls(timerindex)+1
-#ifdef DEBUG
-   write(debug,*) 'Leaving tic()'
-   write(debug,*)
-#endif
 #endif
    return
    end subroutine tic
@@ -328,12 +312,6 @@
 !-----------------------------------------------------------------------
 !BOC
 #ifndef NO_TIMERS
-#ifdef DEBUG
-   integer, save :: Ncall = 0
-   Ncall = Ncall+1
-   write(debug,*) 'toc() # ',Ncall
-#endif
-
    CALL SYSTEM_CLOCK(timertoc)
    num_clock_calls = num_clock_calls+1
    sysclockcalls(timerindex) = sysclockcalls(timerindex)+1
@@ -345,11 +323,6 @@
    end if
 
    timertics(timerindex) = 0
-
-#ifdef DEBUG
-   write(debug,*) 'Leaving toc()'
-   write(debug,*)
-#endif
 #endif
    return
    end subroutine toc

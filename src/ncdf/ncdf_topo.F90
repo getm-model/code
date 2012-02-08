@@ -630,7 +630,7 @@ stop
    end select
 
 !  read bottom roughness
-   if (z0_method .eq. 1) then
+   if (z0_method .eq. 2) then
       status = nf90_inq_varid(ncid,"z0",id)
       if (status .ne. NF90_NOERR) then
          call netcdf_error(status,"ncdf_check_grid()",   &

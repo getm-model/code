@@ -120,5 +120,9 @@
    if (rc /= 0) stop 'init_domain: Error allocating memory (arvd1)'
 
 !  bottom roughness
-   allocate(z0(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_domain: Error allocating memory (z0)'
+   allocate(zub0(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (zub0)'
+
+   allocate(zvb0(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (zvb0)'
+
