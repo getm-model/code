@@ -25,7 +25,7 @@
 ! !USES:
    use exceptions
    use parameters, only: avmmol
-   use domain, only: openbdy,maxdepth,vert_cord,az
+   use domain, only: openbdy,maxdepth,vert_cord,az,z0_method
    use m2d_general, only: bottom_friction
    use m2d, only: Am
 #ifndef NO_BAROCLINIC
@@ -330,9 +330,9 @@
       end do
    end if
 
-#ifndef NO_BOTTFRIC
-   call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
-#endif
+   if (z0_method .ne. 0) then
+      call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
+   end if
 
    return
    end subroutine postinit_3d
@@ -489,12 +489,12 @@
       call uv_advect_3d()
       if (Am .gt. _ZERO_) call uv_diffusion_3d()  ! Must be called after uv_advect_3d
 
-#ifndef NO_BOTTFRIC
-      call tic(TIM_INTEGR3D)
-      call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv,zub,zvb)
-      call toc(TIM_INTEGR3D)
-      call stresses_3d()
-#endif
+      if (z0_method .ne. 0) then
+         call tic(TIM_INTEGR3D)
+         call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv,zub,zvb)
+         call toc(TIM_INTEGR3D)
+         call stresses_3d()
+      end if
 
 #ifndef CONSTANT_VISCOSITY
 #ifndef PARABOLIC_VISCOSITY

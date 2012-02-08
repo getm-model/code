@@ -17,7 +17,7 @@
 !  {\tt PUBLIC DATA MEMBERS}.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth
+   use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth,cd_min
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -118,7 +118,7 @@
    U = _ZERO_; fU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; fV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
 
-   ru = _ZERO_ ; rv = _ZERO_
+   ru = cd_min ; rv = cd_min
 
    res_du = _ZERO_; res_u = _ZERO_
    res_dv = _ZERO_; res_v = _ZERO_

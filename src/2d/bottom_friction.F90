@@ -33,10 +33,11 @@
 ! this quantity on the V-points.
 !
 ! !USES:
-   use parameters,only: kappa,avmmol
-   use domain,only: imin,imax,jmin,jmax,az,au,av,zub0,zvb0
-   use variables_2d,only: PP
-   use getm_timers,only: tic,toc,TIM_BOTTFRIC
+   use parameters, only: kappa,avmmol
+   use domain, only: imin,imax,jmin,jmax,az,au,av
+   use domain, only: cd_min,z0d_iters,zub0,zvb0
+   use variables_2d, only: PP
+   use getm_timers, only: tic,toc,TIM_BOTTFRIC
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -52,10 +53,9 @@
 !
 !  !LOCAL VARIABLES:
    REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel
-   REALTYPE                                 :: vel,cd,z0b
+   REALTYPE                                 :: vel,cd,z0d
    integer                                  :: i,j,it,rc
    logical,save                             :: first=.true.
-   integer,parameter                        :: it_max=0
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -81,7 +81,7 @@
       first = .false.
    end if
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,vel,cd,it,z0b)
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,vel,cd,it,z0d)
 
 !  zonal velocity
 #ifndef SLICE_MODEL
@@ -131,19 +131,19 @@
       do i=imin-HALO,imax+HALO-1
          if (au(i,j).eq.1 .or. au(i,j).eq.2) then
             vel = sqrt( u_vel(i,j)**2 + (_HALF_*(PP(i,j)+PP(i+1,j)))**2 )
-            z0b = zub0(i,j)
+            z0d = zub0(i,j)
 !           Note (KK): note shifting of log profile so that U(-H)=0
-            cd = kappa / log( _ONE_ + _HALF_*DU(i,j)/z0b )
+            cd = kappa / log( _ONE_ + _HALF_*DU(i,j)/z0d )
             if (avmmol.gt._ZERO_ .and. vel.gt._ZERO_) then
-               do it=1,it_max
-                  z0b = zub0(i,j) + _TENTH_*avmmol/(cd*vel)
-                  cd = kappa / log( _ONE_ + _HALF_*DU(i,j)/z0b )
+               do it=1,z0d_iters
+                  z0d = zub0(i,j) + _TENTH_*avmmol/(cd*vel)
+                  cd = kappa / log( _ONE_ + _HALF_*DU(i,j)/z0d )
                end do
             end if
-            !cd = max( 0.0025d0 , cd) ! see Blumberg and Mellor (1987)
+            cd = max( cd_min , cd) ! see Blumberg and Mellor (1987)
             ru(i,j) = (cd**2) * vel
             if (present(zub)) then
-               zub(i,j) = z0b
+               zub(i,j) = z0d
             end if
          end if
       end do
@@ -183,19 +183,19 @@
       do i=imin-HALO+1,imax+HALO-1
          if (av(i,j).eq.1 .or. av(i,j).eq.2) then
             vel = sqrt( (_HALF_*(PP(i,j)+PP(i,j+1)))**2 + v_vel(i,j)**2 )
-            z0b = zvb0(i,j)
+            z0d = zvb0(i,j)
 !           Note (KK): note shifting of log profile so that V(-H)=0
-            cd = kappa / log( _ONE_ + _HALF_*DV(i,j)/z0b )
+            cd = kappa / log( _ONE_ + _HALF_*DV(i,j)/z0d )
             if (avmmol.gt._ZERO_ .and. vel.gt._ZERO_) then
-               do it=1,it_max
-                  z0b = zvb0(i,j) + _TENTH_*avmmol/(cd*vel)
-                  cd = kappa / log( _ONE_ + _HALF_*DV(i,j)/z0b )
+               do it=1,z0d_iters
+                  z0d = zvb0(i,j) + _TENTH_*avmmol/(cd*vel)
+                  cd = kappa / log( _ONE_ + _HALF_*DV(i,j)/z0d )
                end do
             end if
-            !cd = max( 0.0025d0 , cd) ! see Blumberg and Mellor (1987)
+            cd = max( cd_min , cd) ! see Blumberg and Mellor (1987)
             rv(i,j) = (cd**2) * vel
             if (present(zvb)) then
-               zvb(i,j) = z0b
+               zvb(i,j) = z0d
             end if
          end if
       end do

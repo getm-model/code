@@ -111,7 +111,7 @@
 ! {\tt init\_variables\_3d}) and cleanup (see {\tt clean\_variables\_3d}).
 !
 ! !USES:
-   use domain,     only: imin,imax,jmin,jmax,kmax
+   use domain,     only: imin,imax,jmin,jmax,kmax,cd_min
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -188,7 +188,7 @@
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
    ssen = _ZERO_ ; ssun = _ZERO_ ; ssvn = _ZERO_
    Dn = SMALL ; Dun = SMALL ; Dvn = SMALL
-   rru= _ZERO_ ; rrv= _ZERO_
+   rru= cd_min ; rrv= cd_min
    uuEx= _ZERO_ ; vvEx= _ZERO_
    tke=1.e-10 ; eps=1.e-10
    preadapt=0

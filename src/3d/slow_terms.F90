@@ -19,7 +19,7 @@
 ! {\tt slow\_diffusion}.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,kmax,au,av
+   use domain, only: imin,imax,jmin,jmax,kmax,au,av,z0_method
    use variables_2d, only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
    use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,Dn,Dun,Dvn
    use variables_3d, only: uuEx,vvEx,rru,rrv
@@ -55,9 +55,9 @@
 
    if (kmax .gt. 1) then
 
-#ifndef NO_BOTTFRIC
-      call bottom_friction(Uint,Vint,Dun,Dvn,ru,rv)
-#endif
+      if (z0_method .ne. 0) then
+         call bottom_friction(Uint,Vint,Dun,Dvn,ru,rv)
+      end if
       call calc_uvex(0,Uint,Vint,Dn,Dun,Dvn)
 
 !$OMP DO SCHEDULE(RUNTIME)
