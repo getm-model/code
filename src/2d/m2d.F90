@@ -25,8 +25,8 @@
    use domain, only: ilg,ihg,jlg,jhg
    use domain, only: ill,ihl,jll,jhl
    use domain, only: openbdy
-   use m2d_general,only: bottom_friction,calc_uvex
    use advection, only: init_advection,print_adv_settings,NOADV
+   use m2d_general, only: bottom_friction,calc_uvex
    use halo_zones, only : update_2d_halo,wait_halo,H_TAG
    use variables_2d
    IMPLICIT NONE
