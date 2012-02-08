@@ -422,8 +422,13 @@
          call getm_error("init_domain()", &
                          "A non valid z0 method has been chosen");
    end select
-   if (z0_method.ne.0 .and. cd_min.gt._ZERO_) then
-      LEVEL3 'min. drag coefficient: ',real(cd_min)
+   if (z0_method .ne. 0) then
+      if (cd_min .gt. _ZERO_) then
+         LEVEL3 'min. drag coefficient: ',real(cd_min)
+      end if
+      if (z0d_iters .gt. 0) then
+         LEVEL3 'iterations for dynamic bottom roughness: ',z0d_iters
+      end if
    end if
 
 #ifdef DEBUG
