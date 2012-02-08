@@ -205,14 +205,15 @@
          AnC = _ZERO_
 
          call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,AnC(ill:ihl,jll:jhl))
-!        Note (KK): halo update is only needed for periodic domains
-         call update_2d_halo(AnC,AnC,az,imin,jmin,imax,jmax,H_TAG)
-         call wait_halo(H_TAG)
 
          if (MINVAL(AnC(imin:imax,jmin:jmax),mask=(az(imin:imax,jmin:jmax).ge.1)) .lt. _ZERO_) then
             call getm_error("init_2d()", &
                             "negative numerical diffusivity in An field");
          end if
+
+!        Note (KK): halo update is only needed for periodic domains
+         call update_2d_halo(AnC,AnC,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
 
          if (MAXVAL(AnC(imin-1:imax+1,jmin-1:jmax+1),mask=(az(imin-1:imax+1,jmin-1:jmax+1).ge.1)) .eq. _ZERO_) then
 !           Note (BJB): If all An values are really zero, then we should not use An-smoothing at all...
