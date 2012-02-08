@@ -10,7 +10,6 @@
   REALTYPE,dimension(:,:),allocatable  :: fU,fV
   REALTYPE,dimension(:,:),allocatable  :: ru,rv
   REALTYPE,dimension(:,:),allocatable  :: Uint,Vint
-  REALTYPE,dimension(:,:),allocatable  :: Uinto,Vinto
   REALTYPE,dimension(:,:),allocatable  :: res_du,res_u
   REALTYPE,dimension(:,:),allocatable  :: res_dv,res_v
 !kbk
@@ -28,5 +27,5 @@
   REALTYPE,dimension(:,:),allocatable,target :: Dadv
 
 ! Remember to update this value if you add more 2D arrays.
-  integer, parameter :: n2d_fields=34
+  integer, parameter :: n2d_fields=32
 

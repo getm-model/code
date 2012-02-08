@@ -118,8 +118,7 @@
    U = _ZERO_; fU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; fV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
 
-   ru = _ZERO_; Uinto=_ZERO_
-   rv = _ZERO_; Vinto=_ZERO_
+   ru = _ZERO_ ; rv = _ZERO_
 
    res_du = _ZERO_; res_u = _ZERO_
    res_dv = _ZERO_; res_v = _ZERO_

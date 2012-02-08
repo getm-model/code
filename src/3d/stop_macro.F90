@@ -10,13 +10,11 @@
 ! !DESCRIPTION:
 !
 ! This routine should be called from {\tt m3d} at the end of each macro
-! time step in order to copy the vertically interated and temporally
-! averaged transports to old values {\tt Uinto} and {\tt Vinto}, and
-! to reinitialise the transports {\tt Uint} and {\tt Vint}
-! to zero.
+! time step in order to reinitialise the transports {\tt Uint} and
+! {\tt Vint} to zero.
 !
 ! !USES:
-   use variables_2d, only: Uint,Uinto,Vint,Vinto
+   use variables_2d, only: Uint,Vint
    use getm_timers, only: tic, toc, TIM_STOPMCR
    IMPLICIT NONE
 !
@@ -33,9 +31,7 @@
    write(debug,*) 'stop_macro() # ',Ncall
 #endif
 
-  Uinto=Uint
   Uint= _ZERO_
-  Vinto=Vint
   Vint= _ZERO_
 
 #ifdef DEBUG

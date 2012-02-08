@@ -1,5 +1,5 @@
 ! Remember to update this value if you add more 2D arrays.
-   integer, parameter :: n2d_fields=34
+   integer, parameter :: n2d_fields=32
 !
 #ifdef USE_BREAKS
    integer  break_mask(E2DFIELD)
@@ -19,8 +19,6 @@
    REALTYPE rv(E2DFIELD)
    REALTYPE Uint(E2DFIELD)
    REALTYPE Vint(E2DFIELD)
-   REALTYPE Uinto(E2DFIELD)
-   REALTYPE Vinto(E2DFIELD)
    REALTYPE res_du(E2DFIELD)
    REALTYPE res_u(E2DFIELD)
    REALTYPE res_dv(E2DFIELD)

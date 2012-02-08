@@ -186,20 +186,6 @@
          ssvo_id=-1
       end if
 
-      varnam=""
-      status = nf90_inq_varid(ncid, "Uinto", Uinto_id)
-      if (status .NE. NF90_NOERR) then
-         LEVEL3 'variable missing in restart file. Skipping ',varnam
-         Uinto_id=-1
-      end if
-
-      varnam="Vinto"
-      status = nf90_inq_varid(ncid, "Vinto", Vinto_id)
-      if (status .NE. NF90_NOERR) then
-         LEVEL3 'variable missing in restart file. Skipping ',varnam
-         Vinto_id=-1
-      end if
-
       varnam="uu"
       status = nf90_inq_varid(ncid, "uu", uu_id)
       if (status .NE. NF90_NOERR) then

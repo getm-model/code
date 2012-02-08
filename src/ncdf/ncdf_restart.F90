@@ -42,7 +42,6 @@
 #ifndef NO_3D
    integer                             :: ssen_id,ssun_id,ssvn_id
    integer                             :: sseo_id,ssuo_id,ssvo_id
-   integer                             :: Uinto_id,Vinto_id
    integer                             :: uu_id,vv_id,ww_id
    integer                             :: uuEx_id,vvEx_id
    integer                             :: tke_id,eps_id

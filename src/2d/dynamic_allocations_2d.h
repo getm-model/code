@@ -52,12 +52,6 @@
 
       allocate(Vint(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (Vint)'
-
-      allocate(Uinto(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (Uinto)'
-
-      allocate(Vinto(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (Vinto)'
    end if
 
    allocate(res_du(E2DFIELD),stat=rc)

@@ -332,11 +332,9 @@
       if (ischange.ne.0) then
          where (au .eq. 0)
             U     = _ZERO_
-            Uinto = _ZERO_
          end where
          where (av .eq. 0)
             V     = _ZERO_
-            Vinto = _ZERO_
          end where
 !        This is probably not absolutely necessary:
          where (az .eq. 0)
