@@ -65,10 +65,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
-   integer                   :: num_neighbors
-   REALTYPE                  :: An_sum
-!
 !EOP
 !-----------------------------------------------------------------------
 
@@ -151,6 +147,9 @@
          case(2)
             LEVEL2 'getting initial surface elevation from ',trim(elev_file)
             call get_2d_field(trim(elev_file),"elev",ilg,ihg,jlg,jhg,z(ill:ihl,jll:jhl))
+!           Note (KK): we need halo update only for periodic domains
+            call update_2d_halo(z,z,az,imin,jmin,imax,jmax,H_TAG)
+            call wait_halo(H_TAG)
          case default
             stop 'init_2d(): invalid elev_method'
       end select
@@ -213,8 +212,8 @@
 
          allocate(AnC(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_2d: Error allocating memory (AnC)'
+         AnC = _ZERO_
 
-!        Note (KK): due to the use of [i|j][l|h]l we will read in also the halo zones
          call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,AnC(ill:ihl,jll:jhl))
 
          if (MINVAL(AnC(imin:imax,jmin:jmax),mask=(az(imin:imax,jmin:jmax).ge.1)) .lt. _ZERO_) then
@@ -222,20 +221,11 @@
                             "negative numerical diffusivity in An field");
          end if
 
-         if (ihl .eq. imax) then
-            AnC(imax+1,jmin:jmax) = _ZERO_
-            if (jhl .eq. jmax) then
-               AnC(imax+1,jmax+1) = _ZERO_
-            end if
-         end if
-         if (jhl .eq. jmax) then
-            AnC(imin:imax,jmax+1) = _ZERO_
-            if (ihl .eq. imax) then
-               AnC(imax+1,jmax+1) = _ZERO_
-            end if
-         end if
+!        Note (KK): halo update is only needed for periodic domains
+         call update_2d_halo(AnC,AnC,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
 
-         if (MAXVAL(AnC(imin:imax+1,jmin:jmax+1),mask=(az(imin:imax+1,jmin:jmax+1).ge.1)) .eq. _ZERO_) then
+         if (MAXVAL(AnC(imin-1:imax+1,jmin-1:jmax+1),mask=(az(imin-1:imax+1,jmin-1:jmax+1).ge.1)) .eq. _ZERO_) then
 !           Note (BJB): If all An values are really zero, then we should not use An-smoothing at all...
 !                       Note that smoothing may be on in other subdomains.
             LEVEL2 '  All An is zero for this (sub)domain - switching to An_method=0'
@@ -253,30 +243,7 @@
             do j=jmin-1,jmax
                do i=imin-1,imax
                   if (ax(i,j) .ge. 1) then
-                     num_neighbors = 0
-                     An_sum = _ZERO_
-                     ! Each AnX should have up to 4 T-point neighbours.
-!                    Note (KK): right, so why do we need this An_sum stuff?
-                     if ( az(i,j) .ge. 1 ) then
-                        An_sum        = An_sum + AnC(i,j)
-                        num_neighbors = num_neighbors +1
-                     end if
-                     if ( az(i,j+1) .ge. 1 ) then
-                        An_sum        = An_sum + AnC(i,j+1)
-                        num_neighbors = num_neighbors +1
-                     end if
-                     if ( az(i+1,j) .ge. 1 ) then
-                        An_sum        = An_sum + AnC(i+1,j)
-                        num_neighbors = num_neighbors +1
-                     end if
-                     if ( az(i+1,j+1) .ge. 1 ) then
-                        An_sum        = An_sum + AnC(i+1,j+1)
-                        num_neighbors = num_neighbors +1
-                     end if
-                     ! Take average of actual neighbours:
-                     if (num_neighbors .gt. 0) then
-                        AnX(i,j) = An_sum/num_neighbors
-                     end if
+                     AnX(i,j) = _QUART_*( AnC(i,j) + AnC(i+1,j) + AnC(i,j+1) + AnC(i+1,j+1) )
                   end if
                end do
             end do
