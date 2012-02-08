@@ -364,14 +364,32 @@
    call update_2d_halo(corv,corv,av,imin,jmin,imax,jmax,V_TAG)
    call wait_halo(V_TAG)
 
+!  bottom roughness
    select case (z0_method)
       case(0)
          LEVEL2 'Using constant bottom roughness'
+         zub0 = z0_const
+         zvb0 = z0_const
       case(1)
          LEVEL2 'Using space varying bottom roughness'
-         LEVEL2 '..  will read z0 from the topo file ..'
+         LEVEL2 '.. read z0 from the topo file ..'
+!        Note (KK): we need halo update only for periodic domains
          call update_2d_halo(z0,z0,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO-1
+               if (au(i,j) .ge. 1) then
+                  zub0(i,j) = _HALF_ * ( z0(i,j) + z0(i+1,j) )
+               end if
+            end do
+         end do
+         do j=jmin-HALO,jmax+HALO-1
+            do i=imin-HALO,imax+HALO
+               if (av(i,j) .ge. 1) then
+                  zvb0(i,j) = _HALF_ * ( z0(i,j) + z0(i,j+1) )
+               end if
+            end do
+         end do
       case default
          call getm_error("init_domain()", &
                          "A non valid z0 method has been chosen");

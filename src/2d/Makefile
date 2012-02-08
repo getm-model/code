@@ -16,8 +16,8 @@ SRC	= $(MODSRC) $(LIBSRC)
 MOD   = \
 ${LIB}(variables_2d.o)		\
 ${LIB}(advection.o)		\
-${LIB}(m2d.o)			\
-${LIB}(m2d_general.o)
+${LIB}(m2d_general.o)		\
+${LIB}(m2d.o)
 
 OBJ   = \
 ${LIB}(cfl_check.o)	\

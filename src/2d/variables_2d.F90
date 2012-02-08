@@ -114,14 +114,12 @@
 #endif
 
    z  = _ZERO_; zo =_ZERO_
-   zub=_ZERO_ ; zub0=_ZERO_
-   zvb=_ZERO_ ; zvb0=_ZERO_
-   D = _ZERO_;
-   U = _ZERO_; DU = _ZERO_; fU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
-   V = _ZERO_; DV = _ZERO_; fV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
+   D = SMALL ; DU = SMALL ; DV = SMALL
+   U = _ZERO_; fU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
+   V = _ZERO_; fV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
 
-   ru = _ZERO_; ruu=_ZERO_; Uinto=_ZERO_
-   rv = _ZERO_; rvv=_ZERO_; Vinto=_ZERO_
+   ru = _ZERO_; Uinto=_ZERO_
+   rv = _ZERO_; Vinto=_ZERO_
 
    res_du = _ZERO_; res_u = _ZERO_
    res_dv = _ZERO_; res_v = _ZERO_
@@ -140,7 +138,7 @@
 
 !  input arrays for do_advection
    fadv = _ZERO_ ; Uadv = _ZERO_ ; Vadv = _ZERO_
-   DUadv = _ZERO_ ; DVadv = _ZERO_
+   DUadv = SMALL ; DVadv = SMALL
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_variables_2d()'

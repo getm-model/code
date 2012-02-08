@@ -184,7 +184,7 @@
 #include "dynamic_allocations_3d.h"
 #endif
 
-   hn = _ZERO_ ; hun = _ZERO_ ; hvn = _ZERO_
+   hn = SMALL ; hun = SMALL ; hvn = SMALL
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
    ssen = _ZERO_ ; ssun = _ZERO_ ; ssvn = _ZERO_
    Dn = SMALL ; Dun = SMALL ; Dvn = SMALL
@@ -200,7 +200,7 @@
 
 !  input arrays for do_advection_3d
    fadv3d = _ZERO_ ; uuadv = _ZERO_ ; vvadv = _ZERO_ ; wwadv = _ZERO_
-   hoadv = _ZERO_ ; hnadv = _ZERO_ ; huadv = _ZERO_ ; hvadv = _ZERO_
+   hoadv = SMALL ; hnadv = SMALL ; huadv = SMALL ; hvadv = SMALL
 
 #ifndef NO_BAROCLINIC
    idpdx=_ZERO_

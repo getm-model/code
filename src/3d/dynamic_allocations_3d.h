@@ -184,6 +184,12 @@
   allocate(rrv(I2DFIELD),stat=rc)   ! Bottom drag term in v-vel. points (3D)
   if (rc /= 0) stop 'init_3d: Error allocating memory (rrv)'
 
+  allocate(zub(I2DFIELD),stat=rc)   ! bottom roughness length in U-point (3D)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (zub)'
+
+  allocate(zvb(I2DFIELD),stat=rc)   ! bottom roughness length in V-point (3D)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (zvb)'
+
   allocate(taus(I2DFIELD),stat=rc)  ! Absolute Value of surface stress
   if (rc /= 0) stop 'init_3d: Error allocating memory (taus)'
 

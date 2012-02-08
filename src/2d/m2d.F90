@@ -21,11 +21,11 @@
    use exceptions
    use time, only: julianday,secondsofday
    use parameters, only: avmmol
-   use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV,min_depth
+   use domain, only: imin,imax,jmin,jmax,az,au,av,ax,H,HU,HV,min_depth
    use domain, only: ilg,ihg,jlg,jhg
    use domain, only: ill,ihl,jll,jhl
-   use domain, only: openbdy,z0_method,z0_const,z0
-   use domain, only: az,ax
+   use domain, only: openbdy
+   use m2d_general,only: bottom_friction,calc_uvex
    use advection, only: init_advection,print_adv_settings,NOADV
    use halo_zones, only : update_2d_halo,wait_halo,H_TAG
    use variables_2d
@@ -260,26 +260,6 @@
       LEVEL2 'Format=',bdyfmt_2d
    end if
 
-!  bottom roughness
-   if (z0_method .eq. 0) then
-      zub0 = z0_const
-      zvb0 = z0_const
-   end if
-   if (z0_method .eq. 1) then
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO-1
-           if (au(i,j) .gt. 0) zub0(i,j) = 0.5*(z0(i,j)+z0(i+1,j))
-         end do
-      end do
-      do j=jmin-HALO,jmax+HALO-1
-         do i=imin-HALO,imax+HALO
-           if (av(i,j) .gt. 0) zvb0(i,j) = 0.5*(z0(i,j)+z0(i,j+1))
-         end do
-      end do
-   end if
-   zub=zub0
-   zvb=zvb0
-
 #ifdef DEBUG
    write(debug,*) 'Leaving init_2d()'
    write(debug,*)
@@ -420,14 +400,16 @@
    Ncall = Ncall+1
    write(debug,*) 'integrate_2d() # ',Ncall
 #endif
+   call tic(TIM_INTEGR2D)
+
    if (mod(loop-1,MM) .eq. 0) then        ! MacroMicro time step
 #ifndef NO_BOTTFRIC
-      call bottom_friction(runtype)
+      call bottom_friction(U,V,DU,DV,ru,rv)
 #endif
    end if
 
-   call tic(TIM_INTEGR2D)
    call calc_uvex(An_method,U,V,D,DU,DV)
+
    call toc(TIM_INTEGR2D)
 
    call momentum(loop,tausx,tausy,airp)

@@ -5,7 +5,8 @@
 ! !IROUTINE: bottom_friction - calculates the 2D bottom friction.
 !
 ! !INTERFACE:
-   subroutine bottom_friction(runtype)
+   subroutine bottom_friction(U,V,DU,DV,ru,rv,zub,zvb)
+!  Note (KK): keep in sync with interface in m2d_general.F90
 !
 ! !DESCRIPTION:
 !
@@ -32,23 +33,29 @@
 ! this quantity on the V-points.
 !
 ! !USES:
-   use parameters, only: kappa,avmmol
-   use domain, only: imin,imax,jmin,jmax,au,av,min_depth
-   use variables_2d
-   use getm_timers,  only: tic, toc, TIM_BOTTFRICT
+   use parameters,only: kappa,avmmol
+   use domain,only: imin,imax,jmin,jmax,az,au,av,zub0,zvb0
+   use variables_2d,only: PP
+   use getm_timers,only: tic,toc,TIM_BOTTFRIC
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: runtype
+   REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,DU,DV
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE,dimension(E2DFIELD),intent(out)          :: ru,rv
+   REALTYPE,dimension(E2DFIELD),intent(out),optional :: zub,zvb
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  !LOCAL VARIABLES:
-   integer                   :: i,j
-   REALTYPE                  :: uloc(E2DFIELD),vloc(E2DFIELD)
-   REALTYPE                  :: HH(E2DFIELD),fricvel(E2DFIELD)
+   REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel
+   REALTYPE                                 :: vel,cd,z0b
+   integer                                  :: i,j,it,rc
+   logical,save                             :: first=.true.
+   integer,parameter                        :: it_max=0
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -57,191 +64,156 @@
    Ncall = Ncall+1
    write(debug,*) 'bottom_friction() # ',Ncall
 #endif
-   CALL tic(TIM_BOTTFRICT)
+#ifdef SLICE_MODEL
+   j = jmax/2
+#endif
+   CALL tic(TIM_BOTTFRIC)
 
-#ifdef DEBUG
-   if(Ncall .eq. 1) then
-      STDERR 'bottom_friction(): checking for 0 depth values'
-      do j=jmin,jmax
-         do i=imin,imax
-            if (av(i,j) .eq. 1) then
-               if(DU(i,j) .eq. _ZERO_) then
-                  STDERR 'DU=0 uv_advect ',i,j,i,j,av(i,j)
-               end if
-               if(DU(i-1,j) .eq. _ZERO_) then
-                  STDERR 'DU=0 uv_advect ',i-1,j,i,j,av(i,j)
-               end if
-               if(DU(i,j+1) .eq. _ZERO_) then
-                  STDERR 'DU=0 uv_advect ',i,j+1,i,j,av(i,j)
-               end if
-               if(DU(i-1,j+1) .eq. _ZERO_) then
-                  STDERR 'DU=0 uv_advect ',i-1,j+1,i,j,av(i,j)
-               end if
-            end if
-         end do
-      end do
-      do j=jmin,jmax
-         do i=imin,imax
-            if (au(i,j) .eq. 1) then
-               if(DV(i,j) .eq. _ZERO_) then
-                  STDERR 'DV=0 uv_advect ',i,j,i,j,au(i,j)
-               end if
-               if(DV(i+1,j) .eq. _ZERO_) then
-                  STDERR 'DV=0 uv_advect ',i+1,j,i,j,au(i,j)
-               end if
-               if(DV(i,j-1) .eq. _ZERO_) then
-                  STDERR 'DV=0 uv_advect ',i,j-1,i,j,au(i,j)
-               end if
-               if(DV(i+1,j-1) .eq. _ZERO_) then
-                  STDERR 'DV=0 uv_advect ',i+1,j-1,i,j,au(i,j)
-               end if
-            end if
-         end do
-      end do
+   if (first) then
+      allocate(u_vel(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (u_vel)'
+      u_vel=_ZERO_
+
+      allocate(v_vel(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (v_vel)'
+      v_vel=_ZERO_
+
+      first = .false.
    end if
+
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,vel,cd,it,z0b)
+
+!  zonal velocity
+#ifndef SLICE_MODEL
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO,jmax+HALO
+#endif
+      do i=imin-HALO,imax+HALO-1
+         if (au(i,j) .ge. 1) then
+            u_vel(i,j) = U(i,j)/DU(i,j)
+         end if
+      end do
+#ifndef SLICE_MODEL
+   end do
+!$OMP END DO NOWAIT
 #endif
 
-
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j)
+!  meridional velocity
+#ifndef SLICE_MODEL
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO,jmax+HALO-1
+#endif
+      do i=imin-HALO,imax+HALO
+         if (av(i,j) .ge. 1) then
+            v_vel(i,j) = V(i,j)/DV(i,j)
+         end if
+      end do
+#ifndef SLICE_MODEL
+   end do
+!$OMP END DO
+#else
+   v_vel(:,j-1) = v_vel(:,j)
+#endif
 
 !  The x-direction
 
+#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax
-      do i=imin,imax
-         if (au(i,j) .gt. 0) then
-            vloc(i,j)=_QUART_* ( V(i  ,j  )/DV(i  ,j  )   &
-                                +V(i+1,j  )/DV(i+1,j  )   &
-                                +V(i  ,j-1)/DV(i  ,j-1)   &
-                                +V(i+1,j-1)/DV(i+1,j-1) )
-         else
-            vloc(i,j) = _ZERO_
-         end if
-      end do
-   end do
-!OMP END DO NOWAIT
-
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-HALO,jmax+HALO
-      do i=imin-HALO,imax+HALO
-         if (au(i,j) .gt. 0) then
-            uloc(i,j) = U(i,j)/DU(i,j)
-            HH(i,j)=max(min_depth,DU(i,j))
-#ifndef DEBUG
-            ruu(i,j)=(kappa/log((zub(i,j)+_HALF_*HH(i,j))/zub(i,j)))**2
-#else
-            ruu(i,j)=(zub(i,j)+_HALF_*HH(i,j))/zub(i,j)
-            if (ruu(i,j) .le. _ONE_) then
-!$OMP CRITICAL
-               STDERR 'bottom_friction friction coefficient infinite.'
-               STDERR 'i = ',i,' j = ',j
-               STDERR 'min_depth = ',min_depth,' DU = ',DU(i,j)
-!$OMP END CRITICAL
-               stop
-            end if
-            ruu(i,j)=(kappa/log(ruu(i,j)))**2
+   do j=jmin-HALO+1,jmax+HALO-1
 #endif
+!     calculate v_velC
+      do i=imin-HALO,imax+HALO
+         if (az(i,j) .ge. 1) then
+            PP(i,j) = _HALF_ * ( v_vel(i,j-1) + v_vel(i,j) )
          end if
       end do
+
+      do i=imin-HALO,imax+HALO-1
+         if (au(i,j).eq.1 .or. au(i,j).eq.2) then
+            vel = sqrt( u_vel(i,j)**2 + (_HALF_*(PP(i,j)+PP(i+1,j)))**2 )
+            z0b = zub0(i,j)
+!           Note (KK): note shifting of log profile so that U(-H)=0
+            cd = kappa / log( _ONE_ + _HALF_*DU(i,j)/z0b )
+            if (avmmol.gt._ZERO_ .and. vel.gt._ZERO_) then
+               do it=1,it_max
+                  z0b = zub0(i,j) + _TENTH_*avmmol/(cd*vel)
+                  cd = kappa / log( _ONE_ + _HALF_*DU(i,j)/z0b )
+               end do
+            end if
+            !cd = max( 0.0025d0 , cd) ! see Blumberg and Mellor (1987)
+            ru(i,j) = (cd**2) * vel
+            if (present(zub)) then
+               zub(i,j) = z0b
+            end if
+         end if
+      end do
+#ifndef SLICE_MODEL
    end do
 !$OMP END DO
-
-   if (runtype .eq. 1) then
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-            if (au(i,j) .gt. 0) then
-               fricvel(i,j)=sqrt(ruu(i,j)*(uloc(i,j)**2+vloc(i,j)**2))
-               zub(i,j)=min(HH(i,j),zub0(i,j)+_TENTH_*avmmol/max(avmmol,fricvel(i,j)))
-               ruu(i,j)=(zub(i,j)+_HALF_*HH(i,j))/zub(i,j)
-               ruu(i,j)=(kappa/log(ruu(i,j)))**2
-               ru(i,j)=ruu(i,j)*sqrt(uloc(i,j)**2+vloc(i,j)**2)
-            end if
-         end do
-      end do
-!$OMP END DO
-   else
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-            if (au(i,j) .gt. 0) then
-               ru(i,j)=ruu(i,j)*sqrt(uloc(i,j)**2+vloc(i,j)**2)
-            end if
-         end do
-      end do
-!$OMP END DO
+#else
+   ru(imin-HALO:imax+HALO-1,j+1) = ru(imin-HALO:imax+HALO-1,j)
+   if (present(zub)) then
+      zub(imin-HALO:imax+HALO-1,j+1) = zub(imin-HALO:imax+HALO-1,j)
    end if
+#endif
 
 !  The y-direction
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax
-      do i=imin,imax
-         if (av(i,j) .gt. 0) then
-            uloc(i,j)=_QUART_* ( U(i  ,j  )/DU(i  ,j  )   &
-                                +U(i-1,j  )/DU(i-1,j  )   &
-                                +U(i  ,j+1)/DU(i  ,j+1)   &
-                                +U(i-1,j+1)/DU(i-1,j+1) )
-         else
-            uloc(i,j) = _ZERO_
-         end if
-      end do
-   end do
-!$OMP END DO NOWAIT
 
+!  calculate u_velC
+#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
-      do i=imin-HALO,imax+HALO
-         if (av(i,j) .gt. 0) then
-            vloc(i,j)=V(i,j)/DV(i,j)
-            HH(i,j)=max(min_depth,DV(i,j))
-#ifndef DEBUG
-            rvv(i,j)=(kappa/log((zvb(i,j)+_HALF_*HH(i,j))/zvb(i,j)))**2
-#else
-            rvv(i,j)=(zvb(i,j)+_HALF_*HH(i,j))/zvb(i,j)
-            if (rvv(i,j) .le. _ONE_) then
-!$OMP CRITICAL
-               STDERR 'bottom_friction friction coefficient infinite.'
-               STDERR 'i = ',i,' j = ',j
-               STDERR 'min_depth = ',min_depth,' DV = ',DU(i,j)
-!$OMP END CRITICAL
-               stop
-            end if
-            rvv(i,j)=(kappa/log(rvv(i,j)))**2
 #endif
+      do i=imin-HALO+1,imax+HALO-1
+         if (az(i,j) .ge. 1) then
+            PP(i,j) = _HALF_ * ( u_vel(i-1,j) + u_vel(i,j) )
          end if
       end do
+#ifndef SLICE_MODEL
+!$OMP END DO
+   end do
+#else
+   PP(imin-HALO+1:imax+HALO-1,j+1) = PP(imin-HALO+1:imax+HALO-1,j)
+#endif
+
+#ifndef SLICE_MODEL
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO,jmax+HALO-1
+#endif
+      do i=imin-HALO+1,imax+HALO-1
+         if (av(i,j).eq.1 .or. av(i,j).eq.2) then
+            vel = sqrt( (_HALF_*(PP(i,j)+PP(i,j+1)))**2 + v_vel(i,j)**2 )
+            z0b = zvb0(i,j)
+!           Note (KK): note shifting of log profile so that V(-H)=0
+            cd = kappa / log( _ONE_ + _HALF_*DV(i,j)/z0b )
+            if (avmmol.gt._ZERO_ .and. vel.gt._ZERO_) then
+               do it=1,it_max
+                  z0b = zvb0(i,j) + _TENTH_*avmmol/(cd*vel)
+                  cd = kappa / log( _ONE_ + _HALF_*DV(i,j)/z0b )
+               end do
+            end if
+            !cd = max( 0.0025d0 , cd) ! see Blumberg and Mellor (1987)
+            rv(i,j) = (cd**2) * vel
+            if (present(zvb)) then
+               zvb(i,j) = z0b
+            end if
+         end if
+      end do
+#ifndef SLICE_MODEL
    end do
 !$OMP END DO
-
-   if (runtype .eq. 1) then
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-            if (av(i,j) .gt. 0) then
-               fricvel(i,j)=sqrt(rvv(i,j)*(uloc(i,j)**2+vloc(i,j)**2))
-               zvb(i,j)=min(HH(i,j),zvb0(i,j)+_TENTH_*avmmol/max(avmmol,fricvel(i,j)))
-               rvv(i,j)=(zvb(i,j)+_HALF_*HH(i,j))/zvb(i,j)
-               rvv(i,j)=(kappa/log(rvv(i,j)))**2
-               rv(i,j)=rvv(i,j)*sqrt(uloc(i,j)**2+vloc(i,j)**2)
-            end if
-         end do
-      end do
-!$OMP END DO
-   else
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-            if (av(i,j) .gt. 0) then
-               rv(i,j)=rvv(i,j)*sqrt(uloc(i,j)**2+vloc(i,j)**2)
-            end if
-         end do
-      end do
-!$OMP END DO
+#else
+   rv(imin-HALO+1:imax+HALO-1,j-1) = rv(imin-HALO+1:imax+HALO-1,j)
+   rv(imin-HALO+1:imax+HALO-1,j+1) = rv(imin-HALO+1:imax+HALO-1,j)
+   if (present(zvb)) then
+      zvb(imin-HALO+1:imax+HALO-1,j-1) = zvb(imin-HALO+1:imax+HALO-1,j)
+      zvb(imin-HALO+1:imax+HALO-1,j+1) = zvb(imin-HALO+1:imax+HALO-1,j)
    end if
+#endif
 
 !$OMP END PARALLEL
 
-   CALL toc(TIM_BOTTFRICT)
+   CALL toc(TIM_BOTTFRIC)
 #ifdef DEBUG
    write(debug,*) 'Leaving bottom_friction()'
    write(debug,*)
@@ -249,7 +221,6 @@
    return
    end subroutine bottom_friction
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------
