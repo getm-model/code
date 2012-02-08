@@ -19,18 +19,19 @@
 ! {\tt slow\_diffusion}.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,kmax,HU,HV,au,av
+   use domain, only: imin,imax,jmin,jmax,kmax,au,av,z0_method
    use variables_2d, only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
-   use variables_3d, only: kumin,kvmin,uu,vv,huo,hun,hvo,hvn
-   use variables_3d, only: ssuo,ssun,ssvo,ssvn,uuEx,vvEx,rru,rrv
-   use m3d, only: ip_fac
-   use getm_timers, only: tic, toc, TIM_SLOWTERMS
+   use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,Dn,Dun,Dvn
+   use variables_3d, only: uuEx,vvEx,rru,rrv
 #ifndef NO_BAROCLINIC
    use variables_3d, only: idpdx,idpdy
 #endif
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
 #endif
+   use m3d, only: ip_fac
+   use m2d_general, only: bottom_friction,calc_uvex
+   use getm_timers, only: tic, toc, TIM_SLOWTERMS
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -54,45 +55,78 @@
 
    if (kmax .gt. 1) then
 
+      if (z0_method .ne. 0) then
+         call bottom_friction(Uint,Vint,Dun,Dvn,ru,rv)
+      end if
+      call calc_uvex(0,Uint,Vint,Dn,Dun,Dvn)
+
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
+
             if (au(i,j) .ge. 1) then
+
                vertsum=-UEx(i,j)
-               do k=1,kmax
-                  if (k .ge. kumin(i,j)) then
+               do k=kumin(i,j),kmax
 #ifdef NO_BAROCLINIC
                      vertsum=vertsum+uuEx(i,j,k)
 #else
                      vertsum=vertsum+uuEx(i,j,k)-ip_fac*idpdx(i,j,k)
 #endif
-                  end if
                end do
                SlUx(i,j)=vertsum
-            end if
-         end do
-      end do
-!$OMP END DO NOWAIT
 
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin,jmax
-         do i=imin,imax
+#ifdef NO_SLR
+               STDERR 'NO_SLR U'
+               Slru(i,j)= _ZERO_
+#else
+               k=kumin(i,j)
+               Slru(i,j) =   rru(i,j)*uu(i,j,k)/hun(i,j,k) &
+                           - ru(i,j)*Uint(i,j)/Dun(i,j)
+#endif
+
+#ifdef STRUCTURE_FRICTION
+               do k=kumin(i,j),kmax
+                  Slru(i,j)=Slru(i,j)+uu(i,j,k)*_HALF_*(sf(i,j,k)+sf(i+1,j,k))
+               end do
+#endif
+
+            end if
+
             if (av(i,j) .ge. 1) then
+
                vertsum=-VEx(i,j)
-               do k=1,kmax
-                  if (k .ge. kvmin(i,j)) then
+               do k=kvmin(i,j),kmax
 #ifdef NO_BAROCLINIC
                      vertsum=vertsum+vvEx(i,j,k)
 #else
                      vertsum=vertsum+vvEx(i,j,k)-ip_fac*idpdy(i,j,k)
 #endif
-                  end if
                end do
                SlVx(i,j)=vertsum
+
+#ifdef NO_SLR
+               STDERR 'NO_SLR V'
+               Slrv(i,j)= _ZERO_
+#else
+               k=kvmin(i,j)
+               Slrv(i,j) =   rrv(i,j)*vv(i,j,k)/hvn(i,j,k) &
+                           - rv(i,j)*Vint(i,j)/Dvn(i,j)
+#endif
+
+#ifdef STRUCTURE_FRICTION
+               do k=kvmin(i,j),kmax
+                  Slrv(i,j)=Slrv(i,j)+vv(i,j,k)*_HALF_*(sf(i,j,k)+sf(i,j+1,k))
+               end do
+#endif
+
             end if
+
          end do
       end do
 !$OMP END DO
+
+#ifndef NO_BAROCLINIC
 
    else
 !
@@ -103,84 +137,19 @@
       do j=jmin,jmax
          do i=imin,imax
             if (au(i,j) .ge. 1) then
-#ifdef NO_BAROCLINIC
-               SlUx(i,j)= _ZERO_
-#else
                SlUx(i,j)=-ip_fac*idpdx(i,j,k)
-#endif
             end if
-         end do
-      end do
-!$OMP END DO
-
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin,jmax
-         do i=imin,imax
             if (av(i,j) .ge. 1) then
-#ifdef NO_BAROCLINIC
-               SlVx(i,j)= _ZERO_
-#else
                SlVx(i,j)=-ip_fac*idpdy(i,j,k)
-#endif
             end if
          end do
       end do
 !$OMP END DO
-   endif
 
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax
-      do i=imin,imax
-         if (au(i,j) .ge. 1) then
-            k=kumin(i,j)
-            if (kmax .gt. 1) then
-#ifdef NO_SLR
-               STDERR 'NO_SLR U'
-               Slru(i,j)= _ZERO_
-#else
-               Slru(i,j)=-Uint(i,j)/(_HALF_*(ssuo(i,j)+ssun(i,j))         &
-                                       +HU(i,j))*ru(i,j)               &
-                     +uu(i,j,k)/(_HALF_*(huo(i,j,k)+hun(i,j,k)))*rru(i,j)
 #endif
-#ifdef STRUCTURE_FRICTION
-               do k=1,kmax
-                  Slru(i,j)=Slru(i,j)+uu(i,j,k)*_HALF_*(sf(i,j,k)+sf(i+1,j,k))
-               end do
-#endif
-            else
-               Slru(i,j)= _ZERO_
-            end if
-         end if
-      end do
-   end do
-!$OMP END DO NOWAIT
 
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax
-      do i=imin,imax
-         if (av(i,j) .ge. 1) then
-            k=kvmin(i,j)
-            if (kmax .gt. 1) then
-#ifdef NO_SLR
-               STDERR 'NO_SLR V'
-               Slrv(i,j)= _ZERO_
-#else
-               Slrv(i,j)=-Vint(i,j)/(_HALF_*(ssvo(i,j)+ssvn(i,j))         &
-                                    +HV(i,j))*rv(i,j)                  &
-                  +vv(i,j,k)/(_HALF_*(hvo(i,j,k)+hvn(i,j,k)))*rrv(i,j)
-#endif
-#ifdef STRUCTURE_FRICTION
-               do k=1,kmax
-                  Slrv(i,j)=Slrv(i,j)+vv(i,j,k)*_HALF_*(sf(i,j,k)+sf(i,j+1,k))
-               end do
-#endif
-            else
-               Slrv(i,j)=_ZERO_
-            end if
-         end if
-      end do
-   end do
-!$OMP END DO
+   end if
+
 !$OMP END PARALLEL
 
    call toc(TIM_SLOWTERMS)
@@ -191,7 +160,6 @@
    return
    end subroutine slow_terms
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------

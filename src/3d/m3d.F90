@@ -25,11 +25,9 @@
 ! !USES:
    use exceptions
    use parameters, only: avmmol
-   use domain, only: openbdy,maxdepth,vert_cord,az
-!  we do not need to include calc_uvex
-   use m2d_general, only: calc_uvex
+   use domain, only: openbdy,maxdepth,vert_cord,az,z0_method
+   use m2d_general, only: bottom_friction
    use m2d, only: Am
-   use variables_2d, only: Uint,Vint
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
             init_temperature_field
@@ -332,6 +330,10 @@
       end do
    end if
 
+   if (z0_method .ne. 0) then
+      call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
+   end if
+
    return
    end subroutine postinit_3d
 !EOC
@@ -445,11 +447,6 @@
 #ifdef MUDFLAT
    call coordinates(.false.)
 #endif
-#ifndef NO_BOTTFRIC
-   if (kmax .gt. 1) then
-      call bottom_friction_3d()
-   end if
-#endif
    call tic(TIM_INTEGR3D)
    SS = _ZERO_
    call toc(TIM_INTEGR3D)
@@ -484,19 +481,21 @@
    end if
    call coordinates(.false.)
 #endif
-   if (kmax .gt. 1) then
-      call ww_momentum_3d()
-   end if
 
    if (kmax .gt. 1) then
+
+      call ww_momentum_3d()
+
       call uv_advect_3d()
       if (Am .gt. _ZERO_) call uv_diffusion_3d()  ! Must be called after uv_advect_3d
-   end if
 
-   if (kmax .gt. 1) then
-#ifndef NO_BOTTFRIC
-      call stresses_3d()
-#endif
+      if (z0_method .ne. 0) then
+         call tic(TIM_INTEGR3D)
+         call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv,zub,zvb)
+         call toc(TIM_INTEGR3D)
+         call stresses_3d()
+      end if
+
 #ifndef CONSTANT_VISCOSITY
 #ifndef PARABOLIC_VISCOSITY
       if (vert_cord .ne. _ADAPTIVE_COORDS_) call ss_nn()
@@ -504,7 +503,9 @@
       call gotm()
       if (turb_adv) call tke_eps_advect_3d()
 #endif
+
    end if
+
 #ifndef NO_BAROCLINIC
    if(runtype .eq. 4) then        ! prognostic T and S
       if (calc_temp) call do_temperature(n)
@@ -538,19 +539,9 @@
 #endif
 
 #ifndef NO_BAROTROPIC
-   if (kmax .gt. 1) then
-#ifndef NO_BOTTFRIC
-      call slow_bottom_friction()
-#endif
-
-      call tic(TIM_INTEGR3D)
-      call calc_uvex(0,Uint,Vint,Dn,Dun,Dvn)
-      call toc(TIM_INTEGR3D)
-
-   end if
-
    call slow_terms()
 #endif
+
    call tic(TIM_INTEGR3D)
    call stop_macro()
    call toc(TIM_INTEGR3D)
