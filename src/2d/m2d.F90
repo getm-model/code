@@ -27,6 +27,7 @@
    use domain, only: openbdy,z0_method,z0_const,z0
    use domain, only: az,ax
    use advection, only: init_advection,print_adv_settings,NOADV
+   use m2d_general, only: calc_uvex
    use halo_zones, only : update_2d_halo,wait_halo,H_TAG
    use variables_2d
    IMPLICIT NONE
