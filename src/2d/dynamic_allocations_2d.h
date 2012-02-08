@@ -52,12 +52,6 @@
 
       allocate(Vint(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (Vint)'
-
-      allocate(Uinto(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (Uinto)'
-
-      allocate(Vinto(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (Vinto)'
    end if
 
    allocate(res_du(E2DFIELD),stat=rc)
@@ -72,16 +66,8 @@
    allocate(res_v(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (res_v)'
 
-!kbk
-   allocate(ruu(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (ruu)'
-
-   allocate(rvv(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (rvv)'
-
    allocate(PP(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (PP)'
-!kbk
 
    allocate(SlUx(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (SlUx)'
@@ -94,18 +80,6 @@
 
    allocate(Slrv(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (Slrv)'
-
-   allocate(zub(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (zub)'
-
-   allocate(zvb(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (zvb)'
-
-   allocate(zub0(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (zub0)'
-
-   allocate(zvb0(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (zvb0)'
 
    allocate(fwf(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (fwf)'

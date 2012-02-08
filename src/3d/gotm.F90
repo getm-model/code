@@ -47,8 +47,8 @@
 ! !USES:
    use halo_zones, only: update_3d_halo,wait_halo,H_TAG
    use domain, only: imin,imax,jmin,jmax,kmax,az,min_depth,crit_depth
-   use variables_2d, only: D,zub,zvb,z
-   use variables_3d, only: dt,kmin,ho,hn,tke,eps,SS,num,taus,taub
+   use variables_2d, only: D,z
+   use variables_3d, only: dt,kmin,ho,hn,tke,eps,SS,num,taus,taub,zub,zvb
 #ifndef NO_BAROCLINIC
    use variables_3d, only: NN,nuh
 #endif

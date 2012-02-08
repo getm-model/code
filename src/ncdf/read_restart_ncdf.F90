@@ -262,26 +262,6 @@
       end if
 
       status = &
-      nf90_get_var(ncid,Uinto_id,Uinto(iloc:ilen,jloc:jlen),start,edges)
-      if (status .NE. NF90_NOERR) then
-         LEVEL3 "read_restart_ncdf(): setting Uinto=0"
-         Uinto=_ZERO_
-      else
-         call update_2d_halo(Uinto,Uinto,au,imin,jmin,imax,jmax,U_TAG)
-         call wait_halo(U_TAG)
-      end if
-
-      status = &
-      nf90_get_var(ncid,Vinto_id,Vinto(iloc:ilen,jloc:jlen),start,edges)
-      if (status .NE. NF90_NOERR) then
-         LEVEL3 "read_restart_ncdf(): setting Vinto=0"
-         Vinto=_ZERO_
-      else
-         call update_2d_halo(Vinto,Vinto,av,imin,jmin,imax,jmax,V_TAG)
-         call wait_halo(V_TAG)
-      end if
-
-      status = &
       nf90_get_var(ncid,uu_id,uu(iloc:ilen,jloc:jlen,0:kmax),start,edges)
       if (status .NE. NF90_NOERR) then
          LEVEL3 "read_restart_ncdf(): setting uu=0"

@@ -9,12 +9,16 @@
 	<custom>
 		<forward>
 <![CDATA[
+z0_method = source['getm/domain/z0_method'].getValue(usedefault=True)
+target['getm/domain/z0_method'].setValue(z0_method+1)
+
 diffs = ('getm/m2d/Am','getm/temp/temp_AH','getm/salt/salt_AH')
 for diff in diffs:
 	if source[diff].getValue(usedefault=True)>0.0:
 		target[diff+'_method'].setValue(1)
 	else:
 		target[diff+'_method'].setValue(0)
+
 nmls = ('getm/m3d/vel_','getm/temp/temp_','getm/salt/salt_')
 for nml in nmls:
 	adv_split = source[nml+'adv_split'].getValue(usedefault=True)
@@ -33,10 +37,14 @@ for nml in nmls:
 		</forward>
 		<backward>
 <![CDATA[
+z0_method = source['getm/domain/z0_method'].getValue(usedefault=True)
+target['getm/domain/z0_method'].setValue(z0_method-1)
+
 diffs = ('getm/m2d/Am','getm/temp/temp_AH','getm/salt/salt_AH')
 for diff in diffs:
 	if source[diff+'_method'].getValue(usedefault=True)==0:
 		target[diff].setValue(-1.0)
+
 nmls = ('getm/m3d/vel_','getm/temp/temp_','getm/salt/salt_')
 for nml in nmls:
 	adv_split = source[nml+'adv_split'].getValue(usedefault=True)
@@ -56,4 +64,3 @@ for nml in nmls:
 		</backward>
 	</custom>
 </converter>
-

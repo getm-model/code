@@ -44,4 +44,4 @@
    REALTYPE,dimension(:,:),allocatable,target :: arcd1,arud1,arvd1
 
 !  bottom roughness
-   REALTYPE, dimension(:,:), allocatable    :: z0
+   REALTYPE, dimension(:,:), allocatable    :: z0,zub0,zvb0

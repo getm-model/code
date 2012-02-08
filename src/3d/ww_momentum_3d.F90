@@ -78,7 +78,7 @@
 #endif
             if (az(i,j) .eq. 1) then
                if (k .lt. kmin(i,j)) then
-                  ww(i,j,kmin(i,j))= _ZERO_
+                  ww(i,j,k)= _ZERO_
                else
                   ww(i,j,k)=ww(i,j,k-1)                                   &
                            -(hn(i,j,k)-ho(i  ,j  ,k))*dtm1 &
