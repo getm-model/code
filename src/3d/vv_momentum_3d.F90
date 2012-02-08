@@ -250,8 +250,7 @@
 !     Matrix elements for bottom layer
                k=kvmin(i,j)
                a3(k)=-auxn(k  )/hvn(i,j,k+1)
-               a2(k)=_ONE_+auxn(k)/hvn(i,j,k)                          &
-                        +dt*rrv(i,j)/(_HALF_*(hvn(i,j,k)+hvo(i,j,k)))
+               a2(k) = _ONE_ + ( auxn(k) + dt*rrv(i,j) )/hvn(i,j,k)
                a4(k)=vv(i,j,k+1)*auxo(k)/hvo(i,j,k+1)                  &
                        +vv(i,j,k  )*(_ONE_-auxo(k)/hvo(i,j,k))         &
                        +dt*ex(k)                                       &

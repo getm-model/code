@@ -35,14 +35,13 @@
    integer                             :: secondsofday_id
    integer                             :: timestep_id
    integer                             :: z_id,zo_id
-   integer                             :: U_id,zu_id
+   integer                             :: U_id
    integer                             :: SlUx_id,Slru_id
-   integer                             :: V_id,zv_id
+   integer                             :: V_id
    integer                             :: SlVx_id,Slrv_id
 #ifndef NO_3D
    integer                             :: ssen_id,ssun_id,ssvn_id
    integer                             :: sseo_id,ssuo_id,ssvo_id
-   integer                             :: Uinto_id,Vinto_id
    integer                             :: uu_id,vv_id,ww_id
    integer                             :: uuEx_id,vvEx_id
    integer                             :: tke_id,eps_id

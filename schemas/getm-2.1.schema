@@ -89,14 +89,19 @@
 			<element name="ih" type="int" label="???"/>
 			<element name="jl" type="int" label="???"/>
 			<element name="jh" type="int" label="???"/>
+			<element name="cd_min" type="float" unit="m/s" label="min. drag coefficient"/>
 			<element name="z0_method" type="int" label="bottom roughness specification">
 				<options>
-					<option value="0" label="constant - using z0_const"/>
-					<option value="1" label="space varying - read from bathymetry file (variable name MUST be z0)"/>
+					<option value="0" label="disable quadratic bottom friction"/>
+					<option value="1" label="constant - using z0_const"/>
+					<option value="2" label="space varying - read from bathymetry file (variable name MUST be z0)"/>
 				</options>
 			</element>
 			<element name="z0_const" type="float" label="constant bottom roughness" unit="m">
-				<condition type="eq" variable="./z0_method" value="0"/>
+				<condition type="eq" variable="./z0_method" value="1"/>
+			</element>
+			<element name="z0d_iters" type="int" label="iterations for dynamic z0" minInclusive="0">
+				<condition type="ne" variable="./z0_method" value="0"/>
 			</element>
 		</element>
 

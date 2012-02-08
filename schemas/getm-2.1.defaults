@@ -122,12 +122,18 @@
 			<jh>
 				-1
 			</jh>
+			<cd_min>
+				-1.0
+			</cd_min>
 			<z0_method>
-				0
+				1
 			</z0_method>
 			<z0_const>
-				0.01
+				0.001
 			</z0_const>
+			<z0d_iters>
+				0
+			</z0d_iters>
 		</domain>
 		<meteo>
 			<metforcing>

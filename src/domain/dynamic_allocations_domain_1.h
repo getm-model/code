@@ -62,3 +62,8 @@
    if (rc /=0) stop 'init_domain: Error allocating memory (angle)'
    angle = -999.
 #endif
+
+!  bottom roughness
+   allocate(z0(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (z0)'
+

@@ -109,9 +109,13 @@
       wflux(0) = _ZERO_
       wflux(kmax) = _ZERO_
 
+!     Note (KK): as long as h[u|v]n([i|j]max+HALO) are trash (SMALL)
+!                they have to be excluded from the loop to avoid
+!                unnecessary iterations and warnings
+
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
+      do j=jmin-HALO,jmax+HALO-1
+         do i=imin-HALO,imax+HALO-1
             if (az(i,j) .eq. 1) then
 !              Note (KK): exclude vertical advection of normal velocity at open bdys
                if (iterate) then
@@ -122,17 +126,11 @@
                   end do
                   iters = max(1,ceiling(cfl))
                   if (iters .gt. itersmax_adv) then
-                     if (      imin-HALO.ne.i .and. i.ne.imax+HALO &
-                         .and. jmin-HALO.ne.j .and. j.ne.jmax+HALO ) then
 !$OMP CRITICAL
-                        STDERR 'adv_w_split_3d: too many iterations needed at'
-                        STDERR 'i=',i,' j=',j,':',iters
+                     STDERR 'adv_w_split_3d: too many iterations needed at'
+                     STDERR 'i=',i,' j=',j,':',iters
 !$OMP END CRITICAL
-                     end if
                   end if
-#ifdef DEBUG
-                  if (iters .gt. 1) write(95,*) i,j,iters,cfl
-#endif
                   !iters =  min(200,int(cfl)+1) !original
                   iters = min(iters,itersmax_adv)
                   dtik = dti/iters

@@ -52,7 +52,7 @@
   REALTYPE,dimension(:,:),allocatable,target :: Dun,Dvn
 
 ! 3D friction in 3D domain
-  REALTYPE, dimension(:,:), allocatable     :: rru,rrv
+  REALTYPE, dimension(:,:), allocatable     :: rru,rrv,zub,zvb
   REALTYPE, dimension(:,:), allocatable     :: taus,taubx,tauby,taub
 
 ! attenuation
