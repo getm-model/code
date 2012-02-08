@@ -19,10 +19,10 @@
 ! {\tt slow\_diffusion}.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,kmax,HU,HV,au,av
+   use domain, only: imin,imax,jmin,jmax,kmax,au,av
    use variables_2d, only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
-   use variables_3d, only: kumin,kvmin,uu,vv,huo,hun,hvo,hvn,Dun,Dvn
-   use variables_3d, only: ssuo,ssun,ssvo,ssvn,uuEx,vvEx,rru,rrv
+   use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,Dun,Dvn
+   use variables_3d, only: uuEx,vvEx,rru,rrv
    use m3d, only: ip_fac
    use getm_timers, only: tic, toc, TIM_SLOWTERMS
 #ifndef NO_BAROCLINIC
