@@ -35,9 +35,9 @@
    integer                             :: secondsofday_id
    integer                             :: timestep_id
    integer                             :: z_id,zo_id
-   integer                             :: U_id,zu_id
+   integer                             :: U_id
    integer                             :: SlUx_id,Slru_id
-   integer                             :: V_id,zv_id
+   integer                             :: V_id
    integer                             :: SlVx_id,Slrv_id
 #ifndef NO_3D
    integer                             :: ssen_id,ssun_id,ssvn_id
