@@ -318,6 +318,12 @@
       mv = nummix_missing
       vr(1) = -100.0
       vr(2) = 100.0
+      err = nf90_def_var(ncid,'numdis3d',NCDF_FLOAT_PRECISION,f4_dims,nm3d_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,nm3d_id, &
+          long_name='numerical dissipation', &
+          units='W/kg',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
 
       if (calc_salt) then
          err = nf90_def_var(ncid,'nummix3d_S',NCDF_FLOAT_PRECISION,f4_dims,nm3dS_id)

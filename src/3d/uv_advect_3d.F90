@@ -242,11 +242,19 @@
 ! (\ref{SxA}) and (\ref{SyA}).
 !
 ! With this method, all higher-order directional-split advection schemes
-! are now available for the momentum advection. The advective
+! are available for the momentum advection. The advective
 ! fluxes needed for this have to be averaged from the conservative
 ! advective fluxes resulting from the continuity equation
-! Continuity will
+! (\ref{ContiLayerInt}). Continuity will
 ! still be retained due to the linearity of the continuity equation.
+! 
+! \paragraph{Numerical dissipation.}\label{uvadvect-dissipation}
+!
+! For the directional split method, numerical dissipation is calculated
+! if {\tt do\_mixing\_analysis} is set to {\tt .true.},
+! using the method suggested by \cite{BURCHARD12}.
+!
+!
 !
 ! !
 ! !USES:
@@ -263,6 +271,9 @@
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
    use getm_timers, only: tic, toc, TIM_UVADV3D, TIM_UVADV3DH
+   use variables_3d, only: do_mixing_analysis
+   use variables_3d, only: numdis3d,numdis2d
+
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -287,6 +298,9 @@
    REALTYPE                  :: area_inv(I2DFIELD)
    REALTYPE                  :: AH=_ZERO_
    REALTYPE                  :: dti,dxdyi
+   REALTYPE                  :: vel2(I3DFIELD)
+   REALTYPE                  :: vel2o(I3DFIELD)
+   REALTYPE                  :: numdiss(I3DFIELD)
 #endif
 !EOP
 !-----------------------------------------------------------------------
@@ -363,15 +377,52 @@
       end do
    end do
 
-
    call tic(TIM_UVADV3DH)
    call update_3d_halo(uuEx,uuEx,au,imin,jmin,imax,jmax,kmax,U_TAG)
    call wait_halo(U_TAG)
    call toc(TIM_UVADV3DH)
 
+   if (do_mixing_analysis) then
+      do k=1,kmax ! calculate square of u-velocity before advection step 
+         do j=jmin,jmax
+            do i=imin,imax
+               vel2(i,j,k)=uuEx(i,j,k)**2 
+            end do
+         end do
+      end do
+      vel2o=vel2
+   end if   
+
    call do_advection_3d(dt,uuEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
                         azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
+
+   if (do_mixing_analysis) then
+      call do_advection_3d(dt,vel2,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
+                           dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
+                           azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
+
+      do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
+         do j=jmin,jmax
+            do i=imin,imax
+               numdiss(i,j,k)=(vel2(i,j,k)-uuEx(i,j,k)**2)/dt
+            end do
+         end do
+      end do
+
+      numdis2d=_ZERO_
+      do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
+         do j=jmin,jmax
+            do i=imin,imax
+               numdis3d(i,j,k)=0.5*(numdiss(i,j,k)+numdiss(i-1,j,k))
+               numdis2d(i,j)=numdis2d(i,j)                             &
+                             +0.5*(numdiss(i,j,k)*hun(i,j,k)           &
+                                  +numdiss(i-1,j,k)*hun(i-1,j,k))
+            end do
+         end do
+      end do
+   end if
+   
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
 
@@ -442,9 +493,46 @@
    call wait_halo(V_TAG)
    call toc(TIM_UVADV3DH)
 
+   if (do_mixing_analysis) then
+      do k=1,kmax ! calculate square of v-velocity before advection step 
+         do j=jmin,jmax
+            do i=imin,imax
+               vel2(i,j,k)=vvEx(i,j,k)**2 
+            end do
+         end do
+      end do
+      vel2o=vel2
+   end if
+
    call do_advection_3d(dt,vvEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
                         azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
+
+   if (do_mixing_analysis) then
+      call do_advection_3d(dt,vel2,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
+                           dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
+                           azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
+
+      do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
+         do j=jmin,jmax
+            do i=imin,imax
+               numdiss(i,j,k)=(vel2(i,j,k)-vvEx(i,j,k)**2)/dt
+            end do
+         end do
+      end do
+
+      do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
+         do j=jmin,jmax
+            do i=imin,imax
+               numdis3d(i,j,k)=numdis3d(i,j,k)                         &
+                              +0.5*(numdiss(i,j,k)+numdiss(i,j-1,k))
+               numdis2d(i,j)=numdis2d(i,j)                             &
+                             +0.5*(numdiss(i,j,k)*hvn(i,j,k)           &
+                                  +numdiss(i,j-1,k)*hvn(i,j-1,k))
+            end do
+         end do
+      end do
+   end if
 
 ! OMP-NOTE: It might not pay off to thread this loop (due to OMP overhead)
 !   vvEx=-(vvEx*hvn-vv)*dti ! Here, vvEx is the advection term.
