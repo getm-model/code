@@ -5,3 +5,5 @@ timestamp
 VERSION
 include/dimensions.h
 include/version.h
+*.swp
+*~
