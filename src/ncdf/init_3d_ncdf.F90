@@ -191,6 +191,22 @@
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,w_id,long_name='vertical vel.',units='m/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
+
+#if defined(CURVILINEAR)
+!     rotated zonal velocity
+      err = nf90_def_var(ncid,'uurot',NCDF_FLOAT_PRECISION,f4_dims,uurot_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,uurot_id,long_name='rot. zonal vel.', &
+                          units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+!     rotated meridional velocity
+      err = nf90_def_var(ncid,'vvrot',NCDF_FLOAT_PRECISION,f4_dims,vvrot_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,vvrot_id,long_name='rot. meridional vel.', &
+                          units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+#endif
    end if
 
    if (save_strho) then

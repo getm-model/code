@@ -265,9 +265,7 @@
       if (write_2d)   LEVEL3 timestr, ': saving 2D .... '
       if (write_3d)   LEVEL3 timestr, ': saving 3D .... '
       if (write_mean) LEVEL3 timestr, ': saving mean fields .... '
-#ifndef NO_3D
-      call divergence()
-#endif
+
       secs = n*timestep
       select case (out_fmt)
          case (ASCII)
