@@ -314,7 +314,7 @@
    end if ! save_ss_nn
 
 #ifndef NO_BAROCLINIC
-   if (save_mix_analysis) then
+   if (save_numerical_analyses) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,numdis3d,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
       err = nf90_put_var(ncid,nm3d_id,ws(_3D_W_),start,edges)
@@ -343,7 +343,7 @@
          err = nf90_put_var(ncid,pm3dT_id,ws(_3D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
-   end if ! save_mix_analysis
+   end if ! save_numerical_analyses
 #endif
 
 #ifdef SPM

@@ -493,9 +493,9 @@
 			<save_taub>
 				False
 			</save_taub>
-			<save_mix_analysis>
+			<save_numerical_analyses>
 				False
-			</save_mix_analysis>
+			</save_numerical_analyses>
 			<first_2d>
 				0
 			</first_2d>

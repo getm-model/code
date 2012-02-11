@@ -329,7 +329,7 @@
    end if
 
 #ifndef NO_BAROCLINIC
-   if (save_mix_analysis) then
+   if (save_numerical_analyses) then
       fv = nummix_missing
       mv = nummix_missing
       vr(1) = -100.0

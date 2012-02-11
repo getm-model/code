@@ -118,7 +118,7 @@
    REALTYPE                            :: dt,cnpar=0.9
    REALTYPE                            :: avmback=_ZERO_,avhback=_ZERO_
    character(len=64)                   :: adv_schemes(7)
-   logical                             :: do_mixing_analysis=.false.
+   logical                             :: do_numerical_analyses=.false.
 !
 #ifdef STATIC
 #include "static_3d.h"

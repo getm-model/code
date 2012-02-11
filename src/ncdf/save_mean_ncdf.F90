@@ -132,7 +132,7 @@
       if (err .NE. NF90_NOERR) go to 10
    end if
 
-   if (save_mix_analysis) then
+   if (save_numerical_analyses) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az, &
                   numdis3d_mean,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws3d)

@@ -271,7 +271,7 @@
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
    use getm_timers, only: tic, toc, TIM_UVADV3D, TIM_UVADV3DH
-   use variables_3d, only: do_mixing_analysis
+   use variables_3d, only: do_numerical_analyses
    use variables_3d, only: numdis3d,numdis2d
 
 !$ use omp_lib
@@ -382,7 +382,7 @@
    call wait_halo(U_TAG)
    call toc(TIM_UVADV3DH)
 
-   if (do_mixing_analysis) then
+   if (do_numerical_analyses) then
       do k=1,kmax ! calculate square of u-velocity before advection step 
          do j=jmin,jmax
             do i=imin,imax
@@ -397,7 +397,7 @@
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
                         azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
 
-   if (do_mixing_analysis) then
+   if (do_numerical_analyses) then
       call do_advection_3d(dt,vel2,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
                            dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
                            azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
@@ -493,7 +493,7 @@
    call wait_halo(V_TAG)
    call toc(TIM_UVADV3DH)
 
-   if (do_mixing_analysis) then
+   if (do_numerical_analyses) then
       do k=1,kmax ! calculate square of v-velocity before advection step 
          do j=jmin,jmax
             do i=imin,imax
@@ -508,7 +508,7 @@
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
                         azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
 
-   if (do_mixing_analysis) then
+   if (do_numerical_analyses) then
       call do_advection_3d(dt,vel2,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
                            dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
                            azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
