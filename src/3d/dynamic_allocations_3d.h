@@ -97,6 +97,12 @@
   allocate(nummix2d_T(I2DFIELD),stat=rc)
   if (rc /= 0) stop 'init_3d: Error allocating memory (nummix2d_T)'
 
+  allocate(numdis3d(I3DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (numdis3d)'
+
+  allocate(numdis2d(I2DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (numdis2d)'
+
   allocate(phymix3d_S(I3DFIELD),stat=rc)
   if (rc /= 0) stop 'init_3d: Error allocating memory (phymix3d_S)'
 

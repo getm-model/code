@@ -377,7 +377,7 @@ salt_field_no=1
 #endif
    use parameters, only: avmols
    use getm_timers, only: tic, toc, TIM_SALT, TIM_MIXANALYSIS
-   use variables_3d, only: do_mixing_analysis
+   use variables_3d, only: do_numerical_analyses
    use variables_3d, only: nummix3d_S,nummix2d_S
    use variables_3d, only: phymix3d_S,phymix2d_S
 !$ use omp_lib
@@ -434,7 +434,7 @@ salt_field_no=1
    area_inv=ard1
 #endif
 
-   if (do_mixing_analysis) then
+   if (do_numerical_analyses) then
       call toc(TIM_SALT)
       call tic(TIM_MIXANALYSIS)
 ! OMP-note: The following array-based line could be implemented
@@ -453,7 +453,7 @@ salt_field_no=1
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,   &
                         salt_hor_adv,salt_ver_adv,salt_adv_split,salt_AH)
 
-   if (do_mixing_analysis) then
+   if (do_numerical_analyses) then
       call toc(TIM_SALT)
       call tic(TIM_MIXANALYSIS)
       call numerical_mixing(S2,S,nummix3d_S,nummix2d_S)
