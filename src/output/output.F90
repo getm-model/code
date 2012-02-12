@@ -13,7 +13,7 @@
    use time, only: write_time_string,timestep,timestr
    use ascii_out
 #ifndef NO_3D
-   use variables_3d, only: do_mixing_analysis
+   use variables_3d, only: do_numerical_analyses
 #endif
 #ifdef TEST_NESTING
    use nesting
@@ -57,7 +57,7 @@
    integer                             :: step_3d=1
    integer                             :: hotout(3)=-1
    integer                             :: meanout=-1
-   logical                             :: save_mix_analysis=.false.
+   logical                             :: save_numerical_analyses=.false.
 
 !
 ! !REVISION HISTORY:
@@ -97,7 +97,7 @@
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              save_ss_nn,save_taub, &
              first_2d,step_2d,first_3d,step_3d,hotout,meanout, &
-             save_meteo, save_mix_analysis
+             save_meteo, save_numerical_analyses
 !   logical :: nesting=.true.
 !EOP
 !-------------------------------------------------------------------------
@@ -201,9 +201,9 @@
 #endif
 
 #ifndef NO_3D
-   if (save_mix_analysis) then
+   if (save_numerical_analyses) then
       LEVEL2 "calculate and save mixing analysis"
-      do_mixing_analysis=.true.
+      do_numerical_analyses=.true.
    end if
 #endif
 

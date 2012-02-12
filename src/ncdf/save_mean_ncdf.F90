@@ -88,6 +88,7 @@
    edges(3) = zlen
    edges(4) = 1
 
+
 !  layer thickness
    if (hmean_id .gt. 0) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,hmean,h_missing, &
@@ -131,7 +132,12 @@
       if (err .NE. NF90_NOERR) go to 10
    end if
 
-   if (save_mix_analysis) then
+   if (save_numerical_analyses) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az, &
+                  numdis3d_mean,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws3d)
+      err = nf90_put_var(ncid, nm3d_id,ws3d(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
       if (calc_salt) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az, &
                      nummix3d_S_mean,nummix_missing, &
@@ -166,6 +172,11 @@
       edges(1) = xlen
       edges(2) = ylen
       edges(3) = 1
+
+      call cnv_2d(imin,jmin,imax,jmax,az,numdis2d_mean,nummix_missing, &
+                  imin,jmin,imax,jmax,ws2d)
+      err = nf90_put_var(ncid, nm2d_id,ws2d(_2D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
 
       if (calc_salt) then
          call cnv_2d(imin,jmin,imax,jmax,az,nummix2d_S_mean,nummix_missing, &
