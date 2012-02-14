@@ -30,7 +30,8 @@
    public                              :: time_diff
 
 ! !PUBLIC DATA MEMBERS:
-   integer                             :: julianday,secondsofday,yearday,month,day
+   integer, target                     :: julianday,secondsofday,yearday
+   integer                             :: month,day
    integer                             :: jul0=-1,secs0=-1
    integer                             :: juln=-1,secsn=-1
    REALTYPE                            :: fsecs,simtime
