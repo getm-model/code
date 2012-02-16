@@ -242,11 +242,19 @@
 ! (\ref{SxA}) and (\ref{SyA}).
 !
 ! With this method, all higher-order directional-split advection schemes
-! are now available for the momentum advection. The advective
+! are available for the momentum advection. The advective
 ! fluxes needed for this have to be averaged from the conservative
 ! advective fluxes resulting from the continuity equation
-! Continuity will
+! (\ref{ContiLayerInt}). Continuity will
 ! still be retained due to the linearity of the continuity equation.
+! 
+! \paragraph{Numerical dissipation.}\label{uvadvect-dissipation}
+!
+! For the directional split method, numerical dissipation is calculated
+! if {\tt do\_mixing\_analysis} is set to {\tt .true.},
+! using the method suggested by \cite{BURCHARD12}.
+!
+!
 !
 ! !
 ! !USES:
@@ -262,6 +270,8 @@
    use advection, only: UPSTREAM,J7
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
+   use variables_3d, only: do_numerical_analyses
+   use variables_3d, only: numdis3d,numdis2d
    use getm_timers, only: tic,toc,TIM_UVADV3D,TIM_UVADV3DH
 !$ use omp_lib
    IMPLICIT NONE
@@ -272,6 +282,8 @@
 ! !LOCAL VARIABLES:
    integer                           :: i,j,k
    REALTYPE,dimension(:,:,:),pointer :: phadv
+   REALTYPE,dimension(I2DFIELD)      :: numdiss
+   REALTYPE,dimension(I3DFIELD)      :: vel2,vel2o,hires
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -285,6 +297,7 @@
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
 
 ! Here begins dimensional split advection for u-velocity
+
    do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO
@@ -369,11 +382,54 @@
       call toc(TIM_UVADV3DH)
    end if
 
+   if (do_numerical_analyses) then
+!$OMP END MASTER
+!$OMP BARRIER
+      do k=1,kmax ! calculate square of u-velocity before advection step 
+!$OMP DO SCHEDULE(RUNTIME)
+         do j=jmin,jmax
+            do i=imin,imax
+               vel2(i,j,k) = fadv3d(i,j,k)**2
+            end do
+         end do
+!$OMP END DO NOWAIT
+      end do
+!$OMP BARRIER
+!$OMP MASTER
+      vel2o = vel2
+   end if   
+
    call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv, &
                         vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,U_TAG,  &
                         advres=uuEx)
+
+   if (do_numerical_analyses) then
+      call do_advection_3d(dt,vel2,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,  &
+                           vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,U_TAG, &
+                           hires=hires)
+
+      numdis2d = _ZERO_
 !$OMP END MASTER
-!  OMP-NOTE: MASTER does not imply BARRIER
+!$OMP BARRIER
+      do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
+!$OMP DO SCHEDULE(RUNTIME)
+         do j=jmin,jmax
+            do i=imin,imax
+               numdiss(i,j) = ( vel2(i,j,k) - fadv3d(i,j,k)**2 ) / dt
+            end do
+            do i=imin,imax
+               numdis3d(i,j,k) = _HALF_*( numdiss(i-1,j) + numdiss(i,j) )
+               numdis2d(i,j) = numdis2d(i,j) + _HALF_*( numdiss(i-1,j)*hires(i-1,j,k) &
+                                                       +numdiss(i  ,j)*hires(i  ,j,k) )
+            end do
+         end do
+!$OMP END DO
+      end do
+!$OMP BARRIER
+!$OMP MASTER
+   end if
+
+!$OMP END MASTER
 !$OMP BARRIER
 
 !  Here begins dimensional split advection for v-velocity
@@ -458,7 +514,8 @@
 !$OMP END SINGLE
    end if
 
-!$OMP END PARALLEL
+!$OMP BARRIER
+!$OMP MASTER
 
    if (vel_hor_adv.ne.UPSTREAM .and. vel_hor_adv.ne.J7) then
 !     we need to update fadv3d(imin-HALO:imax+HALO,jmax+HALO)
@@ -468,9 +525,55 @@
       call toc(TIM_UVADV3DH)
    end if
 
+   if (do_numerical_analyses) then
+!$OMP END MASTER
+!$OMP BARRIER
+      do k=1,kmax ! calculate square of v-velocity before advection step
+!$OMP DO SCHEDULE(RUNTIME)
+         do j=jmin,jmax
+            do i=imin,imax
+               vel2(i,j,k)=vvEx(i,j,k)**2 
+            end do
+         end do
+!$OMP END DO NOWAIT
+      end do
+!$OMP BARRIER
+!$OMP MASTER
+      vel2o = vel2
+   end if
+
    call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv, &
                         vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,V_TAG,  &
                         advres=vvEx)
+
+   if (do_numerical_analyses) then
+      call do_advection_3d(dt,vel2,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,  &
+                           vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,V_TAG, &
+                           hires=hires)
+!$OMP END MASTER
+!$OMP BARRIER
+      do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
+!$OMP DO SCHEDULE(RUNTIME)
+         do j=jmin,jmax
+            do i=imin,imax
+               numdiss(i,j) = ( vel2(i,j,k) - fadv3d(i,j,k)**2 ) / dt
+            end do
+         end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
+         do j=jmin,jmax
+            do i=imin,imax
+               numdis3d(i,j,k) = numdis3d(i,j,k)                               &
+                                 +_HALF_*( numdiss(i,j-1) + numdiss(i,j) )
+               numdis2d(i,j) = numdis2d(i,j) + _HALF_*( numdiss(i,j-1)*hires(i,j-1,k) &
+                                                       +numdiss(i,  j)*hires(i,  j,k) )
+            end do
+         end do
+!$OMP END DO
+      end do
+   end if
+
+!$OMP END PARALLEL
 
    call toc(TIM_UVADV3D)
 #ifdef DEBUG
