@@ -19,6 +19,7 @@
    use variables_3d, only: nuh,T,S,rho,a,g1,g2,taub
    use advection_3d, only: print_adv_settings_3d,do_advection_3d
    use meteo, only: swr,u10,v10,evap,precip
+   use time, only: yearday,secondsofday
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
 ! JORN_FABM
    use gotm_fabm, only: init_gotm_fabm,set_env_gotm_fabm,do_gotm_fabm
@@ -253,7 +254,7 @@
             call set_env_gotm_fabm(dt,0,0,T(i,j,1:),S(i,j,1:), &
                                    rho(i,j,1:),nuh(i,j,0:),hn(i,j,0:),ww(i,j,0:), &
                                    bioshade,I_0,taub_nonnorm,wind_speed,precip(i,j),evap(i,j), &
-                                   z,A(i,j),g1(i,j),g2(i,j))
+                                   z,A(i,j),g1(i,j),g2(i,j),yearday,secondsofday)
 
 !           Update biogeochemical variable values.
             call do_gotm_fabm(kmax)

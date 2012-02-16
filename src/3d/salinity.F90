@@ -352,7 +352,7 @@ salt_field_no=1
    use variables_3d, only: dt,cnpar,hn,ho,nuh,uu,vv,ww,hun,hvn
    use domain,       only: imin,imax,jmin,jmax,kmax,az
    use getm_timers, only: tic,toc,TIM_SALT,TIM_SALTH,TIM_MIXANALYSIS
-   use variables_3d, only: do_mixing_analysis
+   use variables_3d, only: do_numerical_analyses
    use variables_3d, only: nummix3d_S,nummix2d_S
    use variables_3d, only: phymix3d_S,phymix2d_S
 !$ use omp_lib
@@ -392,7 +392,7 @@ salt_field_no=1
       end do
    end do
 
-   if (do_mixing_analysis) then
+   if (do_numerical_analyses) then
       call toc(TIM_SALT)
       call tic(TIM_MIXANALYSIS)
 ! OMP-note: The following array-based line could be implemented
@@ -409,7 +409,7 @@ salt_field_no=1
    call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,                            &
                         salt_hor_adv,salt_ver_adv,salt_adv_split,_ZERO_,H_TAG)
 
-   if (do_mixing_analysis) then
+   if (do_numerical_analyses) then
       call toc(TIM_SALT)
       call tic(TIM_MIXANALYSIS)
       call numerical_mixing(S2,S,nummix3d_S,nummix2d_S)
