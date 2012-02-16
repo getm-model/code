@@ -117,7 +117,7 @@
 ! !PUBLIC DATA MEMBERS:
    REALTYPE                            :: dt,cnpar=0.9
    REALTYPE                            :: avmback=_ZERO_,avhback=_ZERO_
-   logical                             :: do_mixing_analysis=.false.
+   logical                             :: do_numerical_analyses=.false.
 !
 #ifdef STATIC
 #include "static_3d.h"
@@ -214,6 +214,7 @@
    idpdy=_ZERO_
    nummix3d_S = _ZERO_ ; nummix2d_S = _ZERO_
    nummix3d_T = _ZERO_ ; nummix2d_T = _ZERO_
+   numdis3d   = _ZERO_ ; numdis2d   = _ZERO_
 #endif
 
 #ifdef DEBUG

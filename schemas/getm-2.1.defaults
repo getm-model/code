@@ -115,7 +115,7 @@
 				1
 			</z0_method>
 			<z0_const>
-				0.01
+				0.001
 			</z0_const>
 			<z0d_iters>
 				0
@@ -561,9 +561,9 @@
 			<save_taub>
 				False
 			</save_taub>
-			<save_mix_analysis>
+			<save_numerical_analyses>
 				False
-			</save_mix_analysis>
+			</save_numerical_analyses>
 			<first_2d>
 				0
 			</first_2d>
