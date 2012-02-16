@@ -14,12 +14,13 @@
    use domain, only: az,au,av
    use meteo, only: swr
    use m3d, only: M,calc_temp,calc_salt
-   use variables_3d, only: do_mixing_analysis
+   use variables_3d, only: do_numerical_analyses
    use variables_3d, only: hn,uu,hun,vv,hvn,ww,taub
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T
    use variables_3d, only: nummix3d_S,nummix2d_S,nummix3d_T,nummix2d_T
    use variables_3d, only: phymix3d_S,phymix2d_S,phymix3d_T,phymix2d_T
+   use variables_3d, only: numdis3d,numdis2d
 #endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
@@ -88,7 +89,13 @@
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (Smean)'
 
-      if (do_mixing_analysis) then
+      if (do_numerical_analyses) then
+         allocate(numdis3d_mean(I3DFIELD),stat=rc)
+           if (rc /= 0) &
+              stop 'calc_mean_fields.F90: Error allocating memory (numdis3d_mean)'
+         allocate(numdis2d_mean(I2DFIELD),stat=rc)
+           if (rc /= 0) &
+              stop 'calc_mean_fields.F90: Error allocating memory (numdis2d_mean)'
          if (calc_temp) then
             allocate(nummix3d_T_mean(I3DFIELD),stat=rc)
             if (rc /= 0) &
@@ -132,7 +139,8 @@
       humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
 #ifndef NO_BAROCLINIC
       Tmean=_ZERO_; Smean=_ZERO_
-      if (do_mixing_analysis) then
+      if (do_numerical_analyses) then
+         numdis3d_mean=_ZERO_; numdis2d_mean=_ZERO_
          if (calc_temp) then
             nummix3d_T_mean=_ZERO_; nummix2d_T_mean=_ZERO_
             phymix3d_T_mean=_ZERO_; phymix2d_T_mean=_ZERO_
@@ -179,7 +187,9 @@
 #ifndef NO_BAROCLINIC
       Tmean = Tmean + T
       Smean = Smean + S
-      if (do_mixing_analysis) then
+      if (do_numerical_analyses) then
+         numdis3d_mean = numdis3d_mean + numdis3d
+         numdis2d_mean = numdis2d_mean + numdis2d
          if (calc_temp) then
             nummix3d_T_mean = nummix3d_T_mean + nummix3d_T
             nummix2d_T_mean = nummix2d_T_mean + nummix2d_T
@@ -215,7 +225,9 @@
 #ifndef NO_BAROCLINIC
          Tmean = Tmean / step
          Smean = Smean / step
-         if (do_mixing_analysis) then
+         if (do_numerical_analyses) then
+            numdis3d_mean = numdis3d_mean / step
+            numdis2d_mean = numdis2d_mean / step
             if (calc_temp) then
                nummix3d_T_mean = nummix3d_T_mean / step
                nummix2d_T_mean = nummix2d_T_mean / step

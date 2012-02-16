@@ -310,7 +310,7 @@ temp_field_no=1
    use parameters,   only: rho_0,cp
    use parameters, only: avmolt
    use getm_timers, only: tic, toc, TIM_TEMP, TIM_MIXANALYSIS
-   use variables_3d, only: do_mixing_analysis
+   use variables_3d, only: do_numerical_analyses
    use variables_3d, only: nummix3d_T,nummix2d_T
    use variables_3d, only: phymix3d_T,phymix2d_T
 !$ use omp_lib
@@ -343,7 +343,7 @@ temp_field_no=1
    call tic(TIM_TEMP)
    rho_0_cpi = _ONE_/(rho_0*cp)
 
-   if (do_mixing_analysis) then
+   if (do_numerical_analyses) then
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
 ! OMP-note: The following array-based line could be implemented
@@ -360,7 +360,7 @@ temp_field_no=1
    call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,                            &
                         temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH,H_TAG)
 
-   if (do_mixing_analysis) then
+   if (do_numerical_analyses) then
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
       call numerical_mixing(T2,T,nummix3d_T,nummix2d_T)

@@ -89,7 +89,7 @@
    REALTYPE                            :: cd_min=_ZERO_
 !  method for specifying bottom roughness (0=disable, 1=const, 2=from topo.nc)
    integer                             :: z0_method=1
-   REALTYPE                            :: z0_const=0.01d0
+   REALTYPE                            :: z0_const=0.001d0
    integer                             :: z0d_iters=0
 
 ! !DEFINED PARAMETERS:
