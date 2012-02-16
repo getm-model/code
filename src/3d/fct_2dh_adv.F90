@@ -307,7 +307,7 @@
    do k=1,kmax   ! Calculating v-interface high-order fluxes !
       do j=jmin-1,jmax
          do i=imin,imax
-            uuu=vv(i,j,k)*dt/delyv(i,j)
+            uuu=vv(i,j,k)/hvn(i,j,k)*dt/delyv(i,j)
             vvv=0.25*(                             &
                     uu(i-1,j,k)/hun(i-1,j,k)       &
                    +uu(i-1,j+1,k)/hun(i-1,j+1,k)   &
