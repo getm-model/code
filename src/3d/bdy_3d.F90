@@ -18,6 +18,9 @@
    use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use variables_3d
+#ifdef _FABM_
+   use getm_fabm, only: fabm_pel,fabm_ben
+#endif
    IMPLICIT NONE
 !
    private
@@ -243,6 +246,14 @@
                cc3d(:,i,j,:) = cc3d(:,i+1,j,:)
             end if
 #endif
+
+#ifdef _FABM_
+           if (allocated(fabm_pel)) then
+               fabm_pel(i,j,:,:)=fabm_pel(i+1,j,:,:)
+               fabm_ben(i,j,:) = fabm_ben(i+1,j,:)
+           end if
+#endif
+
          end do
          k = k+1
       end do
@@ -304,6 +315,14 @@
                cc3d(:,i,j,:) = cc3d(:,i,j-1,:)
             end if
 #endif
+
+#ifdef _FABM_
+            if ( allocated(fabm_pel) ) then
+               fabm_pel(i,j,:,:) = fabm_pel(i,j-1,:,:)
+               fabm_ben(i,j,:) = fabm_ben(i,j-1,:)
+            end if
+#endif
+
          end do
          k = k+1
       end do
@@ -365,6 +384,13 @@
                cc3d(:,i,j,:) = cc3d(:,i-1,j,:)
             end if
 #endif
+#ifdef _FABM_
+            if ( allocated(fabm_pel) ) then
+               fabm_pel(i,j,:,:) = fabm_pel(i-1,j,:,:)
+               fabm_ben(i,j,:) = fabm_ben(i-1,j,:)
+            end if
+#endif
+
          end do
          k = k+1
       end do
@@ -426,6 +452,12 @@
                cc3d(:,i,j,:) = cc3d(:,i,j+1,:)
             end if
 #endif
+#ifdef _FABM_
+            if ( allocated(fabm_pel) ) then
+                fabm_pel(i,j,:,:) = fabm_pel(i,j+1,:,:) 
+                fabm_ben(i,j,:)=fabm_ben(i,j+1,:)
+           end if
+#endif
          end do
          k = k+1
       end do
@@ -438,7 +470,18 @@
       end do
    end if
 #endif
-
+#ifdef _FABM_
+   if ( allocated(fabm_pel) ) then
+      do n=1,size(fabm_pel,4)
+         call mirror_bdy_3d(fabm_pel(:,:,:,n),H_TAG)
+      end do
+   end if
+  if ( allocated(fabm_ben) ) then
+      do n=1, size(fabm_ben,3)
+         call mirror_bdy_3d(fabm_ben(:,:,  n),H_TAG)
+      end do
+  end if
+#endif
 #endif
 
 #ifdef DEBUG

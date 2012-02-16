@@ -698,7 +698,7 @@
 			<element name="save_nuh" type="bool" label="save turbulent diffusivity of heat"/>
 			<element name="save_ss_nn" type="bool" label="save shear stress and Brunt-Vaisala frequency"/>
 			<element name="save_taub" type="bool" label="save bottom friction velocity"/>
-			<element name="save_mix_analysis" type="bool" label="calculate/save mixing analysis"/>
+			<element name="save_numerical_analyses" type="bool" label="calculate/save numerical analyses" description="presently numerical mixing and dissipation analyses"/>
 			<element name="first_2d" type="int" label="first time step to save 2D fields" unit="micro time steps" minInclusive="0"/>
 			<element name="step_2d" type="int" label="interval between saves of 2D fields" unit="micro time steps" minInclusive="1"/>
 			<element name="first_3d" type="int" label="first time step to save 3D fields" unit="micro time steps" minInclusive="0"/>
