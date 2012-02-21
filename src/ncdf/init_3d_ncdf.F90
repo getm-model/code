@@ -192,6 +192,79 @@
       call set_attributes(ncid,w_id,long_name='vertical vel.',units='m/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
+#ifdef _MOMENTUM_TERMS_
+      err = nf90_def_var(ncid,'tdv_u',NCDF_FLOAT_PRECISION,f4_dims,tdv_u_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,tdv_u_id,long_name='vertical vel.',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'adv_u',NCDF_FLOAT_PRECISION,f4_dims,adv_u_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,adv_u_id,long_name='vertical vel.',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'vsd_u',NCDF_FLOAT_PRECISION,f4_dims,vsd_u_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,vsd_u_id,long_name='vertical vel.',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'hsd_u',NCDF_FLOAT_PRECISION,f4_dims,hsd_u_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,hsd_u_id,long_name='vertical vel.',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'cor_u',NCDF_FLOAT_PRECISION,f4_dims,cor_u_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,cor_u_id,long_name='vertical vel.',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'epg_u',NCDF_FLOAT_PRECISION,f4_dims,epg_u_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,epg_u_id,long_name='vertical vel.',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'ipg_u',NCDF_FLOAT_PRECISION,f4_dims,ipg_u_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,ipg_u_id,long_name='vertical vel.',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'tdv_v',NCDF_FLOAT_PRECISION,f4_dims,tdv_v_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,tdv_v_id,long_name='vertical vel.',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'adv_v',NCDF_FLOAT_PRECISION,f4_dims,adv_v_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,adv_v_id,long_name='vertical vel.',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'vsd_v',NCDF_FLOAT_PRECISION,f4_dims,vsd_v_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,vsd_v_id,long_name='vertical vel.',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'hsd_v',NCDF_FLOAT_PRECISION,f4_dims,hsd_v_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,hsd_v_id,long_name='vertical vel.',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'cor_v',NCDF_FLOAT_PRECISION,f4_dims,cor_v_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,cor_v_id,long_name='vertical vel.',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'epg_v',NCDF_FLOAT_PRECISION,f4_dims,epg_v_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,epg_v_id,long_name='vertical vel.',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'ipg_v',NCDF_FLOAT_PRECISION,f4_dims,ipg_v_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,ipg_v_id,long_name='vertical vel.',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+#endif
+
 #if defined(CURVILINEAR)
 !     rotated zonal velocity
       err = nf90_def_var(ncid,'uurot',NCDF_FLOAT_PRECISION,f4_dims,uurot_id)

@@ -66,6 +66,9 @@
    use variables_3d, only: dt,cnpar,kvmin,uu,vv,huo,hvo,hvn,vvEx,ww,hun
    use variables_3d, only: num,nuh,sseo,ssvn,rrv
    use variables_3d, only: ssvo
+#ifdef _MOMENTUM_TERMS_
+   use variables_3d, only: tdv_v,cor_v,ipg_v,epg_v,vsd_v
+#endif
 #ifdef XZ_PLUME_TEST
    use variables_3d, only: buoy
 #endif
@@ -183,6 +186,9 @@
 #else
                   ex(k)=-corv(i,j)*Uloc
 #endif
+#ifdef _MOMENTUM_TERMS_
+                  cor_v(i,j,k)=-dry_v(i,j)*ex(k)
+#endif
 #ifdef NO_BAROCLINIC
                   ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k))
 #else
@@ -190,6 +196,9 @@
                   ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+idpdy(i,j,k)+yslope*hvn(i,j,k)*(buoy(i,j,kmax)-buoy(i,j,k)))
 #else
                   ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+ip_fac*idpdy(i,j,k))
+#endif
+#ifdef _MOMENTUM_TERMS_
+                  ipg_v(i,j,k)=-dry_v(i,j)*ip_fac*idpdy(i,j,k)
 #endif
 #endif
                end do
@@ -271,10 +280,27 @@
 
 
                do k=kvmin(i,j),kmax
+#ifdef _MOMENTUM_TERMS_
+                  tdv_v(i,j,k)=vv(i,j,k)
+                  epg_v(i,j,k)=_HALF_*(hvo(i,j,k)+hvn(i,j,k))*g*zy     &
+                              -hvn(i,j,k)*Diff/dt
+                  vsd_v(i,j,k)=-(auxo(k)*(vv(i,j,k+1)/hvo(i,j,k+1)     &
+                               -vv(i,j,k)/hvo(i,j,k))                  &
+                              -auxo(k-1)*(vv(i,j,k)/hvo(i,j,k)         &
+                               -vv(i,j,k-1)/hvo(i,j,k-1)))
+#endif
 #ifndef NO_BAROTROPIC
                   vv(i,j,k)=Res(k)+hvn(i,j,k)*Diff
 #else
                   vv(i,j,k)=Res(k)
+#endif
+#ifdef _MOMENTUM_TERMS_
+                  tdv_v(i,j,k)=(vv(i,j,k)-tdv_v(i,j,k))/dt
+                  vsd_v(i,j,k)=(vsd_v(i,j,k)                           &
+                              +auxn(k)*(vv(i,j,k+1)/hvn(i,j,k+1)       &
+                               -vv(i,j,k)/hvn(i,j,k))                  &
+                              -auxn(k-1)*(vv(i,j,k)/hvn(i,j,k)         &
+                               -vv(i,j,k-1)/hvn(i,j,k-1)))/dt
 #endif
                end do
             else ! (kmax .eq. kvmin(i,j))

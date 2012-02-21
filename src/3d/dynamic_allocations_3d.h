@@ -7,6 +7,52 @@
   allocate(ww(I3DFIELD),stat=rc)    ! 3D field for w-velocity
   if (rc /= 0) stop 'init_3d: Error allocating memory (ww)'
 
+#ifdef _MOMENTUM_TERMS_
+  allocate(tdv_u(I3DFIELD),stat=rc) ! 3D field for tdv_u
+  if (rc /= 0) stop 'init_3d: Error allocating memory (tdv_u)'
+
+  allocate(adv_u(I3DFIELD),stat=rc) ! 3D field for adv_u
+  if (rc /= 0) stop 'init_3d: Error allocating memory (adv_u)'
+
+  allocate(vsd_u(I3DFIELD),stat=rc) ! 3D field for vsd_u
+  if (rc /= 0) stop 'init_3d: Error allocating memory (vsd_u)'
+
+  allocate(hsd_u(I3DFIELD),stat=rc) ! 3D field for hsd_u
+  if (rc /= 0) stop 'init_3d: Error allocating memory (hsd_u)'
+
+  allocate(cor_u(I3DFIELD),stat=rc) ! 3D field for cor_u
+  if (rc /= 0) stop 'init_3d: Error allocating memory (cor_u)'
+
+  allocate(epg_u(I3DFIELD),stat=rc) ! 3D field for epg_u
+  if (rc /= 0) stop 'init_3d: Error allocating memory (epg_u)'
+
+  allocate(ipg_u(I3DFIELD),stat=rc) ! 3D field for ipg_u
+  if (rc /= 0) stop 'init_3d: Error allocating memory (ipg_u)'
+
+  allocate(tdv_v(I3DFIELD),stat=rc) ! 3D field for tdv_v
+  if (rc /= 0) stop 'init_3d: Error allocating memory (tdv_v)'
+
+  allocate(adv_v(I3DFIELD),stat=rc) ! 3D field for adv_v
+  if (rc /= 0) stop 'init_3d: Error allocating memory (adv_v)'
+
+  allocate(vsd_v(I3DFIELD),stat=rc) ! 3D field for vsd_v
+  if (rc /= 0) stop 'init_3d: Error allocating memory (vsd_v)'
+
+  allocate(hsd_v(I3DFIELD),stat=rc) ! 3D field for hsd_v
+  if (rc /= 0) stop 'init_3d: Error allocating memory (hsd_v)'
+
+  allocate(cor_v(I3DFIELD),stat=rc) ! 3D field for cor_v
+  if (rc /= 0) stop 'init_3d: Error allocating memory (cor_v)'
+
+  allocate(epg_v(I3DFIELD),stat=rc) ! 3D field for epg_v
+  if (rc /= 0) stop 'init_3d: Error allocating memory (epg_v)'
+
+  allocate(ipg_v(I3DFIELD),stat=rc) ! 3D field for ipg_v
+  if (rc /= 0) stop 'init_3d: Error allocating memory (ipg_v)'
+
+  
+#endif
+
 #ifdef STRUCTURE_FRICTION
   allocate(sf(I3DFIELD),stat=rc)    ! 3D field for velocity in T-points
   if (rc /= 0) stop 'init_3d: Error allocating memory (sf)'

@@ -23,6 +23,23 @@
   REALTYPE                             :: uu(I3DFIELD)
   REALTYPE                             :: vv(I3DFIELD)
   REALTYPE, target                     :: ww(I3DFIELD)
+#ifdef _MOMENTUM_TERMS_
+  REALTYPE                             :: tdv_u(I3DFIELD)
+  REALTYPE                             :: adv_u(I3DFIELD)
+  REALTYPE                             :: vsd_u(I3DFIELD)
+  REALTYPE                             :: hsd_u(I3DFIELD)
+  REALTYPE                             :: cor_u(I3DFIELD)
+  REALTYPE                             :: epg_u(I3DFIELD)
+  REALTYPE                             :: ipg_u(I3DFIELD)
+
+  REALTYPE                             :: tdv_v(I3DFIELD)
+  REALTYPE                             :: adv_v(I3DFIELD)
+  REALTYPE                             :: vsd_v(I3DFIELD)
+  REALTYPE                             :: hsd_v(I3DFIELD)
+  REALTYPE                             :: cor_v(I3DFIELD)
+  REALTYPE                             :: epg_v(I3DFIELD)
+  REALTYPE                             :: ipg_v(I3DFIELD)
+#endif
 #ifdef STRUCTURE_FRICTION
   REALTYPE                             :: sf(I3DFIELD)
 #endif
