@@ -11,6 +11,17 @@
 
   REALTYPE, dimension(:,:,:), allocatable   :: uu,vv
   REALTYPE, dimension(:,:,:), allocatable, target :: ww
+
+#ifdef _MOMENTUM_TERMS_
+  REALTYPE, dimension(:,:,:), allocatable, target :: tdv_u,adv_u,vsd_u
+  REALTYPE, dimension(:,:,:), allocatable, target :: hsd_u,cor_u,epg_u
+  REALTYPE, dimension(:,:,:), allocatable, target :: ipg_u
+
+  REALTYPE, dimension(:,:,:), allocatable, target :: tdv_v,adv_v,vsd_v
+  REALTYPE, dimension(:,:,:), allocatable, target :: hsd_v,cor_v,epg_v
+  REALTYPE, dimension(:,:,:), allocatable, target :: ipg_v
+#endif
+
 #ifdef STRUCTURE_FRICTION
   REALTYPE, dimension(:,:,:), allocatable   :: sf
 #endif
