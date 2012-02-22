@@ -59,29 +59,28 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
-   REALTYPE                  :: dxm1,dym1
-   REALTYPE                  :: prgr,dxzu,dxzl,dyzu,dyzl
+   REALTYPE                  :: dxm1,dym1,zi
+   REALTYPE                  :: prgr,dxzu,dxzl,dyzu,dyzl,hiu,hil
    REALTYPE                  :: dzr2,dzr1,dxru,dxrl,dyru,dyrl,aa,bb,cc
+   REALTYPE,dimension(I3DFIELD) :: hw
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+
+!  KK-TODO: put this in a central place (if needed at all)
+   idpdx(:,:,0) = _ZERO_
+   idpdy(:,:,0) = _ZERO_
+
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          PRIVATE(i,j,k)                                          &
+!$OMP          PRIVATE(dxm1,dym1,zi)                                   &
+!$OMP          PRIVATE(prgr,dxzu,dxzl,dyzu,dyzl,hiu,hil)               &
+!$OMP          PRIVATE(dzr2,dzr1,dxru,dxrl,dyru,dyrl,aa,bb,cc)
+
 #if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
    dxm1 = _ONE_/DXU
    dym1 = _ONE_/DYV
 #endif
-
-! BJB-TODO: The zeroing of these three arrays is costly.
-!  Try to reduce amount of initialization. BJB 2009-09-22.
-   zz(:,:,0) = _ZERO_
-
-!$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP    PRIVATE(i,j,k,prgr,dxzu,dxzl,dyzu,dyzl)                       &
-!$OMP    PRIVATE(dzr2,dzr1,dxru,dxrl,dyru,dyrl,aa,bb,cc)
-
-!$OMP MASTER
-   idpdx(:,:,0) = _ZERO_
-   idpdy(:,:,0) = _ZERO_
-!$OMP END MASTER
 
 !  First, the pressure point heights are calculated in order to get the
 !  interface slopes further down.
@@ -89,9 +88,11 @@
    do j=jmin,jmax+1
       do i=imin,imax+1
          if (az(i,j) .ge. 1) then
-            zz(i,j,1)=-H(i,j)+_HALF_*hn(i,j,1)
-            do k=2,kmax
-               zz(i,j,k)=zz(i,j,k-1)+_HALF_*(hn(i,j,k-1)+hn(i,j,k))
+            zi = -H(i,j)
+            do k=1,kmax
+               hw(i,j,k-1) = _HALF_ * ( hn(i,j,k-1) + hn(i,j,k) )
+               zz(i,j,k) = zi + _HALF_*hn(i,j,k)
+               zi = zi + hn(i,j,k)
             end do
          end if
       end do
@@ -107,22 +108,25 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
 #endif
+            hil=_HALF_*(hn(i,j,kmax)+hn(i+1,j,kmax))
             dxzl=(zz(i+1,j,kmax)-zz(i,j,kmax))*dxm1
             dxrl=(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
-            prgr=dxrl*_HALF_*hun(i,j,kmax)
-            idpdx(i,j,kmax)=hun(i,j,kmax)*prgr
+            prgr=_HALF_*hil*dxrl
+            idpdx(i,j,kmax)=hil*prgr
             do k=kmax-1,kumin_pmz(i,j),-1
+               hiu=hil
+               hil=_HALF_*(hn(i,j,k)+hn(i+1,j,k))
                dxzu=dxzl
                dxzl=(zz(i+1,j,k)-zz(i,j,k))*dxm1
                dxru=dxrl
                dxrl=(buoy(i+1,j,k)-buoy(i,j,k))*dxm1
-               dzr2=(buoy(i+1,j,k+1)-buoy(i+1,j,k))/(zz(i+1,j,k+1)-zz(i+1,j,k))
-               dzr1=(buoy(i  ,j,k+1)-buoy(i  ,j,k))/(zz(i  ,j,k+1)-zz(i  ,j,k))
+               dzr1 = ( buoy(i  ,j,k+1) - buoy(i  ,j,k) ) / hw(i  ,j,k)
+               dzr2 = ( buoy(i+1,j,k+1) - buoy(i+1,j,k) ) / hw(i+1,j,k)
                aa=_HALF_*(dxrl+dxru)
                bb=_HALF_*(dxzl+dxzu)
-               cc=_HALF_*(dzr2+dzr1)
-               prgr=prgr+(aa-bb*cc)*_HALF_*(hun(i,j,k+1)+hun(i,j,k))
-               idpdx(i,j,k)=hun(i,j,k)*prgr
+               cc=_HALF_*(dzr1+dzr2)
+               prgr=prgr+_HALF_*(hil+hiu)*(aa-bb*cc)
+               idpdx(i,j,k)=hil*prgr
             end do
          end if
       end do
@@ -138,22 +142,25 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             dym1 = _ONE_/DYV
 #endif
+            hil=_HALF_*(hn(i,j,kmax)+hn(i,j+1,kmax))
             dyzl=(zz(i,j+1,kmax)-zz(i,j,kmax))*dym1
             dyrl=(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
-            prgr=dyrl*_HALF_*hun(i,j,kmax)
-            idpdy(i,j,kmax)=hvn(i,j,kmax)*prgr
+            prgr=_HALF_*hil*dyrl
+            idpdy(i,j,kmax)=hil*prgr
             do k=kmax-1,kvmin_pmz(i,j),-1
+               hiu=hil
+               hil=_HALF_*(hn(i,j,k)+hn(i,j+1,k))
                dyzu=dyzl
                dyzl=(zz(i,j+1,k)-zz(i,j,k))*dym1
                dyru=dyrl
                dyrl=(buoy(i,j+1,k)-buoy(i,j,k))*dym1
-               dzr2=(buoy(i,j+1,k+1)-buoy(i,j+1,k))/(zz(i,j+1,k+1)-zz(i,j+1,k))
-               dzr1=(buoy(i,j  ,k+1)-buoy(i  ,j,k))/(zz(i  ,j,k+1)-zz(i  ,j,k))
+               dzr1 = ( buoy(i,j  ,k+1) - buoy(i  ,j,k) ) / hw(i  ,j,k)
+               dzr2 = ( buoy(i,j+1,k+1) - buoy(i,j+1,k) ) / hw(i,j+1,k)
                aa=_HALF_*(dyrl+dyru)
                bb=_HALF_*(dyzl+dyzu)
-               cc=_HALF_*(dzr2+dzr1)
-               prgr=prgr+(aa-bb*cc)*_HALF_*(hvn(i,j,k+1)+hvn(i,j,k))
-               idpdy(i,j,k)=hvn(i,j,k)*prgr
+               cc=_HALF_*(dzr1+dzr2)
+               prgr=prgr+_HALF_*(hil+hiu)*(aa-bb*cc)
+               idpdy(i,j,k)=hil*prgr
             end do
          end if
       end do

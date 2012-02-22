@@ -57,101 +57,120 @@
 !  Original author(s): Hans Burchard, Adolf Stips, Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k
-   REALTYPE                  :: dxm1,dym1
-   REALTYPE                  :: grdl,grdu,buoyl,buoyu,prgr,dxz,dyz
+   integer                   :: i,j,k,kk,kkp
+   REALTYPE                  :: dxm1,dym1,pdiff
+   REALTYPE,dimension(0:1)   :: hvel,buoyvel,buoydiff
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+
+!  KK-TODO: put this in a central place (if needed at all)
+   idpdx(:,:,0) = _ZERO_
+   idpdy(:,:,0) = _ZERO_
+
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          PRIVATE(i,j,k,kk,kkp)                                   &
+!$OMP          PRIVATE(dxm1,dym1,pdiff)                                &
+!$OMP          PRIVATE(hvel,buoyvel,buoydiff)
+
 #if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
    dxm1 = _ONE_/DXU
    dym1 = _ONE_/DYV
 #endif
 
-   zz(:,:,0) = _ZERO_
-!$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP    PRIVATE(i,j,k,grdl,grdu,buoyl,buoyu,prgr,dxz,dyz)
-
-!$OMP MASTER
-   idpdx(:,:,0)    = _ZERO_
-   idpdy(:,:,0)    = _ZERO_
-!$OMP END MASTER
-
 !  First, the interface heights are calculated in order to get the
 !  interface slopes further down.
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax+1
-      do i=imin,imax+1
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
          if (az(i,j) .ge. 1) then
-            zz(i,j,1)=-H(i,j)+hn(i,j,1)
-            do k=2,kmax
-               zz(i,j,k)=zz(i,j,k-1)+hn(i,j,k)
+            zz(i,j,0) = -H(i,j)
+            do k=1,kmax
+               zz(i,j,k) = zz(i,j,k-1) + hn(i,j,k)
             end do
          end if
       end do
    end do
 !$OMP END DO
 
-! BJB-TODO: Change 0.5->_HALF_ etc in this file
 
 !  Calculation of layer integrated internal pressure gradient as it
 !  appears on the right hand side of the u-velocity equation.
+
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax
-      do i=imin,imax
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO-1
          if (au(i,j) .ge. 1) then
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-            dxm1=_ONE_/DXU
+            dxm1 = _ONE_/DXU
 #endif
-            grdl=(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
-            buoyl=0.5*(buoy(i+1,j,kmax)+buoy(i,j,kmax))
-            prgr=grdl*0.5*hun(i,j,kmax)
-            idpdx(i,j,kmax)=hun(i,j,kmax)*prgr
+            kk = 0
+            hvel(kk) = _HALF_ * ( hn(i,j,kmax) + hn(i+1,j,kmax) )
+            buoyvel(kk) = _HALF_ * ( buoy(i,j,kmax) + buoy(i+1,j,kmax) )
+            buoydiff(kk) = buoy(i+1,j,kmax) - buoy(i,j,kmax)
+            pdiff =   buoyvel(kk)*( ssen(i+1,j) - ssen(i,j) ) &
+                    + _HALF_*hvel(kk)*buoydiff(kk)
+            idpdx(i,j,kmax) = hvel(kk)*pdiff*dxm1
             do k=kmax-1,1,-1
-               grdu=grdl
-               grdl=(buoy(i+1,j,k)-buoy(i,j,k))*dxm1
-               buoyu=buoyl
-               buoyl=0.5*(buoy(i+1,j,k)+buoy(i,j,k))
-               dxz=(zz(i+1,j,k)-zz(i,j,k))*dxm1
-               prgr=prgr+0.5*(grdu+grdl)*0.5*(hun(i,j,k)+hun(i,j,k+1))-dxz*(buoyu-buoyl)
-               idpdx(i,j,k)=hun(i,j,k)*prgr
+               kkp = kk
+               kk  = 1-kk
+               hvel(kk) = _HALF_ * ( hn(i,j,k) + hn(i+1,j,k) )
+               buoyvel(kk) = _HALF_ * ( buoy(i,j,k) + buoy(i+1,j,k) )
+               buoydiff(kk) = buoy(i+1,j,k) - buoy(i,j,k)
+               pdiff =   pdiff &
+                       + _QUART_*(hvel(kk)+hvel(kkp))*(buoydiff(kk)+buoydiff(kkp)) &
+                       - ( zz(i+1,j,k) - zz(i,j,k) )*( buoyvel(kkp) - buoyvel(kk) )
+               idpdx(i,j,k) = hvel(kk)*pdiff*dxm1
             end do
          end if
       end do
    end do
-!$OMP END DO NOWAIT
+!$OMP END DO
+
+
+#ifndef SLICE_MODEL
 
 !  Calculation of layer integrated internal pressure gradient as it
 !  appears on the right hand side of the v-velocity equation.
+
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax
-      do i=imin,imax
+   do j=jmin-HALO,jmax+HALO-1
+      do i=imin-HALO,imax+HALO
          if (av(i,j) .ge. 1) then
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             dym1 = _ONE_/DYV
 #endif
-            grdl=(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
-            buoyl=0.5*(buoy(i,j+1,kmax)+buoy(i,j,kmax))
-            prgr=grdl*0.5*hvn(i,j,kmax)
-            idpdy(i,j,kmax)=hvn(i,j,kmax)*prgr
+            kk = 0
+            hvel(kk) = _HALF_ * ( hn(i,j,kmax) + hn(i,j+1,kmax) )
+            buoyvel(kk) = _HALF_ * ( buoy(i,j,kmax) + buoy(i,j+1,kmax) )
+            buoydiff(kk) = buoy(i,j+1,kmax) - buoy(i,j,kmax)
+            pdiff =   buoyvel(kk)*( ssen(i,j+1) - ssen(i,j) ) &
+                    + _HALF_*hvel(kk)*buoydiff(kk)
+            idpdy(i,j,kmax) = hvel(kk)*pdiff*dym1
             do k=kmax-1,1,-1
-               grdu=grdl
-               grdl=(buoy(i,j+1,k)-buoy(i,j,k))*dym1
-               buoyu=buoyl
-               buoyl=0.5*(buoy(i,j+1,k)+buoy(i,j,k))
-               dyz=(zz(i,j+1,k)-zz(i,j,k))*dym1
-               prgr=prgr+0.5*(grdu+grdl)*0.5*(hvn(i,j,k)+hvn(i,j,k+1))-dyz*(buoyu-buoyl)
-               idpdy(i,j,k)=hvn(i,j,k)*prgr
+               kkp = kk
+               kk  = 1-kk
+               hvel(kk) = _HALF_ * ( hn(i,j,k) + hn(i,j+1,k) )
+               buoyvel(kk) = _HALF_ * ( buoy(i,j,k) + buoy(i,j+1,k) )
+               buoydiff(kk) = buoy(i,j+1,k) - buoy(i,j,k)
+               pdiff =   pdiff &
+                       + _QUART_*(hvel(kk)+hvel(kkp))*(buoydiff(kk)+buoydiff(kkp)) &
+                       - ( zz(i,j+1,k) - zz(i,j,k) )*( buoyvel(kkp) - buoyvel(kk) )
+               idpdy(i,j,k) = hvel(kk)*pdiff*dym1
             end do
          end if
       end do
    end do
 !$OMP END DO
+
+#endif
+
+
 !$OMP END PARALLEL
+
    return
    end subroutine ip_blumberg_mellor
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2004 - Hans Burchard, Adolf Stips and Karsten Bolding  !
 !-----------------------------------------------------------------------

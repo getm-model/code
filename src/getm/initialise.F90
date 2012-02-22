@@ -74,9 +74,6 @@
 #endif
    use meteo, only: init_meteo,do_meteo
    use integration,  only: MinN,MaxN
-#ifndef NO_BAROCLINIC
-   use eqstate, only: do_eqstate
-#endif
    use exceptions
    IMPLICIT NONE
 !
@@ -275,15 +272,13 @@
       call depth_update
 #ifndef NO_3D
       if (runtype .ge. 2) then
+!        KK-TODO: do we need this call?
          call coordinates(hotstart)
          Uint=_ZERO_
          Vint=_ZERO_
       end if
 #endif
 
-#ifndef NO_BAROCLINIC
-      if (runtype .ge. 3) call do_eqstate()
-#endif
       call update_time(MinN)
       call write_time_string()
       LEVEL3 timestr
