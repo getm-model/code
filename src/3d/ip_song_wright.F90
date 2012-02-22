@@ -50,24 +50,25 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
-   REALTYPE                  :: dxm1,dym1
-   REALTYPE                  :: grdl,grdu,buoyl,buoyu,prgr,dxz,dyz
+   REALTYPE                  :: dxm1,dym1,zi
+   REALTYPE                  :: grdl,grdu,buoyl,buoyu,prgr,dxz,dyz,hi
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+
+!  KK-TODO: put this in a central place (if needed at all)
+   idpdx(:,:,0) = _ZERO_
+   idpdy(:,:,0) = _ZERO_
+
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          PRIVATE(i,j,k)                                          &
+!$OMP          PRIVATE(dxm1,dym1,zi)                                   &
+!$OMP          PRIVATE(grdl,grdu,buoyl,buoyu,prgr,dxz,dyz,hi)
+
 #if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
    dxm1 = _ONE_/DXU
    dym1 = _ONE_/DYV
 #endif
-
-   zz(:,:,0) = _ZERO_
-!$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP    PRIVATE(i,j,k, grdl,grdu,buoyl,buoyu,prgr,dxz,dyz)
-
-!$OMP MASTER
-   idpdx(:,:,0)    = _ZERO_
-   idpdy(:,:,0)    = _ZERO_
-!$OMP END MASTER
 
 !  First, the interface heights are calculated in order to get the
 !  interface slopes further down.
@@ -75,9 +76,10 @@
    do j=jmin,jmax+1
       do i=imin,imax+1
          if (az(i,j) .ge. 1) then
-            zz(i,j,1)=-H(i,j)+_HALF_*hn(i,j,1)
-            do k=2,kmax
-               zz(i,j,k)=zz(i,j,k-1)+_HALF_*(hn(i,j,k-1)+hn(i,j,k))
+            zi = -H(i,j)
+            do k=1,kmax
+               zz(i,j,k) = zi + _HALF_*hn(i,j,k)
+               zi = zi + hn(i,j,k)
             end do
          end if
       end do
@@ -93,21 +95,23 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
 #endif
-            grdl=_HALF_*hun(i,j,kmax)*(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
-            buoyl=_HALF_*(buoy(i+1,j,kmax)+buoy(i,j,kmax))       &
+            hi=_HALF_*(hn(i,j,kmax)+hn(i+1,j,kmax))
+            grdl=_HALF_*hi*(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
+            buoyl=_HALF_*(buoy(i,j,kmax)+buoy(i+1,j,kmax))       &
                      *(zz(i+1,j,kmax)- zz(i,j,kmax))*dxm1
             prgr=grdl
-            idpdx(i,j,kmax)=hun(i,j,kmax)*prgr
+            idpdx(i,j,kmax)=hi*prgr
             do k=kmax-1,1,-1
+!              KK-TODO: for what do we need grdu?
                grdu=grdl
                grdl=(_HALF_*(buoy(i+1,j,k)+buoy(i+1,j,k+1))               &
                         *_HALF_*(hn(i+1,j,k)+hn(i+1,j,k+1))             &
                     -_HALF_*(buoy(i,j,k)+buoy(i,j,k+1))                   &
                         *_HALF_*(hn(i,j,k)+hn(i,j,k+1)) )*dxm1
                buoyu=buoyl
-               buoyl=_HALF_*(buoy(i+1,j,k)+buoy(i,j,k))*(zz(i+1,j,k)-zz(i,j,k))*dxm1
+               buoyl=_HALF_*(buoy(i,j,k)+buoy(i+1,j,k))*(zz(i+1,j,k)-zz(i,j,k))*dxm1
                prgr=prgr+grdl-(buoyu-buoyl)
-               idpdx(i,j,k)=hun(i,j,k)*prgr
+               idpdx(i,j,k)=_HALF_*(hn(i,j,k)+hn(i+1,j,k))*prgr
             end do
          end if
       end do
@@ -123,21 +127,23 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
          dym1 = _ONE_/DYV
 #endif
-            grdl=_HALF_*hvn(i,j,kmax)*(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
-            buoyl=_HALF_*(buoy(i,j+1,kmax)+buoy(i,j,kmax))     &
+            hi=_HALF_*(hn(i,j,kmax)+hn(i,j+1,kmax))
+            grdl=_HALF_*hi*(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
+            buoyl=_HALF_*(buoy(i,j,kmax)+buoy(i,j+1,kmax))     &
                      *(zz(i,j+1,kmax)- zz(i,j,kmax))*dxm1
             prgr=grdl
-            idpdy(i,j,kmax)=hvn(i,j,kmax)*prgr
+            idpdy(i,j,kmax)=hi*prgr
             do k=kmax-1,1,-1
+!              KK-TODO: for what do we need grdu?
                grdu=grdl
                grdl=(_HALF_*(buoy(i,j+1,k)+buoy(i,j+1,k+1))               &
                         *_HALF_*(hn(i,j+1,k)+hn(i,j+1,k+1))             &
                     -_HALF_*(buoy(i,j,k)+buoy(i,j,k+1))                   &
                         *_HALF_*(hn(i,j,k)+hn(i,j,k+1)) )*dym1
                buoyu=buoyl
-               buoyl=_HALF_*(buoy(i,j+1,k)+buoy(i,j,k))*(zz(i,j+1,k)-zz(i,j,k))*dym1
+               buoyl=_HALF_*(buoy(i,j,k)+buoy(i,j+1,k))*(zz(i,j+1,k)-zz(i,j,k))*dym1
                prgr=prgr+grdl-(buoyu-buoyl)
-               idpdy(i,j,k)=hvn(i,j,k)*prgr
+               idpdy(i,j,k)=_HALF_*(hn(i,j,k)+hn(i,j+1,k))*prgr
             end do
          end if
       end do

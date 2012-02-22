@@ -27,44 +27,48 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k, rc
-   REALTYPE                  :: dxm1,dym1
+   integer                   :: i,j,k,kplus,kminus, rc
+   REALTYPE                  :: dxm1,dym1,zi
    REALTYPE                  :: grdl,grdu,buoyl,prgr,dxz,dyz
-   integer                   :: kplus,kminus
-   REALTYPE, POINTER         :: zx(:)
+   REALTYPE,dimension(:),POINTER :: zx,hi
    REALTYPE                  :: buoyplus,buoyminus
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+
+!  KK-TODO: put this in a central place (if needed at all)
+   idpdx(:,:,0) = _ZERO_
+   idpdy(:,:,0) = _ZERO_
+
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          PRIVATE(i,j,k,kplus,kminus, rc)                         &
+!$OMP          PRIVATE(dxm1,dym1,zi)                                   &
+!$OMP          PRIVATE(grdl,grdu,buoyl,prgr,dxz,dyz)                   &
+!$OMP          PRIVATE(zx,hi)                                          &
+!$OMP          PRIVATE(buoyplus,buoyminus)
+
 #if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
    dxm1 = _ONE_/DXU
    dym1 = _ONE_/DYV
 #endif
 
-   zz(:,:,0) = _ZERO_
-!$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP    PRIVATE(i,j,k,rc)                                             &
-!$OMP    PRIVATE(grdl,grdu,buoyl,prgr,dxz,dyz,buoyplus,buoyminus, zx)
-
 ! OMP-NOTE: Each thread allocates its own HEAP storage for the
 !    vertical work storage:
-   allocate(zx(kmax),stat=rc)    ! work array
+   allocate(zx(0:kmax),stat=rc)    ! work array
    if (rc /= 0) stop 'ip_z_interpol: Error allocating memory (zx)'
-
-!$OMP MASTER
-   idpdx(:,:,0)    = _ZERO_
-   idpdy(:,:,0)    = _ZERO_
-!$OMP END MASTER
-
+   allocate(hi(0:kmax),stat=rc)    ! work array
+   if (rc /= 0) stop 'ip_z_interpol: Error allocating memory (hi)'
+   hi(0) = _ZERO_
 
 !  First, the heights of the pressure points are calculated.
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax+1
       do i=imin,imax+1
          if (az(i,j) .ge. 1) then
-            zz(i,j,1)=-H(i,j)+_HALF_*hn(i,j,1)
-            do k=2,kmax
-               zz(i,j,k)=zz(i,j,k-1)+_HALF_*(hn(i,j,k-1)+hn(i,j,k))
+            zi = -H(i,j)
+            do k=1,kmax
+               zz(i,j,k) = zi + _HALF_*hn(i,j,k)
+               zi = zi + hn(i,j,k)
             end do
          end if
       end do
@@ -80,14 +84,15 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
 #endif
-            zx(1)=-HU(i,j)+_HALF_*hun(i,j,1) ! zx defined on u-points
-            do k=2,kmax
-               zx(k)=zx(k-1)+_HALF_*(hun(i,j,k-1)+hun(i,j,k))
+            zx(0) = -HU(i,j) ! zx defined on u-points
+            do k=1,kmax
+               hi(k) = _HALF_ * ( hn(i,j,k) + hn(i+1,j,k) )
+               zx(k) = zx(k-1) + _HALF_*(hi(k-1)+hi(k))
             end do
-            grdl=_HALF_*hun(i,j,kmax)*(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
-            buoyl=_HALF_*(buoy(i+1,j,kmax)+buoy(i,j,kmax))
+            grdl=_HALF_*hi(kmax)*(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
+            buoyl=_HALF_*(buoy(i,j,kmax)+buoy(i+1,j,kmax))
             prgr=grdl
-            idpdx(i,j,kmax)=hun(i,j,kmax)*prgr
+            idpdx(i,j,kmax)=hi(kmax)*prgr
             do k=kmax-1,1,-1
                grdu=grdl
                do kplus=kmax,1,-1  ! Find neighboring index to east
@@ -109,12 +114,12 @@
                (_HALF_*(hn(i,j,kminus+1)+hn(i,j,kminus)))
                end if
                if (zx(k) .gt. max(-H(i+1,j),-H(i,j))) then
-                  grdl=_HALF_*hun(i,j,k)*(buoyplus-buoyminus)*dxm1
+                  grdl=_HALF_*hi(k)*(buoyplus-buoyminus)*dxm1
                else
                   grdl= _ZERO_
                end if
                prgr=prgr+grdu+grdl
-               idpdx(i,j,k)=hun(i,j,k)*prgr
+               idpdx(i,j,k)=hi(k)*prgr
             end do
          end if
       end do
@@ -130,14 +135,15 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
          dym1 = _ONE_/DYV
 #endif
-            zx(1)=-HV(i,j)+_HALF_*hvn(i,j,1) ! zx defined on v-points
-            do k=2,kmax
-               zx(k)=zx(k-1)+_HALF_*(hvn(i,j,k-1)+hvn(i,j,k))
+            zx(0) = -HV(i,j) ! zx defined on v-points
+            do k=1,kmax
+               hi(k) = _HALF_ * ( hn(i,j,k) + hn(i,j+1,k) )
+               zx(k) = zx(k-1) + _HALF_*(hi(k-1)+hi(k))
             end do
-            grdl=_HALF_*hvn(i,j,kmax)*(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
+            grdl=_HALF_*hi(kmax)*(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
             buoyl=_HALF_*(buoy(i,j+1,kmax)+buoy(i,j,kmax))
             prgr=grdl
-            idpdy(i,j,kmax)=hvn(i,j,kmax)*prgr
+            idpdy(i,j,kmax)=hi(kmax)*prgr
             do k=kmax-1,1,-1
                grdu=grdl
                do kplus=kmax,1,-1  ! Find neighboring index to north
@@ -159,12 +165,12 @@
                            (_HALF_*(hn(i,j,kminus+1)+hn(i,j,kminus)))
                end if
                if (zx(k).gt.max(-H(i,j+1),-H(i,j))) then
-                  grdl=_HALF_*hvn(i,j,k)*(buoyplus-buoyminus)*dym1
+                  grdl=_HALF_*hi(k)*(buoyplus-buoyminus)*dym1
                else
                   grdl= _ZERO_
                end if
                prgr=prgr+grdu+grdl
-               idpdy(i,j,k)=hvn(i,j,k)*prgr
+               idpdy(i,j,k)=hi(k)*prgr
             end do
          end if
       end do
@@ -174,6 +180,8 @@
 ! Each thread must deallocate its own HEAP storage:
    deallocate(zx,stat=rc)
    if (rc /= 0) stop 'ip_z_interpol: Error deallocating memory (zx)'
+   deallocate(hi,stat=rc)
+   if (rc /= 0) stop 'ip_z_interpol: Error deallocating memory (hi)'
 
 !$OMP END PARALLEL
 
