@@ -89,10 +89,11 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: runtype
    REALTYPE, intent(in)                :: timestep
    logical, intent(in)                 :: hotstart
 !
+! !INPUT/OUTPUT PARAMETERS:
+   integer, intent(inout)              :: runtype
 !
 ! !DESCRIPTION:
 !  Here, the {\tt m3d} namelist is read from {\tt getm.inp}, and the
@@ -140,6 +141,12 @@
    read(NAMLST,m3d)
 !   rewind(NAMLST)
 
+!  Note (KK): decrease runtype depending on tracers
+   if (runtype.ge.3 .and. .not.calc_temp .and. .not.calc_salt) then
+      LEVEL2 'reset runtype to 2 because neither temp nor salt are calculated'
+      runtype = 2
+   end if
+
    deformCX_3d=deformCX
    deformUV_3d=deformUV
 
@@ -176,23 +183,28 @@
 
 !  Sanity checks for bdy 3d
    if (.not.openbdy .or. runtype.eq.2) bdy3d=.false.
-   if (bdy3d .and. bdy3d_tmrlx) then
-      LEVEL2 'bdy3d_tmrlx=.true.'
-      LEVEL2 'bdy3d_tmrlx_max=   ',bdy3d_tmrlx_max
-      LEVEL2 'bdy3d_tmrlx_min=   ',bdy3d_tmrlx_min
-      LEVEL2 'bdy3d_tmrlx_ucut=  ',bdy3d_tmrlx_ucut
-      if (bdy3d_tmrlx_min<_ZERO_ .or. bdy3d_tmrlx_min>_ONE_)          &
-           call getm_error("init_3d()",                               &
-           "bdy3d_tmrlx_min is out of valid range [0:1]")
-      if (bdy3d_tmrlx_max<bdy3d_tmrlx_min .or. bdy3d_tmrlx_min>_ONE_) &
-           call getm_error("init_3d()",                               &
-           "bdy3d_tmrlx_max is out of valid range [bdy3d_tmrlx_max:1]")
-      if (bdy3d_tmrlx_ucut<_ZERO_)                                    &
-           call getm_error("init_3d()",                               &
-           "bdy3d_tmrlx_max is out of valid range [0:inf[")
+   if (bdy3d .and. runtype.eq.3) then
+      LEVEL2 'disable OBC for temp and salt in runtype=3'
+      bdy3d = .false.
    end if
-
-   LEVEL2 'ip_ramp=',ip_ramp
+   if (bdy3d) then
+      call init_bdy_3d()
+      if (bdy3d_tmrlx) then
+         LEVEL2 'bdy3d_tmrlx=.true.'
+         LEVEL2 'bdy3d_tmrlx_max=   ',bdy3d_tmrlx_max
+         LEVEL2 'bdy3d_tmrlx_min=   ',bdy3d_tmrlx_min
+         LEVEL2 'bdy3d_tmrlx_ucut=  ',bdy3d_tmrlx_ucut
+         if (bdy3d_tmrlx_min<_ZERO_ .or. bdy3d_tmrlx_min>_ONE_)          &
+              call getm_error("init_3d()",                               &
+              "bdy3d_tmrlx_min is out of valid range [0:1]")
+         if (bdy3d_tmrlx_max<bdy3d_tmrlx_min .or. bdy3d_tmrlx_min>_ONE_) &
+              call getm_error("init_3d()",                               &
+              "bdy3d_tmrlx_max is out of valid range [bdy3d_tmrlx_max:1]")
+         if (bdy3d_tmrlx_ucut<_ZERO_)                                    &
+              call getm_error("init_3d()",                               &
+              "bdy3d_tmrlx_max is out of valid range [0:inf[")
+      end if
+   end if
 
    LEVEL2 'vel_check=',vel_check
    if (vel_check .ne. 0) then
@@ -241,7 +253,15 @@
       T = _ZERO_ ; S = _ZERO_ ; rho = _ZERO_
       if(calc_temp) call init_temperature()
       if(calc_salt) call init_salinity()
+      call init_eqstate()
+      call init_internal_pressure()
+      LEVEL2 'ip_ramp=',ip_ramp
    end if
+#endif
+
+   if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
+
+#ifndef NO_BAROCLINIC
    if (runtype .eq. 4) then
       if (calc_temp) then
          select case(temp_AH_method)
@@ -332,22 +352,6 @@
 
    end if
 
-#ifndef NO_BAROCLINIC
-    if (runtype .eq. 3 .or. runtype .eq. 4) then
-      call init_eqstate()
-#ifndef PECS
-      call do_eqstate()
-      call ss_nn()
-#endif
-
-      if (bdy3d) call init_bdy_3d()
-      if (runtype .ge. 3) call init_internal_pressure()
-      if (runtype .eq. 3) call do_internal_pressure()
-   end if
-#endif
-
-   if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
-
 #ifdef DEBUG
    write(debug,*) 'Leaving init_3d()'
    write(debug,*)
@@ -425,6 +429,15 @@
          end do
       end do
    end if
+
+#ifndef NO_BAROCLINIC
+    if (runtype .ge. 3) then
+      call do_eqstate()
+      call do_internal_pressure()
+   end if
+#endif
+
+   call ss_nn()
 
    if (z0_method .ne. 0) then
       call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
@@ -538,24 +551,27 @@
    Ncall = Ncall+1
    write(debug,*) 'integrate_3d() # ',Ncall
 #endif
+
+!  KK-TODO: coordinates should be part of start_macro
+!           (MUDFLAT should be default)
    call start_macro()
-#ifndef NO_BAROCLINIC
-#endif
+
 #ifdef MUDFLAT
    call coordinates(.false.)
 #endif
+
    call tic(TIM_INTEGR3D)
+
+!  KK-TODO: do we need this reset?
    SS = _ZERO_
-   call toc(TIM_INTEGR3D)
 #ifndef NO_BAROCLINIC
-   call tic(TIM_INTEGR3D)
    NN = _ZERO_
-   call toc(TIM_INTEGR3D)
-   if (runtype .eq. 4) call do_internal_pressure()
 #endif
-   call tic(TIM_INTEGR3D)
+
+!  KK-TODO: do we really need this?
    huo=hun
    hvo=hvn
+
    ip_fac=_ONE_
    if (ip_ramp .gt. 0) ip_fac=min( _ONE_ , n*_ONE_/ip_ramp)
    call toc(TIM_INTEGR3D)
@@ -643,6 +659,7 @@
 #ifndef PECS
       call do_eqstate()
 #endif
+      call do_internal_pressure()
    end if
 #endif
 
