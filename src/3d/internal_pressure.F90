@@ -67,7 +67,7 @@
 #else
    use domain, only: dx,dy
 #endif
-   use variables_3d, only: kmin,hn,hun,hvn,idpdx,idpdy,buoy,ssun,ssvn,ssen
+   use variables_3d, only: kmin,hn,idpdx,idpdy,buoy,ssen
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
