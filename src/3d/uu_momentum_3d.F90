@@ -262,10 +262,22 @@
                   tdv_u(i,j,k)=uu(i,j,k)
                   epg_u(i,j,k)=_HALF_*(huo(i,j,k)+hun(i,j,k))*g*zx     &
                               -hun(i,j,k)*Diff/dt
-                  vsd_u(i,j,k)=auxo(k)*(uu(i,j,k+1)/huo(i,j,k+1)       &
-                               -uu(i,j,k)/huo(i,j,k))                  &
-                              -auxo(k-1)*(uu(i,j,k)/huo(i,j,k)         &
-                               -uu(i,j,k-1)/huo(i,j,k-1))
+                  if (k .eq. kmax) then
+                     vsd_u(i,j,k)=-dt*dry_u(i,j)*_HALF_*               &
+                                   (tausx(i,j)+tausx(i+1,j))*rho_0i    &
+                                  +auxo(k-1)*(uu(i,j,k)/huo(i,j,k)     &
+                                  -uu(i,j,k-1)/huo(i,j,k-1))
+                  end if
+                  if ((k .gt. kumin(i,j)) .and. (k .lt. kmax)) then
+                     vsd_u(i,j,k)=-auxo(k)*(uu(i,j,k+1)/huo(i,j,k+1)   &
+                                  -uu(i,j,k)/huo(i,j,k))               &
+                                  +auxo(k-1)*(uu(i,j,k)/huo(i,j,k)     &
+                                  -uu(i,j,k-1)/huo(i,j,k-1))
+                  end if
+                  if (k .eq. kumin(i,j)) then
+                     vsd_u(i,j,k)=-auxo(k)*(uu(i,j,k+1)/huo(i,j,k+1)   &
+                                  -uu(i,j,k)/huo(i,j,k))
+                  end if
 #endif
 #ifndef NO_BAROTROPIC
                   uu(i,j,k)=Res(k) +hun(i,j,k)*Diff
@@ -274,11 +286,25 @@
 #endif
 #ifdef _MOMENTUM_TERMS_
                   tdv_u(i,j,k)=(uu(i,j,k)-tdv_u(i,j,k))/dt
-                  vsd_u(i,j,k)=-(vsd_u(i,j,k)                          &
-                              +auxn(k)*(uu(i,j,k+1)/hun(i,j,k+1)       &
-                               -uu(i,j,k)/hun(i,j,k))                  &
-                              -auxn(k-1)*(uu(i,j,k)/hun(i,j,k)         &
-                               -uu(i,j,k-1)/hun(i,j,k-1)))/dt
+                  if (k .eq. kmax) then
+                     vsd_u(i,j,k)=(vsd_u(i,j,k)                        &
+                                  +auxn(k-1)*(uu(i,j,k)/hun(i,j,k)     &
+                                  -uu(i,j,k-1)/hun(i,j,k-1)))/dt
+                  end if
+                  if ((k .gt. kumin(i,j)) .and. (k .lt. kmax)) then
+                     vsd_u(i,j,k)=(vsd_u(i,j,k)                        &
+                                 -auxn(k)*(uu(i,j,k+1)/hun(i,j,k+1)    &
+                                  -uu(i,j,k)/hun(i,j,k))               &
+                                 +auxn(k-1)*(uu(i,j,k)/hun(i,j,k)      &
+                                  -uu(i,j,k-1)/hun(i,j,k-1)))/dt
+                  endif
+                  if (k .eq. kumin(i,j)) then
+                     vsd_u(i,j,k)=(vsd_u(i,j,k)                        &
+                                 -auxn(k)*(uu(i,j,k+1)/hun(i,j,k+1)    &
+                                  -uu(i,j,k)/hun(i,j,k))               &
+                                 +dt*rru(i,j)*uu(i,j,k)                &
+                                  /(_HALF_*(hun(i,j,k)+huo(i,j,k))))/dt
+                  endif
 #endif
                end do
             else  ! if (kmax .eq. kumin(i,j))

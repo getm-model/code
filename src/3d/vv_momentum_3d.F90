@@ -203,7 +203,7 @@
 #endif
                end do
                ex(kmax)=ex(kmax)                                      &
-                       +dry_v(i,j)*_HALF_*(tausy(i,j)+tausy(i,j+1))/rho_0
+                       +dry_v(i,j)*_HALF_*(tausy(i,j)+tausy(i,j+1))*rho_0i
 !     Eddy viscosity
                do k=kvmin(i,j),kmax-1
                   dif(k)=_HALF_*(num(i,j,k)+num(i,j+1,k)) + avmmol
@@ -284,10 +284,22 @@
                   tdv_v(i,j,k)=vv(i,j,k)
                   epg_v(i,j,k)=_HALF_*(hvo(i,j,k)+hvn(i,j,k))*g*zy     &
                               -hvn(i,j,k)*Diff/dt
-                  vsd_v(i,j,k)=-(auxo(k)*(vv(i,j,k+1)/hvo(i,j,k+1)     &
-                               -vv(i,j,k)/hvo(i,j,k))                  &
-                              -auxo(k-1)*(vv(i,j,k)/hvo(i,j,k)         &
-                               -vv(i,j,k-1)/hvo(i,j,k-1)))
+                  if (k .eq. kmax) then
+                     vsd_v(i,j,k)=-dt*dry_v(i,j)*_HALF_*               &
+                                   (tausy(i,j)+tausy(i,j+1))*rho_0i    &
+                                  +auxo(k-1)*(vv(i,j,k)/hvo(i,j,k)     &
+                                  -vv(i,j,k-1)/hvo(i,j,k-1))
+                  end if
+                  if ((k .gt. kvmin(i,j)) .and. (k .lt. kmax)) then
+                     vsd_v(i,j,k)=-auxo(k)*(vv(i,j,k+1)/hvo(i,j,k+1)   &
+                                  -vv(i,j,k)/hvo(i,j,k))               &
+                                  +auxo(k-1)*(vv(i,j,k)/hvo(i,j,k)     &
+                                  -vv(i,j,k-1)/hvo(i,j,k-1))
+                  end if
+                  if (k .eq. kvmin(i,j)) then
+                     vsd_v(i,j,k)=-auxo(k)*(vv(i,j,k+1)/hvo(i,j,k+1)   &
+                                  -vv(i,j,k)/hvo(i,j,k))
+                  end if
 #endif
 #ifndef NO_BAROTROPIC
                   vv(i,j,k)=Res(k)+hvn(i,j,k)*Diff
@@ -296,11 +308,26 @@
 #endif
 #ifdef _MOMENTUM_TERMS_
                   tdv_v(i,j,k)=(vv(i,j,k)-tdv_v(i,j,k))/dt
-                  vsd_v(i,j,k)=(vsd_v(i,j,k)                           &
-                              +auxn(k)*(vv(i,j,k+1)/hvn(i,j,k+1)       &
-                               -vv(i,j,k)/hvn(i,j,k))                  &
-                              -auxn(k-1)*(vv(i,j,k)/hvn(i,j,k)         &
-                               -vv(i,j,k-1)/hvn(i,j,k-1)))/dt
+                  if (k .eq. kmax) then
+                     vsd_v(i,j,k)=(vsd_v(i,j,k)                        &
+                                  +auxn(k-1)*(vv(i,j,k)/hvn(i,j,k)     &
+                                  -vv(i,j,k-1)/hvn(i,j,k-1)))/dt
+                  end if
+                  if ((k .gt. kvmin(i,j)) .and. (k .lt. kmax)) then
+                     vsd_v(i,j,k)=(vsd_v(i,j,k)                        &
+                                 -auxn(k)*(vv(i,j,k+1)/hvn(i,j,k+1)    &
+                                  -vv(i,j,k)/hvn(i,j,k))               &
+                                 +auxn(k-1)*(vv(i,j,k)/hvn(i,j,k)      &
+                                  -vv(i,j,k-1)/hvn(i,j,k-1)))/dt
+                  endif
+                  if (k .eq. kvmin(i,j)) then
+                     vsd_v(i,j,k)=(vsd_v(i,j,k)                        &
+                                 -auxn(k)*(vv(i,j,k+1)/hvn(i,j,k+1)    &
+                                  -vv(i,j,k)/hvn(i,j,k))               &
+                                 +dt*rrv(i,j)*vv(i,j,k)                &
+                                  /(_HALF_*(hvn(i,j,k)+hvo(i,j,k))))/dt
+                  endif
+
 #endif
                end do
             else ! (kmax .eq. kvmin(i,j))

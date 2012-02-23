@@ -270,6 +270,7 @@
 #endif
 #ifdef _MOMENTUM_TERMS_
    use variables_3d, only: adv_u,adv_v
+   use domain, only: dry_u,dry_v
 #endif
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
@@ -468,7 +469,7 @@
          do i=imin-HALO,imax+HALO
             uuEx(i,j,k)=dti*(uu(i,j,k)-uuEx(i,j,k)*hun(i,j,k))
 #ifdef _MOMENTUM_TERMS_
-            adv_u(i,j,k)=uuEx(i,j,k)
+            adv_u(i,j,k)=dry_u(i,j)*uuEx(i,j,k)
 #endif
          end do
       end do
@@ -581,7 +582,7 @@
          do i=imin-HALO,imax+HALO
             vvEx(i,j,k)=dti*(vv(i,j,k)-vvEx(i,j,k)*hvn(i,j,k))
 #ifdef _MOMENTUM_TERMS_
-            adv_v(i,j,k)=vvEx(i,j,k)
+            adv_v(i,j,k)=dry_v(i,j)*vvEx(i,j,k)
 #endif
          end do
       end do
