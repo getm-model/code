@@ -400,7 +400,6 @@ temp_field_no=1
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
       call numerical_mixing(T2,T,nummix3d_T,nummix2d_T)
-      call physical_mixing(T,temp_AH,avmolt,phymix3d_T,phymix2d_T)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
    end if
@@ -412,7 +411,16 @@ temp_field_no=1
       call wait_halo(D_TAG)
       call toc(TIM_TEMPH)
 
-      call tracer_diffusion(T,temp_AH_method,temp_AH_const,temp_AH_Prt,temp_AH_stirr_const)
+      call tracer_diffusion(T,temp_AH_method,temp_AH_const,temp_AH_Prt,temp_AH_stirr_const, &
+                            phymix3d_T)
+   end if
+
+   if (do_numerical_analyses) then
+      call toc(TIM_TEMP)
+      call tic(TIM_MIXANALYSIS)
+      call physical_mixing(T,avmolt,phymix3d_T,phymix2d_T)
+      call toc(TIM_MIXANALYSIS)
+      call tic(TIM_TEMP)
    end if
 
 ! OMP-NOTE: Pointer definitions and allocation so that each thread can

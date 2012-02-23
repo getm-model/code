@@ -398,6 +398,17 @@
 
    LEVEL1 'postinit_3d'
 
+   if (do_numerical_analyses) then
+      numdis3d   = _ZERO_ ; numdis2d   = _ZERO_
+#ifndef NO_BAROCLINIC
+      phymix3d_S = _ZERO_ ; phymix2d_S = _ZERO_
+      phymix3d_T = _ZERO_ ; phymix2d_T = _ZERO_
+      nummix3d_S = _ZERO_ ; nummix2d_S = _ZERO_
+      nummix3d_T = _ZERO_ ; nummix2d_T = _ZERO_
+#endif
+   end if
+
+
 ! Hotstart fix - see postinit_2d
    if (hotstart) then
       do j=jmin-HALO,jmax+HALO

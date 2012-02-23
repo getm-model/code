@@ -425,7 +425,6 @@ salt_field_no=1
       call toc(TIM_SALT)
       call tic(TIM_MIXANALYSIS)
       call numerical_mixing(S2,S,nummix3d_S,nummix2d_S)
-      call physical_mixing(S,salt_AH,avmols,phymix3d_S,phymix2d_S)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_SALT)
    end if
@@ -437,7 +436,16 @@ salt_field_no=1
       call wait_halo(D_TAG)
       call toc(TIM_SALTH)
 
-      call tracer_diffusion(S,salt_AH_method,salt_AH_const,salt_AH_Prt,salt_AH_stirr_const)
+      call tracer_diffusion(S,salt_AH_method,salt_AH_const,salt_AH_Prt,salt_AH_stirr_const, &
+                            phymix3d_S)
+   end if
+
+   if (do_numerical_analyses) then
+      call toc(TIM_SALT)
+      call tic(TIM_MIXANALYSIS)
+      call physical_mixing(S,avmols,phymix3d_S,phymix2d_S)
+      call toc(TIM_MIXANALYSIS)
+      call tic(TIM_SALT)
    end if
 
 #ifdef PECS_TEST
