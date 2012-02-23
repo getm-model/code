@@ -67,6 +67,9 @@
    use variables_3d, only: dt,cnpar,kvmin,uu,vv,huo,hvo,hvn,vvEx,ww,hun
    use variables_3d, only: num,nuh,sseo,ssvn,rrv
    use variables_3d, only: ssvo
+#ifdef _MOMENTUM_TERMS_
+   use variables_3d, only: tdv_v,cor_v,ipg_v,epg_v,vsd_v,hsd_v
+#endif
 #ifdef XZ_PLUME_TEST
    use variables_3d, only: buoy
 #endif
@@ -194,6 +197,9 @@
 #else
                   ex(k)=-corv(i,j)*Uloc
 #endif
+#ifdef _MOMENTUM_TERMS_
+                  cor_v(i,j,k)=-dry_v(i,j)*ex(k)
+#endif
 #ifdef NO_BAROCLINIC
                   ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k))
 #else
@@ -202,10 +208,13 @@
 #else
                   ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+ip_fac*idpdy(i,j,k))
 #endif
+#ifdef _MOMENTUM_TERMS_
+                  ipg_v(i,j,k)=-dry_v(i,j)*ip_fac*idpdy(i,j,k)
+#endif
 #endif
                end do
                ex(kmax)=ex(kmax)                                      &
-                       +dry_v(i,j)*_HALF_*(tausy(i,j)+tausy(i,j+1))/rho_0
+                       +dry_v(i,j)*_HALF_*(tausy(i,j)+tausy(i,j+1))*rho_0i
 !     Eddy viscosity
                do k=kvmin(i,j),kmax-1
                   dif(k)=_HALF_*(num(i,j,k)+num(i,j+1,k)) + avmmol
@@ -279,6 +288,31 @@
                Diff=(Vint(i,j)-ResInt)/(ssvo(i,j)+HV(i,j))
 #endif
 
+#ifdef _MOMENTUM_TERMS_
+               do k=kvmin(i,j),kmax
+                  tdv_v(i,j,k)=vv(i,j,k)
+                  epg_v(i,j,k)=_HALF_*(hvo(i,j,k)+hvn(i,j,k))*g*zy     &
+                              -hvn(i,j,k)*Diff/dt
+                  hsd_v(i,j,k)=hsd_v(i,j,k)*dry_v(i,j)
+                  if (k .eq. kmax) then
+                     vsd_v(i,j,k)=-dt*dry_v(i,j)*_HALF_*               &
+                                   (tausy(i,j)+tausy(i,j+1))*rho_0i    &
+                                  +auxo(k-1)*(vv(i,j,k)/hvo(i,j,k)     &
+                                  -vv(i,j,k-1)/hvo(i,j,k-1))
+                  end if
+                  if ((k .gt. kvmin(i,j)) .and. (k .lt. kmax)) then
+                     vsd_v(i,j,k)=-auxo(k)*(vv(i,j,k+1)/hvo(i,j,k+1)   &
+                                  -vv(i,j,k)/hvo(i,j,k))               &
+                                  +auxo(k-1)*(vv(i,j,k)/hvo(i,j,k)     &
+                                  -vv(i,j,k-1)/hvo(i,j,k-1))
+                  end if
+                  if (k .eq. kvmin(i,j)) then
+                     vsd_v(i,j,k)=-auxo(k)*(vv(i,j,k+1)/hvo(i,j,k+1)   &
+                                  -vv(i,j,k)/hvo(i,j,k))
+                  end if
+               end do
+#endif
+
                if (no_shift) then
                   do k=kvmin(i,j),kmax
                      vv(i,j,k)=Res(k)
@@ -288,6 +322,31 @@
                      vv(i,j,k)=Res(k)+hvn(i,j,k)*Diff
                   end do
                end if
+
+#ifdef _MOMENTUM_TERMS_
+               do k=kvmin(i,j),kmax
+                  tdv_v(i,j,k)=(vv(i,j,k)-tdv_v(i,j,k))/dt
+                  if (k .eq. kmax) then
+                     vsd_v(i,j,k)=(vsd_v(i,j,k)                        &
+                                  +auxn(k-1)*(vv(i,j,k)/hvn(i,j,k)     &
+                                  -vv(i,j,k-1)/hvn(i,j,k-1)))/dt
+                  end if
+                  if ((k .gt. kvmin(i,j)) .and. (k .lt. kmax)) then
+                     vsd_v(i,j,k)=(vsd_v(i,j,k)                        &
+                                 -auxn(k)*(vv(i,j,k+1)/hvn(i,j,k+1)    &
+                                  -vv(i,j,k)/hvn(i,j,k))               &
+                                 +auxn(k-1)*(vv(i,j,k)/hvn(i,j,k)      &
+                                  -vv(i,j,k-1)/hvn(i,j,k-1)))/dt
+                  endif
+                  if (k .eq. kvmin(i,j)) then
+                     vsd_v(i,j,k)=(vsd_v(i,j,k)                        &
+                                 -auxn(k)*(vv(i,j,k+1)/hvn(i,j,k+1)    &
+                                  -vv(i,j,k)/hvn(i,j,k))               &
+                                 +dt*rrv(i,j)*vv(i,j,k)                &
+                                  /(_HALF_*(hvn(i,j,k)+hvo(i,j,k))))/dt
+                  endif
+               end do
+#endif
 
             else ! (kmax .eq. kvmin(i,j))
                vv(i,j,kmax)=Vint(i,j)
