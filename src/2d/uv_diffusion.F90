@@ -5,7 +5,7 @@
 ! !ROUTINE: uv_diffusion - 2D diffusion of momentum \label{sec-uv-diffusion}
 !
 ! !INTERFACE:
-   subroutine uv_diffusion(An_method,UEx,VEx,U,V,D,DU,DV)
+   subroutine uv_diffusion(An_method,UEx,VEx,U,V,D,DU,DV,hsd_u,hsd_v)
 
 !  Note (KK): keep in sync with interface in m2d_general.F90
 !
@@ -170,11 +170,14 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer,intent(in)                               :: An_method
-   REALTYPE,dimension(E2DFIELD),intent(in),optional :: U,V,D,DU,DV
+   integer,intent(in)                                :: An_method
+   REALTYPE,dimension(E2DFIELD),intent(in),optional  :: U,V,D,DU,DV
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(inout)       :: UEx,VEx
+   REALTYPE,dimension(E2DFIELD),intent(inout)        :: UEx,VEx
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE,dimension(E2DFIELD),intent(out),optional :: hsd_u,hsd_v
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard
@@ -194,8 +197,18 @@
    CALL tic(TIM_UVDIFF)
 
    use_Am = (Am .gt. _ZERO_)
+
+#ifdef _MOMENTUM_TERMS_
+   if (present(hsd_u)) then
+      hsd_u = UEx
+   end if
+   if (present(hsd_v)) then
+      hsd_v = VEx
+   end if
+#endif
+
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP    PRIVATE(i,j)
+!$OMP          PRIVATE(i,j)
 
 !  Central for dx(2*Am*dx(U/DU))
 !$OMP DO SCHEDULE(RUNTIME)
@@ -324,6 +337,15 @@
 #endif
 
 !$OMP END PARALLEL
+
+#ifdef _MOMENTUM_TERMS_
+   if (present(hsd_u)) then
+      hsd_u = UEx - hsd_u
+   end if
+   if (present(hsd_v)) then
+      hsd_v = VEx - hsd_v
+   end if
+#endif
 
    CALL toc(TIM_UVDIFF)
 #ifdef DEBUG
