@@ -6,14 +6,15 @@
 ! \label{sec-tracer-diffusion}
 !
 ! !INTERFACE:
-   subroutine tracer_diffusion(f,AH_method,AH_const,AH_Prt,AH_stirr_const)
+   subroutine tracer_diffusion(f,AH_method,AH_const,AH_Prt,AH_stirr_const, &
+                               phymix)
 !
 ! !DESCRIPTION:
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,ax
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxu,dyu,dxv,dyv,arcd1
+   use domain, only: dxu,dyu,dxv,dyv,arcd1,arud1,arvd1
 #else
    use domain, only: dx,dy,ard1
 #endif
@@ -21,16 +22,20 @@
    use variables_3d, only: diffxx,diffxy,diffyx,diffyy
    use variables_les, only: AmU_3d,AmV_3d
    use variables_2d, only: PP
+   use variables_3d, only: do_numerical_analyses
    use getm_timers, only: tic,toc,TIM_TRACEDIFF
 
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer,intent(in)  :: AH_method
-   REALTYPE,intent(in) :: AH_const,AH_Prt,AH_stirr_const
+   integer,intent(in)            :: AH_method
+   REALTYPE,intent(in)           :: AH_const,AH_Prt,AH_stirr_const
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,intent(inout) :: f(I3DFIELD)
+   REALTYPE,intent(inout)        :: f(I3DFIELD)
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE,intent(out),optional :: phymix(I3DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Knut Klingbeil
@@ -41,7 +46,9 @@
 #ifndef SLICE_MODEL
    REALTYPE,dimension(:,:),allocatable,save :: dfdyV,dfdxV,dfdyU
 #endif
+   REALTYPE,dimension(:,:),allocatable,save :: phymixU,phymixV
    logical,save                             :: first=.true.
+   logical                                  :: calc_phymix
    integer                                  :: rc
    integer                                  :: i,j,k
 !EOP
@@ -76,8 +83,20 @@
       dfdyU=_ZERO_
 #endif
 
+      if (do_numerical_analyses) then
+         allocate(phymixU(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'tracer_diffusion: Error allocating memory (phymixU)'
+         phymixU=_ZERO_
+
+         allocate(phymixV(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'tracer_diffusion: Error allocating memory (phymixV)'
+         phymixV=_ZERO_
+      end if
+
       first=.false.
    end if
+
+   calc_phymix = (do_numerical_analyses .and. present(phymix))
 
 !  Note (KK): diffusion only within new layer heigts
 
@@ -168,10 +187,24 @@
             if(au(i,j).eq.1 .or. au(i,j).eq.2) then
                select case (AH_method)
                   case(1)
+                     if (calc_phymix) then
+                        phymixU(i,j) = _TWO_*AH_const &
+                                       *(dfdxU(i,j)/DXU)**2
+                     end if
                      dfdxU(i,j) = AH_const * dfdxU(i,j)
                   case(2)
+                     if (calc_phymix) then
+                        phymixU(i,j) = _TWO_*AmU_3d(i,j,k)/AH_Prt &
+                                       *(dfdxU(i,j)/DXU)**2
+                     end if
                      dfdxU(i,j) = AmU_3d(i,j,k) / AH_Prt * dfdxU(i,j)
                   case(3)
+#ifndef SLICE_MODEL
+                     if (calc_phymix) then
+                        phymixU(i,j) = _TWO_*AH_stirr_const*(diffxx(i,j,k)+diffxy(i,j,k)) &
+                                       *dfdxU(i,j)*dfdyU(i,j)*ARUD1
+                     end if
+#endif
                      dfdxU(i,j) = AH_stirr_const &
                                   * (                           &
                                        diffxx(i,j,k)*dfdxU(i,j) &
@@ -197,10 +230,24 @@
             if(av(i,j).eq.1 .or. av(i,j).eq.2) then
                select case (AH_method)
                   case(1)
+                     if (calc_phymix) then
+                        phymixV(i,j) = _TWO_*AH_const &
+                                       *(dfdyV(i,j)/DYV)**2
+                     end if
                      dfdyV(i,j) = AH_const * dfdyV(i,j)
                   case(2)
+                     if (calc_phymix) then
+                        phymixV(i,j) = _TWO_*AmV_3d(i,j,k)/AH_Prt &
+                                       *(dfdyV(i,j)/DYV)**2
+                     end if
                      dfdyV(i,j) = AmV_3d(i,j,k) / AH_Prt * dfdyV(i,j)
                   case(3)
+#ifndef SLICE_MODEL
+                     if (calc_phymix) then
+                        phymixV(i,j) = _TWO_*AH_stirr_const*(diffyy(i,j,k)+diffyx(i,j,k)) &
+                                       *dfdxV(i,j)*dfdyV(i,j)*ARVD1
+                     end if
+#endif
                      dfdyV(i,j) = AH_stirr_const                &
                                   * (                           &
                                        diffyy(i,j,k)*dfdyV(i,j) &
@@ -220,6 +267,10 @@
 !           Note (KK): tracers at az=2 will be set by external boundary data
 !                      therefore dfdx(au=3) and dfdy(av=3) not needed
             if (az(i,j) .eq. 1) then
+               if (calc_phymix) then
+                  phymix(i,j,k) = _HALF_*(  phymixU(i-1,j  ) + phymixU(i,j) &
+                                          + phymixV(i  ,j-1) + phymixV(i,j) )
+               end if
                f(i,j,k) =  f(i,j,k)                            &
                          + dt * (                              &
                                    dfdxU(i,j) - dfdxU(i-1,j  ) &
@@ -233,7 +284,10 @@
 #ifndef SLICE_MODEL
       end do
 #else
-      f(imin:imax,j+1,k)=f(imin:imax,j,k)
+      if (calc_phymix) then
+         phymix(imin:imax,j+1,k) = phymix(imin:imax,j,k)
+      end if
+      f(imin:imax,j+1,k) = f(imin:imax,j,k)
 #endif
 
    end do
