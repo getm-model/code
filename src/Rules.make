@@ -24,7 +24,6 @@ endif
 # The file ../compilers/compiler.$(FORTRAN_COMPILER) must exist
 
 DEFINES=-D$(FORTRAN_COMPILER)
-DEFINES+=-D_MOMENTUM_TERMS_
 include $(GETMDIR)/compilers/compiler.$(FORTRAN_COMPILER)
 
 # The compilation mode is obtained from $COMPILATION_MODE
@@ -83,6 +82,7 @@ endif
 #DEFINES += -DSUBSTR_INI_PRESS
 #DEFINES += -DSONG_WRIGHT
 #DEFINES += -DUV_TVD
+#DEFINES += -D_MOMENTUM_TERMS_
 
 # Further directory related settings.
 ifndef BINDIR
