@@ -27,11 +27,15 @@
    use variables_2d, only: U,V,DU,DV
    use variables_3d, only: dt,kmin,ho,hn,uu,hun,vv,hvn,ww,hcc,SS
    use variables_3d, only: taubx,tauby
+#ifdef _MOMENTUM_TERMS_
+   use variables_3d, only: tdv_u,adv_u,vsd_u,hsd_u,cor_u,epg_u,ipg_u
+   use variables_3d, only: tdv_v,adv_v,vsd_v,hsd_v,cor_v,epg_v,ipg_v
+#endif
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho,rad,NN
    use variables_3d, only: nummix3d_S,nummix3d_T,phymix3d_S,phymix3d_T
-   use variables_3d, only: numdis3d
 #endif
+   use variables_3d, only: numdis3d
    use variables_3d, only: tke,num,nuh,eps
 #ifdef SPM
    use variables_3d, only: spm_pool,spm
@@ -208,6 +212,50 @@
       err = nf90_put_var(ncid,w_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 
+#ifdef _MOMENTUM_TERMS_
+      err = nf90_put_var(ncid,tdv_u_id,tdv_u(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,adv_u_id,adv_u(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,vsd_u_id,vsd_u(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,hsd_u_id,hsd_u(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,cor_u_id,cor_u(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,epg_u_id,epg_u(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,ipg_u_id,ipg_u(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,tdv_v_id,tdv_v(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,adv_v_id,adv_v(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,vsd_v_id,vsd_v(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,hsd_v_id,hsd_v(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,cor_v_id,cor_v(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,epg_v_id,epg_v(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,ipg_v_id,ipg_v(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+#endif
+
 #if defined(CURVILINEAR)
 ! rotated zonal and meridional velocities
       do j=jmin,jmax
@@ -313,13 +361,13 @@
 
    end if ! save_ss_nn
 
-#ifndef NO_BAROCLINIC
    if (save_numerical_analyses) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,numdis3d,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
       err = nf90_put_var(ncid,nm3d_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 
+#ifndef NO_BAROCLINIC
       if (calc_salt) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix3d_S,nummix_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
@@ -343,8 +391,8 @@
          err = nf90_put_var(ncid,pm3dT_id,ws(_3D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
-   end if ! save_numerical_analyses
 #endif
+   end if ! save_numerical_analyses
 
 #ifdef SPM
    if (spm_save) then
