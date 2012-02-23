@@ -24,6 +24,7 @@ endif
 # The file ../compilers/compiler.$(FORTRAN_COMPILER) must exist
 
 DEFINES=-D$(FORTRAN_COMPILER)
+DEFINES+=-D_MOMENTUM_TERMS_
 include $(GETMDIR)/compilers/compiler.$(FORTRAN_COMPILER)
 
 # The compilation mode is obtained from $COMPILATION_MODE
