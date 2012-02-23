@@ -62,7 +62,7 @@
    use variables_3d, only: num,nuh,sseo,ssun,rru
    use variables_3d, only: ssuo
 #ifdef _MOMENTUM_TERMS_
-   use variables_3d, only: tdv_u,cor_u,ipg_u,epg_u,vsd_u
+   use variables_3d, only: tdv_u,cor_u,ipg_u,epg_u,vsd_u,hsd_u
 #endif
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
@@ -259,6 +259,7 @@
                   tdv_u(i,j,k)=uu(i,j,k)
                   epg_u(i,j,k)=_HALF_*(huo(i,j,k)+hun(i,j,k))*g*zx     &
                               -hun(i,j,k)*Diff/dt
+                  hsd_u(i,j,k)=hsd_u(i,j,k)*dry_u(i,j)
                   if (k .eq. kmax) then
                      vsd_u(i,j,k)=-dt*dry_u(i,j)*_HALF_*               &
                                    (tausx(i,j)+tausx(i+1,j))*rho_0i    &
