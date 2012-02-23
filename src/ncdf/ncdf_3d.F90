@@ -24,6 +24,23 @@
    integer                             :: elev_id,u_id,v_id
    integer                             :: taubx_id,tauby_id
    integer                             :: uu_id,vv_id,w_id
+#ifdef _MOMENTUM_TERMS_
+   integer                             :: tdv_u_id
+   integer                             :: adv_u_id
+   integer                             :: vsd_u_id
+   integer                             :: hsd_u_id
+   integer                             :: cor_u_id
+   integer                             :: epg_u_id
+   integer                             :: ipg_u_id
+
+   integer                             :: tdv_v_id
+   integer                             :: adv_v_id
+   integer                             :: vsd_v_id
+   integer                             :: hsd_v_id
+   integer                             :: cor_v_id
+   integer                             :: epg_v_id
+   integer                             :: ipg_v_id
+#endif
 #if defined(CURVILINEAR)
    integer                             :: uurot_id,vvrot_id
 #endif
