@@ -304,9 +304,7 @@
    REALTYPE                  :: dti,dxdyi
    REALTYPE                  :: vel2(I3DFIELD)
    REALTYPE                  :: vel2o(I3DFIELD)
-   REALTYPE                  :: vel(I3DFIELD)
    REALTYPE                  :: numdiss(I3DFIELD)
-   REALTYPE                  :: momtoto=0.,momtot=0.
 #endif
 !EOP
 !-----------------------------------------------------------------------
@@ -337,7 +335,6 @@
      do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO-1
             uadv(i,j,k)=_HALF_*(uu(i+1,j,k)+uu(i,j,k))
-            if ((au(i+1,j).eq.0).or.(au(i,j).eq.0)) uadv(i,j,k)=_ZERO_
             vadv(i,j,k)=_HALF_*(vv(i+1,j,k)+vv(i,j,k))
             wadv(i,j,k)=_HALF_*(ww(i+1,j,k)+ww(i,j,k))
             huadv(i,j,k)=_HALF_*(hun(i+1,j,k)+hun(i,j,k))
@@ -354,7 +351,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
-            uuEx(i,j,k)=uu(i,j,k)/hoadv(i,j,k)
+            uuEx(i,j,k)=uu(i,j,k)/huo(i,j,k)
          end do
       end do
 !$OMP END DO NOWAIT
@@ -382,13 +379,6 @@
          dyvadv(i,j)=dy
          area_inv(i,j)=dxdyi
 #endif
-            do k=1,kmax
-               hnadv(i,j,k)=hoadv(i,j,k)-dt*((uadv(i,j,k)*dyuadv(i,j)  &
-                                             -uadv(i-1,j,k)*dyuadv(i-1,j))  &
-                                        +(vadv(i,j,k)*dxvadv(i,j)   &
-                               -vadv(i,j-1,k)*dxvadv(i,j-1)))*area_inv(i,j)  &
-                                        -dt*(wadv(i,j,k)-wadv(i,j,k-1))
-           end do
       end do
    end do
 
@@ -397,29 +387,16 @@
    call wait_halo(U_TAG)
    call toc(TIM_UVADV3DH)
 
-   vel=_ONE_
    if (do_numerical_analyses) then
       do k=1,kmax ! calculate square of u-velocity before advection step 
          do j=jmin,jmax
             do i=imin,imax
                vel2(i,j,k)=uuEx(i,j,k)**2 
-               if (au(i,j).eq.0) vel(i,j,k)=0.
-!               momtoto=momtoto+uuEx(i,j,k)*hoadv(i,j,k)
-               momtoto=momtoto+vel(i,j,k)*hoadv(i,j,k)
             end do
          end do
       end do
       vel2o=vel2
    end if   
-
-   call do_advection_3d(dt,vel,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
-                        dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
-                        azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
-
-   i=50
-   j=15
-   k=30
-   write(101,*) uuEx(i,j,k),'old'
 
    call do_advection_3d(dt,uuEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
@@ -430,20 +407,13 @@
                            dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
                            azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
 
-   i=50
-   j=15
-   k=30
-   write(101,*) uuEx(i,j,k),'new'
       do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
          do j=jmin,jmax
             do i=imin,imax
                numdiss(i,j,k)=(vel2(i,j,k)-uuEx(i,j,k)**2)/dt
-!               momtot= momtot + uuEx(i,j,k)*hnadv(i,j,k)
-               momtot= momtot + vel(i,j,k)*hnadv(i,j,k)
             end do
          end do
       end do
-      write(100,*) momtot-momtoto,momtot
 
       numdis2d=_ZERO_
       do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
