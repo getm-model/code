@@ -6,7 +6,7 @@
 !
 ! !INTERFACE:
    subroutine uv_diffusion(An_method,UEx,VEx,U,V,D,DU,DV, &
-                           dudxC,dvdyC,shearX,AmC,AmX)
+                           dudxC,dvdyC,shearX,AmC,AmX,hsd_u,hsd_v)
 
 !  Note (KK): keep in sync with interface in m2d_general.F90
 !
@@ -171,13 +171,16 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer,intent(in)                               :: An_method
-   REALTYPE,dimension(E2DFIELD),intent(in),optional :: U,V,D,DU,DV
-   REALTYPE,dimension(E2DFIELD),intent(in),optional :: dudxC,dvdyC,shearX
-   REALTYPE,dimension(E2DFIELD),intent(in),optional :: AmC,AmX
+   integer,intent(in)                                :: An_method
+   REALTYPE,dimension(E2DFIELD),intent(in),optional  :: U,V,D,DU,DV
+   REALTYPE,dimension(E2DFIELD),intent(in),optional  :: dudxC,dvdyC,shearX
+   REALTYPE,dimension(E2DFIELD),intent(in),optional  :: AmC,AmX
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(inout)       :: UEx,VEx
+   REALTYPE,dimension(E2DFIELD),intent(inout)        :: UEx,VEx
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE,dimension(E2DFIELD),intent(out),optional :: hsd_u,hsd_v
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard
@@ -200,9 +203,18 @@
 
    CALL tic(TIM_UVDIFF)
 
+#ifdef _MOMENTUM_TERMS_
+   if (present(hsd_u)) then
+      hsd_u = UEx
+   end if
+   if (present(hsd_v)) then
+      hsd_v = VEx
+   end if
+#endif
+
 #ifndef SLICE_MODEL
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP    PRIVATE(i,j)
+!$OMP          PRIVATE(i,j)
 #endif
 
 !  Note (KK): see Kantha and Clayson 2000, page 591 for approximation
@@ -442,6 +454,15 @@
 
 #ifndef SLICE_MODEL
 !$OMP END PARALLEL
+#endif
+
+#ifdef _MOMENTUM_TERMS_
+   if (present(hsd_u)) then
+      hsd_u = UEx - hsd_u
+   end if
+   if (present(hsd_v)) then
+      hsd_v = VEx - hsd_v
+   end if
 #endif
 
    CALL toc(TIM_UVDIFF)
