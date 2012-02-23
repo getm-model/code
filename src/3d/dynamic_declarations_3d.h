@@ -49,9 +49,9 @@
   REALTYPE, dimension(:,:,:), allocatable   :: phymix3d_S,phymix3d_T
   REALTYPE, dimension(:,:), allocatable     :: nummix2d_S,nummix2d_T
   REALTYPE, dimension(:,:), allocatable     :: phymix2d_S,phymix2d_T
+#endif
   REALTYPE, dimension(:,:,:), allocatable   :: numdis3d
   REALTYPE, dimension(:,:), allocatable     :: numdis2d
-#endif
 
 ! suspended matter
 #ifndef NO_SUSP_MATTER

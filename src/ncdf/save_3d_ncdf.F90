@@ -34,8 +34,8 @@
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho,rad,NN
    use variables_3d, only: nummix3d_S,nummix3d_T,phymix3d_S,phymix3d_T
-   use variables_3d, only: numdis3d
 #endif
+   use variables_3d, only: numdis3d
    use variables_3d, only: tke,num,nuh,eps
 #ifdef SPM
    use variables_3d, only: spm_pool,spm
@@ -361,13 +361,13 @@
 
    end if ! save_ss_nn
 
-#ifndef NO_BAROCLINIC
    if (save_numerical_analyses) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,numdis3d,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
       err = nf90_put_var(ncid,nm3d_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 
+#ifndef NO_BAROCLINIC
       if (calc_salt) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix3d_S,nummix_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
@@ -391,8 +391,8 @@
          err = nf90_put_var(ncid,pm3dT_id,ws(_3D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
-   end if ! save_numerical_analyses
 #endif
+   end if ! save_numerical_analyses
 
 #ifdef SPM
    if (spm_save) then
