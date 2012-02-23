@@ -61,6 +61,9 @@
    use variables_3d, only: dt,cnpar,kumin,uu,vv,huo,hun,hvo,uuEx,ww,hvn
    use variables_3d, only: num,nuh,sseo,ssun,rru
    use variables_3d, only: ssuo
+#ifdef _MOMENTUM_TERMS_
+   use variables_3d, only: tdv_u,cor_u,ipg_u,epg_u,vsd_u,hsd_u
+#endif
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
 #endif
@@ -165,10 +168,16 @@
 #else
                   ex(k)=coru(i,j)*Vloc
 #endif
+#ifdef _MOMENTUM_TERMS_
+                  cor_u(i,j,k)=-dry_u(i,j)*ex(k)
+#endif
 #ifdef NO_BAROCLINIC
                   ex(k)=dry_u(i,j)*(ex(k)-uuEx(i,j,k))
 #else
                   ex(k)=dry_u(i,j)*(ex(k)-uuEx(i,j,k)+ip_fac*idpdx(i,j,k))
+#ifdef _MOMENTUM_TERMS_
+                  ipg_u(i,j,k)=-dry_u(i,j)*ip_fac*idpdx(i,j,k)
+#endif
 #endif
                end do
                ex(kmax)=ex(kmax)                                         &
@@ -245,10 +254,54 @@
 #endif
 
                do k=kumin(i,j),kmax
+#ifdef _MOMENTUM_TERMS_
+                  tdv_u(i,j,k)=uu(i,j,k)
+                  epg_u(i,j,k)=_HALF_*(huo(i,j,k)+hun(i,j,k))*g*zx     &
+                              -hun(i,j,k)*Diff/dt
+                  hsd_u(i,j,k)=hsd_u(i,j,k)*dry_u(i,j)
+                  if (k .eq. kmax) then
+                     vsd_u(i,j,k)=-dt*dry_u(i,j)*_HALF_*               &
+                                   (tausx(i,j)+tausx(i+1,j))*rho_0i    &
+                                  +auxo(k-1)*(uu(i,j,k)/huo(i,j,k)     &
+                                  -uu(i,j,k-1)/huo(i,j,k-1))
+                  end if
+                  if ((k .gt. kumin(i,j)) .and. (k .lt. kmax)) then
+                     vsd_u(i,j,k)=-auxo(k)*(uu(i,j,k+1)/huo(i,j,k+1)   &
+                                  -uu(i,j,k)/huo(i,j,k))               &
+                                  +auxo(k-1)*(uu(i,j,k)/huo(i,j,k)     &
+                                  -uu(i,j,k-1)/huo(i,j,k-1))
+                  end if
+                  if (k .eq. kumin(i,j)) then
+                     vsd_u(i,j,k)=-auxo(k)*(uu(i,j,k+1)/huo(i,j,k+1)   &
+                                  -uu(i,j,k)/huo(i,j,k))
+                  end if
+#endif
 #ifndef NO_BAROTROPIC
                   uu(i,j,k)=Res(k) +hun(i,j,k)*Diff
 #else
                   uu(i,j,k)=Res(k)
+#endif
+#ifdef _MOMENTUM_TERMS_
+                  tdv_u(i,j,k)=(uu(i,j,k)-tdv_u(i,j,k))/dt
+                  if (k .eq. kmax) then
+                     vsd_u(i,j,k)=(vsd_u(i,j,k)                        &
+                                  +auxn(k-1)*(uu(i,j,k)/hun(i,j,k)     &
+                                  -uu(i,j,k-1)/hun(i,j,k-1)))/dt
+                  end if
+                  if ((k .gt. kumin(i,j)) .and. (k .lt. kmax)) then
+                     vsd_u(i,j,k)=(vsd_u(i,j,k)                        &
+                                 -auxn(k)*(uu(i,j,k+1)/hun(i,j,k+1)    &
+                                  -uu(i,j,k)/hun(i,j,k))               &
+                                 +auxn(k-1)*(uu(i,j,k)/hun(i,j,k)      &
+                                  -uu(i,j,k-1)/hun(i,j,k-1)))/dt
+                  endif
+                  if (k .eq. kumin(i,j)) then
+                     vsd_u(i,j,k)=(vsd_u(i,j,k)                        &
+                                 -auxn(k)*(uu(i,j,k+1)/hun(i,j,k+1)    &
+                                  -uu(i,j,k)/hun(i,j,k))               &
+                                 +dt*rru(i,j)*uu(i,j,k)                &
+                                  /(_HALF_*(hun(i,j,k)+huo(i,j,k))))/dt
+                  endif
 #endif
                end do
             else  ! if (kmax .eq. kumin(i,j))
@@ -256,7 +309,7 @@
             end if
          end if
       end do
-end do
+   end do
 !$OMP END DO
 
 #ifdef SLICE_MODEL
