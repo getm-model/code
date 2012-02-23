@@ -272,6 +272,10 @@
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
    use variables_3d, only: do_numerical_analyses
    use variables_3d, only: numdis3d,numdis2d
+#ifdef _MOMENTUM_TERMS_
+   use domain, only: dry_u,dry_v
+   use variables_3d, only: adv_u,adv_v
+#endif
    use getm_timers, only: tic,toc,TIM_UVADV3D,TIM_UVADV3DH
 !$ use omp_lib
    IMPLICIT NONE
@@ -402,6 +406,21 @@
    call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv, &
                         vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,U_TAG,  &
                         advres=uuEx)
+
+#ifdef _MOMENTUM_TERMS_
+!$OMP END MASTER
+!$OMP BARRIER
+   do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin,jmax
+         do i=imin,imax
+            adv_u(i,j,k) = dry_u(i,j) * uuEx(i,j,k)
+         end do
+      end do
+!$OMP END DO NOWAIT
+   end do
+!$OMP MASTER
+#endif
 
    if (do_numerical_analyses) then
       call do_advection_3d(dt,vel2,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,  &
@@ -546,6 +565,21 @@
                         vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,V_TAG,  &
                         advres=vvEx)
 
+#ifdef _MOMENTUM_TERMS_
+!$OMP END MASTER
+!$OMP BARRIER
+   do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin,jmax
+         do i=imin,imax
+            adv_v(i,j,k) = dry_v(i,j) * vvEx(i,j,k)
+         end do
+      end do
+!$OMP END DO NOWAIT
+   end do
+!$OMP MASTER
+#endif
+
    if (do_numerical_analyses) then
       call do_advection_3d(dt,vel2,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,  &
                            vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,V_TAG, &
@@ -571,7 +605,11 @@
          end do
 !$OMP END DO
       end do
+!$OMP BARRIER
+!$OMP MASTER
    end if
+
+!$OMP END MASTER
 
 !$OMP END PARALLEL
 
