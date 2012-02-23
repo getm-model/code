@@ -11,6 +11,17 @@
 
   REALTYPE, dimension(:,:,:), allocatable   :: uu,vv
   REALTYPE, dimension(:,:,:), allocatable, target :: ww
+
+#ifdef _MOMENTUM_TERMS_
+  REALTYPE, dimension(:,:,:), allocatable, target :: tdv_u,adv_u,vsd_u
+  REALTYPE, dimension(:,:,:), allocatable, target :: hsd_u,cor_u,epg_u
+  REALTYPE, dimension(:,:,:), allocatable, target :: ipg_u
+
+  REALTYPE, dimension(:,:,:), allocatable, target :: tdv_v,adv_v,vsd_v
+  REALTYPE, dimension(:,:,:), allocatable, target :: hsd_v,cor_v,epg_v
+  REALTYPE, dimension(:,:,:), allocatable, target :: ipg_v
+#endif
+
 #ifdef STRUCTURE_FRICTION
   REALTYPE, dimension(:,:,:), allocatable   :: sf
 #endif
@@ -38,9 +49,9 @@
   REALTYPE, dimension(:,:,:), allocatable   :: phymix3d_S,phymix3d_T
   REALTYPE, dimension(:,:), allocatable     :: nummix2d_S,nummix2d_T
   REALTYPE, dimension(:,:), allocatable     :: phymix2d_S,phymix2d_T
+#endif
   REALTYPE, dimension(:,:,:), allocatable   :: numdis3d
   REALTYPE, dimension(:,:), allocatable     :: numdis2d
-#endif
 
 ! suspended matter
 #ifndef NO_SUSP_MATTER
