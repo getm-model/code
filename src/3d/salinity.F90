@@ -377,7 +377,7 @@ salt_field_no=1
       call toc(TIM_SALT)
       call tic(TIM_MIXANALYSIS)
       call numerical_mixing(S2,S,nummix3d_S,nummix2d_S)
-      call physical_mixing(S,avmols,phymix3d_S,phymix2d_S)
+      call physical_mixing(S,salt_AH,avmols,phymix3d_S,phymix2d_S)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_SALT)
    end if

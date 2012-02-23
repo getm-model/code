@@ -186,6 +186,12 @@
 
    hn = SMALL ; hun = SMALL ; hvn = SMALL
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
+#ifdef _MOMENTUM_TERMS_
+   tdv_u = _ZERO_ ; adv_u = _ZERO_ ; vsd_u = _ZERO_ ; hsd_u = _ZERO_
+   cor_u = _ZERO_ ; epg_u = _ZERO_ ; ipg_u = _ZERO_ 
+   tdv_v = _ZERO_ ; adv_v = _ZERO_ ; vsd_v = _ZERO_ ; hsd_v = _ZERO_
+   cor_v = _ZERO_ ; epg_v = _ZERO_ ; ipg_v = _ZERO_ 
+#endif
    ssen = _ZERO_ ; ssun = _ZERO_ ; ssvn = _ZERO_
    Dn = SMALL ; Dun = SMALL ; Dvn = SMALL
    rru= cd_min ; rrv= cd_min
@@ -201,6 +207,8 @@
 !  input arrays for do_advection_3d
    fadv3d = _ZERO_ ; uuadv = _ZERO_ ; vvadv = _ZERO_ ; wwadv = _ZERO_
    hoadv = SMALL ; hnadv = SMALL ; huadv = SMALL ; hvadv = SMALL
+
+
 
 #ifndef NO_BAROCLINIC
    idpdx=_ZERO_
