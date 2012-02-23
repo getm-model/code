@@ -34,14 +34,15 @@
       end subroutine deformation_rates
 
       subroutine uv_diffusion(An_method,UEx,VEx,U,V,D,DU,DV, &
-                              dudxC,dvdyC,shearX,AmC,AmX)
+                              dudxC,dvdyC,shearX,AmC,AmX,hsd_u,hsd_v)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         integer,intent(in)                               :: An_method
-         REALTYPE,dimension(E2DFIELD),intent(in),optional :: U,V,D,DU,DV
-         REALTYPE,dimension(E2DFIELD),intent(in),optional :: dudxC,dvdyC,shearX
-         REALTYPE,dimension(E2DFIELD),intent(in),optional :: AmC,AmX
-         REALTYPE,dimension(E2DFIELD),intent(inout)       :: UEx,VEx
+         integer,intent(in)                                :: An_method
+         REALTYPE,dimension(E2DFIELD),intent(in),optional  :: U,V,D,DU,DV
+         REALTYPE,dimension(E2DFIELD),intent(in),optional  :: dudxC,dvdyC,shearX
+         REALTYPE,dimension(E2DFIELD),intent(in),optional  :: AmC,AmX
+         REALTYPE,dimension(E2DFIELD),intent(inout)        :: UEx,VEx
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: hsd_u,hsd_v
       end subroutine uv_diffusion
 
       subroutine calc_uvex(An_method,U,V,D,DU,DV)
