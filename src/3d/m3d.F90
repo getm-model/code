@@ -256,6 +256,7 @@
 
 !  Needed for interpolation of temperature and salinity
    if (.not. hotstart) then
+      ssen = z
       call start_macro()
       call coordinates(hotstart)
       call hcc_check()
@@ -335,6 +336,7 @@
 
 ! Hotstart fix - see postinit_2d
    if (hotstart) then
+
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
             if (au(i,j) .eq. 0) then
@@ -363,6 +365,9 @@
             end if
          end do
       end do
+
+      call coordinates(hotstart)
+
    end if
 
    return
