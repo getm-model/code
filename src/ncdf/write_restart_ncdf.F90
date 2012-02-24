@@ -153,6 +153,14 @@
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
+      nf90_put_var(ncid,Uint_id,Uint(_2D_W_HOT_),start,edges)
+      if (status .NE. NF90_NOERR) go to 10
+
+      status = &
+      nf90_put_var(ncid,Vint_id,Vint(_2D_W_HOT_),start,edges)
+      if (status .NE. NF90_NOERR) go to 10
+
+      status = &
       nf90_put_var(ncid,uu_id,uu(_3D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
