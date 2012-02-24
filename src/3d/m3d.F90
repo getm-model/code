@@ -24,7 +24,7 @@
 !
 ! !USES:
    use exceptions
-   use domain, only: openbdy,maxdepth,vert_cord,az,z0_method
+   use domain, only: openbdy,maxdepth,vert_cord,az,z0_method,H,HU,HV
    use les, only: do_les_3d
    use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
    use m2d_general, only: bottom_friction
@@ -243,7 +243,9 @@
 
 !  Needed for interpolation of temperature and salinity
    if (.not. hotstart) then
+      ssen = z
       call start_macro()
+!      sseo = ssen ; ssuo = ssun ; ssvo = ssvn
       call coordinates(hotstart)
       call hcc_check()
    end if
@@ -366,14 +368,13 @@
 ! !IROUTINE: postinit_3d - re-initialise some 3D after hotstart read.
 !
 ! !INTERFACE:
-   subroutine postinit_3d(runtype,timestep,hotstart)
+   subroutine postinit_3d(runtype,n,hotstart)
 ! !USES:
    use domain, only: imin,imax,jmin,jmax, az,au,av
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: runtype
-   REALTYPE, intent(in)                :: timestep
+   integer, intent(in)                 :: runtype,n
    logical, intent(in)                 :: hotstart
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -411,6 +412,7 @@
 
 ! Hotstart fix - see postinit_2d
    if (hotstart) then
+
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
             if (au(i,j) .eq. 0) then
@@ -439,6 +441,9 @@
             end if
          end do
       end do
+
+      call coordinates(hotstart)
+
    end if
 
 #ifndef NO_BAROCLINIC
@@ -453,6 +458,16 @@
    if (z0_method .ne. 0) then
       call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
    end if
+
+#ifndef NO_BAROTROPIC
+   if (hotstart) then
+      Dn  = ssen + H
+      Dun = ssun + HU
+      Dvn = ssvn + HV
+   end if
+   if (ip_ramp .gt. 0) ip_fac=min( _ONE_ , n*_ONE_/ip_ramp)
+   call slow_terms()
+#endif
 
    return
    end subroutine postinit_3d
@@ -583,7 +598,6 @@
    huo=hun
    hvo=hvn
 
-   ip_fac=_ONE_
    if (ip_ramp .gt. 0) ip_fac=min( _ONE_ , n*_ONE_/ip_ramp)
    call toc(TIM_INTEGR3D)
 #ifdef STRUCTURE_FRICTION
