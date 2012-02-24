@@ -35,10 +35,7 @@
    integer                             :: secondsofday_id
    integer                             :: timestep_id
    integer                             :: z_id,zo_id
-   integer                             :: U_id
-   integer                             :: SlUx_id,Slru_id
-   integer                             :: V_id
-   integer                             :: SlVx_id,Slrv_id
+   integer                             :: U_id,V_id
 #ifndef NO_3D
    integer                             :: ssen_id,ssun_id,ssvn_id
    integer                             :: sseo_id,ssuo_id,ssvo_id
