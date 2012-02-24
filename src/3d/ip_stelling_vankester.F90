@@ -130,9 +130,11 @@
                   if (zi(i,j,kl) .lt. zi(i+1,j,kr) ) then
                      zl(l) = zi(i,j,kl)
                      kl = kl + 1
+!                    why not calc buoyr(kl) here?
                   else
                      zl(l) = zi(i+1,j,kr)
                      kr = kr + 1
+!                    why not calc buoyl(kr) here?
                   end if
                   l = l + 1
                end if

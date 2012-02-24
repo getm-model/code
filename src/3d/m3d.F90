@@ -245,6 +245,7 @@
 !  Needed for interpolation of temperature and salinity
    if (.not. hotstart) then
       call start_macro()
+!      sseo = ssen ; ssuo = ssun ; ssvo = ssvn
       call coordinates(hotstart)
       call hcc_check()
    end if
@@ -367,14 +368,13 @@
 ! !IROUTINE: postinit_3d - re-initialise some 3D after hotstart read.
 !
 ! !INTERFACE:
-   subroutine postinit_3d(runtype,timestep,hotstart)
+   subroutine postinit_3d(runtype,n,hotstart)
 ! !USES:
    use domain, only: imin,imax,jmin,jmax, az,au,av
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: runtype
-   REALTYPE, intent(in)                :: timestep
+   integer, intent(in)                 :: runtype,n
    logical, intent(in)                 :: hotstart
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -454,6 +454,16 @@
    if (z0_method .ne. 0) then
       call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
    end if
+
+#ifndef NO_BAROTROPIC
+   if (hotstart) then
+      Dn  = ssen + H
+      Dun = ssun + HU
+      Dvn = ssvn + HV
+   end if
+   if (ip_ramp .gt. 0) ip_fac=min( _ONE_ , n*_ONE_/ip_ramp)
+   call slow_terms()
+#endif
 
    return
    end subroutine postinit_3d
@@ -584,7 +594,6 @@
    huo=hun
    hvo=hvn
 
-   ip_fac=_ONE_
    if (ip_ramp .gt. 0) ip_fac=min( _ONE_ , n*_ONE_/ip_ramp)
    call toc(TIM_INTEGR3D)
 #ifdef STRUCTURE_FRICTION

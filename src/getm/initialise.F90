@@ -271,6 +271,9 @@
       if (runtype .ge. 2) then
 !        KK-TODO: do we need this call?
          call coordinates(hotstart)
+!        KK-TODO: why don't we store [U|V]int in the restart file and
+!                 remove this reset to offer restarts even in between
+!                 a 2d cycle?
          Uint=_ZERO_
          Vint=_ZERO_
       end if
@@ -284,7 +287,7 @@
 
    call postinit_2d(runtype,timestep,hotstart)
 #ifndef NO_3D
-   call postinit_3d(runtype,timestep,hotstart)
+   call postinit_3d(runtype,MinN-1,hotstart)
 #endif
 
    call init_input(input_dir,MinN)
