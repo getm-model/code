@@ -220,6 +220,10 @@
    idpdy=_ZERO_
 #endif
 
+#ifdef STRUCTURE_FRICTION
+   sf = _ZERO_
+#endif
+
 #ifdef DEBUG
    write(debug,*) 'Leaving init_variables_3d()'
    write(debug,*)
