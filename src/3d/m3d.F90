@@ -25,7 +25,7 @@
 ! !USES:
    use exceptions
    use parameters, only: avmmol
-   use domain, only: openbdy,maxdepth,vert_cord,az,z0_method
+   use domain, only: openbdy,maxdepth,vert_cord,az,z0_method,H,HU,HV
    use les, only: do_les_3d
    use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
    use m2d_general, only: bottom_friction
