@@ -107,23 +107,7 @@
    if (status .NE. NF90_NOERR) go to 10
 
    status = &
-   nf90_put_var(ncid,SlUx_id,SlUx(_2D_W_HOT_),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-
-   status = &
-   nf90_put_var(ncid,Slru_id,Slru(_2D_W_HOT_),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-
-   status = &
    nf90_put_var(ncid,V_id,V(_2D_W_HOT_),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-
-   status = &
-   nf90_put_var(ncid,SlVx_id,SlVx(_2D_W_HOT_),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-
-   status = &
-   nf90_put_var(ncid,Slrv_id,Slrv(_2D_W_HOT_),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
 #ifndef NO_3D
@@ -150,6 +134,14 @@
 
       status = &
       nf90_put_var(ncid,ssvo_id,ssvo(_2D_W_HOT_),start,edges)
+      if (status .NE. NF90_NOERR) go to 10
+
+      status = &
+      nf90_put_var(ncid,Uint_id,Uint(_2D_W_HOT_),start,edges)
+      if (status .NE. NF90_NOERR) go to 10
+
+      status = &
+      nf90_put_var(ncid,Vint_id,Vint(_2D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
