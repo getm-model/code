@@ -53,7 +53,7 @@
 
    do j=jmin-HALO,jmax+HALO         ! Defining 'old' and 'new' sea surface
       do i=imin-HALO,imax+HALO      ! elevation for macro time step
-         sseo(i,j)=ssen(i,j)
+         sseo(i,j)=ssen(i,j) ! needed to calculate external pressure gradient
          ssen(i,j)=z(i,j)
          Dn(i,j) = ssen(i,j) + H(i,j)
 !        KK-TODO: use of Dn & Co. in more routines (coordinates,...)
@@ -62,7 +62,7 @@
 
    do j=jmin-HALO,jmax+HALO             ! Same for U-points
       do i=imin-HALO,imax+HALO-1
-         ssuo(i,j)=ssun(i,j)
+         ssuo(i,j)=ssun(i,j) ! needed for reconstruction of huo (sigma,gvc)
          ssun(i,j)=0.25*(sseo(i,j)+sseo(i+1,j)+ssen(i,j)+ssen(i+1,j))
          ssun(i,j)=max(ssun(i,j),-HU(i,j)+min_depth)
          Dun(i,j) = ssun(i,j) + HU(i,j)
@@ -71,7 +71,7 @@
 
    do j=jmin-HALO,jmax+HALO-1
       do i=imin-HALO,imax+HALO             ! Same for V-points
-         ssvo(i,j)=ssvn(i,j)
+         ssvo(i,j)=ssvn(i,j) ! needed for reconstruction of hvo (sigma,gvc)
          ssvn(i,j)=0.25*(sseo(i,j)+sseo(i,j+1)+ssen(i,j)+ssen(i,j+1))
          ssvn(i,j)=max(ssvn(i,j),-HV(i,j)+min_depth)
          Dvn(i,j) = ssvn(i,j) + HV(i,j)
