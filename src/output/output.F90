@@ -330,12 +330,13 @@
    use domain, only: au,av
    use domain, only: imin,imax,jmin,jmax
 #ifdef ZUB_ZVB
-   use variables_2d, only: U,fU,res_du,SlUx,Slru
-   use variables_2d, only: V,fV,res_dv,SlVx,Slrv
+   use variables_2d, only: U,fU,res_du
+   use variables_2d, only: V,fV,res_dv
 #else
-   use variables_2d, only: U,fU,SlUx,Slru
-   use variables_2d, only: V,fV,SlVx,Slrv
+   use variables_2d, only: U,fU
+   use variables_2d, only: V,fV
 #endif
+   use variables_2d, only: Uint,Vint
 #ifndef NO_3D
    use variables_3d, only: ssen,ssun,ssvn
    use variables_3d, only: sseo,ssuo,ssvo
@@ -410,7 +411,7 @@
             LEVEL3 'obsolete saving of res_du'
             write(RESTART) res_du
 #endif
-            write(RESTART) SlUx,Slru,V
+            write(RESTART) V
 #ifdef _HOT_ZU_ZV_
             LEVEL3 'obsolete saving of placeholder for zv'
             write(RESTART) wrk2d
@@ -419,16 +420,12 @@
             LEVEL3 'obsolete saving of res_dv'
             write(RESTART) res_dv
 #endif
-            write(RESTART) SlVx,Slrv
 #ifndef NO_3D
             if (runtype .ge. 2)  then
                LEVEL3 'saving 3D barotropic variables'
                write(RESTART) ssen,ssun,ssvn
                write(RESTART) sseo,ssuo,ssvo
-#ifdef _HOT_UINTO_VINTO_
-               LEVEL3 'obsolete saving of placeholder for Uinto and Vinto'
-               write(RESTART) wrk2d,wrk2d
-#endif
+               write(RESTART) Uint,Vint
                write(RESTART) uu,vv,ww
                write(RESTART) uuEx,vvEx
                write(RESTART) tke,eps
@@ -484,7 +481,7 @@
             read(RESTART) res_du
             res_du=_ZERO_
 #endif
-            read(RESTART) SlUx,Slru,V
+            read(RESTART) V
 #ifdef _HOT_ZU_ZV_
             LEVEL3 'obsolete reading of placeholder for zv'
             read(RESTART) wrk2d
@@ -494,7 +491,6 @@
             read(RESTART) res_dv
             res_dv=_ZERO_
 #endif
-            read(RESTART) SlVx,Slrv
             where(au .eq. 0) U=_ZERO_
             where(av .eq. 0) V=_ZERO_
 #ifndef NO_3D
@@ -502,10 +498,7 @@
                LEVEL3 'reading 3D barotropic variables'
                read(RESTART) ssen,ssun,ssvn
                read(RESTART) sseo,ssuo,ssvo
-#ifdef _HOT_UINTO_VINTO_
-               LEVEL3 'obsolete reading of placeholder for Uinto and Vinto'
-               read(RESTART) wrk2d,wrk2d
-#endif
+               read(RESTART) Uint,Vint
                read(RESTART) uu,vv,ww
                read(RESTART) uuEx,vvEx
                read(RESTART) tke,eps
