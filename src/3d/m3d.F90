@@ -29,7 +29,7 @@
    use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
    use m2d_general, only: bottom_friction
    use m2d, only: no_2d,deformCX,deformUV,Am_method,NO_AM,AM_LES
-   use variables_2d, only: Uint,Vint
+   use variables_2d, only: z,Uint,Vint
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
             init_temperature_field, temp_AH_method
