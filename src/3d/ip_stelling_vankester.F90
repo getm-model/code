@@ -36,7 +36,8 @@
 ! !LOCAL VARIABLES:
    integer                           :: i,j,k,kl,kr,l,lmin,lmax,lextr,rc
    REALTYPE                          :: dxm1,dym1
-   REALTYPE                          :: pdiff,buoydiff,zvel,dcm,dcn,corr,weight
+   REALTYPE                          :: pdiff,buoydiff
+   REALTYPE                          :: zvel,zm,zn,dcm,dcn,corr,weight
    REALTYPE,dimension(I3DFIELD)      :: zi
    REALTYPE,dimension(:),allocatable :: zl
    integer,dimension(:),allocatable  :: m,n
@@ -53,7 +54,8 @@
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          PRIVATE(i,j,k,kl,kr,l,lmin,lmax,rc)                     &
 !$OMP          PRIVATE(dxm1,dym1)                                      &
-!$OMP          PRIVATE(pdiff,buoydiff,zvel,dcm,dcn,corr,weight)        &
+!$OMP          PRIVATE(pdiff,buoydiff)                                 &
+!$OMP          PRIVATE(zvel,zm,zn,dcm,dcn,corr,weight)                 &
 !$OMP          PRIVATE(zl,m,n)
 
 #if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
@@ -146,6 +148,8 @@
 
             k = kmax
             l = lmax
+            kl = m(lmax)
+            kr = n(lmax)
             pdiff = _HALF_*(buoy(i,j,kmax)+buoy(i+1,j,kmax))*(ssen(i+1,j)-ssen(i,j))
             do while (k.ge.1 .and. l.ge.lmin)
 
@@ -154,41 +158,40 @@
 
                do while (l.ge.lmin .and. zl(l).gt.zvel)
 
-!                 calculate dcm
+                  zm = zz(i  ,j,m(l))
+                  zn = zz(i+1,j,n(l))
+
+!                 calculate dcm[l-1/2]
 !                 calculate c[i+1](z[i,m(l)]) alias buoyplus
-                  if (zz(i,j,m(l)) .ge. zz(i+1,j,kmax)) then
+                  if (zm .ge. zz(i+1,j,kmax)) then
                      dcm = buoy(i+1,j,kmax)
-                  else if (zz(i,j,m(l)) .le. zz(i+1,j,1)) then
+                  else if (zm .le. zz(i+1,j,1)) then
                      dcm = buoy(i+1,j,1)
                   else
-                     if (zz(i,j,m(l)) .ge. zz(i+1,j,n(l))) then
-                        kr = n(l)
-                     else
-                        kr = n(l) - 1
-                     end if
-                     weight =   ( zz(i  ,j,m(l)) - zz(i+1,j,kr) ) &
-                              / ( zz(i+1,j,kr+1) - zz(i+1,j,kr) )
-                     dcm =          weight * buoy(i+1,j,kr+1) &
-                           + (_ONE_-weight)* buoy(i+1,j,kr  )
+                     do while(zm .lt. zz(i+1,j,kr-1))
+                        kr = kr - 1
+                     end do
+                     weight =   ( zm           - zz(i+1,j,kr-1) ) &
+                              / ( zz(i+1,j,kr) - zz(i+1,j,kr-1) )
+                     dcm =          weight * buoy(i+1,j,kr  ) &
+                           + (_ONE_-weight)* buoy(i+1,j,kr-1)
                   end if
                   dcm = dcm - buoy(i,j,m(l))
 
-!                 calculate dcn
+!                 calculate dcn[l-1/2]
 !                 calculate c[i](z[i+1,m(l)]) alias buoyminus
-                  if (zz(i+1,j,n(l)) .ge. zz(i,j,kmax)) then
+                  if (zn .ge. zz(i,j,kmax)) then
                      dcn = buoy(i,j,kmax)
-                  else if (zz(i+1,j,n(l)) .le. zz(i,j,1)) then
+                  else if (zn .le. zz(i,j,1)) then
                      dcn = buoy(i,j,1)
                   else
-                     if (zz(i+1,j,n(l)) .ge. zz(i,j,m(l))) then
-                        kl = m(l)
-                     else
-                        kl = m(l) - 1
-                     end if
-                     weight =   ( zz(i+1,j,n(l)) - zz(i,j,kl) ) &
-                              / ( zz(i  ,j,kl+1) - zz(i,j,kl) )
-                     dcn =          weight * buoy(i,j,kl+1) &
-                           + (_ONE_-weight)* buoy(i,j,kl  )
+                     do while(zn .lt. zz(i,j,kl-1))
+                        kl = kl - 1
+                     end do
+                     weight =   ( zn         - zz(i,j,kl-1) ) &
+                              / ( zz(i,j,kl) - zz(i,j,kl-1) )
+                     dcn =          weight * buoy(i,j,kl  ) &
+                           + (_ONE_-weight)* buoy(i,j,kl-1)
                   end if
                   dcn = buoy(i+1,j,n(l)) - dcn
 
@@ -214,8 +217,8 @@
 
                k = k - 1
             end do
-            kl = k
-            do k=kl,1,-1
+            l = k
+            do k=l,1,-1
                idpdx(i,j,k) = _ZERO_
             end do
 
@@ -288,6 +291,8 @@
 
             k = kmax
             l = lmax
+            kl = m(lmax)
+            kr = n(lmax)
             pdiff = _HALF_*(buoy(i,j,kmax)+buoy(i,j+1,kmax))*(ssen(i,j+1)-ssen(i,j))
             do while (k.ge.1 .and. l.ge.lmin)
 
@@ -296,41 +301,40 @@
 
                do while (l.ge.lmin .and. zl(l).gt.zvel)
 
-!                 calculate dcm
+                  zm = zz(i,j  ,m(l))
+                  zn = zz(i,j+1,n(l))
+
+!                 calculate dcm[l-1/2]
 !                 calculate c[i+1](z[i,m(l)]) alias buoyplus
-                  if (zz(i,j,m(l)) .ge. zz(i,j+1,kmax)) then
+                  if (zm .ge. zz(i,j+1,kmax)) then
                      dcm = buoy(i,j+1,kmax)
-                  else if (zz(i,j,m(l)) .le. zz(i,j+1,1)) then
+                  else if (zm .le. zz(i,j+1,1)) then
                      dcm = buoy(i,j+1,1)
                   else
-                     if (zz(i,j,m(l)) .ge. zz(i,j+1,n(l))) then
-                        kr = n(l)
-                     else
-                        kr = n(l) - 1
-                     end if
-                     weight =   ( zz(i,j  ,m(l)) - zz(i,j+1,kr) ) &
-                              / ( zz(i,j+1,kr+1) - zz(i,j+1,kr) )
-                     dcm =          weight * buoy(i,j+1,kr+1) &
-                           + (_ONE_-weight)* buoy(i,j+1,kr  )
+                     do while(zm .lt. zz(i,j+1,kr-1))
+                        kr = kr - 1
+                     end do
+                     weight =   ( zm           - zz(i,j+1,kr-1) ) &
+                              / ( zz(i,j+1,kr) - zz(i,j+1,kr-1) )
+                     dcm =          weight * buoy(i,j+1,kr  ) &
+                           + (_ONE_-weight)* buoy(i,j+1,kr-1)
                   end if
                   dcm = dcm - buoy(i,j,m(l))
 
-!                 calculate dcn
+!                 calculate dcn[l-1/2]
 !                 calculate c[i](z[i+1,m(l)]) alias buoyminus
-                  if (zz(i,j+1,n(l)) .ge. zz(i,j,kmax)) then
+                  if (zn .ge. zz(i,j,kmax)) then
                      dcn = buoy(i,j,kmax)
-                  else if (zz(i,j+1,n(l)) .le. zz(i,j,1)) then
+                  else if (zn .le. zz(i,j,1)) then
                      dcn = buoy(i,j,1)
                   else
-                     if (zz(i,j+1,n(l)) .ge. zz(i,j,m(l))) then
-                        kl = m(l)
-                     else
-                        kl = m(l) - 1
-                     end if
-                     weight =   ( zz(i,j+1,n(l)) - zz(i,j,kl) ) &
-                              / ( zz(i,j  ,kl+1) - zz(i,j,kl) )
-                     dcn =          weight * buoy(i,j,kl+1) &
-                           + (_ONE_-weight)* buoy(i,j,kl  )
+                     do while(zn .lt. zz(i,j,kl-1))
+                        kl = kl - 1
+                     end do
+                     weight =   ( zn         - zz(i,j,kl-1) ) &
+                              / ( zz(i,j,kl) - zz(i,j,kl-1) )
+                     dcn =          weight * buoy(i,j,kl  ) &
+                           + (_ONE_-weight)* buoy(i,j,kl-1)
                   end if
                   dcn = buoy(i,j+1,n(l)) - dcn
 
@@ -356,8 +360,8 @@
 
                k = k - 1
             end do
-            kl = k
-            do k=kl,1,-1
+            l = k
+            do k=l,1,-1
                idpdy(i,j,k) = _ZERO_
             end do
 
