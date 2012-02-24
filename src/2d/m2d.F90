@@ -311,6 +311,7 @@
 ! It is possible that a user changes the land mask and reads an "old" hotstart file.
 ! In this case the "old" velocities will need to be zeroed out.
    if (hotstart) then
+
       ischange = 0
 !     The first two loops are pure diagnostics, logging where changes will actually take place
 !     (and if there is something to do at all, to be able to skip the second part)
@@ -345,7 +346,11 @@
             zo = _ZERO_
          end where
       end if
+
+      call depth_update()
+
    end if
+
    return
    end subroutine postinit_2d
 !EOC
