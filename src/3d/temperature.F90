@@ -418,7 +418,7 @@ temp_field_no=1
    if (do_numerical_analyses) then
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
-      call physical_mixing(T,avmolt,phymix3d_T,phymix2d_T)
+      call physical_mixing(T,avmolt,phymix3d_T,phymix2d_T,temp_AH_method)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
    end if
