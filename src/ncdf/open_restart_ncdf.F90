@@ -93,11 +93,39 @@
       U_id=-1
    end if
 
+   varnam="SlUx"
+   status = nf90_inq_varid(ncid, "SlUx", SlUx_id)
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 'variable missing in restart file. Skipping ',varnam
+      SlUx_id=-1
+   end if
+
+   varnam="Slru"
+   status = nf90_inq_varid(ncid, "Slru", Slru_id)
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 'variable missing in restart file. Skipping ',varnam
+      Slru_id=-1
+   end if
+
    varnam="V"
    status = nf90_inq_varid(ncid, "V", V_id)
    if (status .NE. NF90_NOERR) then
       LEVEL3 'variable missing in restart file. Skipping ',varnam
       V_id=-1
+   end if
+
+   varnam="SlVx"
+   status = nf90_inq_varid(ncid, "SlVx", SlVx_id)
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 'variable missing in restart file. Skipping ',varnam
+      SlVx_id=-1
+   end if
+
+   varnam="Slrv"
+   status = nf90_inq_varid(ncid, "Slrv", Slrv_id)
+   if (status .NE. NF90_NOERR) then
+      LEVEL3 'variable missing in restart file. Skipping ',varnam
+      Slrv_id=-1
    end if
 
 #ifndef NO_3D
