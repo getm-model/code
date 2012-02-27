@@ -30,7 +30,7 @@
    use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
    use m2d_general, only: bottom_friction
    use m2d, only: no_2d,deformCX,deformUV,Am_method,NO_AM,AM_LES
-   use variables_2d, only: Uint,Vint
+   use variables_2d, only: z
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
             init_temperature_field, temp_AH_method
@@ -441,10 +441,10 @@
 
       call coordinates(hotstart)
 
-   end if
+      if (z0_method .ne. 0) then
+         call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
+      end if
 
-   if (z0_method .ne. 0) then
-      call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
    end if
 
    return
