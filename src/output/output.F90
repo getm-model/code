@@ -331,6 +331,7 @@
    use variables_2d, only: U,fU,SlUx,Slru
    use variables_2d, only: V,fV,SlVx,Slrv
 #endif
+   use variables_2d, only: Uint,Vint
 #ifndef NO_3D
    use variables_3d, only: ssen,ssun,ssvn
    use variables_3d, only: sseo,ssuo,ssvo
@@ -420,10 +421,7 @@
                LEVEL3 'saving 3D barotropic variables'
                write(RESTART) ssen,ssun,ssvn
                write(RESTART) sseo,ssuo,ssvo
-#ifdef _HOT_UINTO_VINTO_
-               LEVEL3 'obsolete saving of placeholder for Uinto and Vinto'
-               write(RESTART) wrk2d,wrk2d
-#endif
+               write(RESTART) Uint,Vint
                write(RESTART) uu,vv,ww
                write(RESTART) uuEx,vvEx
                write(RESTART) tke,eps
@@ -497,10 +495,7 @@
                LEVEL3 'reading 3D barotropic variables'
                read(RESTART) ssen,ssun,ssvn
                read(RESTART) sseo,ssuo,ssvo
-#ifdef _HOT_UINTO_VINTO_
-               LEVEL3 'obsolete reading of placeholder for Uinto and Vinto'
-               read(RESTART) wrk2d,wrk2d
-#endif
+               read(RESTART) Uint,Vint
                read(RESTART) uu,vv,ww
                read(RESTART) uuEx,vvEx
                read(RESTART) tke,eps

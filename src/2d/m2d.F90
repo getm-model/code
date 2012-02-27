@@ -345,10 +345,12 @@
 !     The actual reset is below here - independent of the above diagnostics (except for the if)
       if (ischange.ne.0) then
          where (au .eq. 0)
-            U     = _ZERO_
+            U    = _ZERO_
+            Uint = _ZERO_
          end where
          where (av .eq. 0)
-            V     = _ZERO_
+            V    = _ZERO_
+            Vint = _ZERO_
          end where
 !        This is probably not absolutely necessary:
          where (az .eq. 0)
