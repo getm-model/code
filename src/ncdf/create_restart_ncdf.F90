@@ -124,8 +124,24 @@
                             (/ xdim_id, ydim_id /), U_id)
    if (status .NE. NF90_NOERR) go to 10
 
+   status = nf90_def_var(ncid, "SlUx", nf90_double, &
+                            (/ xdim_id, ydim_id /), SlUx_id)
+   if (status .NE. NF90_NOERR) go to 10
+
+   status = nf90_def_var(ncid, "Slru", nf90_double, &
+                            (/ xdim_id, ydim_id /), Slru_id)
+   if (status .NE. NF90_NOERR) go to 10
+
    status = nf90_def_var(ncid, "V", nf90_double, &
                             (/ xdim_id, ydim_id /), V_id)
+   if (status .NE. NF90_NOERR) go to 10
+
+   status = nf90_def_var(ncid, "SlVx", nf90_double, &
+                            (/ xdim_id, ydim_id /), SlVx_id)
+   if (status .NE. NF90_NOERR) go to 10
+
+   status = nf90_def_var(ncid, "Slrv", nf90_double, &
+                            (/ xdim_id, ydim_id /), Slrv_id)
    if (status .NE. NF90_NOERR) go to 10
 
 #ifndef NO_3D
