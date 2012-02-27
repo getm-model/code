@@ -28,6 +28,7 @@
    use domain, only: openbdy,maxdepth,vert_cord,az,z0_method
    use m2d_general, only: bottom_friction
    use m2d, only: Am
+   use variables_2d, only: z
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
             init_temperature_field
