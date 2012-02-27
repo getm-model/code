@@ -49,7 +49,6 @@
    use les, only: init_les
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
 #ifndef NO_3D
-   use m2d, only: Uint,Vint
    use m3d, only: cord_relax,init_3d,postinit_3d, ssen,ssun,ssvn
 #ifndef NO_BAROCLINIC
    use m3d, only: T
@@ -266,17 +265,6 @@
       hot_in = trim(out_dir) //'/'// 'restart' // trim(buf)
       call restart_file(READING,trim(hot_in),MinN,runtype,use_epoch)
       LEVEL3 'MinN adjusted to ',MinN
-
-#ifndef NO_3D
-      if (runtype .ge. 2) then
-!        KK-TODO: why don't we store [U|V]int in the restart file and
-!                 remove this reset to offer restarts even in between
-!                 a 2d cycle?
-         Uint=_ZERO_
-         Vint=_ZERO_
-      end if
-#endif
-
       call update_time(MinN)
       call write_time_string()
       LEVEL3 timestr
