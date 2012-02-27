@@ -29,7 +29,7 @@
 !  we do not need to include calc_uvex
    use m2d_general, only: calc_uvex
    use m2d, only: Am
-   use variables_2d, only: Uint,Vint
+   use variables_2d, only: z,Uint,Vint
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
             init_temperature_field
