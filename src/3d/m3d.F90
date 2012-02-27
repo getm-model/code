@@ -334,10 +334,10 @@
 
       call coordinates(hotstart)
 
-   end if
+      if (z0_method .ne. 0) then
+         call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
+      end if
 
-   if (z0_method .ne. 0) then
-      call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
    end if
 
    return
