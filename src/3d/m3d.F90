@@ -29,7 +29,7 @@
    use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
    use m2d_general, only: bottom_friction
    use m2d, only: no_2d,deformCX,deformUV,Am_method,NO_AM,AM_LES
-   use variables_2d, only: z,Uint,Vint
+   use variables_2d, only: z
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
             init_temperature_field, temp_AH_method
@@ -245,7 +245,6 @@
    if (.not. hotstart) then
       ssen = z
       call start_macro()
-!      sseo = ssen ; ssuo = ssun ; ssvo = ssvn
       call coordinates(hotstart)
       call hcc_check()
    end if
@@ -444,30 +443,20 @@
 
       call coordinates(hotstart)
 
+      if (z0_method .ne. 0) then
+         call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
+      end if
+
    end if
 
 #ifndef NO_BAROCLINIC
-    if (runtype .ge. 3) then
+   if (runtype .ge. 3) then
       call do_eqstate()
       call do_internal_pressure()
    end if
 #endif
 
    call ss_nn()
-
-   if (z0_method .ne. 0) then
-      call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
-   end if
-
-#ifndef NO_BAROTROPIC
-   if (hotstart) then
-      Dn  = ssen + H
-      Dun = ssun + HU
-      Dvn = ssvn + HV
-   end if
-   if (ip_ramp .gt. 0) ip_fac=min( _ONE_ , n*_ONE_/ip_ramp)
-   call slow_terms()
-#endif
 
    return
    end subroutine postinit_3d
