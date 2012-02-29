@@ -211,6 +211,19 @@
          if (status .NE. NF90_NOERR) go to 10
       end if
 #endif
+
+      if (nonhyd_method .ne. 0) then
+         if (nonhyd_method .eq. 1) then
+            status = &
+            nf90_put_var(ncid,minus_bnh_id,minus_bnh(_3D_W_HOT_),start,edges)
+            if (status .NE. NF90_NOERR) go to 10
+         end if
+
+         status = &
+         nf90_put_var(ncid,wco_id,wco(_3D_W_HOT_),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+      end if
+
 #ifdef SPM
       if (spm_calc) then
          status = &

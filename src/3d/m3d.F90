@@ -36,9 +36,10 @@
    use salinity,   only: init_salinity, do_salinity, init_salinity_field, &
             salt_AH_method
    use eqstate,    only: init_eqstate, do_eqstate
+#endif
+   use nonhydrostatic, only: nonhyd_method,init_nonhydrostatic
    use internal_pressure, only: init_internal_pressure, do_internal_pressure
    use internal_pressure, only: ip_method
-#endif
    use variables_3d
    use advection, only: NOADV
    use advection_3d, only: init_advection_3d,print_adv_settings_3d,itersmax_adv
@@ -53,6 +54,7 @@
 ! !PUBLIC DATA MEMBERS:
    integer                             :: M=1
    REALTYPE                            :: cord_relax=_ZERO_
+   logical                             :: calc_ip=.false.
    logical                             :: calc_temp=.true.
    logical                             :: calc_salt=.true.
    logical                             :: calc_stirr=.false.
@@ -70,9 +72,6 @@
 ! !LOCAL VARIABLES:
    integer         :: vel_adv_split=0,vel_hor_adv=1,vel_ver_adv=1
    logical         :: turb_adv=.false.
-#ifdef NO_BAROCLINIC
-   integer         :: ip_method
-#endif
    integer         :: ip_ramp=-1
 !EOP
 !-----------------------------------------------------------------------
@@ -125,7 +124,7 @@
              vel_adv_split,vel_hor_adv,vel_ver_adv,     &
              calc_temp,calc_salt,                       &
              avmback,avhback,turb_adv,                  &
-             ip_method,ip_ramp,                         &
+             nonhyd_method,ip_method,ip_ramp,           &
              vel_check,min_vel,max_vel
 !EOP
 !-------------------------------------------------------------------------
@@ -146,6 +145,7 @@
       LEVEL2 'reset runtype to 2 because neither temp nor salt are calculated'
       runtype = 2
    end if
+   calc_ip = (runtype.ge.3 .or. nonhyd_method.eq.1)
 
    deformCX_3d=deformCX
    deformUV_3d=deformUV
@@ -255,10 +255,14 @@
       if(calc_temp) call init_temperature()
       if(calc_salt) call init_salinity()
       call init_eqstate()
-      call init_internal_pressure()
-      LEVEL2 'ip_ramp=',ip_ramp
    end if
 #endif
+
+   call init_nonhydrostatic()
+
+   if (calc_ip) then
+      call init_internal_pressure(runtype,nonhyd_method,ip_ramp)
+   end if
 
    if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
 
@@ -452,9 +456,12 @@
 #ifndef NO_BAROCLINIC
    if (runtype .ge. 3) then
       call do_eqstate()
-      call do_internal_pressure()
    end if
 #endif
+
+   if (calc_ip) then
+      call do_internal_pressure()
+   end if
 
    call ss_nn()
 
@@ -470,6 +477,8 @@
 !
 ! !INTERFACE:
    subroutine integrate_3d(runtype,n)
+!
+! !USES:
    use getm_timers, only: tic, toc, TIM_INTEGR3D
 #ifndef NO_BAROCLINIC
    use getm_timers, only: TIM_TEMPH, TIM_SALTH
@@ -556,7 +565,6 @@
 ! rotation.
 !
 ! !LOCAL VARIABLES:
-  logical, save              :: ufirst=.true.
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -592,26 +600,8 @@
 #ifdef STRUCTURE_FRICTION
    call structure_friction_3d
 #endif
-   if (ufirst) then
-      call uu_momentum_3d(n,bdy3d)
-      call vv_momentum_3d(n,bdy3d)
-      ufirst=.false.
-   else
-      call vv_momentum_3d(n,bdy3d)
-      call uu_momentum_3d(n,bdy3d)
-      ufirst=.true.
-   end if
 
-#ifndef MUDFLAT
-   if (kmax .gt. 1) then
-      if (vert_cord .eq. _ADAPTIVE_COORDS_) call ss_nn()
-   end if
-   call coordinates(.false.)
-#endif
-
-   if (kmax .gt. 1) then
-      call ww_momentum_3d()
-   end if
+   call momentum_3d(runtype,n)
 
    call deformation_rates_3d()
 
@@ -673,9 +663,12 @@
 #ifndef PECS
       call do_eqstate()
 #endif
-      call do_internal_pressure()
    end if
 #endif
+
+   if (runtype.eq.4 .or. nonhyd_method.eq.1) then
+      call do_internal_pressure()
+   end if
 
 #ifndef NO_BAROTROPIC
    call slow_terms()

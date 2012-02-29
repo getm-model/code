@@ -14,6 +14,7 @@
    use ascii_out
 #ifndef NO_3D
    use variables_3d, only: do_numerical_analyses
+   use m3d, only: nonhyd_method
 #endif
    use m2d, only: Am_method,AM_LES
    use m3d, only: calc_stirr
@@ -189,7 +190,7 @@
          case (NETCDF)
             if (save_2d) call init_2d_ncdf(out_f_2d,title,starttime)
 #ifndef NO_3D
-            if (save_3d) call init_3d_ncdf(out_f_3d,title,starttime)
+            if (save_3d) call init_3d_ncdf(out_f_3d,title,starttime,runtype)
             if (save_mean)  &
                      call init_mean_ncdf(out_f_mean,title,starttime)
 #endif
@@ -284,7 +285,7 @@
          case (NETCDF)
             if (write_2d) call save_2d_ncdf(secs)
 #ifndef NO_3D
-            if (write_3d) call save_3d_ncdf(secs)
+            if (write_3d) call save_3d_ncdf(runtype,secs)
             if (write_mean) call save_mean_ncdf(secs)
 #endif
          case DEFAULT
@@ -347,6 +348,7 @@
 #ifndef NO_BAROCLINIC
    use variables_3d, only: T,S
 #endif
+   use variables_3d, only: minus_bnh,wco
 #endif
 #ifdef SPM
   use suspended_matter, only: spm_calc,spm_hotstart
@@ -438,6 +440,14 @@
                   write(RESTART) T,S
                end if
 #endif
+               if (nonhyd_method .ne. 0) then
+                  if (nonhyd_method .eq. 1) then
+                     LEVEL3 'saving minus_bnh'
+                     write(RESTART) minus_bnh
+                  end if
+                  LEVEL3 'saving wco'
+                  write(RESTART) wco
+               end if
 #ifdef SPM
                if (spm_calc) then
                   LEVEL3 'saving spm'
@@ -516,6 +526,14 @@
                   read(RESTART) T,S
                end if
 #endif
+               if (nonhyd_method .ne. 0) then
+                  if (nonhyd_method .eq. 1) then
+                     LEVEL3 'reading minus_bnh'
+                     read(RESTART) minus_bnh
+                  end if
+                  LEVEL3 'reading wco'
+                  read(RESTART) wco
+               end if
 #ifdef SPM
                if(spm_calc) then
                   if (spm_hotstart) then

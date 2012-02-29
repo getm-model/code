@@ -51,6 +51,7 @@
 #ifndef NO_BAROCLINIC
    integer                             :: T_id,S_id
 #endif
+   integer                             :: minus_bnh_id,wco_id
 #ifdef SPM
    integer                             :: spm_id,spmpool_id
 #endif

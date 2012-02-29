@@ -5,7 +5,7 @@
 ! !ROUTINE: Save 3D netCDF variables
 !
 ! !INTERFACE:
-   subroutine save_3d_ncdf(secs)
+   subroutine save_3d_ncdf(runtype,secs)
 !
 ! !DESCRIPTION:
 !
@@ -35,7 +35,9 @@
    use variables_3d, only: S,T,rho,rad,NN
    use variables_3d, only: diffxx,diffyy,diffxy
    use variables_3d, only: nummix3d_S,nummix3d_T,phymix3d_S,phymix3d_T
+   use variables_3d, only: buoy
 #endif
+   use variables_3d, only: minus_bnh
    use variables_3d, only: numdis3d
    use variables_les, only: AmC_3d
    use variables_3d, only: tke,num,nuh,eps
@@ -58,7 +60,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE, intent(in) :: secs
+   REALTYPE, intent(in) :: runtype,secs
 !
 ! !DEFINED PARAMTERS:
    logical, parameter   :: save3d=.true.
@@ -414,6 +416,19 @@
       end if
 #endif
    end if ! save_numerical_analyses
+
+   if (nonhyd_method .ne. 0) then
+      if (runtype.eq.2 .or. nonhyd_method.eq.1) then
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,-minus_bnh,bnh_missing, &
+                     imin,imax,jmin,jmax,0,kmax,ws)
+      else
+#ifndef NO_BAROCLINIC
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,abs(minus_bnh/max(buoy,SMALL)),bnh_missing, &
+                     imin,imax,jmin,jmax,0,kmax,ws)
+#endif
+      end if
+      err = nf90_put_var(ncid,bnh_id,ws(_3D_W_),start,edges)
+   end if
 
    if (Am_method.eq.AM_LES .and. save_Am_3d) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,AmC_3d,Am_3d_missing, &

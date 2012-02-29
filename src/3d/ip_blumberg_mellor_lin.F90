@@ -69,7 +69,9 @@
 
 !  KK-TODO: put this in a central place (if needed at all)
    idpdx(:,:,0) = _ZERO_
+#ifndef SLICE_MODEL
    idpdy(:,:,0) = _ZERO_
+#endif
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          PRIVATE(i,j,k)                                          &
@@ -133,6 +135,8 @@
    end do
 !$OMP END DO NOWAIT
 
+#ifndef SLICE_MODEL
+
 ! Calculation of layer integrated internal pressure gradient as it
 ! appears on the right hand side of the v-velocity equation.
 !$OMP DO SCHEDULE(RUNTIME)
@@ -166,6 +170,8 @@
       end do
    end do
 !$OMP END DO
+
+#endif
 
 !$OMP END PARALLEL
 

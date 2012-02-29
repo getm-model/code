@@ -227,6 +227,19 @@
                                (/ xdim_id, ydim_id, zdim_id /), S_id)
       if (status .NE. NF90_NOERR) go to 10
 #endif
+
+      if (nonhyd_method .ne. 0) then
+         if (nonhyd_method .eq. 1) then
+            status = nf90_def_var(ncid, "minus_bnh", nf90_double, &
+                                     (/ xdim_id, ydim_id, zdim_id /), minus_bnh_id)
+            if (status .NE. NF90_NOERR) go to 10
+         end if
+
+         status = nf90_def_var(ncid, "wco", nf90_double, &
+                                  (/ xdim_id, ydim_id, zdim_id /), wco_id)
+         if (status .NE. NF90_NOERR) go to 10
+      end if
+
 #ifdef SPM
       status = nf90_def_var(ncid, "spm", nf90_double, &
                                (/ xdim_id, ydim_id, zdim_id /), spm_id)

@@ -66,7 +66,9 @@
 
 !  KK-TODO: put this in a central place (if needed at all)
    idpdx(:,:,0) = _ZERO_
+#ifndef SLICE_MODEL
    idpdy(:,:,0) = _ZERO_
+#endif
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          PRIVATE(i,j,k,kk,kkp)                                   &

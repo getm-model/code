@@ -77,12 +77,10 @@
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
 #endif
-#ifndef NO_BAROCLINIC
    use variables_3d, only: idpdy
-#endif
    use halo_zones, only: update_3d_halo,wait_halo,V_TAG
    use meteo, only: tausy,airp
-   use m3d, only: ip_fac
+   use m3d, only: calc_ip,ip_fac
    use m3d, only: vel_check,min_vel,max_vel
    use getm_timers, only: tic, toc, TIM_VVMOMENTUM, TIM_VVMOMENTUMH
 !$ use omp_lib
@@ -177,17 +175,18 @@
          if ((av(i,j) .eq. 1) .or. (av(i,j) .eq. 2)) then
 
             if (kmax .gt. kvmin(i,j)) then
-
-               do k=kvmin(i,j),kmax      ! explicit terms
+!              Explicit terms
+               do k=kvmin(i,j),kmax
+!                 Coriolis
 ! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
-                Uloc=(uu(i  ,j  ,k)/sqrt(huo(i  ,j  ,k))  &
-                     +uu(i-1,j  ,k)/sqrt(huo(i-1,j  ,k))  &
-                     +uu(i  ,j+1,k)/sqrt(huo(i  ,j+1,k))  &
-                     +uu(i-1,j+1,k)/sqrt(huo(i-1,j+1,k))) &
-                     *_QUART_*sqrt(hvo(i,j,k))
+                  Uloc=(uu(i  ,j  ,k)/sqrt(huo(i  ,j  ,k))  &
+                       +uu(i-1,j  ,k)/sqrt(huo(i-1,j  ,k))  &
+                       +uu(i  ,j+1,k)/sqrt(huo(i  ,j+1,k))  &
+                       +uu(i-1,j+1,k)/sqrt(huo(i-1,j+1,k))) &
+                       *_QUART_*sqrt(hvo(i,j,k))
 #else
-                Uloc=_QUART_*(uu(i,j,k)+uu(i-1,j,k)+uu(i,j+1,k)+uu(i-1,j+1,k))
+                  Uloc=_QUART_*(uu(i,j,k)+uu(i-1,j,k)+uu(i,j+1,k)+uu(i-1,j+1,k))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   cord_curv=(vv(i,j,k)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC))     &
@@ -199,21 +198,26 @@
 #ifdef _MOMENTUM_TERMS_
                   cor_v(i,j,k)=-dry_v(i,j)*ex(k)
 #endif
-#ifdef NO_BAROCLINIC
-                  ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k))
-#else
-#ifdef XZ_PLUME_TEST
-                  ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+idpdy(i,j,k)+yslope*hvn(i,j,k)*(buoy(i,j,kmax)-buoy(i,j,k)))
-#else
-                  ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+ip_fac*idpdy(i,j,k))
-#endif
-#ifdef _MOMENTUM_TERMS_
-                  ipg_v(i,j,k)=-dry_v(i,j)*ip_fac*idpdy(i,j,k)
-#endif
-#endif
+!                 advection / diffusion
+                  ex(k) = ex(k) - vvEx(i,j,k)
                end do
-               ex(kmax)=ex(kmax)                                      &
-                       +dry_v(i,j)*_HALF_*(tausy(i,j)+tausy(i,j+1))*rho_0i
+#ifndef SLICE_MODEL
+!              internal pressure gradient
+               if (calc_ip) then
+                  do k=kvmin(i,j),kmax
+                     ex(k) = ex(k) + ip_fac*idpdy(i,j,k)
+#ifdef _MOMENTUM_TERMS_
+                     ipg_v(i,j,k)=-dry_v(i,j)*ip_fac*idpdy(i,j,k)
+#endif
+                  end do
+               end if
+#endif
+!              surface stress
+               ex(kmax) = ex(kmax) + _HALF_*(tausy(i,j)+tausy(i,j+1))*rho_0i
+!              finalise explicit terms
+               do k=kvmin(i,j),kmax
+                  ex(k) = dry_v(i,j) * ex(k)
+               end do
 !     Eddy viscosity
                do k=kvmin(i,j),kmax-1
                   dif(k)=_HALF_*(num(i,j,k)+num(i,j+1,k)) + avmmol

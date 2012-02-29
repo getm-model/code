@@ -127,10 +127,21 @@
 
 !  the following fields will only be allocated if deformCX_3d=.true.
    REALTYPE,dimension(:,:,:),allocatable :: dudxC_3d,dvdyC_3d,shearX_3d
+
 !  the following fields will only be allocated if deformUV_3d=.true.
    REALTYPE,dimension(:,:,:),allocatable :: dudxV_3d,dvdyU_3d,shearU_3d
+
 !  the following fields will only be allocated if calc_stirring=.true.
    REALTYPE,dimension(:,:,:),allocatable :: diffxx,diffxy,diffyx,diffyy
+
+!  the following fields will be allocated in init_nonhydrostatic
+   REALTYPE,dimension(:,:,:),allocatable,target :: minus_bnh
+   REALTYPE,dimension(:,:,:),allocatable :: wco
+   REALTYPE,dimension(:,:,:),allocatable :: uu_0,vv_0
+   REALTYPE,dimension(:,:,:),allocatable :: ho_0,hn_0,huo_0,hun_0,hvo_0,hvn_0
+
+!  the following fields will be allocated in init_internal_pressure
+   REALTYPE,dimension(:,:,:),allocatable :: idpdx,idpdy
 
 #ifdef GETM_BIO
    REALTYPE, allocatable               :: cc3d(:,:,:,:)
@@ -214,11 +225,6 @@
 !  input arrays for do_advection_3d
    fadv3d = _ZERO_ ; uuadv = _ZERO_ ; vvadv = _ZERO_ ; wwadv = _ZERO_
    hoadv = SMALL ; hnadv = SMALL ; huadv = SMALL ; hvadv = SMALL
-
-#ifndef NO_BAROCLINIC
-   idpdx=_ZERO_
-   idpdy=_ZERO_
-#endif
 
 #ifdef STRUCTURE_FRICTION
    sf = _ZERO_

@@ -59,11 +59,9 @@
   REALTYPE, target                     :: T(I3DFIELD)
   REALTYPE, target                     :: rho(I3DFIELD)
   REALTYPE                             :: rad(I3DFIELD)
-  REALTYPE                             :: buoy(I3DFIELD)
+  REALTYPE, target                     :: buoy(I3DFIELD)
   REALTYPE                             :: alpha(I3DFIELD)
   REALTYPE                             :: beta(I3DFIELD)
-  REALTYPE                             :: idpdx(I3DFIELD)
-  REALTYPE                             :: idpdy(I3DFIELD)
   REALTYPE                             :: light(I3DFIELD)
 
   REALTYPE                             :: nummix3d_S(I3DFIELD)
