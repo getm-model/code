@@ -97,7 +97,7 @@
    use variables_3d, only: fadv3d
 #endif
    use halo_zones, only: update_3d_halo,wait_halo,H_TAG
-
+!$ use omp_lib
    IMPLICIT NONE
    private
 !
@@ -311,7 +311,12 @@
 
 !  add vertical viscous terms at (n+1/2) (result to work3d)
 !  KK-TODO: do we really have to add num?
+
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          PRIVATE(i,j,k)
+
 #ifndef SLICE_MODEL
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
 #endif
       do i=imin-HALO,imax+HALO
@@ -342,10 +347,14 @@
       end do
 #ifndef SLICE_MODEL
    end do
+!$OMP END DO
 #else
-   work3d(imin-HALO:imax+HALO,j+1,:) = work3d(imin-HALO:imax+HALO,j,:)
+   work3d(:,j+1,:) = work3d(:,j,:)
 #endif
 !  wc now free
+
+!$OMP END PARALLEL
+
 
 !  filter bnh (result to minus_bnh)
    select case(bnh_filter)
