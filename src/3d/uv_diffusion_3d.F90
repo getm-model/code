@@ -121,7 +121,6 @@
    use getm_timers, only: tic, toc, TIM_UVDIFF3D
 #ifdef _MOMENTUM_TERMS_
    use variables_3d, only: hsd_u,hsd_v
-   use domain, only: dry_u, dry_v
 #endif
 !$ use omp_lib
    IMPLICIT NONE
@@ -210,8 +209,7 @@
                if (k .ge. kumin(i,j)) then
                   uuEx(i,j,k)=uuEx(i,j,k)-(PP(i,j,k)-PP(i,j-1,k))*ARUD1
 #ifdef _MOMENTUM_TERMS_
-                  hsd_u(i,j,k)=dry_u(i,j)*hsd_u(i,j,k)                 &
-                               -(PP(i+1,j,k)-PP(i,j,k))*ARUD1
+                  hsd_u(i,j,k)=hsd_u(i,j,k)-(PP(i,j,k)-PP(i,j-1,k))*ARUD1
 #endif
                end if
             end if
@@ -284,8 +282,7 @@
                if (k .ge. kvmin(i,j)) then
                   vvEx(i,j,k)=(vvEx(i,j,k)-(PP(i,j+1,k)-PP(i,j,k))*ARVD1)
 #ifdef _MOMENTUM_TERMS_
-                  hsd_v(i,j,k)=dry_v(i,j)*hsd_v(i,j,k)                 &
-                               -(PP(i,j+1,k)-PP(i,j,k))*ARVD1
+                  hsd_v(i,j,k)=hsd_v(i,j,k)-(PP(i,j+1,k)-PP(i,j,k))*ARVD1
 #endif
                end if
             end if
