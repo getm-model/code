@@ -734,6 +734,7 @@
 						<condition type="ne" variable="./nonhyd_iters" value="1"/>
 					</option>
 				</options>
+			</element>
 			<element name="bnh_weight" type="float" label="weight for bnh_filter" minInclusive="0.0" maxInclusive="1.0">
 				<condition type="or">
 					<condition type="eq" variable="./bnh_filter" value="1"/>
