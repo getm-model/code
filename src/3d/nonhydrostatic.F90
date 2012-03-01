@@ -96,7 +96,7 @@
    use advection_3d, only: do_advection_3d
    use variables_3d, only: fadv3d
 #endif
-   use halo_zones, only: update_3d_halo,wait_halo,z_TAG
+   use halo_zones, only: update_3d_halo,wait_halo,H_TAG
 
    IMPLICIT NONE
    private
@@ -280,8 +280,8 @@
 #endif
             H,HU,HV,hn,ho,uu,hun,vv,hvn,ww,_ZERO_,wc)
 
-   call update_3d_halo(wc,wc,az,imin,jmin,imax,jmax,kmax,z_TAG)
-   call wait_halo(z_TAG)
+   call update_3d_halo(wc,wc,az,imin,jmin,imax,jmax,kmax,H_TAG)
+   call wait_halo(H_TAG)
 
 !  initialise bnh by advective term (result to work3d, wc still needed!!!)
 #ifndef NO_ADVECT
@@ -293,12 +293,12 @@
    fadv3d = wc
 
    call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                   &
-                        vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,z_TAG, &
+                        vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,H_TAG, &
                         advres=work3d)
 
 !  halo update advective (and horizontal viscous) terms [ div(hu*wc) / h ](n+1/2)
-   call update_3d_halo(work3d,work3d,az,imin,jmin,imax,jmax,kmax,z_TAG)
-   call wait_halo(z_TAG)
+   call update_3d_halo(work3d,work3d,az,imin,jmin,imax,jmax,kmax,H_TAG)
+   call wait_halo(H_TAG)
 #else
    work3d = _ZERO_
 #endif
