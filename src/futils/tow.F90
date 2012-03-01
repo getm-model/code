@@ -20,6 +20,7 @@
 ! stages) is calculated.
 !
 ! !USES:
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -83,8 +84,12 @@
    zw(:,:,0) = -H
    kp = 0
 
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          PRIVATE(i,j,k)
+
    do k=1,kmax
 
+!$OMP MASTER
       hwc = _HALF_*( ho(:,:,k) + hn(:,:,k) )
 
 !     update z-levels
@@ -97,12 +102,15 @@
       km = kp
       kp = 1-kp
       zw(:,:,kp) = zw(:,:,km) + hwc
+!$OMP END MASTER
+!$OMP BARRIER
 
 !     calculate wc
 #ifndef SLICE_MODEL
-      do j=jmin,jmax
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin-HALO+1,jmax+HALO
 #endif
-         do i=imin,imax
+         do i=imin-HALO+1,imax+HALO
             if (az(i,j) .eq. 1) then
                wc(i,j,k) =                               &
                   (                                      &
@@ -130,14 +138,16 @@
          end do
 #ifndef SLICE_MODEL
       end do
+!$OMP END DO
 #endif
 
    end do
 
 #ifndef SLICE_MODEL
-   do j=jmin,jmax
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO,jmax+HALO
 #endif
-      do i=imin,imax
+      do i=imin-HALO,imax+HALO
          if (az(i,j) .eq. 2) then
             wc(i,j,:) = _ZERO_
          end if
@@ -152,7 +162,10 @@
       end do
 #ifndef SLICE_MODEL
    end do
+!$OMP END DO
 #endif
+
+!$OMP END PARALLEL
 
 #ifdef SLICE_MODEL
    wc(:,j+1,:) = wc(:,j,:)
