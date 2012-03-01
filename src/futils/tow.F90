@@ -89,7 +89,7 @@
 
    do k=1,kmax
 
-!$OMP MASTER
+!$OMP SINGLE
       hwc = _HALF_*( ho(:,:,k) + hn(:,:,k) )
 
 !     update z-levels
@@ -102,12 +102,11 @@
       km = kp
       kp = 1-kp
       zw(:,:,kp) = zw(:,:,km) + hwc
-!$OMP END MASTER
-!$OMP BARRIER
+!$OMP END SINGLE
 
 !     calculate wc
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin-HALO+1,jmax+HALO
 #endif
          do i=imin-HALO+1,imax+HALO
@@ -138,13 +137,13 @@
          end do
 #ifndef SLICE_MODEL
       end do
-!$OMP END DO
 #endif
+!$OMP END DO
 
    end do
 
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO
 #endif
       do i=imin-HALO,imax+HALO
@@ -162,8 +161,8 @@
       end do
 #ifndef SLICE_MODEL
    end do
-!$OMP END DO
 #endif
+!$OMP END DO
 
 !$OMP END PARALLEL
 
