@@ -45,12 +45,19 @@
    Ncall = Ncall+1
    write(debug,*) 'tke_eps_advect_3d() # ',Ncall
 #endif
+#ifdef SLICE_MODEL
+   j = jmax/2 ! this MUST NOT be changed!!!
+#endif
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          FIRSTPRIVATE(j)                                         &
+!$OMP          PRIVATE(i,k)
 
    do k=1,kmax-1
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin-HALO,jmax+HALO
+#endif
          do i=imin-HALO,imax+HALO
             uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i,j,k+1) )
             vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i,j,k+1) )
@@ -64,7 +71,9 @@
 !                      therefore hvadv only valid until jmax+1
             hvadv(i,j,k) = _HALF_*( hvn(i,j,k) + hvn(i,j,k+1) )
          end do
+#ifndef SLICE_MODEL
       end do
+#endif
 !$OMP END DO NOWAIT
    end do
 
@@ -89,9 +98,14 @@
    hvadv(:,:,kmax) = _HALF_*hvn(:,:,kmax)
 
    if (vel_hor_adv .eq. J7) then
+#ifdef SLICE_MODEL
+      uuadv(:,j+1,:) = uuadv(:,j,:)
+#endif
       do k=1,kmax-1
 !        OMP-NOTE: these loops cannot be threaded!
+#ifndef SLICE_MODEL
          do j=jmin-HALO,jmax+HALO-1
+#endif
             do i=imin-HALO,imax+HALO-1
                if (ax(i,j) .eq. 0) then
                   uuadv(i,j,k) = _ZERO_
@@ -103,7 +117,9 @@
                end if
 !              KK-TODO: do we have to average h[o|n]adv as well?
             end do
+#ifndef SLICE_MODEL
          end do
+#endif
       end do
    end if
 

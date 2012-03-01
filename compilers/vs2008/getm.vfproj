@@ -39,11 +39,19 @@
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
 		<Filter Name="2d">
+		<File RelativePath="..\..\src\2d\adv_arakawa_j7_2dh.F90"/>
+		<File RelativePath="..\..\src\2d\adv_fct_2dh.F90"/>
+		<File RelativePath="..\..\src\2d\adv_u_split.F90"/>
+		<File RelativePath="..\..\src\2d\adv_upstream_2dh.F90"/>
+		<File RelativePath="..\..\src\2d\adv_v_split.F90"/>
+		<File RelativePath="..\..\src\2d\advection.F90"/>
 		<File RelativePath="..\..\src\2d\bottom_friction.F90"/>
+		<File RelativePath="..\..\src\2d\calv_uvex.F90"/>
 		<File RelativePath="..\..\src\2d\cfl_check.F90"/>
 		<File RelativePath="..\..\src\2d\depth_update.F90"/>
 		<File RelativePath="..\..\src\2d\have_bdy.F90"/>
 		<File RelativePath="..\..\src\2d\m2d.F90"/>
+		<File RelativePath="..\..\src\2d\m2d_general.F90"/>
 		<File RelativePath="..\..\src\2d\momentum.F90"/>
 		<File RelativePath="..\..\src\2d\residual.F90"/>
 		<File RelativePath="..\..\src\2d\sealevel.F90"/>
@@ -53,12 +61,12 @@
 		<File RelativePath="..\..\src\2d\variables_2d.F90"/></Filter>
 		<Filter Name="3d">
 		<File RelativePath="..\..\src\3d\adaptive_coordinates.F90"/>
+		<File RelativePath="..\..\src\3d\adv_w_split_3d.F90"/>
 		<File RelativePath="..\..\src\3d\advection_3d.F90"/>
 		<File RelativePath="..\..\src\3d\bdy_3d.F90"/>
 		<File RelativePath="..\..\src\3d\check_h.F90"/>
 		<File RelativePath="..\..\src\3d\coordinates.F90"/>
 		<File RelativePath="..\..\src\3d\eqstate.F90"/>
-		<File RelativePath="..\..\src\3d\fct_2dh_adv.F90"/>
 		<File RelativePath="..\..\src\3d\general_coordinates.F90"/>
 		<File RelativePath="..\..\src\3d\getm_bio.F90"/>
 		<File RelativePath="..\..\src\3d\getm_fabm.F90"/>
@@ -80,8 +88,6 @@
 		<File RelativePath="..\..\src\3d\rivers.F90"/>
 		<File RelativePath="..\..\src\3d\salinity.F90"/>
 		<File RelativePath="..\..\src\3d\sigma_coordinates.F90"/>
-		<File RelativePath="..\..\src\3d\slow_advection.F90"/>
-		<File RelativePath="..\..\src\3d\slow_diffusion.F90"/>
 		<File RelativePath="..\..\src\3d\slow_terms.F90"/>
 		<File RelativePath="..\..\src\3d\ss_nn.F90"/>
 		<File RelativePath="..\..\src\3d\start_macro.F90"/>
@@ -89,17 +95,11 @@
 		<File RelativePath="..\..\src\3d\stresses_3d.F90"/>
 		<File RelativePath="..\..\src\3d\temperature.F90"/>
 		<File RelativePath="..\..\src\3d\tke_eps_advect_3d.F90"/>
-		<File RelativePath="..\..\src\3d\u_split_adv.F90"/>
-		<File RelativePath="..\..\src\3d\upstream_2dh_adv.F90"/>
-		<File RelativePath="..\..\src\3d\upstream_adv.F90"/>
 		<File RelativePath="..\..\src\3d\uu_momentum_3d.F90"/>
 		<File RelativePath="..\..\src\3d\uv_advect_3d.F90"/>
 		<File RelativePath="..\..\src\3d\uv_diffusion_3d.F90"/>
-		<File RelativePath="..\..\src\3d\v_split_adv.F90"/>
 		<File RelativePath="..\..\src\3d\variables_3d.F90"/>
 		<File RelativePath="..\..\src\3d\vv_momentum_3d.F90"/>
-		<File RelativePath="..\..\src\3d\w_split_adv.F90"/>
-		<File RelativePath="..\..\src\3d\w_split_it_adv.F90"/>
 		<File RelativePath="..\..\src\3d\ww_momentum_3d.F90"/></Filter>
 		<Filter Name="domain">
 		<File RelativePath="..\..\src\domain\bdy_spec.F90"/>
