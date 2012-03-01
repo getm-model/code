@@ -164,7 +164,7 @@
    use domain, only: dx,dy,ard1
 #endif
    use m2d, only: Am
-   use variables_2d, only: PP,An,AnX
+   use variables_2d, only: An,AnX
    use getm_timers,  only: tic,toc,TIM_UVDIFF
 !$ use omp_lib
    IMPLICIT NONE
@@ -184,6 +184,7 @@
 !  Modified by       : Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
+   REALTYPE,dimension(E2DFIELD) :: work2d
    logical :: use_Am
    integer :: i,j
 !EOP
@@ -193,6 +194,9 @@
    integer, save :: Ncall = 0
    Ncall = Ncall+1
    write(debug,*) 'uv_diffusion() # ',Ncall
+#endif
+#ifdef SLICE_MODEL
+   j = jmax/2 ! this MUST NOT be changed!!!
 #endif
    CALL tic(TIM_UVDIFF)
 
@@ -208,54 +212,59 @@
 #endif
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP          PRIVATE(i,j)
+!$OMP          FIRSTPRIVATE(j)                                         &
+!$OMP          PRIVATE(i)
 
 !  Central for dx(2*Am*dx(U/DU))
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin,jmax
-      do i=imin,imax+1          ! PP defined on T-points
-         PP(i,j)=_ZERO_
+#endif
+      do i=imin,imax+1          ! work2d defined on T-points
+         work2d(i,j)=_ZERO_
 !        Note (KK): we do not need N/S open bdy cells
 !                   in W/E open bdy cells outflow condition must be
 !                   explicitely prescribed (U(i,:) = U(i-1,:))
          if (az(i,j) .eq. 1) then
             if(use_Am) then
 !              KK-TODO: we need center depth at velocity time stage
-               PP(i,j)=_TWO_*Am*DYC*D(i,j)               &
+               work2d(i,j)=_TWO_*Am*DYC*D(i,j)               &
                        *(U(i,j)/DU(i,j)-U(i-1,j)/DU(i-1,j))/DXC
             end if
             if (An_method .gt. 0) then
-               PP(i,j)=PP(i,j)+An(i,j)*DYC*(U(i,j)-U(i-1,j))/DXC
+               work2d(i,j)=work2d(i,j)+An(i,j)*DYC*(U(i,j)-U(i-1,j))/DXC
             end if
          end if
       end do
-   end do
+#ifdef SLICE_MODEL
 !$OMP END DO
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax      ! UEx defined on U-points
-      do i=imin,imax
+#endif
+      do i=imin,imax      ! UEx defined on U-points
 !        Note (KK): we do not need UEx(au=3)
          if (au(i,j).eq.1 .or. au(i,j).eq.2) then
-            UEx(i,j)=UEx(i,j)-(PP(i+1,j)-PP(i  ,j))*ARUD1
+            UEx(i,j)=UEx(i,j)-(work2d(i+1,j)-work2d(i  ,j))*ARUD1
          end if
       end do
+#ifndef SLICE_MODEL
    end do
+#endif
 !$OMP END DO
 
 #ifndef SLICE_MODEL
 !  Central for dy(Am*(dy(U/DU)+dx(V/DV)))
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-1,jmax        ! PP defined on X-points
+   do j=jmin-1,jmax        ! work2d defined on X-points
       do i=imin,imax
-         PP(i,j)=_ZERO_
+         work2d(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
             if(use_Am) then
-               PP(i,j)=Am*_HALF_*(DU(i,j)+DU(i,j+1))*DXX  &
+               work2d(i,j)=Am*_HALF_*(DU(i,j)+DU(i,j+1))*DXX  &
                        *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
                         +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
             end if
             if (An_method .gt. 0) then
-               PP(i,j)=PP(i,j)+AnX(i,j)*(U(i,j+1)-U(i,j))*DXX/DYX
+               work2d(i,j)=work2d(i,j)+AnX(i,j)*(U(i,j+1)-U(i,j))*DXX/DYX
             end if
          end if
       end do
@@ -266,7 +275,7 @@
       do i=imin,imax
 !        Note (KK): we do not need UEx(au=3)
          if (au(i,j).eq.1 .or. au(i,j).eq.2) then
-            UEx(i,j)=UEx(i,j)-(PP(i,j  )-PP(i,j-1))*ARUD1
+            UEx(i,j)=UEx(i,j)-(work2d(i,j  )-work2d(i,j-1))*ARUD1
          end if
       end do
    end do
@@ -275,50 +284,54 @@
 
 !  Central for dx(Am*(dy(U/DU)+dx(V/DV)))
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax      ! PP defined on X-points
-      do i=imin-1,imax
-         PP(i,j)=_ZERO_
+#ifndef SLICE_MODEL
+   do j=jmin,jmax
+#endif
+      do i=imin-1,imax      ! work2d defined on X-points
+         work2d(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
             if(use_Am) then
-               PP(i,j)=Am*_HALF_*(DV(i,j)+DV(i+1,j))*DYX  &
+               work2d(i,j)=Am*_HALF_*(DV(i,j)+DV(i+1,j))*DYX  &
                        *((U(i,j+1)/DU(i,j+1)-U(i,j)/DU(i,j))/DYX &
                         +(V(i+1,j)/DV(i+1,j)-V(i,j)/DV(i,j))/DXX )
             end if
             if (An_method .gt. 0) then
-               PP(i,j)=PP(i,j)+AnX(i,j)*(V(i+1,j)-V(i,j))*DYX/DXX
+               work2d(i,j)=work2d(i,j)+AnX(i,j)*(V(i+1,j)-V(i,j))*DYX/DXX
             end if
          end if
       end do
-   end do
+#ifdef SLICE_MODEL
 !$OMP END DO
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax          ! VEx defined on V-points
-      do i=imin,imax
+#endif
+      do i=imin,imax          ! VEx defined on V-points
 !        Note (KK): we do not need VEx(av=3)
          if (av(i,j).eq.1 .or. av(i,j).eq.2) then
-            VEx(i,j)=VEx(i,j)-(PP(i  ,j)-PP(i-1,j))*ARVD1
+            VEx(i,j)=VEx(i,j)-(work2d(i  ,j)-work2d(i-1,j))*ARVD1
          end if
       end do
+#ifndef SLICE_MODEL
    end do
+#endif
 !$OMP END DO
 
 #ifndef SLICE_MODEL
 !  Central for dy(2*Am*dy(V/DV))
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax+1     ! PP defined on T-points
+   do j=jmin,jmax+1     ! work2d defined on T-points
       do i=imin,imax
-         PP(i,j)=_ZERO_
+         work2d(i,j)=_ZERO_
 !        Note (KK): we do not need W/E open bdy cells
 !                   in N/S open bdy cells outflow condition must be
 !                   explicitely prescribed (V(:,j) = V(:,j-1))
          if (az(i,j) .eq. 1) then
             if(use_Am) then
 !              KK-TODO: we need center depth at velocity time stage
-               PP(i,j)=_TWO_*Am*DXC*D(i,j)               &
+               work2d(i,j)=_TWO_*Am*DXC*D(i,j)               &
                        *(V(i,j)/DV(i,j)-V(i,j-1)/DV(i,j-1))/DYC
             end if
             if (An_method .gt. 0) then
-               PP(i,j)=PP(i,j)+An(i,j)*DXC*(V(i,j)-V(i,j-1))/DYC
+               work2d(i,j)=work2d(i,j)+An(i,j)*DXC*(V(i,j)-V(i,j-1))/DYC
             end if
          end if
       end do
@@ -329,7 +342,7 @@
       do i=imin,imax
 !        Note (KK): we do not need VEx(av=3)
          if (av(i,j).eq.1 .or. av(i,j).eq.2) then
-            VEx(i,j)=VEx(i,j)-(PP(i,j+1)-PP(i,j  ))*ARVD1
+            VEx(i,j)=VEx(i,j)-(work2d(i,j+1)-work2d(i,j  ))*ARVD1
          end if
       end do
    end do
@@ -337,6 +350,12 @@
 #endif
 
 !$OMP END PARALLEL
+
+#ifdef SLICE_MODEL
+   UEx(imin:imax,j+1) = UEx(imin:imax,j)
+   VEx(imin:imax,j-1) = VEx(imin:imax,j)
+   VEx(imin:imax,j+1) = VEx(imin:imax,j)
+#endif
 
 #ifdef _MOMENTUM_TERMS_
    if (present(hsd_u)) then
