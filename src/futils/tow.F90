@@ -85,7 +85,8 @@
    kp = 0
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP          PRIVATE(i,j,k)
+!$OMP          FIRSTPRIVATE(j)                                         &
+!$OMP          PRIVATE(i,k)
 
    do k=1,kmax
 
