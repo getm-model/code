@@ -296,16 +296,23 @@
    Ncall = Ncall+1
    write(debug,*) 'uv_advect_3d() # ',Ncall
 #endif
+#ifdef SLICE_MODEL
+   j = jmax/2 ! this MUST NOT be changed!!!
+#endif
    call tic(TIM_UVADV3D)
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          FIRSTPRIVATE(j)                                         &
+!$OMP          PRIVATE(i,k)
 
 
 ! Here begins dimensional split advection for u-velocity
 
    do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin-HALO,jmax+HALO
+#endif
          do i=imin-HALO,imax+HALO-1
 !           the velocity to be transported
             fadv3d(i,j,k) = uu(i,j,k)/hun(i,j,k)
@@ -321,14 +328,18 @@
 !                      therefore hvadv only valid until jmax+1
             hvadv(i,j,k) = _HALF_*( hvn(i,j,k) + hvn(i+1,j,k) )
          end do
+#ifndef SLICE_MODEL
       end do
+#endif
 !$OMP END DO NOWAIT
    end do
 
    if (vel_hor_adv .eq. J7) then
       do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
          do j=jmin-HALO,jmax+HALO
+#endif
             do i=imin-HALO,imax+HALO-1
 !              Note (KK): [uu|vv]adv defined on T-points (future U-points)
 !                         hnadv defined on X-points (future V-points)
@@ -357,11 +368,23 @@
                   end if
                end if
             end do
+#ifndef SLICE_MODEL
          end do
+#endif
 !$OMP END DO
+      end do
 
+#ifdef SLICE_MODEL
+      hnadv(imin-HALO:imax+HALO-1,j+1,:) = hnadv(imin-HALO:imax+HALO-1,j,:)
+      uuadv(imin-HALO:imax+HALO-1,j+1,:) = uuadv(imin-HALO:imax+HALO-1,j,:)
+      vvadv(imin-HALO:imax+HALO-1,j+1,:) = vvadv(imin-HALO:imax+HALO-1,j,:)
+#endif
+
+      do k=1,kmax
+#ifndef SLICE_MODEL
 !        OMP-NOTE (KK): j loop must not be changed and cannot be threaded!
          do j=jmin-HALO,jmax+HALO-1
+#endif
 !$OMP DO SCHEDULE(RUNTIME)
             do i=imin-HALO,imax+HALO-1
 !              Note (KK): [uu|vv]adv defined on V-points (future X-points)
@@ -378,15 +401,21 @@
                hnadv(i,j,k) = _HALF_*( hnadv(i,j,k) + hnadv(i,j+1,k) )
             end do
 !$OMP END DO
+#ifndef SLICE_MODEL
          end do
+#endif
       end do
+
 !$OMP SINGLE
       phadv => hnadv
 !$OMP END SINGLE
+
    else
+
 !$OMP SINGLE
       phadv => hun
 !$OMP END SINGLE
+
    end if
 
 !$OMP SINGLE
@@ -460,7 +489,9 @@
 
    do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin-HALO,jmax+HALO-1
+#endif
          do i=imin-HALO,imax+HALO
 !           the velocity to be transported
             fadv3d(i,j,k) = vv(i,j,k)/hvn(i,j,k)
@@ -476,14 +507,18 @@
 !                      therefore hvadv only valid until jmax
             hvadv(i,j,k) = _HALF_*( hvn(i,j,k) + hvn(i,j+1,k) )
          end do
+#ifndef SLICE_MODEL
       end do
+#endif
 !$OMP END DO NOWAIT
    end do
 
    if (vel_hor_adv .eq. J7) then
       do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
          do j=jmin-HALO,jmax+HALO-1
+#endif
             do i=imin-HALO,imax+HALO
 !              Note (KK): [uu|vv]adv defined on T-points (future V-points)
 !                         hnadv defined on X-points (future U-points)
@@ -512,6 +547,9 @@
                end if
                vvadv(i,j,k) = _HALF_*( vv(i,j,k)*DXV + vv(i,j+1,k)*DXVJP1 )
             end do
+#ifdef SLICE_MODEL
+!$OMP END DO
+#endif
 
 !           OMP-NOTE (KK): i loop must not be changed and cannot be threaded!
             do i=imin-HALO,imax+HALO-1
@@ -528,16 +566,22 @@
                end if
                hnadv(i,j,k) = _HALF_*( hnadv(i,j,k) + hnadv(i+1,j,k) )
             end do
+#ifndef SLICE_MODEL
          end do
 !$OMP END DO NOWAIT
+#endif
       end do
+
 !$OMP SINGLE
       phadv => hnadv
 !$OMP END SINGLE
+
    else
+
 !$OMP SINGLE
       phadv => hvn
 !$OMP END SINGLE
+
    end if
 
 !$OMP SINGLE

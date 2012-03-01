@@ -175,15 +175,22 @@
    Ncall = Ncall+1
    write(debug,*) 'uv_advect() # ',Ncall
 #endif
+#ifdef SLICE_MODEL
+   j = jmax/2 ! this MUST NOT be changed!!!
+#endif
    call tic(TIM_UVADV)
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j)
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          FIRSTPRIVATE(j)                                         &
+!$OMP          PRIVATE(i)
 
 
 !  Here begins dimensional split advection for u-velocity
 
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO
+#endif
       do i=imin-HALO,imax+HALO-1
 !        the velocity to be transported
          fadv(i,j) = U(i,j)/DU(i,j)
@@ -200,12 +207,16 @@
 !                   therefore DVadv only valid until jmax+1
          DVadv(i,j) = _HALF_*( DV(i,j) + DV(i+1,j) )
       end do
+#ifndef SLICE_MODEL
    end do
+#endif
 !$OMP END DO NOWAIT
 
    if (vel_adv_scheme .eq. J7) then
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin-HALO,jmax+HALO
+#endif
          do i=imin-HALO,imax+HALO-1
 !           Note (KK): [U|V]adv defined on T-points (future U-points)
 !                      Dadv defined on X-points (future V-points)
@@ -234,11 +245,21 @@
                end if
             end if
          end do
+#ifndef SLICE_MODEL
       end do
+#endif
 !$OMP END DO
 
+#ifdef SLICE_MODEL
+      Dadv(imin-HALO:imax+HALO-1,j+1) = Dadv(imin-HALO:imax+HALO-1,j)
+      Uadv(imin-HALO:imax+HALO-1,j+1) = Uadv(imin-HALO:imax+HALO-1,j)
+      Vadv(imin-HALO:imax+HALO-1,j+1) = Vadv(imin-HALO:imax+HALO-1,j)
+#endif
+
+#ifndef SLICE_MODEL
 !     OMP-NOTE (KK): j loop must not be changed and cannot be threaded!
       do j=jmin-HALO,jmax+HALO-1
+#endif
 !$OMP DO SCHEDULE(RUNTIME)
          do i=imin-HALO,imax+HALO-1
 !           Note (KK): [U|V]adv defined on V-points (future X-points)
@@ -255,14 +276,20 @@
             Dadv(i,j) = _HALF_*( Dadv(i,j) + Dadv(i,j+1) )
          end do
 !$OMP END DO
+#ifndef SLICE_MODEL
       end do
+#endif
+
 !$OMP SINGLE
       pDadv => Dadv
 !$OMP END SINGLE
+
    else
+
 !$OMP SINGLE
       pDadv => DU
 !$OMP END SINGLE
+
    end if
 
 !$OMP SINGLE
@@ -283,7 +310,9 @@
 !  Here begins dimensional split advection for v-velocity
 
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO-1
+#endif
       do i=imin-HALO,imax+HALO
 !        the velocity to be transported
          fadv(i,j) = V(i,j)/DV(i,j)
@@ -300,12 +329,16 @@
 !                   therefore DVadv only valid until jmax
          DVadv(i,j) = _HALF_*( DV(i,j) + DV(i,j+1) )
       end do
+#ifndef SLICE_MODEL
    end do
+#endif
 !$OMP END DO NOWAIT
 
    if (vel_adv_scheme .eq. J7) then
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin-HALO,jmax+HALO-1
+#endif
          do i=imin-HALO,imax+HALO
 !           Note (KK): [U|V]adv defined on T-points (future V-points)
 !                      Dadv defined on X-points (future U-points)
@@ -334,6 +367,9 @@
             end if
             Vadv(i,j) = _HALF_*( V(i,j)*DXV + V(i,j+1)*DXVJP1 )
          end do
+#ifdef SLICE_MODEL
+!$OMP END DO
+#endif
 
 !        OMP-NOTE (KK): i loop must not be changed and cannot be threaded!
          do i=imin-HALO,imax+HALO-1
@@ -350,15 +386,21 @@
             end if
             Dadv(i,j) = _HALF_*( Dadv(i,j) + Dadv(i+1,j) )
          end do
+#ifndef SLICE_MODEL
       end do
 !$OMP END DO
+#endif
+
 !$OMP SINGLE
       pDadv => Dadv
 !$OMP END SINGLE
+
    else
+
 !$OMP SINGLE
       pDadv => DV
 !$OMP END SINGLE
+
    end if
 
 !$OMP END PARALLEL

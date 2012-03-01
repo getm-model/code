@@ -404,6 +404,7 @@
 !
 ! !LOCAL VARIABLES:
    type(t_adv_grid),pointer :: adv_grid
+   integer                  :: j
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -611,6 +612,18 @@
       end select
 
    end if
+
+#ifdef SLICE_MODEL
+   j = jmax/2
+   f(:,j+1)   = f(:,j)
+   Di(:,j+1)  = Di(:,j)
+   adv(:,j+1) = adv(:,j)
+   if (tag .eq. V_TAG) then
+      f(:,j-1)   = f(:,j)
+      Di(:,j-1)  = Di(:,j)
+      adv(:,j-1) = adv(:,j)
+   end if
+#endif
 
    if (present(Dires)) Dires = Di
    if (present(advres)) advres = adv
