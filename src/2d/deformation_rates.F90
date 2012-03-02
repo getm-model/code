@@ -41,8 +41,8 @@
 !  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
-!  allocated outside a module, therefore saved
    REALTYPE,dimension(E2DFIELD)             :: work2d
+!  allocated outside a module, therefore saved
    REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel
    integer                                  :: rc
    logical,save                             :: first=.true.
@@ -57,7 +57,7 @@
    write(debug,*) 'deformation_rates() # ',Ncall
 #endif
 #ifdef SLICE_MODEL
-   j=jmax/2
+   j = jmax/2 ! this MUST NOT be changed!!!
 #endif
    call tic(TIM_DEFORM)
 
@@ -78,13 +78,13 @@
 !             for exact 3D deformation tensor in horizontal orthogonal coordinates
 !             see e.g. Kantha and Clayson 2000, page 35
 
-#ifndef SLICE_MODEL
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,tmp,velgrad)
-#endif
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          FIRSTPRIVATE(j)                                         &
+!$OMP          PRIVATE(i,tmp,velgrad)
 
 !  zonal velocity
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO
 #endif
       do i=imin-HALO,imax+HALO-1
@@ -94,14 +94,12 @@
       end do
 #ifndef SLICE_MODEL
    end do
-!$OMP END DO NOWAIT
-#else
-   u_vel(imin-HALO:imax+HALO-1,j+1) = u_vel(imin-HALO:imax+HALO-1,j)
 #endif
+!$OMP END DO NOWAIT
 
 !  meridional velocity
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO-1
 #endif
       do i=imin-HALO,imax+HALO
@@ -111,17 +109,20 @@
       end do
 #ifndef SLICE_MODEL
    end do
+#endif
 !$OMP END DO
-#else
-   v_vel(:,j-1) = v_vel(:,j)
-   v_vel(:,j+1) = v_vel(:,j)
+
+#ifdef SLICE_MODEL
+!$OMP SINGLE
+   u_vel(imin-HALO:imax+HALO-1,j+1) = u_vel(imin-HALO:imax+HALO-1,j)
+   v_vel(         :           ,j-1) = v_vel(         :           ,j)
+   v_vel(         :           ,j+1) = v_vel(         :           ,j)
+!$OMP END SINGLE
 #endif
 
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-#ifndef SLICE_MODEL
-!$OMP MASTER
-#endif
+!$OMP SINGLE
 !  mirror velocities based on ouflow condition for transverse velocity
    do n = 1,NNB ! northern open boundaries (dudyX=0)
       j = nj(n)-1
@@ -191,10 +192,7 @@
          end if
       end do
    end do
-#ifndef SLICE_MODEL
-!$OMP END MASTER
-!$OMP BARRIER
-#endif
+!$OMP END SINGLE
 #endif
 #endif
 
@@ -205,8 +203,8 @@
 
    if (present(dudxC)) then
 !     zonal strain rate at T-points
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin-HALO+1,jmax+HALO-1
 #endif
          do i=imin-HALO+1,imax+HALO-1
@@ -242,16 +240,21 @@
          end do
 #ifndef SLICE_MODEL
       end do
+#endif
 !$OMP END DO NOWAIT
-#else
+
+#ifdef SLICE_MODEL
+!$OMP BARRIER
+!$OMP SINGLE
       dudxC(imin-HALO+1:imax+HALO-1,j+1) = dudxC(imin-HALO+1:imax+HALO-1,j)
+!$OMP END SINGLE
 #endif
 
       if (present(dudxU)) then
-   !     interpolation of zonal strain rate to U-points
-#ifndef SLICE_MODEL
+!        interpolation of zonal strain rate to U-points
 !$OMP BARRIER
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
          do j=jmin-HALO+1,jmax+HALO-1
 #endif
             do i=imin-HALO+1,imax+HALO-2
@@ -267,9 +270,14 @@
             end do
 #ifndef SLICE_MODEL
          end do
+#endif
 !$OMP END DO NOWAIT
-#else
+
+#ifdef SLICE_MODEL
+!$OMP BARRIER
+!$OMP SINGLE
          dudxU(imin-HALO+1:imax+HALO-2,j+1) = dudxU(imin-HALO+1:imax+HALO-2,j)
+!$OMP END SINGLE
 #endif
       end if
 
@@ -278,20 +286,22 @@
 
    if (present(dudxV)) then
 !     zonal strain rate at V-points
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin-HALO,jmax+HALO-1
 #endif
-!        calculate u_velX
-         do i=imin-HALO,imax+HALO-1
+         do i=imin-HALO,imax+HALO-1 !        calculate u_velX
             if (ax(i,j) .ne. 0) then
                work2d(i,j) = _HALF_ * ( u_vel(i,j) + u_vel(i,j+1) )
             else
                work2d(i,j) = _ZERO_
             end if
          end do
-!        set dudxV
-         do i=imin-HALO+1,imax+HALO-1
+#ifdef SLICE_MODEL
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
+#endif
+         do i=imin-HALO+1,imax+HALO-1 !        set dudxV
 !           Note (KK): outflow condition dudxV(av=3)=0
             if (av(i,j).eq.1 .or. av(i,j).eq.2) then
                dudxV(i,j) = ( work2d(i,j) - work2d(i-1,j) )/DXV
@@ -308,11 +318,16 @@
          end do
 #ifndef SLICE_MODEL
       end do
-!$OMP END DO NOWAIT
-#else
+#endif
+!$OMP END DO
+
+#ifdef SLICE_MODEL
+!$OMP SINGLE
       dudxV(imin-HALO+1:imax+HALO-1,j-1) = dudxV(imin-HALO+1:imax+HALO-1,j)
       dudxV(imin-HALO+1:imax+HALO-1,j+1) = dudxV(imin-HALO+1:imax+HALO-1,j)
+!$OMP END SINGLE
 #endif
+
    end if
 
 #ifndef SLICE_MODEL
@@ -387,8 +402,6 @@
    if (present(dvdyU)) then
 !     meriodional strain rate at U-points
 !     calculate v_velX
-!$OMP BARRIER
-!     Note (KK): we might need omp barrier because work2d was used before with nowait
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO-1
@@ -419,7 +432,7 @@
             end if
          end do
       end do
-!$OMP END DO NOWAIT
+!$OMP END DO
    end if
 
 #endif
@@ -433,8 +446,8 @@
 
    if (present(dvdxX) .or. present(dudyX) .or. present(shearX)) then
 
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin-HALO,jmax+HALO-1
 #endif
          do i=imin-HALO,imax+HALO-1
@@ -535,8 +548,12 @@
          end do
 #ifndef SLICE_MODEL
       end do
-!$OMP END DO
-#else
+#endif
+!$OMP END DO NOWAIT
+
+#ifdef SLICE_MODEL
+!$OMP BARRIER
+!$OMP SINGLE
       if (present(dvdxX)) then
          dvdxX(imin-HALO:imax+HALO-1,j-1) = dvdxX(imin-HALO:imax+HALO-1,j)
          dvdxX(imin-HALO:imax+HALO-1,j+1) = dvdxX(imin-HALO:imax+HALO-1,j)
@@ -545,27 +562,28 @@
          shearX(imin-HALO:imax+HALO-1,j-1) = shearX(imin-HALO:imax+HALO-1,j)
          shearX(imin-HALO:imax+HALO-1,j+1) = shearX(imin-HALO:imax+HALO-1,j)
       end if
+!$OMP END SINGLE
 #endif
 
    end if
 
 !  shear rate at U-points
    if (present(dvdxU)) then
-#ifndef SLICE_MODEL
-!$OMP BARRIER
-!     Note (KK): we need omp barrier here, because work2d was used with nowait
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin-HALO+1,jmax+HALO-1
 #endif
-!        calculate v_velC
-         do i=imin-HALO,imax+HALO
+         do i=imin-HALO,imax+HALO !        calculate v_velC
 !           Note (KK): we only need v_velC(az=1)
             if (az(i,j) .eq. 1) then
                work2d(i,j) = _HALF_ * ( v_vel(i,j-1) + v_vel(i,j) )
             end if
          end do
-!        calculate dvdxU
-         do i=imin-HALO,imax+HALO-1
+#ifdef SLICE_MODEL
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
+#endif
+         do i=imin-HALO,imax+HALO-1!        calculate dvdxU
 !           Note (KK): slip condition dvdxU(au=0)=0
 !                      outflow condition at W/E open bdys dvdxU(au=2)=0
 !           KK-TODO: metric correction
@@ -581,15 +599,22 @@
          end do
 #ifndef SLICE_MODEL
       end do
-!$OMP END DO NOWAIT
-#else
-      dvdxU(imin-HALO:imax+HALO-1,j+1) = dvdxU(imin-HALO:imax+HALO-1,j)
 #endif
+!$OMP END DO
+
+#ifdef SLICE_MODEL
+!$OMP SINGLE
+      dvdxU(imin-HALO:imax+HALO-1,j+1) = dvdxU(imin-HALO:imax+HALO-1,j)
+!$OMP END SINGLE
+#endif
+
    end if
+
    if (present(shearX) .and. present(shearU)) then
 !     interpolation of shear rate to U-points
-#ifndef SLICE_MODEL
+!$OMP BARRIER
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin-HALO+1,jmax+HALO-1
 #endif
          do i=imin-HALO,imax+HALO-1
@@ -603,18 +628,22 @@
          end do
 #ifndef SLICE_MODEL
       end do
-!$OMP END DO
-#else
-      shearU(imin-HALO:imax+HALO-1,j+1) = shearU(imin-HALO:imax+HALO-1,j)
 #endif
+!$OMP END DO NOWAIT
+
+#ifdef SLICE_MODEL
+!$OMP BARRIER
+!$OMP SINGLE
+      shearU(imin-HALO:imax+HALO-1,j+1) = shearU(imin-HALO:imax+HALO-1,j)
+!$OMP END SINGLE
+#endif
+
    end if
 
 !  shear rate at V-points
 #ifndef SLICE_MODEL
    if (present(dudyV)) then
 !     calculate u_velC
-!$OMP BARRIER
-!     Note (KK): we need omp barrier here, because work2d was used with nowait
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO+1,imax+HALO-1
@@ -643,13 +672,15 @@
             end if
          end do
       end do
-!$OMP END DO NOWAIT
+!$OMP END DO
    end if
 #endif
+
    if (present(shearX) .and. present(shearV)) then
 !     interpolation of shear rate to V-points
-#ifndef SLICE_MODEL
+!$OMP BARRIER
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin-HALO,jmax+HALO-1
 #endif
          do i=imin-HALO+1,imax+HALO-1
@@ -663,16 +694,20 @@
          end do
 #ifndef SLICE_MODEL
       end do
+#endif
 !$OMP END DO NOWAIT
-#else
+
+#ifdef SLICE_MODEL
+!$OMP BARRIER
+!$OMP SINGLE
       shearV(imin-HALO+1:imax+HALO-1,j-1) = shearV(imin-HALO+1:imax+HALO-1,j)
       shearV(imin-HALO+1:imax+HALO-1,j+1) = shearV(imin-HALO+1:imax+HALO-1,j)
+!$OMP END SINGLE
 #endif
+
    end if
 
-#ifndef SLICE_MODEL
 !$OMP END PARALLEL
-#endif
 
    call toc(TIM_DEFORM)
 #ifdef DEBUG
@@ -681,8 +716,7 @@
 #endif
    return
    end subroutine deformation_rates
-
 !EOC
 !-----------------------------------------------------------------------
-! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
+! Copyright (C) 2011 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------
