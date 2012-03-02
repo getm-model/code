@@ -21,7 +21,7 @@
    use variables_3d, only: dudxV_3d,dvdyU_3d,shearU_3d
    use variables_3d, only: diffxx,diffxy,diffyx,diffyy
    use getm_timers, only: tic,toc,TIM_STIRR
-
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !REVISION HISTORY:
@@ -39,16 +39,20 @@
    write(debug,*) 'tracer_stirring() # ',Ncall
 #endif
 #ifdef SLICE_MODEL
-      j=jmax/2
+   j = jmax/2 ! this MUST NOT be changed!!!
 #endif
    call tic(TIM_STIRR)
 
 !  Note (KK): in case of SLICE_MODEL only diffxx
 !             is needed in tracer_diffusion
 
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          FIRSTPRIVATE(j,dvdyU)                                   &
+!$OMP          PRIVATE(i,k,velgrad,shear,tension,deformation,factor)
 
    do k=1,kmax
 
+!$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
       do j=jmin-1,jmax+1
 #endif
@@ -75,11 +79,18 @@
          end do
 #ifndef SLICE_MODEL
       end do
-#else
+#endif
+!$OMP END DO NOWAIT
+
+#ifdef SLICE_MODEL
+!$OMP BARRIER
+!$OMP SINGLE
       diffxx(imin-1:imax,j+1,k) = diffxx(imin-1:imax,j,k)
+!$OMP END SINGLE
 #endif
 
 #ifndef SLICE_MODEL
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax
          do i=imin-1,imax+1
 !           Note (KK): we only need diffy[x|y](av=[1|2]) in tracer_diffusion
@@ -99,10 +110,12 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
 #endif
 
    end do
 
+!$OMP END PARALLEL
 
    call toc(TIM_STIRR)
 #ifdef DEBUG
@@ -113,5 +126,5 @@
    end subroutine tracer_stirring
 !EOC
 !-----------------------------------------------------------------------
-! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
+! Copyright (C) 2011 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------
