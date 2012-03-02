@@ -116,7 +116,9 @@
 !$OMP END DO
 
 #ifdef SLICE_MODEL
+!$OMP SINGLE
    v_vel(:,j-1) = v_vel(:,j)
+!$OMP END SINGLE
 #endif
 
 !  The x-direction
@@ -178,7 +180,9 @@
 !$OMP END DO
 
 #ifdef SLICE_MODEL
+!$OMP SINGLE
    work2d(imin-HALO+1:imax+HALO-1,j+1) = work2d(imin-HALO+1:imax+HALO-1,j)
+!$OMP END SINGLE
 #endif
 
 !$OMP DO SCHEDULE(RUNTIME)
