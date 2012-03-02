@@ -545,7 +545,9 @@
 #endif
 
 #ifndef NO_BAROTROPIC
-   call slow_terms()
+   if (.not. no_2d) then
+      call slow_terms()
+   end if
 #endif
 
    call tic(TIM_INTEGR3D)
