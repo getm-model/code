@@ -267,10 +267,10 @@
    write(debug,*) 'do_nonhydrostatic() # ',Ncall
 #endif
 #ifdef SLICE_MODEL
-   j = jmax/2 ! must not be changed!!!
+   j = jmax/2 ! this MUST NOT be changed!!!
 #endif
-
    call tic(TIM_NONHYD)
+
 !  calculate wc(n+1/2) (result to wc)
    call tow(imin,jmin,imax,jmax,kmin,kmax,az,dt,                 &
 #if defined(CURVILINEAR) || defined(SPHERICAL)
@@ -313,10 +313,11 @@
 !  KK-TODO: do we really have to add num?
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP          PRIVATE(i,j,k)
+!$OMP          FIRSTPRIVATE(j)                                         &
+!$OMP          PRIVATE(i,k)
 
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO
 #endif
       do i=imin-HALO,imax+HALO
@@ -347,14 +348,15 @@
       end do
 #ifndef SLICE_MODEL
    end do
-!$OMP END DO
-#else
-   work3d(:,j+1,:) = work3d(:,j,:)
 #endif
-!  wc now free
+!$OMP END DO
 
 !$OMP END PARALLEL
 
+#ifdef SLICE_MODEL
+   work3d(:,j+1,:) = work3d(:,j,:)
+#endif
+!  wc now free
 
 !  filter bnh (result to minus_bnh)
    select case(bnh_filter)
