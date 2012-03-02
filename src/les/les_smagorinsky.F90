@@ -26,7 +26,7 @@
    use domain, only: dx,dy
 #endif
    use getm_timers, only: tic,toc,TIM_SMAG2D
-
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -43,10 +43,7 @@
 !  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
-   REALTYPE :: dudx
-#ifndef SLICE_MODEL
-   REALTYPE :: dvdy
-#endif
+   REALTYPE :: dudx,dvdy
    integer  :: i,j
 
 !EOP
@@ -58,11 +55,16 @@
    write(debug,*) 'les_smagorinsky() # ',Ncall
 #endif
 #ifdef SLICE_MODEL
-   j = jmax/2
+   j = jmax/2 ! this MUST NOT be changed!!!
 #endif
    call tic(TIM_SMAG2D)
 
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          FIRSTPRIVATE(j)                                         &
+!$OMP          PRIVATE(i,dudx,dvdy)
+
    if (present(AmC)) then
+!$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
       do j=jmin-1,jmax+1
 #endif
@@ -85,12 +87,20 @@
          end do
 #ifndef SLICE_MODEL
       end do
-#else
-      AmC(imin-1:imax+1,j+1) =  AmC(imin-1:imax+1,j)
 #endif
+!$OMP END DO NOWAIT
+
+#ifdef SLICE_MODEL
+!$OMP BARRIER
+!$OMP SINGLE
+      AmC(imin-1:imax+1,j+1) =  AmC(imin-1:imax+1,j)
+!$OMP END SINGLE
+#endif
+
    end if
 
    if (present(AmX)) then
+!$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
       do j=jmin-1,jmax
 #endif
@@ -166,13 +176,21 @@
          end do
 #ifndef SLICE_MODEL
       end do
-#else
+#endif
+!$OMP END DO NOWAIT
+
+#ifdef SLICE_MODEL
+!$OMP BARRIER
+!$OMP SINGLE
       AmX(imin-1:imax,j-1) = AmX(imin-1:imax,j)
       AmX(imin-1:imax,j+1) = AmX(imin-1:imax,j)
+!$OMP END SINGLE
 #endif
+
    end if
 
    if (present(AmU)) then
+!$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
       do j=jmin-1,jmax+1
 #endif
@@ -196,13 +214,21 @@
          end do
 #ifndef SLICE_MODEL
       end do
-#else
-      AmU(imin-1:imax,j+1) = AmU(imin-1:imax,j)
 #endif
+!$OMP END DO NOWAIT
+
+#ifdef SLICE_MODEL
+!$OMP BARRIER
+!$OMP SINGLE
+      AmU(imin-1:imax,j+1) = AmU(imin-1:imax,j)
+!$OMP END SINGLE
+#endif
+
    end if
 
 #ifndef SLICE_MODEL
    if (present(AmV)) then
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax
          do i=imin-1,imax+1
 !           Note (KK): we only need AmV(av=[1|2]) in tracer_diffusion
@@ -221,8 +247,11 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
    end if
 #endif
+
+!$OMP END PARALLEL
 
    call toc(TIM_SMAG2D)
 #ifdef DEBUG
@@ -231,8 +260,7 @@
 #endif
    return
    end subroutine les_smagorinsky
-
 !EOC
 !-----------------------------------------------------------------------
-! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
+! Copyright (C) 2011 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------
