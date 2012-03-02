@@ -251,9 +251,11 @@
 !$OMP END DO
 
 #ifdef SLICE_MODEL
+!$OMP SINGLE
       Dadv(imin-HALO:imax+HALO-1,j+1) = Dadv(imin-HALO:imax+HALO-1,j)
       Uadv(imin-HALO:imax+HALO-1,j+1) = Uadv(imin-HALO:imax+HALO-1,j)
       Vadv(imin-HALO:imax+HALO-1,j+1) = Vadv(imin-HALO:imax+HALO-1,j)
+!$OMP END SINGLE
 #endif
 
 #ifndef SLICE_MODEL
