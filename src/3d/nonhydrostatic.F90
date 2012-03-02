@@ -255,7 +255,7 @@
    integer,intent(in)           :: nonhyd_loop,vel_hor_adv,vel_ver_adv,vel_adv_split
 !
 ! !LOCAL VARIABLES:
-   REALTYPE,dimension(I3DFIELD) :: wc,work3d
+   REALTYPE,dimension(I3DFIELD) :: wc,bnh
    REALTYPE                     :: weight
    integer                      :: i,j,k
 !EOP
@@ -283,7 +283,7 @@
    call update_3d_halo(wc,wc,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 
-!  initialise bnh by advective term (result to work3d, wc still needed!!!)
+!  initialise bnh by advective term (result to bnh, wc still needed!!!)
 #ifndef NO_ADVECT
 !  wc(n+1/2) will be advected from h(n+1/2) to h(n+3/2) by transports at (n+1/2) ?
 !  wc(n-1/2) was advected from h(n-1/2) to h(n+1/2) by transports at (n-1/2) ?
@@ -294,22 +294,22 @@
 
    call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                   &
                         vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,H_TAG, &
-                        advres=work3d)
+                        advres=bnh)
 
 !  halo update advective (and horizontal viscous) terms [ div(hu*wc) / h ](n+1/2)
-   call update_3d_halo(work3d,work3d,az,imin,jmin,imax,jmax,kmax,H_TAG)
+   call update_3d_halo(bnh,bnh,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 #else
-   work3d = _ZERO_
+   bnh = _ZERO_
 #endif
 
-!  add local vertical acceleration (result to work3d, wc still needed!!!)
+!  add local vertical acceleration (result to bnh, wc still needed!!!)
 !  [del(h*wc)/delt](n) / h(n) ?
-!  work3d = (hwcn*wc - hwco*wco)/ho*dtm1 ?
+!  bnh = (hwcn*wc - hwco*wco)/ho*dtm1 ?
 !  [del(h*wc)/delt](n+1/2) / h(n+1)
-   work3d = work3d + (wc - ho/hn*wco)*dtm1
+   bnh = bnh + (wc - ho/hn*wco)*dtm1
 
-!  add vertical viscous terms at (n+1/2) (result to work3d)
+!  add vertical viscous terms at (n+1/2) (result to bnh)
 !  KK-TODO: do we really have to add num?
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
@@ -322,13 +322,13 @@
 #endif
       do i=imin-HALO,imax+HALO
          if ( az(i,j) .ge. 1 ) then
-            work3d(i,j,1) = work3d(i,j,1)           &
+            bnh(i,j,1) = bnh(i,j,1)           &
                - (num(i,j,1) + avmmol)                  &
                  * (          wc(i,j,2) - wc(i,j,1)   ) &
                  / ( _HALF_*( hn(i,j,2) + hn(i,j,1) ) ) &
                  / hn(i,j,1)
             do k=2,kmax-1
-               work3d(i,j,k) = work3d(i,j,k)                     &
+               bnh(i,j,k) = bnh(i,j,k)                     &
                   - (                                                &
                         (num(i,j,k) + avmmol)                        &
                         * (            wc(i,j,k+1) - wc(i,j,k  )   ) &
@@ -339,7 +339,7 @@
                      )                                               &
                      / hn(i,j,k)
             end do
-            work3d(i,j,kmax) = work3d(i,j,kmax)               &
+            bnh(i,j,kmax) = bnh(i,j,kmax)               &
                - (num(i,j,kmax-1) + avmmol)                       &
                  * (            wc(i,j,kmax) - wc(i,j,kmax-1)   ) &
                  / ( _HALF_ * ( hn(i,j,kmax) + hn(i,j,kmax-1) ) ) &
@@ -354,24 +354,24 @@
 !$OMP END PARALLEL
 
 #ifdef SLICE_MODEL
-   work3d(:,j+1,:) = work3d(:,j,:)
+   bnh(:,j+1,:) = bnh(:,j,:)
 #endif
 !  wc now free
 
 !  filter bnh (result to minus_bnh)
    select case(bnh_filter)
       case (1)
-         minus_bnh = -bnh_weight*work3d
+         minus_bnh = -bnh_weight*bnh
       case (3)
-         minus_bnh = -bnh_weight*work3d + (_ONE_- bnh_weight)*minus_bnh
+         minus_bnh = -bnh_weight*bnh + (_ONE_- bnh_weight)*minus_bnh
       case (4)
-         !minus_bnh = minus_bnh - work3d/dfloat(nonhyd_iters) ! not usable when iteration is prematurely abrupted
+         !minus_bnh = minus_bnh - bnh/dfloat(nonhyd_iters) ! not usable when iteration is prematurely abrupted
          weight = _ONE_/dfloat(nonhyd_loop)
-         minus_bnh = -weight*work3d + (_ONE_- weight)*minus_bnh
+         minus_bnh = -weight*bnh + (_ONE_- weight)*minus_bnh
       case default
-         minus_bnh = -work3d
+         minus_bnh = -bnh
    end select
-!  work3d now free
+!  bnh now free
 
 !  break iteration
    !nonhyd_loop = nonhyd_iters
