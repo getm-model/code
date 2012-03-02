@@ -23,7 +23,6 @@
 #endif
    use domain, only: NWB,NNB,NEB,NSB
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
-   use variables_2d, only: PP
    use getm_timers, only: tic,toc,TIM_DEFORM
 
    IMPLICIT NONE
@@ -43,6 +42,7 @@
 !
 ! !LOCAL VARIABLES:
 !  allocated outside a module, therefore saved
+   REALTYPE,dimension(E2DFIELD)             :: work2d
    REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel
    integer                                  :: rc
    logical,save                             :: first=.true.
@@ -285,16 +285,16 @@
 !        calculate u_velX
          do i=imin-HALO,imax+HALO-1
             if (ax(i,j) .ne. 0) then
-               PP(i,j) = _HALF_ * ( u_vel(i,j) + u_vel(i,j+1) )
+               work2d(i,j) = _HALF_ * ( u_vel(i,j) + u_vel(i,j+1) )
             else
-               PP(i,j) = _ZERO_
+               work2d(i,j) = _ZERO_
             end if
          end do
 !        set dudxV
          do i=imin-HALO+1,imax+HALO-1
 !           Note (KK): outflow condition dudxV(av=3)=0
             if (av(i,j).eq.1 .or. av(i,j).eq.2) then
-               dudxV(i,j) = ( PP(i,j) - PP(i-1,j) )/DXV
+               dudxV(i,j) = ( work2d(i,j) - work2d(i-1,j) )/DXV
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dudxV(i,j) = dudxV(i,j) + v_vel(i,j)*(DXCJP1-DXC)*ARVD1
@@ -388,14 +388,14 @@
 !     meriodional strain rate at U-points
 !     calculate v_velX
 !$OMP BARRIER
-!     Note (KK): we might need omp barrier because PP was used before with nowait
+!     Note (KK): we might need omp barrier because work2d was used before with nowait
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO-1
             if (ax(i,j) .ne. 0) then
-               PP(i,j) = _HALF_ * ( v_vel(i,j) + v_vel(i+1,j) )
+               work2d(i,j) = _HALF_ * ( v_vel(i,j) + v_vel(i+1,j) )
             else
-               PP(i,j) = _ZERO_
+               work2d(i,j) = _ZERO_
             end if
          end do
       end do
@@ -406,7 +406,7 @@
          do i=imin-HALO,imax+HALO-1
 !           Note (KK): outflow condition dvdyU(au=3)=0
             if (au(i,j).eq.1 .or. au(i,j).eq.2) then
-               dvdyU(i,j) = ( PP(i,j) - PP(i,j-1) ) / DYU
+               dvdyU(i,j) = ( work2d(i,j) - work2d(i,j-1) ) / DYU
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dvdyU(i,j) = dvdyU(i,j) + u_vel(i,j)*(DYCIP1-DYC)*ARUD1
@@ -553,7 +553,7 @@
    if (present(dvdxU)) then
 #ifndef SLICE_MODEL
 !$OMP BARRIER
-!     Note (KK): we need omp barrier here, because PP was used with nowait
+!     Note (KK): we need omp barrier here, because work2d was used with nowait
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO+1,jmax+HALO-1
 #endif
@@ -561,7 +561,7 @@
          do i=imin-HALO,imax+HALO
 !           Note (KK): we only need v_velC(az=1)
             if (az(i,j) .eq. 1) then
-               PP(i,j) = _HALF_ * ( v_vel(i,j-1) + v_vel(i,j) )
+               work2d(i,j) = _HALF_ * ( v_vel(i,j-1) + v_vel(i,j) )
             end if
          end do
 !        calculate dvdxU
@@ -570,7 +570,7 @@
 !                      outflow condition at W/E open bdys dvdxU(au=2)=0
 !           KK-TODO: metric correction
             if (au(i,j) .eq. 1) then
-               dvdxU(i,j) = ( PP(i+1,j) - PP(i,j) ) /DXU
+               dvdxU(i,j) = ( work2d(i+1,j) - work2d(i,j) ) /DXU
             else if (au(i,j) .eq. 3) then
                if (au(i,j-1) .eq. 1) then ! northern open bdy
                   dvdxU(i,j) = (v_vel(i+1,j-1) - v_vel(i  ,j-1))/DXU
@@ -614,13 +614,13 @@
    if (present(dudyV)) then
 !     calculate u_velC
 !$OMP BARRIER
-!     Note (KK): we need omp barrier here, because PP was used with nowait
+!     Note (KK): we need omp barrier here, because work2d was used with nowait
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO+1,imax+HALO-1
 !           Note (KK): we only need u_velC(az=1)
             if (az(i,j) .eq. 1) then
-               PP(i,j) = _HALF_ * ( u_vel(i-1,j) + u_vel(i,j) )
+               work2d(i,j) = _HALF_ * ( u_vel(i-1,j) + u_vel(i,j) )
             end if
          end do
       end do
@@ -633,7 +633,7 @@
 !                      outflow condition at N/S open bdys dudyV(av=2)=0
 !           KK-TODO: metric correction
             if (av(i,j) .eq. 1) then
-               dudyV(i,j) = ( PP(i,j+1) - PP(i,j) ) / DYV
+               dudyV(i,j) = ( work2d(i,j+1) - work2d(i,j) ) / DYV
             else if (av(i,j) .eq. 3) then
                if (av(i-1,j) .eq. 1) then ! eastern open bdy
                   dudyV(i,j) = (u_vel(i-1,j+1) - u_vel(i-1,j  ))/DYV

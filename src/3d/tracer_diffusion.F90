@@ -21,7 +21,6 @@
    use variables_3d, only: dt,hn
    use variables_3d, only: diffxx,diffxy,diffyx,diffyy
    use variables_les, only: AmU_3d,AmV_3d
-   use variables_2d, only: PP
    use variables_3d, only: do_numerical_analyses
    use getm_timers, only: tic,toc,TIM_TRACEDIFF
 
@@ -41,6 +40,7 @@
 !  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
+   REALTYPE,dimension(I2DFIELD)             :: work2d
 !  must be saved because of allocation outside a module
    REALTYPE,dimension(:,:),allocatable,save :: dfdxU
 #ifndef SLICE_MODEL
@@ -130,11 +130,11 @@
          do j=jmin-HALO,jmax+HALO-1
             do i=imin-HALO,imax+HALO-1
                if(ax(i,j) .ge. 1) then
-                  PP(i,j) = _HALF_ * ( dfdxU(i,j) + dfdxU(i,j+1) )
+                  work2d(i,j) = _HALF_ * ( dfdxU(i,j) + dfdxU(i,j+1) )
                else
 !                 Note (KK): dfdxX at corners set to 0
 !                            dfdxX at closed N/S open bdys not 0, but not needed
-                  PP(i,j) = _ZERO_
+                  work2d(i,j) = _ZERO_
                end if
             end do
          end do
@@ -145,7 +145,7 @@
 !                         av=0 (due to zero gradient use of dfdxC) and for
 !                         av=3 (zero gradient???) can be skipped
                if (av(i,j).eq.1 .or. av(i,j).eq.2) then
-                  dfdxV(i,j) = _HALF_ * ( PP(i-1,j) + PP(i,j) )
+                  dfdxV(i,j) = _HALF_ * ( work2d(i-1,j) + work2d(i,j) )
                end if
             end do
          end do
@@ -154,11 +154,11 @@
          do j=jmin-HALO,jmax+HALO-1
             do i=imin-HALO,imax+HALO-1
                if(ax(i,j) .ge. 1) then
-                  PP(i,j) = _HALF_ * ( dfdyV(i,j) + dfdyV(i+1,j) )
+                  work2d(i,j) = _HALF_ * ( dfdyV(i,j) + dfdyV(i+1,j) )
                else
 !                 Note (KK): dfdyX at corners set to 0
 !                            dfdyX at closed W/E open bdys not 0, but not needed
-                  PP(i,j) = _ZERO_
+                  work2d(i,j) = _ZERO_
                end if
             end do
          end do
@@ -169,7 +169,7 @@
 !                         au=0 (due to zero gradient use of dfdyC) and for
 !                         au=3 (zero gradient???) can be skipped
                if (au(i,j).eq.1 .or. au(i,j).eq.2) then
-                  dfdyU(i,j) = _HALF_ * ( PP(i,j-1) + PP(i,j) )
+                  dfdyU(i,j) = _HALF_ * ( work2d(i,j-1) + work2d(i,j) )
                end if
             end do
          end do

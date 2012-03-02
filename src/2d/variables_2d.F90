@@ -133,7 +133,6 @@
    SlUx=_ZERO_; Slru=_ZERO_
    SlVx=_ZERO_; Slrv=_ZERO_
 
-   PP      = _ZERO_
    fwf     = _ZERO_
    fwf_int = _ZERO_
 

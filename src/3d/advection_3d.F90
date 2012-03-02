@@ -242,7 +242,7 @@
    REALTYPE,dimension(I3DFIELD),intent(out),optional :: hires,advres
 !
 ! !LOCAL VARIABLES:
-   integer                  :: tag,k,kshift
+   integer                  :: tag,j,k,kshift
    type(t_adv_grid),pointer :: adv_grid
 !EOP
 !-----------------------------------------------------------------------
@@ -528,6 +528,18 @@
       end if
 
    end if
+
+#ifdef SLICE_MODEL
+   j = jmax/2
+   f(:,j+1,:)     = f(:,j,:)
+   hi(:,j+1,:)    = hi(:,j,:)
+   adv3d(:,j+1,:) = adv3d(:,j,:)
+   if (tag .eq. V_TAG) then
+      f(:,j-1,:)     = f(:,j,:)
+      hi(:,j-1,:)    = hi(:,j,:)
+      adv3d(:,j-1,:) = adv3d(:,j,:)
+   end if
+#endif
 
    if (present(hires)) hires = hi
    if (present(advres)) advres = adv3d

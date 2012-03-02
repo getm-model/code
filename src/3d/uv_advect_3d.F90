@@ -287,7 +287,7 @@
    integer                           :: i,j,k
    REALTYPE,dimension(:,:,:),pointer :: phadv
    REALTYPE,dimension(I2DFIELD)      :: numdiss
-   REALTYPE,dimension(I3DFIELD)      :: vel2,vel2o,hires
+   REALTYPE,dimension(I3DFIELD)      :: vel2,hires
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -296,19 +296,51 @@
    Ncall = Ncall+1
    write(debug,*) 'uv_advect_3d() # ',Ncall
 #endif
+#ifdef SLICE_MODEL
+   j = jmax/2 ! this MUST NOT be changed!!!
+#endif
    call tic(TIM_UVADV3D)
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          FIRSTPRIVATE(j)                                         &
+!$OMP          PRIVATE(i,k)
+
 
 ! Here begins dimensional split advection for u-velocity
 
    do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin-HALO,jmax+HALO
+#endif
          do i=imin-HALO,imax+HALO-1
 !           the velocity to be transported
             fadv3d(i,j,k) = uu(i,j,k)/hun(i,j,k)
-            if (vel_hor_adv .eq. J7) then
+            if (vel_hor_adv .ne. J7) then
+               uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i+1,j,k) )
+               vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i+1,j,k) )
+            end if
+            wwadv(i,j,k) = _HALF_*( ww(i,j,k) + ww(i+1,j,k) )
+!           Note (KK): hun only valid until imax+1
+!                      therefore huadv only valid until imax
+            huadv(i,j,k) = _HALF_*( hun(i,j,k) + hun(i+1,j,k) )
+!           Note (KK): hvn only valid until jmax+1
+!                      therefore hvadv only valid until jmax+1
+            hvadv(i,j,k) = _HALF_*( hvn(i,j,k) + hvn(i+1,j,k) )
+         end do
+#ifndef SLICE_MODEL
+      end do
+#endif
+!$OMP END DO NOWAIT
+   end do
+
+   if (vel_hor_adv .eq. J7) then
+      do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+         do j=jmin-HALO,jmax+HALO
+#endif
+            do i=imin-HALO,imax+HALO-1
 !              Note (KK): [uu|vv]adv defined on T-points (future U-points)
 !                         hnadv defined on X-points (future V-points)
 !                         note that hnadv is shifted to j+1 !!!
@@ -335,28 +367,25 @@
                      hnadv(i,j,k) = _HALF_*( hun(i,j-1,k) + hun(i,j,k) )
                   end if
                end if
-            else
-               uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i+1,j,k) )
-               vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i+1,j,k) )
-            end if
-            wwadv(i,j,k) = _HALF_*( ww(i,j,k) + ww(i+1,j,k) )
-!           Note (KK): hun only valid until imax+1
-!                      therefore huadv only valid until imax
-            huadv(i,j,k) = _HALF_*( hun(i,j,k) + hun(i+1,j,k) )
-!           Note (KK): hvn only valid until jmax+1
-!                      therefore hvadv only valid until jmax+1
-            hvadv(i,j,k) = _HALF_*( hvn(i,j,k) + hvn(i+1,j,k) )
+            end do
+#ifndef SLICE_MODEL
          end do
+#endif
+!$OMP END DO
       end do
-!$OMP END DO NOWAIT
-   end do
-!$OMP BARRIER
 
-!$OMP MASTER
-   if (vel_hor_adv .eq. J7) then
+#ifdef SLICE_MODEL
+      hnadv(imin-HALO:imax+HALO-1,j+1,:) = hnadv(imin-HALO:imax+HALO-1,j,:)
+      uuadv(imin-HALO:imax+HALO-1,j+1,:) = uuadv(imin-HALO:imax+HALO-1,j,:)
+      vvadv(imin-HALO:imax+HALO-1,j+1,:) = vvadv(imin-HALO:imax+HALO-1,j,:)
+#endif
+
       do k=1,kmax
+#ifndef SLICE_MODEL
 !        OMP-NOTE (KK): j loop must not be changed and cannot be threaded!
          do j=jmin-HALO,jmax+HALO-1
+#endif
+!$OMP DO SCHEDULE(RUNTIME)
             do i=imin-HALO,imax+HALO-1
 !              Note (KK): [uu|vv]adv defined on V-points (future X-points)
 !                         no change of uuadv for northern closed bdy
@@ -371,13 +400,25 @@
                end if
                hnadv(i,j,k) = _HALF_*( hnadv(i,j,k) + hnadv(i,j+1,k) )
             end do
+!$OMP END DO
+#ifndef SLICE_MODEL
          end do
+#endif
       end do
+
+!$OMP SINGLE
       phadv => hnadv
+!$OMP END SINGLE
+
    else
+
+!$OMP SINGLE
       phadv => hun
+!$OMP END SINGLE
+
    end if
 
+!$OMP SINGLE
    if (vel_hor_adv.ne.UPSTREAM .and. vel_hor_adv.ne.J7) then
 !     we need to update fadv3d(imax+HALO,jmin-HALO:jmax+HALO)
       call tic(TIM_UVADV3DH)
@@ -385,10 +426,9 @@
       call wait_halo(U_TAG)
       call toc(TIM_UVADV3DH)
    end if
+!$OMP END SINGLE
 
    if (do_numerical_analyses) then
-!$OMP END MASTER
-!$OMP BARRIER
       do k=1,kmax ! calculate square of u-velocity before advection step 
 !$OMP DO SCHEDULE(RUNTIME)
          do j=jmin,jmax
@@ -399,17 +439,15 @@
 !$OMP END DO NOWAIT
       end do
 !$OMP BARRIER
-!$OMP MASTER
-      vel2o = vel2
-   end if   
+   end if
 
+!$OMP SINGLE
    call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv, &
                         vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,U_TAG,  &
                         advres=uuEx)
+!$OMP END SINGLE
 
 #ifdef _MOMENTUM_TERMS_
-!$OMP END MASTER
-!$OMP BARRIER
    do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
@@ -419,17 +457,17 @@
       end do
 !$OMP END DO NOWAIT
    end do
-!$OMP MASTER
 #endif
 
    if (do_numerical_analyses) then
+!$OMP SINGLE
       call do_advection_3d(dt,vel2,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,  &
                            vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,U_TAG, &
                            hires=hires)
 
       numdis2d = _ZERO_
-!$OMP END MASTER
-!$OMP BARRIER
+!$OMP END SINGLE
+
       do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
 !$OMP DO SCHEDULE(RUNTIME)
          do j=jmin,jmax
@@ -444,21 +482,44 @@
          end do
 !$OMP END DO
       end do
-!$OMP BARRIER
-!$OMP MASTER
    end if
 
-!$OMP END MASTER
-!$OMP BARRIER
 
 !  Here begins dimensional split advection for v-velocity
+
    do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin-HALO,jmax+HALO-1
+#endif
          do i=imin-HALO,imax+HALO
 !           the velocity to be transported
             fadv3d(i,j,k) = vv(i,j,k)/hvn(i,j,k)
-            if (vel_hor_adv .eq. J7) then
+            if (vel_hor_adv .ne. J7) then
+               uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i,j+1,k) )
+               vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i,j+1,k) )
+            end if
+            wwadv(i,j,k) = _HALF_*( ww(i,j,k) + ww(i,j+1,k) )
+!           Note (KK): hun only valid until imax+1
+!                      therefore huadv only valid until imax+1
+            huadv(i,j,k) = _HALF_*( hun(i,j,k) + hun(i,j+1,k) )
+!           Note (KK): hvn only valid until jmax+1
+!                      therefore hvadv only valid until jmax
+            hvadv(i,j,k) = _HALF_*( hvn(i,j,k) + hvn(i,j+1,k) )
+         end do
+#ifndef SLICE_MODEL
+      end do
+#endif
+!$OMP END DO NOWAIT
+   end do
+
+   if (vel_hor_adv .eq. J7) then
+      do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+         do j=jmin-HALO,jmax+HALO-1
+#endif
+            do i=imin-HALO,imax+HALO
 !              Note (KK): [uu|vv]adv defined on T-points (future V-points)
 !                         hnadv defined on X-points (future U-points)
 !                         note that hnadv is shifted to i+1 !!!
@@ -485,27 +546,11 @@
                   end if
                end if
                vvadv(i,j,k) = _HALF_*( vv(i,j,k)*DXV + vv(i,j+1,k)*DXVJP1 )
-            else
-               uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i,j+1,k) )
-               vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i,j+1,k) )
-            end if
-            wwadv(i,j,k) = _HALF_*( ww(i,j,k) + ww(i,j+1,k) )
-!           Note (KK): hun only valid until imax+1
-!                      therefore huadv only valid until imax+1
-            huadv(i,j,k) = _HALF_*( hun(i,j,k) + hun(i,j+1,k) )
-!           Note (KK): hvn only valid until jmax+1
-!                      therefore hvadv only valid until jmax
-            hvadv(i,j,k) = _HALF_*( hvn(i,j,k) + hvn(i,j+1,k) )
-         end do
-      end do
-!$OMP END DO NOWAIT
-   end do
+            end do
+#ifdef SLICE_MODEL
+!$OMP END DO
+#endif
 
-   if (vel_hor_adv .eq. J7) then
-!$OMP BARRIER
-      do k=1,kmax
-!$OMP DO SCHEDULE(RUNTIME)
-         do j=jmin-HALO,jmax+HALO-1
 !           OMP-NOTE (KK): i loop must not be changed and cannot be threaded!
             do i=imin-HALO,imax+HALO-1
 !              Note (KK): [uu|vv]adv defined on U-points (future X-points)
@@ -521,21 +566,25 @@
                end if
                hnadv(i,j,k) = _HALF_*( hnadv(i,j,k) + hnadv(i+1,j,k) )
             end do
+#ifndef SLICE_MODEL
          end do
 !$OMP END DO NOWAIT
+#endif
       end do
+
 !$OMP SINGLE
       phadv => hnadv
 !$OMP END SINGLE
+
    else
+
 !$OMP SINGLE
       phadv => hvn
 !$OMP END SINGLE
+
    end if
 
-!$OMP BARRIER
-!$OMP MASTER
-
+!$OMP SINGLE
    if (vel_hor_adv.ne.UPSTREAM .and. vel_hor_adv.ne.J7) then
 !     we need to update fadv3d(imin-HALO:imax+HALO,jmax+HALO)
       call tic(TIM_UVADV3DH)
@@ -543,10 +592,9 @@
       call wait_halo(V_TAG)
       call toc(TIM_UVADV3DH)
    end if
+!$OMP END SINGLE
 
    if (do_numerical_analyses) then
-!$OMP END MASTER
-!$OMP BARRIER
       do k=1,kmax ! calculate square of v-velocity before advection step
 !$OMP DO SCHEDULE(RUNTIME)
          do j=jmin,jmax
@@ -557,17 +605,15 @@
 !$OMP END DO NOWAIT
       end do
 !$OMP BARRIER
-!$OMP MASTER
-      vel2o = vel2
    end if
 
+!$OMP SINGLE
    call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv, &
                         vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,V_TAG,  &
                         advres=vvEx)
+!$OMP END SINGLE
 
 #ifdef _MOMENTUM_TERMS_
-!$OMP END MASTER
-!$OMP BARRIER
    do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
@@ -577,16 +623,16 @@
       end do
 !$OMP END DO NOWAIT
    end do
-!$OMP MASTER
 #endif
 
    if (do_numerical_analyses) then
+!$OMP SINGLE
       call do_advection_3d(dt,vel2,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,  &
                            vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,V_TAG, &
                            hires=hires)
-!$OMP END MASTER
-!$OMP BARRIER
-      do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
+!$OMP END SINGLE
+
+      do k=1,kmax ! calculate kinetic energy dissipaion rate for v-velocity
 !$OMP DO SCHEDULE(RUNTIME)
          do j=jmin,jmax
             do i=imin,imax
@@ -605,11 +651,7 @@
          end do
 !$OMP END DO
       end do
-!$OMP BARRIER
-!$OMP MASTER
    end if
-
-!$OMP END MASTER
 
 !$OMP END PARALLEL
 
