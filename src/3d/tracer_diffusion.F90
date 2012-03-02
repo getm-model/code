@@ -23,7 +23,7 @@
    use variables_les, only: AmU_3d,AmV_3d
    use variables_3d, only: do_numerical_analyses
    use getm_timers, only: tic,toc,TIM_TRACEDIFF
-
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -60,7 +60,7 @@
    write(debug,*) 'tracer_diffusion() # ',Ncall
 #endif
 #ifdef SLICE_MODEL
-      j=jmax/2
+   j = jmax/2 ! this MUST NOT be changed!!!
 #endif
    call tic(TIM_TRACEDIFF)
 
@@ -100,9 +100,14 @@
 
 !  Note (KK): diffusion only within new layer heigts
 
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          FIRSTPRIVATE(j)                                         &
+!$OMP          PRIVATE(i,k)
+
    do k=1,kmax
 
 !     x-change at U-points
+!$OMP DO SCHEDULE (RUNTIME)
 #ifndef SLICE_MODEL
       do j=jmin-HALO,jmax+HALO
 #endif
@@ -114,9 +119,11 @@
 #ifndef SLICE_MODEL
       end do
 #endif
+!OMP END DO NOWAIT
 
 #ifndef SLICE_MODEL
 !     y-change at V-points
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO
             if (av(i,j) .ge. 1) then ! zero normal gradient across closed boundary
@@ -124,10 +131,14 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
 
       if (AH_method .eq. 3) then
-!        interpolation of dfdxU to X-points
+!$OMP BARRIER
+
+!$OMP DO SCHEDULE(RUNTIME)
          do j=jmin-HALO,jmax+HALO-1
+!           interpolation of dfdxX to V-points
             do i=imin-HALO,imax+HALO-1
                if(ax(i,j) .ge. 1) then
                   work2d(i,j) = _HALF_ * ( dfdxU(i,j) + dfdxU(i,j+1) )
@@ -137,9 +148,8 @@
                   work2d(i,j) = _ZERO_
                end if
             end do
-         end do
-!        interpolation of dfdxX to V-points
-         do j=jmin-HALO,jmax+HALO-1
+
+!           interpolation of dfdxX to V-points
             do i=imin-HALO+1,imax+HALO-1
 !              Note (KK): we only need dfdxV(av=[1|2]), therefore settings for
 !                         av=0 (due to zero gradient use of dfdxC) and for
@@ -149,8 +159,10 @@
                end if
             end do
          end do
+!$OMP END DO
 
 !        interpolation of dfdyV to X-points
+!$OMP DO SCHEDULE(RUNTIME)
          do j=jmin-HALO,jmax+HALO-1
             do i=imin-HALO,imax+HALO-1
                if(ax(i,j) .ge. 1) then
@@ -162,7 +174,9 @@
                end if
             end do
          end do
+!$OMP END DO
 !        interpolation of dfdyX to U-points
+!$OMP DO SCHEDULE(RUNTIME)
          do j=jmin-HALO+1,jmax+HALO-1
             do i=imin-HALO,imax+HALO-1
 !              Note (KK): we only need dfdyU(au=[1|2]), therefore settings for
@@ -173,9 +187,13 @@
                end if
             end do
          end do
+!$OMP END DO
       end if
 #endif
 
+!$OMP BARRIER
+
+!$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
       do j=jmin,jmax
 #endif
@@ -219,8 +237,10 @@
 #ifndef SLICE_MODEL
       end do
 #endif
+!$OMP END DO NOWAIT
 
 #ifndef SLICE_MODEL
+!$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax
          do i=imin,imax
 !           flux at V-points
@@ -242,12 +262,10 @@
                      end if
                      dfdyV(i,j) = AmV_3d(i,j,k) / AH_Prt * dfdyV(i,j)
                   case(3)
-#ifndef SLICE_MODEL
                      if (calc_phymix) then
                         phymixV(i,j) = _TWO_*AH_stirr_const*(diffyy(i,j,k)+diffyx(i,j,k)) &
                                        *dfdxV(i,j)*dfdyV(i,j)*ARVD1
                      end if
-#endif
                      dfdyV(i,j) = AH_stirr_const                &
                                   * (                           &
                                        diffyy(i,j,k)*dfdyV(i,j) &
@@ -258,8 +276,11 @@
             end if
          end do
       end do
+!$OMP END DO NOWAIT
 #endif
 
+!$OMP BARRIER
+!$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
       do j=jmin,jmax
 #endif
@@ -283,15 +304,21 @@
          end do
 #ifndef SLICE_MODEL
       end do
-#else
+#endif
+!$OMP END DO
+
+#ifdef SLICE_MODEL
+!$OMP SINGLE
       if (calc_phymix) then
          phymix(imin:imax,j+1,k) = phymix(imin:imax,j,k)
       end if
       f(imin:imax,j+1,k) = f(imin:imax,j,k)
+!$OMP END SINGLE
 #endif
 
    end do
 
+!$OMP END PARALLEL
 
    call toc(TIM_TRACEDIFF)
 #ifdef DEBUG
@@ -302,5 +329,5 @@
    end subroutine tracer_diffusion
 !EOC
 !-----------------------------------------------------------------------
-! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
+! Copyright (C) 2011 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------
