@@ -66,9 +66,6 @@
    allocate(res_v(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (res_v)'
 
-   allocate(PP(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (PP)'
-
    allocate(SlUx(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (SlUx)'
 
