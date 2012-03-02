@@ -78,6 +78,9 @@
    Ncall = Ncall+1
    write(debug,*) 'adv_w_split_3d() # ',Ncall
 #endif
+#ifdef SLICE_MODEL
+   j = jmax/2 ! thus MUST NOT be changed!!!
+#endif
 
    use_limiter = .false.
    dti = splitfac*dt
@@ -96,9 +99,9 @@
       splitfack = splitfac
    end if
 
-!$OMP PARALLEL DEFAULT(SHARED)                                                 &
-!$OMP          FIRSTPRIVATE(use_limiter,iters,dtik,splitfack)                  &
-!$OMP          PRIVATE(i,j,k,it,rc,wflux,hio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          FIRSTPRIVATE(j,use_limiter,iters,dtik,splitfack)        &
+!$OMP          PRIVATE(i,k,it,rc,wflux,hio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
 
    if (scheme .ne. NOADV) then
 
@@ -114,7 +117,9 @@
 !                unnecessary iterations and warnings
 
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin-HALO,jmax+HALO-1
+#endif
          do i=imin-HALO,imax+HALO-1
             if (az(i,j) .eq. 1) then
 !              Note (KK): exclude vertical advection of normal velocity at open bdys
@@ -206,7 +211,9 @@
                end do
             end if
          end do
+#ifndef SLICE_MODEL
       end do
+#endif
 !$OMP END DO
 
 !     Each thread must deallocate its own HEAP storage:
@@ -219,13 +226,17 @@
       if (nosplit_finalise) then
          do k=1,kmax-kshift
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
             do j=jmin-HALO,jmax+HALO
+#endif
                do i=imin-HALO,imax+HALO
                   if (mask_finalise(i,j)) then
                      f(i,j,k) = ( ho(i,j,k)*f(i,j,k) - dt*adv3d(i,j,k) ) / hi(i,j,k)
                   end if
                end do
+#ifndef SLICE_MODEL
             end do
+#endif
 !$OMP END DO NOWAIT
          end do
       end if
