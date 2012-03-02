@@ -102,6 +102,9 @@
    Ncall = Ncall+1
    write(debug,*) 'adv_u_split() # ',Ncall
 #endif
+#ifdef SLICE_MODEL
+   j = jmax/2 ! this MUST NOT be changed!!!
+#endif
 
    if (scheme .eq. UPSTREAM) then
       iadd = 1
@@ -113,13 +116,15 @@
    use_AH = (AH .gt. _ZERO_)
    dti = splitfac*dt
 
-!$OMP PARALLEL DEFAULT(SHARED)                                  &
-!$OMP          FIRSTPRIVATE(use_limiter)                        &
-!$OMP          PRIVATE(i,j,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          FIRSTPRIVATE(j,use_limiter)                             &
+!$OMP          PRIVATE(i,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
 
 ! Calculating u-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO
+#endif
       do i=imin-1-iadd,imax+iadd
          if (mask_flux(i,j)) then
 !           Note (KK): exclude x-advection of u across W/E open bdys
@@ -184,11 +189,15 @@
             uflux(i,j) = _ZERO_
          end if
       end do
+#ifndef SLICE_MODEL
    end do
+#endif
 !$OMP END DO
 
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO
+#endif
       do i=imin-iadd,imax+iadd
          if (mask_update(i,j)) then
 !           Note (KK): exclude x-advection of tracer and u across W/E open bdys
@@ -210,7 +219,9 @@
             end if
          end if
       end do
+#ifndef SLICE_MODEL
    end do
+#endif
 !$OMP END DO
 
 !$OMP END PARALLEL

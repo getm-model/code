@@ -164,7 +164,7 @@
 #else
    use domain, only: dx,dy,ard1
 #endif
-   use variables_2d, only: PP,AnC,AnX
+   use variables_2d, only: AnC,AnX
    use m2d, only: Am_method,Am_const,AM_CONSTANT,AM_LES,An_const
    use getm_timers,  only: tic,toc,TIM_UVDIFF
 !$ use omp_lib
@@ -187,6 +187,7 @@
 !  Modified by       : Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
+   REALTYPE,dimension(E2DFIELD) :: work2d
    integer  :: i,j
    REALTYPE :: depth
 !EOP
@@ -198,9 +199,8 @@
    write(debug,*) 'uv_diffusion() # ',Ncall
 #endif
 #ifdef SLICE_MODEL
-   j = jmax/2
+   j = jmax/2 ! this MUST NOT be changed!!!
 #endif
-
    CALL tic(TIM_UVDIFF)
 
 #ifdef _MOMENTUM_TERMS_
@@ -212,10 +212,9 @@
    end if
 #endif
 
-#ifndef SLICE_MODEL
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP          PRIVATE(i,j)
-#endif
+!$OMP          FIRSTPRIVATE(j)                                         &
+!$OMP          PRIVATE(i)
 
 !  Note (KK): see Kantha and Clayson 2000, page 591 for approximation
 !             of diffusion terms
@@ -224,67 +223,60 @@
 !             and resulting forces
 
 !  Central for dx(2*Am*dx(U/DU))
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin,jmax
 #endif
-      do i=imin,imax+1          ! PP defined on T-points
-         PP(i,j)=_ZERO_
+      do i=imin,imax+1          ! work2d defined on T-points
+         work2d(i,j)=_ZERO_
 !        Note (KK): we do not need N/S open boundary cells
 !                   in W/E open boundary cells already dudxC=0
          if (az(i,j) .eq. 1) then
 !           KK-TODO: center depth at velocity time stage
             select case(Am_method)
                case(AM_CONSTANT)
-                  PP(i,j)=_TWO_*Am_const*DYC*D(i,j)*dudxC(i,j)
+                  work2d(i,j)=_TWO_*Am_const*DYC*D(i,j)*dudxC(i,j)
                case(AM_LES)
-                  PP(i,j)=_TWO_*AmC(i,j)*DYC*D(i,j)*dudxC(i,j)
+                  work2d(i,j)=_TWO_*AmC(i,j)*DYC*D(i,j)*dudxC(i,j)
             end select
             select case(An_method)
 !              KK-TODO: if gradient of velocity also accepted use of dudxC possible !?
                case(1)
-                  PP(i,j)=PP(i,j)+An_const*DYC*(U(i,j)-U(i-1,j))/DXC
+                  work2d(i,j)=work2d(i,j)+An_const*DYC*(U(i,j)-U(i-1,j))/DXC
                case(2)
                   if (AnC(i,j) .gt. _ZERO_) then
-                     PP(i,j)=PP(i,j)+AnC(i,j)*DYC*(U(i,j)-U(i-1,j))/DXC
+                     work2d(i,j)=work2d(i,j)+AnC(i,j)*DYC*(U(i,j)-U(i-1,j))/DXC
                   end if
             end select
          end if
       end do
-#ifndef SLICE_MODEL
-   end do
+#ifdef SLICE_MODEL
 !$OMP END DO
-#endif
-
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax
 #endif
       do i=imin,imax      ! UEx defined on U-points
 !        Note (KK): we do not need UEx(au=3)
          if (au(i,j).eq.1 .or. au(i,j).eq.2) then
-            UEx(i,j)=UEx(i,j)-(PP(i+1,j)-PP(i  ,j))*ARUD1
+            UEx(i,j)=UEx(i,j)-(work2d(i+1,j)-work2d(i  ,j))*ARUD1
          end if
       end do
 #ifndef SLICE_MODEL
    end do
-!$OMP END DO
-#else
-   UEx(imin:imax,j+1) = UEx(imin:imax,j)
 #endif
+!$OMP END DO
 
 #ifndef SLICE_MODEL
 !  Central for dy(Am*(dy(U/DU)+dx(V/DV)))
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-1,jmax
-      do i=imin,imax        ! PP defined on X-points
-         PP(i,j)=_ZERO_
+      do i=imin,imax        ! work2d defined on X-points
+         work2d(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
             select case(Am_method)
                case (AM_CONSTANT)
-                  PP(i,j)=Am_const*DXX*_HALF_*(DU(i,j)+DU(i,j+1))*shearX(i,j)
+                  work2d(i,j)=Am_const*DXX*_HALF_*(DU(i,j)+DU(i,j+1))*shearX(i,j)
                case (AM_LES)
-                  PP(i,j)=AmX(i,j)*DXX*_HALF_*(DU(i,j)+DU(i,j+1))*shearX(i,j)
+                  work2d(i,j)=AmX(i,j)*DXX*_HALF_*(DU(i,j)+DU(i,j+1))*shearX(i,j)
             end select
             select case(An_method)
 !              Note (KK): outflow condition must be fulfilled !
@@ -292,10 +284,10 @@
 !                          from deformation_rates, otherwise extended condition)
 !                         at N/S closed boundaries slip condition dudyX=0
                case(1)
-                  PP(i,j)=PP(i,j)+An_const*DXX*(U(i,j+1)-U(i,j))/DYX
+                  work2d(i,j)=work2d(i,j)+An_const*DXX*(U(i,j+1)-U(i,j))/DYX
                case(2)
                   if (AnX(i,j) .gt. _ZERO_) then
-                     PP(i,j)=PP(i,j)+AnX(i,j)*DXX*(U(i,j+1)-U(i,j))/DYX
+                     work2d(i,j)=work2d(i,j)+AnX(i,j)*DXX*(U(i,j+1)-U(i,j))/DYX
                   end if
             end select
 #ifdef _CORRECT_METRICS_
@@ -306,17 +298,17 @@
             if (au(i,j) .eq. 1) then ! northern closed boundary
                select case(Am_method)
                   case (AM_CONSTANT)
-                     PP(i,j)=Am_const*DXX*DU(i,j)*shearX(i,j)
+                     work2d(i,j)=Am_const*DXX*DU(i,j)*shearX(i,j)
                   case (AM_LES)
-                     PP(i,j)=AmX(i,j)*DXX*DU(i,j)*shearX(i,j)
+                     work2d(i,j)=AmX(i,j)*DXX*DU(i,j)*shearX(i,j)
                end select
             end if
             if (au(i,j+1) .eq. 1) then ! southern closed boundary
                select case(Am_method)
                   case (AM_CONSTANT)
-                     PP(i,j)=Am_const*DXX*DU(i,j+1)*shearX(i,j)
+                     work2d(i,j)=Am_const*DXX*DU(i,j+1)*shearX(i,j)
                   case (AM_LES)
-                     PP(i,j)=AmX(i,j)*DXX*DU(i,j+1)*shearX(i,j)
+                     work2d(i,j)=AmX(i,j)*DXX*DU(i,j+1)*shearX(i,j)
                end select
             end if
 #endif
@@ -330,7 +322,7 @@
       do i=imin,imax
 !        Note (KK): we do not need UEx(au=3)
          if (au(i,j).eq.1 .or. au(i,j).eq.2) then
-            UEx(i,j)=UEx(i,j)-(PP(i,j  )-PP(i,j-1))*ARUD1
+            UEx(i,j)=UEx(i,j)-(work2d(i,j  )-work2d(i,j-1))*ARUD1
          end if
       end do
    end do
@@ -338,18 +330,18 @@
 #endif
 
 !  Central for dx(Am*(dy(U/DU)+dx(V/DV)))
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin,jmax
 #endif
-      do i=imin-1,imax      ! PP defined on X-points
-         PP(i,j)=_ZERO_
+      do i=imin-1,imax      ! work2d defined on X-points
+         work2d(i,j)=_ZERO_
          if (ax(i,j) .ge. 1) then
             select case(Am_method)
                case (AM_CONSTANT)
-                  PP(i,j)=Am_const*DYX*_HALF_*(DV(i,j)+DV(i+1,j))*shearX(i,j)
+                  work2d(i,j)=Am_const*DYX*_HALF_*(DV(i,j)+DV(i+1,j))*shearX(i,j)
                case (AM_LES)
-                  PP(i,j)=AmX(i,j)*DYX*_HALF_*(DV(i,j)+DV(i+1,j))*shearX(i,j)
+                  work2d(i,j)=AmX(i,j)*DYX*_HALF_*(DV(i,j)+DV(i+1,j))*shearX(i,j)
             end select
             select case(An_method)
 !              Note (KK): outflow condition must be fulfilled !
@@ -357,10 +349,10 @@
 !                          from deformation_rates, otherwise extended condition)
 !                         at W/E closed boundaries slip condition dvdxX=0
                case(1)
-                  PP(i,j)=PP(i,j)+An_const*DYX*(V(i+1,j)-V(i,j))/DXX
+                  work2d(i,j)=work2d(i,j)+An_const*DYX*(V(i+1,j)-V(i,j))/DXX
                case(2)
                   if (AnX(i,j) .gt. _ZERO_) then
-                     PP(i,j)=PP(i,j)+AnX(i,j)*DYX*(V(i+1,j)-V(i,j))/DXX
+                     work2d(i,j)=work2d(i,j)+AnX(i,j)*DYX*(V(i+1,j)-V(i,j))/DXX
                   end if
             end select
 #ifdef _CORRECT_METRICS_
@@ -371,69 +363,61 @@
             if (av(i,j) .eq. 1) then ! eastern closed boundary
                select case(Am_method)
                   case (AM_CONSTANT)
-                     PP(i,j)=Am_const*DXX*DV(i,j)*shearX(i,j)
+                     work2d(i,j)=Am_const*DXX*DV(i,j)*shearX(i,j)
                   case (AM_LES)
-                     PP(i,j)=AmX(i,j)*DXX*DV(i,j)*shearX(i,j)
+                     work2d(i,j)=AmX(i,j)*DXX*DV(i,j)*shearX(i,j)
                end select
             end if
             if (av(i+1,j) .eq. 1) then ! western closed boundary
                select case(Am_method)
                   case (AM_CONSTANT)
-                     PP(i,j)=Am_const*DXX*DV(i+1,j)*shearX(i,j)
+                     work2d(i,j)=Am_const*DXX*DV(i+1,j)*shearX(i,j)
                   case (AM_LES)
-                     PP(i,j)=AmX(i,j)*DXX*DV(i+1,j)*shearX(i,j)
+                     work2d(i,j)=AmX(i,j)*DXX*DV(i+1,j)*shearX(i,j)
                end select
             end if
 #endif
 #endif
          end if
       end do
-#ifndef SLICE_MODEL
-   end do
+#ifdef SLICE_MODEL
 !$OMP END DO
-#endif
-
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax
 #endif
       do i=imin,imax          ! VEx defined on V-points
 !        Note (KK): we do not need VEx(av=3)
          if (av(i,j).eq.1 .or. av(i,j).eq.2) then
-            VEx(i,j)=VEx(i,j)-(PP(i  ,j)-PP(i-1,j))*ARVD1
+            VEx(i,j)=VEx(i,j)-(work2d(i  ,j)-work2d(i-1,j))*ARVD1
          end if
       end do
 #ifndef SLICE_MODEL
    end do
-!$OMP END DO
-#else
-   VEx(imin:imax,j-1) = VEx(imin:imax,j)
-   VEx(imin:imax,j+1) = VEx(imin:imax,j)
 #endif
+!$OMP END DO
 
 #ifndef SLICE_MODEL
 !  Central for dy(2*Am*dy(V/DV))
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax+1     ! PP defined on T-points
+   do j=jmin,jmax+1     ! work2d defined on T-points
       do i=imin,imax
-         PP(i,j)=_ZERO_
+         work2d(i,j)=_ZERO_
 !        Note (KK): we do not need W/E open boundary cells
 !                   in N/S open boundary cells already dvdyC=0
          if (az(i,j) .eq. 1) then
 !           KK-TODO: center depth at velocity time stage
             select case(Am_method)
                case (AM_CONSTANT)
-                  PP(i,j)=_TWO_*Am_const*DXC*D(i,j)*dvdyC(i,j)
+                  work2d(i,j)=_TWO_*Am_const*DXC*D(i,j)*dvdyC(i,j)
                case (AM_LES)
-                  PP(i,j)=_TWO_*AmC(i,j)*DXC*D(i,j)*dvdyC(i,j)
+                  work2d(i,j)=_TWO_*AmC(i,j)*DXC*D(i,j)*dvdyC(i,j)
             end select
             select case(An_method)
 !              KK-TODO: if gradient of velocity also accepted use of dvdyC possible !?
                case(1)
-                  PP(i,j)=PP(i,j)+An_const*DXC*(V(i,j)-V(i,j-1))/DYC
+                  work2d(i,j)=work2d(i,j)+An_const*DXC*(V(i,j)-V(i,j-1))/DYC
                case(2)
                   if (AnC(i,j) .gt. _ZERO_) then
-                     PP(i,j)=PP(i,j)+AnC(i,j)*DXC*(V(i,j)-V(i,j-1))/DYC
+                     work2d(i,j)=work2d(i,j)+AnC(i,j)*DXC*(V(i,j)-V(i,j-1))/DYC
                   end if
             end select
          end if
@@ -445,15 +429,19 @@
       do i=imin,imax
 !        Note (KK): we do not need VEx(av=3)
          if (av(i,j).eq.1 .or. av(i,j).eq.2) then
-            VEx(i,j)=VEx(i,j)-(PP(i,j+1)-PP(i,j  ))*ARVD1
+            VEx(i,j)=VEx(i,j)-(work2d(i,j+1)-work2d(i,j  ))*ARVD1
          end if
       end do
    end do
 !$OMP END DO
 #endif
 
-#ifndef SLICE_MODEL
 !$OMP END PARALLEL
+
+#ifdef SLICE_MODEL
+   UEx(imin:imax,j+1) = UEx(imin:imax,j)
+   VEx(imin:imax,j-1) = VEx(imin:imax,j)
+   VEx(imin:imax,j+1) = VEx(imin:imax,j)
 #endif
 
 #ifdef _MOMENTUM_TERMS_
