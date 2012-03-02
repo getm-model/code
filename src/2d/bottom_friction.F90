@@ -36,7 +36,6 @@
    use parameters, only: kappa,avmmol
    use domain, only: imin,imax,jmin,jmax,az,au,av
    use domain, only: cd_min,z0d_iters,zub0,zvb0
-   use variables_2d, only: PP
    use getm_timers, only: tic,toc,TIM_BOTTFRIC
 !$ use omp_lib
    IMPLICIT NONE
@@ -52,6 +51,7 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  !LOCAL VARIABLES:
+   REALTYPE,dimension(E2DFIELD)             :: work2d
    REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel
    REALTYPE                                 :: vel,cd,z0d
    integer                                  :: i,j,it,rc
@@ -65,7 +65,7 @@
    write(debug,*) 'bottom_friction() # ',Ncall
 #endif
 #ifdef SLICE_MODEL
-   j = jmax/2
+   j = jmax/2 ! this MUST NOT be changed!!!
 #endif
    CALL tic(TIM_BOTTFRIC)
 
@@ -81,11 +81,13 @@
       first = .false.
    end if
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,vel,cd,it,z0d)
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          FIRSTPRIVATE(j)                                         &
+!$OMP          PRIVATE(i,vel,cd,it,z0d)
 
 !  zonal velocity
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO
 #endif
       do i=imin-HALO,imax+HALO-1
@@ -95,12 +97,12 @@
       end do
 #ifndef SLICE_MODEL
    end do
-!$OMP END DO NOWAIT
 #endif
+!$OMP END DO NOWAIT
 
 !  meridional velocity
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO-1
 #endif
       do i=imin-HALO,imax+HALO
@@ -110,27 +112,32 @@
       end do
 #ifndef SLICE_MODEL
    end do
+#endif
 !$OMP END DO
-#else
+
+#ifdef SLICE_MODEL
    v_vel(:,j-1) = v_vel(:,j)
 #endif
 
 !  The x-direction
 
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin-HALO+1,jmax+HALO-1
 #endif
 !     calculate v_velC
       do i=imin-HALO,imax+HALO
          if (az(i,j) .ge. 1) then
-            PP(i,j) = _HALF_ * ( v_vel(i,j-1) + v_vel(i,j) )
+            work2d(i,j) = _HALF_ * ( v_vel(i,j-1) + v_vel(i,j) )
          end if
       end do
-
+#ifdef SLICE_MODEL
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
+#endif
       do i=imin-HALO,imax+HALO-1
          if (au(i,j).eq.1 .or. au(i,j).eq.2) then
-            vel = sqrt( u_vel(i,j)**2 + (_HALF_*(PP(i,j)+PP(i+1,j)))**2 )
+            vel = sqrt( u_vel(i,j)**2 + (_HALF_*(work2d(i,j)+work2d(i+1,j)))**2 )
             z0d = zub0(i,j)
 !           Note (KK): note shifting of log profile so that U(-H)=0
             cd = kappa / log( _ONE_ + _HALF_*DU(i,j)/z0d )
@@ -149,40 +156,38 @@
       end do
 #ifndef SLICE_MODEL
    end do
-!$OMP END DO
-#else
-   ru(imin-HALO:imax+HALO-1,j+1) = ru(imin-HALO:imax+HALO-1,j)
-   if (present(zub)) then
-      zub(imin-HALO:imax+HALO-1,j+1) = zub(imin-HALO:imax+HALO-1,j)
-   end if
 #endif
+!$OMP END DO
+
 
 !  The y-direction
 
 !  calculate u_velC
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO
 #endif
       do i=imin-HALO+1,imax+HALO-1
          if (az(i,j) .ge. 1) then
-            PP(i,j) = _HALF_ * ( u_vel(i-1,j) + u_vel(i,j) )
+            work2d(i,j) = _HALF_ * ( u_vel(i-1,j) + u_vel(i,j) )
          end if
       end do
 #ifndef SLICE_MODEL
-!$OMP END DO
    end do
-#else
-   PP(imin-HALO+1:imax+HALO-1,j+1) = PP(imin-HALO+1:imax+HALO-1,j)
+#endif
+!$OMP END DO
+
+#ifdef SLICE_MODEL
+   work2d(imin-HALO+1:imax+HALO-1,j+1) = work2d(imin-HALO+1:imax+HALO-1,j)
 #endif
 
-#ifndef SLICE_MODEL
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO-1
 #endif
       do i=imin-HALO+1,imax+HALO-1
          if (av(i,j).eq.1 .or. av(i,j).eq.2) then
-            vel = sqrt( (_HALF_*(PP(i,j)+PP(i,j+1)))**2 + v_vel(i,j)**2 )
+            vel = sqrt( (_HALF_*(work2d(i,j)+work2d(i,j+1)))**2 + v_vel(i,j)**2 )
             z0d = zvb0(i,j)
 !           Note (KK): note shifting of log profile so that V(-H)=0
             cd = kappa / log( _ONE_ + _HALF_*DV(i,j)/z0d )
@@ -201,17 +206,23 @@
       end do
 #ifndef SLICE_MODEL
    end do
+#endif
 !$OMP END DO
-#else
+
+!$OMP END PARALLEL
+
+#ifdef SLICE_MODEL
+   ru(imin-HALO  :imax+HALO-1,j+1) = ru(imin-HALO  :imax+HALO-1,j)
    rv(imin-HALO+1:imax+HALO-1,j-1) = rv(imin-HALO+1:imax+HALO-1,j)
    rv(imin-HALO+1:imax+HALO-1,j+1) = rv(imin-HALO+1:imax+HALO-1,j)
+   if (present(zub)) then
+      zub(imin-HALO  :imax+HALO-1,j+1) = zub(imin-HALO  :imax+HALO-1,j)
+   end if
    if (present(zvb)) then
       zvb(imin-HALO+1:imax+HALO-1,j-1) = zvb(imin-HALO+1:imax+HALO-1,j)
       zvb(imin-HALO+1:imax+HALO-1,j+1) = zvb(imin-HALO+1:imax+HALO-1,j)
    end if
 #endif
-
-!$OMP END PARALLEL
 
    CALL toc(TIM_BOTTFRIC)
 #ifdef DEBUG

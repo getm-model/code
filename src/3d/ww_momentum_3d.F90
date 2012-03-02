@@ -58,40 +58,58 @@
    Ncall = Ncall+1
    write(debug,*) 'ww_momentum_3d() # ',Ncall
 #endif
+#ifdef SLICE_MODEL
+   j = jmax/2 ! this MUST NOT be changed!!!
+#endif
    call tic(TIM_WWMOMENTUM)
 
    dtm1=_ONE_/dt
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          FIRSTPRIVATE(j)                                         &
+!$OMP          PRIVATE(i,k)
 
 ! OMP-NOTE: k-1 is used at layer k, so we have to conclude
 !    one layer at a time (wait after each later).
    do k=1,kmax-1
-#ifdef CALC_HALO_WW
 !$OMP DO SCHEDULE(RUNTIME)
+#ifdef CALC_HALO_WW
+#ifndef SLICE_MODEL
       do j=jmin-1,jmax+HALO
+#endif
          do i=imin-1,imax+HALO
 #else
-!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
       do j=jmin,jmax
+#endif
          do i=imin,imax
 #endif
             if (az(i,j) .eq. 1) then
                if (k .lt. kmin(i,j)) then
                   ww(i,j,k)= _ZERO_
                else
-                  ww(i,j,k)=ww(i,j,k-1)                                   &
-                           -(hn(i,j,k)-ho(i  ,j  ,k))*dtm1 &
-                           -((uu(i,j,k)*DYU-uu(i-1,j  ,k)*DYUIM1) &
-                           +(vv(i,j,k)*DXV-vv(i  ,j-1,k)*DXVJM1))*ARCD1
+                  ww(i,j,k) =   ww(i,j,k-1)                             &
+                              - ( hn(i,j,k) - ho(i,j,k) )*dtm1          &
+                              - (                                       &
+                                   uu(i,j,k)*DYU - uu(i-1,j  ,k)*DYUIM1 &
+#ifndef SLICE_MODEL
+                                 + vv(i,j,k)*DXV - vv(i  ,j-1,k)*DXVJM1 &
+#endif
+                                )*ARCD1
                end if
             end if
          end do
+#ifndef SLICE_MODEL
       end do
+#endif
 !$OMP END DO
    end do
 
 !$OMP END PARALLEL
+
+#ifdef SLICE_MODEL
+   ww(:,j+1,:) = ww(:,j,:)
+#endif
 
 #ifndef CALC_HALO_WW
    call tic(TIM_WWMOMENTUMH)
