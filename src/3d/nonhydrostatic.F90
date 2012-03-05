@@ -283,20 +283,19 @@
    call update_3d_halo(wc,wc,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 
-!  initialise bnh by advective term (result to bnh, wc still needed!!!)
+!  initialise bnh by advective term [ div(hu*wc) ] (wc still needed!!!)
 #ifndef NO_ADVECT
 !  wc(n+1/2) will be advected from h(n+1/2) to h(n+3/2) by transports at (n+1/2) ?
 !  wc(n-1/2) was advected from h(n-1/2) to h(n+1/2) by transports at (n-1/2) ?
 !  wc(n+1/2) will be advected from h(n) to h(n+1) by transports at (n+1/2)
 
-!  wc that will be advected (result to fadv3d, wc still needed!!!)
+!  wc that will be advected (wc still needed!!!)
    fadv3d = wc
 
    call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                   &
                         vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,H_TAG, &
                         advres=bnh)
 
-!  halo update advective (and horizontal viscous) terms [ div(hu*wc) / h ](n+1/2)
    call update_3d_halo(bnh,bnh,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 #else
@@ -307,7 +306,7 @@
 !  [del(h*wc)/delt](n) / h(n) ?
 !  bnh = (hwcn*wc - hwco*wco)/ho*dtm1 ?
 !  [del(h*wc)/delt](n+1/2) / h(n+1)
-   bnh = bnh + (wc - ho/hn*wco)*dtm1
+   bnh = bnh + (hn*wc - ho*wco)*dtm1
 
 !  add vertical viscous terms at (n+1/2) (result to bnh)
 !  KK-TODO: do we really have to add num?
@@ -322,28 +321,25 @@
 #endif
       do i=imin-HALO,imax+HALO
          if ( az(i,j) .ge. 1 ) then
-            bnh(i,j,1) = bnh(i,j,1)           &
+            bnh(i,j,1) = bnh(i,j,1)                     &
                - (num(i,j,1) + avmmol)                  &
                  * (          wc(i,j,2) - wc(i,j,1)   ) &
-                 / ( _HALF_*( hn(i,j,2) + hn(i,j,1) ) ) &
-                 / hn(i,j,1)
+                 / ( _HALF_*( hn(i,j,1) + hn(i,j,2) ) )
             do k=2,kmax-1
-               bnh(i,j,k) = bnh(i,j,k)                     &
+               bnh(i,j,k) = bnh(i,j,k)                               &
                   - (                                                &
                         (num(i,j,k) + avmmol)                        &
                         * (            wc(i,j,k+1) - wc(i,j,k  )   ) &
-                        / ( _HALF_ * ( hn(i,j,k+1) + hn(i,j,k  ) ) ) &
+                        / ( _HALF_ * ( hn(i,j,k  ) + hn(i,j,k+1) ) ) &
                       - (num(i,j,k-1) + avmmol)                      &
                         * (            wc(i,j,k  ) - wc(i,j,k-1)   ) &
-                        / ( _HALF_ * ( hn(i,j,k  ) + hn(i,j,k-1) ) ) &
-                     )                                               &
-                     / hn(i,j,k)
+                        / ( _HALF_ * ( hn(i,j,k-1) + hn(i,j,k  ) ) ) &
+                     )
             end do
-            bnh(i,j,kmax) = bnh(i,j,kmax)               &
-               - (num(i,j,kmax-1) + avmmol)                       &
-                 * (            wc(i,j,kmax) - wc(i,j,kmax-1)   ) &
-                 / ( _HALF_ * ( hn(i,j,kmax) + hn(i,j,kmax-1) ) ) &
-                 / hn(i,j,kmax)
+            bnh(i,j,kmax) = bnh(i,j,kmax)                           &
+               - (num(i,j,kmax-1) + avmmol)                         &
+                 * (            wc(i,j,kmax  ) - wc(i,j,kmax-1)   ) &
+                 / ( _HALF_ * ( hn(i,j,kmax-1) + hn(i,j,kmax  ) ) )
          end if
       end do
 #ifndef SLICE_MODEL
@@ -361,15 +357,15 @@
 !  filter bnh (result to minus_bnh)
    select case(bnh_filter)
       case (1)
-         minus_bnh = -bnh_weight*bnh
+         minus_bnh = -bnh_weight*bnh/hn
       case (3)
-         minus_bnh = -bnh_weight*bnh + (_ONE_- bnh_weight)*minus_bnh
+         minus_bnh = -bnh_weight*bnh/hn + (_ONE_- bnh_weight)*minus_bnh
       case (4)
          !minus_bnh = minus_bnh - bnh/dfloat(nonhyd_iters) ! not usable when iteration is prematurely abrupted
          weight = _ONE_/dfloat(nonhyd_loop)
-         minus_bnh = -weight*bnh + (_ONE_- weight)*minus_bnh
+         minus_bnh = -weight*bnh/hn + (_ONE_- weight)*minus_bnh
       case default
-         minus_bnh = -bnh
+         minus_bnh = -bnh/hn
    end select
 !  bnh now free
 
