@@ -167,6 +167,10 @@
       case default
    end select
 
+   if (temp_AH .gt. _ZERO_) then
+      LEVEL3 "Hor. temperature diffusion - temp_AH: ",temp_AH
+   end if
+
    select case (attenuation_method)
       case (0)
          LEVEL3 'setting attenuation coefficients to constant values:'
