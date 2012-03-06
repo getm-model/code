@@ -110,10 +110,6 @@
    if (temp_hor_adv .eq. J7) stop 'init_temperature: J7 not implemented yet'
    call print_adv_settings_3d(temp_adv_split,temp_hor_adv,temp_ver_adv,temp_AH)
 
-   if (temp_AH .gt. _ZERO_) then
-      LEVEL3 "Hor. temperature diffusion - temp_AH: ",temp_AH
-   end if
-
    select case (attenuation_method)
       case (0)
          LEVEL3 'setting attenuation coefficients to constant values:'
