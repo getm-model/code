@@ -166,6 +166,10 @@
       case default
    end select
 
+   if (salt_AH .gt. _ZERO_) then
+      LEVEL3 "Hor. salinity diffusion - salt_AH: ",salt_AH
+   end if
+
    LEVEL3 'salt_check=',salt_check
    if (salt_check .ne. 0) then
       LEVEL4 'doing sanity check on salinity'
