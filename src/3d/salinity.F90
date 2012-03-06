@@ -110,6 +110,10 @@
    if (salt_hor_adv .eq. J7) stop 'init_salinity: J7 not implemented yet'
    call print_adv_settings_3d(salt_adv_split,salt_hor_adv,salt_ver_adv,salt_AH)
 
+   if (salt_AH .gt. _ZERO_) then
+      LEVEL3 "Hor. salinity diffusion - salt_AH: ",salt_AH
+   end if
+
    LEVEL3 'salt_check=',salt_check
    if (salt_check .ne. 0) then
       LEVEL4 'doing sanity check on salinity'
