@@ -203,14 +203,12 @@
 #endif
    CALL tic(TIM_UVDIFF)
 
-#ifdef _MOMENTUM_TERMS_
    if (present(hsd_u)) then
       hsd_u = UEx
    end if
    if (present(hsd_v)) then
       hsd_v = VEx
    end if
-#endif
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j)                                         &
@@ -444,14 +442,12 @@
    VEx(imin:imax,j+1) = VEx(imin:imax,j)
 #endif
 
-#ifdef _MOMENTUM_TERMS_
    if (present(hsd_u)) then
       hsd_u = UEx - hsd_u
    end if
    if (present(hsd_v)) then
       hsd_v = VEx - hsd_v
    end if
-#endif
 
    CALL toc(TIM_UVDIFF)
 #ifdef DEBUG
