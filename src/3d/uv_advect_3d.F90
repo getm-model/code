@@ -389,8 +389,8 @@
 
    if (do_numerical_analyses) then
       do k=1,kmax ! calculate square of u-velocity before advection step 
-         do j=jmin,jmax
-            do i=imin,imax
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO
                vel2(i,j,k)=uuEx(i,j,k)**2 
             end do
          end do
@@ -414,6 +414,9 @@
             end do
          end do
       end do
+
+      call update_3d_halo(numdiss,numdiss,au,imin,jmin,imax,jmax,kmax,U_TAG)
+      call wait_halo(U_TAG)
 
       numdis2d=_ZERO_
       do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
@@ -503,8 +506,8 @@
 
    if (do_numerical_analyses) then
       do k=1,kmax ! calculate square of v-velocity before advection step 
-         do j=jmin,jmax
-            do i=imin,imax
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO
                vel2(i,j,k)=vvEx(i,j,k)**2 
             end do
          end do
@@ -528,6 +531,9 @@
             end do
          end do
       end do
+
+      call update_3d_halo(numdiss,numdiss,av,imin,jmin,imax,jmax,kmax,V_TAG)
+      call wait_halo(V_TAG)
 
       do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
          do j=jmin,jmax
