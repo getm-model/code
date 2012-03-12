@@ -56,7 +56,7 @@
          sseo(i,j)=ssen(i,j)
          ssen(i,j)=z(i,j)
          Dn(i,j) = ssen(i,j) + H(i,j)
-!        KK-TODO: use of Dn & Co. in more routines (coordinates,...)
+!        KK-TODO: use of Dn & Co. in more routines (coordinates,momentum,rivers)
       end do
    end do
 
