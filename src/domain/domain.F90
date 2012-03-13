@@ -86,11 +86,11 @@
 
    REALTYPE                            :: cori= _ZERO_
 
-   REALTYPE                            :: cd_min=_ZERO_
-!  method for specifying bottom roughness (0=disable, 1=const, 2=from topo.nc)
-   integer                             :: z0_method=1
+   integer                             :: bottfric_method=2
+   REALTYPE                            :: rdrag=0.0004d0
    REALTYPE                            :: z0_const=0.001d0
    integer                             :: z0d_iters=0
+   REALTYPE                            :: cd_min=_ZERO_
 
 ! !DEFINED PARAMETERS:
    integer,           parameter        :: INNER          = 1
@@ -164,7 +164,7 @@
              longitude,latitude,f_plane,openbdy,bdyinfofile,     &
              crit_depth,min_depth,kdum,ddu,ddl,                  &
              d_gamma,gamma_surf,il,ih,jl,jh,                     &
-             cd_min,z0_method,z0_const,z0d_iters
+             bottfric_method,rdrag,z0_const,z0d_iters,cd_min
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -379,38 +379,34 @@
 
    LEVEL2 'bottom friction specification'
 #ifdef NO_BOTTFRIC
-   if (cd_min.gt._ZERO_ .or. z0_method.ne.0) then
-      LEVEL3 'Reset cd_min=0.0 and z0_method=0 due to obsolete -DNO_BOTTFRIC.'
+   if (bottfric_method .ne. 0) then
+      LEVEL3 'Reset bottfric_method=0 due to obsolete -DNO_BOTTFRIC.'
       LEVEL3 'Note that this behaviour will be removed in the future!'
-      cd_min = _ZERO_
-      z0_method = 0
+      bottfric_method=0
    end if
 #endif
-   if (cd_min .lt. _ZERO_) then
-      cd_min = _ZERO_
+   if (bottfric_method.eq.1 .and. rdrag.le._ZERO_) then
+      bottfric_method = 0
    end if
-   select case (z0_method)
+   select case (bottfric_method)
       case(0)
-         if (cd_min .gt. _ZERO_) then
-            LEVEL3 'linear bottom friction with drag coefficient cd = ',real(cd_min)
-         else
-            LEVEL3 'disabled bottom friction'
-         end if
+         LEVEL3 'no bottom friction'
       case(1)
-         LEVEL3 'quadratic bottom friction with constant z0 = ',real(z0_const)
+         LEVEL3 'linear bottom friction with rdrag = ',real(rdrag)
+      case(2)
+         LEVEL3 'quadratic bottom friction with z0_const = ',real(z0_const)
          if (z0_const .le. _ZERO_) then
             call getm_error("init_domain()", &
                             "non-positive bottom roughness");
          end if
          zub0 = z0_const
          zvb0 = z0_const
-      case(2)
-         LEVEL3 'quadratic bottom friction with z0 field read from topo file'
+      case(3)
+         LEVEL3 'quadratic bottom friction with z0 read from topo file'
          if (MINVAL(z0(imin:imax,jmin:jmax),mask=(az(imin:imax,jmin:jmax).ge.1)) .le. _ZERO_) then
             call getm_error("init_domain()", &
                             "non-positive bottom roughness in z0 field");
          end if
-
 !        Note (KK): we need halo update only for periodic domains
          call update_2d_halo(z0,z0,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
@@ -432,9 +428,11 @@
          call getm_error("init_domain()", &
                          "A non valid z0 method has been chosen");
    end select
-   if (z0_method .ne. 0) then
+   if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
       if (cd_min .gt. _ZERO_) then
-         LEVEL3 'min. drag coefficient: ',real(cd_min)
+         LEVEL3 'min. drag coefficient cd_min = ',real(cd_min)
+      else
+         cd_min = _ZERO_
       end if
       if (z0d_iters .gt. 0) then
          LEVEL3 'iterations for dynamic bottom roughness: ',z0d_iters

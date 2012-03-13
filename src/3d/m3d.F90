@@ -25,7 +25,7 @@
 ! !USES:
    use exceptions
    use parameters, only: avmmol
-   use domain, only: openbdy,maxdepth,vert_cord,az,z0_method
+   use domain, only: openbdy,maxdepth,vert_cord,az,bottfric_method
    use les, only: do_les_3d
    use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
    use m2d_general, only: bottom_friction
@@ -441,7 +441,7 @@
 
       call coordinates(hotstart)
 
-      if (z0_method .ne. 0) then
+      if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
          call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
       end if
 
@@ -613,7 +613,7 @@
       call uv_advect_3d()
       if (Am_method .ne. NO_AM) call uv_diffusion_3d() ! Must be called after uv_advect_3d
 
-      if (z0_method .ne. 0) then
+      if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
          call tic(TIM_INTEGR3D)
          call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv,zub,zvb)
          call toc(TIM_INTEGR3D)
