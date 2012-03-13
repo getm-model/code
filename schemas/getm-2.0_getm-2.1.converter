@@ -11,7 +11,7 @@
 		<forward>
 <![CDATA[
 z0_method = source['getm/domain/z0_method'].getValue(usedefault=True)
-target['getm/domain/z0_method'].setValue(z0_method+1)
+target['getm/domain/bottfric_method'].setValue(z0_method+2)
 
 diffs = ('getm/m2d/Am','getm/temp/temp_AH','getm/salt/salt_AH')
 for diff in diffs:
@@ -38,8 +38,8 @@ for nml in nmls:
 		</forward>
 		<backward>
 <![CDATA[
-z0_method = source['getm/domain/z0_method'].getValue(usedefault=True)
-target['getm/domain/z0_method'].setValue(z0_method-1)
+bottfric_method = source['getm/domain/bottfric_method'].getValue(usedefault=True)
+target['getm/domain/z0_method'].setValue(bottfric_method-2)
 
 diffs = ('getm/m2d/Am','getm/temp/temp_AH','getm/salt/salt_AH')
 for diff in diffs:
