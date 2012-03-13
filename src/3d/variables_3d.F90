@@ -111,7 +111,7 @@
 ! {\tt init\_variables\_3d}) and cleanup (see {\tt clean\_variables\_3d}).
 !
 ! !USES:
-   use domain,     only: imin,imax,jmin,jmax,kmax,cd_min
+   use domain,     only: imin,imax,jmin,jmax,kmax,bottfric_method,rdrag
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -212,7 +212,15 @@
 #endif
    ssen = _ZERO_ ; ssun = _ZERO_ ; ssvn = _ZERO_
    Dn = SMALL ; Dun = SMALL ; Dvn = SMALL
-   rru= cd_min ; rrv= cd_min
+
+   if (bottfric_method .eq. 1) then
+      rru = rdrag
+      rrv = rdrag
+   else
+      rru = _ZERO_
+      rrv = _ZERO_
+   end if
+
    uuEx= _ZERO_ ; vvEx= _ZERO_
    tke=1.e-10 ; eps=1.e-10
    preadapt=0
