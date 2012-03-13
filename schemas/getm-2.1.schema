@@ -82,19 +82,34 @@
 			<element name="ih" type="int" label="???"/>
 			<element name="jl" type="int" label="???"/>
 			<element name="jh" type="int" label="???"/>
-			<element name="cd_min" type="float" unit="m/s" label="min. drag coefficient"/>
-			<element name="z0_method" type="int" label="bottom roughness specification">
+			<element name="bottfric_method" type="int" label="bottom friction specification">
 				<options>
-					<option value="0" label="disable quadratic bottom friction"/>
-					<option value="1" label="constant - using z0_const"/>
-					<option value="2" label="space varying - read from bathymetry file (variable name MUST be z0)"/>
+					<option value="0" label="disable bottom friction"/>
+					<option value="1" label="linear with rdrag"/>
+					<option value="2" label="quadratic with z0_const, z0d_iters and cd_min"/>
+					<option value="3" label="quadratic with z0 from topofile, z0d_iters and cd_min"/>
 				</options>
 			</element>
-			<element name="z0_const" type="float" label="constant bottom roughness" unit="m">
-				<condition type="eq" variable="./z0_method" value="1"/>
+			<element name="rdrag" type="float" label="linear bottom friction parameter" unit="m/s">
+				<condition type="eq" variable="./bottfric_method" value="1"/>
 			</element>
-			<element name="z0d_iters" type="int" label="iterations for dynamic z0" minInclusive="0">
-				<condition type="ne" variable="./z0_method" value="0"/>
+			<element name="z0_const" type="float" label="constant bottom roughness" unit="m">
+				<condition type="or">
+					<condition type="eq" variable="./bottfric_method" value="2"/>
+					<condition type="eq" variable="./bottfric_method" value="3"/>
+				</condition>
+			</element>
+			<element name="z0d_iters" type="int" label="iterations for dynamic bottom roughness" minInclusive="0">
+				<condition type="or">
+					<condition type="eq" variable="./bottfric_method" value="2"/>
+					<condition type="eq" variable="./bottfric_method" value="3"/>
+				</condition>
+			</element>
+			<element name="cd_min" type="float" label="minimum drag coefficient">
+				<condition type="or">
+					<condition type="eq" variable="./bottfric_method" value="2"/>
+					<condition type="eq" variable="./bottfric_method" value="3"/>
+				</condition>
 			</element>
 		</element>
 

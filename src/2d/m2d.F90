@@ -21,7 +21,8 @@
    use exceptions
    use time, only: julianday,secondsofday
    use parameters, only: avmmol
-   use domain, only: imin,imax,iextr,jmin,jmax,jextr,az,au,av,ax,H,HU,HV,min_depth,z0_method
+   use domain, only: imin,imax,iextr,jmin,jmax,jextr,az,au,av,ax,H,HU,HV,min_depth
+   use domain, only: bottfric_method
    use domain, only: ilg,ihg,jlg,jhg
    use domain, only: ill,ihl,jll,jhl
    use domain, only: rigid_lid,openbdy
@@ -421,7 +422,7 @@
    call tic(TIM_INTEGR2D)
 
    if (mod(loop-1,MM) .eq. 0) then        ! MacroMicro time step
-      if (z0_method .ne. 0) then
+      if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
          call bottom_friction(U,V,DU,DV,ru,rv)
       end if
    end if

@@ -33,7 +33,7 @@
   use domain, only                    : latc,lonc
   use domain, only                    : latx,lonx
   use domain, only                    : convx,convc
-  use domain, only                    : z0_method,z0
+  use domain, only                    : bottfric_method,z0
   IMPLICIT NONE
 !
 ! !PUBLIC MEMBER FUNCTIONS:
@@ -630,7 +630,7 @@ stop
    end select
 
 !  read bottom roughness
-   if (z0_method .eq. 2) then
+   if (bottfric_method .eq. 3) then
       status = nf90_inq_varid(ncid,"z0",id)
       if (status .ne. NF90_NOERR) then
          call netcdf_error(status,"ncdf_check_grid()",   &
