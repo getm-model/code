@@ -162,7 +162,7 @@
              longitude,latitude,f_plane,openbdy,bdyinfofile,   &
              crit_depth,min_depth,kdum,ddu,ddl,                &
              d_gamma,gamma_surf,il,ih,jl,jh,                   &
-             bottfric_method,z0_const,z0d_iters,cd_min
+             bottfric_method,rdrag,z0_const,z0d_iters,cd_min
 !EOP
 !-------------------------------------------------------------------------
 !BOC
