@@ -97,7 +97,7 @@
       do i=imin,imax
          pm2d(i,j)=_ZERO_
          dlower=_ZERO_
-         do k=1,kmax-1
+         do k=1,kmax
            if (k .eq. kmax) then
              dupper=_ZERO_
            else
