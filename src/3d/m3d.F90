@@ -455,7 +455,11 @@
       call do_eqstate()
       call do_internal_pressure()
       if (.not. hotstart) then
-         call slow_terms()
+#ifndef NO_BAROTROPIC
+         if (.not. no_2d) then
+            call slow_terms()
+         end if
+#endif
       end if
 
 !     KK-TODO: call slow_terms also for hotstarts => do not store slow terms in restart files
