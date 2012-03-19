@@ -10,7 +10,7 @@
 ! !DESCRIPTION:
 !
 ! Here, the physical tracer variance decay for the tracer $F$,
-! ${ D}^{\mbox{\scriptsize phys}}\left(\langle F \rangle^2 \right)$, 
+! ${ D}^{\mbox{\scriptsize phys}}\left(\langle F \rangle^2 \right)$,
 ! due to horizontal and vertical
 ! mixing is calculated as proposed in \cite{BURCHARDea08b}:
 ! \begin{equation}
