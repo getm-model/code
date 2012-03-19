@@ -186,7 +186,7 @@
    read(NAMLST,domain)
 
    if (crit_depth .lt. 2.5*min_depth)  then
-      stop 'crit_depth must be larger than 2.5 time min_depth' 
+      stop 'crit_depth must be larger than 2.5 time min_depth'
    end if
 
 #ifndef STATIC
