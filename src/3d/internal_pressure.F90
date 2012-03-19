@@ -73,7 +73,6 @@
    use variables_3d, only: kmin,hn,ssen,minus_bnh
    use variables_3d, only: idpdx_m3d=>idpdx,idpdy_m3d=>idpdy
    use variables_3d, only: idpdx_hs,idpdy_hs,idpdx_nh,idpdy_nh,idpdx_full,idpdy_full
-   use nonhydrostatic, only: calc_hs2d
 
    IMPLICIT NONE
 !
