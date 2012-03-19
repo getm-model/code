@@ -27,6 +27,9 @@
    use bio_var, only: numc
    use variables_3d,  only: cc3d
 #endif
+#ifdef _FABM_
+   use getm_fabm, only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
+#endif
    use diagnostic_variables
    use getm_timers, only: tic, toc, TIM_CALCMEANF
    IMPLICIT NONE
@@ -42,6 +45,7 @@
    REALTYPE        :: tmpf(I3DFIELD)
    REALTYPE,save   :: step=_ZERO_
    logical,save    :: first=.true.
+   logical,save    :: fabm_mean=.false.
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -131,6 +135,25 @@
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (cc3dmean)'
 #endif
+#ifdef _FABM_
+      if (allocated(fabm_pel)) then
+         fabm_mean=.true.
+         allocate(fabmmean_pel(I3DFIELD,ubound(fabm_pel,4)),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (fabmmean_pel)'
+         allocate(fabmmean_ben(I2DFIELD,ubound(fabm_ben,3)),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (fabmmean_ben)'
+         allocate(fabmmean_diag(I3DFIELD,ubound(fabm_diag,4)),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (fabmmean_diag)'
+         allocate(fabmmean_diag_hz(I2DFIELD,ubound(fabm_diag_hz,3)),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (fabmmean_diag_hz)'
+      else
+         fabm_mean=.false.
+      end if
+#endif
       first = .false.
    end if
 
@@ -153,6 +176,14 @@
 #endif
 #ifdef GETM_BIO
       cc3dmean=_ZERO_
+#endif
+#ifdef _FABM_
+      if (fabm_mean) then
+         fabmmean_pel=_ZERO_
+         fabmmean_ben=_ZERO_
+         fabmmean_diag=_ZERO_
+         fabmmean_diag_hz=_ZERO_
+      end if
 #endif
       ustarmean=_ZERO_; ustar2mean=_ZERO_; swrmean=_ZERO_
    end if
@@ -207,6 +238,14 @@
 #ifdef GETM_BIO
       if (bio_calc) cc3dmean=cc3dmean + cc3d
 #endif
+#ifdef _FABM_
+      if (fabm_mean) then
+          fabmmean_pel = fabmmean_pel + fabm_pel
+          fabmmean_ben = fabmmean_ben + fabm_ben
+          fabmmean_diag = fabmmean_diag + fabm_diag
+          fabmmean_diag_hz = fabmmean_diag_hz + fabm_diag_hz
+      end if
+#endif
 !  count them
       step = step + 1.0
    end if   ! here we summed them up
@@ -244,6 +283,14 @@
 #endif
 #ifdef GETM_BIO
          if (bio_calc) cc3dmean = cc3dmean / step
+#endif
+#ifdef _FABM_
+         if (fabm_mean) then
+            fabmmean_pel = fabmmean_pel / step
+            fabmmean_ben = fabmmean_ben / step
+            fabmmean_diag = fabmmean_diag / step
+            fabmmean_diag_hz = fabmmean_diag_hz / step
+         end if
 #endif
          ustarmean = ustarmean / step
          swrmean = swrmean / step
