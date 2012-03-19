@@ -29,6 +29,12 @@
 #ifdef GETM_BIO
    integer, allocatable                :: biomean_id(:)
 #endif
+#ifdef _FABM_
+   integer, allocatable                :: fabmmean_ids(:)
+   integer, allocatable                :: fabmmean_ids_ben(:)
+   integer, allocatable                :: fabmmean_ids_diag(:)
+   integer, allocatable                :: fabmmean_ids_diag_hz(:)
+#endif
 
    REALTYPE, parameter                 :: hh_missing=-10.0
    REALTYPE, parameter                 :: swr_missing=-9999.0

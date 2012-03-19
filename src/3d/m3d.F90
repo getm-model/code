@@ -464,6 +464,15 @@
    end if
 #endif
 
+   if (.not. hotstart) then
+      call slow_terms()
+   end if
+
+!  KK-TODO: call slow_terms also for hotstarts => do not store slow terms in restart files
+!           requires storage of [U|V]into (when hotstart is done within 2d cycle)
+!           and calculation of Dn,Dun,Dvn for hostarts
+!           suggestion: within 2d Uint; within 3d Uint=>Umean
+
    call ss_nn()
 
    return

@@ -247,7 +247,7 @@
 ! advective fluxes resulting from the continuity equation
 ! (\ref{ContiLayerInt}). Continuity will
 ! still be retained due to the linearity of the continuity equation.
-! 
+!
 ! \paragraph{Numerical dissipation.}\label{uvadvect-dissipation}
 !
 ! For the directional split method, numerical dissipation is calculated
