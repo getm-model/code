@@ -50,7 +50,7 @@
   allocate(ipg_v(I3DFIELD),stat=rc) ! 3D field for ipg_v
   if (rc /= 0) stop 'init_3d: Error allocating memory (ipg_v)'
 
-  
+
 #endif
 
 #ifdef STRUCTURE_FRICTION
