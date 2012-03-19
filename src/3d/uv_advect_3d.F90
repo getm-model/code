@@ -247,7 +247,7 @@
 ! advective fluxes resulting from the continuity equation
 ! (\ref{ContiLayerInt}). Continuity will
 ! still be retained due to the linearity of the continuity equation.
-! 
+!
 ! \paragraph{Numerical dissipation.}\label{uvadvect-dissipation}
 !
 ! For the directional split method, numerical dissipation is calculated
@@ -388,15 +388,15 @@
    call toc(TIM_UVADV3DH)
 
    if (do_numerical_analyses) then
-      do k=1,kmax ! calculate square of u-velocity before advection step 
+      do k=1,kmax ! calculate square of u-velocity before advection step
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO
-               vel2(i,j,k)=uuEx(i,j,k)**2 
+               vel2(i,j,k)=uuEx(i,j,k)**2
             end do
          end do
       end do
       vel2o=vel2
-   end if   
+   end if
 
    call do_advection_3d(dt,uuEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
@@ -430,7 +430,7 @@
          end do
       end do
    end if
-   
+
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
 
@@ -505,10 +505,10 @@
    call toc(TIM_UVADV3DH)
 
    if (do_numerical_analyses) then
-      do k=1,kmax ! calculate square of v-velocity before advection step 
+      do k=1,kmax ! calculate square of v-velocity before advection step
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO
-               vel2(i,j,k)=vvEx(i,j,k)**2 
+               vel2(i,j,k)=vvEx(i,j,k)**2
             end do
          end do
       end do
