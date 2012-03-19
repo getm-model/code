@@ -10,7 +10,7 @@
 ! !DESCRIPTION:
 !
 ! Here, the physical tracer variance decay for the tracer $F$,
-! ${ D}^{\mbox{\scriptsize phys}}\left(\langle F \rangle^2 \right)$, 
+! ${ D}^{\mbox{\scriptsize phys}}\left(\langle F \rangle^2 \right)$,
 ! due to horizontal and vertical
 ! mixing is calculated as proposed in \cite{BURCHARDea08b}:
 ! \begin{equation}
@@ -59,7 +59,7 @@
          do j=jmin,jmax
             do i=imin-1,imax
                if (au(i,j) .gt. 0) then
-                  aux(i,j,k)=_TWO_*AH*((F(i+1,j,k)-F(i,j,k))/DXU)**2  
+                  aux(i,j,k)=_TWO_*AH*((F(i+1,j,k)-F(i,j,k))/DXU)**2
                else
                   aux(i,j,k)=_ZERO_
                end if
@@ -69,7 +69,7 @@
       do k=1,kmax
          do j=jmin,jmax
             do i=imin,imax
-               pm3d(i,j,k)=pm3d(i,j,k)+_HALF_*(aux(i,j,k)+aux(i-1,j,k))  
+               pm3d(i,j,k)=pm3d(i,j,k)+_HALF_*(aux(i,j,k)+aux(i-1,j,k))
             end do
          end do
       end do
@@ -78,7 +78,7 @@
          do j=jmin-1,jmax
             do i=imin,imax
                if (av(i,j) .gt. 0) then
-                  aux(i,j,k)=_TWO_*AH*((F(i,j+1,k)-F(i,j,k))/DYV)**2  
+                  aux(i,j,k)=_TWO_*AH*((F(i,j+1,k)-F(i,j,k))/DYV)**2
                else
                   aux(i,j,k)=_ZERO_
                end if
@@ -88,7 +88,7 @@
       do k=1,kmax
          do j=jmin,jmax
             do i=imin,imax
-               pm3d(i,j,k)=pm3d(i,j,k)+_HALF_*(aux(i,j,k)+aux(i,j-1,k))  
+               pm3d(i,j,k)=pm3d(i,j,k)+_HALF_*(aux(i,j,k)+aux(i,j-1,k))
             end do
          end do
       end do

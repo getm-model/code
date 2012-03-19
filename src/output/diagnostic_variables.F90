@@ -42,6 +42,12 @@
 #ifdef GETM_BIO
    REALTYPE,dimension(:,:,:,:), allocatable :: cc3dmean
 #endif
+#ifdef _FABM_
+   REALTYPE,dimension(:,:,:,:), allocatable :: fabmmean_pel
+   REALTYPE,dimension(:,:,:), allocatable :: fabmmean_ben
+   REALTYPE,dimension(:,:,:,:), allocatable :: fabmmean_diag
+   REALTYPE,dimension(:,:,:), allocatable :: fabmmean_diag_hz
+#endif
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
