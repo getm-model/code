@@ -454,7 +454,7 @@
 #endif
 #ifdef _FABM_
             if ( allocated(fabm_pel) ) then
-                fabm_pel(i,j,:,:) = fabm_pel(i,j+1,:,:) 
+                fabm_pel(i,j,:,:) = fabm_pel(i,j+1,:,:)
                 fabm_ben(i,j,:)=fabm_ben(i,j+1,:)
            end if
 #endif
