@@ -78,8 +78,8 @@
       if (nonhyd_method .ne. 0) then
          call do_nonhydrostatic(nonhyd_loop,vel_hor_adv,vel_ver_adv,vel_adv_split)
       end if
-      if (nonhyd_loop .lt. nonhyd_iters) then
-         call do_internal_pressure()
+      if (nonhyd_method .eq. 1) then
+         call do_internal_pressure(2)
       end if
       nonhyd_loop = nonhyd_loop + 1
    end do

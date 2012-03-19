@@ -105,6 +105,7 @@
    public init_nonhydrostatic, do_nonhydrostatic
 
    integer,public  :: nonhyd_method=0
+   logical,public  :: calc_hs2d=.false.
    integer,public  :: nonhyd_iters=1
    integer,public  :: bnh_filter=0
    REALTYPE,public :: bnh_weight=_ONE_
@@ -142,7 +143,7 @@
 ! !LOCAL VARIABLES:
    integer                     :: rc
    namelist /nonhyd/ &
-            nonhyd_iters,bnh_filter,bnh_weight
+            calc_hs2d,nonhyd_iters,bnh_filter,bnh_weight
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -160,6 +161,9 @@
          LEVEL3 'passive screening of nonhydrostatic effects'
       case (1)
          read(NAMLST,nonhyd)
+         if (calc_hs2d) then
+            LEVEL3 'exclude nh pressure gradient from slow terms'
+         end if
          if (nonhyd_iters .le. 0) nonhyd_iters=1
          LEVEL3 'number of iterations = ',nonhyd_iters
          select case(bnh_filter)

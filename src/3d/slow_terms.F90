@@ -23,12 +23,14 @@
    use variables_2d, only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
    use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,Dn,Dun,Dvn
    use variables_3d, only: uuEx,vvEx,rru,rrv
-   use variables_3d, only: idpdx,idpdy
+   use variables_3d, only: idpdx_m3d=>idpdx,idpdy_m3d=>idpdy,idpdx_hs,idpdy_hs
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
 #endif
    use m3d, only: calc_ip,ip_fac
    use m2d_general, only: bottom_friction,calc_uvex
+   use internal_pressure, only: calc_ipfull
+   use nonhydrostatic, only: nonhyd_method,calc_hs2d
    use getm_timers, only: tic, toc, TIM_SLOWTERMS
 !$ use omp_lib
    IMPLICIT NONE
@@ -37,8 +39,10 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
+   logical,save              :: first=.true.,calc_slowip
    integer                   :: i,j,k
    REALTYPE                  :: vertsum
+   REALTYPE,dimension(:,:,:),pointer,save :: idpdx,idpdy
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -48,6 +52,23 @@
    write(debug,*) 'slow_terms() # ',Ncall
 #endif
    call tic(TIM_SLOWTERMS)
+
+   if (first) then
+      calc_slowip = calc_ip
+      idpdx => idpdx_m3d
+      idpdy => idpdy_m3d
+      if (calc_ipfull) then
+         if (calc_hs2d) then
+            idpdx => idpdx_hs
+            idpdy => idpdy_hs
+         end if
+      else if (nonhyd_method .eq. 1) then
+         if (calc_hs2d) then
+            calc_slowip = .false.
+         end if
+      end if
+      first = .false.
+   end if
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,vertsum)
 
@@ -68,7 +89,7 @@
                do k=kumin(i,j),kmax
                   vertsum = vertsum + uuEx(i,j,k)
                end do
-               if (calc_ip) then
+               if (calc_slowip) then
                   do k=kumin(i,j),kmax
                      vertsum = vertsum - ip_fac*idpdx(i,j,k)
                   end do
@@ -99,7 +120,7 @@
                   vertsum = vertsum + vvEx(i,j,k)
                end do
 #ifndef SLICE_MODEL
-               if (calc_ip) then
+               if (calc_slowip) then
                   do k=kvmin(i,j),kmax
                      vertsum = vertsum - ip_fac*idpdy(i,j,k)
                   end do
@@ -128,7 +149,7 @@
       end do
 !$OMP END DO
 
-   else if (calc_ip) then
+   else if (calc_slowip) then
 
 !     Note (KK): here kmax=1, thus [uu|vv]=[U|V]int and only internal
 !                pressure contributes to slow terms

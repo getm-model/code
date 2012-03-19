@@ -739,6 +739,7 @@
 
 		<element name="nonhyd" label="parameters for nonhydrostatic simulations">
 			<condition type="eq" variable="/getm/m3d/nonhyd_method" value="1"/>
+			<element name="calc_hs2d" type="bool" label="only hydrostatic forcing of 2D mode"/>
 			<element name="nonhyd_iters" type="int" label="number of nonhydrostatic iterations during an internal time step" minInclusive="1"/>
 			<element name="bnh_filter" type="int" label="temporal filter for nonhydrostatic buoyancy correction">
 				<options>

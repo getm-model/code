@@ -451,17 +451,18 @@
          call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
       end if
 
+      if (nonhyd_method .eq. 1) then
+         call do_internal_pressure(2)
+      end if
+
    end if
 
 #ifndef NO_BAROCLINIC
    if (runtype .ge. 3) then
       call do_eqstate()
+      call do_internal_pressure(1)
    end if
 #endif
-
-   if (calc_ip) then
-      call do_internal_pressure()
-   end if
 
    call ss_nn()
 
@@ -663,12 +664,9 @@
 #ifndef PECS
       call do_eqstate()
 #endif
+      call do_internal_pressure(1)
    end if
 #endif
-
-   if (runtype.eq.4 .or. nonhyd_method.eq.1) then
-      call do_internal_pressure()
-   end if
 
 #ifndef NO_BAROTROPIC
    if (.not. no_2d) then

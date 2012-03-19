@@ -504,6 +504,9 @@
 			</dsr0>
 		</eqstate>
 		<nonhyd>
+			<calc_hs2d>
+				False
+			</calc_hs2d>
 			<nonhyd_iters>
 				1
 			</nonhyd_iters>
