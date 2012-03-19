@@ -274,7 +274,7 @@
    if (allocated(fabm_pel)) then
       allocate(fabmmean_ids(size(model%info%state_variables)),stat=err)
       if (err /= 0) stop 'init_mean_ncdf(): Error allocating memory (fabmmean_ids)'
-   
+
       do n=1,size(model%info%state_variables)
          err = nf90_def_var(ncid,model%info%state_variables(n)%name,NCDF_FLOAT_PRECISION,f4_dims,fabmmean_ids(n))
          if (err .NE.  NF90_NOERR) go to 10
