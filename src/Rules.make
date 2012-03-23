@@ -129,8 +129,8 @@ INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
 ifeq ($(NETCDF_VERSION),NETCDF4)
 
 DEFINES		+= -DNETCDF4
-INCDIRS		+= $(shell nc-config --fflags)
-NETCDFLIB	=  $(shell nc-config --flibs)
+INCDIRS		+= $(shell nf-config --fflags)
+NETCDFLIB	=  $(shell nf-config --flibs)
 
 else  # NetCDF3 is default
 
