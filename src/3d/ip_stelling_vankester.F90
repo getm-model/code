@@ -146,7 +146,7 @@
                   lmin = l
                   exit
                end if
-            end do            
+            end do
 
             k = kmax
             l = lmax
@@ -289,7 +289,7 @@
                   lmin = l
                   exit
                end if
-            end do            
+            end do
 
             k = kmax
             l = lmax
