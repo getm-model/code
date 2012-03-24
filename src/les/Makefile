@@ -5,7 +5,7 @@
 
 include ../Rules.make
 
-INCS	= 
+INCS	=
 LIB	= $(LIBDIR)/libles${buildtype}.a
 
 MODSRC	= les.F90 variables_les.F90
