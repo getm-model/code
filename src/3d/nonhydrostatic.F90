@@ -185,6 +185,9 @@
                end if
             case(4)
                LEVEL3 'moving average over iterative stages'
+            case(5)
+               LEVEL3 'ramping filter over iterative stages'
+               bnh_weight = _ONE_/dfloat(nonhyd_iters)
             case default
                call getm_error("init_nonhydrostatic()", &
                                "no valid bnh_filter specified")
@@ -260,7 +263,6 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(I3DFIELD) :: wc,bnh
-   REALTYPE                     :: weight
    integer                      :: i,j,k
 !EOP
 !-----------------------------------------------------------------------
@@ -365,9 +367,16 @@
       case (3)
          minus_bnh = -bnh_weight*bnh/hn + (_ONE_- bnh_weight)*minus_bnh
       case (4)
-         !minus_bnh = minus_bnh - bnh/dfloat(nonhyd_iters) ! not usable when iteration is prematurely abrupted
-         weight = _ONE_/dfloat(nonhyd_loop)
-         minus_bnh = -weight*bnh/hn + (_ONE_- weight)*minus_bnh
+         if (nonhyd_loop .eq. 1) then
+            minus_bnh = _ZERO_
+         end if
+         bnh_weight = _ONE_/dfloat(nonhyd_loop)
+         minus_bnh = -bnh_weight*bnh/hn + (_ONE_- bnh_weight)*minus_bnh ! gives 100% weight for first loop
+      case (5)
+         if (nonhyd_loop .eq. 1) then
+            minus_bnh = _ZERO_
+         end if
+         minus_bnh = -bnh_weight*bnh/hn + minus_bnh  ! not usable when iteration is prematurely abrupted
       case default
          minus_bnh = -bnh/hn
    end select
