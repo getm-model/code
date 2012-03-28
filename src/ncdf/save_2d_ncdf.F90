@@ -205,8 +205,7 @@
       if (err .NE. NF90_NOERR) go to 10
 
 #ifdef USE_BREAKS
-      err = nf90_put_var(ncid,break_stat_id, &
-                         break_stat(_2D_W_),start,edges)
+      err = nf90_put_var(ncid,break_stat_id,break_stat(_2D_W_))
       if (err .NE. NF90_NOERR) go to 10
 #endif
    end if

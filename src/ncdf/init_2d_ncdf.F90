@@ -212,7 +212,7 @@
                        FillValue=fv,missing_value=mv,valid_range=vr)
 
 #ifdef USE_BREAKS
-      err = nf90_def_var(ncid,'break_stat',NF90_INT,f3_dims,break_stat_id)
+      err = nf90_def_var(ncid,'break_stat',NF90_INT,f3_dims(1:2),break_stat_id)
       if (err .ne. NF90_NOERR) call netcdf_error(err,                  &
                                   "init_2d_ncdf()","break_stat")
       call set_attributes(ncid,break_stat_id, &
