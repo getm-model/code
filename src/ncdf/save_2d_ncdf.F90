@@ -18,7 +18,7 @@
    use domain,       only: H,az,au,av,crit_depth
    use domain,       only: convc
    use variables_2d, only: z,D,U,DU,V,DV,res_u,res_v
-#if USE_BREAKS
+#ifdef USE_BREAKS
    use variables_2d, only: break_stat
 #endif
    use meteo,        only: metforcing,calc_met
@@ -204,7 +204,7 @@
       err = nf90_put_var(ncid,res_v_id,ws(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 
-#if USE_BREAKS
+#ifdef USE_BREAKS
       err = nf90_put_var(ncid,break_stat_id, &
                          break_stat(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
