@@ -118,7 +118,7 @@
 #endif
 
 #ifdef USE_BREAKS
-   break_mask = 0
+   break_stat = 0
 #endif
 
    z  = _ZERO_; zo =_ZERO_
