@@ -372,7 +372,10 @@
 				</options>
 			</element>
 			<element name="temp_file" type="string" label="name of file with initial temperature distribution">
-				<condition type="eq" variable="./temp_method" value="3"/>
+				<condition type="or">
+					<condition type="eq" variable="./temp_method" value="2"/>
+					<condition type="eq" variable="./temp_method" value="3"/>
+				</condition>
 			</element>
 			<element name="temp_name" type="string" label="name of the temperature variable">
 				<condition type="and">
@@ -490,7 +493,10 @@
 				</options>
 			</element>
 			<element name="salt_file" type="string" label="name of file with initial salinity distribution">
-				<condition type="eq" variable="./salt_method" value="3"/>
+				<condition type="or">
+					<condition type="eq" variable="./salt_method" value="2"/>
+					<condition type="eq" variable="./salt_method" value="3"/>
+				</condition>
 			</element>
 			<element name="salt_name" type="string" label="name of the salinity variable">
 				<condition type="and">
