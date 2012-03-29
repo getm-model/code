@@ -46,11 +46,13 @@
 #endif
    integer                             :: salt_id,temp_id,sigma_t_id
    integer                             :: rad_id
-   integer                             :: diffxx_id,diffyy_id,diffxy_id
    integer                             :: tke_id,num_id,nuh_id,eps_id
    integer                             :: SS_id,NN_id
-   integer                             :: bnh_id
-   integer                             :: Am_3d_id
+   integer                             :: bnh_id=-1
+   integer                             :: Am_3d_id=-1
+   integer                             :: diffxx_id=-1
+   integer                             :: diffyy_id=-1
+   integer                             :: diffxy_id=-1
 #ifdef SPM
    integer                             :: spmpool_id,spm_id
 #endif
@@ -75,7 +77,6 @@
    REALTYPE, parameter                 :: temp_missing   =-9999.0
    REALTYPE, parameter                 :: rho_missing    =-9999.0
    REALTYPE, parameter                 :: rad_missing    =-9999.0
-   REALTYPE, parameter                 :: stirr_missing  =-9999.0
    REALTYPE, parameter                 :: tke_missing    =-9999.0
    REALTYPE, parameter                 :: nuh_missing    =-9999.0
    REALTYPE, parameter                 :: num_missing    =-9999.0
@@ -84,6 +85,7 @@
    REALTYPE, parameter                 :: NN_missing     =-9999.0
    REALTYPE, parameter                 :: bnh_missing    =-9999.0
    REALTYPE, parameter                 :: Am_3d_missing  =-9999.0
+   REALTYPE, parameter                 :: stirr_missing  =-9999.0
 #ifdef SPM
    REALTYPE, parameter                 :: spmpool_missing=-9999.0
    REALTYPE, parameter                 :: spm_missing    =-9999.0
