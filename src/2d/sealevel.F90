@@ -144,7 +144,7 @@
 #ifdef USE_BREAKS
    call set_flag(nprocs,break_flag,break_flags)
 
-   do n=0,nprocs
+   do n=1,nprocs
       if (break_flags(n) .gt. 0) then
          break_flag=1
          LEVEL1 "Warning: emergency break in subdomain: ",n
