@@ -189,20 +189,31 @@
 
    else ! residual velocities
 
+!     Note (KK): there are conceptual discrepancies in the implementation
+!                of the residual transports. therefore the buggy output
+!                into 2d ncdf is not fixed (either add missing start(3)
+!                and edges(3), or define the ncdf fields independent on
+!                time) and the activation with residual.gt.0 is not
+!                recommended.
+
       start(1) = 1
       start(2) = 1
       edges(1) = xlen
       edges(2) = ylen
 
-      call cnv_2d(imin,jmin,imax,jmax,az,res_u,vel_missing, &
-                  imin,jmin,imax,jmax,ws)
-      err = nf90_put_var(ncid,res_u_id,ws(_2D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+      if (res_u_id .ne. -1) then
+         call cnv_2d(imin,jmin,imax,jmax,az,res_u,vel_missing, &
+                     imin,jmin,imax,jmax,ws)
+         err = nf90_put_var(ncid,res_u_id,ws(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
 
-      call cnv_2d(imin,jmin,imax,jmax,az,res_v,vel_missing, &
-                  imin,jmin,imax,jmax,ws)
-      err = nf90_put_var(ncid,res_v_id,ws(_2D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+      if (res_v_id .ne. -1) then
+         call cnv_2d(imin,jmin,imax,jmax,az,res_v,vel_missing, &
+                     imin,jmin,imax,jmax,ws)
+         err = nf90_put_var(ncid,res_v_id,ws(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
 
 #ifdef USE_BREAKS
       err = nf90_put_var(ncid,break_stat_id,break_stat(_2D_W_))
