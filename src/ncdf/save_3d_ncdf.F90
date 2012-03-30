@@ -316,24 +316,29 @@
 
    end if ! save_strho
 
-   if (calc_stirr .and. save_stirr) then
+   if (diffxx_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,diffxx,stirr_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
       err = nf90_put_var(ncid,diffxx_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
+   end if
 
 #ifndef SLICE_MODEL
+   if (diffyy_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,diffyy,stirr_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
       err = nf90_put_var(ncid,diffyy_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
+   end if
 
+   if (diffxy_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,diffxy,stirr_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
       err = nf90_put_var(ncid,diffxy_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
-#endif
    end if
+#endif
+
 #endif
 
    if (save_turb) then
@@ -417,7 +422,7 @@
 #endif
    end if ! save_numerical_analyses
 
-   if (nonhyd_method .ne. 0) then
+   if (bnh_id .ne. -1) then
       if (runtype.eq.2 .or. nonhyd_method.eq.1) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,-minus_bnh,bnh_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
@@ -430,7 +435,7 @@
       err = nf90_put_var(ncid,bnh_id,ws(_3D_W_),start,edges)
    end if
 
-   if (Am_method.eq.AM_LES .and. save_Am_3d) then
+   if (Am_3d_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,AmC_3d,Am_3d_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
       err = nf90_put_var(ncid,Am_3d_id,ws(_3D_W_),start,edges)
