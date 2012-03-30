@@ -557,7 +557,7 @@
 
          err = nf90_inquire_dimension(ncid,time_id,len=idum)
          if (err .ne. NF90_NOERR) go to 10
-         if(idum .gt. size(met_times)) then
+         if(idum .gt. textr) then
             deallocate(met_times,stat=err)
             if (err /= 0) stop      &
                'open_meteo_file(): Error de-allocating memory (met_times)'
@@ -575,7 +575,7 @@
          err =  nf90_get_att(ncid,time_var_id,'units',time_units)
          if (err .NE. NF90_NOERR) go to 10
          call string_to_julsecs(time_units,junit,sunit)
-         err = nf90_get_var(ncid,time_var_id,met_times(1:textr))
+         err = nf90_get_var(ncid,time_var_id,met_times)
          if (err .ne. NF90_NOERR) go to 10
 
          call add_secs(junit,sunit,nint(met_times(1)),    j1,s1)
@@ -598,7 +598,7 @@
 
       err = nf90_inquire_dimension(ncid,time_id,len=idum)
       if (err .ne. NF90_NOERR) go to 10
-      if(idum .gt. size(met_times)) then
+      if(idum .gt. textr) then
          deallocate(met_times,stat=err)
          if (err /= 0) stop      &
             'open_meteo_file(): Error de-allocating memory (met_times)'
@@ -616,7 +616,7 @@
       err =  nf90_get_att(ncid,time_var_id,'units',time_units)
       if (err .NE. NF90_NOERR) go to 10
       call string_to_julsecs(time_units,junit,sunit)
-      err = nf90_get_var(ncid,time_var_id,met_times(1:textr))
+      err = nf90_get_var(ncid,time_var_id,met_times)
       if (err .ne. NF90_NOERR) go to 10
 
       call add_secs(junit,sunit,nint(met_times(1)),    j1,s1)
