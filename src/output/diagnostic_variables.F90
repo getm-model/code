@@ -32,6 +32,8 @@
    REALTYPE,dimension(:,:), allocatable :: nummix2d_S_mean
    REALTYPE,dimension(:,:,:), allocatable :: nummix3d_T_mean
    REALTYPE,dimension(:,:), allocatable :: nummix2d_T_mean
+   REALTYPE,dimension(:,:,:), allocatable :: numdis3d_mean
+   REALTYPE,dimension(:,:), allocatable :: numdis2d_mean
    REALTYPE,dimension(:,:,:), allocatable :: phymix3d_S_mean
    REALTYPE,dimension(:,:), allocatable :: phymix2d_S_mean
    REALTYPE,dimension(:,:,:), allocatable :: phymix3d_T_mean
@@ -39,6 +41,12 @@
 
 #ifdef GETM_BIO
    REALTYPE,dimension(:,:,:,:), allocatable :: cc3dmean
+#endif
+#ifdef _FABM_
+   REALTYPE,dimension(:,:,:,:), allocatable :: fabmmean_pel
+   REALTYPE,dimension(:,:,:), allocatable :: fabmmean_ben
+   REALTYPE,dimension(:,:,:,:), allocatable :: fabmmean_diag
+   REALTYPE,dimension(:,:,:), allocatable :: fabmmean_diag_hz
 #endif
 !
 ! !REVISION HISTORY:

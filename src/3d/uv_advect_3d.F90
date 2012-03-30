@@ -242,11 +242,19 @@
 ! (\ref{SxA}) and (\ref{SyA}).
 !
 ! With this method, all higher-order directional-split advection schemes
-! are now available for the momentum advection. The advective
+! are available for the momentum advection. The advective
 ! fluxes needed for this have to be averaged from the conservative
 ! advective fluxes resulting from the continuity equation
-! Continuity will
+! (\ref{ContiLayerInt}). Continuity will
 ! still be retained due to the linearity of the continuity equation.
+!
+! \paragraph{Numerical dissipation.}\label{uvadvect-dissipation}
+!
+! For the directional split method, numerical dissipation is calculated
+! if {\tt do\_mixing\_analysis} is set to {\tt .true.},
+! using the method suggested by \cite{BURCHARD12}.
+!
+!
 !
 ! !
 ! !USES:
@@ -260,9 +268,16 @@
 #ifdef UV_TVD
    use variables_3d, only: uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv
 #endif
+#ifdef _MOMENTUM_TERMS_
+   use variables_3d, only: adv_u,adv_v
+   use domain, only: dry_u,dry_v
+#endif
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
    use getm_timers, only: tic, toc, TIM_UVADV3D, TIM_UVADV3DH
+   use variables_3d, only: do_numerical_analyses
+   use variables_3d, only: numdis3d,numdis2d
+
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -287,6 +302,9 @@
    REALTYPE                  :: area_inv(I2DFIELD)
    REALTYPE                  :: AH=_ZERO_
    REALTYPE                  :: dti,dxdyi
+   REALTYPE                  :: vel2(I3DFIELD)
+   REALTYPE                  :: vel2o(I3DFIELD)
+   REALTYPE                  :: numdiss(I3DFIELD)
 #endif
 !EOP
 !-----------------------------------------------------------------------
@@ -328,6 +346,7 @@
 !$OMP END DO NOWAIT
    end do
 
+   uuEx=_ZERO_
    do k=1,kmax  ! uuEx is here the velocity to be transported.
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
@@ -363,15 +382,55 @@
       end do
    end do
 
-
    call tic(TIM_UVADV3DH)
    call update_3d_halo(uuEx,uuEx,au,imin,jmin,imax,jmax,kmax,U_TAG)
    call wait_halo(U_TAG)
    call toc(TIM_UVADV3DH)
 
+   if (do_numerical_analyses) then
+      do k=1,kmax ! calculate square of u-velocity before advection step
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO
+               vel2(i,j,k)=uuEx(i,j,k)**2
+            end do
+         end do
+      end do
+      vel2o=vel2
+   end if
+
    call do_advection_3d(dt,uuEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
                         azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
+
+   if (do_numerical_analyses) then
+      call do_advection_3d(dt,vel2,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
+                           dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
+                           azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
+
+      do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
+         do j=jmin,jmax
+            do i=imin,imax
+               numdiss(i,j,k)=(vel2(i,j,k)-uuEx(i,j,k)**2)/dt
+            end do
+         end do
+      end do
+
+      call update_3d_halo(numdiss,numdiss,au,imin,jmin,imax,jmax,kmax,U_TAG)
+      call wait_halo(U_TAG)
+
+      numdis2d=_ZERO_
+      do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
+         do j=jmin,jmax
+            do i=imin,imax
+               numdis3d(i,j,k)=0.5*(numdiss(i,j,k)+numdiss(i-1,j,k))
+               numdis2d(i,j)=numdis2d(i,j)                             &
+                             +0.5*(numdiss(i,j,k)*hun(i,j,k)           &
+                                  +numdiss(i-1,j,k)*hun(i-1,j,k))
+            end do
+         end do
+      end do
+   end if
+
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
 
@@ -382,6 +441,9 @@
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
             uuEx(i,j,k)=dti*(uu(i,j,k)-uuEx(i,j,k)*hun(i,j,k))
+#ifdef _MOMENTUM_TERMS_
+            adv_u(i,j,k)=dry_u(i,j)*uuEx(i,j,k)
+#endif
          end do
       end do
 !$OMP END DO NOWAIT
@@ -442,9 +504,49 @@
    call wait_halo(V_TAG)
    call toc(TIM_UVADV3DH)
 
+   if (do_numerical_analyses) then
+      do k=1,kmax ! calculate square of v-velocity before advection step
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO
+               vel2(i,j,k)=vvEx(i,j,k)**2
+            end do
+         end do
+      end do
+      vel2o=vel2
+   end if
+
    call do_advection_3d(dt,vvEx,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
                         dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
                         azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
+
+   if (do_numerical_analyses) then
+      call do_advection_3d(dt,vel2,uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv,&
+                           dxuadv,dxvadv,dyuadv,dyvadv,area_inv,          &
+                           azadv,auadv,avadv,hor_adv,ver_adv,adv_split,AH)
+
+      do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
+         do j=jmin,jmax
+            do i=imin,imax
+               numdiss(i,j,k)=(vel2(i,j,k)-vvEx(i,j,k)**2)/dt
+            end do
+         end do
+      end do
+
+      call update_3d_halo(numdiss,numdiss,av,imin,jmin,imax,jmax,kmax,V_TAG)
+      call wait_halo(V_TAG)
+
+      do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
+         do j=jmin,jmax
+            do i=imin,imax
+               numdis3d(i,j,k)=numdis3d(i,j,k)                         &
+                              +0.5*(numdiss(i,j,k)+numdiss(i,j-1,k))
+               numdis2d(i,j)=numdis2d(i,j)                             &
+                             +0.5*(numdiss(i,j,k)*hvn(i,j,k)           &
+                                  +numdiss(i,j-1,k)*hvn(i,j-1,k))
+            end do
+         end do
+      end do
+   end if
 
 ! OMP-NOTE: It might not pay off to thread this loop (due to OMP overhead)
 !   vvEx=-(vvEx*hvn-vv)*dti ! Here, vvEx is the advection term.
@@ -455,6 +557,9 @@
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
             vvEx(i,j,k)=dti*(vv(i,j,k)-vvEx(i,j,k)*hvn(i,j,k))
+#ifdef _MOMENTUM_TERMS_
+            adv_v(i,j,k)=dry_v(i,j)*vvEx(i,j,k)
+#endif
          end do
       end do
 !$OMP END DO NOWAIT

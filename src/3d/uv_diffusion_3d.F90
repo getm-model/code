@@ -119,6 +119,9 @@
 #endif
    use variables_3d, only: kumin,kvmin,uu,vv,ww,hn,hun,hvn,uuEx,vvEx
    use getm_timers, only: tic, toc, TIM_UVDIFF3D
+#ifdef _MOMENTUM_TERMS_
+   use variables_3d, only: hsd_u,hsd_v
+#endif
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -137,7 +140,7 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'D3uvDiff() # ',Ncall
+   write(debug,*) 'uv_diffusion_3d() # ',Ncall
 #endif
    call tic(TIM_UVDIFF3D)
 
@@ -152,7 +155,7 @@
             PP(i,j,k)=_ZERO_
             if (az(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
-                  PP(i,j,k)=2.*Am*DYC*hn(i,j,k)               &
+                  PP(i,j,k)=_TWO_*Am*DYC*hn(i,j,k)               &
                       *(uu(i,j,k)/hun(i,j,k)-uu(i-1,j,k)/hun(i-1,j,k))/DXC
                end if
             end if
@@ -168,6 +171,9 @@
             if (au(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
                   uuEx(i,j,k)=uuEx(i,j,k)-(PP(i+1,j,k)-PP(i,j,k))*ARUD1
+#ifdef _MOMENTUM_TERMS_
+                  hsd_u(i,j,k)=-(PP(i+1,j,k)-PP(i,j,k))*ARUD1
+#endif
                end if
             end if
          end do
@@ -202,6 +208,9 @@
             if (au(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
                   uuEx(i,j,k)=uuEx(i,j,k)-(PP(i,j,k)-PP(i,j-1,k))*ARUD1
+#ifdef _MOMENTUM_TERMS_
+                  hsd_u(i,j,k)=hsd_u(i,j,k)-(PP(i,j,k)-PP(i,j-1,k))*ARUD1
+#endif
                end if
             end if
          end do
@@ -219,7 +228,7 @@
             PP(i,j,k)=_ZERO_
             if (ax(i,j) .ge. 1) then
                if (k .ge. kumin(i,j)) then
-                  PP(i,j,k)=Am*0.5*(hvn(i+1,j,k)+hvn(i,j,k))*DXX  &
+                  PP(i,j,k)=Am*_HALF_*(hvn(i+1,j,k)+hvn(i,j,k))*DXX  &
                       *((uu(i,j+1,k)/hun(i,j+1,k)-uu(i,j,k)/hun(i,j,k))/DYX &
                        +(vv(i+1,j,k)/hvn(i+1,j,k)-vv(i,j,k)/hvn(i,j,k))/DXX )
                end if
@@ -236,6 +245,9 @@
             if (av(i,j) .ge. 1) then
                if (k .ge. kvmin(i,j)) then
                   vvEx(i,j,k)=vvEx(i,j,k)-(PP(i,j,k)-PP(i-1,j,k))*ARVD1
+#ifdef _MOMENTUM_TERMS_
+                  hsd_v(i,j,k)=-(PP(i,j,k)-PP(i-1,j,k))*ARVD1
+#endif
                end if
             end if
          end do
@@ -252,7 +264,7 @@
          do i=imin,imax          ! PP defined on T-points
             if (az(i,j) .ge. 1) then
                if (k .ge. kvmin(i,j)) then
-                  PP(i,j,k)=2.*Am*DXC*hn(i,j,k)               &
+                  PP(i,j,k)=_TWO_*Am*DXC*hn(i,j,k)               &
                       *(vv(i,j,k)/hvn(i,j,k)-vv(i,j-1,k)/hvn(i,j-1,k))/DYC
                end if
             end if
@@ -269,6 +281,9 @@
             if (av(i,j) .ge. 1) then
                if (k .ge. kvmin(i,j)) then
                   vvEx(i,j,k)=(vvEx(i,j,k)-(PP(i,j+1,k)-PP(i,j,k))*ARVD1)
+#ifdef _MOMENTUM_TERMS_
+                  hsd_v(i,j,k)=hsd_v(i,j,k)-(PP(i,j+1,k)-PP(i,j,k))*ARVD1
+#endif
                end if
             end if
          end do

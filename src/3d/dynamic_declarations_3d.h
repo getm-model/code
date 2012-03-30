@@ -9,16 +9,30 @@
   integer, dimension(:,:), allocatable:: kmin,kumin,kvmin
   integer, dimension(:,:), allocatable:: kmin_pmz,kumin_pmz,kvmin_pmz
 
-  REALTYPE, dimension(:,:,:), allocatable   :: uu,vv,ww
+  REALTYPE, dimension(:,:,:), allocatable   :: uu,vv
+  REALTYPE, dimension(:,:,:), allocatable, target :: ww
+
+#ifdef _MOMENTUM_TERMS_
+  REALTYPE, dimension(:,:,:), allocatable, target :: tdv_u,adv_u,vsd_u
+  REALTYPE, dimension(:,:,:), allocatable, target :: hsd_u,cor_u,epg_u
+  REALTYPE, dimension(:,:,:), allocatable, target :: ipg_u
+
+  REALTYPE, dimension(:,:,:), allocatable, target :: tdv_v,adv_v,vsd_v
+  REALTYPE, dimension(:,:,:), allocatable, target :: hsd_v,cor_v,epg_v
+  REALTYPE, dimension(:,:,:), allocatable, target :: ipg_v
+#endif
+
 #ifdef STRUCTURE_FRICTION
   REALTYPE, dimension(:,:,:), allocatable   :: sf
 #endif
-  REALTYPE, dimension(:,:,:), allocatable   :: ho,hn
+  REALTYPE, dimension(:,:,:), allocatable, target :: hn
+  REALTYPE, dimension(:,:,:), allocatable   :: ho
   REALTYPE, dimension(:,:,:), allocatable   :: huo,hun
   REALTYPE, dimension(:,:,:), allocatable   :: hvo,hvn
   REALTYPE, dimension(:,:,:), allocatable   :: hcc
   REALTYPE, dimension(:,:,:), allocatable   :: uuEx,vvEx
-  REALTYPE, dimension(:,:,:), allocatable   :: num,nuh
+  REALTYPE, dimension(:,:,:), allocatable, target :: nuh
+  REALTYPE, dimension(:,:,:), allocatable   :: num
   REALTYPE, dimension(:,:,:), allocatable   :: tke,eps
   REALTYPE, dimension(:,:,:), allocatable   :: SS
 
@@ -26,7 +40,8 @@
   REALTYPE, dimension(:,:,:), allocatable   :: NN
 
 ! 3D baroclinic fields
-  REALTYPE, dimension(:,:,:), allocatable   :: S,T,rho,buoy
+  REALTYPE, dimension(:,:,:), allocatable, target :: S,T,rho
+  REALTYPE, dimension(:,:,:), allocatable   :: buoy
   REALTYPE, dimension(:,:,:), allocatable   :: alpha,beta
   REALTYPE, dimension(:,:,:), allocatable   :: idpdx,idpdy
   REALTYPE, dimension(:,:,:), allocatable   :: rad,light
@@ -35,6 +50,8 @@
   REALTYPE, dimension(:,:), allocatable     :: nummix2d_S,nummix2d_T
   REALTYPE, dimension(:,:), allocatable     :: phymix2d_S,phymix2d_T
 #endif
+  REALTYPE, dimension(:,:,:), allocatable   :: numdis3d
+  REALTYPE, dimension(:,:), allocatable     :: numdis2d
 
 ! suspended matter
 #ifndef NO_SUSP_MATTER
@@ -58,4 +75,4 @@
 
 ! attenuation
   REALTYPE, dimension(:,:), allocatable     :: A,g1,g2
-  
+

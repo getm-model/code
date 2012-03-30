@@ -212,7 +212,7 @@
                do i=imin-1,imax
                   if (au(i,j) .gt. 0) then
                      if (uu(i,j,k) .gt. _ZERO_) then
-                        c=uu(i,j,k)/hun(i,j,k)*dt/delxu(i,j)
+                        c=splitfac*uu(i,j,k)/hun(i,j,k)*dt/delxu(i,j)
                         if (au(i-1,j) .gt. 0) then
                            fu=f(i-1,j,k)         ! upstream
                         else
@@ -220,13 +220,13 @@
                         end if
                         fc=f(i  ,j,k)            ! central
                         fd=f(i+1,j,k)            ! downstream
-                        if (abs(fd-fc) .gt. 1e-10) then
+                        if (abs(fd-fc) .gt. 1.d-10) then
                            r=(fc-fu)/(fd-fc)     ! slope ratio
                         else
-                           r=(fc-fu)*1.e10
+                           r=(fc-fu)*1.d10
                         end if
                      else
-                        c=-uu(i,j,k)/hun(i,j,k)*dt/delxu(i,j)
+                        c=-splitfac*uu(i,j,k)/hun(i,j,k)*dt/delxu(i,j)
                         if (au(i+1,j) .gt. 0) then
                            fu=f(i+2,j,k)         ! upstream
                         else
@@ -234,10 +234,10 @@
                         end if
                         fc=f(i+1,j,k)            ! central
                         fd=f(i  ,j,k)            ! downstream
-                        if (abs(fc-fd) .gt. 1e-10) then
+                        if (abs(fc-fd) .gt. 1.d-10) then
                            r=(fu-fc)/(fc-fd)     ! slope ratio
                         else
-                           r=(fu-fc)*1.e10
+                           r=(fu-fc)*1.d10
                         end if
                      end if
                      select case (method)
@@ -248,12 +248,12 @@
                               limit=Phi
                            else
                               limit=max(_ZERO_,min(Phi,_TWO_/(_ONE_-c), &
-                                        _TWO_*r/(c+1.e-10)))
+                                        _TWO_*r/(c+1.d-10)))
                            end if
                         case (Superbee)
                            limit=max(_ZERO_,min(_ONE_,_TWO_*r),min(r,_TWO_))
                         case (MUSCL)
-                           limit=max(_ZERO_,min(_TWO_,_TWO_*r,0.5*(_ONE_+r)))
+                           limit=max(_ZERO_,min(_TWO_,_TWO_*r,_HALF_*(_ONE_+r)))
                         case default
                            FATAL 'Not so good - do_advection_3d()'
                            stop 'u_split_adv'

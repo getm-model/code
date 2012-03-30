@@ -46,13 +46,17 @@ VER=1.8.0
 VER=1.9.0
 # 2011/04/01 - new stable release
 VER=2.0.0
+# 2011/04/01 - new devel release
+VER=2.1.0
+# 2012/04/01 - new stable release
+VER=2.2.0
 
 
 .PHONY: doc
 
 all: VERSION
 
-VERSION: Makefile
+VERSION: Makefile src/Makefile src/Rules.make
 	$(MAKE) distclean
 	@echo $(VER) > $@
 	@date > timestamp
@@ -76,7 +80,7 @@ clean:
 distclean:
 	$(MAKE) -C doc $@
 	$(MAKE) -C src $@
-	$(RM) timestep VERSION include/version.h
+	$(RM) timestamp VERSION include/version.h
 	$(RM) -r bin/ lib/ modules/
 
 #-----------------------------------------------------------------------

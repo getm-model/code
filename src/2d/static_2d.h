@@ -1,5 +1,5 @@
 ! Remember to update this value if you add more 2D arrays.
-   integer, parameter :: n2d_fields=35
+   integer, parameter :: n2d_fields=34
 !
 #ifdef USE_BREAKS
    integer  break_mask(E2DFIELD)
@@ -10,8 +10,6 @@
    REALTYPE DV(E2DFIELD)
    REALTYPE z(E2DFIELD)
    REALTYPE zo(E2DFIELD)
-   REALTYPE zu(E2DFIELD)
-   REALTYPE zv(E2DFIELD)
    REALTYPE U(E2DFIELD)
    REALTYPE V(E2DFIELD)
    REALTYPE UEx(E2DFIELD)
@@ -43,8 +41,7 @@
    REALTYPE zvb0(E2DFIELD)
    REALTYPE An(E2DFIELD)
    REALTYPE AnX(E2DFIELD)
-   REALTYPE surfdiv(E2DFIELD)
    REALTYPE fwf(E2DFIELD)
    REALTYPE fwf_int(E2DFIELD)
-   REALTYPE EWbdy(jmax),ENbdy(imax),EEbdy(jmax),ESbdy(imax)   
-  
+   REALTYPE EWbdy(jmax),ENbdy(imax),EEbdy(jmax),ESbdy(imax)
+

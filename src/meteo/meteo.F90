@@ -64,7 +64,7 @@
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
    REALTYPE, public, dimension(:,:), allocatable  :: airp,tausx,tausy,swr,shf
    REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum,tcc
-   REALTYPE, public, dimension(:,:), allocatable  :: evap,precip
+   REALTYPE, public, dimension(:,:), allocatable, target  :: evap,precip
    REALTYPE, public                    :: cd_mom,cd_heat,cd_latent
    REALTYPE, public                    :: cd_precip = _ZERO_
    REALTYPE, public                    :: t_1=-_ONE_,t_2=-_ONE_
@@ -72,13 +72,13 @@
    integer, public                     :: hum_method=-1
 !
 ! !DEFINED PARAMETERS:
-   REALTYPE,public,parameter           :: cpa=1008.    !AS that is not exact !
-   REALTYPE,public,parameter           :: KELVIN=273.15
-   REALTYPE,public,parameter           :: emiss=0.97
-   REALTYPE,public,parameter           :: bolz=5.67e-8
+   REALTYPE,public,parameter           :: cpa=1008.d0  !AS that is not exact !
+   REALTYPE,public,parameter           :: KELVIN=273.15d0
+   REALTYPE,public,parameter           :: emiss=0.97d0
+   REALTYPE,public,parameter           :: bolz=5.67d-8
 !  REALTYPE,public,parameter           :: cpa=1004.67 ! specific heat of dry air- correct
-   REALTYPE,public,parameter           :: cpw=4192.   ! specific heat of sea water
-   REALTYPE,public,parameter           :: rho_precip = 1000.0
+   REALTYPE,public,parameter           :: cpw=4192.d0   ! specific heat of sea water
+   REALTYPE,public,parameter           :: rho_precip = 1000.0d0
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -385,10 +385,8 @@
    REALTYPE                  :: ramp,hh,t,t_frac
    REALTYPE                  :: short_wave_radiation
    REALTYPE                  :: uu,cosconv,vv,sinconv
-! BJB-TODO: Make sure that 3.14... is defined as *double* precision
-   REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029
-! BJB-TODO: Change 180. to 180 (integer)
-   REALTYPE, parameter       :: deg2rad=pi/180.
+   REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029d0
+   REALTYPE, parameter       :: deg2rad=pi/180
    logical,save              :: first=.true.
    logical                   :: have_sst
 !EOP
@@ -412,7 +410,7 @@
 
       if(spinup .gt. 0 .and. k .lt. spinup) then
 ! BJB-TODO: Replace 1.0 with _ONE_ etc in this file.
-         ramp = 1.0*k/spinup
+         ramp = _ONE_*k/spinup
          k = k + 1
       else
          ramp = _ONE_
@@ -550,8 +548,7 @@
                   end do
 !$OMP END DO
                end if
-! BJB-TODO: Convert constant to full precision:
-               hh = secondsofday/3600.
+               hh = secondsofday*(_ONE_/3600)
 !$OMP DO SCHEDULE(RUNTIME)
                do j=jmin,jmax
                   do i=imin,imax

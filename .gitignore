@@ -1,8 +1,9 @@
-# from Knut Klingbeil
-bin
-lib
-modules
+bin/
+lib/
+modules/
 timestamp
 VERSION
 include/dimensions.h
 include/version.h
+*.swp
+*~

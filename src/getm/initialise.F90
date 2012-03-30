@@ -45,11 +45,11 @@
    use domain, only: vert_cord,maxdepth
    use time, only: init_time,update_time,write_time_string
    use time, only: start,timestr,timestep
-   use m2d, only: init_2d,z,zu,zv
+   use m2d, only: init_2d,postinit_2d, z
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
 #ifndef NO_3D
    use m2d, only: Uint,Vint
-   use m3d, only: cord_relax,init_3d,ssen,ssun,ssvn
+   use m3d, only: cord_relax,init_3d,postinit_3d, ssen,ssun,ssvn
 #ifndef NO_BAROCLINIC
    use m3d, only: T
 #endif
@@ -59,6 +59,10 @@
    use variables_3d, only: avmback,avhback
 #ifdef SPM
    use suspended_matter, only: init_spm
+#endif
+#ifdef _FABM_
+   use getm_fabm, only: init_getm_fabm
+   use rivers, only: init_rivers_fabm
 #endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
@@ -231,6 +235,10 @@
 #ifdef SPM
       call init_spm(trim(input_dir) // 'spm.inp',runtype)
 #endif
+#ifdef _FABM_
+      call init_getm_fabm(trim(input_dir) // 'getm_fabm.inp')
+      call init_rivers_fabm
+#endif
 #ifdef GETM_BIO
       call init_getm_bio(trim(input_dir) // 'getm_bio.inp')
       call init_rivers_bio
@@ -275,6 +283,11 @@
       LEVEL3 timestr
       MinN = MinN+1
    end if
+
+   call postinit_2d(runtype,timestep,hotstart)
+#ifndef NO_3D
+   call postinit_3d(runtype,timestep,hotstart)
+#endif
 
    call init_input(input_dir,MinN)
 

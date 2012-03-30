@@ -1,0 +1,35 @@
+# A few handy git commands
+
+# Pleaase add, clarify to this file
+
+# Since you can read this file it does not include 'git clone ...'
+
+# Make a new branch
+git branch <name>
+
+# Change to branch
+git checkout <name>
+
+# Push a local branch
+git push origin <branch_name>
+
+# Commit
+git commit -m "..." <files>
+
+# Update from remote
+git pull
+
+# Push to master-repository
+git push
+
+# Delete
+git branch -d/-D <name> # -d has been merged -D has NOT been merged
+
+# Delete remote branch
+git push origin :<name_of_remote_branch>
+
+# Merge a feature branch using --squash
+git checkout master
+git merge --squash <feature>
+git commit -m "New feature: <newfeature> - <name of developer(s)>"
+

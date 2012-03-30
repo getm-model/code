@@ -26,6 +26,9 @@
    use bio, only: bio_calc
    use bio_var, only: numc
 #endif
+#ifdef _FABM_
+   use gotm_fabm, only: fabm_calc,model
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -66,11 +69,26 @@
    status = nf90_def_dim(ncid, "zax", zlen, zdim_id)
    if (status .NE. NF90_NOERR) go to 10
 
+#ifndef NO_3D
 #ifdef GETM_BIO
    if (bio_calc) then
       status = nf90_def_dim(ncid, "biodim", numc, biodim_id)
       if (status .NE. NF90_NOERR) go to 10
    end if
+#endif
+#ifdef _FABM_
+   if (fabm_calc) then
+      status = nf90_def_dim(ncid, "fabm_pel_dim", size(model%info%state_variables), fabmpeldim_id)
+      if (status .NE. NF90_NOERR) go to 10
+
+      if (size(model%info%state_variables_ben).gt.0) then
+         status = nf90_def_dim(ncid, "fabm_ben_dim", size(model%info%state_variables_ben), fabmbendim_id)
+         if (status .NE. NF90_NOERR) go to 10
+      else
+         fabmbendim_id = 0
+      end if
+   end if
+#endif
 #endif
 
    status = nf90_def_var(ncid, "loop", nf90_int, loop_id)
@@ -106,10 +124,6 @@
                             (/ xdim_id, ydim_id /), U_id)
    if (status .NE. NF90_NOERR) go to 10
 
-   status = nf90_def_var(ncid, "zu", nf90_double, &
-                            (/ xdim_id, ydim_id /), zu_id)
-   if (status .NE. NF90_NOERR) go to 10
-
    status = nf90_def_var(ncid, "SlUx", nf90_double, &
                             (/ xdim_id, ydim_id /), SlUx_id)
    if (status .NE. NF90_NOERR) go to 10
@@ -120,10 +134,6 @@
 
    status = nf90_def_var(ncid, "V", nf90_double, &
                             (/ xdim_id, ydim_id /), V_id)
-   if (status .NE. NF90_NOERR) go to 10
-
-   status = nf90_def_var(ncid, "zv", nf90_double, &
-                            (/ xdim_id, ydim_id /), zv_id)
    if (status .NE. NF90_NOERR) go to 10
 
    status = nf90_def_var(ncid, "SlVx", nf90_double, &
@@ -232,6 +242,21 @@
                                (/ biodim_id, xdim_id, ydim_id, zdim_id /), &
                                 bio_id)
          if (status .NE. NF90_NOERR) go to 10
+      end if
+#endif
+#ifdef _FABM_
+      if (fabm_calc) then
+         status = nf90_def_var(ncid, "fabm_pel", nf90_double, &
+                               (/ xdim_id, ydim_id, zdim_id, fabmpeldim_id /), &
+                                fabm_pel_id)
+         if (status .NE. NF90_NOERR) go to 10
+
+         if (fabmbendim_id.gt.0) then
+            status = nf90_def_var(ncid, "fabm_ben", nf90_double, &
+                               (/ xdim_id, ydim_id, fabmbendim_id /), &
+                                fabm_ben_id)
+            if (status .NE. NF90_NOERR) go to 10
+         endif
       end if
 #endif
    end if

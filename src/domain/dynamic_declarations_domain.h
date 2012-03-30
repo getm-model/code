@@ -9,6 +9,7 @@
    REALTYPE, dimension(:), allocatable      :: xxcord, yxcord
 
 !  mask
+   REALTYPE, dimension(:,:), allocatable    :: mask
    integer, dimension(:,:), allocatable     :: az,au,av,ax
 
 !  bathymetry
@@ -25,7 +26,8 @@
    REALTYPE, dimension(:,:), allocatable    :: lonv,latv
 
 !  grid convergence
-   REALTYPE, dimension(:,:), allocatable    :: angle,convc,convx
+!KB   REALTYPE, dimension(:,:), allocatable    :: angle
+   REALTYPE, dimension(:,:), allocatable    :: convc,convx
 
 !  grid points
    REALTYPE, dimension(:,:), allocatable    :: xx,yx

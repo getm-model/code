@@ -136,10 +136,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
-   REALTYPE                  :: zx(E2DFIELD)
-   REALTYPE                  :: tausu(E2DFIELD)
-   REALTYPE                  :: Slr(E2DFIELD)
-   REALTYPE                  :: zp,zm,Uloc
+   REALTYPE                  :: zp,zm,zx,tausu,Slr,Uloc
    REALTYPE                  :: gamma=rho_0*g
    REALTYPE                  :: cord_curv=_ZERO_
    REALTYPE                  :: gammai
@@ -154,33 +151,23 @@
 
    gammai = _ONE_/gamma
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,Uloc)
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zx,tausu,Slr,Uloc)
 
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
-         if (au(i,j) .gt. 0) then
-            zp=max(z(i+1,j),-H(i  ,j)+min(min_depth,D(i+1,j)))
-            zm=max(z(i  ,j),-H(i+1,j)+min(min_depth,D(i  ,j)))
-            zx(i,j)=(zp-zm+(airp(i+1,j)-airp(i,j))*gammai)/DXU
-! BJB-TODO: Change 0.5 -> _HALF_
-            tausu(i,j)=0.5*(tausx(i,j)+tausx(i+1,j))
-         end if
-      end do
-   end do
-!$OMP END DO
-
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-HALO,jmax+HALO
-      do i=imin-HALO,imax+HALO
-         if (U(i,j) .gt. 0) then
-            Slr(i,j)=max(Slru(i,j), _ZERO_ )
-         else
-            Slr(i,j)=min(Slru(i,j), _ZERO_ )
-         end if
          if ((au(i,j) .eq. 1) .or. (au(i,j) .eq. 2)) then
-            U(i,j)=(U(i,j)-dtm*(g*DU(i,j)*zx(i,j)+dry_u(i,j)*&
-                 (-tausu(i,j)/rho_0-fV(i,j)+UEx(i,j)+SlUx(i,j)+Slr(i,j))))/&
+            zp = max( z(i+1,j) , -H(i  ,j)+min( min_depth , D(i+1,j) ) )
+            zm = max( z(i  ,j) , -H(i+1,j)+min( min_depth , D(i  ,j) ) )
+            zx = ( zp - zm + (airp(i+1,j)-airp(i,j))*gammai ) / DXU
+            tausu = _HALF_ * ( tausx(i,j) + tausx(i+1,j) )
+            if (U(i,j) .gt. _ZERO_) then
+               Slr = max( Slru(i,j) , _ZERO_ )
+            else
+               Slr = min( Slru(i,j) , _ZERO_ )
+            end if
+            U(i,j)=(U(i,j)-dtm*(g*DU(i,j)*zx+dry_u(i,j)*&
+                 (-tausu/rho_0-fV(i,j)+UEx(i,j)+SlUx(i,j)+Slr)))/&
                  (_ONE_+dtm*ru(i,j)/DU(i,j))
          end if
       end do
@@ -208,13 +195,12 @@
          if(av(i,j) .ge. 1) then
 ! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
-! BJB-TODO: Change 0.25 -> _QUART_
             Uloc= &
              ( U(i,j  )/sqrt(DU(i,j  ))+ U(i-1,j  )/sqrt(DU(i-1,j  ))  &
              + U(i,j+1)/sqrt(DU(i,j+1))+ U(i-1,j+1)/sqrt(DU(i-1,j+1))) &
-               *0.25*sqrt(DV(i,j))
+               *_QUART_*sqrt(DV(i,j))
 #else
-            Uloc=0.25*( U(i-1,j)+U(i,j)+U(i-1,j+1)+U(i,j+1))
+            Uloc=_QUART_*( U(i-1,j)+U(i,j)+U(i-1,j+1)+U(i,j+1))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             cord_curv=(V(i,j)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC)) &
@@ -312,10 +298,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
-   REALTYPE                  :: zy(E2DFIELD)
-   REALTYPE                  :: tausv(E2DFIELD)
-   REALTYPE                  :: Slr(E2DFIELD)
-   REALTYPE                  :: zp,zm,Vloc
+   REALTYPE                  :: zp,zm,zy,tausv,Slr,Vloc
    REALTYPE                  :: gamma=rho_0*g
    REALTYPE                  :: cord_curv=_ZERO_
    REALTYPE                  :: gammai
@@ -330,33 +313,23 @@
 
    gammai = _ONE_/gamma
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,Vloc)
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zy,tausv,Slr,Vloc)
 
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
-         if (av(i,j) .gt. 0) then
-            zp=max(z(i,j+1),-H(i,j  )+min(min_depth,D(i,j+1)))
-            zm=max(z(i,j  ),-H(i,j+1)+min(min_depth,D(i,j  )))
-            zy(i,j)=(zp-zm+(airp(i,j+1)-airp(i,j))*gammai)/DYV
-! BJB-TODO: Change 0.5 -> _HALF_
-            tausv(i,j)=0.5*(tausy(i,j)+tausy(i,j+1))
-         end if
-      end do
-   end do
-!$OMP END DO
-
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-HALO,jmax+HALO
-      do i=imin-HALO,imax+HALO
-         if (V(i,j).gt.0) then
-            Slr(i,j)=max(Slrv(i,j), _ZERO_ )
-         else
-            Slr(i,j)=min(Slrv(i,j), _ZERO_ )
-         end if
          if ((av(i,j) .eq. 1) .or. (av(i,j) .eq. 2)) then
-            V(i,j)=(V(i,j)-dtm*(g*DV(i,j)*zy(i,j)+dry_v(i,j)*&
-                 (-tausv(i,j)/rho_0+fU(i,j)+VEx(i,j)+SlVx(i,j)+Slr(i,j))))/&
+            zp = max( z(i,j+1) , -H(i,j  )+min( min_depth , D(i,j+1) ) )
+            zm = max( z(i,j  ) , -H(i,j+1)+min( min_depth , D(i,j  ) ) )
+            zy = ( zp - zm + (airp(i,j+1)-airp(i,j))*gammai ) / DYV
+            tausv = _HALF_ * ( tausy(i,j) + tausy(i,j+1) )
+            if (V(i,j) .gt. _ZERO_) then
+               Slr = max( Slrv(i,j) , _ZERO_ )
+            else
+               Slr = min( Slrv(i,j) , _ZERO_ )
+            end if
+            V(i,j)=(V(i,j)-dtm*(g*DV(i,j)*zy+dry_v(i,j)*&
+                 (-tausv/rho_0+fU(i,j)+VEx(i,j)+SlVx(i,j)+Slr)))/&
                  (_ONE_+dtm*rv(i,j)/DV(i,j))
          end if
       end do
@@ -385,13 +358,12 @@
          if(au(i,j) .ge. 1) then
 ! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
-! BJB-TODO: Change 0.25 -> _QUART_
             Vloc = &
             ( V(i,j  )/sqrt(DV(i,j  ))+ V(i+1,j  )/sqrt(DV(i+1,j  )) + &
               V(i,j-1)/sqrt(DV(i,j-1))+ V(i+1,j-1)/sqrt(DV(i+1,j-1)))  &
-              *0.25*sqrt(DU(i,j))
+              *_QUART_*sqrt(DU(i,j))
 #else
-            Vloc = 0.25*( V(i,j-1)+ V(i+1,j-1)+V(i,j)+V(i+1,j))
+            Vloc = _QUART_*( V(i,j-1)+ V(i+1,j-1)+V(i,j)+V(i+1,j))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             cord_curv=(Vloc*(DYCIP1-DYC)-U(i,j)*(DXX-DXXJM1)) &

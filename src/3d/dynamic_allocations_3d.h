@@ -7,6 +7,52 @@
   allocate(ww(I3DFIELD),stat=rc)    ! 3D field for w-velocity
   if (rc /= 0) stop 'init_3d: Error allocating memory (ww)'
 
+#ifdef _MOMENTUM_TERMS_
+  allocate(tdv_u(I3DFIELD),stat=rc) ! 3D field for tdv_u
+  if (rc /= 0) stop 'init_3d: Error allocating memory (tdv_u)'
+
+  allocate(adv_u(I3DFIELD),stat=rc) ! 3D field for adv_u
+  if (rc /= 0) stop 'init_3d: Error allocating memory (adv_u)'
+
+  allocate(vsd_u(I3DFIELD),stat=rc) ! 3D field for vsd_u
+  if (rc /= 0) stop 'init_3d: Error allocating memory (vsd_u)'
+
+  allocate(hsd_u(I3DFIELD),stat=rc) ! 3D field for hsd_u
+  if (rc /= 0) stop 'init_3d: Error allocating memory (hsd_u)'
+
+  allocate(cor_u(I3DFIELD),stat=rc) ! 3D field for cor_u
+  if (rc /= 0) stop 'init_3d: Error allocating memory (cor_u)'
+
+  allocate(epg_u(I3DFIELD),stat=rc) ! 3D field for epg_u
+  if (rc /= 0) stop 'init_3d: Error allocating memory (epg_u)'
+
+  allocate(ipg_u(I3DFIELD),stat=rc) ! 3D field for ipg_u
+  if (rc /= 0) stop 'init_3d: Error allocating memory (ipg_u)'
+
+  allocate(tdv_v(I3DFIELD),stat=rc) ! 3D field for tdv_v
+  if (rc /= 0) stop 'init_3d: Error allocating memory (tdv_v)'
+
+  allocate(adv_v(I3DFIELD),stat=rc) ! 3D field for adv_v
+  if (rc /= 0) stop 'init_3d: Error allocating memory (adv_v)'
+
+  allocate(vsd_v(I3DFIELD),stat=rc) ! 3D field for vsd_v
+  if (rc /= 0) stop 'init_3d: Error allocating memory (vsd_v)'
+
+  allocate(hsd_v(I3DFIELD),stat=rc) ! 3D field for hsd_v
+  if (rc /= 0) stop 'init_3d: Error allocating memory (hsd_v)'
+
+  allocate(cor_v(I3DFIELD),stat=rc) ! 3D field for cor_v
+  if (rc /= 0) stop 'init_3d: Error allocating memory (cor_v)'
+
+  allocate(epg_v(I3DFIELD),stat=rc) ! 3D field for epg_v
+  if (rc /= 0) stop 'init_3d: Error allocating memory (epg_v)'
+
+  allocate(ipg_v(I3DFIELD),stat=rc) ! 3D field for ipg_v
+  if (rc /= 0) stop 'init_3d: Error allocating memory (ipg_v)'
+
+
+#endif
+
 #ifdef STRUCTURE_FRICTION
   allocate(sf(I3DFIELD),stat=rc)    ! 3D field for velocity in T-points
   if (rc /= 0) stop 'init_3d: Error allocating memory (sf)'
@@ -111,6 +157,12 @@
 
 #endif
 
+  allocate(numdis3d(I3DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (numdis3d)'
+
+  allocate(numdis2d(I2DFIELD),stat=rc)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (numdis2d)'
+
 #ifdef SPM
   allocate(spm(I3DFIELD),stat=rc) ! Suspended particulate matter
   if (rc /= 0) stop 'init_3d: Error allocating memory (spm)'
@@ -168,10 +220,10 @@
   allocate(ssvn(I2DFIELD),stat=rc)  ! Elevation after  macro time step (v-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (ssvn)'
 
-  allocate(rru(I2DFIELD),stat=rc)   ! Bottom drag term in u-vel. points (3D)   
+  allocate(rru(I2DFIELD),stat=rc)   ! Bottom drag term in u-vel. points (3D)
   if (rc /= 0) stop 'init_3d: Error allocating memory (rru)'
 
-  allocate(rrv(I2DFIELD),stat=rc)   ! Bottom drag term in v-vel. points (3D)   
+  allocate(rrv(I2DFIELD),stat=rc)   ! Bottom drag term in v-vel. points (3D)
   if (rc /= 0) stop 'init_3d: Error allocating memory (rrv)'
 
   allocate(taus(I2DFIELD),stat=rc)  ! Absolute Value of surface stress
@@ -186,10 +238,10 @@
   allocate(taub(I2DFIELD),stat=rc)  ! Absolute Value of bottom stress
   if (rc /= 0) stop 'init_3d: Error allocating memory (taub)'
 
-  allocate(kmin(I2DFIELD),stat=rc) ! Bottom index for vertical z-columns    
+  allocate(kmin(I2DFIELD),stat=rc) ! Bottom index for vertical z-columns
   if (rc /= 0) stop 'init_3d: Error allocating memory (kmin)'
 
-  allocate(kumin(I2DFIELD),stat=rc) ! Bottom index for vertical u-columns    
+  allocate(kumin(I2DFIELD),stat=rc) ! Bottom index for vertical u-columns
   if (rc /= 0) stop 'init_3d: Error allocating memory (kumin)'
 
   allocate(kvmin(I2DFIELD),stat=rc) ! Bottom index for vertical v-columns

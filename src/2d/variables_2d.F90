@@ -58,8 +58,6 @@
 !  \begin{center}
 !  \begin{tabular}{lll}
 ! {\tt z } & sea surface elevation in T-point & [m] \\
-! {\tt zu } & sea surface elevation in U-point & [m]\\
-! {\tt zv } & sea surface elevation in V-point & [m]\\
 ! {\tt U } & $x$ component of transport in U-point & [m$^2$s$^{-1}$] \\
 ! {\tt DU } & water depth in U-point & [m] \\
 ! {\tt fU } & Coriolis term for $V$-equation in V-point & [m$^2$s$^{-2}$] \\
@@ -84,7 +82,6 @@
 ! {\tt res\_dv } & residual depth in V-point & [m] \\
 ! {\tt res\_v } &$y$-component of residual transport in V-point &
 ! [m$^2$s$^{-1}$]\\
-! {\tt surfdiv } &divergence of surface currents in T-point & [s$^{-1}$]\\
 ! \end{tabular}
 ! \caption{Public 2D variables.}
 ! \label{table_2d_variables}
@@ -113,12 +110,12 @@
 #endif
 
 #ifdef USE_BREAKS
-   break_mask = 0
+   break_stat = 0
 #endif
 
    z  = _ZERO_; zo =_ZERO_
-   zu = _ZERO_; zub=_ZERO_ ; zub0=_ZERO_
-   zv = _ZERO_; zvb=_ZERO_ ; zvb0=_ZERO_
+   zub=_ZERO_ ; zub0=_ZERO_
+   zvb=_ZERO_ ; zvb0=_ZERO_
    D = _ZERO_;
    U = _ZERO_; DU = _ZERO_; fU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; DV = _ZERO_; fV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
@@ -136,7 +133,6 @@
    fwf     = _ZERO_
    fwf_int = _ZERO_
 
-   surfdiv=_ZERO_
    EWbdy=_ZERO_
    ENbdy=_ZERO_
    EEbdy=_ZERO_

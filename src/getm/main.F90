@@ -33,6 +33,9 @@
    use m3d, only: mem3d
 #endif
    use integration
+#ifdef GETM_PARALLEL
+   use halo_mpi, only: all_2d_exchange, all_3d_exchange
+#endif
    IMPLICIT NONE
 !
 ! !REVISION HISTORY:
@@ -46,6 +49,10 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+#ifdef IFORT
+   call cmdline
+#endif
+
 #ifdef FORTRAN95
    call CPU_Time(t1)
 #endif
@@ -97,6 +104,12 @@
 #endif
    endif
    STDERR LINE
+#ifdef GETM_PARALLEL
+   LEVEL1 "Communication with other sub-domains:"
+   LEVEL2 "2D data exchange: ",all_2d_exchange/(1024*1024)," MB"
+   LEVEL2 "3D data exchange: ",all_3d_exchange/(1024*1024)," MB"
+   STDERR LINE
+#endif
    LEVEL1 'Copyright (C) Bolding & Burchard ApS.'
    LEVEL1 'under the General Public License (GPL) - http://www.gnu.org '
    STDERR LINE
@@ -106,11 +119,72 @@
    end program getm
 
 !EOC
-!-----------------------------------------------------------------------
-! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
-!-----------------------------------------------------------------------
 
+!-----------------------------------------------------------------------
+   subroutine cmdline
+#ifdef IFORT
+   use initialise, only: dryrun
+   IMPLICIT NONE
+   character(len=64)    :: arg
+   integer              :: i
 
+   if (command_argument_count() .eq. 0) return
+
+   do i = 1, command_argument_count()
+      call get_command_argument(i, arg)
+
+      select case (arg)
+      case ('-v', '--version')
+         LEVEL0
+         LEVEL0 'GETM version ',RELEASE
+         LEVEL0
+         stop
+      case ('-c', '--compile')
+         LEVEL0
+         call compilation_options
+         LEVEL0
+         stop
+      case ('-h', '--help')
+         call print_help()
+         stop
+!KB      case ('--dryrun')
+!KB         dryrun=.true.
+      case default
+         LEVEL0
+         LEVEL0 'Unrecognized command-line option: ', arg
+         LEVEL0
+         call print_help()
+         stop
+      end select
+   end do
+#endif
+   return
+   end
+
+!-----------------------------------------------------------------------
+   subroutine print_help()
+#ifdef IFORT
+     character(len=255) :: cmd
+     call get_command_argument(0, cmd)
+
+     print '(a)', ''
+     print '(a,a,a)', 'usage: ',trim(cmd),' [OPTIONS]'
+     print '(a)', ''
+     print '(a)', 'Without any options, getm will continue execution.'
+     print '(a)', ''
+     print '(a)', 'cmdline options:'
+     print '(a)', ''
+     print '(a)', '  -v, --version     print version information and exit'
+     print '(a)', '  -c, --compile     print compilation options'
+     print '(a)', '  -h, --help        print usage information and exit'
+     print '(a)', ''
+     print '(a)', 'visit getm.eu for further info'
+     print '(a)', 'consider subscribing to getm-users@googlegroups.com'
+     print '(a)', ''
+#endif
+  end subroutine print_help
+
+!-----------------------------------------------------------------------
    subroutine compilation_options
    IMPLICIT NONE
 !
@@ -237,8 +311,22 @@
 #ifdef _READ_HOT_HALOS_
    LEVEL1 '_READ_HOT_HALOS_'
 #endif
+#ifdef GETM_BIO
+   LEVEL1 'GETM_BIO'
+#endif
+#ifdef _FABM_
+   LEVEL1 '_FABM_'
+#endif
+#ifdef _NCDF_SAVE_DOUBLE_
+   LEVEL1 '_NCDF_SAVE_DOUBLE_'
+#endif
 
    STDERR LINE
 
    return
    end
+
+!-----------------------------------------------------------------------
+! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
+!-----------------------------------------------------------------------
+

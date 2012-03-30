@@ -108,7 +108,7 @@
    integer                   :: i,j,k
    REALTYPE                  :: x
    REALTYPE                  :: p1,s1,t1
-   REALTYPE                  :: th,densp,dens0,al,be
+   REALTYPE                  :: th,densp
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -120,7 +120,7 @@
    call tic(TIM_EQSTATE)
 
 !$OMP PARALLEL DEFAULT(SHARED)          &
-!$OMP PRIVATE(i,j,k, x,T1,S1,)
+!$OMP PRIVATE(i,j,k, x,p1,s1,t1,th,densp)
 
 #define BUOYANCY
    select case (eqstate_method)
@@ -137,12 +137,20 @@
          end do
 
 #ifndef _OLD_BVF_
+! First finished threas should just start intiializing arrays...
+!$OMP SINGLE
          alpha = dtr0
+!$OMP END SINGLE NOWAIT
+!$OMP SINGLE
          beta  = dsr0
+!$OMP END SINGLE NOWAIT
 #endif
+! This OMP barrier is necessary for the NOWAIT speedup of the rho-loop above
+!$OMP BARRIER
 
       case (2)
          do k = 1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
             do j = jmin-HALO,jmax+HALO
                do i = imin-HALO,imax+HALO
                   if (az(i,j) .gt. 0) then
@@ -151,10 +159,14 @@
                   end if
                end do
             end do
+!$OMP END DO NOWAIT
          end do
+! This OMP barrier is necessary for the NOWAIT speedup of the previous loop:
+!$OMP BARRIER
 #undef BUOYANCY
 
 #ifndef _OLD_BVF_
+!$OMP DO SCHEDULE(RUNTIME)
          do j = jmin-HALO,jmax+HALO
             do i = imin-HALO,imax+HALO
                if (az(i,j) .gt. 0) then
@@ -174,9 +186,11 @@
                end if
             end do
          end do
+!$OMP END DO
 #endif
       case (3)
 ! fisrt calculate potential density
+!$OMP DO SCHEDULE(RUNTIME)
          do j = jmin-HALO,jmax+HALO
             do i = imin-HALO,imax+HALO
                if (az(i,j) .gt. 0) then
@@ -202,10 +216,12 @@
                end if
             end do
          end do
+!$OMP END DO
 #undef BUOYANCY
 
 #ifndef _OLD_BVF_
 !        calculate at SS interface, rho, alpha, beta
+!$OMP DO SCHEDULE(RUNTIME)
          do j = jmin-HALO,jmax+HALO
             do i = imin-HALO,imax+HALO
                if (az(i,j) .gt. 0) then
@@ -225,6 +241,7 @@
                end if
             end do
          end do
+!$OMP END DO
 #endif
 
       case default
@@ -327,16 +344,16 @@
 !   S=35
 !   T=25
 !   p=10000
-!   rho_from_theta = 1062.53817
+!   rho\_from\_theta = 1062.53817
 !
 !   s                : salinity                           (psu)
 !   th               : potential temperature              (deg C, ITS-90)
 !   p                : gauge pressure                     (dbar)
 !                      (absolute pressure - 10.1325 dbar)
 !
-!   rho_from_theta   : in-situ density                    (kg m^-3)
+!   rho\_from\_theta   : in-situ density                    (kg m$^{-3}$)
 !
-!   check value      : rho_from_theta(20,20,1000) = 1017.728868019642
+!   check value      : rho\_from\_theta(20,20,1000) = 1017.728868019642
 !
 !   based on DRJ on 10/12/03
 !
@@ -424,15 +441,15 @@
 !   p                : gauge pressure                     (dbar)
 !                      (absolute pressure - 10.1325 dbar)
 !
-!   rho              : in-situ density                    (kg m^-3)
-!   rho_s            : partial derivative wrt s           (kg m^-3 psu^-1)
-!   rho_th           : partial derivative wrt th          (kg m^-3 deg C^-1)
+!   rho              : in-situ density                    (kg m$^{-3}$)
+!   rho\_s            : partial derivative wrt s           (kg m$^{-3}$ psu$^{-1}$)
+!   rho\_th           : partial derivative wrt th          (kg m$^{-3}$ deg C$^{-1}$)
 !
-!   check values     : eosall_from_theta(20,20,1000,...) gives
+!   check values     : eosall\_from\_theta(20,20,1000,...) gives
 !
 !                               rho =  1017.728868019642
-!                               rho_s =   0.7510471164699279
-!                               rho_th = -0.2570255211349140
+!                               rho\_s =   0.7510471164699279
+!                               rho\_th = -0.2570255211349140
 !
 !   based on DRJ on 10/12/03
 

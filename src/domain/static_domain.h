@@ -9,15 +9,16 @@
    REALTYPE                             :: yxcord(jmin-HALO-1:jmax+HALO)
 
 !  mask
+   REALTYPE                            :: mask(E2DFIELD)
    integer                             :: az(E2DFIELD)
    integer                             :: au(E2DFIELD)
    integer                             :: av(E2DFIELD)
    integer                             :: ax(E2DFIELD)
 
 !  bathymetry
-   REALTYPE                            :: H(E2DFIELD)
-   REALTYPE                            :: HU(E2DFIELD)
-   REALTYPE                            :: HV(E2DFIELD)
+   REALTYPE                            :: H(E2DFIELD)  = -10.
+   REALTYPE                            :: HU(E2DFIELD) = -10.
+   REALTYPE                            :: HV(E2DFIELD) = -10.
    REALTYPE                            :: dry_z(E2DFIELD)
    REALTYPE                            :: dry_u(E2DFIELD)
    REALTYPE                            :: dry_v(E2DFIELD)
@@ -38,7 +39,7 @@
    REALTYPE                            :: latv(E2DFIELD) = -999.
 
 !  grid convergence
-   REALTYPE                            :: angle(E2DFIELD)
+!KB   REALTYPE                            :: angle(E2DFIELD)
    REALTYPE                            :: convc(E2DFIELD) = _ZERO_
    REALTYPE                            :: convx(E2DXFIELD) = _ZERO_
 

@@ -47,8 +47,8 @@
 #endif
    integer, public, parameter          :: UPSTREAM=1,UPSTREAM_SPLIT=2,P2=3
    integer, public, parameter          :: Superbee=4,MUSCL=5,P2_PDM=6,FCT=7
-   REALTYPE, public, parameter         :: one6th=1./6.
-   REALTYPE, public, parameter         :: ONE=_ONE_,TWO=2.*_ONE_
+   REALTYPE, public, parameter         :: one6th=_ONE_/6
+   REALTYPE, public, parameter         :: ONE=_ONE_,TWO=_TWO_
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -211,7 +211,7 @@
 !
 !
 ! !USES:
-   use getm_timers, only: tic, toc, TIM_ADVECT3DTOT
+   use getm_timers, only: tic, toc, TIM_ADVECT3DTOT, TIM_ADVECT3DH
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -262,16 +262,20 @@
             case (0)
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a2,&
                                 hor_adv,az,AH)
+               call tic(TIM_ADVECT3DH)
                call update_3d_halo(f,f,az,&
                                    imin,jmin,imax,jmax,kmax,D_TAG)
                call wait_halo(D_TAG)
+               call toc(TIM_ADVECT3DH)
 
 #ifndef SLICE_MODEL
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a2,&
                                 hor_adv,az,AH)
+               call tic(TIM_ADVECT3DH)
                call update_3d_halo(f,f,az,&
                                    imin,jmin,imax,jmax,kmax,D_TAG)
                call wait_halo(D_TAG)
+               call toc(TIM_ADVECT3DH)
 #endif
 
                if (kmax.gt.1) then
@@ -284,16 +288,20 @@
             case (1)
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
                                 hor_adv,az,AH)
+               call tic(TIM_ADVECT3DH)
                call update_3d_halo(f,f,az, &
                                    imin,jmin,imax,jmax,kmax,D_TAG)
                call wait_halo(D_TAG)
+               call toc(TIM_ADVECT3DH)
 
 #ifndef SLICE_MODEL
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
                                 hor_adv,az,AH)
+               call tic(TIM_ADVECT3DH)
                call update_3d_halo(f,f,az, &
                                    imin,jmin,imax,jmax,kmax,D_TAG)
                call wait_halo(D_TAG)
+               call toc(TIM_ADVECT3DH)
 #endif
 
                if (kmax.gt.1) then
@@ -302,24 +310,30 @@
 #else
                   call w_split_adv(dt,f,ww,az,a2,ver_adv)
 #endif
+                  call tic(TIM_ADVECT3DH)
                   call update_3d_halo(f,f,az, &
                                       imin,jmin,imax,jmax,kmax,D_TAG)
                   call wait_halo(D_TAG)
+                  call toc(TIM_ADVECT3DH)
 
                end if
 #ifndef SLICE_MODEL
                call v_split_adv(dt,f,vv,hvn,delxv,delyv,area_inv,av,a1,&
                                 hor_adv,az,AH)
+               call tic(TIM_ADVECT3DH)
                call update_3d_halo(f,f,az, &
                                    imin,jmin,imax,jmax,kmax,D_TAG)
                call wait_halo(D_TAG)
+               call toc(TIM_ADVECT3DH)
 #endif
 
                call u_split_adv(dt,f,uu,hun,delxu,delyu,area_inv,au,a1,&
                                 hor_adv,az,AH)
+               call tic(TIM_ADVECT3DH)
                call update_3d_halo(f,f,az, &
                                    imin,jmin,imax,jmax,kmax,D_TAG)
                call wait_halo(D_TAG)
+               call toc(TIM_ADVECT3DH)
 
             case (2)
                select case (hor_adv)

@@ -227,7 +227,7 @@
                          + beta(i,j,k) *(S(i,j,k+1)-S(i,j,k)))
 #endif
                if (abs(NNc) .lt. small_bvf ) then
-                  NNc = sign(1.0,NNc) * small_bvf
+                  NNc = sign(_ONE_,NNc) * small_bvf
                end if
                NN(i,j,k)= NNc
             end do

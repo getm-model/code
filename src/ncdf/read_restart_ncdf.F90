@@ -32,11 +32,15 @@
    use variables_2d
 #ifndef NO_3D
    use variables_3d
-#endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use bio_var, only: numc
    use getm_bio, only: bio_init_method
+#endif
+#ifdef _FABM_
+   use getm_fabm, only: fabm_init_method
+   use getm_fabm, only: fabm_pel,fabm_ben
+#endif
 #endif
 #ifdef SPM
    use suspended_matter
@@ -136,18 +140,7 @@
       LEVEL3 "read_restart_ncdf(): setting U=0"
       U=_ZERO_
    else
-      where(au .eq. 0) U=_ZERO_
       call update_2d_halo(U,U,au,imin,jmin,imax,jmax,U_TAG)
-      call wait_halo(U_TAG)
-   end if
-
-   status = &
-   nf90_get_var(ncid,zu_id,zu(iloc:ilen,jloc:jlen),start,edges)
-   if (status .NE. NF90_NOERR) then
-      LEVEL3 "read_restart_ncdf(): setting zu=0"
-      zu=_ZERO_
-   else
-      call update_2d_halo(zu,zu,au,imin,jmin,imax,jmax,U_TAG)
       call wait_halo(U_TAG)
    end if
 
@@ -176,18 +169,7 @@
       LEVEL3 "read_restart_ncdf(): setting V=0"
       V=_ZERO_
    else
-      where(av .eq. 0) V=_ZERO_
       call update_2d_halo(V,V,av,imin,jmin,imax,jmax,V_TAG)
-      call wait_halo(V_TAG)
-   end if
-
-   status = &
-   nf90_get_var(ncid,zv_id,zv(iloc:ilen,jloc:jlen),start,edges)
-   if (status .NE. NF90_NOERR) then
-      LEVEL3 "read_restart_ncdf(): setting zv=0"
-      zv=_ZERO_
-   else
-      call update_2d_halo(zv,zv,av,imin,jmin,imax,jmax,V_TAG)
       call wait_halo(V_TAG)
    end if
 
@@ -305,8 +287,6 @@
          LEVEL3 "read_restart_ncdf(): setting uu=0"
          uu=_ZERO_
       else
-         forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO, au(i,j).eq.0) &
-              uu(i,j,:)=_ZERO_
          call update_3d_halo(uu,uu,au,imin,jmin,imax,jmax,kmax,U_TAG)
          call wait_halo(U_TAG)
       end if
@@ -317,8 +297,6 @@
          LEVEL3 "read_restart_ncdf(): setting vv=0"
          vv=_ZERO_
       else
-         forall(i=imin-HALO:imax+HALO,j=jmin-HALO:jmax+HALO, av(i,j).eq.0) &
-              vv(i,j,:)=_ZERO_
          call update_3d_halo(vv,vv,av,imin,jmin,imax,jmax,kmax,V_TAG)
          call wait_halo(V_TAG)
       end if
@@ -382,12 +360,13 @@
       call wait_halo(H_TAG)
 
 !     hn is required for adaptive coordinates
-      status = &
-      nf90_get_var(ncid,hn_id,hn(iloc:ilen,jloc:jlen,0:kmax),start,edges)
-      if (status .NE. NF90_NOERR) go to 10
-      call update_3d_halo(hn,hn,az,imin,jmin,imax,jmax,kmax,H_TAG)
-      call wait_halo(H_TAG)
-
+      if (hn_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,hn_id,hn(iloc:ilen,jloc:jlen,0:kmax),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+         call update_3d_halo(hn,hn,az,imin,jmin,imax,jmax,kmax,H_TAG)
+         call wait_halo(H_TAG)
+      endif
 
 #ifndef NO_BAROCLINIC
       if (runtype .ge. 3)  then
@@ -432,6 +411,22 @@
          LEVEL3 'spm variables not read from hotstart file'
          LEVEL3 'set spm_init_method=0 to read them from hotstart file'
         end if
+      end if
+#endif
+#ifdef _FABM_
+      if(allocated(fabm_pel) .and. fabm_init_method .eq. 0) then
+         start(4) = 1;  edges(4) = size(fabm_pel,4)
+         status = &
+         nf90_get_var(ncid,fabm_pel_id,fabm_pel(iloc:ilen,jloc:jlen,0:kmax,:),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+
+         start(3) = 1;  edges(3) = size(fabm_ben,3)
+
+         if (fabm_ben_id .gt. 0) then
+            status = &
+            nf90_get_var(ncid,fabm_ben_id,fabm_ben(iloc:ilen,jloc:jlen,:),start,edges)
+            if (status .NE. NF90_NOERR) go to 10
+         end if
       end if
 #endif
 #ifdef GETM_BIO

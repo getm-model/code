@@ -17,6 +17,7 @@
    use grid_ncdf,    only: xlen,ylen,zlen
    use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
    use domain,       only: H,HU,HV,az,au,av,min_depth
+   use domain,       only: convc
 #if defined CURVILINEAR || defined SPHERICAL
    use domain,       only: dxc,dyc
 #else
@@ -26,10 +27,15 @@
    use variables_2d, only: U,V,DU,DV
    use variables_3d, only: dt,kmin,ho,hn,uu,hun,vv,hvn,ww,hcc,SS
    use variables_3d, only: taubx,tauby
+#ifdef _MOMENTUM_TERMS_
+   use variables_3d, only: tdv_u,adv_u,vsd_u,hsd_u,cor_u,epg_u,ipg_u
+   use variables_3d, only: tdv_v,adv_v,vsd_v,hsd_v,cor_v,epg_v,ipg_v
+#endif
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho,rad,NN
    use variables_3d, only: nummix3d_S,nummix3d_T,phymix3d_S,phymix3d_T
 #endif
+   use variables_3d, only: numdis3d
    use variables_3d, only: tke,num,nuh,eps
 #ifdef SPM
    use variables_3d, only: spm_pool,spm
@@ -39,7 +45,11 @@
 #endif
 #ifdef GETM_BIO
    use bio_var, only: numc
-   use variables_3d, only: cc3d,ws3d
+   use variables_3d, only: cc3d
+#endif
+#ifdef _FABM_
+   use gotm_fabm,only: model
+   use getm_fabm,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
 #endif
    use parameters,   only: g,rho_0
    use m3d, only: calc_temp,calc_salt
@@ -60,6 +70,13 @@
    integer, save             :: n3d=0
    REALTYPE                  :: DONE(E2DFIELD)
    REALTYPE                  :: dum(1)
+   integer                   :: i,j
+   REALTYPE                  :: uutmp(I3DFIELD),vvtmp(I3DFIELD)
+#if defined(CURVILINEAR)
+   REALTYPE                  :: uurot(I3DFIELD),vvrot(I3DFIELD)
+   REALTYPE                  :: deg2rad = 3.141592654/180.
+   REALTYPE                  :: cosconv,sinconv
+#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -147,9 +164,7 @@
       err = nf90_put_var(ncid,tauby_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 
-
    endif
-
 
    start(1) = 1
    start(2) = 1
@@ -172,26 +187,20 @@
 
       if (destag) then
          call to_3d_uu(imin,jmin,imax,jmax,kmin,kmax,az, &
-                       hun,uu,vel_missing,ws)
+                       hun,uu,vel_missing,uutmp)
+         call to_3d_vv (imin,jmin,imax,jmax,kmin,kmax,az, &
+                        hvn,vv,vel_missing,vvtmp)
       else
          call to_3d_vel(imin,jmin,imax,jmax,kmin,kmax,au, &
-                        hun,uu,vel_missing,ws)
-      endif
-
-      err = nf90_put_var(ncid,uu_id,ws(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
-
-
-      if (destag) then
-         call to_3d_vv (imin,jmin,imax,jmax,kmin,kmax,az, &
-                        hvn,vv,vel_missing,ws)
-      else
+                        hun,uu,vel_missing,uutmp)
          call to_3d_vel(imin,jmin,imax,jmax,kmin,kmax,av, &
-                        hvn,vv,vel_missing,ws)
+                        hvn,vv,vel_missing,vvtmp)
       endif
-
-      err = nf90_put_var(ncid,vv_id,ws(_3D_W_),start,edges)
+      err = nf90_put_var(ncid,uu_id,uutmp(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
+      err = nf90_put_var(ncid,vv_id,vvtmp(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
       call tow(imin,jmin,imax,jmax,kmin,kmax,az, &
                dt,                               &
 #if defined CURVILINEAR || defined SPHERICAL
@@ -202,6 +211,71 @@
                HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,destag,ws)
       err = nf90_put_var(ncid,w_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
+
+#ifdef _MOMENTUM_TERMS_
+      err = nf90_put_var(ncid,tdv_u_id,tdv_u(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,adv_u_id,adv_u(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,vsd_u_id,vsd_u(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,hsd_u_id,hsd_u(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,cor_u_id,cor_u(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,epg_u_id,epg_u(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,ipg_u_id,ipg_u(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,tdv_v_id,tdv_v(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,adv_v_id,adv_v(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,vsd_v_id,vsd_v(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,hsd_v_id,hsd_v(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,cor_v_id,cor_v(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,epg_v_id,epg_v(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
+      err = nf90_put_var(ncid,ipg_v_id,ipg_v(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+#endif
+
+#if defined(CURVILINEAR)
+! rotated zonal and meridional velocities
+      do j=jmin,jmax
+         do i=imin,imax
+            if (az(i,j) .gt. 0) then
+               cosconv = cos(deg2rad*convc(i,j))
+               sinconv = sin(deg2rad*convc(i,j))
+               uurot(i,j,:) = uutmp(i,j,:)*cosconv-vvtmp(i,j,:)*sinconv
+               vvrot(i,j,:) = uutmp(i,j,:)*sinconv+vvtmp(i,j,:)*cosconv
+            else
+               uurot(i,j,:) = vel_missing
+               vvrot(i,j,:) = vel_missing
+            end if
+         end do
+      end do
+      err = nf90_put_var(ncid,uurot_id,uurot(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+      err = nf90_put_var(ncid,vvrot_id,vvrot(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+#endif
 
    end if
 
@@ -287,8 +361,13 @@
 
    end if ! save_ss_nn
 
+   if (save_numerical_analyses) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,numdis3d,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,nm3d_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+
 #ifndef NO_BAROCLINIC
-   if (save_mix_analysis) then
       if (calc_salt) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix3d_S,nummix_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
@@ -312,8 +391,8 @@
          err = nf90_put_var(ncid,pm3dT_id,ws(_3D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
-   end if ! save_mix_analysis
 #endif
+   end if ! save_numerical_analyses
 
 #ifdef SPM
    if (spm_save) then
@@ -352,6 +431,45 @@
          if (err .NE.  NF90_NOERR) go to 10
       end do
 !   end if
+#endif
+
+#ifdef _FABM_
+    if (allocated(fabm_pel)) then
+      start(1) = 1
+      start(2) = 1
+      start(3) = 1
+      start(4) = n3d
+      edges(1) = xlen
+      edges(2) = ylen
+      edges(3) = zlen
+      edges(4) = 1
+      do n=1,size(model%info%state_variables)
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,fabm_pel(:,:,:,n), &
+                     model%info%state_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
+         err = nf90_put_var(ncid,fabm_ids(n),ws(_3D_W_),start,edges)
+         if (err .NE.  NF90_NOERR) go to 10
+      end do
+      do n=1,size(model%info%diagnostic_variables)
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,fabm_diag(:,:,:,n), &
+                     model%info%diagnostic_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
+         err = nf90_put_var(ncid,fabm_ids_diag(n),ws(_3D_W_),start,edges)
+         if (err .NE.  NF90_NOERR) go to 10
+      end do
+      start(3) = n3d
+      edges(3) = 1
+      do n=1,size(model%info%state_variables_ben)
+         call cnv_2d(imin,jmin,imax,jmax,az,fabm_ben(:,:,n), &
+                     model%info%state_variables_ben(n)%missing_value,imin,jmin,imax,jmax,ws2d)
+         err = nf90_put_var(ncid,fabm_ids_ben(n),ws2d(_2D_W_),start(1:3),edges(1:3))
+         if (err .NE.  NF90_NOERR) go to 10
+      end do
+      do n=1,size(model%info%diagnostic_variables_hz)
+         call cnv_2d(imin,jmin,imax,jmax,az,fabm_diag_hz(:,:,n), &
+                     model%info%diagnostic_variables_hz(n)%missing_value,imin,jmin,imax,jmax,ws2d)
+         err = nf90_put_var(ncid,fabm_ids_diag_hz(n),ws2d(_2D_W_),start(1:3),edges(1:3))
+         if (err .NE.  NF90_NOERR) go to 10
+      end do
+   end if
 #endif
 
    err = nf90_sync(ncid)

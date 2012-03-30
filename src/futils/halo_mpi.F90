@@ -38,6 +38,7 @@
 ! !PUBLIC DATA MEMBERS:
    integer, public                     :: myid=-1, nprocs=1
    integer, public                     :: comm_hd=MPI_COMM_WORLD
+   integer, public                     :: all_2d_exchange, all_3d_exchange
 !   integer, public                    :: comm_wave=MPI_COMM_WORLD
 !   integer, public                    :: comm_biology=MPI_COMM_WORLD
 !
@@ -90,6 +91,9 @@
    integer                   :: ur,ul,ll,lr
    integer                   :: status(MPI_STATUS_SIZE)
    integer                   :: last_action=WAITING
+   integer                   :: size_point
+   integer                   :: size_left, size_ul,size_up,  size_ur
+   integer                   :: size_right,size_lr,size_down,size_ll
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -146,6 +150,10 @@
       STDERR 'Fatal error: unable to get processor name.'
       call MPI_Abort(MPI_COMM_WORLD,-1,ierr)
    end if
+
+   all_2d_exchange = 0
+   all_3d_exchange = 0
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_mpi()'
@@ -678,6 +686,55 @@
                          halo_columns,ierr)
    call MPI_TYPE_COMMIT(halo_columns,ierr)
 
+   size_point = sizeof_realtype
+   if (left  .eq. MPI_PROC_NULL) then
+      size_left = 0
+   else
+      size_left = n*sizeof_realtype
+   end if
+
+   if (ul    .eq. MPI_PROC_NULL) then
+      size_ul = 0
+   else
+      size_ul = sizeof_realtype
+   end if
+
+   if (up    .eq. MPI_PROC_NULL) then
+      size_up = 0
+   else
+      size_up = m*sizeof_realtype
+   end if
+
+   if (ur    .eq. MPI_PROC_NULL) then
+      size_ur = 0
+   else
+      size_ur = sizeof_realtype
+   end if
+
+   if (right .eq. MPI_PROC_NULL) then
+      size_right = 0
+   else
+      size_right = n*sizeof_realtype
+   end if
+
+   if (lr    .eq. MPI_PROC_NULL) then
+      size_lr = 0
+   else
+      size_lr = sizeof_realtype
+   end if
+
+   if (down  .eq. MPI_PROC_NULL) then
+      size_down = 0
+   else
+      size_down = m*sizeof_realtype
+   end if
+
+   if (ll    .eq. MPI_PROC_NULL) then
+      size_ll = 0
+   else
+      size_ll = sizeof_realtype
+   end if
+
    return
    end subroutine MPI_data_types
 !EOC
@@ -689,6 +746,7 @@
 !
 ! !INTERFACE:
    subroutine update_2d_halo_mpi(f1,f2,imin,jmin,imax,jmax,tag,mirror)
+   use getm_timers, only: tic, toc, TIM_HALO2D
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -715,6 +773,7 @@
       FATAL 'Last action was not WAITING - not ready for sending (2D)'
       call MPI_ABORT(active_comm,-1,ierr)
    end if
+   call tic(TIM_HALO2D)
    il=imin;ih=imax;jl=jmin;jh=jmax
 
    if ( present(mirror) ) do_mirror = mirror
@@ -856,6 +915,15 @@ STDERR 'TWOD_SENDRECV'
 
          call MPI_ISEND(f1(ih-(HALO-1),jl), 1, halo_square, lr,tag, &
                            active_comm, req(16), ierr)
+
+         all_2d_exchange =  all_2d_exchange      &
+                          + HALO*size_left       &
+                          + HALO*size_up         &
+                          + HALO*size_right      &
+                          + HALO*size_down       &
+                          + HALO*HALO*size_point &
+                          * (size_ul+size_ur+size_lr+size_ll)
+
       case default
          FATAL 'A non valid communication method has been chosen'
          stop 'update_2d_halo_mpi'
@@ -876,6 +944,7 @@ STDERR 'TWOD_SENDRECV'
 
    last_action = SENDING
 
+   call toc(TIM_HALO2D)
    return
    end subroutine update_2d_halo_mpi
 !EOC
@@ -887,6 +956,7 @@ STDERR 'TWOD_SENDRECV'
 !
 ! !INTERFACE:
    SUBROUTINE update_3d_halo_mpi(f1,f2,imin,jmin,imax,jmax,kmax,tag)
+   use getm_timers, only: tic, toc, TIM_HALO3D
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -911,6 +981,7 @@ STDERR 'TWOD_SENDRECV'
       FATAL 'Last action was not WAITING - not ready for sending (3D)'
       call MPI_ABORT(active_comm,-1,ierr)
    end if
+   call tic(TIM_HALO3D)
    il=imin;ih=imax;jl=jmin;jh=jmax
    select case (comm_method)
       case(ONE_PROCESS)
@@ -945,7 +1016,6 @@ STDERR 'ONED_SENDRECV - xz_slices'
 #ifdef DEBUG
 STDERR 'ONED_NONBLOCKING - yz_slices'
 #endif
-STDERR 'yz_slices'
             call MPI_IRECV(f2(il-HALO,jl,0),     1, yz_slices, left,  tag, &
                               active_comm, req(1), ierr)
             call MPI_IRECV(f2(ih+1,jl,0),        1, yz_slices, right, tag, &
@@ -1046,6 +1116,17 @@ STDERR 'TWOD_NONBLOCKING'
 
          call MPI_ISEND(f1(ih-(HALO-1),jl,0), 1, halo_columns, lr, tag, &
                            active_comm, req(16), ierr)
+
+         all_3d_exchange =  all_3d_exchange      &
+                          + (kmax+1)*            &
+                          ( HALO*size_left       &
+                          + HALO*size_up         &
+                          + HALO*size_right      &
+                          + HALO*size_down       &
+                          + HALO*HALO*size_point &
+                          * (size_ul+size_ur+size_lr+size_ll) &
+                          )
+
       case default
          FATAL 'A non valid communication method has been chosen'
          stop 'update_3d_halo_mpi'
@@ -1066,6 +1147,7 @@ STDERR 'TWOD_NONBLOCKING'
    end if
 #endif
    last_action = SENDING
+   call toc(TIM_HALO3D)
    return
    end subroutine update_3d_halo_mpi
 !EOC
@@ -1077,6 +1159,7 @@ STDERR 'TWOD_NONBLOCKING'
 !
 ! !INTERFACE:
    SUBROUTINE wait_halo_mpi(tag)
+   use getm_timers, only: tic, toc, TIM_HALOWAIT
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -1096,6 +1179,7 @@ STDERR 'TWOD_NONBLOCKING'
       FATAL 'Last action was not sending - nothing to wait for'
       call MPI_ABORT(active_comm,-1,ierr)
    end if
+   call tic(TIM_HALOWAIT)
    select case (comm_method)
       case(ONE_PROCESS)
       case(ONED_SENDRECV)
@@ -1113,6 +1197,7 @@ STDERR 'TWOD_NONBLOCKING'
          stop 'wait_mpi'
    end select
    last_action = WAITING
+   call toc(TIM_HALOWAIT)
    return
    end subroutine wait_halo_mpi
 !EOC

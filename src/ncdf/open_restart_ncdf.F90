@@ -15,9 +15,16 @@
 ! !USES:
    use netcdf
    use ncdf_restart
+#ifndef NO_3D
+   use domain, only: vert_cord
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use getm_bio, only: bio_init_method
+#endif
+#ifdef _FABM_
+   use gotm_fabm, only: fabm_calc
+   use getm_fabm, only: fabm_init_method
+#endif
 #endif
    IMPLICIT NONE
 !
@@ -87,13 +94,6 @@
       U_id=-1
    end if
 
-   varnam="zu"
-   status = nf90_inq_varid(ncid, "zu", zu_id)
-   if (status .NE. NF90_NOERR) then
-      LEVEL3 'variable missing in restart file. Skipping ',varnam
-      zu_id=-1
-   end if
-
    varnam="SlUx"
    status = nf90_inq_varid(ncid, "SlUx", SlUx_id)
    if (status .NE. NF90_NOERR) then
@@ -113,13 +113,6 @@
    if (status .NE. NF90_NOERR) then
       LEVEL3 'variable missing in restart file. Skipping ',varnam
       V_id=-1
-   end if
-
-   varnam="zv"
-   status = nf90_inq_varid(ncid, "zv", zv_id)
-   if (status .NE. NF90_NOERR) then
-      LEVEL3 'variable missing in restart file. Skipping ',varnam
-      zv_id=-1
    end if
 
    varnam="SlVx"
@@ -249,10 +242,17 @@
       status = nf90_inq_varid(ncid, "nuh", nuh_id)
       if (status .NE. NF90_NOERR) go to 10
 
-!  hn is required
+!  hn is required for adaptive coordinates
       varnam="hn"
       status = nf90_inq_varid(ncid, "hn", hn_id)
-      if (status .NE. NF90_NOERR) go to 10
+      if (status .NE. NF90_NOERR) then
+         if (vert_cord .eq. _ADAPTIVE_COORDS_) then
+            go to 10
+         else
+            LEVEL3 'variable missing in restart file. Skipping ',varnam
+            hn_id=-1
+         endif
+      endif
 
 #ifndef NO_BAROCLINIC
 !  T is required
@@ -286,6 +286,18 @@
          varnam="bio"
          status = nf90_inq_varid(ncid, "bio", bio_id)
          if (status .NE. NF90_NOERR) go to 10
+      end if
+#endif
+
+#ifdef _FABM_
+      if (fabm_calc .and. fabm_init_method .eq. 0) then
+         varnam="fabm_pel"
+         status = nf90_inq_varid(ncid,varnam,fabm_pel_id)
+         if (status .NE. NF90_NOERR) go to 10
+
+         varnam="fabm_ben"
+         status = nf90_inq_varid(ncid,varnam,fabm_ben_id)
+         if (status .NE. NF90_NOERR) fabm_ben_id=0 !go to 10
       end if
 #endif
    end if

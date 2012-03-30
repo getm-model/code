@@ -53,7 +53,7 @@
 
 ! For 2D boundary conditions
 #define ZERO_GRADIENT 1
-#define SOMMERFELDT   2
+#define SOMMERFELD    2
 #define CLAMPED       3
 #define FLATHER_ELEV  4
 #define FLATHER_VEL   5
@@ -186,3 +186,10 @@
 #define _GENERAL_COORDS_      3
 #define _HYBRID_COORDS_       4
 #define _ADAPTIVE_COORDS_     5
+
+! Definition to write NetCDF output reals as single or double precision:
+#ifdef _NCDF_SAVE_DOUBLE_
+#define NCDF_FLOAT_PRECISION NF90_DOUBLE
+#else
+#define NCDF_FLOAT_PRECISION NF90_REAL
+#endif

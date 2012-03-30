@@ -56,7 +56,7 @@
    character(len=PATH_MAX)             :: bdyfile_3d
    REALTYPE                            :: ip_fac=_ONE_
    integer                             :: vel_check=0
-   REALTYPE                            :: min_vel=-4.,max_vel=4.
+   REALTYPE                            :: min_vel=-4*_ONE_,max_vel=4*_ONE_
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -212,6 +212,7 @@
    end select
 
 !  Sanity checks for bdy 3d
+   if (.not.openbdy .or. runtype.eq.2) bdy3d=.false.
    if (bdy3d .and. bdy3d_tmrlx) then
       LEVEL2 'bdy3d_tmrlx=.true.'
       LEVEL2 'bdy3d_tmrlx_max=   ',bdy3d_tmrlx_max
@@ -249,8 +250,8 @@
    num=avmback
    nuh=avhback
 #else
-   num=1.e-15
-   nuh=1.e-15
+   num=1.d-15
+   nuh=1.d-15
 #endif
 
 !  Needed for interpolation of temperature and salinity
@@ -278,7 +279,6 @@
       call ss_nn()
 #endif
 
-      if (.not. openbdy) bdy3d=.false.
       if (bdy3d) call init_bdy_3d()
       if (runtype .ge. 3) call init_internal_pressure()
       if (runtype .eq. 3) call do_internal_pressure()
@@ -298,12 +298,89 @@
 !-----------------------------------------------------------------------
 !BOP
 !
+! !IROUTINE: postinit_3d - re-initialise some 3D after hotstart read.
+!
+! !INTERFACE:
+   subroutine postinit_3d(runtype,timestep,hotstart)
+! !USES:
+   use domain, only: imin,imax,jmin,jmax, az,au,av
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)                 :: runtype
+   REALTYPE, intent(in)                :: timestep
+   logical, intent(in)                 :: hotstart
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !DESCRIPTION:
+!  This routine provides possibility to reset/initialize 3D variables to
+!  ensure that velocities are correctly set on land cells after read
+!  of a hotstart file.
+!
+! !LOCAL VARIABLES:
+   integer                   :: i,j
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'postinit_3d() # ',Ncall
+#endif
+
+   LEVEL1 'postinit_3d'
+
+! Hotstart fix - see postinit_2d
+   if (hotstart) then
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if (au(i,j) .eq. 0) then
+               uu(i,j,:)  = _ZERO_
+            end if
+         end do
+      end do
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if (av(i,j) .eq. 0) then
+               vv(i,j,:)  = _ZERO_
+            end if
+         end do
+      end do
+!     These may not be necessary, but we clean up anyway just in case.
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if(az(i,j) .eq. 0) then
+               tke(i,j,:) = _ZERO_
+               num(i,j,:) = 1.e-15
+               nuh(i,j,:) = 1.e-15
+#ifndef NO_BAROCLINIC
+               S(i,j,:)   = _ZERO_
+               T(i,j,:)   = _ZERO_
+#endif
+            end if
+         end do
+      end do
+   end if
+
+   return
+   end subroutine postinit_3d
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: integrate_3d - calls to do 3D model integration
 ! \label{sec-integrate-3d}
 !
 ! !INTERFACE:
    subroutine integrate_3d(runtype,n)
    use getm_timers, only: tic, toc, TIM_INTEGR3D
+#ifndef NO_BAROCLINIC
+   use getm_timers, only: TIM_TEMPH, TIM_SALTH
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -475,33 +552,33 @@
 !     The following is a bit clumpsy and should be changed when do_bdy_3d()
 !     operates on individual fields and not as is the case now - on both
 !     T and S.
-#ifndef NO_BAROCLINIC
       call tic(TIM_INTEGR3D)
       if (bdy3d) call do_bdy_3d(0,T)
       if (calc_temp) then
+         call tic(TIM_TEMPH)
          call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
          call wait_halo(D_TAG)
+         call toc(TIM_TEMPH)
          call mirror_bdy_3d(T,D_TAG)
       end if
       if (calc_salt) then
+         call tic(TIM_SALTH)
          call update_3d_halo(S,S,az,imin,jmin,imax,jmax,kmax,D_TAG)
          call wait_halo(D_TAG)
+         call toc(TIM_SALTH)
          call mirror_bdy_3d(S,D_TAG)
       end if
       call toc(TIM_INTEGR3D)
-#endif
-   end if
-#endif
 
-#ifndef NO_BAROCLINIC
-   if(runtype .eq. 4) then
 #ifndef PECS
       call do_eqstate()
 #endif
    end if
 #endif
 
+   call tic(TIM_INTEGR3D)
    UEx=_ZERO_ ; VEx=_ZERO_
+   call toc(TIM_INTEGR3D)
 #ifndef NO_BAROTROPIC
    if (kmax .gt. 1) then
 #ifndef NO_BOTTFRIC

@@ -228,14 +228,6 @@
    end where
    zo=z
 
-   where (-HU+min_depth .gt. _ZERO_ )
-      zu = -HU+min_depth
-   end where
-
-   where (-HV+min_depth .gt. _ZERO_ )
-      zv = -HV+min_depth
-   end where
-
 !  bottom roughness
    if (z0_method .eq. 0) then
       zub0 = z0_const
@@ -264,6 +256,87 @@
 #endif
    return
    end subroutine init_2d
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: postinit_2d - re-initialise some 2D after hotstart read.
+!
+! !INTERFACE:
+   subroutine postinit_2d(runtype,timestep,hotstart)
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)                 :: runtype
+   REALTYPE, intent(in)                :: timestep
+   logical, intent(in)                 :: hotstart
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !DESCRIPTION:
+!  This routine provides possibility to reset/initialize 2D variables to
+!  ensure that velocities are correctly set on land cells after read
+!  of a hotstart file.
+!
+! !LOCAL VARIABLES:
+   integer                   :: i,j, ischange
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'postinit_2d() # ',Ncall
+#endif
+
+   LEVEL1 'postinit_2d'
+
+!
+! It is possible that a user changes the land mask and reads an "old" hotstart file.
+! In this case the "old" velocities will need to be zeroed out.
+   if (hotstart) then
+      ischange = 0
+!     The first two loops are pure diagnostics, logging where changes will actually take place
+!     (and if there is something to do at all, to be able to skip the second part)
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if ( au(i,j).eq.0 .and. U(i,j).ne._ZERO_ ) then
+               LEVEL3 'postinit_2d: Reset to mask(au), U=0 for i,j=',i,j
+               ischange = 1
+            end if
+         end do
+      end do
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if ( av(i,j).eq.0 .and. V(i,j).ne._ZERO_ ) then
+               LEVEL3 'postinit_2d: Reset to mask(av), V=0 for i,j=',i,j
+               ischange = 1
+            end if
+         end do
+      end do
+
+!     The actual reset is below here - independent of the above diagnostics (except for the if)
+      if (ischange.ne.0) then
+         where (au .eq. 0)
+            U     = _ZERO_
+            Uinto = _ZERO_
+         end where
+         where (av .eq. 0)
+            V     = _ZERO_
+            Vinto = _ZERO_
+         end where
+!        This is probably not absolutely necessary:
+         where (az .eq. 0)
+            z  = _ZERO_
+            zo = _ZERO_
+         end where
+      end if
+   end if
+   return
+   end subroutine postinit_2d
 !EOC
 
 !-----------------------------------------------------------------------

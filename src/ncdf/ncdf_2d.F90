@@ -21,7 +21,10 @@
    integer                             :: time_id
 
    integer                             :: elev_id,u_id,v_id
-   integer                             :: res_u_id,res_v_id,surfdiv_id
+#if defined(CURVILINEAR)
+   integer                             :: urot_id,vrot_id
+#endif
+   integer                             :: res_u_id=-1,res_v_id=-1
    integer                             :: u10_id,v10_id
    integer                             :: airp_id,t2_id,hum_id,tcc_id
    integer                             :: tausx_id,tausy_id,swr_id,shf_id
@@ -40,7 +43,6 @@
    REALTYPE, parameter                 :: stress_missing     =-9999.0
    REALTYPE, parameter                 :: swr_missing        =-9999.0
    REALTYPE, parameter                 :: shf_missing        =-9999.0
-   REALTYPE, parameter                 :: divergence_missing =-9999.0
    REALTYPE, parameter                 :: evap_missing       =-9999.0
    REALTYPE, parameter                 :: precip_missing     =-9999.0
 !

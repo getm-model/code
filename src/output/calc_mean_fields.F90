@@ -14,17 +14,21 @@
    use domain, only: az,au,av
    use meteo, only: swr
    use m3d, only: M,calc_temp,calc_salt
-   use variables_3d, only: do_mixing_analysis
+   use variables_3d, only: do_numerical_analyses
    use variables_3d, only: hn,uu,hun,vv,hvn,ww,taub
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T
    use variables_3d, only: nummix3d_S,nummix2d_S,nummix3d_T,nummix2d_T
    use variables_3d, only: phymix3d_S,phymix2d_S,phymix3d_T,phymix2d_T
+   use variables_3d, only: numdis3d,numdis2d
 #endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use bio_var, only: numc
    use variables_3d,  only: cc3d
+#endif
+#ifdef _FABM_
+   use getm_fabm, only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
 #endif
    use diagnostic_variables
    use getm_timers, only: tic, toc, TIM_CALCMEANF
@@ -41,6 +45,7 @@
    REALTYPE        :: tmpf(I3DFIELD)
    REALTYPE,save   :: step=_ZERO_
    logical,save    :: first=.true.
+   logical,save    :: fabm_mean=.false.
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -88,7 +93,13 @@
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (Smean)'
 
-      if (do_mixing_analysis) then
+      if (do_numerical_analyses) then
+         allocate(numdis3d_mean(I3DFIELD),stat=rc)
+           if (rc /= 0) &
+              stop 'calc_mean_fields.F90: Error allocating memory (numdis3d_mean)'
+         allocate(numdis2d_mean(I2DFIELD),stat=rc)
+           if (rc /= 0) &
+              stop 'calc_mean_fields.F90: Error allocating memory (numdis2d_mean)'
          if (calc_temp) then
             allocate(nummix3d_T_mean(I3DFIELD),stat=rc)
             if (rc /= 0) &
@@ -124,6 +135,25 @@
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (cc3dmean)'
 #endif
+#ifdef _FABM_
+      if (allocated(fabm_pel)) then
+         fabm_mean=.true.
+         allocate(fabmmean_pel(I3DFIELD,ubound(fabm_pel,4)),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (fabmmean_pel)'
+         allocate(fabmmean_ben(I2DFIELD,ubound(fabm_ben,3)),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (fabmmean_ben)'
+         allocate(fabmmean_diag(I3DFIELD,ubound(fabm_diag,4)),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (fabmmean_diag)'
+         allocate(fabmmean_diag_hz(I2DFIELD,ubound(fabm_diag_hz,3)),stat=rc)
+         if (rc /= 0) &
+            stop 'calc_mean_fields.F90: Error allocating memory (fabmmean_diag_hz)'
+      else
+         fabm_mean=.false.
+      end if
+#endif
       first = .false.
    end if
 
@@ -132,7 +162,8 @@
       humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
 #ifndef NO_BAROCLINIC
       Tmean=_ZERO_; Smean=_ZERO_
-      if (do_mixing_analysis) then
+      if (do_numerical_analyses) then
+         numdis3d_mean=_ZERO_; numdis2d_mean=_ZERO_
          if (calc_temp) then
             nummix3d_T_mean=_ZERO_; nummix2d_T_mean=_ZERO_
             phymix3d_T_mean=_ZERO_; phymix2d_T_mean=_ZERO_
@@ -145,6 +176,14 @@
 #endif
 #ifdef GETM_BIO
       cc3dmean=_ZERO_
+#endif
+#ifdef _FABM_
+      if (fabm_mean) then
+         fabmmean_pel=_ZERO_
+         fabmmean_ben=_ZERO_
+         fabmmean_diag=_ZERO_
+         fabmmean_diag_hz=_ZERO_
+      end if
 #endif
       ustarmean=_ZERO_; ustar2mean=_ZERO_; swrmean=_ZERO_
    end if
@@ -179,7 +218,9 @@
 #ifndef NO_BAROCLINIC
       Tmean = Tmean + T
       Smean = Smean + S
-      if (do_mixing_analysis) then
+      if (do_numerical_analyses) then
+         numdis3d_mean = numdis3d_mean + numdis3d
+         numdis2d_mean = numdis2d_mean + numdis2d
          if (calc_temp) then
             nummix3d_T_mean = nummix3d_T_mean + nummix3d_T
             nummix2d_T_mean = nummix2d_T_mean + nummix2d_T
@@ -196,6 +237,14 @@
 #endif
 #ifdef GETM_BIO
       if (bio_calc) cc3dmean=cc3dmean + cc3d
+#endif
+#ifdef _FABM_
+      if (fabm_mean) then
+          fabmmean_pel = fabmmean_pel + fabm_pel
+          fabmmean_ben = fabmmean_ben + fabm_ben
+          fabmmean_diag = fabmmean_diag + fabm_diag
+          fabmmean_diag_hz = fabmmean_diag_hz + fabm_diag_hz
+      end if
 #endif
 !  count them
       step = step + 1.0
@@ -215,7 +264,9 @@
 #ifndef NO_BAROCLINIC
          Tmean = Tmean / step
          Smean = Smean / step
-         if (do_mixing_analysis) then
+         if (do_numerical_analyses) then
+            numdis3d_mean = numdis3d_mean / step
+            numdis2d_mean = numdis2d_mean / step
             if (calc_temp) then
                nummix3d_T_mean = nummix3d_T_mean / step
                nummix2d_T_mean = nummix2d_T_mean / step
@@ -232,6 +283,14 @@
 #endif
 #ifdef GETM_BIO
          if (bio_calc) cc3dmean = cc3dmean / step
+#endif
+#ifdef _FABM_
+         if (fabm_mean) then
+            fabmmean_pel = fabmmean_pel / step
+            fabmmean_ben = fabmmean_ben / step
+            fabmmean_diag = fabmmean_diag / step
+            fabmmean_diag_hz = fabmmean_diag_hz / step
+         end if
 #endif
          ustarmean = ustarmean / step
          swrmean = swrmean / step

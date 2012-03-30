@@ -17,7 +17,7 @@
 !
 ! !PUBLIC MEMBER FUNCTIONS:
    public                              :: init_getm_timers
-   public                              :: write_getm_timers
+   public                              :: write_getm_timers,write_getm_timers_active
    public                              :: tic, toc
 ! !PUBLIC DATA MEMBERS:
 ! The indices order the output.
@@ -55,7 +55,9 @@
    integer, parameter :: TIM_SLOWADV     = 50   ! 3d slow_advection
    integer, parameter :: TIM_SLOWDIFF    = 51   ! 3d slow_diffusion
    integer, parameter :: TIM_TEMP        = 52   ! 3d do_temperature
+   integer, parameter :: TIM_TEMPH       = 53   ! 3d temperature halo (presently in m3d/do_integrate_3d)
    integer, parameter :: TIM_SALT        = 54   ! 3d do_salinity
+   integer, parameter :: TIM_SALTH       = 55   ! 3d salinity halo (presently in m3d/do_integrate_3d)
    integer, parameter :: TIM_COORDS      = 56   ! 3d coordinates
    integer, parameter :: TIM_INTPRESS    = 58   ! 3d do_internal_pressure
    integer, parameter :: TIM_STARTMCR    = 60   ! 3d start_macro
@@ -65,6 +67,7 @@
    integer, parameter :: TIM_CALCMEANF   = 68   ! 3d calc_mean_fields
    integer, parameter :: TIM_METEO       = 70   ! do_meteo (could use + halo)
    integer, parameter :: TIM_GETM_BIO    = 72   ! do_getm_bio
+   integer, parameter :: TIM_GETM_FABM   = 73   ! do_getm_fabm
    ! These catch compuations in integrate_[23]d, which are not in other timers:
    integer, parameter :: TIM_INTEGR2D    = 80   ! 2d integrate_2d - remaining stuff
    integer, parameter :: TIM_INTEGR3D    = 81   ! 3d integrate_3d - remaining stuff
@@ -73,8 +76,15 @@
    integer, parameter :: TIM_OUTPUT      = 92   ! output
    ! These catch stuff that are *also* measured somewhere else:
    integer, parameter :: TIM_ADVECT3DTOT = 100  ! advection_3d (uv+tracers)
+   integer, parameter :: TIM_ADVECT3DH   = 101  ! advection_3d halo-part only
    integer, parameter :: TIM_CHECK3DF    = 102  ! check_3d_fields
    integer, parameter :: TIM_MIXANALYSIS = 103  ! (numerical) mixing analysis
+   integer, parameter :: TIM_HALO2D      = 110  ! do halo 2d (initialize comm)
+   integer, parameter :: TIM_HALO3D      = 111  ! do halo 3d (initialize comm)
+   integer, parameter :: TIM_HALOWAIT    = 112  ! wait_halo (2d+3d both)
+   integer, parameter :: TIM_ADVECTBIO   = 113  ! advection_3d bio
+   integer, parameter :: TIM_ADVECTFABM  = 114  ! advection_3d fabm
+
    ! This is test timers for temporary coding purposes:
    !  Note: All timers with index 170+ (test_timer_first) are
    !  considered test timers, so dont implement your timers here
@@ -169,6 +179,9 @@
 
 #ifdef GETM_PARALLEL
    timernames(TIM_MOMENTUMH)   = ' momentum-halo'
+   timernames(TIM_SEALEVELH)   = ' sealevel-halo'
+   timernames(TIM_HALO2D)      = ' sum do_halo_2d'
+   timernames(TIM_HALOWAIT)    = ' sum wait_halo'
 #endif
 
 #ifndef NO_3D
@@ -188,7 +201,9 @@
    timernames(TIM_SLOWADV)     = 'slow_advection'
    timernames(TIM_SLOWDIFF)    = 'slow_diffusion'
    timernames(TIM_TEMP)        = 'do_temperature'
+   timernames(TIM_TEMPH)       = ' temperature-halo'
    timernames(TIM_SALT)        = 'do_salinity'
+   timernames(TIM_SALTH)       = ' salinity-halo'
    timernames(TIM_COORDS)      = 'coordinates'
    timernames(TIM_INTPRESS)    = 'do_internal_pressure'
    timernames(TIM_STARTMCR)    = 'start_macro'
@@ -203,12 +218,22 @@
 ! We only really want to display halo-stuff if we compile for parallel:
 #ifdef GETM_PARALLEL
    timernames(TIM_GOTMH)       = ' gotm-halo'
-   timernames(TIM_SEALEVELH)   = ' sealevel-halo'
    timernames(TIM_UVADV3DH)    = ' uv_advect_3d-halo'
    timernames(TIM_UUMOMENTUMH) = ' uu_momentum_3d-halo'
    timernames(TIM_VVMOMENTUMH) = ' vv_momentum_3d-halo'
    timernames(TIM_WWMOMENTUMH) = ' ww_momentum_3d-halo'
    timernames(TIM_STRESSES3DH) = ' stresses_3d-halo'
+   timernames(TIM_ADVECT3DH)   = ' do_advection_3d halo'
+   timernames(TIM_HALO3D)      = ' sum do_halo_3d'
+#endif
+
+#ifdef GETM_BIO
+   timernames(TIM_GETM_BIO)    = 'getm_bio'
+   timernames(TIM_ADVECTBIO)   = ' advection getm_bio'
+#endif
+#ifdef _FABM_
+   timernames(TIM_GETM_FABM)   = 'getm_fabm'
+   timernames(TIM_ADVECTFABM)  = ' advection getm_fabm'
 #endif
 
 #ifdef STRUCTURE_FRICTION
@@ -226,7 +251,6 @@
    timernames(TIM_TEST07)  = ' test-07'
    timernames(TIM_TEST08)  = ' test-08'
    timernames(TIM_TEST09)  = ' test-09'
-
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_timers()'
@@ -316,6 +340,8 @@
       LEVEL2 '  Timings may be slightly incorrect'
    end if
 
+   timertics(timerindex) = 0
+
 #ifdef DEBUG
    write(debug,*) 'Leaving toc()'
    write(debug,*)
@@ -401,6 +427,59 @@
    end subroutine write_getm_timers
 !EOC
 
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: write_getm_timers_active - write which timeres are ON
+!
+! !INTERFACE:
+   subroutine write_getm_timers_active()
+   IMPLICIT NONE
+!
+! !DESCRIPTION:
+!  Write IDs of active timers.
+!  This is mostly useful for debugging and location of where certain
+!  timers are set or should be set.
+!
+! !REVISION HISTORY:
+!  Original author(s): Bjarne Buchmann
+!
+! !LOCAL VARIABLES:
+   integer                   :: i,nactive
+   integer                   :: active_counters(max_timers)
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifndef NO_TIMERS
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'write_getm_timers_active() # ',Ncall
+#endif
+
+   nactive=0
+! Go over each timer and mark it if it is active
+   do i=1,max_timers
+      if (timertics(i).ne.0) then
+         ! Inactive timers have been set to "zero" tic value.
+         nactive=nactive+1
+         active_counters(nactive)=i
+      end if
+   end do
+   if (nactive>0) then
+      LEVEL2 'Active timers:',active_counters(1:nactive)
+   else
+      LEVEL2 'Active timers: none'
+   end if
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving write_getm_timers_active()'
+   write(debug,*)
+#endif
+#endif
+   return
+ end subroutine write_getm_timers_active
+!EOC
 !-----------------------------------------------------------------------
 
    end module getm_timers

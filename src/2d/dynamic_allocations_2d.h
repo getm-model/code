@@ -21,12 +21,6 @@
    allocate(zo(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (zo)'
 
-   allocate(zu(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (zu)'
-
-   allocate(zv(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (zv)'
-
    allocate(U(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (U)'
 
@@ -119,12 +113,20 @@
    allocate(AnX(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (AnX)'
 
-   allocate(surfdiv(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (surfdiv)'
-
    allocate(fwf(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (surfdiv)'
+   if (rc /= 0) stop 'init_2d: Error allocating memory (fwf)'
 
    allocate(fwf_int(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (surfdiv)'
+   if (rc /= 0) stop 'init_2d: Error allocating memory (fwf_int)'
 
+   allocate(EWbdy(jmax),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (EWbdy)'
+
+   allocate(ENbdy(imax),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (ENbdy)'
+
+   allocate(EEbdy(jmax),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (EEbdy)'
+
+   allocate(ESbdy(imax),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (ESbdy)'

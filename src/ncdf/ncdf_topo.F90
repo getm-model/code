@@ -112,6 +112,7 @@ contains
    logical                             :: have_xc=.false.
    logical                             :: have_yc=.false.
    REALTYPE                            :: a(2)
+   integer                             :: rc
 !EOP
 !-------------------------------------------------------------------------
 
@@ -189,6 +190,8 @@ contains
 #else
 !  Get i-dimension for dynamic allocation
    iextr = dimlen
+   imin = 1
+   imax = iextr
 #endif
 
    status = nf90_inquire_dimension(ncid,dimidsT(2), len = dimlen)
@@ -205,8 +208,14 @@ contains
 #else
 !  Get j-dimension for dynamic allocation
    jextr = dimlen
+   jmin = 1
+   jmax = jextr
 #endif
    LEVEL3 'iextr, jextr: ',iextr,jextr
+
+#ifndef STATIC
+#include "../domain/dynamic_allocations_domain_1.h"
+#endif
 
 !  Does the bathymetry have proper axis defined?
 !  We will obtain the names of the two dimensions and

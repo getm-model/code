@@ -118,7 +118,7 @@
    REALTYPE                            :: dt,cnpar=0.9
    REALTYPE                            :: avmback=_ZERO_,avhback=_ZERO_
    character(len=64)                   :: adv_schemes(7)
-   logical                             :: do_mixing_analysis=.false.
+   logical                             :: do_numerical_analyses=.false.
 !
 #ifdef STATIC
 #include "static_3d.h"
@@ -129,6 +129,10 @@
 #ifdef GETM_BIO
    REALTYPE, allocatable               :: cc3d(:,:,:,:)
    REALTYPE, allocatable               :: ws3d(:,:,:,:)
+#endif
+#ifdef _FABM_
+   REALTYPE, allocatable, dimension(:,:,:,:) :: fabm_pel,fabm_diag
+   REALTYPE, allocatable, dimension(:,:,:)   :: fabm_ben,fabm_diag_hz
 #endif
    integer                             :: size3d_field
    integer                             :: mem3d
@@ -183,6 +187,12 @@
 
    hn = _ZERO_ ; hun = _ZERO_ ; hvn = _ZERO_
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
+#ifdef _MOMENTUM_TERMS_
+   tdv_u = _ZERO_ ; adv_u = _ZERO_ ; vsd_u = _ZERO_ ; hsd_u = _ZERO_
+   cor_u = _ZERO_ ; epg_u = _ZERO_ ; ipg_u = _ZERO_
+   tdv_v = _ZERO_ ; adv_v = _ZERO_ ; vsd_v = _ZERO_ ; hsd_v = _ZERO_
+   cor_v = _ZERO_ ; epg_v = _ZERO_ ; ipg_v = _ZERO_
+#endif
    ssen = _ZERO_ ; ssun = _ZERO_ ; ssvn = _ZERO_
    rru= _ZERO_ ; rrv= _ZERO_
    uuEx= _ZERO_ ; vvEx= _ZERO_
@@ -200,11 +210,14 @@
    huadv = _ZERO_ ; hvadv = _ZERO_
 #endif
 
+
+
 #ifndef NO_BAROCLINIC
    idpdx=_ZERO_
    idpdy=_ZERO_
    nummix3d_S = _ZERO_ ; nummix2d_S = _ZERO_
    nummix3d_T = _ZERO_ ; nummix2d_T = _ZERO_
+   numdis3d   = _ZERO_ ; numdis2d   = _ZERO_
 #endif
 
    adv_schemes(1) = "3D first-order upstream advection"

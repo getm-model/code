@@ -167,6 +167,10 @@
       case default
    end select
 
+   if (temp_AH .gt. _ZERO_) then
+      LEVEL3 "Hor. temperature diffusion - temp_AH: ",temp_AH
+   end if
+
    select case (attenuation_method)
       case (0)
          LEVEL3 'setting attenuation coefficients to constant values:'
@@ -372,7 +376,7 @@ temp_field_no=1
 #endif
    use parameters, only: avmolt
    use getm_timers, only: tic, toc, TIM_TEMP, TIM_MIXANALYSIS
-   use variables_3d, only: do_mixing_analysis
+   use variables_3d, only: do_numerical_analyses
    use variables_3d, only: nummix3d_T,nummix2d_T
    use variables_3d, only: phymix3d_T,phymix2d_T
 !$ use omp_lib
@@ -424,7 +428,7 @@ temp_field_no=1
    area_inv=ard1
 #endif
 
-   if (do_mixing_analysis) then
+   if (do_numerical_analyses) then
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
 ! OMP-note: The following array-based line could be implemented
@@ -443,11 +447,16 @@ temp_field_no=1
                         delxu,delxv,delyu,delyv,area_inv,az,au,av,     &
                         temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH)
 
-   if (do_mixing_analysis) then
+   if (do_numerical_analyses) then
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
+
       call numerical_mixing(T2,T,nummix3d_T,nummix2d_T)
-      call physical_mixing(T,avmolt,phymix3d_T,phymix2d_T)
+
+      call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
+      call wait_halo(D_TAG)
+      call physical_mixing(T,temp_AH,avmolt,phymix3d_T,phymix2d_T)
+
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
    end if

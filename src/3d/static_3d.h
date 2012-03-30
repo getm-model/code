@@ -3,8 +3,8 @@
 #ifdef SPM
   integer, parameter                   :: n3d_fields=36
 #else
-  integer, parameter                   :: n3d_fields=33 
-#endif  
+  integer, parameter                   :: n3d_fields=33
+#endif
 #else
 #ifdef SPM
   integer, parameter                   :: n3d_fields=29
@@ -22,12 +22,29 @@
 
   REALTYPE                             :: uu(I3DFIELD)
   REALTYPE                             :: vv(I3DFIELD)
-  REALTYPE                             :: ww(I3DFIELD)
+  REALTYPE, target                     :: ww(I3DFIELD)
+#ifdef _MOMENTUM_TERMS_
+  REALTYPE                             :: tdv_u(I3DFIELD)
+  REALTYPE                             :: adv_u(I3DFIELD)
+  REALTYPE                             :: vsd_u(I3DFIELD)
+  REALTYPE                             :: hsd_u(I3DFIELD)
+  REALTYPE                             :: cor_u(I3DFIELD)
+  REALTYPE                             :: epg_u(I3DFIELD)
+  REALTYPE                             :: ipg_u(I3DFIELD)
+
+  REALTYPE                             :: tdv_v(I3DFIELD)
+  REALTYPE                             :: adv_v(I3DFIELD)
+  REALTYPE                             :: vsd_v(I3DFIELD)
+  REALTYPE                             :: hsd_v(I3DFIELD)
+  REALTYPE                             :: cor_v(I3DFIELD)
+  REALTYPE                             :: epg_v(I3DFIELD)
+  REALTYPE                             :: ipg_v(I3DFIELD)
+#endif
 #ifdef STRUCTURE_FRICTION
   REALTYPE                             :: sf(I3DFIELD)
 #endif
   REALTYPE                             :: ho(I3DFIELD)
-  REALTYPE                             :: hn(I3DFIELD)
+  REALTYPE, target                     :: hn(I3DFIELD)
   REALTYPE                             :: huo(I3DFIELD)
   REALTYPE                             :: hun(I3DFIELD)
   REALTYPE                             :: hvo(I3DFIELD)
@@ -36,7 +53,7 @@
   REALTYPE                             :: uuEx(I3DFIELD)
   REALTYPE                             :: vvEx(I3DFIELD)
   REALTYPE                             :: num(I3DFIELD)
-  REALTYPE                             :: nuh(I3DFIELD)
+  REALTYPE, target                     :: nuh(I3DFIELD)
 
 ! 3D turbulent fields
   REALTYPE                             :: tke(I3DFIELD)
@@ -46,10 +63,10 @@
 #ifndef NO_BAROCLINIC
 ! 3D baroclinic fields
   REALTYPE                             :: NN(I3DFIELD)
-  REALTYPE                             :: S(I3DFIELD)
-  REALTYPE                             :: T(I3DFIELD)
+  REALTYPE, target                     :: S(I3DFIELD)
+  REALTYPE, target                     :: T(I3DFIELD)
+  REALTYPE, target                     :: rho(I3DFIELD)
   REALTYPE                             :: rad(I3DFIELD)
-  REALTYPE                             :: rho(I3DFIELD)
   REALTYPE                             :: buoy(I3DFIELD)
   REALTYPE                             :: alpha(I3DFIELD)
   REALTYPE                             :: beta(I3DFIELD)
@@ -66,6 +83,8 @@
   REALTYPE                             :: phymix3d_T(I3DFIELD)
   REALTYPE                             :: phymix2d_T(I2DFIELD)
 #endif
+  REALTYPE                             :: numdis3d(I3DFIELD)
+  REALTYPE                             :: numdis2d(I2DFIELD)
 
 #ifdef SPM
 ! suspended matter
@@ -101,7 +120,7 @@
   REALTYPE                             :: taub(I2DFIELD)
 
 ! light attenuation
-  REALTYPE                             :: A(I2DFIELD)
-  REALTYPE                             :: g1(I2DFIELD)
-  REALTYPE                             :: g2(I2DFIELD)
+  REALTYPE,target                      :: A(I2DFIELD)
+  REALTYPE,target                      :: g1(I2DFIELD)
+  REALTYPE,target                      :: g2(I2DFIELD)
 

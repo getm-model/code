@@ -1,4 +1,3 @@
-#$Id: Rules.make,v 1.24 2009-10-02 06:43:51 kb Exp $
 #
 # This file contains rules which are shared between multiple Makefiles.
 # This file is quite complicated - all compilation options are set in this
@@ -17,7 +16,7 @@ GETMDIR  = $(HOME)/GETM/getm-git
 endif
 
 ifndef GOTMDIR
-GOTMDIR = $(HOME)/GOTM/gotm-cvs
+GOTMDIR = $(HOME)/GOTM/gotm-git
 endif
 
 # Information about which Fortran compiler to use is 
@@ -56,32 +55,15 @@ ifeq ($(GETM_STRUCTURE_FRICTION),true)
 DEFINES += -DSTRUCTURE_FRICTION
 endif
 
-# Bio-geochemical component
-ifeq ($(GETM_BIO),true)
-DEFINES += -DGETM_BIO
-endif
-
 # Remove timers
 ifeq ($(GETM_NO_TIMERS),true)
 DEFINES += -DNO_TIMERS
 endif
 
-# OpenMP computation (mostly with compiler directives anyway):
-ifeq ($(GETM_OMP),true)
-DEFINES += -DGETM_OMP
-endif
-
-# Compile for parallel execution
-ifeq ($(GETM_PARALLEL),true)
-parallel=true
-set par=par
-else
-parallel=false
-set par=ser
-endif
-
 # Here you can put defines for the [c|f]pp - some will also be set depending
 # on compilation mode - if STATIC is defined be careful.
+
+# It is not necessary to set INPUT_DIR
 ifdef INPUT_DIR
 DEFINES += -DINPUT_DIR="'$(INPUT_DIR)/'"
 endif
@@ -100,6 +82,7 @@ endif
 #DEFINES += -DSUBSTR_INI_PRESS
 #DEFINES += -DSONG_WRIGHT
 #DEFINES += -DUV_TVD
+#DEFINES += -D_MOMENTUM_TERMS_
 
 # Further directory related settings.
 ifndef BINDIR
@@ -118,7 +101,21 @@ INCDIRS		= -I$(GETMDIR)/include -I$(MODDIR)
 LINKDIRS	= -L$(LIBDIR)
 EXTRA_LIBS	=
 
+# FABM-geochemical component
+ifeq ($(FABM),true)
+DEFINES += -D_FABM_
+ifndef FABMDIR
+FABMDIR = $(HOME)/FABM/fabm-git
+endif
+INCDIRS    += -I$(FABMDIR)/include -I$(FABMDIR)/modules/gotm/$(FORTRAN_COMPILER) -I$(FABMDIR)/src/drivers/gotm
+LINKDIRS   += -L$(FABMDIR)/lib/gotm/$(FORTRAN_COMPILER)
+EXTRA_LIBS += -lgotm_fabm$(buildtype) -lfabm$(buildtype)
+unexport GETM_BIO
+endif
+
+# Old GOTM-BIO component - deprecated
 ifeq ($(GETM_BIO),true)
+DEFINES    += -DGETM_BIO
 EXTRA_LIBS += -lbio$(buildtype)
 endif
 
@@ -129,12 +126,11 @@ EXTRA_LIBS	+= -lturbulence$(buildtype) -lutil$(buildtype)
 INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
 
 # Where does the NetCDF include file and library reside.
-
 ifeq ($(NETCDF_VERSION),NETCDF4)
 
 DEFINES		+= -DNETCDF4
-INCDIRS		+= $(shell nc-config --fflags)
-NETCDFLIB	=  $(shell nc-config --flibs)
+INCDIRS		+= $(shell nf-config --fflags)
+NETCDFLIB	=  $(shell nf-config --flibs)
 
 else  # NetCDF3 is default
 
@@ -156,11 +152,10 @@ endif
 endif
 
 EXTRA_LIBS	+= $(NETCDFLIB)
-
 # NetCDF/HDF configuration done
 
-# Where does the MPI library reside.
-ifeq ($(parallel),true)
+# Compile for parallel execution
+ifeq ($(GETM_PARALLEL),true)
 DEFINES += -DGETM_PARALLEL
 
 # OPENMPI - set FC to mpif90
@@ -179,6 +174,7 @@ EXTRA_LIBS      += -lmpi
 endif
 
 # obsolete - use either OPenMPI or MPICH2
+# Where does the MPI library reside.
 ifeq ($(MPI),MPICH)
 ifdef MPIINC
 INCDIRS		+= -I$(MPIINC)
@@ -227,7 +223,9 @@ DEFINES += -DPRODUCTION $(STATIC)
 FLAGS   = $(PROD_FLAGS) 
 endif
 
-ifdef GETM_OMP
+# OpenMP computation (mostly with compiler directives anyway):
+ifeq ($(GETM_OMP),true)
+DEFINES += -DGETM_OMP
 FLAGS   += $(OMP_FLAGS)
 endif
 
@@ -243,14 +241,10 @@ PROTEX	= protex -b -n -s
 .SUFFIXES:
 .SUFFIXES: .F90
 
-
 CPPFLAGS	= $(DEFINES) $(INCDIRS)
 FFLAGS  	= $(DEFINES) $(FLAGS) $(MODULES) $(INCDIRS) $(EXTRAS)
 F90FLAGS  	= $(FFLAGS)
 LDFLAGS		= $(FFLAGS) $(LINKDIRS)
-ifdef GETM_OMP
-LDFLAGS += $(OMP_FLAGS)
-endif
 
 #
 # Special variables which should not be exported

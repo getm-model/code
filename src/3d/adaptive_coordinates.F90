@@ -1,4 +1,3 @@
-!$Id: adaptive_coordinates.F90,v 1.6 2010-02-23 08:23:34 kb Exp $
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -163,8 +162,10 @@ STDERR 'adaptive_coordinates()'
       read(ADAPTNML,adapt_coord)
       close(ADAPTNML)
 
-      if (.not. allocated(ga)) allocate(ga(0:kmax),stat=rc)
+      if (.not. allocated(ga)) then
+         allocate(ga(0:kmax),stat=rc)
          if (rc /= 0) stop 'coordinates: Error allocating (ga)'
+      end if
       do k=0,kmax
          ga(k) = k
       end do
@@ -252,11 +253,11 @@ STDERR 'adaptive_coordinates()'
          c4ad=max(_ZERO_,(_ONE_-c1ad-c2ad-c3ad))
       end if
       csum=c1ad+c2ad+c3ad+c4ad
-         if (csum .gt. _ONE_) then
-            c1ad=c1ad/csum
-            c2ad=c2ad/csum
-            c3ad=c3ad/csum
-         end if
+      if (csum .gt. _ONE_) then
+         c1ad=c1ad/csum
+         c2ad=c2ad/csum
+         c3ad=c3ad/csum
+      end if
 
       ! possibly useful:
       !tfac_hor=dt*kmax/tgrid
@@ -390,7 +391,7 @@ STDERR 'adaptive_coordinates()'
                end do
             end do
          end do
- 
+
          call ztoh(zpos,hn,depthmin)
          call hcheck(hn,ssen,H)
 
@@ -413,13 +414,13 @@ STDERR 'adaptive_coordinates()'
                do k=0,kmax
                   gaa(k)   =( zpos(i,j,k)-ssen(i,j))/(ssen(i,j)+H(i,j))
                   gaaold(k)=(zposo(i,j,k)-ssen(i,j))/(ssen(i,j)+H(i,j))
-               end do 
+               end do
                do ii=1,split
 #ifndef NO_BAROCLINIC
 !                 Stratification
                   call col_interpol(kmax-1,1,gaaold,NN(i,j,:),kmax-1,gaa,NNloc)
-                  NNloc(kmax)=NNloc(kmax-1)       
-                  NNloc(0)=NNloc(1)       
+                  NNloc(kmax)=NNloc(kmax-1)
+                  NNloc(0)=NNloc(1)
                   do k=1,kmax
                      avn(k)=min(_ONE_,max(_ZERO_,_HALF_*(NNloc(k)+NNloc(k-1)))/g &
                            *rho_0/d_dens)
@@ -427,8 +428,8 @@ STDERR 'adaptive_coordinates()'
 #endif
 !                 Shear
                   call col_interpol(kmax-1,1,gaaold,SS(i,j,:),kmax-1,gaa,SSloc)
-                  SSloc(kmax)=SSloc(kmax-1)       
-                  SSloc(0)=SSloc(1)       
+                  SSloc(kmax)=SSloc(kmax-1)
+                  SSloc(0)=SSloc(1)
                   do k=1,kmax
                      avs(k)=min(_ONE_,sqrt(max(_ZERO_,_HALF_*  &
                             (SSloc(k)+SSloc(k-1))))/d_vel)
@@ -465,7 +466,7 @@ STDERR 'adaptive_coordinates()'
                   du(kmax)=0.
 
                   call getm_tridiagonal(kmax,0,kmax,aau,bu,cu,du,gaa)
-                 
+
                end do !split
                zpos(i,j,:)=gaa*(ssen(i,j)+H(i,j))+ssen(i,j)
             end if
@@ -492,10 +493,13 @@ STDERR 'adaptive_coordinates()'
    do k=1,kmax
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO-1
-            hun(i,j,k)=_HALF_*(hn(i,j,k)+hn(i+1,j,k))
+            hun(i,j,k)=_QUART_*(ho(i,j,k)+ho(i+1,j,k)+hn(i,j,k)+hn(i+1,j,k))
          end do
       end do
    end do
+!  KK-TODO: although the layer heights in the center points are consistent
+!           with the total water depth, in the present implementation we
+!           cannot rely on depth-coinciding layer heights in velocity points
    call hcheck(hun,ssun,HU)
 
 ! vv
@@ -503,10 +507,13 @@ STDERR 'adaptive_coordinates()'
    do k=1,kmax
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO
-            hvn(i,j,k)=_HALF_*(hn(i,j,k)+hn(i,j+1,k))
+            hvn(i,j,k)=_QUART_*(ho(i,j,k)+ho(i,j+1,k)+hn(i,j,k)+hn(i,j+1,k))
          end do
       end do
    end do
+!  KK-TODO: although the layer heights in the center points are consistent
+!           with the total water depth, in the present implementation we
+!           cannot rely on depth-coinciding layer heights in velocity points
    call hcheck(hvn,ssvn,HV)
 
 !  Update the halo zones for hun

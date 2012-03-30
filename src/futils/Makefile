@@ -1,5 +1,5 @@
-# 
-# Makefile to build utilities written in Fortran90 - libfutils.a 
+#
+# Makefile to build utilities written in Fortran90 - libfutils.a
 #
 
 include ../Rules.make
@@ -7,7 +7,7 @@ include ../Rules.make
 LIB	= $(LIBDIR)/libfutils${buildtype}.a
 
 MODSRC	= exceptions.F90 parallel.F90 parameters.F90 time.F90       \
-          getm_timers.F90 grid_interpol.F90
+          grid_interpol.F90
 
 LIBSRC	= ver_interpol.F90 kbk_interpol.F90 tridiagonal.F90 pos.F90 \
           cnv_2d.F90 cnv_3d.F90 eta_mask.F90 col_interpol.F90 	    \
@@ -17,12 +17,12 @@ LIBSRC	= ver_interpol.F90 kbk_interpol.F90 tridiagonal.F90 pos.F90 \
 
 SRC	= $(MODSRC) $(LIBSRC)
 
-ifeq ($(parallel),false)
-MOD =
-else
-MOD = ${LIB}(halo_mpi.o) ${LIB}(read_par_setup.o)
+MOD = ${LIB}(getm_timers.o)
+ifeq ($(GETM_PARALLEL),true)
+MOD += \
+${LIB}(halo_mpi.o)	\
+${LIB}(read_par_setup.o)
 endif
-
 MOD += \
 ${LIB}(exceptions.o)	\
 ${LIB}(parallel.o)	\

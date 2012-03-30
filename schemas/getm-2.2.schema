@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<element name="scenario" version="getm-1.9" namelistextension=".inp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Programmeren/GOTM-CVS/gotm/gui.py/core/scenario-1.0.xsd">
+<element name="scenario" version="getm-2.2" namelistextension=".inp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Programmeren/GOTM-CVS/gotm/gui.py/core/scenario-1.0.xsd">
 	<element name="getm">
 		<element name="param" label="general model setup">
 			<element name="dryrun"       type="bool"   label="dry run" />
@@ -372,7 +372,10 @@
 				</options>
 			</element>
 			<element name="temp_file" type="string" label="name of file with initial temperature distribution">
-				<condition type="eq" variable="./temp_method" value="3"/>
+				<condition type="or">
+					<condition type="eq" variable="./temp_method" value="2"/>
+					<condition type="eq" variable="./temp_method" value="3"/>
+				</condition>
 			</element>
 			<element name="temp_name" type="string" label="name of the temperature variable">
 				<condition type="and">
@@ -490,7 +493,10 @@
 				</options>
 			</element>
 			<element name="salt_file" type="string" label="name of file with initial salinity distribution">
-				<condition type="eq" variable="./salt_method" value="3"/>
+				<condition type="or">
+					<condition type="eq" variable="./salt_method" value="2"/>
+					<condition type="eq" variable="./salt_method" value="3"/>
+				</condition>
 			</element>
 			<element name="salt_name" type="string" label="name of the salinity variable">
 				<condition type="and">
@@ -610,7 +616,7 @@
 			<element name="save_nuh" type="bool" label="save turbulent diffusivity of heat"/>
 			<element name="save_ss_nn" type="bool" label="save shear stress and Brunt-Vaisala frequency"/>
 			<element name="save_taub" type="bool" label="save bottom friction velocity"/>
-			<element name="save_mix_analysis" type="bool" label="calculate/save mixing analysis"/>
+			<element name="save_numerical_analyses" type="bool" label="calculate/save numerical analyses" description="presently numerical mixing and dissipation analyses"/>
 			<element name="first_2d" type="int" label="first time step to save 2D fields" unit="micro time steps" minInclusive="0"/>
 			<element name="step_2d" type="int" label="interval between saves of 2D fields" unit="micro time steps" minInclusive="1"/>
 			<element name="first_3d" type="int" label="first time step to save 3D fields" unit="micro time steps" minInclusive="0"/>

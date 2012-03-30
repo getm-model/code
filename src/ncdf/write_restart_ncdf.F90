@@ -22,10 +22,13 @@
    use variables_2d
 #ifndef NO_3D
    use variables_3d
-#endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use bio_var, only: numc
+#endif
+#ifdef _FABM_
+   use getm_fabm, only: fabm_pel,fabm_ben
+#endif
 #endif
 #ifdef SPM
    use suspended_matter
@@ -104,10 +107,6 @@
    if (status .NE. NF90_NOERR) go to 10
 
    status = &
-   nf90_put_var(ncid,zu_id,zu(_2D_W_HOT_),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-
-   status = &
    nf90_put_var(ncid,SlUx_id,SlUx(_2D_W_HOT_),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
@@ -117,10 +116,6 @@
 
    status = &
    nf90_put_var(ncid,V_id,V(_2D_W_HOT_),start,edges)
-   if (status .NE. NF90_NOERR) go to 10
-
-   status = &
-   nf90_put_var(ncid,zv_id,zv(_2D_W_HOT_),start,edges)
    if (status .NE. NF90_NOERR) go to 10
 
    status = &
@@ -225,6 +220,21 @@
          status = &
          nf90_put_var(ncid,spmpool_id,spm_pool(_3D_W_HOT_)
          if (status .NE. NF90_NOERR) go to 10
+      end if
+#endif
+#ifdef _FABM_
+      if (allocated(fabm_pel)) then
+         start(4) = 1; edges(4) = size(fabm_pel,4)
+         status = &
+         nf90_put_var(ncid,fabm_pel_id,fabm_pel(_3D_W_HOT_,:),start,edges)
+         if  (status .NE. NF90_NOERR) go to 10
+
+         start(3) = 1; edges(3) = size(fabm_ben,3)
+         if (edges(3).gt.0) then
+            status = &
+            nf90_put_var(ncid,fabm_ben_id,fabm_ben(_2D_W_HOT_,:),start,edges)
+            if  (status .NE. NF90_NOERR) go to 10
+         end if
       end if
 #endif
 #ifdef GETM_BIO
