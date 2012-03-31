@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<scenario version="getm-2.1">
+<scenario version="getm-2.2">
 	<getm>
 		<param>
 			<dryrun>
@@ -54,9 +54,6 @@
 			<bathymetry>
 				topo.nc
 			</bathymetry>
-			<vel_depth_method>
-				0
-			</vel_depth_method>
 			<longitude>
 				0.0
 			</longitude>
@@ -189,18 +186,12 @@
 			</use_river_temp>
 		</rivers>
 		<m2d>
-			<elev_method>
-				1
-			</elev_method>
-			<elev_const>
-				0.0
-			</elev_const>
-			<elev_file>
-				elev.nc
-			</elev_file>
 			<MM>
 				1
 			</MM>
+			<vel_depth_method>
+				0
+			</vel_depth_method>
 			<Am>
 				-1.0
 			</Am>

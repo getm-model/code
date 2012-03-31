@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<converter source="getm-2.2" target="getm-2.3">
+	<links>
+		<link source="/getm/m2d/vel_depth_method" target="/getm/domain/vel_depth_method"/>
+	</links>
+</converter>
