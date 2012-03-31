@@ -1,7 +1,6 @@
 <?xml version="1.0" ?>
-<converter source="getm-2.0" target="getm-2.1">
+<converter source="getm-2.2" target="getm-2.3">
 	<links>
-		<link source="/getm/io_spec/save_mix_analysis" target="/getm/io_spec/save_numerical_analyses"/>
 		<link source="/getm/m2d/vel_depth_method" target="/getm/domain/vel_depth_method"/>
 		<link source="/getm/m2d/Am" target="/getm/m2d/Am_const"/>
 		<link source="/getm/temp/temp_AH" target="/getm/temp/temp_AH_const"/>

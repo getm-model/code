@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<element name="scenario" version="getm-2.1" namelistextension=".inp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Programmeren/GOTM-CVS/gotm/gui.py/core/scenario-1.0.xsd">
+<element name="scenario" version="getm-2.3" namelistextension=".inp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Programmeren/GOTM-CVS/gotm/gui.py/core/scenario-1.0.xsd">
 	<element name="getm">
 		<element name="param" label="general model setup">
 			<element name="dryrun"       type="bool"   label="dry run" />
