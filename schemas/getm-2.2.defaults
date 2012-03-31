@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<scenario version="getm-2.1">
+<scenario version="getm-2.2">
 	<getm>
 		<param>
 			<dryrun>
@@ -27,20 +27,6 @@
 				True
 			</save_initial>
 		</param>
-		<parameters>
-			<g>
-				9.81
-			</g>
-			<rho_0>
-				1025.0
-			</rho_0>
-			<cp>
-				3985.0
-			</cp>
-			<kappa>
-				0.4
-			</kappa>
-		</parameters>
 		<time>
 			<timestep>
 				3.0
@@ -68,12 +54,6 @@
 			<bathymetry>
 				topo.nc
 			</bathymetry>
-			<vel_depth_method>
-				0
-			</vel_depth_method>
-			<rigid_lid>
-				False
-			</rigid_lid>
 			<longitude>
 				0.0
 			</longitude>
@@ -122,21 +102,12 @@
 			<jh>
 				-1
 			</jh>
-			<bottfric_method>
-				2
-			</bottfric_method>
-			<rdrag>
-				0.0004
-			</rdrag>
-			<z0_const>
-				0.001
-			</z0_const>
-			<z0d_iters>
+			<z0_method>
 				0
-			</z0d_iters>
-			<cd_min>
-				-1.0
-			</cd_min>
+			</z0_method>
+			<z0_const>
+				0.01
+			</z0_const>
 		</domain>
 		<meteo>
 			<metforcing>
@@ -215,33 +186,15 @@
 			</use_river_temp>
 		</rivers>
 		<m2d>
-			<elev_method>
-				1
-			</elev_method>
-			<elev_const>
-				0.0
-			</elev_const>
-			<elev_file>
-				elev.nc
-			</elev_file>
 			<MM>
 				1
 			</MM>
-			<vel_adv_split2d>
+			<vel_depth_method>
 				0
-			</vel_adv_split2d>
-			<vel_adv_scheme>
-				1
-			</vel_adv_scheme>
-			<avmmol>
-				1.8e-6
-			</avmmol>
-			<Am_method>
-				0
-			</Am_method>
-			<Am_const>
-				1.8e-06
-			</Am_const>
+			</vel_depth_method>
+			<Am>
+				-1.0
+			</Am>
 			<An_method>
 				0
 			</An_method>
@@ -280,9 +233,6 @@
 			<cord_relax>
 				0.0
 			</cord_relax>
-			<itersmax_adv>
-				200
-			</itersmax_adv>
 			<bdy3d>
 				False
 			</bdy3d>
@@ -307,15 +257,15 @@
 			<bdy3d_tmrlx_ucut>
 				0.02
 			</bdy3d_tmrlx_ucut>
-			<vel_adv_split>
-				0
-			</vel_adv_split>
 			<vel_hor_adv>
 				1
 			</vel_hor_adv>
 			<vel_ver_adv>
 				1
 			</vel_ver_adv>
+			<vel_adv_split>
+				0
+			</vel_adv_split>
 			<calc_temp>
 				True
 			</calc_temp>
@@ -328,9 +278,6 @@
 			<avhback>
 				0.0
 			</avhback>
-			<turb_adv>
-				False
-			</turb_adv>
 			<ip_method>
 				1
 			</ip_method>
@@ -366,30 +313,18 @@
 			<temp_field_no>
 				1
 			</temp_field_no>
-			<temp_adv_split>
-				0
-			</temp_adv_split>
 			<temp_hor_adv>
 				1
 			</temp_hor_adv>
 			<temp_ver_adv>
 				1
 			</temp_ver_adv>
-			<avmolt>
-				1.4e-7
-			</avmolt>
-			<temp_AH_method>
+			<temp_adv_split>
 				0
-			</temp_AH_method>
-			<temp_AH_const>
-				1.4e-07
-			</temp_AH_const>
-			<temp_AH_Prt>
-				2.0
-			</temp_AH_Prt>
-			<temp_AH_stirr_const>
-				1.0
-			</temp_AH_stirr_const>
+			</temp_adv_split>
+			<temp_AH>
+				-1.0
+			</temp_AH>
 			<attenuation_method>
 				0
 			</attenuation_method>
@@ -443,30 +378,18 @@
 			<salt_field_no>
 				1
 			</salt_field_no>
-			<salt_adv_split>
-				0
-			</salt_adv_split>
 			<salt_hor_adv>
 				1
 			</salt_hor_adv>
 			<salt_ver_adv>
 				1
 			</salt_ver_adv>
-			<avmols>
-				1.1e-9
-			</avmols>
-			<salt_AH_method>
+			<salt_adv_split>
 				0
-			</salt_AH_method>
-			<salt_AH_const>
-				1.1e-09
-			</salt_AH_const>
-			<salt_AH_Prt>
-				2.0
-			</salt_AH_Prt>
-			<salt_AH_stirr_const>
-				1.0
-			</salt_AH_stirr_const>
+			</salt_adv_split>
+			<salt_AH>
+				-1.0
+			</salt_AH>
 			<salt_check>
 				0
 			</salt_check>
@@ -497,14 +420,6 @@
 				0.78
 			</dsr0>
 		</eqstate>
-		<les>
-			<les_method>
-				1
-			</les_method>
-			<smag_const>
-				0.28
-			</smag_const>
-		</les>
 		<io_spec>
 			<out_fmt>
 				2
@@ -572,15 +487,6 @@
 			<save_nuh>
 				True
 			</save_nuh>
-			<save_Am_2d>
-				False
-			</save_Am_2d>
-			<save_Am_3d>
-				False
-			</save_Am_3d>
-			<save_stirr>
-				False
-			</save_stirr>
 			<save_ss_nn>
 				True
 			</save_ss_nn>
