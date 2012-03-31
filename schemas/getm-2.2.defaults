@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<scenario version="getm-2.1">
+<scenario version="getm-2.2">
 	<getm>
 		<param>
 			<dryrun>
@@ -54,12 +54,6 @@
 			<bathymetry>
 				topo.nc
 			</bathymetry>
-			<vel_depth_method>
-				0
-			</vel_depth_method>
-			<rigid_lid>
-				False
-			</rigid_lid>
 			<longitude>
 				0.0
 			</longitude>
@@ -108,21 +102,12 @@
 			<jh>
 				-1
 			</jh>
-			<bottfric_method>
-				2
-			</bottfric_method>
-			<rdrag>
-				0.0004
-			</rdrag>
-			<z0_const>
-				0.001
-			</z0_const>
-			<z0d_iters>
+			<z0_method>
 				0
-			</z0d_iters>
-			<cd_min>
-				-1.0
-			</cd_min>
+			</z0_method>
+			<z0_const>
+				0.01
+			</z0_const>
 		</domain>
 		<meteo>
 			<metforcing>
@@ -201,24 +186,12 @@
 			</use_river_temp>
 		</rivers>
 		<m2d>
-			<elev_method>
-				1
-			</elev_method>
-			<elev_const>
-				0.0
-			</elev_const>
-			<elev_file>
-				elev.nc
-			</elev_file>
 			<MM>
 				1
 			</MM>
-			<vel_adv_split2d>
+			<vel_depth_method>
 				0
-			</vel_adv_split2d>
-			<vel_adv_scheme>
-				1
-			</vel_adv_scheme>
+			</vel_depth_method>
 			<Am>
 				-1.0
 			</Am>
@@ -260,9 +233,6 @@
 			<cord_relax>
 				0.0
 			</cord_relax>
-			<itersmax_adv>
-				200
-			</itersmax_adv>
 			<bdy3d>
 				False
 			</bdy3d>
@@ -287,15 +257,15 @@
 			<bdy3d_tmrlx_ucut>
 				0.02
 			</bdy3d_tmrlx_ucut>
-			<vel_adv_split>
-				0
-			</vel_adv_split>
 			<vel_hor_adv>
 				1
 			</vel_hor_adv>
 			<vel_ver_adv>
 				1
 			</vel_ver_adv>
+			<vel_adv_split>
+				0
+			</vel_adv_split>
 			<calc_temp>
 				True
 			</calc_temp>
@@ -308,9 +278,6 @@
 			<avhback>
 				0.0
 			</avhback>
-			<turb_adv>
-				False
-			</turb_adv>
 			<ip_method>
 				1
 			</ip_method>
@@ -346,15 +313,15 @@
 			<temp_field_no>
 				1
 			</temp_field_no>
-			<temp_adv_split>
-				0
-			</temp_adv_split>
 			<temp_hor_adv>
 				1
 			</temp_hor_adv>
 			<temp_ver_adv>
 				1
 			</temp_ver_adv>
+			<temp_adv_split>
+				0
+			</temp_adv_split>
 			<temp_AH>
 				-1.0
 			</temp_AH>
@@ -411,15 +378,15 @@
 			<salt_field_no>
 				1
 			</salt_field_no>
-			<salt_adv_split>
-				0
-			</salt_adv_split>
 			<salt_hor_adv>
 				1
 			</salt_hor_adv>
 			<salt_ver_adv>
 				1
 			</salt_ver_adv>
+			<salt_adv_split>
+				0
+			</salt_adv_split>
 			<salt_AH>
 				-1.0
 			</salt_AH>
