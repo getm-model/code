@@ -280,7 +280,9 @@
 
    call postinit_2d(runtype,timestep,hotstart)
 #ifndef NO_3D
-   call postinit_3d(runtype,timestep,hotstart)
+   if (runtype .gt. 1) then
+      call postinit_3d(runtype,timestep,hotstart)
+   end if
 #endif
 
    call init_input(input_dir,MinN)
