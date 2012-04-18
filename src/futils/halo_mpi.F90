@@ -599,8 +599,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer                   :: m,n,o,sizeof_realtype
+   integer                   :: m,n,o
    integer                   :: real_extent
+   INTEGER(KIND=MPI_ADDRESS_KIND) :: sizeof_realtype
 !EOP
 !-------------------------------------------------------------------------
 !BOC
