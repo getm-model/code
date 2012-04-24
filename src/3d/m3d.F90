@@ -137,6 +137,8 @@
    read(NAMLST,m3d)
 !   rewind(NAMLST)
 
+   LEVEL2 "splitting factor M: ",M
+
    if (avmback .lt. _ZERO_) then
       LEVEL2 "setting avmback to 0."
       avmback = _ZERO_
