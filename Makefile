@@ -46,6 +46,8 @@ VER=1.8.0
 VER=1.9.0
 # 2011/04/01 - new stable release
 VER=2.0.0
+# 2011/04/28 - backport
+VER=2.0.1
 
 
 .PHONY: doc
