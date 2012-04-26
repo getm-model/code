@@ -136,7 +136,8 @@
       select case (arg)
       case ('-v', '--version')
          LEVEL0
-         LEVEL0 'GETM version ',RELEASE
+         LEVEL0 'GETM version: ',RELEASE
+         LEVEL0 'Compiler:     ',FORTRAN_VERSION
          LEVEL0
          stop
       case ('-c', '--compile')
@@ -189,7 +190,7 @@
    IMPLICIT NONE
 !
    STDERR LINE
-   STDERR 'Compilation options (unstable version):'
+   STDERR 'Compilation options: ',RELEASE,' - ',FORTRAN_VERSION
    STDERR LINE
 !
 #ifdef GETM_PARALLEL
