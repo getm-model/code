@@ -65,6 +65,9 @@ VERSION: Makefile src/Makefile src/Rules.make
 	@echo \#define RELEASE \"$(VER)\" > .ver
 	@mv -f .ver include/version.h
 
+FORTRAN:
+	. ./fortran_version.sh > ./include/fortran_version.h
+
 Makefile:
 
 doc:
