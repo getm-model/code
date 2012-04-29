@@ -70,22 +70,22 @@
 #endif
    integer,public,parameter           :: NOSPLIT=0,FULLSPLIT=1,HALFSPLIT=2
    character(len=64),public,parameter :: adv_splits(0:2) = &
-                  (/"no split: one 2D uv step",            &
-                    "full step splitting: u + v",          &
+                  (/"no split: one 2D uv step          ",  &
+                    "full step splitting: u + v        ",  &
                     "half step splitting: u/2 + v + u/2"/)
    integer,public,parameter           :: NOADV=0,UPSTREAM=1,UPSTREAM_2DH=2
    integer,public,parameter           :: P2=3,SUPERBEE=4,MUSCL=5,P2_PDM=6,FCT=7
    integer,public,parameter           :: J7=8
    character(len=64),public,parameter :: adv_schemes(0:8) = &
-      (/"advection disabled",                               &
-        "upstream advection (first-order, monotone)",       &
+      (/"advection disabled                             ",  &
+        "upstream advection (first-order, monotone)     ",  &
         "2DH-upstream advection with forced monotonicity",  &
-        "P2 advection (third-order, non-monotone)",         &
+        "P2 advection (third-order, non-monotone)       ",  &
         "TVD-Superbee advection (second-order, monotone)",  &
-        "TVD-MUSCL advection (second-order, monotone)",     &
-        "TVD-P2-PDM advection (third-order, monotone)",     &
-        "2DH-FCT advection",                                &
-        "2DH-J7 advection (Arakawa and Lamb, 1977)"/)
+        "TVD-MUSCL advection (second-order, monotone)   ",  &
+        "TVD-P2-PDM advection (third-order, monotone)   ",  &
+        "2DH-FCT advection                              ",  &
+        "2DH-J7 advection (Arakawa and Lamb, 1977)      "/)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard

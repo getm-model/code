@@ -151,6 +151,8 @@
    deformCX_3d=deformCX
    deformUV_3d=deformUV
 
+   LEVEL2 "splitting factor M: ",M
+
    if (avmback .lt. _ZERO_) then
       LEVEL2 "setting avmback to 0."
       avmback = _ZERO_
