@@ -599,8 +599,9 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer                   :: m,n,o,sizeof_realtype
+   integer                   :: m,n,o
    integer                   :: real_extent
+   INTEGER(KIND=MPI_ADDRESS_KIND) :: sizeof_realtype
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -619,7 +620,12 @@
 
 !  Set up different data types
    call MPI_TYPE_SIZE(MPI_REALTYPE,real_extent,ierr)
+#if 1
+!  deprecated - use MPI_TYPE_GET_EXTENT instead - does not work yet
    call MPI_TYPE_EXTENT(MPI_REALTYPE,sizeof_realtype,ierr)
+#else
+   call MPI_TYPE_GET_EXTENT(MPI_REALTYPE,sizeof_realtype,ierr)
+#endif
 
 !  1 x-line
    call MPI_TYPE_VECTOR(m,1,1,MPI_REALTYPE,x_line,ierr)
