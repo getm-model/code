@@ -6,7 +6,7 @@
 ! \label{sec-tracer-diffusion}
 !
 ! !INTERFACE:
-   subroutine tracer_diffusion(f,AH_method,AH_const,AH_Prt,AH_stirr_const, &
+   subroutine tracer_diffusion(f,hn,AH_method,AH_const,AH_Prt,AH_stirr_const, &
                                phymix)
 !
 ! !DESCRIPTION:
@@ -18,7 +18,7 @@
 #else
    use domain, only: dx,dy,ard1
 #endif
-   use variables_3d, only: dt,hn
+   use variables_3d, only: dt
    use variables_3d, only: diffxx,diffxy,diffyx,diffyy
    use variables_les, only: AmU_3d,AmV_3d
    use variables_3d, only: do_numerical_analyses
@@ -27,6 +27,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   REALTYPE,intent(in)           :: hn(I3DFIELD)
    integer,intent(in)            :: AH_method
    REALTYPE,intent(in)           :: AH_const,AH_Prt,AH_stirr_const
 !
