@@ -232,13 +232,13 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
+   if (nprocs .eq. 1) then
+      flags(n) = flag
+   else
 #ifdef GETM_PARALLEL
-   if (nprocs .gt. 1) then
       call set_flag_mpi(n,flag,flags)
-   end if
-#else
-   flags(n) = flag
 #endif
+   end if
    return
    end subroutine set_flag
 !EOC
