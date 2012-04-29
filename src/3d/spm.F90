@@ -422,7 +422,7 @@
 !      call update_3d_halo(spm,spm,az,imin,jmin,imax,jmax,kmax,D_TAG)
 !      call wait_halo(D_TAG)
 !
-!      call tracer_diffusion(spm,spm_AH_method,spm_AH_const,spm_AH_Prt,spm_AH_stirr_const)
+!      call tracer_diffusion(spm,hn,spm_AH_method,spm_AH_const,spm_AH_Prt,spm_AH_stirr_const)
 !   end if
 
 #ifdef TRACER_POSITIVE

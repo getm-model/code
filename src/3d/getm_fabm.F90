@@ -300,7 +300,7 @@
 !      if (fabm_AH_method .gt. 1) then
 !         call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az,imin,jmin,imax,jmax,kmax,D_TAG)
 !         call wait_halo(D_TAG)
-!         call tracer_diffusion(fabm_pel(:,:,:,n),fabm_AH_method,fabm_AH_const,fabm_AH_Prt,fabm_AH_stirr_const)
+!         call tracer_diffusion(fabm_pel(:,:,:,n),hn,fabm_AH_method,fabm_AH_const,fabm_AH_Prt,fabm_AH_stirr_const)
 !      end if
    end do
    call toc(TIM_ADVECTFABM)
