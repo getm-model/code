@@ -347,6 +347,8 @@
    if ( .not. have_lonlat ) then
       LEVEL2 "Setting constant longitude (swr) - lon = ",longitude
       lonc = longitude
+      LEVEL2 "Setting constant latitude (meteo) - lat = ",latitude
+      latc = latitude
    end if
 
 !  Compute Coriolis parameter
