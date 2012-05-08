@@ -52,6 +52,8 @@ VER=2.1.0
 VER=2.2.0
 # 2012/04/18 - backport - issue with 64 bit in hala_mpi.F90 - MPI_ADDRESS_KIND
 VER=2.2.1
+# 2012/05/08 - backport - NN1d init for NO_BAROCLINIC
+VER=2.2.2
 
 
 .PHONY: doc
