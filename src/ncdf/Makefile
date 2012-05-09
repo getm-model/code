@@ -31,6 +31,10 @@ MOD	+=                      \
 ${LIB}(ncdf_3d.o)		\
 ${LIB}(ncdf_3d_bdy.o)		\
 ${LIB}(ncdf_rivers.o)
+ifeq ($(FABM),true)
+MOD     +=                      \
+${LIB}(ncdf_3d_bio_bdy.o)
+endif
 endif
 MOD	+= 	\
 ${LIB}(ncdf_meteo.o)		\
