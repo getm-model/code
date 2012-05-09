@@ -54,7 +54,7 @@
    integer                             :: calc_points
    logical                             :: openbdy        = .false.
 
-   REALTYPE                            :: Hland
+   REALTYPE                            :: Hland=-10.0
    REALTYPE                            :: min_depth,crit_depth
 
    REALTYPE                            :: longitude      = _ZERO_
