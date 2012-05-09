@@ -12,6 +12,10 @@
 !
 ! !USES:
    use ncdf_3d_bdy, only: init_3d_bdy_ncdf
+#ifdef _FABM_
+   use gotm_fabm, only: fabm_calc
+   use ncdf_3d_bio_bdy, only: init_3d_bio_bdy_ncdf
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -24,6 +28,9 @@
 ! !LOCAL VARIABLES:
    integer                   :: rc
    integer                   :: bdyfmt=NETCDF
+#ifdef _FABM_
+   character(len=255)        :: bio_fn
+#endif
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -45,6 +52,13 @@
       case (NETCDF)
          LEVEL3 'reading from: ',trim(fn)
          call init_3d_bdy_ncdf(fn)
+#ifdef _FABM_
+         if (fabm_calc) then
+            bio_fn='bdy_3d_bio.nc'
+            LEVEL3 'reading BIO from: ',trim(bio_fn)
+            call init_3d_bio_bdy_ncdf(bio_fn)
+         end if
+#endif
       case DEFAULT
          FATAL 'A non valid input format has been chosen'
          stop 'init_3d_bdy'
