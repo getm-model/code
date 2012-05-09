@@ -19,7 +19,7 @@
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use variables_3d
 #ifdef _FABM_
-   use getm_fabm, only: fabm_pel,fabm_ben
+   use getm_fabm, only: fabm_calc,model,fabm_pel,fabm_ben
 #endif
    IMPLICIT NONE
 !
@@ -28,6 +28,10 @@
 ! !PUBLIC DATA MEMBERS:
    public init_bdy_3d, do_bdy_3d
    REALTYPE, public, allocatable       :: S_bdy(:,:),T_bdy(:,:)
+#ifdef _FABM_
+   REALTYPE, public, allocatable       :: bio_bdy(:,:,:)
+   integer, public, allocatable        :: have_bio_bdy_values(:)
+#endif
    logical,  public                    :: bdy3d_tmrlx=.false.
    REALTYPE, public                    :: bdy3d_tmrlx_ucut=_ONE_/50
    REALTYPE, public                    :: bdy3d_tmrlx_max=_ONE_/4
@@ -36,6 +40,9 @@
 ! !PRIVATE DATA MEMBERS:
    REALTYPE,         allocatable       :: bdyvertS(:), bdyvertT(:)
    REALTYPE,         allocatable       :: rlxcoef(:)
+#ifdef _FABM_
+   integer                             :: npel=-1,nben=-1
+#endif
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -89,6 +96,9 @@
    allocate(rlxcoef(0:kmax),stat=rc)
    if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (rlxcoef)'
 
+#ifdef _FABM_
+   npel=size(model%info%state_variables)
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_bdy_3d()'
@@ -131,7 +141,7 @@
    REALTYPE, intent(inout)             :: field(I3DFIELD)
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k,l,n,ii,jj,kk
+   integer                   :: i,j,k,l,n,o,ii,jj,kk
    REALTYPE                  :: sp(1:4),rat
    REALTYPE                  :: bdy3d_tmrlx_umin
    REALTYPE                  :: wsum
@@ -236,25 +246,33 @@
             bdyvertT(:) = T_bdy(:,k)
          end if
          do ii=1,4
-!             Spatial relaxation / sponge:
+!           Spatial relaxation / sponge:
             if (az(i-1+ii,j).gt.0) then
                S(i-1+ii,j,:) = sp(ii)*bdyvertS(:)+(_ONE_-sp(ii))*S(i-1+ii,j,:)
                T(i-1+ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i-1+ii,j,:)
-            end if
-#ifdef GETM_BIO
-            if ( allocated(cc3d) ) then
-               cc3d(:,i,j,:) = cc3d(:,i+1,j,:)
-            end if
-#endif
-
 #ifdef _FABM_
-           if (allocated(fabm_pel)) then
-               fabm_pel(i,j,:,:)=fabm_pel(i+1,j,:,:)
-               fabm_ben(i,j,:) = fabm_ben(i+1,j,:)
-           end if
+               if (fabm_calc) then
+                  do o=1,npel
+                     if (have_bio_bdy_values(o) .eq. 1) then
+                        fabm_pel(i-1+ii,j,:,o) = sp(ii)*bio_bdy(:,k,o) &
+                                            +(1.-sp(ii))*fabm_pel(i-1+ii,j,:,o)
+                     end if
+                  end do
+               end if
 #endif
-
+            end if
          end do
+#ifdef _FABM_
+!        zero gradient when we don't have bdy values
+         if (fabm_calc) then
+            do o=1,npel
+               if (have_bio_bdy_values(o) .ne. 1) then
+                  fabm_pel(i,j,:,o) = fabm_pel(i+1,j,:,o)
+               end if
+            end do
+            fabm_ben(i,j,:) = fabm_ben(i+1,j,:)
+         end if
+#endif
          k = k+1
       end do
    end do
@@ -309,21 +327,29 @@
             if (az(i,j+1-jj).gt.0) then
                S(i,j+1-jj,:) = sp(jj)*bdyvertS(:)+(_ONE_-sp(jj))*S(i,j+1-jj,:)
                T(i,j+1-jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j+1-jj,:)
-            end if
-#ifdef GETM_BIO
-            if ( allocated(cc3d) ) then
-               cc3d(:,i,j,:) = cc3d(:,i,j-1,:)
-            end if
-#endif
-
 #ifdef _FABM_
-            if ( allocated(fabm_pel) ) then
-               fabm_pel(i,j,:,:) = fabm_pel(i,j-1,:,:)
-               fabm_ben(i,j,:) = fabm_ben(i,j-1,:)
-            end if
+               if (fabm_calc) then
+                  do o=1,npel
+                     if (have_bio_bdy_values(o) .eq. 1) then
+                        fabm_pel(i,j+1-jj,:,o) = sp(jj)*bio_bdy(:,k,o) &
+                                            +(1.-sp(jj))*fabm_pel(i,j+1-jj,:,o)
+                     end if
+                  end do
+               end if
 #endif
-
+            end if
          end do
+#ifdef _FABM_
+!        zero gradient when we don't have bdy values
+         if (fabm_calc) then
+            do o=1,npel
+               if (have_bio_bdy_values(o) .ne. 1) then
+                  fabm_pel(i,j,:,o) = fabm_pel(i,j-1,:,o)
+               end if
+            end do
+            fabm_ben(i,j,:) = fabm_ben(i,j-1,:)
+         end if
+#endif
          k = k+1
       end do
    end do
@@ -378,20 +404,29 @@
             if (az(i+1-ii,j).gt.0) then
                S(i+1-ii,j,:) = sp(ii)*bdyvertS(:)+(_ONE_-sp(ii))*S(i+1-ii,j,:)
                T(i+1-ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i+1-ii,j,:)
-            end if
-#ifdef GETM_BIO
-            if ( allocated(cc3d) ) then
-               cc3d(:,i,j,:) = cc3d(:,i-1,j,:)
-            end if
-#endif
 #ifdef _FABM_
-            if ( allocated(fabm_pel) ) then
-               fabm_pel(i,j,:,:) = fabm_pel(i-1,j,:,:)
-               fabm_ben(i,j,:) = fabm_ben(i-1,j,:)
-            end if
+               if (fabm_calc) then
+                  do o=1,npel
+                     if (have_bio_bdy_values(o) .eq. 1) then
+                        fabm_pel(i+1-ii,j,:,o) = sp(ii)*bio_bdy(:,k,o) &
+                                            +(1.-sp(ii))*fabm_pel(i+1-ii,j,:,o)
+                     end if
+                  end do
+               end if
 #endif
-
+            end if
          end do
+#ifdef _FABM_
+!        zero gradient when we don't have bdy values
+         if (fabm_calc) then
+            do o=1,npel
+               if (have_bio_bdy_values(o) .ne. 1) then
+                  fabm_pel(i,j,:,o) = fabm_pel(i-1,j,:,o)
+               end if
+            end do
+            fabm_ben(i,j,:) = fabm_ben(i-1,j,:)
+         end if
+#endif
          k = k+1
       end do
    end do
@@ -446,30 +481,33 @@
             if (az(i,j-1+jj).gt.0) then
                S(i,j-1+jj,:) = sp(jj)*bdyvertS(:)+(_ONE_-sp(jj))*S(i,j-1+jj,:)
                T(i,j-1+jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j-1+jj,:)
-            end if
-#ifdef GETM_BIO
-            if ( allocated(cc3d) ) then
-               cc3d(:,i,j,:) = cc3d(:,i,j+1,:)
-            end if
-#endif
 #ifdef _FABM_
-            if ( allocated(fabm_pel) ) then
-                fabm_pel(i,j,:,:) = fabm_pel(i,j+1,:,:)
-                fabm_ben(i,j,:)=fabm_ben(i,j+1,:)
-           end if
+               if (fabm_calc) then
+                  do o=1,npel
+                     if (have_bio_bdy_values(o) .eq. 1) then
+                        fabm_pel(i,j-1+jj,:,o) = sp(jj)*bio_bdy(:,k,o) &
+                                            +(1.-sp(jj))*fabm_pel(i,j-1+jj,:,o)
+                     end if
+                  end do
+               end if
 #endif
+            end if
          end do
+#ifdef _FABM_
+!        zero gradient when we don't have bdy values
+         if (fabm_calc) then
+            do o=1,npel
+               if (have_bio_bdy_values(o) .ne. 1) then
+                  fabm_pel(i,j,:,o) = fabm_pel(i,j+1,:,o)
+               end if
+            end do
+            fabm_ben(i,j,:) = fabm_ben(i,j+1,:)
+         end if
+#endif
          k = k+1
       end do
    end do
 
-#ifdef GETM_BIO
-   if ( allocated(cc3d) ) then
-      do n=1,size(cc3d,1)
-         call mirror_bdy_3d(cc3d(n,:,:,:),H_TAG)
-      end do
-   end if
-#endif
 #ifdef _FABM_
    if ( allocated(fabm_pel) ) then
       do n=1,size(fabm_pel,4)
