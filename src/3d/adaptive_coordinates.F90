@@ -136,7 +136,7 @@
                         depthmin,Ncrit, &
                         cNN,cSS,cdd,cbg,d_vel,d_dens, &
                         dsurf,tgrid,split,preadapt
-#if (defined PARALLEL && defined INPUT_DIR)
+#if (defined GETM_PARALLEL && defined INPUT_DIR)
    character(len=PATH_MAX)   :: input_dir=INPUT_DIR
 #else
    character(len=PATH_MAX)   :: input_dir='./'
