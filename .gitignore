@@ -5,5 +5,6 @@ timestamp
 VERSION
 include/dimensions.h
 include/version.h
+include/fortran_version.h
 *.swp
 *~
