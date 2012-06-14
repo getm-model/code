@@ -55,13 +55,11 @@
    logical,dimension(E2DFIELD),target         :: mask_updateH
    logical,dimension(E2DFIELD),target         :: mask_uflux,mask_vflux,mask_xflux
    logical,dimension(E2DFIELD),target         :: mask_uupdateU,mask_vupdateV
-   REALTYPE,public,dimension(E2DFIELD)        :: uflux,vflux
    REALTYPE,dimension(E2DFIELD)               :: Di,adv
 #else
    logical,dimension(:,:),allocatable,target  :: mask_updateH
    logical,dimension(:,:),allocatable,target  :: mask_uflux,mask_vflux,mask_xflux
    logical,dimension(:,:),allocatable,target  :: mask_uupdateU,mask_vupdateV
-   REALTYPE,public,dimension(:,:),allocatable :: uflux,vflux
    REALTYPE,dimension(:,:),allocatable        :: Di,adv
 #endif
 #ifndef _POINTER_REMAP_
@@ -256,12 +254,6 @@
 
    allocate(mask_vupdateV(E2DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (mask_vupdateV)'
-
-   allocate(uflux(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (uflux)'
-
-   allocate(vflux(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (vflux)'
 
    allocate(Di(E2DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (Di)'

@@ -41,7 +41,6 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
-   use advection, only: uflux,vflux
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -67,6 +66,7 @@
    logical         :: update_f
    integer         :: rc,i,ii,j,jj
    REALTYPE,dimension(:,:),allocatable,save    :: Dio
+   REALTYPE,dimension(E2DFIELD) :: uflux,vflux
    REALTYPE,dimension(E2DFIELD) :: flx
 #ifndef SLICE_MODEL
    REALTYPE,dimension(E2DFIELD) :: fly
