@@ -91,7 +91,7 @@
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: uflux
    logical            :: use_limiter,use_AH
-   integer            :: i,j,iadd
+   integer            :: i,j,isub
    REALTYPE           :: dti,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd
    REALTYPE,parameter :: one6th=_ONE_/6
 !EOP
@@ -107,9 +107,9 @@
 #endif
 
    if (scheme .eq. UPSTREAM) then
-      iadd = 1
+      isub = 0
    else
-      iadd = 0
+      isub = 1
    end if
 
    use_limiter = .false.
@@ -125,7 +125,7 @@
 #ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO
 #endif
-      do i=imin-1-iadd,imax+iadd
+      do i=imin-HALO+isub,imax+HALO-1-isub
          if (mask_flux(i,j)) then
 !           Note (KK): exclude x-advection of u across W/E open bdys
             if (U(i,j) .gt. _ZERO_) then
@@ -198,7 +198,7 @@
 #ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO
 #endif
-      do i=imin-iadd,imax+iadd
+      do i=imin-HALO+1+isub,imax+HALO-1-isub
          if (mask_update(i,j)) then
 !           Note (KK): exclude x-advection of tracer and u across W/E open bdys
             Dio = Di(i,j)

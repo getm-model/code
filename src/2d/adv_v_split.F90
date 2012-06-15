@@ -66,7 +66,7 @@
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: vflux
    logical            :: use_limiter,use_AH
-   integer            :: i,j,jadd
+   integer            :: i,j,jsub
    REALTYPE           :: dti,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd
    REALTYPE,parameter :: one6th=_ONE_/6
 !EOP
@@ -79,9 +79,9 @@
 #endif
 
    if (scheme .eq. UPSTREAM) then
-      jadd = 1
+      jsub = 0
    else
-      jadd = 0
+      jsub = 1
    end if
 
    use_limiter = .false.
@@ -94,7 +94,7 @@
 
 ! Calculating v-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-1-jadd,jmax+jadd
+   do j=jmin-HALO+jsub,jmax+HALO-1-jsub
       do i=imin-HALO,imax+HALO
          if (mask_flux(i,j)) then
 !           Note (KK): exclude y-advection of v across N/S open bdys
@@ -163,7 +163,7 @@
 !$OMP END DO
 
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-jadd,jmax+jadd
+   do j=jmin-HALO+1+jsub,jmax+HALO-1-jsub
       do i=imin-HALO,imax+HALO
          if (mask_update(i,j)) then
 !           Note (KK): exclude y-advection of tracer and v across N/S open bdys
