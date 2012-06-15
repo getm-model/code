@@ -69,7 +69,7 @@
 #ifndef SLICE_MODEL
    REALTYPE,dimension(E2DFIELD) :: fly
 #endif
-   REALTYPE,dimension(E2DFIELD) :: fi,rp,rm,cmin,cmax
+   REALTYPE,dimension(E2DFIELD) :: fi,rp,rm,cmin,cmax,work
    REALTYPE        :: CNW,CW,CSW,CSSW,CWW,CSWW,CC,CS
    REALTYPE        :: advn,uuu,vvv,x,CExx,Cl,Cu,fac
    REALTYPE,parameter :: one12th=_ONE_/12,one6th=_ONE_/6,one3rd=_ONE_/3
@@ -103,34 +103,6 @@
 
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP   PRIVATE(i,j,CNW,CW,CSW,CSSW,CWW,CSWW,CC,CS,advn,uuu,vvv,x,CExx,Cl,Cu,fac)
-
-!  Calculating u-interface low-order fluxes !
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax
-      do i=imin-1,imax
-         if (U(i,j) .gt. _ZERO_) then
-            flx(i,j)=U(i,j)*f(i  ,j)
-         else
-            flx(i,j)=U(i,j)*f(i+1,j)
-         end if
-      end do
-   end do
-!$OMP END DO NOWAIT
-
-#ifndef SLICE_MODEL
-!  Calculating v-interface low-order fluxes !
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-1,jmax
-      do i=imin,imax
-         if (V(i,j) .gt. _ZERO_) then
-            fly(i,j)=V(i,j)*f(i,j  )
-         else
-            fly(i,j)=V(i,j)*f(i,j+1)
-         end if
-      end do
-   end do
-!$OMP END DO NOWAIT
-#endif
 
 ! OMP-TODO: The following loop gives errornous results when
 !   threaded. - tried both at k,j, adn i. And I cant see what
@@ -432,12 +404,48 @@
    end do
 #endif
 !$OMP END MASTER
-!$OMP BARRIER
 
 !  Calculate intermediate low resolution solution fi
+!  Calculating u-interface low-order fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax
-      do i=imin,imax
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO-1
+         if (au(i,j) .eq. 1) then
+            if (U(i,j) .gt. _ZERO_) then
+               flx(i,j) = U(i,j)*f(i  ,j)
+            else
+               flx(i,j) = U(i,j)*f(i+1,j)
+            end if
+         else
+            flx(i,j) = _ZERO_
+         end if
+      end do
+   end do
+!$OMP END DO NOWAIT
+
+#ifndef SLICE_MODEL
+!  Calculating v-interface low-order fluxes !
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO,jmax+HALO-1
+      do i=imin-HALO,imax+HALO
+         if (av(i,j) .eq. 1) then
+            if (V(i,j) .gt. _ZERO_) then
+               fly(i,j) = V(i,j)*f(i,j  )
+            else
+               fly(i,j) = V(i,j)*f(i,j+1)
+            end if
+         else
+            fly(i,j) = _ZERO_
+         end if
+      end do
+   end do
+!$OMP END DO NOWAIT
+#endif
+
+!$OMP BARRIER
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO+1,jmax+HALO-1
+      do i=imin-HALO+1,imax+HALO-1
          if (az(i,j) .eq. 1)  then
             Dio(i,j) = Di(i,j)
             Di(i,j) = Dio(i,j) - dt*(                                &
@@ -458,25 +466,50 @@
 !$OMP END DO
 
 !  Calculating and applying the flux limiter
+! Calculate min and max of all values around one point
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO+1,jmax+HALO-1
+      do i=imin-HALO+1,imax+HALO-1
+         if (az(i,j) .eq. 1) then
+            work(i,j) = min( f(i,j) , fi(i,j) )
+         end if
+      end do
+   end do
+!$OMP END DO
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .eq. 1) then
-            cmin(i,j)= 10000*_ONE_
-            cmax(i,j)=-10000*_ONE_
-! Calculate min and max of all values around one point
-            do ii=-1,1
-               do jj=-1,1
-                  if (az(i+ii,j+jj).ge.1) then
-                     x=min(f(i+ii,j+jj),fi(i+ii,j+jj))
-                     if (x .lt. cmin(i,j)) cmin(i,j)=x
-                     x=max(f(i+ii,j+jj),fi(i+ii,j+jj))
-                     if (x .gt. cmax(i,j)) cmax(i,j)=x
-                  end if
-               end do
-            end do
+            cmin(i,j) = minval(work(i-1:i+1,j-1:j+1),mask=(az(i-1:i+1,j-1:j+1).eq.1))
+         end if
+      end do
+   end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO+1,jmax+HALO-1
+      do i=imin-HALO+1,imax+HALO-1
+         if (az(i,j) .eq. 1) then
+            work(i,j) = max( f(i,j) , fi(i,j) )
+         end if
+      end do
+   end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin,jmax
+      do i=imin,imax
+         if (az(i,j) .eq. 1) then
+            cmax(i,j) = maxval(work(i-1:i+1,j-1:j+1),mask=(az(i-1:i+1,j-1:j+1).eq.1))
+         end if
+      end do
+   end do
+!$OMP END DO
 
-! max (Cu) and min (Cl) possible concentration after a time step
+
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin,jmax
+      do i=imin,imax
+         if (az(i,j) .eq. 1) then
+! max (Cu) possible concentration after a time step
             CExx=(                                              &
                    ( min(uflux(i  ,j  )-flx(i  ,j  ),_ZERO_)      &
                     -max(uflux(i-1,j  )-flx(i-1,j  ),_ZERO_))/DXU &
@@ -486,7 +519,14 @@
 #endif
                  )
             Cu=(fi(i,j)*Di(i,j)-dt*CExx)/Di(i,j)
+! calculating the maximum limiter rp for each conc. cell
+            if (Cu .eq. fi(i,j)) then
+               rp(i,j)=_ZERO_
+            else
+               rp(i,j)=min((cmax(i,j)-fi(i,j))/(Cu-fi(i,j)),_ONE_)
+            end if
 
+! min (Cl) possible concentration after a time step
             CExx=(                                              &
                    ( max(uflux(i  ,j  )-flx(i  ,j  ),_ZERO_)      &
                     -min(uflux(i-1,j  )-flx(i-1,j  ),_ZERO_))/DXU &
@@ -496,13 +536,7 @@
 #endif
                  )
             Cl=(fi(i,j)*Di(i,j)-dt*CExx)/Di(i,j)
-
-! calculating the maximum limiters rp and rm for each conc. cell
-            if (Cu .eq. fi(i,j)) then
-               rp(i,j)=_ZERO_
-            else
-               rp(i,j)=min((cmax(i,j)-fi(i,j))/(Cu-fi(i,j)),_ONE_)
-            end if
+! calculating the minimum limiter rm for each conc. cell
             if (Cl .eq. fi(i,j)) then
                rm(i,j)=_ZERO_
             else
@@ -512,6 +546,10 @@
       end do
    end do
 !$OMP END DO
+
+
+!  KK-TODO: we need r[m|p] within [imin-1:imax+1,jmin-1:jmax+1]
+!           however, only available within [imin:imax,jmin:jmax]
 
 !  Limiters for the u-fluxes (fac)
 !$OMP DO SCHEDULE(RUNTIME)
