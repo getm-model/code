@@ -62,11 +62,9 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   logical,save    :: first=.true.
    logical         :: update_f
    integer         :: rc,i,ii,j,jj
-   REALTYPE,dimension(:,:),allocatable,save    :: Dio
-   REALTYPE,dimension(E2DFIELD) :: uflux,vflux
+   REALTYPE,dimension(E2DFIELD) :: Dio,uflux,vflux
    REALTYPE,dimension(E2DFIELD) :: flx
 #ifndef SLICE_MODEL
    REALTYPE,dimension(E2DFIELD) :: fly
@@ -85,13 +83,6 @@
 #endif
 
    stop 'adv_fct_2dh: This routine is buggy (KK)'
-   if (first) then
-      allocate(Dio(E2DFIELD),stat=rc)    ! work array
-      if (rc /= 0) stop 'adv_fct_2dh: Error allocating memory (Dio)'
-      Dio = _ZERO_
-
-      first = .false.
-   end if
 
    update_f = .true.
    if (present(nosplit_finalise)) then
