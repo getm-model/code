@@ -350,6 +350,8 @@
                                          adv_grid%arcd1,                     &
 #endif
                                          adv_grid%az,AH,                     &
+                                         adv_grid%mask_uflux,                &
+                                         adv_grid%mask_vflux,                &
                                          nosplit_finalise=.false.)
                      end do
 

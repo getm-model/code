@@ -185,7 +185,9 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                              dxv,dyu,dxu,dyv,arcd1,       &
 #endif
-                             az,AH,nosplit_finalise)
+                             az,AH,                       &
+                             mask_uflux,mask_vflux,       &
+                             nosplit_finalise)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,intent(in)                        :: dt,AH
@@ -196,6 +198,8 @@
          REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
          integer,dimension(E2DFIELD),intent(in)     :: az
+         logical,dimension(:,:),pointer,intent(in)  :: mask_uflux
+         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
          logical,intent(in),optional                :: nosplit_finalise
          REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
       end subroutine adv_fct_2dh
@@ -471,7 +475,9 @@
                                    adv_grid%dxu,adv_grid%dyv,   &
                                    adv_grid%arcd1,              &
 #endif
-                                   adv_grid%az,AH)
+                                   adv_grid%az,AH,              &
+                                   adv_grid%mask_uflux,         &
+                                   adv_grid%mask_vflux)
 
                case(J7)
 

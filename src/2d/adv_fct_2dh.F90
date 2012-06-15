@@ -8,7 +8,8 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                           dxv,dyu,dxu,dyv,arcd1,       &
 #endif
-                          az,AH,nosplit_finalise)
+                          az,AH,mask_uflux,mask_vflux, &
+                          nosplit_finalise)
 !  Note (KK): keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -53,6 +54,8 @@
    REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
    integer,dimension(E2DFIELD),intent(in)     :: az
+   logical,dimension(:,:),pointer,intent(in)  :: mask_uflux
+   logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
    logical,intent(in),optional                :: nosplit_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -410,7 +413,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO-1
-         if (au(i,j) .eq. 1) then
+         if (mask_uflux(i,j) .eq. 1) then
             if (U(i,j) .gt. _ZERO_) then
                flx(i,j) = U(i,j)*f(i  ,j)
             else
@@ -428,7 +431,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO-1
       do i=imin-HALO,imax+HALO
-         if (av(i,j) .eq. 1) then
+         if (mask_vflux(i,j) .eq. 1) then
             if (V(i,j) .gt. _ZERO_) then
                fly(i,j) = V(i,j)*f(i,j  )
             else
