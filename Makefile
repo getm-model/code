@@ -68,6 +68,9 @@ VERSION: Makefile src/Makefile src/Rules.make
 FORTRAN:
 	. ./fortran_version.sh > ./include/fortran_version.h
 
+GIT:
+	@echo "#define GIT_REVISION \"`git log | head -1`\"" > ./include/git_revision.h
+
 Makefile:
 
 doc:
