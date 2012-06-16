@@ -136,8 +136,10 @@
       select case (arg)
       case ('-v', '--version')
          LEVEL0
-         LEVEL0 'GETM version: ',RELEASE
-         LEVEL0 'Compiler:     ',FORTRAN_VERSION
+         LEVEL0 'GETM:     www.getm.eu'
+         LEVEL0 'version:  ',RELEASE
+         LEVEL0 'git:      ',GIT_REVISION
+         LEVEL0 'compiler: ',FORTRAN_VERSION
          LEVEL0
          stop
       case ('-c', '--compile')
@@ -190,7 +192,11 @@
    IMPLICIT NONE
 !
    STDERR LINE
-   STDERR 'Compilation options: ',RELEASE,' - ',FORTRAN_VERSION
+   STDERR 'GETM:     www.getm.eu'
+   STDERR 'version:  ',RELEASE
+   STDERR 'git:      ',GIT_REVISION
+   STDERR 'compiler: ',FORTRAN_VERSION
+   STDERR 'Compilation options: '
    STDERR LINE
 !
 #ifdef GETM_PARALLEL
