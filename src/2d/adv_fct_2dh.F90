@@ -8,7 +8,8 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                           dxv,dyu,dxu,dyv,arcd1,       &
 #endif
-                          az,AH,mask_uflux,mask_vflux, &
+                          az,AH,                       &
+                          mask_uflux,mask_vflux,       &
                           nosplit_finalise)
 !  Note (KK): keep in sync with interface in advection.F90
 !
