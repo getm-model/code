@@ -74,7 +74,7 @@
    integer,public,parameter           :: NOADV=0,UPSTREAM=1,UPSTREAM_2DH=2
    integer,public,parameter           :: P2=3,SUPERBEE=4,MUSCL=5,P2_PDM=6
    integer,public,parameter           :: FCT=7,P2_2DH=8,J7=9
-   character(len=64),public,parameter :: adv_schemes(0:8) = &
+   character(len=64),public,parameter :: adv_schemes(0:9) = &
       (/"advection disabled                             ",  &
         "upstream advection (first-order, monotone)     ",  &
         "2DH-upstream advection with forced monotonicity",  &

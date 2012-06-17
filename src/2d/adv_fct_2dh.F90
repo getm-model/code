@@ -69,15 +69,15 @@
 !
 ! !LOCAL VARIABLES:
    logical         :: update_f
-   integer         :: rc,i,ii,j,jj
-   REALTYPE,dimension(E2DFIELD) :: Dio,uflux,vflux
-   REALTYPE,dimension(E2DFIELD) :: flx
+   integer         :: i,j
+   REALTYPE,dimension(E2DFIELD) :: Dio
+   REALTYPE,dimension(E2DFIELD) :: uflux,flx
 #ifndef SLICE_MODEL
-   REALTYPE,dimension(E2DFIELD) :: fly
+   REALTYPE,dimension(E2DFIELD) :: vflux,fly
 #endif
-   REALTYPE,dimension(E2DFIELD) :: fi,rp,rm,cmin,cmax,work
+   REALTYPE,dimension(E2DFIELD) :: fi,rp,rm,cmin,cmax
    REALTYPE        :: CNW,CW,CSW,CSSW,CWW,CSWW,CC,CS
-   REALTYPE        :: advn,uuu,vvv,x,CExx,Cl,Cu,fac
+   REALTYPE        :: advn,uuu,vvv,CExx,Cl,Cu,fac
    REALTYPE,parameter :: one12th=_ONE_/12,one6th=_ONE_/6,one3rd=_ONE_/3
 !EOP
 !-----------------------------------------------------------------------
@@ -87,8 +87,6 @@
    Ncall = Ncall+1
    write(debug,*) 'adv_fct_2dh() # ',Ncall
 #endif
-
-   stop 'adv_fct_2dh: This routine is buggy (KK)'
 
    update_f = .true.
    if (present(nosplit_finalise)) then
@@ -101,7 +99,27 @@
 !      BJB 2009-09-25.
 
 !$OMP PARALLEL DEFAULT(SHARED) &
-!$OMP   PRIVATE(i,j,CNW,CW,CSW,CSSW,CWW,CSWW,CC,CS,advn,uuu,vvv,x,CExx,Cl,Cu,fac)
+!$OMP   PRIVATE(i,j,CNW,CW,CSW,CSSW,CWW,CSWW,CC,CS,advn,uuu,vvv,CExx,Cl,Cu,fac)
+
+!  Calculate min and max of all values around one point
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO+1,jmax+HALO-1
+      do i=imin-HALO+1,imax+HALO-1
+         if (az(i,j) .eq. 1) then
+            cmin(i,j) = minval(f(i-1:i+1,j-1:j+1),mask=(az(i-1:i+1,j-1:j+1).eq.1))
+         end if
+      end do
+   end do
+!$OMP END DO NOWAIT
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO+1,jmax+HALO-1
+      do i=imin-HALO+1,imax+HALO-1
+         if (az(i,j) .eq. 1) then
+            cmax(i,j) = maxval(f(i-1:i+1,j-1:j+1),mask=(az(i-1:i+1,j-1:j+1).eq.1))
+         end if
+      end do
+   end do
+!$OMP END DO NOWAIT
 
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO+1,jmax+HALO-1
@@ -128,146 +146,150 @@
 !  Calculating u-interface high-order fluxes !
    do j=jmin,jmax
       do i=imin-1,imax
-!        KK-TODO: calculation of uvel and vvel only once at start
-         uuu=U(i,j)/DU(i,j)*dt/DXU
-         vvv=_QUART_*(  V(i  ,j-1)/DV(i  ,j-1)         &
-                      + V(i  ,j  )/DV(i  ,j  )         &
-                      + V(i+1,j-1)/DV(i+1,j-1)         &
-                      + V(i+1,j  )/DV(i+1,j  ))*dt/DYU
-         if (uuu .gt. _ZERO_) then
-            if (vvv .gt. _ZERO_) then
-               CNW =f(i  ,j+1)
-               CW  =f(i  ,j  )
-               CSW =f(i  ,j-1)
-               CSSW=f(i  ,j-2)
-               CWW =f(i-1,j  )
-               CSWW=f(i-1,j-1)
-               CC  =f(i+1,j  )
-               CS  =f(i+1,j-1)
-               if (az(i-1,j-1) .eq. 0) then
-                  CSWW=CW
-               end if
-               if (az(i-1,j  ) .eq. 0) then
-                  CWW=CW
-               end if
-               if (az(i  ,j+1) .eq. 0) then
-                  CNW=CW
-               end if
-               if (az(i  ,j-1) .eq. 0) then
-                  CSW=CW
-               end if
-               if (az(i  ,j-2) .eq. 0) then
-                  CSSW=CNW
-               end if
-               if (az(i+1,j-1) .eq. 0) then
-                  CS=CC
+         if (mask_uflux(i,j)) then
+!           KK-TODO: calculation of uvel and vvel only once at start
+            uuu=U(i,j)/DU(i,j)*dt/DXU
+            vvv=_QUART_*(  V(i  ,j-1)/DV(i  ,j-1)         &
+                         + V(i  ,j  )/DV(i  ,j  )         &
+                         + V(i+1,j-1)/DV(i+1,j-1)         &
+                         + V(i+1,j  )/DV(i+1,j  ))*dt/DYU
+            if (uuu .gt. _ZERO_) then
+               if (vvv .gt. _ZERO_) then
+                  CNW =f(i  ,j+1)
+                  CW  =f(i  ,j  )
+                  CSW =f(i  ,j-1)
+                  CSSW=f(i  ,j-2)
+                  CWW =f(i-1,j  )
+                  CSWW=f(i-1,j-1)
+                  CC  =f(i+1,j  )
+                  CS  =f(i+1,j-1)
+                  if (az(i-1,j-1) .eq. 0) then
+                     CSWW=CW
+                  end if
+                  if (az(i-1,j  ) .eq. 0) then
+                     CWW=CW
+                  end if
+                  if (az(i  ,j+1) .eq. 0) then
+                     CNW=CW
+                  end if
+                  if (az(i  ,j-1) .eq. 0) then
+                     CSW=CW
+                  end if
+                  if (az(i  ,j-2) .eq. 0) then
+                     CSSW=CNW
+                  end if
+                  if (az(i+1,j-1) .eq. 0) then
+                     CS=CC
+                  end if
+               else
+                  CNW =f(i  ,j-1)
+                  CW  =f(i  ,j  )
+                  CSW =f(i  ,j+1)
+                  CSSW=f(i  ,j+2)
+                  CWW =f(i-1,j  )
+                  CSWW=f(i-1,j+1)
+                  CC  =f(i+1,j  )
+                  CS  =f(i+1,j+1)
+                  if (az(i-1,j+1) .eq. 0) then
+                     CSWW=CW
+                  end if
+                  if (az(i-1,j  ) .eq. 0) then
+                     CWW=CW
+                  end if
+                  if (az(i  ,j-1) .eq. 0) then
+                     CNW=CW
+                  end if
+                  if (az(i  ,j+1) .eq. 0) then
+                     CSW=CW
+                  end if
+                  if (az(i  ,j+2) .eq. 0) then
+                     CSSW=CNW
+                  end if
+                  if (az(i+1,j+1) .eq. 0) then
+                     CS=CC
+                  end if
                end if
             else
-               CNW =f(i  ,j-1)
-               CW  =f(i  ,j  )
-               CSW =f(i  ,j+1)
-               CSSW=f(i  ,j+2)
-               CWW =f(i-1,j  )
-               CSWW=f(i-1,j+1)
-               CC  =f(i+1,j  )
-               CS  =f(i+1,j+1)
-               if (az(i-1,j+1) .eq. 0) then
-                  CSWW=CW
-               end if
-               if (az(i-1,j  ) .eq. 0) then
-                  CWW=CW
-               end if
-               if (az(i  ,j-1) .eq. 0) then
-                  CNW=CW
-               end if
-               if (az(i  ,j+1) .eq. 0) then
-                  CSW=CW
-               end if
-               if (az(i  ,j+2) .eq. 0) then
-                  CSSW=CNW
-               end if
-               if (az(i+1,j+1) .eq. 0) then
-                  CS=CC
+               if (vvv.gt._ZERO_) then
+                  CNW =f(i+1,j+1)
+                  CW  =f(i+1,j  )
+                  CSW =f(i+1,j-1)
+                  CSSW=f(i+1,j-2)
+                  CWW =f(i+2,j  )
+                  CSWW=f(i+2,j-1)
+                  CC  =f(i  ,j  )
+                  CS  =f(i  ,j-1)
+                  if (az(i+2,j-1) .eq. 0) then
+                     CSWW=CW
+                  end if
+                  if (az(i+2,j  ) .eq. 0) then
+                     CWW=CW
+                  end if
+                  if (az(i+1,j+1) .eq. 0) then
+                     CNW=CW
+                  end if
+                  if (az(i+1,j-1) .eq. 0) then
+                     CSW=CW
+                  end if
+                  if (az(i+1,j-2) .eq. 0) then
+                     CSSW=CNW
+                  end if
+                  if (az(i  ,j-1) .eq. 0) then
+                     CS=CC
+                  end if
+               else
+                  CNW =f(i+1,j-1)
+                  CW  =f(i+1,j  )
+                  CSW =f(i+1,j+1)
+                  CSSW=f(i+1,j+2)
+                  CWW =f(i+2,j  )
+                  CSWW=f(i+2,j+1)
+                  CC  =f(i  ,j  )
+                  CS  =f(i  ,j+1)
+                  if (az(i+2,j+1) .eq. 0) then
+                     CSWW=CW
+                  end if
+                  if (az(i+2,j  ) .eq. 0) then
+                     CWW=CW
+                  end if
+                  if (az(i+1,j-1) .eq. 0) then
+                     CNW=CW
+                  end if
+                  if (az(i+1,j+1) .eq. 0) then
+                     CSW=CW
+                  end if
+                  if (az(i+1,j+2) .eq. 0) then
+                     CSSW=CNW
+                  end if
+                  if (az(i  ,j+1) .eq. 0) then
+                     CS=CC
+                  end if
                end if
             end if
+            uuu=abs(uuu)
+            vvv=abs(vvv)
+            uflux(i,j) = (                                                    &
+                            _HALF_                                            &
+                            * ( CC + CW )                                     &
+                          - _HALF_*uuu                                        &
+                            * ( CC - CW )                                     &
+                          - one6th*(_ONE_-uuu*uuu)                            &
+                            * ( CC - _TWO_*CW + CWW )                         &
+                          - _HALF_*vvv                                        &
+                            * ( CW - CSW )                                    &
+                          - vvv*(_QUART_-one3rd*uuu)                          &
+                            * ( CC - CW - CS + CSW )                          &
+                          - _HALF_*vvv*(_HALF_ -one3rd*vvv)                   &
+                            * ( CNW - _TWO_*CW + CSW )                        &
+                          + _QUART_*vvv*(one3rd-_HALF_*uuu*uuu)               &
+                            * ( CC - _TWO_*CW + CWW - CS - _TWO_*CSW + CSWW ) &
+                          + one12th*vvv*(_ONE_-_HALF_*vvv*vvv)                &
+                            * ( CNW - _THREE_*CW + _THREE_*CSW - CSSW )       &
+                         )                                                    &
+                         *U(i,j)
          else
-            if (vvv.gt._ZERO_) then
-               CNW =f(i+1,j+1)
-               CW  =f(i+1,j  )
-               CSW =f(i+1,j-1)
-               CSSW=f(i+1,j-2)
-               CWW =f(i+2,j  )
-               CSWW=f(i+2,j-1)
-               CC  =f(i  ,j  )
-               CS  =f(i  ,j-1)
-               if (az(i+2,j-1) .eq. 0) then
-                  CSWW=CW
-               end if
-               if (az(i+2,j  ) .eq. 0) then
-                  CWW=CW
-               end if
-               if (az(i+1,j+1) .eq. 0) then
-                  CNW=CW
-               end if
-               if (az(i+1,j-1) .eq. 0) then
-                  CSW=CW
-               end if
-               if (az(i+1,j-2) .eq. 0) then
-                  CSSW=CNW
-               end if
-               if (az(i  ,j-1) .eq. 0) then
-                  CS=CC
-               end if
-            else
-               CNW =f(i+1,j-1)
-               CW  =f(i+1,j  )
-               CSW =f(i+1,j+1)
-               CSSW=f(i+1,j+2)
-               CWW =f(i+2,j  )
-               CSWW=f(i+2,j+1)
-               CC  =f(i  ,j  )
-               CS  =f(i  ,j+1)
-               if (az(i+2,j+1) .eq. 0) then
-                  CSWW=CW
-               end if
-               if (az(i+2,j  ) .eq. 0) then
-                  CWW=CW
-               end if
-               if (az(i+1,j-1) .eq. 0) then
-                  CNW=CW
-               end if
-               if (az(i+1,j+1) .eq. 0) then
-                  CSW=CW
-               end if
-               if (az(i+1,j+2) .eq. 0) then
-                  CSSW=CNW
-               end if
-               if (az(i  ,j+1) .eq. 0) then
-                  CS=CC
-               end if
-            end if
+            uflux(i,j) = _ZERO_
          end if
-         uuu=abs(uuu)
-         vvv=abs(vvv)
-         uflux(i,j) = (                                                    &
-                         _HALF_                                            &
-                         * ( CC + CW )                                     &
-                       - _HALF_*uuu                                        &
-                         * ( CC - CW )                                     &
-                       - one6th*(_ONE_-uuu*uuu)                            &
-                         * ( CC - _TWO_*CW + CWW )                         &
-                       - _HALF_*vvv                                        &
-                         * ( CW - CSW )                                    &
-                       - vvv*(_QUART_-one3rd*uuu)                          &
-                         * ( CC - CW - CS + CSW )                          &
-                       - _HALF_*vvv*(_HALF_ -one3rd*vvv)                   &
-                         * ( CNW - _TWO_*CW + CSW )                        &
-                       + _QUART_*vvv*(one3rd-_HALF_*uuu*uuu)               &
-                         * ( CC - _TWO_*CW + CWW - CS - _TWO_*CSW + CSWW ) &
-                       + one12th*vvv*(_ONE_-_HALF_*vvv*vvv)                &
-                         * ( CNW - _THREE_*CW + _THREE_*CSW - CSSW )       &
-                      )                                                    &
-                      *U(i,j)
       end do
    end do
 
@@ -275,145 +297,149 @@
 !  Calculating v-interface high-order fluxes !
    do j=jmin-1,jmax
       do i=imin,imax
-         uuu=V(i,j)/DV(i,j)*dt/DYV
-         vvv=_QUART_*(  U(i-1,j  )/DU(i-1,j  )         &
-                      + U(i-1,j+1)/DU(i-1,j+1)         &
-                      + U(i  ,j  )/DU(i  ,j  )         &
-                      + U(i  ,j+1)/DU(i  ,j+1))*dt/DXV
-         if (uuu .gt. _ZERO_) then
-            if (vvv .gt. _ZERO_) then
-               CNW =f(i+1,j  )
-               CW  =f(i  ,j  )
-               CSW =f(i-1,j  )
-               CSSW=f(i-2,j  )
-               CWW =f(i  ,j-1)
-               CSWW=f(i-1,j-1)
-               CC  =f(i  ,j+1)
-               CS  =f(i-1,j+1)
-               if (az(i-1,j-1) .eq. 0) then
-                  CSWW=CW
-               end if
-               if (az(i  ,j-1) .eq. 0) then
-                  CWW=CW
-               end if
-               if (az(i+1,j  ) .eq. 0) then
-                  CNW=CW
-               end if
-               if (az(i-1,j  ) .eq. 0) then
-                  CSW=CW
-               end if
-               if (az(i-2,j  ) .eq. 0) then
-                  CSSW=CNW
-               end if
-               if (az(i-1,j+1) .eq. 0) then
-                  CS=CC
+         if (mask_vflux(i,j)) then
+            uuu=V(i,j)/DV(i,j)*dt/DYV
+            vvv=_QUART_*(  U(i-1,j  )/DU(i-1,j  )         &
+                         + U(i-1,j+1)/DU(i-1,j+1)         &
+                         + U(i  ,j  )/DU(i  ,j  )         &
+                         + U(i  ,j+1)/DU(i  ,j+1))*dt/DXV
+            if (uuu .gt. _ZERO_) then
+               if (vvv .gt. _ZERO_) then
+                  CNW =f(i+1,j  )
+                  CW  =f(i  ,j  )
+                  CSW =f(i-1,j  )
+                  CSSW=f(i-2,j  )
+                  CWW =f(i  ,j-1)
+                  CSWW=f(i-1,j-1)
+                  CC  =f(i  ,j+1)
+                  CS  =f(i-1,j+1)
+                  if (az(i-1,j-1) .eq. 0) then
+                     CSWW=CW
+                  end if
+                  if (az(i  ,j-1) .eq. 0) then
+                     CWW=CW
+                  end if
+                  if (az(i+1,j  ) .eq. 0) then
+                     CNW=CW
+                  end if
+                  if (az(i-1,j  ) .eq. 0) then
+                     CSW=CW
+                  end if
+                  if (az(i-2,j  ) .eq. 0) then
+                     CSSW=CNW
+                  end if
+                  if (az(i-1,j+1) .eq. 0) then
+                     CS=CC
+                  end if
+               else
+                  CNW =f(i-1,j  )
+                  CW  =f(i  ,j  )
+                  CSW =f(i+1,j  )
+                  CSSW=f(i+2,j  )
+                  CWW =f(i  ,j-1)
+                  CSWW=f(i+1,j-1)
+                  CC  =f(i  ,j+1)
+                  CS  =f(i+1,j+1)
+                  if (az(i+1,j-1) .eq. 0) then
+                     CSWW=CW
+                  end if
+                  if (az(i  ,j-1) .eq. 0) then
+                     CWW=CW
+                  end if
+                  if (az(i-1,j  ) .eq. 0) then
+                     CNW=CW
+                  end if
+                  if (az(i+1,j  ) .eq. 0) then
+                     CSW=CW
+                  end if
+                  if (az(i+2,j  ) .eq. 0) then
+                     CSSW=CNW
+                  end if
+                  if (az(i+1,j+1) .eq. 0) then
+                     CS=CC
+                  end if
                end if
             else
-               CNW =f(i-1,j  )
-               CW  =f(i  ,j  )
-               CSW =f(i+1,j  )
-               CSSW=f(i+2,j  )
-               CWW =f(i  ,j-1)
-               CSWW=f(i+1,j-1)
-               CC  =f(i  ,j+1)
-               CS  =f(i+1,j+1)
-               if (az(i+1,j-1) .eq. 0) then
-                  CSWW=CW
-               end if
-               if (az(i  ,j-1) .eq. 0) then
-                  CWW=CW
-               end if
-               if (az(i-1,j  ) .eq. 0) then
-                  CNW=CW
-               end if
-               if (az(i+1,j  ) .eq. 0) then
-                  CSW=CW
-               end if
-               if (az(i+2,j  ) .eq. 0) then
-                  CSSW=CNW
-               end if
-               if (az(i+1,j+1) .eq. 0) then
-                  CS=CC
+               if (vvv .gt. _ZERO_) then
+                  CNW =f(i+1,j+1)
+                  CW  =f(i  ,j+1)
+                  CSW =f(i-1,j+1)
+                  CSSW=f(i-2,j+1)
+                  CWW =f(i  ,j+2)
+                  CSWW=f(i-1,j+2)
+                  CC  =f(i  ,j  )
+                  CS  =f(i-1,j  )
+                  if (az(i-1,j+2) .eq. 0) then
+                     CSWW=CW
+                  end if
+                  if (az(i  ,j+2) .eq. 0) then
+                     CWW=CW
+                  end if
+                  if (az(i+1,j+1) .eq. 0) then
+                     CNW=CW
+                  end if
+                  if (az(i-1,j+1) .eq. 0) then
+                     CSW=CW
+                  end if
+                  if (az(i-2,j+1) .eq. 0) then
+                     CSSW=CNW
+                  end if
+                  if (az(i-1,j  ) .eq. 0) then
+                     CS=CC
+                  end if
+               else
+                  CNW =f(i-1,j+1)
+                  CW  =f(i  ,j+1)
+                  CSW =f(i+1,j+1)
+                  CSSW=f(i+2,j+1)
+                  CWW =f(i  ,j+2)
+                  CSWW=f(i+1,j+2)
+                  CC  =f(i  ,j  )
+                  CS  =f(i+1,j  )
+                  if (az(i+1,j+2) .eq. 0) then
+                     CSWW=CW
+                  end if
+                  if (az(i  ,j+2) .eq. 0) then
+                     CWW=CW
+                  end if
+                  if (az(i-1,j+1) .eq. 0) then
+                     CNW=CW
+                  end if
+                  if (az(i+1,j+1) .eq. 0) then
+                     CSW=CW
+                  end if
+                  if (az(i+2,j+1) .eq. 0) then
+                     CSSW=CNW
+                  end if
+                  if (az(i+1,j  ) .eq. 0) then
+                     CS=CC
+                  end if
                end if
             end if
+            uuu=abs(uuu)
+            vvv=abs(vvv)
+            vflux(i,j) = (                                                    &
+                            _HALF_                                            &
+                            * ( CC + CW )                                     &
+                          - _HALF_*uuu                                        &
+                            * ( CC - CW )                                     &
+                          - one6th*(_ONE_-uuu*uuu)                            &
+                            * ( CC - _TWO_*CW + CWW )                         &
+                          - _HALF_*vvv                                        &
+                            * ( CW - CSW )                                    &
+                          - vvv*(_QUART_-one3rd*uuu)                          &
+                            * ( CC - CW - CS + CSW )                          &
+                          - _HALF_*vvv*(_HALF_-one3rd*vvv)                    &
+                            * ( CNW - _TWO_*CW + CSW )                        &
+                          + _QUART_*vvv*(one3rd-_HALF_*uuu*uuu)               &
+                            * ( CC - _TWO_*CW + CWW - CS - _TWO_*CSW + CSWW ) &
+                          + one12th*vvv*(_ONE_-_HALF_*vvv*vvv)                &
+                            * ( CNW - _THREE_*CW + _THREE_*CSW - CSSW )       &
+                         )                                                    &
+                         *V(i,j)
          else
-            if (vvv .gt. _ZERO_) then
-               CNW =f(i+1,j+1)
-               CW  =f(i  ,j+1)
-               CSW =f(i-1,j+1)
-               CSSW=f(i-2,j+1)
-               CWW =f(i  ,j+2)
-               CSWW=f(i-1,j+2)
-               CC  =f(i  ,j  )
-               CS  =f(i-1,j  )
-               if (az(i-1,j+2) .eq. 0) then
-                  CSWW=CW
-               end if
-               if (az(i  ,j+2) .eq. 0) then
-                  CWW=CW
-               end if
-               if (az(i+1,j+1) .eq. 0) then
-                  CNW=CW
-               end if
-               if (az(i-1,j+1) .eq. 0) then
-                  CSW=CW
-               end if
-               if (az(i-2,j+1) .eq. 0) then
-                  CSSW=CNW
-               end if
-               if (az(i-1,j  ) .eq. 0) then
-                  CS=CC
-               end if
-            else
-               CNW =f(i-1,j+1)
-               CW  =f(i  ,j+1)
-               CSW =f(i+1,j+1)
-               CSSW=f(i+2,j+1)
-               CWW =f(i  ,j+2)
-               CSWW=f(i+1,j+2)
-               CC  =f(i  ,j  )
-               CS  =f(i+1,j  )
-               if (az(i+1,j+2) .eq. 0) then
-                  CSWW=CW
-               end if
-               if (az(i  ,j+2) .eq. 0) then
-                  CWW=CW
-               end if
-               if (az(i-1,j+1) .eq. 0) then
-                  CNW=CW
-               end if
-               if (az(i+1,j+1) .eq. 0) then
-                  CSW=CW
-               end if
-               if (az(i+2,j+1) .eq. 0) then
-                  CSSW=CNW
-               end if
-               if (az(i+1,j  ) .eq. 0) then
-                  CS=CC
-               end if
-            end if
+            vflux(i,j) = _ZERO_
          end if
-         uuu=abs(uuu)
-         vvv=abs(vvv)
-         vflux(i,j) = (                                                    &
-                         _HALF_                                            &
-                         * ( CC + CW )                                     &
-                       - _HALF_*uuu                                        &
-                         * ( CC - CW )                                     &
-                       - one6th*(_ONE_-uuu*uuu)                            &
-                         * ( CC - _TWO_*CW + CWW )                         &
-                       - _HALF_*vvv                                        &
-                         * ( CW - CSW )                                    &
-                       - vvv*(_QUART_-one3rd*uuu)                          &
-                         * ( CC - CW - CS + CSW )                          &
-                       - _HALF_*vvv*(_HALF_-one3rd*vvv)                    &
-                         * ( CNW - _TWO_*CW + CSW )                        &
-                       + _QUART_*vvv*(one3rd-_HALF_*uuu*uuu)               &
-                         * ( CC - _TWO_*CW + CWW - CS - _TWO_*CSW + CSWW ) &
-                       + one12th*vvv*(_ONE_-_HALF_*vvv*vvv)                &
-                         * ( CNW - _THREE_*CW + _THREE_*CSW - CSSW )       &
-                      )                                                    &
-                      *V(i,j)
       end do
    end do
 #endif
@@ -475,51 +501,16 @@
       end do
 !$OMP END DO
 
-!     Calculating and applying the flux limiter
-!     Calculate min and max of all values around one point
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO+1,jmax+HALO-1
-         do i=imin-HALO+1,imax+HALO-1
-            if (az(i,j) .eq. 1) then
-               work(i,j) = min( f(i,j) , fi(i,j) )
-            end if
-         end do
-      end do
-!$OMP END DO
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
             if (az(i,j) .eq. 1) then
-               cmin(i,j) = minval(work(i-1:i+1,j-1:j+1),mask=(az(i-1:i+1,j-1:j+1).eq.1))
-            end if
-         end do
-      end do
-!$OMP END DO
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO+1,jmax+HALO-1
-         do i=imin-HALO+1,imax+HALO-1
-            if (az(i,j) .eq. 1) then
-               work(i,j) = max( f(i,j) , fi(i,j) )
-            end if
-         end do
-      end do
-!$OMP END DO
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin,jmax
-         do i=imin,imax
-            if (az(i,j) .eq. 1) then
-               cmax(i,j) = maxval(work(i-1:i+1,j-1:j+1),mask=(az(i-1:i+1,j-1:j+1).eq.1))
-            end if
-         end do
-      end do
-!$OMP END DO
+!              Calculate max and min of all values around one point
+               cmax(i,j) = max( cmax(i,j) , maxval(fi(i-1:i+1,j-1:j+1),mask=(az(i-1:i+1,j-1:j+1).eq.1)) )
+               cmin(i,j) = min( cmin(i,j) , minval(fi(i-1:i+1,j-1:j+1),mask=(az(i-1:i+1,j-1:j+1).eq.1)) )
 
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin,jmax
-         do i=imin,imax
-            if (az(i,j) .eq. 1) then
 !              max (Cu) possible concentration after a time step
-               CExx=(                                              &
+               CExx=(                                                &
                       ( min(uflux(i  ,j  )-flx(i  ,j  ),_ZERO_)      &
                        -max(uflux(i-1,j  )-flx(i-1,j  ),_ZERO_))/DXU &
 #ifndef SLICE_MODEL
@@ -536,7 +527,7 @@
                end if
 
 !              min (Cl) possible concentration after a time step
-               CExx=(                                              &
+               CExx=(                                                &
                       ( max(uflux(i  ,j  )-flx(i  ,j  ),_ZERO_)      &
                        -min(uflux(i-1,j  )-flx(i-1,j  ),_ZERO_))/DXU &
 #ifndef SLICE_MODEL
@@ -567,12 +558,14 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin-1,imax
-            if (uflux(i,j)-flx(i,j) .ge. _ZERO_) then
-               fac=min(rm(i,j),rp(i+1,j))
-            else
-               fac=min(rm(i+1,j),rp(i,j))
+            if (mask_uflux(i,j)) then
+               if (uflux(i,j)-flx(i,j) .ge. _ZERO_) then
+                  fac=min(rm(i,j),rp(i+1,j))
+               else
+                  fac=min(rm(i+1,j),rp(i,j))
+               end if
+               uflux(i,j) = (_ONE_-fac)*flx(i,j) + fac*uflux(i,j)
             end if
-            uflux(i,j) = (_ONE_-fac)*flx(i,j) + fac*uflux(i,j)
          end do
       end do
 !$OMP END DO
@@ -582,12 +575,14 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax
          do i=imin,imax
-            if (vflux(i,j)-fly(i,j) .ge. _ZERO_) then
-               fac=min(rm(i,j),rp(i,j+1))
-            else
-               fac=min(rm(i,j+1),rp(i,j))
+            if (mask_vflux(i,j)) then
+               if (vflux(i,j)-fly(i,j) .ge. _ZERO_) then
+                  fac=min(rm(i,j),rp(i,j+1))
+               else
+                  fac=min(rm(i,j+1),rp(i,j))
+               end if
+               vflux(i,j) = (_ONE_-fac)*fly(i,j) + fac*vflux(i,j)
             end if
-            vflux(i,j) = (_ONE_-fac)*fly(i,j) + fac*vflux(i,j)
          end do
       end do
 !$OMP END DO
