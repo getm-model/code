@@ -202,15 +202,6 @@
 #ifndef NO_BAROCLINIC
    rad=_ZERO_
    light=_ONE_
-#endif
-
-!  input arrays for do_advection_3d
-   fadv3d = _ZERO_ ; uuadv = _ZERO_ ; vvadv = _ZERO_ ; wwadv = _ZERO_
-   hoadv = SMALL ; hnadv = SMALL ; huadv = SMALL ; hvadv = SMALL
-
-
-
-#ifndef NO_BAROCLINIC
    idpdx=_ZERO_
    idpdy=_ZERO_
    nummix3d_S = _ZERO_ ; nummix2d_S = _ZERO_

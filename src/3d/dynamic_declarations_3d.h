@@ -1,5 +1,5 @@
 ! Remember to update this value if you add more 3D arrays.
-  integer,parameter                    :: n3d_fields=37
+  integer,parameter                    :: n3d_fields=29
 
 ! Number of vertical layers in z,u,v columns
   integer, dimension(:,:), allocatable:: kmin,kumin,kvmin
@@ -52,11 +52,6 @@
   REALTYPE, dimension(:,:,:), allocatable   :: spm,spm_ws
   REALTYPE, dimension(:,:), allocatable     :: spm_pool
 #endif
-
-! input arrays for do_advection_3d
-  REALTYPE,dimension(:,:,:),allocatable        :: fadv3d,uuadv,vvadv,wwadv
-  REALTYPE,dimension(:,:,:),allocatable        :: hoadv,huadv,hvadv
-  REALTYPE,dimension(:,:,:),allocatable,target :: hnadv
 
 ! 2D fields in 3D domain
   REALTYPE, dimension(:,:), allocatable     :: sseo,ssen,Dn

@@ -37,7 +37,7 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_advection,do_advection,print_adv_settings
-   public adv_u_split,adv_v_split,adv_upstream_2dh,adv_fct_2dh,adv_arakawa_j7_2dh
+   public adv_u_split,adv_v_split,adv_upstream_2dh,adv_arakawa_j7_2dh,adv_fct_2dh
 
    type, public :: t_adv_grid
       logical,dimension(:,:),pointer :: mask_uflux,mask_vflux,mask_xflux
@@ -73,7 +73,7 @@
                     "half step splitting: u/2 + v + u/2"/)
    integer,public,parameter           :: NOADV=0,UPSTREAM=1,UPSTREAM_2DH=2
    integer,public,parameter           :: P2=3,SUPERBEE=4,MUSCL=5,P2_PDM=6
-   integer,public,parameter           :: FCT=7,P2_2DH=8,J7=9
+   integer,public,parameter           :: J7=7,FCT=8,P2_2DH=9
    character(len=64),public,parameter :: adv_schemes(0:9) = &
       (/"advection disabled                             ",  &
         "upstream advection (first-order, monotone)     ",  &
@@ -82,9 +82,9 @@
         "TVD-Superbee advection (second-order, monotone)",  &
         "TVD-MUSCL advection (second-order, monotone)   ",  &
         "TVD-P2-PDM advection (third-order, monotone)   ",  &
+        "2DH-J7 advection (Arakawa and Lamb, 1977)      ",  &
         "2DH-FCT advection                              ",  &
-        "2DH-P2 advection                               ",  &
-        "2DH-J7 advection (Arakawa and Lamb, 1977)      "/)
+        "2DH-P2 advection                               "/)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -469,6 +469,19 @@
 #endif
                                         adv_grid%az,AH)
 
+               case(J7)
+
+                  call adv_arakawa_j7_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                          adv_grid%dxv,adv_grid%dyu,   &
+                                          adv_grid%dxu,adv_grid%dyv,   &
+                                          adv_grid%arcd1,              &
+#endif
+                                          adv_grid%az,AH,              &
+                                          adv_grid%mask_uflux,         &
+                                          adv_grid%mask_vflux,         &
+                                          adv_grid%mask_xflux)
+
                case(FCT)
 
                   call adv_fct_2dh(.true.,dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
@@ -492,19 +505,6 @@
                                    adv_grid%az,AH,                     &
                                    adv_grid%mask_uflux,                &
                                    adv_grid%mask_vflux)
-
-               case(J7)
-
-                  call adv_arakawa_j7_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                                          adv_grid%dxv,adv_grid%dyu,   &
-                                          adv_grid%dxu,adv_grid%dyv,   &
-                                          adv_grid%arcd1,              &
-#endif
-                                          adv_grid%az,AH,              &
-                                          adv_grid%mask_uflux,         &
-                                          adv_grid%mask_vflux,         &
-                                          adv_grid%mask_xflux)
 
                case default
 
@@ -542,7 +542,7 @@
                                    adv_grid%mask_vflux,adv_grid%mask_vupdate)
 #endif
 
-               case((UPSTREAM_2DH),(FCT),(P2_2DH),(J7))
+               case((UPSTREAM_2DH),(J7),(FCT),(P2_2DH))
 
                   stop 'do_advection: scheme not valid for split'
 
@@ -607,7 +607,7 @@
                                    _HALF_,scheme,AH,                          &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate)
 
-               case((UPSTREAM_2DH),(FCT),(P2_2DH),(J7))
+               case((UPSTREAM_2DH),(J7),(FCT),(P2_2DH))
 
                   stop 'do_advection: scheme not valid for split'
 
@@ -688,7 +688,7 @@
    end if
 
    select case (scheme)
-      case((NOADV),(UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(FCT),(P2_2DH),(J7))
+      case((NOADV),(UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(J7),(FCT),(P2_2DH))
       case default
          FATAL 'adv_scheme=',scheme,' is invalid'
          stop
@@ -698,7 +698,7 @@
       select case (split)
          case((FULLSPLIT),(HALFSPLIT))
             select case (scheme)
-               case((UPSTREAM_2DH),(FCT),(P2_2DH),(J7))
+               case((UPSTREAM_2DH),(J7),(FCT),(P2_2DH))
                   FATAL 'adv_scheme=',scheme,' not valid for adv_split=',split
                   stop
             end select

@@ -1,8 +1,8 @@
 ! Remember to update this value if you add more 3D arrays.
 #ifdef SPM
-  integer, parameter                   :: n3d_fields=36
+  integer, parameter                   :: n3d_fields=28
 #else
-  integer, parameter                   :: n3d_fields=33
+  integer, parameter                   :: n3d_fields=25
 #endif
 ! Number of vertical layers in z,u,v columns
   INTEGER                              :: kmin(I2DFIELD)
@@ -84,11 +84,6 @@
   REALTYPE                             :: spm_ws(I3DFIELD)
   REALTYPE                             :: spm_pool(I2DFIELD)
 #endif
-
-! input arrays for do_advection_3d
-  REALTYPE,dimension(I3DFIELD)        :: fadv3d,uuadv,vvadv,wwadv
-  REALTYPE,dimension(I3DFIELD)        :: hoadv,huadv,hvadv
-  REALTYPE,dimension(I3DFIELD),target :: hnadv
 
 ! 2D fields in 3D domain
   REALTYPE                             :: sseo(I2DFIELD)
