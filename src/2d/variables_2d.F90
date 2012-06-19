@@ -148,10 +148,6 @@
    EEbdy=_ZERO_
    ESbdy=_ZERO_
 
-!  input arrays for do_advection
-   fadv = _ZERO_ ; Uadv = _ZERO_ ; Vadv = _ZERO_
-   DUadv = SMALL ; DVadv = SMALL
-
 #ifdef DEBUG
    write(debug,*) 'Leaving init_variables_2d()'
    write(debug,*)

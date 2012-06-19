@@ -18,10 +18,6 @@
 
   REALTYPE,dimension(:),  allocatable:: EWbdy,ENbdy,EEbdy,ESbdy
 
-! input arrays for do_advection
-  REALTYPE,dimension(:,:),allocatable :: fadv,Uadv,Vadv,DUadv,DVadv
-  REALTYPE,dimension(:,:),allocatable,target :: Dadv
-
 ! Remember to update this value if you add more 2D arrays.
-  integer, parameter :: n2d_fields=31
+  integer, parameter :: n2d_fields=27
 
