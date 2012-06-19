@@ -144,6 +144,7 @@
                do it=1,iters
 !                 Calculating w-interface fluxes !
                   do k=1-kshift,kmax-1
+!                    Note (KK): overwrite zero flux at k=0 in case of W_TAG
                      if (ww(i,j,k) .gt. _ZERO_) then
                         fc = f(i,j,k  )               ! central
                         if (scheme .ne. UPSTREAM) then
@@ -199,6 +200,7 @@
                      end if
                   end do
                   do k=1,kmax-kshift
+!                    Note (KK): in case of W_TAG do not advect at k=kmax
                      hio = hi(i,j,k)
                      hi(i,j,k) = hio - dtik*(ww(i,j,k  )-ww(i,j,k-1))
                      advn = splitfack*(wflux(k  )-wflux(k-1))

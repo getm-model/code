@@ -337,22 +337,6 @@
                                               nosplit_finalise=.false.)
                      end do
 
-                  case (FCT)
-
-                     do k=1,kmax
-                        call adv_fct_2dh(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k), &
-                                         uu(:,:,k),vv(:,:,k),                &
-                                         ho(:,:,k),hn(:,:,k),                &
-                                         hu(:,:,k),hv(:,:,k),                &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-                                         adv_grid%dxv,adv_grid%dyu,          &
-                                         adv_grid%dxu,adv_grid%dyv,          &
-                                         adv_grid%arcd1,                     &
-#endif
-                                         adv_grid%az,AH,                     &
-                                         nosplit_finalise=.false.)
-                     end do
-
                   case(J7)
 
                      do k=1,kmax
@@ -370,6 +354,42 @@
                                                 adv_grid%mask_vflux,                &
                                                 adv_grid%mask_xflux,                &
                                                 nosplit_finalise=.false.)
+                     end do
+
+                  case (FCT)
+
+                     do k=1,kmax
+                        call adv_fct_2dh(.true.,dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k), &
+                                         uu(:,:,k),vv(:,:,k),                       &
+                                         ho(:,:,k),hn(:,:,k),                       &
+                                         hu(:,:,k),hv(:,:,k),                       &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                         adv_grid%dxv,adv_grid%dyu,                 &
+                                         adv_grid%dxu,adv_grid%dyv,                 &
+                                         adv_grid%arcd1,                            &
+#endif
+                                         adv_grid%az,AH,                            &
+                                         adv_grid%mask_uflux,                       &
+                                         adv_grid%mask_vflux,                       &
+                                         nosplit_finalise=.false.)
+                     end do
+
+                  case (P2_2DH)
+
+                     do k=1,kmax
+                        call adv_fct_2dh(.false.,dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k), &
+                                         uu(:,:,k),vv(:,:,k),                        &
+                                         ho(:,:,k),hn(:,:,k),                        &
+                                         hu(:,:,k),hv(:,:,k),                        &
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+                                         adv_grid%dxv,adv_grid%dyu,                  &
+                                         adv_grid%dxu,adv_grid%dyv,                  &
+                                         adv_grid%arcd1,                             &
+#endif
+                                         adv_grid%az,AH,                             &
+                                         adv_grid%mask_uflux,                        &
+                                         adv_grid%mask_vflux,                        &
+                                         nosplit_finalise=.false.)
                      end do
 
                   case default
@@ -496,7 +516,7 @@
                                          adv_grid%mask_uflux,adv_grid%mask_uupdate)
                      end do
 
-                  case((UPSTREAM_2DH),(FCT),(J7))
+                  case((UPSTREAM_2DH),(J7),(FCT),(P2_2DH))
 
                      stop 'do_advection_3d: hscheme not valid for split'
 
@@ -593,7 +613,7 @@
    end if
 
    select case (hscheme)
-      case((NOADV),(UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(FCT),(J7))
+      case((NOADV),(UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(J7),(FCT),(P2_2DH))
       case default
          FATAL 'hor_adv=',hscheme,' is invalid'
          stop
@@ -614,7 +634,7 @@
       select case (split)
          case((FULLSPLIT),(HALFSPLIT))
             select case (hscheme)
-               case((UPSTREAM_2DH),(FCT),(J7))
+               case((UPSTREAM_2DH),(J7),(FCT),(P2_2DH))
                   FATAL 'hor_adv=',hscheme,' not valid for adv_split=',split
                   stop
             end select
