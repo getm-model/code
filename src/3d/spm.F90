@@ -345,7 +345,7 @@
 !
 ! !USES:
    use advection_3d, only: do_advection_3d
-   use variables_3d, only: dt,cnpar,hun,hvn,ho,nuh,uu,vv,ww,wwadv
+   use variables_3d, only: dt,cnpar,hun,hvn,ho,nuh,uu,vv,ww
 #ifndef NO_BAROCLINIC
    use variables_3d, only: rho
 #endif
@@ -354,6 +354,7 @@
 !
 ! !LOCAL VARIABLES:
    integer         :: i,j,k,rc
+   REALTYPE,dimension(I3DFIELD) :: wwadv
    REALTYPE        :: spmtot
    REALTYPE        :: Res(0:kmax)
    REALTYPE        :: auxn(1:kmax-1),auxo(1:kmax-1)
@@ -403,7 +404,9 @@
    end select
 !  The vertical velocity to be used in the advection routine for spm is ww-ws
 !  In drying grid boxes, the settling velocity is reduced.
-!  Note (KK): why is wwadv(:,:,0|kmax) not assigned (spm_ws .ne. _ZERO_) ?!
+
+   wwadv(:,:,0) = _ZERO_
+   wwadv(:,:,kmax) = _ZERO_
    do i=imin,imax
       do j=jmin,jmax
          do k=1,kmax-1

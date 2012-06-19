@@ -266,7 +266,6 @@
 #endif
    use m3d, only: vel_adv_split,vel_hor_adv,vel_ver_adv
    use variables_3d, only: dt,uu,vv,ww,hun,hvn,uuEx,vvEx
-   use variables_3d, only: fadv3d,uuadv,vvadv,wwadv,hnadv,huadv,hvadv
    use advection, only: UPSTREAM,J7
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
@@ -284,9 +283,11 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   integer                           :: i,j,k
-   REALTYPE,dimension(:,:,:),pointer :: phadv
-   REALTYPE,dimension(I3DFIELD)      :: numdiss,vel2,hires
+   integer                             :: i,j,k
+   REALTYPE,dimension(I3DFIELD)        :: fadv3d,uuadv,vvadv,wwadv,huadv,hvadv
+   REALTYPE,dimension(I3DFIELD),target :: hnadv
+   REALTYPE,dimension(:,:,:),pointer   :: phadv
+   REALTYPE,dimension(I3DFIELD)        :: numdiss,vel2,hires
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -299,6 +300,9 @@
    j = jmax/2 ! this MUST NOT be changed!!!
 #endif
    call tic(TIM_UVADV3D)
+
+!  Note (KK): wwadv(:,:kmax) will be overwritten by ww(:,:,kmax) anyway
+   wwadv(:,:,0) = _ZERO_
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j)                                         &
