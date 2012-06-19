@@ -96,22 +96,3 @@
    allocate(ESbdy(imax),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (ESbdy)'
 
-!  input arrays for do_advection
-   allocate(fadv(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (fadv)'
-
-   allocate(Uadv(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (Uadv)'
-
-   allocate(Vadv(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (Vadv)'
-
-   allocate(Dadv(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (Dadv)'
-
-   allocate(DUadv(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (DUadv)'
-
-   allocate(DVadv(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (DVadv)'
-

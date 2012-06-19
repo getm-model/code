@@ -43,12 +43,12 @@ CORE_LIBS	+=	\
 
 LIBS		= $(CORE_LIBS) $(EXTRA_LIBS)
 
-all: FORTRAN ../VERSION getm$(buildtype)_$(FORTRAN_COMPILER) install
+all: GIT FORTRAN ../VERSION getm$(buildtype)_$(FORTRAN_COMPILER) install
 
 ../VERSION: ../Makefile Makefile Rules.make
 	$(MAKE) -C ..
 
-FORTRAN:
+GIT FORTRAN:
 	$(MAKE) -C .. $@
 
 getm$(buildtype)_$(FORTRAN_COMPILER): makedirs subdirs
