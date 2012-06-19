@@ -1,5 +1,5 @@
 ! Remember to update this value if you add more 2D arrays.
-   integer, parameter :: n2d_fields=31
+   integer, parameter :: n2d_fields=27
 !
 #ifdef USE_BREAKS
    integer  break_mask(E2DFIELD)
@@ -32,8 +32,4 @@
    REALTYPE fwf(E2DFIELD)
    REALTYPE fwf_int(E2DFIELD)
    REALTYPE EWbdy(jmax),ENbdy(imax),EEbdy(jmax),ESbdy(imax)
-
-!  input arrays for do_advection
-   REALTYPE,dimension(E2DFIELD) :: fadv,Uadv,Vadv,DUadv,DVadv
-   REALTYPE,dimension(E2DFIELD),target :: Dadv
 

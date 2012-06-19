@@ -24,7 +24,6 @@
 #endif
    use m3d, only: vel_adv_split,vel_hor_adv,vel_ver_adv
    use variables_3d, only: tke,eps,dt,uu,vv,ww,hun,hvn,ho,hn
-   use variables_3d, only: uuadv,vvadv,wwadv,hoadv,hnadv,huadv,hvadv
    use advection, only: J7
    use advection_3d, only: do_advection_3d,W_TAG
    use halo_zones, only: update_3d_halo,wait_halo,H_TAG
@@ -36,7 +35,8 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   integer  :: i,j,k
+   integer                      :: i,j,k
+   REALTYPE,dimension(I3DFIELD) :: uuadv,vvadv,wwadv,hoadv,hnadv,huadv,hvadv
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -48,6 +48,26 @@
 #ifdef SLICE_MODEL
    j = jmax/2 ! this MUST NOT be changed!!!
 #endif
+
+!  Note (KK): in the present implementation it is guaranteed, that 
+!             the turbulent quantities at k=0|kmax are not changed
+!             due to advection
+!   uuadv(:,:,0) = _ZERO_ ! not used in the present implementation
+!   vvadv(:,:,0) = _ZERO_ ! not used in the present implementation
+   wwadv(:,:,0) = _HALF_*ww(:,:,1)
+!   hoadv(:,:,0) = _HALF_*ho(:,:,1) ! not used in the present implementation
+!   hnadv(:,:,0) = _HALF_*hn(:,:,1) ! not used in the present implementation
+!   huadv(:,:,0) = _HALF_*hun(:,:,1) ! not used in the present implementation
+!   hvadv(:,:,0) = _HALF_*hvn(:,:,1) ! not used in the present implementation
+
+   uuadv(:,:,kmax) = _ZERO_
+   vvadv(:,:,kmax) = _ZERO_
+!   wwadv(:,:,kmax) = _ZERO_ ! not used in the present implementation
+   hoadv(:,:,kmax) = _HALF_*ho(:,:,kmax)
+   hnadv(:,:,kmax) = _HALF_*hn(:,:,kmax)
+   huadv(:,:,kmax) = _HALF_*hun(:,:,kmax)
+   hvadv(:,:,kmax) = _HALF_*hvn(:,:,kmax)
+
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j)                                         &
@@ -78,24 +98,6 @@
    end do
 
 !$OMP END PARALLEL
-
-!  Note (KK): [uu|vv]adv(k=0) already initialised to 0
-!             we need wwadv(k=0)
-!             (no change of k=0 by vertical advection by default)
-   wwadv(:,:,0) = _HALF_*ww(:,:,1)
-   hoadv(:,:,0) = _HALF_*ho(:,:,1)
-   hnadv(:,:,0) = _HALF_*hn(:,:,1)
-   huadv(:,:,0) = _HALF_*hun(:,:,1)
-   hvadv(:,:,0) = _HALF_*hvn(:,:,1)
-
-!  Note (KK): we do not want horizontal advection for k=kmax
-!             (no change of k=kmax by vertical advection by default)
-   uuadv(:,:,kmax) = _ZERO_
-   vvadv(:,:,kmax) = _ZERO_
-   hoadv(:,:,kmax) = _HALF_*ho(:,:,kmax)
-   hnadv(:,:,kmax) = _HALF_*hn(:,:,kmax)
-   huadv(:,:,kmax) = _HALF_*hun(:,:,kmax)
-   hvadv(:,:,kmax) = _HALF_*hvn(:,:,kmax)
 
    if (vel_hor_adv .eq. J7) then
 #ifdef SLICE_MODEL
@@ -138,9 +140,6 @@
 
    tke = max(k_min,tke)
    eps = max(eps_min,eps)
-
-!  Note (KK): all other routines expect wwadv(k=0)=0
-   wwadv(:,:,0) = _ZERO_
 
 #ifdef DEBUG
    write(debug,*) 'Leaving tke_eps_advect_3d()'

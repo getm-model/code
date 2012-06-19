@@ -277,10 +277,14 @@
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
-					<option value="7" label="2DH-FCT">
+					<option value="7" label="2DH-J7">
 						<condition type="eq" variable="./vel_adv_split2d" value="0"/>
 					</option>
-					<option value="8" label="2DH-J7">
+
+					<option value="8" label="2DH-FCT">
+						<condition type="eq" variable="./vel_adv_split2d" value="0"/>
+					</option>
+					<option value="9" label="2DH-P2">
 						<condition type="eq" variable="./vel_adv_split2d" value="0"/>
 					</option>
 				</options>
@@ -381,13 +385,19 @@
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
-					<option value="7" label="2DH-FCT">
+					<option value="7" label="2DH-J7">
 						<condition type="or">
 							<condition type="eq" variable="./vel_adv_split" value="0"/>
 							<condition type="eq" variable="./vel_adv_split" value="3"/>
 						</condition>
 					</option>
-					<option value="8" label="2DH-J7">
+					<option value="8" label="2DH-FCT">
+						<condition type="or">
+							<condition type="eq" variable="./vel_adv_split" value="0"/>
+							<condition type="eq" variable="./vel_adv_split" value="3"/>
+						</condition>
+					</option>
+					<option value="9" label="2DH-P2">
 						<condition type="or">
 							<condition type="eq" variable="./vel_adv_split" value="0"/>
 							<condition type="eq" variable="./vel_adv_split" value="3"/>
@@ -491,7 +501,13 @@
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
-					<option value="7" label="2DH-FCT">
+					<option value="8" label="2DH-FCT">
+						<condition type="or">
+							<condition type="eq" variable="./temp_adv_split" value="0"/>
+							<condition type="eq" variable="./temp_adv_split" value="3"/>
+						</condition>
+					</option>
+					<option value="8" label="2DH-P2">
 						<condition type="or">
 							<condition type="eq" variable="./temp_adv_split" value="0"/>
 							<condition type="eq" variable="./temp_adv_split" value="3"/>
@@ -624,7 +640,13 @@
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
-					<option value="7" label="2DH-FCT">
+					<option value="8" label="2DH-FCT">
+						<condition type="or">
+							<condition type="eq" variable="./salt_adv_split" value="0"/>
+							<condition type="eq" variable="./salt_adv_split" value="3"/>
+						</condition>
+					</option>
+					<option value="9" label="2DH-P2">
 						<condition type="or">
 							<condition type="eq" variable="./salt_adv_split" value="0"/>
 							<condition type="eq" variable="./salt_adv_split" value="3"/>

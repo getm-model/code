@@ -150,7 +150,7 @@
    use domain, only: dx,dy
 #endif
    use m2d, only: dtm,vel_adv_split2d,vel_adv_scheme
-   use variables_2d, only: UEx,VEx,fadv,Uadv,Vadv,Dadv,DUadv,DVadv
+   use variables_2d, only: UEx,VEx
    use advection, only: UPSTREAM,J7,do_advection
    use halo_zones, only: update_2d_halo,wait_halo,U_TAG,V_TAG
    use getm_timers, only: tic,toc,TIM_UVADV,TIM_UVADVH
@@ -166,7 +166,9 @@
 !
 ! !LOCAL VARIABLES:
    integer :: i,j
-   REALTYPE,dimension(:,:),pointer :: pDadv
+   REALTYPE,dimension(E2DFIELD)        :: fadv,Uadv,Vadv,DUadv,DVadv
+   REALTYPE,dimension(E2DFIELD),target :: Dadv
+   REALTYPE,dimension(:,:),pointer     :: pDadv
 !EOP
 !-----------------------------------------------------------------------
 !BOC
