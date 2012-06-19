@@ -228,11 +228,9 @@
 #ifndef NO_BAROCLINIC
    rad=_ZERO_
    light=_ONE_
+   idpdx=_ZERO_
+   idpdy=_ZERO_
 #endif
-
-!  input arrays for do_advection_3d
-   fadv3d = _ZERO_ ; uuadv = _ZERO_ ; vvadv = _ZERO_ ; wwadv = _ZERO_
-   hoadv = SMALL ; hnadv = SMALL ; huadv = SMALL ; hvadv = SMALL
 
 #ifdef STRUCTURE_FRICTION
    sf = _ZERO_

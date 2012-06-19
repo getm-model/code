@@ -21,7 +21,6 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
-   use advection, only: uflux,vflux
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -51,6 +50,7 @@
    REALTYPE,dimension(E2DFIELD) :: flux_e,flux_n,flux_ne,flux_nw
    REALTYPE,dimension(E2DFIELD) :: f_e,f_n,f_ne,f_nw
    REALTYPE,dimension(E2DFIELD) :: fo,Dio,advo
+   REALTYPE,dimension(E2DFIELD) :: uflux,vflux
    REALTYPE,parameter           :: one3rd = _ONE_/_THREE_
    REALTYPE,parameter           :: one6th = one3rd/_TWO_
 !EOP

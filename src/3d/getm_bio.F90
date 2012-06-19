@@ -16,7 +16,7 @@
    use time, only: secondsofday
    use variables_2d, only: D
    use variables_3d, only: taub
-   use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn,fadv3d
+   use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
    use variables_3d, only: nuh,T,S,rad,rho,light
    use variables_3d, only: cc3d
    use meteo, only: swr,u10,v10
@@ -162,6 +162,7 @@
 ! !LOCAL VARIABLES:
    integer         :: n
    integer         :: i,j,k
+   REALTYPE,dimension(I3DFIELD) :: fadv3d
    REALTYPE        :: h1d(0:kmax),T1d(0:kmax),S1d(0:kmax),rho1d(0:kmax)
    REALTYPE        :: nuh1d(0:kmax),rad1d(0:kmax),light1d(0:kmax)
    REALTYPE        :: bioshade1d(0:kmax)
