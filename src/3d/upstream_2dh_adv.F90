@@ -47,8 +47,8 @@
 ! }{\Delta x^c_{i,j}\Delta y^c_{i,j}}
 ! +
 ! \frac{
-! q_{i,j,k}\tilde c^v_{i,j,k}\Delta y^v_{i,j}-
-! q_{i,j-1,k}\tilde c^v_{i,j-1,k}\Delta y^v_{i,j-1}
+! q_{i,j,k}\tilde c^v_{i,j,k}\Delta x^v_{i,j}-
+! q_{i,j-1,k}\tilde c^v_{i,j-1,k}\Delta x^v_{i,j-1}
 ! }{\Delta x^c_{i,j}\Delta y^c_{i,j}}\Bigg),
 ! \end{array}
 ! \end{equation}
