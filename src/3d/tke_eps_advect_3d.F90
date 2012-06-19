@@ -55,7 +55,7 @@
 !   uuadv(:,:,0) = _ZERO_ ! not used in the present implementation
 !   vvadv(:,:,0) = _ZERO_ ! not used in the present implementation
    wwadv(:,:,0) = _HALF_*ww(:,:,1)
-!   hoadv(:,:,0) = _HALF_*ho(:,:,1) ! not used in the present implementation
+   hoadv(:,:,0) = _HALF_*ho(:,:,1)
 !   hnadv(:,:,0) = _HALF_*hn(:,:,1) ! not used in the present implementation
 !   huadv(:,:,0) = _HALF_*hun(:,:,1) ! not used in the present implementation
 !   hvadv(:,:,0) = _HALF_*hvn(:,:,1) ! not used in the present implementation
