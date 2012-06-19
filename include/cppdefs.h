@@ -4,6 +4,7 @@
 ! KBK 990615
 
 #include "version.h"
+#include "git_revision.h"
 #include "fortran_version.h"
 
 #if defined(SPHERICAL) || defined(CURVILINEAR)

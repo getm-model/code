@@ -21,6 +21,8 @@ for nml in nmls:
 	elif hor_adv == 2:
 		if adv_split in (0,1):
 			target[nml+'hor_adv'].setValue(1)
+	elif hor_adv == 7:
+		target[nml+'hor_adv'].setValue(8)
 	if ver_adv == 2:
 		target[nml+'ver_adv'].setValue(1)
 ]]>
@@ -43,6 +45,8 @@ for nml in nmls:
 	if hor_adv == 1:
 		if adv_split in (1,2):
 			target[nml+'hor_adv'].setValue(2)
+	if hor_adv == 8:
+		target[nml+'hor_adv'].setValue(7)
 	if ver_adv == 1:
 		target[nml+'ver_adv'].setValue(2)
 ]]>
