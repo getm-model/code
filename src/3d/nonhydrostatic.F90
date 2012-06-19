@@ -94,7 +94,6 @@
    use m2d, only: avmmol
 #ifndef NO_ADVECT
    use advection_3d, only: do_advection_3d
-   use variables_3d, only: fadv3d
 #endif
    use halo_zones, only: update_3d_halo,wait_halo,H_TAG
 !$ use omp_lib
@@ -258,7 +257,7 @@
    integer,intent(in)           :: nonhyd_loop,vel_hor_adv,vel_ver_adv,vel_adv_split
 !
 ! !LOCAL VARIABLES:
-   REALTYPE,dimension(I3DFIELD) :: wc,bnh
+   REALTYPE,dimension(I3DFIELD) :: wc,bnh,fadv3d
    integer                      :: i,j,k
 !EOP
 !-----------------------------------------------------------------------
