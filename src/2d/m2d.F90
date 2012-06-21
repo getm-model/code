@@ -100,9 +100,8 @@
 ! !LOCAL VARIABLES:
    integer                   :: rc
    integer                   :: i,j
-   integer                   :: vel_depth_method=0
    namelist /m2d/ &
-          MM,vel_depth_method,Am,An_method,An_const,An_file,residual, &
+          MM,Am,An_method,An_const,An_file,residual,           &
           sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
@@ -220,8 +219,6 @@
       LEVEL2 TRIM(bdyfile_2d)
       LEVEL2 'Format=',bdyfmt_2d
    end if
-
-   call uv_depths(vel_depth_method)
 
    where ( -H+min_depth .gt. _ZERO_ )
       z = -H+min_depth
