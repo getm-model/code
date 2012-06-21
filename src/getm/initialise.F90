@@ -266,10 +266,9 @@
       hot_in = trim(out_dir) //'/'// 'restart' // trim(buf)
       call restart_file(READING,trim(hot_in),MinN,runtype,use_epoch)
       LEVEL3 'MinN adjusted to ',MinN
-      call depth_update
+
 #ifndef NO_3D
       if (runtype .ge. 2) then
-         call coordinates(hotstart)
          Uint=_ZERO_
          Vint=_ZERO_
       end if
