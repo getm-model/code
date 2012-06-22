@@ -52,6 +52,13 @@
 				<condition type="eq" variable="./vert_cord" value="3"/>
 			</element>
 			<element name="bathymetry" type="string" label="name of file with bathymetry and grid" />
+			<element name="vel_depth_method" type="int" label="vel_depth_method">
+				<options>
+					<option value="0" label="use mean value of neighboring H points (default)"/>
+					<option value="1" label="use minimum value of neighboring H points"/>
+					<option value="2" label="use mixture of mean and minimum values: see code for details"/>
+				</options>
+			</element>
 			<element name="longitude" type="float" unit="° East" description="Longitude used for calculating short wave radiation (if not from bathymetry file)"/>
 			<element name="latitude"  type="float" unit="° North" description="Latitude used for meteo and the Coriolis force (if not from bathymetry file)"/>
 			<element name="f_plane"   type="bool" label="compute (constant) f latitude (otherwise calculated from latitude,longitude in bathymetry)"/>
@@ -218,14 +225,19 @@
 		</element>
 
 		<element name="m2d" label="variables related to 2D model">
-			<element name="MM" type="int" label="time steps between calls to bottom_friction()" unit="micro time steps" minInclusive="0"/>
-			<element name="vel_depth_method" type="int" label="vel_depth_method">
+			<element name="elev_method" type="int" label="method for initial surface elevation">
 				<options>
-					<option value="0" label="use mean value of neighboring H points (default)"/>
-					<option value="1" label="use minimum value of neighboring H points"/>
-					<option value="2" label="use mixture of mean and minimum values: see code for details"/>
+					<option value="1" label="constant"/>
+					<option value="2" label="from 2D field"/>
 				</options>
 			</element>
+			<element name="elev_const" type="float" label="constant initial surface elevation">
+				<condition type="eq" variable="./elev_method" value="1"/>
+			</element>
+			<element name="elev_file" type="string" label="name of file with initial surface elevation">
+				<condition type="eq" variable="./elev_method" value="2"/>
+			</element>
+			<element name="MM" type="int" label="time steps between calls to bottom_friction()" unit="micro time steps" minInclusive="0"/>
 			<element name="Am" type="float" label="constant horizontal momentum diffusion coefficient" unit="m²/s"/>
 			<element name="An_method" type="int" label="method for constant horizontal numerical diffusion coefficient (m²/s) used to filter the surface elevation">
 				<options>

@@ -45,7 +45,6 @@
 ! !USES:
    use exceptions
    use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV
-   use variables_2d, only: DU,DV
    use getm_timers, only: tic,toc,TIM_UVDEPTHS
    IMPLICIT NONE
 !
@@ -72,14 +71,14 @@
       do i=imin-HALO,imax+HALO-1
          select case (vel_depth_method)
             case (0)
-               HU(i,j)=0.5*(H(i,j)+H(i+1,j))
+               HU(i,j) = _HALF_ * ( H(i,j) + H(i+1,j) )
             case (1)
                HU(i,j)=min(H(i,j),H(i+1,j))
             case (2)
                if (H(i,j) .lt. d_crit .or. H(i+1,j) .lt. d_crit) then
                   HU(i,j)=min(H(i,j),H(i+1,j))
                else
-                  HU(i,j)=0.5*(H(i,j)+H(i+1,j))
+                  HU(i,j) = _HALF_ * ( H(i,j) + H(i+1,j) )
                end if
             case default
                call getm_error("uv_depths()", &
@@ -92,14 +91,14 @@
       do i=imin-HALO,imax+HALO
          select case (vel_depth_method)
             case (0)
-               HV(i,j)=0.5*(H(i,j)+H(i,j+1))
+               HV(i,j) = _HALF_ * ( H(i,j) + H(i,j+1) )
             case (1)
                HV(i,j)=min(H(i,j),H(i,j+1))
             case (2)
                if (H(i,j) .lt. d_crit .or. H(i,j+1) .lt. d_crit) then
                   HV(i,j)=min(H(i,j),H(i,j+1))
                else
-                  HV(i,j)=0.5*(H(i,j)+H(i,j+1))
+                  HV(i,j) = _HALF_ * ( H(i,j) + H(i,j+1) )
                end if
             case default
                call getm_error("uv_depths()", &
@@ -116,7 +115,6 @@
    return
    end subroutine uv_depths
 !EOC
-
 !-----------------------------------------------------------------------
 ! Copyright (C) 2001 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------
