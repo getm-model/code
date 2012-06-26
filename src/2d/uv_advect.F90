@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: uv_advect - 2D advection of momentum \label{sec-uv-advect}
+! !ROUTINE: uv_advect - 2D advection of momentum \label{sec-uv-advect}
 !
 ! !INTERFACE:
    subroutine uv_advect

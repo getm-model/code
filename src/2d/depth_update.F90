@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: depth_update - adjust the depth to new elevations.
+! !ROUTINE: depth_update - adjust the depth to new elevations.
 !
 ! !INTERFACE:
    subroutine depth_update

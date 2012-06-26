@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: bottom_friction - calculates the 2D bottom friction.
+! !ROUTINE: bottom_friction - calculates the 2D bottom friction.
 !
 ! !INTERFACE:
    subroutine bottom_friction(runtype)
