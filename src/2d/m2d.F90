@@ -26,12 +26,38 @@
    use domain, only: ill,ihl,jll,jhl
    use domain, only: openbdy,z0_method,z0_const,z0
    use domain, only: az,ax
-   use halo_zones, only : update_2d_halo,wait_halo
-   use halo_zones, only : U_TAG,V_TAG,H_TAG
+   use advection, only: init_advection,print_adv_settings,NOADV
+   use halo_zones, only: update_2d_halo,wait_halo,H_TAG
    use variables_2d
+
    IMPLICIT NONE
-! Temporary interface (should be read from module):
+
    interface
+
+      subroutine uv_advect(U,V,DU,DV)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V
+         REALTYPE,dimension(E2DFIELD),target,intent(in) :: DU,DV
+      end subroutine uv_advect
+
+      subroutine uv_diffusion(An_method,U,V,D,DU,DV)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         integer,intent(in)                      :: An_method
+         REALTYPE,dimension(E2DFIELD),intent(in) :: U,V,D,DU,DV
+      end subroutine uv_diffusion
+
+      subroutine uv_diff_2dh(An_method,UEx,VEx,U,V,D,DU,DV,hsd_u,hsd_v)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         integer,intent(in)                                :: An_method
+         REALTYPE,dimension(E2DFIELD),intent(in),optional  :: U,V,D,DU,DV
+         REALTYPE,dimension(E2DFIELD),intent(inout)        :: UEx,VEx
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: hsd_u,hsd_v
+      end subroutine uv_diff_2dh
+
+! Temporary interface (should be read from module):
       subroutine get_2d_field(fn,varname,il,ih,jl,jh,f)
          character(len=*),intent(in)   :: fn,varname
          integer, intent(in)           :: il,ih,jl,jh
@@ -41,7 +67,10 @@
 !
 ! !PUBLIC DATA MEMBERS:
    logical                   :: have_boundaries
-   REALTYPE                  :: dtm,Am=-_ONE_
+   REALTYPE                  :: dtm
+   integer                   :: vel2d_adv_split=0
+   integer                   :: vel2d_adv_hor=1
+   REALTYPE                  :: Am=-_ONE_
 !  method for specifying horizontal numerical diffusion coefficient
 !     (0=const, 1=from named nc-file)
    integer                   :: An_method=0
@@ -105,7 +134,8 @@
    character(LEN = PATH_MAX) :: elev_file='elev.nc'
    namelist /m2d/ &
           elev_method,elev_const,elev_file,                    &
-          MM,Am,An_method,An_const,An_file,residual,           &
+          MM,vel2d_adv_split,vel2d_adv_hor,                    &
+          Am,An_method,An_const,An_file,residual,              &
           sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
@@ -132,6 +162,18 @@
 
 !  Allocates memory for the public data members - if not static
    call init_variables_2d(runtype)
+   call init_advection()
+
+   LEVEL2 'Advection of depth-averaged velocities'
+#ifdef NO_ADVECT
+   if (vel2d_adv_hor .ne. NOADV) then
+      LEVEL2 "reset vel2d_adv_hor= ",NOADV," because of"
+      LEVEL2 "obsolete NO_ADVECT macro. Note that this"
+      LEVEL2 "behaviour will be removed in the future."
+      vel2d_adv_hor = NOADV
+   end if
+#endif
+   call print_adv_settings(vel2d_adv_split,vel2d_adv_hor,_ZERO_)
 
    if (.not. hotstart) then
       select case (elev_method)
@@ -416,21 +458,12 @@
       call bottom_friction(runtype)
 #endif
    end if
-   UEx=_ZERO_ ; VEx=_ZERO_
-#ifdef NO_ADVECT
-   STDERR 'NO_ADVECT 2D'
-#else
-#ifndef UV_ADV_DIRECT
-   call uv_advect()
-   if (Am .gt. _ZERO_ .or. An_method .gt. 0) then
-      call uv_diffusion(Am,An_method,An,AnX) ! Has to be called after uv_advect.
-   end if
+
    call tic(TIM_INTEGR2D)
-   call mirror_bdy_2d(UEx,U_TAG)
-   call mirror_bdy_2d(VEx,V_TAG)
+   call uv_advect(U,V,DU,DV)
+   call uv_diffusion(An_method,U,V,D,DU,DV) ! Has to be called after uv_advect.
    call toc(TIM_INTEGR2D)
-#endif
-#endif
+
    call momentum(loop,tausx,tausy,airp)
    if (runtype .gt. 1) then
       call tic(TIM_INTEGR2D)

@@ -78,9 +78,6 @@
 
    allocate(rvv(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (rvv)'
-
-   allocate(PP(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (PP)'
 !kbk
 
    allocate(SlUx(E2DFIELD),stat=rc)
@@ -130,3 +127,4 @@
 
    allocate(ESbdy(imax),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (ESbdy)'
+

@@ -70,9 +70,6 @@
 #ifndef NO_BAROCLINIC
    use variables_3d, only: idpdx
 #endif
-#ifdef UV_TVD
-   use variables_3d, only: uadv,vadv,wadv,huadv,hvadv,hoadv,hnadv
-#endif
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG
    use meteo, only: tausx,airp
    use m3d, only: ip_fac

@@ -14,7 +14,10 @@
 #define DXCJP1 dxc(i,j+1)
 #define DXU dxu(i,j)
 #define DXV dxv(i,j)
+#define DXVIP1 dxv(i+1,j)
 #define DXVJM1 dxv(i,j-1)
+#define DXVJP1 dxv(i,j+1)
+#define DXVPM dxv(i+1,j-1)
 #define DXX dxx(i,j)
 #define DXXJM1 dxx(i,j-1)
 #define DYC dyc(i,j)
@@ -22,7 +25,10 @@
 #define DYCJP1 dyc(i,j+1)
 #define DYCJM1 dyc(i,j-1)
 #define DYU dyu(i,j)
+#define DYUIP1 dyu(i+1,j)
 #define DYUIM1 dyu(i-1,j)
+#define DYUJP1 dyu(i,j+1)
+#define DYUMP dyu(i-1,j+1)
 #define DYV dyv(i,j)
 #define DYX dyx(i,j)
 #define DYXIM1 dyx(i-1,j)
@@ -36,7 +42,10 @@
 #define DXCJP1 dx
 #define DXU dx
 #define DXV dx
+#define DXVIP1 dx
 #define DXVJM1 dx
+#define DXVJP1 dx
+#define DXVPM dx
 #define DXX dx
 #define DXXJM1 dx
 #define DYC dy
@@ -44,7 +53,10 @@
 #define DYCJP1 dy
 #define DYCJM1 dy
 #define DYU dy
+#define DYUIP1 dy
 #define DYUIM1 dy
+#define DYUJP1 dy
+#define DYUMP dy
 #define DYV dy
 #define DYX dy
 #define DYXIM1 dy
@@ -111,22 +123,24 @@
 #ifdef SINGLE
 #define REAL_SIZE 4
 #define REALTYPE real(kind=4)
-#define _ZERO_ 0.0
+#define _ZERO_  0.0
 #define _TENTH_ 0.1
 #define _QUART_ 0.25
-#define _HALF_ 0.5
-#define _ONE_  1.0
-#define _TWO_  2.0
+#define _HALF_  0.5
+#define _ONE_   1.0
+#define _TWO_   2.0
+#define _THREE_ 3.0
 #else
 #define REAL_SIZE 8
 #define REALTYPE real(kind=8)
 #define MPI_REALTYPE MPI_DOUBLE_PRECISION
-#define _ZERO_ 0.0d0
+#define _ZERO_  0.0d0
 #define _TENTH_ 0.1d0
 #define _QUART_ 0.25d0
-#define _HALF_ 0.5d0
-#define _ONE_  1.0d0
-#define _TWO_  2.0d0
+#define _HALF_  0.5d0
+#define _ONE_   1.0d0
+#define _TWO_   2.0d0
+#define _THREE_ 3.0d0
 #endif
 
 ! Rare use of long integers (e.g. timers):

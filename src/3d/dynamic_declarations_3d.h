@@ -1,9 +1,5 @@
 ! Remember to update this value if you add more 3D arrays.
-#ifdef UV_TVD
-  integer,parameter                    :: n3d_fields=36
-#else
   integer,parameter                    :: n3d_fields=29
-#endif
 
 ! Number of vertical layers in z,u,v columns
   integer, dimension(:,:), allocatable:: kmin,kumin,kvmin
@@ -25,10 +21,8 @@
 #ifdef STRUCTURE_FRICTION
   REALTYPE, dimension(:,:,:), allocatable   :: sf
 #endif
-  REALTYPE, dimension(:,:,:), allocatable, target :: hn
-  REALTYPE, dimension(:,:,:), allocatable   :: ho
-  REALTYPE, dimension(:,:,:), allocatable   :: huo,hun
-  REALTYPE, dimension(:,:,:), allocatable   :: hvo,hvn
+  REALTYPE, dimension(:,:,:), allocatable, target :: hn,hun,hvn
+  REALTYPE, dimension(:,:,:), allocatable   :: ho,huo,hvo
   REALTYPE, dimension(:,:,:), allocatable   :: hcc
   REALTYPE, dimension(:,:,:), allocatable   :: uuEx,vvEx
   REALTYPE, dimension(:,:,:), allocatable, target :: nuh
@@ -59,15 +53,11 @@
   REALTYPE, dimension(:,:), allocatable     :: spm_pool
 #endif
 
-#ifdef UV_TVD
-  REALTYPE, dimension(:,:,:), allocatable   :: uadv,vadv,wadv
-  REALTYPE, dimension(:,:,:), allocatable   :: huadv,hvadv,hoadv,hnadv
-#endif
-
 ! 2D fields in 3D domain
-  REALTYPE, dimension(:,:), allocatable     :: sseo,ssen
+  REALTYPE, dimension(:,:), allocatable     :: sseo,ssen,Dn
   REALTYPE, dimension(:,:), allocatable     :: ssuo,ssun
   REALTYPE, dimension(:,:), allocatable     :: ssvo,ssvn
+  REALTYPE,dimension(:,:),allocatable,target :: Dun,Dvn
 
 ! 3D friction in 3D domain
   REALTYPE, dimension(:,:), allocatable     :: rru,rrv

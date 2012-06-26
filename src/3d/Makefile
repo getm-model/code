@@ -7,14 +7,14 @@ include ../Rules.make
 INCS	= static_3d.h dynamic_declarations_3d.h dynamic_allocations_3d.h
 LIB	= $(LIBDIR)/lib3d${buildtype}.a
 
-MODSRC	= m3d.F90 variables_3d.F90 advection_3d.F90 eqstate.F90 \
-          temperature.F90 salinity.F90 spm.F90 bdy_3d.F90 rivers.F90
-
-LIBSRC	= start_macro.F90 hcc_check.F90 bdy_3d.F90 coordinates.F90 sigma_coordinates.F90 general_coordinates.F90 hybrid_coordinates.F90 check_h.F90 bottom_friction_3d.F90 internal_pressure.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 structure_friction_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 tke_eps_advect_3d.F90 stresses_3d.F90 ss_nn.F90 gotm.F90 slow_bottom_friction.F90 slow_advection.F90 slow_diffusion.F90 slow_terms.F90 stop_macro.F90
-
-TEXSRC	= m3d.F90 variables_3d.F90  coordinates.F90 sigma_coordinates.F90 general_coordinates.F90 adaptive_coordinates.F90 check_h.F90 hcc_check.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 structure_friction_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 tke_eps_advect_3d.F90 bottom_friction_3d.F90 internal_pressure.F90 ip_blumberg_mellor.F90 ip_blumberg_mellor_lin.F90 ip_z_interpol.F90  ip_song_wright.F90 ip_chu_fan.F90 ip_shchepetkin_mcwilliams.F90 ip_stelling_vankester.F90 numerical_mixing.F90 physical_mixing.F90 advection_3d.F90 upstream_adv.F90 upstream_2dh_adv.F90 u_split_adv.F90 v_split_adv.F90 w_split_adv.F90 w_split_it_adv.F90 fct_2dh_adv.F90 temperature.F90 salinity.F90 spm.F90 eqstate.F90 ss_nn.F90 stresses_3d.F90 gotm.F90 rivers.F90 bdy_3d.F90 slow_bottom_friction.F90 slow_advection.F90 slow_diffusion.F90 slow_terms.F90 start_macro.F90 stop_macro.F90
-
-SRC	= $(MODSRC) $(LIBSRC)
+TEXSRC	= m3d.F90 variables_3d.F90 \
+	  coordinates.F90 sigma_coordinates.F90 general_coordinates.F90 adaptive_coordinates.F90 check_h.F90 hcc_check.F90 \
+	  advection_3d.F90 adv_split_w.F90 \
+	  temperature.F90 salinity.F90 eqstate.F90 \
+	  internal_pressure.F90 ip_blumberg_mellor.F90 ip_blumberg_mellor_lin.F90 ip_z_interpol.F90  ip_song_wright.F90 ip_chu_fan.F90 ip_shchepetkin_mcwilliams.F90 ip_stelling_vankester.F90 \
+          bdy_3d.F90 rivers.F90 spm.F90 \
+	  start_macro.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 bottom_friction_3d.F90 slow_bottom_friction.F90 slow_terms.F90 stop_macro.F90 \
+	  ss_nn.F90 stresses_3d.F90 gotm.F90 tke_eps_advect_3d.F90 numerical_mixing.F90 physical_mixing.F90 structure_friction_3d.F90
 
 MOD = \
 $(LIB)(variables_3d.o)		\
@@ -77,16 +77,8 @@ endif
 OBJ += \
 $(LIB)(eddyviscosity.o)			\
 $(LIB)(slow_bottom_friction.o)		\
-$(LIB)(slow_advection.o)		\
-$(LIB)(slow_diffusion.o)		\
 $(LIB)(slow_terms.o)			\
-$(LIB)(upstream_adv.o)			\
-$(LIB)(u_split_adv.o)			\
-$(LIB)(v_split_adv.o)			\
-$(LIB)(w_split_adv.o)			\
-$(LIB)(w_split_it_adv.o)		\
-$(LIB)(upstream_2dh_adv.o)		\
-$(LIB)(fct_2dh_adv.o)			\
+$(LIB)(adv_split_w.o)		\
 $(LIB)(stresses_3d.o)			\
 $(LIB)(ss_nn.o)				\
 $(LIB)(gotm.o)				\

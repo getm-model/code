@@ -2,7 +2,8 @@
   integer,dimension(:,:),allocatable   :: break_mask
   integer,dimension(:,:),allocatable   :: break_stat
 #endif
-  REALTYPE,dimension(:,:),allocatable  :: D,DU,DV
+  REALTYPE,dimension(:,:),allocatable  :: D
+  REALTYPE,dimension(:,:),allocatable,target :: DU,DV
   REALTYPE,dimension(:,:),allocatable  :: z,zo
   REALTYPE,dimension(:,:),allocatable  :: U,V
   REALTYPE,dimension(:,:),allocatable  :: UEx,VEx
@@ -14,7 +15,6 @@
   REALTYPE,dimension(:,:),allocatable  :: res_dv,res_v
 !kbk
   REALTYPE,dimension(:,:),allocatable  :: ruu,rvv
-  REALTYPE,dimension(:,:),allocatable  :: PP
 !kbk
   REALTYPE,dimension(:,:),allocatable  :: SlUx,SlVx
   REALTYPE,dimension(:,:),allocatable  :: Slru,Slrv
@@ -26,4 +26,5 @@
   REALTYPE,dimension(:),  allocatable:: EWbdy,ENbdy,EEbdy,ESbdy
 
 ! Remember to update this value if you add more 2D arrays.
-  integer, parameter :: n2d_fields=34
+  integer, parameter :: n2d_fields=33
+

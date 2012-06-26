@@ -117,7 +117,6 @@
 ! !PUBLIC DATA MEMBERS:
    REALTYPE                            :: dt,cnpar=0.9
    REALTYPE                            :: avmback=_ZERO_,avhback=_ZERO_
-   character(len=64)                   :: adv_schemes(7)
    logical                             :: do_numerical_analyses=.false.
 !
 #ifdef STATIC
@@ -194,6 +193,7 @@
    cor_v = _ZERO_ ; epg_v = _ZERO_ ; ipg_v = _ZERO_
 #endif
    ssen = _ZERO_ ; ssun = _ZERO_ ; ssvn = _ZERO_
+   Dn = _ZERO_ ; Dun = _ZERO_ ; Dvn = _ZERO_
    rru= _ZERO_ ; rrv= _ZERO_
    uuEx= _ZERO_ ; vvEx= _ZERO_
    tke=1.e-10 ; eps=1.e-10
@@ -202,31 +202,12 @@
 #ifndef NO_BAROCLINIC
    rad=_ZERO_
    light=_ONE_
-#endif
-
-#ifdef UV_TVD
-   uadv = _ZERO_ ; vadv = _ZERO_ ; wadv = _ZERO_
-   hnadv = _ZERO_ ; hoadv = _ZERO_
-   huadv = _ZERO_ ; hvadv = _ZERO_
-#endif
-
-
-
-#ifndef NO_BAROCLINIC
    idpdx=_ZERO_
    idpdy=_ZERO_
    nummix3d_S = _ZERO_ ; nummix2d_S = _ZERO_
    nummix3d_T = _ZERO_ ; nummix2d_T = _ZERO_
    numdis3d   = _ZERO_ ; numdis2d   = _ZERO_
 #endif
-
-   adv_schemes(1) = "3D first-order upstream advection"
-   adv_schemes(2) = "upstream advection (first-order, monotone)"
-   adv_schemes(3) = "P2-PDM advection (third-order, non-monotone)"
-   adv_schemes(4) = "TVD-Superbee advection (second-order, monotone)"
-   adv_schemes(5) = "TVD-MUSCL advection (second-order, monotone)"
-   adv_schemes(6) = "TVD-P2-PDM advection (third-order, monotone)"
-   adv_schemes(7) = "2D-FCT advection"
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_variables_3d()'

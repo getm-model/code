@@ -2,138 +2,36 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: uv_diffusion_3d - hor.\ momentum diffusion
+! !ROUTINE: uv_diffusion_3d - lateral diffusion of 3D velocity
 ! \label{sec-uv-diffusion-3d}
 !
 ! !INTERFACE:
-   subroutine uv_diffusion_3d(Am)
+   subroutine uv_diffusion_3d()
 !
 ! !DESCRIPTION:
-!
-! Here, the horizontal diffusion terms are discretised in
-! momentum-conserving form
-! as well. For simplicity,
-! this shown here for these terms as they appear in equations
-! (\ref{uEqviCurvi}) and (\ref{vEqviCurvi}),
-! i.e.\ without multiplying them by $mn$.
-!
-! First horizontal diffusion term in (\ref{uEqviCurvi}):
-! \begin{equation}
-! \begin{array}{l}
-! \displaystyle
-! \partial_{\cal X}\left(\frac{2A_Mh_k}{n} m\partial_{\cal X}u_k\right)_{i,j,k}
-! \approx
-! \\ \\ \displaystyle \quad
-! 2A^M_{i+1,j,k} \Delta y_{i+1,j}^c h_{i+1,j,k}^c
-! \frac{u_{i+1,j,k}-u_{i,j,k}}{\Delta x_{i+1,j}^c}
-! -
-! 2A^M_{i,j,k} \Delta y_{i,j}^c h_{i,j,k}^c
-! \frac{u_{i,j,k}-u_{i-1,j,k}}{\Delta x_{i,j}^c}
-! \end{array}
-! \end {equation}
-!
-! Second horizontal diffusion term in (\ref{uEqviCurvi}):
-! \begin{equation}
-! \begin{array}{l}
-! \displaystyle
-! \partial_{\cal Y}\left(\frac{A_Mh_k}{m}
-! (n\partial_{\cal Y}u_k+m\partial_{\cal X}v_k)\right)_{i,j,k}
-! \approx
-! \\ \\ \displaystyle \quad
-! \,\,\,\,\,\frac14\left(
-! A^M_{i+1,j+1,k}+A^M_{i,j+1,k}+A^M_{i,j,k}+A^M_{i+1,j,k}\right)
-! h^+_{i,j,k}\Delta x^+_{i,j}
-! \\ \\ \displaystyle \quad
-! \,\,\,\,\,\times\bigg(
-! \frac{u_{i,j+1,k}-u_{i,j,k}}{\Delta y^+_{i,j}}
-! -\frac{v_{i+1,j,k}-v_{i,j,k}}{\Delta x^+_{i,j}}
-! \bigg)
-! \\ \\ \displaystyle \quad
-! -\frac14\left(
-! A^M_{i+1,j,k}+A^M_{i,j,k}+A^M_{i,j-1,k}+A^M_{i+1,j-1,k}\right)
-! h^+_{i,j-1,k}\Delta x^+_{i,j-1}
-! \\ \\ \displaystyle \quad
-! \,\,\,\,\,\times\bigg(
-! \frac{u_{i,j,k}-u_{i,j-1,k}}{\Delta y^+_{i,j-1}}
-! -\frac{v_{i+1,j-1,k}-v_{i,j-1,k}}{\Delta x^+_{i,j-1}}
-! \bigg)
-! \end{array}
-! \end {equation}
-!
-! First horizontal diffusion term in (\ref{vEqviCurvi}):
-! \begin{equation}
-! \begin{array}{l}
-! \displaystyle
-! \partial_{\cal Y}\left(\frac{2A_Mh_k}{m} n\partial_{\cal Y}v_k\right)_{i,j,k}
-! \approx
-! \\ \\ \displaystyle \quad
-! 2A^M_{i,j+1,k} \Delta x_{i,j+1}^c h_{i,j+1,k}^c
-! \frac{v_{i,j+1,k}-v_{i,j,k}}{\Delta y_{i,j+1}^c}
-! -
-! 2A^M_{i,j,k} \Delta x_{i,j}^c h_{i,j,k}^c
-! \frac{v_{i,j,k}-v_{i,j-1,k}}{\Delta y_{i,j}^c}
-! \end{array}
-! \end {equation}
-!
-! Second horizontal diffusion term in (\ref{vEqviCurvi}):
-! \begin{equation}
-! \begin{array}{l}
-! \displaystyle
-! \partial_{\cal X}\left(\frac{A_Mh_k}{n}
-! (n\partial_{\cal Y}u_k+m\partial_{\cal X}v_k)\right)_{i,j,k}
-! \approx
-! \\ \\ \displaystyle \quad
-! \,\,\,\,\,\frac14\left(
-! A^M_{i+1,j+1,k}+A^M_{i,j+1,k}+A^M_{i,j,k}+A^M_{i+1,j,k}\right)
-! h^+_{i,j,k}\Delta x^+_{i,j}
-! \\ \\ \displaystyle \quad
-! \,\,\,\,\,\times\bigg(
-! \frac{u_{i,j+1,k}-u_{i,j,k}}{\Delta y^+_{i,j}}
-! -\frac{v_{i+1,j,k}-v_{i,j,k}}{\Delta x^+_{i,j}}
-! \bigg)
-! \\ \\ \displaystyle \quad
-! -\frac14\left(
-! A^M_{i,j+1,k}+A^M_{i-1,j+1,k}+A^M_{i-1,j,k}+A^M_{i,j,k}\right)
-! h^+_{i-1,j,k}\Delta x^+_{i-1,j}
-! \\ \\ \displaystyle \quad
-! \,\,\,\,\,\times\bigg(
-! \frac{u_{i-1,j+1,k}-u_{i-1,j,k}}{\Delta y^+_{i-1,j}}
-! -\frac{v_{i,j,k}-v_{i-1,j,k}}{\Delta x^+_{i-1,j}}
-! \bigg)
-! \end{array}
-! \end {equation}
-!
-! It is assumed here that the horizontal momentum diffusivities
-! $A^M_{i,j,k}$ are located
-! on the T-points.
-!
-! For the case of a slice model simulation (compiler option {\tt SLICE\_MODEL}
-! activated) the diffusive fluxes in $y$-direction are set to zero.
+! This wrapper calls routine {\tt uv\_diff\_2dh} (see section
+! \ref{sec-uv-diff-2dh} on page \pageref{sec-uv-diff-2dh}) for each
+! layer.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,ax
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dyc,arud1,dxx,dyx,arvd1,dxc
-#else
-   use domain, only: dx,dy,ard1
-#endif
-   use variables_3d, only: kumin,kvmin,uu,vv,ww,hn,hun,hvn,uuEx,vvEx
-   use getm_timers, only: tic, toc, TIM_UVDIFF3D
+   use domain, only: imin,imax,jmin,jmax,kmax
+   use m2d, only: uv_diff_2dh
+   use m2d, only: Am
+   use variables_3d, only: uu,vv,uuEx,vvEx,hn,hun,hvn
 #ifdef _MOMENTUM_TERMS_
+   use domain, only: dry_u,dry_v
    use variables_3d, only: hsd_u,hsd_v
 #endif
+   use getm_timers, only: tic, toc, TIM_UVDIFF3D
 !$ use omp_lib
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-  REALTYPE, intent(in) :: Am
 
 ! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
+!  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k,ii,jj,kk
-   REALTYPE                  :: PP(imin-1:imax+1,jmin-1:jmax+1,1:kmax)
+   integer :: i,j,k
+
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -144,155 +42,36 @@
 #endif
    call tic(TIM_UVDIFF3D)
 
+   if (Am .gt. _ZERO_) then
+
+      do k=1,kmax
+         call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                          D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k)            &
+#ifdef _MOMENTUM_TERMS_
+                          ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)             &
+#endif
+                         )
+      end do
+
+#ifdef _MOMENTUM_TERMS_
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP    PRIVATE(i,j,k,ii,jj,kk)
+!$OMP          PRIVATE(i,j,k)
 
-! Central for dx(2*Am*dx(uu/hun))
-   do k=1,kmax
+      do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin,jmax
-         do i=imin,imax+1          ! PP defined on T-points
-            PP(i,j,k)=_ZERO_
-            if (az(i,j) .eq. 1) then
-               if (k .ge. kumin(i,j)) then
-                  PP(i,j,k)=_TWO_*Am*DYC*hn(i,j,k)               &
-                      *(uu(i,j,k)/hun(i,j,k)-uu(i-1,j,k)/hun(i-1,j,k))/DXC
-               end if
-            end if
+         do j=jmin,jmax
+            do i=imin,imax
+               hsd_u(i,j,k) = dry_u(i,j) * hsd_u(i,j,k)
+               hsd_v(i,j,k) = dry_v(i,j) * hsd_v(i,j,k)
+            end do
          end do
-      end do
 !$OMP END DO NOWAIT
-   end do
-!$OMP BARRIER
-   do k=1,kmax
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin,jmax         ! uuEx defined on U-points
-         do i=imin,imax
-            if (au(i,j).eq.1 .or. au(i,j).eq.2) then
-               if (k .ge. kumin(i,j)) then
-                  uuEx(i,j,k)=uuEx(i,j,k)-(PP(i+1,j,k)-PP(i,j,k))*ARUD1
-#ifdef _MOMENTUM_TERMS_
-                  hsd_u(i,j,k)=-(PP(i+1,j,k)-PP(i,j,k))*ARUD1
-#endif
-               end if
-            end if
-         end do
       end do
-!$OMP END DO NOWAIT
-   end do
-!$OMP BARRIER
 
-#ifndef SLICE_MODEL
-! Central for dy(Am*(dy(uu/hun)+dx(vv/hvn)))
-   do k=1,kmax
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-1,jmax          ! PP defined on X-points
-         do i=imin,imax
-            PP(i,j,k)=_ZERO_
-            if (ax(i,j) .ge. 1) then
-               if (k .ge. kumin(i,j)) then
-                  PP(i,j,k)=Am*_HALF_*(hun(i,j,k)+hun(i,j+1,k))*DXX  &
-                      *((uu(i,j+1,k)/hun(i,j+1,k)-uu(i,j,k)/hun(i,j,k))/DYX &
-                       +(vv(i+1,j,k)/hvn(i+1,j,k)-vv(i,j,k)/hvn(i,j,k))/DXX )
-               end if
-            end if
-         end do
-      end do
-!$OMP END DO NOWAIT
-   end do
-!$OMP BARRIER
-   do k=1,kmax
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin,jmax
-         do i=imin,imax
-            if (au(i,j).eq.1 .or. au(i,j).eq.2) then
-               if (k .ge. kumin(i,j)) then
-                  uuEx(i,j,k)=uuEx(i,j,k)-(PP(i,j,k)-PP(i,j-1,k))*ARUD1
-#ifdef _MOMENTUM_TERMS_
-                  hsd_u(i,j,k)=hsd_u(i,j,k)-(PP(i,j,k)-PP(i,j-1,k))*ARUD1
-#endif
-               end if
-            end if
-         end do
-      end do
-!$OMP END DO NOWAIT
-   end do
-!$OMP BARRIER
-#endif
-
-! Central for dx(Am*(dy(uu/hun)+dx(vv/hvn)))
-   do k=1,kmax
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin,jmax          ! PP defined on X-points
-         do i=imin-1,imax
-            PP(i,j,k)=_ZERO_
-            if (ax(i,j) .ge. 1) then
-               if (k .ge. kumin(i,j)) then
-                  PP(i,j,k)=Am*_HALF_*(hvn(i+1,j,k)+hvn(i,j,k))*DYX  &
-                      *((uu(i,j+1,k)/hun(i,j+1,k)-uu(i,j,k)/hun(i,j,k))/DYX &
-                       +(vv(i+1,j,k)/hvn(i+1,j,k)-vv(i,j,k)/hvn(i,j,k))/DXX )
-               end if
-            end if
-         end do
-      end do
-!$OMP END DO NOWAIT
-   end do
-!$OMP BARRIER
-   do k=1,kmax
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin,jmax          ! vvEx defined on V-points
-         do i=imin,imax
-            if (av(i,j).eq.1 .or. av(i,j).eq.2) then
-               if (k .ge. kvmin(i,j)) then
-                  vvEx(i,j,k)=vvEx(i,j,k)-(PP(i,j,k)-PP(i-1,j,k))*ARVD1
-#ifdef _MOMENTUM_TERMS_
-                  hsd_v(i,j,k)=-(PP(i,j,k)-PP(i-1,j,k))*ARVD1
-#endif
-               end if
-            end if
-         end do
-      end do
-!$OMP END DO NOWAIT
-   end do
-!$OMP BARRIER
-
-#ifndef SLICE_MODEL
-! Central for dy(2*Am*dy(vv^2/hvn))
-   do k=1,kmax
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin,jmax+1
-         do i=imin,imax          ! PP defined on T-points
-            PP(i,j,k)=_ZERO_
-            if (az(i,j) .eq. 1) then
-               if (k .ge. kvmin(i,j)) then
-                  PP(i,j,k)=_TWO_*Am*DXC*hn(i,j,k)               &
-                      *(vv(i,j,k)/hvn(i,j,k)-vv(i,j-1,k)/hvn(i,j-1,k))/DYC
-               end if
-            end if
-         end do
-      end do
-!$OMP END DO NOWAIT
-   end do
-!$OMP BARRIER
-
-   do k=1,kmax
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin,jmax          ! vvEx defined on V-points
-         do i=imin,imax
-            if (av(i,j).eq.1 .or. av(i,j).eq.2) then
-               if (k .ge. kvmin(i,j)) then
-                  vvEx(i,j,k)=(vvEx(i,j,k)-(PP(i,j+1,k)-PP(i,j,k))*ARVD1)
-#ifdef _MOMENTUM_TERMS_
-                  hsd_v(i,j,k)=hsd_v(i,j,k)-(PP(i,j+1,k)-PP(i,j,k))*ARVD1
-#endif
-               end if
-            end if
-         end do
-      end do
-!$OMP END DO NOWAIT
-   end do
-#endif
 !$OMP END PARALLEL
+#endif
+
+   end if
 
    call toc(TIM_UVDIFF3D)
 #ifdef DEBUG

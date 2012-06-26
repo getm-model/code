@@ -12,21 +12,15 @@
 ! !USES:
    use parameters, only: g,rho_0
    use domain, only: imin,imax,jmin,jmax,kmax
-   use domain, only: az,au,av
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxu,dxv,dyu,dyv,arcd1
-#else
-   use domain, only: dx,dy,ard1
-#endif
+   use domain, only: az
    use time, only: secondsofday
    use variables_2d, only: D
    use variables_3d, only: taub
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
    use variables_3d, only: nuh,T,S,rad,rho,light
    use variables_3d, only: cc3d
-   use advection_3d, only: do_advection_3d
    use meteo, only: swr,u10,v10
-   use halo_zones, only: update_3d_halo,wait_halo,D_TAG
+   use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
    use bio, only: init_bio, init_var_bio, set_env_bio, do_bio
    use bio, only: bio_calc
    use bio_var, only: numc
@@ -38,21 +32,10 @@
    integer, public           :: bio_init_method=0
 !
 ! !PRIVATE DATA MEMBERS:
-   integer         :: bio_hor_adv=1
-   integer         :: bio_ver_adv=1
-   integer         :: bio_adv_split=1
-   REALTYPE        :: bio_AH=-1.
-#ifdef STATIC
-   REALTYPE        :: delxu(I2DFIELD),delxv(I2DFIELD)
-   REALTYPE        :: delyu(I2DFIELD),delyv(I2DFIELD)
-   REALTYPE        :: area_inv(I2DFIELD)
-   REALTYPE        :: ff(I3DFIELD)
-#else
-   REALTYPE, dimension(:,:), allocatable :: delxu,delxv
-   REALTYPE, dimension(:,:), allocatable :: delyu,delyv
-   REALTYPE, dimension(:,:), allocatable :: area_inv
-   REALTYPE, dimension(:,:,:), allocatable :: ff
-#endif
+   integer  :: bio_adv_split=0
+   integer  :: bio_adv_hor=1
+   integer  :: bio_adv_ver=1
+   REALTYPE :: bio_AH=-_ONE_
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -69,11 +52,15 @@
 !
 ! !INTERFACE:
    subroutine init_getm_bio(nml_file)
-   IMPLICIT NONE
 !
 ! !DESCRIPTION:
 !  Reads the namelist and makes calls to the init functions of the
 !  various model components.
+!
+! !USES:
+   use advection, only: J7
+   use advection_3d, only: print_adv_settings_3d
+   IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)   :: nml_file
@@ -90,7 +77,7 @@
 
    namelist /getm_bio_nml/ bio_init_method, &
                            bio_init_file,bio_init_format,bio_field_no, &
-                           bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH
+                           bio_adv_split,bio_adv_hor,bio_adv_ver,bio_AH
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -110,11 +97,9 @@
       read(NAMLST2,NML=getm_bio_nml)
       close(NAMLST2)
 
-      LEVEL2 "settings related to 3D biological calculations"
-      LEVEL3 'bio_hor_adv=   ',bio_hor_adv
-      LEVEL3 'bio_ver_adv=   ',bio_ver_adv
-      LEVEL3 'bio_adv_split= ',bio_adv_split
-      LEVEL3 'bio_AH=        ',bio_AH
+      LEVEL2 'Advection of biological fields'
+      if (bio_adv_hor .eq. J7) stop 'init_bio: J7 not implemented yet'
+      call print_adv_settings_3d(bio_adv_split,bio_adv_hor,bio_adv_ver,bio_AH)
 
       select case (bio_init_method)
          case(0)
@@ -146,38 +131,6 @@
          call wait_halo(D_TAG)
       end do
 
-#ifndef STATIC
-      allocate(delxu(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_bio: Error allocating memory (delxu)'
-
-      allocate(delxv(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_bio: Error allocating memory (delxv)'
-
-      allocate(delyu(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_bio: Error allocating memory (delyu)'
-
-      allocate(delyv(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_bio: Error allocating memory (delyv)'
-
-      allocate(area_inv(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_bio: Error allocating memory (area_inv)'
-
-      allocate(ff(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_bio: Error allocating memory (ff)'
-#endif
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-      delxu=dxu
-      delxv=dxv
-      delyu=dyu
-      delyv=dyv
-      area_inv=arcd1
-#else
-      delxu=dx
-      delxv=dx
-      delyu=dy
-      delyv=dy
-      area_inv=ard1
-#endif
    end if
 
    return
@@ -195,7 +148,9 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use advection_3d, only: do_advection_3d
    use getm_timers, only: tic, toc, TIM_GETM_BIO, TIM_ADVECTBIO
+
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -207,6 +162,7 @@
 ! !LOCAL VARIABLES:
    integer         :: n
    integer         :: i,j,k
+   REALTYPE,dimension(I3DFIELD) :: fadv3d
    REALTYPE        :: h1d(0:kmax),T1d(0:kmax),S1d(0:kmax),rho1d(0:kmax)
    REALTYPE        :: nuh1d(0:kmax),rad1d(0:kmax),light1d(0:kmax)
    REALTYPE        :: bioshade1d(0:kmax)
@@ -267,22 +223,19 @@
    do n=1,numc
 
 #if 1
-      ff = cc3d(n,:,:,:)
-      call update_3d_halo(ff,ff,az, &
+      fadv3d = cc3d(n,:,:,:)
+      call update_3d_halo(fadv3d,fadv3d,az, &
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
-      call do_advection_3d(dt,ff,uu,vv,ww,hun,hvn,ho,hn, &
-              delxu,delxv,delyu,delyv,area_inv,az,au,av, &
-              bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH)
-      cc3d(n,:,:,:) = ff
+      call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                   &
+                           bio_adv_split,bio_adv_hor,bio_adv_ver,bio_AH,H_TAG)
+      cc3d(n,:,:,:) = fadv3d
 #else
       call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az, &
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
-
-      call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn, &
-              delxu,delxv,delyu,delyv,area_inv,az,au,av, &
-              bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH)
+      call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn,            &
+                           bio_adv_split,bio_adv_hor,bio_adv_ver,bio_AH,H_TAG)
 #endif
    end do
 
