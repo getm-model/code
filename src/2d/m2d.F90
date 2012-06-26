@@ -120,6 +120,13 @@
 
    dtm = timestep
 
+#if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
+!  STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'
+!  call cfl_check()
+#else
+   call cfl_check()
+#endif
+
 !  Read 2D-model specific things from the namelist.
    read(NAMLST,m2d)
 
@@ -147,14 +154,6 @@
       zo = z
       call depth_update()
    end if
-
-#if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
-!   STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'
-!   call cfl_check()
-#else
-!  KK-TODO: why is cfl_check not in terms of D?
-   call cfl_check()
-#endif
 
    if (Am .lt. _ZERO_) then
       LEVEL2 'Am < 0 --> horizontal momentum diffusion not included'
