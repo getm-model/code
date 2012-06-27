@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: momentum - 2D-momentum for all interior points.
+! !ROUTINE: momentum - 2D-momentum for all interior points.
 !
 ! !INTERFACE:
    subroutine momentum(n,tausx,tausy,airp)

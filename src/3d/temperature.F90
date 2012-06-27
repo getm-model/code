@@ -34,8 +34,8 @@
    character(len=32)         :: temp_name='temp'
    REALTYPE                  :: temp_const=20.
    integer                   :: temp_adv_split=0
-   integer                   :: temp_hor_adv=1
-   integer                   :: temp_ver_adv=1
+   integer                   :: temp_adv_hor=1
+   integer                   :: temp_adv_ver=1
    REALTYPE                  :: temp_AH=-_ONE_
    integer                   :: attenuation_method=0,jerlov=1
    character(len=PATH_MAX)   :: attenuation_file="attenuation.nc"
@@ -86,7 +86,7 @@
    namelist /temp/ &
             temp_method,temp_const,temp_file,                 &
             temp_format,temp_name,temp_field_no,              &
-            temp_adv_split,temp_hor_adv,temp_ver_adv,temp_AH, &
+            temp_adv_split,temp_adv_hor,temp_adv_ver,temp_AH, &
             attenuation_method,attenuation_file,jerlov,       &
             A_const,g1_const,g2_const,                        &
             swr_bot_refl_frac, swr_min_bot_frac,              &
@@ -107,8 +107,8 @@
 
 !  Sanity checks for advection specifications
    LEVEL3 'Advection of temperature'
-   if (temp_hor_adv .eq. J7) stop 'init_temperature: J7 not implemented yet'
-   call print_adv_settings_3d(temp_adv_split,temp_hor_adv,temp_ver_adv,temp_AH)
+   if (temp_adv_hor .eq. J7) stop 'init_temperature: J7 not implemented yet'
+   call print_adv_settings_3d(temp_adv_split,temp_adv_hor,temp_adv_ver,temp_AH)
 
    select case (attenuation_method)
       case (0)
@@ -352,13 +352,13 @@ temp_field_no=1
 !    so the overhead of the contruct would be rather large.
       T2 = T**2
       call do_advection_3d(dt,T2,uu,vv,ww,hun,hvn,ho,hn,                           &
-                           temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH,H_TAG)
+                           temp_adv_split,temp_adv_hor,temp_adv_ver,temp_AH,H_TAG)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
    end if
 
    call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,                            &
-                        temp_hor_adv,temp_ver_adv,temp_adv_split,temp_AH,H_TAG)
+                        temp_adv_split,temp_adv_hor,temp_adv_ver,temp_AH,H_TAG)
 
    if (do_numerical_analyses) then
       call toc(TIM_TEMP)

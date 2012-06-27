@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: update_2d_bdy - update 2D boundaries every time step.
+! !ROUTINE: update_2d_bdy - update 2D boundaries every time step.
 !
 ! !INTERFACE:
    subroutine update_2d_bdy(loop,bdyramp)
