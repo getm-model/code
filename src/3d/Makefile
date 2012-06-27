@@ -76,7 +76,7 @@ endif
 OBJ += \
 $(LIB)(eddyviscosity.o)			\
 $(LIB)(slow_terms.o)			\
-$(LIB)(adv_split_w.o)		\
+$(LIB)(adv_split_w.o)			\
 $(LIB)(stresses_3d.o)			\
 $(LIB)(ss_nn.o)				\
 $(LIB)(gotm.o)				\
