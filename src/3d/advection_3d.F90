@@ -41,9 +41,9 @@
    integer,public                        :: adv_ver_iterations=1
    integer,public,parameter              :: HVSPLIT=3,W_TAG=33
    character(len=64),public,parameter    :: adv_splits_3d(0:3) = &
-           (/"no split: one 3D uvw step                     ",   &
-             "full step splitting: u + v + w                ",   &
-             "half step splitting: u/2 + v/2 + w + v/2 + u/2",   &
+            (/"no split: one 3D uvw step                     ",  &
+              "full step splitting: u + v + w                ",  &
+              "half step splitting: u/2 + v/2 + w + v/2 + u/2",  &
               "hor/ver splitting: uv + w                     "/)
 !
 ! !LOCAL VARIABLES:
