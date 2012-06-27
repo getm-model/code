@@ -2,18 +2,21 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: uv_diffusion_3d - hor.\ momentum diffusion
+! !ROUTINE: uv_diffusion_3d - lateral diffusion of 3D velocity
 ! \label{sec-uv-diffusion-3d}
 !
 ! !INTERFACE:
    subroutine uv_diffusion_3d()
 !
 ! !DESCRIPTION:
-!  This wrapper calls uv_diffusion for each layer.
+! This wrapper calls routine {\tt uv\_diff\_2dh} (see section
+! \ref{sec-uv-diff-2dh} on page \pageref{sec-uv-diff-2dh}) for each
+! layer.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
-   use m2d_general, only: uv_diffusion
+   use m2d, only: uv_diff_2dh
+   use m2d, only: Am
    use variables_3d, only: uu,vv,uuEx,vvEx,hn,hun,hvn
 #ifdef _MOMENTUM_TERMS_
    use domain, only: dry_u,dry_v
@@ -39,32 +42,36 @@
 #endif
    call tic(TIM_UVDIFF3D)
 
-   do k=1,kmax
-      call uv_diffusion(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
-                        D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k)            &
+   if (Am .gt. _ZERO_) then
+
+      do k=1,kmax
+         call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                          D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k)            &
 #ifdef _MOMENTUM_TERMS_
-                        ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)             &
+                          ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)             &
 #endif
-                       )
-   end do
+                         )
+      end do
 
 #ifdef _MOMENTUM_TERMS_
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          PRIVATE(i,j,k)
 
-   do k=1,kmax
+      do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin,jmax
-         do i=imin,imax
-            hsd_u(i,j,k) = dry_u(i,j) * hsd_u(i,j,k)
-            hsd_v(i,j,k) = dry_v(i,j) * hsd_v(i,j,k)
+         do j=jmin,jmax
+            do i=imin,imax
+               hsd_u(i,j,k) = dry_u(i,j) * hsd_u(i,j,k)
+               hsd_v(i,j,k) = dry_v(i,j) * hsd_v(i,j,k)
+            end do
          end do
-      end do
 !$OMP END DO NOWAIT
-   end do
+      end do
 
 !$OMP END PARALLEL
 #endif
+
+   end if
 
    call toc(TIM_UVDIFF3D)
 #ifdef DEBUG
