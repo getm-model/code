@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: ip_song_wright
+! !IROUTINE: ip_song_wright
 !
 ! !INTERFACE:
    subroutine ip_song_wright()

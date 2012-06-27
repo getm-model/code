@@ -33,8 +33,8 @@
 !
 ! !PRIVATE DATA MEMBERS:
    integer  :: bio_adv_split=0
-   integer  :: bio_hor_adv=1
-   integer  :: bio_ver_adv=1
+   integer  :: bio_adv_hor=1
+   integer  :: bio_adv_ver=1
    REALTYPE :: bio_AH=-_ONE_
 !
 ! !REVISION HISTORY:
@@ -77,7 +77,7 @@
 
    namelist /getm_bio_nml/ bio_init_method, &
                            bio_init_file,bio_init_format,bio_field_no, &
-                           bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH
+                           bio_adv_split,bio_adv_hor,bio_adv_ver,bio_AH
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -98,8 +98,8 @@
       close(NAMLST2)
 
       LEVEL2 'Advection of biological fields'
-      if (bio_hor_adv .eq. J7) stop 'init_bio: J7 not implemented yet'
-      call print_adv_settings_3d(bio_adv_split,bio_hor_adv,bio_ver_adv,bio_AH)
+      if (bio_adv_hor .eq. J7) stop 'init_bio: J7 not implemented yet'
+      call print_adv_settings_3d(bio_adv_split,bio_adv_hor,bio_adv_ver,bio_AH)
 
       select case (bio_init_method)
          case(0)
@@ -228,14 +228,14 @@
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
       call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                   &
-                           bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH,H_TAG)
+                           bio_adv_split,bio_adv_hor,bio_adv_ver,bio_AH,H_TAG)
       cc3d(n,:,:,:) = fadv3d
 #else
       call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az, &
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
       call do_advection_3d(dt,cc3d(n,:,:,:),uu,vv,ww,hun,hvn,ho,hn,            &
-                           bio_hor_adv,bio_ver_adv,bio_adv_split,bio_AH,H_TAG)
+                           bio_adv_split,bio_adv_hor,bio_adv_ver,bio_AH,H_TAG)
 #endif
    end do
 

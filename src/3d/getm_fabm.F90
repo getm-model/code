@@ -34,8 +34,8 @@
 !
 ! !PRIVATE DATA MEMBERS:
    integer         :: fabm_adv_split=0
-   integer         :: fabm_hor_adv=1
-   integer         :: fabm_ver_adv=1
+   integer         :: fabm_adv_hor=1
+   integer         :: fabm_adv_ver=1
    REALTYPE        :: fabm_AH=-_ONE_
    REALTYPE, allocatable, dimension(:,:,:,:) :: cc_pel,cc_diag
    REALTYPE, allocatable, dimension(:,:,:)   :: cc_ben,cc_diag_hz
@@ -79,7 +79,7 @@
 
    namelist /getm_fabm_nml/ fabm_init_method, &
                            fabm_init_file,fabm_init_format,fabm_field_no, &
-                           fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH
+                           fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -126,8 +126,8 @@
 
 !     Show settings specific to GETM-FABM interaction.
       LEVEL2 'Advection of FABM variables'
-      if (fabm_hor_adv .eq. J7) stop 'init_getm_fabm: J7 not implemented yet'
-      call print_adv_settings_3d(fabm_adv_split,fabm_hor_adv,fabm_ver_adv,fabm_AH)
+      if (fabm_adv_hor .eq. J7) stop 'init_getm_fabm: J7 not implemented yet'
+      call print_adv_settings_3d(fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH)
 
 !     Initialize biogeochemical state variables.
       select case (fabm_init_method)
@@ -293,7 +293,7 @@
       call wait_halo(D_TAG)
 
       call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn,                       &
-                           fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH,H_TAG)
+                           fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH,H_TAG)
 
    end do
    call toc(TIM_ADVECTFABM)
