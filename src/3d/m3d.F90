@@ -491,16 +491,14 @@
    end if
    call coordinates(.false.)
 #endif
-   if (kmax .gt. 1) then
-      call ww_momentum_3d()
-   end if
 
    if (kmax .gt. 1) then
+
+      call ww_momentum_3d()
+
       call uv_advect_3d()
       call uv_diffusion_3d()  ! Must be called after uv_advect_3d
-   end if
 
-   if (kmax .gt. 1) then
 #ifndef NO_BOTTFRIC
       call stresses_3d()
 #endif
@@ -511,7 +509,9 @@
       call gotm()
       if (advect_turbulence) call tke_eps_advect_3d()
 #endif
+
    end if
+
 #ifndef NO_BAROCLINIC
    if(runtype .eq. 4) then        ! prognostic T and S
       if (calc_temp) call do_temperature(n)
