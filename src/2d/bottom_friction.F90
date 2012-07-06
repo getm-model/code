@@ -138,8 +138,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
 #endif
       do i=imin-HALO,imax+HALO-1
-!        Note (KK): we have to include au=3 to have zub for gotm in convex open bdy cells as well
-         if ( au(i,j) .ge. 1 ) then
+         if (au(i,j).eq.1 .or. au(i,j).eq.2) then
             vel = sqrt( u_vel(i,j)**2 + (_HALF_*(work2d(i,j)+work2d(i+1,j)))**2 )
             z0d = zub0(i,j)
 !           Note (KK): note shifting of log profile so that U(-H)=0
@@ -191,7 +190,7 @@
    do j=jmin-HALO,jmax+HALO-1
 #endif
       do i=imin-HALO+1,imax+HALO-1
-         if ( av(i,j) .ge. 1 ) then
+         if (av(i,j).eq.1 .or. av(i,j).eq.2) then
             vel = sqrt( (_HALF_*(work2d(i,j)+work2d(i,j+1)))**2 + v_vel(i,j)**2 )
             z0d = zvb0(i,j)
 !           Note (KK): note shifting of log profile so that V(-H)=0
