@@ -85,6 +85,10 @@
 !$OMP          FIRSTPRIVATE(j)                                         &
 !$OMP          PRIVATE(i,vel,cd,it,z0d)
 
+
+!  KK-TODO: the present implementation sets normal velocity outside open
+!           bdy cell to zero (we need proper mirror)
+
 !  zonal velocity
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
