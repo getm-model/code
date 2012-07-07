@@ -13,7 +13,7 @@
 ! !USES:
    use domain, only: kmax,vert_cord,maxdepth
    use variables_3d, only: uu,vv,ho,hn,huo,hun,hvo,hvn
-   use m3d, only: bdy3d,vert_cord,cord_relax,vel_hor_adv,vel_ver_adv,vel_adv_split,nonhyd_method
+   use m3d, only: bdy3d,vert_cord,cord_relax,vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,nonhyd_method
    use nonhydrostatic, only: do_nonhydrostatic
    use nonhydrostatic, only: nonhyd_iters
    use variables_3d, only: uu_0,vv_0,ho_0,hn_0,huo_0,hun_0,hvo_0,hvn_0
@@ -76,7 +76,7 @@
          call ww_momentum_3d()
       end if
       if (nonhyd_method .ne. 0) then
-         call do_nonhydrostatic(nonhyd_loop,vel_hor_adv,vel_ver_adv,vel_adv_split)
+         call do_nonhydrostatic(nonhyd_loop,vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver)
       end if
       if (nonhyd_loop .lt. nonhyd_iters) then
          call do_internal_pressure()

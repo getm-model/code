@@ -244,7 +244,7 @@
 ! !ROUTINE: do_nonhydrostatic
 !
 ! !INTERFACE:
-   subroutine do_nonhydrostatic(nonhyd_loop,vel_hor_adv,vel_ver_adv,vel_adv_split)
+   subroutine do_nonhydrostatic(nonhyd_loop,vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver)
 !
 ! !DESCRIPTION:
 !
@@ -254,7 +254,7 @@
 
 !
 ! !INPUT PARAMETERS:
-   integer,intent(in)           :: nonhyd_loop,vel_hor_adv,vel_ver_adv,vel_adv_split
+   integer,intent(in)           :: nonhyd_loop,vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(I3DFIELD) :: wc,bnh,fadv3d
@@ -293,8 +293,8 @@
 !  wc that will be advected (wc still needed!!!)
    fadv3d = wc
 
-   call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                   &
-                        vel_hor_adv,vel_ver_adv,vel_adv_split,_ZERO_,H_TAG, &
+   call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                         &
+                        vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,H_TAG, &
                         advres=bnh)
 
    call update_3d_halo(bnh,bnh,az,imin,jmin,imax,jmax,kmax,H_TAG)
