@@ -24,7 +24,7 @@
 !
 ! !USES:
    use exceptions
-   use domain, only: openbdy,maxdepth,vert_cord,az,bottfric_method,H,HU,HV
+   use domain, only: openbdy,maxdepth,vert_cord,az
    use les, only: do_les_3d
    use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
    use m2d, only: bottom_friction
@@ -451,9 +451,7 @@
 
       call coordinates(hotstart)
 
-      if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
-         call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
-      end if
+      call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
 
    end if
 
@@ -633,12 +631,10 @@
       call uv_advect_3d()
       call uv_diffusion_3d()  ! Must be called after uv_advect_3d
 
-      if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
-         call tic(TIM_INTEGR3D)
-         call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv,zub,zvb)
-         call toc(TIM_INTEGR3D)
-         call stresses_3d()
-      end if
+      call tic(TIM_INTEGR3D)
+      call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv,zub,zvb)
+      call toc(TIM_INTEGR3D)
+      call stresses_3d()
 
 #ifndef CONSTANT_VISCOSITY
 #ifndef PARABOLIC_VISCOSITY
