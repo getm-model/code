@@ -2,38 +2,22 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  adv_v_split - 1D y-advection \label{sec-v-split-adv}
+! !IROUTINE:  adv_split_v - meridional advection of 2D quantities \label{sec-v-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_v_split(dt,f,Di,adv,V,Do,DV,            &
+   subroutine adv_split_v(dt,f,Di,adv,V,Do,DV,                 &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                          dxv,dyv,arcd1,                  &
+                          dxv,dyv,arcd1,                       &
 #endif
-                          splitfac,scheme,AH,             &
-                          mask_flux,mask_update,          &
-                          nosplit_finalise,mask_finalise)
+                          splitfac,scheme,action,AH,           &
+                          mask_flux,mask_update,mask_finalise)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
 !
-! Here, the $y$-directional split 1D advection step is executed
-! with a number of options for the numerical scheme. The basic
-! advection equation is accompanied by an fractional step
-! for the continuity equation.
-!
-! When this $y$-directional split step is repeated
-! during the total time step (Strang splitting), the time step $\Delta t$
-! denotes a fraction of the full time step.
-!
-! The interfacial fluxes $\tilde c^v_{i,j,k}$ are calculated by means of
-! monotone and non-monotone schemes which are described in detail in
-! {\tt u\_split\_adv}, see section \ref{sec-u-split-adv} on
-! page \pageref{sec-u-split-adv}.
-!
-! Furthermore, the horizontal diffusion in $y$-direction
-! with the constant diffusion
-! coefficient {\tt AH} is carried out here by means of a central difference
-! second-order scheme.
+! Executes an advection step in meridional direction for a 2D quantity
+! in analogy to routine {\tt adv\_u\_split} (see section
+! \ref{sec-u-split-adv} on page \pageref{sec-u-split-adv}).
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
@@ -41,6 +25,7 @@
    use domain, only: dx,dy,ard1
 #endif
    use advection, only: UPSTREAM,P2,SUPERBEE,MUSCL,P2_PDM
+   use advection, only: NOSPLIT_FINALISE,SPLIT_UPDATE
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -51,17 +36,13 @@
    REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
    REALTYPE,dimension(E2DFIELD),intent(in)         :: arcd1
 #endif
-   integer,intent(in)                              :: scheme
+   integer,intent(in)                              :: scheme,action
    logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_flux
    logical,dimension(E2DFIELD),intent(in)          :: mask_update
-   logical,intent(in),optional                     :: nosplit_finalise
    logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout)      :: f,Di,adv
-!
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: vflux
@@ -69,13 +50,16 @@
    integer            :: i,j,jsub
    REALTYPE           :: dti,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd
    REALTYPE,parameter :: one6th=_ONE_/6
+!
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard & Karsten Bolding
 !EOP
 !-----------------------------------------------------------------------
 !BOC
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'adv_v_split() # ',Ncall
+   write(debug,*) 'adv_split_v() # ',Ncall
 #endif
 
    if (scheme .eq. UPSTREAM) then
@@ -147,7 +131,7 @@
                   case (MUSCL)
                      limit = max(_ZERO_,min(_TWO_,_TWO_*r,_HALF_*(_ONE_+r)))
                   case default
-                     stop 'adv_v_split: invalid scheme'
+                     stop 'adv_split_v: invalid scheme'
                end select
                vflux(i,j) = vflux(i,j) + V(i,j)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
             end if
@@ -173,13 +157,12 @@
             advn = splitfac*( vflux(i,j  )*DXV           &
                              -vflux(i,j-1)*DXVJM1)*ARCD1
             adv(i,j) = adv(i,j) + advn
-            if (.not. present(nosplit_finalise)) then
-!              do the y-advection splitting step
+            if (action .eq. SPLIT_UPDATE) then
                f(i,j) = ( Dio*f(i,j) - dt*advn ) / Di(i,j)
             end if
          end if
-         if (present(nosplit_finalise)) then
-            if (nosplit_finalise .and. mask_finalise(i,j)) then
+         if (action .eq. NOSPLIT_FINALISE) then
+            if (mask_finalise(i,j)) then
 !              Note (KK): do not modify tracer inside open bdy cells
                f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
             end if
@@ -191,11 +174,11 @@
 !$OMP END PARALLEL
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving adv_v_split()'
+   write(debug,*) 'Leaving adv_split_v()'
    write(debug,*)
 #endif
    return
-   end subroutine adv_v_split
+   end subroutine adv_split_v
 !EOC
 !-----------------------------------------------------------------------
 ! Copyright (C) 2004 - Hans Burchard and Karsten Bolding               !

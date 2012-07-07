@@ -2,11 +2,11 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: bottom_friction - calculates the 2D bottom friction.
+! !ROUTINE: bottom_friction - calculates the 2D bottom friction.
 !
 ! !INTERFACE:
    subroutine bottom_friction(U,V,DU,DV,ru,rv,zub,zvb)
-!  Note (KK): keep in sync with interface in m2d_general.F90
+!  Note (KK): keep in sync with interface in m2d.F90
 !
 ! !DESCRIPTION:
 !

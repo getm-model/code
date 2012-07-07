@@ -29,7 +29,6 @@
    integer, parameter :: TIM_MOMENTUM    =  4   ! 2d momentum
    integer, parameter :: TIM_MOMENTUMH   =  5   ! 2d momentum - halo part only
    integer, parameter :: TIM_UVDEPTHS    =  6   ! 2d uv_depths
-   integer, parameter :: TIM_UVEX        =  7   ! wrapper for hor. adv+diff
    integer, parameter :: TIM_UVADV       =  8   ! 2d uv_advect
    integer, parameter :: TIM_UVADVH      =  9   ! 2d uv_advect - halo part only
    integer, parameter :: TIM_DEFORM      = 10   ! 2d deformation rates
@@ -174,7 +173,6 @@
    timernames(TIM_UVDEPTHS)    = 'uv_depths'
    timernames(TIM_LES2D)       = 'do_les_2d'
    timernames(TIM_SMAG2D)      = ' sum les_smagorinsky'
-   timernames(TIM_UVEX)        = ' sum calc_uvex'
    timernames(TIM_UVADV)       = ' sum uv_advect'
    timernames(TIM_DEFORM)      = ' sum deformation_rates'
    timernames(TIM_UVDIFF)      = ' sum uv_diffusion'
