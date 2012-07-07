@@ -74,9 +74,6 @@
 !
 ! !LOCAL VARIABLES:
    logical         :: advect_turbulence=.false.
-#ifdef NO_BAROCLINIC
-   integer         :: ip_method
-#endif
    integer         :: ip_ramp=-1
 !EOP
 !-----------------------------------------------------------------------
