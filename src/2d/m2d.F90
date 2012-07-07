@@ -27,15 +27,63 @@
    use domain, only: ill,ihl,jll,jhl
    use domain, only: rigid_lid,openbdy
    use advection, only: init_advection,print_adv_settings,NOADV
-   use m2d_general, only: bottom_friction,calc_uvex
    use les, only: les_mode,LES_MOMENTUM
-   use halo_zones, only : update_2d_halo,wait_halo,H_TAG
+   use halo_zones, only: update_2d_halo,wait_halo,H_TAG
    use variables_2d
    use bdy_2d, only: bdyfmt_2d,bdyramp_2d
    IMPLICIT NONE
 
-! Temporary interface (should be read from module):
    interface
+
+      subroutine uv_advect(U,V,DU,DV)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V
+         REALTYPE,dimension(E2DFIELD),target,intent(in) :: DU,DV
+      end subroutine uv_advect
+
+      subroutine uv_diffusion(An_method,U,V,D,DU,DV)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         integer,intent(in)                      :: An_method
+         REALTYPE,dimension(E2DFIELD),intent(in) :: U,V,D,DU,DV
+      end subroutine uv_diffusion
+
+      subroutine uv_diff_2dh(An_method,UEx,VEx,U,V,D,DU,DV, &
+                             dudxC,dvdyC,shearX,AmC,AmX,hsd_u,hsd_v)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         integer,intent(in)                                :: An_method
+         REALTYPE,dimension(E2DFIELD),intent(in),optional  :: U,V,D,DU,DV
+         REALTYPE,dimension(E2DFIELD),intent(in),optional  :: dudxC,dvdyC,shearX
+         REALTYPE,dimension(E2DFIELD),intent(in),optional  :: AmC,AmX
+         REALTYPE,dimension(E2DFIELD),intent(inout)        :: UEx,VEx
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: hsd_u,hsd_v
+      end subroutine uv_diff_2dh
+
+      subroutine bottom_friction(U,V,DU,DV,ru,rv,zub,zvb)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,DU,DV
+         REALTYPE,dimension(E2DFIELD),intent(out)          :: ru,rv
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: zub,zvb
+      end subroutine bottom_friction
+
+      subroutine deformation_rates(U,V,DU,DV,dudxC,dudxV,dudxU,         &
+                                             dvdyC,dvdyU,dvdyV,         &
+                                             dudyX,dvdxX,shearX,        &
+                                             dvdxU,shearU,dudyV,shearV)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,DU,DV
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudxC,dudxV,dudxU
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: dvdyC,dvdyU,dvdyV
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudyX,dvdxX,shearX
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: dvdxU,shearU
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudyV,shearV
+      end subroutine deformation_rates
+
+! Temporary interface (should be read from module):
       subroutine get_2d_field(fn,varname,il,ih,jl,jh,f)
          character(len=*),intent(in)   :: fn,varname
          integer, intent(in)           :: il,ih,jl,jh
@@ -46,8 +94,8 @@
 ! !PUBLIC DATA MEMBERS:
    logical                   :: no_2d
    logical                   :: have_boundaries
-   integer                   :: vel_adv_split2d=0
-   integer                   :: vel_adv_scheme=1
+   integer                   :: vel2d_adv_split=0
+   integer                   :: vel2d_adv_hor=1
    logical                   :: deformCX=.false.,deformUV=.false.
    integer,parameter         :: NO_AM=0,AM_CONSTANT=1,AM_LES=2
    integer                   :: Am_method=NO_AM
@@ -105,7 +153,7 @@
    character(LEN = PATH_MAX) :: elev_file='elev.nc'
    namelist /m2d/ &
           elev_method,elev_const,elev_file,              &
-          MM,vel_adv_split2d,vel_adv_scheme,             &
+          MM,vel2d_adv_split,vel2d_adv_hor,              &
           Am_method,Am_const,An_method,An_const,An_file, &
           residual,sealevel_check,                       &
           bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
@@ -122,6 +170,13 @@
 
    dtm = timestep
 
+#if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
+!  STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'
+!  call cfl_check()
+#else
+   if (.not. rigid_lid) call cfl_check()
+#endif
+
 !  Read 2D-model specific things from the namelist.
    read(NAMLST,m2d)
 
@@ -131,14 +186,14 @@
 
    LEVEL2 'Advection of depth-averaged velocities'
 #ifdef NO_ADVECT
-   if (vel_adv_scheme .ne. NOADV) then
-      LEVEL2 "reset vel_adv_scheme= ",NOADV," because of"
+   if (vel2d_adv_hor .ne. NOADV) then
+      LEVEL2 "reset vel2d_adv_hor= ",NOADV," because of"
       LEVEL2 "obsolete NO_ADVECT macro. Note that this"
       LEVEL2 "behaviour will be removed in the future."
-      vel_adv_scheme = NOADV
+      vel2d_adv_hor = NOADV
    end if
 #endif
-   call print_adv_settings(vel_adv_split2d,vel_adv_scheme,_ZERO_)
+   call print_adv_settings(vel2d_adv_split,vel2d_adv_hor,_ZERO_)
 
    if (.not. hotstart) then
       select case (elev_method)
@@ -161,14 +216,6 @@
       zo = z
       call depth_update()
    end if
-
-#if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
-!   STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'
-!   call cfl_check()
-#else
-!  KK-TODO: why is cfl_check not in terms of D?
-   if (.not. rigid_lid) call cfl_check()
-#endif
 
    select case (Am_method)
       case(NO_AM)
@@ -469,7 +516,8 @@
       end if
    end if
 
-   call calc_uvex(An_method,U,V,D,DU,DV)
+   call uv_advect(U,V,DU,DV)
+   call uv_diffusion(An_method,U,V,D,DU,DV) ! Has to be called after uv_advect.
 
    call toc(TIM_INTEGR2D)
 

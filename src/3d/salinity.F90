@@ -35,8 +35,8 @@
    character(len=32)         :: salt_name='salt'
    REALTYPE                  :: salt_const=35*_ONE_
    integer                   :: salt_adv_split=0
-   integer                   :: salt_hor_adv=1
-   integer                   :: salt_ver_adv=1
+   integer                   :: salt_adv_hor=1
+   integer                   :: salt_adv_ver=1
    integer, public           :: salt_AH_method=0
    REALTYPE                  :: salt_AH_const=1.1d-9
    REALTYPE                  :: salt_AH_Prt=_TWO_
@@ -92,7 +92,7 @@
    NAMELIST /salt/                                            &
             salt_method,salt_const,salt_file,                 &
             salt_format,salt_name,salt_field_no,              &
-            salt_adv_split,salt_hor_adv,salt_ver_adv,         &
+            salt_adv_split,salt_adv_hor,salt_adv_ver,         &
             salt_AH_method,salt_AH_const,salt_AH_Prt,         &
             salt_AH_stirr_const,salt_check,min_salt,max_salt
 !EOP
@@ -111,8 +111,8 @@
 
 !  Sanity checks for advection specifications
    LEVEL3 'Advection of salinity'
-   if (salt_hor_adv .eq. J7) stop 'init_salinity: J7 not implemented yet'
-   call print_adv_settings_3d(salt_adv_split,salt_hor_adv,salt_ver_adv,_ZERO_)
+   if (salt_adv_hor .eq. J7) stop 'init_salinity: J7 not implemented yet'
+   call print_adv_settings_3d(salt_adv_split,salt_adv_hor,salt_adv_ver,_ZERO_)
 
    select case (salt_AH_method)
       case(0)
@@ -179,7 +179,7 @@
 !BOP
 !
 ! !IROUTINE: init_salinity_field - initialisation of the salinity field
-! \label{sec-init-salinity}
+! \label{sec-init-salinity-field}
 !
 ! !INTERFACE:
    subroutine init_salinity_field()
@@ -394,13 +394,13 @@ salt_field_no=1
 !    so the overhead of the contruct would be rather large.
       S2 = S**2
       call do_advection_3d(dt,S2,uu,vv,ww,hun,hvn,ho,hn,                           &
-                           salt_hor_adv,salt_ver_adv,salt_adv_split,_ZERO_,H_TAG)
+                           salt_adv_split,salt_adv_hor,salt_adv_ver,_ZERO_,H_TAG)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_SALT)
    end if
 
    call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,                            &
-                        salt_hor_adv,salt_ver_adv,salt_adv_split,_ZERO_,H_TAG)
+                        salt_adv_split,salt_adv_hor,salt_adv_ver,_ZERO_,H_TAG)
 
    if (do_numerical_analyses) then
       call toc(TIM_SALT)

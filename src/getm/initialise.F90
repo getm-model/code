@@ -268,7 +268,6 @@
       hot_in = trim(out_dir) //'/'// 'restart' // trim(buf)
       call restart_file(READING,trim(hot_in),MinN,runtype,use_epoch)
       LEVEL3 'MinN adjusted to ',MinN
-
 #ifndef NO_BAROCLINIC
       if (runtype .ge. 3) call do_eqstate()
 #endif

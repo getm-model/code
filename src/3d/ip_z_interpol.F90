@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: ip_z_interpol
+! !IROUTINE: ip_z_interpol
 !
 ! !INTERFACE:
    subroutine ip_z_interpol()

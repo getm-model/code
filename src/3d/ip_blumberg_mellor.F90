@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: ip_blumberg_mellor - \label{ip-blumberg-mellor}
+! !IROUTINE: ip_blumberg_mellor - \label{ip-blumberg-mellor}
 !
 ! !INTERFACE:
    subroutine ip_blumberg_mellor()

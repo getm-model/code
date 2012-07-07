@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: ip_stelling_vankester
+! !IROUTINE: ip_stelling_vankester
 !
 ! !INTERFACE:
    subroutine ip_stelling_vankester()
