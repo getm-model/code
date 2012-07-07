@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE:  hybrid vertical coordinates - (z-sigma)
+! !IROUTINE:  hybrid vertical coordinates - (z-sigma)
 ! \label{sec-hybrid-coordinates}
 !
 ! !INTERFACE:

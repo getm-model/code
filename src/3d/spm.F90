@@ -102,8 +102,8 @@
    character(len=PATH_MAX) :: spm_file="spm.nc"
    character(len=32)       :: spm_name='spm'
    integer                 :: spm_adv_split=0
-   integer                 :: spm_hor_adv=1
-   integer                 :: spm_ver_adv=1
+   integer                 :: spm_adv_hor=1
+   integer                 :: spm_adv_ver=1
    REALTYPE                :: spm_AH = -_ONE_
    REALTYPE                :: spm_const= _ZERO_
    REALTYPE                :: spm_init= _ZERO_
@@ -184,7 +184,7 @@
    logical         :: intertidal_spm0=.false.
    namelist /spm_nml/   spm_calc,spm_save,spm_method,spm_init_method,  &
                         spm_const,spm_format,spm_file,spm_name,        &
-                        spm_hor_adv, spm_ver_adv,spm_adv_split,        &
+                        spm_adv_split,spm_adv_hor,spm_adv_ver,         &
                         spm_AH,spm_ws_method,spm_ws_const,             &
                         spm_erosion_const, spm_tauc_sedimentation,     &
                         spm_tauc_erosion, spm_porosity, spm_pool_init, &
@@ -252,8 +252,8 @@
       end select
 
       LEVEL2 'Advection of SPM'
-      if (spm_hor_adv .eq. J7) stop 'init_spm: J7 not implemented yet'
-      call print_adv_settings_3d(spm_adv_split,spm_hor_adv,spm_ver_adv,spm_AH)
+      if (spm_adv_hor .eq. J7) stop 'init_spm: J7 not implemented yet'
+      call print_adv_settings_3d(spm_adv_split,spm_adv_hor,spm_adv_ver,spm_AH)
 
       spm_ws = _ZERO_
 
@@ -418,7 +418,7 @@
 !  KK-TODO: spm_AH_method + include spm_AH_method=1 into advection
 
    call do_advection_3d(dt,spm,uu,vv,wwadv,hun,hvn,ho,hn,                   &
-                        spm_hor_adv,spm_ver_adv,spm_adv_split,spm_AH,H_TAG)
+                        spm_adv_split,spm_adv_hor,spm_adv_ver,spm_AH,H_TAG)
 
 !   if (spm_AH_method .gt. 1) then
 !     spm is not halo updated after advection
