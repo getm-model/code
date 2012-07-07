@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE:  equidistant and zoomed sigma-coordinates
+! !IROUTINE:  equidistant and zoomed sigma-coordinates
 ! \label{sec-sigma-coordinates}
 !
 ! !INTERFACE:

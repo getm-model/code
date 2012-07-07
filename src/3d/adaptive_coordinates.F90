@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE:  adaptive vertical coordinates
+! !IROUTINE:  adaptive vertical coordinates
 ! \label{sec-adaptive-coordinates}
 !
 ! !INTERFACE:

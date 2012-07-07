@@ -1,7 +1,7 @@
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  adv_arakawa_j7_2dh - 2D Arakawa J7 advection 2d
+! !IROUTINE:  adv_arakawa_j7_2dh - 2DH Arakawa J7 advection of 2D quantities
 ! \label{sec-arakawa-j7-2dh-adv}
 !
 ! !INTERFACE:
@@ -9,9 +9,8 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                  dxv,dyu,dxu,dyv,arcd1,            &
 #endif
-                                 az,AH,                            &
-                                 mask_uflux,mask_vflux,mask_xflux, &
-                                 nosplit_finalise)
+                                 action,AH,az,                     &
+                                 mask_uflux,mask_vflux,mask_xflux)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -21,6 +20,7 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
+   use advection, only: NOSPLIT_FINALISE,SPLIT_UPDATE
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -32,16 +32,13 @@
    REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
    REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
+   integer,intent(in)                         :: action
    integer,dimension(E2DFIELD),intent(in)     :: az
    logical,dimension(:,:),pointer,intent(in)  :: mask_uflux,mask_xflux
    logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
-   logical,intent(in),optional                :: nosplit_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
-!
-! !REVISION HISTORY:
-!  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
    logical                      :: use_AH
@@ -53,6 +50,9 @@
    REALTYPE,dimension(E2DFIELD) :: uflux,vflux
    REALTYPE,parameter           :: one3rd = _ONE_/_THREE_
    REALTYPE,parameter           :: one6th = one3rd/_TWO_
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -153,13 +153,10 @@
                                  + vflux(i,j)*DXV - vflux(i,j-1)*DXVJM1 )*ARCD1
                end if
                adv(i,j) = advo(i,j) + advn
-               if (present(nosplit_finalise)) then
-!                 Note (KK): do not update f in case of nosplit_finalise=.false. !!!
-                  if (nosplit_finalise) then
-                     f(i,j) = ( Do(i,j)*fo(i,j) - dt*adv(i,j) ) / Di(i,j)
-                  end if
-               else
+               if (action .eq. SPLIT_UPDATE) then
                   f(i,j) = ( Dio(i,j)*fo(i,j) - dt*advn ) / Di(i,j)
+               else if (action .eq. NOSPLIT_FINALISE) then
+                  f(i,j) = ( Do(i,j)*fo(i,j) - dt*adv(i,j) ) / Di(i,j)
                end if
             end if
          end do
