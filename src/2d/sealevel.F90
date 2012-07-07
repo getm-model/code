@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: sealevel - using the cont. eq. to get the sealevel.
+! !ROUTINE: sealevel - using the cont. eq. to get the sealevel.
 !
 ! !INTERFACE:
    subroutine sealevel(loop)

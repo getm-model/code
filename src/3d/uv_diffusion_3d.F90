@@ -2,18 +2,20 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: uv_diffusion_3d - hor.\ momentum diffusion
+! !ROUTINE: uv_diffusion_3d - lateral diffusion of 3D velocity
 ! \label{sec-uv-diffusion-3d}
 !
 ! !INTERFACE:
    subroutine uv_diffusion_3d()
 !
 ! !DESCRIPTION:
-!  This wrapper calls uv_diffusion for each layer.
+! This wrapper calls routine {\tt uv\_diff\_2dh} (see section
+! \ref{sec-uv-diff-2dh} on page \pageref{sec-uv-diff-2dh}) for each
+! layer.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
-   use m2d_general, only: uv_diffusion
+   use m2d, only: uv_diff_2dh
    use m2d, only: Am_method,AM_CONSTANT,AM_LES
    use variables_3d, only: uu,vv,uuEx,vvEx,hn,hun,hvn
    use variables_3d, only: dudxC_3d,dvdyC_3d,shearX_3d
@@ -46,32 +48,32 @@
    select case(Am_method)
       case(AM_CONSTANT)
          do k=1,kmax
-            call uv_diffusion(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
-                              D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
-                              dudxC=dudxC_3d(:,:,k),                             &
+            call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                             D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
+                             dudxC=dudxC_3d(:,:,k),                             &
 #ifndef SLICE_MODEL
-                              dvdyC=dvdyC_3d(:,:,k),                             &
+                             dvdyC=dvdyC_3d(:,:,k),                             &
 #endif
-                              shearX=shearX_3d(:,:,k)                            &
+                             shearX=shearX_3d(:,:,k)                            &
 #ifdef _MOMENTUM_TERMS_
-                              ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)             &
+                             ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)             &
 #endif
-                             )
+                            )
          end do
       case(AM_LES)
          do k=1,kmax
-            call uv_diffusion(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
-                              D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
-                              dudxC=dudxC_3d(:,:,k),                             &
+            call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                             D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
+                             dudxC=dudxC_3d(:,:,k),                             &
 #ifndef SLICE_MODEL
-                              dvdyC=dvdyC_3d(:,:,k),                             &
+                             dvdyC=dvdyC_3d(:,:,k),                             &
 #endif
-                              shearX=shearX_3d(:,:,k),                           &
-                              AmC=AmC_3d(:,:,k),AmX=AmX_3d(:,:,k)                &
+                             shearX=shearX_3d(:,:,k),                           &
+                             AmC=AmC_3d(:,:,k),AmX=AmX_3d(:,:,k)                &
 #ifdef _MOMENTUM_TERMS_
-                              ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)             &
+                             ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)             &
 #endif
-                             )
+                            )
          end do
    end select
 

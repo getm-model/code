@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: ip_shchepetkin_mcwilliams
+! !IROUTINE: ip_shchepetkin_mcwilliams
 !
 ! !INTERFACE:
    subroutine ip_shchepetkin_mcwilliams()
