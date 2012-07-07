@@ -1,24 +1,22 @@
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  adv_fct_2dh - 2D flux-corrected transport \label{sec-fct-2dh-adv}
+! !IROUTINE:  adv_fct_2dh - 2DH FCT advection of 2D quantities \label{sec-fct-2dh-adv}
 !
 ! !INTERFACE:
    subroutine adv_fct_2dh(fct,dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                           dxv,dyu,dxu,dyv,arcd1,           &
 #endif
-                          az,AH,                           &
-                          mask_uflux,mask_vflux,           &
-                          nosplit_finalise)
+                          action,AH,az,                    &
+                          mask_uflux,mask_vflux)
 !  Note (KK): keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
 ! In this routine, the flux corrected transport advection scheme by
 ! \cite{ZALEZAK79} is applied for the two horizontal directions in
-! one step. For details of this type of operator splitting, see the
-! routine {\tt upstream\_2dh\_adv} (see section \ref{sec-upstream-2dh-adv}
-! on page \pageref{sec-upstream-2dh-adv}).
+! one step. For details of this type of operator splitting, see  section
+! \ref{sec-upstream-2dh-adv} on page \pageref{sec-upstream-2dh-adv}).
 !
 ! The monotone low-order flux is the first-order upstream
 ! scheme, the
@@ -43,6 +41,7 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
+   use advection, only: NOSPLIT_NOFINALISE,NOSPLIT_FINALISE
    use halo_zones, only : update_2d_halo,wait_halo,z_TAG
 !$ use omp_lib
    IMPLICIT NONE
@@ -56,19 +55,15 @@
    REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
    REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
+   integer,intent(in)                         :: action
    integer,dimension(E2DFIELD),intent(in)     :: az
    logical,dimension(:,:),pointer,intent(in)  :: mask_uflux
    logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
-   logical,intent(in),optional                :: nosplit_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
 !
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
 ! !LOCAL VARIABLES:
-   logical         :: update_f
    integer         :: i,j
    REALTYPE,dimension(E2DFIELD) :: Dio
    REALTYPE,dimension(E2DFIELD) :: uflux,flx
@@ -79,6 +74,9 @@
    REALTYPE        :: CNW,CW,CSW,CSSW,CWW,CSWW,CC,CS
    REALTYPE        :: advn,uuu,vvv,CExx,Cl,Cu,fac
    REALTYPE,parameter :: one12th=_ONE_/12,one6th=_ONE_/6,one3rd=_ONE_/3
+!
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard & Karsten Bolding
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -87,11 +85,6 @@
    Ncall = Ncall+1
    write(debug,*) 'adv_fct_2dh() # ',Ncall
 #endif
-
-   update_f = .true.
-   if (present(nosplit_finalise)) then
-      if (.not. nosplit_finalise) update_f = .false.
-   end if
 
 ! NOTE: With the present implementation it is not necessary
 !   to initialize flx, fly, fhx, fhy, cmin and cmax. Even if they
@@ -630,15 +623,12 @@
 #endif
                    )*ARCD1
             adv(i,j) = adv(i,j) + advn
-            if (present(nosplit_finalise)) then
-!              Note (KK): do not update f in case of nosplit_finalise=.false. !!!
-               if (nosplit_finalise) then
+            if (action .ne. NOSPLIT_NOFINALISE) then
+               if (action .eq. NOSPLIT_FINALISE) then
                   f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
+               else
+                  f(i,j) = ( Dio(i,j)*f(i,j) - dt*advn ) / Di(i,j)
                end if
-            else
-               f(i,j) = ( Dio(i,j)*f(i,j) - dt*advn ) / Di(i,j)
-            end if
-            if (update_f) then
 !              Force monotonicity, this is needed here for correcting truncations errors:
                if (f(i,j).gt.cmax(i,j)) f(i,j)=cmax(i,j)
                if (f(i,j).lt.cmin(i,j)) f(i,j)=cmin(i,j)
