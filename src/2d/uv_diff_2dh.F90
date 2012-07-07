@@ -188,8 +188,7 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: work2d
-   REALTYPE :: depth
-   integer  :: i,j
+   integer                      :: i,j
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -227,7 +226,6 @@
       do i=imin,imax+1          ! work2d defined on T-points
          work2d(i,j)=_ZERO_
          if (az(i,j) .eq. 1) then
-!           KK-TODO: center depth at velocity time stage
             select case(Am_method)
                case(AM_CONSTANT)
                   work2d(i,j)=_TWO_*Am_const*DYC*D(i,j)*dudxC(i,j)
