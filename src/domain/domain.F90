@@ -397,6 +397,7 @@
             call getm_error("init_domain()", &
                             "non-positive bottom roughness");
          end if
+         z0 = z0_const
          zub0 = z0_const
          zvb0 = z0_const
       case(3)
@@ -424,7 +425,7 @@
          end do
       case default
          call getm_error("init_domain()", &
-                         "A non valid z0 method has been chosen");
+                         "A non valid bottfric method has been chosen");
    end select
    if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
       if (cd_min .gt. _ZERO_) then
@@ -435,6 +436,11 @@
       if (z0d_iters .gt. 0) then
          LEVEL3 'iterations for dynamic bottom roughness: ',z0d_iters
       end if
+   else
+#ifndef CONSTANT_VISCOSITY
+      call getm_error("init_domain()", &
+                      "consistency with GOTM requires quadratic bottom friction");
+#endif
    end if
 
 #ifdef DEBUG

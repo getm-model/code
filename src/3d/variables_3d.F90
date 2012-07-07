@@ -195,6 +195,7 @@
    ssen = _ZERO_ ; ssun = _ZERO_ ; ssvn = _ZERO_
    Dn = _ZERO_ ; Dun = _ZERO_ ; Dvn = _ZERO_
 
+   zub = -9999.0 ; zvb = -9999.0 ! must be initialised for gotm
    if (bottfric_method .eq. 1) then
       rru = rdrag
       rrv = rdrag
