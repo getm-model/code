@@ -167,12 +167,11 @@
             zm = max( z(i  ,j) , -H(i+1,j)+min( min_depth , D(i  ,j) ) )
             zx = ( zp - zm + (airp(i+1,j)-airp(i,j))*gammai ) / DXU
             tausu = _HALF_ * ( tausx(i,j) + tausx(i+1,j) )
-            Slr = Slru(i,j)
-!            if (U(i,j) .gt. _ZERO_) then
-!               Slr = max( Slru(i,j) , _ZERO_ )
-!            else
-!               Slr = min( Slru(i,j) , _ZERO_ )
-!            end if
+            if (U(i,j) .gt. _ZERO_) then
+               Slr = max( Slru(i,j) , _ZERO_ )
+            else
+               Slr = min( Slru(i,j) , _ZERO_ )
+            end if
             U(i,j)=(U(i,j)-dtm*(g*DU(i,j)*zx+dry_u(i,j)*&
                  (-tausu*rho_0i-fV(i,j)+UEx(i,j)+SlUx(i,j)+Slr)))/&
                  (_ONE_+dtm*ru(i,j)/DU(i,j))
@@ -338,12 +337,11 @@
             zm = max( z(i,j  ) , -H(i,j+1)+min( min_depth , D(i,j  ) ) )
             zy = ( zp - zm + (airp(i,j+1)-airp(i,j))*gammai ) / DYV
             tausv = _HALF_ * ( tausy(i,j) + tausy(i,j+1) )
-            Slr = Slrv(i,j)
-!            if (V(i,j) .gt. _ZERO_) then
-!               Slr = max( Slrv(i,j) , _ZERO_ )
-!            else
-!               Slr = min( Slrv(i,j) , _ZERO_ )
-!            end if
+            if (V(i,j) .gt. _ZERO_) then
+               Slr = max( Slrv(i,j) , _ZERO_ )
+            else
+               Slr = min( Slrv(i,j) , _ZERO_ )
+            end if
             V(i,j)=(V(i,j)-dtm*(g*DV(i,j)*zy+dry_v(i,j)*&
                  (-tausv*rho_0i+fU(i,j)+VEx(i,j)+SlVx(i,j)+Slr)))/&
                  (_ONE_+dtm*rv(i,j)/DV(i,j))

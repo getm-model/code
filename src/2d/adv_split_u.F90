@@ -154,7 +154,8 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
-   use advection, only: UPSTREAM,P2,SUPERBEE,MUSCL,P2_PDM
+   use advection, only: adv_tvd_limiter
+   use advection, only: UPSTREAM
    use advection, only: NOSPLIT_FINALISE,SPLIT_UPDATE
 !$ use omp_lib
    IMPLICIT NONE
@@ -187,8 +188,7 @@
    REALTYPE,dimension(E2DFIELD) :: uflux
    logical            :: use_limiter,use_AH
    integer            :: i,j,isub
-   REALTYPE           :: dti,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd
-   REALTYPE,parameter :: one6th=_ONE_/6
+   REALTYPE           :: dti,Dio,advn,cfl,r,limit,fu,fc,fd
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -216,7 +216,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j,use_limiter)                             &
-!$OMP          PRIVATE(i,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
+!$OMP          PRIVATE(i,Dio,advn,cfl,r,limit,fu,fc,fd)
 
 ! Calculating u-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
@@ -261,22 +261,7 @@
             end if
             uflux(i,j) = U(i,j)*fc
             if (use_limiter) then
-               select case (scheme)
-                  case ((P2),(P2_PDM))
-                     x = one6th*(_ONE_-_TWO_*cfl)
-                     Phi = (_HALF_+x) + (_HALF_-x)*r
-                     if (scheme.eq.P2) then
-                        limit = Phi
-                     else
-                        limit = max(_ZERO_,min(Phi,_TWO_/(_ONE_-cfl),_TWO_*r/(cfl+1.d-10)))
-                     end if
-                  case (SUPERBEE)
-                     limit = max(_ZERO_,min(_ONE_,_TWO_*r),min(r,_TWO_))
-                  case (MUSCL)
-                     limit = max(_ZERO_,min(_TWO_,_TWO_*r,_HALF_*(_ONE_+r)))
-                  case default
-                     stop 'adv_split_u: invalid scheme'
-               end select
+               limit = adv_tvd_limiter(scheme,cfl,r)
                uflux(i,j) = uflux(i,j) + U(i,j)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
             end if
             if (use_AH) then

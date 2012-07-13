@@ -38,6 +38,7 @@
 ! !PUBLIC DATA MEMBERS:
    public init_advection,do_advection,print_adv_settings
    public adv_split_u,adv_split_v,adv_upstream_2dh,adv_arakawa_j7_2dh,adv_fct_2dh
+   public adv_tvd_limiter
 
    type, public :: t_adv_grid
       logical,dimension(:,:),pointer :: mask_uflux,mask_vflux,mask_xflux
@@ -202,6 +203,13 @@
          logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
          REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
       end subroutine adv_fct_2dh
+
+      REALTYPE function adv_tvd_limiter(scheme,cfl,slope)
+         IMPLICIT NONE
+         integer,intent(in)  :: scheme
+         REALTYPE,intent(in) :: cfl,slope
+      end function adv_tvd_limiter
+
    end interface
 
    contains
