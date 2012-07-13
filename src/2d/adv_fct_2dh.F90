@@ -446,7 +446,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO-1
-            if (mask_uflux(i,j) .eq. 1) then
+            if (mask_uflux(i,j)) then
                if (U(i,j) .gt. _ZERO_) then
                   flx(i,j) = U(i,j)*f(i  ,j)
                else
@@ -464,7 +464,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO
-            if (mask_vflux(i,j) .eq. 1) then
+            if (mask_vflux(i,j)) then
                if (V(i,j) .gt. _ZERO_) then
                   fly(i,j) = V(i,j)*f(i,j  )
                else
