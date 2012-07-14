@@ -41,7 +41,6 @@
 		<File RelativePath="..\..\src\2d\cfl_check.F90"/>
 		<File RelativePath="..\..\src\2d\deformation_rates.F90"/>
 		<File RelativePath="..\..\src\2d\depth_update.F90"/>
-		<File RelativePath="..\..\src\2d\have_bdy.F90"/>
 		<File RelativePath="..\..\src\2d\m2d.F90"/>
 		<File RelativePath="..\..\src\2d\momentum.F90"/>
 		<File RelativePath="..\..\src\2d\residual.F90"/>
@@ -99,11 +98,12 @@
 		<Filter Name="domain">
 		<File RelativePath="..\..\src\domain\bdy_spec.F90"/>
 		<File RelativePath="..\..\src\domain\domain.F90"/>
-		<File RelativePath="..\..\src\domain\uv_depths.F90"/>
+		<File RelativePath="..\..\src\domain\have_bdy.F90"/>
 		<File RelativePath="..\..\src\domain\mirror_bdy_2d.F90"/>
 		<File RelativePath="..\..\src\domain\mirror_bdy_3d.F90"/>
 		<File RelativePath="..\..\src\domain\part_domain.F90"/>
-		<File RelativePath="..\..\src\domain\print_bdy.F90"/></Filter>
+		<File RelativePath="..\..\src\domain\print_bdy.F90"/>
+		<File RelativePath="..\..\src\domain\uv_depths.F90"/></Filter>
 		<Filter Name="futil">
 		<File RelativePath="..\..\src\futils\c2x.F90"/>
 		<File RelativePath="..\..\src\futils\check_3d_fields.F90"/>
