@@ -26,9 +26,9 @@
 #else
    use domain, only : dx,dy,ard1
 #endif
+   use domain, only: have_boundaries
    use variables_2d, only: dtm,z,zo,U,V,fwf
    use bdy_2d, only: do_bdy_2d
-   use m2d, only: have_boundaries
    use getm_timers, only: tic, toc, TIM_SEALEVEL, TIM_SEALEVELH
    use halo_zones, only : update_2d_halo,wait_halo,z_TAG
 #ifdef USE_BREAKS
