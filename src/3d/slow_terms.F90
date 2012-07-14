@@ -19,7 +19,7 @@
 ! {\tt slow\_diffusion}.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,kmax,au,av,bottfric_method
+   use domain, only: imin,imax,jmin,jmax,kmax,au,av
    use variables_2d, only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
    use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,Dn,Dun,Dvn
    use variables_3d, only: uuEx,vvEx,rru,rrv
@@ -28,7 +28,7 @@
    use variables_3d, only: sf
 #endif
    use m3d, only: calc_ip,ip_fac
-   use m2d_general, only: bottom_friction,calc_uvex
+   use m2d, only: uv_advect,uv_diffusion,bottom_friction
    use internal_pressure, only: calc_ipfull
    use nonhydrostatic, only: nonhyd_method,calc_hs2d
    use getm_timers, only: tic, toc, TIM_SLOWTERMS
@@ -74,10 +74,9 @@
 
    if (kmax .gt. 1) then
 
-      if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
-         call bottom_friction(Uint,Vint,Dun,Dvn,ru,rv)
-      end if
-      call calc_uvex(0,Uint,Vint,Dn,Dun,Dvn)
+      call bottom_friction(Uint,Vint,Dun,Dvn,ru,rv)
+      call uv_advect(Uint,Vint,Dun,Dvn)
+      call uv_diffusion(0,Uint,Vint,Dn,Dun,Dvn) ! Has to be called after uv_advect.
 
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax

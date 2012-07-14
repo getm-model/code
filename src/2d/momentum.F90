@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: momentum - 2D-momentum for all interior points.
+! !ROUTINE: momentum - 2D-momentum for all interior points.
 !
 ! !INTERFACE:
    subroutine momentum(n,tausx,tausy,airp)
@@ -124,9 +124,9 @@
 #else
    use domain, only: dx
 #endif
+   use domain, only: have_boundaries
    use variables_2d, only: dtm,D,z,UEx,U,DU,fV,SlUx,Slru,ru,fU,DV
    use bdy_2d, only: do_bdy_2d
-   use m2d, only: have_boundaries
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,U_TAG
 !$ use omp_lib
@@ -167,12 +167,11 @@
             zm = max( z(i  ,j) , -H(i+1,j)+min( min_depth , D(i  ,j) ) )
             zx = ( zp - zm + (airp(i+1,j)-airp(i,j))*gammai ) / DXU
             tausu = _HALF_ * ( tausx(i,j) + tausx(i+1,j) )
-            Slr = Slru(i,j)
-!            if (U(i,j) .gt. _ZERO_) then
-!               Slr = max( Slru(i,j) , _ZERO_ )
-!            else
-!               Slr = min( Slru(i,j) , _ZERO_ )
-!            end if
+            if (U(i,j) .gt. _ZERO_) then
+               Slr = max( Slru(i,j) , _ZERO_ )
+            else
+               Slr = min( Slru(i,j) , _ZERO_ )
+            end if
             U(i,j)=(U(i,j)-dtm*(g*DU(i,j)*zx+dry_u(i,j)*&
                  (-tausu*rho_0i-fV(i,j)+UEx(i,j)+SlUx(i,j)+Slr)))/&
                  (_ONE_+dtm*ru(i,j)/DU(i,j))
@@ -296,9 +295,9 @@
 #else
    use domain, only: dy
 #endif
+   use domain, only: have_boundaries
    use variables_2d, only: dtm,D,z,VEx,V,DV,fU,SlVx,Slrv,rv,fV,DU
    use bdy_2d, only: do_bdy_2d
-   use m2d, only: have_boundaries
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,V_TAG
    IMPLICIT NONE
@@ -338,12 +337,11 @@
             zm = max( z(i,j  ) , -H(i,j+1)+min( min_depth , D(i,j  ) ) )
             zy = ( zp - zm + (airp(i,j+1)-airp(i,j))*gammai ) / DYV
             tausv = _HALF_ * ( tausy(i,j) + tausy(i,j+1) )
-            Slr = Slrv(i,j)
-!            if (V(i,j) .gt. _ZERO_) then
-!               Slr = max( Slrv(i,j) , _ZERO_ )
-!            else
-!               Slr = min( Slrv(i,j) , _ZERO_ )
-!            end if
+            if (V(i,j) .gt. _ZERO_) then
+               Slr = max( Slrv(i,j) , _ZERO_ )
+            else
+               Slr = min( Slrv(i,j) , _ZERO_ )
+            end if
             V(i,j)=(V(i,j)-dtm*(g*DV(i,j)*zy+dry_v(i,j)*&
                  (-tausv*rho_0i+fU(i,j)+VEx(i,j)+SlVx(i,j)+Slr)))/&
                  (_ONE_+dtm*rv(i,j)/DV(i,j))

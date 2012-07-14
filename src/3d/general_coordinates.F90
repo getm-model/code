@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE:  general vertical coordinates
+! !IROUTINE:  general vertical coordinates
 ! \label{sec-general-coordinates}
 !
 ! !INTERFACE:

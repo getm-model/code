@@ -2,35 +2,133 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  adv_u_split - 1D x-advection \label{sec-u-split-adv}
+! !IROUTINE:  adv_split_u - zonal advection of 2D quantities \label{sec-u-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_u_split(dt,f,Di,adv,U,Do,DU,            &
+   subroutine adv_split_u(dt,f,Di,adv,U,Do,DU,                 &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                          dxu,dyu,arcd1,                  &
+                          dxu,dyu,arcd1,                       &
 #endif
-                          splitfac,scheme,AH,             &
-                          mask_flux,mask_update,          &
-                          nosplit_finalise,mask_finalise)
+                          splitfac,scheme,action,AH,           &
+                          mask_flux,mask_update,mask_finalise)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
 !
-! Here, the $x$-directional split 1D advection step is executed
-! with a number of options for the numerical scheme.
+! Executes an advection step in zonal direction for a 2D quantity. The
+! 1D advection equation
+!
+! \begin{equation}\label{adv_u_step}
+! D^n_{i,j} c^n_{i,j} =
+! D^o_{i,j} c^o_{i,j}
+! \displaystyle
+! - \Delta t
+! \frac{
+! U_{i,j}\tilde c^u_{i,j}\Delta y^u_{i,j}-
+! U_{i-1,j}\tilde c^u_{i-1,j}\Delta y^u_{i-1,j}
+! }{\Delta x^c_{i,j}\Delta y^c_{i,j}},
+! \end{equation}
+!
+! is accompanied by an fractional step for the 1D continuity equation
+!
+! \begin{equation}\label{adv_u_step_D}
+! D^n_{i,j} =
+! D^o_{i,j}
+! \displaystyle
+! - \Delta t
+! \frac{
+! U_{i,j}\Delta y^u_{i,j}-
+! U_{i-1,j}\Delta y^u_{i-1,j}
+! }{\Delta x^c_{i,j}\Delta y^c_{i,j}}.
+! \end{equation}
 !
 ! Here, $n$ and $o$ denote values before and after this operation,
 ! respectively, $n$ denote intermediate values when other
 ! 1D advection steps come after this and $o$ denotes intermediate
 ! values when other 1D advection steps came before this.
-! Furthermore, when this $x$-directional split step is repeated
+! Furthermore, when this $u$-directional split step is repeated
 ! during the total time step (Strang splitting), the time step $\Delta t$
 ! denotes a fraction of the full time step.
 !
-! The interfacial fluxes are calculated by means of
-! monotone Total Variation Diminishing (TVD), the first-order monotone
-! upstream and the (non-monotone)
-! unlimited third-order polynomial scheme.
+! The interfacial fluxes $\tilde c^u_{i,j}$ are calculated according to
+! the third-order polynomial scheme (so-called P$_2$ scheme), cast in
+! Lax-Wendroff form by:
+!
+! \begin{equation}\label{LaxWendroffForm}
+! \tilde c_{i,j}=
+! \left\{
+! \begin{array}{ll}
+! \left(c_{i,j}+\frac12 \tilde c_{i,j}^+ (1-|C_{i,j}|)
+! (c_{i+1,j}-c_{i,j})\right) & \mbox{ for } U_{i,j} \geq 0, \\ \\
+! \left(c_{i+1,j}+\frac12 \tilde c_{i,j}^- (1-|C_{i,j}|)
+! (c_{i,j}-c_{i+1,j})\right) & \mbox{ else, }
+! \end{array}
+! \right.
+! \end{equation}
+!
+! with the Courant number $C_{i,j}=u_{i,j}\Delta t/\Delta x$ and
+!
+! \begin{equation}\label{alphabeta}
+! \tilde c_{i,j}^+=\alpha_{i,j}+\beta_{i,j}r^+_{i,j}, \quad
+! \tilde c_{i,j}^-=\alpha_{i,j}+\beta_{i,j}r^-_{i,j},
+! \end{equation}
+!
+! where
+!
+! \begin{equation}
+! \alpha_{i,j}=\frac12 +\frac16(1-2|C_{i,j}|),\quad
+! \beta _{i,j}=\frac12 -\frac16(1-2|C_{i,j}|),
+! \end{equation}
+!
+! and
+!
+! \begin{equation}
+! r^+_{i,j}=\frac{c_{i,j}-c_{i-1,j}}{c_{i+1,j}-c_{i,j}},
+! \quad
+! r^-_{i,j}=\frac{c_{i+2,j}-c_{i+1,j}}{c_{i+1,j}-c_{i,j}}.
+! \end{equation}
+!
+! It should be noted, that for $\tilde c_{i,j}^+=\tilde c_{i,j}^-=1$
+! the original Lax-Wendroff scheme and for
+! $\tilde c_{i,j}^+=\tilde c_{i,j}^-=0$ the first-oder upstream scheme
+! can be recovered.
+!
+! In order to obtain a monotonic and positive scheme, the factors
+! $\tilde c_{i,j}^+$ are limited in the following way:
+!
+! \begin{equation}\label{PDM}
+! \tilde c_{i,j}^+ \rightarrow \max \left[
+! 0,\min\left(\tilde c_{i,j}^+,\frac{2}{1-|C_{i,j}|},
+! \frac{2r^+_{i,j}}{|C_{i,j}|}\right)
+! \right],
+! \end{equation}
+!
+! and, equivalently, for $\tilde c_{i,j}^-$.
+! This so-called PDM-limiter has been described in detail
+! by \cite{LEONARD91}, who named the PDM-limited P$_2$ scheme
+! also ULTIMATE QUICKEST (quadratic upstream interpolation
+! for convective kinematics with estimated stream terms).
+!
+! Some simpler limiters which do not exploit the third-order
+! polynomial properties of the discretisation (\ref{LaxWendroffForm}) have been
+! listed by \cite{ZALEZAK87}. Among those are the MUSCL scheme by
+! \cite{VANLEER79},
+!
+! \begin{equation}\label{MUSCL}
+! \tilde c_{i,j}^+ \rightarrow \max \left[
+! 0,\min\left(
+! 2,2r^+_{i,j},\frac{1+r^+_{i,j}}{2}
+! \right)
+! \right],
+! \end{equation}
+!
+! and the Superbee scheme by \cite{ROE85},
+!
+! \begin{equation}\label{Superbee}
+! \tilde c_{i,j}^+ \rightarrow \max \left[
+! 0,\min(1,2r^+_{i,j}),\min(r^+_{i,j},2)
+! \right].
+! \end{equation}
 !
 ! The selector for the schemes is {\tt scheme}:
 !
@@ -39,14 +137,14 @@
 ! \begin{tabular}{ll}
 ! {\tt scheme = UPSTREAM}: & first-order upstream (monotone) \\
 ! {\tt scheme = P2}: & third-order polynomial (non-monotone) \\
-! {\tt scheme = P2\_PDM}: & third-order ULTIMATE-QUICKEST (monotone) \\
-! {\tt scheme = MUSCL}: & second-order TVD (monotone) \\
 ! {\tt scheme = SUPERBEE}: & second-order TVD (monotone) \\
+! {\tt scheme = MUSCL}: & second-order TVD (monotone) \\
+! {\tt scheme = P2\_PDM}: & third-order ULTIMATE-QUICKEST (monotone) \\
 ! \end{tabular}
 !
 ! \vspace{0.5cm}
 !
-! Furthermore, the horizontal diffusion in $x$-direction
+! Furthermore, the horizontal diffusion in zonal direction
 ! with the constant diffusion
 ! coefficient {\tt AH} is carried out here by means of a central difference
 ! second-order scheme.
@@ -56,7 +154,9 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
-   use advection, only: UPSTREAM,P2,SUPERBEE,MUSCL,P2_PDM
+   use advection, only: adv_tvd_limiter
+   use advection, only: UPSTREAM
+   use advection, only: NOSPLIT_FINALISE,SPLIT_UPDATE
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -76,31 +176,29 @@
    REALTYPE,dimension(:,:),pointer,intent(in)      :: dxu,dyu
    REALTYPE,dimension(E2DFIELD),intent(in)         :: arcd1
 #endif
-   integer,intent(in)                              :: scheme
+   integer,intent(in)                              :: scheme,action
    logical,dimension(:,:),pointer,intent(in)       :: mask_flux
    logical,dimension(E2DFIELD),intent(in)          :: mask_update
-   logical,intent(in),optional                     :: nosplit_finalise
    logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout)      :: f,Di,adv
 !
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: uflux
    logical            :: use_limiter,use_AH
    integer            :: i,j,isub
-   REALTYPE           :: dti,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd
-   REALTYPE,parameter :: one6th=_ONE_/6
+   REALTYPE           :: dti,Dio,advn,cfl,r,limit,fu,fc,fd
+!
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard & Karsten Bolding
 !EOP
 !-----------------------------------------------------------------------
 !BOC
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'adv_u_split() # ',Ncall
+   write(debug,*) 'adv_split_u() # ',Ncall
 #endif
 #ifdef SLICE_MODEL
    j = jmax/2 ! this MUST NOT be changed!!!
@@ -118,7 +216,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j,use_limiter)                             &
-!$OMP          PRIVATE(i,Dio,advn,cfl,x,r,Phi,limit,fu,fc,fd)
+!$OMP          PRIVATE(i,Dio,advn,cfl,r,limit,fu,fc,fd)
 
 ! Calculating u-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
@@ -163,22 +261,7 @@
             end if
             uflux(i,j) = U(i,j)*fc
             if (use_limiter) then
-               select case (scheme)
-                  case ((P2),(P2_PDM))
-                     x = one6th*(_ONE_-_TWO_*cfl)
-                     Phi = (_HALF_+x) + (_HALF_-x)*r
-                     if (scheme.eq.P2) then
-                        limit = Phi
-                     else
-                        limit = max(_ZERO_,min(Phi,_TWO_/(_ONE_-cfl),_TWO_*r/(cfl+1.d-10)))
-                     end if
-                  case (SUPERBEE)
-                     limit = max(_ZERO_,min(_ONE_,_TWO_*r),min(r,_TWO_))
-                  case (MUSCL)
-                     limit = max(_ZERO_,min(_TWO_,_TWO_*r,_HALF_*(_ONE_+r)))
-                  case default
-                     stop 'adv_u_split: invalid scheme'
-               end select
+               limit = adv_tvd_limiter(scheme,cfl,r)
                uflux(i,j) = uflux(i,j) + U(i,j)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
             end if
             if (use_AH) then
@@ -207,13 +290,12 @@
             advn = splitfac*( uflux(i  ,j)*DYU           &
                              -uflux(i-1,j)*DYUIM1)*ARCD1
             adv(i,j) = adv(i,j) + advn
-            if (.not. present(nosplit_finalise)) then
-!              do the x-advection splitting step
+            if (action .eq. SPLIT_UPDATE) then
                f(i,j) = ( Dio*f(i,j) - dt*advn ) / Di(i,j)
             end if
          end if
-         if (present(nosplit_finalise)) then
-            if (nosplit_finalise .and. mask_finalise(i,j)) then
+         if (action .eq. NOSPLIT_FINALISE) then
+            if (mask_finalise(i,j)) then
 !              Note (KK): do not modify tracer inside open bdy cells
                f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
             end if
@@ -227,11 +309,11 @@
 !$OMP END PARALLEL
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving adv_u_split()'
+   write(debug,*) 'Leaving adv_split_u()'
    write(debug,*)
 #endif
    return
-   end subroutine adv_u_split
+   end subroutine adv_split_u
 !EOC
 !-----------------------------------------------------------------------
 ! Copyright (C) 2004 - Hans Burchard and Karsten Bolding               !

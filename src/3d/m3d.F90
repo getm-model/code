@@ -24,11 +24,11 @@
 !
 ! !USES:
    use exceptions
-   use domain, only: openbdy,maxdepth,vert_cord,az,bottfric_method,H,HU,HV
+   use domain, only: openbdy,maxdepth,vert_cord,az
    use les, only: do_les_3d
    use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
-   use m2d_general, only: bottom_friction
-   use m2d, only: no_2d,deformCX,deformUV,Am_method,NO_AM,AM_LES
+   use m2d, only: bottom_friction
+   use m2d, only: no_2d,deformCX,deformUV,Am_method,AM_LES
    use variables_2d, only: z
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
@@ -42,7 +42,7 @@
    use internal_pressure, only: ip_method
    use variables_3d
    use advection, only: NOADV
-   use advection_3d, only: init_advection_3d,print_adv_settings_3d,itersmax_adv
+   use advection_3d, only: init_advection_3d,print_adv_settings_3d,adv_ver_iterations
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
    use bdy_3d, only: bdy3d_tmrlx, bdy3d_tmrlx_ucut, bdy3d_tmrlx_max, bdy3d_tmrlx_min
 !  Necessary to use halo_zones because update_3d_halos() have been moved out
@@ -55,6 +55,9 @@
    integer                             :: M=1
    REALTYPE                            :: cord_relax=_ZERO_
    logical                             :: calc_ip=.false.
+   integer                             :: vel3d_adv_split=0
+   integer                             :: vel3d_adv_hor=1
+   integer                             :: vel3d_adv_ver=1
    logical                             :: calc_temp=.true.
    logical                             :: calc_salt=.true.
    logical                             :: calc_stirr=.false.
@@ -70,8 +73,7 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer         :: vel_adv_split=0,vel_hor_adv=1,vel_ver_adv=1
-   logical         :: turb_adv=.false.
+   logical         :: advect_turbulence=.false.
    integer         :: ip_ramp=-1
 !EOP
 !-----------------------------------------------------------------------
@@ -117,14 +119,14 @@
 ! !LOCAL VARIABLES:
    integer         :: rc
    NAMELIST /m3d/ &
-             M,cnpar,cord_relax,itersmax_adv,           &
-             bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,     &
-             bdy3d_tmrlx,bdy3d_tmrlx_ucut,              &
-             bdy3d_tmrlx_max,bdy3d_tmrlx_min,           &
-             vel_adv_split,vel_hor_adv,vel_ver_adv,     &
-             calc_temp,calc_salt,                       &
-             avmback,avhback,turb_adv,                  &
-             nonhyd_method,ip_method,ip_ramp,           &
+             M,cnpar,cord_relax,adv_ver_iterations,       &
+             bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,       &
+             bdy3d_tmrlx,bdy3d_tmrlx_ucut,                &
+             bdy3d_tmrlx_max,bdy3d_tmrlx_min,             &
+             vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver, &
+             calc_temp,calc_salt,                         &
+             avmback,avhback,advect_turbulence,           &
+             nonhyd_method,ip_method,ip_ramp,             &
              vel_check,min_vel,max_vel
 !EOP
 !-------------------------------------------------------------------------
@@ -168,20 +170,20 @@
 !  Sanity checks for advection specifications
    LEVEL2 'Advection of horizontal 3D velocities'
 #ifdef NO_ADVECT
-   if (vel_hor_adv .ne. NOADV) then
-      LEVEL2 "reset vel_hor_adv= ",NOADV," because of"
+   if (vel3d_adv_hor .ne. NOADV) then
+      LEVEL2 "reset vel3d_adv_hor= ",NOADV," because of"
       LEVEL2 "obsolete NO_ADVECT macro. Note that this"
       LEVEL2 "behaviour will be removed in the future."
-      vel_hor_adv = NOADV
+      vel3d_adv_hor = NOADV
    end if
-   if (vel_ver_adv .ne. NOADV) then
-      LEVEL2 "reset vel_ver_adv= ",NOADV," because of"
+   if (vel3d_adv_ver .ne. NOADV) then
+      LEVEL2 "reset vel3d_adv_ver= ",NOADV," because of"
       LEVEL2 "obsolete NO_ADVECT macro. Note that this"
       LEVEL2 "behaviour will be removed in the future."
-      vel_ver_adv = NOADV
+      vel3d_adv_ver = NOADV
    end if
 #endif
-   call print_adv_settings_3d(vel_adv_split,vel_hor_adv,vel_ver_adv,_ZERO_)
+   call print_adv_settings_3d(vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_)
 
 !  Sanity checks for bdy 3d
    if (.not.openbdy .or. runtype.eq.2) bdy3d=.false.
@@ -231,15 +233,15 @@
    nuh=1.d-15
 
 #ifdef TURB_ADV
-   if (.not. turb_adv) then
+   if (.not. advect_turbulence) then
       LEVEL2 "reenabled advection of TKE and eps due to"
       LEVEL2 "obsolete TURB_ADV macro. Note that this"
       LEVEL2 "behaviour will be removed in the future!"
-      turb_adv = .true.
+      advect_turbulence = .true.
    end if
 #endif
 
-   LEVEL2 "turb_adv = ",turb_adv
+   LEVEL2 "advect_turbulence = ",advect_turbulence
 
 #endif
 
@@ -449,9 +451,7 @@
 
       call coordinates(hotstart)
 
-      if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
-         call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
-      end if
+      call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
 
       if (nonhyd_method .eq. 1) then
          call do_internal_pressure(2)
@@ -630,21 +630,19 @@
    if (kmax .gt. 1) then
 
       call uv_advect_3d()
-      if (Am_method .ne. NO_AM) call uv_diffusion_3d() ! Must be called after uv_advect_3d
+      call uv_diffusion_3d()  ! Must be called after uv_advect_3d
 
-      if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
-         call tic(TIM_INTEGR3D)
-         call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv,zub,zvb)
-         call toc(TIM_INTEGR3D)
-         call stresses_3d()
-      end if
+      call tic(TIM_INTEGR3D)
+      call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv,zub,zvb)
+      call toc(TIM_INTEGR3D)
+      call stresses_3d()
 
 #ifndef CONSTANT_VISCOSITY
 #ifndef PARABOLIC_VISCOSITY
       if (vert_cord .ne. _ADAPTIVE_COORDS_) call ss_nn()
 #endif
       call gotm()
-      if (turb_adv) call tke_eps_advect_3d()
+      if (advect_turbulence) call tke_eps_advect_3d()
 #endif
 
    end if

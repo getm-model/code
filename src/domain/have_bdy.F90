@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: have_bdy - checks whether this node has boundaries.
+! !ROUTINE: have_bdy - checks whether this node has boundaries.
 !
 ! !INTERFACE:
    subroutine have_bdy
@@ -15,7 +15,6 @@
 !
 ! !USES:
    use domain
-   use m2d, only: have_boundaries
    IMPLICIT NONE
 !
 ! !REVISION HISTORY:

@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: ip_blumberg_mellor_lin
+! !IROUTINE: ip_blumberg_mellor_lin
 !
 ! !INTERFACE:
    subroutine ip_blumberg_mellor_lin()

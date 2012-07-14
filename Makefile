@@ -52,6 +52,8 @@ VER=2.1.0
 VER=2.2.0
 # 2012/04/01 - new devel release
 VER=2.3.0
+# 2012/06/26 - unified advection/diffusion
+VER=2.3.1
 
 
 .PHONY: doc

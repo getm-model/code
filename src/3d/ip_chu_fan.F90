@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: ip_chu_fan
+! !IROUTINE: ip_chu_fan
 !
 ! !INTERFACE:
    subroutine ip_chu_fan()

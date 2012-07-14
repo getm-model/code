@@ -9,7 +9,7 @@
 !
 ! !DESCRIPTION:
 !
-!  This module do advection of scalars.  The module follows the same
+!  This module does lateral advection of scalars. It follows the same
 !  convention as the other modules in 'getm'. The module is initialised
 !  by calling 'init\_advection()'. In the time-loop 'do\_advection()' is
 !  called. 'do\_advection' is a wrapper routine which - dependent on the
@@ -37,7 +37,8 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_advection,do_advection,print_adv_settings
-   public adv_u_split,adv_v_split,adv_upstream_2dh,adv_arakawa_j7_2dh,adv_fct_2dh
+   public adv_split_u,adv_split_v,adv_upstream_2dh,adv_arakawa_j7_2dh,adv_fct_2dh
+   public adv_tvd_limiter
 
    type, public :: t_adv_grid
       logical,dimension(:,:),pointer :: mask_uflux,mask_vflux,mask_xflux
@@ -51,21 +52,6 @@
 
    type(t_adv_grid),public,target :: adv_gridH,adv_gridU,adv_gridV
 
-#ifdef STATIC
-   logical,dimension(E2DFIELD),target         :: mask_updateH
-   logical,dimension(E2DFIELD),target         :: mask_uflux,mask_vflux,mask_xflux
-   logical,dimension(E2DFIELD),target         :: mask_uupdateU,mask_vupdateV
-   REALTYPE,dimension(E2DFIELD)               :: Di,adv
-#else
-   logical,dimension(:,:),allocatable,target  :: mask_updateH
-   logical,dimension(:,:),allocatable,target  :: mask_uflux,mask_vflux,mask_xflux
-   logical,dimension(:,:),allocatable,target  :: mask_uupdateU,mask_vupdateV
-   REALTYPE,dimension(:,:),allocatable        :: Di,adv
-#endif
-#ifndef _POINTER_REMAP_
-   logical,dimension(:,:),allocatable,target  :: mask_ufluxU,mask_xfluxU,mask_xfluxV
-   REALTYPE,dimension(:,:),allocatable,target :: dxuU,dyuU
-#endif
    integer,public,parameter           :: NOSPLIT=0,FULLSPLIT=1,HALFSPLIT=2
    character(len=64),public,parameter :: adv_splits(0:2) = &
                   (/"no split: one 2D uv step          ",  &
@@ -85,22 +71,39 @@
         "2DH-J7 advection (Arakawa and Lamb, 1977)      ",  &
         "2DH-FCT advection                              ",  &
         "2DH-P2 advection                               "/)
-!
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Hans Burchard
+   integer,public,parameter           :: NOSPLIT_NOFINALISE=0
+   integer,public,parameter           :: NOSPLIT_FINALISE=1
+   integer,public,parameter           :: SPLIT_UPDATE=2
 !
 ! !LOCAL VARIABLES:
+#ifdef STATIC
+   logical,dimension(E2DFIELD),target         :: mask_updateH
+   logical,dimension(E2DFIELD),target         :: mask_uflux,mask_vflux,mask_xflux
+   logical,dimension(E2DFIELD),target         :: mask_uupdateU,mask_vupdateV
+   REALTYPE,dimension(E2DFIELD)               :: Di,adv
+#else
+   logical,dimension(:,:),allocatable,target  :: mask_updateH
+   logical,dimension(:,:),allocatable,target  :: mask_uflux,mask_vflux,mask_xflux
+   logical,dimension(:,:),allocatable,target  :: mask_uupdateU,mask_vupdateV
+   REALTYPE,dimension(:,:),allocatable        :: Di,adv
+#endif
+#ifndef _POINTER_REMAP_
+   logical,dimension(:,:),allocatable,target  :: mask_ufluxU,mask_xfluxU,mask_xfluxV
+   REALTYPE,dimension(:,:),allocatable,target :: dxuU,dyuU
+#endif
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
 !EOP
 !-----------------------------------------------------------------------
 
    interface
-      subroutine adv_u_split(dt,f,Di,adv,U,Do,DU,            &
+      subroutine adv_split_u(dt,f,Di,adv,U,Do,DU,                 &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                             dxu,dyu,arcd1,                  &
+                             dxu,dyu,arcd1,                       &
 #endif
-                             splitfac,scheme,AH,             &
-                             mask_flux,mask_update,          &
-                             nosplit_finalise,mask_finalise)
+                             splitfac,scheme,action,AH,           &
+                             mask_flux,mask_update,mask_finalise)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,intent(in)                             :: dt,splitfac,AH
@@ -109,21 +112,19 @@
          REALTYPE,dimension(:,:),pointer,intent(in)      :: dxu,dyu
          REALTYPE,dimension(E2DFIELD),intent(in)         :: arcd1
 #endif
-         integer,intent(in)                              :: scheme
+         integer,intent(in)                              :: scheme,action
          logical,dimension(:,:),pointer,intent(in)       :: mask_flux
          logical,dimension(E2DFIELD),intent(in)          :: mask_update
-         logical,intent(in),optional                     :: nosplit_finalise
          logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
          REALTYPE,dimension(E2DFIELD),intent(inout)      :: f,Di,adv
-      end subroutine adv_u_split
+      end subroutine adv_split_u
 
-      subroutine adv_v_split(dt,f,Di,adv,V,Do,DV,            &
+      subroutine adv_split_v(dt,f,Di,adv,V,Do,DV,                 &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                             dxv,dyv,arcd1,                  &
+                             dxv,dyv,arcd1,                       &
 #endif
-                             splitfac,scheme,AH,             &
-                             mask_flux,mask_update,          &
-                             nosplit_finalise,mask_finalise)
+                             splitfac,scheme,action,AH,           &
+                             mask_flux,mask_update,mask_finalise)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,intent(in)                             :: dt,splitfac,AH
@@ -132,21 +133,19 @@
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
          REALTYPE,dimension(E2DFIELD),intent(in)         :: arcd1
 #endif
-         integer,intent(in)                              :: scheme
+         integer,intent(in)                              :: scheme,action
          logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_flux
          logical,dimension(E2DFIELD),intent(in)          :: mask_update
-         logical,intent(in),optional                     :: nosplit_finalise
          logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
          REALTYPE,dimension(E2DFIELD),intent(inout)      :: f,Di,adv
-      end subroutine adv_v_split
+      end subroutine adv_split_v
 
       subroutine adv_arakawa_j7_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV,      &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                     dxv,dyu,dxu,dyv,arcd1,            &
 #endif
-                                    az,AH,                            &
-                                    mask_uflux,mask_vflux,mask_xflux, &
-                                    nosplit_finalise)
+                                    action,AH,az,                     &
+                                    mask_uflux,mask_vflux,mask_xflux)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,intent(in)                        :: dt,AH
@@ -156,10 +155,10 @@
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
          REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
+         integer,intent(in)                         :: action
          integer,dimension(E2DFIELD),intent(in)     :: az
          logical,dimension(:,:),pointer,intent(in)  :: mask_uflux,mask_xflux
          logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
-         logical,intent(in),optional                :: nosplit_finalise
          REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
       end subroutine adv_arakawa_j7_2dh
 
@@ -167,7 +166,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                   dxv,dyu,dxu,dyv,arcd1,       &
 #endif
-                                  az,AH,nosplit_finalise)
+                                  action,AH,az)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,intent(in)                        :: dt,AH
@@ -177,8 +176,8 @@
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
          REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
+         integer,intent(in)                         :: action
          integer,dimension(E2DFIELD),intent(in)     :: az
-         logical,intent(in),optional                :: nosplit_finalise
          REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
       end subroutine adv_upstream_2dh
 
@@ -186,9 +185,8 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                              dxv,dyu,dxu,dyv,arcd1,           &
 #endif
-                             az,AH,                           &
-                             mask_uflux,mask_vflux,           &
-                             nosplit_finalise)
+                             action,AH,az,                    &
+                             mask_uflux,mask_vflux)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          logical,intent(in)                         :: fct
@@ -199,12 +197,19 @@
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
          REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
+         integer,intent(in)                         :: action
          integer,dimension(E2DFIELD),intent(in)     :: az
          logical,dimension(:,:),pointer,intent(in)  :: mask_uflux
          logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
-         logical,intent(in),optional                :: nosplit_finalise
          REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
       end subroutine adv_fct_2dh
+
+      REALTYPE function adv_tvd_limiter(scheme,cfl,slope)
+         IMPLICIT NONE
+         integer,intent(in)  :: scheme
+         REALTYPE,intent(in) :: cfl,slope
+      end function adv_tvd_limiter
+
    end interface
 
    contains
@@ -219,10 +224,9 @@
 !
 ! !DESCRIPTION:
 !
-! Here, memory for some variables is allocated, which are then initialised to
-! zero.
+! Allocates memory and sets up masks and lateral grid increments.
 !
-! !USES
+! !USES:
    use domain, only: az,au,av,ax
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxc,dyc,arcd1,dxu,dyu,arud1,dxv,dyv,arvd1,dxx,dyx
@@ -364,24 +368,53 @@
 ! !IROUTINE:  do_advection - 2D advection schemes \label{sec-do-advection}
 !
 ! !INTERFACE:
-   subroutine do_advection(dt,f,U,V,DU,DV,Do,Dn,scheme,split,AH,tag, &
+   subroutine do_advection(dt,f,U,V,DU,DV,Do,Dn,split,scheme,AH,tag, &
                            Dires,advres)
 !
 ! !DESCRIPTION:
 !
-! Here, advection terms for all two-dimensional state variables are
-! calculated by means of a finite-volume approach (an exception
-! is the possibility to directly calculate the momentum advection
-! by a one-step two-dimensional upstream scheme,
-! see {\tt uv\_advect}) and the advection step is carried out
-! as a fractional advection time step. Those 2D variables may be defined on
-! T-, U- and V-points. Inside this advection
-! routine, it does not matter, where the advected variable is located
-! on the grid. All finite volume fluxes and geometric coefficients
-! need to be calculated before {\tt do\_advection\_2d} is called.
+! Laterally advects a 2D quantity. The location of the quantity on the
+! grid (either T-, U- or V-points) must be specified by the argument
+! {\tt tag}. The transports through the interfaces of the corresponding
+! Finite-Volumes and their different height information (all relative to
+! the given quantity) must be provided as well. Depending on {\tt split}
+! and {\tt scheme} several fractional steps (Strang splitting) with
+! different options for the calculation of the interfacial fluxes are
+! carried out.
+!
+! The options for {\tt split} are:
+!
+! \vspace{0.5cm}
+!
+! \begin{tabular}{ll}
+! {\tt split = NOSPLIT}: & no split (one 2D uv step) \\
+! {\tt split = FULLSPLIT}: & full step splitting (u + v) \\
+! {\tt split = HALFSPLIT}: & half step splitting (u/2 + v + u/2) \\
+! \end{tabular}
+!
+! \vspace{0.5cm}
+!
+! The options for {\tt scheme} are:
+!
+! \vspace{0.5cm}
+!
+! \begin{tabular}{ll}
+! {\tt scheme = NOADV}: & advection disabled \\
+! {\tt scheme = UPSTREAM}: & first-order upstream (monotone) \\
+! {\tt scheme = UPSTREAM\_2DH}: & 2DH upstream with forced monotonicity \\
+! {\tt scheme = P2}: & third-order polynomial (non-monotone) \\
+! {\tt scheme = SUPERBEE}: & second-order TVD (monotone) \\
+! {\tt scheme = MUSCL}: & second-order TVD (monotone) \\
+! {\tt scheme = P2\_PDM}: & third-order ULTIMATE-QUICKEST (monotone) \\
+! {\tt scheme = J7}: & 2DH Arakawa J7 \\
+! {\tt scheme = FCT}: & 2DH FCT with forced monotonicity \\
+! {\tt scheme = P2\_2DH}: & 2DH P2 with forced monotonicity \\
+! \end{tabular}
+!
+! \vspace{0.5cm}
 !
 ! With the compiler option {\tt SLICE\_MODEL}, the advection in
-! $y$-direction is not executed.
+! meridional direction is not executed.
 !
 !
 ! !USES:
@@ -438,24 +471,25 @@
 
                case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
-                  call adv_u_split(dt,f,Di,adv,U,Do,DU,                      &
+                  call adv_split_u(dt,f,Di,adv,U,Do,DU,                       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                   adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1, &
+                                   adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
-                                   _ONE_,scheme,AH,                          &
-                                   adv_grid%mask_uflux,adv_grid%mask_uupdate &
-#ifndef SLICE_MODEL
-                                   ,nosplit_finalise=.false.                 &
+                                   _ONE_,scheme,                              &
+#ifdef SLICE_MODEL
+                                   SPLIT_UPDATE,                              &
+#else
+                                   NOSPLIT_NOFINALISE,                        &
 #endif
-                                  )
+                                   AH,                                        &
+                                   adv_grid%mask_uflux,adv_grid%mask_uupdate)
 #ifndef SLICE_MODEL
-                  call adv_v_split(dt,f,Di,adv,V,Do,DV,                       &
+                  call adv_split_v(dt,f,Di,adv,V,Do,DV,                       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
-                                   _ONE_,scheme,AH,                           &
+                                   _ONE_,scheme,NOSPLIT_FINALISE,AH,          &
                                    adv_grid%mask_vflux,adv_grid%mask_vupdate, &
-                                   nosplit_finalise=.true.,                   &
                                    mask_finalise=adv_grid%mask_finalise)
 #endif
 
@@ -467,7 +501,7 @@
                                         adv_grid%dxu,adv_grid%dyv,   &
                                         adv_grid%arcd1,              &
 #endif
-                                        adv_grid%az,AH)
+                                        SPLIT_UPDATE,AH,adv_grid%az)
 
                case(J7)
 
@@ -477,7 +511,7 @@
                                           adv_grid%dxu,adv_grid%dyv,   &
                                           adv_grid%arcd1,              &
 #endif
-                                          adv_grid%az,AH,              &
+                                          SPLIT_UPDATE,AH,adv_grid%az, &
                                           adv_grid%mask_uflux,         &
                                           adv_grid%mask_vflux,         &
                                           adv_grid%mask_xflux)
@@ -490,7 +524,7 @@
                                    adv_grid%dxu,adv_grid%dyv,          &
                                    adv_grid%arcd1,                     &
 #endif
-                                   adv_grid%az,AH,                     &
+                                   SPLIT_UPDATE,AH,adv_grid%az,        &
                                    adv_grid%mask_uflux,                &
                                    adv_grid%mask_vflux)
 
@@ -502,7 +536,7 @@
                                    adv_grid%dxu,adv_grid%dyv,          &
                                    adv_grid%arcd1,                     &
 #endif
-                                   adv_grid%az,AH,                     &
+                                   SPLIT_UPDATE,AH,adv_grid%az,        &
                                    adv_grid%mask_uflux,                &
                                    adv_grid%mask_vflux)
 
@@ -518,11 +552,11 @@
 
                case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
-                  call adv_u_split(dt,f,Di,adv,U,Do,DU,                       &
+                  call adv_split_u(dt,f,Di,adv,U,Do,DU,                       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
-                                   _ONE_,scheme,AH,                           &
+                                   _ONE_,scheme,SPLIT_UPDATE,AH,              &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate)
 #ifndef SLICE_MODEL
 #ifdef GETM_PARALLEL
@@ -534,11 +568,11 @@
                      call toc(TIM_ADVH)
                   end if
 #endif
-                  call adv_v_split(dt,f,Di,adv,V,Do,DV,                       &
+                  call adv_split_v(dt,f,Di,adv,V,Do,DV,                       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
-                                   _ONE_,scheme,AH,                           &
+                                   _ONE_,scheme,SPLIT_UPDATE,AH,              &
                                    adv_grid%mask_vflux,adv_grid%mask_vupdate)
 #endif
 
@@ -558,11 +592,11 @@
 
                case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
-                  call adv_u_split(dt,f,Di,adv,U,Do,DU,                       &
+                  call adv_split_u(dt,f,Di,adv,U,Do,DU,                       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
-                                   _HALF_,scheme,AH,                          &
+                                   _HALF_,scheme,SPLIT_UPDATE,AH,             &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate)
 #ifndef SLICE_MODEL
 #ifdef GETM_PARALLEL
@@ -574,11 +608,11 @@
                      call toc(TIM_ADVH)
                   end if
 #endif
-                  call adv_v_split(dt,f,Di,adv,V,Do,DV,                       &
+                  call adv_split_v(dt,f,Di,adv,V,Do,DV,                       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
-                                   _ONE_,scheme,AH,                           &
+                                   _ONE_,scheme,SPLIT_UPDATE,AH,              &
                                    adv_grid%mask_vflux,adv_grid%mask_vupdate)
 #endif
 #ifdef GETM_PARALLEL
@@ -600,11 +634,11 @@
                      call toc(TIM_ADVH)
                   end if
 #endif
-                  call adv_u_split(dt,f,Di,adv,U,Do,DU,                       &
+                  call adv_split_u(dt,f,Di,adv,U,Do,DU,                       &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
-                                   _HALF_,scheme,AH,                          &
+                                   _HALF_,scheme,SPLIT_UPDATE,AH,             &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate)
 
                case((UPSTREAM_2DH),(J7),(FCT),(P2_2DH))
@@ -623,19 +657,19 @@
 
       end select
 
-   end if
-
 #ifdef SLICE_MODEL
-   j = jmax/2
-   f(:,j+1)   = f(:,j)
-   Di(:,j+1)  = Di(:,j)
-   adv(:,j+1) = adv(:,j)
-   if (tag .eq. V_TAG) then
-      f(:,j-1)   = f(:,j)
-      Di(:,j-1)  = Di(:,j)
-      adv(:,j-1) = adv(:,j)
-   end if
+      j = jmax/2
+      f(:,j+1)   = f(:,j)
+      Di(:,j+1)  = Di(:,j)
+      adv(:,j+1) = adv(:,j)
+      if (tag .eq. V_TAG) then
+         f(:,j-1)   = f(:,j)
+         Di(:,j-1)  = Di(:,j)
+         adv(:,j-1) = adv(:,j)
+      end if
 #endif
+
+   end if
 
    if (present(Dires)) Dires = Di
    if (present(advres)) advres = adv
@@ -660,7 +694,7 @@
 !
 ! Checks and prints out settings for 2D advection.
 !
-! !USES
+! !USES:
    IMPLICIT NONE
 
 ! !INPUT PARAMETERS:

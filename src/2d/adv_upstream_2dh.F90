@@ -1,7 +1,7 @@
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE:  adv_upstream_2dh - 2D upstream advection 2d
+! !IROUTINE:  adv_upstream_2dh - 2DH upstream advection of 2D quantities
 ! \label{sec-upstream-2dh-adv}
 !
 ! !INTERFACE:
@@ -9,7 +9,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                dxv,dyu,dxu,dyv,arcd1,       &
 #endif
-                               az,AH,nosplit_finalise)
+                               action,AH,az)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -23,16 +23,12 @@
 ! one-dimensional directional-split schemes might compute negative intermediate
 ! depths.
 !
-! The advection terms are calculated according to (\ref{u_discr_advect}) and
-! (\ref{v_discr_advect}) and the interface
-! fluxes are again calculated according to (\ref{uflux_upstream}) and
-! (\ref{vflux_upstream}).
-!
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
+   use advection, only: NOSPLIT_NOFINALISE,NOSPLIT_FINALISE
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -44,21 +40,20 @@
    REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
    REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
+   integer,intent(in)                         :: action
    integer,dimension(E2DFIELD),intent(in)     :: az
-   logical,intent(in),optional                :: nosplit_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
 !
-! !REVISION HISTORY:
-!  Original author(s): Hans Burchard & Karsten Bolding
-!
 ! !LOCAL VARIABLES:
-   logical                      :: update_f
    integer                      :: i,j,ii,jj
    REALTYPE                     :: Dio,advn
    REALTYPE,dimension(E2DFIELD) :: uflux,vflux
    REALTYPE,dimension(E2DFIELD) :: cmin,cmax
+!
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard & Karsten Bolding
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -67,11 +62,6 @@
    Ncall = Ncall+1
    write(debug,*) 'adv_upstream_2dh() # ',Ncall
 #endif
-
-   update_f = .true.
-   if (present(nosplit_finalise)) then
-      if (.not. nosplit_finalise) update_f = .false.
-   end if
 
 #ifdef SLICE_MODEL
  stop 'adv_upstream_2dh(): Do not use adv_upstream_2dh in SLICE_MODEL mode'
@@ -162,15 +152,12 @@
 #endif
                    )*ARCD1
             adv(i,j) = adv(i,j) + advn
-            if (present(nosplit_finalise)) then
-!              Note (KK): do not update f in case of nosplit_finalise=.false. !!!
-               if (nosplit_finalise) then
+            if (action .ne. NOSPLIT_NOFINALISE) then
+               if (action .eq. NOSPLIT_FINALISE) then
                   f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
+               else
+                  f(i,j) = ( Dio*f(i,j) - dt*advn ) / Di(i,j)
                end if
-            else
-               f(i,j) = ( Dio*f(i,j) - dt*advn ) / Di(i,j)
-            end if
-            if (update_f) then
 !              Force monotonicity, this is needed here for correcting truncations errors:
                if (f(i,j).gt.cmax(i,j)) f(i,j)=cmax(i,j)
                if (f(i,j).lt.cmin(i,j)) f(i,j)=cmin(i,j)
