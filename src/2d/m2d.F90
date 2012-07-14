@@ -23,7 +23,7 @@
    use domain, only: imin,imax,iextr,jmin,jmax,jextr,az,au,av,ax,H,HU,HV,min_depth
    use domain, only: ilg,ihg,jlg,jhg
    use domain, only: ill,ihl,jll,jhl
-   use domain, only: rigid_lid,openbdy
+   use domain, only: rigid_lid,openbdy,have_boundaries
    use advection, only: init_advection,print_adv_settings,NOADV
    use les, only: les_mode,LES_MOMENTUM
    use halo_zones, only: update_2d_halo,wait_halo,H_TAG
@@ -91,7 +91,6 @@
 !
 ! !PUBLIC DATA MEMBERS:
    logical                   :: no_2d
-   logical                   :: have_boundaries
    integer                   :: vel2d_adv_split=0
    integer                   :: vel2d_adv_hor=1
    REALTYPE                  :: avmmol=1.8d-6
