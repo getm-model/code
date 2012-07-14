@@ -76,6 +76,7 @@
    integer, dimension(:), allocatable  :: ei,efj,elj
    integer, dimension(:), allocatable  :: sj,sfi,sli
    integer, allocatable                :: bdy_index(:),bdy_map(:,:)
+   logical                             :: have_boundaries=.false.
 
    character(len=64)                   :: bdy_2d_desc(7)
    logical                             :: need_2d_bdy_elev = .false.

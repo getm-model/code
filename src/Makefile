@@ -24,7 +24,6 @@ $(GETMDIR)/src/getm
 CORE_LIBS	=	\
 		-lgetm${buildtype} 	\
 		-loutput${buildtype}	\
-		-ldomain${buildtype} 	\
 		-lmeteo${buildtype}
 ifneq ($(GETM_NO_3D),true)
 CORE_LIBS	+=	\
