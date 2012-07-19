@@ -133,38 +133,7 @@
 
   allocate(light(I3DFIELD),stat=rc) ! light advection velocity
   if (rc /= 0) stop 'init_3d: Error allocating memory (light)'
-
-  allocate(nummix3d_S(I3DFIELD),stat=rc)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (nummix3d_S)'
-
-  allocate(nummix2d_S(I2DFIELD),stat=rc)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (nummix2d_S)'
-
-  allocate(nummix3d_T(I3DFIELD),stat=rc)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (nummix3d_T)'
-
-  allocate(nummix2d_T(I2DFIELD),stat=rc)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (nummix2d_T)'
-
-  allocate(phymix3d_S(I3DFIELD),stat=rc)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (phymix3d_S)'
-
-  allocate(phymix2d_S(I2DFIELD),stat=rc)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (phymix2d_S)'
-
-  allocate(phymix3d_T(I3DFIELD),stat=rc)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (phymix3d_T)'
-
-  allocate(phymix2d_T(I2DFIELD),stat=rc)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (phymix2d_T)'
-
 #endif
-
-  allocate(numdis3d(I3DFIELD),stat=rc)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (numdis3d)'
-
-  allocate(numdis2d(I2DFIELD),stat=rc)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (numdis2d)'
 
 #ifdef SPM
   allocate(spm(I3DFIELD),stat=rc) ! Suspended particulate matter
