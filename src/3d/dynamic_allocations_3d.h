@@ -131,6 +131,9 @@
   allocate(rad(I3DFIELD),stat=rc) ! Solar radiation
   if (rc /= 0) stop 'init_3d: Error allocating memory (rad)'
 
+  allocate(light(I3DFIELD),stat=rc) ! light advection velocity
+  if (rc /= 0) stop 'init_3d: Error allocating memory (light)'
+
   allocate(nummix3d_S(I3DFIELD),stat=rc)
   if (rc /= 0) stop 'init_3d: Error allocating memory (nummix3d_S)'
 
@@ -173,9 +176,6 @@
   allocate(spm_pool(I2DFIELD),stat=rc) ! Pool of spm
   if (rc /= 0) stop 'init_3d: Error allocating memory (spm_pool)'
 #endif
-
-  allocate(light(I3DFIELD),stat=rc) ! light advection velocity
-  if (rc /= 0) stop 'init_3d: Error allocating memory (light)'
 
 ! 2D fields in the 3D domain
   allocate(sseo(I2DFIELD),stat=rc)  ! Elevation before macro time step (z-column)
