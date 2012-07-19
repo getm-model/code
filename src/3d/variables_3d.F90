@@ -206,8 +206,8 @@
    idpdy=_ZERO_
    nummix3d_S = _ZERO_ ; nummix2d_S = _ZERO_
    nummix3d_T = _ZERO_ ; nummix2d_T = _ZERO_
-   numdis3d   = _ZERO_ ; numdis2d   = _ZERO_
 #endif
+   numdis3d   = _ZERO_ ; numdis2d   = _ZERO_
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_variables_3d()'
