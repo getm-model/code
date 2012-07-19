@@ -233,13 +233,16 @@
       call hcc_check()
    end if
 
+   if (runtype .eq. 2) then
+      calc_temp = .false.
+      calc_salt = .false.
+   else
 #ifndef NO_BAROCLINIC
-   if (runtype .eq. 3 .or. runtype .eq. 4) then
       T = _ZERO_ ; S = _ZERO_ ; rho = _ZERO_
       if(calc_temp) call init_temperature()
       if(calc_salt) call init_salinity()
-   end if
 #endif
+   end if
 
 #ifndef NO_BAROCLINIC
     if (runtype .eq. 3 .or. runtype .eq. 4) then
