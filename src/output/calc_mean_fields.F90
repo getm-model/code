@@ -18,9 +18,9 @@
    use variables_3d, only: hn,uu,hun,vv,hvn,ww,taub
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T
+#endif
    use variables_3d, only: nummix3d_S,nummix2d_S,nummix3d_T,nummix2d_T
    use variables_3d, only: phymix3d_S,phymix2d_S,phymix3d_T,phymix2d_T
-#endif
    use variables_3d, only: numdis3d,numdis2d
 #ifdef GETM_BIO
    use bio, only: bio_calc
@@ -222,7 +222,6 @@
       if (do_numerical_analyses) then
          numdis3d_mean = numdis3d_mean + numdis3d
          numdis2d_mean = numdis2d_mean + numdis2d
-#ifndef NO_BAROCLINIC
          if (calc_temp) then
             nummix3d_T_mean = nummix3d_T_mean + nummix3d_T
             nummix2d_T_mean = nummix2d_T_mean + nummix2d_T
@@ -235,7 +234,6 @@
             phymix3d_S_mean = phymix3d_S_mean + phymix3d_S
             phymix2d_S_mean = phymix2d_S_mean + phymix2d_S
          end if
-#endif
       end if
 #ifdef GETM_BIO
       if (bio_calc) cc3dmean=cc3dmean + cc3d
@@ -270,7 +268,6 @@
          if (do_numerical_analyses) then
             numdis3d_mean = numdis3d_mean / step
             numdis2d_mean = numdis2d_mean / step
-#ifndef NO_BAROCLINIC
             if (calc_temp) then
                nummix3d_T_mean = nummix3d_T_mean / step
                nummix2d_T_mean = nummix2d_T_mean / step
@@ -283,7 +280,6 @@
                phymix3d_S_mean = phymix3d_S_mean / step
                phymix2d_S_mean = phymix2d_S_mean / step
             end if
-#endif
          end if
 #ifdef GETM_BIO
          if (bio_calc) cc3dmean = cc3dmean / step
