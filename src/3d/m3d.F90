@@ -529,6 +529,8 @@
       ufirst=.true.
    end if
 
+!  HERE WE HAVE TO UPDATE SS !!!
+
 #ifndef MUDFLAT
    if (kmax .gt. 1) then
       if (vert_cord .eq. _ADAPTIVE_COORDS_) call ss_nn()
@@ -585,6 +587,7 @@
 #ifndef PECS
       call do_eqstate()
 #endif
+!     HERE WE HAVE TO UPDATE NN !!!
    end if
 #endif
 

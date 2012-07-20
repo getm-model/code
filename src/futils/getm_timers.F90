@@ -47,7 +47,8 @@
    integer, parameter :: TIM_UUMOMENTUMH = 37   ! 3d uu_momentum_3d - halo part only
    integer, parameter :: TIM_WWMOMENTUM  = 38   ! 3d ww_momentum_3d
    integer, parameter :: TIM_WWMOMENTUMH = 39   ! 3d ww_momentum_3d - halo part only
-   integer, parameter :: TIM_SSNN        = 40   ! 3d ss_nn
+   integer, parameter :: TIM_SS          = 40   ! 3d shear_frequency
+   integer, parameter :: TIM_NN          = 41   ! 3d buoyancy_frequency
    integer, parameter :: TIM_BOTTFRICT3D = 42   ! 3d bottom_friction_3d
    integer, parameter :: TIM_STRESSES3D  = 44   ! 3d stresses_3d
    integer, parameter :: TIM_STRESSES3DH = 45   ! 3d stresses_3d - halo part only
@@ -197,7 +198,8 @@
    timernames(TIM_VVMOMENTUM)  = 'vv_momentum_3d'
    timernames(TIM_UUMOMENTUM)  = 'uu_momentum_3d'
    timernames(TIM_WWMOMENTUM)  = 'ww_momentum_3d'
-   timernames(TIM_SSNN)        = 'ss_nn'
+   timernames(TIM_SS)          = 'shear_frequency'
+   timernames(TIM_NN)          = 'buoyancy_frequency'
    timernames(TIM_BOTTFRICT3D) = 'bottom_friction_3d'
    timernames(TIM_STRESSES3D)  = 'stresses_3d'
    timernames(TIM_SLOWTERMS)   = 'slow_terms'
