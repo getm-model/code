@@ -291,7 +291,9 @@ do k=1,kmax-1
    do i = imin,imax
       if (az(i,2) .ge. 1 ) then
          SS(i,3,k)=SS(i,2,k)
+#ifndef NO_BAROCLINIC
          NN(i,3,k)=NN(i,2,k)
+#endif
       end if
    end do
 end do

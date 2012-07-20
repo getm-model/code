@@ -254,16 +254,19 @@
       call hcc_check()
    end if
 
+   if (runtype .eq. 2) then
+      calc_temp = .false.
+      calc_salt = .false.
+   else
 #ifndef NO_BAROCLINIC
-   if (runtype .eq. 3 .or. runtype .eq. 4) then
       T = _ZERO_ ; S = _ZERO_ ; rho = _ZERO_
       if(calc_temp) call init_temperature()
       if(calc_salt) call init_salinity()
       call init_eqstate()
       call init_internal_pressure()
       LEVEL2 'ip_ramp=',ip_ramp
-   end if
 #endif
+   end if
 
    if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
 
@@ -322,7 +325,6 @@
       end if
    end if
 #endif
-
 
    if (deformCX_3d) then
 
@@ -391,7 +393,7 @@
 !  of a hotstart file.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j
+   integer                   :: i,j,rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -404,15 +406,45 @@
    LEVEL1 'postinit_3d'
 
    if (do_numerical_analyses) then
-      numdis3d   = _ZERO_ ; numdis2d   = _ZERO_
-#ifndef NO_BAROCLINIC
-      phymix3d_S = _ZERO_ ; phymix2d_S = _ZERO_
-      phymix3d_T = _ZERO_ ; phymix2d_T = _ZERO_
-      nummix3d_S = _ZERO_ ; nummix2d_S = _ZERO_
-      nummix3d_T = _ZERO_ ; nummix2d_T = _ZERO_
-#endif
-   end if
 
+      allocate(numdis3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis3d)'
+      numdis3d = _ZERO_
+      allocate(numdis2d(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis2d)'
+      numdis2d = _ZERO_
+
+      if (calc_temp) then
+         allocate(phymix3d_T(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix3d_T)'
+         phymix3d_T = _ZERO_
+         allocate(phymix2d_T(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix2d_T)'
+         phymix2d_T = _ZERO_
+         allocate(nummix3d_T(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix3d_T)'
+         nummix3d_T = _ZERO_
+         allocate(nummix2d_T(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix2d_T)'
+         nummix2d_T = _ZERO_
+      end if
+
+      if (calc_salt) then
+         allocate(phymix3d_S(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix3d_S)'
+         phymix3d_S = _ZERO_
+         allocate(phymix2d_S(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix2d_S)'
+         phymix2d_S = _ZERO_
+         allocate(nummix3d_S(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix3d_S)'
+         nummix3d_S = _ZERO_
+         allocate(nummix2d_S(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix2d_S)'
+         nummix2d_S = _ZERO_
+      end if
+
+   end if
 
 ! Hotstart fix - see postinit_2d
    if (hotstart) then
