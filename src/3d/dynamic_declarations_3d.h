@@ -39,13 +39,7 @@
   REALTYPE, dimension(:,:,:), allocatable   :: alpha,beta
   REALTYPE, dimension(:,:,:), allocatable   :: idpdx,idpdy
   REALTYPE, dimension(:,:,:), allocatable   :: rad,light
-  REALTYPE, dimension(:,:,:), allocatable   :: nummix3d_S,nummix3d_T
-  REALTYPE, dimension(:,:,:), allocatable   :: phymix3d_S,phymix3d_T
-  REALTYPE, dimension(:,:), allocatable     :: nummix2d_S,nummix2d_T
-  REALTYPE, dimension(:,:), allocatable     :: phymix2d_S,phymix2d_T
 #endif
-  REALTYPE, dimension(:,:,:), allocatable   :: numdis3d
-  REALTYPE, dimension(:,:), allocatable     :: numdis2d
 
 ! suspended matter
 #ifndef NO_SUSP_MATTER

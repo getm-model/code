@@ -37,8 +37,6 @@
    integer         :: fabm_adv_hor=1
    integer         :: fabm_adv_ver=1
    REALTYPE        :: fabm_AH=-_ONE_
-   REALTYPE, allocatable, dimension(:,:,:,:) :: cc_pel,cc_diag
-   REALTYPE, allocatable, dimension(:,:,:)   :: cc_ben,cc_diag_hz
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -101,22 +99,22 @@
 
 !     Allocate memory for pelagic state variables.
       allocate(fabm_pel(I3DFIELD,size(model%info%state_variables)),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (cc_pel)'
+      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (fabm_pel)'
       fabm_pel = _ZERO_
 
 !     Allocate memory for benthic state variables.
       allocate(fabm_ben(I2DFIELD,size(model%info%state_variables_ben)),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (cc_ben)'
+      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (fabm_ben)'
       fabm_ben = _ZERO_
 
 !     Allocate memory for 3D diagnostic variables.
       allocate(fabm_diag(I3DFIELD,size(model%info%diagnostic_variables)),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (cc_diag)'
+      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (fabm_diag)'
       fabm_diag = _ZERO_
 
 !     Allocate memory for 2D [horizontal-only] diagnostic variables.
       allocate(fabm_diag_hz(I2DFIELD,size(model%info%diagnostic_variables_hz)),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (cc_diag_hz)'
+      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (fabm_diag_hz)'
       fabm_diag_hz = _ZERO_
 
 !     Read settings specific to GETM-FABM interaction.
@@ -279,8 +277,8 @@
 
 #ifdef SLICE_MODEL
       do i=imin,imax
-         cc_pel(:,i,3,:)=cc_pel(:,i,2,:)
-         cc_ben(:,i,3)  =cc_ben(:,i,2)
+         fabm_pel(:,i,3,:)=fabm_pel(:,i,2,:)
+         fabm_ben(:,i,3)  =fabm_ben(:,i,2)
       end do
 #endif
 
