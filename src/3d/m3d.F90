@@ -26,7 +26,7 @@
    use exceptions
    use parameters, only: avmmol
    use domain, only: openbdy,maxdepth,vert_cord,az
-   use m2d, only: uv_advect,uv_diffusion
+   use m2d, only: Am,uv_advect,uv_diffusion
    use variables_2d, only: z,Uint,Vint,UEx,VEx
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
@@ -497,8 +497,7 @@
    write(debug,*) 'integrate_3d() # ',Ncall
 #endif
    call start_macro()
-#ifndef NO_BAROCLINIC
-#endif
+
 #ifdef MUDFLAT
    call coordinates(.false.)
 #endif
@@ -507,13 +506,8 @@
       call bottom_friction_3d()
    end if
 #endif
-   call tic(TIM_INTEGR3D)
-   SS = _ZERO_
-   call toc(TIM_INTEGR3D)
+
 #ifndef NO_BAROCLINIC
-   call tic(TIM_INTEGR3D)
-   NN = _ZERO_
-   call toc(TIM_INTEGR3D)
    if (runtype .eq. 4) call do_internal_pressure()
 #endif
    call tic(TIM_INTEGR3D)
@@ -535,10 +529,19 @@
       ufirst=.true.
    end if
 
+!  KK-TODO: In realistic simulations (baroclinic+gotm) we need to call
+!           ss_nn() in any case, therefore it is done here by default.
+!           In the future one might check whether a very seldom case
+!           is present, where it can be skipped.
+!           We need SS: 1) #if (!defined(CONSTANT_VISCOSITY) && !defined(PARABOLIC_VISCOSITY))
+!                       2) adpative coordinates
+!                       3) if(do_numerical_analyses)
+!           We need NN (runtype .ge. 3):
+!                       1) #if (!defined(CONSTANT_VISCOSITY) && !defined(PARABOLIC_VISCOSITY))
+!                       2) adaptive coordinates
+   call ss_nn()
+
 #ifndef MUDFLAT
-   if (kmax .gt. 1) then
-      if (vert_cord .eq. _ADAPTIVE_COORDS_) call ss_nn()
-   end if
    call coordinates(.false.)
 #endif
 
@@ -553,9 +556,6 @@
       call stresses_3d()
 #endif
 #ifndef CONSTANT_VISCOSITY
-#ifndef PARABOLIC_VISCOSITY
-      if (vert_cord .ne. _ADAPTIVE_COORDS_) call ss_nn()
-#endif
       call gotm()
       if (advect_turbulence) call tke_eps_advect_3d()
 #endif

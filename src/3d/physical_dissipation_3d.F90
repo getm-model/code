@@ -2,10 +2,10 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: physical_dissipation()
+! !ROUTINE: physical_dissipation_3d()
 !
 ! !INTERFACE:
-   subroutine physical_dissipation(Am,pd3d,pd2d)
+   subroutine physical_dissipation_3d(Am,pd3d,pd2d)
 !
 ! !DESCRIPTION:
 !
@@ -126,7 +126,7 @@
    end do 
 
    return
-   end subroutine physical_dissipation
+   end subroutine physical_dissipation_3d
 !EOC
 
 !-----------------------------------------------------------------------
