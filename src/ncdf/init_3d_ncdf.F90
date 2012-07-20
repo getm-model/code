@@ -414,6 +414,13 @@
           units='W/kg',&
           FillValue=fv,missing_value=mv,valid_range=vr)
 
+      err = nf90_def_var(ncid,'phydis3d',NCDF_FLOAT_PRECISION,f4_dims,pd3d_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,pd3d_id, &
+          long_name='physical dissipation', &
+          units='W/kg',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+
       if (calc_salt) then
          err = nf90_def_var(ncid,'nummix3d_S',NCDF_FLOAT_PRECISION,f4_dims,nm3dS_id)
          if (err .NE. NF90_NOERR) go to 10

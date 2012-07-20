@@ -34,6 +34,8 @@
    REALTYPE,dimension(:,:), allocatable :: nummix2d_T_mean
    REALTYPE,dimension(:,:,:), allocatable :: numdis3d_mean
    REALTYPE,dimension(:,:), allocatable :: numdis2d_mean
+   REALTYPE,dimension(:,:,:), allocatable :: phydis3d_mean
+   REALTYPE,dimension(:,:), allocatable :: phydis2d_mean
    REALTYPE,dimension(:,:,:), allocatable :: phymix3d_S_mean
    REALTYPE,dimension(:,:), allocatable :: phymix2d_S_mean
    REALTYPE,dimension(:,:,:), allocatable :: phymix3d_T_mean

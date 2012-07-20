@@ -183,10 +183,24 @@
           units='W/kg',&
           FillValue=fv,missing_value=mv,valid_range=vr)
 
+      err = nf90_def_var(ncid,'phydis3d',NCDF_FLOAT_PRECISION,f4_dims,pd3d_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,pd3d_id, &
+          long_name='mean physical dissipation', &
+          units='W/kg',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+
       err = nf90_def_var(ncid,'numdis2d',NCDF_FLOAT_PRECISION,f3_dims,nm2d_id)
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,nm2d_id, &
           long_name='mean, vert. integrated numerical dissipation', &
+          units='Wm/kg',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'phydis2d',NCDF_FLOAT_PRECISION,f3_dims,pd2d_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,pd2d_id, &
+          long_name='mean, vert. integrated physical dissipation', &
           units='Wm/kg',&
           FillValue=fv,missing_value=mv,valid_range=vr)
 

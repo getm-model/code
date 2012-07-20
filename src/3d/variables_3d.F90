@@ -125,8 +125,8 @@
 #include "dynamic_declarations_3d.h"
 #endif
 
-  REALTYPE, dimension(:,:,:), allocatable   :: numdis3d
-  REALTYPE, dimension(:,:), allocatable     :: numdis2d
+  REALTYPE, dimension(:,:,:), allocatable   :: numdis3d,phydis3d
+  REALTYPE, dimension(:,:), allocatable     :: numdis2d,phydis2d
   REALTYPE, dimension(:,:,:), allocatable   :: nummix3d_S,nummix3d_T
   REALTYPE, dimension(:,:,:), allocatable   :: phymix3d_S,phymix3d_T
   REALTYPE, dimension(:,:), allocatable     :: nummix2d_S,nummix2d_T

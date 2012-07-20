@@ -308,6 +308,12 @@
 
    if (do_numerical_analyses) then
 
+      allocate(phydis3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (phydis3d)'
+      phydis3d = _ZERO_
+      allocate(phydis2d(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (phydis2d)'
+      phydis2d = _ZERO_
       allocate(numdis3d(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis3d)'
       numdis3d = _ZERO_
@@ -555,6 +561,8 @@
 #endif
 
    end if
+
+   if (do_numerical_analyses) call physical_dissipation_3d(Am,phydis3d,phydis2d)  
 
 #ifndef NO_BAROCLINIC
    if(runtype .eq. 4) then        ! prognostic T and S
