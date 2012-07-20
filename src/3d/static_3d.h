@@ -63,18 +63,7 @@
   REALTYPE                             :: alpha(I3DFIELD)
   REALTYPE                             :: beta(I3DFIELD)
   REALTYPE                             :: light(I3DFIELD)
-
-  REALTYPE                             :: nummix3d_S(I3DFIELD)
-  REALTYPE                             :: nummix2d_S(I2DFIELD)
-  REALTYPE                             :: nummix3d_T(I3DFIELD)
-  REALTYPE                             :: nummix2d_T(I2DFIELD)
-  REALTYPE                             :: phymix3d_S(I3DFIELD)
-  REALTYPE                             :: phymix2d_S(I2DFIELD)
-  REALTYPE                             :: phymix3d_T(I3DFIELD)
-  REALTYPE                             :: phymix2d_T(I2DFIELD)
 #endif
-  REALTYPE                             :: numdis3d(I3DFIELD)
-  REALTYPE                             :: numdis2d(I2DFIELD)
 
 #ifdef SPM
 ! suspended matter
