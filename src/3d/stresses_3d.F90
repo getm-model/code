@@ -94,9 +94,7 @@
                   +(vv(i  ,j  ,kv2)/hvn(i  ,j  ,kv2)*rrv(i  ,j  ))**2))
 
 !        total surface stress at T-points
-         taus(i,j)=rho_0i*sqrt(_HALF_*(                 &
-                        tausx(i,j)**2+tausx(i-1,j)**2   &
-                      + tausy(i,j)**2+tausy(i,j-1)**2) )
+         taus(i,j)=rho_0i*sqrt( tausx(i,j)**2 + tausy(i,j)**2 )
 
       end do
    end do
