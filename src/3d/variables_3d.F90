@@ -125,6 +125,13 @@
 #include "dynamic_declarations_3d.h"
 #endif
 
+  REALTYPE, dimension(:,:,:), allocatable   :: numdis3d
+  REALTYPE, dimension(:,:), allocatable     :: numdis2d
+  REALTYPE, dimension(:,:,:), allocatable   :: nummix3d_S,nummix3d_T
+  REALTYPE, dimension(:,:,:), allocatable   :: phymix3d_S,phymix3d_T
+  REALTYPE, dimension(:,:), allocatable     :: nummix2d_S,nummix2d_T
+  REALTYPE, dimension(:,:), allocatable     :: phymix2d_S,phymix2d_T
+
 !  the following fields will only be allocated if deformCX_3d=.true.
    REALTYPE,dimension(:,:,:),allocatable :: dudxC_3d,dvdyC_3d,shearX_3d
 

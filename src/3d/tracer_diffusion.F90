@@ -43,10 +43,7 @@
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(I2DFIELD)             :: work2d
 !  must be saved because of allocation outside a module
-   REALTYPE,dimension(:,:),allocatable,save :: dfdxU
-#ifndef SLICE_MODEL
-   REALTYPE,dimension(:,:),allocatable,save :: dfdyV,dfdxV,dfdyU
-#endif
+   REALTYPE,dimension(:,:),allocatable,save :: dfdxU,dfdyV,dfdxV,dfdyU
    REALTYPE,dimension(:,:),allocatable,save :: phymixU,phymixV
    logical,save                             :: first=.true.
    logical                                  :: calc_phymix
@@ -85,13 +82,17 @@
 #endif
 
       if (do_numerical_analyses) then
+
          allocate(phymixU(I2DFIELD),stat=rc)
          if (rc /= 0) stop 'tracer_diffusion: Error allocating memory (phymixU)'
          phymixU=_ZERO_
 
+#ifndef SLICE_MODEL
          allocate(phymixV(I2DFIELD),stat=rc)
          if (rc /= 0) stop 'tracer_diffusion: Error allocating memory (phymixV)'
          phymixV=_ZERO_
+#endif
+
       end if
 
       first=.false.
@@ -290,8 +291,12 @@
 !                      therefore dfdx(au=3) and dfdy(av=3) not needed
             if (az(i,j) .eq. 1) then
                if (calc_phymix) then
-                  phymix(i,j,k) = _HALF_*(  phymixU(i-1,j  ) + phymixU(i,j) &
-                                          + phymixV(i  ,j-1) + phymixV(i,j) )
+                  phymix(i,j,k) = _HALF_*(                                  &
+                                            phymixU(i-1,j  ) + phymixU(i,j) &
+#ifndef SLICE_MODEL
+                                          + phymixV(i  ,j-1) + phymixV(i,j) &
+#endif
+                                         )
                end if
                f(i,j,k) =  f(i,j,k)                            &
                          + dt * (                              &
