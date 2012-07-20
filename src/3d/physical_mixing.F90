@@ -54,7 +54,7 @@
 !BOC
    pm3d=_ZERO_
    if (AH .gt. _ZERO_) then
-      ! Physical dissipation on U-points
+      ! Physical mixing on U-points
       do k=1,kmax
          do j=jmin,jmax
             do i=imin-1,imax
@@ -73,7 +73,7 @@
             end do
          end do
       end do
-      ! Physical dissipation on V-points
+      ! Physical mixing on V-points
       do k=1,kmax
          do j=jmin-1,jmax
             do i=imin,imax

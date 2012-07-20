@@ -402,6 +402,7 @@
    end if
 
    if (save_numerical_analyses) then
+
       fv = nummix_missing
       mv = nummix_missing
       vr(1) = -100.0
@@ -413,7 +414,6 @@
           units='W/kg',&
           FillValue=fv,missing_value=mv,valid_range=vr)
 
-#ifndef NO_BAROCLINIC
       if (calc_salt) then
          err = nf90_def_var(ncid,'nummix3d_S',NCDF_FLOAT_PRECISION,f4_dims,nm3dS_id)
          if (err .NE. NF90_NOERR) go to 10
@@ -445,7 +445,7 @@
              units='degC**2/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
       end if
-#endif
+
    end if
 #ifdef SPM
    if (spm_save) then
