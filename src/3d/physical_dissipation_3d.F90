@@ -5,7 +5,7 @@
 ! !ROUTINE: physical_dissipation_3d()
 !
 ! !INTERFACE:
-   subroutine physical_dissipation_3d(Am,pd3d,pd2d)
+   subroutine physical_dissipation_3d()
 !
 ! !DESCRIPTION:
 !
@@ -40,25 +40,19 @@
 ! !USES:
    use domain,       only: imin,imax,jmin,jmax,kmax,H,au,av,ax,az
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxx,dyx,dxc,dyc
+   use domain, only: dxc,dyc,dxx,dyx
 #else
-   use domain, only: dx,dy,dry_z
+   use domain, only: dx,dy
 #endif
    use domain, only: dry_z
-   use variables_3d, only: num,uu,vv,hn,hun,hvn,SS
+   use m2d, only: Am
+   use variables_3d, only: phydis_3d,phydis_int,num,uu,vv,hn,hun,hvn,SS
    use parameters, only: avmmol
 
    IMPLICIT NONE
-
-! !INPUT PARAMETERS
-   REALTYPE, intent(in) :: Am
-
-! !INPUT/OUTPUT PARAMETERS
-   REALTYPE, intent(out) :: pd3d(I3DFIELD)
-   REALTYPE, intent(out) :: pd2d(I2DFIELD)
 !
 ! !REVISION HISTORY:
-!  Original author(s): Hannes Rennau
+!  Original author(s): Hans Burchard
 !
 ! !LOCAL VARIABLES:
    REALTYPE                  :: dupper,dlower
@@ -67,68 +61,63 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   pd3d=_ZERO_
-   pd2d=_ZERO_
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'physical_dissipation() # ',Ncall
+#endif
+#ifdef SLICE_MODEL
+   j = jmax/2 ! this MUST NOT be changed!!!
+#endif
+   phydis_int = _ZERO_
+
    if (Am .gt. _ZERO_) then
-      ! 0.5*(dv/dx + du/dy)**2 on X-points
       do k=1,kmax
-         do j=jmin-1,jmax
-            do i=imin-1,imax
-               if (ax(i,j).gt.0) then
-                  aux(i,j,k)=                                                  &
-                     _HALF_*(                                                  &
-                      (vv(i+1,j,k)/hvn(i+1,j,k)-vv(i,j,k)/hvn(i,j,k))/DXX      &
-                     +(uu(i,j+1,k)/hun(i,j+1,k)-uu(i,j,k)/hun(i,j,k))/DYX      &
-                                                                     )**2               
-               else 
-                  aux(i,j,k)=_ZERO_
-               end if
-            end do
-         end do
-      end do 
-      ! 2*Am*((du/dx)**2+0.5*(dv/dx + du/dy)**2+(dv/dy)**2) on T-points
-      do k=1,kmax
-         do j=jmin,jmax
-            do i=imin,imax
-               if (az(i,j).eq.1) then
-                  pd3d(i,j,k)=_TWO_*dry_z(i,j)*Am*(                            &
-                     _QUART_*(                                                 &
-                           aux(i,j,k)+aux(i-1,j,k)+aux(i,j-1,k)+aux(i-1,j-1,k))&
-                    +((uu(i,j,k)/hun(i,j,k)-uu(i-1,j,k)/hun(i-1,j,k))/DXC)**2  &
-                    +((vv(i,j,k)/hvn(i,j,k)-vv(i,j-1,k)/hvn(i,j-1,k))/DYC)**2)
-               end if
-            end do
-         end do
-      end do 
+         call physical_dissipation(uu(:,:,k),vv(:,:,k),hun(:,:,k),hvn(:,:,k),Am,phydis_3d(:,:,k))
+      end do
+   else
+      phydis_3d = _ZERO_
    end if
+
    ! Av * ( (du/dz)**2 + (dv/dz)**2 ) on W-POINTS
    aux(:,:,kmax)=_ZERO_
    aux(:,:,0)   =_ZERO_
    do k=1,kmax-1
+#ifndef SLICE_MODEL
       do j=jmin,jmax
+#endif
          do i=imin,imax
             if (az(i,j).eq.1) then
                aux(i,j,k)=(num(i,j,k)+avmmol)*SS(i,j,k)
             end if
          end do
+#ifndef SLICE_MODEL
       end do
+#endif
    end do 
    ! Add Av * ( (du/dz)**2 + (dv/dz)**2 ) on T-POINTS
    do k=1,kmax
+#ifndef SLICE_MODEL
       do j=jmin,jmax
+#endif
          do i=imin,imax
             if (az(i,j).eq.1) then
-               pd3d(i,j,k)=pd3d(i,j,k)+_HALF_*(aux(i,j,k-1)+aux(i,j,k))
-               pd2d(i,j)=pd2d(i,j)+pd3d(i,j,k)*hn(i,j,k)
+               phydis_3d(i,j,k)=phydis_3d(i,j,k)+_HALF_*(aux(i,j,k-1)+aux(i,j,k))
+               phydis_int(i,j)=phydis_int(i,j)+phydis_3d(i,j,k)*hn(i,j,k)
             end if
          end do
+#ifndef SLICE_MODEL
       end do
+#endif
    end do 
 
+#ifdef DEBUG
+   write(debug,*) 'Leaving physical_dissipation_3d()'
+   write(debug,*)
+#endif
    return
    end subroutine physical_dissipation_3d
 !EOC
-
 !-----------------------------------------------------------------------
-! Copyright (C) 2010 - Hannes Rennau, Richard Hofmeister               !
+! Copyright (C) 2012 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------

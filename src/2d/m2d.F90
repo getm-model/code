@@ -351,6 +351,15 @@
 
    LEVEL1 'postinit_2d'
 
+   if (do_numerical_analyses_2d) then
+      allocate(phydis_2d(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_2d: Error allocating memory (phydis_2d)'
+      phydis_2d = _ZERO_
+      allocate(numdis_2d(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d)'
+      numdis_2d = _ZERO_
+   end if
+
 !
 ! It is possible that a user changes the land mask and reads an "old" hotstart file.
 ! In this case the "old" velocities will need to be zeroed out.
@@ -461,6 +470,7 @@
    call tic(TIM_INTEGR2D)
    call uv_advect(U,V,DU,DV)
    call uv_diffusion(An_method,U,V,D,DU,DV) ! Has to be called after uv_advect.
+   if (do_numerical_analyses_2d) call physical_dissipation(U,V,DU,DV,Am,phydis_2d)
    call toc(TIM_INTEGR2D)
 
    call momentum(loop,tausx,tausy,airp)

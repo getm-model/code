@@ -306,49 +306,49 @@
 
    LEVEL1 'postinit_3d'
 
-   if (do_numerical_analyses) then
+   if (do_numerical_analyses_3d) then
 
-      allocate(phydis3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (phydis3d)'
-      phydis3d = _ZERO_
-      allocate(phydis2d(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (phydis2d)'
-      phydis2d = _ZERO_
-      allocate(numdis3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis3d)'
-      numdis3d = _ZERO_
-      allocate(numdis2d(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis2d)'
-      numdis2d = _ZERO_
+      allocate(phydis_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (phydis_3d)'
+      phydis_3d = _ZERO_
+      allocate(phydis_int(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (phydis_int)'
+      phydis_int = _ZERO_
+      allocate(numdis_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_3d)'
+      numdis_3d = _ZERO_
+      allocate(numdis_int(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_int)'
+      numdis_int = _ZERO_
 
       if (calc_temp) then
-         allocate(phymix3d_T(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix3d_T)'
-         phymix3d_T = _ZERO_
-         allocate(phymix2d_T(I2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix2d_T)'
-         phymix2d_T = _ZERO_
-         allocate(nummix3d_T(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix3d_T)'
-         nummix3d_T = _ZERO_
-         allocate(nummix2d_T(I2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix2d_T)'
-         nummix2d_T = _ZERO_
+         allocate(phymix_T(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_T)'
+         phymix_T = _ZERO_
+         allocate(phymix_T_int(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_T_int)'
+         phymix_T_int = _ZERO_
+         allocate(nummix_T(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_T)'
+         nummix_T = _ZERO_
+         allocate(nummix_T_int(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_T_int)'
+         nummix_T_int = _ZERO_
       end if
 
       if (calc_salt) then
-         allocate(phymix3d_S(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix3d_S)'
-         phymix3d_S = _ZERO_
-         allocate(phymix2d_S(I2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix2d_S)'
-         phymix2d_S = _ZERO_
-         allocate(nummix3d_S(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix3d_S)'
-         nummix3d_S = _ZERO_
-         allocate(nummix2d_S(I2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix2d_S)'
-         nummix2d_S = _ZERO_
+         allocate(phymix_S(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_S)'
+         phymix_S = _ZERO_
+         allocate(phymix_S_int(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_S_int)'
+         phymix_S_int = _ZERO_
+         allocate(nummix_S(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_S)'
+         nummix_S = _ZERO_
+         allocate(nummix_S_int(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_S_int)'
+         nummix_S_int = _ZERO_
       end if
 
    end if
@@ -535,7 +535,7 @@
 !           is present, where it can be skipped.
 !           We need SS: 1) #if (!defined(CONSTANT_VISCOSITY) && !defined(PARABOLIC_VISCOSITY))
 !                       2) adpative coordinates
-!                       3) if(do_numerical_analyses)
+!                       3) if(do_numerical_analyses_3d)
 !           We need NN (runtype .ge. 3):
 !                       1) #if (!defined(CONSTANT_VISCOSITY) && !defined(PARABOLIC_VISCOSITY))
 !                       2) adaptive coordinates
@@ -562,7 +562,7 @@
 
    end if
 
-   if (do_numerical_analyses) call physical_dissipation_3d(Am,phydis3d,phydis2d)  
+   if (do_numerical_analyses_3d) call physical_dissipation_3d(Am,phydis_3d,phydis_int)
 
 #ifndef NO_BAROCLINIC
    if(runtype .eq. 4) then        ! prognostic T and S
