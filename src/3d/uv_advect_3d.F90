@@ -487,13 +487,6 @@
 
 !$OMP END PARALLEL
 
-#ifdef SLICE_MODEL
-      if (do_numerical_analyses_3d) then
-         numdis_3d(imin:imax,j+1,1:kmax) = numdis_3d(imin:imax,j,1:kmax)
-         numdis_int(imin:imax,j+1)       = numdis_int(imin:imax,j)
-      end if
-#endif
-
    end if
 
    call toc(TIM_UVADV3D)
