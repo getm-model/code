@@ -44,7 +44,7 @@
    REALTYPE,dimension(E2DFIELD)        :: fadv,Uadv,Vadv,DUadv,DVadv
    REALTYPE,dimension(E2DFIELD),target :: Dadv
    REALTYPE,dimension(:,:),pointer     :: pDadv
-   REALTYPE,dimension(E2DFIELD)        :: numdiss,vel2
+   REALTYPE,dimension(E2DFIELD)        :: work2d
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -190,7 +190,7 @@
          do j=jmin-HALO,jmax+HALO  ! calculate square of u-velocity before advection step
 #endif
             do i=imin-HALO,imax+HALO
-               vel2(i,j) = fadv(i,j)**2
+               work2d(i,j) = fadv(i,j)**2
             end do
 #ifndef SLICE_MODEL
          end do
@@ -207,7 +207,7 @@
       if (do_numerical_analyses_2d) then
 
 !$OMP SINGLE
-         call do_advection(dtm,vel2,Uadv,Vadv,DUadv,DVadv,pDadv,pDadv, &
+         call do_advection(dtm,work2d,Uadv,Vadv,DUadv,DVadv,pDadv,pDadv, &
                            vel2d_adv_split,vel2d_adv_hor,_ZERO_,U_TAG)
 !$OMP END SINGLE
  
@@ -216,7 +216,7 @@
          do j=jmin,jmax ! calculate kinetic energy dissipaion rate for u-velocity
 #endif
             do i=imin,imax
-               numdiss(i,j) = ( vel2(i,j) - fadv(i,j)**2 ) / dtm
+               work2d(i,j) = ( work2d(i,j) - fadv(i,j)**2 ) / dtm
             end do
 #ifndef SLICE_MODEL
          end do
@@ -224,7 +224,7 @@
 !$OMP END DO
 
 !$OMP SINGLE
-         call update_2d_halo(numdiss,numdiss,au,imin,jmin,imax,jmax,U_TAG)
+         call update_2d_halo(work2d,work2d,au,imin,jmin,imax,jmax,U_TAG)
          call wait_halo(U_TAG)
 !$OMP END SINGLE
 
@@ -233,7 +233,9 @@
          do j=jmin,jmax
 #endif
             do i=imin,imax
-               numdis_2d(i,j) = _HALF_*( numdiss(i-1,j) + numdiss(i,j) )
+               if (az(i,j) .eq. 1) then
+                  numdis_2d(i,j) = _HALF_*( work2d(i-1,j) + work2d(i,j) )
+               end if
             end do
 #ifndef SLICE_MODEL
          end do
@@ -354,7 +356,7 @@
          do j=jmin-HALO,jmax+HALO  ! calculate square of v-velocity before advection step
 #endif
             do i=imin-HALO,imax+HALO
-               vel2(i,j) = fadv(i,j)**2
+               work2d(i,j) = fadv(i,j)**2
             end do
 #ifndef SLICE_MODEL
          end do
@@ -371,7 +373,7 @@
       if (do_numerical_analyses_2d) then
 
 !$OMP SINGLE
-         call do_advection(dtm,vel2,Uadv,Vadv,DUadv,DVadv,pDadv,pDadv, &
+         call do_advection(dtm,work2d,Uadv,Vadv,DUadv,DVadv,pDadv,pDadv, &
                            vel2d_adv_split,vel2d_adv_hor,_ZERO_,V_TAG)
 !$OMP END SINGLE
 
@@ -380,7 +382,7 @@
          do j=jmin,jmax ! calculate kinetic energy dissipaion rate for v-velocity
 #endif
             do i=imin,imax
-               numdiss(i,j) = ( vel2(i,j) - fadv(i,j)**2 ) / dtm
+               work2d(i,j) = ( work2d(i,j) - fadv(i,j)**2 ) / dtm
             end do
 #ifndef SLICE_MODEL
          end do
@@ -389,9 +391,9 @@
 
 !$OMP SINGLE
 #ifdef SLICE_MODEL
-         numdiss(imin:imax,j-1) = numdiss(imin:imax,j)
+         work2d(imin:imax,j-1) = work2d(imin:imax,j)
 #else
-         call update_2d_halo(numdiss,numdiss,av,imin,jmin,imax,jmax,V_TAG)
+         call update_2d_halo(work2d,work2d,av,imin,jmin,imax,jmax,V_TAG)
          call wait_halo(V_TAG)
 #endif
 !$OMP END SINGLE
@@ -401,8 +403,10 @@
          do j=jmin,jmax
 #endif
             do i=imin,imax
-               numdis_2d(i,j) = numdis_2d(i,j)                           &
-                               +_HALF_*( numdiss(i,j-1) + numdiss(i,j) )
+               if (az(i,j) .eq. 1) then
+                  numdis_2d(i,j) = numdis_2d(i,j)                         &
+                                  +_HALF_*( work2d(i,j-1) + work2d(i,j) )
+               end if
             end do
 #ifndef SLICE_MODEL
          end do

@@ -48,7 +48,7 @@
    REALTYPE,dimension(I3DFIELD)        :: fadv3d,uuadv,vvadv,wwadv,huadv,hvadv
    REALTYPE,dimension(I3DFIELD),target :: hnadv
    REALTYPE,dimension(:,:,:),pointer   :: phadv
-   REALTYPE,dimension(I3DFIELD)        :: numdiss,vel2,hires
+   REALTYPE,dimension(I3DFIELD)        :: work3d,hires
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -201,7 +201,7 @@
             do j=jmin-HALO,jmax+HALO
 #endif
                do i=imin-HALO,imax+HALO
-                  vel2(i,j,k) = fadv3d(i,j,k)**2
+                  work3d(i,j,k) = fadv3d(i,j,k)**2
                end do
 #ifndef SLICE_MODEL
             end do
@@ -236,7 +236,7 @@
       if (do_numerical_analyses_3d) then
 
 !$OMP SINGLE
-         call do_advection_3d(dt,vel2,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,        &
+         call do_advection_3d(dt,work3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,        &
                               vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,U_TAG, &
                               hires=hires)
 
@@ -249,7 +249,7 @@
             do j=jmin,jmax
 #endif
                do i=imin,imax
-                  numdiss(i,j,k) = ( vel2(i,j,k) - fadv3d(i,j,k)**2 ) / dt
+                  work3d(i,j,k) = ( work3d(i,j,k) - fadv3d(i,j,k)**2 ) / dt
                end do
 #ifndef SLICE_MODEL
             end do
@@ -259,7 +259,7 @@
 
 !$OMP BARRIER
 !$OMP SINGLE
-         call update_3d_halo(numdiss,numdiss,au,imin,jmin,imax,jmax,kmax,U_TAG)
+         call update_3d_halo(work3d,work3d,au,imin,jmin,imax,jmax,kmax,U_TAG)
          call wait_halo(U_TAG)
 !$OMP END SINGLE
 
@@ -269,9 +269,12 @@
             do j=jmin,jmax
 #endif
                do i=imin,imax
-                  numdis_3d(i,j,k) = _HALF_*( numdiss(i-1,j,k) + numdiss(i,j,k) )
-                  numdis_int(i,j) = numdis_int(i,j) + _HALF_*( numdiss(i-1,j,k)*hires(i-1,j,k) &
-                                                          +numdiss(i  ,j,k)*hires(i  ,j,k) )
+                  if (az(i,j) .eq. 1) then
+                     numdis_3d(i,j,k) = _HALF_*( work3d(i-1,j,k) + work3d(i,j,k) )
+                     numdis_int(i,j) = numdis_int(i,j)                           &
+                                      +_HALF_*( work3d(i-1,j,k)*hires(i-1,j,k)   &
+                                               +work3d(i  ,j,k)*hires(i  ,j,k) )
+                  end if
                end do
 #ifndef SLICE_MODEL
             end do
@@ -398,7 +401,7 @@
             do j=jmin-HALO,jmax+HALO
 #endif
                do i=imin-HALO,imax+HALO
-                  vel2(i,j,k) = fadv3d(i,j,k)**2
+                  work3d(i,j,k) = fadv3d(i,j,k)**2
                end do
 #ifndef SLICE_MODEL
             end do
@@ -433,7 +436,7 @@
       if (do_numerical_analyses_3d) then
 
 !$OMP SINGLE
-         call do_advection_3d(dt,vel2,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,        &
+         call do_advection_3d(dt,work3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,        &
                               vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,V_TAG, &
                               hires=hires)
 !$OMP END SINGLE
@@ -444,7 +447,7 @@
             do j=jmin,jmax
 #endif
                do i=imin,imax
-                  numdiss(i,j,k) = ( vel2(i,j,k) - fadv3d(i,j,k)**2 ) / dt
+                  work3d(i,j,k) = ( work3d(i,j,k) - fadv3d(i,j,k)**2 ) / dt
                end do
 #ifndef SLICE_MODEL
             end do
@@ -455,9 +458,9 @@
 !$OMP BARRIER
 !$OMP SINGLE
 #ifdef SLICE_MODEL
-         numdiss(imin:imax,j-1,1:kmax) = numdiss(imin:imax,j,1:kmax)
+         work3d(imin:imax,j-1,1:kmax) = work3d(imin:imax,j,1:kmax)
 #else
-         call update_3d_halo(numdiss,numdiss,av,imin,jmin,imax,jmax,kmax,V_TAG)
+         call update_3d_halo(work3d,work3d,av,imin,jmin,imax,jmax,kmax,V_TAG)
          call wait_halo(V_TAG)
 #endif
 !$OMP END SINGLE
@@ -468,10 +471,11 @@
             do j=jmin,jmax
 #endif
                do i=imin,imax
-                  numdis_3d(i,j,k) = numdis_3d(i,j,k)                               &
-                                    +_HALF_*( numdiss(i,j-1,k) + numdiss(i,j,k) )
-                  numdis_int(i,j) = numdis_int(i,j) + _HALF_*( numdiss(i,j-1,k)*hires(i,j-1,k) &
-                                                          +numdiss(i,j  ,k)*hires(i,j  ,k) )
+                  numdis_3d(i,j,k) = numdis_3d(i,j,k)                           &
+                                    +_HALF_*( work3d(i,j-1,k) + work3d(i,j,k) )
+                  numdis_int(i,j) = numdis_int(i,j)                           &
+                                   +_HALF_*( work3d(i,j-1,k)*hires(i,j-1,k)   &
+                                            +work3d(i,j  ,k)*hires(i,j  ,k) )
                end do
 #ifndef SLICE_MODEL
             end do
@@ -486,7 +490,7 @@
 #ifdef SLICE_MODEL
       if (do_numerical_analyses_3d) then
          numdis_3d(imin:imax,j+1,1:kmax) = numdis_3d(imin:imax,j,1:kmax)
-         numdis_int(imin:imax,j+1)        = numdis_int(imin:imax,j)
+         numdis_int(imin:imax,j+1)       = numdis_int(imin:imax,j)
       end if
 #endif
 
