@@ -562,7 +562,7 @@
 
    end if
 
-   if (do_numerical_analyses_3d) call physical_dissipation_3d(Am,phydis_3d,phydis_int)
+   if (do_numerical_analyses_3d) call physical_dissipation_3d()
 
 #ifndef NO_BAROCLINIC
    if(runtype .eq. 4) then        ! prognostic T and S
