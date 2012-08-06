@@ -57,6 +57,14 @@
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: hsd_u,hsd_v
       end subroutine uv_diff_2dh
 
+      subroutine physical_dissipation(U,V,DU,DV,Am,phydiss)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         REALTYPE,dimension(E2DFIELD),intent(in)  :: U,V,DU,DV
+         REALTYPE,intent(in)                      :: Am
+         REALTYPE,dimension(E2DFIELD),intent(out) :: phydiss
+      end subroutine physical_dissipation
+
 ! Temporary interface (should be read from module):
       subroutine get_2d_field(fn,varname,il,ih,jl,jh,f)
          character(len=*),intent(in)   :: fn,varname
