@@ -361,43 +361,42 @@
 
    end if ! save_ss_nn
 
-   if (save_numerical_analyses) then
-
+   if (nd3d_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,numdis_3d,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
       err = nf90_put_var(ncid,nd3d_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
-
+   end if
+   if (pd3d_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phydis_3d,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
       err = nf90_put_var(ncid,pd3d_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
-
-      if (calc_salt) then
-         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix_S,nummix_missing, &
-                     imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf90_put_var(ncid,nmS_id,ws(_3D_W_),start,edges)
-         if (err .NE. NF90_NOERR) go to 10
-
-         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix_S,nummix_missing, &
-                     imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf90_put_var(ncid,pmS_id,ws(_3D_W_),start,edges)
-         if (err .NE. NF90_NOERR) go to 10
-      end if
-
-      if (calc_temp) then
-         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix_T,nummix_missing, &
-                     imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf90_put_var(ncid,nmT_id,ws(_3D_W_),start,edges)
-         if (err .NE. NF90_NOERR) go to 10
-
-         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix_T,nummix_missing, &
-                     imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf90_put_var(ncid,pmT_id,ws(_3D_W_),start,edges)
-         if (err .NE. NF90_NOERR) go to 10
-      end if
-
-   end if ! save_numerical_analyses
+   end if
+   if (nmS_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix_S,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,nmS_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+   if (pmS_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix_S,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,pmS_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+   if (nmT_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix_T,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,nmT_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+   if (pmT_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix_T,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,pmT_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
 
 #ifdef SPM
    if (spm_save) then
