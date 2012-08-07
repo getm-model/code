@@ -236,7 +236,7 @@
       if (do_numerical_analyses_3d) then
 
 !$OMP SINGLE
-         call do_advection_3d(dt,work3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,        &
+         call do_advection_3d(dt,work3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,      &
                               vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,U_TAG, &
                               hires=hires)
 
@@ -436,7 +436,7 @@
       if (do_numerical_analyses_3d) then
 
 !$OMP SINGLE
-         call do_advection_3d(dt,work3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,        &
+         call do_advection_3d(dt,work3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,      &
                               vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,V_TAG, &
                               hires=hires)
 !$OMP END SINGLE
@@ -471,11 +471,13 @@
             do j=jmin,jmax
 #endif
                do i=imin,imax
-                  numdis_3d(i,j,k) = numdis_3d(i,j,k)                           &
-                                    +_HALF_*( work3d(i,j-1,k) + work3d(i,j,k) )
-                  numdis_int(i,j) = numdis_int(i,j)                           &
-                                   +_HALF_*( work3d(i,j-1,k)*hires(i,j-1,k)   &
-                                            +work3d(i,j  ,k)*hires(i,j  ,k) )
+                  if (az(i,j) .eq. 1) then
+                     numdis_3d(i,j,k) = numdis_3d(i,j,k)                           &
+                                       +_HALF_*( work3d(i,j-1,k) + work3d(i,j,k) )
+                     numdis_int(i,j) = numdis_int(i,j)                           &
+                                      +_HALF_*( work3d(i,j-1,k)*hires(i,j-1,k)   &
+                                               +work3d(i,j  ,k)*hires(i,j  ,k) )
+                  end if
                end do
 #ifndef SLICE_MODEL
             end do
