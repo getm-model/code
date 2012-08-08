@@ -49,7 +49,7 @@
    j = jmax/2 ! this MUST NOT be changed!!!
 #endif
 
-!  Note (KK): in the present implementation it is guaranteed, that 
+!  Note (KK): in the present implementation it is guaranteed, that
 !             the turbulent quantities at k=0|kmax are not changed
 !             due to advection
 !   uuadv(:,:,0) = _ZERO_ ! not used in the present implementation
