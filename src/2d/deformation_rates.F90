@@ -10,7 +10,7 @@
                                           dudyX,dvdxX,shearX,        &
                                           dvdxU,shearU,dudyV,shearV)
 
-!  Note (KK): keep in sync with interface in m2d_general.F90
+!  Note (KK): keep in sync with interface in m2d.F90
 !
 ! !DESCRIPTION:
 !
