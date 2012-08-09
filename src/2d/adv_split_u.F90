@@ -155,7 +155,7 @@
    use domain, only: dx,dy,ard1
 #endif
    use advection, only: adv_tvd_limiter
-   use advection, only: UPSTREAM
+   use advection, only: UPSTREAM,CENTRAL
    use advection, only: NOSPLIT_FINALISE,SPLIT_UPDATE
 !$ use omp_lib
    IMPLICIT NONE
@@ -226,44 +226,48 @@
       do i=imin-HALO+isub,imax+HALO-1-isub
          if (mask_flux(i,j)) then
 !           Note (KK): exclude x-advection of u across W/E open bdys
-            if (U(i,j) .gt. _ZERO_) then
-               fc = f(i  ,j)               ! central
-               if (scheme .ne. UPSTREAM) then
-!                 Note (KK): also fall back to upstream near boundaries
-                  use_limiter = mask_flux(i-1,j)
-               end if
-               if (use_limiter) then
-                  cfl = U(i,j)/DU(i,j)*dti/DXU
-                  fu = f(i-1,j)            ! upstream
-                  fd = f(i+1,j)            ! downstream
-                  if (abs(fd-fc) .gt. 1.d-10) then
-                     r = (fc-fu)/(fd-fc)   ! slope ratio
-                  else
-                     r = (fc-fu)*1.d10
-                  end if
-               end if
+            if (scheme .eq. CENTRAL) then
+               fc = _HALF_*( f(i,j) + f(i+1,j) )
             else
-               fc = f(i+1,j)               ! central
-               if (scheme .ne. UPSTREAM) then
-!                 Note (KK): also fall back to upstream near boundaries
-                  use_limiter = mask_flux(i+1,j)
+               if (U(i,j) .gt. _ZERO_) then
+                  fc = f(i  ,j)               ! central
+                  if (scheme .ne. UPSTREAM) then
+!                    Note (KK): also fall back to upstream near boundaries
+                     use_limiter = mask_flux(i-1,j)
+                  end if
+                  if (use_limiter) then
+                     cfl = U(i,j)/DU(i,j)*dti/DXU
+                     fu = f(i-1,j)            ! upstream
+                     fd = f(i+1,j)            ! downstream
+                     if (abs(fd-fc) .gt. 1.d-10) then
+                        r = (fc-fu)/(fd-fc)   ! slope ratio
+                     else
+                        r = (fc-fu)*1.d10
+                     end if
+                  end if
+               else
+                  fc = f(i+1,j)               ! central
+                  if (scheme .ne. UPSTREAM) then
+!                    Note (KK): also fall back to upstream near boundaries
+                     use_limiter = mask_flux(i+1,j)
+                  end if
+                  if (use_limiter) then
+                     cfl = -U(i,j)/DU(i,j)*dti/DXU
+                     fu = f(i+2,j)            ! upstream
+                     fd = f(i  ,j)            ! downstream
+                     if (abs(fc-fd) .gt. 1.d-10) then
+                        r = (fu-fc)/(fc-fd)   ! slope ratio
+                     else
+                        r = (fu-fc)*1.d10
+                     end if
+                  end if
                end if
                if (use_limiter) then
-                  cfl = -U(i,j)/DU(i,j)*dti/DXU
-                  fu = f(i+2,j)            ! upstream
-                  fd = f(i  ,j)            ! downstream
-                  if (abs(fc-fd) .gt. 1.d-10) then
-                     r = (fu-fc)/(fc-fd)   ! slope ratio
-                  else
-                     r = (fu-fc)*1.d10
-                  end if
+                  limit = adv_tvd_limiter(scheme,cfl,r)
+                  fc = fc + _HALF_*limit*(_ONE_-cfl)*(fd-fc)
                end if
             end if
             uflux(i,j) = U(i,j)*fc
-            if (use_limiter) then
-               limit = adv_tvd_limiter(scheme,cfl,r)
-               uflux(i,j) = uflux(i,j) + U(i,j)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
-            end if
             if (use_AH) then
 !              Horizontal diffusion
                uflux(i,j) = uflux(i,j) - AH*DU(i,j)*(f(i+1,j)-f(i  ,j))/DXU
