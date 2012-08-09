@@ -115,11 +115,11 @@
                   end if
                end if
             end if
-            vflux(i,j) = V(i,j)*fc
             if (use_limiter) then
                limit = adv_tvd_limiter(scheme,cfl,r)
-               vflux(i,j) = vflux(i,j) + V(i,j)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
+               fc = fc + _HALF_*limit*(_ONE_-cfl)*(fd-fc)
             end if
+            vflux(i,j) = V(i,j)*fc
             if (use_AH) then
 !              Horizontal diffusion
                vflux(i,j) = vflux(i,j) - AH*DV(i,j)*(f(i,j+1)-f(i,j  ))/DYV
