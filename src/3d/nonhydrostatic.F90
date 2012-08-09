@@ -93,6 +93,7 @@
    use variables_3d, only: dt,uu,vv,ww,ho,hn,hun,hvn,num
    use m2d, only: avmmol
 #ifndef NO_ADVECT
+   use advection, only: NOSPLIT,CENTRAL
    use advection_3d, only: do_advection_3d
 #endif
    use halo_zones, only: update_3d_halo,wait_halo,H_TAG
@@ -297,8 +298,8 @@
 !  wc that will be advected (wc still needed!!!)
    fadv3d = wc
 
-   call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                         &
-                        vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,H_TAG, &
+   call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,     &
+                        NOSPLIT,CENTRAL,CENTRAL,_ZERO_,H_TAG, &
                         advres=bnh)
 
    call update_3d_halo(bnh,bnh,az,imin,jmin,imax,jmax,kmax,H_TAG)

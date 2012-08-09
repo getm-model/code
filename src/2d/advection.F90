@@ -60,6 +60,7 @@
    integer,public,parameter           :: NOADV=0,UPSTREAM=1,UPSTREAM_2DH=2
    integer,public,parameter           :: P2=3,SUPERBEE=4,MUSCL=5,P2_PDM=6
    integer,public,parameter           :: J7=7,FCT=8,P2_2DH=9
+   integer,public,parameter           :: CENTRAL=-1
    character(len=64),public,parameter :: adv_schemes(0:9) = &
       (/"advection disabled                             ",  &
         "upstream advection (first-order, monotone)     ",  &
