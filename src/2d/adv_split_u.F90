@@ -259,11 +259,11 @@
                   end if
                end if
             end if
-            uflux(i,j) = U(i,j)*fc
             if (use_limiter) then
                limit = adv_tvd_limiter(scheme,cfl,r)
-               uflux(i,j) = uflux(i,j) + U(i,j)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
+               fc = fc + _HALF_*limit*(_ONE_-cfl)*(fd-fc)
             end if
+            uflux(i,j) = U(i,j)*fc
             if (use_AH) then
 !              Horizontal diffusion
                uflux(i,j) = uflux(i,j) - AH*DU(i,j)*(f(i+1,j)-f(i  ,j))/DXU
