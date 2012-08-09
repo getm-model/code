@@ -181,11 +181,11 @@
                            end if
                         end if
                      end if
-                     wflux(k) = ww(i,j,k)*fc
                      if (use_limiter) then
                         limit = adv_tvd_limiter(scheme,cfl,r)
-                        wflux(k) = wflux(k) + ww(i,j,k)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
+                        fc = fc + _HALF_*limit*(_ONE_-cfl)*(fd-fc)
                      end if
+                     wflux(k) = ww(i,j,k)*fc
                   end do
                   do k=1,kmax-kshift
 !                    Note (KK): in case of W_TAG do not advect at k=kmax
