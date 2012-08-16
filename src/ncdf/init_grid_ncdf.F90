@@ -19,7 +19,7 @@
 ! !USES:
    use exceptions
    use netcdf
-   use ncdf_common
+   use ncdf_common, only: set_attributes
    use grid_ncdf
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: grid_type,vert_cord

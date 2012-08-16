@@ -188,7 +188,7 @@
    REALTYPE,dimension(E2DFIELD) :: uflux
    logical            :: use_limiter,use_AH
    integer            :: i,j,isub
-   REALTYPE           :: dti,Dio,advn,cfl,r,limit,fu,fc,fd
+   REALTYPE           :: dti,Dio,advn,cfl,limit,fuu,fu,fd
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -216,7 +216,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j,use_limiter)                             &
-!$OMP          PRIVATE(i,Dio,advn,cfl,r,limit,fu,fc,fd)
+!$OMP          PRIVATE(i,Dio,advn,cfl,limit,fuu,fu,fd)
 
 ! Calculating u-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
@@ -227,47 +227,37 @@
          if (mask_flux(i,j)) then
 !           Note (KK): exclude x-advection of u across W/E open bdys
             if (scheme .eq. CENTRAL) then
-               fc = _HALF_*( f(i,j) + f(i+1,j) )
+               fu = _HALF_*( f(i,j) + f(i+1,j) )
             else
                if (U(i,j) .gt. _ZERO_) then
-                  fc = f(i  ,j)               ! central
+                  fu = f(i  ,j)               ! central
                   if (scheme .ne. UPSTREAM) then
 !                    Note (KK): also fall back to upstream near boundaries
                      use_limiter = mask_flux(i-1,j)
                   end if
                   if (use_limiter) then
                      cfl = U(i,j)/DU(i,j)*dti/DXU
-                     fu = f(i-1,j)            ! upstream
+                     fuu = f(i-1,j)            ! upstream
                      fd = f(i+1,j)            ! downstream
-                     if (abs(fd-fc) .gt. 1.d-10) then
-                        r = (fc-fu)/(fd-fc)   ! slope ratio
-                     else
-                        r = (fc-fu)*1.d10
-                     end if
                   end if
                else
-                  fc = f(i+1,j)               ! central
+                  fu = f(i+1,j)               ! central
                   if (scheme .ne. UPSTREAM) then
 !                    Note (KK): also fall back to upstream near boundaries
                      use_limiter = mask_flux(i+1,j)
                   end if
                   if (use_limiter) then
                      cfl = -U(i,j)/DU(i,j)*dti/DXU
-                     fu = f(i+2,j)            ! upstream
+                     fuu = f(i+2,j)            ! upstream
                      fd = f(i  ,j)            ! downstream
-                     if (abs(fc-fd) .gt. 1.d-10) then
-                        r = (fu-fc)/(fc-fd)   ! slope ratio
-                     else
-                        r = (fu-fc)*1.d10
-                     end if
                   end if
                end if
                if (use_limiter) then
-                  limit = adv_tvd_limiter(scheme,cfl,r)
-                  fc = fc + _HALF_*limit*(_ONE_-cfl)*(fd-fc)
+                  limit = adv_tvd_limiter(scheme,cfl,fuu,fu,fd)
+                  fu = fu + _HALF_*limit*(_ONE_-cfl)*(fd-fu)
                end if
             end if
-            uflux(i,j) = U(i,j)*fc
+            uflux(i,j) = U(i,j)*fu
             if (use_AH) then
 !              Horizontal diffusion
                uflux(i,j) = uflux(i,j) - AH*DU(i,j)*(f(i+1,j)-f(i  ,j))/DXU
