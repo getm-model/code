@@ -205,10 +205,10 @@
          REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
       end subroutine adv_fct_2dh
 
-      REALTYPE function adv_tvd_limiter(scheme,cfl,slope)
+      REALTYPE function adv_tvd_limiter(scheme,cfl,fuu,fu,fd)
          IMPLICIT NONE
          integer,intent(in)  :: scheme
-         REALTYPE,intent(in) :: cfl,slope
+         REALTYPE,intent(in) :: cfl,fuu,fu,fd
       end function adv_tvd_limiter
 
    end interface
