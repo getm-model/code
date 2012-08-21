@@ -356,11 +356,12 @@
 !$OMP END DO
 
 #ifdef SLICE_MODEL
+   j = jmax/2
 !$OMP DO SCHEDULE(RUNTIME)
    do i=imin,imax
-      do k=kvmin(i,2),kmax
-         vv(i,1,k)=vv(i,2,k)
-         vv(i,3,k)=vv(i,2,k)
+      do k=kvmin(i,j),kmax
+         vv(i,j-1,k)=vv(i,j,k)
+         vv(i,j+1,k)=vv(i,j,k)
       end do
    end do
 !$OMP END DO

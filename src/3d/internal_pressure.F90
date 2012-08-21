@@ -253,9 +253,10 @@
 #endif
 
 #ifdef SLICE_MODEL
+   j = jmax/2
    do i=imin,imax
-      do k=kmin(i,2),kmax
-         idpdx(i,3,k)=idpdx(i,2,k)
+      do k=kmin(i,j),kmax
+         idpdx(i,j+1,k)=idpdx(i,j,k)
       end do
    end do
 #endif
