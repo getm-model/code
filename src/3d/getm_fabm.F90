@@ -199,13 +199,13 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-
+#ifdef SLICE_MODEL
+   j = jmax/2 ! this MUST NOT be changed!!!
+#endif
    call tic(TIM_GETM_FABM)
 
 !  First we do all the vertical processes
-#ifdef SLICE_MODEL
-   do j=2,2
-#else
+#ifndef SLICE_MODEL
    do j=jmin,jmax
 #endif
       do i=imin,imax
@@ -273,12 +273,12 @@
 
          end if
       end do
+#ifndef SLICE_MODEL
    end do
-
-#ifdef SLICE_MODEL
+#else
       do i=imin,imax
-         fabm_pel(:,i,3,:)=fabm_pel(:,i,2,:)
-         fabm_ben(:,i,3)  =fabm_ben(:,i,2)
+         fabm_pel(:,i,j+1,:)=fabm_pel(:,i,j,:)
+         fabm_ben(:,i,j+1)  =fabm_ben(:,i,j)
       end do
 #endif
 

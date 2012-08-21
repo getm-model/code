@@ -185,9 +185,8 @@
    if (have_boundaries) call do_bdy_2d(n,U_TAG)
 
 #ifdef SLICE_MODEL
-   do i=imin,imax
-      U(i,3)=U(i,2)
-   end do
+   j = jmax/2
+   U(imin:imax,j+1) = U(imin:imax,j)
 #endif
 
 !  now u is calculated
@@ -355,10 +354,9 @@
    if (have_boundaries) call do_bdy_2d(n,V_TAG)
 
 #ifdef SLICE_MODEL
-   do i=imin,imax
-      V(i,1)=V(i,2)
-      V(i,3)=V(i,2)
-   end do
+   j = jmax/2
+   V(imin:imax,j-1) = V(imin:imax,j)
+   V(imin:imax,j+1) = V(imin:imax,j)
 #endif
 
 !  now v is calculated

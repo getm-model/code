@@ -113,10 +113,9 @@
 !$OMP END PARALLEL
 
 #ifdef SLICE_MODEL
-   do i=imin,imax
-      DV(i,1)=DV(i,2)
-      DV(i,3)=DV(i,2)
-   end do
+   j = jmax/2
+   DV(imin:imax,j-1) = DV(imin:imax,j)
+   DV(imin:imax,j+1) = DV(imin:imax,j)
 #endif
 
 #ifdef DEBUG
