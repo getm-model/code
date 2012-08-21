@@ -172,9 +172,8 @@
    call sealevel_nan_check()
 
 #ifdef SLICE_MODEL
-      do i=imin,imax
-         z(i,3)=z(i,2)
-      end do
+   j = jmax/2
+   z(imin:imax,j+1) = z(imin:imax,j)
 #endif
    call tic(TIM_SEALEVELH)
    call update_2d_halo(z,z,az,imin,jmin,imax,jmax,z_TAG)

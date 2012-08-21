@@ -101,12 +101,13 @@ stop
    end if ! first
 
 #ifdef SLICE_MODEL
+   j = jmax/2
    do i=imin,imax
-      do k=kvmin(i,2),kmax
-         hvo(i,1,k)=hvo(i,2,k)
-         hvo(i,3,k)=hvo(i,2,k)
-         hvn(i,1,k)=hvn(i,2,k)
-         hvn(i,3,k)=hvn(i,2,k)
+      do k=kvmin(i,j),kmax
+         hvo(i,j-1,k)=hvo(i,j,k)
+         hvo(i,j+1,k)=hvo(i,j,k)
+         hvn(i,j-1,k)=hvn(i,j,k)
+         hvn(i,j+1,k)=hvn(i,j,k)
       end do
    end do
 #endif

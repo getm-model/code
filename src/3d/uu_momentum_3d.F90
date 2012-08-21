@@ -325,10 +325,11 @@
 !$OMP END DO
 
 #ifdef SLICE_MODEL
+   j = jmax/2
 !$OMP DO SCHEDULE(RUNTIME)
    do i=imin,imax
-      do k=kumin(i,2),kmax
-         uu(i,3,k)=uu(i,2,k)
+      do k=kumin(i,j),kmax
+         uu(i,j+1,k)=uu(i,j,k)
       end do
    end do
 !$OMP END DO NOWAIT
