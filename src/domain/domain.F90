@@ -507,22 +507,22 @@ STDERR latc(1,1),latx(1,0)
 
          do j=jll,jhl
             do i=ill-1,ihl
-               xu(i,j) = _HALF_*( xx(i,j-1) +   xx(i,j) )
-               yu(i,j) = _HALF_*( yx(i,j-1) +   yx(i,j) )
+               xu(i,j) = _HALF_*( xx(i,j-1) + xx(i,j) )
+               yu(i,j) = _HALF_*( yx(i,j-1) + yx(i,j) )
             end do
          end do
 
          do j=jll-1,jhl
             do i=ill,ihl
-               xv(i,j) = _HALF_*( xx(i-1,j) +   xx(i,j) )
-               yv(i,j) = _HALF_*( yx(i-1,j) +   yx(i,j) )
+               xv(i,j) = _HALF_*( xx(i-1,j) + xx(i,j) )
+               yv(i,j) = _HALF_*( yx(i-1,j) + yx(i,j) )
             end do
          end do
 
          do j=jll,jhl
             do i=ill,ihl
-               xc(i,j) = _HALF_*( xu(i-1,j) +   xu(i,j) )
-               yc(i,j) = _HALF_*( yu(i-1,j) +   yu(i,j) )
+               xc(i,j) = _HALF_*( xu(i-1,j) + xu(i,j) )
+               yc(i,j) = _HALF_*( yu(i-1,j) + yu(i,j) )
             end do
          end do
 
@@ -621,14 +621,14 @@ STDERR latc(1,1),latx(1,0)
 
          do j=jll,jhl
             do i=ill,ihl
-               dxc(i,j) = sqrt(  (xu(i,j)-xu(i-1,j  ))**2 &
-                               + (yu(i,j)-yu(i-1,j  ))**2 )
-               dyc(i,j) = sqrt(  (xv(i,j)-xv(i  ,j-1))**2 &
-                               + (yv(i,j)-yv(i  ,j-1))**2 )
-               dxv(i,j) = sqrt(  (xx(i,j)-xx(i-1,j  ))**2 &
-                               + (yx(i,j)-yx(i-1,j  ))**2 )
-               dyu(i,j) = sqrt(  (xx(i,j)-xx(i  ,j-1))**2 &
-                               + (yx(i,j)-yx(i  ,j-1))**2 )
+               dxc(i,j) = sqrt(  ( xu(i,j) - xu(i-1,j  ) )**2 &
+                               + ( yu(i,j) - yu(i-1,j  ) )**2 )
+               dyc(i,j) = sqrt(  ( xv(i,j) - xv(i  ,j-1) )**2 &
+                               + ( yv(i,j) - yv(i  ,j-1) )**2 )
+               dxv(i,j) = sqrt(  ( xx(i,j) - xx(i-1,j  ) )**2 &
+                               + ( yx(i,j) - yx(i-1,j  ) )**2 )
+               dyu(i,j) = sqrt(  ( xx(i,j) - xx(i  ,j-1) )**2 &
+                               + ( yx(i,j) - yx(i  ,j-1) )**2 )
             end do
          end do
 
@@ -637,10 +637,10 @@ STDERR latc(1,1),latx(1,0)
 !              Note (KK): in the present code we do not need
 !                         a halo-update for imax+HALO, since
 !                         metrics there are not used
-               dxu(i,j) = sqrt(  (xc(i+1,j)-xc(i,j))**2 &
-                               + (yc(i+1,j)-yc(i,j))**2 )
-               dxx(i,j) = sqrt(  (xv(i+1,j)-xv(i,j))**2 &
-                               + (yv(i+1,j)-yv(i,j))**2 )
+               dxu(i,j) = sqrt(  ( xc(i+1,j) - xc(i,j) )**2 &
+                               + ( yc(i+1,j) - yc(i,j) )**2 )
+               dxx(i,j) = sqrt(  ( xv(i+1,j) - xv(i,j) )**2 &
+                               + ( yv(i+1,j) - yv(i,j) )**2 )
             end do
          end do
 
@@ -649,10 +649,10 @@ STDERR latc(1,1),latx(1,0)
 !              Note (KK): in the present code we do not need
 !                         a halo-update for jmax+HALO, since
 !                         metrics there are not used
-               dyv(i,j) = sqrt(  (xc(i,j+1)-xc(i,j))**2 &
-                               + (yc(i,j+1)-yc(i,j))**2 )
-               dyx(i,j) = sqrt(  (xu(i,j+1)-xu(i,j))**2 &
-                               + (yu(i,j+1)-yu(i,j))**2 )
+               dyv(i,j) = sqrt(  ( xc(i,j+1) - xc(i,j) )**2 &
+                               + ( yc(i,j+1) - yc(i,j) )**2 )
+               dyx(i,j) = sqrt(  ( xu(i,j+1) - xu(i,j) )**2 &
+                               + ( yu(i,j+1) - yu(i,j) )**2 )
             end do
          end do
 
