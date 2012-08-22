@@ -506,21 +506,21 @@ STDERR latc(1,1),latx(1,0)
       case(3)
 
          do j=jll,jhl
-            do i=ill-1,jhl
+            do i=ill-1,ihl
                xu(i,j) = _HALF_*( xx(i  ,j-1) +   xx(i,j) )
                yu(i,j) = _HALF_*( yx(i  ,j-1) +   yx(i,j) )
             end do
          end do
 
          do j=jll-1,jhl
-            do i=ill,jhl
+            do i=ill,ihl
                xv(i,j) = _HALF_*( xx(i-1,j  ) +   xx(i,j) )
                yv(i,j) = _HALF_*( yx(i-1,j  ) +   yx(i,j) )
             end do
          end do
 
          do j=jll,jhl
-            do i=ill,jhl
+            do i=ill,ihl
                xc(i,j) = _HALF_*( xu(i-1,j  ) +   xu(i,j) )
                yc(i,j) = _HALF_*( yu(i-1,j  ) +   yu(i,j) )
             end do
