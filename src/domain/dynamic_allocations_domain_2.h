@@ -67,16 +67,16 @@
    latv = -999.
 
 !  positions of X-points
-   allocate(xu(E2DFIELD),stat=rc)
+   allocate(xu(E2DXFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (xu)'
 
-   allocate(yu(E2DFIELD),stat=rc)
+   allocate(yu(E2DXFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (yu)'
 
-   allocate(xv(E2DFIELD),stat=rc)
+   allocate(xv(E2DXFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (xv)'
 
-   allocate(yv(E2DFIELD),stat=rc)
+   allocate(yv(E2DXFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (yv)'
 
 !  metric parameters

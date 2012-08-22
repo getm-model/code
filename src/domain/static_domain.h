@@ -48,10 +48,10 @@
    REALTYPE                            :: yx(E2DXFIELD)
    REALTYPE                            :: xc(E2DFIELD)
    REALTYPE                            :: yc(E2DFIELD)
-   REALTYPE                            :: xu(E2DFIELD)
-   REALTYPE                            :: yu(E2DFIELD)
-   REALTYPE                            :: xv(E2DFIELD)
-   REALTYPE                            :: yv(E2DFIELD)
+   REALTYPE                            :: xu(E2DXFIELD)
+   REALTYPE                            :: yu(E2DXFIELD)
+   REALTYPE                            :: xv(E2DXFIELD)
+   REALTYPE                            :: yv(E2DXFIELD)
 
 !  metric parameters
    REALTYPE                            :: dx=-_ONE_,dy=-_ONE_,x0,y0,ard1

@@ -505,16 +505,24 @@ STDERR latc(1,1),latx(1,0)
 
       case(3)
 
-         do j=jmin-HALO,jmax+HALO
-            do i=imin-HALO,imax+HALO
-               xc(i,j) = _QUART_*(  xx(i-1,j-1) + xx(i,j-1) &
-                                  + xx(i-1,j  ) + xx(i,j  ) )
-               yc(i,j) = _QUART_*(  yx(i-1,j-1) + yx(i,j-1) &
-                                  + yx(i-1,j  ) + yx(i,j  ) )
+         do j=jll,jhl
+            do i=ill-1,jhl
                xu(i,j) = _HALF_*( xx(i  ,j-1) +   xx(i,j) )
                yu(i,j) = _HALF_*( yx(i  ,j-1) +   yx(i,j) )
+            end do
+         end do
+
+         do j=jll-1,jhl
+            do i=ill,jhl
                xv(i,j) = _HALF_*( xx(i-1,j  ) +   xx(i,j) )
                yv(i,j) = _HALF_*( yx(i-1,j  ) +   yx(i,j) )
+            end do
+         end do
+
+         do j=jll,jhl
+            do i=ill,jhl
+               xc(i,j) = _HALF_*( xu(i-1,j  ) +   xu(i,j) )
+               yc(i,j) = _HALF_*( yu(i-1,j  ) +   yu(i,j) )
             end do
          end do
 
@@ -611,8 +619,8 @@ STDERR latc(1,1),latx(1,0)
 
       case(3) ! planar curvi-linear
 
-         do j=jmin-HALO,jmax+HALO
-            do i=imin-HALO,imax+HALO
+         do j=jll,jhl
+            do i=ill,ihl
                dxc(i,j) = sqrt(  (xu(i,j)-xu(i-1,j  ))**2 &
                                + (yu(i,j)-yu(i-1,j  ))**2 )
                dyc(i,j) = sqrt(  (xv(i,j)-xv(i  ,j-1))**2 &
@@ -624,8 +632,8 @@ STDERR latc(1,1),latx(1,0)
             end do
          end do
 
-         do j=jmin-HALO,jmax+HALO
-            do i=imin-HALO,imax+HALO-1
+         do j=jll,jhl
+            do i=ill,ihl-1
 !              Note (KK): in the present code we do not need
 !                         a halo-update for imax+HALO, since
 !                         metrics there are not used
@@ -636,8 +644,8 @@ STDERR latc(1,1),latx(1,0)
             end do
          end do
 
-         do j=jmin-HALO,jmax+HALO-1
-            do i=imin-HALO,imax+HALO
+         do j=jll,jhl-1
+            do i=ill,ihl
 !              Note (KK): in the present code we do not need
 !                         a halo-update for jmax+HALO, since
 !                         metrics there are not used
@@ -743,21 +751,37 @@ STDERR latc(1,1),latx(1,0)
 
 
 !     compute differently centered areas of grid boxes
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-
+      do j=jll,jhl
+         do i=ill,ihl
             if( az(i,j) .gt. 0) then
-               arcd1(i,j)=_ONE_/(dxc(i,j)*dyc(i,j))
+               ard1 = _HALF_*abs(  (xx(i,j-1)-xx(i-1,j  ))*(yx(i  ,j)-yx(i-1,j-1)) &
+                                 + (xx(i,j  )-xx(i-1,j-1))*(yx(i-1,j)-yx(i  ,j-1)) )
+               arcd1(i,j)=_ONE_/ard1
             end if
-
+         end do
+      end do
+      do j=jll,jhl
+         do i=ill,ihl-1
+!           Note (KK): in the present code we do not need
+!                      a halo-update for imax+HALO, since
+!                      arud1 there is not used
             if( au(i,j) .gt. 0) then
-               arud1(i,j)=_ONE_/(dxu(i,j)*dyu(i,j))
+               ard1 = _HALF_*abs(  (xv(i+1,j-1)-xv(i,j  ))*(yv(i+1,j)-yv(i  ,j-1)) &
+                                 + (xv(i+1,j  )-xv(i,j-1))*(yv(i  ,j)-yv(i+1,j-1)) )
+               arud1(i,j)=_ONE_/ard1
             end if
-
+         end do
+      end do
+      do j=jll,jhl-1
+         do i=ill,ihl
+!           Note (KK): in the present code we do not need
+!                      a halo-update for imax+HALO, since
+!                      arvd1 there is not used
             if( av(i,j) .gt. 0) then
-               arvd1(i,j)=_ONE_/(dxv(i,j)*dyv(i,j))
+               ard1 = _HALF_*abs(  (xu(i,j  )-xu(i-1,j+1))*(yu(i  ,j+1)-yu(i-1,j)) &
+                                 + (xu(i,j+1)-xu(i-1,j  ))*(yu(i-1,j+1)-yu(i  ,j)) )
+               arvd1(i,j)=_ONE_/ard1
             end if
-
          end do
       end do
 
