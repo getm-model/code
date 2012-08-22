@@ -785,6 +785,13 @@ STDERR latc(1,1),latx(1,0)
          end do
       end do
 
+      LEVEL3 'arcd1= [ ',minval(arcd1,mask=(az .gt. 0)), &
+                         maxval(arcd1,mask=(az .gt. 0)), ' ]'
+      LEVEL3 'arud1= [ ',minval(arud1,mask=(au .gt. 0)), &
+                         maxval(arud1,mask=(au .gt. 0)), ' ]'
+      LEVEL3 'arvd1= [ ',minval(arvd1,mask=(av .gt. 0)), &
+                         maxval(arvd1,mask=(av .gt. 0)), ' ]'
+
       call update_2d_halo(arcd1,arcd1,az,imin,jmin,imax,jmax,H_TAG)
       call wait_halo(H_TAG)
 
