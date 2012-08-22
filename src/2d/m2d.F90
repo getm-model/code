@@ -21,7 +21,7 @@
    use exceptions
    use time, only: julianday,secondsofday
    use parameters, only: avmmol
-   use domain, only: imin,imax,jmin,jmax,az,au,av,ax,H,HU,HV,min_depth
+   use domain, only: imin,imax,jmin,jmax,az,au,av,ax,H,min_depth
    use domain, only: ilg,ihg,jlg,jhg
    use domain, only: ill,ihl,jll,jhl
    use domain, only: openbdy,have_boundaries
