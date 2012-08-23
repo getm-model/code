@@ -506,23 +506,25 @@ STDERR latc(1,1),latx(1,0)
       case(3)
 
          do j=jll,jhl
-            do i=ill-1,ihl
+            do i=ill,ihl
+               xc(i,j) = _QUART_*(  xx(i-1,j-1) + xx(i,j-1) &
+                                  + xx(i-1,j  ) + xx(i,j  ) )
+               yc(i,j) = _QUART_*(  yx(i-1,j-1) + yx(i,j-1) &
+                                  + yx(i-1,j  ) + yx(i,j  ) )
+            end do
+         end do
+
+         do j=jll,jhl
+            do i=min(ill,imin-1),ihl
                xu(i,j) = _HALF_*( xx(i,j-1) + xx(i,j) )
                yu(i,j) = _HALF_*( yx(i,j-1) + yx(i,j) )
             end do
          end do
 
-         do j=jll-1,jhl
+         do j=min(jll,jmin-1),jhl
             do i=ill,ihl
                xv(i,j) = _HALF_*( xx(i-1,j) + xx(i,j) )
                yv(i,j) = _HALF_*( yx(i-1,j) + yx(i,j) )
-            end do
-         end do
-
-         do j=jll,jhl
-            do i=ill,ihl
-               xc(i,j) = _HALF_*( xu(i-1,j) + xu(i,j) )
-               yc(i,j) = _HALF_*( yu(i-1,j) + yu(i,j) )
             end do
          end do
 
@@ -607,28 +609,23 @@ STDERR latc(1,1),latx(1,0)
          dxx = dxv
          dyx = dyc
 
-         LEVEL3 'dxc= [ ',minval(dxc,mask=(az .gt. 0)), &
-                          maxval(dxc,mask=(az .gt. 0)), ' ]'
-         LEVEL3 'dxu= [ ',minval(dxu,mask=(au .gt. 0)), &
-                          maxval(dxu,mask=(au .gt. 0)), ' ]'
-         LEVEL3 'dxv= [ ',minval(dxv,mask=(av .gt. 0)), &
-                          maxval(dxv,mask=(av .gt. 0)), ' ]'
-         LEVEL3 'dxx= [ ',minval(dxx,mask=(ax .gt. 0)), &
-                          maxval(dxx,mask=(ax .gt. 0)), ' ]'
-         LEVEL3 'dy[cuvx]=',minval(dyc,mask=(az .gt. 0))
-
       case(3) ! planar curvi-linear
 
          do j=jll,jhl
             do i=ill,ihl
-               dxc(i,j) = sqrt(  ( xu(i,j) - xu(i-1,j  ) )**2 &
-                               + ( yu(i,j) - yu(i-1,j  ) )**2 )
-               dyc(i,j) = sqrt(  ( xv(i,j) - xv(i  ,j-1) )**2 &
-                               + ( yv(i,j) - yv(i  ,j-1) )**2 )
-               dxv(i,j) = sqrt(  ( xx(i,j) - xx(i-1,j  ) )**2 &
-                               + ( yx(i,j) - yx(i-1,j  ) )**2 )
-               dyu(i,j) = sqrt(  ( xx(i,j) - xx(i  ,j-1) )**2 &
-                               + ( yx(i,j) - yx(i  ,j-1) )**2 )
+               dxc(i,j) = sqrt(  (  _HALF_*( xx(i  ,j-1) + xx(i  ,j  ) )      &
+                                  - _HALF_*( xx(i-1,j-1) + xx(i-1,j  ) ) )**2 &
+                               + (  _HALF_*( yx(i  ,j-1) + yx(i  ,j  ) )      &
+                                  - _HALF_*( yx(i-1,j-1) + yx(i-1,j  ) ) )**2 )
+               dyc(i,j) = sqrt(  (  _HALF_*( xx(i-1,j  ) + xx(i  ,j  ) )      &
+                                  - _HALF_*( xx(i-1,j-1) + xx(i  ,j-1) ) )**2 &
+                               + (  _HALF_*( yx(i-1,j  ) + yx(i  ,j  ) )      &
+                                  - _HALF_*( yx(i-1,j-1) + yx(i  ,j-1) ) )**2 )
+               if (az(i,j) .gt. 0) then
+                  ard1 = _HALF_*abs(  (xx(i,j-1)-xx(i-1,j  ))*(yx(i  ,j)-yx(i-1,j-1)) &
+                                    + (xx(i,j  )-xx(i-1,j-1))*(yx(i-1,j)-yx(i  ,j-1)) )
+                  arcd1(i,j)=_ONE_/ard1
+               end if
             end do
          end do
 
@@ -639,8 +636,21 @@ STDERR latc(1,1),latx(1,0)
 !                         metrics there are not used
                dxu(i,j) = sqrt(  ( xc(i+1,j) - xc(i,j) )**2 &
                                + ( yc(i+1,j) - yc(i,j) )**2 )
-               dxx(i,j) = sqrt(  ( xv(i+1,j) - xv(i,j) )**2 &
-                               + ( yv(i+1,j) - yv(i,j) )**2 )
+               dxx(i,j) = sqrt(  (  _HALF_*( xx(i  ,j) + xx(i+1,j) )      &
+                                  - _HALF_*( xx(i-1,j) + xx(i  ,j) ) )**2 &
+                               + (  _HALF_*( yx(i  ,j) + yx(i+1,j) )      &
+                                  - _HALF_*( yx(i-1,j) + yx(i  ,j) ) )**2 )
+               if (au(i,j) .gt. 0) then
+                  ard1 = _HALF_*abs(  (  (  _HALF_*( xx(i  ,j-1) + xx(i+1,j-1) )     &
+                                          - _HALF_*( xx(i-1,j  ) + xx(i  ,j  ) ) )   &
+                                       * (  _HALF_*( yx(i  ,j  ) + yx(i+1,j  ) )     &
+                                          - _HALF_*( yx(i-1,j-1) + yx(i  ,j-1) ) ) ) &
+                                    + (  (  _HALF_*( xx(i  ,j  ) + xx(i+1,j  ) )     &
+                                          - _HALF_*( xx(i-1,j-1) + xx(i  ,j-1) ) )   &
+                                       * (  _HALF_*( yx(i-1,j  ) + yx(i  ,j  ) )     &
+                                          - _HALF_*( yx(i  ,j-1) + yx(i+1,j-1) ) ) ) )
+                  arud1(i,j)=_ONE_/ard1
+               end if
             end do
          end do
 
@@ -651,80 +661,136 @@ STDERR latc(1,1),latx(1,0)
 !                         metrics there are not used
                dyv(i,j) = sqrt(  ( xc(i,j+1) - xc(i,j) )**2 &
                                + ( yc(i,j+1) - yc(i,j) )**2 )
-               dyx(i,j) = sqrt(  ( xu(i,j+1) - xu(i,j) )**2 &
-                               + ( yu(i,j+1) - yu(i,j) )**2 )
+               dyx(i,j) = sqrt(  (  _HALF_*( xx(i,j  ) + xx(i,j+1) )      &
+                                  - _HALF_*( xx(i,j-1) + xx(i,j  ) ) )**2 &
+                               + (  _HALF_*( yx(i,j  ) + yx(i,j+1) )      &
+                                  - _HALF_*( yx(i,j-1) + yx(i,j  ) ) )**2 )
+               if (av(i,j) .gt. 0) then
+                  ard1 = _HALF_*abs(  (  (  _HALF_*( xx(i  ,j-1) + xx(i  ,j  ) )     &
+                                          - _HALF_*( xx(i-1,j  ) + xx(i-1,j+1) ) )   &
+                                       * (  _HALF_*( yx(i  ,j  ) + yx(i  ,j+1) )     &
+                                          - _HALF_*( yx(i-1,j-1) + yx(i-1,j  ) ) ) ) &
+                                    + (  (  _HALF_*( xx(i  ,j  ) + xx(i  ,j+1) )     &
+                                          - _HALF_*( xx(i-1,j-1) + xx(i-1,j  ) ) )   &
+                                       * (  _HALF_*( yx(i-1,j  ) + yx(i-1,j+1) )     &
+                                          - _HALF_*( yx(i  ,j-1) + yx(i  ,j  ) ) ) ) )
+                  arvd1(i,j)=_ONE_/ard1
+               end if
             end do
          end do
 
-         LEVEL3 'dxc= [ ',minval(dxc,mask=(az .gt. 0)), &
-                          maxval(dxc,mask=(az .gt. 0)), ' ]'
-         LEVEL3 'dyc= [ ',minval(dyc,mask=(az .gt. 0)), &
-                          maxval(dyc,mask=(az .gt. 0)), ' ]'
-         LEVEL3 'dxu= [ ',minval(dxu,mask=(au .gt. 0)), &
-                          maxval(dxu,mask=(au .gt. 0)), ' ]'
-         LEVEL3 'dyu= [ ',minval(dyu,mask=(au .gt. 0)), &
-                          maxval(dyu,mask=(au .gt. 0)), ' ]'
-         LEVEL3 'dxv= [ ',minval(dxv,mask=(av .gt. 0)), &
-                          maxval(dxv,mask=(av .gt. 0)), ' ]'
-         LEVEL3 'dyv= [ ',minval(dyv,mask=(av .gt. 0)), &
-                          maxval(dyv,mask=(av .gt. 0)), ' ]'
-         LEVEL3 'dxx= [ ',minval(dxx,mask=(ax .gt. 0)), &
-                          maxval(dxx,mask=(ax .gt. 0)), ' ]'
-         LEVEL3 'dyx= [ ',minval(dyx,mask=(ax .gt. 0)), &
-                          maxval(dyx,mask=(ax .gt. 0)), ' ]'
-
-   case(4) ! sperical curvi-linear
-
-      do j=jmin,jmax
-         do i=imin,imax
-            dx = deg2rad*(lonu(i,j)-lonu(i-1,j))*rearth*cos(deg2rad*latc(i,j))
-            dy = deg2rad*(latu(i,j)-latu(i-1,j))*rearth
-            dxc(i,j)= sqrt(dx*dx+dy*dy)
-            dx = deg2rad*(lonv(i,j)-lonv(i,j-1))*rearth*cos(deg2rad*latc(i,j))
-            dy = deg2rad*(latv(i,j)-latv(i,j-1))*rearth
-            dyc(i,j)= sqrt(dx*dx+dy*dy)
+         do j=jll,jhl
+            do i=min(ill,imin-1),ihl
+               dyu(i,j) = sqrt(  ( xx(i,j) - xx(i  ,j-1) )**2 &
+                               + ( yx(i,j) - yx(i  ,j-1) )**2 )
+            end do
          end do
-      end do
 
-      do j=jmin,jmax
-         do i=imin,imax
-            dx = deg2rad*(lonc(i+1,j)-lonc(i,j))*rearth*cos(deg2rad*latu(i,j))
-            dy = deg2rad*(latc(i+1,j)-latc(i,j))*rearth
-            dxu(i,j)= sqrt(dx*dx+dy*dy)
-            dx = deg2rad*(lonx(i,j)-lonx(i,j-1))*rearth*cos(deg2rad*latu(i,j))
-            dy = deg2rad*(latx(i,j)-latx(i,j-1))*rearth
-            dyu(i,j)= sqrt(dx*dx+dy*dy)
+         do j=min(jll,jmin-1),jhl
+            do i=ill,ihl
+               dxv(i,j) = sqrt(  ( xx(i,j) - xx(i-1,j  ) )**2 &
+                               + ( yx(i,j) - yx(i-1,j  ) )**2 )
+            end do
          end do
-      end do
 
-      do j=jmin,jmax
-         do i=imin,imax
-            dx = deg2rad*(lonx(i,j)-lonx(i-1,j))*rearth*cos(deg2rad*latv(i,j))
-            dy = deg2rad*(latx(i,j)-latx(i-1,j))*rearth
-            dxv(i,j)= sqrt(dx*dx+dy*dy)
-            dx = deg2rad*(lonc(i,j+1)-lonc(i,j))*rearth*cos(deg2rad*latv(i,j))
-            dy = deg2rad*(latc(i,j+1)-latc(i,j))*rearth
-            dyv(i,j)= sqrt(dx*dx+dy*dy)
-         end do
-      end do
+      case(4) ! sperical curvi-linear
 
-      do j=jmin,jmax
-         do i=imin,imax
-            dx = deg2rad*(lonv(i+1,j)-lonv(i,j))*rearth*cos(deg2rad*latx(i,j))
-            dy = deg2rad*(latv(i+1,j)-latv(i,j))*rearth
-            dxx(i,j)= sqrt(dx*dx+dy*dy)
-            dx = deg2rad*(lonu(i,j+1)-lonu(i,j))*rearth*cos(deg2rad*latx(i,j))
-            dy = deg2rad*(latu(i,j+1)-latu(i,j))*rearth
-            dyx(i,j)= sqrt(dx*dx+dy*dy)
+         do j=jmin,jmax
+            do i=imin,imax
+               dx = deg2rad*(lonu(i,j)-lonu(i-1,j))*rearth*cos(deg2rad*latc(i,j))
+               dy = deg2rad*(latu(i,j)-latu(i-1,j))*rearth
+               dxc(i,j)= sqrt(dx*dx+dy*dy)
+               dx = deg2rad*(lonv(i,j)-lonv(i,j-1))*rearth*cos(deg2rad*latc(i,j))
+               dy = deg2rad*(latv(i,j)-latv(i,j-1))*rearth
+               dyc(i,j)= sqrt(dx*dx+dy*dy)
+            end do
          end do
-      end do
+
+         do j=jmin,jmax
+            do i=imin,imax
+               dx = deg2rad*(lonc(i+1,j)-lonc(i,j))*rearth*cos(deg2rad*latu(i,j))
+               dy = deg2rad*(latc(i+1,j)-latc(i,j))*rearth
+               dxu(i,j)= sqrt(dx*dx+dy*dy)
+               dx = deg2rad*(lonx(i,j)-lonx(i,j-1))*rearth*cos(deg2rad*latu(i,j))
+               dy = deg2rad*(latx(i,j)-latx(i,j-1))*rearth
+               dyu(i,j)= sqrt(dx*dx+dy*dy)
+            end do
+         end do
+
+         do j=jmin,jmax
+            do i=imin,imax
+               dx = deg2rad*(lonx(i,j)-lonx(i-1,j))*rearth*cos(deg2rad*latv(i,j))
+               dy = deg2rad*(latx(i,j)-latx(i-1,j))*rearth
+               dxv(i,j)= sqrt(dx*dx+dy*dy)
+               dx = deg2rad*(lonc(i,j+1)-lonc(i,j))*rearth*cos(deg2rad*latv(i,j))
+               dy = deg2rad*(latc(i,j+1)-latc(i,j))*rearth
+               dyv(i,j)= sqrt(dx*dx+dy*dy)
+            end do
+         end do
+
+         do j=jmin,jmax
+            do i=imin,imax
+               dx = deg2rad*(lonv(i+1,j)-lonv(i,j))*rearth*cos(deg2rad*latx(i,j))
+               dy = deg2rad*(latv(i+1,j)-latv(i,j))*rearth
+               dxx(i,j)= sqrt(dx*dx+dy*dy)
+               dx = deg2rad*(lonu(i,j+1)-lonu(i,j))*rearth*cos(deg2rad*latx(i,j))
+               dy = deg2rad*(latu(i,j+1)-latu(i,j))*rearth
+               dyx(i,j)= sqrt(dx*dx+dy*dy)
+            end do
+         end do
 
       case default
          call getm_error("metric()","A non valid grid type has been chosen.")
    end select
 
+   if (grid_type.eq.2 .or. grid_type.eq.4) then
+!     compute differently centered areas of grid boxes
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+
+            if( az(i,j) .gt. 0) then
+               arcd1(i,j)=_ONE_/(dxc(i,j)*dyc(i,j))
+            end if
+
+            if( au(i,j) .gt. 0) then
+               arud1(i,j)=_ONE_/(dxu(i,j)*dyu(i,j))
+            end if
+
+            if( av(i,j) .gt. 0) then
+               arvd1(i,j)=_ONE_/(dxv(i,j)*dyv(i,j))
+            end if
+
+         end do
+      end do
+   end if
+
    if ( grid_type .ne. 1 ) then
 
+      LEVEL3 'dxc= [ ',minval(dxc,mask=(az .gt. 0)), &
+                       maxval(dxc,mask=(az .gt. 0)), ' ]'
+      LEVEL3 'dyc= [ ',minval(dyc,mask=(az .gt. 0)), &
+                       maxval(dyc,mask=(az .gt. 0)), ' ]'
+      LEVEL3 'dxu= [ ',minval(dxu,mask=(au .gt. 0)), &
+                       maxval(dxu,mask=(au .gt. 0)), ' ]'
+      LEVEL3 'dyu= [ ',minval(dyu,mask=(au .gt. 0)), &
+                       maxval(dyu,mask=(au .gt. 0)), ' ]'
+      LEVEL3 'dxv= [ ',minval(dxv,mask=(av .gt. 0)), &
+                       maxval(dxv,mask=(av .gt. 0)), ' ]'
+      LEVEL3 'dyv= [ ',minval(dyv,mask=(av .gt. 0)), &
+                       maxval(dyv,mask=(av .gt. 0)), ' ]'
+      LEVEL3 'dxx= [ ',minval(dxx,mask=(ax .gt. 0)), &
+                       maxval(dxx,mask=(ax .gt. 0)), ' ]'
+      LEVEL3 'dyx= [ ',minval(dyx,mask=(ax .gt. 0)), &
+                       maxval(dyx,mask=(ax .gt. 0)), ' ]'
+
+      LEVEL3 'arcd1= [ ',minval(arcd1,mask=(az .gt. 0)), &
+                         maxval(arcd1,mask=(az .gt. 0)), ' ]'
+      LEVEL3 'arud1= [ ',minval(arud1,mask=(au .gt. 0)), &
+                         maxval(arud1,mask=(au .gt. 0)), ' ]'
+      LEVEL3 'arvd1= [ ',minval(arvd1,mask=(av .gt. 0)), &
+                         maxval(arvd1,mask=(av .gt. 0)), ' ]'
+
+!     Note(KK): we only need halo-update for periodic domains
       call update_2d_halo(dxc,dxc,az,imin,jmin,imax,jmax,H_TAG)
       call wait_halo(H_TAG)
 
@@ -748,49 +814,6 @@ STDERR latc(1,1),latx(1,0)
 
       call update_2d_halo(dyx,dyx,ax,imin,jmin,imax,jmax,H_TAG)
       call wait_halo(H_TAG)
-
-
-!     compute differently centered areas of grid boxes
-      do j=jll,jhl
-         do i=ill,ihl
-            if( az(i,j) .gt. 0) then
-               ard1 = _HALF_*abs(  (xx(i,j-1)-xx(i-1,j  ))*(yx(i  ,j)-yx(i-1,j-1)) &
-                                 + (xx(i,j  )-xx(i-1,j-1))*(yx(i-1,j)-yx(i  ,j-1)) )
-               arcd1(i,j)=_ONE_/ard1
-            end if
-         end do
-      end do
-      do j=jll,jhl
-         do i=ill,ihl-1
-!           Note (KK): in the present code we do not need
-!                      a halo-update for imax+HALO, since
-!                      arud1 there is not used
-            if( au(i,j) .gt. 0) then
-               ard1 = _HALF_*abs(  (xv(i+1,j-1)-xv(i,j  ))*(yv(i+1,j)-yv(i  ,j-1)) &
-                                 + (xv(i+1,j  )-xv(i,j-1))*(yv(i  ,j)-yv(i+1,j-1)) )
-               arud1(i,j)=_ONE_/ard1
-            end if
-         end do
-      end do
-      do j=jll,jhl-1
-         do i=ill,ihl
-!           Note (KK): in the present code we do not need
-!                      a halo-update for imax+HALO, since
-!                      arvd1 there is not used
-            if( av(i,j) .gt. 0) then
-               ard1 = _HALF_*abs(  (xu(i,j  )-xu(i-1,j+1))*(yu(i  ,j+1)-yu(i-1,j)) &
-                                 + (xu(i,j+1)-xu(i-1,j  ))*(yu(i-1,j+1)-yu(i  ,j)) )
-               arvd1(i,j)=_ONE_/ard1
-            end if
-         end do
-      end do
-
-      LEVEL3 'arcd1= [ ',minval(arcd1,mask=(az .gt. 0)), &
-                         maxval(arcd1,mask=(az .gt. 0)), ' ]'
-      LEVEL3 'arud1= [ ',minval(arud1,mask=(au .gt. 0)), &
-                         maxval(arud1,mask=(au .gt. 0)), ' ]'
-      LEVEL3 'arvd1= [ ',minval(arvd1,mask=(av .gt. 0)), &
-                         maxval(arvd1,mask=(av .gt. 0)), ' ]'
 
       call update_2d_halo(arcd1,arcd1,az,imin,jmin,imax,jmax,H_TAG)
       call wait_halo(H_TAG)
