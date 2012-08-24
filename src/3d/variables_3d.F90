@@ -239,8 +239,6 @@
 #ifndef NO_BAROCLINIC
    rad=_ZERO_
    light=_ONE_
-   idpdx=_ZERO_
-   idpdy=_ZERO_
 #endif
 
 #ifdef STRUCTURE_FRICTION
