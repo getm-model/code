@@ -49,7 +49,8 @@ ${LIB}(to_3d_uu.o)	\
 ${LIB}(to_3d_vv.o)	\
 ${LIB}(tow.o)		\
 ${LIB}(c2x.o)		\
-${LIB}(check_3d_fields.o)
+${LIB}(check_3d_fields.o)	\
+${LIB}(filter_1d.o)
 
 all: modules objects
 

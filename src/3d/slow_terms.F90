@@ -23,7 +23,7 @@
    use variables_2d, only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
    use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,Dn,Dun,Dvn
    use variables_3d, only: uuEx,vvEx,rru,rrv
-   use variables_3d, only: idpdx_m3d=>idpdx,idpdy_m3d=>idpdy,idpdx_hs,idpdy_hs
+   use variables_3d, only: idpdx_m3d=>idpdx,idpdy_m3d=>idpdy,idpdx_hs,idpdy_hs,idpdx_nh,idpdy_nh
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
 #endif
@@ -31,6 +31,7 @@
    use m2d, only: uv_advect,uv_diffusion,bottom_friction
    use internal_pressure, only: calc_ipfull
    use nonhydrostatic, only: nonhyd_method,calc_hs2d
+   use halo_zones, only: update_2d_halo,wait_halo,U_TAG
    use getm_timers, only: tic, toc, TIM_SLOWTERMS
 !$ use omp_lib
    IMPLICIT NONE
@@ -43,6 +44,7 @@
    integer                   :: i,j,k
    REALTYPE                  :: vertsum
    REALTYPE,dimension(:,:,:),pointer,save :: idpdx,idpdy
+   REALTYPE,dimension(E2DFIELD) :: work2d
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -70,6 +72,27 @@
       first = .false.
    end if
 
+   work2d = _ZERO_
+
+   if (allocated(idpdx_nh)) then
+      do k=1,kmax
+         work2d = work2d + idpdx_nh(:,:,k)
+      end do
+
+      call update_2d_halo(work2d,work2d,au,imin,jmin,imax,jmax,U_TAG)
+      call wait_halo(U_TAG)
+
+      do j=jmin,jmax
+         call filter_1d(imin-HALO  ,imax+HALO  ,au(:,j),work2d(:,j), &
+                        imin-HALO+1,imax+HALO-1,work2d(:,j))
+      end do
+   end if
+   if (allocated(idpdx_hs)) then
+      do k=1,kmax
+         work2d = work2d + idpdx_hs(:,:,k)
+      end do
+   end if
+
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,vertsum)
 
    if (kmax .gt. 1) then
@@ -88,11 +111,12 @@
                do k=kumin(i,j),kmax
                   vertsum = vertsum + uuEx(i,j,k)
                end do
-               if (calc_slowip) then
-                  do k=kumin(i,j),kmax
-                     vertsum = vertsum - ip_fac*idpdx(i,j,k)
-                  end do
-               end if
+!               if (calc_slowip) then
+!                  do k=kumin(i,j),kmax
+!                     vertsum = vertsum - ip_fac*idpdx(i,j,k)
+!                  end do
+!               end if
+               vertsum = vertsum - ip_fac*work2d(i,j)
                SlUx(i,j) = vertsum
 
 #ifdef NO_SLR
