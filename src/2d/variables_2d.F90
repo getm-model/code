@@ -17,7 +17,7 @@
 !  {\tt PUBLIC DATA MEMBERS}.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth
+   use domain, only: imin,imax,jmin,jmax
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
