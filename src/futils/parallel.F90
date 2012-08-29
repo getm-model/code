@@ -78,8 +78,10 @@
       else
          pid = ''
       end if
+
       ext   = 'stderr'
-FATAL stderr_dir
+      STDERR 'stderr_dir:'
+      STDERR TRIM(stderr_dir)
       fname = TRIM(stderr_dir) // TRIM(runid) // TRIM(pid) // '.' // ext
       open(stderr,file=Fname)
 
