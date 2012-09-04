@@ -80,8 +80,10 @@
       end if
 
       ext   = 'stderr'
+#ifdef _STDERR_DIR_
       STDERR 'stderr_dir:'
       STDERR TRIM(stderr_dir)
+#endif
       fname = TRIM(stderr_dir) // TRIM(runid) // TRIM(pid) // '.' // ext
       open(stderr,file=Fname)
 
