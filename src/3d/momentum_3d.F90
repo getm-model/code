@@ -17,7 +17,7 @@
    use nonhydrostatic, only: do_nonhydrostatic
    use nonhydrostatic, only: nonhyd_iters
    use variables_3d, only: uu_0,vv_0,ho_0,hn_0,huo_0,hun_0,hvo_0,hvn_0
-   use getm_timers, only: tic,toc,TIM_NONHYD_TOT
+   use getm_timers, only: tic,toc,TIM_INTEGR3D,TIM_NONHYD_TOT
    use internal_pressure, only: do_internal_pressure
 
    IMPLICIT NONE
@@ -46,6 +46,7 @@
 #endif
 
    if (nonhyd_iters .gt. 1) then
+      call tic(TIM_INTEGR3D)
       call tic(TIM_NONHYD_TOT)
       uu_0  = uu  ; vv_0  = vv
 #ifndef MUDFLAT
@@ -54,10 +55,12 @@
       hvo_0 = hvo ; hvn_0 = hvn
 #endif
       call toc(TIM_NONHYD_TOT)
+      call toc(TIM_INTEGR3D)
    end if
    nonhyd_loop = 1
    do while (nonhyd_loop .le. nonhyd_iters)
       if (nonhyd_loop .gt. 1) then
+         call tic(TIM_INTEGR3D)
          call tic(TIM_NONHYD_TOT)
          uu  = uu_0  ; vv  = vv_0
 #ifndef MUDFLAT
@@ -65,6 +68,7 @@
          huo = huo_0 ; hun = hun_0
          hvo = hvo_0 ; hvn = hvn_0
 #endif
+         call toc(TIM_INTEGR3D)
       end if
       if (mod(n,2) .eq. 1) then
          call uu_momentum_3d(runtype,n,bdy3d)
