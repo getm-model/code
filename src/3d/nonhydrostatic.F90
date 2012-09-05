@@ -214,6 +214,7 @@
          allocate(vv_0(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'init_nonhydrostatic: Error allocating memory (vv_0)'
 
+#ifndef MUDFLAT
          allocate(ho_0(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'init_nonhydrostatic: Error allocating memory (ho_0)'
 
@@ -231,6 +232,7 @@
 
          allocate(hvn_0(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'init_nonhydrostatic: Error allocating memory (hvn_0)'
+#endif
       end if
 
       dtm1=_ONE_/dt

@@ -145,7 +145,9 @@
    REALTYPE,dimension(:,:,:),allocatable,target :: minus_bnh
    REALTYPE,dimension(:,:,:),allocatable :: wco
    REALTYPE,dimension(:,:,:),allocatable :: uu_0,vv_0
+#ifndef MUDLFAT
    REALTYPE,dimension(:,:,:),allocatable :: ho_0,hn_0,huo_0,hun_0,hvo_0,hvn_0
+#endif
 
 !  the following fields will be allocated in init_internal_pressure
    REALTYPE,dimension(:,:,:),pointer            :: idpdx,idpdy
