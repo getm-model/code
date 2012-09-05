@@ -47,16 +47,24 @@
 
    if (nonhyd_iters .gt. 1) then
       call tic(TIM_NONHYD)
-      uu_0  = uu  ; vv_0  = vv  ; ho_0  = ho  ; hn_0  = hn
-      huo_0 = huo ; hun_0 = hun ; hvo_0 = hvo ; hvn_0 = hvn
+      uu_0  = uu  ; vv_0  = vv
+#ifndef MUDFLAT
+      ho_0  = ho  ; hn_0  = hn
+      huo_0 = huo ; hun_0 = hun
+      hvo_0 = hvo ; hvn_0 = hvn
+#endif
       call toc(TIM_NONHYD)
    end if
    nonhyd_loop = 1
    do while (nonhyd_loop .le. nonhyd_iters)
       if (nonhyd_loop .gt. 1) then
          call tic(TIM_NONHYD)
-         uu  = uu_0  ; vv  = vv_0  ; ho  = ho_0  ; hn  = hn_0
-         huo = huo_0 ; hun = hun_0 ; hvo = hvo_0 ; hvn = hvn_0
+         uu  = uu_0  ; vv  = vv_0
+#ifndef MUDFLAT
+         ho  = ho_0  ; hn  = hn_0
+         huo = huo_0 ; hun = hun_0
+         hvo = hvo_0 ; hvn = hvn_0
+#endif
          call toc(TIM_NONHYD)
       end if
       if (mod(n,2) .eq. 1) then
