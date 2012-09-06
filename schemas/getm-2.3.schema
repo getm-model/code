@@ -301,8 +301,9 @@
 			<element name="Am_method" type="int" label="method for horizontal momentum diffusion coefficient">
 				<options>
 					<option value="0" label="disabled"/>
-					<option value="1" label="constant value Am_const"/>
+					<option value="1" label="constant value Am_const (Laplacian diffusion)"/>
 					<option value="2" label="LES parameterisation, see namelist les"/>
+					<option value="3" label="constant value Am_const"/>
 				</options>
 			</element>
 			<element name="Am_const" type="float" label="constant horizontal momentum diffusion coefficient" unit="m²/s">

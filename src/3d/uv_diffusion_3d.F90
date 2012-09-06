@@ -16,7 +16,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
    use m2d, only: uv_diff_2dh
-   use m2d, only: Am_method,AM_CONSTANT,AM_LES
+   use m2d, only: Am_method,AM_LAPLACE,AM_LES,AM_CONSTANT
    use variables_3d, only: uu,vv,uuEx,vvEx,hn,hun,hvn
    use variables_3d, only: dudxC_3d,dvdyC_3d,shearX_3d
    use variables_les, only: AmC_2d,AmX_2d,AmC_3d,AmX_3d
@@ -46,17 +46,16 @@
    call tic(TIM_UVDIFF3D)
 
    select case(Am_method)
-      case(AM_CONSTANT)
+      case(AM_LAPLACE)
          do k=1,kmax
             call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
                              D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
-                             dudxC=dudxC_3d(:,:,k),                             &
+                             dudxC=dudxC_3d(:,:,k)                              &
 #ifndef SLICE_MODEL
-                             dvdyC=dvdyC_3d(:,:,k),                             &
+                            ,dvdyC=dvdyC_3d(:,:,k)                              &
 #endif
-                             shearX=shearX_3d(:,:,k)                            &
 #ifdef _MOMENTUM_TERMS_
-                             ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)             &
+                            ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)             &
 #endif
                             )
          end do
@@ -70,6 +69,20 @@
 #endif
                              shearX=shearX_3d(:,:,k),                           &
                              AmC=AmC_3d(:,:,k),AmX=AmX_3d(:,:,k)                &
+#ifdef _MOMENTUM_TERMS_
+                             ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)             &
+#endif
+                            )
+         end do
+      case(AM_CONSTANT)
+         do k=1,kmax
+            call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                             D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
+                             dudxC=dudxC_3d(:,:,k),                             &
+#ifndef SLICE_MODEL
+                             dvdyC=dvdyC_3d(:,:,k),                             &
+#endif
+                             shearX=shearX_3d(:,:,k)                            &
 #ifdef _MOMENTUM_TERMS_
                              ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)             &
 #endif
