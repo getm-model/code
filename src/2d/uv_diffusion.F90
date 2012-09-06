@@ -17,7 +17,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
    use m2d, only: deformation_rates,uv_diff_2dh
-   use m2d, only: Am_method,NO_AM,AM_CONSTANT,AM_LES
+   use m2d, only: Am_method,NO_AM,AM_LAPLACE,AM_LES,AM_CONSTANT
    use variables_2d, only: UEx,VEx
    use variables_2d, only: dudxC,dudxV,dvdyC,dvdyU,shearX,shearU
    use les, only: do_les_2d
@@ -50,19 +50,19 @@
          if (An_method .gt. 0) then
             call uv_diff_2dh(An_method,UEx,VEx,U=U,V=V)
          end if
-      case(AM_CONSTANT)
-         call deformation_rates(U,V,DU,DV,   &
-                                dudxC=dudxC, &
+      case(AM_LAPLACE)
+         call deformation_rates(U,V,DU,DV,  &
+                                dudxC=dudxC &
 #ifndef SLICE_MODEL
-                                dvdyC=dvdyC, &
+                               ,dvdyC=dvdyC &
 #endif
-                                shearX=shearX)
+                               )
          call uv_diff_2dh(An_method,UEx,VEx,U=U,V=V,D=D,DU=DU,DV=DV, &
-                          dudxC=dudxC,                               &
+                          dudxC=dudxC                                &
 #ifndef SLICE_MODEL
-                          dvdyC=dvdyC,                               &
+                         ,dvdyC=dvdyC                                &
 #endif
-                          shearX=shearX)
+                         )
       case(AM_LES)
          call deformation_rates(U,V,DU,DV,                 &
                                 dudxC=dudxC,dudxV=dudxV,   &
@@ -83,6 +83,20 @@
                           dvdyC=dvdyC,                               &
 #endif
                           shearX=shearX,AmC=AmC_2d,AmX=AmX_2d)
+      case(AM_CONSTANT)
+         call deformation_rates(U,V,DU,DV,   &
+                                dudxC=dudxC, &
+#ifndef SLICE_MODEL
+                                dvdyC=dvdyC, &
+#endif
+                                shearX=shearX)
+         call uv_diff_2dh(An_method,UEx,VEx,U=U,V=V,D=D,DU=DU,DV=DV, &
+                          dudxC=dudxC,                               &
+#ifndef SLICE_MODEL
+                          dvdyC=dvdyC,                               &
+#endif
+                          shearX=shearX)
+
    end select
 
    CALL toc(TIM_UVDIFF)

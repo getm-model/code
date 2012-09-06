@@ -29,7 +29,7 @@
    use les, only: do_les_3d
    use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
    use m2d, only: bottom_friction
-   use m2d, only: no_2d,deformCX,deformUV,Am_method,AM_LES
+   use m2d, only: no_2d,deformC,deformX,deformUV,Am_method,AM_LES
    use variables_2d, only: z
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
@@ -66,7 +66,7 @@
    REALTYPE                            :: ip_fac=_ONE_
    integer                             :: vel_check=0
    REALTYPE                            :: min_vel=-4*_ONE_,max_vel=4*_ONE_
-   logical                             :: deformCX_3d=.false.,deformUV_3d=.false.
+   logical                             :: deformC_3d=.false.,deformX_3d=.false.,deformUV_3d=.false.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -143,7 +143,8 @@
    read(NAMLST,m3d)
 !   rewind(NAMLST)
 
-   deformCX_3d=deformCX
+   deformC_3d =deformC
+   deformX_3d =deformX
    deformUV_3d=deformUV
 
    LEVEL2 "splitting factor M: ",M
@@ -258,7 +259,8 @@
       if (calc_temp) then
          select case(temp_AH_method)
             case(2)
-               deformCX_3d=.true.
+               deformC_3d =.true.
+               deformX_3d =.true.
                deformUV_3d=.true.
                if (Am_method .eq. AM_LES) then
                   les_mode = LES_BOTH
@@ -266,7 +268,8 @@
                   les_mode = LES_TRACER
                end if
             case(3)
-               deformCX_3d=.true.
+               deformC_3d =.true.
+               deformX_3d =.true.
                deformUV_3d=.true.
                calc_stirr=.true.
          end select
@@ -274,7 +277,8 @@
       if (calc_salt) then
          select case(salt_AH_method)
             case(2)
-               deformCX_3d=.true.
+               deformC_3d =.true.
+               deformX_3d =.true.
                deformUV_3d=.true.
                if (Am_method .eq. AM_LES) then
                   les_mode = LES_BOTH
@@ -282,7 +286,8 @@
                   les_mode = LES_TRACER
                end if
             case(3)
-               deformCX_3d=.true.
+               deformC_3d =.true.
+               deformX_3d =.true.
                deformUV_3d=.true.
                calc_stirr=.true.
          end select
@@ -309,38 +314,35 @@
    end if
 #endif
 
-   if (deformCX_3d) then
-
+   if (deformC_3d) then
       allocate(dudxC_3d(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (dudxC_3d)'
       dudxC_3d=_ZERO_
-
 #ifndef SLICE_MODEL
       allocate(dvdyC_3d(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyC_3d)'
       dvdyC_3d=_ZERO_
 #endif
-
+   end if
+   if (deformX_3d) then
       allocate(shearX_3d(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (shearX_3d)'
       shearX_3d=_ZERO_
-
-      if (deformUV_3d) then
-         allocate(dudxV_3d(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_3d: Error allocating memory (dudxV_3d)'
-         dudxV_3d=_ZERO_
+   end if
+   if (deformUV_3d) then
+      allocate(dudxV_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (dudxV_3d)'
+      dudxV_3d=_ZERO_
 
 #ifndef SLICE_MODEL
-         allocate(dvdyU_3d(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_3d: Error allocating memory (dvdyU_3d)'
-         dvdyU_3d=_ZERO_
+      allocate(dvdyU_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (dvdyU_3d)'
+      dvdyU_3d=_ZERO_
 #endif
 
-         allocate(shearU_3d(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_3d: Error allocating memory (shearU_3d)'
-         shearU_3d=_ZERO_
-      end if
-
+      allocate(shearU_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (shearU_3d)'
+      shearU_3d=_ZERO_
    end if
 
 #ifndef NO_BAROCLINIC
