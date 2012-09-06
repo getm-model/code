@@ -33,9 +33,12 @@ for n,nml in enumerate(nmls_s):
 		target[nmls_t[n]+'adv_ver'].setValue(1)
 
 diffs = ('getm/m2d/Am','getm/temp/temp_AH','getm/salt/salt_AH')
-for diff in diffs:
+for d,diff in enumerate(diffs):
 	if source[diff].getValue(usedefault=True)>0.0:
-		target[diff+'_method'].setValue(1)
+		if d == 0:
+			target[diff+'_method'].setValue(3)
+		else:
+			target[diff+'_method'].setValue(1)
 	else:
 		target[diff+'_method'].setValue(0)
 
