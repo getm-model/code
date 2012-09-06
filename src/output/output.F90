@@ -23,8 +23,8 @@
 !
 ! !PUBLIC DATA MEMBERS:
    integer                             :: out_fmt=NETCDF
-   integer                             :: hotin_fmt=BINARY
-   integer                             :: hotout_fmt=BINARY
+   integer                             :: hotin_fmt=NETCDF
+   integer                             :: hotout_fmt=NETCDF
    character(LEN = PATH_MAX)           :: in_dir='.'
    character(LEN = PATH_MAX)           :: out_dir='.'
    character(LEN = PATH_MAX)           :: out_f_2d
