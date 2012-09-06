@@ -94,8 +94,8 @@
    integer                   :: vel2d_adv_split=0
    integer                   :: vel2d_adv_hor=1
    REALTYPE                  :: avmmol=1.8d-6
-   logical                   :: deformCX=.false.,deformUV=.false.
-   integer,parameter         :: NO_AM=0,AM_CONSTANT=1,AM_LES=2
+   logical                   :: deformC=.false.,deformX=.false.,deformUV=.false.
+   integer,parameter         :: NO_AM=0,AM_LAPLACE=1,AM_LES=2,AM_CONSTANT=3
    integer                   :: Am_method=NO_AM
    REALTYPE                  :: Am_const=1.8d-6
 !  method for specifying horizontal numerical diffusion coefficient
@@ -225,19 +225,29 @@
    select case (Am_method)
       case(NO_AM)
          LEVEL2 'Am_method=0 -> horizontal momentum diffusion not included'
-      case(AM_CONSTANT)
-         LEVEL2 'Am_method=1 -> Using constant horizontal momentum diffusion'
+      case(AM_LAPLACE)
+         LEVEL2 'Am_method=1 -> Using constant horizontal momentum diffusion (Laplacian)'
          if (Am_const .lt. _ZERO_) then
            call getm_error("init_2d()", &
                            "Constant horizontal momentum diffusion <0");
          end if
          LEVEL3 real(Am_const)
-         deformCX=.true.
+         deformC=.true.
       case(AM_LES)
          LEVEL2 'Am_method=2 -> using LES parameterisation'
          les_mode=LES_MOMENTUM
-         deformCX=.true.
+         deformC=.true.
+         deformX=.true.
          deformUV=.true.
+      case(AM_CONSTANT)
+         LEVEL2 'Am_method=3 -> Using constant horizontal momentum diffusion'
+         if (Am_const .lt. _ZERO_) then
+           call getm_error("init_2d()", &
+                           "Constant horizontal momentum diffusion <0");
+         end if
+         LEVEL3 real(Am_const)
+         deformC=.true.
+         deformX=.true.
       case default
          call getm_error("init_2d()", &
                          "A non valid Am_method has been chosen");
@@ -325,38 +335,33 @@
       end if
    end if
 
-   if (deformCX) then
-
+   if (deformC) then
       allocate(dudxC(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (dudxC)'
       dudxC=_ZERO_
-
 #ifndef SLICE_MODEL
       allocate(dvdyC(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyC)'
       dvdyC=_ZERO_
 #endif
-
+   end if
+   if (deformX) then
       allocate(shearX(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (shearX)'
       shearX=_ZERO_
-
-      if (deformUV) then
-         allocate(dudxV(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_2d: Error allocating memory (dudxV)'
-         dudxV=_ZERO_
-
+   end if
+   if (deformUV) then
+      allocate(dudxV(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (dudxV)'
+      dudxV=_ZERO_
 #ifndef SLICE_MODEL
-         allocate(dvdyU(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyU)'
-         dvdyU=_ZERO_
+      allocate(dvdyU(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyU)'
+      dvdyU=_ZERO_
 #endif
-
-         allocate(shearU(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_2d: Error allocating memory (shearU)'
-         shearU=_ZERO_
-      end if
-
+      allocate(shearU(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (shearU)'
+      shearU=_ZERO_
    end if
 
 #ifdef SLICE_MODEL
