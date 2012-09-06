@@ -227,10 +227,12 @@
          work2d(i,j)=_ZERO_
          if (az(i,j) .eq. 1) then
             select case(Am_method)
-               case(AM_LAPLACE,AM_CONSTANT)
-                  work2d(i,j)=_TWO_*Am_const*DYC*D(i,j)*dudxC(i,j)
+               case(AM_LAPLACE)
+                  work2d(i,j)=Am_const*DYC*D(i,j)*dudxC(i,j)
                case(AM_LES)
                   work2d(i,j)=_TWO_*AmC(i,j)*DYC*D(i,j)*dudxC(i,j)
+               case(AM_CONSTANT)
+                  work2d(i,j)=_TWO_*Am_const*DYC*D(i,j)*dudxC(i,j)
             end select
             select case(An_method)
                case(1)
@@ -398,10 +400,12 @@
          work2d(i,j)=_ZERO_
          if (az(i,j) .eq. 1) then
             select case(Am_method)
-               case (AM_LAPLACE,AM_CONSTANT)
-                  work2d(i,j)=_TWO_*Am_const*DXC*D(i,j)*dvdyC(i,j)
+               case (AM_LAPLACE)
+                  work2d(i,j)=Am_const*DXC*D(i,j)*dvdyC(i,j)
                case (AM_LES)
                   work2d(i,j)=_TWO_*AmC(i,j)*DXC*D(i,j)*dvdyC(i,j)
+               case (AM_CONSTANT)
+                  work2d(i,j)=_TWO_*Am_const*DXC*D(i,j)*dvdyC(i,j)
             end select
             select case(An_method)
                case(1)

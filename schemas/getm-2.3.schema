@@ -299,7 +299,10 @@
 				</options>
 			</element>
 			<element name="Am_const" type="float" label="constant horizontal momentum diffusion coefficient" unit="m²/s">
-				<condition type="eq" variable="./Am_method" value="1"/>
+				<condition type="or">
+					<condition type="eq" variable="./Am_method" value="1"/>
+					<condition type="eq" variable="./Am_method" value="3"/>
+				</condition>
 			</element>
 			<element name="An_method" type="int" label="method for constant horizontal numerical diffusion coefficient (m²/s) used to filter the surface elevation">
 				<options>
