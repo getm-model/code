@@ -82,6 +82,7 @@
             n=n+1
             read(line,*,END=91,ERR=92) wi(n),wfj(n),wlj(n), &
                                        type_2d(1,n),type_3d(1,n)
+            if (wlj(n) .lt. wfj(n)) stop 'bdy_spec: wlj.lt.wfj'
             nsbv = nsbv + (wlj(n)-wfj(n)+1)
          end if
       end do
@@ -129,6 +130,7 @@
             n=n+1
             read(line,*,END=91,ERR=92) nj(n),nfi(n),nli(n), &
                                        type_2d(2,n),type_3d(2,n)
+            if (nli(n) .lt. nfi(n)) stop 'bdy_spec: nli.lt.nfi'
             nsbv = nsbv + (nli(n)-nfi(n)+1)
          end if
       end do
@@ -174,6 +176,7 @@
             n=n+1
             read(line,*,END=91,ERR=92) ei(n),efj(n),elj(n), &
                                        type_2d(3,n),type_3d(3,n)
+            if (elj(n) .lt. efj(n)) stop 'bdy_spec: elj.lt.efj'
             nsbv = nsbv + (elj(n)-efj(n)+1)
          end if
       end do
@@ -219,6 +222,7 @@
             n=n+1
             read(line,*,END=91,ERR=92) sj(n),sfi(n),sli(n), &
                                        type_2d(4,n),type_3d(4,n)
+            if (sli(n) .lt. sfi(n)) stop 'bdy_spec: sli.lt.sfi'
             nsbv = nsbv + (sli(n)-sfi(n)+1)
          end if
       end do
