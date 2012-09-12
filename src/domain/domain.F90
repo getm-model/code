@@ -254,27 +254,39 @@
 #define BOUNDARY_POINT 2
 !  western boundary - at present elev only
    do n=1,NWB
-      az(wi(n),wfj(n):wlj(n)) = BOUNDARY_POINT
-      if(wfj(n) .eq. jmin) az(wi(n),jmin-1) = az(wi(n),jmin)
-      if(wlj(n) .eq. jmax) az(wi(n),jmax+1) = az(wi(n),jmax)
+      i = wi(n)
+      do j=wfj(n),wlj(n)
+         if(az(i,j) .eq. 1) then
+            az(i,j) = BOUNDARY_POINT
+         end if
+      end do
    end do
 !  northern boundary - at present elev only
    do n=1,NNB
-      az(nfi(n):nli(n),nj(n)) = BOUNDARY_POINT
-      if(nfi(n) .eq. imin) az(imin-1,nj(n)) = az(imin,nj(n))
-      if(nli(n) .eq. imax) az(imax+1,nj(n)) = az(imax,nj(n))
+      j = nj(n)
+      do i=nfi(n),nli(n)
+         if(az(i,j) .eq. 1) then
+            az(i,j) = BOUNDARY_POINT
+         end if
+      end do
    end do
 !  easter boundary - at present elev only
    do n=1,NEB
-      az(ei(n),efj(n):elj(n)) = BOUNDARY_POINT
-      if(efj(n) .eq. jmin) az(ei(n),jmin-1) = az(ei(n),jmin)
-      if(elj(n) .eq. jmax) az(ei(n),jmax+1) = az(ei(n),jmax)
+      i = ei(n)
+      do j=efj(n),elj(n)
+         if(az(i,j) .eq. 1) then
+            az(i,j) = BOUNDARY_POINT
+         end if
+      end do
    end do
 !  southern boundary - at present elev only
    do n=1,NSB
-      az(sfi(n):sli(n),sj(n)) = BOUNDARY_POINT
-      if(sfi(n) .eq. imin) az(imin-1,sj(n)) = az(imin,sj(n))
-      if(sli(n) .eq. imax) az(imax+1,sj(n)) = az(imax,sj(n))
+      j = sj(n)
+      do i=sfi(n),sli(n)
+         if(az(i,j) .eq. 1) then
+            az(i,j) = BOUNDARY_POINT
+         end if
+      end do
    end do
 #undef BOUNDARY_POINT
 
