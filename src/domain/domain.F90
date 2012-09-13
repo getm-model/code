@@ -83,6 +83,7 @@
    logical                             :: need_2d_bdy_elev = .false.
    logical                             :: need_2d_bdy_u    = .false.
    logical                             :: need_2d_bdy_v    = .false.
+   logical                             :: need_3d_bdy      = .false.
 
    REALTYPE                            :: cori= _ZERO_
 
@@ -184,6 +185,14 @@
 
    bdy_3d_desc(CLAMPED)                 = "Clamped"
    bdy_3d_desc(ZERO_GRADIENT)           = "Zero gradient"
+
+   bdy_3d_desc(ZERO_GRADIENT)           = "Zero gradient"
+   bdy_3d_desc(SOMMERFELD)              = "Sommerfeld rad."
+   bdy_3d_desc(CLAMPED_ELEV)            = "Clamped (elev)"
+   bdy_3d_desc(FLATHER_ELEV)            = "Flather (elev)"
+   bdy_3d_desc(FLATHER_VEL)             = "Flather (vel)"
+   bdy_3d_desc(CLAMPED_VEL)             = "Clamped (vel)"
+   bdy_3d_desc(CLAMPED)                 = "Clamped (elev + normal vel)"
 
    LEVEL1 'init_domain'
 

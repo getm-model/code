@@ -58,7 +58,6 @@
          LEVEL4 nj(n),nfi(n),nli(n)
          LEVEL4 "   2D:",trim(bdy_2d_desc(bdy_2d_type(m)))
          LEVEL4 "   3D:",trim(bdy_3d_desc(bdy_3d_type(m)))
-
       end do
    end if
    if (NEB .ge. 1) then
@@ -68,7 +67,6 @@
          LEVEL4 ei(n),efj(n),elj(n)
          LEVEL4 "   2D:",trim(bdy_2d_desc(bdy_2d_type(m)))
          LEVEL4 "   3D:",trim(bdy_3d_desc(bdy_3d_type(m)))
-
       end do
    end if
    if (NSB .ge. 1) then
@@ -78,7 +76,6 @@
          LEVEL4 sj(n),sfi(n),sli(n)
          LEVEL4 "   2D:",trim(bdy_2d_desc(bdy_2d_type(m)))
          LEVEL4 "   3D:",trim(bdy_3d_desc(bdy_3d_type(m)))
-
       end do
    end if
 

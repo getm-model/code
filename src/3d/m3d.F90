@@ -21,11 +21,10 @@
 !  and are linked in from the library {\tt lib3d.a}.
 !  After the simulation, the module is closed in {\tt clean\_3d}, see
 !  section \ref{sec-clean-3d} on page \pageref{sec-clean-3d}.
-!
 ! !USES:
    use exceptions
    use parameters, only: avmmol
-   use domain, only: openbdy,have_boundaries,maxdepth,vert_cord,az
+   use domain, only: have_boundaries,maxdepth,vert_cord,az
    use m2d, only: bottom_friction
    use variables_2d, only: z
 #ifndef NO_BAROCLINIC
@@ -40,6 +39,7 @@
    use advection, only: NOADV
    use advection_3d, only: init_advection_3d,print_adv_settings_3d,adv_ver_iterations
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
+   use bdy_3d, only: bdyfile_3d,bdyfmt_3d,bdyramp_3d
    use bdy_3d, only: bdy3d_tmrlx, bdy3d_tmrlx_ucut, bdy3d_tmrlx_max, bdy3d_tmrlx_min
 !  Necessary to use halo_zones because update_3d_halos() have been moved out
 !  temperature.F90 and salinity.F90 - should be changed at a later stage
@@ -56,8 +56,6 @@
    logical                             :: calc_temp=.true.
    logical                             :: calc_salt=.true.
    logical                             :: bdy3d=.false.
-   integer                             :: bdyfmt_3d,bdyramp_3d
-   character(len=PATH_MAX)             :: bdyfile_3d
    REALTYPE                            :: ip_fac=_ONE_
    integer                             :: vel_check=0
    REALTYPE                            :: min_vel=-4*_ONE_,max_vel=4*_ONE_
@@ -239,14 +237,13 @@
    end if
 #endif
 
-   if (.not.openbdy .or. runtype.eq.2) bdy3d=.false.
-   if (bdy3d .and. runtype.eq.3) then
-      LEVEL2 'reset bdy3d=.false. in runtype=3'
+   if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
+
+   if (have_boundaries) then
+      call init_bdy_3d(bdy3d,runtype,hotstart)
+   else
       bdy3d = .false.
    end if
-   if (bdy3d) call init_bdy_3d()
-
-   if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_3d()'

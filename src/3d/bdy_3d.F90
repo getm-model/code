@@ -15,7 +15,8 @@
 ! !USES:
    use halo_zones, only : H_TAG,U_TAG,V_TAG
    use domain, only: imin,jmin,imax,jmax,kmax,H,az,au,av
-   use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index,bdy_3d_type
+   use domain, only: nsbv,nbdy,NWB,NNB,NEB,NSB,bdy_index,bdy_3d_type
+   use domain, only: need_3d_bdy
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use variables_3d
 #ifdef _FABM_
@@ -28,19 +29,24 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_bdy_3d, do_bdy_3d
+   character(len=PATH_MAX),public      :: bdyfile_3d
+   integer,public                      :: bdyfmt_3d
+   integer,public                      :: bdyramp_3d
+   integer,public                      :: bdy3d_sponge_size=3
+   logical,public                      :: bdy3d_tmrlx=.false.
+   REALTYPE,public                     :: bdy3d_tmrlx_ucut=_ONE_/50
+   REALTYPE                            :: bdy3d_tmrlx_umin
+   REALTYPE,public                     :: bdy3d_tmrlx_max=_ONE_/4
+   REALTYPE,public                     :: bdy3d_tmrlx_min=_ZERO_
+
    REALTYPE, public, allocatable       :: S_bdy(:,:),T_bdy(:,:)
 #ifdef _FABM_
    REALTYPE, public, allocatable       :: bio_bdy(:,:,:)
    integer, public, allocatable        :: have_bio_bdy_values(:)
 #endif
-   integer,public                      :: bdy3d_sponge_size=3
-   logical,  public                    :: bdy3d_tmrlx=.false.
-   REALTYPE, public                    :: bdy3d_tmrlx_ucut=_ONE_/50
-   REALTYPE                            :: bdy3d_tmrlx_umin
-   REALTYPE, public                    :: bdy3d_tmrlx_max=_ONE_/4
-   REALTYPE, public                    :: bdy3d_tmrlx_min=_ZERO_
 !
 ! !PRIVATE DATA MEMBERS:
+   private bdy3d_active
    REALTYPE,         allocatable       :: bdyvertS(:), bdyvertT(:)
    REALTYPE,         allocatable       :: rlxcoef(:),sp(:)
 #ifdef _FABM_
@@ -62,7 +68,7 @@
 ! \label{sec-init-bdy-3d}
 !
 ! !INTERFACE:
-   subroutine init_bdy_3d()
+   subroutine init_bdy_3d(bdy3d,runtype,hotstart)
 !
 ! !DESCRIPTION:
 !
@@ -72,8 +78,15 @@
 ! !USES:
    IMPLICIT NONE
 !
+! !INPUT PARAMETERS:
+   integer, intent(in)                 :: runtype
+   logical, intent(in)                 :: hotstart
+!
+! !INPUT/OUTPUT PARAMETERS:
+   logical, intent(inout)              :: bdy3d
+!
 ! !LOCAL VARIABLES:
-   integer                   :: rc,i,j,k,n
+   integer                   :: rc,i,j,k,l,n
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -85,54 +98,91 @@
 
    LEVEL2 'init_bdy_3d()'
 
-   if (bdy3d_tmrlx) then
-      LEVEL3 'bdy3d_tmrlx=.true.'
-      LEVEL3 'bdy3d_tmrlx_max=   ',bdy3d_tmrlx_max
-      LEVEL3 'bdy3d_tmrlx_min=   ',bdy3d_tmrlx_min
-      LEVEL3 'bdy3d_tmrlx_ucut=  ',bdy3d_tmrlx_ucut
-      if (bdy3d_tmrlx_min<_ZERO_ .or. bdy3d_tmrlx_min>_ONE_)          &
-           call getm_error("init_3d()",                               &
-           "bdy3d_tmrlx_min is out of valid range [0:1]")
-      if (bdy3d_tmrlx_max<bdy3d_tmrlx_min .or. bdy3d_tmrlx_min>_ONE_) &
-           call getm_error("init_3d()",                               &
-           "bdy3d_tmrlx_max is out of valid range [bdy3d_tmrlx_max:1]")
-      if (bdy3d_tmrlx_ucut<_ZERO_)                                    &
-           call getm_error("init_3d()",                               &
-           "bdy3d_tmrlx_max is out of valid range [0:inf[")
-
-!     Hardcoding of lower limit of velocity cut-off for temporal relaxation.
-!     Linear variation between bdy3d_tmrlx_umin and bdy3d_tmrlx_ucut.
-      bdy3d_tmrlx_umin = -_QUART_*bdy3d_tmrlx_ucut
-      LEVEL3 'bdy3d_tmrlx_umin=  ',bdy3d_tmrlx_umin
+   if (runtype.eq.2) bdy3d=.false.
+   if (bdy3d .and. runtype.eq.3) then
+      LEVEL2 'reset bdy3d=.false. in runtype=3'
+      bdy3d = .false.
    end if
 
-   allocate(S_bdy(0:kmax,nsbv),stat=rc)
-   if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (S_bdy)'
-
-   allocate(T_bdy(0:kmax,nsbv),stat=rc)
-   if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (T_bdy)'
-
-   allocate(bdyvertS(0:kmax),stat=rc)
-   if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (bdyvertS)'
-
-   allocate(bdyvertT(0:kmax),stat=rc)
-   if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (bdyvertT)'
-
-   allocate(rlxcoef(0:kmax),stat=rc)
-   if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (rlxcoef)'
-
-   if (bdy3d_sponge_size .gt. 0) then
-      allocate(sp(bdy3d_sponge_size),stat=rc)
-      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (sp)'
-
-   !  Sponge layer factors according to Martinsen and Engedahl, 1987.
-   !  Note (KK): factor=1 (bdy cell) does not count for sponge size
-   !             (in contrast to earlier GETM)
-      LEVEL3 "sponge layer factors:"
-      do i=1,bdy3d_sponge_size
-         sp(i) = ((_ONE_+bdy3d_sponge_size-i)/(_ONE_+bdy3d_sponge_size))**2
-         LEVEL4 "sp(",i,")=",sp(i)
+   if (bdy3d) then
+      do l=1,nbdy
+         if (bdy3d_active(bdy_3d_type(l))) then
+            need_3d_bdy = .true.
+            exit
+         end if
       end do
+      if (.not. need_3d_bdy) then
+         bdy3d = .false.
+      end if
+   else
+      do l=1,nbdy
+         if (bdy3d_active(bdy_3d_type(l))) then
+            LEVEL3 'bdy3d=F deactivates local 3D bdy #',l
+            bdy_3d_type(l) = -1
+         end if
+      end do
+   end if
+
+
+   if (bdy3d) then
+
+      LEVEL3 'bdyfile_3d=',TRIM(bdyfile_3d)
+      LEVEL3 'bdyfmt_3d=',bdyfmt_3d
+      LEVEL3 'bdyramp_3d=',bdyramp_3d
+      if (hotstart .and. bdyramp_3d .gt. 0) then
+          LEVEL4 'WARNING: hotstart is .true. AND bdyramp_3d .gt. 0'
+          LEVEL4 'WARNING: .. be sure you know what you are doing ..'
+      end if
+
+      if (bdy3d_tmrlx) then
+         LEVEL3 'bdy3d_tmrlx=.true.'
+         LEVEL3 'bdy3d_tmrlx_max=   ',bdy3d_tmrlx_max
+         LEVEL3 'bdy3d_tmrlx_min=   ',bdy3d_tmrlx_min
+         LEVEL3 'bdy3d_tmrlx_ucut=  ',bdy3d_tmrlx_ucut
+         if (bdy3d_tmrlx_min<_ZERO_ .or. bdy3d_tmrlx_min>_ONE_)          &
+              call getm_error("init_3d()",                               &
+              "bdy3d_tmrlx_min is out of valid range [0:1]")
+         if (bdy3d_tmrlx_max<bdy3d_tmrlx_min .or. bdy3d_tmrlx_min>_ONE_) &
+              call getm_error("init_3d()",                               &
+              "bdy3d_tmrlx_max is out of valid range [bdy3d_tmrlx_max:1]")
+         if (bdy3d_tmrlx_ucut<_ZERO_)                                    &
+              call getm_error("init_3d()",                               &
+              "bdy3d_tmrlx_max is out of valid range [0:inf[")
+
+!        Hardcoding of lower limit of velocity cut-off for temporal relaxation.
+!        Linear variation between bdy3d_tmrlx_umin and bdy3d_tmrlx_ucut.
+         bdy3d_tmrlx_umin = -_QUART_*bdy3d_tmrlx_ucut
+         LEVEL3 'bdy3d_tmrlx_umin=  ',bdy3d_tmrlx_umin
+      end if
+
+      allocate(S_bdy(0:kmax,nsbv),stat=rc)
+      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (S_bdy)'
+
+      allocate(T_bdy(0:kmax,nsbv),stat=rc)
+      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (T_bdy)'
+
+      allocate(bdyvertS(0:kmax),stat=rc)
+      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (bdyvertS)'
+
+      allocate(bdyvertT(0:kmax),stat=rc)
+      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (bdyvertT)'
+
+      allocate(rlxcoef(0:kmax),stat=rc)
+      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (rlxcoef)'
+
+      if (bdy3d_sponge_size .gt. 0) then
+         allocate(sp(bdy3d_sponge_size),stat=rc)
+         if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (sp)'
+
+!        Sponge layer factors according to Martinsen and Engedahl, 1987.
+!        Note (KK): factor=1 (bdy cell) does not count for sponge size
+!                   (in contrast to earlier GETM)
+         LEVEL3 "sponge layer factors:"
+         do i=1,bdy3d_sponge_size
+            sp(i) = ((_ONE_+bdy3d_sponge_size-i)/(_ONE_+bdy3d_sponge_size))**2
+            LEVEL4 "sp(",i,")=",sp(i)
+         end do
+      end if
    end if
 
 #ifdef _FABM_
@@ -602,7 +652,38 @@
    return
    end subroutine do_bdy_3d
 !EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  LOGICAL function bdy3d_active -
+!
+! !INTERFACE:
+   logical function bdy3d_active(type_3d)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer,intent(in)  :: type_3d
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!EOP
+!-----------------------------------------------------------------------
+!BOC
 
+   select case (type_3d)
+      case (CLAMPED)
+         bdy3d_active = .true.
+      case (ZERO_GRADIENT)
+         bdy3d_active = .false.
+   end select
+
+   return
+   end function bdy3d_active
+!EOC
 !-----------------------------------------------------------------------
 
    end module bdy_3d

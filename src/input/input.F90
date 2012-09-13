@@ -14,7 +14,8 @@
    use m2d, only: bdy2d
    use bdy_2d, only: bdyfile_2d,bdyfmt_2d
 #ifndef NO_3D
-   use m3d, only: bdy3d,bdyfile_3d,bdyfmt_3d
+   use m3d, only: bdy3d
+   use bdy_3d, only: bdyfile_3d,bdyfmt_3d
    use rivers, only: river_method,nriver,river_data
 #endif
    IMPLICIT NONE
