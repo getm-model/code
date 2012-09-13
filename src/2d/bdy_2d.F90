@@ -16,7 +16,8 @@
    use parameters,only: g
    use halo_zones, only : z_TAG,H_TAG,U_TAG,V_TAG
    use domain, only: imin,jmin,imax,jmax,kmax,H,az,au,av
-   use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index,bdy_2d_type
+   use domain, only: nsbv,nbdy,NWB,NNB,NEB,NSB,bdy_index,bdy_2d_type
+   use domain, only: need_2d_bdy_elev,need_2d_bdy_u,need_2d_bdy_v
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: min_depth
    use variables_2d, only: dtm,z,zo,D,U,DU,V,DV
@@ -32,9 +33,13 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_bdy_2d, do_bdy_2d
-   integer,public                   :: bdyfmt_2d,bdyramp_2d=-1
+   character(len=PATH_MAX),public :: bdyfile_2d
+   integer,public                 :: bdyfmt_2d,bdyramp_2d=-1
 !  KK-TODO: static REAL_4B => allocatable REALTYPE
    REAL_4B,dimension(1500),public :: bdy_data,bdy_data_u,bdy_data_v
+!
+! !PRIVATE DATA MEMBERS:
+   private bdy2d_active,bdy2d_need_elev,bdy2d_need_vel
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -51,14 +56,21 @@
 ! \label{sec-init-bdy-2d}
 !
 ! !INTERFACE:
-   subroutine init_bdy_2d()
+   subroutine init_bdy_2d(bdy2d,hotstart)
 !
 ! !DESCRIPTION:
 !
 ! !USES:
    IMPLICIT NONE
 !
+! !INPUT PARAMETERS:
+   logical, intent(in)                 :: hotstart
+!
+! !INPUT/OUTPUT PARAMETERS:
+   logical, intent(inout)              :: bdy2d
+!
 ! !LOCAL VARIABLES:
+   integer :: n,l
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -68,7 +80,77 @@
    write(debug,*) 'init_bdy_2d() # ',Ncall
 #endif
 
-   LEVEL2 'init_bdy_2d()'
+   LEVEL2 'init_bdy_2d'
+
+   if (bdy2d) then
+
+      do l=1,nbdy
+         if (bdy2d_need_elev(bdy_2d_type(l))) then
+            need_2d_bdy_elev = .true.
+            exit
+         end if
+      end do
+
+      l = 0
+      do n = 1,NWB
+         l = l+1
+         if (bdy2d_need_vel(bdy_2d_type(l))) then
+            need_2d_bdy_u = .true.
+            exit
+         end if
+      end do
+      if (.not. need_2d_bdy_u) then
+         l = l + NNB
+         do n = 1,NEB
+            l = l+1
+            if (bdy2d_need_vel(bdy_2d_type(l))) then
+               need_2d_bdy_u = .true.
+               exit
+            end if
+         end do
+      end if
+
+      l = NWB
+      do n = 1,NNB
+         l = l+1
+         if (bdy2d_need_vel(bdy_2d_type(l))) then
+            need_2d_bdy_v = .true.
+            exit
+         end if
+      end do
+      if (.not. need_2d_bdy_v) then
+         l = l + NEB
+         do n = 1,NSB
+            l = l+1
+            if (bdy2d_need_vel(bdy_2d_type(l))) then
+               need_2d_bdy_v = .true.
+               exit
+            end if
+         end do
+      end if
+
+      if (need_2d_bdy_elev .or. need_2d_bdy_u .or. need_2d_bdy_v) then
+         LEVEL3 'bdyfile_2d=',TRIM(bdyfile_2d)
+         LEVEL3 'bdyfmt_2d=',bdyfmt_2d
+         LEVEL3 'bdyramp_2d=',bdyramp_2d
+         if (hotstart .and. bdyramp_2d .gt. 0) then
+             LEVEL4 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
+             LEVEL4 'WARNING: .. be sure you know what you are doing ..'
+         end if
+      else
+         bdy2d = .false.
+      end if
+
+   else
+
+      do l=1,nbdy
+         if (bdy2d_active(bdy_2d_type(l))) then
+            LEVEL3 'bdy2d=F deactivates local bdy #',l
+            bdy_2d_type(l) = -1
+         end if
+      end do
+
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_bdy_2d()'
@@ -398,6 +480,132 @@
 #endif
    return
    end subroutine do_bdy_2d
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  LOGICAL function bdy2d_active -
+!
+! !INTERFACE:
+   logical function bdy2d_active(type_2d)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer,intent(in)  :: type_2d
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   select case (type_2d)
+      case (CLAMPED)
+         bdy2d_active = .true.
+      case (ZERO_GRADIENT)
+         bdy2d_active = .false.
+      case (SOMMERFELD)
+         bdy2d_active = .false.
+      case (CLAMPED_ELEV)
+         bdy2d_active = .true.
+      case (FLATHER_ELEV)
+         bdy2d_active = .true.
+      case (FLATHER_VEL)
+         bdy2d_active = .true.
+      case (CLAMPED_VEL)
+         bdy2d_active = .true.
+   end select
+
+   return
+   end function bdy2d_active
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  LOGICAL function bdy2d_need_elev -
+!
+! !INTERFACE:
+   logical function bdy2d_need_elev(type_2d)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer,intent(in)  :: type_2d
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   select case (type_2d)
+      case (CLAMPED)
+         bdy2d_need_elev = .true.
+      case (ZERO_GRADIENT)
+         bdy2d_need_elev = .false.
+      case (SOMMERFELD)
+         bdy2d_need_elev = .false.
+      case (CLAMPED_ELEV)
+         bdy2d_need_elev = .true.
+      case (FLATHER_ELEV)
+         bdy2d_need_elev = .true.
+      case (FLATHER_VEL)
+         bdy2d_need_elev = .true.
+      case (CLAMPED_VEL)
+         bdy2d_need_elev = .false.
+   end select
+
+   return
+   end function bdy2d_need_elev
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  LOGICAL function bdy2d_need_vel -
+!
+! !INTERFACE:
+   logical function bdy2d_need_vel(type_2d)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer,intent(in)  :: type_2d
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   select case (type_2d)
+      case (CLAMPED)
+         bdy2d_need_vel = .true.
+      case (ZERO_GRADIENT)
+         bdy2d_need_vel = .false.
+      case (SOMMERFELD)
+         bdy2d_need_vel = .false.
+      case (CLAMPED_ELEV)
+         bdy2d_need_vel = .false.
+      case (FLATHER_ELEV)
+         bdy2d_need_vel = .true.
+      case (FLATHER_VEL)
+         bdy2d_need_vel = .true.
+      case (CLAMPED_VEL)
+         bdy2d_need_vel = .true.
+   end select
+
+   return
+   end function bdy2d_need_vel
 !EOC
 !-----------------------------------------------------------------------
 

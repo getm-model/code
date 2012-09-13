@@ -22,7 +22,6 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,m,n
-   integer                   :: nbdy
    integer                   :: f,l
 !EOP
 !-----------------------------------------------------------------------
@@ -33,7 +32,6 @@
    write(debug,*) 'have_bdy() # ',Ncall
 #endif
 
-   nbdy = 0
    i = 0
    m = 0
    if (NWB .ge. 1) then

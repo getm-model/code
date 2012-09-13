@@ -16,7 +16,6 @@
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: bdy_index,bdy_map,nsbv
    use domain, only: bdy_2d_type,bdy_3d_type
-   use domain, only: need_2d_bdy_elev,need_2d_bdy_u,need_2d_bdy_v
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -86,16 +85,6 @@
             nsbv = nsbv + (wlj(n)-wfj(n)+1)
          end if
       end do
-      do n = 1,NWB
-         if (type_2d(1,n) .eq. CLAMPED_ELEV) need_2d_bdy_elev = .true.
-         if (     type_2d(1,n) .eq. FLATHER_ELEV &
-             .or. type_2d(1,n) .eq. FLATHER_VEL  &
-             .or. type_2d(1,n) .eq. CLAMPED      ) then
-            need_2d_bdy_elev = .true.
-            need_2d_bdy_u    = .true.
-         end if
-         if (type_2d(1,n) .eq. CLAMPED_VEL) need_2d_bdy_u = .true.
-      end do
    end if
 
 !  Northern boundary info
@@ -134,16 +123,6 @@
             nsbv = nsbv + (nli(n)-nfi(n)+1)
          end if
       end do
-      do n = 1,NNB
-         if (type_2d(2,n) .eq. CLAMPED_ELEV) need_2d_bdy_elev = .true.
-         if (     type_2d(2,n) .eq. FLATHER_ELEV &
-             .or. type_2d(2,n) .eq. FLATHER_VEL  &
-             .or. type_2d(2,n) .eq. CLAMPED      ) then
-            need_2d_bdy_elev = .true.
-            need_2d_bdy_v    = .true.
-         end if
-         if (type_2d(2,n) .eq. CLAMPED_VEL) need_2d_bdy_v = .true.
-      end do
    end if
 
 !  Eastern boundary info
@@ -180,16 +159,6 @@
             nsbv = nsbv + (elj(n)-efj(n)+1)
          end if
       end do
-      do n = 1,NEB
-         if (type_2d(3,n) .eq. CLAMPED_ELEV) need_2d_bdy_elev = .true.
-         if (     type_2d(3,n) .eq. FLATHER_ELEV &
-             .or. type_2d(3,n) .eq. FLATHER_VEL  &
-             .or. type_2d(3,n) .eq. CLAMPED      ) then
-            need_2d_bdy_elev = .true.
-            need_2d_bdy_u    = .true.
-         end if
-         if (type_2d(3,n) .eq. CLAMPED_VEL) need_2d_bdy_u = .true.
-      end do
    end if
 
 !  Southern boundary info
@@ -225,16 +194,6 @@
             if (sli(n) .lt. sfi(n)) stop 'bdy_spec: sli.lt.sfi'
             nsbv = nsbv + (sli(n)-sfi(n)+1)
          end if
-      end do
-      do n=1,NSB
-         if (type_2d(4,n) .eq. CLAMPED_ELEV) need_2d_bdy_elev = .true.
-         if (     type_2d(4,n) .eq. FLATHER_ELEV &
-             .or. type_2d(4,n) .eq. FLATHER_VEL  &
-             .or. type_2d(4,n) .eq. CLAMPED      ) then
-            need_2d_bdy_elev = .true.
-            need_2d_bdy_v    = .true.
-         end if
-         if (type_2d(4,n) .eq. CLAMPED_VEL) need_2d_bdy_v = .true.
       end do
    end if
 
