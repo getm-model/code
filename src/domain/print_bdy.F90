@@ -18,7 +18,7 @@
    use domain, only: NWB,NNB,NEB,NSB
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: bdy_2d_type,bdy_3d_type
-   use domain, only: bdy_2d_desc
+   use domain, only: bdy_2d_desc,bdy_3d_desc
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -46,28 +46,39 @@
       LEVEL3 'Western Boundary'
       do n = 1,NWB
          m=m+1
-         LEVEL3 wi(n),wfj(n),wlj(n),trim(bdy_2d_desc(bdy_2d_type(m)))
+         LEVEL4 wi(n),wfj(n),wlj(n)
+         LEVEL4 "   2D:",trim(bdy_2d_desc(bdy_2d_type(m)))
+         LEVEL4 "   3D:",trim(bdy_3d_desc(bdy_3d_type(m)))
       end do
    end if
    if (NNB .ge. 1) then
       LEVEL3 'Northern Boundary'
       do n = 1,NNB
          m=m+1
-         LEVEL3 nj(n),nfi(n),nli(n),trim(bdy_2d_desc(bdy_2d_type(m)))
+         LEVEL4 nj(n),nfi(n),nli(n)
+         LEVEL4 "   2D:",trim(bdy_2d_desc(bdy_2d_type(m)))
+         LEVEL4 "   3D:",trim(bdy_3d_desc(bdy_3d_type(m)))
+
       end do
    end if
    if (NEB .ge. 1) then
       LEVEL3 'Eastern Boundary'
       do n = 1,NEB
          m=m+1
-         LEVEL3 ei(n),efj(n),elj(n),trim(bdy_2d_desc(bdy_2d_type(m)))
+         LEVEL4 ei(n),efj(n),elj(n)
+         LEVEL4 "   2D:",trim(bdy_2d_desc(bdy_2d_type(m)))
+         LEVEL4 "   3D:",trim(bdy_3d_desc(bdy_3d_type(m)))
+
       end do
    end if
    if (NSB .ge. 1) then
       LEVEL3 'Southern Boundary'
       do n = 1,NSB
          m=m+1
-         LEVEL3 sj(n),sfi(n),sli(n),trim(bdy_2d_desc(bdy_2d_type(m)))
+         LEVEL4 sj(n),sfi(n),sli(n)
+         LEVEL4 "   2D:",trim(bdy_2d_desc(bdy_2d_type(m)))
+         LEVEL4 "   3D:",trim(bdy_3d_desc(bdy_3d_type(m)))
+
       end do
    end if
 

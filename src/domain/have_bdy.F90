@@ -49,6 +49,7 @@
                wlj(i) = l
                nbdy = nbdy+1
                bdy_2d_type(nbdy) = bdy_2d_type(m)
+               bdy_3d_type(nbdy) = bdy_3d_type(m)
                do k=1,nsbv
                   if (bdy_map(k,1) .eq. wi(i)+ioff .and. &
                       bdy_map(k,2) .eq. f+joff) then
@@ -75,6 +76,7 @@
                nj(i) = nj(n) - joff
                nbdy = nbdy+1
                bdy_2d_type(nbdy) = bdy_2d_type(m)
+               bdy_3d_type(nbdy) = bdy_3d_type(m)
                do k=1,nsbv
                   if (bdy_map(k,1) .eq. f+ioff .and.  &
                       bdy_map(k,2) .eq. nj(i)+joff) then
@@ -101,6 +103,7 @@
                elj(i) = l
                nbdy = nbdy+1
                bdy_2d_type(nbdy) = bdy_2d_type(m)
+               bdy_3d_type(nbdy) = bdy_3d_type(m)
                do k=1,nsbv
                   if (bdy_map(k,1) .eq. ei(i)+ioff .and. &
                       bdy_map(k,2) .eq. f+joff) then
@@ -127,6 +130,7 @@
                sj(i) = sj(n) - joff
                nbdy = nbdy+1
                bdy_2d_type(nbdy) = bdy_2d_type(m)
+               bdy_3d_type(nbdy) = bdy_3d_type(m)
                do k=1,nsbv
                   if (bdy_map(k,1) .eq. f+ioff .and. &
                       bdy_map(k,2) .eq. sj(i)+joff) then

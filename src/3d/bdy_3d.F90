@@ -15,12 +15,13 @@
 ! !USES:
    use halo_zones, only : H_TAG,U_TAG,V_TAG
    use domain, only: imin,jmin,imax,jmax,kmax,H,az,au,av
-   use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index
+   use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index,bdy_3d_type
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use variables_3d
 #ifdef _FABM_
    use getm_fabm, only: fabm_calc,model,fabm_pel,fabm_ben
 #endif
+   use exceptions
    IMPLICIT NONE
 !
    private
@@ -32,14 +33,16 @@
    REALTYPE, public, allocatable       :: bio_bdy(:,:,:)
    integer, public, allocatable        :: have_bio_bdy_values(:)
 #endif
+   integer,public                      :: bdy3d_sponge_size=3
    logical,  public                    :: bdy3d_tmrlx=.false.
    REALTYPE, public                    :: bdy3d_tmrlx_ucut=_ONE_/50
+   REALTYPE                            :: bdy3d_tmrlx_umin
    REALTYPE, public                    :: bdy3d_tmrlx_max=_ONE_/4
    REALTYPE, public                    :: bdy3d_tmrlx_min=_ZERO_
 !
 ! !PRIVATE DATA MEMBERS:
    REALTYPE,         allocatable       :: bdyvertS(:), bdyvertT(:)
-   REALTYPE,         allocatable       :: rlxcoef(:)
+   REALTYPE,         allocatable       :: rlxcoef(:),sp(:)
 #ifdef _FABM_
    integer                             :: npel=-1,nben=-1
 #endif
@@ -81,6 +84,28 @@
 #endif
 
    LEVEL2 'init_bdy_3d()'
+
+   if (bdy3d_tmrlx) then
+      LEVEL3 'bdy3d_tmrlx=.true.'
+      LEVEL3 'bdy3d_tmrlx_max=   ',bdy3d_tmrlx_max
+      LEVEL3 'bdy3d_tmrlx_min=   ',bdy3d_tmrlx_min
+      LEVEL3 'bdy3d_tmrlx_ucut=  ',bdy3d_tmrlx_ucut
+      if (bdy3d_tmrlx_min<_ZERO_ .or. bdy3d_tmrlx_min>_ONE_)          &
+           call getm_error("init_3d()",                               &
+           "bdy3d_tmrlx_min is out of valid range [0:1]")
+      if (bdy3d_tmrlx_max<bdy3d_tmrlx_min .or. bdy3d_tmrlx_min>_ONE_) &
+           call getm_error("init_3d()",                               &
+           "bdy3d_tmrlx_max is out of valid range [bdy3d_tmrlx_max:1]")
+      if (bdy3d_tmrlx_ucut<_ZERO_)                                    &
+           call getm_error("init_3d()",                               &
+           "bdy3d_tmrlx_max is out of valid range [0:inf[")
+
+!     Hardcoding of lower limit of velocity cut-off for temporal relaxation.
+!     Linear variation between bdy3d_tmrlx_umin and bdy3d_tmrlx_ucut.
+      bdy3d_tmrlx_umin = -_QUART_*bdy3d_tmrlx_ucut
+      LEVEL3 'bdy3d_tmrlx_umin=  ',bdy3d_tmrlx_umin
+   end if
+
    allocate(S_bdy(0:kmax,nsbv),stat=rc)
    if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (S_bdy)'
 
@@ -95,6 +120,20 @@
 
    allocate(rlxcoef(0:kmax),stat=rc)
    if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (rlxcoef)'
+
+   if (bdy3d_sponge_size .gt. 0) then
+      allocate(sp(bdy3d_sponge_size),stat=rc)
+      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (sp)'
+
+   !  Sponge layer factors according to Martinsen and Engedahl, 1987.
+   !  Note (KK): factor=1 (bdy cell) does not count for sponge size
+   !             (in contrast to earlier GETM)
+      LEVEL3 "sponge layer factors:"
+      do i=1,bdy3d_sponge_size
+         sp(i) = ((_ONE_+bdy3d_sponge_size-i)/(_ONE_+bdy3d_sponge_size))**2
+         LEVEL4 "sp(",i,")=",sp(i)
+      end do
+   end if
 
 #ifdef _FABM_
    npel=size(model%info%state_variables)
@@ -142,8 +181,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,l,n,o,ii,jj,kk
-   REALTYPE                  :: sp(1:4),rat
-   REALTYPE                  :: bdy3d_tmrlx_umin
+   REALTYPE                  :: rat
    REALTYPE                  :: wsum
 !EOP
 !-----------------------------------------------------------------------
@@ -179,333 +217,368 @@
 #endif
 
 #ifndef NO_BAROCLINIC
-! Sponge layer factors according to Martinsen and Engedahl, 1987.
-   sp(1)=1.0
-   sp(2)=0.5625
-   sp(3)=0.25
-   sp(4)=0.0625
-! Hardcoding of lower limit of velocity cut-off for temporal relaxation.
-! Linear variation between bdy3d_tmrlx_umin and bdy3d_tmrlx_ucut.
-   bdy3d_tmrlx_umin = -_QUART_*bdy3d_tmrlx_ucut
 
    l = 0
-   k = 0
    do n=1,NWB
       l = l+1
       k = bdy_index(l)
       i = wi(n)
-      do j=wfj(n),wlj(n)
-         if (bdy3d_tmrlx) then
-            if (au(i,j).gt.0) then
-!                Local temporal relaxation coeficient depends on
-!                local current just *inside* domain:
-               do kk=1,kmax
-                  if (uu(i,j,kk).ge.bdy3d_tmrlx_ucut) then
-                     rlxcoef(kk) = bdy3d_tmrlx_max
-                  else if (uu(i,j,kk).le.bdy3d_tmrlx_umin) then
-                     rlxcoef(kk) = bdy3d_tmrlx_min
+      select case (bdy_3d_type(l))
+         case(ZERO_GRADIENT)
+            do j=wfj(n),wlj(n)
+               S(i,j,:) = S(i+1,j,:)
+               T(i,j,:) = T(i+1,j,:)
+            end do
+         case(CLAMPED)
+            do j=wfj(n),wlj(n)
+               if (az(i,j) .eq. 2) then
+                  if (bdy3d_tmrlx) then
+!                    Temporal relaxation: Weight inner (actual) solution near boundary
+!                    with boundary condition (outer solution.)
+                     wsum = _ZERO_
+                     bdyvertS(:) = _ZERO_
+                     bdyvertT(:) = _ZERO_
+                     do ii=1,bdy3d_sponge_size
+!                       Get (weighted avr of) inner near-bdy solution (sponge) cells:
+                        if(az(i+ii,j) .ne. 0) then
+                           wsum = wsum + sp(ii)
+                           bdyvertS(:) = bdyvertS(:) + sp(ii)*S(i+ii,j,:)
+                           bdyvertT(:) = bdyvertT(:) + sp(ii)*T(i+ii,j,:)
+                        else
+                           exit
+                        end if
+                     end do
+                     if (wsum>_ZERO_) then
+!                       Local temporal relaxation coeficient depends on
+!                       local current just *inside* domain:
+                        do kk=1,kmax
+                           if (uu(i,j,kk).ge.bdy3d_tmrlx_ucut) then
+                              rlxcoef(kk) = bdy3d_tmrlx_max
+                           else if (uu(i,j,kk).le.bdy3d_tmrlx_umin) then
+                              rlxcoef(kk) = bdy3d_tmrlx_min
+                           else
+                              rlxcoef(kk) = (bdy3d_tmrlx_max-bdy3d_tmrlx_min)    &
+                                   *(uu(i,j,kk)-bdy3d_tmrlx_umin)                &
+                                   /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
+                                   + bdy3d_tmrlx_min
+                           end if
+                        end do
+!                       Weight inner and outer (bc) solutions for use
+!                       in spatial relaxation/sponge
+                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,k)
+                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,k)
+                     else
+   !                    No near-bdy points. Just clamp bdy temporally:
+                        bdyvertS(:) = S_bdy(:,k)
+                        bdyvertT(:) = T_bdy(:,k)
+                     end if
                   else
-                     rlxcoef(kk) = (bdy3d_tmrlx_max-bdy3d_tmrlx_min)    &
-                          *(uu(i,j,kk)-bdy3d_tmrlx_umin)                &
-                          /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
-                          + bdy3d_tmrlx_min
+!                    No time-relaxation. Just clamp at bondary points.
+                     bdyvertS(:) = S_bdy(:,k)
+                     bdyvertT(:) = T_bdy(:,k)
                   end if
-               end do
-            else
-               rlxcoef(:)=bdy3d_tmrlx_max
-            end if
-!             Temporal relaxation: Weight inner (actual) solution near boundary
-!             with boundary condition (outer solution.)
-            wsum= MIN(az(i-1+2,j),1)*sp(2)                              &
-                 +MIN(az(i-1+3,j),1)*sp(3)                              &
-                 +MIN(az(i-1+4,j),1)*sp(4)
-            if (wsum>_ZERO_) then
-!                Get (weighted avr of) inner near-bdy solution (sponge) cells:
-               bdyvertS(:) = (_ONE_/wsum)*(                              &
-                               MIN(az(i-1+2,j),1) * sp(2) * S(i-1+2,j,:) &
-                              +MIN(az(i-1+3,j),1) * sp(3) * S(i-1+3,j,:) &
-                              +MIN(az(i-1+4,j),1) * sp(4) * S(i-1+4,j,:) &
-                                          )
-               bdyvertT(:) = (_ONE_/wsum)*(                              &
-                               MIN(az(i-1+2,j),1) * sp(2) * T(i-1+2,j,:) &
-                              +MIN(az(i-1+3,j),1) * sp(3) * T(i-1+3,j,:) &
-                              +MIN(az(i-1+4,j),1) * sp(4) * T(i-1+4,j,:) &
-                                          )
-!                Weight inner and outer (bc) solutions for use
-!                in spatial relaxation/sponge
-               bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:) + rlxcoef(:)*S_bdy(:,k)
-               bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:) + rlxcoef(:)*T_bdy(:,k)
-            else
-!                No near-bdy points. Just clamp bdy temporally:
-               bdyvertS(:) = S_bdy(:,k)
-               bdyvertT(:) = T_bdy(:,k)
-            end if
-         else
-!            No time-relaxation. Just clamp at bondary points.
-            bdyvertS(:) = S_bdy(:,k)
-            bdyvertT(:) = T_bdy(:,k)
-         end if
-         do ii=1,4
-!           Spatial relaxation / sponge:
-            if (az(i-1+ii,j).gt.0) then
-               S(i-1+ii,j,:) = sp(ii)*bdyvertS(:)+(_ONE_-sp(ii))*S(i-1+ii,j,:)
-               T(i-1+ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i-1+ii,j,:)
+                  S(i,j,:) = bdyvertS(:)
+                  T(i,j,:) = bdyvertT(:)
 #ifdef _FABM_
-               if (fabm_calc) then
-                  do o=1,npel
-                     if (have_bio_bdy_values(o) .eq. 1) then
-                        fabm_pel(i-1+ii,j,:,o) = sp(ii)*bio_bdy(:,k,o) &
-                                            +(1.-sp(ii))*fabm_pel(i-1+ii,j,:,o)
+                  if (fabm_calc) then
+                     do o=1,npel
+                        if (have_bio_bdy_values(o) .eq. 1) then
+                           fabm_pel(i,j,:,o) = bio_bdy(:,k,o)
+                        else
+!                          zero gradient when we don't have bdy values
+                           fabm_pel(i,j,:,o) = fabm_pel(i+1,j,:,o)
+                        end if
+                     end do
+                     fabm_ben(i,j,:) = fabm_ben(i+1,j,:)
+                  end if
+#endif
+                  do ii=1,bdy3d_sponge_size
+!                    Spatial relaxation / sponge:
+                     if (az(i+ii,j) .ne. 0) then
+                        S(i+ii,j,:) = sp(ii)*bdyvertS(:)+(_ONE_-sp(ii))*S(i+ii,j,:)
+                        T(i+ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i+ii,j,:)
+#ifdef _FABM_
+                        if (fabm_calc) then
+                           do o=1,npel
+                              if (have_bio_bdy_values(o) .eq. 1) then
+                                 fabm_pel(i+ii,j,:,o) = sp(ii)*bio_bdy(:,k,o) &
+                                                     +(_ONE_-sp(ii))*fabm_pel(i+ii,j,:,o)
+                              end if
+                           end do
+                        end if
+#endif
+                     else
+                        exit
                      end if
                   end do
                end if
-#endif
-            end if
-         end do
-#ifdef _FABM_
-!        zero gradient when we don't have bdy values
-         if (fabm_calc) then
-            do o=1,npel
-               if (have_bio_bdy_values(o) .ne. 1) then
-                  fabm_pel(i,j,:,o) = fabm_pel(i+1,j,:,o)
-               end if
+               k = k+1
             end do
-            fabm_ben(i,j,:) = fabm_ben(i+1,j,:)
-         end if
-#endif
-         k = k+1
-      end do
+      end select
    end do
 
    do n = 1,NNB
       l = l+1
       k = bdy_index(l)
       j = nj(n)
-      do i = nfi(n),nli(n)
-         if (bdy3d_tmrlx) then
-            if (av(i,j-1).gt.0) then
-               do kk=1,kmax
-                  if (vv(i,j-1,kk).le.-bdy3d_tmrlx_ucut) then
-                     rlxcoef(kk) = bdy3d_tmrlx_max
-                  else if (vv(i,j-1,kk).ge.-bdy3d_tmrlx_umin) then
-                     rlxcoef(kk) = bdy3d_tmrlx_min
+      select case (bdy_3d_type(l))
+         case(ZERO_GRADIENT)
+            do i = nfi(n),nli(n)
+               S(i,j,:) = S(i,j-1,:)
+               T(i,j,:) = T(i,j-1,:)
+            end do
+         case(CLAMPED)
+            do i = nfi(n),nli(n)
+               if (az(i,j) .eq. 2) then
+                  if (bdy3d_tmrlx) then
+                     wsum = _ZERO_
+                     bdyvertS(:) = _ZERO_
+                     bdyvertT(:) = _ZERO_
+                     do jj=1,bdy3d_sponge_size
+                        if(az(i,j-jj)  .ne. 0) then
+                           wsum = wsum + sp(jj)
+                           bdyvertS(:) = bdyvertS(:) + sp(jj)*S(i,j-jj,:)
+                           bdyvertT(:) = bdyvertT(:) + sp(jj)*T(i,j-jj,:)
+                        else
+                           exit
+                        end if
+                     end do
+                     if (wsum>_ZERO_) then
+                        do kk=1,kmax
+                           if (vv(i,j-1,kk).le.-bdy3d_tmrlx_ucut) then
+                              rlxcoef(kk) = bdy3d_tmrlx_max
+                           else if (vv(i,j-1,kk).ge.-bdy3d_tmrlx_umin) then
+                              rlxcoef(kk) = bdy3d_tmrlx_min
+                           else
+                              rlxcoef(kk) = -(bdy3d_tmrlx_max-bdy3d_tmrlx_min)   &
+                                   *(vv(i,j-1,kk)+bdy3d_tmrlx_umin)              &
+                                   /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
+                                   + bdy3d_tmrlx_min
+                           end if
+                        end do
+                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,k)
+                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,k)
+                     else
+                        bdyvertS(:) = S_bdy(:,k)
+                        bdyvertT(:) = T_bdy(:,k)
+                     end if
                   else
-                     rlxcoef(kk) = -(bdy3d_tmrlx_max-bdy3d_tmrlx_min)   &
-                          *(vv(i,j-1,kk)+bdy3d_tmrlx_umin)              &
-                          /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
-                          + bdy3d_tmrlx_min
+                     bdyvertS(:) = S_bdy(:,k)
+                     bdyvertT(:) = T_bdy(:,k)
                   end if
-               end do
-            else
-               rlxcoef(:)=bdy3d_tmrlx_max
-            end if
-            wsum= MIN(az(i,j+1-2),1)*sp(2)                              &
-                 +MIN(az(i,j+1-3),1)*sp(3)                              &
-                 +MIN(az(i,j+1-4),1)*sp(4)
-            if (wsum>_ZERO_) then
-               bdyvertS(:) = (_ONE_/wsum)*(                              &
-                               MIN(az(i,j+1-2),1) * sp(2) * S(i,j+1-2,:) &
-                              +MIN(az(i,j+1-3),1) * sp(3) * S(i,j+1-3,:) &
-                              +MIN(az(i,j+1-4),1) * sp(4) * S(i,j+1-4,:) &
-                                          )
-               bdyvertT(:) = (_ONE_/wsum)*(                              &
-                               MIN(az(i,j+1-2),1) * sp(2) * T(i,j+1-2,:) &
-                              +MIN(az(i,j+1-3),1) * sp(3) * T(i,j+1-3,:) &
-                              +MIN(az(i,j+1-4),1) * sp(4) * T(i,j+1-4,:) &
-                                          )
-               bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:) + rlxcoef(:)*S_bdy(:,k)
-               bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:) + rlxcoef(:)*T_bdy(:,k)
-            else
-               bdyvertS(:) = S_bdy(:,k)
-               bdyvertT(:) = T_bdy(:,k)
-            end if
-         else
-            bdyvertS(:) = S_bdy(:,k)
-            bdyvertT(:) = T_bdy(:,k)
-         end if
-         do jj=1,4
-            if (az(i,j+1-jj).gt.0) then
-               S(i,j+1-jj,:) = sp(jj)*bdyvertS(:)+(_ONE_-sp(jj))*S(i,j+1-jj,:)
-               T(i,j+1-jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j+1-jj,:)
+                  S(i,j,:) = bdyvertS(:)
+                  T(i,j,:) = bdyvertT(:)
 #ifdef _FABM_
-               if (fabm_calc) then
-                  do o=1,npel
-                     if (have_bio_bdy_values(o) .eq. 1) then
-                        fabm_pel(i,j+1-jj,:,o) = sp(jj)*bio_bdy(:,k,o) &
-                                            +(1.-sp(jj))*fabm_pel(i,j+1-jj,:,o)
+                  if (fabm_calc) then
+                     do o=1,npel
+                        if (have_bio_bdy_values(o) .eq. 1) then
+                           fabm_pel(i,j,:,o) = bio_bdy(:,k,o)
+                        else
+!                          zero gradient when we don't have bdy values
+                           fabm_pel(i,j,:,o) = fabm_pel(i,j-1,:,o)
+                        end if
+                     end do
+                     fabm_ben(i,j,:) = fabm_ben(i,j-1,:)
+                  end if
+#endif
+                  do jj=1,bdy3d_sponge_size
+                     if (az(i,j-jj) .ne. 0) then
+                        S(i,j-jj,:) = sp(jj)*bdyvertS(:)+(_ONE_-sp(jj))*S(i,j-jj,:)
+                        T(i,j-jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j-jj,:)
+#ifdef _FABM_
+                        if (fabm_calc) then
+                           do o=1,npel
+                              if (have_bio_bdy_values(o) .eq. 1) then
+                                 fabm_pel(i,j-jj,:,o) = sp(jj)*bio_bdy(:,k,o) &
+                                                     +(_ONE_-sp(jj))*fabm_pel(i,j-jj,:,o)
+                              end if
+                           end do
+                        end if
+#endif
+                     else
+                        exit
                      end if
                   end do
                end if
-#endif
-            end if
-         end do
-#ifdef _FABM_
-!        zero gradient when we don't have bdy values
-         if (fabm_calc) then
-            do o=1,npel
-               if (have_bio_bdy_values(o) .ne. 1) then
-                  fabm_pel(i,j,:,o) = fabm_pel(i,j-1,:,o)
-               end if
+               k = k+1
             end do
-            fabm_ben(i,j,:) = fabm_ben(i,j-1,:)
-         end if
-#endif
-         k = k+1
-      end do
+      end select
    end do
 
    do n=1,NEB
       l = l+1
       k = bdy_index(l)
       i = ei(n)
-      do j=efj(n),elj(n)
-         if (bdy3d_tmrlx) then
-            if (au(i-1,j).gt.0) then
-               do kk=1,kmax
-                  if (uu(i-1,j,kk).le.-bdy3d_tmrlx_ucut) then
-                     rlxcoef(kk) = bdy3d_tmrlx_max
-                  else if (uu(i-1,j,kk).ge.-bdy3d_tmrlx_umin) then
-                     rlxcoef(kk) = bdy3d_tmrlx_min
+      select case (bdy_3d_type(l))
+         case(ZERO_GRADIENT)
+            do j=efj(n),elj(n)
+               S(i,j,:) = S(i-1,j,:)
+               T(i,j,:) = T(i-1,j,:)
+            end do
+         case(CLAMPED)
+            do j=efj(n),elj(n)
+               if (az(i,j) .eq. 2) then
+                  if (bdy3d_tmrlx) then
+                     wsum = _ZERO_
+                     bdyvertS(:) = _ZERO_
+                     bdyvertT(:) = _ZERO_
+                     do ii=1,bdy3d_sponge_size
+                        if(az(i-ii,j) .ne. 0) then
+                           wsum = wsum + sp(ii)
+                           bdyvertS(:) = bdyvertS(:) + sp(ii)*S(i-ii,j,:)
+                           bdyvertT(:) = bdyvertT(:) + sp(ii)*T(i-ii,j,:)
+                        else
+                           exit
+                        end if
+                     end do
+                     if (wsum>_ZERO_) then
+                        do kk=1,kmax
+                           if (uu(i-1,j,kk).le.-bdy3d_tmrlx_ucut) then
+                              rlxcoef(kk) = bdy3d_tmrlx_max
+                           else if (uu(i-1,j,kk).ge.-bdy3d_tmrlx_umin) then
+                              rlxcoef(kk) = bdy3d_tmrlx_min
+                           else
+                              rlxcoef(kk) = -(bdy3d_tmrlx_max-bdy3d_tmrlx_min)   &
+                                   *(uu(i-1,j,kk)+bdy3d_tmrlx_umin)              &
+                                   /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
+                                   + bdy3d_tmrlx_min
+                           end if
+                        end do
+                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,k)
+                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,k)
+                     else
+                        bdyvertS(:) = S_bdy(:,k)
+                        bdyvertT(:) = T_bdy(:,k)
+                     end if
                   else
-                     rlxcoef(kk) = -(bdy3d_tmrlx_max-bdy3d_tmrlx_min)   &
-                          *(uu(i-1,j,kk)+bdy3d_tmrlx_umin)              &
-                          /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
-                          + bdy3d_tmrlx_min
+                     bdyvertS(:) = S_bdy(:,k)
+                     bdyvertT(:) = T_bdy(:,k)
                   end if
-               end do
-            else
-               rlxcoef(:)=bdy3d_tmrlx_max
-            end if
-            wsum= MIN(az(i+1-2,j),1)*sp(2)                              &
-                 +MIN(az(i+1-3,j),1)*sp(3)                              &
-                 +MIN(az(i+1-4,j),1)*sp(4)
-            if (wsum>_ZERO_) then
-               bdyvertS(:) = (_ONE_/wsum)*(                              &
-                               MIN(az(i+1-2,j),1) * sp(2) * S(i+1-2,j,:) &
-                              +MIN(az(i+1-3,j),1) * sp(3) * S(i+1-3,j,:) &
-                              +MIN(az(i+1-4,j),1) * sp(4) * S(i+1-4,j,:) &
-                                          )
-               bdyvertT(:) = (_ONE_/wsum)*(                              &
-                               MIN(az(i+1-2,j),1) * sp(2) * T(i+1-2,j,:) &
-                              +MIN(az(i+1-3,j),1) * sp(3) * T(i+1-3,j,:) &
-                              +MIN(az(i+1-4,j),1) * sp(4) * T(i+1-4,j,:) &
-                                          )
-               bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:) + rlxcoef(:)*S_bdy(:,k)
-               bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:) + rlxcoef(:)*T_bdy(:,k)
-            else
-               bdyvertS(:) = S_bdy(:,k)
-               bdyvertT(:) = T_bdy(:,k)
-            end if
-         else
-            bdyvertS(:) = S_bdy(:,k)
-            bdyvertT(:) = T_bdy(:,k)
-         end if
-         do ii=1,4
-            if (az(i+1-ii,j).gt.0) then
-               S(i+1-ii,j,:) = sp(ii)*bdyvertS(:)+(_ONE_-sp(ii))*S(i+1-ii,j,:)
-               T(i+1-ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i+1-ii,j,:)
+                  S(i,j,:) = bdyvertS(:)
+                  T(i,j,:) = bdyvertT(:)
 #ifdef _FABM_
-               if (fabm_calc) then
-                  do o=1,npel
-                     if (have_bio_bdy_values(o) .eq. 1) then
-                        fabm_pel(i+1-ii,j,:,o) = sp(ii)*bio_bdy(:,k,o) &
-                                            +(1.-sp(ii))*fabm_pel(i+1-ii,j,:,o)
+                  if (fabm_calc) then
+                     do o=1,npel
+                        if (have_bio_bdy_values(o) .eq. 1) then
+                           fabm_pel(i,j,:,o) = bio_bdy(:,k,o)
+                        else
+!                          zero gradient when we don't have bdy values
+                           fabm_pel(i,j,:,o) = fabm_pel(i-1,j,:,o)
+                        end if
+                     end do
+                     fabm_ben(i,j,:) = fabm_ben(i-1,j,:)
+                  end if
+#endif
+                  do ii=1,bdy3d_sponge_size
+                     if (az(i-ii,j) .ne. 0) then
+                        S(i-ii,j,:) = sp(ii)*bdyvertS(:)+(_ONE_-sp(ii))*S(i-ii,j,:)
+                        T(i-ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i-ii,j,:)
+#ifdef _FABM_
+                        if (fabm_calc) then
+                           do o=1,npel
+                              if (have_bio_bdy_values(o) .eq. 1) then
+                                 fabm_pel(i-ii,j,:,o) = sp(ii)*bio_bdy(:,k,o) &
+                                                     +(_ONE_-sp(ii))*fabm_pel(i-ii,j,:,o)
+                              end if
+                           end do
+                        end if
+#endif
+                     else
+                        exit
                      end if
                   end do
                end if
-#endif
-            end if
-         end do
-#ifdef _FABM_
-!        zero gradient when we don't have bdy values
-         if (fabm_calc) then
-            do o=1,npel
-               if (have_bio_bdy_values(o) .ne. 1) then
-                  fabm_pel(i,j,:,o) = fabm_pel(i-1,j,:,o)
-               end if
+               k = k+1
             end do
-            fabm_ben(i,j,:) = fabm_ben(i-1,j,:)
-         end if
-#endif
-         k = k+1
-      end do
+      end select
    end do
 
    do n = 1,NSB
       l = l+1
       k = bdy_index(l)
       j = sj(n)
-      do i = sfi(n),sli(n)
-         if (av(i,j).gt.0) then
-            if (bdy3d_tmrlx) then
-               do kk=1,kmax
-                  if (vv(i,j,kk).ge.bdy3d_tmrlx_ucut) then
-                     rlxcoef(kk) = bdy3d_tmrlx_max
-                  else if (vv(i,j,kk).le.bdy3d_tmrlx_umin) then
-                     rlxcoef(kk) = bdy3d_tmrlx_min
+      select case (bdy_3d_type(l))
+         case(ZERO_GRADIENT)
+            do i = sfi(n),sli(n)
+               S(i,j,:) = S(i,j+1,:)
+               T(i,j,:) = T(i,j+1,:)
+            end do
+         case(CLAMPED)
+            do i = sfi(n),sli(n)
+               if (az(i,j) .eq. 2) then
+                  if (bdy3d_tmrlx) then
+                     wsum = _ZERO_
+                     bdyvertS(:) = _ZERO_
+                     bdyvertT(:) = _ZERO_
+                     do jj=1,bdy3d_sponge_size
+                        if(az(i,j+jj) .ne. 0) then
+                           wsum = wsum + sp(jj)
+                           bdyvertS(:) = bdyvertS(:) + sp(jj)*S(i,j+jj,:)
+                           bdyvertS(:) = bdyvertT(:) + sp(jj)*T(i,j+jj,:)
+                        else
+                           exit
+                        end if
+                     end do
+                     if (wsum>_ZERO_) then
+                        do kk=1,kmax
+                           if (vv(i,j,kk).ge.bdy3d_tmrlx_ucut) then
+                              rlxcoef(kk) = bdy3d_tmrlx_max
+                           else if (vv(i,j,kk).le.bdy3d_tmrlx_umin) then
+                              rlxcoef(kk) = bdy3d_tmrlx_min
+                           else
+                              rlxcoef(kk) = (bdy3d_tmrlx_max-bdy3d_tmrlx_min)    &
+                                   *(vv(i,j,kk)-bdy3d_tmrlx_umin)                &
+                                   /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
+                                   + bdy3d_tmrlx_min
+                           end if
+                        end do
+                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,k)
+                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,k)
+                     else
+                        bdyvertS(:) = S_bdy(:,k)
+                        bdyvertT(:) = T_bdy(:,k)
+                     end if
                   else
-                     rlxcoef(kk) = (bdy3d_tmrlx_max-bdy3d_tmrlx_min)    &
-                          *(vv(i,j,kk)-bdy3d_tmrlx_umin)                &
-                          /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
-                          + bdy3d_tmrlx_min
+                     bdyvertS(:) = S_bdy(:,k)
+                     bdyvertT(:) = T_bdy(:,k)
                   end if
-               end do
-            else
-               rlxcoef(:)=bdy3d_tmrlx_max
-            end if
-            wsum= MIN(az(i,j-1+2),1)*sp(2)                              &
-                 +MIN(az(i,j-1+3),1)*sp(3)                              &
-                 +MIN(az(i,j-1+4),1)*sp(4)
-            if (wsum>_ZERO_) then
-               bdyvertS(:) = (_ONE_/wsum)*(                              &
-                               MIN(az(i,j-1+2),1) * sp(2) * S(i,j-1+2,:) &
-                              +MIN(az(i,j-1+3),1) * sp(3) * S(i,j-1+3,:) &
-                              +MIN(az(i,j-1+4),1) * sp(4) * S(i,j-1+4,:) &
-                                          )
-               bdyvertT(:) = (_ONE_/wsum)*(                              &
-                               MIN(az(i,j-1+2),1) * sp(2) * T(i,j-1+2,:) &
-                              +MIN(az(i,j-1+3),1) * sp(3) * T(i,j-1+3,:) &
-                              +MIN(az(i,j-1+4),1) * sp(4) * T(i,j-1+4,:) &
-                                          )
-               bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:) + rlxcoef(:)*S_bdy(:,k)
-               bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:) + rlxcoef(:)*T_bdy(:,k)
-            else
-               bdyvertS(:) = S_bdy(:,k)
-               bdyvertT(:) = T_bdy(:,k)
-            end if
-         else
-            bdyvertS(:) = S_bdy(:,k)
-            bdyvertT(:) = T_bdy(:,k)
-         end if
-         do jj=1,4
-            if (az(i,j-1+jj).gt.0) then
-               S(i,j-1+jj,:) = sp(jj)*bdyvertS(:)+(_ONE_-sp(jj))*S(i,j-1+jj,:)
-               T(i,j-1+jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j-1+jj,:)
+                  S(i,j,:) = bdyvertS(:)
+                  T(i,j,:) = bdyvertT(:)
 #ifdef _FABM_
-               if (fabm_calc) then
-                  do o=1,npel
-                     if (have_bio_bdy_values(o) .eq. 1) then
-                        fabm_pel(i,j-1+jj,:,o) = sp(jj)*bio_bdy(:,k,o) &
-                                            +(1.-sp(jj))*fabm_pel(i,j-1+jj,:,o)
+                  if (fabm_calc) then
+                     do o=1,npel
+                        if (have_bio_bdy_values(o) .eq. 1) then
+                           fabm_pel(i,j,:,o) = bio_bdy(:,k,o)
+                        else
+!                          zero gradient when we don't have bdy values
+                           fabm_pel(i,j,:,o) = fabm_pel(i,j+1,:,o)
+                        end if
+                     end do
+                     fabm_ben(i,j,:) = fabm_ben(i,j+1,:)
+                  end if
+#endif
+                  do jj=1,bdy3d_sponge_size
+                     if (az(i,j+jj) .ne. 0) then
+                        S(i,j+jj,:) = sp(jj)*bdyvertS(:)+(_ONE_-sp(jj))*S(i,j+jj,:)
+                        T(i,j+jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j+jj,:)
+#ifdef _FABM_
+                        if (fabm_calc) then
+                           do o=1,npel
+                              if (have_bio_bdy_values(o) .eq. 1) then
+                                 fabm_pel(i,j+jj,:,o) = sp(jj)*bio_bdy(:,k,o) &
+                                                     +(_ONE_-sp(jj))*fabm_pel(i,j+jj,:,o)
+                              end if
+                           end do
+                        end if
+#endif
+                     else
+                        exit
                      end if
                   end do
                end if
-#endif
-            end if
-         end do
-#ifdef _FABM_
-!        zero gradient when we don't have bdy values
-         if (fabm_calc) then
-            do o=1,npel
-               if (have_bio_bdy_values(o) .ne. 1) then
-                  fabm_pel(i,j,:,o) = fabm_pel(i,j+1,:,o)
-               end if
+               k = k+1
             end do
-            fabm_ben(i,j,:) = fabm_ben(i,j+1,:)
-         end if
-#endif
-         k = k+1
-      end do
+      end select
    end do
 
 #ifdef _FABM_

@@ -78,7 +78,7 @@
    integer, allocatable                :: bdy_index(:),bdy_map(:,:)
    logical                             :: have_boundaries=.false.
 
-   character(len=64)                   :: bdy_2d_desc(0:6)
+   character(len=64)                   :: bdy_2d_desc(0:6),bdy_3d_desc(0:1)
    logical                             :: need_2d_bdy_elev = .false.
    logical                             :: need_2d_bdy_u    = .false.
    logical                             :: need_2d_bdy_v    = .false.
@@ -180,6 +180,9 @@
    bdy_2d_desc(FLATHER_ELEV)            = "Flather (elev)"
    bdy_2d_desc(FLATHER_VEL)             = "Flather (vel)"
    bdy_2d_desc(CLAMPED_VEL)             = "Clamped (vel)"
+
+   bdy_3d_desc(CLAMPED)                 = "Clamped"
+   bdy_3d_desc(ZERO_GRADIENT)           = "Zero gradient"
 
    LEVEL1 'init_domain'
 
