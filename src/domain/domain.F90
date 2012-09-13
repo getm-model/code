@@ -66,7 +66,8 @@
 #else
 #include "dynamic_declarations_domain.h"
 #endif
-   integer                             :: nsbv
+   integer                             :: nsbv=0 ! number of global bdy cells
+   integer                             :: nbdy=0 ! number local bdys
 
    integer                             :: ioff=0,joff=0
    integer, dimension(:), allocatable  :: bdy_2d_type
