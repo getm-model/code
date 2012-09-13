@@ -294,6 +294,9 @@
    call adjust_mask(trim(input_dir) // mask_adjust_file)
 
    mask = _ONE_*az
+   call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
+   call wait_halo(H_TAG)
+   az = mask
 
 !  mask for U-points
    mask=0
