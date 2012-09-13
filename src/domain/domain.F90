@@ -78,7 +78,7 @@
    integer, allocatable                :: bdy_index(:),bdy_map(:,:)
    logical                             :: have_boundaries=.false.
 
-   character(len=64)                   :: bdy_2d_desc(7)
+   character(len=64)                   :: bdy_2d_desc(0:6)
    logical                             :: need_2d_bdy_elev = .false.
    logical                             :: need_2d_bdy_u    = .false.
    logical                             :: need_2d_bdy_v    = .false.
@@ -173,13 +173,13 @@
    write(debug,*) 'init_domain()'
 #endif
 
+   bdy_2d_desc(CLAMPED)                 = "Clamped (elev + normal vel)"
    bdy_2d_desc(ZERO_GRADIENT)           = "Zero gradient"
    bdy_2d_desc(SOMMERFELD)              = "Sommerfeld rad."
    bdy_2d_desc(CLAMPED_ELEV)            = "Clamped (elev)"
    bdy_2d_desc(FLATHER_ELEV)            = "Flather (elev)"
    bdy_2d_desc(FLATHER_VEL)             = "Flather (vel)"
    bdy_2d_desc(CLAMPED_VEL)             = "Clamped (vel)"
-   bdy_2d_desc(CLAMPED)                 = "Clamped (elev + normal vel)"
 
    LEVEL1 'init_domain'
 
