@@ -70,6 +70,7 @@
 #endif
 
 ! For 2D boundary conditions
+#define CONSTANT     -1
 #define CLAMPED       0
 #define ZERO_GRADIENT 1
 #define SOMMERFELD    2
