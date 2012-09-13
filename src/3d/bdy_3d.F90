@@ -118,7 +118,7 @@
       do l=1,nbdy
          if (bdy3d_active(bdy_3d_type(l))) then
             LEVEL3 'bdy3d=F deactivates local 3D bdy #',l
-            bdy_3d_type(l) = -1
+            bdy_3d_type(l) = CONSTANT
          end if
       end do
    end if
