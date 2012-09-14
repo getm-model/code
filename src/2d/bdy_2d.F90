@@ -145,7 +145,7 @@
 
       do l=1,nbdy
          if (bdy2d_active(bdy_2d_type(l))) then
-            LEVEL3 'bdy2d=F deactivates local bdy #',l
+            LEVEL3 'bdy2d=F deactivates local 2D bdy #',l
             bdy_2d_type(l) = CONSTANT
          end if
       end do
