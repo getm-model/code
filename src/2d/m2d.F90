@@ -24,12 +24,12 @@
    use domain, only: imin,imax,iextr,jmin,jmax,jextr,az,au,av,ax,H,min_depth
    use domain, only: ilg,ihg,jlg,jhg
    use domain, only: ill,ihl,jll,jhl
-   use domain, only: rigid_lid,openbdy,have_boundaries
+   use domain, only: rigid_lid,have_boundaries
    use advection, only: init_advection,print_adv_settings,NOADV
    use les, only: les_mode,LES_MOMENTUM
    use halo_zones, only: update_2d_halo,wait_halo,H_TAG
    use variables_2d
-   use bdy_2d, only: bdyfmt_2d,bdyramp_2d
+   use bdy_2d, only: init_bdy_2d,bdyfile_2d,bdyfmt_2d,bdyramp_2d
    IMPLICIT NONE
 
    interface
@@ -106,7 +106,6 @@
    integer                   :: MM=1,residual=-1
    integer                   :: sealevel_check=0
    logical                   :: bdy2d=.false.
-   character(len=PATH_MAX)   :: bdyfile_2d
    integer, parameter        :: comm_method=-1
 !
 ! !REVISION HISTORY:
@@ -302,23 +301,12 @@
                          "A non valid An method has been chosen");
    end select
 
-   if (.not. openbdy)  bdy2d=.false.
-
    if (rigid_lid) then
       if (bdy2d) then
          LEVEL2 'Reset bdy2d=F because of rigid lid'
          bdy2d=.false.
       end if
    else
-      LEVEL2 'Open boundary=',bdy2d
-      if (bdy2d) then
-         if (hotstart .and. bdyramp_2d .gt. 0) then
-             LEVEL2 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
-             LEVEL2 'WARNING: .. be sure you know what you are doing ..'
-         end if
-         LEVEL2 TRIM(bdyfile_2d)
-         LEVEL2 'Format=',bdyfmt_2d
-      end if
       if (sealevel_check .eq. 0) then
          LEVEL2 'sealevel_check=0 --> NaN checks disabled'
       else if (sealevel_check .gt. 0) then
@@ -327,6 +315,20 @@
          LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
       end if
    end if
+
+   if (have_boundaries) then
+      call init_bdy_2d(bdy2d,hotstart)
+   else
+      bdy2d = .false.
+   end if
+
+#ifdef SLICE_MODEL
+!  Note (KK): sse=0,U=0,dyV=0,V set in 3d
+   no_2d = rigid_lid
+#else
+!  Note (KK): sse=0,U=V=0
+   no_2d = (rigid_lid .and. (imin.eq.iextr .or. jmin.eq.jextr))
+#endif
 
    if (deformC) then
       allocate(dudxC(E2DFIELD),stat=rc)
@@ -356,14 +358,6 @@
       if (rc /= 0) stop 'init_2d: Error allocating memory (shearU)'
       shearU=_ZERO_
    end if
-
-#ifdef SLICE_MODEL
-!  Note (KK): sse=0,U=0,dyV=0,V set in 3d
-   no_2d = rigid_lid
-#else
-!  Note (KK): sse=0,U=V=0
-   no_2d = (rigid_lid .and. (imin.eq.iextr .or. jmin.eq.jextr))
-#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_2d()'
