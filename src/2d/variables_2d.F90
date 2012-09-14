@@ -47,7 +47,7 @@
 ! !IROUTINE: init_variables_2d - initialise 2D related stuff.
 !
 ! !INTERFACE:
-   subroutine init_variables_2d(runtype)
+   subroutine init_variables_2d(runtype,no_2d)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -92,6 +92,7 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
+   logical, intent(in)                 :: no_2d
 !
 !EOP
 !-------------------------------------------------------------------------

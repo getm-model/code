@@ -147,6 +147,14 @@
 
    LEVEL1 'init_2d'
 
+#ifdef SLICE_MODEL
+!  Note (KK): sse=0,U=0,dyV=0,V set in 3d
+   no_2d = rigid_lid
+#else
+!  Note (KK): sse=0,U=V=0
+   no_2d = (rigid_lid .and. (imin.eq.iextr .or. jmin.eq.jextr))
+#endif
+
    dtm = timestep
 
 #if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
@@ -160,19 +168,21 @@
    read(NAMLST,m2d)
 
 !  Allocates memory for the public data members - if not static
-   call init_variables_2d(runtype)
+   call init_variables_2d(runtype,no_2d)
    call init_advection()
 
-   LEVEL2 'Advection of depth-averaged velocities'
+   if (.not. no_2d) then
+      LEVEL2 'Advection of depth-averaged velocities'
 #ifdef NO_ADVECT
-   if (vel2d_adv_hor .ne. NOADV) then
-      LEVEL2 "reset vel2d_adv_hor= ",NOADV," because of"
-      LEVEL2 "obsolete NO_ADVECT macro. Note that this"
-      LEVEL2 "behaviour will be removed in the future."
-      vel2d_adv_hor = NOADV
-   end if
+      if (vel2d_adv_hor .ne. NOADV) then
+         LEVEL2 "reset vel2d_adv_hor= ",NOADV," because of"
+         LEVEL2 "obsolete NO_ADVECT macro. Note that this"
+         LEVEL2 "behaviour will be removed in the future."
+         vel2d_adv_hor = NOADV
+      end if
 #endif
-   call print_adv_settings(vel2d_adv_split,vel2d_adv_hor,_ZERO_)
+      call print_adv_settings(vel2d_adv_split,vel2d_adv_hor,_ZERO_)
+   end if
 
    if (.not. hotstart) then
       select case (elev_method)
@@ -200,102 +210,99 @@
       LEVEL2 'Am < 0 --> horizontal momentum diffusion not included'
    end if
 
-   select case (An_method)
-      case(0)
-         LEVEL2 'An_method=0 -> horizontal numerical diffusion not included'
-         An = _ZERO_
-      case(1)
-         LEVEL2 'An_method=1 -> Using constant horizontal numerical diffusion'
-         if (An_const .lt. _ZERO_) then
-              call getm_error("init_2d()", &
-                         "Constant horizontal numerical diffusion <0");
-         else
-            An  = An_const
-            AnX = An_const
-         end if
-      case(2)
-         LEVEL2 'An_method=2 -> Using space varying horizontal numerical diffusion'
-         LEVEL2 '..  will read An from An_file ',trim(An_file)
-         ! Initialize and then read field:
-         An = _ZERO_
-         call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,An(ill:ihl,jll:jhl))
-         call update_2d_halo(An,An,az,imin,jmin,imax,jmax,H_TAG)
-         call wait_halo(H_TAG)
-         ! Compute AnX (An in X-points) based on An and the X- and T- masks
-         AnX = _ZERO_
-         ! We loop over the X-points in the present domain.
-         do j=jmin-1,jmax
-            do i=imin-1,imax
-               if (ax(i,j) .ge. 1) then
-                  num_neighbors = 0
-                  An_sum = _ZERO_
-                  ! Each AnX should have up to 4 T-point neighbours.
-                  if ( az(i,j) .ge. 1 ) then
-                     An_sum        = An_sum + An(i,j)
-                     num_neighbors = num_neighbors +1
+
+   if (.not. no_2d) then
+
+      select case (An_method)
+         case(0)
+            LEVEL2 'An_method=0 -> horizontal numerical diffusion not included'
+            An = _ZERO_
+         case(1)
+            LEVEL2 'An_method=1 -> Using constant horizontal numerical diffusion'
+            if (An_const .lt. _ZERO_) then
+                 call getm_error("init_2d()", &
+                            "Constant horizontal numerical diffusion <0");
+            else
+               An  = An_const
+               AnX = An_const
+            end if
+         case(2)
+            LEVEL2 'An_method=2 -> Using space varying horizontal numerical diffusion'
+            LEVEL2 '..  will read An from An_file ',trim(An_file)
+            ! Initialize and then read field:
+            An = _ZERO_
+            call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,An(ill:ihl,jll:jhl))
+            call update_2d_halo(An,An,az,imin,jmin,imax,jmax,H_TAG)
+            call wait_halo(H_TAG)
+            ! Compute AnX (An in X-points) based on An and the X- and T- masks
+            AnX = _ZERO_
+            ! We loop over the X-points in the present domain.
+            do j=jmin-1,jmax
+               do i=imin-1,imax
+                  if (ax(i,j) .ge. 1) then
+                     num_neighbors = 0
+                     An_sum = _ZERO_
+                     ! Each AnX should have up to 4 T-point neighbours.
+                     if ( az(i,j) .ge. 1 ) then
+                        An_sum        = An_sum + An(i,j)
+                        num_neighbors = num_neighbors +1
+                     end if
+                     if ( az(i,j+1) .ge. 1 ) then
+                        An_sum        = An_sum + An(i,j+1)
+                        num_neighbors = num_neighbors +1
+                     end if
+                     if ( az(i+1,j) .ge. 1 ) then
+                        An_sum        = An_sum + An(i+1,j)
+                        num_neighbors = num_neighbors +1
+                     end if
+                     if ( az(i+1,j+1) .ge. 1 ) then
+                        An_sum        = An_sum + An(i+1,j+1)
+                        num_neighbors = num_neighbors +1
+                     end if
+                     ! Take average of actual neighbours:
+                     if (num_neighbors .gt. 0) then
+                        AnX(i,j) = An_sum/num_neighbors
+                     end if
                   end if
-                  if ( az(i,j+1) .ge. 1 ) then
-                     An_sum        = An_sum + An(i,j+1)
-                     num_neighbors = num_neighbors +1
-                  end if
-                  if ( az(i+1,j) .ge. 1 ) then
-                     An_sum        = An_sum + An(i+1,j)
-                     num_neighbors = num_neighbors +1
-                  end if
-                  if ( az(i+1,j+1) .ge. 1 ) then
-                     An_sum        = An_sum + An(i+1,j+1)
-                     num_neighbors = num_neighbors +1
-                  end if
-                  ! Take average of actual neighbours:
-                  if (num_neighbors .gt. 0) then
-                     AnX(i,j) = An_sum/num_neighbors
-                  end if
-               end if
+               end do
             end do
-         end do
-         call update_2d_halo(AnX,AnX,ax,imin,jmin,imax,jmax,H_TAG)
-         call wait_halo(H_TAG)
-         !
-         ! If all An values are really zero, then we should not use An-smoothing at all...
-         ! Note that smoothing may be on in other subdomains.
-         if ( MAXVAL(ABS(An)) .eq. _ZERO_ ) then
-            LEVEL2 '  All An is zero for this (sub)domain - switching to An_method=0'
-            An_method=0
+            call update_2d_halo(AnX,AnX,ax,imin,jmin,imax,jmax,H_TAG)
+            call wait_halo(H_TAG)
+            !
+            ! If all An values are really zero, then we should not use An-smoothing at all...
+            ! Note that smoothing may be on in other subdomains.
+            if ( MAXVAL(ABS(An)) .eq. _ZERO_ ) then
+               LEVEL2 '  All An is zero for this (sub)domain - switching to An_method=0'
+               An_method=0
+            end if
+
+         case default
+            call getm_error("init_2d()", &
+                            "A non valid An method has been chosen");
+      end select
+
+      if (rigid_lid) then
+         if (bdy2d) then
+            LEVEL2 'Reset bdy2d=F because of rigid lid'
+            bdy2d=.false.
          end if
-
-      case default
-         call getm_error("init_2d()", &
-                         "A non valid An method has been chosen");
-   end select
-
-   if (rigid_lid) then
-      if (bdy2d) then
-         LEVEL2 'Reset bdy2d=F because of rigid lid'
-         bdy2d=.false.
-      end if
-   else
-      if (sealevel_check .eq. 0) then
-         LEVEL2 'sealevel_check=0 --> NaN checks disabled'
-      else if (sealevel_check .gt. 0) then
-         LEVEL2 'sealevel_check>0 --> NaN values will result in error conditions'
       else
-         LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
+         if (sealevel_check .eq. 0) then
+            LEVEL2 'sealevel_check=0 --> NaN checks disabled'
+         else if (sealevel_check .gt. 0) then
+            LEVEL2 'sealevel_check>0 --> NaN values will result in error conditions'
+         else
+            LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
+         end if
       end if
-   end if
 
-   if (have_boundaries) then
-      call init_bdy_2d(bdy2d,hotstart)
-   else
-      bdy2d = .false.
-   end if
+      if (have_boundaries) then
+         call init_bdy_2d(bdy2d,hotstart)
+      else
+         bdy2d = .false.
+      end if
 
-#ifdef SLICE_MODEL
-!  Note (KK): sse=0,U=0,dyV=0,V set in 3d
-   no_2d = rigid_lid
-#else
-!  Note (KK): sse=0,U=V=0
-   no_2d = (rigid_lid .and. (imin.eq.iextr .or. jmin.eq.jextr))
-#endif
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_2d()'
