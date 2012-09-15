@@ -16,7 +16,6 @@
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: bdy_index,bdy_map,nsbv
    use domain, only: bdy_2d_type,bdy_3d_type
-   use domain, only: need_2d_bdy_elev,need_2d_bdy_u,need_2d_bdy_v
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -82,18 +81,9 @@
             n=n+1
             read(line,*,END=91,ERR=92) wi(n),wfj(n),wlj(n), &
                                        type_2d(1,n),type_3d(1,n)
+            if (wlj(n) .lt. wfj(n)) stop 'bdy_spec: wlj.lt.wfj'
             nsbv = nsbv + (wlj(n)-wfj(n)+1)
          end if
-      end do
-      do n = 1,NWB
-         if (type_2d(1,n) .eq. CLAMPED_ELEV) need_2d_bdy_elev = .true.
-         if (     type_2d(1,n) .eq. FLATHER_ELEV &
-             .or. type_2d(1,n) .eq. FLATHER_VEL  &
-             .or. type_2d(1,n) .eq. CLAMPED      ) then
-            need_2d_bdy_elev = .true.
-            need_2d_bdy_u    = .true.
-         end if
-         if (type_2d(1,n) .eq. CLAMPED_VEL) need_2d_bdy_u = .true.
       end do
    end if
 
@@ -129,18 +119,9 @@
             n=n+1
             read(line,*,END=91,ERR=92) nj(n),nfi(n),nli(n), &
                                        type_2d(2,n),type_3d(2,n)
+            if (nli(n) .lt. nfi(n)) stop 'bdy_spec: nli.lt.nfi'
             nsbv = nsbv + (nli(n)-nfi(n)+1)
          end if
-      end do
-      do n = 1,NNB
-         if (type_2d(2,n) .eq. CLAMPED_ELEV) need_2d_bdy_elev = .true.
-         if (     type_2d(2,n) .eq. FLATHER_ELEV &
-             .or. type_2d(2,n) .eq. FLATHER_VEL  &
-             .or. type_2d(2,n) .eq. CLAMPED      ) then
-            need_2d_bdy_elev = .true.
-            need_2d_bdy_v    = .true.
-         end if
-         if (type_2d(2,n) .eq. CLAMPED_VEL) need_2d_bdy_v = .true.
       end do
    end if
 
@@ -174,18 +155,9 @@
             n=n+1
             read(line,*,END=91,ERR=92) ei(n),efj(n),elj(n), &
                                        type_2d(3,n),type_3d(3,n)
+            if (elj(n) .lt. efj(n)) stop 'bdy_spec: elj.lt.efj'
             nsbv = nsbv + (elj(n)-efj(n)+1)
          end if
-      end do
-      do n = 1,NEB
-         if (type_2d(3,n) .eq. CLAMPED_ELEV) need_2d_bdy_elev = .true.
-         if (     type_2d(3,n) .eq. FLATHER_ELEV &
-             .or. type_2d(3,n) .eq. FLATHER_VEL  &
-             .or. type_2d(3,n) .eq. CLAMPED      ) then
-            need_2d_bdy_elev = .true.
-            need_2d_bdy_u    = .true.
-         end if
-         if (type_2d(3,n) .eq. CLAMPED_VEL) need_2d_bdy_u = .true.
       end do
    end if
 
@@ -219,18 +191,9 @@
             n=n+1
             read(line,*,END=91,ERR=92) sj(n),sfi(n),sli(n), &
                                        type_2d(4,n),type_3d(4,n)
+            if (sli(n) .lt. sfi(n)) stop 'bdy_spec: sli.lt.sfi'
             nsbv = nsbv + (sli(n)-sfi(n)+1)
          end if
-      end do
-      do n=1,NSB
-         if (type_2d(4,n) .eq. CLAMPED_ELEV) need_2d_bdy_elev = .true.
-         if (     type_2d(4,n) .eq. FLATHER_ELEV &
-             .or. type_2d(4,n) .eq. FLATHER_VEL  &
-             .or. type_2d(4,n) .eq. CLAMPED      ) then
-            need_2d_bdy_elev = .true.
-            need_2d_bdy_v    = .true.
-         end if
-         if (type_2d(4,n) .eq. CLAMPED_VEL) need_2d_bdy_v = .true.
       end do
    end if
 
