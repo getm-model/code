@@ -22,7 +22,6 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,m,n
-   integer                   :: nbdy
    integer                   :: f,l
 !EOP
 !-----------------------------------------------------------------------
@@ -33,22 +32,22 @@
    write(debug,*) 'have_bdy() # ',Ncall
 #endif
 
-   nbdy = 0
    i = 0
    m = 0
    if (NWB .ge. 1) then
       do n = 1,NWB
          m = m+1
          if (wi(n) .ge. imin+ioff .and. wi(n) .le. imax+ioff) then
-            f = max(jmin+joff,wfj(n)) - joff
-            l = min(jmax+joff,wlj(n)) - joff
-            if(f .le. l) then
+            f = max(jlg,wfj(n)) - joff
+            l = min(jhg,wlj(n)) - joff
+            if(f.le.jmax .and. jmin.le.l) then
                i = i+1
                wi(i) = wi(n) - ioff
                wfj(i) = f
                wlj(i) = l
                nbdy = nbdy+1
                bdy_2d_type(nbdy) = bdy_2d_type(m)
+               bdy_3d_type(nbdy) = bdy_3d_type(m)
                do k=1,nsbv
                   if (bdy_map(k,1) .eq. wi(i)+ioff .and. &
                       bdy_map(k,2) .eq. f+joff) then
@@ -66,15 +65,16 @@
       do n = 1,NNB
          m = m+1
          if (nj(n) .ge. jmin+joff .and. nj(n) .le. jmax+joff) then
-            f = max(imin+ioff,nfi(n)) - ioff
-            l = min(imax+ioff,nli(n)) - ioff
-            if(f .le. l) then
+            f = max(ilg,nfi(n)) - ioff
+            l = min(ihg,nli(n)) - ioff
+            if(f.le.imax .and. imin.le.l) then
                i = i+1
                nfi(i) = f
                nli(i) = l
                nj(i) = nj(n) - joff
                nbdy = nbdy+1
                bdy_2d_type(nbdy) = bdy_2d_type(m)
+               bdy_3d_type(nbdy) = bdy_3d_type(m)
                do k=1,nsbv
                   if (bdy_map(k,1) .eq. f+ioff .and.  &
                       bdy_map(k,2) .eq. nj(i)+joff) then
@@ -92,15 +92,16 @@
       do n = 1,NEB
          m = m+1
          if (ei(n) .ge. imin+ioff .and. ei(n) .le. imax+ioff) then
-            f = max(jmin+joff,efj(n)) - joff
-            l = min(jmax+joff,elj(n)) - joff
-            if(f .le. l) then
+            f = max(jlg,efj(n)) - joff
+            l = min(jhg,elj(n)) - joff
+            if(f.le.jmax .and. jmin.le.l) then
                i = i+1
                ei(i) = ei(n) - ioff
                efj(i) = f
                elj(i) = l
                nbdy = nbdy+1
                bdy_2d_type(nbdy) = bdy_2d_type(m)
+               bdy_3d_type(nbdy) = bdy_3d_type(m)
                do k=1,nsbv
                   if (bdy_map(k,1) .eq. ei(i)+ioff .and. &
                       bdy_map(k,2) .eq. f+joff) then
@@ -118,15 +119,16 @@
       do n = 1,NSB
          m = m+1
          if (sj(n) .ge. jmin+joff .and. sj(n) .le. jmax+joff) then
-            f = max(imin+ioff,sfi(n)) - ioff
-            l = min(imax+ioff,sli(n)) - ioff
-            if(f .le. l) then
+            f = max(ilg,sfi(n)) - ioff
+            l = min(ihg,sli(n)) - ioff
+            if(f.le.imax .and. imin.le.l) then
                i = i+1
                sfi(i) = f
                sli(i) = l
                sj(i) = sj(n) - joff
                nbdy = nbdy+1
                bdy_2d_type(nbdy) = bdy_2d_type(m)
+               bdy_3d_type(nbdy) = bdy_3d_type(m)
                do k=1,nsbv
                   if (bdy_map(k,1) .eq. f+ioff .and. &
                       bdy_map(k,2) .eq. sj(i)+joff) then
