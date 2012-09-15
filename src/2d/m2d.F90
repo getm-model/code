@@ -281,12 +281,7 @@
                             "A non valid An method has been chosen");
       end select
 
-      if (rigid_lid) then
-         if (bdy2d) then
-            LEVEL2 'Reset bdy2d=F because of rigid lid'
-            bdy2d=.false.
-         end if
-      else
+      if (.not. rigid_lid) then
          if (sealevel_check .eq. 0) then
             LEVEL2 'sealevel_check=0 --> NaN checks disabled'
          else if (sealevel_check .gt. 0) then

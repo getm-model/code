@@ -16,10 +16,12 @@
    use parameters,only: g
    use halo_zones, only : z_TAG,H_TAG,U_TAG,V_TAG
    use domain, only: imin,jmin,imax,jmax,kmax,H,az,au,av
-   use domain, only: nsbv,nbdy,NWB,NNB,NEB,NSB,bdy_index,bdy_2d_type
+   use domain, only: nsbv,nbdy,NWB,NNB,NEB,NSB,bdy_index
+   use domain, only: bdy_2d_desc,bdy_2d_type
    use domain, only: need_2d_bdy_elev,need_2d_bdy_u,need_2d_bdy_v
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: min_depth
+   use domain, only: rigid_lid
    use variables_2d, only: dtm,z,zo,D,U,DU,V,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dyv
@@ -81,6 +83,29 @@
 #endif
 
    LEVEL2 'init_bdy_2d'
+
+   if (rigid_lid) then
+      do l=1,nbdy
+         select case (bdy_2d_type(l))
+            case (CLAMPED)
+               LEVEL3 'rigid lid resets local 2D bdy #',l
+               LEVEL4 'old: ',trim(bdy_2d_desc(bdy_2d_type(l)))
+               bdy_2d_type(l) = CLAMPED_VEL
+               LEVEL4 'new: ',trim(bdy_2d_desc(bdy_2d_type(l)))
+            case (ZERO_GRADIENT,SOMMERFELD,CLAMPED_ELEV,FLATHER_ELEV)
+               LEVEL3 'rigid lid resets local 2D bdy #',l
+               LEVEL4 'old: ',trim(bdy_2d_desc(bdy_2d_type(l)))
+               bdy_2d_type(l) = CONSTANT
+               LEVEL4 'new: ',trim(bdy_2d_desc(bdy_2d_type(l)))
+            case (FLATHER_VEL)
+               LEVEL3 'rigid lid resets local 2D bdy #',l
+               LEVEL4 'old: ',trim(bdy_2d_desc(bdy_2d_type(l)))
+               bdy_2d_type(l) = CLAMPED_VEL
+               LEVEL4 'new: ',trim(bdy_2d_desc(bdy_2d_type(l)))
+         end select
+      end do
+   end if
+
 
    if (bdy2d) then
 
