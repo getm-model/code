@@ -68,7 +68,8 @@
 #else
 #include "dynamic_declarations_domain.h"
 #endif
-   integer                             :: nsbv
+   integer                             :: nsbv=0 ! number of global bdy cells
+   integer                             :: nbdy=0 ! number local bdys
 
    integer                             :: ioff=0,joff=0
    integer, dimension(:), allocatable  :: bdy_2d_type
@@ -80,10 +81,11 @@
    integer, allocatable                :: bdy_index(:),bdy_map(:,:)
    logical                             :: have_boundaries=.false.
 
-   character(len=64)                   :: bdy_2d_desc(7)
+   character(len=64)                   :: bdy_2d_desc(-1:6),bdy_3d_desc(-1:1)
    logical                             :: need_2d_bdy_elev = .false.
    logical                             :: need_2d_bdy_u    = .false.
    logical                             :: need_2d_bdy_v    = .false.
+   logical                             :: need_3d_bdy      = .false.
 
    REALTYPE                            :: cori= _ZERO_
 
@@ -175,13 +177,18 @@
    write(debug,*) 'init_domain()'
 #endif
 
+   bdy_2d_desc(CONSTANT)                = "constant"
+   bdy_2d_desc(CLAMPED)                 = "Clamped (elev + normal vel)"
    bdy_2d_desc(ZERO_GRADIENT)           = "Zero gradient"
    bdy_2d_desc(SOMMERFELD)              = "Sommerfeld rad."
    bdy_2d_desc(CLAMPED_ELEV)            = "Clamped (elev)"
    bdy_2d_desc(FLATHER_ELEV)            = "Flather (elev)"
    bdy_2d_desc(FLATHER_VEL)             = "Flather (vel)"
    bdy_2d_desc(CLAMPED_VEL)             = "Clamped (vel)"
-   bdy_2d_desc(CLAMPED)                 = "Clamped (elev + normal vel)"
+
+   bdy_3d_desc(CONSTANT)                = "constant"
+   bdy_3d_desc(CLAMPED)                 = "Clamped"
+   bdy_3d_desc(ZERO_GRADIENT)           = "Zero gradient"
 
    LEVEL1 'init_domain'
 
@@ -273,27 +280,39 @@
 #define BOUNDARY_POINT 2
 !  western boundary - at present elev only
    do n=1,NWB
-      az(wi(n),wfj(n):wlj(n)) = BOUNDARY_POINT
-      if(wfj(n) .eq. jmin) az(wi(n),jmin-1) = az(wi(n),jmin)
-      if(wlj(n) .eq. jmax) az(wi(n),jmax+1) = az(wi(n),jmax)
+      i = wi(n)
+      do j=wfj(n),wlj(n)
+         if(az(i,j) .eq. 1) then
+            az(i,j) = BOUNDARY_POINT
+         end if
+      end do
    end do
 !  northern boundary - at present elev only
    do n=1,NNB
-      az(nfi(n):nli(n),nj(n)) = BOUNDARY_POINT
-      if(nfi(n) .eq. imin) az(imin-1,nj(n)) = az(imin,nj(n))
-      if(nli(n) .eq. imax) az(imax+1,nj(n)) = az(imax,nj(n))
+      j = nj(n)
+      do i=nfi(n),nli(n)
+         if(az(i,j) .eq. 1) then
+            az(i,j) = BOUNDARY_POINT
+         end if
+      end do
    end do
 !  easter boundary - at present elev only
    do n=1,NEB
-      az(ei(n),efj(n):elj(n)) = BOUNDARY_POINT
-      if(efj(n) .eq. jmin) az(ei(n),jmin-1) = az(ei(n),jmin)
-      if(elj(n) .eq. jmax) az(ei(n),jmax+1) = az(ei(n),jmax)
+      i = ei(n)
+      do j=efj(n),elj(n)
+         if(az(i,j) .eq. 1) then
+            az(i,j) = BOUNDARY_POINT
+         end if
+      end do
    end do
 !  southern boundary - at present elev only
    do n=1,NSB
-      az(sfi(n):sli(n),sj(n)) = BOUNDARY_POINT
-      if(sfi(n) .eq. imin) az(imin-1,sj(n)) = az(imin,sj(n))
-      if(sli(n) .eq. imax) az(imax+1,sj(n)) = az(imax,sj(n))
+      j = sj(n)
+      do i=sfi(n),sli(n)
+         if(az(i,j) .eq. 1) then
+            az(i,j) = BOUNDARY_POINT
+         end if
+      end do
    end do
 #undef BOUNDARY_POINT
 
@@ -301,6 +320,9 @@
    call adjust_mask(trim(input_dir) // mask_adjust_file)
 
    mask = _ONE_*az
+   call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
+   call wait_halo(H_TAG)
+   az = mask
 
 !  mask for U-points
    mask=0
