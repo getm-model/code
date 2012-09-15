@@ -165,6 +165,14 @@
 
    LEVEL1 'init_2d'
 
+#ifdef SLICE_MODEL
+!  Note (KK): sse=0,U=0,dyV=0,V set in 3d
+   no_2d = rigid_lid
+#else
+!  Note (KK): sse=0,U=V=0
+   no_2d = (rigid_lid .and. (imin.eq.iextr .or. jmin.eq.jextr))
+#endif
+
    dtm = timestep
 
 #if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
@@ -178,19 +186,21 @@
    read(NAMLST,m2d)
 
 !  Allocates memory for the public data members - if not static
-   call init_variables_2d(runtype)
+   call init_variables_2d(runtype,no_2d)
    call init_advection()
 
-   LEVEL2 'Advection of depth-averaged velocities'
+   if (.not. no_2d) then
+      LEVEL2 'Advection of depth-averaged velocities'
 #ifdef NO_ADVECT
-   if (vel2d_adv_hor .ne. NOADV) then
-      LEVEL2 "reset vel2d_adv_hor= ",NOADV," because of"
-      LEVEL2 "obsolete NO_ADVECT macro. Note that this"
-      LEVEL2 "behaviour will be removed in the future."
-      vel2d_adv_hor = NOADV
-   end if
+      if (vel2d_adv_hor .ne. NOADV) then
+         LEVEL2 "reset vel2d_adv_hor= ",NOADV," because of"
+         LEVEL2 "obsolete NO_ADVECT macro. Note that this"
+         LEVEL2 "behaviour will be removed in the future."
+         vel2d_adv_hor = NOADV
+      end if
 #endif
-   call print_adv_settings(vel2d_adv_split,vel2d_adv_hor,_ZERO_)
+      call print_adv_settings(vel2d_adv_split,vel2d_adv_hor,_ZERO_)
+   end if
 
    if (.not. hotstart) then
       select case (elev_method)
@@ -245,118 +255,109 @@
                          "A non valid Am_method has been chosen");
    end select
 
-   select case (An_method)
-      case(0)
-         LEVEL2 'An_method=0 -> horizontal numerical diffusion not included'
-      case(1)
-         LEVEL2 'An_method=1 -> Using constant horizontal numerical diffusion'
-         if (An_const .lt. _ZERO_) then
-            call getm_error("init_2d()", &
-                            "Constant horizontal numerical diffusion <0");
-         end if
-      case(2)
-         LEVEL2 'An_method=2 -> Using space varying horizontal numerical diffusion'
-         LEVEL2 '..  will read An from An_file ',trim(An_file)
 
-         allocate(AnC(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_2d: Error allocating memory (AnC)'
-         AnC = _ZERO_
+   if (.not. no_2d) then
 
-         call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,AnC(ill:ihl,jll:jhl))
+      select case (An_method)
+         case(0)
+            LEVEL2 'An_method=0 -> horizontal numerical diffusion not included'
+         case(1)
+            LEVEL2 'An_method=1 -> Using constant horizontal numerical diffusion'
+            if (An_const .lt. _ZERO_) then
+               call getm_error("init_2d()", &
+                               "Constant horizontal numerical diffusion <0");
+            end if
+         case(2)
+            LEVEL2 'An_method=2 -> Using space varying horizontal numerical diffusion'
+            LEVEL2 '..  will read An from An_file ',trim(An_file)
 
-         if (MINVAL(AnC(imin:imax,jmin:jmax),mask=(az(imin:imax,jmin:jmax).ge.1)) .lt. _ZERO_) then
-            call getm_error("init_2d()", &
-                            "negative numerical diffusivity in An field");
-         end if
+            allocate(AnC(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_2d: Error allocating memory (AnC)'
+            AnC = _ZERO_
 
-!        Note (KK): halo update is only needed for periodic domains
-         call update_2d_halo(AnC,AnC,az,imin,jmin,imax,jmax,H_TAG)
-         call wait_halo(H_TAG)
+            call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,AnC(ill:ihl,jll:jhl))
 
-         if (MAXVAL(AnC(imin-1:imax+1,jmin-1:jmax+1),mask=(az(imin-1:imax+1,jmin-1:jmax+1).ge.1)) .eq. _ZERO_) then
-!           Note (BJB): If all An values are really zero, then we should not use An-smoothing at all...
-!                       Note that smoothing may be on in other subdomains.
-            LEVEL2 '  All An is zero for this (sub)domain - switching to An_method=0'
-            An_method=0
-         else
-!           Note (KK): since a HALO update of AnX is not needed,
-!                      the allocation of AnX can be done locally
-!                      and dependent on the test above
+            if (MINVAL(AnC(imin:imax,jmin:jmax),mask=(az(imin:imax,jmin:jmax).ge.1)) .lt. _ZERO_) then
+               call getm_error("init_2d()", &
+                               "negative numerical diffusivity in An field");
+            end if
 
-            allocate(AnX(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'init_2d: Error allocating memory (AnX)'
+!           Note (KK): halo update is only needed for periodic domains
+            call update_2d_halo(AnC,AnC,az,imin,jmin,imax,jmax,H_TAG)
+            call wait_halo(H_TAG)
 
-            ! Compute AnX (An in X-points) based on AnC and the X- and T- masks
-            ! We loop over the X-points in the present domain.
-            do j=jmin-1,jmax
-               do i=imin-1,imax
-                  if (ax(i,j) .ge. 1) then
-                     AnX(i,j) = _QUART_*( AnC(i,j) + AnC(i+1,j) + AnC(i,j+1) + AnC(i+1,j+1) )
-                  end if
+            if (MAXVAL(AnC(imin-1:imax+1,jmin-1:jmax+1),mask=(az(imin-1:imax+1,jmin-1:jmax+1).ge.1)) .eq. _ZERO_) then
+!              Note (BJB): If all An values are really zero, then we should not use An-smoothing at all...
+!                          Note that smoothing may be on in other subdomains.
+               LEVEL2 '  All An is zero for this (sub)domain - switching to An_method=0'
+               An_method=0
+            else
+!              Note (KK): since a HALO update of AnX is not needed,
+!                         the allocation of AnX can be done locally
+!                         and dependent on the test above
+
+               allocate(AnX(E2DFIELD),stat=rc)
+               if (rc /= 0) stop 'init_2d: Error allocating memory (AnX)'
+
+               ! Compute AnX (An in X-points) based on AnC and the X- and T- masks
+               ! We loop over the X-points in the present domain.
+               do j=jmin-1,jmax
+                  do i=imin-1,imax
+                     if (ax(i,j) .ge. 1) then
+                        AnX(i,j) = _QUART_*( AnC(i,j) + AnC(i+1,j) + AnC(i,j+1) + AnC(i+1,j+1) )
+                     end if
+                  end do
                end do
-            end do
+            end if
+         case default
+            call getm_error("init_2d()", &
+                            "A non valid An method has been chosen");
+      end select
+
+      if (.not. rigid_lid) then
+         if (sealevel_check .eq. 0) then
+            LEVEL2 'sealevel_check=0 --> NaN checks disabled'
+         else if (sealevel_check .gt. 0) then
+            LEVEL2 'sealevel_check>0 --> NaN values will result in error conditions'
+         else
+            LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
          end if
-      case default
-         call getm_error("init_2d()", &
-                         "A non valid An method has been chosen");
-   end select
-
-   if (rigid_lid) then
-      if (bdy2d) then
-         LEVEL2 'Reset bdy2d=F because of rigid lid'
-         bdy2d=.false.
       end if
-   else
-      if (sealevel_check .eq. 0) then
-         LEVEL2 'sealevel_check=0 --> NaN checks disabled'
-      else if (sealevel_check .gt. 0) then
-         LEVEL2 'sealevel_check>0 --> NaN values will result in error conditions'
+
+      if (have_boundaries) then
+         call init_bdy_2d(bdy2d,hotstart)
       else
-         LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
+         bdy2d = .false.
       end if
-   end if
 
-   if (have_boundaries) then
-      call init_bdy_2d(bdy2d,hotstart)
-   else
-      bdy2d = .false.
-   end if
-
-#ifdef SLICE_MODEL
-!  Note (KK): sse=0,U=0,dyV=0,V set in 3d
-   no_2d = rigid_lid
-#else
-!  Note (KK): sse=0,U=V=0
-   no_2d = (rigid_lid .and. (imin.eq.iextr .or. jmin.eq.jextr))
-#endif
-
-   if (deformC) then
-      allocate(dudxC(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (dudxC)'
-      dudxC=_ZERO_
+      if (deformC) then
+         allocate(dudxC(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (dudxC)'
+         dudxC=_ZERO_
 #ifndef SLICE_MODEL
-      allocate(dvdyC(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyC)'
-      dvdyC=_ZERO_
+         allocate(dvdyC(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyC)'
+         dvdyC=_ZERO_
 #endif
-   end if
-   if (deformX) then
-      allocate(shearX(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (shearX)'
-      shearX=_ZERO_
-   end if
-   if (deformUV) then
-      allocate(dudxV(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (dudxV)'
-      dudxV=_ZERO_
+      end if
+      if (deformX) then
+         allocate(shearX(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (shearX)'
+         shearX=_ZERO_
+      end if
+      if (deformUV) then
+         allocate(dudxV(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (dudxV)'
+         dudxV=_ZERO_
 #ifndef SLICE_MODEL
-      allocate(dvdyU(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyU)'
-      dvdyU=_ZERO_
+         allocate(dvdyU(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyU)'
+         dvdyU=_ZERO_
 #endif
-      allocate(shearU(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (shearU)'
-      shearU=_ZERO_
+         allocate(shearU(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (shearU)'
+         shearU=_ZERO_
+      end if
    end if
 
 #ifdef DEBUG
