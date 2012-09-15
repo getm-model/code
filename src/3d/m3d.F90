@@ -43,7 +43,7 @@
    use advection, only: NOADV
    use advection_3d, only: init_advection_3d,print_adv_settings_3d,adv_ver_iterations
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
-   use bdy_3d, only: bdyfile_3d,bdyfmt_3d,bdyramp_3d
+   use bdy_3d, only: bdyfile_3d,bdyfmt_3d,bdyramp_3d,bdy3d_sponge_size
    use bdy_3d, only: bdy3d_tmrlx, bdy3d_tmrlx_ucut, bdy3d_tmrlx_max, bdy3d_tmrlx_min
 !  Necessary to use halo_zones because update_3d_halos() have been moved out
 !  temperature.F90 and salinity.F90 - should be changed at a later stage
@@ -119,6 +119,7 @@
    NAMELIST /m3d/ &
              M,cnpar,cord_relax,adv_ver_iterations,       &
              bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,       &
+             bdy3d_sponge_size,                           &
              bdy3d_tmrlx,bdy3d_tmrlx_ucut,                &
              bdy3d_tmrlx_max,bdy3d_tmrlx_min,             &
              vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver, &
