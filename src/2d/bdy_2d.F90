@@ -170,8 +170,10 @@
 
       do l=1,nbdy
          if (bdy2d_active(bdy_2d_type(l))) then
-            LEVEL3 'bdy2d=F deactivates local 2D bdy #',l
+            LEVEL3 'bdy2d=F resets local 2D bdy #',l
+            LEVEL4 'old: ',trim(bdy_2d_desc(bdy_2d_type(l)))
             bdy_2d_type(l) = CONSTANT
+            LEVEL4 'new: ',trim(bdy_2d_desc(bdy_2d_type(l)))
          end if
       end do
 
@@ -529,6 +531,8 @@
 !BOC
 
    select case (type_2d)
+      case (CONSTANT)
+         bdy2d_active = .false.
       case (CLAMPED)
          bdy2d_active = .true.
       case (ZERO_GRADIENT)
@@ -571,6 +575,8 @@
 !BOC
 
    select case (type_2d)
+      case (CONSTANT)
+         bdy2d_need_elev = .false.
       case (CLAMPED)
          bdy2d_need_elev = .true.
       case (ZERO_GRADIENT)
@@ -613,6 +619,8 @@
 !BOC
 
    select case (type_2d)
+      case (CONSTANT)
+         bdy2d_need_vel = .false.
       case (CLAMPED)
          bdy2d_need_vel = .true.
       case (ZERO_GRADIENT)
