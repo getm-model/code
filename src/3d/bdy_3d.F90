@@ -183,7 +183,7 @@
          LEVEL3 "sponge layer factors:"
          do i=1,bdy3d_sponge_size
             sp(i) = ((_ONE_+bdy3d_sponge_size-i)/(_ONE_+bdy3d_sponge_size))**2
-            LEVEL4 "sp(",i,")=",sp(i)
+            LEVEL4 "sp(",i,")=",real(sp(i))
          end do
       end if
    end if
