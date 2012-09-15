@@ -15,7 +15,8 @@
 ! !USES:
    use halo_zones, only : H_TAG,U_TAG,V_TAG
    use domain, only: imin,jmin,imax,jmax,kmax,H,az,au,av
-   use domain, only: nsbv,nbdy,NWB,NNB,NEB,NSB,bdy_index,bdy_3d_type
+   use domain, only: nsbv,nbdy,NWB,NNB,NEB,NSB,bdy_index
+   use domain, only: bdy_3d_desc,bdy_3d_type
    use domain, only: need_3d_bdy
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use variables_3d
@@ -100,7 +101,7 @@
 
    if (runtype.eq.2) bdy3d=.false.
    if (bdy3d .and. runtype.eq.3) then
-      LEVEL2 'reset bdy3d=.false. in runtype=3'
+      LEVEL3 'reset bdy3d=.false. in runtype=3'
       bdy3d = .false.
    end if
 
@@ -117,8 +118,10 @@
    else
       do l=1,nbdy
          if (bdy3d_active(bdy_3d_type(l))) then
-            LEVEL3 'bdy3d=F deactivates local 3D bdy #',l
+            LEVEL3 'bdy3d=F resets local 3D bdy #',l
+            LEVEL4 'old: ',trim(bdy_3d_desc(bdy_3d_type(l)))
             bdy_3d_type(l) = CONSTANT
+            LEVEL4 'new: ',trim(bdy_3d_desc(bdy_3d_type(l)))
          end if
       end do
    end if
@@ -675,6 +678,8 @@
 !BOC
 
    select case (type_3d)
+      case (CONSTANT)
+         bdy3d_active = .false.
       case (CLAMPED)
          bdy3d_active = .true.
       case (ZERO_GRADIENT)
