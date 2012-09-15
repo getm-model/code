@@ -66,13 +66,14 @@
 #endif
 
 ! For 2D boundary conditions
+#define CONSTANT     -1
+#define CLAMPED       0
 #define ZERO_GRADIENT 1
 #define SOMMERFELD    2
 #define CLAMPED_ELEV  3
 #define FLATHER_ELEV  4
 #define FLATHER_VEL   5
 #define CLAMPED_VEL   6
-#define CLAMPED       7
 
 ! Reserved Fortran units
 #define stdin  		5

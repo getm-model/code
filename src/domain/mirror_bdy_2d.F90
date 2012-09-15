@@ -47,54 +47,54 @@
       case (U_TAG)
          do n = 1,NNB
             j = nj(n)
-            do i = nfi(n)-HALO,nli(n)+HALO
+            do i = nfi(n),nli(n)
                if (au(i,j) .eq. 3) f(i,j) = f(i,j-1)
              end do
          end do
          do n = 1,NSB
             j = sj(n)
-            do i = sfi(n)-HALO,sli(n)+HALO
+            do i = sfi(n),sli(n)
                if (au(i,j) .eq. 3) f(i,j) = f(i,j+1)
             end do
          end do
       case (V_TAG)
          do n = 1,NWB
             i = wi(n)
-            do j = wfj(n)-HALO,wlj(n)+HALO
+            do j = wfj(n),wlj(n)
                if (av(i,j) .eq. 3) f(i,j) = f(i+1,j)
             end do
          end do
          do n = 1,NEB
             i = ei(n)
-            do j = efj(n)-HALO,elj(n)+HALO
+            do j = efj(n),elj(n)
                if (av(i,j) .eq. 3) f(i,j) = f(i-1,j)
             end do
          end do
       case default
          do n = 1,NWB
             i = wi(n)
-            do j = wfj(n)-HALO,wlj(n)+HALO
+            do j = wfj(n),wlj(n)
                if (az(i,j) .gt. 1) f(i-1,j) = f(i,j)
             end do
          end do
 
          do n = 1,NNB
             j = nj(n)
-            do i = nfi(n)-HALO,nli(n)+HALO
+            do i = nfi(n),nli(n)
                if (az(i,j) .gt. 1) f(i,j+1) = f(i,j)
             end do
          end do
 
          do n = 1,NEB
             i = ei(n)
-            do j = efj(n)-HALO,elj(n)+HALO
+            do j = efj(n),elj(n)
                if (az(i,j) .gt. 1) f(i+1,j) = f(i,j)
             end do
          end do
 
          do n = 1,NSB
             j = sj(n)
-            do i = sfi(n)-HALO,sli(n)+HALO
+            do i = sfi(n),sli(n)
                if (az(i,j) .gt. 1) f(i,j-1) = f(i,j)
             end do
          end do

@@ -16,9 +16,12 @@
    use parameters,only: g
    use halo_zones, only : z_TAG,H_TAG,U_TAG,V_TAG
    use domain, only: imin,jmin,imax,jmax,kmax,H,az,au,av
-   use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index,bdy_2d_type
+   use domain, only: nsbv,nbdy,NWB,NNB,NEB,NSB,bdy_index
+   use domain, only: bdy_2d_desc,bdy_2d_type
+   use domain, only: need_2d_bdy_elev,need_2d_bdy_u,need_2d_bdy_v
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: min_depth
+   use domain, only: rigid_lid
    use variables_2d, only: dtm,z,zo,D,U,DU,V,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dyv
@@ -32,9 +35,13 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_bdy_2d, do_bdy_2d
-   integer,public                   :: bdyfmt_2d,bdyramp_2d=-1
+   character(len=PATH_MAX),public :: bdyfile_2d
+   integer,public                 :: bdyfmt_2d,bdyramp_2d=-1
 !  KK-TODO: static REAL_4B => allocatable REALTYPE
    REAL_4B,dimension(1500),public :: bdy_data,bdy_data_u,bdy_data_v
+!
+! !PRIVATE DATA MEMBERS:
+   private bdy2d_active,bdy2d_need_elev,bdy2d_need_vel
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -51,14 +58,21 @@
 ! \label{sec-init-bdy-2d}
 !
 ! !INTERFACE:
-   subroutine init_bdy_2d()
+   subroutine init_bdy_2d(bdy2d,hotstart)
 !
 ! !DESCRIPTION:
 !
 ! !USES:
    IMPLICIT NONE
 !
+! !INPUT PARAMETERS:
+   logical, intent(in)                 :: hotstart
+!
+! !INPUT/OUTPUT PARAMETERS:
+   logical, intent(inout)              :: bdy2d
+!
 ! !LOCAL VARIABLES:
+   integer :: n,l
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -68,7 +82,102 @@
    write(debug,*) 'init_bdy_2d() # ',Ncall
 #endif
 
-   LEVEL2 'init_bdy_2d()'
+   LEVEL2 'init_bdy_2d'
+
+   if (rigid_lid) then
+      do l=1,nbdy
+         select case (bdy_2d_type(l))
+            case (CLAMPED)
+               LEVEL3 'rigid lid resets local 2D bdy #',l
+               LEVEL4 'old: ',trim(bdy_2d_desc(bdy_2d_type(l)))
+               bdy_2d_type(l) = CLAMPED_VEL
+               LEVEL4 'new: ',trim(bdy_2d_desc(bdy_2d_type(l)))
+            case (ZERO_GRADIENT,SOMMERFELD,CLAMPED_ELEV,FLATHER_ELEV)
+               LEVEL3 'rigid lid resets local 2D bdy #',l
+               LEVEL4 'old: ',trim(bdy_2d_desc(bdy_2d_type(l)))
+               bdy_2d_type(l) = CONSTANT
+               LEVEL4 'new: ',trim(bdy_2d_desc(bdy_2d_type(l)))
+            case (FLATHER_VEL)
+               LEVEL3 'rigid lid resets local 2D bdy #',l
+               LEVEL4 'old: ',trim(bdy_2d_desc(bdy_2d_type(l)))
+               bdy_2d_type(l) = CLAMPED_VEL
+               LEVEL4 'new: ',trim(bdy_2d_desc(bdy_2d_type(l)))
+         end select
+      end do
+   end if
+
+
+   if (bdy2d) then
+
+      do l=1,nbdy
+         if (bdy2d_need_elev(bdy_2d_type(l))) then
+            need_2d_bdy_elev = .true.
+            exit
+         end if
+      end do
+
+      l = 0
+      do n = 1,NWB
+         l = l+1
+         if (bdy2d_need_vel(bdy_2d_type(l))) then
+            need_2d_bdy_u = .true.
+            exit
+         end if
+      end do
+      if (.not. need_2d_bdy_u) then
+         l = l + NNB
+         do n = 1,NEB
+            l = l+1
+            if (bdy2d_need_vel(bdy_2d_type(l))) then
+               need_2d_bdy_u = .true.
+               exit
+            end if
+         end do
+      end if
+
+      l = NWB
+      do n = 1,NNB
+         l = l+1
+         if (bdy2d_need_vel(bdy_2d_type(l))) then
+            need_2d_bdy_v = .true.
+            exit
+         end if
+      end do
+      if (.not. need_2d_bdy_v) then
+         l = l + NEB
+         do n = 1,NSB
+            l = l+1
+            if (bdy2d_need_vel(bdy_2d_type(l))) then
+               need_2d_bdy_v = .true.
+               exit
+            end if
+         end do
+      end if
+
+      if (need_2d_bdy_elev .or. need_2d_bdy_u .or. need_2d_bdy_v) then
+         LEVEL3 'bdyfile_2d=',TRIM(bdyfile_2d)
+         LEVEL3 'bdyfmt_2d=',bdyfmt_2d
+         LEVEL3 'bdyramp_2d=',bdyramp_2d
+         if (hotstart .and. bdyramp_2d .gt. 0) then
+             LEVEL4 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
+             LEVEL4 'WARNING: .. be sure you know what you are doing ..'
+         end if
+      else
+         bdy2d = .false.
+      end if
+
+   else
+
+      do l=1,nbdy
+         if (bdy2d_active(bdy_2d_type(l))) then
+            LEVEL3 'bdy2d=F resets local 2D bdy #',l
+            LEVEL4 'old: ',trim(bdy_2d_desc(bdy_2d_type(l)))
+            bdy_2d_type(l) = CONSTANT
+            LEVEL4 'new: ',trim(bdy_2d_desc(bdy_2d_type(l)))
+         end if
+      end do
+
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_bdy_2d()'
@@ -129,13 +238,16 @@
    fac = _ONE_
    if(bdyramp_2d .gt. 1) fac=min( _ONE_ ,FOUR*loop/float(bdyramp_2d))
 
-   l = 0
-   do n = 1,NWB
-      l = l+1
-      k = bdy_index(l)
-      i = wi(n)
-      select case (tag)
-         case (z_TAG,H_TAG)
+
+   select case (tag)
+
+      case (z_TAG,H_TAG)
+
+         l = 0
+         do n = 1,NWB
+            l = l+1
+            k = bdy_index(l)
+            i = wi(n)
             select case (bdy_2d_type(l))
                case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
                   do j = wfj(n),wlj(n)
@@ -167,36 +279,11 @@
                      k = k+1
                   end do
             end select
-         case (U_TAG)
-            select case (bdy_2d_type(l))
-               case (FLATHER_VEL)
-                  do j = wfj(n),wlj(n)
-!                    Note (KK): approximate interface depths at vel-time stage
-!                               by spatial mean at last sse-time stage
-                     depth = _HALF_*(D(i,j)+D(i+1,j))
-!                    Note (KK): note approximation of sse at vel-time stage
-                     U(i,j) = fac*bdy_data_u(k)*depth &
-                              - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
-                     k = k+1
-                  end do
-               case (CLAMPED_VEL,CLAMPED)
-                  do j = wfj(n),wlj(n)
-!                    Note (KK): approximate interface depths at vel-time stage
-!                               by spatial mean at last sse-time stage
-                     depth = _HALF_*(D(i,j)+D(i+1,j))
-                     U(i,j) = fac*bdy_data_u(k)*depth
-                     k = k+1
-                  end do
-            end select
-      end select
-   end do
-
-   do n = 1,NNB
-      l = l+1
-      k = bdy_index(l)
-      j = nj(n)
-      select case (tag)
-         case (z_TAG,H_TAG)
+         end do
+         do n = 1,NNB
+            l = l+1
+            k = bdy_index(l)
+            j = nj(n)
             select case (bdy_2d_type(l))
                case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
                   do i = nfi(n),nli(n)
@@ -228,36 +315,11 @@
                      k = k+1
                   end do
             end select
-         case (V_TAG)
-            select case (bdy_2d_type(l))
-               case (FLATHER_VEL)
-                  do i = nfi(n),nli(n)
-!                    Note (KK): approximate interface depths at vel-time stage
-!                               by spatial mean at last sse-time stage
-                     depth = _HALF_*(D(i,j-1)+D(i,j))
-!                    Note (KK): note approximation of sse at vel-time stage
-                     V(i,j-1) = fac*bdy_data_v(k)*depth &
-                                + _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
-                     k = k+1
-                  end do
-               case (CLAMPED_VEL,CLAMPED)
-                  do i = nfi(n),nli(n)
-!                    Note (KK): approximate interface depths at vel-time stage
-!                               by spatial mean at last sse-time stage
-                     depth = _HALF_*(D(i,j-1)+D(i,j))
-                     V(i,j-1) = fac*bdy_data_v(k)*depth
-                     k = k+1
-                  end do
-            end select
-      end select
-   end do
-
-   do n = 1,NEB
-      l = l+1
-      k = bdy_index(l)
-      i = ei(n)
-      select case (tag)
-         case (z_TAG,H_TAG)
+         end do
+         do n = 1,NEB
+            l = l+1
+            k = bdy_index(l)
+            i = ei(n)
             select case (bdy_2d_type(l))
                case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
                   do j = efj(n),elj(n)
@@ -289,36 +351,11 @@
                      k = k+1
                   end do
             end select
-         case (U_TAG)
-            select case (bdy_2d_type(l))
-               case (FLATHER_VEL)
-                  do j = efj(n),elj(n)
-!                    Note (KK): approximate interface depths at vel-time stage
-!                               by spatial mean at last sse-time stage
-                     depth = _HALF_*(D(i-1,j)+D(i,j))
-!                    Note (KK): note approximation of sse at vel-time stage
-                     U(i-1,j) = fac*bdy_data_u(k)*depth &
-                                + _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
-                     k = k+1
-                  end do
-               case (CLAMPED_VEL,CLAMPED)
-                  do j = efj(n),elj(n)
-!                    Note (KK): approximate interface depths at vel-time stage
-!                               by spatial mean at last sse-time stage
-                     depth = _HALF_*(D(i-1,j)+D(i,j))
-                     U(i-1,j) = fac*bdy_data_u(k)*depth
-                     k = k+1
-                  end do
-            end select
-      end select
-   end do
-
-   do n = 1,NSB
-      l = l+1
-      k = bdy_index(l)
-      j = sj(n)
-      select case (tag)
-         case (z_TAG,H_TAG)
+         end do
+         do n = 1,NSB
+            l = l+1
+            k = bdy_index(l)
+            j = sj(n)
             select case (bdy_2d_type(l))
                case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
                   do i = sfi(n),sli(n)
@@ -350,7 +387,96 @@
                      k = k+1
                   end do
             end select
-         case (V_TAG)
+         end do
+
+      case (U_TAG)
+
+         l = 0
+         do n = 1,NWB
+            l = l+1
+            k = bdy_index(l)
+            i = wi(n)
+            select case (bdy_2d_type(l))
+               case (FLATHER_VEL)
+                  do j = wfj(n),wlj(n)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i,j)+D(i+1,j))
+!                    Note (KK): note approximation of sse at vel-time stage
+                     U(i,j) = fac*bdy_data_u(k)*depth &
+                              - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
+                     k = k+1
+                  end do
+               case (CLAMPED_VEL,CLAMPED)
+                  do j = wfj(n),wlj(n)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i,j)+D(i+1,j))
+                     U(i,j) = fac*bdy_data_u(k)*depth
+                     k = k+1
+                  end do
+            end select
+         end do
+         l = l + NNB
+         do n = 1,NEB
+            l = l+1
+            k = bdy_index(l)
+            i = ei(n)
+            select case (bdy_2d_type(l))
+               case (FLATHER_VEL)
+                  do j = efj(n),elj(n)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i-1,j)+D(i,j))
+!                    Note (KK): note approximation of sse at vel-time stage
+                     U(i-1,j) = fac*bdy_data_u(k)*depth &
+                                + _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
+                     k = k+1
+                  end do
+               case (CLAMPED_VEL,CLAMPED)
+                  do j = efj(n),elj(n)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i-1,j)+D(i,j))
+                     U(i-1,j) = fac*bdy_data_u(k)*depth
+                     k = k+1
+                  end do
+            end select
+         end do
+
+      case (V_TAG)
+
+         l = NWB
+         do n = 1,NNB
+            l = l+1
+            k = bdy_index(l)
+            j = nj(n)
+            select case (bdy_2d_type(l))
+               case (FLATHER_VEL)
+                  do i = nfi(n),nli(n)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i,j-1)+D(i,j))
+!                    Note (KK): note approximation of sse at vel-time stage
+                     V(i,j-1) = fac*bdy_data_v(k)*depth &
+                                + _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
+                     k = k+1
+                  end do
+               case (CLAMPED_VEL,CLAMPED)
+                  do i = nfi(n),nli(n)
+!                    Note (KK): approximate interface depths at vel-time stage
+!                               by spatial mean at last sse-time stage
+                     depth = _HALF_*(D(i,j-1)+D(i,j))
+                     V(i,j-1) = fac*bdy_data_v(k)*depth
+                     k = k+1
+                  end do
+            end select
+         end do
+         l = l + NEB
+         do n = 1,NSB
+            l = l+1
+            k = bdy_index(l)
+            j = sj(n)
             select case (bdy_2d_type(l))
                case (FLATHER_VEL)
                   do i = sfi(n),sli(n)
@@ -371,8 +497,9 @@
                      k = k+1
                   end do
             end select
-      end select
-   end do
+         end do
+
+   end select
 
 #ifdef DEBUG
    write(debug,*) 'leaving do_bdy_2d()'
@@ -380,6 +507,138 @@
 #endif
    return
    end subroutine do_bdy_2d
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  LOGICAL function bdy2d_active -
+!
+! !INTERFACE:
+   logical function bdy2d_active(type_2d)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer,intent(in)  :: type_2d
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   select case (type_2d)
+      case (CONSTANT)
+         bdy2d_active = .false.
+      case (CLAMPED)
+         bdy2d_active = .true.
+      case (ZERO_GRADIENT)
+         bdy2d_active = .false.
+      case (SOMMERFELD)
+         bdy2d_active = .false.
+      case (CLAMPED_ELEV)
+         bdy2d_active = .true.
+      case (FLATHER_ELEV)
+         bdy2d_active = .true.
+      case (FLATHER_VEL)
+         bdy2d_active = .true.
+      case (CLAMPED_VEL)
+         bdy2d_active = .true.
+   end select
+
+   return
+   end function bdy2d_active
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  LOGICAL function bdy2d_need_elev -
+!
+! !INTERFACE:
+   logical function bdy2d_need_elev(type_2d)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer,intent(in)  :: type_2d
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   select case (type_2d)
+      case (CONSTANT)
+         bdy2d_need_elev = .false.
+      case (CLAMPED)
+         bdy2d_need_elev = .true.
+      case (ZERO_GRADIENT)
+         bdy2d_need_elev = .false.
+      case (SOMMERFELD)
+         bdy2d_need_elev = .false.
+      case (CLAMPED_ELEV)
+         bdy2d_need_elev = .true.
+      case (FLATHER_ELEV)
+         bdy2d_need_elev = .true.
+      case (FLATHER_VEL)
+         bdy2d_need_elev = .true.
+      case (CLAMPED_VEL)
+         bdy2d_need_elev = .false.
+   end select
+
+   return
+   end function bdy2d_need_elev
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  LOGICAL function bdy2d_need_vel -
+!
+! !INTERFACE:
+   logical function bdy2d_need_vel(type_2d)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer,intent(in)  :: type_2d
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   select case (type_2d)
+      case (CONSTANT)
+         bdy2d_need_vel = .false.
+      case (CLAMPED)
+         bdy2d_need_vel = .true.
+      case (ZERO_GRADIENT)
+         bdy2d_need_vel = .false.
+      case (SOMMERFELD)
+         bdy2d_need_vel = .false.
+      case (CLAMPED_ELEV)
+         bdy2d_need_vel = .false.
+      case (FLATHER_ELEV)
+         bdy2d_need_vel = .true.
+      case (FLATHER_VEL)
+         bdy2d_need_vel = .true.
+      case (CLAMPED_VEL)
+         bdy2d_need_vel = .true.
+   end select
+
+   return
+   end function bdy2d_need_vel
 !EOC
 !-----------------------------------------------------------------------
 
