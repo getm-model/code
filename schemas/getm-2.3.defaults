@@ -278,6 +278,9 @@
 			<bdyfile_3d>
 				bdy_3d.nc
 			</bdyfile_3d>
+			<bdy3d_sponge_size>
+				3
+			</bdy3d_sponge_size>
 			<bdy3d_tmrlx>
 				False
 			</bdy3d_tmrlx>

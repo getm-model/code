@@ -364,6 +364,9 @@
 			<element name="bdyfile_3d" type="string" label="name of file with boundary data">
 				<condition type="eq" variable="./bdy3d" value="True"/>
 			</element>
+			<element name="bdy3d_sponge_size" type="int" label="number of cells inside sponge zone" minInclusive="0">
+				<condition type="eq" variable="./bdy3d" value="True"/>
+			</element>
 			<element name="bdy3d_tmrlx" type="bool" label="temporal 3D boundary relaxation coeff.">
 				<condition type="eq" variable="./bdy3d" value="True"/>
 			</element>
