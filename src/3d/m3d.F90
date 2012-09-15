@@ -282,27 +282,16 @@
                calc_stirr=.true.
          end select
       end if
-      if (calc_stirr) then
-         allocate(diffxx(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_3d: Error allocating memory (diffxx)'
-         diffxx=_ZERO_
-
-#ifndef SLICE_MODEL
-         allocate(diffxy(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_3d: Error allocating memory (diffxy)'
-         diffxy=_ZERO_
-
-         allocate(diffyx(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_3d: Error allocating memory (diffyx)'
-         diffyx=_ZERO_
-
-         allocate(diffyy(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_3d: Error allocating memory (diffyy)'
-         diffyy=_ZERO_
-#endif
-      end if
    end if
 #endif
+
+   if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
+
+   if (have_boundaries) then
+      call init_bdy_3d(bdy3d,runtype,hotstart)
+   else
+      bdy3d = .false.
+   end if
 
    if (deformC_3d) then
       allocate(dudxC_3d(I3DFIELD),stat=rc)
@@ -334,12 +323,26 @@
       if (rc /= 0) stop 'init_3d: Error allocating memory (shearU_3d)'
       shearU_3d=_ZERO_
    end if
+   if (calc_stirr) then
+      allocate(diffxx(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (diffxx)'
+      diffxx=_ZERO_
 
-   if (have_boundaries) then
-      call init_bdy_3d(bdy3d,runtype,hotstart)
-   else
-      bdy3d = .false.
+#ifndef SLICE_MODEL
+      allocate(diffxy(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (diffxy)'
+      diffxy=_ZERO_
+
+      allocate(diffyx(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (diffyx)'
+      diffyx=_ZERO_
+
+      allocate(diffyy(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (diffyy)'
+      diffyy=_ZERO_
+#endif
    end if
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_3d()'
