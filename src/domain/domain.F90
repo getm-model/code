@@ -722,10 +722,6 @@ STDERR latc(1,1),latx(1,0)
 !                         metrics there are not used
                dxu(i,j) = sqrt(  ( xc(i+1,j) - xc(i,j) )**2 &
                                + ( yc(i+1,j) - yc(i,j) )**2 )
-               dxx(i,j) = sqrt(  (  _HALF_*( xx(i  ,j) + xx(i+1,j) )      &
-                                  - _HALF_*( xx(i-1,j) + xx(i  ,j) ) )**2 &
-                               + (  _HALF_*( yx(i  ,j) + yx(i+1,j) )      &
-                                  - _HALF_*( yx(i-1,j) + yx(i  ,j) ) )**2 )
                if (au(i,j) .gt. 0) then
                   ard1 = _HALF_*abs(  (  (  _HALF_*( xx(i  ,j-1) + xx(i+1,j-1) )     &
                                           - _HALF_*( xx(i-1,j  ) + xx(i  ,j  ) ) )   &
@@ -736,31 +732,6 @@ STDERR latc(1,1),latx(1,0)
                                        * (  _HALF_*( yx(i-1,j  ) + yx(i  ,j  ) )     &
                                           - _HALF_*( yx(i  ,j-1) + yx(i+1,j-1) ) ) ) )
                   arud1(i,j)=_ONE_/ard1
-               end if
-            end do
-         end do
-
-         do j=jll,jhl-1
-            do i=ill,ihl
-!              Note (KK): in the present code we do not need
-!                         a halo-update for jmax+HALO, since
-!                         metrics there are not used
-               dyv(i,j) = sqrt(  ( xc(i,j+1) - xc(i,j) )**2 &
-                               + ( yc(i,j+1) - yc(i,j) )**2 )
-               dyx(i,j) = sqrt(  (  _HALF_*( xx(i,j  ) + xx(i,j+1) )      &
-                                  - _HALF_*( xx(i,j-1) + xx(i,j  ) ) )**2 &
-                               + (  _HALF_*( yx(i,j  ) + yx(i,j+1) )      &
-                                  - _HALF_*( yx(i,j-1) + yx(i,j  ) ) )**2 )
-               if (av(i,j) .gt. 0) then
-                  ard1 = _HALF_*abs(  (  (  _HALF_*( xx(i  ,j-1) + xx(i  ,j  ) )     &
-                                          - _HALF_*( xx(i-1,j  ) + xx(i-1,j+1) ) )   &
-                                       * (  _HALF_*( yx(i  ,j  ) + yx(i  ,j+1) )     &
-                                          - _HALF_*( yx(i-1,j-1) + yx(i-1,j  ) ) ) ) &
-                                    + (  (  _HALF_*( xx(i  ,j  ) + xx(i  ,j+1) )     &
-                                          - _HALF_*( xx(i-1,j-1) + xx(i-1,j  ) ) )   &
-                                       * (  _HALF_*( yx(i-1,j  ) + yx(i-1,j+1) )     &
-                                          - _HALF_*( yx(i  ,j-1) + yx(i  ,j  ) ) ) ) )
-                  arvd1(i,j)=_ONE_/ard1
                end if
             end do
          end do
@@ -776,6 +747,51 @@ STDERR latc(1,1),latx(1,0)
             do i=ill,ihl
                dxv(i,j) = sqrt(  ( xx(i,j) - xx(i-1,j  ) )**2 &
                                + ( yx(i,j) - yx(i-1,j  ) )**2 )
+            end do
+         end do
+
+         do j=jll,jhl-1
+            do i=ill,ihl
+!              Note (KK): in the present code we do not need
+!                         a halo-update for jmax+HALO, since
+!                         metrics there are not used
+               dyv(i,j) = sqrt(  ( xc(i,j+1) - xc(i,j) )**2 &
+                               + ( yc(i,j+1) - yc(i,j) )**2 )
+               if (av(i,j) .gt. 0) then
+                  ard1 = _HALF_*abs(  (  (  _HALF_*( xx(i  ,j-1) + xx(i  ,j  ) )     &
+                                          - _HALF_*( xx(i-1,j  ) + xx(i-1,j+1) ) )   &
+                                       * (  _HALF_*( yx(i  ,j  ) + yx(i  ,j+1) )     &
+                                          - _HALF_*( yx(i-1,j-1) + yx(i-1,j  ) ) ) ) &
+                                    + (  (  _HALF_*( xx(i  ,j  ) + xx(i  ,j+1) )     &
+                                          - _HALF_*( xx(i-1,j-1) + xx(i-1,j  ) ) )   &
+                                       * (  _HALF_*( yx(i-1,j  ) + yx(i-1,j+1) )     &
+                                          - _HALF_*( yx(i  ,j-1) + yx(i  ,j  ) ) ) ) )
+                  arvd1(i,j)=_ONE_/ard1
+               end if
+            end do
+         end do
+
+         do j=min(jll,jmin-1),jhl
+            do i=ill,ihl-1
+!              Note (KK): in the present code we do not need
+!                         a halo-update for imax+HALO, since
+!                         metrics there are not used
+               dxx(i,j) = sqrt(  (  _HALF_*( xx(i  ,j) + xx(i+1,j) )      &
+                                  - _HALF_*( xx(i-1,j) + xx(i  ,j) ) )**2 &
+                               + (  _HALF_*( yx(i  ,j) + yx(i+1,j) )      &
+                                  - _HALF_*( yx(i-1,j) + yx(i  ,j) ) )**2 )
+            end do
+         end do
+
+         do j=jll,jhl-1
+            do i=min(ill,imin-1),ihl
+!              Note (KK): in the present code we do not need
+!                         a halo-update for jmax+HALO, since
+!                         metrics there are not used
+               dyx(i,j) = sqrt(  (  _HALF_*( xx(i,j  ) + xx(i,j+1) )      &
+                                  - _HALF_*( xx(i,j-1) + xx(i,j  ) ) )**2 &
+                               + (  _HALF_*( yx(i,j  ) + yx(i,j+1) )      &
+                                  - _HALF_*( yx(i,j-1) + yx(i,j  ) ) )**2 )
             end do
          end do
 
