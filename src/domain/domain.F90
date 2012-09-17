@@ -91,7 +91,7 @@
 
    integer                             :: bottfric_method=2
    REALTYPE                            :: rdrag=0.0004d0
-   REALTYPE                            :: z0_const=0.001d0
+   REALTYPE                            :: z0_const=0.01d0
    integer                             :: z0d_iters=0
    REALTYPE                            :: cd_min=_ZERO_
 
