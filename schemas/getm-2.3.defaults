@@ -115,7 +115,7 @@
 				0.0004
 			</rdrag>
 			<z0_const>
-				0.001
+				0.01
 			</z0_const>
 			<z0d_iters>
 				0
