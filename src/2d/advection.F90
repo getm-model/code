@@ -280,6 +280,12 @@
    mask_uupdateU = (au.eq.1)
    mask_vupdateV = (av.eq.1)
 
+!  Note (KK): avoid division by zero layer heights in adv_split_[u|v]
+!             (because D[V|U] are not halo-updated)
+!             (does not affect flux calculations of H_TAGs)
+   mask_uflux(imax+HALO,:) = .false.
+   mask_vflux(:,jmax+HALO) = .false.
+
    adv_gridH%mask_uflux    => mask_uflux
    adv_gridH%mask_vflux    => mask_vflux(_IRANGE_HALO_,_JRANGE_HALO_-1)
    adv_gridH%mask_xflux    => mask_xflux
