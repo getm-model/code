@@ -684,6 +684,8 @@
          bdy3d_active = .true.
       case (ZERO_GRADIENT)
          bdy3d_active = .false.
+      case default
+         bdy3d_active = .false.
    end select
 
    return
