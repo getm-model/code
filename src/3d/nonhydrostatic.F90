@@ -301,8 +301,6 @@
    bnh = _ZERO_
 #endif
 
-!  add vertical viscous terms
-!  KK-TODO: do we really have to add num?
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j)                                         &
 !$OMP          PRIVATE(i,k)
@@ -312,6 +310,9 @@
 #endif
       do i=imin-HALO,imax+HALO
          if ( az(i,j) .ge. 1 ) then
+
+!           add vertical viscous terms
+!           KK-TODO: do we really have to add num?
             bnh(i,j,1) = bnh(i,j,1)                       &
                - (num(i,j,1) + avmmol)                    &
                  * (           wc(i,j,2) -  wc(i,j,1)   ) &
@@ -331,6 +332,14 @@
                - (num(i,j,kmax-1) + avmmol)                           &
                  * (             wc(i,j,kmax  ) -  wc(i,j,kmax-1)   ) &
                  / ( _HALF_ * ( hwc(i,j,kmax-1) + hwc(i,j,kmax  ) ) )
+
+!           add local vertical acceleration and divide by layer height
+            wc(i,j,1:kmax) = hwc(i,j,1:kmax)*wc(i,j,1:kmax)
+            bnh(i,j,1:kmax) = (                                          &
+                                 bnh(i,j,1:kmax)                         &
+                               + (wc(i,j,1:kmax) - wco(i,j,1:kmax))*dtm1 &
+                              )/hwc(i,j,1:kmax)
+
          end if
       end do
 #ifndef SLICE_MODEL
@@ -343,29 +352,25 @@
    bnh(:,j+1,:) = bnh(:,j,:)
 #endif
 
-!  add local vertical acceleration
-   wc = hwc*wc
-   bnh = bnh + (wc - wco)*dtm1
-
 !  filter bnh (result to minus_bnh)
    select case(bnh_filter)
       case (1)
-         minus_bnh = -bnh_weight*bnh/hwc
+         minus_bnh = -bnh_weight*bnh
       case (3)
-         minus_bnh = -bnh_weight*bnh/hwc + (_ONE_- bnh_weight)*minus_bnh
+         minus_bnh = -bnh_weight*bnh + (_ONE_- bnh_weight)*minus_bnh
       case (4)
          if (nonhyd_loop .eq. 1) then
             minus_bnh = _ZERO_
          end if
          bnh_weight = _ONE_/dfloat(nonhyd_loop)
-         minus_bnh = -bnh_weight*bnh/hwc + (_ONE_- bnh_weight)*minus_bnh ! gives 100% weight for first loop
+         minus_bnh = -bnh_weight*bnh + (_ONE_- bnh_weight)*minus_bnh ! gives 100% weight for first loop
       case (5)
          if (nonhyd_loop .eq. 1) then
             minus_bnh = _ZERO_
          end if
-         minus_bnh = -bnh_weight*bnh/hwc + minus_bnh  ! not usable when iteration is prematurely abrupted
+         minus_bnh = -bnh_weight*bnh + minus_bnh  ! not usable when iteration is prematurely abrupted
       case default
-         minus_bnh = -bnh/hwc
+         minus_bnh = -bnh
    end select
 !  bnh now free
 
