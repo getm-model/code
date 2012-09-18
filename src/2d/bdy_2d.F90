@@ -523,6 +523,8 @@
          bdy2d_active = .true.
       case (CLAMPED_VEL)
          bdy2d_active = .true.
+      case default
+         bdy2d_active = .false.
    end select
 
    return
@@ -566,6 +568,8 @@
       case (FLATHER_VEL)
          bdy2d_need_elev = .true.
       case (CLAMPED_VEL)
+         bdy2d_need_elev = .false.
+      case default
          bdy2d_need_elev = .false.
    end select
 
@@ -611,6 +615,8 @@
          bdy2d_need_vel = .true.
       case (CLAMPED_VEL)
          bdy2d_need_vel = .true.
+      case default
+         bdy2d_need_vel = .false.
    end select
 
    return
