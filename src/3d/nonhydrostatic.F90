@@ -173,17 +173,17 @@
                LEVEL4 'weight = ',real(bnh_weight)
                if (_ZERO_ .lt. bnh_weight .and. bnh_weight .lt. _ONE_) then
                   LEVEL4 'eff. 99% nh timestep = ',&
-                     real(ceiling(log(_ONE_-0.99d0)/log(_ONE_-bnh_weight)/dfloat(nonhyd_iters))*dt)
+                     real(ceiling(log(_ONE_-0.99d0)/log(_ONE_-bnh_weight)/real(nonhyd_iters,kind=REAL_SIZE))*dt)
                   LEVEL4 'eff. 67% nh timestep = ',&
-                     real(ceiling(log(_ONE_-0.67d0)/log(_ONE_-bnh_weight)/dfloat(nonhyd_iters))*dt)
+                     real(ceiling(log(_ONE_-0.67d0)/log(_ONE_-bnh_weight)/real(nonhyd_iters,kind=REAL_SIZE))*dt)
                   LEVEL4 'eff. 50% nh timestep = ',&
-                     real(ceiling(log(_ONE_-_HALF_)/log(_ONE_-bnh_weight)/dfloat(nonhyd_iters))*dt)
+                     real(ceiling(log(_ONE_-_HALF_)/log(_ONE_-bnh_weight)/real(nonhyd_iters,kind=REAL_SIZE))*dt)
                end if
             case(4)
                LEVEL3 'moving average over iterative stages'
             case(5)
                LEVEL3 'ramping filter over iterative stages'
-               bnh_weight = _ONE_/dfloat(nonhyd_iters)
+               bnh_weight = _ONE_/real(nonhyd_iters,kind=REAL_SIZE)
             case default
                call getm_error("init_nonhydrostatic()", &
                                "no valid bnh_filter specified")
@@ -362,7 +362,7 @@
          if (nonhyd_loop .eq. 1) then
             minus_bnh = _ZERO_
          end if
-         bnh_weight = _ONE_/dfloat(nonhyd_loop)
+         bnh_weight = _ONE_/real(nonhyd_loop,kind=REAL_SIZE)
          minus_bnh = -bnh_weight*bnh + (_ONE_- bnh_weight)*minus_bnh ! gives 100% weight for first loop
       case (5)
          if (nonhyd_loop .eq. 1) then
