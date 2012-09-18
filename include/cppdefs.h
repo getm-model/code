@@ -116,9 +116,6 @@
 #define READING 0
 #define WRITING 1
 
-! To avoid dividing by zero
-#define SMALL 1e-8
-
 ! What precision will we use in this compilation
 #define SINGLE
 #undef  SINGLE
@@ -126,6 +123,7 @@
 #ifdef SINGLE
 #define REAL_SIZE 4
 #define REALTYPE real(kind=4)
+#define SMALL 1e-8
 #define _ZERO_  0.0
 #define _TENTH_ 0.1
 #define _QUART_ 0.25
@@ -137,6 +135,7 @@
 #define REAL_SIZE 8
 #define REALTYPE real(kind=8)
 #define MPI_REALTYPE MPI_DOUBLE_PRECISION
+#define SMALL 1d-8
 #define _ZERO_  0.0d0
 #define _TENTH_ 0.1d0
 #define _QUART_ 0.25d0
