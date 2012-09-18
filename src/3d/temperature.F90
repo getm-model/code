@@ -404,8 +404,12 @@ temp_field_no=1
       call wait_halo(D_TAG)
       call toc(TIM_TEMPH)
 
-      call tracer_diffusion(T,hn,temp_AH_method,temp_AH_const,temp_AH_Prt,temp_AH_stirr_const, &
-                            phymix3d_T)
+      if (do_numerical_analyses) then
+         call tracer_diffusion(T,hn,temp_AH_method,temp_AH_const,temp_AH_Prt,temp_AH_stirr_const, &
+                               phymix3d_T)
+      else
+         call tracer_diffusion(T,hn,temp_AH_method,temp_AH_const,temp_AH_Prt,temp_AH_stirr_const)
+      end if
    end if
 
    if (do_numerical_analyses) then
