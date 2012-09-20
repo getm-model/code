@@ -519,6 +519,9 @@
 			<bnh_weight>
 				1.0
 			</bnh_weight>
+			<sbnh_filter>
+				False
+			</sbnh_filter>
 		</nonhyd>
 		<les>
 			<les_method>

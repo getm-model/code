@@ -486,7 +486,7 @@
    if (.not. hotstart) then
 #ifndef NO_BAROTROPIC
       if (.not. no_2d) then
-         call slow_terms()
+         call slow_terms(runtype)
       end if
 #endif
    end if
@@ -700,7 +700,7 @@
 
 #ifndef NO_BAROTROPIC
    if (.not. no_2d) then
-      call slow_terms()
+      call slow_terms(runtype)
    end if
 #endif
 

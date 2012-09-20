@@ -792,6 +792,7 @@
 					<condition type="eq" variable="./bnh_filter" value="3"/>
 				</condition>
 			</element>
+			<element name="sbnh_filter" type="bool" label="spatial filtering of nh slow terms"/>
 		</element>
 
 		<element name="les" label="variables related to LES">

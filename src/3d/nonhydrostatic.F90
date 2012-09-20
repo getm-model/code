@@ -105,10 +105,11 @@
    public init_nonhydrostatic, do_nonhydrostatic
 
    integer,public  :: nonhyd_method=0
-   logical,public  :: calc_hs2d=.false.
+   logical,public  :: calc_hs2d=.true.
    integer,public  :: nonhyd_iters=1
    integer,public  :: bnh_filter=0
    REALTYPE,public :: bnh_weight=_ONE_
+   logical,public  :: sbnh_filter=.false.
 !
 ! !PRIVATE DATA MEMBERS:
    REALTYPE        :: dtm1
@@ -143,7 +144,7 @@
 ! !LOCAL VARIABLES:
    integer                     :: rc
    namelist /nonhyd/ &
-            calc_hs2d,nonhyd_iters,bnh_filter,bnh_weight
+            calc_hs2d,nonhyd_iters,bnh_filter,bnh_weight,sbnh_filter
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -160,6 +161,7 @@
       case (-1)
          LEVEL3 'passive screening of nonhydrostatic effects'
       case (1)
+         calc_hs2d = .false.
          read(NAMLST,nonhyd)
          if (calc_hs2d) then
             LEVEL3 'exclude nh pressure gradient from slow terms'
@@ -192,6 +194,9 @@
                call getm_error("init_nonhydrostatic()", &
                                "no valid bnh_filter specified")
          end select
+         if (sbnh_filter) then
+            LEVEL3 'apply spatial filter to nh slow terms'
+         end if
       case default
          call getm_error("init_nonhydrostatic()", &
                          "no valid nonhyd_method specified")
