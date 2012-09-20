@@ -21,14 +21,13 @@
 !  and are linked in from the library {\tt lib3d.a}.
 !  After the simulation, the module is closed in {\tt clean\_3d}, see
 !  section \ref{sec-clean-3d} on page \pageref{sec-clean-3d}.
-!
 ! !USES:
    use exceptions
-   use domain, only: openbdy,maxdepth,vert_cord,az
+   use domain, only: have_boundaries,maxdepth,vert_cord,az
    use les, only: do_les_3d
    use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
    use m2d, only: bottom_friction
-   use m2d, only: no_2d,deformCX,deformUV,Am_method,AM_LES
+   use m2d, only: no_2d,deformC,deformX,deformUV,Am_method,AM_LES
    use variables_2d, only: z
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
@@ -44,6 +43,7 @@
    use advection, only: NOADV
    use advection_3d, only: init_advection_3d,print_adv_settings_3d,adv_ver_iterations
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
+   use bdy_3d, only: bdyfile_3d,bdyfmt_3d,bdyramp_3d,bdy3d_sponge_size
    use bdy_3d, only: bdy3d_tmrlx, bdy3d_tmrlx_ucut, bdy3d_tmrlx_max, bdy3d_tmrlx_min
 !  Necessary to use halo_zones because update_3d_halos() have been moved out
 !  temperature.F90 and salinity.F90 - should be changed at a later stage
@@ -62,12 +62,10 @@
    logical                             :: calc_salt=.true.
    logical                             :: calc_stirr=.false.
    logical                             :: bdy3d=.false.
-   integer                             :: bdyfmt_3d,bdyramp_3d
-   character(len=PATH_MAX)             :: bdyfile_3d
    REALTYPE                            :: ip_fac=_ONE_
    integer                             :: vel_check=0
    REALTYPE                            :: min_vel=-4*_ONE_,max_vel=4*_ONE_
-   logical                             :: deformCX_3d=.false.,deformUV_3d=.false.
+   logical                             :: deformC_3d=.false.,deformX_3d=.false.,deformUV_3d=.false.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -121,6 +119,7 @@
    NAMELIST /m3d/ &
              M,cnpar,cord_relax,adv_ver_iterations,       &
              bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,       &
+             bdy3d_sponge_size,                           &
              bdy3d_tmrlx,bdy3d_tmrlx_ucut,                &
              bdy3d_tmrlx_max,bdy3d_tmrlx_min,             &
              vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver, &
@@ -149,7 +148,8 @@
    end if
    calc_ip = (runtype.ge.3 .or. nonhyd_method.eq.1)
 
-   deformCX_3d=deformCX
+   deformC_3d =deformC
+   deformX_3d =deformX
    deformUV_3d=deformUV
 
    LEVEL2 "splitting factor M: ",M
@@ -184,31 +184,6 @@
    end if
 #endif
    call print_adv_settings_3d(vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_)
-
-!  Sanity checks for bdy 3d
-   if (.not.openbdy .or. runtype.eq.2) bdy3d=.false.
-   if (bdy3d .and. runtype.eq.3) then
-      LEVEL2 'disable OBC for temp and salt in runtype=3'
-      bdy3d = .false.
-   end if
-   if (bdy3d) then
-      call init_bdy_3d()
-      if (bdy3d_tmrlx) then
-         LEVEL2 'bdy3d_tmrlx=.true.'
-         LEVEL2 'bdy3d_tmrlx_max=   ',bdy3d_tmrlx_max
-         LEVEL2 'bdy3d_tmrlx_min=   ',bdy3d_tmrlx_min
-         LEVEL2 'bdy3d_tmrlx_ucut=  ',bdy3d_tmrlx_ucut
-         if (bdy3d_tmrlx_min<_ZERO_ .or. bdy3d_tmrlx_min>_ONE_)          &
-              call getm_error("init_3d()",                               &
-              "bdy3d_tmrlx_min is out of valid range [0:1]")
-         if (bdy3d_tmrlx_max<bdy3d_tmrlx_min .or. bdy3d_tmrlx_min>_ONE_) &
-              call getm_error("init_3d()",                               &
-              "bdy3d_tmrlx_max is out of valid range [bdy3d_tmrlx_max:1]")
-         if (bdy3d_tmrlx_ucut<_ZERO_)                                    &
-              call getm_error("init_3d()",                               &
-              "bdy3d_tmrlx_max is out of valid range [0:inf[")
-      end if
-   end if
 
    LEVEL2 'vel_check=',vel_check
    if (vel_check .ne. 0) then
@@ -278,7 +253,8 @@
       if (calc_temp) then
          select case(temp_AH_method)
             case(2)
-               deformCX_3d=.true.
+               deformC_3d =.true.
+               deformX_3d =.true.
                deformUV_3d=.true.
                if (Am_method .eq. AM_LES) then
                   les_mode = LES_BOTH
@@ -286,7 +262,8 @@
                   les_mode = LES_TRACER
                end if
             case(3)
-               deformCX_3d=.true.
+               deformC_3d =.true.
+               deformX_3d =.true.
                deformUV_3d=.true.
                calc_stirr=.true.
          end select
@@ -294,7 +271,8 @@
       if (calc_salt) then
          select case(salt_AH_method)
             case(2)
-               deformCX_3d=.true.
+               deformC_3d =.true.
+               deformX_3d =.true.
                deformUV_3d=.true.
                if (Am_method .eq. AM_LES) then
                   les_mode = LES_BOTH
@@ -302,66 +280,73 @@
                   les_mode = LES_TRACER
                end if
             case(3)
-               deformCX_3d=.true.
+               deformC_3d =.true.
+               deformX_3d =.true.
                deformUV_3d=.true.
                calc_stirr=.true.
          end select
       end if
-      if (calc_stirr) then
-         allocate(diffxx(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_3d: Error allocating memory (diffxx)'
-         diffxx=_ZERO_
-
-#ifndef SLICE_MODEL
-         allocate(diffxy(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_3d: Error allocating memory (diffxy)'
-         diffxy=_ZERO_
-
-         allocate(diffyx(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_3d: Error allocating memory (diffyx)'
-         diffyx=_ZERO_
-
-         allocate(diffyy(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_3d: Error allocating memory (diffyy)'
-         diffyy=_ZERO_
-#endif
-      end if
    end if
 #endif
 
-   if (deformCX_3d) then
+   if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
 
+   if (have_boundaries) then
+      call init_bdy_3d(bdy3d,runtype,hotstart)
+   else
+      bdy3d = .false.
+   end if
+
+   if (deformC_3d) then
       allocate(dudxC_3d(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (dudxC_3d)'
       dudxC_3d=_ZERO_
-
 #ifndef SLICE_MODEL
       allocate(dvdyC_3d(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyC_3d)'
       dvdyC_3d=_ZERO_
 #endif
-
+   end if
+   if (deformX_3d) then
       allocate(shearX_3d(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (shearX_3d)'
       shearX_3d=_ZERO_
-
-      if (deformUV_3d) then
-         allocate(dudxV_3d(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_3d: Error allocating memory (dudxV_3d)'
-         dudxV_3d=_ZERO_
+   end if
+   if (deformUV_3d) then
+      allocate(dudxV_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (dudxV_3d)'
+      dudxV_3d=_ZERO_
 
 #ifndef SLICE_MODEL
-         allocate(dvdyU_3d(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_3d: Error allocating memory (dvdyU_3d)'
-         dvdyU_3d=_ZERO_
+      allocate(dvdyU_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (dvdyU_3d)'
+      dvdyU_3d=_ZERO_
 #endif
 
-         allocate(shearU_3d(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_3d: Error allocating memory (shearU_3d)'
-         shearU_3d=_ZERO_
-      end if
-
+      allocate(shearU_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (shearU_3d)'
+      shearU_3d=_ZERO_
    end if
+   if (calc_stirr) then
+      allocate(diffxx(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (diffxx)'
+      diffxx=_ZERO_
+
+#ifndef SLICE_MODEL
+      allocate(diffxy(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (diffxy)'
+      diffxy=_ZERO_
+
+      allocate(diffyx(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (diffyx)'
+      diffyx=_ZERO_
+
+      allocate(diffyy(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (diffyy)'
+      diffyy=_ZERO_
+#endif
+   end if
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_3d()'
@@ -689,7 +674,7 @@
 !     operates on individual fields and not as is the case now - on both
 !     T and S.
       call tic(TIM_INTEGR3D)
-      if (bdy3d) call do_bdy_3d(0,T)
+      if (have_boundaries) call do_bdy_3d(0,T)
       if (calc_temp) then
          call tic(TIM_TEMPH)
          call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)

@@ -166,7 +166,7 @@
    use domain, only: dx,dy,ard1
 #endif
    use variables_2d, only: AnC,AnX
-   use m2d, only: Am_method,Am_const,AM_CONSTANT,AM_LES,An_const
+   use m2d, only: Am_method,Am_const,AM_LAPLACE,AM_LES,AM_CONSTANT,An_const
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -227,10 +227,12 @@
          work2d(i,j)=_ZERO_
          if (az(i,j) .eq. 1) then
             select case(Am_method)
-               case(AM_CONSTANT)
-                  work2d(i,j)=_TWO_*Am_const*DYC*D(i,j)*dudxC(i,j)
+               case(AM_LAPLACE)
+                  work2d(i,j)=Am_const*DYC*D(i,j)*dudxC(i,j)
                case(AM_LES)
                   work2d(i,j)=_TWO_*AmC(i,j)*DYC*D(i,j)*dudxC(i,j)
+               case(AM_CONSTANT)
+                  work2d(i,j)=_TWO_*Am_const*DYC*D(i,j)*dudxC(i,j)
             end select
             select case(An_method)
                case(1)
@@ -256,133 +258,139 @@
 #endif
 !$OMP END DO
 
+
+   if (An_method.gt.0 .or. Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
+
 #ifndef SLICE_MODEL
-!  Central for dy(Am*(dy(U/DU)+dx(V/DV)))
+!     Central for dy(Am*(dy(U/DU)+dx(V/DV)))
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-1,jmax        ! work2d defined on X-points
-      do i=imin,imax
-         work2d(i,j)=_ZERO_
-         if (ax(i,j) .ge. 1) then
-            select case(Am_method)
-               case (AM_CONSTANT)
-                  work2d(i,j)=Am_const*DXX*_HALF_*(DU(i,j)+DU(i,j+1))*shearX(i,j)
-               case (AM_LES)
-                  work2d(i,j)=AmX(i,j)*DXX*_HALF_*(DU(i,j)+DU(i,j+1))*shearX(i,j)
-            end select
-            select case(An_method)
-!              Note (KK): outflow condition must be fulfilled !
-!                         (use of mirrored transports or use of dudyX
-!                          from deformation_rates, otherwise extended condition)
-!                         at N/S closed boundaries slip condition dudyX=0
-               case(1)
-                  work2d(i,j)=work2d(i,j)+An_const*DXX*(U(i,j+1)-U(i,j))/DYX
-               case(2)
-                  if (AnX(i,j) .gt. _ZERO_) then
-                     work2d(i,j)=work2d(i,j)+AnX(i,j)*DXX*(U(i,j+1)-U(i,j))/DYX
-                  end if
-            end select
+      do j=jmin-1,jmax        ! work2d defined on X-points
+         do i=imin,imax
+            work2d(i,j)=_ZERO_
+            if (ax(i,j) .ge. 1) then
+               select case(Am_method)
+                  case (AM_CONSTANT)
+                     work2d(i,j)=Am_const*DXX*_HALF_*(DU(i,j)+DU(i,j+1))*shearX(i,j)
+                  case (AM_LES)
+                     work2d(i,j)=AmX(i,j)*DXX*_HALF_*(DU(i,j)+DU(i,j+1))*shearX(i,j)
+               end select
+               select case(An_method)
+!                 Note (KK): outflow condition must be fulfilled !
+!                            (use of mirrored transports or use of dudyX
+!                             from deformation_rates, otherwise extended condition)
+!                            at N/S closed boundaries slip condition dudyX=0
+                  case(1)
+                     work2d(i,j)=work2d(i,j)+An_const*DXX*(U(i,j+1)-U(i,j))/DYX
+                  case(2)
+                     if (AnX(i,j) .gt. _ZERO_) then
+                        work2d(i,j)=work2d(i,j)+AnX(i,j)*DXX*(U(i,j+1)-U(i,j))/DYX
+                     end if
+               end select
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-        else if (av(i,j).eq.0 .and. av(i+1,j).eq.0) then
-!           Note (KK): exclude convex corners (shearX=0)
-!                      exclude W/E closed boundaries (not needed)
-            if (au(i,j) .eq. 1) then ! northern closed boundary
-               select case(Am_method)
-                  case (AM_CONSTANT)
-                     work2d(i,j)=Am_const*DXX*DU(i,j)*shearX(i,j)
-                  case (AM_LES)
-                     work2d(i,j)=AmX(i,j)*DXX*DU(i,j)*shearX(i,j)
-               end select
-            end if
-            if (au(i,j+1) .eq. 1) then ! southern closed boundary
-               select case(Am_method)
-                  case (AM_CONSTANT)
-                     work2d(i,j)=Am_const*DXX*DU(i,j+1)*shearX(i,j)
-                  case (AM_LES)
-                     work2d(i,j)=AmX(i,j)*DXX*DU(i,j+1)*shearX(i,j)
-               end select
-            end if
+           else if (av(i,j).eq.0 .and. av(i+1,j).eq.0) then
+!              Note (KK): exclude convex corners (shearX=0)
+!                         exclude W/E closed boundaries (not needed)
+               if (au(i,j) .eq. 1) then ! northern closed boundary
+                  select case(Am_method)
+                     case (AM_CONSTANT)
+                        work2d(i,j)=Am_const*DXX*DU(i,j)*shearX(i,j)
+                     case (AM_LES)
+                        work2d(i,j)=AmX(i,j)*DXX*DU(i,j)*shearX(i,j)
+                  end select
+               end if
+               if (au(i,j+1) .eq. 1) then ! southern closed boundary
+                  select case(Am_method)
+                     case (AM_CONSTANT)
+                        work2d(i,j)=Am_const*DXX*DU(i,j+1)*shearX(i,j)
+                     case (AM_LES)
+                        work2d(i,j)=AmX(i,j)*DXX*DU(i,j+1)*shearX(i,j)
+                  end select
+               end if
 #endif
 #endif
-         end if
+            end if
+         end do
       end do
-   end do
 !$OMP END DO
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax        !UEx defined on U-points
-      do i=imin,imax
-         if (au(i,j).eq.1 .or. au(i,j).eq.2) then
-            UEx(i,j)=UEx(i,j)-(work2d(i,j  )-work2d(i,j-1))*ARUD1
-         end if
+      do j=jmin,jmax        !UEx defined on U-points
+         do i=imin,imax
+            if (au(i,j).eq.1 .or. au(i,j).eq.2) then
+               UEx(i,j)=UEx(i,j)-(work2d(i,j  )-work2d(i,j-1))*ARUD1
+            end if
+         end do
       end do
-   end do
 !$OMP END DO
 #endif
 
-!  Central for dx(Am*(dy(U/DU)+dx(V/DV)))
+!     Central for dx(Am*(dy(U/DU)+dx(V/DV)))
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
-   do j=jmin,jmax
+      do j=jmin,jmax
 #endif
-      do i=imin-1,imax      ! work2d defined on X-points
-         work2d(i,j)=_ZERO_
-         if (ax(i,j) .ge. 1) then
-            select case(Am_method)
-               case (AM_CONSTANT)
-                  work2d(i,j)=Am_const*DYX*_HALF_*(DV(i,j)+DV(i+1,j))*shearX(i,j)
-               case (AM_LES)
-                  work2d(i,j)=AmX(i,j)*DYX*_HALF_*(DV(i,j)+DV(i+1,j))*shearX(i,j)
-            end select
-            select case(An_method)
-!              Note (KK): outflow condition must be fulfilled !
-!                         (use of mirrored transports or use of dvdxX
-!                          from deformation_rates, otherwise extended condition)
-!                         at W/E closed boundaries slip condition dvdxX=0
-               case(1)
-                  work2d(i,j)=work2d(i,j)+An_const*DYX*(V(i+1,j)-V(i,j))/DXX
-               case(2)
-                  if (AnX(i,j) .gt. _ZERO_) then
-                     work2d(i,j)=work2d(i,j)+AnX(i,j)*DYX*(V(i+1,j)-V(i,j))/DXX
-                  end if
-            end select
+         do i=imin-1,imax      ! work2d defined on X-points
+            work2d(i,j)=_ZERO_
+            if (ax(i,j) .ge. 1) then
+               select case(Am_method)
+                  case (AM_CONSTANT)
+                     work2d(i,j)=Am_const*DYX*_HALF_*(DV(i,j)+DV(i+1,j))*shearX(i,j)
+                  case (AM_LES)
+                     work2d(i,j)=AmX(i,j)*DYX*_HALF_*(DV(i,j)+DV(i+1,j))*shearX(i,j)
+               end select
+               select case(An_method)
+!                 Note (KK): outflow condition must be fulfilled !
+!                            (use of mirrored transports or use of dvdxX
+!                             from deformation_rates, otherwise extended condition)
+!                            at W/E closed boundaries slip condition dvdxX=0
+                  case(1)
+                     work2d(i,j)=work2d(i,j)+An_const*DYX*(V(i+1,j)-V(i,j))/DXX
+                  case(2)
+                     if (AnX(i,j) .gt. _ZERO_) then
+                        work2d(i,j)=work2d(i,j)+AnX(i,j)*DYX*(V(i+1,j)-V(i,j))/DXX
+                     end if
+               end select
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-        else if (au(i,j).eq.0 .and. au(i,j+1).eq.0) then
-!           Note (KK): exclude convex corners (shearX=0)
-!                      exclude N/S closed boundaries (not needed)
-            if (av(i,j) .eq. 1) then ! eastern closed boundary
-               select case(Am_method)
-                  case (AM_CONSTANT)
-                     work2d(i,j)=Am_const*DXX*DV(i,j)*shearX(i,j)
-                  case (AM_LES)
-                     work2d(i,j)=AmX(i,j)*DXX*DV(i,j)*shearX(i,j)
-               end select
-            end if
-            if (av(i+1,j) .eq. 1) then ! western closed boundary
-               select case(Am_method)
-                  case (AM_CONSTANT)
-                     work2d(i,j)=Am_const*DXX*DV(i+1,j)*shearX(i,j)
-                  case (AM_LES)
-                     work2d(i,j)=AmX(i,j)*DXX*DV(i+1,j)*shearX(i,j)
-               end select
-            end if
+           else if (au(i,j).eq.0 .and. au(i,j+1).eq.0) then
+!              Note (KK): exclude convex corners (shearX=0)
+!                         exclude N/S closed boundaries (not needed)
+               if (av(i,j) .eq. 1) then ! eastern closed boundary
+                  select case(Am_method)
+                     case (AM_CONSTANT)
+                        work2d(i,j)=Am_const*DXX*DV(i,j)*shearX(i,j)
+                     case (AM_LES)
+                        work2d(i,j)=AmX(i,j)*DXX*DV(i,j)*shearX(i,j)
+                  end select
+               end if
+               if (av(i+1,j) .eq. 1) then ! western closed boundary
+                  select case(Am_method)
+                     case (AM_CONSTANT)
+                        work2d(i,j)=Am_const*DXX*DV(i+1,j)*shearX(i,j)
+                     case (AM_LES)
+                        work2d(i,j)=AmX(i,j)*DXX*DV(i+1,j)*shearX(i,j)
+                  end select
+               end if
 #endif
 #endif
-         end if
-      end do
+            end if
+         end do
 #ifdef SLICE_MODEL
 !$OMP END DO
 !$OMP DO SCHEDULE(RUNTIME)
 #endif
-      do i=imin,imax          ! VEx defined on V-points
-         if (av(i,j).eq.1 .or. av(i,j).eq.2) then
-            VEx(i,j)=VEx(i,j)-(work2d(i  ,j)-work2d(i-1,j))*ARVD1
-         end if
-      end do
+         do i=imin,imax          ! VEx defined on V-points
+            if (av(i,j).eq.1 .or. av(i,j).eq.2) then
+               VEx(i,j)=VEx(i,j)-(work2d(i  ,j)-work2d(i-1,j))*ARVD1
+            end if
+         end do
 #ifndef SLICE_MODEL
-   end do
+      end do
 #endif
 !$OMP END DO
+
+   end if
+
 
 #ifndef SLICE_MODEL
 !  Central for dy(2*Am*dy(V/DV))
@@ -392,10 +400,12 @@
          work2d(i,j)=_ZERO_
          if (az(i,j) .eq. 1) then
             select case(Am_method)
-               case (AM_CONSTANT)
-                  work2d(i,j)=_TWO_*Am_const*DXC*D(i,j)*dvdyC(i,j)
+               case (AM_LAPLACE)
+                  work2d(i,j)=Am_const*DXC*D(i,j)*dvdyC(i,j)
                case (AM_LES)
                   work2d(i,j)=_TWO_*AmC(i,j)*DXC*D(i,j)*dvdyC(i,j)
+               case (AM_CONSTANT)
+                  work2d(i,j)=_TWO_*Am_const*DXC*D(i,j)*dvdyC(i,j)
             end select
             select case(An_method)
                case(1)

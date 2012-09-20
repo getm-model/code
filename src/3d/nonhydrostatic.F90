@@ -177,17 +177,17 @@
                LEVEL4 'weight = ',real(bnh_weight)
                if (_ZERO_ .lt. bnh_weight .and. bnh_weight .lt. _ONE_) then
                   LEVEL4 'eff. 99% nh timestep = ',&
-                     real(ceiling(log(_ONE_-0.99d0)/log(_ONE_-bnh_weight)/dfloat(nonhyd_iters))*dt)
+                     real(ceiling(log(_ONE_-0.99d0)/log(_ONE_-bnh_weight)/real(nonhyd_iters,kind=REAL_SIZE))*dt)
                   LEVEL4 'eff. 67% nh timestep = ',&
-                     real(ceiling(log(_ONE_-0.67d0)/log(_ONE_-bnh_weight)/dfloat(nonhyd_iters))*dt)
+                     real(ceiling(log(_ONE_-0.67d0)/log(_ONE_-bnh_weight)/real(nonhyd_iters,kind=REAL_SIZE))*dt)
                   LEVEL4 'eff. 50% nh timestep = ',&
-                     real(ceiling(log(_ONE_-_HALF_)/log(_ONE_-bnh_weight)/dfloat(nonhyd_iters))*dt)
+                     real(ceiling(log(_ONE_-_HALF_)/log(_ONE_-bnh_weight)/real(nonhyd_iters,kind=REAL_SIZE))*dt)
                end if
             case(4)
                LEVEL3 'moving average over iterative stages'
             case(5)
                LEVEL3 'ramping filter over iterative stages'
-               bnh_weight = _ONE_/dfloat(nonhyd_iters)
+               bnh_weight = _ONE_/real(nonhyd_iters,kind=REAL_SIZE)
             case default
                call getm_error("init_nonhydrostatic()", &
                                "no valid bnh_filter specified")
@@ -214,6 +214,7 @@
          allocate(vv_0(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'init_nonhydrostatic: Error allocating memory (vv_0)'
 
+#ifndef MUDFLAT
          allocate(ho_0(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'init_nonhydrostatic: Error allocating memory (ho_0)'
 
@@ -231,6 +232,7 @@
 
          allocate(hvn_0(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'init_nonhydrostatic: Error allocating memory (hvn_0)'
+#endif
       end if
 
       dtm1=_ONE_/dt
@@ -262,7 +264,7 @@
    integer,intent(in)           :: nonhyd_loop,vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver
 !
 ! !LOCAL VARIABLES:
-   REALTYPE,dimension(I3DFIELD) :: wc,bnh,fadv3d
+   REALTYPE,dimension(I3DFIELD) :: hwc,wc,bnh,fadv3d
    integer                      :: i,j,k
 !EOP
 !-----------------------------------------------------------------------
@@ -277,7 +279,9 @@
 #endif
    call tic(TIM_NONHYD)
 
-!  calculate wc(n+1/2) (result to wc)
+   hwc = _HALF_*(ho + hn)
+
+!  calculate wc
    call tow(imin,jmin,imax,jmax,kmin,kmax,az,dt,                 &
 #if defined(CURVILINEAR) || defined(SPHERICAL)
             dxv,dyu,arcd1,                                       &
@@ -289,96 +293,88 @@
    call update_3d_halo(wc,wc,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 
-!  initialise bnh by advective term [ div(hu*wc) ] (wc still needed!!!)
+!  initialise bnh by advective term
 #ifndef NO_ADVECT
-!  wc(n+1/2) will be advected from h(n+1/2) to h(n+3/2) by transports at (n+1/2) ?
-!  wc(n-1/2) was advected from h(n-1/2) to h(n+1/2) by transports at (n-1/2) ?
-!  wc(n+1/2) will be advected from h(n) to h(n+1) by transports at (n+1/2)
-
-!  wc that will be advected (wc still needed!!!)
    fadv3d = wc
-
-   call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,     &
+   call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,hwc,hwc,   &
                         NOSPLIT,CENTRAL,CENTRAL,_ZERO_,H_TAG, &
                         advres=bnh)
-
    call update_3d_halo(bnh,bnh,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 #else
    bnh = _ZERO_
 #endif
 
-!  add local vertical acceleration (result to bnh, wc still needed!!!)
-!  [del(h*wc)/delt](n) / h(n) ?
-!  bnh = (hwcn*wc - hwco*wco)/ho*dtm1 ?
-!  [del(h*wc)/delt](n+1/2) / h(n+1)
-   bnh = bnh + (hn*wc - ho*wco)*dtm1
-
-!  add vertical viscous terms at (n+1/2) (result to bnh)
-!  KK-TODO: do we really have to add num?
-
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j)                                         &
 !$OMP          PRIVATE(i,k)
-
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO
 #endif
       do i=imin-HALO,imax+HALO
          if ( az(i,j) .ge. 1 ) then
-            bnh(i,j,1) = bnh(i,j,1)                     &
-               - (num(i,j,1) + avmmol)                  &
-                 * (          wc(i,j,2) - wc(i,j,1)   ) &
-                 / ( _HALF_*( hn(i,j,1) + hn(i,j,2) ) )
+
+!           add vertical viscous terms
+!           KK-TODO: do we really have to add num?
+            bnh(i,j,1) = bnh(i,j,1)                       &
+               - (num(i,j,1) + avmmol)                    &
+                 * (           wc(i,j,2) -  wc(i,j,1)   ) &
+                 / ( _HALF_*( hwc(i,j,1) + hwc(i,j,2) ) )
             do k=2,kmax-1
-               bnh(i,j,k) = bnh(i,j,k)                               &
-                  - (                                                &
-                        (num(i,j,k) + avmmol)                        &
-                        * (            wc(i,j,k+1) - wc(i,j,k  )   ) &
-                        / ( _HALF_ * ( hn(i,j,k  ) + hn(i,j,k+1) ) ) &
-                      - (num(i,j,k-1) + avmmol)                      &
-                        * (            wc(i,j,k  ) - wc(i,j,k-1)   ) &
-                        / ( _HALF_ * ( hn(i,j,k-1) + hn(i,j,k  ) ) ) &
+               bnh(i,j,k) = bnh(i,j,k)                                 &
+                  - (                                                  &
+                        (num(i,j,k) + avmmol)                          &
+                        * (             wc(i,j,k+1) -  wc(i,j,k  )   ) &
+                        / ( _HALF_ * ( hwc(i,j,k  ) + hwc(i,j,k+1) ) ) &
+                      - (num(i,j,k-1) + avmmol)                        &
+                        * (             wc(i,j,k  ) -  wc(i,j,k-1)   ) &
+                        / ( _HALF_ * ( hwc(i,j,k-1) + hwc(i,j,k  ) ) ) &
                      )
             end do
-            bnh(i,j,kmax) = bnh(i,j,kmax)                           &
-               - (num(i,j,kmax-1) + avmmol)                         &
-                 * (            wc(i,j,kmax  ) - wc(i,j,kmax-1)   ) &
-                 / ( _HALF_ * ( hn(i,j,kmax-1) + hn(i,j,kmax  ) ) )
+            bnh(i,j,kmax) = bnh(i,j,kmax)                             &
+               - (num(i,j,kmax-1) + avmmol)                           &
+                 * (             wc(i,j,kmax  ) -  wc(i,j,kmax-1)   ) &
+                 / ( _HALF_ * ( hwc(i,j,kmax-1) + hwc(i,j,kmax  ) ) )
+
+!           add local vertical acceleration and divide by layer height
+            wc(i,j,1:kmax) = hwc(i,j,1:kmax)*wc(i,j,1:kmax)
+            bnh(i,j,1:kmax) = (                                          &
+                                 bnh(i,j,1:kmax)                         &
+                               + (wc(i,j,1:kmax) - wco(i,j,1:kmax))*dtm1 &
+                              )/hwc(i,j,1:kmax)
+
          end if
       end do
 #ifndef SLICE_MODEL
    end do
 #endif
 !$OMP END DO
-
 !$OMP END PARALLEL
 
 #ifdef SLICE_MODEL
    bnh(:,j+1,:) = bnh(:,j,:)
 #endif
-!  wc now free
 
 !  filter bnh (result to minus_bnh)
    select case(bnh_filter)
       case (1)
-         minus_bnh = -bnh_weight*bnh/hn
+         minus_bnh = -bnh_weight*bnh
       case (3)
-         minus_bnh = -bnh_weight*bnh/hn + (_ONE_- bnh_weight)*minus_bnh
+         minus_bnh = -bnh_weight*bnh + (_ONE_- bnh_weight)*minus_bnh
       case (4)
          if (nonhyd_loop .eq. 1) then
             minus_bnh = _ZERO_
          end if
-         bnh_weight = _ONE_/dfloat(nonhyd_loop)
-         minus_bnh = -bnh_weight*bnh/hn + (_ONE_- bnh_weight)*minus_bnh ! gives 100% weight for first loop
+         bnh_weight = _ONE_/real(nonhyd_loop,kind=REAL_SIZE)
+         minus_bnh = -bnh_weight*bnh + (_ONE_- bnh_weight)*minus_bnh ! gives 100% weight for first loop
       case (5)
          if (nonhyd_loop .eq. 1) then
             minus_bnh = _ZERO_
          end if
-         minus_bnh = -bnh_weight*bnh/hn + minus_bnh  ! not usable when iteration is prematurely abrupted
+         minus_bnh = -bnh_weight*bnh + minus_bnh  ! not usable when iteration is prematurely abrupted
       case default
-         minus_bnh = -bnh/hn
+         minus_bnh = -bnh
    end select
 !  bnh now free
 

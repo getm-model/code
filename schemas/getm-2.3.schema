@@ -125,7 +125,7 @@
 			<element name="on_grid"    type="bool" label="Are meteo given on grid-points?">
 				<condition type="eq" variable="./metforcing" value="True"/>
 			</element>
-			<element name="calc_met" type="bool" label="Are the fluxes already given?">
+			<element name="calc_met" type="bool" label="Fluxes are not provided and need to be calculated.">
 				<condition type="eq" variable="./metforcing" value="True"/>
 			</element>
 			<element name="met_method" type="int" label="meteo method">
@@ -301,12 +301,16 @@
 			<element name="Am_method" type="int" label="method for horizontal momentum diffusion coefficient">
 				<options>
 					<option value="0" label="disabled"/>
-					<option value="1" label="constant value Am_const"/>
+					<option value="1" label="constant value Am_const (Laplacian diffusion)"/>
 					<option value="2" label="LES parameterisation, see namelist les"/>
+					<option value="3" label="constant value Am_const"/>
 				</options>
 			</element>
 			<element name="Am_const" type="float" label="constant horizontal momentum diffusion coefficient" unit="m²/s">
-				<condition type="eq" variable="./Am_method" value="1"/>
+				<condition type="or">
+					<condition type="eq" variable="./Am_method" value="1"/>
+					<condition type="eq" variable="./Am_method" value="3"/>
+				</condition>
 			</element>
 			<element name="An_method" type="int" label="method for constant horizontal numerical diffusion coefficient (m²/s) used to filter the surface elevation">
 				<options>
@@ -366,6 +370,9 @@
 				<condition type="eq" variable="./bdy3d" value="True"/>
 			</element>
 			<element name="bdyfile_3d" type="string" label="name of file with boundary data">
+				<condition type="eq" variable="./bdy3d" value="True"/>
+			</element>
+			<element name="bdy3d_sponge_size" type="int" label="number of cells inside sponge zone" minInclusive="0">
 				<condition type="eq" variable="./bdy3d" value="True"/>
 			</element>
 			<element name="bdy3d_tmrlx" type="bool" label="temporal 3D boundary relaxation coeff.">

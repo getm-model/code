@@ -53,6 +53,11 @@
    character(len=3)          :: buf
    character(len=16)         :: pid,ext
    character(len=PATH_MAX)   :: fname
+#ifdef _STDERR_DIR_
+   character(len=PATH_MAX)   :: stderr_dir=_STDERR_DIR_
+#else
+   character(len=PATH_MAX)   :: stderr_dir='./'
+#endif
 #endif
 !EOP
 !-------------------------------------------------------------------------
@@ -73,8 +78,13 @@
       else
          pid = ''
       end if
+
       ext   = 'stderr'
-      fname = TRIM(runid) // TRIM(pid) // '.' // ext
+#ifdef _STDERR_DIR_
+      STDERR 'stderr_dir:'
+      STDERR TRIM(stderr_dir)
+#endif
+      fname = TRIM(stderr_dir) // TRIM(runid) // TRIM(pid) // '.' // ext
       open(stderr,file=Fname)
 
       ext   = 'stdout'
