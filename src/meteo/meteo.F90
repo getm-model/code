@@ -338,14 +338,14 @@
 ! !IROUTINE: do_meteo - update the meteo forcing
 !
 ! !INTERFACE:
-   subroutine do_meteo(n,sst)
+   subroutine do_meteo(n,sst_model)
 !$ use omp_lib
 !
 ! !DESCRIPTION:
 !  Should be called once every time step to update the meteorological forcing.
 !  \emph{do\_meteo()} is called with two arguments - n is the loop number and
 !  the sea surface temperature.
-!  The SST is only used in the case where fluxes and stresses are
+!  The modelled SST \emph{sst_model} is only used in the case where fluxes and stresses are
 !  calculated as part of the model simulation.
 !  The forcing can be obtained in 3 different way - using constant values,
 !  using pre-calculated stresses and heat-fluxes or by calculating the
@@ -374,7 +374,7 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    integer, intent(in)                 :: n
-   REALTYPE, optional, intent(inout)   :: sst(I2DFIELD)
+   REALTYPE, optional, intent(inout)   :: sst_model(I2DFIELD)
 !
 ! !REVISION HISTORY:
 !  See module for log.
@@ -448,7 +448,7 @@
             end if
          case (2)
             if(calc_met) then
-               have_sst = present(sst)
+               have_sst = present(sst_model)
                if (new_meteo) then
                   call update_2d_halo(airp,airp,az, &
                                       imin,jmin,imax,jmax,H_TAG)
@@ -477,9 +477,9 @@
                            if (az(i,j) .ge. 1) then
                               call exchange_coefficients( &
                                      u10(i,j),v10(i,j),t2(i,j),airp(i,j), &
-                                     sst(i,j),hum(i,j),hum_method)
+                                     sst_model(i,j),hum(i,j),hum_method)
                               call fluxes(latc(i,j),u10(i,j),v10(i,j),    &
-                                      t2(i,j),tcc(i,j),sst(i,j),precip(i,j), &
+                                      t2(i,j),tcc(i,j),sst_model(i,j),precip(i,j), &
                                       shf(i,j),tausx(i,j),tausy(i,j),evap(i,j))
                            else
 ! BJB-TODO: This part of the if-block could be omitted, if the entire fields
