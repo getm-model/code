@@ -181,6 +181,9 @@
 			<precip_const>
 				0.0
 			</precip_const>
+			<sst_const>
+				-1.0
+			</sst_const>
 			<evap_factor>
 				1.0
 			</evap_factor>
@@ -420,6 +423,9 @@
 			<swr_min_bot_frac>
 				0.01
 			</swr_min_bot_frac>
+			<sst_nudging_time>
+				-1.0
+			</sst_nudging_time>
 			<temp_check>
 				0
 			</temp_check>
