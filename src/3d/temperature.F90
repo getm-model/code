@@ -19,6 +19,7 @@
    use exceptions
    use domain, only: imin,jmin,imax,kmax,jmax,H,az,dry_z
    use variables_3d, only: T,rad,hn,kmin,A,g1,g2
+   use meteo, only: metforcing,met_method,nudge_sst,sst,sst_const
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
    IMPLICIT NONE
 !
@@ -46,6 +47,7 @@
    REALTYPE                  :: A_const=0.58,g1_const=0.35,g2_const=23.0
    REALTYPE                  :: swr_bot_refl_frac=-_ONE_
    REALTYPE                  :: swr_min_bot_frac=0.01
+   REALTYPE                  :: sst_nudging_time=-_ONE_
    integer                   :: temp_check=0
    REALTYPE                  :: min_temp=-2.,max_temp=35.
 !
@@ -85,7 +87,7 @@
    IMPLICIT NONE
 !
 ! !LOCAL VARIABLES:
-   integer                   :: k,i,j,n
+   integer                   :: k,i,j,n,rc
    integer                   :: status
    namelist /temp/ &
             temp_method,temp_const,temp_file,                 &
@@ -96,7 +98,7 @@
             attenuation_method,attenuation_file,jerlov,       &
             A_const,g1_const,g2_const,                        &
             swr_bot_refl_frac, swr_min_bot_frac,              &
-            temp_check,min_temp,max_temp
+            sst_nudging_time,temp_check,min_temp,max_temp
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -194,6 +196,26 @@
       LEVEL3 "reflection of short wave radiation from the bottom:"
       LEVEL4 "swr_bot_refl_frac=",swr_bot_refl_frac
       LEVEL4 "swr_min_bot_frac= ",swr_min_bot_frac
+   end if
+
+   if (metforcing .and. sst_nudging_time.gt._ZERO_) then
+      nudge_sst = .True.
+      LEVEL3 'nudging of SST enabled'
+      LEVEL4 'sst_nudging_time=',real(sst_nudging_time)
+      allocate(sst(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_temperature: Error allocating memory (sst)'
+      select case(met_method)
+         case (1)
+            if (sst_const .gt. _ZERO_) then
+               LEVEL4 'constant sst=',real(sst_const)
+               sst = sst_const
+            else
+               call getm_error("init_temperature()", &
+                               "non-positive sst_const")
+            end if
+         case (2)
+            LEVEL4 'sst read from meteo file'
+      end select
    end if
 
    LEVEL3 'temp_check=',temp_check
@@ -527,6 +549,9 @@ temp_field_no=1
                a2(k)=hn(i,j,k)+auxn(k-1)
                a4(k)=T(i,j,k)*(hn(i,j,k)-auxo(k-1))+T(i,j,k-1)*auxo(k-1)  &
                      +dry_z(i,j)*dt*(rad1d(k)+shf_loc*rho_0_cpi-rad1d(k-1))
+               if (nudge_sst) then
+                  a4(kmax) = a4(kmax) - dry_z(i,j)*dt*hn(i,j,kmax)*(T(i,j,kmax)-sst(i,j))/sst_nudging_time
+               end if
 
 !        Matrix elements for inner layers
                do k=2,kmax-1

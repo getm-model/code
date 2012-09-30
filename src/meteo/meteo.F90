@@ -65,6 +65,9 @@
    REALTYPE, public, dimension(:,:), allocatable  :: airp,tausx,tausy,swr,shf
    REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum,tcc
    REALTYPE, public, dimension(:,:), allocatable, target  :: evap,precip
+   logical, public                           :: nudge_sst=.false.
+   REALTYPE, public, dimension(:,:), pointer :: sst
+   REALTYPE, public                          :: sst_const=-_ONE_
    REALTYPE, public                    :: cd_mom,cd_heat,cd_latent
    REALTYPE, public                    :: cd_precip = _ZERO_
    REALTYPE, public                    :: t_1=-_ONE_,t_2=-_ONE_
@@ -96,6 +99,7 @@
    REALTYPE, dimension(:,:), allocatable :: d_tcc,d_swr,d_shf
    REALTYPE, dimension(:,:), allocatable :: evap_old,precip_old
    REALTYPE, dimension(:,:), allocatable :: d_evap,d_precip
+   REALTYPE, dimension(:,:), pointer     :: sst_new,d_sst
 !EOP
 !-----------------------------------------------------------------------
 
@@ -126,7 +130,7 @@
    namelist /meteo/ metforcing,on_grid,calc_met,met_method,fwf_method, &
                     spinup,metfmt,meteo_file, &
                     tx,ty,swr_const,shf_const,evap_const,precip_const, &
-                    precip_factor,evap_factor
+                    sst_const,precip_factor,evap_factor
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -338,14 +342,14 @@
 ! !IROUTINE: do_meteo - update the meteo forcing
 !
 ! !INTERFACE:
-   subroutine do_meteo(n,sst)
+   subroutine do_meteo(n,sst_model)
 !$ use omp_lib
 !
 ! !DESCRIPTION:
 !  Should be called once every time step to update the meteorological forcing.
 !  \emph{do\_meteo()} is called with two arguments - n is the loop number and
 !  the sea surface temperature.
-!  The SST is only used in the case where fluxes and stresses are
+!  The modelled SST \emph{sst_model} is only used in the case where fluxes and stresses are
 !  calculated as part of the model simulation.
 !  The forcing can be obtained in 3 different way - using constant values,
 !  using pre-calculated stresses and heat-fluxes or by calculating the
@@ -374,21 +378,23 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    integer, intent(in)                 :: n
-   REALTYPE, optional, intent(inout)   :: sst(I2DFIELD)
+   REALTYPE, optional, intent(inout)   :: sst_model(I2DFIELD)
 !
 ! !REVISION HISTORY:
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
    integer, save             :: k=0
-   integer                   :: i,j
+   integer                   :: i,j,rc
    REALTYPE                  :: ramp,hh,t,t_frac
+   REALTYPE, save            :: deltm1
    REALTYPE                  :: short_wave_radiation
    REALTYPE                  :: uu,cosconv,vv,sinconv
    REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029d0
    REALTYPE, parameter       :: deg2rad=pi/180
    logical,save              :: first=.true.
    logical                   :: have_sst
+   REALTYPE, dimension(:,:), pointer :: old
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -405,6 +411,17 @@
 !    is by far the most expensive of the present routine.
 !       BJB 2009-09-30.
    if (metforcing) then
+
+      if (first) then
+         if (nudge_sst) then
+            if (met_method .eq. 2) then
+               allocate(sst_new(E2DFIELD),stat=rc)
+               if (rc /= 0) stop 'do_meteo: Error allocating memory (sst_new)'
+               allocate(d_sst(E2DFIELD),stat=rc)
+               if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sst)'
+            end if
+         end if
+      end if
 
       t = n*timestep
 
@@ -448,7 +465,7 @@
             end if
          case (2)
             if(calc_met) then
-               have_sst = present(sst)
+               have_sst = present(sst_model)
                if (new_meteo) then
                   call update_2d_halo(airp,airp,az, &
                                       imin,jmin,imax,jmax,H_TAG)
@@ -477,9 +494,9 @@
                            if (az(i,j) .ge. 1) then
                               call exchange_coefficients( &
                                      u10(i,j),v10(i,j),t2(i,j),airp(i,j), &
-                                     sst(i,j),hum(i,j),hum_method)
+                                     sst_model(i,j),hum(i,j),hum_method)
                               call fluxes(latc(i,j),u10(i,j),v10(i,j),    &
-                                      t2(i,j),tcc(i,j),sst(i,j),precip(i,j), &
+                                      t2(i,j),tcc(i,j),sst_model(i,j),precip(i,j), &
                                       shf(i,j),tausx(i,j),tausy(i,j),evap(i,j))
                            else
 ! BJB-TODO: This part of the if-block could be omitted, if the entire fields
@@ -618,6 +635,22 @@
 !$OMP END DO
                end if
 !$OMP END PARALLEL
+            end if
+            if (nudge_sst) then
+!              Note (KK): old and new meteo data cannot be read at once
+!                         since they might come from different files.
+!                         Thus only new data is read and new_meteo is set to true.
+!                         first call with sst at t_1, later with sst at t_2
+               if (new_meteo) then
+                  old=>sst_new;sst_new=>sst;sst=>d_sst;d_sst=>old
+                  if (.not. first) then
+                     d_sst = sst_new - old
+                     deltm1 = _ONE_ / (t_2 - t_1)
+                  end if
+               end if
+               if (.not. first) then
+                  sst = sst_new + d_sst*deltm1*(t-t_2)
+               end if
             end if
          case default
             FATAL 'A non valid meteo method has been specified.'
