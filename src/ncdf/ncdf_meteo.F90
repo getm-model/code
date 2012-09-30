@@ -23,6 +23,7 @@
    use meteo, only: tausx,tausy,swr,shf
    use meteo, only: new_meteo,t_1,t_2
    use meteo, only: evap_factor,precip_factor
+   use meteo, only: nudge_sst,sst
    use exceptions
    IMPLICIT NONE
 !
@@ -39,6 +40,7 @@
    integer         :: hum_id,convp_id,largep_id,tcc_id
    integer         :: evap_id=-1,precip_id=-1
    integer         :: tausx_id,tausy_id,swr_id,shf_id
+   integer         :: sst_id=-1
    integer         :: iextr,jextr,textr,tmax=-1
    integer         :: grid_scan=1
    logical         :: point_source=.false.
@@ -80,6 +82,7 @@
    character(len=10)         :: name_tausy="tausy"
    character(len=10)         :: name_swr="swr"
    character(len=10)         :: name_shf="shf"
+   character(len=10)         :: name_sst="sst"
    character(len=128)        :: model_time
 !
 ! !REVISION HISTORY:
@@ -136,15 +139,6 @@
 
    call open_meteo_file(meteo_file)
 
-   if(iextr .eq. 1 .and. jextr .eq. 1) then
-      point_source = .true.
-      LEVEL3 'Assuming Point Source meteo forcing'
-!      if (on_grid .eq. .false. ) then
-         LEVEL3 'Setting on_grid to true'
-         on_grid=.true.
-!      end if
-   end if
-
    if (met_lat(1) .gt. met_lat(2)) then
       LEVEL3 'Reverting lat-axis and setting grid_scan to 0'
       grid_scan = 0
@@ -185,6 +179,10 @@
    end if
 
    if ( .not. on_grid ) then
+
+      if (.not. calc_met) then
+         stop 'init_meteo_input_ncdf: calc_met=false requires on_grid=true'
+      end if
 
       allocate(ti(E2DFIELD),stat=err)
       if (err /= 0) &
@@ -315,6 +313,12 @@
       err = nf90_inq_varid(ncid,name_shf,shf_id)
       if (err .NE. NF90_NOERR) go to 10
 
+   end if
+
+   if (nudge_sst) then
+      name_thisvar = name_sst
+      err = nf90_inq_varid(ncid,name_sst,sst_id)
+      if (err .NE. NF90_NOERR) go to 10
    end if
 
    if (met_method .eq. 2) then
@@ -899,6 +903,25 @@
          end do
       end if
 
+   end if
+
+   if (sst_id .gt. 0) then
+      err = nf90_get_var(ncid,sst_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
+      if (on_grid) then
+         if (point_source) then
+            sst = wrk(1,1)
+         else
+            do j=jmin,jmax
+               do i=imin,imax
+                  sst(i,j) = wrk(i,j)
+               end do
+            end do
+         end if
+      else if (calc_met) then
+         call copy_var(grid_scan,wrk,wrk_dp)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sst)
+      end if
    end if
 
 #ifdef DEBUG
