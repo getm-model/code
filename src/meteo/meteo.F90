@@ -65,6 +65,9 @@
    REALTYPE, public, dimension(:,:), allocatable  :: airp,tausx,tausy,swr,shf
    REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum,tcc
    REALTYPE, public, dimension(:,:), allocatable, target  :: evap,precip
+   logical, public                           :: nudge_sst=.false.
+   REALTYPE, public, dimension(:,:), pointer :: sst,sst_new,d_sst,sst_old
+   REALTYPE, public                          :: sst_const=-_ONE_
    REALTYPE, public                    :: cd_mom,cd_heat,cd_latent
    REALTYPE, public                    :: cd_precip = _ZERO_
    REALTYPE, public                    :: t_1=-_ONE_,t_2=-_ONE_
@@ -126,7 +129,7 @@
    namelist /meteo/ metforcing,on_grid,calc_met,met_method,fwf_method, &
                     spinup,metfmt,meteo_file, &
                     tx,ty,swr_const,shf_const,evap_const,precip_const, &
-                    precip_factor,evap_factor
+                    sst_const,precip_factor,evap_factor
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -381,8 +384,8 @@
 !
 ! !LOCAL VARIABLES:
    integer, save             :: k=0
-   integer                   :: i,j
-   REALTYPE                  :: ramp,hh,t,t_frac
+   integer                   :: i,j,rc
+   REALTYPE                  :: ramp,hh,t,t_frac,deltm1
    REALTYPE                  :: short_wave_radiation
    REALTYPE                  :: uu,cosconv,vv,sinconv
    REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029d0
@@ -405,6 +408,18 @@
 !    is by far the most expensive of the present routine.
 !       BJB 2009-09-30.
    if (metforcing) then
+
+      if (first) then
+         if (nudge_sst) then
+            if (met_method .eq. 2) then
+               allocate(sst_new(E2DFIELD),stat=rc)
+               if (rc /= 0) stop 'do_meteo: Error allocating memory (sst_new)'
+               allocate(d_sst(E2DFIELD),stat=rc)
+               if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sst)'
+               sst_old => d_sst
+            end if
+         end if
+      end if
 
       t = n*timestep
 
@@ -618,6 +633,22 @@
 !$OMP END DO
                end if
 !$OMP END PARALLEL
+            end if
+            if (nudge_sst) then
+!              Note (KK): old and new meteo data cannot be read at once
+!                         since they might come from different files.
+!                         Thus only new data is read and new_meteo is set to true.
+!                         first call with sst at t_1, later with sst at t_2
+               if (new_meteo) then
+                  sst_old=>sst_new;sst_new=>sst;sst=>d_sst;d_sst=>sst_old
+                  if (.not. first) then
+                     d_sst = sst_new - sst_old
+                     deltm1 = _ONE_/(t_2 - t_1)
+                  end if
+               end if
+               if (.not. first) then
+                  sst = sst_new + d_sst*deltm1*(t-t_2)
+               end if
             end if
          case default
             FATAL 'A non valid meteo method has been specified.'
