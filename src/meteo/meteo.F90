@@ -64,9 +64,9 @@
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
    REALTYPE, public, dimension(:,:), allocatable  :: airp,tausx,tausy,swr,shf
    REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum,tcc
-   REALTYPE, public, dimension(:,:), allocatable, target  :: evap,precip
+   REALTYPE, public, dimension(:,:), allocatable, target  :: evap
+   REALTYPE, public, dimension(:,:), pointer :: precip,sst
    logical, public                           :: nudge_sst=.false.
-   REALTYPE, public, dimension(:,:), pointer :: sst
    REALTYPE, public                          :: sst_const=-_ONE_
    REALTYPE, public                    :: cd_mom,cd_heat,cd_latent
    REALTYPE, public                    :: cd_precip = _ZERO_
@@ -97,8 +97,8 @@
    REALTYPE, dimension(:,:), allocatable :: tcc_old,tcc_new
    REALTYPE, dimension(:,:), allocatable :: swr_old,shf_old
    REALTYPE, dimension(:,:), allocatable :: d_tcc,d_swr,d_shf
-   REALTYPE, dimension(:,:), allocatable :: evap_old,precip_old
-   REALTYPE, dimension(:,:), allocatable :: d_evap,d_precip
+   REALTYPE, dimension(:,:), allocatable :: evap_old,d_evap
+   REALTYPE, dimension(:,:), pointer     :: precip_new,d_precip
    REALTYPE, dimension(:,:), pointer     :: sst_new,d_sst
 !EOP
 !-----------------------------------------------------------------------
@@ -318,13 +318,10 @@
       end if
 
       if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-         allocate(precip_old(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_meteo: Error allocating memory (precip_old)'
-         precip_old = _ZERO_
-
+         allocate(precip_new(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (precip_new)'
          allocate(d_precip(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_precip)'
-         d_precip = _ZERO_
       end if
 
    end if
@@ -461,7 +458,6 @@
             shf   = shf_const
             if (fwf_method .eq. 1) then
                evap = evap_const
-               precip = precip_const
             end if
          case (2)
             if(calc_met) then
@@ -478,9 +474,6 @@
                      shf_old = shf
                      if (fwf_method .ge. 2) then
                         evap_old = evap
-                     end if
-                     if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-                        precip_old = precip
                      end if
                   end if
                   airp_new = airp
@@ -506,7 +499,6 @@
                               tausy(i,j) = _ZERO_
                               if (fwf_method .ge. 1) then
                                  evap(i,j) = _ZERO_
-                                 precip(i,j) = _ZERO_
                               end if
                            end if
                         end do
@@ -539,9 +531,6 @@
                      if (fwf_method .ge. 2) then
                         d_evap = evap - evap_old
                      end if
-                     if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-                        d_precip = precip - precip_old
-                     end if
                   end if
                end if
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j, t_frac, hh)
@@ -557,9 +546,6 @@
                         tausy(:,j) = tausy_old(:,j)  + t_frac*d_tausy(:,j)
                         if (fwf_method .ge. 2) then
                            evap(:,j) = evap_old(:,j) + t_frac*d_evap(:,j)
-                        end if
-                        if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-                           precip(:,j) = precip_old(:,j) + t_frac*d_precip(:,j)
                         end if
 !                     end do
                   end do
@@ -589,9 +575,6 @@
                   if (fwf_method .ge. 2) then
                      evap_old = evap
                   end if
-                  if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-                     precip_old = precip
-                  end if
                end if
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j, t_frac)
                if (new_meteo) then
@@ -610,10 +593,6 @@
                         evap_old(:,j) = evap_old(:,j) + d_evap(:,j)
                         d_evap(:,j) = evap(:,j) - evap_old(:,j)
                      end if
-                     if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-                        precip_old(:,j) = precip_old(:,j) + d_precip(:,j)
-                        d_precip(:,j) = precip(:,j) - precip_old(:,j)
-                     end if
                   end do
 !$OMP END DO
                end if
@@ -628,30 +607,47 @@
                      if (fwf_method .ge. 2) then
                         evap(:,j) = evap_old(:,j) + t_frac*d_evap(:,j)
                      end if
-                     if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-                        precip(:,j) = precip_old(:,j) + t_frac*d_precip(:,j)
-                     end if
                   end do
 !$OMP END DO
                end if
 !$OMP END PARALLEL
             end if
+
+
+!           Note (KK): old and new meteo data cannot be read at once
+!                      since they might come from different files.
+!                      Thus only new data is read and new_meteo is set to true.
+!                      first call with sst at t_1, later with sst at t_2
+
+            if (new_meteo) then
+               if (.not. first) then ! for .first. t_1=t_2
+                  deltm1 = _ONE_ / (t_2 - t_1)
+               end if
+            end if
+
+            if (fwf_method.eq.2 .or. fwf_method.eq.3) then
+               if (new_meteo) then
+                  old=>precip_new;precip_new=>precip;precip=>d_precip;d_precip=>old
+                  if (.not. first) then
+                     d_precip = precip_new - old
+                  end if
+               end if
+               if (.not. first) then
+                  precip = precip_new + d_precip*deltm1*(t-t_2)
+               end if
+            end if
             if (nudge_sst) then
-!              Note (KK): old and new meteo data cannot be read at once
-!                         since they might come from different files.
-!                         Thus only new data is read and new_meteo is set to true.
-!                         first call with sst at t_1, later with sst at t_2
                if (new_meteo) then
                   old=>sst_new;sst_new=>sst;sst=>d_sst;d_sst=>old
                   if (.not. first) then
                      d_sst = sst_new - old
-                     deltm1 = _ONE_ / (t_2 - t_1)
                   end if
                end if
                if (.not. first) then
                   sst = sst_new + d_sst*deltm1*(t-t_2)
                end if
             end if
+
          case default
             FATAL 'A non valid meteo method has been specified.'
             stop 'do_meteo'
