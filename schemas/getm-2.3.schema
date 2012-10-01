@@ -612,7 +612,7 @@
 			<element name="swr_min_bot_frac" type="float" minInclusive="0.0" maxInclusive="1." label="only do reflection if bottom/surface SWR is .gt. this value"  description="Only do reflection if the ratio of bottom to surface SWR is greater than this variable. Only used if swr_bot_refl_frac is greater than 0. Default is 0.01.">
 				<condition type="ne" variable="./swr_bot_refl_frac" value="0"/>
 			</element>
-			<element name="sst_nudging_time" type="float" minExclusive="0.0" label="nudging time for sst">
+			<element name="sst_nudging_time" type="float" minExclusive="0.0" label="nudging time for sst" unit="s">
 				<condition type="eq" variable="../meteo/metforcing" value="True"/>
 			</element>
 			<element name="temp_check" type="int" label="interval between checks for out-of-bounds temperatures" description="Interval between checks for out-of-bounds temperatures. 0: disabled, &gt;0: check every temp_check step, abort if check fails, &lt;0: check every abs(temp_check) step, warn if check fails"/>
