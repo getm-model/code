@@ -23,8 +23,7 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: yday
-   REALTYPE, intent(inout)             :: hour
-   REALTYPE, intent(in)                :: lat,lon,tcc
+   REALTYPE, intent(in)                :: hour,lat,lon,tcc
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding and Hans Burchard
