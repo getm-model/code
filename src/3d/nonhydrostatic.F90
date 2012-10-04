@@ -91,7 +91,7 @@
    use variables_3d, only: minus_bnh,wco
    use variables_3d, only: uu_0,vv_0,ho_0,hn_0,huo_0,hun_0,hvo_0,hvn_0
    use variables_3d, only: dt,uu,vv,ww,ho,hn,hun,hvn,num
-   use m2d, only: avmmol
+   use m2d, only: no_2d,avmmol
 #ifndef NO_ADVECT
    use advection, only: NOSPLIT,CENTRAL
    use advection_3d, only: do_advection_3d
@@ -163,9 +163,6 @@
       case (1)
          calc_hs2d = .false.
          read(NAMLST,nonhyd)
-         if (calc_hs2d) then
-            LEVEL3 'exclude nh pressure gradient from slow terms'
-         end if
          if (nonhyd_iters .le. 0) nonhyd_iters=1
          LEVEL3 'number of iterations = ',nonhyd_iters
          select case(bnh_filter)
@@ -194,8 +191,12 @@
                call getm_error("init_nonhydrostatic()", &
                                "no valid bnh_filter specified")
          end select
-         if (sbnh_filter) then
-            LEVEL3 'apply spatial filter to nh slow terms'
+         if (.not. no_2d) then
+            if (calc_hs2d) then
+               LEVEL3 'exclude nh pressure gradient from slow terms'
+            else if (sbnh_filter) then
+               LEVEL3 'apply spatial filter to nh slow terms'
+            end if
          end if
       case default
          call getm_error("init_nonhydrostatic()", &
