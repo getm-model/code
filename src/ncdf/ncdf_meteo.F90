@@ -240,6 +240,21 @@
       end if
    end if
 
+   name_thisvar = name_airp
+   err = nf90_inq_varid(ncid,name_airp,airp_id)
+   if (err .NE. NF90_NOERR) go to 10
+
+   if (fwf_method .eq. 2) then
+      name_thisvar = name_evap
+      err = nf90_inq_varid(ncid,name_evap,evap_id)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+   if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+      name_thisvar = name_precip
+      err = nf90_inq_varid(ncid,name_precip,precip_id)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+
    if (calc_met) then
       name_thisvar = name_u10
       err = nf90_inq_varid(ncid,name_u10,u10_id)
@@ -247,10 +262,6 @@
 
       name_thisvar = name_v10
       err = nf90_inq_varid(ncid,name_v10,v10_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-      name_thisvar = name_airp
-      err = nf90_inq_varid(ncid,name_airp,airp_id)
       if (err .NE. NF90_NOERR) go to 10
 
       name_thisvar = name_t2
@@ -283,17 +294,6 @@
       name_thisvar = name_tcc
       err = nf90_inq_varid(ncid,name_tcc,tcc_id)
       if (err .NE. NF90_NOERR) go to 10
-
-      if (fwf_method .eq. 2) then
-         name_thisvar = name_evap
-         err = nf90_inq_varid(ncid,name_evap,evap_id)
-         if (err .NE. NF90_NOERR) go to 10
-      end if
-      if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-         name_thisvar = name_precip
-         err = nf90_inq_varid(ncid,name_precip,precip_id)
-         if (err .NE. NF90_NOERR) go to 10
-      end if
 
    else
 
@@ -680,6 +680,69 @@
    REALTYPE        :: angle,uu,vv,sinconv,cosconv
 !EOP
 !-----------------------------------------------------------------------
+
+   err = nf90_get_var(ncid,airp_id,wrk,start,edges)
+   if (err .ne. NF90_NOERR) go to 10
+   if (on_grid) then
+      if (point_source) then
+         airp = wrk(1,1)
+      else
+         do j=jmin,jmax
+            do i=imin,imax
+               airp(i,j) = wrk(i,j)
+            end do
+         end do
+      end if
+   else
+      !KBKwrk_dp = _ZERO_
+      call copy_var(grid_scan,wrk,wrk_dp)
+      call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,airp)
+   end if
+
+   if (evap_id .ge. 0) then
+      err = nf90_get_var(ncid,evap_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
+      if (on_grid) then
+         if (point_source) then
+            evap = wrk(1,1)
+         else
+            do j=jmin,jmax
+               do i=imin,imax
+                  evap(i,j) = wrk(i,j)
+               end do
+            end do
+         end if
+      else
+         call copy_var(grid_scan,wrk,wrk_dp)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,evap)
+      end if
+      if (evap_factor .ne. _ONE_) then
+         evap = evap * evap_factor
+      end if
+   end if
+
+   if (precip_id .gt. 0) then
+      err = nf90_get_var(ncid,precip_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
+      if (on_grid) then
+         if (point_source) then
+            precip = wrk(1,1)
+         else
+            do j=jmin,jmax
+               do i=imin,imax
+                  precip(i,j) = wrk(i,j)
+               end do
+            end do
+         end if
+      else
+         call copy_var(grid_scan,wrk,wrk_dp)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,precip)
+      end if
+      if (precip_factor .ne. _ONE_) then
+         precip = precip * precip_factor
+      end if
+   end if
+
    if (calc_met) then
 
       err = nf90_get_var(ncid,u10_id,wrk,start,edges)
@@ -737,24 +800,6 @@
          end do
       end do
 
-      err = nf90_get_var(ncid,airp_id,wrk,start,edges)
-      if (err .ne. NF90_NOERR) go to 10
-      if (on_grid) then
-         if (point_source) then
-            airp = wrk(1,1)
-         else
-            do j=jmin,jmax
-               do i=imin,imax
-                  airp(i,j) = wrk(i,j)
-               end do
-            end do
-         end if
-      else
-         !KBKwrk_dp = _ZERO_
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,airp)
-      end if
-
       err = nf90_get_var(ncid,t2_id,wrk,start,edges)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
@@ -807,50 +852,6 @@
          !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,tcc)
-      end if
-
-      if (evap_id .ge. 0) then
-         err = nf90_get_var(ncid,evap_id,wrk,start,edges)
-         if (err .ne. NF90_NOERR) go to 10
-         if (on_grid) then
-            if (point_source) then
-               evap = wrk(1,1)
-            else
-               do j=jmin,jmax
-                  do i=imin,imax
-                     evap(i,j) = wrk(i,j)
-                  end do
-               end do
-            end if
-         else
-            call copy_var(grid_scan,wrk,wrk_dp)
-            call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,evap)
-         end if
-         if (evap_factor .ne. _ONE_) then
-            evap = evap * evap_factor
-         end if
-      end if
-
-      if (precip_id .gt. 0) then
-         err = nf90_get_var(ncid,precip_id,wrk,start,edges)
-         if (err .ne. NF90_NOERR) go to 10
-         if (on_grid) then
-            if (point_source) then
-               precip = wrk(1,1)
-            else
-               do j=jmin,jmax
-                  do i=imin,imax
-                     precip(i,j) = wrk(i,j)
-                  end do
-               end do
-            end if
-         else
-            call copy_var(grid_scan,wrk,wrk_dp)
-            call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,precip)
-         end if
-         if (precip_factor .ne. _ONE_) then
-            precip = precip * precip_factor
-         end if
       end if
 
    else

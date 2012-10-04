@@ -189,7 +189,7 @@
       tauy  = tauy + tmp * sign(_ONE_,x)
    end if
 
-   if (fwf_method .ge. 2) then
+   if (fwf_method .ge. 3) then
       evap = rho_air/rho_0*cd_latent*w*(qa-qs)
    end if
 
