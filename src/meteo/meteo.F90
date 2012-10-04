@@ -63,9 +63,8 @@
    REALTYPE, public                    :: precip_factor = _ONE_
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
    REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum
-   REALTYPE, public, dimension(:,:), pointer :: tcc
    REALTYPE, public, dimension(:,:), pointer :: airp,tausx,tausy
-   REALTYPE, public, dimension(:,:), pointer :: swr,shf
+   REALTYPE, public, dimension(:,:), pointer :: shf,swr,tcc
    REALTYPE, public, dimension(:,:), pointer :: evap,precip
    REALTYPE, public, dimension(:,:), pointer :: sst
    logical, public                           :: nudge_sst=.false.
@@ -96,15 +95,12 @@
    REALTYPE, dimension(:,:), pointer     :: airp_new,d_airp
    REALTYPE, dimension(:,:), pointer     :: tausx_new,d_tausx
    REALTYPE, dimension(:,:), pointer     :: tausy_new,d_tausy
-   REALTYPE, dimension(:,:), pointer     :: swr_new,d_swr
    REALTYPE, dimension(:,:), pointer     :: shf_new,d_shf
+   REALTYPE, dimension(:,:), pointer     :: swr_new,d_swr
+   REALTYPE, dimension(:,:), pointer     :: tcc_new,d_tcc
    REALTYPE, dimension(:,:), pointer     :: evap_new,d_evap
    REALTYPE, dimension(:,:), pointer     :: precip_new,d_precip
    REALTYPE, dimension(:,:), pointer     :: sst_new,d_sst
-#define _INTERPOLATE_TCC_INSTEAD_OF_SWR_
-#ifdef _INTERPOLATE_TCC_INSTEAD_OF_SWR_
-   REALTYPE, dimension(:,:), pointer     :: tcc_new,d_tcc
-#endif
 !EOP
 !-----------------------------------------------------------------------
 
@@ -209,16 +205,16 @@
    if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy)'
    tausy = _ZERO_
 
-   allocate(swr(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_meteo: Error allocating memory (swr)'
    allocate(shf(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (shf)'
+   allocate(swr(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (swr)'
    if (met_method .eq. 1) then
-      swr   = swr_const
       shf   = shf_const
+      swr   = swr_const
    else
-      swr = _ZERO_
       shf = _ZERO_
+      swr = _ZERO_
    end if
 
    allocate(evap(E2DFIELD),stat=rc)
@@ -273,26 +269,22 @@
       allocate(d_tausy(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tausy)'
 
-#ifdef _INTERPOLATE_TCC_INSTEAD_OF_SWR_
+      allocate(shf_new(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo: Error allocating memory (shf_new)'
+      allocate(d_shf(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo: Error allocating memory (d_shf)'
+
       if (calc_met) then
          allocate(tcc_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc_new)'
          allocate(d_tcc(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tcc)'
       else
-#endif
-      allocate(swr_new(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_meteo: Error allocating memory (swr_new)'
-      allocate(d_swr(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_meteo: Error allocating memory (d_swr)'
-#ifdef _INTERPOLATE_TCC_INSTEAD_OF_SWR_
+         allocate(swr_new(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (swr_new)'
+         allocate(d_swr(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (d_swr)'
       end if
-#endif
-
-      allocate(shf_new(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_meteo: Error allocating memory (shf_new)'
-      allocate(d_shf(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_meteo: Error allocating memory (d_shf)'
 
       if (fwf_method .ge. 2) then
          allocate(evap_new(E2DFIELD),stat=rc)
@@ -367,21 +359,17 @@
 ! !LOCAL VARIABLES:
    integer, save             :: k=0
    integer                   :: i,j,rc
-   REALTYPE                  :: ramp,hh,t,t_frac,t_minus_t2
+   REALTYPE                  :: ramp,hh,t,t_minus_t2
    REALTYPE, save            :: deltm1
    REALTYPE                  :: short_wave_radiation
    REALTYPE                  :: uu,cosconv,vv,sinconv
    REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029d0
    REALTYPE, parameter       :: deg2rad=pi/180
    logical,save              :: first=.true.
-   logical                   :: have_sst
    REALTYPE, dimension(:,:), pointer :: airp_old,tausx_old,tausy_old
-   REALTYPE, dimension(:,:), pointer :: swr_old,shf_old
+   REALTYPE, dimension(:,:), pointer :: shf_old,swr_old,tcc_old
    REALTYPE, dimension(:,:), pointer :: evap_old,precip_old
    REALTYPE, dimension(:,:), pointer :: sst_old
-#ifdef _INTERPOLATE_TCC_INSTEAD_OF_SWR_
-   REALTYPE, dimension(:,:), pointer :: tcc_old
-#endif
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -411,6 +399,7 @@
       end if
 
       t = n*timestep
+      hh = secondsofday*(_ONE_/3600)
       if (new_meteo) then
          if (.not. first) then
             deltm1 = _ONE_ / (t_2 - t_1)
@@ -451,11 +440,27 @@
             end do
 !$OMP END DO
 !$OMP END PARALLEL
+
          case (2)
-            if(calc_met) then
-               have_sst = present(sst_model)
-               if (new_meteo) then
-                  if (have_sst) then
+
+!           Note (KK): old and new meteo data cannot be read at once
+!                      since they might come from different files.
+!                      Thus only new data is read and new_meteo is set to true.
+!                      first call with sst at t_1, later with sst at t_2
+
+#ifdef SLICE_MODEL
+            j = jmax/2
+#endif
+!$OMP PARALLEL DEFAULT(SHARED)                                         &
+!$OMP          FIRSTPRIVATE(j)                                         &
+!$OMP          PRIVATE(i)
+!$OMP SINGLE
+
+            if (new_meteo) then
+
+               if(calc_met) then
+
+                  if (present(sst_model)) then
 ! OMP-NOTE: This is an expensive loop, but we cannot thread it as long
 !    as exchange_coefficients() and fluxes() pass information through
 !    scalars in the meteo module. BJB 2009-09-30.
@@ -484,44 +489,9 @@
                         end do
                      end do
                   end if
-#ifdef _INTERPOLATE_TCC_INSTEAD_OF_SWR_
-                  tcc_old=>tcc_new;tcc_new=>tcc;tcc=>d_tcc;d_tcc=>tcc_old
-                  if (.not. first) then
-                     d_tcc = tcc_new - tcc_old
-                  end if
-               end if
-               if (.not. first) then
-                  tcc = tcc_new + d_tcc*deltm1*t_minus_t2
-#endif
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j, hh)
-                  hh = secondsofday*(_ONE_/3600)
-!$OMP DO SCHEDULE(RUNTIME)
-                  do j=jmin,jmax
-                     do i=imin,imax
-                        if (az(i,j) .ge. 1) then
-                           swr(i,j) = short_wave_radiation             &
-                                   (yearday,hh,latc(i,j),lonc(i,j),tcc(i,j))
-                        end if
-                     end do
-                  end do
-!$OMP END DO
-!$OMP END PARALLEL
-               end if
-            end if
 
-!           Note (KK): old and new meteo data cannot be read at once
-!                      since they might come from different files.
-!                      Thus only new data is read and new_meteo is set to true.
-!                      first call with sst at t_1, later with sst at t_2
+               end if
 
-#ifdef SLICE_MODEL
-            j = jmax/2
-#endif
-!$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP          FIRSTPRIVATE(j)                                         &
-!$OMP          PRIVATE(i)
-!$OMP SINGLE
-            if (new_meteo) then
 
                call update_2d_halo(airp,airp,az,imin,jmin,imax,jmax,H_TAG)
                call wait_halo(H_TAG)
@@ -533,14 +503,12 @@
                airp_old=>airp_new;airp_new=>airp;airp=>d_airp;d_airp=>airp_old
                tausx_old=>tausx_new;tausx_new=>tausx;tausx=>d_tausx;d_tausx=>tausx_old
                tausy_old=>tausy_new;tausy_new=>tausy;tausy=>d_tausy;d_tausy=>tausy_old
-#ifdef _INTERPOLATE_TCC_INSTEAD_OF_SWR_
-               if (.not. calc_met) then
-#endif
-               swr_old=>swr_new;swr_new=>swr;swr=>d_swr;d_swr=>swr_old
-#ifdef _INTERPOLATE_TCC_INSTEAD_OF_SWR_
-               end if
-#endif
                shf_old=>shf_new;shf_new=>shf;shf=>d_shf;d_shf=>shf_old
+               if (calc_met) then
+                  tcc_old=>tcc_new;tcc_new=>tcc;tcc=>d_tcc;d_tcc=>tcc_old
+               else
+                  swr_old=>swr_new;swr_new=>swr;swr=>d_swr;d_swr=>swr_old
+               end if
                if (fwf_method .ge. 2) then
                   evap_old=>evap_new;evap_new=>evap;evap=>d_evap;d_evap=>evap_old
                end if
@@ -553,7 +521,6 @@
 
 
                if (.not. first) then
-
 !$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
@@ -564,14 +531,12 @@
                            d_airp (i,j) = airp_new (i,j) - airp_old (i,j)
                            d_tausx(i,j) = tausx_new(i,j) - tausx_old(i,j)
                            d_tausy(i,j) = tausy_new(i,j) - tausy_old(i,j)
-#ifdef _INTERPOLATE_TCC_INSTEAD_OF_SWR_
-                           if (.not. calc_met) then
-#endif
-                           d_swr  (i,j) = swr_new  (i,j) - swr_old  (i,j)
-#ifdef _INTERPOLATE_TCC_INSTEAD_OF_SWR_
-                           end if
-#endif
                            d_shf  (i,j) = shf_new  (i,j) - shf_old  (i,j)
+                           if (calc_met) then
+                              d_tcc(i,j) = tcc_new(i,j) - tcc_old(i,j)
+                           else
+                              d_swr(i,j) = swr_new(i,j) - swr_old(i,j)
+                           end if
                            if (fwf_method .ge. 2) then
                               d_evap(i,j) = evap_new(i,j) - evap_old(i,j)
                            end if
@@ -588,7 +553,6 @@
 #endif
 !$OMP END DO
 !$OMP SINGLE
-
                end if
 
             end if
@@ -606,14 +570,13 @@
                         airp (i,j) = airp_new (i,j) + d_airp (i,j)*deltm1*t_minus_t2
                         tausx(i,j) = tausx_new(i,j) + d_tausx(i,j)*deltm1*t_minus_t2
                         tausy(i,j) = tausy_new(i,j) + d_tausy(i,j)*deltm1*t_minus_t2
-#ifdef _INTERPOLATE_TCC_INSTEAD_OF_SWR_
-                        if (.not. calc_met) then
-#endif
-                        swr  (i,j) = swr_new  (i,j) + d_swr  (i,j)*deltm1*t_minus_t2
-#ifdef _INTERPOLATE_TCC_INSTEAD_OF_SWR_
-                        end if
-#endif
                         shf  (i,j) = shf_new  (i,j) + d_shf  (i,j)*deltm1*t_minus_t2
+                        if (calc_met) then
+                           tcc(i,j) = tcc_new(i,j) + d_tcc(i,j)*deltm1*t_minus_t2
+                           swr(i,j) = short_wave_radiation(yearday,hh,latc(i,j),lonc(i,j),tcc(i,j))
+                        else
+                           swr(i,j) = swr_new(i,j) + d_swr(i,j)*deltm1*t_minus_t2
+                        end if
                         if (fwf_method .ge. 2) then
                            evap(i,j) = evap_new(i,j) + d_evap(i,j)*deltm1*t_minus_t2
                         end if
@@ -634,8 +597,8 @@
                airp (:,j+1) = airp (:,j)
                tausx(:,j+1) = tausx(:,j)
                tausy(:,j+1) = tausy(:,j)
-               swr  (:,j+1) = swr  (:,j)
                shf  (:,j+1) = shf  (:,j)
+               swr  (:,j+1) = swr  (:,j)
                if (fwf_method .ge. 2) then
                   evap(:,j+1) = evap(:,j)
                end if
@@ -651,8 +614,10 @@
 !$OMP END PARALLEL
 
          case default
+
             FATAL 'A non valid meteo method has been specified.'
             stop 'do_meteo'
+
       end select
 
    end if
