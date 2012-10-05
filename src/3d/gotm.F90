@@ -46,7 +46,7 @@
 !
 ! !USES:
    use halo_zones, only: update_3d_halo,wait_halo,H_TAG
-   use domain, only: imin,imax,jmin,jmax,kmax,az,min_depth,crit_depth
+   use domain, only: imin,imax,jmin,jmax,kmax,az,min_depth,crit_depth,z0
    use variables_2d, only: D,z
    use variables_3d, only: dt,kmin,ho,hn,tke,eps,SS,num,taus,taub,zub,zvb
 #ifndef NO_BAROCLINIC
@@ -125,7 +125,8 @@
 #endif
             end do
             z0s = _TENTH_
-            z0b = _HALF_*(max(zub(i-1,j),zub(i,j))+max(zvb(i,j-1),zvb(i,j)))
+            z0b = _HALF_*( max( z0(i,j) , zub(i-1,j  ) , zub(i,j) ) &
+                          +max( z0(i,j) , zvb(i  ,j-1) , zvb(i,j) ) )
             if (z0s .gt. D(i,j)/10.) z0s= D(i,j)/10.
 
 #ifdef PARABOLIC_VISCOSITY
