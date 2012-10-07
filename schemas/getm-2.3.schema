@@ -450,9 +450,15 @@
 			</element>
 			<element name="calc_temp" type="bool" label="solve temperature equation"/>
 			<element name="calc_salt" type="bool" label="solve salinity equation"/>
-			<element name="avmback"   type="float" label="background viscosity" unit="m²/s"/>
-			<element name="avhback"   type="float" label="background diffusivity" unit="m²/s"/>
-			<element name="advect_turbulence"  type="bool"  label="advect TKE and eps"/>
+			<element name="use_gotm" type="bool" label="calculate turb. vertical viscosity/diffusivity by GOTM"/>
+			<element name="avmback"   type="float" label="background viscosity" unit="m²/s">
+				<condition type="eq" variable="./use_gotm" value="False"/>
+			</element>
+			<element name="avhback"   type="float" label="background diffusivity" unit="m²/s">
+				<condition type="eq" variable="./use_gotm" value="False"/>
+			</element>
+			<element name="advect_turbulence"  type="bool"  label="advect TKE and eps">
+				<condition type="eq" variable="./use_gotm" value="True"/>
 			<element name="nonhyd_method" type="int" label="nonhydrostatic options">
 				<options>
 					<option value="-1" label="passive screening"/>
