@@ -328,6 +328,9 @@
 			<calc_salt>
 				False
 			</calc_salt>
+			<use_gotm>
+				True
+			</use_gotm>
 			<avmback>
 				0.0
 			</avmback>
