@@ -54,10 +54,10 @@
 #ifndef NO_BAROCLINIC
    use m3d, only: T
 #endif
+   use m3d, only: use_gotm
    use turbulence, only: init_turbulence
    use mtridiagonal, only: init_tridiagonal
    use rivers, only: init_rivers
-   use variables_3d, only: avmback,avhback
 #ifdef SPM
    use suspended_matter, only: init_spm
 #endif
@@ -218,13 +218,9 @@
 #ifndef NO_3D
    if (runtype .gt. 1) then
       call init_3d(runtype,timestep,hotstart)
-#ifndef CONSTANT_VISCOSITY
-      call init_turbulence(60,trim(input_dir) // 'gotmturb.nml',kmax)
-#else
-      LEVEL3 'turbulent viscosity and diffusivity set to constant (-DCONSTANT_VISCOSITY)'
-#endif
-      LEVEL2 'background turbulent viscosity set to',avmback
-      LEVEL2 'background turbulent diffusivity set to',avhback
+      if (use_gotm) then
+         call init_turbulence(60,trim(input_dir) // 'gotmturb.nml',kmax)
+      end if
       call init_tridiagonal(kmax)
 
 #ifdef SPM

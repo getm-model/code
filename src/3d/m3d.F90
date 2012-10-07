@@ -24,6 +24,7 @@
 ! !USES:
    use exceptions
    use domain, only: have_boundaries,maxdepth,vert_cord,az
+   use domain, only: bottfric_method
    use les, only: do_les_3d
    use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
    use m2d, only: bottom_friction
@@ -58,6 +59,7 @@
    integer                             :: vel3d_adv_ver=1
    logical                             :: calc_temp=.true.
    logical                             :: calc_salt=.true.
+   logical                             :: use_gotm=.true.
    logical                             :: calc_stirr=.false.
    logical                             :: bdy3d=.false.
    REALTYPE                            :: ip_fac=_ONE_
@@ -125,7 +127,7 @@
              bdy3d_tmrlx_max,bdy3d_tmrlx_min,             &
              vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver, &
              calc_temp,calc_salt,                         &
-             avmback,avhback,advect_turbulence,           &
+             use_gotm,avmback,avhback,advect_turbulence,  &
              ip_method,ip_ramp,                           &
              vel_check,min_vel,max_vel
 !EOP
@@ -153,15 +155,6 @@
    deformUV_3d=deformUV
 
    LEVEL2 "splitting factor M: ",M
-
-   if (avmback .lt. _ZERO_) then
-      LEVEL2 "setting avmback to 0."
-      avmback = _ZERO_
-   end if
-   if (avhback .lt. _ZERO_) then
-      LEVEL2 "setting avhback to 0."
-      avhback = _ZERO_
-   end if
 
 ! Allocates memory for the public data members - if not static
    call init_variables_3d(runtype)
@@ -201,24 +194,38 @@
    dt = M*timestep
 
 #ifdef CONSTANT_VISCOSITY
-   num=avmback
-   nuh=avhback
-#else
-   num=1.d-15
-   nuh=1.d-15
-
-#ifdef TURB_ADV
-   if (.not. advect_turbulence) then
-      LEVEL2 "reenabled advection of TKE and eps due to"
-      LEVEL2 "obsolete TURB_ADV macro. Note that this"
-      LEVEL2 "behaviour will be removed in the future!"
-      advect_turbulence = .true.
+   if (use_gotm) then
+      LEVEL2 "reset use_gotm=F because of"
+      LEVEL2 "obsolete CONSTANT_VISCOSITY macro."
+      LEVEL2 "Note that this behaviour will be"
+      LEVEL2 "removed in the future!"
+      use_gotm = .false.
    end if
 #endif
-
-   LEVEL2 "advect_turbulence = ",advect_turbulence
-
+   if (.not. use_gotm) then
+      avmback = max(_ZERO_,avmback)
+      avhback = max(_ZERO_,avhback)
+      LEVEL2 'background turbulent viscosity set to constant: ',real(avmback)
+      LEVEL2 'background turbulent diffusivity set to constant: ',real(avhback)
+      num=avmback
+      nuh=avhback
+   else
+      if (bottfric_method.ne.2 .and. bottfric_method.ne.3) then
+         call getm_error("init_3d()", &
+                         "consistency with GOTM requires quadratic bottom friction");
+      end if
+      num=1.d-15
+      nuh=1.d-15
+#ifdef TURB_ADV
+      if (.not. advect_turbulence) then
+         LEVEL2 "reenabled advection of TKE and eps due to"
+         LEVEL2 "obsolete TURB_ADV macro. Note that this"
+         LEVEL2 "behaviour will be removed in the future!"
+         advect_turbulence = .true.
+      end if
 #endif
+      LEVEL2 "advect_turbulence = ",advect_turbulence
+   end if
 
 !  Needed for interpolation of temperature and salinity
    if (.not. hotstart) then
@@ -663,13 +670,13 @@
       call toc(TIM_INTEGR3D)
       call stresses_3d()
 
-#ifndef CONSTANT_VISCOSITY
+      if (use_gotm) then
 #ifndef PARABOLIC_VISCOSITY
-      if (vert_cord .ne. _ADAPTIVE_COORDS_) call ss_nn()
+         if (vert_cord .ne. _ADAPTIVE_COORDS_) call ss_nn()
 #endif
-      call gotm()
-      if (advect_turbulence) call tke_eps_advect_3d()
-#endif
+         call gotm()
+         if (advect_turbulence) call tke_eps_advect_3d()
+      end if
 
    end if
 
