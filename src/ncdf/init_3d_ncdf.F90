@@ -18,8 +18,9 @@
    use domain, only: ioff,joff
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
+   use m2d, only: no_2d
    use m3d, only: calc_temp,calc_salt
-   use nonhydrostatic, only: nonhyd_iters,bnh_filter,bnh_weight
+   use nonhydrostatic, only: nonhyd_iters,bnh_filter,bnh_weight,calc_hs2d,sbnh_filter
 #ifdef SPM
    use suspended_matter, only: spm_save
 #endif
@@ -490,6 +491,13 @@
          err = nf90_put_att(ncid,bnh_id,'bnh_filter',bnh_filter)
          if (bnh_filter .eq. 1 .or. bnh_filter .eq. 3) then
             err = nf90_put_att(ncid,bnh_id,'bnh_weight',bnh_weight)
+         end if
+         if (.not. no_2d) then
+            if (calc_hs2d) then
+               err = nf90_put_att(ncid,bnh_id,'calc_hs2d',calc_hs2d)
+            else if (sbnh_filter) then
+               err = nf90_put_att(ncid,bnh_id,'sbnh_filter',sbnh_filter)
+            end if
          end if
       else
          vr(1) = 0.
