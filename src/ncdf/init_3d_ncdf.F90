@@ -493,12 +493,11 @@
             if (bnh_filter .eq. 1 .or. bnh_filter .eq. 3) then
                err = nf90_put_att(ncid,bnh_id,'bnh_weight',bnh_weight)
             end if
-         end if
-         if (.not. no_2d) then
-            if (calc_hs2d) then
+            if (.not. no_2d) then
                err = nf90_put_att(ncid,bnh_id,'calc_hs2d',calc_hs2d)
-            else if (sbnh_filter) then
-               err = nf90_put_att(ncid,bnh_id,'sbnh_filter',sbnh_filter)
+               if (.not. calc_hs2d) then
+                  err = nf90_put_att(ncid,bnh_id,'sbnh_filter',sbnh_filter)
+               end if
             end if
          end if
       else
