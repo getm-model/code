@@ -487,10 +487,12 @@
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,bnh_id,long_name='nh buoyancy correction',units='m/s2',&
                              FillValue=fv,missing_value=mv,valid_range=vr)
-         err = nf90_put_att(ncid,bnh_id,'nonhyd_iters',nonhyd_iters)
-         err = nf90_put_att(ncid,bnh_id,'bnh_filter',bnh_filter)
-         if (bnh_filter .eq. 1 .or. bnh_filter .eq. 3) then
-            err = nf90_put_att(ncid,bnh_id,'bnh_weight',bnh_weight)
+         if (nonhyd_method .eq. 1) then
+            err = nf90_put_att(ncid,bnh_id,'nonhyd_iters',nonhyd_iters)
+            err = nf90_put_att(ncid,bnh_id,'bnh_filter',bnh_filter)
+            if (bnh_filter .eq. 1 .or. bnh_filter .eq. 3) then
+               err = nf90_put_att(ncid,bnh_id,'bnh_weight',bnh_weight)
+            end if
          end if
          if (.not. no_2d) then
             if (calc_hs2d) then
