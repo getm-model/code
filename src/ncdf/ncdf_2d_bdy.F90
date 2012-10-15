@@ -27,13 +27,13 @@
    integer                             :: ncid
    integer                             :: time_id,elev_id=-1,nsets,bdy_len
    integer                             :: u_id=-1, v_id=-1
-   integer                             :: start(2),edges(2)
-   REALTYPE                            :: offset
+   integer                             :: loop0
+   REALTYPE                            :: offset=_ZERO_
 
-   REAL_4B,dimension(:),allocatable   :: bdy_times
-   REAL_4B,dimension(:),allocatable   :: bdy_old,bdy_new
-   REAL_4B,dimension(:),allocatable   :: bdy_old_u,bdy_new_u
-   REAL_4B,dimension(:),allocatable   :: bdy_old_v,bdy_new_v
+   REALTYPE,dimension(:),allocatable   :: bdy_times
+   REALTYPE,dimension(:),pointer       :: bdy_data_new,d_bdy_data
+   REALTYPE,dimension(:),pointer       :: bdy_data_u_new,d_bdy_data_u
+   REALTYPE,dimension(:),pointer       :: bdy_data_v_new,d_bdy_data_v
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -49,7 +49,7 @@
 ! !IROUTINE: init_2d_bdy_ncdf -
 !
 ! !INTERFACE:
-   subroutine init_2d_bdy_ncdf(fname)
+   subroutine init_2d_bdy_ncdf(fname,loop)
 !
 ! !DESCRIPTION:
 !  kurt,kurt
@@ -59,6 +59,7 @@
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fname
+   integer, intent(in)                 :: loop
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -85,7 +86,6 @@
 
    err = nf90_inquire(ncid, unlimitedDimID = rec_id)
    if (err .ne. NF90_NOERR) go to 10
-
    err = nf90_inquire_dimension(ncid, rec_id, len = nsets)
    if (err .ne. NF90_NOERR) go to 10
 
@@ -98,13 +98,8 @@
       stop 'init_2d_bdy_ncdf: netcdf file does not contain enough bdy points'
    else if (bdy_len .gt. nsbv) then
       LEVEL4 'WARNING: netcdf file contains data for more bdy points'
+      bdy_len = nsbv
    end if
-
-   err = nf90_inq_varid(ncid,'time',time_id)
-   if (err .NE. NF90_NOERR) go to 10
-
-   err =  nf90_get_att(ncid,time_id,'units',units)
-   if (err .NE. NF90_NOERR) go to 10
 
 #if 0
    err = nf90_inq_varid(ncid,'julday',jul_id)
@@ -114,39 +109,17 @@
    if (err .NE. NF90_NOERR) go to 10
 #endif
 
-   if ( need_2d_bdy_elev ) then
-      err = nf90_inq_varid(ncid,'elev',elev_id)
-      if (err .NE. NF90_NOERR) go to 10
-      allocate(bdy_old(bdy_len),stat=err)
-      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_old)'
-      allocate(bdy_new(bdy_len),stat=err)
-      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_new)'
-   end if
-
-   if ( need_2d_bdy_u ) then
-      err = nf90_inq_varid(ncid,'u',u_id)
-      if (err .NE. NF90_NOERR) go to 10
-      allocate(bdy_old_u(bdy_len),stat=err)
-      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_old_u)'
-      allocate(bdy_new_u(bdy_len),stat=err)
-      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_new_u)'
-   end if
-
-   if ( need_2d_bdy_v ) then
-      err = nf90_inq_varid(ncid,'v',v_id)
-      if (err .NE. NF90_NOERR) go to 10
-      allocate(bdy_old_v(bdy_len),stat=err)
-      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_old_v)'
-      allocate(bdy_new_v(bdy_len),stat=err)
-      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_new_v)'
-   end if
+   err = nf90_inq_varid(ncid,'time',time_id)
+   if (err .NE. NF90_NOERR) go to 10
+   err =  nf90_get_att(ncid,time_id,'units',units)
+   if (err .NE. NF90_NOERR) go to 10
 
    allocate(bdy_times(nsets),stat=err)
    if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_times)'
-
    err = nf90_get_var(ncid,time_id,bdy_times)
    if (err .NE. NF90_NOERR) go to 10
 
+   loop0 = loop-1
    call string_to_julsecs(units,j1,s1)
    offset = time_diff(julianday,secondsofday,j1,s1)
    if( offset .lt. bdy_times(1) ) then
@@ -171,6 +144,35 @@
       FATAL 'Datafile ends:   ',tbuf
       stop 'init_2d_bdy_ncdf'
    end if
+
+   if ( need_2d_bdy_elev ) then
+      err = nf90_inq_varid(ncid,'elev',elev_id)
+      if (err .NE. NF90_NOERR) go to 10
+      allocate(bdy_data_new(bdy_len),stat=err)
+      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_data_new)'
+      allocate(d_bdy_data(bdy_len),stat=err)
+      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (d_bdy_data)'
+   end if
+
+   if ( need_2d_bdy_u ) then
+      err = nf90_inq_varid(ncid,'u',u_id)
+      if (err .NE. NF90_NOERR) go to 10
+      allocate(bdy_data_u_new(bdy_len),stat=err)
+      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_data_u_new)'
+      allocate(d_bdy_data_u(bdy_len),stat=err)
+      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (d_bdy_data_u)'
+   end if
+
+   if ( need_2d_bdy_v ) then
+      err = nf90_inq_varid(ncid,'v',v_id)
+      if (err .NE. NF90_NOERR) go to 10
+      allocate(bdy_data_v_new(bdy_len),stat=err)
+      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_data_v_new)'
+      allocate(d_bdy_data_v(bdy_len),stat=err)
+      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (d_bdy_data_v)'
+   end if
+
+   call do_2d_bdy_ncdf(loop0)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_2d_bdy_ncdf()'
@@ -197,17 +199,18 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: loop
+   integer, intent(in)           :: loop
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer,save              :: i,n
-   integer                   :: err
-   logical                   :: first=.true.
-   REALTYPE                  :: t
-   REALTYPE, save            :: t1,t2= -_ONE_,loop0
+   integer,save                  :: indx=1
+   integer                       :: i
+   logical                       :: first=.true.
+   REALTYPE                      :: t,t_minus_t2
+   REALTYPE, save                :: t1,t2= -_ONE_,deltm1
+   REALTYPE,dimension(:),pointer :: bdy_data_old,bdy_data_u_old,bdy_data_v_old
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -215,120 +218,130 @@
    write(debug,*) 'do_2d_bdy_ncdf (NetCDF)'
 #endif
 
-   start(1) = 1   ; edges(1) = bdy_len
-
-   if (first) then
-      loop0=loop-1
-   endif
    t = (loop-loop0)*dtm
 
-   if (first) then
-      first = .false.
-
-      n = size(bdy_times)
-      do i=1,n
-         if (bdy_times(i) .gt. real(t + offset)) then
-            EXIT
-         end if
-      end do
-      t1 = bdy_times(i-1) - offset
-      t2 = bdy_times(i) - offset
-
-      if ( need_2d_bdy_elev ) then
-         start(2) = i-1 ; edges(2) = 1
-         err = nf90_get_var(ncid,elev_id,bdy_old,start,edges)
-         if(err .NE. NF90_NOERR) go to 10
-
-         start(2) = i ; edges(2) = 1
-         err = nf90_get_var(ncid,elev_id,bdy_new,start,edges)
-         if(err .NE. NF90_NOERR) go to 10
-      end if
-
-      if ( need_2d_bdy_u ) then
-         start(2) = i-1 ; edges(2) = 1
-         err = nf90_get_var(ncid,u_id,bdy_old_u,start,edges)
-         if(err .NE. NF90_NOERR) go to 10
-
-         start(2) = i ; edges(2) = 1
-         err = nf90_get_var(ncid,u_id,bdy_new_u,start,edges)
-         if(err .NE. NF90_NOERR) go to 10
-      end if
-
-      if ( need_2d_bdy_v ) then
-         start(2) = i-1 ; edges(2) = 1
-         err = nf90_get_var(ncid,v_id,bdy_old_v,start,edges)
-         if(err .NE. NF90_NOERR) go to 10
-
-         start(2) = i ; edges(2) = 1
-         err = nf90_get_var(ncid,v_id,bdy_new_v,start,edges)
-         if(err .NE. NF90_NOERR) go to 10
-      end if
-
-   end if
 
    if(t .gt. t2) then
-      do i=1,n
-         if(bdy_times(i) .gt. real(t + offset)) then
-            EXIT
-         end if
-      end do
 
       call write_time_string()
       LEVEL3 timestr,': reading 2D boundary data ...'
+      t1 = t2
+      do i=indx+1,nsets
+         t2 = bdy_times(i) - offset
+         if(t2 .gt. t) then
+            EXIT
+         end if
+      end do
 
-      t1 = bdy_times(i-1) - offset
-      t2 = bdy_times(i) - offset
+      if (first) then
+         indx = i-1
+         t2 = bdy_times(indx) - offset
+         first = .false.
+      else
+         indx = i
+      end if
+      call read_2d_bdy_data_ncdf(indx)
 
-      if ( need_2d_bdy_elev ) then
-         start(2) = i-1 ; edges(2) = 1
-         err = nf90_get_var(ncid,elev_id,bdy_old,start,edges)
-         if(err .NE. NF90_NOERR) go to 10
-
-         start(2) = i ; edges(2) = 1
-         err = nf90_get_var(ncid,elev_id,bdy_new,start,edges)
-         if(err .NE. NF90_NOERR) go to 10
+      if (need_2d_bdy_elev) then
+         bdy_data_old=>bdy_data_new;bdy_data_new=>bdy_data;bdy_data=>d_bdy_data;d_bdy_data=>bdy_data_old
+         d_bdy_data = bdy_data_new - bdy_data_old
+      end if
+      if (need_2d_bdy_elev) then
+         bdy_data_u_old=>bdy_data_u_new;bdy_data_u_new=>bdy_data_u;bdy_data_u=>d_bdy_data_u;d_bdy_data_u=>bdy_data_u_old
+         d_bdy_data_u = bdy_data_u_new - bdy_data_u_old
+      end if
+      if (need_2d_bdy_elev) then
+         bdy_data_v_old=>bdy_data_v_new;bdy_data_v_new=>bdy_data_v;bdy_data_v=>d_bdy_data_v;d_bdy_data_v=>bdy_data_v_old
+         d_bdy_data_v = bdy_data_v_new - bdy_data_v_old
       end if
 
-      if ( need_2d_bdy_u ) then
-         start(2) = i-1 ; edges(2) = 1
-         err = nf90_get_var(ncid,u_id,bdy_old_u,start,edges)
-         if(err .NE. NF90_NOERR) go to 10
-
-         start(2) = i ; edges(2) = 1
-         err = nf90_get_var(ncid,u_id,bdy_new_u,start,edges)
-         if(err .NE. NF90_NOERR) go to 10
-      end if
-
-      if ( need_2d_bdy_v ) then
-         start(2) = i-1 ; edges(2) = 1
-         err = nf90_get_var(ncid,v_id,bdy_old_v,start,edges)
-         if(err .NE. NF90_NOERR) go to 10
-
-         start(2) = i ; edges(2) = 1
-         err = nf90_get_var(ncid,v_id,bdy_new_v,start,edges)
-         if(err .NE. NF90_NOERR) go to 10
-      end if
+      deltm1 = _ONE_ / (t2 - t1)
 
    end if
 
-   if ( need_2d_bdy_elev ) then
-      bdy_data = bdy_old + (bdy_new - bdy_old)*(t-t1)/(t2-t1)
+
+   t_minus_t2 = t - t2
+
+   if ( need_2d_bdy_elev ) then 
+      bdy_data = bdy_data_new + d_bdy_data*deltm1*t_minus_t2
    end if
    if ( need_2d_bdy_u ) then
-      bdy_data_u = bdy_old_u + (bdy_new_u - bdy_old_u)*(t-t1)/(t2-t1)
+      bdy_data_u = bdy_data_u_new + d_bdy_data_u*deltm1*t_minus_t2
    end if
    if ( need_2d_bdy_v ) then
-      bdy_data_v = bdy_old_v + (bdy_new_v - bdy_old_v)*(t-t1)/(t2-t1)
+      bdy_data_v = bdy_data_v_new + d_bdy_data_v*deltm1*t_minus_t2
    end if
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_2d_bdy_ncdf()'
    write(debug,*)
 #endif
    return
-10 FATAL 'do_2d_bdy_ncdf: ',nf90_strerror(err)
-   stop
    end subroutine do_2d_bdy_ncdf
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: read_2d_bdy_data_ncdf -
+!
+! !INTERFACE:
+   subroutine read_2d_bdy_data_ncdf(indx)
+!
+! !DESCRIPTION:
+!  kurt,kurt
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in) :: indx
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
+!
+! !LOCAL VARIABLES:
+   integer,save        :: start(2),edges(2)
+   integer             :: err
+   logical,save        :: first=.true.
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   write(debug,*) 'do_2d_bdy_ncdf (NetCDF)'
+#endif
+
+   if (first) then
+      start(1) = 1 ; edges(1) = bdy_len
+      edges(2) = 1
+      first = .false.
+   end if
+
+   start(2) = indx
+
+   if ( elev_id .ne. -1 ) then
+      err = nf90_get_var(ncid,elev_id,bdy_data,start,edges)
+      if(err .NE. NF90_NOERR) go to 10
+   end if
+
+   if ( u_id .ne. -1 ) then
+      err = nf90_get_var(ncid,u_id,bdy_data_u,start,edges)
+      if(err .NE. NF90_NOERR) go to 10
+   end if
+
+   if ( v_id .ne. -1 ) then
+      err = nf90_get_var(ncid,v_id,bdy_data_v,start,edges)
+      if(err .NE. NF90_NOERR) go to 10
+   end if
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving read_2d_bdy_data_ncdf()'
+   write(debug,*)
+#endif
+   return
+10 FATAL 'read_2d_bdy_data_ncdf: ',nf90_strerror(err)
+   stop
+   end subroutine read_2d_bdy_data_ncdf
 !EOC
 
 !-----------------------------------------------------------------------

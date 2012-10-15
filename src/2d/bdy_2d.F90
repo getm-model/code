@@ -34,9 +34,9 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_bdy_2d, do_bdy_2d
-   character(len=PATH_MAX),public :: bdyfile_2d
-   integer,public                 :: bdyfmt_2d,bdyramp_2d=-1
-   REALTYPE,dimension(:),public,allocatable :: bdy_data,bdy_data_u,bdy_data_v
+   character(len=PATH_MAX),public       :: bdyfile_2d
+   integer,public                       :: bdyfmt_2d,bdyramp_2d=-1
+   REALTYPE,dimension(:),pointer,public :: bdy_data,bdy_data_u,bdy_data_v
 !
 ! !PRIVATE DATA MEMBERS:
    private bdy2d_active,bdy2d_need_elev,bdy2d_need_vel
