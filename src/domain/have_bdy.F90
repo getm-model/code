@@ -45,6 +45,7 @@
                wi(i) = wi(n) - ioff
                wfj(i) = f
                wlj(i) = l
+               nsbvl = nsbvl + (wlj(i)-wfj(i)+1)
                nbdy = nbdy+1
                bdy_2d_type(nbdy) = bdy_2d_type(m)
                bdy_3d_type(nbdy) = bdy_3d_type(m)
@@ -72,6 +73,7 @@
                nfi(i) = f
                nli(i) = l
                nj(i) = nj(n) - joff
+               nsbvl = nsbvl + (nli(i)-nfi(i)+1)
                nbdy = nbdy+1
                bdy_2d_type(nbdy) = bdy_2d_type(m)
                bdy_3d_type(nbdy) = bdy_3d_type(m)
@@ -99,6 +101,7 @@
                ei(i) = ei(n) - ioff
                efj(i) = f
                elj(i) = l
+               nsbvl = nsbvl + (elj(i)-efj(i)+1)
                nbdy = nbdy+1
                bdy_2d_type(nbdy) = bdy_2d_type(m)
                bdy_3d_type(nbdy) = bdy_3d_type(m)
@@ -127,6 +130,7 @@
                sli(i) = l
                sj(i) = sj(n) - joff
                nbdy = nbdy+1
+               nsbvl = nsbvl + (sli(i)-sfi(i)+1)
                bdy_2d_type(nbdy) = bdy_2d_type(m)
                bdy_3d_type(nbdy) = bdy_3d_type(m)
                do k=1,nsbv
