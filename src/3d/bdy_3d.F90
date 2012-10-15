@@ -40,7 +40,7 @@
    REALTYPE,public                     :: bdy3d_tmrlx_max=_ONE_/4
    REALTYPE,public                     :: bdy3d_tmrlx_min=_ZERO_
 
-   REALTYPE, public, allocatable       :: S_bdy(:,:),T_bdy(:,:)
+   REALTYPE,dimension(:,:),pointer,public :: S_bdy,T_bdy
 #ifdef _FABM_
    REALTYPE, public, allocatable       :: bio_bdy(:,:,:)
    integer, public, allocatable        :: have_bio_bdy_values(:)
