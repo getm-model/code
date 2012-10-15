@@ -36,8 +36,7 @@
    public init_bdy_2d, do_bdy_2d
    character(len=PATH_MAX),public :: bdyfile_2d
    integer,public                 :: bdyfmt_2d,bdyramp_2d=-1
-!  KK-TODO: static REAL_4B => allocatable REALTYPE
-   REAL_4B,dimension(1500),public :: bdy_data,bdy_data_u,bdy_data_v
+   REALTYPE,dimension(:),public,allocatable :: bdy_data,bdy_data_u,bdy_data_v
 !
 ! !PRIVATE DATA MEMBERS:
    private bdy2d_active,bdy2d_need_elev,bdy2d_need_vel
@@ -71,7 +70,7 @@
    logical, intent(inout)              :: bdy2d
 !
 ! !LOCAL VARIABLES:
-   integer :: n,l
+   integer :: n,l,rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -137,6 +136,18 @@
          if (hotstart .and. bdyramp_2d .gt. 0) then
              LEVEL4 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
              LEVEL4 'WARNING: .. be sure you know what you are doing ..'
+         end if
+         if (need_2d_bdy_elev) then
+            allocate(bdy_data(nsbv),stat=rc)
+            if (rc /= 0) stop 'init_bdy_2d: Error allocating memory (bdy_data)'
+         end if
+         if (need_2d_bdy_u) then
+            allocate(bdy_data_u(nsbv),stat=rc)
+            if (rc /= 0) stop 'init_bdy_2d: Error allocating memory (bdy_data_u)'
+         end if
+         if (need_2d_bdy_v) then
+            allocate(bdy_data_v(nsbv),stat=rc)
+            if (rc /= 0) stop 'init_bdy_2d: Error allocating memory (bdy_data_v)'
          end if
       else
          bdy2d = .false.

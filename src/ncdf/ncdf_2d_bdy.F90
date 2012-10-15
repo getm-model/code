@@ -16,7 +16,7 @@
    use time, only: string_to_julsecs,time_diff,add_secs
    use time, only: julianday,secondsofday,juln,secsn
    use time, only: write_time_string,timestr
-   use domain,  only: need_2d_bdy_elev,need_2d_bdy_u,need_2d_bdy_v
+   use domain,  only: nsbv,need_2d_bdy_elev,need_2d_bdy_u,need_2d_bdy_v
    IMPLICIT NONE
 !
    private
@@ -31,13 +31,9 @@
    REALTYPE                            :: offset
 
    REAL_4B,dimension(:),allocatable   :: bdy_times
-   REAL_4B                            :: bdy_old(1500)
-   REAL_4B                            :: bdy_new(1500)
-   REAL_4B                            :: bdy_old_u(1500)
-   REAL_4B                            :: bdy_new_u(1500)
-   REAL_4B                            :: bdy_old_v(1500)
-   REAL_4B                            :: bdy_new_v(1500)
-!
+   REAL_4B,dimension(:),allocatable   :: bdy_old,bdy_new
+   REAL_4B,dimension(:),allocatable   :: bdy_old_u,bdy_new_u
+   REAL_4B,dimension(:),allocatable   :: bdy_old_v,bdy_new_v
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -95,9 +91,14 @@
 
    err = nf90_inq_dimid(ncid, 'nbdyp', bdy_id)
    if (err .ne. NF90_NOERR)  go to 10
-
    err = nf90_inquire_dimension(ncid, bdy_id, len = bdy_len)
    if (err .ne. NF90_NOERR) go to 10
+
+   if (bdy_len .lt. nsbv) then
+      stop 'init_2d_bdy_ncdf: netcdf file does not contain enough bdy points'
+   else if (bdy_len .gt. nsbv) then
+      LEVEL4 'WARNING: netcdf file contains data for more bdy points'
+   end if
 
    err = nf90_inq_varid(ncid,'time',time_id)
    if (err .NE. NF90_NOERR) go to 10
@@ -116,16 +117,28 @@
    if ( need_2d_bdy_elev ) then
       err = nf90_inq_varid(ncid,'elev',elev_id)
       if (err .NE. NF90_NOERR) go to 10
+      allocate(bdy_old(bdy_len),stat=err)
+      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_old)'
+      allocate(bdy_new(bdy_len),stat=err)
+      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_new)'
    end if
 
    if ( need_2d_bdy_u ) then
       err = nf90_inq_varid(ncid,'u',u_id)
       if (err .NE. NF90_NOERR) go to 10
+      allocate(bdy_old_u(bdy_len),stat=err)
+      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_old_u)'
+      allocate(bdy_new_u(bdy_len),stat=err)
+      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_new_u)'
    end if
 
    if ( need_2d_bdy_v ) then
       err = nf90_inq_varid(ncid,'v',v_id)
       if (err .NE. NF90_NOERR) go to 10
+      allocate(bdy_old_v(bdy_len),stat=err)
+      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_old_v)'
+      allocate(bdy_new_v(bdy_len),stat=err)
+      if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_new_v)'
    end if
 
    allocate(bdy_times(nsets),stat=err)
