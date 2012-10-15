@@ -31,6 +31,7 @@
    integer                             :: ncid
    integer                             :: time_id,temp_id,salt_id
    integer                             :: start(4),edges(4)
+   integer                             :: bdy_id,bdy_len
    integer                             :: zax_dim,zax_len,zax_pos
    integer                             :: time_dim,time_len,time_pos
    logical                             :: climatology=.false.
@@ -137,6 +138,19 @@
       from_3d_fields=.false.
       zax_pos = 1
       time_pos = 3
+
+      err = nf90_inq_dimid(ncid, 'nbdyp', bdy_id)
+      if (err .ne. NF90_NOERR)  go to 10
+      err = nf90_inquire_dimension(ncid, bdy_id, len = bdy_len)
+      if (err .ne. NF90_NOERR) go to 10
+
+      if (bdy_len .lt. nsbv) then
+         stop 'init_3d_bdy_ncdf: netcdf file does not contain enough bdy points'
+      else if (bdy_len .gt. nsbv) then
+         LEVEL4 'WARNING: netcdf file contains data for more bdy points'
+         bdy_len = nsbv
+      end if
+
 !     Note(BJB): This test may break backward compatibility,
 !                so I leave it out for now:
       !if (ndims .NE. 3) stop 'init_3d_bdy_ncdf: Wrong number of dims in file (must be 3)'
@@ -228,10 +242,10 @@
       allocate(wrk(zax_len),stat=rc)
       if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (wrk)'
 
-      allocate(T_bdy_clim(time_len,0:kmax,nsbv),stat=rc)
+      allocate(T_bdy_clim(time_len,0:kmax,bdy_len),stat=rc)
       if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_bdy_clim)'
 
-      allocate(S_bdy_clim(time_len,0:kmax,nsbv),stat=rc)
+      allocate(S_bdy_clim(time_len,0:kmax,bdy_len),stat=rc)
       if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy_clim)'
 
 !     Note(KK): We read in the data columnwise for all time stages
@@ -384,18 +398,18 @@
          stop 'init_3d_bdy_ncdf'
       end if
 
-      allocate(T_old(0:kmax,nsbv),stat=err)
+      allocate(T_old(0:kmax,bdy_len),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_old)'
-      allocate(T_new(0:kmax,nsbv),stat=err)
+      allocate(T_new(0:kmax,bdy_len),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_new)'
-      allocate(T_wrk(zax_len,nsbv),stat=err)
+      allocate(T_wrk(zax_len,bdy_len),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_wrk)'
 
-      allocate(S_old(0:kmax,nsbv),stat=err)
+      allocate(S_old(0:kmax,bdy_len),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_old)'
-      allocate(S_new(0:kmax,nsbv),stat=err)
+      allocate(S_new(0:kmax,bdy_len),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_new)'
-      allocate(S_wrk(zax_len,nsbv),stat=err)
+      allocate(S_wrk(zax_len,bdy_len),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_wrk)'
 
 !     Note(KK): We read in at once the data of all points
@@ -413,7 +427,7 @@
       end if
 
       start(1) = 1; edges(1) = zax_len;
-      start(2) = 1; edges(2) = nsbv;
+      start(2) = 1; edges(2) = bdy_len;
       start(3) = i; edges(3) = 1
 
       err = nf90_get_var(ncid,temp_id,T_wrk,start,edges)
@@ -569,7 +583,7 @@
             end if
          end do
          start(1) = 1; edges(1) = zax_len;
-         start(2) = 1; edges(2) = nsbv;
+         start(2) = 1; edges(2) = bdy_len;
          start(3) = i; edges(3) = 1
 
          t1=t2
