@@ -12,7 +12,7 @@
 ! !USES:
    use netcdf
    use domain, only: imin,imax,jmin,jmax,kmax,ioff,joff
-   use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index
+   use domain, only: nsbv,nsbvl,NWB,NNB,NEB,NSB,bdy_index
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: H
    use variables_2d, only: dtm
@@ -89,7 +89,7 @@
    character(len=16), allocatable :: dim_name(:)
    integer                   :: start(4),edges(4)
    integer                   :: rc,err
-   integer                   :: i,j,k,l,m,n,id
+   integer                   :: i,j,k,kl,l,m,n,id
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -240,11 +240,11 @@
    if (climatology) then
 
       if (calc_salt) then
-         allocate(S_bdy_clim(time_len,0:kmax,bdy_len),stat=rc)
+         allocate(S_bdy_clim(time_len,0:kmax,nsbvl),stat=rc)
          if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy_clim)'
       end if
       if (calc_temp) then
-         allocate(T_bdy_clim(time_len,0:kmax,bdy_len),stat=rc)
+         allocate(T_bdy_clim(time_len,0:kmax,nsbvl),stat=rc)
          if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_bdy_clim)'
       end if
 
@@ -268,6 +268,7 @@
       do m=1,time_len
          start(time_pos) = m
          l = 0
+         kl = 1
          do n=1,NWB
             l = l+1
             k = bdy_index(l)
@@ -282,15 +283,16 @@
                   err = nf90_get_var(ncid,salt_id,wrk_clim,start,edges)
                   if (err .ne. NF90_NOERR) go to 10
                   call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
-                                S_bdy_clim(m,:,k))
+                                S_bdy_clim(m,:,kl))
                end if
                if (temp_id .ne. -1) then
                   err = nf90_get_var(ncid,temp_id,wrk_clim,start,edges)
                   if (err .ne. NF90_NOERR) go to 10
                   call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
-                                T_bdy_clim(m,:,k))
+                                T_bdy_clim(m,:,kl))
                end if
                k = k+1
+               kl = kl + 1
             end do
          end do
 
@@ -308,15 +310,16 @@
                   err = nf90_get_var(ncid,salt_id,wrk_clim,start,edges)
                   if (err .ne. NF90_NOERR) go to 10
                   call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
-                                S_bdy_clim(m,:,k))
+                                S_bdy_clim(m,:,kl))
                end if
                if (temp_id .ne. -1) then
                   err = nf90_get_var(ncid,temp_id,wrk_clim,start,edges)
                   if (err .ne. NF90_NOERR) go to 10
                   call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
-                                T_bdy_clim(m,:,k))
+                                T_bdy_clim(m,:,kl))
                end if
                k = k+1
+               kl = kl + 1
             end do
          end do
 
@@ -334,15 +337,16 @@
                   err = nf90_get_var(ncid,salt_id,wrk_clim,start,edges)
                   if (err .ne. NF90_NOERR) go to 10
                   call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
-                                S_bdy_clim(m,:,k))
+                                S_bdy_clim(m,:,kl))
                end if
                if (temp_id .ne. -1) then
                   err = nf90_get_var(ncid,temp_id,wrk_clim,start,edges)
                   if (err .ne. NF90_NOERR) go to 10
                   call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
-                                T_bdy_clim(m,:,k))
+                                T_bdy_clim(m,:,kl))
                end if
                k = k+1
+               kl = kl + 1
             end do
          end do
 
@@ -360,15 +364,16 @@
                   err = nf90_get_var(ncid,salt_id,wrk_clim,start,edges)
                   if (err .ne. NF90_NOERR) go to 10
                   call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
-                                S_bdy_clim(m,:,k))
+                                S_bdy_clim(m,:,kl))
                end if
                if (temp_id .ne. -1) then
                   err = nf90_get_var(ncid,temp_id,wrk_clim,start,edges)
                   if (err .ne. NF90_NOERR) go to 10
                   call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
-                                T_bdy_clim(m,:,k))
+                                T_bdy_clim(m,:,kl))
                end if
                k = k+1
+               kl = kl + 1
             end do
          end do
       end do
@@ -419,15 +424,15 @@
       end if
 
       if (calc_salt) then
-         allocate(S_bdy_new(0:kmax,bdy_len),stat=err)
+         allocate(S_bdy_new(0:kmax,nsbvl),stat=err)
          if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy_new)'
-         allocate(d_S_bdy(0:kmax,bdy_len),stat=err)
+         allocate(d_S_bdy(0:kmax,nsbvl),stat=err)
          if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_S_bdy)'
       end if
       if (calc_temp) then
-         allocate(T_bdy_new(0:kmax,bdy_len),stat=err)
+         allocate(T_bdy_new(0:kmax,nsbvl),stat=err)
          if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_bdy_new)'
-         allocate(d_T_bdy(0:kmax,bdy_len),stat=err)
+         allocate(d_T_bdy(0:kmax,nsbvl),stat=err)
          if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_T_bdy)'
       end if
       allocate(wrk(zax_len,bdy_len),stat=err)
@@ -473,7 +478,7 @@
 !
 ! !LOCAL VARIABLES:
    integer,save    :: indx=1,start(3),edges(3)
-   integer         :: i,j,k,l,n,err
+   integer         :: i,err
    REALTYPE        :: rat
    integer         :: monthsecs,prev,this,next
    logical, save   :: first=.true.
@@ -533,79 +538,24 @@
          end if
          start(3) = indx
 
-!        Note(KK): We read in at once the data of all points
-!                  but only for the current time stage
+!        Note(KK): We read in at once the data of all global bdy cells
+!                  but only for the current time stage.
+!                  Interpolation extracts all local bdy cells.
 
          if (salt_id .ne. -1) then
             err = nf90_get_var(ncid,salt_id,wrk,start,edges)
             if (err .ne. NF90_NOERR) go to 10
-            call interpolate_3d_bdy_ncdf(nsbv,zax_len,wrk,kmax,S_bdy)
+            call interpolate_3d_bdy_ncdf(nsbv,zax_len,wrk,nsbvl,kmax,S_bdy)
             S_bdy_old=>S_bdy_new;S_bdy_new=>S_bdy;S_bdy=>d_S_bdy;d_S_bdy=>S_bdy_old
+            d_S_bdy = S_bdy_new - S_bdy_old
          end if
          if (temp_id .ne. -1) then
             err = nf90_get_var(ncid,temp_id,wrk,start,edges)
             if (err .ne. NF90_NOERR) go to 10
-            call interpolate_3d_bdy_ncdf(nsbv,zax_len,wrk,kmax,T_bdy)
+            call interpolate_3d_bdy_ncdf(nsbv,zax_len,wrk,nsbvl,kmax,T_bdy)
             T_bdy_old=>T_bdy_new;T_bdy_new=>T_bdy;T_bdy=>d_T_bdy;d_T_bdy=>T_bdy_old
+            d_T_bdy = T_bdy_new - T_bdy_old
          end if
-
-         l = 0
-         do n=1,NWB
-            l = l+1
-            k = bdy_index(l)
-            i = wi(n)
-            do j=wfj(n),wlj(n)
-               if (calc_salt) then
-                  d_S_bdy(:,k) = S_bdy_new(:,k) - S_bdy_old(:,k)
-               end if
-               if (calc_temp) then
-                  d_T_bdy(:,k) = T_bdy_new(:,k) - T_bdy_old(:,k)
-               end if
-               k = k+1
-            end do
-         end do
-         do n = 1,NNB
-            l = l+1
-            k = bdy_index(l)
-            j = nj(n)
-            do i = nfi(n),nli(n)
-               if (calc_salt) then
-                  d_S_bdy(:,k) = S_bdy_new(:,k) - S_bdy_old(:,k)
-               end if
-               if (calc_temp) then
-                  d_T_bdy(:,k) = T_bdy_new(:,k) - T_bdy_old(:,k)
-               end if
-               k = k+1
-            end do
-         end do
-         do n=1,NEB
-            l = l+1
-            k = bdy_index(l)
-            i = ei(n)
-            do j=efj(n),elj(n)
-               if (calc_salt) then
-                  d_S_bdy(:,k) = S_bdy_new(:,k) - S_bdy_old(:,k)
-               end if
-               if (calc_temp) then
-                  d_T_bdy(:,k) = T_bdy_new(:,k) - T_bdy_old(:,k)
-               end if
-               k = k+1
-            end do
-         end do
-         do n = 1,NSB
-            l = l+1
-            k = bdy_index(l)
-            j = sj(n)
-            do i = sfi(n),sli(n)
-               if (calc_salt) then
-                  d_S_bdy(:,k) = S_bdy_new(:,k) - S_bdy_old(:,k)
-               end if
-               if (calc_temp) then
-                  d_T_bdy(:,k) = T_bdy_new(:,k) - T_bdy_old(:,k)
-               end if
-               k = k+1
-            end do
-         end do
 
          deltm1 = _ONE_ / (t2 - t1)
 
@@ -613,63 +563,12 @@
 
       t_minus_t2 = t - t2
 
-      l = 0
-      do n=1,NWB
-         l = l+1
-         k = bdy_index(l)
-         i = wi(n)
-         do j=wfj(n),wlj(n)
-            if (calc_salt) then
-               S_bdy(:,k) = S_bdy_new(:,k) + d_S_bdy(:,k)*deltm1*t_minus_t2
-            end if
-            if (calc_temp) then
-               T_bdy(:,k) = T_bdy_new(:,k) + d_T_bdy(:,k)*deltm1*t_minus_t2
-            end if
-            k = k+1
-         end do
-      end do
-      do n = 1,NNB
-         l = l+1
-         k = bdy_index(l)
-         j = nj(n)
-         do i = nfi(n),nli(n)
-            if (calc_salt) then
-               S_bdy(:,k) = S_bdy_new(:,k) + d_S_bdy(:,k)*deltm1*t_minus_t2
-            end if
-            if (calc_temp) then
-               T_bdy(:,k) = T_bdy_new(:,k) + d_T_bdy(:,k)*deltm1*t_minus_t2
-            end if
-            k = k+1
-         end do
-      end do
-      do n=1,NEB
-         l = l+1
-         k = bdy_index(l)
-         i = ei(n)
-         do j=efj(n),elj(n)
-            if (calc_salt) then
-               S_bdy(:,k) = S_bdy_new(:,k) + d_S_bdy(:,k)*deltm1*t_minus_t2
-            end if
-            if (calc_temp) then
-               T_bdy(:,k) = T_bdy_new(:,k) + d_T_bdy(:,k)*deltm1*t_minus_t2
-            end if
-            k = k+1
-         end do
-      end do
-      do n = 1,NSB
-         l = l+1
-         k = bdy_index(l)
-         j = sj(n)
-         do i = sfi(n),sli(n)
-            if (calc_salt) then
-               S_bdy(:,k) = S_bdy_new(:,k) + d_S_bdy(:,k)*deltm1*t_minus_t2
-            end if
-            if (calc_temp) then
-               T_bdy(:,k) = T_bdy_new(:,k) + d_T_bdy(:,k)*deltm1*t_minus_t2
-            end if
-            k = k+1
-         end do
-      end do
+      if (calc_salt) then
+         S_bdy = S_bdy_new + d_S_bdy*deltm1*t_minus_t2
+      end if
+      if (calc_temp) then
+         T_bdy = T_bdy_new + d_T_bdy*deltm1*t_minus_t2
+      end if
 
    end if
 
@@ -689,7 +588,7 @@
 ! !ROUTINE: interpolate_3d_bdy_ncdf -
 !
 ! !INTERFACE:
-   subroutine interpolate_3d_bdy_ncdf(nsbv,nlev,data_zax,kmax,data_gvc)
+   subroutine interpolate_3d_bdy_ncdf(nsbv,nlev,data_zax,nsbvl,kmax,data_gvc)
 !
 ! !DESCRIPTION:
 !  Here the interpolation is called for the locally active bdy columns.
@@ -698,17 +597,17 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer,intent(in)   :: nsbv,nlev,kmax
+   integer,intent(in)   :: nsbv,nlev,nsbvl,kmax
    REALTYPE,intent(in)  :: data_zax(nlev,nsbv)
 
 ! !OUTPUT PARAMETERS:
-   REALTYPE,intent(out) :: data_gvc(0:kmax,nsbv)
+   REALTYPE,intent(out) :: data_gvc(0:kmax,nsbvl)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer         :: i,j,k,l,n
+   integer         :: i,j,k,kl,l,n
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -717,14 +616,16 @@
 #endif
 
    l = 0
+   kl = 1
    do n=1,NWB
       l = l+1
       k = bdy_index(l)
       i = wi(n)
       do j=wfj(n),wlj(n)
          call interpol(nlev,zlev,data_zax(:,k),H(i,j),kmax,hn(i,j,:), &
-                       data_gvc(:,k))
+                       data_gvc(:,kl))
          k = k+1
+         kl = kl + 1
       end do
    end do
 
@@ -734,8 +635,9 @@
       j = nj(n)
       do i = nfi(n),nli(n)
          call interpol(nlev,zlev,data_zax(:,k),H(i,j),kmax,hn(i,j,:), &
-                       data_gvc(:,k))
+                       data_gvc(:,kl))
          k = k+1
+         kl = kl + 1
       end do
    end do
 
@@ -745,8 +647,9 @@
       i = ei(n)
       do j=efj(n),elj(n)
          call interpol(nlev,zlev,data_zax(:,k),H(i,j),kmax,hn(i,j,:), &
-                       data_gvc(:,k))
+                       data_gvc(:,kl))
          k = k+1
+         kl = kl + 1
       end do
    end do
 
@@ -756,8 +659,9 @@
       j = sj(n)
       do i = sfi(n),sli(n)
          call interpol(nlev,zlev,data_zax(:,k),H(i,j),kmax,hn(i,j,:), &
-                       data_gvc(:,k))
+                       data_gvc(:,kl))
          k = k+1
+         kl = kl + 1
       end do
    end do
 
