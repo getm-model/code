@@ -16,7 +16,9 @@
    use time, only: string_to_julsecs,time_diff,add_secs
    use time, only: julianday,secondsofday,juln,secsn
    use time, only: write_time_string,timestr
-   use domain,  only: nsbv,need_2d_bdy_elev,need_2d_bdy_u,need_2d_bdy_v
+   use domain,  only: need_2d_bdy_elev,need_2d_bdy_u,need_2d_bdy_v
+   use domain, only: nsbv,nsbvl,nbdy,NWB,NNB,NEB,NSB,bdy_index,bdy_index_l
+   use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    IMPLICIT NONE
 !
    private
@@ -34,6 +36,7 @@
    REALTYPE,dimension(:),pointer       :: bdy_data_new,d_bdy_data
    REALTYPE,dimension(:),pointer       :: bdy_data_u_new,d_bdy_data_u
    REALTYPE,dimension(:),pointer       :: bdy_data_v_new,d_bdy_data_v
+   REALTYPE,dimension(:),allocatable   :: wrk
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -148,29 +151,33 @@
    if ( need_2d_bdy_elev ) then
       err = nf90_inq_varid(ncid,'elev',elev_id)
       if (err .NE. NF90_NOERR) go to 10
-      allocate(bdy_data_new(bdy_len),stat=err)
+      allocate(bdy_data_new(nsbvl),stat=err)
       if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_data_new)'
-      allocate(d_bdy_data(bdy_len),stat=err)
+      allocate(d_bdy_data(nsbvl),stat=err)
       if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (d_bdy_data)'
    end if
 
    if ( need_2d_bdy_u ) then
       err = nf90_inq_varid(ncid,'u',u_id)
       if (err .NE. NF90_NOERR) go to 10
-      allocate(bdy_data_u_new(bdy_len),stat=err)
+      allocate(bdy_data_u_new(nsbvl),stat=err)
       if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_data_u_new)'
-      allocate(d_bdy_data_u(bdy_len),stat=err)
+      allocate(d_bdy_data_u(nsbvl),stat=err)
       if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (d_bdy_data_u)'
    end if
 
    if ( need_2d_bdy_v ) then
       err = nf90_inq_varid(ncid,'v',v_id)
       if (err .NE. NF90_NOERR) go to 10
-      allocate(bdy_data_v_new(bdy_len),stat=err)
+      allocate(bdy_data_v_new(nsbvl),stat=err)
       if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (bdy_data_v_new)'
-      allocate(d_bdy_data_v(bdy_len),stat=err)
+      allocate(d_bdy_data_v(nsbvl),stat=err)
       if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (d_bdy_data_v)'
    end if
+
+   if (err .NE. NF90_NOERR) go to 10
+   allocate(wrk(bdy_len),stat=err)
+   wrk = _ZERO_
 
    call do_2d_bdy_ncdf(loop0)
 
@@ -205,8 +212,8 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer,save                  :: indx=1
-   integer                       :: i
+   integer,save                  :: indx=1,start(2),edges(2)
+   integer                       :: i,err
    logical                       :: first=.true.
    REALTYPE                      :: t,t_minus_t2
    REALTYPE, save                :: t1,t2= -_ONE_,deltm1
@@ -236,21 +243,32 @@
       if (first) then
          indx = i-1
          t2 = bdy_times(indx) - offset
+         start(1) = 1 ; edges(1) = bdy_len
+         edges(2) = 1
          first = .false.
       else
          indx = i
       end if
-      call read_2d_bdy_data_ncdf(indx)
+      start(2) = indx
 
-      if (need_2d_bdy_elev) then
+      if ( elev_id .ne. -1 ) then
+         err = nf90_get_var(ncid,elev_id,wrk,start,edges)
+         if(err .NE. NF90_NOERR) go to 10
+         call grid_2d_bdy_data_ncdf(bdy_len,wrk,nsbvl,bdy_data)
          bdy_data_old=>bdy_data_new;bdy_data_new=>bdy_data;bdy_data=>d_bdy_data;d_bdy_data=>bdy_data_old
          d_bdy_data = bdy_data_new - bdy_data_old
       end if
-      if (need_2d_bdy_elev) then
+      if ( u_id .ne. -1 ) then
+         err = nf90_get_var(ncid,u_id,wrk,start,edges)
+         if(err .NE. NF90_NOERR) go to 10
+         call grid_2d_bdy_data_ncdf(bdy_len,wrk,nsbvl,bdy_data_u)
          bdy_data_u_old=>bdy_data_u_new;bdy_data_u_new=>bdy_data_u;bdy_data_u=>d_bdy_data_u;d_bdy_data_u=>bdy_data_u_old
          d_bdy_data_u = bdy_data_u_new - bdy_data_u_old
       end if
-      if (need_2d_bdy_elev) then
+      if ( v_id .ne. -1 ) then
+         err = nf90_get_var(ncid,v_id,wrk,start,edges)
+         if(err .NE. NF90_NOERR) go to 10
+         call grid_2d_bdy_data_ncdf(bdy_len,wrk,nsbvl,bdy_data_v)
          bdy_data_v_old=>bdy_data_v_new;bdy_data_v_new=>bdy_data_v;bdy_data_v=>d_bdy_data_v;d_bdy_data_v=>bdy_data_v_old
          d_bdy_data_v = bdy_data_v_new - bdy_data_v_old
       end if
@@ -278,15 +296,17 @@
    write(debug,*)
 #endif
    return
+10 FATAL 'do_2d_bdy_data_ncdf: ',nf90_strerror(err)
+   stop
    end subroutine do_2d_bdy_ncdf
 !EOC
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: read_2d_bdy_data_ncdf -
+! !IROUTINE: grid_2d_bdy_data_ncdf -
 !
 ! !INTERFACE:
-   subroutine read_2d_bdy_data_ncdf(indx)
+   subroutine grid_2d_bdy_data_ncdf(nsbv,wrk,nsbvl,col)
 !
 ! !DESCRIPTION:
 !  kurt,kurt
@@ -295,53 +315,76 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in) :: indx
+   integer,intent(in)  :: nsbv,nsbvl
+   REALTYPE,intent(in) :: wrk(nsbv)
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE,intent(out) :: col(nsbvl)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer,save        :: start(2),edges(2)
-   integer             :: err
-   logical,save        :: first=.true.
+   integer             :: i,j,k,kl,l,n
 !EOP
 !-------------------------------------------------------------------------
 !BOC
 #ifdef DEBUG
-   write(debug,*) 'do_2d_bdy_ncdf (NetCDF)'
+   write(debug,*) 'grid_2d_bdy_data_ncdf'
 #endif
 
-   if (first) then
-      start(1) = 1 ; edges(1) = bdy_len
-      edges(2) = 1
-      first = .false.
-   end if
-
-   start(2) = indx
-
-   if ( elev_id .ne. -1 ) then
-      err = nf90_get_var(ncid,elev_id,bdy_data,start,edges)
-      if(err .NE. NF90_NOERR) go to 10
-   end if
-
-   if ( u_id .ne. -1 ) then
-      err = nf90_get_var(ncid,u_id,bdy_data_u,start,edges)
-      if(err .NE. NF90_NOERR) go to 10
-   end if
-
-   if ( v_id .ne. -1 ) then
-      err = nf90_get_var(ncid,v_id,bdy_data_v,start,edges)
-      if(err .NE. NF90_NOERR) go to 10
-   end if
+   l = 0
+   do n=1,NWB
+      l = l+1
+      k = bdy_index(l)
+      kl = bdy_index_l(l)
+      i = wi(n)
+      do j=wfj(n),wlj(n)
+         col(kl) = wrk(k)
+         k = k+1
+         kl = kl + 1
+      end do
+   end do
+   do n = 1,NNB
+      l = l+1
+      k = bdy_index(l)
+      kl = bdy_index_l(l)
+      j = nj(n)
+      do i = nfi(n),nli(n)
+         col(kl) = wrk(k)
+         k = k+1
+         kl = kl + 1
+      end do
+   end do
+   do n=1,NEB
+      l = l+1
+      k = bdy_index(l)
+      kl = bdy_index_l(l)
+      i = ei(n)
+      do j=efj(n),elj(n)
+         col(kl) = wrk(k)
+         k = k+1
+         kl = kl + 1
+      end do
+   end do
+   do n = 1,NSB
+      l = l+1
+      k = bdy_index(l)
+      kl = bdy_index_l(l)
+      j = sj(n)
+      do i = sfi(n),sli(n)
+         col(kl) = wrk(k)
+         k = k+1
+         kl = kl + 1
+      end do
+   end do
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving read_2d_bdy_data_ncdf()'
+   write(debug,*) 'Leaving grid_2d_bdy_data_ncdf()'
    write(debug,*)
 #endif
    return
-10 FATAL 'read_2d_bdy_data_ncdf: ',nf90_strerror(err)
-   stop
-   end subroutine read_2d_bdy_data_ncdf
+   end subroutine grid_2d_bdy_data_ncdf
 !EOC
 
 !-----------------------------------------------------------------------
