@@ -5,7 +5,7 @@
 ! !IROUTINE: init_3d_bdy - initialise 3D boundary data file(s)
 !
 ! !INTERFACE:
-   subroutine init_3d_bdy(fn,fmt)
+   subroutine init_3d_bdy(fn,fmt,n)
 !
 ! !DESCRIPTION:
 !  Prepares for reading boundary data for the 2D module.
@@ -20,7 +20,7 @@
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fn
-   integer, intent(in)                 :: fmt
+   integer, intent(in)                 :: fmt,n
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -51,7 +51,7 @@
          stop 'init_3d_bdy'
       case (NETCDF)
          LEVEL3 'reading from: ',trim(fn)
-         call init_3d_bdy_ncdf(fn)
+         call init_3d_bdy_ncdf(fn,n)
 #ifdef _FABM_
          if (fabm_calc) then
             bio_fn='bdy_3d_bio.nc'
