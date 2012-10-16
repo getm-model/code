@@ -15,7 +15,7 @@
 ! !USES:
    use halo_zones, only : H_TAG,U_TAG,V_TAG
    use domain, only: imin,jmin,imax,jmax,kmax,H,az,au,av
-   use domain, only: nsbv,nbdy,NWB,NNB,NEB,NSB,bdy_index
+   use domain, only: nsbvl,nbdy,NWB,NNB,NEB,NSB,bdy_index
    use domain, only: bdy_3d_desc,bdy_3d_type
    use domain, only: need_3d_bdy
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
@@ -40,7 +40,7 @@
    REALTYPE,public                     :: bdy3d_tmrlx_max=_ONE_/4
    REALTYPE,public                     :: bdy3d_tmrlx_min=_ZERO_
 
-   REALTYPE, public, allocatable       :: S_bdy(:,:),T_bdy(:,:)
+   REALTYPE,dimension(:,:),pointer,public :: S_bdy,T_bdy
 #ifdef _FABM_
    REALTYPE, public, allocatable       :: bio_bdy(:,:,:)
    integer, public, allocatable        :: have_bio_bdy_values(:)
@@ -158,10 +158,10 @@
          LEVEL3 'bdy3d_tmrlx_umin=  ',bdy3d_tmrlx_umin
       end if
 
-      allocate(S_bdy(0:kmax,nsbv),stat=rc)
+      allocate(S_bdy(0:kmax,nsbvl),stat=rc)
       if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (S_bdy)'
 
-      allocate(T_bdy(0:kmax,nsbv),stat=rc)
+      allocate(T_bdy(0:kmax,nsbvl),stat=rc)
       if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (T_bdy)'
 
       allocate(bdyvertS(0:kmax),stat=rc)
@@ -233,7 +233,7 @@
    REALTYPE, intent(inout)             :: field(I3DFIELD)
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k,l,n,o,ii,jj,kk
+   integer                   :: i,j,k,kl,l,n,o,ii,jj,kk
    REALTYPE                  :: rat
    REALTYPE                  :: wsum
 !EOP
@@ -272,6 +272,7 @@
 #ifndef NO_BAROCLINIC
 
    l = 0
+   kl = 1
    do n=1,NWB
       l = l+1
       k = bdy_index(l)
@@ -318,17 +319,17 @@
                         end do
 !                       Weight inner and outer (bc) solutions for use
 !                       in spatial relaxation/sponge
-                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,k)
-                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,k)
+                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,kl)
+                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,kl)
                      else
    !                    No near-bdy points. Just clamp bdy temporally:
-                        bdyvertS(:) = S_bdy(:,k)
-                        bdyvertT(:) = T_bdy(:,k)
+                        bdyvertS(:) = S_bdy(:,kl)
+                        bdyvertT(:) = T_bdy(:,kl)
                      end if
                   else
 !                    No time-relaxation. Just clamp at bondary points.
-                     bdyvertS(:) = S_bdy(:,k)
-                     bdyvertT(:) = T_bdy(:,k)
+                     bdyvertS(:) = S_bdy(:,kl)
+                     bdyvertT(:) = T_bdy(:,kl)
                   end if
                   S(i,j,:) = bdyvertS(:)
                   T(i,j,:) = bdyvertT(:)
@@ -366,6 +367,7 @@
                   end do
                end if
                k = k+1
+               kl = kl + 1
             end do
       end select
    end do
@@ -409,15 +411,15 @@
                                    + bdy3d_tmrlx_min
                            end if
                         end do
-                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,k)
-                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,k)
+                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,kl)
+                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,kl)
                      else
-                        bdyvertS(:) = S_bdy(:,k)
-                        bdyvertT(:) = T_bdy(:,k)
+                        bdyvertS(:) = S_bdy(:,kl)
+                        bdyvertT(:) = T_bdy(:,kl)
                      end if
                   else
-                     bdyvertS(:) = S_bdy(:,k)
-                     bdyvertT(:) = T_bdy(:,k)
+                     bdyvertS(:) = S_bdy(:,kl)
+                     bdyvertT(:) = T_bdy(:,kl)
                   end if
                   S(i,j,:) = bdyvertS(:)
                   T(i,j,:) = bdyvertT(:)
@@ -454,6 +456,7 @@
                   end do
                end if
                k = k+1
+               kl = kl + 1
             end do
       end select
    end do
@@ -497,15 +500,15 @@
                                    + bdy3d_tmrlx_min
                            end if
                         end do
-                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,k)
-                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,k)
+                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,kl)
+                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,kl)
                      else
-                        bdyvertS(:) = S_bdy(:,k)
-                        bdyvertT(:) = T_bdy(:,k)
+                        bdyvertS(:) = S_bdy(:,kl)
+                        bdyvertT(:) = T_bdy(:,kl)
                      end if
                   else
-                     bdyvertS(:) = S_bdy(:,k)
-                     bdyvertT(:) = T_bdy(:,k)
+                     bdyvertS(:) = S_bdy(:,kl)
+                     bdyvertT(:) = T_bdy(:,kl)
                   end if
                   S(i,j,:) = bdyvertS(:)
                   T(i,j,:) = bdyvertT(:)
@@ -542,6 +545,7 @@
                   end do
                end if
                k = k+1
+               kl = kl + 1
             end do
       end select
    end do
@@ -585,15 +589,15 @@
                                    + bdy3d_tmrlx_min
                            end if
                         end do
-                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,k)
-                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,k)
+                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,kl)
+                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,kl)
                      else
-                        bdyvertS(:) = S_bdy(:,k)
-                        bdyvertT(:) = T_bdy(:,k)
+                        bdyvertS(:) = S_bdy(:,kl)
+                        bdyvertT(:) = T_bdy(:,kl)
                      end if
                   else
-                     bdyvertS(:) = S_bdy(:,k)
-                     bdyvertT(:) = T_bdy(:,k)
+                     bdyvertS(:) = S_bdy(:,kl)
+                     bdyvertT(:) = T_bdy(:,kl)
                   end if
                   S(i,j,:) = bdyvertS(:)
                   T(i,j,:) = bdyvertT(:)
@@ -630,6 +634,7 @@
                   end do
                end if
                k = k+1
+               kl = kl + 1
             end do
       end select
    end do
