@@ -29,9 +29,9 @@
 !-----------------------------------------------------------------------
 
    interface
-      subroutine init_2d_bdy(fn,fmt)
+      subroutine init_2d_bdy(fn,fmt,n)
          character(len=*), intent(in)  :: fn
-         integer, intent(in)           :: fmt
+         integer, intent(in)           :: fmt,n
       end subroutine init_2d_bdy
    end interface
 
@@ -42,9 +42,9 @@
    end interface
 
    interface
-      subroutine init_3d_bdy(fn,fmt)
+      subroutine init_3d_bdy(fn,fmt,n)
          character(len=*), intent(in)  :: fn
-         integer, intent(in)           :: fmt
+         integer, intent(in)           :: fmt,n
       end subroutine init_3d_bdy
    end interface
 
@@ -112,12 +112,12 @@
 #endif
 
    if(bdy2d) then
-      call init_2d_bdy(trim(input_dir) // bdyfile_2d,bdyfmt_2d)
+      call init_2d_bdy(trim(input_dir) // bdyfile_2d,bdyfmt_2d,n)
    end if
 
 #ifndef NO_3D
    if(bdy3d) then
-      call init_3d_bdy(trim(input_dir) // bdyfile_3d,bdyfmt_3d)
+      call init_3d_bdy(trim(input_dir) // bdyfile_3d,bdyfmt_3d,n)
    end if
 #endif
 

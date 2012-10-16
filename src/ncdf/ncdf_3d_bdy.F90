@@ -12,11 +12,12 @@
 ! !USES:
    use netcdf
    use domain, only: imin,imax,jmin,jmax,kmax,ioff,joff
-   use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index
+   use domain, only: nsbv,nsbvl,NWB,NNB,NEB,NSB,bdy_index
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: H
    use variables_2d, only: dtm
    use variables_3d, only: hn
+   use m3d, only: calc_salt,calc_temp
    use bdy_3d, only: T_bdy,S_bdy
    use time, only: string_to_julsecs,time_diff,add_secs
    use time, only: julianday,secondsofday,juln,secsn
@@ -29,20 +30,23 @@
 !
 ! !PRIVATE DATA MEMBERS:
    integer                             :: ncid
-   integer                             :: time_id,temp_id,salt_id
-   integer                             :: start(4),edges(4)
-   integer                             :: zax_dim,zax_len,zax_pos
-   integer                             :: time_dim,time_len,time_pos
+   integer                             :: time_id,temp_id=-1,salt_id=-1
+   integer                             :: bdy_dim,bdy_len,bdy_pos
+   integer                             :: zax_dim=-1,zax_len,zax_pos
+   integer                             :: time_dim=-1,time_len,time_pos
    logical                             :: climatology=.false.
    logical                             :: from_3d_fields
+   REALTYPE,dimension(:),allocatable   :: zlev
+!  the following is used for climatology=.true.
+   REALTYPE,dimension(:,:,:),allocatable :: S_bdy_clim,T_bdy_clim
+   REALTYPE,dimension(:),allocatable     :: wrk_clim
+!  the following is used for climatology=.false.
+   integer                             :: loop0
    REALTYPE                            :: offset
-   REAL_4B, allocatable                :: bdy_times(:),wrk(:)
-   REAL_4B,  allocatable, dimension(:)     :: zlev
-   REALTYPE, allocatable, dimension(:,:)   :: T_old, T_new
-   REAL_4B,  allocatable, dimension(:,:)   :: T_wrk
-   REALTYPE, allocatable, dimension(:,:)   :: S_old, S_new
-   REAL_4B,  allocatable, dimension(:,:)   :: S_wrk
-   REALTYPE, allocatable, dimension(:,:,:) :: T_bdy_clim,S_bdy_clim
+   REALTYPE,dimension(:),allocatable   :: bdy_times
+   REALTYPE,dimension(:,:),pointer     :: S_bdy_new,d_S_bdy
+   REALTYPE,dimension(:,:),pointer     :: T_bdy_new,d_T_bdy
+   REALTYPE,dimension(:,:),allocatable :: wrk
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -58,7 +62,7 @@
 ! !ROUTINE: init_3d_bdy_ncdf -
 !
 ! !INTERFACE:
-   subroutine init_3d_bdy_ncdf(fname)
+   subroutine init_3d_bdy_ncdf(fname,loop)
 !
 ! !DESCRIPTION:
 !  kurt,kurt
@@ -68,6 +72,7 @@
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fname
+   integer, intent(in)                 :: loop
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -82,8 +87,9 @@
    integer                   :: vardim_ids(4)
    integer, allocatable, dimension(:):: dim_ids,dim_len
    character(len=16), allocatable :: dim_name(:)
+   integer                   :: start(4),edges(4)
    integer                   :: rc,err
-   integer                   :: i,j,k,l,m,n,id
+   integer                   :: i,j,k,kl,l,m,n,id
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -102,10 +108,8 @@
 
    allocate(dim_ids(ndims),stat=rc)
    if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (dim_ids)'
-
    allocate(dim_len(ndims),stat=rc)
    if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (dim_len)'
-
    allocate(dim_name(ndims),stat=rc)
    if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (dim_name)'
 
@@ -136,7 +140,9 @@
       LEVEL4 'special boundary data file'
       from_3d_fields=.false.
       zax_pos = 1
+      bdy_pos = 2
       time_pos = 3
+
 !     Note(BJB): This test may break backward compatibility,
 !                so I leave it out for now:
       !if (ndims .NE. 3) stop 'init_3d_bdy_ncdf: Wrong number of dims in file (must be 3)'
@@ -147,52 +153,60 @@
 !  Some of the tests will be repeated later (fixing is possible but not
 !  high priority, BJB 2007-04-25).
 
-   LEVEL4 ' ... checking variable "temp"'
+   if (calc_salt) then
+      LEVEL4 ' ... checking variable "salt"'
+      err = nf90_inq_varid(ncid,'salt',salt_id)
+      if (err .NE. NF90_NOERR) go to 10
+      err = nf90_inquire_variable(ncid,salt_id,ndims=nvardims)
+      if (err .NE. NF90_NOERR) go to 10
+      if (nvardims .NE. ndims) &
+           stop 'init_3d_bdy_ncdf: Wrong number of dims in salt'
+      err = nf90_inquire_variable(ncid,salt_id,dimids=vardim_ids)
+      if (err .NE. NF90_NOERR) go to 10
+      zax_dim  = vardim_ids(zax_pos)
+      time_dim = vardim_ids(time_pos)
+   end if
+   if (calc_temp) then
+      LEVEL4 ' ... checking variable "temp"'
+      err = nf90_inq_varid(ncid,'temp',temp_id)
+      if (err .NE. NF90_NOERR) go to 10
+      err = nf90_inquire_variable(ncid,temp_id,ndims=nvardims)
+      if (err .NE. NF90_NOERR) go to 10
+      if (nvardims .NE. ndims) &
+           stop 'init_3d_bdy_ncdf: Wrong number of dims in temp'
+      err = nf90_inquire_variable(ncid,temp_id,dimids=vardim_ids)
+      if (err .NE. NF90_NOERR) go to 10
+      if (calc_salt) then
+         if (zax_dim /= vardim_ids(zax_pos)) &
+              stop 'init_3d_bdy_ncdf: Position of zax dimension of salt and temp differs'
+         if (time_dim /= vardim_ids(time_pos)) &
+              stop 'init_3d_bdy_ncdf: Position of time dimension of salt and temp differs'
+      else
+         zax_dim  = vardim_ids(zax_pos)
+         time_dim = vardim_ids(time_pos)
+      end if
+   end if
 
-   err = nf90_inq_varid(ncid,'temp',temp_id)
-   if (err .NE. NF90_NOERR) go to 10
-
-   err = nf90_inquire_variable(ncid,temp_id,ndims=nvardims)
-   if (err .NE. NF90_NOERR) go to 10
-
-   if (nvardims .NE. ndims) &
-        stop 'init_3d_bdy_ncdf: Wrong number of dims in temp'
-
-   err = nf90_inquire_variable(ncid,temp_id,dimids=vardim_ids)
-   if (err .NE. NF90_NOERR) go to 10
-
-   zax_dim  = vardim_ids(zax_pos)
-   time_dim = vardim_ids(time_pos)
-
-   ! The 'salt' part is only for error capture.
-   LEVEL4 ' ... checking variable "salt"'
-
-   err = nf90_inq_varid(ncid,'salt',salt_id)
-   if (err .NE. NF90_NOERR) go to 10
-
-   err = nf90_inquire_variable(ncid,salt_id,ndims=nvardims)
-   if (err .NE. NF90_NOERR) go to 10
-
-   if (nvardims .NE. ndims) &
-        stop 'init_3d_bdy_ncdf: Wrong number of dims in salt'
-
-   err = nf90_inquire_variable(ncid,salt_id,dimids=vardim_ids)
-   if (err .NE. NF90_NOERR) go to 10
-
-   if (zax_dim /= vardim_ids(zax_pos)) &
-        stop 'init_3d_bdy_ncdf: Position of zax dimension of salt and temp differs'
-   if (time_dim /= vardim_ids(time_pos)) &
-        stop 'init_3d_bdy_ncdf: Position of time dimension of salt and temp differs'
+   if (.not. from_3d_fields) then
+      bdy_dim = vardim_ids(bdy_pos)
+      bdy_len = dim_len(bdy_dim)
+      if (bdy_len .lt. nsbv) then
+         stop 'init_3d_bdy_ncdf: netcdf file does not contain enough bdy points'
+      else if (bdy_len .gt. nsbv) then
+         LEVEL4 'WARNING: netcdf file contains data for more bdy points'
+         bdy_len = nsbv
+      end if
+   end if
 
    zax_len = dim_len(zax_dim)
    time_len = dim_len(time_dim)
 
    allocate(zlev(zax_len),stat=rc)
    if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (zlev)'
+   zlev = _ZERO_
 
    err = nf90_inq_varid(ncid, dim_name(zax_dim), id)
    if (err .ne. NF90_NOERR) go to 10
-
    err = nf90_get_var(ncid,id,zlev)
    if (err .ne. NF90_NOERR) go to 10
 
@@ -225,14 +239,14 @@
 
    if (climatology) then
 
-      allocate(wrk(zax_len),stat=rc)
-      if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (wrk)'
-
-      allocate(T_bdy_clim(time_len,0:kmax,nsbv),stat=rc)
-      if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_bdy_clim)'
-
-      allocate(S_bdy_clim(time_len,0:kmax,nsbv),stat=rc)
-      if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy_clim)'
+      if (calc_salt) then
+         allocate(S_bdy_clim(time_len,0:kmax,nsbvl),stat=rc)
+         if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy_clim)'
+      end if
+      if (calc_temp) then
+         allocate(T_bdy_clim(time_len,0:kmax,nsbvl),stat=rc)
+         if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_bdy_clim)'
+      end if
 
 !     Note(KK): We read in the data columnwise for all time stages
 !     here we can read from both a 3D field and from a
@@ -243,6 +257,10 @@
 !     k counts the number of the specific point
 !     MUST cover the same area as in topo.nc
 
+      allocate(wrk_clim(zax_len),stat=rc)
+      if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (wrk_clim)'
+      wrk_clim = _ZERO_
+
       edges = 1
       edges(zax_pos) = zax_len
       start(zax_pos) = 1
@@ -250,6 +268,7 @@
       do m=1,time_len
          start(time_pos) = m
          l = 0
+         kl = 1
          do n=1,NWB
             l = l+1
             k = bdy_index(l)
@@ -260,15 +279,20 @@
                else
                   start(2) = k
                end if
-               err = nf90_get_var(ncid,salt_id,wrk,start,edges)
-               if (err .ne. NF90_NOERR) go to 10
-               call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             S_bdy_clim(m,:,k))
-               err = nf90_get_var(ncid,temp_id,wrk,start,edges)
-               if (err .ne. NF90_NOERR) go to 10
-               call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             T_bdy_clim(m,:,k))
+               if (salt_id .ne. -1) then
+                  err = nf90_get_var(ncid,salt_id,wrk_clim,start,edges)
+                  if (err .ne. NF90_NOERR) go to 10
+                  call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
+                                S_bdy_clim(m,:,kl))
+               end if
+               if (temp_id .ne. -1) then
+                  err = nf90_get_var(ncid,temp_id,wrk_clim,start,edges)
+                  if (err .ne. NF90_NOERR) go to 10
+                  call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
+                                T_bdy_clim(m,:,kl))
+               end if
                k = k+1
+               kl = kl + 1
             end do
          end do
 
@@ -282,15 +306,20 @@
                else
                   start(2) = k
                end if
-               err = nf90_get_var(ncid,salt_id,wrk,start,edges)
-               if (err .ne. NF90_NOERR) go to 10
-               call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             S_bdy_clim(m,:,k))
-               err = nf90_get_var(ncid,temp_id,wrk,start,edges)
-               if (err .ne. NF90_NOERR) go to 10
-               call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             T_bdy_clim(m,:,k))
+               if (salt_id .ne. -1) then
+                  err = nf90_get_var(ncid,salt_id,wrk_clim,start,edges)
+                  if (err .ne. NF90_NOERR) go to 10
+                  call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
+                                S_bdy_clim(m,:,kl))
+               end if
+               if (temp_id .ne. -1) then
+                  err = nf90_get_var(ncid,temp_id,wrk_clim,start,edges)
+                  if (err .ne. NF90_NOERR) go to 10
+                  call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
+                                T_bdy_clim(m,:,kl))
+               end if
                k = k+1
+               kl = kl + 1
             end do
          end do
 
@@ -304,15 +333,20 @@
                else
                   start(2) = k
                end if
-               err = nf90_get_var(ncid,salt_id,wrk,start,edges)
-               if (err .ne. NF90_NOERR) go to 10
-               call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             S_bdy_clim(m,:,k))
-               err = nf90_get_var(ncid,temp_id,wrk,start,edges)
-               if (err .ne. NF90_NOERR) go to 10
-               call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             T_bdy_clim(m,:,k))
+               if (salt_id .ne. -1) then
+                  err = nf90_get_var(ncid,salt_id,wrk_clim,start,edges)
+                  if (err .ne. NF90_NOERR) go to 10
+                  call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
+                                S_bdy_clim(m,:,kl))
+               end if
+               if (temp_id .ne. -1) then
+                  err = nf90_get_var(ncid,temp_id,wrk_clim,start,edges)
+                  if (err .ne. NF90_NOERR) go to 10
+                  call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
+                                T_bdy_clim(m,:,kl))
+               end if
                k = k+1
+               kl = kl + 1
             end do
          end do
 
@@ -326,15 +360,20 @@
                else
                   start(2) = k
                end if
-               err = nf90_get_var(ncid,salt_id,wrk,start,edges)
-               if (err .ne. NF90_NOERR) go to 10
-               call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             S_bdy_clim(m,:,k))
-               err = nf90_get_var(ncid,temp_id,wrk,start,edges)
-               if (err .ne. NF90_NOERR) go to 10
-               call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             T_bdy_clim(m,:,k))
+               if (salt_id .ne. -1) then
+                  err = nf90_get_var(ncid,salt_id,wrk_clim,start,edges)
+                  if (err .ne. NF90_NOERR) go to 10
+                  call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
+                                S_bdy_clim(m,:,kl))
+               end if
+               if (temp_id .ne. -1) then
+                  err = nf90_get_var(ncid,temp_id,wrk_clim,start,edges)
+                  if (err .ne. NF90_NOERR) go to 10
+                  call interpol(zax_len,zlev,wrk_clim,H(i,j),kmax,hn(i,j,:), &
+                                T_bdy_clim(m,:,kl))
+               end if
                k = k+1
+               kl = kl + 1
             end do
          end do
       end do
@@ -349,16 +388,16 @@
 
       err = nf90_inq_varid(ncid,'time',time_id)
       if (err .NE. NF90_NOERR) go to 10
-
       err =  nf90_get_att(ncid,time_id,'units',units)
       if (err .NE. NF90_NOERR) go to 10
 
       allocate(bdy_times(time_len),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (bdy_times)'
-
+      bdy_times = _ZERO_
       err = nf90_get_var(ncid,time_id,bdy_times)
       if (err .NE. NF90_NOERR) go to 10
 
+      loop0 = loop - 1
       call string_to_julsecs(units,j1,s1)
       offset = time_diff(julianday,secondsofday,j1,s1)
       if( offset .lt. bdy_times(1) ) then
@@ -384,97 +423,27 @@
          stop 'init_3d_bdy_ncdf'
       end if
 
-      allocate(T_old(0:kmax,nsbv),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_old)'
-      allocate(T_new(0:kmax,nsbv),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_new)'
-      allocate(T_wrk(zax_len,nsbv),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_wrk)'
-
-      allocate(S_old(0:kmax,nsbv),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_old)'
-      allocate(S_new(0:kmax,nsbv),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_new)'
-      allocate(S_wrk(zax_len,nsbv),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_wrk)'
-
-!     Note(KK): We read in at once the data of all points
-!               but only for the current time stage
-
-      n = size(bdy_times)
-      do i=1,n
-         if(bdy_times(i) .ge. real(offset)) then
-            EXIT
-         end if
-      end do
-
-      if(i .gt. 1 .and. bdy_times(i) .gt. real(offset)) then
-         i = i-1
+      if (calc_salt) then
+         allocate(S_bdy_new(0:kmax,nsbvl),stat=err)
+         if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy_new)'
+         allocate(d_S_bdy(0:kmax,nsbvl),stat=err)
+         if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_S_bdy)'
       end if
+      if (calc_temp) then
+         allocate(T_bdy_new(0:kmax,nsbvl),stat=err)
+         if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_bdy_new)'
+         allocate(d_T_bdy(0:kmax,nsbvl),stat=err)
+         if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_T_bdy)'
+      end if
+      allocate(wrk(zax_len,bdy_len),stat=err)
+      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (wrk)'
+      wrk = _ZERO_
 
-      start(1) = 1; edges(1) = zax_len;
-      start(2) = 1; edges(2) = nsbv;
-      start(3) = i; edges(3) = 1
 
-      err = nf90_get_var(ncid,temp_id,T_wrk,start,edges)
-      if (err .ne. NF90_NOERR) go to 10
+      call do_3d_bdy_ncdf(loop0)
 
-      err = nf90_get_var(ncid,salt_id,S_wrk,start,edges)
-      if (err .ne. NF90_NOERR) go to 10
-
-      l = 0
-      do n=1,NWB
-         l = l+1
-         k = bdy_index(l)
-         i = wi(n)
-         do j=wfj(n),wlj(n)
-            call interpol(zax_len,zlev,T_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                          T_new(:,k))
-            call interpol(zax_len,zlev,S_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                          S_new(:,k))
-            k = k+1
-         end do
-      end do
-
-      do n = 1,NNB
-         l = l+1
-         k = bdy_index(l)
-         j = nj(n)
-         do i = nfi(n),nli(n)
-            call interpol(zax_len,zlev,S_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                          S_new(:,k))
-            call interpol(zax_len,zlev,T_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                          T_new(:,k))
-            k = k+1
-         end do
-      end do
-
-      do n=1,NEB
-         l = l+1
-         k = bdy_index(l)
-         i = ei(n)
-         do j=efj(n),elj(n)
-            call interpol(zax_len,zlev,S_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                          S_new(:,k))
-            call interpol(zax_len,zlev,T_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                          T_new(:,k))
-            k = k+1
-         end do
-      end do
-
-      do n = 1,NSB
-         l = l+1
-         k = bdy_index(l)
-         j = sj(n)
-         do i = sfi(n),sli(n)
-            call interpol(zax_len,zlev,S_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                          S_new(:,k))
-            call interpol(zax_len,zlev,T_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                          T_new(:,k))
-            k = k+1
-         end do
-      end do
    end if
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_3d_bdy_ncdf()'
@@ -508,14 +477,14 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer         :: err
+   integer,save    :: indx=1,start(3),edges(3)
+   integer         :: i,err
    REALTYPE        :: rat
    integer         :: monthsecs,prev,this,next
    logical, save   :: first=.true.
-   integer, save   :: loop0
-   REALTYPE        :: t
-   REALTYPE, save  :: t1=_ZERO_,t2=-_ONE_
-   integer         :: i,j,k,l,n
+   REALTYPE        :: t,t_minus_t2
+   REALTYPE, save  :: t1,t2=-_ONE_,deltm1
+   REALTYPE,dimension(:,:),pointer :: S_bdy_old,T_bdy_old
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -524,124 +493,85 @@
 #endif
 
    if ( climatology ) then
-      if (time_len .eq. 12) then
-!        Note(KK): We already read in all data and only need to interpolate in time
-         this = month
-         monthsecs = secsprday*days_in_mon(leapyear,month)
-         rat=((day-1)*secsprday+secondsofday)/float(monthsecs)
-         next=this+1
-         if (next .gt. time_len) next=1
-         prev=this-1
-         if (prev .eq. 0) prev=time_len
-      else
-         STDERR 'do_3d_bdy_ncdf: climatology time_len .ne. 12'
-         stop
-      end if
+!     Note(KK): We already read in all data and only need to interpolate in time
+      this = month
+      monthsecs = secsprday*days_in_mon(leapyear,month)
+      rat=((day-1)*secsprday+secondsofday)/float(monthsecs)
+      next=this+1
+      if (next .gt. time_len) next=1
+      prev=this-1
+      if (prev .eq. 0) prev=time_len
 
-      S_bdy=(1.-rat)*0.5*(S_bdy_clim(prev,:,:)+S_bdy_clim(this,:,:))  &
-         +     rat*0.5*(S_bdy_clim(next,:,:)+S_bdy_clim(this,:,:))
-      T_bdy=(1.-rat)*0.5*(T_bdy_clim(prev,:,:)+T_bdy_clim(this,:,:))  &
-         +     rat*0.5*(T_bdy_clim(next,:,:)+T_bdy_clim(this,:,:))
+      if (calc_salt) then
+         S_bdy=(1.-rat)*0.5*(S_bdy_clim(prev,:,:)+S_bdy_clim(this,:,:))  &
+            +     rat*0.5*(S_bdy_clim(next,:,:)+S_bdy_clim(this,:,:))
+      end if
+      if (calc_temp) then
+         T_bdy=(1.-rat)*0.5*(T_bdy_clim(prev,:,:)+T_bdy_clim(this,:,:))  &
+            +     rat*0.5*(T_bdy_clim(next,:,:)+T_bdy_clim(this,:,:))
+      end if
    else
 
-      if (first) then
-         loop0=loop-1
-      endif
       t = (loop-loop0)*dtm
 
-      if(t .gt. t2 .or. first) then
+      if(t .gt. t2) then
 
-         if (first) then
-            first = .false.
-            t2=t
-         else
-            call write_time_string()
-            LEVEL3 timestr,': reading 3D boundary data ...'
-         end if
-
-!     Note(KK): We read in at once the data of all points
-!               but only for the current time stage
-
-         n = size(bdy_times)
-         do i=1,n
-            if(bdy_times(i) .ge. real(t + offset)) then
+         call write_time_string()
+         LEVEL3 timestr,': reading 3D boundary data ...'
+         t1 = t2
+         do i=indx+1,time_len
+            t2 = bdy_times(i) - offset
+            if(t2 .gt. t) then
                EXIT
             end if
          end do
-         start(1) = 1; edges(1) = zax_len;
-         start(2) = 1; edges(2) = nsbv;
-         start(3) = i; edges(3) = 1
 
-         t1=t2
-         t2 = bdy_times(i) - offset
+         if (first) then
+            indx = i-1
+            t2 = bdy_times(indx) - offset
+            start(1) = 1; edges(1) = zax_len;
+            start(2) = 1; edges(2) = bdy_len;
+            edges(3) = 1
+            first = .false.
+         else
+            indx = i
+         end if
+         start(3) = indx
 
-         T_old = T_new
-         S_old = S_new
+!        Note(KK): We read in at once the data of all global bdy cells
+!                  but only for the current time stage.
+!                  Interpolation extracts all local bdy cells.
 
-         err = nf90_get_var(ncid,temp_id,T_wrk,start,edges)
-         if (err .ne. NF90_NOERR) go to 10
+         if (salt_id .ne. -1) then
+            err = nf90_get_var(ncid,salt_id,wrk,start,edges)
+            if (err .ne. NF90_NOERR) go to 10
+            call interpolate_3d_bdy_ncdf(nsbv,zax_len,wrk,nsbvl,kmax,S_bdy)
+            S_bdy_old=>S_bdy_new;S_bdy_new=>S_bdy;S_bdy=>d_S_bdy;d_S_bdy=>S_bdy_old
+            d_S_bdy = S_bdy_new - S_bdy_old
+         end if
+         if (temp_id .ne. -1) then
+            err = nf90_get_var(ncid,temp_id,wrk,start,edges)
+            if (err .ne. NF90_NOERR) go to 10
+            call interpolate_3d_bdy_ncdf(nsbv,zax_len,wrk,nsbvl,kmax,T_bdy)
+            T_bdy_old=>T_bdy_new;T_bdy_new=>T_bdy;T_bdy=>d_T_bdy;d_T_bdy=>T_bdy_old
+            d_T_bdy = T_bdy_new - T_bdy_old
+         end if
 
-         err = nf90_get_var(ncid,salt_id,S_wrk,start,edges)
-         if (err .ne. NF90_NOERR) go to 10
+         deltm1 = _ONE_ / (t2 - t1)
 
-         l = 0
-         do n=1,NWB
-            l = l+1
-            k = bdy_index(l)
-            i = wi(n)
-            do j=wfj(n),wlj(n)
-               call interpol(zax_len,zlev,T_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                             T_new(:,k))
-               call interpol(zax_len,zlev,S_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                             S_new(:,k))
-               k = k+1
-            end do
-         end do
-
-         do n = 1,NNB
-            l = l+1
-            k = bdy_index(l)
-            j = nj(n)
-            do i = nfi(n),nli(n)
-               call interpol(zax_len,zlev,S_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                             S_new(:,k))
-               call interpol(zax_len,zlev,T_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                             T_new(:,k))
-               k = k+1
-            end do
-         end do
-
-         do n=1,NEB
-            l = l+1
-            k = bdy_index(l)
-            i = ei(n)
-            do j=efj(n),elj(n)
-               call interpol(zax_len,zlev,S_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                             S_new(:,k))
-               call interpol(zax_len,zlev,T_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                             T_new(:,k))
-               k = k+1
-            end do
-         end do
-
-         do n = 1,NSB
-            l = l+1
-            k = bdy_index(l)
-            j = sj(n)
-            do i = sfi(n),sli(n)
-               call interpol(zax_len,zlev,S_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                             S_new(:,k))
-               call interpol(zax_len,zlev,T_wrk(:,k),H(i,j),kmax,hn(i,j,:), &
-                             T_new(:,k))
-               k = k+1
-            end do
-         end do
       end if
 
-      T_bdy = T_old + (T_new - T_old)*(t-t1)/(t2-t1)
-      S_bdy = S_old + (S_new - S_old)*(t-t1)/(t2-t1)
+      t_minus_t2 = t - t2
+
+      if (calc_salt) then
+         S_bdy = S_bdy_new + d_S_bdy*deltm1*t_minus_t2
+      end if
+      if (calc_temp) then
+         T_bdy = T_bdy_new + d_T_bdy*deltm1*t_minus_t2
+      end if
 
    end if
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_3d_bdy_ncdf()'
@@ -652,7 +582,96 @@
    stop
    end subroutine do_3d_bdy_ncdf
 !EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: interpolate_3d_bdy_ncdf -
+!
+! !INTERFACE:
+   subroutine interpolate_3d_bdy_ncdf(nsbv,nlev,data_zax,nsbvl,kmax,data_gvc)
+!
+! !DESCRIPTION:
+!  Here the interpolation is called for the locally active bdy columns.
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer,intent(in)   :: nsbv,nlev,nsbvl,kmax
+   REALTYPE,intent(in)  :: data_zax(nlev,nsbv)
 
+! !OUTPUT PARAMETERS:
+   REALTYPE,intent(out) :: data_gvc(0:kmax,nsbvl)
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
+!
+! !LOCAL VARIABLES:
+   integer         :: i,j,k,kl,l,n
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   write(debug,*) 'interpolate_3d_bdy_ncdf'
+#endif
+
+   l = 0
+   kl = 1
+   do n=1,NWB
+      l = l+1
+      k = bdy_index(l)
+      i = wi(n)
+      do j=wfj(n),wlj(n)
+         call interpol(nlev,zlev,data_zax(:,k),H(i,j),kmax,hn(i,j,:), &
+                       data_gvc(:,kl))
+         k = k+1
+         kl = kl + 1
+      end do
+   end do
+
+   do n = 1,NNB
+      l = l+1
+      k = bdy_index(l)
+      j = nj(n)
+      do i = nfi(n),nli(n)
+         call interpol(nlev,zlev,data_zax(:,k),H(i,j),kmax,hn(i,j,:), &
+                       data_gvc(:,kl))
+         k = k+1
+         kl = kl + 1
+      end do
+   end do
+
+   do n=1,NEB
+      l = l+1
+      k = bdy_index(l)
+      i = ei(n)
+      do j=efj(n),elj(n)
+         call interpol(nlev,zlev,data_zax(:,k),H(i,j),kmax,hn(i,j,:), &
+                       data_gvc(:,kl))
+         k = k+1
+         kl = kl + 1
+      end do
+   end do
+
+   do n = 1,NSB
+      l = l+1
+      k = bdy_index(l)
+      j = sj(n)
+      do i = sfi(n),sli(n)
+         call interpol(nlev,zlev,data_zax(:,k),H(i,j),kmax,hn(i,j,:), &
+                       data_gvc(:,kl))
+         k = k+1
+         kl = kl + 1
+      end do
+   end do
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving interpolate_3d_bdy_ncdf()'
+   write(debug,*)
+#endif
+   return
+   end subroutine interpolate_3d_bdy_ncdf
+!EOC
 !-----------------------------------------------------------------------
 
 ! quick and dirty - should be merged with kbk_interpol.F90 and
@@ -661,11 +680,10 @@
    subroutine interpol(nlev,zlev,wrk,depth,kmax,zm,col)
 
 ! !INPUT PARAMETERS:
-   integer, intent(in)       :: nlev
-   REAL_4B, intent(in)       :: zlev(nlev),wrk(nlev)
-   REALTYPE, intent(in)      :: depth
-   integer, intent(in)       :: kmax
-   REALTYPE, intent(in)      :: zm(0:kmax)
+   integer,intent(in)                    :: nlev,kmax
+   REALTYPE,dimension(nlev),intent(in)   :: zlev,wrk
+   REALTYPE,intent(in)                   :: depth
+   REALTYPE,dimension(0:kmax),intent(in) :: zm
 
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out)     :: col(0:kmax)
