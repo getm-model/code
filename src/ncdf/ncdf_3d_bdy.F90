@@ -12,7 +12,7 @@
 ! !USES:
    use netcdf
    use domain, only: imin,imax,jmin,jmax,kmax,ioff,joff
-   use domain, only: nsbv,nsbvl,NWB,NNB,NEB,NSB,bdy_index
+   use domain, only: nsbv,nsbvl,NWB,NNB,NEB,NSB,bdy_index,bdy_index_l
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: H
    use variables_2d, only: dtm
@@ -268,10 +268,10 @@
       do m=1,time_len
          start(time_pos) = m
          l = 0
-         kl = 1
          do n=1,NWB
             l = l+1
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             i = wi(n)
             do j=wfj(n),wlj(n)
                if (from_3d_fields) then
@@ -299,6 +299,7 @@
          do n = 1,NNB
             l = l+1
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             j = nj(n)
             do i = nfi(n),nli(n)
                if (from_3d_fields) then
@@ -326,6 +327,7 @@
          do n=1,NEB
             l = l+1
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             i = ei(n)
             do j=efj(n),elj(n)
                if (from_3d_fields) then
@@ -353,6 +355,7 @@
          do n = 1,NSB
             l = l+1
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             j = sj(n)
             do i = sfi(n),sli(n)
                if (from_3d_fields) then
@@ -616,10 +619,10 @@
 #endif
 
    l = 0
-   kl = 1
    do n=1,NWB
       l = l+1
       k = bdy_index(l)
+      kl = bdy_index_l(l)
       i = wi(n)
       do j=wfj(n),wlj(n)
          call interpol(nlev,zlev,data_zax(:,k),H(i,j),kmax,hn(i,j,:), &
@@ -628,10 +631,10 @@
          kl = kl + 1
       end do
    end do
-
    do n = 1,NNB
       l = l+1
       k = bdy_index(l)
+      kl = bdy_index_l(l)
       j = nj(n)
       do i = nfi(n),nli(n)
          call interpol(nlev,zlev,data_zax(:,k),H(i,j),kmax,hn(i,j,:), &
@@ -640,10 +643,10 @@
          kl = kl + 1
       end do
    end do
-
    do n=1,NEB
       l = l+1
       k = bdy_index(l)
+      kl = bdy_index_l(l)
       i = ei(n)
       do j=efj(n),elj(n)
          call interpol(nlev,zlev,data_zax(:,k),H(i,j),kmax,hn(i,j,:), &
@@ -652,10 +655,10 @@
          kl = kl + 1
       end do
    end do
-
    do n = 1,NSB
       l = l+1
       k = bdy_index(l)
+      kl = bdy_index_l(l)
       j = sj(n)
       do i = sfi(n),sli(n)
          call interpol(nlev,zlev,data_zax(:,k),H(i,j),kmax,hn(i,j,:), &
