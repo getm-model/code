@@ -16,7 +16,7 @@
    use parameters,only: g
    use halo_zones, only : z_TAG,H_TAG,U_TAG,V_TAG
    use domain, only: imin,jmin,imax,jmax,kmax,H,az,au,av
-   use domain, only: nsbv,nbdy,NWB,NNB,NEB,NSB,bdy_index
+   use domain, only: nsbv,nsbvl,nbdy,NWB,NNB,NEB,NSB,bdy_index,bdy_index_l
    use domain, only: bdy_2d_desc,bdy_2d_type
    use domain, only: need_2d_bdy_elev,need_2d_bdy_u,need_2d_bdy_v
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
@@ -34,10 +34,9 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_bdy_2d, do_bdy_2d
-   character(len=PATH_MAX),public :: bdyfile_2d
-   integer,public                 :: bdyfmt_2d,bdyramp_2d=-1
-!  KK-TODO: static REAL_4B => allocatable REALTYPE
-   REAL_4B,dimension(1500),public :: bdy_data,bdy_data_u,bdy_data_v
+   character(len=PATH_MAX),public       :: bdyfile_2d
+   integer,public                       :: bdyfmt_2d,bdyramp_2d=-1
+   REALTYPE,dimension(:),pointer,public :: bdy_data,bdy_data_u,bdy_data_v
 !
 ! !PRIVATE DATA MEMBERS:
    private bdy2d_active,bdy2d_need_elev,bdy2d_need_vel
@@ -71,7 +70,7 @@
    logical, intent(inout)              :: bdy2d
 !
 ! !LOCAL VARIABLES:
-   integer :: n,l
+   integer :: n,l,rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -138,6 +137,18 @@
              LEVEL4 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
              LEVEL4 'WARNING: .. be sure you know what you are doing ..'
          end if
+         if (need_2d_bdy_elev) then
+            allocate(bdy_data(nsbvl),stat=rc)
+            if (rc /= 0) stop 'init_bdy_2d: Error allocating memory (bdy_data)'
+         end if
+         if (need_2d_bdy_u) then
+            allocate(bdy_data_u(nsbvl),stat=rc)
+            if (rc /= 0) stop 'init_bdy_2d: Error allocating memory (bdy_data_u)'
+         end if
+         if (need_2d_bdy_v) then
+            allocate(bdy_data_v(nsbvl),stat=rc)
+            if (rc /= 0) stop 'init_bdy_2d: Error allocating memory (bdy_data_v)'
+         end if
       else
          bdy2d = .false.
       end if
@@ -184,7 +195,7 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE                  :: cfl,depth,a,fac
-   integer                   :: i,j,k,l,n
+   integer                   :: i,j,k,kl,l,n
    REALTYPE, parameter       :: theta = _HALF_
    REALTYPE, parameter       :: FOUR=4.*_ONE_
 !
@@ -223,6 +234,7 @@
          do n = 1,NWB
             l = l+1
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             i = wi(n)
             select case (bdy_2d_type(l))
                case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
@@ -240,8 +252,9 @@
                   end do
                case (CLAMPED_ELEV,CLAMPED)
                   do j = wfj(n),wlj(n)
-                     z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+                     z(i,j) = max(fac*bdy_data(kl),-H(i,j)+min_depth)
                      k = k+1
+                     kl = kl + 1
                   end do
                case (FLATHER_ELEV)
                   do j = wfj(n),wlj(n)
@@ -249,16 +262,18 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i+1,j))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     a = fac*bdy_data(k) &
-                         - _TWO_/sqrt(g*depth)*(U(i,j)-fac*bdy_data_u(k)*depth)
+                     a = fac*bdy_data(kl) &
+                         - _TWO_/sqrt(g*depth)*(U(i,j)-fac*bdy_data_u(kl)*depth)
                      z(i,j) = max(a,-H(i,j)+min_depth)
                      k = k+1
+                     kl = kl + 1
                   end do
             end select
          end do
          do n = 1,NNB
             l = l+1
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             j = nj(n)
             select case (bdy_2d_type(l))
                case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
@@ -276,8 +291,9 @@
                   end do
                case (CLAMPED_ELEV,CLAMPED)
                   do i = nfi(n),nli(n)
-                     z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+                     z(i,j) = max(fac*bdy_data(kl),-H(i,j)+min_depth)
                      k = k+1
+                     kl = kl + 1
                   end do
                case (FLATHER_ELEV)
                   do i = nfi(n),nli(n)
@@ -285,16 +301,18 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j-1)+D(i,j))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     a = fac*bdy_data(k) &
-                         + _TWO_/sqrt(g*depth)*(V(i,j-1)-fac*bdy_data_v(k)*depth)
+                     a = fac*bdy_data(kl) &
+                         + _TWO_/sqrt(g*depth)*(V(i,j-1)-fac*bdy_data_v(kl)*depth)
                      z(i,j) = max(a,-H(i,j)+min_depth)
                      k = k+1
+                     kl = kl + 1
                   end do
             end select
          end do
          do n = 1,NEB
             l = l+1
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             i = ei(n)
             select case (bdy_2d_type(l))
                case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
@@ -312,8 +330,9 @@
                   end do
                case (CLAMPED_ELEV,CLAMPED)
                   do j = efj(n),elj(n)
-                     z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+                     z(i,j) = max(fac*bdy_data(kl),-H(i,j)+min_depth)
                      k = k+1
+                     kl = kl + 1
                   end do
                case (FLATHER_ELEV)
                   do j = efj(n),elj(n)
@@ -321,16 +340,18 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i-1,j)+D(i,j))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     a = fac*bdy_data(k) &
-                         + _TWO_/sqrt(g*depth)*(U(i-1,j)-fac*bdy_data_u(k)*depth)
+                     a = fac*bdy_data(kl) &
+                         + _TWO_/sqrt(g*depth)*(U(i-1,j)-fac*bdy_data_u(kl)*depth)
                      z(i,j) = max(a,-H(i,j)+min_depth)
                      k = k+1
+                     kl = kl + 1
                   end do
             end select
          end do
          do n = 1,NSB
             l = l+1
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             j = sj(n)
             select case (bdy_2d_type(l))
                case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
@@ -348,8 +369,9 @@
                   end do
                case (CLAMPED_ELEV,CLAMPED)
                   do i = sfi(n),sli(n)
-                     z(i,j) = max(fac*bdy_data(k),-H(i,j)+min_depth)
+                     z(i,j) = max(fac*bdy_data(kl),-H(i,j)+min_depth)
                      k = k+1
+                     kl = kl + 1
                   end do
                case (FLATHER_ELEV)
                   do i = sfi(n),sli(n)
@@ -357,10 +379,11 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i,j+1))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     a = fac*bdy_data(k) &
-                         - _TWO_/sqrt(g*depth)*(V(i,j)-fac*bdy_data_v(k)*depth)
+                     a = fac*bdy_data(kl) &
+                         - _TWO_/sqrt(g*depth)*(V(i,j)-fac*bdy_data_v(kl)*depth)
                      z(i,j) = max(a,-H(i,j)+min_depth)
                      k = k+1
+                     kl = kl + 1
                   end do
             end select
          end do
@@ -371,6 +394,7 @@
          do n = 1,NWB
             l = l+1
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             i = wi(n)
             select case (bdy_2d_type(l))
                case (FLATHER_VEL)
@@ -379,17 +403,19 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i+1,j))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     U(i,j) = fac*bdy_data_u(k)*depth &
-                              - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
+                     U(i,j) = fac*bdy_data_u(kl)*depth &
+                              - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(kl))
                      k = k+1
+                     kl = kl + 1
                   end do
                case (CLAMPED_VEL,CLAMPED)
                   do j = wfj(n),wlj(n)
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i+1,j))
-                     U(i,j) = fac*bdy_data_u(k)*depth
+                     U(i,j) = fac*bdy_data_u(kl)*depth
                      k = k+1
+                     kl = kl + 1
                   end do
             end select
          end do
@@ -397,6 +423,7 @@
          do n = 1,NEB
             l = l+1
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             i = ei(n)
             select case (bdy_2d_type(l))
                case (FLATHER_VEL)
@@ -405,17 +432,19 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i-1,j)+D(i,j))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     U(i-1,j) = fac*bdy_data_u(k)*depth &
-                                + _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
+                     U(i-1,j) = fac*bdy_data_u(kl)*depth &
+                                + _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(kl))
                      k = k+1
+                     kl = kl + 1
                   end do
                case (CLAMPED_VEL,CLAMPED)
                   do j = efj(n),elj(n)
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i-1,j)+D(i,j))
-                     U(i-1,j) = fac*bdy_data_u(k)*depth
+                     U(i-1,j) = fac*bdy_data_u(kl)*depth
                      k = k+1
+                     kl = kl + 1
                   end do
             end select
          end do
@@ -426,6 +455,7 @@
          do n = 1,NNB
             l = l+1
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             j = nj(n)
             select case (bdy_2d_type(l))
                case (FLATHER_VEL)
@@ -434,17 +464,19 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j-1)+D(i,j))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     V(i,j-1) = fac*bdy_data_v(k)*depth &
-                                + _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
+                     V(i,j-1) = fac*bdy_data_v(kl)*depth &
+                                + _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(kl))
                      k = k+1
+                     kl = kl + 1
                   end do
                case (CLAMPED_VEL,CLAMPED)
                   do i = nfi(n),nli(n)
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j-1)+D(i,j))
-                     V(i,j-1) = fac*bdy_data_v(k)*depth
+                     V(i,j-1) = fac*bdy_data_v(kl)*depth
                      k = k+1
+                     kl = kl + 1
                   end do
             end select
          end do
@@ -452,6 +484,7 @@
          do n = 1,NSB
             l = l+1
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             j = sj(n)
             select case (bdy_2d_type(l))
                case (FLATHER_VEL)
@@ -460,17 +493,19 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i,j+1))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     V(i,j) = fac*bdy_data_v(k)*depth &
-                              - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(k))
+                     V(i,j) = fac*bdy_data_v(kl)*depth &
+                              - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(kl))
                      k = k+1
+                     kl = kl + 1
                   end do
                case (CLAMPED_VEL,CLAMPED)
                   do i = sfi(n),sli(n)
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i,j+1))
-                     V(i,j) = fac*bdy_data_v(k)*depth
+                     V(i,j) = fac*bdy_data_v(kl)*depth
                      k = k+1
+                     kl = kl + 1
                   end do
             end select
          end do

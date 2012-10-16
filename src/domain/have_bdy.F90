@@ -41,19 +41,21 @@
             f = max(jlg,wfj(n)) - joff
             l = min(jhg,wlj(n)) - joff
             if(f.le.jmax .and. jmin.le.l) then
-               i = i+1
-               wi(i) = wi(n) - ioff
-               wfj(i) = f
-               wlj(i) = l
                nbdy = nbdy+1
-               bdy_2d_type(nbdy) = bdy_2d_type(m)
-               bdy_3d_type(nbdy) = bdy_3d_type(m)
-               do k=1,nsbv
-                  if (bdy_map(k,1) .eq. wi(i)+ioff .and. &
+               do k=bdy_index(m),nsbv
+                  if (bdy_map(k,1) .eq. wi(n) .and. &
                       bdy_map(k,2) .eq. f+joff) then
                      bdy_index(nbdy) = k
                   end if
                end do
+               bdy_2d_type(nbdy) = bdy_2d_type(m)
+               bdy_3d_type(nbdy) = bdy_3d_type(m)
+               bdy_index_l(nbdy) = nsbvl+1
+               i = i+1
+               wi(i) = wi(n) - ioff
+               wfj(i) = f
+               wlj(i) = l
+               nsbvl = nsbvl + (l-f+1)
             end if
          end if
       end do
@@ -68,19 +70,21 @@
             f = max(ilg,nfi(n)) - ioff
             l = min(ihg,nli(n)) - ioff
             if(f.le.imax .and. imin.le.l) then
-               i = i+1
-               nfi(i) = f
-               nli(i) = l
-               nj(i) = nj(n) - joff
                nbdy = nbdy+1
-               bdy_2d_type(nbdy) = bdy_2d_type(m)
-               bdy_3d_type(nbdy) = bdy_3d_type(m)
-               do k=1,nsbv
+               do k=bdy_index(m),nsbv
                   if (bdy_map(k,1) .eq. f+ioff .and.  &
-                      bdy_map(k,2) .eq. nj(i)+joff) then
+                      bdy_map(k,2) .eq. nj(n)) then
                      bdy_index(nbdy) = k
                   end if
                end do
+               bdy_2d_type(nbdy) = bdy_2d_type(m)
+               bdy_3d_type(nbdy) = bdy_3d_type(m)
+               bdy_index_l(nbdy) = nsbvl+1
+               i = i+1
+               nj(i) = nj(n) - joff
+               nfi(i) = f
+               nli(i) = l
+               nsbvl = nsbvl + (l-f+1)
             end if
          end if
       end do
@@ -95,19 +99,21 @@
             f = max(jlg,efj(n)) - joff
             l = min(jhg,elj(n)) - joff
             if(f.le.jmax .and. jmin.le.l) then
-               i = i+1
-               ei(i) = ei(n) - ioff
-               efj(i) = f
-               elj(i) = l
                nbdy = nbdy+1
-               bdy_2d_type(nbdy) = bdy_2d_type(m)
-               bdy_3d_type(nbdy) = bdy_3d_type(m)
-               do k=1,nsbv
-                  if (bdy_map(k,1) .eq. ei(i)+ioff .and. &
+               do k=bdy_index(m),nsbv
+                  if (bdy_map(k,1) .eq. ei(n) .and. &
                       bdy_map(k,2) .eq. f+joff) then
                      bdy_index(nbdy) = k
                   end if
                end do
+               bdy_2d_type(nbdy) = bdy_2d_type(m)
+               bdy_3d_type(nbdy) = bdy_3d_type(m)
+               bdy_index_l(nbdy) = nsbvl+1
+               i = i+1
+               ei(i) = ei(n) - ioff
+               efj(i) = f
+               elj(i) = l
+               nsbvl = nsbvl + (l-f+1)
             end if
          end if
       end do
@@ -122,19 +128,21 @@
             f = max(ilg,sfi(n)) - ioff
             l = min(ihg,sli(n)) - ioff
             if(f.le.imax .and. imin.le.l) then
-               i = i+1
-               sfi(i) = f
-               sli(i) = l
-               sj(i) = sj(n) - joff
                nbdy = nbdy+1
-               bdy_2d_type(nbdy) = bdy_2d_type(m)
-               bdy_3d_type(nbdy) = bdy_3d_type(m)
-               do k=1,nsbv
+               do k=bdy_index(m),nsbv
                   if (bdy_map(k,1) .eq. f+ioff .and. &
-                      bdy_map(k,2) .eq. sj(i)+joff) then
+                      bdy_map(k,2) .eq. sj(n)) then
                      bdy_index(nbdy) = k
                   end if
                end do
+               bdy_2d_type(nbdy) = bdy_2d_type(m)
+               bdy_3d_type(nbdy) = bdy_3d_type(m)
+               bdy_index_l(nbdy) = nsbvl+1
+               i = i+1
+               sj(i) = sj(n) - joff
+               sfi(i) = f
+               sli(i) = l
+               nsbvl = nsbvl + (l-f+1)
             end if
          end if
       end do
@@ -144,9 +152,11 @@
    if (nbdy .gt. 0) then
       have_boundaries = .true.
       bdy_index(nbdy+1:) = -1
+      bdy_index_l(nbdy+1:) = -1
    else
       have_boundaries = .false.
       bdy_index = -1
+      bdy_index_l = -1
    end if
 
 #ifdef DEBUG

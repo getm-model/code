@@ -66,8 +66,9 @@
 #else
 #include "dynamic_declarations_domain.h"
 #endif
-   integer                             :: nsbv=0 ! number of global bdy cells
-   integer                             :: nbdy=0 ! number local bdys
+   integer                             :: nsbv=0  ! global number of bdy cells
+   integer                             :: nsbvl=0 ! local number of bdy cells
+   integer                             :: nbdy=0  ! local number of bdys
 
    integer                             :: ioff=0,joff=0
    integer, dimension(:), allocatable  :: bdy_2d_type
@@ -76,7 +77,7 @@
    integer, dimension(:), allocatable  :: nj,nfi,nli
    integer, dimension(:), allocatable  :: ei,efj,elj
    integer, dimension(:), allocatable  :: sj,sfi,sli
-   integer, allocatable                :: bdy_index(:),bdy_map(:,:)
+   integer, allocatable                :: bdy_index(:),bdy_map(:,:),bdy_index_l(:)
    logical                             :: have_boundaries=.false.
 
    character(len=64)                   :: bdy_2d_desc(-1:6),bdy_3d_desc(-1:1)
