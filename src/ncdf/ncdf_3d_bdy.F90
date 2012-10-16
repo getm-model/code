@@ -545,14 +545,14 @@
          if (salt_id .ne. -1) then
             err = nf90_get_var(ncid,salt_id,wrk,start,edges)
             if (err .ne. NF90_NOERR) go to 10
-            call interpolate_3d_bdy_ncdf(nsbv,zax_len,wrk,nsbvl,kmax,S_bdy)
+            call interpolate_3d_bdy_ncdf(bdy_len,zax_len,wrk,nsbvl,kmax,S_bdy)
             S_bdy_old=>S_bdy_new;S_bdy_new=>S_bdy;S_bdy=>d_S_bdy;d_S_bdy=>S_bdy_old
             d_S_bdy = S_bdy_new - S_bdy_old
          end if
          if (temp_id .ne. -1) then
             err = nf90_get_var(ncid,temp_id,wrk,start,edges)
             if (err .ne. NF90_NOERR) go to 10
-            call interpolate_3d_bdy_ncdf(nsbv,zax_len,wrk,nsbvl,kmax,T_bdy)
+            call interpolate_3d_bdy_ncdf(bdy_len,zax_len,wrk,nsbvl,kmax,T_bdy)
             T_bdy_old=>T_bdy_new;T_bdy_new=>T_bdy;T_bdy=>d_T_bdy;d_T_bdy=>T_bdy_old
             d_T_bdy = T_bdy_new - T_bdy_old
          end if
