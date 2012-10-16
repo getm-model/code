@@ -14,7 +14,7 @@
    use exceptions
    use domain, only: NWB,NNB,NEB,NSB,NOB
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
-   use domain, only: bdy_index,bdy_map,nsbv
+   use domain, only: bdy_index,bdy_index_l,bdy_map,nsbv
    use domain, only: bdy_2d_type,bdy_3d_type
    IMPLICIT NONE
 !
@@ -236,6 +236,9 @@
       allocate(bdy_index(NOB),stat=rc)
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (bdy_index)'
 
+      allocate(bdy_index_l(NOB),stat=rc)
+      if (rc /= 0) stop 'bdy_spec: Error allocating memory (bdy_index_l)'
+
       allocate(bdy_map(nsbv,2),stat=rc)
       if (rc /= 0) stop 'bdy_spec: Error allocating memory (bdy_map)'
 
@@ -243,6 +246,7 @@
       l = 1
       do n=1,NWB
          bdy_index(l) = k
+         bdy_index_l(l) = k
          l = l+1
          i = wi(n)
          do j=wfj(n),wlj(n)
@@ -253,6 +257,7 @@
       end do
       do n=1,NNB
          bdy_index(l) = k
+         bdy_index_l(l) = k
          l = l+1
          j = nj(n)
          do i=nfi(n),nli(n)
@@ -263,6 +268,7 @@
       end do
       do n=1,NEB
          bdy_index(l) = k
+         bdy_index_l(l) = k
          l = l+1
          i = ei(n)
          do j=efj(n),elj(n)
@@ -273,6 +279,7 @@
       end do
       do n=1,NSB
          bdy_index(l) = k
+         bdy_index_l(l) = k
          l = l+1
          j = sj(n)
          do i=sfi(n),sli(n)
