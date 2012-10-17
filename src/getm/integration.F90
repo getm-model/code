@@ -73,7 +73,7 @@
 ! !REVISION HISTORY:
 !
 ! !LOCAL VARIABLES
-   logical                   :: do_3d
+   logical                   :: do_3d=.false.
    integer                   :: n
    integer                   :: progress=100
    character(8)              :: d_
@@ -101,7 +101,7 @@
 #ifndef NO_3D
       do_3d = (runtype .ge. 2 .and. mod(n,M) .eq. 0)
 #endif
-      call do_input(n)
+      call do_input(n,do_3d)
       if(runtype .le. 2) then
          call do_meteo(n)
 #ifndef NO_3D
