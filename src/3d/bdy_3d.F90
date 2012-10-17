@@ -40,7 +40,7 @@
    REALTYPE,public                     :: bdy3d_tmrlx_max=_ONE_/4
    REALTYPE,public                     :: bdy3d_tmrlx_min=_ZERO_
 
-   REALTYPE,dimension(:,:),pointer,public :: S_bdy,T_bdy
+   REALTYPE,dimension(:,:),allocatable,public :: bdy_data_S,bdy_data_T
 #ifdef _FABM_
    REALTYPE, public, allocatable       :: bio_bdy(:,:,:)
    integer, public, allocatable        :: have_bio_bdy_values(:)
@@ -158,11 +158,11 @@
          LEVEL3 'bdy3d_tmrlx_umin=  ',bdy3d_tmrlx_umin
       end if
 
-      allocate(S_bdy(0:kmax,nsbvl),stat=rc)
-      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (S_bdy)'
+      allocate(bdy_data_S(0:kmax,nsbvl),stat=rc)
+      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (bdy_data_S)'
 
-      allocate(T_bdy(0:kmax,nsbvl),stat=rc)
-      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (T_bdy)'
+      allocate(bdy_data_T(0:kmax,nsbvl),stat=rc)
+      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (bdy_data_T)'
 
       allocate(bdyvertS(0:kmax),stat=rc)
       if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (bdyvertS)'
@@ -319,17 +319,17 @@
                         end do
 !                       Weight inner and outer (bc) solutions for use
 !                       in spatial relaxation/sponge
-                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,kl)
-                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,kl)
+                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
+                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
                      else
    !                    No near-bdy points. Just clamp bdy temporally:
-                        bdyvertS(:) = S_bdy(:,kl)
-                        bdyvertT(:) = T_bdy(:,kl)
+                        bdyvertS(:) = bdy_data_S(:,kl)
+                        bdyvertT(:) = bdy_data_T(:,kl)
                      end if
                   else
 !                    No time-relaxation. Just clamp at bondary points.
-                     bdyvertS(:) = S_bdy(:,kl)
-                     bdyvertT(:) = T_bdy(:,kl)
+                     bdyvertS(:) = bdy_data_S(:,kl)
+                     bdyvertT(:) = bdy_data_T(:,kl)
                   end if
                   S(i,j,:) = bdyvertS(:)
                   T(i,j,:) = bdyvertT(:)
@@ -411,15 +411,15 @@
                                    + bdy3d_tmrlx_min
                            end if
                         end do
-                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,kl)
-                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,kl)
+                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
+                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
                      else
-                        bdyvertS(:) = S_bdy(:,kl)
-                        bdyvertT(:) = T_bdy(:,kl)
+                        bdyvertS(:) = bdy_data_S(:,kl)
+                        bdyvertT(:) = bdy_data_T(:,kl)
                      end if
                   else
-                     bdyvertS(:) = S_bdy(:,kl)
-                     bdyvertT(:) = T_bdy(:,kl)
+                     bdyvertS(:) = bdy_data_S(:,kl)
+                     bdyvertT(:) = bdy_data_T(:,kl)
                   end if
                   S(i,j,:) = bdyvertS(:)
                   T(i,j,:) = bdyvertT(:)
@@ -500,15 +500,15 @@
                                    + bdy3d_tmrlx_min
                            end if
                         end do
-                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,kl)
-                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,kl)
+                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
+                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
                      else
-                        bdyvertS(:) = S_bdy(:,kl)
-                        bdyvertT(:) = T_bdy(:,kl)
+                        bdyvertS(:) = bdy_data_S(:,kl)
+                        bdyvertT(:) = bdy_data_T(:,kl)
                      end if
                   else
-                     bdyvertS(:) = S_bdy(:,kl)
-                     bdyvertT(:) = T_bdy(:,kl)
+                     bdyvertS(:) = bdy_data_S(:,kl)
+                     bdyvertT(:) = bdy_data_T(:,kl)
                   end if
                   S(i,j,:) = bdyvertS(:)
                   T(i,j,:) = bdyvertT(:)
@@ -589,15 +589,15 @@
                                    + bdy3d_tmrlx_min
                            end if
                         end do
-                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*S_bdy(:,kl)
-                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*T_bdy(:,kl)
+                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
+                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
                      else
-                        bdyvertS(:) = S_bdy(:,kl)
-                        bdyvertT(:) = T_bdy(:,kl)
+                        bdyvertS(:) = bdy_data_S(:,kl)
+                        bdyvertT(:) = bdy_data_T(:,kl)
                      end if
                   else
-                     bdyvertS(:) = S_bdy(:,kl)
-                     bdyvertT(:) = T_bdy(:,kl)
+                     bdyvertS(:) = bdy_data_S(:,kl)
+                     bdyvertT(:) = bdy_data_T(:,kl)
                   end if
                   S(i,j,:) = bdyvertS(:)
                   T(i,j,:) = bdyvertT(:)
