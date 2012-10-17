@@ -135,7 +135,7 @@
 ! !IROUTINE: do_input - cleans up after run
 !
 ! !INTERFACE:
-   subroutine do_input(n)
+   subroutine do_input(n,do_3d)
    use getm_timers, only: tic, toc, TIM_INPUT
    IMPLICIT NONE
 !
@@ -144,6 +144,7 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in) :: n
+   logical, intent(in) :: do_3d
 !
 ! !REVISION HISTORY:
 !
@@ -172,7 +173,9 @@
    end if
 
 #ifndef NO_3D
-   if(bdy3d) then
+   if(bdy3d .and. do_3d) then
+!     Note (KK): bdy data are assumed to be provided less frequently than 3D time step
+!                thus no data set is assumed to be skipped
       call get_3d_bdy(bdyfmt_3d,n)
    end if
 #endif
