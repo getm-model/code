@@ -95,16 +95,8 @@
    logical                   :: hotstart=.false.
    logical                   :: use_epoch=.false.
    logical                   :: save_initial=.false.
-#ifdef INPUT_DIR
-   character(len=PATH_MAX)   :: input_dir=trim(INPUT_DIR) // '/'
-#else
    character(len=PATH_MAX)   :: input_dir=''
-#endif
-#ifdef _NAMLST_FILE_
-   character(len=PATH_MAX)   :: namlst_file=trim(_NAMLST_FILE_)
-#else
-   character(len=PATH_MAX)   :: namlst_file=input_dir // 'getm.inp'
-#endif
+   character(len=PATH_MAX)   :: namlst_file=''
    character(len=PATH_MAX)   :: hot_in=''
 
    namelist /param/ &
@@ -145,8 +137,14 @@
 #endif
 
 #ifdef INPUT_DIR
+   input_dir=trim(INPUT_DIR) // '/'
    STDERR 'input_dir:'
-   STDERR trim(INPUT_DIR)
+   STDERR input_dir
+#endif
+#ifdef _NAMLST_FILE_
+   namlst_file=trim(_NAMLST_FILE_)
+#else
+   namlst_file=trim(input_dir) // 'getm.inp'
 #endif
 !
 ! Open the namelist file to get basic run parameters.
