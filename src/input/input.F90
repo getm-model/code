@@ -102,22 +102,22 @@
 
    LEVEL1 'init_input'
    if (metforcing .and. met_method .eq. 2) then
-      call init_meteo_input(trim(input_dir) // meteo_file,n)
+      call init_meteo_input(meteo_file,n)
    end if
 
 #ifndef NO_3D
    if (river_method .gt. 0 .and. nriver .gt. 0) then
-      call init_river_input(trim(input_dir) // river_data,n)
+      call init_river_input(river_data,n)
    end if
 #endif
 
    if(bdy2d) then
-      call init_2d_bdy(trim(input_dir) // bdyfile_2d,bdyfmt_2d,n)
+      call init_2d_bdy(bdyfile_2d,bdyfmt_2d,n)
    end if
 
 #ifndef NO_3D
    if(bdy3d) then
-      call init_3d_bdy(trim(input_dir) // bdyfile_3d,bdyfmt_3d,n)
+      call init_3d_bdy(bdyfile_3d,bdyfmt_3d,n)
    end if
 #endif
 
