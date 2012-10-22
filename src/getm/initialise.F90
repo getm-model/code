@@ -100,6 +100,11 @@
 #else
    character(len=PATH_MAX)   :: input_dir=''
 #endif
+#ifdef _NAMLST_FILE_
+   character(len=PATH_MAX)   :: namlst_file=trim(_NAMLST_FILE_)
+#else
+   character(len=PATH_MAX)   :: namlst_file=input_dir // 'getm.inp'
+#endif
    character(len=PATH_MAX)   :: hot_in=''
 
    namelist /param/ &
@@ -147,7 +152,7 @@
 ! Open the namelist file to get basic run parameters.
 !
    title='A descriptive title can be specified in the param namelist'
-   open(NAMLST,status='unknown',file=trim(input_dir) // "getm.inp")
+   open(NAMLST,status='unknown',file=namlst_file)
    read(NAMLST,NML=param)
 
 #ifdef NO_BAROCLINIC
