@@ -14,7 +14,7 @@ nmls_t = ('getm/m3d/vel3d_','getm/temp/temp_','getm/salt/salt_')
 for n,nml in enumerate(nmls_s):
 	adv_split = source[nml+'adv_split'].getValue(usedefault=True)
 	hor_adv = source[nml+'hor_adv'].getValue(usedefault=True)
-	ver_adv = source[nml+'hor_adv'].getValue(usedefault=True)
+	ver_adv = source[nml+'ver_adv'].getValue(usedefault=True)
 	target[nmls_t[n]+'adv_split'].setValue(adv_split+1)
 	target[nmls_t[n]+'adv_hor'].setValue(hor_adv)
 	target[nmls_t[n]+'adv_ver'].setValue(ver_adv)
