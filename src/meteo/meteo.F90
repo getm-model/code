@@ -186,12 +186,12 @@
          case default
       end select
 
-      if (hotstart .and. meteo_ramp .gt. 0) then
-         LEVEL2 'hotstart --> meteo_ramp=-1'
-         meteo_ramp=-1
-      end if
-      if ( meteo_ramp .gt. 0) then
-         LEVEL2 'Forcing will be spun up over ',meteo_ramp,' timesteps'
+      if (meteo_ramp .gt. 1) then
+         LEVEL2 'meteo_ramp=',meteo_ramp
+         if (hotstart) then
+            LEVEL3 'WARNING: hotstart is .true. AND meteo_ramp .gt. 1'
+            LEVEL3 'WARNING: .. be sure you know what you are doing ..'
+         end if
       end if
    end if
 
