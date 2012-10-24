@@ -249,7 +249,16 @@
 				<condition type="eq" variable="./river_method" value="2"/>
 			</element>
 			<element name="river_ramp" type="int" label="ramp on river flows - in micro time steps">
-				<condition type="ne" variable="./river_method" value="0"/>
+				<condition type="and">
+					<condition type="ne" variable="./river_method" value="0"/>
+					<condition type="or">
+						<condition type="eq" variable="../param/hotstart" value="False"/>
+						<condition type="and">
+							<condition type="eq" variable="../param/hotstart" value="True"/>
+							<condition type="eq" variable="../param/use_epoch" value="False"/>
+						</condition>
+					</condition>
+				</condition>
 			</element>
 			<element name="river_factor" type="float" label="factor to convert river flow to m³/s">
 				<condition type="eq" variable="./river_method" value="2"/>
