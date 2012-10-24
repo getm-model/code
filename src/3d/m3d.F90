@@ -249,7 +249,9 @@
 #endif
    end if
 
-   if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
+   if (.not.hotstart .and. vert_cord.eq._ADAPTIVE_COORDS_) then
+      call preadapt_coordinates(preadapt)
+   end if
 
 #ifndef NO_BAROCLINIC
    if (runtype .eq. 4) then
@@ -291,8 +293,6 @@
       end if
    end if
 #endif
-
-   if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
 
    if (have_boundaries) then
       call init_bdy_3d(bdy3d,runtype,hotstart_method)

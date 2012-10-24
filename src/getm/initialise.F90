@@ -212,7 +212,7 @@
    call init_meteo(hotstart_method)
 
 #ifndef NO_3D
-   call init_rivers()
+   call init_rivers(hotstart_method)
 #endif
 
    call init_2d(runtype,timestep,hotstart_method)

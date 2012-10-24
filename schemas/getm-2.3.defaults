@@ -151,9 +151,9 @@
 			<fwf_method>
 				0
 			</fwf_method>
-			<spinup>
+			<meteo_ramp>
 				0
-			</spinup>
+			</meteo_ramp>
 			<metfmt>
 				1
 			</metfmt>
