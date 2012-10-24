@@ -103,7 +103,7 @@
 ! !IROUTINE: init_rivers
 !
 ! !INTERFACE:
-   subroutine init_rivers
+   subroutine init_rivers(hotstart)
 !
 ! !DESCRIPTION:
 !
@@ -118,6 +118,9 @@
 !
 ! !USES:
    IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   logical,intent(in)        :: hotstart
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n,nn,ni,rc,m,iriver,jriver,numcells
@@ -146,7 +149,13 @@
          LEVEL2 'river_method= ',river_method
          LEVEL2 'river_data=   ',trim(river_data)
          LEVEL2 'river_format= ',river_format
-         LEVEL2 'river_ramp=   ',river_ramp
+         if (river_ramp .gt. 1) then
+            LEVEL2 'river_ramp=',river_ramp
+            if (hotstart) then
+               LEVEL3 'WARNING: hotstart is .true. AND river_ramp .gt. 1'
+               LEVEL3 'WARNING: .. be sure you know what you are doing ..'
+            end if
+         end if
          LEVEL2 'river_factor= ',river_factor
          LEVEL2 'use_river_temp= ',use_river_temp
          LEVEL2 'use_river_salt= ',use_river_salt
