@@ -67,6 +67,9 @@ endif
 ifdef INPUT_DIR
 DEFINES += -DINPUT_DIR="'$(INPUT_DIR)/'"
 endif
+ifdef GETM_NAMLST_FILE
+DEFINES += -D_NAMLST_FILE_="'$(GETM_NAMLST_FILE)'"
+endif
 ifdef GETM_STDERR_DIR
 DEFINES += -D_STDERR_DIR_="'$(GETM_STDERR_DIR)/'"
 endif

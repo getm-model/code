@@ -6,7 +6,7 @@
 ! \label{sec-adaptive-coordinates}
 !
 ! !INTERFACE:
-   subroutine adaptive_coordinates(first,hotstart)
+   subroutine adaptive_coordinates(first,hotstart_method)
 !
 ! !DESCRIPTION:
 ! The vertical grid adaptivity is partially given by a vertical diffusion
@@ -79,7 +79,7 @@
 !
 ! !INPUT PARAMETERS:
    logical, intent(in)                 :: first
-   logical, intent(in)                 :: hotstart
+   integer, intent(in)                 :: hotstart_method
 ! !OUTPUT PARAMETERS:
 !   integer, intent(out)                :: preadapt
 !
@@ -136,10 +136,10 @@
                         depthmin,Ncrit, &
                         cNN,cSS,cdd,cbg,d_vel,d_dens, &
                         dsurf,tgrid,split,preadapt
-#if (defined GETM_PARALLEL && defined INPUT_DIR)
-   character(len=PATH_MAX)   :: input_dir=INPUT_DIR
+#ifdef INPUT_DIR
+   character(len=PATH_MAX)   :: input_dir=trim(INPUT_DIR) // '/'
 #else
-   character(len=PATH_MAX)   :: input_dir='./'
+   character(len=PATH_MAX)   :: input_dir=''
 #endif
 
 !EOP
@@ -203,7 +203,7 @@ STDERR 'adaptive_coordinates()'
 ! so we initiialize it here. Same for avn: Both just remain zero.
       NNloc(:) = _ZERO_
       avn(:)   = _ZERO_
-      if (.not.hotstart) then
+      if (hotstart_method .eq. 0) then
 ! Dirty way to read initial distribution (as equidistant sigma coordinates):
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO
