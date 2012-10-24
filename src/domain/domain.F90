@@ -272,7 +272,7 @@
 
 !  Reads boundary location information
    if (openbdy) then
-      call bdy_spec(trim(input_dir) // bdyinfofile)
+      call bdy_spec(bdyinfofile)
       call print_bdy('Global Boundary Information')
       call have_bdy()
       call print_bdy('Local Boundary Information')

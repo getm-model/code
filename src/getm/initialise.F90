@@ -95,11 +95,8 @@
    logical                   :: hotstart=.false.
    logical                   :: use_epoch=.false.
    logical                   :: save_initial=.false.
-#if (defined GETM_PARALLEL && defined INPUT_DIR)
-   character(len=PATH_MAX)   :: input_dir=INPUT_DIR
-#else
-   character(len=PATH_MAX)   :: input_dir='./'
-#endif
+   character(len=PATH_MAX)   :: input_dir=''
+   character(len=PATH_MAX)   :: namlst_file=''
    character(len=PATH_MAX)   :: hot_in=''
 
    namelist /param/ &
@@ -139,15 +136,21 @@
    call init_mpi()
 #endif
 
-#if (defined GETM_PARALLEL && defined INPUT_DIR)
+#ifdef INPUT_DIR
+   input_dir=trim(INPUT_DIR) // '/'
    STDERR 'input_dir:'
-   STDERR trim(input_dir)
+   STDERR input_dir
+#endif
+#ifdef _NAMLST_FILE_
+   namlst_file=trim(_NAMLST_FILE_)
+#else
+   namlst_file=trim(input_dir) // 'getm.inp'
 #endif
 !
 ! Open the namelist file to get basic run parameters.
 !
    title='A descriptive title can be specified in the param namelist'
-   open(NAMLST,status='unknown',file=trim(input_dir) // "/getm.inp")
+   open(NAMLST,status='unknown',file=namlst_file)
    read(NAMLST,NML=param)
 
 #ifdef NO_BAROCLINIC

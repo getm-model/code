@@ -384,6 +384,11 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,zz(2),neighbours(nneighbours),numthreads
    character(len=*),parameter:: par_setup="par_setup.dat"
+#ifdef INPUT_DIR
+   character(len=PATH_MAX)   :: input_dir=trim(INPUT_DIR) // '/'
+#else
+   character(len=PATH_MAX)   :: input_dir=''
+#endif
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -434,7 +439,7 @@
 !         STDERR 'dynamic dims ',dims
 #endif
       case(MESH_FROM_FILE)
-         call read_par_setup(par_setup,nprocs,myid,imax,jmax,iextr,jextr, &
+         call read_par_setup(trim(input_dir) // par_setup,nprocs,myid,imax,jmax,iextr,jextr, &
                              ioff,joff,neighbours,numthreads)
          left  = neighbours(1) ; if (left  .eq. -1) left  = MPI_PROC_NULL
          ul    = neighbours(2) ; if (ul    .eq. -1) ul    = MPI_PROC_NULL
