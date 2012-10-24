@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
 <converter source="getm-2.2" target="getm-2.3">
 	<links>
+		<link source="/getm/meteo/spinup" target="/getm/meteo/meteo_ramp"/>
 		<link source="/getm/m2d/vel_depth_method" target="/getm/domain/vel_depth_method"/>
 		<link source="/getm/m2d/Am" target="/getm/m2d/Am_const"/>
 		<link source="/getm/temp/temp_AH" target="/getm/temp/temp_AH_const"/>
@@ -17,7 +18,7 @@ nmls_t = ('getm/m3d/vel3d_','getm/temp/temp_','getm/salt/salt_')
 for n,nml in enumerate(nmls_s):
 	adv_split = source[nml+'adv_split'].getValue(usedefault=True)
 	hor_adv = source[nml+'hor_adv'].getValue(usedefault=True)
-	ver_adv = source[nml+'hor_adv'].getValue(usedefault=True)
+	ver_adv = source[nml+'ver_adv'].getValue(usedefault=True)
 	target[nmls_t[n]+'adv_split'].setValue(adv_split+1)
 	target[nmls_t[n]+'adv_hor'].setValue(hor_adv)
 	target[nmls_t[n]+'adv_ver'].setValue(ver_adv)
