@@ -187,8 +187,8 @@
       end select
 
       if (hotstart .and. meteo_ramp .gt. 0) then
-         LEVEL2 'hotstart --> meteo_ramp=-1'
-         meteo_ramp=-1
+         LEVEL2 'WARNING: hotstart is .true. AND meteo_ramp .gt. 0'
+         LEVEL2 'WARNING: .. be sure you know what you are doing ..'
       end if
       if ( meteo_ramp .gt. 0) then
          LEVEL2 'Forcing will be spun up over ',meteo_ramp,' timesteps'
