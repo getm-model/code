@@ -156,10 +156,12 @@
       if (need_2d_bdy_elev .or. need_2d_bdy_u .or. need_2d_bdy_v) then
          LEVEL3 'bdyfile_2d=',TRIM(bdyfile_2d)
          LEVEL3 'bdyfmt_2d=',bdyfmt_2d
-         LEVEL3 'bdyramp_2d=',bdyramp_2d
-         if (hotstart .and. bdyramp_2d .gt. 0) then
-             LEVEL4 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
-             LEVEL4 'WARNING: .. be sure you know what you are doing ..'
+         if (bdyramp_2d .gt. 1) then
+            LEVEL3 'bdyramp_2d=',bdyramp_2d
+            if (hotstart) then
+               LEVEL4 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 1'
+               LEVEL4 'WARNING: .. be sure you know what you are doing ..'
+            end if
          end if
          if (need_2d_bdy_elev) then
             allocate(bdy_data(nsbvl),stat=rc)
@@ -221,7 +223,6 @@
    REALTYPE                  :: cfl,depth,a,fac
    integer                   :: i,j,k,kl,l,n
    REALTYPE, parameter       :: theta = _HALF_
-   REALTYPE, parameter       :: FOUR=4.*_ONE_
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -247,7 +248,7 @@
 !  Data read - do time interpolation
 
    fac = _ONE_
-   if(bdyramp_2d .gt. 1) fac=min( _ONE_ ,FOUR*loop/float(bdyramp_2d))
+   if(bdyramp_2d .gt. 1) fac=min( _ONE_ ,loop/float(bdyramp_2d))
 
 
    select case (tag)
