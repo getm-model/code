@@ -69,7 +69,7 @@
 ! \label{sec-init-bdy-3d}
 !
 ! !INTERFACE:
-   subroutine init_bdy_3d(bdy3d,runtype,hotstart)
+   subroutine init_bdy_3d(bdy3d,runtype,hotstart_method)
 !
 ! !DESCRIPTION:
 !
@@ -81,7 +81,7 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
-   logical, intent(in)                 :: hotstart
+   integer, intent(in)                 :: hotstart_method
 !
 ! !INPUT/OUTPUT PARAMETERS:
    logical, intent(inout)              :: bdy3d
@@ -132,7 +132,7 @@
       LEVEL3 'bdyfile_3d=',TRIM(bdyfile_3d)
       LEVEL3 'bdyfmt_3d=',bdyfmt_3d
       LEVEL3 'bdyramp_3d=',bdyramp_3d
-      if (hotstart .and. bdyramp_3d .gt. 0) then
+      if (hotstart_method.eq.1 .and. bdyramp_3d .gt. 0) then
           LEVEL4 'WARNING: hotstart is .true. AND bdyramp_3d .gt. 0'
           LEVEL4 'WARNING: .. be sure you know what you are doing ..'
       end if

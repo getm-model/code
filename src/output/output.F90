@@ -319,7 +319,7 @@
 ! !ROUTINE: restart_file - read/write the restart file
 !
 ! !INTERFACE:
-   subroutine restart_file(mode,fname,loop,runtype,use_epoch)
+   subroutine restart_file(mode,fname,loop,runtype,hotstart_method)
 !
 ! !DESCRIPTION:
 !  This routine write the variables necesaary for a 'hot' model start.
@@ -364,7 +364,7 @@
    integer, intent(in)                 :: mode
    character(len=*), intent(in)        :: fname
    integer, intent(in)                 :: runtype
-   logical, optional, intent(in)       :: use_epoch
+   integer, optional, intent(in)       :: hotstart_method
 !
 ! !INPUT/OUTPUT PARAMETERS:
    integer, intent(inout)              :: loop
@@ -544,7 +544,7 @@
       end select
 
 !     make some sanity checks
-      if (use_epoch) then
+      if (hotstart_method .eq. 2) then
          if (jd .eq. julianday .and. secs .eq. secondsofday) then
             loop=0
          else

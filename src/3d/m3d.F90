@@ -87,12 +87,12 @@
 ! !IROUTINE: init_3d - initialise 3D related stuff \label{sec-init-3d}
 !
 ! !INTERFACE:
-   subroutine init_3d(runtype,timestep,hotstart)
+   subroutine init_3d(runtype,timestep,hotstart_method)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    REALTYPE, intent(in)                :: timestep
-   logical, intent(in)                 :: hotstart
+   integer, intent(in)                 :: hotstart_method
 !
 ! !INPUT/OUTPUT PARAMETERS:
    integer, intent(inout)              :: runtype
@@ -228,10 +228,10 @@
    end if
 
 !  Needed for interpolation of temperature and salinity
-   if (.not. hotstart) then
+   if (hotstart_method .eq. 0) then
       ssen = z
       call start_macro()
-      call coordinates(hotstart)
+      call coordinates(hotstart_method)
       call hcc_check()
    end if
 
@@ -241,8 +241,8 @@
    else
 #ifndef NO_BAROCLINIC
       T = _ZERO_ ; S = _ZERO_ ; rho = _ZERO_
-      if(calc_temp) call init_temperature()
-      if(calc_salt) call init_salinity()
+      if(calc_temp) call init_temperature(hotstart_method)
+      if(calc_salt) call init_salinity(hotstart_method)
       call init_eqstate()
       call init_internal_pressure()
       LEVEL2 'ip_ramp=',ip_ramp
@@ -295,7 +295,7 @@
    if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
 
    if (have_boundaries) then
-      call init_bdy_3d(bdy3d,runtype,hotstart)
+      call init_bdy_3d(bdy3d,runtype,hotstart_method)
    else
       bdy3d = .false.
    end if
@@ -365,14 +365,14 @@
 ! !IROUTINE: postinit_3d - re-initialise some 3D after hotstart read.
 !
 ! !INTERFACE:
-   subroutine postinit_3d(runtype,n,hotstart)
+   subroutine postinit_3d(runtype,n,hotstart_method)
 ! !USES:
    use domain, only: imin,imax,jmin,jmax, az,au,av
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype,n
-   logical, intent(in)                 :: hotstart
+   integer, intent(in)                 :: hotstart_method
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -438,7 +438,7 @@
    end if
 
 ! Hotstart fix - see postinit_2d
-   if (hotstart) then
+   if (hotstart_method .ne. 0) then
 
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
@@ -469,7 +469,7 @@
          end do
       end do
 
-      call coordinates(hotstart)
+      call coordinates(hotstart_method)
 
       call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
 
@@ -479,7 +479,7 @@
    if (runtype .ge. 3) then
       call do_eqstate()
       call do_internal_pressure()
-      if (.not. hotstart) then
+      if (hotstart_method .eq. 0) then
 #ifndef NO_BAROTROPIC
          if (.not. no_2d) then
             call slow_terms()

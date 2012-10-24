@@ -61,7 +61,7 @@
 ! \label{sec-init-salinity}
 !
 ! !INTERFACE:
-   subroutine init_salinity()
+   subroutine init_salinity(hotstart_method)
 !
 ! !DESCRIPTION:
 !
@@ -84,7 +84,8 @@
    use advection_3d, only: print_adv_settings_3d
    IMPLICIT NONE
 !
-! !INPUT/OUTPUT PARAMETERS:
+! !INPUT PARAMETERS:
+   integer,intent(in)        :: hotstart_method
 !
 ! !OUTPUT PARAMETERS:
 !
@@ -110,6 +111,10 @@
    LEVEL2 'init_salinity()'
    read(NAMLST,salt)
 
+   if (hotstart_method.eq.2 .and. salt_method.ne.0) then
+      LEVEL3 'WARNING: reset salt_method=0 because of hotstart_method=2'
+      salt_method=0
+   end if
    if (avmols .lt. _ZERO_) then
       LEVEL3 'setting avmols to 0.'
       avmols = _ZERO_

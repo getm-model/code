@@ -57,7 +57,7 @@
 ! \label{sec-init-bdy-2d}
 !
 ! !INTERFACE:
-   subroutine init_bdy_2d(bdy2d,hotstart)
+   subroutine init_bdy_2d(bdy2d,hotstart_method)
 !
 ! !DESCRIPTION:
 !
@@ -65,7 +65,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   logical, intent(in)                 :: hotstart
+   integer, intent(in)                 :: hotstart_method
 !
 ! !INPUT/OUTPUT PARAMETERS:
    logical, intent(inout)              :: bdy2d
@@ -157,7 +157,7 @@
          LEVEL3 'bdyfile_2d=',TRIM(bdyfile_2d)
          LEVEL3 'bdyfmt_2d=',bdyfmt_2d
          LEVEL3 'bdyramp_2d=',bdyramp_2d
-         if (hotstart .and. bdyramp_2d .gt. 0) then
+         if (hotstart_method.eq.1 .and. bdyramp_2d .gt. 0) then
              LEVEL4 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
              LEVEL4 'WARNING: .. be sure you know what you are doing ..'
          end if

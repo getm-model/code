@@ -112,7 +112,7 @@
 ! !IROUTINE: init_meteo - initialise the \emph{meteo} module.
 !
 ! !INTERFACE:
-   subroutine init_meteo(hotstart)
+   subroutine init_meteo(hotstart_method)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -120,7 +120,7 @@
 !  the content of the namelist various variables are allocated and initialised.
 !
 ! !INPUT PARAMETERS:
-   logical, intent(in)                 :: hotstart
+   integer, intent(in)                 :: hotstart_method
 !
 ! !REVISION HISTORY:
 !
@@ -182,7 +182,7 @@
          case default
       end select
 
-      if (hotstart .and. spinup .gt. 0) then
+      if (hotstart_method.ne.0 .and. spinup .gt. 0) then
          LEVEL2 'hotstart --> spinup=-1'
          spinup=-1
       end if

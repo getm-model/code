@@ -14,8 +14,13 @@
 					<option value="4" label="3D (full)"/>
 				</options>
 			</element>
-			<element name="hotstart"     type="bool"   label="read initial fields from file" />
-			<element name="use_epoch"    type="bool"   label="use a common time origin for a series of hotstart simulations" />
+			<element name="hotstart_method"     type="int"   label="read initial fields from file">
+				<options>
+					<option value="0" label="no hotstart"/>
+					<option value="1" label="hotstart (start new epoch)"/>
+					<option value="2" label="hotstart (continue old epoch)"/>
+				</options>
+			</element>
 			<element name="save_initial" type="bool"   label="save initial values i.e. before entering the time loop" />
 		</element>
 
