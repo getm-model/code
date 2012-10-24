@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
 <converter source="getm-2.2" target="getm-2.3">
 	<links>
+		<link source="/getm/meteo/spinup" target="/getm/meteo/meteo_ramp"/>
 		<link source="/getm/m2d/vel_depth_method" target="/getm/domain/vel_depth_method"/>
 		<link source="/getm/m2d/Am" target="/getm/m2d/Am_const"/>
 		<link source="/getm/temp/temp_AH" target="/getm/temp/temp_AH_const"/>
@@ -9,6 +10,16 @@
 	<custom>
 		<forward>
 <![CDATA[
+hotstart = source['getm/param/hotstart'].getValue(usedefault=True)
+use_epoch = source['getm/param/use_epoch'].getValue(usedefault=True)
+if not hotstart:
+	target['getm/param/hotstart_method'].setValue(0)
+else:
+	if use_epoch:
+		target['getm/param/hotstart_method'].setValue(2)
+	else:
+		target['getm/param/hotstart_method'].setValue(1)
+
 z0_method = source['getm/domain/z0_method'].getValue(usedefault=True)
 target['getm/domain/bottfric_method'].setValue(z0_method+2)
 
@@ -17,7 +28,7 @@ nmls_t = ('getm/m3d/vel3d_','getm/temp/temp_','getm/salt/salt_')
 for n,nml in enumerate(nmls_s):
 	adv_split = source[nml+'adv_split'].getValue(usedefault=True)
 	hor_adv = source[nml+'hor_adv'].getValue(usedefault=True)
-	ver_adv = source[nml+'hor_adv'].getValue(usedefault=True)
+	ver_adv = source[nml+'ver_adv'].getValue(usedefault=True)
 	target[nmls_t[n]+'adv_split'].setValue(adv_split+1)
 	target[nmls_t[n]+'adv_hor'].setValue(hor_adv)
 	target[nmls_t[n]+'adv_ver'].setValue(ver_adv)
@@ -46,6 +57,16 @@ for d,diff in enumerate(diffs):
 		</forward>
 		<backward>
 <![CDATA[
+hotstart_method = source['getm/param/hotstart_method'].getValue(usedefault=True)
+if hotstart_method == 0:
+	target['getm/param/hotstart'].setValue(False)
+else:
+	target['getm/param/hotstart'].setValue(True)
+	if hotstart_method == 1:
+		target['getm/param/use_epoch'].setValue(False)
+	else:
+		target['getm/param/use_epoch'].setValue(True)
+
 bottfric_method = source['getm/domain/bottfric_method'].getValue(usedefault=True)
 target['getm/domain/z0_method'].setValue(bottfric_method-2)
 

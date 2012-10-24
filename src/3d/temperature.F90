@@ -66,7 +66,7 @@
 ! \label{sec-init-temperature}
 !
 ! !INTERFACE:
-   subroutine init_temperature()
+   subroutine init_temperature(hotstart_method)
 !
 ! !DESCRIPTION:
 !
@@ -85,6 +85,9 @@
    use advection, only: J7
    use advection_3d, only: print_adv_settings_3d
    IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer,intent(in)        :: hotstart_method
 !
 ! !LOCAL VARIABLES:
    integer                   :: k,i,j,n,rc
@@ -111,6 +114,10 @@
    LEVEL2 'init_temperature()'
    read(NAMLST,temp)
 
+   if (hotstart_method.eq.2 .and. temp_method.ne.0) then
+      LEVEL3 'WARNING: reset temp_method=0 because of hotstart_method=2'
+      temp_method=0
+   end if
    if (avmolt .lt. _ZERO_) then
       LEVEL3 'setting avmolt to 0.'
       avmolt = _ZERO_

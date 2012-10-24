@@ -103,7 +103,7 @@
 ! !IROUTINE: init_rivers
 !
 ! !INTERFACE:
-   subroutine init_rivers
+   subroutine init_rivers(hotstart_method)
 !
 ! !DESCRIPTION:
 !
@@ -118,6 +118,9 @@
 !
 ! !USES:
    IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer,intent(in)        :: hotstart_method
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n,nn,ni,rc,m,iriver,jriver,numcells
@@ -146,7 +149,12 @@
          LEVEL2 'river_method= ',river_method
          LEVEL2 'river_data=   ',trim(river_data)
          LEVEL2 'river_format= ',river_format
-         LEVEL2 'river_ramp=   ',river_ramp
+         if (river_ramp .gt. 1) then
+            LEVEL2 'river_ramp=',river_ramp
+            if (hotstart_method .eq. 1) then
+               LEVEL3 'WARNING: re-start ramp for rivers'
+            end if
+         end if
          LEVEL2 'river_factor= ',river_factor
          LEVEL2 'use_river_temp= ',use_river_temp
          LEVEL2 'use_river_salt= ',use_river_salt
@@ -395,7 +403,7 @@
 ! !IROUTINE:  do_rivers - updating river points \label{sec-do-rivers}
 !
 ! !INTERFACE:
-   subroutine do_rivers(do_3d)
+   subroutine do_rivers(loop,do_3d)
 !
 ! !DESCRIPTION:
 !
@@ -410,12 +418,12 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   integer, intent(in)                 :: loop
    logical, intent(in)                 :: do_3d
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,m,n
-   integer, save             :: nn=0
-   REALTYPE                  :: ramp=_ONE_
+   REALTYPE                  :: ramp
    REALTYPE                  :: rvol,height
    REALTYPE                  :: svol,tvol,vol
 !EOP
@@ -428,10 +436,10 @@
 #endif
 
 !  river spin-up
-   ramp=_ONE_
-   if (river_ramp .gt. 0 .and. nn .lt. river_ramp) then
-      ramp=min( _ONE_ , nn*_ONE_/river_ramp)
-      nn=nn+1
+   if (river_ramp .gt. 1 .and. loop .lt. river_ramp) then
+      ramp = _ONE_*loop/river_ramp
+   else
+      ramp = _ONE_
    end if
 
    select case (river_method)
