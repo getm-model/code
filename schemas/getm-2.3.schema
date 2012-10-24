@@ -138,8 +138,17 @@
 					<option value="4" label="evaporation is calculated, NO precipitation"/>
 				</options>
 			</element>
-			<element name="spinup" type="int" label="number of time steps for forcing spin-up" unit="micro time steps">
-				<condition type="eq" variable="./metforcing" value="True"/>
+			<element name="meteo_ramp" type="int" label="number of time steps for forcing spin-up" unit="micro time steps">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="or">
+						<condition type="eq" variable="../param/hotstart" value="False"/>
+						<condition type="and">
+							<condition type="eq" variable="../param/hotstart" value="True"/>
+							<condition type="eq" variable="../param/use_epoch" value="False"/>
+						</condition>
+					</condition>
+				</condition>
 			</element>
 			<element name="metfmt" type="int" label="format of meteofile">
 				<condition type="and">
