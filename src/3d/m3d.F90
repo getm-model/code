@@ -249,7 +249,7 @@
 #endif
    end if
 
-   if (.not.hotstart .and. vert_cord.eq._ADAPTIVE_COORDS_) then
+   if (hotstart_method.eq.0 .and. vert_cord.eq._ADAPTIVE_COORDS_) then
       call preadapt_coordinates(preadapt)
    end if
 
