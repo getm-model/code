@@ -88,7 +88,7 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer                   :: spinup=0,metfmt=2
+   integer                   :: meteo_ramp=0,metfmt=2
    REALTYPE                  :: tx= _ZERO_ ,ty= _ZERO_
    REALTYPE                  :: swr_const= _ZERO_ ,shf_const= _ZERO_
    REALTYPE                  :: evap_const= _ZERO_ ,precip_const= _ZERO_
@@ -131,7 +131,7 @@
    integer                   :: rc
    REALTYPE                  :: sinconv,cosconv
    namelist /meteo/ metforcing,on_grid,calc_met,met_method,fwf_method, &
-                    spinup,metfmt,meteo_file, &
+                    meteo_ramp,metfmt,meteo_file, &
                     tx,ty,swr_const,shf_const,evap_const,precip_const, &
                     sst_const,precip_factor,evap_factor
 !EOP
@@ -184,12 +184,12 @@
          case default
       end select
 
-      if (hotstart .and. spinup .gt. 0) then
-         LEVEL2 'hotstart --> spinup=-1'
-         spinup=-1
+      if (hotstart .and. meteo_ramp .gt. 0) then
+         LEVEL2 'hotstart --> meteo_ramp=-1'
+         meteo_ramp=-1
       end if
-      if ( spinup .gt. 0) then
-         LEVEL2 'Forcing will be spun up over ',spinup,' timesteps'
+      if ( meteo_ramp .gt. 0) then
+         LEVEL2 'Forcing will be spun up over ',meteo_ramp,' timesteps'
       end if
    end if
 
@@ -357,8 +357,8 @@
 !  In addition checks of the logical \emph{new\_meteo} is checked - set by the
 !  reading subroutine.
 !  Temporal interpolation is done in the principal variables.
-!  It is possible to specify a soft start - via the spinup variable -
-!  which is used to calculate a ramp (linearly from 0 to one over spinup
+!  It is possible to specify a soft start - via the meteo_ramp variable -
+!  which is used to calculate a ramp (linearly from 0 to one over meteo_ramp
 !  time steps).
 !  To implement an use a different set of formulae for flux calculations
 !  should be a matter of only changing the involved subroutines.
