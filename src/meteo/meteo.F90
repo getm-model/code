@@ -88,10 +88,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer                   :: spinup=0,metfmt=2
+   integer                   :: meteo_ramp=0,metfmt=2
    REALTYPE                  :: tx= _ZERO_ ,ty= _ZERO_
    REALTYPE                  :: swr_const= _ZERO_ ,shf_const= _ZERO_
    REALTYPE                  :: evap_const= _ZERO_ ,precip_const= _ZERO_
+   REALTYPE, dimension(:,:), allocatable :: tausx_const,tausy_const
    REALTYPE, dimension(:,:), pointer     :: airp_new,d_airp
    REALTYPE, dimension(:,:), pointer     :: tausx_new,d_tausx
    REALTYPE, dimension(:,:), pointer     :: tausy_new,d_tausy
@@ -127,9 +128,12 @@
 !  See log for module.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: rc
+   integer                   :: i,j,rc
+   REALTYPE                  :: sinconv,cosconv
+   REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029d0
+   REALTYPE, parameter       :: deg2rad=pi/180
    namelist /meteo/ metforcing,on_grid,calc_met,met_method,fwf_method, &
-                    spinup,metfmt,meteo_file, &
+                    meteo_ramp,metfmt,meteo_file, &
                     tx,ty,swr_const,shf_const,evap_const,precip_const, &
                     sst_const,precip_factor,evap_factor
 !EOP
@@ -182,12 +186,12 @@
          case default
       end select
 
-      if (hotstart .and. spinup .gt. 0) then
-         LEVEL2 'hotstart --> spinup=-1'
-         spinup=-1
-      end if
-      if ( spinup .gt. 0) then
-         LEVEL2 'Forcing will be spun up over ',spinup,' timesteps'
+      if (meteo_ramp .gt. 1) then
+         LEVEL2 'meteo_ramp=',meteo_ramp
+         if (hotstart) then
+            LEVEL3 'WARNING: hotstart is .true. AND meteo_ramp .gt. 1'
+            LEVEL3 'WARNING: .. be sure you know what you are doing ..'
+         end if
       end if
    end if
 
@@ -199,22 +203,36 @@
 
    allocate(tausx(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx)'
-   tausx = _ZERO_
-
    allocate(tausy(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy)'
-   tausy = _ZERO_
-
    allocate(shf(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (shf)'
    allocate(swr(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (swr)'
+
    if (met_method .eq. 1) then
+!     Rotation of wind stress due to grid convergence
+      allocate(tausx_const(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx_const)'
+      allocate(tausy_const(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy_const)'
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            sinconv=sin(-convc(i,j)*deg2rad)
+            cosconv=cos(-convc(i,j)*deg2rad)
+            tausx_const(i,j)= tx*cosconv+ty*sinconv
+            tausy_const(i,j)=-tx*sinconv+ty*cosconv
+         end do
+      end do
+      tausx = tausx_const
+      tausy = tausy_const
       shf   = shf_const
       swr   = swr_const
    else
-      shf = _ZERO_
-      swr = _ZERO_
+      tausx = _ZERO_
+      tausy = _ZERO_
+      shf   = _ZERO_
+      swr   = _ZERO_
    end if
 
    allocate(evap(E2DFIELD),stat=rc)
@@ -340,8 +358,8 @@
 !  In addition checks of the logical \emph{new\_meteo} is checked - set by the
 !  reading subroutine.
 !  Temporal interpolation is done in the principal variables.
-!  It is possible to specify a soft start - via the spinup variable -
-!  which is used to calculate a ramp (linearly from 0 to one over spinup
+!  It is possible to specify a soft start - via the meteo_ramp variable -
+!  which is used to calculate a ramp (linearly from 0 to one over meteo_ramp
 !  time steps).
 !  To implement an use a different set of formulae for flux calculations
 !  should be a matter of only changing the involved subroutines.
@@ -357,14 +375,10 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer, save             :: k=0
    integer                   :: i,j,rc
    REALTYPE                  :: ramp,hh,t,t_minus_t2
    REALTYPE, save            :: deltm1
    REALTYPE                  :: short_wave_radiation
-   REALTYPE                  :: uu,cosconv,vv,sinconv
-   REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029d0
-   REALTYPE, parameter       :: deg2rad=pi/180
    logical,save              :: first=.true.
    REALTYPE, dimension(:,:), pointer :: airp_old,tausx_old,tausy_old
    REALTYPE, dimension(:,:), pointer :: shf_old,swr_old,tcc_old
@@ -409,37 +423,16 @@
          t_minus_t2 = t - t_2
       end if
 
-      if(spinup .gt. 0 .and. k .lt. spinup) then
-! BJB-TODO: Replace 1.0 with _ONE_ etc in this file.
-         ramp = _ONE_*k/spinup
-         k = k + 1
+      if(meteo_ramp .gt. 1 .and. n .lt. meteo_ramp) then
+         ramp = _ONE_*n/meteo_ramp
       else
          ramp = _ONE_
       end if
 
       select case (met_method)
          case (1)
-! BJB-TODO: Why is this called every time step (even after k=spinup)-
-!    It should all be constant in time after that(?)
-            tausx = ramp*tx
-            tausy = ramp*ty
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j, sinconv,cosconv,uu,vv)
-!     Rotation of wind stress due to grid convergence
-!$OMP DO SCHEDULE(RUNTIME)
-             do j=jmin-1,jmax+1
-               do i=imin-1,imax+1
-                  if (convc(i,j) .ne. _ZERO_ .and. az(i,j) .gt. 0) then
-                     sinconv=sin(-convc(i,j)*deg2rad)
-                     cosconv=cos(-convc(i,j)*deg2rad)
-                     uu=tausx(i,j)
-                     vv=tausy(i,j)
-                     tausx(i,j)= uu*cosconv+vv*sinconv
-                     tausy(i,j)=-uu*sinconv+vv*cosconv
-                  end if
-               end do
-            end do
-!$OMP END DO
-!$OMP END PARALLEL
+            tausx = ramp*tausx_const
+            tausy = ramp*tausy_const
 
          case (2)
 
@@ -568,8 +561,8 @@
                   do i=imin-HALO,imax+HALO
                      if (az(i,j) .ne. 0) then
                         airp (i,j) = airp_new (i,j) + d_airp (i,j)*deltm1*t_minus_t2
-                        tausx(i,j) = tausx_new(i,j) + d_tausx(i,j)*deltm1*t_minus_t2
-                        tausy(i,j) = tausy_new(i,j) + d_tausy(i,j)*deltm1*t_minus_t2
+                        tausx(i,j) = ramp*(tausx_new(i,j) + d_tausx(i,j)*deltm1*t_minus_t2)
+                        tausy(i,j) = ramp*(tausy_new(i,j) + d_tausy(i,j)*deltm1*t_minus_t2)
                         shf  (i,j) = shf_new  (i,j) + d_shf  (i,j)*deltm1*t_minus_t2
                         if (calc_met) then
                            tcc(i,j) = tcc_new(i,j) + d_tcc(i,j)*deltm1*t_minus_t2
