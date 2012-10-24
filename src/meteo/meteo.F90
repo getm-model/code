@@ -424,8 +424,8 @@
          t_minus_t2 = t - t_2
       end if
 
-      if(spinup .gt. 1 .and. n .lt. spinup) then
-         ramp = _ONE_*n/spinup
+      if(meteo_ramp .gt. 1 .and. n .lt. meteo_ramp) then
+         ramp = _ONE_*n/meteo_ramp
       else
          ramp = _ONE_
       end if
