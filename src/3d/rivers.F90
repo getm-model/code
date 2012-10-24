@@ -103,7 +103,7 @@
 ! !IROUTINE: init_rivers
 !
 ! !INTERFACE:
-   subroutine init_rivers
+   subroutine init_rivers(hotstart)
 !
 ! !DESCRIPTION:
 !
@@ -118,6 +118,9 @@
 !
 ! !USES:
    IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   logical,intent(in)        :: hotstart
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n,nn,ni,rc,m,iriver,jriver,numcells
