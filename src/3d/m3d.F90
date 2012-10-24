@@ -36,7 +36,7 @@
             salt_AH_method
    use eqstate,    only: init_eqstate, do_eqstate
    use internal_pressure, only: init_internal_pressure, do_internal_pressure
-   use internal_pressure, only: ip_method
+   use internal_pressure, only: ip_method,ip_ramp
 #endif
    use variables_3d
    use advection, only: NOADV
@@ -72,8 +72,8 @@
    logical         :: advect_turbulence=.false.
 #ifdef NO_BAROCLINIC
    integer         :: ip_method
-#endif
    integer         :: ip_ramp=-1
+#endif
 !EOP
 !-----------------------------------------------------------------------
 
@@ -237,8 +237,7 @@
       if(calc_temp) call init_temperature()
       if(calc_salt) call init_salinity()
       call init_eqstate()
-      call init_internal_pressure()
-      LEVEL2 'ip_ramp=',ip_ramp
+      call init_internal_pressure(hotstart)
 #endif
    end if
 
