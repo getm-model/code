@@ -128,8 +128,10 @@
 !  See log for module.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: rc
+   integer                   :: i,j,rc
    REALTYPE                  :: sinconv,cosconv
+   REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029d0
+   REALTYPE, parameter       :: deg2rad=pi/180
    namelist /meteo/ metforcing,on_grid,calc_met,met_method,fwf_method, &
                     meteo_ramp,metfmt,meteo_file, &
                     tx,ty,swr_const,shf_const,evap_const,precip_const, &
@@ -214,13 +216,12 @@
       if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx_const)'
       allocate(tausy_const(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy_const)'
-       do j=jmin-HALO,jmax+HALO
+      do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
             sinconv=sin(-convc(i,j)*deg2rad)
             cosconv=cos(-convc(i,j)*deg2rad)
             tausx_const(i,j)= tx*cosconv+ty*sinconv
             tausy_const(i,j)=-tx*sinconv+ty*cosconv
-            end if
          end do
       end do
       tausx = tausx_const
@@ -378,8 +379,6 @@
    REALTYPE                  :: ramp,hh,t,t_minus_t2
    REALTYPE, save            :: deltm1
    REALTYPE                  :: short_wave_radiation
-   REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029d0
-   REALTYPE, parameter       :: deg2rad=pi/180
    logical,save              :: first=.true.
    REALTYPE, dimension(:,:), pointer :: airp_old,tausx_old,tausy_old
    REALTYPE, dimension(:,:), pointer :: shf_old,swr_old,tcc_old
