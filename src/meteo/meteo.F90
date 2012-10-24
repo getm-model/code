@@ -568,8 +568,8 @@
                   do i=imin-HALO,imax+HALO
                      if (az(i,j) .ne. 0) then
                         airp (i,j) = airp_new (i,j) + d_airp (i,j)*deltm1*t_minus_t2
-                        tausx(i,j) = tausx_new(i,j) + d_tausx(i,j)*deltm1*t_minus_t2
-                        tausy(i,j) = tausy_new(i,j) + d_tausy(i,j)*deltm1*t_minus_t2
+                        tausx(i,j) = ramp*(tausx_new(i,j) + d_tausx(i,j)*deltm1*t_minus_t2)
+                        tausy(i,j) = ramp*(tausy_new(i,j) + d_tausy(i,j)*deltm1*t_minus_t2)
                         shf  (i,j) = shf_new  (i,j) + d_shf  (i,j)*deltm1*t_minus_t2
                         if (calc_met) then
                            tcc(i,j) = tcc_new(i,j) + d_tcc(i,j)*deltm1*t_minus_t2
