@@ -73,6 +73,7 @@
 ! !PUBLIC DATA MEMBERS:
    public init_internal_pressure, do_internal_pressure
    integer, public           :: ip_method=1
+   integer, public           :: ip_ramp=-1
 #ifdef STATIC
    REALTYPE                  :: zz(I3DFIELD)
 #ifdef SUBSTR_INI_PRESS
@@ -109,7 +110,7 @@
 ! \label{sec-init-internal pressure}
 !
 ! !INTERFACE:
-   subroutine init_internal_pressure()
+   subroutine init_internal_pressure(hotstart)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -117,6 +118,9 @@
 ! Here, some necessary memory is allocated (in case of the compiler option
 ! {\tt STATIC}), and information is written to the log-file of
 ! the simulation.
+!
+! !INPUT PARAMETERS:
+   logical,intent(in) :: hotstart
 !
 ! !LOCAL VARIABLES
    integer         :: rc
@@ -162,6 +166,14 @@
          FATAL 'Not valid ip_method specified'
          stop 'init_internal_pressure()'
    end select
+
+   if (ip_ramp .gt. 1) then
+      LEVEL3 'ip_ramp=',ip_ramp
+      if (hotstart) then
+         LEVEL3 'WARNING: hotstart is .true. AND ip_ramp .gt. 1'
+         LEVEL3 'WARNING: .. be sure you know what you are doing ..'
+      end if
+   end if
 
    return
    end subroutine init_internal_pressure
