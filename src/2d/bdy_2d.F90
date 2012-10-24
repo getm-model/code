@@ -197,7 +197,6 @@
    REALTYPE                  :: cfl,depth,a,fac
    integer                   :: i,j,k,kl,l,n
    REALTYPE, parameter       :: theta = _HALF_
-   REALTYPE, parameter       :: FOUR=4.*_ONE_
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -223,7 +222,7 @@
 !  Data read - do time interpolation
 
    fac = _ONE_
-   if(bdyramp_2d .gt. 1) fac=min( _ONE_ ,FOUR*loop/float(bdyramp_2d))
+   if(bdyramp_2d .gt. 1) fac=min( _ONE_ ,loop/float(bdyramp_2d))
 
 
    select case (tag)
