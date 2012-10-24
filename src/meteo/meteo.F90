@@ -374,7 +374,6 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer, save             :: k=0
    integer                   :: i,j,rc
    REALTYPE                  :: ramp,hh,t,t_minus_t2
    REALTYPE, save            :: deltm1
@@ -425,19 +424,14 @@
          t_minus_t2 = t - t_2
       end if
 
-      !if(spinup .gt. 1) ramp=min( _ONE_ ,n/float(spinup))
-      if(spinup .gt. 1 .and. k .lt. spinup) then
-! BJB-TODO: Replace 1.0 with _ONE_ etc in this file.
-         ramp = _ONE_*k/spinup
-         k = k + 1
+      if(spinup .gt. 1 .and. n .lt. spinup) then
+         ramp = _ONE_*n/spinup
       else
          ramp = _ONE_
       end if
 
       select case (met_method)
          case (1)
-! BJB-TODO: Why is this called every time step (even after k=spinup)-
-!    It should all be constant in time after that(?)
             tausx = ramp*tausx_const
             tausy = ramp*tausy_const
 
