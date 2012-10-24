@@ -395,7 +395,7 @@
 ! !IROUTINE:  do_rivers - updating river points \label{sec-do-rivers}
 !
 ! !INTERFACE:
-   subroutine do_rivers(do_3d)
+   subroutine do_rivers(loop,do_3d)
 !
 ! !DESCRIPTION:
 !
@@ -410,12 +410,12 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   integer, intent(in)                 :: loop
    logical, intent(in)                 :: do_3d
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,m,n
-   integer, save             :: nn=0
-   REALTYPE                  :: ramp=_ONE_
+   REALTYPE                  :: ramp
    REALTYPE                  :: rvol,height
    REALTYPE                  :: svol,tvol,vol
 !EOP
@@ -428,10 +428,10 @@
 #endif
 
 !  river spin-up
-   ramp=_ONE_
-   if (river_ramp .gt. 0 .and. nn .lt. river_ramp) then
-      ramp=min( _ONE_ , nn*_ONE_/river_ramp)
-      nn=nn+1
+   if (river_ramp .gt. 1 .and. loop .lt. river_ramp) then
+      ramp = _ONE_*loop/river_ramp
+   else
+      ramp = _ONE_
    end if
 
    select case (river_method)

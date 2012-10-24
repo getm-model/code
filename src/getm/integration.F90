@@ -123,7 +123,7 @@
       call integrate_2d(runtype,n,tausx,tausy,airp)
 #endif
 #ifndef NO_3D
-      call do_rivers(do_3d)
+      call do_rivers(n,do_3d)
       if (do_3d) then
          call integrate_3d(runtype,n)
 #ifdef SPM
