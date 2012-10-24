@@ -116,7 +116,6 @@
 !
 ! !INTERFACE:
    subroutine init_internal_pressure(runtype,hotstart_method,nonhyd_method)
-   IMPLICIT NONE
 !
 ! !DESCRIPTION:
 !
