@@ -244,7 +244,7 @@
       if(calc_temp) call init_temperature(hotstart_method)
       if(calc_salt) call init_salinity(hotstart_method)
       call init_eqstate()
-      call init_internal_pressure(hotstart)
+      call init_internal_pressure(hotstart_method)
 #endif
    end if
 

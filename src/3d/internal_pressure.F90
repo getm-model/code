@@ -110,7 +110,7 @@
 ! \label{sec-init-internal pressure}
 !
 ! !INTERFACE:
-   subroutine init_internal_pressure(hotstart)
+   subroutine init_internal_pressure(hotstart_method)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -120,7 +120,7 @@
 ! the simulation.
 !
 ! !INPUT PARAMETERS:
-   logical,intent(in) :: hotstart
+   integer,intent(in) :: hotstart_method
 !
 ! !LOCAL VARIABLES
    integer         :: rc
@@ -169,9 +169,8 @@
 
    if (ip_ramp .gt. 1) then
       LEVEL3 'ip_ramp=',ip_ramp
-      if (hotstart) then
-         LEVEL3 'WARNING: hotstart is .true. AND ip_ramp .gt. 1'
-         LEVEL3 'WARNING: .. be sure you know what you are doing ..'
+      if (hotstart_method .eq. 1) then
+         LEVEL3 'WARNING: re-start ramp for ip'
       end if
    end if
 
