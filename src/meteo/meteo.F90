@@ -92,6 +92,7 @@
    REALTYPE                  :: tx= _ZERO_ ,ty= _ZERO_
    REALTYPE                  :: swr_const= _ZERO_ ,shf_const= _ZERO_
    REALTYPE                  :: evap_const= _ZERO_ ,precip_const= _ZERO_
+   REALTYPE, dimension(:,:), allocatable :: tausx_const,tausy_const
    REALTYPE, dimension(:,:), pointer     :: airp_new,d_airp
    REALTYPE, dimension(:,:), pointer     :: tausx_new,d_tausx
    REALTYPE, dimension(:,:), pointer     :: tausy_new,d_tausy
@@ -128,6 +129,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
+   REALTYPE                  :: sinconv,cosconv
    namelist /meteo/ metforcing,on_grid,calc_met,met_method,fwf_method, &
                     spinup,metfmt,meteo_file, &
                     tx,ty,swr_const,shf_const,evap_const,precip_const, &
@@ -199,22 +201,37 @@
 
    allocate(tausx(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx)'
-   tausx = _ZERO_
-
    allocate(tausy(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy)'
-   tausy = _ZERO_
-
    allocate(shf(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (shf)'
    allocate(swr(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (swr)'
+
    if (met_method .eq. 1) then
+!     Rotation of wind stress due to grid convergence
+      allocate(tausx_const(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx_const)'
+      allocate(tausy_const(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy_const)'
+       do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            sinconv=sin(-convc(i,j)*deg2rad)
+            cosconv=cos(-convc(i,j)*deg2rad)
+            tausx_const(i,j)= tx*cosconv+ty*sinconv
+            tausy_const(i,j)=-tx*sinconv+ty*cosconv
+            end if
+         end do
+      end do
+      tausx = tausx_const
+      tausy = tausy_const
       shf   = shf_const
       swr   = swr_const
    else
-      shf = _ZERO_
-      swr = _ZERO_
+      tausx = _ZERO_
+      tausy = _ZERO_
+      shf   = _ZERO_
+      swr   = _ZERO_
    end if
 
    allocate(evap(E2DFIELD),stat=rc)
@@ -362,7 +379,6 @@
    REALTYPE                  :: ramp,hh,t,t_minus_t2
    REALTYPE, save            :: deltm1
    REALTYPE                  :: short_wave_radiation
-   REALTYPE                  :: uu,cosconv,vv,sinconv
    REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029d0
    REALTYPE, parameter       :: deg2rad=pi/180
    logical,save              :: first=.true.
@@ -409,7 +425,8 @@
          t_minus_t2 = t - t_2
       end if
 
-      if(spinup .gt. 0 .and. k .lt. spinup) then
+      !if(spinup .gt. 1) ramp=min( _ONE_ ,n/float(spinup))
+      if(spinup .gt. 1 .and. k .lt. spinup) then
 ! BJB-TODO: Replace 1.0 with _ONE_ etc in this file.
          ramp = _ONE_*k/spinup
          k = k + 1
@@ -421,25 +438,8 @@
          case (1)
 ! BJB-TODO: Why is this called every time step (even after k=spinup)-
 !    It should all be constant in time after that(?)
-            tausx = ramp*tx
-            tausy = ramp*ty
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j, sinconv,cosconv,uu,vv)
-!     Rotation of wind stress due to grid convergence
-!$OMP DO SCHEDULE(RUNTIME)
-             do j=jmin-1,jmax+1
-               do i=imin-1,imax+1
-                  if (convc(i,j) .ne. _ZERO_ .and. az(i,j) .gt. 0) then
-                     sinconv=sin(-convc(i,j)*deg2rad)
-                     cosconv=cos(-convc(i,j)*deg2rad)
-                     uu=tausx(i,j)
-                     vv=tausy(i,j)
-                     tausx(i,j)= uu*cosconv+vv*sinconv
-                     tausy(i,j)=-uu*sinconv+vv*cosconv
-                  end if
-               end do
-            end do
-!$OMP END DO
-!$OMP END PARALLEL
+            tausx = ramp*tausx_const
+            tausy = ramp*tausy_const
 
          case (2)
 
