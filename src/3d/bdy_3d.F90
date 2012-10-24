@@ -97,7 +97,9 @@
    if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (rlxcoef)'
 
 #ifdef _FABM_
-   npel=size(model%info%state_variables)
+   if (fabm_calc) then
+      npel=size(model%info%state_variables)
+   end if
 #endif
 
 #ifdef DEBUG
