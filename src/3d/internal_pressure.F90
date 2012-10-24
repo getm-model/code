@@ -77,6 +77,7 @@
 ! !PUBLIC DATA MEMBERS:
    public init_internal_pressure, do_internal_pressure
    integer,public                               :: ip_method=1
+   integer,public                               :: ip_ramp=-1
    REALTYPE,dimension(:,:,:),pointer,public     :: buoy
 #ifdef STATIC
 !  KK-TODO: this should become an automatic array in each ip routine
@@ -114,8 +115,8 @@
 ! \label{sec-init-internal pressure}
 !
 ! !INTERFACE:
-   subroutine init_internal_pressure(runtype,nonhyd_method,ip_ramp)
-
+   subroutine init_internal_pressure(runtype,hotstart_method,nonhyd_method)
+   IMPLICIT NONE
 !
 ! !DESCRIPTION:
 !
@@ -126,7 +127,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in) :: runtype,nonhyd_method,ip_ramp
+   integer, intent(in) :: runtype,hotstart_method,nonhyd_method
 !
 ! !LOCAL VARIABLES
    integer         :: rc
@@ -162,7 +163,13 @@
          FATAL 'Not valid ip_method specified'
          stop 'init_internal_pressure()'
    end select
-   LEVEL3 'ip_ramp=',ip_ramp
+
+   if (ip_ramp .gt. 1) then
+      LEVEL3 'ip_ramp=',ip_ramp
+      if (hotstart_method .eq. 1) then
+         LEVEL3 'WARNING: re-start ramp for ip'
+      end if
+   end if
 
    allocate(idpdx(I3DFIELD),stat=rc) ! Internal pressure gradient - x
    if (rc /= 0) stop 'init_internal_pressure(): Error allocating memory (idpdx)'

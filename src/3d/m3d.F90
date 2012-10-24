@@ -39,7 +39,7 @@
 #endif
    use nonhydrostatic, only: nonhyd_method,init_nonhydrostatic
    use internal_pressure, only: init_internal_pressure, do_internal_pressure
-   use internal_pressure, only: ip_method
+   use internal_pressure, only: ip_method,ip_ramp
    use variables_3d
    use advection, only: NOADV
    use advection_3d, only: init_advection_3d,print_adv_settings_3d,adv_ver_iterations
@@ -74,7 +74,6 @@
 !
 ! !LOCAL VARIABLES:
    logical         :: advect_turbulence=.false.
-   integer         :: ip_ramp=-1
 !EOP
 !-----------------------------------------------------------------------
 
@@ -250,7 +249,7 @@
    call init_nonhydrostatic()
 
    if (calc_ip) then
-      call init_internal_pressure(runtype,nonhyd_method,ip_ramp)
+      call init_internal_pressure(runtype,hotstart_method,nonhyd_method)
    end if
 
    if (hotstart_method.eq.0 .and. vert_cord.eq._ADAPTIVE_COORDS_) then
