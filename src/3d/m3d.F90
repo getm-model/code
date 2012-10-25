@@ -56,7 +56,7 @@
    logical                             :: calc_temp=.true.
    logical                             :: calc_salt=.true.
    logical                             :: bdy3d=.false.
-   integer                             :: bdyfmt_3d,bdyramp_3d
+   integer                             :: bdyfmt_3d,bdy3d_ramp
    character(len=PATH_MAX)             :: bdyfile_3d
    REALTYPE                            :: ip_fac=_ONE_
    integer                             :: vel_check=0
@@ -115,7 +115,7 @@
    integer         :: rc
    NAMELIST /m3d/ &
              M,cnpar,cord_relax,adv_ver_iterations,       &
-             bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,       &
+             bdy3d,bdyfmt_3d,bdy3d_ramp,bdyfile_3d,       &
              bdy3d_tmrlx,bdy3d_tmrlx_ucut,                &
              bdy3d_tmrlx_max,bdy3d_tmrlx_min,             &
              vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver, &
