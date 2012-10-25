@@ -2,6 +2,7 @@
 <converter source="getm-2.2" target="getm-2.3">
 	<links>
 		<link source="/getm/meteo/spinup" target="/getm/meteo/meteo_ramp"/>
+		<link source="/getm/m2d/bdyramp_2d" target="/getm/m2d/bdy2d_ramp"/>
 		<link source="/getm/m2d/vel_depth_method" target="/getm/domain/vel_depth_method"/>
 	</links>
 	<custom>

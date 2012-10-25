@@ -231,9 +231,9 @@
 			<bdyfmt_2d>
 				2
 			</bdyfmt_2d>
-			<bdyramp_2d>
+			<bdy2d_ramp>
 				-1
-			</bdyramp_2d>
+			</bdy2d_ramp>
 			<bdyfile_2d>
 				bdy_2d.nc
 			</bdyfile_2d>
