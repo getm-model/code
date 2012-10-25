@@ -220,8 +220,7 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
-   REALTYPE,save             :: ramp=_ONE_
-   REALTYPE                  :: cfl,depth,a
+   REALTYPE                  :: cfl,depth,a,ramp
    integer                   :: i,j,k,kl,l,n
    REALTYPE, parameter       :: theta = _HALF_
 !
@@ -248,8 +247,10 @@
 
 !  Data read - do time interpolation
 
-   if(bdy2d_ramp.gt.1 .and. loop.le.bdy2d_ramp) then
+   if(bdy2d_ramp.gt.1 .and. loop.lt.bdy2d_ramp) then
       ramp = _ONE_*loop/bdy2d_ramp
+   else
+      ramp = _ONE_
    end if
 
    select case (tag)
