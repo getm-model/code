@@ -36,7 +36,7 @@
 ! !PUBLIC DATA MEMBERS:
    public init_bdy_2d, do_bdy_2d
    character(len=PATH_MAX),public       :: bdyfile_2d
-   integer,public                       :: bdyfmt_2d,bdyramp_2d=-1
+   integer,public                       :: bdyfmt_2d,bdy2d_ramp=-1
    REALTYPE,dimension(:),pointer,public :: bdy_data,bdy_data_u,bdy_data_v
 !
 ! !PRIVATE DATA MEMBERS:
@@ -156,10 +156,10 @@
       if (need_2d_bdy_elev .or. need_2d_bdy_u .or. need_2d_bdy_v) then
          LEVEL3 'bdyfile_2d=',TRIM(bdyfile_2d)
          LEVEL3 'bdyfmt_2d=',bdyfmt_2d
-         if (bdyramp_2d .gt. 1) then
-            LEVEL3 'bdyramp_2d=',bdyramp_2d
+         if (bdy2d_ramp .gt. 1) then
+            LEVEL3 'bdy2d_ramp=',bdy2d_ramp
             if (hotstart) then
-               LEVEL4 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 1'
+               LEVEL4 'WARNING: hotstart is .true. AND bdy2d_ramp .gt. 1'
                LEVEL4 'WARNING: .. be sure you know what you are doing ..'
             end if
          end if
@@ -247,8 +247,11 @@
 
 !  Data read - do time interpolation
 
-   fac = _ONE_
-   if(bdyramp_2d .gt. 1) fac=min( _ONE_ ,loop/float(bdyramp_2d))
+   if(bdy2d_ramp.gt.1 .and. loop.lt.bdy2d_ramp) then
+      fac = _ONE_*loop/bdy2d_ramp
+   else
+      fac = _ONE_
+   end if
 
 
    select case (tag)
