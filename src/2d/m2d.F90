@@ -28,7 +28,7 @@
    use advection, only: init_advection,print_adv_settings,NOADV
    use halo_zones, only: update_2d_halo,wait_halo,H_TAG
    use variables_2d
-   use bdy_2d, only: init_bdy_2d,bdyfile_2d,bdyfmt_2d,bdyramp_2d
+   use bdy_2d, only: init_bdy_2d,bdyfile_2d,bdyfmt_2d,bdy2d_ramp
    IMPLICIT NONE
 
    interface
@@ -134,7 +134,7 @@
           elev_method,elev_const,elev_file,                    &
           MM,vel2d_adv_split,vel2d_adv_hor,                    &
           Am,An_method,An_const,An_file,residual,              &
-          sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
+          sealevel_check,bdy2d,bdyfmt_2d,bdy2d_ramp,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -280,7 +280,6 @@
    else
       LEVEL2 'sealevel_check<0 --> NaN values will result in warnings'
    end if
-
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_2d()'
