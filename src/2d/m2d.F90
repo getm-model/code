@@ -86,7 +86,7 @@
    integer                   :: MM=1,residual=-1
    integer                   :: sealevel_check=0
    logical                   :: bdy2d=.false.
-   integer                   :: bdyfmt_2d,bdytype,bdyramp_2d=-1
+   integer                   :: bdyfmt_2d,bdytype,bdy2d_ramp=-1
    character(len=PATH_MAX)   :: bdyfile_2d
    REAL_4B                   :: bdy_data(1500)
    REAL_4B                   :: bdy_data_u(1500)
@@ -142,7 +142,7 @@
           elev_method,elev_const,elev_file,                    &
           MM,vel2d_adv_split,vel2d_adv_hor,                    &
           Am,An_method,An_const,An_file,residual,              &
-          sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
+          sealevel_check,bdy2d,bdyfmt_2d,bdy2d_ramp,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -286,8 +286,8 @@
    if (.not. openbdy)  bdy2d=.false.
    LEVEL2 'Open boundary=',bdy2d
    if (bdy2d) then
-      if (hotstart .and. bdyramp_2d .gt. 0) then
-          LEVEL2 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
+      if (hotstart .and. bdy2d_ramp .gt. 0) then
+          LEVEL2 'WARNING: hotstart is .true. AND bdy2d_ramp .gt. 0'
           LEVEL2 'WARNING: .. be sure you know what you are doing ..'
       end if
       LEVEL2 TRIM(bdyfile_2d)
@@ -457,7 +457,7 @@
       Vint=Vint+V
       call toc(TIM_INTEGR2D)
    end if
-   if (have_boundaries) call update_2d_bdy(loop,bdyramp_2d)
+   if (have_boundaries) call update_2d_bdy(loop,bdy2d_ramp)
    call sealevel()
    call depth_update()
 
