@@ -32,7 +32,7 @@
    public init_bdy_3d, do_bdy_3d
    character(len=PATH_MAX),public      :: bdyfile_3d
    integer,public                      :: bdyfmt_3d
-   integer,public                      :: bdyramp_3d
+   integer,public                      :: bdy3d_ramp
    integer,public                      :: bdy3d_sponge_size=3
    logical,public                      :: bdy3d_tmrlx=.false.
    REALTYPE,public                     :: bdy3d_tmrlx_ucut=_ONE_/50
@@ -131,8 +131,8 @@
 
       LEVEL3 'bdyfile_3d=',TRIM(bdyfile_3d)
       LEVEL3 'bdyfmt_3d=',bdyfmt_3d
-      if (bdyramp_3d .gt. 1) then
-         LEVEL3 'bdyramp_3d=',bdyramp_3d
+      if (bdy3d_ramp .gt. 1) then
+         LEVEL3 'bdy3d_ramp=',bdy3d_ramp
          if (hotstart_method .eq. 1) then
             LEVEL4 'WARNING: re-start ramp for 3d bdys'
          end if

@@ -28,7 +28,7 @@
    use les, only: les_mode,LES_MOMENTUM
    use halo_zones, only: update_2d_halo,wait_halo,H_TAG
    use variables_2d
-   use bdy_2d, only: init_bdy_2d,bdyfile_2d,bdyfmt_2d,bdyramp_2d
+   use bdy_2d, only: init_bdy_2d,bdyfile_2d,bdyfmt_2d,bdy2d_ramp
    IMPLICIT NONE
 
    interface
@@ -153,7 +153,7 @@
           MM,vel2d_adv_split,vel2d_adv_hor,avmmol,       &
           Am_method,Am_const,An_method,An_const,An_file, &
           residual,sealevel_check,                       &
-          bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
+          bdy2d,bdyfmt_2d,bdy2d_ramp,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
 !BOC
