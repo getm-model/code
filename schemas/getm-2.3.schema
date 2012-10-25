@@ -295,7 +295,7 @@
 					<option value="2" label="NetCDF"/>
 				</options>
 			</element>
-			<element name="bdyramp_2d" type="int" label="number of time steps for elevation boundary spin-up">
+			<element name="bdy2d_ramp" type="int" label="number of time steps for elevation boundary spin-up">
 				<condition type="eq" variable="./bdy2d" value="True"/>
 			</element>
 			<element name="bdyfile_2d" type="string" label="name of file with boundary data">
@@ -324,7 +324,7 @@
 					<option value="2" label="NetCDF"/>
 				</options>
 			</element>
-			<element name="bdyramp_3d" type="int" label="number of time steps for boundary spin-up">
+			<element name="bdy3d_ramp" type="int" label="number of time steps for boundary spin-up">
 				<condition type="eq" variable="./bdy3d" value="True"/>
 			</element>
 			<element name="bdyfile_3d" type="string" label="name of file with boundary data">
