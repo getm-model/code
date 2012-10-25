@@ -619,7 +619,10 @@
    huo=hun
    hvo=hvn
 
-   if (ip_ramp .gt. 0) ip_fac=min( _ONE_ , n*_ONE_/ip_ramp)
+   if(ip_ramp.gt.1 .and. n.le.ip_ramp) then
+      ip_fac = _ONE_*n/ip_ramp
+   end if
+
    call toc(TIM_INTEGR3D)
 #ifdef STRUCTURE_FRICTION
    call structure_friction_3d
