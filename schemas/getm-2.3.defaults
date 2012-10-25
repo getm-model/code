@@ -266,9 +266,9 @@
 			<bdyfmt_2d>
 				2
 			</bdyfmt_2d>
-			<bdyramp_2d>
+			<bdy2d_ramp>
 				-1
-			</bdyramp_2d>
+			</bdy2d_ramp>
 			<bdyfile_2d>
 				bdy_2d.nc
 			</bdyfile_2d>
@@ -292,9 +292,9 @@
 			<bdyfmt_3d>
 				2
 			</bdyfmt_3d>
-			<bdyramp_3d>
+			<bdy3d_ramp>
 				-1
-			</bdyramp_3d>
+			</bdy3d_ramp>
 			<bdyfile_3d>
 				bdy_3d.nc
 			</bdyfile_3d>
