@@ -634,8 +634,10 @@
    huo=hun
    hvo=hvn
 
-   if(ip_ramp.gt.1 .and. n.le.ip_ramp) then
+   if(ip_ramp.gt.1 .and. n.lt.ip_ramp) then
       ip_fac = _ONE_*n/ip_ramp
+   else
+      ip_fac = _ONE_
    end if
 
    call toc(TIM_INTEGR3D)
