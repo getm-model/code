@@ -376,8 +376,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,rc
-   REALTYPE,save             :: ramp=_ONE_
-   REALTYPE                  :: hh,t,t_minus_t2
+   REALTYPE                  :: ramp,hh,t,t_minus_t2
    REALTYPE, save            :: deltm1
    REALTYPE                  :: short_wave_radiation
    logical,save              :: first=.true.
@@ -424,8 +423,10 @@
          t_minus_t2 = t - t_2
       end if
 
-      if(meteo_ramp.gt.1 .and. n.le.meteo_ramp) then
+      if(meteo_ramp.gt.1 .and. n.lt.meteo_ramp) then
          ramp = _ONE_*n/meteo_ramp
+      else
+         ramp = _ONE_
       end if
 
       select case (met_method)
