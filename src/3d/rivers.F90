@@ -424,7 +424,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,m,n
-   REALTYPE,save             :: ramp=_ONE_
+   REALTYPE                  :: ramp
    REALTYPE                  :: rvol,height
    REALTYPE                  :: svol,tvol,vol
 !EOP
@@ -437,8 +437,10 @@
 #endif
 
 !  river spin-up
-   if (river_ramp.gt.1 .and. loop.le.river_ramp) then
+   if (river_ramp.gt.1 .and. loop.lt.river_ramp) then
       ramp = _ONE_*loop/river_ramp
+   else
+      ramp = _ONE_
    end if
 
    select case (river_method)
