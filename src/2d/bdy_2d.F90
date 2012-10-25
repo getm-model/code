@@ -196,7 +196,8 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
-   REALTYPE                  :: cfl,depth,a,fac
+   REALTYPE,save             :: ramp=_ONE_
+   REALTYPE                  :: cfl,depth,a
    integer                   :: i,j,k,kl,l,n
    REALTYPE, parameter       :: theta = _HALF_
 !
@@ -223,12 +224,9 @@
 
 !  Data read - do time interpolation
 
-   if(bdy2d_ramp.gt.1 .and. loop.lt.bdy2d_ramp) then
-      fac = _ONE_*loop/bdy2d_ramp
-   else
-      fac = _ONE_
+   if(bdy2d_ramp.gt.1 .and. loop.le.bdy2d_ramp) then
+      ramp = _ONE_*loop/bdy2d_ramp
    end if
-
 
    select case (tag)
 
@@ -256,7 +254,7 @@
                   end do
                case (CLAMPED_ELEV,CLAMPED)
                   do j = wfj(n),wlj(n)
-                     z(i,j) = max(fac*bdy_data(kl),-H(i,j)+min_depth)
+                     z(i,j) = max(ramp*bdy_data(kl),-H(i,j)+min_depth)
                      k = k+1
                      kl = kl + 1
                   end do
@@ -266,8 +264,8 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i+1,j))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     a = fac*bdy_data(kl) &
-                         - _TWO_/sqrt(g*depth)*(U(i,j)-fac*bdy_data_u(kl)*depth)
+                     a = ramp*bdy_data(kl) &
+                         - _TWO_/sqrt(g*depth)*(U(i,j)-ramp*bdy_data_u(kl)*depth)
                      z(i,j) = max(a,-H(i,j)+min_depth)
                      k = k+1
                      kl = kl + 1
@@ -295,7 +293,7 @@
                   end do
                case (CLAMPED_ELEV,CLAMPED)
                   do i = nfi(n),nli(n)
-                     z(i,j) = max(fac*bdy_data(kl),-H(i,j)+min_depth)
+                     z(i,j) = max(ramp*bdy_data(kl),-H(i,j)+min_depth)
                      k = k+1
                      kl = kl + 1
                   end do
@@ -305,8 +303,8 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j-1)+D(i,j))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     a = fac*bdy_data(kl) &
-                         + _TWO_/sqrt(g*depth)*(V(i,j-1)-fac*bdy_data_v(kl)*depth)
+                     a = ramp*bdy_data(kl) &
+                         + _TWO_/sqrt(g*depth)*(V(i,j-1)-ramp*bdy_data_v(kl)*depth)
                      z(i,j) = max(a,-H(i,j)+min_depth)
                      k = k+1
                      kl = kl + 1
@@ -334,7 +332,7 @@
                   end do
                case (CLAMPED_ELEV,CLAMPED)
                   do j = efj(n),elj(n)
-                     z(i,j) = max(fac*bdy_data(kl),-H(i,j)+min_depth)
+                     z(i,j) = max(ramp*bdy_data(kl),-H(i,j)+min_depth)
                      k = k+1
                      kl = kl + 1
                   end do
@@ -344,8 +342,8 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i-1,j)+D(i,j))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     a = fac*bdy_data(kl) &
-                         + _TWO_/sqrt(g*depth)*(U(i-1,j)-fac*bdy_data_u(kl)*depth)
+                     a = ramp*bdy_data(kl) &
+                         + _TWO_/sqrt(g*depth)*(U(i-1,j)-ramp*bdy_data_u(kl)*depth)
                      z(i,j) = max(a,-H(i,j)+min_depth)
                      k = k+1
                      kl = kl + 1
@@ -373,7 +371,7 @@
                   end do
                case (CLAMPED_ELEV,CLAMPED)
                   do i = sfi(n),sli(n)
-                     z(i,j) = max(fac*bdy_data(kl),-H(i,j)+min_depth)
+                     z(i,j) = max(ramp*bdy_data(kl),-H(i,j)+min_depth)
                      k = k+1
                      kl = kl + 1
                   end do
@@ -383,8 +381,8 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i,j+1))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     a = fac*bdy_data(kl) &
-                         - _TWO_/sqrt(g*depth)*(V(i,j)-fac*bdy_data_v(kl)*depth)
+                     a = ramp*bdy_data(kl) &
+                         - _TWO_/sqrt(g*depth)*(V(i,j)-ramp*bdy_data_v(kl)*depth)
                      z(i,j) = max(a,-H(i,j)+min_depth)
                      k = k+1
                      kl = kl + 1
@@ -407,8 +405,8 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i+1,j))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     U(i,j) = fac*bdy_data_u(kl)*depth &
-                              - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(kl))
+                     U(i,j) = ramp*bdy_data_u(kl)*depth &
+                              - _HALF_*sqrt(g*depth)*(z(i,j)-ramp*bdy_data(kl))
                      k = k+1
                      kl = kl + 1
                   end do
@@ -417,7 +415,7 @@
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i+1,j))
-                     U(i,j) = fac*bdy_data_u(kl)*depth
+                     U(i,j) = ramp*bdy_data_u(kl)*depth
                      k = k+1
                      kl = kl + 1
                   end do
@@ -436,8 +434,8 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i-1,j)+D(i,j))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     U(i-1,j) = fac*bdy_data_u(kl)*depth &
-                                + _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(kl))
+                     U(i-1,j) = ramp*bdy_data_u(kl)*depth &
+                                + _HALF_*sqrt(g*depth)*(z(i,j)-ramp*bdy_data(kl))
                      k = k+1
                      kl = kl + 1
                   end do
@@ -446,7 +444,7 @@
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i-1,j)+D(i,j))
-                     U(i-1,j) = fac*bdy_data_u(kl)*depth
+                     U(i-1,j) = ramp*bdy_data_u(kl)*depth
                      k = k+1
                      kl = kl + 1
                   end do
@@ -468,8 +466,8 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j-1)+D(i,j))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     V(i,j-1) = fac*bdy_data_v(kl)*depth &
-                                + _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(kl))
+                     V(i,j-1) = ramp*bdy_data_v(kl)*depth &
+                                + _HALF_*sqrt(g*depth)*(z(i,j)-ramp*bdy_data(kl))
                      k = k+1
                      kl = kl + 1
                   end do
@@ -478,7 +476,7 @@
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j-1)+D(i,j))
-                     V(i,j-1) = fac*bdy_data_v(kl)*depth
+                     V(i,j-1) = ramp*bdy_data_v(kl)*depth
                      k = k+1
                      kl = kl + 1
                   end do
@@ -497,8 +495,8 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i,j+1))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     V(i,j) = fac*bdy_data_v(kl)*depth &
-                              - _HALF_*sqrt(g*depth)*(z(i,j)-fac*bdy_data(kl))
+                     V(i,j) = ramp*bdy_data_v(kl)*depth &
+                              - _HALF_*sqrt(g*depth)*(z(i,j)-ramp*bdy_data(kl))
                      k = k+1
                      kl = kl + 1
                   end do
@@ -507,7 +505,7 @@
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i,j+1))
-                     V(i,j) = fac*bdy_data_v(kl)*depth
+                     V(i,j) = ramp*bdy_data_v(kl)*depth
                      k = k+1
                      kl = kl + 1
                   end do
