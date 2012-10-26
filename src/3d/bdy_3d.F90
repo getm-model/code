@@ -15,7 +15,7 @@
 ! !USES:
    use halo_zones, only : H_TAG,U_TAG,V_TAG
    use domain, only: imin,jmin,imax,jmax,kmax,H,az,au,av
-   use domain, only: nsbvl,nbdy,NWB,NNB,NEB,NSB,bdy_index
+   use domain, only: nsbvl,nbdy,NWB,NNB,NEB,NSB,bdy_index,bdy_index_l
    use domain, only: bdy_3d_desc,bdy_3d_type
    use domain, only: need_3d_bdy
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
@@ -274,10 +274,10 @@
 #ifndef NO_BAROCLINIC
 
    l = 0
-   kl = 1
    do n=1,NWB
       l = l+1
       k = bdy_index(l)
+      kl = bdy_index_l(l)
       i = wi(n)
       select case (bdy_3d_type(l))
          case(ZERO_GRADIENT)
@@ -377,6 +377,7 @@
    do n = 1,NNB
       l = l+1
       k = bdy_index(l)
+      kl = bdy_index_l(l)
       j = nj(n)
       select case (bdy_3d_type(l))
          case(ZERO_GRADIENT)
@@ -466,6 +467,7 @@
    do n=1,NEB
       l = l+1
       k = bdy_index(l)
+      kl = bdy_index_l(l)
       i = ei(n)
       select case (bdy_3d_type(l))
          case(ZERO_GRADIENT)
@@ -555,6 +557,7 @@
    do n = 1,NSB
       l = l+1
       k = bdy_index(l)
+      kl = bdy_index_l(l)
       j = sj(n)
       select case (bdy_3d_type(l))
          case(ZERO_GRADIENT)
