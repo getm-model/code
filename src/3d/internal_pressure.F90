@@ -166,7 +166,7 @@
 
    if (ip_ramp .gt. 1) then
       LEVEL3 'ip_ramp=',ip_ramp
-      select case(hotstart_method) then
+      select case(hotstart_method)
          case (1)
             LEVEL4 'WARNING: re-start ramp for ip'
          case (2)
