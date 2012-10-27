@@ -64,7 +64,7 @@
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
    REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum
    REALTYPE, public, dimension(:,:), pointer :: airp,tausx,tausy
-   REALTYPE, public, dimension(:,:), pointer :: shf,swr,tcc
+   REALTYPE, public, dimension(:,:), pointer :: shf,swr=>null(),tcc
    REALTYPE, public, dimension(:,:), pointer :: evap,precip
    REALTYPE, public, dimension(:,:), pointer :: sst
    logical, public                           :: nudge_sst=.false.
