@@ -219,7 +219,7 @@
             end if
 
 !           Get surface short-wave radiation.
-            if (allocated(swr)) then
+            if (associated(swr)) then
                I_0 = swr(i,j)
             else
                I_0 = _ZERO_
