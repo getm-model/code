@@ -158,7 +158,7 @@
          LEVEL3 'bdyfmt_2d=',bdyfmt_2d
          if (bdy2d_ramp .gt. 1) then
             LEVEL3 'bdy2d_ramp=',bdy2d_ramp
-            select case(hotstart_method) then
+            select case(hotstart_method)
                case (1)
                   LEVEL4 'WARNING: re-start ramp for 2d bdys'
                case (2)
