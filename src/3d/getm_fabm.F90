@@ -36,7 +36,10 @@
    integer         :: fabm_adv_split=0
    integer         :: fabm_adv_hor=1
    integer         :: fabm_adv_ver=1
-   REALTYPE        :: fabm_AH=-_ONE_
+   integer, public :: fabm_AH_method=0
+   REALTYPE        :: fabm_AH_const=1.4d-7
+   REALTYPE        :: fabm_AH_Prt=_TWO_
+   REALTYPE        :: fabm_AH_stirr_const=_ONE_
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -77,7 +80,9 @@
 
    namelist /getm_fabm_nml/ fabm_init_method, &
                            fabm_init_file,fabm_init_format,fabm_field_no, &
-                           fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH
+                           fabm_adv_split,fabm_adv_hor,fabm_adv_ver,      &
+                           fabm_AH_method,fabm_AH_const,fabm_AH_Prt,      &
+                           fabm_AH_stirr_const
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -125,7 +130,35 @@
 !     Show settings specific to GETM-FABM interaction.
       LEVEL2 'Advection of FABM variables'
       if (fabm_adv_hor .eq. J7) stop 'init_getm_fabm: J7 not implemented yet'
-      call print_adv_settings_3d(fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH)
+      if (fabm_AH_method .ne. 1) then
+         fabm_AH_const = -_ONE_
+      end if
+      call print_adv_settings_3d(fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH_const)
+
+      select case (fabm_AH_method)
+         case(0)
+            LEVEL3 'fabm_AH_method=0 -> horizontal diffusion disabled'
+         case(1)
+            LEVEL3 'fabm_AH_method=1 -> Using constant horizontal diffusivity (performed during advection)'
+            if (fabm_AH_const .lt. _ZERO_) then
+                 call getm_error("init_getm_fabm()", &
+                            "Constant horizontal diffusivity <0");
+            end if
+            LEVEL4 real(fabm_AH_const)
+         case(2)
+            LEVEL3 'fabm_AH_method=2 -> using LES parameterisation'
+            LEVEL4 'Turbulent Prandtl number: ',real(fabm_AH_Prt)
+         case(3)
+            LEVEL3 'fabm_AH_method=3 -> SGS stirring parameterisation'
+            if (fabm_AH_stirr_const .lt. _ZERO_) then
+                 call getm_error("init_getm_fabm()", &
+                            "fabm_AH_stirr_const <0");
+            end if
+            LEVEL4 'stirring constant: ',real(fabm_AH_stirr_const)
+         case default
+            call getm_error("init_getm_fabm()", &
+                            "A non valid fabm_AH_method has been chosen");
+      end select
 
 !     Initialize biogeochemical state variables.
       select case (fabm_init_method)
@@ -290,16 +323,14 @@
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
 
-!     KK-TODO: fabm_AH_method + include fabm_AH_method=1 into advection
-
       call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn,                       &
-                           fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH,H_TAG)
+                           fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH_const,H_TAG)
 
-!      if (fabm_AH_method .gt. 1) then
-!         call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az,imin,jmin,imax,jmax,kmax,D_TAG)
-!         call wait_halo(D_TAG)
-!         call tracer_diffusion(fabm_pel(:,:,:,n),hn,fabm_AH_method,fabm_AH_const,fabm_AH_Prt,fabm_AH_stirr_const)
-!      end if
+      if (fabm_AH_method .gt. 1) then
+         call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az,imin,jmin,imax,jmax,kmax,D_TAG)
+         call wait_halo(D_TAG)
+         call tracer_diffusion(fabm_pel(:,:,:,n),hn,fabm_AH_method,fabm_AH_const,fabm_AH_Prt,fabm_AH_stirr_const)
+      end if
    end do
    call toc(TIM_ADVECTFABM)
 
