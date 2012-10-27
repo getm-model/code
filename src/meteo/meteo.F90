@@ -188,9 +188,12 @@
 
       if (meteo_ramp .gt. 1) then
          LEVEL2 'meteo_ramp=',meteo_ramp
-         if (hotstart_method .eq. 1) then
-            LEVEL3 'WARNING: re-start ramp for meteo forcing'
-         end if
+         select case(hotstart_method) then
+            case (1)
+               LEVEL3 'WARNING: re-start ramp for meteo'
+            case (2)
+               LEVEL3 'WARNING: no re-start of ramp for meteo'
+         end select
       end if
    end if
 

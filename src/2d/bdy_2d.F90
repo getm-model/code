@@ -158,9 +158,12 @@
          LEVEL3 'bdyfmt_2d=',bdyfmt_2d
          if (bdy2d_ramp .gt. 1) then
             LEVEL3 'bdy2d_ramp=',bdy2d_ramp
-            if (hotstart_method .eq. 1) then
-               LEVEL4 'WARNING: re-start ramp for 2d bdys'
-            end if
+            select case(hotstart_method) then
+               case (1)
+                  LEVEL4 'WARNING: re-start ramp for 2d bdys'
+               case (2)
+                  LEVEL4 'WARNING: no re-start of ramp for 2d bdys'
+            end select
          end if
          if (need_2d_bdy_elev) then
             allocate(bdy_data(nsbvl),stat=rc)
