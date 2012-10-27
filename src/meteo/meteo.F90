@@ -188,7 +188,7 @@
 
       if (meteo_ramp .gt. 1) then
          LEVEL2 'meteo_ramp=',meteo_ramp
-         select case(hotstart_method) then
+         select case(hotstart_method)
             case (1)
                LEVEL3 'WARNING: re-start ramp for meteo'
             case (2)

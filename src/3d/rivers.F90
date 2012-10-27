@@ -151,7 +151,7 @@
          LEVEL2 'river_format= ',river_format
          if (river_ramp .gt. 1) then
             LEVEL2 'river_ramp=',river_ramp
-            select case(hotstart_method) then
+            select case(hotstart_method)
                case (1)
                   LEVEL3 'WARNING: re-start ramp for rivers'
                case (2)
