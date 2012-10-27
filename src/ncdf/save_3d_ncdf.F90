@@ -263,8 +263,8 @@
       do j=jmin,jmax
          do i=imin,imax
             if (az(i,j) .gt. 0) then
-               cosconv = cos(deg2rad*convc(i,j))
-               sinconv = sin(deg2rad*convc(i,j))
+               cosconv = cos(-convc(i,j)*deg2rad)
+               sinconv = sin(-convc(i,j)*deg2rad)
                uurot(i,j,:) = uutmp(i,j,:)*cosconv-vvtmp(i,j,:)*sinconv
                vvrot(i,j,:) = uutmp(i,j,:)*sinconv+vvtmp(i,j,:)*cosconv
             else
