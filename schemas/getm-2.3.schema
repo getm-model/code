@@ -97,7 +97,7 @@
 			<element name="on_grid"    type="bool" label="Are meteo given on grid-points?">
 				<condition type="eq" variable="./metforcing" value="True"/>
 			</element>
-			<element name="calc_met" type="bool" label="Are the fluxes already given?">
+			<element name="calc_met" type="bool" label="Fluxes are not provided and need to be calculated.">
 				<condition type="eq" variable="./metforcing" value="True"/>
 			</element>
 			<element name="met_method" type="int" label="meteo method">
@@ -117,7 +117,7 @@
 					<option value="4" label="evaporation is calculated, NO precipitation"/>
 				</options>
 			</element>
-			<element name="spinup" type="int" label="number of time steps for forcing spin-up" unit="micro time steps">
+			<element name="meteo_ramp" type="int" label="number of time steps for forcing spin-up" unit="micro time steps">
 				<condition type="eq" variable="./metforcing" value="True"/>
 			</element>
 			<element name="metfmt" type="int" label="format of meteofile">
@@ -295,7 +295,7 @@
 					<option value="2" label="NetCDF"/>
 				</options>
 			</element>
-			<element name="bdyramp_2d" type="int" label="number of time steps for elevation boundary spin-up">
+			<element name="bdy2d_ramp" type="int" label="number of time steps for elevation boundary spin-up">
 				<condition type="eq" variable="./bdy2d" value="True"/>
 			</element>
 			<element name="bdyfile_2d" type="string" label="name of file with boundary data">
@@ -324,7 +324,7 @@
 					<option value="2" label="NetCDF"/>
 				</options>
 			</element>
-			<element name="bdyramp_3d" type="int" label="number of time steps for boundary spin-up">
+			<element name="bdy3d_ramp" type="int" label="number of time steps for boundary spin-up">
 				<condition type="eq" variable="./bdy3d" value="True"/>
 			</element>
 			<element name="bdyfile_3d" type="string" label="name of file with boundary data">

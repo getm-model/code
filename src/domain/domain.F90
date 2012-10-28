@@ -87,7 +87,7 @@
 
 !  method for specifying bottom roughness (0=const, 1=from topo.nc)
    integer                             :: z0_method=0
-   REALTYPE                            :: z0_const=0.001
+   REALTYPE                            :: z0_const=0.01d0
 
 ! !DEFINED PARAMETERS:
    integer,           parameter        :: INNER          = 1
