@@ -45,9 +45,8 @@
          call start_macro()
 #ifndef NO_BAROCLINIC
          call do_eqstate()
+         call buoyancy_frequency()
 #endif
-         call ss_nn()
-         SS=_ZERO_
          call adaptive_coordinates(.false.,.false.)
          call ww_momentum_3d()
 #ifndef NO_BAROCLINIC
