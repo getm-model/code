@@ -247,10 +247,8 @@
 #ifndef NO_BAROCLINIC
     if (runtype .eq. 3 .or. runtype .eq. 4) then
       call init_eqstate()
-#ifndef PECS
       call do_eqstate()
-      call ss_nn()
-#endif
+      call buoyancy_frequency()
 
       if (bdy3d) call init_bdy_3d()
       if (runtype .ge. 3) call init_internal_pressure()
@@ -381,6 +379,10 @@
 
       call coordinates(hotstart)
 
+#ifdef MUDFLAT
+      if (vert_cord .eq. _ADAPTIVE_COORDS_) call shear_frequency()
+#endif
+
    end if
 
    return
@@ -491,8 +493,7 @@
    write(debug,*) 'integrate_3d() # ',Ncall
 #endif
    call start_macro()
-#ifndef NO_BAROCLINIC
-#endif
+
 #ifdef MUDFLAT
    call coordinates(.false.)
 #endif
@@ -501,13 +502,7 @@
       call bottom_friction_3d()
    end if
 #endif
-   call tic(TIM_INTEGR3D)
-   SS = _ZERO_
-   call toc(TIM_INTEGR3D)
 #ifndef NO_BAROCLINIC
-   call tic(TIM_INTEGR3D)
-   NN = _ZERO_
-   call toc(TIM_INTEGR3D)
    if (runtype .eq. 4) call do_internal_pressure()
 #endif
    call tic(TIM_INTEGR3D)
@@ -529,12 +524,16 @@
       ufirst=.true.
    end if
 
-!  HERE WE HAVE TO UPDATE SS !!!
+!  KK-TODO: In realistic simulations (gotm) we need SS
+!           in any case, therefore it is done here by default.
+!           In the future one might check whether a very seldom case
+!           is present, where it can be skipped.
+!           We need SS: 1) #if (!defined(CONSTANT_VISCOSITY) && !defined(PARABOLIC_VISCOSITY))
+!                       2) adpative coordinates
+!                       3) if(do_numerical_analyses_3d) [physical dissipation analyses]
+   call shear_frequency()
 
 #ifndef MUDFLAT
-   if (kmax .gt. 1) then
-      if (vert_cord .eq. _ADAPTIVE_COORDS_) call ss_nn()
-   end if
    call coordinates(.false.)
 #endif
 
@@ -549,9 +548,6 @@
       call stresses_3d()
 #endif
 #ifndef CONSTANT_VISCOSITY
-#ifndef PARABOLIC_VISCOSITY
-      if (vert_cord .ne. _ADAPTIVE_COORDS_) call ss_nn()
-#endif
       call gotm()
       if (advect_turbulence) call tke_eps_advect_3d()
 #endif
@@ -584,10 +580,15 @@
       end if
       call toc(TIM_INTEGR3D)
 
-#ifndef PECS
       call do_eqstate()
-#endif
-!     HERE WE HAVE TO UPDATE NN !!!
+!     KK-TODO: In realistic simulations (baroclinic+gotm) we need NN
+!              in any case, therefore it is done here by default.
+!              In the future one might check whether a very seldom case
+!              is present, where it can be skipped.
+!              We need NN (runtype .ge. 3):
+!                          1) #if (!defined(CONSTANT_VISCOSITY) && !defined(PARABOLIC_VISCOSITY))
+!                          2) adaptive coordinates
+      call buoyancy_frequency()
    end if
 #endif
 
