@@ -474,6 +474,7 @@
 
       call coordinates(hotstart_method)
 
+      if (vert_cord .eq. _ADAPTIVE_COORDS_) call shear_frequency()
       call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
 
    end if
@@ -481,6 +482,7 @@
 #ifndef NO_BAROCLINIC
    if (runtype .ge. 3) then
       call do_eqstate()
+      call buoyancy_frequency()
    end if
 #endif
 
@@ -500,8 +502,6 @@
 !           requires storage of [U|V]into (when hotstart is done within 2d cycle)
 !           and calculation of Dn,Dun,Dvn for hostarts
 !           suggestion: within 2d Uint; within 3d Uint=>Umean
-
-   call ss_nn()
 
    return
    end subroutine postinit_3d
@@ -535,12 +535,6 @@
 ! This is a wrapper routine to call all 3D related subroutines.
 ! The call position for the {\tt coordinates} routine depends on
 ! the compiler option
-! {\tt MUDFLAT}: If it is defined, then the
-! call to {\tt coordinates} construction is made such that drying and flooding
-! is stable. If {\tt MUDFLAT} is not defined, then the adaptive grids with
-! Lagrangian component which are currently under development are supported.
-! Both, drying and flooding and
-! Lagrangian coordinates does not go together yet.
 ! The call sequence is as follows:
 !
 ! \vspace{0.5cm}
@@ -613,38 +607,33 @@
    write(debug,*) 'integrate_3d() # ',Ncall
 #endif
 
-!  KK-TODO: coordinates should be part of start_macro
-!           (MUDFLAT should be default)
    call start_macro()
-
-#ifdef MUDFLAT
    call coordinates(.false.)
-#endif
 
    call tic(TIM_INTEGR3D)
-
-!  KK-TODO: do we need this reset?
-   SS = _ZERO_
-#ifndef NO_BAROCLINIC
-   NN = _ZERO_
-#endif
-
-!  KK-TODO: do we really need this?
-   huo=hun
-   hvo=hvn
-
    if(ip_ramp.gt.1 .and. n.lt.ip_ramp) then
       ip_fac = _ONE_*n/ip_ramp
    else
       ip_fac = _ONE_
    end if
-
    call toc(TIM_INTEGR3D)
+
 #ifdef STRUCTURE_FRICTION
    call structure_friction_3d
 #endif
 
    call momentum_3d(runtype,n)
+
+   if (kmax .gt. 1) then
+!     KK-TODO: In realistic simulations (gotm) we need SS
+!              in any case, therefore it is done here by default.
+!              In the future one might check whether a very seldom case
+!              is present, where it can be skipped.
+!              We need SS: 1) #if (!defined(CONSTANT_VISCOSITY) && !defined(PARABOLIC_VISCOSITY))
+!                          2) adpative coordinates
+!                          3) if(do_numerical_analyses_3d) [physical dissipation analyses]
+      call shear_frequency()
+   end if
 
    call deformation_rates_3d()
 
@@ -665,9 +654,6 @@
       call stresses_3d()
 
       if (use_gotm) then
-#ifndef PARABOLIC_VISCOSITY
-         if (vert_cord .ne. _ADAPTIVE_COORDS_) call ss_nn()
-#endif
          call gotm()
          if (advect_turbulence) call tke_eps_advect_3d()
       end if
@@ -701,9 +687,17 @@
       end if
       call toc(TIM_INTEGR3D)
 
-#ifndef PECS
       call do_eqstate()
-#endif
+
+!     KK-TODO: In realistic simulations (baroclinic+gotm) we need NN
+!              in any case, therefore it is done here by default.
+!              In the future one might check whether a very seldom case
+!              is present, where it can be skipped.
+!              We need NN (runtype .ge. 3):
+!                          1) #if (!defined(CONSTANT_VISCOSITY) && !defined(PARABOLIC_VISCOSITY))
+!                          2) adaptive coordinates
+      call buoyancy_frequency()
+
    end if
 #endif
 
