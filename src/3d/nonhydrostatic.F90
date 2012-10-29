@@ -89,7 +89,7 @@
 #endif
    use variables_3d, only: kmin
    use variables_3d, only: minus_bnh,wco
-   use variables_3d, only: uu_0,vv_0,ho_0,hn_0,huo_0,hun_0,hvo_0,hvn_0
+   use variables_3d, only: uu_0,vv_0
    use variables_3d, only: dt,uu,vv,ww,ho,hn,hun,hvn,num
    use m2d, only: no_2d,avmmol
 #ifndef NO_ADVECT
@@ -216,29 +216,8 @@
       if (nonhyd_iters .gt. 1) then
          allocate(uu_0(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'init_nonhydrostatic: Error allocating memory (uu_0)'
-
          allocate(vv_0(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'init_nonhydrostatic: Error allocating memory (vv_0)'
-
-#ifndef MUDFLAT
-         allocate(ho_0(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_nonhydrostatic: Error allocating memory (ho_0)'
-
-         allocate(hn_0(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_nonhydrostatic: Error allocating memory (hn_0)'
-
-         allocate(huo_0(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_nonhydrostatic: Error allocating memory (huo_0)'
-
-         allocate(hun_0(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_nonhydrostatic: Error allocating memory (hun_0)'
-
-         allocate(hvo_0(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_nonhydrostatic: Error allocating memory (hvo_0)'
-
-         allocate(hvn_0(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_nonhydrostatic: Error allocating memory (hvn_0)'
-#endif
       end if
 
       dtm1=_ONE_/dt

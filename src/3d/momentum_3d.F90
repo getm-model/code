@@ -16,7 +16,7 @@
    use m3d, only: bdy3d,vert_cord,cord_relax,vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,nonhyd_method
    use nonhydrostatic, only: do_nonhydrostatic
    use nonhydrostatic, only: nonhyd_iters
-   use variables_3d, only: uu_0,vv_0,ho_0,hn_0,huo_0,hun_0,hvo_0,hvn_0
+   use variables_3d, only: uu_0,vv_0
    use getm_timers, only: tic,toc,TIM_INTEGR3D,TIM_NH_OVERHEAD
    use internal_pressure, only: do_internal_pressure
 
@@ -49,11 +49,6 @@
       call tic(TIM_INTEGR3D)
       call tic(TIM_NH_OVERHEAD)
       uu_0  = uu  ; vv_0  = vv
-#ifndef MUDFLAT
-      ho_0  = ho  ; hn_0  = hn
-      huo_0 = huo ; hun_0 = hun
-      hvo_0 = hvo ; hvn_0 = hvn
-#endif
       call toc(TIM_NH_OVERHEAD)
       call toc(TIM_INTEGR3D)
    end if
@@ -63,11 +58,6 @@
          call tic(TIM_INTEGR3D)
          call tic(TIM_NH_OVERHEAD)
          uu  = uu_0  ; vv  = vv_0
-#ifndef MUDFLAT
-         ho  = ho_0  ; hn  = hn_0
-         huo = huo_0 ; hun = hun_0
-         hvo = hvo_0 ; hvn = hvn_0
-#endif
          call toc(TIM_INTEGR3D)
       end if
       if (mod(n,2) .eq. 1) then
@@ -77,12 +67,6 @@
          call vv_momentum_3d(runtype,n,bdy3d)
          call uu_momentum_3d(runtype,n,bdy3d)
       end if
-#ifndef MUDFLAT
-      if (kmax .gt. 1) then
-         if (vert_cord .eq. _ADAPTIVE_COORDS_) call ss_nn()
-      end if
-      call coordinates(.false.)
-#endif
       if (kmax .gt. 1) then
          call ww_momentum_3d()
       end if

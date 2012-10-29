@@ -145,9 +145,6 @@
    REALTYPE,dimension(:,:,:),allocatable,target :: minus_bnh
    REALTYPE,dimension(:,:,:),allocatable :: wco
    REALTYPE,dimension(:,:,:),allocatable :: uu_0,vv_0
-#ifndef MUDLFAT
-   REALTYPE,dimension(:,:,:),allocatable :: ho_0,hn_0,huo_0,hun_0,hvo_0,hvn_0
-#endif
 
 !  the following fields will be allocated in init_internal_pressure
    REALTYPE,dimension(:,:,:),pointer            :: idpdx,idpdy
@@ -235,10 +232,12 @@
    end if
 
    uuEx= _ZERO_ ; vvEx= _ZERO_
+   SS=_ZERO_
    tke=1.e-10 ; eps=1.e-10
    preadapt=0
 
 #ifndef NO_BAROCLINIC
+   NN=_ZERO_
    rad=_ZERO_
    light=_ONE_
 #endif
