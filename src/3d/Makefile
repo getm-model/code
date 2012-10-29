@@ -14,7 +14,7 @@ TEXSRC	= m3d.F90 variables_3d.F90 \
 	  internal_pressure.F90 ip_blumberg_mellor.F90 ip_blumberg_mellor_lin.F90 ip_z_interpol.F90  ip_song_wright.F90 ip_chu_fan.F90 ip_shchepetkin_mcwilliams.F90 ip_stelling_vankester.F90 \
           bdy_3d.F90 rivers.F90 spm.F90 \
 	  start_macro.F90 uu_momentum_3d.F90 vv_momentum_3d.F90 ww_momentum_3d.F90 uv_advect_3d.F90 uv_diffusion_3d.F90 slow_terms.F90 stop_macro.F90 \
-	  ss_nn.F90 stresses_3d.F90 gotm.F90 tke_eps_advect_3d.F90 numerical_mixing.F90 physical_mixing.F90 structure_friction_3d.F90
+	  shear_frequency.F90 buoyancy_frequency.F90 stresses_3d.F90 gotm.F90 tke_eps_advect_3d.F90 numerical_mixing.F90 physical_mixing.F90 structure_friction_3d.F90
 
 MOD = \
 $(LIB)(variables_3d.o)		\
@@ -70,6 +70,7 @@ $(LIB)(ip_song_wright.o)		\
 $(LIB)(ip_shchepetkin_mcwilliams.o)     \
 $(LIB)(ip_stelling_vankester.o)		\
 $(LIB)(ip_chu_fan.o)            	\
+$(LIB)(buoyancy_frequency.o)		\
 $(LIB)(numerical_mixing.o)		\
 $(LIB)(physical_mixing.o)		\
 $(LIB)(tracer_stirring.o)		\
@@ -80,7 +81,7 @@ $(LIB)(eddyviscosity.o)			\
 $(LIB)(slow_terms.o)			\
 $(LIB)(adv_split_w.o)			\
 $(LIB)(stresses_3d.o)			\
-$(LIB)(ss_nn.o)				\
+$(LIB)(shear_frequency.o)		\
 $(LIB)(gotm.o)				\
 $(LIB)(check_h.o)			\
 $(LIB)(tke_eps_advect_3d.o)		\
