@@ -44,15 +44,14 @@
       LEVEL1 'pre-adapting coordinates'
       do ii=1,preadapt
          call start_macro()
-         SS=_ZERO_
          call adaptive_coordinates(.false.,.false.)
          call ww_momentum_3d()
 #ifndef NO_BAROCLINIC
          if(calc_salt) call do_salinity(1)
          if(calc_temp) call do_temperature(1)
          call do_eqstate()
+         call buoyancy_frequency()
 #endif
-         call ss_nn()
          call stop_macro()
          if (mod(ii,10).eq._ZERO_) LEVEL3 ii
       end do
@@ -67,6 +66,7 @@
          call init_temperature_field()
       end if
       call do_eqstate()
+      call buoyancy_frequency()
       call do_internal_pressure()
 #endif
    end if
