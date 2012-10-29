@@ -1,3 +1,6 @@
 12/06/21 consider to remove: vel_depth_method
 12/06/22 implemtation of non-z BCs
 12/06/27 include more dependencies on GOTM (compilers/*,Makefile)
+
+12/10/29 consider SLICE_MODEL loops in:
+         sealevel,depth_update,momentum,coordinates,internal_pressure,[uu|vv]_momentum
