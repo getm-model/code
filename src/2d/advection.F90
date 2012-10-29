@@ -204,10 +204,10 @@
          REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
       end subroutine adv_fct_2dh
 
-      REALTYPE function adv_tvd_limiter(scheme,cfl,slope)
+      REALTYPE function adv_tvd_limiter(scheme,cfl,fuu,fu,fd)
          IMPLICIT NONE
          integer,intent(in)  :: scheme
-         REALTYPE,intent(in) :: cfl,slope
+         REALTYPE,intent(in) :: cfl,fuu,fu,fd
       end function adv_tvd_limiter
 
    end interface
@@ -278,6 +278,12 @@
    mask_xflux    = (ax.eq.1)
    mask_uupdateU = (au.eq.1)
    mask_vupdateV = (av.eq.1)
+
+!  Note (KK): avoid division by zero layer heights in adv_split_[u|v]
+!             (because D[V|U] are not halo-updated)
+!             (does not affect flux calculations of H_TAGs)
+   mask_uflux(imax+HALO,:) = .false.
+   mask_vflux(:,jmax+HALO) = .false.
 
    adv_gridH%mask_uflux    => mask_uflux
    adv_gridH%mask_vflux    => mask_vflux(_IRANGE_HALO_,_JRANGE_HALO_-1)

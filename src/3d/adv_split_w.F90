@@ -62,7 +62,7 @@
 ! !LOCAL VARIABLES:
    logical            :: iterate,use_limiter
    integer            :: i,j,k,kshift,it,iters,rc
-   REALTYPE           :: dti,dtik,hio,advn,cfl,r,limit,fu,fc,fd,splitfack
+   REALTYPE           :: dti,dtik,hio,advn,cfl,limit,fuu,fu,fd,splitfack
    REALTYPE,dimension(:),allocatable :: wflux
 !
 ! !REVISION HISTORY:
@@ -104,7 +104,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j,use_limiter,iters,dtik,splitfack)        &
-!$OMP          PRIVATE(i,k,it,rc,wflux,hio,advn,cfl,r,limit,fu,fc,fd)
+!$OMP          PRIVATE(i,k,it,rc,wflux,hio,advn,cfl,limit,fuu,fu,fd)
 
    if (scheme .ne. NOADV) then
 
@@ -149,43 +149,33 @@
                   do k=1-kshift,kmax-1
 !                    Note (KK): overwrite zero flux at k=0 in case of W_TAG
                      if (ww(i,j,k) .gt. _ZERO_) then
-                        fc = f(i,j,k  )               ! central
+                        fu = f(i,j,k  )               ! central
                         if (scheme .ne. UPSTREAM) then
 !                          also fall back to upstream near boundaries
                            use_limiter = (k .gt. 1-kshift)
                         end if
                         if (use_limiter) then
                            cfl = ww(i,j,k)*dtik/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
-                           fu = f(i,j,k-1)            ! upstream
+                           fuu = f(i,j,k-1)            ! upstream
                            fd = f(i,j,k+1)            ! downstream
-                           if (abs(fd-fc) .gt. 1.d-10) then
-                              r = (fc-fu)/(fd-fc)     ! slope ratio
-                           else
-                              r = (fc-fu)*1.d10
-                           end if
                         end if
                      else
-                        fc = f(i,j,k+1)               ! central
+                        fu = f(i,j,k+1)               ! central
                         if (scheme .ne. UPSTREAM) then
 !                          also fall back to upstream near boundaries
                            use_limiter = (k .lt. kmax-1)
                         end if
                         if (use_limiter) then
                            cfl = -ww(i,j,k)*dtik/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
-                           fu = f(i,j,k+2)            ! upstream
+                           fuu = f(i,j,k+2)            ! upstream
                            fd = f(i,j,k  )            ! downstream
-                           if (abs(fc-fd) .gt. 1.d-10) then
-                              r = (fu-fc)/(fc-fd)     ! slope ratio
-                           else
-                              r = (fu-fc)*1.d10
-                           end if
                         end if
                      end if
-                     wflux(k) = ww(i,j,k)*fc
                      if (use_limiter) then
-                        limit = adv_tvd_limiter(scheme,cfl,r)
-                        wflux(k) = wflux(k) + ww(i,j,k)*_HALF_*limit*(_ONE_-cfl)*(fd-fc)
+                        limit = adv_tvd_limiter(scheme,cfl,fuu,fu,fd)
+                        fu = fu + _HALF_*limit*(_ONE_-cfl)*(fd-fu)
                      end if
+                     wflux(k) = ww(i,j,k)*fu
                   end do
                   do k=1,kmax-kshift
 !                    Note (KK): in case of W_TAG do not advect at k=kmax

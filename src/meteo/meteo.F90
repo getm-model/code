@@ -84,7 +84,7 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer                   :: spinup=0,metfmt=2
+   integer                   :: meteo_ramp=0,metfmt=2
    REALTYPE                  :: tx= _ZERO_ ,ty= _ZERO_
    REALTYPE                  :: swr_const= _ZERO_ ,shf_const= _ZERO_
    REALTYPE                  :: evap_const= _ZERO_ ,precip_const= _ZERO_
@@ -124,7 +124,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: rc
    namelist /meteo/ metforcing,on_grid,calc_met,met_method,fwf_method, &
-                    spinup,metfmt,meteo_file, &
+                    meteo_ramp,metfmt,meteo_file, &
                     tx,ty,swr_const,shf_const,evap_const,precip_const, &
                     precip_factor,evap_factor
 !EOP
@@ -177,12 +177,12 @@
          case default
       end select
 
-      if (hotstart .and. spinup .gt. 0) then
-         LEVEL2 'hotstart --> spinup=-1'
-         spinup=-1
+      if (hotstart .and. meteo_ramp .gt. 0) then
+         LEVEL2 'hotstart --> meteo_ramp=-1'
+         meteo_ramp=-1
       end if
-      if ( spinup .gt. 0) then
-         LEVEL2 'Forcing will be spun up over ',spinup,' timesteps'
+      if ( meteo_ramp .gt. 0) then
+         LEVEL2 'Forcing will be spun up over ',meteo_ramp,' timesteps'
       end if
    end if
 
@@ -363,8 +363,8 @@
 !  In addition checks of the logical \emph{new\_meteo} is checked - set by the
 !  reading subroutine.
 !  Temporal interpolation is done in the principal variables.
-!  It is possible to specify a soft start - via the spinup variable -
-!  which is used to calculate a ramp (linearly from 0 to one over spinup
+!  It is possible to specify a soft start - via the meteo_ramp variable -
+!  which is used to calculate a ramp (linearly from 0 to one over meteo_ramp
 !  time steps).
 !  To implement an use a different set of formulae for flux calculations
 !  should be a matter of only changing the involved subroutines.
@@ -408,9 +408,9 @@
 
       t = n*timestep
 
-      if(spinup .gt. 0 .and. k .lt. spinup) then
+      if(meteo_ramp .gt. 0 .and. k .lt. meteo_ramp) then
 ! BJB-TODO: Replace 1.0 with _ONE_ etc in this file.
-         ramp = _ONE_*k/spinup
+         ramp = _ONE_*k/meteo_ramp
          k = k + 1
       else
          ramp = _ONE_
@@ -418,7 +418,7 @@
 
       select case (met_method)
          case (1)
-! BJB-TODO: Why is this called every time step (even after k=spinup)-
+! BJB-TODO: Why is this called every time step (even after k=meteo_ramp)-
 !    It should all be constant in time after that(?)
             airp  =  _ZERO_
             tausx = ramp*tx

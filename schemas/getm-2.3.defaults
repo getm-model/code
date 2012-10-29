@@ -128,9 +128,9 @@
 			<fwf_method>
 				0
 			</fwf_method>
-			<spinup>
+			<meteo_ramp>
 				0
-			</spinup>
+			</meteo_ramp>
 			<metfmt>
 				1
 			</metfmt>
@@ -231,9 +231,9 @@
 			<bdyfmt_2d>
 				2
 			</bdyfmt_2d>
-			<bdyramp_2d>
+			<bdy2d_ramp>
 				-1
-			</bdyramp_2d>
+			</bdy2d_ramp>
 			<bdyfile_2d>
 				bdy_2d.nc
 			</bdyfile_2d>
@@ -257,9 +257,9 @@
 			<bdyfmt_3d>
 				2
 			</bdyfmt_3d>
-			<bdyramp_3d>
+			<bdy3d_ramp>
 				-1
-			</bdyramp_3d>
+			</bdy3d_ramp>
 			<bdyfile_3d>
 				bdy_3d.nc
 			</bdyfile_3d>
@@ -446,10 +446,10 @@
 				2
 			</out_fmt>
 			<hotin_fmt>
-				3
+				2
 			</hotin_fmt>
 			<hotout_fmt>
-				3
+				2
 			</hotout_fmt>
 			<in_dir>
 				.
