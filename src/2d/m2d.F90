@@ -148,10 +148,7 @@
 
    dtm = timestep
 
-#if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
-!  STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'
-!  call cfl_check()
-#else
+#ifndef NO_BAROTROPIC
    call cfl_check()
 #endif
 
