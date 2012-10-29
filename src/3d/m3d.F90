@@ -379,9 +379,7 @@
 
       call coordinates(hotstart)
 
-#ifdef MUDFLAT
       if (vert_cord .eq. _ADAPTIVE_COORDS_) call shear_frequency()
-#endif
 
    end if
 
@@ -414,12 +412,6 @@
 ! This is a wrapper routine to call all 3D related subroutines.
 ! The call position for the {\tt coordinates} routine depends on
 ! the compiler option
-! {\tt MUDFLAT}: If it is defined, then the
-! call to {\tt coordinates} construction is made such that drying and flooding
-! is stable. If {\tt MUDFLAT} is not defined, then the adaptive grids with
-! Lagrangian component which are currently under development are supported.
-! Both, drying and flooding and
-! Lagrangian coordinates does not go together yet.
 ! The call sequence is as follows:
 !
 ! \vspace{0.5cm}
@@ -494,9 +486,8 @@
 #endif
    call start_macro()
 
-#ifdef MUDFLAT
    call coordinates(.false.)
-#endif
+
 #ifndef NO_BOTTFRIC
    if (kmax .gt. 1) then
       call bottom_friction_3d()
@@ -505,12 +496,12 @@
 #ifndef NO_BAROCLINIC
    if (runtype .eq. 4) call do_internal_pressure()
 #endif
+
    call tic(TIM_INTEGR3D)
-   huo=hun
-   hvo=hvn
    ip_fac=_ONE_
    if (ip_ramp .gt. 0) ip_fac=min( _ONE_ , n*_ONE_/ip_ramp)
    call toc(TIM_INTEGR3D)
+
 #ifdef STRUCTURE_FRICTION
    call structure_friction_3d
 #endif
@@ -524,20 +515,16 @@
       ufirst=.true.
    end if
 
-!  KK-TODO: In realistic simulations (gotm) we need SS
-!           in any case, therefore it is done here by default.
-!           In the future one might check whether a very seldom case
-!           is present, where it can be skipped.
-!           We need SS: 1) #if (!defined(CONSTANT_VISCOSITY) && !defined(PARABOLIC_VISCOSITY))
-!                       2) adpative coordinates
-!                       3) if(do_numerical_analyses_3d) [physical dissipation analyses]
-   call shear_frequency()
-
-#ifndef MUDFLAT
-   call coordinates(.false.)
-#endif
-
    if (kmax .gt. 1) then
+
+!    KK-TODO: In realistic simulations (gotm) we need SS
+!             in any case, therefore it is done here by default.
+!             In the future one might check whether a very seldom case
+!             is present, where it can be skipped.
+!             We need SS: 1) #if (!defined(CONSTANT_VISCOSITY) && !defined(PARABOLIC_VISCOSITY))
+!                         2) adpative coordinates
+!                         3) if(do_numerical_analyses_3d) [physical dissipation analyses]
+      call shear_frequency()
 
       call ww_momentum_3d()
 
