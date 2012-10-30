@@ -57,7 +57,7 @@
 ! \label{sec-init-bdy-2d}
 !
 ! !INTERFACE:
-   subroutine init_bdy_2d(bdy2d,hotstart_method)
+   subroutine init_bdy_2d(bdy2d,hotstart)
 !
 ! !DESCRIPTION:
 !
@@ -65,7 +65,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: hotstart_method
+   logical, intent(in)                 :: hotstart
 !
 ! !INPUT/OUTPUT PARAMETERS:
    logical, intent(inout)              :: bdy2d
@@ -158,12 +158,10 @@
          LEVEL3 'bdyfmt_2d=',bdyfmt_2d
          if (bdy2d_ramp .gt. 1) then
             LEVEL3 'bdy2d_ramp=',bdy2d_ramp
-            select case(hotstart_method)
-               case (1)
-                  LEVEL4 'WARNING: re-start ramp for 2d bdys'
-               case (2)
-                  LEVEL4 'WARNING: no re-start of ramp for 2d bdys'
-            end select
+            if (hotstart) then
+               LEVEL4 'WARNING: hotstart is .true. AND bdy2d_ramp .gt. 1'
+               LEVEL4 'WARNING: .. be sure you know what you are doing ..'
+            end if
          end if
          if (need_2d_bdy_elev) then
             allocate(bdy_data(nsbvl),stat=rc)

@@ -14,13 +14,8 @@
 					<option value="4" label="3D (full)"/>
 				</options>
 			</element>
-			<element name="hotstart_method"     type="int"   label="read initial fields from file">
-				<options>
-					<option value="0" label="no hotstart"/>
-					<option value="1" label="hotstart (start new epoch)"/>
-					<option value="2" label="hotstart (continue old epoch)"/>
-				</options>
-			</element>
+			<element name="hotstart"     type="bool"   label="read initial fields from file" />
+			<element name="use_epoch"    type="bool"   label="use a common time origin for a series of hotstart simulations" />
 			<element name="save_initial" type="bool"   label="save initial values i.e. before entering the time loop" />
 		</element>
 
@@ -151,7 +146,16 @@
 				</options>
 			</element>
 			<element name="meteo_ramp" type="int" label="number of time steps for forcing spin-up" unit="micro time steps">
-				<condition type="eq" variable="./metforcing" value="True"/>
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="or">
+						<condition type="eq" variable="../param/hotstart" value="False"/>
+						<condition type="and">
+							<condition type="eq" variable="../param/hotstart" value="True"/>
+							<condition type="eq" variable="../param/use_epoch" value="False"/>
+						</condition>
+					</condition>
+				</condition>
 			</element>
 			<element name="metfmt" type="int" label="format of meteofile">
 				<condition type="and">
@@ -252,7 +256,16 @@
 				<condition type="eq" variable="./river_method" value="2"/>
 			</element>
 			<element name="river_ramp" type="int" label="ramp on river flows - in micro time steps">
-				<condition type="ne" variable="./river_method" value="0"/>
+				<condition type="and">
+					<condition type="ne" variable="./river_method" value="0"/>
+					<condition type="or">
+						<condition type="eq" variable="../param/hotstart" value="False"/>
+						<condition type="and">
+							<condition type="eq" variable="../param/hotstart" value="True"/>
+							<condition type="eq" variable="../param/use_epoch" value="False"/>
+						</condition>
+					</condition>
+				</condition>
 			</element>
 			<element name="river_factor" type="float" label="factor to convert river flow to m³/s">
 				<condition type="eq" variable="./river_method" value="2"/>

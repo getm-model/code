@@ -85,12 +85,12 @@
 ! !IROUTINE: init_3d - initialise 3D related stuff \label{sec-init-3d}
 !
 ! !INTERFACE:
-   subroutine init_3d(runtype,timestep,hotstart_method)
+   subroutine init_3d(runtype,timestep,hotstart)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    REALTYPE, intent(in)                :: timestep
-   integer, intent(in)                 :: hotstart_method
+   logical, intent(in)                 :: hotstart
 !
 ! !INPUT/OUTPUT PARAMETERS:
    integer, intent(inout)              :: runtype
@@ -227,10 +227,10 @@
    end if
 
 !  Needed for interpolation of temperature and salinity
-   if (hotstart_method .eq. 0) then
+   if (.not. hotstart) then
       ssen = z
       call start_macro()
-      call coordinates(hotstart_method)
+      call coordinates(hotstart)
       call hcc_check()
    end if
 
@@ -240,8 +240,8 @@
    else
 #ifndef NO_BAROCLINIC
       T = _ZERO_ ; S = _ZERO_ ; rho = _ZERO_
-      if(calc_temp) call init_temperature(hotstart_method)
-      if(calc_salt) call init_salinity(hotstart_method)
+      if(calc_temp) call init_temperature()
+      if(calc_salt) call init_salinity()
       call init_eqstate()
 #endif
    end if
@@ -249,10 +249,10 @@
    call init_nonhydrostatic()
 
    if (calc_ip) then
-      call init_internal_pressure(runtype,hotstart_method,nonhyd_method)
+      call init_internal_pressure(runtype,hotstart,nonhyd_method)
    end if
 
-   if (hotstart_method.eq.0 .and. vert_cord.eq._ADAPTIVE_COORDS_) then
+   if (.not.hotstart .and. vert_cord.eq._ADAPTIVE_COORDS_) then
       call preadapt_coordinates(preadapt)
    end if
 
@@ -298,7 +298,7 @@
 #endif
 
    if (have_boundaries) then
-      call init_bdy_3d(bdy3d,runtype,hotstart_method)
+      call init_bdy_3d(bdy3d,runtype,hotstart)
    else
       bdy3d = .false.
    end if
@@ -368,14 +368,14 @@
 ! !IROUTINE: postinit_3d - re-initialise some 3D after hotstart read.
 !
 ! !INTERFACE:
-   subroutine postinit_3d(runtype,n,hotstart_method)
+   subroutine postinit_3d(runtype,n,hotstart)
 ! !USES:
    use domain, only: imin,imax,jmin,jmax, az,au,av
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype,n
-   integer, intent(in)                 :: hotstart_method
+   logical, intent(in)                 :: hotstart
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -441,7 +441,7 @@
    end if
 
 ! Hotstart fix - see postinit_2d
-   if (hotstart_method .ne. 0) then
+   if (hotstart) then
 
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
@@ -472,7 +472,7 @@
          end do
       end do
 
-      call coordinates(hotstart_method)
+      call coordinates(hotstart)
 
       if (vert_cord .eq. _ADAPTIVE_COORDS_) call shear_frequency()
       call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
@@ -491,7 +491,7 @@
    end if
 #endif
 
-   if (hotstart_method .eq. 0) then
+   if (.not. hotstart) then
 #ifndef NO_BAROTROPIC
       if (.not. no_2d) then
          call slow_terms(runtype)

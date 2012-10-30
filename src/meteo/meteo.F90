@@ -113,7 +113,7 @@
 ! !IROUTINE: init_meteo - initialise the \emph{meteo} module.
 !
 ! !INTERFACE:
-   subroutine init_meteo(hotstart_method)
+   subroutine init_meteo(hotstart)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -121,7 +121,7 @@
 !  the content of the namelist various variables are allocated and initialised.
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: hotstart_method
+   logical, intent(in)                 :: hotstart
 !
 ! !REVISION HISTORY:
 !
@@ -188,12 +188,10 @@
 
       if (meteo_ramp .gt. 1) then
          LEVEL2 'meteo_ramp=',meteo_ramp
-         select case(hotstart_method)
-            case (1)
-               LEVEL3 'WARNING: re-start ramp for meteo'
-            case (2)
-               LEVEL3 'WARNING: no re-start of ramp for meteo'
-         end select
+         if (hotstart) then
+            LEVEL3 'WARNING: hotstart is .true. AND meteo_ramp .gt. 1'
+            LEVEL3 'WARNING: .. be sure you know what you are doing ..'
+         end if
       end if
    end if
 

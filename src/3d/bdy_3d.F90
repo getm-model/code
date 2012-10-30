@@ -69,7 +69,7 @@
 ! \label{sec-init-bdy-3d}
 !
 ! !INTERFACE:
-   subroutine init_bdy_3d(bdy3d,runtype,hotstart_method)
+   subroutine init_bdy_3d(bdy3d,runtype,hotstart)
 !
 ! !DESCRIPTION:
 !
@@ -81,7 +81,7 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
-   integer, intent(in)                 :: hotstart_method
+   logical, intent(in)                 :: hotstart
 !
 ! !INPUT/OUTPUT PARAMETERS:
    logical, intent(inout)              :: bdy3d
@@ -133,12 +133,10 @@
       LEVEL3 'bdyfmt_3d=',bdyfmt_3d
       if (bdy3d_ramp .gt. 1) then
          LEVEL3 'bdy3d_ramp=',bdy3d_ramp
-         select case(hotstart_method)
-            case (1)
-               LEVEL4 'WARNING: re-start ramp for 3d bdys'
-            case (2)
-               LEVEL4 'WARNING: no re-start of ramp for 3d bdys'
-         end select
+         if (hotstart) then
+            LEVEL4 'WARNING: hotstart is .true. AND bdy3d_ramp .gt. 1'
+            LEVEL4 'WARNING: .. be sure you know what you are doing ..'
+         end if
       end if
 
       if (bdy3d_tmrlx) then
