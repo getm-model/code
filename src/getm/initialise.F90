@@ -92,7 +92,8 @@
    character(len=64)         :: runid
    character(len=80)         :: title
    logical                   :: parallel=.false.
-   integer                   :: hotstart_method=0
+   logical                   :: hotstart=.false.
+   logical                   :: use_epoch=.false.
    logical                   :: save_initial=.false.
    character(len=PATH_MAX)   :: input_dir=''
    character(len=PATH_MAX)   :: namlst_file=''
@@ -100,7 +101,7 @@
 
    namelist /param/ &
              dryrun,runid,title,parallel,runtype,  &
-             hotstart_method,save_initial
+             hotstart,use_epoch,save_initial
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -188,13 +189,13 @@
 
    select case (runtype)
       case (1)
-         LEVEL1 '2D run (hotstart_method=',hotstart_method,')'
+         LEVEL1 '2D run (hotstart=',hotstart,')'
       case (2)
-         LEVEL1 '3D run - no density (hotstart_method=',hotstart_method,')'
+         LEVEL1 '3D run - no density (hotstart=',hotstart,')'
       case (3)
-         LEVEL1 '3D run - frozen density (hotstart_method=',hotstart_method,')'
+         LEVEL1 '3D run - frozen density (hotstart=',hotstart,')'
       case (4)
-         LEVEL1 '3D run - full (hotstart_method=',hotstart_method,')'
+         LEVEL1 '3D run - full (hotstart=',hotstart,')'
       case default
          FATAL 'A non valid runtype has been specified.'
          stop 'initialise()'
@@ -203,23 +204,23 @@
    call init_parameters()
 
    call init_time(MinN,MaxN)
-   if(hotstart_method .eq. 2) then
+   if(use_epoch) then
       LEVEL2 'using "',start,'" as time reference'
    end if
 
    call init_domain(input_dir)
 
-   call init_meteo(hotstart_method)
+   call init_meteo(hotstart)
 
 #ifndef NO_3D
-   call init_rivers(hotstart_method)
+   call init_rivers(hotstart)
 #endif
 
-   call init_2d(runtype,timestep,hotstart_method)
+   call init_2d(runtype,timestep,hotstart)
 
 #ifndef NO_3D
    if (runtype .gt. 1) then
-      call init_3d(runtype,timestep,hotstart_method)
+      call init_3d(runtype,timestep,hotstart)
       if (use_gotm) then
          call init_turbulence(60,trim(input_dir) // 'gotmturb.nml',kmax)
       end if
@@ -246,11 +247,11 @@
    close(NAMLST)
 
 #if 0
-   call init_waves(hotstart_method)
-   call init_biology(hotstart_method)
+   call init_waves(hotstart)
+   call init_biology(hotstart)
 #endif
 
-   if (hotstart_method .ne. 0) then
+   if (hotstart) then
       LEVEL1 'hotstart'
       if (myid .ge. 0) then
          write(buf,'(I3.3)') myid
@@ -259,7 +260,7 @@
          buf = '.in'
       end if
       hot_in = trim(out_dir) //'/'// 'restart' // trim(buf)
-      call restart_file(READING,trim(hot_in),MinN,runtype,hotstart_method)
+      call restart_file(READING,trim(hot_in),MinN,runtype,use_epoch)
       LEVEL3 'MinN adjusted to ',MinN
       call update_time(MinN)
       call write_time_string()
@@ -267,10 +268,10 @@
       MinN = MinN+1
    end if
 
-   call postinit_2d(runtype,timestep,hotstart_method)
+   call postinit_2d(runtype,timestep,hotstart)
 #ifndef NO_3D
    if (runtype .gt. 1) then
-      call postinit_3d(runtype,MinN-1,hotstart_method)
+      call postinit_3d(runtype,MinN-1,hotstart)
    end if
 #endif
 

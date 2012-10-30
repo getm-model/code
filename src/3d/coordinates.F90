@@ -6,7 +6,7 @@
 ! \label{sec-coordinates}
 !
 ! !INTERFACE:
-   subroutine coordinates(hotstart_method)
+   subroutine coordinates(hotstart)
 !
 ! !DESCRIPTION:
 !
@@ -43,7 +43,7 @@
 !   integer, intent(in)                 :: cord_type
 !   REALTYPE, intent(in)                :: cord_relax
 !   REALTYPE, intent(in)                :: maxdepth
-   integer, intent(in)                 :: hotstart_method
+   logical, intent(in)                 :: hotstart
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -81,7 +81,7 @@ STDERR 'coordinates(): hybrid_coordinates not coded yet'
 stop
          case (_ADAPTIVE_COORDS_) ! adaptive vertical coordinates
             LEVEL2 'using adaptive vertical coordinates'
-            call adaptive_coordinates(.true.,hotstart_method)
+            call adaptive_coordinates(.true.,hotstart)
          case default
       end select
       first = .false.
@@ -95,7 +95,7 @@ stop
          case (_HYBRID_COORDS_) ! hybrid vertical coordinates
             call hybrid_coordinates(.false.)
          case (_ADAPTIVE_COORDS_) ! adaptive vertical coordinates
-            call adaptive_coordinates(.false.,hotstart_method)
+            call adaptive_coordinates(.false.,hotstart)
          case default
       end select
    end if ! first

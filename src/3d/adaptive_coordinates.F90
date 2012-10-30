@@ -6,7 +6,7 @@
 ! \label{sec-adaptive-coordinates}
 !
 ! !INTERFACE:
-   subroutine adaptive_coordinates(first,hotstart_method)
+   subroutine adaptive_coordinates(first,hotstart)
 !
 ! !DESCRIPTION:
 ! The vertical grid adaptivity is partially given by a vertical diffusion
@@ -79,7 +79,7 @@
 !
 ! !INPUT PARAMETERS:
    logical, intent(in)                 :: first
-   integer, intent(in)                 :: hotstart_method
+   logical, intent(in)                 :: hotstart
 ! !OUTPUT PARAMETERS:
 !   integer, intent(out)                :: preadapt
 !
@@ -203,7 +203,7 @@ STDERR 'adaptive_coordinates()'
 ! so we initiialize it here. Same for avn: Both just remain zero.
       NNloc(:) = _ZERO_
       avn(:)   = _ZERO_
-      if (hotstart_method .eq. 0) then
+      if (.not.hotstart) then
 ! Dirty way to read initial distribution (as equidistant sigma coordinates):
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO

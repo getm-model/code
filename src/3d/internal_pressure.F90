@@ -115,7 +115,7 @@
 ! \label{sec-init-internal pressure}
 !
 ! !INTERFACE:
-   subroutine init_internal_pressure(runtype,hotstart_method,nonhyd_method)
+   subroutine init_internal_pressure(runtype,hotstart,nonhyd_method)
 !
 ! !DESCRIPTION:
 !
@@ -126,7 +126,8 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in) :: runtype,hotstart_method,nonhyd_method
+   integer, intent(in) :: runtype,nonhyd_method
+   logical, intent(in) :: hotstart
 !
 ! !LOCAL VARIABLES
    integer         :: rc
@@ -136,7 +137,7 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'init_nonhydrostatic() # ',Ncall
+   write(debug,*) 'init_internal_pressure() # ',Ncall
 #endif
 
    LEVEL2 'init_internal_pressure()'
@@ -165,12 +166,10 @@
 
    if (ip_ramp .gt. 1) then
       LEVEL3 'ip_ramp=',ip_ramp
-      select case(hotstart_method)
-         case (1)
-            LEVEL4 'WARNING: re-start ramp for ip'
-         case (2)
-            LEVEL4 'WARNING: no re-start of ramp for ip'
-      end select
+      if (hotstart) then
+         LEVEL3 'WARNING: hotstart is .true. AND ip_ramp .gt. 1'
+         LEVEL3 'WARNING: .. be sure you know what you are doing ..'
+      end if
    end if
 
    allocate(idpdx(I3DFIELD),stat=rc) ! Internal pressure gradient - x

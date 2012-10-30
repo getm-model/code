@@ -122,13 +122,13 @@
 ! !IROUTINE: init_2d - initialise 2D related stuff.
 !
 ! !INTERFACE:
-   subroutine init_2d(runtype,timestep,hotstart_method)
+   subroutine init_2d(runtype,timestep,hotstart)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
    REALTYPE, intent(in)                :: timestep
-   integer, intent(in)                 :: hotstart_method
+   logical, intent(in)                 :: hotstart
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -199,7 +199,7 @@
       call print_adv_settings(vel2d_adv_split,vel2d_adv_hor,_ZERO_)
    end if
 
-   if (hotstart_method .eq. 0) then
+   if (.not. hotstart) then
       select case (elev_method)
          case(1)
             LEVEL2 'setting initial surface elevation to ',real(elev_const)
@@ -329,7 +329,7 @@
       end if
 
       if (have_boundaries) then
-         call init_bdy_2d(bdy2d,hotstart_method)
+         call init_bdy_2d(bdy2d,hotstart)
       else
          bdy2d = .false.
       end if
@@ -378,13 +378,13 @@
 ! !IROUTINE: postinit_2d - re-initialise some 2D after hotstart read.
 !
 ! !INTERFACE:
-   subroutine postinit_2d(runtype,timestep,hotstart_method)
+   subroutine postinit_2d(runtype,timestep,hotstart)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
    REALTYPE, intent(in)                :: timestep
-   integer, intent(in)                 :: hotstart_method
+   logical, intent(in)                 :: hotstart
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -411,7 +411,7 @@
 !
 ! It is possible that a user changes the land mask and reads an "old" hotstart file.
 ! In this case the "old" velocities will need to be zeroed out.
-   if (hotstart_method .ne. 0) then
+   if (hotstart) then
 
       ischange = 0
 !     The first two loops are pure diagnostics, logging where changes will actually take place

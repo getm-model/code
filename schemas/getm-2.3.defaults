@@ -17,9 +17,12 @@
 			<runtype>
 				4
 			</runtype>
-			<hotstart_method>
-				0
-			</hotstart_method>
+			<hotstart>
+				False
+			</hotstart>
+			<use_epoch>
+				False
+			</use_epoch>
 			<save_initial>
 				True
 			</save_initial>
