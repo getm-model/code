@@ -56,6 +56,7 @@
    use variables_3d, only: kmin_pmz,kumin_pmz,kvmin_pmz
    use variables_3d, only: preadapt
    use m3d, only: calc_salt, calc_temp, bdy3d
+   use vertical_coordinates,only: restart_with_ho,restart_with_hn
 
 ! ADAPTIVE-BEGIN
    use  parameters,  only: g,rho_0
@@ -203,30 +204,28 @@ STDERR 'adaptive_coordinates()'
 ! so we initiialize it here. Same for avn: Both just remain zero.
       NNloc(:) = _ZERO_
       avn(:)   = _ZERO_
-      if (.not.hotstart) then
-! Dirty way to read initial distribution (as equidistant sigma coordinates):
+      if (.not. restart_with_hn) then
+         if (hotstart) then
+            LEVEL2 'WARNING: assume equidistant sigma coordinates for hn'
+         end if
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO
-               ho(i,j,:)=(sseo(i,j)+H(i,j))*kmaxm1
                hn(i,j,:)=(ssen(i,j)+H(i,j))*kmaxm1
             end do
          end do
+      end if
+!     only for backward compatibility
+      if (hotstart) then
+         if (.not. restart_with_ho) then
+            LEVEL2 'WARNING: assume ho=hn'
+            ho=hn
+         end if
+      else
          do j=jmin-HALO,jmax+HALO
-            do i=imin-HALO,imax+HALO-1
-               huo(i,j,:)=(ssuo(i,j)+HU(i,j))*kmaxm1
-               hun(i,j,:)=(ssun(i,j)+HU(i,j))*kmaxm1
-            end do
-         end do
-         do j=jmin-HALO,jmax+HALO-1
             do i=imin-HALO,imax+HALO
-               hvo(i,j,:)=(ssvo(i,j)+HV(i,j))*kmaxm1
-               hvn(i,j,:)=(ssvn(i,j)+HV(i,j))*kmaxm1
+               ho(i,j,:)=(sseo(i,j)+H(i,j))*kmaxm1
             end do
          end do
-         LEVEL2 "initialised ho,hun,hvn"
-
-      else !hotstart
-         ho=hn
       end if
 
       kmin=1
@@ -525,10 +524,13 @@ STDERR 'adaptive_coordinates()'
    call wait_halo(V_TAG)
    call mirror_bdy_3d(hvn,V_TAG)
 
+!  only for backward compatibility
    if (first) then
       huo=hun
       hvo=hvn
-      ho=hn
+      if (.not. hotstart) then
+         ho=hn
+      end if
    end if
 
 #ifdef DEBUG

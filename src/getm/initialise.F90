@@ -48,7 +48,7 @@
    use m2d, only: init_2d,postinit_2d, z
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
 #ifndef NO_3D
-   use m3d, only: cord_relax,init_3d,postinit_3d, ssen,ssun,ssvn
+   use m3d, only: init_3d,postinit_3d, ssen,ssun,ssvn
 #ifndef NO_BAROCLINIC
    use m3d, only: T
 #endif
