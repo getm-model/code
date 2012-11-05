@@ -2,6 +2,41 @@
 !-----------------------------------------------------------------------
 !BOP
 !
+! !MODULE: vertical_coordinates
+!
+! !INTERFACE:
+   module vertical_coordinates
+!
+! !DESCRIPTION:
+!
+! !USES:
+#ifdef SLICE_MODEL
+   use domain, only: imin,imax,jmin,jmax,kmax
+   use variables_3d, only: kvmin,hvo,hvn
+#endif
+   use domain, only: vert_cord,maxdepth
+   use exceptions
+   IMPLICIT NONE
+!
+! !PUBLIC DATA MEMBERS:
+   public coordinates
+   logical,public  :: restart_with_ho=.false.
+   logical,public  :: restart_with_hn=.false.
+   REALTYPE,public :: cord_relax=_ZERO_
+!
+! !PRIVATE DATA MEMBERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Richard Hofmeister & Knut Klingbeil
+!
+!EOP
+!-----------------------------------------------------------------------
+
+   contains
+
+!-----------------------------------------------------------------------
+!BOP
+!
 ! !ROUTINE:  coordinates - defines the vertical coordinate
 ! \label{sec-coordinates}
 !
@@ -30,13 +65,7 @@
 !
 !
 ! !USES:
-#ifdef SLICE_MODEL
-   use domain, only: imin,imax,jmin,jmax,kmax
-   use variables_3d, only: kvmin,hvo,hvn
-#endif
    use getm_timers, only: tic, toc,TIM_COORDS
-   use m3d
-   use domain, only: vert_cord
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -120,7 +149,10 @@ stop
    return
    end subroutine coordinates
 !EOC
+!-----------------------------------------------------------------------
+
+   end module vertical_coordinates
 
 !-----------------------------------------------------------------------
-! Copyright (C) 2007 - Hans Burchard and Karsten Bolding               !
+! Copyright (C) 2012 - Hans Burchard and Karsten Bolding               !
 !-----------------------------------------------------------------------

@@ -47,7 +47,8 @@
    integer                             :: uuEx_id,vvEx_id
    integer                             :: tke_id,eps_id
    integer                             :: num_id,nuh_id
-   integer                             :: hn_id
+   integer                             :: ho_id=-1
+   integer                             :: hn_id=-1
 #ifndef NO_BAROCLINIC
    integer                             :: T_id,S_id
 #endif

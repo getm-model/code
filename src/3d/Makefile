@@ -7,8 +7,8 @@ include ../Rules.make
 INCS	= static_3d.h dynamic_declarations_3d.h dynamic_allocations_3d.h
 LIB	= $(LIBDIR)/lib3d${buildtype}.a
 
-TEXSRC	= m3d.F90 variables_3d.F90 \
-	  coordinates.F90 sigma_coordinates.F90 general_coordinates.F90 adaptive_coordinates.F90 check_h.F90 hcc_check.F90 \
+TEXSRC	= m3d.F90 variables_3d.F90 vertical_coordinates.F90 \
+	  sigma_coordinates.F90 general_coordinates.F90 adaptive_coordinates.F90 check_h.F90 hcc_check.F90 \
 	  advection_3d.F90 adv_split_w.F90 \
 	  temperature.F90 salinity.F90 eqstate.F90 \
 	  internal_pressure.F90 ip_blumberg_mellor.F90 ip_blumberg_mellor_lin.F90 ip_z_interpol.F90  ip_song_wright.F90 ip_chu_fan.F90 ip_shchepetkin_mcwilliams.F90 ip_stelling_vankester.F90 \
@@ -18,6 +18,7 @@ TEXSRC	= m3d.F90 variables_3d.F90 \
 
 MOD = \
 $(LIB)(variables_3d.o)		\
+$(LIB)(vertical_coordinates.o)	\
 $(LIB)(advection_3d.o)
 
 ifneq ($(GETM_NO_BAROCLINIC),true)
@@ -52,7 +53,6 @@ $(LIB)(rivers.o)
 OBJ = \
 $(LIB)(start_macro.o)			\
 $(LIB)(hcc_check.o)			\
-$(LIB)(coordinates.o)			\
 $(LIB)(sigma_coordinates.o)		\
 $(LIB)(general_coordinates.o)		\
 $(LIB)(hybrid_coordinates.o)		\

@@ -197,6 +197,10 @@
       if (status .NE. NF90_NOERR) go to 10
 
       status = &
+      nf90_put_var(ncid,ho_id,ho(_3D_W_HOT_),start,edges)
+      if (status .NE. NF90_NOERR) go to 10
+
+      status = &
       nf90_put_var(ncid,hn_id,hn(_3D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
 
