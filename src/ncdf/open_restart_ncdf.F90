@@ -243,7 +243,7 @@
       if (status .NE. NF90_NOERR) go to 10
 
       varnam="ho"
-      status = nf90_inq_varid(ncid, "ho", hn_id)
+      status = nf90_inq_varid(ncid, "ho", ho_id)
       if (status .NE. NF90_NOERR) then
          LEVEL3 'variable missing in restart file. Skipping ',varnam
       else
