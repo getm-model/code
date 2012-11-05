@@ -13,7 +13,7 @@
 ! !USES:
    use domain, only: kmax,vert_cord,maxdepth
    use variables_3d, only: uu,vv,ho,hn,huo,hun,hvo,hvn
-   use m3d, only: bdy3d,vert_cord,cord_relax,vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,nonhyd_method
+   use m3d, only: M,bdy3d,vert_cord,cord_relax,vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,nonhyd_method
    use nonhydrostatic, only: do_nonhydrostatic
    use nonhydrostatic, only: nonhyd_iters
    use variables_3d, only: uu_0,vv_0
@@ -60,7 +60,7 @@
          uu  = uu_0  ; vv  = vv_0
          call toc(TIM_INTEGR3D)
       end if
-      if (mod(n,2) .eq. 1) then
+      if (mod(n/M,2) .eq. 1) then
          call uu_momentum_3d(runtype,n,bdy3d)
          call vv_momentum_3d(runtype,n,bdy3d)
       else
