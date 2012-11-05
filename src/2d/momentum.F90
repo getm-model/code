@@ -30,7 +30,7 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   logical                   :: ufirst=.false.
+!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -41,14 +41,12 @@
 #endif
    CALL tic(TIM_MOMENTUM)
 
-   if(ufirst) then
+   if (mod(n,2) .eq. 0) then
       call umomentum(n,tausx,airp)
       call vmomentum(n,tausy,airp)
-      ufirst = .false.
    else
       call vmomentum(n,tausy,airp)
       call umomentum(n,tausx,airp)
-      ufirst = .true.
    end if
 
    CALL toc(TIM_MOMENTUM)
