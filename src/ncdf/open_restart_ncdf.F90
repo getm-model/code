@@ -16,7 +16,7 @@
    use netcdf
    use ncdf_restart
 #ifndef NO_3D
-   use domain, only: vert_cord
+   use vertical_coordinates,only: restart_with_ho,restart_with_hn
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use getm_bio, only: bio_init_method
@@ -242,16 +242,20 @@
       status = nf90_inq_varid(ncid, "nuh", nuh_id)
       if (status .NE. NF90_NOERR) go to 10
 
-!  hn is required for adaptive coordinates
+      varnam="ho"
+      status = nf90_inq_varid(ncid, "ho", ho_id)
+      if (status .NE. NF90_NOERR) then
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+      else
+         restart_with_ho=.true.
+      endif
+
       varnam="hn"
       status = nf90_inq_varid(ncid, "hn", hn_id)
       if (status .NE. NF90_NOERR) then
-         if (vert_cord .eq. _ADAPTIVE_COORDS_) then
-            go to 10
-         else
-            LEVEL3 'variable missing in restart file. Skipping ',varnam
-            hn_id=-1
-         endif
+         LEVEL3 'variable missing in restart file. Skipping ',varnam
+      else
+         restart_with_hn=.true.
       endif
 
 #ifndef NO_BAROCLINIC
