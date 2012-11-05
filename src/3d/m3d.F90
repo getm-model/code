@@ -37,6 +37,7 @@
    use internal_pressure, only: ip_method
 #endif
    use variables_3d
+   use vertical_coordinates, only: coordinates,cord_relax
    use advection, only: NOADV
    use advection_3d, only: init_advection_3d,print_adv_settings_3d,adv_ver_iterations
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
@@ -49,7 +50,6 @@
 !
 ! !PUBLIC DATA MEMBERS:
    integer                             :: M=1
-   REALTYPE                            :: cord_relax=_ZERO_
    integer                             :: vel3d_adv_split=0
    integer                             :: vel3d_adv_hor=1
    integer                             :: vel3d_adv_ver=1
