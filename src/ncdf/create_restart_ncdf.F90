@@ -21,7 +21,6 @@
    use ncdf_restart
    use domain, only: ioff,joff
    use domain, only: imin,imax,jmin,jmax,kmax
-   use domain, only: vert_cord
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use bio_var, only: numc
@@ -212,6 +211,10 @@
 
       status = nf90_def_var(ncid, "nuh", nf90_double, &
                                (/ xdim_id, ydim_id, zdim_id /), nuh_id)
+      if (status .NE. NF90_NOERR) go to 10
+
+      status = nf90_def_var(ncid, "ho", nf90_double, &
+                               (/ xdim_id, ydim_id, zdim_id /), ho_id)
       if (status .NE. NF90_NOERR) go to 10
 
       status = nf90_def_var(ncid, "hn", nf90_double, &
