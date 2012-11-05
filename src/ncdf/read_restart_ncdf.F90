@@ -359,7 +359,14 @@
       call update_3d_halo(nuh,nuh,az,imin,jmin,imax,jmax,kmax,H_TAG)
       call wait_halo(H_TAG)
 
-!     hn is required for adaptive coordinates
+      if (ho_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,ho_id,ho(iloc:ilen,jloc:jlen,0:kmax),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+         call update_3d_halo(ho,ho,az,imin,jmin,imax,jmax,kmax,H_TAG)
+         call wait_halo(H_TAG)
+      endif
+
       if (hn_id .ne. -1) then
          status = &
          nf90_get_var(ncid,hn_id,hn(iloc:ilen,jloc:jlen,0:kmax),start,edges)

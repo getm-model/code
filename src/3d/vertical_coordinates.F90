@@ -20,6 +20,8 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public coordinates
+   logical,public  :: restart_with_ho=.false.
+   logical,public  :: restart_with_hn=.false.
    REALTYPE,public :: cord_relax=_ZERO_
 !
 ! !PRIVATE DATA MEMBERS:
