@@ -61,11 +61,11 @@
          call toc(TIM_INTEGR3D)
       end if
       if (mod(n/M,2) .eq. 1) then
-         call uu_momentum_3d(runtype,n,bdy3d)
-         call vv_momentum_3d(runtype,n,bdy3d)
+         call uu_momentum_3d(n,bdy3d)
+         call vv_momentum_3d(n,bdy3d)
       else
-         call vv_momentum_3d(runtype,n,bdy3d)
-         call uu_momentum_3d(runtype,n,bdy3d)
+         call vv_momentum_3d(n,bdy3d)
+         call uu_momentum_3d(n,bdy3d)
       end if
       if (kmax .gt. 1) then
          call ww_momentum_3d()
