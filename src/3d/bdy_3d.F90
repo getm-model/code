@@ -191,7 +191,9 @@
    end if
 
 #ifdef _FABM_
-   npel=size(model%info%state_variables)
+   if (fabm_calc) then
+      npel=size(model%info%state_variables)
+   end if
 #endif
 
 #ifdef DEBUG
