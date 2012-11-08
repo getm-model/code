@@ -118,6 +118,10 @@
    REALTYPE                            :: dt,cnpar=0.9
    REALTYPE                            :: avmback=_ZERO_,avhback=_ZERO_
    logical                             :: do_numerical_analyses=.false.
+   logical                             :: deformC_3d=.false.
+   logical                             :: deformX_3d=.false.
+   logical                             :: deformUV_3d=.false.
+   logical                             :: calc_stirr=.false.
 !
 #ifdef STATIC
 #include "static_3d.h"
