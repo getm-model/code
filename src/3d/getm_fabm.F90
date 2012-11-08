@@ -33,13 +33,13 @@
    integer, public           :: fabm_init_method=0
 !
 ! !PRIVATE DATA MEMBERS:
-   integer         :: fabm_adv_split=0
-   integer         :: fabm_adv_hor=1
-   integer         :: fabm_adv_ver=1
-   integer, public :: fabm_AH_method=0
-   REALTYPE        :: fabm_AH_const=1.4d-7
-   REALTYPE        :: fabm_AH_Prt=_TWO_
-   REALTYPE        :: fabm_AH_stirr_const=_ONE_
+   integer  :: fabm_adv_split=0
+   integer  :: fabm_adv_hor=1
+   integer  :: fabm_adv_ver=1
+   integer  :: fabm_AH_method=0
+   REALTYPE :: fabm_AH_const=1.4d-7
+   REALTYPE :: fabm_AH_Prt=_TWO_
+   REALTYPE :: fabm_AH_stirr_const=_ONE_
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
