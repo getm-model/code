@@ -438,8 +438,8 @@
       k = bdy_index(l)
       j = sj(n)
       do i = sfi(n),sli(n)
-         if (av(i,j).gt.0) then
-            if (bdy3d_tmrlx) then
+         if (bdy3d_tmrlx) then
+            if (av(i,j).gt.0) then
                do kk=1,kmax
                   if (vv(i,j,kk).ge.bdy3d_tmrlx_ucut) then
                      rlxcoef(kk) = bdy3d_tmrlx_max
