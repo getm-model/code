@@ -250,57 +250,6 @@
       bdy3d = .false.
    end if
 
-   if (deformC_3d) then
-      allocate(dudxC_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (dudxC_3d)'
-      dudxC_3d=_ZERO_
-#ifndef SLICE_MODEL
-      allocate(dvdyC_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyC_3d)'
-      dvdyC_3d=_ZERO_
-#endif
-   end if
-   if (deformX_3d) then
-      allocate(shearX_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (shearX_3d)'
-      shearX_3d=_ZERO_
-   end if
-   if (deformUV_3d) then
-      allocate(dudxV_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_3d: Error allocating memory (dudxV_3d)'
-      dudxV_3d=_ZERO_
-
-#ifndef SLICE_MODEL
-      allocate(dvdyU_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_3d: Error allocating memory (dvdyU_3d)'
-      dvdyU_3d=_ZERO_
-#endif
-
-      allocate(shearU_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_3d: Error allocating memory (shearU_3d)'
-      shearU_3d=_ZERO_
-   end if
-   if (calc_stirr) then
-      allocate(diffxx(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_3d: Error allocating memory (diffxx)'
-      diffxx=_ZERO_
-
-#ifndef SLICE_MODEL
-      allocate(diffxy(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_3d: Error allocating memory (diffxy)'
-      diffxy=_ZERO_
-
-      allocate(diffyx(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_3d: Error allocating memory (diffyx)'
-      diffyx=_ZERO_
-
-      allocate(diffyy(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_3d: Error allocating memory (diffyy)'
-      diffyy=_ZERO_
-#endif
-   end if
-
-
 #ifdef DEBUG
    write(debug,*) 'Leaving init_3d()'
    write(debug,*)
@@ -347,6 +296,58 @@
 
    LEVEL1 'postinit_3d'
 
+!  must be in postinit because flags are set init_getm_fabm
+   if (deformC_3d) then
+      allocate(dudxC_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (dudxC_3d)'
+      dudxC_3d=_ZERO_
+#ifndef SLICE_MODEL
+      allocate(dvdyC_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (dvdyC_3d)'
+      dvdyC_3d=_ZERO_
+#endif
+   end if
+   if (deformX_3d) then
+      allocate(shearX_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (shearX_3d)'
+      shearX_3d=_ZERO_
+   end if
+   if (deformUV_3d) then
+      allocate(dudxV_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (dudxV_3d)'
+      dudxV_3d=_ZERO_
+
+#ifndef SLICE_MODEL
+      allocate(dvdyU_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (dvdyU_3d)'
+      dvdyU_3d=_ZERO_
+#endif
+
+      allocate(shearU_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (shearU_3d)'
+      shearU_3d=_ZERO_
+   end if
+   if (calc_stirr) then
+      allocate(diffxx(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (diffxx)'
+      diffxx=_ZERO_
+
+#ifndef SLICE_MODEL
+      allocate(diffxy(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (diffxy)'
+      diffxy=_ZERO_
+
+      allocate(diffyx(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (diffyx)'
+      diffyx=_ZERO_
+
+      allocate(diffyy(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (diffyy)'
+      diffyy=_ZERO_
+#endif
+   end if
+
+!  must be in postinit because do_numerical_analyses is set in init_output
    if (do_numerical_analyses) then
 
       allocate(numdis3d(I3DFIELD),stat=rc)
