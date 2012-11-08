@@ -13,10 +13,9 @@
    use time, only: write_time_string,timestep,timestr
    use ascii_out
 #ifndef NO_3D
-   use variables_3d, only: do_numerical_analyses
+   use variables_3d, only: do_numerical_analyses,calc_stirr
 #endif
    use m2d, only: Am_method,AM_LES
-   use m3d, only: calc_stirr
 #ifdef TEST_NESTING
    use nesting
 #endif
