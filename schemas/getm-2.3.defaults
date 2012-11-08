@@ -199,6 +199,9 @@
 			<use_river_temp>
 				False
 			</use_river_temp>
+			<river_outflow_properties_follow_source_cell>
+				True
+			</river_outflow_properties_follow_source_cell>
 		</rivers>
 		<m2d>
 			<elev_method>
