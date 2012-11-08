@@ -89,6 +89,7 @@
    REALTYPE, allocatable     :: irr(:)
    REALTYPE, allocatable     :: macro_height(:)
    REALTYPE, allocatable     :: flow_fraction(:),flow_fraction_rel(:)
+   logical                   :: river_outflow_properties_follow_source_cell=.true.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -127,7 +128,7 @@
    REALTYPE                  :: area, total_weight
    NAMELIST /rivers/ &
             river_method,river_info,river_format,river_data,river_ramp, &
-            river_factor,use_river_salt,use_river_temp
+            river_factor,use_river_salt,use_river_temp,river_outflow_properties_follow_source_cell
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -151,6 +152,7 @@
          LEVEL2 'river_factor= ',river_factor
          LEVEL2 'use_river_temp= ',use_river_temp
          LEVEL2 'use_river_salt= ',use_river_salt
+         LEVEL2 'river_outflow_properties_follow_source_cell=',river_outflow_properties_follow_source_cell
          open(unit,file=river_info,action='read',status='old',err=90)
          read(unit,*) nriver
          allocate(ir(nriver),stat=rc) ! i index of rivers
@@ -451,45 +453,48 @@
                macro_height(n)=macro_height(n)+height
 !              on macrotime step adjust 3d fields
                if (do_3d) then
-                  if (calc_salt) then
-                     if ( river_salt(n) .ne. salt_missing ) then
-                        S(i,j,1:kmax) = (S(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
-                                      + river_salt(n)*macro_height(n))      &
-                                      / (H(i,j)+ssen(i,j)+macro_height(n))
-                     else
-                        S(i,j,1:kmax) = S(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
-                                      / (H(i,j)+ssen(i,j)+macro_height(n))
-                     end if
-                  end if
-                  if (calc_temp .and. river_temp(n) .ne. temp_missing) then
-                     T(i,j,1:kmax) = (T(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
-                                      + river_temp(n)*macro_height(n))      &
-                                      / (H(i,j)+ssen(i,j)+macro_height(n))
-                  end if
-#ifdef GETM_BIO
-                  if (bio_calc) then
-                     do m=1,numc
-                        if ( river_bio(n,m) .ne. bio_missing ) then
-                           cc3d(m,i,j,1:kmax) = &
-                                 (cc3d(m,i,j,1:kmax)*(H(i,j)+ssen(i,j)) &
-                                 + river_bio(n,m)*macro_height(n))      &
-                                 / (H(i,j)+ssen(i,j)+macro_height(n))
+                  if (macro_height(n).gt._ZERO_ .or. .not.river_outflow_properties_follow_source_cell) then
+                     if (calc_salt ) then
+                        if ( river_salt(n) .ne. salt_missing) then
+                           S(i,j,1:kmax) = (S(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
+                                         + river_salt(n)*macro_height(n))      &
+                                         / (H(i,j)+ssen(i,j)+macro_height(n))
+                        else
+                           S(i,j,1:kmax) = S(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
+                                         / (H(i,j)+ssen(i,j)+macro_height(n))
                         end if
-                     end do
-                  end if
+                     end if
+                     if (calc_temp .and. river_temp(n) .ne. temp_missing) then
+                        T(i,j,1:kmax) = (T(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
+                                         + river_temp(n)*macro_height(n))      &
+                                         / (H(i,j)+ssen(i,j)+macro_height(n))
+                     end if
+#ifdef GETM_BIO
+                     if (bio_calc) then
+                        do m=1,numc
+                           if ( river_bio(n,m) .ne. bio_missing ) then
+                              cc3d(m,i,j,1:kmax) = &
+                                    (cc3d(m,i,j,1:kmax)*(H(i,j)+ssen(i,j)) &
+                                    + river_bio(n,m)*macro_height(n))      &
+                                    / (H(i,j)+ssen(i,j)+macro_height(n))
+                           end if
+                        end do
+                     end if
 #endif
 #ifdef _FABM_
-                  if (allocated(fabm_pel)) then
-                     do m=1,size(model%info%state_variables)
-                        if ( river_fabm(n,m) .ne. model%info%state_variables(m)%missing_value ) then
-                           fabm_pel(i,j,1:kmax,m) = &
-                                 (fabm_pel(i,j,1:kmax,m)*(H(i,j)+ssen(i,j)) &
-                                 + river_fabm(n,m)*macro_height(n))      &
-                                 / (H(i,j)+ssen(i,j)+macro_height(n))
-                        end if
-                     end do
-                  end if
+                     if (allocated(fabm_pel)) then
+                        do m=1,size(model%info%state_variables)
+                           if ( river_fabm(n,m) .ne. model%info%state_variables(m)%missing_value ) then
+                              fabm_pel(i,j,1:kmax,m) = &
+                                    (fabm_pel(i,j,1:kmax,m)*(H(i,j)+ssen(i,j)) &
+                                    + river_fabm(n,m)*macro_height(n))      &
+                                    / (H(i,j)+ssen(i,j)+macro_height(n))
+                           end if
+                        end do
+                     end if
 #endif
+                  end if
+
 !                 Changes of total and layer height due to river inflow:
                   hn(i,j,1:kmax) = hn(i,j,1:kmax)/(H(i,j)+ssen(i,j)) &
                                   *(H(i,j)+ssen(i,j)+macro_height(n))
