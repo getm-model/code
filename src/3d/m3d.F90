@@ -26,9 +26,9 @@
    use parameters, only: avmmol
    use domain, only: have_boundaries,maxdepth,vert_cord,az
    use les, only: do_les_3d
-   use les, only: les_mode,NO_LES,LES_MOMENTUM,LES_TRACER,LES_BOTH
+   use les, only: les_mode,NO_LES,LES_MOMENTUM
    use m2d, only: bottom_friction
-   use m2d, only: no_2d,deformC,deformX,deformUV,Am_method,AM_LES
+   use m2d, only: no_2d,deformC,deformX,deformUV
    use variables_2d, only: z
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
@@ -59,12 +59,10 @@
    integer                             :: vel3d_adv_ver=1
    logical                             :: calc_temp=.true.
    logical                             :: calc_salt=.true.
-   logical                             :: calc_stirr=.false.
    logical                             :: bdy3d=.false.
    REALTYPE                            :: ip_fac=_ONE_
    integer                             :: vel_check=0
    REALTYPE                            :: min_vel=-4*_ONE_,max_vel=4*_ONE_
-   logical                             :: deformC_3d=.false.,deformX_3d=.false.,deformUV_3d=.false.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -234,47 +232,6 @@
       if(calc_salt) call init_salinity()
 #endif
    end if
-
-#ifndef NO_BAROCLINIC
-   if (runtype .eq. 4) then
-      if (calc_temp) then
-         select case(temp_AH_method)
-            case(2)
-               deformC_3d =.true.
-               deformX_3d =.true.
-               deformUV_3d=.true.
-               if (Am_method .eq. AM_LES) then
-                  les_mode = LES_BOTH
-               else
-                  les_mode = LES_TRACER
-               end if
-            case(3)
-               deformC_3d =.true.
-               deformX_3d =.true.
-               deformUV_3d=.true.
-               calc_stirr=.true.
-         end select
-      end if
-      if (calc_salt) then
-         select case(salt_AH_method)
-            case(2)
-               deformC_3d =.true.
-               deformX_3d =.true.
-               deformUV_3d=.true.
-               if (Am_method .eq. AM_LES) then
-                  les_mode = LES_BOTH
-               else
-                  les_mode = LES_TRACER
-               end if
-            case(3)
-               deformC_3d =.true.
-               deformX_3d =.true.
-               deformUV_3d=.true.
-               calc_stirr=.true.
-         end select
-      end if
-   end if
-#endif
 
 #ifndef NO_BAROCLINIC
     if (runtype .eq. 3 .or. runtype .eq. 4) then

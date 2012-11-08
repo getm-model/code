@@ -17,7 +17,6 @@
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
    use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
    use variables_3d, only: nuh,T,S,rho,a,g1,g2,taub
-   use advection_3d, only: print_adv_settings_3d,do_advection_3d
    use meteo, only: swr,u10,v10,evap,precip
    use time, only: yearday,secondsofday
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
@@ -64,6 +63,10 @@
 !
 ! !USES:
    use advection, only: J7
+   use advection_3d, only: print_adv_settings_3d
+   use variables_3d, only: deformC_3d,deformX_3d,deformUV_3d,calc_stirr
+   use m2d, only: Am_method,AM_LES
+   use les, only: les_mode,LES_TRACER,LES_BOTH
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -149,6 +152,14 @@
          case(2)
             LEVEL3 'fabm_AH_method=2 -> using LES parameterisation'
             LEVEL4 'Turbulent Prandtl number: ',real(fabm_AH_Prt)
+            deformC_3d =.true.
+            deformX_3d =.true.
+            deformUV_3d=.true.
+            if (Am_method .eq. AM_LES) then
+               les_mode = LES_BOTH
+            else
+               les_mode = LES_TRACER
+            end if
          case(3)
             LEVEL3 'fabm_AH_method=3 -> SGS stirring parameterisation'
             if (fabm_AH_stirr_const .lt. _ZERO_) then
@@ -156,6 +167,10 @@
                             "fabm_AH_stirr_const <0");
             end if
             LEVEL4 'stirring constant: ',real(fabm_AH_stirr_const)
+            deformC_3d =.true.
+            deformX_3d =.true.
+            deformUV_3d=.true.
+            calc_stirr=.true.
          case default
             call getm_error("init_getm_fabm()", &
                             "A non valid fabm_AH_method has been chosen");
@@ -215,6 +230,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use advection_3d, only: do_advection_3d
    use getm_timers, only: tic, toc, TIM_GETM_FABM, TIM_ADVECTFABM
    IMPLICIT NONE
 !
