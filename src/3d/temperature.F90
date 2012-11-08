@@ -83,6 +83,9 @@
 ! !USES:
    use advection, only: J7
    use advection_3d, only: print_adv_settings_3d
+   use variables_3d, only: deformC_3d,deformX_3d,deformUV_3d,calc_stirr
+   use m2d, only: Am_method,AM_LES
+   use les, only: les_mode,LES_TRACER,LES_BOTH
    IMPLICIT NONE
 !
 ! !LOCAL VARIABLES:
@@ -130,6 +133,14 @@
       case(2)
          LEVEL3 'temp_AH_method=2 -> using LES parameterisation'
          LEVEL4 'Turbulent Prandtl number: ',real(temp_AH_Prt)
+         deformC_3d =.true.
+         deformX_3d =.true.
+         deformUV_3d=.true.
+         if (Am_method .eq. AM_LES) then
+            les_mode = LES_BOTH
+         else
+            les_mode = LES_TRACER
+         end if
       case(3)
          LEVEL3 'temp_AH_method=3 -> SGS stirring parameterisation'
          if (temp_AH_stirr_const .lt. _ZERO_) then
@@ -137,6 +148,10 @@
                          "temp_AH_stirr_const <0");
          end if
          LEVEL4 'stirring constant: ',real(temp_AH_stirr_const)
+         deformC_3d =.true.
+         deformX_3d =.true.
+         deformUV_3d=.true.
+         calc_stirr=.true.
       case default
          call getm_error("init_temperature()", &
                          "A non valid temp_AH_method has been chosen");
