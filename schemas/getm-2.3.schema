@@ -269,6 +269,9 @@
 			<element name="use_river_temp" type="bool" label="use temperature info - if present in river data">
 				<condition type="eq" variable="./river_method" value="2"/>
 			</element>
+			<element name="river_outflow_properties_follow_source_cell" type="bool" label="take temperature, salinity, biogeochemistry of river outflow from modelled source cell">
+				<condition type="eq" variable="./river_method" value="2"/>
+			</element>
 		</element>
 
 		<element name="m2d" label="variables related to 2D model">
