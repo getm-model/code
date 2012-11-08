@@ -37,7 +37,7 @@
    integer                   :: salt_adv_split=0
    integer                   :: salt_adv_hor=1
    integer                   :: salt_adv_ver=1
-   integer, public           :: salt_AH_method=0
+   integer                   :: salt_AH_method=0
    REALTYPE                  :: salt_AH_const=1.1d-9
    REALTYPE                  :: salt_AH_Prt=_TWO_
    REALTYPE                  :: salt_AH_stirr_const=_ONE_

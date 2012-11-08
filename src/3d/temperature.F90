@@ -37,7 +37,7 @@
    integer                   :: temp_adv_split=0
    integer                   :: temp_adv_hor=1
    integer                   :: temp_adv_ver=1
-   integer, public           :: temp_AH_method=0
+   integer                   :: temp_AH_method=0
    REALTYPE                  :: temp_AH_const=1.4d-7
    REALTYPE                  :: temp_AH_Prt=_TWO_
    REALTYPE                  :: temp_AH_stirr_const=_ONE_
