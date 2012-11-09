@@ -578,7 +578,7 @@
                         if(az(i,j+jj) .ne. 0) then
                            wsum = wsum + sp(jj)
                            bdyvertS(:) = bdyvertS(:) + sp(jj)*S(i,j+jj,:)
-                           bdyvertS(:) = bdyvertT(:) + sp(jj)*T(i,j+jj,:)
+                           bdyvertT(:) = bdyvertT(:) + sp(jj)*T(i,j+jj,:)
                         else
                            exit
                         end if
