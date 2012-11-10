@@ -12,7 +12,7 @@
 ! !USES:
    use netcdf
    use domain, only: imin,imax,jmin,jmax,kmax,ioff,joff
-   use domain, only: nsbv,nsbvl,NWB,NNB,NEB,NSB,bdy_index,bdy_index_l
+   use domain, only: nsbv,nsbvl,nbdy,NWB,NNB,NEB,NSB,bdy_index,bdy_index_l
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: H
    use variables_2d, only: dtm
@@ -353,7 +353,7 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer,save    :: this,indx=1,start(3),edges(3)
+   integer,save    :: this,indx=1,start(3),edges(3),bdy_index_stop
    integer         :: prev,next,i,err
    logical, save   :: first=.true.
    logical         :: new_set
@@ -436,8 +436,11 @@
          if (first) then
             indx = i-1
             t2 = bdy_times(indx) - offset
-            start(1) = 1; edges(1) = zax_len;
-            start(2) = 1; edges(2) = bdy_len;
+            bdy_index_stop = bdy_index(nbdy) + nsbvl - bdy_index_l(nbdy)
+            start(1) = 1
+            edges(1) = zax_len
+            start(2) = bdy_index(1)
+            edges(2) = bdy_index_stop - bdy_index(1) + 1
             edges(3) = 1
             first = .false.
          else
@@ -450,12 +453,12 @@
 !                  Interpolation extracts all local bdy cells.
 
          if (salt_id .ne. -1) then
-            err = nf90_get_var(ncid,salt_id,wrk,start,edges)
+            err = nf90_get_var(ncid,salt_id,wrk(:,bdy_index(1):bdy_index_stop),start,edges)
             if (err .ne. NF90_NOERR) go to 10
             call grid_3d_bdy_data_ncdf(zax_len,bdy_len,wrk,nsbvl,S_bdy)
          end if
          if (temp_id .ne. -1) then
-            err = nf90_get_var(ncid,temp_id,wrk,start,edges)
+            err = nf90_get_var(ncid,temp_id,wrk(:,bdy_index(1):bdy_index_stop),start,edges)
             if (err .ne. NF90_NOERR) go to 10
             call grid_3d_bdy_data_ncdf(zax_len,bdy_len,wrk,nsbvl,T_bdy)
          end if
