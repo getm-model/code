@@ -12,7 +12,8 @@
 ! !USES:
    use netcdf
    use domain, only: imin,imax,jmin,jmax,kmax,ioff,joff
-   use domain, only: nsbv,nsbvl,NWB,NNB,NEB,NSB,bdy_index,bdy_index_l
+   use domain, only: nsbv,nsbvl,nbdy,NWB,NNB,NEB,NSB
+   use domain, only: bdy_index,bdy_index_l,bdy_index_stop
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: H
    use variables_2d, only: dtm
@@ -46,6 +47,7 @@
    REALTYPE                            :: offset
    REALTYPE,dimension(:),allocatable   :: bdy_times
    REALTYPE,dimension(:,:),allocatable :: wrk
+   integer                             :: wrk_len
    integer,parameter                   :: climatology_len=12
 !
 ! !REVISION HISTORY:
@@ -193,7 +195,6 @@
          stop 'init_3d_bdy_ncdf: netcdf file does not contain enough bdy points'
       else if (bdy_len .gt. nsbv) then
          LEVEL4 'WARNING: netcdf file contains data for more bdy points'
-         bdy_len = nsbv
       end if
    end if
 
@@ -312,7 +313,8 @@
          stop 'init_3d_bdy_ncdf'
       end if
 
-      allocate(wrk(zax_len,bdy_len),stat=err)
+      wrk_len = bdy_index_stop - bdy_index(1) + 1
+      allocate(wrk(zax_len,bdy_index(1):bdy_index_stop),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (wrk)'
       wrk = _ZERO_
 
@@ -436,8 +438,10 @@
          if (first) then
             indx = i-1
             t2 = bdy_times(indx) - offset
-            start(1) = 1; edges(1) = zax_len;
-            start(2) = 1; edges(2) = bdy_len;
+            start(1) = 1
+            edges(1) = zax_len
+            start(2) = bdy_index(1)
+            edges(2) = wrk_len
             edges(3) = 1
             first = .false.
          else
@@ -452,12 +456,12 @@
          if (salt_id .ne. -1) then
             err = nf90_get_var(ncid,salt_id,wrk,start,edges)
             if (err .ne. NF90_NOERR) go to 10
-            call grid_3d_bdy_data_ncdf(zax_len,bdy_len,wrk,nsbvl,S_bdy)
+            call grid_3d_bdy_data_ncdf(wrk,S_bdy)
          end if
          if (temp_id .ne. -1) then
             err = nf90_get_var(ncid,temp_id,wrk,start,edges)
             if (err .ne. NF90_NOERR) go to 10
-            call grid_3d_bdy_data_ncdf(zax_len,bdy_len,wrk,nsbvl,T_bdy)
+            call grid_3d_bdy_data_ncdf(wrk,T_bdy)
          end if
 
       end if
@@ -505,7 +509,7 @@
 ! !IROUTINE: grid_3d_bdy_data_ncdf -
 !
 ! !INTERFACE:
-   subroutine grid_3d_bdy_data_ncdf(nlev,nsbv,wrk,nsbvl,col)
+   subroutine grid_3d_bdy_data_ncdf(wrk,col)
 !
 ! !DESCRIPTION:
 !  kurt,kurt
@@ -514,11 +518,10 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer,intent(in)  :: nlev,nsbv,nsbvl
-   REALTYPE,intent(in) :: wrk(nlev,nsbv)
+   REALTYPE,intent(in) :: wrk(zax_len,bdy_index(1):bdy_index_stop)
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE,intent(out) :: col(nlev,nsbvl)
+   REALTYPE,intent(out) :: col(zax_len,nsbvl)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard

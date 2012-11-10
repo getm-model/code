@@ -153,10 +153,12 @@
       have_boundaries = .true.
       bdy_index(nbdy+1:) = -1
       bdy_index_l(nbdy+1:) = -1
+      bdy_index_stop = bdy_index(nbdy) + nsbvl - bdy_index_l(nbdy)
    else
       have_boundaries = .false.
       bdy_index = -1
       bdy_index_l = -1
+      bdy_index_stop = -1
    end if
 
 #ifdef DEBUG
