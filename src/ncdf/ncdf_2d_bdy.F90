@@ -212,7 +212,7 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer,save                  :: indx=1,start(2),edges(2)
+   integer,save                  :: indx=1,start(2),edges(2),bdy_index_stop
    integer                       :: i,err
    logical                       :: first=.true.
    REALTYPE                      :: t,t_minus_t2
@@ -243,7 +243,9 @@
       if (first) then
          indx = i-1
          t2 = bdy_times(indx) - offset
-         start(1) = 1 ; edges(1) = bdy_len
+         bdy_index_stop = bdy_index(nbdy) + nsbvl - bdy_index_l(nbdy)
+         start(1) = bdy_index(1)
+         edges(1) = bdy_index_stop - bdy_index(1) + 1
          edges(2) = 1
          first = .false.
       else
@@ -252,21 +254,21 @@
       start(2) = indx
 
       if ( elev_id .ne. -1 ) then
-         err = nf90_get_var(ncid,elev_id,wrk,start,edges)
+         err = nf90_get_var(ncid,elev_id,wrk(bdy_index(1):bdy_index_stop),start,edges)
          if(err .NE. NF90_NOERR) go to 10
          call grid_2d_bdy_data_ncdf(bdy_len,wrk,nsbvl,bdy_data)
          bdy_data_old=>bdy_data_new;bdy_data_new=>bdy_data;bdy_data=>d_bdy_data;d_bdy_data=>bdy_data_old
          d_bdy_data = bdy_data_new - bdy_data_old
       end if
       if ( u_id .ne. -1 ) then
-         err = nf90_get_var(ncid,u_id,wrk,start,edges)
+         err = nf90_get_var(ncid,u_id,wrk(bdy_index(1):bdy_index_stop),start,edges)
          if(err .NE. NF90_NOERR) go to 10
          call grid_2d_bdy_data_ncdf(bdy_len,wrk,nsbvl,bdy_data_u)
          bdy_data_u_old=>bdy_data_u_new;bdy_data_u_new=>bdy_data_u;bdy_data_u=>d_bdy_data_u;d_bdy_data_u=>bdy_data_u_old
          d_bdy_data_u = bdy_data_u_new - bdy_data_u_old
       end if
       if ( v_id .ne. -1 ) then
-         err = nf90_get_var(ncid,v_id,wrk,start,edges)
+         err = nf90_get_var(ncid,v_id,wrk(bdy_index(1):bdy_index_stop),start,edges)
          if(err .NE. NF90_NOERR) go to 10
          call grid_2d_bdy_data_ncdf(bdy_len,wrk,nsbvl,bdy_data_v)
          bdy_data_v_old=>bdy_data_v_new;bdy_data_v_new=>bdy_data_v;bdy_data_v=>d_bdy_data_v;d_bdy_data_v=>bdy_data_v_old
