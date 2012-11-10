@@ -16,8 +16,9 @@
    use time, only: string_to_julsecs,time_diff,add_secs
    use time, only: julianday,secondsofday,juln,secsn
    use time, only: write_time_string,timestr
-   use domain,  only: need_2d_bdy_elev,need_2d_bdy_u,need_2d_bdy_v
-   use domain, only: nsbv,nsbvl,nbdy,NWB,NNB,NEB,NSB,bdy_index,bdy_index_l
+   use domain, only: need_2d_bdy_elev,need_2d_bdy_u,need_2d_bdy_v
+   use domain, only: nsbv,nsbvl,nbdy,NWB,NNB,NEB,NSB
+   use domain, only: bdy_index,bdy_index_l,bdy_index_stop
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    IMPLICIT NONE
 !
@@ -37,6 +38,7 @@
    REALTYPE,dimension(:),pointer       :: bdy_data_u_new,d_bdy_data_u
    REALTYPE,dimension(:),pointer       :: bdy_data_v_new,d_bdy_data_v
    REALTYPE,dimension(:),allocatable   :: wrk
+   integer                             :: wrk_len
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -101,7 +103,6 @@
       stop 'init_2d_bdy_ncdf: netcdf file does not contain enough bdy points'
    else if (bdy_len .gt. nsbv) then
       LEVEL4 'WARNING: netcdf file contains data for more bdy points'
-      bdy_len = nsbv
    end if
 
 #if 0
@@ -175,8 +176,9 @@
       if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (d_bdy_data_v)'
    end if
 
-   if (err .NE. NF90_NOERR) go to 10
-   allocate(wrk(bdy_len),stat=err)
+   wrk_len = bdy_index_stop - bdy_index(1) + 1
+   allocate(wrk(bdy_index(1):bdy_index_stop),stat=err)
+   if (err /= 0) stop 'init_2d_bdy_ncdf: Error allocating memory (wrk)'
    wrk = _ZERO_
 
    call do_2d_bdy_ncdf(loop0)
@@ -243,7 +245,8 @@
       if (first) then
          indx = i-1
          t2 = bdy_times(indx) - offset
-         start(1) = 1 ; edges(1) = bdy_len
+         start(1) = bdy_index(1)
+         edges(1) = wrk_len
          edges(2) = 1
          first = .false.
       else
@@ -254,21 +257,21 @@
       if ( elev_id .ne. -1 ) then
          err = nf90_get_var(ncid,elev_id,wrk,start,edges)
          if(err .NE. NF90_NOERR) go to 10
-         call grid_2d_bdy_data_ncdf(bdy_len,wrk,nsbvl,bdy_data)
+         call grid_2d_bdy_data_ncdf(wrk,bdy_data)
          bdy_data_old=>bdy_data_new;bdy_data_new=>bdy_data;bdy_data=>d_bdy_data;d_bdy_data=>bdy_data_old
          d_bdy_data = bdy_data_new - bdy_data_old
       end if
       if ( u_id .ne. -1 ) then
          err = nf90_get_var(ncid,u_id,wrk,start,edges)
          if(err .NE. NF90_NOERR) go to 10
-         call grid_2d_bdy_data_ncdf(bdy_len,wrk,nsbvl,bdy_data_u)
+         call grid_2d_bdy_data_ncdf(wrk,bdy_data_u)
          bdy_data_u_old=>bdy_data_u_new;bdy_data_u_new=>bdy_data_u;bdy_data_u=>d_bdy_data_u;d_bdy_data_u=>bdy_data_u_old
          d_bdy_data_u = bdy_data_u_new - bdy_data_u_old
       end if
       if ( v_id .ne. -1 ) then
          err = nf90_get_var(ncid,v_id,wrk,start,edges)
          if(err .NE. NF90_NOERR) go to 10
-         call grid_2d_bdy_data_ncdf(bdy_len,wrk,nsbvl,bdy_data_v)
+         call grid_2d_bdy_data_ncdf(wrk,bdy_data_v)
          bdy_data_v_old=>bdy_data_v_new;bdy_data_v_new=>bdy_data_v;bdy_data_v=>d_bdy_data_v;d_bdy_data_v=>bdy_data_v_old
          d_bdy_data_v = bdy_data_v_new - bdy_data_v_old
       end if
@@ -306,7 +309,7 @@
 ! !IROUTINE: grid_2d_bdy_data_ncdf -
 !
 ! !INTERFACE:
-   subroutine grid_2d_bdy_data_ncdf(nsbv,wrk,nsbvl,col)
+   subroutine grid_2d_bdy_data_ncdf(wrk,col)
 !
 ! !DESCRIPTION:
 !  kurt,kurt
@@ -315,8 +318,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer,intent(in)  :: nsbv,nsbvl
-   REALTYPE,intent(in) :: wrk(nsbv)
+   REALTYPE,intent(in) :: wrk(bdy_index(1):bdy_index_stop)
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE,intent(out) :: col(nsbvl)
