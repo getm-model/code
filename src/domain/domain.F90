@@ -80,6 +80,7 @@
    integer, dimension(:), allocatable  :: ei,efj,elj
    integer, dimension(:), allocatable  :: sj,sfi,sli
    integer, allocatable                :: bdy_index(:),bdy_map(:,:),bdy_index_l(:)
+   integer                             :: bdy_index_stop
    logical                             :: have_boundaries=.false.
 
    character(len=64)                   :: bdy_2d_desc(-1:6),bdy_3d_desc(-1:1)
