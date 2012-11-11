@@ -310,9 +310,9 @@ temp_field_no=1
    use parameters,   only: rho_0,cp
    use parameters, only: avmolt
    use getm_timers, only: tic, toc, TIM_TEMP, TIM_MIXANALYSIS
-   use variables_3d, only: do_numerical_analyses
-   use variables_3d, only: nummix3d_T,nummix2d_T
-   use variables_3d, only: phymix3d_T,phymix2d_T
+   use variables_3d, only: do_numerical_analyses_3d
+   use variables_3d, only: nummix_T,nummix_T_int
+   use variables_3d, only: phymix_T,phymix_T_int
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -343,7 +343,7 @@ temp_field_no=1
    call tic(TIM_TEMP)
    rho_0_cpi = _ONE_/(rho_0*cp)
 
-   if (do_numerical_analyses) then
+   if (do_numerical_analyses_3d) then
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
 ! OMP-note: The following array-based line could be implemented
@@ -360,15 +360,15 @@ temp_field_no=1
    call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,                            &
                         temp_adv_split,temp_adv_hor,temp_adv_ver,temp_AH,H_TAG)
 
-   if (do_numerical_analyses) then
+   if (do_numerical_analyses_3d) then
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
 
-      call numerical_mixing(T2,T,nummix3d_T,nummix2d_T)
+      call numerical_mixing(T2,T,nummix_T,nummix_T_int)
 
       call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
-      call physical_mixing(T,temp_AH,avmolt,phymix3d_T,phymix2d_T)
+      call physical_mixing(T,temp_AH,avmolt,phymix_T,phymix_T_int)
 
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
