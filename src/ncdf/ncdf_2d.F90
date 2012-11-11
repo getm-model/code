@@ -30,6 +30,7 @@
    integer                             :: tausx_id,tausy_id,swr_id,shf_id
    integer                             :: evap_id=-1,precip_id=-1
    integer                             :: break_stat_id=-1
+   integer                             :: nd2d_id=-1,pd2d_id=-1
 
    REALTYPE, dimension(:,:), allocatable :: ws
 
@@ -45,6 +46,7 @@
    REALTYPE, parameter                 :: shf_missing        =-9999.0
    REALTYPE, parameter                 :: evap_missing       =-9999.0
    REALTYPE, parameter                 :: precip_missing     =-9999.0
+   REALTYPE, parameter                 :: nummix_missing     =-9999.0
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
