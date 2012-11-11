@@ -37,7 +37,6 @@
 		<File RelativePath="..\..\src\2d\adv_upstream_2dh.F90"/>
 		<File RelativePath="..\..\src\2d\advection.F90"/>
 		<File RelativePath="..\..\src\2d\bottom_friction.F90"/>
-		<File RelativePath="..\..\src\3d\buoyancy_frequency.F90"/>
 		<File RelativePath="..\..\src\2d\cfl_check.F90"/>
 		<File RelativePath="..\..\src\2d\depth_update.F90"/>
 		<File RelativePath="..\..\src\2d\m2d.F90"/>
@@ -55,6 +54,7 @@
 		<File RelativePath="..\..\src\3d\advection_3d.F90"/>
 		<File RelativePath="..\..\src\3d\bdy_3d.F90"/>
 		<File RelativePath="..\..\src\3d\bottom_friction_3d.F90"/>
+		<File RelativePath="..\..\src\3d\buoyancy_frequency.F90"/>
 		<File RelativePath="..\..\src\3d\check_h.F90"/>
 		<File RelativePath="..\..\src\3d\coordinates.F90"/>
 		<File RelativePath="..\..\src\3d\eqstate.F90"/>
