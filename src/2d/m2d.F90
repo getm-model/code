@@ -64,6 +64,14 @@
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: zub,zvb
       end subroutine bottom_friction
 
+      subroutine physical_dissipation(U,V,DU,DV,Am,phydiss)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         REALTYPE,dimension(E2DFIELD),intent(in)  :: U,V,DU,DV
+         REALTYPE,intent(in)                      :: Am
+         REALTYPE,dimension(E2DFIELD),intent(out) :: phydiss
+      end subroutine physical_dissipation
+
 ! Temporary interface (should be read from module):
       subroutine get_2d_field(fn,varname,il,ih,jl,jh,f)
          character(len=*),intent(in)   :: fn,varname
@@ -335,6 +343,15 @@
 
    LEVEL1 'postinit_2d'
 
+   if (do_numerical_analyses_2d) then
+      allocate(phydis_2d(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_2d: Error allocating memory (phydis_2d)'
+      phydis_2d = _ZERO_
+      allocate(numdis_2d(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d)'
+      numdis_2d = _ZERO_
+   end if
+
 !
 ! It is possible that a user changes the land mask and reads an "old" hotstart file.
 ! In this case the "old" velocities will need to be zeroed out.
@@ -444,7 +461,7 @@
 
    call uv_advect(U,V,DU,DV)
    call uv_diffusion(An_method,U,V,D,DU,DV) ! Has to be called after uv_advect.
-
+   if (do_numerical_analyses_2d) call physical_dissipation(U,V,DU,DV,Am,phydis_2d)
    call toc(TIM_INTEGR2D)
 
    call momentum(loop,tausx,tausy,airp)
