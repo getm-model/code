@@ -23,9 +23,11 @@
    integer                             :: swrmean_id,ustarmean_id,ustar2mean_id
    integer                             :: uumean_id,vvmean_id,wmean_id
    integer                             :: saltmean_id,tempmean_id,hmean_id
-   integer                             :: nm3dS_id,nm3dT_id,nm2dS_id,nm2dT_id
-   integer                             :: pm3dS_id,pm3dT_id,pm2dS_id,pm2dT_id
-   integer                             :: nm3d_id,nm2d_id
+   integer                             :: nd3d_id=-1,pd3d_id=-1
+   integer                             :: ndint_id=-1,pdint_id=-1
+   integer                             :: nmS_id=-1,pmS_id=-1,nmSint_id=-1,pmSint_id=-1
+   integer                             :: nmT_id=-1,pmT_id=-1,nmTint_id=-1,pmTint_id=-1
+
 #ifdef GETM_BIO
    integer, allocatable                :: biomean_id(:)
 #endif

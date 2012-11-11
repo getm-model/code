@@ -26,7 +26,7 @@
    use exceptions
    use parameters, only: avmmol
    use domain, only: openbdy,maxdepth,vert_cord,az
-   use m2d, only: uv_advect,uv_diffusion
+   use m2d, only: Am,uv_advect,uv_diffusion
    use variables_2d, only: z,Uint,Vint,UEx,VEx
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
@@ -304,43 +304,49 @@
 
    LEVEL1 'postinit_3d'
 
-   if (do_numerical_analyses) then
+   if (do_numerical_analyses_3d) then
 
-      allocate(numdis3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis3d)'
-      numdis3d = _ZERO_
-      allocate(numdis2d(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis2d)'
-      numdis2d = _ZERO_
+      allocate(phydis_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (phydis_3d)'
+      phydis_3d = _ZERO_
+      allocate(phydis_int(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (phydis_int)'
+      phydis_int = _ZERO_
+      allocate(numdis_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_3d)'
+      numdis_3d = _ZERO_
+      allocate(numdis_int(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_int)'
+      numdis_int = _ZERO_
 
       if (calc_temp) then
-         allocate(phymix3d_T(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix3d_T)'
-         phymix3d_T = _ZERO_
-         allocate(phymix2d_T(I2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix2d_T)'
-         phymix2d_T = _ZERO_
-         allocate(nummix3d_T(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix3d_T)'
-         nummix3d_T = _ZERO_
-         allocate(nummix2d_T(I2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix2d_T)'
-         nummix2d_T = _ZERO_
+         allocate(phymix_T(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_T)'
+         phymix_T = _ZERO_
+         allocate(phymix_T_int(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_T_int)'
+         phymix_T_int = _ZERO_
+         allocate(nummix_T(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_T)'
+         nummix_T = _ZERO_
+         allocate(nummix_T_int(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_T_int)'
+         nummix_T_int = _ZERO_
       end if
 
       if (calc_salt) then
-         allocate(phymix3d_S(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix3d_S)'
-         phymix3d_S = _ZERO_
-         allocate(phymix2d_S(I2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix2d_S)'
-         phymix2d_S = _ZERO_
-         allocate(nummix3d_S(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix3d_S)'
-         nummix3d_S = _ZERO_
-         allocate(nummix2d_S(I2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix2d_S)'
-         nummix2d_S = _ZERO_
+         allocate(phymix_S(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_S)'
+         phymix_S = _ZERO_
+         allocate(phymix_S_int(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_S_int)'
+         phymix_S_int = _ZERO_
+         allocate(nummix_S(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_S)'
+         nummix_S = _ZERO_
+         allocate(nummix_S_int(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_S_int)'
+         nummix_S_int = _ZERO_
       end if
 
    end if
@@ -493,6 +499,7 @@
       call bottom_friction_3d()
    end if
 #endif
+
 #ifndef NO_BAROCLINIC
    if (runtype .eq. 4) call do_internal_pressure()
 #endif
@@ -540,6 +547,8 @@
 #endif
 
    end if
+
+   if (do_numerical_analyses_3d) call physical_dissipation_3d()
 
 #ifndef NO_BAROCLINIC
    if(runtype .eq. 4) then        ! prognostic T and S

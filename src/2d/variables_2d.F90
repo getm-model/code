@@ -21,11 +21,16 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
+   logical                             :: do_numerical_analyses_2d=.false.
+
 #ifdef STATIC
 #include "static_2d.h"
 #else
 #include "dynamic_declarations_2d.h"
 #endif
+
+   REALTYPE,dimension(:,:),allocatable :: numdis_2d,phydis_2d
+
    integer                             :: size2d_field
    integer                             :: mem2d
 !

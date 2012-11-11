@@ -12,8 +12,9 @@
 ! !USES:
    use time, only: write_time_string,timestep,timestr
    use ascii_out
+   use variables_2d, only: do_numerical_analyses_2d
 #ifndef NO_3D
-   use variables_3d, only: do_numerical_analyses
+   use variables_3d, only: do_numerical_analyses_3d
 #endif
 #ifdef TEST_NESTING
    use nesting
@@ -200,12 +201,13 @@
 !   end if
 #endif
 
-#ifndef NO_3D
    if (save_numerical_analyses) then
-      LEVEL2 "calculate and save mixing analysis"
-      do_numerical_analyses=.true.
-   end if
+      LEVEL2 "calculate and save numerical dissipation/mixing"
+      do_numerical_analyses_2d=.true.
+#ifndef NO_3D
+      do_numerical_analyses_3d=.true.
 #endif
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_output()'
