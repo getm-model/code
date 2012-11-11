@@ -40,10 +40,6 @@
 ! Finally, the new velocity profile is shifted such that its vertical
 ! integral is identical to the time integral of the vertically integrated
 ! transport.
-! If the compiler option {\tt MUDFLAT} is defined, this fitting of profiles
-! is made with
-! respect to the new surface elevation, otherwise to the
-! old surface elevation.
 !
 ! When GETM is run as a slice model (compiler option {\tt SLICE\_MODEL}
 ! is activated), the result for $j=2$ is copied to $j=1$ and $j=3$.
@@ -54,7 +50,7 @@
 ! !USES:
    use exceptions
    use parameters, only: g,avmmol,rho_0
-   use domain, only: imin,imax,jmin,jmax,kmax,H,HV,min_depth
+   use domain, only: imin,imax,jmin,jmax,kmax,H,min_depth
    use domain, only: dry_v,corv,au,av,az,ax
 #if defined CURVILINEAR || defined SPHERICAL
    use domain, only: dyv,arvd1,dxc,dyx,dyc,dxx
@@ -64,8 +60,7 @@
    use variables_2d, only: Vint,D
    use bdy_3d, only: do_bdy_3d
    use variables_3d, only: dt,cnpar,kvmin,uu,vv,huo,hvo,hvn,vvEx,ww,hun
-   use variables_3d, only: num,nuh,sseo,ssvn,rrv
-   use variables_3d, only: ssvo
+   use variables_3d, only: num,nuh,sseo,Dvn,rrv
 #ifdef _MOMENTUM_TERMS_
    use variables_3d, only: tdv_v,cor_v,ipg_v,epg_v,vsd_v,hsd_v
 #endif
@@ -268,13 +263,7 @@
                do k=kvmin(i,j),kmax
                   ResInt=ResInt+Res(k)
                end do
-
-#ifdef MUDFLAT
-               Diff=(Vint(i,j)-ResInt)/(ssvn(i,j)+HV(i,j))
-#else
-               Diff=(Vint(i,j)-ResInt)/(ssvo(i,j)+HV(i,j))
-#endif
-
+               Diff=(Vint(i,j)-ResInt)/Dvn(i,j)
 
                do k=kvmin(i,j),kmax
 #ifdef _MOMENTUM_TERMS_

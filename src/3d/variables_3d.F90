@@ -203,10 +203,12 @@
    Dn = _ZERO_ ; Dun = _ZERO_ ; Dvn = _ZERO_
    rru= _ZERO_ ; rrv= _ZERO_
    uuEx= _ZERO_ ; vvEx= _ZERO_
+   SS=_ZERO_
    tke=1.e-10 ; eps=1.e-10
    preadapt=0
 
 #ifndef NO_BAROCLINIC
+   NN=_ZERO_
    rad=_ZERO_
    light=_ONE_
    idpdx=_ZERO_
