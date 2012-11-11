@@ -63,6 +63,7 @@
 		<File RelativePath="..\..\src\3d\advection_3d.F90"/>
 		<File RelativePath="..\..\src\3d\bdy_3d.F90"/>
 		<File RelativePath="..\..\src\3d\bottom_friction_3d.F90"/>
+		<File RelativePath="..\..\src\3d\buoyancy_frequency.F90"/>
 		<File RelativePath="..\..\src\3d\check_h.F90"/>
 		<File RelativePath="..\..\src\3d\coordinates.F90"/>
 		<File RelativePath="..\..\src\3d\eqstate.F90"/>
@@ -86,10 +87,10 @@
 		<File RelativePath="..\..\src\3d\preadapt_coordinates.F90"/>
 		<File RelativePath="..\..\src\3d\rivers.F90"/>
 		<File RelativePath="..\..\src\3d\salinity.F90"/>
+		<File RelativePath="..\..\src\3d\shear_frequency.F90"/>
 		<File RelativePath="..\..\src\3d\sigma_coordinates.F90"/>
 		<File RelativePath="..\..\src\3d\slow_bottom_friction.F90"/>
 		<File RelativePath="..\..\src\3d\slow_terms.F90"/>
-		<File RelativePath="..\..\src\3d\ss_nn.F90"/>
 		<File RelativePath="..\..\src\3d\start_macro.F90"/>
 		<File RelativePath="..\..\src\3d\stop_macro.F90"/>
 		<File RelativePath="..\..\src\3d\stresses_3d.F90"/>
