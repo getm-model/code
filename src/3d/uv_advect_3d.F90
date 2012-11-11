@@ -30,8 +30,8 @@
    use advection, only: NOADV,UPSTREAM,J7
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
-   use variables_3d, only: do_numerical_analyses
-   use variables_3d, only: numdis3d,numdis2d
+   use variables_3d, only: do_numerical_analyses_3d
+   use variables_3d, only: numdis_3d,numdis_int
 #ifdef _MOMENTUM_TERMS_
    use domain, only: dry_u,dry_v
    use variables_3d, only: adv_u,adv_v
@@ -194,14 +194,18 @@
       end if
 !$OMP END SINGLE
 
-      if (do_numerical_analyses) then
+      if (do_numerical_analyses_3d) then
          do k=1,kmax ! calculate square of u-velocity before advection step
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
             do j=jmin-HALO,jmax+HALO
+#endif
                do i=imin-HALO,imax+HALO
                   work3d(i,j,k) = fadv3d(i,j,k)**2
                end do
+#ifndef SLICE_MODEL
             end do
+#endif
 !$OMP END DO NOWAIT
          end do
 !$OMP BARRIER
@@ -216,23 +220,27 @@
 #ifdef _MOMENTUM_TERMS_
       do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
          do j=jmin,jmax
+#endif
             do i=imin,imax
                adv_u(i,j,k) = dry_u(i,j) * uuEx(i,j,k)
             end do
+#ifndef SLICE_MODEL
          end do
+#endif
 !$OMP END DO NOWAIT
       end do
 #endif
 
-      if (do_numerical_analyses) then
+      if (do_numerical_analyses_3d) then
 
 !$OMP SINGLE
          call do_advection_3d(dt,work3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,      &
                               vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,U_TAG, &
                               hires=hires)
 
-         numdis2d = _ZERO_
+         numdis_int = _ZERO_
 !$OMP END SINGLE
 
          do k=1,kmax ! calculate kinetic energy dissipaion rate for u-velocity
@@ -262,10 +270,10 @@
 #endif
                do i=imin,imax
                   if (az(i,j) .eq. 1) then
-                     numdis3d(i,j,k) = _HALF_*( work3d(i-1,j,k) + work3d(i,j,k) )
-                     numdis2d(i,j) = numdis2d(i,j)                             &
-                                    +_HALF_*( work3d(i-1,j,k)*hires(i-1,j,k)   &
-                                             +work3d(i  ,j,k)*hires(i  ,j,k) )
+                     numdis_3d(i,j,k) = _HALF_*( work3d(i-1,j,k) + work3d(i,j,k) )
+                     numdis_int(i,j) = numdis_int(i,j)                           &
+                                      +_HALF_*( work3d(i-1,j,k)*hires(i-1,j,k)   &
+                                               +work3d(i  ,j,k)*hires(i  ,j,k) )
                   end if
                end do
 #ifndef SLICE_MODEL
@@ -386,14 +394,18 @@
       end if
 !$OMP END SINGLE
 
-      if (do_numerical_analyses) then
+      if (do_numerical_analyses_3d) then
          do k=1,kmax ! calculate square of v-velocity before advection step
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
             do j=jmin-HALO,jmax+HALO
+#endif
                do i=imin-HALO,imax+HALO
                   work3d(i,j,k) = fadv3d(i,j,k)**2
                end do
+#ifndef SLICE_MODEL
             end do
+#endif
 !$OMP END DO NOWAIT
          end do
 !$OMP BARRIER
@@ -408,16 +420,20 @@
 #ifdef _MOMENTUM_TERMS_
       do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
          do j=jmin,jmax
+#endif
             do i=imin,imax
                adv_v(i,j,k) = dry_v(i,j) * vvEx(i,j,k)
             end do
+#ifndef SLICE_MODEL
          end do
+#endif
 !$OMP END DO NOWAIT
       end do
 #endif
 
-      if (do_numerical_analyses) then
+      if (do_numerical_analyses_3d) then
 
 !$OMP SINGLE
          call do_advection_3d(dt,work3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,      &
@@ -456,11 +472,11 @@
 #endif
                do i=imin,imax
                   if (az(i,j) .eq. 1) then
-                     numdis3d(i,j,k) = numdis3d(i,j,k)                             &
+                     numdis_3d(i,j,k) = numdis_3d(i,j,k)                           &
                                        +_HALF_*( work3d(i,j-1,k) + work3d(i,j,k) )
-                     numdis2d(i,j) = numdis2d(i,j)                             &
-                                    +_HALF_*( work3d(i,j-1,k)*hires(i,j-1,k)   &
-                                             +work3d(i,j  ,k)*hires(i,j  ,k) )
+                     numdis_int(i,j) = numdis_int(i,j)                           &
+                                      +_HALF_*( work3d(i,j-1,k)*hires(i,j-1,k)   &
+                                               +work3d(i,j  ,k)*hires(i,j  ,k) )
                   end if
                end do
 #ifndef SLICE_MODEL
