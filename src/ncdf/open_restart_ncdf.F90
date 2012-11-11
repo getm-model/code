@@ -246,6 +246,7 @@
       status = nf90_inq_varid(ncid, "ho", ho_id)
       if (status .NE. NF90_NOERR) then
          LEVEL3 'variable missing in restart file. Skipping ',varnam
+         ho_id=-1
       else
          restart_with_ho=.true.
       endif
@@ -254,6 +255,7 @@
       status = nf90_inq_varid(ncid, "hn", hn_id)
       if (status .NE. NF90_NOERR) then
          LEVEL3 'variable missing in restart file. Skipping ',varnam
+         hn_id=-1
       else
          restart_with_hn=.true.
       endif
