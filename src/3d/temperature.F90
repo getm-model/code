@@ -376,9 +376,9 @@ temp_field_no=1
    use parameters,   only: rho_0,cp
    use parameters, only: avmolt
    use getm_timers, only: tic,toc,TIM_TEMP,TIM_TEMPH,TIM_MIXANALYSIS
-   use variables_3d, only: do_numerical_analyses
-   use variables_3d, only: nummix3d_T,nummix2d_T
-   use variables_3d, only: phymix3d_T,phymix2d_T
+   use variables_3d, only: do_numerical_analyses_3d
+   use variables_3d, only: nummix_T,nummix_T_int
+   use variables_3d, only: phymix_T,phymix_T_int
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -409,7 +409,7 @@ temp_field_no=1
    call tic(TIM_TEMP)
    rho_0_cpi = _ONE_/(rho_0*cp)
 
-   if (do_numerical_analyses) then
+   if (do_numerical_analyses_3d) then
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
 ! OMP-note: The following array-based line could be implemented
@@ -426,10 +426,10 @@ temp_field_no=1
    call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,                            &
                         temp_adv_split,temp_adv_hor,temp_adv_ver,_ZERO_,H_TAG)
 
-   if (do_numerical_analyses) then
+   if (do_numerical_analyses_3d) then
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
-      call numerical_mixing(T2,T,nummix3d_T,nummix2d_T)
+      call numerical_mixing(T2,T,nummix_T,nummix_T_int)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
    end if
@@ -443,7 +443,7 @@ temp_field_no=1
 
       if (do_numerical_analyses) then
          call tracer_diffusion(T,hn,temp_AH_method,temp_AH_const,temp_AH_Prt,temp_AH_stirr_const, &
-                               phymix3d_T)
+                               phymix_T)
       else
          call tracer_diffusion(T,hn,temp_AH_method,temp_AH_const,temp_AH_Prt,temp_AH_stirr_const)
       end if
@@ -452,7 +452,7 @@ temp_field_no=1
    if (do_numerical_analyses) then
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
-      call physical_mixing(T,avmolt,phymix3d_T,phymix2d_T,temp_AH_method)
+      call physical_mixing(T,avmolt,phymix_T,phymix_T_int,temp_AH_method)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
    end if

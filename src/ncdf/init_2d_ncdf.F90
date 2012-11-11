@@ -110,6 +110,25 @@
                        FillValue=fv,missing_value=mv,valid_range=vr)
 #endif
 
+   if (save_numerical_analyses) then
+      fv = nummix_missing
+      mv = nummix_missing
+      vr(1) = -100.0
+      vr(2) = 100.0
+      err = nf90_def_var(ncid,'numdis_2d',NCDF_FLOAT_PRECISION,f3_dims,nd2d_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,nd2d_id, &
+          long_name='numerical dissipation', &
+          units='W/kg',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+      err = nf90_def_var(ncid,'phydis_2d',NCDF_FLOAT_PRECISION,f3_dims,pd2d_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,pd2d_id, &
+          long_name='physical dissipation', &
+          units='W/kg',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
+
 !  meteorology
    if (metforcing .and. save_meteo) then
       if (calc_met) then

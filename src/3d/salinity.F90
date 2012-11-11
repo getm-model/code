@@ -360,9 +360,9 @@ salt_field_no=1
    use domain,       only: imin,imax,jmin,jmax,kmax,az
    use parameters, only: avmols
    use getm_timers, only: tic,toc,TIM_SALT,TIM_SALTH,TIM_MIXANALYSIS
-   use variables_3d, only: do_numerical_analyses
-   use variables_3d, only: nummix3d_S,nummix2d_S
-   use variables_3d, only: phymix3d_S,phymix2d_S
+   use variables_3d, only: do_numerical_analyses_3d
+   use variables_3d, only: nummix_S,nummix_S_int
+   use variables_3d, only: phymix_S,phymix_S_int
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -400,7 +400,7 @@ salt_field_no=1
       end do
    end do
 
-   if (do_numerical_analyses) then
+   if (do_numerical_analyses_3d) then
       call toc(TIM_SALT)
       call tic(TIM_MIXANALYSIS)
 ! OMP-note: The following array-based line could be implemented
@@ -417,10 +417,10 @@ salt_field_no=1
    call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,                            &
                         salt_adv_split,salt_adv_hor,salt_adv_ver,_ZERO_,H_TAG)
 
-   if (do_numerical_analyses) then
+   if (do_numerical_analyses_3d) then
       call toc(TIM_SALT)
       call tic(TIM_MIXANALYSIS)
-      call numerical_mixing(S2,S,nummix3d_S,nummix2d_S)
+      call numerical_mixing(S2,S,nummix_S,nummix_S_int)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_SALT)
    end if
@@ -434,7 +434,7 @@ salt_field_no=1
 
       if (do_numerical_analyses) then
          call tracer_diffusion(S,hn,salt_AH_method,salt_AH_const,salt_AH_Prt,salt_AH_stirr_const, &
-                               phymix3d_S)
+                               phymix_S)
       else
          call tracer_diffusion(S,hn,salt_AH_method,salt_AH_const,salt_AH_Prt,salt_AH_stirr_const)
       end if
@@ -443,7 +443,7 @@ salt_field_no=1
    if (do_numerical_analyses) then
       call toc(TIM_SALT)
       call tic(TIM_MIXANALYSIS)
-      call physical_mixing(S,avmols,phymix3d_S,phymix2d_S,salt_AH_method)
+      call physical_mixing(S,avmols,phymix_S,phymix_S_int,salt_AH_method)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_SALT)
    end if
