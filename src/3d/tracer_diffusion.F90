@@ -45,7 +45,7 @@
 !  must be saved because of allocation outside a module
    REALTYPE,dimension(:,:),allocatable,save :: delfxU,delfyV,delfxV,delfyU
    REALTYPE,dimension(:,:),allocatable,save :: phymixU,phymixV
-   REALTYPE                                 :: dfdxU,dfdyV,dfdxV,dfdyU
+   REALTYPE                                 :: dfdxU,dfdyV
    logical,save                             :: first=.true.
    logical                                  :: calc_phymix
    integer                                  :: rc
@@ -209,31 +209,21 @@
                dfdxU = delfxU(i,j) / DXU
                select case (AH_method)
                   case(1)
-                     if (calc_phymix) then
-                        phymixU(i,j) = _TWO_ * AH_const * dfdxU**2
-                     end if
                      delfxU(i,j) = AH_const * dfdxU
                   case(2)
-                     if (calc_phymix) then
-                        phymixU(i,j) = _TWO_ * AmU_3d(i,j,k) / AH_Prt * dfdxU**2
-                     end if
                      delfxU(i,j) = AmU_3d(i,j,k) / AH_Prt * dfdxU
                   case(3)
+                     delfxU(i,j) = AH_stirr_const                    &
+                                  * (                                &
+                                       diffxx(i,j,k)*dfdxU           &
 #ifndef SLICE_MODEL
-                     dfdyU = delfyU(i,j) / DYU
-                     if (calc_phymix) then
-                        phymixU(i,j) = _TWO_*AH_stirr_const*(diffxx(i,j,k)+diffxy(i,j,k)) &
-                                       *dfdxU*dfdyU
-                     end if
-#endif
-                     delfxU(i,j) = AH_stirr_const          &
-                                  * (                      &
-                                       diffxx(i,j,k)*dfdxU &
-#ifndef SLICE_MODEL
-                                     + diffxy(i,j,k)*dfdyU &
+                                     + diffxy(i,j,k)*delfyU(i,j)/DYU &
 #endif
                                     )
                end select
+               if (calc_phymix) then
+                  phymixU(i,j) = _TWO_ * delfxU(i,j) * dfdxU
+               end if
                delfxU(i,j) = DYU*_HALF_*(hn(i,j,k)+hn(i+1,j,k))*delfxU(i,j)
 !              now delfxU is flux!
             end if
@@ -255,27 +245,19 @@
                dfdyV = delfyV(i,j) / DYV
                select case (AH_method)
                   case(1)
-                     if (calc_phymix) then
-                        phymixV(i,j) = _TWO_ * AH_const * dfdyV**2
-                     end if
                      delfyV(i,j) = AH_const * dfdyV
                   case(2)
-                     if (calc_phymix) then
-                        phymixV(i,j) = _TWO_ * AmV_3d(i,j,k) / AH_Prt * dfdyV**2
-                     end if
                      delfyV(i,j) = AmV_3d(i,j,k) / AH_Prt * dfdyV
                   case(3)
-                     dfdxV = delfxV(i,j) / DXV
-                     if (calc_phymix) then
-                        phymixV(i,j) = _TWO_*AH_stirr_const*(diffyy(i,j,k)+diffyx(i,j,k)) &
-                                       *dfdxV*dfdyV
-                     end if
-                     delfyV(i,j) = AH_stirr_const          &
-                                  * (                      &
-                                       diffyy(i,j,k)*dfdyV &
-                                     + diffyx(i,j,k)*dfdxV &
+                     delfyV(i,j) = AH_stirr_const                    &
+                                  * (                                &
+                                       diffyy(i,j,k)*dfdyV           &
+                                     + diffyx(i,j,k)*delfxV(i,j)/DXV &
                                     )
                end select
+               if (calc_phymix) then
+                  phymixV(i,j) = _TWO_ * delfyV(i,j) * dfdyV
+               end if
                delfyV(i,j) = DXV*_HALF_*(hn(i,j,k)+hn(i,j+1,k))*delfyV(i,j)
 !              now delfyV is flux!
             end if
