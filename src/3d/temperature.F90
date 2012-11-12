@@ -441,7 +441,7 @@ temp_field_no=1
       call wait_halo(D_TAG)
       call toc(TIM_TEMPH)
 
-      if (do_numerical_analyses) then
+      if (do_numerical_analyses_3d) then
          call tracer_diffusion(T,hn,temp_AH_method,temp_AH_const,temp_AH_Prt,temp_AH_stirr_const, &
                                phymix_T)
       else
@@ -449,7 +449,7 @@ temp_field_no=1
       end if
    end if
 
-   if (do_numerical_analyses) then
+   if (do_numerical_analyses_3d) then
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
       call physical_mixing(T,avmolt,phymix_T,phymix_T_int,temp_AH_method)

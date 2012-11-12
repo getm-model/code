@@ -21,7 +21,7 @@
    use variables_3d, only: dt
    use variables_3d, only: diffxx,diffxy,diffyx,diffyy
    use variables_les, only: AmU_3d,AmV_3d
-   use variables_3d, only: do_numerical_analyses
+   use variables_3d, only: do_numerical_analyses_3d
    use getm_timers, only: tic,toc,TIM_TRACEDIFF
 !$ use omp_lib
    IMPLICIT NONE
@@ -82,7 +82,7 @@
       delfyU=_ZERO_
 #endif
 
-      if (do_numerical_analyses) then
+      if (do_numerical_analyses_3d) then
 
          allocate(phymixU(I2DFIELD),stat=rc)
          if (rc /= 0) stop 'tracer_diffusion: Error allocating memory (phymixU)'
@@ -99,7 +99,7 @@
       first=.false.
    end if
 
-   calc_phymix = (do_numerical_analyses .and. present(phymix))
+   calc_phymix = (do_numerical_analyses_3d .and. present(phymix))
 
 !  Note (KK): diffusion only within new layer heigts
 
