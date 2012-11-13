@@ -131,6 +131,8 @@
 #define _ONE_   1.0
 #define _TWO_   2.0
 #define _THREE_ 3.0
+! To avoid dividing by zero
+#define SMALL 1e-8
 #else
 #define REAL_SIZE 8
 #define REALTYPE real(kind=8)
@@ -143,6 +145,9 @@
 #define _ONE_   1.0d0
 #define _TWO_   2.0d0
 #define _THREE_ 3.0d0
+! To avoid dividing by zero
+#define SMALL 1d-8
+
 #endif
 
 ! Rare use of long integers (e.g. timers):
