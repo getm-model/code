@@ -14,11 +14,12 @@
    use m2d, only: deformation_rates
    use variables_3d, only: deformC_3d,deformX_3d,deformUV_3d
    use variables_3d, only: uu,vv,hun,hvn
-   use variables_3d, only: dudxC_3d,dudxV_3d
+   use variables_3d, only: dudxC_3d,dudxV_3d,dvdxX_3d
 #ifndef SLICE_MODEL
-   use variables_3d, only: dvdyC_3d,dvdyU_3d
+   use variables_3d, only: dvdyC_3d,dvdyU_3d,dudyX_3d
 #endif
    use variables_3d, only: shearX_3d,shearU_3d
+   use variables_3d, only: do_numerical_analyses_3d
    use getm_timers, only: tic,toc,TIM_DEFORM3D
 
    IMPLICIT NONE
@@ -41,24 +42,46 @@
 
    if (deformC_3d) then
       if (deformX_3d) then
-         if (deformUV_3d) then
-            do k=1,kmax
-               call deformation_rates(uu(:,:,k),vv(:,:,k),hun(:,:,k),hvn(:,:,k),     &
-                                      dudxC=dudxC_3d(:,:,k),dudxV=dudxV_3d(:,:,k),   &
+         if (do_numerical_analyses_3d) then
+            if (deformUV_3d) then
+               do k=1,kmax
+                  call deformation_rates(uu(:,:,k),vv(:,:,k),hun(:,:,k),hvn(:,:,k),                         &
+                                         dudxC=dudxC_3d(:,:,k),dudxV=dudxV_3d(:,:,k),dvdxX=dvdxX_3d(:,:,k), &
 #ifndef SLICE_MODEL
-                                      dvdyC=dvdyC_3d(:,:,k),dvdyU=dvdyU_3d(:,:,k),   &
+                                         dvdyC=dvdyC_3d(:,:,k),dvdyU=dvdyU_3d(:,:,k),dudyX=dudyX_3d(:,:,k), &
 #endif
-                                      shearX=shearX_3d(:,:,k),shearU=shearU_3d(:,:,k))
-            end do
+                                         shearX=shearX_3d(:,:,k),shearU=shearU_3d(:,:,k))
+               end do
+            else
+               do k=1,kmax
+                  call deformation_rates(uu(:,:,k),vv(:,:,k),hun(:,:,k),hvn(:,:,k),   &
+                                         dudxC=dudxC_3d(:,:,k),dvdxX=dvdxX_3d(:,:,k), &
+#ifndef SLICE_MODEL
+                                         dvdyC=dvdyC_3d(:,:,k),dudyX=dudyX_3d(:,:,k), &
+#endif
+                                         shearX=shearX_3d(:,:,k))
+               end do
+            end if
          else
-            do k=1,kmax
-               call deformation_rates(uu(:,:,k),vv(:,:,k),hun(:,:,k),hvn(:,:,k), &
-                                      dudxC=dudxC_3d(:,:,k),                     &
+            if (deformUV_3d) then
+               do k=1,kmax
+                  call deformation_rates(uu(:,:,k),vv(:,:,k),hun(:,:,k),hvn(:,:,k),     &
+                                         dudxC=dudxC_3d(:,:,k),dudxV=dudxV_3d(:,:,k),   &
 #ifndef SLICE_MODEL
-                                      dvdyC=dvdyC_3d(:,:,k),                     &
+                                         dvdyC=dvdyC_3d(:,:,k),dvdyU=dvdyU_3d(:,:,k),   &
 #endif
-                                      shearX=shearX_3d(:,:,k))
-            end do
+                                         shearX=shearX_3d(:,:,k),shearU=shearU_3d(:,:,k))
+               end do
+            else
+               do k=1,kmax
+                  call deformation_rates(uu(:,:,k),vv(:,:,k),hun(:,:,k),hvn(:,:,k), &
+                                         dudxC=dudxC_3d(:,:,k),                     &
+#ifndef SLICE_MODEL
+                                         dvdyC=dvdyC_3d(:,:,k),                     &
+#endif
+                                         shearX=shearX_3d(:,:,k))
+               end do
+            end if
          end if
       else
          do k=1,kmax
