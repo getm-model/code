@@ -6,8 +6,7 @@
 ! \label{sec-uv-diffusion}
 !
 ! !INTERFACE:
-   subroutine uv_diffusion(An_method,U,V,D,DU,DV)
-
+   subroutine uv_diffusion(An_method,U,V,D,DU,DV,phydis)
 !  Note (KK): keep in sync with interface in m2d.F90
 !
 ! !DESCRIPTION:
@@ -20,15 +19,19 @@
    use m2d, only: Am_method,NO_AM,AM_LAPLACE,AM_LES,AM_CONSTANT
    use variables_2d, only: UEx,VEx
    use variables_2d, only: dudxC,dudxV,dvdyC,dvdyU,shearX,shearU
+   use variables_2d, only: dvdxX,dudyX
    use les, only: do_les_2d
    use variables_les, only: AmC_2d,AmX_2d
    use getm_timers,  only: tic,toc,TIM_UVDIFF
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer,intent(in)                             :: An_method
-   REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V,D
-   REALTYPE,dimension(E2DFIELD),target,intent(in) :: DU,DV
+   integer,intent(in)                                :: An_method
+   REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,D
+   REALTYPE,dimension(E2DFIELD),target,intent(in)    :: DU,DV
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE,dimension(E2DFIELD),intent(out),optional :: phydis
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard
@@ -57,45 +60,93 @@
                                ,dvdyC=dvdyC &
 #endif
                                )
-         call uv_diff_2dh(An_method,UEx,VEx,U=U,V=V,D=D,DU=DU,DV=DV, &
-                          dudxC=dudxC                                &
+         if (present(phydis)) then
+            call uv_diff_2dh(An_method,UEx,VEx,U=U,V=V,D=D,DU=DU,DV=DV, &
+                             dudxC=dudxC,                               &
 #ifndef SLICE_MODEL
-                         ,dvdyC=dvdyC                                &
+                             dvdyC=dvdyC,                               &
 #endif
-                         )
+                             phydis=phydis)
+         else
+            call uv_diff_2dh(An_method,UEx,VEx,U=U,V=V,D=D,DU=DU,DV=DV, &
+                             dudxC=dudxC                                &
+#ifndef SLICE_MODEL
+                            ,dvdyC=dvdyC                                &
+#endif
+                            )
+         end if
       case(AM_LES)
-         call deformation_rates(U,V,DU,DV,                 &
-                                dudxC=dudxC,dudxV=dudxV,   &
+         if (present(phydis)) then
+            call deformation_rates(U,V,DU,DV,                           &
+                                   dudxC=dudxC,dudxV=dudxV,dvdxX=dvdxX, &
 #ifndef SLICE_MODEL
-                                dvdyC=dvdyC,dvdyU=dvdyU,   &
+                                   dvdyC=dvdyC,dvdyU=dvdyU,dudyX=dudyX, &
 #endif
-                                shearX=shearX,shearU=shearU)
-         CALL toc(TIM_UVDIFF)
-         call do_les_2d(dudxC,dudxV, &
+                                   shearX=shearX,shearU=shearU)
+            CALL toc(TIM_UVDIFF)
+            call do_les_2d(dudxC,dudxV, &
 #ifndef SLICE_MODEL
-                        dvdyC,dvdyU, &
+                           dvdyC,dvdyU, &
 #endif
-                        shearX,shearU)
-         CALL tic(TIM_UVDIFF)
-         call uv_diff_2dh(An_method,UEx,VEx,U=U,V=V,D=D,DU=DU,DV=DV, &
-                          dudxC=dudxC,                               &
+                           shearX,shearU)
+            CALL tic(TIM_UVDIFF)
+            call uv_diff_2dh(An_method,UEx,VEx,U=U,V=V,D=D,DU=DU,DV=DV, &
+                             dudxC=dudxC,dvdxX=dvdxX,                   &
 #ifndef SLICE_MODEL
-                          dvdyC=dvdyC,                               &
+                             dvdyC=dvdyC,dudyX=dudyX,                   &
 #endif
-                          shearX=shearX,AmC=AmC_2d,AmX=AmX_2d)
+                             shearX=shearX,AmC=AmC_2d,AmX=AmX_2d,       &
+                             phydis=phydis)
+         else
+            call deformation_rates(U,V,DU,DV,                 &
+                                   dudxC=dudxC,dudxV=dudxV,   &
+#ifndef SLICE_MODEL
+                                   dvdyC=dvdyC,dvdyU=dvdyU,   &
+#endif
+                                   shearX=shearX,shearU=shearU)
+            CALL toc(TIM_UVDIFF)
+            call do_les_2d(dudxC,dudxV, &
+#ifndef SLICE_MODEL
+                           dvdyC,dvdyU, &
+#endif
+                           shearX,shearU)
+            CALL tic(TIM_UVDIFF)
+            call uv_diff_2dh(An_method,UEx,VEx,U=U,V=V,D=D,DU=DU,DV=DV, &
+                             dudxC=dudxC,                               &
+#ifndef SLICE_MODEL
+                             dvdyC=dvdyC,                               &
+#endif
+                             shearX=shearX,AmC=AmC_2d,AmX=AmX_2d)
+         end if
       case(AM_CONSTANT)
-         call deformation_rates(U,V,DU,DV,   &
-                                dudxC=dudxC, &
+         if (present(phydis)) then
+            call deformation_rates(U,V,DU,DV,               &
+                                   dudxC=dudxC,dvdxX=dvdxX, &
 #ifndef SLICE_MODEL
-                                dvdyC=dvdyC, &
+                                   dvdyC=dvdyC,dudyX=dudyX, &
 #endif
-                                shearX=shearX)
-         call uv_diff_2dh(An_method,UEx,VEx,U=U,V=V,D=D,DU=DU,DV=DV, &
-                          dudxC=dudxC,                               &
+                                   shearX=shearX)
+            call uv_diff_2dh(An_method,UEx,VEx,U=U,V=V,D=D,DU=DU,DV=DV, &
+                             dudxC=dudxC,dvdxX=dvdxX,                   &
 #ifndef SLICE_MODEL
-                          dvdyC=dvdyC,                               &
+                             dvdyC=dvdyC,dudyX=dudyX,                   &
 #endif
-                          shearX=shearX)
+                             shearX=shearX,                             &
+                             phydis=phydis)
+         else
+            call deformation_rates(U,V,DU,DV,   &
+                                   dudxC=dudxC, &
+#ifndef SLICE_MODEL
+                                   dvdyC=dvdyC, &
+#endif
+                                   shearX=shearX)
+            call uv_diff_2dh(An_method,UEx,VEx,U=U,V=V,D=D,DU=DU,DV=DV, &
+                             dudxC=dudxC,                               &
+#ifndef SLICE_MODEL
+                             dvdyC=dvdyC,                               &
+#endif
+                             shearX=shearX)
+         end if
 
    end select
 
