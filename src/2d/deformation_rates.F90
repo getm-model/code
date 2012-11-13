@@ -44,6 +44,7 @@
    REALTYPE,dimension(E2DFIELD)             :: work2d
 !  allocated outside a module, therefore saved
    REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel
+   REALTYPE,dimension(:,:),allocatable,save :: deluxC,delvyC
    integer                                  :: rc
    logical,save                             :: first=.true.
    REALTYPE                                 :: dxdy,dydx,tmp,velgrad
@@ -69,6 +70,14 @@
       allocate(v_vel(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (v_vel)'
       v_vel=_ZERO_
+
+      allocate(deluxC(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (deluxC)'
+      deluxC=_ZERO_
+
+      allocate(delvyC(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (delvyC)'
+      delvyC=_ZERO_
 
       first = .false.
    end if
@@ -210,7 +219,8 @@
          do i=imin-HALO+1,imax+HALO-1
             if (az(i,j) .eq. 1) then
 !              Note (KK): since U(au=0)=0, dudxC can also be calculated near closed boundaries
-               dudxC(i,j) = (u_vel(i,j) - u_vel(i-1,j)) / DXC
+               deluxC(i,j) = u_vel(i,j) - u_vel(i-1,j)
+               dudxC(i,j) = deluxC(i,j) / DXC
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dudxC(i,j) = dudxC(i,j) + _HALF_*(v_vel(i,j)+v_vel(i,j-1))*(DXV-DXVJM1)*ARCD1
@@ -220,7 +230,8 @@
 !              Note (KK): outflow condition dudxC=0 in W/E open boundaries
 !                         v_vel outside N/S open boundary from outflow condition dvdyC=0
                if (av(i,j-1) .eq. 2) then ! northern open boundary
-                  dudxC(i,j) = (u_vel(i,j) - u_vel(i-1,j)) / DXC
+                  deluxC(i,j) = u_vel(i,j) - u_vel(i-1,j)
+                  dudxC(i,j) = deluxC(i,j) / DXC
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   tmp = v_vel(i,j-1) - _HALF_*(u_vel(i,j)+u_vel(i-1,j))*(DYU-DYUIM1)/DXC
@@ -228,7 +239,8 @@
 #endif
 #endif
                else if (av(i,j) .eq. 2) then ! southern open boundary
-                  dudxC(i,j) = (u_vel(i,j) - u_vel(i-1,j)) / DXC
+                  deluxC(i,j) = u_vel(i,j) - u_vel(i-1,j)
+                  dudxC(i,j) = deluxC(i,j) / DXC
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   tmp = v_vel(i,j) + _HALF_*(u_vel(i,j)+u_vel(i-1,j))*(DYU-DYUIM1)/DXC
@@ -246,6 +258,7 @@
 #ifdef SLICE_MODEL
 !$OMP BARRIER
 !$OMP SINGLE
+      deluxC(imin-HALO+1:imax+HALO-1,j+1) = deluxC(imin-HALO+1:imax+HALO-1,j)
       dudxC(imin-HALO+1:imax+HALO-1,j+1) = dudxC(imin-HALO+1:imax+HALO-1,j)
 !$OMP END SINGLE
 #endif
@@ -260,7 +273,8 @@
             do i=imin-HALO+1,imax+HALO-2
 !              KK-TODO: outflow condition dudxU(au=2)=0 ?
                if (au(i,j).eq.1 .or. au(i,j).eq.3) then
-                  dudxU(i,j) = _HALF_*(dudxC(i,j) + dudxC(i+1,j))
+                  !dudxU(i,j) = _HALF_*(dudxC(i,j) + dudxC(i+1,j))
+                  dudxU(i,j) = _HALF_*(deluxC(i,j) + deluxC(i+1,j)) / DXU
                else if (au(i,j) .eq. 0) then
 !                 KK-TODO: is this correct (U(au=0)=0 + slip condition) ?
 !                 Note (KK): in case of no-slip dudxU=0
@@ -305,6 +319,7 @@
 !           Note (KK): outflow condition dudxV(av=3)=0
             if (av(i,j).eq.1 .or. av(i,j).eq.2) then
                dudxV(i,j) = ( work2d(i,j) - work2d(i-1,j) )/DXV
+               !dudxV(i,j) = _HALF_*( deluxC(i,j) + deluxC(i,j+1) )/DXV
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dudxV(i,j) = dudxV(i,j) + v_vel(i,j)*(DXCJP1-DXC)*ARVD1
@@ -312,8 +327,10 @@
 #endif
             else if (av(i,j) .eq. 0) then
 !              Note (KK): V(av=0)=0 and slip condition dudyV(av=0)=0 at N/S closed bdys
-               if (az(i,j  ).eq.1 .or. az(i,j  ).eq.2) dudxV(i,j) = (u_vel(i,j  ) - u_vel(i-1,j  ))/DXV
-               if (az(i,j+1).eq.1 .or. az(i,j+1).eq.2) dudxV(i,j) = (u_vel(i,j+1) - u_vel(i-1,j+1))/DXV
+               !if (az(i,j  ).eq.1 .or. az(i,j  ).eq.2) dudxV(i,j) = (u_vel(i,j  ) - u_vel(i-1,j  ))/DXV
+               !if (az(i,j+1).eq.1 .or. az(i,j+1).eq.2) dudxV(i,j) = (u_vel(i,j+1) - u_vel(i-1,j+1))/DXV
+               if (az(i,j  ).eq.1 .or. az(i,j  ).eq.2) dudxV(i,j) = deluxC(i,j  ) / DXV
+               if (az(i,j+1).eq.1 .or. az(i,j+1).eq.2) dudxV(i,j) = deluxC(i,j+1) / DXV
             end if
          end do
 #ifndef SLICE_MODEL
@@ -342,7 +359,8 @@
          do i=imin-HALO+1,imax+HALO-1
             if (az(i,j) .eq. 1) then
 !              Note (KK): since V(av=0)=0, dvdyC can also be calculated near closed boundaries
-               dvdyC(i,j) = (v_vel(i,j) - v_vel(i,j-1)) / DYC
+               delvyC(i,j) = v_vel(i,j) - v_vel(i,j-1)
+               dvdyC(i,j) = delvyC(i,j) / DYC
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dvdyC(i,j) = dvdyC(i,j) + _HALF_*(u_vel(i,j)+u_vel(i-1,j))*(DYU-DYUIM1)*ARCD1
@@ -353,7 +371,8 @@
 !                         u_vel outside W/E open boundary from outflow condition dudxC=0
 !                         dvdyC in W/E open boundary needed for dvdyV(av=3)
                if (au(i-1,j) .eq. 2) then ! eastern open boundary
-                  dvdyC(i,j) = (v_vel(i,j) - v_vel(i,j-1)) / DYC
+                  delvyC(i,j) = v_vel(i,j) - v_vel(i,j-1)
+                  dvdyC(i,j) = delvyC(i,j) / DYC
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   tmp = u_vel(i-1,j) - _HALF_*(v_vel(i,j)+v_vel(i,j-1))*(DXV-DXVJM1)/DYC
@@ -361,7 +380,8 @@
 #endif
 #endif
                else if (au(i,j) .eq. 2) then ! western open boundary
-                  dvdyC(i,j) = (v_vel(i,j) - v_vel(i,j-1)) / DYC
+                  delvyC(i,j) = v_vel(i,j) - v_vel(i,j-1)
+                  dvdyC(i,j) = delvyC(i,j) / DYC
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   tmp = u_vel(i,j) + _HALF_*(v_vel(i,j)+v_vel(i,j-1))*(DXV-DXVJM1)/DYC
@@ -385,7 +405,8 @@
 !                 KK-TODO: for dvdyV(av=3) average of nonlinear metric
 !                          correction might cause violation of outflow
 !                          condition dvdx=0?
-                  dvdyV(i,j) = _HALF_*(dvdyC(i,j) + dvdyC(i,j+1))
+                  !dvdyV(i,j) = _HALF_*(dvdyC(i,j) + dvdyC(i,j+1))
+                  dvdyV(i,j) = _HALF_*(delvyC(i,j) + delvyC(i,j+1)) / DYV
                else if (av(i,j) .eq. 0) then
 !                 KK-TODO: is this correct (V(av=0)=0 + slip condition) ?
 !                 Note (KK): in case of no-slip dvdyV=0
@@ -420,6 +441,7 @@
 !           Note (KK): outflow condition dvdyU(au=3)=0
             if (au(i,j).eq.1 .or. au(i,j).eq.2) then
                dvdyU(i,j) = ( work2d(i,j) - work2d(i,j-1) ) / DYU
+               !dvdyU(i,j) = _HALF_*( delvyC(i,j) + delvyC(i+1,j) )/DYU
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                dvdyU(i,j) = dvdyU(i,j) + u_vel(i,j)*(DYCIP1-DYC)*ARUD1
@@ -427,8 +449,10 @@
 #endif
             else if (au(i,j) .eq. 0) then
 !              Note (KK): U(au=0)=0 and slip condition dvdxU(au=0)=0
-               if (az(i  ,j) .ge. 1) dvdyU(i,j) = (v_vel(i  ,j) - v_vel(i  ,j-1))/DYU
-               if (az(i+1,j) .ge. 1) dvdyU(i,j) = (v_vel(i+1,j) - v_vel(i+1,j-1))/DYU
+               !if (az(i  ,j) .ge. 1) dvdyU(i,j) = (v_vel(i  ,j) - v_vel(i  ,j-1))/DYU
+               !if (az(i+1,j) .ge. 1) dvdyU(i,j) = (v_vel(i+1,j) - v_vel(i+1,j-1))/DYU
+               if (az(i  ,j) .ge. 1) dvdyU(i,j) = delvyC(i  ,j) / DYU
+               if (az(i+1,j) .ge. 1) dvdyU(i,j) = delvyC(i+1,j) / DYU
             end if
          end do
       end do

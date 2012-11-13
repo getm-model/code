@@ -18,6 +18,7 @@
    use domain,       only: H,az,au,av,crit_depth
    use domain,       only: convc
    use variables_2d, only: z,D,U,DU,V,DV,res_u,res_v
+   use variables_2d, only: numdis_2d,phydis_2d
    use variables_les, only: AmC_2d
 #ifdef USE_BREAKS
    use variables_2d, only: break_stat
@@ -116,6 +117,19 @@
       err = nf90_put_var(ncid,vrot_id,Vrot(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 #endif
+
+      if (nd2d_id .ne. -1) then
+         call cnv_2d(imin,jmin,imax,jmax,az,numdis_2d,nummix_missing, &
+                     imin,jmin,imax,jmax,ws)
+         err = nf90_put_var(ncid,nd2d_id,ws(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+      if (pd2d_id .ne. -1) then
+         call cnv_2d(imin,jmin,imax,jmax,az,phydis_2d,nummix_missing, &
+                     imin,jmin,imax,jmax,ws)
+         err = nf90_put_var(ncid,pd2d_id,ws(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
 
       if (metforcing .and. save_meteo) then
 
