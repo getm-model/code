@@ -222,7 +222,7 @@
 !             and resulting forces
 
 
-!  diffusion terms for u-equations
+!  diffusion terms for u-equation
 
    if (present(phydis)) then
       phydis_vel = _ZERO_
