@@ -43,7 +43,6 @@
 		<File RelativePath="..\..\src\2d\depth_update.F90"/>
 		<File RelativePath="..\..\src\2d\m2d.F90"/>
 		<File RelativePath="..\..\src\2d\momentum.F90"/>
-		<File RelativePath="..\..\src\2d\physical_dissipation.F90"/>
 		<File RelativePath="..\..\src\2d\residual.F90"/>
 		<File RelativePath="..\..\src\2d\sealevel.F90"/>
 		<File RelativePath="..\..\src\2d\uv_advect.F90"/>
