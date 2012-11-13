@@ -31,6 +31,7 @@
    integer                             :: evap_id=-1,precip_id=-1
    integer                             :: Am_2d_id=-1
    integer                             :: break_stat_id=-1
+   integer                             :: nd2d_id=-1,pd2d_id=-1
 
    REALTYPE, dimension(:,:), allocatable :: ws
 
@@ -47,6 +48,7 @@
    REALTYPE, parameter                 :: evap_missing       =-9999.0
    REALTYPE, parameter                 :: precip_missing     =-9999.0
    REALTYPE, parameter                 :: Am_2d_missing      =-9999.0
+   REALTYPE, parameter                 :: nummix_missing     =-9999.0
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard

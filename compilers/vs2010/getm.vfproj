@@ -54,8 +54,8 @@
 		<File RelativePath="..\..\src\3d\adv_split_w.F90"/>
 		<File RelativePath="..\..\src\3d\advection_3d.F90"/>
 		<File RelativePath="..\..\src\3d\bdy_3d.F90"/>
+		<File RelativePath="..\..\src\3d\buoyancy_frequency.F90"/>
 		<File RelativePath="..\..\src\3d\check_h.F90"/>
-		<File RelativePath="..\..\src\3d\coordinates.F90"/>
 		<File RelativePath="..\..\src\3d\deformation_rates_3d.F90"/>
 		<File RelativePath="..\..\src\3d\eqstate.F90"/>
 		<File RelativePath="..\..\src\3d\general_coordinates.F90"/>
@@ -73,13 +73,14 @@
 		<File RelativePath="..\..\src\3d\ip_z_interpol.F90"/>
 		<File RelativePath="..\..\src\3d\m3d.F90"/>
 		<File RelativePath="..\..\src\3d\numerical_mixing.F90"/>
+		<File RelativePath="..\..\src\3d\physical_dissipation_3d.F90"/>
 		<File RelativePath="..\..\src\3d\physical_mixing.F90"/>
 		<File RelativePath="..\..\src\3d\preadapt_coordinates.F90"/>
 		<File RelativePath="..\..\src\3d\rivers.F90"/>
 		<File RelativePath="..\..\src\3d\salinity.F90"/>
+		<File RelativePath="..\..\src\3d\shear_frequency.F90"/>
 		<File RelativePath="..\..\src\3d\sigma_coordinates.F90"/>
 		<File RelativePath="..\..\src\3d\slow_terms.F90"/>
-		<File RelativePath="..\..\src\3d\ss_nn.F90"/>
 		<File RelativePath="..\..\src\3d\start_macro.F90"/>
 		<File RelativePath="..\..\src\3d\stop_macro.F90"/>
 		<File RelativePath="..\..\src\3d\stresses_3d.F90"/>
@@ -91,6 +92,7 @@
 		<File RelativePath="..\..\src\3d\uv_advect_3d.F90"/>
 		<File RelativePath="..\..\src\3d\uv_diffusion_3d.F90"/>
 		<File RelativePath="..\..\src\3d\variables_3d.F90"/>
+		<File RelativePath="..\..\src\3d\vertical_coordinates.F90"/>
 		<File RelativePath="..\..\src\3d\vv_momentum_3d.F90"/>
 		<File RelativePath="..\..\src\3d\ww_momentum_3d.F90"/></Filter>
 		<Filter Name="domain">
