@@ -117,7 +117,7 @@
 ! !PUBLIC DATA MEMBERS:
    REALTYPE                            :: dt,cnpar=0.9
    REALTYPE                            :: avmback=_ZERO_,avhback=_ZERO_
-   logical                             :: do_numerical_analyses=.false.
+   logical                             :: do_numerical_analyses_3d=.false.
    logical                             :: deformC_3d=.false.
    logical                             :: deformX_3d=.false.
    logical                             :: deformUV_3d=.false.
@@ -129,15 +129,16 @@
 #include "dynamic_declarations_3d.h"
 #endif
 
-  REALTYPE, dimension(:,:,:), allocatable   :: numdis3d
-  REALTYPE, dimension(:,:), allocatable     :: numdis2d
-  REALTYPE, dimension(:,:,:), allocatable   :: nummix3d_S,nummix3d_T
-  REALTYPE, dimension(:,:,:), allocatable   :: phymix3d_S,phymix3d_T
-  REALTYPE, dimension(:,:), allocatable     :: nummix2d_S,nummix2d_T
-  REALTYPE, dimension(:,:), allocatable     :: phymix2d_S,phymix2d_T
+   REALTYPE, dimension(:,:,:), allocatable   :: numdis_3d,phydis_3d
+   REALTYPE, dimension(:,:), allocatable     :: numdis_int,phydis_int
+   REALTYPE, dimension(:,:,:), allocatable   :: nummix_S,nummix_T
+   REALTYPE, dimension(:,:,:), allocatable   :: phymix_S,phymix_T
+   REALTYPE, dimension(:,:), allocatable     :: nummix_S_int,nummix_T_int
+   REALTYPE, dimension(:,:), allocatable     :: phymix_S_int,phymix_T_int
 
 !  the following fields will only be allocated if deformCX_3d=.true.
-   REALTYPE,dimension(:,:,:),allocatable :: dudxC_3d,dvdyC_3d,shearX_3d
+   REALTYPE,dimension(:,:,:),allocatable :: dudxC_3d,dvdyC_3d
+   REALTYPE,dimension(:,:,:),allocatable :: dudyX_3d,dvdxX_3d,shearX_3d
 !  the following fields will only be allocated if deformUV_3d=.true.
    REALTYPE,dimension(:,:,:),allocatable :: dudxV_3d,dvdyU_3d,shearU_3d
 !  the following fields will only be allocated if calc_stirring=.true.
