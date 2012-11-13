@@ -54,7 +54,7 @@
 !  Original author(s): Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   REALTYPE                  :: dupper,dlower
+   REALTYPE                  :: dupper,dlower,pdsum
    integer                   :: i,j,k
    REALTYPE                  :: aux(I3DFIELD)
 !EOP
@@ -68,39 +68,35 @@
 #ifdef SLICE_MODEL
    j = jmax/2 ! this MUST NOT be changed!!!
 #endif
-   phydis_int = _ZERO_
 
-   ! Av * ( (du/dz)**2 + (dv/dz)**2 ) on W-POINTS
-   aux(:,:,kmax)=_ZERO_
-   aux(:,:,0)   =_ZERO_
-   do k=1,kmax-1
-#ifndef SLICE_MODEL
-      do j=jmin,jmax
-#endif
-         do i=imin,imax
-            if (az(i,j).eq.1) then
-               aux(i,j,k)=(num(i,j,k)+avmmol)*SS(i,j,k)
-            end if
-         end do
-#ifndef SLICE_MODEL
-      end do
-#endif
-   end do 
+!  KK-TODO: vertical dissipation should be calculated
+!           directly in momentum routines
+!           (similar to vsd in MOMENTUM_TERMS)
+
    ! Add Av * ( (du/dz)**2 + (dv/dz)**2 ) on T-POINTS
-   do k=1,kmax
 #ifndef SLICE_MODEL
-      do j=jmin,jmax
+   do j=jmin,jmax
 #endif
-         do i=imin,imax
-            if (az(i,j).eq.1) then
-               phydis_3d(i,j,k)=phydis_3d(i,j,k)+_HALF_*(aux(i,j,k-1)+aux(i,j,k))
-               phydis_int(i,j)=phydis_int(i,j)+phydis_3d(i,j,k)*hn(i,j,k)
-            end if
-         end do
-#ifndef SLICE_MODEL
+      do i=imin,imax
+         if (az(i,j).eq.1) then
+            pdsum = _ZERO_
+            dlower = _ZERO_
+            do k=1,kmax
+               if (k .eq. kmax) then
+                  dupper=_ZERO_
+               else
+                  dupper=(num(i,j,k)+avmmol)*SS(i,j,k)
+               end if
+               phydis_3d(i,j,k) = phydis_3d(i,j,k) + _HALF_*(dlower+dupper)
+               pdsum = pdsum + phydis_3d(i,j,k)*hn(i,j,k)
+               dlower=dupper
+            end do
+            phydis_int(i,j) = pdsum
+         end if
       end do
+#ifndef SLICE_MODEL
+   end do
 #endif
-   end do 
 
 #ifdef DEBUG
    write(debug,*) 'Leaving physical_dissipation_3d()'

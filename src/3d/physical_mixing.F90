@@ -40,7 +40,7 @@
 !  Original author(s): Hannes Rennau
 !
 ! !LOCAL VARIABLES:
-   REALTYPE                  :: dupper,dlower
+   REALTYPE                  :: dupper,dlower,pmsum
    integer                   :: i,j,k
 
 !EOP
@@ -50,22 +50,20 @@
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .eq. 1) then
-            if (AH_method .eq. 0) then
-               pm3d(i,j,:) = _ZERO_
-            end if
-            pm2d(i,j)=_ZERO_
+            pmsum = _ZERO_
             dlower=_ZERO_
             do k=1,kmax
                if (k .eq. kmax) then
                   dupper=_ZERO_
                else
-                  dupper=_TWO_*(diffusivity+nuh(i,j,k))*(F(i,j,k+1)-F(i,j,k))**2 &
-                         /(_HALF_*(hn(i,j,k+1)+hn(i,j,k)))**2
+                  dupper=_TWO_*(diffusivity+nuh(i,j,k))* &
+                         ((F(i,j,k+1)-F(i,j,k))/(_HALF_*(hn(i,j,k)+hn(i,j,k+1))))**2
                end if
-               pm3d(i,j,k) = pm3d(i,j,k) + _HALF_*(dupper+dlower)
+               pm3d(i,j,k) = pm3d(i,j,k) + _HALF_*(dlower+dupper)
+               pmsum = pmsum + pm3d(i,j,k)*hn(i,j,k)
                dlower=dupper
-               pm2d(i,j)=pm2d(i,j)+pm3d(i,j,k)*hn(i,j,k)
             end do
+            pm2d(i,j) = pmsum
          end if
       end do
    end do
