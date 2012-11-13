@@ -23,17 +23,24 @@
 !
 ! !PUBLIC DATA MEMBERS:
    REALTYPE                            :: dtm
+   logical                             :: do_numerical_analyses_2d=.false.
+
 #ifdef STATIC
 #include "static_2d.h"
 #else
 #include "dynamic_declarations_2d.h"
 #endif
+
 !  the following fields will only be allocated if deformCX=.true.
-   REALTYPE,dimension(:,:),allocatable :: dudxC,dvdyC,shearX
+   REALTYPE,dimension(:,:),allocatable :: dudxC,dvdyC
+   REALTYPE,dimension(:,:),allocatable :: dvdxX,dudyX,shearX
 !  the following fields will only be allocated if deformUV=.true.
    REALTYPE,dimension(:,:),allocatable :: dudxV,dvdyU,shearU
 !  the followinf fields will only be allocated if An_method=2
    REALTYPE,dimension(:,:),allocatable :: AnC,AnX
+
+   REALTYPE,dimension(:,:),allocatable :: numdis_2d,phydis_2d
+
    integer                             :: size2d_field
    integer                             :: mem2d
 !

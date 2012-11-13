@@ -28,16 +28,18 @@
    REALTYPE,dimension(:,:,:), allocatable :: Tmean
    REALTYPE,dimension(:,:,:), allocatable :: Smean
 
-   REALTYPE,dimension(:,:,:), allocatable :: nummix3d_S_mean
-   REALTYPE,dimension(:,:), allocatable :: nummix2d_S_mean
-   REALTYPE,dimension(:,:,:), allocatable :: nummix3d_T_mean
-   REALTYPE,dimension(:,:), allocatable :: nummix2d_T_mean
-   REALTYPE,dimension(:,:,:), allocatable :: numdis3d_mean
-   REALTYPE,dimension(:,:), allocatable :: numdis2d_mean
-   REALTYPE,dimension(:,:,:), allocatable :: phymix3d_S_mean
-   REALTYPE,dimension(:,:), allocatable :: phymix2d_S_mean
-   REALTYPE,dimension(:,:,:), allocatable :: phymix3d_T_mean
-   REALTYPE,dimension(:,:), allocatable :: phymix2d_T_mean
+   REALTYPE,dimension(:,:,:), allocatable :: nummix_S_mean
+   REALTYPE,dimension(:,:), allocatable :: nummix_S_int_mean
+   REALTYPE,dimension(:,:,:), allocatable :: nummix_T_mean
+   REALTYPE,dimension(:,:), allocatable :: nummix_T_int_mean
+   REALTYPE,dimension(:,:,:), allocatable :: numdis_3d_mean
+   REALTYPE,dimension(:,:), allocatable :: numdis_int_mean
+   REALTYPE,dimension(:,:,:), allocatable :: phydis_3d_mean
+   REALTYPE,dimension(:,:), allocatable :: phydis_int_mean
+   REALTYPE,dimension(:,:,:), allocatable :: phymix_S_mean
+   REALTYPE,dimension(:,:), allocatable :: phymix_S_int_mean
+   REALTYPE,dimension(:,:,:), allocatable :: phymix_T_mean
+   REALTYPE,dimension(:,:), allocatable :: phymix_T_int_mean
 
 #ifdef GETM_BIO
    REALTYPE,dimension(:,:,:,:), allocatable :: cc3dmean

@@ -40,22 +40,26 @@
          REALTYPE,dimension(E2DFIELD),target,intent(in) :: DU,DV
       end subroutine uv_advect
 
-      subroutine uv_diffusion(An_method,U,V,D,DU,DV)
+      subroutine uv_diffusion(An_method,U,V,D,DU,DV,phydis)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         integer,intent(in)                      :: An_method
-         REALTYPE,dimension(E2DFIELD),intent(in) :: U,V,D,DU,DV
+         integer,intent(in)                                :: An_method
+         REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,D,DU,DV
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: phydis
       end subroutine uv_diffusion
 
-      subroutine uv_diff_2dh(An_method,UEx,VEx,U,V,D,DU,DV, &
-                             dudxC,dvdyC,shearX,AmC,AmX,hsd_u,hsd_v)
+      subroutine uv_diff_2dh(An_method,UEx,VEx,U,V,D,DU,DV,  &
+                             dudxC,dvdyC,dudyX,dvdxX,shearX, &
+                             AmC,AmX,phydis,hsd_u,hsd_v)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          integer,intent(in)                                :: An_method
          REALTYPE,dimension(E2DFIELD),intent(in),optional  :: U,V,D,DU,DV
-         REALTYPE,dimension(E2DFIELD),intent(in),optional  :: dudxC,dvdyC,shearX
+         REALTYPE,dimension(E2DFIELD),intent(in),optional  :: dudxC,dvdyC
+         REALTYPE,dimension(E2DFIELD),intent(in),optional  :: dudyX,dvdxX,shearX
          REALTYPE,dimension(E2DFIELD),intent(in),optional  :: AmC,AmX
          REALTYPE,dimension(E2DFIELD),intent(inout)        :: UEx,VEx
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: phydis
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: hsd_u,hsd_v
       end subroutine uv_diff_2dh
 
@@ -334,34 +338,6 @@
          bdy2d = .false.
       end if
 
-      if (deformC) then
-         allocate(dudxC(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_2d: Error allocating memory (dudxC)'
-         dudxC=_ZERO_
-#ifndef SLICE_MODEL
-         allocate(dvdyC(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyC)'
-         dvdyC=_ZERO_
-#endif
-      end if
-      if (deformX) then
-         allocate(shearX(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_2d: Error allocating memory (shearX)'
-         shearX=_ZERO_
-      end if
-      if (deformUV) then
-         allocate(dudxV(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_2d: Error allocating memory (dudxV)'
-         dudxV=_ZERO_
-#ifndef SLICE_MODEL
-         allocate(dvdyU(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_2d: Error allocating memory (dvdyU)'
-         dvdyU=_ZERO_
-#endif
-         allocate(shearU(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_2d: Error allocating memory (shearU)'
-         shearU=_ZERO_
-      end if
    end if
 
 #ifdef DEBUG
@@ -407,6 +383,57 @@
 #endif
 
    LEVEL1 'postinit_2d'
+
+!  must be allocated in postinit because of do_numerical_analyses_2d
+   if (.not. no_2d) then
+      if (deformC) then
+         allocate(dudxC(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_2d: Error allocating memory (dudxC)'
+         dudxC=_ZERO_
+#ifndef SLICE_MODEL
+         allocate(dvdyC(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_2d: Error allocating memory (dvdyC)'
+         dvdyC=_ZERO_
+#endif
+      end if
+      if (deformX) then
+         allocate(shearX(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_2d: Error allocating memory (shearX)'
+         shearX=_ZERO_
+         if (do_numerical_analyses_2d) then
+            allocate(dvdxX(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'postinit_2d: Error allocating memory (dvdxX)'
+            dvdxX=_ZERO_
+#ifndef SLICE_MODEL
+            allocate(dudyX(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'postinit_2d: Error allocating memory (dudyX)'
+            dudyX=_ZERO_
+#endif
+         end if
+      end if
+      if (deformUV) then
+         allocate(dudxV(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_2d: Error allocating memory (dudxV)'
+         dudxV=_ZERO_
+#ifndef SLICE_MODEL
+         allocate(dvdyU(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_2d: Error allocating memory (dvdyU)'
+         dvdyU=_ZERO_
+#endif
+         allocate(shearU(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_2d: Error allocating memory (shearU)'
+         shearU=_ZERO_
+      end if
+
+      if (do_numerical_analyses_2d) then
+         allocate(phydis_2d(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_2d: Error allocating memory (phydis_2d)'
+         phydis_2d = _ZERO_
+         allocate(numdis_2d(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d)'
+         numdis_2d = _ZERO_
+      end if
+   end if
 
 !
 ! It is possible that a user changes the land mask and reads an "old" hotstart file.
@@ -517,8 +544,11 @@
    end if
 
    call uv_advect(U,V,DU,DV)
-   call uv_diffusion(An_method,U,V,D,DU,DV) ! Has to be called after uv_advect.
-
+   if (do_numerical_analyses_2d) then
+      call uv_diffusion(An_method,U,V,D,DU,DV,phydis_2d) ! Has to be called after uv_advect.
+   else
+      call uv_diffusion(An_method,U,V,D,DU,DV) ! Has to be called after uv_advect.
+   end if
    call toc(TIM_INTEGR2D)
 
    call momentum(loop,tausx,tausy,airp)
