@@ -28,6 +28,7 @@ ${LIB}(sealevel.o)		\
 ${LIB}(deformation_rates.o)	\
 ${LIB}(uv_advect.o)		\
 ${LIB}(uv_diffusion.o)		\
+${LIB}(uv_diff_2dh.o)		\
 ${LIB}(residual.o)		\
 ${LIB}(update_2d_bdy.o)		\
 ${LIB}(adv_split_u.o)		\
@@ -35,8 +36,7 @@ ${LIB}(adv_split_v.o)		\
 ${LIB}(adv_upstream_2dh.o)	\
 ${LIB}(adv_fct_2dh.o)		\
 ${LIB}(adv_arakawa_j7_2dh.o)	\
-${LIB}(adv_tvd_limiter.o)	\
-${LIB}(uv_diff_2dh.o)
+${LIB}(adv_tvd_limiter.o)
 
 all: modules objects
 

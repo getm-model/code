@@ -18,7 +18,10 @@
    use m2d, only: uv_diff_2dh
    use m2d, only: Am_method,AM_LAPLACE,AM_LES,AM_CONSTANT
    use variables_3d, only: uu,vv,uuEx,vvEx,hn,hun,hvn
-   use variables_3d, only: dudxC_3d,dvdyC_3d,shearX_3d
+   use variables_3d, only: dudxC_3d,dvdyC_3d
+   use variables_3d, only: dvdxX_3d,dudyX_3d,shearX_3d
+   use variables_3d, only: do_numerical_analyses_3d
+   use variables_3d, only: phydis_3d
    use variables_les, only: AmC_2d,AmX_2d,AmC_3d,AmX_3d
 #ifdef _MOMENTUM_TERMS_
    use domain, only: dry_u,dry_v
@@ -47,47 +50,98 @@
 
    select case(Am_method)
       case(AM_LAPLACE)
-         do k=1,kmax
-            call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
-                             D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
-                             dudxC=dudxC_3d(:,:,k)                              &
+         if (do_numerical_analyses_3d) then
+            do k=1,kmax
+               call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                                D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
+                                dudxC=dudxC_3d(:,:,k),                             &
 #ifndef SLICE_MODEL
-                            ,dvdyC=dvdyC_3d(:,:,k)                              &
+                                dvdyC=dvdyC_3d(:,:,k),                             &
+#endif
+                                phydis=phydis_3d(:,:,k)                            &
+#ifdef _MOMENTUM_TERMS_
+                               ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)              &
+#endif
+                               )
+            end do
+         else
+            do k=1,kmax
+               call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                                D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
+                                dudxC=dudxC_3d(:,:,k)                              &
+#ifndef SLICE_MODEL
+                               ,dvdyC=dvdyC_3d(:,:,k)                              &
 #endif
 #ifdef _MOMENTUM_TERMS_
-                            ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)             &
+                               ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)              &
 #endif
-                            )
-         end do
+                               )
+            end do
+         end if
       case(AM_LES)
-         do k=1,kmax
-            call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
-                             D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
-                             dudxC=dudxC_3d(:,:,k),                             &
+         if (do_numerical_analyses_3d) then
+            do k=1,kmax
+               call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                                D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
+                                dudxC=dudxC_3d(:,:,k),dvdxX=dvdxX_3d(:,:,k),       &
 #ifndef SLICE_MODEL
-                             dvdyC=dvdyC_3d(:,:,k),                             &
+                                dvdyC=dvdyC_3d(:,:,k),dudyX=dudyX_3d(:,:,k),       &
 #endif
-                             shearX=shearX_3d(:,:,k),                           &
-                             AmC=AmC_3d(:,:,k),AmX=AmX_3d(:,:,k)                &
+                                shearX=shearX_3d(:,:,k),                           &
+                                AmC=AmC_3d(:,:,k),AmX=AmX_3d(:,:,k),               &
+                                phydis=phydis_3d(:,:,k)                            &
 #ifdef _MOMENTUM_TERMS_
-                             ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)             &
+                               ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)              &
 #endif
-                            )
-         end do
+                               )
+            end do
+         else
+            do k=1,kmax
+               call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                                D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
+                                dudxC=dudxC_3d(:,:,k),                             &
+#ifndef SLICE_MODEL
+                                dvdyC=dvdyC_3d(:,:,k),                             &
+#endif
+                                shearX=shearX_3d(:,:,k),                           &
+                                AmC=AmC_3d(:,:,k),AmX=AmX_3d(:,:,k)                &
+#ifdef _MOMENTUM_TERMS_
+                               ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)              &
+#endif
+                               )
+            end do
+         end if
       case(AM_CONSTANT)
-         do k=1,kmax
-            call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
-                             D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
-                             dudxC=dudxC_3d(:,:,k),                             &
+         if (do_numerical_analyses_3d) then
+            do k=1,kmax
+               call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                                D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
+                                dudxC=dudxC_3d(:,:,k),dvdxX=dvdxX_3d(:,:,k),       &
 #ifndef SLICE_MODEL
-                             dvdyC=dvdyC_3d(:,:,k),                             &
+                                dvdyC=dvdyC_3d(:,:,k),dudyX=dudyX_3d(:,:,k),       &
 #endif
-                             shearX=shearX_3d(:,:,k)                            &
+                                shearX=shearX_3d(:,:,k),                           &
+                                phydis=phydis_3d(:,:,k)                            &
 #ifdef _MOMENTUM_TERMS_
-                             ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)             &
+                               ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)              &
 #endif
-                            )
-         end do
+                               )
+            end do
+         else
+            do k=1,kmax
+               call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                                D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
+                                dudxC=dudxC_3d(:,:,k),                             &
+#ifndef SLICE_MODEL
+                                dvdyC=dvdyC_3d(:,:,k),                             &
+#endif
+                                shearX=shearX_3d(:,:,k)                            &
+#ifdef _MOMENTUM_TERMS_
+                               ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)              &
+#endif
+                               )
+            end do
+         end if
    end select
 
 #ifdef _MOMENTUM_TERMS_
