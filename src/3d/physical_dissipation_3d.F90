@@ -46,8 +46,7 @@
 #endif
    use domain, only: dry_z
    use variables_3d, only: phydis_3d,phydis_int,num,uu,vv,hn,hun,hvn,SS
-   use parameters, only: avmmol
-   use m2d, only: Am_method,NO_AM
+   use m2d, only: avmmol,Am_method,NO_AM
 
    IMPLICIT NONE
 !
