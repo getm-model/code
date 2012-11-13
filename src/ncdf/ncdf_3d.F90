@@ -62,9 +62,9 @@
 #ifdef _FABM_
    integer, allocatable, dimension(:)  :: fabm_ids,fabm_ids_diag,fabm_ids_ben,fabm_ids_diag_hz
 #endif
-   integer                             :: nm3dS_id,nm3dT_id,nm2dS_id,nm2dT_id
-   integer                             :: pm3dS_id,pm3dT_id,pm2dS_id,pm2dT_id
-   integer                             :: nm3d_id,nm2d_id
+   integer                             :: nd3d_id=-1,pd3d_id=-1
+   integer                             :: nmS_id=-1,pmS_id=-1
+   integer                             :: nmT_id=-1,pmT_id=-1
 
    REALTYPE, dimension(:,:,:), allocatable :: ws
 

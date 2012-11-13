@@ -429,46 +429,53 @@
 
    end if
 
-   if (save_numerical_analyses) then
+   if (do_numerical_analyses_3d) then
 
       fv = nummix_missing
       mv = nummix_missing
       vr(1) = -100.0
       vr(2) = 100.0
-      err = nf90_def_var(ncid,'numdis3d',NCDF_FLOAT_PRECISION,f4_dims,nm3d_id)
+      err = nf90_def_var(ncid,'numdis_3d',NCDF_FLOAT_PRECISION,f4_dims,nd3d_id)
       if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,nm3d_id, &
+      call set_attributes(ncid,nd3d_id, &
           long_name='numerical dissipation', &
           units='W/kg',&
           FillValue=fv,missing_value=mv,valid_range=vr)
 
+      err = nf90_def_var(ncid,'phydis_3d',NCDF_FLOAT_PRECISION,f4_dims,pd3d_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,pd3d_id, &
+          long_name='physical dissipation', &
+          units='W/kg',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+
       if (calc_salt) then
-         err = nf90_def_var(ncid,'nummix3d_S',NCDF_FLOAT_PRECISION,f4_dims,nm3dS_id)
+         err = nf90_def_var(ncid,'nummix_S',NCDF_FLOAT_PRECISION,f4_dims,nmS_id)
          if (err .NE. NF90_NOERR) go to 10
-         call set_attributes(ncid,nm3dS_id, &
+         call set_attributes(ncid,nmS_id, &
              long_name='numerical mixing of salinity', &
              units='psu**2/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
 
-         err = nf90_def_var(ncid,'phymix3d_S',NCDF_FLOAT_PRECISION,f4_dims,pm3dS_id)
+         err = nf90_def_var(ncid,'phymix_S',NCDF_FLOAT_PRECISION,f4_dims,pmS_id)
          if (err .NE. NF90_NOERR) go to 10
-         call set_attributes(ncid,pm3dS_id, &
+         call set_attributes(ncid,pmS_id, &
              long_name='physical mixing of salinity', &
              units='psu**2/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
       end if
 
       if (calc_temp) then
-         err = nf90_def_var(ncid,'nummix3d_T',NCDF_FLOAT_PRECISION,f4_dims,nm3dT_id)
+         err = nf90_def_var(ncid,'nummix_T',NCDF_FLOAT_PRECISION,f4_dims,nmT_id)
          if (err .NE. NF90_NOERR) go to 10
-         call set_attributes(ncid,nm3dT_id, &
+         call set_attributes(ncid,nmT_id, &
              long_name='numerical mixing of temperature', &
              units='degC**2/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
 
-         err = nf90_def_var(ncid,'phymix3d_T',NCDF_FLOAT_PRECISION,f4_dims,pm3dT_id)
+         err = nf90_def_var(ncid,'phymix_T',NCDF_FLOAT_PRECISION,f4_dims,pmT_id)
          if (err .NE. NF90_NOERR) go to 10
-         call set_attributes(ncid,pm3dT_id, &
+         call set_attributes(ncid,pmT_id, &
              long_name='physical mixing of temperature', &
              units='degC**2/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
