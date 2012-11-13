@@ -5,7 +5,7 @@
 ! !ROUTINE: physical_mixing()
 !
 ! !INTERFACE:
-   subroutine physical_mixing(F,diffusivity,pm3d,pm2d,AH_method)
+   subroutine physical_mixing(F,diffusivity,phymix_3d,phymix_int,AH_method)
 !
 ! !DESCRIPTION:
 !
@@ -33,14 +33,14 @@
    integer, intent(in)   :: AH_method
 !
 ! !OUTPUT PARAMETERS
-   REALTYPE, intent(out) :: pm3d(I3DFIELD)
-   REALTYPE, intent(out) :: pm2d(I2DFIELD)
+   REALTYPE, intent(out) :: phymix_3d(I3DFIELD)
+   REALTYPE, intent(out) :: phymix_int(I2DFIELD)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hannes Rennau
 !
 ! !LOCAL VARIABLES:
-   REALTYPE                  :: dupper,dlower,pmsum
+   REALTYPE                  :: dupper,dlower,phymix_sum,phymix
    integer                   :: i,j,k
 
 !EOP
@@ -50,7 +50,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .eq. 1) then
-            pmsum = _ZERO_
+            phymix_sum = _ZERO_
             dlower=_ZERO_
             do k=1,kmax
                if (k .eq. kmax) then
@@ -59,11 +59,16 @@
                   dupper=_TWO_*(diffusivity+nuh(i,j,k))* &
                          ((F(i,j,k+1)-F(i,j,k))/(_HALF_*(hn(i,j,k)+hn(i,j,k+1))))**2
                end if
-               pm3d(i,j,k) = pm3d(i,j,k) + _HALF_*(dlower+dupper)
-               pmsum = pmsum + pm3d(i,j,k)*hn(i,j,k)
+               phymix = _HALF_ * ( dlower + dupper )
+               if (AH_method .eq. 0) then
+                  phymix_3d(i,j,k) = phymix ! avoid cumulative sum in time
+               else
+                  phymix_3d(i,j,k) = phymix_3d(i,j,k) + phymix
+               end if
+               phymix_sum = phymix_sum + phymix_3d(i,j,k)*hn(i,j,k)
                dlower=dupper
             end do
-            pm2d(i,j) = pmsum
+            phymix_int(i,j) = phymix_sum
          end if
       end do
    end do

@@ -47,6 +47,7 @@
    use domain, only: dry_z
    use variables_3d, only: phydis_3d,phydis_int,num,uu,vv,hn,hun,hvn,SS
    use parameters, only: avmmol
+   use m2d, only: Am_method,NO_AM
 
    IMPLICIT NONE
 !
@@ -54,7 +55,7 @@
 !  Original author(s): Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   REALTYPE                  :: dupper,dlower,pdsum
+   REALTYPE                  :: dupper,dlower,phydis_sum,phydis
    integer                   :: i,j,k
    REALTYPE                  :: aux(I3DFIELD)
 !EOP
@@ -79,7 +80,7 @@
 #endif
       do i=imin,imax
          if (az(i,j).eq.1) then
-            pdsum = _ZERO_
+            phydis_sum = _ZERO_
             dlower = _ZERO_
             do k=1,kmax
                if (k .eq. kmax) then
@@ -87,11 +88,16 @@
                else
                   dupper=(num(i,j,k)+avmmol)*SS(i,j,k)
                end if
-               phydis_3d(i,j,k) = phydis_3d(i,j,k) + _HALF_*(dlower+dupper)
-               pdsum = pdsum + phydis_3d(i,j,k)*hn(i,j,k)
+               phydis = _HALF_ * ( dlower + dupper )
+               if (Am_method .eq. NO_AM) then
+                  phydis_3d(i,j,k) = phydis
+               else
+                  phydis_3d(i,j,k) = phydis_3d(i,j,k) + phydis
+               end if
+               phydis_sum = phydis_sum + phydis_3d(i,j,k)*hn(i,j,k)
                dlower=dupper
             end do
-            phydis_int(i,j) = pdsum
+            phydis_int(i,j) = phydis_sum
          end if
       end do
 #ifndef SLICE_MODEL
