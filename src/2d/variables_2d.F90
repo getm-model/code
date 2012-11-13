@@ -32,7 +32,8 @@
 #endif
 
 !  the following fields will only be allocated if deformCX=.true.
-   REALTYPE,dimension(:,:),allocatable :: dudxC,dvdyC,shearX
+   REALTYPE,dimension(:,:),allocatable :: dudxC,dvdyC
+   REALTYPE,dimension(:,:),allocatable :: dvdxX,dudyX,shearX
 !  the following fields will only be allocated if deformUV=.true.
    REALTYPE,dimension(:,:),allocatable :: dudxV,dvdyU,shearU
 !  the followinf fields will only be allocated if An_method=2

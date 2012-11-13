@@ -6,9 +6,9 @@
 ! \label{sec-uv-diff-2dh}
 !
 ! !INTERFACE:
-   subroutine uv_diff_2dh(An_method,UEx,VEx,U,V,D,DU,DV, &
-                          dudxC,dvdyC,shearX,AmC,AmX,hsd_u,hsd_v)
-
+   subroutine uv_diff_2dh(An_method,UEx,VEx,U,V,D,DU,DV,  &
+                          dudxC,dvdyC,dudyX,dvdxX,shearX, &
+                          AmC,AmX,phydis,hsd_u,hsd_v)
 !  Note (KK): keep in sync with interface in m2d.F90
 !
 ! !DESCRIPTION:
@@ -166,20 +166,22 @@
    use domain, only: dx,dy,ard1
 #endif
    use variables_2d, only: AnC,AnX
-   use m2d, only: Am_method,Am_const,AM_LAPLACE,AM_LES,AM_CONSTANT,An_const
+   use m2d, only: Am_method,Am_const,NO_AM,AM_LAPLACE,AM_LES,AM_CONSTANT,An_const
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer,intent(in)                                :: An_method
    REALTYPE,dimension(E2DFIELD),intent(in),optional  :: U,V,D,DU,DV
-   REALTYPE,dimension(E2DFIELD),intent(in),optional  :: dudxC,dvdyC,shearX
+   REALTYPE,dimension(E2DFIELD),intent(in),optional  :: dudxC,dvdyC
+   REALTYPE,dimension(E2DFIELD),intent(in),optional  :: dudyX,dvdxX,shearX
    REALTYPE,dimension(E2DFIELD),intent(in),optional  :: AmC,AmX
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout)        :: UEx,VEx
 !
 ! !OUTPUT PARAMETERS:
+   REALTYPE,dimension(E2DFIELD),intent(out),optional :: phydis
    REALTYPE,dimension(E2DFIELD),intent(out),optional :: hsd_u,hsd_v
 !
 ! !REVISION HISTORY:
@@ -188,6 +190,7 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: work2d
+   REALTYPE,dimension(E2DFIELD) :: phydis_wrk,phydis_vel
    integer                      :: i,j
 !EOP
 !-----------------------------------------------------------------------
@@ -218,22 +221,35 @@
 !             see Griffies 2004, page 407 for transverse stress tensor
 !             and resulting forces
 
+
+!  diffusion terms for u-equations
+
+   if (present(phydis)) then
+      phydis_vel = _ZERO_
+   end if
+
 !  Central for dx(2*Am*dx(U/DU))
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
    do j=jmin,jmax
 #endif
-      do i=imin,imax+1          ! work2d defined on T-points
+      do i=imin-1,imax+1          ! work2d defined on T-points
          work2d(i,j)=_ZERO_
          if (az(i,j) .eq. 1) then
             select case(Am_method)
                case(AM_LAPLACE)
-                  work2d(i,j)=Am_const*DYC*D(i,j)*dudxC(i,j)
+                  work2d(i,j)=Am_const*dudxC(i,j)
                case(AM_LES)
-                  work2d(i,j)=_TWO_*AmC(i,j)*DYC*D(i,j)*dudxC(i,j)
+                  work2d(i,j)=_TWO_*AmC(i,j)*dudxC(i,j)
                case(AM_CONSTANT)
-                  work2d(i,j)=_TWO_*Am_const*DYC*D(i,j)*dudxC(i,j)
+                  work2d(i,j)=_TWO_*Am_const*dudxC(i,j)
             end select
+            if (Am_method .ne. NO_AM) then
+               if (present(phydis)) then
+                  phydis_wrk(i,j) = work2d(i,j) * dudxC(i,j)
+               end if
+               work2d(i,j) = DYC * D(i,j) * work2d(i,j)
+            end if
             select case(An_method)
                case(1)
                   work2d(i,j)=work2d(i,j)+An_const*DYC*(U(i,j)-U(i-1,j))/DXC
@@ -242,15 +258,22 @@
                      work2d(i,j)=work2d(i,j)+AnC(i,j)*DYC*(U(i,j)-U(i-1,j))/DXC
                   end if
             end select
+         else
+            if (present(phydis)) then
+               phydis_wrk(i,j) = _ZERO_
+            end if
          end if
       end do
 #ifdef SLICE_MODEL
 !$OMP END DO
 !$OMP DO SCHEDULE(RUNTIME)
 #endif
-      do i=imin,imax      ! UEx defined on U-points
+      do i=imin-1,imax      ! UEx defined on U-points
          if (au(i,j).eq.1 .or. au(i,j).eq.2) then
             UEx(i,j)=UEx(i,j)-(work2d(i+1,j)-work2d(i  ,j))*ARUD1
+            if (present(phydis)) then
+               phydis_vel(i,j) = _HALF_*(phydis_wrk(i,j)+phydis_wrk(i+1,j))
+            end if
          end if
       end do
 #ifndef SLICE_MODEL
@@ -258,22 +281,29 @@
 #endif
 !$OMP END DO
 
-
-   if (An_method.gt.0 .or. Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
-
 #ifndef SLICE_MODEL
+   if (An_method.gt.0 .or. Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
 !     Central for dy(Am*(dy(U/DU)+dx(V/DV)))
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax        ! work2d defined on X-points
-         do i=imin,imax
+         do i=imin-1,imax
             work2d(i,j)=_ZERO_
+            if (present(phydis)) then
+               phydis_wrk(i,j) = _ZERO_
+            end if
             if (ax(i,j) .ge. 1) then
                select case(Am_method)
                   case (AM_CONSTANT)
-                     work2d(i,j)=Am_const*DXX*_HALF_*(DU(i,j)+DU(i,j+1))*shearX(i,j)
+                     work2d(i,j)=Am_const*shearX(i,j)
                   case (AM_LES)
-                     work2d(i,j)=AmX(i,j)*DXX*_HALF_*(DU(i,j)+DU(i,j+1))*shearX(i,j)
+                     work2d(i,j)=AmX(i,j)*shearX(i,j)
                end select
+               if (Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
+                  if (present(phydis)) then
+                     phydis_wrk(i,j) = work2d(i,j) * dudyX(i,j)
+                  end if
+                  work2d(i,j) = DXX * _HALF_*(DU(i,j)+DU(i,j+1)) * work2d(i,j)
+               end if
                select case(An_method)
 !                 Note (KK): outflow condition must be fulfilled !
 !                            (use of mirrored transports or use of dudyX
@@ -288,24 +318,36 @@
                end select
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-           else if (av(i,j).eq.0 .and. av(i+1,j).eq.0) then
+            else if (av(i,j).eq.0 .and. av(i+1,j).eq.0) then
 !              Note (KK): exclude convex corners (shearX=0)
 !                         exclude W/E closed boundaries (not needed)
                if (au(i,j) .eq. 1) then ! northern closed boundary
                   select case(Am_method)
                      case (AM_CONSTANT)
-                        work2d(i,j)=Am_const*DXX*DU(i,j)*shearX(i,j)
+                        work2d(i,j)=Am_const*shearX(i,j)
                      case (AM_LES)
-                        work2d(i,j)=AmX(i,j)*DXX*DU(i,j)*shearX(i,j)
+                        work2d(i,j)=AmX(i,j)*shearX(i,j)
                   end select
+                  if (Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
+                     if (present(phydis)) then
+                        phydis_wrk(i,j) = work2d(i,j) * dudyX(i,j)
+                     end if
+                     work2d(i,j) = DXX * DU(i,j) * work2d(i,j)
+                  end if
                end if
                if (au(i,j+1) .eq. 1) then ! southern closed boundary
                   select case(Am_method)
                      case (AM_CONSTANT)
-                        work2d(i,j)=Am_const*DXX*DU(i,j+1)*shearX(i,j)
+                        work2d(i,j)=Am_const*shearX(i,j)
                      case (AM_LES)
-                        work2d(i,j)=AmX(i,j)*DXX*DU(i,j+1)*shearX(i,j)
+                        work2d(i,j)=AmX(i,j)*shearX(i,j)
                   end select
+                  if (Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
+                     if (present(phydis)) then
+                        phydis_wrk(i,j) = work2d(i,j) * dudyX(i,j)
+                     end if
+                     work2d(i,j) = DXX * DU(i,j+1) * work2d(i,j)
+                  end if
                end if
 #endif
 #endif
@@ -315,29 +357,66 @@
 !$OMP END DO
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax        !UEx defined on U-points
-         do i=imin,imax
+         do i=imin-1,imax
             if (au(i,j).eq.1 .or. au(i,j).eq.2) then
                UEx(i,j)=UEx(i,j)-(work2d(i,j  )-work2d(i,j-1))*ARUD1
+               if (present(phydis)) then
+                  phydis_vel(i,j) = phydis_vel(i,j) + _HALF_*(phydis_wrk(i,j-1)+phydis_wrk(i,j))
+               end if
             end if
          end do
       end do
 !$OMP END DO
+   end if
 #endif
 
-!     Central for dx(Am*(dy(U/DU)+dx(V/DV)))
+   if (present(phydis)) then
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
       do j=jmin,jmax
 #endif
+         do i=imin,imax
+            if (az(i,j) .eq. 1) then
+               phydis(i,j) = _HALF_*(phydis_vel(i-1,j)+phydis_vel(i,j))
+            end if
+         end do
+#ifndef SLICE_MODEL
+      end do
+#endif
+!$OMP END DO
+   end if
+
+
+!  diffusion terms for v-equation
+
+   if (present(phydis)) then
+      phydis_vel = _ZERO_
+   end if
+
+   if (An_method.gt.0 .or. Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
+!     Central for dx(Am*(dy(U/DU)+dx(V/DV)))
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+      do j=jmin-1,jmax
+#endif
          do i=imin-1,imax      ! work2d defined on X-points
             work2d(i,j)=_ZERO_
+            if (present(phydis)) then
+               phydis_wrk(i,j) = _ZERO_
+            end if
             if (ax(i,j) .ge. 1) then
                select case(Am_method)
                   case (AM_CONSTANT)
-                     work2d(i,j)=Am_const*DYX*_HALF_*(DV(i,j)+DV(i+1,j))*shearX(i,j)
+                     work2d(i,j)=Am_const*shearX(i,j)
                   case (AM_LES)
-                     work2d(i,j)=AmX(i,j)*DYX*_HALF_*(DV(i,j)+DV(i+1,j))*shearX(i,j)
+                     work2d(i,j)=AmX(i,j)*shearX(i,j)
                end select
+               if (Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
+                  if (present(phydis)) then
+                     phydis_wrk(i,j) = work2d(i,j) * dvdxX(i,j)
+                  end if
+                  work2d(i,j) = DYX * _HALF_*(DV(i,j)+DV(i+1,j)) * work2d(i,j)
+               end if
                select case(An_method)
 !                 Note (KK): outflow condition must be fulfilled !
 !                            (use of mirrored transports or use of dvdxX
@@ -358,18 +437,30 @@
                if (av(i,j) .eq. 1) then ! eastern closed boundary
                   select case(Am_method)
                      case (AM_CONSTANT)
-                        work2d(i,j)=Am_const*DXX*DV(i,j)*shearX(i,j)
+                        work2d(i,j)=Am_const*shearX(i,j)
                      case (AM_LES)
-                        work2d(i,j)=AmX(i,j)*DXX*DV(i,j)*shearX(i,j)
+                        work2d(i,j)=AmX(i,j)*shearX(i,j)
                   end select
+                  if (Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
+                     if (present(phydis)) then
+                        phydis_wrk(i,j) = work2d(i,j) * dvdxX(i,j)
+                     end if
+                     work2d(i,j) = DXX * DV(i,j) * work2d(i,j)
+                  end if
                end if
                if (av(i+1,j) .eq. 1) then ! western closed boundary
                   select case(Am_method)
                      case (AM_CONSTANT)
-                        work2d(i,j)=Am_const*DXX*DV(i+1,j)*shearX(i,j)
+                        work2d(i,j)=Am_const*shearX(i,j)
                      case (AM_LES)
-                        work2d(i,j)=AmX(i,j)*DXX*DV(i+1,j)*shearX(i,j)
+                        work2d(i,j)=AmX(i,j)*shearX(i,j)
                   end select
+                  if (Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
+                     if (present(phydis)) then
+                        phydis_wrk(i,j) = work2d(i,j) * dvdxX(i,j)
+                     end if
+                     work2d(i,j) = DXX * DV(i+1,j) * work2d(i,j)
+                  end if
                end if
 #endif
 #endif
@@ -382,31 +473,39 @@
          do i=imin,imax          ! VEx defined on V-points
             if (av(i,j).eq.1 .or. av(i,j).eq.2) then
                VEx(i,j)=VEx(i,j)-(work2d(i  ,j)-work2d(i-1,j))*ARVD1
+               if (present(phydis)) then
+                  phydis_vel(i,j) = _HALF_ * ( phydis_wrk(i-1,j) + phydis_wrk(i,j) )
+               end if
             end if
          end do
 #ifndef SLICE_MODEL
       end do
 #endif
 !$OMP END DO
-
    end if
 
 
 #ifndef SLICE_MODEL
 !  Central for dy(2*Am*dy(V/DV))
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax+1     ! work2d defined on T-points
+   do j=jmin-1,jmax+1     ! work2d defined on T-points
       do i=imin,imax
          work2d(i,j)=_ZERO_
          if (az(i,j) .eq. 1) then
             select case(Am_method)
                case (AM_LAPLACE)
-                  work2d(i,j)=Am_const*DXC*D(i,j)*dvdyC(i,j)
+                  work2d(i,j)=Am_const*dvdyC(i,j)
                case (AM_LES)
-                  work2d(i,j)=_TWO_*AmC(i,j)*DXC*D(i,j)*dvdyC(i,j)
+                  work2d(i,j)=_TWO_*AmC(i,j)*dvdyC(i,j)
                case (AM_CONSTANT)
-                  work2d(i,j)=_TWO_*Am_const*DXC*D(i,j)*dvdyC(i,j)
+                  work2d(i,j)=_TWO_*Am_const*dvdyC(i,j)
             end select
+            if (Am_method .ne. NO_AM) then
+               if (present(phydis)) then
+                  phydis_wrk(i,j) = work2d(i,j) * dvdyC(i,j)
+               end if
+               work2d(i,j) = DXC * D(i,j) * work2d(i,j)
+            end if
             select case(An_method)
                case(1)
                   work2d(i,j)=work2d(i,j)+An_const*DXC*(V(i,j)-V(i,j-1))/DYC
@@ -415,20 +514,43 @@
                      work2d(i,j)=work2d(i,j)+AnC(i,j)*DXC*(V(i,j)-V(i,j-1))/DYC
                   end if
             end select
+         else
+            if (present(phydis)) then
+               phydis_wrk(i,j) = _ZERO_
+            end if
          end if
       end do
    end do
 !$OMP END DO
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax             ! VEx defined on V-points
+   do j=jmin-1,jmax             ! VEx defined on V-points
       do i=imin,imax
          if (av(i,j).eq.1 .or. av(i,j).eq.2) then
             VEx(i,j)=VEx(i,j)-(work2d(i,j+1)-work2d(i,j  ))*ARVD1
+            if (present(phydis)) then
+               phydis_vel(i,j) = phydis_vel(i,j) + _HALF_*(phydis_wrk(i,j)+phydis_wrk(i,j+1))
+            end if
          end if
       end do
    end do
 !$OMP END DO
 #endif
+
+   if (present(phydis)) then
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+      do j=jmin,jmax
+#endif
+         do i=imin,imax
+            if (az(i,j) .eq. 1) then
+               phydis(i,j) = phydis(i,j) + _HALF_*(phydis_vel(i,j-1)+phydis_vel(i,j))
+            end if
+         end do
+#ifndef SLICE_MODEL
+      end do
+#endif
+!$OMP END DO
+   end if
 
 !$OMP END PARALLEL
 

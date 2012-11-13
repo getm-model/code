@@ -137,7 +137,8 @@
    REALTYPE, dimension(:,:), allocatable     :: phymix_S_int,phymix_T_int
 
 !  the following fields will only be allocated if deformCX_3d=.true.
-   REALTYPE,dimension(:,:,:),allocatable :: dudxC_3d,dvdyC_3d,shearX_3d
+   REALTYPE,dimension(:,:,:),allocatable :: dudxC_3d,dvdyC_3d
+   REALTYPE,dimension(:,:,:),allocatable :: dudyX_3d,dvdxX_3d,shearX_3d
 !  the following fields will only be allocated if deformUV_3d=.true.
    REALTYPE,dimension(:,:,:),allocatable :: dudxV_3d,dvdyU_3d,shearU_3d
 !  the following fields will only be allocated if calc_stirring=.true.

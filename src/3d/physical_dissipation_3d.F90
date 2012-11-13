@@ -45,7 +45,6 @@
    use domain, only: dx,dy
 #endif
    use domain, only: dry_z
-   use m2d, only: Am
    use variables_3d, only: phydis_3d,phydis_int,num,uu,vv,hn,hun,hvn,SS
    use parameters, only: avmmol
 
@@ -64,20 +63,12 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'physical_dissipation() # ',Ncall
+   write(debug,*) 'physical_dissipation_3d() # ',Ncall
 #endif
 #ifdef SLICE_MODEL
    j = jmax/2 ! this MUST NOT be changed!!!
 #endif
    phydis_int = _ZERO_
-
-   if (Am .gt. _ZERO_) then
-      do k=1,kmax
-         call physical_dissipation(uu(:,:,k),vv(:,:,k),hun(:,:,k),hvn(:,:,k),Am,phydis_3d(:,:,k))
-      end do
-   else
-      phydis_3d = _ZERO_
-   end if
 
    ! Av * ( (du/dz)**2 + (dv/dz)**2 ) on W-POINTS
    aux(:,:,kmax)=_ZERO_

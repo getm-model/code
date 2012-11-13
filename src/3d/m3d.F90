@@ -311,6 +311,17 @@
       allocate(shearX_3d(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'postinit_3d: Error allocating memory (shearX_3d)'
       shearX_3d=_ZERO_
+
+      if (do_numerical_analyses_3d) then
+            allocate(dvdxX_3d(I3DFIELD),stat=rc)
+            if (rc /= 0) stop 'postinit_3d: Error allocating memory (dvdxX_3d)'
+            dvdxX_3d=_ZERO_
+#ifndef SLICE_MODEL
+            allocate(dudyX_3d(I3DFIELD),stat=rc)
+            if (rc /= 0) stop 'postinit_3d: Error allocating memory (dudyX_3d)'
+            dudyX_3d=_ZERO_
+#endif
+      end if
    end if
    if (deformUV_3d) then
       allocate(dudxV_3d(I3DFIELD),stat=rc)
