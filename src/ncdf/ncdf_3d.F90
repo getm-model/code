@@ -21,9 +21,13 @@
    integer                             :: time_id
 
    integer                             :: hcc_id,h_id
-   integer                             :: elev_id,u_id,v_id
+   integer                             :: elev_id
+   integer                             :: u_adv_id=-1,v_adv_id=-1
+   integer                             :: uu_id=-1,vv_id=-1,ww_id=-1
+   integer                             :: velx_adv_id=-1,vely_adv_id=-1
+   integer                             :: velx_id=-1,vely_id=-1,w_id=-1
    integer                             :: taubx_id,tauby_id
-   integer                             :: uu_id,vv_id,w_id
+
 #ifdef _MOMENTUM_TERMS_
    integer                             :: tdv_u_id
    integer                             :: adv_u_id

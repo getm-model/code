@@ -20,10 +20,9 @@
    integer                             :: time_dim
    integer                             :: time_id
 
-   integer                             :: elev_id,u_id,v_id
-#if defined(CURVILINEAR)
-   integer                             :: urot_id,vrot_id
-#endif
+   integer                             :: elev_id
+   integer                             :: u_id=-1,v_id=-1
+   integer                             :: velx_id=-1,vely_id=-1
    integer                             :: res_u_id=-1,res_v_id=-1
    integer                             :: u10_id,v10_id
    integer                             :: airp_id,t2_id,hum_id,tcc_id

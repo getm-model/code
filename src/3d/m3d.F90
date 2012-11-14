@@ -229,6 +229,7 @@
    if (.not. hotstart) then
       ssen = z
       call start_macro()
+      Dold = Dn
       call coordinates(hotstart)
       call hcc_check()
    end if
