@@ -149,7 +149,25 @@
       LEVEL2 '3D results: ',trim(out_f_3d)
       LEVEL2 'First=',first_3d,' step=',step_3d
    end if
+
+   save_mean=(meanout .ge. 0 .and. runtype .gt. 1)
+   if ( save_mean ) then
+      LEVEL2 'Mean fields in: ',trim(out_f_mean)
+   end if
 #endif
+
+   if (save_numerical_analyses) then
+      if (save_2d) then
+         LEVEL2 "calculate and save 2d dissipation"
+         do_numerical_analyses_2d=.true.
+      end if
+#ifndef NO_3D
+      if (save_3d) then
+         LEVEL2 "calculate and save 3d dissipation and mixing"
+         do_numerical_analyses_3d=.true.
+      end if
+#endif
+   end if
 
    if ( hotout(1) .gt. 0 .and. hotout(2) .lt. hotout(1) ) then
       if ( hotout(2) .eq. -1 ) then
@@ -163,13 +181,6 @@
    if ( hotout(1) .eq. hotout(2)) then
       hotout(3) = 1
    end if
-
-#ifndef NO_3D
-   save_mean=(meanout .ge. 0 .and. runtype .gt. 1)
-   if ( save_mean ) then
-      LEVEL2 'Mean fields in: ',trim(out_f_mean)
-   end if
-#endif
 
    if( .not. dryrun) then
 
@@ -200,14 +211,6 @@
       call init_nesting()
 !   end if
 #endif
-
-   if (save_numerical_analyses) then
-      LEVEL2 "calculate and save numerical dissipation/mixing"
-      do_numerical_analyses_2d=.true.
-#ifndef NO_3D
-      do_numerical_analyses_3d=.true.
-#endif
-   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_output()'
