@@ -86,6 +86,8 @@
 !             obtained by covariant differentiation of the velocity vector
 !             for exact 3D deformation tensor in horizontal orthogonal coordinates
 !             see e.g. Kantha and Clayson 2000, page 35
+!  Note (KK): for CORRECT_METRICS some grid increments are not defined at the edge
+!             to the HALO zones (if no framing land edge inside)
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j)                                         &
