@@ -110,7 +110,7 @@
                        FillValue=fv,missing_value=mv,valid_range=vr)
 #endif
 
-   if (save_numerical_analyses) then
+   if (do_numerical_analyses_2d) then
       fv = nummix_missing
       mv = nummix_missing
       vr(1) = -100.0
