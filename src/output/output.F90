@@ -12,6 +12,7 @@
 ! !USES:
    use time, only: write_time_string,timestep,timestr
    use ascii_out
+   use m2d, only: no_2d
    use variables_2d, only: do_numerical_analyses_2d
 #ifndef NO_3D
    use variables_3d, only: do_numerical_analyses_3d,calc_stirr
