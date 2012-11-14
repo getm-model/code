@@ -170,7 +170,7 @@
    end if
 #endif
 
-   if (save_numerical_analyses) then
+   if (do_numerical_analyses_3d) then
 
       fv = nummix_missing
       mv = nummix_missing
