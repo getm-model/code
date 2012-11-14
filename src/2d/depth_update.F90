@@ -22,7 +22,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth,crit_depth
    use domain, only: az,au,av,dry_z,dry_u,dry_v
-   use variables_2d, only: D,z,zo,DU,DV
+   use variables_2d, only: D,Dlast,z,zo,DU,DV
    use getm_timers,  only: tic, toc, TIM_DPTHUPDATE
 !$ use omp_lib
    IMPLICIT NONE
@@ -33,6 +33,8 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j
    REALTYPE                  :: d1,d2i,x
+   REALTYPE,dimension(E2DFIELD)    :: ztmp
+   REALTYPE,dimension(:,:),pointer :: p2d
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -46,6 +48,8 @@
 ! TODO/BJB: Why is this turned off?
 #undef USE_MASK
 
+   p2d => Dlast ; Dlast => D ; D => p2d
+
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,d1,d2i,x)
 
 !  Depth in elevation points
@@ -55,6 +59,7 @@
       do i=imin-HALO,imax+HALO
          ! TODO/BJB: Is it enough to do this on az?
          D(i,j) = z(i,j)+H(i,j)
+         ztmp(i,j) = _HALF_ * ( zo(i,j) + z(i,j) )
       end do
    end do
 !$OMP END DO NOWAIT
@@ -66,7 +71,7 @@
 #ifdef USE_MASK
          if(au(i,j) .gt. 0) then
 #endif
-         x=max(_QUART_*(zo(i,j)+zo(i+1,j)+z(i,j)+z(i+1,j)),-HU(i,j)+min_depth)
+         x=max(_HALF_*(ztmp(i,j)+ztmp(i+1,j)),-HU(i,j)+min_depth)
          DU(i,j) = x+HU(i,j)
 #ifdef USE_MASK
          end if
@@ -82,7 +87,7 @@
 #ifdef USE_MASK
          if(av(i,j) .gt. 0) then
 #endif
-         x = max(_QUART_*(zo(i,j)+zo(i,j+1)+z(i,j)+z(i,j+1)),-HV(i,j)+min_depth)
+         x = max(_HALF_*(ztmp(i,j)+ztmp(i,j+1)),-HV(i,j)+min_depth)
          DV(i,j) = x+HV(i,j)
 #ifdef USE_MASK
          end if
