@@ -12,6 +12,7 @@
 ! !USES:
    use time, only: write_time_string,timestep,timestr
    use ascii_out
+   use m2d, only: no_2d
    use variables_2d, only: do_numerical_analyses_2d
 #ifndef NO_3D
    use variables_3d, only: do_numerical_analyses_3d
@@ -115,6 +116,10 @@
    LEVEL2 'save_nuh',save_nuh
    LEVEL2 'save_num',save_num
    LEVEL2 'save_tke',save_tke
+
+   if (no_2d) then
+      save_2d = .false.
+   end if
 
    if (runtype .eq. 1) then
       save_3d = .false.
