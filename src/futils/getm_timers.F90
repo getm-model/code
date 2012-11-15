@@ -50,7 +50,6 @@
    integer, parameter :: TIM_SS          = 40   ! 3d shear_frequency
    integer, parameter :: TIM_NN          = 41   ! 3d buoyancy_frequency
    integer, parameter :: TIM_STRESSES3D  = 44   ! 3d stresses_3d
-   integer, parameter :: TIM_SLOWTERMS   = 46   ! 3d slow_terms
    integer, parameter :: TIM_TEMP        = 52   ! 3d do_temperature
    integer, parameter :: TIM_TEMPH       = 53   ! 3d temperature halo (presently in m3d/do_integrate_3d)
    integer, parameter :: TIM_SALT        = 54   ! 3d do_salinity
@@ -198,12 +197,12 @@
    timernames(TIM_SS)          = 'shear_frequency'
    timernames(TIM_NN)          = 'buoyancy_frequency'
    timernames(TIM_STRESSES3D)  = 'stresses_3d'
-   timernames(TIM_SLOWTERMS)   = 'slow_terms'
    timernames(TIM_TEMP)        = 'do_temperature'
    timernames(TIM_SALT)        = 'do_salinity'
    timernames(TIM_COORDS)      = 'coordinates'
    timernames(TIM_INTPRESS)    = 'do_internal_pressure'
    timernames(TIM_STARTMCR)    = 'start_macro'
+   timernames(TIM_STOPMCR)     = 'start_macro'
    timernames(TIM_EQSTATE)     = 'eq_state'
    timernames(TIM_CALCMEANF)   = 'calc_mean_fields'
 

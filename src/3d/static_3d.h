@@ -77,12 +77,12 @@
 ! 2D fields in 3D domain
   REALTYPE                             :: sseo(I2DFIELD)
   REALTYPE                             :: ssen(I2DFIELD)
-  REALTYPE                             :: Dn(I2DFIELD)
   REALTYPE                             :: ssuo(I2DFIELD)
   REALTYPE                             :: ssun(I2DFIELD)
   REALTYPE                             :: ssvo(I2DFIELD)
   REALTYPE                             :: ssvn(I2DFIELD)
-  REALTYPE,dimension(I2DFIELD),target  :: Dun,Dvn
+  REALTYPE,dimension(I2DFIELD),target  :: t_Dn,t_Dold,Dun,Dvn
+  REALTYPE,dimension(I2DFIELD)         :: Uadv,Vadv
 
 ! 3D friction in 3D domain
   REALTYPE                             :: rru(I2DFIELD)

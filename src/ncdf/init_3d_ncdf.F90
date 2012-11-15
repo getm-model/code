@@ -98,26 +98,74 @@
    call set_attributes(ncid,elev_id,long_name='elevation',units='m', &
                        FillValue=fv,missing_value=mv,valid_range=vr)
 
-!  depth integrated zonal velocity
-   err = nf90_def_var(ncid,'u',NCDF_FLOAT_PRECISION,f3_dims,u_id)
-   if (err .NE. NF90_NOERR) go to 10
-   fv = vel_missing
-   mv = vel_missing
-   vr(1) = -3.
-   vr(2) =  3.
-   call set_attributes(ncid,u_id,long_name='int. zonal vel.',units='m/s', &
-                       FillValue=fv,missing_value=mv,valid_range=vr)
 
-!  depth integrated meridional velocity
-   err = nf90_def_var(ncid,'v',NCDF_FLOAT_PRECISION,f3_dims,v_id)
-   if (err .NE. NF90_NOERR) go to 10
-   fv = vel_missing
-   mv = vel_missing
-   vr(1) = -3.
-   vr(2) =  3.
-   call set_attributes(ncid,v_id,long_name='int. meridional vel.',units='m/s', &
-                       FillValue=fv,missing_value=mv,valid_range=vr)
+   if (save_transports) then
 
+      fv = vel_missing
+      mv = vel_missing
+      vr(1) = -3.
+      vr(2) =  3.
+
+      err = nf90_def_var(ncid,'U_adv',NCDF_FLOAT_PRECISION,f3_dims,u_adv_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,u_adv_id,long_name='int. grid-related U-transport',units='m2/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'V_adv',NCDF_FLOAT_PRECISION,f3_dims,v_adv_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,v_adv_id,long_name='int. grid-related V-transport',units='m2/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'uu',NCDF_FLOAT_PRECISION,f4_dims,uu_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,uu_id,long_name='grid-related uu-transport',units='m2/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'vv',NCDF_FLOAT_PRECISION,f4_dims,vv_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,vv_id,long_name='grid-related vv-transport',units='m2/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'ww',NCDF_FLOAT_PRECISION,f4_dims,ww_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,ww_id,long_name='grid-related vertical velocity',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+   end if
+
+
+   if (save_vel) then
+
+      fv = vel_missing
+      mv = vel_missing
+      vr(1) = -1.
+      vr(2) =  1.
+
+      err = nf90_def_var(ncid,'velx_adv',NCDF_FLOAT_PRECISION,f3_dims,velx_adv_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,velx_adv_id,long_name='int. velocity in x-direction (T-point)',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'vely_adv',NCDF_FLOAT_PRECISION,f3_dims,vely_adv_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,vely_adv_id,long_name='int. velocity in y-direction (T-point)',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'velx',NCDF_FLOAT_PRECISION,f4_dims,velx_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,velx_id,long_name='velocity in x-direction (T-point)',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'vely',NCDF_FLOAT_PRECISION,f4_dims,vely_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,vely_id,long_name='velocity in y-direction (T-point)',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'w',NCDF_FLOAT_PRECISION,f4_dims,w_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,w_id,long_name='grid-related vertical velocity (T-point)',units='m/s', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
 
    if (save_taub) then
 
@@ -168,119 +216,82 @@
                        long_name='hcc',units=' ',          &
                        FillValue=fv,missing_value=mv,valid_range=vr)
 
-   if (save_vel) then
-      fv = vel_missing
-      mv = vel_missing
-      vr(1) = -3.
-      vr(2) =  3.
-
-!     zonal velocity
-      err = nf90_def_var(ncid,'uu',NCDF_FLOAT_PRECISION,f4_dims,uu_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,uu_id,long_name='zonal vel.',units='m/s', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
-
-!     meridional velocity
-      err = nf90_def_var(ncid,'vv',NCDF_FLOAT_PRECISION,f4_dims,vv_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,vv_id,long_name='meridional vel.',units='m/s', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
-
-!     vertical velocity
-      err = nf90_def_var(ncid,'w',NCDF_FLOAT_PRECISION,f4_dims,w_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,w_id,long_name='vertical vel.',units='m/s', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
-
 #ifdef _MOMENTUM_TERMS_
-      err = nf90_def_var(ncid,'tdv_u',NCDF_FLOAT_PRECISION,f4_dims,tdv_u_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,tdv_u_id,long_name='time tendency (u)',units='m2/s2', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
+   fv = vel_missing
+   mv = vel_missing
+   vr(1) = -3.
+   vr(2) =  3.
 
-      err = nf90_def_var(ncid,'adv_u',NCDF_FLOAT_PRECISION,f4_dims,adv_u_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,adv_u_id,long_name='advection (u).',units='m2/s2', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
+   err = nf90_def_var(ncid,'tdv_u',NCDF_FLOAT_PRECISION,f4_dims,tdv_u_id)
+   if (err .NE. NF90_NOERR) go to 10
+   call set_attributes(ncid,tdv_u_id,long_name='time tendency (u)',units='m2/s2', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'vsd_u',NCDF_FLOAT_PRECISION,f4_dims,vsd_u_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,vsd_u_id,long_name='vertical stress divergence (u).',units='m2/s2', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
+   err = nf90_def_var(ncid,'adv_u',NCDF_FLOAT_PRECISION,f4_dims,adv_u_id)
+   if (err .NE. NF90_NOERR) go to 10
+   call set_attributes(ncid,adv_u_id,long_name='advection (u).',units='m2/s2', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'hsd_u',NCDF_FLOAT_PRECISION,f4_dims,hsd_u_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,hsd_u_id,long_name='horizontal stress divergence (u).',units='m2/s2', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
+   err = nf90_def_var(ncid,'vsd_u',NCDF_FLOAT_PRECISION,f4_dims,vsd_u_id)
+   if (err .NE. NF90_NOERR) go to 10
+   call set_attributes(ncid,vsd_u_id,long_name='vertical stress divergence (u).',units='m2/s2', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'cor_u',NCDF_FLOAT_PRECISION,f4_dims,cor_u_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,cor_u_id,long_name='Coriolis term (u).',units='m2/s2', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
+   err = nf90_def_var(ncid,'hsd_u',NCDF_FLOAT_PRECISION,f4_dims,hsd_u_id)
+   if (err .NE. NF90_NOERR) go to 10
+   call set_attributes(ncid,hsd_u_id,long_name='horizontal stress divergence (u).',units='m2/s2', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'epg_u',NCDF_FLOAT_PRECISION,f4_dims,epg_u_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,epg_u_id,long_name='extenal pressure gradient (u).',units='m2/s2', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
+   err = nf90_def_var(ncid,'cor_u',NCDF_FLOAT_PRECISION,f4_dims,cor_u_id)
+   if (err .NE. NF90_NOERR) go to 10
+   call set_attributes(ncid,cor_u_id,long_name='Coriolis term (u).',units='m2/s2', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'ipg_u',NCDF_FLOAT_PRECISION,f4_dims,ipg_u_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,ipg_u_id,long_name='internal pressure gradient (u).',units='m2/s2', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
+   err = nf90_def_var(ncid,'epg_u',NCDF_FLOAT_PRECISION,f4_dims,epg_u_id)
+   if (err .NE. NF90_NOERR) go to 10
+   call set_attributes(ncid,epg_u_id,long_name='extenal pressure gradient (u).',units='m2/s2', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'tdv_v',NCDF_FLOAT_PRECISION,f4_dims,tdv_v_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,tdv_v_id,long_name='time tendency (v).',units='m2/s2', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
+   err = nf90_def_var(ncid,'ipg_u',NCDF_FLOAT_PRECISION,f4_dims,ipg_u_id)
+   if (err .NE. NF90_NOERR) go to 10
+   call set_attributes(ncid,ipg_u_id,long_name='internal pressure gradient (u).',units='m2/s2', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'adv_v',NCDF_FLOAT_PRECISION,f4_dims,adv_v_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,adv_v_id,long_name='advection (v).',units='m2/s2', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
+   err = nf90_def_var(ncid,'tdv_v',NCDF_FLOAT_PRECISION,f4_dims,tdv_v_id)
+   if (err .NE. NF90_NOERR) go to 10
+   call set_attributes(ncid,tdv_v_id,long_name='time tendency (v).',units='m2/s2', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'vsd_v',NCDF_FLOAT_PRECISION,f4_dims,vsd_v_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,vsd_v_id,long_name='vertical stress divergence (v).',units='m2/s2', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
+   err = nf90_def_var(ncid,'adv_v',NCDF_FLOAT_PRECISION,f4_dims,adv_v_id)
+   if (err .NE. NF90_NOERR) go to 10
+   call set_attributes(ncid,adv_v_id,long_name='advection (v).',units='m2/s2', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'hsd_v',NCDF_FLOAT_PRECISION,f4_dims,hsd_v_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,hsd_v_id,long_name='horizontal stress divergence (v).',units='m2/s2', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
+   err = nf90_def_var(ncid,'vsd_v',NCDF_FLOAT_PRECISION,f4_dims,vsd_v_id)
+   if (err .NE. NF90_NOERR) go to 10
+   call set_attributes(ncid,vsd_v_id,long_name='vertical stress divergence (v).',units='m2/s2', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'cor_v',NCDF_FLOAT_PRECISION,f4_dims,cor_v_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,cor_v_id,long_name='Coriolis term (v).',units='m2/s2', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
+   err = nf90_def_var(ncid,'hsd_v',NCDF_FLOAT_PRECISION,f4_dims,hsd_v_id)
+   if (err .NE. NF90_NOERR) go to 10
+   call set_attributes(ncid,hsd_v_id,long_name='horizontal stress divergence (v).',units='m2/s2', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'epg_v',NCDF_FLOAT_PRECISION,f4_dims,epg_v_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,epg_v_id,long_name='external pressure gradient (v).',units='m2/s2', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
+   err = nf90_def_var(ncid,'cor_v',NCDF_FLOAT_PRECISION,f4_dims,cor_v_id)
+   if (err .NE. NF90_NOERR) go to 10
+   call set_attributes(ncid,cor_v_id,long_name='Coriolis term (v).',units='m2/s2', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'ipg_v',NCDF_FLOAT_PRECISION,f4_dims,ipg_v_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,ipg_v_id,long_name='internal pressure gradient (v).',units='m2/s2', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
+   err = nf90_def_var(ncid,'epg_v',NCDF_FLOAT_PRECISION,f4_dims,epg_v_id)
+   if (err .NE. NF90_NOERR) go to 10
+   call set_attributes(ncid,epg_v_id,long_name='external pressure gradient (v).',units='m2/s2', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 
+   err = nf90_def_var(ncid,'ipg_v',NCDF_FLOAT_PRECISION,f4_dims,ipg_v_id)
+   if (err .NE. NF90_NOERR) go to 10
+   call set_attributes(ncid,ipg_v_id,long_name='internal pressure gradient (v).',units='m2/s2', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 #endif
-
-#if defined(CURVILINEAR)
-!     rotated zonal velocity
-      err = nf90_def_var(ncid,'uurot',NCDF_FLOAT_PRECISION,f4_dims,uurot_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,uurot_id,long_name='rot. zonal vel.', &
-                          units='m/s', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
-
-!     rotated meridional velocity
-      err = nf90_def_var(ncid,'vvrot',NCDF_FLOAT_PRECISION,f4_dims,vvrot_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,vvrot_id,long_name='rot. meridional vel.', &
-                          units='m/s', &
-                          FillValue=fv,missing_value=mv,valid_range=vr)
-#endif
-   end if
 
    if (save_strho) then
 
