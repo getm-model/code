@@ -60,8 +60,6 @@
             LEVEL2 'reinterpolating initial temperature'
             call init_temperature_field()
          end if
-         call do_eqstate()
-         call buoyancy_frequency()
 #endif
 
       end do
