@@ -211,6 +211,7 @@
    if (.not. hotstart) then
       ssen = z
       call start_macro()
+      Dold = Dn
       call coordinates(hotstart)
       call hcc_check()
    end if
@@ -345,6 +346,7 @@
          do i=imin-HALO,imax+HALO
             if (au(i,j) .eq. 0) then
                uu(i,j,:)  = _ZERO_
+               Uadv(i,j)  = _ZERO_
             end if
          end do
       end do
@@ -352,6 +354,7 @@
          do i=imin-HALO,imax+HALO
             if (av(i,j) .eq. 0) then
                vv(i,j,:)  = _ZERO_
+               Vadv(i,j)  = _ZERO_
             end if
          end do
       end do
@@ -574,13 +577,9 @@
 
 #ifndef NO_BAROTROPIC
    if (.not. no_2d) then
-      call slow_terms()
+      call stop_macro()
    end if
 #endif
-
-   call tic(TIM_INTEGR3D)
-   call stop_macro()
-   call toc(TIM_INTEGR3D)
 
 #ifdef DEBUG
      write(debug,*) 'Leaving integrate_3d()'
