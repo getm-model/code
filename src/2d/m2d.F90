@@ -206,6 +206,7 @@
       end where
       zo = z
       call depth_update()
+      Dlast = D
    end if
 
    if (Am .lt. _ZERO_) then
