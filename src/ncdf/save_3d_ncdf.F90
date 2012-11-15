@@ -18,13 +18,13 @@
    use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
    use domain,       only: H,HU,HV,az,au,av,min_depth
    use domain,       only: convc
+   use domain,       only: grid_type,xc,xu,xv,yc,yu,yv
 #if defined CURVILINEAR || defined SPHERICAL
    use domain,       only: dxv,dyu,arcd1
 #else
    use domain,       only: dx,dy,ard1
 #endif
-   use variables_2d, only: z,D
-   use variables_2d, only: U,V,DU,DV
+   use variables_3d, only: ssen,Dn,Dold,Dun,Dvn,Uadv,Vadv
    use variables_3d, only: dt,kmin,ho,hn,uu,hun,vv,hvn,ww,hcc,SS
    use variables_3d, only: taubx,tauby
 #ifdef _MOMENTUM_TERMS_
@@ -72,15 +72,9 @@
    integer                   :: err,n
    integer                   :: start(4),edges(4)
    integer, save             :: n3d=0
-   REALTYPE                  :: DONE(E2DFIELD)
    REALTYPE                  :: dum(1)
-   integer                   :: i,j
-   REALTYPE                  :: uutmp(I3DFIELD),vvtmp(I3DFIELD)
-#if defined(CURVILINEAR)
-   REALTYPE                  :: uurot(I3DFIELD),vvrot(I3DFIELD)
-   REALTYPE                  :: deg2rad = 3.141592654/180.
-   REALTYPE                  :: cosconv,sinconv
-#endif
+   REALTYPE,dimension(I2DFIELD) :: wrk2d
+   integer                   :: k
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -121,50 +115,65 @@
    edges(3) = 1
 
 !  elevations
-   call eta_mask(imin,jmin,imax,jmax,az,H,D,z,min_depth,elev_missing, &
+   call eta_mask(imin,jmin,imax,jmax,az,H,Dn,ssen,min_depth,elev_missing, &
                  imin,jmin,imax,jmax,ws2d)
    err = nf90_put_var(ncid,elev_id,ws2d(_2D_W_),start,edges)
    if (err .NE. NF90_NOERR) go to 10
 
-!  depth integrated zonal velocity
-   call to_2d_vel(imin,jmin,imax,jmax,au,U,DU,vel_missing, &
+!  transports
+   if (u_adv_id .ne. -1) then
+      call cnv_2d(imin,jmin,imax,jmax,az,Uadv,vel_missing, &
                   imin,jmin,imax,jmax,ws2d)
-   err = nf90_put_var(ncid,u_id,ws2d(_2D_W_),start,edges)
-   if (err .NE. NF90_NOERR) go to 10
+      err = nf90_put_var(ncid,u_adv_id,ws2d(_2D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+   if (v_adv_id .ne. -1) then
+      call cnv_2d(imin,jmin,imax,jmax,az,Vadv,vel_missing, &
+                  imin,jmin,imax,jmax,ws2d)
+      err = nf90_put_var(ncid,v_adv_id,ws2d(_2D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
 
-!  depth integrated meridional velocity
-   call to_2d_vel(imin,jmin,imax,jmax,av,V,DV,vel_missing, &
-                  imin,jmin,imax,jmax,ws2d)
-   err = nf90_put_var(ncid,v_id,ws2d(_2D_W_),start,edges)
-   if (err .NE. NF90_NOERR) go to 10
+!  velocities
+   if (velx_adv_id .ne. -1) then
+      wrk2d = _ZERO_
+      call to_velx(imin,jmin,imax,jmax,az,                            &
+                   dt,grid_type,                                      &
+#if defined(CURVILINEAR) || defined(SPHERICAL)
+                   dxv,dyu,arcd1,                                     &
+#else
+                   dx,dy,ard1,                                        &
+#endif
+                   xc,xu,xv,Dn,Dold,Uadv,Dun,Vadv,Dvn,wrk2d,wrk2d,vel_missing,ws2d)
+      err = nf90_put_var(ncid,velx_adv_id,ws2d(_2D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+   if (vely_adv_id .ne. -1) then
+      wrk2d = _ZERO_
+      call to_vely(imin,jmin,imax,jmax,az,                            &
+                   dt,grid_type,                                      &
+#if defined(CURVILINEAR) || defined(SPHERICAL)
+                   dxv,dyu,arcd1,                                     &
+#else
+                   dx,dy,ard1,                                        &
+#endif
+                   yc,yu,yv,Dn,Dold,Uadv,Dun,Vadv,Dvn,wrk2d,wrk2d,vel_missing,ws2d)
+      err = nf90_put_var(ncid,vely_adv_id,ws2d(_2D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
 
    if (save_taub) then
 
       !  bottom stress (x)
-      if (destag) then
-         DONE = _ONE_
-         call to_2d_u(imin,jmin,imax,jmax,au,rho_0*taubx,DONE,tau_missing, &
-              imin,jmin,imax,jmax,ws2d)
-      else
-         call cnv_2d(imin,jmin,imax,jmax,au,rho_0*taubx,tau_missing,       &
-              imin,jmin,imax,jmax,ws2d)
-
-      endif
-
+      call cnv_2d(imin,jmin,imax,jmax,au,rho_0*taubx,tau_missing,       &
+                  imin,jmin,imax,jmax,ws2d)
       err = nf90_put_var(ncid,taubx_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 
 
       !  bottom stress (y)
-      if (destag) then
-         DONE = _ONE_
-         call to_2d_v(imin,jmin,imax,jmax,av,rho_0*tauby,DONE,tau_missing, &
-              imin,jmin,imax,jmax,ws2d)
-      else
-         call cnv_2d(imin,jmin,imax,jmax,av,rho_0*tauby,tau_missing,       &
-              imin,jmin,imax,jmax,ws2d)
-      endif
-
+      call cnv_2d(imin,jmin,imax,jmax,av,rho_0*tauby,tau_missing,       &
+                  imin,jmin,imax,jmax,ws2d)
       err = nf90_put_var(ncid,tauby_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 
@@ -187,24 +196,59 @@
       if (err .NE. NF90_NOERR) go to 10
    end if
 
-   if (save_vel) then
+!  transports
+   if (uu_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,uu,vel_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,uu_id,ws(_3D_W_),start,edges)
+   end if
+   if (vv_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,vv,vel_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,vv_id,ws(_3D_W_),start,edges)
+   end if
+   if (ww_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,ww,vel_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,ww_id,ws(_3D_W_),start,edges)
+   end if
 
-      if (destag) then
-         call to_3d_uu(imin,jmin,imax,jmax,kmin,kmax,az, &
-                       hun,uu,vel_missing,uutmp)
-         call to_3d_vv (imin,jmin,imax,jmax,kmin,kmax,az, &
-                        hvn,vv,vel_missing,vvtmp)
-      else
-         call to_3d_vel(imin,jmin,imax,jmax,kmin,kmax,au, &
-                        hun,uu,vel_missing,uutmp)
-         call to_3d_vel(imin,jmin,imax,jmax,kmin,kmax,av, &
-                        hvn,vv,vel_missing,vvtmp)
-      endif
-      err = nf90_put_var(ncid,uu_id,uutmp(_3D_W_),start,edges)
+!  velocites
+   if (velx_id .ne. -1) then
+      ws(:,:,0) = vel_missing
+      do k=1,kmax
+         call to_velx(imin,jmin,imax,jmax,az,                            &
+                      dt,grid_type,                                      &
+#if defined(CURVILINEAR) || defined(SPHERICAL)
+                      dxv,dyu,arcd1,                                     &
+#else
+                      dx,dy,ard1,                                        &
+#endif
+                      xc,xu,xv,hn(:,:,k),ho(:,:,k),                      &
+                      uu(:,:,k),hun(:,:,k),vv(:,:,k),hvn(:,:,k),         &
+                      ww(:,:,k-1),ww(:,:,k),vel_missing,ws(:,:,k))
+      end do
+      err = nf90_put_var(ncid,velx_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
-      err = nf90_put_var(ncid,vv_id,vvtmp(_3D_W_),start,edges)
+   end if
+   if (vely_id .ne. -1) then
+      ws(:,:,0) = vel_missing
+      do k=1,kmax
+         call to_vely(imin,jmin,imax,jmax,az,                            &
+                      dt,grid_type,                                      &
+#if defined(CURVILINEAR) || defined(SPHERICAL)
+                      dxv,dyu,arcd1,                                     &
+#else
+                      dx,dy,ard1,                                        &
+#endif
+                      yc,yu,yv,hn(:,:,k),ho(:,:,k),                      &
+                      uu(:,:,k),hun(:,:,k),vv(:,:,k),hvn(:,:,k),         &
+                      ww(:,:,k-1),ww(:,:,k),vel_missing,ws(:,:,k))
+      end do
+      err = nf90_put_var(ncid,vely_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
-
+   end if
+   if (w_id .ne. -1) then
       call tow(imin,jmin,imax,jmax,kmin,kmax,az, &
                dt,                               &
 #if defined CURVILINEAR || defined SPHERICAL
@@ -215,73 +259,51 @@
                H,HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,ws)
       err = nf90_put_var(ncid,w_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
+   end if
 
 #ifdef _MOMENTUM_TERMS_
-      err = nf90_put_var(ncid,tdv_u_id,tdv_u(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+   err = nf90_put_var(ncid,tdv_u_id,tdv_u(_3D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
-      err = nf90_put_var(ncid,adv_u_id,adv_u(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+   err = nf90_put_var(ncid,adv_u_id,adv_u(_3D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
-      err = nf90_put_var(ncid,vsd_u_id,vsd_u(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+   err = nf90_put_var(ncid,vsd_u_id,vsd_u(_3D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
-      err = nf90_put_var(ncid,hsd_u_id,hsd_u(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+   err = nf90_put_var(ncid,hsd_u_id,hsd_u(_3D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
-      err = nf90_put_var(ncid,cor_u_id,cor_u(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+   err = nf90_put_var(ncid,cor_u_id,cor_u(_3D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
-      err = nf90_put_var(ncid,epg_u_id,epg_u(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+   err = nf90_put_var(ncid,epg_u_id,epg_u(_3D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
-      err = nf90_put_var(ncid,ipg_u_id,ipg_u(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+   err = nf90_put_var(ncid,ipg_u_id,ipg_u(_3D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
-      err = nf90_put_var(ncid,tdv_v_id,tdv_v(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+   err = nf90_put_var(ncid,tdv_v_id,tdv_v(_3D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
-      err = nf90_put_var(ncid,adv_v_id,adv_v(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+   err = nf90_put_var(ncid,adv_v_id,adv_v(_3D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
-      err = nf90_put_var(ncid,vsd_v_id,vsd_v(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+   err = nf90_put_var(ncid,vsd_v_id,vsd_v(_3D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
-      err = nf90_put_var(ncid,hsd_v_id,hsd_v(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+   err = nf90_put_var(ncid,hsd_v_id,hsd_v(_3D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
-      err = nf90_put_var(ncid,cor_v_id,cor_v(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+   err = nf90_put_var(ncid,cor_v_id,cor_v(_3D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
-      err = nf90_put_var(ncid,epg_v_id,epg_v(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+   err = nf90_put_var(ncid,epg_v_id,epg_v(_3D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
-      err = nf90_put_var(ncid,ipg_v_id,ipg_v(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
+   err = nf90_put_var(ncid,ipg_v_id,ipg_v(_3D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 #endif
-
-#if defined(CURVILINEAR)
-! rotated zonal and meridional velocities
-      do j=jmin,jmax
-         do i=imin,imax
-            if (az(i,j) .gt. 0) then
-               cosconv = cos(-convc(i,j)*deg2rad)
-               sinconv = sin(-convc(i,j)*deg2rad)
-               uurot(i,j,:) = uutmp(i,j,:)*cosconv-vvtmp(i,j,:)*sinconv
-               vvrot(i,j,:) = uutmp(i,j,:)*sinconv+vvtmp(i,j,:)*cosconv
-            else
-               uurot(i,j,:) = vel_missing
-               vvrot(i,j,:) = vel_missing
-            end if
-         end do
-      end do
-      err = nf90_put_var(ncid,uurot_id,uurot(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
-      err = nf90_put_var(ncid,vvrot_id,vvrot(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
-#endif
-
-   end if
 
 #ifndef NO_BAROCLINIC
    if (save_strho) then
