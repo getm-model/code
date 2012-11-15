@@ -223,6 +223,7 @@
       end where
       zo = z
       call depth_update()
+      Dlast = D
    end if
 
    select case (Am_method)
