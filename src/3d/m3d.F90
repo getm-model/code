@@ -453,15 +453,14 @@
       if (.not. hotstart) then
 #ifndef NO_BAROTROPIC
          if (.not. no_2d) then
-            call slow_terms()
+            call stop_macro(.false.)
          end if
 #endif
       end if
 
-!     KK-TODO: call slow_terms also for hotstarts => do not store slow terms in restart files
-!              requires storage of [U|V]into (when hotstart is done within 2d cycle)
+!     KK-TODO: call stop_macro also for hotstarts => do not store slow terms in restart files
+!              requires storage of [U|V]adv (when hotstart is done within 2d cycle)
 !              and calculation of Dn,Dun,Dvn for hostarts
-!              suggestion: within 2d Uint; within 3d Uint=>Umean
 
    end if
 #endif
@@ -679,7 +678,7 @@
 
 #ifndef NO_BAROTROPIC
    if (.not. no_2d) then
-      call stop_macro()
+      call stop_macro(.true.)
    end if
 #endif
 

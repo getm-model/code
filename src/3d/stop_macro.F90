@@ -5,7 +5,7 @@
 ! !ROUTINE: stop_macro - terminates the macro loop \label{sec-stop-macro}
 !
 ! !INTERFACE:
-   subroutine stop_macro
+   subroutine stop_macro(reset)
 !
 ! !DESCRIPTION:
 !
@@ -33,6 +33,9 @@
    use getm_timers, only: tic, toc, TIM_STOPMCR
 !$ use omp_lib
    IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   logical,intent(in) :: reset
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -150,8 +153,10 @@
 
 !$OMP END PARALLEL
 
-   Uint= _ZERO_
-   Vint= _ZERO_
+   if (reset) then
+      Uint= _ZERO_
+      Vint= _ZERO_
+   end if
 
    call toc(TIM_STOPMCR)
 #ifdef DEBUG
