@@ -18,8 +18,8 @@
    use getm_timers, only: tic, toc, TIM_COORDS
 #ifndef NO_BAROCLINIC
    use m3d, only: calc_salt, calc_temp
-   use salinity, only: init_salinity_field, do_salinity
-   use temperature, only: init_temperature_field, do_temperature
+   use salinity, only: init_salinity_field
+   use temperature, only: init_temperature_field
    use eqstate, only: do_eqstate
 #endif
    use variables_3d, only: SS
@@ -39,35 +39,33 @@
 !BOC
 
    call tic(TIM_COORDS)
+
    if (preadapt.ne.0) then
+
       LEVEL1 'pre-adapting coordinates'
+
       do ii=1,preadapt
-         call start_macro()
+
 #ifndef NO_BAROCLINIC
          call do_eqstate()
          call buoyancy_frequency()
 #endif
          call adaptive_coordinates(.false.,.false.)
-         call ww_momentum_3d()
 #ifndef NO_BAROCLINIC
-         if(calc_salt) call do_salinity(1)
-         if(calc_temp) call do_temperature(1)
+         if(calc_salt) then
+            LEVEL2 'reinterpolating initial salinity'
+            call init_salinity_field()
+         end if
+         if(calc_temp) then
+            LEVEL2 'reinterpolating initial temperature'
+            call init_temperature_field()
+         end if
 #endif
-         call stop_macro()
-         if (mod(ii,10).eq._ZERO_) LEVEL3 ii
+
       end do
 
-#ifndef NO_BAROCLINIC
-      LEVEL2 'reinterpolating initial salinity'
-      if(calc_salt) then
-         call init_salinity_field()
-      end if
-      LEVEL2 'reinterpolating initial temperature'
-      if(calc_temp) then
-         call init_temperature_field()
-      end if
-#endif
    end if
+
    call toc(TIM_COORDS)
 #ifdef DEBUG
    write(debug,*) 'Leaving preadapt_coordinates()'
