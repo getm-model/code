@@ -18,7 +18,7 @@
    use getm_timers, only: tic, toc, TIM_COORDS
 #ifndef NO_BAROCLINIC
    use m3d, only: calc_salt, calc_temp
-   use salinity, only: init_salinity_field,
+   use salinity, only: init_salinity_field
    use temperature, only: init_temperature_field
    use eqstate, only: do_eqstate
    use internal_pressure, only: do_internal_pressure
