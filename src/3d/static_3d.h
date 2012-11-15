@@ -82,6 +82,7 @@
   REALTYPE                             :: ssvo(I2DFIELD)
   REALTYPE                             :: ssvn(I2DFIELD)
   REALTYPE,dimension(I2DFIELD),target  :: t_Dn,t_Dold,Dun,Dvn
+  REALTYPE,dimension(I2DFIELD)         :: Uadv,Vadv
 
 ! 3D friction in 3D domain
   REALTYPE                             :: rru(I2DFIELD)

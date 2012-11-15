@@ -359,6 +359,7 @@
          do i=imin-HALO,imax+HALO
             if (au(i,j) .eq. 0) then
                uu(i,j,:)  = _ZERO_
+               Uadv(i,j)  = _ZERO_
             end if
          end do
       end do
@@ -366,6 +367,7 @@
          do i=imin-HALO,imax+HALO
             if (av(i,j) .eq. 0) then
                vv(i,j,:)  = _ZERO_
+               Vadv(i,j)  = _ZERO_
             end if
          end do
       end do
@@ -587,12 +589,8 @@
 #endif
 
 #ifndef NO_BAROTROPIC
-   call slow_terms()
-#endif
-
-   call tic(TIM_INTEGR3D)
    call stop_macro()
-   call toc(TIM_INTEGR3D)
+#endif
 
 #ifdef DEBUG
      write(debug,*) 'Leaving integrate_3d()'

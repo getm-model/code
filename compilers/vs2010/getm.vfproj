@@ -79,7 +79,6 @@
 		<File RelativePath="..\..\src\3d\salinity.F90"/>
 		<File RelativePath="..\..\src\3d\shear_frequency.F90"/>
 		<File RelativePath="..\..\src\3d\sigma_coordinates.F90"/>
-		<File RelativePath="..\..\src\3d\slow_terms.F90"/>
 		<File RelativePath="..\..\src\3d\start_macro.F90"/>
 		<File RelativePath="..\..\src\3d\stop_macro.F90"/>
 		<File RelativePath="..\..\src\3d\stresses_3d.F90"/>

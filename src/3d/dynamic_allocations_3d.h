@@ -177,6 +177,12 @@
   allocate(Dvn(I2DFIELD),stat=rc)  ! depth after  macro time step (v-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (Dvn)'
 
+   allocate(Uadv(I2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_3d: Error allocating memory (Uadv)'
+
+   allocate(Vadv(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_3d: Error allocating memory (Vadv)'
+
   allocate(rru(I2DFIELD),stat=rc)   ! Bottom drag term in u-vel. points (3D)
   if (rc /= 0) stop 'init_3d: Error allocating memory (rru)'
 

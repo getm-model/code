@@ -31,7 +31,7 @@
    use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth
    use m2d, only: z,Uint,Vint
    use m3d, only: M
-   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn,Dn,Dold,Dun,Dvn
+   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn,Dn,Dold,Dun,Dvn,Uadv,Vadv
    use getm_timers, only: tic, toc, TIM_STARTMCR
    IMPLICIT NONE
 !
@@ -84,9 +84,9 @@
 ! Defining vertically integrated, conservative
 ! u- and v-transport for macro time step
 
-   split = _ONE_/float(M)
-   Uint = split*Uint
-   Vint = split*Vint
+   split = _ONE_/M
+   Uadv = split*Uint
+   Vadv = split*Vint
 
    call toc(TIM_STARTMCR)
 #ifdef DEBUG

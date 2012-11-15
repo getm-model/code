@@ -24,8 +24,7 @@
 #else
    use domain,       only: dx,dy,ard1
 #endif
-   use variables_2d, only: Uinto,Vinto
-   use variables_3d, only: ssen,Dn,Dold,Dun,Dvn
+   use variables_3d, only: ssen,Dn,Dold,Dun,Dvn,Uadv,Vadv
    use variables_3d, only: dt,kmin,ho,hn,uu,hun,vv,hvn,ww,hcc,SS
    use variables_3d, only: taubx,tauby
 #ifdef _MOMENTUM_TERMS_
@@ -119,13 +118,13 @@
 
 !  transports
    if (u_adv_id .ne. -1) then
-      call cnv_2d(imin,jmin,imax,jmax,az,Uinto,vel_missing, &
+      call cnv_2d(imin,jmin,imax,jmax,az,Uadv,vel_missing, &
                   imin,jmin,imax,jmax,ws2d)
       err = nf90_put_var(ncid,u_adv_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
    if (v_adv_id .ne. -1) then
-      call cnv_2d(imin,jmin,imax,jmax,az,Vinto,vel_missing, &
+      call cnv_2d(imin,jmin,imax,jmax,az,Vadv,vel_missing, &
                   imin,jmin,imax,jmax,ws2d)
       err = nf90_put_var(ncid,v_adv_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
@@ -141,7 +140,7 @@
 #else
                    dx,dy,ard1,                                        &
 #endif
-                   xc,xu,xv,Dn,Dold,Uinto,Dun,Vinto,Dvn,wrk2d,wrk2d,vel_missing,ws2d)
+                   xc,xu,xv,Dn,Dold,Uadv,Dun,Vadv,Dvn,wrk2d,wrk2d,vel_missing,ws2d)
       err = nf90_put_var(ncid,velx_adv_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
@@ -154,7 +153,7 @@
 #else
                    dx,dy,ard1,                                        &
 #endif
-                   yc,yu,yv,Dn,Dold,Uinto,Dun,Vinto,Dvn,wrk2d,wrk2d,vel_missing,ws2d)
+                   yc,yu,yv,Dn,Dold,Uadv,Dun,Vadv,Dvn,wrk2d,wrk2d,vel_missing,ws2d)
       err = nf90_put_var(ncid,vely_adv_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
