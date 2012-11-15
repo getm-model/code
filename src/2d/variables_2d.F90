@@ -21,6 +21,7 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
+   REALTYPE,dimension(:,:),pointer     :: D,Dlast,z,zo
    logical                             :: do_numerical_analyses_2d=.false.
 
 #ifdef STATIC
@@ -113,6 +114,8 @@
 #ifndef STATIC
 #include "dynamic_allocations_2d.h"
 #endif
+   D => t_D ; Dlast => t_Dlast
+   z => t_z ; zo => t_zo
 
 #ifdef USE_BREAKS
    break_stat = 0
@@ -121,7 +124,7 @@
    z  = _ZERO_; zo =_ZERO_
    zub=_ZERO_ ; zub0=_ZERO_
    zvb=_ZERO_ ; zvb0=_ZERO_
-   D = _ZERO_;
+   D = _ZERO_; Dlast = _ZERO_
    U = _ZERO_; DU = _ZERO_; fU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; DV = _ZERO_; fV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
 
