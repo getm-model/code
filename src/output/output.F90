@@ -39,7 +39,7 @@
    logical                             :: save_3d=.true.
    logical                             :: save_mean=.false.
    logical                             :: save_vel=.true.
-   logical                             :: destag=.false.
+   logical                             :: save_transports=.true.
    logical                             :: save_strho=.true.
    logical                             :: save_s=.true.
    logical                             :: save_t=.true.
@@ -93,7 +93,7 @@
    namelist /io_spec/ &
              out_fmt,hotin_fmt,hotout_fmt, &
              in_dir,out_dir, save_metrics, save_masks, &
-             save_2d,save_3d,save_vel,destag, &
+             save_2d,save_3d,save_vel,save_transports, &
              save_strho,save_s,save_t,save_rho,save_rad, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              save_ss_nn,save_taub, &
@@ -118,7 +118,6 @@
 
    if (runtype .eq. 1) then
       save_3d = .false.
-      save_vel = .false.
       save_strho = .false.
       save_turb = .false.
    end if
@@ -129,10 +128,11 @@
       save_t = .false.
    end if
 
-   if(destag) then
-      LEVEL2 'de-stag velocities to T-points'
-   else
-      LEVEL2 'keeping velocities on calculation grid'
+   if(save_vel) then
+      LEVEL2 'save (rotated) velocities in center points'
+   end if
+   if(save_transports) then
+      LEVEL2 'save grid-related transports on interfaces'
    end if
 
    call file_names(runid,myid)
