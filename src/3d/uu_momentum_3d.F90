@@ -53,10 +53,10 @@
 #else
    use domain, only: dx,dy
 #endif
-   use variables_2d, only: Uint,D
    use bdy_3d, only: do_bdy_3d
    use variables_3d, only: dt,cnpar,kumin,uu,vv,huo,hun,hvo,uuEx,ww,hvn
    use variables_3d, only: num,nuh,sseo,Dun,rru
+   use variables_3d, only: Uadv,Dn
 #ifdef _MOMENTUM_TERMS_
    use variables_3d, only: tdv_u,cor_u,ipg_u,epg_u,vsd_u,hsd_u
 #endif
@@ -202,8 +202,8 @@
 
 !     Barotropic pressure gradient
 #ifndef NO_BAROTROPIC
-               zp=max(sseo(i+1,j),-H(i  ,j)+min(min_depth,D(i+1,j)))
-               zm=max(sseo(i  ,j),-H(i+1,j)+min(min_depth,D(i  ,j)))
+               zp=max(sseo(i+1,j),-H(i  ,j)+min(min_depth,Dn(i+1,j)))
+               zm=max(sseo(i  ,j),-H(i+1,j)+min(min_depth,Dn(i  ,j)))
                zx=(zp-zm+(airp(i+1,j)-airp(i,j))*gammai)/DXU
 #else
                zx=_ZERO_
@@ -248,13 +248,13 @@
                call getm_tridiagonal(kmax,kumin(i,j),kmax,a1,a2,a3,a4,Res)
 
 !     Transport correction: the integral of the new velocities has to
-!     be the same than the transport calculated by the external mode, Uint.
+!     be the same than the transport calculated by the external mode, Uadv.
 
                ResInt= _ZERO_
                do k=kumin(i,j),kmax
                   ResInt=ResInt+Res(k)
                end do
-               Diff=(Uint(i,j)-ResInt)/Dun(i,j)
+               Diff=(Uadv(i,j)-ResInt)/Dun(i,j)
 
                do k=kumin(i,j),kmax
 #ifdef _MOMENTUM_TERMS_
@@ -308,7 +308,7 @@
 #endif
                end do
             else  ! if (kmax .eq. kumin(i,j))
-                  uu(i,j,kmax)=Uint(i,j)
+                  uu(i,j,kmax)=Uadv(i,j)
             end if
          end if
       end do
