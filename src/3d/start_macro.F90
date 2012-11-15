@@ -31,7 +31,7 @@
    use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth
    use m2d, only: z,Uint,Vint
    use m3d, only: M
-   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn,Dn,Dun,Dvn
+   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn,Dn,Dold,Dun,Dvn,Uadv,Vadv
    use getm_timers, only: tic, toc, TIM_STARTMCR
    IMPLICIT NONE
 !
@@ -41,6 +41,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j
    REALTYPE                  :: split
+   REALTYPE,dimension(:,:),pointer :: p2d
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -50,6 +51,8 @@
    write(debug,*) 'start_macro() # ',Ncall
 #endif
    call tic(TIM_STARTMCR)
+
+   p2d => Dold ; Dold => Dn ; Dn => p2d
 
    do j=jmin-HALO,jmax+HALO         ! Defining 'old' and 'new' sea surface
       do i=imin-HALO,imax+HALO      ! elevation for macro time step
@@ -81,9 +84,9 @@
 ! Defining vertically integrated, conservative
 ! u- and v-transport for macro time step
 
-   split = _ONE_/float(M)
-   Uint = split*Uint
-   Vint = split*Vint
+   split = _ONE_/M
+   Uadv = split*Uint
+   Vadv = split*Vint
 
    call toc(TIM_STARTMCR)
 #ifdef DEBUG

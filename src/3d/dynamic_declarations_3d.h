@@ -48,10 +48,11 @@
 #endif
 
 ! 2D fields in 3D domain
-  REALTYPE, dimension(:,:), allocatable     :: sseo,ssen,Dn
+  REALTYPE, dimension(:,:), allocatable     :: sseo,ssen
   REALTYPE, dimension(:,:), allocatable     :: ssuo,ssun
   REALTYPE, dimension(:,:), allocatable     :: ssvo,ssvn
-  REALTYPE,dimension(:,:),allocatable,target :: Dun,Dvn
+  REALTYPE,dimension(:,:),allocatable,target :: t_Dn,t_Dold,Dun,Dvn
+  REALTYPE,dimension(:,:),allocatable        :: Uadv,Vadv
 
 ! 3D friction in 3D domain
   REALTYPE, dimension(:,:), allocatable     :: rru,rrv,zub,zvb
