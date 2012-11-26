@@ -779,8 +779,10 @@
 			<element name="save_numerical_analyses" type="bool" label="calculate/save numerical analyses" description="presently numerical mixing and dissipation analyses"/>
 			<element name="first_2d" type="int" label="first time step to save 2D fields" unit="micro time steps" minInclusive="0"/>
 			<element name="step_2d" type="int" label="interval between saves of 2D fields" unit="micro time steps" minInclusive="1"/>
+			<element name="sync_2d" type="int" label="2D fields disk syncing frequecncy" unit="every n'th save - 0 no syncing" minInclusive="0"/>
 			<element name="first_3d" type="int" label="first time step to save 3D fields" unit="micro time steps" minInclusive="0"/>
 			<element name="step_3d" type="int" label="interval between saves of 3D fields" unit="micro time steps" minInclusive="1"/>
+			<element name="sync_3d" type="int" label="3D fields disk syncing frequecncy" unit="every n'th save - 0 no syncing" minInclusive="0"/>
 			<element name="hotout" type="array(int)" shape="3" label="array to control generation of hot-start files" description="Array to control generation of hot-start files. The three array elements represent the start, stop and stride for hot-start file generation, in micro time steps. All values default to -1. Three special cases exist: a) hotout(1) &lt; 0 - no saving, hotout(1) = 0 - make hot-start file at end of simulation, b) hotout(2) &lt; 0 --&gt; hotout(2)='very large integer', hotout(3)=hotout(1), c) hotout(2) &lt;= hotout(1) --&gt; hotout(2)=hotout(1), hotout(3)=1"/>
 			<element name="meanout" type="int" label="make average over 'meanout' time steps" description="Make average over 'meanout' time steps. Special cases: if &lt; 0 - no averaging, if = 0 - average over entire run."/>
 		</element>
