@@ -47,7 +47,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: pos(2),max_pos(2),rc,i,j
-   REALTYPE                  :: h_max=-99.,c,max_dt,dtt
+   REALTYPE                  :: h_max=-99.,c,max_dt,dtt,dxeff
    logical, dimension(:,:), allocatable :: lmask
 !EOP
 !-----------------------------------------------------------------------
@@ -70,8 +70,13 @@
             dtt=min(dxc(i,j),dyc(i,j))/sqrt(2.*g*H(i,j))
 #else
             c = sqrt(g*H(i,j))
-            dtt = (dxc(i,j)*dyc(i,j))/ &
-                   (sqrt(2.0)*c*sqrt(dxc(i,j)*dxc(i,j)+dyc(i,j)*dyc(i,j)))
+#ifdef SLICE_MODEL
+            dxeff = dxc(i,j)
+#else
+            dxeff = (dxc(i,j)*dyc(i,j))/ &
+                     (sqrt(2.0)*sqrt(dxc(i,j)*dxc(i,j)+dyc(i,j)*dyc(i,j)))
+#endif
+            dtt = dxeff/c
 
 #endif
             if (dtt .lt. max_dt) then
@@ -87,7 +92,12 @@
 #else
    c = sqrt(g*h_max)
 !  Becker and Deleersnijder
-   max_dt = (dx*dy)/(sqrt(2.0)*c*sqrt(dx*dx+dy*dy))
+#ifdef SLICE_MODEL
+   dxeff = dx
+#else
+   dxeff = (dx*dy)/(sqrt(2.0)*sqrt(dx*dx+dy*dy))
+#endif
+   max_dt = dxeff/c
 
 #if 0
 #ifdef POM_CFL

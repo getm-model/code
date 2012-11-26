@@ -239,8 +239,10 @@
       if (err .NE. NF90_NOERR) go to 10
 #endif
    end if
-   err = nf90_sync(ncid)
-   if (err .NE. NF90_NOERR) go to 10
+   if (sync_2d .ne. 0 .and. mod(n2d,sync_2d) .eq. 0) then
+      err = nf90_sync(ncid)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
 
    return
 
