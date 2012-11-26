@@ -608,12 +608,18 @@
 			<step_2d>
 				90
 			</step_2d>
+			<sync_2d>
+				1
+			</sync_2d>
 			<first_3d>
 				0
 			</first_3d>
 			<step_3d>
 				720
 			</step_3d>
+			<sync_3d>
+				1
+			</sync_3d>
 			<hotout>
 				<e/>
 				<e>
