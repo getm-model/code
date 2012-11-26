@@ -54,8 +54,10 @@
    logical                             :: save_taub=.false.
    integer                             :: first_2d=1
    integer                             :: step_2d=1
+   integer                             :: sync_2d=1
    integer                             :: first_3d=1
    integer                             :: step_3d=1
+   integer                             :: sync_3d=1
    integer                             :: hotout(3)=-1
    integer                             :: meanout=-1
    logical                             :: save_numerical_analyses=.false.
@@ -97,8 +99,8 @@
              save_strho,save_s,save_t,save_rho,save_rad, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              save_ss_nn,save_taub, &
-             first_2d,step_2d,first_3d,step_3d,hotout,meanout, &
-             save_meteo, save_numerical_analyses
+             first_2d,step_2d,sync_2d,first_3d,step_3d,sync_3d,hotout, &
+             meanout, save_meteo, save_numerical_analyses
 !   logical :: nesting=.true.
 !EOP
 !-------------------------------------------------------------------------
@@ -139,7 +141,8 @@
 
    if(save_2d) then
       LEVEL2 '2D results: ',trim(out_f_2d)
-      LEVEL2 'First=',first_2d,' step=',step_2d
+      if (sync_2d .lt. 0) sync_2d=0
+      LEVEL2 'First=',first_2d,' step=',step_2d,' sync_2d= ',sync_2d
       if(save_meteo) then
          LEVEL2 'Saving meteo forcing in ',trim(out_f_2d)
       end if
@@ -147,7 +150,8 @@
 #ifndef NO_3D
    if(save_3d) then
       LEVEL2 '3D results: ',trim(out_f_3d)
-      LEVEL2 'First=',first_3d,' step=',step_3d
+      if (sync_3d .lt. 0) sync_3d=0
+      LEVEL2 'First=',first_3d,' step=',step_3d,' sync_3d= ',sync_3d
    end if
 
    save_mean=(meanout .ge. 0 .and. runtype .gt. 1)
@@ -282,9 +286,9 @@
             stop 'do_output'
 #endif
          case (NETCDF)
-            if (write_2d) call save_2d_ncdf(secs)
+            if (write_2d) call save_2d_ncdf(secs,sync_2d)
 #ifndef NO_3D
-            if (write_3d) call save_3d_ncdf(secs)
+            if (write_3d) call save_3d_ncdf(secs,sync_3d)
             if (write_mean) call save_mean_ncdf(secs)
 #endif
          case DEFAULT
