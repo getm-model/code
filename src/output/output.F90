@@ -113,6 +113,16 @@
    LEVEL1 'init_output'
 
    read(NAMLST, nml=io_spec)
+
+   if (hotin_fmt .ne. NETCDF) then
+     LEVEL2 'WARNING: Support of non-netcdf restart files will be stopped.'
+     LEVEL2 '         Do a zero-length simulation to convert your restart files to netcdf!'
+   end if
+   if (hotout_fmt .ne. NETCDF) then
+     STDERR 'Writing of non-netcdf restart files not supported anymore!'
+     stop
+   end if
+
    LEVEL2 'save_nuh',save_nuh
    LEVEL2 'save_num',save_num
    LEVEL2 'save_tke',save_tke
