@@ -291,9 +291,9 @@
             stop 'do_output'
 #endif
          case (NETCDF)
-            if (write_2d) call save_2d_ncdf(secs,sync_2d)
+            if (write_2d) call save_2d_ncdf(secs)
 #ifndef NO_3D
-            if (write_3d) call save_3d_ncdf(secs,sync_3d)
+            if (write_3d) call save_3d_ncdf(secs)
             if (write_mean) call save_mean_ncdf(secs)
 #endif
          case DEFAULT
