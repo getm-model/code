@@ -16,6 +16,7 @@
    use variables_2d, only: do_numerical_analyses_2d
 #ifndef NO_3D
    use variables_3d, only: do_numerical_analyses_3d,calc_stirr
+   use m3d, only: nonhyd_method
 #endif
 #ifdef TEST_NESTING
    use nesting
