@@ -475,9 +475,9 @@
 			<save_3d>
 				True
 			</save_3d>
-			<save_transports>
-				True
-			</save_transports>
+			<save_fluxes>
+				False
+			</save_fluxes>
 			<save_vel>
 				True
 			</save_vel>

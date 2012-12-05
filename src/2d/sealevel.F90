@@ -262,8 +262,11 @@
       end if
 ! Check a failing (NaN) case:
 ! does not work in DEBUG comilation with ifort:
+#ifdef GFORTRAN
+      zdum = _ZERO_
+      zdum = _ZERO_ / zdum
+#else
 #ifndef DEBUG
-#ifndef GFORTRAN
       zdum = 0.0/0.0
 #endif
 #endif
