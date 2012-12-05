@@ -110,8 +110,6 @@
 #ifndef STATIC
 #include "dynamic_allocations_2d.h"
 #endif
-   D => t_D ; Dlast => t_Dlast
-   z => t_z ; zo => t_zo
 
    zo => t_zo ; z => t_z
    Dlast => t_Dlast ; D => t_D
