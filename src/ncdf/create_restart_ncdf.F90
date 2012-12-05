@@ -177,6 +177,14 @@
                                (/ xdim_id, ydim_id /), Vint_id)
       if (status .NE. NF90_NOERR) go to 10
 
+      status = nf90_def_var(ncid, "Uadv", nf90_double, &
+                               (/ xdim_id, ydim_id /), Uadv_id)
+      if (status .NE. NF90_NOERR) go to 10
+
+      status = nf90_def_var(ncid, "Vadv", nf90_double, &
+                               (/ xdim_id, ydim_id /), Vadv_id)
+      if (status .NE. NF90_NOERR) go to 10
+
       status = nf90_def_var(ncid, "uu", nf90_double, &
                                (/ xdim_id, ydim_id, zdim_id /), uu_id)
       if (status .NE. NF90_NOERR) go to 10
