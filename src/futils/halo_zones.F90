@@ -138,7 +138,7 @@
 ! !IROUTINE: update_3d_halo - updates the halo zones for 3D fields.
 !
 ! !INTERFACE:
-   subroutine update_3d_halo(f1,f2,mask,imin,jmin,imax,jmax,kmax,tag)
+   subroutine update_3d_halo(f1,f2,mask,imin,jmin,imax,jmax,kmax,tag,mirror)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -148,6 +148,7 @@
    integer, intent(in)                 :: imin,jmin,imax,jmax,kmax
    integer, intent(in)                 :: tag
    integer, intent(in)                 :: mask(-HALO+1:,-HALO+1:)
+   logical, optional, intent(in)       :: mirror
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE, intent(inout):: f1(I3DFIELD),f2(I3DFIELD)
@@ -158,19 +159,28 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k
    integer                   :: il,jl,ih,jh
+   logical                   :: do_mirror
 !EOP
 !-------------------------------------------------------------------------
 !BOC
    il=imin;ih=imax;jl=jmin;jh=jmax
 
+   if ( present(mirror) ) then
+      do_mirror = mirror
+   else
+      do_mirror = .false.
+   end if
+
    if (nprocs .eq. 1) then
+      if ( do_mirror ) then
       f1(il-1, : , : )  = f2(il, : , :  )
       f1(ih+1, : , : )  = f2(ih, : , :  )
       f1( : , jl-1, : ) = f2( : , jl, : )
       f1( : , jh+1, : ) = f2( : , jh, : )
+      end if
    else
 #ifdef GETM_PARALLEL
-      call update_3d_halo_mpi(f1,f2,imin,jmin,imax,jmax,kmax,tag)
+      call update_3d_halo_mpi(f1,f2,imin,jmin,imax,jmax,kmax,tag,do_mirror)
 #endif
    end if
    return
