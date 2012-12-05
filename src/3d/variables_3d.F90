@@ -115,7 +115,7 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
-   REALTYPE,dimension(:,:),pointer :: Dn,Dold
+   REALTYPE,dimension(:,:),pointer :: Dold,Dn
    REALTYPE                            :: dt,cnpar=0.9
    REALTYPE                            :: avmback=_ZERO_,avhback=_ZERO_
    logical                             :: do_numerical_analyses_3d=.false.
@@ -204,7 +204,7 @@
 #include "dynamic_allocations_3d.h"
 #endif
 
-   Dn => t_Dn ; Dold => t_Dold
+   Dold => t_Dold ; Dn => t_Dn
 
    hn = _ZERO_ ; hun = _ZERO_ ; hvn = _ZERO_
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
@@ -215,7 +215,7 @@
    cor_v = _ZERO_ ; epg_v = _ZERO_ ; ipg_v = _ZERO_
 #endif
    ssen = _ZERO_ ; ssun = _ZERO_ ; ssvn = _ZERO_
-   Dn = _ZERO_ ; Dold = _ZERO_ ; Dun = _ZERO_ ; Dvn = _ZERO_
+   Dold = _ZERO_ ; Dn = _ZERO_ ; Dun = _ZERO_ ; Dvn = _ZERO_
    Uadv = _ZERO_ ; Vadv = _ZERO_
 
    zub = -9999.0 ; zvb = -9999.0 ! must be initialised for gotm

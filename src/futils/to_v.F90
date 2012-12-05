@@ -2,17 +2,17 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: to_velx() - calculates cell centered physical vertical velocity
+! !ROUTINE: to_v() - calculates cell centered velocity in global y-direction
 !
 ! !INTERFACE:
-   subroutine to_velx(imin,jmin,imax,jmax,az,                            &
-                      dt,grid_type,                                      &
+   subroutine to_v(imin,jmin,imax,jmax,az,                            &
+                   dt,grid_type,                                      &
 #if defined(CURVILINEAR) || defined(SPHERICAL)
-                      dxv,dyu,arcd1,                                     &
+                   dxv,dyu,arcd1,                                     &
 #else
-                      dx,dy,ard1,                                        &
+                   dx,dy,ard1,                                        &
 #endif
-                      xc,xu,xv,D,Dlast,U,DU,V,DV,wwm,wwp,missing,velx)
+                   yc,yu,yv,D,Dlast,U,DU,V,DV,wwm,wwp,missing,vely)
 !
 ! !DESCRIPTION:
 !
@@ -32,11 +32,11 @@
 #else
    REALTYPE,intent(in)                      :: dx,dy,ard1
 #endif
-   REALTYPE,dimension(E2DFIELD),intent(in)  :: xc,xu,xv,D,Dlast,U,DU,V,DV,wwm,wwp
+   REALTYPE,dimension(E2DFIELD),intent(in)  :: yc,yu,yv,D,Dlast,U,DU,V,DV,wwm,wwp
    REALTYPE,intent(in)                      :: missing
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(out) :: velx
+   REALTYPE,dimension(E2DFIELD),intent(out) :: vely
 !
 ! !REVISION HISTORY:
 !  Original author(s): Knut Klingbeil
@@ -50,7 +50,7 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'to_velx() # ',Ncall
+   write(debug,*) 'to_v() # ',Ncall
 #endif
 #ifdef SLICE_MODEL
 !  Note (KK): this value MUST NOT be changed !!!
@@ -70,13 +70,13 @@
 
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
-         do j=jmin-HALO,jmax+HALO
+         do j=jmin-HALO+1,jmax+HALO
 #endif
-            do i=imin-HALO+1,imax+HALO
+            do i=imin-HALO,imax+HALO
                if (az(i,j) .eq. 1) then
-                  velx(i,j) = ( U(i-1,j) + U(i,j) ) / ( Dlast(i,j) + D(i,j) )
+                  vely(i,j) = ( V(i,j-1) + V(i,j) ) / ( Dlast(i,j) + D(i,j) )
                else
-                  velx(i,j) = missing
+                  vely(i,j) = missing
                end if
             end do
 #ifndef SLICE_MODEL
@@ -92,25 +92,25 @@
 #endif
             do i=imin-HALO+1,imax+HALO
                if (az(i,j) .eq. 1) then
-                  velx(i,j) = (                                   &
+                  vely(i,j) = (                                   &
                                  (                                &
                                      ( D(i,j) - Dlast(i,j) )*dtm1  &
                                    + ( wwp(i,j) - wwm(i,j) )      &
                                  )                                &
-                                 *xc(i,j)                         &
+                                 *yc(i,j)                         &
                                + (                                &
-                                    U(i  ,j  )*xu(i  ,j  )*DYU    &
-                                  - U(i-1,j  )*xu(i-1,j  )*DYUIM1 &
+                                    U(i  ,j  )*yu(i  ,j  )*DYU    &
+                                  - U(i-1,j  )*yu(i-1,j  )*DYUIM1 &
 #ifndef SLICE_MODEL
-                                  + V(i  ,j  )*xv(i  ,j  )*DXV    &
-                                  - V(i  ,j-1)*xv(i  ,j-1)*DXVJM1 &
+                                  + V(i  ,j  )*yv(i  ,j  )*DXV    &
+                                  - V(i  ,j-1)*yv(i  ,j-1)*DXVJM1 &
 #endif
                                  )                                &
                                  *ARCD1                           &
                               )                                   &
                               /(_HALF_*(Dlast(i,j)+D(i,j)))
                else
-                  velx(i,j) = missing
+                  vely(i,j) = missing
                end if
             end do
 #ifndef SLICE_MODEL
@@ -119,25 +119,25 @@
 !$OMP END DO
 
       case (4)
-         stop 'tovel: grid_type=4 not implemented yet'
+         stop 'to_v: grid_type=4 not implemented yet'
 
       case default
-         stop 'tovel: invalid grid_type'
+         stop 'to_v: invalid grid_type'
 
    end select
 
 !$OMP END PARALLEL
 
 #ifdef SLICE_MODEL
-   velx(:,j+1) = velx(:,j)
+   vely(:,j+1) = vely(:,j)
 #endif
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving to_velx()'
+   write(debug,*) 'Leaving to_v()'
    write(debug,*)
 #endif
    return
-   end subroutine to_velx
+   end subroutine to_v
 !EOC
 !-----------------------------------------------------------------------
 ! Copyright (C) 2012 - Hans Burchard and Karsten Bolding (BBH)         !
