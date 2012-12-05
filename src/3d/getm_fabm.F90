@@ -13,12 +13,12 @@
 ! !USES:
    use parameters, only: rho_0
    use domain, only: imin,imax,jmin,jmax,kmax
-   use domain, only: az
+   use domain, only: az,latc,lonc
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
    use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
    use variables_3d, only: nuh,T,S,rho,a,g1,g2,taub
    use advection_3d, only: print_adv_settings_3d,do_advection_3d
-   use meteo, only: swr,u10,v10,evap,precip
+   use meteo, only: swr,u10,v10,evap,precip,tcc
    use time, only: yearday,secondsofday
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
 ! JORN_FABM
@@ -194,7 +194,7 @@
    integer         :: n
    integer         :: i,j,k
    REALTYPE        :: bioshade(1:kmax)
-   REALTYPE        :: wind_speed,I_0,taub_nonnorm
+   REALTYPE        :: wind_speed,I_0,taub_nonnorm,cloud
    REALTYPE        :: z(1:kmax)
 !EOP
 !-----------------------------------------------------------------------
@@ -225,6 +225,12 @@
                I_0 = _ZERO_
             end if
 
+            if (allocated(tcc)) then
+               cloud = tcc(i,j)
+            else
+               cloud = _ZERO_
+            end if
+
 !           Calculate depths of cell centers from layer heights.
             z(kmax) = -_HALF_*hn(i,j,kmax)
             do k=kmax-1,1,-1
@@ -249,9 +255,9 @@
             end do
 
 !           Transfer pointers to physical environment variables to FABM.
-            call set_env_gotm_fabm(dt,0,0,T(i,j,1:),S(i,j,1:), &
+            call set_env_gotm_fabm(latc(i,j),lonc(i,j),dt,0,0,T(i,j,1:),S(i,j,1:), &
                                    rho(i,j,1:),nuh(i,j,0:),hn(i,j,0:),ww(i,j,0:), &
-                                   bioshade,I_0,taub_nonnorm,wind_speed,precip(i,j),evap(i,j), &
+                                   bioshade,I_0,cloud,taub_nonnorm,wind_speed,precip(i,j),evap(i,j), &
                                    z,A(i,j),g1(i,j),g2(i,j),yearday,secondsofday)
 
 !           Update biogeochemical variable values.

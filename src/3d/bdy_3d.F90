@@ -190,12 +190,6 @@
       end if
    end if
 
-#ifdef _FABM_
-   if (fabm_calc) then
-      npel=size(model%info%state_variables)
-   end if
-#endif
-
 #ifdef DEBUG
    write(debug,*) 'Leaving init_bdy_3d()'
    write(debug,*)
@@ -339,7 +333,7 @@
                   T(i,j,:) = bdyvertT(:)
 #ifdef _FABM_
                   if (fabm_calc) then
-                     do o=1,npel
+                     do o=1,size(model%info%state_variables)
                         if (have_bio_bdy_values(o) .eq. 1) then
                            fabm_pel(i,j,:,o) = bio_bdy(:,k,o)
                         else
@@ -357,7 +351,7 @@
                         T(i+ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i+ii,j,:)
 #ifdef _FABM_
                         if (fabm_calc) then
-                           do o=1,npel
+                           do o=1,size(model%info%state_variables)
                               if (have_bio_bdy_values(o) .eq. 1) then
                                  fabm_pel(i+ii,j,:,o) = sp(ii)*bio_bdy(:,k,o) &
                                                      +(_ONE_-sp(ii))*fabm_pel(i+ii,j,:,o)
@@ -430,7 +424,7 @@
                   T(i,j,:) = bdyvertT(:)
 #ifdef _FABM_
                   if (fabm_calc) then
-                     do o=1,npel
+                     do o=1,size(model%info%state_variables)
                         if (have_bio_bdy_values(o) .eq. 1) then
                            fabm_pel(i,j,:,o) = bio_bdy(:,k,o)
                         else
@@ -447,7 +441,7 @@
                         T(i,j-jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j-jj,:)
 #ifdef _FABM_
                         if (fabm_calc) then
-                           do o=1,npel
+                           do o=1,size(model%info%state_variables)
                               if (have_bio_bdy_values(o) .eq. 1) then
                                  fabm_pel(i,j-jj,:,o) = sp(jj)*bio_bdy(:,k,o) &
                                                      +(_ONE_-sp(jj))*fabm_pel(i,j-jj,:,o)
@@ -520,7 +514,7 @@
                   T(i,j,:) = bdyvertT(:)
 #ifdef _FABM_
                   if (fabm_calc) then
-                     do o=1,npel
+                     do o=1,size(model%info%state_variables)
                         if (have_bio_bdy_values(o) .eq. 1) then
                            fabm_pel(i,j,:,o) = bio_bdy(:,k,o)
                         else
@@ -537,7 +531,7 @@
                         T(i-ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i-ii,j,:)
 #ifdef _FABM_
                         if (fabm_calc) then
-                           do o=1,npel
+                           do o=1,size(model%info%state_variables)
                               if (have_bio_bdy_values(o) .eq. 1) then
                                  fabm_pel(i-ii,j,:,o) = sp(ii)*bio_bdy(:,k,o) &
                                                      +(_ONE_-sp(ii))*fabm_pel(i-ii,j,:,o)
@@ -610,7 +604,7 @@
                   T(i,j,:) = bdyvertT(:)
 #ifdef _FABM_
                   if (fabm_calc) then
-                     do o=1,npel
+                     do o=1,size(model%info%state_variables)
                         if (have_bio_bdy_values(o) .eq. 1) then
                            fabm_pel(i,j,:,o) = bio_bdy(:,k,o)
                         else
@@ -627,7 +621,7 @@
                         T(i,j+jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j+jj,:)
 #ifdef _FABM_
                         if (fabm_calc) then
-                           do o=1,npel
+                           do o=1,size(model%info%state_variables)
                               if (have_bio_bdy_values(o) .eq. 1) then
                                  fabm_pel(i,j+jj,:,o) = sp(jj)*bio_bdy(:,k,o) &
                                                      +(_ONE_-sp(jj))*fabm_pel(i,j+jj,:,o)
@@ -647,16 +641,14 @@
    end do
 
 #ifdef _FABM_
-   if ( allocated(fabm_pel) ) then
-      do n=1,size(fabm_pel,4)
+   if (fabm_calc) then
+      do n=1,size(model%info%state_variables)
          call mirror_bdy_3d(fabm_pel(:,:,:,n),H_TAG)
       end do
-   end if
-  if ( allocated(fabm_ben) ) then
-      do n=1, size(fabm_ben,3)
+      do n=1,size(model%info%state_variables_ben)
          call mirror_bdy_3d(fabm_ben(:,:,  n),H_TAG)
       end do
-  end if
+   end if
 #endif
 #endif
 
