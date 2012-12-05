@@ -159,11 +159,11 @@
   allocate(ssvn(I2DFIELD),stat=rc)  ! Elevation after  macro time step (v-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (ssvn)'
 
-  allocate(t_Dn(I2DFIELD),stat=rc)  ! depth after  macro time step (z-column)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (t_Dn)'
-
   allocate(t_Dold(I2DFIELD),stat=rc)  ! depth before  macro time step (z-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (t_Dold)'
+
+  allocate(t_Dn(I2DFIELD),stat=rc)  ! depth after  macro time step (z-column)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (t_Dn)'
 
   allocate(Dun(I2DFIELD),stat=rc)  ! depth after  macro time step (u-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (Dun)'

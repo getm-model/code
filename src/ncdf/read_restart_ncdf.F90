@@ -261,24 +261,62 @@
          call wait_halo(V_TAG)
       end if
 
-      status = &
-      nf90_get_var(ncid,Uint_id,Uint(iloc:ilen,jloc:jlen),start,edges)
-      if (status .NE. NF90_NOERR) then
-         LEVEL3 "read_restart_ncdf(): setting Uint=0"
-         Uint=_ZERO_
-      else
+      if (Uint_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,Uint_id,Uint(iloc:ilen,jloc:jlen),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
          call update_2d_halo(Uint,Uint,au,imin,jmin,imax,jmax,U_TAG)
          call wait_halo(U_TAG)
+      else
+         LEVEL3 "read_restart_ncdf(): setting Uint=0"
+         LEVEL3 "                     (invalid within 2d cycle!)"
+         Uint=_ZERO_
       end if
 
-      status = &
-      nf90_get_var(ncid,Vint_id,Vint(iloc:ilen,jloc:jlen),start,edges)
-      if (status .NE. NF90_NOERR) then
-         LEVEL3 "read_restart_ncdf(): setting Vint=0"
-         Vint=_ZERO_
-      else
+      if (Vint_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,Vint_id,Vint(iloc:ilen,jloc:jlen),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
          call update_2d_halo(Vint,Vint,av,imin,jmin,imax,jmax,V_TAG)
          call wait_halo(V_TAG)
+      else
+         LEVEL3 "read_restart_ncdf(): setting Vint=0"
+         LEVEL3 "                     (invalid within 2d cycle!)"
+         Vint=_ZERO_
+      end if
+
+      if (Uadv_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,Uadv_id,Uadv(iloc:ilen,jloc:jlen),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+         call update_2d_halo(Uadv,Uadv,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+      else if (Uinto_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,Uinto_id,Uadv(iloc:ilen,jloc:jlen),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+         call update_2d_halo(Uadv,Uadv,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+      else
+         LEVEL3 "read_restart_ncdf(): setting Uadv=0"
+         Uadv=_ZERO_
+      end if
+
+      if (Vadv_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,Vadv_id,Vadv(iloc:ilen,jloc:jlen),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+         call update_2d_halo(Vadv,Vadv,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
+      else if (Vinto_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,Vinto_id,Vadv(iloc:ilen,jloc:jlen),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+         call update_2d_halo(Vadv,Vadv,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
+      else
+         LEVEL3 "read_restart_ncdf(): setting Vadv=0"
+         Vadv=_ZERO_
       end if
 
       status = &

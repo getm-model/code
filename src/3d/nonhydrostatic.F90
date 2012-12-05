@@ -257,13 +257,13 @@
    hwc = _HALF_*(ho + hn)
 
 !  calculate wc
-   call tow(imin,jmin,imax,jmax,kmin,kmax,az,dt,                 &
+   call to_w(imin,jmin,imax,jmax,kmin,kmax,az,dt,                 &
 #if defined(CURVILINEAR) || defined(SPHERICAL)
-            dxv,dyu,arcd1,                                       &
+             dxv,dyu,arcd1,                                       &
 #else
-            dx,dy,ard1,                                          &
+             dx,dy,ard1,                                          &
 #endif
-            H,HU,HV,hn,ho,uu,hun,vv,hvn,ww,_ZERO_,wc)
+             H,HU,HV,hn,ho,uu,hun,vv,hvn,ww,_ZERO_,wc)
 
    call update_3d_halo(wc,wc,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)

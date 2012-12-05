@@ -966,7 +966,7 @@ STDERR 'TWOD_SENDRECV'
 ! !IROUTINE: update_3d_halo_mpi - updates the halo zones for 3D fields.
 !
 ! !INTERFACE:
-   SUBROUTINE update_3d_halo_mpi(f1,f2,imin,jmin,imax,jmax,kmax,tag)
+   SUBROUTINE update_3d_halo_mpi(f1,f2,imin,jmin,imax,jmax,kmax,tag,mirror)
    use getm_timers, only: tic, toc, TIM_HALO3D
    IMPLICIT NONE
 !
@@ -976,6 +976,7 @@ STDERR 'TWOD_SENDRECV'
 ! !INPUT PARAMTERS:
    integer, intent(in)                 :: imin,jmin,imax,jmax,kmax
    integer, intent(in)                 :: tag
+   logical, intent(in)                 :: mirror
 !
 ! !INPUT/OUTPUT PARAMTERS:
    REALTYPE, intent(inout), DIMENSION(I3DFIELD) :: f1,f2
@@ -996,10 +997,12 @@ STDERR 'TWOD_SENDRECV'
    il=imin;ih=imax;jl=jmin;jh=jmax
    select case (comm_method)
       case(ONE_PROCESS)
+         if ( mirror ) then
          f1(il-1, :, : )  = f2(il, :, :  )
          f1(ih+1, :, : )  = f2(ih, :, :  )
          f1( :, jl-1, : ) = f2( :, jl, : )
          f1( :, jh+1, : ) = f2( :, jh, : )
+         end if
       case(ONED_SENDRECV)
          if(com_direction .eq. RIGHT_LEFT) then
 #ifdef DEBUG
@@ -1145,7 +1148,7 @@ STDERR 'TWOD_NONBLOCKING'
 
 ! Produces an error in some sub-domain layout cases if the following is
 ! included.
-#if 0
+   if ( mirror ) then
    if ( comm_method .ne. ONE_PROCESS ) then
       if(left  .eq. MPI_PROC_NULL) f1(il-1, :, : )   = f1(il, :, : )
       if(right .eq. MPI_PROC_NULL) f1(ih+1, :, : )   = f1(ih, :, : )
@@ -1156,7 +1159,7 @@ STDERR 'TWOD_NONBLOCKING'
       if(lr    .eq. MPI_PROC_NULL) f1(ih+1,jl-1, : ) = f1(ih,jl, : )
       if(ll    .eq. MPI_PROC_NULL) f1(il-1,jl-1, : ) = f1(il,jl, : )
    end if
-#endif
+   end if
    last_action = SENDING
    call toc(TIM_HALO3D)
    return
