@@ -81,45 +81,55 @@
       err = nf90_put_var(ncid,elev_id,ws(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 
-!     transports
-      if (u_id .ne. -1) then
-         call cnv_2d(imin,jmin,imax,jmax,az,U,vel_missing, &
-                     imin,jmin,imax,jmax,ws)
-         err = nf90_put_var(ncid,u_id,ws(_2D_W_),start,edges)
+!     volume fluxes
+      if (fluxu_id .ne. -1) then
+         call to_fluxu(imin,jmin,imax,jmax,au, &
+#if defined(CURVILINEAR) || defined(SPHERICAL)
+                       dyu,                    &
+#else
+                       dy,                     &
+#endif
+                       U,vel_missing,ws)
+         err = nf90_put_var(ncid,fluxu_id,ws(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
-      if (v_id .ne. -1) then
-         call cnv_2d(imin,jmin,imax,jmax,az,V,vel_missing, &
-                     imin,jmin,imax,jmax,ws)
-         err = nf90_put_var(ncid,v_id,ws(_2D_W_),start,edges)
+      if (fluxv_id .ne. -1) then
+         call to_fluxv(imin,jmin,imax,jmax,av, &
+#if defined(CURVILINEAR) || defined(SPHERICAL)
+                       dxv,                    &
+#else
+                       dx,                     &
+#endif
+                       V,vel_missing,ws)
+         err = nf90_put_var(ncid,fluxv_id,ws(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
 
 !     velocites
-      if (velx_id .ne. -1) then
+      if (u_id .ne. -1) then
          wrk = _ZERO_
-         call to_velx(imin,jmin,imax,jmax,az,                            &
-                      dtm,grid_type,                                     &
+         call to_u(imin,jmin,imax,jmax,az,                            &
+                   dtm,grid_type,                                     &
 #if defined(CURVILINEAR) || defined(SPHERICAL)
-                      dxv,dyu,arcd1,                                     &
+                   dxv,dyu,arcd1,                                     &
 #else
-                      dx,dy,ard1,                                        &
+                   dx,dy,ard1,                                        &
 #endif
-                      xc,xu,xv,D,Dlast,U,DU,V,DV,wrk,wrk,vel_missing,ws)
-         err = nf90_put_var(ncid,velx_id,ws(_2D_W_),start,edges)
+                   xc,xu,xv,D,Dlast,U,DU,V,DV,wrk,wrk,vel_missing,ws)
+         err = nf90_put_var(ncid,u_id,ws(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
-      if (vely_id .ne. -1) then
+      if (v_id .ne. -1) then
          wrk = _ZERO_
-         call to_vely(imin,jmin,imax,jmax,az,                            &
-                      dtm,grid_type,                                     &
+         call to_v(imin,jmin,imax,jmax,az,                            &
+                   dtm,grid_type,                                     &
 #if defined(CURVILINEAR) || defined(SPHERICAL)
-                      dxv,dyu,arcd1,                                     &
+                   dxv,dyu,arcd1,                                     &
 #else
-                      dx,dy,ard1,                                        &
+                   dx,dy,ard1,                                        &
 #endif
-                      yc,yu,yv,D,Dlast,U,DU,V,DV,wrk,wrk,vel_missing,ws)
-         err = nf90_put_var(ncid,vely_id,ws(_2D_W_),start,edges)
+                   yc,yu,yv,D,Dlast,U,DU,V,DV,wrk,wrk,vel_missing,ws)
+         err = nf90_put_var(ncid,v_id,ws(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
 

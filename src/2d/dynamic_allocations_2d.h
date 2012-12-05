@@ -6,23 +6,23 @@
    if (rc /= 0) stop 'init_2d: Error allocating memory (iteration_stat)'
 #endif
 
-   allocate(t_D(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (t_D)'
+   allocate(t_zo(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (t_zo)'
+
+   allocate(t_z(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (t_z)'
 
    allocate(t_Dlast(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (t_Dlast)'
+
+   allocate(t_D(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (t_D)'
 
    allocate(DU(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (DU)'
 
    allocate(DV(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (DV)'
-
-   allocate(t_z(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (t_z)'
-
-   allocate(t_zo(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (t_zo)'
 
    allocate(U(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (U)'

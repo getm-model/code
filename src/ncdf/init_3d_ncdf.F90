@@ -102,36 +102,36 @@
                        FillValue=fv,missing_value=mv,valid_range=vr)
 
 
-   if (save_transports) then
+   if (save_fluxes) then
 
       fv = vel_missing
       mv = vel_missing
       vr(1) = -3.
       vr(2) =  3.
 
-      err = nf90_def_var(ncid,'U_adv',NCDF_FLOAT_PRECISION,f3_dims,u_adv_id)
+      err = nf90_def_var(ncid,'fluxu_adv',NCDF_FLOAT_PRECISION,f3_dims,fluxu_adv_id)
       if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,u_adv_id,long_name='int. grid-related U-transport',units='m2/s', &
+      call set_attributes(ncid,fluxu_adv_id,long_name='avg. grid-related volume flux in local x-direction (U-point)',units='m3/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'V_adv',NCDF_FLOAT_PRECISION,f3_dims,v_adv_id)
+      err = nf90_def_var(ncid,'fluxv_adv',NCDF_FLOAT_PRECISION,f3_dims,fluxv_adv_id)
       if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,v_adv_id,long_name='int. grid-related V-transport',units='m2/s', &
+      call set_attributes(ncid,fluxv_adv_id,long_name='avg. grid-related volume flux in local y-direction (V-point)',units='m3/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'uu',NCDF_FLOAT_PRECISION,f4_dims,uu_id)
+      err = nf90_def_var(ncid,'fluxuu',NCDF_FLOAT_PRECISION,f4_dims,fluxuu_id)
       if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,uu_id,long_name='grid-related uu-transport',units='m2/s', &
+      call set_attributes(ncid,fluxuu_id,long_name='grid-related volume flux in local x-direction (U-point)',units='m3/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'vv',NCDF_FLOAT_PRECISION,f4_dims,vv_id)
+      err = nf90_def_var(ncid,'fluxvv',NCDF_FLOAT_PRECISION,f4_dims,fluxvv_id)
       if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,vv_id,long_name='grid-related vv-transport',units='m2/s', &
+      call set_attributes(ncid,fluxvv_id,long_name='grid-related volume flux in local y-direction (V-point)',units='m3/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'ww',NCDF_FLOAT_PRECISION,f4_dims,ww_id)
+      err = nf90_def_var(ncid,'fluxw',NCDF_FLOAT_PRECISION,f4_dims,fluxw_id)
       if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,ww_id,long_name='grid-related vertical velocity',units='m/s', &
+      call set_attributes(ncid,fluxw_id,long_name='vertical volume flux (W-point)',units='m3/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
    end if
@@ -144,29 +144,29 @@
       vr(1) = -1.
       vr(2) =  1.
 
-      err = nf90_def_var(ncid,'velx_adv',NCDF_FLOAT_PRECISION,f3_dims,velx_adv_id)
+      err = nf90_def_var(ncid,'u_adv',NCDF_FLOAT_PRECISION,f3_dims,u_adv_id)
       if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,velx_adv_id,long_name='int. velocity in x-direction (T-point)',units='m/s', &
+      call set_attributes(ncid,u_adv_id,long_name='avg. velocity in global x-direction (T-point)',units='m/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'vely_adv',NCDF_FLOAT_PRECISION,f3_dims,vely_adv_id)
+      err = nf90_def_var(ncid,'v_adv',NCDF_FLOAT_PRECISION,f3_dims,v_adv_id)
       if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,vely_adv_id,long_name='int. velocity in y-direction (T-point)',units='m/s', &
+      call set_attributes(ncid,v_adv_id,long_name='avg. velocity in global y-direction (T-point)',units='m/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'velx',NCDF_FLOAT_PRECISION,f4_dims,velx_id)
+      err = nf90_def_var(ncid,'uu',NCDF_FLOAT_PRECISION,f4_dims,uu_id)
       if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,velx_id,long_name='velocity in x-direction (T-point)',units='m/s', &
+      call set_attributes(ncid,uu_id,long_name='velocity in global x-direction (T-point)',units='m/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'vely',NCDF_FLOAT_PRECISION,f4_dims,vely_id)
+      err = nf90_def_var(ncid,'vv',NCDF_FLOAT_PRECISION,f4_dims,vv_id)
       if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,vely_id,long_name='velocity in y-direction (T-point)',units='m/s', &
+      call set_attributes(ncid,vv_id,long_name='velocity in global y-direction (T-point)',units='m/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
       err = nf90_def_var(ncid,'w',NCDF_FLOAT_PRECISION,f4_dims,w_id)
       if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,w_id,long_name='grid-related vertical velocity (T-point)',units='m/s', &
+      call set_attributes(ncid,w_id,long_name='vertical velocity (T-point)',units='m/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
    end if
 

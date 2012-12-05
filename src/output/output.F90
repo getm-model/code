@@ -16,7 +16,6 @@
    use variables_2d, only: do_numerical_analyses_2d
 #ifndef NO_3D
    use variables_3d, only: do_numerical_analyses_3d,calc_stirr
-   use m3d, only: nonhyd_method
 #endif
 #ifdef TEST_NESTING
    use nesting
@@ -41,7 +40,7 @@
    logical                             :: save_3d=.true.
    logical                             :: save_mean=.false.
    logical                             :: save_vel=.true.
-   logical                             :: save_transports=.true.
+   logical                             :: save_fluxes=.false.
    logical                             :: save_strho=.true.
    logical                             :: save_s=.true.
    logical                             :: save_t=.true.
@@ -100,7 +99,7 @@
    namelist /io_spec/ &
              out_fmt,hotin_fmt,hotout_fmt, &
              in_dir,out_dir, save_metrics, save_masks, &
-             save_2d,save_3d,save_vel,save_transports, &
+             save_2d,save_3d,save_vel,save_fluxes, &
              save_strho,save_s,save_t,save_rho,save_rad, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              save_Am_2d,save_Am_3d,save_stirr,save_ss_nn,save_taub, &
@@ -119,6 +118,16 @@
    LEVEL1 'init_output'
 
    read(NAMLST, nml=io_spec)
+
+   if (hotin_fmt .ne. NETCDF) then
+     LEVEL2 'WARNING: Support of non-netcdf restart files will be stopped.'
+     LEVEL2 '         Do a zero-length simulation to convert your restart files to netcdf!'
+   end if
+   if (hotout_fmt .ne. NETCDF) then
+     STDERR 'Writing of non-netcdf restart files not supported anymore!'
+     stop
+   end if
+
    LEVEL2 'save_nuh',save_nuh
    LEVEL2 'save_num',save_num
    LEVEL2 'save_tke',save_tke
@@ -142,8 +151,8 @@
    if(save_vel) then
       LEVEL2 'save (rotated) velocities in center points'
    end if
-   if(save_transports) then
-      LEVEL2 'save grid-related transports on interfaces'
+   if(save_fluxes) then
+      LEVEL2 'save grid-related volume fluxes through interfaces'
    end if
 
    call file_names(runid,myid)
@@ -295,9 +304,9 @@
             stop 'do_output'
 #endif
          case (NETCDF)
-            if (write_2d) call save_2d_ncdf(secs,sync_2d)
+            if (write_2d) call save_2d_ncdf(secs)
 #ifndef NO_3D
-            if (write_3d) call save_3d_ncdf(runtype,secs,sync_3d)
+            if (write_3d) call save_3d_ncdf(runtype,secs)
             if (write_mean) call save_mean_ncdf(secs)
 #endif
          case DEFAULT
@@ -349,10 +358,10 @@
    use variables_2d, only: U,fU,SlUx,Slru
    use variables_2d, only: V,fV,SlVx,Slrv
 #endif
-   use variables_2d, only: Uint,Vint
 #ifndef NO_3D
    use variables_3d, only: ssen,ssun,ssvn
    use variables_3d, only: sseo,ssuo,ssvo
+   use variables_3d, only: Uadv,Vadv
    use variables_3d, only: uu,vv,ww
    use variables_3d, only: uuEx,vvEx
    use variables_3d, only: tke,eps,num,nuh
@@ -360,7 +369,6 @@
 #ifndef NO_BAROCLINIC
    use variables_3d, only: T,S
 #endif
-   use variables_3d, only: minus_bnh,wco
 #endif
 #ifdef SPM
   use suspended_matter, only: spm_calc,spm_hotstart
@@ -440,7 +448,7 @@
                LEVEL3 'saving 3D barotropic variables'
                write(RESTART) ssen,ssun,ssvn
                write(RESTART) sseo,ssuo,ssvo
-               write(RESTART) Uint,Vint
+               write(RESTART) Uadv,Vadv
                write(RESTART) uu,vv,ww
                write(RESTART) uuEx,vvEx
                write(RESTART) tke,eps
@@ -452,14 +460,6 @@
                   write(RESTART) T,S
                end if
 #endif
-               if (nonhyd_method .ne. 0) then
-                  if (nonhyd_method .eq. 1) then
-                     LEVEL3 'saving minus_bnh'
-                     write(RESTART) minus_bnh
-                  end if
-                  LEVEL3 'saving wco'
-                  write(RESTART) wco
-               end if
 #ifdef SPM
                if (spm_calc) then
                   LEVEL3 'saving spm'
@@ -522,7 +522,7 @@
                LEVEL3 'reading 3D barotropic variables'
                read(RESTART) ssen,ssun,ssvn
                read(RESTART) sseo,ssuo,ssvo
-               read(RESTART) Uint,Vint
+               read(RESTART) Uadv,Vadv
                read(RESTART) uu,vv,ww
                read(RESTART) uuEx,vvEx
                read(RESTART) tke,eps
@@ -538,14 +538,6 @@
                   read(RESTART) T,S
                end if
 #endif
-               if (nonhyd_method .ne. 0) then
-                  if (nonhyd_method .eq. 1) then
-                     LEVEL3 'reading minus_bnh'
-                     read(RESTART) minus_bnh
-                  end if
-                  LEVEL3 'reading wco'
-                  read(RESTART) wco
-               end if
 #ifdef SPM
                if(spm_calc) then
                   if (spm_hotstart) then
