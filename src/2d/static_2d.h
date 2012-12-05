@@ -5,10 +5,7 @@
    integer  break_mask(E2DFIELD)
    integer  break_stat(E2DFIELD)
 #endif
-   REALTYPE D(E2DFIELD)
-   REALTYPE,dimension(E2DFIELD),target :: DU,DV
-   REALTYPE z(E2DFIELD)
-   REALTYPE zo(E2DFIELD)
+   REALTYPE,dimension(E2DFIELD),target :: t_zo,t_z,t_Dlast,t_D,DU,DV
    REALTYPE U(E2DFIELD)
    REALTYPE V(E2DFIELD)
    REALTYPE UEx(E2DFIELD)

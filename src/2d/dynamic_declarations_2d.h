@@ -2,9 +2,7 @@
   integer,dimension(:,:),allocatable   :: break_mask
   integer,dimension(:,:),allocatable   :: break_stat
 #endif
-  REALTYPE,dimension(:,:),allocatable  :: D
-  REALTYPE,dimension(:,:),allocatable,target :: DU,DV
-  REALTYPE,dimension(:,:),allocatable  :: z,zo
+  REALTYPE,dimension(:,:),allocatable,target :: t_zo,t_z,t_Dlast,t_D,DU,DV
   REALTYPE,dimension(:,:),allocatable  :: U,V
   REALTYPE,dimension(:,:),allocatable  :: UEx,VEx
   REALTYPE,dimension(:,:),allocatable  :: fU,fV

@@ -43,6 +43,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
+   REALTYPE,dimension(:,:),pointer :: p2d
 #ifdef USE_BREAKS
    integer                   :: n,break_flag,break_flags(nprocs)
 #endif
@@ -59,14 +60,7 @@
 #endif
    call tic(TIM_SEALEVEL)
 
-! OMP-NOTE: This loop does not really improve from threading.
-! It is bound by memory access, and everything is nicely
-! lined up anyway, so we keep it in serial.
-   do j=jmin-HALO,jmax+HALO
-      do i=imin-HALO,imax+HALO
-         zo(i,j) = z(i,j)
-      end do
-   end do
+   p2d => zo ; zo => z ; z => p2d
 
 #ifdef USE_BREAKS
    break_flag=1
@@ -93,9 +87,9 @@
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .eq. 1) then
-            z(i,j)=z(i,j)-dtm*((U(i,j)*DYU-U(i-1,j  )*DYUIM1) &
-                              +(V(i,j)*DXV-V(i  ,j-1)*DXVJM1))*ARCD1 &
-                         +dtm*fwf(i,j)
+            z(i,j)=zo(i,j)-dtm*((U(i,j)*DYU-U(i-1,j  )*DYUIM1) &
+                               +(V(i,j)*DXV-V(i  ,j-1)*DXVJM1))*ARCD1 &
+                          +dtm*fwf(i,j)
 #if 0
 #ifdef FRESHWATER_LENSE_TEST
        kk=1.0
@@ -152,7 +146,7 @@
    end do
 
    if(break_flag .ne. 0) then
-      z=zo
+      p2d => z ; z => zo ; zo => p2d
       call tic(TIM_SEALEVELH)
       call update_2d_halo(U,U,au,imin,jmin,imax,jmax,u_TAG)
       call wait_halo(u_TAG)

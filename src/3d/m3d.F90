@@ -26,7 +26,7 @@
    use exceptions
    use parameters, only: avmmol
    use domain, only: openbdy,maxdepth,vert_cord,az
-   use m2d, only: uv_advect,uv_diffusion
+   use m2d, only: depth_update,uv_advect,uv_diffusion
    use variables_2d, only: z,Uint,Vint,UEx,VEx
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
@@ -229,6 +229,7 @@
    if (.not. hotstart) then
       ssen = z
       call start_macro()
+      Dold = Dn
       call coordinates(hotstart)
       call hcc_check()
    end if
@@ -379,6 +380,7 @@
          end do
       end do
 
+      call depth_update(sseo,ssen,Dold,Dn,Dun,Dvn,first=.true.,from3d=.true.)
       call coordinates(hotstart)
 
    end if
