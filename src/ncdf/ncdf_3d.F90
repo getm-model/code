@@ -22,10 +22,16 @@
 
    integer                             :: hcc_id,h_id
    integer                             :: elev_id
-   integer                             :: u_adv_id=-1,v_adv_id=-1
-   integer                             :: uu_id=-1,vv_id=-1,ww_id=-1
-   integer                             :: velx_adv_id=-1,vely_adv_id=-1
-   integer                             :: velx_id=-1,vely_id=-1,w_id=-1
+   integer                             :: fluxu_adv_id=-1
+   integer                             :: fluxv_adv_id=-1
+   integer                             :: u_adv_id=-1
+   integer                             :: v_adv_id=-1
+   integer                             :: fluxuu_id=-1
+   integer                             :: fluxvv_id=-1
+   integer                             :: fluxw_id=-1
+   integer                             :: uu_id=-1
+   integer                             :: vv_id=-1
+   integer                             :: w_id=-1
    integer                             :: taubx_id,tauby_id
 
 #ifdef _MOMENTUM_TERMS_
