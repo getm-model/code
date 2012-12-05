@@ -33,6 +33,15 @@
 
    interface
 
+      subroutine depth_update(zo,z,Dlast,D,DU,DV,first,from3d)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         REALTYPE,dimension(E2DFIELD),intent(in)       :: zo,z
+         logical,intent(in),optional                   :: first,from3d
+         REALTYPE,dimension(:,:),pointer,intent(inout) :: Dlast,D
+         REALTYPE,dimension(E2DFIELD),intent(out)      :: DU,DV
+      end subroutine depth_update
+
       subroutine uv_advect(U,V,DU,DV)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
@@ -197,8 +206,9 @@
          z = -H+min_depth
       end where
       zo = z
-      call depth_update()
-      Dlast = D
+!     KK-TODO: check whether we need D[ |U|V] in init_3d
+!              otherwise we can move this call by default to postinit_2d
+      call depth_update(zo,z,Dlast,D,DU,DV,first=.true.)
    end if
 
    if (Am .lt. _ZERO_) then
@@ -382,7 +392,7 @@
          end where
       end if
 
-      call depth_update()
+      call depth_update(zo,z,Dlast,D,DU,DV,first=.true.)
 
    end if
 
@@ -461,7 +471,7 @@
    end if
 
    call sealevel(loop)
-   call depth_update()
+   call depth_update(zo,z,Dlast,D,DU,DV)
 
    if(residual .gt. 0 .and. loop .ge. residual) then
       call tic(TIM_INTEGR2D)
