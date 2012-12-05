@@ -38,7 +38,7 @@
    logical                             :: save_3d=.true.
    logical                             :: save_mean=.false.
    logical                             :: save_vel=.true.
-   logical                             :: save_transports=.true.
+   logical                             :: save_fluxes=.false.
    logical                             :: save_strho=.true.
    logical                             :: save_s=.true.
    logical                             :: save_t=.true.
@@ -94,7 +94,7 @@
    namelist /io_spec/ &
              out_fmt,hotin_fmt,hotout_fmt, &
              in_dir,out_dir, save_metrics, save_masks, &
-             save_2d,save_3d,save_vel,save_transports, &
+             save_2d,save_3d,save_vel,save_fluxes, &
              save_strho,save_s,save_t,save_rho,save_rad, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              save_ss_nn,save_taub, &
@@ -142,8 +142,8 @@
    if(save_vel) then
       LEVEL2 'save (rotated) velocities in center points'
    end if
-   if(save_transports) then
-      LEVEL2 'save grid-related transports on interfaces'
+   if(save_fluxes) then
+      LEVEL2 'save grid-related volume fluxes through interfaces'
    end if
 
    call file_names(runid,myid)

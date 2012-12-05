@@ -21,8 +21,10 @@
    integer                             :: time_id
 
    integer                             :: elev_id
-   integer                             :: u_id=-1,v_id=-1
-   integer                             :: velx_id=-1,vely_id=-1
+   integer                             :: fluxu_id=-1
+   integer                             :: fluxv_id=-1
+   integer                             :: u_id=-1
+   integer                             :: v_id=-1
    integer                             :: res_u_id=-1,res_v_id=-1
    integer                             :: u10_id,v10_id
    integer                             :: airp_id,t2_id,hum_id,tcc_id
