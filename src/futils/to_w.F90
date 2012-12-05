@@ -2,17 +2,17 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: tow() - calculates cell centered physical vertical velocity
+! !ROUTINE: to_w() - calculates cell centered physical vertical velocity
 !
 ! !INTERFACE:
-   subroutine tow(imin,jmin,imax,jmax,kmin,kmax,az,                    &
-                  dt,                                                  &
+   subroutine to_w(imin,jmin,imax,jmax,kmin,kmax,az,                    &
+                   dt,                                                  &
 #if defined(CURVILINEAR) || defined(SPHERICAL)
-                  dxv,dyu,arcd1,                                       &
+                   dxv,dyu,arcd1,                                       &
 #else
-                  dx,dy,ard1,                                          &
+                   dx,dy,ard1,                                          &
 #endif
-                  H,HU,HV,hn,ho,uu,hun,vv,hvn,ww,missing,wc)
+                   H,HU,HV,hn,ho,uu,hun,vv,hvn,ww,missing,wc)
 !
 ! !DESCRIPTION:
 !
@@ -58,7 +58,7 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'tow() # ',Ncall
+   write(debug,*) 'to_w() # ',Ncall
 #endif
 #ifdef SLICE_MODEL
 !  Note (KK): this value MUST NOT be changed !!!
@@ -111,7 +111,7 @@
       do j=jmin-HALO+1,jmax+HALO
 #endif
          do i=imin-HALO+1,imax+HALO
-            if (az(i,j) .eq. 1) then
+            if (az(i,j).eq.1 .and. kmin(i,j).le.k) then
                wc(i,j,k) =                               &
                   (                                      &
                      (                                   &
@@ -172,11 +172,11 @@
 #endif
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving tow()'
+   write(debug,*) 'Leaving to_w()'
    write(debug,*)
 #endif
    return
-   end subroutine tow
+   end subroutine to_w
 !EOC
 !-----------------------------------------------------------------------
 ! Copyright (C) 2012 - Hans Burchard and Karsten Bolding (BBH)         !

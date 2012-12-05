@@ -126,7 +126,12 @@
 		<File RelativePath="..\..\src\futils\to_3d_uu.F90"/>
 		<File RelativePath="..\..\src\futils\to_3d_vel.F90"/>
 		<File RelativePath="..\..\src\futils\to_3d_vv.F90"/>
-		<File RelativePath="..\..\src\futils\tow.F90"/>
+		<File RelativePath="..\..\src\futils\to_fluxu.F90"/>
+		<File RelativePath="..\..\src\futils\to_fluxv.F90"/>
+		<File RelativePath="..\..\src\futils\to_fluxw.F90"/>
+		<File RelativePath="..\..\src\futils\to_u.F90"/>
+		<File RelativePath="..\..\src\futils\to_v.F90"/>
+		<File RelativePath="..\..\src\futils\to_w.F90"/>
 		<File RelativePath="..\..\src\futils\tridiagonal.F90"/>
 		<File RelativePath="..\..\src\futils\ver_interpol.F90"/></Filter>
 		<Filter Name="getm">
