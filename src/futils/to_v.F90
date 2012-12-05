@@ -119,10 +119,10 @@
 !$OMP END DO
 
       case (4)
-         stop 'tovel: grid_type=4 not implemented yet'
+         stop 'to_v: grid_type=4 not implemented yet'
 
       case default
-         stop 'tovel: invalid grid_type'
+         stop 'to_v: invalid grid_type'
 
    end select
 
