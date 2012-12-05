@@ -27,7 +27,7 @@
    use domain, only: have_boundaries,maxdepth,vert_cord,az
    use les, only: do_les_3d
    use les, only: les_mode,NO_LES,LES_MOMENTUM
-   use m2d, only: bottom_friction
+   use m2d, only: depth_update,bottom_friction
    use m2d, only: no_2d,deformC,deformX,deformUV
    use variables_2d, only: z
 #ifndef NO_BAROCLINIC
@@ -441,6 +441,7 @@
          end do
       end do
 
+      call depth_update(sseo,ssen,Dold,Dn,Dun,Dvn,first=.true.,from3d=.true.)
       call coordinates(hotstart)
 
       if (vert_cord .eq. _ADAPTIVE_COORDS_) call shear_frequency()
