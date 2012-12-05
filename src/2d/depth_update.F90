@@ -5,7 +5,9 @@
 ! !ROUTINE: depth_update - adjust the depth to new elevations.
 !
 ! !INTERFACE:
-   subroutine depth_update
+   subroutine depth_update(zo,z,Dlast,D,DU,DV,first,from3d)
+
+!  Note (KK): keep in sync with interface in m2d.F90
 !
 ! !DESCRIPTION:
 !
@@ -22,10 +24,19 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth,crit_depth
    use domain, only: az,au,av,dry_z,dry_u,dry_v
-   use variables_2d, only: D,Dlast,z,zo,DU,DV
    use getm_timers,  only: tic, toc, TIM_DPTHUPDATE
 !$ use omp_lib
    IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   REALTYPE,dimension(E2DFIELD),intent(in)       :: zo,z
+   logical,intent(in),optional                   :: first,from3d
+!
+! !INPUT/OUTPUT PARAMETERS:
+   REALTYPE,dimension(:,:),pointer,intent(inout) :: Dlast,D
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE,dimension(E2DFIELD),intent(out)      :: DU,DV
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -35,6 +46,7 @@
    REALTYPE                  :: d1,d2i,x
    REALTYPE,dimension(E2DFIELD)    :: ztmp
    REALTYPE,dimension(:,:),pointer :: p2d
+   logical                         :: update_dryingfactors
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -54,6 +66,19 @@
 
 !  Depth in elevation points
 
+   if (present(first)) then
+      if (first) then
+!$OMP DO SCHEDULE(RUNTIME)
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO
+               ! TODO/BJB: Is it enough to do this on az?
+               Dlast(i,j) = zo(i,j) + H(i,j)
+            end do
+         end do
+!$OMP END DO NOWAIT
+      end if
+   end if
+
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
@@ -62,7 +87,7 @@
          ztmp(i,j) = _HALF_ * ( zo(i,j) + z(i,j) )
       end do
    end do
-!$OMP END DO NOWAIT
+!$OMP END DO
 
 !  U-points
 !$OMP DO SCHEDULE(RUNTIME)
@@ -96,7 +121,15 @@
    end do
 !$OMP END DO
 
-
+   update_dryingfactors = .true.
+   if (present(from3d)) then
+      if (from3d) then
+         update_dryingfactors = .false.
+      end if
+   end if
+!  KK-TODO: why not set the dry masks in any case?
+!           however, consider that last call is from postinit_3d
+   if (update_dryingfactors) then
    d1  = 2*min_depth
    d2i = _ONE_/(crit_depth-2*min_depth)
 !$OMP DO SCHEDULE(RUNTIME)
@@ -114,6 +147,7 @@
      end do
   end do
 !$OMP END DO
+   end if
 
 !$OMP END PARALLEL
 
