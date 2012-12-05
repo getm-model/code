@@ -62,13 +62,13 @@
    REALTYPE, public                    :: evap_factor = _ONE_
    REALTYPE, public                    :: precip_factor = _ONE_
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
-   REALTYPE, public, dimension(:,:), allocatable  :: u10,v10,t2,hum
-   REALTYPE, public, dimension(:,:), pointer :: airp,tausx,tausy
-   REALTYPE, public, dimension(:,:), pointer :: shf,swr=>null(),tcc
-   REALTYPE, public, dimension(:,:), pointer :: evap,precip
-   REALTYPE, public, dimension(:,:), pointer :: sst
-   logical, public                           :: nudge_sst=.false.
-   REALTYPE, public                          :: sst_const=-_ONE_
+   REALTYPE,public,dimension(:,:),allocatable,target :: u10,v10,t2,hum
+   REALTYPE,public,dimension(:,:),pointer            :: airp,tausx,tausy
+   REALTYPE,public,dimension(:,:),pointer            :: shf,swr=>null(),tcc
+   REALTYPE,public,dimension(:,:),pointer            :: evap,precip
+   REALTYPE,public,dimension(:,:),pointer            :: sst
+   logical,public                                    :: nudge_sst=.false.
+   REALTYPE,public                                   :: sst_const=-_ONE_
    REALTYPE, public                    :: cd_mom,cd_heat,cd_latent
    REALTYPE, public                    :: cd_precip = _ZERO_
    REALTYPE, public                    :: t_1=-_ONE_,t_2=-_ONE_
