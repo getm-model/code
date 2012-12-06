@@ -174,7 +174,7 @@
             end if
             Slr = max(_ZERO_,ru(i,j)/DU(i,j)+Slr)
             U(i,j)=(U(i,j)-dtm*(g*DU(i,j)*zx+dry_u(i,j)*&
-                 (-tausu/rho_0i-fV(i,j)+UEx(i,j)+SlUx(i,j))))/&
+                 (-tausu*rho_0i-fV(i,j)+UEx(i,j)+SlUx(i,j))))/&
                  (_ONE_+dtm*Slr)
          end if
       end do
@@ -345,7 +345,7 @@
             end if
             Slr = max(_ZERO_,rv(i,j)/DV(i,j)+Slr)
             V(i,j)=(V(i,j)-dtm*(g*DV(i,j)*zy+dry_v(i,j)*&
-                 (-tausv/rho_0i+fU(i,j)+VEx(i,j)+SlVx(i,j))))/&
+                 (-tausv*rho_0i+fU(i,j)+VEx(i,j)+SlVx(i,j))))/&
                  (_ONE_+dtm*Slr)
          end if
       end do
