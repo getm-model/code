@@ -118,10 +118,6 @@
      LEVEL2 'WARNING: Support of non-netcdf restart files will be stopped.'
      LEVEL2 '         Do a zero-length simulation to convert your restart files to netcdf!'
    end if
-   if (hotout_fmt .ne. NETCDF) then
-     STDERR 'Writing of non-netcdf restart files not supported anymore!'
-     stop
-   end if
 
    LEVEL2 'save_nuh',save_nuh
    LEVEL2 'save_num',save_num
@@ -164,6 +160,12 @@
    end if
 #endif
 
+   if ( hotout(1) .ge. 0) then
+      if (hotout_fmt .ne. NETCDF) then
+        STDERR 'Writing of non-netcdf restart files not supported anymore!'
+        stop
+      end if
+   end if
    if ( hotout(1) .gt. 0 .and. hotout(2) .lt. hotout(1) ) then
       if ( hotout(2) .eq. -1 ) then
          hotout(2) = 2147483647
@@ -291,9 +293,9 @@
             stop 'do_output'
 #endif
          case (NETCDF)
-            if (write_2d) call save_2d_ncdf(secs,sync_2d)
+            if (write_2d) call save_2d_ncdf(secs)
 #ifndef NO_3D
-            if (write_3d) call save_3d_ncdf(secs,sync_3d)
+            if (write_3d) call save_3d_ncdf(secs)
             if (write_mean) call save_mean_ncdf(secs)
 #endif
          case DEFAULT

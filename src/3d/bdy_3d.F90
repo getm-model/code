@@ -40,9 +40,6 @@
 ! !PRIVATE DATA MEMBERS:
    REALTYPE,         allocatable       :: bdyvertS(:), bdyvertT(:)
    REALTYPE,         allocatable       :: rlxcoef(:)
-#ifdef _FABM_
-   integer                             :: npel=-1,nben=-1
-#endif
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -95,12 +92,6 @@
 
    allocate(rlxcoef(0:kmax),stat=rc)
    if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (rlxcoef)'
-
-#ifdef _FABM_
-   if (fabm_calc) then
-      npel=size(model%info%state_variables)
-   end if
-#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_bdy_3d()'
@@ -254,7 +245,7 @@
                T(i-1+ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i-1+ii,j,:)
 #ifdef _FABM_
                if (fabm_calc) then
-                  do o=1,npel
+                  do o=1,size(model%info%state_variables)
                      if (have_bio_bdy_values(o) .eq. 1) then
                         fabm_pel(i-1+ii,j,:,o) = sp(ii)*bio_bdy(:,k,o) &
                                             +(1.-sp(ii))*fabm_pel(i-1+ii,j,:,o)
@@ -267,7 +258,7 @@
 #ifdef _FABM_
 !        zero gradient when we don't have bdy values
          if (fabm_calc) then
-            do o=1,npel
+            do o=1,size(model%info%state_variables)
                if (have_bio_bdy_values(o) .ne. 1) then
                   fabm_pel(i,j,:,o) = fabm_pel(i+1,j,:,o)
                end if
@@ -331,7 +322,7 @@
                T(i,j+1-jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j+1-jj,:)
 #ifdef _FABM_
                if (fabm_calc) then
-                  do o=1,npel
+                  do o=1,size(model%info%state_variables)
                      if (have_bio_bdy_values(o) .eq. 1) then
                         fabm_pel(i,j+1-jj,:,o) = sp(jj)*bio_bdy(:,k,o) &
                                             +(1.-sp(jj))*fabm_pel(i,j+1-jj,:,o)
@@ -344,7 +335,7 @@
 #ifdef _FABM_
 !        zero gradient when we don't have bdy values
          if (fabm_calc) then
-            do o=1,npel
+            do o=1,size(model%info%state_variables)
                if (have_bio_bdy_values(o) .ne. 1) then
                   fabm_pel(i,j,:,o) = fabm_pel(i,j-1,:,o)
                end if
@@ -408,7 +399,7 @@
                T(i+1-ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i+1-ii,j,:)
 #ifdef _FABM_
                if (fabm_calc) then
-                  do o=1,npel
+                  do o=1,size(model%info%state_variables)
                      if (have_bio_bdy_values(o) .eq. 1) then
                         fabm_pel(i+1-ii,j,:,o) = sp(ii)*bio_bdy(:,k,o) &
                                             +(1.-sp(ii))*fabm_pel(i+1-ii,j,:,o)
@@ -421,7 +412,7 @@
 #ifdef _FABM_
 !        zero gradient when we don't have bdy values
          if (fabm_calc) then
-            do o=1,npel
+            do o=1,size(model%info%state_variables)
                if (have_bio_bdy_values(o) .ne. 1) then
                   fabm_pel(i,j,:,o) = fabm_pel(i-1,j,:,o)
                end if
@@ -485,7 +476,7 @@
                T(i,j-1+jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j-1+jj,:)
 #ifdef _FABM_
                if (fabm_calc) then
-                  do o=1,npel
+                  do o=1,size(model%info%state_variables)
                      if (have_bio_bdy_values(o) .eq. 1) then
                         fabm_pel(i,j-1+jj,:,o) = sp(jj)*bio_bdy(:,k,o) &
                                             +(1.-sp(jj))*fabm_pel(i,j-1+jj,:,o)
@@ -498,7 +489,7 @@
 #ifdef _FABM_
 !        zero gradient when we don't have bdy values
          if (fabm_calc) then
-            do o=1,npel
+            do o=1,size(model%info%state_variables)
                if (have_bio_bdy_values(o) .ne. 1) then
                   fabm_pel(i,j,:,o) = fabm_pel(i,j+1,:,o)
                end if
@@ -511,16 +502,14 @@
    end do
 
 #ifdef _FABM_
-   if ( allocated(fabm_pel) ) then
-      do n=1,size(fabm_pel,4)
+   if (fabm_calc) then
+      do n=1,size(model%info%state_variables)
          call mirror_bdy_3d(fabm_pel(:,:,:,n),H_TAG)
       end do
-   end if
-  if ( allocated(fabm_ben) ) then
-      do n=1, size(fabm_ben,3)
+      do n=1,size(model%info%state_variables_ben)
          call mirror_bdy_3d(fabm_ben(:,:,  n),H_TAG)
       end do
-  end if
+   end if
 #endif
 #endif
 
