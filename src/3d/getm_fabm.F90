@@ -225,7 +225,7 @@
                I_0 = _ZERO_
             end if
 
-            if (allocated(tcc)) then
+            if (associated(tcc)) then
                cloud = tcc(i,j)
             else
                cloud = _ZERO_
