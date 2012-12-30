@@ -343,12 +343,13 @@
          end if
       end if
 
-      if (have_boundaries) then
-         call init_bdy_2d(bdy2d,hotstart)
-      else
-         bdy2d = .false.
-      end if
+   end if
 
+
+   if (.not.no_2d .and. have_boundaries) then
+      call init_bdy_2d(bdy2d,hotstart)
+   else
+      bdy2d = .false.
    end if
 
 #ifdef DEBUG
