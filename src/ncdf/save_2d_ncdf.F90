@@ -231,6 +231,7 @@
 !                and edges(3), or define the ncdf fields independent on
 !                time) and the activation with residual.gt.0 is not
 !                recommended.
+!     the output has now been fixed - kb
 
       start(1) = 1
       start(2) = 1
