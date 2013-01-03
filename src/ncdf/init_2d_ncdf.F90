@@ -55,6 +55,9 @@
    if (err .NE. NF90_NOERR) go to 10
 
 !  netCDF dimension vectors
+   f2_dims(2)= y_dim
+   f2_dims(1)= x_dim
+
    f3_dims(3)= time_dim
    f3_dims(2)= y_dim
    f3_dims(1)= x_dim
@@ -232,12 +235,12 @@
    if (residual .gt. 0) then
 !     residual currents - u and v
       fv = vel_missing; mv = vel_missing; vr(1) = -3.; vr(2) =  3.
-      err = nf90_def_var(ncid,'res_u',NCDF_FLOAT_PRECISION,f3_dims,res_u_id)
+      err = nf90_def_var(ncid,'res_u',NCDF_FLOAT_PRECISION,f2_dims,res_u_id)
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,res_u_id,long_name='res. u',units='m/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
-      err = nf90_def_var(ncid,'res_v',NCDF_FLOAT_PRECISION,f3_dims,res_v_id)
+      err = nf90_def_var(ncid,'res_v',NCDF_FLOAT_PRECISION,f2_dims,res_v_id)
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,res_v_id,long_name='res. v',units='m/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
