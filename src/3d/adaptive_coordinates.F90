@@ -219,6 +219,7 @@ STDERR 'adaptive_coordinates()'
          if (.not. restart_with_ho) then
             LEVEL2 'WARNING: assume ho=hn'
             ho=hn
+            call hcheck(ho,sseo,H)
          end if
       else
          do j=jmin-HALO,jmax+HALO
@@ -515,6 +516,7 @@ STDERR 'adaptive_coordinates()'
 !           cannot rely on depth-coinciding layer heights in velocity points
    call hcheck(hvn,ssvn,HV)
 
+!  KK-TODO: do we really need these halo updates?!
 !  Update the halo zones for hun
    call update_3d_halo(hun,hun,au,imin,jmin,imax,jmax,kmax,U_TAG)
    call wait_halo(U_TAG)
@@ -528,6 +530,7 @@ STDERR 'adaptive_coordinates()'
    if (first) then
       huo=hun
       hvo=hvn
+!     KK-TODO: hcheck of h[u|v]o for hotstarts?
       if (.not. hotstart) then
          ho=hn
       end if
