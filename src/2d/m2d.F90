@@ -485,7 +485,7 @@
    call sealevel()
    call depth_update(zo,z,Dlast,D,DU,DV)
 
-   if(residual .gt. 0 .and. loop .ge. residual) then
+   if(residual .gt. 0) then
       call tic(TIM_INTEGR2D)
       call do_residual(0)
       call toc(TIM_INTEGR2D)
