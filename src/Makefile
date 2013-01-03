@@ -40,10 +40,26 @@ CORE_LIBS	+=	\
 
 LIBS		= $(CORE_LIBS) $(EXTRA_LIBS)
 
-all: GIT FORTRAN ../VERSION getm$(buildtype)_$(FORTRAN_COMPILER) install
+all: GIT FORTRAN ../VERSION getm$(buildtype)_$(FORTRAN_COMPILER) install confdir
 
 ../VERSION: ../Makefile Makefile Rules.make
 	$(MAKE) -C ..
+
+confall: confdir confflags
+
+confdir:
+	@echo "GETMDIR:    "$(GETMDIR)
+	@echo "GOTMDIR:    "$(GOTMDIR)
+	@echo "BINDIR:     "$(BINDIR)
+	@echo "MODDIR:     "$(MODDIR)
+	@echo "LIBDIR:     "$(LIBDIR)
+
+confflags:
+	@echo "DEFINES:    "$(DEFINES)
+	@echo "INCDIRS:    "$(INCDIRS)
+	@echo "LINKDIRS:   "$(LINKDIRS)
+	@echo "EXTRA_LIBS: "$(EXTRA_LIBS)
+	@echo "F90FLAGS:   "$(F90FLAGS)
 
 GIT FORTRAN:
 	$(MAKE) -C .. $@
