@@ -23,6 +23,7 @@
 !  section \ref{sec-clean-3d} on page \pageref{sec-clean-3d}.
 ! !USES:
    use exceptions
+   use time, only: write_time_string,timestr
    use domain, only: have_boundaries,maxdepth,vert_cord,az
    use les, only: do_les_3d
    use les, only: les_mode,NO_LES,LES_MOMENTUM
@@ -34,7 +35,7 @@
    use salinity, only: init_salinity,do_salinity,init_salinity_field
    use eqstate,    only: init_eqstate, do_eqstate
    use internal_pressure, only: init_internal_pressure, do_internal_pressure
-   use internal_pressure, only: ip_method,ip_ramp
+   use internal_pressure, only: ip_method,ip_ramp,ip_ramp_is_active
 #endif
    use variables_3d
    use vertical_coordinates, only: coordinates,cord_relax
@@ -69,6 +70,7 @@
 #ifdef NO_BAROCLINIC
    integer         :: ip_method
    integer         :: ip_ramp=-1
+   logical         :: ip_ramp_is_active=.false.
 #endif
 !EOP
 !-----------------------------------------------------------------------
@@ -572,10 +574,17 @@
    call coordinates(.false.)
 
    call tic(TIM_INTEGR3D)
-   if(ip_ramp.gt.1 .and. n.lt.ip_ramp) then
-      ip_fac = _ONE_*n/ip_ramp
-   else
-      ip_fac = _ONE_
+   if (ip_ramp_is_active) then
+      if (n .ge. ip_ramp) then
+         ip_fac = _ONE_
+         ip_ramp_is_active = .false.
+         STDERR LINE
+         call write_time_string()
+         LEVEL3 timestr,': finished ip_ramp=',ip_ramp
+         STDERR LINE
+      else
+         ip_fac = _ONE_*n/ip_ramp
+      end if
    end if
    call toc(TIM_INTEGR3D)
 
