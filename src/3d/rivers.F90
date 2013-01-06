@@ -32,6 +32,7 @@
 #else
    use domain, only: H,az,kmax,ard1
 #endif
+   use time, only: write_time_string,timestr
    use variables_2d, only: dtm,z
 #ifndef NO_BAROCLINIC
    use m3d, only: calc_salt,calc_temp
@@ -88,6 +89,8 @@
    REALTYPE, allocatable     :: irr(:)
    REALTYPE, allocatable     :: macro_height(:)
    REALTYPE, allocatable     :: flow_fraction(:),flow_fraction_rel(:)
+   REALTYPE                  :: ramp=_ONE_
+   logical                   :: ramp_is_active=.false.
    logical                   :: river_outflow_properties_follow_source_cell=.true.
 !
 ! !REVISION HISTORY:
@@ -152,6 +155,7 @@
          LEVEL2 'river_format= ',river_format
          if (river_ramp .gt. 1) then
             LEVEL2 'river_ramp=',river_ramp
+            ramp_is_active = .true.
             if (hotstart) then
                LEVEL3 'WARNING: hotstart is .true. AND river_ramp .gt. 1'
                LEVEL3 'WARNING: .. be sure you know what you are doing ..'
@@ -426,7 +430,6 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,m,n
-   REALTYPE                  :: ramp
    REALTYPE                  :: rvol,height
    REALTYPE                  :: svol,tvol,vol
 !EOP
@@ -439,10 +442,17 @@
 #endif
 
 !  river spin-up
-   if (river_ramp.gt.1 .and. loop.lt.river_ramp) then
-      ramp = _ONE_*loop/river_ramp
-   else
-      ramp = _ONE_
+   if (ramp_is_active) then
+      if (loop .ge. river_ramp) then
+         ramp = _ONE_
+         ramp_is_active = .false.
+         STDERR LINE
+         call write_time_string()
+         LEVEL3 timestr,': finished river_ramp=',river_ramp
+         STDERR LINE
+      else
+         ramp = _ONE_*loop/river_ramp
+      end if
    end if
 
    select case (river_method)
