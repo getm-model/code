@@ -131,6 +131,7 @@
 
       LEVEL3 'bdyfile_3d=',TRIM(bdyfile_3d)
       LEVEL3 'bdyfmt_3d=',bdyfmt_3d
+#if 0
       if (bdy3d_ramp .gt. 1) then
          LEVEL3 'bdy3d_ramp=',bdy3d_ramp
          if (hotstart) then
@@ -138,6 +139,7 @@
             LEVEL4 'WARNING: .. be sure you know what you are doing ..'
          end if
       end if
+#endif
 
       if (bdy3d_tmrlx) then
          LEVEL3 'bdy3d_tmrlx=.true.'
