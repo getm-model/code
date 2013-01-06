@@ -78,6 +78,7 @@
    public init_internal_pressure, do_internal_pressure
    integer,public                               :: ip_method=1
    integer,public                               :: ip_ramp=-1
+   logical, public                              :: ip_ramp_is_active=.false.
    REALTYPE,dimension(:,:,:),pointer,public     :: buoy
 #ifdef STATIC
 !  KK-TODO: this should become an automatic array in each ip routine
@@ -166,6 +167,7 @@
 
    if (ip_ramp .gt. 1) then
       LEVEL3 'ip_ramp=',ip_ramp
+      ip_ramp_is_active = .true.
       if (hotstart) then
          LEVEL3 'WARNING: hotstart is .true. AND ip_ramp .gt. 1'
          LEVEL3 'WARNING: .. be sure you know what you are doing ..'

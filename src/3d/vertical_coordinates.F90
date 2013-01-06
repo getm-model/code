@@ -11,10 +11,10 @@
 !
 ! !USES:
 #ifdef SLICE_MODEL
-   use domain, only: imin,imax,jmin,jmax,kmax
+   use domain, only: imin,imax,jmin,jmax
    use variables_3d, only: kvmin,hvo,hvn
 #endif
-   use domain, only: vert_cord,maxdepth
+   use domain, only: kmax,vert_cord,maxdepth
    use exceptions
    IMPLICIT NONE
 !
@@ -97,19 +97,19 @@
    if (first) then
       select case (vert_cord)
          case (_SIGMA_COORDS_) ! sigma coordinates
-            LEVEL2 'using sigma vertical coordinates'
+            LEVEL2 'using ',kmax,' sigma layers'
             call sigma_coordinates(.true.)
          case (_Z_COORDS_) ! z-level
          case (_GENERAL_COORDS_) ! general vertical coordinates
-            LEVEL2 'using general vertical coordinates'
+            LEVEL2 'using ',kmax,' gvc layers'
             call general_coordinates(.true.,cord_relax,maxdepth)
          case (_HYBRID_COORDS_) ! hybrid vertical coordinates
-            LEVEL2 'using hybrid vertical coordinates'
+            LEVEL2 'using ',kmax,' hybrid layers'
             call hybrid_coordinates(.true.)
 STDERR 'coordinates(): hybrid_coordinates not coded yet'
 stop
          case (_ADAPTIVE_COORDS_) ! adaptive vertical coordinates
-            LEVEL2 'using adaptive vertical coordinates'
+            LEVEL2 'using ',kmax,' adaptive layers'
             call adaptive_coordinates(.true.,hotstart)
          case default
       end select
