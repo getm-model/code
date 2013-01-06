@@ -22,6 +22,7 @@
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: min_depth
    use domain, only: rigid_lid
+   use time, only: write_time_string,timestr
    use variables_2d, only: dtm,z,zo,D,U,DU,V,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dyv
@@ -41,6 +42,8 @@
 !
 ! !PRIVATE DATA MEMBERS:
    private bdy2d_active,bdy2d_need_elev,bdy2d_need_vel
+   REALTYPE                             :: ramp=_ONE_
+   logical                              :: ramp_is_active=.false.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -158,6 +161,7 @@
          LEVEL3 'bdyfmt_2d=',bdyfmt_2d
          if (bdy2d_ramp .gt. 1) then
             LEVEL3 'bdy2d_ramp=',bdy2d_ramp
+            ramp_is_active = .true.
             if (hotstart) then
                LEVEL4 'WARNING: hotstart is .true. AND bdy2d_ramp .gt. 1'
                LEVEL4 'WARNING: .. be sure you know what you are doing ..'
@@ -220,7 +224,7 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
-   REALTYPE                  :: cfl,depth,a,ramp
+   REALTYPE                  :: cfl,depth,a
    integer                   :: i,j,k,kl,l,n
    REALTYPE, parameter       :: theta = _HALF_
 !
@@ -247,10 +251,17 @@
 
 !  Data read - do time interpolation
 
-   if(bdy2d_ramp.gt.1 .and. loop.lt.bdy2d_ramp) then
-      ramp = _ONE_*loop/bdy2d_ramp
-   else
-      ramp = _ONE_
+   if (ramp_is_active) then
+      if (loop .ge. bdy2d_ramp) then
+         ramp = _ONE_
+         ramp_is_active = .false.
+         STDERR LINE
+         call write_time_string()
+         LEVEL3 timestr,': finished bdy2d_ramp=',bdy2d_ramp
+         STDERR LINE
+      else
+         ramp = _ONE_*loop/bdy2d_ramp
+      end if
    end if
 
    select case (tag)

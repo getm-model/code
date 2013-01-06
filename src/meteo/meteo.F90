@@ -43,6 +43,7 @@
 !
 ! !USES:
    use time, only: yearday,secondsofday,timestep
+   use time, only: write_time_string,timestr
    use halo_zones, only : H_TAG,update_2d_halo,wait_halo
    use domain, only: imin,imax,jmin,jmax,lonc,latc,convc,az
    IMPLICIT NONE
@@ -102,6 +103,8 @@
    REALTYPE, dimension(:,:), pointer     :: evap_new,d_evap
    REALTYPE, dimension(:,:), pointer     :: precip_new,d_precip
    REALTYPE, dimension(:,:), pointer     :: sst_new,d_sst
+   REALTYPE                              :: ramp=_ONE_
+   logical                               :: ramp_is_active=.false.
 !EOP
 !-----------------------------------------------------------------------
 
@@ -188,6 +191,7 @@
 
       if (meteo_ramp .gt. 1) then
          LEVEL2 'meteo_ramp=',meteo_ramp
+         ramp_is_active = .true.
          if (hotstart) then
             LEVEL3 'WARNING: hotstart is .true. AND meteo_ramp .gt. 1'
             LEVEL3 'WARNING: .. be sure you know what you are doing ..'
@@ -376,7 +380,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,rc
-   REALTYPE                  :: ramp,hh,t,t_minus_t2
+   REALTYPE                  :: hh,t,t_minus_t2
    REALTYPE, save            :: deltm1
    REALTYPE                  :: short_wave_radiation
    logical,save              :: first=.true.
@@ -423,10 +427,17 @@
          t_minus_t2 = t - t_2
       end if
 
-      if(meteo_ramp.gt.1 .and. n.lt.meteo_ramp) then
-         ramp = _ONE_*n/meteo_ramp
-      else
-         ramp = _ONE_
+      if (ramp_is_active) then
+         if (n .ge. meteo_ramp) then
+            ramp = _ONE_
+            ramp_is_active = .false.
+            STDERR LINE
+            call write_time_string()
+            LEVEL3 timestr,': finished meteo_ramp=',meteo_ramp
+            STDERR LINE
+         else
+            ramp = _ONE_*n/meteo_ramp
+         end if
       end if
 
       select case (met_method)
