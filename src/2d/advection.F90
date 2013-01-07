@@ -88,10 +88,6 @@
    logical,dimension(:,:),allocatable,target  :: mask_uupdateU,mask_vupdateV
    REALTYPE,dimension(:,:),allocatable        :: Di,adv
 #endif
-#ifndef _POINTER_REMAP_
-   logical,dimension(:,:),allocatable,target  :: mask_ufluxU,mask_xfluxU,mask_xfluxV
-   REALTYPE,dimension(:,:),allocatable,target :: dxuU,dyuU
-#endif
 !
 ! !REVISION HISTORY:
 !  Original author(s): Knut Klingbeil
@@ -310,19 +306,17 @@
 #ifdef _POINTER_REMAP_
    adv_gridU%mask_uflux(imin-HALO:,jmin-HALO:) => mask_updateH(1+_IRANGE_HALO_,_JRANGE_HALO_)
 #else
-   allocate(mask_ufluxU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
+   allocate(adv_gridU%mask_uflux(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (mask_ufluxU)'
-   mask_ufluxU = mask_updateH(1+_IRANGE_HALO_,_JRANGE_HALO_)
-   adv_gridU%mask_uflux    => mask_ufluxU
+   adv_gridU%mask_uflux = mask_updateH(1+_IRANGE_HALO_,_JRANGE_HALO_)
 #endif
    adv_gridU%mask_vflux    => mask_xflux(_IRANGE_HALO_,_JRANGE_HALO_-1)
 #ifdef _POINTER_REMAP_
    adv_gridU%mask_xflux(imin-HALO:,jmin-HALO:) => mask_vflux(1+_IRANGE_HALO_,_JRANGE_HALO_)
 #else
-   allocate(mask_xfluxU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
+   allocate(adv_gridU%mask_xflux(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (mask_xfluxU)'
-   mask_xfluxU = mask_vflux(1+_IRANGE_HALO_,_JRANGE_HALO_)
-   adv_gridU%mask_xflux    => mask_xfluxU
+   adv_gridU%mask_xflux = mask_vflux(1+_IRANGE_HALO_,_JRANGE_HALO_)
 #endif
    adv_gridU%mask_uupdate  => mask_uupdateU
    adv_gridU%mask_vupdate  => mask_uflux ! now also includes y-advection of u along W/E open bdys
@@ -334,10 +328,9 @@
 #ifdef _POINTER_REMAP_
    adv_gridV%mask_xflux(imin-HALO:,jmin-HALO:) => mask_uflux(_IRANGE_HALO_,1+_JRANGE_HALO_)
 #else
-   allocate(mask_xfluxV(_IRANGE_HALO_,_JRANGE_HALO_-1),stat=rc)    ! work array
+   allocate(adv_gridV%mask_xflux(_IRANGE_HALO_,_JRANGE_HALO_-1),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (mask_xfluxV)'
-   mask_xfluxV = mask_uflux(_IRANGE_HALO_,1+_JRANGE_HALO_)
-   adv_gridV%mask_xflux    => mask_xfluxV
+   adv_gridV%mask_xflux = mask_uflux(_IRANGE_HALO_,1+_JRANGE_HALO_)
 #endif
    adv_gridV%mask_uupdate  => mask_vflux ! now also includes x-advection of v along N/S open bdys
    adv_gridV%mask_vupdate  => mask_vupdateV
@@ -355,14 +348,12 @@
    adv_gridU%dxu(imin-HALO:,jmin-HALO:) => dxc(1+_IRANGE_HALO_,_JRANGE_HALO_)
    adv_gridU%dyu(imin-HALO:,jmin-HALO:) => dyc(1+_IRANGE_HALO_,_JRANGE_HALO_)
 #else
-   allocate(dxuU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
+   allocate(adv_gridU%dxu(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (dxuU)'
-   allocate(dyuU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
+   allocate(adv_gridU%dyu(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (dyuU)'
-   dxuU = dxc(1+_IRANGE_HALO_,_JRANGE_HALO_)
-   dyuU = dyc(1+_IRANGE_HALO_,_JRANGE_HALO_)
-   adv_gridU%dxu   => dxuU
-   adv_gridU%dyu   => dyuU
+   adv_gridU%dxu = dxc(1+_IRANGE_HALO_,_JRANGE_HALO_)
+   adv_gridU%dyu = dyc(1+_IRANGE_HALO_,_JRANGE_HALO_)
 #endif
    adv_gridU%dxv   => dxx(_IRANGE_HALO_,_JRANGE_HALO_-1)
    adv_gridU%dyv   => dyx(_IRANGE_HALO_,_JRANGE_HALO_-1)
