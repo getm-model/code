@@ -100,7 +100,7 @@
    end if
 
 !  velocities
-   if (save_vel) then
+   if (save_vel2d) then
       fv = vel_missing
       mv = vel_missing
       vr(1) = -1.
