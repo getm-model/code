@@ -202,7 +202,7 @@
    timernames(TIM_COORDS)      = 'coordinates'
    timernames(TIM_INTPRESS)    = 'do_internal_pressure'
    timernames(TIM_STARTMCR)    = 'start_macro'
-   timernames(TIM_STOPMCR)     = 'start_macro'
+   timernames(TIM_STOPMCR)     = 'stop_macro'
    timernames(TIM_EQSTATE)     = 'eq_state'
    timernames(TIM_CALCMEANF)   = 'calc_mean_fields'
 
