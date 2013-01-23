@@ -39,6 +39,8 @@
    logical                             :: save_3d=.true.
    logical                             :: save_mean=.false.
    logical                             :: save_vel=.true.
+   logical                             :: save_vel2d=.true.
+   logical                             :: save_vel3d=.true.
    logical                             :: save_fluxes=.false.
    logical                             :: save_strho=.true.
    logical                             :: save_s=.true.
@@ -138,6 +140,10 @@
 
    if(save_vel) then
       LEVEL2 'save (rotated) velocities in center points'
+   else
+!     Note (KK): always store 2D velocities (Ulf)
+      LEVEL2 'save (rotated) 2D velocities in center points'
+      save_vel3d = .false.
    end if
    if(save_fluxes) then
       LEVEL2 'save grid-related volume fluxes through interfaces'
