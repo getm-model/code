@@ -137,7 +137,7 @@
    end if
 
 
-   if (save_vel) then
+   if (save_vel2d) then
 
       fv = vel_missing
       mv = vel_missing
@@ -153,6 +153,10 @@
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,v_adv_id,long_name='avg. velocity in global y-direction (T-point)',units='m/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
+
+   end if
+
+   if (save_vel3d) then
 
       err = nf90_def_var(ncid,'uu',NCDF_FLOAT_PRECISION,f4_dims,uu_id)
       if (err .NE. NF90_NOERR) go to 10
