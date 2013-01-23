@@ -333,8 +333,8 @@
    end do
 #else
       do i=imin,imax
-         fabm_pel(:,i,j+1,:)=fabm_pel(:,i,j,:)
-         fabm_ben(:,i,j+1)  =fabm_ben(:,i,j)
+         fabm_pel(i,j+1,:,:)=fabm_pel(i,j,:,:)
+         fabm_ben(i,j+1,:)  =fabm_ben(i,j,:)
       end do
 #endif
 
