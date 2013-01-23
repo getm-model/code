@@ -333,8 +333,8 @@
 
 #ifdef SLICE_MODEL
       do i=imin,imax
-         fabm_pel(:,i,3,:)=fabm_pel(:,i,2,:)
-         fabm_ben(:,i,3)  =fabm_ben(:,i,2)
+         fabm_pel(i,3,:,:)=fabm_pel(i,2,:,:)
+         fabm_ben(i,3,:)  =fabm_ben(i,2,:)
       end do
 #endif
 
