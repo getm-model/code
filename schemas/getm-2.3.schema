@@ -710,6 +710,9 @@
 			<element name="save_2d" type="bool" label="save 2d fields "/>
 			<element name="save_meteo" type="bool" label="save meteo data"/>
 			<element name="save_3d" type="bool" label="save 3d fields"/>
+			<element name="save_h"  type="bool" label="save layer heights">
+				<condition type="eq" variable="../domain/vert_cord" value="1"/>
+			</element>
 			<element name="save_fluxes" type="bool" label="save grid-related volume fluxes"/>
 			<element name="save_vel" type="bool" label="save (rotated) 3d velocities at T-points"/>
 			<element name="save_strho" type="bool" label="save any of salinity, temperature, density"/>
