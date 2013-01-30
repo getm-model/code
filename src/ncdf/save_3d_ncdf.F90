@@ -194,7 +194,7 @@
    edges(3) = zlen
    edges(4) = 1
 
-   if (h_id .gt. 0) then
+   if (h_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,hn,hh_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
       err = nf90_put_var(ncid,h_id,ws(_3D_W_),start,edges)

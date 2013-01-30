@@ -20,7 +20,7 @@
    integer                             :: time_dim
    integer                             :: time_id
 
-   integer                             :: hcc_id,h_id
+   integer                             :: hcc_id,h_id=-1
    integer                             :: elev_id
    integer                             :: fluxu_adv_id=-1
    integer                             :: fluxv_adv_id=-1
