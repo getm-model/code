@@ -107,14 +107,14 @@
    if (init3d) then
       select case (vert_cord)
       case (1)
-         zname  = 'sigma'
+         zname  = 'level'
          zunits = 'sigma_level'
       case (2)
          zname  = 'z'
          zunits = 'm'
       case (3,4,5)
          zname  = 'level'
-         zunits = 'level'
+         zunits = ' '
       case default
       end select
    endif
