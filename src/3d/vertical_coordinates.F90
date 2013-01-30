@@ -100,6 +100,7 @@
             LEVEL2 'using ',kmax,' sigma layers'
             call sigma_coordinates(.true.)
          case (_Z_COORDS_) ! z-level
+            call getm_error("coordinates()","z-levels not implemented yet")
          case (_GENERAL_COORDS_) ! general vertical coordinates
             LEVEL2 'using ',kmax,' gvc layers'
             call general_coordinates(.true.,cord_relax,maxdepth)
