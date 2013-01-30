@@ -403,12 +403,10 @@
    if (save3d) then
 
       select case (vert_cord)
-      case (1)
-         zname  = 'sigma'
+      case (1,3,4,5)
+         zname  = 'level'
       case (2)
          zname  = 'z'
-      case (3,4,5)
-         zname  = 'level'
       case default
       end select
 
