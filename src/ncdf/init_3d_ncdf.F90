@@ -196,19 +196,14 @@
            FillValue=fv,missing_value=mv,valid_range=vr)
    endif
 
-   select case (vert_cord)
-      case (_SIGMA_COORDS_)
-      case (_Z_COORDS_)
-         call getm_error("init_3d_ncdf()","saving of z-levels disabled")
-      case (_GENERAL_COORDS_,_HYBRID_COORDS_,_ADAPTIVE_COORDS_)
-         fv = hh_missing
-         mv = hh_missing
-         err = nf90_def_var(ncid,'h',NCDF_FLOAT_PRECISION,f4_dims,h_id)
-         if (err .NE. NF90_NOERR) go to 10
-         call set_attributes(ncid,h_id,long_name='layer thickness',  &
-                             units='m',FillValue=fv,missing_value=mv)
-      case default
-   end select
+   if (save_h) then
+      fv = hh_missing
+      mv = hh_missing
+      err = nf90_def_var(ncid,'h',NCDF_FLOAT_PRECISION,f4_dims,h_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,h_id,long_name='layer thickness',  &
+                          units='m',FillValue=fv,missing_value=mv)
+   end if
 
 
 !  hydrostatic consistency criterion

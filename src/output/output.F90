@@ -12,6 +12,7 @@
 ! !USES:
    use time, only: write_time_string,timestep,timestr
    use ascii_out
+   use domain, only: vert_cord
    use m2d, only: no_2d,Am_method,AM_LES
    use variables_2d, only: do_numerical_analyses_2d
 #ifndef NO_3D
@@ -39,6 +40,7 @@
    logical                             :: save_2d=.true.
    logical                             :: save_meteo=.false.
    logical                             :: save_3d=.true.
+   logical                             :: save_h=.false.
    logical                             :: save_mean=.false.
    logical                             :: save_vel=.true.
    logical                             :: save_vel2d=.true.
@@ -102,7 +104,7 @@
    namelist /io_spec/ &
              out_fmt,hotin_fmt,hotout_fmt, &
              in_dir,out_dir, save_metrics, save_masks, &
-             save_2d,save_3d,save_vel,save_fluxes, &
+             save_2d,save_3d,save_h,save_vel,save_fluxes, &
              save_strho,save_s,save_t,save_rho,save_rad, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              save_Am_2d,save_Am_3d,save_stirr,save_ss_nn,save_taub, &
@@ -192,6 +194,14 @@
          do_numerical_analyses_3d=.true.
       end if
 #endif
+   end if
+
+   if (.not.save_h .and. (save_3d .or. save_mean)) then
+      select case (vert_cord)
+         case (_GENERAL_COORDS_,_HYBRID_COORDS_,_ADAPTIVE_COORDS_)
+            save_h = .true.
+         case default
+      end select
    end if
 
    if ( hotout(1) .ge. 0) then
