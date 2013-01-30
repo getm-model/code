@@ -94,7 +94,7 @@
 
 
 !  layer thickness
-   if (hmean_id .gt. 0) then
+   if (hmean_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,hmean,h_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws3d)
       err = nf90_put_var(ncid,hmean_id,ws3d(_3D_W_),start,edges)
