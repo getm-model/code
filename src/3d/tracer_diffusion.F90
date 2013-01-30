@@ -8,6 +8,7 @@
 ! !INTERFACE:
    subroutine tracer_diffusion(f,hn,AH_method,AH_const,AH_Prt,AH_stirr_const, &
                                phymix)
+!  Note (KK): keep in sync with interface in getm_fabm.F90
 !
 ! !DESCRIPTION:
 !

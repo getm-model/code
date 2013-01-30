@@ -27,6 +27,19 @@
    use fabm_types,only: time_treatment_last
 
    IMPLICIT NONE
+
+   interface
+      subroutine tracer_diffusion(f,hn,AH_method,AH_const,AH_Prt,AH_stirr_const, &
+                                  phymix)
+         use domain, only: imin,imax,jmin,jmax,kmax
+         IMPLICIT NONE
+         REALTYPE,intent(in)           :: hn(I3DFIELD)
+         integer,intent(in)            :: AH_method
+         REALTYPE,intent(in)           :: AH_const,AH_Prt,AH_stirr_const
+         REALTYPE,intent(inout)        :: f(I3DFIELD)
+         REALTYPE,intent(out),optional :: phymix(I3DFIELD)
+      end subroutine tracer_diffusion
+   end interface
 !
 ! !PUBLIC DATA MEMBERS:
    public init_getm_fabm, do_getm_fabm
