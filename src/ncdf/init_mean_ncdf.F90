@@ -104,19 +104,15 @@
           long_name='stdev of bottom friction velocity',units='m/s', &
           FillValue=fv,missing_value=mv,valid_range=vr)
 
-   select case (vert_cord)
-      case (_SIGMA_COORDS_)
-      case (_Z_COORDS_)
-         call getm_error("init_3d_ncdf()","saving of z-levels disabled")
-      case default
-         fv = hh_missing
-         mv = hh_missing
-         err = nf90_def_var(ncid,'hmean',NCDF_FLOAT_PRECISION,f4_dims,hmean_id)
-         if (err .NE. NF90_NOERR) go to 10
-         call set_attributes(ncid,hmean_id, &
-                             long_name='mean layer thickness',  &
-                             units='meters',FillValue=fv,missing_value=mv)
-   end select
+   if (save_h) then
+      fv = hh_missing
+      mv = hh_missing
+      err = nf90_def_var(ncid,'hmean',NCDF_FLOAT_PRECISION,f4_dims,hmean_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,hmean_id, &
+                          long_name='mean layer thickness',  &
+                          units='meters',FillValue=fv,missing_value=mv)
+   end if
 
    fv = vel_missing
    mv = vel_missing
