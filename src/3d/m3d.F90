@@ -597,7 +597,7 @@
 #endif
 
       call tic(TIM_INTEGR3D)
-      call uv_advect(Uint,Vint,Dun,Dvn)
+      call uv_advect(Uint,Vint,Dold,Dn,Dun,Dvn)
       call uv_diffusion(0,Uint,Vint,Dn,Dun,Dvn) ! Has to be called after uv_advect.
       call toc(TIM_INTEGR3D)
 

@@ -43,11 +43,11 @@
          REALTYPE,dimension(E2DFIELD),intent(out)      :: DU,DV
       end subroutine depth_update
 
-      subroutine uv_advect(U,V,DU,DV)
+      subroutine uv_advect(U,V,Dold,Dnew,DU,DV)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V
-         REALTYPE,dimension(E2DFIELD),target,intent(in) :: DU,DV
+         REALTYPE,dimension(E2DFIELD),target,intent(in) :: Dold,Dnew,DU,DV
       end subroutine uv_advect
 
       subroutine uv_diffusion(An_method,U,V,D,DU,DV)
@@ -484,7 +484,7 @@
    end if
 
    call tic(TIM_INTEGR2D)
-   call uv_advect(U,V,DU,DV)
+   call uv_advect(U,V,Dlast,D,DU,DV)
    call uv_diffusion(An_method,U,V,D,DU,DV) ! Has to be called after uv_advect.
    if (do_numerical_analyses_2d) call physical_dissipation(U,V,DU,DV,Am,phydis_2d)
    call toc(TIM_INTEGR2D)
