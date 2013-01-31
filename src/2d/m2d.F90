@@ -42,11 +42,11 @@
          REALTYPE,dimension(E2DFIELD),intent(out)      :: DU,DV
       end subroutine depth_update
 
-      subroutine uv_advect(U,V,DU,DV)
+      subroutine uv_advect(U,V,Dold,Dnew,DU,DV)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V
-         REALTYPE,dimension(E2DFIELD),target,intent(in) :: DU,DV
+         REALTYPE,dimension(E2DFIELD),target,intent(in) :: Dold,Dnew,DU,DV
       end subroutine uv_advect
 
       subroutine uv_diffusion(An_method,U,V,D,DU,DV,phydis)
@@ -555,12 +555,13 @@
       call bottom_friction(U,V,DU,DV,ru,rv)
    end if
 
-   call uv_advect(U,V,DU,DV)
+   call uv_advect(U,V,Dlast,D,DU,DV)
    if (do_numerical_analyses_2d) then
       call uv_diffusion(An_method,U,V,D,DU,DV,phydis_2d) ! Has to be called after uv_advect.
    else
       call uv_diffusion(An_method,U,V,D,DU,DV) ! Has to be called after uv_advect.
    end if
+
    call toc(TIM_INTEGR2D)
 
    call momentum(loop,tausx,tausy,airp)

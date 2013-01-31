@@ -114,7 +114,7 @@
          zunits = 'm'
       case (3,4,5)
          zname  = 'level'
-         zunits = ' '
+         zunits = 'level'
       case default
       end select
    endif
