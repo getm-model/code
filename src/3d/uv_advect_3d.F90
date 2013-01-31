@@ -26,7 +26,7 @@
    use domain, only: dx,dy
 #endif
    use m3d, only: vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver
-   use variables_3d, only: dt,uu,vv,ww,hun,hvn,uuEx,vvEx
+   use variables_3d, only: dt,uu,vv,ww,ho,hn,hun,hvn,uuEx,vvEx
    use advection, only: NOADV,UPSTREAM,J7
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
@@ -87,9 +87,7 @@
                   vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i+1,j,k) )
                end if
                wwadv(i,j,k) = _HALF_*( ww(i,j,k) + ww(i+1,j,k) )
-!              Note (KK): hun only valid until imax+1
-!                         therefore huadv only valid until imax
-               huadv(i,j,k) = _HALF_*( hun(i,j,k) + hun(i+1,j,k) )
+               huadv(i,j,k) = _HALF_*( ho(i+1,j,k) + hn(i+1,j,k) )
 !              Note (KK): hvn only valid until jmax+1
 !                         therefore hvadv only valid until jmax+1
                hvadv(i,j,k) = _HALF_*( hvn(i,j,k) + hvn(i+1,j,k) )
@@ -303,9 +301,7 @@
 !              Note (KK): hun only valid until imax+1
 !                         therefore huadv only valid until imax+1
                huadv(i,j,k) = _HALF_*( hun(i,j,k) + hun(i,j+1,k) )
-!              Note (KK): hvn only valid until jmax+1
-!                         therefore hvadv only valid until jmax
-               hvadv(i,j,k) = _HALF_*( hvn(i,j,k) + hvn(i,j+1,k) )
+               hvadv(i,j,k) = _HALF_*( ho(i,j+1,k) + hn(i,j+1,k) )
             end do
 #ifndef SLICE_MODEL
          end do
