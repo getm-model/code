@@ -55,7 +55,7 @@
    if (kmax .gt. 1) then
 
       call bottom_friction(Uadv,Vadv,Dun,Dvn,ru,rv)
-      call uv_advect(Uint,Vint,Dold,Dn,Dun,Dvn)
+      call uv_advect(Uadv,Vadv,Dold,Dn,Dun,Dvn)
       call uv_diffusion(0,Uadv,Vadv,Dn,Dun,Dvn) ! Has to be called after uv_advect.
 
 !$OMP DO SCHEDULE(RUNTIME)
