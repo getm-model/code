@@ -5,7 +5,7 @@
 ! !ROUTINE: uv_advect - 2D advection of momentum \label{sec-uv-advect}
 !
 ! !INTERFACE:
-   subroutine uv_advect(U,V,DU,DV)
+   subroutine uv_advect(U,V,Dold,Dnew,DU,DV)
 
 !  Note (KK): keep in sync with interface in m2d.F90
 !
@@ -34,7 +34,7 @@
 !
 ! !INPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V
-   REALTYPE,dimension(E2DFIELD),target,intent(in) :: DU,DV
+   REALTYPE,dimension(E2DFIELD),target,intent(in) :: Dold,Dnew,DU,DV
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -80,9 +80,7 @@
                Uadv(i,j) = _HALF_*( U(i,j) + U(i+1,j) )
                Vadv(i,j) = _HALF_*( V(i,j) + V(i+1,j) )
             end if
-!           Note (KK): DU only valid until imax+1
-!                      therefore DUadv only valid until imax
-            DUadv(i,j) = _HALF_*( DU(i,j) + DU(i+1,j) )
+            DUadv(i,j) = _HALF_*( Dold(i+1,j) + Dnew(i+1,j) )
 !           Note (KK): DV only valid until jmax+1
 !                      therefore DVadv only valid until jmax+1
             DVadv(i,j) = _HALF_*( DV(i,j) + DV(i+1,j) )
@@ -262,9 +260,7 @@
 !           Note (KK): DU only valid until imax+1
 !                      therefore DUadv only valid until imax+1
             DUadv(i,j) = _HALF_*( DU(i,j) + DU(i,j+1) )
-!           Note (KK): DV only valid until jmax+1
-!                      therefore DVadv only valid until jmax
-            DVadv(i,j) = _HALF_*( DV(i,j) + DV(i,j+1) )
+            DVadv(i,j) = _HALF_*( Dold(i,j+1) + Dnew(i,j+1) )
          end do
 #ifndef SLICE_MODEL
       end do
