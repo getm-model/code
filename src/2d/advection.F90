@@ -87,10 +87,6 @@
    logical,dimension(:,:),allocatable,target  :: mask_uupdateU,mask_vupdateV
    REALTYPE,dimension(:,:),allocatable        :: Di,adv
 #endif
-#ifndef _POINTER_REMAP_
-   logical,dimension(:,:),allocatable,target  :: mask_ufluxU,mask_xfluxU,mask_xfluxV
-   REALTYPE,dimension(:,:),allocatable,target :: dxuU,dyuU
-#endif
 !
 ! !REVISION HISTORY:
 !  Original author(s): Knut Klingbeil
@@ -272,6 +268,19 @@
    if (rc /= 0) stop 'init_advection: Error allocating memory (adv)'
 #endif
 
+!  Note (KK): In this module pointers are used extensively.
+!             Note that pointers to subarrays do not carry the correct
+!             bounds!
+!             Since some pointers must carry the correct bounds when
+!             provided to subroutines pointer remapping
+!             (or a corresponding emulation) is needed.
+
+#ifdef _POINTER_REMAP_ 
+   if (.not. test_pointer_remap()) then
+      stop 'recompile without -D_POINTER_REMAP_'
+   end if
+#endif
+
    mask_updateH  = (az.eq.1)
    mask_uflux    = (au.eq.1 .or. au.eq.2)
    mask_vflux    = (av.eq.1 .or. av.eq.2)
@@ -294,21 +303,19 @@
    adv_gridH%az            => az
 
 #ifdef _POINTER_REMAP_
-   adv_gridU%mask_uflux(_IRANGE_HALO_-1,_JRANGE_HALO_) => mask_updateH(1+_IRANGE_HALO_,_JRANGE_HALO_)
+   adv_gridU%mask_uflux(imin-HALO:,jmin-HALO:) => mask_updateH(1+_IRANGE_HALO_,_JRANGE_HALO_)
 #else
-   allocate(mask_ufluxU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
+   allocate(adv_gridU%mask_uflux(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (mask_ufluxU)'
-   mask_ufluxU = mask_updateH(1+_IRANGE_HALO_,_JRANGE_HALO_)
-   adv_gridU%mask_uflux    => mask_ufluxU
+   adv_gridU%mask_uflux = mask_updateH(1+_IRANGE_HALO_,_JRANGE_HALO_)
 #endif
    adv_gridU%mask_vflux    => mask_xflux(_IRANGE_HALO_,_JRANGE_HALO_-1)
 #ifdef _POINTER_REMAP_
-   adv_gridU%mask_xflux(_IRANGE_HALO_-1,_JRANGE_HALO_) => mask_vflux(1+_IRANGE_HALO_,_JRANGE_HALO_)
+   adv_gridU%mask_xflux(imin-HALO:,jmin-HALO:) => mask_vflux(1+_IRANGE_HALO_,_JRANGE_HALO_)
 #else
-   allocate(mask_xfluxU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
+   allocate(adv_gridU%mask_xflux(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (mask_xfluxU)'
-   mask_xfluxU = mask_vflux(1+_IRANGE_HALO_,_JRANGE_HALO_)
-   adv_gridU%mask_xflux    => mask_xfluxU
+   adv_gridU%mask_xflux = mask_vflux(1+_IRANGE_HALO_,_JRANGE_HALO_)
 #endif
    adv_gridU%mask_uupdate  => mask_uupdateU
    adv_gridU%mask_vupdate  => mask_uflux ! now also includes y-advection of u along W/E open bdys
@@ -318,12 +325,11 @@
    adv_gridV%mask_uflux    => mask_xflux
    adv_gridV%mask_vflux    => mask_updateH(_IRANGE_HALO_,1+_JRANGE_HALO_)
 #ifdef _POINTER_REMAP_
-   adv_gridV%mask_xflux(_IRANGE_HALO_,_JRANGE_HALO_-1) => mask_uflux(_IRANGE_HALO_,1+_JRANGE_HALO_)
+   adv_gridV%mask_xflux(imin-HALO:,jmin-HALO:) => mask_uflux(_IRANGE_HALO_,1+_JRANGE_HALO_)
 #else
-   allocate(mask_xfluxV(_IRANGE_HALO_,_JRANGE_HALO_-1),stat=rc)    ! work array
+   allocate(adv_gridV%mask_xflux(_IRANGE_HALO_,_JRANGE_HALO_-1),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (mask_xfluxV)'
-   mask_xfluxV = mask_uflux(_IRANGE_HALO_,1+_JRANGE_HALO_)
-   adv_gridV%mask_xflux    => mask_xfluxV
+   adv_gridV%mask_xflux = mask_uflux(_IRANGE_HALO_,1+_JRANGE_HALO_)
 #endif
    adv_gridV%mask_uupdate  => mask_vflux ! now also includes x-advection of v along N/S open bdys
    adv_gridV%mask_vupdate  => mask_vupdateV
@@ -338,17 +344,15 @@
    adv_gridH%arcd1 => arcd1
 
 #ifdef _POINTER_REMAP_
-   adv_gridU%dxu(_IRANGE_HALO_-1,_JRANGE_HALO_) => dxc(1+_IRANGE_HALO_,_JRANGE_HALO_)
-   adv_gridU%dyu(_IRANGE_HALO_-1,_JRANGE_HALO_) => dyc(1+_IRANGE_HALO_,_JRANGE_HALO_)
+   adv_gridU%dxu(imin-HALO:,jmin-HALO:) => dxc(1+_IRANGE_HALO_,_JRANGE_HALO_)
+   adv_gridU%dyu(imin-HALO:,jmin-HALO:) => dyc(1+_IRANGE_HALO_,_JRANGE_HALO_)
 #else
-   allocate(dxuU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
+   allocate(adv_gridU%dxu(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (dxuU)'
-   allocate(dyuU(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
+   allocate(adv_gridU%dyu(_IRANGE_HALO_-1,_JRANGE_HALO_),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (dyuU)'
-   dxuU = dxc(1+_IRANGE_HALO_,_JRANGE_HALO_)
-   dyuU = dyc(1+_IRANGE_HALO_,_JRANGE_HALO_)
-   adv_gridU%dxu   => dxuU
-   adv_gridU%dyu   => dyuU
+   adv_gridU%dxu = dxc(1+_IRANGE_HALO_,_JRANGE_HALO_)
+   adv_gridU%dyu = dyc(1+_IRANGE_HALO_,_JRANGE_HALO_)
 #endif
    adv_gridU%dxv   => dxx(_IRANGE_HALO_,_JRANGE_HALO_-1)
    adv_gridU%dyv   => dyx(_IRANGE_HALO_,_JRANGE_HALO_-1)
@@ -763,6 +767,51 @@
    return
    end subroutine print_adv_settings
 !EOC
+!-----------------------------------------------------------------------
+#ifdef _POINTER_REMAP_
+!BOP
+!
+! !IROUTINE:  LOGICAL function test_pointer_remap
+!
+! !INTERFACE:
+   logical function test_pointer_remap()
+!
+! !DESCRIPTION:
+!
+! Tests the support of pointer remapping.
+!
+! !USES:
+   IMPLICIT NONE
+
+!
+! !LOCAL VARIABLES:
+   REALTYPE,dimension(3,2),target  :: t2d
+   REALTYPE,dimension(:,:),pointer :: p2d
+!
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'test_pointer_remap() # ',Ncall
+#endif
+
+   p2d(-10:,1:) => t2d(2:2,:)
+   if (lbound(p2d,1).eq.-10 .and. ubound(p2d,1).eq.-10) then
+      test_pointer_remap = .true.
+   else
+      test_pointer_remap = .false.
+   end if
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving test_pointer_remap()'
+   write(debug,*)
+#endif
+   return
+   end function test_pointer_remap
+!EOC
+#endif
 !-----------------------------------------------------------------------
 
    end module advection
