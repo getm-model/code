@@ -134,12 +134,12 @@
    end if
 
 
-   if (save_vel2d) then
+   fv = vel_missing
+   mv = vel_missing
+   vr(1) = -1.
+   vr(2) =  1.
 
-      fv = vel_missing
-      mv = vel_missing
-      vr(1) = -1.
-      vr(2) =  1.
+   if (save_vel2d) then
 
       err = nf90_def_var(ncid,'u_adv',NCDF_FLOAT_PRECISION,f3_dims,u_adv_id)
       if (err .NE. NF90_NOERR) go to 10
