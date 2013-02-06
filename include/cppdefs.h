@@ -122,7 +122,7 @@
 
 #ifdef SINGLE
 #define REAL_SIZE 4
-#define REALTYPE real(kind=4)
+#define REALTYPE real(kind=selected_real_kind(6))
 #define SMALL 1e-8
 #define _ZERO_  0.0
 #define _TENTH_ 0.1
@@ -135,7 +135,7 @@
 #define SMALL 1e-8
 #else
 #define REAL_SIZE 8
-#define REALTYPE real(kind=8)
+#define REALTYPE real(kind=selected_real_kind(13))
 #define MPI_REALTYPE MPI_DOUBLE_PRECISION
 #define SMALL 1d-8
 #define _ZERO_  0.0d0
@@ -151,7 +151,7 @@
 #endif
 
 ! Rare use of long integers (e.g. timers):
-#define LONGINT INTEGER(KIND=8)
+#define LONGINT INTEGER(KIND=selected_int_kind(15))
 
 ! The width of the HALO zones
 #define HALO	  2
