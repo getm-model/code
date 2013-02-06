@@ -27,8 +27,7 @@
 !
 ! !INPUT PARAMETERS:
    integer,intent(in)                                :: An_method
-   REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,D
-   REALTYPE,dimension(E2DFIELD),target,intent(in)    :: DU,DV
+   REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,D,DU,DV
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(out),optional :: phydis
