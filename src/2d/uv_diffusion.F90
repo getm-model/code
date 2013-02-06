@@ -25,9 +25,8 @@
 
 !
 ! !INPUT PARAMETERS:
-   integer,intent(in)                             :: An_method
-   REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V,D
-   REALTYPE,dimension(E2DFIELD),target,intent(in) :: DU,DV
+   integer,intent(in)                      :: An_method
+   REALTYPE,dimension(E2DFIELD),intent(in) :: U,V,D,DU,DV
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard
