@@ -510,7 +510,7 @@
          err = nf90_def_var(ncid,model%info%state_variables(n)%name,NCDF_FLOAT_PRECISION,f4_dims,fabm_ids(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabm_ids(n), &
-                          long_name    =trim(model%info%state_variables(n)%longname), &
+                          long_name    =trim(model%info%state_variables(n)%long_name), &
                           units        =trim(model%info%state_variables(n)%units),    &
                           FillValue    =model%info%state_variables(n)%missing_value,  &
                           missing_value=model%info%state_variables(n)%missing_value,  &
@@ -524,7 +524,7 @@
          err = nf90_def_var(ncid,model%info%state_variables_ben(n)%name,NCDF_FLOAT_PRECISION,f3_dims,fabm_ids_ben(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabm_ids_ben(n), &
-                          long_name    =trim(model%info%state_variables_ben(n)%longname), &
+                          long_name    =trim(model%info%state_variables_ben(n)%long_name), &
                           units        =trim(model%info%state_variables_ben(n)%units),    &
                           FillValue    =model%info%state_variables_ben(n)%missing_value,  &
                           missing_value=model%info%state_variables_ben(n)%missing_value,  &
@@ -538,7 +538,7 @@
          err = nf90_def_var(ncid,model%info%diagnostic_variables(n)%name,NCDF_FLOAT_PRECISION,f4_dims,fabm_ids_diag(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabm_ids_diag(n), &
-                          long_name    =trim(model%info%diagnostic_variables(n)%longname), &
+                          long_name    =trim(model%info%diagnostic_variables(n)%long_name), &
                           units        =trim(model%info%diagnostic_variables(n)%units),    &
                           FillValue    =model%info%diagnostic_variables(n)%missing_value,  &
                           missing_value=model%info%diagnostic_variables(n)%missing_value,  &
@@ -552,7 +552,7 @@
          err = nf90_def_var(ncid,model%info%diagnostic_variables_hz(n)%name,NCDF_FLOAT_PRECISION,f3_dims,fabm_ids_diag_hz(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabm_ids_diag_hz(n), &
-                          long_name    =trim(model%info%diagnostic_variables_hz(n)%longname), &
+                          long_name    =trim(model%info%diagnostic_variables_hz(n)%long_name), &
                           units        =trim(model%info%diagnostic_variables_hz(n)%units),    &
                           FillValue    =model%info%diagnostic_variables_hz(n)%missing_value,  &
                           missing_value=model%info%diagnostic_variables_hz(n)%missing_value,  &
