@@ -24,7 +24,7 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
-   use advection, only: adv_tvd_limiter
+   use advection, only: adv_interfacial_reconstruction
    use advection, only: UPSTREAM
    use advection, only: NOSPLIT_FINALISE,SPLIT_UPDATE
 !$ use omp_lib
@@ -49,7 +49,7 @@
    REALTYPE,dimension(E2DFIELD) :: vflux
    logical            :: use_limiter,use_AH
    integer            :: i,j,jsub
-   REALTYPE           :: dti,Dio,advn,cfl,limit,fuu,fu,fd
+   REALTYPE           :: dti,Dio,advn,cfl,fuu,fu,fd
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -74,7 +74,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                  &
 !$OMP          FIRSTPRIVATE(use_limiter)                        &
-!$OMP          PRIVATE(i,j,Dio,advn,cfl,limit,fuu,fu,fd)
+!$OMP          PRIVATE(i,j,Dio,advn,cfl,fuu,fu,fd)
 
 ! Calculating v-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
@@ -106,8 +106,7 @@
                end if
             end if
             if (use_limiter) then
-               limit = adv_tvd_limiter(scheme,cfl,fuu,fu,fd)
-               fu = fu + _HALF_*limit*(_ONE_-cfl)*(fd-fu)
+               fu = adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
             end if
             vflux(i,j) = V(i,j)*fu
             if (use_AH) then
