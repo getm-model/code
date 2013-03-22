@@ -154,7 +154,7 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
-   use advection, only: adv_tvd_limiter
+   use advection, only: adv_interfacial_reconstruction
    use advection, only: UPSTREAM
    use advection, only: NOSPLIT_FINALISE,SPLIT_UPDATE
 !$ use omp_lib
@@ -188,7 +188,7 @@
    REALTYPE,dimension(E2DFIELD) :: uflux
    logical            :: use_limiter,use_AH
    integer            :: i,j,isub
-   REALTYPE           :: dti,Dio,advn,cfl,limit,fuu,fu,fd
+   REALTYPE           :: dti,Dio,advn,cfl,fuu,fu,fd
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -216,7 +216,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j,use_limiter)                             &
-!$OMP          PRIVATE(i,Dio,advn,cfl,limit,fuu,fu,fd)
+!$OMP          PRIVATE(i,Dio,advn,cfl,fuu,fu,fd)
 
 ! Calculating u-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
@@ -250,8 +250,7 @@
                end if
             end if
             if (use_limiter) then
-               limit = adv_tvd_limiter(scheme,cfl,fuu,fu,fd)
-               fu = fu + _HALF_*limit*(_ONE_-cfl)*(fd-fu)
+               fu = adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
             end if
             uflux(i,j) = U(i,j)*fu
             if (use_AH) then
