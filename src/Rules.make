@@ -43,6 +43,7 @@ endif
 # 3D barotropic
 ifeq ($(GETM_NO_BAROCLINIC),true)
 DEFINES += -DNO_BAROCLINIC
+unexport FABM
 endif
 
 # Suspended matter
