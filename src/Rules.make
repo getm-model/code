@@ -81,7 +81,6 @@ endif
 #DEFINES += -DITERATE_VERT_ADV
 #DEFINES += -DSUBSTR_INI_PRESS
 #DEFINES += -DSONG_WRIGHT
-#DEFINES += -DUV_TVD
 #DEFINES += -D_MOMENTUM_TERMS_
 
 # Further directory related settings.
