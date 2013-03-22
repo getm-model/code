@@ -43,6 +43,7 @@ endif
 # 3D barotropic
 ifeq ($(GETM_NO_BAROCLINIC),true)
 DEFINES += -DNO_BAROCLINIC
+unexport FABM
 endif
 
 # Suspended matter
@@ -81,7 +82,6 @@ endif
 #DEFINES += -DITERATE_VERT_ADV
 #DEFINES += -DSUBSTR_INI_PRESS
 #DEFINES += -DSONG_WRIGHT
-#DEFINES += -DUV_TVD
 #DEFINES += -D_MOMENTUM_TERMS_
 
 # Further directory related settings.
