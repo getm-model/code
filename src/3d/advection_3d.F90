@@ -46,13 +46,6 @@
               "half step splitting: u/2 + v/2 + w + v/2 + u/2",  &
               "hor/ver splitting: uv + w                     "/)
 !
-! !LOCAL VARIABLES:
-#ifdef STATIC
-   REALTYPE,dimension(I3DFIELD)          :: hi,adv3d
-#else
-   REALTYPE,dimension(:,:,:),allocatable :: hi,adv3d
-#endif
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
@@ -91,8 +84,6 @@
 ! !USES:
    IMPLICIT NONE
 !
-! !LOCAL VARIABLES:
-   integer :: rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -103,14 +94,6 @@
 #endif
 
    LEVEL2 'init_advection_3d'
-
-#ifndef STATIC
-   allocate(hi(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection_3d: Error allocating memory (hi)'
-
-   allocate(adv3d(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection_3d: Error allocating memory (adv3d)'
-#endif
 
 #ifdef ITERATE_VERT_ADV
    if (adv_ver_iterations .eq. 1) then
@@ -262,8 +245,9 @@
    REALTYPE,dimension(I3DFIELD),intent(out),optional :: hires,advres
 !
 ! !LOCAL VARIABLES:
-   integer                  :: tag,j,k
-   type(t_adv_grid),pointer :: adv_grid
+   type(t_adv_grid),pointer     :: adv_grid
+   REALTYPE,dimension(I3DFIELD) :: hi,adv3d
+   integer                      :: tag,j,k
 !EOP
 !-----------------------------------------------------------------------
 !BOC

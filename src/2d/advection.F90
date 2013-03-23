@@ -80,12 +80,10 @@
    logical,dimension(E2DFIELD),target         :: mask_updateH
    logical,dimension(E2DFIELD),target         :: mask_uflux,mask_vflux,mask_xflux
    logical,dimension(E2DFIELD),target         :: mask_uupdateU,mask_vupdateV
-   REALTYPE,dimension(E2DFIELD)               :: Di,adv
 #else
    logical,dimension(:,:),allocatable,target  :: mask_updateH
    logical,dimension(:,:),allocatable,target  :: mask_uflux,mask_vflux,mask_xflux
    logical,dimension(:,:),allocatable,target  :: mask_uupdateU,mask_vupdateV
-   REALTYPE,dimension(:,:),allocatable        :: Di,adv
 #endif
 !
 ! !REVISION HISTORY:
@@ -260,12 +258,6 @@
 
    allocate(mask_vupdateV(E2DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (mask_vupdateV)'
-
-   allocate(Di(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (Di)'
-
-   allocate(adv(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (adv)'
 #endif
 
 !  Note (KK): In this module pointers are used extensively.
@@ -444,8 +436,9 @@
    REALTYPE,dimension(E2DFIELD),intent(out),optional :: Dires,advres
 !
 ! !LOCAL VARIABLES:
-   type(t_adv_grid),pointer :: adv_grid
-   integer                  :: j
+   type(t_adv_grid),pointer     :: adv_grid
+   REALTYPE,dimension(E2DFIELD) :: Di,adv
+   integer                      :: j
 !
 !EOP
 !-----------------------------------------------------------------------
