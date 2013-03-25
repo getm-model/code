@@ -46,13 +46,6 @@
               "half step splitting: u/2 + v/2 + w + v/2 + u/2",  &
               "hor/ver splitting: uv + w                     "/)
 !
-! !LOCAL VARIABLES:
-#ifdef STATIC
-   REALTYPE,dimension(I3DFIELD)          :: hi,adv3d
-#else
-   REALTYPE,dimension(:,:,:),allocatable :: hi,adv3d
-#endif
-!
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
@@ -60,17 +53,17 @@
 !-----------------------------------------------------------------------
 
    interface
-      subroutine adv_split_w(dt,f,hi,adv3d,ww,ho,              &
-                             splitfac,scheme,action,tag_3d,az, &
-                             mask_finalise)
+      subroutine adv_split_w(dt,f,fi,hi,adv,ww,      &
+                             splitfac,scheme,tag,az, &
+                             itersmax)
          use domain, only: imin,imax,jmin,jmax,kmax
          IMPLICIT NONE
-         REALTYPE,intent(in)                             :: dt,splitfac
-         REALTYPE,dimension(I3DFIELD),intent(in)         :: ww,ho
-         integer,intent(in)                              :: scheme,action,tag_3d
-         integer,dimension(E2DFIELD),intent(in)          :: az
-         logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
-         REALTYPE,dimension(I3DFIELD),intent(inout)      :: f,hi,adv3d
+         REALTYPE,intent(in)                               :: dt,splitfac
+         REALTYPE,dimension(I3DFIELD),target,intent(in)    :: f
+         REALTYPE,dimension(I3DFIELD),intent(in)           :: ww
+         integer,intent(in)                                :: scheme,tag,itersmax
+         integer,dimension(E2DFIELD),intent(in)            :: az
+         REALTYPE,dimension(I3DFIELD),target,intent(inout) :: fi,hi,adv
       end subroutine adv_split_w
    end interface
 
@@ -91,8 +84,6 @@
 ! !USES:
    IMPLICIT NONE
 !
-! !LOCAL VARIABLES:
-   integer :: rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -103,14 +94,6 @@
 #endif
 
    LEVEL2 'init_advection_3d'
-
-#ifndef STATIC
-   allocate(hi(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection_3d: Error allocating memory (hi)'
-
-   allocate(adv3d(I3DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection_3d: Error allocating memory (adv3d)'
-#endif
 
 #ifdef ITERATE_VERT_ADV
    if (adv_ver_iterations .eq. 1) then
@@ -134,8 +117,8 @@
 ! !IROUTINE:  do_advection_3d - 3D advection schemes \label{sec-do-advection-3d}
 !
 ! !INTERFACE:
-   subroutine do_advection_3d(dt,f,uu,vv,ww,hu,hv,ho,hn,       &
-                              split,hscheme,vscheme,AH,tag_3d, &
+   subroutine do_advection_3d(dt,f,uu,vv,ww,hu,hv,ho,hn,    &
+                              split,hscheme,vscheme,AH,tag, &
                               hires,advres)
 !
 ! !DESCRIPTION:
@@ -253,17 +236,19 @@
 ! !INPUT PARAMETERS:
    REALTYPE,intent(in)                               :: dt,AH
    REALTYPE,dimension(I3DFIELD),intent(in)           :: uu,vv,ww,ho,hn,hu,hv
-   integer,intent(in)                                :: split,hscheme,vscheme,tag_3d
+   integer,intent(in)                                :: split,hscheme,vscheme,tag
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(I3DFIELD),intent(inout)        :: f
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE,dimension(I3DFIELD),intent(out),optional :: hires,advres
+   REALTYPE,dimension(I3DFIELD),target,intent(out),optional :: hires,advres
 !
 ! !LOCAL VARIABLES:
-   integer                  :: tag,j,k
-   type(t_adv_grid),pointer :: adv_grid
+   type(t_adv_grid),pointer            :: adv_grid
+   REALTYPE,dimension(I3DFIELD),target :: fi,hi,adv
+   REALTYPE,dimension(:,:,:),pointer   :: p_hi,p_adv
+   integer                             :: tag2d,i,j,k
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -274,39 +259,50 @@
 #endif
    call tic(TIM_ADV3D)
 
-   select case (tag_3d)
+   select case (tag)
       case(H_TAG,D_TAG)
-         tag = H_TAG
+         tag2d = H_TAG
          adv_grid => adv_gridH
       case(U_TAG)
-         tag = U_TAG
+         tag2d = U_TAG
          adv_grid => adv_gridU
       case(V_TAG)
-         tag = V_TAG
+         tag2d = V_TAG
          adv_grid => adv_gridV
       case(W_TAG)
-         tag = H_TAG
+         tag2d = H_TAG
          adv_grid => adv_gridH
       case default
-         stop 'do_advection_3d: tag_3d is invalid'
+         stop 'do_advection_3d: tag is invalid'
    end select
 
-   hi = ho
-   adv3d = _ZERO_
+   if (present(hires)) then
+      p_hi => hires
+   else
+      p_hi => hi
+   end if
+   p_hi = ho
+
+   if (present(advres)) then
+      p_adv => advres
+   else
+      p_adv => adv
+   end if
+   p_adv = _ZERO_
 
    if (hscheme.ne.NOADV .or. vscheme.ne.NOADV) then
 
       if (hscheme .eq. NOADV) then
          if (kmax .gt. 1) then
-            call adv_split_w(dt,f,hi,adv3d,ww,ho,                           &
-                             _ONE_,vscheme,SPLIT_UPDATE,tag_3d,adv_grid%az)
+            call adv_split_w(dt,f,f,p_hi,p_adv,ww,_ONE_,vscheme,tag,adv_grid%az, &
+                             adv_ver_iterations)
          end if
       else if (vscheme .eq. NOADV) then
          do k=1,kmax
             call do_advection(dt,f(:,:,k),uu(:,:,k),vv(:,:,k),         &
                               hu(:,:,k),hv(:,:,k),ho(:,:,k),hn(:,:,k), &
-                              split,hscheme,AH,tag,                    &
-                              Dires=hi(:,:,k),advres=adv3d(:,:,k))
+                              split,hscheme,AH,tag2d,                  &
+                              Dires=p_hi(:,:,k),advres=p_adv(:,:,k))
          end do
       else
 
@@ -314,25 +310,27 @@
 
             case(NOSPLIT)
 
+               fi = f
+
                select case (hscheme)
 
                   case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
                      do k=1,kmax
-                        call adv_split_u(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k),        &
-                                         uu(:,:,k),ho(:,:,k),hu(:,:,k),             &
+                        call adv_split_u(dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k),         &
+                                         p_adv(:,:,k),uu(:,:,k),hu(:,:,k),          &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                          adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
-                                         _ONE_,hscheme,NOSPLIT_NOFINALISE,AH,       &
+                                         _ONE_,hscheme,AH,                          &
                                          adv_grid%mask_uflux,adv_grid%mask_uupdate)
 #ifndef SLICE_MODEL
-                        call adv_split_v(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k),        &
-                                         vv(:,:,k),ho(:,:,k),hv(:,:,k),             &
+                        call adv_split_v(dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k),         &
+                                         p_adv(:,:,k),vv(:,:,k),hv(:,:,k),          &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                          adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
-                                         _ONE_,hscheme,NOSPLIT_NOFINALISE,AH,       &
+                                         _ONE_,hscheme,AH,                          &
                                          adv_grid%mask_vflux,adv_grid%mask_vupdate)
 #endif
                      end do
@@ -340,67 +338,63 @@
                   case (UPSTREAM_2DH)
 
                      do k=1,kmax
-                        call adv_upstream_2dh(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k), &
-                                              uu(:,:,k),vv(:,:,k),                &
-                                              ho(:,:,k),hn(:,:,k),                &
-                                              hu(:,:,k),hv(:,:,k),                &
+                        call adv_upstream_2dh(dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k), &
+                                              p_adv(:,:,k),uu(:,:,k),vv(:,:,k),  &
+                                              hn(:,:,k),hu(:,:,k),hv(:,:,k),     &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                              adv_grid%dxv,adv_grid%dyu,          &
-                                              adv_grid%dxu,adv_grid%dyv,          &
-                                              adv_grid%arcd1,                     &
+                                              adv_grid%dxv,adv_grid%dyu,         &
+                                              adv_grid%dxu,adv_grid%dyv,         &
+                                              adv_grid%arcd1,                    &
 #endif
-                                              NOSPLIT_NOFINALISE,AH,adv_grid%az)
+                                              AH,adv_grid%az)
                      end do
 
                   case(J7)
 
                      do k=1,kmax
-                        call adv_arakawa_j7_2dh(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k), &
-                                                uu(:,:,k),vv(:,:,k),                &
-                                                ho(:,:,k),hn(:,:,k),                &
-                                                hu(:,:,k),hv(:,:,k),                &
+                        call adv_arakawa_j7_2dh(dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k), &
+                                                p_adv(:,:,k),uu(:,:,k),vv(:,:,k),  &
+                                                hn(:,:,k),hu(:,:,k),hv(:,:,k),     &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                                adv_grid%dxv,adv_grid%dyu,          &
-                                                adv_grid%dxu,adv_grid%dyv,          &
-                                                adv_grid%arcd1,                     &
+                                                adv_grid%dxv,adv_grid%dyu,         &
+                                                adv_grid%dxu,adv_grid%dyv,         &
+                                                adv_grid%arcd1,                    &
 #endif
-                                                NOSPLIT_NOFINALISE,AH,adv_grid%az,  &
-                                                adv_grid%mask_uflux,                &
-                                                adv_grid%mask_vflux,                &
+                                                AH,adv_grid%az,                    &
+                                                adv_grid%mask_uflux,               &
+                                                adv_grid%mask_vflux,               &
                                                 adv_grid%mask_xflux)
                      end do
 
                   case (FCT)
 
                      do k=1,kmax
-                        call adv_fct_2dh(.true.,dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k), &
-                                         uu(:,:,k),vv(:,:,k),                       &
-                                         ho(:,:,k),hn(:,:,k),                       &
-                                         hu(:,:,k),hv(:,:,k),                       &
+                        call adv_fct_2dh(.true.,dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k), &
+                                         p_adv(:,:,k),uu(:,:,k),vv(:,:,k),         &
+                                         hn(:,:,k),hu(:,:,k),hv(:,:,k),            &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                         adv_grid%dxv,adv_grid%dyu,                 &
-                                         adv_grid%dxu,adv_grid%dyv,                 &
-                                         adv_grid%arcd1,                            &
+                                         adv_grid%dxv,adv_grid%dyu,                &
+                                         adv_grid%dxu,adv_grid%dyv,                &
+                                         adv_grid%arcd1,                           &
 #endif
-                                         NOSPLIT_NOFINALISE,AH,adv_grid%az,         &
-                                         adv_grid%mask_uflux,                       &
+                                         AH,adv_grid%az,                           &
+                                         adv_grid%mask_uflux,                      &
                                          adv_grid%mask_vflux)
                      end do
 
                   case (P2_2DH)
 
                      do k=1,kmax
-                        call adv_fct_2dh(.false.,dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k), &
-                                         uu(:,:,k),vv(:,:,k),                        &
-                                         ho(:,:,k),hn(:,:,k),                        &
-                                         hu(:,:,k),hv(:,:,k),                        &
+                        call adv_fct_2dh(.false.,dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k), &
+                                         p_adv(:,:,k),uu(:,:,k),vv(:,:,k),          &
+                                         hn(:,:,k),hu(:,:,k),hv(:,:,k),             &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                         adv_grid%dxv,adv_grid%dyu,                  &
-                                         adv_grid%dxu,adv_grid%dyv,                  &
-                                         adv_grid%arcd1,                             &
+                                         adv_grid%dxv,adv_grid%dyu,                 &
+                                         adv_grid%dxu,adv_grid%dyv,                 &
+                                         adv_grid%arcd1,                            &
 #endif
-                                         NOSPLIT_NOFINALISE,AH,adv_grid%az,          &
-                                         adv_grid%mask_uflux,                        &
+                                         AH,adv_grid%az,                            &
+                                         adv_grid%mask_uflux,                       &
                                          adv_grid%mask_vflux)
                      end do
 
@@ -409,24 +403,37 @@
                      stop 'do_advection_3d: hscheme is invalid'
 
                end select
-!              Note (KK): here adv_split_w must be called in any case !!!
-               call adv_split_w(dt,f,hi,adv3d,ww,ho,                   &
-                                _ONE_,vscheme,NOSPLIT_FINALISE,tag_3d, &
-                                adv_grid%az,                           &
-                                mask_finalise=adv_grid%mask_finalise)
+
+               if (kmax .gt. 1) then
+                  call adv_split_w(dt,f,fi,p_hi,p_adv,ww,_ONE_,vscheme,tag,adv_grid%az, &
+                                   1)
+               end if
+
+#ifdef _NEW_ADV_NOSPLIT_
+!              Note (KK): causes truncation errors
+               f = fi
+#else
+               do j=jmin-HALO,jmax+HALO
+                  do i=imin-HALO,imax+HALO
+                     if (adv_grid%mask_finalise(i,j)) then
+!                       Note (KK): do not modify tracer inside open bdy cells
+                        f(i,j,1:kmax) = ( ho(i,j,1:kmax)*f(i,j,1:kmax) - dt*p_adv(i,j,1:kmax) ) / p_hi(i,j,1:kmax)
+                     end if
+                  end do
+               end do
+#endif
 
             case(FULLSPLIT)
 
                do k=1,kmax
                   call do_advection(dt,f(:,:,k),uu(:,:,k),vv(:,:,k),         &
                                     hu(:,:,k),hv(:,:,k),ho(:,:,k),hn(:,:,k), &
-                                    FULLSPLIT,hscheme,AH,tag,                &
-                                    Dires=hi(:,:,k),advres=adv3d(:,:,k))
+                                    FULLSPLIT,hscheme,AH,tag2d,              &
+                                    Dires=p_hi(:,:,k),advres=p_adv(:,:,k))
                end do
                if (kmax .gt. 1) then
-                  call adv_split_w(dt,f,hi,adv3d,ww,ho,               &
-                                   _ONE_,vscheme,SPLIT_UPDATE,tag_3d, &
-                                   adv_grid%az)
+                  call adv_split_w(dt,f,f,p_hi,p_adv,ww,_ONE_,vscheme,tag,adv_grid%az, &
+                                   adv_ver_iterations)
                end if
 
             case(HALFSPLIT)
@@ -436,17 +443,17 @@
                   case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
                      do k=1,kmax
-                        call adv_split_u(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k),        &
-                                         uu(:,:,k),ho(:,:,k),hu(:,:,k),             &
+                        call adv_split_u(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
+                                         p_adv(:,:,k),uu(:,:,k),hu(:,:,k),          &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                          adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
-                                         _HALF_,hscheme,SPLIT_UPDATE,AH,            &
+                                         _HALF_,hscheme,AH,                         &
                                          adv_grid%mask_uflux,adv_grid%mask_uupdate)
                      end do
 #ifndef SLICE_MODEL
 #ifdef GETM_PARALLEL
-                     if (hscheme.ne.UPSTREAM .and. tag_3d.eq.V_TAG) then
+                     if (hscheme.ne.UPSTREAM .and. tag.eq.V_TAG) then
 !                       we need to update f(imin:imax,jmax+HALO)
                         call tic(TIM_ADV3DH)
                         call update_3d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,kmax,D_TAG)
@@ -455,26 +462,25 @@
                      end if
 #endif
                      do k=1,kmax
-                        call adv_split_v(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k),        &
-                                         vv(:,:,k),ho(:,:,k),hv(:,:,k),             &
+                        call adv_split_v(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
+                                         p_adv(:,:,k),vv(:,:,k),hv(:,:,k),          &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                          adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
-                                         _HALF_,hscheme,SPLIT_UPDATE,AH,            &
+                                         _HALF_,hscheme,AH,                         &
                                          adv_grid%mask_vflux,adv_grid%mask_vupdate)
                      end do
 #endif
 
                      if (kmax .gt. 1) then
-                        call adv_split_w(dt,f,hi,adv3d,ww,ho,               &
-                                         _ONE_,vscheme,SPLIT_UPDATE,tag_3d, &
-                                         adv_grid%az)
+                        call adv_split_w(dt,f,f,p_hi,p_adv,ww,_ONE_,vscheme,tag,adv_grid%az, &
+                                         adv_ver_iterations)
                      end if
 
 #ifndef SLICE_MODEL
 #ifdef GETM_PARALLEL
                      if (hscheme .eq. UPSTREAM) then
-                        if (tag_3d .eq. V_TAG) then
+                        if (tag .eq. V_TAG) then
 !                          we need to update f(imin-1:imax+1,jmax+1)
 !                          KK-TODO: if external hv was halo-updated this halo-update is not necessary
                            call tic(TIM_ADV3DH)
@@ -492,18 +498,18 @@
                      end if
 #endif
                      do k=1,kmax
-                        call adv_split_v(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k),        &
-                                         vv(:,:,k),ho(:,:,k),hv(:,:,k),             &
+                        call adv_split_v(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
+                                         p_adv(:,:,k),vv(:,:,k),hv(:,:,k),          &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                          adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
-                                         _HALF_,hscheme,SPLIT_UPDATE,AH,            &
+                                         _HALF_,hscheme,AH,                         &
                                          adv_grid%mask_vflux,adv_grid%mask_vupdate)
                      end do
 #endif
 #ifdef GETM_PARALLEL
                      if (hscheme .eq. UPSTREAM) then
-                        if (tag_3d .eq. U_TAG) then
+                        if (tag .eq. U_TAG) then
 !                          we need to update f(imax+1,jmin:jmax)
 !                          KK-TODO: if external hu was halo-updated this halo-update is not necessary
                            call tic(TIM_ADV3DH)
@@ -521,12 +527,12 @@
                      end if
 #endif
                      do k=1,kmax
-                        call adv_split_u(dt,f(:,:,k),hi(:,:,k),adv3d(:,:,k),        &
-                                         uu(:,:,k),ho(:,:,k),hu(:,:,k),             &
+                        call adv_split_u(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
+                                         p_adv(:,:,k),uu(:,:,k),hu(:,:,k),          &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                          adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
-                                         _HALF_,hscheme,SPLIT_UPDATE,AH,            &
+                                         _HALF_,hscheme,AH,                         &
                                          adv_grid%mask_uflux,adv_grid%mask_uupdate)
                      end do
 
@@ -545,13 +551,12 @@
                do k=1,kmax
                   call do_advection(dt,f(:,:,k),uu(:,:,k),vv(:,:,k),         &
                                     hu(:,:,k),hv(:,:,k),ho(:,:,k),hn(:,:,k), &
-                                    NOSPLIT,hscheme,AH,tag,                  &
-                                    Dires=hi(:,:,k),advres=adv3d(:,:,k))
+                                    NOSPLIT,hscheme,AH,tag2d,                &
+                                    Dires=p_hi(:,:,k),advres=p_adv(:,:,k))
                end do
                if (kmax .gt. 1) then
-                  call adv_split_w(dt,f,hi,adv3d,ww,ho,               &
-                                   _ONE_,vscheme,SPLIT_UPDATE,tag_3d, &
-                                   adv_grid%az)
+                  call adv_split_w(dt,f,f,p_hi,p_adv,ww,_ONE_,vscheme,tag,adv_grid%az, &
+                                   adv_ver_iterations)
                end if
 
             case default
@@ -564,20 +569,27 @@
 
 #ifdef SLICE_MODEL
       j = jmax/2
-      f(:,j+1,:)     = f(:,j,:)
-      hi(:,j+1,:)    = hi(:,j,:)
-      adv3d(:,j+1,:) = adv3d(:,j,:)
-      if (tag_3d .eq. V_TAG) then
-         f(:,j-1,:)     = f(:,j,:)
-         hi(:,j-1,:)    = hi(:,j,:)
-         adv3d(:,j-1,:) = adv3d(:,j,:)
+      f (:,j+1,:) = f (:,j,:)
+      if (tag .eq. V_TAG) then
+         f (:,j-1,:) = f(:,j,:)
+      end if
+      if (present(hires)) then
+         hires(:,j+1,:) = hires(:,j,:)
+         if (tag .eq. V_TAG) then
+            hires(:,j-1,:) = hires(:,j,:)
+         end if
+      end if
+      if (present(advres)) then
+         advres(:,j+1,:) = advres(:,j,:)
+         if (tag .eq. V_TAG) then
+            advres(:,j-1,:) = advres(:,j,:)
+         end if
       end if
 #endif
 
    end if
 
    if (present(hires)) hires = hi
-   if (present(advres)) advres = adv3d
 
    call toc(TIM_ADV3D)
 #ifdef DEBUG
