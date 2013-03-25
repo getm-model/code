@@ -43,6 +43,7 @@ endif
 # 3D barotropic
 ifeq ($(GETM_NO_BAROCLINIC),true)
 DEFINES += -DNO_BAROCLINIC
+unexport FABM
 endif
 
 # Suspended matter
@@ -87,7 +88,6 @@ endif
 #DEFINES += -DITERATE_VERT_ADV
 #DEFINES += -DSUBSTR_INI_PRESS
 #DEFINES += -DSONG_WRIGHT
-#DEFINES += -DUV_TVD
 #DEFINES += -D_MOMENTUM_TERMS_
 
 # Further directory related settings.
@@ -135,7 +135,7 @@ INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
 ifeq ($(NETCDF_VERSION),NETCDF4)
 
 DEFINES		+= -DNETCDF4
-INCDIRS		+= $(shell nf-config --fflags)
+INCDIRS		+= -I$(shell nf-config --includedir)
 NETCDFLIB	=  $(shell nf-config --flibs)
 
 else  # NetCDF3 is default
