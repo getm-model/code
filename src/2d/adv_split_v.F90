@@ -5,12 +5,12 @@
 ! !IROUTINE:  adv_split_v - meridional advection of 2D quantities \label{sec-v-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_split_v(dt,f,Di,adv,V,Do,DV,                 &
+   subroutine adv_split_v(dt,f,fi,Di,adv,V,DV,   &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                          dxv,dyv,arcd1,                       &
+                          dxv,dyv,arcd1,         &
 #endif
-                          splitfac,scheme,action,AH,           &
-                          mask_flux,mask_update,mask_finalise)
+                          splitfac,scheme,AH,    &
+                          mask_flux,mask_update)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -26,24 +26,22 @@
 #endif
    use advection, only: adv_interfacial_reconstruction
    use advection, only: UPSTREAM
-   use advection, only: NOSPLIT_FINALISE,SPLIT_UPDATE
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,intent(in)                             :: dt,splitfac,AH
-   REALTYPE,dimension(E2DFIELD),intent(in)         :: V,Do,DV
+   REALTYPE,intent(in)                           :: dt,splitfac,AH
+   REALTYPE,dimension(E2DFIELD),intent(in)       :: f,V,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-   REALTYPE,dimension(E2DFIELD),intent(in)         :: arcd1
+   REALTYPE,dimension(E2DFIELD),intent(in)       :: arcd1
 #endif
-   integer,intent(in)                              :: scheme,action
+   integer,intent(in)                            :: scheme
    logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_flux
-   logical,dimension(E2DFIELD),intent(in)          :: mask_update
-   logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
+   logical,dimension(E2DFIELD),intent(in)        :: mask_update
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(inout)      :: f,Di,adv
+   REALTYPE,dimension(E2DFIELD),intent(inout)    :: fi,Di,adv
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: vflux
@@ -130,16 +128,8 @@
                                   -V(i,j-1)*DXVJM1)*ARCD1
             advn = splitfac*( vflux(i,j  )*DXV           &
                              -vflux(i,j-1)*DXVJM1)*ARCD1
+            fi(i,j) = ( Dio*fi(i,j) - dt*advn ) / Di(i,j)
             adv(i,j) = adv(i,j) + advn
-            if (action .eq. SPLIT_UPDATE) then
-               f(i,j) = ( Dio*f(i,j) - dt*advn ) / Di(i,j)
-            end if
-         end if
-         if (action .eq. NOSPLIT_FINALISE) then
-            if (mask_finalise(i,j)) then
-!              Note (KK): do not modify tracer inside open bdy cells
-               f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
-            end if
          end if
       end do
    end do

@@ -4,11 +4,11 @@
 ! !IROUTINE:  adv_fct_2dh - 2DH FCT advection of 2D quantities \label{sec-fct-2dh-adv}
 !
 ! !INTERFACE:
-   subroutine adv_fct_2dh(fct,dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
+   subroutine adv_fct_2dh(fct,dt,f,fi,Di,adv,U,V,Dn,DU,DV, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                           dxv,dyu,dxu,dyv,arcd1,           &
 #endif
-                          action,AH,az,                    &
+                          AH,az,                           &
                           mask_uflux,mask_vflux)
 !  Note (KK): keep in sync with interface in advection.F90
 !
@@ -41,7 +41,6 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
-   use advection, only: NOSPLIT_NOFINALISE,NOSPLIT_FINALISE
    use halo_zones, only : update_2d_halo,wait_halo,z_TAG
 !$ use omp_lib
    IMPLICIT NONE
@@ -49,19 +48,18 @@
 ! !INPUT PARAMETERS:
    logical,intent(in)                         :: fct
    REALTYPE,intent(in)                        :: dt,AH
-   REALTYPE,dimension(E2DFIELD),intent(in)    :: U,V,Do,Dn,DU,DV
+   REALTYPE,dimension(E2DFIELD),intent(in)    :: f,U,V,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
    REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
    REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
-   integer,intent(in)                         :: action
    integer,dimension(E2DFIELD),intent(in)     :: az
    logical,dimension(:,:),pointer,intent(in)  :: mask_uflux
    logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
+   REALTYPE,dimension(E2DFIELD),intent(inout) :: fi,Di,adv
 !
 ! !LOCAL VARIABLES:
    integer         :: i,j
@@ -70,7 +68,7 @@
 #ifndef SLICE_MODEL
    REALTYPE,dimension(E2DFIELD) :: vflux,fly
 #endif
-   REALTYPE,dimension(E2DFIELD) :: fi,rp,rm,cmin,cmax
+   REALTYPE,dimension(E2DFIELD) :: faux,rp,rm,cmin,cmax
    REALTYPE        :: CNW,CW,CSW,CSSW,CWW,CSWW,CC,CS
    REALTYPE        :: advn,uuu,vvv,CExx,Cl,Cu,fac
    REALTYPE,parameter :: one12th=_ONE_/12,one6th=_ONE_/6,one3rd=_ONE_/3
@@ -441,7 +439,7 @@
 
    if (fct) then
 
-!     Calculate intermediate low resolution solution fi
+!     Calculate intermediate low resolution solution faux
 !     Calculating u-interface low-order fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO
@@ -483,7 +481,7 @@
       do j=jmin-HALO+1,jmax+HALO-1
          do i=imin-HALO+1,imax+HALO-1
             if (az(i,j) .eq. 1)  then
-               fi(i,j) = ( f(i,j)*Dio(i,j) - dt*(                                  &
+               faux(i,j) = ( f(i,j)*Dio(i,j) - dt*(                                  &
                                                   flx(i  ,j)*DYU-flx(i-1,j)*DYUIM1 &
 #ifndef SLICE_MODEL
                                                  +fly(i,j  )*DXV-fly(i,j-1)*DXVJM1 &
@@ -499,8 +497,8 @@
          do i=imin,imax
             if (az(i,j) .eq. 1) then
 !              Calculate max and min of all values around one point
-               cmax(i,j) = max( cmax(i,j) , maxval(fi(i-1:i+1,j-1:j+1),mask=(az(i-1:i+1,j-1:j+1).eq.1)) )
-               cmin(i,j) = min( cmin(i,j) , minval(fi(i-1:i+1,j-1:j+1),mask=(az(i-1:i+1,j-1:j+1).eq.1)) )
+               cmax(i,j) = max( cmax(i,j) , maxval(faux(i-1:i+1,j-1:j+1),mask=(az(i-1:i+1,j-1:j+1).eq.1)) )
+               cmin(i,j) = min( cmin(i,j) , minval(faux(i-1:i+1,j-1:j+1),mask=(az(i-1:i+1,j-1:j+1).eq.1)) )
 
 !              max (Cu) possible concentration after a time step
                CExx=(                                                &
@@ -511,12 +509,12 @@
                        -max(vflux(i  ,j-1)-fly(i  ,j-1),_ZERO_))/DYV &
 #endif
                     )
-               Cu=(fi(i,j)*Di(i,j)-dt*CExx)/Di(i,j)
+               Cu=(faux(i,j)*Di(i,j)-dt*CExx)/Di(i,j)
 !              calculating the maximum limiter rp for each conc. cell
-               if (Cu .eq. fi(i,j)) then
+               if (Cu .eq. faux(i,j)) then
                   rp(i,j)=_ZERO_
                else
-                  rp(i,j)=min((cmax(i,j)-fi(i,j))/(Cu-fi(i,j)),_ONE_)
+                  rp(i,j)=min((cmax(i,j)-faux(i,j))/(Cu-faux(i,j)),_ONE_)
                end if
 
 !              min (Cl) possible concentration after a time step
@@ -528,12 +526,12 @@
                        -min(vflux(i  ,j-1)-fly(i  ,j-1),_ZERO_))/DYV &
 #endif
                     )
-               Cl=(fi(i,j)*Di(i,j)-dt*CExx)/Di(i,j)
+               Cl=(faux(i,j)*Di(i,j)-dt*CExx)/Di(i,j)
 !              calculating the minimum limiter rm for each conc. cell
-               if (Cl .eq. fi(i,j)) then
+               if (Cl .eq. faux(i,j)) then
                   rm(i,j)=_ZERO_
                else
-                  rm(i,j)=min((fi(i,j)-cmin(i,j))/(fi(i,j)-Cl),_ONE_)
+                  rm(i,j)=min((faux(i,j)-cmin(i,j))/(faux(i,j)-Cl),_ONE_)
                end if
             end if
          end do
@@ -622,17 +620,11 @@
                     + vflux(i,j)*DXV - vflux(i  ,j-1)*DXVJM1 &
 #endif
                    )*ARCD1
+            fi(i,j) = ( Dio(i,j)*fi(i,j) - dt*advn ) / Di(i,j)
+!           Force monotonicity, this is needed here for correcting truncations errors:
+            if (fi(i,j).gt.cmax(i,j)) fi(i,j)=cmax(i,j)
+            if (fi(i,j).lt.cmin(i,j)) fi(i,j)=cmin(i,j)
             adv(i,j) = adv(i,j) + advn
-            if (action .ne. NOSPLIT_NOFINALISE) then
-               if (action .eq. NOSPLIT_FINALISE) then
-                  f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
-               else
-                  f(i,j) = ( Dio(i,j)*f(i,j) - dt*advn ) / Di(i,j)
-               end if
-!              Force monotonicity, this is needed here for correcting truncations errors:
-               if (f(i,j).gt.cmax(i,j)) f(i,j)=cmax(i,j)
-               if (f(i,j).lt.cmin(i,j)) f(i,j)=cmin(i,j)
-            end if
          end if
       end do
    end do
