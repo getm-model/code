@@ -5,12 +5,12 @@
 ! !IROUTINE:  adv_split_u - zonal advection of 2D quantities \label{sec-u-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_split_u(dt,f,Di,adv,U,Do,DU,                 &
+   subroutine adv_split_u(dt,f,fi,Di,adv,U,DU,   &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                          dxu,dyu,arcd1,                       &
+                          dxu,dyu,arcd1,         &
 #endif
-                          splitfac,scheme,action,AH,           &
-                          mask_flux,mask_update,mask_finalise)
+                          splitfac,scheme,AH,    &
+                          mask_flux,mask_update)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -154,9 +154,8 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
-   use advection, only: adv_tvd_limiter
+   use advection, only: adv_interfacial_reconstruction
    use advection, only: UPSTREAM,CENTRAL
-   use advection, only: NOSPLIT_FINALISE,SPLIT_UPDATE
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -170,25 +169,24 @@
 !             array. Therefore they are declared as pointers here. This
 !             however requires, that the provided pointers already carry
 !             the correct bounds.
-   REALTYPE,intent(in)                             :: dt,splitfac,AH
-   REALTYPE,dimension(E2DFIELD),intent(in)         :: U,Do,DU
+   REALTYPE,intent(in)                           :: dt,splitfac,AH
+   REALTYPE,dimension(E2DFIELD),intent(in)       :: f,U,DU
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   REALTYPE,dimension(:,:),pointer,intent(in)      :: dxu,dyu
-   REALTYPE,dimension(E2DFIELD),intent(in)         :: arcd1
+   REALTYPE,dimension(:,:),pointer,intent(in)    :: dxu,dyu
+   REALTYPE,dimension(E2DFIELD),intent(in)       :: arcd1
 #endif
-   integer,intent(in)                              :: scheme,action
-   logical,dimension(:,:),pointer,intent(in)       :: mask_flux
-   logical,dimension(E2DFIELD),intent(in)          :: mask_update
-   logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
+   integer,intent(in)                            :: scheme
+   logical,dimension(:,:),pointer,intent(in)     :: mask_flux
+   logical,dimension(E2DFIELD),intent(in)        :: mask_update
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(inout)      :: f,Di,adv
+   REALTYPE,dimension(E2DFIELD),intent(inout)    :: fi,Di,adv
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: uflux
    logical            :: use_limiter,use_AH
    integer            :: i,j,isub
-   REALTYPE           :: dti,Dio,advn,cfl,limit,fuu,fu,fd
+   REALTYPE           :: dti,Dio,advn,cfl,fuu,fu,fd
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -216,7 +214,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j,use_limiter)                             &
-!$OMP          PRIVATE(i,Dio,advn,cfl,limit,fuu,fu,fd)
+!$OMP          PRIVATE(i,Dio,advn,cfl,fuu,fu,fd)
 
 ! Calculating u-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
@@ -253,8 +251,7 @@
                   end if
                end if
                if (use_limiter) then
-                  limit = adv_tvd_limiter(scheme,cfl,fuu,fu,fd)
-                  fu = fu + _HALF_*limit*(_ONE_-cfl)*(fd-fu)
+                  fu = adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
                end if
             end if
             uflux(i,j) = U(i,j)*fu
@@ -283,16 +280,8 @@
                                   -U(i-1,j)*DYUIM1)*ARCD1
             advn = splitfac*( uflux(i  ,j)*DYU           &
                              -uflux(i-1,j)*DYUIM1)*ARCD1
+            fi(i,j) = ( Dio*fi(i,j) - dt*advn ) / Di(i,j)
             adv(i,j) = adv(i,j) + advn
-            if (action .eq. SPLIT_UPDATE) then
-               f(i,j) = ( Dio*f(i,j) - dt*advn ) / Di(i,j)
-            end if
-         end if
-         if (action .eq. NOSPLIT_FINALISE) then
-            if (mask_finalise(i,j)) then
-!              Note (KK): do not modify tracer inside open bdy cells
-               f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
-            end if
          end if
       end do
 #ifndef SLICE_MODEL
