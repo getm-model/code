@@ -282,9 +282,6 @@
 #ifdef NEW_SS
    LEVEL1 'NEW_SS'
 #endif
-#ifdef UV_TVD
-   LEVEL1 'UV_TVD'
-#endif
 #ifdef NONNEGSALT
    LEVEL1 'NONNEGSALT'
 #endif
