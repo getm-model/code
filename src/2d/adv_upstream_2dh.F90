@@ -5,7 +5,7 @@
 ! \label{sec-upstream-2dh-adv}
 !
 ! !INTERFACE:
-   subroutine adv_upstream_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
+   subroutine adv_upstream_2dh(dt,f,fi,Di,adv,U,V,Dn,DU,DV, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                dxv,dyu,dxu,dyv,arcd1,       &
 #endif
@@ -28,13 +28,12 @@
 #if !( defined(SPHERICAL) || defined(CURVILINEAR) )
    use domain, only: dx,dy,ard1
 #endif
-   use advection, only: NOSPLIT_NOFINALISE,NOSPLIT_FINALISE
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    REALTYPE,intent(in)                        :: dt,AH
-   REALTYPE,dimension(E2DFIELD),intent(in)    :: U,V,Do,Dn,DU,DV
+   REALTYPE,dimension(E2DFIELD),intent(in)    :: f,U,V,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
    REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
@@ -44,7 +43,7 @@
    integer,dimension(E2DFIELD),intent(in)     :: az
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
+   REALTYPE,dimension(E2DFIELD),intent(inout) :: fi,Di,adv
 !
 ! !LOCAL VARIABLES:
    integer                      :: i,j,ii,jj
@@ -151,17 +150,11 @@
                     + vflux(i,j)*DXV - vflux(i  ,j-1)*DXVJM1 &
 #endif
                    )*ARCD1
+            fi(i,j) = ( Dio*fi(i,j) - dt*advn ) / Di(i,j)
             adv(i,j) = adv(i,j) + advn
-            if (action .ne. NOSPLIT_NOFINALISE) then
-               if (action .eq. NOSPLIT_FINALISE) then
-                  f(i,j) = ( Do(i,j)*f(i,j) - dt*adv(i,j) ) / Di(i,j)
-               else
-                  f(i,j) = ( Dio*f(i,j) - dt*advn ) / Di(i,j)
-               end if
-!              Force monotonicity, this is needed here for correcting truncations errors:
-               if (f(i,j).gt.cmax(i,j)) f(i,j)=cmax(i,j)
-               if (f(i,j).lt.cmin(i,j)) f(i,j)=cmin(i,j)
-            end if
+!           Force monotonicity, this is needed here for correcting truncations errors:
+            if (fi(i,j).gt.cmax(i,j)) fi(i,j)=cmax(i,j)
+            if (fi(i,j).lt.cmin(i,j)) fi(i,j)=cmin(i,j)
          end if
       end do
    end do
