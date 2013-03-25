@@ -432,12 +432,8 @@ salt_field_no=1
       call wait_halo(D_TAG)
       call toc(TIM_SALTH)
 
-      if (do_numerical_analyses_3d) then
-         call tracer_diffusion(S,hn,salt_AH_method,salt_AH_const,salt_AH_Prt,salt_AH_stirr_const, &
-                               phymix_S)
-      else
-         call tracer_diffusion(S,hn,salt_AH_method,salt_AH_const,salt_AH_Prt,salt_AH_stirr_const)
-      end if
+      call tracer_diffusion(S,hn,salt_AH_method,salt_AH_const,salt_AH_Prt,salt_AH_stirr_const, &
+                            phymix_S)
    end if
 
    if (do_numerical_analyses_3d) then
