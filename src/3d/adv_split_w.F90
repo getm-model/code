@@ -4,9 +4,9 @@
 ! !IROUTINE:  adv_split_w - vertical advection of 3D quantities \label{sec-w-split-adv}
 !
 ! !INTERFACE:
-   subroutine adv_split_w(dt,f,hi,adv3d,ww,ho,              &
-                          splitfac,scheme,action,tag_3d,az, &
-                          mask_finalise)
+   subroutine adv_split_w(dt,f,fi,hi,adv,ww,      &
+                          splitfac,scheme,tag,az, &
+                          itersmax)
 !  Note (KK): Keep in sync with interface in advection_3d.F90
 !
 ! !DESCRIPTION:
@@ -43,29 +43,29 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use advection, only: adv_interfacial_reconstruction
    use advection, only: NOADV,UPSTREAM
-   use advection, only: NOSPLIT_FINALISE,SPLIT_UPDATE
-   use advection_3d, only: adv_ver_iterations,W_TAG
+   use advection_3d, only: W_TAG
    use halo_zones, only: U_TAG,V_TAG
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    REALTYPE,intent(in)                             :: dt,splitfac
-   REALTYPE,dimension(I3DFIELD),intent(in)         :: ww,ho
-   integer,intent(in)                              :: scheme,action,tag_3d
+   REALTYPE,dimension(I3DFIELD),intent(in),target  :: f
+   REALTYPE,dimension(I3DFIELD),intent(in)         :: ww
+   integer,intent(in)                              :: scheme,tag,itersmax
    integer,dimension(E2DFIELD),intent(in)          :: az
-   logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(I3DFIELD),target,intent(inout) :: f,hi,adv3d
+   REALTYPE,dimension(I3DFIELD),target,intent(inout) :: fi,hi,adv
 !
 ! !LOCAL VARIABLES:
-   logical            :: iterate,use_limiter
+   logical            :: iterate,use_limiter,allocated_aux
    integer            :: i,j,k,kshift,it,iters,iters_new,rc
    REALTYPE           :: itersm1,dti,dtik,hio,advn,fuu,fu,fd,splitfack
    REALTYPE,dimension(:),allocatable        :: wflux
    REALTYPE,dimension(:),allocatable,target :: cfl0
-   REALTYPE,dimension(:),pointer            :: hiaux,advaux,faux,cfls
+   REALTYPE,dimension(:),pointer            :: fo,faux,fiaux,hiaux,advaux,cfls
+   REALTYPE,dimension(:),pointer            :: p_fiaux,p_hiaux,p_advaux
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -81,7 +81,7 @@
    j = jmax/2 ! this MUST NOT be changed!!!
 #endif
 
-   if (tag_3d .eq. W_TAG) then
+   if (tag .eq. W_TAG) then
       kshift = 1
    else
       kshift = 0
@@ -90,11 +90,7 @@
    use_limiter = .false.
    dti = splitfac*dt
 
-   iterate=.false.
-   if (action .eq. SPLIT_UPDATE) then
-      if (adv_ver_iterations .gt. 1) iterate=.true.
-   end if
-
+   iterate = (itersmax .gt. 1)
    if (.not. iterate) then
 #ifdef NO_BAROTROPIC
       stop 'adv_split_w: do enable iterations with compiler option NO_BAROTROPIC'
@@ -103,7 +99,8 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j,use_limiter)                             &
-!$OMP          PRIVATE(rc,wflux,hiaux,advaux,faux,cfl0,cfls)           &
+!$OMP          PRIVATE(rc,wflux,fo,faux,fiaux,hiaux,advaux,cfl0,cfls)  &
+!$OMP          PRIVATE(p_fiaux,p_hiaux,p_advaux)                       &
 !$OMP          PRIVATE(itersm1,dtik,splitfack)                         &
 !$OMP          PRIVATE(i,k,it,iters,iters_new,hio,advn,fuu,fu,fd)
 
@@ -114,17 +111,26 @@
       allocate(wflux(0:kmax),stat=rc)    ! work array
       if (rc /= 0) stop 'adv_split_w: Error allocating memory (wflux)'
 
+#ifndef _POINTER_REMAP_
+      allocate(fo(0:kmax),stat=rc)    ! work array
+      if (rc /= 0) stop 'adv_split_w: Error allocating memory (fo)'
+#endif
+
+      allocated_aux = .false.
 #ifdef _POINTER_REMAP_
       if (iterate) then
 #endif
+         allocated_aux = .true.
+
+         allocate(fiaux(0:kmax),stat=rc)    ! work array
+         if (rc /= 0) stop 'adv_split_w: Error allocating memory (fiaux)'
+
          allocate(hiaux(0:kmax),stat=rc)    ! work array
          if (rc /= 0) stop 'adv_split_w: Error allocating memory (hiaux)'
 
          allocate(advaux(0:kmax),stat=rc)    ! work array
          if (rc /= 0) stop 'adv_split_w: Error allocating memory (advaux)'
 
-         allocate(faux(0:kmax),stat=rc)    ! work array
-         if (rc /= 0) stop 'adv_split_w: Error allocating memory (faux)'
 #ifdef _POINTER_REMAP_
       end if
 #endif
@@ -167,45 +173,58 @@
                dtik = dti
                splitfack = splitfac
 
-               it = 0
-
-               do while (it .lt. iters)
-
-                  if (it .eq. 0) then
 #ifdef _POINTER_REMAP_
-                     if (iterate) then
+               if (.not. iterate) then
+                  fiaux (0:) => fi (i,j,:)
+                  hiaux (0:) => hi (i,j,:)
+                  advaux(0:) => adv(i,j,:)
+               end if
+#else
+               fo = f(i,j,:)
 #endif
-                        hiaux  = hi   (i,j,:)
-                        advaux = adv3d(i,j,:)
-                        faux   = f    (i,j,:)
-#ifdef _POINTER_REMAP_
-                     else
-                        hiaux (0:) => hi   (i,j,:)
-                        advaux(0:) => adv3d(i,j,:)
-                        faux  (0:) => f    (i,j,:)
+
+               p_fiaux  => fiaux
+               p_hiaux  => hiaux
+               p_advaux => advaux
+
+               it = 1
+
+               do while (it .le. iters)
+
+                  if (it .eq. 1) then
+
+                     if (allocated_aux) then
+                        fiaux  = fi (i,j,:)
+                        hiaux  = hi (i,j,:)
+                        advaux = adv(i,j,:)
                      end if
+
+#ifdef _POINTER_REMAP_
+                     faux(0:) => f(i,j,:)
+#else
+                     faux => fo
 #endif
+
                   end if
-                  it = it + 1
 
                   if (iterate) then
                      if (it .eq. 1) then
                         cfls = cfl0
-                     else if (scheme.ne.UPSTREAM .or. iters.lt.adv_ver_iterations) then
+                     else if (scheme.ne.UPSTREAM .or. iters.lt.itersmax) then
                         do k=1-kshift,kmax-1
                            cfls(k) = abs(ww(i,j,k))*dti/(_HALF_*(hiaux(k)+hiaux(k+1)))
                         end do
                      end if
-                     if (iters .lt. adv_ver_iterations) then
+                     if (iters .lt. itersmax) then
 !                       estimate number of iterations by maximum cfl number in water column
                         iters_new = max(1,maxval(ceiling(cfls(1-kshift:kmax-1))))
                         if (iters_new .gt. iters) then
-                           if (iters_new .gt. adv_ver_iterations) then
+                           if (iters_new .gt. itersmax) then
 !$OMP CRITICAL
                               STDERR 'adv_split_w: too many iterations needed at'
                               STDERR 'i=',i,' j=',j,':',iters_new
 !$OMP END CRITICAL
-                              iters = adv_ver_iterations
+                              iters = itersmax
                            else
                               iters = iters_new
                            end if
@@ -217,7 +236,7 @@
                               STDERR 'adv_split_w: restart iterations during it=',it
                               STDERR 'i=',i,' j=',j,':',iters
 !$OMP END CRITICAL
-                              it = 0
+                              it = 1
                               cycle
                            end if
                         end if
@@ -253,55 +272,69 @@
                      end if
                      wflux(k) = ww(i,j,k)*fu
                   end do
+
+#ifdef _POINTER_REMAP_
+                  if (it .eq. iters) then
+                     p_fiaux (0:) => fi (i,j,:)
+                     p_hiaux (0:) => hi (i,j,:)
+                     p_advaux(0:) => adv(i,j,:)
+                  end if
+#endif
+
                   do k=1,kmax-kshift
 !                    Note (KK): in case of W_TAG do not advect at k=kmax
                      hio = hiaux(k)
-                     hiaux(k) = hio - dtik*(ww(i,j,k  )-ww(i,j,k-1))
+                     p_hiaux(k) = hio - dtik*(ww(i,j,k  )-ww(i,j,k-1))
                      advn = splitfack*(wflux(k  )-wflux(k-1))
-                     advaux(k) = advaux(k) + advn
-                     if (action .eq. SPLIT_UPDATE) then
-                        faux(k) = ( hio*faux(k) - dt*advn ) / hiaux(k)
-                     end if
+                     p_fiaux(k) = ( hio*fiaux(k) - dt*advn ) / p_hiaux(k)
+                     p_advaux(k) = advaux(k) + advn
                   end do
+
+                  faux => p_fiaux
+                  it = it + 1
+
                end do
-#ifdef _POINTER_REMAP_
-               if (iterate) then
-#endif
-                  hi   (i,j,1:kmax-kshift) = hiaux (1:kmax-kshift)
-                  adv3d(i,j,1:kmax-kshift) = advaux(1:kmax-kshift)
+
 #ifndef _POINTER_REMAP_
-                  if (action .eq. SPLIT_UPDATE) then
+               fi (i,j,1:kmax-kshift) = p_fiaux (1:kmax-kshift)
+               hi (i,j,1:kmax-kshift) = p_hiaux (1:kmax-kshift)
+               adv(i,j,1:kmax-kshift) = p_advaux(1:kmax-kshift)
 #endif
-                  f    (i,j,1:kmax-kshift) = faux  (1:kmax-kshift)
-#ifndef _POINTER_REMAP_
-                  end if
-#endif
-#ifdef _POINTER_REMAP_
-               end if
-#endif
+
             end if
+
          end do
 #ifndef SLICE_MODEL
       end do
 #endif
-!$OMP END DO
+!$OMP END DO NOWAIT
 
 !     Each thread must deallocate its own HEAP storage:
       deallocate(wflux,stat=rc)
       if (rc /= 0) stop 'adv_split_w: Error deallocating memory (wflux)'
 
+#ifndef _POINTER_REMAP_
+      deallocate(fo,stat=rc)
+      if (rc /= 0) stop 'adv_split_w: Error deallocating memory (fo)'         
+#endif
+
 #ifdef _POINTER_REMAP_
       if (iterate) then
 #endif
+
+         deallocate(fiaux,stat=rc)
+         if (rc /= 0) stop 'adv_split_w: Error deallocating memory (fiaux)'
+
          deallocate(hiaux,stat=rc)
          if (rc /= 0) stop 'adv_split_w: Error deallocating memory (hiaux)'
+
          deallocate(advaux,stat=rc)
          if (rc /= 0) stop 'adv_split_w: Error deallocating memory (advaux)'
-         deallocate(faux,stat=rc)
-         if (rc /= 0) stop 'adv_split_w: Error deallocating memory (faux)'
+
 #ifdef _POINTER_REMAP_
       end if
 #endif
+
       if (scheme.ne.UPSTREAM .or. iterate) then
          deallocate(cfl0,stat=rc)
          if (rc /= 0) stop 'adv_split_w: Error deallocating memory (cfl0)'
@@ -312,25 +345,6 @@
          end if
       end if
 
-
-   end if
-
-   if (action .eq. NOSPLIT_FINALISE) then
-      do k=1,kmax-kshift
-!$OMP DO SCHEDULE(RUNTIME)
-#ifndef SLICE_MODEL
-         do j=jmin-HALO,jmax+HALO
-#endif
-            do i=imin-HALO,imax+HALO
-               if (mask_finalise(i,j)) then
-                  f(i,j,k) = ( ho(i,j,k)*f(i,j,k) - dt*adv3d(i,j,k) ) / hi(i,j,k)
-               end if
-            end do
-#ifndef SLICE_MODEL
-         end do
-#endif
-!$OMP END DO NOWAIT
-      end do
    end if
 
 !$OMP END PARALLEL
