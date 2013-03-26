@@ -55,7 +55,7 @@
    interface
       subroutine adv_split_w(dt,f,fi,hi,adv,ww,      &
                              splitfac,scheme,tag,az, &
-                             itersmax)
+                             itersmax,nvd)
          use domain, only: imin,imax,jmin,jmax,kmax
          IMPLICIT NONE
          REALTYPE,intent(in)                               :: dt,splitfac
@@ -64,6 +64,7 @@
          integer,intent(in)                                :: scheme,tag,itersmax
          integer,dimension(E2DFIELD),intent(in)            :: az
          REALTYPE,dimension(I3DFIELD),target,intent(inout) :: fi,hi,adv
+         REALTYPE,dimension(:,:,:),pointer,intent(inout)   :: nvd
       end subroutine adv_split_w
    end interface
 
@@ -119,7 +120,7 @@
 ! !INTERFACE:
    subroutine do_advection_3d(dt,f,uu,vv,ww,hu,hv,ho,hn,    &
                               split,hscheme,vscheme,AH,tag, &
-                              hires,advres)
+                              hires,advres,nvd)
 !
 ! !DESCRIPTION:
 !
@@ -243,11 +244,20 @@
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE,dimension(I3DFIELD),target,intent(out),optional :: hires,advres
+   REALTYPE,dimension(:,:,:),pointer,intent(out),optional   :: nvd
 !
 ! !LOCAL VARIABLES:
+   type t_pa2d
+      REALTYPE,dimension(:,:),pointer :: p2d
+   end type t_pa2d
+   type(t_pa2d),dimension(1:kmax)      :: pa_nvd2d
    type(t_adv_grid),pointer            :: adv_grid
+   logical                             :: calc_nvd
    REALTYPE,dimension(I3DFIELD),target :: fi,hi,adv
-   REALTYPE,dimension(:,:,:),pointer   :: p_hi,p_adv
+#ifndef _POINTER_REMAP_
+   REALTYPE,dimension(I2DFIELD),target :: nvd2d
+#endif
+   REALTYPE,dimension(:,:,:),pointer   :: p_hi,p_adv,p_nvd
    integer                             :: tag2d,i,j,k
 !EOP
 !-----------------------------------------------------------------------
@@ -276,6 +286,33 @@
          stop 'do_advection_3d: tag is invalid'
    end select
 
+   if (present(nvd)) then
+      calc_nvd = associated(nvd)
+      p_nvd => nvd
+   else
+      calc_nvd = .false.
+      p_nvd => null()
+   end if
+
+   if (calc_nvd) then
+      do k=1,kmax
+#ifdef _POINTER_REMAP_
+         pa_nvd2d(k)%p2d(imin-HALO:,jmin-HALO:) => nvd(:,:,k)
+#else
+         pa_nvd2d(k)%p2d => nvd2d
+#endif
+      end do
+#ifdef _POINTER_REMAP_
+      nvd = _ZERO_
+#else
+      nvd2d = _ZERO_
+#endif
+   else
+      do k=1,kmax
+         pa_nvd2d(k)%p2d => null()
+      end do
+   end if
+
    if (present(hires)) then
       p_hi => hires
    else
@@ -295,14 +332,20 @@
       if (hscheme .eq. NOADV) then
          if (kmax .gt. 1) then
             call adv_split_w(dt,f,f,p_hi,p_adv,ww,_ONE_,vscheme,tag,adv_grid%az, &
-                             adv_ver_iterations)
+                             adv_ver_iterations,p_nvd)
          end if
       else if (vscheme .eq. NOADV) then
          do k=1,kmax
             call do_advection(dt,f(:,:,k),uu(:,:,k),vv(:,:,k),         &
                               hu(:,:,k),hv(:,:,k),ho(:,:,k),hn(:,:,k), &
                               split,hscheme,AH,tag2d,                  &
-                              Dires=p_hi(:,:,k),advres=p_adv(:,:,k))
+                              Dires=p_hi(:,:,k),advres=p_adv(:,:,k),   &
+                              nvd=pa_nvd2d(k)%p2d)
+#ifndef _POINTER_REMAP_
+            if (calc_nvd) then
+               nvd(:,:,k) = pa_nvd2d(k)%p2d
+            end if
+#endif
          end do
       else
 
@@ -323,7 +366,8 @@
                                          adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
                                          _ONE_,hscheme,AH,                          &
-                                         adv_grid%mask_uflux,adv_grid%mask_uupdate)
+                                         adv_grid%mask_uflux,adv_grid%mask_uupdate, &
+                                         pa_nvd2d(k)%p2d)
 #ifndef SLICE_MODEL
                         call adv_split_v(dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k),         &
                                          p_adv(:,:,k),vv(:,:,k),hv(:,:,k),          &
@@ -331,7 +375,15 @@
                                          adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
                                          _ONE_,hscheme,AH,                          &
-                                         adv_grid%mask_vflux,adv_grid%mask_vupdate)
+                                         adv_grid%mask_vflux,adv_grid%mask_vupdate, &
+                                         pa_nvd2d(k)%p2d)
+#endif
+
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd) then
+                           nvd(:,:,k) = pa_nvd2d(k)%p2d
+                           pa_nvd2d(k)%p2d = _ZERO_
+                        end if
 #endif
                      end do
 
@@ -406,7 +458,7 @@
 
                if (kmax .gt. 1) then
                   call adv_split_w(dt,f,fi,p_hi,p_adv,ww,_ONE_,vscheme,tag,adv_grid%az, &
-                                   1)
+                                   1,p_nvd)
                end if
 
 #ifdef _NEW_ADV_NOSPLIT_
@@ -429,11 +481,17 @@
                   call do_advection(dt,f(:,:,k),uu(:,:,k),vv(:,:,k),         &
                                     hu(:,:,k),hv(:,:,k),ho(:,:,k),hn(:,:,k), &
                                     FULLSPLIT,hscheme,AH,tag2d,              &
-                                    Dires=p_hi(:,:,k),advres=p_adv(:,:,k))
+                                    Dires=p_hi(:,:,k),advres=p_adv(:,:,k),   &
+                                    nvd=pa_nvd2d(k)%p2d)
+#ifndef _POINTER_REMAP_
+                  if (calc_nvd) then
+                     nvd(:,:,k) = pa_nvd2d(k)%p2d
+                  end if
+#endif
                end do
                if (kmax .gt. 1) then
                   call adv_split_w(dt,f,f,p_hi,p_adv,ww,_ONE_,vscheme,tag,adv_grid%az, &
-                                   adv_ver_iterations)
+                                   adv_ver_iterations,p_nvd)
                end if
 
             case(HALFSPLIT)
@@ -449,7 +507,14 @@
                                          adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
                                          _HALF_,hscheme,AH,                         &
-                                         adv_grid%mask_uflux,adv_grid%mask_uupdate)
+                                         adv_grid%mask_uflux,adv_grid%mask_uupdate, &
+                                         pa_nvd2d(k)%p2d)
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd) then
+                           nvd(:,:,k) = pa_nvd2d(k)%p2d
+                           pa_nvd2d(k)%p2d = _ZERO_
+                        end if
+#endif
                      end do
 #ifndef SLICE_MODEL
 #ifdef GETM_PARALLEL
@@ -468,13 +533,20 @@
                                          adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
                                          _HALF_,hscheme,AH,                         &
-                                         adv_grid%mask_vflux,adv_grid%mask_vupdate)
+                                         adv_grid%mask_vflux,adv_grid%mask_vupdate, &
+                                         pa_nvd2d(k)%p2d)
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd) then
+                           nvd(:,:,k) = nvd(:,:,k) + pa_nvd2d(k)%p2d
+                           pa_nvd2d(k)%p2d = _ZERO_
+                        end if
+#endif
                      end do
 #endif
 
                      if (kmax .gt. 1) then
                         call adv_split_w(dt,f,f,p_hi,p_adv,ww,_ONE_,vscheme,tag,adv_grid%az, &
-                                         adv_ver_iterations)
+                                         adv_ver_iterations,p_nvd)
                      end if
 
 #ifndef SLICE_MODEL
@@ -504,7 +576,14 @@
                                          adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
                                          _HALF_,hscheme,AH,                         &
-                                         adv_grid%mask_vflux,adv_grid%mask_vupdate)
+                                         adv_grid%mask_vflux,adv_grid%mask_vupdate, &
+                                         pa_nvd2d(k)%p2d)
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd) then
+                           nvd(:,:,k) = nvd(:,:,k) + pa_nvd2d(k)%p2d
+                           pa_nvd2d(k)%p2d = _ZERO_
+                        end if
+#endif
                      end do
 #endif
 #ifdef GETM_PARALLEL
@@ -533,7 +612,14 @@
                                          adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
                                          _HALF_,hscheme,AH,                         &
-                                         adv_grid%mask_uflux,adv_grid%mask_uupdate)
+                                         adv_grid%mask_uflux,adv_grid%mask_uupdate, &
+                                         pa_nvd2d(k)%p2d)
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd) then
+                           nvd(:,:,k) = nvd(:,:,k) + pa_nvd2d(k)%p2d
+                           pa_nvd2d(k)%p2d = _ZERO_
+                        end if
+#endif
                      end do
 
                   case((UPSTREAM_2DH),(J7),(FCT),(P2_2DH))
@@ -552,11 +638,17 @@
                   call do_advection(dt,f(:,:,k),uu(:,:,k),vv(:,:,k),         &
                                     hu(:,:,k),hv(:,:,k),ho(:,:,k),hn(:,:,k), &
                                     NOSPLIT,hscheme,AH,tag2d,                &
-                                    Dires=p_hi(:,:,k),advres=p_adv(:,:,k))
+                                    Dires=p_hi(:,:,k),advres=p_adv(:,:,k),   &
+                                    nvd=pa_nvd2d(k)%p2d)
+#ifndef _POINTER_REMAP_
+                  if (calc_nvd) then
+                     nvd(:,:,k) = pa_nvd2d(k)%p2d
+                  end if
+#endif
                end do
                if (kmax .gt. 1) then
                   call adv_split_w(dt,f,f,p_hi,p_adv,ww,_ONE_,vscheme,tag,adv_grid%az, &
-                                   adv_ver_iterations)
+                                   adv_ver_iterations,p_nvd)
                end if
 
             case default

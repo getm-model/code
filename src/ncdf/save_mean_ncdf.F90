@@ -18,7 +18,7 @@
    use ncdf_mean
    use diagnostic_variables
    use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
-   use domain,       only: H,az
+   use domain,       only: H,az,au,av
    use variables_3d, only: kmin
    use m3d, only: calc_temp,calc_salt
 #ifdef GETM_BIO
@@ -137,6 +137,20 @@
    end if
 #endif
 
+   if (ndu3d_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,au, &
+                  numdis_u_3d_mean,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws3d)
+      err = nf90_put_var(ncid,ndu3d_id,ws3d(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+   if (ndv3d_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,av, &
+                  numdis_v_3d_mean,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws3d)
+      err = nf90_put_var(ncid,ndv3d_id,ws3d(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
    if (nd3d_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az, &
                   numdis_3d_mean,nummix_missing, &
@@ -158,6 +172,13 @@
       err = nf90_put_var(ncid,nmS_id,ws3d(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
+   if (nmSo_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az, &
+                  nummix_S_old_mean,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws3d)
+      err = nf90_put_var(ncid,nmSo_id,ws3d(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
    if (pmS_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az, &
                   phymix_S_mean,nummix_missing, &
@@ -170,6 +191,13 @@
                   nummix_T_mean,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws3d)
       err = nf90_put_var(ncid,nmT_id,ws3d(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+   if (nmTo_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az, &
+                  nummix_T_old_mean,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws3d)
+      err = nf90_put_var(ncid,nmTo_id,ws3d(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
    if (pmT_id .ne. -1) then
