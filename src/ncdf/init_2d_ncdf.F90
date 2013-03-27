@@ -120,12 +120,26 @@
       mv = nummix_missing
       vr(1) = -100.0
       vr(2) = 100.0
+      err = nf90_def_var(ncid,'numdis_u_2d',NCDF_FLOAT_PRECISION,f3_dims,ndu2d_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,ndu2d_id, &
+          long_name='numerical dissipation (u)', &
+          units='W/kg',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+      err = nf90_def_var(ncid,'numdis_v_2d',NCDF_FLOAT_PRECISION,f3_dims,ndv2d_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,ndv2d_id, &
+          long_name='numerical dissipation (v)', &
+          units='W/kg',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+#ifdef _NUMERICAL_ANALYSES_OLD_
       err = nf90_def_var(ncid,'numdis_2d',NCDF_FLOAT_PRECISION,f3_dims,nd2d_id)
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,nd2d_id, &
           long_name='numerical dissipation', &
           units='W/kg',&
           FillValue=fv,missing_value=mv,valid_range=vr)
+#endif
       err = nf90_def_var(ncid,'phydis_2d',NCDF_FLOAT_PRECISION,f3_dims,pd2d_id)
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,pd2d_id, &
