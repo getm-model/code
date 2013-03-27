@@ -137,25 +137,18 @@
    end if
 #endif
 
-   if (ndu3d_id .ne. -1) then
-      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,au, &
-                  numdis_u_3d_mean,nummix_missing, &
-                  imin,imax,jmin,jmax,0,kmax,ws3d)
-      err = nf90_put_var(ncid,ndu3d_id,ws3d(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
-   end if
-   if (ndv3d_id .ne. -1) then
-      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,av, &
-                  numdis_v_3d_mean,nummix_missing, &
-                  imin,imax,jmin,jmax,0,kmax,ws3d)
-      err = nf90_put_var(ncid,ndv3d_id,ws3d(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
-   end if
    if (nd3d_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az, &
                   numdis_3d_mean,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws3d)
       err = nf90_put_var(ncid,nd3d_id,ws3d(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+   if (nd3do_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az, &
+                  numdis_3d_old_mean,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws3d)
+      err = nf90_put_var(ncid,nd3do_id,ws3d(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
    if (pd3d_id .ne. -1) then
