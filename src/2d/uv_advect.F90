@@ -26,7 +26,7 @@
    use variables_2d, only: dtm
    use variables_2d, only: UEx,VEx
    use variables_2d, only: do_numerical_analyses_2d
-   use variables_2d, only: numdis_2d
+   use variables_2d, only: numdis_u_2d,numdis_v_2d,numdis_2d
    use advection, only: NOADV,UPSTREAM,J7,do_advection
    use halo_zones, only: update_2d_halo,wait_halo,U_TAG,V_TAG
    use getm_timers, only: tic,toc,TIM_UVADV,TIM_UVADVH
@@ -183,6 +183,7 @@
       end if
 !$OMP END SINGLE
 
+#ifdef _NUMERICAL_ANALYSES_OLD_
       if (do_numerical_analyses_2d) then
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
@@ -196,13 +197,15 @@
 #endif
 !$OMP END DO
       end if
+#endif
 
 !$OMP SINGLE
       call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,pDadv,pDadv, &
                         vel2d_adv_split,vel2d_adv_hor,_ZERO_,U_TAG, &
-                        advres=UEx)
+                        advres=UEx,nvd=numdis_u_2d)
 !$OMP END SINGLE
 
+#ifdef _NUMERICAL_ANALYSES_OLD_
       if (do_numerical_analyses_2d) then
 
 !$OMP SINGLE
@@ -242,6 +245,7 @@
 !$OMP END DO
 
       end if
+#endif
 
 !     Here begins dimensional split advection for v-velocity
 
@@ -347,6 +351,7 @@
       end if
 !$OMP END SINGLE
 
+#ifdef _NUMERICAL_ANALYSES_OLD_
       if (do_numerical_analyses_2d) then
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
@@ -360,13 +365,15 @@
 #endif
 !$OMP END DO
       end if
+#endif
 
 !$OMP SINGLE
       call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,pDadv,pDadv, &
                         vel2d_adv_split,vel2d_adv_hor,_ZERO_,V_TAG, &
-                        advres=VEx)
+                        advres=VEx,nvd=numdis_v_2d)
 !$OMP END SINGLE
 
+#ifdef _NUMERICAL_ANALYSES_OLD_
       if (do_numerical_analyses_2d) then
 
 !$OMP SINGLE
@@ -411,6 +418,7 @@
 !$OMP END DO
 
       end if
+#endif
 
 !$OMP END PARALLEL
 
