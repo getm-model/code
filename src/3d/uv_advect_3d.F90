@@ -21,9 +21,9 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,ax
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxv,dyu
+   use domain, only: dxv,dyu,arcd1,arud1,arvd1
 #else
-   use domain, only: dx,dy
+   use domain, only: dx,dy,ard1
 #endif
    use m3d, only: vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver
    use variables_3d, only: dt,uu,vv,ww,ho,hn,hun,hvn,uuEx,vvEx
@@ -31,7 +31,7 @@
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
    use variables_3d, only: do_numerical_analyses_3d
-   use variables_3d, only: numdis_u_3d,numdis_v_3d,numdis_3d,numdis_int
+   use variables_3d, only: numdis_3d,numdis_3d_old,numdis_int
 #ifdef _MOMENTUM_TERMS_
    use domain, only: dry_u,dry_v
    use variables_3d, only: adv_u,adv_v
@@ -44,11 +44,14 @@
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
+   logical                             :: calc_numdis
    integer                             :: i,j,k
-   REALTYPE,dimension(I3DFIELD)        :: fadv3d,uuadv,vvadv,wwadv,huadv,hvadv
-   REALTYPE,dimension(I3DFIELD),target :: hnadv
-   REALTYPE,dimension(:,:,:),pointer   :: phadv
-   REALTYPE,dimension(I3DFIELD)        :: work3d,hires
+   REALTYPE,dimension(I3DFIELD)        :: fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hires
+   REALTYPE,dimension(I3DFIELD),target :: hnadv,nvd
+   REALTYPE,dimension(:,:,:),pointer   :: phadv,p_nvd
+#ifdef _NUMERICAL_ANALYSES_OLD_
+   REALTYPE,dimension(I3DFIELD)        :: work3d
+#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -61,6 +64,13 @@
    j = jmax/2 ! this MUST NOT be changed!!!
 #endif
    call tic(TIM_UVADV3D)
+
+   calc_numdis = associated(numdis_3d)
+   if (calc_numdis) then
+      p_nvd => nvd
+   else
+      p_nvd => null()
+   end if
 
    if (vel3d_adv_hor.ne.NOADV .or. vel3d_adv_ver.ne.NOADV) then
 
@@ -214,32 +224,53 @@
 !$OMP SINGLE
       call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,      &
                            vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,U_TAG, &
-                           advres=uuEx,nvd=numdis_u_3d)
+                           hires=hires,advres=uuEx,nvd=p_nvd)
 !$OMP END SINGLE
 
-#ifdef _MOMENTUM_TERMS_
-      do k=1,kmax
+      if (calc_numdis) then
+
+         do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
-         do j=jmin,jmax
+            do j=jmin,jmax
 #endif
-            do i=imin,imax
-               adv_u(i,j,k) = dry_u(i,j) * uuEx(i,j,k)
-            end do
+               do i=imin,imax
+                  nvd(i,j,k) = nvd(i,j,k)*hires(i,j,k)/ARUD1
+               end do
 #ifndef SLICE_MODEL
+            end do
+#endif
+!$OMP END DO
          end do
+
+!$OMP SINGLE
+         call update_3d_halo(nvd,nvd,au,imin,jmin,imax,jmax,kmax,U_TAG)
+         call wait_halo(U_TAG)
+!$OMP END SINGLE
+
+         do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+            do j=jmin,jmax
 #endif
-!$OMP END DO NOWAIT
-      end do
+               do i=imin,imax
+                  if (az(i,j) .eq. 1) then
+                     numdis_3d(i,j,k) = _HALF_*( nvd(i-1,j,k) + nvd(i,j,k) )/hn(i,j,k)*ARCD1
+                  end if
+               end do
+#ifndef SLICE_MODEL
+            end do
 #endif
+!$OMP END DO
+         end do
+      end if
 
 #ifdef _NUMERICAL_ANALYSES_OLD_
       if (do_numerical_analyses_3d) then
 
 !$OMP SINGLE
          call do_advection_3d(dt,work3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,      &
-                              vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,U_TAG, &
-                              hires=hires)
+                              vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,U_TAG)
 
          numdis_int = _ZERO_
 !$OMP END SINGLE
@@ -250,7 +281,7 @@
             do j=jmin,jmax
 #endif
                do i=imin,imax
-                  work3d(i,j,k) = ( work3d(i,j,k) - fadv3d(i,j,k)**2 ) / dt
+                  work3d(i,j,k) = ( work3d(i,j,k) - fadv3d(i,j,k)**2 )/dt*hires(i,j,k)/ARUD1
                end do
 #ifndef SLICE_MODEL
             end do
@@ -271,10 +302,9 @@
 #endif
                do i=imin,imax
                   if (az(i,j) .eq. 1) then
-                     numdis_3d(i,j,k) = _HALF_*( work3d(i-1,j,k) + work3d(i,j,k) )
-                     numdis_int(i,j) = numdis_int(i,j)                           &
-                                      +_HALF_*( work3d(i-1,j,k)*hires(i-1,j,k)   &
-                                               +work3d(i  ,j,k)*hires(i  ,j,k) )
+                     numdis_3d_old(i,j,k) = _HALF_*( work3d(i-1,j,k) + work3d(i,j,k) )/hn(i,j,k)*ARCD1
+                     numdis_int(i,j) = numdis_int(i,j)                                  &
+                                      +_HALF_*( work3d(i-1,j,k) + work3d(i,j,k) )*ARCD1
                   end if
                end do
 #ifndef SLICE_MODEL
@@ -286,6 +316,21 @@
       end if
 #endif
 
+#ifdef _MOMENTUM_TERMS_
+      do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+         do j=jmin,jmax
+#endif
+            do i=imin,imax
+               adv_u(i,j,k) = dry_u(i,j) * uuEx(i,j,k)
+            end do
+#ifndef SLICE_MODEL
+         end do
+#endif
+!$OMP END DO NOWAIT
+      end do
+#endif
 
 !     Here begins dimensional split advection for v-velocity
 
@@ -416,24 +461,47 @@
 !$OMP SINGLE
       call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,      &
                            vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,V_TAG, &
-                           advres=vvEx,nvd=numdis_v_3d)
+                           hires=hires,advres=vvEx,nvd=p_nvd)
 !$OMP END SINGLE
 
-#ifdef _MOMENTUM_TERMS_
-      do k=1,kmax
+      if (calc_numdis) then
+
+         do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
-         do j=jmin,jmax
+            do j=jmin,jmax
 #endif
-            do i=imin,imax
-               adv_v(i,j,k) = dry_v(i,j) * vvEx(i,j,k)
-            end do
+               do i=imin,imax
+                  nvd(i,j,k) = nvd(i,j,k)*hires(i,j,k)/ARVD1
+               end do
 #ifndef SLICE_MODEL
+            end do
+#endif
+!$OMP END DO
          end do
+
+!$OMP SINGLE
+         call update_3d_halo(nvd,nvd,av,imin,jmin,imax,jmax,kmax,V_TAG)
+         call wait_halo(V_TAG)
+!$OMP END SINGLE
+
+         do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+            do j=jmin,jmax
 #endif
-!$OMP END DO NOWAIT
-      end do
+               do i=imin,imax
+                  if (az(i,j) .eq. 1) then
+                     numdis_3d(i,j,k) = numdis_3d(i,j,k)                                    &
+                                       +_HALF_*( nvd(i,j-1,k) + nvd(i,j,k) )/hn(i,j,k)*ARCD1
+                  end if
+               end do
+#ifndef SLICE_MODEL
+            end do
 #endif
+!$OMP END DO
+         end do
+      end if
 
 #ifdef _NUMERICAL_ANALYSES_OLD_
       if (do_numerical_analyses_3d) then
@@ -450,7 +518,7 @@
             do j=jmin,jmax
 #endif
                do i=imin,imax
-                  work3d(i,j,k) = ( work3d(i,j,k) - fadv3d(i,j,k)**2 ) / dt
+                  work3d(i,j,k) = ( work3d(i,j,k) - fadv3d(i,j,k)**2 )/dt*hires(i,j,k)/ARVD1
                end do
 #ifndef SLICE_MODEL
             end do
@@ -475,11 +543,10 @@
 #endif
                do i=imin,imax
                   if (az(i,j) .eq. 1) then
-                     numdis_3d(i,j,k) = numdis_3d(i,j,k)                           &
-                                       +_HALF_*( work3d(i,j-1,k) + work3d(i,j,k) )
-                     numdis_int(i,j) = numdis_int(i,j)                           &
-                                      +_HALF_*( work3d(i,j-1,k)*hires(i,j-1,k)   &
-                                               +work3d(i,j  ,k)*hires(i,j  ,k) )
+                     numdis_3d_old(i,j,k) = numdis_3d_old(i,j,k)                                   &
+                                       +_HALF_*( work3d(i,j-1,k) + work3d(i,j,k) )/hn(i,j,k)*ARCD1
+                     numdis_int(i,j) = numdis_int(i,j)                                  &
+                                      +_HALF_*( work3d(i,j-1,k) + work3d(i,j,k) )*ARCD1
                   end if
                end do
 #ifndef SLICE_MODEL
@@ -489,6 +556,22 @@
          end do
 
       end if
+#endif
+
+#ifdef _MOMENTUM_TERMS_
+      do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+         do j=jmin,jmax
+#endif
+            do i=imin,imax
+               adv_v(i,j,k) = dry_v(i,j) * vvEx(i,j,k)
+            end do
+#ifndef SLICE_MODEL
+         end do
+#endif
+!$OMP END DO NOWAIT
+      end do
 #endif
 
 !$OMP END PARALLEL
