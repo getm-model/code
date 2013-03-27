@@ -33,7 +33,8 @@
 ! !OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudxC,dudxV,dudxU
    REALTYPE,dimension(E2DFIELD),intent(out),optional :: dvdyC,dvdyU,dvdyV
-   REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudyX,dvdxX,shearX
+   REALTYPE,dimension(:,:),pointer,intent(out),optional :: dudyX,dvdxX
+   REALTYPE,dimension(E2DFIELD),intent(out),optional :: shearX
    REALTYPE,dimension(E2DFIELD),intent(out),optional :: dvdxU,shearU
    REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudyV,shearV
 !
@@ -47,6 +48,7 @@
    REALTYPE,dimension(:,:),allocatable,save :: deluxC,delvyC
    integer                                  :: rc
    logical,save                             :: first=.true.
+   logical                                  :: calc_dudyX,calc_dvdxX
    REALTYPE                                 :: dxdy,dydx,tmp,velgrad
    integer                                  :: i,j,n
 !EOP
@@ -80,6 +82,18 @@
       delvyC=_ZERO_
 
       first = .false.
+   end if
+
+   if (present(dudyX)) then
+      calc_dudyX = associated(dudyX)
+   else
+      calc_dudyX = .false.
+   end if
+
+   if (present(dvdxX)) then
+      calc_dvdxX = associated(dvdxX)
+   else
+      calc_dvdxX = .false.
    end if
 
 !  Note (KK): the quantities calculated here are elements of the velocity gradient
@@ -470,7 +484,7 @@
 
 !  shear rate at X-points
 
-   if (present(dvdxX) .or. present(dudyX) .or. present(shearX)) then
+   if (calc_dvdxX .or. calc_dudyX .or. present(shearX)) then
 
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
@@ -489,7 +503,7 @@
 !                 Note (KK): excludes concave and W/E open boundaries (dvdxX=0)
 !                            includes convex open boundaries (no mirroring)
                   velgrad = (v_vel(i+1,j) - v_vel(i,j)) / DXX
-                  if (present(dvdxX)) then
+                  if (calc_dvdxX) then
                      dvdxX(i,j) = velgrad
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -505,7 +519,7 @@
 !                 Note (KK): excludes concave and N/S open boundaries (dudyX=0)
 !                            includes convex open boundaries (no mirroring)
                   velgrad = (u_vel(i,j+1) - u_vel(i,j)) / DYX
-                  if (present(dudyX)) then
+                  if (calc_dudyX) then
                      dudyX(i,j) = velgrad
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -540,12 +554,12 @@
 !                            at W/E closed boundaries slip condition dvdx=0
                   if (au(i,j) .eq. 1) then ! northern closed boundary
                      velgrad = - u_vel(i,j)/DXX*(DXUJP1-DXU)/DYX
-                     if (present(dvdxX)) dvdxX(i,j) = velgrad
+                     if (calc_dvdxX) dvdxX(i,j) = velgrad
                      if (present(shearX)) shearX(i,j) = velgrad
                   end if
                   if (au(i,j+1) .eq. 1) then ! southern closed boundary
                      velgrad = - u_vel(i,j+1)/DXX*(DXUJP1-DXU)/DYX
-                     if (present(dvdxX)) dvdxX(i,j) = velgrad
+                     if (calc_dvdxX) dvdxX(i,j) = velgrad
                      if (present(shearX)) shearX(i,j) = velgrad
                   end if
                end if
@@ -556,12 +570,12 @@
 !                            at N/S closed boundaries slip condition dudy=0
                   if (av(i,j) .eq. 1) then ! eastern closed boundary
                      velgrad = - v_vel(i,j)/DYX*(DYVIP1-DYV)/DXX
-                     if (present(dudyX)) dudyX(i,j) = velgrad
+                     if (calc_dudyX) dudyX(i,j) = velgrad
                      if (present(shearX)) shearX(i,j) = shearX(i,j) + velgrad
                   end if
                   if (av(i+1,j) .eq. 1) then ! western closed boundary
                      velgrad = - v_vel(i+1,j)/DYX*(DYVIP1-DYV)/DXX
-                     if (present(dudyX)) dudyX(i,j) = velgrad
+                     if (calc_dudyX) dudyX(i,j) = velgrad
                      if (present(shearX)) shearX(i,j) = shearX(i,j) + velgrad
                   end if
                end if
@@ -580,7 +594,7 @@
 #ifdef SLICE_MODEL
 !$OMP BARRIER
 !$OMP SINGLE
-      if (present(dvdxX)) then
+      if (calc_dvdxX) then
          dvdxX(imin-HALO:imax+HALO-1,j-1) = dvdxX(imin-HALO:imax+HALO-1,j)
          dvdxX(imin-HALO:imax+HALO-1,j+1) = dvdxX(imin-HALO:imax+HALO-1,j)
       end if
