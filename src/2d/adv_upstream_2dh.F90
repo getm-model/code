@@ -9,7 +9,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                dxv,dyu,dxu,dyv,arcd1,       &
 #endif
-                               action,AH,az)
+                               AH,az)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -39,7 +39,6 @@
    REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
    REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
-   integer,intent(in)                         :: action
    integer,dimension(E2DFIELD),intent(in)     :: az
 !
 ! !INPUT/OUTPUT PARAMETERS:

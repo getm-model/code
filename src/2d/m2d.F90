@@ -434,10 +434,19 @@
          allocate(phydis_2d(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'postinit_2d: Error allocating memory (phydis_2d)'
          phydis_2d = _ZERO_
+         allocate(numdis_u_2d(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_u_2d)'
+         numdis_u_2d = _ZERO_
+         allocate(numdis_v_2d(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_v_2d)'
+         numdis_v_2d = _ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
          allocate(numdis_2d(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d)'
          numdis_2d = _ZERO_
+#endif
       end if
+
    end if
 
 !
