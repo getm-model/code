@@ -25,7 +25,7 @@
 #endif
    use m2d,          only: dtm
    use variables_2d, only: z,D,Dlast,U,DU,V,DV,res_u,res_v
-   use variables_2d, only: numdis_2d,phydis_2d
+   use variables_2d, only: numdis_u_2d,numdis_v_2d,numdis_2d,phydis_2d
    use variables_les, only: AmC_2d
 #ifdef USE_BREAKS
    use variables_2d, only: break_stat
@@ -133,6 +133,18 @@
          if (err .NE. NF90_NOERR) go to 10
       end if
 
+      if (ndu2d_id .ne. -1) then
+         call cnv_2d(imin,jmin,imax,jmax,au,numdis_u_2d,nummix_missing, &
+                     imin,jmin,imax,jmax,ws)
+         err = nf90_put_var(ncid,ndu2d_id,ws(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+      if (ndv2d_id .ne. -1) then
+         call cnv_2d(imin,jmin,imax,jmax,av,numdis_v_2d,nummix_missing, &
+                     imin,jmin,imax,jmax,ws)
+         err = nf90_put_var(ncid,ndv2d_id,ws(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
       if (nd2d_id .ne. -1) then
          call cnv_2d(imin,jmin,imax,jmax,az,numdis_2d,nummix_missing, &
                      imin,jmin,imax,jmax,ws)

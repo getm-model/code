@@ -37,8 +37,9 @@
    use variables_3d, only: buoy
 #endif
    use variables_3d, only: minus_bnh
-   use variables_3d, only: numdis_3d,phydis_3d
+   use variables_3d, only: numdis_u_3d,numdis_v_3d,numdis_3d,phydis_3d
    use variables_3d, only: nummix_S,nummix_T,phymix_S,phymix_T
+   use variables_3d, only: nummix_S_old,nummix_T_old
    use variables_les, only: AmC_3d
    use variables_3d, only: tke,num,nuh,eps
 #ifdef SPM
@@ -442,6 +443,18 @@
 
    end if ! save_ss_nn
 
+   if (ndu3d_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,au,numdis_u_3d,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,ndu3d_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+   if (ndv3d_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,av,numdis_v_3d,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,ndv3d_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
    if (nd3d_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,numdis_3d,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
@@ -460,6 +473,12 @@
       err = nf90_put_var(ncid,nmS_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
+   if (nmSo_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix_S_old,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,nmSo_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
    if (pmS_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix_S,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
@@ -470,6 +489,12 @@
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix_T,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
       err = nf90_put_var(ncid,nmT_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+   if (nmTo_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix_T_old,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,nmTo_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
    if (pmT_id .ne. -1) then
