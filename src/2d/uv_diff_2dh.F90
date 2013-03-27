@@ -174,14 +174,15 @@
    integer,intent(in)                                :: An_method
    REALTYPE,dimension(E2DFIELD),intent(in),optional  :: U,V,D,DU,DV
    REALTYPE,dimension(E2DFIELD),intent(in),optional  :: dudxC,dvdyC
-   REALTYPE,dimension(E2DFIELD),intent(in),optional  :: dudyX,dvdxX,shearX
+   REALTYPE,dimension(:,:),pointer,intent(in),optional  :: dudyX,dvdxX
+   REALTYPE,dimension(E2DFIELD),intent(in),optional  :: shearX
    REALTYPE,dimension(E2DFIELD),intent(in),optional  :: AmC,AmX
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout)        :: UEx,VEx
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(out),optional :: phydis
+   REALTYPE,dimension(:,:),pointer,intent(out)       :: phydis
    REALTYPE,dimension(E2DFIELD),intent(out),optional :: hsd_u,hsd_v
 !
 ! !REVISION HISTORY:
@@ -189,6 +190,7 @@
 !  Modified by       : Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
+   logical                      :: calc_phydis
    REALTYPE,dimension(E2DFIELD) :: work2d
    REALTYPE,dimension(E2DFIELD) :: phydis_wrk,phydis_vel
    integer                      :: i,j
@@ -203,6 +205,8 @@
 #ifdef SLICE_MODEL
    j = jmax/2 ! this MUST NOT be changed!!!
 #endif
+
+   calc_phydis = associated(phydis)
 
    if (present(hsd_u)) then
       hsd_u = UEx
@@ -224,7 +228,7 @@
 
 !  diffusion terms for u-equation
 
-   if (present(phydis)) then
+   if (calc_phydis) then
       phydis_vel = _ZERO_
    end if
 
@@ -245,7 +249,7 @@
                   work2d(i,j)=_TWO_*Am_const*dudxC(i,j)
             end select
             if (Am_method .ne. NO_AM) then
-               if (present(phydis)) then
+               if (calc_phydis) then
                   phydis_wrk(i,j) = work2d(i,j) * dudxC(i,j)
                end if
                work2d(i,j) = DYC * D(i,j) * work2d(i,j)
@@ -259,7 +263,7 @@
                   end if
             end select
          else
-            if (present(phydis)) then
+            if (calc_phydis) then
                phydis_wrk(i,j) = _ZERO_
             end if
          end if
@@ -271,7 +275,7 @@
       do i=imin-1,imax      ! UEx defined on U-points
          if (au(i,j).eq.1 .or. au(i,j).eq.2) then
             UEx(i,j)=UEx(i,j)-(work2d(i+1,j)-work2d(i  ,j))*ARUD1
-            if (present(phydis)) then
+            if (calc_phydis) then
                phydis_vel(i,j) = _HALF_*(phydis_wrk(i,j)+phydis_wrk(i+1,j))
             end if
          end if
@@ -288,7 +292,7 @@
       do j=jmin-1,jmax        ! work2d defined on X-points
          do i=imin-1,imax
             work2d(i,j)=_ZERO_
-            if (present(phydis)) then
+            if (calc_phydis) then
                phydis_wrk(i,j) = _ZERO_
             end if
             if (ax(i,j) .ge. 1) then
@@ -299,7 +303,7 @@
                      work2d(i,j)=AmX(i,j)*shearX(i,j)
                end select
                if (Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
-                  if (present(phydis)) then
+                  if (calc_phydis) then
                      phydis_wrk(i,j) = work2d(i,j) * dudyX(i,j)
                   end if
                   work2d(i,j) = DXX * _HALF_*(DU(i,j)+DU(i,j+1)) * work2d(i,j)
@@ -329,7 +333,7 @@
                         work2d(i,j)=AmX(i,j)*shearX(i,j)
                   end select
                   if (Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
-                     if (present(phydis)) then
+                     if (calc_phydis) then
                         phydis_wrk(i,j) = work2d(i,j) * dudyX(i,j)
                      end if
                      work2d(i,j) = DXX * DU(i,j) * work2d(i,j)
@@ -343,7 +347,7 @@
                         work2d(i,j)=AmX(i,j)*shearX(i,j)
                   end select
                   if (Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
-                     if (present(phydis)) then
+                     if (calc_phydis) then
                         phydis_wrk(i,j) = work2d(i,j) * dudyX(i,j)
                      end if
                      work2d(i,j) = DXX * DU(i,j+1) * work2d(i,j)
@@ -360,7 +364,7 @@
          do i=imin-1,imax
             if (au(i,j).eq.1 .or. au(i,j).eq.2) then
                UEx(i,j)=UEx(i,j)-(work2d(i,j  )-work2d(i,j-1))*ARUD1
-               if (present(phydis)) then
+               if (calc_phydis) then
                   phydis_vel(i,j) = phydis_vel(i,j) + _HALF_*(phydis_wrk(i,j-1)+phydis_wrk(i,j))
                end if
             end if
@@ -370,7 +374,7 @@
    end if
 #endif
 
-   if (present(phydis)) then
+   if (calc_phydis) then
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
       do j=jmin,jmax
@@ -389,7 +393,7 @@
 
 !  diffusion terms for v-equation
 
-   if (present(phydis)) then
+   if (calc_phydis) then
       phydis_vel = _ZERO_
    end if
 
@@ -401,7 +405,7 @@
 #endif
          do i=imin-1,imax      ! work2d defined on X-points
             work2d(i,j)=_ZERO_
-            if (present(phydis)) then
+            if (calc_phydis) then
                phydis_wrk(i,j) = _ZERO_
             end if
             if (ax(i,j) .ge. 1) then
@@ -412,7 +416,7 @@
                      work2d(i,j)=AmX(i,j)*shearX(i,j)
                end select
                if (Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
-                  if (present(phydis)) then
+                  if (calc_phydis) then
                      phydis_wrk(i,j) = work2d(i,j) * dvdxX(i,j)
                   end if
                   work2d(i,j) = DYX * _HALF_*(DV(i,j)+DV(i+1,j)) * work2d(i,j)
@@ -442,7 +446,7 @@
                         work2d(i,j)=AmX(i,j)*shearX(i,j)
                   end select
                   if (Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
-                     if (present(phydis)) then
+                     if (calc_phydis) then
                         phydis_wrk(i,j) = work2d(i,j) * dvdxX(i,j)
                      end if
                      work2d(i,j) = DXX * DV(i,j) * work2d(i,j)
@@ -456,7 +460,7 @@
                         work2d(i,j)=AmX(i,j)*shearX(i,j)
                   end select
                   if (Am_method.eq.AM_CONSTANT .or. Am_method.eq.AM_LES) then
-                     if (present(phydis)) then
+                     if (calc_phydis) then
                         phydis_wrk(i,j) = work2d(i,j) * dvdxX(i,j)
                      end if
                      work2d(i,j) = DXX * DV(i+1,j) * work2d(i,j)
@@ -473,7 +477,7 @@
          do i=imin,imax          ! VEx defined on V-points
             if (av(i,j).eq.1 .or. av(i,j).eq.2) then
                VEx(i,j)=VEx(i,j)-(work2d(i  ,j)-work2d(i-1,j))*ARVD1
-               if (present(phydis)) then
+               if (calc_phydis) then
                   phydis_vel(i,j) = _HALF_ * ( phydis_wrk(i-1,j) + phydis_wrk(i,j) )
                end if
             end if
@@ -501,7 +505,7 @@
                   work2d(i,j)=_TWO_*Am_const*dvdyC(i,j)
             end select
             if (Am_method .ne. NO_AM) then
-               if (present(phydis)) then
+               if (calc_phydis) then
                   phydis_wrk(i,j) = work2d(i,j) * dvdyC(i,j)
                end if
                work2d(i,j) = DXC * D(i,j) * work2d(i,j)
@@ -515,7 +519,7 @@
                   end if
             end select
          else
-            if (present(phydis)) then
+            if (calc_phydis) then
                phydis_wrk(i,j) = _ZERO_
             end if
          end if
@@ -527,7 +531,7 @@
       do i=imin,imax
          if (av(i,j).eq.1 .or. av(i,j).eq.2) then
             VEx(i,j)=VEx(i,j)-(work2d(i,j+1)-work2d(i,j  ))*ARVD1
-            if (present(phydis)) then
+            if (calc_phydis) then
                phydis_vel(i,j) = phydis_vel(i,j) + _HALF_*(phydis_wrk(i,j)+phydis_wrk(i,j+1))
             end if
          end if
@@ -536,7 +540,7 @@
 !$OMP END DO
 #endif
 
-   if (present(phydis)) then
+   if (calc_phydis) then
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
       do j=jmin,jmax
