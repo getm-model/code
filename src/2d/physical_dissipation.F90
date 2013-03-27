@@ -136,7 +136,7 @@
       end do
       do j=jmin-HALO,jmax+HALO-1
 #endif
-         do i=imax+HALO-1,imin-HALO+1 ! loop order MUST NOT be changed!!!
+         do i=imax+HALO-1,imin-HALO+1,-1 ! loop order MUST NOT be changed!!!
 !           Note (KK): slip condition dudyV(av=0)=0
 !                      prolonged outflow condition dvdxV(av=3)=0
 !                      shearV(av=3) would require shearX outside open boundary
@@ -150,7 +150,7 @@
          end do
 #ifndef SLICE_MODEL
       end do
-      do j=jmax+HALO-1,jmin-HALO+1 ! loop order MUST NOT be changed!!!
+      do j=jmax+HALO-1,jmin-HALO+1,-1 ! loop order MUST NOT be changed!!!
          do i=imin-HALO+1,imax+HALO-1
             if (az(i,j) .eq. 1) then
                ! calculate shearC
