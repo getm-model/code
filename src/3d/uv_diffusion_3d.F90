@@ -36,6 +36,14 @@
 !  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
+   type t_pa2d
+      REALTYPE,dimension(:,:),pointer :: p2d
+   end type t_pa2d
+   type(t_pa2d),dimension(1:kmax)      :: pa_pd2d,pa_dvdxX,pa_dudyX
+   logical                             :: calc_phydis
+#ifndef _POINTER_REMAP_
+   REALTYPE,dimension(I2DFIELD),target :: pd2d,dvdxX,dudyX
+#endif
    integer :: i,j,k
 
 !EOP
@@ -48,100 +56,104 @@
 #endif
    call tic(TIM_UVDIFF3D)
 
+   calc_phydis = associated(phydis_3d)
+   if (calc_phydis) then
+      do k=1,kmax
+#ifdef _POINTER_REMAP_
+         pa_pd2d (k)%p2d(imin-HALO:,jmin-HALO:) => phydis_3d(:,:,k)
+         pa_dvdxX(k)%p2d(imin-HALO:,jmin-HALO:) => dvdxX_3d (:,:,k)
+#ifndef SLICE_MODEL
+         pa_dudyX(k)%p2d(imin-HALO:,jmin-HALO:) => dudyX_3d (:,:,k)
+#endif
+#else
+         pa_pd2d (k)%p2d => pd2d
+         pa_dvdxX(k)%p2d => dvdxX
+         pa_dudyX(k)%p2d => dudyX
+#endif
+      end do
+   else
+      do k=1,kmax
+         pa_pd2d(k)%p2d => null()
+      end do
+   end if
+
    select case(Am_method)
       case(AM_LAPLACE)
-         if (do_numerical_analyses_3d) then
-            do k=1,kmax
-               call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
-                                D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
-                                dudxC=dudxC_3d(:,:,k),                             &
+         do k=1,kmax
+            call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                             D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
+                             dudxC=dudxC_3d(:,:,k),                             &
 #ifndef SLICE_MODEL
-                                dvdyC=dvdyC_3d(:,:,k),                             &
+                             dvdyC=dvdyC_3d(:,:,k),                             &
 #endif
-                                phydis=phydis_3d(:,:,k)                            &
+                             phydis=pa_pd2d(k)%p2d                              &
 #ifdef _MOMENTUM_TERMS_
-                               ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)              &
+                            ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)              &
 #endif
-                               )
-            end do
-         else
-            do k=1,kmax
-               call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
-                                D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
-                                dudxC=dudxC_3d(:,:,k)                              &
-#ifndef SLICE_MODEL
-                               ,dvdyC=dvdyC_3d(:,:,k)                              &
+                            )
+#ifndef _POINTER_REMAP_
+            if (calc_phydis) then
+               phydis_3d(:,:,k) = pa_pd2d(k)%p2d
+            end if
 #endif
-#ifdef _MOMENTUM_TERMS_
-                               ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)              &
-#endif
-                               )
-            end do
-         end if
+         end do
       case(AM_LES)
-         if (do_numerical_analyses_3d) then
-            do k=1,kmax
-               call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
-                                D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
-                                dudxC=dudxC_3d(:,:,k),dvdxX=dvdxX_3d(:,:,k),       &
+         do k=1,kmax
+#ifndef _POINTER_REMAP_
+            if (calc_phydis) then
+               pa_dvdxX(k)%p2d = dvdxX_3d(:,:,k)
 #ifndef SLICE_MODEL
-                                dvdyC=dvdyC_3d(:,:,k),dudyX=dudyX_3d(:,:,k),       &
+               pa_dudyX(k)%p2d = dudyX_3d(:,:,k)
 #endif
-                                shearX=shearX_3d(:,:,k),                           &
-                                AmC=AmC_3d(:,:,k),AmX=AmX_3d(:,:,k),               &
-                                phydis=phydis_3d(:,:,k)                            &
-#ifdef _MOMENTUM_TERMS_
-                               ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)              &
+            end if
 #endif
-                               )
-            end do
-         else
-            do k=1,kmax
-               call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
-                                D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
-                                dudxC=dudxC_3d(:,:,k),                             &
+            call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                             D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
+                             dudxC=dudxC_3d(:,:,k),dvdxX=pa_dvdxX(k)%p2d,       &
 #ifndef SLICE_MODEL
-                                dvdyC=dvdyC_3d(:,:,k),                             &
+                             dvdyC=dvdyC_3d(:,:,k),dudyX=pa_dudyX(k)%p2d,       &
 #endif
-                                shearX=shearX_3d(:,:,k),                           &
-                                AmC=AmC_3d(:,:,k),AmX=AmX_3d(:,:,k)                &
+                             shearX=shearX_3d(:,:,k),                           &
+                             AmC=AmC_3d(:,:,k),AmX=AmX_3d(:,:,k),               &
+                             phydis=pa_pd2d(k)%p2d                              &
 #ifdef _MOMENTUM_TERMS_
-                               ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)              &
+                            ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)              &
 #endif
-                               )
-            end do
-         end if
+                            )
+#ifndef _POINTER_REMAP_
+            if (calc_phydis) then
+               phydis_3d(:,:,k) = pa_pd2d(k)%p2d
+            end if
+#endif
+         end do
       case(AM_CONSTANT)
-         if (do_numerical_analyses_3d) then
-            do k=1,kmax
-               call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
-                                D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
-                                dudxC=dudxC_3d(:,:,k),dvdxX=dvdxX_3d(:,:,k),       &
+         do k=1,kmax
+#ifndef _POINTER_REMAP_
+            if (calc_phydis) then
+               pa_dvdxX(k)%p2d = dvdxX_3d(:,:,k)
 #ifndef SLICE_MODEL
-                                dvdyC=dvdyC_3d(:,:,k),dudyX=dudyX_3d(:,:,k),       &
+               pa_dudyX(k)%p2d = dudyX_3d(:,:,k)
 #endif
-                                shearX=shearX_3d(:,:,k),                           &
-                                phydis=phydis_3d(:,:,k)                            &
-#ifdef _MOMENTUM_TERMS_
-                               ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)              &
+            end if
 #endif
-                               )
-            end do
-         else
-            do k=1,kmax
-               call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
-                                D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
-                                dudxC=dudxC_3d(:,:,k),                             &
+            call uv_diff_2dh(0,uuEx(:,:,k),vvEx(:,:,k),U=uu(:,:,k),V=vv(:,:,k), &
+                             D=hn(:,:,k),DU=hun(:,:,k),DV=hvn(:,:,k),           &
+                             dudxC=dudxC_3d(:,:,k),dvdxX=pa_dvdxX(k)%p2d,       &
 #ifndef SLICE_MODEL
-                                dvdyC=dvdyC_3d(:,:,k),                             &
+                             dvdyC=dvdyC_3d(:,:,k),dudyX=pa_dudyX(k)%p2d,       &
 #endif
-                                shearX=shearX_3d(:,:,k)                            &
+                             shearX=shearX_3d(:,:,k),                           &
+                             phydis=pa_pd2d(k)%p2d                              &
 #ifdef _MOMENTUM_TERMS_
-                               ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)              &
+                            ,hsd_u=hsd_u(:,:,k),hsd_v=hsd_v(:,:,k)              &
 #endif
-                               )
-            end do
-         end if
+                            )
+#ifndef _POINTER_REMAP_
+            if (calc_phydis) then
+               phydis_3d(:,:,k) = pa_pd2d(k)%p2d
+            end if
+#endif
+         end do
    end select
 
 #ifdef _MOMENTUM_TERMS_

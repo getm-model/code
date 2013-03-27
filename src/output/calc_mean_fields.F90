@@ -22,7 +22,7 @@
    use variables_3d, only: nummix_S,nummix_T
    use variables_3d, only: nummix_S_old,nummix_S_int,nummix_T_old,nummix_T_int
    use variables_3d, only: phymix_S,phymix_S_int,phymix_T,phymix_T_int
-   use variables_3d, only: numdis_u_3d,numdis_v_3d,numdis_3d,numdis_int
+   use variables_3d, only: numdis_3d,numdis_3d_old,numdis_int
    use variables_3d, only: phydis_3d,phydis_int
 #ifdef GETM_BIO
    use bio, only: bio_calc
@@ -97,16 +97,13 @@
 #endif
 
       if (do_numerical_analyses_3d) then
-         allocate(numdis_u_3d_mean(I3DFIELD),stat=rc)
-           if (rc /= 0) &
-              stop 'calc_mean_fields.F90: Error allocating memory (numdis_u_3d_mean)'
-         allocate(numdis_v_3d_mean(I3DFIELD),stat=rc)
-           if (rc /= 0) &
-              stop 'calc_mean_fields.F90: Error allocating memory (numdis_v_3d_mean)'
-#ifdef _NUMERICAL_ANALYSES_OLD_
          allocate(numdis_3d_mean(I3DFIELD),stat=rc)
            if (rc /= 0) &
               stop 'calc_mean_fields.F90: Error allocating memory (numdis_3d_mean)'
+#ifdef _NUMERICAL_ANALYSES_OLD_
+         allocate(numdis_3d_old_mean(I3DFIELD),stat=rc)
+           if (rc /= 0) &
+              stop 'calc_mean_fields.F90: Error allocating memory (numdis_3d_old_mean)'
          allocate(numdis_int_mean(I2DFIELD),stat=rc)
            if (rc /= 0) &
               stop 'calc_mean_fields.F90: Error allocating memory (numdis_int_mean)'
@@ -190,9 +187,9 @@
       Tmean=_ZERO_; Smean=_ZERO_
 #endif
       if (do_numerical_analyses_3d) then
-         numdis_u_3d_mean=_ZERO_; numdis_v_3d_mean=_ZERO_
+         numdis_3d_mean=_ZERO_
 #ifdef _NUMERICAL_ANALYSES_OLD_
-         numdis_3d_mean=_ZERO_; numdis_int_mean=_ZERO_
+         numdis_3d_old_mean=_ZERO_; numdis_int_mean=_ZERO_
 #endif
          phydis_3d_mean=_ZERO_; phydis_int_mean=_ZERO_
          if (calc_temp) then
@@ -256,10 +253,9 @@
       Smean = Smean + S
 #endif
       if (do_numerical_analyses_3d) then
-         numdis_u_3d_mean = numdis_u_3d_mean + numdis_u_3d
-         numdis_v_3d_mean = numdis_v_3d_mean + numdis_v_3d
-#ifdef _NUMERICAL_ANALYSES_OLD_
          numdis_3d_mean = numdis_3d_mean + numdis_3d
+#ifdef _NUMERICAL_ANALYSES_OLD_
+         numdis_3d_old_mean = numdis_3d_old_mean + numdis_3d_old
          numdis_int_mean = numdis_int_mean + numdis_int
 #endif
          phydis_3d_mean = phydis_3d_mean + phydis_3d
@@ -314,10 +310,9 @@
          Smean = Smean / step
 #endif
          if (do_numerical_analyses_3d) then
-            numdis_u_3d_mean = numdis_u_3d_mean / step
-            numdis_v_3d_mean = numdis_v_3d_mean / step
-#ifdef _NUMERICAL_ANALYSES_OLD_
             numdis_3d_mean = numdis_3d_mean / step
+#ifdef _NUMERICAL_ANALYSES_OLD_
+            numdis_3d_old_mean = numdis_3d_old_mean / step
             numdis_int_mean = numdis_int_mean / step
 #endif
             phydis_3d_mean = phydis_3d_mean / step
