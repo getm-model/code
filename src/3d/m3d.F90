@@ -299,16 +299,13 @@
       allocate(phydis_int(I2DFIELD),stat=rc)
       if (rc /= 0) stop 'postinit_3d: Error allocating memory (phydis_int)'
       phydis_int = _ZERO_
-      allocate(numdis_u_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_u_3d)'
-      numdis_u_3d = _ZERO_
-      allocate(numdis_v_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_v_3d)'
-      numdis_v_3d = _ZERO_
-#ifdef _NUMERICAL_ANALYSES_OLD_
       allocate(numdis_3d(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_3d)'
       numdis_3d = _ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
+      allocate(numdis_3d_old(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_3d_old)'
+      numdis_3d_old = _ZERO_
       allocate(numdis_int(I2DFIELD),stat=rc)
       if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_int)'
       numdis_int = _ZERO_
