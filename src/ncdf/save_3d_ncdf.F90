@@ -34,7 +34,7 @@
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho,rad,NN
 #endif
-   use variables_3d, only: numdis_u_3d,numdis_v_3d,numdis_3d,phydis_3d
+   use variables_3d, only: numdis_3d,numdis_3d_old,phydis_3d
    use variables_3d, only: nummix_S,nummix_T,phymix_S,phymix_T
    use variables_3d, only: nummix_S_old,nummix_T_old
    use variables_3d, only: tke,num,nuh,eps
@@ -415,22 +415,16 @@
 
    end if ! save_ss_nn
 
-   if (ndu3d_id .ne. -1) then
-      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,au,numdis_u_3d,nummix_missing, &
-                  imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf90_put_var(ncid,ndu3d_id,ws(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
-   end if
-   if (ndv3d_id .ne. -1) then
-      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,av,numdis_v_3d,nummix_missing, &
-                  imin,imax,jmin,jmax,0,kmax,ws)
-      err = nf90_put_var(ncid,ndv3d_id,ws(_3D_W_),start,edges)
-      if (err .NE. NF90_NOERR) go to 10
-   end if
    if (nd3d_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,numdis_3d,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
       err = nf90_put_var(ncid,nd3d_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+   if (nd3do_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,numdis_3d_old,nummix_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,nd3do_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
    if (pd3d_id .ne. -1) then
