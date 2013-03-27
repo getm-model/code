@@ -681,8 +681,6 @@
 
    end if
 
-   if (present(hires)) hires = hi
-
    call toc(TIM_ADV3D)
 #ifdef DEBUG
    write(debug,*) 'Leaving do_advection_3d()'
