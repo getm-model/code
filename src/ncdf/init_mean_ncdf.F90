@@ -172,12 +172,29 @@
       mv = nummix_missing
       vr(1) = -100.0
       vr(2) =  100.0
+
+      err = nf90_def_var(ncid,'numdis_u_3d',NCDF_FLOAT_PRECISION,f4_dims,ndu3d_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,ndu3d_id, &
+          long_name='mean numerical dissipation (u)', &
+          units='W/kg',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'numdis_v_3d',NCDF_FLOAT_PRECISION,f4_dims,ndv3d_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,ndv3d_id, &
+          long_name='mean numerical dissipation (v)', &
+          units='W/kg',&
+          FillValue=fv,missing_value=mv,valid_range=vr)
+
+#ifdef _NUMERICAL_ANALYSES_OLD_
       err = nf90_def_var(ncid,'numdis_3d',NCDF_FLOAT_PRECISION,f4_dims,nd3d_id)
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,nd3d_id, &
           long_name='mean numerical dissipation', &
           units='W/kg',&
           FillValue=fv,missing_value=mv,valid_range=vr)
+#endif
 
       err = nf90_def_var(ncid,'phydis_3d',NCDF_FLOAT_PRECISION,f4_dims,pd3d_id)
       if (err .NE. NF90_NOERR) go to 10
@@ -186,12 +203,14 @@
           units='W/kg',&
           FillValue=fv,missing_value=mv,valid_range=vr)
 
+#ifdef _NUMERICAL_ANALYSES_OLD_
       err = nf90_def_var(ncid,'numdis_int',NCDF_FLOAT_PRECISION,f3_dims,ndint_id)
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,ndint_id, &
           long_name='mean, vert. integrated numerical dissipation', &
           units='Wm/kg',&
           FillValue=fv,missing_value=mv,valid_range=vr)
+#endif
 
       err = nf90_def_var(ncid,'phydis_int',NCDF_FLOAT_PRECISION,f3_dims,pdint_id)
       if (err .NE. NF90_NOERR) go to 10
@@ -201,12 +220,22 @@
           FillValue=fv,missing_value=mv,valid_range=vr)
 
       if (calc_salt) then
+
          err = nf90_def_var(ncid,'nummix_S',NCDF_FLOAT_PRECISION,f4_dims,nmS_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nmS_id, &
              long_name='mean numerical mixing of salinity', &
              units='psu**2/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
+
+#ifdef _NUMERICAL_ANALYSES_OLD_
+         err = nf90_def_var(ncid,'nummix_S_old',NCDF_FLOAT_PRECISION,f4_dims,nmSo_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,nmSo_id, &
+             long_name='mean numerical mixing of salinity (old)', &
+             units='psu**2/s',&
+             FillValue=fv,missing_value=mv,valid_range=vr)
+#endif
 
          err = nf90_def_var(ncid,'phymix_S',NCDF_FLOAT_PRECISION,f4_dims,pmS_id)
          if (err .NE. NF90_NOERR) go to 10
@@ -215,12 +244,14 @@
              units='psu**2/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
 
+#ifdef _NUMERICAL_ANALYSES_OLD_
          err = nf90_def_var(ncid,'nummix_S_int',NCDF_FLOAT_PRECISION,f3_dims,nmSint_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nmSint_id, &
              long_name='mean, vert.integrated numerical mixing of salinity', &
              units='psu**2 m/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
+#endif
 
          err = nf90_def_var(ncid,'phymix_S_int',NCDF_FLOAT_PRECISION,f3_dims,pmSint_id)
          if (err .NE. NF90_NOERR) go to 10
@@ -231,12 +262,22 @@
       end if
 
       if (calc_temp) then
+
          err = nf90_def_var(ncid,'nummix_T',NCDF_FLOAT_PRECISION,f4_dims,nmT_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nmT_id, &
              long_name='mean numerical mixing of temperature', &
              units='degC**2/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
+
+#ifdef _NUMERICAL_ANALYSES_OLD_
+         err = nf90_def_var(ncid,'nummix_T_old',NCDF_FLOAT_PRECISION,f4_dims,nmTo_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,nmTo_id, &
+             long_name='mean numerical mixing of temperature (old)', &
+             units='degC**2/s',&
+             FillValue=fv,missing_value=mv,valid_range=vr)
+#endif
 
          err = nf90_def_var(ncid,'phymix_T',NCDF_FLOAT_PRECISION,f4_dims,pmT_id)
          if (err .NE. NF90_NOERR) go to 10
@@ -245,12 +286,14 @@
              units='degC**2/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
 
+#ifdef _NUMERICAL_ANALYSES_OLD_
          err = nf90_def_var(ncid,'nummix_T_int',NCDF_FLOAT_PRECISION,f3_dims,nmTint_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nmTint_id, &
              long_name='mean, vert.integrated numerical mixing of temperature', &
              units='degC**2 m/s',&
              FillValue=fv,missing_value=mv,valid_range=vr)
+#endif
 
          err = nf90_def_var(ncid,'phymix_T_int',NCDF_FLOAT_PRECISION,f3_dims,pmTint_id)
          if (err .NE. NF90_NOERR) go to 10
