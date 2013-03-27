@@ -31,7 +31,7 @@
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
    use variables_3d, only: do_numerical_analyses_3d
-   use variables_3d, only: numdis_3d,numdis_int
+   use variables_3d, only: numdis_u_3d,numdis_v_3d,numdis_3d,numdis_int
 #ifdef _MOMENTUM_TERMS_
    use domain, only: dry_u,dry_v
    use variables_3d, only: adv_u,adv_v
@@ -192,6 +192,7 @@
       end if
 !$OMP END SINGLE
 
+#ifdef _NUMERICAL_ANALYSES_OLD_
       if (do_numerical_analyses_3d) then
          do k=1,kmax ! calculate square of u-velocity before advection step
 !$OMP DO SCHEDULE(RUNTIME)
@@ -208,11 +209,12 @@
          end do
 !$OMP BARRIER
       end if
+#endif
 
 !$OMP SINGLE
       call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,      &
                            vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,U_TAG, &
-                           advres=uuEx)
+                           advres=uuEx,nvd=numdis_u_3d)
 !$OMP END SINGLE
 
 #ifdef _MOMENTUM_TERMS_
@@ -231,6 +233,7 @@
       end do
 #endif
 
+#ifdef _NUMERICAL_ANALYSES_OLD_
       if (do_numerical_analyses_3d) then
 
 !$OMP SINGLE
@@ -281,6 +284,7 @@
          end do
 
       end if
+#endif
 
 
 !     Here begins dimensional split advection for v-velocity
@@ -390,6 +394,7 @@
       end if
 !$OMP END SINGLE
 
+#ifdef _NUMERICAL_ANALYSES_OLD_
       if (do_numerical_analyses_3d) then
          do k=1,kmax ! calculate square of v-velocity before advection step
 !$OMP DO SCHEDULE(RUNTIME)
@@ -406,11 +411,12 @@
          end do
 !$OMP BARRIER
       end if
+#endif
 
 !$OMP SINGLE
       call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,      &
                            vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,V_TAG, &
-                           advres=vvEx)
+                           advres=vvEx,nvd=numdis_v_3d)
 !$OMP END SINGLE
 
 #ifdef _MOMENTUM_TERMS_
@@ -429,6 +435,7 @@
       end do
 #endif
 
+#ifdef _NUMERICAL_ANALYSES_OLD_
       if (do_numerical_analyses_3d) then
 
 !$OMP SINGLE
@@ -482,6 +489,7 @@
          end do
 
       end if
+#endif
 
 !$OMP END PARALLEL
 

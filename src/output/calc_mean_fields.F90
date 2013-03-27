@@ -19,9 +19,10 @@
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T
 #endif
-   use variables_3d, only: nummix_S,nummix_S_int,nummix_T,nummix_T_int
+   use variables_3d, only: nummix_S,nummix_T
+   use variables_3d, only: nummix_S_old,nummix_S_int,nummix_T_old,nummix_T_int
    use variables_3d, only: phymix_S,phymix_S_int,phymix_T,phymix_T_int
-   use variables_3d, only: numdis_3d,numdis_int
+   use variables_3d, only: numdis_u_3d,numdis_v_3d,numdis_3d,numdis_int
    use variables_3d, only: phydis_3d,phydis_int
 #ifdef GETM_BIO
    use bio, only: bio_calc
@@ -96,12 +97,20 @@
 #endif
 
       if (do_numerical_analyses_3d) then
+         allocate(numdis_u_3d_mean(I3DFIELD),stat=rc)
+           if (rc /= 0) &
+              stop 'calc_mean_fields.F90: Error allocating memory (numdis_u_3d_mean)'
+         allocate(numdis_v_3d_mean(I3DFIELD),stat=rc)
+           if (rc /= 0) &
+              stop 'calc_mean_fields.F90: Error allocating memory (numdis_v_3d_mean)'
+#ifdef _NUMERICAL_ANALYSES_OLD_
          allocate(numdis_3d_mean(I3DFIELD),stat=rc)
            if (rc /= 0) &
               stop 'calc_mean_fields.F90: Error allocating memory (numdis_3d_mean)'
          allocate(numdis_int_mean(I2DFIELD),stat=rc)
            if (rc /= 0) &
               stop 'calc_mean_fields.F90: Error allocating memory (numdis_int_mean)'
+#endif
          allocate(phydis_3d_mean(I3DFIELD),stat=rc)
            if (rc /= 0) &
               stop 'calc_mean_fields.F90: Error allocating memory (phydis_3d_mean)'
@@ -112,9 +121,14 @@
             allocate(nummix_T_mean(I3DFIELD),stat=rc)
             if (rc /= 0) &
                stop 'calc_mean_fields.F90: Error allocating memory (nummix_T_mean)'
+#ifdef _NUMERICAL_ANALYSES_OLD_
+            allocate(nummix_T_old_mean(I3DFIELD),stat=rc)
+            if (rc /= 0) &
+               stop 'calc_mean_fields.F90: Error allocating memory (nummix_T_old_mean)'
             allocate(nummix_T_int_mean(I2DFIELD),stat=rc)
             if (rc /= 0) &
                stop 'calc_mean_fields.F90: Error allocating memory (nummix_T_int_mean)'
+#endif
             allocate(phymix_T_mean(I3DFIELD),stat=rc)
             if (rc /= 0) &
                stop 'calc_mean_fields.F90: Error allocating memory (nummix_T_mean)'
@@ -126,9 +140,14 @@
             allocate(nummix_S_mean(I3DFIELD),stat=rc)
             if (rc /= 0) &
                stop 'calc_mean_fields.F90: Error allocating memory (nummix_S_mean)'
+#ifdef _NUMERICAL_ANALYSES_OLD_
+            allocate(nummix_S_old_mean(I3DFIELD),stat=rc)
+            if (rc /= 0) &
+               stop 'calc_mean_fields.F90: Error allocating memory (nummix_S_old_mean)'
             allocate(nummix_S_int_mean(I2DFIELD),stat=rc)
             if (rc /= 0) &
                stop 'calc_mean_fields.F90: Error allocating memory (nummix_S_int_mean)'
+#endif
             allocate(phymix_S_mean(I3DFIELD),stat=rc)
             if (rc /= 0) &
                stop 'calc_mean_fields.F90: Error allocating memory (nummix_S_mean)'
@@ -171,14 +190,23 @@
       Tmean=_ZERO_; Smean=_ZERO_
 #endif
       if (do_numerical_analyses_3d) then
+         numdis_u_3d_mean=_ZERO_; numdis_v_3d_mean=_ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
          numdis_3d_mean=_ZERO_; numdis_int_mean=_ZERO_
+#endif
          phydis_3d_mean=_ZERO_; phydis_int_mean=_ZERO_
          if (calc_temp) then
-            nummix_T_mean=_ZERO_; nummix_T_int_mean=_ZERO_
+            nummix_T_mean=_ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
+            nummix_T_old_mean=_ZERO_; nummix_T_int_mean=_ZERO_
+#endif
             phymix_T_mean=_ZERO_; phymix_T_int_mean=_ZERO_
          end if
          if (calc_salt) then
-            nummix_S_mean=_ZERO_; nummix_S_int_mean=_ZERO_
+            nummix_S_mean=_ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
+            nummix_S_old_mean=_ZERO_; nummix_S_int_mean=_ZERO_
+#endif
             phymix_S_mean=_ZERO_; phymix_S_int_mean=_ZERO_
          end if
       end if
@@ -228,19 +256,29 @@
       Smean = Smean + S
 #endif
       if (do_numerical_analyses_3d) then
+         numdis_u_3d_mean = numdis_u_3d_mean + numdis_u_3d
+         numdis_v_3d_mean = numdis_v_3d_mean + numdis_v_3d
+#ifdef _NUMERICAL_ANALYSES_OLD_
          numdis_3d_mean = numdis_3d_mean + numdis_3d
          numdis_int_mean = numdis_int_mean + numdis_int
+#endif
          phydis_3d_mean = phydis_3d_mean + phydis_3d
          phydis_int_mean = phydis_int_mean + phydis_int
          if (calc_temp) then
             nummix_T_mean = nummix_T_mean + nummix_T
+#ifdef _NUMERICAL_ANALYSES_OLD_
+            nummix_T_old_mean = nummix_T_old_mean + nummix_T_old
             nummix_T_int_mean = nummix_T_int_mean + nummix_T_int
+#endif
             phymix_T_mean = phymix_T_mean + phymix_T
             phymix_T_int_mean = phymix_T_int_mean + phymix_T_int
          end if
          if (calc_salt) then
             nummix_S_mean = nummix_S_mean + nummix_S
+#ifdef _NUMERICAL_ANALYSES_OLD_
+            nummix_S_old_mean = nummix_S_old_mean + nummix_S_old
             nummix_S_int_mean = nummix_S_int_mean + nummix_S_int
+#endif
             phymix_S_mean = phymix_S_mean + phymix_S
             phymix_S_int_mean = phymix_S_int_mean + phymix_S_int
          end if
@@ -276,19 +314,29 @@
          Smean = Smean / step
 #endif
          if (do_numerical_analyses_3d) then
+            numdis_u_3d_mean = numdis_u_3d_mean / step
+            numdis_v_3d_mean = numdis_v_3d_mean / step
+#ifdef _NUMERICAL_ANALYSES_OLD_
             numdis_3d_mean = numdis_3d_mean / step
             numdis_int_mean = numdis_int_mean / step
+#endif
             phydis_3d_mean = phydis_3d_mean / step
             phydis_int_mean = phydis_int_mean / step
             if (calc_temp) then
                nummix_T_mean = nummix_T_mean / step
+#ifdef _NUMERICAL_ANALYSES_OLD_
+               nummix_T_old_mean = nummix_T_old_mean / step
                nummix_T_int_mean = nummix_T_int_mean / step
+#endif
                phymix_T_mean = phymix_T_mean / step
                phymix_T_int_mean = phymix_T_int_mean / step
             end if
             if (calc_salt) then
                nummix_S_mean = nummix_S_mean / step
+#ifdef _NUMERICAL_ANALYSES_OLD_
+               nummix_S_old_mean = nummix_S_old_mean / step
                nummix_S_int_mean = nummix_S_int_mean / step
+#endif
                phymix_S_mean = phymix_S_mean / step
                phymix_S_int_mean = phymix_S_int_mean / step
             end if

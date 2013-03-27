@@ -377,7 +377,7 @@ temp_field_no=1
    use parameters, only: avmolt
    use getm_timers, only: tic,toc,TIM_TEMP,TIM_TEMPH,TIM_MIXANALYSIS
    use variables_3d, only: do_numerical_analyses_3d
-   use variables_3d, only: nummix_T,nummix_T_int
+   use variables_3d, only: nummix_T,nummix_T_old,nummix_T_int
    use variables_3d, only: phymix_T,phymix_T_int
 !$ use omp_lib
    IMPLICIT NONE
@@ -409,6 +409,7 @@ temp_field_no=1
    call tic(TIM_TEMP)
    rho_0_cpi = _ONE_/(rho_0*cp)
 
+#ifdef _NUMERICAL_ANALYSES_OLD_
    if (do_numerical_analyses_3d) then
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
@@ -422,17 +423,21 @@ temp_field_no=1
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
    end if
+#endif
 
-   call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,                            &
-                        temp_adv_split,temp_adv_hor,temp_adv_ver,_ZERO_,H_TAG)
+   call do_advection_3d(dt,T,uu,vv,ww,hun,hvn,ho,hn,                           &
+                        temp_adv_split,temp_adv_hor,temp_adv_ver,_ZERO_,H_TAG, &
+                        nvd=nummix_T)
 
+#ifdef _NUMERICAL_ANALYSES_OLD_
    if (do_numerical_analyses_3d) then
       call toc(TIM_TEMP)
       call tic(TIM_MIXANALYSIS)
-      call numerical_mixing(T2,T,nummix_T,nummix_T_int)
+      call numerical_mixing(T2,T,nummix_T_old,nummix_T_int)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_TEMP)
    end if
+#endif
 
    if (temp_AH_method .gt. 0) then
 !     T is not halo updated after advection
