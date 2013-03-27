@@ -31,6 +31,8 @@
    integer                             :: tausx_id,tausy_id,swr_id,shf_id
    integer                             :: evap_id=-1,precip_id=-1
    integer                             :: break_stat_id=-1
+   integer                             :: ndu2d_id=-1
+   integer                             :: ndv2d_id=-1
    integer                             :: nd2d_id=-1,pd2d_id=-1
 
    REALTYPE, dimension(:,:), allocatable :: ws
