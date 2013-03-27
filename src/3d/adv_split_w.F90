@@ -6,7 +6,7 @@
 ! !INTERFACE:
    subroutine adv_split_w(dt,f,fi,hi,adv,ww,      &
                           splitfac,scheme,tag,az, &
-                          itersmax)
+                          itersmax,nvd)
 !  Note (KK): Keep in sync with interface in advection_3d.F90
 !
 ! !DESCRIPTION:
@@ -57,15 +57,16 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(I3DFIELD),target,intent(inout) :: fi,hi,adv
+   REALTYPE,dimension(:,:,:),pointer,intent(inout)   :: nvd
 !
 ! !LOCAL VARIABLES:
-   logical            :: iterate,use_limiter,allocated_aux
+   logical            :: iterate,use_limiter,calc_nvd,allocated_aux
    integer            :: i,j,k,kshift,it,iters,iters_new,rc
-   REALTYPE           :: itersm1,dti,dtik,hio,advn,fuu,fu,fd,splitfack
-   REALTYPE,dimension(:),allocatable        :: wflux
+   REALTYPE           :: itersm1,dti,dtik,fio,hio,advn,adv2n,fuu,fu,fd,splitfack
+   REALTYPE,dimension(:),allocatable        :: wflux,wflux2
    REALTYPE,dimension(:),allocatable,target :: cfl0
-   REALTYPE,dimension(:),pointer            :: fo,faux,fiaux,hiaux,advaux,cfls
-   REALTYPE,dimension(:),pointer            :: p_fiaux,p_hiaux,p_advaux
+   REALTYPE,dimension(:),pointer            :: fo,faux,fiaux,hiaux,advaux,nvdaux,cfls
+   REALTYPE,dimension(:),pointer            :: p_fiaux,p_hiaux,p_advaux,p_nvdaux
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -88,6 +89,7 @@
    end if
 
    use_limiter = .false.
+   calc_nvd = associated(nvd)
    dti = splitfac*dt
 
    iterate = (itersmax .gt. 1)
@@ -99,10 +101,11 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j,use_limiter)                             &
-!$OMP          PRIVATE(rc,wflux,fo,faux,fiaux,hiaux,advaux,cfl0,cfls)  &
-!$OMP          PRIVATE(p_fiaux,p_hiaux,p_advaux)                       &
+!$OMP          PRIVATE(rc,wflux,wflux2,cfl0,cfls)                      &
+!$OMP          PRIVATE(fo,faux,fiaux,hiaux,advaux,nvdaux)              &
+!$OMP          PRIVATE(p_fiaux,p_hiaux,p_advaux,p_nvdaux)              &
 !$OMP          PRIVATE(itersm1,dtik,splitfack)                         &
-!$OMP          PRIVATE(i,k,it,iters,iters_new,hio,advn,fuu,fu,fd)
+!$OMP          PRIVATE(i,k,it,iters,iters_new,fio,hio,advn,adv2n,fuu,fu,fd)
 
 
    if (scheme .ne. NOADV) then
@@ -110,6 +113,11 @@
 !     Each thread allocates its own HEAP storage:
       allocate(wflux(0:kmax),stat=rc)    ! work array
       if (rc /= 0) stop 'adv_split_w: Error allocating memory (wflux)'
+
+      if (calc_nvd) then
+         allocate(wflux2(0:kmax),stat=rc)    ! work array
+         if (rc /= 0) stop 'adv_split_w: Error allocating memory (wflux2)'
+      end if
 
 #ifndef _POINTER_REMAP_
       allocate(fo(0:kmax),stat=rc)    ! work array
@@ -131,6 +139,11 @@
          allocate(advaux(0:kmax),stat=rc)    ! work array
          if (rc /= 0) stop 'adv_split_w: Error allocating memory (advaux)'
 
+         if (calc_nvd) then
+            allocate(nvdaux(0:kmax),stat=rc)    ! work array
+            if (rc /= 0) stop 'adv_split_w: Error allocating memory (nvdaux)'
+         end if
+
 #ifdef _POINTER_REMAP_
       end if
 #endif
@@ -147,8 +160,12 @@
          end if
       end if
 
-      wflux(0) = _ZERO_
+      wflux(0   ) = _ZERO_
       wflux(kmax) = _ZERO_
+      if (calc_nvd) then
+         wflux2(0   ) = _ZERO_
+         wflux2(kmax) = _ZERO_
+      end if
 
 !     Note (KK): as long as h[u|v]n([i|j]max+HALO) are trash (SMALL)
 !                they have to be excluded from the loop to avoid
@@ -178,6 +195,7 @@
                   fiaux (0:) => fi (i,j,:)
                   hiaux (0:) => hi (i,j,:)
                   advaux(0:) => adv(i,j,:)
+                  nvdaux(0:) => nvd(i,j,:)
                end if
 #else
                fo = f(i,j,:)
@@ -186,6 +204,7 @@
                p_fiaux  => fiaux
                p_hiaux  => hiaux
                p_advaux => advaux
+               p_nvdaux => nvdaux
 
                it = 1
 
@@ -197,6 +216,9 @@
                         fiaux  = fi (i,j,:)
                         hiaux  = hi (i,j,:)
                         advaux = adv(i,j,:)
+                        if (calc_nvd) then
+                           nvdaux = nvd(i,j,:)
+                        end if
                      end if
 
 #ifdef _POINTER_REMAP_
@@ -275,6 +297,9 @@
                         end if
                      end if
                      wflux(k) = ww(i,j,k)*fu
+                     if (calc_nvd) then
+                        wflux2(k) = wflux(k)*fu
+                     end if
                   end do
 
 #ifdef _POINTER_REMAP_
@@ -282,16 +307,26 @@
                      p_fiaux (0:) => fi (i,j,:)
                      p_hiaux (0:) => hi (i,j,:)
                      p_advaux(0:) => adv(i,j,:)
+                     p_nvdaux(0:) => nvd(i,j,:)
                   end if
 #endif
 
                   do k=1,kmax-kshift
 !                    Note (KK): in case of W_TAG do not advect at k=kmax
+                     fio = fiaux(k)
                      hio = hiaux(k)
                      p_hiaux(k) = hio - dtik*(ww(i,j,k  )-ww(i,j,k-1))
                      advn = splitfack*(wflux(k  )-wflux(k-1))
-                     p_fiaux(k) = ( hio*fiaux(k) - dt*advn ) / p_hiaux(k)
+                     p_fiaux(k) = ( hio*fio - dt*advn ) / p_hiaux(k)
                      p_advaux(k) = advaux(k) + advn
+                     if (calc_nvd) then
+                        adv2n = splitfack*(wflux2(k  )-wflux2(k-1))
+!                        p_nvdaux(k) = nvdaux(k)                                            &
+!                                     -((p_hiaux(k)*p_fiaux(k)**2 - hio*fio**2)/dt + adv2n)
+                        p_nvdaux(k) = ( hio*nvdaux(k)                                        &
+                                       -((p_hiaux(k)*p_fiaux(k)**2 - hio*fio**2)/dt + adv2n) &
+                                      )/p_hiaux(k)
+                     end if
                   end do
 
                   faux => p_fiaux
@@ -303,6 +338,9 @@
                fi (i,j,1:kmax-kshift) = p_fiaux (1:kmax-kshift)
                hi (i,j,1:kmax-kshift) = p_hiaux (1:kmax-kshift)
                adv(i,j,1:kmax-kshift) = p_advaux(1:kmax-kshift)
+               if (calc_nvd) then
+                  nvd(i,j,1:kmax-kshift) = p_nvdaux(1:kmax-kshift)
+               end if
 #endif
 
             end if
@@ -316,6 +354,11 @@
 !     Each thread must deallocate its own HEAP storage:
       deallocate(wflux,stat=rc)
       if (rc /= 0) stop 'adv_split_w: Error deallocating memory (wflux)'
+
+      if (calc_nvd) then
+         deallocate(wflux2,stat=rc)
+         if (rc /= 0) stop 'adv_split_w: Error deallocating memory (wflux2)'
+      end if
 
 #ifndef _POINTER_REMAP_
       deallocate(fo,stat=rc)
@@ -334,6 +377,11 @@
 
          deallocate(advaux,stat=rc)
          if (rc /= 0) stop 'adv_split_w: Error deallocating memory (advaux)'
+
+         if (calc_nvd) then
+            deallocate(nvdaux,stat=rc)
+            if (rc /= 0) stop 'adv_split_w: Error deallocating memory (nvdaux)'
+         end if
 
 #ifdef _POINTER_REMAP_
       end if

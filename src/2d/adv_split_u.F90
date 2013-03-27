@@ -10,7 +10,8 @@
                           dxu,dyu,arcd1,         &
 #endif
                           splitfac,scheme,AH,    &
-                          mask_flux,mask_update)
+                          mask_flux,mask_update, &
+                          nvd)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -181,12 +182,13 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout)    :: fi,Di,adv
+   REALTYPE,dimension(:,:),pointer,intent(inout) :: nvd
 !
 ! !LOCAL VARIABLES:
-   REALTYPE,dimension(E2DFIELD) :: uflux
-   logical            :: use_limiter,use_AH
+   REALTYPE,dimension(E2DFIELD) :: uflux,uflux2
+   logical            :: use_limiter,use_AH,calc_nvd
    integer            :: i,j,isub
-   REALTYPE           :: dti,Dio,advn,cfl,fuu,fu,fd
+   REALTYPE           :: dti,fio,Dio,advn,adv2n,cfl,fuu,fu,fd
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -210,11 +212,12 @@
 
    use_limiter = .false.
    use_AH = (AH .gt. _ZERO_)
+   calc_nvd = associated(nvd)
    dti = splitfac*dt
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j,use_limiter)                             &
-!$OMP          PRIVATE(i,Dio,advn,cfl,fuu,fu,fd)
+!$OMP          PRIVATE(i,fio,Dio,advn,adv2n,cfl,fuu,fu,fd)
 
 ! Calculating u-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
@@ -254,13 +257,15 @@
                   fu = adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
                end if
             end if
-            uflux(i,j) = U(i,j)*fu
+            uflux (i,j) = U(i,j)*fu
+            uflux2(i,j) = uflux(i,j)*fu
             if (use_AH) then
 !              Horizontal diffusion
                uflux(i,j) = uflux(i,j) - AH*DU(i,j)*(f(i+1,j)-f(i  ,j))/DXU
             end if
          else
-            uflux(i,j) = _ZERO_
+            uflux (i,j) = _ZERO_
+            uflux2(i,j) = _ZERO_
          end if
       end do
 #ifndef SLICE_MODEL
@@ -275,13 +280,23 @@
       do i=imin-HALO+1+isub,imax+HALO-1-isub
          if (mask_update(i,j)) then
 !           Note (KK): exclude x-advection of tracer and u across W/E open bdys
+            fio = fi(i,j)
             Dio = Di(i,j)
             Di(i,j) =  Dio - dti*( U(i  ,j)*DYU           &
                                   -U(i-1,j)*DYUIM1)*ARCD1
             advn = splitfac*( uflux(i  ,j)*DYU           &
                              -uflux(i-1,j)*DYUIM1)*ARCD1
-            fi(i,j) = ( Dio*fi(i,j) - dt*advn ) / Di(i,j)
+            fi(i,j) = ( Dio*fio - dt*advn ) / Di(i,j)
             adv(i,j) = adv(i,j) + advn
+            if (calc_nvd) then
+               adv2n = splitfac*( uflux2(i  ,j)*DYU           &
+                                 -uflux2(i-1,j)*DYUIM1)*ARCD1
+!               nvd(i,j) = nvd(i,j)                                       &
+!                         -((Di(i,j)*fi(i,j)**2 - Dio*fio**2)/dt + adv2n)
+               nvd(i,j) = ( Dio*nvd(i,j)                                   &
+                           -((Di(i,j)*fi(i,j)**2 - Dio*fio**2)/dt + adv2n) &
+                          )/Di(i,j)
+            end if
          end if
       end do
 #ifndef SLICE_MODEL

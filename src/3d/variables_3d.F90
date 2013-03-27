@@ -130,9 +130,13 @@
 #include "dynamic_declarations_3d.h"
 #endif
 
+   REALTYPE,dimension(:,:,:),pointer         :: numdis_u_3d=>null()
+   REALTYPE,dimension(:,:,:),pointer         :: numdis_v_3d=>null()
    REALTYPE, dimension(:,:,:), allocatable   :: numdis_3d,phydis_3d
    REALTYPE, dimension(:,:), allocatable     :: numdis_int,phydis_int
-   REALTYPE, dimension(:,:,:), allocatable   :: nummix_S,nummix_T
+   REALTYPE,dimension(:,:,:),pointer         :: nummix_S=>null()
+   REALTYPE,dimension(:,:,:),pointer         :: nummix_T=>null()
+   REALTYPE, dimension(:,:,:), allocatable   :: nummix_S_old,nummix_T_old
    REALTYPE, dimension(:,:,:), allocatable   :: phymix_S,phymix_T
    REALTYPE, dimension(:,:), allocatable     :: nummix_S_int,nummix_T_int
    REALTYPE, dimension(:,:), allocatable     :: phymix_S_int,phymix_T_int
