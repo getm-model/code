@@ -34,14 +34,17 @@
 
 !  the following fields will only be allocated if deformCX=.true.
    REALTYPE,dimension(:,:),allocatable :: dudxC,dvdyC
-   REALTYPE,dimension(:,:),allocatable :: dvdxX,dudyX,shearX
+   REALTYPE,dimension(:,:),pointer     :: dudyX=>null()
+   REALTYPE,dimension(:,:),pointer     :: dvdxX=>null()
+   REALTYPE,dimension(:,:),allocatable :: shearX
 !  the following fields will only be allocated if deformUV=.true.
    REALTYPE,dimension(:,:),allocatable :: dudxV,dvdyU,shearU
 !  the followinf fields will only be allocated if An_method=2
    REALTYPE,dimension(:,:),allocatable :: AnC,AnX
 
    REALTYPE,dimension(:,:),pointer     :: numdis_2d=>null()
-   REALTYPE,dimension(:,:),allocatable :: numdis_2d_old,phydis_2d
+   REALTYPE,dimension(:,:),pointer     :: phydis_2d=>null()
+   REALTYPE,dimension(:,:),allocatable :: numdis_2d_old
 
    integer                             :: size2d_field
    integer                             :: mem2d

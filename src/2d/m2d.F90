@@ -54,9 +54,9 @@
       subroutine uv_diffusion(An_method,U,V,D,DU,DV,phydis)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         integer,intent(in)                                :: An_method
-         REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,D,DU,DV
-         REALTYPE,dimension(E2DFIELD),intent(out),optional :: phydis
+         integer,intent(in)                                   :: An_method
+         REALTYPE,dimension(E2DFIELD),intent(in)              :: U,V,D,DU,DV
+         REALTYPE,dimension(:,:),pointer,intent(out),optional :: phydis
       end subroutine uv_diffusion
 
       subroutine uv_diff_2dh(An_method,UEx,VEx,U,V,D,DU,DV,  &
@@ -67,10 +67,11 @@
          integer,intent(in)                                :: An_method
          REALTYPE,dimension(E2DFIELD),intent(in),optional  :: U,V,D,DU,DV
          REALTYPE,dimension(E2DFIELD),intent(in),optional  :: dudxC,dvdyC
-         REALTYPE,dimension(E2DFIELD),intent(in),optional  :: dudyX,dvdxX,shearX
+         REALTYPE,dimension(:,:),pointer,intent(in),optional  :: dudyX,dvdxX
+         REALTYPE,dimension(E2DFIELD),intent(in),optional  :: shearX
          REALTYPE,dimension(E2DFIELD),intent(in),optional  :: AmC,AmX
          REALTYPE,dimension(E2DFIELD),intent(inout)        :: UEx,VEx
-         REALTYPE,dimension(E2DFIELD),intent(out),optional :: phydis
+         REALTYPE,dimension(:,:),pointer,intent(out)       :: phydis
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: hsd_u,hsd_v
       end subroutine uv_diff_2dh
 
@@ -91,7 +92,8 @@
          REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,DU,DV
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudxC,dudxV,dudxU
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: dvdyC,dvdyU,dvdyV
-         REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudyX,dvdxX,shearX
+         REALTYPE,dimension(:,:),pointer,intent(out),optional :: dudyX,dvdxX
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: shearX
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: dvdxU,shearU
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudyV,shearV
       end subroutine deformation_rates
@@ -556,12 +558,7 @@
    end if
 
    call uv_advect(U,V,Dlast,D,DU,DV,numdis_2d)
-
-   if (do_numerical_analyses_2d) then
-      call uv_diffusion(An_method,U,V,D,DU,DV,phydis_2d) ! Has to be called after uv_advect.
-   else
-      call uv_diffusion(An_method,U,V,D,DU,DV) ! Has to be called after uv_advect.
-   end if
+   call uv_diffusion(An_method,U,V,D,DU,DV,phydis_2d) ! Has to be called after uv_advect.
 
    call toc(TIM_INTEGR2D)
 
