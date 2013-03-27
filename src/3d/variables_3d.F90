@@ -130,9 +130,9 @@
 #include "dynamic_declarations_3d.h"
 #endif
 
-   REALTYPE,dimension(:,:,:),pointer         :: numdis_u_3d=>null()
-   REALTYPE,dimension(:,:,:),pointer         :: numdis_v_3d=>null()
-   REALTYPE, dimension(:,:,:), allocatable   :: numdis_3d,phydis_3d
+   REALTYPE,dimension(:,:,:),pointer         :: numdis_3d=>null()
+   REALTYPE,dimension(:,:,:),pointer         :: phydis_3d=>null()
+   REALTYPE, dimension(:,:,:), allocatable   :: numdis_3d_old
    REALTYPE, dimension(:,:), allocatable     :: numdis_int,phydis_int
    REALTYPE,dimension(:,:,:),pointer         :: nummix_S=>null()
    REALTYPE,dimension(:,:,:),pointer         :: nummix_T=>null()
@@ -143,7 +143,9 @@
 
 !  the following fields will only be allocated if deformCX_3d=.true.
    REALTYPE,dimension(:,:,:),allocatable :: dudxC_3d,dvdyC_3d
-   REALTYPE,dimension(:,:,:),allocatable :: dudyX_3d,dvdxX_3d,shearX_3d
+   REALTYPE,dimension(:,:,:),pointer     :: dudyX_3d=>null()
+   REALTYPE,dimension(:,:,:),pointer     :: dvdxX_3d=>null()
+   REALTYPE,dimension(:,:,:),allocatable :: shearX_3d
 
 !  the following fields will only be allocated if deformUV_3d=.true.
    REALTYPE,dimension(:,:,:),allocatable :: dudxV_3d,dvdyU_3d,shearU_3d
