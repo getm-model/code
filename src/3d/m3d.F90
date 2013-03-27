@@ -300,12 +300,20 @@
       allocate(phydis_int(I2DFIELD),stat=rc)
       if (rc /= 0) stop 'postinit_3d: Error allocating memory (phydis_int)'
       phydis_int = _ZERO_
+      allocate(numdis_u_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_u_3d)'
+      numdis_u_3d = _ZERO_
+      allocate(numdis_v_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_v_3d)'
+      numdis_v_3d = _ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
       allocate(numdis_3d(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_3d)'
       numdis_3d = _ZERO_
       allocate(numdis_int(I2DFIELD),stat=rc)
       if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_int)'
       numdis_int = _ZERO_
+#endif
 
       if (calc_temp) then
          allocate(phymix_T(I3DFIELD),stat=rc)
@@ -317,9 +325,14 @@
          allocate(nummix_T(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_T)'
          nummix_T = _ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
+         allocate(nummix_T_old(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_T_old)'
+         nummix_T_old = _ZERO_
          allocate(nummix_T_int(I2DFIELD),stat=rc)
          if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_T_int)'
          nummix_T_int = _ZERO_
+#endif
       end if
 
       if (calc_salt) then
@@ -332,9 +345,14 @@
          allocate(nummix_S(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_S)'
          nummix_S = _ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
+         allocate(nummix_S_old(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_S_old)'
+         nummix_S_old = _ZERO_
          allocate(nummix_S_int(I2DFIELD),stat=rc)
          if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_S_int)'
          nummix_S_int = _ZERO_
+#endif
       end if
 
    end if
