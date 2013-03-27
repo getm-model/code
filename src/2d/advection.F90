@@ -94,7 +94,8 @@
                              dxu,dyu,arcd1,         &
 #endif
                              splitfac,scheme,AH,    &
-                             mask_flux,mask_update)
+                             mask_flux,mask_update, &
+                             nvd)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,intent(in)                           :: dt,splitfac,AH
@@ -107,6 +108,7 @@
          logical,dimension(:,:),pointer,intent(in)     :: mask_flux
          logical,dimension(E2DFIELD),intent(in)        :: mask_update
          REALTYPE,dimension(E2DFIELD),intent(inout)    :: fi,Di,adv
+         REALTYPE,dimension(:,:),pointer,intent(inout) :: nvd
       end subroutine adv_split_u
 
       subroutine adv_split_v(dt,f,fi,Di,adv,V,DV,   &
@@ -114,7 +116,8 @@
                              dxv,dyv,arcd1,         &
 #endif
                              splitfac,scheme,AH,    &
-                             mask_flux,mask_update)
+                             mask_flux,mask_update, &
+                             nvd)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,intent(in)                           :: dt,splitfac,AH
@@ -127,6 +130,7 @@
          logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_flux
          logical,dimension(E2DFIELD),intent(in)        :: mask_update
          REALTYPE,dimension(E2DFIELD),intent(inout)    :: fi,Di,adv
+         REALTYPE,dimension(:,:),pointer,intent(inout) :: nvd
       end subroutine adv_split_v
 
       subroutine adv_arakawa_j7_2dh(dt,f,fi,Di,adv,U,V,Dn,DU,DV,      &
@@ -364,7 +368,7 @@
 !
 ! !INTERFACE:
    subroutine do_advection(dt,f,U,V,DU,DV,Do,Dn,split,scheme,AH,tag, &
-                           Dires,advres)
+                           Dires,advres,nvd)
 !
 ! !DESCRIPTION:
 !
@@ -427,11 +431,12 @@
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),target,intent(out),optional :: Dires,advres
+   REALTYPE,dimension(:,:),pointer,intent(out),optional     :: nvd
 !
 ! !LOCAL VARIABLES:
    type(t_adv_grid),pointer            :: adv_grid
    REALTYPE,dimension(E2DFIELD),target :: fi,Di,adv
-   REALTYPE,dimension(:,:),pointer     :: p_Di,p_adv
+   REALTYPE,dimension(:,:),pointer     :: p_Di,p_adv,p_nvd
    integer                             :: i,j
 !
 !EOP
@@ -454,6 +459,15 @@
       case default
          stop 'do_advection: tag is invalid'
    end select
+
+   if (present(nvd)) then
+      p_nvd => nvd
+      if (associated(nvd)) then
+         nvd = _ZERO_
+      end if
+   else
+      p_nvd => null()
+   end if
 
    if (present(Dires)) then
       p_Di => Dires
@@ -487,14 +501,16 @@
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
                                    _ONE_,scheme,AH,                           &
-                                   adv_grid%mask_uflux,adv_grid%mask_uupdate)
+                                   adv_grid%mask_uflux,adv_grid%mask_uupdate, &
+                                   p_nvd)
 #ifndef SLICE_MODEL
                   call adv_split_v(dt,f,fi,p_Di,p_adv,V,DV,                   &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
                                    _ONE_,scheme,AH,                           &
-                                   adv_grid%mask_vflux,adv_grid%mask_vupdate)
+                                   adv_grid%mask_vflux,adv_grid%mask_vupdate, &
+                                   p_nvd)
 #endif
 
 #ifdef _NEW_ADV_NOSPLIT_
@@ -575,7 +591,8 @@
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
                                    _ONE_,scheme,AH,                           &
-                                   adv_grid%mask_uflux,adv_grid%mask_uupdate)
+                                   adv_grid%mask_uflux,adv_grid%mask_uupdate, &
+                                   p_nvd)
 #ifndef SLICE_MODEL
 #ifdef GETM_PARALLEL
                   if (scheme.ne.UPSTREAM .and. tag.eq.V_TAG) then
@@ -591,7 +608,8 @@
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
                                    _ONE_,scheme,AH,                           &
-                                   adv_grid%mask_vflux,adv_grid%mask_vupdate)
+                                   adv_grid%mask_vflux,adv_grid%mask_vupdate, &
+                                   p_nvd)
 #endif
 
                case((UPSTREAM_2DH),(J7),(FCT),(P2_2DH))
@@ -615,7 +633,8 @@
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
                                    _HALF_,scheme,AH,                          &
-                                   adv_grid%mask_uflux,adv_grid%mask_uupdate)
+                                   adv_grid%mask_uflux,adv_grid%mask_uupdate, &
+                                   p_nvd)
 #ifndef SLICE_MODEL
 #ifdef GETM_PARALLEL
                   if (scheme.ne.UPSTREAM .and. tag.eq.V_TAG) then
@@ -631,7 +650,8 @@
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
                                    _ONE_,scheme,AH,                           &
-                                   adv_grid%mask_vflux,adv_grid%mask_vupdate)
+                                   adv_grid%mask_vflux,adv_grid%mask_vupdate, &
+                                   p_nvd)
 #endif
 #ifdef GETM_PARALLEL
                   if (scheme .eq. UPSTREAM) then
@@ -657,7 +677,8 @@
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
                                    _HALF_,scheme,AH,                          &
-                                   adv_grid%mask_uflux,adv_grid%mask_uupdate)
+                                   adv_grid%mask_uflux,adv_grid%mask_uupdate, &
+                                   p_nvd)
 
                case((UPSTREAM_2DH),(J7),(FCT),(P2_2DH))
 
