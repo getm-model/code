@@ -5,7 +5,7 @@
 ! !ROUTINE: uv_advect - 2D advection of momentum \label{sec-uv-advect}
 !
 ! !INTERFACE:
-   subroutine uv_advect(U,V,Dold,Dnew,DU,DV)
+   subroutine uv_advect(U,V,Dold,Dnew,DU,DV,numdis)
 
 !  Note (KK): keep in sync with interface in m2d.F90
 !
@@ -18,15 +18,15 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,az,au,av,ax
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxv,dyu
+   use domain, only: dxv,dyu,arcd1,arud1,arvd1
 #else
-   use domain, only: dx,dy
+   use domain, only: dx,dy,ard1
 #endif
    use m2d, only: vel2d_adv_split,vel2d_adv_hor
    use variables_2d, only: dtm
    use variables_2d, only: UEx,VEx
    use variables_2d, only: do_numerical_analyses_2d
-   use variables_2d, only: numdis_u_2d,numdis_v_2d,numdis_2d
+   use variables_2d, only: numdis_2d_old
    use advection, only: NOADV,UPSTREAM,J7,do_advection
    use halo_zones, only: update_2d_halo,wait_halo,U_TAG,V_TAG
    use getm_timers, only: tic,toc,TIM_UVADV,TIM_UVADVH
@@ -37,15 +37,21 @@
    REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V
    REALTYPE,dimension(E2DFIELD),target,intent(in) :: Dold,Dnew,DU,DV
 !
+! !OUTPUT PARAMETERS:
+   REALTYPE,dimension(:,:),pointer,intent(out),optional :: numdis
+!
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
+   logical                             :: calc_numdis
    integer                             :: i,j
-   REALTYPE,dimension(E2DFIELD)        :: fadv,Uadv,Vadv,DUadv,DVadv
-   REALTYPE,dimension(E2DFIELD),target :: Dadv
-   REALTYPE,dimension(:,:),pointer     :: pDadv
+   REALTYPE,dimension(E2DFIELD)        :: fadv,Uadv,Vadv,DUadv,DVadv,Dires
+   REALTYPE,dimension(E2DFIELD),target :: Dadv,nvd
+   REALTYPE,dimension(:,:),pointer     :: pDadv,p_nvd
+#ifdef _NUMERICAL_ANALYSES_OLD_
    REALTYPE,dimension(E2DFIELD)        :: work2d
+#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -58,6 +64,19 @@
    j = jmax/2 ! this MUST NOT be changed!!!
 #endif
    call tic(TIM_UVADV)
+
+   if (present(numdis)) then
+      calc_numdis = associated(numdis)
+   else
+      calc_numdis = .false.
+   end if
+      
+   if (calc_numdis) then
+      p_nvd => nvd
+   else
+      p_nvd => null()
+   end if
+   
 
    if (vel2d_adv_hor .ne. NOADV) then
 
@@ -202,8 +221,42 @@
 !$OMP SINGLE
       call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,pDadv,pDadv, &
                         vel2d_adv_split,vel2d_adv_hor,_ZERO_,U_TAG, &
-                        advres=UEx,nvd=numdis_u_2d)
+                        Dires=Dires,advres=UEx,nvd=p_nvd)
 !$OMP END SINGLE
+
+      if (calc_numdis) then
+
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+         do j=jmin,jmax
+#endif
+            do i=imin,imax
+               nvd(i,j) = nvd(i,j)*Dires(i,j)/ARUD1
+            end do
+#ifndef SLICE_MODEL
+         end do
+#endif
+!$OMP END DO
+
+!$OMP SINGLE
+         call update_2d_halo(nvd,nvd,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+!$OMP END SINGLE
+
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+         do j=jmin,jmax
+#endif
+            do i=imin,imax
+               if (az(i,j) .eq. 1) then
+                  numdis(i,j) = _HALF_*( nvd(i-1,j) + nvd(i,j) )/Dnew(i,j)*ARCD1
+               end if
+            end do
+#ifndef SLICE_MODEL
+         end do
+#endif
+!$OMP END DO
+      end if
 
 #ifdef _NUMERICAL_ANALYSES_OLD_
       if (do_numerical_analyses_2d) then
@@ -218,7 +271,7 @@
          do j=jmin,jmax ! calculate kinetic energy dissipaion rate for u-velocity
 #endif
             do i=imin,imax
-               work2d(i,j) = ( work2d(i,j) - fadv(i,j)**2 ) / dtm
+               work2d(i,j) = ( work2d(i,j) - fadv(i,j)**2 )/dtm*Dires(i,j)/ARUD1
             end do
 #ifndef SLICE_MODEL
          end do
@@ -236,7 +289,7 @@
 #endif
             do i=imin,imax
                if (az(i,j) .eq. 1) then
-                  numdis_2d(i,j) = _HALF_*( work2d(i-1,j) + work2d(i,j) )
+                  numdis_2d_old(i,j) = _HALF_*( work2d(i-1,j) + work2d(i,j) )/Dnew(i,j)*ARCD1
                end if
             end do
 #ifndef SLICE_MODEL
@@ -370,8 +423,43 @@
 !$OMP SINGLE
       call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,pDadv,pDadv, &
                         vel2d_adv_split,vel2d_adv_hor,_ZERO_,V_TAG, &
-                        advres=VEx,nvd=numdis_v_2d)
+                        Dires=Dires,advres=VEx,nvd=p_nvd)
 !$OMP END SINGLE
+
+      if (calc_numdis) then
+
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+         do j=jmin,jmax
+#endif
+            do i=imin,imax
+               nvd(i,j) = nvd(i,j)*Dires(i,j)/ARVD1
+            end do
+#ifndef SLICE_MODEL
+         end do
+#endif
+!$OMP END DO
+
+!$OMP SINGLE
+         call update_2d_halo(nvd,nvd,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
+!$OMP END SINGLE
+
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+         do j=jmin,jmax
+#endif
+            do i=imin,imax
+               if (az(i,j) .eq. 1) then
+                  numdis(i,j) = numdis(i,j)                                      &
+                               +_HALF_*( nvd(i,j-1) + nvd(i,j) )/Dnew(i,j)*ARCD1
+               end if
+            end do
+#ifndef SLICE_MODEL
+         end do
+#endif
+!$OMP END DO
+      end if
 
 #ifdef _NUMERICAL_ANALYSES_OLD_
       if (do_numerical_analyses_2d) then
@@ -386,7 +474,7 @@
          do j=jmin,jmax ! calculate kinetic energy dissipaion rate for v-velocity
 #endif
             do i=imin,imax
-               work2d(i,j) = ( work2d(i,j) - fadv(i,j)**2 ) / dtm
+               work2d(i,j) = ( work2d(i,j) - fadv(i,j)**2 )/dtm*Dires(i,j)/ARVD1
             end do
 #ifndef SLICE_MODEL
          end do
@@ -408,8 +496,8 @@
 #endif
             do i=imin,imax
                if (az(i,j) .eq. 1) then
-                  numdis_2d(i,j) = numdis_2d(i,j)                         &
-                                  +_HALF_*( work2d(i,j-1) + work2d(i,j) )
+                  numdis_2d_old(i,j) = numdis_2d_old(i,j)                    &
+                     +_HALF_*( work2d(i,j-1) + work2d(i,j) )/Dnew(i,j)*ARCD1
                end if
             end do
 #ifndef SLICE_MODEL
