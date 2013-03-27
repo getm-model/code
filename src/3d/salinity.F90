@@ -368,7 +368,7 @@ salt_field_no=1
    use domain,       only: imin,imax,jmin,jmax,kmax,az
    use getm_timers, only: tic,toc,TIM_SALT,TIM_SALTH,TIM_MIXANALYSIS
    use variables_3d, only: do_numerical_analyses_3d
-   use variables_3d, only: nummix_S,nummix_S_int
+   use variables_3d, only: nummix_S,nummix_S_old,nummix_S_int
    use variables_3d, only: phymix_S,phymix_S_int
 !$ use omp_lib
    IMPLICIT NONE
@@ -407,6 +407,7 @@ salt_field_no=1
       end do
    end do
 
+#ifdef _NUMERICAL_ANALYSES_OLD_
    if (do_numerical_analyses_3d) then
       call toc(TIM_SALT)
       call tic(TIM_MIXANALYSIS)
@@ -420,17 +421,21 @@ salt_field_no=1
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_SALT)
    end if
+#endif
 
-   call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,                            &
-                        salt_adv_split,salt_adv_hor,salt_adv_ver,_ZERO_,H_TAG)
+   call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,                           &
+                        salt_adv_split,salt_adv_hor,salt_adv_ver,_ZERO_,H_TAG, &
+                        nvd=nummix_S)
 
+#ifdef _NUMERICAL_ANALYSES_OLD_
    if (do_numerical_analyses_3d) then
       call toc(TIM_SALT)
       call tic(TIM_MIXANALYSIS)
-      call numerical_mixing(S2,S,nummix_S,nummix_S_int)
+      call numerical_mixing(S2,S,nummix_S_old,nummix_S_int)
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_SALT)
    end if
+#endif
 
    if (salt_AH_method .gt. 0) then
 !     S is not halo updated after advection
