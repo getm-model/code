@@ -43,11 +43,12 @@
          REALTYPE,dimension(E2DFIELD),intent(out)      :: DU,DV
       end subroutine depth_update
 
-      subroutine uv_advect(U,V,Dold,Dnew,DU,DV)
+      subroutine uv_advect(U,V,Dold,Dnew,DU,DV,numdis)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V
          REALTYPE,dimension(E2DFIELD),target,intent(in) :: Dold,Dnew,DU,DV
+         REALTYPE,dimension(:,:),pointer,intent(out),optional :: numdis
       end subroutine uv_advect
 
       subroutine uv_diffusion(An_method,U,V,D,DU,DV,phydis)
@@ -434,16 +435,13 @@
          allocate(phydis_2d(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'postinit_2d: Error allocating memory (phydis_2d)'
          phydis_2d = _ZERO_
-         allocate(numdis_u_2d(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_u_2d)'
-         numdis_u_2d = _ZERO_
-         allocate(numdis_v_2d(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_v_2d)'
-         numdis_v_2d = _ZERO_
-#ifdef _NUMERICAL_ANALYSES_OLD_
          allocate(numdis_2d(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d)'
          numdis_2d = _ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
+         allocate(numdis_2d_old(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d_old)'
+         numdis_2d_old = _ZERO_
 #endif
       end if
 
@@ -557,7 +555,8 @@
       call bottom_friction(U,V,DU,DV,ru,rv)
    end if
 
-   call uv_advect(U,V,Dlast,D,DU,DV)
+   call uv_advect(U,V,Dlast,D,DU,DV,numdis_2d)
+
    if (do_numerical_analyses_2d) then
       call uv_diffusion(An_method,U,V,D,DU,DV,phydis_2d) ! Has to be called after uv_advect.
    else

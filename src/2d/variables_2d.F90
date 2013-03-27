@@ -40,9 +40,8 @@
 !  the followinf fields will only be allocated if An_method=2
    REALTYPE,dimension(:,:),allocatable :: AnC,AnX
 
-   REALTYPE,dimension(:,:),pointer     :: numdis_u_2d=>null()
-   REALTYPE,dimension(:,:),pointer     :: numdis_v_2d=>null()
-   REALTYPE,dimension(:,:),allocatable :: numdis_2d,phydis_2d
+   REALTYPE,dimension(:,:),pointer     :: numdis_2d=>null()
+   REALTYPE,dimension(:,:),allocatable :: numdis_2d_old,phydis_2d
 
    integer                             :: size2d_field
    integer                             :: mem2d
