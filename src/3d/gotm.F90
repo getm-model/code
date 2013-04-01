@@ -90,9 +90,6 @@
    call tic(TIM_GOTM)
 
    xP = _ZERO_
-#ifdef NO_BAROCLINIC
-   NN1d = _ZERO_
-#endif
    do j=jmin,jmax
       do i=imin,imax
 
