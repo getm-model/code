@@ -12,6 +12,10 @@
 !
 ! !USES:
    use ncdf_3d_bdy, only: do_3d_bdy_ncdf
+#ifdef _FABM_
+   use gotm_fabm, only: fabm_calc
+   use ncdf_3d_bio_bdy, only: do_3d_bio_bdy_ncdf
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -34,6 +38,11 @@
          STDERR 'should get ASCII boundary data'
       case (NETCDF)
          call do_3d_bdy_ncdf(n)
+#ifdef _FABM_
+         if (fabm_calc) then
+            call do_3d_bio_bdy_ncdf(n)
+         end if
+#endif
       case DEFAULT
          FATAL 'A non valid input format has been chosen'
          stop 'get_3d_bdy'

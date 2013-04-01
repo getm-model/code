@@ -1,0 +1,58 @@
+<?xml version="1.0" ?>
+<converter source="getm-2.2" target="getm-2.4">
+	<links>
+		<link source="/getm/meteo/spinup" target="/getm/meteo/meteo_ramp"/>
+		<link source="/getm/m2d/bdyramp_2d" target="/getm/m2d/bdy2d_ramp"/>
+		<link source="/getm/m2d/vel_depth_method" target="/getm/domain/vel_depth_method"/>
+		<link source="/getm/m3d/bdyramp_3d" target="/getm/m3d/bdy3d_ramp"/>
+	</links>
+	<custom>
+		<forward>
+<![CDATA[
+nmls_s = ('getm/m3d/vel_'  ,'getm/temp/temp_','getm/salt/salt_')
+nmls_t = ('getm/m3d/vel3d_','getm/temp/temp_','getm/salt/salt_')
+for n,nml in enumerate(nmls_s):
+	adv_split = source[nml+'adv_split'].getValue(usedefault=True)
+	hor_adv = source[nml+'hor_adv'].getValue(usedefault=True)
+	ver_adv = source[nml+'ver_adv'].getValue(usedefault=True)
+	target[nmls_t[n]+'adv_split'].setValue(adv_split+1)
+	target[nmls_t[n]+'adv_hor'].setValue(hor_adv)
+	target[nmls_t[n]+'adv_ver'].setValue(ver_adv)
+	if hor_adv == 1:
+		target[nmls_t[n]+'adv_split'].setValue(0)
+		target[nmls_t[n]+'adv_ver'].setValue(1)
+	elif hor_adv == 2:
+		if adv_split in (0,1):
+			target[nmls_t[n]+'adv_hor'].setValue(1)
+	elif hor_adv == 7:
+		target[nmls_t[n]+'adv_hor'].setValue(8)
+	if ver_adv == 2:
+		target[nmls_t[n]+'adv_ver'].setValue(1)
+]]>
+		</forward>
+		<backward>
+<![CDATA[
+nmls_s = ('getm/m3d/vel3d_','getm/temp/temp_','getm/salt/salt_')
+nmls_t = ('getm/m3d/vel_'  ,'getm/temp/temp_','getm/salt/salt_')
+for n,nml in enumerate(nmls_s):
+	adv_split = source[nml+'adv_split'].getValue(usedefault=True)
+	adv_hor = source[nml+'adv_hor'].getValue(usedefault=True)
+	adv_ver = source[nml+'adv_ver'].getValue(usedefault=True)
+	target[nmls_t[n]+'hor_adv'].setValue(adv_hor)
+	target[nmls_t[n]+'ver_adv'].setValue(adv_ver)
+	if adv_split == 0:
+		if adv_hor in (2,7,8,9):
+			target[nmls_t[n]+'adv_split'].setValue(2)
+	else:
+		target[nmls_t[n]+'adv_split'].setValue(adv_split-1)
+	if adv_hor == 1:
+		if adv_split in (1,2):
+			target[nmls_t[n]+'hor_adv'].setValue(2)
+	if adv_hor == 8:
+		target[nmls_t[n]+'hor_adv'].setValue(7)
+	if adv_ver == 1:
+		target[nmls_t[n]+'ver_adv'].setValue(2)
+]]>
+		</backward>
+	</custom>
+</converter>

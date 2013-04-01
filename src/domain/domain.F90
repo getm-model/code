@@ -54,7 +54,7 @@
    integer                             :: calc_points
    logical                             :: openbdy        = .false.
 
-   REALTYPE                            :: Hland
+   REALTYPE                            :: Hland=-10.0
    REALTYPE                            :: min_depth,crit_depth
 
    REALTYPE                            :: longitude      = _ZERO_
@@ -76,6 +76,7 @@
    integer, dimension(:), allocatable  :: ei,efj,elj
    integer, dimension(:), allocatable  :: sj,sfi,sli
    integer, allocatable                :: bdy_index(:),bdy_map(:,:)
+   logical                             :: have_boundaries=.false.
 
    character(len=64)                   :: bdy_2d_desc(5)
    logical                             :: need_2d_bdy_elev = .false.
@@ -86,7 +87,7 @@
 
 !  method for specifying bottom roughness (0=const, 1=from topo.nc)
    integer                             :: z0_method=0
-   REALTYPE                            :: z0_const=0.001
+   REALTYPE                            :: z0_const=0.01d0
 
 ! !DEFINED PARAMETERS:
    integer,           parameter        :: INNER          = 1
@@ -148,13 +149,15 @@
    integer                   :: i,j,n
    integer                   :: kdum
    character(len=PATH_MAX)   :: bathymetry               = 'topo.nc'
+   integer                   :: vel_depth_method=0
    character(len=PATH_MAX)   :: bdyinfofile              = 'bdyinfo.dat'
    character(len=PATH_MAX)   :: min_depth_file           = 'minimum_depth.dat'
    character(len=PATH_MAX)   :: bathymetry_adjust_file   = 'bathymetry.adjust'
    character(len=PATH_MAX)   :: mask_adjust_file         = 'mask.adjust'
    integer                   :: il=-1,ih=-1,jl=-1,jh=-1
    namelist /domain/ &
-             vert_cord,maxdepth,bathy_format,bathymetry,       &
+             vert_cord,maxdepth,                               &
+             bathy_format,bathymetry,vel_depth_method,         &
              longitude,latitude,f_plane,openbdy,bdyinfofile,   &
              crit_depth,min_depth,kdum,ddu,ddl,                &
              d_gamma,gamma_surf,il,ih,jl,jh,z0_method,z0_const
@@ -232,6 +235,8 @@
 
    call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG,mirror=.true.)
    call wait_halo(H_TAG)
+
+   call uv_depths(vel_depth_method)
 
 !  Reads boundary location information
    if (openbdy) then
@@ -338,6 +343,8 @@
    if ( .not. have_lonlat ) then
       LEVEL2 "Setting constant longitude (swr) - lon = ",longitude
       lonc = longitude
+      LEVEL2 "Setting constant latitude (meteo) - lat = ",latitude
+      latc = latitude
    end if
 
 !  Compute Coriolis parameter

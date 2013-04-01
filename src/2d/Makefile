@@ -7,14 +7,14 @@ include ../Rules.make
 INCS	= static_2d.h dynamic_declarations_2d.h dynamic_allocations_2d.h
 LIB	= $(LIBDIR)/lib2d${buildtype}.a
 
-MODSRC	= m2d.F90 variables_2d.F90
-
-LIBSRC	= momentum.F90 uv_advect.F90  uv_diffusion.F90 bottom_friction.F90 sealevel.F90 depth_update.F90 uv_depths.F90 update_2d_bdy.F90  cfl_check.F90 have_bdy.F90 residual.F90
-
-SRC	= $(MODSRC) $(LIBSRC)
+TEXSRC	= m2d.F90 variables_2d.F90 \
+	  advection.F90 adv_split_u.F90 adv_split_v.F90 adv_arakawa_j7_2dh.F90 adv_upstream_2dh.F90 adv_fct_2dh.F90 adv_tvd_limiter.F90 \
+	  bottom_friction.F90 uv_advect.F90 uv_diffusion.F90 uv_diff_2dh.F90 momentum.F90 sealevel.F90 depth_update.F90 \
+	  update_2d_bdy.F90 residual.F90 cfl_check.F90
 
 MOD   = \
 ${LIB}(variables_2d.o)		\
+${LIB}(advection.o)		\
 ${LIB}(m2d.o)
 
 OBJ   = \
@@ -25,10 +25,16 @@ ${LIB}(momentum.o)		\
 ${LIB}(sealevel.o)		\
 ${LIB}(uv_advect.o)		\
 ${LIB}(uv_diffusion.o)		\
-${LIB}(uv_depths.o)		\
-${LIB}(have_bdy.o)		\
 ${LIB}(residual.o)		\
-${LIB}(update_2d_bdy.o)
+${LIB}(update_2d_bdy.o)		\
+${LIB}(adv_split_u.o)		\
+${LIB}(adv_split_v.o)		\
+${LIB}(adv_upstream_2dh.o)	\
+${LIB}(adv_fct_2dh.o)		\
+${LIB}(adv_arakawa_j7_2dh.o)	\
+${LIB}(adv_tvd_limiter.o)	\
+${LIB}(uv_diff_2dh.o)
+
 
 all: modules objects
 
@@ -40,8 +46,8 @@ $(MOD): $(INCS)
 
 $(OBJ): $(INCS)
 
-doc: $(SRC)
-	$(PROTEX) $(SRC) > $(DOCDIR)/2d.tex
+doc: $(TEXSRC)
+	$(PROTEX) $(TEXSRC) > $(DOCDIR)/2d.tex
 	touch doc
 
 clean:

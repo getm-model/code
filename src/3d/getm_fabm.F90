@@ -13,19 +13,14 @@
 ! !USES:
    use parameters, only: rho_0
    use domain, only: imin,imax,jmin,jmax,kmax
-   use domain, only: az,au,av
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxu,dxv,dyu,dyv,arcd1
-#else
-   use domain, only: dx,dy,ard1
-#endif
-   use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
+   use domain, only: az,latc,lonc
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
+   use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
    use variables_3d, only: nuh,T,S,rho,a,g1,g2,taub
-   use advection_3d, only: do_advection_3d
-   use meteo, only: swr,u10,v10,evap,precip
+   use advection_3d, only: print_adv_settings_3d,do_advection_3d
+   use meteo, only: swr,u10,v10,evap,precip,tcc
    use time, only: yearday,secondsofday
-   use halo_zones, only: update_3d_halo,wait_halo,D_TAG
+   use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
 ! JORN_FABM
    use gotm_fabm, only: init_gotm_fabm,set_env_gotm_fabm,do_gotm_fabm
    use gotm_fabm, only: fabm_calc, model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz
@@ -38,20 +33,10 @@
    integer, public           :: fabm_init_method=0
 !
 ! !PRIVATE DATA MEMBERS:
-   integer         :: fabm_hor_adv=1
-   integer         :: fabm_ver_adv=1
-   integer         :: fabm_adv_split=1
-   REALTYPE        :: fabm_AH=-1.
-#ifdef STATIC
-   REALTYPE        :: delxu(I2DFIELD),delxv(I2DFIELD)
-   REALTYPE        :: delyu(I2DFIELD),delyv(I2DFIELD)
-   REALTYPE        :: area_inv(I2DFIELD)
-#else
-   REALTYPE, dimension(:,:), allocatable :: delxu,delxv
-   REALTYPE, dimension(:,:), allocatable :: delyu,delyv
-   REALTYPE, dimension(:,:), allocatable :: area_inv
-#endif
-
+   integer         :: fabm_adv_split=0
+   integer         :: fabm_adv_hor=1
+   integer         :: fabm_adv_ver=1
+   REALTYPE        :: fabm_AH=-_ONE_
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -68,11 +53,14 @@
 !
 ! !INTERFACE:
    subroutine init_getm_fabm(nml_file)
-   IMPLICIT NONE
 !
 ! !DESCRIPTION:
 !  Reads the namelist and makes calls to the init functions of the
 !  various model components.
+!
+! !USES:
+   use advection, only: J7
+   IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)   :: nml_file
@@ -89,7 +77,7 @@
 
    namelist /getm_fabm_nml/ fabm_init_method, &
                            fabm_init_file,fabm_init_format,fabm_field_no, &
-                           fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH
+                           fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -111,22 +99,22 @@
 
 !     Allocate memory for pelagic state variables.
       allocate(fabm_pel(I3DFIELD,size(model%info%state_variables)),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (cc_pel)'
+      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (fabm_pel)'
       fabm_pel = _ZERO_
 
 !     Allocate memory for benthic state variables.
       allocate(fabm_ben(I2DFIELD,size(model%info%state_variables_ben)),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (cc_ben)'
+      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (fabm_ben)'
       fabm_ben = _ZERO_
 
 !     Allocate memory for 3D diagnostic variables.
       allocate(fabm_diag(I3DFIELD,size(model%info%diagnostic_variables)),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (cc_diag)'
+      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (fabm_diag)'
       fabm_diag = _ZERO_
 
 !     Allocate memory for 2D [horizontal-only] diagnostic variables.
       allocate(fabm_diag_hz(I2DFIELD,size(model%info%diagnostic_variables_hz)),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (cc_diag_hz)'
+      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (fabm_diag_hz)'
       fabm_diag_hz = _ZERO_
 
 !     Read settings specific to GETM-FABM interaction.
@@ -135,11 +123,9 @@
       close(NAMLST2)
 
 !     Show settings specific to GETM-FABM interaction.
-      LEVEL2 "settings related to FABM calculations"
-      LEVEL3 'fabm_hor_adv=   ',fabm_hor_adv
-      LEVEL3 'fabm_ver_adv=   ',fabm_ver_adv
-      LEVEL3 'fabm_adv_split= ',fabm_adv_split
-      LEVEL3 'fabm_AH=        ',fabm_AH
+      LEVEL2 'Advection of FABM variables'
+      if (fabm_adv_hor .eq. J7) stop 'init_getm_fabm: J7 not implemented yet'
+      call print_adv_settings_3d(fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH)
 
 !     Initialize biogeochemical state variables.
       select case (fabm_init_method)
@@ -178,35 +164,6 @@
          call wait_halo(D_TAG)
       end do
 
-#ifndef STATIC
-      allocate(delxu(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (delxu)'
-
-      allocate(delxv(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (delxv)'
-
-      allocate(delyu(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (delyu)'
-
-      allocate(delyv(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (delyv)'
-
-      allocate(area_inv(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (area_inv)'
-#endif
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-      delxu=dxu
-      delxv=dxv
-      delyu=dyu
-      delyv=dyv
-      area_inv=arcd1
-#else
-      delxu=dx
-      delxv=dx
-      delyu=dy
-      delyv=dy
-      area_inv=ard1
-#endif
    end if
 
    return
@@ -237,7 +194,7 @@
    integer         :: n
    integer         :: i,j,k
    REALTYPE        :: bioshade(1:kmax)
-   REALTYPE        :: wind_speed,I_0,taub_nonnorm
+   REALTYPE        :: wind_speed,I_0,taub_nonnorm,cloud
    REALTYPE        :: z(1:kmax)
 !EOP
 !-----------------------------------------------------------------------
@@ -268,6 +225,12 @@
                I_0 = _ZERO_
             end if
 
+            if (allocated(tcc)) then
+               cloud = tcc(i,j)
+            else
+               cloud = _ZERO_
+            end if
+
 !           Calculate depths of cell centers from layer heights.
             z(kmax) = -_HALF_*hn(i,j,kmax)
             do k=kmax-1,1,-1
@@ -292,9 +255,9 @@
             end do
 
 !           Transfer pointers to physical environment variables to FABM.
-            call set_env_gotm_fabm(dt,0,0,T(i,j,1:),S(i,j,1:), &
+            call set_env_gotm_fabm(latc(i,j),lonc(i,j),dt,0,0,T(i,j,1:),S(i,j,1:), &
                                    rho(i,j,1:),nuh(i,j,0:),hn(i,j,0:),ww(i,j,0:), &
-                                   bioshade,I_0,taub_nonnorm,wind_speed,precip(i,j),evap(i,j), &
+                                   bioshade,I_0,cloud,taub_nonnorm,wind_speed,precip(i,j),evap(i,j), &
                                    z,A(i,j),g1(i,j),g2(i,j),yearday,secondsofday)
 
 !           Update biogeochemical variable values.
@@ -320,8 +283,8 @@
 
 #ifdef SLICE_MODEL
       do i=imin,imax
-         cc_pel(:,i,3,:)=cc_pel(:,i,2,:)
-         cc_ben(:,i,3)  =cc_ben(:,i,2)
+         fabm_pel(i,3,:,:)=fabm_pel(i,2,:,:)
+         fabm_ben(i,3,:)  =fabm_ben(i,2,:)
       end do
 #endif
 
@@ -333,9 +296,8 @@
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
 
-      call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn, &
-              delxu,delxv,delyu,delyv,area_inv,az,au,av, &
-              fabm_hor_adv,fabm_ver_adv,fabm_adv_split,fabm_AH)
+      call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn,                       &
+                           fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH,H_TAG)
 
    end do
    call toc(TIM_ADVECTFABM)

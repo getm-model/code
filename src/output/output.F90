@@ -22,8 +22,8 @@
 !
 ! !PUBLIC DATA MEMBERS:
    integer                             :: out_fmt=NETCDF
-   integer                             :: hotin_fmt=BINARY
-   integer                             :: hotout_fmt=BINARY
+   integer                             :: hotin_fmt=NETCDF
+   integer                             :: hotout_fmt=NETCDF
    character(LEN = PATH_MAX)           :: in_dir='.'
    character(LEN = PATH_MAX)           :: out_dir='.'
    character(LEN = PATH_MAX)           :: out_f_2d
@@ -53,8 +53,10 @@
    logical                             :: save_taub=.false.
    integer                             :: first_2d=1
    integer                             :: step_2d=1
+   integer                             :: sync_2d=1
    integer                             :: first_3d=1
    integer                             :: step_3d=1
+   integer                             :: sync_3d=1
    integer                             :: hotout(3)=-1
    integer                             :: meanout=-1
    logical                             :: save_numerical_analyses=.false.
@@ -96,8 +98,8 @@
              save_strho,save_s,save_t,save_rho,save_rad, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              save_ss_nn,save_taub, &
-             first_2d,step_2d,first_3d,step_3d,hotout,meanout, &
-             save_meteo, save_numerical_analyses
+             first_2d,step_2d,sync_2d,first_3d,step_3d,sync_3d,hotout, &
+             meanout, save_meteo, save_numerical_analyses
 !   logical :: nesting=.true.
 !EOP
 !-------------------------------------------------------------------------
@@ -111,6 +113,12 @@
    LEVEL1 'init_output'
 
    read(NAMLST, nml=io_spec)
+
+   if (hotin_fmt .ne. NETCDF) then
+     LEVEL2 'WARNING: Support of non-netcdf restart files will be stopped.'
+     LEVEL2 '         Do a zero-length simulation to convert your restart files to netcdf!'
+   end if
+
    LEVEL2 'save_nuh',save_nuh
    LEVEL2 'save_num',save_num
    LEVEL2 'save_tke',save_tke
@@ -138,7 +146,8 @@
 
    if(save_2d) then
       LEVEL2 '2D results: ',trim(out_f_2d)
-      LEVEL2 'First=',first_2d,' step=',step_2d
+      if (sync_2d .lt. 0) sync_2d=0
+      LEVEL2 'First=',first_2d,' step=',step_2d,' sync_2d= ',sync_2d
       if(save_meteo) then
          LEVEL2 'Saving meteo forcing in ',trim(out_f_2d)
       end if
@@ -146,10 +155,17 @@
 #ifndef NO_3D
    if(save_3d) then
       LEVEL2 '3D results: ',trim(out_f_3d)
-      LEVEL2 'First=',first_3d,' step=',step_3d
+      if (sync_3d .lt. 0) sync_3d=0
+      LEVEL2 'First=',first_3d,' step=',step_3d,' sync_3d= ',sync_3d
    end if
 #endif
 
+   if ( hotout(1) .ge. 0) then
+      if (hotout_fmt .ne. NETCDF) then
+        STDERR 'Writing of non-netcdf restart files not supported anymore!'
+        stop
+      end if
+   end if
    if ( hotout(1) .gt. 0 .and. hotout(2) .lt. hotout(1) ) then
       if ( hotout(2) .eq. -1 ) then
          hotout(2) = 2147483647

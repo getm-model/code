@@ -21,17 +21,43 @@
    use exceptions
    use time, only: julianday,secondsofday
    use parameters, only: avmmol
-   use domain, only: imin,imax,jmin,jmax,az,au,av,H,HU,HV,min_depth
+   use domain, only: imin,imax,jmin,jmax,az,au,av,H,min_depth
    use domain, only: ilg,ihg,jlg,jhg
    use domain, only: ill,ihl,jll,jhl
-   use domain, only: openbdy,z0_method,z0_const,z0
+   use domain, only: openbdy,have_boundaries,z0_method,z0_const,z0
    use domain, only: az,ax
-   use halo_zones, only : update_2d_halo,wait_halo
-   use halo_zones, only : U_TAG,V_TAG,H_TAG
+   use advection, only: init_advection,print_adv_settings,NOADV
+   use halo_zones, only: update_2d_halo,wait_halo,H_TAG
    use variables_2d
+
    IMPLICIT NONE
-! Temporary interface (should be read from module):
+
    interface
+
+      subroutine uv_advect(U,V,DU,DV)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V
+         REALTYPE,dimension(E2DFIELD),target,intent(in) :: DU,DV
+      end subroutine uv_advect
+
+      subroutine uv_diffusion(An_method,U,V,D,DU,DV)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         integer,intent(in)                      :: An_method
+         REALTYPE,dimension(E2DFIELD),intent(in) :: U,V,D,DU,DV
+      end subroutine uv_diffusion
+
+      subroutine uv_diff_2dh(An_method,UEx,VEx,U,V,D,DU,DV,hsd_u,hsd_v)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         integer,intent(in)                                :: An_method
+         REALTYPE,dimension(E2DFIELD),intent(in),optional  :: U,V,D,DU,DV
+         REALTYPE,dimension(E2DFIELD),intent(inout)        :: UEx,VEx
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: hsd_u,hsd_v
+      end subroutine uv_diff_2dh
+
+! Temporary interface (should be read from module):
       subroutine get_2d_field(fn,varname,il,ih,jl,jh,f)
          character(len=*),intent(in)   :: fn,varname
          integer, intent(in)           :: il,ih,jl,jh
@@ -40,8 +66,10 @@
    end interface
 !
 ! !PUBLIC DATA MEMBERS:
-   logical                   :: have_boundaries
-   REALTYPE                  :: dtm,Am=-_ONE_
+   REALTYPE                  :: dtm
+   integer                   :: vel2d_adv_split=0
+   integer                   :: vel2d_adv_hor=1
+   REALTYPE                  :: Am=-_ONE_
 !  method for specifying horizontal numerical diffusion coefficient
 !     (0=const, 1=from named nc-file)
    integer                   :: An_method=0
@@ -51,7 +79,7 @@
    integer                   :: MM=1,residual=-1
    integer                   :: sealevel_check=0
    logical                   :: bdy2d=.false.
-   integer                   :: bdyfmt_2d,bdytype,bdyramp_2d=-1
+   integer                   :: bdyfmt_2d,bdytype,bdy2d_ramp=-1
    character(len=PATH_MAX)   :: bdyfile_2d
    REAL_4B                   :: bdy_data(1500)
    REAL_4B                   :: bdy_data_u(1500)
@@ -100,10 +128,14 @@
 ! !LOCAL VARIABLES:
    integer                   :: rc
    integer                   :: i,j
-   integer                   :: vel_depth_method=0
+   integer                   :: elev_method=1
+   REALTYPE                  :: elev_const=_ZERO_
+   character(LEN = PATH_MAX) :: elev_file='elev.nc'
    namelist /m2d/ &
-          MM,vel_depth_method,Am,An_method,An_const,An_file,residual, &
-          sealevel_check,bdy2d,bdyfmt_2d,bdyramp_2d,bdyfile_2d
+          elev_method,elev_const,elev_file,                    &
+          MM,vel2d_adv_split,vel2d_adv_hor,                    &
+          Am,An_method,An_const,An_file,residual,              &
+          sealevel_check,bdy2d,bdyfmt_2d,bdy2d_ramp,bdyfile_2d
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -115,20 +147,54 @@
 
    LEVEL1 'init_2d'
 
-!  Read 2D-model specific things from the namelist.
-   read(NAMLST,m2d)
-
    dtm = timestep
 
-!  Allocates memory for the public data members - if not static
-   call init_variables_2d(runtype)
-
 #if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
-!   STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'
-!   call cfl_check()
+!  STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'
+!  call cfl_check()
 #else
    call cfl_check()
 #endif
+
+!  Read 2D-model specific things from the namelist.
+   read(NAMLST,m2d)
+
+!  Allocates memory for the public data members - if not static
+   call init_variables_2d(runtype)
+   call init_advection()
+
+   LEVEL2 'Advection of depth-averaged velocities'
+#ifdef NO_ADVECT
+   if (vel2d_adv_hor .ne. NOADV) then
+      LEVEL2 "reset vel2d_adv_hor= ",NOADV," because of"
+      LEVEL2 "obsolete NO_ADVECT macro. Note that this"
+      LEVEL2 "behaviour will be removed in the future."
+      vel2d_adv_hor = NOADV
+   end if
+#endif
+   call print_adv_settings(vel2d_adv_split,vel2d_adv_hor,_ZERO_)
+
+   if (.not. hotstart) then
+      select case (elev_method)
+         case(1)
+            LEVEL2 'setting initial surface elevation to ',real(elev_const)
+            z = elev_const
+         case(2)
+            LEVEL2 'getting initial surface elevation from ',trim(elev_file)
+            call get_2d_field(trim(elev_file),"elev",ilg,ihg,jlg,jhg,z(ill:ihl,jll:jhl))
+!           Note (KK): we need halo update only for periodic domains
+            call update_2d_halo(z,z,az,imin,jmin,imax,jmax,H_TAG)
+            call wait_halo(H_TAG)
+         case default
+            stop 'init_2d(): invalid elev_method'
+      end select
+
+      where ( z .lt. -H+min_depth)
+         z = -H+min_depth
+      end where
+      zo = z
+      call depth_update()
+   end if
 
    if (Am .lt. _ZERO_) then
       LEVEL2 'Am < 0 --> horizontal momentum diffusion not included'
@@ -213,20 +279,13 @@
    if (.not. openbdy)  bdy2d=.false.
    LEVEL2 'Open boundary=',bdy2d
    if (bdy2d) then
-      if (hotstart .and. bdyramp_2d .gt. 0) then
-          LEVEL2 'WARNING: hotstart is .true. AND bdyramp_2d .gt. 0'
+      if (hotstart .and. bdy2d_ramp .gt. 0) then
+          LEVEL2 'WARNING: hotstart is .true. AND bdy2d_ramp .gt. 0'
           LEVEL2 'WARNING: .. be sure you know what you are doing ..'
       end if
       LEVEL2 TRIM(bdyfile_2d)
       LEVEL2 'Format=',bdyfmt_2d
    end if
-
-   call uv_depths(vel_depth_method)
-
-   where ( -H+min_depth .gt. _ZERO_ )
-      z = -H+min_depth
-   end where
-   zo=z
 
 !  bottom roughness
    if (z0_method .eq. 0) then
@@ -247,8 +306,6 @@
    end if
    zub=zub0
    zvb=zvb0
-
-   call depth_update()
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_2d()'
@@ -298,6 +355,7 @@
 ! It is possible that a user changes the land mask and reads an "old" hotstart file.
 ! In this case the "old" velocities will need to be zeroed out.
    if (hotstart) then
+
       ischange = 0
 !     The first two loops are pure diagnostics, logging where changes will actually take place
 !     (and if there is something to do at all, to be able to skip the second part)
@@ -334,7 +392,11 @@
             zo = _ZERO_
          end where
       end if
+
+      call depth_update()
+
    end if
+
    return
    end subroutine postinit_2d
 !EOC
@@ -395,21 +457,12 @@
       call bottom_friction(runtype)
 #endif
    end if
-   UEx=_ZERO_ ; VEx=_ZERO_
-#ifdef NO_ADVECT
-   STDERR 'NO_ADVECT 2D'
-#else
-#ifndef UV_ADV_DIRECT
-   call uv_advect()
-   if (Am .gt. _ZERO_ .or. An_method .gt. 0) then
-      call uv_diffusion(Am,An_method,An,AnX) ! Has to be called after uv_advect.
-   end if
+
    call tic(TIM_INTEGR2D)
-   call mirror_bdy_2d(UEx,U_TAG)
-   call mirror_bdy_2d(VEx,V_TAG)
+   call uv_advect(U,V,DU,DV)
+   call uv_diffusion(An_method,U,V,D,DU,DV) ! Has to be called after uv_advect.
    call toc(TIM_INTEGR2D)
-#endif
-#endif
+
    call momentum(loop,tausx,tausy,airp)
    if (runtype .gt. 1) then
       call tic(TIM_INTEGR2D)
@@ -417,11 +470,11 @@
       Vint=Vint+V
       call toc(TIM_INTEGR2D)
    end if
-   if (have_boundaries) call update_2d_bdy(loop,bdyramp_2d)
+   if (have_boundaries) call update_2d_bdy(loop,bdy2d_ramp)
    call sealevel()
    call depth_update()
 
-   if(residual .gt. 0 .and. loop .ge. residual) then
+   if(residual .gt. 0) then
       call tic(TIM_INTEGR2D)
       call do_residual(0)
       call toc(TIM_INTEGR2D)

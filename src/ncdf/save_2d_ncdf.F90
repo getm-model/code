@@ -100,8 +100,8 @@
       do j=jmin,jmax
          do i=imin,imax
             if (az(i,j) .gt. 0) then
-               cosconv = cos(deg2rad*convc(i,j))
-               sinconv = sin(deg2rad*convc(i,j))
+               cosconv = cos(-convc(i,j)*deg2rad)
+               sinconv = sin(-convc(i,j)*deg2rad)
                Urot(i,j) = Utmp(i,j)*cosconv-Vtmp(i,j)*sinconv
                Vrot(i,j) = Utmp(i,j)*sinconv+Vtmp(i,j)*cosconv
             else
@@ -195,6 +195,7 @@
 !                and edges(3), or define the ncdf fields independent on
 !                time) and the activation with residual.gt.0 is not
 !                recommended.
+!     the output has now been fixed - kb
 
       start(1) = 1
       start(2) = 1
@@ -220,8 +221,10 @@
       if (err .NE. NF90_NOERR) go to 10
 #endif
    end if
-   err = nf90_sync(ncid)
-   if (err .NE. NF90_NOERR) go to 10
+   if (sync_2d .ne. 0 .and. mod(n2d,sync_2d) .eq. 0) then
+      err = nf90_sync(ncid)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
 
    return
 

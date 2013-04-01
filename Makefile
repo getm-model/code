@@ -50,6 +50,12 @@ VER=2.0.0
 VER=2.1.0
 # 2012/04/01 - new stable release
 VER=2.2.0
+# 2012/04/01 - new devel release
+VER=2.3.0
+# 2012/06/26 - unified advection/diffusion
+VER=2.3.1
+# 2013/04/01 - new stable release
+VER=2.4.0
 
 
 .PHONY: doc
@@ -62,6 +68,12 @@ VERSION: Makefile src/Makefile src/Rules.make
 	@date > timestamp
 	@echo \#define RELEASE \"$(VER)\" > .ver
 	@mv -f .ver include/version.h
+
+FORTRAN:
+	. ./fortran_version.sh > ./include/fortran_version.h
+
+GIT:
+	@echo "#define GIT_REVISION \"`git log | head -1`\"" > ./include/git_revision.h
 
 Makefile:
 

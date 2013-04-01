@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: hcc_check - hydrostatic consistency criteria
+! !IROUTINE: hcc_check - hydrostatic consistency criteria
 !
 ! !INTERFACE:
    subroutine hcc_check()

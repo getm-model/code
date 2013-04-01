@@ -1,0 +1,758 @@
+<?xml version="1.0" ?>
+<element name="scenario" version="getm-2.4" namelistextension=".inp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Programmeren/GOTM-CVS/gotm/gui.py/core/scenario-1.0.xsd">
+	<element name="getm">
+		<element name="param" label="general model setup">
+			<element name="dryrun"       type="bool"   label="dry run" />
+			<element name="runid"        type="string" label="identifier for the naming of output files" />
+			<element name="title"        type="string" label="title of simulation" />
+			<element name="parallel"     type="bool"   label="parallel simulation" />
+			<element name="runtype"      type="int"    label="type of run">
+				<options>
+					<option value="1" label="2D"/>
+					<option value="2" label="3D (no density)"/>
+					<option value="3" label="3D (frozen density)"/>
+					<option value="4" label="3D (full)"/>
+				</options>
+			</element>
+			<element name="hotstart"     type="bool"   label="read initial fields from file" />
+			<element name="use_epoch"    type="bool"   label="use a common time origin for a series of hotstart simulations" />
+			<element name="save_initial" type="bool"   label="save initial values i.e. before entering the time loop" />
+		</element>
+		
+		<element name="time" label="time related formats and variables">
+			<element name="timestep" type="float"    label="micro timestep" unit="s"/>
+			<element name="timefmt"  type="int"      label="time format">
+				<options>
+					<option value="1" label="nlast only - fake start time used"/>
+					<option value="2" label="start and stop - nlast calculated"/>
+					<option value="3" label="start and nlast - stop calculated"/>
+				</options>
+			</element>
+			<element name="nlast"    type="int"      label="number of time steps">
+				<condition type="ne" variable="./timefmt" value="2"/>
+			</element>
+			<element name="start"    type="datetime" label="initial time">
+				<condition type="ne" variable="./timefmt" value="1"/>
+			</element>
+			<element name="stop"     type="datetime" label="final time">
+				<condition type="eq" variable="./timefmt" value="2"/>
+			</element>
+		</element>
+
+		<element name="domain" label="information on the calculation domain">
+			<element name="vert_cord" type="int" label="vertical coordinates">
+				<options>
+					<option value="1" label="sigma"/>
+					<option value="2" label="z-level"/>
+					<option value="3" label="general vertical coordinates (gvc)"/>
+					<option value="5" label="adaptive coordinates"/>
+				</options>
+			</element>
+			<element name="maxdepth" type="float" label="maximum depth in active calculation domain" unit="m">
+				<condition type="eq" variable="./vert_cord" value="3"/>
+			</element>
+			<element name="bathymetry" type="string" label="name of file with bathymetry and grid" />
+			<element name="vel_depth_method" type="int" label="vel_depth_method">
+				<options>
+					<option value="0" label="use mean value of neighboring H points (default)"/>
+					<option value="1" label="use minimum value of neighboring H points"/>
+					<option value="2" label="use mixture of mean and minimum values: see code for details"/>
+				</options>
+			</element>
+			<element name="longitude" type="float" unit="° East" description="Longitude used for calculating short wave radiation (if not from bathymetry file)"/>
+			<element name="latitude"  type="float" unit="° North" description="Latitude used for meteo and the Coriolis force (if not from bathymetry file)"/>
+			<element name="f_plane"   type="bool" label="compute (constant) f latitude (otherwise calculated from latitude,longitude in bathymetry)"/>
+			<element name="openbdy"   type="bool" label="whether the scenario has open boundaries"/>
+			<element name="bdyinfofile" type="string" label="name of file with boundary info">
+				<condition type="eq" variable="./openbdy" value="True"/>
+			</element>
+			<element name="crit_depth" type="float" unit="m" label="the critical depth - when the drying procedure starts"/>
+			<element name="min_depth"  type="float" unit="m" label="the absolute minimum depth"/>
+			<element name="kdum" type="int" label="number of layers in the vertical - only used when -DDYNAMIC"/>
+			<element name="ddu" type="float" label="surface zooming" description="Surface zooming: 0: no zooming, 1: weak zooming, 3: strong zooming, etc."/>
+			<element name="ddl" type="float" label="bottom zooming" description="Bottom zooming: 0: no zooming, 1: weak zooming, 3: strong zooming, etc."/>
+			<element name="d_gamma"  type="float" label="depth below which sigma coordinates are used." unit="m" description="Depth below which sigma coordinates are used. For larger depth, surface or bottom layer thickness at depth=d_gamma is kept, depending on gamma_surf">
+				<condition type="eq" variable="./vert_cord" value="3"/>
+			</element>
+			<element name="gamma_surf" type="bool" label="layer thickness constant at surface (else at the bottom)">
+				<condition type="eq" variable="./vert_cord" value="3"/>
+			</element>
+			<element name="il" type="int" label="???"/>
+			<element name="ih" type="int" label="???"/>
+			<element name="jl" type="int" label="???"/>
+			<element name="jh" type="int" label="???"/>
+			<element name="z0_method" type="int" label="bottom roughness specification">
+				<options>
+					<option value="0" label="constant - using z0_const"/>
+					<option value="1" label="space varying - read from bathymetry file (variable name MUST be z0)"/>
+				</options>
+			</element>
+			<element name="z0_const" type="float" label="constant bottom roughness" unit="m">
+				<condition type="eq" variable="./z0_method" value="0"/>
+			</element>
+		</element>
+
+		<element name="meteo" label="variables related to meteorological forcing">
+			<element name="metforcing" type="bool" label="use meteorological forcing"/>
+			<element name="on_grid"    type="bool" label="Are meteo given on grid-points?">
+				<condition type="eq" variable="./metforcing" value="True"/>
+			</element>
+			<element name="calc_met" type="bool" label="Fluxes are not provided and need to be calculated.">
+				<condition type="eq" variable="./metforcing" value="True"/>
+			</element>
+			<element name="met_method" type="int" label="meteo method">
+				<condition type="eq" variable="./metforcing" value="True"/>
+				<options>
+					<option value="1" label="constant"/>
+					<option value="2" label="from file"/>
+				</options>
+			</element>
+			<element name="fwf_method" type="int" label="freshwater flux method">
+				<condition type="eq" variable="./metforcing" value="True"/>
+				<options>
+					<option value="0" label="none"/>
+					<option value="1" label="constant, use precip_const and evap_const"/>
+					<option value="2" label="both evapotation and precipitation from file"/>
+					<option value="3" label="evaporation is calculated, precipitation from file"/>
+					<option value="4" label="evaporation is calculated, NO precipitation"/>
+				</options>
+			</element>
+			<element name="meteo_ramp" type="int" label="number of time steps for forcing spin-up" unit="micro time steps">
+				<condition type="eq" variable="./metforcing" value="True"/>
+			</element>
+			<element name="metfmt" type="int" label="format of meteofile">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="eq" variable="./met_method" value="2"/>
+				</condition>
+				<options>
+					<option value="1" label="ASCII"/>
+					<option value="2" label="NetCDF"/>
+				</options>
+			</element>
+			<element name="meteo_file" type="string" label="name of meteofile">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="eq" variable="./met_method" value="2"/>
+				</condition>
+			</element>
+			<element name="tx" type="float" label="constant x stress" unit="Pa">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="eq" variable="./met_method" value="1"/>
+				</condition>
+			</element>
+			<element name="ty" type="float" label="constant y stress" unit="Pa">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="eq" variable="./met_method" value="1"/>
+				</condition>
+			</element>
+			<element name="swr_const" type="float" label="constant short wave radiation" unit="W/m²">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="eq" variable="./met_method" value="1"/>
+				</condition>
+			</element>
+			<element name="shf_const" type="float" label="constant surface heat flux" unit="W/m²">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="eq" variable="./met_method" value="1"/>
+				</condition>
+			</element>
+			<element name="evap_const" type="float" label="constant evaporation" unit="m/s">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="eq" variable="./fwf_method" value="1"/>
+				</condition>
+			</element>
+			<element name="precip_const" type="float" label="constant precipitation" unit="m/s">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="eq" variable="./fwf_method" value="1"/>
+				</condition>
+			</element>
+			<element name="evap_factor" type="float" label="factor to convert evaporation to m/s">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="eq" variable="./fwf_method" value="2"/>
+				</condition>
+			</element>
+			<element name="precip_factor" type="float" label="factor to convert precipitation to m/s">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="or">
+						<condition type="eq" variable="./fwf_method" value="2"/>
+						<condition type="eq" variable="./fwf_method" value="3"/>
+					</condition>
+				</condition>
+			</element>
+		</element>
+
+		<element name="rivers" label="variables related to rivers">
+			<element name="river_method" type="int" label="river method">
+				<options>
+					<option value="0" label="none"/>
+					<option value="1" label="constant"/>
+					<option value="2" label="from file"/>
+				</options>
+			</element>
+			<element name="river_info" type="string" label="name of file with river specifications">
+				<condition type="eq" variable="./river_method" value="2"/>
+			</element>
+			<element name="river_format" type="int" label="format of river_data">
+				<condition type="eq" variable="./river_method" value="2"/>
+				<options>
+					<option value="1" label="ASCII"/>
+					<option value="2" label="NetCDF"/>
+				</options>
+			</element>
+			<element name="river_data" type="string" label="name of file with actual river data">
+				<condition type="eq" variable="./river_method" value="2"/>
+			</element>
+			<element name="river_ramp" type="int" label="ramp on river flows - in micro time steps">
+				<condition type="ne" variable="./river_method" value="0"/>
+			</element>
+			<element name="river_factor" type="float" label="factor to convert river flow to m³/s">
+				<condition type="eq" variable="./river_method" value="2"/>
+			</element>
+			<element name="use_river_salt" type="bool" label="use salinity info - if present in river data">
+				<condition type="eq" variable="./river_method" value="2"/>
+			</element>
+			<element name="use_river_temp" type="bool" label="use temperature info - if present in river data">
+				<condition type="eq" variable="./river_method" value="2"/>
+			</element>
+			<element name="river_outflow_properties_follow_source_cell" type="bool" label="take temperature, salinity, biogeochemistry of river outflow from modelled source cell">
+				<condition type="eq" variable="./river_method" value="2"/>
+			</element>
+		</element>
+
+		<element name="m2d" label="variables related to 2D model">
+			<element name="elev_method" type="int" label="method for initial surface elevation">
+				<options>
+					<option value="1" label="constant"/>
+					<option value="2" label="from 2D field"/>
+				</options>
+			</element>
+			<element name="elev_const" type="float" label="constant initial surface elevation">
+				<condition type="eq" variable="./elev_method" value="1"/>
+			</element>
+			<element name="elev_file" type="string" label="name of file with initial surface elevation">
+				<condition type="eq" variable="./elev_method" value="2"/>
+			</element>
+			<element name="MM" type="int" label="time steps between calls to bottom_friction()" unit="micro time steps" minInclusive="0"/>
+			<element name="vel2d_adv_split" type="int" label="advection splitting for depth-averaged velocities">
+				<condition type="ne" variable="./vel2d_adv_hor" value="0"/>
+				<options>
+					<option value="0" label="no split: one 2D uv step"/>
+					<option value="1" label="full step splitting: u + v"/>
+					<option value="2" label="half step splitting: u/2 + v + u/2"/>
+				</options>
+			</element>
+			<element name="vel2d_adv_hor" type="int" label="advection scheme for depth-averaged velocities">
+				<options>
+					<option value="0" label="advection disabled"/>
+					<option value="1" label="upstream (first-order, monotone)"/>
+					<option value="2" label="2DH-upstream with forced monotonicity">
+						<condition type="eq" variable="./vel2d_adv_split" value="0"/>
+					</option>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
+					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
+					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
+					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+					<option value="7" label="2DH-J7">
+						<condition type="eq" variable="./vel2d_adv_split" value="0"/>
+					</option>
+
+					<option value="8" label="2DH-FCT">
+						<condition type="eq" variable="./vel2d_adv_split" value="0"/>
+					</option>
+					<option value="9" label="2DH-P2">
+						<condition type="eq" variable="./vel2d_adv_split" value="0"/>
+					</option>
+				</options>
+			</element>
+			<element name="Am" type="float" label="constant horizontal momentum diffusion coefficient" unit="m²/s"/>
+			<element name="An_method" type="int" label="method for constant horizontal numerical diffusion coefficient (m²/s) used to filter the surface elevation">
+				<options>
+					<option value="0" label="disabled"/>
+					<option value="1" label="constant value An_const"/>
+					<option value="2" label="variable 2D from file"/>
+				</options>
+			</element>
+			<element name="An_const" type="float" label="constant horizontal numerical diffusion coefficient" unit="m²/s">
+				<condition type="eq" variable="./An_method" value="1"/>
+			</element>
+			<element name="An_file" type="string" label="name of netcdf file with variable An">
+				<condition type="eq" variable="./An_method" value="2"/>
+			</element>
+			<element name="residual" type="int" label="compute vertically integrated residual currents every 'residual' time step"/>
+			<element name="sealevel_check" type="int" label="interval between checks for NaN's in sealevels" description="Interval between checks for NaN's in sealevels. 0: disabled, &gt;0: check every sealevel_check step, abort if check fails, &lt;0: check every abs(sealevel_check) step, warn only if check fails"/>
+			<element name="bdy2d" type="bool" label="open boundaries exist"/>
+			<element name="bdyfmt_2d" type="int" label="format of boundary specifications">
+				<condition type="eq" variable="./bdy2d" value="True"/>
+				<options>
+					<option value="-1" label="no data needed"/>
+					<option value="0" label="analytical"/>
+					<option value="1" label="ASCII"/>
+					<option value="2" label="NetCDF"/>
+				</options>
+			</element>
+			<element name="bdy2d_ramp" type="int" label="number of time steps for elevation boundary spin-up">
+				<condition type="eq" variable="./bdy2d" value="True"/>
+			</element>
+			<element name="bdyfile_2d" type="string" label="name of file with boundary data">
+				<condition type="and">
+					<condition type="eq" variable="./bdy2d" value="True"/>
+					<condition type="or">
+						<condition type="eq" variable="./bdyfmt_2d" value="1"/>
+						<condition type="eq" variable="./bdyfmt_2d" value="2"/>
+					</condition>
+				</condition>
+			</element>
+		</element>
+
+		<element name="m3d" label="variables related to 3D model">
+			<element name="M" type="int" label="time steps between calls to 3D model" minInclusive="1" unit="micro time steps"/>
+			<element name="cnpar" type="float" label="Cranck-Nicolson parameter" minInclusive="0.0" maxInclusive="1.0"/>
+			<element name="cord_relax" type="float" label="coordinate relaxation time scale" minInclusive="0.0" unit="s" description="Coordinate relaxation time scale. The parameter r=cord_relax/dt*H(i,j)/maxdepth regulates how strongly new layer distribution is relaxed to the old one.">
+				<condition type="eq" variable="../domain/vert_cord" value="3"/>
+			</element>
+			<element name="adv_ver_iterations" type="int" label="max number of iterations of vertical advection" minInclusive="0"/>
+			<element name="bdy3d" type="bool" label="open boundaries exist"/>
+			<element name="bdyfmt_3d" type="int" label="format of boundary specifications">
+				<condition type="eq" variable="./bdy3d" value="True"/>
+				<options>
+					<option value="1" label="ASCII"/>
+					<option value="2" label="NetCDF"/>
+				</options>
+			</element>
+			<element name="bdy3d_ramp" type="int" label="number of time steps for boundary spin-up">
+				<condition type="eq" variable="./bdy3d" value="True"/>
+			</element>
+			<element name="bdyfile_3d" type="string" label="name of file with boundary data">
+				<condition type="eq" variable="./bdy3d" value="True"/>
+			</element>
+			<element name="bdy3d_tmrlx" type="bool" label="temporal 3D boundary relaxation coeff.">
+				<condition type="eq" variable="./bdy3d" value="True"/>
+			</element>
+			<element name="bdy3d_tmrlx_min" type="float" label="minimum relaxation coefficient" minInclusive="0.0" maxInclusive="1.0">
+				<condition type="eq" variable="./bdy3d_tmrlx" value="True"/>
+			</element>
+			<element name="bdy3d_tmrlx_max" type="float" label="maximum relaxation coefficient" minInclusive="0.0" maxInclusive="1.0">
+				<condition type="eq" variable="./bdy3d_tmrlx" value="True"/>
+			</element>
+			<element name="bdy3d_tmrlx_ucut" type="float" label="velocity threshold" unit="m/s" minInclusive="0.0">
+				<condition type="eq" variable="./bdy3d_tmrlx" value="True"/>
+			</element>
+			<element name="vel3d_adv_split" type="int" label="advection splitting for horizontal 3D velocities">
+				<condition type="ne" variable="./vel3d_adv_hor" value="0"/>
+				<options>
+					<option value="0" label="no split: one 3D uvw step"/>
+					<option value="1" label="full step splitting: u + v + w"/>
+					<option value="2" label="half step splitting: u/2 + v/2 + w + v/2 + u/2"/>
+					<option value="3" label="hor/ver splitting: uv + w"/>
+				</options>
+			</element>
+			<element name="vel3d_adv_hor" type="int" label="horizontal advection scheme for horizontal 3D velocities">
+				<options>
+					<option value="0" label="advection disabled"/>
+					<option value="1" label="upstream (first-order, monotone)"/>
+					<option value="2" label="2DH-upstream with forced monotonicity">
+						<condition type="or">
+							<condition type="eq" variable="./vel3d_adv_split" value="0"/>
+							<condition type="eq" variable="./vel3d_adv_split" value="3"/>
+						</condition>
+					</option>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
+					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
+					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
+					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+					<option value="7" label="2DH-J7">
+						<condition type="or">
+							<condition type="eq" variable="./vel3d_adv_split" value="0"/>
+							<condition type="eq" variable="./vel3d_adv_split" value="3"/>
+						</condition>
+					</option>
+					<option value="8" label="2DH-FCT">
+						<condition type="or">
+							<condition type="eq" variable="./vel3d_adv_split" value="0"/>
+							<condition type="eq" variable="./vel3d_adv_split" value="3"/>
+						</condition>
+					</option>
+					<option value="9" label="2DH-P2">
+						<condition type="or">
+							<condition type="eq" variable="./vel3d_adv_split" value="0"/>
+							<condition type="eq" variable="./vel3d_adv_split" value="3"/>
+						</condition>
+					</option>
+				</options>
+			</element>
+			<element name="vel3d_adv_ver" type="int" label="vertical advection scheme for horizontal 3D velocities">
+				<options>
+					<option value="0" label="advection disabled"/>
+					<option value="1" label="upstream (first-order, monotone)"/>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
+					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
+					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
+					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+				</options>
+			</element>
+			<element name="calc_temp" type="bool" label="solve temperature equation"/>
+			<element name="calc_salt" type="bool" label="solve salinity equation"/>
+			<element name="avmback"   type="float" label="background viscosity" unit="m²/s"/>
+			<element name="avhback"   type="float" label="background diffusivity" unit="m²/s"/>
+			<element name="advect_turbulence"  type="bool"  label="advect TKE and eps"/>
+			<element name="ip_method" type="int" label="internal pressure method">
+				<options>
+					<option value="1" label="Blumberg and Mellor"/>
+					<option value="2" label="Blumberg and Mellor (linear)"/>
+					<option value="3" label="z-interpolation"/>
+					<option value="4" label="Song and Wright"/>
+					<option value="5" label="Chu and Fan"/>
+					<option value="6" label="Shchepetkin and McWilliams (2003)"/>
+					<option value="7" label="Stelling and van Kester (1994)"/>
+				</options>
+			</element>
+			<element name="ip_ramp" type="int" label="internal pressure spin-up" description="Internal pressure spin-up. must be a multiple of M (split factor)" unit="micro time steps"/>
+			<element name="vel_check" type="int" label="interval between checks for out-of-bounds velocities" description="Interval between checks for out-of-bounds velocities. 0: disabled, &gt;0: check every vel_check step, abort if check fails, &lt;0: check every abs(vel_check) step, warn if check fails"/>
+			<element name="min_vel"   type="float" label="minimum valid velocity" unit="m/s">
+				<condition type="ne" variable="./vel_check" value="0"/>
+			</element>
+			<element name="max_vel"   type="float" label="maximum valid velocity" unit="m/s">
+				<condition type="ne" variable="./vel_check" value="0"/>
+			</element>
+		</element>
+
+		<element name="temp" label="variables related to temperature">
+			<element name="temp_method" type="int" label="temperature method">
+				<options>
+					<option value="0" label="read from hotstart file"/>
+					<option value="1" label="constant"/>
+					<option value="2" label="homogeneous stratification"/>
+					<option value="3" label="from 3D field"/>
+				</options>
+			</element>
+			<element name="temp_const" type="float" label="constant initial temperature">
+				<condition type="eq" variable="./temp_method" value="1"/>
+			</element>
+			<element name="temp_format" type="int" label="format of temperature file">
+				<condition type="eq" variable="./temp_method" value="3"/>
+				<options>
+					<option value="1" label="ASCII"/>
+					<option value="2" label="NetCDF"/>
+				</options>
+			</element>
+			<element name="temp_file" type="string" label="name of file with initial temperature distribution">
+				<condition type="or">
+					<condition type="eq" variable="./temp_method" value="2"/>
+					<condition type="eq" variable="./temp_method" value="3"/>
+				</condition>
+			</element>
+			<element name="temp_name" type="string" label="name of the temperature variable">
+				<condition type="and">
+					<condition type="eq" variable="./temp_method" value="3"/>
+					<condition type="eq" variable="./temp_format" value="2"/>
+				</condition>
+			</element>
+			<element name="temp_field_no" type="int" label="what number to read initial data from">
+				<condition type="and">
+					<condition type="eq" variable="./temp_method" value="3"/>
+					<condition type="eq" variable="./temp_format" value="2"/>
+				</condition>
+			</element>
+			<element name="temp_adv_split" type="int" label="advection splitting for temperature">
+				<condition type="ne" variable="./temp_adv_hor" value="0"/>
+				<options>
+					<option value="0" label="no split: one 3D uvw step"/>
+					<option value="1" label="full step splitting: u + v + w"/>
+					<option value="2" label="half step splitting: u/2 + v/2 + w + v/2 + u/2"/>
+					<option value="3" label="hor/ver splitting: uv + w"/>
+				</options>
+			</element>
+			<element name="temp_adv_hor" type="int" label="horizontal advection scheme for temperature">
+				<options>
+					<option value="0" label="advection disabled"/>
+					<option value="1" label="upstream (first-order, monotone)"/>
+					<option value="2" label="2DH-upstream with forced monotonicity">
+						<condition type="or">
+							<condition type="eq" variable="./temp_adv_split" value="0"/>
+							<condition type="eq" variable="./temp_adv_split" value="3"/>
+						</condition>
+					</option>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
+					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
+					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
+					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+					<option value="8" label="2DH-FCT">
+						<condition type="or">
+							<condition type="eq" variable="./temp_adv_split" value="0"/>
+							<condition type="eq" variable="./temp_adv_split" value="3"/>
+						</condition>
+					</option>
+					<option value="8" label="2DH-P2">
+						<condition type="or">
+							<condition type="eq" variable="./temp_adv_split" value="0"/>
+							<condition type="eq" variable="./temp_adv_split" value="3"/>
+						</condition>
+					</option>
+				</options>
+			</element>
+			<element name="temp_adv_ver" type="int" label="vertical advection scheme for temperature">
+				<options>
+					<option value="0" label="advection disabled"/>
+					<option value="1" label="upstream (first-order, monotone)"/>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
+					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
+					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
+					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+				</options>
+			</element>
+			<element name="temp_AH" type="float" label="horizontal diffusivity of heat" unit="m²/s"/>
+			<element name="attenuation_method" type="int" label="light attenuation method">
+				<options>
+					<option value="0" label="spatially constant coefficients"/>
+					<option value="1" label="spatially and temporally varying - read from file"/>
+				</options>
+			</element>
+			<element name="jerlov" type="int" label="Jerlov water class">
+				<condition type="eq" variable="./attenuation_method" value="0"/>
+				<options>
+					<option value="0" label="custom" />
+					<option value="1" label="Jerlov type I" />
+					<option value="2" label="Jerlov type 1 (upper 50 m)"/>
+					<option value="3" label="Jerlov type IA"/>
+					<option value="4" label="Jerlov type IB"/>
+					<option value="5" label="Jerlov type II"/>
+					<option value="6" label="Jerlov type III"/>
+					<option value="7" label="User specified A, g1 and g2"/>
+				</options>
+			</element>
+			<element name="A_const" type="float" label="longwave fraction of visible light">
+				<condition type="and">
+					<condition type="eq" variable="./attenuation_method" value="0"/>
+					<condition type="eq" variable="./jerlov" value="7"/>
+				</condition>
+			</element>
+			<element name="g1_const" type="float" label="efolding depth of longwave fraction" unit="m">
+				<condition type="and">
+					<condition type="eq" variable="./attenuation_method" value="0"/>
+					<condition type="eq" variable="./jerlov" value="7"/>
+				</condition>
+			</element>
+			<element name="g2_const" type="float" label="efolding depth of shortwave fraction" unit="m">
+				<condition type="and">
+					<condition type="eq" variable="./attenuation_method" value="0"/>
+					<condition type="eq" variable="./jerlov" value="7"/>
+				</condition>
+			</element>
+			<element name="attenuation_file" type="string" label="name of file with varying coefficients">
+				<condition type="eq" variable="./attenuation_method" value="1"/>
+			</element>
+			<element name="swr_bot_refl_frac" type="float" minInclusive="0." maxInclusive="1." label="fraction of bottom SWR that is reflected" description="At low - or in clear - waters a certain amount of SWR reaches the bottom. The value of this variable specifies how much is reflected up in the water column. Set to 0 to have no reflection. Default value is 0">
+			</element>
+			<element name="swr_min_bot_frac" type="float" minInclusive="0.0" maxInclusive="1." label="only do reflection if bottom/surface SWR is .gt. this value"  description="Only do reflection if the ratio of bottom to surface SWR is greater than this variable. Only used if swr_bot_refl_frac is greater than 0. Default is 0.01.">
+				<condition type="ne" variable="./swr_bot_refl_frac" value="0"/>
+			</element>
+			<element name="temp_check" type="int" label="interval between checks for out-of-bounds temperatures" description="Interval between checks for out-of-bounds temperatures. 0: disabled, &gt;0: check every temp_check step, abort if check fails, &lt;0: check every abs(temp_check) step, warn if check fails"/>
+			<element name="min_temp"   type="float" label="minimum valid temperature" unit="°C">
+				<condition type="ne" variable="./temp_check" value="0"/>
+			</element>
+			<element name="max_temp"   type="float" label="maximum valid temperature" unit="°C">
+				<condition type="ne" variable="./temp_check" value="0"/>
+			</element>
+		</element>
+
+		<element name="salt" label="variables related to salinity">
+			<element name="salt_method" type="int" label="salinity method">
+				<options>
+					<option value="0" label="read from hotstart file"/>
+					<option value="1" label="constant"/>
+					<option value="2" label="homogeneous stratification"/>
+					<option value="3" label="from 3D field"/>
+				</options>
+			</element>
+			<element name="salt_const" type="float" label="constant initial salinity" unit="psu">
+				<condition type="eq" variable="./salt_method" value="1"/>
+			</element>
+			<element name="salt_format" type="int" label="format of salinity file">
+				<condition type="eq" variable="./salt_method" value="3"/>
+				<options>
+					<option value="1" label="ASCII"/>
+					<option value="2" label="NetCDF"/>
+				</options>
+			</element>
+			<element name="salt_file" type="string" label="name of file with initial salinity distribution">
+				<condition type="or">
+					<condition type="eq" variable="./salt_method" value="2"/>
+					<condition type="eq" variable="./salt_method" value="3"/>
+				</condition>
+			</element>
+			<element name="salt_name" type="string" label="name of the salinity variable">
+				<condition type="and">
+					<condition type="eq" variable="./salt_method" value="3"/>
+					<condition type="eq" variable="./salt_format" value="2"/>
+				</condition>
+			</element>
+			<element name="salt_field_no" type="int" label="what number to read initial data from">
+				<condition type="and">
+					<condition type="eq" variable="./salt_method" value="3"/>
+					<condition type="eq" variable="./salt_format" value="2"/>
+				</condition>
+			</element>
+			<element name="salt_adv_split" type="int" label="advection splitting for salinity">
+				<condition type="ne" variable="./salt_adv_hor" value="0"/>
+				<options>
+					<option value="0" label="no split: one 3D uvw step"/>
+					<option value="1" label="full step splitting: u + v + w"/>
+					<option value="2" label="half step splitting: u/2 + v/2 + w + v/2 + u/2"/>
+					<option value="3" label="hor/ver splitting: uv + w"/>
+				</options>
+			</element>
+			<element name="salt_adv_hor" type="int" label="horizontal advection scheme for salinity">
+				<options>
+					<option value="0" label="advection disabled"/>
+					<option value="1" label="upstream (first-order, monotone)"/>
+					<option value="2" label="2DH-upstream with forced monotonicity">
+						<condition type="or">
+							<condition type="eq" variable="./salt_adv_split" value="0"/>
+							<condition type="eq" variable="./salt_adv_split" value="3"/>
+						</condition>
+					</option>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
+					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
+					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
+					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+					<option value="8" label="2DH-FCT">
+						<condition type="or">
+							<condition type="eq" variable="./salt_adv_split" value="0"/>
+							<condition type="eq" variable="./salt_adv_split" value="3"/>
+						</condition>
+					</option>
+					<option value="9" label="2DH-P2">
+						<condition type="or">
+							<condition type="eq" variable="./salt_adv_split" value="0"/>
+							<condition type="eq" variable="./salt_adv_split" value="3"/>
+						</condition>
+					</option>
+				</options>
+			</element>
+			<element name="salt_adv_ver" type="int" label="vertical advection scheme for salinity">
+				<options>
+					<option value="0" label="advection disabled"/>
+					<option value="1" label="upstream (first-order, monotone)"/>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
+					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
+					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
+					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+				</options>
+			</element>
+			<element name="salt_AH" type="float" label="horizontal diffusivity of salt" unit="m²/s"/>
+			<element name="salt_check" type="int" label="interval between checks for out-of-bounds salinities" description="Interval between checks for out-of-bounds salinities. 0: disabled, &gt;0: check every salt_check step, abort if check fails, &lt;0: check every abs(salt_check) step, warn if check fails"/>
+			<element name="min_salt"   type="float" label="minimum valid salinity" unit="psu">
+				<condition type="ne" variable="./salt_check" value="0"/>
+			</element>
+			<element name="max_salt"   type="float" label="maximum valid salinity" unit="psu">
+				<condition type="ne" variable="./salt_check" value="0"/>
+			</element>
+		</element>
+		
+		<element name="eqstate" label="equation of state">
+			<element name="eqstate_method" type="int" label="equation of state method">
+				<options>
+					<option value="1" label="linearisation of equation of state with T0,S0,dtr0,dsr0" />
+                                        <option value="2" label="UNESCO equation of state" description="UNESCO (1980) equation of state with no pressure adjustment" />
+                                        <option value="3" label="TEOS-10 equation of state" description=" http://www.teos-10.org/ - adopted for modelling according Jackett et al. 2006" />
+				</options>
+			</element>
+			<element name="T0" type="float" label="reference temperature for linear equation of state" unit="ºC">
+				<condition type="eq" variable="./eqstate_method" value="1" />
+			</element>
+			<element name="S0" type="float" label="reference salinity for linear equation of state" unit="psu">
+				<condition type="eq" variable="./eqstate_method" value="1" />
+			</element>
+			<element name="p0" type="float" label="reference pressure for linear equation of state" unit="bar">
+				<condition type="eq" variable="./eqstate_method" value="1" />
+			</element>
+			<element name="dtr0" type="float" label="thermal expansion coefficient for linear equation of state">
+				<condition type="eq" variable="./eqstate_method" value="1" />
+			</element>
+			<element name="dsr0" type="float" label="saline expansion coefficient for linear equation of state">
+				<condition type="eq" variable="./eqstate_method" value="1" />
+			</element>
+		</element>
+
+		<element name="io_spec" label="format for output and filename(s)">
+			<element name="out_fmt" type="int" label="output format">
+				<options>
+					<option value="1" label="ASCII" />
+					<option value="2" label="NetCDF" />
+				</options>
+			</element>
+			<element name="hotin_fmt" type="int" label="format for input hotstart file">
+				<options>
+					<option value="1" label="ASCII" />
+					<option value="2" label="NetCDF" />
+					<option value="3" label="binary" />
+				</options>
+			</element>
+			<element name="hotout_fmt" type="int" label="format for output hotstart file">
+				<options>
+					<option value="1" label="ASCII" />
+					<option value="2" label="NetCDF" />
+					<option value="3" label="binary" />
+				</options>
+			</element>
+			<element name="in_dir"  type="string" label="path to input directory"/>
+			<element name="out_dir" type="string" label="path to output directory"/>
+			<element name="save_metrics" type="bool" label="save additional info on grid"/>
+			<element name="save_masks" type="bool" label="save computational masks (az, au, av)"/>
+			<element name="save_2d" type="bool" label="save 2d fields "/>
+			<element name="save_meteo" type="bool" label="save meteo data"/>
+			<element name="save_3d" type="bool" label="save 3d fields"/>
+			<element name="save_vel" type="bool" label="save velocities"/>
+			<element name="destag" type="bool" label="save velocities at T-points"/>
+			<element name="save_strho" type="bool" label="save any of salinity, temperature, density"/>
+			<element name="save_s" type="bool" label="save salinity"/>
+			<element name="save_t" type="bool" label="save temperature"/>
+			<element name="save_rho" type="bool" label="save density"/>
+			<element name="save_rad" type="bool" label="save solar radiation in water column"/>
+			<element name="save_turb" type="bool" label="save any of the turbulent quantities"/>
+			<element name="save_tke" type="bool" label="save TKE"/>
+			<element name="save_eps" type="bool" label="save turbulence dissipation rate"/>
+			<element name="save_num" type="bool" label="save turbulent diffusivity of momentum"/>
+			<element name="save_nuh" type="bool" label="save turbulent diffusivity of heat"/>
+			<element name="save_ss_nn" type="bool" label="save shear stress and Brunt-Vaisala frequency"/>
+			<element name="save_taub" type="bool" label="save bottom friction velocity"/>
+			<element name="save_numerical_analyses" type="bool" label="calculate/save numerical analyses" description="presently numerical mixing and dissipation analyses"/>
+			<element name="first_2d" type="int" label="first time step to save 2D fields" unit="micro time steps" minInclusive="0"/>
+			<element name="step_2d" type="int" label="interval between saves of 2D fields" unit="micro time steps" minInclusive="1"/>
+			<element name="sync_2d" type="int" label="2D fields disk syncing frequecncy" unit="every n'th save - 0 no syncing" minInclusive="0"/>
+			<element name="first_3d" type="int" label="first time step to save 3D fields" unit="micro time steps" minInclusive="0"/>
+			<element name="step_3d" type="int" label="interval between saves of 3D fields" unit="micro time steps" minInclusive="1"/>
+			<element name="sync_3d" type="int" label="3D fields disk syncing frequecncy" unit="every n'th save - 0 no syncing" minInclusive="0"/>
+			<element name="hotout" type="array(int)" shape="3" label="array to control generation of hot-start files" description="Array to control generation of hot-start files. The three array elements represent the start, stop and stride for hot-start file generation, in micro time steps. All values default to -1. Three special cases exist: a) hotout(1) &lt; 0 - no saving, hotout(1) = 0 - make hot-start file at end of simulation, b) hotout(2) &lt; 0 --&gt; hotout(2)='very large integer', hotout(3)=hotout(1), c) hotout(2) &lt;= hotout(1) --&gt; hotout(2)=hotout(1), hotout(3)=1"/>
+			<element name="meanout" type="int" label="make average over 'meanout' time steps" description="Make average over 'meanout' time steps. Special cases: if &lt; 0 - no averaging, if = 0 - average over entire run."/>
+		</element>
+
+	</element>
+	<element name="adaptcoord">
+                <condition type="eq" variable="getm/domain/vert_cord" value="5"/>
+		<element name="adapt_coord" label="adaptive coordinates parameters">
+			<element name="faclag" type="float" label="Lagrangian tendency" minInclusive="0" maxInclusive="1"/>
+<!--			<condition type="eq" variable="../../getm/domain/vert_cord" value="5"/></element>-->
+			<element name="faciso" type="float" label="Isopycnal tendency" minInclusive="0" maxInclusive="1"/>
+			<element name="fachor" type="float" label="interf. postition filter" minInclusive="0" maxInclusive="1"/>
+			<element name="facdif" type="float" label="layer height filter" minInclusive="0" maxInclusive="1"/>
+			<element name="depthmin" type="float" label="minimum layer height" unit="m"/>
+			<element name="cNN" type="float" label="zoom. tendency stratification" minInclusive="0" maxInclusive="1"/>
+			<element name="cSS" type="float" label="zoom. tendency shear" minInclusive="0" maxInclusive="1"/>
+			<element name="cdd" type="float" label="zoom. tendency boundaries" minInclusive="0" maxInclusive="1"/>
+			<element name="d_vel" type="float" unit="m/s" label="vel. difference to resolve"/>
+			<element name="d_dens" type="float" unit="kg/m³" label="dens. difference to resolve"/>
+			<element name="dsurf" type="float" label="reference distance to boundaries" unit="m"/>
+			<element name="tgrid" type="float" label="adaptation timescale" unit="s"/>
+			<element name="preadapt" type="int" label="pre-adaptation iterations"/> 
+		</element>
+	</element>
+</element>

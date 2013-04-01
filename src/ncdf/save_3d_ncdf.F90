@@ -19,9 +19,9 @@
    use domain,       only: H,HU,HV,az,au,av,min_depth
    use domain,       only: convc
 #if defined CURVILINEAR || defined SPHERICAL
-   use domain,       only: dxc,dyc
+   use domain,       only: dxv,dyu,arcd1
 #else
-   use domain,       only: dx,dy
+   use domain,       only: dx,dy,ard1
 #endif
    use variables_2d, only: z,D
    use variables_2d, only: U,V,DU,DV
@@ -33,8 +33,8 @@
 #endif
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho,rad,NN
-   use variables_3d, only: nummix3d_S,nummix3d_T,phymix3d_S,phymix3d_T
 #endif
+   use variables_3d, only: nummix3d_S,nummix3d_T,phymix3d_S,phymix3d_T
    use variables_3d, only: numdis3d
    use variables_3d, only: tke,num,nuh,eps
 #ifdef SPM
@@ -204,11 +204,11 @@
       call tow(imin,jmin,imax,jmax,kmin,kmax,az, &
                dt,                               &
 #if defined CURVILINEAR || defined SPHERICAL
-               dxc,dyc,                          &
+               dxv,dyu,arcd1,                    &
 #else
-               dx,dy,                            &
+               dx,dy,ard1,                       &
 #endif
-               HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,destag,ws)
+               H,HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,ws)
       err = nf90_put_var(ncid,w_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 
@@ -261,8 +261,8 @@
       do j=jmin,jmax
          do i=imin,imax
             if (az(i,j) .gt. 0) then
-               cosconv = cos(deg2rad*convc(i,j))
-               sinconv = sin(deg2rad*convc(i,j))
+               cosconv = cos(-convc(i,j)*deg2rad)
+               sinconv = sin(-convc(i,j)*deg2rad)
                uurot(i,j,:) = uutmp(i,j,:)*cosconv-vvtmp(i,j,:)*sinconv
                vvrot(i,j,:) = uutmp(i,j,:)*sinconv+vvtmp(i,j,:)*cosconv
             else
@@ -362,12 +362,12 @@
    end if ! save_ss_nn
 
    if (save_numerical_analyses) then
+
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,numdis3d,nummix_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws)
       err = nf90_put_var(ncid,nm3d_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 
-#ifndef NO_BAROCLINIC
       if (calc_salt) then
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix3d_S,nummix_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
@@ -391,7 +391,7 @@
          err = nf90_put_var(ncid,pm3dT_id,ws(_3D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
-#endif
+
    end if ! save_numerical_analyses
 
 #ifdef SPM
@@ -472,8 +472,10 @@
    end if
 #endif
 
-   err = nf90_sync(ncid)
-   if (err .NE. NF90_NOERR) go to 10
+   if (sync_3d .ne. 0 .and. mod(n3d,sync_3d) .eq. 0) then
+      err = nf90_sync(ncid)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
 
    return
 

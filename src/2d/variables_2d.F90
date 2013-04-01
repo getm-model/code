@@ -17,7 +17,7 @@
 !  {\tt PUBLIC DATA MEMBERS}.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth
+   use domain, only: imin,imax,jmin,jmax
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -129,7 +129,6 @@
    SlUx=_ZERO_; Slru=_ZERO_
    SlVx=_ZERO_; Slrv=_ZERO_
 
-   PP      = _ZERO_
    fwf     = _ZERO_
    fwf_int = _ZERO_
 

@@ -24,14 +24,13 @@ $(GETMDIR)/src/getm
 CORE_LIBS	=	\
 		-lgetm${buildtype} 	\
 		-loutput${buildtype}	\
-		-ldomain${buildtype} 	\
-		-lmeteo${buildtype}	\
-		-l2d${buildtype}
+		-lmeteo${buildtype}
 ifneq ($(GETM_NO_3D),true)
 CORE_LIBS	+=	\
 		-l3d${buildtype}
 endif
 CORE_LIBS	+=	\
+		-l2d${buildtype}	\
 		-ldomain${buildtype} 	\
 		-linput${buildtype}	\
 		-lncdfio${buildtype}	\
@@ -41,10 +40,29 @@ CORE_LIBS	+=	\
 
 LIBS		= $(CORE_LIBS) $(EXTRA_LIBS)
 
-all: ../VERSION getm$(buildtype)_$(FORTRAN_COMPILER) install
+all: GIT FORTRAN ../VERSION getm$(buildtype)_$(FORTRAN_COMPILER) install confdir
 
 ../VERSION: ../Makefile Makefile Rules.make
 	$(MAKE) -C ..
+
+confall: confdir confflags
+
+confdir:
+	@echo "GETMDIR:    "$(GETMDIR)
+	@echo "GOTMDIR:    "$(GOTMDIR)
+	@echo "BINDIR:     "$(BINDIR)
+	@echo "MODDIR:     "$(MODDIR)
+	@echo "LIBDIR:     "$(LIBDIR)
+
+confflags:
+	@echo "DEFINES:    "$(DEFINES)
+	@echo "INCDIRS:    "$(INCDIRS)
+	@echo "LINKDIRS:   "$(LINKDIRS)
+	@echo "EXTRA_LIBS: "$(EXTRA_LIBS)
+	@echo "F90FLAGS:   "$(F90FLAGS)
+
+GIT FORTRAN:
+	$(MAKE) -C .. $@
 
 getm$(buildtype)_$(FORTRAN_COMPILER): makedirs subdirs
 	$(FC) -o $@ getm/main.o $(LDFLAGS) $(LIBS)

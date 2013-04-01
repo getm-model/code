@@ -10,7 +10,7 @@ LIB	= $(LIBDIR)/libdomain${buildtype}.a
 
 MODSRC	= domain.F90
 
-LIBSRC	= part_domain.F90 bdy_spec.F90 print_bdy.F90 \
+LIBSRC	= part_domain.F90 uv_depths.F90 have_bdy.F90 bdy_spec.F90 print_bdy.F90 \
           mirror_bdy_2d.F90 mirror_bdy_3d.F90
 
 SRC	= $(MODSRC) $(LIBSRC)
@@ -21,6 +21,8 @@ ${LIB}(domain.o)
 
 OBJ   = \
 ${LIB}(part_domain.o)	\
+${LIB}(uv_depths.o)	\
+${LIB}(have_bdy.o)	\
 ${LIB}(bdy_spec.o)	\
 ${LIB}(print_bdy.o)	\
 ${LIB}(mirror_bdy_2d.o)	\

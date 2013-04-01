@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: sealevel - using the cont. eq. to get the sealevel.
+! !ROUTINE: sealevel - using the cont. eq. to get the sealevel.
 !
 ! !INTERFACE:
    subroutine sealevel
@@ -268,8 +268,11 @@
       end if
 ! Check a failing (NaN) case:
 ! does not work in DEBUG comilation with ifort:
+#ifdef GFORTRAN
+      zdum = _ZERO_
+      zdum = _ZERO_ / zdum
+#else
 #ifndef DEBUG
-#ifndef GFORTRAN
       zdum = 0.0/0.0
 #endif
 #endif

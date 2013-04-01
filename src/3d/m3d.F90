@@ -26,8 +26,8 @@
    use exceptions
    use parameters, only: avmmol
    use domain, only: openbdy,maxdepth,vert_cord,az
-   use m2d, only: Am
-   use variables_2d, only: D,z,UEx,VEx
+   use m2d, only: uv_advect,uv_diffusion
+   use variables_2d, only: z,Uint,Vint,UEx,VEx
 #ifndef NO_BAROCLINIC
    use temperature,only: init_temperature, do_temperature, &
             init_temperature_field
@@ -37,7 +37,8 @@
    use internal_pressure, only: ip_method
 #endif
    use variables_3d
-   use advection_3d, only: init_advection_3d
+   use advection, only: NOADV
+   use advection_3d, only: init_advection_3d,print_adv_settings_3d,adv_ver_iterations
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
    use bdy_3d, only: bdy3d_tmrlx, bdy3d_tmrlx_ucut, bdy3d_tmrlx_max, bdy3d_tmrlx_min
 !  Necessary to use halo_zones because update_3d_halos() have been moved out
@@ -49,10 +50,13 @@
 ! !PUBLIC DATA MEMBERS:
    integer                             :: M=1
    REALTYPE                            :: cord_relax=_ZERO_
+   integer                             :: vel3d_adv_split=0
+   integer                             :: vel3d_adv_hor=1
+   integer                             :: vel3d_adv_ver=1
    logical                             :: calc_temp=.true.
    logical                             :: calc_salt=.true.
    logical                             :: bdy3d=.false.
-   integer                             :: bdyfmt_3d,bdyramp_3d
+   integer                             :: bdyfmt_3d,bdy3d_ramp
    character(len=PATH_MAX)             :: bdyfile_3d
    REALTYPE                            :: ip_fac=_ONE_
    integer                             :: vel_check=0
@@ -62,7 +66,7 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer         :: vel_hor_adv=1,vel_ver_adv=1,vel_adv_split=0
+   logical         :: advect_turbulence=.false.
 #ifdef NO_BAROCLINIC
    integer         :: ip_method
 #endif
@@ -110,13 +114,14 @@
 ! !LOCAL VARIABLES:
    integer         :: rc
    NAMELIST /m3d/ &
-             M,cnpar,cord_relax,                        &
-             bdy3d,bdyfmt_3d,bdyramp_3d,bdyfile_3d,     &
-             bdy3d_tmrlx,bdy3d_tmrlx_ucut,              &
-             bdy3d_tmrlx_max,bdy3d_tmrlx_min,           &
-             vel_hor_adv,vel_ver_adv,vel_adv_split,     &
-             calc_temp,calc_salt,                       &
-             avmback,avhback,ip_method,ip_ramp,         &
+             M,cnpar,cord_relax,adv_ver_iterations,       &
+             bdy3d,bdyfmt_3d,bdy3d_ramp,bdyfile_3d,       &
+             bdy3d_tmrlx,bdy3d_tmrlx_ucut,                &
+             bdy3d_tmrlx_max,bdy3d_tmrlx_min,             &
+             vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver, &
+             calc_temp,calc_salt,                         &
+             avmback,avhback,advect_turbulence,           &
+             ip_method,ip_ramp,                           &
              vel_check,min_vel,max_vel
 !EOP
 !-------------------------------------------------------------------------
@@ -132,6 +137,8 @@
    read(NAMLST,m3d)
 !   rewind(NAMLST)
 
+   LEVEL2 "splitting factor M: ",M
+
    if (avmback .lt. _ZERO_) then
       LEVEL2 "setting avmback to 0."
       avmback = _ZERO_
@@ -143,73 +150,25 @@
 
 ! Allocates memory for the public data members - if not static
    call init_variables_3d(runtype)
+   call init_advection_3d()
 
 !  Sanity checks for advection specifications
-   LEVEL2 'vel_hor_adv=   ',vel_hor_adv
-   LEVEL2 'vel_ver_adv=   ',vel_ver_adv
-   LEVEL2 'vel_adv_split= ',vel_adv_split
-   if(vel_hor_adv .gt. 1) then
-#ifndef UV_TVD
-      STDERR 'To run the model with higher order advection for momentum'
-      STDERR 'you need to re-compile the model with the option -DUV_TVD.'
-      call getm_error("init_3d()","GETM needs recompilation")
-#endif
-   else
-      vel_adv_split=-1
-      if(vel_ver_adv .ne. 1) then
-         LEVEL2 "setting vel_ver_adv to 1 - since vel_hor_adv is 1"
-         vel_ver_adv=1
-      end if
+   LEVEL2 'Advection of horizontal 3D velocities'
+#ifdef NO_ADVECT
+   if (vel3d_adv_hor .ne. NOADV) then
+      LEVEL2 "reset vel3d_adv_hor= ",NOADV," because of"
+      LEVEL2 "obsolete NO_ADVECT macro. Note that this"
+      LEVEL2 "behaviour will be removed in the future."
+      vel3d_adv_hor = NOADV
    end if
-   LEVEL2 "horizontal: ",trim(adv_schemes(vel_hor_adv))," of momentum"
-   LEVEL2 "vertical:   ",trim(adv_schemes(vel_ver_adv))," of momentum"
-
-   select case (vel_adv_split)
-      case (-1)
-      case (0)
-         select case (vel_hor_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "vel_adv_split=0: vel_hor_adv not valid (2-6)")
-         end select
-         select case (vel_ver_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "vel_adv_split=0: vel_ver_adv not valid (2-6)")
-         end select
-         LEVEL2 "1D split --> full u, full v, full w"
-      case (1)
-         select case (vel_hor_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "vel_adv_split=1: vel_hor_adv not valid (2-6)")
-         end select
-         select case (vel_ver_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "vel_adv_split=1: vel_ver_adv not valid (2-6)")
-         end select
-         LEVEL2 "1D split --> half u, half v, full w, half v, half u"
-      case (2)
-         select case (vel_hor_adv)
-            case (2,7)
-            case default
-               call getm_error("init_3d()", &
-                    "vel_adv_split=2: vel_hor_adv not valid (2,7)")
-         end select
-         select case (vel_ver_adv)
-            case (2,3,4,5,6)
-            case default
-               call getm_error("init_3d()", &
-                    "vel_adv_split=2: vel_ver_adv not valid (2-6)")
-         end select
-         LEVEL2 "2D-hor, 1D-vert split --> full uv, full w"
-      case default
-   end select
+   if (vel3d_adv_ver .ne. NOADV) then
+      LEVEL2 "reset vel3d_adv_ver= ",NOADV," because of"
+      LEVEL2 "obsolete NO_ADVECT macro. Note that this"
+      LEVEL2 "behaviour will be removed in the future."
+      vel3d_adv_ver = NOADV
+   end if
+#endif
+   call print_adv_settings_3d(vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_)
 
 !  Sanity checks for bdy 3d
    if (.not.openbdy .or. runtype.eq.2) bdy3d=.false.
@@ -252,24 +211,38 @@
 #else
    num=1.d-15
    nuh=1.d-15
+
+#ifdef TURB_ADV
+   if (.not. advect_turbulence) then
+      LEVEL2 "reenabled advection of TKE and eps due to"
+      LEVEL2 "obsolete TURB_ADV macro. Note that this"
+      LEVEL2 "behaviour will be removed in the future!"
+      advect_turbulence = .true.
+   end if
+#endif
+
+   LEVEL2 "advect_turbulence = ",advect_turbulence
+
 #endif
 
 !  Needed for interpolation of temperature and salinity
    if (.not. hotstart) then
+      ssen = z
       call start_macro()
       call coordinates(hotstart)
       call hcc_check()
    end if
 
+   if (runtype .eq. 2) then
+      calc_temp = .false.
+      calc_salt = .false.
+   else
 #ifndef NO_BAROCLINIC
-   if (runtype .eq. 3 .or. runtype .eq. 4) then
       T = _ZERO_ ; S = _ZERO_ ; rho = _ZERO_
-      if(calc_temp) call init_temperature(1)
-      if(calc_salt) call init_salinity(1)
-   end if
+      if(calc_temp) call init_temperature()
+      if(calc_salt) call init_salinity()
 #endif
-
-    call init_advection_3d(2)
+   end if
 
 #ifndef NO_BAROCLINIC
     if (runtype .eq. 3 .or. runtype .eq. 4) then
@@ -321,7 +294,7 @@
 !  of a hotstart file.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j
+   integer                   :: i,j,rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -333,8 +306,50 @@
 
    LEVEL1 'postinit_3d'
 
+   if (do_numerical_analyses) then
+
+      allocate(numdis3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis3d)'
+      numdis3d = _ZERO_
+      allocate(numdis2d(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis2d)'
+      numdis2d = _ZERO_
+
+      if (calc_temp) then
+         allocate(phymix3d_T(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix3d_T)'
+         phymix3d_T = _ZERO_
+         allocate(phymix2d_T(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix2d_T)'
+         phymix2d_T = _ZERO_
+         allocate(nummix3d_T(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix3d_T)'
+         nummix3d_T = _ZERO_
+         allocate(nummix2d_T(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix2d_T)'
+         nummix2d_T = _ZERO_
+      end if
+
+      if (calc_salt) then
+         allocate(phymix3d_S(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix3d_S)'
+         phymix3d_S = _ZERO_
+         allocate(phymix2d_S(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix2d_S)'
+         phymix2d_S = _ZERO_
+         allocate(nummix3d_S(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix3d_S)'
+         nummix3d_S = _ZERO_
+         allocate(nummix2d_S(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix2d_S)'
+         nummix2d_S = _ZERO_
+      end if
+
+   end if
+
 ! Hotstart fix - see postinit_2d
    if (hotstart) then
+
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
             if (au(i,j) .eq. 0) then
@@ -363,6 +378,9 @@
             end if
          end do
       end do
+
+      call coordinates(hotstart)
+
    end if
 
    return
@@ -517,20 +535,14 @@
    end if
    call coordinates(.false.)
 #endif
+
    if (kmax .gt. 1) then
+
       call ww_momentum_3d()
-   end if
-#ifndef NO_ADVECT
-   if (kmax .gt. 1) then
-      call uv_advect_3d(vel_hor_adv,vel_ver_adv,vel_adv_split)
-      if (Am .gt. _ZERO_) then
-         call uv_diffusion_3d(Am)  ! Must be called after uv_advect_3d
-      end if
-   end if
-#else
-   STDERR 'NO_ADVECT 3D'
-#endif
-   if (kmax .gt. 1) then
+
+      call uv_advect_3d()
+      call uv_diffusion_3d()  ! Must be called after uv_advect_3d
+
 #ifndef NO_BOTTFRIC
       call stresses_3d()
 #endif
@@ -539,11 +551,11 @@
       if (vert_cord .ne. _ADAPTIVE_COORDS_) call ss_nn()
 #endif
       call gotm()
-#ifdef TURB_ADV
-      call tke_eps_advect_3d(vel_hor_adv,vel_ver_adv,vel_adv_split)
+      if (advect_turbulence) call tke_eps_advect_3d()
 #endif
-#endif
+
    end if
+
 #ifndef NO_BAROCLINIC
    if(runtype .eq. 4) then        ! prognostic T and S
       if (calc_temp) call do_temperature(n)
@@ -576,22 +588,17 @@
    end if
 #endif
 
-   call tic(TIM_INTEGR3D)
-   UEx=_ZERO_ ; VEx=_ZERO_
-   call toc(TIM_INTEGR3D)
 #ifndef NO_BAROTROPIC
    if (kmax .gt. 1) then
 #ifndef NO_BOTTFRIC
       call slow_bottom_friction()
 #endif
-#ifndef NO_ADVECT
-#ifndef UV_ADV_DIRECT
-      call slow_advection()
-      if (Am .gt. _ZERO_) then
-         call slow_diffusion(Am) ! Has to be called after slow_advection.
-      end if
-#endif
-#endif
+
+      call tic(TIM_INTEGR3D)
+      call uv_advect(Uint,Vint,Dun,Dvn)
+      call uv_diffusion(0,Uint,Vint,Dn,Dun,Dvn) ! Has to be called after uv_advect.
+      call toc(TIM_INTEGR3D)
+
    end if
 
    call slow_terms()

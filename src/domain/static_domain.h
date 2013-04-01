@@ -10,9 +10,9 @@
 
 !  mask
    REALTYPE                            :: mask(E2DFIELD)
-   integer                             :: az(E2DFIELD)
-   integer                             :: au(E2DFIELD)
-   integer                             :: av(E2DFIELD)
+   integer,target                      :: az(E2DFIELD)
+   integer,target                      :: au(E2DFIELD)
+   integer,target                      :: av(E2DFIELD)
    integer                             :: ax(E2DFIELD)
 
 !  bathymetry
@@ -58,17 +58,17 @@
    REALTYPE                            :: dlon=-_ONE_,dlat=-_ONE_,lon0,lat0
    REALTYPE                            :: dxdyc(E2DFIELD)
    REALTYPE                            :: dydxc(E2DFIELD)
-   REALTYPE                            :: dxc(E2DFIELD) = -999.
-   REALTYPE                            :: dxu(E2DFIELD) = -999.
-   REALTYPE                            :: dxv(E2DFIELD) = -999.
-   REALTYPE                            :: dxx(E2DFIELD) = -999.
-   REALTYPE                            :: dyc(E2DFIELD) = -999.
-   REALTYPE                            :: dyu(E2DFIELD) = -999.
-   REALTYPE                            :: dyv(E2DFIELD) = -999.
-   REALTYPE                            :: dyx(E2DFIELD) = -999.
-   REALTYPE                            :: arcd1(E2DFIELD)
-   REALTYPE                            :: arud1(E2DFIELD)
-   REALTYPE                            :: arvd1(E2DFIELD)
+   REALTYPE,target                     :: dxc(E2DFIELD) = -999.
+   REALTYPE,target                     :: dxu(E2DFIELD) = -999.
+   REALTYPE,target                     :: dxv(E2DFIELD) = -999.
+   REALTYPE,target                     :: dxx(E2DFIELD) = -999.
+   REALTYPE,target                     :: dyc(E2DFIELD) = -999.
+   REALTYPE,target                     :: dyu(E2DFIELD) = -999.
+   REALTYPE,target                     :: dyv(E2DFIELD) = -999.
+   REALTYPE,target                     :: dyx(E2DFIELD) = -999.
+   REALTYPE,target                     :: arcd1(E2DFIELD)
+   REALTYPE,target                     :: arud1(E2DFIELD)
+   REALTYPE,target                     :: arvd1(E2DFIELD)
 
 !  bottom roughness
    REALTYPE                            :: z0(E2DFIELD)

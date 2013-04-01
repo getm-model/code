@@ -5,7 +5,7 @@ DEFINES += -DFORTRAN95
 can_do_F90=true
 F90_to_f90=
 MODULES=-J$(MODDIR)
-EXTRAS = -ffree-form -Wall -std=f95 -pedantic
+EXTRAS = -ffree-form -ffree-line-length-none -Wall -std=f2003 -pedantic
 DEBUG_FLAGS = -g 
 PROF_FLAGS  = -p
 PROD_FLAGS  = -O3
