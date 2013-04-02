@@ -475,15 +475,12 @@
 			<save_3d>
 				True
 			</save_3d>
-			<save_h>
-				False
-			</save_h>
-			<save_fluxes>
-				False
-			</save_fluxes>
 			<save_vel>
 				True
 			</save_vel>
+			<destag>
+				True
+			</destag>
 			<save_strho>
 				True
 			</save_strho>
