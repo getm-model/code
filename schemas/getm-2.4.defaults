@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<scenario version="getm-2.3">
+<scenario version="getm-2.4">
 	<getm>
 		<param>
 			<dryrun>
