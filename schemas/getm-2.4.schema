@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<element name="scenario" version="getm-2.3" namelistextension=".inp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Programmeren/GOTM-CVS/gotm/gui.py/core/scenario-1.0.xsd">
+<element name="scenario" version="getm-2.4" namelistextension=".inp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Programmeren/GOTM-CVS/gotm/gui.py/core/scenario-1.0.xsd">
 	<element name="getm">
 		<element name="param" label="general model setup">
 			<element name="dryrun"       type="bool"   label="dry run" />
@@ -81,34 +81,14 @@
 			<element name="ih" type="int" label="???"/>
 			<element name="jl" type="int" label="???"/>
 			<element name="jh" type="int" label="???"/>
-			<element name="bottfric_method" type="int" label="bottom friction specification">
+			<element name="z0_method" type="int" label="bottom roughness specification">
 				<options>
-					<option value="0" label="disable bottom friction"/>
-					<option value="1" label="linear with rdrag"/>
-					<option value="2" label="quadratic with z0_const, z0d_iters and cd_min"/>
-					<option value="3" label="quadratic with z0 from topofile, z0d_iters and cd_min"/>
+					<option value="0" label="constant - using z0_const"/>
+					<option value="1" label="space varying - read from bathymetry file (variable name MUST be z0)"/>
 				</options>
 			</element>
-			<element name="rdrag" type="float" label="linear bottom friction parameter" unit="m/s">
-				<condition type="eq" variable="./bottfric_method" value="1"/>
-			</element>
 			<element name="z0_const" type="float" label="constant bottom roughness" unit="m">
-				<condition type="or">
-					<condition type="eq" variable="./bottfric_method" value="2"/>
-					<condition type="eq" variable="./bottfric_method" value="3"/>
-				</condition>
-			</element>
-			<element name="z0d_iters" type="int" label="iterations for dynamic bottom roughness" minInclusive="0">
-				<condition type="or">
-					<condition type="eq" variable="./bottfric_method" value="2"/>
-					<condition type="eq" variable="./bottfric_method" value="3"/>
-				</condition>
-			</element>
-			<element name="cd_min" type="float" label="minimum drag coefficient">
-				<condition type="or">
-					<condition type="eq" variable="./bottfric_method" value="2"/>
-					<condition type="eq" variable="./bottfric_method" value="3"/>
-				</condition>
+				<condition type="eq" variable="./z0_method" value="0"/>
 			</element>
 		</element>
 
@@ -138,16 +118,7 @@
 				</options>
 			</element>
 			<element name="meteo_ramp" type="int" label="number of time steps for forcing spin-up" unit="micro time steps">
-				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
-					<condition type="or">
-						<condition type="eq" variable="../param/hotstart" value="False"/>
-						<condition type="and">
-							<condition type="eq" variable="../param/hotstart" value="True"/>
-							<condition type="eq" variable="../param/use_epoch" value="False"/>
-						</condition>
-					</condition>
-				</condition>
+				<condition type="eq" variable="./metforcing" value="True"/>
 			</element>
 			<element name="metfmt" type="int" label="format of meteofile">
 				<condition type="and">
@@ -199,14 +170,6 @@
 				<condition type="and">
 					<condition type="eq" variable="./metforcing" value="True"/>
 					<condition type="eq" variable="./fwf_method" value="1"/>
-				</condition>
-			</element>
-			<element name="sst_const" type="float" label="constant sea surface temperature" unit="°C" minExclusive="0">
-				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
-					<condition type="eq" variable="./met_method" value="1"/>
-					<condition type="eq" variable="../param/runtype" value="4"/>
-					<condition type="eq" variable="../m3d/calc_temp" value="True"/>
 				</condition>
 			</element>
 			<element name="evap_factor" type="float" label="factor to convert evaporation to m/s">
@@ -368,9 +331,6 @@
 				<condition type="eq" variable="./bdy3d" value="True"/>
 			</element>
 			<element name="bdyfile_3d" type="string" label="name of file with boundary data">
-				<condition type="eq" variable="./bdy3d" value="True"/>
-			</element>
-			<element name="bdy3d_sponge_size" type="int" label="number of cells inside sponge zone" minInclusive="0">
 				<condition type="eq" variable="./bdy3d" value="True"/>
 			</element>
 			<element name="bdy3d_tmrlx" type="bool" label="temporal 3D boundary relaxation coeff.">
@@ -594,9 +554,6 @@
 			<element name="swr_min_bot_frac" type="float" minInclusive="0.0" maxInclusive="1." label="only do reflection if bottom/surface SWR is .gt. this value"  description="Only do reflection if the ratio of bottom to surface SWR is greater than this variable. Only used if swr_bot_refl_frac is greater than 0. Default is 0.01.">
 				<condition type="ne" variable="./swr_bot_refl_frac" value="0"/>
 			</element>
-			<element name="sst_nudging_time" type="float" minExclusive="0.0" label="nudging time for sst" unit="s">
-				<condition type="eq" variable="../meteo/metforcing" value="True"/>
-			</element>
 			<element name="temp_check" type="int" label="interval between checks for out-of-bounds temperatures" description="Interval between checks for out-of-bounds temperatures. 0: disabled, &gt;0: check every temp_check step, abort if check fails, &lt;0: check every abs(temp_check) step, warn if check fails"/>
 			<element name="min_temp"   type="float" label="minimum valid temperature" unit="°C">
 				<condition type="ne" variable="./temp_check" value="0"/>
@@ -753,11 +710,8 @@
 			<element name="save_2d" type="bool" label="save 2d fields "/>
 			<element name="save_meteo" type="bool" label="save meteo data"/>
 			<element name="save_3d" type="bool" label="save 3d fields"/>
-			<element name="save_h"  type="bool" label="save layer heights">
-				<condition type="eq" variable="../domain/vert_cord" value="1"/>
-			</element>
-			<element name="save_fluxes" type="bool" label="save grid-related volume fluxes"/>
-			<element name="save_vel" type="bool" label="save (rotated) 3d velocities at T-points"/>
+			<element name="save_vel" type="bool" label="save velocities"/>
+			<element name="destag" type="bool" label="save velocities at T-points"/>
 			<element name="save_strho" type="bool" label="save any of salinity, temperature, density"/>
 			<element name="save_s" type="bool" label="save salinity"/>
 			<element name="save_t" type="bool" label="save temperature"/>
