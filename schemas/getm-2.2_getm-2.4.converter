@@ -1,20 +1,14 @@
 <?xml version="1.0" ?>
-<converter source="getm-2.2" target="getm-2.3">
+<converter source="getm-2.2" target="getm-2.4">
 	<links>
 		<link source="/getm/meteo/spinup" target="/getm/meteo/meteo_ramp"/>
 		<link source="/getm/m2d/bdyramp_2d" target="/getm/m2d/bdy2d_ramp"/>
 		<link source="/getm/m2d/vel_depth_method" target="/getm/domain/vel_depth_method"/>
-		<link source="/getm/m2d/Am" target="/getm/m2d/Am_const"/>
 		<link source="/getm/m3d/bdyramp_3d" target="/getm/m3d/bdy3d_ramp"/>
-		<link source="/getm/temp/temp_AH" target="/getm/temp/temp_AH_const"/>
-		<link source="/getm/salt/salt_AH" target="/getm/salt/salt_AH_const"/>
 	</links>
 	<custom>
 		<forward>
 <![CDATA[
-z0_method = source['getm/domain/z0_method'].getValue(usedefault=True)
-target['getm/domain/bottfric_method'].setValue(z0_method+2)
-
 nmls_s = ('getm/m3d/vel_'  ,'getm/temp/temp_','getm/salt/salt_')
 nmls_t = ('getm/m3d/vel3d_','getm/temp/temp_','getm/salt/salt_')
 for n,nml in enumerate(nmls_s):
@@ -34,24 +28,10 @@ for n,nml in enumerate(nmls_s):
 		target[nmls_t[n]+'adv_hor'].setValue(8)
 	if ver_adv == 2:
 		target[nmls_t[n]+'adv_ver'].setValue(1)
-
-diffs = ('getm/m2d/Am','getm/temp/temp_AH','getm/salt/salt_AH')
-for d,diff in enumerate(diffs):
-	if source[diff].getValue(usedefault=True)>0.0:
-		if d == 0:
-			target[diff+'_method'].setValue(3)
-		else:
-			target[diff+'_method'].setValue(1)
-	else:
-		target[diff+'_method'].setValue(0)
-
 ]]>
 		</forward>
 		<backward>
 <![CDATA[
-bottfric_method = source['getm/domain/bottfric_method'].getValue(usedefault=True)
-target['getm/domain/z0_method'].setValue(bottfric_method-2)
-
 nmls_s = ('getm/m3d/vel3d_','getm/temp/temp_','getm/salt/salt_')
 nmls_t = ('getm/m3d/vel_'  ,'getm/temp/temp_','getm/salt/salt_')
 for n,nml in enumerate(nmls_s):
@@ -72,11 +52,6 @@ for n,nml in enumerate(nmls_s):
 		target[nmls_t[n]+'hor_adv'].setValue(7)
 	if adv_ver == 1:
 		target[nmls_t[n]+'ver_adv'].setValue(2)
-
-diffs = ('getm/m2d/Am','getm/temp/temp_AH','getm/salt/salt_AH')
-for diff in diffs:
-	if source[diff+'_method'].getValue(usedefault=True)==0:
-		target[diff].setValue(-1.0)
 ]]>
 		</backward>
 	</custom>
