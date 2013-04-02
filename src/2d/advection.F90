@@ -265,7 +265,7 @@
 !             provided to subroutines pointer remapping
 !             (or a corresponding emulation) is needed.
 
-#ifdef _POINTER_REMAP_ 
+#ifdef _POINTER_REMAP_
    if (.not. test_pointer_remap()) then
       stop 'recompile without -D_POINTER_REMAP_'
    end if
