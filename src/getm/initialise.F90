@@ -62,7 +62,8 @@
    use suspended_matter, only: init_spm
 #endif
 #ifdef _FABM_
-   use getm_fabm, only: init_getm_fabm
+   use getm_fabm, only: fabm_calc
+   use getm_fabm, only: init_getm_fabm, postinit_getm_fabm
    use rivers, only: init_rivers_fabm
 #endif
 #ifdef GETM_BIO
@@ -278,6 +279,9 @@
 #ifndef NO_3D
    if (runtype .gt. 1) then
       call postinit_3d(runtype,MinN-1,hotstart)
+#ifdef _FABM_
+      if (fabm_calc) call postinit_getm_fabm()
+#endif
    end if
 #endif
 
