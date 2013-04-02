@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<converter source="getm-2.4" target="getm-2.5">
+	<links>
+		<link source="/getm/m2d/Am" target="/getm/m2d/Am_const"/>
+		<link source="/getm/temp/temp_AH" target="/getm/temp/temp_AH_const"/>
+		<link source="/getm/salt/salt_AH" target="/getm/salt/salt_AH_const"/>
+	</links>
+	<custom>
+		<forward>
+<![CDATA[
+z0_method = source['getm/domain/z0_method'].getValue(usedefault=True)
+target['getm/domain/bottfric_method'].setValue(z0_method+2)
+
+diffs = ('getm/m2d/Am','getm/temp/temp_AH','getm/salt/salt_AH')
+for d,diff in enumerate(diffs):
+	if source[diff].getValue(usedefault=True)>0.0:
+		if d == 0:
+			target[diff+'_method'].setValue(3)
+		else:
+			target[diff+'_method'].setValue(1)
+	else:
+		target[diff+'_method'].setValue(0)
+]]>
+		</forward>
+		<backward>
+<![CDATA[
+bottfric_method = source['getm/domain/bottfric_method'].getValue(usedefault=True)
+target['getm/domain/z0_method'].setValue(bottfric_method-2)
+
+diffs = ('getm/m2d/Am','getm/temp/temp_AH','getm/salt/salt_AH')
+for diff in diffs:
+	if source[diff+'_method'].getValue(usedefault=True)==0:
+		target[diff].setValue(-1.0)
+]]>
+		</backward>
+	</custom>
+</converter>

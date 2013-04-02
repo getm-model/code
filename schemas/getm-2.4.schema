@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<element name="scenario" version="getm-2.3" namelistextension=".inp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Programmeren/GOTM-CVS/gotm/gui.py/core/scenario-1.0.xsd">
+<element name="scenario" version="getm-2.4" namelistextension=".inp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Programmeren/GOTM-CVS/gotm/gui.py/core/scenario-1.0.xsd">
 	<element name="getm">
 		<element name="param" label="general model setup">
 			<element name="dryrun"       type="bool"   label="dry run" />
@@ -18,14 +18,7 @@
 			<element name="use_epoch"    type="bool"   label="use a common time origin for a series of hotstart simulations" />
 			<element name="save_initial" type="bool"   label="save initial values i.e. before entering the time loop" />
 		</element>
-
-		<element name="parameters" label="model constants">
-			<element name="g" type="float" unit="m/s²" label="gravitational acceleration"/>
-			<element name="rho_0" type="float" unit="kg/m³" label="reference density"/>
-			<element name="cp" type="float" unit="J/(kg*K)" label="spec. heat capacity at const. pressure"/>
-			<element name="kappa" type="float" label="von-Karman constant"/>
-		</element>
-
+		
 		<element name="time" label="time related formats and variables">
 			<element name="timestep" type="float"    label="micro timestep" unit="s"/>
 			<element name="timefmt"  type="int"      label="time format">
@@ -66,7 +59,6 @@
 					<option value="2" label="use mixture of mean and minimum values: see code for details"/>
 				</options>
 			</element>
-			<element name="rigid_lid" type="bool" label="whether a rigid lid is applied"/>
 			<element name="longitude" type="float" unit="° East" description="Longitude used for calculating short wave radiation (if not from bathymetry file)"/>
 			<element name="latitude"  type="float" unit="° North" description="Latitude used for meteo and the Coriolis force (if not from bathymetry file)"/>
 			<element name="f_plane"   type="bool" label="compute (constant) f latitude (otherwise calculated from latitude,longitude in bathymetry)"/>
@@ -89,34 +81,14 @@
 			<element name="ih" type="int" label="???"/>
 			<element name="jl" type="int" label="???"/>
 			<element name="jh" type="int" label="???"/>
-			<element name="bottfric_method" type="int" label="bottom friction specification">
+			<element name="z0_method" type="int" label="bottom roughness specification">
 				<options>
-					<option value="0" label="disable bottom friction"/>
-					<option value="1" label="linear with rdrag"/>
-					<option value="2" label="quadratic with z0_const, z0d_iters and cd_min"/>
-					<option value="3" label="quadratic with z0 from topofile, z0d_iters and cd_min"/>
+					<option value="0" label="constant - using z0_const"/>
+					<option value="1" label="space varying - read from bathymetry file (variable name MUST be z0)"/>
 				</options>
 			</element>
-			<element name="rdrag" type="float" label="linear bottom friction parameter" unit="m/s">
-				<condition type="eq" variable="./bottfric_method" value="1"/>
-			</element>
 			<element name="z0_const" type="float" label="constant bottom roughness" unit="m">
-				<condition type="or">
-					<condition type="eq" variable="./bottfric_method" value="2"/>
-					<condition type="eq" variable="./bottfric_method" value="3"/>
-				</condition>
-			</element>
-			<element name="z0d_iters" type="int" label="iterations for dynamic bottom roughness" minInclusive="0">
-				<condition type="or">
-					<condition type="eq" variable="./bottfric_method" value="2"/>
-					<condition type="eq" variable="./bottfric_method" value="3"/>
-				</condition>
-			</element>
-			<element name="cd_min" type="float" label="minimum drag coefficient">
-				<condition type="or">
-					<condition type="eq" variable="./bottfric_method" value="2"/>
-					<condition type="eq" variable="./bottfric_method" value="3"/>
-				</condition>
+				<condition type="eq" variable="./z0_method" value="0"/>
 			</element>
 		</element>
 
@@ -146,16 +118,7 @@
 				</options>
 			</element>
 			<element name="meteo_ramp" type="int" label="number of time steps for forcing spin-up" unit="micro time steps">
-				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
-					<condition type="or">
-						<condition type="eq" variable="../param/hotstart" value="False"/>
-						<condition type="and">
-							<condition type="eq" variable="../param/hotstart" value="True"/>
-							<condition type="eq" variable="../param/use_epoch" value="False"/>
-						</condition>
-					</condition>
-				</condition>
+				<condition type="eq" variable="./metforcing" value="True"/>
 			</element>
 			<element name="metfmt" type="int" label="format of meteofile">
 				<condition type="and">
@@ -209,14 +172,6 @@
 					<condition type="eq" variable="./fwf_method" value="1"/>
 				</condition>
 			</element>
-			<element name="sst_const" type="float" label="constant sea surface temperature" unit="°C" minExclusive="0">
-				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
-					<condition type="eq" variable="./met_method" value="1"/>
-					<condition type="eq" variable="../param/runtype" value="4"/>
-					<condition type="eq" variable="../m3d/calc_temp" value="True"/>
-				</condition>
-			</element>
 			<element name="evap_factor" type="float" label="factor to convert evaporation to m/s">
 				<condition type="and">
 					<condition type="eq" variable="./metforcing" value="True"/>
@@ -256,16 +211,7 @@
 				<condition type="eq" variable="./river_method" value="2"/>
 			</element>
 			<element name="river_ramp" type="int" label="ramp on river flows - in micro time steps">
-				<condition type="and">
-					<condition type="ne" variable="./river_method" value="0"/>
-					<condition type="or">
-						<condition type="eq" variable="../param/hotstart" value="False"/>
-						<condition type="and">
-							<condition type="eq" variable="../param/hotstart" value="True"/>
-							<condition type="eq" variable="../param/use_epoch" value="False"/>
-						</condition>
-					</condition>
-				</condition>
+				<condition type="ne" variable="./river_method" value="0"/>
 			</element>
 			<element name="river_factor" type="float" label="factor to convert river flow to m³/s">
 				<condition type="eq" variable="./river_method" value="2"/>
@@ -326,21 +272,7 @@
 					</option>
 				</options>
 			</element>
-			<element name="avmmol" type="float" label="molecular momentum viscosity" unit="m²/s"/>
-			<element name="Am_method" type="int" label="method for horizontal momentum diffusion coefficient">
-				<options>
-					<option value="0" label="disabled"/>
-					<option value="1" label="constant value Am_const (Laplacian diffusion)"/>
-					<option value="2" label="LES parameterisation, see namelist les"/>
-					<option value="3" label="constant value Am_const"/>
-				</options>
-			</element>
-			<element name="Am_const" type="float" label="constant horizontal momentum diffusion coefficient" unit="m²/s">
-				<condition type="or">
-					<condition type="eq" variable="./Am_method" value="1"/>
-					<condition type="eq" variable="./Am_method" value="3"/>
-				</condition>
-			</element>
+			<element name="Am" type="float" label="constant horizontal momentum diffusion coefficient" unit="m²/s"/>
 			<element name="An_method" type="int" label="method for constant horizontal numerical diffusion coefficient (m²/s) used to filter the surface elevation">
 				<options>
 					<option value="0" label="disabled"/>
@@ -399,9 +331,6 @@
 				<condition type="eq" variable="./bdy3d" value="True"/>
 			</element>
 			<element name="bdyfile_3d" type="string" label="name of file with boundary data">
-				<condition type="eq" variable="./bdy3d" value="True"/>
-			</element>
-			<element name="bdy3d_sponge_size" type="int" label="number of cells inside sponge zone" minInclusive="0">
 				<condition type="eq" variable="./bdy3d" value="True"/>
 			</element>
 			<element name="bdy3d_tmrlx" type="bool" label="temporal 3D boundary relaxation coeff.">
@@ -471,16 +400,9 @@
 			</element>
 			<element name="calc_temp" type="bool" label="solve temperature equation"/>
 			<element name="calc_salt" type="bool" label="solve salinity equation"/>
-			<element name="use_gotm" type="bool" label="calculate turb. vertical viscosity/diffusivity by GOTM"/>
-			<element name="avmback"   type="float" label="background viscosity" unit="m²/s">
-				<condition type="eq" variable="./use_gotm" value="False"/>
-			</element>
-			<element name="avhback"   type="float" label="background diffusivity" unit="m²/s">
-				<condition type="eq" variable="./use_gotm" value="False"/>
-			</element>
-			<element name="advect_turbulence"  type="bool"  label="advect TKE and eps">
-				<condition type="eq" variable="./use_gotm" value="True"/>
-			</element>
+			<element name="avmback"   type="float" label="background viscosity" unit="m²/s"/>
+			<element name="avhback"   type="float" label="background diffusivity" unit="m²/s"/>
+			<element name="advect_turbulence"  type="bool"  label="advect TKE and eps"/>
 			<element name="ip_method" type="int" label="internal pressure method">
 				<options>
 					<option value="1" label="Blumberg and Mellor"/>
@@ -586,24 +508,7 @@
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
 				</options>
 			</element>
-			<element name="avmolt" type="float" label="molecular diffusivity of heat" unit="m²/s"/>
-			<element name="temp_AH_method" type="int" label="method for horizontal diffusivity of heat">
-				<options>
-					<option value="0" label="disabled"/>
-					<option value="1" label="constant value temp_AH_const"/>
-					<option value="2" label="LES parameterisation"/>
-					<option value="3" label="SGS stirring"/>
-				</options>
-			</element>
-			<element name="temp_AH_const" type="float" label="constant horizontal diffusivity of heat" unit="m²/s">
-				<condition type="eq" variable="./temp_AH_method" value="1"/>
-			</element>
-			<element name="temp_AH_Prt" type="float" label="turbulent Prandtl number of heat">
-				<condition type="eq" variable="./temp_AH_method" value="2"/>
-			</element>
-			<element name="temp_AH_stirr_const" type="float" label="temperature stirring constant">
-				<condition type="eq" variable="./temp_AH_method" value="3"/>
-			</element>
+			<element name="temp_AH" type="float" label="horizontal diffusivity of heat" unit="m²/s"/>
 			<element name="attenuation_method" type="int" label="light attenuation method">
 				<options>
 					<option value="0" label="spatially constant coefficients"/>
@@ -648,9 +553,6 @@
 			</element>
 			<element name="swr_min_bot_frac" type="float" minInclusive="0.0" maxInclusive="1." label="only do reflection if bottom/surface SWR is .gt. this value"  description="Only do reflection if the ratio of bottom to surface SWR is greater than this variable. Only used if swr_bot_refl_frac is greater than 0. Default is 0.01.">
 				<condition type="ne" variable="./swr_bot_refl_frac" value="0"/>
-			</element>
-			<element name="sst_nudging_time" type="float" minExclusive="0.0" label="nudging time for sst" unit="s">
-				<condition type="eq" variable="../meteo/metforcing" value="True"/>
 			</element>
 			<element name="temp_check" type="int" label="interval between checks for out-of-bounds temperatures" description="Interval between checks for out-of-bounds temperatures. 0: disabled, &gt;0: check every temp_check step, abort if check fails, &lt;0: check every abs(temp_check) step, warn if check fails"/>
 			<element name="min_temp"   type="float" label="minimum valid temperature" unit="°C">
@@ -745,24 +647,7 @@
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
 				</options>
 			</element>
-			<element name="avmols" type="float" label="molecular diffusivity of salt" unit="m²/s"/>
-			<element name="salt_AH_method" type="int" label="method for horizontal diffusivity of salt">
-				<options>
-					<option value="0" label="disabled"/>
-					<option value="1" label="constant value salt_AH_const"/>
-					<option value="2" label="LES parameterisation"/>
-					<option value="3" label="SGS stirring"/>
-				</options>
-			</element>
-			<element name="salt_AH_const" type="float" label="constant horizontal diffusivity of salt" unit="m²/s">
-				<condition type="eq" variable="./salt_AH_method" value="1"/>
-			</element>
-			<element name="salt_AH_Prt" type="float" label="turbulent Prandtl number of salt">
-				<condition type="eq" variable="./salt_AH_method" value="2"/>
-			</element>
-			<element name="salt_AH_stirr_const" type="float" label="salt stirring constant">
-				<condition type="eq" variable="./salt_AH_method" value="3"/>
-			</element>
+			<element name="salt_AH" type="float" label="horizontal diffusivity of salt" unit="m²/s"/>
 			<element name="salt_check" type="int" label="interval between checks for out-of-bounds salinities" description="Interval between checks for out-of-bounds salinities. 0: disabled, &gt;0: check every salt_check step, abort if check fails, &lt;0: check every abs(salt_check) step, warn if check fails"/>
 			<element name="min_salt"   type="float" label="minimum valid salinity" unit="psu">
 				<condition type="ne" variable="./salt_check" value="0"/>
@@ -797,22 +682,6 @@
 			</element>
 		</element>
 
-		<element name="les" label="variables related to LES">
-			<condition type="or">
-				<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
-				<condition type="eq" variable="/getm/temp/temp_AH_method" value="2"/>
-				<condition type="eq" variable="/getm/salt/salt_AH_method" value="2"/>
-			</condition>
-			<element name="les_method" type="int" label="LES method">
-				<options>
-					<option value="1" label="Smagorinsky parameterisation"/>
-				</options>
-			</element>
-			<element name="smag_const" type="float" label="Smagorinsky constant" minInclusive="0.0">
-				<condition type="eq" variable="./les_method" value="1"/>
-			</element>
-		</element>
-
 		<element name="io_spec" label="format for output and filename(s)">
 			<element name="out_fmt" type="int" label="output format">
 				<options>
@@ -841,11 +710,8 @@
 			<element name="save_2d" type="bool" label="save 2d fields "/>
 			<element name="save_meteo" type="bool" label="save meteo data"/>
 			<element name="save_3d" type="bool" label="save 3d fields"/>
-			<element name="save_h"  type="bool" label="save layer heights">
-				<condition type="eq" variable="../domain/vert_cord" value="1"/>
-			</element>
-			<element name="save_fluxes" type="bool" label="save grid-related volume fluxes"/>
-			<element name="save_vel" type="bool" label="save (rotated) 3d velocities at T-points"/>
+			<element name="save_vel" type="bool" label="save velocities"/>
+			<element name="destag" type="bool" label="save velocities at T-points"/>
 			<element name="save_strho" type="bool" label="save any of salinity, temperature, density"/>
 			<element name="save_s" type="bool" label="save salinity"/>
 			<element name="save_t" type="bool" label="save temperature"/>
@@ -856,24 +722,6 @@
 			<element name="save_eps" type="bool" label="save turbulence dissipation rate"/>
 			<element name="save_num" type="bool" label="save turbulent diffusivity of momentum"/>
 			<element name="save_nuh" type="bool" label="save turbulent diffusivity of heat"/>
-			<element name="save_Am_2d" type="bool" label="save 2D horizontal eddy viscosity">
-				<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
-			</element>
-			<element name="save_Am_3d" type="bool" label="save 3D horizontal eddy viscosity">
-				<condition type="and">
-					<condition type="ne" variable="/getm/param/runtype" value="1"/>
-					<condition type="eq" variable="/getm/m2d/Am_method" value="2"/>
-				</condition>
-			</element>
-			<element name="save_stirr" type="bool" label="save stirring diffusivities">
-				<condition type="and">
-					<condition type="eq" variable="/getm/param/runtype" value="4"/>
-					<condition type="or">
-						<condition type="eq" variable="/getm/temp/temp_AH_method" value="3"/>
-						<condition type="eq" variable="/getm/salt/salt_AH_method" value="3"/>
-					</condition>
-				</condition>
-			</element>
 			<element name="save_ss_nn" type="bool" label="save shear stress and Brunt-Vaisala frequency"/>
 			<element name="save_taub" type="bool" label="save bottom friction velocity"/>
 			<element name="save_numerical_analyses" type="bool" label="calculate/save numerical analyses" description="presently numerical mixing and dissipation analyses"/>
