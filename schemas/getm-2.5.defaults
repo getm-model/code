@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<scenario version="getm-2.3">
+<scenario version="getm-2.5">
 	<getm>
 		<param>
 			<dryrun>
@@ -475,15 +475,12 @@
 			<save_3d>
 				True
 			</save_3d>
-			<save_h>
-				False
-			</save_h>
-			<save_fluxes>
-				False
-			</save_fluxes>
 			<save_vel>
 				True
 			</save_vel>
+			<destag>
+				True
+			</destag>
 			<save_strho>
 				True
 			</save_strho>
