@@ -1,4 +1,17 @@
 <?xml version="1.0" ?>
-<!-- this converter is currently an empty placeholder, but it is needed to tell xmlstore that direct conversion between 2.4 and 2.5 is permitted. -->
-<converter source="getm-2.4" target="getm-2.5"/>
-
+<converter source="getm-2.4" target="getm-2.5">
+	<custom>
+		<forward>
+<![CDATA[
+z0_method = source['getm/domain/z0_method'].getValue(usedefault=True)
+target['getm/domain/bottfric_method'].setValue(z0_method+2)
+]]>
+		</forward>
+		<backward>
+<![CDATA[
+bottfric_method = source['getm/domain/bottfric_method'].getValue(usedefault=True)
+target['getm/domain/z0_method'].setValue(bottfric_method-2)
+]]>
+		</backward>
+	</custom>
+</converter>

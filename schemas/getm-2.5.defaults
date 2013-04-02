@@ -105,12 +105,21 @@
 			<jh>
 				-1
 			</jh>
-			<z0_method>
-				0
-			</z0_method>
+			<bottfric_method>
+				2
+			</bottfric_method>
+			<rdrag>
+				0.0004
+			</rdrag>
 			<z0_const>
 				0.01
 			</z0_const>
+			<z0d_iters>
+				0
+			</z0d_iters>
+			<cd_min>
+				-1.0
+			</cd_min>
 		</domain>
 		<meteo>
 			<metforcing>
