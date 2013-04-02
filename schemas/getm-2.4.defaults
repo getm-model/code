@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<scenario version="getm-2.3">
+<scenario version="getm-2.4">
 	<getm>
 		<param>
 			<dryrun>
@@ -27,20 +27,6 @@
 				True
 			</save_initial>
 		</param>
-		<parameters>
-			<g>
-				9.81
-			</g>
-			<rho_0>
-				1025.0
-			</rho_0>
-			<cp>
-				3985.0
-			</cp>
-			<kappa>
-				0.4
-			</kappa>
-		</parameters>
 		<time>
 			<timestep>
 				3.0
@@ -71,9 +57,6 @@
 			<vel_depth_method>
 				0
 			</vel_depth_method>
-			<rigid_lid>
-				False
-			</rigid_lid>
 			<longitude>
 				0.0
 			</longitude>
@@ -122,21 +105,12 @@
 			<jh>
 				-1
 			</jh>
-			<bottfric_method>
-				2
-			</bottfric_method>
-			<rdrag>
-				0.0004
-			</rdrag>
+			<z0_method>
+				0
+			</z0_method>
 			<z0_const>
 				0.01
 			</z0_const>
-			<z0d_iters>
-				0
-			</z0d_iters>
-			<cd_min>
-				-1.0
-			</cd_min>
 		</domain>
 		<meteo>
 			<metforcing>
@@ -181,9 +155,6 @@
 			<precip_const>
 				0.0
 			</precip_const>
-			<sst_const>
-				-1.0
-			</sst_const>
 			<evap_factor>
 				1.0
 			</evap_factor>
@@ -239,15 +210,9 @@
 			<vel2d_adv_hor>
 				1
 			</vel2d_adv_hor>
-			<avmmol>
-				1.8e-6
-			</avmmol>
-			<Am_method>
-				0
-			</Am_method>
-			<Am_const>
-				1.8e-06
-			</Am_const>
+			<Am>
+				-1.0
+			</Am>
 			<An_method>
 				0
 			</An_method>
@@ -301,9 +266,6 @@
 			<bdyfile_3d>
 				bdy_3d.nc
 			</bdyfile_3d>
-			<bdy3d_sponge_size>
-				3
-			</bdy3d_sponge_size>
 			<bdy3d_tmrlx>
 				False
 			</bdy3d_tmrlx>
@@ -331,9 +293,6 @@
 			<calc_salt>
 				False
 			</calc_salt>
-			<use_gotm>
-				True
-			</use_gotm>
 			<avmback>
 				0.0
 			</avmback>
@@ -387,21 +346,9 @@
 			<temp_adv_ver>
 				1
 			</temp_adv_ver>
-			<avmolt>
-				1.4e-7
-			</avmolt>
-			<temp_AH_method>
-				0
-			</temp_AH_method>
-			<temp_AH_const>
-				1.4e-07
-			</temp_AH_const>
-			<temp_AH_Prt>
-				2.0
-			</temp_AH_Prt>
-			<temp_AH_stirr_const>
-				1.0
-			</temp_AH_stirr_const>
+			<temp_AH>
+				-1.0
+			</temp_AH>
 			<attenuation_method>
 				0
 			</attenuation_method>
@@ -426,9 +373,6 @@
 			<swr_min_bot_frac>
 				0.01
 			</swr_min_bot_frac>
-			<sst_nudging_time>
-				-1.0
-			</sst_nudging_time>
 			<temp_check>
 				0
 			</temp_check>
@@ -467,21 +411,9 @@
 			<salt_adv_ver>
 				1
 			</salt_adv_ver>
-			<avmols>
-				1.1e-9
-			</avmols>
-			<salt_AH_method>
-				0
-			</salt_AH_method>
-			<salt_AH_const>
-				1.1e-09
-			</salt_AH_const>
-			<salt_AH_Prt>
-				2.0
-			</salt_AH_Prt>
-			<salt_AH_stirr_const>
-				1.0
-			</salt_AH_stirr_const>
+			<salt_AH>
+				-1.0
+			</salt_AH>
 			<salt_check>
 				0
 			</salt_check>
@@ -491,9 +423,6 @@
 			<max_salt>
 				40.0
 			</max_salt>
-			<nonnegsalt_method>
-				0
-			</nonnegsalt_method>
 		</salt>
 		<eqstate>
 			<eqstate_method>
@@ -515,14 +444,6 @@
 				0.78
 			</dsr0>
 		</eqstate>
-		<les>
-			<les_method>
-				1
-			</les_method>
-			<smag_const>
-				0.28
-			</smag_const>
-		</les>
 		<io_spec>
 			<out_fmt>
 				2
@@ -554,15 +475,12 @@
 			<save_3d>
 				True
 			</save_3d>
-			<save_h>
-				False
-			</save_h>
-			<save_fluxes>
-				False
-			</save_fluxes>
 			<save_vel>
 				True
 			</save_vel>
+			<destag>
+				True
+			</destag>
 			<save_strho>
 				True
 			</save_strho>
@@ -593,15 +511,6 @@
 			<save_nuh>
 				True
 			</save_nuh>
-			<save_Am_2d>
-				False
-			</save_Am_2d>
-			<save_Am_3d>
-				False
-			</save_Am_3d>
-			<save_stirr>
-				False
-			</save_stirr>
 			<save_ss_nn>
 				True
 			</save_ss_nn>
