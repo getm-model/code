@@ -53,7 +53,7 @@
 #ifdef _FABM_
    use gotm_fabm,only: model
    use getm_fabm,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
-   use getm_fabm,only: nummix_fabm_pel
+   use getm_fabm,only: phymix_fabm_pel,nummix_fabm_pel
 #endif
    use parameters,   only: g,rho_0
    use m3d, only: calc_temp,calc_salt
@@ -580,6 +580,12 @@
          if (err .NE.  NF90_NOERR) go to 10
       end do
       if (do_numerical_analyses_3d) then
+         do n=1,size(model%info%state_variables)
+            call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix_fabm_pel(:,:,:,n), &
+                        model%info%state_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
+            err = nf90_put_var(ncid,pmpel_ids(n),ws(_3D_W_),start,edges)
+            if (err .NE.  NF90_NOERR) go to 10
+         end do
          do n=1,size(model%info%state_variables)
             call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix_fabm_pel(:,:,:,n), &
                         model%info%state_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
