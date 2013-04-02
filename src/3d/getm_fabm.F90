@@ -17,6 +17,7 @@
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
    use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
    use variables_3d, only: nuh,T,S,rho,a,g1,g2,taub
+   use variables_3d, only: do_numerical_analyses_3d
    use meteo, only: swr,u10,v10,evap,precip,tcc
    use time, only: yearday,secondsofday
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
@@ -42,8 +43,9 @@
    end interface
 !
 ! !PUBLIC DATA MEMBERS:
-   public init_getm_fabm, do_getm_fabm
+   public init_getm_fabm, postinit_getm_fabm, do_getm_fabm
    integer, public           :: fabm_init_method=0
+   REALTYPE,dimension(:,:,:,:),allocatable,target,public :: nummix_fabm_pel
 !
 ! !PRIVATE DATA MEMBERS:
    integer  :: fabm_adv_split=0
@@ -53,6 +55,13 @@
    REALTYPE :: fabm_AH_const=1.4d-7
    REALTYPE :: fabm_AH_Prt=_TWO_
    REALTYPE :: fabm_AH_stirr_const=_ONE_
+   type t_pa3d
+      REALTYPE,dimension(:,:,:),pointer :: p3d
+   end type t_pa3d
+   type(t_pa3d),dimension(:),allocatable :: pa_nummix
+#ifndef _POINTER_REMAP_
+   REALTYPE,dimension(:,:,:),allocatable,target :: nummix
+#endif
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -189,6 +198,12 @@
                             "A non valid fabm_AH_method has been chosen");
       end select
 
+      allocate(pa_nummix(size(model%info%state_variables)),stat=rc)
+      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (pa_nummix)'
+      do n=1,size(model%info%state_variables)
+         pa_nummix(n)%p3d => null()
+      end do
+
 !     Initialize biogeochemical state variables.
       select case (fabm_init_method)
          case(0)
@@ -230,6 +245,57 @@
 
    return
    end subroutine init_getm_fabm
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: postinit_getm_fabm -
+!
+! !INTERFACE:
+   subroutine postinit_getm_fabm()
+! !USES:
+   IMPLICIT NONE
+!
+! !DESCRIPTION:
+!
+! !LOCAL VARIABLES:
+   integer                   :: rc
+   integer                   :: n
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'postinit_getm_fabm() # ',Ncall
+#endif
+
+   LEVEL1 'postinit_getm_fabm'
+
+   if (do_numerical_analyses_3d) then
+
+      allocate(nummix_fabm_pel(I3DFIELD,size(model%info%state_variables)),stat=rc)
+      if (rc /= 0) stop 'postinit_getm_fabm: Error allocating memory (nummix_fabm_pel)'
+      nummix_fabm_pel = _ZERO_
+
+#ifndef _POINTER_REMAP_
+      allocate(nummix(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_getm_fabm: Error allocating memory (nummix)'
+#endif
+
+      do n=1,size(model%info%state_variables)
+#ifdef _POINTER_REMAP_
+         pa_nummix(n)%p3d(imin-HALO:,jmin-HALO:,0:) => nummix_fabm_pel(:,:,:,n)
+#else
+         pa_nummix(n)%p3d => nummix
+#endif
+      end do
+
+   end if
+
+   return
+   end subroutine postinit_getm_fabm
 !EOC
 
 !-----------------------------------------------------------------------
@@ -359,8 +425,14 @@
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
 
-      call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn,                       &
-                           fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH_const,H_TAG)
+      call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn,                  &
+                           fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH_const,H_TAG, &
+                           nvd=pa_nummix(n)%p3d)
+#ifndef _POINTER_REMAP_
+      if (do_numerical_analyses_3d) then
+         nummix_fabm_pel(:,:,:,n) = pa_nummix(n)%p3d
+      end if
+#endif
 
       if (fabm_AH_method .gt. 1) then
          call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az,imin,jmin,imax,jmax,kmax,D_TAG)
