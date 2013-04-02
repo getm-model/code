@@ -71,7 +71,7 @@
 #endif
 #ifdef _FABM_
    integer, allocatable, dimension(:)  :: fabm_ids,fabm_ids_diag,fabm_ids_ben,fabm_ids_diag_hz
-   integer, allocatable, dimension(:)  :: nmpel_ids
+   integer, allocatable, dimension(:)  :: pmpel_ids,nmpel_ids
 #endif
    integer                             :: nd3d_id=-1
    integer                             :: nd3do_id=-1,pd3d_id=-1

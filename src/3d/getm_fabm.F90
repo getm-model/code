@@ -45,7 +45,7 @@
 ! !PUBLIC DATA MEMBERS:
    public init_getm_fabm, postinit_getm_fabm, do_getm_fabm
    integer, public           :: fabm_init_method=0
-   REALTYPE,dimension(:,:,:,:),allocatable,target,public :: nummix_fabm_pel
+   REALTYPE,dimension(:,:,:,:),allocatable,target,public :: phymix_fabm_pel,nummix_fabm_pel
 !
 ! !PRIVATE DATA MEMBERS:
    integer  :: fabm_adv_split=0
@@ -156,16 +156,13 @@
 !     Show settings specific to GETM-FABM interaction.
       LEVEL2 'Advection of FABM variables'
       if (fabm_adv_hor .eq. J7) stop 'init_getm_fabm: J7 not implemented yet'
-      if (fabm_AH_method .ne. 1) then
-         fabm_AH_const = -_ONE_
-      end if
       call print_adv_settings_3d(fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH_const)
 
       select case (fabm_AH_method)
          case(0)
             LEVEL3 'fabm_AH_method=0 -> horizontal diffusion disabled'
          case(1)
-            LEVEL3 'fabm_AH_method=1 -> Using constant horizontal diffusivity (performed during advection)'
+            LEVEL3 'fabm_AH_method=1 -> Using constant horizontal diffusivity'
             if (fabm_AH_const .lt. _ZERO_) then
                  call getm_error("init_getm_fabm()", &
                             "Constant horizontal diffusivity <0");
@@ -275,6 +272,10 @@
 
    if (do_numerical_analyses_3d) then
 
+      allocate(phymix_fabm_pel(I3DFIELD,size(model%info%state_variables)),stat=rc)
+      if (rc /= 0) stop 'postinit_getm_fabm: Error allocating memory (phymix_fabm_pel)'
+      phymix_fabm_pel = _ZERO_
+
       allocate(nummix_fabm_pel(I3DFIELD,size(model%info%state_variables)),stat=rc)
       if (rc /= 0) stop 'postinit_getm_fabm: Error allocating memory (nummix_fabm_pel)'
       nummix_fabm_pel = _ZERO_
@@ -325,6 +326,7 @@
    REALTYPE        :: bioshade(1:kmax)
    REALTYPE        :: wind_speed,I_0,taub_nonnorm,cloud
    REALTYPE        :: z(1:kmax)
+   REALTYPE,dimension(I2DFIELD) :: work2d
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -425,8 +427,8 @@
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
 
-      call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn,                  &
-                           fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH_const,H_TAG, &
+      call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn,           &
+                           fabm_adv_split,fabm_adv_hor,fabm_adv_ver,_ZERO_,H_TAG, &
                            nvd=pa_nummix(n)%p3d)
 #ifndef _POINTER_REMAP_
       if (do_numerical_analyses_3d) then
@@ -434,11 +436,17 @@
       end if
 #endif
 
-      if (fabm_AH_method .gt. 1) then
+      if (fabm_AH_method .gt. 0) then
          call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az,imin,jmin,imax,jmax,kmax,D_TAG)
          call wait_halo(D_TAG)
-         call tracer_diffusion(fabm_pel(:,:,:,n),hn,fabm_AH_method,fabm_AH_const,fabm_AH_Prt,fabm_AH_stirr_const)
+         call tracer_diffusion(fabm_pel(:,:,:,n),hn,fabm_AH_method,fabm_AH_const,fabm_AH_Prt,fabm_AH_stirr_const, &
+                               phymix_fabm_pel(:,:,:,n))
       end if
+
+      if (do_numerical_analyses_3d) then
+         call physical_mixing(fabm_pel(:,:,:,n),_ZERO_,phymix_fabm_pel,work2d,fabm_AH_method)
+      end if
+
    end do
    call toc(TIM_ADVECTFABM)
 
