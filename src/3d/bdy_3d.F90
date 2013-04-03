@@ -177,20 +177,23 @@
       allocate(rlxcoef(0:kmax),stat=rc)
       if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (rlxcoef)'
 
-      if (bdy3d_sponge_size .gt. 0) then
-         allocate(sp(bdy3d_sponge_size),stat=rc)
-         if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (sp)'
-
-!        Sponge layer factors according to Martinsen and Engedahl, 1987.
-!        Note (KK): factor=1 (bdy cell) does not count for sponge size
-!                   (in contrast to earlier GETM)
-         LEVEL3 "sponge layer factors:"
-         do i=1,bdy3d_sponge_size
-            sp(i) = ((_ONE_+bdy3d_sponge_size-i)/(_ONE_+bdy3d_sponge_size))**2
-            LEVEL4 "sp(",i,")=",real(sp(i))
-         end do
-      end if
    end if
+
+
+   if (bdy3d_sponge_size .gt. 0) then
+      allocate(sp(bdy3d_sponge_size),stat=rc)
+      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (sp)'
+
+!     Sponge layer factors according to Martinsen and Engedahl, 1987.
+!     Note (KK): factor=1 (bdy cell) does not count for sponge size
+!                (in contrast to earlier GETM)
+      LEVEL3 "sponge layer factors:"
+      do i=1,bdy3d_sponge_size
+         sp(i) = ((_ONE_+bdy3d_sponge_size-i)/(_ONE_+bdy3d_sponge_size))**2
+         LEVEL4 "sp(",i,")=",real(sp(i))
+      end do
+   end if
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_bdy_3d()'
