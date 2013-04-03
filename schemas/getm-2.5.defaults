@@ -249,6 +249,9 @@
 			<bdyfile_2d>
 				bdy_2d.nc
 			</bdyfile_2d>
+			<bdy2d_sponge_size>
+				0
+			</bdy2d_sponge_size>
 		</m2d>
 		<m3d>
 			<M>
