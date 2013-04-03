@@ -319,20 +319,18 @@
                         end do
 !                       Weight inner and outer (bc) solutions for use
 !                       in spatial relaxation/sponge
-                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
-                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
+                        S(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
+                        T(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
                      else
    !                    No near-bdy points. Just clamp bdy temporally:
-                        bdyvertS(:) = bdy_data_S(:,kl)
-                        bdyvertT(:) = bdy_data_T(:,kl)
+                        S(i,j,:) = bdy_data_S(:,kl)
+                        T(i,j,:) = bdy_data_T(:,kl)
                      end if
                   else
 !                    No time-relaxation. Just clamp at bondary points.
-                     bdyvertS(:) = bdy_data_S(:,kl)
-                     bdyvertT(:) = bdy_data_T(:,kl)
+                     S(i,j,:) = bdy_data_S(:,kl)
+                     T(i,j,:) = bdy_data_T(:,kl)
                   end if
-                  S(i,j,:) = bdyvertS(:)
-                  T(i,j,:) = bdyvertT(:)
 #ifdef _FABM_
                   if (fabm_calc) then
                      do o=1,size(model%info%state_variables)
@@ -346,25 +344,6 @@
                      fabm_ben(i,j,:) = fabm_ben(i+1,j,:)
                   end if
 #endif
-                  do ii=1,bdy3d_sponge_size
-!                    Spatial relaxation / sponge:
-                     if (az(i+ii,j) .ne. 0) then
-                        S(i+ii,j,:) = sp(ii)*bdyvertS(:)+(_ONE_-sp(ii))*S(i+ii,j,:)
-                        T(i+ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i+ii,j,:)
-#ifdef _FABM_
-                        if (fabm_calc) then
-                           do o=1,size(model%info%state_variables)
-                              if (have_bio_bdy_values(o) .eq. 1) then
-                                 fabm_pel(i+ii,j,:,o) = sp(ii)*bio_bdy(:,k,o) &
-                                                     +(_ONE_-sp(ii))*fabm_pel(i+ii,j,:,o)
-                              end if
-                           end do
-                        end if
-#endif
-                     else
-                        exit
-                     end if
-                  end do
                end if
                k = k+1
                kl = kl + 1
@@ -412,18 +391,16 @@
                                    + bdy3d_tmrlx_min
                            end if
                         end do
-                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
-                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
+                        S(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
+                        T(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
                      else
-                        bdyvertS(:) = bdy_data_S(:,kl)
-                        bdyvertT(:) = bdy_data_T(:,kl)
+                        S(i,j,:) = bdy_data_S(:,kl)
+                        T(i,j,:) = bdy_data_T(:,kl)
                      end if
                   else
-                     bdyvertS(:) = bdy_data_S(:,kl)
-                     bdyvertT(:) = bdy_data_T(:,kl)
+                     S(i,j,:) = bdy_data_S(:,kl)
+                     T(i,j,:) = bdy_data_T(:,kl)
                   end if
-                  S(i,j,:) = bdyvertS(:)
-                  T(i,j,:) = bdyvertT(:)
 #ifdef _FABM_
                   if (fabm_calc) then
                      do o=1,size(model%info%state_variables)
@@ -437,24 +414,6 @@
                      fabm_ben(i,j,:) = fabm_ben(i,j-1,:)
                   end if
 #endif
-                  do jj=1,bdy3d_sponge_size
-                     if (az(i,j-jj) .ne. 0) then
-                        S(i,j-jj,:) = sp(jj)*bdyvertS(:)+(_ONE_-sp(jj))*S(i,j-jj,:)
-                        T(i,j-jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j-jj,:)
-#ifdef _FABM_
-                        if (fabm_calc) then
-                           do o=1,size(model%info%state_variables)
-                              if (have_bio_bdy_values(o) .eq. 1) then
-                                 fabm_pel(i,j-jj,:,o) = sp(jj)*bio_bdy(:,k,o) &
-                                                     +(_ONE_-sp(jj))*fabm_pel(i,j-jj,:,o)
-                              end if
-                           end do
-                        end if
-#endif
-                     else
-                        exit
-                     end if
-                  end do
                end if
                k = k+1
                kl = kl + 1
@@ -502,18 +461,16 @@
                                    + bdy3d_tmrlx_min
                            end if
                         end do
-                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
-                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
+                        S(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
+                        T(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
                      else
-                        bdyvertS(:) = bdy_data_S(:,kl)
-                        bdyvertT(:) = bdy_data_T(:,kl)
+                        S(i,j,:) = bdy_data_S(:,kl)
+                        T(i,j,:) = bdy_data_T(:,kl)
                      end if
                   else
-                     bdyvertS(:) = bdy_data_S(:,kl)
-                     bdyvertT(:) = bdy_data_T(:,kl)
+                     S(i,j,:) = bdy_data_S(:,kl)
+                     T(i,j,:) = bdy_data_T(:,kl)
                   end if
-                  S(i,j,:) = bdyvertS(:)
-                  T(i,j,:) = bdyvertT(:)
 #ifdef _FABM_
                   if (fabm_calc) then
                      do o=1,size(model%info%state_variables)
@@ -527,24 +484,6 @@
                      fabm_ben(i,j,:) = fabm_ben(i-1,j,:)
                   end if
 #endif
-                  do ii=1,bdy3d_sponge_size
-                     if (az(i-ii,j) .ne. 0) then
-                        S(i-ii,j,:) = sp(ii)*bdyvertS(:)+(_ONE_-sp(ii))*S(i-ii,j,:)
-                        T(i-ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i-ii,j,:)
-#ifdef _FABM_
-                        if (fabm_calc) then
-                           do o=1,size(model%info%state_variables)
-                              if (have_bio_bdy_values(o) .eq. 1) then
-                                 fabm_pel(i-ii,j,:,o) = sp(ii)*bio_bdy(:,k,o) &
-                                                     +(_ONE_-sp(ii))*fabm_pel(i-ii,j,:,o)
-                              end if
-                           end do
-                        end if
-#endif
-                     else
-                        exit
-                     end if
-                  end do
                end if
                k = k+1
                kl = kl + 1
@@ -592,18 +531,16 @@
                                    + bdy3d_tmrlx_min
                            end if
                         end do
-                        bdyvertS(:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
-                        bdyvertT(:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
+                        S(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
+                        T(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
                      else
-                        bdyvertS(:) = bdy_data_S(:,kl)
-                        bdyvertT(:) = bdy_data_T(:,kl)
+                        S(i,j,:) = bdy_data_S(:,kl)
+                        T(i,j,:) = bdy_data_T(:,kl)
                      end if
                   else
-                     bdyvertS(:) = bdy_data_S(:,kl)
-                     bdyvertT(:) = bdy_data_T(:,kl)
+                     S(i,j,:) = bdy_data_S(:,kl)
+                     T(i,j,:) = bdy_data_T(:,kl)
                   end if
-                  S(i,j,:) = bdyvertS(:)
-                  T(i,j,:) = bdyvertT(:)
 #ifdef _FABM_
                   if (fabm_calc) then
                      do o=1,size(model%info%state_variables)
@@ -617,30 +554,132 @@
                      fabm_ben(i,j,:) = fabm_ben(i,j+1,:)
                   end if
 #endif
-                  do jj=1,bdy3d_sponge_size
-                     if (az(i,j+jj) .ne. 0) then
-                        S(i,j+jj,:) = sp(jj)*bdyvertS(:)+(_ONE_-sp(jj))*S(i,j+jj,:)
-                        T(i,j+jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j+jj,:)
-#ifdef _FABM_
-                        if (fabm_calc) then
-                           do o=1,size(model%info%state_variables)
-                              if (have_bio_bdy_values(o) .eq. 1) then
-                                 fabm_pel(i,j+jj,:,o) = sp(jj)*bio_bdy(:,k,o) &
-                                                     +(_ONE_-sp(jj))*fabm_pel(i,j+jj,:,o)
-                              end if
-                           end do
-                        end if
-#endif
-                     else
-                        exit
-                     end if
-                  end do
                end if
                k = k+1
                kl = kl + 1
             end do
       end select
    end do
+
+   if (bdy3d_sponge_size .gt. 0) then
+      l = 0
+      do n = 1,NWB
+         l = l+1
+         select case (bdy_3d_type(l))
+            case (CONSTANT,CLAMPED)
+               i = wi(n)
+               do j = wfj(n),wlj(n)
+                  if (az(i,j) .eq. 2) then
+                     do ii=1,bdy3d_sponge_size
+                        if (az(i+ii,j) .eq. 1) then
+                           S(i+ii,j,:) = sp(ii)*S(i,j,:)+(_ONE_-sp(ii))*S(i+ii,j,:)
+                           T(i+ii,j,:) = sp(ii)*T(i,j,:)+(_ONE_-sp(ii))*T(i+ii,j,:)
+#ifdef _FABM_
+                           if (fabm_calc) then
+                              do o=1,size(model%info%state_variables)
+                                 if (have_bio_bdy_values(o) .eq. 1) then
+                                    fabm_pel(i+ii,j,:,o) = sp(ii)*fabm_pel(i,j,:,o) &
+                                                        +(_ONE_-sp(ii))*fabm_pel(i+ii,j,:,o)
+                                 end if
+                              end do
+                           end if
+#endif
+                        else
+                           exit
+                        end if
+                     end do
+                  end if
+               end do
+         end select
+      end do
+      do n = 1,NNB
+         l = l+1
+         select case (bdy_3d_type(l))
+            case (CONSTANT,CLAMPED)
+               j = nj(n)
+               do i = nfi(n),nli(n)
+                  if (az(i,j) .eq. 2) then
+                     do jj=1,bdy3d_sponge_size
+                        if (az(i,j-jj) .eq. 1) then
+                           S(i,j-jj,:) = sp(jj)*S(i,j,:)+(_ONE_-sp(jj))*S(i,j-jj,:)
+                           T(i,j-jj,:) = sp(jj)*T(i,j,:)+(_ONE_-sp(jj))*T(i,j-jj,:)
+#ifdef _FABM_
+                           if (fabm_calc) then
+                              do o=1,size(model%info%state_variables)
+                                 if (have_bio_bdy_values(o) .eq. 1) then
+                                    fabm_pel(i,j-jj,:,o) = sp(jj)*fabm_pel(i,j,:,o) &
+                                                        +(_ONE_-sp(jj))*fabm_pel(i,j-jj,:,o)
+                                 end if
+                              end do
+                           end if
+#endif
+                        else
+                           exit
+                        end if
+                     end do
+                  end if
+               end do
+         end select
+      end do
+      do n = 1,NEB
+         l = l+1
+         select case (bdy_3d_type(l))
+            case (CONSTANT,CLAMPED)
+               i = ei(n)
+               do j = efj(n),elj(n)
+                  if (az(i,j) .eq. 2) then
+                     do ii=1,bdy3d_sponge_size
+                        if (az(i-ii,j) .eq. 1) then
+                           S(i-ii,j,:) = sp(ii)*S(i,j,:)+(_ONE_-sp(ii))*S(i-ii,j,:)
+                           T(i-ii,j,:) = sp(ii)*T(i,j,:)+(_ONE_-sp(ii))*T(i-ii,j,:)
+#ifdef _FABM_
+                           if (fabm_calc) then
+                              do o=1,size(model%info%state_variables)
+                                 if (have_bio_bdy_values(o) .eq. 1) then
+                                    fabm_pel(i-ii,j,:,o) = sp(ii)*fabm_pel(i,j,:,o) &
+                                                        +(_ONE_-sp(ii))*fabm_pel(i-ii,j,:,o)
+                                 end if
+                              end do
+                           end if
+#endif
+                        else
+                           exit
+                        end if
+                     end do
+                  end if
+               end do
+         end select
+      end do
+      do n = 1,NSB
+         l = l+1
+         select case (bdy_3d_type(l))
+            case (CONSTANT,CLAMPED)
+               j = sj(n)
+               do i = sfi(n),sli(n)
+                  if (az(i,j) .eq. 2) then
+                     do jj=1,bdy3d_sponge_size
+                        if (az(i,j+jj) .eq. 1) then
+                           S(i,j+jj,:) = sp(jj)*S(i,j,:)+(_ONE_-sp(jj))*S(i,j+jj,:)
+                           T(i,j+jj,:) = sp(jj)*T(i,j,:)+(_ONE_-sp(jj))*T(i,j+jj,:)
+#ifdef _FABM_
+                           if (fabm_calc) then
+                              do o=1,size(model%info%state_variables)
+                                 if (have_bio_bdy_values(o) .eq. 1) then
+                                    fabm_pel(i,j+jj,:,o) = sp(jj)*fabm_pel(i,j,:,o) &
+                                                        +(_ONE_-sp(jj))*fabm_pel(i,j+jj,:,o)
+                                 end if
+                              end do
+                           end if
+#endif
+                        else
+                           exit
+                        end if
+                     end do
+                  end if
+               end do
+         end select
+      end do
+   end if
 
 #ifdef _FABM_
    if (fabm_calc) then
