@@ -230,7 +230,7 @@
          do j=jmin,jmax
 #endif
             do i=imin,imax
-               nvd(i,j) = nvd(i,j)*Dires(i,j)/ARUD1
+               nvd(i,j) = _HALF_*nvd(i,j)*Dires(i,j)/ARUD1
             end do
 #ifndef SLICE_MODEL
          end do
@@ -270,7 +270,7 @@
          do j=jmin,jmax ! calculate kinetic energy dissipaion rate for u-velocity
 #endif
             do i=imin,imax
-               work2d(i,j) = ( work2d(i,j) - fadv(i,j)**2 )/dtm*Dires(i,j)/ARUD1
+               work2d(i,j) = _HALF_*( work2d(i,j) - fadv(i,j)**2 )/dtm*Dires(i,j)/ARUD1
             end do
 #ifndef SLICE_MODEL
          end do
@@ -432,7 +432,7 @@
          do j=jmin,jmax
 #endif
             do i=imin,imax
-               nvd(i,j) = nvd(i,j)*Dires(i,j)/ARVD1
+               nvd(i,j) = _HALF_*nvd(i,j)*Dires(i,j)/ARVD1
             end do
 #ifndef SLICE_MODEL
          end do
@@ -473,7 +473,7 @@
          do j=jmin,jmax ! calculate kinetic energy dissipaion rate for v-velocity
 #endif
             do i=imin,imax
-               work2d(i,j) = ( work2d(i,j) - fadv(i,j)**2 )/dtm*Dires(i,j)/ARVD1
+               work2d(i,j) = _HALF_*( work2d(i,j) - fadv(i,j)**2 )/dtm*Dires(i,j)/ARVD1
             end do
 #ifndef SLICE_MODEL
          end do
