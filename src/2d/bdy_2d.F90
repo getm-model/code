@@ -428,13 +428,15 @@
                   case (CONSTANT,CLAMPED_ELEV,CLAMPED)
                      i = wi(n)
                      do j = wfj(n),wlj(n)
-                        do ii=1,bdy2d_sponge_size
-                           if (az(i+ii,j) .eq. 1) then
-                              z(i+ii,j) = sp(ii)*z(i,j)+(_ONE_-sp(ii))*z(i+ii,j)
-                           else
-                              exit
-                           end if
-                        end do
+                        if (az(i,j) .eq. 2) then
+                           do ii=1,bdy2d_sponge_size
+                              if (az(i+ii,j) .eq. 1) then
+                                 z(i+ii,j) = sp(ii)*z(i,j)+(_ONE_-sp(ii))*z(i+ii,j)
+                              else
+                                 exit
+                              end if
+                           end do
+                        end if
                      end do
                end select
             end do
@@ -444,13 +446,15 @@
                   case (CONSTANT,CLAMPED_ELEV,CLAMPED)
                      j = nj(n)
                      do i = nfi(n),nli(n)
-                        do jj=1,bdy2d_sponge_size
-                           if (az(i,j-jj) .eq. 1) then
-                              z(i,j-jj) = sp(jj)*z(i,j)+(_ONE_-sp(jj))*z(i,j-jj)
-                           else
-                              exit
-                           end if
-                        end do
+                        if (az(i,j) .eq. 2) then
+                           do jj=1,bdy2d_sponge_size
+                              if (az(i,j-jj) .eq. 1) then
+                                 z(i,j-jj) = sp(jj)*z(i,j)+(_ONE_-sp(jj))*z(i,j-jj)
+                              else
+                                 exit
+                              end if
+                           end do
+                        end if
                      end do
                end select
             end do
@@ -460,13 +464,15 @@
                   case (CONSTANT,CLAMPED_ELEV,CLAMPED)
                      i = ei(n)
                      do j = efj(n),elj(n)
-                        do ii=1,bdy2d_sponge_size
-                           if (az(i-ii,j) .eq. 1) then
-                              z(i-ii,j) = sp(ii)*z(i,j)+(_ONE_-sp(ii))*z(i-ii,j)
-                           else
-                              exit
-                           end if
-                        end do
+                        if (az(i,j) .eq. 2) then
+                           do ii=1,bdy2d_sponge_size
+                              if (az(i-ii,j) .eq. 1) then
+                                 z(i-ii,j) = sp(ii)*z(i,j)+(_ONE_-sp(ii))*z(i-ii,j)
+                              else
+                                 exit
+                              end if
+                           end do
+                        end if
                      end do
                end select
             end do
@@ -476,13 +482,15 @@
                   case (CONSTANT,CLAMPED_ELEV,CLAMPED)
                      j = sj(n)
                      do i = sfi(n),sli(n)
-                        do jj=1,bdy2d_sponge_size
-                           if (az(i,j+jj) .eq. 1) then
-                              z(i,j+jj) = sp(jj)*z(i,j)+(_ONE_-sp(jj))*z(i,j+jj)
-                           else
-                              exit
-                           end if
-                        end do
+                        if (az(i,j) .eq. 2) then
+                           do jj=1,bdy2d_sponge_size
+                              if (az(i,j+jj) .eq. 1) then
+                                 z(i,j+jj) = sp(jj)*z(i,j)+(_ONE_-sp(jj))*z(i,j+jj)
+                              else
+                                 exit
+                              end if
+                           end do
+                        end if
                      end do
                end select
             end do
