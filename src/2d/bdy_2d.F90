@@ -36,13 +36,16 @@
 ! !PUBLIC DATA MEMBERS:
    public init_bdy_2d, do_bdy_2d
    character(len=PATH_MAX),public       :: bdyfile_2d
-   integer,public                       :: bdyfmt_2d,bdy2d_ramp=-1
+   integer,public                       :: bdyfmt_2d
+   integer,public                       :: bdy2d_ramp=-1
+   integer,public                       :: bdy2d_sponge_size=0
    REALTYPE,dimension(:),pointer,public :: bdy_data,bdy_data_u,bdy_data_v
 !
 ! !PRIVATE DATA MEMBERS:
    private bdy2d_active,bdy2d_need_elev,bdy2d_need_vel
    REALTYPE                             :: ramp=_ONE_
    logical                              :: ramp_is_active=.false.
+   REALTYPE,dimension(:),allocatable    :: sp(:)
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -73,7 +76,7 @@
    logical, intent(inout)              :: bdy2d
 !
 ! !LOCAL VARIABLES:
-   integer :: n,l,rc
+   integer :: i,n,l,rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -172,6 +175,21 @@
 
    end if
 
+   if (bdy2d_sponge_size .gt. 0) then
+      allocate(sp(bdy2d_sponge_size),stat=rc)
+      if (rc /= 0) stop 'init_bdy_2d: Error allocating memory (sp)'
+
+!        Sponge layer factors according to Martinsen and Engedahl, 1987.
+!        Note (KK): factor=1 (bdy cell) does not count for sponge size
+!                   (in contrast to earlier GETM)
+      LEVEL3 "sponge layer factors for surface elevation:"
+      do i=1,bdy2d_sponge_size
+         sp(i) = ((_ONE_+bdy2d_sponge_size-i)/(_ONE_+bdy2d_sponge_size))**2
+         LEVEL4 "sp(",i,")=",real(sp(i))
+      end do
+   end if
+
+
 #ifdef DEBUG
    write(debug,*) 'Leaving init_bdy_2d()'
    write(debug,*)
@@ -201,7 +219,7 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE                  :: cfl,depth,a
-   integer                   :: i,j,k,kl,l,n
+   integer                   :: i,j,k,ii,jj,kl,l,n
    REALTYPE, parameter       :: theta = _HALF_
 !
 !EOP
@@ -283,6 +301,17 @@
                      kl = kl + 1
                   end do
             end select
+            if (bdy2d_sponge_size .gt. 0) then
+               do j = wfj(n),wlj(n)
+                  do ii=1,bdy2d_sponge_size
+                     if (az(i+ii,j) .ne. 0) then
+                        z(i+ii,j) = sp(ii)*z(i,j)+(_ONE_-sp(ii))*z(i+ii,j)
+                     else
+                        exit
+                     end if
+                  end do
+               end do
+            end if
          end do
          do n = 1,NNB
             l = l+1
@@ -322,6 +351,17 @@
                      kl = kl + 1
                   end do
             end select
+            if (bdy2d_sponge_size .gt. 0) then
+               do j = nfi(n),nli(n)
+                  do jj=1,bdy2d_sponge_size
+                     if (az(i,j-jj) .ne. 0) then
+                        z(i,j-jj) = sp(jj)*z(i,j)+(_ONE_-sp(jj))*z(i,j-jj)
+                     else
+                        exit
+                     end if
+                  end do
+               end do
+            end if
          end do
          do n = 1,NEB
             l = l+1
@@ -361,6 +401,17 @@
                      kl = kl + 1
                   end do
             end select
+            if (bdy2d_sponge_size .gt. 0) then
+               do j = efj(n),elj(n)
+                  do ii=1,bdy2d_sponge_size
+                     if (az(i-ii,j) .ne. 0) then
+                        z(i-ii,j) = sp(ii)*z(i,j)+(_ONE_-sp(ii))*z(i-ii,j)
+                     else
+                        exit
+                     end if
+                  end do
+               end do
+            end if
          end do
          do n = 1,NSB
             l = l+1
@@ -400,6 +451,17 @@
                      kl = kl + 1
                   end do
             end select
+            if (bdy2d_sponge_size .gt. 0) then
+               do j = sfi(n),sli(n)
+                  do jj=1,bdy2d_sponge_size
+                     if (az(i,j+jj) .ne. 0) then
+                        z(i,j+jj) = sp(jj)*z(i,j)+(_ONE_-sp(jj))*z(i,j+jj)
+                     else
+                        exit
+                     end if
+                  end do
+               end do
+            end if
          end do
 
       case (U_TAG)
