@@ -301,17 +301,6 @@
                      kl = kl + 1
                   end do
             end select
-            if (bdy2d_sponge_size .gt. 0) then
-               do j = wfj(n),wlj(n)
-                  do ii=1,bdy2d_sponge_size
-                     if (az(i+ii,j) .ne. 0) then
-                        z(i+ii,j) = sp(ii)*z(i,j)+(_ONE_-sp(ii))*z(i+ii,j)
-                     else
-                        exit
-                     end if
-                  end do
-               end do
-            end if
          end do
          do n = 1,NNB
             l = l+1
@@ -351,17 +340,6 @@
                      kl = kl + 1
                   end do
             end select
-            if (bdy2d_sponge_size .gt. 0) then
-               do j = nfi(n),nli(n)
-                  do jj=1,bdy2d_sponge_size
-                     if (az(i,j-jj) .ne. 0) then
-                        z(i,j-jj) = sp(jj)*z(i,j)+(_ONE_-sp(jj))*z(i,j-jj)
-                     else
-                        exit
-                     end if
-                  end do
-               end do
-            end if
          end do
          do n = 1,NEB
             l = l+1
@@ -401,17 +379,6 @@
                      kl = kl + 1
                   end do
             end select
-            if (bdy2d_sponge_size .gt. 0) then
-               do j = efj(n),elj(n)
-                  do ii=1,bdy2d_sponge_size
-                     if (az(i-ii,j) .ne. 0) then
-                        z(i-ii,j) = sp(ii)*z(i,j)+(_ONE_-sp(ii))*z(i-ii,j)
-                     else
-                        exit
-                     end if
-                  end do
-               end do
-            end if
          end do
          do n = 1,NSB
             l = l+1
@@ -451,18 +418,76 @@
                      kl = kl + 1
                   end do
             end select
-            if (bdy2d_sponge_size .gt. 0) then
-               do j = sfi(n),sli(n)
-                  do jj=1,bdy2d_sponge_size
-                     if (az(i,j+jj) .ne. 0) then
-                        z(i,j+jj) = sp(jj)*z(i,j)+(_ONE_-sp(jj))*z(i,j+jj)
-                     else
-                        exit
-                     end if
-                  end do
-               end do
-            end if
          end do
+
+         if (bdy2d_sponge_size .gt. 0) then
+            l = 0
+            do n = 1,NWB
+               l = l+1
+               select case (bdy_2d_type(l))
+                  case (CONSTANT,CLAMPED_ELEV,CLAMPED)
+                     i = wi(n)
+                     do j = wfj(n),wlj(n)
+                        do ii=1,bdy2d_sponge_size
+                           if (az(i+ii,j) .eq. 1) then
+                              z(i+ii,j) = sp(ii)*z(i,j)+(_ONE_-sp(ii))*z(i+ii,j)
+                           else
+                              exit
+                           end if
+                        end do
+                     end do
+               end select
+            end do
+            do n = 1,NNB
+               l = l+1
+               select case (bdy_2d_type(l))
+                  case (CONSTANT,CLAMPED_ELEV,CLAMPED)
+                     j = nj(n)
+                     do i = nfi(n),nli(n)
+                        do jj=1,bdy2d_sponge_size
+                           if (az(i,j-jj) .eq. 1) then
+                              z(i,j-jj) = sp(jj)*z(i,j)+(_ONE_-sp(jj))*z(i,j-jj)
+                           else
+                              exit
+                           end if
+                        end do
+                     end do
+               end select
+            end do
+            do n = 1,NEB
+               l = l+1
+               select case (bdy_2d_type(l))
+                  case (CONSTANT,CLAMPED_ELEV,CLAMPED)
+                     i = ei(n)
+                     do j = efj(n),elj(n)
+                        do ii=1,bdy2d_sponge_size
+                           if (az(i-ii,j) .eq. 1) then
+                              z(i-ii,j) = sp(ii)*z(i,j)+(_ONE_-sp(ii))*z(i-ii,j)
+                           else
+                              exit
+                           end if
+                        end do
+                     end do
+               end select
+            end do
+            do n = 1,NSB
+               l = l+1
+               select case (bdy_2d_type(l))
+                  case (CONSTANT,CLAMPED_ELEV,CLAMPED)
+                     j = sj(n)
+                     do i = sfi(n),sli(n)
+                        do jj=1,bdy2d_sponge_size
+                           if (az(i,j+jj) .eq. 1) then
+                              z(i,j+jj) = sp(jj)*z(i,j)+(_ONE_-sp(jj))*z(i,j+jj)
+                           else
+                              exit
+                           end if
+                        end do
+                     end do
+               end select
+            end do
+         end if
+
 
       case (U_TAG)
 
