@@ -139,7 +139,7 @@
    namelist /meteo/ metforcing,on_grid,calc_met,met_method,fwf_method, &
                     meteo_ramp,metfmt,meteo_file, &
                     tx,ty,swr_const,shf_const,evap_const,precip_const, &
-                    sst_const,precip_factor,evap_factor
+                    sst_const,wind_factor,precip_factor,evap_factor
 !EOP
 !-------------------------------------------------------------------------
 !BOC
