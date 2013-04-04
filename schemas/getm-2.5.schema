@@ -209,6 +209,13 @@
 					<condition type="eq" variable="../m3d/calc_temp" value="True"/>
 				</condition>
 			</element>
+			<element name="wind_factor" type="float" label="factor to convert windspeeds to m/s">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="eq" variable="./calc_met" value="True"/>
+					<condition type="eq" variable="./met_method" value="2"/>
+				</condition>
+			</element>
 			<element name="evap_factor" type="float" label="factor to convert evaporation to m/s">
 				<condition type="and">
 					<condition type="eq" variable="./metforcing" value="True"/>

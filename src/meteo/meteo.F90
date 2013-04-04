@@ -60,6 +60,7 @@
    logical, public                     :: calc_met=.false.
    integer, public                     :: met_method
    integer, public                     :: fwf_method=0
+   REALTYPE, public                    :: wind_factor=_ONE_
    REALTYPE, public                    :: evap_factor = _ONE_
    REALTYPE, public                    :: precip_factor = _ONE_
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
