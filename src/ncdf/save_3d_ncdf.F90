@@ -580,20 +580,6 @@
          err = nf90_put_var(ncid,fabm_ids_diag(n),ws(_3D_W_),start,edges)
          if (err .NE.  NF90_NOERR) go to 10
       end do
-      start(3) = n3d
-      edges(3) = 1
-      do n=1,size(model%info%state_variables_ben)
-         call cnv_2d(imin,jmin,imax,jmax,az,fabm_ben(:,:,n), &
-                     model%info%state_variables_ben(n)%missing_value,imin,jmin,imax,jmax,ws2d)
-         err = nf90_put_var(ncid,fabm_ids_ben(n),ws2d(_2D_W_),start(1:3),edges(1:3))
-         if (err .NE.  NF90_NOERR) go to 10
-      end do
-      do n=1,size(model%info%diagnostic_variables_hz)
-         call cnv_2d(imin,jmin,imax,jmax,az,fabm_diag_hz(:,:,n), &
-                     model%info%diagnostic_variables_hz(n)%missing_value,imin,jmin,imax,jmax,ws2d)
-         err = nf90_put_var(ncid,fabm_ids_diag_hz(n),ws2d(_2D_W_),start(1:3),edges(1:3))
-         if (err .NE.  NF90_NOERR) go to 10
-      end do
       if (do_numerical_analyses_3d) then
          do n=1,size(model%info%state_variables)
             call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix_fabm_pel(:,:,:,n), &
@@ -608,6 +594,21 @@
             if (err .NE.  NF90_NOERR) go to 10
          end do
       end if
+
+      start(3) = n3d
+      edges(3) = 1
+      do n=1,size(model%info%state_variables_ben)
+         call cnv_2d(imin,jmin,imax,jmax,az,fabm_ben(:,:,n), &
+                     model%info%state_variables_ben(n)%missing_value,imin,jmin,imax,jmax,ws2d)
+         err = nf90_put_var(ncid,fabm_ids_ben(n),ws2d(_2D_W_),start(1:3),edges(1:3))
+         if (err .NE.  NF90_NOERR) go to 10
+      end do
+      do n=1,size(model%info%diagnostic_variables_hz)
+         call cnv_2d(imin,jmin,imax,jmax,az,fabm_diag_hz(:,:,n), &
+                     model%info%diagnostic_variables_hz(n)%missing_value,imin,jmin,imax,jmax,ws2d)
+         err = nf90_put_var(ncid,fabm_ids_diag_hz(n),ws2d(_2D_W_),start(1:3),edges(1:3))
+         if (err .NE.  NF90_NOERR) go to 10
+      end do
    end if
 #endif
 
