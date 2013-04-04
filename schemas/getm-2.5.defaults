@@ -170,6 +170,9 @@
 			<sst_const>
 				-1.0
 			</sst_const>
+			<wind_factor>
+				1.0
+			</wind_factor>
 			<evap_factor>
 				1.0
 			</evap_factor>
@@ -258,6 +261,9 @@
 			<bdyfile_2d>
 				bdy_2d.nc
 			</bdyfile_2d>
+			<bdy2d_sponge_size>
+				0
+			</bdy2d_sponge_size>
 		</m2d>
 		<m3d>
 			<M>
