@@ -210,6 +210,13 @@
 					<condition type="eq" variable="../m3d/calc_temp" value="True"/>
 				</condition>
 			</element>
+			<element name="wind_factor" type="float" label="factor to convert windspeeds to m/s">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="eq" variable="./calc_met" value="True"/>
+					<condition type="eq" variable="./met_method" value="2"/>
+				</condition>
+			</element>
 			<element name="evap_factor" type="float" label="factor to convert evaporation to m/s">
 				<condition type="and">
 					<condition type="eq" variable="./metforcing" value="True"/>
@@ -370,6 +377,9 @@
 					</condition>
 				</condition>
 			</element>
+			<element name="bdy2d_sponge_size" type="int" label="number of cells inside sponge zone" minInclusive="0">
+                                <condition type="eq" variable="./bdy2d" value="True"/>
+                        </element>
 		</element>
 
 		<element name="m3d" label="variables related to 3D model">
