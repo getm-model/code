@@ -28,7 +28,8 @@
    use les, only: les_mode,LES_MOMENTUM
    use halo_zones, only: update_2d_halo,wait_halo,H_TAG
    use variables_2d
-   use bdy_2d, only: init_bdy_2d,bdyfile_2d,bdyfmt_2d,bdy2d_ramp
+   use bdy_2d, only: init_bdy_2d
+   use bdy_2d, only: bdyfile_2d,bdyfmt_2d,bdy2d_ramp,bdy2d_sponge_size
    IMPLICIT NONE
 
    interface
@@ -165,11 +166,11 @@
    REALTYPE                  :: elev_const=_ZERO_
    character(LEN = PATH_MAX) :: elev_file='elev.nc'
    namelist /m2d/ &
-          elev_method,elev_const,elev_file,              &
-          MM,vel2d_adv_split,vel2d_adv_hor,avmmol,       &
-          Am_method,Am_const,An_method,An_const,An_file, &
-          residual,sealevel_check,                       &
-          bdy2d,bdyfmt_2d,bdy2d_ramp,bdyfile_2d
+          elev_method,elev_const,elev_file,                       &
+          MM,vel2d_adv_split,vel2d_adv_hor,avmmol,                &
+          Am_method,Am_const,An_method,An_const,An_file,          &
+          residual,sealevel_check,                                &
+          bdy2d,bdyfmt_2d,bdy2d_ramp,bdyfile_2d,bdy2d_sponge_size
 !EOP
 !-------------------------------------------------------------------------
 !BOC

@@ -235,7 +235,7 @@
             do j=jmin,jmax
 #endif
                do i=imin,imax
-                  nvd(i,j,k) = nvd(i,j,k)*hires(i,j,k)/ARUD1
+                  nvd(i,j,k) = _HALF_*nvd(i,j,k)*hires(i,j,k)/ARUD1
                end do
 #ifndef SLICE_MODEL
             end do
@@ -281,7 +281,7 @@
             do j=jmin,jmax
 #endif
                do i=imin,imax
-                  work3d(i,j,k) = ( work3d(i,j,k) - fadv3d(i,j,k)**2 )/dt*hires(i,j,k)/ARUD1
+                  work3d(i,j,k) = _HALF_*( work3d(i,j,k) - fadv3d(i,j,k)**2 )/dt*hires(i,j,k)/ARUD1
                end do
 #ifndef SLICE_MODEL
             end do
@@ -472,7 +472,7 @@
             do j=jmin,jmax
 #endif
                do i=imin,imax
-                  nvd(i,j,k) = nvd(i,j,k)*hires(i,j,k)/ARVD1
+                  nvd(i,j,k) = _HALF_*nvd(i,j,k)*hires(i,j,k)/ARVD1
                end do
 #ifndef SLICE_MODEL
             end do
@@ -518,7 +518,7 @@
             do j=jmin,jmax
 #endif
                do i=imin,imax
-                  work3d(i,j,k) = ( work3d(i,j,k) - fadv3d(i,j,k)**2 )/dt*hires(i,j,k)/ARVD1
+                  work3d(i,j,k) = _HALF_*( work3d(i,j,k) - fadv3d(i,j,k)**2 )/dt*hires(i,j,k)/ARVD1
                end do
 #ifndef SLICE_MODEL
             end do

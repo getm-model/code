@@ -22,7 +22,7 @@
    use meteo, only: fwf_method,evap,precip
    use meteo, only: tausx,tausy,swr,shf
    use meteo, only: new_meteo,t_1,t_2
-   use meteo, only: evap_factor,precip_factor
+   use meteo, only: wind_factor,evap_factor,precip_factor
    use meteo, only: nudge_sst,sst
    use exceptions
    IMPLICIT NONE
@@ -799,6 +799,12 @@
             end if
          end do
       end do
+
+      if (wind_factor .ne. _ONE_) then
+         u10 = u10 * wind_factor
+         v10 = v10 * wind_factor
+      end if
+
 
       err = nf90_get_var(ncid,t2_id,wrk,start,edges)
       if (err .ne. NF90_NOERR) go to 10
