@@ -51,9 +51,6 @@
 #ifdef USE_BREAKS
    integer                   :: n,break_flag,break_flags(nprocs)
 #endif
-#ifdef FRESHWATER_LENSE_TEST
-   REALTYPE                  :: kk
-#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -81,11 +78,7 @@
 ! it is sliglty more complicated.
 ! The present routine is a small part of the total CPU.
 #ifndef USE_BREAKS
-#ifdef FRESHWATER_LENSE_TEST
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,kk)
-#else
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j)
-#endif
 !$OMP DO SCHEDULE(RUNTIME)
 #endif
    do j=jmin,jmax
@@ -94,26 +87,6 @@
             z(i,j)=zo(i,j)-dtm*((U(i,j)*DYU-U(i-1,j  )*DYUIM1) &
                                +(V(i,j)*DXV-V(i  ,j-1)*DXVJM1))*ARCD1 &
                           +dtm*fwf(i,j)
-#if 0
-#ifdef FRESHWATER_LENSE_TEST
-       kk=1.0
-       if ((((i.eq.1).or.(i.eq.imax)).and.(j.ge.1).and.(j.le.jmax)).or. &
-           (((j.eq.1).or.(j.eq.jmax)).and.(i.ge.1).and.(i.le.imax)))    &
-          z(i,j)=(1.-kk)*z(i,j)
-       kk=0.5625d0
-       if ((((i.eq.2).or.(i.eq.imax-1)).and.(j.ge.2).and.(j.le.jmax-1)).or. &
-           (((j.eq.2).or.(j.eq.jmax-1)).and.(i.ge.2).and.(i.le.imax-1)))    &
-          z(i,j)=(1.-kk)*z(i,j)
-       kk=0.25d0
-       if ((((i.eq.3).or.(i.eq.imax-2)).and.(j.ge.3).and.(j.le.jmax-2)).or. &
-           (((j.eq.3).or.(j.eq.jmax-2)).and.(i.ge.3).and.(i.le.imax-2)))    &
-           z(i,j)=(1.-kk)*z(i,j)
-       kk=0.0625d0
-       if ((((i.eq.4).or.(i.eq.imax-3)).and.(j.ge.4).and.(j.le.jmax-3)).or. &
-           (((j.eq.4).or.(j.eq.jmax-3)).and.(i.ge.4).and.(i.le.imax-3)))    &
-           z(i,j)=(1.-kk)*z(i,j)
-#endif
-#endif
 
 #ifdef USE_BREAKS
             if (z(i,j)+H(i,j) .lt. 0.9d0*min_depth .and. &
