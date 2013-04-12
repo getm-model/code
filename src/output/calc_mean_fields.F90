@@ -253,9 +253,9 @@
       Smean = Smean + S
 #endif
       if (do_numerical_analyses_3d) then
-         numdis_3d_mean = numdis_3d_mean + numdis_3d
+         numdis_3d_mean = numdis_3d_mean + numdis_3d*hn
 #ifdef _NUMERICAL_ANALYSES_OLD_
-         numdis_3d_old_mean = numdis_3d_old_mean + numdis_3d_old
+         numdis_3d_old_mean = numdis_3d_old_mean + numdis_3d_old*hn
          numdis_int_mean = numdis_int_mean + numdis_int
 #endif
          phydis_3d_mean = phydis_3d_mean + phydis_3d
@@ -310,9 +310,9 @@
          Smean = Smean / step
 #endif
          if (do_numerical_analyses_3d) then
-            numdis_3d_mean = numdis_3d_mean / step
+            numdis_3d_mean = numdis_3d_mean / step / hmean
 #ifdef _NUMERICAL_ANALYSES_OLD_
-            numdis_3d_old_mean = numdis_3d_old_mean / step
+            numdis_3d_old_mean = numdis_3d_old_mean / step / hmean
             numdis_int_mean = numdis_int_mean / step
 #endif
             phydis_3d_mean = phydis_3d_mean / step
