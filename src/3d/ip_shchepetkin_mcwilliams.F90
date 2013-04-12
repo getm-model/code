@@ -196,7 +196,7 @@
 !  appears on the right hand side of v equation
 
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-HALO,jmax+HALO-1
+   do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
          if (av(i,j) .eq. 0) then
             delzx(i,j) = _ZERO_
@@ -208,7 +208,7 @@
 
    do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+HALO
+      do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO
             if (av(i,j) .ge. 1) then
                delzx(i,j) = zz(i,j+1,k) - zz(i,j,k)
