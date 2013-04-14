@@ -501,15 +501,15 @@
                cmin(i,j) = min( cmin(i,j) , minval(faux(i-1:i+1,j-1:j+1),mask=(az(i-1:i+1,j-1:j+1).eq.1)) )
 
 !              max (Cu) possible concentration after a time step
-               CExx=(                                                &
-                      ( min(uflux(i  ,j  )-flx(i  ,j  ),_ZERO_)      &
-                       -max(uflux(i-1,j  )-flx(i-1,j  ),_ZERO_))/DXU &
+               CExx=(                                                   &
+                      ( min(uflux(i  ,j  )-flx(i  ,j  ),_ZERO_)*DYU     &
+                       -max(uflux(i-1,j  )-flx(i-1,j  ),_ZERO_)*DYUIM1) &
 #ifndef SLICE_MODEL
-                     +( min(vflux(i  ,j  )-fly(i  ,j  ),_ZERO_)      &
-                       -max(vflux(i  ,j-1)-fly(i  ,j-1),_ZERO_))/DYV &
+                     +( min(vflux(i  ,j  )-fly(i  ,j  ),_ZERO_)*DXV     &
+                       -max(vflux(i  ,j-1)-fly(i  ,j-1),_ZERO_)*DXVJM1) &
 #endif
                     )
-               Cu=(faux(i,j)*Di(i,j)-dt*CExx)/Di(i,j)
+               Cu=(faux(i,j)*Di(i,j)-dt*CExx*ARCD1)/Di(i,j)
 !              calculating the maximum limiter rp for each conc. cell
                if (Cu .eq. faux(i,j)) then
                   rp(i,j)=_ZERO_
@@ -518,15 +518,15 @@
                end if
 
 !              min (Cl) possible concentration after a time step
-               CExx=(                                                &
-                      ( max(uflux(i  ,j  )-flx(i  ,j  ),_ZERO_)      &
-                       -min(uflux(i-1,j  )-flx(i-1,j  ),_ZERO_))/DXU &
+               CExx=(                                                   &
+                      ( max(uflux(i  ,j  )-flx(i  ,j  ),_ZERO_)*DYU     &
+                       -min(uflux(i-1,j  )-flx(i-1,j  ),_ZERO_)*DYUIM1) &
 #ifndef SLICE_MODEL
-                     +( max(vflux(i  ,j  )-fly(i  ,j  ),_ZERO_)      &
-                       -min(vflux(i  ,j-1)-fly(i  ,j-1),_ZERO_))/DYV &
+                     +( max(vflux(i  ,j  )-fly(i  ,j  ),_ZERO_)*DXV     &
+                       -min(vflux(i  ,j-1)-fly(i  ,j-1),_ZERO_)*DXVJM1) &
 #endif
                     )
-               Cl=(faux(i,j)*Di(i,j)-dt*CExx)/Di(i,j)
+               Cl=(faux(i,j)*Di(i,j)-dt*CExx*ARCD1)/Di(i,j)
 !              calculating the minimum limiter rm for each conc. cell
                if (Cl .eq. faux(i,j)) then
                   rm(i,j)=_ZERO_
