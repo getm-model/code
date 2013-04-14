@@ -68,6 +68,7 @@
    integer                             :: step_3d=1
    integer                             :: sync_3d=1
    integer                             :: hotout(3)=-1
+   integer                             :: mean0=0
    integer                             :: meanout=-1
    logical                             :: save_numerical_analyses=.false.
 
@@ -301,8 +302,9 @@
    write_2d = save_2d .and. n .ge. first_2d .and. mod(n,step_2d).eq.0
    write_3d = save_3d .and. n .ge. first_3d .and. mod(n,step_3d).eq.0
 #ifndef NO_3D
-   if (meanout .gt. 0 .and. n .gt. 0) then
+   if (meanout .gt. 0 .and. n .gt. mean0) then
       write_mean = save_mean .and. (mod(n,meanout) .eq. 0)
+!      write_mean = save_mean .and. (mod(n-mean0,meanout) .eq. 0)
    end if
 #endif
 
@@ -615,6 +617,7 @@
          loop = 0
          julianday=jd; secondsofday=secs
       end if
+      mean0 = loop
    end if ! READING
 
 #ifdef DEBUG
