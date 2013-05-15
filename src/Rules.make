@@ -194,7 +194,7 @@ else
 MPILIB		= -lmpich -lpthread
 endif
 ifdef MPILIBDIR
-LDFLAGS		+= -L$(MPILIBDIR)
+LINKFLAGS		+= -L$(MPILIBDIR)
 LINKDIRS	+= -L$(MPILIBDIR)
 endif
 endif
@@ -247,7 +247,7 @@ PROTEX	= protex -b -n -s
 CPPFLAGS	= $(DEFINES) $(INCDIRS)
 FFLAGS  	= $(DEFINES) $(FLAGS) $(MODULES) $(INCDIRS) $(EXTRAS)
 F90FLAGS  	= $(FFLAGS)
-LDFLAGS		= $(FFLAGS) $(LINKDIRS)
+LINKFLAGS		= $(LDFLAGS) $(FFLAGS) $(LINKDIRS)
 
 #
 # Special variables which should not be exported
