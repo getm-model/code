@@ -67,7 +67,7 @@ GIT FORTRAN:
 	$(MAKE) -C .. $@
 
 getm$(buildtype)_$(FORTRAN_COMPILER): makedirs subdirs
-	$(FC) -o $@ getm/main.o $(LDFLAGS) $(LIBS)
+	$(FC) -o $@ getm/main.o $(LINKFLAGS) $(LIBS)
 	$(RM) getm/main.o
 
 install: getm$(buildtype)_$(FORTRAN_COMPILER)
