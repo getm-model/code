@@ -258,24 +258,24 @@
          numdis_3d_old_mean = numdis_3d_old_mean + numdis_3d_old*hn
          numdis_int_mean = numdis_int_mean + numdis_int
 #endif
-         phydis_3d_mean = phydis_3d_mean + phydis_3d
+         phydis_3d_mean = phydis_3d_mean + phydis_3d*hn
          phydis_int_mean = phydis_int_mean + phydis_int
          if (calc_temp) then
-            nummix_T_mean = nummix_T_mean + nummix_T
+            nummix_T_mean = nummix_T_mean + nummix_T*hn
 #ifdef _NUMERICAL_ANALYSES_OLD_
-            nummix_T_old_mean = nummix_T_old_mean + nummix_T_old
+            nummix_T_old_mean = nummix_T_old_mean + nummix_T_old*hn
             nummix_T_int_mean = nummix_T_int_mean + nummix_T_int
 #endif
-            phymix_T_mean = phymix_T_mean + phymix_T
+            phymix_T_mean = phymix_T_mean + phymix_T*hn
             phymix_T_int_mean = phymix_T_int_mean + phymix_T_int
          end if
          if (calc_salt) then
-            nummix_S_mean = nummix_S_mean + nummix_S
+            nummix_S_mean = nummix_S_mean + nummix_S*hn
 #ifdef _NUMERICAL_ANALYSES_OLD_
-            nummix_S_old_mean = nummix_S_old_mean + nummix_S_old
+            nummix_S_old_mean = nummix_S_old_mean + nummix_S_old*hn
             nummix_S_int_mean = nummix_S_int_mean + nummix_S_int
 #endif
-            phymix_S_mean = phymix_S_mean + phymix_S
+            phymix_S_mean = phymix_S_mean + phymix_S*hn
             phymix_S_int_mean = phymix_S_int_mean + phymix_S_int
          end if
       end if
@@ -315,24 +315,24 @@
             numdis_3d_old_mean = numdis_3d_old_mean / step / hmean
             numdis_int_mean = numdis_int_mean / step
 #endif
-            phydis_3d_mean = phydis_3d_mean / step
+            phydis_3d_mean = phydis_3d_mean / step / hmean
             phydis_int_mean = phydis_int_mean / step
             if (calc_temp) then
-               nummix_T_mean = nummix_T_mean / step
+               nummix_T_mean = nummix_T_mean / step / hmean
 #ifdef _NUMERICAL_ANALYSES_OLD_
-               nummix_T_old_mean = nummix_T_old_mean / step
+               nummix_T_old_mean = nummix_T_old_mean / step / hmean
                nummix_T_int_mean = nummix_T_int_mean / step
 #endif
-               phymix_T_mean = phymix_T_mean / step
+               phymix_T_mean = phymix_T_mean / step / hmean
                phymix_T_int_mean = phymix_T_int_mean / step
             end if
             if (calc_salt) then
-               nummix_S_mean = nummix_S_mean / step
+               nummix_S_mean = nummix_S_mean / step / hmean
 #ifdef _NUMERICAL_ANALYSES_OLD_
-               nummix_S_old_mean = nummix_S_old_mean / step
+               nummix_S_old_mean = nummix_S_old_mean / step / hmean
                nummix_S_int_mean = nummix_S_int_mean / step
 #endif
-               phymix_S_mean = phymix_S_mean / step
+               phymix_S_mean = phymix_S_mean / step / hmean
                phymix_S_int_mean = phymix_S_int_mean / step
             end if
          end if
