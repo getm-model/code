@@ -17,6 +17,7 @@
    use variables_2d, only: do_numerical_analyses_2d
 #ifndef NO_3D
    use variables_3d, only: do_numerical_analyses_3d,calc_stirr
+   use m3d, only: calc_salt,calc_temp
 #endif
 #ifdef TEST_NESTING
    use nesting
@@ -45,10 +46,10 @@
    logical                             :: save_vel2d=.true.
    logical                             :: save_vel3d=.true.
    logical                             :: save_fluxes=.false.
-   logical                             :: save_strho=.true.
-   logical                             :: save_s=.true.
-   logical                             :: save_t=.true.
-   logical                             :: save_rho=.true.
+   logical                             :: save_strho=.false.
+   logical                             :: save_s=.false.
+   logical                             :: save_t=.false.
+   logical                             :: save_rho=.false.
    logical                             :: save_rad=.false.
    logical                             :: save_turb=.true.
    logical                             :: save_tke=.true.
@@ -70,6 +71,8 @@
    integer                             :: mean0=0
    integer                             :: meanout=-1
    logical                             :: save_numerical_analyses=.false.
+   logical,private                     :: save_restart
+   integer,private                     :: lastN=-1
 
 !
 ! !REVISION HISTORY:
@@ -88,12 +91,12 @@
 ! !DESCRIPTION:
 !
 ! !INTERFACE:
-   subroutine init_output(runid,title,starttime,runtype,dryrun,myid)
+   subroutine init_output(runid,title,starttime,runtype,dryrun,myid,MaxN)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: runid,title,starttime
-   integer, intent(in)                 :: runtype,myid
+   integer, intent(in)                 :: runtype,myid,MaxN
    logical, intent(in)                 :: dryrun
 !
 ! !REVISION HISTORY:
@@ -122,6 +125,8 @@
 
    LEVEL1 'init_output'
 
+   lastN = MaxN
+
    read(NAMLST, nml=io_spec)
 
    if (hotin_fmt .ne. NETCDF) then
@@ -145,9 +150,22 @@
 
    if (runtype .eq. 2) then
       save_strho = .false.
+   end if
+
+   if (.not. save_strho) then
       save_s = .false.
       save_t = .false.
+      save_rho = .false.
    end if
+
+#ifndef NO_3D
+   if (.not. calc_salt) then
+      save_s = .false.
+   end if
+   if (.not. calc_temp) then
+      save_t = .false.
+   end if
+#endif
 
    if(save_vel) then
       LEVEL2 'save (rotated) velocities in center points'
@@ -204,7 +222,8 @@
       end select
    end if
 
-   if ( hotout(1) .ge. 0) then
+   save_restart = (hotout(1).ge.0)
+   if (save_restart) then
       if (hotout_fmt .ne. NETCDF) then
         STDERR 'Writing of non-netcdf restart files not supported anymore!'
         stop
@@ -286,7 +305,7 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE                  :: secs
-   logical                   :: write_2d,write_3d,write_mean=.false.
+   logical                   :: write_2d,write_3d,write_mean=.false.,write_restart=.false.
    integer                   :: dummy
 !EOP
 !-------------------------------------------------------------------------
@@ -300,10 +319,16 @@
 
    write_2d = save_2d .and. n .ge. first_2d .and. mod(n,step_2d).eq.0
    write_3d = save_3d .and. n .ge. first_3d .and. mod(n,step_3d).eq.0
+
 #ifndef NO_3D
-   if (meanout .gt. 0 .and. n .gt. mean0) then
-      write_mean = save_mean .and. (mod(n,meanout) .eq. 0)
-!      write_mean = save_mean .and. (mod(n-mean0,meanout) .eq. 0)
+   if (save_mean .and. n.gt.mean0) then
+      if (meanout .eq. 0) then
+         write_mean = (n.eq.lastN)
+      else
+!         write_mean = mod(n,meanout).eq.0
+         write_mean = mod(n-mean0,meanout).eq.0
+      end if
+      call calc_mean_fields(n,write_mean)
    end if
 #endif
 
@@ -336,10 +361,14 @@
    end if
 
 !  Restart file
-   if ( hotout(1) .gt. 0 ) then
-      if (hotout(1) .le. n .and. &
-          n .le. hotout(2) .and. &
-          mod(n,hotout(3)) .eq. 0) then
+   if (save_restart) then
+!     Save last restart file
+      if (hotout(1) .eq. 0) then
+         write_restart = (n.eq.lastN)
+      else
+         write_restart = hotout(1).le.n .and. n.le.hotout(2) .and. mod(n,hotout(3)).eq.0
+      end if
+      if (write_restart) then
          dummy = n
          call restart_file(WRITING,trim(hot_out),dummy,runtype)
       end if
@@ -661,21 +690,6 @@
    write(debug,*) 'clean_output() # ',Ncall
 #endif
 
-!  Save last restart file
-   if (hotout(1) .eq. 0) then
-      call restart_file(WRITING,trim(hot_out),loop,runtype)
-   end if
-
-   if (save_mean .and. meanout.eq.0) then
-      select case (out_fmt)
-         case(NETCDF)
-            dummy=-_ZERO_
-#ifndef NO_3D
-            LEVEL3 timestr, ': saving mean fields .... '
-            call save_mean_ncdf(dummy)
-#endif
-      end select
-   end if
 
    select case (out_fmt)
       case (NETCDF)
