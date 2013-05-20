@@ -63,6 +63,8 @@
    integer                             :: mean0=0
    integer                             :: meanout=-1
    logical                             :: save_numerical_analyses=.false.
+   logical,private                     :: save_restart
+   integer,private                     :: lastN=-1
 
 !
 ! !REVISION HISTORY:
@@ -81,12 +83,12 @@
 ! !DESCRIPTION:
 !
 ! !INTERFACE:
-   subroutine init_output(runid,title,starttime,runtype,dryrun,myid)
+   subroutine init_output(runid,title,starttime,runtype,dryrun,myid,MaxN)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: runid,title,starttime
-   integer, intent(in)                 :: runtype,myid
+   integer, intent(in)                 :: runtype,myid,MaxN
    logical, intent(in)                 :: dryrun
 !
 ! !REVISION HISTORY:
@@ -114,6 +116,8 @@
 #endif
 
    LEVEL1 'init_output'
+
+   lastN = MaxN
 
    read(NAMLST, nml=io_spec)
 
@@ -167,7 +171,8 @@
    end if
 #endif
 
-   if ( hotout(1) .ge. 0) then
+   save_restart = (hotout(1).ge.0)
+   if (save_restart) then
       if (hotout_fmt .ne. NETCDF) then
         STDERR 'Writing of non-netcdf restart files not supported anymore!'
         stop
@@ -263,7 +268,7 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE                  :: secs
-   logical                   :: write_2d,write_3d,write_mean=.false.
+   logical                   :: write_2d,write_3d,write_mean=.false.,write_restart=.false.
    integer                   :: dummy
 !EOP
 !-------------------------------------------------------------------------
@@ -277,10 +282,16 @@
 
    write_2d = save_2d .and. n .ge. first_2d .and. mod(n,step_2d).eq.0
    write_3d = save_3d .and. n .ge. first_3d .and. mod(n,step_3d).eq.0
+
 #ifndef NO_3D
-   if (meanout .gt. 0 .and. n .gt. mean0) then
-      write_mean = save_mean .and. (mod(n,meanout) .eq. 0)
-!      write_mean = save_mean .and. (mod(n-mean0,meanout) .eq. 0)
+   if (save_mean .and. n.gt.mean0) then
+      if (meanout .eq. 0) then
+         write_mean = (n.eq.lastN)
+      else
+!         write_mean = mod(n,meanout).eq.0
+         write_mean = mod(n-mean0,meanout).eq.0
+      end if
+      call calc_mean_fields(n,write_mean)
    end if
 #endif
 
@@ -313,10 +324,14 @@
    end if
 
 !  Restart file
-   if ( hotout(1) .gt. 0 ) then
-      if (hotout(1) .le. n .and. &
-          n .le. hotout(2) .and. &
-          mod(n,hotout(3)) .eq. 0) then
+   if (save_restart) then
+!     Save last restart file
+      if (hotout(1) .eq. 0) then
+         write_restart = (n.eq.lastN)
+      else
+         write_restart = hotout(1).le.n .and. n.le.hotout(2) .and. mod(n,hotout(3)).eq.0
+      end if
+      if (write_restart) then
          dummy = n
          call restart_file(WRITING,trim(hot_out),dummy,runtype)
       end if
@@ -640,21 +655,6 @@
    write(debug,*) 'clean_output() # ',Ncall
 #endif
 
-!  Save last restart file
-   if (hotout(1) .eq. 0) then
-      call restart_file(WRITING,trim(hot_out),loop,runtype)
-   end if
-
-   if (save_mean .and. meanout.eq.0) then
-      select case (out_fmt)
-         case(NETCDF)
-            dummy=-_ZERO_
-#ifndef NO_3D
-            LEVEL3 timestr, ': saving mean fields .... '
-            call save_mean_ncdf(dummy)
-#endif
-      end select
-   end if
 
    select case (out_fmt)
       case (NETCDF)
