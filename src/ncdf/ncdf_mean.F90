@@ -25,7 +25,7 @@
    integer                             :: hmean_id
    integer                             :: saltmean_id=-1
    integer                             :: tempmean_id=-1
-   integer                             :: sigma_tmean_id=-1
+   integer                             :: sigma_t_id=-1
    integer                             :: nm3dS_id,nm3dT_id,nm2dS_id,nm2dT_id
    integer                             :: pm3dS_id,pm3dT_id,pm2dS_id,pm2dT_id
    integer                             :: nm3d_id,nm2d_id
