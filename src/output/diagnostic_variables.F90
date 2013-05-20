@@ -27,6 +27,7 @@
    REALTYPE,dimension(:,:,:), allocatable :: hmean
    REALTYPE,dimension(:,:,:), allocatable :: Tmean
    REALTYPE,dimension(:,:,:), allocatable :: Smean
+   REALTYPE,dimension(:,:,:), allocatable :: rhomean
 
    REALTYPE,dimension(:,:,:), allocatable :: nummix_S_mean
    REALTYPE,dimension(:,:,:), allocatable :: nummix_S_old_mean
