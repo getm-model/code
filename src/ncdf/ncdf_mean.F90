@@ -39,7 +39,7 @@
    integer, allocatable                :: fabmmean_ids_diag_hz(:)
 #endif
 
-   REALTYPE, parameter                 :: hh_missing=-10.0
+   REALTYPE, parameter                 :: hh_missing=-9999.0
    REALTYPE, parameter                 :: swr_missing=-9999.0
    REALTYPE, parameter                 :: vel_missing=-9999.0
    REALTYPE, parameter                 :: salt_missing=-9999.0

@@ -12,7 +12,7 @@
 ! !USES:
    use netcdf
    use exceptions
-   use grid_ncdf,    only: xlen,ylen,zlen,h_missing
+   use grid_ncdf,    only: xlen,ylen,zlen
    use ncdf_2d, only: ws2d => ws
    use ncdf_3d, only: ws3d => ws
    use ncdf_mean
@@ -95,7 +95,7 @@
 
 !  layer thickness
    if (hmean_id .gt. 0) then
-      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,hmean,h_missing, &
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,hmean,hh_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws3d)
       err = nf90_put_var(ncid,hmean_id,ws3d(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
