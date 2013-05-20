@@ -5,7 +5,7 @@
 ! !IROUTINE: calc_mean_fields() - produces averaged output.
 !
 ! !INTERFACE:
-   subroutine calc_mean_fields(n,meanout)
+   subroutine calc_mean_fields(n,write_mean)
 !
 ! !DESCRIPTION:
 !
@@ -35,7 +35,8 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)  :: n,meanout
+   integer, intent(in)  :: n
+   logical, intent(in)  :: write_mean
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Adolf Stips
@@ -43,7 +44,7 @@
 ! !LOCAL VARIABLES:
    integer         :: i,j,k,rc
    REALTYPE        :: tmpf(I3DFIELD)
-   REALTYPE,save   :: step=_ZERO_
+   integer,save    :: step=0
    logical,save    :: first=.true.
    logical,save    :: fabm_mean=.false.
 !EOP
@@ -157,39 +158,41 @@
       first = .false.
    end if
 
-   if (step .eq. _ZERO_ ) then
-      uumean=_ZERO_; vvmean=_ZERO_; wmean=_ZERO_
-      humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
-#ifndef NO_BAROCLINIC
-      Tmean=_ZERO_; Smean=_ZERO_
-#endif
-      if (do_numerical_analyses) then
-         numdis3d_mean=_ZERO_; numdis2d_mean=_ZERO_
-         if (calc_temp) then
-            nummix3d_T_mean=_ZERO_; nummix2d_T_mean=_ZERO_
-            phymix3d_T_mean=_ZERO_; phymix2d_T_mean=_ZERO_
-         end if
-         if (calc_salt) then
-            nummix3d_S_mean=_ZERO_; nummix2d_S_mean=_ZERO_
-            phymix3d_S_mean=_ZERO_; phymix2d_S_mean=_ZERO_
-         end if
-      end if
-#ifdef GETM_BIO
-      cc3dmean=_ZERO_
-#endif
-#ifdef _FABM_
-      if (fabm_mean) then
-         fabmmean_pel=_ZERO_
-         fabmmean_ben=_ZERO_
-         fabmmean_diag=_ZERO_
-         fabmmean_diag_hz=_ZERO_
-      end if
-#endif
-      ustarmean=_ZERO_; ustar2mean=_ZERO_; swrmean=_ZERO_
-   end if
 
 !  Sum every macro time step, even less would be okay
    if(mod(n,M) .eq. 0) then
+
+!     reset to start new meanout period
+      if (step .eq. 0) then
+         uumean=_ZERO_; vvmean=_ZERO_; wmean=_ZERO_
+         humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
+#ifndef NO_BAROCLINIC
+         Tmean=_ZERO_; Smean=_ZERO_
+#endif
+         if (do_numerical_analyses) then
+            numdis3d_mean=_ZERO_; numdis2d_mean=_ZERO_
+            if (calc_temp) then
+               nummix3d_T_mean=_ZERO_; nummix2d_T_mean=_ZERO_
+               phymix3d_T_mean=_ZERO_; phymix2d_T_mean=_ZERO_
+            end if
+            if (calc_salt) then
+               nummix3d_S_mean=_ZERO_; nummix2d_S_mean=_ZERO_
+               phymix3d_S_mean=_ZERO_; phymix2d_S_mean=_ZERO_
+            end if
+         end if
+#ifdef GETM_BIO
+         cc3dmean=_ZERO_
+#endif
+#ifdef _FABM_
+         if (fabm_mean) then
+            fabmmean_pel=_ZERO_
+            fabmmean_ben=_ZERO_
+            fabmmean_diag=_ZERO_
+            fabmmean_diag_hz=_ZERO_
+         end if
+#endif
+         ustarmean=_ZERO_; ustar2mean=_ZERO_; swrmean=_ZERO_
+      end if
 
       swrmean = swrmean + swr
 !     AS this has to be checked, if it is the correct ustar,
@@ -216,8 +219,8 @@
       hmean = hmean + hn
 
 #ifndef NO_BAROCLINIC
-      Tmean = Tmean + T
-      Smean = Smean + S
+      Tmean = Tmean + T*hn
+      Smean = Smean + S*hn
 #endif
       if (do_numerical_analyses) then
          numdis3d_mean = numdis3d_mean + numdis3d
@@ -247,13 +250,13 @@
       end if
 #endif
 !  count them
-      step = step + 1.0
+      step = step + 1
    end if   ! here we summed them up
 
 !  prepare for output
-   if(meanout .gt. 0 .and. mod(n,meanout) .eq. 0) then
+   if (write_mean) then
 
-      if ( step .ge. 1.0) then
+      if (step .gt. 1) then
          uumean = uumean / step
          vvmean = vvmean / step
          wmean = wmean / step
@@ -262,8 +265,8 @@
          hmean = hmean / step
 
 #ifndef NO_BAROCLINIC
-         Tmean = Tmean / step
-         Smean = Smean / step
+         Tmean = Tmean / step / hmean
+         Smean = Smean / step / hmean
 #endif
          if (do_numerical_analyses) then
             numdis3d_mean = numdis3d_mean / step
@@ -294,6 +297,10 @@
 #endif
          ustarmean = ustarmean / step
          swrmean = swrmean / step
+
+      end if
+
+      if (step .ge. 1) then
 
 !  now calculate the velocities
          where ( humean .ne. _ZERO_ )
@@ -350,7 +357,7 @@
          end do
          wmean = tmpf
       end if
-      step = _ZERO_
+      step = 0
    end if
 
    call toc(TIM_CALCMEANF)
