@@ -54,8 +54,10 @@
 #if defined(CURVILINEAR)
    integer                             :: uurot_id,vvrot_id
 #endif
-   integer                             :: salt_id,temp_id,sigma_t_id
-   integer                             :: rad_id
+   integer                             :: salt_id=-1
+   integer                             :: temp_id=-1
+   integer                             :: sigma_t_id=-1
+   integer                             :: rad_id=-1
    integer                             :: tke_id,num_id,nuh_id,eps_id
    integer                             :: SS_id,NN_id
    integer                             :: bnh_id=-1
