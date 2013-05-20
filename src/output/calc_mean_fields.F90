@@ -17,7 +17,7 @@
    use variables_3d, only: do_numerical_analyses
    use variables_3d, only: hn,uu,hun,vv,hvn,ww,taub
 #ifndef NO_BAROCLINIC
-   use variables_3d, only: S,T
+   use variables_3d, only: S,T,rho
 #endif
    use variables_3d, only: nummix3d_S,nummix2d_S,nummix3d_T,nummix2d_T
    use variables_3d, only: phymix3d_S,phymix2d_S,phymix3d_T,phymix2d_T
@@ -30,6 +30,7 @@
 #ifdef _FABM_
    use getm_fabm, only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
 #endif
+   use output, only: save_s,save_t,save_rho
    use diagnostic_variables
    use getm_timers, only: tic, toc, TIM_CALCMEANF
    IMPLICIT NONE
@@ -87,12 +88,21 @@
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (hmean)'
 #ifndef NO_BAROCLINIC
-      allocate(Tmean(I3DFIELD),stat=rc)
-      if (rc /= 0) &
-          stop 'calc_mean_fields.F90: Error allocating memory (Tmean)'
-      allocate(Smean(I3DFIELD),stat=rc)
-      if (rc /= 0) &
-          stop 'calc_mean_fields.F90: Error allocating memory (Smean)'
+      if (save_t) then
+         allocate(Tmean(I3DFIELD),stat=rc)
+         if (rc /= 0) &
+             stop 'calc_mean_fields.F90: Error allocating memory (Tmean)'
+      end if
+      if (save_s) then
+         allocate(Smean(I3DFIELD),stat=rc)
+         if (rc /= 0) &
+             stop 'calc_mean_fields.F90: Error allocating memory (Smean)'
+      end if
+      if (save_rho) then
+         allocate(rhomean(I3DFIELD),stat=rc)
+         if (rc /= 0) &
+             stop 'calc_mean_fields.F90: Error allocating memory (rhomean)'
+      end if
 #endif
 
       if (do_numerical_analyses) then
@@ -167,7 +177,9 @@
          uumean=_ZERO_; vvmean=_ZERO_; wmean=_ZERO_
          humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
 #ifndef NO_BAROCLINIC
-         Tmean=_ZERO_; Smean=_ZERO_
+         if (save_t) Tmean=_ZERO_
+         if (save_s) Smean=_ZERO_
+         if (save_rho) rhomean=_ZERO_
 #endif
          if (do_numerical_analyses) then
             numdis3d_mean=_ZERO_; numdis2d_mean=_ZERO_
@@ -219,8 +231,9 @@
       hmean = hmean + hn
 
 #ifndef NO_BAROCLINIC
-      Tmean = Tmean + T*hn
-      Smean = Smean + S*hn
+      if (save_t) Tmean = Tmean + T*hn
+      if (save_s) Smean = Smean + S*hn
+      if (save_rho) rhomean = rhomean + rho*hn
 #endif
       if (do_numerical_analyses) then
          numdis3d_mean = numdis3d_mean + numdis3d
@@ -265,8 +278,9 @@
          hmean = hmean / step
 
 #ifndef NO_BAROCLINIC
-         Tmean = Tmean / step / hmean
-         Smean = Smean / step / hmean
+         if (save_t) Tmean = Tmean / step / hmean
+         if (save_s) Smean = Smean / step / hmean
+         if (save_rho) rhomean = rhomean / step / hmean
 #endif
          if (do_numerical_analyses) then
             numdis3d_mean = numdis3d_mean / step

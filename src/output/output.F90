@@ -13,6 +13,7 @@
    use time, only: write_time_string,timestep,timestr
    use ascii_out
 #ifndef NO_3D
+   use m3d, only: calc_salt,calc_temp
    use variables_3d, only: do_numerical_analyses
 #endif
 #ifdef TEST_NESTING
@@ -41,10 +42,10 @@
    logical                             :: save_vel2d=.true.
    logical                             :: save_vel3d=.true.
    logical                             :: save_fluxes=.false.
-   logical                             :: save_strho=.true.
-   logical                             :: save_s=.true.
-   logical                             :: save_t=.true.
-   logical                             :: save_rho=.true.
+   logical                             :: save_strho=.false.
+   logical                             :: save_s=.false.
+   logical                             :: save_t=.false.
+   logical                             :: save_rho=.false.
    logical                             :: save_rad=.false.
    logical                             :: save_turb=.true.
    logical                             :: save_tke=.true.
@@ -138,9 +139,22 @@
 
    if (runtype .eq. 2) then
       save_strho = .false.
+   end if
+
+   if (.not. save_strho) then
       save_s = .false.
       save_t = .false.
+      save_rho = .false.
    end if
+
+#ifndef NO_3D
+   if (.not. calc_salt) then
+      save_s = .false.
+   end if
+   if (.not. calc_temp) then
+      save_t = .false.
+   end if
+#endif
 
    if(save_vel) then
       LEVEL2 'save (rotated) velocities in center points'
