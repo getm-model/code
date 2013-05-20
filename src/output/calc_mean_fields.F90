@@ -5,7 +5,7 @@
 ! !IROUTINE: calc_mean_fields() - produces averaged output.
 !
 ! !INTERFACE:
-   subroutine calc_mean_fields(n,meanout)
+   subroutine calc_mean_fields(n,write_mean)
 !
 ! !DESCRIPTION:
 !
@@ -17,7 +17,7 @@
    use variables_3d, only: do_numerical_analyses_3d
    use variables_3d, only: hn,uu,hun,vv,hvn,ww,taub
 #ifndef NO_BAROCLINIC
-   use variables_3d, only: S,T
+   use variables_3d, only: S,T,rho
 #endif
    use variables_3d, only: nummix_S,nummix_T
    use variables_3d, only: nummix_S_old,nummix_S_int,nummix_T_old,nummix_T_int
@@ -32,12 +32,14 @@
 #ifdef _FABM_
    use getm_fabm, only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
 #endif
+   use output, only: save_s,save_t,save_rho
    use diagnostic_variables
    use getm_timers, only: tic, toc, TIM_CALCMEANF
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)  :: n,meanout
+   integer, intent(in)  :: n
+   logical, intent(in)  :: write_mean
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Adolf Stips
@@ -45,7 +47,7 @@
 ! !LOCAL VARIABLES:
    integer         :: i,j,k,rc
    REALTYPE        :: tmpf(I3DFIELD)
-   REALTYPE,save   :: step=_ZERO_
+   integer,save    :: step=0
    logical,save    :: first=.true.
    logical,save    :: fabm_mean=.false.
 !EOP
@@ -88,12 +90,21 @@
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (hmean)'
 #ifndef NO_BAROCLINIC
-      allocate(Tmean(I3DFIELD),stat=rc)
-      if (rc /= 0) &
-          stop 'calc_mean_fields.F90: Error allocating memory (Tmean)'
-      allocate(Smean(I3DFIELD),stat=rc)
-      if (rc /= 0) &
-          stop 'calc_mean_fields.F90: Error allocating memory (Smean)'
+      if (save_t) then
+         allocate(Tmean(I3DFIELD),stat=rc)
+         if (rc /= 0) &
+             stop 'calc_mean_fields.F90: Error allocating memory (Tmean)'
+      end if
+      if (save_s) then
+         allocate(Smean(I3DFIELD),stat=rc)
+         if (rc /= 0) &
+             stop 'calc_mean_fields.F90: Error allocating memory (Smean)'
+      end if
+      if (save_rho) then
+         allocate(rhomean(I3DFIELD),stat=rc)
+         if (rc /= 0) &
+             stop 'calc_mean_fields.F90: Error allocating memory (rhomean)'
+      end if
 #endif
 
       if (do_numerical_analyses_3d) then
@@ -180,49 +191,53 @@
       first = .false.
    end if
 
-   if (step .eq. _ZERO_ ) then
-      uumean=_ZERO_; vvmean=_ZERO_; wmean=_ZERO_
-      humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
-#ifndef NO_BAROCLINIC
-      Tmean=_ZERO_; Smean=_ZERO_
-#endif
-      if (do_numerical_analyses_3d) then
-         numdis_3d_mean=_ZERO_
-#ifdef _NUMERICAL_ANALYSES_OLD_
-         numdis_3d_old_mean=_ZERO_; numdis_int_mean=_ZERO_
-#endif
-         phydis_3d_mean=_ZERO_; phydis_int_mean=_ZERO_
-         if (calc_temp) then
-            nummix_T_mean=_ZERO_
-#ifdef _NUMERICAL_ANALYSES_OLD_
-            nummix_T_old_mean=_ZERO_; nummix_T_int_mean=_ZERO_
-#endif
-            phymix_T_mean=_ZERO_; phymix_T_int_mean=_ZERO_
-         end if
-         if (calc_salt) then
-            nummix_S_mean=_ZERO_
-#ifdef _NUMERICAL_ANALYSES_OLD_
-            nummix_S_old_mean=_ZERO_; nummix_S_int_mean=_ZERO_
-#endif
-            phymix_S_mean=_ZERO_; phymix_S_int_mean=_ZERO_
-         end if
-      end if
-#ifdef GETM_BIO
-      cc3dmean=_ZERO_
-#endif
-#ifdef _FABM_
-      if (fabm_mean) then
-         fabmmean_pel=_ZERO_
-         fabmmean_ben=_ZERO_
-         fabmmean_diag=_ZERO_
-         fabmmean_diag_hz=_ZERO_
-      end if
-#endif
-      ustarmean=_ZERO_; ustar2mean=_ZERO_; swrmean=_ZERO_
-   end if
 
 !  Sum every macro time step, even less would be okay
    if(mod(n,M) .eq. 0) then
+
+!     reset to start new meanout period
+      if (step .eq. 0) then
+         uumean=_ZERO_; vvmean=_ZERO_; wmean=_ZERO_
+         humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
+#ifndef NO_BAROCLINIC
+         if (save_t) Tmean=_ZERO_
+         if (save_s) Smean=_ZERO_
+         if (save_rho) rhomean=_ZERO_
+#endif
+         if (do_numerical_analyses_3d) then
+            numdis_3d_mean=_ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
+            numdis_3d_old_mean=_ZERO_; numdis_int_mean=_ZERO_
+#endif
+            phydis_3d_mean=_ZERO_; phydis_int_mean=_ZERO_
+            if (calc_temp) then
+               nummix_T_mean=_ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
+               nummix_T_old_mean=_ZERO_; nummix_T_int_mean=_ZERO_
+#endif
+               phymix_T_mean=_ZERO_; phymix_T_int_mean=_ZERO_
+            end if
+            if (calc_salt) then
+               nummix_S_mean=_ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
+               nummix_S_old_mean=_ZERO_; nummix_S_int_mean=_ZERO_
+#endif
+               phymix_S_mean=_ZERO_; phymix_S_int_mean=_ZERO_
+            end if
+         end if
+#ifdef GETM_BIO
+         cc3dmean=_ZERO_
+#endif
+#ifdef _FABM_
+         if (fabm_mean) then
+            fabmmean_pel=_ZERO_
+            fabmmean_ben=_ZERO_
+            fabmmean_diag=_ZERO_
+            fabmmean_diag_hz=_ZERO_
+         end if
+#endif
+         ustarmean=_ZERO_; ustar2mean=_ZERO_; swrmean=_ZERO_
+      end if
 
       swrmean = swrmean + swr
 !     AS this has to be checked, if it is the correct ustar,
@@ -249,8 +264,9 @@
       hmean = hmean + hn
 
 #ifndef NO_BAROCLINIC
-      Tmean = Tmean + T
-      Smean = Smean + S
+      if (save_t) Tmean = Tmean + T*hn
+      if (save_s) Smean = Smean + S*hn
+      if (save_rho) rhomean = rhomean + rho*hn
 #endif
       if (do_numerical_analyses_3d) then
          numdis_3d_mean = numdis_3d_mean + numdis_3d*hn
@@ -291,13 +307,13 @@
       end if
 #endif
 !  count them
-      step = step + 1.0
+      step = step + 1
    end if   ! here we summed them up
 
 !  prepare for output
-   if(meanout .gt. 0 .and. mod(n,meanout) .eq. 0) then
+   if (write_mean) then
 
-      if ( step .ge. 1.0) then
+      if (step .gt. 1) then
          uumean = uumean / step
          vvmean = vvmean / step
          wmean = wmean / step
@@ -306,8 +322,9 @@
          hmean = hmean / step
 
 #ifndef NO_BAROCLINIC
-         Tmean = Tmean / step
-         Smean = Smean / step
+         if (save_t) Tmean = Tmean / step / hmean
+         if (save_s) Smean = Smean / step / hmean
+         if (save_rho) rhomean = rhomean / step / hmean
 #endif
          if (do_numerical_analyses_3d) then
             numdis_3d_mean = numdis_3d_mean / step / hmean
@@ -349,6 +366,10 @@
 #endif
          ustarmean = ustarmean / step
          swrmean = swrmean / step
+
+      end if
+
+      if (step .ge. 1) then
 
 !  now calculate the velocities
          where ( humean .ne. _ZERO_ )
@@ -405,7 +426,7 @@
          end do
          wmean = tmpf
       end if
-      step = _ZERO_
+      step = 0
    end if
 
    call toc(TIM_CALCMEANF)

@@ -61,7 +61,7 @@
    use suspended_matter, only: spm_calc,do_spm
 #endif
    use input,    only: do_input
-   use output,   only: do_output,meanout
+   use output,   only: do_output
 #ifdef TEST_NESTING
    use nesting,   only: nesting_file
 #endif
@@ -150,22 +150,12 @@
 #endif
       call update_time(n)
 
-#ifndef NO_3D
-      if(meanout .ge. 0) then
-         call calc_mean_fields(n,meanout)
-      end if
-#endif
       call do_output(runtype,n,timestep)
 #ifdef DIAGNOSE
       call diagnose(n,MaxN,runtype)
 #endif
    end do
 
-#ifndef NO_3D
-   if (meanout .eq. 0) then
-     call calc_mean_fields(n,n)
-   end if
-#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving time_loop()'
