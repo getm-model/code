@@ -121,7 +121,7 @@
 
 #ifndef NO_BAROCLINIC
 !  salt mean
-   if (calc_salt) then
+   if (saltmean_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,Smean,salt_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws3d)
       err = nf90_put_var(ncid, saltmean_id,ws3d(_3D_W_),start,edges)
@@ -129,10 +129,18 @@
    end if
 
 !  mean temperature
-   if (calc_temp) then
+   if (tempmean_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,Tmean,temp_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws3d)
       err = nf90_put_var(ncid, tempmean_id,ws3d(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+
+!  mean sigma_t
+   if (sigma_tmean_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,rhomean-1000.,rho_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws3d)
+      err = nf90_put_var(ncid,sigma_tmean_id,ws3d(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
 #endif
