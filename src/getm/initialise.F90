@@ -246,7 +246,7 @@
 
    call init_les(runtype)
 
-   call init_output(runid,title,start,runtype,dryrun,myid)
+   call init_output(runid,title,start,runtype,dryrun,myid,MaxN)
 
    close(NAMLST)
 
