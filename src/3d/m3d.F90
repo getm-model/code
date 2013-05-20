@@ -56,8 +56,8 @@
    integer                             :: vel3d_adv_split=0
    integer                             :: vel3d_adv_hor=1
    integer                             :: vel3d_adv_ver=1
-   logical                             :: calc_temp=.true.
-   logical                             :: calc_salt=.true.
+   logical                             :: calc_temp=.false.
+   logical                             :: calc_salt=.false.
    logical                             :: use_gotm=.true.
    logical                             :: bdy3d=.false.
    REALTYPE                            :: ip_fac=_ONE_
@@ -94,6 +94,7 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    integer, intent(inout)              :: runtype
+!
 !
 ! !DESCRIPTION:
 !  Here, the {\tt m3d} namelist is read from {\tt getm.inp}, and the
@@ -142,7 +143,6 @@
    read(NAMLST,m3d)
 !   rewind(NAMLST)
 
-!  Note (KK): decrease runtype depending on tracers
    if (runtype.ge.3 .and. .not.calc_temp .and. .not.calc_salt) then
       LEVEL2 'reset runtype to 2 because neither temp nor salt are calculated'
       runtype = 2
