@@ -145,7 +145,8 @@
           FillValue=fv,missing_value=mv,valid_range=vr)
 
 #ifndef NO_BAROCLINIC
-   if (calc_salt) then
+
+   if (save_s) then
       fv = salt_missing
       mv = salt_missing
       vr(1) =  0.
@@ -157,7 +158,7 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
    end if
 
-   if (calc_temp) then
+   if (save_t) then
       fv = temp_missing
       mv = temp_missing
       vr(1) =  0.
@@ -168,6 +169,19 @@
              long_name='mean temperature',units='degC',&
              FillValue=fv,missing_value=mv,valid_range=vr)
    end if
+
+   if (save_rho) then
+      fv = rho_missing
+      mv = rho_missing
+      vr(1) =  0.
+      vr(2) = 30.
+      err = nf90_def_var(ncid,'sigma_tmean',NCDF_FLOAT_PRECISION,f4_dims,sigma_tmean_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,sigma_tmean_id, &
+             long_name='mean sigma_t',units='kg/m3',&
+             FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
+
 #endif
 
    if (save_numerical_analyses) then
