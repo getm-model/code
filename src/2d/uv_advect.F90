@@ -275,6 +275,8 @@
             do i=imin,imax
                if (adv_gridU%mask_finalise(i,j)) then
                   work2d(i,j) = _HALF_*( work2d(i,j) - fadv(i,j)**2 )/dtm*Dires(i,j)/ARUD1
+               else
+                  work2d(i,j) = _ZERO_
                end if
             end do
 #ifndef SLICE_MODEL
@@ -482,6 +484,8 @@
             do i=imin,imax
                if (adv_gridV%mask_finalise(i,j)) then
                   work2d(i,j) = _HALF_*( work2d(i,j) - fadv(i,j)**2 )/dtm*Dires(i,j)/ARVD1
+               else
+                  work2d(i,j) = _ZERO_
                end if
             end do
 #ifndef SLICE_MODEL
