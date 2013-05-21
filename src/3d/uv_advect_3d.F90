@@ -286,6 +286,8 @@
                do i=imin,imax
                   if (adv_gridU%mask_finalise(i,j)) then
                      work3d(i,j,k) = _HALF_*( work3d(i,j,k) - fadv3d(i,j,k)**2 )/dt*hires(i,j,k)/ARUD1
+                  else
+                     work3d(i,j,k) = _ZERO_
                   end if
                end do
 #ifndef SLICE_MODEL
@@ -527,6 +529,8 @@
                do i=imin,imax
                   if (adv_gridV%mask_finalise(i,j)) then
                      work3d(i,j,k) = _HALF_*( work3d(i,j,k) - fadv3d(i,j,k)**2 )/dt*hires(i,j,k)/ARVD1
+                  else
+                     work3d(i,j,k) = _ZERO_
                   end if
                end do
 #ifndef SLICE_MODEL
