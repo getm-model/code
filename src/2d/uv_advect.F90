@@ -27,7 +27,8 @@
    use variables_2d, only: UEx,VEx
    use variables_2d, only: do_numerical_analyses_2d
    use variables_2d, only: numdis_2d_old
-   use advection, only: NOADV,UPSTREAM,J7,do_advection
+   use advection, only: NOADV,UPSTREAM,J7
+   use advection, only: adv_gridU,adv_gridV,do_advection
    use halo_zones, only: update_2d_halo,wait_halo,U_TAG,V_TAG
    use getm_timers, only: tic,toc,TIM_UVADV,TIM_UVADVH
 !$ use omp_lib
@@ -231,7 +232,9 @@
          do j=jmin,jmax
 #endif
             do i=imin,imax
-               nvd(i,j) = _HALF_*nvd(i,j)*Dires(i,j)/ARUD1
+               if (adv_gridU%mask_finalise(i,j)) then
+                  nvd(i,j) = _HALF_*nvd(i,j)*Dires(i,j)/ARUD1
+               end if
             end do
 #ifndef SLICE_MODEL
          end do
@@ -271,7 +274,9 @@
          do j=jmin,jmax ! calculate kinetic energy dissipaion rate for u-velocity
 #endif
             do i=imin,imax
-               work2d(i,j) = _HALF_*( work2d(i,j) - fadv(i,j)**2 )/dtm*Dires(i,j)/ARUD1
+               if (adv_gridU%mask_finalise(i,j)) then
+                  work2d(i,j) = _HALF_*( work2d(i,j) - fadv(i,j)**2 )/dtm*Dires(i,j)/ARUD1
+               end if
             end do
 #ifndef SLICE_MODEL
          end do
@@ -433,7 +438,9 @@
          do j=jmin,jmax
 #endif
             do i=imin,imax
-               nvd(i,j) = _HALF_*nvd(i,j)*Dires(i,j)/ARVD1
+               if (adv_gridV%mask_finalise(i,j)) then
+                  nvd(i,j) = _HALF_*nvd(i,j)*Dires(i,j)/ARVD1
+               end if
             end do
 #ifndef SLICE_MODEL
          end do
@@ -474,7 +481,9 @@
          do j=jmin,jmax ! calculate kinetic energy dissipaion rate for v-velocity
 #endif
             do i=imin,imax
-               work2d(i,j) = _HALF_*( work2d(i,j) - fadv(i,j)**2 )/dtm*Dires(i,j)/ARVD1
+               if (adv_gridV%mask_finalise(i,j)) then
+                  work2d(i,j) = _HALF_*( work2d(i,j) - fadv(i,j)**2 )/dtm*Dires(i,j)/ARVD1
+               end if
             end do
 #ifndef SLICE_MODEL
          end do
