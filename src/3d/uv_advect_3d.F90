@@ -28,6 +28,7 @@
    use m3d, only: vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver
    use variables_3d, only: dt,uu,vv,ww,ho,hn,hun,hvn,uuEx,vvEx
    use advection, only: NOADV,UPSTREAM,J7
+   use advection, only: adv_gridU,adv_gridV
    use advection_3d, only: do_advection_3d
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG,V_TAG
    use variables_3d, only: do_numerical_analyses_3d
@@ -235,7 +236,9 @@
             do j=jmin,jmax
 #endif
                do i=imin,imax
-                  nvd(i,j,k) = _HALF_*nvd(i,j,k)*hires(i,j,k)/ARUD1
+                  if (adv_gridU%mask_finalise(i,j)) then
+                     nvd(i,j,k) = _HALF_*nvd(i,j,k)*hires(i,j,k)/ARUD1
+                  end if
                end do
 #ifndef SLICE_MODEL
             end do
@@ -281,7 +284,9 @@
             do j=jmin,jmax
 #endif
                do i=imin,imax
-                  work3d(i,j,k) = _HALF_*( work3d(i,j,k) - fadv3d(i,j,k)**2 )/dt*hires(i,j,k)/ARUD1
+                  if (adv_gridU%mask_finalise(i,j)) then
+                     work3d(i,j,k) = _HALF_*( work3d(i,j,k) - fadv3d(i,j,k)**2 )/dt*hires(i,j,k)/ARUD1
+                  end if
                end do
 #ifndef SLICE_MODEL
             end do
@@ -472,7 +477,9 @@
             do j=jmin,jmax
 #endif
                do i=imin,imax
-                  nvd(i,j,k) = _HALF_*nvd(i,j,k)*hires(i,j,k)/ARVD1
+                  if (adv_gridV%mask_finalise(i,j)) then
+                     nvd(i,j,k) = _HALF_*nvd(i,j,k)*hires(i,j,k)/ARVD1
+                  end if
                end do
 #ifndef SLICE_MODEL
             end do
@@ -518,7 +525,9 @@
             do j=jmin,jmax
 #endif
                do i=imin,imax
-                  work3d(i,j,k) = _HALF_*( work3d(i,j,k) - fadv3d(i,j,k)**2 )/dt*hires(i,j,k)/ARVD1
+                  if (adv_gridV%mask_finalise(i,j)) then
+                     work3d(i,j,k) = _HALF_*( work3d(i,j,k) - fadv3d(i,j,k)**2 )/dt*hires(i,j,k)/ARVD1
+                  end if
                end do
 #ifndef SLICE_MODEL
             end do
