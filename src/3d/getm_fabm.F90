@@ -444,7 +444,7 @@
       end if
 
       if (do_numerical_analyses_3d) then
-         call physical_mixing(fabm_pel(:,:,:,n),_ZERO_,phymix_fabm_pel,work2d,fabm_AH_method)
+         call physical_mixing(fabm_pel(:,:,:,n),_ZERO_,phymix_fabm_pel(:,:,:,n),work2d,fabm_AH_method)
       end if
 
    end do
