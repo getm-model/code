@@ -23,14 +23,17 @@
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
 ! JORN_FABM
    use gotm_fabm, only: init_gotm_fabm,set_env_gotm_fabm,do_gotm_fabm
-   use gotm_fabm, only: fabm_calc, model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz
+   use gotm_fabm, only: gotm_fabm_calc=>fabm_calc, gotm_model=>model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz
    use fabm_types,only: time_treatment_last
+   use fabm,only: type_model
 
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
    public init_getm_fabm, do_getm_fabm
-   integer, public           :: fabm_init_method=0
+   integer, public :: fabm_init_method=0
+   logical, public :: fabm_calc
+   type (type_model), pointer, public :: model
 !
 ! !PRIVATE DATA MEMBERS:
    integer         :: fabm_adv_split=0
@@ -85,6 +88,10 @@
 
 !  Initialize FABM.
    call init_gotm_fabm(kmax,NAMLST2,'gotm_fabm.nml')
+
+!  Store fabm_calc and model for use by GETM
+   fabm_calc = gotm_fabm_calc
+   model => gotm_model
 
    if (fabm_calc) then
 !     Temporary: make sure diagnostic variables store the last value,
