@@ -144,10 +144,10 @@
                do i=imin,imax
                   if (az(i,j) .ge. 1 ) then
                      do n=1,size(model%info%state_variables)
-                        fabm_pel(i,j,:,n) = cc_col(n,:)
+                        fabm_pel(i,j,:,n) = cc_col(:,n)
                      end do
                      do n=1,size(model%info%state_variables_ben)
-                        fabm_ben(i,j,  n) = cc_col(size(model%info%state_variables)+n,1)
+                        fabm_ben(i,j,  n) = cc_col(1,size(model%info%state_variables)+n)
                      end do
                   end if
                end do
@@ -173,7 +173,6 @@
 
    end if
 
-   return
    end subroutine init_getm_fabm
 !EOC
 
@@ -249,13 +248,13 @@
 
 !           Copy current values of biogeochemical variables from full 3D field to columns.
             do n=1,size(model%info%state_variables)
-               cc_col(n,:) = fabm_pel(i,j,:,n)
+               cc_col(:,n) = fabm_pel(i,j,:,n)
             end do
             do n=1,size(model%info%state_variables_ben)
-               cc_col(size(model%info%state_variables)+n,1) = fabm_ben(i,j,n)
+               cc_col(1,size(model%info%state_variables)+n) = fabm_ben(i,j,n)
             end do
             do n=1,size(model%info%diagnostic_variables)
-               cc_diag_col(n,:) = fabm_diag(i,j,:,n)
+               cc_diag_col(:,n) = fabm_diag(i,j,:,n)
             end do
             do n=1,size(model%info%diagnostic_variables_hz)
                cc_diag_hz_col(n) = fabm_diag_hz(i,j,n)
@@ -272,13 +271,13 @@
 
 !           Copy updated column values of biogeochemical variables to full 3D field.
             do n=1,size(model%info%state_variables)
-               fabm_pel(i,j,:,n) = cc_col(n,:)
+               fabm_pel(i,j,:,n) = cc_col(:,n)
             end do
             do n=1,size(model%info%state_variables_ben)
-               fabm_ben(i,j,n) = cc_col(size(model%info%state_variables)+n,1)
+               fabm_ben(i,j,n) = cc_col(1,size(model%info%state_variables)+n)
             end do
             do n=1,size(model%info%diagnostic_variables)
-               fabm_diag(i,j,:,n) = cc_diag_col(n,:)
+               fabm_diag(i,j,:,n) = cc_diag_col(:,n)
             end do
             do n=1,size(model%info%diagnostic_variables_hz)
                fabm_diag_hz(i,j,n) = cc_diag_hz_col(n)
@@ -289,10 +288,10 @@
    end do
 
 #ifdef SLICE_MODEL
-      do i=imin,imax
-         fabm_pel(i,3,:,:)=fabm_pel(i,2,:,:)
-         fabm_ben(i,3,:)  =fabm_ben(i,2,:)
-      end do
+   do i=imin,imax
+      fabm_pel(i,3,:,:)=fabm_pel(i,2,:,:)
+      fabm_ben(i,3,:)  =fabm_ben(i,2,:)
+   end do
 #endif
 
 !  Advect pelagic biogeochemical variables.
@@ -311,7 +310,6 @@
 
    call toc(TIM_GETM_FABM)
 
-   return
    end subroutine do_getm_fabm
 !EOC
 
