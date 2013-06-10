@@ -1,3 +1,4 @@
+#ifdef GETM_BIO
 #include "cppdefs.h"
 !-----------------------------------------------------------------------
 !BOP
@@ -16,8 +17,7 @@
    use domain, only: H
    use m2d, only: dtm
    use variables_3d, only: hn
-!   use gotm_fabm, only: numc,var_names
-   use gotm_fabm, only: fabm_calc,model
+   use getm_fabm, only: fabm_calc,model
    use bdy_3d, only: bio_bdy,have_bio_bdy_values
    use time, only: string_to_julsecs,time_diff,julianday,secondsofday
    use time, only: write_time_string,timestr
@@ -633,3 +633,5 @@
 !-----------------------------------------------------------------------
 ! Copyright (C) 2012 - Karsten Bolding and Jorn Bruggeman (BB)         !
 !-----------------------------------------------------------------------
+
+#endif
