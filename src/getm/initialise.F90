@@ -246,7 +246,7 @@
    end if
 #endif
 
-   call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN)
+   call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)
 
    close(NAMLST)
 
