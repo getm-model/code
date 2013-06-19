@@ -63,6 +63,7 @@
    integer                             :: meanout=-1
    logical                             :: save_numerical_analyses=.false.
    logical,private                     :: save_restart
+   integer,private                     :: firstN=-1
    integer,private                     :: lastN=-1
 
 !
@@ -82,12 +83,12 @@
 ! !DESCRIPTION:
 !
 ! !INTERFACE:
-   subroutine init_output(runid,title,starttime,runtype,dryrun,myid,MaxN)
+   subroutine init_output(runid,title,starttime,runtype,dryrun,myid,MinN,MaxN)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: runid,title,starttime
-   integer, intent(in)                 :: runtype,myid,MaxN
+   integer, intent(in)                 :: runtype,myid,MinN,MaxN
    logical, intent(in)                 :: dryrun
 !
 ! !REVISION HISTORY:
@@ -116,6 +117,7 @@
 
    LEVEL1 'init_output'
 
+   firstN = MinN
    lastN = MaxN
 
    read(NAMLST, nml=io_spec)
@@ -287,7 +289,7 @@
    write(debug,*) 'do_output() # ',Ncall
 #endif
    call tic(TIM_OUTPUT)
-
+       
    write_2d = save_2d .and. n .ge. first_2d .and. mod(n,step_2d).eq.0
    write_3d = save_3d .and. n .ge. first_3d .and. mod(n,step_3d).eq.0
 
@@ -336,7 +338,7 @@
 !     Save last restart file
       if (hotout(1) .eq. 0) then
          write_restart = (n.eq.lastN)
-      else
+      else if (firstN .le. n) then ! avoid recreating just read restart file
          write_restart = hotout(1).le.n .and. n.le.hotout(2) .and. mod(n,hotout(3)).eq.0
       end if
       if (write_restart) then
@@ -618,6 +620,7 @@
          loop = 0
          julianday=jd; secondsofday=secs
       end if
+      firstN = loop+1
       mean0 = loop
    end if ! READING
 
