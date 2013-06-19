@@ -22,8 +22,7 @@
    use bio_var, only: numc,var_names,var_units,var_long
 #endif
 #ifdef _FABM_
-   use gotm_fabm, only: model
-   use getm_fabm, only: fabm_pel
+   use getm_fabm, only: model,fabm_pel
 #endif
    IMPLICIT NONE
 !
