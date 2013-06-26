@@ -23,7 +23,7 @@
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
 ! JORN_FABM
    use gotm_fabm, only: init_gotm_fabm,set_env_gotm_fabm,do_gotm_fabm
-   use gotm_fabm, only: gotm_fabm_calc=>fabm_calc, gotm_model=>model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz
+   use gotm_fabm, only: gotm_fabm_calc=>fabm_calc, gotm_model=>model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz, cc_transport
    use fabm_types,only: time_treatment_last
    use fabm,only: type_model
 
@@ -302,8 +302,8 @@
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
 
-      call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn,                       &
-                           fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH,H_TAG)
+      if (cc_transport(n)) call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn,            &
+                                                fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH,H_TAG)
 
    end do
    call toc(TIM_ADVECTFABM)
