@@ -14,10 +14,17 @@ CPP	= /lib/cpp
 ifndef GETMDIR
 GETMDIR  = $(HOME)/GETM/getm-git
 endif
+ifeq ($(wildcard $(GETMDIR)/src/getm/main.F90),)
+$(error the directory GETMDIR=$(GETMDIR) is not a valid GETM directory)
+endif
 
 ifndef GOTMDIR
 GOTMDIR = $(HOME)/GOTM/gotm-git
 endif
+ifeq ($(wildcard $(GOTMDIR)/src/gotm/gotm.F90),)
+$(error the directory GOTMDIR=$(GOTMDIR) is not a valid GOTM directory)
+endif
+
 
 # Information about which Fortran compiler to use is 
 # obtained from $(FORTRAN_COMPILER) - environment variable.
@@ -107,6 +114,9 @@ DEFINES += -D_FABM_
 ifndef FABMDIR
 FABMDIR = $(HOME)/FABM/fabm-git
 endif
+ifeq ($(wildcard $(FABMDIR)/src/fabm.F90),)
+$(error the directory FABMDIR=$(FABMDIR) is not a valid FABM directory)
+endif
 INCDIRS    += -I$(FABMDIR)/include -I$(FABMDIR)/modules/gotm/$(FORTRAN_COMPILER) -I$(FABMDIR)/src/drivers/gotm
 LINKDIRS   += -L$(FABMDIR)/lib/gotm/$(FORTRAN_COMPILER)
 EXTRA_LIBS += -lgotm_fabm$(buildtype) -lfabm$(buildtype)
@@ -129,7 +139,10 @@ INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
 ifeq ($(NETCDF_VERSION),NETCDF4)
 
 DEFINES		+= -DNETCDF4
+# this does not work for shared libs
 INCDIRS		+= -I$(shell nf-config --includedir)
+# this includes optimisation flags from the netcdf compilation
+#INCDIRS		+= $(shell nf-config --fflags)
 NETCDFLIB	=  $(shell nf-config --flibs)
 
 else  # NetCDF3 is default
@@ -191,7 +204,7 @@ else
 MPILIB		= -lmpich -lpthread
 endif
 ifdef MPILIBDIR
-LDFLAGS		+= -L$(MPILIBDIR)
+LINKFLAGS		+= -L$(MPILIBDIR)
 LINKDIRS	+= -L$(MPILIBDIR)
 endif
 endif
@@ -244,7 +257,7 @@ PROTEX	= protex -b -n -s
 CPPFLAGS	= $(DEFINES) $(INCDIRS)
 FFLAGS  	= $(DEFINES) $(FLAGS) $(MODULES) $(INCDIRS) $(EXTRAS)
 F90FLAGS  	= $(FFLAGS)
-LDFLAGS		= $(FFLAGS) $(LINKDIRS)
+LINKFLAGS		= $(LDFLAGS) $(FFLAGS) $(LINKDIRS)
 
 #
 # Special variables which should not be exported
