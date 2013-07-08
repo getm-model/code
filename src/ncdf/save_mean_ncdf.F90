@@ -145,6 +145,14 @@
    end if
 #endif
 
+   if (bnh_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az, &
+                  bnhmean,bnh_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws3d)
+      err = nf90_put_var(ncid,bnh_id,ws3d(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+
    if (nd3d_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az, &
                   numdis_3d_mean,nummix_missing, &

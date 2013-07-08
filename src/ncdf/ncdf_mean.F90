@@ -26,6 +26,7 @@
    integer                             :: saltmean_id=-1
    integer                             :: tempmean_id=-1
    integer                             :: sigma_tmean_id=-1
+   integer                             :: bnh_id=-1
    integer                             :: nd3d_id=-1,nd3do_id=-1,pd3d_id=-1
    integer                             :: ndint_id=-1,pdint_id=-1
    integer                             :: nmS_id=-1
@@ -50,6 +51,7 @@
    REALTYPE, parameter                 :: rho_missing=-9999.0
    REALTYPE, parameter                 :: tke_missing=-9999.0
    REALTYPE, parameter                 :: eps_missing=-9999.0
+   REALTYPE, parameter                 :: bnh_missing    =-9999.0
    REALTYPE, parameter                 :: nummix_missing=-9999.0
 #if (defined(GETM_BIO) || defined(_FABM_))
    REALTYPE, parameter                 :: bio_missing=-9999.0

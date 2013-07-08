@@ -259,7 +259,7 @@
 #ifndef NO_3D
             if (save_3d) call init_3d_ncdf(out_f_3d,title,starttime,runtype)
             if (save_mean)  &
-                     call init_mean_ncdf(out_f_mean,title,starttime)
+                     call init_mean_ncdf(out_f_mean,title,starttime,runtype)
 #endif
          case (GRADS)
          case DEFAULT
@@ -329,7 +329,7 @@
 !         write_mean = mod(n,meanout).eq.0
          write_mean = mod(n-mean0,meanout).eq.0
       end if
-      call calc_mean_fields(n,write_mean)
+      call calc_mean_fields(n,write_mean,runtype)
    end if
 #endif
 

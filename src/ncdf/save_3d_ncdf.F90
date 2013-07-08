@@ -502,7 +502,7 @@
                      imin,imax,jmin,jmax,0,kmax,ws)
       else
 #ifndef NO_BAROCLINIC
-         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,abs(minus_bnh/max(buoy,SMALL)),bnh_missing, &
+         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,minus_bnh/max(buoy,SMALL),bnh_missing, &
                      imin,imax,jmin,jmax,0,kmax,ws)
 #endif
       end if
