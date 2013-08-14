@@ -24,14 +24,17 @@
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
 ! JORN_FABM
    use gotm_fabm, only: init_gotm_fabm,set_env_gotm_fabm,do_gotm_fabm
-   use gotm_fabm, only: fabm_calc, model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz
+   use gotm_fabm, only: gotm_fabm_calc=>fabm_calc, gotm_model=>model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz, cc_transport
    use fabm_types,only: time_treatment_last
+   use fabm,only: type_model
 
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
    public init_getm_fabm, postinit_getm_fabm, do_getm_fabm
    integer, public           :: fabm_init_method=0
+   logical, public :: fabm_calc
+   type (type_model), pointer, public :: model
    REALTYPE,dimension(:,:,:,:),allocatable,target,public :: nummix_fabm_pel
 !
 ! !PRIVATE DATA MEMBERS:
@@ -95,6 +98,10 @@
 !  Initialize FABM.
    call init_gotm_fabm(kmax,NAMLST2,'gotm_fabm.nml')
 
+!  Store fabm_calc and model for use by GETM
+   fabm_calc = gotm_fabm_calc
+   model => gotm_model
+
    if (fabm_calc) then
 !     Temporary: make sure diagnostic variables store the last value,
 !     not their time integral. This will be redundant when time-integrating/averaging
@@ -152,10 +159,10 @@
                do i=imin,imax
                   if (az(i,j) .ge. 1 ) then
                      do n=1,size(model%info%state_variables)
-                        fabm_pel(i,j,:,n) = cc_col(n,:)
+                        fabm_pel(i,j,:,n) = cc_col(:,n)
                      end do
                      do n=1,size(model%info%state_variables_ben)
-                        fabm_ben(i,j,  n) = cc_col(size(model%info%state_variables)+n,1)
+                        fabm_ben(i,j,  n) = cc_col(1,size(model%info%state_variables)+n)
                      end do
                   end if
                end do
@@ -181,7 +188,6 @@
 
    end if
 
-   return
    end subroutine init_getm_fabm
 !EOC
 
@@ -308,13 +314,13 @@
 
 !           Copy current values of biogeochemical variables from full 3D field to columns.
             do n=1,size(model%info%state_variables)
-               cc_col(n,:) = fabm_pel(i,j,:,n)
+               cc_col(:,n) = fabm_pel(i,j,:,n)
             end do
             do n=1,size(model%info%state_variables_ben)
-               cc_col(size(model%info%state_variables)+n,1) = fabm_ben(i,j,n)
+               cc_col(1,size(model%info%state_variables)+n) = fabm_ben(i,j,n)
             end do
             do n=1,size(model%info%diagnostic_variables)
-               cc_diag_col(n,:) = fabm_diag(i,j,:,n)
+               cc_diag_col(:,n) = fabm_diag(i,j,:,n)
             end do
             do n=1,size(model%info%diagnostic_variables_hz)
                cc_diag_hz_col(n) = fabm_diag_hz(i,j,n)
@@ -331,13 +337,13 @@
 
 !           Copy updated column values of biogeochemical variables to full 3D field.
             do n=1,size(model%info%state_variables)
-               fabm_pel(i,j,:,n) = cc_col(n,:)
+               fabm_pel(i,j,:,n) = cc_col(:,n)
             end do
             do n=1,size(model%info%state_variables_ben)
-               fabm_ben(i,j,n) = cc_col(size(model%info%state_variables)+n,1)
+               fabm_ben(i,j,n) = cc_col(1,size(model%info%state_variables)+n)
             end do
             do n=1,size(model%info%diagnostic_variables)
-               fabm_diag(i,j,:,n) = cc_diag_col(n,:)
+               fabm_diag(i,j,:,n) = cc_diag_col(:,n)
             end do
             do n=1,size(model%info%diagnostic_variables_hz)
                fabm_diag_hz(i,j,n) = cc_diag_hz_col(n)
@@ -348,35 +354,36 @@
    end do
 
 #ifdef SLICE_MODEL
-      do i=imin,imax
-         fabm_pel(i,3,:,:)=fabm_pel(i,2,:,:)
-         fabm_ben(i,3,:)  =fabm_ben(i,2,:)
-      end do
+   do i=imin,imax
+      fabm_pel(i,3,:,:)=fabm_pel(i,2,:,:)
+      fabm_ben(i,3,:)  =fabm_ben(i,2,:)
+   end do
 #endif
 
 !  Advect pelagic biogeochemical variables.
    call tic(TIM_ADVECTFABM)
    do n=1,size(model%info%state_variables)
 
-      call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az, &
-                          imin,jmin,imax,jmax,kmax,D_TAG)
-      call wait_halo(D_TAG)
+      if (cc_transport(n)) then
+         call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az, &
+                             imin,jmin,imax,jmax,kmax,D_TAG)
+         call wait_halo(D_TAG)
 
-      call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn,            &
-                           fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH,H_TAG, &
-                           nvd=pa_nummix(n)%p3d)
+         call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn,            &
+                              fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH,H_TAG, &
+                              nvd=pa_nummix(n)%p3d)
 #ifndef _POINTER_REMAP_
-      if (do_numerical_analyses_3d) then
-         nummix_fabm_pel(:,:,:,n) = pa_nummix(n)%p3d
-      end if
+         if (do_numerical_analyses_3d) then
+            nummix_fabm_pel(:,:,:,n) = pa_nummix(n)%p3d
+         end if
 #endif
+      end if
 
    end do
    call toc(TIM_ADVECTFABM)
 
    call toc(TIM_GETM_FABM)
 
-   return
    end subroutine do_getm_fabm
 !EOC
 
