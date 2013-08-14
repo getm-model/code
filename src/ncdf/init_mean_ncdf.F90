@@ -174,9 +174,9 @@
       mv = rho_missing
       vr(1) =  0.
       vr(2) = 30.
-      err = nf90_def_var(ncid,'sigma_t',NCDF_FLOAT_PRECISION,f4_dims,sigma_t_id)
+      err = nf90_def_var(ncid,'sigma_t',NCDF_FLOAT_PRECISION,f4_dims,sigma_tmean_id)
       if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,sigma_t_id, &
+      call set_attributes(ncid,sigma_tmean_id, &
              long_name='mean sigma_t',units='kg/m3',&
              FillValue=fv,missing_value=mv,valid_range=vr)
    end if
