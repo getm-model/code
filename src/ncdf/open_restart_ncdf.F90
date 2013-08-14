@@ -22,8 +22,7 @@
    use getm_bio, only: bio_init_method
 #endif
 #ifdef _FABM_
-   use gotm_fabm, only: fabm_calc
-   use getm_fabm, only: fabm_init_method
+   use getm_fabm, only: fabm_calc,fabm_init_method
 #endif
 #endif
    IMPLICIT NONE
