@@ -322,9 +322,9 @@
          hmean = hmean / step
 
 #ifndef NO_BAROCLINIC
-         if (save_t) Tmean = Tmean / step / hmean
-         if (save_s) Smean = Smean / step / hmean
-         if (save_rho) rhomean = rhomean / step / hmean
+         if (save_t) Tmean = Tmean / step
+         if (save_s) Smean = Smean / step
+         if (save_rho) rhomean = rhomean / step
 #endif
          if (do_numerical_analyses_3d) then
             numdis_3d_mean = numdis_3d_mean / step / hmean
@@ -370,6 +370,25 @@
       end if
 
       if (step .ge. 1) then
+
+#ifndef NO_BAROCLINIC
+         if (save_t) then
+            forall (i=imin:imax,j=jmin:jmax,az(i,j).ne.0)
+               Tmean(i,j,1:) = Tmean(i,j,1:) / hmean(i,j,1:)
+            end forall
+         end if
+         if (save_s) then
+            forall (i=imin:imax,j=jmin:jmax,az(i,j).ne.0)
+               Smean(i,j,1:) = Smean(i,j,1:) / hmean(i,j,1:)
+            end forall
+         end if
+         if (save_rho) then
+            forall (i=imin:imax,j=jmin:jmax,az(i,j).ne.0)
+               rhomean(i,j,1:) = rhomean(i,j,1:) / hmean(i,j,1:)
+            end forall
+         end if
+#endif
+
 
 !  now calculate the velocities
          where ( humean .ne. _ZERO_ )
