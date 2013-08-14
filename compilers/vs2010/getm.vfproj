@@ -4,29 +4,33 @@
 		<Platform Name="Win32"/></Platforms>
 	<Configurations>
 		<Configuration Name="Debug|Win32" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\src\domain;..\..\src\3d;..\..\src\2d;$(GOTMDIR)\extras\netcdf\win32\3.6.3\include;$(MSMPI_INC)" PreprocessorDefinitions="STATIC;REAL_4B=real(kind=4);GETM_BIO;GETM_PARALLEL" Interfaces="true" WarnInterfaces="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\src\domain;..\..\src\3d;..\..\src\2d;$(GOTMDIR)\extras\netcdf\win32\3.6.3\include;$(MSMPI_INC)" PreprocessorDefinitions="STATIC;REAL_4B=real(kind=4);GETM_BIO;GETM_PARALLEL;_FABM_" WarnInterfaces="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug" Interfaces="true"/>
 				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(GOTMDIR)\extras\netcdf\win32\3.6.3\lib;$(MSMPI_LIB32);$(GOTMDIR)\compilers\vs2008\Debug\gotm" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="netcdfs.lib msmpi.lib msmpifec.lib gotm.lib"/>
 				<Tool Name="VFLibrarianTool" LinkLibraryDependencies="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool" CommandLine="copy C:\Temp\getm-setups\box_cartesian\box_cartesian.4p.dim .\dimensions.h"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="copy ..\..\..\getm-setups-git\box_cartesian\box_cartesian.1p.dim .\dimensions.h"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\src\domain;..\..\src\3d;..\..\src\2d;$(GOTMDIR)\extras\netcdf\win32\3.6.3\include;$(MSMPI_INC)" PreprocessorDefinitions="STATIC;REAL_4B=real(kind=4);GETM_BIO;GETM_PARALLEL"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\src\domain;..\..\src\3d;..\..\src\2d;$(GOTMDIR)\extras\netcdf\win32\3.6.3\include;$(MSMPI_INC)" PreprocessorDefinitions="STATIC;REAL_4B=real(kind=4);GETM_BIO;GETM_PARALLEL;_FABM_"/>
 				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(GOTMDIR)\extras\netcdf\win32\3.6.3\lib;$(MSMPI_LIB32)" SubSystem="subSystemConsole" AdditionalDependencies="netcdfs.lib msmpi.lib msmpifec.lib"/>
 				<Tool Name="VFLibrarianTool" LinkLibraryDependencies="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="copy ..\..\..\getm-setups-git\box_cartesian\box_cartesian.1p.dim .\dimensions.h"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
 	<Files>
-		<Filter Name="Header Files" Filter="fi;fd"/>
+		<Filter Name="Header Files" Filter="fi;fd">
+		<File RelativePath=".\dimensions.h"/>
+		<File RelativePath=".\fortran_version.h"/>
+		<File RelativePath=".\git_revision.h"/>
+		<File RelativePath=".\version.h"/></Filter>
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
 		<Filter Name="2d">
@@ -35,6 +39,7 @@
 		<File RelativePath="..\..\src\2d\adv_interfacial_reconstruction.F90"/>
 		<File RelativePath="..\..\src\2d\adv_split_u.F90"/>
 		<File RelativePath="..\..\src\2d\adv_split_v.F90"/>
+		<File RelativePath="..\..\src\2d\adv_tvd_limiter.F90"/>
 		<File RelativePath="..\..\src\2d\adv_upstream_2dh.F90"/>
 		<File RelativePath="..\..\src\2d\advection.F90"/>
 		<File RelativePath="..\..\src\2d\bottom_friction.F90"/>
@@ -60,6 +65,7 @@
 		<File RelativePath="..\..\src\3d\eqstate.F90"/>
 		<File RelativePath="..\..\src\3d\general_coordinates.F90"/>
 		<File RelativePath="..\..\src\3d\getm_bio.F90"/>
+		<File RelativePath="..\..\src\3d\getm_fabm.F90"/>
 		<File RelativePath="..\..\src\3d\gotm.F90"/>
 		<File RelativePath="..\..\src\3d\hcc_check.F90"/>
 		<File RelativePath="..\..\src\3d\hybrid_coordinates.F90"/>
@@ -171,6 +177,7 @@
 		<File RelativePath="..\..\src\ncdf\ncdf_2d_bdy.F90"/>
 		<File RelativePath="..\..\src\ncdf\ncdf_3d.F90"/>
 		<File RelativePath="..\..\src\ncdf\ncdf_3d_bdy.F90"/>
+		<File RelativePath="..\..\src\ncdf\ncdf_3d_bio_bdy.F90"/>
 		<File RelativePath="..\..\src\ncdf\ncdf_close.F90"/>
 		<File RelativePath="..\..\src\ncdf\ncdf_common.F90"/>
 		<File RelativePath="..\..\src\ncdf\ncdf_in.F90"/>
