@@ -28,7 +28,7 @@
    use bio_var, only: numc,var_names,var_units,var_long
 #endif
 #ifdef _FABM_
-   use gotm_fabm, only: model,fabm_calc
+   use getm_fabm, only: model,fabm_calc
 #endif
 
    IMPLICIT NONE
@@ -549,8 +549,8 @@
             end if
          end if
       else
-         vr(1) = 0.
-         vr(2) = 10./SMALL
+         vr(1) = -10./SMALL
+         vr(2) =  10./SMALL
          err = nf90_def_var(ncid,'nhsp',NCDF_FLOAT_PRECISION,f4_dims,bnh_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,bnh_id,long_name='nh screening parameter',units=' ',&

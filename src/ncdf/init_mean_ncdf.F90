@@ -23,8 +23,7 @@
    use bio_var, only: numc,var_names,var_units,var_long
 #endif
 #ifdef _FABM_
-   use gotm_fabm, only: model
-   use getm_fabm, only: fabm_pel
+   use getm_fabm, only: model,fabm_pel
 #endif
    IMPLICIT NONE
 !
@@ -173,7 +172,7 @@
       mv = rho_missing
       vr(1) =  0.
       vr(2) = 30.
-      err = nf90_def_var(ncid,'sigma_tmean',NCDF_FLOAT_PRECISION,f4_dims,sigma_tmean_id)
+      err = nf90_def_var(ncid,'sigma_t',NCDF_FLOAT_PRECISION,f4_dims,sigma_tmean_id)
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,sigma_tmean_id, &
              long_name='mean sigma_t',units='kg/m3',&
