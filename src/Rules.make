@@ -14,10 +14,17 @@ CPP	= /lib/cpp
 ifndef GETMDIR
 GETMDIR  = $(HOME)/GETM/getm-git
 endif
+ifeq ($(wildcard $(GETMDIR)/src/getm/main.F90),)
+$(error the directory GETMDIR=$(GETMDIR) is not a valid GETM directory)
+endif
 
 ifndef GOTMDIR
 GOTMDIR = $(HOME)/GOTM/gotm-git
 endif
+ifeq ($(wildcard $(GOTMDIR)/src/gotm/gotm.F90),)
+$(error the directory GOTMDIR=$(GOTMDIR) is not a valid GOTM directory)
+endif
+
 
 # Information about which Fortran compiler to use is 
 # obtained from $(FORTRAN_COMPILER) - environment variable.
@@ -106,6 +113,9 @@ ifeq ($(FABM),true)
 DEFINES += -D_FABM_
 ifndef FABMDIR
 FABMDIR = $(HOME)/FABM/fabm-git
+endif
+ifeq ($(wildcard $(FABMDIR)/src/fabm.F90),)
+$(error the directory FABMDIR=$(FABMDIR) is not a valid FABM directory)
 endif
 INCDIRS    += -I$(FABMDIR)/include -I$(FABMDIR)/modules/gotm/$(FORTRAN_COMPILER) -I$(FABMDIR)/src/drivers/gotm
 LINKDIRS   += -L$(FABMDIR)/lib/gotm/$(FORTRAN_COMPILER)
