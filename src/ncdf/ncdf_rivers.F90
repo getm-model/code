@@ -24,7 +24,7 @@
    use rivers, only: river_bio
 #endif
 #ifdef _FABM_
-   use gotm_fabm, only: model,fabm_calc
+   use getm_fabm, only: model,fabm_calc
    use rivers, only: river_fabm
 #endif
    IMPLICIT NONE
