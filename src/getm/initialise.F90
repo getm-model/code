@@ -249,7 +249,7 @@
 
    call init_les(runtype)
 
-   call init_output(runid,title,start,runtype,dryrun,myid,MaxN)
+   call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)
 
    close(NAMLST)
 
@@ -303,7 +303,7 @@
 #endif
    end if
 
-   if (save_initial .and. .not. dryrun) then
+   if (.not. dryrun) then
       call do_output(runtype,MinN-1,timestep)
    end if
 
