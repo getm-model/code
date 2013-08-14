@@ -53,8 +53,7 @@
    use variables_3d, only: cc3d
 #endif
 #ifdef _FABM_
-   use gotm_fabm,only: model
-   use getm_fabm,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
+   use getm_fabm,only: model,fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
    use getm_fabm,only: phymix_fabm_pel,nummix_fabm_pel
 #endif
    use parameters,   only: g,rho_0

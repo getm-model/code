@@ -690,7 +690,7 @@
          call mirror_bdy_3d(fabm_pel(:,:,:,n),H_TAG)
       end do
       do n=1,size(model%info%state_variables_ben)
-         call mirror_bdy_3d(fabm_ben(:,:,  n),H_TAG)
+         call mirror_bdy_2d(fabm_ben(:,:,  n),H_TAG)
       end do
    end if
 #endif
