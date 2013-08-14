@@ -13,7 +13,7 @@
 ! !USES:
    use ncdf_3d_bdy, only: do_3d_bdy_ncdf
 #ifdef _FABM_
-   use gotm_fabm, only: fabm_calc
+   use getm_fabm, only: fabm_calc
    use ncdf_3d_bio_bdy, only: do_3d_bio_bdy_ncdf
 #endif
    IMPLICIT NONE
