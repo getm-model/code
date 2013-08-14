@@ -80,8 +80,14 @@
    integer                   :: yz_slice,yz_slices
    integer                   :: z_column
    integer                   :: halo_columns
+#define _MPI_TYPE_EXTENT_
+#ifdef _MPI_TYPE_EXTENT_
    integer                   :: x_size,y_size,z_size
    integer                   :: xy_size,xz_size,yz_size,xyz_size
+#else
+   integer(KIND=MPI_ADDRESS_KIND) :: x_size,y_size,z_size
+   integer(KIND=MPI_ADDRESS_KIND) :: xy_size,xz_size,yz_size,xyz_size
+#endif
    integer                   :: com_direction
    integer                   :: req(2*nneighbours)
    integer                   :: status_array(MPI_STATUS_SIZE,2*nneighbours)
@@ -601,7 +607,12 @@
 ! !LOCAL VARIABLES:
    integer                   :: m,n,o
    integer                   :: real_extent
-   INTEGER(KIND=MPI_ADDRESS_KIND) :: sizeof_realtype
+#ifdef _MPI_TYPE_EXTENT_
+   INTEGER                   :: lower_bound,sizeof_realtype
+#else
+   INTEGER(KIND=MPI_ADDRESS_KIND) :: idum1,idum2
+   INTEGER(KIND=MPI_ADDRESS_KIND) :: lower_bound,sizeof_realtype
+#endif
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -620,12 +631,15 @@
 
 !  Set up different data types
    call MPI_TYPE_SIZE(MPI_REALTYPE,real_extent,ierr)
-#if 1
+#ifdef _MPI_TYPE_EXTENT_
 !  deprecated - use MPI_TYPE_GET_EXTENT instead - does not work yet
    call MPI_TYPE_EXTENT(MPI_REALTYPE,sizeof_realtype,ierr)
 #else
-   call MPI_TYPE_GET_EXTENT(MPI_REALTYPE,sizeof_realtype,ierr)
+   call MPI_TYPE_GET_EXTENT(MPI_REALTYPE,idum1,idum2,ierr)
+   lower_bound     = idum1
+   sizeof_realtype = idum2
 #endif
+#undef _MPI_TYPE_EXTENT_
 
 !  1 x-line
    call MPI_TYPE_VECTOR(m,1,1,MPI_REALTYPE,x_line,ierr)
