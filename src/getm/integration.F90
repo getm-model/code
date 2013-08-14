@@ -49,8 +49,7 @@
 #endif
    use rivers,   only: do_rivers
 #ifdef _FABM_
-   use gotm_fabm, only: fabm_calc
-   use getm_fabm, only: do_getm_fabm
+   use getm_fabm, only: fabm_calc,do_getm_fabm
 #endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
