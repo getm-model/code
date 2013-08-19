@@ -429,11 +429,15 @@ temp_field_no=1
          if (az(i,j) .eq. 1) then
 
             shf_loc=shf(i,j)
-
+#if 1
             if (T(i,j,kmax).le.-0.0575*S(i,j,kmax)) then  ! use most primitive
                                                           ! sea ice model ...
                shf_loc=max(_ZERO_,shf_loc)
             end if
+#else
+!           need to do something for ice model 
+#endif
+
 
             do k=0,kmax
                rad1d(k)=rad(i,j,k)

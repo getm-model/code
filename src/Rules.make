@@ -132,7 +132,7 @@ endif
 # Turbulence directory
 GOTMLIBDIR	= $(GOTMDIR)/lib/$(FORTRAN_COMPILER)
 LINKDIRS	+= -L$(GOTMLIBDIR)
-EXTRA_LIBS	+= -lturbulence$(buildtype) -lutil$(buildtype) 
+EXTRA_LIBS	+= -lice$(buildtype) -lturbulence$(buildtype) -lutil$(buildtype) 
 INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
 
 # Where does the NetCDF include file and library reside.

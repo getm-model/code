@@ -162,6 +162,11 @@
 				1.0
 			</precip_factor>
 		</meteo>
+		<ice>
+			<ice_method>
+				1
+			</ice_method>
+		</ice>
 		<rivers>
 			<river_method>
 				0
