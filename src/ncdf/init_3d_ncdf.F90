@@ -18,6 +18,7 @@
    use domain, only: ioff,joff
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
+   use getm_ice, only: ice_method
    use m3d, only: calc_temp,calc_salt
 #ifdef SPM
    use suspended_matter, only: spm_save
@@ -87,6 +88,44 @@
    err = nf90_def_var(ncid,'time',NF90_DOUBLE,time_dim,time_id)
    if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,time_id,units=trim(ts),long_name='time')
+
+!  ice
+   select case (ice_method)
+!     Freezing point ice 'model'
+      case (1)
+         err = nf90_def_var(ncid,'ice_mask',NCDF_FLOAT_PRECISION,f3_dims,ice_mask_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,ice_mask_id,long_name='ice mask')
+!     Winton ice model
+      case (2)
+         fv = ice_missing
+         mv = ice_missing
+!         vr(1) = _ZERO_
+!         vr(2) =  20.
+         err = nf90_def_var(ncid,'ice_hs',NCDF_FLOAT_PRECISION,f3_dims,ice_hs_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,ice_hs_id,long_name='snow thickness',units='m', &
+                             FillValue=fv,missing_value=mv)
+
+         err = nf90_def_var(ncid,'ice_hi',NCDF_FLOAT_PRECISION,f3_dims,ice_hi_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,ice_hi_id,long_name='ice thickness',units='m', &
+                             FillValue=fv,missing_value=mv)
+
+         err = nf90_def_var(ncid,'ice_T1',NCDF_FLOAT_PRECISION,f3_dims,ice_T1_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,ice_T1_id,long_name='upper ice temperature', &
+                             units='celsius', &
+                             FillValue=fv,missing_value=mv)
+
+         err = nf90_def_var(ncid,'ice_T2',NCDF_FLOAT_PRECISION,f3_dims,ice_T2_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,ice_T2_id,long_name='lower ice temperature', &
+                             units='celsius', &
+                             FillValue=fv,missing_value=mv)
+!                             FillValue=fv,missing_value=mv,valid_range=vr)
+      case default
+   end select
 
 !  elevation
    err = nf90_def_var(ncid,'elev',NCDF_FLOAT_PRECISION,f3_dims,elev_id)

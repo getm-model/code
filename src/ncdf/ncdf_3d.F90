@@ -21,6 +21,12 @@
    integer                             :: time_id
 
    integer                             :: hcc_id,h_id
+!  Freezing point ice 'model'
+   integer                             :: ice_mask_id
+!  Winton ice model
+   integer                             :: ice_hs_id,ice_hi_id
+   integer                             :: ice_T1_id,ice_T2_id
+
    integer                             :: elev_id,u_id,v_id
    integer                             :: taubx_id,tauby_id
    integer                             :: uu_id,vv_id,w_id
@@ -65,6 +71,7 @@
 
 ! !DEFINED PARAMETERS
    REALTYPE, parameter                 :: hh_missing     =-9999.0
+   REALTYPE, parameter                 :: ice_missing    =-9999.0
    REALTYPE, parameter                 :: elev_missing   =-9999.0
    REALTYPE, parameter                 :: vel_missing    =-9999.0
    REALTYPE, parameter                 :: tau_missing    =-9999.0
