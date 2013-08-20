@@ -23,6 +23,7 @@
 #else
    use domain,       only: dx,dy,ard1
 #endif
+   use getm_ice
    use variables_2d, only: z,D
    use variables_2d, only: U,V,DU,DV
    use variables_3d, only: dt,kmin,ho,hn,uu,hun,vv,hvn,ww,hcc,SS
@@ -114,6 +115,27 @@
    edges(1) = xlen
    edges(2) = ylen
    edges(3) = 1
+
+!  ice
+   select case (ice_method)
+!     Freezing point ice 'model'
+      case (1)
+         err = nf90_put_var(ncid,ice_mask_id,ice_mask(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+!         err = nf90_put_var(ncid,ice_hs_id,ice_hs(_2D_W_),start,edges)
+!         if (err .NE. NF90_NOERR) go to 10
+!     Winton ice model
+      case (2)
+         err = nf90_put_var(ncid,ice_hs_id,ice_hs(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+         err = nf90_put_var(ncid,ice_hi_id,ice_hi(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+         err = nf90_put_var(ncid,ice_T1_id,ice_T1(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+         err = nf90_put_var(ncid,ice_T2_id,ice_T2(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      case default
+   end select
 
 !  elevations
    call eta_mask(imin,jmin,imax,jmax,az,H,D,z,min_depth,elev_missing, &
