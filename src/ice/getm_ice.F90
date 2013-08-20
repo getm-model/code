@@ -63,12 +63,12 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
-   namelist /getm_ice/ ice_method
+   namelist /ice/ ice_method
 !EOP
 !-------------------------------------------------------------------------
 !BOC
    LEVEL1 'init_getm_ice'
-   read(NAMLST,getm_ice)
+   read(NAMLST,ice)
 
    select case (ice_method)
          case (0)
