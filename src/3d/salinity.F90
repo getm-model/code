@@ -201,7 +201,7 @@ salt_field_no=1
                            az,H,hn,S)
       case(3)
          LEVEL3 'interpolating from 3D field'
-         call get_field(salt_file,salt_name,salt_field_no,S)
+         call get_3d_field(salt_file,salt_name,salt_field_no,.true.,S)
 #ifdef SALTWEDGE_TEST
       case(4)
       !I need this here for hotstart of salinity!!!
