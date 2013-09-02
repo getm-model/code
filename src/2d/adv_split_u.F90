@@ -184,8 +184,8 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: uflux
-   logical            :: use_AH
-   integer            :: i,j,isub,p_scheme
+   logical            :: use_limiter,use_AH
+   integer            :: i,j,isub
    REALTYPE           :: dti,Dio,advn,cfl,fuu,fu,fd
 !
 ! !REVISION HISTORY:
@@ -208,12 +208,13 @@
       isub = 1
    end if
 
+   use_limiter = .false.
    use_AH = (AH .gt. _ZERO_)
    dti = splitfac*dt
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP          FIRSTPRIVATE(j)                                         &
-!$OMP          PRIVATE(i,p_scheme,Dio,advn,cfl,fuu,fu,fd)
+!$OMP          FIRSTPRIVATE(j,use_limiter)                             &
+!$OMP          PRIVATE(i,Dio,advn,cfl,fuu,fu,fd)
 
 ! Calculating u-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
@@ -225,28 +226,30 @@
 !           Note (KK): exclude x-advection of u across W/E open bdys
             if (U(i,j) .gt. _ZERO_) then
                fu = f(i  ,j)               ! central
-               if (mask_flux(i-1,j)) then
-                  p_scheme = scheme
-                  cfl = U(i,j)/DU(i,j)*dti/DXU
-                  fuu = f(i-1,j)           ! upstream
-                  fd  = f(i+1,j)           ! downstream
-               else
+               if (scheme .ne. UPSTREAM) then
 !                 Note (KK): also fall back to upstream near boundaries
-                  p_scheme = UPSTREAM
+                  use_limiter = mask_flux(i-1,j)
+               end if
+               if (use_limiter) then
+                  cfl = U(i,j)/DU(i,j)*dti/DXU
+                  fuu = f(i-1,j)            ! upstream
+                  fd = f(i+1,j)            ! downstream
                end if
             else
                fu = f(i+1,j)               ! central
-               if (mask_flux(i+1,j)) then
-                  p_scheme = scheme
-                  cfl = -U(i,j)/DU(i,j)*dti/DXU
-                  fuu = f(i+2,j)           ! upstream
-                  fd  = f(i  ,j)           ! downstream
-               else
+               if (scheme .ne. UPSTREAM) then
 !                 Note (KK): also fall back to upstream near boundaries
-                  p_scheme = UPSTREAM
+                  use_limiter = mask_flux(i+1,j)
+               end if
+               if (use_limiter) then
+                  cfl = -U(i,j)/DU(i,j)*dti/DXU
+                  fuu = f(i+2,j)            ! upstream
+                  fd = f(i  ,j)            ! downstream
                end if
             end if
-            fu = adv_interfacial_reconstruction(p_scheme,cfl,fuu,fu,fd)
+            if (use_limiter) then
+               fu = adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
+            end if
             uflux(i,j) = U(i,j)*fu
             if (use_AH) then
 !              Horizontal diffusion
