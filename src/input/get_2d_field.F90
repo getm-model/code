@@ -11,7 +11,7 @@
 !  Reads varname from a named file - fn - into to field.
 !
 ! !USES:
-   use field_2d_ncdf, only: get_2d_field_ncdf
+   use ncdf_get_field, only: get_2d_field_ncdf
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
