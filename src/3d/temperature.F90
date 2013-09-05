@@ -266,7 +266,7 @@ temp_field_no=1
                            az,H,hn,T)
       case(3)
          LEVEL3 'interpolating from 3D field'
-         call get_field(temp_file,temp_name,temp_field_no,T)
+         call get_3d_field(temp_file,temp_name,temp_field_no,.true.,T)
       case default
          FATAL 'Not valid temp_method specified'
          stop 'init_temperature'

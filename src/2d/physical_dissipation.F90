@@ -59,10 +59,10 @@
 !  Original author(s): Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer                             :: i,j,rc
-   REALTYPE,dimension(E2DFIELD)        :: shear
-   REALTYPE,dimension(:,:),allocatable :: u_vel,v_vel
-   logical,save                        :: first=.true.
+   integer                                  :: i,j,rc
+   REALTYPE,dimension(E2DFIELD)             :: shear
+   REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel
+   logical,save                             :: first=.true.
 !EOP
 !-----------------------------------------------------------------------
 !BOC
