@@ -55,18 +55,20 @@
    end interface
 
    interface
-      subroutine get_field(fname,var,f)
-         character(len=*),intent(in)   :: fname,var
-         REALTYPE, intent(out)         :: f
-      end subroutine get_field
-   end interface
-
-   interface
       subroutine get_2d_field(fn,varname,il,ih,jl,jh,f)
          character(len=*),intent(in)   :: fn,varname
          integer, intent(in)           :: il,ih,jl,jh
          REALTYPE, intent(out)         :: f(:,:)
       end subroutine get_2d_field
+   end interface
+
+   interface
+      subroutine get_3d_field(fname,var,n,break_on_missing,f)
+         character(len=*),intent(in)   :: fname,var
+         integer, intent(in)           :: n
+         logical, intent(in)           :: break_on_missing
+         REALTYPE, intent(out)         :: f
+      end subroutine get_3d_field
    end interface
 
    contains
