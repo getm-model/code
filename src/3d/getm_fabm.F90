@@ -212,7 +212,7 @@
       select case (fabm_init_method)
          case(0)
             LEVEL3 'getting initial biogeochemical fields from hotstart file'
-         case(1)
+         case(1,2)
             LEVEL3 "initial biogeochemical fields from namelists - fabm.nml"
             do j=jmin,jmax
                do i=imin,imax
@@ -226,11 +226,12 @@
                   end if
                end do
             end do
-         case(2)
-            LEVEL3 'reading initial biogeochemical fields from ',trim(fabm_init_file)
+            LEVEL3 'now checking initial fields from ',trim(fabm_init_file)
             do n=1,size(model%info%state_variables)
-               LEVEL4 'inquiring ',trim(model%info%state_variables(n)%name)
-               call get_field(fabm_init_file,trim(model%info%state_variables(n)%name),fabm_field_no, &
+               LEVEL4 'inquiring: ',trim(model%info%state_variables(n)%name)
+               call get_3d_field(fabm_init_file, &
+                              trim(model%info%state_variables(n)%name), &
+                              fabm_field_no,.false., &
                               fabm_pel(:,:,:,n))
             end do
          case default
