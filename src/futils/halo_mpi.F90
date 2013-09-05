@@ -80,7 +80,16 @@
    integer                   :: yz_slice,yz_slices
    integer                   :: z_column
    integer                   :: halo_columns
-#define _MPI_TYPE_EXTENT_
+!
+! There is a discrepancy between new and older versions of MPI(2).
+! In particular, the use of MPI_TYPE_EXTENT is deprecated, but _MAY_ still
+! not be available in all mpi-lib implementations. 
+! Also, mpif.h _should_  contain a definition of MPI_ADDRESS_KIND, but that 
+! may also not always be the case. If x_size etc. is defined wrong, then the 
+! data exchanged between subdomains may be wrong.
+! The "old" behaviour (without MPI_ADDRESS_KIND and MPI_TYPE_GET_EXTENT) can
+! be tried by defining _MPI_TYPE_EXTENT_ as a directive at compile time, e.g. by 
+! adding -D_MPI_TYPE_EXTENT_ to the compilation.
 #ifdef _MPI_TYPE_EXTENT_
    integer                   :: x_size,y_size,z_size
    integer                   :: xy_size,xz_size,yz_size,xyz_size
@@ -639,7 +648,6 @@
    lower_bound     = idum1
    sizeof_realtype = idum2
 #endif
-#undef _MPI_TYPE_EXTENT_
 
 !  1 x-line
    call MPI_TYPE_VECTOR(m,1,1,MPI_REALTYPE,x_line,ierr)
