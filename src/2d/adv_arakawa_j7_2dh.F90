@@ -24,20 +24,20 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,intent(in)                               :: dt,AH
-   REALTYPE,dimension(E2DFIELD),target,intent(in)    :: f
-   REALTYPE,dimension(E2DFIELD),intent(in)           :: vfU,vfV,Dn,DU,DV
+   REALTYPE,intent(in)                                          :: dt,AH
+   REALTYPE,dimension(E2DFIELD),target,intent(in)               :: f
+   REALTYPE,dimension(E2DFIELD),intent(in)                      :: vfU,vfV,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   REALTYPE,dimension(:,:),pointer,intent(in)        :: dxu,dyu
+   REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
    REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-   REALTYPE,dimension(E2DFIELD),intent(in)           :: arcd1
+   REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
 #endif
-   integer,dimension(E2DFIELD),intent(in)            :: az
-   logical,dimension(:,:),pointer,intent(in)         :: mask_uflux,mask_xflux
-   logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
+   integer,dimension(E2DFIELD),intent(in)                       :: az
+   logical,dimension(:,:),pointer,intent(in)                    :: mask_uflux,mask_xflux
+   logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_vflux
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),target,intent(inout) :: fi,Di,adv
+   REALTYPE,dimension(E2DFIELD),target,intent(inout)            :: fi,Di,adv
 !
 ! !LOCAL VARIABLES:
    logical                      :: use_AH
