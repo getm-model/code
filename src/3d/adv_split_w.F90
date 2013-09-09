@@ -62,7 +62,7 @@
 ! !LOCAL VARIABLES:
    logical            :: iterate,use_limiter
    integer            :: i,j,k,kshift,it,iters,iters_new,rc
-   REALTYPE           :: itersm1,dti,dtik,hio,advn,cfl,limit,fuu,fu,fd,splitfack
+   REALTYPE           :: itersm1,dti,dtik,hio,advn,fuu,fu,fd,splitfack
    REALTYPE,dimension(:),allocatable        :: wflux
    REALTYPE,dimension(:),allocatable,target :: cfl0
    REALTYPE,dimension(:),pointer            :: hiaux,advaux,faux,cfls
@@ -105,7 +105,7 @@
 !$OMP          FIRSTPRIVATE(j,use_limiter)                             &
 !$OMP          PRIVATE(rc,wflux,hiaux,advaux,faux,cfl0,cfls)           &
 !$OMP          PRIVATE(itersm1,dtik,splitfack)                         &
-!$OMP          PRIVATE(i,k,it,iters,iters_new,hio,advn,cfl,limit,fuu,fu,fd)
+!$OMP          PRIVATE(i,k,it,iters,iters_new,hio,advn,fuu,fu,fd)
 
 
    if (scheme .ne. NOADV) then
@@ -249,8 +249,7 @@
                         end if
                      end if
                      if (use_limiter) then
-                        cfl = cfls(k) * itersm1
-                        fu = adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
+                        fu = adv_interfacial_reconstruction(scheme,cfls(k)*itersm1,fuu,fu,fd)
                      end if
                      wflux(k) = ww(i,j,k)*fu
                   end do

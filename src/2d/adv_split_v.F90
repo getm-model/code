@@ -49,7 +49,7 @@
    REALTYPE,dimension(E2DFIELD) :: vflux
    logical            :: use_limiter,use_AH
    integer            :: i,j,jsub
-   REALTYPE           :: dti,Dio,advn,cfl,limit,fuu,fu,fd
+   REALTYPE           :: dti,Dio,advn,cfl,fuu,fu,fd
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -74,7 +74,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                  &
 !$OMP          FIRSTPRIVATE(use_limiter)                        &
-!$OMP          PRIVATE(i,j,Dio,advn,cfl,limit,fuu,fu,fd)
+!$OMP          PRIVATE(i,j,Dio,advn,cfl,fuu,fu,fd)
 
 ! Calculating v-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)

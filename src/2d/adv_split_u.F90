@@ -188,7 +188,7 @@
    REALTYPE,dimension(E2DFIELD) :: uflux
    logical            :: use_limiter,use_AH
    integer            :: i,j,isub
-   REALTYPE           :: dti,Dio,advn,cfl,limit,fuu,fu,fd
+   REALTYPE           :: dti,Dio,advn,cfl,fuu,fu,fd
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -216,7 +216,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j,use_limiter)                             &
-!$OMP          PRIVATE(i,Dio,advn,cfl,limit,fuu,fu,fd)
+!$OMP          PRIVATE(i,Dio,advn,cfl,fuu,fu,fd)
 
 ! Calculating u-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
