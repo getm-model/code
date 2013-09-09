@@ -8,7 +8,7 @@ INCS	= static_2d.h dynamic_declarations_2d.h dynamic_allocations_2d.h
 LIB	= $(LIBDIR)/lib2d${buildtype}.a
 
 TEXSRC	= m2d.F90 variables_2d.F90 \
-	  advection.F90 adv_split_u.F90 adv_split_v.F90 adv_arakawa_j7_2dh.F90 adv_upstream_2dh.F90 adv_fct_2dh.F90 adv_tvd_limiter.F90 \
+	  advection.F90 adv_split_u.F90 adv_split_v.F90 adv_arakawa_j7_2dh.F90 adv_upstream_2dh.F90 adv_fct_2dh.F90 \
 	  bottom_friction.F90 uv_advect.F90 uv_diffusion.F90 uv_diff_2dh.F90 momentum.F90 sealevel.F90 depth_update.F90 \
 	  update_2d_bdy.F90 residual.F90 cfl_check.F90
 
@@ -32,7 +32,6 @@ ${LIB}(adv_split_v.o)		\
 ${LIB}(adv_upstream_2dh.o)	\
 ${LIB}(adv_fct_2dh.o)		\
 ${LIB}(adv_arakawa_j7_2dh.o)	\
-${LIB}(adv_tvd_limiter.o)	\
 ${LIB}(uv_diff_2dh.o)
 
 

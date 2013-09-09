@@ -200,12 +200,6 @@
          REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
       end subroutine adv_fct_2dh
 
-      REALTYPE function adv_tvd_limiter(scheme,cfl,fuu,fu,fd)
-         IMPLICIT NONE
-         integer,intent(in)  :: scheme
-         REALTYPE,intent(in) :: cfl,fuu,fu,fd
-      end function adv_tvd_limiter
-
    end interface
 
    contains
@@ -766,6 +760,59 @@
 #endif
    return
    end subroutine print_adv_settings
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  REALTYPE function adv_tvd_limiter -
+!
+! !INTERFACE:
+   REALTYPE function adv_tvd_limiter(scheme,cfl,fuu,fu,fd)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer,intent(in)  :: scheme
+   REALTYPE,intent(in) :: cfl,fuu,fu,fd
+!
+! !LOCAL VARIABLES:
+   REALTYPE           :: ratio,x,Phi
+   REALTYPE,parameter :: one6th=_ONE_/6
+!
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard & Karsten Bolding
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   if (abs(fd-fu) .gt. 1.d-10) then
+      ratio = (fu-fuu)/(fd-fu)   ! slope ratio
+   else
+      ratio = (fu-fuu)*1.d10
+   end if
+
+   select case (scheme)
+      case ((P2),(P2_PDM))
+         x = one6th*(_ONE_-_TWO_*cfl)
+         Phi = (_HALF_+x) + (_HALF_-x)*ratio
+         if (scheme.eq.P2) then
+            adv_tvd_limiter = Phi
+         else
+            adv_tvd_limiter = max(_ZERO_,min(Phi,_TWO_/(_ONE_-cfl),_TWO_*ratio/(cfl+1.d-10)))
+         end if
+      case (SUPERBEE)
+         adv_tvd_limiter = max(_ZERO_,min(_ONE_,_TWO_*ratio),min(ratio,_TWO_))
+      case (MUSCL)
+         adv_tvd_limiter = max(_ZERO_,min(_TWO_,_TWO_*ratio,_HALF_*(_ONE_+ratio)))
+      case default
+         stop 'adv_tvd_limiter: invalid scheme'
+   end select
+
+   return
+   end function adv_tvd_limiter
 !EOC
 !-----------------------------------------------------------------------
 #ifdef _POINTER_REMAP_
