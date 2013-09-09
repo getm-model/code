@@ -20,8 +20,10 @@
    use variables_3d, only: hn
    use getm_fabm, only: fabm_calc,model
    use bdy_3d, only: bio_bdy,have_bio_bdy_values
-   use time, only: string_to_julsecs,time_diff,julianday,secondsofday
+   use time, only: string_to_julsecs,time_diff,add_secs
+   use time, only: julianday,secondsofday,juln,secsn
    use time, only: write_time_string,timestr
+
    IMPLICIT NONE
 !
    private
@@ -83,7 +85,8 @@
 !
 ! !LOCAL VARIABLES:
    character(len=256)        :: units
-   integer                   :: j1,s1
+   character(len=19)         :: tbuf
+   integer                   :: j1,s1,j2,s2
    integer                   :: ndims,nvardims
    integer                   :: vardim_ids(4)
    integer, allocatable, dimension(:):: dim_ids,dim_len
@@ -352,11 +355,27 @@
 
       call string_to_julsecs(units,j1,s1)
       offset = time_diff(julianday,secondsofday,j1,s1)
-      if( offset .lt. _ZERO_ ) then
+      if( offset .lt. bdy_times(1) ) then
          FATAL 'Model simulation starts before available BIO boundary data'
+         call write_time_string(julianday,secondsofday,tbuf)
+         FATAL 'Simulation starts: ',tbuf
+         call add_secs(j1,s1,nint(bdy_times(1)),j2,s2)
+         call write_time_string(j2,s2,tbuf)
+         FATAL 'Datafile starts:   ',tbuf
          stop 'init_3d_bio_bdy_ncdf'
       else
          LEVEL3 'Boundary offset time ',offset
+      end if
+
+!     check if the bdy data file is long enough
+      if( time_diff(juln,secsn,j1,s1) .gt. bdy_times(time_len) ) then
+         FATAL 'Not enough 3D boundary data in file'
+         call write_time_string(juln,secsn,tbuf)
+         FATAL 'Simulation ends: ',tbuf
+         call add_secs(j1,s1,nint(bdy_times(time_len)),j2,s2)
+         call write_time_string(j2,s2,tbuf)
+         FATAL 'Datafile ends:   ',tbuf
+         stop 'init_3d_bio_bdy_ncdf'
       end if
 
       allocate(bio_old(0:kmax,nsbv,npel),stat=err)
