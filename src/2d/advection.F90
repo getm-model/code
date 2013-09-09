@@ -191,12 +191,6 @@
          REALTYPE,dimension(E2DFIELD),intent(inout) :: fi,Di,adv
       end subroutine adv_fct_2dh
 
-      REALTYPE function adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
-         IMPLICIT NONE
-         integer,intent(in)  :: scheme
-         REALTYPE,intent(in) :: cfl,fuu,fu,fd
-      end function adv_interfacial_reconstruction
-
    end interface
 
    contains
@@ -779,6 +773,109 @@
 #endif
    return
    end subroutine print_adv_settings
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  REALTYPE function adv_interfacial_reconstruction -
+!
+! !INTERFACE:
+   REALTYPE function adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer,intent(in)  :: scheme
+   REALTYPE,intent(in) :: cfl,fuu,fu,fd
+!
+! !LOCAL VARIABLES:
+   REALTYPE           :: ratio,limiter,x,deltaf,deltafu
+   REALTYPE,parameter :: one6th=_ONE_/6
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   deltaf  = fd - fu
+   deltafu = fu - fuu
+
+   if (deltaf*deltafu .gt. _ZERO_) then
+
+      ratio = deltafu / deltaf   ! slope ratio
+
+      select case (scheme)
+         case (P2_PDM)
+            x = one6th*(_ONE_-_TWO_*cfl)
+            limiter = (_HALF_+x) + (_HALF_-x)*ratio
+            limiter = min(_TWO_*ratio/(cfl+1.d-10),limiter,_TWO_/(_ONE_-cfl))
+         case (SUPERBEE)
+            limiter = max(min(_TWO_*ratio,_ONE_),min(ratio,_TWO_))
+         case (MUSCL)
+            limiter = min(_TWO_*ratio,_HALF_*(_ONE_+ratio),_TWO_)
+         case (P2)
+            adv_interfacial_reconstruction = &
+                adv_interfacial_reconstruction_p2(cfl,fu,deltafu,deltaf)
+            return
+         case (UPSTREAM)
+            adv_interfacial_reconstruction = fu
+            return
+      end select
+
+      adv_interfacial_reconstruction = fu + _HALF_*limiter*(_ONE_-cfl)*deltaf
+      return
+
+   end if
+
+   select case (scheme)
+      case (P2)
+         adv_interfacial_reconstruction = &
+                adv_interfacial_reconstruction_p2(cfl,fu,deltafu,deltaf)
+      case default
+         adv_interfacial_reconstruction = fu
+   end select
+
+   return
+   end function adv_interfacial_reconstruction
+
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  REALTYPE function adv_interfacial_reconstruction_p2 -
+!
+! !INTERFACE:
+   REALTYPE function adv_interfacial_reconstruction_p2(cfl,fu,deltafu,deltaf)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   REALTYPE,intent(in) :: cfl,fu,deltafu,deltaf
+!
+! !LOCAL VARIABLES:
+   REALTYPE           :: x
+   REALTYPE,parameter :: one6th=_ONE_/6
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   x = one6th*(_ONE_-_TWO_*cfl)
+   adv_interfacial_reconstruction_p2 = &
+        fu + _HALF_*(_ONE_-cfl)*((_HALF_+x)*deltaf + (_HALF_-x)*deltafu)
+   return
+
+   end function adv_interfacial_reconstruction_p2
+
 !EOC
 !-----------------------------------------------------------------------
 #ifdef _POINTER_REMAP_
