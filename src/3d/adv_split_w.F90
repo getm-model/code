@@ -49,11 +49,11 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,intent(in)                             :: dt,splitfac
-   REALTYPE,dimension(I3DFIELD),intent(in),target  :: f
-   REALTYPE,dimension(I3DFIELD),intent(in)         :: ww
-   integer,intent(in)                              :: scheme,tag,itersmax
-   integer,dimension(E2DFIELD),intent(in)          :: az
+   REALTYPE,intent(in)                               :: dt,splitfac
+   REALTYPE,dimension(I3DFIELD),intent(in),target    :: f
+   REALTYPE,dimension(I3DFIELD),intent(in)           :: ww
+   integer,intent(in)                                :: scheme,tag,itersmax
+   integer,dimension(E2DFIELD),intent(in)            :: az
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(I3DFIELD),target,intent(inout) :: fi,hi,adv
@@ -358,7 +358,7 @@
 
 #ifndef _POINTER_REMAP_
       deallocate(fo,stat=rc)
-      if (rc /= 0) stop 'adv_split_w: Error deallocating memory (fo)'         
+      if (rc /= 0) stop 'adv_split_w: Error deallocating memory (fo)'
 #endif
 
 #ifdef _POINTER_REMAP_
