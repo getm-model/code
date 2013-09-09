@@ -169,18 +169,18 @@
 !             array. Therefore they are declared as pointers here. This
 !             however requires, that the provided pointers already carry
 !             the correct bounds.
-   REALTYPE,intent(in)                           :: dt,splitfac,AH
-   REALTYPE,dimension(E2DFIELD),intent(in)       :: f,U,DU
+   REALTYPE,intent(in)                        :: dt,splitfac,AH
+   REALTYPE,dimension(E2DFIELD),intent(in)    :: f,U,DU
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   REALTYPE,dimension(:,:),pointer,intent(in)    :: dxu,dyu
-   REALTYPE,dimension(E2DFIELD),intent(in)       :: arcd1
+   REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
+   REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
-   integer,intent(in)                            :: scheme
-   logical,dimension(:,:),pointer,intent(in)     :: mask_flux
-   logical,dimension(E2DFIELD),intent(in)        :: mask_update
+   integer,intent(in)                         :: scheme
+   logical,dimension(:,:),pointer,intent(in)  :: mask_flux
+   logical,dimension(E2DFIELD),intent(in)     :: mask_update
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(inout)    :: fi,Di,adv
+   REALTYPE,dimension(E2DFIELD),intent(inout) :: fi,Di,adv
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: uflux
