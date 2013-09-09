@@ -11,6 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use netcdf
    use domain, only: imin,imax,jmin,jmax,kmax,ioff,joff
    use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
@@ -94,7 +95,6 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
 #ifdef DEBUG
    write(debug,*) 'ncdf_init_3d_bdy (NetCDF)'
    write(debug,*) 'Reading from: ',trim(fname)
@@ -102,11 +102,11 @@
 
    LEVEL3 'init_3d_bio_bdy_ncdf'
 
-   err = nf_open(fname,NCNOWRIT,ncid)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_open(fname,NF90_NOWRITE,ncid)
+   if (err .NE. NF90_NOERR) go to 10
 
-   err = nf_inq_ndims(ncid,ndims)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_inquire(ncid,nDimensions=ndims)
+   if (err .NE. NF90_NOERR) go to 10
 
    allocate(dim_ids(ndims),stat=rc)
    if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (dim_ids)'
@@ -118,8 +118,8 @@
    if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (dim_name)'
 
    do n=1,ndims
-      err = nf_inq_dim(ncid, n, dim_name(n), dim_len(n))
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inquire_dimension(ncid,n,name=dim_name(n),len=dim_len(n))
+      if (err .NE. NF90_NOERR) go to 10
       LEVEL4 n,dim_name(n), dim_len(n)
    end do
 
@@ -144,11 +144,11 @@
    allocate(zlev(zax_len),stat=rc)
    if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (zlev)'
 
-   err = nf_inq_varid(ncid, trim(dim_name(zax_dim)), id)
-   if (err .ne. NF_NOERR) go to 10
+   err = nf90_inq_varid(ncid, trim(dim_name(zax_dim)), id)
+   if (err .ne. NF90_NOERR) go to 10
 
-   err = nf_get_var_real(ncid,id,zlev)
-   if (err .ne. NF_NOERR) go to 10
+   err = nf90_get_var(ncid,id,zlev)
+   if (err .ne. NF90_NOERR) go to 10
    zlev = -_ONE_*zlev
 
    allocate(wrk(zax_len),stat=rc)
@@ -176,8 +176,8 @@
    LEVEL4 'checking available boundary variables:'
    do n=1,npel
       varname = trim(model%info%state_variables(n)%name)
-      err = nf_inq_varid(ncid,trim(varname),bio_ids(n))
-      if (err .NE. NF_NOERR) then
+      err = nf90_inq_varid(ncid,trim(varname),bio_ids(n))
+      if (err .NE. NF90_NOERR) then
          have_bio_bdy_values(n) = -1
          LEVEL4 trim(varname),': no'
       else
@@ -212,8 +212,8 @@
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do j=wfj(n),wlj(n)
                      start(2) = k
-                     err = nf_get_vara_real(ncid,bio_ids(o),start,edges,wrk)
-                     if (err .ne. NF_NOERR) go to 10
+                     err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
+                     if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
                                    hn(i,j,:),bio_bdy_clim(:,k,m,o))
                      k = k+1
@@ -232,8 +232,8 @@
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do i = nfi(n),nli(n)
                      start(2) = k
-                     err = nf_get_vara_real(ncid,bio_ids(o),start,edges,wrk)
-                     if (err .ne. NF_NOERR) go to 10
+                     err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
+                     if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
                                    hn(i,j,:),bio_bdy_clim(:,k,m,o))
                      k = k+1
@@ -252,8 +252,8 @@
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do j=efj(1),elj(1)
                      start(2) = k
-                     err = nf_get_vara_real(ncid,bio_ids(o),start,edges,wrk)
-                     if (err .ne. NF_NOERR) go to 10
+                     err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
+                     if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
                                    hn(i,j,:),bio_bdy_clim(:,k,o,m))
                      k = k+1
@@ -272,8 +272,8 @@
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do i = sfi(n),sli(n)
                      start(2) = k
-                     err = nf_get_vara_real(ncid,bio_ids(o),start,edges,wrk)
-                     if (err .ne. NF_NOERR) go to 10
+                     err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
+                     if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
                                    hn(i,j,:),bio_bdy_clim(:,k,o,m))
                      k = k+1
@@ -284,21 +284,21 @@
             end do
          end do
       end do
-      err = nf_close(ncid)
+      err = nf90_close(ncid)
 
    else
 
-      err = nf_inq_varid(ncid,'time',time_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,'time',time_id)
+      if (err .NE. NF90_NOERR) go to 10
 
-      err =  nf_get_att_text(ncid,time_id,'units',units)
-      if (err .NE. NF_NOERR) go to 10
+      err =  nf90_get_att(ncid,time_id,'units',units)
+      if (err .NE. NF90_NOERR) go to 10
 
       allocate(bdy_times(time_len),stat=err)
       if (err /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (bdy_times)'
 
-      err = nf_get_var_real(ncid,time_id,bdy_times)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,time_id,bdy_times)
+      if (err .NE. NF90_NOERR) go to 10
 
       call string_to_julsecs(units,j1,s1)
       offset = time_diff(julianday,secondsofday,j1,s1)
@@ -334,8 +334,8 @@
 
       do m=1,npel
          if (have_bio_bdy_values(m) .eq. 1 ) then
-            err = nf_get_vara_real(ncid,bio_ids(m),start,edges,bio_wrk(:,:,m))
-            if (err .ne. NF_NOERR) go to 10
+            err = nf90_get_var(ncid,bio_ids(m),bio_wrk(:,:,m),start,edges)
+            if (err .ne. NF90_NOERR) go to 10
          end if
       end do
 
@@ -398,7 +398,7 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'init_3d_bio_bdy_ncdf: ',nf_strerror(err)
+10 FATAL 'init_3d_bio_bdy_ncdf: ',nf90_strerror(err)
    stop
    end subroutine init_3d_bio_bdy_ncdf
 !EOC
@@ -442,7 +442,6 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
 #ifdef DEBUG
    write(debug,*) 'do_3d_bio_bdy_ncdf (NetCDF)'
 #endif
@@ -501,8 +500,8 @@
 
          do o=1,npel
             if (have_bio_bdy_values(o) .eq. 1 ) then
-               err = nf_get_vara_real(ncid,bio_ids(o),start,edges,bio_wrk(:,:,o))
-               if (err .ne. NF_NOERR) go to 10
+               err = nf90_get_var(ncid,bio_ids(o),bio_wrk(:,:,o),start,edges)
+               if (err .ne. NF90_NOERR) go to 10
             end if
          end do
 
@@ -569,7 +568,7 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'do_3d_bio_bdy_ncdf: ',nf_strerror(err)
+10 FATAL 'do_3d_bio_bdy_ncdf: ',nf90_strerror(err)
    stop
    end subroutine do_3d_bio_bdy_ncdf
 !EOC
