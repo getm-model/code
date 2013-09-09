@@ -36,10 +36,8 @@
 		<Filter Name="2d">
 		<File RelativePath="..\..\src\2d\adv_arakawa_j7_2dh.F90"/>
 		<File RelativePath="..\..\src\2d\adv_fct_2dh.F90"/>
-		<File RelativePath="..\..\src\2d\adv_interfacial_reconstruction.F90"/>
 		<File RelativePath="..\..\src\2d\adv_split_u.F90"/>
 		<File RelativePath="..\..\src\2d\adv_split_v.F90"/>
-		<File RelativePath="..\..\src\2d\adv_tvd_limiter.F90"/>
 		<File RelativePath="..\..\src\2d\adv_upstream_2dh.F90"/>
 		<File RelativePath="..\..\src\2d\advection.F90"/>
 		<File RelativePath="..\..\src\2d\bdy_2d.F90"/>
