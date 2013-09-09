@@ -97,16 +97,16 @@
                              mask_flux,mask_update)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,intent(in)                           :: dt,splitfac,AH
-         REALTYPE,dimension(E2DFIELD),intent(in)       :: f,U,DU
+         REALTYPE,intent(in)                        :: dt,splitfac,AH
+         REALTYPE,dimension(E2DFIELD),intent(in)    :: f,U,DU
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         REALTYPE,dimension(:,:),pointer,intent(in)    :: dxu,dyu
-         REALTYPE,dimension(E2DFIELD),intent(in)       :: arcd1
+         REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
+         REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
-         integer,intent(in)                            :: scheme
-         logical,dimension(:,:),pointer,intent(in)     :: mask_flux
-         logical,dimension(E2DFIELD),intent(in)        :: mask_update
-         REALTYPE,dimension(E2DFIELD),intent(inout)    :: fi,Di,adv
+         integer,intent(in)                         :: scheme
+         logical,dimension(:,:),pointer,intent(in)  :: mask_flux
+         logical,dimension(E2DFIELD),intent(in)     :: mask_update
+         REALTYPE,dimension(E2DFIELD),intent(inout) :: fi,Di,adv
       end subroutine adv_split_u
 
       subroutine adv_split_v(dt,f,fi,Di,adv,V,DV,   &
@@ -117,16 +117,16 @@
                              mask_flux,mask_update)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,intent(in)                           :: dt,splitfac,AH
-         REALTYPE,dimension(E2DFIELD),intent(in)       :: f,V,DV
+         REALTYPE,intent(in)                                          :: dt,splitfac,AH
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,V,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-         REALTYPE,dimension(E2DFIELD),intent(in)       :: arcd1
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
 #endif
-         integer,intent(in)                            :: scheme
-         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_flux
-         logical,dimension(E2DFIELD),intent(in)        :: mask_update
-         REALTYPE,dimension(E2DFIELD),intent(inout)    :: fi,Di,adv
+         integer,intent(in)                                           :: scheme
+         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_flux
+         logical,dimension(E2DFIELD),intent(in)                       :: mask_update
+         REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
       end subroutine adv_split_v
 
       subroutine adv_arakawa_j7_2dh(dt,f,fi,Di,adv,U,V,Dn,DU,DV,      &
@@ -137,18 +137,18 @@
                                     mask_uflux,mask_vflux,mask_xflux)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,intent(in)                               :: dt,AH
-         REALTYPE,dimension(E2DFIELD),target,intent(in)    :: f
-         REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,Dn,DU,DV
+         REALTYPE,intent(in)                                          :: dt,AH
+         REALTYPE,dimension(E2DFIELD),target,intent(in)               :: f
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: U,V,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         REALTYPE,dimension(:,:),pointer,intent(in)        :: dxu,dyu
+         REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-         REALTYPE,dimension(E2DFIELD),intent(in)           :: arcd1
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
 #endif
-         integer,dimension(E2DFIELD),intent(in)            :: az
-         logical,dimension(:,:),pointer,intent(in)         :: mask_uflux,mask_xflux
-         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
-         REALTYPE,dimension(E2DFIELD),target,intent(inout) :: fi,Di,adv
+         integer,dimension(E2DFIELD),intent(in)                       :: az
+         logical,dimension(:,:),pointer,intent(in)                    :: mask_uflux,mask_xflux
+         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_vflux
+         REALTYPE,dimension(E2DFIELD),target,intent(inout)            :: fi,Di,adv
       end subroutine adv_arakawa_j7_2dh
 
       subroutine adv_upstream_2dh(dt,f,fi,Di,adv,U,V,Dn,DU,DV, &
@@ -158,15 +158,15 @@
                                   AH,az)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,intent(in)                        :: dt,AH
-         REALTYPE,dimension(E2DFIELD),intent(in)    :: f,U,V,Dn,DU,DV
+         REALTYPE,intent(in)                                          :: dt,AH
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,U,V,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
+         REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-         REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
 #endif
-         integer,dimension(E2DFIELD),intent(in)     :: az
-         REALTYPE,dimension(E2DFIELD),intent(inout) :: fi,Di,adv
+         integer,dimension(E2DFIELD),intent(in)                       :: az
+         REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
       end subroutine adv_upstream_2dh
 
       subroutine adv_fct_2dh(fct,dt,f,fi,Di,adv,U,V,Dn,DU,DV, &
@@ -177,18 +177,18 @@
                              mask_uflux,mask_vflux)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         logical,intent(in)                         :: fct
-         REALTYPE,intent(in)                        :: dt,AH
-         REALTYPE,dimension(E2DFIELD),intent(in)    :: f,U,V,Dn,DU,DV
+         logical,intent(in)                                           :: fct
+         REALTYPE,intent(in)                                          :: dt,AH
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,U,V,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
+         REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-         REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
 #endif
-         integer,dimension(E2DFIELD),intent(in)     :: az
-         logical,dimension(:,:),pointer,intent(in)  :: mask_uflux
-         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
-         REALTYPE,dimension(E2DFIELD),intent(inout) :: fi,Di,adv
+         integer,dimension(E2DFIELD),intent(in)                       :: az
+         logical,dimension(:,:),pointer,intent(in)                    :: mask_uflux
+         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_vflux
+         REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
       end subroutine adv_fct_2dh
 
    end interface
