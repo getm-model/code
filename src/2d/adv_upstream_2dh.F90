@@ -32,17 +32,17 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,intent(in)                        :: dt,AH
-   REALTYPE,dimension(E2DFIELD),intent(in)    :: f,U,V,Dn,DU,DV
+   REALTYPE,intent(in)                                          :: dt,AH
+   REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,U,V,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
+   REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
    REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-   REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
+   REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
 #endif
-   integer,dimension(E2DFIELD),intent(in)     :: az
+   integer,dimension(E2DFIELD),intent(in)                       :: az
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(inout) :: fi,Di,adv
+   REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
 !
 ! !LOCAL VARIABLES:
    integer                      :: i,j,ii,jj
