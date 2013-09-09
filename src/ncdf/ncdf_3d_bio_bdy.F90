@@ -11,6 +11,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use netcdf
    use domain, only: imin,imax,jmin,jmax,kmax,ioff,joff
    use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
@@ -19,8 +20,10 @@
    use variables_3d, only: hn
    use getm_fabm, only: fabm_calc,model
    use bdy_3d, only: bio_bdy,have_bio_bdy_values
-   use time, only: string_to_julsecs,time_diff,julianday,secondsofday
+   use time, only: string_to_julsecs,time_diff,add_secs
+   use time, only: julianday,secondsofday,juln,secsn
    use time, only: write_time_string,timestr
+
    IMPLICIT NONE
 !
    private
@@ -33,8 +36,8 @@
    integer                             :: time_id
    integer, allocatable, dimension(:)  :: bio_ids
    integer                             :: start(3),edges(3)
-   integer                             :: zax_dim,zax_len
-   integer                             :: time_dim,time_len
+   integer                             :: zax_dim=-1,zax_len,zax_pos
+   integer                             :: time_dim=-1,time_len,time_pos
    logical                             :: climatology=.false.
    REALTYPE                            :: offset
    REAL_4B, allocatable                :: bdy_times(:),wrk(:)
@@ -82,8 +85,10 @@
 !
 ! !LOCAL VARIABLES:
    character(len=256)        :: units
-   integer                   :: j1,s1
-   integer                   :: ndims
+   character(len=19)         :: tbuf
+   integer                   :: j1,s1,j2,s2
+   integer                   :: ndims,nvardims
+   integer                   :: vardim_ids(4)
    integer, allocatable, dimension(:):: dim_ids,dim_len
    character(len=16), allocatable :: dim_name(:)
    integer                   :: rc,err
@@ -94,19 +99,18 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
 #ifdef DEBUG
-   write(debug,*) 'ncdf_init_3d_bdy (NetCDF)'
+   write(debug,*) 'ncdf_init_3d_bio_bdy (NetCDF)'
    write(debug,*) 'Reading from: ',trim(fname)
 #endif
 
    LEVEL3 'init_3d_bio_bdy_ncdf'
 
-   err = nf_open(fname,NCNOWRIT,ncid)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_open(fname,NF90_NOWRITE,ncid)
+   if (err .NE. NF90_NOERR) go to 10
 
-   err = nf_inq_ndims(ncid,ndims)
-   if (err .NE. NF_NOERR) go to 10
+   err = nf90_inquire(ncid,nDimensions=ndims)
+   if (err .NE. NF90_NOERR) go to 10
 
    allocate(dim_ids(ndims),stat=rc)
    if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (dim_ids)'
@@ -118,8 +122,8 @@
    if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (dim_name)'
 
    do n=1,ndims
-      err = nf_inq_dim(ncid, n, dim_name(n), dim_len(n))
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inquire_dimension(ncid,n,name=dim_name(n),len=dim_len(n))
+      if (err .NE. NF90_NOERR) go to 10
       LEVEL4 n,dim_name(n), dim_len(n)
    end do
 
@@ -128,37 +132,8 @@
 !    1 -> zax,levels
 !    2 -> bdy_points
 !    3 -> time
-
-!  made to work with the Bodden simulations
-#if 0
-   zax_dim  = 2
-   time_dim = 1
-#else
-   time_dim = 1
-   zax_dim  = 3
-#endif
-
-   zax_len = dim_len(zax_dim)
-   time_len = dim_len(time_dim)
-
-   allocate(zlev(zax_len),stat=rc)
-   if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (zlev)'
-
-   err = nf_inq_varid(ncid, trim(dim_name(zax_dim)), id)
-   if (err .ne. NF_NOERR) go to 10
-
-   err = nf_get_var_real(ncid,id,zlev)
-   if (err .ne. NF_NOERR) go to 10
-   zlev = -_ONE_*zlev
-
-   allocate(wrk(zax_len),stat=rc)
-   if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (wrk)'
-
-   if( time_len .eq. 12) then
-      climatology=.true.
-      LEVEL4 'Assuming climatolgical BIO boundary conditions'
-      LEVEL4 '# of times = ',time_len
-   end if
+   zax_pos = 1
+   time_pos = 3
 
    npel = size(model%info%state_variables)
 
@@ -176,17 +151,94 @@
    LEVEL4 'checking available boundary variables:'
    do n=1,npel
       varname = trim(model%info%state_variables(n)%name)
-      err = nf_inq_varid(ncid,trim(varname),bio_ids(n))
-      if (err .NE. NF_NOERR) then
+      err = nf90_inq_varid(ncid,trim(varname),id)
+      if (err .NE. NF90_NOERR) then
          have_bio_bdy_values(n) = -1
          LEVEL4 trim(varname),': no'
       else
          have_bio_bdy_values(n) = 1
          LEVEL4 trim(varname),': yes'
+         bio_ids(n) = id
+
+         LEVEL4 ' ... checking variable ',varname
+
+         err = nf90_inquire_variable(ncid,id,ndims=nvardims)
+         if (err .NE. NF90_NOERR) go to 10
+
+         if (nvardims .NE. ndims) then
+            FATAL 'Wrong number of dims in ',varname
+            stop 'init_3d_bio_bdy_ncdf'
+         end if
+
+         err = nf90_inquire_variable(ncid,id,dimids=vardim_ids)
+         if (err .NE. NF90_NOERR) go to 10
+
+         if (zax_dim .eq. -1) then
+            zax_dim  = vardim_ids(zax_pos)
+         else if (zax_dim /= vardim_ids(zax_pos)) then
+            stop 'init_3d_bio_bdy_ncdf: Position of zax dimension differs'
+         end if
+         if (time_dim .eq. -1) then
+            time_dim = vardim_ids(time_pos)
+         else if (time_dim /= vardim_ids(time_pos)) then
+            stop 'init_3d_bio_bdy_ncdf: Position of time dimension differs'
+         end if
+
       end if
    end do
 
+!  made to work with the Bodden simulations
+#if 0
+   zax_dim  = 2
+   time_dim = 1
+!#else
+!   time_dim = 1
+!   zax_dim  = 3
+#endif
+
+   zax_len = dim_len(zax_dim)
+   time_len = dim_len(time_dim)
+
+   allocate(zlev(zax_len),stat=rc)
+   if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (zlev)'
+
+   err = nf90_inq_varid(ncid, trim(dim_name(zax_dim)), id)
+   if (err .ne. NF90_NOERR) go to 10
+
+   err = nf90_get_var(ncid,id,zlev)
+   if (err .ne. NF90_NOERR) go to 10
+
+!  a few sanity checks on the vertical axis for the 3D boundaries
+   do n=1,zax_len
+      if (zlev(n) .eq. NF90_FILL_REAL) then
+         FATAL '3D boundary z-axis contains NF90_FILL_REAL values'
+         FATAL 'proper interpolation cant be done'
+         stop 'init_3d_bio_bdy_ncdf'
+      end if
+   end do
+!  not sure if this check is safe - kb
+   if ( zlev(1) .ge. _ZERO_ .and. zlev(zax_len) .gt. _ZERO_ ) then
+      LEVEL4 'converting positive z-axis (depth) values to negative'
+      zlev = -_ONE_*zlev
+   end if
+!  check strict monotonicity
+   do n=1,zax_len-1
+      if ( .not. zlev(n) .gt. zlev(n+1) ) then
+         FATAL '3D boundary z-axis not strict monotone: ',zlev(n),zlev(n+1)
+         stop 'init_3d_bio_bdy_ncdf'
+      end if
+   end do
+
+   if( time_len .eq. 12) then
+      climatology=.true.
+      LEVEL4 'Assuming climatolgical BIO boundary conditions'
+      LEVEL4 '# of times = ',time_len
+   end if
+
    if (climatology) then
+
+      allocate(wrk(zax_len),stat=rc)
+      if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (wrk)'
 
       allocate(bio_bdy_clim(0:kmax,nsbv,time_len,npel),stat=rc)
       if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (bio_bdy_clim)'
@@ -196,12 +248,13 @@
 !     l counts the boundary number
 !     k counts the number of the specific point
 !     MUST cover the same area as in topo.nc
-      start(1) = 1; edges(1) = dim_len(zax_dim);
-      edges(2) = 1
-      edges(3) = 1
+
+      edges = 1
+      edges(zax_pos) = zax_len
+      start(zax_pos) = 1
 
       do m=1,time_len
-         start(time_dim) = m
+         start(time_pos) = m
          l = 0
 
          do n=1,NWB
@@ -212,8 +265,8 @@
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do j=wfj(n),wlj(n)
                      start(2) = k
-                     err = nf_get_vara_real(ncid,bio_ids(o),start,edges,wrk)
-                     if (err .ne. NF_NOERR) go to 10
+                     err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
+                     if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
                                    hn(i,j,:),bio_bdy_clim(:,k,m,o))
                      k = k+1
@@ -232,8 +285,8 @@
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do i = nfi(n),nli(n)
                      start(2) = k
-                     err = nf_get_vara_real(ncid,bio_ids(o),start,edges,wrk)
-                     if (err .ne. NF_NOERR) go to 10
+                     err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
+                     if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
                                    hn(i,j,:),bio_bdy_clim(:,k,m,o))
                      k = k+1
@@ -252,8 +305,8 @@
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do j=efj(1),elj(1)
                      start(2) = k
-                     err = nf_get_vara_real(ncid,bio_ids(o),start,edges,wrk)
-                     if (err .ne. NF_NOERR) go to 10
+                     err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
+                     if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
                                    hn(i,j,:),bio_bdy_clim(:,k,o,m))
                      k = k+1
@@ -272,8 +325,8 @@
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do i = sfi(n),sli(n)
                      start(2) = k
-                     err = nf_get_vara_real(ncid,bio_ids(o),start,edges,wrk)
-                     if (err .ne. NF_NOERR) go to 10
+                     err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
+                     if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
                                    hn(i,j,:),bio_bdy_clim(:,k,o,m))
                      k = k+1
@@ -284,29 +337,45 @@
             end do
          end do
       end do
-      err = nf_close(ncid)
+      err = nf90_close(ncid)
 
    else
 
-      err = nf_inq_varid(ncid,'time',time_id)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_inq_varid(ncid,'time',time_id)
+      if (err .NE. NF90_NOERR) go to 10
 
-      err =  nf_get_att_text(ncid,time_id,'units',units)
-      if (err .NE. NF_NOERR) go to 10
+      err =  nf90_get_att(ncid,time_id,'units',units)
+      if (err .NE. NF90_NOERR) go to 10
 
       allocate(bdy_times(time_len),stat=err)
       if (err /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (bdy_times)'
 
-      err = nf_get_var_real(ncid,time_id,bdy_times)
-      if (err .NE. NF_NOERR) go to 10
+      err = nf90_get_var(ncid,time_id,bdy_times)
+      if (err .NE. NF90_NOERR) go to 10
 
       call string_to_julsecs(units,j1,s1)
       offset = time_diff(julianday,secondsofday,j1,s1)
-      if( offset .lt. _ZERO_ ) then
+      if( offset .lt. bdy_times(1) ) then
          FATAL 'Model simulation starts before available BIO boundary data'
+         call write_time_string(julianday,secondsofday,tbuf)
+         FATAL 'Simulation starts: ',tbuf
+         call add_secs(j1,s1,nint(bdy_times(1)),j2,s2)
+         call write_time_string(j2,s2,tbuf)
+         FATAL 'Datafile starts:   ',tbuf
          stop 'init_3d_bio_bdy_ncdf'
       else
          LEVEL3 'Boundary offset time ',offset
+      end if
+
+!     check if the bdy data file is long enough
+      if( time_diff(juln,secsn,j1,s1) .gt. bdy_times(time_len) ) then
+         FATAL 'Not enough 3D boundary data in file'
+         call write_time_string(juln,secsn,tbuf)
+         FATAL 'Simulation ends: ',tbuf
+         call add_secs(j1,s1,nint(bdy_times(time_len)),j2,s2)
+         call write_time_string(j2,s2,tbuf)
+         FATAL 'Datafile ends:   ',tbuf
+         stop 'init_3d_bio_bdy_ncdf'
       end if
 
       allocate(bio_old(0:kmax,nsbv,npel),stat=err)
@@ -328,14 +397,14 @@
          i = i-1
       end if
 
-      start(1) = 1; edges(1) = dim_len(zax_dim);
+      start(1) = 1; edges(1) = zax_len;
       start(2) = 1; edges(2) = nsbv;
       start(3) = i; edges(3) = 1
 
       do m=1,npel
          if (have_bio_bdy_values(m) .eq. 1 ) then
-            err = nf_get_vara_real(ncid,bio_ids(m),start,edges,bio_wrk(:,:,m))
-            if (err .ne. NF_NOERR) go to 10
+            err = nf90_get_var(ncid,bio_ids(m),bio_wrk(:,:,m),start,edges)
+            if (err .ne. NF90_NOERR) go to 10
          end if
       end do
 
@@ -398,7 +467,7 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'init_3d_bio_bdy_ncdf: ',nf_strerror(err)
+10 FATAL 'init_3d_bio_bdy_ncdf: ',nf90_strerror(err)
    stop
    end subroutine init_3d_bio_bdy_ncdf
 !EOC
@@ -442,7 +511,6 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-   include "netcdf.inc"
 #ifdef DEBUG
    write(debug,*) 'do_3d_bio_bdy_ncdf (NetCDF)'
 #endif
@@ -462,9 +530,9 @@
       end if
 
       do o=1,npel
-         bio_bdy(:,:,o)=(1.-rat)*0.5 &
+         bio_bdy(:,:,o)=(1.-rat)*_HALF_ &
                         *(bio_bdy_clim(prev,:,:,o)+bio_bdy_clim(this,:,:,o)) &
-                        +rat*0.5     &
+                        +rat*_HALF_     &
                         *(bio_bdy_clim(next,:,:,o)+bio_bdy_clim(this,:,:,o))
       end do
    else
@@ -501,8 +569,8 @@
 
          do o=1,npel
             if (have_bio_bdy_values(o) .eq. 1 ) then
-               err = nf_get_vara_real(ncid,bio_ids(o),start,edges,bio_wrk(:,:,o))
-               if (err .ne. NF_NOERR) go to 10
+               err = nf90_get_var(ncid,bio_ids(o),bio_wrk(:,:,o),start,edges)
+               if (err .ne. NF90_NOERR) go to 10
             end if
          end do
 
@@ -569,7 +637,7 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'do_3d_bio_bdy_ncdf: ',nf_strerror(err)
+10 FATAL 'do_3d_bio_bdy_ncdf: ',nf90_strerror(err)
    stop
    end subroutine do_3d_bio_bdy_ncdf
 !EOC
@@ -596,9 +664,9 @@
    REALTYPE                  :: zmodel(kmax),rat
    integer                   :: k,li,n,nn
 
-   zmodel(1) = -depth + 0.5*zm(1)
+   zmodel(1) = -depth + _HALF_*zm(1)
    do k=2,kmax
-      zmodel(k) = zmodel(k-1) + 0.5*(zm(k-1)+zm(k))
+      zmodel(k) = zmodel(k-1) + _HALF_*(zm(k-1)+zm(k))
    end do
 
    do k=kmax,1,-1
@@ -609,7 +677,16 @@
    do li=1,nlev
       if (wrk(li) .lt. -999. ) EXIT
    end do
-   if (li .ne. nlev .or. wrk(li) .lt. -999.) li=li-1
+   ! BJB-NOTE: Typically, li will end up as nlev+1, so the first
+   !   of the following tests gets false. However, during debug
+   !   compilation the second condition *MAY* evaulate wrk(li),
+   !   which will result in a "forrtl: severe".
+   !if (li .ne. nlev .or. wrk(li) .lt. -999.) li=li-1
+   if (li .ne. nlev) then
+      li=li-1
+   elseif (wrk(li) .lt. -999.) then
+      li=li-1
+   end if
 
    do k=1,kmax
       if (zmodel(k) .le. zlev(li)) col(k) = wrk(li)
