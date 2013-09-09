@@ -120,17 +120,17 @@
                              nvd)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,intent(in)                           :: dt,splitfac,AH
-         REALTYPE,dimension(E2DFIELD),intent(in)       :: f,V,DV
+         REALTYPE,intent(in)                                          :: dt,splitfac,AH
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,V,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-         REALTYPE,dimension(E2DFIELD),intent(in)       :: arcd1
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
 #endif
-         integer,intent(in)                            :: scheme
-         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_flux
-         logical,dimension(E2DFIELD),intent(in)        :: mask_update
-         REALTYPE,dimension(E2DFIELD),intent(inout)    :: fi,Di,adv
-         REALTYPE,dimension(:,:),pointer,intent(inout) :: nvd
+         integer,intent(in)                                           :: scheme
+         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_flux
+         logical,dimension(E2DFIELD),intent(in)                       :: mask_update
+         REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
+         REALTYPE,dimension(:,:),pointer,intent(inout)                :: nvd
       end subroutine adv_split_v
 
       subroutine adv_arakawa_j7_2dh(dt,f,fi,Di,adv,U,V,Dn,DU,DV,      &
@@ -141,18 +141,18 @@
                                     mask_uflux,mask_vflux,mask_xflux)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,intent(in)                               :: dt,AH
-         REALTYPE,dimension(E2DFIELD),target,intent(in)    :: f
-         REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,Dn,DU,DV
+         REALTYPE,intent(in)                                          :: dt,AH
+         REALTYPE,dimension(E2DFIELD),target,intent(in)               :: f
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: U,V,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         REALTYPE,dimension(:,:),pointer,intent(in)        :: dxu,dyu
+         REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-         REALTYPE,dimension(E2DFIELD),intent(in)           :: arcd1
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
 #endif
-         integer,dimension(E2DFIELD),intent(in)            :: az
-         logical,dimension(:,:),pointer,intent(in)         :: mask_uflux,mask_xflux
-         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
-         REALTYPE,dimension(E2DFIELD),target,intent(inout) :: fi,Di,adv
+         integer,dimension(E2DFIELD),intent(in)                       :: az
+         logical,dimension(:,:),pointer,intent(in)                    :: mask_uflux,mask_xflux
+         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_vflux
+         REALTYPE,dimension(E2DFIELD),target,intent(inout)            :: fi,Di,adv
       end subroutine adv_arakawa_j7_2dh
 
       subroutine adv_upstream_2dh(dt,f,fi,Di,adv,U,V,Dn,DU,DV, &
@@ -162,15 +162,15 @@
                                   AH,az)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,intent(in)                        :: dt,AH
-         REALTYPE,dimension(E2DFIELD),intent(in)    :: f,U,V,Dn,DU,DV
+         REALTYPE,intent(in)                                          :: dt,AH
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,U,V,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
+         REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-         REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
 #endif
-         integer,dimension(E2DFIELD),intent(in)     :: az
-         REALTYPE,dimension(E2DFIELD),intent(inout) :: fi,Di,adv
+         integer,dimension(E2DFIELD),intent(in)                       :: az
+         REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
       end subroutine adv_upstream_2dh
 
       subroutine adv_fct_2dh(fct,dt,f,fi,Di,adv,U,V,Dn,DU,DV, &
@@ -181,25 +181,19 @@
                              mask_uflux,mask_vflux)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         logical,intent(in)                         :: fct
-         REALTYPE,intent(in)                        :: dt,AH
-         REALTYPE,dimension(E2DFIELD),intent(in)    :: f,U,V,Dn,DU,DV
+         logical,intent(in)                                           :: fct
+         REALTYPE,intent(in)                                          :: dt,AH
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,U,V,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
+         REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-         REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
 #endif
-         integer,dimension(E2DFIELD),intent(in)     :: az
-         logical,dimension(:,:),pointer,intent(in)  :: mask_uflux
-         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
-         REALTYPE,dimension(E2DFIELD),intent(inout) :: fi,Di,adv
+         integer,dimension(E2DFIELD),intent(in)                       :: az
+         logical,dimension(:,:),pointer,intent(in)                    :: mask_uflux
+         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_vflux
+         REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
       end subroutine adv_fct_2dh
-
-      REALTYPE function adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
-         IMPLICIT NONE
-         integer,intent(in)  :: scheme
-         REALTYPE,intent(in) :: cfl,fuu,fu,fd
-      end function adv_interfacial_reconstruction
 
    end interface
 
@@ -800,6 +794,109 @@
 #endif
    return
    end subroutine print_adv_settings
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  REALTYPE function adv_interfacial_reconstruction -
+!
+! !INTERFACE:
+   REALTYPE function adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer,intent(in)  :: scheme
+   REALTYPE,intent(in) :: cfl,fuu,fu,fd
+!
+! !LOCAL VARIABLES:
+   REALTYPE           :: ratio,limiter,x,deltaf,deltafu
+   REALTYPE,parameter :: one6th=_ONE_/6
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   deltaf  = fd - fu
+   deltafu = fu - fuu
+
+   if (deltaf*deltafu .gt. _ZERO_) then
+
+      ratio = deltafu / deltaf   ! slope ratio
+
+      select case (scheme)
+         case (P2_PDM)
+            x = one6th*(_ONE_-_TWO_*cfl)
+            limiter = (_HALF_+x) + (_HALF_-x)*ratio
+            limiter = min(_TWO_*ratio/(cfl+1.d-10),limiter,_TWO_/(_ONE_-cfl))
+         case (SUPERBEE)
+            limiter = max(min(_TWO_*ratio,_ONE_),min(ratio,_TWO_))
+         case (MUSCL)
+            limiter = min(_TWO_*ratio,_HALF_*(_ONE_+ratio),_TWO_)
+         case (P2)
+            adv_interfacial_reconstruction = &
+                adv_interfacial_reconstruction_p2(cfl,fu,deltafu,deltaf)
+            return
+         case (UPSTREAM)
+            adv_interfacial_reconstruction = fu
+            return
+      end select
+
+      adv_interfacial_reconstruction = fu + _HALF_*limiter*(_ONE_-cfl)*deltaf
+      return
+
+   end if
+
+   select case (scheme)
+      case (P2)
+         adv_interfacial_reconstruction = &
+                adv_interfacial_reconstruction_p2(cfl,fu,deltafu,deltaf)
+      case default
+         adv_interfacial_reconstruction = fu
+   end select
+
+   return
+   end function adv_interfacial_reconstruction
+
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  REALTYPE function adv_interfacial_reconstruction_p2 -
+!
+! !INTERFACE:
+   REALTYPE function adv_interfacial_reconstruction_p2(cfl,fu,deltafu,deltaf)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   REALTYPE,intent(in) :: cfl,fu,deltafu,deltaf
+!
+! !LOCAL VARIABLES:
+   REALTYPE           :: x
+   REALTYPE,parameter :: one6th=_ONE_/6
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   x = one6th*(_ONE_-_TWO_*cfl)
+   adv_interfacial_reconstruction_p2 = &
+        fu + _HALF_*(_ONE_-cfl)*((_HALF_+x)*deltaf + (_HALF_-x)*deltafu)
+   return
+
+   end function adv_interfacial_reconstruction_p2
+
 !EOC
 !-----------------------------------------------------------------------
 #ifdef _POINTER_REMAP_
