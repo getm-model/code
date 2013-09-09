@@ -31,19 +31,19 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,intent(in)                           :: dt,splitfac,AH
-   REALTYPE,dimension(E2DFIELD),intent(in)       :: f,V,DV
+   REALTYPE,intent(in)                                          :: dt,splitfac,AH
+   REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,V,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-   REALTYPE,dimension(E2DFIELD),intent(in)       :: arcd1
+   REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
 #endif
-   integer,intent(in)                            :: scheme
-   logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_flux
-   logical,dimension(E2DFIELD),intent(in)        :: mask_update
+   integer,intent(in)                                           :: scheme
+   logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_flux
+   logical,dimension(E2DFIELD),intent(in)                       :: mask_update
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(inout)    :: fi,Di,adv
-   REALTYPE,dimension(:,:),pointer,intent(inout) :: nvd
+   REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
+   REALTYPE,dimension(:,:),pointer,intent(inout)                :: nvd
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: vflux,vflux2
