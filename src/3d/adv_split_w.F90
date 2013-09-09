@@ -41,7 +41,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
-   use advection, only: adv_tvd_limiter
+   use advection, only: adv_interfacial_reconstruction
    use advection, only: NOADV,UPSTREAM
    use advection, only: NOSPLIT_FINALISE,SPLIT_UPDATE
    use advection_3d, only: adv_ver_iterations,W_TAG
@@ -250,8 +250,7 @@
                      end if
                      if (use_limiter) then
                         cfl = cfls(k) * itersm1
-                        limit = adv_tvd_limiter(scheme,cfl,fuu,fu,fd)
-                        fu = fu + _HALF_*limit*(_ONE_-cfl)*(fd-fu)
+                        fu = adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
                      end if
                      wflux(k) = ww(i,j,k)*fu
                   end do
