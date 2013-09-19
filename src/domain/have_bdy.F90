@@ -41,6 +41,8 @@
             f = max(jlg,wfj(n)) - joff
             l = min(jhg,wlj(n)) - joff
             if(f.le.jmax .and. jmin.le.l) then
+!              KK-TODO: here we do not consider bdys defined only in the
+!                       halo zone of this subdomain. Is this a problem?
                nbdy = nbdy+1
                do k=bdy_index(m),nsbv
                   if (bdy_map(k,1) .eq. wi(n) .and. &
