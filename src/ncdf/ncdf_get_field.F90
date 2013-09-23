@@ -116,7 +116,9 @@
 !   use netcdf
    use domain, only: imin,jmin,imax,jmax,kmax,iextr,jextr,ioff,joff
    use domain, only: H,az
+#ifndef NO_3D
    use variables_3d, only: hn
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -291,8 +293,14 @@
          end do
       end do
 
+#ifndef NO_3D
       call kbk_interpol(kh,zax_2d,wrk_2d,imin,jmin,imax,jmax,kmax, &
                         az,H,hn,f)
+#else
+      FATAL 'vertical interpolation impossible for NO_3D'
+      stop 'get_3d_field_ncdf'
+#endif
+
    else
       indx = 1
       do j=jl,jh
