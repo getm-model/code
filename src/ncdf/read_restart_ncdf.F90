@@ -311,13 +311,13 @@
 
       if (Vadv_id .ne. -1) then
          status = &
-         nf90_get_var(ncid,Vadv_id,Vadv(iloc:ilen,jloc:jlen),start,edges)
+         nf90_get_var(ncid,Vadv_id,Vadv(istart:istop,jstart:jstop),start(1:3),edges(1:3))
          if (status .NE. NF90_NOERR) go to 10
          call update_2d_halo(Vadv,Vadv,av,imin,jmin,imax,jmax,V_TAG)
          call wait_halo(V_TAG)
       else if (Vinto_id .ne. -1) then
          status = &
-         nf90_get_var(ncid,Vinto_id,Vadv(iloc:ilen,jloc:jlen),start,edges)
+         nf90_get_var(ncid,Vinto_id,Vadv(istart:istop,jstart:jstop),start(1:3),edges(1:3))
          if (status .NE. NF90_NOERR) go to 10
          call update_2d_halo(Vadv,Vadv,av,imin,jmin,imax,jmax,V_TAG)
          call wait_halo(V_TAG)
@@ -406,7 +406,7 @@
 
       if (ho_id .ne. -1) then
          status = &
-         nf90_get_var(ncid,ho_id,ho(iloc:ilen,jloc:jlen,0:kmax),start,edges)
+         nf90_get_var(ncid,ho_id,ho(istart:istop,jstart:jstop,0:kmax),start(1:3),edges(1:3))
          if (status .NE. NF90_NOERR) go to 10
          call update_3d_halo(ho,ho,az,imin,jmin,imax,jmax,kmax,H_TAG)
          call wait_halo(H_TAG)
