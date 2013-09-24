@@ -445,7 +445,7 @@
                minus_bnh = _ZERO_
             else
                status = &
-               nf90_get_var(ncid,minus_bnh_id,minus_bnh(iloc:ilen,jloc:jlen,0:kmax),start,edges)
+               nf90_get_var(ncid,minus_bnh_id,minus_bnh(istart:istop,jstart:jstop,0:kmax),start(1:3),edges(1:3))
                if (status .NE. NF90_NOERR) go to 10
                call update_3d_halo(minus_bnh,minus_bnh,az,imin,jmin,imax,jmax,kmax,H_TAG)
                call wait_halo(H_TAG)
@@ -457,7 +457,7 @@
             wco = _ZERO_
          else
             status = &
-            nf90_get_var(ncid,wco_id,wco(iloc:ilen,jloc:jlen,0:kmax),start,edges)
+            nf90_get_var(ncid,wco_id,wco(istart:istop,jstart:jstop,0:kmax),start(1:3),edges(1:3))
             if (status .NE. NF90_NOERR) go to 10
             call update_3d_halo(wco,wco,az,imin,jmin,imax,jmax,kmax,H_TAG)
             call wait_halo(H_TAG)
