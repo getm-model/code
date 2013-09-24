@@ -250,26 +250,18 @@
 !  western boundary - at present elev only
    do n=1,NWB
       az(wi(n),wfj(n):wlj(n)) = BOUNDARY_POINT
-      if(wfj(n) .eq. jmin) az(wi(n),jmin-1) = az(wi(n),jmin)
-      if(wlj(n) .eq. jmax) az(wi(n),jmax+1) = az(wi(n),jmax)
    end do
 !  northern boundary - at present elev only
    do n=1,NNB
       az(nfi(n):nli(n),nj(n)) = BOUNDARY_POINT
-      if(nfi(n) .eq. imin) az(imin-1,nj(n)) = az(imin,nj(n))
-      if(nli(n) .eq. imax) az(imax+1,nj(n)) = az(imax,nj(n))
    end do
 !  easter boundary - at present elev only
    do n=1,NEB
       az(ei(n),efj(n):elj(n)) = BOUNDARY_POINT
-      if(efj(n) .eq. jmin) az(ei(n),jmin-1) = az(ei(n),jmin)
-      if(elj(n) .eq. jmax) az(ei(n),jmax+1) = az(ei(n),jmax)
    end do
 !  southern boundary - at present elev only
    do n=1,NSB
       az(sfi(n):sli(n),sj(n)) = BOUNDARY_POINT
-      if(sfi(n) .eq. imin) az(imin-1,sj(n)) = az(imin,sj(n))
-      if(sli(n) .eq. imax) az(imax+1,sj(n)) = az(imax,sj(n))
    end do
 #undef BOUNDARY_POINT
 
@@ -277,6 +269,9 @@
    call adjust_mask(trim(input_dir) // mask_adjust_file)
 
    mask = _ONE_*az
+   call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
+   call wait_halo(H_TAG)
+   az=mask
 
 !  mask for U-points
    mask=0
@@ -297,7 +292,7 @@
    call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
    call wait_halo(H_TAG)
    au = mask
-
+   
 !  mask for V-points
    mask=_ZERO_
    do j=jmin-HALO,jmax+HALO-1
