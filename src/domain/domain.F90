@@ -300,7 +300,7 @@
    mask = _ONE_*az
    call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
    call wait_halo(H_TAG)
-   az = mask
+   az=mask
 
 !  mask for U-points
    mask=0
@@ -321,7 +321,7 @@
    call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
    call wait_halo(H_TAG)
    au = mask
-
+   
 !  mask for V-points
    mask=_ZERO_
    do j=jmin-HALO,jmax+HALO-1
