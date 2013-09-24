@@ -306,12 +306,12 @@
    if (z0_method .eq. 1) then
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO-1
-           if (au(i,j) .gt. 0) zub0(i,j) = 0.5*(z0(i,j)+z0(i+1,j))
+           if (au(i,j) .gt. 0) zub0(i,j) = _HALF_*(z0(i,j)+z0(i+1,j))
          end do
       end do
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO
-           if (av(i,j) .gt. 0) zvb0(i,j) = 0.5*(z0(i,j)+z0(i,j+1))
+           if (av(i,j) .gt. 0) zvb0(i,j) = _HALF_*(z0(i,j)+z0(i,j+1))
          end do
       end do
    end if
