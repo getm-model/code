@@ -24,7 +24,7 @@
    use domain, only: NWB,NNB,NEB,NSB
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use getm_timers, only: tic,toc,TIM_DEFORM
-
+!$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
