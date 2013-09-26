@@ -84,15 +84,17 @@
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: zub,zvb
       end subroutine bottom_friction
 
-      subroutine deformation_rates(U,V,DU,DV,dudxC,dudxV,dudxU,         &
-                                             dvdyC,dvdyU,dvdyV,         &
-                                             dudyX,dvdxX,shearX,        &
-                                             dvdxU,shearU,dudyV,shearV)
+      subroutine deformation_rates(U,V,DU,DV,kwe,dudxC,dudxV,dudxU,         &
+                                                 dvdyC,dvdyU,dvdyV,         &
+                                                 dudyX,dvdxX,shearX,        &
+                                                 dvdxU,shearU,dudyV,shearV)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,DU,DV
-         REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudxC,dudxV,dudxU
-         REALTYPE,dimension(E2DFIELD),intent(out),optional :: dvdyC,dvdyU,dvdyV
+         logical,intent(in),optional                       :: kwe !keyword-enforcer
+         REALTYPE,dimension(E2DFIELD),target,intent(out),optional :: dudxC,dvdyC
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudxV,dudxU
+         REALTYPE,dimension(E2DFIELD),intent(out),optional :: dvdyU,dvdyV
          REALTYPE,dimension(:,:),pointer,intent(out),optional :: dudyX,dvdxX
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: shearX
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: dvdxU,shearU
