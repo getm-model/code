@@ -209,8 +209,9 @@
       nuh=avhback
    else
       if (bottfric_method.ne.2 .and. bottfric_method.ne.3) then
-         call getm_error("init_3d()", &
-                         "consistency with GOTM requires quadratic bottom friction");
+         STDERR LINE
+         LEVEL2 "WARNING: consistency with GOTM requires quadratic bottom friction!!!"
+         STDERR LINE
       end if
       num=1.d-15
       nuh=1.d-15
