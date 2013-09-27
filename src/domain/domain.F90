@@ -463,8 +463,9 @@
       end if
    else
 #ifndef CONSTANT_VISCOSITY
-      call getm_error("init_domain()", &
-                      "consistency with GOTM requires quadratic bottom friction");
+      STDERR LINE
+      LEVEL3 "WARNING: consistency with GOTM requires quadratic bottom friction!!!"
+      STDERR LINE
 #endif
    end if
 
