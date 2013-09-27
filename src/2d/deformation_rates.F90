@@ -158,7 +158,7 @@
       do i = nfi(n)-HALO,nli(n)+HALO-1
          if (au(i,j+1) .eq. 3) then
             dydx = ( DYVIP1 - DYV ) / DXX
-            if (av(i,j) .eq. 3) then ! concave W/N
+            if (av(i,j) .eq. 3) then ! concave W\N
                dxdy = ( DXUJP1 - DXU ) / DYX
                u_vel(i,j+1) = (                                       &
                                  (_ONE_-_QUART_*dydx*dxdy)*u_vel(i,j) &
