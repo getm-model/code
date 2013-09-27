@@ -189,38 +189,39 @@
 
    dt = M*timestep
 
+   LEVEL2 "Turbulence settings"
 #ifdef CONSTANT_VISCOSITY
    if (use_gotm) then
-      LEVEL2 "reset use_gotm=F because of"
-      LEVEL2 "obsolete CONSTANT_VISCOSITY macro."
-      LEVEL2 "Note that this behaviour will be"
-      LEVEL2 "removed in the future!"
+      LEVEL3 "Reset use_gotm=F because of obsolete CONSTANT_VISCOSITY macro."
       use_gotm = .false.
    end if
 #endif
+
+   avmback = max(_ZERO_,avmback)
+   avhback = max(_ZERO_,avhback)
+
    if (.not. use_gotm) then
-      avmback = max(_ZERO_,avmback)
-      avhback = max(_ZERO_,avhback)
-      LEVEL2 'background turbulent viscosity set to constant: ',real(avmback)
-      LEVEL2 'background turbulent diffusivity set to constant: ',real(avhback)
+      LEVEL3 'turbulent vertical viscosity set to constant: ',real(avmback)
+      LEVEL3 'turbulent vertical diffusivity set to constant: ',real(avhback)
       num=avmback
       nuh=avhback
    else
+      LEVEL3 'background turbulent vertical viscosity set to: ',real(avmback)
+      LEVEL3 'background turbulent vertical diffusivity set to: ',real(avhback)
       if (bottfric_method.ne.2 .and. bottfric_method.ne.3) then
-         call getm_error("init_3d()", &
-                         "consistency with GOTM requires quadratic bottom friction");
+         STDERR LINE
+         LEVEL3 "WARNING: consistency with GOTM requires quadratic bottom friction!!!"
+         STDERR LINE
       end if
       num=1.d-15
       nuh=1.d-15
 #ifdef TURB_ADV
       if (.not. advect_turbulence) then
-         LEVEL2 "reenabled advection of TKE and eps due to"
-         LEVEL2 "obsolete TURB_ADV macro. Note that this"
-         LEVEL2 "behaviour will be removed in the future!"
+         LEVEL3 "Reenabled advection of TKE and eps due to obsolete TURB_ADV macro."
          advect_turbulence = .true.
       end if
 #endif
-      LEVEL2 "advect_turbulence = ",advect_turbulence
+      LEVEL3 "advect_turbulence = ",advect_turbulence
    end if
 
 !  Needed for interpolation of temperature and salinity
