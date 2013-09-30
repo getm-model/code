@@ -13,6 +13,7 @@
 ! !USES:
    use parameters, only: rho_0
    use domain, only: imin,imax,jmin,jmax,kmax
+   use domain, only: ilg,ihg,jlg,jhg,ill,ihl,jll,jhl
    use domain, only: az,latc,lonc
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
    use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
@@ -160,6 +161,13 @@
                                  trim(model%info%state_variables(n)%name), &
                                  fabm_field_no,.false., &
                                  fabm_pel(:,:,:,n))
+               end do
+               do n=1,size(model%info%state_variables_ben)
+                  LEVEL4 'inquiring: ',trim(model%info%state_variables_ben(n)%name)
+                  call get_2d_field(fabm_init_file, &
+                                 trim(model%info%state_variables_ben(n)%name), &
+                                 ilg,ihg,jlg,jhg,.false., &
+                                 fabm_ben(ill:ihl,jll:jhl,n))
                end do
             end if
          case default
