@@ -29,6 +29,16 @@
    use fabm,only: type_model
 
    IMPLICIT NONE
+
+! Temporary interface (should be read from module):
+   interface
+      subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,f)
+         character(len=*),intent(in)   :: fn,varname
+         integer, intent(in)           :: il,ih,jl,jh
+         logical, intent(in)           :: break_on_missing
+         REALTYPE, intent(out)         :: f(:,:)
+      end subroutine get_2d_field
+   end interface
 !
 ! !PUBLIC DATA MEMBERS:
    public init_getm_fabm, do_getm_fabm
