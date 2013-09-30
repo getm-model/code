@@ -152,14 +152,16 @@
                   end if
                end do
             end do
-            LEVEL3 'now checking initial fields from ',trim(fabm_init_file)
-            do n=1,size(model%info%state_variables)
-               LEVEL4 'inquiring: ',trim(model%info%state_variables(n)%name)
-               call get_3d_field(fabm_init_file, &
-                              trim(model%info%state_variables(n)%name), &
-                              fabm_field_no,.false., &
-                              fabm_pel(:,:,:,n))
-            end do
+            if (fabm_init_method .eq. 2) then
+               LEVEL3 'now checking initial fields from ',trim(fabm_init_file)
+               do n=1,size(model%info%state_variables)
+                  LEVEL4 'inquiring: ',trim(model%info%state_variables(n)%name)
+                  call get_3d_field(fabm_init_file, &
+                                 trim(model%info%state_variables(n)%name), &
+                                 fabm_field_no,.false., &
+                                 fabm_pel(:,:,:,n))
+               end do
+            end if
          case default
             FATAL 'Not valid fabm_init_method specified'
             stop 'init_getm_fabm()'
