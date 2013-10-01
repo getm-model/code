@@ -5,7 +5,7 @@
 ! !IROUTINE: get_2d_field - read a 2D field from a file.
 !
 ! !INTERFACE:
-   subroutine get_2d_field(fn,varname,il,ih,jl,jh,field)
+   subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,field)
 !
 ! !DESCRIPTION:
 !  Reads varname from a named file - fn - into to field.
@@ -17,6 +17,7 @@
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fn,varname
    integer, intent(in)                 :: il,ih,jl,jh
+   logical, intent(in)                 :: break_on_missing
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out)               :: field(:,:)
@@ -41,7 +42,7 @@
          STDERR 'Should get an ASCII field'
          stop 'get_2d_field()'
       case (NETCDF)
-         call get_2d_field_ncdf(fn,varname,il,ih,jl,jh,field)
+         call get_2d_field_ncdf(fn,varname,il,ih,jl,jh,break_on_missing,field)
       case DEFAULT
          FATAL 'A non valid input format has been chosen'
          stop 'get_2d_field'
