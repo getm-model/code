@@ -13,6 +13,7 @@
 ! !USES:
    use parameters, only: rho_0
    use domain, only: imin,imax,jmin,jmax,kmax
+   use domain, only: ilg,ihg,jlg,jhg,ill,ihl,jll,jhl
    use domain, only: az,latc,lonc
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
    use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
@@ -29,6 +30,16 @@
    use fabm,only: type_model
 
    IMPLICIT NONE
+
+! Temporary interface (should be read from module):
+   interface
+      subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,f)
+         character(len=*),intent(in)   :: fn,varname
+         integer, intent(in)           :: il,ih,jl,jh
+         logical, intent(in)           :: break_on_missing
+         REALTYPE, intent(out)         :: f(:,:)
+      end subroutine get_2d_field
+   end interface
 !
 ! !PUBLIC DATA MEMBERS:
    public init_getm_fabm, postinit_getm_fabm, do_getm_fabm
@@ -167,14 +178,23 @@
                   end if
                end do
             end do
-            LEVEL3 'now checking initial fields from ',trim(fabm_init_file)
-            do n=1,size(model%info%state_variables)
-               LEVEL4 'inquiring: ',trim(model%info%state_variables(n)%name)
-               call get_3d_field(fabm_init_file, &
-                              trim(model%info%state_variables(n)%name), &
-                              fabm_field_no,.false., &
-                              fabm_pel(:,:,:,n))
-            end do
+            if (fabm_init_method .eq. 2) then
+               LEVEL3 'now checking initial fields from ',trim(fabm_init_file)
+               do n=1,size(model%info%state_variables)
+                  LEVEL4 'inquiring: ',trim(model%info%state_variables(n)%name)
+                  call get_3d_field(fabm_init_file, &
+                                 trim(model%info%state_variables(n)%name), &
+                                 fabm_field_no,.false., &
+                                 fabm_pel(:,:,:,n))
+               end do
+               do n=1,size(model%info%state_variables_ben)
+                  LEVEL4 'inquiring: ',trim(model%info%state_variables_ben(n)%name)
+                  call get_2d_field(fabm_init_file, &
+                                 trim(model%info%state_variables_ben(n)%name), &
+                                 ilg,ihg,jlg,jhg,.false., &
+                                 fabm_ben(ill:ihl,jll:jhl,n))
+               end do
+            end if
          case default
             FATAL 'Not valid fabm_init_method specified'
             stop 'init_getm_fabm()'
