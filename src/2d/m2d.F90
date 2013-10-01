@@ -67,9 +67,10 @@
       end subroutine uv_diff_2dh
 
 ! Temporary interface (should be read from module):
-      subroutine get_2d_field(fn,varname,il,ih,jl,jh,f)
+      subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,f)
          character(len=*),intent(in)   :: fn,varname
          integer, intent(in)           :: il,ih,jl,jh
+         logical, intent(in)           :: break_on_missing
          REALTYPE, intent(out)         :: f(:,:)
       end subroutine get_2d_field
    end interface
@@ -187,7 +188,7 @@
             z = elev_const
          case(2)
             LEVEL2 'getting initial surface elevation from ',trim(elev_file)
-            call get_2d_field(trim(elev_file),"elev",ilg,ihg,jlg,jhg,z(ill:ihl,jll:jhl))
+            call get_2d_field(trim(elev_file),"elev",ilg,ihg,jlg,jhg,.true.,z(ill:ihl,jll:jhl))
 !           Note (KK): we need halo update only for periodic domains
             call update_2d_halo(z,z,az,imin,jmin,imax,jmax,H_TAG)
             call wait_halo(H_TAG)
@@ -226,7 +227,7 @@
          LEVEL2 '..  will read An from An_file ',trim(An_file)
          ! Initialize and then read field:
          An = _ZERO_
-         call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,An(ill:ihl,jll:jhl))
+         call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,.true.,An(ill:ihl,jll:jhl))
          call update_2d_halo(An,An,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
          ! Compute AnX (An in X-points) based on An and the X- and T- masks
