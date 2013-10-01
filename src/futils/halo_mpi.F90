@@ -80,14 +80,8 @@
    integer                   :: yz_slice,yz_slices
    integer                   :: z_column
    integer                   :: halo_columns
-#define _MPI_TYPE_EXTENT_
-#ifdef _MPI_TYPE_EXTENT_
    integer                   :: x_size,y_size,z_size
    integer                   :: xy_size,xz_size,yz_size,xyz_size
-#else
-   integer(KIND=MPI_ADDRESS_KIND) :: x_size,y_size,z_size
-   integer(KIND=MPI_ADDRESS_KIND) :: xy_size,xz_size,yz_size,xyz_size
-#endif
    integer                   :: com_direction
    integer                   :: req(2*nneighbours)
    integer                   :: status_array(MPI_STATUS_SIZE,2*nneighbours)
@@ -607,12 +601,8 @@
 ! !LOCAL VARIABLES:
    integer                   :: m,n,o
    integer                   :: real_extent
-#ifdef _MPI_TYPE_EXTENT_
-   INTEGER                   :: lower_bound,sizeof_realtype
-#else
    INTEGER(KIND=MPI_ADDRESS_KIND) :: idum1,idum2
    INTEGER(KIND=MPI_ADDRESS_KIND) :: lower_bound,sizeof_realtype
-#endif
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -631,22 +621,16 @@
 
 !  Set up different data types
    call MPI_TYPE_SIZE(MPI_REALTYPE,real_extent,ierr)
-#ifdef _MPI_TYPE_EXTENT_
-!  deprecated - use MPI_TYPE_GET_EXTENT instead - does not work yet
-   call MPI_TYPE_EXTENT(MPI_REALTYPE,sizeof_realtype,ierr)
-#else
    call MPI_TYPE_GET_EXTENT(MPI_REALTYPE,idum1,idum2,ierr)
    lower_bound     = idum1
    sizeof_realtype = idum2
-#endif
-#undef _MPI_TYPE_EXTENT_
 
 !  1 x-line
    call MPI_TYPE_VECTOR(m,1,1,MPI_REALTYPE,x_line,ierr)
    call MPI_TYPE_COMMIT(x_line,ierr)
 
 !  HALO x-lines
-   call MPI_TYPE_HVECTOR(HALO,1,x_size*sizeof_realtype,x_line,x_lines,ierr)
+   call MPI_TYPE_CREATE_HVECTOR(HALO,1,x_size*sizeof_realtype,x_line,x_lines,ierr)
    call MPI_TYPE_COMMIT(x_lines,ierr)
 
 !  1 y-line
@@ -654,7 +638,7 @@
    call MPI_TYPE_COMMIT(y_line,ierr)
 
 !  HALO y-lines
-   call MPI_TYPE_HVECTOR(HALO,1,1*sizeof_realtype,y_line,y_lines,ierr)
+   call MPI_TYPE_CREATE_HVECTOR(HALO,1,1*sizeof_realtype,y_line,y_lines,ierr)
    call MPI_TYPE_COMMIT(y_lines,ierr)
 
 !  1 HALO-line
@@ -662,24 +646,24 @@
    call MPI_TYPE_COMMIT(halo_line,ierr)
 
 !  HALO square
-   call MPI_TYPE_HVECTOR(HALO,1,x_size*sizeof_realtype,halo_line,halo_square,ierr)
+   call MPI_TYPE_CREATE_HVECTOR(HALO,1,x_size*sizeof_realtype,halo_line,halo_square,ierr)
    call MPI_TYPE_COMMIT(halo_square,ierr)
 
 !  1 xz-slice
-   call MPI_TYPE_HVECTOR(o,1,xy_size*sizeof_realtype,x_line,xz_slice,ierr)
+   call MPI_TYPE_CREATE_HVECTOR(o,1,xy_size*sizeof_realtype,x_line,xz_slice,ierr)
    call MPI_TYPE_COMMIT(xz_slice,ierr)
 
 !  HALO xz-slices
-   call MPI_TYPE_HVECTOR(o,1,xy_size*sizeof_realtype,x_lines,xz_slices,ierr)
+   call MPI_TYPE_CREATE_HVECTOR(o,1,xy_size*sizeof_realtype,x_lines,xz_slices,ierr)
    call MPI_TYPE_COMMIT(xz_slices,ierr)
 
 #if 1
 !  1 yz slice
-   call MPI_TYPE_HVECTOR(o,1,xy_size*sizeof_realtype,y_line,yz_slice,ierr)
+   call MPI_TYPE_CREATE_HVECTOR(o,1,xy_size*sizeof_realtype,y_line,yz_slice,ierr)
    call MPI_TYPE_COMMIT(yz_slice,ierr)
 
 !  HALO yz-slices
-   call MPI_TYPE_HVECTOR(o,1,xy_size*sizeof_realtype,y_lines,yz_slices,ierr)
+   call MPI_TYPE_CREATE_HVECTOR(o,1,xy_size*sizeof_realtype,y_lines,yz_slices,ierr)
    call MPI_TYPE_COMMIT(yz_slices,ierr)
 
 #else
@@ -702,7 +686,7 @@
    call MPI_TYPE_COMMIT(z_column,ierr)
 
 !  HALO square vertical columns
-   call MPI_TYPE_HVECTOR(o,1,xy_size*sizeof_realtype,halo_square, &
+   call MPI_TYPE_CREATE_HVECTOR(o,1,xy_size*sizeof_realtype,halo_square, &
                          halo_columns,ierr)
    call MPI_TYPE_COMMIT(halo_columns,ierr)
 

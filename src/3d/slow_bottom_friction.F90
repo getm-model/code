@@ -31,6 +31,7 @@
    use variables_2d, only: zub,zvb,ru,rv,Uinto,Vinto
    use variables_3d, only: ssuo,ssun,ssvo,ssvn
    use getm_timers, only: tic, toc, TIM_SLOWBFRICT
+   use exceptions, only: getm_error
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -98,8 +99,11 @@
             HH=max(min_depth,ssun(i,j)+HU(i,j))
             ruu(i,j)=(zub(i,j)+_HALF_*HH)/zub(i,j)
             if (ruu(i,j) .le. _ONE_) then
-               STDERR i,j,ssuo(i,j),' Bottom xfriction coefficient infinite.'
-               stop 'slow_bottom_friction()'
+               LEVEL1 i,j,ssuo(i,j)
+               LEVEL1 'Bottom xfriction coefficient infinite.'
+               FATAL 'slow_bottom_friction()'
+               call getm_error('slow_bottom_friction()','Bottom xfriction coefficient infinite.') 
+               STOP ! Just if getm_error doesnt actually halt
             end if
             ruu(i,j)=(kappa/log(ruu(i,j)))**2
          end if
@@ -114,8 +118,11 @@
             HH=max(min_depth,ssvn(i,j)+HV(i,j))
             rvv(i,j)=(zvb(i,j)+_HALF_*HH)/zvb(i,j)
             if (rvv(i,j) .le. _ONE_) then
-               STDERR i,j,ssvo(i,j),' Bottom yfriction coefficient infinite.'
-               stop 'slow_bottom_friction()'
+               LEVEL1 i,j,ssvo(i,j)
+               LEVEL1 'Bottom yfriction coefficient infinite.'
+               FATAL 'slow_bottom_friction()'
+               call getm_error('slow_bottom_friction()','Bottom yfriction coefficient infinite.') 
+               STOP ! Just if getm_error doesnt actually halt
             end if
             rvv(i,j)=(kappa/log(rvv(i,j)))**2
          end if
@@ -157,6 +164,7 @@
    end do
 !$OMP END DO
 !$OMP END PARALLEL
+   first = .false.
    call toc(TIM_SLOWBFRICT)
 #ifdef DEBUG
    write(debug,*) 'Leaving slow_bottom_friction()'
