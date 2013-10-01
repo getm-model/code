@@ -18,7 +18,7 @@
    use domain, only: ioff,joff
    use meteo,  only: metforcing,calc_met
    use meteo,  only: fwf_method
-   use m2d,    only: residual
+   use m2d,    only: Am_method,NO_AM,residual
 
    IMPLICIT NONE
 !
@@ -134,12 +134,14 @@
           units='W/kg',&
           FillValue=fv,missing_value=mv,valid_range=vr)
 #endif
-      err = nf90_def_var(ncid,'phydis_2d',NCDF_FLOAT_PRECISION,f3_dims,pd2d_id)
-      if (err .NE. NF90_NOERR) go to 10
-      call set_attributes(ncid,pd2d_id, &
-          long_name='physical dissipation', &
-          units='W/kg',&
-          FillValue=fv,missing_value=mv,valid_range=vr)
+      if (Am_method .ne. NO_AM) then
+         err = nf90_def_var(ncid,'phydis_2d',NCDF_FLOAT_PRECISION,f3_dims,pd2d_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,pd2d_id, &
+             long_name='physical dissipation', &
+             units='W/kg',&
+             FillValue=fv,missing_value=mv,valid_range=vr)
+      end if
    end if
 
 !  meteorology
