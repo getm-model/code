@@ -31,7 +31,7 @@
 ! !IROUTINE: get_2d_field_ncdf()
 !
 ! !INTERFACE:
-   subroutine get_2d_field_ncdf(fn,varname,il,ih,jl,jh,field)
+   subroutine get_2d_field_ncdf(fn,varname,il,ih,jl,jh,break_on_missing,field)
 ! !USES:
     IMPLICIT NONE
 !
@@ -45,6 +45,7 @@
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fn,varname
    integer,          intent(in)        :: il,ih,jl,jh
+   logical, intent(in)                 :: break_on_missing
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE, intent(out)               :: field(:,:)
@@ -81,8 +82,13 @@
 
    status = nf90_inq_varid(ncid,trim(varname),varid)
    if (status .ne. NF90_NOERR) then
-      call netcdf_error(status,"get_2d_field_ncdf()", &
-           "Error inquiring "//trim(varname))
+      if (break_on_missing) then
+         call netcdf_error(status,"get_2d_field_ncdf()", &
+              "Error inquiring "//trim(varname))
+      else
+         LEVEL4 trim(varname),': does not exist - continuing'
+         return
+      end if
    endif
 
    status = nf90_get_var(ncid,varid,field,start,edges)
