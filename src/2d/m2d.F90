@@ -102,9 +102,10 @@
       end subroutine deformation_rates
 
 ! Temporary interface (should be read from module):
-      subroutine get_2d_field(fn,varname,il,ih,jl,jh,f)
+      subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,f)
          character(len=*),intent(in)   :: fn,varname
          integer, intent(in)           :: il,ih,jl,jh
+         logical, intent(in)           :: break_on_missing
          REALTYPE, intent(out)         :: f(:,:)
       end subroutine get_2d_field
    end interface
@@ -225,7 +226,7 @@
             z = elev_const
          case(2)
             LEVEL2 'getting initial surface elevation from ',trim(elev_file)
-            call get_2d_field(trim(elev_file),"elev",ilg,ihg,jlg,jhg,z(ill:ihl,jll:jhl))
+            call get_2d_field(trim(elev_file),"elev",ilg,ihg,jlg,jhg,.true.,z(ill:ihl,jll:jhl))
 !           Note (KK): we need halo update only for periodic domains
             call update_2d_halo(z,z,az,imin,jmin,imax,jmax,H_TAG)
             call wait_halo(H_TAG)
@@ -293,7 +294,7 @@
             if (rc /= 0) stop 'init_2d: Error allocating memory (AnC)'
             AnC = _ZERO_
 
-            call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,AnC(ill:ihl,jll:jhl))
+            call get_2d_field(trim(An_file),"An",ilg,ihg,jlg,jhg,.true.,AnC(ill:ihl,jll:jhl))
 
             if (MINVAL(AnC(imin:imax,jmin:jmax),mask=(az(imin:imax,jmin:jmax).ge.1)) .lt. _ZERO_) then
                call getm_error("init_2d()", &
