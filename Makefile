@@ -59,6 +59,7 @@ VER=2.4.0
 # 2013/04/01 - new devel release
 VER=2.5.0
 
+include compilers/compiler.$(FORTRAN_COMPILER)
 
 .PHONY: doc
 
@@ -72,7 +73,7 @@ VERSION: Makefile src/Makefile src/Rules.make
 	@mv -f .ver include/version.h
 
 FORTRAN:
-	. ./fortran_version.sh > ./include/fortran_version.h
+	@echo "#define FORTRAN_VERSION \"`$(FC) $(VERSION_FLAG) 2> /dev/null`\"" > ./include/fortran_version.h
 
 GIT:
 	@echo "#define GIT_REVISION \"`git log | head -1`\"" > ./include/git_revision.h
