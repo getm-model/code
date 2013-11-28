@@ -272,6 +272,8 @@
 !             (does not affect flux calculations of H_TAGs)
    mask_uflux(imax+HALO,:) = .false.
    mask_vflux(:,jmax+HALO) = .false.
+   mask_xflux(imax+HALO,:) = .false.
+   mask_xflux(:,jmax+HALO) = .false.
 
    adv_gridH%mask_uflux    => mask_uflux
    adv_gridH%mask_vflux    => mask_vflux(_IRANGE_HALO_,_JRANGE_HALO_-1)
