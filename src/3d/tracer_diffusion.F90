@@ -36,6 +36,8 @@
    REALTYPE,intent(inout)        :: f(I3DFIELD)
 !
 ! !OUTPUT PARAMETERS:
+!  KK-TODO: this should be an allocatable array
+!           (and an explicit interface should be provided in m3d)
    REALTYPE,intent(out),optional :: phymix(I3DFIELD)
 !
 ! !REVISION HISTORY:
