@@ -527,6 +527,11 @@
                      end if
 #endif
                      do k=1,kmax
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd) then
+                           pa_nvd2d(k)%p2d = nvd(:,:,k)
+                        end if
+#endif
                         call adv_split_v(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
                                          p_adv(:,:,k),vv(:,:,k),hv(:,:,k),          &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -537,7 +542,7 @@
                                          pa_nvd2d(k)%p2d)
 #ifndef _POINTER_REMAP_
                         if (calc_nvd) then
-                           nvd(:,:,k) = nvd(:,:,k) + pa_nvd2d(k)%p2d
+                           nvd(:,:,k) = pa_nvd2d(k)%p2d
                            pa_nvd2d(k)%p2d = _ZERO_
                         end if
 #endif
@@ -570,6 +575,11 @@
                      end if
 #endif
                      do k=1,kmax
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd) then
+                           pa_nvd2d(k)%p2d = nvd(:,:,k)
+                        end if
+#endif
                         call adv_split_v(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
                                          p_adv(:,:,k),vv(:,:,k),hv(:,:,k),          &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -580,7 +590,7 @@
                                          pa_nvd2d(k)%p2d)
 #ifndef _POINTER_REMAP_
                         if (calc_nvd) then
-                           nvd(:,:,k) = nvd(:,:,k) + pa_nvd2d(k)%p2d
+                           nvd(:,:,k) = pa_nvd2d(k)%p2d
                            pa_nvd2d(k)%p2d = _ZERO_
                         end if
 #endif
@@ -606,6 +616,11 @@
                      end if
 #endif
                      do k=1,kmax
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd) then
+                           pa_nvd2d(k)%p2d = nvd(:,:,k)
+                        end if
+#endif
                         call adv_split_u(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
                                          p_adv(:,:,k),uu(:,:,k),hu(:,:,k),          &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
@@ -616,7 +631,7 @@
                                          pa_nvd2d(k)%p2d)
 #ifndef _POINTER_REMAP_
                         if (calc_nvd) then
-                           nvd(:,:,k) = nvd(:,:,k) + pa_nvd2d(k)%p2d
+                           nvd(:,:,k) = pa_nvd2d(k)%p2d
                            pa_nvd2d(k)%p2d = _ZERO_
                         end if
 #endif
