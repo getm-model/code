@@ -36,6 +36,7 @@
    private                             :: MPI_data_types
 
 ! !PUBLIC DATA MEMBERS:
+   logical, public                     :: external_mpi_init=.false.
    integer, public                     :: myid=-1, nprocs=1
    integer, public                     :: comm_hd=MPI_COMM_WORLD
    LONGINT, public                     :: all_2d_exchange, all_3d_exchange
@@ -124,10 +125,17 @@
 #endif
 
 !  Initialize the MPI environment
-   call MPI_INIT(ierr)
+   call MPI_Initialized(external_mpi_init,ierr)
    if(ierr .ne. MPI_SUCCESS) then
-      STDERR 'Fatal error: unable to initialize MPI.'
+      STDERR 'Fatal error: unable to get MPI status.'
       call MPI_Abort(MPI_COMM_WORLD,-1,ierr)
+   end if
+   if (.not. external_mpi_init) then
+      call MPI_INIT(ierr)
+      if(ierr .ne. MPI_SUCCESS) then
+         STDERR 'Fatal error: unable to initialize MPI.'
+         call MPI_Abort(MPI_COMM_WORLD,-1,ierr)
+      end if
    end if
 
 !  Get number of processes

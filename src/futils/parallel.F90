@@ -11,7 +11,7 @@
 !
 ! !USES:
 #ifdef GETM_PARALLEL
-   use halo_mpi, only: postinit_mpi,print_MPI_info,barrier,myid
+   use halo_mpi, only: postinit_mpi,print_MPI_info,barrier,myid,external_mpi_init
 #endif
    IMPLICIT NONE
 !
@@ -134,11 +134,13 @@
 #ifdef GETM_PARALLEL
    LEVEL2 'At final MPI barrier'
    call barrier()
-   LEVEL2 'About to finish parallel part of GETM - calling MPI_Finalize()'
-   if(myid .ge. 0) then
-      call MPI_Finalize(ierr)
+   if (.not. external_mpi_init) then
+      LEVEL2 'About to finish parallel part of GETM - calling MPI_Finalize()'
+      if(myid .ge. 0) then
+         call MPI_Finalize(ierr)
+      end if
+      LEVEL2 'MPI finalized'
    end if
-   LEVEL2 'MPI finalized'
 #endif
 
 #ifdef DEBUG
