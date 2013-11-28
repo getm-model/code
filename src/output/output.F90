@@ -325,7 +325,7 @@
    write_2d = save_2d .and. n .ge. first_2d .and. mod(n,step_2d).eq.0
    write_3d = save_3d .and. n .ge. first_3d .and. mod(n,step_3d).eq.0
 
-   if (n.lt.firstN .and. .not. save_init) then
+   if (.not.save_init .and. n.eq.firstN-1) then
       write_2d = .false.
       write_3d = .false.
    end if
@@ -335,8 +335,8 @@
       if (meanout .eq. 0) then
          write_mean = (n.eq.lastN)
       else
-!         write_mean = mod(n,meanout).eq.0
-         write_mean = mod(n-mean0,meanout).eq.0
+         write_mean = (mod(n,meanout).eq.0)
+         !write_mean = (mod(n-mean0,meanout).eq.0)
       end if
       call calc_mean_fields(n,write_mean,runtype)
    end if
@@ -372,8 +372,9 @@
 
 !  Restart file
    if (save_restart) then
-!     Save last restart file
       if (hotout(1) .eq. 0) then
+!        Save last restart file
+!        also works for zero-length simulations (called from init_model)
          write_restart = (n.eq.lastN)
       else if (firstN .le. n) then ! avoid recreating just read restart file
          write_restart = hotout(1).le.n .and. n.le.hotout(2) .and. mod(n,hotout(3)).eq.0
