@@ -316,6 +316,10 @@
    write_2d = save_2d .and. n .ge. first_2d .and. mod(n,step_2d).eq.0
    write_3d = save_3d .and. n .ge. first_3d .and. mod(n,step_3d).eq.0
 
+!  TODO: Presently save_init can only be used to switch of initial output.
+!        Maybe we want to extend this so that save_init=T in any case
+!        (independent of the checks above) causes initial output?
+
    if (.not.save_init .and. n.eq.firstN-1) then
       write_2d = .false.
       write_3d = .false.
