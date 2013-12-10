@@ -38,7 +38,7 @@
 ! !PUBLIC DATA MEMBERS:
    public init_advection,do_advection,print_adv_settings
    public adv_split_u,adv_split_v,adv_upstream_2dh,adv_arakawa_j7_2dh,adv_fct_2dh
-   public adv_tvd_limiter
+   public adv_interfacial_reconstruction
 
    type, public :: t_adv_grid
       logical,dimension(:,:),pointer :: mask_uflux,mask_vflux,mask_xflux
@@ -71,21 +71,16 @@
         "2DH-J7 advection (Arakawa and Lamb, 1977)      ",  &
         "2DH-FCT advection                              ",  &
         "2DH-P2 advection                               "/)
-   integer,public,parameter           :: NOSPLIT_NOFINALISE=0
-   integer,public,parameter           :: NOSPLIT_FINALISE=1
-   integer,public,parameter           :: SPLIT_UPDATE=2
 !
 ! !LOCAL VARIABLES:
 #ifdef STATIC
    logical,dimension(E2DFIELD),target         :: mask_updateH
    logical,dimension(E2DFIELD),target         :: mask_uflux,mask_vflux,mask_xflux
    logical,dimension(E2DFIELD),target         :: mask_uupdateU,mask_vupdateV
-   REALTYPE,dimension(E2DFIELD)               :: Di,adv
 #else
    logical,dimension(:,:),allocatable,target  :: mask_updateH
    logical,dimension(:,:),allocatable,target  :: mask_uflux,mask_vflux,mask_xflux
    logical,dimension(:,:),allocatable,target  :: mask_uupdateU,mask_vupdateV
-   REALTYPE,dimension(:,:),allocatable        :: Di,adv
 #endif
 !
 ! !REVISION HISTORY:
@@ -94,117 +89,107 @@
 !-----------------------------------------------------------------------
 
    interface
-      subroutine adv_split_u(dt,f,Di,adv,U,Do,DU,                 &
+      subroutine adv_split_u(dt,f,fi,Di,adv,U,DU,   &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                             dxu,dyu,arcd1,                       &
+                             dxu,dyu,arcd1,         &
 #endif
-                             splitfac,scheme,action,AH,           &
-                             mask_flux,mask_update,mask_finalise)
+                             splitfac,scheme,AH,    &
+                             mask_flux,mask_update)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,intent(in)                             :: dt,splitfac,AH
-         REALTYPE,dimension(E2DFIELD),intent(in)         :: U,Do,DU
+         REALTYPE,intent(in)                        :: dt,splitfac,AH
+         REALTYPE,dimension(E2DFIELD),intent(in)    :: f,U,DU
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         REALTYPE,dimension(:,:),pointer,intent(in)      :: dxu,dyu
-         REALTYPE,dimension(E2DFIELD),intent(in)         :: arcd1
+         REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
+         REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
 #endif
-         integer,intent(in)                              :: scheme,action
-         logical,dimension(:,:),pointer,intent(in)       :: mask_flux
-         logical,dimension(E2DFIELD),intent(in)          :: mask_update
-         logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
-         REALTYPE,dimension(E2DFIELD),intent(inout)      :: f,Di,adv
+         integer,intent(in)                         :: scheme
+         logical,dimension(:,:),pointer,intent(in)  :: mask_flux
+         logical,dimension(E2DFIELD),intent(in)     :: mask_update
+         REALTYPE,dimension(E2DFIELD),intent(inout) :: fi,Di,adv
       end subroutine adv_split_u
 
-      subroutine adv_split_v(dt,f,Di,adv,V,Do,DV,                 &
+      subroutine adv_split_v(dt,f,fi,Di,adv,V,DV,   &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                             dxv,dyv,arcd1,                       &
+                             dxv,dyv,arcd1,         &
 #endif
-                             splitfac,scheme,action,AH,           &
-                             mask_flux,mask_update,mask_finalise)
+                             splitfac,scheme,AH,    &
+                             mask_flux,mask_update)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,intent(in)                             :: dt,splitfac,AH
-         REALTYPE,dimension(E2DFIELD),intent(in)         :: V,Do,DV
+         REALTYPE,intent(in)                                          :: dt,splitfac,AH
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,V,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-         REALTYPE,dimension(E2DFIELD),intent(in)         :: arcd1
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
 #endif
-         integer,intent(in)                              :: scheme,action
-         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_flux
-         logical,dimension(E2DFIELD),intent(in)          :: mask_update
-         logical,dimension(E2DFIELD),intent(in),optional :: mask_finalise
-         REALTYPE,dimension(E2DFIELD),intent(inout)      :: f,Di,adv
+         integer,intent(in)                                           :: scheme
+         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_flux
+         logical,dimension(E2DFIELD),intent(in)                       :: mask_update
+         REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
       end subroutine adv_split_v
 
-      subroutine adv_arakawa_j7_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV,      &
+      subroutine adv_arakawa_j7_2dh(dt,f,fi,Di,adv,U,V,Dn,DU,DV,      &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                     dxv,dyu,dxu,dyv,arcd1,            &
 #endif
-                                    action,AH,az,                     &
+                                    AH,az,                            &
                                     mask_uflux,mask_vflux,mask_xflux)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,intent(in)                        :: dt,AH
-         REALTYPE,dimension(E2DFIELD),intent(in)    :: U,V,Do,Dn,DU,DV
+         REALTYPE,intent(in)                                          :: dt,AH
+         REALTYPE,dimension(E2DFIELD),target,intent(in)               :: f
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: U,V,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
+         REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-         REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
 #endif
-         integer,intent(in)                         :: action
-         integer,dimension(E2DFIELD),intent(in)     :: az
-         logical,dimension(:,:),pointer,intent(in)  :: mask_uflux,mask_xflux
-         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
-         REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
+         integer,dimension(E2DFIELD),intent(in)                       :: az
+         logical,dimension(:,:),pointer,intent(in)                    :: mask_uflux,mask_xflux
+         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_vflux
+         REALTYPE,dimension(E2DFIELD),target,intent(inout)            :: fi,Di,adv
       end subroutine adv_arakawa_j7_2dh
 
-      subroutine adv_upstream_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
+      subroutine adv_upstream_2dh(dt,f,fi,Di,adv,U,V,Dn,DU,DV, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                   dxv,dyu,dxu,dyv,arcd1,       &
 #endif
-                                  action,AH,az)
+                                  AH,az)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,intent(in)                        :: dt,AH
-         REALTYPE,dimension(E2DFIELD),intent(in)    :: U,V,Do,Dn,DU,DV
+         REALTYPE,intent(in)                                          :: dt,AH
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,U,V,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
+         REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-         REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
 #endif
-         integer,intent(in)                         :: action
-         integer,dimension(E2DFIELD),intent(in)     :: az
-         REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
+         integer,dimension(E2DFIELD),intent(in)                       :: az
+         REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
       end subroutine adv_upstream_2dh
 
-      subroutine adv_fct_2dh(fct,dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
+      subroutine adv_fct_2dh(fct,dt,f,fi,Di,adv,U,V,Dn,DU,DV, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                              dxv,dyu,dxu,dyv,arcd1,           &
 #endif
-                             action,AH,az,                    &
+                             AH,az,                           &
                              mask_uflux,mask_vflux)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         logical,intent(in)                         :: fct
-         REALTYPE,intent(in)                        :: dt,AH
-         REALTYPE,dimension(E2DFIELD),intent(in)    :: U,V,Do,Dn,DU,DV
+         logical,intent(in)                                           :: fct
+         REALTYPE,intent(in)                                          :: dt,AH
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,U,V,Dn,DU,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-         REALTYPE,dimension(:,:),pointer,intent(in) :: dxu,dyu
+         REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
-         REALTYPE,dimension(E2DFIELD),intent(in)    :: arcd1
+         REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
 #endif
-         integer,intent(in)                         :: action
-         integer,dimension(E2DFIELD),intent(in)     :: az
-         logical,dimension(:,:),pointer,intent(in)  :: mask_uflux
-         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: mask_vflux
-         REALTYPE,dimension(E2DFIELD),intent(inout) :: f,Di,adv
+         integer,dimension(E2DFIELD),intent(in)                       :: az
+         logical,dimension(:,:),pointer,intent(in)                    :: mask_uflux
+         logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_vflux
+         REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
       end subroutine adv_fct_2dh
-
-      REALTYPE function adv_tvd_limiter(scheme,cfl,fuu,fu,fd)
-         IMPLICIT NONE
-         integer,intent(in)  :: scheme
-         REALTYPE,intent(in) :: cfl,fuu,fu,fd
-      end function adv_tvd_limiter
 
    end interface
 
@@ -260,12 +245,6 @@
 
    allocate(mask_vupdateV(E2DFIELD),stat=rc)    ! work array
    if (rc /= 0) stop 'init_advection: Error allocating memory (mask_vupdateV)'
-
-   allocate(Di(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (Di)'
-
-   allocate(adv(E2DFIELD),stat=rc)    ! work array
-   if (rc /= 0) stop 'init_advection: Error allocating memory (adv)'
 #endif
 
 !  Note (KK): In this module pointers are used extensively.
@@ -281,7 +260,7 @@
    end if
 #endif
 
-   mask_updateH  = (az.eq.1)
+   mask_updateH  = (az.eq.1) ! do not modify tracer inside open bdy cells
    mask_uflux    = (au.eq.1 .or. au.eq.2)
    mask_vflux    = (av.eq.1 .or. av.eq.2)
    mask_xflux    = (ax.eq.1)
@@ -293,6 +272,8 @@
 !             (does not affect flux calculations of H_TAGs)
    mask_uflux(imax+HALO,:) = .false.
    mask_vflux(:,jmax+HALO) = .false.
+   mask_xflux(imax+HALO,:) = .false.
+   mask_xflux(:,jmax+HALO) = .false.
 
    adv_gridH%mask_uflux    => mask_uflux
    adv_gridH%mask_vflux    => mask_vflux(_IRANGE_HALO_,_JRANGE_HALO_-1)
@@ -441,11 +422,13 @@
    REALTYPE,dimension(E2DFIELD),intent(inout)        :: f
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(out),optional :: Dires,advres
+   REALTYPE,dimension(E2DFIELD),target,intent(out),optional :: Dires,advres
 !
 ! !LOCAL VARIABLES:
-   type(t_adv_grid),pointer :: adv_grid
-   integer                  :: j
+   type(t_adv_grid),pointer            :: adv_grid
+   REALTYPE,dimension(E2DFIELD),target :: fi,Di,adv
+   REALTYPE,dimension(:,:),pointer     :: p_Di,p_adv
+   integer                             :: i,j
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -468,8 +451,20 @@
          stop 'do_advection: tag is invalid'
    end select
 
-   Di = Do
-   adv = _ZERO_
+   if (present(Dires)) then
+      p_Di => Dires
+   else
+      p_Di => Di
+   end if
+   p_Di = Do
+
+   if (present(advres)) then
+      p_adv => advres
+   else
+      p_adv => adv
+   end if
+   p_adv = _ZERO_
+
 
    if (scheme .ne. NOADV) then
 
@@ -481,73 +476,82 @@
 
                case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
-                  call adv_split_u(dt,f,Di,adv,U,Do,DU,                       &
+                  fi = f
+
+                  call adv_split_u(dt,f,fi,p_Di,p_adv,U,DU,                   &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
-                                   _ONE_,scheme,                              &
-#ifdef SLICE_MODEL
-                                   SPLIT_UPDATE,                              &
-#else
-                                   NOSPLIT_NOFINALISE,                        &
-#endif
-                                   AH,                                        &
+                                   _ONE_,scheme,AH,                           &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate)
 #ifndef SLICE_MODEL
-                  call adv_split_v(dt,f,Di,adv,V,Do,DV,                       &
+                  call adv_split_v(dt,f,fi,p_Di,p_adv,V,DV,                   &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
-                                   _ONE_,scheme,NOSPLIT_FINALISE,AH,          &
-                                   adv_grid%mask_vflux,adv_grid%mask_vupdate, &
-                                   mask_finalise=adv_grid%mask_finalise)
+                                   _ONE_,scheme,AH,                           &
+                                   adv_grid%mask_vflux,adv_grid%mask_vupdate)
+#endif
+
+#ifdef _NEW_ADV_NOSPLIT_
+!                 Note (KK): causes truncation errors
+                  f = fi
+#else
+                  do j=jmin-HALO,jmax+HALO
+                     do i=imin-HALO,imax+HALO
+                        if (adv_grid%mask_finalise(i,j)) then
+!                          Note (KK): do not modify tracer inside open bdy cells
+                           f(i,j) = ( Do(i,j)*f(i,j) - dt*p_adv(i,j) ) / p_Di(i,j)
+                        end if
+                     end do
+                  end do
 #endif
 
                case(UPSTREAM_2DH)
 
-                  call adv_upstream_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
+                  call adv_upstream_2dh(dt,f,f,p_Di,p_adv,U,V,Dn,DU,DV, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                        adv_grid%dxv,adv_grid%dyu,   &
-                                        adv_grid%dxu,adv_grid%dyv,   &
-                                        adv_grid%arcd1,              &
+                                        adv_grid%dxv,adv_grid%dyu,      &
+                                        adv_grid%dxu,adv_grid%dyv,      &
+                                        adv_grid%arcd1,                 &
 #endif
-                                        SPLIT_UPDATE,AH,adv_grid%az)
+                                        AH,adv_grid%az)
 
                case(J7)
 
-                  call adv_arakawa_j7_2dh(dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
+                  call adv_arakawa_j7_2dh(dt,f,f,p_Di,p_adv,U,V,Dn,DU,DV, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                          adv_grid%dxv,adv_grid%dyu,   &
-                                          adv_grid%dxu,adv_grid%dyv,   &
-                                          adv_grid%arcd1,              &
+                                          adv_grid%dxv,adv_grid%dyu,      &
+                                          adv_grid%dxu,adv_grid%dyv,      &
+                                          adv_grid%arcd1,                 &
 #endif
-                                          SPLIT_UPDATE,AH,adv_grid%az, &
-                                          adv_grid%mask_uflux,         &
-                                          adv_grid%mask_vflux,         &
+                                          AH,adv_grid%az,                 &
+                                          adv_grid%mask_uflux,            &
+                                          adv_grid%mask_vflux,            &
                                           adv_grid%mask_xflux)
 
                case(FCT)
 
-                  call adv_fct_2dh(.true.,dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
+                  call adv_fct_2dh(.true.,dt,f,f,p_Di,p_adv,U,V,Dn,DU,DV, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                   adv_grid%dxv,adv_grid%dyu,          &
-                                   adv_grid%dxu,adv_grid%dyv,          &
-                                   adv_grid%arcd1,                     &
+                                   adv_grid%dxv,adv_grid%dyu,             &
+                                   adv_grid%dxu,adv_grid%dyv,             &
+                                   adv_grid%arcd1,                        &
 #endif
-                                   SPLIT_UPDATE,AH,adv_grid%az,        &
-                                   adv_grid%mask_uflux,                &
+                                   AH,adv_grid%az,                        &
+                                   adv_grid%mask_uflux,                   &
                                    adv_grid%mask_vflux)
 
                case(P2_2DH)
 
-                  call adv_fct_2dh(.false.,dt,f,Di,adv,U,V,Do,Dn,DU,DV, &
+                  call adv_fct_2dh(.false.,dt,f,f,p_Di,p_adv,U,V,Dn,DU,DV, &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-                                   adv_grid%dxv,adv_grid%dyu,          &
-                                   adv_grid%dxu,adv_grid%dyv,          &
-                                   adv_grid%arcd1,                     &
+                                   adv_grid%dxv,adv_grid%dyu,              &
+                                   adv_grid%dxu,adv_grid%dyv,              &
+                                   adv_grid%arcd1,                         &
 #endif
-                                   SPLIT_UPDATE,AH,adv_grid%az,        &
-                                   adv_grid%mask_uflux,                &
+                                   AH,adv_grid%az,                         &
+                                   adv_grid%mask_uflux,                    &
                                    adv_grid%mask_vflux)
 
                case default
@@ -562,11 +566,11 @@
 
                case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
-                  call adv_split_u(dt,f,Di,adv,U,Do,DU,                       &
+                  call adv_split_u(dt,f,f,p_Di,p_adv,U,DU,                    &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
-                                   _ONE_,scheme,SPLIT_UPDATE,AH,              &
+                                   _ONE_,scheme,AH,                           &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate)
 #ifndef SLICE_MODEL
 #ifdef GETM_PARALLEL
@@ -578,11 +582,11 @@
                      call toc(TIM_ADVH)
                   end if
 #endif
-                  call adv_split_v(dt,f,Di,adv,V,Do,DV,                       &
+                  call adv_split_v(dt,f,f,p_Di,p_adv,V,DV,                    &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
-                                   _ONE_,scheme,SPLIT_UPDATE,AH,              &
+                                   _ONE_,scheme,AH,                           &
                                    adv_grid%mask_vflux,adv_grid%mask_vupdate)
 #endif
 
@@ -602,11 +606,11 @@
 
                case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
-                  call adv_split_u(dt,f,Di,adv,U,Do,DU,                       &
+                  call adv_split_u(dt,f,f,p_Di,p_adv,U,DU,                    &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
-                                   _HALF_,scheme,SPLIT_UPDATE,AH,             &
+                                   _HALF_,scheme,AH,                          &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate)
 #ifndef SLICE_MODEL
 #ifdef GETM_PARALLEL
@@ -618,11 +622,11 @@
                      call toc(TIM_ADVH)
                   end if
 #endif
-                  call adv_split_v(dt,f,Di,adv,V,Do,DV,                       &
+                  call adv_split_v(dt,f,f,p_Di,p_adv,V,DV,                    &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
 #endif
-                                   _ONE_,scheme,SPLIT_UPDATE,AH,              &
+                                   _ONE_,scheme,AH,                           &
                                    adv_grid%mask_vflux,adv_grid%mask_vupdate)
 #endif
 #ifdef GETM_PARALLEL
@@ -644,11 +648,11 @@
                      call toc(TIM_ADVH)
                   end if
 #endif
-                  call adv_split_u(dt,f,Di,adv,U,Do,DU,                       &
+                  call adv_split_u(dt,f,f,p_Di,p_adv,U,DU,                    &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
 #endif
-                                   _HALF_,scheme,SPLIT_UPDATE,AH,             &
+                                   _HALF_,scheme,AH,                          &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate)
 
                case((UPSTREAM_2DH),(J7),(FCT),(P2_2DH))
@@ -669,20 +673,25 @@
 
 #ifdef SLICE_MODEL
       j = jmax/2
-      f(:,j+1)   = f(:,j)
-      Di(:,j+1)  = Di(:,j)
-      adv(:,j+1) = adv(:,j)
+      f(:,j+1) = f(:,j)
       if (tag .eq. V_TAG) then
-         f(:,j-1)   = f(:,j)
-         Di(:,j-1)  = Di(:,j)
-         adv(:,j-1) = adv(:,j)
+         f(:,j-1) = f(:,j)
+      end if
+      if (present(Dires)) then
+         Dires(:,j+1) = Dires(:,j)
+         if (tag .eq. V_TAG) then
+            Dires(:,j-1) = Dires(:,j)
+         end if
+      end if
+      if (present(advres)) then
+         advres(:,j+1) = advres(:,j)
+         if (tag .eq. V_TAG) then
+            advres(:,j-1) = advres(:,j)
+         end if
       end if
 #endif
 
    end if
-
-   if (present(Dires)) Dires = Di
-   if (present(advres)) advres = adv
 
    call toc(TIM_ADV)
 #ifdef DEBUG
@@ -766,6 +775,109 @@
 #endif
    return
    end subroutine print_adv_settings
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  REALTYPE function adv_interfacial_reconstruction -
+!
+! !INTERFACE:
+   REALTYPE function adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer,intent(in)  :: scheme
+   REALTYPE,intent(in) :: cfl,fuu,fu,fd
+!
+! !LOCAL VARIABLES:
+   REALTYPE           :: ratio,limiter,x,deltaf,deltafu
+   REALTYPE,parameter :: one6th=_ONE_/6
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   deltaf  = fd - fu
+   deltafu = fu - fuu
+
+   if (deltaf*deltafu .gt. _ZERO_) then
+
+      ratio = deltafu / deltaf   ! slope ratio
+
+      select case (scheme)
+         case (P2_PDM)
+            x = one6th*(_ONE_-_TWO_*cfl)
+            limiter = (_HALF_+x) + (_HALF_-x)*ratio
+            limiter = min(_TWO_*ratio/(cfl+1.d-10),limiter,_TWO_/(_ONE_-cfl))
+         case (SUPERBEE)
+            limiter = max(min(_TWO_*ratio,_ONE_),min(ratio,_TWO_))
+         case (MUSCL)
+            limiter = min(_TWO_*ratio,_HALF_*(_ONE_+ratio),_TWO_)
+         case (P2)
+            adv_interfacial_reconstruction = &
+                adv_interfacial_reconstruction_p2(cfl,fu,deltafu,deltaf)
+            return
+         case (UPSTREAM)
+            adv_interfacial_reconstruction = fu
+            return
+      end select
+
+      adv_interfacial_reconstruction = fu + _HALF_*limiter*(_ONE_-cfl)*deltaf
+      return
+
+   end if
+
+   select case (scheme)
+      case (P2)
+         adv_interfacial_reconstruction = &
+                adv_interfacial_reconstruction_p2(cfl,fu,deltafu,deltaf)
+      case default
+         adv_interfacial_reconstruction = fu
+   end select
+
+   return
+   end function adv_interfacial_reconstruction
+
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  REALTYPE function adv_interfacial_reconstruction_p2 -
+!
+! !INTERFACE:
+   REALTYPE function adv_interfacial_reconstruction_p2(cfl,fu,deltafu,deltaf)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   REALTYPE,intent(in) :: cfl,fu,deltafu,deltaf
+!
+! !LOCAL VARIABLES:
+   REALTYPE           :: x
+   REALTYPE,parameter :: one6th=_ONE_/6
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   x = one6th*(_ONE_-_TWO_*cfl)
+   adv_interfacial_reconstruction_p2 = &
+        fu + _HALF_*(_ONE_-cfl)*((_HALF_+x)*deltaf + (_HALF_-x)*deltafu)
+   return
+
+   end function adv_interfacial_reconstruction_p2
+
 !EOC
 !-----------------------------------------------------------------------
 #ifdef _POINTER_REMAP_
