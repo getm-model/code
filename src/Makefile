@@ -10,11 +10,11 @@ SUBDIRS = \
 $(GETMDIR)/src/futils		\
 $(GETMDIR)/src/domain		\
 $(GETMDIR)/src/meteo		\
-$(GETMDIR)/src/ice		\
 $(GETMDIR)/src/2d
 ifneq ($(GETM_NO_3D),true)
 SUBDIRS += \
-$(GETMDIR)/src/3d
+$(GETMDIR)/src/3d		\
+$(GETMDIR)/src/ice
 endif
 SUBDIRS += \
 $(GETMDIR)/src/output		\

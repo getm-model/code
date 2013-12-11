@@ -108,7 +108,7 @@
    integer, parameter :: test_timer_first = 170
    LONGINT            :: timercounts(max_timers)
    LONGINT            :: timertics(max_timers), sysclockcalls(max_timers)
-   character(len=24)  :: timernames(max_timers)
+   character(len=32)  :: timernames(max_timers)
    LONGINT, save      :: num_clock_calls=0
 !EOP
 !-----------------------------------------------------------------------

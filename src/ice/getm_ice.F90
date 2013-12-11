@@ -13,6 +13,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,az
+   use meteo, only: albedo
    use variables_3d, only: S,T
    use ice_winton, only: do_ice_winton
    IMPLICIT NONE
@@ -71,12 +72,12 @@
    read(NAMLST,ice)
 
    select case (ice_method)
-         case (0)
-         case (1)
+         case (0) ! No ice model
+         case (1) ! Salinity dependent freezing point
             allocate(ice_mask(E2DFIELD),stat=rc)
             if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_mask)'
             ice_mask = _ZERO_
-         case (2)
+         case (2) ! Winton
 !           Allocates memory for the public data members
             allocate(ice_hs(E2DFIELD),stat=rc)
             if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hs)'
@@ -123,8 +124,8 @@
 !BOC
 !KB   call tic(TIM_METEO)
    select case (ice_method)
-      case (0)
-      case (1)
+      case (0) ! No ice model
+      case (1) ! Salinity dependent freezing point
          do j=jmin,jmax
             do i=imin,imax
                if (az(i,j) .ge. 1 .and. T(i,j,kmax).le.-0.0575*S(i,j,kmax)) then
@@ -134,8 +135,8 @@
                end if
             end do
          end do
-         
-      case (2)
+      case (2) ! Winton
+#if 0
          do j=jmin,jmax
             do i=imin,imax
                if (az(i,j) .ge. 1) then
@@ -143,6 +144,7 @@
                end if
             end do
          end do
+#endif
       case default
    end select
 !KB    call toc(TIM_METEO)
