@@ -39,7 +39,8 @@
 ! !USES:
    use time,     only: update_time,timestep
    use domain,   only: kmax
-   use meteo,    only: do_meteo,tausx,tausy,airp,fwf_method,evap,precip
+   use meteo,    only: do_meteo,tausx,tausy,airp,swr,albedo
+   use meteo,    only: fwf_method,evap,precip
 #ifndef NO_BAROCLINIC
    use getm_ice, only: do_getm_ice
 #endif
@@ -111,6 +112,7 @@
       else
          call do_meteo(n,T(:,:,kmax))
          call do_getm_ice()
+         swr = swr*(_ONE_-albedo)
 #endif
 #endif
       end if

@@ -39,7 +39,8 @@
 !  the model run.
 !
 ! !SEE ALSO:
-!  short_wave_radiation.F90, fluxes.F90, exchange_coefficients.F90
+!  short_wave_radiation.F90, albedo_water.F90, 
+!  fluxes.F90, exchange_coefficients.F90
 !
 ! !USES:
    use time, only: yearday,secondsofday,timestep
@@ -62,7 +63,8 @@
    REALTYPE, public                    :: evap_factor = _ONE_
    REALTYPE, public                    :: precip_factor = _ONE_
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
-   REALTYPE, public, dimension(:,:), allocatable, target  :: airp,tausx,tausy,swr,shf
+   REALTYPE, public, dimension(:,:), allocatable, target  :: airp,tausx,tausy
+   REALTYPE, public, dimension(:,:), allocatable, target  :: swr,albedo,shf
    REALTYPE, public, dimension(:,:), allocatable, target  :: u10,v10,t2,hum,tcc
    REALTYPE, public, dimension(:,:), allocatable, target  :: evap,precip
    REALTYPE, public                    :: cd_mom,cd_heat,cd_latent
@@ -203,6 +205,10 @@
    allocate(swr(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (swr)'
    swr = _ZERO_
+
+   allocate(albedo(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (albedo)'
+   albedo = _ZERO_
 
    allocate(shf(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (shf)'
@@ -384,9 +390,10 @@
    integer                   :: i,j
    REALTYPE                  :: ramp,hh,t,t_frac
    REALTYPE                  :: short_wave_radiation
+   REALTYPE                  :: albedo_water
    REALTYPE                  :: uu,cosconv,vv,sinconv
    REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029d0
-   REALTYPE, parameter       :: deg2rad=pi/180
+   REALTYPE, parameter       :: deg2rad=pi/180.
    logical,save              :: first=.true.
    logical                   :: have_sst
 !EOP
@@ -555,6 +562,8 @@
                      if (az(i,j) .ge. 1) then
                         swr(i,j) = short_wave_radiation             &
                                 (yearday,hh,latc(i,j),lonc(i,j),tcc(i,j))
+                        albedo(i,j) = albedo_water             &
+                                (1,yearday,hh,latc(i,j),lonc(i,j))
                      end if
                   end do
                end do

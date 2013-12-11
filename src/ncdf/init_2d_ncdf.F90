@@ -176,6 +176,13 @@
                           long_name='short wave radiation',units='W/m2', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
+      fv = albedo_missing; mv = albedo_missing; vr(1) = _ZERO_; vr(2) = _ONE_
+      err = nf90_def_var(ncid,'albedo',NCDF_FLOAT_PRECISION,f3_dims,albedo_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,albedo_id,  &
+                          long_name='surface albedo (water and ice)',units='', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
       fv = shf_missing; mv = shf_missing; vr(1) = -1000; vr(2) = 1000.
       err = nf90_def_var(ncid,'shf',NCDF_FLOAT_PRECISION,f3_dims,shf_id)
       if (err .NE. NF90_NOERR) go to 10

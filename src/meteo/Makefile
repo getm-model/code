@@ -17,6 +17,7 @@ ${LIB}(meteo.o)
 
 OBJ   = \
 ${LIB}(short_wave_radiation.o)		\
+${LIB}(albedo_water.o)		\
 ${LIB}(exchange_coefficients.o)		\
 ${LIB}(fluxes.o)
 
@@ -25,6 +26,13 @@ all: modules objects
 modules: $(MOD)
 
 objects: $(OBJ)
+
+tests: test_albedo
+
+test_albedo: modules objects test_albedo.o
+	$(FC) -o $@ $@.o $(LDFLAGS) $(LIB)
+	$(RM) $@.o
+	./$@
 
 doc: $(SRC)
 	$(PROTEX) $(SRC) > $(DOCDIR)/meteo.tex
