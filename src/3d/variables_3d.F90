@@ -145,10 +145,23 @@
    REALTYPE,dimension(:,:,:),pointer     :: dudyX_3d=>null()
    REALTYPE,dimension(:,:,:),pointer     :: dvdxX_3d=>null()
    REALTYPE,dimension(:,:,:),allocatable :: shearX_3d
+
 !  the following fields will only be allocated if deformUV_3d=.true.
    REALTYPE,dimension(:,:,:),allocatable :: dudxV_3d,dvdyU_3d,shearU_3d
+
 !  the following fields will only be allocated if calc_stirring=.true.
    REALTYPE,dimension(:,:,:),allocatable :: diffxx,diffxy,diffyx,diffyy
+
+!  the following fields will be allocated in init_nonhydrostatic
+   REALTYPE,dimension(:,:,:),allocatable,target :: minus_bnh
+   REALTYPE,dimension(:,:,:),allocatable :: wco
+   REALTYPE,dimension(:,:,:),allocatable :: uu_0,vv_0
+
+!  the following fields will be allocated in init_internal_pressure
+   REALTYPE,dimension(:,:,:),pointer            :: idpdx,idpdy
+   REALTYPE,dimension(:,:,:),allocatable,target :: idpdx_hs,idpdy_hs
+   REALTYPE,dimension(:,:,:),allocatable,target :: idpdx_nh,idpdy_nh
+   REALTYPE,dimension(:,:,:),allocatable,target :: idpdx_full,idpdy_full
 
 #ifdef GETM_BIO
    REALTYPE, allocatable               :: cc3d(:,:,:,:)
@@ -239,8 +252,6 @@
    NN=_ZERO_
    rad=_ZERO_
    light=_ONE_
-   idpdx=_ZERO_
-   idpdy=_ZERO_
 #endif
 
 #ifdef STRUCTURE_FRICTION

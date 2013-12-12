@@ -491,6 +491,14 @@
 			<element name="advect_turbulence"  type="bool"  label="advect TKE and eps">
 				<condition type="eq" variable="./use_gotm" value="True"/>
 			</element>
+
+			<element name="nonhyd_method" type="int" label="nonhydrostatic options">
+				<options>
+					<option value="-1" label="passive screening"/>
+					<option value="0" label="disabled"/>
+					<option value="1" label="active"/>
+				</options>
+			</element>
 			<element name="ip_method" type="int" label="internal pressure method">
 				<options>
 					<option value="1" label="Blumberg and Mellor"/>
@@ -805,6 +813,29 @@
 			<element name="dsr0" type="float" label="saline expansion coefficient for linear equation of state">
 				<condition type="eq" variable="./eqstate_method" value="1" />
 			</element>
+		</element>
+
+		<element name="nonhyd" label="parameters for nonhydrostatic simulations">
+			<condition type="eq" variable="/getm/m3d/nonhyd_method" value="1"/>
+			<element name="calc_hs2d" type="bool" label="only hydrostatic forcing of 2D mode"/>
+			<element name="nonhyd_iters" type="int" label="number of nonhydrostatic iterations during an internal time step" minInclusive="1"/>
+			<element name="bnh_filter" type="int" label="temporal filter for nonhydrostatic buoyancy correction">
+				<options>
+					<option value="0" label="no filtering"/>
+					<option value="1" label="one-stage FIR filter"/>
+					<option value="3" label="one-stage AR-IIR filter (accumulative average)"/>
+					<option value="4" label="moving average over iterative stages within one internal time step">
+						<condition type="ne" variable="./nonhyd_iters" value="1"/>
+					</option>
+				</options>
+			</element>
+			<element name="bnh_weight" type="float" label="weight for bnh_filter" minInclusive="0.0" maxInclusive="1.0">
+				<condition type="or">
+					<condition type="eq" variable="./bnh_filter" value="1"/>
+					<condition type="eq" variable="./bnh_filter" value="3"/>
+				</condition>
+			</element>
+			<element name="sbnh_filter" type="bool" label="spatial filtering of nh slow terms"/>
 		</element>
 
 		<element name="les" label="variables related to LES">

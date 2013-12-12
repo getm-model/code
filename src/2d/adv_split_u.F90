@@ -156,7 +156,7 @@
    use domain, only: dx,dy,ard1
 #endif
    use advection, only: adv_interfacial_reconstruction
-   use advection, only: UPSTREAM
+   use advection, only: UPSTREAM,CENTRAL
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -227,31 +227,35 @@
       do i=imin-HALO+isub,imax+HALO-1-isub
          if (mask_flux(i,j)) then
 !           Note (KK): exclude x-advection of u across W/E open bdys
-            if (U(i,j) .gt. _ZERO_) then
-               fu = f(i  ,j)               ! central
-               if (scheme .ne. UPSTREAM) then
-!                 Note (KK): also fall back to upstream near boundaries
-                  use_limiter = mask_flux(i-1,j)
-               end if
-               if (use_limiter) then
-                  cfl = U(i,j)/DU(i,j)*dti/DXU
-                  fuu = f(i-1,j)            ! upstream
-                  fd = f(i+1,j)            ! downstream
-               end if
+            if (scheme .eq. CENTRAL) then
+               fu = _HALF_*( f(i,j) + f(i+1,j) )
             else
-               fu = f(i+1,j)               ! central
-               if (scheme .ne. UPSTREAM) then
-!                 Note (KK): also fall back to upstream near boundaries
-                  use_limiter = mask_flux(i+1,j)
+               if (U(i,j) .gt. _ZERO_) then
+                  fu = f(i  ,j)               ! central
+                  if (scheme .ne. UPSTREAM) then
+!                    Note (KK): also fall back to upstream near boundaries
+                     use_limiter = mask_flux(i-1,j)
+                  end if
+                  if (use_limiter) then
+                     cfl = U(i,j)/DU(i,j)*dti/DXU
+                     fuu = f(i-1,j)            ! upstream
+                     fd = f(i+1,j)            ! downstream
+                  end if
+               else
+                  fu = f(i+1,j)               ! central
+                  if (scheme .ne. UPSTREAM) then
+!                    Note (KK): also fall back to upstream near boundaries
+                     use_limiter = mask_flux(i+1,j)
+                  end if
+                  if (use_limiter) then
+                     cfl = -U(i,j)/DU(i,j)*dti/DXU
+                     fuu = f(i+2,j)            ! upstream
+                     fd = f(i  ,j)            ! downstream
+                  end if
                end if
                if (use_limiter) then
-                  cfl = -U(i,j)/DU(i,j)*dti/DXU
-                  fuu = f(i+2,j)            ! upstream
-                  fd = f(i  ,j)            ! downstream
+                  fu = adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
                end if
-            end if
-            if (use_limiter) then
-               fu = adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
             end if
             uflux (i,j) = U(i,j)*fu
             uflux2(i,j) = uflux(i,j)*fu

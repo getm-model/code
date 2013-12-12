@@ -35,9 +35,10 @@
    use temperature, only: init_temperature,do_temperature,init_temperature_field
    use salinity, only: init_salinity,do_salinity,init_salinity_field
    use eqstate,    only: init_eqstate, do_eqstate
+#endif
+   use nonhydrostatic, only: nonhyd_method,init_nonhydrostatic
    use internal_pressure, only: init_internal_pressure, do_internal_pressure
    use internal_pressure, only: ip_method,ip_ramp,ip_ramp_is_active
-#endif
    use variables_3d
    use vertical_coordinates, only: coordinates,cord_relax
    use advection, only: NOADV
@@ -53,6 +54,7 @@
 !
 ! !PUBLIC DATA MEMBERS:
    integer                             :: M=1
+   logical                             :: calc_ip=.false.
    integer                             :: vel3d_adv_split=0
    integer                             :: vel3d_adv_hor=1
    integer                             :: vel3d_adv_ver=1
@@ -69,11 +71,6 @@
 !
 ! !LOCAL VARIABLES:
    logical         :: advect_turbulence=.false.
-#ifdef NO_BAROCLINIC
-   integer         :: ip_method
-   integer         :: ip_ramp=-1
-   logical         :: ip_ramp_is_active=.false.
-#endif
 !EOP
 !-----------------------------------------------------------------------
 
@@ -127,7 +124,8 @@
              vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver, &
              calc_temp,calc_salt,                         &
              use_gotm,avmback,avhback,advect_turbulence,  &
-             ip_method,ip_ramp,                           &
+             nonhyd_method,ip_method,ip_ramp,             &
+             avmback,avhback,advect_turbulence,           &
              vel_check,min_vel,max_vel
 !EOP
 !-------------------------------------------------------------------------
@@ -147,6 +145,7 @@
       LEVEL2 'reset runtype to 2 because neither temp nor salt are calculated'
       runtype = 2
    end if
+   calc_ip = (runtype.ge.3 .or. nonhyd_method.eq.1)
 
    deformC_3d =deformC
    deformX_3d =deformX
@@ -243,8 +242,13 @@
       if(calc_temp) call init_temperature()
       if(calc_salt) call init_salinity()
       call init_eqstate()
-      call init_internal_pressure(hotstart)
 #endif
+   end if
+
+   call init_nonhydrostatic()
+
+   if (calc_ip) then
+      call init_internal_pressure(runtype,hotstart,nonhyd_method)
    end if
 
    if (.not.hotstart .and. vert_cord.eq._ADAPTIVE_COORDS_) then
@@ -471,28 +475,31 @@
       if (vert_cord .eq. _ADAPTIVE_COORDS_) call shear_frequency()
       call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
 
+      if (nonhyd_method .eq. 1) then
+         call do_internal_pressure(2)
+      end if
+
    end if
 
 #ifndef NO_BAROCLINIC
    if (runtype .ge. 3) then
       call do_eqstate()
       call buoyancy_frequency()
-      call do_internal_pressure()
-      if (.not. hotstart) then
-#ifndef NO_BAROTROPIC
-         if (.not. no_2d) then
-            call stop_macro(.false.)
-         end if
-#endif
-      end if
-
-!     KK-TODO: call stop_macro also for hotstarts => do not store slow terms in restart files
-!              requires storage of [U|V]adv (when hotstart is done within 2d cycle)
-!              and calculation of Dn,Dun,Dvn for hostarts
-
+      call do_internal_pressure(1)
    end if
 #endif
 
+   if (.not. hotstart) then
+#ifndef NO_BAROTROPIC
+      if (.not. no_2d) then
+         call stop_macro(runtype,.false.)
+      end if
+#endif
+   end if
+
+!  KK-TODO: call stop_macro also for hotstarts => do not store slow terms in restart files
+!           requires storage of [U|V]adv (when hotstart is done within 2d cycle)
+!           and calculation of Dn,Dun,Dvn for hostarts
    return
    end subroutine postinit_3d
 !EOC
@@ -505,6 +512,8 @@
 !
 ! !INTERFACE:
    subroutine integrate_3d(runtype,n)
+!
+! !USES:
    use getm_timers, only: tic, toc, TIM_INTEGR3D
 #ifndef NO_BAROCLINIC
    use getm_timers, only: TIM_TEMPH, TIM_SALTH
@@ -585,7 +594,6 @@
 ! rotation.
 !
 ! !LOCAL VARIABLES:
-  logical, save              :: ufirst=.true.
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -617,20 +625,10 @@
 #ifdef STRUCTURE_FRICTION
    call structure_friction_3d
 #endif
-   if (ufirst) then
-      call uu_momentum_3d(n,bdy3d)
-      call vv_momentum_3d(n,bdy3d)
-      ufirst=.false.
-   else
-      call vv_momentum_3d(n,bdy3d)
-      call uu_momentum_3d(n,bdy3d)
-      ufirst=.true.
-   end if
+
+   call momentum_3d(runtype,n)
 
    if (kmax .gt. 1) then
-
-      call ww_momentum_3d()
-
 !     KK-TODO: In realistic simulations (gotm) we need SS
 !              in any case, therefore it is done here by default.
 !              In the future one might check whether a very seldom case
@@ -639,7 +637,6 @@
 !                          2) adpative coordinates
 !                          3) if(do_numerical_analyses_3d) [physical dissipation analyses]
       call shear_frequency()
-
    end if
 
    call deformation_rates_3d()
@@ -707,13 +704,14 @@
 !                          2) adaptive coordinates
       call buoyancy_frequency()
 
-      call do_internal_pressure()
+      call do_internal_pressure(1)
+
    end if
 #endif
 
 #ifndef NO_BAROTROPIC
    if (.not. no_2d) then
-      call stop_macro(.true.)
+      call stop_macro(runtype,.true.)
    end if
 #endif
 
