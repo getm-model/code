@@ -36,11 +36,9 @@
   REALTYPE                             :: sf(I3DFIELD)
 #endif
   REALTYPE                             :: ho(I3DFIELD)
-  REALTYPE, target                     :: hn(I3DFIELD)
+  REALTYPE,dimension(I3DFIELD),target  :: hn,hvel,hun,hvn
   REALTYPE                             :: huo(I3DFIELD)
-  REALTYPE, target                     :: hun(I3DFIELD)
   REALTYPE                             :: hvo(I3DFIELD)
-  REALTYPE, target                     :: hvn(I3DFIELD)
   REALTYPE                             :: hcc(I3DFIELD)
   REALTYPE                             :: uuEx(I3DFIELD)
   REALTYPE                             :: vvEx(I3DFIELD)
@@ -81,7 +79,7 @@
   REALTYPE                             :: ssun(I2DFIELD)
   REALTYPE                             :: ssvo(I2DFIELD)
   REALTYPE                             :: ssvn(I2DFIELD)
-  REALTYPE,dimension(I2DFIELD),target  :: t_Dold,t_Dn,Dun,Dvn
+  REALTYPE,dimension(I2DFIELD),target  :: Dn,Dveln,Dun,Dvn
 
 ! 3D friction in 3D domain
   REALTYPE                             :: rru(I2DFIELD)

@@ -34,20 +34,19 @@
 
    interface
 
-      subroutine depth_update(zo,z,Dlast,D,DU,DV,first,from3d)
+      subroutine depth_update(zo,z,D,Dvel,DU,DV,from3d)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,dimension(E2DFIELD),intent(in)       :: zo,z
-         logical,intent(in),optional                   :: first,from3d
-         REALTYPE,dimension(:,:),pointer,intent(inout) :: Dlast,D
-         REALTYPE,dimension(E2DFIELD),intent(out)      :: DU,DV
+         REALTYPE,dimension(E2DFIELD),intent(in)  :: zo,z
+         logical,intent(in),optional              :: from3d
+         REALTYPE,dimension(E2DFIELD),intent(out) :: D,Dvel,DU,DV
       end subroutine depth_update
 
-      subroutine uv_advect(U,V,Dold,Dnew,DU,DV)
+      subroutine uv_advect(U,V,D,Dvel,DU,DV)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V
-         REALTYPE,dimension(E2DFIELD),target,intent(in) :: Dold,Dnew,DU,DV
+         REALTYPE,dimension(E2DFIELD),target,intent(in) :: D,Dvel,DU,DV
       end subroutine uv_advect
 
       subroutine uv_diffusion(An_method,U,V,D,DU,DV)
@@ -202,7 +201,7 @@
       zo = z
 !     KK-TODO: check whether we need D[ |U|V] in init_3d
 !              otherwise we can move this call by default to postinit_2d
-      call depth_update(zo,z,Dlast,D,DU,DV,first=.true.)
+      call depth_update(zo,z,D,Dvel,DU,DV)
    end if
 
    if (Am .lt. _ZERO_) then
@@ -402,7 +401,7 @@
          end where
       end if
 
-      call depth_update(zo,z,Dlast,D,DU,DV,first=.true.)
+      call depth_update(zo,z,D,Dvel,DU,DV)
 
    end if
 
@@ -468,7 +467,7 @@
    end if
 
    call tic(TIM_INTEGR2D)
-   call uv_advect(U,V,Dlast,D,DU,DV)
+   call uv_advect(U,V,D,Dvel,DU,DV)
    call uv_diffusion(An_method,U,V,D,DU,DV) ! Has to be called after uv_advect.
    call toc(TIM_INTEGR2D)
 
@@ -481,7 +480,7 @@
    end if
    if (have_boundaries) call update_2d_bdy(loop,bdy2d_ramp)
    call sealevel()
-   call depth_update(zo,z,Dlast,D,DU,DV)
+   call depth_update(zo,z,D,Dvel,DU,DV)
 
    if(residual .gt. 0) then
       call tic(TIM_INTEGR2D)
