@@ -24,7 +24,7 @@
    use domain,       only: dx,dy,ard1
 #endif
    use m2d,          only: dtm
-   use variables_2d, only: z,D,Dlast,U,DU,V,DV,res_u,res_v
+   use variables_2d, only: zo,z,D,Dvel,U,DU,V,DV,res_u,res_v
    use variables_2d, only: numdis_2d,numdis_2d_old,phydis_2d
 #ifdef USE_BREAKS
    use variables_2d, only: break_stat
@@ -114,7 +114,7 @@
 #else
                    dx,dy,ard1,                                        &
 #endif
-                   xc,xu,xv,D,Dlast,U,DU,V,DV,wrk,wrk,vel_missing,ws)
+                   xc,xu,xv,z,zo,Dvel,U,DU,V,DV,wrk,wrk,vel_missing,ws)
          err = nf90_put_var(ncid,u_id,ws(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
@@ -127,7 +127,7 @@
 #else
                    dx,dy,ard1,                                        &
 #endif
-                   yc,yu,yv,D,Dlast,U,DU,V,DV,wrk,wrk,vel_missing,ws)
+                   yc,yu,yv,z,zo,Dvel,U,DU,V,DV,wrk,wrk,vel_missing,ws)
          err = nf90_put_var(ncid,v_id,ws(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if

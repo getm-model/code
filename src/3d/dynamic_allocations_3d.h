@@ -64,6 +64,9 @@
   allocate(hn(I3DFIELD),stat=rc)    ! 3D field for new box height (z-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (hn)'
 
+  allocate(hvel(I3DFIELD),stat=rc)    ! 3D field for intermediate box height (z-column)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (hvel)'
+
   allocate(huo(I3DFIELD),stat=rc)   ! 3D field for old box height (u-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (huo)'
 
@@ -165,11 +168,11 @@
   allocate(ssvn(I2DFIELD),stat=rc)  ! Elevation after  macro time step (v-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (ssvn)'
 
-  allocate(t_Dold(I2DFIELD),stat=rc)  ! depth before  macro time step (z-column)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (t_Dold)'
+  allocate(Dn(I2DFIELD),stat=rc)  ! depth after  macro time step (z-column)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (Dn)'
 
-  allocate(t_Dn(I2DFIELD),stat=rc)  ! depth after  macro time step (z-column)
-  if (rc /= 0) stop 'init_3d: Error allocating memory (t_Dn)'
+  allocate(Dveln(I2DFIELD),stat=rc)  ! depth during  macro time step (z-column)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (Dveln)'
 
   allocate(Dun(I2DFIELD),stat=rc)  ! depth after  macro time step (u-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (Dun)'
