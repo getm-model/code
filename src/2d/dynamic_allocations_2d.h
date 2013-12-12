@@ -12,11 +12,11 @@
    allocate(t_z(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (t_z)'
 
-   allocate(t_Dlast(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (t_Dlast)'
+   allocate(D(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (D)'
 
-   allocate(t_D(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (t_D)'
+   allocate(Dvel(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (Dvel)'
 
    allocate(DU(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (DU)'

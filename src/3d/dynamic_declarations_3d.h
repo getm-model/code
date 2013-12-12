@@ -51,7 +51,7 @@
   REALTYPE, dimension(:,:), allocatable     :: sseo,ssen
   REALTYPE, dimension(:,:), allocatable     :: ssuo,ssun
   REALTYPE, dimension(:,:), allocatable     :: ssvo,ssvn
-  REALTYPE,dimension(:,:),allocatable,target :: t_Dold,t_Dn,Dun,Dvn
+  REALTYPE,dimension(:,:),allocatable,target :: Dn,Dveln,Dun,Dvn
 
 ! 3D friction in 3D domain
   REALTYPE, dimension(:,:), allocatable     :: rru,rrv
