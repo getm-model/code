@@ -5,7 +5,7 @@
 ! !ROUTINE: uv_advect - 2D advection of momentum \label{sec-uv-advect}
 !
 ! !INTERFACE:
-   subroutine uv_advect(U,V,Dold,Dnew,DU,DV,numdis)
+   subroutine uv_advect(U,V,D,Dvel,DU,DV,numdis)
 
 !  Note (KK): keep in sync with interface in m2d.F90
 !
@@ -36,7 +36,7 @@
 !
 ! !INPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V
-   REALTYPE,dimension(E2DFIELD),target,intent(in) :: Dold,Dnew,DU,DV
+   REALTYPE,dimension(E2DFIELD),target,intent(in) :: D,Dvel,DU,DV
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE,dimension(:,:),pointer,intent(out),optional :: numdis
@@ -47,9 +47,9 @@
 ! !LOCAL VARIABLES:
    logical                             :: calc_numdis
    integer                             :: i,j
-   REALTYPE,dimension(E2DFIELD)        :: fadv,Uadv,Vadv,DUadv,DVadv,Dires
-   REALTYPE,dimension(E2DFIELD),target :: Dadv,nvd
-   REALTYPE,dimension(:,:),pointer     :: pDadv,p_nvd
+   REALTYPE,dimension(E2DFIELD)        :: fadv,Uadv,Vadv,Dires
+   REALTYPE,dimension(E2DFIELD),target :: Dadv,DUadv,DVadv,nvd
+   REALTYPE,dimension(:,:),pointer     :: pDadv,pDUadv,pDVadv,p_nvd
 #ifdef _NUMERICAL_ANALYSES_OLD_
    REALTYPE,dimension(E2DFIELD)        :: work2d
 #endif
@@ -88,6 +88,19 @@
 
 !     Here begins dimensional split advection for u-velocity
 
+!$OMP SINGLE
+!     KK-TODO: _POINTER_REMAP_, but this requires that D[U|V] become
+!              pointers like mask_[u|v]flux in do_advection and similar
+!              for h[u|v] in do_advection_3d and in uv_advect_3d
+!#ifdef _POINTER_REMAP_
+!      pDUadv(imin-HALO:,jmin-HALO:) => Dvel(1+_IRANGE_HALO_,_JRANGE_HALO_)
+!#else
+      pDUadv => DUadv
+      pDUadv(_IRANGE_HALO_-1,:) = Dvel(1+_IRANGE_HALO_,:)
+!#endif
+      pDVadv => DVadv
+!$OMP END SINGLE
+
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
       do j=jmin-HALO,jmax+HALO
@@ -101,10 +114,9 @@
                Uadv(i,j) = _HALF_*( U(i,j) + U(i+1,j) )
                Vadv(i,j) = _HALF_*( V(i,j) + V(i+1,j) )
             end if
-            DUadv(i,j) = _HALF_*( Dold(i+1,j) + Dnew(i+1,j) )
 !           Note (KK): DV only valid until jmax+1
-!                      therefore DVadv only valid until jmax+1
-            DVadv(i,j) = _HALF_*( DV(i,j) + DV(i+1,j) )
+!                      therefore pDVadv only valid until jmax+1
+            pDVadv(i,j) = _HALF_*( DV(i,j) + DV(i+1,j) )
          end do
 #ifndef SLICE_MODEL
       end do
@@ -220,8 +232,8 @@
 #endif
 
 !$OMP SINGLE
-      call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,pDadv,pDadv, &
-                        vel2d_adv_split,vel2d_adv_hor,_ZERO_,U_TAG, &
+      call do_advection(dtm,fadv,Uadv,Vadv,pDUadv,pDVadv,pDadv,pDadv, &
+                        vel2d_adv_split,vel2d_adv_hor,_ZERO_,U_TAG,   &
                         Dires=Dires,advres=UEx,nvd=p_nvd)
 !$OMP END SINGLE
 
@@ -252,7 +264,7 @@
 #endif
             do i=imin,imax
                if (az(i,j) .eq. 1) then
-                  numdis(i,j) = _HALF_*( nvd(i-1,j) + nvd(i,j) )/Dnew(i,j)*ARCD1
+                  numdis(i,j) = _HALF_*( nvd(i-1,j) + nvd(i,j) )/D(i,j)*ARCD1
                end if
             end do
 #ifndef SLICE_MODEL
@@ -296,7 +308,7 @@
 #endif
             do i=imin,imax
                if (az(i,j) .eq. 1) then
-                  numdis_2d_old(i,j) = _HALF_*( work2d(i-1,j) + work2d(i,j) )/Dnew(i,j)*ARCD1
+                  numdis_2d_old(i,j) = _HALF_*( work2d(i-1,j) + work2d(i,j) )/D(i,j)*ARCD1
                end if
             end do
 #ifndef SLICE_MODEL
@@ -308,6 +320,19 @@
 #endif
 
 !     Here begins dimensional split advection for v-velocity
+
+!$OMP SINGLE
+!     KK-TODO: _POINTER_REMAP_, but this requires that D[U|V] become
+!              pointers like mask_[u|v]flux in do_advection and similar
+!              for h[u|v] in do_advection_3d and in uv_advect_3d
+      pDUadv => DUadv
+!#ifdef _POINTER_REMAP_
+!      pDVadv(imin-HALO:,jmin-HALO:) => Dvel(_IRANGE_HALO_,1+_JRANGE_HALO_)
+!#else
+      pDVadv => DVadv
+      pDVadv(:,_JRANGE_HALO_-1) = Dvel(:,1+_JRANGE_HALO_)
+!#endif
+!$OMP END SINGLE
 
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
@@ -323,9 +348,8 @@
                Vadv(i,j) = _HALF_*( V(i,j) + V(i,j+1) )
             end if
 !           Note (KK): DU only valid until imax+1
-!                      therefore DUadv only valid until imax+1
-            DUadv(i,j) = _HALF_*( DU(i,j) + DU(i,j+1) )
-            DVadv(i,j) = _HALF_*( Dold(i,j+1) + Dnew(i,j+1) )
+!                      therefore pDUadv only valid until imax+1
+            pDUadv(i,j) = _HALF_*( DU(i,j) + DU(i,j+1) )
          end do
 #ifndef SLICE_MODEL
       end do
@@ -428,8 +452,8 @@
 #endif
 
 !$OMP SINGLE
-      call do_advection(dtm,fadv,Uadv,Vadv,DUadv,DVadv,pDadv,pDadv, &
-                        vel2d_adv_split,vel2d_adv_hor,_ZERO_,V_TAG, &
+      call do_advection(dtm,fadv,Uadv,Vadv,pDUadv,pDVadv,pDadv,pDadv, &
+                        vel2d_adv_split,vel2d_adv_hor,_ZERO_,V_TAG,   &
                         Dires=Dires,advres=VEx,nvd=p_nvd)
 !$OMP END SINGLE
 
@@ -461,7 +485,7 @@
             do i=imin,imax
                if (az(i,j) .eq. 1) then
                   numdis(i,j) = numdis(i,j)                                      &
-                               +_HALF_*( nvd(i,j-1) + nvd(i,j) )/Dnew(i,j)*ARCD1
+                               +_HALF_*( nvd(i,j-1) + nvd(i,j) )/D(i,j)*ARCD1
                end if
             end do
 #ifndef SLICE_MODEL
@@ -510,7 +534,7 @@
             do i=imin,imax
                if (az(i,j) .eq. 1) then
                   numdis_2d_old(i,j) = numdis_2d_old(i,j)                    &
-                     +_HALF_*( work2d(i,j-1) + work2d(i,j) )/Dnew(i,j)*ARCD1
+                     +_HALF_*( work2d(i,j-1) + work2d(i,j) )/D(i,j)*ARCD1
                end if
             end do
 #ifndef SLICE_MODEL
