@@ -62,12 +62,10 @@
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
 #endif
-#ifndef NO_BAROCLINIC
    use variables_3d, only: idpdx
-#endif
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG
    use meteo, only: tausx,airp
-   use m3d, only: ip_fac
+   use m3d, only: calc_ip,ip_fac
    use m3d, only: vel_check,min_vel,max_vel
    use getm_timers, only: tic, toc, TIM_UUMOMENTUM, TIM_UUMOMENTUMH
 !$ use omp_lib
@@ -145,7 +143,9 @@
 
          if (au(i,j) .eq. 1 .or. au(i,j) .eq. 2) then
             if (kmax .gt. kumin(i,j)) then
-               do k=kumin(i,j),kmax ! explicit terms
+!              explicit terms
+               do k=kumin(i,j),kmax
+!                 Coriolis
 ! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
                   Vloc=(vv(i  ,j  ,k)/sqrt(hvo(i  ,j  ,k))   &
@@ -166,17 +166,24 @@
 #ifdef _MOMENTUM_TERMS_
                   cor_u(i,j,k)=-dry_u(i,j)*ex(k)
 #endif
-#ifdef NO_BAROCLINIC
-                  ex(k)=dry_u(i,j)*(ex(k)-uuEx(i,j,k))
-#else
-                  ex(k)=dry_u(i,j)*(ex(k)-uuEx(i,j,k)+ip_fac*idpdx(i,j,k))
-#ifdef _MOMENTUM_TERMS_
-                  ipg_u(i,j,k)=-dry_u(i,j)*ip_fac*idpdx(i,j,k)
-#endif
-#endif
+!                 advection / diffusion
+                  ex(k) = ex(k) - uuEx(i,j,k)
                end do
-               ex(kmax)=ex(kmax)                                         &
-                       +dry_u(i,j)*_HALF_*(tausx(i,j)+tausx(i+1,j))*rho_0i
+!              internal pressure gradient
+               if (calc_ip) then
+                  do k=kumin(i,j),kmax
+                     ex(k) = ex(k) + ip_fac*idpdx(i,j,k)
+#ifdef _MOMENTUM_TERMS_
+                     ipg_u(i,j,k)=-dry_u(i,j)*ip_fac*idpdx(i,j,k)
+#endif
+                  end do
+               end if
+!              surface stress
+               ex(kmax) = ex(kmax) + _HALF_*(tausx(i,j)+tausx(i+1,j))*rho_0i
+!              finalise explicit terms
+               do k=kumin(i,j),kmax
+                  ex(k) = dry_u(i,j) * ex(k)
+               end do
 !     Eddy viscosity
                do k=kumin(i,j),kmax-1
                   dif(k)=0.5*(num(i,j,k)+num(i+1,j,k)) + avmmol

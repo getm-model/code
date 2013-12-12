@@ -67,27 +67,32 @@
 #else
    use domain, only: dx,dy
 #endif
-   use variables_3d, only: kmin,hn,idpdx,idpdy,buoy,ssen
+#ifndef NO_BAROCLINIC
+   use variables_3d, only: buoy_eos=>buoy
+#endif
+   use variables_3d, only: kmin,hn,idpdx,idpdy,ssen,minus_bnh
+
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
    public init_internal_pressure, do_internal_pressure
-   integer, public           :: ip_method=1
-   integer, public           :: ip_ramp=-1
-   logical, public           :: ip_ramp_is_active=.false.
+   integer,public                               :: ip_method=1
+   integer,public                               :: ip_ramp=-1
+   logical,public                               :: ip_ramp_is_active=.false.
+   REALTYPE,dimension(:,:,:),pointer,public     :: buoy
 #ifdef STATIC
-   REALTYPE                  :: zz(I3DFIELD)
-#ifdef SUBSTR_INI_PRESS
-   REALTYPE                  :: idpdx0(I3DFIELD),idpdy0(I3DFIELD)
-#endif
+!  KK-TODO: this should become an automatic array in each ip routine
+   REALTYPE,public                  :: zz(I3DFIELD)
 #else
-   REALTYPE, allocatable     :: zz(:,:,:)
-#ifdef SUBSTR_INI_PRESS
-   REALTYPE, allocatable     :: idpdx0(:,:,:),idpdy0(:,:,:)
-#endif
+   REALTYPE,allocatable,public     :: zz(:,:,:)
 #endif
 !
 ! !PRIVATE DATA MEMBERS:
+   REALTYPE,dimension(:,:,:),allocatable,target,private :: buoy_c
+#ifdef SUBSTR_INI_PRESS
+   REALTYPE,dimension(:,:,:),allocatable,private        :: idpdx0,idpdy0
+#endif
+   logical,private                                      :: calc_buoyc=.false.
    integer, private, parameter         :: BLUMBERG_MELLOR=1
    integer, private, parameter         :: BLUMBERG_MELLOR_LIN=2
    integer, private, parameter         :: Z_INTERPOL=3
@@ -111,41 +116,33 @@
 ! \label{sec-init-internal pressure}
 !
 ! !INTERFACE:
-   subroutine init_internal_pressure(hotstart)
-   IMPLICIT NONE
+   subroutine init_internal_pressure(runtype,hotstart,nonhyd_method)
 !
 ! !DESCRIPTION:
 !
 ! Here, some necessary memory is allocated (in case of the compiler option
 ! {\tt STATIC}), and information is written to the log-file of
 ! the simulation.
+
+   IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   logical,intent(in) :: hotstart
+   integer, intent(in) :: runtype,nonhyd_method
+   logical, intent(in) :: hotstart
 !
 ! !LOCAL VARIABLES
    integer         :: rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-
-#ifndef STATIC
-   allocate(zz(I3DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_internal_pressure: Error allocating memory (zz)'
-   zz=_ZERO_
-#ifdef SUBSTR_INI_PRESS
-   allocate(idpdx0(I3DFIELD),stat=rc) ! Initial x - pressure gradient.
-   if (rc /= 0) stop &
-        'init_internal_pressure(): Error allocating memory (idpdx0)'
-   allocate(idpdy0(I3DFIELD),stat=rc) ! Initial y - pressure gradient.
-   if (rc /= 0) stop &
-         'init_internal_pressure(): Error allocating memory (idpdy0)'
-   idpdx0=_ZERO_ ;  idpdy0=_ZERO_
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'init_internal_pressure() # ',Ncall
 #endif
-#endif
-
 
    LEVEL2 'init_internal_pressure()'
+
    select case (ip_method)
       case(BLUMBERG_MELLOR)
          LEVEL3 'Blumber-Mellor scheme'
@@ -175,6 +172,47 @@
          LEVEL3 'WARNING: hotstart is .true. AND ip_ramp .gt. 1'
          LEVEL3 'WARNING: .. be sure you know what you are doing ..'
       end if
+   end if
+
+   allocate(idpdx(I3DFIELD),stat=rc) ! Internal pressure gradient - x
+   if (rc /= 0) stop 'init_internal_pressure(): Error allocating memory (idpdx)'
+   idpdx = _ZERO_
+
+#ifndef SLICE_MODEL
+   allocate(idpdy(I3DFIELD),stat=rc) ! Internal pressure gradient - y
+   if (rc /= 0) stop 'init_internal_pressure(): Error allocating memory (idpdy)'
+   idpdy = _ZERO_
+#endif
+
+#ifndef STATIC
+   allocate(zz(I3DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_internal_pressure: Error allocating memory (zz)'
+   zz=_ZERO_
+#endif
+
+#ifdef SUBSTR_INI_PRESS
+   allocate(idpdx0(I3DFIELD),stat=rc) ! Initial x - pressure gradient.
+   if (rc /= 0) stop 'init_internal_pressure(): Error allocating memory (idpdx0)'
+   idpdx0=_ZERO_
+
+#ifndef SLICE_MODEL
+   allocate(idpdy0(I3DFIELD),stat=rc) ! Initial y - pressure gradient.
+   if (rc /= 0) stop 'init_internal_pressure(): Error allocating memory (idpdy0)'
+   idpdy0=_ZERO_
+#endif
+#endif
+
+   if (runtype.ge.3 .and. nonhyd_method.eq.1) then
+      calc_buoyc = .true.
+      allocate(buoy_c(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_internal_pressure: Error allocating memory (buoy_c)'
+      buoy => buoy_c
+   else if(nonhyd_method .eq. 1) then
+      buoy => minus_bnh
+   else
+#ifndef NO_BAROCLINIC
+      buoy => buoy_eos
+#endif
    end if
 
    return
@@ -217,6 +255,12 @@
 #endif
    call tic(TIM_INTPRESS)
 
+   if (calc_buoyc) then
+#ifndef NO_BAROCLINIC
+      buoy_c = buoy_eos + minus_bnh
+#endif
+   end if
+
 ! BJB-NOTE: Initialization of zz, idpdx and ipdy moved to the
 !  individual ip_methods to allow speed-up based on method (by
 !  local reduction of amount of initialzation) BJB 2009-09-24.
@@ -249,8 +293,10 @@
             do i=imin,imax
                idpdx0(i,j,k) = idpdx(i,j,k)
                idpdx(i,j,k) = _ZERO_
+#ifndef SLICE_MODEL
                idpdy0(i,j,k) = idpdy(i,j,k)
                idpdy(i,j,k) = _ZERO_
+#endif
             end do
          end do
       end do
@@ -259,7 +305,9 @@
          do j=jmin,jmax
             do i=imin,imax
                idpdx(i,j,k) = idpdx(i,j,k) - idpdx0(i,j,k)
+#ifndef SLICE_MODEL
                idpdy(i,j,k) = idpdy(i,j,k) - idpdy0(i,j,k)
+#endif
             end do
          end do
       end do

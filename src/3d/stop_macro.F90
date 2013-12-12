@@ -22,13 +22,11 @@
    use variables_2d, only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
    use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,Dn,Dveln,Dun,Dvn
    use variables_3d, only: Uadv,Vadv,uuEx,vvEx,rru,rrv
-#ifndef NO_BAROCLINIC
    use variables_3d, only: idpdx,idpdy
-#endif
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
 #endif
-   use m3d, only: ip_fac
+   use m3d, only: calc_ip,ip_fac
    use m2d, only: uv_advect,uv_diffusion,bottom_friction
    use getm_timers, only: tic, toc, TIM_STOPMCR
 !$ use omp_lib
@@ -67,15 +65,16 @@
 
             if (au(i,j) .ge. 1) then
 
-               vertsum=-UEx(i,j)
+               vertsum = -UEx(i,j)
                do k=kumin(i,j),kmax
-#ifdef NO_BAROCLINIC
-                     vertsum=vertsum+uuEx(i,j,k)
-#else
-                     vertsum=vertsum+uuEx(i,j,k)-ip_fac*idpdx(i,j,k)
-#endif
+                  vertsum = vertsum + uuEx(i,j,k)
                end do
-               SlUx(i,j)=vertsum
+               if (calc_ip) then
+                  do k=kumin(i,j),kmax
+                     vertsum = vertsum - ip_fac*idpdx(i,j,k)
+                  end do
+               end if
+               SlUx(i,j) = vertsum
 
 #ifdef NO_SLR
                STDERR 'NO_SLR U'
@@ -96,15 +95,18 @@
 
             if (av(i,j) .ge. 1) then
 
-               vertsum=-VEx(i,j)
+               vertsum = -VEx(i,j)
                do k=kvmin(i,j),kmax
-#ifdef NO_BAROCLINIC
-                     vertsum=vertsum+vvEx(i,j,k)
-#else
-                     vertsum=vertsum+vvEx(i,j,k)-ip_fac*idpdy(i,j,k)
-#endif
+                  vertsum = vertsum + vvEx(i,j,k)
                end do
-               SlVx(i,j)=vertsum
+#ifndef SLICE_MODEL
+               if (calc_ip) then
+                  do k=kvmin(i,j),kmax
+                     vertsum = vertsum - ip_fac*idpdy(i,j,k)
+                  end do
+               end if
+#endif
+               SlVx(i,j) = vertsum
 
 #ifdef NO_SLR
                STDERR 'NO_SLR V'
@@ -126,28 +128,25 @@
          end do
       end do
 !$OMP END DO
+   else if (calc_ip) then
 
-#ifndef NO_BAROCLINIC
+!     Note (KK): here kmax=1, thus [uu|vv]=[U|V]int and only internal
+!                pressure contributes to slow terms
 
-   else
-!
-! Here kmax=1, so the loops degenerate and there is no need
-! to test for k .ge. kumin(i,j).
-      k=1
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin,jmax
          do i=imin,imax
             if (au(i,j) .ge. 1) then
-               SlUx(i,j)=-ip_fac*idpdx(i,j,k)
+               SlUx(i,j) = - ip_fac*idpdx(i,j,1)
             end if
+#ifndef SLICE_MODEL
             if (av(i,j) .ge. 1) then
-               SlVx(i,j)=-ip_fac*idpdy(i,j,k)
+               SlVx(i,j) = - ip_fac*idpdy(i,j,1)
             end if
+#endif
          end do
       end do
 !$OMP END DO
-
-#endif
 
    end if
 
