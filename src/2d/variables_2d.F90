@@ -23,7 +23,7 @@
 !
 ! !PUBLIC DATA MEMBERS:
    REALTYPE                            :: dtm
-   REALTYPE,dimension(:,:),pointer     :: zo,z,Dlast,D
+   REALTYPE,dimension(:,:),pointer     :: zo,z
    logical                             :: do_numerical_analyses_2d=.false.
 
 #ifdef STATIC
@@ -120,14 +120,13 @@
 #endif
 
    zo => t_zo ; z => t_z
-   Dlast => t_Dlast ; D => t_D
 
 #ifdef USE_BREAKS
    break_stat = 0
 #endif
 
    z  = _ZERO_; zo =_ZERO_
-   Dlast = _ZERO_ ; D = _ZERO_
+   D = _ZERO_ ; Dvel = _ZERO_
    U = _ZERO_; DU = _ZERO_; fU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; DV = _ZERO_; fV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
 
