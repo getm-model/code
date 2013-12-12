@@ -387,6 +387,9 @@
       end do
 
       call depth_update(sseo,ssen,Dn,Dveln,Dun,Dvn,from3d=.true.)
+!     KK-TODO: do not store ss[u|v]n in hotstart file
+!     ssun = Dun - HU
+!     ssvn = Dvn - HV
       call coordinates(hotstart)
 
    end if
