@@ -90,7 +90,7 @@
    use variables_3d, only: kmin
    use variables_3d, only: minus_bnh,wco
    use variables_3d, only: uu_0,vv_0
-   use variables_3d, only: dt,uu,vv,ww,ho,hn,hun,hvn,num
+   use variables_3d, only: dt,uu,vv,ww,ho,hn,hvel,hun,hvn,num
    use m2d, only: no_2d,avmmol
 #ifndef NO_ADVECT
    use advection, only: NOSPLIT,CENTRAL
@@ -249,7 +249,7 @@
    integer,intent(in)           :: nonhyd_loop,vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver
 !
 ! !LOCAL VARIABLES:
-   REALTYPE,dimension(I3DFIELD) :: hwc,wc,bnh,fadv3d
+   REALTYPE,dimension(I3DFIELD) :: wc,bnh,fadv3d
    integer                      :: i,j,k
 !EOP
 !-----------------------------------------------------------------------
@@ -264,16 +264,14 @@
 #endif
    call tic(TIM_NONHYD)
 
-   hwc = _HALF_*(ho + hn)
-
 !  calculate wc
-   call to_w(imin,jmin,imax,jmax,kmin,kmax,az,dt,                 &
+   call to_w(imin,jmin,imax,jmax,kmin,kmax,az,dt,           &
 #if defined(CURVILINEAR) || defined(SPHERICAL)
-             dxv,dyu,arcd1,                                       &
+             dxv,dyu,arcd1,                                 &
 #else
-             dx,dy,ard1,                                          &
+             dx,dy,ard1,                                    &
 #endif
-             H,HU,HV,hn,ho,uu,hun,vv,hvn,ww,_ZERO_,wc)
+             H,HU,HV,hn,ho,hvel,uu,hun,vv,hvn,ww,_ZERO_,wc)
 
    call update_3d_halo(wc,wc,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)
@@ -281,7 +279,7 @@
 !  initialise bnh by advective term
 #ifndef NO_ADVECT
    fadv3d = wc
-   call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,hwc,hwc,   &
+   call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,hvel,hvel, &
                         NOSPLIT,CENTRAL,CENTRAL,_ZERO_,H_TAG, &
                         advres=bnh)
    call update_3d_halo(bnh,bnh,az,imin,jmin,imax,jmax,kmax,H_TAG)
@@ -302,32 +300,32 @@
 
 !           add vertical viscous terms
 !           KK-TODO: do we really have to add num?
-            bnh(i,j,1) = bnh(i,j,1)                       &
-               - (num(i,j,1) + avmmol)                    &
-                 * (           wc(i,j,2) -  wc(i,j,1)   ) &
-                 / ( _HALF_*( hwc(i,j,1) + hwc(i,j,2) ) )
+            bnh(i,j,1) = bnh(i,j,1)                         &
+               - (num(i,j,1) + avmmol)                      &
+                 * (           wc(i,j,2) -  wc(i,j,1)   )   &
+                 / ( _HALF_*( hvel(i,j,1) + hvel(i,j,2) ) )
             do k=2,kmax-1
-               bnh(i,j,k) = bnh(i,j,k)                                 &
-                  - (                                                  &
-                        (num(i,j,k) + avmmol)                          &
-                        * (             wc(i,j,k+1) -  wc(i,j,k  )   ) &
-                        / ( _HALF_ * ( hwc(i,j,k  ) + hwc(i,j,k+1) ) ) &
-                      - (num(i,j,k-1) + avmmol)                        &
-                        * (             wc(i,j,k  ) -  wc(i,j,k-1)   ) &
-                        / ( _HALF_ * ( hwc(i,j,k-1) + hwc(i,j,k  ) ) ) &
+               bnh(i,j,k) = bnh(i,j,k)                                   &
+                  - (                                                    &
+                        (num(i,j,k) + avmmol)                            &
+                        * (             wc(i,j,k+1) -  wc(i,j,k  )   )   &
+                        / ( _HALF_ * ( hvel(i,j,k  ) + hvel(i,j,k+1) ) ) &
+                      - (num(i,j,k-1) + avmmol)                          &
+                        * (             wc(i,j,k  ) -  wc(i,j,k-1)   )   &
+                        / ( _HALF_ * ( hvel(i,j,k-1) + hvel(i,j,k  ) ) ) &
                      )
             end do
-            bnh(i,j,kmax) = bnh(i,j,kmax)                             &
-               - (num(i,j,kmax-1) + avmmol)                           &
-                 * (             wc(i,j,kmax  ) -  wc(i,j,kmax-1)   ) &
-                 / ( _HALF_ * ( hwc(i,j,kmax-1) + hwc(i,j,kmax  ) ) )
+            bnh(i,j,kmax) = bnh(i,j,kmax)                               &
+               - (num(i,j,kmax-1) + avmmol)                             &
+                 * (             wc(i,j,kmax  ) -  wc(i,j,kmax-1)   )   &
+                 / ( _HALF_ * ( hvel(i,j,kmax-1) + hvel(i,j,kmax  ) ) )
 
 !           add local vertical acceleration and divide by layer height
-            wc(i,j,1:kmax) = hwc(i,j,1:kmax)*wc(i,j,1:kmax)
+            wc(i,j,1:kmax) = hvel(i,j,1:kmax)*wc(i,j,1:kmax)
             bnh(i,j,1:kmax) = (                                          &
                                  bnh(i,j,1:kmax)                         &
                                + (wc(i,j,1:kmax) - wco(i,j,1:kmax))*dtm1 &
-                              )/hwc(i,j,1:kmax)
+                              )/hvel(i,j,1:kmax)
 
          end if
       end do

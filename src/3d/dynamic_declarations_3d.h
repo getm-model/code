@@ -21,7 +21,7 @@
 #ifdef STRUCTURE_FRICTION
   REALTYPE, dimension(:,:,:), allocatable   :: sf
 #endif
-  REALTYPE, dimension(:,:,:), allocatable, target :: hn,hun,hvn
+  REALTYPE, dimension(:,:,:), allocatable, target :: hn,hvel,hun,hvn
   REALTYPE, dimension(:,:,:), allocatable   :: ho,huo,hvo
   REALTYPE, dimension(:,:,:), allocatable   :: hcc
   REALTYPE, dimension(:,:,:), allocatable   :: uuEx,vvEx
@@ -49,7 +49,7 @@
   REALTYPE, dimension(:,:), allocatable     :: sseo,ssen
   REALTYPE, dimension(:,:), allocatable     :: ssuo,ssun
   REALTYPE, dimension(:,:), allocatable     :: ssvo,ssvn
-  REALTYPE,dimension(:,:),allocatable,target :: t_Dold,t_Dn,Dun,Dvn
+  REALTYPE,dimension(:,:),allocatable,target :: Dn,Dveln,Dun,Dvn
   REALTYPE,dimension(:,:),allocatable        :: Uadv,Vadv
 
 ! 3D friction in 3D domain

@@ -16,7 +16,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax,H,HU,HV,az,au,av,min_depth
    use domain, only: ga,ddu,ddl,d_gamma,gamma_surf
    use variables_3d, only: dt,kmin,kumin,kvmin,ho,hn,huo,hun,hvo,hvn
-   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
+   use variables_3d, only: sseo,ssen,ssuo,ssvo
 #endif
    IMPLICIT NONE
 !
