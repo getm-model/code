@@ -20,23 +20,31 @@ MOD = \
 $(LIB)(variables_3d.o)		\
 $(LIB)(vertical_coordinates.o)	\
 $(LIB)(advection_3d.o)
+
 ifneq ($(GETM_NO_BAROCLINIC),true)
 MOD += \
 $(LIB)(temperature.o)			\
 $(LIB)(salinity.o)			\
-$(LIB)(eqstate.o)			\
-$(LIB)(internal_pressure.o)
+$(LIB)(eqstate.o)
 endif
+
+MOD += \
+$(LIB)(nonhydrostatic.o)		\
+$(LIB)(internal_pressure.o)
+
 ifeq ($(GETM_SPM),true)
 MOD += \
 $(LIB)(spm.o)
 endif
+
 ifeq ($(FABM),true)
 MOD += $(LIB)(getm_fabm.o)
 endif
+
 ifeq ($(GETM_BIO),true)
 MOD += $(LIB)(getm_bio.o)
 endif
+
 MOD += \
 $(LIB)(bdy_3d.o)			\
 $(LIB)(m3d.o)				\
@@ -48,35 +56,40 @@ $(LIB)(hcc_check.o)			\
 $(LIB)(sigma_coordinates.o)		\
 $(LIB)(general_coordinates.o)		\
 $(LIB)(hybrid_coordinates.o)		\
+$(LIB)(adaptive_coordinates.o)		\
+$(LIB)(preadapt_coordinates.o)		\
 $(LIB)(uu_momentum_3d.o)		\
 $(LIB)(vv_momentum_3d.o)		\
-$(LIB)(ww_momentum_3d.o)
+$(LIB)(ww_momentum_3d.o)		\
+$(LIB)(momentum_3d.o)
+
 ifeq ($(GETM_STRUCTURE_FRICTION),true)
 OBJ += \
 $(LIB)(structure_friction_3d.o)
 endif
+
 OBJ += \
 $(LIB)(deformation_rates_3d.o)		\
 $(LIB)(uv_advect_3d.o)			\
 $(LIB)(uv_diffusion_3d.o)               \
 $(LIB)(physical_dissipation_3d.o)	\
-$(LIB)(adaptive_coordinates.o)          \
-$(LIB)(preadapt_coordinates.o)
-ifneq ($(GETM_NO_BAROCLINIC),true)
-OBJ += \
 $(LIB)(ip_blumberg_mellor.o)		\
 $(LIB)(ip_blumberg_mellor_lin.o)	\
 $(LIB)(ip_z_interpol.o)			\
 $(LIB)(ip_song_wright.o)		\
 $(LIB)(ip_shchepetkin_mcwilliams.o)     \
 $(LIB)(ip_stelling_vankester.o)		\
-$(LIB)(ip_chu_fan.o)            	\
+$(LIB)(ip_chu_fan.o)
+
+ifneq ($(GETM_NO_BAROCLINIC),true)
+OBJ += \
 $(LIB)(buoyancy_frequency.o)		\
 $(LIB)(numerical_mixing.o)		\
 $(LIB)(physical_mixing.o)		\
 $(LIB)(tracer_stirring.o)		\
 $(LIB)(tracer_diffusion.o)
 endif
+
 OBJ += \
 $(LIB)(eddyviscosity.o)			\
 $(LIB)(adv_split_w.o)			\

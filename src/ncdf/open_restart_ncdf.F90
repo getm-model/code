@@ -298,6 +298,25 @@
       status = nf90_inq_varid(ncid, "S", S_id)
       if (status .NE. NF90_NOERR) go to 10
 #endif
+
+      if (nonhyd_method .ne. 0) then
+         if (nonhyd_method .eq. 1) then
+            varnam="minus_bnh"
+            status = nf90_inq_varid(ncid, "minus_bnh", minus_bnh_id)
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 'variable missing in restart file. Skipping ',varnam
+               minus_bnh_id=-1
+            end if
+         end if
+
+         varnam="wco"
+         status = nf90_inq_varid(ncid, "wco", wco_id)
+         if (status .NE. NF90_NOERR) then
+            LEVEL3 'variable missing in restart file. Skipping ',varnam
+            wco_id=-1
+         end if
+      end if
+
 #ifdef SPM
       varnam="spm"
       status = nf90_inq_varid(ncid, "spm", spm_id)

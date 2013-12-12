@@ -357,7 +357,7 @@
 
                select case (hscheme)
 
-                  case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
+                  case((CENTRAL),(UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
                      do k=1,kmax
                         call adv_split_u(dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k),         &
