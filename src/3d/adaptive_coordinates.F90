@@ -52,7 +52,7 @@
 ! !USES:
    use domain, only: ga,imin,imax,jmin,jmax,kmax,H,HU,HV,az,au,av
    use variables_3d, only: dt,kmin,kumin,kvmin,ho,hn,huo,hvo,hun,hvn
-   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
+   use variables_3d, only: Dn,Dun,Dvn,sseo,ssen,ssuo,ssvo
    use variables_3d, only: kmin_pmz,kumin_pmz,kvmin_pmz
    use variables_3d, only: preadapt
    use m3d, only: calc_salt, calc_temp, bdy3d
@@ -210,7 +210,7 @@ STDERR 'adaptive_coordinates()'
          end if
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO
-               hn(i,j,:)=(ssen(i,j)+H(i,j))*kmaxm1
+               hn(i,j,:) = Dn(i,j) * kmaxm1
             end do
          end do
       end if
@@ -288,7 +288,7 @@ STDERR 'adaptive_coordinates()'
             end do
          end do
       end do
-      call hcheck(hn,ssen,H)
+      call hcheck(hn,Dn)
 
 !     Update the halo zones
       call update_3d_halo(hn,hn,az,imin,jmin,imax,jmax,kmax,H_TAG)
@@ -393,7 +393,7 @@ STDERR 'adaptive_coordinates()'
          end do
 
          call ztoh(zpos,hn,depthmin)
-         call hcheck(hn,ssen,H)
+         call hcheck(hn,Dn)
 
 
       end do ! End of Horizontal diffusion of zpos repeated mhor times
@@ -412,8 +412,8 @@ STDERR 'adaptive_coordinates()'
 #endif
                SSloc=SS(i,j,:)
                do k=0,kmax
-                  gaa(k)   =( zpos(i,j,k)-ssen(i,j))/(ssen(i,j)+H(i,j))
-                  gaaold(k)=(zposo(i,j,k)-ssen(i,j))/(ssen(i,j)+H(i,j))
+                  gaa(k)   =( zpos(i,j,k)-ssen(i,j))/Dn(i,j)
+                  gaaold(k)=(zposo(i,j,k)-ssen(i,j))/Dn(i,j)
                end do
                do ii=1,split
 #ifndef NO_BAROCLINIC
@@ -468,7 +468,7 @@ STDERR 'adaptive_coordinates()'
                   call getm_tridiagonal(kmax,0,kmax,aau,bu,cu,du,gaa)
 
                end do !split
-               zpos(i,j,:)=gaa*(ssen(i,j)+H(i,j))+ssen(i,j)
+               zpos(i,j,:)=gaa*Dn(i,j)+ssen(i,j)
             end if
          end do
       end do
@@ -479,7 +479,7 @@ STDERR 'adaptive_coordinates()'
 
    end if !first
 
-   call hcheck(hn,ssen,H)
+   call hcheck(hn,Dn)
 ! Finally derive interface grid sizes for uu and vv
 ! Interface treatment and check
 
@@ -500,7 +500,7 @@ STDERR 'adaptive_coordinates()'
 !  KK-TODO: although the layer heights in the center points are consistent
 !           with the total water depth, in the present implementation we
 !           cannot rely on depth-coinciding layer heights in velocity points
-   call hcheck(hun,ssun,HU)
+   call hcheck(hun,Dun)
 
 ! vv
    hvo=hvn
@@ -514,7 +514,7 @@ STDERR 'adaptive_coordinates()'
 !  KK-TODO: although the layer heights in the center points are consistent
 !           with the total water depth, in the present implementation we
 !           cannot rely on depth-coinciding layer heights in velocity points
-   call hcheck(hvn,ssvn,HV)
+   call hcheck(hvn,Dvn)
 
 !  KK-TODO: do we really need these halo updates?!
 !  Update the halo zones for hun

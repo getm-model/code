@@ -12,7 +12,7 @@
 #else
                    dx,dy,ard1,                                        &
 #endif
-                   xc,xu,xv,D,Dlast,U,DU,V,DV,wwm,wwp,missing,velx)
+                   xc,xu,xv,z,zo,Dvel,U,DU,V,DV,wwm,wwp,missing,velx)
 !
 ! !DESCRIPTION:
 !
@@ -32,7 +32,7 @@
 #else
    REALTYPE,intent(in)                      :: dx,dy,ard1
 #endif
-   REALTYPE,dimension(E2DFIELD),intent(in)  :: xc,xu,xv,D,Dlast,U,DU,V,DV,wwm,wwp
+   REALTYPE,dimension(E2DFIELD),intent(in)  :: xc,xu,xv,z,zo,Dvel,U,DU,V,DV,wwm,wwp
    REALTYPE,intent(in)                      :: missing
 !
 ! !OUTPUT PARAMETERS:
@@ -74,7 +74,7 @@
 #endif
             do i=imin-HALO+1,imax+HALO
                if (az(i,j) .eq. 1) then
-                  velx(i,j) = ( U(i-1,j) + U(i,j) ) / ( Dlast(i,j) + D(i,j) )
+                  velx(i,j) = _HALF_*( U(i-1,j) + U(i,j) )/Dvel(i,j)
                else
                   velx(i,j) = missing
                end if
@@ -94,7 +94,7 @@
                if (az(i,j) .eq. 1) then
                   velx(i,j) = (                                   &
                                  (                                &
-                                     ( D(i,j) - Dlast(i,j) )*dtm1  &
+                                     ( z(i,j) - zo(i,j) )*dtm1    &
                                    + ( wwp(i,j) - wwm(i,j) )      &
                                  )                                &
                                  *xc(i,j)                         &
@@ -108,7 +108,7 @@
                                  )                                &
                                  *ARCD1                           &
                               )                                   &
-                              /(_HALF_*(Dlast(i,j)+D(i,j)))
+                              /Dvel(i,j)
                else
                   velx(i,j) = missing
                end if
