@@ -236,7 +236,6 @@
    if (.not. hotstart) then
       ssen = z
       call start_macro()
-      Dold = Dn
       call coordinates(hotstart)
       call hcc_check()
    end if
@@ -387,7 +386,7 @@
          end do
       end do
 
-      call depth_update(sseo,ssen,Dold,Dn,Dun,Dvn,first=.true.,from3d=.true.)
+      call depth_update(sseo,ssen,Dn,Dveln,Dun,Dvn,from3d=.true.)
       call coordinates(hotstart)
 
    end if
@@ -604,7 +603,7 @@
 #endif
 
       call tic(TIM_INTEGR3D)
-      call uv_advect(Uint,Vint,Dold,Dn,Dun,Dvn)
+      call uv_advect(Uint,Vint,Dn,Dveln,Dun,Dvn)
       call uv_diffusion(0,Uint,Vint,Dn,Dun,Dvn) ! Has to be called after uv_advect.
       call toc(TIM_INTEGR3D)
 
