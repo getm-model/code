@@ -5,7 +5,7 @@
 ! !ROUTINE: depth_update - adjust the depth to new elevations.
 !
 ! !INTERFACE:
-   subroutine depth_update(zo,z,Dlast,D,DU,DV,first,from3d)
+   subroutine depth_update(zo,z,D,Dvel,DU,DV,from3d)
 
 !  Note (KK): keep in sync with interface in m2d.F90
 !
@@ -29,24 +29,20 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(in)       :: zo,z
-   logical,intent(in),optional                   :: first,from3d
-!
-! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(:,:),pointer,intent(inout) :: Dlast,D
+   REALTYPE,dimension(E2DFIELD),intent(in)  :: zo,z
+   logical,intent(in),optional              :: from3d
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(out)      :: DU,DV
+   REALTYPE,dimension(E2DFIELD),intent(out) :: D,Dvel,DU,DV
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
-   REALTYPE                  :: d1,d2i,x
-   REALTYPE,dimension(E2DFIELD)    :: ztmp
-   REALTYPE,dimension(:,:),pointer :: p2d
-   logical                         :: update_dryingfactors
+   REALTYPE                  :: d1,d2i
+   REALTYPE,dimension(E2DFIELD) :: zvel
+   logical                      :: update_dryingfactors
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -60,31 +56,17 @@
 ! TODO/BJB: Why is this turned off?
 #undef USE_MASK
 
-   p2d => Dlast ; Dlast => D ; D => p2d
-
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,d1,d2i,x)
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,d1,d2i)
 
 !  Depth in elevation points
-
-   if (present(first)) then
-      if (first) then
-!$OMP DO SCHEDULE(RUNTIME)
-         do j=jmin-HALO,jmax+HALO
-            do i=imin-HALO,imax+HALO
-               ! TODO/BJB: Is it enough to do this on az?
-               Dlast(i,j) = zo(i,j) + H(i,j)
-            end do
-         end do
-!$OMP END DO NOWAIT
-      end if
-   end if
 
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
          ! TODO/BJB: Is it enough to do this on az?
          D(i,j) = z(i,j)+H(i,j)
-         ztmp(i,j) = _HALF_ * ( zo(i,j) + z(i,j) )
+         zvel(i,j) = _HALF_ * ( zo(i,j) + z(i,j) )
+         Dvel(i,j) = zvel(i,j) + H(i,j)
       end do
    end do
 !$OMP END DO
@@ -96,8 +78,8 @@
 #ifdef USE_MASK
          if(au(i,j) .gt. 0) then
 #endif
-         x=max(_HALF_*(ztmp(i,j)+ztmp(i+1,j)),-HU(i,j)+min_depth)
-         DU(i,j) = x+HU(i,j)
+         DU(i,j) = max( min_depth                                , &
+                        _HALF_*(zvel(i,j)+zvel(i+1,j)) + HU(i,j) )
 #ifdef USE_MASK
          end if
 #endif
@@ -112,8 +94,8 @@
 #ifdef USE_MASK
          if(av(i,j) .gt. 0) then
 #endif
-         x = max(_HALF_*(ztmp(i,j)+ztmp(i,j+1)),-HV(i,j)+min_depth)
-         DV(i,j) = x+HV(i,j)
+         DV(i,j) = max( min_depth                                , &
+                        _HALF_*(zvel(i,j)+zvel(i,j+1)) + HV(i,j) )
 #ifdef USE_MASK
          end if
 #endif

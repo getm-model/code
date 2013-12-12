@@ -20,7 +20,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,au,av
    use variables_2d, only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
-   use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,Dold,Dn,Dun,Dvn
+   use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,Dn,Dveln,Dun,Dvn
    use variables_3d, only: Uadv,Vadv,uuEx,vvEx,rru,rrv
    use variables_3d, only: idpdx,idpdy
 #ifdef STRUCTURE_FRICTION
@@ -56,7 +56,7 @@
    if (kmax .gt. 1) then
 
       call bottom_friction(Uadv,Vadv,Dun,Dvn,ru,rv)
-      call uv_advect(Uadv,Vadv,Dold,Dn,Dun,Dvn)
+      call uv_advect(Uadv,Vadv,Dn,Dveln,Dun,Dvn)
       call uv_diffusion(0,Uadv,Vadv,Dn,Dun,Dvn) ! Has to be called after uv_advect.
 
 !$OMP DO SCHEDULE(RUNTIME)
