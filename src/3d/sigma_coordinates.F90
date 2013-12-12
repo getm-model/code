@@ -27,7 +27,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax,H,HU,HV
    use domain, only: ga,ddu,ddl
    use variables_3d, only: kmin,kumin,kvmin,ho,hn,huo,hun,hvo,hvn
-   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
+   use variables_3d, only: Dn,Dun,Dvn,sseo,ssuo,ssvo
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -88,7 +88,7 @@
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
             ho(i,j,:)=(sseo(i,j)+H(i,j))*kmaxm1
-            hn(i,j,:)=(ssen(i,j)+H(i,j))*kmaxm1
+            hn(i,j,:) = Dn(i,j) * kmaxm1
          end do
       end do
 !$OMP END DO NOWAIT
@@ -97,7 +97,7 @@
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO-1
             huo(i,j,:)=(ssuo(i,j)+HU(i,j))*kmaxm1
-            hun(i,j,:)=(ssun(i,j)+HU(i,j))*kmaxm1
+            hun(i,j,:) = Dun(i,j) * kmaxm1
          end do
       end do
 !$OMP END DO NOWAIT
@@ -106,7 +106,7 @@
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO
             hvo(i,j,:)=(ssvo(i,j)+HV(i,j))*kmaxm1
-            hvn(i,j,:)=(ssvn(i,j)+HV(i,j))*kmaxm1
+            hvn(i,j,:) = Dvn(i,j) * kmaxm1
          end do
       end do
 !$OMP END DO NOWAIT
@@ -117,7 +117,7 @@
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO
                ho(i,j,k)=(sseo(i,j)+H(i,j))*dga(k)
-               hn(i,j,k)=(ssen(i,j)+H(i,j))*dga(k)
+               hn(i,j,k)= Dn(i,j) * dga(k)
             end do
          end do
 !$OMP END DO NOWAIT
@@ -128,7 +128,7 @@
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO-1
                huo(i,j,k)=(ssuo(i,j)+HU(i,j))*dga(k)
-               hun(i,j,k)=(ssun(i,j)+HU(i,j))*dga(k)
+               hun(i,j,k) = Dun(i,j) * dga(k)
             end do
          end do
 !$OMP END DO NOWAIT
@@ -139,7 +139,7 @@
          do j=jmin-HALO,jmax+HALO-1
             do i=imin-HALO,imax+HALO
                hvo(i,j,k)=(ssvo(i,j)+HV(i,j))*dga(k)
-               hvn(i,j,k)=(ssvn(i,j)+HV(i,j))*dga(k)
+               hvn(i,j,k) = Dvn(i,j) * dga(k)
             end do
          end do
 !$OMP END DO NOWAIT

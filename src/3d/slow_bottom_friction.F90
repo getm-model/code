@@ -29,7 +29,7 @@
    use parameters, only: kappa
    use domain, only: imin,imax,jmin,jmax,HU,HV,min_depth,au,av
    use variables_2d, only: zub,zvb,ru,rv,Uinto,Vinto
-   use variables_3d, only: ssuo,ssun,ssvo,ssvn
+   use variables_3d, only: ssuo,Dun,ssvo,Dvn
    use getm_timers, only: tic, toc, TIM_SLOWBFRICT
    use exceptions, only: getm_error
 !$ use omp_lib
@@ -96,7 +96,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .ge. 1) then
-            HH=max(min_depth,ssun(i,j)+HU(i,j))
+            HH=Dun(i,j)
             ruu(i,j)=(zub(i,j)+_HALF_*HH)/zub(i,j)
             if (ruu(i,j) .le. _ONE_) then
                LEVEL1 i,j,ssuo(i,j)
@@ -115,7 +115,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .ge. 1) then
-            HH=max(min_depth,ssvn(i,j)+HV(i,j))
+            HH=Dvn(i,j)
             rvv(i,j)=(zvb(i,j)+_HALF_*HH)/zvb(i,j)
             if (rvv(i,j) .le. _ONE_) then
                LEVEL1 i,j,ssvo(i,j)
