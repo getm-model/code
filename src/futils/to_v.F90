@@ -5,14 +5,14 @@
 ! !ROUTINE: to_v() - calculates cell centered velocity in global y-direction
 !
 ! !INTERFACE:
-   subroutine to_v(imin,jmin,imax,jmax,az,                            &
-                   dt,grid_type,                                      &
+   subroutine to_v(imin,jmin,imax,jmax,az,                               &
+                   dt,grid_type,                                         &
 #if defined(CURVILINEAR) || defined(SPHERICAL)
-                   dxv,dyu,arcd1,                                     &
+                   dxv,dyu,arcd1,                                        &
 #else
-                   dx,dy,ard1,                                        &
+                   dx,dy,ard1,                                           &
 #endif
-                   yc,yu,yv,D,Dlast,U,DU,V,DV,wwm,wwp,missing,vely)
+                   yc,yu,yv,z,zo,Dvel,U,DU,V,DV,wwm,wwp,missing,vely)
 !
 ! !DESCRIPTION:
 !
@@ -32,7 +32,7 @@
 #else
    REALTYPE,intent(in)                      :: dx,dy,ard1
 #endif
-   REALTYPE,dimension(E2DFIELD),intent(in)  :: yc,yu,yv,D,Dlast,U,DU,V,DV,wwm,wwp
+   REALTYPE,dimension(E2DFIELD),intent(in)  :: yc,yu,yv,z,zo,Dvel,U,DU,V,DV,wwm,wwp
    REALTYPE,intent(in)                      :: missing
 !
 ! !OUTPUT PARAMETERS:
@@ -74,7 +74,7 @@
 #endif
             do i=imin-HALO,imax+HALO
                if (az(i,j) .eq. 1) then
-                  vely(i,j) = ( V(i,j-1) + V(i,j) ) / ( Dlast(i,j) + D(i,j) )
+                  vely(i,j) = _HALF_*( V(i,j-1) + V(i,j) )/Dvel(i,j)
                else
                   vely(i,j) = missing
                end if
@@ -94,7 +94,7 @@
                if (az(i,j) .eq. 1) then
                   vely(i,j) = (                                   &
                                  (                                &
-                                     ( D(i,j) - Dlast(i,j) )*dtm1  &
+                                     ( z(i,j) - zo(i,j) )*dtm1    &
                                    + ( wwp(i,j) - wwm(i,j) )      &
                                  )                                &
                                  *yc(i,j)                         &
@@ -108,7 +108,7 @@
                                  )                                &
                                  *ARCD1                           &
                               )                                   &
-                              /(_HALF_*(Dlast(i,j)+D(i,j)))
+                              /Dvel(i,j)
                else
                   vely(i,j) = missing
                end if
