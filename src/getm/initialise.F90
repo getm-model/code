@@ -283,10 +283,10 @@
       MinN = MinN+1
    end if
 
-   call postinit_2d(runtype,timestep,hotstart)
+   call postinit_2d(runtype,timestep,hotstart,MinN)
 #ifndef NO_3D
    if (runtype .gt. 1) then
-      call postinit_3d(runtype,timestep,hotstart)
+      call postinit_3d(runtype,timestep,hotstart,MinN)
    end if
 #endif
 

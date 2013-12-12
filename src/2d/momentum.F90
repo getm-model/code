@@ -5,7 +5,7 @@
 ! !ROUTINE: momentum - 2D-momentum for all interior points.
 !
 ! !INTERFACE:
-   subroutine momentum(n,tausx,tausy,airp)
+   subroutine momentum(n,tausx,tausy,airp,ufirst)
 !
 ! !DESCRIPTION:
 !
@@ -26,11 +26,14 @@
    REALTYPE, intent(in)                :: tausy(E2DFIELD)
    REALTYPE, intent(in)                :: airp(E2DFIELD)
 !
+! !INPUT/OUTPUT VARIABLES:
+   logical, intent(inout)              :: ufirst
+!
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   logical                   :: ufirst=.false.
+!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
