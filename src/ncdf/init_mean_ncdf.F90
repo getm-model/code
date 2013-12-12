@@ -5,7 +5,7 @@
 ! !IROUTINE: Initialise mean netCDf variables
 !
 ! !INTERFACE:
-   subroutine init_mean_ncdf(fn,title,starttime)
+   subroutine init_mean_ncdf(fn,title,starttime,runtype)
 !
 ! !DESCRIPTION:
 !
@@ -18,6 +18,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
    use m3d, only: calc_temp,calc_salt
+   use nonhydrostatic, only: nonhyd_iters,bnh_filter,bnh_weight
 #ifdef GETM_BIO
    use bio_var, only: numc,var_names,var_units,var_long
 #endif
@@ -28,6 +29,7 @@
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fn,title,starttime
+   integer, intent(in)                 :: runtype
 !
 ! !DEFINED PARAMETERS:
    logical,    parameter               :: init3d=.true.
@@ -309,6 +311,33 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
       end if
 
+   end if
+
+   if (nonhyd_method .ne. 0) then
+      fv = bnh_missing
+      mv = bnh_missing
+      if (runtype.eq.2 .or. nonhyd_method.eq.1) then
+         vr(1) = -10.
+         vr(2) = 10.
+         err = nf90_def_var(ncid,'bnh',NCDF_FLOAT_PRECISION,f4_dims,bnh_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,bnh_id,long_name='nh buoyancy correction',units='m/s2',&
+                             FillValue=fv,missing_value=mv,valid_range=vr)
+         if (nonhyd_method .eq. 1) then
+            err = nf90_put_att(ncid,bnh_id,'nonhyd_iters',nonhyd_iters)
+            err = nf90_put_att(ncid,bnh_id,'bnh_filter',bnh_filter)
+            if (bnh_filter .eq. 1 .or. bnh_filter .eq. 3) then
+               err = nf90_put_att(ncid,bnh_id,'bnh_weight',bnh_weight)
+            end if
+         end if
+      else
+         vr(1) = 0.
+         vr(2) = 10./SMALL
+         err = nf90_def_var(ncid,'nhsp',NCDF_FLOAT_PRECISION,f4_dims,bnh_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,bnh_id,long_name='nh screening parameter',units=' ',&
+                             FillValue=fv,missing_value=mv,valid_range=vr)
+      end if
    end if
 
 #ifdef GETM_BIO

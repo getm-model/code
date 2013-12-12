@@ -76,6 +76,8 @@
 		<File RelativePath="..\..\src\3d\ip_stelling_vankester.F90"/>
 		<File RelativePath="..\..\src\3d\ip_z_interpol.F90"/>
 		<File RelativePath="..\..\src\3d\m3d.F90"/>
+		<File RelativePath="..\..\src\3d\momentum_3d.F90"/>
+		<File RelativePath="..\..\src\3d\nonhydrostatic.F90"/>
 		<File RelativePath="..\..\src\3d\numerical_mixing.F90"/>
 		<File RelativePath="..\..\src\3d\physical_dissipation_3d.F90"/>
 		<File RelativePath="..\..\src\3d\physical_mixing.F90"/>

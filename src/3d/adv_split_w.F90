@@ -42,7 +42,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
    use advection, only: adv_interfacial_reconstruction
-   use advection, only: NOADV,UPSTREAM
+   use advection, only: NOADV,UPSTREAM,CENTRAL
    use advection_3d, only: W_TAG
    use halo_zones, only: U_TAG,V_TAG
 !$ use omp_lib
@@ -148,7 +148,7 @@
       end if
 #endif
 
-      if (scheme.ne.UPSTREAM .or. iterate) then
+      if ((scheme.ne.UPSTREAM .and. scheme.ne.CENTRAL) .or. iterate) then
          allocate(cfl0(0:kmax),stat=rc)    ! work array
          if (rc /= 0) stop 'adv_split_w: Error allocating memory (cfl0)'
 
@@ -179,7 +179,7 @@
             if (az(i,j) .eq. 1) then
 !              Note (KK): exclude vertical advection of normal velocity at open bdys
 
-               if (scheme.ne.UPSTREAM .or. iterate) then
+               if ((scheme.ne.UPSTREAM .and. scheme.ne.CENTRAL) .or. iterate) then
                   do k=1-kshift,kmax-1
                      cfl0(k) = abs(ww(i,j,k))*dti/(_HALF_*(hi(i,j,k)+hi(i,j,k+1)))
                   end do
@@ -232,7 +232,7 @@
                   if (iterate) then
                      if (it .eq. 1) then
                         cfls = cfl0
-                     else if (scheme.ne.UPSTREAM .or. iters.lt.itersmax) then
+                     else if ((scheme.ne.UPSTREAM .and. scheme.ne.CENTRAL) .or. iters.lt.itersmax) then
                         do k=1-kshift,kmax-1
                            cfls(k) = abs(ww(i,j,k))*dti/(_HALF_*(hiaux(k)+hiaux(k+1)))
                         end do
@@ -268,29 +268,33 @@
 !                 Calculating w-interface fluxes !
                   do k=1-kshift,kmax-1
 !                    Note (KK): overwrite zero flux at k=0 in case of W_TAG
-                     if (ww(i,j,k) .gt. _ZERO_) then
-                        fu = faux(k)               ! central
-                        if (scheme .ne. UPSTREAM) then
-!                          also fall back to upstream near boundaries
-                           use_limiter = (k .gt. 1-kshift)
-                        end if
-                        if (use_limiter) then
-                           fuu = faux(k-1)            ! upstream
-                           fd  = faux(k+1)            ! downstream
-                        end if
+                     if (scheme .eq. CENTRAL) then
+                        fu = _HALF_*( faux(k) + faux(k+1) )
                      else
-                        fu = faux(k+1)               ! central
-                        if (scheme .ne. UPSTREAM) then
-!                          also fall back to upstream near boundaries
-                           use_limiter = (k .lt. kmax-1)
+                        if (ww(i,j,k) .gt. _ZERO_) then
+                           fu = faux(k)               ! central
+                           if (scheme .ne. UPSTREAM) then
+!                             also fall back to upstream near boundaries
+                              use_limiter = (k .gt. 1-kshift)
+                           end if
+                           if (use_limiter) then
+                              fuu = faux(k-1)            ! upstream
+                              fd  = faux(k+1)            ! downstream
+                           end if
+                        else
+                           fu = faux(k+1)               ! central
+                           if (scheme .ne. UPSTREAM) then
+!                             also fall back to upstream near boundaries
+                              use_limiter = (k .lt. kmax-1)
+                           end if
+                           if (use_limiter) then
+                              fuu = faux(k+2)            ! upstream
+                              fd  = faux(k  )            ! downstream
+                           end if
                         end if
                         if (use_limiter) then
-                           fuu = faux(k+2)            ! upstream
-                           fd  = faux(k  )            ! downstream
+                           fu = adv_interfacial_reconstruction(scheme,cfls(k)*itersm1,fuu,fu,fd)
                         end if
-                     end if
-                     if (use_limiter) then
-                        fu = adv_interfacial_reconstruction(scheme,cfls(k)*itersm1,fuu,fu,fd)
                      end if
                      wflux(k) = ww(i,j,k)*fu
                      if (calc_nvd) then
@@ -383,7 +387,8 @@
       end if
 #endif
 
-      if (scheme.ne.UPSTREAM .or. iterate) then
+      if ((scheme.ne.UPSTREAM .and. scheme.ne.CENTRAL) .or. iterate) then
+
          deallocate(cfl0,stat=rc)
          if (rc /= 0) stop 'adv_split_w: Error deallocating memory (cfl0)'
 

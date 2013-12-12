@@ -349,6 +349,9 @@
 			<advect_turbulence>
 				False
 			</advect_turbulence>
+			<nonhyd_method>
+				0
+			</nonhyd_method>
 			<ip_method>
 				1
 			</ip_method>
@@ -521,6 +524,23 @@
 				0.78
 			</dsr0>
 		</eqstate>
+		<nonhyd>
+			<calc_hs2d>
+				False
+			</calc_hs2d>
+			<nonhyd_iters>
+				1
+			</nonhyd_iters>
+			<bnh_filter>
+				0
+			</bnh_filter>
+			<bnh_weight>
+				1.0
+			</bnh_weight>
+			<sbnh_filter>
+				False
+			</sbnh_filter>
+		</nonhyd>
 		<les>
 			<les_method>
 				1
