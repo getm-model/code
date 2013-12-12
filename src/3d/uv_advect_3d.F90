@@ -26,7 +26,7 @@
    use domain, only: dx,dy,ard1
 #endif
    use m3d, only: vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver
-   use variables_3d, only: dt,uu,vv,ww,ho,hn,hun,hvn,uuEx,vvEx
+   use variables_3d, only: dt,uu,vv,ww,hn,hvel,hun,hvn,uuEx,vvEx
    use advection, only: NOADV,UPSTREAM,J7
    use advection, only: adv_gridU,adv_gridV
    use advection_3d, only: do_advection_3d
@@ -47,9 +47,9 @@
 ! !LOCAL VARIABLES:
    logical                             :: calc_numdis
    integer                             :: i,j,k
-   REALTYPE,dimension(I3DFIELD)        :: fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,hires
-   REALTYPE,dimension(I3DFIELD),target :: hnadv,nvd
-   REALTYPE,dimension(:,:,:),pointer   :: phadv,p_nvd
+   REALTYPE,dimension(I3DFIELD)        :: fadv3d,uuadv,vvadv,wwadv,hires
+   REALTYPE,dimension(I3DFIELD),target :: hnadv,huadv,hvadv,nvd
+   REALTYPE,dimension(:,:,:),pointer   :: phadv,phuadv,phvadv,p_nvd
 #ifdef _NUMERICAL_ANALYSES_OLD_
    REALTYPE,dimension(I3DFIELD)        :: work3d
 #endif
@@ -85,6 +85,19 @@
 
 !     Here begins dimensional split advection for u-velocity
 
+!$OMP SINGLE
+!     KK-TODO: _POINTER_REMAP_, but this requires that h[u|v]n become
+!              pointers like mask_[u|v]flux in do_advection_3d and similar
+!              for D[U|V] in do_advection and in uv_advect
+!#ifdef _POINTER_REMAP_
+!      phuadv(imin-HALO:,jmin-HALO:,0:) => hvel(1+_IRANGE_HALO_,_JRANGE_HALO_,_KRANGE_)
+!#else
+      phuadv => huadv
+      phuadv(_IRANGE_HALO_-1,:,:) = hvel(1+_IRANGE_HALO_,:,:)
+!#endif
+      phvadv => hvadv
+!$OMP END SINGLE
+
       do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
@@ -98,10 +111,9 @@
                   vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i+1,j,k) )
                end if
                wwadv(i,j,k) = _HALF_*( ww(i,j,k) + ww(i+1,j,k) )
-               huadv(i,j,k) = _HALF_*( ho(i+1,j,k) + hn(i+1,j,k) )
 !              Note (KK): hvn only valid until jmax+1
-!                         therefore hvadv only valid until jmax+1
-               hvadv(i,j,k) = _HALF_*( hvn(i,j,k) + hvn(i+1,j,k) )
+!                         therefore phvadv only valid until jmax+1
+               phvadv(i,j,k) = _HALF_*( hvn(i,j,k) + hvn(i+1,j,k) )
             end do
 #ifndef SLICE_MODEL
          end do
@@ -223,7 +235,7 @@
 #endif
 
 !$OMP SINGLE
-      call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,      &
+      call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,phuadv,phvadv,phadv,phadv,    &
                            vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,U_TAG, &
                            hires=hires,advres=uuEx,nvd=p_nvd)
 !$OMP END SINGLE
@@ -272,7 +284,7 @@
       if (do_numerical_analyses_3d) then
 
 !$OMP SINGLE
-         call do_advection_3d(dt,work3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,      &
+         call do_advection_3d(dt,work3d,uuadv,vvadv,wwadv,phuadv,phvadv,phadv,phadv,    &
                               vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,U_TAG)
 
          numdis_int = _ZERO_
@@ -341,6 +353,20 @@
 
 !     Here begins dimensional split advection for v-velocity
 
+!$OMP SINGLE
+!     KK-TODO: _POINTER_REMAP_, but this requires that h[u|v]n become
+!              pointers like mask_[u|v]flux in do_advection_3d and similar
+!              for D[U|V] in do_advection and in uv_advect
+      phuadv => huadv
+!#ifdef _POINTER_REMAP_
+!      phvadv(imin-HALO:,jmin-HALO:,0:) => hvel(_IRANGE_HALO_,1+_JRANGE_HALO_,_KRANGE_)
+!#else
+      phvadv => hvadv
+      phvadv(:,_JRANGE_HALO_-1,:) = hvel(:,1+_JRANGE_HALO_,:)
+!#endif
+!$OMP END SINGLE
+
+
       do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
@@ -355,9 +381,8 @@
                end if
                wwadv(i,j,k) = _HALF_*( ww(i,j,k) + ww(i,j+1,k) )
 !              Note (KK): hun only valid until imax+1
-!                         therefore huadv only valid until imax+1
-               huadv(i,j,k) = _HALF_*( hun(i,j,k) + hun(i,j+1,k) )
-               hvadv(i,j,k) = _HALF_*( ho(i,j+1,k) + hn(i,j+1,k) )
+!                         therefore phuadv only valid until imax+1
+               phuadv(i,j,k) = _HALF_*( hun(i,j,k) + hun(i,j+1,k) )
             end do
 #ifndef SLICE_MODEL
          end do
@@ -466,7 +491,7 @@
 #endif
 
 !$OMP SINGLE
-      call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,      &
+      call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,phuadv,phvadv,phadv,phadv,    &
                            vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,V_TAG, &
                            hires=hires,advres=vvEx,nvd=p_nvd)
 !$OMP END SINGLE
@@ -516,7 +541,7 @@
       if (do_numerical_analyses_3d) then
 
 !$OMP SINGLE
-         call do_advection_3d(dt,work3d,uuadv,vvadv,wwadv,huadv,hvadv,phadv,phadv,      &
+         call do_advection_3d(dt,work3d,uuadv,vvadv,wwadv,phuadv,phvadv,phadv,phadv,    &
                               vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,V_TAG, &
                               hires=hires)
 !$OMP END SINGLE

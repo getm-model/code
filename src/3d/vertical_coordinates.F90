@@ -15,6 +15,7 @@
    use variables_3d, only: kvmin,hvo,hvn
 #endif
    use domain, only: kmax,vert_cord,maxdepth
+   use variables_3d, only: ho,hn,hvel
    use exceptions
    IMPLICIT NONE
 !
@@ -129,6 +130,8 @@ stop
          case default
       end select
    end if ! first
+
+   hvel = _HALF_ * ( ho + hn )
 
 #ifdef SLICE_MODEL
    j = jmax/2
