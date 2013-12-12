@@ -24,8 +24,8 @@
 #else
    use domain,       only: dx,dy,ard1
 #endif
-   use variables_3d, only: ssen,Dn,Dold,Dun,Dvn,Uadv,Vadv
-   use variables_3d, only: dt,kmin,ho,hn,uu,hun,vv,hvn,ww,hcc,SS
+   use variables_3d, only: sseo,ssen,Dn,Dveln,Dun,Dvn,Uadv,Vadv
+   use variables_3d, only: dt,kmin,ho,hn,hvel,uu,hun,vv,hvn,ww,hcc,SS
    use variables_3d, only: taubx,tauby
 #ifdef _MOMENTUM_TERMS_
    use variables_3d, only: tdv_u,adv_u,vsd_u,hsd_u,cor_u,epg_u,ipg_u
@@ -151,7 +151,7 @@
 #else
                 dx,dy,ard1,                                        &
 #endif
-                xc,xu,xv,Dn,Dold,Uadv,Dun,Vadv,Dvn,wrk2d,wrk2d,vel_missing,ws2d)
+                xc,xu,xv,ssen,sseo,Dveln,Uadv,Dun,Vadv,Dvn,wrk2d,wrk2d,vel_missing,ws2d)
       err = nf90_put_var(ncid,u_adv_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
@@ -164,7 +164,7 @@
 #else
                 dx,dy,ard1,                                        &
 #endif
-                yc,yu,yv,Dn,Dold,Uadv,Dun,Vadv,Dvn,wrk2d,wrk2d,vel_missing,ws2d)
+                yc,yu,yv,ssen,sseo,Dveln,Uadv,Dun,Vadv,Dvn,wrk2d,wrk2d,vel_missing,ws2d)
       err = nf90_put_var(ncid,v_adv_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
@@ -252,7 +252,7 @@
 #else
                    dx,dy,ard1,                                        &
 #endif
-                   xc,xu,xv,hn(:,:,k),ho(:,:,k),                      &
+                   xc,xu,xv,hn(:,:,k),ho(:,:,k),hvel(:,:,k),          &
                    uu(:,:,k),hun(:,:,k),vv(:,:,k),hvn(:,:,k),         &
                    ww(:,:,k-1),ww(:,:,k),vel_missing,ws(:,:,k))
       end do
@@ -269,7 +269,7 @@
 #else
                    dx,dy,ard1,                                        &
 #endif
-                   yc,yu,yv,hn(:,:,k),ho(:,:,k),                      &
+                   yc,yu,yv,hn(:,:,k),ho(:,:,k),hvel(:,:,k),          &
                    uu(:,:,k),hun(:,:,k),vv(:,:,k),hvn(:,:,k),         &
                    ww(:,:,k-1),ww(:,:,k),vel_missing,ws(:,:,k))
       end do
@@ -284,7 +284,7 @@
 #else
                 dx,dy,ard1,                       &
 #endif
-                H,HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,ws)
+                H,HU,HV,hn,ho,hvel,uu,hun,vv,hvn,ww,vel_missing,ws)
       err = nf90_put_var(ncid,w_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
