@@ -5,7 +5,7 @@
 ! !IROUTINE: calc_mean_fields() - produces averaged output.
 !
 ! !INTERFACE:
-   subroutine calc_mean_fields(n,write_mean)
+   subroutine calc_mean_fields(n,write_mean,runtype)
 !
 ! !DESCRIPTION:
 !
@@ -14,11 +14,14 @@
    use domain, only: az,au,av
    use meteo, only: swr
    use m3d, only: M,calc_temp,calc_salt
+   use m3d, only: nonhyd_method
    use variables_3d, only: do_numerical_analyses_3d
    use variables_3d, only: hn,uu,hun,vv,hvn,ww,taub
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho
+   use variables_3d, only: buoy
 #endif
+   use variables_3d, only: minus_bnh
    use variables_3d, only: nummix_S,nummix_T
    use variables_3d, only: nummix_S_old,nummix_S_int,nummix_T_old,nummix_T_int
    use variables_3d, only: phymix_S,phymix_S_int,phymix_T,phymix_T_int
@@ -38,7 +41,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)  :: n
+   integer, intent(in)  :: n,runtype
    logical, intent(in)  :: write_mean
 !
 ! !REVISION HISTORY:
@@ -106,7 +109,11 @@
              stop 'calc_mean_fields.F90: Error allocating memory (rhomean)'
       end if
 #endif
-
+      if (nonhyd_method .ne. 0) then
+         allocate(bnhmean(I3DFIELD),stat=rc)
+           if (rc /= 0) &
+              stop 'calc_mean_fields.F90: Error allocating memory (bnhmean)'
+      end if
       if (do_numerical_analyses_3d) then
          allocate(numdis_3d_mean(I3DFIELD),stat=rc)
            if (rc /= 0) &
@@ -204,6 +211,7 @@
          if (save_s) Smean=_ZERO_
          if (save_rho) rhomean=_ZERO_
 #endif
+         if (nonhyd_method .ne. 0) bnhmean=_ZERO_
          if (do_numerical_analyses_3d) then
             numdis_3d_mean=_ZERO_
 #ifdef _NUMERICAL_ANALYSES_OLD_
@@ -268,6 +276,16 @@
       if (save_s) Smean = Smean + S*hn
       if (save_rho) rhomean = rhomean + rho*hn
 #endif
+      if (nonhyd_method .ne. 0) then
+         if (runtype.eq.2 .or. nonhyd_method.eq.1) then
+            bnhmean = bnhmean - minus_bnh*hn
+         else
+#ifndef NO_BAROCLINIC
+            bnhmean = bnhmean + abs(minus_bnh/max(buoy,SMALL))
+#endif
+         end if
+      end if
+
       if (do_numerical_analyses_3d) then
          numdis_3d_mean = numdis_3d_mean + numdis_3d*hn
 #ifdef _NUMERICAL_ANALYSES_OLD_
@@ -326,6 +344,15 @@
          if (save_s) Smean = Smean / step
          if (save_rho) rhomean = rhomean / step
 #endif
+
+         if (nonhyd_method .ne. 0) then
+           if (runtype.eq.2 .or. nonhyd_method.eq.1) then
+             bnhmean = bnhmean / step / hmean
+           else
+             bnhmean = bnhmean / step
+           end if
+         end if
+
          if (do_numerical_analyses_3d) then
             numdis_3d_mean = numdis_3d_mean / step / hmean
 #ifdef _NUMERICAL_ANALYSES_OLD_
