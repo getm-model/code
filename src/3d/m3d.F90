@@ -125,7 +125,6 @@
              calc_temp,calc_salt,                         &
              use_gotm,avmback,avhback,advect_turbulence,  &
              nonhyd_method,ip_method,ip_ramp,             &
-             avmback,avhback,advect_turbulence,           &
              vel_check,min_vel,max_vel
 !EOP
 !-------------------------------------------------------------------------
