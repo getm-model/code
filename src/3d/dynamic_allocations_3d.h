@@ -64,6 +64,9 @@
   allocate(hn(I3DFIELD),stat=rc)    ! 3D field for new box height (z-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (hn)'
 
+  allocate(hvel(I3DFIELD),stat=rc)    ! 3D field for intermediate box height (z-column)
+  if (rc /= 0) stop 'init_3d: Error allocating memory (hvel)'
+
   allocate(huo(I3DFIELD),stat=rc)   ! 3D field for old box height (u-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (huo)'
 
