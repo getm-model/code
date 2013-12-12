@@ -34,20 +34,19 @@
 
    interface
 
-      subroutine depth_update(zo,z,Dlast,D,DU,DV,first,from3d)
+      subroutine depth_update(zo,z,D,Dvel,DU,DV,from3d)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,dimension(E2DFIELD),intent(in)       :: zo,z
-         logical,intent(in),optional                   :: first,from3d
-         REALTYPE,dimension(:,:),pointer,intent(inout) :: Dlast,D
-         REALTYPE,dimension(E2DFIELD),intent(out)      :: DU,DV
+         REALTYPE,dimension(E2DFIELD),intent(in)  :: zo,z
+         logical,intent(in),optional              :: from3d
+         REALTYPE,dimension(E2DFIELD),intent(out) :: D,Dvel,DU,DV
       end subroutine depth_update
 
-      subroutine uv_advect(U,V,Dold,Dnew,DU,DV,numdis)
+      subroutine uv_advect(U,V,D,Dvel,DU,DV,numdis)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V
-         REALTYPE,dimension(E2DFIELD),target,intent(in) :: Dold,Dnew,DU,DV
+         REALTYPE,dimension(E2DFIELD),target,intent(in) :: D,Dvel,DU,DV
          REALTYPE,dimension(:,:),pointer,intent(out),optional :: numdis
       end subroutine uv_advect
 
@@ -212,7 +211,7 @@
       zo = z
 !     KK-TODO: check whether we need D[ |U|V] in init_3d
 !              otherwise we can move this call by default to postinit_2d
-      call depth_update(zo,z,Dlast,D,DU,DV,first=.true.)
+      call depth_update(zo,z,D,Dvel,DU,DV)
    end if
 
    if (Am .lt. _ZERO_) then
@@ -401,7 +400,7 @@
          end where
       end if
 
-      call depth_update(zo,z,Dlast,D,DU,DV,first=.true.)
+      call depth_update(zo,z,D,Dvel,DU,DV)
 
    end if
 
@@ -466,7 +465,7 @@
       call bottom_friction(U,V,DU,DV,ru,rv)
    end if
 
-   call uv_advect(U,V,Dlast,D,DU,DV,numdis_2d)
+   call uv_advect(U,V,D,Dvel,DU,DV,numdis_2d)
    call uv_diffusion(An_method,U,V,D,DU,DV) ! Has to be called after uv_advect.
    if (do_numerical_analyses_2d) call physical_dissipation(U,V,DU,DV,Am,phydis_2d)
    call toc(TIM_INTEGR2D)
@@ -480,7 +479,7 @@
    end if
 
    call sealevel(loop)
-   call depth_update(zo,z,Dlast,D,DU,DV)
+   call depth_update(zo,z,D,Dvel,DU,DV)
 
    if(residual .gt. 0) then
       call tic(TIM_INTEGR2D)
