@@ -437,6 +437,33 @@
          call wait_halo(H_TAG)
       end if
 #endif
+
+      if (nonhyd_method .ne. 0) then
+         if (nonhyd_method .eq. 1) then
+            if (minus_bnh_id .eq. -1) then
+               LEVEL3 "read_restart_ncdf(): setting minus_bnh=0"
+               minus_bnh = _ZERO_
+            else
+               status = &
+               nf90_get_var(ncid,minus_bnh_id,minus_bnh(istart:istop,jstart:jstop,0:kmax),start(1:3),edges(1:3))
+               if (status .NE. NF90_NOERR) go to 10
+               call update_3d_halo(minus_bnh,minus_bnh,az,imin,jmin,imax,jmax,kmax,H_TAG)
+               call wait_halo(H_TAG)
+            end if
+         end if
+
+         if (wco_id .eq. -1) then
+            LEVEL3 "read_restart_ncdf(): setting wco=0"
+            wco = _ZERO_
+         else
+            status = &
+            nf90_get_var(ncid,wco_id,wco(istart:istop,jstart:jstop,0:kmax),start(1:3),edges(1:3))
+            if (status .NE. NF90_NOERR) go to 10
+            call update_3d_halo(wco,wco,az,imin,jmin,imax,jmax,kmax,H_TAG)
+            call wait_halo(H_TAG)
+         end if
+      end if
+
 #ifdef SPM
       if(spm_calc) then
         if (spm_hotstart) then

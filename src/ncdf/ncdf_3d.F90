@@ -60,6 +60,7 @@
    integer                             :: rad_id=-1
    integer                             :: tke_id,num_id,nuh_id,eps_id
    integer                             :: SS_id,NN_id
+   integer                             :: bnh_id=-1
    integer                             :: Am_3d_id=-1
    integer                             :: diffxx_id=-1
    integer                             :: diffyy_id=-1
@@ -98,6 +99,7 @@
    REALTYPE, parameter                 :: eps_missing    =-9999.0
    REALTYPE, parameter                 :: SS_missing     =-9999.0
    REALTYPE, parameter                 :: NN_missing     =-9999.0
+   REALTYPE, parameter                 :: bnh_missing    =-9999.0
    REALTYPE, parameter                 :: Am_3d_missing  =-9999.0
    REALTYPE, parameter                 :: stirr_missing  =-9999.0
 #ifdef SPM
