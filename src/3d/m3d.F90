@@ -388,6 +388,7 @@
 
       call depth_update(sseo,ssen,Dn,Dveln,Dun,Dvn,from3d=.true.)
 !     KK-TODO: do not store ss[u|v]n in hotstart file
+!              can be calculated here (if needed at all... use of D[u|v]n)
 !     ssun = Dun - HU
 !     ssvn = Dvn - HV
       call coordinates(hotstart)
