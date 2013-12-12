@@ -26,7 +26,7 @@
    use domain, only: ga,ddu,ddl,d_gamma,gamma_surf
    use domain, only: imin,imax,jmin,jmax,kmax,H,HU,HV,az,au,av,min_depth
    use variables_3d, only: dt,kmin,kumin,kvmin,ho,hn,huo,hun,hvo,hvn
-   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
+   use variables_3d, only: Dn,Dun,Dvn,sseo,ssen,ssuo,ssun,ssvo,ssvn
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -148,7 +148,7 @@
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
          r=cord_relax/dt*H(i,j)/maxdepth
-         HH=ssen(i,j)+H(i,j)
+         HH=Dn(i,j)
          if (HH .lt. D_gamma) then
             do k=1,kmax
                ho(i,j,k)=hn(i,j,k)
@@ -174,7 +174,7 @@
 !KBK         if (au(i,j) .gt. 0) then
             r=cord_relax/dt*HU(i,j)/maxdepth
             zz=-HU(i,j)
-            HH=ssun(i,j)+HU(i,j)
+            HH=Dun(i,j)
             do k=1,kmax-1
                huo(i,j,k)=hun(i,j,k)
                hun(i,j,k)=(huo(i,j,k)*r+HH*0.5*(gga(i,j,k)-gga(i,j,k-1) &
@@ -194,7 +194,7 @@
 !KBK         if (av(i,j).gt.0) then
             r=cord_relax/dt*HV(i,j)/maxdepth
             zz=-HV(i,j)
-            HH=ssvn(i,j)+HV(i,j)
+            HH=Dvn(i,j)
             do k=1,kmax-1
                hvo(i,j,k)=hvn(i,j,k)
                hvn(i,j,k)=(hvo(i,j,k)*r+HH*0.5*(gga(i,j,k)-gga(i,j,k-1) &
