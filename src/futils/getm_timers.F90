@@ -57,7 +57,9 @@
    integer, parameter :: TIM_SALT        = 54   ! 3d do_salinity
    integer, parameter :: TIM_SALTH       = 55   ! 3d salinity halo (presently in m3d/do_integrate_3d)
    integer, parameter :: TIM_COORDS      = 56   ! 3d coordinates
-   integer, parameter :: TIM_INTPRESS    = 58   ! 3d do_internal_pressure
+   integer, parameter :: TIM_INTPRESS    = 57   ! 3d do_internal_pressure
+   integer, parameter :: TIM_NONHYD      = 58   ! 3d do_nonhydrostatic
+   integer, parameter :: TIM_NH_OVERHEAD = 59   ! 3d nonhydrostatic overhead
    integer, parameter :: TIM_STARTMCR    = 60   ! 3d start_macro
    integer, parameter :: TIM_STOPMCR     = 62   ! 3d stop_macro
    integer, parameter :: TIM_STRCTFRICT  = 64   ! 3d structure_friction_3d
@@ -213,6 +215,8 @@
    timernames(TIM_SALT)        = 'do_salinity'
    timernames(TIM_COORDS)      = 'coordinates'
    timernames(TIM_INTPRESS)    = 'do_internal_pressure'
+   timernames(TIM_NONHYD)      = 'do_nonhydrostatic'
+   timernames(TIM_NH_OVERHEAD) = ' nonhyd overhead'
    timernames(TIM_STARTMCR)    = 'start_macro'
    timernames(TIM_STOPMCR)     = 'stop_macro'
    timernames(TIM_EQSTATE)     = 'eq_state'

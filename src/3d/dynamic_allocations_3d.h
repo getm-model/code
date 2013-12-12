@@ -125,12 +125,6 @@
   allocate(buoy(I3DFIELD),stat=rc)  ! 3D field for buoyancy
   if (rc /= 0) stop 'init_3d: Error allocating memory (buoy)'
 
-  allocate(idpdx(I3DFIELD),stat=rc) ! Internal pressure gradient - x
-  if (rc /= 0) stop 'init_3d: Error allocating memory (idpdx)'
-
-  allocate(idpdy(I3DFIELD),stat=rc) ! Internal pressure gradient - y
-  if (rc /= 0) stop 'init_3d: Error allocating memory (idpdy)'
-
   allocate(rad(I3DFIELD),stat=rc) ! Solar radiation
   if (rc /= 0) stop 'init_3d: Error allocating memory (rad)'
 

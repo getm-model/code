@@ -34,10 +34,8 @@
   REALTYPE, dimension(:,:,:), allocatable   :: NN
 
 ! 3D baroclinic fields
-  REALTYPE, dimension(:,:,:), allocatable, target :: S,T,rho
-  REALTYPE, dimension(:,:,:), allocatable   :: buoy
+  REALTYPE, dimension(:,:,:), allocatable, target :: S,T,rho,buoy
   REALTYPE, dimension(:,:,:), allocatable   :: alpha,beta
-  REALTYPE, dimension(:,:,:), allocatable   :: idpdx,idpdy
   REALTYPE, dimension(:,:,:), allocatable   :: rad,light
 #endif
 

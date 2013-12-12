@@ -17,6 +17,7 @@
    use variables_2d, only: do_numerical_analyses_2d
 #ifndef NO_3D
    use variables_3d, only: do_numerical_analyses_3d,calc_stirr
+   use m3d, only: nonhyd_method
    use m3d, only: calc_salt,calc_temp
 #endif
 #ifdef TEST_NESTING
@@ -260,9 +261,9 @@
          case (NETCDF)
             if (save_2d) call init_2d_ncdf(out_f_2d,title,starttime)
 #ifndef NO_3D
-            if (save_3d) call init_3d_ncdf(out_f_3d,title,starttime)
+            if (save_3d) call init_3d_ncdf(out_f_3d,title,starttime,runtype)
             if (save_mean)  &
-                     call init_mean_ncdf(out_f_mean,title,starttime)
+                     call init_mean_ncdf(out_f_mean,title,starttime,runtype)
 #endif
          case (GRADS)
          case DEFAULT
@@ -341,7 +342,7 @@
          write_mean = (mod(n,meanout).eq.0)
          !write_mean = (mod(n-mean0,meanout).eq.0)
       end if
-      call calc_mean_fields(n,write_mean)
+      call calc_mean_fields(n,write_mean,runtype)
    end if
 #endif
 
@@ -364,7 +365,7 @@
          case (NETCDF)
             if (write_2d) call save_2d_ncdf(secs)
 #ifndef NO_3D
-            if (write_3d) call save_3d_ncdf(secs)
+            if (write_3d) call save_3d_ncdf(runtype,secs)
             if (write_mean) call save_mean_ncdf(secs)
 #endif
          case DEFAULT
