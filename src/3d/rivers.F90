@@ -36,7 +36,7 @@
    use variables_2d, only: dtm,z
 #ifndef NO_BAROCLINIC
    use m3d, only: calc_salt,calc_temp
-   use variables_3d, only: hn,ssen,T,S
+   use variables_3d, only: hn,Dn,ssen,T,S
 #endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
@@ -473,27 +473,27 @@
                   if (macro_height(n).gt._ZERO_ .or. .not.river_outflow_properties_follow_source_cell) then
                      if (calc_salt ) then
                         if ( river_salt(n) .ne. salt_missing) then
-                           S(i,j,1:kmax) = (S(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
+                           S(i,j,1:kmax) = (S(i,j,1:kmax)*Dn(i,j)   &
                                          + river_salt(n)*macro_height(n))      &
-                                         / (H(i,j)+ssen(i,j)+macro_height(n))
+                                         / (Dn(i,j)+macro_height(n))
                         else
-                           S(i,j,1:kmax) = S(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
-                                         / (H(i,j)+ssen(i,j)+macro_height(n))
+                           S(i,j,1:kmax) = S(i,j,1:kmax)*Dn(i,j)   &
+                                         / (Dn(i,j)+macro_height(n))
                         end if
                      end if
                      if (calc_temp .and. river_temp(n) .ne. temp_missing) then
-                        T(i,j,1:kmax) = (T(i,j,1:kmax)*(H(i,j)+ssen(i,j))   &
+                        T(i,j,1:kmax) = (T(i,j,1:kmax)*Dn(i,j)   &
                                          + river_temp(n)*macro_height(n))      &
-                                         / (H(i,j)+ssen(i,j)+macro_height(n))
+                                         / (Dn(i,j)+macro_height(n))
                      end if
 #ifdef GETM_BIO
                      if (bio_calc) then
                         do m=1,numc
                            if ( river_bio(n,m) .ne. bio_missing ) then
                               cc3d(m,i,j,1:kmax) = &
-                                    (cc3d(m,i,j,1:kmax)*(H(i,j)+ssen(i,j)) &
+                                    (cc3d(m,i,j,1:kmax)*Dn(i,j) &
                                     + river_bio(n,m)*macro_height(n))      &
-                                    / (H(i,j)+ssen(i,j)+macro_height(n))
+                                    / (Dn(i,j)+macro_height(n))
                            end if
                         end do
                      end if
@@ -503,9 +503,9 @@
                         do m=1,size(model%info%state_variables)
                            if ( river_fabm(n,m) .ne. model%info%state_variables(m)%missing_value ) then
                               fabm_pel(i,j,1:kmax,m) = &
-                                    (fabm_pel(i,j,1:kmax,m)*(H(i,j)+ssen(i,j)) &
+                                    (fabm_pel(i,j,1:kmax,m)*Dn(i,j) &
                                     + river_fabm(n,m)*macro_height(n))      &
-                                    / (H(i,j)+ssen(i,j)+macro_height(n))
+                                    / (Dn(i,j)+macro_height(n))
                            end if
                         end do
                      end if
@@ -513,8 +513,8 @@
                   end if
 
 !                 Changes of total and layer height due to river inflow:
-                  hn(i,j,1:kmax) = hn(i,j,1:kmax)/(H(i,j)+ssen(i,j)) &
-                                  *(H(i,j)+ssen(i,j)+macro_height(n))
+                  hn(i,j,1:kmax) = hn(i,j,1:kmax)/Dn(i,j) &
+                                  *(Dn(i,j)+macro_height(n))
                   ssen(i,j) = ssen(i,j)+macro_height(n)
                   macro_height(n) = _ZERO_
                end if

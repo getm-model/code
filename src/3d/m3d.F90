@@ -223,7 +223,6 @@
    if (.not. hotstart) then
       ssen = z
       call start_macro()
-      Dold = Dn
       call coordinates(hotstart)
       call hcc_check()
    end if
@@ -463,7 +462,11 @@
          end do
       end do
 
-      call depth_update(sseo,ssen,Dold,Dn,Dun,Dvn,first=.true.,from3d=.true.)
+      call depth_update(sseo,ssen,Dn,Dveln,Dun,Dvn,from3d=.true.)
+!     KK-TODO: do not store ss[u|v]n in hotstart file
+!              can be calculated here (if needed at all... use of D[u|v]n)
+!     ssun = Dun - HU
+!     ssvn = Dvn - HV
       call coordinates(hotstart)
 
       if (vert_cord .eq. _ADAPTIVE_COORDS_) call shear_frequency()
