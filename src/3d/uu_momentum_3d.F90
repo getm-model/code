@@ -59,7 +59,7 @@
    use variables_2d, only: Uint,D
    use bdy_3d, only: do_bdy_3d
    use variables_3d, only: dt,cnpar,kumin,uu,vv,huo,hun,hvo,uuEx,ww,hvn
-   use variables_3d, only: num,nuh,sseo,ssun,rru
+   use variables_3d, only: num,nuh,sseo,Dun,rru
    use variables_3d, only: ssuo
 #ifdef _MOMENTUM_TERMS_
    use variables_3d, only: tdv_u,cor_u,ipg_u,epg_u,vsd_u,hsd_u
@@ -249,7 +249,7 @@
                   ResInt=ResInt+Res(k)
                end do
 #ifdef MUDFLAT
-               Diff=(Uint(i,j)-ResInt)/(ssun(i,j)+HU(i,j))
+               Diff=(Uint(i,j)-ResInt)/Dun(i,j)
 #else
                Diff=(Uint(i,j)-ResInt)/(ssuo(i,j)+HU(i,j))
 #endif
