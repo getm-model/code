@@ -32,7 +32,7 @@
 ! !USES:
 #ifdef SLICE_MODEL
    use domain, only: imin,imax,jmin,jmax,kmax
-   use variables_3d, only: kvmin,hvo,hvn
+   use variables_3d, only: kvmin,hvo,hvn,ho,hn,hvel
 #endif
    use getm_timers, only: tic, toc,TIM_COORDS
    use m3d
@@ -99,6 +99,8 @@ stop
          case default
       end select
    end if ! first
+
+   hvel = _HALF_ * ( ho + hn )
 
 #ifdef SLICE_MODEL
    do i=imin,imax
