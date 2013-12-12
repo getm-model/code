@@ -56,7 +56,8 @@ ${LIB}(to_u.o)		\
 ${LIB}(to_v.o)		\
 ${LIB}(to_w.o)		\
 ${LIB}(c2x.o)		\
-${LIB}(check_3d_fields.o)
+${LIB}(check_3d_fields.o)	\
+${LIB}(filter_1d.o)
 
 all: modules objects
 

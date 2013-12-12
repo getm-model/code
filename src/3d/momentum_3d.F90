@@ -78,9 +78,9 @@
          call do_nonhydrostatic(nonhyd_loop,vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver)
          call toc(TIM_NH_OVERHEAD)
       end if
-      if (nonhyd_loop .lt. nonhyd_iters) then
+      if (nonhyd_method .eq. 1) then
          call tic(TIM_NH_OVERHEAD)
-         call do_internal_pressure()
+         call do_internal_pressure(2)
          call toc(TIM_NH_OVERHEAD)
       end if
       nonhyd_loop = nonhyd_loop + 1

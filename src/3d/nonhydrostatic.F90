@@ -91,7 +91,7 @@
    use variables_3d, only: minus_bnh,wco
    use variables_3d, only: uu_0,vv_0
    use variables_3d, only: dt,uu,vv,ww,ho,hn,hvel,hun,hvn,num
-   use m2d, only: avmmol
+   use m2d, only: no_2d,avmmol
 #ifndef NO_ADVECT
    use advection, only: NOSPLIT,CENTRAL
    use advection_3d, only: do_advection_3d
@@ -105,9 +105,11 @@
    public init_nonhydrostatic, do_nonhydrostatic
 
    integer,public  :: nonhyd_method=0
+   logical,public  :: calc_hs2d=.true.
    integer,public  :: nonhyd_iters=1
    integer,public  :: bnh_filter=0
    REALTYPE,public :: bnh_weight=_ONE_
+   logical,public  :: sbnh_filter=.false.
 !
 ! !PRIVATE DATA MEMBERS:
    REALTYPE        :: dtm1
@@ -142,7 +144,7 @@
 ! !LOCAL VARIABLES:
    integer                     :: rc
    namelist /nonhyd/ &
-            nonhyd_iters,bnh_filter,bnh_weight
+            calc_hs2d,nonhyd_iters,bnh_filter,bnh_weight,sbnh_filter
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -159,6 +161,7 @@
       case (-1)
          LEVEL3 'passive screening of nonhydrostatic effects'
       case (1)
+         calc_hs2d = .false.
          read(NAMLST,nonhyd)
          if (nonhyd_iters .le. 0) nonhyd_iters=1
          LEVEL3 'number of iterations = ',nonhyd_iters
@@ -188,6 +191,13 @@
                call getm_error("init_nonhydrostatic()", &
                                "no valid bnh_filter specified")
          end select
+         if (.not. no_2d) then
+            if (calc_hs2d) then
+               LEVEL3 'exclude nh pressure gradient from slow terms'
+            else if (sbnh_filter) then
+               LEVEL3 'apply spatial filter to nh slow terms'
+            end if
+         end if
       case default
          call getm_error("init_nonhydrostatic()", &
                          "no valid nonhyd_method specified")

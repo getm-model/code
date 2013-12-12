@@ -467,23 +467,24 @@
       if (vert_cord .eq. _ADAPTIVE_COORDS_) call shear_frequency()
       call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
 
+      if (nonhyd_method .eq. 1) then
+         call do_internal_pressure(2)
+      end if
+
    end if
 
 #ifndef NO_BAROCLINIC
    if (runtype .ge. 3) then
       call do_eqstate()
       call buoyancy_frequency()
+      call do_internal_pressure(1)
    end if
 #endif
-
-   if (calc_ip) then
-      call do_internal_pressure()
-   end if
 
    if (.not. hotstart) then
 #ifndef NO_BAROTROPIC
       if (.not. no_2d) then
-         call stop_macro(.false.)
+         call stop_macro(runtype,.false.)
       end if
 #endif
    end if
@@ -695,16 +696,14 @@
 !                          2) adaptive coordinates
       call buoyancy_frequency()
 
+      call do_internal_pressure(1)
+
    end if
 #endif
 
-   if (runtype.eq.4 .or. nonhyd_method.eq.1) then
-      call do_internal_pressure()
-   end if
-
 #ifndef NO_BAROTROPIC
    if (.not. no_2d) then
-      call stop_macro(.true.)
+      call stop_macro(runtype,.true.)
    end if
 #endif
 

@@ -158,7 +158,10 @@
    REALTYPE,dimension(:,:,:),allocatable :: uu_0,vv_0
 
 !  the following fields will be allocated in init_internal_pressure
-   REALTYPE,dimension(:,:,:),allocatable :: idpdx,idpdy
+   REALTYPE,dimension(:,:,:),pointer            :: idpdx,idpdy
+   REALTYPE,dimension(:,:,:),allocatable,target :: idpdx_hs,idpdy_hs
+   REALTYPE,dimension(:,:,:),allocatable,target :: idpdx_nh,idpdy_nh
+   REALTYPE,dimension(:,:,:),allocatable,target :: idpdx_full,idpdy_full
 
 #ifdef GETM_BIO
    REALTYPE, allocatable               :: cc3d(:,:,:,:)
