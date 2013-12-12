@@ -12,7 +12,7 @@
 #else
                    dx,dy,ard1,                                          &
 #endif
-                   H,HU,HV,hn,ho,uu,hun,vv,hvn,ww,missing,wc)
+                   H,HU,HV,hn,ho,hvel,uu,hun,vv,hvn,ww,missing,wc)
 !
 ! !DESCRIPTION:
 !
@@ -34,7 +34,7 @@
    REALTYPE,intent(in)                      :: dx,dy,ard1
 #endif
    REALTYPE,dimension(E2DFIELD),intent(in)  :: H,HU,HV
-   REALTYPE,dimension(I3DFIELD),intent(inout) :: hn,ho,hun,hvn
+   REALTYPE,dimension(I3DFIELD),intent(inout) :: hn,ho,hvel,hun,hvn
    REALTYPE,dimension(I3DFIELD),intent(in)  :: uu,vv,ww
    REALTYPE,intent(in)                      :: missing
 !
@@ -45,7 +45,7 @@
 !  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
-   REALTYPE,dimension(I2DFIELD)             :: hwc,zco,zcn,zu
+   REALTYPE,dimension(I2DFIELD)             :: zco,zcn,zu
 #ifndef SLICE_MODEL
    REALTYPE,dimension(I2DFIELD)             :: zv
 #endif
@@ -91,8 +91,6 @@
    do k=1,kmax
 
 !$OMP SINGLE
-      hwc = _HALF_*( ho(:,:,k) + hn(:,:,k) )
-
 !     update z-levels
       zco = zco + _HALF_*(  ho(:,:,k-1) +  ho(:,:,k) )
       zcn = zcn + _HALF_*(  hn(:,:,k-1) +  hn(:,:,k) )
@@ -102,7 +100,7 @@
 #endif
       km = kp
       kp = 1-kp
-      zw(:,:,kp) = zw(:,:,km) + hwc
+      zw(:,:,kp) = zw(:,:,km) + hvel(:,:,k)
 !$OMP END SINGLE
 
 !     calculate wc
@@ -133,7 +131,7 @@
                       - ww(i,j,k-1)*zw(i,j,km)           &
                      )                                   &
                   )                                      &
-                  /hwc(i,j)
+                  /hvel(i,j,k)
             end if
          end do
 #ifndef SLICE_MODEL
