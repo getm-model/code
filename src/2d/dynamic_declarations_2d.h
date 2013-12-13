@@ -7,7 +7,6 @@
   REALTYPE,dimension(:,:),allocatable  :: z,zo
   REALTYPE,dimension(:,:),allocatable  :: U,V
   REALTYPE,dimension(:,:),allocatable  :: UEx,VEx
-  REALTYPE,dimension(:,:),allocatable  :: fU,fV
   REALTYPE,dimension(:,:),allocatable  :: ru,rv
   REALTYPE,dimension(:,:),allocatable  :: Uint,Vint
   REALTYPE,dimension(:,:),allocatable  :: Uinto,Vinto
