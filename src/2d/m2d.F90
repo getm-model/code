@@ -92,6 +92,7 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
+   logical,private           :: ufirst=.false.
   integer                    :: num_neighbors
   REALTYPE                   :: An_sum
 !
@@ -322,11 +323,11 @@
 ! !IROUTINE: postinit_2d - re-initialise some 2D after hotstart read.
 !
 ! !INTERFACE:
-   subroutine postinit_2d(runtype,timestep,hotstart)
+   subroutine postinit_2d(runtype,timestep,hotstart,MinN)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: runtype
+   integer, intent(in)                 :: runtype,MinN
    REALTYPE, intent(in)                :: timestep
    logical, intent(in)                 :: hotstart
 !
@@ -351,6 +352,8 @@
 #endif
 
    LEVEL1 'postinit_2d'
+
+   ufirst = ( mod(MinN,2) .eq. 0 )
 
 !
 ! It is possible that a user changes the land mask and reads an "old" hotstart file.
@@ -464,7 +467,7 @@
    call uv_diffusion(An_method,U,V,D,DU,DV) ! Has to be called after uv_advect.
    call toc(TIM_INTEGR2D)
 
-   call momentum(loop,tausx,tausy,airp)
+   call momentum(loop,tausx,tausy,airp,ufirst)
    if (runtype .gt. 1) then
       call tic(TIM_INTEGR2D)
       Uint=Uint+U
