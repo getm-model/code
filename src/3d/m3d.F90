@@ -66,6 +66,7 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
+   logical,private :: ufirst=.true.
    logical         :: advect_turbulence=.false.
 #ifdef NO_BAROCLINIC
    integer         :: ip_method
@@ -279,13 +280,13 @@
 ! !IROUTINE: postinit_3d - re-initialise some 3D after hotstart read.
 !
 ! !INTERFACE:
-   subroutine postinit_3d(runtype,timestep,hotstart)
+   subroutine postinit_3d(runtype,timestep,hotstart,MinN)
 ! !USES:
    use domain, only: imin,imax,jmin,jmax, az,au,av
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: runtype
+   integer, intent(in)                 :: runtype,MinN
    REALTYPE, intent(in)                :: timestep
    logical, intent(in)                 :: hotstart
 !
@@ -310,6 +311,8 @@
 #endif
 
    LEVEL1 'postinit_3d'
+
+   ufirst = ( mod(int(ceiling((_ONE_*MinN)/M)),2) .eq. 1 )
 
    if (do_numerical_analyses) then
 
@@ -486,7 +489,6 @@
 ! rotation.
 !
 ! !LOCAL VARIABLES:
-  logical, save              :: ufirst=.true.
 !
 !EOP
 !-------------------------------------------------------------------------
