@@ -397,11 +397,11 @@
    use domain, only: au,av
    use domain, only: imin,imax,jmin,jmax
 #ifdef ZUB_ZVB
-   use variables_2d, only: U,fU,res_du,SlUx,Slru
-   use variables_2d, only: V,fV,res_dv,SlVx,Slrv
+   use variables_2d, only: U,res_du,SlUx,Slru
+   use variables_2d, only: V,res_dv,SlVx,Slrv
 #else
-   use variables_2d, only: U,fU,SlUx,Slru
-   use variables_2d, only: V,fV,SlVx,Slrv
+   use variables_2d, only: U,SlUx,Slru
+   use variables_2d, only: V,SlVx,Slrv
 #endif
    use variables_2d, only: Uinto,Vinto
 #ifndef NO_3D
