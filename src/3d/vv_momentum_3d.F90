@@ -64,7 +64,7 @@
    use variables_2d, only: Vint,D
    use bdy_3d, only: do_bdy_3d
    use variables_3d, only: dt,cnpar,kvmin,uu,vv,huo,hvo,hvn,vvEx,ww,hun
-   use variables_3d, only: num,nuh,sseo,ssvn,rrv
+   use variables_3d, only: num,nuh,sseo,ssvn,Dvn,rrv
    use variables_3d, only: ssvo
 #ifdef _MOMENTUM_TERMS_
    use variables_3d, only: tdv_v,cor_v,ipg_v,epg_v,vsd_v,hsd_v
@@ -270,7 +270,7 @@
                end do
 
 #ifdef MUDFLAT
-               Diff=(Vint(i,j)-ResInt)/(ssvn(i,j)+HV(i,j))
+               Diff=(Vint(i,j)-ResInt)/Dvn(i,j)
 #else
                Diff=(Vint(i,j)-ResInt)/(ssvo(i,j)+HV(i,j))
 #endif
