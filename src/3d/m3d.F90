@@ -66,6 +66,7 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
+   logical,private :: ufirst=.true.
    logical         :: advect_turbulence=.false.
 #ifdef NO_BAROCLINIC
    integer         :: ip_method
@@ -271,13 +272,13 @@
 ! !IROUTINE: postinit_3d - re-initialise some 3D after hotstart read.
 !
 ! !INTERFACE:
-   subroutine postinit_3d(runtype,timestep,hotstart)
+   subroutine postinit_3d(runtype,timestep,hotstart,MinN)
 ! !USES:
    use domain, only: imin,imax,jmin,jmax, az,au,av
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: runtype
+   integer, intent(in)                 :: runtype,MinN
    REALTYPE, intent(in)                :: timestep
    logical, intent(in)                 :: hotstart
 !
@@ -303,7 +304,11 @@
 
    LEVEL1 'postinit_3d'
 
+   ufirst = ( mod(int(ceiling((_ONE_*MinN)/M)),2) .eq. 1 )
+
 !  must be in postinit because flags are set init_getm_fabm
+!  KK-TODO: postinit_variables_3d()
+
    if (deformC_3d) then
       allocate(dudxC_3d(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'postinit_3d: Error allocating memory (dudxC_3d)'
@@ -566,7 +571,6 @@
 ! rotation.
 !
 ! !LOCAL VARIABLES:
-  logical, save              :: ufirst=.true.
 !
 !EOP
 !-------------------------------------------------------------------------

@@ -130,6 +130,9 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
+! !LOCAL VARIABLES:
+   logical,private           :: ufirst=.false.
+!
 !EOP
 !-----------------------------------------------------------------------
 
@@ -365,11 +368,11 @@
 ! !IROUTINE: postinit_2d - re-initialise some 2D after hotstart read.
 !
 ! !INTERFACE:
-   subroutine postinit_2d(runtype,timestep,hotstart)
+   subroutine postinit_2d(runtype,timestep,hotstart,MinN)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: runtype
+   integer, intent(in)                 :: runtype,MinN
    REALTYPE, intent(in)                :: timestep
    logical, intent(in)                 :: hotstart
 !
@@ -396,7 +399,12 @@
    LEVEL1 'postinit_2d'
 
 !  must be allocated in postinit because of do_numerical_analyses_2d
+!  KK-TODO: postinit_variables_2d()
+
    if (.not. no_2d) then
+
+      ufirst = ( mod(MinN,2) .eq. 0 )
+
       if (deformC) then
          allocate(dudxC(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'postinit_2d: Error allocating memory (dudxC)'
@@ -565,7 +573,7 @@
 
    call toc(TIM_INTEGR2D)
 
-   call momentum(loop,tausx,tausy,airp)
+   call momentum(loop,tausx,tausy,airp,ufirst)
 
    if (rigid_lid) then
 !     Note (KK): we need to solve Poisson equation to get final transports
