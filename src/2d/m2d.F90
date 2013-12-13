@@ -110,6 +110,7 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
+   logical,private           :: ufirst=.false.
   integer                    :: num_neighbors
   REALTYPE                   :: An_sum
 !
@@ -333,11 +334,11 @@
 ! !IROUTINE: postinit_2d - re-initialise some 2D after hotstart read.
 !
 ! !INTERFACE:
-   subroutine postinit_2d(runtype,timestep,hotstart)
+   subroutine postinit_2d(runtype,timestep,hotstart,MinN)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: runtype
+   integer, intent(in)                 :: runtype,MinN
    REALTYPE, intent(in)                :: timestep
    logical, intent(in)                 :: hotstart
 !
@@ -362,6 +363,8 @@
 #endif
 
    LEVEL1 'postinit_2d'
+
+   ufirst = ( mod(MinN,2) .eq. 0 )
 
    if (do_numerical_analyses_2d) then
       allocate(phydis_2d(E2DFIELD),stat=rc)
@@ -489,7 +492,7 @@
    if (do_numerical_analyses_2d) call physical_dissipation(U,V,DU,DV,Am,phydis_2d)
    call toc(TIM_INTEGR2D)
 
-   call momentum(loop,tausx,tausy,airp)
+   call momentum(loop,tausx,tausy,airp,ufirst)
 
    if (rigid_lid) then
 !     Note (KK): we need to solve Poisson equation to get final transports
