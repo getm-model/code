@@ -36,12 +36,6 @@
    allocate(VEx(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (VEx)'
 
-   allocate(fU(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (fU)'
-
-   allocate(fV(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_2d: Error allocating memory (fV)'
-
    allocate(ru(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (ru)'
 
