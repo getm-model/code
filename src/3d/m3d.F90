@@ -64,12 +64,12 @@
    REALTYPE                            :: ip_fac=_ONE_
    integer                             :: vel_check=0
    REALTYPE                            :: min_vel=-4*_ONE_,max_vel=4*_ONE_
+   logical                             :: ufirst=.true.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   logical,private :: ufirst=.true.
    logical         :: advect_turbulence=.false.
 !EOP
 !-----------------------------------------------------------------------

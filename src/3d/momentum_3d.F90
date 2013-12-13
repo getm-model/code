@@ -13,7 +13,8 @@
 ! !USES:
    use domain, only: kmax,vert_cord,maxdepth
    use variables_3d, only: uu,vv,ho,hn,huo,hun,hvo,hvn
-   use m3d, only: M,bdy3d,vert_cord,cord_relax,vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,nonhyd_method
+   use m3d, only: ufirst,bdy3d,vert_cord,cord_relax
+   use m3d, only: vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,nonhyd_method
    use nonhydrostatic, only: do_nonhydrostatic
    use nonhydrostatic, only: nonhyd_iters
    use variables_3d, only: uu_0,vv_0
@@ -35,6 +36,7 @@
 !
 ! !LOCAL VARIABLES:
    integer :: nonhyd_loop
+   logical :: ufirst_0
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -49,6 +51,7 @@
       call tic(TIM_INTEGR3D)
       call tic(TIM_NH_OVERHEAD)
       uu_0  = uu  ; vv_0  = vv
+      ufirst_0 = ufirst
       call toc(TIM_NH_OVERHEAD)
       call toc(TIM_INTEGR3D)
    end if
@@ -58,14 +61,17 @@
          call tic(TIM_INTEGR3D)
          call tic(TIM_NH_OVERHEAD)
          uu  = uu_0  ; vv  = vv_0
+         ufirst = ufirst_0
          call toc(TIM_INTEGR3D)
       end if
-      if (mod(n/M,2) .eq. 1) then
+      if (ufirst) then
          call uu_momentum_3d(n,bdy3d)
          call vv_momentum_3d(n,bdy3d)
+         ufirst = .false.
       else
          call vv_momentum_3d(n,bdy3d)
          call uu_momentum_3d(n,bdy3d)
+         ufirst = .true.
       end if
       if (kmax .gt. 1) then
          call ww_momentum_3d()
@@ -85,6 +91,14 @@
       end if
       nonhyd_loop = nonhyd_loop + 1
    end do
+
+   if (nonhyd_iters .gt. 1) then
+      call tic(TIM_INTEGR3D)
+      call tic(TIM_NH_OVERHEAD)
+      ufirst = ( .not. ufirst_0 )
+      call toc(TIM_NH_OVERHEAD)
+      call toc(TIM_INTEGR3D)
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving momentum_3d()'
