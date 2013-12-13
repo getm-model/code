@@ -491,7 +491,6 @@
 			<element name="advect_turbulence"  type="bool"  label="advect TKE and eps">
 				<condition type="eq" variable="./use_gotm" value="True"/>
 			</element>
-
 			<element name="nonhyd_method" type="int" label="nonhydrostatic options">
 				<options>
 					<option value="-1" label="passive screening"/>

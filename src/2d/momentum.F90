@@ -5,7 +5,7 @@
 ! !ROUTINE: momentum - 2D-momentum for all interior points.
 !
 ! !INTERFACE:
-   subroutine momentum(n,tausx,tausy,airp)
+   subroutine momentum(n,tausx,tausy,airp,ufirst)
 !
 ! !DESCRIPTION:
 !
@@ -26,11 +26,14 @@
    REALTYPE, intent(in)                :: tausy(E2DFIELD)
    REALTYPE, intent(in)                :: airp(E2DFIELD)
 !
+! !INPUT/OUTPUT VARIABLES:
+   logical, intent(inout)              :: ufirst
+!
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   logical                   :: ufirst=.false.
+!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -117,15 +120,14 @@
 ! !USES:
    use parameters, only: g,rho_0
    use domain, only: imin,imax,jmin,jmax
-   use domain, only: H,au,av,min_depth,dry_u,Cori,corv
+   use domain, only: H,au,av,min_depth,dry_u,Cori,coru
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dxu,arvd1,dxc,dyx
-   use variables_2d, only: V
+   use domain, only: dxu,arud1,dyc,dxx
 #else
    use domain, only: dx
 #endif
    use domain, only: have_boundaries
-   use variables_2d, only: dtm,D,z,UEx,U,DU,fV,SlUx,Slru,ru,fU,DV
+   use variables_2d, only: dtm,D,z,UEx,U,DU,SlUx,Slru,ru,V,DV
    use bdy_2d, only: do_bdy_2d
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,U_TAG
@@ -139,7 +141,7 @@
 ! !LOCAL VARIABLES:
    logical, save             :: first=.true.
    integer                   :: i,j
-   REALTYPE                  :: zp,zm,zx,tausu,Slr,Uloc
+   REALTYPE                  :: zp,zm,zx,tausu,Slr,Vloc,fV
    REALTYPE                  :: cord_curv=_ZERO_
    REALTYPE, save            :: gammai,rho_0i
 !EOP
@@ -157,12 +159,36 @@
       first = .false.
    end if
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zx,tausu,Slr,Uloc)
-
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zx,tausu,Slr,Vloc,fV)
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if ((au(i,j) .eq. 1) .or. (au(i,j) .eq. 2)) then
+!           Semi-implicit treatment of Coriolis force
+!           Note (KK): Between individual momentum routines no call
+!                      to depth_update, therefore combination of new
+!                      transport and old depth (impossible to fix).
+!                      In the old implementation (fV calculated at the
+!                      end of vmomentum), this was the default.
+!                      In this new implementation at least the momentum
+!                      called first gets consistent transports and depths.
+!           Espelid et al. [2000], IJNME 49, 1521-1545
+#ifdef NEW_CORI
+            Vloc = &
+            ( V(i,j  )/sqrt(DV(i,j  ))+ V(i+1,j  )/sqrt(DV(i+1,j  )) + &
+              V(i,j-1)/sqrt(DV(i,j-1))+ V(i+1,j-1)/sqrt(DV(i+1,j-1)))  &
+              *_QUART_*sqrt(DU(i,j))
+#else
+            Vloc = _QUART_*( V(i,j-1)+ V(i+1,j-1)+V(i,j)+V(i+1,j))
+#endif
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+            cord_curv=(Vloc*(DYCIP1-DYC)-U(i,j)*(DXX-DXXJM1)) &
+                       /DU(i,j)*ARUD1
+            fV=(cord_curv+coru(i,j))*Vloc
+#else
+            fV=coru(i,j)*Vloc
+#endif
+
             zp = max( z(i+1,j) , -H(i  ,j)+min( min_depth , D(i+1,j) ) )
             zm = max( z(i  ,j) , -H(i+1,j)+min( min_depth , D(i  ,j) ) )
             zx = ( zp - zm + (airp(i+1,j)-airp(i,j))*gammai ) / DXU
@@ -174,7 +200,7 @@
             end if
             Slr = max(_ZERO_,ru(i,j)/DU(i,j)+Slr)
             U(i,j)=(U(i,j)-dtm*(g*DU(i,j)*zx+dry_u(i,j)*&
-                 (-tausu*rho_0i-fV(i,j)+UEx(i,j)+SlUx(i,j))))/&
+                 (-tausu*rho_0i-fV+UEx(i,j)+SlUx(i,j))))/&
                  (_ONE_+dtm*Slr)
          end if
       end do
@@ -196,32 +222,6 @@
    call wait_halo(U_TAG)
    CALL toc(TIM_MOMENTUMH)
    call mirror_bdy_2d(U,U_TAG)
-
-! Semi-implicit treatment of Coriolis force for V-momentum eq.
-   do j=jmin,jmax
-      do i=imin,imax
-         if(av(i,j) .ge. 1) then
-! Espelid et al. [2000], IJNME 49, 1521-1545
-#ifdef NEW_CORI
-            Uloc= &
-             ( U(i,j  )/sqrt(DU(i,j  ))+ U(i-1,j  )/sqrt(DU(i-1,j  ))  &
-             + U(i,j+1)/sqrt(DU(i,j+1))+ U(i-1,j+1)/sqrt(DU(i-1,j+1))) &
-               *_QUART_*sqrt(DV(i,j))
-#else
-            Uloc=_QUART_*( U(i-1,j)+U(i,j)+U(i-1,j+1)+U(i,j+1))
-#endif
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-            cord_curv=(V(i,j)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC)) &
-                      /DV(i,j)*ARVD1
-            fU(i,j)=(cord_curv+corv(i,j))*Uloc
-#else
-            fU(i,j)=corv(i,j)*Uloc
-#endif
-         else
-            fU(i,j)= _ZERO_
-         end if
-      end do
-   end do
 
 #ifdef DEBUG
    write(debug,*) 'Leaving umomentum()'
@@ -288,15 +288,14 @@
 ! !USES:
    use parameters, only: g,rho_0
    use domain, only: imin,imax,jmin,jmax
-   use domain, only: H,au,av,min_depth,dry_v,Cori,coru
+   use domain, only: H,au,av,min_depth,dry_v,Cori,corv
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dyv,arud1,dxx,dyc
-   use m2d, only: U
+   use domain, only: dyv,arvd1,dxc,dyx
 #else
    use domain, only: dy
 #endif
    use domain, only: have_boundaries
-   use variables_2d, only: dtm,D,z,VEx,V,DV,fU,SlVx,Slrv,rv,fV,DU
+   use variables_2d, only: dtm,D,z,VEx,V,DV,SlVx,Slrv,rv,U,DU
    use bdy_2d, only: do_bdy_2d
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,V_TAG
@@ -309,7 +308,7 @@
 ! !LOCAL VARIABLES:
    logical, save             :: first=.true.
    integer                   :: i,j
-   REALTYPE                  :: zp,zm,zy,tausv,Slr,Vloc
+   REALTYPE                  :: zp,zm,zy,tausv,Slr,Uloc,fU
    REALTYPE                  :: cord_curv=_ZERO_
    REALTYPE, save            :: gammai,rho_0i
 !EOP
@@ -327,12 +326,29 @@
       first = .false.
    end if
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zy,tausv,Slr,Vloc)
-
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zy,tausv,Slr,Uloc,fU)
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if ((av(i,j) .eq. 1) .or. (av(i,j) .eq. 2)) then
+!           Semi-implicit treatment of Coriolis force
+!           Espelid et al. [2000], IJNME 49, 1521-1545
+#ifdef NEW_CORI
+            Uloc= &
+             ( U(i,j  )/sqrt(DU(i,j  ))+ U(i-1,j  )/sqrt(DU(i-1,j  ))  &
+             + U(i,j+1)/sqrt(DU(i,j+1))+ U(i-1,j+1)/sqrt(DU(i-1,j+1))) &
+               *_QUART_*sqrt(DV(i,j))
+#else
+            Uloc=_QUART_*( U(i-1,j)+U(i,j)+U(i-1,j+1)+U(i,j+1))
+#endif
+#if defined(SPHERICAL) || defined(CURVILINEAR)
+            cord_curv=(V(i,j)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC)) &
+                      /DV(i,j)*ARVD1
+            fU=(cord_curv+corv(i,j))*Uloc
+#else
+            fU=corv(i,j)*Uloc
+#endif
+
             zp = max( z(i,j+1) , -H(i,j  )+min( min_depth , D(i,j+1) ) )
             zm = max( z(i,j  ) , -H(i,j+1)+min( min_depth , D(i,j  ) ) )
             zy = ( zp - zm + (airp(i,j+1)-airp(i,j))*gammai ) / DYV
@@ -344,7 +360,7 @@
             end if
             Slr = max(_ZERO_,rv(i,j)/DV(i,j)+Slr)
             V(i,j)=(V(i,j)-dtm*(g*DV(i,j)*zy+dry_v(i,j)*&
-                 (-tausv*rho_0i+fU(i,j)+VEx(i,j)+SlVx(i,j))))/&
+                 (-tausv*rho_0i+fU+VEx(i,j)+SlVx(i,j))))/&
                  (_ONE_+dtm*Slr)
          end if
       end do
@@ -367,32 +383,6 @@
    call wait_halo(V_TAG)
    CALL toc(TIM_MOMENTUMH)
    call mirror_bdy_2d(V,V_TAG)
-
-!  Semi-implicit treatment of Coriolis force for U-momentum eq.
-   do j=jmin,jmax
-      do i=imin,imax
-         if(au(i,j) .ge. 1) then
-! Espelid et al. [2000], IJNME 49, 1521-1545
-#ifdef NEW_CORI
-            Vloc = &
-            ( V(i,j  )/sqrt(DV(i,j  ))+ V(i+1,j  )/sqrt(DV(i+1,j  )) + &
-              V(i,j-1)/sqrt(DV(i,j-1))+ V(i+1,j-1)/sqrt(DV(i+1,j-1)))  &
-              *_QUART_*sqrt(DU(i,j))
-#else
-            Vloc = _QUART_*( V(i,j-1)+ V(i+1,j-1)+V(i,j)+V(i+1,j))
-#endif
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-            cord_curv=(Vloc*(DYCIP1-DYC)-U(i,j)*(DXX-DXXJM1)) &
-                       /DU(i,j)*ARUD1
-            fV(i,j)=(cord_curv+coru(i,j))*Vloc
-#else
-            fV(i,j)=coru(i,j)*Vloc
-#endif
-         else
-            fV(i,j) = _ZERO_
-         end if
-      end do
-   end do
 
 #ifdef DEBUG
    write(debug,*) 'Leaving vmomentum()'
