@@ -177,16 +177,11 @@
       sinwavedir = sin(waveDir)
       waveE = grav * (_QUART_*waveH)**2
 
-
-      new_StokesC = .true.
-
+!     calculate depth-integrated Stokes drift at T-point
       waveECm1 = waveE * waveK * waveT * oneovertwopi
-
-!     depth-integrated Stokes drift in x-direction at T-point
       UStokesC = coswavedir * waveECm1
-
-!     depth-integrated Stokes drift in y-direction at T-point
       VStokesC = sinwavedir * waveECm1
+      new_StokesC = .true.
 
    end if
 
