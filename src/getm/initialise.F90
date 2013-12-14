@@ -45,7 +45,8 @@
    use domain, only: vert_cord,maxdepth
    use time, only: init_time,update_time,write_time_string
    use time, only: start,timestr,timestep
-   use m2d, only: init_2d,postinit_2d, z
+   use m2d, only: init_2d,postinit_2d
+   use variables_2d, only: Dvel
    use les, only: init_les
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
 #ifndef NO_3D
@@ -72,6 +73,7 @@
 #endif
 #endif
    use meteo, only: init_meteo,do_meteo
+   use waves, only: init_waves,do_waves,waves_method,NO_WAVES
    use integration,  only: MinN,MaxN
    use exceptions
    IMPLICIT NONE
@@ -212,6 +214,8 @@
 
    call init_meteo(hotstart)
 
+   call init_waves(runtype)
+
 #ifndef NO_3D
    call init_rivers(hotstart)
 #endif
@@ -251,7 +255,6 @@
    close(NAMLST)
 
 #if 0
-   call init_waves(hotstart)
    call init_biology(hotstart)
 #endif
 
@@ -284,6 +287,10 @@
       call do_meteo(MinN,T(:,:,kmax))
 #endif
 #endif
+   end if
+
+   if (waves_method .ne. NO_WAVES) then
+      call do_waves(Dvel)
    end if
 
    call tic(TIM_INITIALIZE)
