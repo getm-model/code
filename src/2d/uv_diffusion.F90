@@ -15,7 +15,8 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
-   use m2d, only: deformation_rates,uv_diff_2dh
+   use pool, only: deformation_rates
+   use m2d, only: uv_diff_2dh
    use m2d, only: Am_method,NO_AM,AM_LAPLACE,AM_LES,AM_CONSTANT
    use variables_2d, only: UEx,VEx
    use variables_2d, only: dudxC,dudxV,dvdyC,dvdyU,shearX,shearU
