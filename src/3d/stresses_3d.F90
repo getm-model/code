@@ -23,7 +23,8 @@
 ! !USES:
    use parameters, only: rho_0
    use domain, only: az,au,av,imin,imax,jmin,jmax
-   use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,rru,rrv
+   use variables_3d, only: kumin,kvmin
+   use variables_3d, only: uu=>uuEuler,vv=>vvEuler,hun,hvn,rru,rrv
    use variables_3d, only: taus,taubx,tauby,taub
    use meteo, only: tausx,tausy
    use getm_timers, only: tic, toc, TIM_STRESSES3D

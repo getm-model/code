@@ -11,7 +11,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
-   use m2d, only: deformation_rates
+   use pool, only: deformation_rates
    use variables_3d, only: deformC_3d,deformX_3d,deformUV_3d
    use variables_3d, only: uu,vv,hun,hvn
    use variables_3d, only: dudxC_3d,dudxV_3d,dvdxX_3d

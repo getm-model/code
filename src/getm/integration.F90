@@ -40,8 +40,9 @@
    use time,     only: update_time,timestep
    use domain,   only: kmax
    use meteo,    only: do_meteo,tausx,tausy,airp,fwf_method,evap,precip
+   use waves,    only: do_waves,waves_method,NO_WAVES
    use m2d,      only: no_2d,integrate_2d
-   use variables_2d, only: fwf,fwf_int
+   use variables_2d, only: fwf,fwf_int,D
 #ifndef NO_3D
    use m3d,      only: integrate_3d,M
 #ifndef NO_BAROCLINIC
@@ -109,6 +110,10 @@
          call do_meteo(n,T(:,:,kmax))
 #endif
 #endif
+      end if
+
+      if (waves_method .ne. NO_WAVES) then
+         call do_waves(D)
       end if
 
       if (fwf_method .ge. 1) then
