@@ -60,7 +60,7 @@
    use domain, only: dx,dy
 #endif
    use bdy_3d, only: do_bdy_3d
-   use variables_3d, only: Vadv,Dn
+   use variables_3d, only: vvEuler,VEulerAdv,Dn
    use variables_3d, only: dt,cnpar,kvmin,uu,vv,huo,hvo,hvn,vvEx,ww,hun
    use variables_3d, only: num,nuh,sseo,Dvn,rrv
 #ifdef _MOMENTUM_TERMS_
@@ -75,6 +75,8 @@
    use variables_3d, only: idpdy
    use halo_zones, only: update_3d_halo,wait_halo,V_TAG
    use meteo, only: tausy,airp
+   use waves, only: waves_method,NO_WAVES
+   use variables_waves, only: vvStokes
    use m3d, only: calc_ip,ip_fac
    use m3d, only: vel_check,min_vel,max_vel
    use getm_timers, only: tic, toc, TIM_VVMOMENTUM, TIM_VVMOMENTUMH
@@ -238,9 +240,9 @@
                k=kmax
                a1(k)=-auxn(k-1)/hvn(i,j,k-1)
                a2(k)=1+auxn(k-1)/hvn(i,j,k)
-               a4(k)=vv(i,j,k  )*(1-auxo(k-1)/hvo(i,j,k))              &
-                    +vv(i,j,k-1)*auxo(k-1)/hvo(i,j,k-1)                &
-                    +dt*ex(k)                                          &
+               a4(k)=vvEuler(i,j,k  )*(1-auxo(k-1)/hvo(i,j,k))              &
+                    +vvEuler(i,j,k-1)*auxo(k-1)/hvo(i,j,k-1)                &
+                    +dt*ex(k)                                               &
                     -dt*_HALF_*(hvo(i,j,k)+hvn(i,j,k))*g*zy
 
 !     Matrix elements for inner layers
@@ -248,10 +250,10 @@
                   a3(k)=-auxn(k  )/hvn(i,j,k+1)
                   a1(k)=-auxn(k-1)/hvn(i,j,k-1)
                   a2(k)=_ONE_+(auxn(k)+auxn(k-1))/hvn(i,j,k)
-                  a4(k)=vv(i,j,k+1)*auxo(k)/hvo(i,j,k+1)               &
-                       +vv(i,j,k  )*(1-(auxo(k)+auxo(k-1))/hvo(i,j,k)) &
-                       +vv(i,j,k-1)*auxo(k-1)/hvo(i,j,k-1)             &
-                       +dt*ex(k)                                       &
+                  a4(k)=vvEuler(i,j,k+1)*auxo(k)/hvo(i,j,k+1)               &
+                       +vvEuler(i,j,k  )*(1-(auxo(k)+auxo(k-1))/hvo(i,j,k)) &
+                       +vvEuler(i,j,k-1)*auxo(k-1)/hvo(i,j,k-1)             &
+                       +dt*ex(k)                                            &
                        -dt*_HALF_*(hvo(i,j,k)+hvn(i,j,k))*g*zy
                end do
 
@@ -259,9 +261,9 @@
                k=kvmin(i,j)
                a3(k)=-auxn(k  )/hvn(i,j,k+1)
                a2(k) = _ONE_ + ( auxn(k) + dt*rrv(i,j) )/hvn(i,j,k)
-               a4(k)=vv(i,j,k+1)*auxo(k)/hvo(i,j,k+1)                  &
-                       +vv(i,j,k  )*(_ONE_-auxo(k)/hvo(i,j,k))         &
-                       +dt*ex(k)                                       &
+               a4(k)=vvEuler(i,j,k+1)*auxo(k)/hvo(i,j,k+1)                  &
+                       +vvEuler(i,j,k  )*(_ONE_-auxo(k)/hvo(i,j,k))         &
+                       +dt*ex(k)                                            &
                        -dt*_HALF_*(hvo(i,j,k)+hvn(i,j,k))*g*zy
 
 #ifdef STRUCTURE_FRICTION
@@ -279,7 +281,7 @@
                do k=kvmin(i,j),kmax
                   ResInt=ResInt+Res(k)
                end do
-               Diff=(Vadv(i,j)-ResInt)/Dvn(i,j)
+               Diff=(VEulerAdv(i,j)-ResInt)/Dvn(i,j)
 
 #ifdef _MOMENTUM_TERMS_
                do k=kvmin(i,j),kmax
@@ -308,11 +310,11 @@
 
                if (no_shift) then
                   do k=kvmin(i,j),kmax
-                     vv(i,j,k)=Res(k)
+                     vvEuler(i,j,k)=Res(k)
                   end do
                else
                   do k=kvmin(i,j),kmax
-                     vv(i,j,k)=Res(k)+hvn(i,j,k)*Diff
+                     vvEuler(i,j,k)=Res(k)+hvn(i,j,k)*Diff
                   end do
                end if
 
@@ -342,7 +344,7 @@
 #endif
 
             else ! (kmax .eq. kvmin(i,j))
-               vv(i,j,kmax)=Vadv(i,j)
+               vvEuler(i,j,kmax)=VEulerAdv(i,j)
             end if
          end if
       end do
@@ -353,8 +355,8 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do i=imin,imax
       do k=kvmin(i,2),kmax
-         vv(i,1,k)=vv(i,2,k)
-         vv(i,3,k)=vv(i,2,k)
+         vvEuler(i,1,k)=vvEuler(i,2,k)
+         vvEuler(i,3,k)=vvEuler(i,2,k)
       end do
    end do
 !$OMP END DO
@@ -392,15 +394,20 @@
 
 !  Update the halo zones
    call tic(TIM_VVMOMENTUMH)
-   call update_3d_halo(vv,vv,av,imin,jmin,imax,jmax,kmax,V_TAG)
+   call update_3d_halo(vvEuler,vvEuler,av,imin,jmin,imax,jmax,kmax,V_TAG)
 
    if (bdy3d) then
 !      call do_bdy_3d(2,vv)
+!     Note (KK): modification of vv AND vvEuler necessary for waves!!!
    end if
 
    call wait_halo(V_TAG)
    call toc(TIM_VVMOMENTUMH)
-   call mirror_bdy_3d(vv,V_TAG)
+   call mirror_bdy_3d(vvEuler,V_TAG)
+
+   if (waves_method .ne. NO_WAVES) then
+      vv = vvEuler + vvStokes
+   end if
 
    if (vel_check .ne. 0 .and. mod(n,abs(vel_check)) .eq. 0) then
       call check_3d_fields(imin,jmin,imax,jmax,kvmin,kmax,av, &

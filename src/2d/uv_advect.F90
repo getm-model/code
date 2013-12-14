@@ -5,7 +5,7 @@
 ! !ROUTINE: uv_advect - 2D advection of momentum \label{sec-uv-advect}
 !
 ! !INTERFACE:
-   subroutine uv_advect(U,V,D,Dvel,DU,DV,numdis)
+   subroutine uv_advect(Uf,Vf,U,V,D,Dvel,DU,DV,numdis)
 
 !  Note (KK): keep in sync with interface in m2d.F90
 !
@@ -35,7 +35,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V
+   REALTYPE,dimension(E2DFIELD),intent(in)        :: Uf,Vf,U,V
    REALTYPE,dimension(E2DFIELD),target,intent(in) :: D,Dvel,DU,DV
 !
 ! !OUTPUT PARAMETERS:
@@ -107,7 +107,7 @@
 #endif
          do i=imin-HALO,imax+HALO-1
 !           the velocity to be transported
-            fadv(i,j) = U(i,j)/DU(i,j)
+            fadv(i,j) = Uf(i,j)/DU(i,j)
             if (vel2d_adv_hor .ne. J7) then
 !              Note (KK): Uadv defined on T-points (future U-points)
 !                         Vadv defined on X-points (future V-points)
@@ -340,7 +340,7 @@
 #endif
          do i=imin-HALO,imax+HALO
 !           the velocity to be transported
-            fadv(i,j) = V(i,j)/DV(i,j)
+            fadv(i,j) = Vf(i,j)/DV(i,j)
             if (vel2d_adv_hor .ne. J7) then
 !              Note (KK): Uadv defined on X-points (future U-points)
 !                         Vadv defined on T-points (future V-points)

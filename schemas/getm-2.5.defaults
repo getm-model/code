@@ -194,6 +194,14 @@
 				1.0
 			</precip_factor>
 		</meteo>
+		<waves>
+			<waves_method>
+				0
+			</waves_method>
+			<waves_datasource>
+				0
+			</waves_datasource>
+		</waves>
 		<rivers>
 			<river_method>
 				0
@@ -574,6 +582,9 @@
 			<save_meteo>
 				True
 			</save_meteo>
+			<save_waves>
+				True
+			</save_waves>
 			<save_3d>
 				True
 			</save_3d>

@@ -34,6 +34,7 @@
    use meteo,        only: airp,u10,v10,t2,hum,tcc
    use meteo,        only: evap,precip
    use meteo,        only: tausx,tausy,swr,shf
+   use variables_waves
 
    IMPLICIT NONE
 !
@@ -222,12 +223,75 @@
          if (err .NE. NF90_NOERR) go to 10
 
       end if
+
+
+      if (waveH_id .ne. -1) then
+         call cnv_2d(imin,jmin,imax,jmax,az,waveH,waves_missing, &
+                     imin,jmin,imax,jmax,ws)
+         err = nf90_put_var(ncid,waveH_id,ws(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+
+      if (waveL_id .ne. -1) then
+         call cnv_2d(imin,jmin,imax,jmax,az,waveL,waves_missing, &
+                     imin,jmin,imax,jmax,ws)
+         err = nf90_put_var(ncid,waveL_id,ws(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+
+      if (waveT_id .ne. -1) then
+         call cnv_2d(imin,jmin,imax,jmax,az,waveT,waves_missing, &
+                     imin,jmin,imax,jmax,ws)
+         err = nf90_put_var(ncid,waveT_id,ws(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+
+!     volume fluxes
+      if (fluxuStokes_id .ne. -1) then
+         call to_fluxu(imin,jmin,imax,jmax,au, &
+#if defined(CURVILINEAR) || defined(SPHERICAL)
+                       dyu,                    &
+#else
+                       dy,                     &
+#endif
+                       UStokes,waves_missing,ws)
+         err = nf90_put_var(ncid,fluxuStokes_id,ws(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+      if (fluxvStokes_id .ne. -1) then
+         call to_fluxv(imin,jmin,imax,jmax,av, &
+#if defined(CURVILINEAR) || defined(SPHERICAL)
+                       dxv,                    &
+#else
+                       dx,                     &
+#endif
+                       VStokes,waves_missing,ws)
+         err = nf90_put_var(ncid,fluxvStokes_id,ws(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+
+!     velocites
+      if (uStokes_id .ne. -1) then
+         call to_2d_vel(imin,jmin,imax,jmax,az,UStokesC,Dvel,waves_missing,       &
+                        imin,jmin,imax,jmax,ws)
+         err = nf90_put_var(ncid,uStokes_id,ws(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+      if (vStokes_id .ne. -1) then
+         call to_2d_vel(imin,jmin,imax,jmax,az,VStokesC,Dvel,waves_missing,       &
+                        imin,jmin,imax,jmax,ws)
+         err = nf90_put_var(ncid,vStokes_id,ws(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+
+
       if (Am_2d_id .ne. -1) then
          call cnv_2d(imin,jmin,imax,jmax,az,AmC_2d,Am_2d_missing, &
                      imin,jmin,imax,jmax,ws)
          err = nf90_put_var(ncid,Am_2d_id,ws(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
+
 
    else ! residual velocities
 

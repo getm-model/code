@@ -17,6 +17,7 @@
    use ncdf_restart
 #ifndef NO_3D
    use vertical_coordinates,only: restart_with_ho,restart_with_hn
+   use waves, only: waves_method,NO_WAVES
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use getm_bio, only: bio_init_method
@@ -213,6 +214,68 @@
          LEVEL3 'variable missing in restart file. Skipping ',varnam
          Vadv_id=-1
       end if
+
+
+      if (waves_method .ne. NO_WAVES) then
+
+         varnam="UEulerInt"
+         status = nf90_inq_varid(ncid, "UEulerInt", UEulerInt_id)
+         if (status .NE. NF90_NOERR) then
+            LEVEL3 'variable missing in restart file. Skipping ',varnam
+            UEulerInt_id=-1
+         end if
+
+         varnam="VEulerInt"
+         status = nf90_inq_varid(ncid, "VEulerInt", VEulerInt_id)
+         if (status .NE. NF90_NOERR) then
+            LEVEL3 'variable missing in restart file. Skipping ',varnam
+            VEulerInt_id=-1
+         end if
+
+         varnam="UEulerAdv"
+         status = nf90_inq_varid(ncid, "UEulerAdv", UEulerAdv_id)
+         if (status .NE. NF90_NOERR) then
+            LEVEL3 'variable missing in restart file. Skipping ',varnam
+            UEulerAdv_id=-1
+         end if
+
+         varnam="VEulerAdv"
+         status = nf90_inq_varid(ncid, "VEulerAdv", VEulerAdv_id)
+         if (status .NE. NF90_NOERR) then
+            LEVEL3 'variable missing in restart file. Skipping ',varnam
+            VEulerAdv_id=-1
+         end if
+
+         varnam="UStokesCint"
+         status = nf90_inq_varid(ncid, "UStokesCint", UStokesCint_id)
+         if (status .NE. NF90_NOERR) then
+            LEVEL3 'variable missing in restart file. Skipping ',varnam
+            UStokesCint_id=-1
+         end if
+
+         varnam="VStokesCint"
+         status = nf90_inq_varid(ncid, "VStokesCint", VStokesCint_id)
+         if (status .NE. NF90_NOERR) then
+            LEVEL3 'variable missing in restart file. Skipping ',varnam
+            VStokesCint_id=-1
+         end if
+
+         varnam="UStokesCadv"
+         status = nf90_inq_varid(ncid, "UStokesCadv", UStokesCadv_id)
+         if (status .NE. NF90_NOERR) then
+            LEVEL3 'variable missing in restart file. Skipping ',varnam
+            UStokesCadv_id=-1
+         end if
+
+         varnam="VStokesCadv"
+         status = nf90_inq_varid(ncid, "VStokesCadv", VStokesCadv_id)
+         if (status .NE. NF90_NOERR) then
+            LEVEL3 'variable missing in restart file. Skipping ',varnam
+            VStokesCadv_id=-1
+         end if
+
+      end if
+
 
       varnam="uu"
       status = nf90_inq_varid(ncid, "uu", uu_id)
