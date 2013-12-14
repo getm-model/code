@@ -12,9 +12,7 @@
   INTEGER                              :: kumin_pmz(I2DFIELD)
   INTEGER                              :: kvmin_pmz(I2DFIELD)
 
-  REALTYPE                             :: uu(I3DFIELD)
-  REALTYPE                             :: vv(I3DFIELD)
-  REALTYPE, target                     :: ww(I3DFIELD)
+  REALTYPE,dimension(I3DFIELD),target  :: uu,vv,ww
 #ifdef _MOMENTUM_TERMS_
   REALTYPE                             :: tdv_u(I3DFIELD)
   REALTYPE                             :: adv_u(I3DFIELD)
@@ -78,7 +76,7 @@
   REALTYPE                             :: ssvo(I2DFIELD)
   REALTYPE                             :: ssvn(I2DFIELD)
   REALTYPE,dimension(I2DFIELD),target  :: Dn,Dveln,Dun,Dvn
-  REALTYPE,dimension(I2DFIELD)         :: Uadv,Vadv
+  REALTYPE,dimension(I2DFIELD),target  :: Uadv,Vadv
 
 ! 3D friction in 3D domain
   REALTYPE                             :: rru(I2DFIELD)

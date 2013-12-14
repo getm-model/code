@@ -18,6 +18,7 @@
    use domain, only: ioff,joff
    use meteo,  only: metforcing,calc_met
    use meteo,  only: fwf_method
+   use waves,  only: waves_method,NO_WAVES
    use m2d,    only: Am_method,NO_AM,residual
 
    IMPLICIT NONE
@@ -233,6 +234,66 @@
       end if
 
    end if
+
+
+   if (waves_method .ne. NO_WAVES) then
+
+      fv = waves_missing
+      mv = waves_missing
+
+      err = nf90_def_var(ncid,'waveH',NCDF_FLOAT_PRECISION,f3_dims,waveH_id)
+      if (err .NE. NF90_NOERR) go to 10
+      vr(1) =  0.
+      vr(2) = 15.
+      call set_attributes(ncid,waveH_id,long_name='significant wave height',units='meters', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'waveL',NCDF_FLOAT_PRECISION,f3_dims,waveL_id)
+      if (err .NE. NF90_NOERR) go to 10
+      vr(1) =     0.
+      vr(2) = 10000.
+      call set_attributes(ncid,waveL_id,long_name='mean wave length',units='meters', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      err = nf90_def_var(ncid,'waveT',NCDF_FLOAT_PRECISION,f3_dims,waveT_id)
+      if (err .NE. NF90_NOERR) go to 10
+      vr(1) =    0.
+      vr(2) = 1000.
+      call set_attributes(ncid,waveT_id,long_name='wave period',units='seconds', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+!     volume fluxes
+      if (save_fluxes) then
+         vr(1) = -3.
+         vr(2) =  3.
+         err = nf90_def_var(ncid,'fluxuStokes',NCDF_FLOAT_PRECISION,f3_dims,fluxuStokes_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,fluxuStokes_id,long_name='grid-related volume Stokes flux in local x-direction (U-point)', &
+                             units='m3/s',                                                                                   &
+                             FillValue=fv,missing_value=mv,valid_range=vr)
+         err = nf90_def_var(ncid,'fluxvStokes',NCDF_FLOAT_PRECISION,f3_dims,fluxvStokes_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,fluxvStokes_id,long_name='grid-related volume Stokes flux in local y-direction (V-point)', &
+                             units='m3/s',                                                                                   &
+                             FillValue=fv,missing_value=mv,valid_range=vr)
+      end if
+
+!     velocities
+      if (save_vel2d) then
+         vr(1) = -1.
+         vr(2) =  1.
+         err = nf90_def_var(ncid,'uStokes',NCDF_FLOAT_PRECISION,f3_dims,uStokes_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,uStokes_id,long_name='Stokes drift in global x-direction (T-point)',units='m/s', &
+                             FillValue=fv,missing_value=mv,valid_range=vr)
+         err = nf90_def_var(ncid,'vStokes',NCDF_FLOAT_PRECISION,f3_dims,vStokes_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,vStokes_id,long_name='Stokes drift in global y-direction (T-point)',units='m/s', &
+                             FillValue=fv,missing_value=mv,valid_range=vr)
+      end if
+
+   end if
+
 
    if (Am_method.eq.AM_LES .and. save_Am_2d) then
       fv = Am_2d_missing; mv = Am_2d_missing; vr(1) = 0.; vr(2) =  500.

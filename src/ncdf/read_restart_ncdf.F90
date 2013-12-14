@@ -33,6 +33,7 @@
    use exceptions, only: getm_error
 #ifndef NO_3D
    use variables_3d
+   use variables_waves
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use bio_var, only: numc
@@ -324,6 +325,86 @@
       else
          LEVEL3 "read_restart_ncdf(): setting Vadv=0"
          Vadv=_ZERO_
+      end if
+
+      if (UEulerInt_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,UEulerInt_id,UEulerInt(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+         if (status .NE. NF90_NOERR) go to 10
+         call update_2d_halo(UEulerInt,UEulerInt,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+      else
+         LEVEL3 "read_restart_ncdf(): leaving UEulerInt=0"
+      end if
+
+      if (VEulerInt_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,VEulerInt_id,VEulerInt(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+         if (status .NE. NF90_NOERR) go to 10
+         call update_2d_halo(VEulerInt,VEulerInt,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
+      else
+         LEVEL3 "read_restart_ncdf(): leaving VEulerInt=0"
+      end if
+
+      if (UEulerAdv_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,UEulerAdv_id,UEulerAdv(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+         if (status .NE. NF90_NOERR) go to 10
+         call update_2d_halo(UEulerAdv,UEulerAdv,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+      else
+         LEVEL3 "read_restart_ncdf(): leaving UEulerAdv=0"
+      end if
+
+      if (VEulerAdv_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,VEulerAdv_id,VEulerAdv(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+         if (status .NE. NF90_NOERR) go to 10
+         call update_2d_halo(VEulerAdv,VEulerAdv,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
+      else
+         LEVEL3 "read_restart_ncdf(): leaving VEulerAdv=0"
+      end if
+
+      if (UStokesCint_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,UStokesCint_id,UStokesCint(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+         if (status .NE. NF90_NOERR) go to 10
+         call update_2d_halo(UStokesCint,UStokesCint,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+      else
+         LEVEL3 "read_restart_ncdf(): leaving UStokesCint=0"
+      end if
+
+      if (VStokesCint_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,VStokesCint_id,VStokesCint(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+         if (status .NE. NF90_NOERR) go to 10
+         call update_2d_halo(VStokesCint,VStokesCint,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
+      else
+         LEVEL3 "read_restart_ncdf(): leaving VStokesCint=0"
+      end if
+
+      if (UStokesCadv_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,UStokesCadv_id,UStokesCadv(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+         if (status .NE. NF90_NOERR) go to 10
+         call update_2d_halo(UStokesCadv,UStokesCadv,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+      else
+         LEVEL3 "read_restart_ncdf(): leaving UStokesCadv=0"
+      end if
+
+      if (VStokesCadv_id .ne. -1) then
+         status = &
+         nf90_get_var(ncid,VStokesCadv_id,VStokesCadv(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+         if (status .NE. NF90_NOERR) go to 10
+         call update_2d_halo(VStokesCadv,VStokesCadv,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
+      else
+         LEVEL3 "read_restart_ncdf(): leaving VStokesCadv=0"
       end if
 
       status = &

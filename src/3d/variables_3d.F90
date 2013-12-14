@@ -112,6 +112,7 @@
 !
 ! !USES:
    use domain,     only: imin,imax,jmin,jmax,kmax,bottfric_method,rdrag
+   use waves , only: waves_method,NO_WAVES,WAVES_VF
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -128,6 +129,11 @@
 #else
 #include "dynamic_declarations_3d.h"
 #endif
+
+   REALTYPE, dimension(:,:  ), pointer :: Uadvf=>NULL(),Vadvf=>NULL()
+   REALTYPE, dimension(:,:  ), pointer :: UEulerAdv=>NULL(),VEulerAdv=>NULL()
+   REALTYPE, dimension(:,:,:), pointer :: uuf=>NULL(),vvf=>NULL()
+   REALTYPE, dimension(:,:,:), pointer :: uuEuler=>NULL(),vvEuler=>NULL()
 
    REALTYPE,dimension(:,:,:),pointer         :: numdis_3d=>null()
    REALTYPE,dimension(:,:,:),pointer         :: phydis_3d=>null()
@@ -224,6 +230,7 @@
 
    hn = _ZERO_ ; hvel = _ZERO_ ; hun = _ZERO_ ; hvn = _ZERO_
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
+
 #ifdef _MOMENTUM_TERMS_
    tdv_u = _ZERO_ ; adv_u = _ZERO_ ; vsd_u = _ZERO_ ; hsd_u = _ZERO_
    cor_u = _ZERO_ ; epg_u = _ZERO_ ; ipg_u = _ZERO_
@@ -233,6 +240,34 @@
    ssen = _ZERO_ ; ssun = _ZERO_ ; ssvn = _ZERO_
    Dn = _ZERO_ ; Dveln = _ZERO_ ; Dun = _ZERO_ ; Dvn = _ZERO_
    Uadv = _ZERO_ ; Vadv = _ZERO_
+
+   Uadvf     => Uadv ; Vadvf     => Vadv
+   UEulerAdv => Uadv ; VEulerAdv => Vadv
+   uuf       => uu   ; vvf       => vv
+   uuEuler   => uu   ; vvEuler   => vv
+
+
+   if (waves_method .ne. NO_WAVES) then
+
+      allocate(UEulerAdv(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (UEulerAdv)'
+      UEulerAdv = _ZERO_
+      allocate(VEulerAdv(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (VEulerAdv)'
+      VEulerAdv = _ZERO_
+
+      allocate(uuEuler(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (uuEuler)'
+      allocate(vvEuler(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (vvEuler)'
+
+      if (waves_method .eq. WAVES_VF) then
+         Uadvf => UEulerAdv ; Vadvf => VEulerAdv
+         uuf   => uuEuler   ; vvf   => vvEuler
+      end if
+
+   end if
+
 
    zub = -9999.0 ; zvb = -9999.0 ! must be initialised for gotm
    if (bottfric_method .eq. 1) then
