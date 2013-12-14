@@ -11,6 +11,7 @@
 !
 ! !USES:
    use meteo, only: metforcing,met_method,meteo_file
+   use waves, only: waves_datasource,WAVES_FROMFILE
    use m2d, only: bdy2d
    use bdy_2d, only: bdyfile_2d,bdyfmt_2d
 #ifndef NO_3D
@@ -107,6 +108,10 @@
       call init_meteo_input(meteo_file,n)
    end if
 
+   if (waves_datasource .eq. WAVES_FROMFILE) then
+      stop 'init_input: WAVES_FROMFILE not yet implemented'
+   end if
+
 #ifndef NO_3D
    if (river_method .gt. 0 .and. nriver .gt. 0) then
       call init_river_input(river_data,n)
@@ -162,6 +167,10 @@
 
    if(metforcing .and. met_method .eq. 2) then
       call get_meteo_data(n)
+   end if
+
+   if (waves_datasource .eq. WAVES_FROMFILE) then
+      stop 'do_input: WAVES_FROMFILE not yet implemented'
    end if
 
 #ifndef NO_3D

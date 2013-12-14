@@ -126,6 +126,9 @@
 #else
    use domain, only: dx
 #endif
+   use variables_2d, only: UEuler
+   use waves, only: waves_method,NO_WAVES
+   use variables_waves, only: UStokes
    use domain, only: have_boundaries
    use variables_2d, only: dtm,D,z,UEx,U,DU,SlUx,Slru,ru,V,DV
    use bdy_2d, only: do_bdy_2d
@@ -193,13 +196,13 @@
             zm = max( z(i  ,j) , -H(i+1,j)+min( min_depth , D(i  ,j) ) )
             zx = ( zp - zm + (airp(i+1,j)-airp(i,j))*gammai ) / DXU
             tausu = _HALF_ * ( tausx(i,j) + tausx(i+1,j) )
-            if (U(i,j) .eq. _ZERO_) then
+            if (UEuler(i,j) .eq. _ZERO_) then
                Slr = Slru(i,j) / SMALL
             else
-               Slr = Slru(i,j) / U(i,j)
+               Slr = Slru(i,j) / UEuler(i,j)
             end if
             Slr = max(_ZERO_,ru(i,j)/DU(i,j)+Slr)
-            U(i,j)=(U(i,j)-dtm*(g*DU(i,j)*zx+dry_u(i,j)*&
+            UEuler(i,j)=(UEuler(i,j)-dtm*(g*DU(i,j)*zx+dry_u(i,j)*&
                  (-tausu*rho_0i-fV+UEx(i,j)+SlUx(i,j))))/&
                  (_ONE_+dtm*Slr)
          end if
@@ -213,15 +216,19 @@
 
 #ifdef SLICE_MODEL
    j = jmax/2
-   U(imin:imax,j+1) = U(imin:imax,j)
+   UEuler(imin:imax,j+1) = UEuler(imin:imax,j)
 #endif
 
 !  now u is calculated
    CALL tic(TIM_MOMENTUMH)
-   call update_2d_halo(U,U,au,imin,jmin,imax,jmax,U_TAG)
+   call update_2d_halo(UEuler,UEuler,au,imin,jmin,imax,jmax,U_TAG)
    call wait_halo(U_TAG)
    CALL toc(TIM_MOMENTUMH)
-   call mirror_bdy_2d(U,U_TAG)
+   call mirror_bdy_2d(UEuler,U_TAG)
+
+   if (waves_method .ne. NO_WAVES) then
+      U = UEuler + UStokes
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving umomentum()'
@@ -294,6 +301,9 @@
 #else
    use domain, only: dy
 #endif
+   use variables_2d, only: VEuler
+   use waves, only: waves_method,NO_WAVES
+   use variables_waves, only: VStokes
    use domain, only: have_boundaries
    use variables_2d, only: dtm,D,z,VEx,V,DV,SlVx,Slrv,rv,U,DU
    use bdy_2d, only: do_bdy_2d
@@ -353,13 +363,13 @@
             zm = max( z(i,j  ) , -H(i,j+1)+min( min_depth , D(i,j  ) ) )
             zy = ( zp - zm + (airp(i,j+1)-airp(i,j))*gammai ) / DYV
             tausv = _HALF_ * ( tausy(i,j) + tausy(i,j+1) )
-            if (V(i,j) .eq. _ZERO_) then
+            if (VEuler(i,j) .eq. _ZERO_) then
                Slr = Slrv(i,j) / SMALL
             else
-               Slr = Slrv(i,j) / V(i,j)
+               Slr = Slrv(i,j) / VEuler(i,j)
             end if
             Slr = max(_ZERO_,rv(i,j)/DV(i,j)+Slr)
-            V(i,j)=(V(i,j)-dtm*(g*DV(i,j)*zy+dry_v(i,j)*&
+            VEuler(i,j)=(VEuler(i,j)-dtm*(g*DV(i,j)*zy+dry_v(i,j)*&
                  (-tausv*rho_0i+fU+VEx(i,j)+SlVx(i,j))))/&
                  (_ONE_+dtm*Slr)
          end if
@@ -373,16 +383,20 @@
 
 #ifdef SLICE_MODEL
    j = jmax/2
-   V(imin:imax,j-1) = V(imin:imax,j)
-   V(imin:imax,j+1) = V(imin:imax,j)
+   VEuler(imin:imax,j-1) = VEuler(imin:imax,j)
+   VEuler(imin:imax,j+1) = VEuler(imin:imax,j)
 #endif
 
 !  now v is calculated
    CALL tic(TIM_MOMENTUMH)
-   call update_2d_halo(V,V,av,imin,jmin,imax,jmax,V_TAG)
+   call update_2d_halo(VEuler,VEuler,av,imin,jmin,imax,jmax,V_TAG)
    call wait_halo(V_TAG)
    CALL toc(TIM_MOMENTUMH)
-   call mirror_bdy_2d(V,V_TAG)
+   call mirror_bdy_2d(VEuler,V_TAG)
+
+   if (waves_method .ne. NO_WAVES) then
+      V = VEuler + VStokes
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving vmomentum()'

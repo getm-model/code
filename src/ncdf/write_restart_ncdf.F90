@@ -22,6 +22,8 @@
    use variables_2d
 #ifndef NO_3D
    use variables_3d
+   use waves, only: waves_method,NO_WAVES
+   use variables_waves
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use bio_var, only: numc
@@ -167,6 +169,44 @@
       status = &
       nf90_put_var(ncid,Vadv_id,Vadv(_2D_W_HOT_),start,edges)
       if (status .NE. NF90_NOERR) go to 10
+
+
+      if (waves_method .ne. NO_WAVES) then
+
+         status = &
+         nf90_put_var(ncid,UEulerInt_id,UEulerInt(_2D_W_HOT_),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+
+         status = &
+         nf90_put_var(ncid,VEulerInt_id,VEulerInt(_2D_W_HOT_),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+
+         status = &
+         nf90_put_var(ncid,UEulerAdv_id,UEulerAdv(_2D_W_HOT_),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+
+         status = &
+         nf90_put_var(ncid,VEulerAdv_id,VEulerAdv(_2D_W_HOT_),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+
+         status = &
+         nf90_put_var(ncid,UStokesCint_id,UStokesCint(_2D_W_HOT_),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+
+         status = &
+         nf90_put_var(ncid,VStokesCint_id,VStokesCint(_2D_W_HOT_),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+
+         status = &
+         nf90_put_var(ncid,UStokesCadv_id,UStokesCadv(_2D_W_HOT_),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+
+         status = &
+         nf90_put_var(ncid,VStokesCadv_id,VStokesCadv(_2D_W_HOT_),start,edges)
+         if (status .NE. NF90_NOERR) go to 10
+
+      end if
+
 
       status = &
       nf90_put_var(ncid,uu_id,uu(_3D_W_HOT_),start,edges)

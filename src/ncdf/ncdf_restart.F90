@@ -45,6 +45,12 @@
    integer                             :: Uint_id,Vint_id
    integer                             :: Uinto_id,Vinto_id
    integer                             :: Uadv_id,Vadv_id
+
+   integer                             :: UEulerInt_id=-1,VEulerInt_id=-1
+   integer                             :: UEulerAdv_id=-1,VEulerAdv_id=-1
+   integer                             :: UStokesCint_id=-1,VStokesCint_id=-1
+   integer                             :: UStokesCadv_id=-1,VStokesCadv_id=-1
+
    integer                             :: uu_id,vv_id,ww_id
    integer                             :: uuEx_id,vvEx_id
    integer                             :: tke_id,eps_id
