@@ -18,6 +18,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
+   use waves , only: waves_method,NO_WAVES,WAVES_VF
    use domain, only: bottfric_method,rdrag
    IMPLICIT NONE
 !
@@ -32,6 +33,9 @@
 #include "dynamic_declarations_2d.h"
 #endif
 
+   REALTYPE,dimension(:,:),pointer     :: Uf=>NULL(),Vf=>NULL()
+   REALTYPE,dimension(:,:),pointer     :: UEuler=>NULL(),VEuler=>NULL()
+   REALTYPE,dimension(:,:),pointer     :: UEulerInt=>NULL(),VEulerInt=>NULL()
 !  the following fields will only be allocated if deformCX=.true.
    REALTYPE,dimension(:,:),allocatable :: dudxC,dvdyC
    REALTYPE,dimension(:,:),pointer     :: dudyX=>null()
@@ -52,8 +56,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
-   integer                   :: rc
 !EOP
 !-----------------------------------------------------------------------
 
@@ -110,6 +112,7 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
+   integer                   :: rc
    logical, intent(in)                 :: no_2d
 !
 !EOP
@@ -136,10 +139,39 @@
    break_stat = 0
 #endif
 
+   Uf        => U    ; Vf        => V
+   UEuler    => U    ; VEuler    => V
+   UEulerInt => Uint ; VEulerInt => Vint
+
+
+   if (waves_method .ne. NO_WAVES) then
+
+      allocate(UEuler(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (UEuler)'
+      allocate(VEuler(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (VEuler)'
+
+      if (runtype .gt. 1) then
+         allocate(UEulerInt(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (UEulerInt)'
+         UEulerInt = _ZERO_
+         allocate(VEulerInt(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (VEulerInt)'
+         VEulerInt = _ZERO_
+      end if
+
+      if (waves_method .eq. WAVES_VF) then
+         Uf => UEuler ; Vf => VEuler
+      end if
+
+   end if
+
+
    z  = _ZERO_; zo =_ZERO_
    D = _ZERO_ ; Dvel = _ZERO_
    U = _ZERO_; DU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; DV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
+
 
    if (bottfric_method .eq. 1) then
       ru = rdrag

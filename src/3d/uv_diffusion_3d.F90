@@ -17,7 +17,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use m2d, only: uv_diff_2dh
    use m2d, only: Am_method,AM_LAPLACE,AM_LES,AM_CONSTANT
-   use variables_3d, only: uu,vv,uuEx,vvEx,hn,hun,hvn
+   use variables_3d, only: uu=>uuEuler,vv=>vvEuler,uuEx,vvEx,hn,hun,hvn
    use variables_3d, only: dudxC_3d,dvdyC_3d
    use variables_3d, only: dvdxX_3d,dudyX_3d,shearX_3d
    use variables_3d, only: do_numerical_analyses_3d

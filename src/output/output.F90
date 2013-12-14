@@ -20,6 +20,7 @@
    use m3d, only: nonhyd_method
    use m3d, only: calc_salt,calc_temp
 #endif
+   use waves, only: waves_method,NO_WAVES
 #ifdef TEST_NESTING
    use nesting
 #endif
@@ -40,6 +41,7 @@
    logical                             :: save_masks=.false.
    logical                             :: save_2d=.true.
    logical                             :: save_meteo=.false.
+   logical                             :: save_waves=.true.
    logical                             :: save_3d=.true.
    logical                             :: save_h=.false.
    logical                             :: save_mean=.false.
@@ -115,7 +117,7 @@
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              save_Am_2d,save_Am_3d,save_stirr,save_ss_nn,save_taub, &
              first_2d,step_2d,sync_2d,first_3d,step_3d,sync_3d,hotout, &
-             meanout, save_meteo, save_numerical_analyses
+             meanout,save_meteo,save_waves,save_numerical_analyses
 !   logical :: nesting=.true.
 !EOP
 !-------------------------------------------------------------------------
@@ -172,6 +174,10 @@
    end if
 #endif
 
+   if (waves_method .eq. NO_WAVES) then
+      save_waves = .false.
+   end if
+
    if(save_vel) then
       LEVEL2 'save (rotated) velocities in center points'
    else
@@ -191,6 +197,9 @@
       LEVEL2 'First=',first_2d,' step=',step_2d,' sync_2d= ',sync_2d
       if(save_meteo) then
          LEVEL2 'Saving meteo forcing in ',trim(out_f_2d)
+      end if
+      if(save_waves) then
+         LEVEL2 'Saving wave forcing in ',trim(out_f_2d)
       end if
    end if
 #ifndef NO_3D

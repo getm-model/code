@@ -26,6 +26,7 @@
    use domain, only: dx,dy,ard1
 #endif
    use m3d, only: vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver
+   use variables_3d, only: uuf,vvf
    use variables_3d, only: dt,uu,vv,ww,hn,hvel,hun,hvn,uuEx,vvEx
    use advection, only: NOADV,UPSTREAM,J7
    use advection, only: adv_gridU,adv_gridV
@@ -105,7 +106,7 @@
 #endif
             do i=imin-HALO,imax+HALO-1
 !              the velocity to be transported
-               fadv3d(i,j,k) = uu(i,j,k)/hun(i,j,k)
+               fadv3d(i,j,k) = uuf(i,j,k)/hun(i,j,k)
                if (vel3d_adv_hor .ne. J7) then
                   uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i+1,j,k) )
                   vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i+1,j,k) )
@@ -374,7 +375,7 @@
 #endif
             do i=imin-HALO,imax+HALO
 !              the velocity to be transported
-               fadv3d(i,j,k) = vv(i,j,k)/hvn(i,j,k)
+               fadv3d(i,j,k) = vvf(i,j,k)/hvn(i,j,k)
                if (vel3d_adv_hor .ne. J7) then
                   uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i,j+1,k) )
                   vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i,j+1,k) )
