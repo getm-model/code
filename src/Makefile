@@ -9,6 +9,7 @@ include Rules.make
 SUBDIRS = \
 $(GETMDIR)/src/futils		\
 $(GETMDIR)/src/domain		\
+$(GETMDIR)/src/pool		\
 $(GETMDIR)/src/meteo		\
 $(GETMDIR)/src/waves		\
 $(GETMDIR)/src/les		\
@@ -35,6 +36,7 @@ CORE_LIBS	+=	\
 		-l2d${buildtype}	\
 		-lwaves${buildtype}	\
 		-lles${buildtype}	\
+		-lpool${buildtype}	\
 		-ldomain${buildtype} 	\
 		-linput${buildtype}	\
 		-lncdfio${buildtype}	\
