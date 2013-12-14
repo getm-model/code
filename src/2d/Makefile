@@ -25,7 +25,6 @@ ${LIB}(bottom_friction.o)	\
 ${LIB}(depth_update.o)		\
 ${LIB}(momentum.o)		\
 ${LIB}(sealevel.o)		\
-${LIB}(deformation_rates.o)	\
 ${LIB}(uv_advect.o)		\
 ${LIB}(uv_diffusion.o)		\
 ${LIB}(uv_diff_2dh.o)		\
