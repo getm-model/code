@@ -53,9 +53,9 @@
    use domain, only: dx,dy
 #endif
    use bdy_3d, only: do_bdy_3d
+   use variables_3d, only: uuEuler,UEulerAdv,Dn
    use variables_3d, only: dt,cnpar,kumin,uu,vv,huo,hun,hvo,uuEx,ww,hvn
    use variables_3d, only: num,nuh,sseo,Dun,rru
-   use variables_3d, only: Uadv,Dn
 #ifdef _MOMENTUM_TERMS_
    use variables_3d, only: tdv_u,cor_u,ipg_u,epg_u,vsd_u,hsd_u
 #endif
@@ -65,6 +65,8 @@
    use variables_3d, only: idpdx
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG
    use meteo, only: tausx,airp
+   use waves, only: waves_method,NO_WAVES
+   use variables_waves, only: uuStokes
    use m3d, only: calc_ip,ip_fac
    use m3d, only: vel_check,min_vel,max_vel
    use getm_timers, only: tic, toc, TIM_UUMOMENTUM, TIM_UUMOMENTUMH
@@ -208,8 +210,8 @@
                k=kmax
                a1(k)=-auxn(k-1)/hun(i,j,k-1)
                a2(k)=1.+auxn(k-1)/hun(i,j,k)
-               a4(k)=uu(i,j,k  )*(1-auxo(k-1)/huo(i,j,k))              &
-                    +uu(i,j,k-1)*auxo(k-1)/huo(i,j,k-1)                &
+               a4(k)=uuEuler(i,j,k  )*(1-auxo(k-1)/huo(i,j,k))         &
+                    +uuEuler(i,j,k-1)*auxo(k-1)/huo(i,j,k-1)           &
                     +dt*ex(k)                                          &
                     -dt*_HALF_*(huo(i,j,k)+hun(i,j,k))*g*zx
 
@@ -218,10 +220,10 @@
                   a3(k)=-auxn(k  )/hun(i,j,k+1)
                   a1(k)=-auxn(k-1)/hun(i,j,k-1)
                   a2(k)=_ONE_+(auxn(k)+auxn(k-1))/hun(i,j,k)
-                  a4(k)=uu(i,j,k+1)*auxo(k)/huo(i,j,k+1)               &
-                       +uu(i,j,k  )*(1-(auxo(k)+auxo(k-1))/huo(i,j,k)) &
-                       +uu(i,j,k-1)*auxo(k-1)/huo(i,j,k-1)             &
-                       +dt*ex(k)                                       &
+                  a4(k)=uuEuler(i,j,k+1)*auxo(k)/huo(i,j,k+1)               &
+                       +uuEuler(i,j,k  )*(1-(auxo(k)+auxo(k-1))/huo(i,j,k)) &
+                       +uuEuler(i,j,k-1)*auxo(k-1)/huo(i,j,k-1)             &
+                       +dt*ex(k)                                            &
                        -dt*_HALF_*(huo(i,j,k)+hun(i,j,k))*g*zx
                end do
 
@@ -229,8 +231,8 @@
                k=kumin(i,j)
                a3(k)=-auxn(k  )/hun(i,j,k+1)
                a2(k) = _ONE_ + ( auxn(k) + dt*rru(i,j) )/hun(i,j,k)
-               a4(k)=uu(i,j,k+1)*auxo(k)/huo(i,j,k+1)                  &
-                    +uu(i,j,k  )*(1-auxo(k)/huo(i,j,k))                &
+               a4(k)=uuEuler(i,j,k+1)*auxo(k)/huo(i,j,k+1)             &
+                    +uuEuler(i,j,k  )*(1-auxo(k)/huo(i,j,k))           &
                     +dt*ex(k)                                          &
                     -dt*_HALF_*(huo(i,j,k)+hun(i,j,k))*g*zx
 
@@ -249,7 +251,7 @@
                do k=kumin(i,j),kmax
                   ResInt=ResInt+Res(k)
                end do
-               Diff=(Uadv(i,j)-ResInt)/Dun(i,j)
+               Diff=(UEulerAdv(i,j)-ResInt)/Dun(i,j)
 
                do k=kumin(i,j),kmax
 #ifdef _MOMENTUM_TERMS_
@@ -275,9 +277,9 @@
                   end if
 #endif
 #ifndef NO_BAROTROPIC
-                  uu(i,j,k)=Res(k) +hun(i,j,k)*Diff
+                  uuEuler(i,j,k)=Res(k) +hun(i,j,k)*Diff
 #else
-                  uu(i,j,k)=Res(k)
+                  uuEuler(i,j,k)=Res(k)
 #endif
 #ifdef _MOMENTUM_TERMS_
                   tdv_u(i,j,k)=(uu(i,j,k)-tdv_u(i,j,k))/dt
@@ -303,7 +305,7 @@
 #endif
                end do
             else  ! if (kmax .eq. kumin(i,j))
-                  uu(i,j,kmax)=Uadv(i,j)
+                  uuEuler(i,j,kmax)=UEulerAdv(i,j)
             end if
          end if
       end do
@@ -314,7 +316,7 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do i=imin,imax
       do k=kumin(i,2),kmax
-         uu(i,3,k)=uu(i,2,k)
+         uuEuler(i,3,k)=uuEuler(i,2,k)
       end do
    end do
 !$OMP END DO NOWAIT
@@ -352,15 +354,20 @@
 
 !  Update the halo zones
    call tic(TIM_UUMOMENTUMH)
-   call update_3d_halo(uu,uu,au,imin,jmin,imax,jmax,kmax,U_TAG)
+   call update_3d_halo(uuEuler,uuEuler,au,imin,jmin,imax,jmax,kmax,U_TAG)
 
    if (bdy3d) then
 !      call do_bdy_3d(1,uu)
+!     Note (KK): modification of uu AND uuEuler necessary for waves!!!
    end if
 
    call wait_halo(U_TAG)
    call toc(TIM_UUMOMENTUMH)
-   call mirror_bdy_3d(uu,U_TAG)
+   call mirror_bdy_3d(uuEuler,U_TAG)
+
+   if (waves_method .ne. NO_WAVES) then
+      uu = uuEuler + uuStokes
+   end if
 
    if (vel_check .ne. 0 .and. mod(n,abs(vel_check)) .eq. 0) then
       call check_3d_fields(imin,jmin,imax,jmax,kumin,kmax,au, &

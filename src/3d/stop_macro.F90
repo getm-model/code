@@ -19,10 +19,13 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,au,av
-   use variables_2d, only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
+   use variables_2d, only: UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
+   use variables_2d, only: Uint,Vint,UEulerInt,VEulerInt
    use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,Dn,Dveln,Dun,Dvn
-   use variables_3d, only: Uadv,Vadv,uuEx,vvEx,rru,rrv
+   use variables_3d, only: Uadv,Vadv,UEulerAdv,VEulerAdv,uuEx,vvEx,rru,rrv
    use variables_3d, only: idpdx_hs,idpdy_hs,idpdx_nh,idpdy_nh
+   use waves, only: uv_waves,waves_method,NO_WAVES
+   use variables_waves, only: UStokesCint,VStokesCint
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
 #endif
@@ -68,9 +71,12 @@
 !             pressure contributes to slow terms
    if (kmax .gt. 1) then
 
-      call bottom_friction(Uadv,Vadv,Dun,Dvn,ru,rv)
-      call uv_advect(Uadv,Vadv,Dn,Dveln,Dun,Dvn)
-      call uv_diffusion(0,Uadv,Vadv,Dn,Dun,Dvn) ! Has to be called after uv_advect.
+      call bottom_friction(UEulerAdv,VEulerAdv,Dun,Dvn,ru,rv)
+      call uv_advect(Uadvf,Vadvf,Uadv,Vadv,Dn,Dveln,Dun,Dvn)
+      call uv_diffusion(0,UEulerAdv,VEulerAdv,Dn,Dun,Dvn) ! Has to be called after uv_advect.
+      if (waves_method .ne. NO_WAVES) then
+	      call uv_waves(Dveln,UEx,VEx) ! add wave forcing
+	   end if
 
 !$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
@@ -93,7 +99,7 @@
 #else
                k=kumin(i,j)
                Slru(i,j) =   rru(i,j)*uu(i,j,k)/hun(i,j,k) &
-                           - ru(i,j)*Uadv(i,j)/Dun(i,j)
+                           - ru(i,j)*UEulerAdv(i,j)/Dun(i,j)
 #endif
 
 #ifdef STRUCTURE_FRICTION
@@ -118,7 +124,7 @@
 #else
                k=kvmin(i,j)
                Slrv(i,j) =   rrv(i,j)*vv(i,j,k)/hvn(i,j,k) &
-                           - rv(i,j)*Vadv(i,j)/Dvn(i,j)
+                           - rv(i,j)*VEulerAdv(i,j)/Dvn(i,j)
 #endif
 
 #ifdef STRUCTURE_FRICTION
@@ -265,6 +271,12 @@
    if (reset) then
       Uint= _ZERO_
       Vint= _ZERO_
+      if (waves_method .ne. NO_WAVES) then
+         UEulerInt = _ZERO_
+         VEulerInt = _ZERO_
+         UStokesCint = _ZERO_
+         VStokesCint = _ZERO_
+      end if
    end if
 
    call toc(TIM_STOPMCR)

@@ -46,6 +46,9 @@
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
    use bdy_3d, only: bdyfile_3d,bdyfmt_3d,bdy3d_ramp,bdy3d_sponge_size
    use bdy_3d, only: bdy3d_tmrlx, bdy3d_tmrlx_ucut, bdy3d_tmrlx_max, bdy3d_tmrlx_min
+   use waves, only: uv_waves_3d,waves_method,NO_WAVES
+   use variables_waves, only: UStokesC,UStokesCadv,uuStokes
+   use variables_waves, only: VStokesC,VStokesCadv,vvStokes
 !  Necessary to use halo_zones because update_3d_halos() have been moved out
 !  temperature.F90 and salinity.F90 - should be changed at a later stage
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
@@ -471,7 +474,7 @@
       call coordinates(hotstart)
 
       if (vert_cord .eq. _ADAPTIVE_COORDS_) call shear_frequency()
-      call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
+      call bottom_friction(uuEuler(:,:,1),vvEuler(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
 
       if (nonhyd_method .eq. 1) then
          call do_internal_pressure(2)
@@ -486,6 +489,17 @@
       call do_internal_pressure(1)
    end if
 #endif
+
+   if (waves_method .ne. NO_WAVES) then
+!     calculate initial Stokes drift...
+      if ( .not. hotstart ) then
+         UStokesCadv = UStokesC ; VStokesCadv = VStokesC
+      end if
+      call stokes_drift_3d(dt,Dveln,hvel,uuEx,vvEx)
+!     ...and initialise Eulerian transports accordingly
+      uuEuler = uu - uuStokes
+      vvEuler = vv - vvStokes
+   end if
 
    if (.not. hotstart) then
 #ifndef NO_BAROTROPIC
@@ -623,6 +637,10 @@
 #ifdef STRUCTURE_FRICTION
    call structure_friction_3d
 #endif
+   if (waves_method .ne. NO_WAVES) then
+!     calculate new Stokes drift
+      call stokes_drift_3d(dt,Dveln,hvel,uuEx,vvEx)
+   end if
 
    call momentum_3d(runtype,n)
 
@@ -650,8 +668,13 @@
       call uv_advect_3d()
       call uv_diffusion_3d()  ! Must be called after uv_advect_3d
 
+      if (waves_method .ne. NO_WAVES) then
+!        add new wave forcing
+         call uv_waves_3d(Dveln,hvel,uuEuler,vvEuler,hun,hvn,uuEx,vvEx)
+      end if
+
       call tic(TIM_INTEGR3D)
-      call bottom_friction(uu(:,:,1),vv(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv,zub,zvb)
+      call bottom_friction(uuEuler(:,:,1),vvEuler(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv,zub,zvb)
       call toc(TIM_INTEGR3D)
       call stresses_3d()
 

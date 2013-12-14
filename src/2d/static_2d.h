@@ -5,15 +5,13 @@
    integer  break_mask(E2DFIELD)
    integer  break_stat(E2DFIELD)
 #endif
+   REALTYPE,dimension(E2DFIELD),target :: U,V
    REALTYPE,dimension(E2DFIELD),target :: t_zo,t_z,D,Dvel,DU,DV
-   REALTYPE U(E2DFIELD)
-   REALTYPE V(E2DFIELD)
    REALTYPE UEx(E2DFIELD)
    REALTYPE VEx(E2DFIELD)
    REALTYPE ru(E2DFIELD)
    REALTYPE rv(E2DFIELD)
-   REALTYPE Uint(E2DFIELD)
-   REALTYPE Vint(E2DFIELD)
+   REALTYPE,dimension(E2DFIELD),target :: Uint,Vint
    REALTYPE res_du(E2DFIELD)
    REALTYPE res_u(E2DFIELD)
    REALTYPE res_dv(E2DFIELD)

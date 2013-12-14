@@ -45,6 +45,7 @@
 #ifdef SPM
    use variables_3d, only: spm_pool,spm
 #endif
+   use variables_waves
 #ifdef SPM
    use suspended_matter, only: spm_save
 #endif
@@ -514,6 +515,50 @@
       err = nf90_put_var(ncid,Am_3d_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
+
+
+!  volume fluxes
+   if (fluxuuStokes_id .ne. -1) then
+      ws(:,:,0) = waves_missing
+      do k=1,kmax
+         call to_fluxu(imin,jmin,imax,jmax,au, &
+#if defined(CURVILINEAR) || defined(SPHERICAL)
+                       dyu,                    &
+#else
+                       dy,                     &
+#endif
+                       uuStokes(:,:,k),waves_missing,ws(:,:,k))
+      end do
+      err = nf90_put_var(ncid,fluxuuStokes_id,ws(_3D_W_),start,edges)
+   end if
+   if (fluxvvStokes_id .ne. -1) then
+      ws(:,:,0) = waves_missing
+      do k=1,kmax
+         call to_fluxv(imin,jmin,imax,jmax,av, &
+#if defined(CURVILINEAR) || defined(SPHERICAL)
+                       dxv,                    &
+#else
+                       dx,                     &
+#endif
+                       vvStokes(:,:,k),waves_missing,ws(:,:,k))
+      end do
+      err = nf90_put_var(ncid,fluxvvStokes_id,ws(_3D_W_),start,edges)
+   end if
+
+!  velocites
+   if (uuStokes_id .ne. -1) then
+      call to_3d_vel(imin,jmin,imax,jmax,kmin,kmax,az, &
+                     hvel,uuStokesC,waves_missing,ws)
+      err = nf90_put_var(ncid,uuStokes_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+   if (vvStokes_id .ne. -1) then
+      call to_3d_vel(imin,jmin,imax,jmax,kmin,kmax,az, &
+                     hvel,vvStokesC,waves_missing,ws)
+      err = nf90_put_var(ncid,vvStokes_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+
 
 #ifdef SPM
    if (spm_save) then

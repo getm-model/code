@@ -65,6 +65,10 @@
    integer                             :: diffxx_id=-1
    integer                             :: diffyy_id=-1
    integer                             :: diffxy_id=-1
+   integer                             :: uuStokes_id=-1
+   integer                             :: vvStokes_id=-1
+   integer                             :: fluxuuStokes_id=-1
+   integer                             :: fluxvvStokes_id=-1
 #ifdef SPM
    integer                             :: spmpool_id,spm_id
 #endif
@@ -102,6 +106,7 @@
    REALTYPE, parameter                 :: bnh_missing    =-9999.0
    REALTYPE, parameter                 :: Am_3d_missing  =-9999.0
    REALTYPE, parameter                 :: stirr_missing  =-9999.0
+   REALTYPE, parameter                 :: waves_missing  =-9999.0
 #ifdef SPM
    REALTYPE, parameter                 :: spmpool_missing=-9999.0
    REALTYPE, parameter                 :: spm_missing    =-9999.0

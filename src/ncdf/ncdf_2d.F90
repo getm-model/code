@@ -30,8 +30,18 @@
    integer                             :: airp_id,t2_id,hum_id,tcc_id
    integer                             :: tausx_id,tausy_id,swr_id,shf_id
    integer                             :: evap_id=-1,precip_id=-1
+
+   integer                             :: waveH_id=-1
+   integer                             :: waveL_id=-1
+   integer                             :: waveT_id=-1
+   integer                             :: uStokes_id=-1
+   integer                             :: vStokes_id=-1
+   integer                             :: fluxuStokes_id=-1
+   integer                             :: fluxvStokes_id=-1
+
    integer                             :: Am_2d_id=-1
    integer                             :: break_stat_id=-1
+
    integer                             :: nd2d_id=-1
    integer                             :: nd2do_id=-1,pd2d_id=-1
 
@@ -49,6 +59,7 @@
    REALTYPE, parameter                 :: shf_missing        =-9999.0
    REALTYPE, parameter                 :: evap_missing       =-9999.0
    REALTYPE, parameter                 :: precip_missing     =-9999.0
+   REALTYPE, parameter                 :: waves_missing      =-9999.0
    REALTYPE, parameter                 :: Am_2d_missing      =-9999.0
    REALTYPE, parameter                 :: nummix_missing     =-9999.0
 !

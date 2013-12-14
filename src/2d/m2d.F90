@@ -28,6 +28,9 @@
    use advection, only: init_advection,print_adv_settings,NOADV
    use les, only: les_mode,LES_MOMENTUM
    use halo_zones, only: update_2d_halo,wait_halo,H_TAG
+   use waves, only: uv_waves,waves_method,NO_WAVES
+   use variables_waves, only: UStokesC,UStokesCint,UStokes
+   use variables_waves, only: VStokesC,VStokesCint,VStokes
    use variables_2d
    use bdy_2d, only: init_bdy_2d
    use bdy_2d, only: bdyfile_2d,bdyfmt_2d,bdy2d_ramp,bdy2d_sponge_size
@@ -43,10 +46,10 @@
          REALTYPE,dimension(E2DFIELD),intent(out) :: D,Dvel,DU,DV
       end subroutine depth_update
 
-      subroutine uv_advect(U,V,D,Dvel,DU,DV,numdis)
+      subroutine uv_advect(Uf,Vf,U,V,D,Dvel,DU,DV,numdis)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,dimension(E2DFIELD),intent(in)        :: U,V
+         REALTYPE,dimension(E2DFIELD),intent(in)        :: Uf,Vf,U,V
          REALTYPE,dimension(E2DFIELD),target,intent(in) :: D,Dvel,DU,DV
          REALTYPE,dimension(:,:),pointer,intent(out),optional :: numdis
       end subroutine uv_advect
@@ -506,6 +509,14 @@
 
    end if
 
+   if (waves_method .ne. NO_WAVES) then
+!     calculate initial Stokes drift...
+      call stokes_drift(dtm,Dvel,UEx,VEx)
+!     ...and initialise Eulerian transports accordingly
+      UEuler = U - UStokes
+      VEuler = V - VStokes
+   end if
+
    return
    end subroutine postinit_2d
 !EOC
@@ -565,13 +576,18 @@
    call tic(TIM_INTEGR2D)
 
    if (mod(loop-1,MM) .eq. 0) then        ! MacroMicro time step
-      call bottom_friction(U,V,DU,DV,ru,rv)
+      call bottom_friction(UEuler,VEuler,DU,DV,ru,rv)
    end if
 
-   call uv_advect(U,V,D,Dvel,DU,DV,numdis_2d)
-   call uv_diffusion(An_method,U,V,D,DU,DV,phydis_2d) ! Has to be called after uv_advect.
+   call uv_advect(Uf,Vf,U,V,D,Dvel,DU,DV,numdis_2d)
+   call uv_diffusion(An_method,UEuler,VEuler,D,DU,DV,phydis_2d) ! Has to be called after uv_advect.
 
    call toc(TIM_INTEGR2D)
+
+   if (waves_method .ne. NO_WAVES) then
+      call uv_waves(Dvel,UEX,VEx)         ! add forcing
+      call stokes_drift(dtm,Dvel,UEx,VEx) ! calculate new Stokes drift
+   end if
 
    call momentum(loop,tausx,tausy,airp,ufirst)
 
@@ -585,6 +601,12 @@
       call tic(TIM_INTEGR2D)
       Uint=Uint+U
       Vint=Vint+V
+      if (waves_method .ne. NO_WAVES) then
+         UEulerInt = UEulerInt + UEuler
+         VEulerInt = VEulerInt + VEuler
+         UStokesCint = UStokesCint + UStokesC
+         VStokesCint = VStokesCint + VStokesC
+      end if
       call toc(TIM_INTEGR2D)
    end if
 

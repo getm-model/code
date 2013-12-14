@@ -234,6 +234,23 @@
 			</element>
 		</element>
 
+		<element name="waves" label="waves">
+			<element name="waves_method" type="int" label="waves method">
+				<options>
+					<option value="0" label="no wave forcing" />
+					<option value="1" label="wave forcing by Radiation Stress" />
+					<option value="2" label="wave forcing by Vortex Force" />
+				</options>
+			</element>
+			<element name="waves_datasource" type="int" label="waves method">
+				<options>
+					<option value="0" label="wave data written from external" />
+					<option value="1" label="wave data read from file" />
+					<option value="2" label="wave data derived from wind data" />
+				</options>
+			</element>
+		</element>
+
 		<element name="rivers" label="variables related to rivers">
 			<element name="river_method" type="int" label="river method">
 				<options>
@@ -863,6 +880,7 @@
 			<element name="save_masks" type="bool" label="save computational masks (az, au, av)"/>
 			<element name="save_2d" type="bool" label="save 2d fields "/>
 			<element name="save_meteo" type="bool" label="save meteo data"/>
+			<element name="save_waves" type="bool" label="save wave data"/>
 			<element name="save_3d" type="bool" label="save 3d fields"/>
 			<element name="save_h"  type="bool" label="save layer heights">
 				<condition type="eq" variable="../domain/vert_cord" value="1"/>

@@ -21,6 +21,7 @@
    use m2d, only: no_2d
    use m3d, only: calc_temp,calc_salt
    use nonhydrostatic, only: nonhyd_iters,bnh_filter,bnh_weight,calc_hs2d,sbnh_filter
+   use waves,  only: waves_method,NO_WAVES
 #ifdef SPM
    use suspended_matter, only: spm_save
 #endif
@@ -438,6 +439,7 @@
 
    end if
 
+
    if (do_numerical_analyses_3d) then
 
       fv = nummix_missing
@@ -568,6 +570,45 @@
       call set_attributes(ncid,Am_3d_id,long_name='hor. eddy viscosity',units='m2/s',&
                           FillValue=fv,missing_value=mv,valid_range=vr)
    end if
+
+
+   if (waves_method .ne. NO_WAVES) then
+
+      fv = waves_missing
+      mv = waves_missing
+
+      if (save_fluxes) then
+         vr(1) = -3.
+         vr(2) =  3.
+         err = nf90_def_var(ncid,'fluxuuStokes',NCDF_FLOAT_PRECISION,f4_dims,fluxuuStokes_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,fluxuuStokes_id,long_name='grid-related volume Stokes flux in local x-direction (U-point)', &
+                             units='m3/s',                                                                                    &
+                             FillValue=fv,missing_value=mv,valid_range=vr)
+         err = nf90_def_var(ncid,'fluxvvStokes',NCDF_FLOAT_PRECISION,f4_dims,fluxvvStokes_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,fluxvvStokes_id,long_name='grid-related volume Stokes flux in local y-direction (V-point)', &
+                             units='m3/s',                                                                                    &
+                             FillValue=fv,missing_value=mv,valid_range=vr)
+      end if
+
+      if (save_vel3d) then
+         vr(1) = -1.
+         vr(2) =  1.
+         err = nf90_def_var(ncid,'uuStokes',NCDF_FLOAT_PRECISION,f4_dims,uuStokes_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,uuStokes_id,long_name='Stokes drift in global x-direction (T-point)', &
+                             units='m/s',                                                               &
+                             FillValue=fv,missing_value=mv,valid_range=vr)
+         err = nf90_def_var(ncid,'vvStokes',NCDF_FLOAT_PRECISION,f4_dims,vvStokes_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,vvStokes_id,long_name='Stokes drift in global y-direction (T-point)', &
+                             units='m/s',                                                               &
+                             FillValue=fv,missing_value=mv,valid_range=vr)
+      end if
+
+   end if
+
 
 #ifdef SPM
    if (spm_save) then
