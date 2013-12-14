@@ -24,7 +24,7 @@
    REALTYPE,dimension(:,:)  ,allocatable :: UStokesC,VStokesC
    REALTYPE,dimension(:,:)  ,allocatable :: UStokes,VStokes
    REALTYPE,dimension(:,:)  ,allocatable :: UStokesCint,VStokesCint
-   REALTYPE,dimension(:,:)  ,allocatable :: UStokesCmean,VStokesCmean
+   REALTYPE,dimension(:,:)  ,allocatable :: UStokesCadv,VStokesCadv
    REALTYPE,dimension(:,:,:),allocatable :: uuStokesC,vvStokesC
    REALTYPE,dimension(:,:,:),allocatable :: uuStokes,vvStokes
 !
@@ -135,13 +135,13 @@
       if (rc /= 0) stop 'init_variables_waves: Error allocating memory (VStokesCint)'
       VStokesCint = _ZERO_
 
-      allocate(UStokesCmean(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_variables_waves: Error allocating memory (UStokesCmean)'
-      UStokesCmean = _ZERO_
+      allocate(UStokesCadv(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_variables_waves: Error allocating memory (UStokesCadv)'
+      UStokesCadv = _ZERO_
 
-      allocate(VStokesCmean(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_variables_waves: Error allocating memory (VStokesCmean)'
-      VStokesCmean = _ZERO_
+      allocate(VStokesCadv(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_variables_waves: Error allocating memory (VStokesCadv)'
+      VStokesCadv = _ZERO_
 
       allocate(uuStokesC(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'init_variables_waves: Error allocating memory (uuStokesC)'
