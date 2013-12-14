@@ -272,20 +272,9 @@
       MinN = MinN+1
    end if
 
-   call postinit_2d(runtype,timestep,hotstart,MinN)
-#ifndef NO_3D
-   if (runtype .gt. 1) then
-      call postinit_3d(runtype,timestep,hotstart,MinN)
-#ifdef _FABM_
-      if (fabm_calc) call postinit_getm_fabm()
-#endif
-   end if
-#endif
-
    call init_input(input_dir,MinN)
 
    call toc(TIM_INITIALIZE)
-   ! The rest is timed with meteo and output.
 
    if(runtype .le. 2) then
       call do_meteo(MinN)
@@ -296,6 +285,20 @@
 #endif
 #endif
    end if
+
+   call tic(TIM_INITIALIZE)
+
+   call postinit_2d(runtype,timestep,hotstart,MinN)
+#ifndef NO_3D
+   if (runtype .gt. 1) then
+      call postinit_3d(runtype,timestep,hotstart,MinN)
+#ifdef _FABM_
+      if (fabm_calc) call postinit_getm_fabm()
+#endif
+   end if
+#endif
+
+   call toc(TIM_INITIALIZE)
 
    if (.not. dryrun) then
       call do_output(runtype,MinN-1,timestep)
