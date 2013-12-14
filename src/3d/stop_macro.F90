@@ -21,8 +21,9 @@
    use domain, only: imin,imax,jmin,jmax,kmax,au,av
    use variables_2d, only: UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
    use variables_2d, only: Uint,Vint,UEulerInt,VEulerInt
-   use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,Dn,Dveln,Dun,Dvn
+   use variables_3d, only: kumin,kvmin,hun,hvn,Dn,Dveln,Dun,Dvn
    use variables_3d, only: uuEx,vvEx,rru,rrv
+   use variables_3d, only: uu,vv,uuEuler,vvEuler
    use variables_3d, only: Uadv,Vadv,UEulerAdv,VEulerAdv,Uadvf,Vadvf
    use variables_3d, only: idpdx_hs,idpdy_hs,idpdx_nh,idpdy_nh
    use waves, only: uv_waves,waves_method,NO_WAVES
