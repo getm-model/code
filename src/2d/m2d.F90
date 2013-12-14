@@ -373,6 +373,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j, ischange
+   integer                   :: rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
