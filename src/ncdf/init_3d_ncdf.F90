@@ -21,7 +21,6 @@
    use m2d, only: no_2d
    use m3d, only: calc_temp,calc_salt
    use nonhydrostatic, only: nonhyd_iters,bnh_filter,bnh_weight,calc_hs2d,sbnh_filter
-   use waves,  only: waves_method,NO_WAVES
 #ifdef SPM
    use suspended_matter, only: spm_save
 #endif
@@ -572,7 +571,7 @@
    end if
 
 
-   if (waves_method .ne. NO_WAVES) then
+   if (save_waves) then
 
       fv = waves_missing
       mv = waves_missing

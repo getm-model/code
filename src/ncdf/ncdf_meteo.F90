@@ -47,8 +47,8 @@
    logical         :: rotated_meteo_grid=.false.
 
    REALTYPE, allocatable     :: met_lon(:),met_lat(:)
-   REAL_4B, allocatable      :: met_times(:)
-   REAL_4B, allocatable      :: wrk(:,:)
+   REALTYPE, allocatable      :: met_times(:)
+   REALTYPE, allocatable      :: wrk(:,:)
    REALTYPE, allocatable     :: wrk_dp(:,:)
 
 !  For gridinterpolation
@@ -325,7 +325,7 @@
       start(1) = 1; start(2) = 1;
       edges(1) = iextr; edges(2) = jextr;
       edges(3) = 1
-      call get_meteo_data_ncdf(nstart)
+      call get_meteo_data_ncdf(nstart-1)
    end if
 
 #ifdef DEBUG
@@ -377,45 +377,55 @@
 !     find the right index
 
       t = loop*timestep
-      do indx=save_n,tmax
-         if (met_times(indx) .ge. real(t + offset)) EXIT
-      end do
-!     end of simulation?
+      new_meteo = .false.
 
-      if (indx .gt. tmax) then
-         LEVEL2 'Need new meteo file'
-         call open_meteo_file(meteo_file)
-         save_n = 1
-         do indx=save_n,tmax
-            if (met_times(indx) .gt. real(t + offset)) EXIT
-         end do
-         save_n = 0
-      end if
-      start(3) = indx
+      if ( t .gt. t_2 ) then
 
-      ! First time through we have to initialize t_1
-      if (first) then
-         first = .false.
+         t_1 = t_2
          new_meteo = .true.
-         if (indx .gt. 1) then
-            indx = indx-1
-         end if
-         start(3) = indx
-         t_1 = met_times(indx) - offset
-         t_2 = t_1
-         call read_data()
-      else
-         if (indx .gt. save_n) then
-            new_meteo = .true.
-            call write_time_string()
-            LEVEL3 timestr,': reading meteo data ...'
-            save_n = indx
-            t_1 = t_2
+
+!        Note (KK): Even if the first time stage is the last entry of an
+!                   input file, we must not jump to the next file because
+!                   then indx-1 does not work!
+!                   Therefore .ge. and save_n must be initialised to 1!
+         do indx=save_n,tmax
             t_2 = met_times(indx) - offset
-            call read_data()
-         else
-            new_meteo = .false.
+            if ( t_2 .ge. t ) then
+               EXIT
+            end if
+         end do
+
+!        end of simulation?
+         if (indx .gt. tmax) then
+!           Note (KK): here we are not in case of first
+!                      (because of in_interval check in open_meteo_file)
+            LEVEL2 'Need new meteo file'
+            call open_meteo_file(meteo_file)
+            do indx=1,tmax
+               t_2 = met_times(indx) - offset
+!              Note (KK): For meteo there is no check for long enough
+!                         data sets. Therefore .ge.!
+               if ( t_2 .ge. t ) then
+                  EXIT
+               end if
+            end do
          end if
+
+         if (first) then
+            first = .false.
+!            if (indx .gt. 1) then
+            if ( t_2 .gt. t ) then
+               indx = indx-1
+            end if
+            t_2 = met_times(indx) - offset
+         end if
+
+         start(3) = indx
+         call write_time_string()
+         LEVEL3 timestr,': reading meteo data ...',indx
+         call read_data()
+         save_n = indx+1
+
       end if
    end if
 
@@ -959,7 +969,7 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: grid_scan
-   REAL_4B, intent(in)                 :: inf(:,:)
+   REALTYPE, intent(in)                :: inf(:,:)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
