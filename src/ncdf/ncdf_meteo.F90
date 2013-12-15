@@ -403,12 +403,14 @@
          start(3) = indx
          t_1 = met_times(indx) - offset
          t_2 = t_1
+         call write_time_string()
+         LEVEL3 timestr,': reading meteo data ...',indx
          call read_data()
       else
          if (indx .gt. save_n) then
             new_meteo = .true.
             call write_time_string()
-            LEVEL3 timestr,': reading meteo data ...'
+            LEVEL3 timestr,': reading meteo data ...',indx
             save_n = indx
             t_1 = t_2
             t_2 = met_times(indx) - offset
