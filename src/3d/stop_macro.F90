@@ -77,7 +77,7 @@
       call uv_advect(Uadvf,Vadvf,Uadv,Vadv,Dn,Dveln,Dun,Dvn)
       call uv_diffusion(0,UEulerAdv,VEulerAdv,Dn,Dun,Dvn) ! Has to be called after uv_advect.
       if (waves_method .ne. NO_WAVES) then
-         call uv_waves(Dveln,UEx,VEx) ! add wave forcing
+         call uv_waves(UEulerAdv,VEulerAdv,Dveln,Dun,Dvn,UEx,VEx) ! add wave forcing
       end if
 
 !$OMP END SINGLE
