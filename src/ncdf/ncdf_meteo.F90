@@ -325,7 +325,7 @@
       start(1) = 1; start(2) = 1;
       edges(1) = iextr; edges(2) = jextr;
       edges(3) = 1
-      call get_meteo_data_ncdf(nstart)
+      call get_meteo_data_ncdf(nstart-1)
    end if
 
 #ifdef DEBUG
