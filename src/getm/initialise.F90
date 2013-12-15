@@ -46,7 +46,8 @@
    use domain, only: vert_cord,maxdepth
    use time, only: init_time,update_time,write_time_string
    use time, only: start,timestr,timestep
-   use m2d, only: init_2d,postinit_2d, z
+   use m2d, only: init_2d,postinit_2d
+   use variables_2d, only: Dvel
    use les, only: init_les
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
 #ifndef NO_3D
@@ -73,6 +74,7 @@
 #endif
 #endif
    use meteo, only: init_meteo,do_meteo
+   use waves, only: init_waves,do_waves,waves_method,NO_WAVES
    use integration,  only: MinN,MaxN
    use exceptions
    IMPLICIT NONE
@@ -210,6 +212,8 @@
 
    call init_meteo(hotstart)
 
+   call init_waves(runtype)
+
 #ifndef NO_3D
    call init_rivers(hotstart)
 #endif
@@ -245,7 +249,6 @@
    close(NAMLST)
 
 #if 0
-   call init_waves(hotstart)
    call init_biology(hotstart)
 #endif
 
@@ -266,6 +269,26 @@
       MinN = MinN+1
    end if
 
+   call init_input(input_dir,MinN)
+
+   call toc(TIM_INITIALIZE)
+
+   if(runtype .le. 2) then
+      call do_meteo(MinN-1)
+#ifndef NO_3D
+#ifndef NO_BAROCLINIC
+   else
+      call do_meteo(MinN-1,T(:,:,kmax))
+#endif
+#endif
+   end if
+
+   if (waves_method .ne. NO_WAVES) then
+      call do_waves(Dvel)
+   end if
+
+   call tic(TIM_INITIALIZE)
+
    call postinit_2d(runtype,timestep,hotstart,MinN)
 #ifndef NO_3D
    if (runtype .gt. 1) then
@@ -276,20 +299,7 @@
    end if
 #endif
 
-   call init_input(input_dir,MinN)
-
    call toc(TIM_INITIALIZE)
-   ! The rest is timed with meteo and output.
-
-   if(runtype .le. 2) then
-      call do_meteo(MinN)
-#ifndef NO_3D
-#ifndef NO_BAROCLINIC
-   else
-      call do_meteo(MinN,T(:,:,kmax))
-#endif
-#endif
-   end if
 
    if (.not. dryrun) then
       call do_output(runtype,MinN-1,timestep)
