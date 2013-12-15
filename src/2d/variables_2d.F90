@@ -112,8 +112,10 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
-   integer                   :: rc
    logical, intent(in)                 :: no_2d
+!
+! !LOCAL VARIABLES:
+   integer                   :: rc
 !
 !EOP
 !-------------------------------------------------------------------------

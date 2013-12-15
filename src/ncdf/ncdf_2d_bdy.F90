@@ -232,8 +232,6 @@
 
    if(t .gt. t2) then
 
-      call write_time_string()
-      LEVEL3 timestr,': reading 2D boundary data ...'
       t1 = t2
       do i=indx+1,nsets
          t2 = bdy_times(i) - offset
@@ -253,6 +251,9 @@
          indx = i
       end if
       start(2) = indx
+
+      call write_time_string()
+      LEVEL3 timestr,': reading 2D boundary data ...',indx
 
       if ( elev_id .ne. -1 ) then
          err = nf90_get_var(ncid,elev_id,wrk,start,edges)
