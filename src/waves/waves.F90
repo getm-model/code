@@ -152,13 +152,13 @@
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO
                if ( az(i,j) .gt. 0 ) then
-!                 use of taus[x|y] because of:
-!                    - missing temporal interpolation
+!                 use of approximation for wind based on taus[x|y] because of:
+!                    - missing temporal interpolation of [u|v]10
 !                    - missing halo update of [u|v]10
 !                    - also valid for met_method=1
-!                 however: only approximation for wind!
                   waveDir(i,j) = atan2(tausy(i,j),tausx(i,j)) ! cartesian convention and in radians
                   wind = sqrt(sqrt(tausx(i,j)**2 + tausy(i,j)**2)/(1.25d-3*1.25))
+                  wind = max( SMALL , wind )
                   waveH(i,j) = wind2waveHeight(wind,D(i,j))
                   waveT(i,j) = wind2wavePeriod(wind,D(i,j))
                   waveK(i,j) = wavePeriod2waveNumber(waveT(i,j),D(i,j))
