@@ -47,8 +47,8 @@
    logical         :: rotated_meteo_grid=.false.
 
    REALTYPE, allocatable     :: met_lon(:),met_lat(:)
-   REAL_4B, allocatable      :: met_times(:)
-   REAL_4B, allocatable      :: wrk(:,:)
+   REALTYPE, allocatable      :: met_times(:)
+   REALTYPE, allocatable      :: wrk(:,:)
    REALTYPE, allocatable     :: wrk_dp(:,:)
 
 !  For gridinterpolation
@@ -961,7 +961,7 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: grid_scan
-   REAL_4B, intent(in)                 :: inf(:,:)
+   REALTYPE, intent(in)                :: inf(:,:)
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
