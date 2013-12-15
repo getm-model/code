@@ -576,8 +576,8 @@
    call toc(TIM_INTEGR2D)
 
    if (waves_method .ne. NO_WAVES) then
-      call uv_waves(Dvel,UEX,VEx)         ! add forcing
-      call stokes_drift(dtm,Dvel,UEx,VEx) ! calculate new Stokes drift
+      call uv_waves(UEuler,VEuler,Dvel,DU,DV,UEx,VEx) ! add forcing
+      call stokes_drift(dtm,Dvel,UEx,VEx)             ! calculate new Stokes drift
    end if
 
    call momentum(loop,tausx,tausy,airp,ufirst)
