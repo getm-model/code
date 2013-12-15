@@ -201,12 +201,12 @@
 ! \label{sec-uv-waves}
 !
 ! !INTERFACE:
-   subroutine uv_waves(Dvel,UEX,VEx)
+   subroutine uv_waves(UEuler,VEuler,Dvel,DU,DV,UEx,VEx)
 
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(in)    :: Dvel
+   REALTYPE,dimension(E2DFIELD),intent(in)    :: UEuler,VEuler,Dvel,DU,DV
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout) :: UEx,VEx
@@ -228,7 +228,7 @@
       case (WAVES_RS)
          call radiation_stress(Dvel,UEx,VEx)
       case (WAVES_VF)
-         call vortex_force(UEx,VEx)
+         call vortex_force(UEuler,VEuler,DU,DV,UEx,VEx)
    end select
 
 #ifdef DEBUG
@@ -245,13 +245,13 @@
 ! \label{sec-uv-waves-3d}
 !
 ! !INTERFACE:
-   subroutine uv_waves_3d(Dveln,hvel,uuEuler,vvEuler,hun,hvn,uuEx,vvEx)
+   subroutine uv_waves_3d(uuEuler,vvEuler,Dveln,hvel,hun,hvn,uuEx,vvEx)
 
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    REALTYPE,dimension(I2DFIELD),intent(in)    :: Dveln
-   REALTYPE,dimension(I3DFIELD),intent(in)    :: hvel,uuEuler,vvEuler,hun,hvn
+   REALTYPE,dimension(I3DFIELD),intent(in)    :: uuEuler,vvEuler,hvel,hun,hvn
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(I3DFIELD),intent(inout) :: uuEx,vvEx

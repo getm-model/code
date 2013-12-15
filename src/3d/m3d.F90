@@ -670,7 +670,7 @@
 
       if (waves_method .ne. NO_WAVES) then
 !        add new wave forcing
-         call uv_waves_3d(Dveln,hvel,uuEuler,vvEuler,hun,hvn,uuEx,vvEx)
+         call uv_waves_3d(uuEuler,vvEuler,Dveln,hvel,hun,hvn,uuEx,vvEx)
       end if
 
       call tic(TIM_INTEGR3D)
