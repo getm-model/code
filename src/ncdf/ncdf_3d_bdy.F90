@@ -425,8 +425,7 @@
       if(t .gt. t2) then
 
          new_set = .true.
-         call write_time_string()
-         LEVEL3 timestr,': reading 3D boundary data ...'
+
          t1 = t2
          do i=indx+1,time_len
             t2 = bdy_times(i) - offset
@@ -448,6 +447,9 @@
             indx = i
          end if
          start(3) = indx
+
+         call write_time_string()
+         LEVEL3 timestr,': reading 3D boundary data ...',indx
 
 !        Note(KK): We read in at once the data of all global bdy cells
 !                  but only for the current time stage.
