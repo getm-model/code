@@ -134,6 +134,7 @@
    REALTYPE,dimension(E2DFIELD) :: waveECm1
    REALTYPE                     :: wind
    integer                      :: i,j
+   REALTYPE,parameter           :: min_wind=_TENTH_
    REALTYPE,parameter           :: pi=3.1415926535897932384626433832795029d0
    REALTYPE,parameter           :: twopi = _TWO_*pi
    REALTYPE,parameter           :: oneovertwopi=_ONE_/twopi
@@ -158,7 +159,7 @@
 !                    - also valid for met_method=1
                   waveDir(i,j) = atan2(tausy(i,j),tausx(i,j)) ! cartesian convention and in radians
                   wind = sqrt(sqrt(tausx(i,j)**2 + tausy(i,j)**2)/(1.25d-3*1.25))
-                  wind = max( SMALL , wind )
+                  wind = max( min_wind , wind )
                   waveH(i,j) = wind2waveHeight(wind,D(i,j))
                   waveT(i,j) = wind2wavePeriod(wind,D(i,j))
                   waveK(i,j) = wavePeriod2waveNumber(waveT(i,j),D(i,j))
