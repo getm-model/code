@@ -382,7 +382,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,rc
    REALTYPE                  :: hh,t,t_minus_t2
-   REALTYPE, save            :: deltm1
+   REALTYPE, save            :: deltm1=_ZERO_
    REALTYPE                  :: short_wave_radiation
    logical,save              :: first=.true.
    REALTYPE, dimension(:,:), pointer :: airp_old,tausx_old,tausy_old
@@ -424,9 +424,7 @@
             deltm1 = _ONE_ / (t_2 - t_1)
          end if
       end if
-      if (.not. first) then
-         t_minus_t2 = t - t_2
-      end if
+      t_minus_t2 = t - t_2
 
       if (ramp_is_active) then
          if (n .ge. meteo_ramp) then
@@ -563,7 +561,7 @@
             end if
 
 
-            if (.not. first) then
+!            if (.not. first) then
 
 !$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
@@ -615,7 +613,7 @@
                end if
 #endif
 
-            end if
+!            end if
 !$OMP END PARALLEL
 
          case default
