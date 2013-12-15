@@ -21,8 +21,9 @@
    use domain, only: imin,imax,jmin,jmax,kmax,au,av
    use variables_2d, only: UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
    use variables_2d, only: Uint,Vint,UEulerInt,VEulerInt
-   use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,Dn,Dveln,Dun,Dvn
+   use variables_3d, only: kumin,kvmin,hun,hvn,Dn,Dveln,Dun,Dvn
    use variables_3d, only: uuEx,vvEx,rru,rrv
+   use variables_3d, only: uu,vv,uuEuler,vvEuler
    use variables_3d, only: Uadv,Vadv,UEulerAdv,VEulerAdv,Uadvf,Vadvf
    use variables_3d, only: idpdx_hs,idpdy_hs,idpdx_nh,idpdy_nh
    use waves, only: uv_waves,waves_method,NO_WAVES
@@ -76,8 +77,8 @@
       call uv_advect(Uadvf,Vadvf,Uadv,Vadv,Dn,Dveln,Dun,Dvn)
       call uv_diffusion(0,UEulerAdv,VEulerAdv,Dn,Dun,Dvn) ! Has to be called after uv_advect.
       if (waves_method .ne. NO_WAVES) then
-	      call uv_waves(Dveln,UEx,VEx) ! add wave forcing
-	   end if
+         call uv_waves(Dveln,UEx,VEx) ! add wave forcing
+      end if
 
 !$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
@@ -99,7 +100,7 @@
                Slru(i,j)= _ZERO_
 #else
                k=kumin(i,j)
-               Slru(i,j) =   rru(i,j)*uu(i,j,k)/hun(i,j,k) &
+               Slru(i,j) =   rru(i,j)*uuEuler(i,j,k)/hun(i,j,k) &
                            - ru(i,j)*UEulerAdv(i,j)/Dun(i,j)
 #endif
 
@@ -124,7 +125,7 @@
                Slrv(i,j)= _ZERO_
 #else
                k=kvmin(i,j)
-               Slrv(i,j) =   rrv(i,j)*vv(i,j,k)/hvn(i,j,k) &
+               Slrv(i,j) =   rrv(i,j)*vvEuler(i,j,k)/hvn(i,j,k) &
                            - rv(i,j)*VEulerAdv(i,j)/Dvn(i,j)
 #endif
 
