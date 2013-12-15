@@ -18,7 +18,6 @@
    use domain, only: ioff,joff
    use meteo,  only: metforcing,calc_met
    use meteo,  only: fwf_method
-   use waves,  only: waves_method,NO_WAVES
    use m2d,    only: Am_method,NO_AM,residual
 
    IMPLICIT NONE
@@ -236,7 +235,7 @@
    end if
 
 
-   if (waves_method .ne. NO_WAVES) then
+   if (save_waves) then
 
       fv = waves_missing
       mv = waves_missing
