@@ -178,7 +178,7 @@ endif
 # Turbulence directory
 GOTMLIBDIR	= $(GOTMDIR)/lib/$(FORTRAN_COMPILER)
 LINKDIRS	+= -L$(GOTMLIBDIR)
-EXTRA_LIBS	+= -lice$(buildtype) -lturbulence$(buildtype) -lutil$(buildtype) 
+EXTRA_LIBS	+= -lice$(buildtype) -lairsea_utils$(buildtype) -lturbulence$(buildtype) -lutil$(buildtype) 
 INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
 
 >>>>>>> initial commit of ice models
