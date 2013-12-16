@@ -12,9 +12,12 @@
 ! !SEE ALSO:
 !
 ! !USES:
+   use time, only: julianday, secondsofday, timestep
    use domain, only: imin,imax,jmin,jmax,kmax,az
-   use meteo, only: albedo
-   use variables_3d, only: S,T
+   use domain, only: lonc,latc
+   use meteo, only: shf,swr,albedo,precip,evap,tcc,t2,airp,hum,u10,v10
+   use parameters, only: rho_0
+   use variables_3d, only: rho,rho_0,S,T,hn
    use ice_winton, only: do_ice_winton
    IMPLICIT NONE
 !
@@ -30,6 +33,9 @@
 !  Winton ice model
    REALTYPE, public, dimension(:,:), allocatable, target  :: ice_hs,ice_hi
    REALTYPE, public, dimension(:,:), allocatable, target  :: ice_T1,ice_T2
+   REALTYPE, public, dimension(:,:), allocatable, target  :: ice_tmelt
+   REALTYPE, public, dimension(:,:), allocatable, target  :: ice_bmelt
+   REALTYPE, public, dimension(:,:), allocatable, target  :: ice_ts
 !
 ! !DEFINED PARAMETERS:
 !
@@ -91,6 +97,15 @@
             allocate(ice_T2(E2DFIELD),stat=rc)
             if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_T2)'
             ice_T2 = _ZERO_
+            allocate(ice_tmelt(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_tmelt)'
+            ice_tmelt = _ZERO_
+            allocate(ice_bmelt(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_bmelt)'
+            ice_bmelt = _ZERO_
+            allocate(ice_ts(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_ts)'
+            ice_ts = _ZERO_
       case default
    end select
 
@@ -119,6 +134,11 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
+#if 1
+   integer                   :: hum_method=1
+   integer                   :: back_radiation_method=1
+   integer                   :: fluxes_method=1
+#endif
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -136,11 +156,19 @@
             end do
          end do
       case (2) ! Winton
-#if 0
+#if 1
          do j=jmin,jmax
             do i=imin,imax
                if (az(i,j) .ge. 1) then
-                  call do_ice_winton(ice_hs(i,j),ice_hi(i,j),ice_T1(i,j),ice_T2(i,j))
+                  call do_ice_winton(julianday,secondsofday, &
+                         lonc(i,j),latc(i,j), &
+                         tcc(i,j),t2(i,j),airp(i,j),hum(i,j),u10(i,j),v10(i,j), &
+                         S(i,j,kmax),rho(i,j,kmax),rho_0,hn(i,j,kmax), &
+                         back_radiation_method,hum_method, &
+                         fluxes_method,timestep, &
+                         T(i,j,kmax),shf(i,j),swr(i,j),precip(i,j), &
+                         ice_hs(i,j),ice_hi(i,j),ice_t1(i,j),ice_t2(i,j), &
+                         ice_ts(i,j),albedo(i,j),ice_tmelt(i,j),ice_bmelt(i,j))
                end if
             end do
          end do
