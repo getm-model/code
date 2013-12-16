@@ -42,10 +42,6 @@
    REALTYPE                  :: th0,th02,th03,sundec
    REALTYPE                  :: thsun,coszen,zen,dzen,sunbet
    REALTYPE                  :: qatten,qzer,qdir,qdiff,qtot,qshort
-#if 0
-   REALTYPE                  :: albedo
-   integer                   :: jab
-#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
