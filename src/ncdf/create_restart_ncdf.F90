@@ -22,6 +22,9 @@
    use domain, only: ioff,joff
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
+#ifndef NO_BAROCLINIC
+   use getm_ice, only: ice_method
+#endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use bio_var, only: numc
@@ -226,6 +229,36 @@
       status = nf90_def_var(ncid, "S", nf90_double, &
                                (/ xdim_id, ydim_id, zdim_id /), S_id)
       if (status .NE. NF90_NOERR) go to 10
+
+      select case (ice_method)
+         case (1) ! Freezing point ice model
+            status = nf90_def_var(ncid, "ice_mask", nf90_double, &
+                                  (/ xdim_id, ydim_id, zdim_id /), ice_mask_id)
+            if (status .NE. NF90_NOERR) go to 10
+         case (2) ! Winton ice model
+            status = nf90_def_var(ncid, "ice_hs", nf90_double, &
+                                  (/ xdim_id, ydim_id, zdim_id /), ice_hs_id)
+            if (status .NE. NF90_NOERR) go to 10
+            status = nf90_def_var(ncid, "ice_hi", nf90_double, &
+                                  (/ xdim_id, ydim_id, zdim_id /), ice_hi_id)
+            if (status .NE. NF90_NOERR) go to 10
+            status = nf90_def_var(ncid, "ice_ts", nf90_double, &
+                                  (/ xdim_id, ydim_id, zdim_id /), ice_ts_id)
+            if (status .NE. NF90_NOERR) go to 10
+            status = nf90_def_var(ncid, "ice_T1", nf90_double, &
+                                  (/ xdim_id, ydim_id, zdim_id /), ice_T1_id)
+            if (status .NE. NF90_NOERR) go to 10
+            status = nf90_def_var(ncid, "ice_T2", nf90_double, &
+                                  (/ xdim_id, ydim_id, zdim_id /), ice_T2_id)
+            if (status .NE. NF90_NOERR) go to 10
+            status = nf90_def_var(ncid, "ice_tmelt", nf90_double, &
+                                  (/ xdim_id, ydim_id, zdim_id /), ice_tmelt_id)
+            if (status .NE. NF90_NOERR) go to 10
+            status = nf90_def_var(ncid, "ice_bmelt", nf90_double, &
+                                  (/ xdim_id, ydim_id, zdim_id /), ice_bmelt_id)
+            if (status .NE. NF90_NOERR) go to 10
+         case default
+      end select
 #endif
 #ifdef SPM
       status = nf90_def_var(ncid, "spm", nf90_double, &
