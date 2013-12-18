@@ -25,7 +25,7 @@
    integer                             :: ice_mask_id
 !  Winton ice model
    integer                             :: ice_hs_id,ice_hi_id
-   integer                             :: ice_T1_id,ice_T2_id
+   integer                             :: ice_ts_id,ice_T1_id,ice_T2_id
 
    integer                             :: elev_id,u_id,v_id
    integer                             :: taubx_id,tauby_id
