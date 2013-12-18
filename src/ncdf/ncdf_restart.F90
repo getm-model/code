@@ -50,6 +50,12 @@
    integer                             :: hn_id
 #ifndef NO_BAROCLINIC
    integer                             :: T_id,S_id
+!  Simple ice model
+   integer                             :: ice_mask_id
+!  Winton ice model
+   integer                             :: ice_hs_id,ice_hi_id
+   integer                             :: ice_ts_id,ice_T1_id,ice_T2_id
+   integer                             :: ice_tmelt_id,ice_bmelt_id
 #endif
 #ifdef SPM
    integer                             :: spm_id,spmpool_id

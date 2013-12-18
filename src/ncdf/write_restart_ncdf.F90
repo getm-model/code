@@ -22,6 +22,13 @@
    use variables_2d
 #ifndef NO_3D
    use variables_3d
+#ifndef NO_BAROCLINIC
+   use getm_ice, only: ice_method
+   use getm_ice, only: ice_mask
+   use getm_ice, only: ice_hs,ice_hi
+   use getm_ice, only: ice_ts,ice_T1,ice_T2
+   use getm_ice, only: ice_tmelt,ice_bmelt
+#endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use bio_var, only: numc
@@ -210,6 +217,35 @@
          nf90_put_var(ncid,S_id,S(_3D_W_HOT_),start,edges)
          if (status .NE. NF90_NOERR) go to 10
       end if
+      select case (ice_method)
+         case (1) ! Freezing point ice model
+            status = &
+            nf90_put_var(ncid,ice_mask_id,ice_mask(_2D_W_HOT_),start,edges)
+            if (status .NE. NF90_NOERR) go to 10
+         case (2) ! Winton ice model
+            status = &
+            nf90_put_var(ncid,ice_hs_id,ice_hs(_2D_W_HOT_),start,edges)
+            if (status .NE. NF90_NOERR) go to 10
+            status = &
+            nf90_put_var(ncid,ice_hi_id,ice_hi(_2D_W_HOT_),start,edges)
+            if (status .NE. NF90_NOERR) go to 10
+            status = &
+            nf90_put_var(ncid,ice_ts_id,ice_ts(_2D_W_HOT_),start,edges)
+            if (status .NE. NF90_NOERR) go to 10
+            status = &
+            nf90_put_var(ncid,ice_T1_id,ice_T1(_2D_W_HOT_),start,edges)
+            if (status .NE. NF90_NOERR) go to 10
+            status = &
+            nf90_put_var(ncid,ice_T2_id,ice_T2(_2D_W_HOT_),start,edges)
+            if (status .NE. NF90_NOERR) go to 10
+            status = &
+            nf90_put_var(ncid,ice_tmelt_id,ice_tmelt(_2D_W_HOT_),start,edges)
+            if (status .NE. NF90_NOERR) go to 10
+            status = &
+            nf90_put_var(ncid,ice_bmelt_id,ice_bmelt(_2D_W_HOT_),start,edges)
+            if (status .NE. NF90_NOERR) go to 10
+         case default
+      end select
 #endif
 #ifdef SPM
       if (spm_calc) then

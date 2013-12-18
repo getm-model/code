@@ -17,6 +17,13 @@
    use ncdf_restart
 #ifndef NO_3D
    use domain, only: vert_cord
+#ifndef NO_BAROCLINIC
+   use getm_ice, only: ice_method
+   use getm_ice, only: ice_mask
+   use getm_ice, only: ice_hs,ice_hi
+   use getm_ice, only: ice_ts,ice_T1,ice_T2
+   use getm_ice, only: ice_tmelt,ice_bmelt
+#endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use getm_bio, only: bio_init_method
@@ -263,6 +270,60 @@
       varnam="S"
       status = nf90_inq_varid(ncid, "S", S_id)
       if (status .NE. NF90_NOERR) go to 10
+
+      select case (ice_method)
+         case (1) ! Freezing point ice model
+            varnam="ice_mask"
+            status = nf90_inq_varid(ncid, "ice_mask", ice_mask_id)
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 'variable missing in restart file. Skipping ',varnam
+               ice_mask_id=-1
+            end if
+         case (2) ! Winton ice model
+            varnam="ice_hs"
+            status = nf90_inq_varid(ncid, "ice_hs", ice_hs_id)
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 'variable missing in restart file. Skipping ',varnam
+               ice_hs_id=-1
+            end if
+            varnam="ice_hi"
+            status = nf90_inq_varid(ncid, "ice_hi", ice_hi_id)
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 'variable missing in restart file. Skipping ',varnam
+               ice_hi_id=-1
+            end if
+            varnam="ice_ts"
+            status = nf90_inq_varid(ncid, "ice_ts", ice_ts_id)
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 'variable missing in restart file. Skipping ',varnam
+               ice_ts_id=-1
+            end if
+            varnam="ice_T1"
+            status = nf90_inq_varid(ncid, "ice_T1", ice_T1_id)
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 'variable missing in restart file. Skipping ',varnam
+               ice_T1_id=-1
+            end if
+            varnam="ice_T2"
+            status = nf90_inq_varid(ncid, "ice_T2", ice_T2_id)
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 'variable missing in restart file. Skipping ',varnam
+               ice_T2_id=-1
+            end if
+            varnam="ice_tmelt"
+            status = nf90_inq_varid(ncid, "ice_tmelt", ice_tmelt_id)
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 'variable missing in restart file. Skipping ',varnam
+               ice_tmelt_id=-1
+            end if
+            varnam="ice_bmelt"
+            status = nf90_inq_varid(ncid, "ice_bmelt", ice_bmelt_id)
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 'variable missing in restart file. Skipping ',varnam
+               ice_bmelt_id=-1
+            end if
+         case default
+      end select
 #endif
 #ifdef SPM
       varnam="spm"

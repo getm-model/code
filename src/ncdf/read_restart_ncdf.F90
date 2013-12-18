@@ -33,6 +33,13 @@
    use exceptions, only: getm_error
 #ifndef NO_3D
    use variables_3d
+#ifndef NO_BAROCLINIC
+   use getm_ice, only: ice_method
+   use getm_ice, only: ice_mask
+   use getm_ice, only: ice_hs,ice_hi
+   use getm_ice, only: ice_ts,ice_T1,ice_T2
+   use getm_ice, only: ice_tmelt,ice_bmelt
+#endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use bio_var, only: numc
@@ -391,6 +398,83 @@
          call update_3d_halo(S,S,az,imin,jmin,imax,jmax,kmax,H_TAG)
          call wait_halo(H_TAG)
       end if
+      select case (ice_method)
+         case (1) ! Freezing point ice model
+            status = &
+            nf90_get_var(ncid,ice_mask_id,ice_mask(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 "read_restart_ncdf(): setting ice_mask=0"
+               ice_mask=_ZERO_
+            else
+               call update_2d_halo(ice_mask,ice_mask,az,imin,jmin,imax,jmax,H_TAG)
+               call wait_halo(H_TAG)
+            end if
+         case (2) ! Winton ice model
+            status = &
+            nf90_get_var(ncid,ice_hs_id,ice_hs(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 "read_restart_ncdf(): setting ice_hs=0"
+               ice_hs=_ZERO_
+            else
+               call update_2d_halo(ice_hs,ice_hs,az,imin,jmin,imax,jmax,H_TAG)
+               call wait_halo(H_TAG)
+            end if
+            status = &
+            nf90_get_var(ncid,ice_hi_id,ice_hi(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 "read_restart_ncdf(): setting ice_hi=0"
+               ice_hi=_ZERO_
+            else
+               call update_2d_halo(ice_hi,ice_hi,az,imin,jmin,imax,jmax,H_TAG)
+               call wait_halo(H_TAG)
+            end if
+            status = &
+            nf90_get_var(ncid,ice_ts_id,ice_ts(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 "read_restart_ncdf(): setting ice_ts=0"
+               ice_ts=_ZERO_
+            else
+               call update_2d_halo(ice_ts,ice_ts,az,imin,jmin,imax,jmax,H_TAG)
+               call wait_halo(H_TAG)
+            end if
+            status = &
+            nf90_get_var(ncid,ice_T1_id,ice_T1(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 "read_restart_ncdf(): setting ice_T1=0"
+               ice_T1=_ZERO_
+            else
+               call update_2d_halo(ice_T1,ice_T1,az,imin,jmin,imax,jmax,H_TAG)
+               call wait_halo(H_TAG)
+            end if
+            status = &
+            nf90_get_var(ncid,ice_T2_id,ice_T2(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 "read_restart_ncdf(): setting ice_T2=0"
+               ice_T2=_ZERO_
+            else
+               call update_2d_halo(ice_T2,ice_T2,az,imin,jmin,imax,jmax,H_TAG)
+               call wait_halo(H_TAG)
+            end if
+            status = &
+            nf90_get_var(ncid,ice_tmelt_id,ice_tmelt(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 "read_restart_ncdf(): setting ice_tmelt=0"
+               ice_tmelt=_ZERO_
+            else
+               call update_2d_halo(ice_tmelt,ice_tmelt,az,imin,jmin,imax,jmax,H_TAG)
+               call wait_halo(H_TAG)
+            end if
+            status = &
+            nf90_get_var(ncid,ice_bmelt_id,ice_bmelt(istart:istop,jstart:jstop),start(1:2),edges(1:2))
+            if (status .NE. NF90_NOERR) then
+               LEVEL3 "read_restart_ncdf(): setting ice_bmelt=0"
+               ice_bmelt=_ZERO_
+            else
+               call update_2d_halo(ice_bmelt,ice_tmelt,az,imin,jmin,imax,jmax,H_TAG)
+               call wait_halo(H_TAG)
+            end if
+         case default
+      end select
 #endif
 #ifdef SPM
       if(spm_calc) then
