@@ -32,10 +32,10 @@
    REALTYPE, public, dimension(:,:), allocatable, target  :: ice_mask
 !  Winton ice model
    REALTYPE, public, dimension(:,:), allocatable, target  :: ice_hs,ice_hi
+   REALTYPE, public, dimension(:,:), allocatable, target  :: ice_ts
    REALTYPE, public, dimension(:,:), allocatable, target  :: ice_T1,ice_T2
    REALTYPE, public, dimension(:,:), allocatable, target  :: ice_tmelt
    REALTYPE, public, dimension(:,:), allocatable, target  :: ice_bmelt
-   REALTYPE, public, dimension(:,:), allocatable, target  :: ice_ts
 !
 ! !DEFINED PARAMETERS:
 !
@@ -79,11 +79,14 @@
 
    select case (ice_method)
          case (0) ! No ice model
+            LEVEL2 'No ice model included'
          case (1) ! Salinity dependent freezing point
+            LEVEL2 'Freezing point ice model'
             allocate(ice_mask(E2DFIELD),stat=rc)
             if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_mask)'
             ice_mask = _ZERO_
          case (2) ! Winton
+            LEVEL2 'Winton ice model'
 !           Allocates memory for the public data members
             allocate(ice_hs(E2DFIELD),stat=rc)
             if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hs)'
@@ -156,7 +159,6 @@
             end do
          end do
       case (2) ! Winton
-#if 1
          do j=jmin,jmax
             do i=imin,imax
                if (az(i,j) .ge. 1) then
@@ -172,7 +174,6 @@
                end if
             end do
          end do
-#endif
       case default
    end select
 !KB    call toc(TIM_METEO)

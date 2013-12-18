@@ -112,6 +112,12 @@
          call set_attributes(ncid,ice_hi_id,long_name='ice thickness',units='m', &
                              FillValue=fv,missing_value=mv)
 
+         err = nf90_def_var(ncid,'ice_ts',NCDF_FLOAT_PRECISION,f3_dims,ice_ts_id)
+         if (err .NE. NF90_NOERR) go to 10
+         call set_attributes(ncid,ice_ts_id,long_name='ice surface temperature', &
+                             units='celsius', &
+                             FillValue=fv,missing_value=mv)
+
          err = nf90_def_var(ncid,'ice_T1',NCDF_FLOAT_PRECISION,f3_dims,ice_T1_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,ice_T1_id,long_name='upper ice temperature', &

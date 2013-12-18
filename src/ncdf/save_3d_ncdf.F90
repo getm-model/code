@@ -130,6 +130,8 @@
          if (err .NE. NF90_NOERR) go to 10
          err = nf90_put_var(ncid,ice_hi_id,ice_hi(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
+         err = nf90_put_var(ncid,ice_ts_id,ice_ts(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
          err = nf90_put_var(ncid,ice_T1_id,ice_T1(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
          err = nf90_put_var(ncid,ice_T2_id,ice_T2(_2D_W_),start,edges)
