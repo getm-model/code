@@ -9,11 +9,13 @@
 !
 ! !USES:
    use halo_zones     , only: U_TAG,V_TAG
-   use domain         , only: imin,imax,jmin,jmax,kmax,au,av
+   use domain         , only: imin,imax,jmin,jmax,kmax,az,au,av
    use pool           , only: flux_center2interface
-   use waves          , only: waves_method,WAVES_RS
+   use waves          , only: waves_method,WAVES_RS,kD_max
    use variables_waves, only: waveK,waveE
-   use variables_waves, only: SJJ,sinh2kDvelnm1,khab,layerratios
+   use variables_waves, only: SJJ
+   use variables_waves, only: kDveln,sinh2kDvelnm1,mask_kDveln
+   use variables_waves, only: khab,layerratios
    use variables_waves, only: UStokesCadv,VStokesCadv
    use variables_waves, only: uuStokesC,vvStokesC,uuStokes,vvStokes
    IMPLICIT NONE
@@ -56,7 +58,9 @@
    write(debug,*) 'stokes_drift_3d() # ',Ncall
 #endif
 
-   sinh2kDvelnm1 = _ONE_ / sinh(_TWO_*waveK*Dveln)
+   kDveln = waveK * Dveln
+   mask_kDveln = ( kDveln .lt. kD_max )
+   sinh2kDvelnm1 = _ONE_ / sinh(_TWO_*kDveln)
 
 !  wave-induced kinematic pressure
    SJJ = waveE * waveK * sinh2kDvelnm1
@@ -65,13 +69,29 @@
    sinh2khab(:,:,0) = _ZERO_
    kp = 0
 
+
    do k=1,kmax
+
       km = kp
       kp = 1 - kp
+
       hab = hab + hvel(:,:,k)
       khab(:,:,k) = waveK*hab
-      sinh2khab  (:,:,kp) = sinh(_TWO_*khab(:,:,k))
-      layerratios(:,:,k ) = ( sinh2khab(:,:,kp) - sinh2khab(:,:,km) ) * sinh2kDvelnm1
+
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if ( az(i,j) .gt. 0 ) then
+               if ( mask_kDveln(i,j) ) then
+                  sinh2khab  (i,j,kp) = sinh(_TWO_*khab(i,j,k))
+                  layerratios(i,j,k ) = ( sinh2khab(i,j,kp) - sinh2khab(i,j,km) ) * sinh2kDvelnm1(i,j)
+               else
+                  sinh2khab  (i,j,kp) = exp(_TWO_*(khab(i,j,k)-kDveln(i,j)))
+                  layerratios(i,j,k ) = ( sinh2khab(i,j,kp) - sinh2khab(i,j,km) )
+               end if
+            end if
+         end do
+      end do
+
    end do
 
 
