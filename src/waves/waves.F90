@@ -24,16 +24,17 @@
 ! !PUBLIC DATA MEMBERS:
    public init_waves,do_waves,uv_waves,uv_waves_3d
 
-   integer,public,parameter :: NO_WAVES=0
-   integer,public,parameter :: WAVES_RS=1
-   integer,public,parameter :: WAVES_VF=2
-   integer,public           :: waves_method=NO_WAVES
-   integer,public,parameter :: WAVES_FROMEXT=0
-   integer,public,parameter :: WAVES_FROMFILE=1
-   integer,public,parameter :: WAVES_FROMWIND=2
-   integer,public           :: waves_datasource=WAVES_FROMEXT
-   logical,public           :: new_waves=.false.
-   logical,public           :: new_StokesC=.false.
+   integer,public,parameter  :: NO_WAVES=0
+   integer,public,parameter  :: WAVES_RS=1
+   integer,public,parameter  :: WAVES_VF=2
+   integer,public            :: waves_method=NO_WAVES
+   integer,public,parameter  :: WAVES_FROMEXT=0
+   integer,public,parameter  :: WAVES_FROMFILE=1
+   integer,public,parameter  :: WAVES_FROMWIND=2
+   integer,public            :: waves_datasource=WAVES_FROMEXT
+   logical,public            :: new_waves=.false.
+   logical,public            :: new_StokesC=.false.
+   REALTYPE,public,parameter :: kD_max=100*_ONE_
 !
 ! !PRIVATE DATA MEMBERS:
 !

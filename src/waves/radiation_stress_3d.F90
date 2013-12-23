@@ -8,8 +8,12 @@
    subroutine radiation_stress_3d(Dveln,hvel,uuEx,vvEx)
 !
 ! !USES:
-   use domain         , only: imin,imax,jmin,jmax,kmax
-   use variables_waves, only: waveK,waveE,SJJ,khab,layerratios
+   use domain         , only: imin,imax,jmin,jmax,kmax,az
+   use waves          , only: kD_max
+   use variables_waves, only: waveK,waveE
+   use variables_waves, only: SJJ
+   use variables_waves, only: kDveln,mask_kDveln
+   use variables_waves, only: khab,layerratios
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -28,8 +32,8 @@
 !
 ! !LOCAL VARIABLES
    REALTYPE,dimension(I2DFIELD,0:1) :: sinhkhab2
-   REALTYPE,dimension(I2DFIELD)     :: sinhkDvelnm2,SE,gradterms
-   integer                          :: k,km,kp
+   REALTYPE,dimension(I2DFIELD)     :: sinhkDvelnm2,layerratios2,SE,gradterms
+   integer                          :: i,j,k,km,kp
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -40,7 +44,7 @@
    write(debug,*) 'radiation_stress_3d() # ',Ncall
 #endif
 
-   sinhkDvelnm2 = (_ONE_ / sinh(waveK*Dveln))**2
+   sinhkDvelnm2 = (_ONE_ / sinh(kDveln))**2
 
    sinhkhab2(:,:,0) = _ZERO_
    kp = 0
@@ -50,10 +54,22 @@
 
       km = kp
       kp = 1 - kp
-      sinhkhab2(:,:,kp) = sinh(khab(:,:,k))**2
+
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if ( az(i,j) .gt. 0 ) then
+               if ( mask_kDveln(i,j) ) then
+                  sinhkhab2   (i,j,kp) = sinh(khab(i,j,k))**2
+                  layerratios2(i,j) = ( sinhkhab2(i,j,kp) - sinhkhab2(i,j,km) ) * sinhkDvelnm2(i,j)
+               else
+                  layerratios2(i,j) = layerratios(i,j,k)
+               end if
+            end if
+         end do
+      end do
 
       SE  = _HALF_*waveE*layerratios(:,:,k) + hvel(:,:,k)*SJJ
-      gradterms = SE - _HALF_*waveE*( sinhkhab2(:,:,kp) - sinhkhab2(:,:,km) )*sinhkDvelnm2
+      gradterms = SE - _HALF_*waveE*layerratios2
 
       call rs_force(SE,gradterms,uuEx(:,:,k),vvEx(:,:,k))
 
