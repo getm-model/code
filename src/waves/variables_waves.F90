@@ -19,7 +19,8 @@
    REALTYPE,dimension(:,:)  ,allocatable :: waveDir,coswavedir,sinwavedir
    REALTYPE,dimension(:,:)  ,allocatable :: waveH,waveL,waveT,waveK,waveE
    REALTYPE,dimension(:,:)  ,allocatable :: SJ,SJJ
-   REALTYPE,dimension(:,:)  ,allocatable :: sinh2kDvelnm1
+   REALTYPE,dimension(:,:)  ,allocatable :: kDveln,sinh2kDvelnm1
+   logical ,dimension(:,:)  ,allocatable :: mask_kDveln
    REALTYPE,dimension(:,:,:),allocatable :: khab,layerratios
    REALTYPE,dimension(:,:)  ,allocatable :: UStokesC,VStokesC
    REALTYPE,dimension(:,:)  ,allocatable :: UStokes,VStokes
@@ -118,8 +119,14 @@
       allocate(SJJ(I2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_variables_waves: Error allocating memory (SJJ)'
 
+      allocate(kDveln(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_variables_waves: Error allocating memory (kDveln)'
+
       allocate(sinh2kDvelnm1(I2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_variables_waves: Error allocating memory (sinh2kDvelnm1)'
+
+      allocate(mask_kDveln(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_variables_waves: Error allocating memory (mask_kDveln)'
 
       allocate(khab(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'init_variables_waves: Error allocating memory (khab)'
