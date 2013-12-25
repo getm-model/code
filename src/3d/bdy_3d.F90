@@ -100,6 +100,11 @@
 
    LEVEL2 'init_bdy_3d()'
 
+   if (bdy3d .and. runtype.eq.3) then
+      LEVEL3 'reset bdy3d=.false. in runtype=3'
+      bdy3d = .false.
+   end if
+
    if (bdy3d) then
       do l=1,nbdy
          if (bdy3d_active(bdy_3d_type(l))) then
@@ -112,7 +117,7 @@
       end if
    else
       do l=1,nbdy
-         if (bdy3d_active(bdy_3d_type(l))) then
+         if (bdy3d_active(bdy_3d_type(l)) .or. runtype.eq.3) then
             LEVEL3 'bdy3d=F resets local 3D bdy #',l
             LEVEL4 'old: ',trim(bdy_3d_desc(bdy_3d_type(l)))
             bdy_3d_type(l) = CONSTANT
