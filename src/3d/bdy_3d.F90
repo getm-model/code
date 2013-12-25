@@ -285,6 +285,12 @@
             do j=wfj(n),wlj(n)
                S(i,j,:) = S(i+1,j,:)
                T(i,j,:) = T(i+1,j,:)
+#ifdef _FABM_
+               if (fabm_calc) then
+                  fabm_pel(i,j,:,:) = fabm_pel(i+1,j,:,:)
+                  fabm_ben(i,j,:) = fabm_ben(i+1,j,:)
+               end if
+#endif
             end do
          case(CLAMPED)
             do j=wfj(n),wlj(n)
@@ -364,6 +370,12 @@
             do i = nfi(n),nli(n)
                S(i,j,:) = S(i,j-1,:)
                T(i,j,:) = T(i,j-1,:)
+#ifdef _FABM_
+               if (fabm_calc) then
+                  fabm_pel(i,j,:,:) = fabm_pel(i,j-1,:,:)
+                  fabm_ben(i,j,:) = fabm_ben(i,j-1,:)
+               end if
+#endif
             end do
          case(CLAMPED)
             do i = nfi(n),nli(n)
@@ -434,6 +446,12 @@
             do j=efj(n),elj(n)
                S(i,j,:) = S(i-1,j,:)
                T(i,j,:) = T(i-1,j,:)
+#ifdef _FABM_
+               if (fabm_calc) then
+                  fabm_pel(i,j,:,:) = fabm_pel(i-1,j,:,:)
+                  fabm_ben(i,j,:) = fabm_ben(i-1,j,:)
+               end if
+#endif
             end do
          case(CLAMPED)
             do j=efj(n),elj(n)
@@ -504,6 +522,12 @@
             do i = sfi(n),sli(n)
                S(i,j,:) = S(i,j+1,:)
                T(i,j,:) = T(i,j+1,:)
+#ifdef _FABM_
+               if (fabm_calc) then
+                  fabm_pel(i,j,:,:) = fabm_pel(i,j+1,:,:)
+                  fabm_ben(i,j,:) = fabm_ben(i,j+1,:)
+               end if
+#endif
             end do
          case(CLAMPED)
             do i = sfi(n),sli(n)
