@@ -579,12 +579,8 @@
                            T(i+ii,j,:) = sp(ii)*T(i,j,:)+(_ONE_-sp(ii))*T(i+ii,j,:)
 #ifdef _FABM_
                            if (fabm_calc) then
-                              do o=1,size(model%info%state_variables)
-                                 if (have_bio_bdy_values(o) .eq. 1) then
-                                    fabm_pel(i+ii,j,:,o) = sp(ii)*fabm_pel(i,j,:,o) &
-                                                        +(_ONE_-sp(ii))*fabm_pel(i+ii,j,:,o)
-                                 end if
-                              end do
+                              fabm_pel(i+ii,j,:,:) = sp(ii)*fabm_pel(i,j,:,:) &
+                                                  +(_ONE_-sp(ii))*fabm_pel(i+ii,j,:,:)
                            end if
 #endif
                         else
@@ -608,12 +604,8 @@
                            T(i,j-jj,:) = sp(jj)*T(i,j,:)+(_ONE_-sp(jj))*T(i,j-jj,:)
 #ifdef _FABM_
                            if (fabm_calc) then
-                              do o=1,size(model%info%state_variables)
-                                 if (have_bio_bdy_values(o) .eq. 1) then
-                                    fabm_pel(i,j-jj,:,o) = sp(jj)*fabm_pel(i,j,:,o) &
-                                                        +(_ONE_-sp(jj))*fabm_pel(i,j-jj,:,o)
-                                 end if
-                              end do
+                              fabm_pel(i,j-jj,:,:) = sp(jj)*fabm_pel(i,j,:,:) &
+                                                  +(_ONE_-sp(jj))*fabm_pel(i,j-jj,:,:)
                            end if
 #endif
                         else
@@ -637,12 +629,8 @@
                            T(i-ii,j,:) = sp(ii)*T(i,j,:)+(_ONE_-sp(ii))*T(i-ii,j,:)
 #ifdef _FABM_
                            if (fabm_calc) then
-                              do o=1,size(model%info%state_variables)
-                                 if (have_bio_bdy_values(o) .eq. 1) then
-                                    fabm_pel(i-ii,j,:,o) = sp(ii)*fabm_pel(i,j,:,o) &
-                                                        +(_ONE_-sp(ii))*fabm_pel(i-ii,j,:,o)
-                                 end if
-                              end do
+                              fabm_pel(i-ii,j,:,:) = sp(ii)*fabm_pel(i,j,:,:) &
+                                                  +(_ONE_-sp(ii))*fabm_pel(i-ii,j,:,:)
                            end if
 #endif
                         else
@@ -666,12 +654,8 @@
                            T(i,j+jj,:) = sp(jj)*T(i,j,:)+(_ONE_-sp(jj))*T(i,j+jj,:)
 #ifdef _FABM_
                            if (fabm_calc) then
-                              do o=1,size(model%info%state_variables)
-                                 if (have_bio_bdy_values(o) .eq. 1) then
-                                    fabm_pel(i,j+jj,:,o) = sp(jj)*fabm_pel(i,j,:,o) &
-                                                        +(_ONE_-sp(jj))*fabm_pel(i,j+jj,:,o)
-                                 end if
-                              end do
+                              fabm_pel(i,j+jj,:,:) = sp(jj)*fabm_pel(i,j,:,:) &
+                                                  +(_ONE_-sp(jj))*fabm_pel(i,j+jj,:,:)
                            end if
 #endif
                         else
