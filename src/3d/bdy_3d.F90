@@ -163,26 +163,26 @@
       end if
 
       allocate(bdy_data_S(0:kmax,nsbvl),stat=rc)
-      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (bdy_data_S)'
+      if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_data_S)'
 
       allocate(bdy_data_T(0:kmax,nsbvl),stat=rc)
-      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (bdy_data_T)'
+      if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_data_T)'
 
       allocate(bdyvertS(0:kmax),stat=rc)
-      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (bdyvertS)'
+      if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdyvertS)'
 
       allocate(bdyvertT(0:kmax),stat=rc)
-      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (bdyvertT)'
+      if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdyvertT)'
 
       allocate(rlxcoef(0:kmax),stat=rc)
-      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (rlxcoef)'
+      if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (rlxcoef)'
 
    end if
 
 
    if (bdy3d_sponge_size .gt. 0) then
       allocate(sp(bdy3d_sponge_size),stat=rc)
-      if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (sp)'
+      if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (sp)'
 
 !     Sponge layer factors according to Martinsen and Engedahl, 1987.
 !     Note (KK): factor=1 (bdy cell) does not count for sponge size
