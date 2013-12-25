@@ -30,26 +30,27 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_bdy_3d, do_bdy_3d
-   character(len=PATH_MAX),public      :: bdyfile_3d
-   integer,public                      :: bdyfmt_3d
-   integer,public                      :: bdy3d_ramp
-   integer,public                      :: bdy3d_sponge_size=3
-   logical,public                      :: bdy3d_tmrlx=.false.
-   REALTYPE,public                     :: bdy3d_tmrlx_ucut=_ONE_/50
-   REALTYPE                            :: bdy3d_tmrlx_umin
-   REALTYPE,public                     :: bdy3d_tmrlx_max=_ONE_/4
-   REALTYPE,public                     :: bdy3d_tmrlx_min=_ZERO_
+   character(len=PATH_MAX),public         :: bdyfile_3d
+   integer,public                         :: bdyfmt_3d
+   integer,public                         :: bdy3d_ramp
+   integer,public                         :: bdy3d_sponge_size=3
+   logical,public                         :: bdy3d_tmrlx=.false.
+   REALTYPE,public                        :: bdy3d_tmrlx_ucut=_ONE_/50
+   REALTYPE                               :: bdy3d_tmrlx_umin
+   REALTYPE,public                        :: bdy3d_tmrlx_max=_ONE_/4
+   REALTYPE,public                        :: bdy3d_tmrlx_min=_ZERO_
 
-   REALTYPE,dimension(:,:),allocatable,public :: bdy_data_S,bdy_data_T
+   REALTYPE,dimension(:,:),pointer,public :: bdy_data_S=>null()
+   REALTYPE,dimension(:,:),pointer,public :: bdy_data_T=>null()
 #ifdef _FABM_
-   REALTYPE, public, allocatable       :: bio_bdy(:,:,:)
-   integer, public, allocatable        :: have_bio_bdy_values(:)
+   REALTYPE,allocatable,target,public     :: bio_bdy(:,:,:)
+   integer,allocatable,public             :: have_bio_bdy_values(:)
 #endif
 !
 ! !PRIVATE DATA MEMBERS:
    private bdy3d_active
-   REALTYPE,         allocatable       :: bdyvertS(:), bdyvertT(:)
-   REALTYPE,         allocatable       :: rlxcoef(:),sp(:)
+   private bdy_3d_west,bdy_3d_north,bdy_3d_east,bdy_3d_south
+   REALTYPE,         allocatable       :: sp(:)
 #ifdef _FABM_
    integer                             :: npel=-1,nben=-1
 #endif
@@ -69,7 +70,7 @@
 ! \label{sec-init-bdy-3d}
 !
 ! !INTERFACE:
-   subroutine init_bdy_3d(bdy3d,runtype,hotstart)
+   subroutine init_bdy_3d(bdy3d,runtype,hotstart,calc_salt,calc_temp)
 !
 ! !DESCRIPTION:
 !
@@ -81,13 +82,13 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
-   logical, intent(in)                 :: hotstart
+   logical, intent(in)                 :: hotstart,calc_salt,calc_temp
 !
 ! !INPUT/OUTPUT PARAMETERS:
    logical, intent(inout)              :: bdy3d
 !
 ! !LOCAL VARIABLES:
-   integer                   :: rc,i,j,k,l,n
+   integer                   :: rc,i,l
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -98,12 +99,6 @@
 #endif
 
    LEVEL2 'init_bdy_3d()'
-
-   if (runtype.eq.2) bdy3d=.false.
-   if (bdy3d .and. runtype.eq.3) then
-      LEVEL3 'reset bdy3d=.false. in runtype=3'
-      bdy3d = .false.
-   end if
 
    if (bdy3d) then
       do l=1,nbdy
@@ -162,20 +157,15 @@
          LEVEL3 'bdy3d_tmrlx_umin=  ',bdy3d_tmrlx_umin
       end if
 
-      allocate(bdy_data_S(0:kmax,nsbvl),stat=rc)
-      if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_data_S)'
+      if (calc_salt) then
+         allocate(bdy_data_S(0:kmax,nsbvl),stat=rc)
+         if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_data_S)'
+      end if
 
-      allocate(bdy_data_T(0:kmax,nsbvl),stat=rc)
-      if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_data_T)'
-
-      allocate(bdyvertS(0:kmax),stat=rc)
-      if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdyvertS)'
-
-      allocate(bdyvertT(0:kmax),stat=rc)
-      if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdyvertT)'
-
-      allocate(rlxcoef(0:kmax),stat=rc)
-      if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (rlxcoef)'
+      if (calc_temp) then
+         allocate(bdy_data_T(0:kmax,nsbvl),stat=rc)
+         if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_data_T)'
+      end if
 
    end if
 
@@ -210,7 +200,7 @@
 ! \label{sec-do-bdy-3d}
 !
 ! !INTERFACE:
-   subroutine do_bdy_3d(tag,field)
+   subroutine do_bdy_3d(calc_salt,calc_temp)
 !
 ! !DESCRIPTION:
 !
@@ -230,15 +220,14 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: tag
-!
-! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE, intent(inout)             :: field(I3DFIELD)
+   logical, intent(in)                     :: calc_salt,calc_temp
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k,kl,l,n,o,ii,jj,kk
-   REALTYPE                  :: rat
-   REALTYPE                  :: wsum
+#ifndef _POINTER_REMAP_
+   REALTYPE,dimension(0:kmax,nsbvl),target :: bdy_data
+#endif
+   REALTYPE,dimension(:,:),pointer         :: p_bdy_data
+   integer                                 :: i,j,l,n,o
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -272,425 +261,148 @@
    end select
 #endif
 
+#ifndef _POINTER_REMAP_
+   p_bdy_data => bdy_data
+#endif
+
 #ifndef NO_BAROCLINIC
 
    l = 0
    do n=1,NWB
       l = l+1
-      k = bdy_index(l)
-      kl = bdy_index_l(l)
-      i = wi(n)
-      select case (bdy_3d_type(l))
-         case(ZERO_GRADIENT)
-            do j=wfj(n),wlj(n)
-               S(i,j,:) = S(i+1,j,:)
-               T(i,j,:) = T(i+1,j,:)
+      if (calc_salt) call bdy_3d_west(l,n,bdy_3d_type(l),S,bdy_data_S)
+      if (calc_temp) call bdy_3d_west(l,n,bdy_3d_type(l),T,bdy_data_T)
 #ifdef _FABM_
-               if (fabm_calc) then
-                  fabm_pel(i,j,:,:) = fabm_pel(i+1,j,:,:)
-                  fabm_ben(i,j,:) = fabm_ben(i+1,j,:)
-               end if
+      if (fabm_calc) then
+         i = wi(n)
+         do j=wfj(n),wlj(n)
+            fabm_ben(i,j,:) = fabm_ben(i+1,j,:)
+         end do
+         select case (bdy_3d_type(l))
+            case(ZERO_GRADIENT)
+               do o=1,size(model%info%state_variables)
+                  call bdy_3d_west(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
+               end do
+            case(CLAMPED)
+               do o=1,size(model%info%state_variables)
+                  if (have_bio_bdy_values(o) .eq. 1) then
+#ifdef _POINTER_REMAP_
+                     p_bdy_data(0:,1:) => bio_bdy(:,:,o)
+#else
+                     bdy_data = bio_bdy(:,:,o)
 #endif
-            end do
-         case(CLAMPED)
-            do j=wfj(n),wlj(n)
-               if (az(i,j) .eq. 2) then
-                  if (bdy3d_tmrlx) then
-!                    Temporal relaxation: Weight inner (actual) solution near boundary
-!                    with boundary condition (outer solution.)
-                     wsum = _ZERO_
-                     bdyvertS(:) = _ZERO_
-                     bdyvertT(:) = _ZERO_
-                     do ii=1,bdy3d_sponge_size
-!                       Get (weighted avr of) inner near-bdy solution (sponge) cells:
-                        if(az(i+ii,j) .ne. 0) then
-                           wsum = wsum + sp(ii)
-                           bdyvertS(:) = bdyvertS(:) + sp(ii)*S(i+ii,j,:)
-                           bdyvertT(:) = bdyvertT(:) + sp(ii)*T(i+ii,j,:)
-                        else
-                           exit
-                        end if
-                     end do
-                     if (wsum>_ZERO_) then
-!                       Local temporal relaxation coeficient depends on
-!                       local current just *inside* domain:
-                        do kk=1,kmax
-                           if (uu(i,j,kk).ge.bdy3d_tmrlx_ucut) then
-                              rlxcoef(kk) = bdy3d_tmrlx_max
-                           else if (uu(i,j,kk).le.bdy3d_tmrlx_umin) then
-                              rlxcoef(kk) = bdy3d_tmrlx_min
-                           else
-                              rlxcoef(kk) = (bdy3d_tmrlx_max-bdy3d_tmrlx_min)    &
-                                   *(uu(i,j,kk)-bdy3d_tmrlx_umin)                &
-                                   /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
-                                   + bdy3d_tmrlx_min
-                           end if
-                        end do
-!                       Weight inner and outer (bc) solutions for use
-!                       in spatial relaxation/sponge
-                        S(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
-                        T(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
-                     else
-   !                    No near-bdy points. Just clamp bdy temporally:
-                        S(i,j,:) = bdy_data_S(:,kl)
-                        T(i,j,:) = bdy_data_T(:,kl)
-                     end if
+                     call bdy_3d_west(l,n,CLAMPED,fabm_pel(:,:,:,o),p_bdy_data)
                   else
-!                    No time-relaxation. Just clamp at bondary points.
-                     S(i,j,:) = bdy_data_S(:,kl)
-                     T(i,j,:) = bdy_data_T(:,kl)
+!                    zero gradient when we don't have bdy values
+                     call bdy_3d_west(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
                   end if
-#ifdef _FABM_
-                  if (fabm_calc) then
-                     do o=1,size(model%info%state_variables)
-                        if (have_bio_bdy_values(o) .eq. 1) then
-                           fabm_pel(i,j,:,o) = bio_bdy(:,k,o)
-                        else
-!                          zero gradient when we don't have bdy values
-                           fabm_pel(i,j,:,o) = fabm_pel(i+1,j,:,o)
-                        end if
-                     end do
-                     fabm_ben(i,j,:) = fabm_ben(i+1,j,:)
-                  end if
+               end do
+         end select
+      end if
 #endif
-               end if
-               k = k+1
-               kl = kl + 1
-            end do
-      end select
    end do
 
    do n = 1,NNB
       l = l+1
-      k = bdy_index(l)
-      kl = bdy_index_l(l)
-      j = nj(n)
-      select case (bdy_3d_type(l))
-         case(ZERO_GRADIENT)
-            do i = nfi(n),nli(n)
-               S(i,j,:) = S(i,j-1,:)
-               T(i,j,:) = T(i,j-1,:)
+      if (calc_salt) call bdy_3d_north(l,n,bdy_3d_type(l),S,bdy_data_S)
+      if (calc_temp) call bdy_3d_north(l,n,bdy_3d_type(l),T,bdy_data_T)
 #ifdef _FABM_
-               if (fabm_calc) then
-                  fabm_pel(i,j,:,:) = fabm_pel(i,j-1,:,:)
-                  fabm_ben(i,j,:) = fabm_ben(i,j-1,:)
-               end if
+      if (fabm_calc) then
+         j = nj(n)
+         do i = nfi(n),nli(n)
+            fabm_ben(i,j,:) = fabm_ben(i,j-1,:)
+         end do
+         select case (bdy_3d_type(l))
+            case(ZERO_GRADIENT)
+               do o=1,size(model%info%state_variables)
+                  call bdy_3d_north(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
+               end do
+            case(CLAMPED)
+               do o=1,size(model%info%state_variables)
+                  if (have_bio_bdy_values(o) .eq. 1) then
+#ifdef _POINTER_REMAP_
+                     p_bdy_data(0:,1:) => bio_bdy(:,:,o)
+#else
+                     bdy_data = bio_bdy(:,:,o)
 #endif
-            end do
-         case(CLAMPED)
-            do i = nfi(n),nli(n)
-               if (az(i,j) .eq. 2) then
-                  if (bdy3d_tmrlx) then
-                     wsum = _ZERO_
-                     bdyvertS(:) = _ZERO_
-                     bdyvertT(:) = _ZERO_
-                     do jj=1,bdy3d_sponge_size
-                        if(az(i,j-jj)  .ne. 0) then
-                           wsum = wsum + sp(jj)
-                           bdyvertS(:) = bdyvertS(:) + sp(jj)*S(i,j-jj,:)
-                           bdyvertT(:) = bdyvertT(:) + sp(jj)*T(i,j-jj,:)
-                        else
-                           exit
-                        end if
-                     end do
-                     if (wsum>_ZERO_) then
-                        do kk=1,kmax
-                           if (vv(i,j-1,kk).le.-bdy3d_tmrlx_ucut) then
-                              rlxcoef(kk) = bdy3d_tmrlx_max
-                           else if (vv(i,j-1,kk).ge.-bdy3d_tmrlx_umin) then
-                              rlxcoef(kk) = bdy3d_tmrlx_min
-                           else
-                              rlxcoef(kk) = -(bdy3d_tmrlx_max-bdy3d_tmrlx_min)   &
-                                   *(vv(i,j-1,kk)+bdy3d_tmrlx_umin)              &
-                                   /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
-                                   + bdy3d_tmrlx_min
-                           end if
-                        end do
-                        S(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
-                        T(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
-                     else
-                        S(i,j,:) = bdy_data_S(:,kl)
-                        T(i,j,:) = bdy_data_T(:,kl)
-                     end if
+                     call bdy_3d_north(l,n,CLAMPED,fabm_pel(:,:,:,o),p_bdy_data)
                   else
-                     S(i,j,:) = bdy_data_S(:,kl)
-                     T(i,j,:) = bdy_data_T(:,kl)
+!                    zero gradient when we don't have bdy values
+                     call bdy_3d_north(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
                   end if
-#ifdef _FABM_
-                  if (fabm_calc) then
-                     do o=1,size(model%info%state_variables)
-                        if (have_bio_bdy_values(o) .eq. 1) then
-                           fabm_pel(i,j,:,o) = bio_bdy(:,k,o)
-                        else
-!                          zero gradient when we don't have bdy values
-                           fabm_pel(i,j,:,o) = fabm_pel(i,j-1,:,o)
-                        end if
-                     end do
-                     fabm_ben(i,j,:) = fabm_ben(i,j-1,:)
-                  end if
+               end do
+         end select
+      end if
 #endif
-               end if
-               k = k+1
-               kl = kl + 1
-            end do
-      end select
    end do
 
    do n=1,NEB
       l = l+1
-      k = bdy_index(l)
-      kl = bdy_index_l(l)
-      i = ei(n)
-      select case (bdy_3d_type(l))
-         case(ZERO_GRADIENT)
-            do j=efj(n),elj(n)
-               S(i,j,:) = S(i-1,j,:)
-               T(i,j,:) = T(i-1,j,:)
+      if (calc_salt) call bdy_3d_east(l,n,bdy_3d_type(l),S,bdy_data_S)
+      if (calc_temp) call bdy_3d_east(l,n,bdy_3d_type(l),T,bdy_data_T)
 #ifdef _FABM_
-               if (fabm_calc) then
-                  fabm_pel(i,j,:,:) = fabm_pel(i-1,j,:,:)
-                  fabm_ben(i,j,:) = fabm_ben(i-1,j,:)
-               end if
+      if (fabm_calc) then
+         i = ei(n)
+         do j=efj(n),elj(n)
+            fabm_ben(i,j,:) = fabm_ben(i-1,j,:)
+         end do
+         select case (bdy_3d_type(l))
+            case(ZERO_GRADIENT)
+               do o=1,size(model%info%state_variables)
+                  call bdy_3d_east(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
+               end do
+            case(CLAMPED)
+               do o=1,size(model%info%state_variables)
+                  if (have_bio_bdy_values(o) .eq. 1) then
+#ifdef _POINTER_REMAP_
+                     p_bdy_data(0:,1:) => bio_bdy(:,:,o)
+#else
+                     bdy_data = bio_bdy(:,:,o)
 #endif
-            end do
-         case(CLAMPED)
-            do j=efj(n),elj(n)
-               if (az(i,j) .eq. 2) then
-                  if (bdy3d_tmrlx) then
-                     wsum = _ZERO_
-                     bdyvertS(:) = _ZERO_
-                     bdyvertT(:) = _ZERO_
-                     do ii=1,bdy3d_sponge_size
-                        if(az(i-ii,j) .ne. 0) then
-                           wsum = wsum + sp(ii)
-                           bdyvertS(:) = bdyvertS(:) + sp(ii)*S(i-ii,j,:)
-                           bdyvertT(:) = bdyvertT(:) + sp(ii)*T(i-ii,j,:)
-                        else
-                           exit
-                        end if
-                     end do
-                     if (wsum>_ZERO_) then
-                        do kk=1,kmax
-                           if (uu(i-1,j,kk).le.-bdy3d_tmrlx_ucut) then
-                              rlxcoef(kk) = bdy3d_tmrlx_max
-                           else if (uu(i-1,j,kk).ge.-bdy3d_tmrlx_umin) then
-                              rlxcoef(kk) = bdy3d_tmrlx_min
-                           else
-                              rlxcoef(kk) = -(bdy3d_tmrlx_max-bdy3d_tmrlx_min)   &
-                                   *(uu(i-1,j,kk)+bdy3d_tmrlx_umin)              &
-                                   /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
-                                   + bdy3d_tmrlx_min
-                           end if
-                        end do
-                        S(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
-                        T(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
-                     else
-                        S(i,j,:) = bdy_data_S(:,kl)
-                        T(i,j,:) = bdy_data_T(:,kl)
-                     end if
+                     call bdy_3d_east(l,n,CLAMPED,fabm_pel(:,:,:,o),p_bdy_data)
                   else
-                     S(i,j,:) = bdy_data_S(:,kl)
-                     T(i,j,:) = bdy_data_T(:,kl)
+!                    zero gradient when we don't have bdy values
+                     call bdy_3d_east(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
                   end if
-#ifdef _FABM_
-                  if (fabm_calc) then
-                     do o=1,size(model%info%state_variables)
-                        if (have_bio_bdy_values(o) .eq. 1) then
-                           fabm_pel(i,j,:,o) = bio_bdy(:,k,o)
-                        else
-!                          zero gradient when we don't have bdy values
-                           fabm_pel(i,j,:,o) = fabm_pel(i-1,j,:,o)
-                        end if
-                     end do
-                     fabm_ben(i,j,:) = fabm_ben(i-1,j,:)
-                  end if
+               end do
+         end select
+      end if
 #endif
-               end if
-               k = k+1
-               kl = kl + 1
-            end do
-      end select
    end do
 
    do n = 1,NSB
       l = l+1
-      k = bdy_index(l)
-      kl = bdy_index_l(l)
-      j = sj(n)
-      select case (bdy_3d_type(l))
-         case(ZERO_GRADIENT)
-            do i = sfi(n),sli(n)
-               S(i,j,:) = S(i,j+1,:)
-               T(i,j,:) = T(i,j+1,:)
+      if (calc_salt) call bdy_3d_south(l,n,bdy_3d_type(l),S,bdy_data_S)
+      if (calc_temp) call bdy_3d_south(l,n,bdy_3d_type(l),T,bdy_data_T)
 #ifdef _FABM_
-               if (fabm_calc) then
-                  fabm_pel(i,j,:,:) = fabm_pel(i,j+1,:,:)
-                  fabm_ben(i,j,:) = fabm_ben(i,j+1,:)
-               end if
+      if (fabm_calc) then
+         j = sj(n)
+         do i = sfi(n),sli(n)
+            fabm_ben(i,j,:) = fabm_ben(i,j+1,:)
+         end do
+         select case (bdy_3d_type(l))
+            case(ZERO_GRADIENT)
+               do o=1,size(model%info%state_variables)
+                  call bdy_3d_south(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
+               end do
+            case(CLAMPED)
+               do o=1,size(model%info%state_variables)
+                  if (have_bio_bdy_values(o) .eq. 1) then
+#ifdef _POINTER_REMAP_
+                     p_bdy_data(0:,1:) => bio_bdy(:,:,o)
+#else
+                     bdy_data = bio_bdy(:,:,o)
 #endif
-            end do
-         case(CLAMPED)
-            do i = sfi(n),sli(n)
-               if (az(i,j) .eq. 2) then
-                  if (bdy3d_tmrlx) then
-                     wsum = _ZERO_
-                     bdyvertS(:) = _ZERO_
-                     bdyvertT(:) = _ZERO_
-                     do jj=1,bdy3d_sponge_size
-                        if(az(i,j+jj) .ne. 0) then
-                           wsum = wsum + sp(jj)
-                           bdyvertS(:) = bdyvertS(:) + sp(jj)*S(i,j+jj,:)
-                           bdyvertT(:) = bdyvertT(:) + sp(jj)*T(i,j+jj,:)
-                        else
-                           exit
-                        end if
-                     end do
-                     if (wsum>_ZERO_) then
-                        do kk=1,kmax
-                           if (vv(i,j,kk).ge.bdy3d_tmrlx_ucut) then
-                              rlxcoef(kk) = bdy3d_tmrlx_max
-                           else if (vv(i,j,kk).le.bdy3d_tmrlx_umin) then
-                              rlxcoef(kk) = bdy3d_tmrlx_min
-                           else
-                              rlxcoef(kk) = (bdy3d_tmrlx_max-bdy3d_tmrlx_min)    &
-                                   *(vv(i,j,kk)-bdy3d_tmrlx_umin)                &
-                                   /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
-                                   + bdy3d_tmrlx_min
-                           end if
-                        end do
-                        S(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertS(:)/wsum + rlxcoef(:)*bdy_data_S(:,kl)
-                        T(i,j,:) = (_ONE_-rlxcoef(:))*bdyvertT(:)/wsum + rlxcoef(:)*bdy_data_T(:,kl)
-                     else
-                        S(i,j,:) = bdy_data_S(:,kl)
-                        T(i,j,:) = bdy_data_T(:,kl)
-                     end if
+                     call bdy_3d_south(l,n,CLAMPED,fabm_pel(:,:,:,o),p_bdy_data)
                   else
-                     S(i,j,:) = bdy_data_S(:,kl)
-                     T(i,j,:) = bdy_data_T(:,kl)
+!                    zero gradient when we don't have bdy values
+                     call bdy_3d_south(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
                   end if
-#ifdef _FABM_
-                  if (fabm_calc) then
-                     do o=1,size(model%info%state_variables)
-                        if (have_bio_bdy_values(o) .eq. 1) then
-                           fabm_pel(i,j,:,o) = bio_bdy(:,k,o)
-                        else
-!                          zero gradient when we don't have bdy values
-                           fabm_pel(i,j,:,o) = fabm_pel(i,j+1,:,o)
-                        end if
-                     end do
-                     fabm_ben(i,j,:) = fabm_ben(i,j+1,:)
-                  end if
+               end do
+         end select
+      end if
 #endif
-               end if
-               k = k+1
-               kl = kl + 1
-            end do
-      end select
    end do
-
-   if (bdy3d_sponge_size .gt. 0) then
-      l = 0
-      do n = 1,NWB
-         l = l+1
-         select case (bdy_3d_type(l))
-            case (CONSTANT,CLAMPED)
-               i = wi(n)
-               do j = wfj(n),wlj(n)
-                  if (az(i,j) .eq. 2) then
-                     do ii=1,bdy3d_sponge_size
-                        if (az(i+ii,j) .eq. 1) then
-                           S(i+ii,j,:) = sp(ii)*S(i,j,:)+(_ONE_-sp(ii))*S(i+ii,j,:)
-                           T(i+ii,j,:) = sp(ii)*T(i,j,:)+(_ONE_-sp(ii))*T(i+ii,j,:)
-#ifdef _FABM_
-                           if (fabm_calc) then
-                              fabm_pel(i+ii,j,:,:) = sp(ii)*fabm_pel(i,j,:,:) &
-                                                  +(_ONE_-sp(ii))*fabm_pel(i+ii,j,:,:)
-                           end if
-#endif
-                        else
-                           exit
-                        end if
-                     end do
-                  end if
-               end do
-         end select
-      end do
-      do n = 1,NNB
-         l = l+1
-         select case (bdy_3d_type(l))
-            case (CONSTANT,CLAMPED)
-               j = nj(n)
-               do i = nfi(n),nli(n)
-                  if (az(i,j) .eq. 2) then
-                     do jj=1,bdy3d_sponge_size
-                        if (az(i,j-jj) .eq. 1) then
-                           S(i,j-jj,:) = sp(jj)*S(i,j,:)+(_ONE_-sp(jj))*S(i,j-jj,:)
-                           T(i,j-jj,:) = sp(jj)*T(i,j,:)+(_ONE_-sp(jj))*T(i,j-jj,:)
-#ifdef _FABM_
-                           if (fabm_calc) then
-                              fabm_pel(i,j-jj,:,:) = sp(jj)*fabm_pel(i,j,:,:) &
-                                                  +(_ONE_-sp(jj))*fabm_pel(i,j-jj,:,:)
-                           end if
-#endif
-                        else
-                           exit
-                        end if
-                     end do
-                  end if
-               end do
-         end select
-      end do
-      do n = 1,NEB
-         l = l+1
-         select case (bdy_3d_type(l))
-            case (CONSTANT,CLAMPED)
-               i = ei(n)
-               do j = efj(n),elj(n)
-                  if (az(i,j) .eq. 2) then
-                     do ii=1,bdy3d_sponge_size
-                        if (az(i-ii,j) .eq. 1) then
-                           S(i-ii,j,:) = sp(ii)*S(i,j,:)+(_ONE_-sp(ii))*S(i-ii,j,:)
-                           T(i-ii,j,:) = sp(ii)*T(i,j,:)+(_ONE_-sp(ii))*T(i-ii,j,:)
-#ifdef _FABM_
-                           if (fabm_calc) then
-                              fabm_pel(i-ii,j,:,:) = sp(ii)*fabm_pel(i,j,:,:) &
-                                                  +(_ONE_-sp(ii))*fabm_pel(i-ii,j,:,:)
-                           end if
-#endif
-                        else
-                           exit
-                        end if
-                     end do
-                  end if
-               end do
-         end select
-      end do
-      do n = 1,NSB
-         l = l+1
-         select case (bdy_3d_type(l))
-            case (CONSTANT,CLAMPED)
-               j = sj(n)
-               do i = sfi(n),sli(n)
-                  if (az(i,j) .eq. 2) then
-                     do jj=1,bdy3d_sponge_size
-                        if (az(i,j+jj) .eq. 1) then
-                           S(i,j+jj,:) = sp(jj)*S(i,j,:)+(_ONE_-sp(jj))*S(i,j+jj,:)
-                           T(i,j+jj,:) = sp(jj)*T(i,j,:)+(_ONE_-sp(jj))*T(i,j+jj,:)
-#ifdef _FABM_
-                           if (fabm_calc) then
-                              fabm_pel(i,j+jj,:,:) = sp(jj)*fabm_pel(i,j,:,:) &
-                                                  +(_ONE_-sp(jj))*fabm_pel(i,j+jj,:,:)
-                           end if
-#endif
-                        else
-                           exit
-                        end if
-                     end do
-                  end if
-               end do
-         end select
-      end do
-   end if
 
 #ifdef _FABM_
    if (fabm_calc) then
@@ -710,6 +422,430 @@
 #endif
    return
    end subroutine do_bdy_3d
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  bdy_3d_west -
+!
+! !INTERFACE:
+   subroutine bdy_3d_west(l,n,bdy_type,f,bdy_data)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT VARIABLES:
+   integer,intent(in)                                  :: l,n,bdy_type
+   REALTYPE,dimension(:,:),pointer,intent(in),optional :: bdy_data
+!
+! !INPUT/OUTPUT VARIABLES:
+   REALTYPE,dimension(I3DFIELD),intent(inout)          :: f
+!
+! !LOCAL VARIABLES:
+   REALTYPE,dimension(0:kmax) :: bdyvert,rlxcoef
+   REALTYPE                   :: wsum
+   integer                    :: i,k,kl,ii,j,kk
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   i = wi(n)
+
+   select case (bdy_type)
+      case(ZERO_GRADIENT)
+         do j=wfj(n),wlj(n)
+            f(i,j,:) = f(i+1,j,:)
+         end do
+      case(CLAMPED)
+         k = bdy_index(l)
+         kl = bdy_index_l(l)
+         do j=wfj(n),wlj(n)
+            if (az(i,j) .eq. 2) then
+               if (bdy3d_tmrlx) then
+!                 Temporal relaxation: Weight inner (actual) solution near boundary
+!                 with boundary condition (outer solution.)
+                  wsum = _ZERO_
+                  bdyvert(:) = _ZERO_
+                  do ii=1,bdy3d_sponge_size
+!                    Get (weighted avr of) inner near-bdy solution (sponge) cells:
+                     if(az(i+ii,j) .ne. 0) then
+                        wsum = wsum + sp(ii)
+                        bdyvert(:) = bdyvert(:) + sp(ii)*f(i+ii,j,:)
+                     else
+                        exit
+                     end if
+                  end do
+                  if (wsum>_ZERO_) then
+!                    Local temporal relaxation coeficient depends on
+!                    local current just *inside* domain:
+                     do kk=1,kmax
+                        if (uu(i,j,kk).ge.bdy3d_tmrlx_ucut) then
+                           rlxcoef(kk) = bdy3d_tmrlx_max
+                        else if (uu(i,j,kk).le.bdy3d_tmrlx_umin) then
+                           rlxcoef(kk) = bdy3d_tmrlx_min
+                        else
+                           rlxcoef(kk) = (bdy3d_tmrlx_max-bdy3d_tmrlx_min)    &
+                                *(uu(i,j,kk)-bdy3d_tmrlx_umin)                &
+                                /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
+                                + bdy3d_tmrlx_min
+                        end if
+                     end do
+!                    Weight inner and outer (bc) solutions for use
+!                    in spatial relaxation/sponge
+                     f(i,j,:) = (_ONE_-rlxcoef(:))*bdyvert(:)/wsum + rlxcoef(:)*bdy_data(:,kl)
+                  else
+!                    No near-bdy points. Just clamp bdy temporally:
+                     f(i,j,:) = bdy_data(:,kl)
+                  end if
+               else
+!                 No time-relaxation. Just clamp at bondary points.
+                  f(i,j,:) = bdy_data(:,kl)
+               end if
+            end if
+            k = k+1
+            kl = kl + 1
+         end do
+   end select
+
+   if (bdy3d_sponge_size .gt. 0) then
+      select case (bdy_type)
+         case (CONSTANT,CLAMPED)
+            do j = wfj(n),wlj(n)
+               if (az(i,j) .eq. 2) then
+                  do ii=1,bdy3d_sponge_size
+                     if (az(i+ii,j) .eq. 1) then
+                        f(i+ii,j,:) = sp(ii)*f(i,j,:)+(_ONE_-sp(ii))*f(i+ii,j,:)
+                     else
+                        exit
+                     end if
+                  end do
+               end if
+            end do
+      end select
+   end if
+
+   return
+   end subroutine bdy_3d_west
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  bdy_3d_north -
+!
+! !INTERFACE:
+   subroutine bdy_3d_north(l,n,bdy_type,f,bdy_data)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT VARIABLES:
+   integer,intent(in)                                  :: l,n,bdy_type
+   REALTYPE,dimension(:,:),pointer,intent(in),optional :: bdy_data
+!
+! !INPUT/OUTPUT VARIABLES:
+   REALTYPE,dimension(I3DFIELD),intent(inout)          :: f
+!
+! !LOCAL VARIABLES:
+   REALTYPE,dimension(0:kmax) :: bdyvert,rlxcoef
+   REALTYPE                   :: wsum
+   integer                    :: j,k,kl,i,jj,kk
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   j = nj(n)
+
+   select case (bdy_type)
+      case(ZERO_GRADIENT)
+         do i = nfi(n),nli(n)
+            f(i,j,:) = f(i,j-1,:)
+         end do
+      case(CLAMPED)
+         k = bdy_index(l)
+         kl = bdy_index_l(l)
+         do i = nfi(n),nli(n)
+            if (az(i,j) .eq. 2) then
+               if (bdy3d_tmrlx) then
+!                 Temporal relaxation: Weight inner (actual) solution near boundary
+!                 with boundary condition (outer solution.)
+                  wsum = _ZERO_
+                  bdyvert(:) = _ZERO_
+                  do jj=1,bdy3d_sponge_size
+!                    Get (weighted avr of) inner near-bdy solution (sponge) cells:
+                     if(az(i,j-jj) .ne. 0) then
+                        wsum = wsum + sp(jj)
+                        bdyvert(:) = bdyvert(:) + sp(jj)*f(i,j-jj,:)
+                     else
+                        exit
+                     end if
+                  end do
+                  if (wsum>_ZERO_) then
+!                    Local temporal relaxation coeficient depends on
+!                    local current just *inside* domain:
+                     do kk=1,kmax
+                        if (vv(i,j-1,kk).le.-bdy3d_tmrlx_ucut) then
+                           rlxcoef(kk) = bdy3d_tmrlx_max
+                        else if (vv(i,j-1,kk).ge.-bdy3d_tmrlx_umin) then
+                           rlxcoef(kk) = bdy3d_tmrlx_min
+                        else
+                           rlxcoef(kk) = -(bdy3d_tmrlx_max-bdy3d_tmrlx_min)   &
+                                *(vv(i,j-1,kk)+bdy3d_tmrlx_umin)              &
+                                /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
+                                + bdy3d_tmrlx_min
+                        end if
+                     end do
+!                    Weight inner and outer (bc) solutions for use
+!                    in spatial relaxation/sponge
+                     f(i,j,:) = (_ONE_-rlxcoef(:))*bdyvert(:)/wsum + rlxcoef(:)*bdy_data(:,kl)
+                  else
+!                    No near-bdy points. Just clamp bdy temporally:
+                     f(i,j,:) = bdy_data(:,kl)
+                  end if
+               else
+!                 No time-relaxation. Just clamp at bondary points.
+                  f(i,j,:) = bdy_data(:,kl)
+               end if
+            end if
+            k = k+1
+            kl = kl + 1
+         end do
+   end select
+
+   if (bdy3d_sponge_size .gt. 0) then
+      select case (bdy_type)
+         case (CONSTANT,CLAMPED)
+            do i = nfi(n),nli(n)
+               if (az(i,j) .eq. 2) then
+                  do jj=1,bdy3d_sponge_size
+                     if (az(i,j-jj) .eq. 1) then
+                        f(i,j-jj,:) = sp(jj)*f(i,j,:)+(_ONE_-sp(jj))*f(i,j-jj,:)
+                     else
+                        exit
+                     end if
+                  end do
+               end if
+            end do
+      end select
+   end if
+
+   return
+   end subroutine bdy_3d_north
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  bdy_3d_east -
+!
+! !INTERFACE:
+   subroutine bdy_3d_east(l,n,bdy_type,f,bdy_data)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT VARIABLES:
+   integer,intent(in)                                  :: l,n,bdy_type
+   REALTYPE,dimension(:,:),pointer,intent(in),optional :: bdy_data
+!
+! !INPUT/OUTPUT VARIABLES:
+   REALTYPE,dimension(I3DFIELD),intent(inout)          :: f
+!
+! !LOCAL VARIABLES:
+   REALTYPE,dimension(0:kmax) :: bdyvert,rlxcoef
+   REALTYPE                   :: wsum
+   integer                    :: i,k,kl,ii,j,kk
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   i = ei(n)
+
+   select case (bdy_type)
+      case(ZERO_GRADIENT)
+         do j=efj(n),elj(n)
+            f(i,j,:) = f(i-1,j,:)
+         end do
+      case(CLAMPED)
+         k = bdy_index(l)
+         kl = bdy_index_l(l)
+         do j=efj(n),elj(n)
+            if (az(i,j) .eq. 2) then
+               if (bdy3d_tmrlx) then
+!                 Temporal relaxation: Weight inner (actual) solution near boundary
+!                 with boundary condition (outer solution.)
+                  wsum = _ZERO_
+                  bdyvert(:) = _ZERO_
+                  do ii=1,bdy3d_sponge_size
+!                    Get (weighted avr of) inner near-bdy solution (sponge) cells:
+                     if(az(i-ii,j) .ne. 0) then
+                        wsum = wsum + sp(ii)
+                        bdyvert(:) = bdyvert(:) + sp(ii)*f(i-ii,j,:)
+                     else
+                        exit
+                     end if
+                  end do
+                  if (wsum>_ZERO_) then
+!                    Local temporal relaxation coeficient depends on
+!                    local current just *inside* domain:
+                     do kk=1,kmax
+                        if (uu(i-1,j,kk).le.-bdy3d_tmrlx_ucut) then
+                           rlxcoef(kk) = bdy3d_tmrlx_max
+                        else if (uu(i-1,j,kk).ge.-bdy3d_tmrlx_umin) then
+                           rlxcoef(kk) = bdy3d_tmrlx_min
+                        else
+                           rlxcoef(kk) = -(bdy3d_tmrlx_max-bdy3d_tmrlx_min)   &
+                                *(uu(i-1,j,kk)+bdy3d_tmrlx_umin)              &
+                                /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
+                                + bdy3d_tmrlx_min
+                        end if
+                     end do
+!                    Weight inner and outer (bc) solutions for use
+!                    in spatial relaxation/sponge
+                     f(i,j,:) = (_ONE_-rlxcoef(:))*bdyvert(:)/wsum + rlxcoef(:)*bdy_data(:,kl)
+                  else
+!                    No near-bdy points. Just clamp bdy temporally:
+                     f(i,j,:) = bdy_data(:,kl)
+                  end if
+               else
+!                 No time-relaxation. Just clamp at bondary points.
+                  f(i,j,:) = bdy_data(:,kl)
+               end if
+            end if
+            k = k+1
+            kl = kl + 1
+         end do
+   end select
+
+   if (bdy3d_sponge_size .gt. 0) then
+      select case (bdy_type)
+         case (CONSTANT,CLAMPED)
+            do j = efj(n),elj(n)
+               if (az(i,j) .eq. 2) then
+                  do ii=1,bdy3d_sponge_size
+                     if (az(i-ii,j) .eq. 1) then
+                        f(i-ii,j,:) = sp(ii)*f(i,j,:)+(_ONE_-sp(ii))*f(i-ii,j,:)
+                     else
+                        exit
+                     end if
+                  end do
+               end if
+            end do
+      end select
+   end if
+
+   return
+   end subroutine bdy_3d_east
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  bdy_3d_south -
+!
+! !INTERFACE:
+   subroutine bdy_3d_south(l,n,bdy_type,f,bdy_data)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT VARIABLES:
+   integer,intent(in)                                  :: l,n,bdy_type
+   REALTYPE,dimension(:,:),pointer,intent(in),optional :: bdy_data
+!
+! !INPUT/OUTPUT VARIABLES:
+   REALTYPE,dimension(I3DFIELD),intent(inout)          :: f
+!
+! !LOCAL VARIABLES:
+   REALTYPE,dimension(0:kmax) :: bdyvert,rlxcoef
+   REALTYPE                   :: wsum
+   integer                    :: j,k,kl,i,jj,kk
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   j = sj(n)
+
+   select case (bdy_type)
+      case(ZERO_GRADIENT)
+         do i = sfi(n),sli(n)
+            f(i,j,:) = f(i,j+1,:)
+         end do
+      case(CLAMPED)
+         k = bdy_index(l)
+         kl = bdy_index_l(l)
+         do i = sfi(n),sli(n)
+            if (az(i,j) .eq. 2) then
+               if (bdy3d_tmrlx) then
+!                 Temporal relaxation: Weight inner (actual) solution near boundary
+!                 with boundary condition (outer solution.)
+                  wsum = _ZERO_
+                  bdyvert(:) = _ZERO_
+                  do jj=1,bdy3d_sponge_size
+!                    Get (weighted avr of) inner near-bdy solution (sponge) cells:
+                     if(az(i,j+jj) .ne. 0) then
+                        wsum = wsum + sp(jj)
+                        bdyvert(:) = bdyvert(:) + sp(jj)*f(i,j+jj,:)
+                     else
+                        exit
+                     end if
+                  end do
+                  if (wsum>_ZERO_) then
+!                    Local temporal relaxation coeficient depends on
+!                    local current just *inside* domain:
+                     do kk=1,kmax
+                        if (vv(i,j,kk).ge.bdy3d_tmrlx_ucut) then
+                           rlxcoef(kk) = bdy3d_tmrlx_max
+                        else if (vv(i,j,kk).le.bdy3d_tmrlx_umin) then
+                           rlxcoef(kk) = bdy3d_tmrlx_min
+                        else
+                           rlxcoef(kk) = (bdy3d_tmrlx_max-bdy3d_tmrlx_min)    &
+                                *(vv(i,j,kk)-bdy3d_tmrlx_umin)                &
+                                /(bdy3d_tmrlx_ucut-bdy3d_tmrlx_umin)          &
+                                + bdy3d_tmrlx_min
+                        end if
+                     end do
+!                    Weight inner and outer (bc) solutions for use
+!                    in spatial relaxation/sponge
+                     f(i,j,:) = (_ONE_-rlxcoef(:))*bdyvert(:)/wsum + rlxcoef(:)*bdy_data(:,kl)
+                  else
+!                    No near-bdy points. Just clamp bdy temporally:
+                     f(i,j,:) = bdy_data(:,kl)
+                  end if
+               else
+!                 No time-relaxation. Just clamp at bondary points.
+                  f(i,j,:) = bdy_data(:,kl)
+               end if
+            end if
+            k = k+1
+            kl = kl + 1
+         end do
+   end select
+
+   if (bdy3d_sponge_size .gt. 0) then
+      select case (bdy_type)
+         case (CONSTANT,CLAMPED)
+            do i = nfi(n),nli(n)
+               if (az(i,j) .eq. 2) then
+                  do jj=1,bdy3d_sponge_size
+                     if (az(i,j-jj) .eq. 1) then
+                        f(i,j-jj,:) = sp(jj)*f(i,j,:)+(_ONE_-sp(jj))*f(i,j-jj,:)
+                     else
+                        exit
+                     end if
+                  end do
+               end if
+            end do
+      end select
+   end if
+
+   return
+   end subroutine bdy_3d_south
 !EOC
 !-----------------------------------------------------------------------
 !BOP
