@@ -12,6 +12,7 @@
 !
 ! !USES:
    use ncdf_3d_bdy, only: do_3d_bdy_ncdf
+   use m3d, only: calc_salt,calc_temp
 #ifdef _FABM_
    use getm_fabm, only: fabm_calc
    use ncdf_3d_bio_bdy, only: do_3d_bio_bdy_ncdf
@@ -37,7 +38,9 @@
       case (ASCII)
          STDERR 'should get ASCII boundary data'
       case (NETCDF)
-         call do_3d_bdy_ncdf(n)
+         if (calc_salt .or. calc_temp) then
+            call do_3d_bdy_ncdf(n)
+         end if
 #ifdef _FABM_
          if (fabm_calc) then
             call do_3d_bio_bdy_ncdf(n)
