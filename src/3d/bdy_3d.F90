@@ -100,9 +100,15 @@
 
    LEVEL2 'init_bdy_3d()'
 
-   if (bdy3d .and. runtype.eq.3) then
-      LEVEL3 'reset bdy3d=.false. in runtype=3'
-      bdy3d = .false.
+   if (runtype .eq. 3) then
+      if (bdy3d) then
+         LEVEL3 'reset bdy3d=.false. in runtype=3'
+         bdy3d = .false.
+      end if
+      if (bdy3d_sponge_size .gt. 0) then
+         LEVEL3 'reset bdy3d_sponge_size=0 in runtype=3'
+         bdy3d_sponge_size = 0
+      end if
    end if
 
    if (bdy3d) then
