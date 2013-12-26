@@ -65,7 +65,7 @@
 ! \label{sec-init-bdy-2d}
 !
 ! !INTERFACE:
-   subroutine init_bdy_2d(bdy2d,hotstart)
+   subroutine init_bdy_2d(bdy2d,runtype,hotstart)
 !
 ! !DESCRIPTION:
 !
@@ -73,6 +73,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   integer, intent(in)                 :: runtype
    logical, intent(in)                 :: hotstart
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -111,6 +112,17 @@
                LEVEL4 'new: ',trim(bdy_2d_desc(bdy_2d_type(l)))
          end select
       end do
+   end if
+
+   if (runtype .eq. 3) then
+      if (bdy2d) then
+         LEVEL3 'reset bdy2d=.false. in runtype=3'
+         bdy2d = .false.
+      end if
+      if (bdy2d_sponge_size .gt. 0) then
+         LEVEL3 'reset bdy2d_sponge_size=0 in runtype=3'
+         bdy2d_sponge_size = 0
+      end if
    end if
 
 
@@ -191,7 +203,7 @@
    else
 
       do l=1,nbdy
-         if (bdy2d_active(bdy_2d_type(l))) then
+         if (bdy2d_active(bdy_2d_type(l)) .or. runtype.eq.3) then
             LEVEL3 'bdy2d=F resets local 2D bdy #',l
             LEVEL4 'old: ',trim(bdy_2d_desc(bdy_2d_type(l)))
             bdy_2d_type(l) = CONSTANT
