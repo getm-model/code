@@ -12,6 +12,7 @@
 !
 ! !USES:
    use ncdf_3d_bdy, only: init_3d_bdy_ncdf
+   use m3d, only: calc_salt,calc_temp
 #ifdef _FABM_
    use getm_fabm, only: fabm_calc
    use ncdf_3d_bio_bdy, only: init_3d_bio_bdy_ncdf
@@ -50,8 +51,10 @@
          LEVEL3 'ASCII boundary format'
          stop 'init_3d_bdy'
       case (NETCDF)
-         LEVEL3 'reading from: ',trim(fn)
-         call init_3d_bdy_ncdf(fn,n)
+         if (calc_salt .or. calc_temp) then
+            LEVEL3 'reading from: ',trim(fn)
+            call init_3d_bdy_ncdf(fn,n)
+         end if
 #ifdef _FABM_
          if (fabm_calc) then
             bio_fn='bdy_3d_bio.nc'
