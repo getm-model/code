@@ -248,7 +248,7 @@
    if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
 
    if (have_boundaries) then
-      call init_bdy_3d(bdy3d,runtype,hotstart)
+      call init_bdy_3d(bdy3d,runtype,hotstart,calc_salt,calc_temp)
    else
       bdy3d = .false.
    end if
@@ -574,7 +574,7 @@
 !     operates on individual fields and not as is the case now - on both
 !     T and S.
       call tic(TIM_INTEGR3D)
-      if (have_boundaries) call do_bdy_3d(0,T)
+      if (have_boundaries) call do_bdy_3d(calc_salt,calc_temp)
       if (calc_temp) then
          call tic(TIM_TEMPH)
          call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
