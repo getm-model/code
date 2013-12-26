@@ -288,7 +288,7 @@
    end select
 
    if (have_boundaries) then
-      call init_bdy_2d(bdy2d,hotstart)
+      call init_bdy_2d(bdy2d,runtype,hotstart)
    else
       bdy2d = .false.
    end if
