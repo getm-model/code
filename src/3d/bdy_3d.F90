@@ -841,11 +841,11 @@
    if (bdy3d_sponge_size .gt. 0) then
       select case (bdy_type)
          case (CONSTANT,CLAMPED)
-            do i = nfi(n),nli(n)
+            do i = sfi(n),sli(n)
                if (az(i,j) .eq. 2) then
                   do jj=1,bdy3d_sponge_size
-                     if (az(i,j-jj) .eq. 1) then
-                        f(i,j-jj,:) = sp(jj)*f(i,j,:)+(_ONE_-sp(jj))*f(i,j-jj,:)
+                     if (az(i,j+jj) .eq. 1) then
+                        f(i,j+jj,:) = sp(jj)*f(i,j,:)+(_ONE_-sp(jj))*f(i,j+jj,:)
                      else
                         exit
                      end if
