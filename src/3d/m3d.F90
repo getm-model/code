@@ -691,12 +691,17 @@
       if (calc_stirr) call tracer_stirring()
       if (calc_temp) call do_temperature(n)
       if (calc_salt) call do_salinity(n)
+      call tic(TIM_INTEGR3D)
+   end if
 
 !     The following is a bit clumpsy and should be changed when do_bdy_3d()
 !     operates on individual fields and not as is the case now - on both
 !     T and S.
-      call tic(TIM_INTEGR3D)
+   if(runtype .ne. 3) then
+!     KK-TODO: this should be outside #ifndef NO_BAROCLINIC
       if (have_boundaries) call do_bdy_3d(calc_salt,calc_temp)
+   end if
+   if(runtype .eq. 4) then
       if (calc_temp) then
          call tic(TIM_TEMPH)
          call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
