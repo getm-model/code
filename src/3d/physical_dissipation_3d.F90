@@ -74,6 +74,10 @@
 !           directly in momentum routines
 !           (similar to vsd in MOMENTUM_TERMS)
 
+!  KK-TODO: parts of this should be included into the individual momentum
+!           routines where we can temporarily store [uu|vv]o(0:kmax) and
+!           can then apply the consistent calculation of Burchard (2002)
+
    ! Add Av * ( (du/dz)**2 + (dv/dz)**2 ) on T-POINTS
 #ifndef SLICE_MODEL
    do j=jmin,jmax
