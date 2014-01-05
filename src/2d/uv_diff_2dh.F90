@@ -276,6 +276,7 @@
          if (au(i,j).eq.1 .or. au(i,j).eq.2) then
             UEx(i,j)=UEx(i,j)-(work2d(i+1,j)-work2d(i  ,j))*ARUD1
             if (calc_phydis) then
+!              KK-TODO: conservative average with volume consideration
                phydis_vel(i,j) = _HALF_*(phydis_wrk(i,j)+phydis_wrk(i+1,j))
             end if
          end if
