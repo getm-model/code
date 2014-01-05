@@ -440,7 +440,7 @@
 !  approximation by Soulsby (1997, page 71) (see (18) in Lettmann et al., 2009)
 !  (errors less than 1%)
    if ( omegastar .gt. _ONE_ ) then
-      kD = omegastar**2 * ( _ONE_ + one5th*exp(_TWO_*(_ONE_-omegastar**2) )
+      kD = omegastar**2 * ( _ONE_ + one5th*exp(_TWO_*(_ONE_-omegastar**2)) )
    else
       kD = omegastar * ( _ONE_ + one5th*omegastar**2 )
    end if
