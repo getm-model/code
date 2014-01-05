@@ -349,7 +349,7 @@
 
 
    if (.not.no_2d .and. have_boundaries) then
-      call init_bdy_2d(bdy2d,runtype,hotstart)
+      call init_bdy_2d(bdy2d,hotstart)
    else
       bdy2d = .false.
    end if
