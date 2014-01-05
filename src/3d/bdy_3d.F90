@@ -102,6 +102,8 @@
 
    if (runtype .eq. 3) then
       if (bdy3d) then
+!        KK-TODO: In the present implementation this is redundant
+!                 with the reset of calc_[salt|temp]=F in init_3d().
          LEVEL3 'reset bdy3d=.false. in runtype=3'
          bdy3d = .false.
       end if
