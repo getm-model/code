@@ -34,9 +34,12 @@
    integer,public            :: waves_datasource=WAVES_FROMEXT
    logical,public            :: new_waves=.false.
    logical,public            :: new_StokesC=.false.
-   REALTYPE,public,parameter :: kD_max=100*_ONE_
+!  KK-TODO: this value should be much smaller for computational efficiency
+!           (reduces evaluations of hyperbolic functions)
+   REALTYPE,public,parameter :: kD_deepthresh=100*_ONE_
 !
 ! !PRIVATE DATA MEMBERS:
+   REALTYPE                  :: max_depth_windwaves = -_ONE_
 !
 ! !REVISION HISTORY:
 !  Original author(s): Ulf Graewe
@@ -69,7 +72,7 @@
 ! the simulation.
 !
 ! !LOCAL VARIABLES
-   namelist /waves/ waves_method,waves_datasource
+   namelist /waves/ waves_method,waves_datasource,max_depth_windwaves
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -106,6 +109,11 @@
          if ( .not. metforcing ) then
             stop 'init_waves(): metforcing must be active for WAVES_FROMWIND'
          end if
+         if ( max_depth_windwaves .lt. _ZERO_) then
+            max_depth_windwaves = 99999.0
+         else
+            LEVEL3 'max_depth_windwaves = ',real(max_depth_windwaves)
+         end if
       case default
          stop 'init_waves(): no valid waves_datasource specified'
    end select
@@ -133,7 +141,7 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: waveECm1
-   REALTYPE                     :: wind
+   REALTYPE                     :: wind,depth
    integer                      :: i,j
    REALTYPE,parameter           :: min_wind=_TENTH_
    REALTYPE,parameter           :: pi=3.1415926535897932384626433832795029d0
@@ -161,7 +169,8 @@
                   waveDir(i,j) = atan2(tausy(i,j),tausx(i,j)) ! cartesian convention and in radians
                   wind = sqrt(sqrt(tausx(i,j)**2 + tausy(i,j)**2)/(1.25d-3*1.25))
                   wind = max( min_wind , wind )
-                  waveH(i,j) = wind2waveHeight(wind,D(i,j))
+                  depth = min( D(i,j) , max_depth_windwaves )
+                  waveH(i,j) = wind2waveHeight(wind,depth)
                   waveT(i,j) = wind2wavePeriod(wind,D(i,j))
                   waveK(i,j) = wavePeriod2waveNumber(waveT(i,j),D(i,j))
                   waveL(i,j) = twopi / waveK(i,j)
@@ -413,6 +422,7 @@
    REALTYPE           :: omega,omegastar,kD
    REALTYPE,parameter :: omegastar1_rec = _ONE_/0.8727d0
    REALTYPE,parameter :: slopestar1_rec = _ONE_/0.77572d0
+   REALTYPE,parameter :: one5th = _ONE_/5
    REALTYPE,parameter :: pi=3.1415926535897932384626433832795029d0
 !
 !EOP
@@ -422,15 +432,25 @@
    omega = _TWO_ * pi / period ! radian frequency
    omegastar = omega * sqrt(depth/grav) ! non-dimensional radian frequency
 
-   if ( omegastar .lt. 0.5449d0 ) then
-!     shallow-water approximation
-      kD = omegastar
-   else if ( omegastar .gt. 1.28d0 ) then
-!     deep-water approximation
-      kD = omegastar**2
+!!   approximation by Knut
+!!   (errors less than 5%)
+!   if ( omegastar .gt. 1.28d0 ) then
+!!     deep-water approximation
+!      kD = omegastar**2
+!   else if ( omegastar .lt. 0.5449d0 ) then
+!!     shallow-water approximation
+!      kD = omegastar
+!   else
+!!     tangential approximation in loglog-space for full dispersion relation
+!      kD = (omegastar1_rec * omegastar) ** slopestar1_rec
+!   end if
+
+!  approximation by Soulsby (1997, page 71) (see (18) in Lettmann et al., 2009)
+!  (errors less than 1%)
+   if ( omegastar .gt. _ONE_ ) then
+      kD = omegastar**2 * ( _ONE_ + one5th*exp(_TWO_*(_ONE_-omegastar**2)) )
    else
-!     tangential approximation in loglog-space for full dispersion relation
-      kD = (omegastar1_rec * omegastar) ** slopestar1_rec
+      kD = omegastar * ( _ONE_ + one5th*omegastar**2 )
    end if
 
    wavePeriod2waveNumber = kD / depth
