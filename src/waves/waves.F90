@@ -171,7 +171,7 @@
                   wind = max( min_wind , wind )
                   depth = min( D(i,j) , max_depth_windwaves )
                   waveH(i,j) = wind2waveHeight(wind,depth)
-                  waveT(i,j) = wind2wavePeriod(wind,D(i,j))
+                  waveT(i,j) = wind2wavePeriod(wind,depth)
                   waveK(i,j) = wavePeriod2waveNumber(waveT(i,j),D(i,j))
                   waveL(i,j) = twopi / waveK(i,j)
             end if
