@@ -414,6 +414,7 @@
    REALTYPE,parameter :: sqrtgrav_rec = _ONE_/sqrt(grav)
    REALTYPE,parameter :: omegastar1_rec = _ONE_/0.8727d0
    REALTYPE,parameter :: slopestar1_rec = _ONE_/0.77572d0
+   REALTYPE,parameter :: one5th = _ONE_/5
    REALTYPE,parameter :: pi=3.1415926535897932384626433832795029d0
 !
 !EOP
@@ -423,15 +424,25 @@
    omega = _TWO_ * pi / period ! radian frequency
    omegastar = omega * sqrt(depth) * sqrtgrav_rec ! non-dimensional radian frequency
 
-   if ( omegastar .lt. 0.5449d0 ) then
-!     shallow-water approximation
-      kD = omegastar
-   else if ( omegastar .gt. 1.28d0 ) then
-!     deep-water approximation
-      kD = omegastar**2
+!!   approximation by Knut
+!!   (errors less than 5%)
+!   if ( omegastar .gt. 1.28d0 ) then
+!!     deep-water approximation
+!      kD = omegastar**2
+!   else if ( omegastar .lt. 0.5449d0 ) then
+!!     shallow-water approximation
+!      kD = omegastar
+!   else
+!!     tangential approximation in loglog-space for full dispersion relation
+!      kD = (omegastar1_rec * omegastar) ** slopestar1_rec
+!   end if
+
+!  approximation by Soulsby (1997, page 71) (see (18) in Lettmann et al., 2009)
+!  (errors less than 1%)
+   if ( omegastar .gt. _ONE_ ) then
+      kD = omegastar**2 * ( _ONE_ + one5th*exp(_TWO_*(_ONE_-omegastar**2) )
    else
-!     tangential approximation in loglog-space for full dispersion relation
-      kD = (omegastar1_rec * omegastar) ** slopestar1_rec
+      kD = omegastar * ( _ONE_ + one5th*omegastar**2 )
    end if
 
    wavePeriod2waveNumber = kD / depth
