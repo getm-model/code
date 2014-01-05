@@ -248,6 +248,17 @@
       call preadapt_coordinates(preadapt)
    end if
 
+   if (runtype .eq. 3) then
+      if (calc_salt) then
+         LEVEL2 "reset calc_salt=F in runtype=3 for prognostic integration"
+         calc_salt = .false.
+      end if
+      if (calc_temp) then
+         LEVEL2 "reset calc_temp=F in runtype=3 for prognostic integration"
+         calc_temp = .false.
+      end if
+   end if
+
    if (have_boundaries) then
       call init_bdy_3d(bdy3d,runtype,hotstart,calc_salt,calc_temp)
    else
@@ -664,37 +675,40 @@
    if (do_numerical_analyses_3d) call physical_dissipation_3d()
 
 #ifndef NO_BAROCLINIC
-   if(runtype .eq. 4) then        ! prognostic T and S
-      if (calc_stirr) call tracer_stirring()
-      if (calc_temp) call do_temperature(n)
-      if (calc_salt) call do_salinity(n)
-      call tic(TIM_INTEGR3D)
+!  prognostic T and S
+   if (calc_stirr) call tracer_stirring()
+   if (calc_temp) call do_temperature(n)
+   if (calc_salt) call do_salinity(n)
+#endif
+
+   if (have_boundaries) call do_bdy_3d(calc_salt,calc_temp)
+
+
+#ifndef NO_BAROCLINIC
+
+   call tic(TIM_INTEGR3D)
+
+!  The following is a bit clumpsy and should be changed when do_bdy_3d()
+!  operates on individual fields and not as is the case now - on both
+!  T and S.
+   if (calc_temp) then
+      call tic(TIM_TEMPH)
+      call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
+      call wait_halo(D_TAG)
+      call toc(TIM_TEMPH)
+      call mirror_bdy_3d(T,D_TAG)
+   end if
+   if (calc_salt) then
+      call tic(TIM_SALTH)
+      call update_3d_halo(S,S,az,imin,jmin,imax,jmax,kmax,D_TAG)
+      call wait_halo(D_TAG)
+      call toc(TIM_SALTH)
+      call mirror_bdy_3d(S,D_TAG)
    end if
 
-!     The following is a bit clumpsy and should be changed when do_bdy_3d()
-!     operates on individual fields and not as is the case now - on both
-!     T and S.
-   if(runtype .ne. 3) then
-!     KK-TODO: this should be outside #ifndef NO_BAROCLINIC
-      if (have_boundaries) call do_bdy_3d(calc_salt,calc_temp)
-   end if
-   if(runtype .eq. 4) then
-      if (calc_temp) then
-         call tic(TIM_TEMPH)
-         call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
-         call wait_halo(D_TAG)
-         call toc(TIM_TEMPH)
-         call mirror_bdy_3d(T,D_TAG)
-      end if
-      if (calc_salt) then
-         call tic(TIM_SALTH)
-         call update_3d_halo(S,S,az,imin,jmin,imax,jmax,kmax,D_TAG)
-         call wait_halo(D_TAG)
-         call toc(TIM_SALTH)
-         call mirror_bdy_3d(S,D_TAG)
-      end if
-      call toc(TIM_INTEGR3D)
+   call toc(TIM_INTEGR3D)
 
+   if (runtype .eq. 4) then
       call do_eqstate()
 
 !     KK-TODO: In realistic simulations (baroclinic+gotm) we need NN
