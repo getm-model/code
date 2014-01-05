@@ -12,8 +12,7 @@ MODSRC	= ncdf_common.F90 grid_ncdf.F90 ncdf_2d.F90 ncdf_2d_bdy.F90	\
 
 LIBSRC	= set_attributes.F90 init_grid_ncdf.F90 save_grid_ncdf.F90	\
           init_2d_ncdf.F90 save_2d_ncdf.F90				\
-          init_3d_ncdf.F90 save_3d_ncdf.F90				\
-          get_field_ncdf.F90 read_field_ncdf.F90 ncdf_close.F90		\
+          init_3d_ncdf.F90 save_3d_ncdf.F90 ncdf_close.F90		\
 	  create_restart_ncdf.F90 write_restart_ncdf.F90		\
 	  open_restart_ncdf.F90 read_restart_ncdf.F90			\
 	  init_mean_ncdf.F90 save_mean_ncdf.F90
