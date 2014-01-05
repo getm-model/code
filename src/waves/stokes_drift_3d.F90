@@ -11,10 +11,10 @@
    use halo_zones     , only: U_TAG,V_TAG
    use domain         , only: imin,imax,jmin,jmax,kmax,az,au,av
    use pool           , only: flux_center2interface
-   use waves          , only: waves_method,WAVES_RS,kD_max
+   use waves          , only: waves_method,WAVES_RS,kD_deepthresh
    use variables_waves, only: waveK,waveE
    use variables_waves, only: SJJ
-   use variables_waves, only: kDveln,sinh2kDvelnm1,mask_kDveln
+   use variables_waves, only: kDveln,sinh2kDvelnm1,is_deepwave
    use variables_waves, only: khab,layerratios
    use variables_waves, only: UStokesCadv,VStokesCadv
    use variables_waves, only: uuStokesC,vvStokesC,uuStokes,vvStokes
@@ -59,7 +59,7 @@
 #endif
 
    kDveln = waveK * Dveln
-   mask_kDveln = ( kDveln .lt. kD_max )
+   is_deepwave = ( kDveln .gt. kD_deepthresh )
    sinh2kDvelnm1 = _ONE_ / sinh(_TWO_*kDveln)
 
 !  wave-induced kinematic pressure
@@ -81,12 +81,12 @@
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
             if ( az(i,j) .gt. 0 ) then
-               if ( mask_kDveln(i,j) ) then
-                  sinh2khab  (i,j,kp) = sinh(_TWO_*khab(i,j,k))
-                  layerratios(i,j,k ) = ( sinh2khab(i,j,kp) - sinh2khab(i,j,km) ) * sinh2kDvelnm1(i,j)
-               else
+               if ( is_deepwave(i,j) ) then
                   sinh2khab  (i,j,kp) = exp(_TWO_*(khab(i,j,k)-kDveln(i,j)))
                   layerratios(i,j,k ) = ( sinh2khab(i,j,kp) - sinh2khab(i,j,km) )
+               else
+                  sinh2khab  (i,j,kp) = sinh(_TWO_*khab(i,j,k))
+                  layerratios(i,j,k ) = ( sinh2khab(i,j,kp) - sinh2khab(i,j,km) ) * sinh2kDvelnm1(i,j)
                end if
             end if
          end do

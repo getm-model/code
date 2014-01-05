@@ -9,10 +9,9 @@
 !
 ! !USES:
    use domain         , only: imin,imax,jmin,jmax,kmax,az
-   use waves          , only: kD_max
    use variables_waves, only: waveK,waveE
    use variables_waves, only: SJJ
-   use variables_waves, only: kDveln,mask_kDveln
+   use variables_waves, only: kDveln,is_deepwave
    use variables_waves, only: khab,layerratios
    IMPLICIT NONE
 !
@@ -58,11 +57,11 @@
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
             if ( az(i,j) .gt. 0 ) then
-               if ( mask_kDveln(i,j) ) then
+               if ( is_deepwave(i,j) ) then
+                  layerratios2(i,j) = layerratios(i,j,k)
+               else
                   sinhkhab2   (i,j,kp) = sinh(khab(i,j,k))**2
                   layerratios2(i,j) = ( sinhkhab2(i,j,kp) - sinhkhab2(i,j,km) ) * sinhkDvelnm2(i,j)
-               else
-                  layerratios2(i,j) = layerratios(i,j,k)
                end if
             end if
          end do
