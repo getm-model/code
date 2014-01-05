@@ -79,6 +79,9 @@
       phydis_3d = _ZERO_
    end if
 
+!  KK-TODO: parts of this should be included into the individual momentum
+!           routines where we can temporarily store [uu|vv]o(0:kmax) and
+!           can then apply the consistent calculation of Burchard (2002)
    ! Av * ( (du/dz)**2 + (dv/dz)**2 ) on W-POINTS
    aux(:,:,kmax)=_ZERO_
    aux(:,:,0)   =_ZERO_
