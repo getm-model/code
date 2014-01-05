@@ -34,7 +34,9 @@
    integer,public            :: waves_datasource=WAVES_FROMEXT
    logical,public            :: new_waves=.false.
    logical,public            :: new_StokesC=.false.
-   REALTYPE,public,parameter :: kD_max=100*_ONE_
+!  KK-TODO: this value should be much smaller for computational efficiency
+!           (reduces evaluations of hyperbolic functions)
+   REALTYPE,public,parameter :: kD_deepthresh=100*_ONE_
 !
 ! !PRIVATE DATA MEMBERS:
    REALTYPE                  :: max_depth_windwaves = -_ONE_
