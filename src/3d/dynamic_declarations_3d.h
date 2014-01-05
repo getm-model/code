@@ -5,8 +5,7 @@
   integer, dimension(:,:), allocatable:: kmin,kumin,kvmin
   integer, dimension(:,:), allocatable:: kmin_pmz,kumin_pmz,kvmin_pmz
 
-  REALTYPE, dimension(:,:,:), allocatable   :: uu,vv
-  REALTYPE, dimension(:,:,:), allocatable, target :: ww
+  REALTYPE, dimension(:,:,:), allocatable, target :: uu,vv,ww
 
 #ifdef _MOMENTUM_TERMS_
   REALTYPE, dimension(:,:,:), allocatable, target :: tdv_u,adv_u,vsd_u
