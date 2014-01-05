@@ -37,6 +37,7 @@
    REALTYPE,public,parameter :: kD_max=100*_ONE_
 !
 ! !PRIVATE DATA MEMBERS:
+   REALTYPE                  :: max_depth_windwaves = -_ONE_
 !
 ! !REVISION HISTORY:
 !  Original author(s): Ulf Graewe
@@ -69,7 +70,7 @@
 ! the simulation.
 !
 ! !LOCAL VARIABLES
-   namelist /waves/ waves_method,waves_datasource
+   namelist /waves/ waves_method,waves_datasource,max_depth_windwaves
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -106,6 +107,11 @@
          if ( .not. metforcing ) then
             stop 'init_waves(): metforcing must be active for WAVES_FROMWIND'
          end if
+         if ( max_depth_windwaves .lt. _ZERO_) then
+            max_depth_windwaves = 99999.0
+         else
+            LEVEL3 'max_depth_windwaves = ',real(max_depth_windwaves)
+         end if
       case default
          stop 'init_waves(): no valid waves_datasource specified'
    end select
@@ -133,7 +139,7 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: waveECm1
-   REALTYPE                     :: wind
+   REALTYPE                     :: wind,depth
    integer                      :: i,j
    REALTYPE,parameter           :: min_wind=_TENTH_
    REALTYPE,parameter           :: pi=3.1415926535897932384626433832795029d0
@@ -161,7 +167,8 @@
                   waveDir(i,j) = atan2(tausy(i,j),tausx(i,j)) ! cartesian convention and in radians
                   wind = sqrt(sqrt(tausx(i,j)**2 + tausy(i,j)**2)/(1.25d-3*1.25))
                   wind = max( min_wind , wind )
-                  waveH(i,j) = wind2waveHeight(wind,D(i,j))
+                  depth = min( D(i,j) , max_depth_windwaves )
+                  waveH(i,j) = wind2waveHeight(wind,depth)
                   waveT(i,j) = wind2wavePeriod(wind,D(i,j))
                   waveK(i,j) = wavePeriod2waveNumber(waveT(i,j),D(i,j))
                   waveL(i,j) = twopi / waveK(i,j)
