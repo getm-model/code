@@ -201,6 +201,9 @@
 			<waves_datasource>
 				0
 			</waves_datasource>
+			<max_depth_windwaves>
+				-1.0
+			</max_depth_windwaves>
 		</waves>
 		<rivers>
 			<river_method>

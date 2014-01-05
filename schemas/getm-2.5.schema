@@ -256,6 +256,9 @@
 					<option value="2" label="wave data derived from wind data" />
 				</options>
 			</element>
+			<element name="max_depth_windwaves" type="float" label="truncate depth for wind wave parameterisation" unit="m">
+				<condition type="eq" variable="./waves_datasource" value="2"/>
+			</element>
 		</element>
 
 		<element name="rivers" label="variables related to rivers">
