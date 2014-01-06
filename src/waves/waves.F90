@@ -15,7 +15,7 @@
    use parameters     , only: grav => g
    use exceptions
    use halo_zones     , only: update_2d_halo,wait_halo,H_TAG
-   use domain         , only: imin,imax,jmin,jmax,az
+   use domain         , only: imin,imax,jmin,jmax,kmax,az
    use meteo          , only: metforcing,met_method,tausx,tausy
 
    IMPLICIT NONE
@@ -34,9 +34,13 @@
    integer,public            :: waves_datasource=WAVES_FROMEXT
    logical,public            :: new_waves=.false.
    logical,public            :: new_StokesC=.false.
-!  KK-TODO: this value should be much smaller for computational efficiency
+!  KK-TODO: for computational efficiency this value should be as small as possible
 !           (reduces evaluations of hyperbolic functions)
-   REALTYPE,public,parameter :: kD_deepthresh=100*_ONE_
+!   REALTYPE,public,parameter :: kD_deepthresh=100*_ONE_ ! errors<1% for less than 85 layers
+!   REALTYPE,public,parameter :: kD_deepthresh= 50*_ONE_ ! errors<1% for less than 40 layers
+!   REALTYPE,public,parameter :: kD_deepthresh= 25*_ONE_ ! errors<1% for less than 20 layers
+!   REALTYPE,public,parameter :: kD_deepthresh= 10*_ONE_ ! errors<1% for less than  8 layers
+   REALTYPE,public           :: kD_deepthresh=1.25d0*kmax
 !
 ! !PRIVATE DATA MEMBERS:
    REALTYPE                  :: max_depth_windwaves = -_ONE_
