@@ -91,7 +91,8 @@
    use variables_3d, only: minus_bnh,wco
    use variables_3d, only: uu_0,vv_0
    use variables_3d, only: dt,uu,vv,ww,ho,hn,hvel,hun,hvn,num
-   use m2d, only: no_2d,avmmol
+   use parameters, only: avmmol
+   use m2d, only: no_2d
 #ifndef NO_ADVECT
    use advection, only: NOSPLIT,CENTRAL
    use advection_3d, only: do_advection_3d
