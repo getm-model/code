@@ -5,7 +5,7 @@
 ! !ROUTINE: bottom_friction - calculates the 2D bottom friction.
 !
 ! !INTERFACE:
-   subroutine bottom_friction(U,V,DU,DV,ru,rv,zub,zvb)
+   subroutine bottom_friction(U1,V1,DU1,DV1,Dvel,ru,rv,kwe,zub,zvb,taubmax)
 !  Note (KK): keep in sync with interface in m2d.F90
 !
 ! !DESCRIPTION:
@@ -36,23 +36,28 @@
    use parameters, only: kappa,avmmol
    use domain, only: imin,imax,jmin,jmax,az,au,av
    use domain, only: bottfric_method,cd_min,z0d_iters,zub0,zvb0
+   use waves, only: waves_method,NO_WAVES,bottom_friction_waves
    use getm_timers, only: tic,toc,TIM_BOTTFRIC
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,DU,DV
+   REALTYPE,dimension(E2DFIELD),intent(in) :: U1,V1,DU1,DV1,Dvel
+   logical,intent(in),optional             :: kwe !keyword-enforcer
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(out)          :: ru,rv
-   REALTYPE,dimension(E2DFIELD),intent(out),optional :: zub,zvb
+   REALTYPE,dimension(E2DFIELD),intent(out)                 :: ru,rv
+   REALTYPE,dimension(E2DFIELD),intent(out),target,optional :: zub,zvb
+   REALTYPE,dimension(:,:),pointer,intent(out),optional     :: taubmax
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  !LOCAL VARIABLES:
-   REALTYPE,dimension(E2DFIELD)             :: work2d
+   REALTYPE,dimension(E2DFIELD)             :: work2d,velU,velV
+   REALTYPE,dimension(E2DFIELD),target      :: t_zub,t_zvb
    REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel
+   REALTYPE,dimension(:,:),pointer          :: p_zub,p_zvb
    REALTYPE                                 :: vel,cd,cdsqrt,z0d
    integer                                  :: i,j,it,rc
    logical,save                             :: first=.true.
@@ -83,6 +88,17 @@
          first = .false.
       end if
 
+      if (present(zub)) then
+         p_zub => zub
+      else
+         p_zub => t_zub
+      end if
+      if (present(zvb)) then
+         p_zvb => zvb
+      else
+         p_zvb => t_zvb
+      end if
+
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j)                                         &
 !$OMP          PRIVATE(i,vel,cd,cdsqrt,it,z0d)
@@ -98,7 +114,7 @@
 #endif
          do i=imin-HALO,imax+HALO-1
             if (au(i,j) .ge. 1) then
-               u_vel(i,j) = U(i,j)/DU(i,j)
+               u_vel(i,j) = U1(i,j)/DU1(i,j)
             end if
          end do
 #ifndef SLICE_MODEL
@@ -113,7 +129,7 @@
 #endif
          do i=imin-HALO,imax+HALO
             if (av(i,j) .ge. 1) then
-               v_vel(i,j) = V(i,j)/DV(i,j)
+               v_vel(i,j) = V1(i,j)/DV1(i,j)
             end if
          end do
 #ifndef SLICE_MODEL
@@ -145,21 +161,19 @@
 #endif
          do i=imin-HALO,imax+HALO-1
             if ( au(i,j) .ge. 1 ) then
-               vel = sqrt( u_vel(i,j)**2 + (_HALF_*(work2d(i,j)+work2d(i+1,j)))**2 )
+               velU(i,j) = sqrt( u_vel(i,j)**2 + (_HALF_*(work2d(i,j)+work2d(i+1,j)))**2 )
                z0d = zub0(i,j)
 !              Note (KK): note shifting of log profile so that U(-H)=0
-               cdsqrt = kappa / log( _ONE_ + _HALF_*DU(i,j)/z0d )
-               if (avmmol.gt._ZERO_ .and. vel.gt._ZERO_) then
+               cdsqrt = kappa / log( _ONE_ + _HALF_*DU1(i,j)/z0d )
+               if (avmmol.gt._ZERO_ .and. velU(i,j).gt._ZERO_) then
                   do it=1,z0d_iters
-                     z0d = zub0(i,j) + _TENTH_*avmmol/(cdsqrt*vel)
-                     cdsqrt = kappa / log( _ONE_ + _HALF_*DU(i,j)/z0d )
+                     z0d = zub0(i,j) + _TENTH_*avmmol/(cdsqrt*velU(i,j))
+                     cdsqrt = kappa / log( _ONE_ + _HALF_*DU1(i,j)/z0d )
                   end do
                end if
                cd = max( cd_min , cdsqrt**2) ! see Blumberg and Mellor (1987)
-               ru(i,j) = cd * vel
-               if (present(zub)) then
-                  zub(i,j) = z0d
-               end if
+               ru(i,j) = cd * velU(i,j)
+               p_zub(i,j) = z0d
             end if
          end do
 #ifndef SLICE_MODEL
@@ -197,21 +211,19 @@
 #endif
          do i=imin-HALO+1,imax+HALO-1
             if ( av(i,j) .ge. 1 ) then
-               vel = sqrt( (_HALF_*(work2d(i,j)+work2d(i,j+1)))**2 + v_vel(i,j)**2 )
+               velV(i,j) = sqrt( (_HALF_*(work2d(i,j)+work2d(i,j+1)))**2 + v_vel(i,j)**2 )
                z0d = zvb0(i,j)
 !              Note (KK): note shifting of log profile so that V(-H)=0
-               cdsqrt = kappa / log( _ONE_ + _HALF_*DV(i,j)/z0d )
-               if (avmmol.gt._ZERO_ .and. vel.gt._ZERO_) then
+               cdsqrt = kappa / log( _ONE_ + _HALF_*DV1(i,j)/z0d )
+               if (avmmol.gt._ZERO_ .and. velV(i,j).gt._ZERO_) then
                   do it=1,z0d_iters
-                     z0d = zvb0(i,j) + _TENTH_*avmmol/(cdsqrt*vel)
-                     cdsqrt = kappa / log( _ONE_ + _HALF_*DV(i,j)/z0d )
+                     z0d = zvb0(i,j) + _TENTH_*avmmol/(cdsqrt*velV(i,j))
+                     cdsqrt = kappa / log( _ONE_ + _HALF_*DV1(i,j)/z0d )
                   end do
                end if
                cd = max( cd_min , cdsqrt**2) ! see Blumberg and Mellor (1987)
-               rv(i,j) = cd * vel
-               if (present(zvb)) then
-                  zvb(i,j) = z0d
-               end if
+               rv(i,j) = cd * velV(i,j)
+               p_zvb(i,j) = z0d
             end if
          end do
 #ifndef SLICE_MODEL
@@ -222,17 +234,23 @@
 !$OMP END PARALLEL
 
 #ifdef SLICE_MODEL
-      ru(imin-HALO  :imax+HALO-1,j+1) = ru(imin-HALO  :imax+HALO-1,j)
-      rv(imin-HALO+1:imax+HALO-1,j-1) = rv(imin-HALO+1:imax+HALO-1,j)
-      rv(imin-HALO+1:imax+HALO-1,j+1) = rv(imin-HALO+1:imax+HALO-1,j)
-      if (present(zub)) then
-         zub(imin-HALO  :imax+HALO-1,j+1) = zub(imin-HALO  :imax+HALO-1,j)
-      end if
-      if (present(zvb)) then
-         zvb(imin-HALO+1:imax+HALO-1,j-1) = zvb(imin-HALO+1:imax+HALO-1,j)
-         zvb(imin-HALO+1:imax+HALO-1,j+1) = zvb(imin-HALO+1:imax+HALO-1,j)
-      end if
+      ru   (imin-HALO  :imax+HALO-1,j+1) = ru   (imin-HALO  :imax+HALO-1,j)
+      rv   (imin-HALO+1:imax+HALO-1,j-1) = rv   (imin-HALO+1:imax+HALO-1,j)
+      rv   (imin-HALO+1:imax+HALO-1,j+1) = rv   (imin-HALO+1:imax+HALO-1,j)
+      p_zub(imin-HALO  :imax+HALO-1,j+1) = p_zub(imin-HALO  :imax+HALO-1,j)
+      p_zvb(imin-HALO+1:imax+HALO-1,j-1) = p_zvb(imin-HALO+1:imax+HALO-1,j)
+      p_zvb(imin-HALO+1:imax+HALO-1,j+1) = p_zvb(imin-HALO+1:imax+HALO-1,j)
 #endif
+
+      if (waves_method .ne. NO_WAVES) then
+         call toc(TIM_BOTTFRIC)
+         if (present(taubmax)) then
+            call bottom_friction_waves(U1,V1,DU1,DV1,Dvel,velU,velV,ru,rv,p_zub,p_zvb,taubmax)
+         else
+            call bottom_friction_waves(U1,V1,DU1,DV1,Dvel,velU,velV,ru,rv,p_zub,p_zvb)
+         end if
+         call tic(TIM_BOTTFRIC)
+      end if
 
    end if
 

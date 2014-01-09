@@ -23,6 +23,7 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_waves,do_waves,uv_waves,uv_waves_3d
+   public bottom_friction_waves,wbbl_rdrag
 
    integer,public,parameter  :: NO_WAVES=0
    integer,public,parameter  :: WAVES_RS=1
@@ -32,6 +33,10 @@
    integer,public,parameter  :: WAVES_FROMFILE=1
    integer,public,parameter  :: WAVES_FROMWIND=2
    integer,public            :: waves_datasource=WAVES_FROMEXT
+   integer,public,parameter  :: NO_WBBL=0
+   integer,public,parameter  :: WBBL_DATA2=1
+   integer,public,parameter  :: WBBL_SOULSBY05=2
+   integer,public            :: waves_bbl_method=WBBL_DATA2
    logical,public            :: new_waves=.false.
    logical,public            :: new_StokesC=.false.
 !  KK-TODO: for computational efficiency this value should be as small as possible
@@ -40,7 +45,7 @@
 !   REALTYPE,public,parameter :: kD_deepthresh= 50*_ONE_ ! errors<1% for less than 40 layers
 !   REALTYPE,public,parameter :: kD_deepthresh= 25*_ONE_ ! errors<1% for less than 20 layers
 !   REALTYPE,public,parameter :: kD_deepthresh= 10*_ONE_ ! errors<1% for less than  8 layers
-   REALTYPE,public           :: kD_deepthresh=1.25d0*kmax
+   REALTYPE,public           :: kD_deepthresh
 !
 ! !PRIVATE DATA MEMBERS:
    REALTYPE                  :: max_depth_windwaves = -_ONE_
@@ -52,6 +57,16 @@
 !
 !EOP
 !-----------------------------------------------------------------------
+
+   interface
+      subroutine bottom_friction_waves(U1,V1,DU1,DV1,Dvel,velU,velV,ru,rv,zub,zvb,taubmax)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         REALTYPE,dimension(E2DFIELD),intent(in)    :: U1,V1,DU1,DV1,Dvel,velU,velV
+         REALTYPE,dimension(E2DFIELD),intent(inout) :: ru,rv,zub,zvb
+         REALTYPE,dimension(:,:),pointer,intent(out),optional :: taubmax
+      end subroutine bottom_friction_waves
+   end interface
 
    contains
 
@@ -76,7 +91,8 @@
 ! the simulation.
 !
 ! !LOCAL VARIABLES
-   namelist /waves/ waves_method,waves_datasource,max_depth_windwaves
+   namelist /waves/ waves_method,waves_datasource,max_depth_windwaves, &
+                    waves_bbl_method
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -102,6 +118,7 @@
    end select
 
    call init_variables_waves(runtype)
+   kD_deepthresh=1.25d0*kmax
 
    select case (waves_datasource)
       case(WAVES_FROMEXT)
@@ -120,6 +137,17 @@
          end if
       case default
          stop 'init_waves(): no valid waves_datasource specified'
+   end select
+
+   select case (waves_bbl_method)
+      case (NO_WBBL)
+         LEVEL2 'no wave BBL'
+      case (WBBL_DATA2)
+         LEVEL2 'wave BBL by DATA2 formula (Soulsby, 1995, 1997)'
+      case (WBBL_SOULSBY05)
+         LEVEL2 'wave BBL according to Soulsby & Clarke (2005)'
+      case default
+         stop 'init_waves(): no valid waves_bbl_method specified'
    end select
 
    return
@@ -461,6 +489,55 @@
    wavePeriod2waveNumber = kD / depth
 
    end function wavePeriod2waveNumber
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: wbbl_rdrag - calculates mean bottom friction
+!
+! !INTERFACE:
+   REALTYPE function wbbl_rdrag(tauc,tauw,rdragc,vel,depth,wbbl,z0)
+
+! !USES:
+   use parameters, only: kappa
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   REALTYPE,intent(in) :: tauc,tauw,rdragc,vel,depth,wbbl,z0
+!
+! !DESCRIPTION:
+!  rough => total stress => includes form drag (Whitehouse, 2000, page 57)
+!  smooth => skin-friction
+!
+! !REVISION HISTORY:
+!  Original author(s): Saeed Moghimi
+!                      Ulf Graewe
+!                      Knut Klingbeil
+!
+! !LOCAL VARIABLES:
+   REALTYPE :: taue_vel,lnT1m1,lnT2,T3,A1,A2,cd
+!
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   select case(waves_bbl_method)
+      case (WBBL_DATA2) ! DATA2 formula for rough flow (Soulsby, 1995, 1997)
+         wbbl_rdrag = (_ONE_ + 1.2d0*(tauw/(tauc+tauw))**3.2d0) * rdragc
+      case (WBBL_SOULSBY05) ! Soulsby & Clarke (2005) for rough flow
+         taue_vel = ( tauc**2 + tauw**2 ) ** _QUART_
+!!        extension by Malarkey & Davies (2012)
+!         taue_vel = (tauc**2 + tauw**2 + _TWO_*tauc*tauw*cos(angle))**_QUART_
+         lnT1m1 = _ONE_ / log( wbbl / z0 )
+         lnT2 = log( depth / wbbl )
+         T3 = taue_vel / vel
+         A1 = _HALF_ * T3 * (lnT2-_ONE_) * lnT1m1
+         A2 = kappa * T3 * lnT1m1
+         cd = (sqrt(A1**2 + A2) - A1)**2
+         wbbl_rdrag = cd * vel
+   end select
+
+   end function wbbl_rdrag
 !EOC
 !-----------------------------------------------------------------------
 

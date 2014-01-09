@@ -53,7 +53,8 @@
 
 ! 3D friction in 3D domain
   REALTYPE, dimension(:,:), allocatable     :: rru,rrv,zub,zvb
-  REALTYPE, dimension(:,:), allocatable     :: taus,taubx,tauby,taub
+  REALTYPE, dimension(:,:), allocatable     :: taus,taubx,tauby
+  REALTYPE,dimension(:,:),allocatable,target :: taub
 
 ! attenuation
   REALTYPE, dimension(:,:), allocatable     :: A,g1,g2

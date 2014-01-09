@@ -78,12 +78,14 @@
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: hsd_u,hsd_v
       end subroutine uv_diff_2dh
 
-      subroutine bottom_friction(U,V,DU,DV,ru,rv,zub,zvb)
+      subroutine bottom_friction(U1,V1,DU1,DV1,Dvel,ru,rv,kwe,zub,zvb,taubmax)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,dimension(E2DFIELD),intent(in)           :: U,V,DU,DV
-         REALTYPE,dimension(E2DFIELD),intent(out)          :: ru,rv
-         REALTYPE,dimension(E2DFIELD),intent(out),optional :: zub,zvb
+         REALTYPE,dimension(E2DFIELD),intent(in)  :: U1,V1,DU1,DV1,Dvel
+         REALTYPE,dimension(E2DFIELD),intent(out) :: ru,rv
+         logical,intent(in),optional              :: kwe !keyword-enforcer
+         REALTYPE,dimension(E2DFIELD),intent(out),target,optional :: zub,zvb
+         REALTYPE,dimension(:,:),pointer,intent(out),optional     :: taubmax
       end subroutine bottom_friction
 
 ! Temporary interface (should be read from module):
@@ -560,7 +562,7 @@
    call tic(TIM_INTEGR2D)
 
    if (mod(loop-1,MM) .eq. 0) then        ! MacroMicro time step
-      call bottom_friction(UEuler,VEuler,DU,DV,ru,rv)
+      call bottom_friction(UEuler,VEuler,DU,DV,Dvel,ru,rv)
    end if
 
    call uv_advect(Uf,Vf,U,V,D,Dvel,DU,DV,numdis_2d)
