@@ -17,6 +17,7 @@
    use halo_zones     , only: update_2d_halo,wait_halo,H_TAG
    use domain         , only: imin,imax,jmin,jmax,kmax,az
    use meteo          , only: metforcing,met_method,tausx,tausy
+   use getm_timers    , only: tic,toc,TIM_WAVES
 
    IMPLICIT NONE
    private
@@ -189,6 +190,8 @@
    write(debug,*) 'do_waves() # ',Ncall
 #endif
 
+   call tic(TIM_WAVES)
+
    if (waves_datasource .eq. WAVES_FROMWIND) then
       new_waves = .true.
          do j=jmin-HALO,jmax+HALO
@@ -228,6 +231,7 @@
 
    end if
 
+   call toc(TIM_WAVES)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_waves()'
@@ -266,12 +270,16 @@
    write(debug,*) 'uv_waves() # ',Ncall
 #endif
 
+   call tic(TIM_WAVES)
+
    select case(waves_method)
       case (WAVES_RS)
          call radiation_stress(Dvel,UEx,VEx)
       case (WAVES_VF)
          call vortex_force(UEuler,VEuler,DU,DV,UEx,VEx)
    end select
+
+   call toc(TIM_WAVES)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving uv_waves()'
@@ -311,12 +319,16 @@
    write(debug,*) 'uv_waves_3d() # ',Ncall
 #endif
 
+   call tic(TIM_WAVES)
+
    select case(waves_method)
       case (WAVES_RS)
          call radiation_stress_3d(Dveln,hvel,uuEx,vvEx)
       case (WAVES_VF)
          call vortex_force_3d(uuEuler,vvEuler,hun,hvn,uuEx,vvEx)
    end select
+
+   call toc(TIM_WAVES)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving uv_waves_3d()'

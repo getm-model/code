@@ -18,6 +18,7 @@
    use variables_waves, only: khab,layerratios
    use variables_waves, only: UStokesCadv,VStokesCadv
    use variables_waves, only: uuStokesC,vvStokesC,uuStokes,vvStokes
+   use getm_timers    , only: tic,toc,TIM_WAVES
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -57,6 +58,8 @@
    Ncall = Ncall+1
    write(debug,*) 'stokes_drift_3d() # ',Ncall
 #endif
+
+   call tic(TIM_WAVES)
 
    kDveln = waveK * Dveln
    is_deepwave = ( kDveln .gt. kD_deepthresh )
@@ -143,6 +146,7 @@
 
    end do
 
+   call toc(TIM_WAVES)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving stokes_drift_3d()'
