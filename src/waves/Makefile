@@ -25,7 +25,8 @@ ${LIB}(radiation_stress.o)	\
 ${LIB}(vortex_force.o)		\
 ${LIB}(stokes_drift_3d.o)	\
 ${LIB}(radiation_stress_3d.o)	\
-${LIB}(vortex_force_3d.o)
+${LIB}(vortex_force_3d.o)	\
+${LIB}(bottom_friction_waves.o)
 
 
 all: modules objects
