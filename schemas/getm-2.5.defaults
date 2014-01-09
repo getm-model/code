@@ -40,6 +40,9 @@
 			<kappa>
 				0.4
 			</kappa>
+			<avmmol>
+				1.8e-6
+			</avmmol>
 		</parameters>
 		<time>
 			<timestep>
@@ -256,9 +259,6 @@
 			<vel2d_adv_hor>
 				1
 			</vel2d_adv_hor>
-			<avmmol>
-				1.8e-6
-			</avmmol>
 			<Am_method>
 				0
 			</Am_method>

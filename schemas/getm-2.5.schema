@@ -24,6 +24,7 @@
 			<element name="rho_0" type="float" unit="kg/m³" label="reference density"/>
 			<element name="cp" type="float" unit="J/(kg*K)" label="spec. heat capacity at const. pressure"/>
 			<element name="kappa" type="float" label="von-Karman constant"/>
+			<element name="avmmol" type="float" label="molecular momentum viscosity" unit="m²/s"/>
 		</element>
 
 		<element name="time" label="time related formats and variables">
@@ -360,7 +361,6 @@
 					</option>
 				</options>
 			</element>
-			<element name="avmmol" type="float" label="molecular momentum viscosity" unit="m²/s"/>
 			<element name="Am_method" type="int" label="method for horizontal momentum diffusion coefficient">
 				<options>
 					<option value="0" label="disabled"/>
