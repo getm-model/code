@@ -22,6 +22,7 @@
    REALTYPE :: rho_0 = 1025.0d0
    REALTYPE :: cp = 3985.0d0
    REALTYPE :: kappa = 0.4d0
+   REALTYPE :: avmmol=1.8d-6
 !
 !  Turbulence related constants - see www.gotm.net
 !
@@ -75,6 +76,13 @@
 
    LEVEL2 'cp = ',real(cp)
    LEVEL2 'kappa = ',real(kappa)
+
+   if (avmmol .lt. _ZERO_) then
+      LEVEL2 'setting avmmol to 0.'
+      avmmol = _ZERO_
+   else
+      LEVEL2 'avmmol = ',real(avmmol)
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_parameters()'

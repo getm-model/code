@@ -73,7 +73,7 @@
 !             pressure contributes to slow terms
    if (kmax .gt. 1) then
 
-      call bottom_friction(UEulerAdv,VEulerAdv,Dun,Dvn,ru,rv)
+      call bottom_friction(UEulerAdv,VEulerAdv,Dun,Dvn,Dveln,ru,rv)
       call uv_advect(Uadvf,Vadvf,Uadv,Vadv,Dn,Dveln,Dun,Dvn)
       call uv_diffusion(0,UEulerAdv,VEulerAdv,Dn,Dun,Dvn) ! Has to be called after uv_advect.
       if (waves_method .ne. NO_WAVES) then
