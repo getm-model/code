@@ -492,7 +492,8 @@
       call coordinates(hotstart)
 
       if (vert_cord .eq. _ADAPTIVE_COORDS_) call shear_frequency()
-      call bottom_friction(uuEuler(:,:,1),vvEuler(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv)
+      call bottom_friction(uuEuler(:,:,1),vvEuler(:,:,1),hun(:,:,1),hvn(:,:,1), &
+                           Dveln,rru,rrv)
 
       if (nonhyd_method .eq. 1) then
          call do_internal_pressure(2)
@@ -692,7 +693,8 @@
       end if
 
       call tic(TIM_INTEGR3D)
-      call bottom_friction(uuEuler(:,:,1),vvEuler(:,:,1),hun(:,:,1),hvn(:,:,1),rru,rrv,zub,zvb)
+      call bottom_friction(uuEuler(:,:,1),vvEuler(:,:,1),hun(:,:,1),hvn(:,:,1), &
+                           Dveln,rru,rrv,zub=zub,zvb=zvb,taubmax=taubmax)
       call toc(TIM_INTEGR3D)
       call stresses_3d()
 
