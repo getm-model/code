@@ -49,8 +49,7 @@
 !
 ! !USES:
    use exceptions
-   use parameters, only: g,rho_0
-   use m2d, only: avmmol
+   use parameters, only: g,rho_0,avmmol
    use domain, only: rigid_lid
    use domain, only: imin,imax,jmin,jmax,kmax,H,min_depth
    use domain, only: dry_v,corv,au,av,az,ax

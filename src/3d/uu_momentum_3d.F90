@@ -44,8 +44,7 @@
 !
 ! !USES:
    use exceptions
-   use parameters, only: g,rho_0
-   use m2d, only: avmmol
+   use parameters, only: g,rho_0,avmmol 
    use domain, only: imin,imax,jmin,jmax,kmax,H,min_depth
    use domain, only: dry_u,coru,au,av,az,ax
 #if defined CURVILINEAR || defined SPHERICAL

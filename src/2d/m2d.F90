@@ -100,7 +100,6 @@
    logical                   :: no_2d
    integer                   :: vel2d_adv_split=0
    integer                   :: vel2d_adv_hor=1
-   REALTYPE                  :: avmmol=1.8d-6
    logical                   :: deformC=.false.,deformX=.false.,deformUV=.false.
    integer,parameter         :: NO_AM=0,AM_LAPLACE=1,AM_LES=2,AM_CONSTANT=3
    integer                   :: Am_method=NO_AM
@@ -160,7 +159,7 @@
    character(LEN = PATH_MAX) :: elev_file='elev.nc'
    namelist /m2d/ &
           elev_method,elev_const,elev_file,                       &
-          MM,vel2d_adv_split,vel2d_adv_hor,avmmol,                &
+          MM,vel2d_adv_split,vel2d_adv_hor,                       &
           Am_method,Am_const,An_method,An_const,An_file,          &
           residual,sealevel_check,                                &
           bdy2d,bdyfmt_2d,bdy2d_ramp,bdyfile_2d,bdy2d_sponge_size
@@ -233,12 +232,6 @@
       call depth_update(zo,z,D,Dvel,DU,DV)
    end if
 
-   if (avmmol .lt. _ZERO_) then
-      LEVEL2 'setting avmmol to 0.'
-      avmmol = _ZERO_
-   else
-      LEVEL2 'avmmol = ',real(avmmol)
-   end if
 
    select case (Am_method)
       case(NO_AM)
