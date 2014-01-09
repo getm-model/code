@@ -130,10 +130,12 @@
 #include "dynamic_declarations_3d.h"
 #endif
 
+!  the following fields will be allocated for waves
    REALTYPE, dimension(:,:  ), pointer :: Uadvf=>NULL(),Vadvf=>NULL()
    REALTYPE, dimension(:,:  ), pointer :: UEulerAdv=>NULL(),VEulerAdv=>NULL()
    REALTYPE, dimension(:,:,:), pointer :: uuf=>NULL(),vvf=>NULL()
    REALTYPE, dimension(:,:,:), pointer :: uuEuler=>NULL(),vvEuler=>NULL()
+   REALTYPE, dimension(:,:  ), pointer :: taubmax=>NULL()
 
    REALTYPE,dimension(:,:,:),pointer         :: numdis_3d=>null()
    REALTYPE,dimension(:,:,:),pointer         :: phydis_3d=>null()
@@ -245,6 +247,7 @@
    UEulerAdv => Uadv ; VEulerAdv => Vadv
    uuf       => uu   ; vvf       => vv
    uuEuler   => uu   ; vvEuler   => vv
+   taubmax   => taub
 
 
    if (waves_method .ne. NO_WAVES) then
@@ -265,6 +268,9 @@
          Uadvf => UEulerAdv ; Vadvf => VEulerAdv
          uuf   => uuEuler   ; vvf   => vvEuler
       end if
+
+      allocate(taubmax(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_3d: Error allocating memory (taubmax)'
 
    end if
 
