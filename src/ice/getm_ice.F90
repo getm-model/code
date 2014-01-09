@@ -69,7 +69,7 @@
 !  See log for module.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: rc
+   integer                   :: i,j,rc
    namelist /ice/ ice_method
 !EOP
 !-------------------------------------------------------------------------
@@ -78,37 +78,60 @@
    read(NAMLST,ice)
 
    select case (ice_method)
-         case (0) ! No ice model
-            LEVEL2 'No ice model included'
-         case (1) ! Salinity dependent freezing point
-            LEVEL2 'Freezing point ice model'
-            allocate(ice_mask(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_mask)'
-            ice_mask = _ZERO_
-         case (2) ! Winton
-            LEVEL2 'Winton ice model'
-!           Allocates memory for the public data members
-            allocate(ice_hs(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hs)'
-            ice_hs = _ZERO_
-            allocate(ice_hi(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hi)'
-            ice_hi = _ZERO_
-            allocate(ice_T1(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_T1)'
-            ice_T1 = _ZERO_
-            allocate(ice_T2(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_T2)'
-            ice_T2 = _ZERO_
-            allocate(ice_tmelt(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_tmelt)'
-            ice_tmelt = _ZERO_
-            allocate(ice_bmelt(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_bmelt)'
-            ice_bmelt = _ZERO_
-            allocate(ice_ts(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_ts)'
-            ice_ts = _ZERO_
+      case (0) ! No ice model
+         LEVEL2 'No ice model included'
+      case (1) ! Salinity dependent freezing point
+         LEVEL2 'Freezing point ice model'
+         allocate(ice_mask(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_mask)'
+         do j=jmin,jmax
+            do i=imin,imax
+               if (az(i,j) .ge. 1) then
+                  ice_mask(i,j) = _ZERO_
+               else
+                  ice_mask(i,j) = -9999.
+               end if
+            end do
+         end do
+      case (2) ! Winton
+         LEVEL2 'Winton ice model'
+!        Allocates memory for the public data members
+         allocate(ice_hs(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hs)'
+         allocate(ice_hi(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hi)'
+         allocate(ice_T1(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_T1)'
+         allocate(ice_T2(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_T2)'
+         allocate(ice_tmelt(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_tmelt)'
+         allocate(ice_bmelt(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_bmelt)'
+         allocate(ice_ts(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_ts)'
+
+         do j=jmin,jmax
+            do i=imin,imax
+               if (az(i,j) .ge. 1) then
+                  ice_hs(i,j) = _ZERO_
+                  ice_hi(i,j) = _ZERO_
+                  ice_T1(i,j) = _ZERO_
+                  ice_T2(i,j) = _ZERO_
+                  ice_tmelt(i,j) = _ZERO_
+                  ice_bmelt(i,j) = _ZERO_
+                  ice_ts(i,j) = _ZERO_
+               else
+                  ice_hs(i,j) = -9999.
+                  ice_hi(i,j) = -9999.
+                  ice_T1(i,j) = -9999.
+                  ice_T2(i,j) = -9999.
+                  ice_tmelt(i,j) = -9999.
+                  ice_bmelt(i,j) = -9999.
+                  ice_ts(i,j) = -9999.
+               end if
+            end do
+         end do
       case default
    end select
 
