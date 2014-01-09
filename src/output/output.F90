@@ -18,7 +18,7 @@
 #ifndef NO_3D
    use variables_3d, only: do_numerical_analyses_3d,calc_stirr
    use m3d, only: nonhyd_method
-   use m3d, only: calc_salt,calc_temp
+   use m3d, only: calc_bottfric,calc_salt,calc_temp
 #endif
    use waves, only: waves_method,NO_WAVES
 #ifdef TEST_NESTING
@@ -166,6 +166,7 @@
    end if
 
 #ifndef NO_3D
+   if (save_taub) calc_bottfric = .true.
    if (.not. calc_salt) then
       save_s = .false.
    end if
