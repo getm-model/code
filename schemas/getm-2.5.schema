@@ -259,6 +259,13 @@
 			<element name="max_depth_windwaves" type="float" label="truncate depth for wind wave parameterisation" unit="m">
 				<condition type="eq" variable="./waves_datasource" value="2"/>
 			</element>
+			<element name="waves_bbl_method" type="int" label="wave BBL method">
+				<options>
+					<option value="0" label="no wave BBL" />
+					<option value="1" label="wave BBL by DATA2 formula (Soulsby, 1995, 1997)" />
+					<option value="2" label="wave BBL according to Soulsby and Clarke (2005)" />
+				</options>
+			</element>
 		</element>
 
 		<element name="rivers" label="variables related to rivers">
