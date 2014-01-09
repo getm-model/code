@@ -49,6 +49,7 @@
    use waves, only: uv_waves_3d,waves_method,NO_WAVES
    use variables_waves, only: UStokesC,UStokesCadv,uuStokes
    use variables_waves, only: VStokesC,VStokesCadv,vvStokes
+   use getm_fabm, only: fabm_calc
 !  Necessary to use halo_zones because update_3d_halos() have been moved out
 !  temperature.F90 and salinity.F90 - should be changed at a later stage
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
@@ -58,6 +59,7 @@
 ! !PUBLIC DATA MEMBERS:
    integer                             :: M=1
    logical                             :: calc_ip=.false.
+   logical                             :: calc_bottfric=.false.
    integer                             :: vel3d_adv_split=0
    integer                             :: vel3d_adv_hor=1
    integer                             :: vel3d_adv_ver=1
@@ -317,6 +319,8 @@
    ufirst = ( mod(int(ceiling((_ONE_*MinN)/M)),2) .eq. 1 )
 
 !  must be in postinit because flags are set init_getm_fabm
+   if (kmax.gt.1 .or. fabm_calc) calc_bottfric = .true.
+
 !  KK-TODO: postinit_variables_3d()
 
    if (deformC_3d) then
@@ -656,6 +660,14 @@
 
    call momentum_3d(runtype,n)
 
+   if (calc_bottfric) then
+      call tic(TIM_INTEGR3D)
+      call bottom_friction(uuEuler(:,:,1),vvEuler(:,:,1),hun(:,:,1),hvn(:,:,1), &
+                           Dveln,rru,rrv,zub=zub,zvb=zvb,taubmax=taubmax)
+      call toc(TIM_INTEGR3D)
+      call stresses_3d()
+   end if
+
    if (kmax .gt. 1) then
 !     KK-TODO: In realistic simulations (gotm) we need SS
 !              in any case, therefore it is done here by default.
@@ -684,12 +696,6 @@
 !        add new wave forcing
          call uv_waves_3d(uuEuler,vvEuler,Dveln,hvel,hun,hvn,uuEx,vvEx)
       end if
-
-      call tic(TIM_INTEGR3D)
-      call bottom_friction(uuEuler(:,:,1),vvEuler(:,:,1),hun(:,:,1),hvn(:,:,1), &
-                           Dveln,rru,rrv,zub=zub,zvb=zvb,taubmax=taubmax)
-      call toc(TIM_INTEGR3D)
-      call stresses_3d()
 
 #ifndef CONSTANT_VISCOSITY
       call gotm()
