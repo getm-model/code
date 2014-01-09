@@ -48,7 +48,7 @@
 !
 ! !LOCAL VARIABLES:
    namelist /parameters/ &
-             g,rho_0,cp,kappa
+             g,rho_0,cp,kappa,avmmol
 !EOP
 !-------------------------------------------------------------------------
 !BOC
