@@ -249,7 +249,7 @@
                      taubp = sqrt( taube * taubw(i,j))
                end select
 
-               taubmax(i,j) = taubm**2 + taubp**2 + _TWO_*taubm*taubp*cos(angle)
+               taubmax(i,j) = sqrt( taubm**2 + taubp**2 + _TWO_*taubm*taubp*cos(angle) )
             end if
          end do
 #ifndef SLICE_MODEL
