@@ -22,12 +22,12 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,intent(in)                        :: dt
-   REALTYPE,dimension(I2DFIELD),intent(in)    :: Dveln
-   REALTYPE,dimension(I3DFIELD),intent(in)    :: hvel
+   REALTYPE,intent(in)                     :: dt
+   REALTYPE,dimension(I2DFIELD),intent(in) :: Dveln
+   REALTYPE,dimension(I3DFIELD),intent(in) :: hvel
 !
 ! !INPUT/OUTPUT PARAMETERS:
-   REALTYPE,dimension(I3DFIELD),intent(inout) :: uuEx,vvEx
+   REALTYPE,dimension(I3DFIELD),intent(inout),optional :: uuEx,vvEx
 !
 ! !DESCRIPTION:
 !  Has to be called every 3D timestep after coordinates to take care of
@@ -49,6 +49,7 @@
    REALTYPE,dimension(I2DFIELD)     :: hab
    REALTYPE                         :: dtm1
    integer                          :: i,j,k,km,kp
+   logical                          :: update_uuvvEx
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -99,15 +100,14 @@
 
 
 !  here begins the actual calculation of the layer-integrated Stokes drift
-   dtm1 = _ONE_ / dt
+   update_uuvvEx = (present(uuEx) .and. present(vvEx) .and. waves_method.eq.WAVES_RS)
 
-
-   do k=1,kmax
-
+   if (update_uuvvEx) then
+      dtm1 = _ONE_ / dt
 !     Due to semi-implicit treatment of Eulerian velocity in momentum
 !     routines, for RS the tendency of the Stokes transport is added
 !     as forcing term.
-      if (waves_method .eq. WAVES_RS) then
+      do k=1,kmax
          do j=jmin,jmax
             do i=imin,imax
                if ( au(i,j).eq.1 .or. au(i,j).eq.2 ) then
@@ -118,8 +118,10 @@
                end if
             end do
          end do
-      end if
+      end do
+   end if
 
+   do k=1,kmax
       uuStokesC(:,:,k) = layerratios(:,:,k) * UStokesCadv
       call flux_center2interface(U_TAG,uuStokesC(:,:,k),U_TAG,uuStokes(:,:,k))
       call mirror_bdy_2d(uuStokes(:,:,k),U_TAG)
@@ -127,11 +129,13 @@
       vvStokesC(:,:,k) = layerratios(:,:,k) * VStokesCadv
       call flux_center2interface(V_TAG,vvStokesC(:,:,k),V_TAG,vvStokes(:,:,k))
       call mirror_bdy_2d(vvStokes(:,:,k),V_TAG)
+   end do
 
+   if (update_uuvvEx) then
 !     Due to semi-implicit treatment of Eulerian velocity in momentum
 !     routines, for RS the tendency of the Stokes transport is added
 !     as forcing term.
-      if (waves_method .eq. WAVES_RS) then
+      do k=1,kmax
          do j=jmin,jmax
             do i=imin,imax
                if ( au(i,j).eq.1 .or. au(i,j).eq.2 ) then
@@ -142,9 +146,8 @@
                end if
             end do
          end do
-      end if
-
-   end do
+      end do
+   end if
 
    call toc(TIM_WAVES)
 

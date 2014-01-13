@@ -24,6 +24,7 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_waves,do_waves,uv_waves,uv_waves_3d
+   public stokes_drift_3d
    public bottom_friction_waves,wbbl_rdrag
 
    integer,public,parameter  :: NO_WAVES=0
@@ -60,6 +61,15 @@
 !-----------------------------------------------------------------------
 
    interface
+      subroutine stokes_drift_3d(dt,Dveln,hvel,uuEx,vvEx)
+         use domain, only: imin,imax,jmin,jmax,kmax
+         IMPLICIT NONE
+         REALTYPE,intent(in)                     :: dt
+         REALTYPE,dimension(I2DFIELD),intent(in) :: Dveln
+         REALTYPE,dimension(I3DFIELD),intent(in) :: hvel
+         REALTYPE,dimension(I3DFIELD),intent(inout),optional :: uuEx,vvEx
+      end subroutine stokes_drift_3d
+
       subroutine bottom_friction_waves(U1,V1,DU1,DV1,Dvel,velU,velV,ru,rv,zub,zvb,taubmax)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
