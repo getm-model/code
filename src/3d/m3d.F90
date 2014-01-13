@@ -49,7 +49,9 @@
    use waves, only: waves_method,NO_WAVES,uv_waves_3d,stokes_drift_3d
    use variables_waves, only: UStokesC,UStokesCadv,uuStokes
    use variables_waves, only: VStokesC,VStokesCadv,vvStokes
+#ifdef _FABM_
    use getm_fabm, only: fabm_calc
+#endif
 !  Necessary to use halo_zones because update_3d_halos() have been moved out
 !  temperature.F90 and salinity.F90 - should be changed at a later stage
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
@@ -141,6 +143,9 @@
 #endif
 
    LEVEL1 'init_3d'
+
+   if (kmax .gt. 1) calc_bottfric = .true.
+
 !  Read 3D-model specific things from the namelist.
    read(NAMLST,m3d)
 !   rewind(NAMLST)
@@ -319,7 +324,9 @@
    ufirst = ( mod(int(ceiling((_ONE_*MinN)/M)),2) .eq. 1 )
 
 !  must be in postinit because flags are set init_getm_fabm
-   if (kmax.gt.1 .or. fabm_calc) calc_bottfric = .true.
+#ifdef _FABM_
+   if (fabm_calc) calc_bottfric = .true.
+#endif
 
 !  KK-TODO: postinit_variables_3d()
 
