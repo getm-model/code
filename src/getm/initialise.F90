@@ -46,8 +46,8 @@
    use domain, only: vert_cord,maxdepth
    use time, only: init_time,update_time,write_time_string
    use time, only: start,timestr,timestep
-   use m2d, only: init_2d,postinit_2d
-   use variables_2d, only: Dvel
+   use m2d, only: init_2d,postinit_2d,depth_update
+   use variables_2d, only: zo,z,D,Dvel,DU,DV
    use les, only: init_les
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
 #ifndef NO_3D
@@ -73,7 +73,7 @@
    use rivers, only: init_rivers_bio
 #endif
 #endif
-   use meteo, only: init_meteo,do_meteo
+   use meteo, only: metforcing,met_method,init_meteo,do_meteo
    use waves, only: init_waves,do_waves,waves_method,NO_WAVES
    use integration,  only: MinN,MaxN
    use exceptions
@@ -278,18 +278,27 @@
       MinN = MinN+1
    end if
 
+!  Note (KK): we need Dvel for do_waves()
+!  KK-TODO: we would not need Dvel if we use H for WAVES_FROMWIND
+   call depth_update(zo,z,D,Dvel,DU,DV)
+
    call init_input(input_dir,MinN)
 
    call toc(TIM_INITIALIZE)
 
-   if(runtype .le. 2) then
-      call do_meteo(MinN-1)
+   if (metforcing) then
+      if (met_method .eq. 2) then
+         call get_meteo_data(MinN-1)
+      end if
+      if(runtype .le. 2) then
+         call do_meteo(MinN-1)
 #ifndef NO_3D
 #ifndef NO_BAROCLINIC
-   else
-      call do_meteo(MinN-1,T(:,:,kmax))
+      else
+         call do_meteo(MinN-1,T(:,:,kmax))
 #endif
 #endif
+      end if
    end if
 
    if (waves_method .ne. NO_WAVES) then

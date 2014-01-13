@@ -45,7 +45,7 @@
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
    use bdy_3d, only: bdyfile_3d,bdyfmt_3d,bdy3d_ramp,bdy3d_sponge_size
    use bdy_3d, only: bdy3d_tmrlx, bdy3d_tmrlx_ucut, bdy3d_tmrlx_max, bdy3d_tmrlx_min
-   use waves, only: uv_waves_3d,waves_method,NO_WAVES
+   use waves, only: waves_method,NO_WAVES,uv_waves_3d,stokes_drift_3d
    use variables_waves, only: UStokesC,UStokesCadv,uuStokes
    use variables_waves, only: VStokesC,VStokesCadv,vvStokes
    use getm_fabm, only: fabm_calc
@@ -510,7 +510,7 @@
       if ( .not. hotstart ) then
          UStokesCadv = UStokesC ; VStokesCadv = VStokesC
       end if
-      call stokes_drift_3d(dt,Dveln,hvel,uuEx,vvEx)
+      call stokes_drift_3d(dt,Dveln,hvel) ! do not update [uu|vv]Ex!!!
 !     ...and initialise Eulerian transports accordingly
       uuEuler = uu - uuStokes
       vvEuler = vv - vvStokes
