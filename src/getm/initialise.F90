@@ -72,7 +72,7 @@
    use rivers, only: init_rivers_bio
 #endif
 #endif
-   use meteo, only: init_meteo,do_meteo
+   use meteo, only: metforcing,met_method,init_meteo,do_meteo
    use waves, only: init_waves,do_waves,waves_method,NO_WAVES
    use integration,  only: MinN,MaxN
    use exceptions
@@ -279,14 +279,19 @@
 
    call toc(TIM_INITIALIZE)
 
-   if(runtype .le. 2) then
-      call do_meteo(MinN-1)
+   if (metforcing) then
+      if (met_method .eq. 2) then
+         call get_meteo_data(MinN-1)
+      end if
+      if(runtype .le. 2) then
+         call do_meteo(MinN-1)
 #ifndef NO_3D
 #ifndef NO_BAROCLINIC
-   else
-      call do_meteo(MinN-1,T(:,:,kmax))
+      else
+         call do_meteo(MinN-1,T(:,:,kmax))
 #endif
 #endif
+      end if
    end if
 
    if (waves_method .ne. NO_WAVES) then
