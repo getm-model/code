@@ -16,7 +16,7 @@
    use variables_waves, only: waveH,waveT,waveK,waveDir
    use waves, only: waves_bbl_method,NO_WBBL,WBBL_DATA2,WBBL_SOULSBY05
    use waves, only: wbbl_rdrag
-!   use getm_timers, only: tic,toc,TIM_WAVES
+   use getm_timers, only: tic,toc,TIM_WAVES
 !$ use omp_lib
    IMPLICIT NONE
 !
@@ -65,9 +65,10 @@
 #ifdef SLICE_MODEL
    j = jmax/2 ! this MUST NOT be changed!!!
 #endif
-!   CALL tic(TIM_WAVES)
 
    if (waves_bbl_method .eq. NO_WBBL) return
+
+   call tic(TIM_WAVES)
 
    if (first) then
       allocate(taubcx(E2DFIELD),stat=rc)
@@ -272,7 +273,8 @@
    end if
 #endif
 
-!   CALL toc(TIM_WAVES)
+   call toc(TIM_WAVES)
+
 #ifdef DEBUG
    write(debug,*) 'Leaving bottom_friction_waves()'
    write(debug,*)

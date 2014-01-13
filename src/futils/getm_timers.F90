@@ -93,6 +93,8 @@
    integer, parameter :: TIM_LES2D       = 152  ! do_les_2d
    integer, parameter :: TIM_LES3D       = 153  ! do_les_3d
    integer, parameter :: TIM_SMAG2D      = 154  ! les_smagorinsky
+!  WAVE timers
+   integer, parameter :: TIM_WAVES       = 160  ! waves
    ! This is test timers for temporary coding purposes:
    !  Note: All timers with index 170+ (test_timer_first) are
    !  considered test timers, so dont implement your timers here
@@ -257,6 +259,8 @@
    timernames(TIM_STRCTFRICT)  = 'structure_friction_3d'
 #endif
 #endif
+
+   timernames(TIM_WAVES)       = 'waves'
 
    timernames(TIM_TEST00)  = ' test-00'
    timernames(TIM_TEST01)  = ' test-01'
