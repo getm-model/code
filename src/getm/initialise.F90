@@ -45,8 +45,8 @@
    use domain, only: vert_cord,maxdepth
    use time, only: init_time,update_time,write_time_string
    use time, only: start,timestr,timestep
-   use m2d, only: init_2d,postinit_2d
-   use variables_2d, only: Dvel
+   use m2d, only: init_2d,postinit_2d,depth_update
+   use variables_2d, only: zo,z,D,Dvel,DU,DV
    use les, only: init_les
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
 #ifndef NO_3D
@@ -274,6 +274,10 @@
       LEVEL3 timestr
       MinN = MinN+1
    end if
+
+!  Note (KK): we need Dvel for do_waves()
+!  KK-TODO: we would not need Dvel if we use H for WAVES_FROMWIND
+   call depth_update(zo,z,D,Dvel,DU,DV)
 
    call init_input(input_dir,MinN)
 

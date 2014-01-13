@@ -230,6 +230,7 @@
       zo = z
 !     KK-TODO: check whether we need D[ |U|V] in init_3d
 !              otherwise we can move this call by default to postinit_2d
+!              or initialise()
       call depth_update(zo,z,D,Dvel,DU,DV)
    end if
 
@@ -491,7 +492,8 @@
          end where
       end if
 
-      call depth_update(zo,z,D,Dvel,DU,DV)
+!     Note (KK): moved to initialise()
+!      call depth_update(zo,z,D,Dvel,DU,DV)
 
    end if
 

@@ -214,6 +214,10 @@
                   waveDir(i,j) = atan2(tausy(i,j),tausx(i,j)) ! cartesian convention and in radians
                   wind = sqrt(sqrt(tausx(i,j)**2 + tausy(i,j)**2)/(1.25d-3*1.25))
                   wind = max( min_wind , wind )
+!                 KK-TODO: Or do we want to use H instead of D?
+!                          Then we would not need to call depth_update in
+!                          initialise(). However H does not consider
+!                          min_depth.
                   depth = min( D(i,j) , max_depth_windwaves )
                   waveH(i,j) = wind2waveHeight(wind,depth)
                   waveT(i,j) = wind2wavePeriod(wind,depth)
