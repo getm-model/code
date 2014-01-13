@@ -14,6 +14,7 @@
    use waves          , only: new_StokesC,waves_method,WAVES_RS
    use variables_waves, only: waveE,waveK,SJ
    use variables_waves, only: UStokesC,VStokesC,UStokes,VStokes
+   use getm_timers    , only: tic,toc,TIM_WAVES
    IMPLICIT NONE
 !
 ! !INPUT VARIABLES:
@@ -42,6 +43,8 @@
    Ncall = Ncall+1
    write(debug,*) 'stokes_drift() # ',Ncall
 #endif
+
+   call tic(TIM_WAVES)
 
 !  stokes_drift is called first for each timestep,
 !  so some quantities calculated here are also used later in
@@ -98,6 +101,8 @@
       end if
 
    end if
+
+   call toc(TIM_WAVES)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving stokes_drift()'

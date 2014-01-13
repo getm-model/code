@@ -17,12 +17,14 @@
    use halo_zones     , only: update_2d_halo,wait_halo,H_TAG
    use domain         , only: imin,imax,jmin,jmax,kmax,az
    use meteo          , only: metforcing,met_method,tausx,tausy
+   use getm_timers    , only: tic,toc,TIM_WAVES
 
    IMPLICIT NONE
    private
 !
 ! !PUBLIC DATA MEMBERS:
    public init_waves,do_waves,uv_waves,uv_waves_3d
+   public stokes_drift_3d
    public bottom_friction_waves,wbbl_rdrag
 
    integer,public,parameter  :: NO_WAVES=0
@@ -59,6 +61,15 @@
 !-----------------------------------------------------------------------
 
    interface
+      subroutine stokes_drift_3d(dt,Dveln,hvel,uuEx,vvEx)
+         use domain, only: imin,imax,jmin,jmax,kmax
+         IMPLICIT NONE
+         REALTYPE,intent(in)                     :: dt
+         REALTYPE,dimension(I2DFIELD),intent(in) :: Dveln
+         REALTYPE,dimension(I3DFIELD),intent(in) :: hvel
+         REALTYPE,dimension(I3DFIELD),intent(inout),optional :: uuEx,vvEx
+      end subroutine stokes_drift_3d
+
       subroutine bottom_friction_waves(U1,V1,DU1,DV1,Dvel,velU,velV,ru,rv,zub,zvb,taubmax)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
@@ -189,6 +200,8 @@
    write(debug,*) 'do_waves() # ',Ncall
 #endif
 
+   call tic(TIM_WAVES)
+
    if (waves_datasource .eq. WAVES_FROMWIND) then
       new_waves = .true.
          do j=jmin-HALO,jmax+HALO
@@ -201,6 +214,10 @@
                   waveDir(i,j) = atan2(tausy(i,j),tausx(i,j)) ! cartesian convention and in radians
                   wind = sqrt(sqrt(tausx(i,j)**2 + tausy(i,j)**2)/(1.25d-3*1.25))
                   wind = max( min_wind , wind )
+!                 KK-TODO: Or do we want to use H instead of D?
+!                          Then we would not need to call depth_update in
+!                          initialise(). However H does not consider
+!                          min_depth.
                   depth = min( D(i,j) , max_depth_windwaves )
                   waveH(i,j) = wind2waveHeight(wind,depth)
                   waveT(i,j) = wind2wavePeriod(wind,depth)
@@ -228,6 +245,7 @@
 
    end if
 
+   call toc(TIM_WAVES)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_waves()'
@@ -266,12 +284,16 @@
    write(debug,*) 'uv_waves() # ',Ncall
 #endif
 
+   call tic(TIM_WAVES)
+
    select case(waves_method)
       case (WAVES_RS)
          call radiation_stress(Dvel,UEx,VEx)
       case (WAVES_VF)
          call vortex_force(UEuler,VEuler,DU,DV,UEx,VEx)
    end select
+
+   call toc(TIM_WAVES)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving uv_waves()'
@@ -311,12 +333,16 @@
    write(debug,*) 'uv_waves_3d() # ',Ncall
 #endif
 
+   call tic(TIM_WAVES)
+
    select case(waves_method)
       case (WAVES_RS)
          call radiation_stress_3d(Dveln,hvel,uuEx,vvEx)
       case (WAVES_VF)
          call vortex_force_3d(uuEuler,vvEuler,hun,hvn,uuEx,vvEx)
    end select
+
+   call toc(TIM_WAVES)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving uv_waves_3d()'
