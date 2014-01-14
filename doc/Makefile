@@ -80,7 +80,7 @@ realclean: clean
 	$(RM) *.dvi *.ps *.pdf
 	$(RM) -r html/
 ifdef PROTEXSRC
-	set -e; for i in $(PROTEXSRC); do $(MAKE) -C $(SRCDIR)/$(shell echo $(i) | cut -f 1 -d .) $@; done
+	set -e; for i in $(PROTEXSRC); do $(RM) $(SRCDIR)/$$(echo $$i | cut -f 1 -d .)/doc; done
 endif
 
 distclean: realclean
