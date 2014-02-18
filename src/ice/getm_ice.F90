@@ -18,7 +18,7 @@
    use meteo, only: shf,swr,albedo,precip,evap,tcc,t2,airp,hum,u10,v10,kelvin
    use parameters, only: rho_0
    use variables_3d, only: rho,rho_0,S,T,hn
-   use ice_winton, only: do_ice_winton
+   use ice_winton, only: init_ice_winton, do_ice_winton
    IMPLICIT NONE
 !
    private
@@ -70,11 +70,29 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,rc
-   namelist /ice/ ice_method
+   REALTYPE :: ks, alb_sno, alb_ice, pen_ice, opt_dep_ice, opt_ext_ice, &
+               opt_ext_snow, t_range_melt, h_lo_lim, kmelt, t_range_dhdt
+   namelist /ice/ ice_method, ks, alb_sno, alb_ice, pen_ice, opt_dep_ice, &
+                  opt_ext_ice, opt_ext_snow, t_range_melt, h_lo_lim, kmelt, &
+                  t_range_dhdt
 !EOP
 !-------------------------------------------------------------------------
 !BOC
    LEVEL1 'init_getm_ice'
+   ! initialize namelist variables to reasonable defaults
+   ice_method   = 0
+   ks           = 0.31
+   alb_sno      = 0.85
+   alb_ice      = 0.5826
+   pen_ice      = 0.3
+   opt_dep_ice  = 0.67
+   opt_ext_ice  = 1.5
+   opt_ext_snow = 15.0
+   t_range_melt = _ONE_
+   h_lo_lim     = 0.1
+   kmelt        = 240.0
+   t_range_dhdt = 0.1
+
    read(NAMLST,ice)
 
    select case (ice_method)
@@ -95,6 +113,10 @@
          end do
       case (2) ! Winton
          LEVEL2 'Winton ice model'
+!        Set ice model parameters
+         call  init_ice_winton(ks, alb_sno, alb_ice, pen_ice, &
+               opt_dep_ice, opt_ext_ice, opt_ext_snow, t_range_melt, &
+               h_lo_lim, kmelt, t_range_dhdt)
 !        Allocates memory for the public data members
          allocate(ice_hs(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hs)'
@@ -195,7 +217,15 @@
                          T(i,j,kmax),shf(i,j),swr(i,j),precip(i,j), &
                          ice_hs(i,j),ice_hi(i,j),ice_t1(i,j),ice_t2(i,j), &
                          ice_ts(i,j),albedo(i,j),ice_tmelt(i,j),ice_bmelt(i,j))
-               end if
+               else
+                  ice_hs(i,j) = -9999.
+                  ice_hi(i,j) = -9999.
+                  ice_T1(i,j) = -9999.
+                  ice_T2(i,j) = -9999.
+                  ice_tmelt(i,j) = -9999.
+                  ice_bmelt(i,j) = -9999.
+                  ice_ts(i,j) = -9999.
+              end if
             end do
          end do
       case default
