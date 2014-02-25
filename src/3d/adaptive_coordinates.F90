@@ -55,7 +55,6 @@
    use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn
    use variables_3d, only: kmin_pmz,kumin_pmz,kvmin_pmz
    use variables_3d, only: preadapt
-   use m3d, only: calc_salt, calc_temp, bdy3d
 
 ! ADAPTIVE-BEGIN
    use  parameters,  only: g,rho_0
