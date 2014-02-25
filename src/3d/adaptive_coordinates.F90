@@ -55,7 +55,6 @@
    use variables_3d, only: Dn,Dun,Dvn,sseo,ssen,ssuo,ssvo
    use variables_3d, only: kmin_pmz,kumin_pmz,kvmin_pmz
    use variables_3d, only: preadapt
-   use m3d, only: calc_salt, calc_temp, bdy3d
    use vertical_coordinates,only: restart_with_ho,restart_with_hn
 
 ! ADAPTIVE-BEGIN
