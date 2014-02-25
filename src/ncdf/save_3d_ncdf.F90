@@ -57,7 +57,6 @@
    use getm_fabm,only: phymix_fabm_pel,nummix_fabm_pel
 #endif
    use parameters,   only: g,rho_0
-   use m3d, only: calc_temp,calc_salt
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
