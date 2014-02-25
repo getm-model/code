@@ -20,7 +20,6 @@
    use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
    use domain,       only: H,az,au,av
    use variables_3d, only: kmin
-   use m3d, only: calc_temp,calc_salt
 #ifdef GETM_BIO
    use bio_var, only: numc
 #endif
