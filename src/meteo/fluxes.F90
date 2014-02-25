@@ -112,8 +112,8 @@
       ta_k = airt
    end if
 
-   qh=cd_heat*cpa*rho_air*w*(tw-ta)            ! sensible
-   qe=cd_latent*L*rho_air*w*(qs-qa)            ! latent
+   qe=cd_heat*cpa*rho_air*w*(tw-ta)            ! sensible
+   qh=cd_latent*L*rho_air*w*(qs-qa)            ! latent
 
 #ifndef OLD_WRONG_FLUXES
 !  calculate cloud correction factor North and South are equal
