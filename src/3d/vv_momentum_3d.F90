@@ -93,6 +93,7 @@
    logical,save              :: first=.true.
    logical,save              :: no_shift=.false.
    integer                   :: i,j,k,rc
+   REALTYPE,dimension(I3DFIELD) :: work3d
    REALTYPE, POINTER         :: dif(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
    REALTYPE, POINTER         :: a1(:),a2(:)
@@ -130,7 +131,6 @@
    gammai=_ONE_/gamma
    rho_0i=_ONE_/rho_0
 
-
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j,k,rc,zp,zm,zy,ResInt,Diff,Uloc,cord_curv)         &
 !$OMP    PRIVATE(dif,auxn,auxo,a1,a2,a3,a4,Res,ex)
@@ -166,6 +166,29 @@
 ! Note: We do not need to initialize these work arrays.
 !   Tested BJB 2009-09-25.
 
+!  calculate uu at X-points (needed for Coriolis)
+!  KK-TODO: check whether h[u|v]o should be replaced by h[u|v]n
+   do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin,jmax
+         do i=imin-1,imax
+            if (ax(i,j) .ne. 0) then
+#ifdef NEW_CORI
+! Espelid et al. [2000], IJNME 49, 1521-1545
+               work3d(i,j,k) = _HALF_ * (  uu(i,j  ,k)/sqrt(huo(i,j  ,k)) &
+                                         + uu(i,j+1,k)/sqrt(huo(i,j+1,k)) )
+#else
+               work3d(i,j,k) = _HALF_ * ( uu(i,j,k) + uu(i,j+1,k) )
+#endif
+            else
+               work3d(i,j,k) = _ZERO_
+            end if
+         end do
+      end do
+!$OMP END DO NOWAIT
+   end do
+!$OMP BARRIER
+
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
@@ -175,15 +198,10 @@
             if (kmax .gt. kvmin(i,j)) then
 
                do k=kvmin(i,j),kmax      ! explicit terms
-! Espelid et al. [2000], IJNME 49, 1521-1545
+                  Uloc = _HALF_ * ( work3d(i-1,j,k) + work3d(i,j,k) )
 #ifdef NEW_CORI
-                Uloc=(uu(i  ,j  ,k)/sqrt(huo(i  ,j  ,k))  &
-                     +uu(i-1,j  ,k)/sqrt(huo(i-1,j  ,k))  &
-                     +uu(i  ,j+1,k)/sqrt(huo(i  ,j+1,k))  &
-                     +uu(i-1,j+1,k)/sqrt(huo(i-1,j+1,k))) &
-                     *_QUART_*sqrt(hvo(i,j,k))
-#else
-                Uloc=_QUART_*(uu(i,j,k)+uu(i-1,j,k)+uu(i,j+1,k)+uu(i-1,j+1,k))
+! Espelid et al. [2000], IJNME 49, 1521-1545
+                  Uloc = Uloc * sqrt(hvo(i,j,k))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   cord_curv=(vv(i,j,k)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC))     &
