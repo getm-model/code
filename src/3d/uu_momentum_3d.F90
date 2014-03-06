@@ -82,6 +82,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc
+   REALTYPE,dimension(I3DFIELD) :: work3d
    REALTYPE, POINTER         :: dif(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
    REALTYPE, POINTER         :: a1(:),a2(:)
@@ -104,6 +105,7 @@
 
    gammai=_ONE_/gamma
    rho_0i=_ONE_/rho_0
+
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j,k,rc,zp,zm,zx,ResInt,Diff,Vloc,cord_curv)         &
 !$OMP    PRIVATE(dif,auxn,auxo,a1,a2,a3,a4,Res,ex)
@@ -139,6 +141,29 @@
 ! Note: We do not need to initialize these work arrays.
 !   Tested BJB 2009-09-25.
 
+!  calculate vv at X-points (needed for Coriolis)
+!  KK-TODO: check whether h[u|v]o should be replaced by h[u|v]n
+   do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin-1,jmax
+         do i=imin,imax
+            if (ax(i,j) .ne. 0) then
+#ifdef NEW_CORI
+! Espelid et al. [2000], IJNME 49, 1521-1545
+               work3d(i,j,k) = _HALF_ * (  vv(i  ,j,k)/sqrt(hvo(i  ,j,k)) &
+                                         + vv(i+1,j,k)/sqrt(hvo(i+1,j,k)) )
+#else
+               work3d(i,j,k) = _HALF_ * ( vv(i,j,k) + vv(i+1,j,k) )
+#endif
+            else
+               work3d(i,j,k) = _ZERO_
+            end if
+         end do
+      end do
+!$OMP END DO NOWAIT
+   end do
+!$OMP BARRIER
+
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
@@ -146,15 +171,10 @@
          if (au(i,j) .eq. 1 .or. au(i,j) .eq. 2) then
             if (kmax .gt. kumin(i,j)) then
                do k=kumin(i,j),kmax ! explicit terms
-! Espelid et al. [2000], IJNME 49, 1521-1545
+                  Vloc = _HALF_ * ( work3d(i,j-1,k) + work3d(i,j,k) )
 #ifdef NEW_CORI
-                  Vloc=(vv(i  ,j  ,k)/sqrt(hvo(i  ,j  ,k))   &
-                       +vv(i+1,j  ,k)/sqrt(hvo(i+1,j  ,k))   &
-                       +vv(i  ,j-1,k)/sqrt(hvo(i  ,j-1,k))   &
-                       +vv(i+1,j-1,k)/sqrt(hvo(i+1,j-1,k)))  &
-                       *_QUART_*sqrt(huo(i,j,k))
-#else
-                  Vloc=_QUART_*(vv(i,j,k)+vv(i+1,j,k)+vv(i,j-1,k)+vv(i+1,j-1,k))
+! Espelid et al. [2000], IJNME 49, 1521-1545
+                  Vloc = Vloc * sqrt(huo(i,j,k))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   cord_curv=(Vloc*(DYCIP1-DYC)-uu(i,j,k)*(DXX-DXXJM1))   &
