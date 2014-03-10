@@ -138,6 +138,9 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
+#ifdef NEW_CORI
+   REALTYPE,dimension(E2DFIELD) :: work2d
+#endif
    REALTYPE                  :: zp,zm,zx,tausu,Slr,Vloc,fV
    REALTYPE                  :: gamma=rho_0*g
    REALTYPE                  :: cord_curv=_ZERO_
@@ -153,8 +156,23 @@
 
    gammai = _ONE_/gamma
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zx,tausu,Slr,Vloc,fV)
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zx,tausu,Slr,Vloc,fV,cord_curv)
+
+#ifdef NEW_CORI
+!  Espelid et al. [2000], IJNME 49, 1521-1545
 !$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-1,jmax
+      do i=imin,imax+1
+         if (av(i,j) .ne. 0) then
+            work2d(i,j) = V(i,j)/sqrt(DV(i,j))
+         else
+            work2d(i,j) = _ZERO_
+         end if
+      end do
+   end do
+!$OMP END DO
+#endif
+
    do j=jmin,jmax
       do i=imin,imax
          if ((au(i,j) .eq. 1) .or. (au(i,j) .eq. 2)) then
@@ -169,8 +187,8 @@
 !           Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
             Vloc = &
-            ( V(i,j  )/sqrt(DV(i,j  ))+ V(i+1,j  )/sqrt(DV(i+1,j  )) + &
-              V(i,j-1)/sqrt(DV(i,j-1))+ V(i+1,j-1)/sqrt(DV(i+1,j-1)))  &
+            ( work2d(i,j  )+ work2d(i+1,j  ) + &
+              work2d(i,j-1)+ work2d(i+1,j-1))  &
               *_QUART_*sqrt(DU(i,j))
 #else
             Vloc = _QUART_*( V(i,j-1)+ V(i+1,j-1)+V(i,j)+V(i+1,j))
@@ -297,6 +315,9 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
+#ifdef NEW_CORI
+   REALTYPE,dimension(E2DFIELD) :: work2d
+#endif
    REALTYPE                  :: zp,zm,zy,tausv,Slr,Uloc,fU
    REALTYPE                  :: gamma=rho_0*g
    REALTYPE                  :: cord_curv=_ZERO_
@@ -312,8 +333,23 @@
 
    gammai = _ONE_/gamma
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zy,tausv,Slr,Uloc,fU)
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zy,tausv,Slr,Uloc,fU,cord_curv)
+
+#ifdef NEW_CORI
+!  Espelid et al. [2000], IJNME 49, 1521-1545
 !$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin,jmax+1
+      do i=imin-1,imax
+         if (au(i,j) .ne. 0) then
+            work2d(i,j) = U(i,j)/sqrt(DU(i,j))
+         else
+            work2d(i,j) = _ZERO_
+         end if
+      end do
+   end do
+!$OMP END DO
+#endif
+
    do j=jmin,jmax
       do i=imin,imax
          if ((av(i,j) .eq. 1) .or. (av(i,j) .eq. 2)) then
@@ -321,8 +357,8 @@
 !           Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
             Uloc= &
-             ( U(i,j  )/sqrt(DU(i,j  ))+ U(i-1,j  )/sqrt(DU(i-1,j  ))  &
-             + U(i,j+1)/sqrt(DU(i,j+1))+ U(i-1,j+1)/sqrt(DU(i-1,j+1))) &
+             ( work2d(i,j  )+ work2d(i-1,j  )  &
+             + work2d(i,j+1)+ work2d(i-1,j+1)) &
                *_QUART_*sqrt(DV(i,j))
 #else
             Uloc=_QUART_*( U(i-1,j)+U(i,j)+U(i-1,j+1)+U(i,j+1))
