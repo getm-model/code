@@ -70,7 +70,7 @@
 ! \label{sec-init-bdy-3d}
 !
 ! !INTERFACE:
-   subroutine init_bdy_3d(bdy3d,runtype,hotstart,calc_salt,calc_temp)
+   subroutine init_bdy_3d(bdy3d,runtype,hotstart,update_salt,update_temp)
 !
 ! !DESCRIPTION:
 !
@@ -82,7 +82,7 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
-   logical, intent(in)                 :: hotstart,calc_salt,calc_temp
+   logical, intent(in)                 :: hotstart,update_salt,update_temp
 !
 ! !INPUT/OUTPUT PARAMETERS:
    logical, intent(inout)              :: bdy3d
@@ -170,12 +170,12 @@
          LEVEL3 'bdy3d_tmrlx_umin=  ',bdy3d_tmrlx_umin
       end if
 
-      if (calc_salt) then
+      if (update_salt) then
          allocate(bdy_data_S(0:kmax,nsbvl),stat=rc)
          if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_data_S)'
       end if
 
-      if (calc_temp) then
+      if (update_temp) then
          allocate(bdy_data_T(0:kmax,nsbvl),stat=rc)
          if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_data_T)'
       end if
@@ -213,7 +213,7 @@
 ! \label{sec-do-bdy-3d}
 !
 ! !INTERFACE:
-   subroutine do_bdy_3d(calc_salt,calc_temp)
+   subroutine do_bdy_3d(update_salt,update_temp)
 !
 ! !DESCRIPTION:
 !
@@ -233,7 +233,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   logical, intent(in)                     :: calc_salt,calc_temp
+   logical, intent(in)                     :: update_salt,update_temp
 !
 ! !LOCAL VARIABLES:
 #ifndef _POINTER_REMAP_
@@ -283,8 +283,8 @@
    l = 0
    do n=1,NWB
       l = l+1
-      if (calc_salt) call bdy_3d_west(l,n,bdy_3d_type(l),S,bdy_data_S)
-      if (calc_temp) call bdy_3d_west(l,n,bdy_3d_type(l),T,bdy_data_T)
+      if (update_salt) call bdy_3d_west(l,n,bdy_3d_type(l),S,bdy_data_S)
+      if (update_temp) call bdy_3d_west(l,n,bdy_3d_type(l),T,bdy_data_T)
 #ifdef _FABM_
       if (fabm_calc) then
          i = wi(n)
@@ -317,8 +317,8 @@
 
    do n = 1,NNB
       l = l+1
-      if (calc_salt) call bdy_3d_north(l,n,bdy_3d_type(l),S,bdy_data_S)
-      if (calc_temp) call bdy_3d_north(l,n,bdy_3d_type(l),T,bdy_data_T)
+      if (update_salt) call bdy_3d_north(l,n,bdy_3d_type(l),S,bdy_data_S)
+      if (update_temp) call bdy_3d_north(l,n,bdy_3d_type(l),T,bdy_data_T)
 #ifdef _FABM_
       if (fabm_calc) then
          j = nj(n)
@@ -351,8 +351,8 @@
 
    do n=1,NEB
       l = l+1
-      if (calc_salt) call bdy_3d_east(l,n,bdy_3d_type(l),S,bdy_data_S)
-      if (calc_temp) call bdy_3d_east(l,n,bdy_3d_type(l),T,bdy_data_T)
+      if (update_salt) call bdy_3d_east(l,n,bdy_3d_type(l),S,bdy_data_S)
+      if (update_temp) call bdy_3d_east(l,n,bdy_3d_type(l),T,bdy_data_T)
 #ifdef _FABM_
       if (fabm_calc) then
          i = ei(n)
@@ -385,8 +385,8 @@
 
    do n = 1,NSB
       l = l+1
-      if (calc_salt) call bdy_3d_south(l,n,bdy_3d_type(l),S,bdy_data_S)
-      if (calc_temp) call bdy_3d_south(l,n,bdy_3d_type(l),T,bdy_data_T)
+      if (update_salt) call bdy_3d_south(l,n,bdy_3d_type(l),S,bdy_data_S)
+      if (update_temp) call bdy_3d_south(l,n,bdy_3d_type(l),T,bdy_data_T)
 #ifdef _FABM_
       if (fabm_calc) then
          j = sj(n)
