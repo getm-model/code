@@ -51,7 +51,9 @@
 #ifndef NO_3D
    use m3d, only: init_3d,postinit_3d
 #ifndef NO_BAROCLINIC
-   use m3d, only: T
+   use m3d, only: T,calc_temp,calc_salt
+   use temperature, only: init_temperature_field
+   use salinity, only: init_salinity_field
 #endif
    use turbulence, only: init_turbulence
    use mtridiagonal, only: init_tridiagonal
@@ -270,8 +272,19 @@
       call write_time_string()
       LEVEL3 timestr
       MinN = MinN+1
+#ifndef NO_BAROCLINIC
+      if (calc_temp) then
+         LEVEL2 'hotstart temperature:'
+         call init_temperature_field()
+      end if
+      if (calc_salt) then
+         LEVEL2 'hotstart salinity:'
+         call init_salinity_field()
+      end if
+#endif
    end if
 
+!  Note (KK): init_input() calls do_3d_bdy_ncdf() which requires hn
    call init_input(input_dir,MinN)
 
    call toc(TIM_INITIALIZE)
