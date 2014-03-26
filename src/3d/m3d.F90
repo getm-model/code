@@ -251,8 +251,8 @@
    else
 #ifndef NO_BAROCLINIC
       T = _ZERO_ ; S = _ZERO_ ; rho = _ZERO_
-      if(calc_temp) call init_temperature()
-      if(calc_salt) call init_salinity()
+      if(calc_temp) call init_temperature(hotstart)
+      if(calc_salt) call init_salinity(hotstart)
       call init_eqstate()
 #endif
    end if
