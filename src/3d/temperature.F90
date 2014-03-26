@@ -65,7 +65,7 @@
 ! \label{sec-init-temperature}
 !
 ! !INTERFACE:
-   subroutine init_temperature()
+   subroutine init_temperature(hotstart)
 !
 ! !DESCRIPTION:
 !
@@ -87,6 +87,9 @@
    use m2d, only: Am_method,AM_LES
    use les, only: les_mode,LES_TRACER,LES_BOTH
    IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   logical,intent(in)        :: hotstart
 !
 ! !LOCAL VARIABLES:
    integer                   :: k,i,j,n,rc
@@ -113,7 +116,9 @@
    LEVEL2 'init_temperature()'
    read(NAMLST,temp)
 
-   call init_temperature_field()
+   if (.not. hotstart) then
+      call init_temperature_field()
+   end if
 
 !  Sanity checks for advection specifications
    LEVEL3 'Advection of temperature'
@@ -237,6 +242,8 @@
          LEVEL4 'out-of-bound values result in warnings only'
       end if
 
+      if (.not. hotstart) then
+
       call check_3d_fields(imin,jmin,imax,jmax,kmin,kmax,az, &
                            T,min_temp,max_temp,status)
       if (status .gt. 0) then
@@ -249,6 +256,9 @@
                    ' out-of-bound values encountered'
          end if
       end if
+
+      end if
+
    end if
 
 #ifdef DEBUG
