@@ -50,7 +50,7 @@
    use exceptions
    use parameters, only: g,avmmol,rho_0
    use domain, only: imin,imax,jmin,jmax,kmax,H,HU,min_depth
-   use domain, only: dry_u,coru,au,av,az,ax
+   use domain, only: dry_u,coru,au,av,az
 #if defined CURVILINEAR || defined SPHERICAL
    use domain, only: dxu,arud1,dxx,dyc,dyx,dxc
 #else
@@ -87,6 +87,9 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc
+#ifdef NEW_CORI
+   REALTYPE,dimension(I3DFIELD) :: work3d
+#endif
    REALTYPE, POINTER         :: dif(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
    REALTYPE, POINTER         :: a1(:),a2(:)
@@ -144,6 +147,25 @@
 ! Note: We do not need to initialize these work arrays.
 !   Tested BJB 2009-09-25.
 
+#ifdef NEW_CORI
+!  Espelid et al. [2000], IJNME 49, 1521-1545
+!  KK-TODO: check whether h[u|v]o should be replaced by h[u|v]n
+   do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin-1,jmax
+         do i=imin,imax+1
+            if (av(i,j) .ne. 0) then
+               work3d(i,j,k) = vv(i,j,k)/sqrt(hvo(i,j,k))
+            else
+               work3d(i,j,k) = _ZERO_
+            end if
+         end do
+      end do
+!$OMP END DO NOWAIT
+   end do
+!$OMP BARRIER
+#endif
+
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
@@ -153,10 +175,10 @@
                do k=kumin(i,j),kmax ! explicit terms
 ! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
-                  Vloc=(vv(i  ,j  ,k)/sqrt(hvo(i  ,j  ,k))   &
-                       +vv(i+1,j  ,k)/sqrt(hvo(i+1,j  ,k))   &
-                       +vv(i  ,j-1,k)/sqrt(hvo(i  ,j-1,k))   &
-                       +vv(i+1,j-1,k)/sqrt(hvo(i+1,j-1,k)))  &
+                  Vloc=(work3d(i  ,j  ,k)   &
+                       +work3d(i+1,j  ,k)   &
+                       +work3d(i  ,j-1,k)   &
+                       +work3d(i+1,j-1,k))  &
                        *_QUART_*sqrt(huo(i,j,k))
 #else
                   Vloc=_QUART_*(vv(i,j,k)+vv(i+1,j,k)+vv(i,j-1,k)+vv(i+1,j-1,k))

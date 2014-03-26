@@ -55,7 +55,7 @@
    use exceptions
    use parameters, only: g,avmmol,rho_0
    use domain, only: imin,imax,jmin,jmax,kmax,H,HV,min_depth
-   use domain, only: dry_v,corv,au,av,az,ax
+   use domain, only: dry_v,corv,au,av,az
 #if defined CURVILINEAR || defined SPHERICAL
    use domain, only: dyv,arvd1,dxc,dyx,dyc,dxx
 #else
@@ -95,6 +95,9 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc
+#ifdef NEW_CORI
+   REALTYPE,dimension(I3DFIELD) :: work3d
+#endif
    REALTYPE, POINTER         :: dif(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
    REALTYPE, POINTER         :: a1(:),a2(:)
@@ -157,6 +160,25 @@
 ! Note: We do not need to initialize these work arrays.
 !   Tested BJB 2009-09-25.
 
+#ifdef NEW_CORI
+!  Espelid et al. [2000], IJNME 49, 1521-1545
+!  KK-TODO: check whether h[u|v]o should be replaced by h[u|v]n
+   do k=1,kmax
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin,jmax+1
+         do i=imin-1,imax
+            if (au(i,j) .ne. 0) then
+               work3d(i,j,k) = uu(i,j,k)/sqrt(huo(i,j,k))
+            else
+               work3d(i,j,k) = _ZERO_
+            end if
+         end do
+      end do
+!$OMP END DO NOWAIT
+   end do
+!$OMP BARRIER
+#endif
+
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
@@ -168,10 +190,10 @@
                do k=kvmin(i,j),kmax      ! explicit terms
 ! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
-                Uloc=(uu(i  ,j  ,k)/sqrt(huo(i  ,j  ,k))  &
-                     +uu(i-1,j  ,k)/sqrt(huo(i-1,j  ,k))  &
-                     +uu(i  ,j+1,k)/sqrt(huo(i  ,j+1,k))  &
-                     +uu(i-1,j+1,k)/sqrt(huo(i-1,j+1,k))) &
+                Uloc=(work3d(i  ,j  ,k)  &
+                     +work3d(i-1,j  ,k)  &
+                     +work3d(i  ,j+1,k)  &
+                     +work3d(i-1,j+1,k)) &
                      *_QUART_*sqrt(hvo(i,j,k))
 #else
                 Uloc=_QUART_*(uu(i,j,k)+uu(i-1,j,k)+uu(i,j+1,k)+uu(i-1,j+1,k))
