@@ -45,8 +45,8 @@
 ! !USES:
    use exceptions
    use parameters, only: g,avmmol,rho_0
-   use domain, only: imin,imax,jmin,jmax,kmax,H,min_depth
-   use domain, only: dry_u,coru,au,av,az,ax
+   use domain, only: imin,imax,jmin,jmax,kmax,H,HU,min_depth
+   use domain, only: dry_u,coru,au,av,az
 #if defined CURVILINEAR || defined SPHERICAL
    use domain, only: dxu,arud1,dxx,dyc,dyx,dxc
 #else
@@ -82,7 +82,9 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc
+#ifdef NEW_CORI
    REALTYPE,dimension(I3DFIELD) :: work3d
+#endif
    REALTYPE, POINTER         :: dif(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
    REALTYPE, POINTER         :: a1(:),a2(:)
@@ -105,7 +107,6 @@
 
    gammai=_ONE_/gamma
    rho_0i=_ONE_/rho_0
-
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j,k,rc,zp,zm,zx,ResInt,Diff,Vloc,cord_curv)         &
 !$OMP    PRIVATE(dif,auxn,auxo,a1,a2,a3,a4,Res,ex)
@@ -141,20 +142,15 @@
 ! Note: We do not need to initialize these work arrays.
 !   Tested BJB 2009-09-25.
 
-!  calculate vv at X-points (needed for Coriolis)
+#ifdef NEW_CORI
+!  Espelid et al. [2000], IJNME 49, 1521-1545
 !  KK-TODO: check whether h[u|v]o should be replaced by h[u|v]n
    do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-1,jmax
-         do i=imin,imax
-            if (ax(i,j) .ne. 0) then
-#ifdef NEW_CORI
-! Espelid et al. [2000], IJNME 49, 1521-1545
-               work3d(i,j,k) = _HALF_ * (  vv(i  ,j,k)/sqrt(hvo(i  ,j,k)) &
-                                         + vv(i+1,j,k)/sqrt(hvo(i+1,j,k)) )
-#else
-               work3d(i,j,k) = _HALF_ * ( vv(i,j,k) + vv(i+1,j,k) )
-#endif
+         do i=imin,imax+1
+            if (av(i,j) .ne. 0) then
+               work3d(i,j,k) = vv(i,j,k)/sqrt(hvo(i,j,k))
             else
                work3d(i,j,k) = _ZERO_
             end if
@@ -163,6 +159,7 @@
 !$OMP END DO NOWAIT
    end do
 !$OMP BARRIER
+#endif
 
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
@@ -170,13 +167,16 @@
 
          if (au(i,j) .eq. 1 .or. au(i,j) .eq. 2) then
             if (kmax .gt. kumin(i,j)) then
-!              explicit terms
-               do k=kumin(i,j),kmax
-!                 Coriolis
-                  Vloc = _HALF_ * ( work3d(i,j-1,k) + work3d(i,j,k) )
+               do k=kumin(i,j),kmax ! explicit terms
+! Espelid et al. [2000], IJNME 49, 1521-1545
 #ifdef NEW_CORI
-!                 Espelid et al. [2000], IJNME 49, 1521-1545
-                  Vloc = Vloc * sqrt(huo(i,j,k))
+                  Vloc=(work3d(i  ,j  ,k)   &
+                       +work3d(i+1,j  ,k)   &
+                       +work3d(i  ,j-1,k)   &
+                       +work3d(i+1,j-1,k))  &
+                       *_QUART_*sqrt(huo(i,j,k))
+#else
+                  Vloc=_QUART_*(vv(i,j,k)+vv(i+1,j,k)+vv(i,j-1,k)+vv(i+1,j-1,k))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   cord_curv=(Vloc*(DYCIP1-DYC)-uu(i,j,k)*(DXX-DXXJM1))   &

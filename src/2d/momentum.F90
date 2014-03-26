@@ -120,7 +120,7 @@
 ! !USES:
    use parameters, only: g,rho_0
    use domain, only: imin,imax,jmin,jmax
-   use domain, only: H,au,ax,min_depth,dry_u,Cori,coru
+   use domain, only: H,au,av,min_depth,dry_u,Cori,coru
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,arud1,dyc,dxx
 #else
@@ -143,7 +143,9 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
+#ifdef NEW_CORI
    REALTYPE,dimension(E2DFIELD) :: work2d
+#endif
    REALTYPE                  :: zp,zm,zx,tausu,Slr,Vloc,fV
    REALTYPE                  :: gamma=rho_0*g
    REALTYPE                  :: cord_curv=_ZERO_
@@ -161,26 +163,21 @@
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zx,tausu,Slr,Vloc,fV,cord_curv)
 
-!  calculate V at X-points (needed for Coriolis)
+#ifdef NEW_CORI
+!  Espelid et al. [2000], IJNME 49, 1521-1545
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-1,jmax
-      do i=imin,imax
-         if (ax(i,j) .ne. 0) then
-#ifdef NEW_CORI
-!           Espelid et al. [2000], IJNME 49, 1521-1545
-            work2d(i,j) = _HALF_ * (  V(i  ,j)/sqrt(DV(i  ,j)) &
-                                    + V(i+1,j)/sqrt(DV(i+1,j)) )
-#else
-            work2d(i,j) = _HALF_ * ( V(i,j) + V(i+1,j) )
-#endif
+      do i=imin,imax+1
+         if (av(i,j) .ne. 0) then
+            work2d(i,j) = V(i,j)/sqrt(DV(i,j))
          else
             work2d(i,j) = _ZERO_
          end if
       end do
    end do
 !$OMP END DO
+#endif
 
-!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if ((au(i,j) .eq. 1) .or. (au(i,j) .eq. 2)) then
@@ -192,14 +189,18 @@
 !                      end of vmomentum), this was the default.
 !                      In this new implementation at least the momentum
 !                      called first gets consistent transports and depths.
-            Vloc = _HALF_ * ( work2d(i,j-1) + work2d(i,j) )
-#ifdef NEW_CORI
 !           Espelid et al. [2000], IJNME 49, 1521-1545
-            Vloc = Vloc * sqrt(DU(i,j))
+#ifdef NEW_CORI
+            Vloc = &
+            ( work2d(i,j  )+ work2d(i+1,j  ) + &
+              work2d(i,j-1)+ work2d(i+1,j-1))  &
+              *_QUART_*sqrt(DU(i,j))
+#else
+            Vloc = _QUART_*( V(i,j-1)+ V(i+1,j-1)+V(i,j)+V(i+1,j))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             cord_curv=(Vloc*(DYCIP1-DYC)-U(i,j)*(DXX-DXXJM1)) &
-                      /DU(i,j)*ARUD1
+                       /DU(i,j)*ARUD1
             fV=(cord_curv+coru(i,j))*Vloc
 #else
             fV=coru(i,j)*Vloc
@@ -309,9 +310,9 @@
 ! !USES:
    use parameters, only: g,rho_0
    use domain, only: imin,imax,jmin,jmax
-   use domain, only: H,av,ax,min_depth,dry_v,Cori,corv
+   use domain, only: H,au,av,min_depth,dry_v,Cori,corv
 #if defined(SPHERICAL) || defined(CURVILINEAR)
-   use domain, only: dyv,arvd1,dyx,dxc
+   use domain, only: dyv,arvd1,dxc,dyx
 #else
    use domain, only: dy
 #endif
@@ -331,7 +332,9 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
+#ifdef NEW_CORI
    REALTYPE,dimension(E2DFIELD) :: work2d
+#endif
    REALTYPE                  :: zp,zm,zy,tausv,Slr,Uloc,fU
    REALTYPE                  :: gamma=rho_0*g
    REALTYPE                  :: cord_curv=_ZERO_
@@ -349,41 +352,33 @@
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zy,tausv,Slr,Uloc,fU,cord_curv)
 
-!  calculate U at X-points (needed for Coriolis)
-!$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin,jmax
-      do i=imin-1,imax
-         if (ax(i,j) .ne. 0) then
 #ifdef NEW_CORI
-!           Espelid et al. [2000], IJNME 49, 1521-1545
-            work2d(i,j) = _HALF_ * (  U(i,j  )/sqrt(DU(i,j  )) &
-                                    + U(i,j+1)/sqrt(DU(i,j+1)) )
-#else
-            work2d(i,j) = _HALF_ * ( U(i,j) + U(i,j+1) )
-#endif
+!  Espelid et al. [2000], IJNME 49, 1521-1545
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin,jmax+1
+      do i=imin-1,imax
+         if (au(i,j) .ne. 0) then
+            work2d(i,j) = U(i,j)/sqrt(DU(i,j))
          else
             work2d(i,j) = _ZERO_
          end if
       end do
    end do
 !$OMP END DO
+#endif
 
-!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if ((av(i,j) .eq. 1) .or. (av(i,j) .eq. 2)) then
 !           Semi-implicit treatment of Coriolis force
-!           Note (KK): Between individual momentum routines no call
-!                      to depth_update, therefore combination of new
-!                      transport and old depth (impossible to fix).
-!                      In the old implementation (fV calculated at the
-!                      end of vmomentum), this was the default.
-!                      In this new implementation at least the momentum
-!                      called first gets consistent transports and depths.
-            Uloc = _HALF_ * ( work2d(i-1,j) + work2d(i,j) )
-#ifdef NEW_CORI
 !           Espelid et al. [2000], IJNME 49, 1521-1545
-            Uloc = Uloc * sqrt(DV(i,j))
+#ifdef NEW_CORI
+            Uloc= &
+             ( work2d(i,j  )+ work2d(i-1,j  )  &
+             + work2d(i,j+1)+ work2d(i-1,j+1)) &
+               *_QUART_*sqrt(DV(i,j))
+#else
+            Uloc=_QUART_*( U(i-1,j)+U(i,j)+U(i-1,j+1)+U(i,j+1))
 #endif
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             cord_curv=(V(i,j)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC)) &
