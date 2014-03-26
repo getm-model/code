@@ -94,10 +94,7 @@
 				<condition type="eq" variable="./bottfric_method" value="1"/>
 			</element>
 			<element name="z0_const" type="float" label="constant bottom roughness" unit="m">
-				<condition type="or">
-					<condition type="eq" variable="./bottfric_method" value="2"/>
-					<condition type="eq" variable="./bottfric_method" value="3"/>
-				</condition>
+				<condition type="eq" variable="./bottfric_method" value="2"/>
 			</element>
 			<element name="z0d_iters" type="int" label="iterations for dynamic bottom roughness" minInclusive="0">
 				<condition type="or">
