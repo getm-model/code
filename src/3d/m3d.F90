@@ -58,6 +58,8 @@
    integer                             :: vel3d_adv_ver=1
    logical                             :: calc_temp=.false.
    logical                             :: calc_salt=.false.
+   logical                             :: update_temp=.false.
+   logical                             :: update_salt=.false.
    logical                             :: bdy3d=.false.
    REALTYPE                            :: ip_fac=_ONE_
    integer                             :: vel_check=0
@@ -245,19 +247,13 @@
       call preadapt_coordinates(preadapt)
    end if
 
-   if (runtype .eq. 3) then
-      if (calc_salt) then
-         LEVEL2 "reset calc_salt=F in runtype=3 for prognostic integration"
-         calc_salt = .false.
-      end if
-      if (calc_temp) then
-         LEVEL2 "reset calc_temp=F in runtype=3 for prognostic integration"
-         calc_temp = .false.
-      end if
+   if (runtype .eq. 4) then
+      if (calc_salt) update_salt = .true.
+      if (calc_temp) update_temp = .true.
    end if
 
    if (have_boundaries) then
-      call init_bdy_3d(bdy3d,runtype,hotstart,calc_salt,calc_temp)
+      call init_bdy_3d(bdy3d,runtype,hotstart,update_salt,update_temp)
    else
       bdy3d = .false.
    end if
@@ -395,7 +391,7 @@
       numdis_int = _ZERO_
 #endif
 
-      if (calc_temp) then
+      if (update_temp) then
          allocate(phymix_T(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_T)'
          phymix_T = _ZERO_
@@ -415,7 +411,7 @@
 #endif
       end if
 
-      if (calc_salt) then
+      if (update_salt) then
          allocate(phymix_S(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_S)'
          phymix_S = _ZERO_
@@ -681,11 +677,11 @@
 #ifndef NO_BAROCLINIC
 !  prognostic T and S
    if (calc_stirr) call tracer_stirring()
-   if (calc_temp) call do_temperature(n)
-   if (calc_salt) call do_salinity(n)
+   if (update_temp) call do_temperature(n)
+   if (update_salt) call do_salinity(n)
 #endif
 
-   if (have_boundaries) call do_bdy_3d(calc_salt,calc_temp)
+   if (have_boundaries) call do_bdy_3d(update_salt,update_temp)
 
 
 #ifndef NO_BAROCLINIC
@@ -695,14 +691,14 @@
 !  The following is a bit clumpsy and should be changed when do_bdy_3d()
 !  operates on individual fields and not as is the case now - on both
 !  T and S.
-   if (calc_temp) then
+   if (update_temp) then
       call tic(TIM_TEMPH)
       call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
       call toc(TIM_TEMPH)
       call mirror_bdy_3d(T,D_TAG)
    end if
-   if (calc_salt) then
+   if (update_salt) then
       call tic(TIM_SALTH)
       call update_3d_halo(S,S,az,imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
