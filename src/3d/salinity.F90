@@ -61,7 +61,7 @@
 ! \label{sec-init-salinity}
 !
 ! !INTERFACE:
-   subroutine init_salinity()
+   subroutine init_salinity(hotstart)
 !
 ! !DESCRIPTION:
 !
@@ -87,9 +87,8 @@
    use les, only: les_mode,LES_TRACER,LES_BOTH
    IMPLICIT NONE
 !
-! !INPUT/OUTPUT PARAMETERS:
-!
-! !OUTPUT PARAMETERS:
+! !INPUT PARAMETERS:
+   logical,intent(in)        :: hotstart
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,n
@@ -120,7 +119,9 @@
       LEVEL3 'avmols = ',real(avmols)
    end if
 
-   call init_salinity_field()
+   if (.not. hotstart) then
+      call init_salinity_field()
+   end if
 
 !  Sanity checks for advection specifications
    LEVEL3 'Advection of salinity'
@@ -176,6 +177,8 @@
          LEVEL4 'out-of-bound values result in warnings only'
       end if
 
+      if (.not. hotstart) then
+
       call check_3d_fields(imin,jmin,imax,jmax,kmin,kmax,az, &
                            S,min_salt,max_salt,status)
       if (status .gt. 0) then
@@ -187,6 +190,8 @@
             LEVEL1 'do_salinity(): ',status, &
                    ' out-of-bound values encountered'
          end if
+      end if
+
       end if
 
    end if
