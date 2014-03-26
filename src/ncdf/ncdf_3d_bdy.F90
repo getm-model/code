@@ -18,7 +18,7 @@
    use domain, only: H
    use variables_2d, only: dtm
    use variables_3d, only: hn
-   use m3d, only: calc_salt,calc_temp
+   use m3d, only: update_salt,update_temp
    use bdy_3d, only: bdy_data_S,bdy_data_T
    use time, only: string_to_julsecs,time_diff,add_secs
    use time, only: julianday,secondsofday,juln,secsn
@@ -154,7 +154,7 @@
 !  Some of the tests will be repeated later (fixing is possible but not
 !  high priority, BJB 2007-04-25).
 
-   if (calc_salt) then
+   if (update_salt) then
       LEVEL4 ' ... checking variable "salt"'
       err = nf90_inq_varid(ncid,'salt',salt_id)
       if (err .NE. NF90_NOERR) go to 10
@@ -167,7 +167,7 @@
       zax_dim  = vardim_ids(zax_pos)
       time_dim = vardim_ids(time_pos)
    end if
-   if (calc_temp) then
+   if (update_temp) then
       LEVEL4 ' ... checking variable "temp"'
       err = nf90_inq_varid(ncid,'temp',temp_id)
       if (err .NE. NF90_NOERR) go to 10
@@ -177,7 +177,7 @@
            stop 'init_3d_bdy_ncdf: Wrong number of dims in temp'
       err = nf90_inquire_variable(ncid,temp_id,dimids=vardim_ids)
       if (err .NE. NF90_NOERR) go to 10
-      if (calc_salt) then
+      if (update_salt) then
          if (zax_dim /= vardim_ids(zax_pos)) &
               stop 'init_3d_bdy_ncdf: Position of zax dimension of salt and temp differs'
          if (time_dim /= vardim_ids(time_pos)) &
@@ -231,7 +231,7 @@
       end if
    end do
 
-   if (calc_salt) then
+   if (update_salt) then
       allocate(S_bdy(zax_len,nsbvl),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy)'
       allocate(S_bdy_new(zax_len,nsbvl),stat=err)
@@ -239,7 +239,7 @@
       allocate(d_S_bdy(zax_len,nsbvl),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_S_bdy)'
    end if
-   if (calc_temp) then
+   if (update_temp) then
       allocate(T_bdy(zax_len,nsbvl),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_bdy)'
       allocate(T_bdy_new(zax_len,nsbvl),stat=err)
@@ -256,11 +256,11 @@
 
    if (climatology) then
 
-      if (calc_salt) then
+      if (update_salt) then
          allocate(S_bdy_clim(climatology_len,zax_len,nsbvl),stat=rc)
          if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy_clim)'
       end if
-      if (calc_temp) then
+      if (update_temp) then
          allocate(T_bdy_clim(climatology_len,zax_len,nsbvl),stat=rc)
          if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_bdy_clim)'
       end if
@@ -398,19 +398,19 @@
 
 !        Note (KK): in principle the average can be calculated only once
          if (first) then
-            if (calc_salt) then
+            if (update_salt) then
                S_bdy_new = _HALF_ * ( S_bdy_clim(prev,:,:) + S_bdy_clim(this,:,:) )
             end if
-            if (calc_temp) then
+            if (update_temp) then
                T_bdy_new = _HALF_ * ( T_bdy_clim(prev,:,:) + T_bdy_clim(this,:,:) )
             end if
             first = .false.
          end if
 
-         if (calc_salt) then
+         if (update_salt) then
             S_bdy = _HALF_ * ( S_bdy_clim(this,:,:) + S_bdy_clim(next,:,:) )
          end if
-         if (calc_temp) then
+         if (update_temp) then
             T_bdy = _HALF_ * ( T_bdy_clim(this,:,:) + T_bdy_clim(next,:,:) )
          end if
 
@@ -473,11 +473,11 @@
 
 
    if (new_set) then
-      if (calc_salt) then
+      if (update_salt) then
          S_bdy_old=>S_bdy_new;S_bdy_new=>S_bdy;S_bdy=>d_S_bdy;d_S_bdy=>S_bdy_old
          d_S_bdy = S_bdy_new - S_bdy_old
       end if
-      if (calc_temp) then
+      if (update_temp) then
          T_bdy_old=>T_bdy_new;T_bdy_new=>T_bdy;T_bdy=>d_T_bdy;d_T_bdy=>T_bdy_old
          d_T_bdy = T_bdy_new - T_bdy_old
       end if
@@ -486,11 +486,11 @@
 
    t_minus_t2 = t - t2
 
-   if (calc_salt) then
+   if (update_salt) then
       S_bdy = S_bdy_new + d_S_bdy*deltm1*t_minus_t2
       call interpolate_3d_bdy_ncdf(nsbvl,zax_len,S_bdy,kmax,bdy_data_S)
    end if
-   if (calc_temp) then
+   if (update_temp) then
       T_bdy = T_bdy_new + d_T_bdy*deltm1*t_minus_t2
       call interpolate_3d_bdy_ncdf(nsbvl,zax_len,T_bdy,kmax,bdy_data_T)
    end if

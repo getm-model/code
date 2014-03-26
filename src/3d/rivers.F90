@@ -35,7 +35,7 @@
    use time, only: write_time_string,timestr
    use variables_2d, only: dtm,z
 #ifndef NO_BAROCLINIC
-   use m3d, only: calc_salt,calc_temp
+   use m3d, only: update_salt,update_temp
    use variables_3d, only: hn,Dn,ssen,T,S
 #endif
 #ifdef GETM_BIO
@@ -471,7 +471,7 @@
 !              on macrotime step adjust 3d fields
                if (do_3d) then
                   if (macro_height(n).gt._ZERO_ .or. .not.river_outflow_properties_follow_source_cell) then
-                     if (calc_salt ) then
+                     if (update_salt ) then
                         if ( river_salt(n) .ne. salt_missing) then
                            S(i,j,1:kmax) = (S(i,j,1:kmax)*Dn(i,j)   &
                                          + river_salt(n)*macro_height(n))      &
@@ -481,7 +481,7 @@
                                          / (Dn(i,j)+macro_height(n))
                         end if
                      end if
-                     if (calc_temp .and. river_temp(n) .ne. temp_missing) then
+                     if (update_temp .and. river_temp(n) .ne. temp_missing) then
                         T(i,j,1:kmax) = (T(i,j,1:kmax)*Dn(i,j)   &
                                          + river_temp(n)*macro_height(n))      &
                                          / (Dn(i,j)+macro_height(n))
