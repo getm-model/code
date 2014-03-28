@@ -112,10 +112,10 @@
 		<element name="meteo" label="variables related to meteorological forcing">
 			<element name="metforcing" type="bool" label="use meteorological forcing"/>
 			<element name="on_grid"    type="bool" label="Are meteo given on grid-points?">
-				<condition type="eq" variable="./metforcing" value="True"/>
+				<condition type="eq" variable="./met_method" value="2"/>
 			</element>
 			<element name="calc_met" type="bool" label="Fluxes are not provided and need to be calculated.">
-				<condition type="eq" variable="./metforcing" value="True"/>
+				<condition type="eq" variable="./met_method" value="2"/>
 			</element>
 			<element name="met_method" type="int" label="meteo method">
 				<condition type="eq" variable="./metforcing" value="True"/>
@@ -129,9 +129,15 @@
 				<options>
 					<option value="0" label="none"/>
 					<option value="1" label="constant, use precip_const and evap_const"/>
-					<option value="2" label="both evapotation and precipitation from file"/>
-					<option value="3" label="evaporation is calculated, precipitation from file"/>
-					<option value="4" label="evaporation is calculated, NO precipitation"/>
+					<option value="2" label="both evapotation and precipitation from file">
+						<condition type="eq" variable="./met_method" value="2"/>
+					</option>
+					<option value="3" label="evaporation is calculated, precipitation from file">
+						<condition type="eq" variable="./met_method" value="2"/>
+					</option>
+					<option value="4" label="evaporation is calculated, NO precipitation">
+						<condition type="eq" variable="./met_method" value="2"/>
+					</option>
 				</options>
 			</element>
 			<element name="meteo_ramp" type="int" label="number of time steps for forcing spin-up" unit="micro time steps">
@@ -147,85 +153,50 @@
 				</condition>
 			</element>
 			<element name="metfmt" type="int" label="format of meteofile">
-				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
-					<condition type="eq" variable="./met_method" value="2"/>
-				</condition>
+				<condition type="eq" variable="./met_method" value="2"/>
 				<options>
 					<option value="1" label="ASCII"/>
 					<option value="2" label="NetCDF"/>
 				</options>
 			</element>
 			<element name="meteo_file" type="string" label="name of meteofile">
-				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
-					<condition type="eq" variable="./met_method" value="2"/>
-				</condition>
+				<condition type="eq" variable="./met_method" value="2"/>
 			</element>
 			<element name="tx" type="float" label="constant x stress" unit="Pa">
-				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
-					<condition type="eq" variable="./met_method" value="1"/>
-				</condition>
+				<condition type="eq" variable="./met_method" value="1"/>
 			</element>
 			<element name="ty" type="float" label="constant y stress" unit="Pa">
-				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
-					<condition type="eq" variable="./met_method" value="1"/>
-				</condition>
+				<condition type="eq" variable="./met_method" value="1"/>
 			</element>
 			<element name="swr_const" type="float" label="constant short wave radiation" unit="W/m²">
-				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
-					<condition type="eq" variable="./met_method" value="1"/>
-				</condition>
+				<condition type="eq" variable="./met_method" value="1"/>
 			</element>
 			<element name="shf_const" type="float" label="constant surface heat flux" unit="W/m²">
-				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
-					<condition type="eq" variable="./met_method" value="1"/>
-				</condition>
+				<condition type="eq" variable="./met_method" value="1"/>
 			</element>
 			<element name="evap_const" type="float" label="constant evaporation" unit="m/s">
-				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
-					<condition type="eq" variable="./fwf_method" value="1"/>
-				</condition>
+				<condition type="eq" variable="./met_method" value="1"/>
 			</element>
 			<element name="precip_const" type="float" label="constant precipitation" unit="m/s">
-				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
-					<condition type="eq" variable="./fwf_method" value="1"/>
-				</condition>
+				<condition type="eq" variable="./met_method" value="1"/>
 			</element>
 			<element name="sst_const" type="float" label="constant sea surface temperature" unit="°C" minExclusive="0">
 				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
 					<condition type="eq" variable="./met_method" value="1"/>
 					<condition type="eq" variable="../param/runtype" value="4"/>
 					<condition type="eq" variable="../m3d/calc_temp" value="True"/>
 				</condition>
 			</element>
 			<element name="wind_factor" type="float" label="factor to convert windspeeds to m/s">
-				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
-					<condition type="eq" variable="./calc_met" value="True"/>
-					<condition type="eq" variable="./met_method" value="2"/>
-				</condition>
+				<condition type="eq" variable="./calc_met" value="True"/>
 			</element>
 			<element name="evap_factor" type="float" label="factor to convert evaporation to m/s">
-				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
-					<condition type="eq" variable="./fwf_method" value="2"/>
-				</condition>
+				<condition type="eq" variable="./fwf_method" value="2"/>
 			</element>
 			<element name="precip_factor" type="float" label="factor to convert precipitation to m/s">
-				<condition type="and">
-					<condition type="eq" variable="./metforcing" value="True"/>
-					<condition type="or">
-						<condition type="eq" variable="./fwf_method" value="2"/>
-						<condition type="eq" variable="./fwf_method" value="3"/>
-					</condition>
+				<condition type="or">
+					<condition type="eq" variable="./fwf_method" value="2"/>
+					<condition type="eq" variable="./fwf_method" value="3"/>
 				</condition>
 			</element>
 		</element>
