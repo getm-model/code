@@ -13,7 +13,7 @@
 ! !USES:
    use netcdf
    use domain, only: imin,imax,jmin,jmax,kmax,ioff,joff
-   use domain, only: nsbv,NWB,NNB,NEB,NSB,bdy_index
+   use domain, only: nsbv,nsbvl,NWB,NNB,NEB,NSB,bdy_index,bdy_index_l
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use domain, only: H
    use m2d, only: dtm
@@ -92,7 +92,7 @@
    integer, allocatable, dimension(:):: dim_ids,dim_len
    character(len=16), allocatable :: dim_name(:)
    integer                   :: rc,err
-   integer                   :: i,j,k,l,m,n,o,id
+   integer                   :: i,j,k,kl,l,m,n,o,id
 #ifdef _FABM_
    character(len=256)        :: varname
 #endif
@@ -142,7 +142,7 @@
    if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (bio_ids)'
    bio_ids = -1
 
-   allocate(bio_bdy(0:kmax,nsbv,npel),stat=rc)
+   allocate(bio_bdy(0:kmax,nsbvl,npel),stat=rc)
    if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bio_bdy)'
    allocate(have_bio_bdy_values(npel),stat=rc)
    if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (have_bio_bdy_values)'
@@ -240,7 +240,7 @@
       allocate(wrk(zax_len),stat=rc)
       if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (wrk)'
 
-      allocate(bio_bdy_clim(0:kmax,nsbv,time_len,npel),stat=rc)
+      allocate(bio_bdy_clim(0:kmax,nsbvl,time_len,npel),stat=rc)
       if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (bio_bdy_clim)'
 
 !     we read each boundary column individually
@@ -262,14 +262,16 @@
             i = wi(n)
             do o=1,npel
                k = bdy_index(l)
+               kl = bdy_index_l(l)
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do j=wfj(n),wlj(n)
                      start(2) = k
                      err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
                      if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
-                                   hn(i,j,:),bio_bdy_clim(:,k,m,o))
+                                   hn(i,j,:),bio_bdy_clim(:,kl,m,o))
                      k = k+1
+                     kl = kl + 1
                   end do
                else
                   k = k + (wlj(n)-wfj(n)+1)
@@ -282,14 +284,16 @@
             j = nj(n)
             do o=1,npel
                k = bdy_index(l)
+               kl = bdy_index_l(l)
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do i = nfi(n),nli(n)
                      start(2) = k
                      err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
                      if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
-                                   hn(i,j,:),bio_bdy_clim(:,k,m,o))
+                                   hn(i,j,:),bio_bdy_clim(:,kl,m,o))
                      k = k+1
+                     kl = kl + 1
                   end do
                else
                   k = k + (nli(n)-nfi(n)+1)
@@ -302,14 +306,16 @@
             i = ei(n)
             do o=1,npel
                k = bdy_index(l)
+               kl = bdy_index_l(l)
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do j=efj(1),elj(1)
                      start(2) = k
                      err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
                      if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
-                                   hn(i,j,:),bio_bdy_clim(:,k,o,m))
+                                   hn(i,j,:),bio_bdy_clim(:,kl,o,m))
                      k = k+1
+                     kl = kl + 1
                   end do
                else
                   k = k + (elj(n)-efj(n)+1)
@@ -322,14 +328,16 @@
             j = sj(n)
             do o=1,npel
                k = bdy_index(l)
+               kl = bdy_index_l(l)
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do i = sfi(n),sli(n)
                      start(2) = k
                      err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
                      if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
-                                   hn(i,j,:),bio_bdy_clim(:,k,o,m))
+                                   hn(i,j,:),bio_bdy_clim(:,kl,o,m))
                      k = k+1
+                     kl = kl + 1
                   end do
                else
                   k = k + (sli(n)-sfi(n)+1)
@@ -378,9 +386,9 @@
          stop 'init_3d_bio_bdy_ncdf'
       end if
 
-      allocate(bio_old(0:kmax,nsbv,npel),stat=err)
+      allocate(bio_old(0:kmax,nsbvl,npel),stat=err)
       if (err /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (bio_old)'
-      allocate(bio_new(0:kmax,nsbv,npel),stat=err)
+      allocate(bio_new(0:kmax,nsbvl,npel),stat=err)
       if (err /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (bio_new)'
       allocate(bio_wrk(zax_len,nsbv,npel),stat=err)
       if (err /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (bio_wrk)'
@@ -414,10 +422,12 @@
          i = wi(n)
          do m=1,npel
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             do j=wfj(n),wlj(n)
                call interpol(zax_len,zlev,bio_wrk(:,k,m),H(i,j), &
-                             kmax,hn(i,j,:),bio_new(:,k,m))
+                             kmax,hn(i,j,:),bio_new(:,kl,m))
                k = k+1
+               kl = kl + 1
             end do
          end do
       end do
@@ -427,10 +437,12 @@
          j = nj(n)
          do m=1,npel
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             do i = nfi(n),nli(n)
                call interpol(zax_len,zlev,bio_wrk(:,k,m),H(i,j), &
-                             kmax,hn(i,j,:),bio_new(:,k,m))
+                             kmax,hn(i,j,:),bio_new(:,kl,m))
                k = k+1
+               kl = kl + 1
             end do
          end do
       end do
@@ -440,10 +452,12 @@
          i = ei(n)
          do m=1,npel
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             do j=efj(1),elj(1)
                call interpol(zax_len,zlev,bio_wrk(:,k,m),H(i,j), &
-                             kmax,hn(i,j,:),bio_new(:,k,m))
+                             kmax,hn(i,j,:),bio_new(:,kl,m))
                k = k+1
+               kl = kl + 1
             end do
          end do
       end do
@@ -453,10 +467,12 @@
          j = sj(n)
          do m=1,npel
             k = bdy_index(l)
+            kl = bdy_index_l(l)
             do i = sfi(n),sli(n)
                call interpol(zax_len,zlev,bio_wrk(:,k,m),H(i,j), &
-                             kmax,hn(i,j,:),bio_new(:,k,m))
+                             kmax,hn(i,j,:),bio_new(:,kl,m))
                k = k+1
+               kl = kl + 1
             end do
          end do
       end do
@@ -507,7 +523,7 @@
    integer, save   :: loop0
    REALTYPE        :: t
    REALTYPE, save  :: t1=_ZERO_,t2=-_ONE_
-   integer         :: i,j,k,l,n,o
+   integer         :: i,j,k,kl,l,n,o
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -580,10 +596,12 @@
             i = wi(n)
             do o=1,npel
                k = bdy_index(l)
+               kl = bdy_index_l(l)
                do j=wfj(n),wlj(n)
                   call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j),kmax, &
-                                hn(i,j,:),bio_new(:,k,o))
+                                hn(i,j,:),bio_new(:,kl,o))
                   k = k+1
+                  kl = kl + 1
                end do
             end do
          end do
@@ -593,10 +611,12 @@
             j = nj(n)
             do o=1,npel
                k = bdy_index(l)
+               kl = bdy_index_l(l)
                do i = nfi(n),nli(n)
                   call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j),kmax, &
-                                hn(i,j,:),bio_new(:,k,o))
+                                hn(i,j,:),bio_new(:,kl,o))
                   k = k+1
+                  kl = kl + 1
                end do
             end do
          end do
@@ -606,10 +626,12 @@
             i = ei(n)
             do o=1,npel
                k = bdy_index(l)
+               kl = bdy_index_l(l)
                do j=efj(1),elj(1)
                   call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j),kmax, &
-                                hn(i,j,:),bio_new(:,k,o))
+                                hn(i,j,:),bio_new(:,kl,o))
                   k = k+1
+                  kl = kl + 1
                end do
             end do
          end do
@@ -619,10 +641,12 @@
             j = sj(n)
             do o=1,npel
                k = bdy_index(l)
+               kl = bdy_index_l(l)
                do i = sfi(n),sli(n)
                   call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j),kmax, &
-                                hn(i,j,:),bio_new(:,k,o))
+                                hn(i,j,:),bio_new(:,kl,o))
                   k = k+1
+                  kl = kl + 1
                end do
             end do
          end do
