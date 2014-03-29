@@ -149,32 +149,64 @@
    write(debug,*) 'init_meteo() # ',Ncall
 #endif
    LEVEL1 'init_meteo'
+
+! Allocates memory for the public data members
+!  KK-TODO: Why is this not static #ifdef STATIC?
+!  Note (KK): sst will be allocated in init_temperature()
+
+   allocate(airp(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (airp)'
+   airp = _ZERO_
+   allocate(tausx(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx)'
+   tausx = _ZERO_
+   allocate(tausy(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy)'
+   tausy = _ZERO_
+   allocate(shf(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (shf)'
+   shf = _ZERO_
+   allocate(swr(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (swr)'
+   swr = _ZERO_
+   allocate(evap(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (evap)'
+   evap = _ZERO_
+   allocate(precip(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (precip)'
+   precip = _ZERO_
+
+
    read(NAMLST,meteo)
 
-   LEVEL2 'Metforcing=',metforcing
-   if (metforcing) then
-      select case (met_method)
-            case (1)
-               LEVEL2 'Constant forcing is used:'
-               LEVEL3 'tx     = ',tx
-               LEVEL3 'ty     = ',ty
-               LEVEL3 'swr    = ',swr_const
-               LEVEL3 'shf    = ',shf_const
-            case (2)
-               if(on_grid) then
-                  LEVEL2 'Meteorological fields are on the computational grid'
-               else
-                  LEVEL2 'Meteorological fields needs to be interpolated'
-               end if
-               if(calc_met) then
-                  LEVEL2 'Stresses and fluxes will be calculated'
-               else
-                  LEVEL2 'Stresses and fluxes are already calculated'
-               end if
-         case default
-      end select
+!  KK-TODO: replace metforcing by met_method=0
 
-      select case (fwf_method)
+   LEVEL2 'Metforcing=',metforcing
+   if (.not. metforcing) return
+
+   select case (met_method)
+      case (1)
+         LEVEL2 'Constant forcing is used:'
+         LEVEL3 'tx     = ',tx
+         LEVEL3 'ty     = ',ty
+         LEVEL3 'swr    = ',swr_const
+         LEVEL3 'shf    = ',shf_const
+         if (fwf_method .eq. 1) then
+            LEVEL3 'evap   = ',evap_const
+            LEVEL3 'precip = ',precip_const
+         end if
+      case (2)
+         if(on_grid) then
+            LEVEL2 'Meteorological fields are on the computational grid'
+         else
+            LEVEL2 'Meteorological fields needs to be interpolated'
+         end if
+         if(calc_met) then
+            LEVEL2 'Stresses and fluxes will be calculated'
+         else
+            LEVEL2 'Stresses and fluxes are already calculated'
+         end if
+         select case (fwf_method)
             case (1)
                LEVEL2 'Constant evaporation/precipitation'
                LEVEL3 'evap   = ',evap_const
@@ -183,37 +215,31 @@
                LEVEL2 'Evaporation/precipitation read from file'
             case (3)
                LEVEL2 'Precipitation read from file'
-               LEVEL2 'Evaporation calculated'
+               if (calc_met) then
+                  LEVEL2 'Evaporation will be calculated'
+               else
+                  LEVEL2 'No evaporation'
+               end if
             case (4)
                LEVEL2 'No precipitation'
-               LEVEL2 'Evaporation calculated'
-         case default
-      end select
+               if (calc_met) then
+                  LEVEL2 'Evaporation will be calculated'
+               else
+                  LEVEL2 'No evaporation'
+               end if
+            case default
+         end select
+      case default
+   end select
 
-      if (meteo_ramp .gt. 1) then
-         LEVEL2 'meteo_ramp=',meteo_ramp
-         ramp_is_active = .true.
-         if (hotstart) then
-            LEVEL3 'WARNING: hotstart is .true. AND meteo_ramp .gt. 1'
-            LEVEL3 'WARNING: .. be sure you know what you are doing ..'
-         end if
+   if (meteo_ramp .gt. 1) then
+      LEVEL2 'meteo_ramp=',meteo_ramp
+      ramp_is_active = .true.
+      if (hotstart) then
+         LEVEL3 'WARNING: hotstart is .true. AND meteo_ramp .gt. 1'
+         LEVEL3 'WARNING: .. be sure you know what you are doing ..'
       end if
    end if
-
-! Allocates memory for the public data members
-
-   allocate(airp(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_meteo: Error allocating memory (airp)'
-   airp = _ZERO_
-
-   allocate(tausx(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx)'
-   allocate(tausy(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy)'
-   allocate(shf(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_meteo: Error allocating memory (shf)'
-   allocate(swr(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_meteo: Error allocating memory (swr)'
 
    if (met_method .eq. 1) then
 !     Rotation of wind stress due to grid convergence
@@ -229,29 +255,16 @@
             tausy_const(i,j)=-tx*sinconv+ty*cosconv
          end do
       end do
-      tausx = tausx_const
-      tausy = tausy_const
+      tausx = tausx_const ! KK-TODO: can we remove this? -- ramp will be
+      tausy = tausy_const !          applied in do_meteo() ...
       shf   = shf_const
       swr   = swr_const
-   else
-      tausx = _ZERO_
-      tausy = _ZERO_
-      shf   = _ZERO_
-      swr   = _ZERO_
    end if
 
-   allocate(evap(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_meteo: Error allocating memory (evap)'
-   allocate(precip(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_meteo: Error allocating memory (precip)'
    if (fwf_method .eq. 1) then
       evap = evap_const
       precip = precip_const
-   else
-      evap = _ZERO_
-      precip = _ZERO_
    end if
-
 
    if (metforcing .and. met_method.eq.2) then
 
