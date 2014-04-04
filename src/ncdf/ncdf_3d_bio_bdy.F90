@@ -135,7 +135,7 @@
    zax_pos = 1
    time_pos = 3
 
-   npel = size(model%info%state_variables)
+   npel = size(model%state_variables)
 
 !  npel is known and we can allocate memory for boundary conditions
    allocate(bio_ids(npel),stat=rc)
@@ -150,7 +150,7 @@
 
    LEVEL4 'checking available boundary variables:'
    do n=1,npel
-      varname = trim(model%info%state_variables(n)%name)
+      varname = trim(model%state_variables(n)%name)
       err = nf90_inq_varid(ncid,trim(varname),id)
       if (err .NE. NF90_NOERR) then
          have_bio_bdy_values(n) = -1
