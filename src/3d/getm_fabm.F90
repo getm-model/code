@@ -298,7 +298,7 @@
                fabm_ben(i,j,n) = cc_col(1,size(model%state_variables)+n)
             end do
             do n=1,size(model%diagnostic_variables)
-               fabm_diag(i,j,:,n) = cc_diag_col(:,n)
+               fabm_diag(i,j,1:,n) = cc_diag_col(:,n)
             end do
             do n=1,size(model%horizontal_diagnostic_variables)
                fabm_diag_hz(i,j,n) = cc_diag_hz_col(n)
