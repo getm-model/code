@@ -93,6 +93,7 @@
    character(len=16), allocatable :: dim_name(:)
    integer                   :: rc,err
    integer                   :: i,j,k,l,m,n,o,id
+   logical                   :: exist
 #ifdef _FABM_
    character(len=256)        :: varname
 #endif
@@ -105,6 +106,19 @@
 #endif
 
    LEVEL3 'init_3d_bio_bdy_ncdf'
+
+   npel = size(model%state_variables)
+
+   allocate(have_bio_bdy_values(npel),stat=rc)
+   if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (have_bio_bdy_values)'
+   have_bio_bdy_values = -1
+
+   inquire(file=fname,exist=exist)
+   if (.not.exist) then
+      LEVEL3 'Boundary file '//trim(fname)//' does not exist. Not using bio boundaries.'
+      ncid = -1
+      return
+   end if
 
    err = nf90_open(fname,NF90_NOWRITE,ncid)
    if (err .NE. NF90_NOERR) go to 10
@@ -135,8 +149,6 @@
    zax_pos = 1
    time_pos = 3
 
-   npel = size(model%state_variables)
-
 !  npel is known and we can allocate memory for boundary conditions
    allocate(bio_ids(npel),stat=rc)
    if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (bio_ids)'
@@ -144,9 +156,6 @@
 
    allocate(bio_bdy(0:kmax,nsbv,npel),stat=rc)
    if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bio_bdy)'
-   allocate(have_bio_bdy_values(npel),stat=rc)
-   if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (have_bio_bdy_values)'
-   have_bio_bdy_values = -1
 
    LEVEL4 'checking available boundary variables:'
    do n=1,npel
@@ -514,6 +523,7 @@
 #ifdef DEBUG
    write(debug,*) 'do_3d_bio_bdy_ncdf (NetCDF)'
 #endif
+   if (ncid .eq. -1) return
 
    if ( climatology ) then
       if (time_len .eq. 12) then
