@@ -169,13 +169,13 @@
          LEVEL4 trim(varname),': yes'
          bio_ids(n) = id
 
-         LEVEL4 ' ... checking variable ',varname
+         LEVEL4 ' ... checking variable ',trim(varname)
 
          err = nf90_inquire_variable(ncid,id,ndims=nvardims)
          if (err .NE. NF90_NOERR) go to 10
 
          if (nvardims .NE. ndims) then
-            FATAL 'Wrong number of dims in ',varname
+            FATAL 'Wrong number of dims in ',trim(varname)
             stop 'init_3d_bio_bdy_ncdf'
          end if
 
