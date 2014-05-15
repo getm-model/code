@@ -168,6 +168,7 @@
                if (avmmol.gt._ZERO_ .and. velU(i,j).gt._ZERO_) then
                   do it=1,z0d_iters
                      z0d = zub0(i,j) + _TENTH_*avmmol/(cdsqrt*velU(i,j))
+!                    KK-TODO: clipping of z0d at DU as in the old code?
                      cdsqrt = kappa / log( _ONE_ + _HALF_*DU1(i,j)/z0d )
                   end do
                end if
@@ -218,6 +219,7 @@
                if (avmmol.gt._ZERO_ .and. velV(i,j).gt._ZERO_) then
                   do it=1,z0d_iters
                      z0d = zvb0(i,j) + _TENTH_*avmmol/(cdsqrt*velV(i,j))
+!                    KK-TODO: clipping of z0d at DV as in the old code?
                      cdsqrt = kappa / log( _ONE_ + _HALF_*DV1(i,j)/z0d )
                   end do
                end if
