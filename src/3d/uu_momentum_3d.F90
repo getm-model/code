@@ -52,6 +52,7 @@
 #else
    use domain, only: dx,dy
 #endif
+   use domain, only: rigid_lid
    use bdy_3d, only: do_bdy_3d
    use variables_3d, only: uuEuler,UEulerAdv,Dn
    use variables_3d, only: dt,cnpar,kumin,uu,vv,huo,hun,hvo,uuEx,ww,hvn
@@ -223,8 +224,13 @@
 
 !     Barotropic pressure gradient
 #ifndef NO_BAROTROPIC
-               zp=max(sseo(i+1,j),-H(i  ,j)+min(min_depth,Dn(i+1,j)))
-               zm=max(sseo(i  ,j),-H(i+1,j)+min(min_depth,Dn(i  ,j)))
+               if (rigid_lid) then
+                  zp = _ZERO_
+                  zm = _ZERO_
+               else
+                  zp=max(sseo(i+1,j),-H(i  ,j)+min(min_depth,Dn(i+1,j)))
+                  zm=max(sseo(i  ,j),-H(i+1,j)+min(min_depth,Dn(i  ,j)))
+               end if
                zx=(zp-zm+(airp(i+1,j)-airp(i,j))*gammai)/DXU
 #else
                zx=_ZERO_

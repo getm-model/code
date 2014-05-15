@@ -78,11 +78,11 @@
 #endif
 #ifdef _FABM_
    if (fabm_calc) then
-      status = nf90_def_dim(ncid, "fabm_pel_dim", size(model%info%state_variables), fabmpeldim_id)
+      status = nf90_def_dim(ncid, "fabm_pel_dim", size(model%state_variables), fabmpeldim_id)
       if (status .NE. NF90_NOERR) go to 10
 
-      if (size(model%info%state_variables_ben).gt.0) then
-         status = nf90_def_dim(ncid, "fabm_ben_dim", size(model%info%state_variables_ben), fabmbendim_id)
+      if (size(model%bottom_state_variables).gt.0) then
+         status = nf90_def_dim(ncid, "fabm_ben_dim", size(model%bottom_state_variables), fabmbendim_id)
          if (status .NE. NF90_NOERR) go to 10
       else
          fabmbendim_id = 0
