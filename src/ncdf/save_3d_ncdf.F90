@@ -548,15 +548,15 @@
       edges(2) = ylen
       edges(3) = zlen
       edges(4) = 1
-      do n=1,size(model%info%state_variables)
+      do n=1,size(model%state_variables)
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,fabm_pel(:,:,:,n), &
-                     model%info%state_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
+                     model%state_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
          err = nf90_put_var(ncid,fabm_ids(n),ws(_3D_W_),start,edges)
          if (err .NE.  NF90_NOERR) go to 10
       end do
-      do n=1,size(model%info%diagnostic_variables)
+      do n=1,size(model%diagnostic_variables)
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,fabm_diag(:,:,:,n), &
-                     model%info%diagnostic_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
+                     model%diagnostic_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
          err = nf90_put_var(ncid,fabm_ids_diag(n),ws(_3D_W_),start,edges)
          if (err .NE.  NF90_NOERR) go to 10
       end do
@@ -577,15 +577,15 @@
 
       start(3) = n3d
       edges(3) = 1
-      do n=1,size(model%info%state_variables_ben)
+      do n=1,size(model%bottom_state_variables)
          call cnv_2d(imin,jmin,imax,jmax,az,fabm_ben(:,:,n), &
-                     model%info%state_variables_ben(n)%missing_value,imin,jmin,imax,jmax,ws2d)
+                     model%bottom_state_variables(n)%missing_value,imin,jmin,imax,jmax,ws2d)
          err = nf90_put_var(ncid,fabm_ids_ben(n),ws2d(_2D_W_),start(1:3),edges(1:3))
          if (err .NE.  NF90_NOERR) go to 10
       end do
-      do n=1,size(model%info%diagnostic_variables_hz)
+      do n=1,size(model%horizontal_diagnostic_variables)
          call cnv_2d(imin,jmin,imax,jmax,az,fabm_diag_hz(:,:,n), &
-                     model%info%diagnostic_variables_hz(n)%missing_value,imin,jmin,imax,jmax,ws2d)
+                     model%horizontal_diagnostic_variables(n)%missing_value,imin,jmin,imax,jmax,ws2d)
          err = nf90_put_var(ncid,fabm_ids_diag_hz(n),ws2d(_2D_W_),start(1:3),edges(1:3))
          if (err .NE.  NF90_NOERR) go to 10
       end do
