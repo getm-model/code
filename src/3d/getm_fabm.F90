@@ -152,9 +152,9 @@
       if (fabm_adv_hor .eq. J7) stop 'init_getm_fabm: J7 not implemented yet'
       call print_adv_settings_3d(fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH)
 
-      allocate(pa_nummix(size(model%info%state_variables)),stat=rc)
+      allocate(pa_nummix(size(model%state_variables)),stat=rc)
       if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (pa_nummix)'
-      do n=1,size(model%info%state_variables)
+      do n=1,size(model%state_variables)
          pa_nummix(n)%p3d => null()
       end do
 
@@ -238,7 +238,7 @@
 
    if (do_numerical_analyses_3d) then
 
-      allocate(nummix_fabm_pel(I3DFIELD,size(model%info%state_variables)),stat=rc)
+      allocate(nummix_fabm_pel(I3DFIELD,size(model%state_variables)),stat=rc)
       if (rc /= 0) stop 'postinit_getm_fabm: Error allocating memory (nummix_fabm_pel)'
       nummix_fabm_pel = _ZERO_
 
@@ -247,7 +247,7 @@
       if (rc /= 0) stop 'postinit_getm_fabm: Error allocating memory (nummix)'
 #endif
 
-      do n=1,size(model%info%state_variables)
+      do n=1,size(model%state_variables)
 #ifdef _POINTER_REMAP_
          pa_nummix(n)%p3d(imin-HALO:,jmin-HALO:,0:) => nummix_fabm_pel(:,:,:,n)
 #else
