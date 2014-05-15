@@ -71,7 +71,7 @@
    end do
 
 #ifdef _WRITE_HOT_HALOS_
-   LEVEL3 'include HALOs in NetCDF hostart files'
+   LEVEL3 'include HALOs in NetCDF hotstart files'
    start(1) = 1; edges(1) = (imax+HALO)-(imin-HALO)+1
    start(2) = 1; edges(2) = (jmax+HALO)-(jmin-HALO)+1
 #else

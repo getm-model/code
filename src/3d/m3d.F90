@@ -95,11 +95,9 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   integer, intent(in)                 :: runtype
    REALTYPE, intent(in)                :: timestep
    logical, intent(in)                 :: hotstart
-!
-! !INPUT/OUTPUT PARAMETERS:
-   integer, intent(inout)              :: runtype
 !
 !
 ! !DESCRIPTION:
@@ -152,10 +150,6 @@
    read(NAMLST,m3d)
 !   rewind(NAMLST)
 
-   if (runtype.ge.3 .and. .not.calc_temp .and. .not.calc_salt) then
-      LEVEL2 'reset runtype to 2 because neither temp nor salt are calculated'
-      runtype = 2
-   end if
    calc_ip = (runtype.ge.3 .or. nonhyd_method.eq.1)
 
    deformC_3d =deformC
