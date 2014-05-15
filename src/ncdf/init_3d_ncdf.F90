@@ -593,16 +593,16 @@
       end do
 
       if (do_numerical_analyses_3d) then
-         allocate(nmpel_ids(size(model%info%state_variables)),stat=rc)
+         allocate(nmpel_ids(size(model%state_variables)),stat=rc)
          if (rc /= 0) stop 'init_3d_ncdf(): Error allocating memory (nmpel_ids)'
-         do n=1,size(model%info%state_variables)
-            err = nf90_def_var(ncid,'nummix_'//trim(model%info%state_variables(n)%name),NCDF_FLOAT_PRECISION,f4_dims,nmpel_ids(n))
+         do n=1,size(model%state_variables)
+            err = nf90_def_var(ncid,'nummix_'//trim(model%state_variables(n)%name),NCDF_FLOAT_PRECISION,f4_dims,nmpel_ids(n))
             if (err .NE.  NF90_NOERR) go to 10
             call set_attributes(ncid,nmpel_ids(n),                                                                &
-                             long_name    ='numerical mixing of '//trim(model%info%state_variables(n)%long_name), &
-                             units        =trim(model%info%state_variables(n)%units//'**2/s'),                    &
-                             FillValue    =model%info%state_variables(n)%missing_value,                           &
-                             missing_value=model%info%state_variables(n)%missing_value)
+                             long_name    ='numerical mixing of '//trim(model%state_variables(n)%long_name), &
+                             units        =trim(model%state_variables(n)%units//'**2/s'),                    &
+                             FillValue    =model%state_variables(n)%missing_value,                           &
+                             missing_value=model%state_variables(n)%missing_value)
          end do
       end if
 
