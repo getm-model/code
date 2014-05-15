@@ -293,11 +293,11 @@
          end do
          select case (bdy_3d_type(l))
             case(ZERO_GRADIENT)
-               do o=1,size(model%info%state_variables)
+               do o=1,size(model%state_variables)
                   call bdy_3d_west(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
                end do
             case(CLAMPED)
-               do o=1,size(model%info%state_variables)
+               do o=1,size(model%state_variables)
                   if (have_bio_bdy_values(o) .eq. 1) then
 #ifdef _POINTER_REMAP_
                      p_bdy_data(0:,1:) => bio_bdy(:,:,o)
@@ -327,11 +327,11 @@
          end do
          select case (bdy_3d_type(l))
             case(ZERO_GRADIENT)
-               do o=1,size(model%info%state_variables)
+               do o=1,size(model%state_variables)
                   call bdy_3d_north(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
                end do
             case(CLAMPED)
-               do o=1,size(model%info%state_variables)
+               do o=1,size(model%state_variables)
                   if (have_bio_bdy_values(o) .eq. 1) then
 #ifdef _POINTER_REMAP_
                      p_bdy_data(0:,1:) => bio_bdy(:,:,o)
@@ -361,11 +361,11 @@
          end do
          select case (bdy_3d_type(l))
             case(ZERO_GRADIENT)
-               do o=1,size(model%info%state_variables)
+               do o=1,size(model%state_variables)
                   call bdy_3d_east(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
                end do
             case(CLAMPED)
-               do o=1,size(model%info%state_variables)
+               do o=1,size(model%state_variables)
                   if (have_bio_bdy_values(o) .eq. 1) then
 #ifdef _POINTER_REMAP_
                      p_bdy_data(0:,1:) => bio_bdy(:,:,o)
@@ -395,11 +395,11 @@
          end do
          select case (bdy_3d_type(l))
             case(ZERO_GRADIENT)
-               do o=1,size(model%info%state_variables)
+               do o=1,size(model%state_variables)
                   call bdy_3d_south(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
                end do
             case(CLAMPED)
-               do o=1,size(model%info%state_variables)
+               do o=1,size(model%state_variables)
                   if (have_bio_bdy_values(o) .eq. 1) then
 #ifdef _POINTER_REMAP_
                      p_bdy_data(0:,1:) => bio_bdy(:,:,o)
@@ -419,10 +419,10 @@
 
 #ifdef _FABM_
    if (fabm_calc) then
-      do n=1,size(model%info%state_variables)
+      do n=1,size(model%state_variables)
          call mirror_bdy_3d(fabm_pel(:,:,:,n),H_TAG)
       end do
-      do n=1,size(model%info%state_variables_ben)
+      do n=1,size(model%bottom_state_variables)
          call mirror_bdy_2d(fabm_ben(:,:,  n),H_TAG)
       end do
    end if
