@@ -543,9 +543,9 @@
          if (err .NE.  NF90_NOERR) go to 10
       end do
       if (do_numerical_analyses_3d) then
-         do n=1,size(model%info%state_variables)
+         do n=1,size(model%state_variables)
             call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix_fabm_pel(:,:,:,n), &
-                        model%info%state_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
+                        model%state_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
             err = nf90_put_var(ncid,nmpel_ids(n),ws(_3D_W_),start,edges)
             if (err .NE.  NF90_NOERR) go to 10
          end do
