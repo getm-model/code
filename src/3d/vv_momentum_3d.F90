@@ -249,8 +249,13 @@
 
 !     Barotropic pressure gradient
 #ifndef NO_BAROTROPIC
-               zp=max(sseo(i,j+1),-H(i,j  )+min(min_depth,Dn(i,j+1)))
-               zm=max(sseo(i,j  ),-H(i,j+1)+min(min_depth,Dn(i,j  )))
+               if (rigid_lid) then
+                  zp = _ZERO_
+                  zm = _ZERO_
+               else
+                  zp=max(sseo(i,j+1),-H(i,j  )+min(min_depth,Dn(i,j+1)))
+                  zm=max(sseo(i,j  ),-H(i,j+1)+min(min_depth,Dn(i,j  )))
+               end if
                zy=(zp-zm+(airp(i,j+1)-airp(i,j))/gamma)/DYV
 #else
                zy=_ZERO_

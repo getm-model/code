@@ -119,7 +119,7 @@
 #endif
 #ifdef _FABM_
    if (fabm_calc) then
-      allocate(fabm_id(rriver,size(model%info%state_variables)),stat=err)
+      allocate(fabm_id(rriver,size(model%state_variables)),stat=err)
       if (err /= 0) stop 'ncdf_river: Error allocating memory (fabm_id)'
       fabm_id = -1
    end if
@@ -175,15 +175,15 @@
 #endif
 #ifdef _FABM_
       if (fabm_calc) then
-         do m=1,size(model%info%state_variables)
+         do m=1,size(model%state_variables)
             fabm_name=trim(real_river_name(n))//'_'// &
-                        trim(model%info%state_variables(m)%name)
+                        trim(model%state_variables(m)%name)
             err =  nf90_inq_varid(ncid,trim(fabm_name),fabm_id(n,m))
             if (err .ne. NF90_NOERR) then
                fabm_id(n,m) = -1
             else
                LEVEL4 trim(real_river_name(n)),': ', &
-                        trim(model%info%state_variables(m)%name)
+                        trim(model%state_variables(m)%name)
             end if
          end do
       end if
