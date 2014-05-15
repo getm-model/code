@@ -169,11 +169,14 @@
 
 ! _2D_W_HOT_, _3D_W_HOT_ - macros for writing hot-start files
 #ifdef _WRITE_HOT_HALOS_
-#warning "_WRITE_HOT_HALOS_ not implemented yet - undef it"
-#undef _WRITE_HOT_HALOS_
-#endif
+!KB#warning "_WRITE_HOT_HALOS_ not implemented yet - undef it"
+!KB#undef _WRITE_HOT_HALOS_
+#define _2D_W_HOT_ _IRANGE_HALO_,_JRANGE_HALO_
+#define _3D_W_HOT_ _IRANGE_HALO_,_JRANGE_HALO_,_KRANGE_
+#else
 #define _2D_W_HOT_ _IRANGE_NO_HALO_,_JRANGE_NO_HALO_
 #define _3D_W_HOT_ _IRANGE_NO_HALO_,_JRANGE_NO_HALO_,_KRANGE_
+#endif
 
 ! _2D_R_HOT_, _3D_R_HOT_ - macros for reading hot-start files
 #ifdef _READ_HOT_HALOS_
