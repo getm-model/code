@@ -948,10 +948,10 @@ STDERR 'TWOD_SENDRECV'
 
    if (do_mirror) then
       if ( comm_method .ne. ONE_PROCESS ) then
-         if(left  .eq. MPI_PROC_NULL) f1(il-1, : )  = f1(il, : )
-         if(right .eq. MPI_PROC_NULL) f1(ih+1, : )  = f1(ih, : )
-         if(down  .eq. MPI_PROC_NULL) f1( :, jl-1)  = f1( :, jl)
-         if(up    .eq. MPI_PROC_NULL) f1( :, jh+1)  = f1( :, jh)
+         if(left  .eq. MPI_PROC_NULL) f1(il-1,jl:jh)  = f1(il,jl:jh)
+         if(right .eq. MPI_PROC_NULL) f1(ih+1,jl:jh)  = f1(ih,jl:jh)
+         if(down  .eq. MPI_PROC_NULL) f1(il:ih,jl-1)  = f1(il:ih,jl)
+         if(up    .eq. MPI_PROC_NULL) f1(il:ih,jh+1)  = f1(il:ih,jh)
          if(ul    .eq. MPI_PROC_NULL) f1(il-1,jh+1) = f1(il,jh)
          if(ur    .eq. MPI_PROC_NULL) f1(ih+1,jh+1) = f1(ih,jh)
          if(lr    .eq. MPI_PROC_NULL) f1(ih+1,jl-1) = f1(ih,jl)
@@ -1156,10 +1156,10 @@ STDERR 'TWOD_NONBLOCKING'
 ! included.
    if ( mirror ) then
    if ( comm_method .ne. ONE_PROCESS ) then
-      if(left  .eq. MPI_PROC_NULL) f1(il-1, :, : )   = f1(il, :, : )
-      if(right .eq. MPI_PROC_NULL) f1(ih+1, :, : )   = f1(ih, :, : )
-      if(down  .eq. MPI_PROC_NULL) f1( :, jl-1, : )  = f1( :, jl, : )
-      if(up    .eq. MPI_PROC_NULL) f1( :, jh+1, : )  = f1( :, jh, : )
+      if(left  .eq. MPI_PROC_NULL) f1(il-1, jl:jh, : )   = f1(il, jl:jh, : )
+      if(right .eq. MPI_PROC_NULL) f1(ih+1, jl:jh, : )   = f1(ih, jl:jh, : )
+      if(down  .eq. MPI_PROC_NULL) f1(il:ih, jl-1, : )   = f1(il:ih, jl, : )
+      if(up    .eq. MPI_PROC_NULL) f1(il:ih, jh+1, : )   = f1(il:ih, jh, : )
       if(ul    .eq. MPI_PROC_NULL) f1(il-1,jh+1, : ) = f1(il,jh, : )
       if(ur    .eq. MPI_PROC_NULL) f1(ih+1,jh+1, : ) = f1(ih,jh, : )
       if(lr    .eq. MPI_PROC_NULL) f1(ih+1,jl-1, : ) = f1(ih,jl, : )
