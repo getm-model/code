@@ -245,7 +245,7 @@
                T(i-1+ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i-1+ii,j,:)
 #ifdef _FABM_
                if (fabm_calc) then
-                  do o=1,size(model%info%state_variables)
+                  do o=1,size(model%state_variables)
                      if (have_bio_bdy_values(o) .eq. 1) then
                         fabm_pel(i-1+ii,j,:,o) = sp(ii)*bio_bdy(:,k,o) &
                                             +(1.-sp(ii))*fabm_pel(i-1+ii,j,:,o)
@@ -258,7 +258,7 @@
 #ifdef _FABM_
 !        zero gradient when we don't have bdy values
          if (fabm_calc) then
-            do o=1,size(model%info%state_variables)
+            do o=1,size(model%state_variables)
                if (have_bio_bdy_values(o) .ne. 1) then
                   fabm_pel(i,j,:,o) = fabm_pel(i+1,j,:,o)
                end if
@@ -322,7 +322,7 @@
                T(i,j+1-jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j+1-jj,:)
 #ifdef _FABM_
                if (fabm_calc) then
-                  do o=1,size(model%info%state_variables)
+                  do o=1,size(model%state_variables)
                      if (have_bio_bdy_values(o) .eq. 1) then
                         fabm_pel(i,j+1-jj,:,o) = sp(jj)*bio_bdy(:,k,o) &
                                             +(1.-sp(jj))*fabm_pel(i,j+1-jj,:,o)
@@ -335,7 +335,7 @@
 #ifdef _FABM_
 !        zero gradient when we don't have bdy values
          if (fabm_calc) then
-            do o=1,size(model%info%state_variables)
+            do o=1,size(model%state_variables)
                if (have_bio_bdy_values(o) .ne. 1) then
                   fabm_pel(i,j,:,o) = fabm_pel(i,j-1,:,o)
                end if
@@ -399,7 +399,7 @@
                T(i+1-ii,j,:) = sp(ii)*bdyvertT(:)+(_ONE_-sp(ii))*T(i+1-ii,j,:)
 #ifdef _FABM_
                if (fabm_calc) then
-                  do o=1,size(model%info%state_variables)
+                  do o=1,size(model%state_variables)
                      if (have_bio_bdy_values(o) .eq. 1) then
                         fabm_pel(i+1-ii,j,:,o) = sp(ii)*bio_bdy(:,k,o) &
                                             +(1.-sp(ii))*fabm_pel(i+1-ii,j,:,o)
@@ -412,7 +412,7 @@
 #ifdef _FABM_
 !        zero gradient when we don't have bdy values
          if (fabm_calc) then
-            do o=1,size(model%info%state_variables)
+            do o=1,size(model%state_variables)
                if (have_bio_bdy_values(o) .ne. 1) then
                   fabm_pel(i,j,:,o) = fabm_pel(i-1,j,:,o)
                end if
@@ -476,7 +476,7 @@
                T(i,j-1+jj,:) = sp(jj)*bdyvertT(:)+(_ONE_-sp(jj))*T(i,j-1+jj,:)
 #ifdef _FABM_
                if (fabm_calc) then
-                  do o=1,size(model%info%state_variables)
+                  do o=1,size(model%state_variables)
                      if (have_bio_bdy_values(o) .eq. 1) then
                         fabm_pel(i,j-1+jj,:,o) = sp(jj)*bio_bdy(:,k,o) &
                                             +(1.-sp(jj))*fabm_pel(i,j-1+jj,:,o)
@@ -489,7 +489,7 @@
 #ifdef _FABM_
 !        zero gradient when we don't have bdy values
          if (fabm_calc) then
-            do o=1,size(model%info%state_variables)
+            do o=1,size(model%state_variables)
                if (have_bio_bdy_values(o) .ne. 1) then
                   fabm_pel(i,j,:,o) = fabm_pel(i,j+1,:,o)
                end if
@@ -503,10 +503,10 @@
 
 #ifdef _FABM_
    if (fabm_calc) then
-      do n=1,size(model%info%state_variables)
+      do n=1,size(model%state_variables)
          call mirror_bdy_3d(fabm_pel(:,:,:,n),H_TAG)
       end do
-      do n=1,size(model%info%state_variables_ben)
+      do n=1,size(model%bottom_state_variables)
          call mirror_bdy_2d(fabm_ben(:,:,  n),H_TAG)
       end do
    end if
