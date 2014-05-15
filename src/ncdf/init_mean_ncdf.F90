@@ -335,61 +335,61 @@
 #endif
 #ifdef _FABM_
    if (allocated(fabm_pel)) then
-      allocate(fabmmean_ids(size(model%info%state_variables)),stat=err)
+      allocate(fabmmean_ids(size(model%state_variables)),stat=err)
       if (err /= 0) stop 'init_mean_ncdf(): Error allocating memory (fabmmean_ids)'
 
-      do n=1,size(model%info%state_variables)
-         err = nf90_def_var(ncid,model%info%state_variables(n)%name,NCDF_FLOAT_PRECISION,f4_dims,fabmmean_ids(n))
+      do n=1,size(model%state_variables)
+         err = nf90_def_var(ncid,model%state_variables(n)%name,NCDF_FLOAT_PRECISION,f4_dims,fabmmean_ids(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabmmean_ids(n), &
-                          long_name    =trim(model%info%state_variables(n)%long_name), &
-                          units        =trim(model%info%state_variables(n)%units),    &
-                          FillValue    =model%info%state_variables(n)%missing_value,  &
-                          missing_value=model%info%state_variables(n)%missing_value,  &
-                          valid_min    =model%info%state_variables(n)%minimum,        &
-                          valid_max    =model%info%state_variables(n)%maximum)
+                          long_name    =trim(model%state_variables(n)%long_name), &
+                          units        =trim(model%state_variables(n)%units),    &
+                          FillValue    =model%state_variables(n)%missing_value,  &
+                          missing_value=model%state_variables(n)%missing_value,  &
+                          valid_min    =model%state_variables(n)%minimum,        &
+                          valid_max    =model%state_variables(n)%maximum)
       end do
 
-      allocate(fabmmean_ids_ben(size(model%info%state_variables_ben)),stat=err)
+      allocate(fabmmean_ids_ben(size(model%bottom_state_variables)),stat=err)
       if (err /= 0) stop 'init_mean_ncdf(): Error allocating memory (fabmmean_ids_ben)'
-      do n=1,size(model%info%state_variables_ben)
-         err = nf90_def_var(ncid,model%info%state_variables_ben(n)%name,NCDF_FLOAT_PRECISION,f3_dims,fabmmean_ids_ben(n))
+      do n=1,size(model%bottom_state_variables)
+         err = nf90_def_var(ncid,model%bottom_state_variables(n)%name,NCDF_FLOAT_PRECISION,f3_dims,fabmmean_ids_ben(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabmmean_ids_ben(n), &
-                       long_name    =trim(model%info%state_variables_ben(n)%long_name), &
-                       units        =trim(model%info%state_variables_ben(n)%units),    &
-                       FillValue    =model%info%state_variables_ben(n)%missing_value,  &
-                       missing_value=model%info%state_variables_ben(n)%missing_value,  &
-                       valid_min    =model%info%state_variables_ben(n)%minimum,        &
-                       valid_max    =model%info%state_variables_ben(n)%maximum)
+                       long_name    =trim(model%bottom_state_variables(n)%long_name), &
+                       units        =trim(model%bottom_state_variables(n)%units),    &
+                       FillValue    =model%bottom_state_variables(n)%missing_value,  &
+                       missing_value=model%bottom_state_variables(n)%missing_value,  &
+                       valid_min    =model%bottom_state_variables(n)%minimum,        &
+                       valid_max    =model%bottom_state_variables(n)%maximum)
       end do
 
-      allocate(fabmmean_ids_diag(size(model%info%diagnostic_variables)),stat=err)
+      allocate(fabmmean_ids_diag(size(model%diagnostic_variables)),stat=err)
       if (err /= 0) stop 'init_mean_ncdf(): Error allocating memory (fabmmean_ids_diag)'
-      do n=1,size(model%info%diagnostic_variables)
-         err = nf90_def_var(ncid,model%info%diagnostic_variables(n)%name,NCDF_FLOAT_PRECISION,f4_dims,fabmmean_ids_diag(n))
+      do n=1,size(model%diagnostic_variables)
+         err = nf90_def_var(ncid,model%diagnostic_variables(n)%name,NCDF_FLOAT_PRECISION,f4_dims,fabmmean_ids_diag(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabmmean_ids_diag(n), &
-                       long_name    =trim(model%info%diagnostic_variables(n)%long_name), &
-                       units        =trim(model%info%diagnostic_variables(n)%units),    &
-                       FillValue    =model%info%diagnostic_variables(n)%missing_value,  &
-                       missing_value=model%info%diagnostic_variables(n)%missing_value,  &
-                       valid_min    =model%info%diagnostic_variables(n)%minimum,        &
-                       valid_max    =model%info%diagnostic_variables(n)%maximum)
+                       long_name    =trim(model%diagnostic_variables(n)%long_name), &
+                       units        =trim(model%diagnostic_variables(n)%units),    &
+                       FillValue    =model%diagnostic_variables(n)%missing_value,  &
+                       missing_value=model%diagnostic_variables(n)%missing_value,  &
+                       valid_min    =model%diagnostic_variables(n)%minimum,        &
+                       valid_max    =model%diagnostic_variables(n)%maximum)
       end do
 
-      allocate(fabmmean_ids_diag_hz(size(model%info%diagnostic_variables_hz)),stat=err)
+      allocate(fabmmean_ids_diag_hz(size(model%horizontal_diagnostic_variables)),stat=err)
       if (err /= 0) stop 'init_mean_ncdf(): Error allocating memory (fabmmean_ids_diag_hz)'
-      do n=1,size(model%info%diagnostic_variables_hz)
-         err = nf90_def_var(ncid,model%info%diagnostic_variables_hz(n)%name,NCDF_FLOAT_PRECISION,f3_dims,fabmmean_ids_diag_hz(n))
+      do n=1,size(model%horizontal_diagnostic_variables)
+         err = nf90_def_var(ncid,model%horizontal_diagnostic_variables(n)%name,NCDF_FLOAT_PRECISION,f3_dims,fabmmean_ids_diag_hz(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabmmean_ids_diag_hz(n), &
-                       long_name    =trim(model%info%diagnostic_variables_hz(n)%long_name), &
-                       units        =trim(model%info%diagnostic_variables_hz(n)%units),    &
-                       FillValue    =model%info%diagnostic_variables_hz(n)%missing_value,  &
-                       missing_value=model%info%diagnostic_variables_hz(n)%missing_value,  &
-                       valid_min    =model%info%diagnostic_variables_hz(n)%minimum,        &
-                       valid_max    =model%info%diagnostic_variables_hz(n)%maximum)
+                       long_name    =trim(model%horizontal_diagnostic_variables(n)%long_name), &
+                       units        =trim(model%horizontal_diagnostic_variables(n)%units),    &
+                       FillValue    =model%horizontal_diagnostic_variables(n)%missing_value,  &
+                       missing_value=model%horizontal_diagnostic_variables(n)%missing_value,  &
+                       valid_min    =model%horizontal_diagnostic_variables(n)%minimum,        &
+                       valid_max    =model%horizontal_diagnostic_variables(n)%maximum)
       end do
    end if
 #endif
