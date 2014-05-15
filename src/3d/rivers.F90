@@ -370,12 +370,12 @@
    if (allocated(fabm_pel)) then
       LEVEL1 'init_rivers_fabm()'
 
-      allocate(river_fabm(nriver,size(model%info%state_variables)),stat=rc)
+      allocate(river_fabm(nriver,size(model%state_variables)),stat=rc)
       if (rc /= 0) stop 'rivers: Error allocating memory (river_fabm)'
 
-      do m=1,size(model%info%state_variables)
-         if (model%info%state_variables(m)%no_river_dilution) then
-            river_fabm(:,m) = model%info%state_variables(m)%missing_value
+      do m=1,size(model%state_variables)
+         if (model%state_variables(m)%no_river_dilution) then
+            river_fabm(:,m) = model%state_variables(m)%missing_value
          else
             river_fabm(:,m) = _ZERO_
          end if
@@ -482,8 +482,8 @@
 #endif
 #ifdef _FABM_
                      if (allocated(fabm_pel)) then
-                        do m=1,size(model%info%state_variables)
-                           if ( river_fabm(n,m) .ne. model%info%state_variables(m)%missing_value ) then
+                        do m=1,size(model%state_variables)
+                           if ( river_fabm(n,m) .ne. model%state_variables(m)%missing_value ) then
                               fabm_pel(i,j,1:kmax,m) = &
                                     (fabm_pel(i,j,1:kmax,m)*(H(i,j)+ssen(i,j)) &
                                     + river_fabm(n,m)*macro_height(n))      &
