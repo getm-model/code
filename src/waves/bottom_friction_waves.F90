@@ -111,7 +111,7 @@
          if (az(i,j) .ne. 0) then
             Hrms = sqrthalf * waveH(i,j)
             omegam1 = oneovertwopi * waveT(i,j)
-!           wave orbital velocity amplitude at bottom (ubot in SWAN)
+!           wave orbital velocity amplitude at bottom (peak orbital velocity, ubot in SWAN)
             uorb = _HALF_ * Hrms / ( omegam1*sinh(waveK(i,j)*Dvel(i,j)) )
 !           wave orbital excursion
             aorb = omegam1 * uorb
