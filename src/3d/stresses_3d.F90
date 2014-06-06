@@ -56,6 +56,7 @@
    do j=jmin,jmax
       do i=imin-1,imax
 
+!        KK-TODO: replace with semi-implicit calculation from stop_macro
          k          = kumin(i,j)                      ! bottom index
          taubx(i,j) = - uu(i,j,k)/hun(i,j,k)*rru(i,j) ! momentum flux
 
@@ -68,6 +69,7 @@
    do j=jmin-1,jmax
       do i=imin,imax
 
+!        KK-TODO: replace with semi-implicit calculation from stop_macro
          k          = kvmin(i,j)                      ! bottom index
          tauby(i,j) = - vv(i,j,k)/hvn(i,j,k)*rrv(i,j) ! momentum flux
 
@@ -88,6 +90,7 @@
 
 
 !        total bottom stress at T-points
+!        KK-TODO: check calculation
          taub(i,j)=sqrt(_HALF_*(                                      &
                    (uu(i-1,j  ,ku1)/hun(i-1,j  ,ku1)*rru(i-1,j  ))**2 &
                   +(uu(i  ,j  ,ku2)/hun(i  ,j  ,ku2)*rru(i  ,j  ))**2 &
