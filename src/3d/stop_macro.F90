@@ -21,7 +21,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax,au,av
    use variables_2d, only: Uint,Vint,UEx,VEx,Slru,Slrv,SlUx,SlVx,ru,rv
    use variables_3d, only: kumin,kvmin,uu,vv,hun,hvn,Dn,Dveln,Dun,Dvn
-   use variables_3d, only: Uadv,Vadv,uuEx,vvEx,rru,rrv
+   use variables_3d, only: dt,Uadv,Vadv,uuEx,vvEx,rru,rrv
    use variables_3d, only: idpdx_hs,idpdy_hs,idpdx_nh,idpdy_nh
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
@@ -44,7 +44,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                      :: i,j,k
-   REALTYPE                     :: vertsum
+   REALTYPE                     :: vertsum,rrdraghm1,rdragDm1
    REALTYPE,dimension(E2DFIELD) :: work2d
 !EOP
 !-----------------------------------------------------------------------
@@ -61,7 +61,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j)                                         &
-!$OMP          PRIVATE(i,k,vertsum)
+!$OMP          PRIVATE(i,k,vertsum,rrdraghm1,rdragDm1)
 !$OMP SINGLE
 
 !  Note (KK): for kmax=1 [uu|vv]=[U|V]int and only internal
@@ -91,9 +91,15 @@
                STDERR 'NO_SLR U'
                Slru(i,j)= _ZERO_
 #else
+!              KK-TODO: adapt taubx calculation in stresses_3d and use taubx here.
+!                       consider uuEx/UEx as well for "new" transport?
+!                       if no special treatment of Slru is needed anymore, it can
+!                       be combined with SlUx.
                k=kumin(i,j)
-               Slru(i,j) =   rru(i,j)*uu(i,j,k)/hun(i,j,k) &
-                           - ru(i,j)*Uadv(i,j)/Dun(i,j)
+               rrdraghm1 = rru(i,j) / hun(i,j,k)
+               rdragDm1  = ru (i,j) / Dun(i,j)
+               Slru(i,j) =   rrdraghm1*uu  (i,j,k) / (_ONE_+dt*rrdraghm1) &
+                           - rdragDm1 *Uadv(i,j)   / (_ONE_+dt*rdragDm1 )
 #endif
 
 #ifdef STRUCTURE_FRICTION
@@ -116,9 +122,15 @@
                STDERR 'NO_SLR V'
                Slrv(i,j)= _ZERO_
 #else
+!              KK-TODO: adapt tauby calculation in stresses_3d and use tauby here.
+!                       consider vvEx/VEx as well for "new" transport?
+!                       if no special treatment of Slrv is needed anymore, it can
+!                       be combined with SlVx.
                k=kvmin(i,j)
-               Slrv(i,j) =   rrv(i,j)*vv(i,j,k)/hvn(i,j,k) &
-                           - rv(i,j)*Vadv(i,j)/Dvn(i,j)
+               rrdraghm1 = rrv(i,j) / hvn(i,j,k)
+               rdragDm1  = rv (i,j) / Dvn(i,j)
+               Slrv(i,j) =   rrdraghm1*vv  (i,j,k) / (_ONE_+dt*rrdraghm1) &
+                           - rdragDm1 *Vadv(i,j)   / (_ONE_+dt*rdragDm1 )
 #endif
 
 #ifdef STRUCTURE_FRICTION
