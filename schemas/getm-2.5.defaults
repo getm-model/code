@@ -204,6 +204,9 @@
 			<waves_datasource>
 				0
 			</waves_datasource>
+			<waves_windscalefactor>
+				1.0
+			</waves_windscalefactor>
 			<max_depth_windwaves>
 				-1.0
 			</max_depth_windwaves>
