@@ -50,6 +50,7 @@
    REALTYPE,public           :: kD_deepthresh
 !
 ! !PRIVATE DATA MEMBERS:
+   REALTYPE                  :: waves_windscalefactor = _ONE_
    REALTYPE                  :: max_depth_windwaves = -_ONE_
 !
 ! !REVISION HISTORY:
@@ -102,8 +103,8 @@
 ! the simulation.
 !
 ! !LOCAL VARIABLES
-   namelist /waves/ waves_method,waves_datasource,max_depth_windwaves, &
-                    waves_bbl_method
+   namelist /waves/ waves_method,waves_datasource,waves_windscalefactor, &
+                    max_depth_windwaves,waves_bbl_method
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -141,6 +142,7 @@
          if ( .not. metforcing ) then
             stop 'init_waves(): metforcing must be active for WAVES_FROMWIND'
          end if
+         LEVEL3 'waves_windscalefactor = ',real(waves_windscalefactor)
          if ( max_depth_windwaves .lt. _ZERO_) then
             max_depth_windwaves = 99999.0
          else
@@ -213,7 +215,7 @@
 !                    - also valid for met_method=1
                   waveDir(i,j) = atan2(tausy(i,j),tausx(i,j)) ! cartesian convention and in radians
                   wind = sqrt(sqrt(tausx(i,j)**2 + tausy(i,j)**2)/(1.25d-3*1.25))
-                  wind = max( min_wind , wind )
+                  wind = waves_windscalefactor * max( min_wind , wind )
 !                 KK-TODO: Or do we want to use H instead of D?
 !                          Then we would not need to call depth_update in
 !                          initialise(). However H does not consider
