@@ -359,17 +359,19 @@
 ! !IROUTINE: wind2waveHeight - estimates significant wave height from wind
 !
 ! !INTERFACE:
-   REALTYPE function wind2waveHeight(wind,depth)
+   REALTYPE function wind2waveHeight(wind,depth,fetch)
 
 ! !USES:
    use parameters, only: grav => g
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,intent(in) :: wind,depth
+   REALTYPE,intent(in)          :: wind,depth
+   REALTYPE,intent(in),optional :: fetch
 !
 ! !DESCRIPTION:
-!  Calculates significant wave height (Hm0) under assumption of unlimited fetch.
+!  Calculates significant wave height (Hm0).
+!  If fetch is not provided, unlimited fetch will be assumed.
 !  See page 250 in Holthuijsen (2007).
 !
 ! !REVISION HISTORY:
@@ -377,8 +379,11 @@
 !                      Knut Klingbeil
 !
 ! !LOCAL VARIABLES
-   REALTYPE           :: depthstar,waveHeightstar
+   REALTYPE           :: depthstar,fetchstar,waveHeightstar
+   REALTYPE           :: tanhk3dm3,limiter
    REALTYPE,parameter :: waveHeightstar8 = 0.24d0
+   REALTYPE,parameter :: k1 = 4.14d-4
+   REALTYPE,parameter :: m1 = 0.79d0
    REALTYPE,parameter :: k3 = 0.343d0
    REALTYPE,parameter :: m3 = 1.14d0
    REALTYPE,parameter :: p  = 0.572d0
@@ -390,8 +395,18 @@
 !  dimensionless depth
    depthstar = grav * depth / wind**2
 
+   tanhk3dm3 = tanh(k3*depthstar**m3)
+
+   if (present(fetch)) then
+!     dimensionless fetch
+      fetchstar = grav * fetch / wind**2
+      limiter = tanh(k1*fetchstar**m1 / tanhk3dm3)
+   else
+      limiter = _ONE_
+   end if
+
 !  dimensionless significant wave height
-   waveHeightstar = waveHeightstar8 * tanh(k3*depthstar**m3)**p
+   waveHeightstar = waveHeightstar8 * (tanhk3dm3*limiter)**p
 
 !  significant wave height
    wind2waveHeight = wind**2 * waveHeightstar / grav
@@ -404,17 +419,19 @@
 ! !IROUTINE: wind2wavePeriod - estimates peak wave period from wind
 !
 ! !INTERFACE:
-   REALTYPE function wind2wavePeriod(wind,depth)
+   REALTYPE function wind2wavePeriod(wind,depth,fetch)
 
 ! !USES:
    use parameters, only: grav => g
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,intent(in) :: wind,depth
+   REALTYPE,intent(in)          :: wind,depth
+   REALTYPE,intent(in),optional :: fetch
 !
 ! !DESCRIPTION:
-!  Calculates peak wave period under assumption of unlimited fetch.
+!  Calculates peak wave period.
+!  If fetch is not provided, unlimited fetch will be assumed.
 !  See page 250 in Holthuijsen (2007).
 !  The peak wave period can be empirically related to the significant
 !  wave period (Holthuijsen Eqs. (4.2.7) and (4.2.9)).
@@ -424,8 +441,11 @@
 !                      Knut Klingbeil
 !
 ! !LOCAL VARIABLES
-   REALTYPE           :: depthstar,wavePeriodstar
+   REALTYPE           :: depthstar,fetchstar,wavePeriodstar
+   REALTYPE           :: tanhk4dm4,limiter
    REALTYPE,parameter :: wavePeriodstar8 = 7.69d0
+   REALTYPE,parameter :: k2 = 2.77d-7
+   REALTYPE,parameter :: m2 = 1.45d0
    REALTYPE,parameter :: k4 = 0.10d0
    REALTYPE,parameter :: m4 = 2.01d0
    REALTYPE,parameter :: q  = 0.187d0
@@ -437,8 +457,18 @@
 !  dimensionless depth
    depthstar = grav * depth / wind**2
 
+   tanhk4dm4 = tanh(k4*depthstar**m4)
+
+   if (present(fetch)) then
+!     dimensionless fetch
+      fetchstar = grav * fetch / wind**2
+      limiter = tanh(k2*fetchstar**m2 / tanhk4dm4)
+   else
+      limiter = _ONE_
+   end if
+
 !  dimensionless peak wave period
-   wavePeriodstar = wavePeriodstar8 * tanh(k4*depthstar**m4)**q
+   wavePeriodstar = wavePeriodstar8 * (tanhk4dm4*limiter)**q
 
 !  peak wave period
    wind2wavePeriod = wind * wavePeriodstar / grav
