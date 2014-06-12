@@ -54,13 +54,13 @@
 !BOC
    LEVEL2 'CFL check'
 
-   allocate(lmask(E2DFIELD),stat=rc)
+   allocate(lmask(imin:imax,jmin:jmax),stat=rc)
    if (rc /= 0) stop 'cfl_check: Error allocating memory (lmask)'
 
    lmask = .false.
-   lmask = (az .gt. 0)
-   h_max = maxval(H,mask = lmask)
-   pos = maxloc(H,mask = lmask)
+   lmask = (az(imin:imax,jmin:jmax) .gt. 0)
+   h_max = maxval(H(imin:imax,jmin:jmax),mask = lmask)
+   pos = maxloc(H(imin:imax,jmin:jmax),mask = lmask)
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    max_dt=1000000000.
    do i=imin,imax
