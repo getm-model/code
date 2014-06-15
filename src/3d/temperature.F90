@@ -502,7 +502,11 @@ temp_field_no=1
                a4(k)=T(i,j,k)*(hn(i,j,k)-auxo(k-1))+T(i,j,k-1)*auxo(k-1)  &
                      +dry_z(i,j)*dt*(rad1d(k)+shf_loc*rho_0_cpi-rad1d(k-1))
                if (nudge_sst) then
-                  a4(kmax) = a4(kmax) - dry_z(i,j)*dt*hn(i,j,kmax)*(T(i,j,kmax)-sst(i,j))/sst_nudging_time
+!                 implicit nudging
+                  a2(kmax) = a2(kmax) + dry_z(i,j)*hn(i,j,kmax)*dt/sst_nudging_time
+                  a4(kmax) = a4(kmax) + dry_z(i,j)*hn(i,j,kmax)*dt/sst_nudging_time*sst(i,j)
+!                 explicit nudging
+                  !a4(kmax) = a4(kmax) - dry_z(i,j)*dt*hn(i,j,kmax)*(T(i,j,kmax)-sst(i,j))/sst_nudging_time
                end if
 
 !        Matrix elements for inner layers
