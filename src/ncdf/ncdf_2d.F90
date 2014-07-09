@@ -35,8 +35,6 @@
    integer                             :: nd2d_id=-1
    integer                             :: nd2do_id=-1,pd2d_id=-1
 
-   REALTYPE, dimension(:,:), allocatable :: ws
-
 ! !DEFINED PARAMETERS
    REALTYPE, parameter                 :: elev_missing       =-9999.0
    REALTYPE, parameter                 :: vel_missing        =-9999.0

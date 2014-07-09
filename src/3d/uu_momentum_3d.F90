@@ -5,7 +5,7 @@
 ! !ROUTINE: uu_momentum_3d - $x$-momentum eq.\ \label{sec-uu-momentum-3d}
 !
 ! !INTERFACE:
-   subroutine uu_momentum_3d(n,bdy3d)
+   subroutine uu_momentum_3d(n)
 !
 ! !DESCRIPTION:
 !
@@ -52,8 +52,8 @@
 #else
    use domain, only: dx,dy
 #endif
-   use domain, only: rigid_lid
-   use bdy_3d, only: do_bdy_3d
+   use domain, only: have_boundaries,rigid_lid
+   use bdy_3d, only: do_bdy_3d_vel
    use variables_3d, only: dt,cnpar,kumin,uu,vv,huo,hun,hvo,uuEx,ww,hvn
    use variables_3d, only: num,nuh,sseo,Dun,rru
    use variables_3d, only: Uadv,Dn
@@ -74,7 +74,6 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: n
-   logical, intent(in)                 :: bdy3d
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -336,16 +335,6 @@
    end do
 !$OMP END DO
 
-#ifdef SLICE_MODEL
-!$OMP DO SCHEDULE(RUNTIME)
-   do i=imin,imax
-      do k=kumin(i,2),kmax
-         uu(i,3,k)=uu(i,2,k)
-      end do
-   end do
-!$OMP END DO NOWAIT
-#endif
-
 ! Each thread must deallocate its own HEAP storage:
    deallocate(dif,stat=rc)
    if (rc /= 0) stop 'uu_momentum_3d: Error deallocating memory (dif)'
@@ -376,14 +365,21 @@
 
 !$OMP END PARALLEL
 
+   if (have_boundaries) call do_bdy_3d_vel(n,U_TAG)
+
+#ifdef SLICE_MODEL
+   j = jmax / 2
+   do i=imin,imax
+      do k=kumin(i,j),kmax
+         uu(i,j+1,k) = uu(i,j,k)
+      end do
+   end do
+#endif
+
+
 !  Update the halo zones
    call tic(TIM_UUMOMENTUMH)
    call update_3d_halo(uu,uu,au,imin,jmin,imax,jmax,kmax,U_TAG)
-
-   if (bdy3d) then
-!      call do_bdy_3d(1,uu)
-   end if
-
    call wait_halo(U_TAG)
    call toc(TIM_UUMOMENTUMH)
    call mirror_bdy_3d(uu,U_TAG)

@@ -5,7 +5,7 @@
 ! !ROUTINE: vv_momentum_3d - $y$-momentum eq.\ \label{sec-vv-momentum-3d}
 !
 ! !INTERFACE:
-   subroutine vv_momentum_3d(n,bdy3d)
+   subroutine vv_momentum_3d(n)
 !
 ! !DESCRIPTION:
 !
@@ -50,7 +50,6 @@
 ! !USES:
    use exceptions
    use parameters, only: g,avmmol,rho_0
-   use domain, only: rigid_lid
    use domain, only: imin,imax,jmin,jmax,kmax,H,HV,min_depth
    use domain, only: dry_v,corv,au,av,az
 #if defined CURVILINEAR || defined SPHERICAL
@@ -58,7 +57,8 @@
 #else
    use domain, only: dx,dy
 #endif
-   use bdy_3d, only: do_bdy_3d
+   use domain, only: have_boundaries,rigid_lid
+   use bdy_3d, only: do_bdy_3d_vel
    use variables_3d, only: Vadv,Dn
    use variables_3d, only: dt,cnpar,kvmin,uu,vv,huo,hvo,hvn,vvEx,ww,hun
    use variables_3d, only: num,nuh,sseo,Dvn,rrv
@@ -82,7 +82,6 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: n
-   logical, intent(in)                 :: bdy3d
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -376,17 +375,6 @@
    end do
 !$OMP END DO
 
-#ifdef SLICE_MODEL
-!$OMP DO SCHEDULE(RUNTIME)
-   do i=imin,imax
-      do k=kvmin(i,2),kmax
-         vv(i,1,k)=vv(i,2,k)
-         vv(i,3,k)=vv(i,2,k)
-      end do
-   end do
-!$OMP END DO
-#endif
-
 ! Each thread must deallocate its own HEAP storage:
    deallocate(dif,stat=rc)
    if (rc /= 0) stop 'vv_momentum_3d: Error deallocating memory (dif)'
@@ -417,14 +405,21 @@
 
 !$OMP END PARALLEL
 
+   if (have_boundaries) call do_bdy_3d_vel(n,V_TAG)
+
+#ifdef SLICE_MODEL
+   j = jmax / 2
+   do i=imin,imax
+      do k=kvmin(i,j),kmax
+         vv(i,j-1,k) = vv(i,j,k)
+         vv(i,j+1,k) = vv(i,j,k)
+      end do
+   end do
+#endif
+
 !  Update the halo zones
    call tic(TIM_VVMOMENTUMH)
    call update_3d_halo(vv,vv,av,imin,jmin,imax,jmax,kmax,V_TAG)
-
-   if (bdy3d) then
-!      call do_bdy_3d(2,vv)
-   end if
-
    call wait_halo(V_TAG)
    call toc(TIM_VVMOMENTUMH)
    call mirror_bdy_3d(vv,V_TAG)
