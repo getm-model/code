@@ -81,8 +81,6 @@
    integer                             :: nmSo_id=-1,pmS_id=-1
    integer                             :: nmTo_id=-1,pmT_id=-1
 
-   REALTYPE, dimension(:,:,:), allocatable :: ws
-
 ! !DEFINED PARAMETERS
    REALTYPE, parameter                 :: hh_missing     =-9999.0
    REALTYPE, parameter                 :: elev_missing   =-9999.0

@@ -12,7 +12,6 @@
 ! !USES:
    use netcdf
    use exceptions
-   use ncdf_2d,      only: ws2d => ws
    use ncdf_3d
    use grid_ncdf,    only: xlen,ylen,zlen
    use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
@@ -71,7 +70,8 @@
    integer                   :: start(4),edges(4)
    integer, save             :: n3d=0
    REALTYPE                  :: dum(1)
-   REALTYPE,dimension(I2DFIELD) :: wrk2d
+   REALTYPE,dimension(E2DFIELD) :: ws2d,wrk2d
+   REALTYPE,dimension(I3DFIELD) :: ws
    integer                   :: k
 !EOP
 !-----------------------------------------------------------------------
