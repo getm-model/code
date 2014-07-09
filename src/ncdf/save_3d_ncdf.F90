@@ -12,7 +12,6 @@
 ! !USES:
    use netcdf
    use exceptions
-   use ncdf_2d,      only: ws2d => ws
    use ncdf_3d
    use grid_ncdf,    only: xlen,ylen,zlen
    use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
@@ -76,6 +75,8 @@
    REALTYPE                  :: deg2rad = 3.141592654/180.
    REALTYPE                  :: cosconv,sinconv
 #endif
+   REALTYPE,dimension(E2DFIELD) :: ws2d
+   REALTYPE,dimension(I3DFIELD) :: ws
 !EOP
 !-----------------------------------------------------------------------
 !BOC

@@ -63,8 +63,6 @@
    integer                             :: pm3dS_id,pm3dT_id,pm2dS_id,pm2dT_id
    integer                             :: nm3d_id,nm2d_id
 
-   REALTYPE, dimension(:,:,:), allocatable :: ws
-
 ! !DEFINED PARAMETERS
    REALTYPE, parameter                 :: hh_missing     =-9999.0
    REALTYPE, parameter                 :: elev_missing   =-9999.0
