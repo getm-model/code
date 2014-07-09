@@ -982,20 +982,18 @@
             kl = bdy_index_l(l)
             j = nj(n)
             do i = nfi(n),nli(n)
-               if (no_shift) then
-                  do k=kvmin(i,j-1),kmax
+               bdy_transport = _ZERO_
+               do k=kvmin(i,j-1),kmax
+                  bdy_transport = bdy_transport + hvn(i,j-1,k)*bdy_data_v3d(k,kl)
+               end do
+               Diff = ( Vadv(i,j-1) - ramp*bdy_transport ) / Dvn(i,j-1)
+               do k=kvmin(i,j-1),kmax
+                  if (no_shift) then
                      vv(i,j-1,k) = hvn(i,j-1,k) * ramp * bdy_data_v3d(k,kl)
-                  end do
-               else
-                  bdy_transport = _ZERO_
-                  do k=kvmin(i,j-1),kmax
-                     bdy_transport = bdy_transport + hvn(i,j-1,k)*bdy_data_v3d(k,kl)
-                  end do
-                  Diff = ( Vadv(i,j-1) - ramp*bdy_transport ) / Dvn(i,j-1)
-                  do k=kvmin(i,j-1),kmax
+                  else
                      vv(i,j-1,k) = hvn(i,j-1,k) * ( ramp*bdy_data_v3d(k,kl) + Diff )
-                  end do
-               end if
+                  end if
+               end do
                kl = kl + 1
             end do
          end do
@@ -1005,20 +1003,18 @@
             kl = bdy_index_l(l)
             j = sj(n)
             do i = sfi(n),sli(n)
-               if (no_shift) then
-                  do k=kvmin(i,j),kmax
+               bdy_transport = _ZERO_
+               do k=kvmin(i,j),kmax
+                  bdy_transport = bdy_transport + hvn(i,j,k)*bdy_data_v3d(k,kl)
+               end do
+               Diff = ( Vadv(i,j) - ramp*bdy_transport ) / Dvn(i,j)
+               do k=kvmin(i,j),kmax
+                  if (no_shift) then
                      vv(i,j,k) = hvn(i,j,k) * ramp * bdy_data_v3d(k,kl)
-                  end do
-               else
-                  bdy_transport = _ZERO_
-                  do k=kvmin(i,j),kmax
-                     bdy_transport = bdy_transport + hvn(i,j,k)*bdy_data_v3d(k,kl)
-                  end do
-                  Diff = ( Vadv(i,j) - ramp*bdy_transport ) / Dvn(i,j)
-                  do k=kvmin(i,j),kmax
+                  else
                      vv(i,j,k) = hvn(i,j,k) * ( ramp*bdy_data_v3d(k,kl) + Diff )
-                  end do
-               end if
+                  end if
+               end do
                kl = kl + 1
             end do
          end do
