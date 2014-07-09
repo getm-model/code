@@ -43,7 +43,7 @@
    use advection, only: NOADV
    use advection_3d, only: init_advection_3d,print_adv_settings_3d,adv_ver_iterations
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
-   use bdy_3d, only: bdyfile_3d,bdyfmt_3d,bdy3d_ramp,bdy3d_sponge_size
+   use bdy_3d, only: bdyfile_3d,bdyfmt_3d,bdy3d_vel,bdy3d_ramp,bdy3d_sponge_size
    use bdy_3d, only: bdy3d_tmrlx, bdy3d_tmrlx_ucut, bdy3d_tmrlx_max, bdy3d_tmrlx_min
    use waves, only: waves_method,NO_WAVES,uv_waves_3d,stokes_drift_3d
    use variables_waves, only: UStokesC,UStokesCadv,uuStokes
@@ -123,8 +123,8 @@
    integer         :: rc
    NAMELIST /m3d/ &
              M,cnpar,cord_relax,adv_ver_iterations,       &
-             bdy3d,bdyfmt_3d,bdy3d_ramp,bdyfile_3d,       &
-             bdy3d_sponge_size,                           &
+             bdy3d,bdyfmt_3d,bdy3d_vel,bdy3d_ramp,        &
+             bdyfile_3d,bdy3d_sponge_size,                &
              bdy3d_tmrlx,bdy3d_tmrlx_ucut,                &
              bdy3d_tmrlx_max,bdy3d_tmrlx_min,             &
              vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver, &
