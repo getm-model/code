@@ -31,8 +31,6 @@
    integer                             :: evap_id=-1,precip_id=-1
    integer                             :: break_stat_id=-1
 
-   REALTYPE, dimension(:,:), allocatable :: ws
-
 ! !DEFINED PARAMETERS
    REALTYPE, parameter                 :: elev_missing       =-9999.0
    REALTYPE, parameter                 :: vel_missing        =-9999.0
