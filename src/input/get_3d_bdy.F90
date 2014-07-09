@@ -12,6 +12,7 @@
 !
 ! !USES:
    use ncdf_3d_bdy, only: do_3d_bdy_ncdf
+   use bdy_3d, only: bdy3d_vel
    use m3d, only: update_salt,update_temp
 #ifdef _FABM_
    use getm_fabm, only: fabm_calc

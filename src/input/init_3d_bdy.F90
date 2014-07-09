@@ -12,6 +12,7 @@
 !
 ! !USES:
    use ncdf_3d_bdy, only: init_3d_bdy_ncdf
+   use bdy_3d, only: bdy3d_vel
    use m3d, only: update_salt,update_temp
 #ifdef _FABM_
    use getm_fabm, only: fabm_calc
@@ -51,7 +52,7 @@
          LEVEL3 'ASCII boundary format'
          stop 'init_3d_bdy'
       case (NETCDF)
-         if (update_salt .or. update_temp) then
+         if (bdy3d_vel .or. update_salt .or. update_temp) then
             LEVEL3 'reading from: ',trim(fn)
             call init_3d_bdy_ncdf(fn,n)
          end if
