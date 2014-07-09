@@ -876,6 +876,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use domain, only: rigid_lid
    use waves, only: waves_method,NO_WAVES
    use variables_waves, only: uuStokes,vvStokes
    IMPLICIT NONE
@@ -886,6 +887,8 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
+   logical,save              :: first=.true.
+   logical,save              :: no_shift=.false.
    REALTYPE                  :: bdy_transport,Diff
    integer                   :: i,j,k,kl,l,n
 !
@@ -899,6 +902,17 @@
 #endif
 
    if (.not. bdy3d_vel) return
+
+   if (first) then
+#ifdef NO_BAROTROPIC
+      no_shift = .true.
+#else
+#ifdef SLICE_MODEL
+      no_shift = rigid_lid
+#endif
+#endif
+      first = .false.
+   end if
 
 !  Data read - do time interpolation
 
@@ -982,11 +996,11 @@
                end do
                Diff = ( Vadv(i,j-1) - ramp*bdy_transport ) / Dvn(i,j-1)
                do k=kvmin(i,j-1),kmax
-#ifndef NO_BAROTROPIC
-                  vv(i,j-1,k) = hvn(i,j-1,k) * ( ramp*bdy_data_v3d(k,kl) + Diff )
-#else
-                  vv(i,j-1,k) = hvn(i,j-1,k) * ramp * bdy_data_v3d(k,kl)
-#endif
+                  if (no_shift) then
+                     vv(i,j-1,k) = hvn(i,j-1,k) * ramp * bdy_data_v3d(k,kl)
+                  else
+                     vv(i,j-1,k) = hvn(i,j-1,k) * ( ramp*bdy_data_v3d(k,kl) + Diff )
+                  end if
                   if (waves_method .ne. NO_WAVES) then
                      vvEuler(i,j,k) = vv(i,j,k) - vvStokes(i,j,k)
                   end if
@@ -1006,11 +1020,11 @@
                end do
                Diff = ( Vadv(i,j) - ramp*bdy_transport ) / Dvn(i,j)
                do k=kvmin(i,j),kmax
-#ifndef NO_BAROTROPIC
-                  vv(i,j,k) = hvn(i,j,k) * ( ramp*bdy_data_v3d(k,kl) + Diff )
-#else
-                  vv(i,j,k) = hvn(i,j,k) * ramp * bdy_data_v3d(k,kl)
-#endif
+                  if (no_shift) then
+                     vv(i,j,k) = hvn(i,j,k) * ramp * bdy_data_v3d(k,kl)
+                  else
+                     vv(i,j,k) = hvn(i,j,k) * ( ramp*bdy_data_v3d(k,kl) + Diff )
+                  end if
                   if (waves_method .ne. NO_WAVES) then
                      vvEuler(i,j,k) = vv(i,j,k) - vvStokes(i,j,k)
                   end if
