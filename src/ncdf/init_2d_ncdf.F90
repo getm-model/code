@@ -45,11 +45,6 @@
 !  initialize all time-independent, grid related variables
    call init_grid_ncdf(ncid,init3d,x_dim,y_dim)
 
-!  allocate workspace
-   allocate(ws(E2DFIELD),stat=err)
-   if (err .ne. 0) call getm_error("init_2d_ncdf()",               &
-                                   "error allocating ws")
-
 !  define unlimited dimension
    err = nf90_def_dim(ncid,'time',NF90_UNLIMITED,time_dim)
    if (err .NE. NF90_NOERR) go to 10

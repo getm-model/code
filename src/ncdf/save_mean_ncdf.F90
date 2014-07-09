@@ -13,8 +13,6 @@
    use netcdf
    use exceptions
    use grid_ncdf,    only: xlen,ylen,zlen
-   use ncdf_2d, only: ws2d => ws
-   use ncdf_3d, only: ws3d => ws
    use ncdf_mean
    use diagnostic_variables
    use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
@@ -44,6 +42,8 @@
    integer                   :: start(4),edges(4)
    integer, save             :: n3d=0
    REALTYPE                  :: dum(1)
+   REALTYPE,dimension(E2DFIELD) :: ws2d
+   REALTYPE,dimension(I3DFIELD) :: ws3d
 !EOP
 !-----------------------------------------------------------------------
 !BOC
