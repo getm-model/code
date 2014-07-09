@@ -219,7 +219,6 @@
 #endif
    integer, parameter        :: nmax=10000
    REALTYPE                  :: zlev(nmax),prof(nmax)
-   integer                   :: salt_field_no=1
    integer                   :: status
 !EOP
 !-------------------------------------------------------------------------

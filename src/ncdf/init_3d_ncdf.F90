@@ -13,7 +13,6 @@
    use netcdf
    use exceptions
    use ncdf_common
-   use ncdf_2d,      only: ws2d => ws
    use ncdf_3d
    use domain, only: ioff,joff
    use domain, only: imin,imax,jmin,jmax,kmax
@@ -56,16 +55,6 @@
 
 !  initialize all time-independent, grid related variables
    call init_grid_ncdf(ncid,init3d,x_dim,y_dim,z_dim)
-
-!  allocate workspace
-   if (.not. allocated(ws2d)) then
-      allocate(ws2d(E2DFIELD),stat=err)
-      if (err .ne. 0) call getm_error("init_3d_ncdf()",            &
-                                      "error allocating ws2d")
-   end if
-   allocate(ws(I3DFIELD),stat=err)
-   if (err .ne. 0) call getm_error("init_3d_ncdf()",               &
-                                   "error allocating ws")
 
 !  define unlimited dimension
    err = nf90_def_dim(ncid,'time',NF90_UNLIMITED,time_dim)
