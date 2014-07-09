@@ -50,7 +50,7 @@
    integer                   :: start(3),edges(3)
    integer, save             :: n2d=0
    REALTYPE                  :: dum(1)
-   REALTYPE,dimension(E2DFIELD) :: wrk
+   REALTYPE,dimension(E2DFIELD) :: ws,wrk
 !EOP
 !-----------------------------------------------------------------------
 !BOC
