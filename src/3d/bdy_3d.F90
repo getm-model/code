@@ -876,6 +876,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use domain, only: rigid_lid
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -884,6 +885,8 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
+   logical,save              :: first=.true.
+   logical,save              :: no_shift=.false.
    REALTYPE                  :: bdy_transport,Diff
    integer                   :: i,j,k,kl,l,n
 !
@@ -897,6 +900,17 @@
 #endif
 
    if (.not. bdy3d_vel) return
+
+   if (first) then
+#ifdef NO_BAROTROPIC
+      no_shift = .true.
+#else
+#ifdef SLICE_MODEL
+      no_shift = rigid_lid
+#endif
+#endif
+      first = .false.
+   end if
 
 !  Data read - do time interpolation
 
@@ -968,18 +982,20 @@
             kl = bdy_index_l(l)
             j = nj(n)
             do i = nfi(n),nli(n)
-               bdy_transport = _ZERO_
-               do k=kvmin(i,j-1),kmax
-                  bdy_transport = bdy_transport + hvn(i,j-1,k)*bdy_data_v3d(k,kl)
-               end do
-               Diff = ( Vadv(i,j-1) - ramp*bdy_transport ) / Dvn(i,j-1)
-               do k=kvmin(i,j-1),kmax
-#ifndef NO_BAROTROPIC
-                  vv(i,j-1,k) = hvn(i,j-1,k) * ( ramp*bdy_data_v3d(k,kl) + Diff )
-#else
-                  vv(i,j-1,k) = hvn(i,j-1,k) * ramp * bdy_data_v3d(k,kl)
-#endif
-               end do
+               if (no_shift) then
+                  do k=kvmin(i,j-1),kmax
+                     vv(i,j-1,k) = hvn(i,j-1,k) * ramp * bdy_data_v3d(k,kl)
+                  end do
+               else
+                  bdy_transport = _ZERO_
+                  do k=kvmin(i,j-1),kmax
+                     bdy_transport = bdy_transport + hvn(i,j-1,k)*bdy_data_v3d(k,kl)
+                  end do
+                  Diff = ( Vadv(i,j-1) - ramp*bdy_transport ) / Dvn(i,j-1)
+                  do k=kvmin(i,j-1),kmax
+                     vv(i,j-1,k) = hvn(i,j-1,k) * ( ramp*bdy_data_v3d(k,kl) + Diff )
+                  end do
+               end if
                kl = kl + 1
             end do
          end do
@@ -989,18 +1005,20 @@
             kl = bdy_index_l(l)
             j = sj(n)
             do i = sfi(n),sli(n)
-               bdy_transport = _ZERO_
-               do k=kvmin(i,j),kmax
-                  bdy_transport = bdy_transport + hvn(i,j,k)*bdy_data_v3d(k,kl)
-               end do
-               Diff = ( Vadv(i,j) - ramp*bdy_transport ) / Dvn(i,j)
-               do k=kvmin(i,j),kmax
-#ifndef NO_BAROTROPIC
-                  vv(i,j,k) = hvn(i,j,k) * ( ramp*bdy_data_v3d(k,kl) + Diff )
-#else
-                  vv(i,j,k) = hvn(i,j,k) * ramp * bdy_data_v3d(k,kl)
-#endif
-               end do
+               if (no_shift) then
+                  do k=kvmin(i,j),kmax
+                     vv(i,j,k) = hvn(i,j,k) * ramp * bdy_data_v3d(k,kl)
+                  end do
+               else
+                  bdy_transport = _ZERO_
+                  do k=kvmin(i,j),kmax
+                     bdy_transport = bdy_transport + hvn(i,j,k)*bdy_data_v3d(k,kl)
+                  end do
+                  Diff = ( Vadv(i,j) - ramp*bdy_transport ) / Dvn(i,j)
+                  do k=kvmin(i,j),kmax
+                     vv(i,j,k) = hvn(i,j,k) * ( ramp*bdy_data_v3d(k,kl) + Diff )
+                  end do
+               end if
                kl = kl + 1
             end do
          end do
