@@ -301,6 +301,9 @@
 			<bdyfmt_3d>
 				2
 			</bdyfmt_3d>
+			<bdy3d_vel>
+				False
+			</bdy3d_vel>
 			<bdy3d_ramp>
 				-1
 			</bdy3d_ramp>

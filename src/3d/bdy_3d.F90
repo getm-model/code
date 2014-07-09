@@ -19,6 +19,7 @@
    use domain, only: bdy_3d_desc,bdy_3d_type
    use domain, only: need_3d_bdy
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
+   use time, only: write_time_string,timestr
    use variables_3d
 #ifdef _FABM_
    use getm_fabm, only: fabm_calc,model,fabm_pel,fabm_ben
@@ -29,10 +30,11 @@
    private
 !
 ! !PUBLIC DATA MEMBERS:
-   public init_bdy_3d, do_bdy_3d
+   public init_bdy_3d, do_bdy_3d,do_bdy_3d_vel
    character(len=PATH_MAX),public         :: bdyfile_3d
    integer,public                         :: bdyfmt_3d
-   integer,public                         :: bdy3d_ramp
+   integer,public                         :: bdy3d_ramp=-1
+   logical,public                         :: bdy3d_vel=.false.
    integer,public                         :: bdy3d_sponge_size=3
    logical,public                         :: bdy3d_tmrlx=.false.
    REALTYPE,public                        :: bdy3d_tmrlx_ucut=_ONE_/50
@@ -40,6 +42,8 @@
    REALTYPE,public                        :: bdy3d_tmrlx_max=_ONE_/4
    REALTYPE,public                        :: bdy3d_tmrlx_min=_ZERO_
 
+   REALTYPE,dimension(:,:),pointer,public :: bdy_data_u3d=>null()
+   REALTYPE,dimension(:,:),pointer,public :: bdy_data_v3d=>null()
    REALTYPE,dimension(:,:),pointer,public :: bdy_data_S=>null()
    REALTYPE,dimension(:,:),pointer,public :: bdy_data_T=>null()
 #ifdef _FABM_
@@ -50,6 +54,8 @@
 ! !PRIVATE DATA MEMBERS:
    private bdy3d_active
    private bdy_3d_west,bdy_3d_north,bdy_3d_east,bdy_3d_south
+   REALTYPE                            :: ramp=_ONE_
+   logical                             :: ramp_is_active=.false.
    REALTYPE,         allocatable       :: sp(:)
 #ifdef _FABM_
    integer                             :: npel=-1,nben=-1
@@ -101,16 +107,21 @@
    LEVEL2 'init_bdy_3d()'
 
    if (bdy3d) then
-      do l=1,nbdy
-         if (bdy3d_active(bdy_3d_type(l))) then
-            need_3d_bdy = .true.
-            exit
-         end if
-      end do
+      if (bdy3d_vel) then
+         need_3d_bdy = .true.
+      else
+         do l=1,nbdy
+            if (bdy3d_active(bdy_3d_type(l))) then
+               need_3d_bdy = .true.
+               exit
+            end if
+         end do
+      end if
       if (.not. need_3d_bdy) then
          bdy3d = .false.
       end if
    else
+      bdy3d_vel = .false.
       do l=1,nbdy
          if (bdy3d_active(bdy_3d_type(l)) .or. runtype.eq.3) then
             LEVEL3 'bdy3d=F resets local 3D bdy #',l
@@ -126,15 +137,14 @@
 
       LEVEL3 'bdyfile_3d=',TRIM(bdyfile_3d)
       LEVEL3 'bdyfmt_3d=',bdyfmt_3d
-#if 0
-      if (bdy3d_ramp .gt. 1) then
+      LEVEL3 'bdy3d_vel=',bdy3d_vel
+      if (bdy3d_vel .and. bdy3d_ramp.gt.1) then
          LEVEL3 'bdy3d_ramp=',bdy3d_ramp
          if (hotstart) then
             LEVEL4 'WARNING: hotstart is .true. AND bdy3d_ramp .gt. 1'
             LEVEL4 'WARNING: .. be sure you know what you are doing ..'
          end if
       end if
-#endif
 
       if (bdy3d_tmrlx) then
          LEVEL3 'bdy3d_tmrlx=.true.'
@@ -155,6 +165,13 @@
 !        Linear variation between bdy3d_tmrlx_umin and bdy3d_tmrlx_ucut.
          bdy3d_tmrlx_umin = -_QUART_*bdy3d_tmrlx_ucut
          LEVEL3 'bdy3d_tmrlx_umin=  ',bdy3d_tmrlx_umin
+      end if
+
+      if (bdy3d_vel) then
+         allocate(bdy_data_u3d(0:kmax,nsbvl),stat=rc)
+         if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_data_u3d)'
+         allocate(bdy_data_v3d(0:kmax,nsbvl),stat=rc)
+         if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_data_v3d)'
       end if
 
       if (update_salt) then
@@ -846,6 +863,170 @@
 
    return
    end subroutine bdy_3d_south
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE:  do_bdy_3d_vel  - consider bdy velocity profiles
+! \label{sec-do-bdy-3d-vel}
+!
+! !INTERFACE:
+   subroutine do_bdy_3d_vel(loop,tag)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use waves, only: waves_method,NO_WAVES
+   use variables_waves, only: uuStokes,vvStokes
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)                 :: loop,tag
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !LOCAL VARIABLES:
+   REALTYPE                  :: bdy_transport,Diff
+   integer                   :: i,j,k,kl,l,n
+!
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'do_bdy_3d_vel() # ',Ncall
+#endif
+
+   if (.not. bdy3d_vel) return
+
+!  Data read - do time interpolation
+
+   if (ramp_is_active) then
+      if (loop .ge. bdy3d_ramp) then
+         ramp = _ONE_
+         ramp_is_active = .false.
+         STDERR LINE
+         call write_time_string()
+         LEVEL3 timestr,': finished bdy3d_ramp=',bdy3d_ramp
+         STDERR LINE
+      else
+         ramp = _ONE_*loop/bdy3d_ramp
+      end if
+   end if
+
+   select case (tag)
+
+      case (U_TAG)
+
+         l = 0
+         do n = 1,NWB
+            l = l+1
+            kl = bdy_index_l(l)
+            i = wi(n)
+            do j = wfj(n),wlj(n)
+               bdy_transport = _ZERO_
+               do k=kumin(i,j),kmax
+                  bdy_transport = bdy_transport + hun(i,j,k)*bdy_data_u3d(k,kl)
+               end do
+               Diff = ( Uadv(i,j) - ramp*bdy_transport ) / Dun(i,j)
+               do k=kumin(i,j),kmax
+#ifndef NO_BAROTROPIC
+                  uu(i,j,k) = hun(i,j,k) * ( ramp*bdy_data_u3d(k,kl) + Diff )
+#else
+                  uu(i,j,k) = hun(i,j,k) * ramp * bdy_data_u3d(k,kl)
+#endif
+                  if (waves_method .ne. NO_WAVES) then
+                     uuEuler(i,j,k) = uu(i,j,k) - uuStokes(i,j,k)
+                  end if
+               end do
+               kl = kl + 1
+            end do
+         end do
+         l = l + NNB
+         do n = 1,NEB
+            l = l+1
+            kl = bdy_index_l(l)
+            i = ei(n)
+            do j = efj(n),elj(n)
+               bdy_transport = _ZERO_
+               do k=kumin(i-1,j),kmax
+                  bdy_transport = bdy_transport + hun(i-1,j,k)*bdy_data_u3d(k,kl)
+               end do
+               Diff = ( Uadv(i-1,j) - ramp*bdy_transport ) / Dun(i-1,j)
+               do k=kumin(i-1,j),kmax
+#ifndef NO_BAROTROPIC
+                  uu(i-1,j,k) = hun(i-1,j,k) * ( ramp*bdy_data_u3d(k,kl) + Diff )
+#else
+                  uu(i-1,j,k) = hun(i-1,j,k) * ramp * bdy_data_u3d(k,kl)
+#endif
+                  if (waves_method .ne. NO_WAVES) then
+                     uuEuler(i,j,k) = uu(i,j,k) - uuStokes(i,j,k)
+                  end if
+               end do
+               kl = kl + 1
+            end do
+         end do
+
+      case (V_TAG)
+
+         l = NWB
+         do n = 1,NNB
+            l = l+1
+            kl = bdy_index_l(l)
+            j = nj(n)
+            do i = nfi(n),nli(n)
+               bdy_transport = _ZERO_
+               do k=kvmin(i,j-1),kmax
+                  bdy_transport = bdy_transport + hvn(i,j-1,k)*bdy_data_v3d(k,kl)
+               end do
+               Diff = ( Vadv(i,j-1) - ramp*bdy_transport ) / Dvn(i,j-1)
+               do k=kvmin(i,j-1),kmax
+#ifndef NO_BAROTROPIC
+                  vv(i,j-1,k) = hvn(i,j-1,k) * ( ramp*bdy_data_v3d(k,kl) + Diff )
+#else
+                  vv(i,j-1,k) = hvn(i,j-1,k) * ramp * bdy_data_v3d(k,kl)
+#endif
+                  if (waves_method .ne. NO_WAVES) then
+                     vvEuler(i,j,k) = vv(i,j,k) - vvStokes(i,j,k)
+                  end if
+               end do
+               kl = kl + 1
+            end do
+         end do
+         l = l + NEB
+         do n = 1,NSB
+            l = l+1
+            kl = bdy_index_l(l)
+            j = sj(n)
+            do i = sfi(n),sli(n)
+               bdy_transport = _ZERO_
+               do k=kvmin(i,j),kmax
+                  bdy_transport = bdy_transport + hvn(i,j,k)*bdy_data_v3d(k,kl)
+               end do
+               Diff = ( Vadv(i,j) - ramp*bdy_transport ) / Dvn(i,j)
+               do k=kvmin(i,j),kmax
+#ifndef NO_BAROTROPIC
+                  vv(i,j,k) = hvn(i,j,k) * ( ramp*bdy_data_v3d(k,kl) + Diff )
+#else
+                  vv(i,j,k) = hvn(i,j,k) * ramp * bdy_data_v3d(k,kl)
+#endif
+                  if (waves_method .ne. NO_WAVES) then
+                     vvEuler(i,j,k) = vv(i,j,k) - vvStokes(i,j,k)
+                  end if
+               end do
+               kl = kl + 1
+            end do
+         end do
+
+   end select
+
+#ifdef DEBUG
+   write(debug,*) 'leaving do_bdy_3d_vel()'
+   write(debug,*)
+#endif
+   return
+   end subroutine do_bdy_3d_vel
 !EOC
 !-----------------------------------------------------------------------
 !BOP
