@@ -1,5 +1,5 @@
    integer         :: iextr=-1, jextr=-1
-   integer         :: imin=-1,imax=-1,jmin=-1,jmax=-1
+   integer         :: imin=1,imax=-1,jmin=1,jmax=-1
    integer         :: kmax=1
 
 !  coordinate axes - grid-type = 1 or 2
