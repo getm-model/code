@@ -200,6 +200,7 @@ contains
 !EOP
 !-------------------------------------------------------------------------
 
+!  Does the bathymetry have proper axis defined?
 !  We will obtain the names of the two dimensions and
 !  then inquire if there are variables with the same names - if
 !  that is the case they are by NetCDF definition coordinate
