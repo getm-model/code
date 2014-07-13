@@ -220,12 +220,11 @@
 
 !  prepare parallel run
    call part_domain()
+   il=imin ; ih=imax ; jl=jmin ; jh=jmax
 
 #ifndef STATIC
 #include "dynamic_allocations_domain.h"
 #endif
-
-   il=imin ; ih=imax ; jl=jmin ; jh=jmax
 
 !  GLOBAL index range
    ilg = max(imin-HALO+ioff,1); ihg = min(imax+HALO+ioff,iextr)
