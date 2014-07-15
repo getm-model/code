@@ -143,7 +143,7 @@
       else
          comm_dummy = MPI_COMM_WORLD
       end if
-      call MPI_COMM_DUP(comm_dummy,comm_getm)
+      call MPI_COMM_DUP(comm_dummy,comm_getm,ierr)
       if(ierr .ne. MPI_SUCCESS) then
          STDERR 'Fatal error: unable to duplicate communicator.'
          call MPI_Abort(MPI_COMM_WORLD,-1,ierr)
