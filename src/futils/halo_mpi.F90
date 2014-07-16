@@ -40,7 +40,7 @@
    integer, public                     :: myid=-1, nprocs=1
    integer, public                     :: comm_hd=MPI_COMM_WORLD
    LONGINT, public                     :: all_2d_exchange, all_3d_exchange
-   integer, public                     :: comm_getm
+   integer, public                     :: comm_getm=MPI_COMM_NULL
 !   integer, public                    :: comm_wave=MPI_COMM_WORLD
 !   integer, public                    :: comm_biology=MPI_COMM_WORLD
 !
@@ -108,11 +108,8 @@
 ! !IROUTINE: init_mpi - initialize the basic MPI environment
 !
 ! !INTERFACE:
-   subroutine init_mpi(comm_external)
+   subroutine init_mpi
    IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-   integer,intent(in),optional :: comm_external
 !
 ! !DESCRIPTION:
 !  Initialize MPI parallel environment, i.e. getting process id etc.
@@ -120,9 +117,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !  Revised by: Bjarne Buchmann, 2006
-!
-! !LOCAL VARIABLES:
-   integer :: comm_dummy
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -138,15 +132,8 @@
       call MPI_Abort(MPI_COMM_WORLD,-1,ierr)
    end if
    if (external_mpi_init) then
-      if (present(comm_external)) then
-         comm_dummy = comm_external
-      else
-         comm_dummy = MPI_COMM_WORLD
-      end if
-      call MPI_COMM_DUP(comm_dummy,comm_getm,ierr)
-      if(ierr .ne. MPI_SUCCESS) then
-         STDERR 'Fatal error: unable to duplicate communicator.'
-         call MPI_Abort(MPI_COMM_WORLD,-1,ierr)
+      if (comm_getm .eq. MPI_COMM_NULL) then
+         comm_getm = MPI_COMM_WORLD
       end if
    else
       call MPI_INIT(ierr)
