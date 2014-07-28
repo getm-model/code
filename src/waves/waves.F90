@@ -30,6 +30,7 @@
    integer,public,parameter  :: NO_WAVES=0
    integer,public,parameter  :: WAVES_RS=1
    integer,public,parameter  :: WAVES_VF=2
+   integer,public,parameter  :: WAVES_NOSTOKES=3
    integer,public            :: waves_method=NO_WAVES
    integer,public,parameter  :: WAVES_FROMEXT=0
    integer,public,parameter  :: WAVES_FROMFILE=1
@@ -125,6 +126,8 @@
          LEVEL2 'wave forcing by Radiation Stress'
       case(WAVES_VF)
          LEVEL2 'wave forcing by Vortex Force'
+      case(WAVES_NOSTOKES)
+         LEVEL2 'wave forcing only via bottom friction'
       case default
          stop 'init_waves(): no valid waves_method specified'
    end select
