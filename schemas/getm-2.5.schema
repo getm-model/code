@@ -208,6 +208,7 @@
 					<option value="0" label="no wave forcing" />
 					<option value="1" label="wave forcing by Radiation Stress" />
 					<option value="2" label="wave forcing by Vortex Force" />
+					<option value="3" label="wave forcing only via bottom friction" />
 				</options>
 			</element>
 			<element name="waves_datasource" type="int" label="source of wave data">
