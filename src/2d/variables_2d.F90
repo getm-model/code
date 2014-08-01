@@ -52,8 +52,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
-   integer                   :: rc
 !EOP
 !-----------------------------------------------------------------------
 
@@ -112,6 +110,8 @@
    integer, intent(in)                 :: runtype
    logical, intent(in)                 :: no_2d
 !
+! !LOCAL VARIABLES:
+   integer                   :: rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
