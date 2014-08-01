@@ -386,7 +386,7 @@
 !  of a hotstart file.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j, ischange
+   integer                   :: i,j, ischange, rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
