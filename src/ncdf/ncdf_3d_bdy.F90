@@ -18,7 +18,7 @@
    use variables_2d, only: dtm
    use m3d, only: update_salt,update_temp
    use bdy_3d, only: bdy3d_vel
-   use bdy_3d, only: bdy_data_u3d,bdy_data_v3d,bdy_data_S,bdy_data_T
+   use bdy_3d, only: bdy_data_uu,bdy_data_vv,bdy_data_S,bdy_data_T
    use time, only: string_to_julsecs,time_diff,add_secs
    use time, only: julianday,secondsofday,juln,secsn
    use time, only: write_time_string,timestr
@@ -31,19 +31,19 @@
 ! !PRIVATE DATA MEMBERS:
    integer                             :: ncid
    integer                             :: time_id,temp_id=-1,salt_id=-1
-   integer                             :: u3d_id=-1,v3d_id=-1
+   integer                             :: uu_id=-1,vv_id=-1
    integer                             :: bdy_dim,bdy_len,bdy_pos
    integer                             :: zax_dim=-1,zax_len,zax_pos
    integer                             :: time_dim=-1,time_len,time_pos
    logical                             :: climatology=.false.
    logical                             :: from_3d_fields
    REALTYPE,dimension(:),allocatable   :: zlev
-   REALTYPE,dimension(:,:),pointer     :: u3d_bdy,u3d_bdy_new,d_u3d_bdy
-   REALTYPE,dimension(:,:),pointer     :: v3d_bdy,v3d_bdy_new,d_v3d_bdy
+   REALTYPE,dimension(:,:),pointer     :: uu_bdy,uu_bdy_new,d_uu_bdy
+   REALTYPE,dimension(:,:),pointer     :: vv_bdy,vv_bdy_new,d_vv_bdy
    REALTYPE,dimension(:,:),pointer     :: S_bdy,S_bdy_new,d_S_bdy
    REALTYPE,dimension(:,:),pointer     :: T_bdy,T_bdy_new,d_T_bdy
 !  the following is used for climatology=.true.
-   REALTYPE,dimension(:,:,:),allocatable :: u3d_bdy_clim,v3d_bdy_clim
+   REALTYPE,dimension(:,:,:),allocatable :: uu_bdy_clim,vv_bdy_clim
    REALTYPE,dimension(:,:,:),allocatable :: S_bdy_clim,T_bdy_clim
 !  the following is used for climatology=.false.
    integer                             :: loop0
@@ -160,31 +160,31 @@
 
    dims_ready = .false.
    if (bdy3d_vel) then
-      LEVEL4 ' ... checking variable "u3d"'
-      err = nf90_inq_varid(ncid,'u3d',u3d_id)
+      LEVEL4 ' ... checking variable "uu"'
+      err = nf90_inq_varid(ncid,'uu',uu_id)
       if (err .NE. NF90_NOERR) go to 10
-      err = nf90_inquire_variable(ncid,u3d_id,ndims=nvardims)
+      err = nf90_inquire_variable(ncid,uu_id,ndims=nvardims)
       if (err .NE. NF90_NOERR) go to 10
       if (nvardims .NE. ndims) &
-           stop 'init_3d_bdy_ncdf: Wrong number of dims in u3d'
-      err = nf90_inquire_variable(ncid,u3d_id,dimids=vardim_ids)
+           stop 'init_3d_bdy_ncdf: Wrong number of dims in uu'
+      err = nf90_inquire_variable(ncid,uu_id,dimids=vardim_ids)
       if (err .NE. NF90_NOERR) go to 10
       zax_dim  = vardim_ids(zax_pos)
       time_dim = vardim_ids(time_pos)
       dims_ready = .true.
-      LEVEL4 ' ... checking variable "v3d"'
-      err = nf90_inq_varid(ncid,'v3d',v3d_id)
+      LEVEL4 ' ... checking variable "vv"'
+      err = nf90_inq_varid(ncid,'vv',vv_id)
       if (err .NE. NF90_NOERR) go to 10
-      err = nf90_inquire_variable(ncid,v3d_id,ndims=nvardims)
+      err = nf90_inquire_variable(ncid,vv_id,ndims=nvardims)
       if (err .NE. NF90_NOERR) go to 10
       if (nvardims .NE. ndims) &
-           stop 'init_3d_bdy_ncdf: Wrong number of dims in v3d'
-      err = nf90_inquire_variable(ncid,v3d_id,dimids=vardim_ids)
+           stop 'init_3d_bdy_ncdf: Wrong number of dims in vv'
+      err = nf90_inquire_variable(ncid,vv_id,dimids=vardim_ids)
       if (err .NE. NF90_NOERR) go to 10
       if (zax_dim /= vardim_ids(zax_pos)) &
-           stop 'init_3d_bdy_ncdf: Position of zax dimension of v3d'
+           stop 'init_3d_bdy_ncdf: Position of zax dimension of vv'
       if (time_dim /= vardim_ids(time_pos)) &
-           stop 'init_3d_bdy_ncdf: Position of time dimension of v3d'
+           stop 'init_3d_bdy_ncdf: Position of time dimension of vv'
    end if
    if (update_salt) then
       LEVEL4 ' ... checking variable "salt"'
@@ -273,18 +273,18 @@
    end do
 
    if (bdy3d_vel) then
-      allocate(u3d_bdy(zax_len,nsbvl),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (u3d_bdy)'
-      allocate(u3d_bdy_new(zax_len,nsbvl),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (u3d_bdy_new)'
-      allocate(d_u3d_bdy(zax_len,nsbvl),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_u3d_bdy)'
-      allocate(v3d_bdy(zax_len,nsbvl),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (v3d_bdy)'
-      allocate(v3d_bdy_new(zax_len,nsbvl),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (v3d_bdy_new)'
-      allocate(d_v3d_bdy(zax_len,nsbvl),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_v3d_bdy)'
+      allocate(uu_bdy(zax_len,nsbvl),stat=err)
+      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (uu_bdy)'
+      allocate(uu_bdy_new(zax_len,nsbvl),stat=err)
+      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (uu_bdy_new)'
+      allocate(d_uu_bdy(zax_len,nsbvl),stat=err)
+      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_uu_bdy)'
+      allocate(vv_bdy(zax_len,nsbvl),stat=err)
+      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (vv_bdy)'
+      allocate(vv_bdy_new(zax_len,nsbvl),stat=err)
+      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (vv_bdy_new)'
+      allocate(d_vv_bdy(zax_len,nsbvl),stat=err)
+      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_vv_bdy)'
    end if
    if (update_salt) then
       allocate(S_bdy(zax_len,nsbvl),stat=err)
@@ -312,10 +312,10 @@
    if (climatology) then
 
       if (bdy3d_vel) then
-         allocate(u3d_bdy_clim(climatology_len,zax_len,nsbvl),stat=rc)
-         if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (u3d_bdy_clim)'
-         allocate(v3d_bdy_clim(climatology_len,zax_len,nsbvl),stat=rc)
-         if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (v3d_bdy_clim)'
+         allocate(uu_bdy_clim(climatology_len,zax_len,nsbvl),stat=rc)
+         if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (uu_bdy_clim)'
+         allocate(vv_bdy_clim(climatology_len,zax_len,nsbvl),stat=rc)
+         if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (vv_bdy_clim)'
       end if
       if (update_salt) then
          allocate(S_bdy_clim(climatology_len,zax_len,nsbvl),stat=rc)
@@ -424,7 +424,7 @@
    logical         :: new_set
    REALTYPE        :: t,t_minus_t2
    REALTYPE, save  :: t1=_ZERO_,t2=-_ONE_,deltm1
-   REALTYPE,dimension(:,:),pointer :: u3d_bdy_old,v3d_bdy_old,S_bdy_old,T_bdy_old
+   REALTYPE,dimension(:,:),pointer :: uu_bdy_old,vv_bdy_old,S_bdy_old,T_bdy_old
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -462,8 +462,8 @@
 !        Note (KK): in principle the average can be calculated only once
          if (first) then
             if (bdy3d_vel) then
-               u3d_bdy_new = _HALF_ * ( u3d_bdy_clim(prev,:,:) + u3d_bdy_clim(this,:,:) )
-               v3d_bdy_new = _HALF_ * ( v3d_bdy_clim(prev,:,:) + v3d_bdy_clim(this,:,:) )
+               uu_bdy_new = _HALF_ * ( uu_bdy_clim(prev,:,:) + uu_bdy_clim(this,:,:) )
+               vv_bdy_new = _HALF_ * ( vv_bdy_clim(prev,:,:) + vv_bdy_clim(this,:,:) )
             end if
             if (update_salt) then
                S_bdy_new = _HALF_ * ( S_bdy_clim(prev,:,:) + S_bdy_clim(this,:,:) )
@@ -475,8 +475,8 @@
          end if
 
          if (bdy3d_vel) then
-            u3d_bdy = _HALF_ * ( u3d_bdy_clim(this,:,:) + u3d_bdy_clim(next,:,:) )
-            v3d_bdy = _HALF_ * ( v3d_bdy_clim(this,:,:) + v3d_bdy_clim(next,:,:) )
+            uu_bdy = _HALF_ * ( uu_bdy_clim(this,:,:) + uu_bdy_clim(next,:,:) )
+            vv_bdy = _HALF_ * ( vv_bdy_clim(this,:,:) + vv_bdy_clim(next,:,:) )
          end if
          if (update_salt) then
             S_bdy = _HALF_ * ( S_bdy_clim(this,:,:) + S_bdy_clim(next,:,:) )
@@ -526,15 +526,15 @@
 !                  but only for the current time stage.
 !                  Interpolation extracts all local bdy cells.
 
-         if (u3d_id .ne. -1) then
-            err = nf90_get_var(ncid,u3d_id,wrk,start,edges)
+         if (uu_id .ne. -1) then
+            err = nf90_get_var(ncid,uu_id,wrk,start,edges)
             if (err .ne. NF90_NOERR) go to 10
-            call grid_3d_bdy_data_ncdf(wrk,u3d_bdy)
+            call grid_3d_bdy_data_ncdf(wrk,uu_bdy)
          end if
-         if (v3d_id .ne. -1) then
-            err = nf90_get_var(ncid,v3d_id,wrk,start,edges)
+         if (vv_id .ne. -1) then
+            err = nf90_get_var(ncid,vv_id,wrk,start,edges)
             if (err .ne. NF90_NOERR) go to 10
-            call grid_3d_bdy_data_ncdf(wrk,v3d_bdy)
+            call grid_3d_bdy_data_ncdf(wrk,vv_bdy)
          end if
          if (salt_id .ne. -1) then
             err = nf90_get_var(ncid,salt_id,wrk,start,edges)
@@ -555,10 +555,10 @@
 
    if (new_set) then
       if (bdy3d_vel) then
-         u3d_bdy_old=>u3d_bdy_new;u3d_bdy_new=>u3d_bdy;u3d_bdy=>d_u3d_bdy;d_u3d_bdy=>u3d_bdy_old
-         d_u3d_bdy = u3d_bdy_new - u3d_bdy_old
-         v3d_bdy_old=>v3d_bdy_new;v3d_bdy_new=>v3d_bdy;v3d_bdy=>d_v3d_bdy;d_v3d_bdy=>v3d_bdy_old
-         d_v3d_bdy = v3d_bdy_new - v3d_bdy_old
+         uu_bdy_old=>uu_bdy_new;uu_bdy_new=>uu_bdy;uu_bdy=>d_uu_bdy;d_uu_bdy=>uu_bdy_old
+         d_uu_bdy = uu_bdy_new - uu_bdy_old
+         vv_bdy_old=>vv_bdy_new;vv_bdy_new=>vv_bdy;vv_bdy=>d_vv_bdy;d_vv_bdy=>vv_bdy_old
+         d_vv_bdy = vv_bdy_new - vv_bdy_old
       end if
       if (update_salt) then
          S_bdy_old=>S_bdy_new;S_bdy_new=>S_bdy;S_bdy=>d_S_bdy;d_S_bdy=>S_bdy_old
@@ -574,10 +574,10 @@
    t_minus_t2 = t - t2
 
    if (bdy3d_vel) then
-      u3d_bdy = u3d_bdy_new + d_u3d_bdy*deltm1*t_minus_t2
-      call interpolate_3d_bdy_ncdf(nsbvl,zax_len,u3d_bdy,HU,kmax,hun,bdy_data_u3d)
-      v3d_bdy = v3d_bdy_new + d_v3d_bdy*deltm1*t_minus_t2
-      call interpolate_3d_bdy_ncdf(nsbvl,zax_len,v3d_bdy,HV,kmax,hvn,bdy_data_v3d)
+      uu_bdy = uu_bdy_new + d_uu_bdy*deltm1*t_minus_t2
+      call interpolate_3d_bdy_ncdf(nsbvl,zax_len,uu_bdy,HU,kmax,hun,bdy_data_uu)
+      vv_bdy = vv_bdy_new + d_vv_bdy*deltm1*t_minus_t2
+      call interpolate_3d_bdy_ncdf(nsbvl,zax_len,vv_bdy,HV,kmax,hvn,bdy_data_vv)
    end if
    if (update_salt) then
       S_bdy = S_bdy_new + d_S_bdy*deltm1*t_minus_t2
@@ -737,12 +737,12 @@
             else
                start(2) = k
             end if
-            if (u3d_id .ne. -1) then
-               err = nf90_get_var(ncid,u3d_id,u3d_bdy_clim(m,:,kl),start,edges)
+            if (uu_id .ne. -1) then
+               err = nf90_get_var(ncid,uu_id,uu_bdy_clim(m,:,kl),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
-            if (v3d_id .ne. -1) then
-               err = nf90_get_var(ncid,v3d_id,v3d_bdy_clim(m,:,kl),start,edges)
+            if (vv_id .ne. -1) then
+               err = nf90_get_var(ncid,vv_id,vv_bdy_clim(m,:,kl),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (salt_id .ne. -1) then
@@ -768,12 +768,12 @@
             else
                start(2) = k
             end if
-            if (u3d_id .ne. -1) then
-               err = nf90_get_var(ncid,u3d_id,u3d_bdy_clim(m,:,kl),start,edges)
+            if (uu_id .ne. -1) then
+               err = nf90_get_var(ncid,uu_id,uu_bdy_clim(m,:,kl),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
-            if (v3d_id .ne. -1) then
-               err = nf90_get_var(ncid,v3d_id,v3d_bdy_clim(m,:,kl),start,edges)
+            if (vv_id .ne. -1) then
+               err = nf90_get_var(ncid,vv_id,vv_bdy_clim(m,:,kl),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (salt_id .ne. -1) then
@@ -799,12 +799,12 @@
             else
                start(2) = k
             end if
-            if (u3d_id .ne. -1) then
-               err = nf90_get_var(ncid,u3d_id,u3d_bdy_clim(m,:,kl),start,edges)
+            if (uu_id .ne. -1) then
+               err = nf90_get_var(ncid,uu_id,uu_bdy_clim(m,:,kl),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
-            if (v3d_id .ne. -1) then
-               err = nf90_get_var(ncid,v3d_id,v3d_bdy_clim(m,:,kl),start,edges)
+            if (vv_id .ne. -1) then
+               err = nf90_get_var(ncid,vv_id,vv_bdy_clim(m,:,kl),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (salt_id .ne. -1) then
@@ -830,12 +830,12 @@
             else
                start(2) = k
             end if
-            if (u3d_id .ne. -1) then
-               err = nf90_get_var(ncid,u3d_id,u3d_bdy_clim(m,:,kl),start,edges)
+            if (uu_id .ne. -1) then
+               err = nf90_get_var(ncid,uu_id,uu_bdy_clim(m,:,kl),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
-            if (v3d_id .ne. -1) then
-               err = nf90_get_var(ncid,v3d_id,v3d_bdy_clim(m,:,kl),start,edges)
+            if (vv_id .ne. -1) then
+               err = nf90_get_var(ncid,vv_id,vv_bdy_clim(m,:,kl),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (salt_id .ne. -1) then
