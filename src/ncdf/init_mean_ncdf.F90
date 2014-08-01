@@ -156,7 +156,7 @@
    if (save_t) then
       fv = temp_missing
       mv = temp_missing
-      vr(1) =  0.
+      vr(1) = -2.
       vr(2) = 40.
       err = nf90_def_var(ncid,'tempmean',NCDF_FLOAT_PRECISION,f4_dims,tempmean_id)
       if (err .NE. NF90_NOERR) go to 10
