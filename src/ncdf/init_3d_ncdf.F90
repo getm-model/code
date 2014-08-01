@@ -90,10 +90,10 @@
 
    if (save_fluxes) then
 
-      fv = vel_missing
-      mv = vel_missing
-      vr(1) = -3.
-      vr(2) =  3.
+      fv = -99999.
+      mv = -99999.
+      vr(1) = -10000.
+      vr(2) =  10000.
 
       err = nf90_def_var(ncid,'fluxu_adv',NCDF_FLOAT_PRECISION,f3_dims,fluxu_adv_id)
       if (err .NE. NF90_NOERR) go to 10
@@ -125,8 +125,8 @@
 
    fv = vel_missing
    mv = vel_missing
-   vr(1) = -1.
-   vr(2) =  1.
+   vr(1) = -3.
+   vr(2) =  3.
 
    if (save_vel2d) then
 
