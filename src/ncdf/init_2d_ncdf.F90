@@ -78,10 +78,10 @@
 
 !  volume fluxes
    if (save_fluxes) then
-      fv = vel_missing
-      mv = vel_missing
-      vr(1) = -3.
-      vr(2) =  3.
+      fv = -99999.
+      mv = -99999.
+      vr(1) = -10000.
+      vr(2) =  10000.
       err = nf90_def_var(ncid,'fluxu',NCDF_FLOAT_PRECISION,f3_dims,fluxu_id)
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,fluxu_id,long_name='grid-related volume flux in local x-direction (U-point)', &
@@ -98,8 +98,8 @@
    if (save_vel2d) then
       fv = vel_missing
       mv = vel_missing
-      vr(1) = -1.
-      vr(2) =  1.
+      vr(1) = -3.
+      vr(2) =  3.
       err = nf90_def_var(ncid,'u',NCDF_FLOAT_PRECISION,f3_dims,u_id)
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,u_id,long_name='velocity in global x-direction (T-point)',units='m/s', &
