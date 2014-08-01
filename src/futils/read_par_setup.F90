@@ -13,9 +13,15 @@
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fn ! file to read from
    integer, intent(in)                 :: nprocs,myid  ! Number of jobs actually started.
-   integer, intent(in)                 :: imax,jmax,iextr,jextr
+   integer, intent(in)                 :: iextr,jextr
+#ifdef STATIC
+   integer, intent(in)                 :: imax,jmax
+#endif
 !
 ! !OUTPUT PARAMETERS:
+#ifndef STATIC
+   integer, intent(out)                :: imax,jmax
+#endif
    integer, intent(out)                :: ioff,joff,neighbours(8),numthreads
 !
 ! !DESCRIPTION:
@@ -103,12 +109,18 @@
       stop
    end if
 
+#ifdef STATIC
    if (imax_read /= imax .OR. jmax_read /= jmax) then
       FATAL 'read_par_setup: Local grid sizes do not match'
       FATAL '  Expected ',imax,' by ',jmax
       FATAL '  Read     ',imax_read,' by ',jmax_read
       stop
    end if
+#else
+   imax = imax_read
+   jmax = jmax_read
+#endif
+
 !
 ! Read following lines (one per job)
    do ijob=0,nprocs-1
