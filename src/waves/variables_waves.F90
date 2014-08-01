@@ -34,9 +34,6 @@
 !                      Saeed Moghimi
 !                      Knut Klingbeil
 !
-! !LOCAL VARIABLES:
-   integer :: rc
-!
 !EOP
 !-----------------------------------------------------------------------
 
@@ -59,6 +56,8 @@
 ! !INPUT PARAMETERS:
    integer,intent(in) :: runtype
 !
+! !LOCAL VARIABLES:
+   integer :: rc
 !EOP
 !-----------------------------------------------------------------------
 !BOC
