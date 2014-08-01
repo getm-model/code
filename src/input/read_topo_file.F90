@@ -4,7 +4,7 @@
 ! !ROUTINE: read bathymetry and grid information
 !
 ! !INTERFACE:
-   subroutine read_topo_file(filetype,fn)
+   subroutine read_topo_file(filetype,grid_type)
 !
 ! !DESCRIPTION:
 !  This is a wrapper routine to read the bathymetry file
@@ -20,7 +20,7 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: filetype
-   character(LEN=PATH_MAX),intent(in)  :: fn
+   integer,intent(in)                  :: grid_type
 !
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf
@@ -35,7 +35,7 @@
          call getm_error("get_grid()", &
               "ASCII format for topo files not yet supported.")
       case(NETCDF)
-         call ncdf_read_topo_file(fn)
+         call ncdf_read_topo_file(grid_type)
       case(BINARY)
          call getm_error("get_grid()", &
               "RAWBINDARY format for topo files not yet supported.")
