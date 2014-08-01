@@ -162,7 +162,7 @@
 ! !LOCAL VARIABLES:
    integer         :: n
    integer         :: i,j,k
-   REALTYPE,dimension(I3DFIELD) :: fadvv
+   REALTYPE,dimension(I3DFIELD) :: fadv3d
    REALTYPE        :: h1d(0:kmax),T1d(0:kmax),S1d(0:kmax),rho1d(0:kmax)
    REALTYPE        :: nuh1d(0:kmax),rad1d(0:kmax),light1d(0:kmax)
    REALTYPE        :: bioshade1d(0:kmax)
@@ -223,23 +223,23 @@
    do n=1,numc
 
 #if 1
-      fadvv = cc3d(n,:,:,:)
-      call update_3d_halo(fadvv,fadvv,az, &
+      fadv3d = cc3d(n,:,:,:)
+      call update_3d_halo(fadv3d,fadv3d,az, &
                           imin,jmin,imax,jmax,kmax,D_TAG)
       call wait_halo(D_TAG)
 
 !     KK-TODO: bio_AH_method + include bio_AH_method=1 into advection
 
-      call do_advection_3d(dt,fadvv,uu,vv,ww,hun,hvn,ho,hn,                   &
+      call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,ho,hn,                   &
                            bio_adv_split,bio_adv_hor,bio_adv_ver,bio_AH,H_TAG)
 
 !      if (bio_AH_method .gt. 1) then
-!         call update_3d_halo(fadvv,fadvv,az,imin,jmin,imax,jmax,kmax,D_TAG)
+!         call update_3d_halo(fadv3d,fadv3d,az,imin,jmin,imax,jmax,kmax,D_TAG)
 !         call wait_halo(D_TAG)
-!         call tracer_diffusion(fadvv,hn,bio_AH_method,bio_AH_const,bio_AH_Prt,bio_AH_stirr_const)
+!         call tracer_diffusion(fadv3d,hn,bio_AH_method,bio_AH_const,bio_AH_Prt,bio_AH_stirr_const)
 !      end if
 
-      cc3d(n,:,:,:) = fadvv
+      cc3d(n,:,:,:) = fadv3d
 #else
       call update_3d_halo(cc3d(n,:,:,:),cc3d(n,:,:,:),az, &
                           imin,jmin,imax,jmax,kmax,D_TAG)
