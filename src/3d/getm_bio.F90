@@ -236,7 +236,7 @@
 !      if (bio_AH_method .gt. 1) then
 !         call update_3d_halo(fadv3d,fadv3d,az,imin,jmin,imax,jmax,kmax,D_TAG)
 !         call wait_halo(D_TAG)
-!         call tracer_diffusion(ff,hn,bio_AH_method,bio_AH_const,bio_AH_Prt,bio_AH_stirr_const)
+!         call tracer_diffusion(fadv3d,hn,bio_AH_method,bio_AH_const,bio_AH_Prt,bio_AH_stirr_const)
 !      end if
 
       cc3d(n,:,:,:) = fadv3d

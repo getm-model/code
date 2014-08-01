@@ -5,7 +5,7 @@
 include ../Rules.make
 
 INCS	= static_domain.h dynamic_declarations_domain.h 	\
-          dynamic_allocations_domain_1.h dynamic_allocations_domain_2.h
+          dynamic_allocations_domain.h
 LIB	= $(LIBDIR)/libdomain${buildtype}.a
 
 MODSRC	= domain.F90

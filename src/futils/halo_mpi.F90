@@ -442,6 +442,9 @@
 !         STDERR 'dynamic dims ',dims
 #endif
       case(MESH_FROM_FILE)
+#ifndef STATIC
+         imin=1 ; jmin=1
+#endif
          call read_par_setup(par_setup,nprocs,myid,imax,jmax,iextr,jextr, &
                              ioff,joff,neighbours,numthreads)
          left  = neighbours(1) ; if (left  .eq. -1) left  = MPI_PROC_NULL
