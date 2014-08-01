@@ -42,8 +42,8 @@
    REALTYPE,public                        :: bdy3d_tmrlx_max=_ONE_/4
    REALTYPE,public                        :: bdy3d_tmrlx_min=_ZERO_
 
-   REALTYPE,dimension(:,:),pointer,public :: bdy_data_u3d=>null()
-   REALTYPE,dimension(:,:),pointer,public :: bdy_data_v3d=>null()
+   REALTYPE,dimension(:,:),pointer,public :: bdy_data_uu=>null()
+   REALTYPE,dimension(:,:),pointer,public :: bdy_data_vv=>null()
    REALTYPE,dimension(:,:),pointer,public :: bdy_data_S=>null()
    REALTYPE,dimension(:,:),pointer,public :: bdy_data_T=>null()
 #ifdef _FABM_
@@ -168,10 +168,10 @@
       end if
 
       if (bdy3d_vel) then
-         allocate(bdy_data_u3d(0:kmax,nsbvl),stat=rc)
-         if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_data_u3d)'
-         allocate(bdy_data_v3d(0:kmax,nsbvl),stat=rc)
-         if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_data_v3d)'
+         allocate(bdy_data_uu(0:kmax,nsbvl),stat=rc)
+         if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_data_uu)'
+         allocate(bdy_data_vv(0:kmax,nsbvl),stat=rc)
+         if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_data_vv)'
       end if
 
       if (update_salt) then
@@ -939,14 +939,14 @@
             do j = wfj(n),wlj(n)
                bdy_transport = _ZERO_
                do k=kumin(i,j),kmax
-                  bdy_transport = bdy_transport + hun(i,j,k)*bdy_data_u3d(k,kl)
+                  bdy_transport = bdy_transport + hun(i,j,k)*bdy_data_uu(k,kl)
                end do
                Diff = ( Uadv(i,j) - ramp*bdy_transport ) / Dun(i,j)
                do k=kumin(i,j),kmax
 #ifndef NO_BAROTROPIC
-                  uu(i,j,k) = hun(i,j,k) * ( ramp*bdy_data_u3d(k,kl) + Diff )
+                  uu(i,j,k) = hun(i,j,k) * ( ramp*bdy_data_uu(k,kl) + Diff )
 #else
-                  uu(i,j,k) = hun(i,j,k) * ramp * bdy_data_u3d(k,kl)
+                  uu(i,j,k) = hun(i,j,k) * ramp * bdy_data_uu(k,kl)
 #endif
                end do
                kl = kl + 1
@@ -960,14 +960,14 @@
             do j = efj(n),elj(n)
                bdy_transport = _ZERO_
                do k=kumin(i-1,j),kmax
-                  bdy_transport = bdy_transport + hun(i-1,j,k)*bdy_data_u3d(k,kl)
+                  bdy_transport = bdy_transport + hun(i-1,j,k)*bdy_data_uu(k,kl)
                end do
                Diff = ( Uadv(i-1,j) - ramp*bdy_transport ) / Dun(i-1,j)
                do k=kumin(i-1,j),kmax
 #ifndef NO_BAROTROPIC
-                  uu(i-1,j,k) = hun(i-1,j,k) * ( ramp*bdy_data_u3d(k,kl) + Diff )
+                  uu(i-1,j,k) = hun(i-1,j,k) * ( ramp*bdy_data_uu(k,kl) + Diff )
 #else
-                  uu(i-1,j,k) = hun(i-1,j,k) * ramp * bdy_data_u3d(k,kl)
+                  uu(i-1,j,k) = hun(i-1,j,k) * ramp * bdy_data_uu(k,kl)
 #endif
                end do
                kl = kl + 1
@@ -984,14 +984,14 @@
             do i = nfi(n),nli(n)
                bdy_transport = _ZERO_
                do k=kvmin(i,j-1),kmax
-                  bdy_transport = bdy_transport + hvn(i,j-1,k)*bdy_data_v3d(k,kl)
+                  bdy_transport = bdy_transport + hvn(i,j-1,k)*bdy_data_vv(k,kl)
                end do
                Diff = ( Vadv(i,j-1) - ramp*bdy_transport ) / Dvn(i,j-1)
                do k=kvmin(i,j-1),kmax
                   if (no_shift) then
-                     vv(i,j-1,k) = hvn(i,j-1,k) * ramp * bdy_data_v3d(k,kl)
+                     vv(i,j-1,k) = hvn(i,j-1,k) * ramp * bdy_data_vv(k,kl)
                   else
-                     vv(i,j-1,k) = hvn(i,j-1,k) * ( ramp*bdy_data_v3d(k,kl) + Diff )
+                     vv(i,j-1,k) = hvn(i,j-1,k) * ( ramp*bdy_data_vv(k,kl) + Diff )
                   end if
                end do
                kl = kl + 1
@@ -1005,14 +1005,14 @@
             do i = sfi(n),sli(n)
                bdy_transport = _ZERO_
                do k=kvmin(i,j),kmax
-                  bdy_transport = bdy_transport + hvn(i,j,k)*bdy_data_v3d(k,kl)
+                  bdy_transport = bdy_transport + hvn(i,j,k)*bdy_data_vv(k,kl)
                end do
                Diff = ( Vadv(i,j) - ramp*bdy_transport ) / Dvn(i,j)
                do k=kvmin(i,j),kmax
                   if (no_shift) then
-                     vv(i,j,k) = hvn(i,j,k) * ramp * bdy_data_v3d(k,kl)
+                     vv(i,j,k) = hvn(i,j,k) * ramp * bdy_data_vv(k,kl)
                   else
-                     vv(i,j,k) = hvn(i,j,k) * ( ramp*bdy_data_v3d(k,kl) + Diff )
+                     vv(i,j,k) = hvn(i,j,k) * ( ramp*bdy_data_vv(k,kl) + Diff )
                   end if
                end do
                kl = kl + 1
