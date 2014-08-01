@@ -47,7 +47,7 @@
 ! !LOCAL VARIABLES:
    logical                             :: calc_numdis
    integer                             :: i,j,k
-   REALTYPE,dimension(I3DFIELD)        :: fadvv,uuadv,vvadv,wwadv,hires
+   REALTYPE,dimension(I3DFIELD)        :: fadv3d,uuadv,vvadv,wwadv,hires
    REALTYPE,dimension(I3DFIELD),target :: hnadv,huadv,hvadv,nvd
    REALTYPE,dimension(:,:,:),pointer   :: phadv,phuadv,phvadv,p_nvd
 #ifdef _NUMERICAL_ANALYSES_OLD_
@@ -105,7 +105,7 @@
 #endif
             do i=imin-HALO,imax+HALO-1
 !              the velocity to be transported
-               fadvv(i,j,k) = uu(i,j,k)/hun(i,j,k)
+               fadv3d(i,j,k) = uu(i,j,k)/hun(i,j,k)
                if (vel3d_adv_hor .ne. J7) then
                   uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i+1,j,k) )
                   vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i+1,j,k) )
@@ -207,9 +207,9 @@
 
 !$OMP SINGLE
       if (vel3d_adv_hor.ne.NOADV .and. vel3d_adv_hor.ne.UPSTREAM .and. vel3d_adv_hor.ne.J7) then
-!        we need to update fadvv(imax+HALO,jmin-HALO:jmax+HALO)
+!        we need to update fadv3d(imax+HALO,jmin-HALO:jmax+HALO)
          call tic(TIM_UVADV3DH)
-         call update_3d_halo(fadvv,fadvv,au,imin,jmin,imax,jmax,kmax,U_TAG)
+         call update_3d_halo(fadv3d,fadv3d,au,imin,jmin,imax,jmax,kmax,U_TAG)
          call wait_halo(U_TAG)
          call toc(TIM_UVADV3DH)
       end if
@@ -223,7 +223,7 @@
             do j=jmin-HALO,jmax+HALO
 #endif
                do i=imin-HALO,imax+HALO
-                  work3d(i,j,k) = fadvv(i,j,k)**2
+                  work3d(i,j,k) = fadv3d(i,j,k)**2
                end do
 #ifndef SLICE_MODEL
             end do
@@ -235,7 +235,7 @@
 #endif
 
 !$OMP SINGLE
-      call do_advection_3d(dt,fadvv,uuadv,vvadv,wwadv,phuadv,phvadv,phadv,phadv,    &
+      call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,phuadv,phvadv,phadv,phadv,    &
                            vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,U_TAG, &
                            hires=hires,advres=uuEx,nvd=p_nvd)
 !$OMP END SINGLE
@@ -297,7 +297,7 @@
 #endif
                do i=imin,imax
                   if (adv_gridU%mask_finalise(i,j)) then
-                     work3d(i,j,k) = _HALF_*( work3d(i,j,k) - fadvv(i,j,k)**2 )/dt*hires(i,j,k)/ARUD1
+                     work3d(i,j,k) = _HALF_*( work3d(i,j,k) - fadv3d(i,j,k)**2 )/dt*hires(i,j,k)/ARUD1
                   else
                      work3d(i,j,k) = _ZERO_
                   end if
@@ -374,7 +374,7 @@
 #endif
             do i=imin-HALO,imax+HALO
 !              the velocity to be transported
-               fadvv(i,j,k) = vv(i,j,k)/hvn(i,j,k)
+               fadv3d(i,j,k) = vv(i,j,k)/hvn(i,j,k)
                if (vel3d_adv_hor .ne. J7) then
                   uuadv(i,j,k) = _HALF_*( uu(i,j,k) + uu(i,j+1,k) )
                   vvadv(i,j,k) = _HALF_*( vv(i,j,k) + vv(i,j+1,k) )
@@ -463,9 +463,9 @@
 
 !$OMP SINGLE
       if (vel3d_adv_hor.ne.NOADV .and. vel3d_adv_hor.ne.UPSTREAM .and. vel3d_adv_hor.ne.J7) then
-!        we need to update fadvv(imin-HALO:imax+HALO,jmax+HALO)
+!        we need to update fadv3d(imin-HALO:imax+HALO,jmax+HALO)
          call tic(TIM_UVADV3DH)
-         call update_3d_halo(fadvv,fadvv,av,imin,jmin,imax,jmax,kmax,V_TAG)
+         call update_3d_halo(fadv3d,fadv3d,av,imin,jmin,imax,jmax,kmax,V_TAG)
          call wait_halo(V_TAG)
          call toc(TIM_UVADV3DH)
       end if
@@ -479,7 +479,7 @@
             do j=jmin-HALO,jmax+HALO
 #endif
                do i=imin-HALO,imax+HALO
-                  work3d(i,j,k) = fadvv(i,j,k)**2
+                  work3d(i,j,k) = fadv3d(i,j,k)**2
                end do
 #ifndef SLICE_MODEL
             end do
@@ -491,7 +491,7 @@
 #endif
 
 !$OMP SINGLE
-      call do_advection_3d(dt,fadvv,uuadv,vvadv,wwadv,phuadv,phvadv,phadv,phadv,    &
+      call do_advection_3d(dt,fadv3d,uuadv,vvadv,wwadv,phuadv,phvadv,phadv,phadv,    &
                            vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,V_TAG, &
                            hires=hires,advres=vvEx,nvd=p_nvd)
 !$OMP END SINGLE
@@ -553,7 +553,7 @@
 #endif
                do i=imin,imax
                   if (adv_gridV%mask_finalise(i,j)) then
-                     work3d(i,j,k) = _HALF_*( work3d(i,j,k) - fadvv(i,j,k)**2 )/dt*hires(i,j,k)/ARVD1
+                     work3d(i,j,k) = _HALF_*( work3d(i,j,k) - fadv3d(i,j,k)**2 )/dt*hires(i,j,k)/ARVD1
                   else
                      work3d(i,j,k) = _ZERO_
                   end if
