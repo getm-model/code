@@ -12,7 +12,7 @@ LIBSRC	= init_2d_bdy.F90 get_2d_bdy.F90 init_3d_bdy.F90 get_3d_bdy.F90 \
           init_meteo_input.F90 get_meteo_data.F90 \
           init_river_input.F90 get_river_data.F90 \
           get_2d_field.F90 get_3d_field.F90 \
-          read_profile.F90 read_topo_file.F90
+          read_profile.F90 open_topo_file.F90 read_topo_file.F90
 
 SRC	= $(MODSRC) $(LIBSRC)
 
@@ -35,9 +35,8 @@ ${LIB}(get_meteo_data.o)	\
 ${LIB}(get_2d_field.o)		\
 ${LIB}(get_3d_field.o)		\
 ${LIB}(read_profile.o)          \
+${LIB}(open_topo_file.o)	\
 ${LIB}(read_topo_file.o)
-
-#${LIB}(get_grid.o)
 
 all: modules objects
 
