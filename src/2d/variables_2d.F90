@@ -34,8 +34,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
-   integer                   :: rc
 !EOP
 !-----------------------------------------------------------------------
 
@@ -93,6 +91,8 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
 !
+! !LOCAL VARIABLES:
+   integer                   :: rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
