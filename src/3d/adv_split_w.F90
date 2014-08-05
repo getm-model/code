@@ -232,10 +232,12 @@
                            dtik = dti * itersm1
                            splitfack = splitfac * itersm1
                            if (it .gt. 1) then
+#ifdef DEBUG
 !$OMP CRITICAL
                               STDERR 'adv_split_w: restart iterations during it=',it
                               STDERR 'i=',i,' j=',j,':',iters
 !$OMP END CRITICAL
+#endif
                               it = 1
                               cycle
                            end if
