@@ -113,6 +113,7 @@
 ! !USES:
    use domain,     only: imin,imax,jmin,jmax,kmax,bottfric_method,rdrag
    use waves , only: waves_method,NO_WAVES,WAVES_VF
+   use waves , only: waves_bbl_method,NO_WBBL
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -269,8 +270,10 @@
          uuf   => uuEuler   ; vvf   => vvEuler
       end if
 
-      allocate(taubmax(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_3d: Error allocating memory (taubmax)'
+      if (waves_bbl_method .ne. NO_WBBL) then
+         allocate(taubmax(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_3d: Error allocating memory (taubmax)'
+      end if
 
    end if
 
