@@ -50,6 +50,9 @@ confall: confdir confflags
 confdir:
 	@echo "GETMDIR:    "$(GETMDIR)
 	@echo "GOTMDIR:    "$(GOTMDIR)
+ifeq ($(FABM),true)
+	@echo "FABMDIR:    "$(FABMDIR)
+endif
 	@echo "BINDIR:     "$(BINDIR)
 	@echo "MODDIR:     "$(MODDIR)
 	@echo "LIBDIR:     "$(LIBDIR)
