@@ -136,7 +136,7 @@
    REALTYPE, dimension(:,:  ), pointer :: UEulerAdv=>NULL(),VEulerAdv=>NULL()
    REALTYPE, dimension(:,:,:), pointer :: uuf=>NULL(),vvf=>NULL()
    REALTYPE, dimension(:,:,:), pointer :: uuEuler=>NULL(),vvEuler=>NULL()
-   REALTYPE, dimension(:,:  ), pointer :: taubmax=>NULL()
+   REALTYPE, dimension(:,:  ), pointer :: taubmax_3d=>NULL()
 
    REALTYPE,dimension(:,:,:),pointer         :: numdis_3d=>null()
    REALTYPE,dimension(:,:,:),pointer         :: phydis_3d=>null()
@@ -248,7 +248,7 @@
    UEulerAdv => Uadv ; VEulerAdv => Vadv
    uuf       => uu   ; vvf       => vv
    uuEuler   => uu   ; vvEuler   => vv
-   taubmax   => taub
+   taubmax_3d   => taub
 
 
    if (waves_method .ne. NO_WAVES) then
@@ -271,8 +271,8 @@
       end if
 
       if (waves_bbl_method .ne. NO_WBBL) then
-         allocate(taubmax(I2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_3d: Error allocating memory (taubmax)'
+         allocate(taubmax_3d(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_3d: Error allocating memory (taubmax_3d)'
       end if
 
    end if
