@@ -54,12 +54,13 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  !LOCAL VARIABLES:
-   REALTYPE,dimension(E2DFIELD)             :: work2d,velU,velV
+   REALTYPE,dimension(E2DFIELD)             :: work2d,taubcx,taubcy
    REALTYPE,dimension(E2DFIELD),target      :: t_zub,t_zvb
-   REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel
-   REALTYPE,dimension(:,:),pointer          :: p_zub,p_zvb
+   REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel,velU,velV
+   REALTYPE,dimension(:,:),pointer          :: p_zub,p_zvb,p_taubmax
    REALTYPE                                 :: vel,cd,cdsqrt,z0d
    integer                                  :: i,j,it,rc
+   logical                                  :: calc_taubmax
    logical,save                             :: first=.true.
 !EOP
 !-----------------------------------------------------------------------
@@ -74,7 +75,7 @@
 #endif
    CALL tic(TIM_BOTTFRIC)
 
-   if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
+   if (bottfric_method .eq. 0) return
 
       if (first) then
          allocate(u_vel(E2DFIELD),stat=rc)
@@ -85,19 +86,24 @@
          if (rc /= 0) stop 'init_2d: Error allocating memory (v_vel)'
          v_vel=_ZERO_
 
+         allocate(velU(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (velU)'
+         velU=_ZERO_
+
+         allocate(velV(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_2d: Error allocating memory (velV)'
+         velV=_ZERO_
+
          first = .false.
       end if
 
-      if (present(zub)) then
-         p_zub => zub
-      else
-         p_zub => t_zub
-      end if
-      if (present(zvb)) then
-         p_zvb => zvb
-      else
-         p_zvb => t_zvb
-      end if
+   calc_taubmax = .false.
+   if (present(taubmax)) then
+      calc_taubmax = associated(taubmax)
+      p_taubmax => taubmax
+   else
+      p_taubmax => NULL()
+   end if
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j)                                         &
@@ -139,7 +145,27 @@
 
 #ifdef SLICE_MODEL
 !$OMP SINGLE
-      v_vel(:,j-1) = v_vel(:,j)
+   u_vel(imin-HALO:imax+HALO-1,j+1) = u_vel(imin-HALO:imax+HALO-1,j)
+   v_vel(imin-HALO:imax+HALO  ,j-1) = v_vel(imin-HALO:imax+HALO  ,j)
+   v_vel(imin-HALO:imax+HALO  ,j+1) = v_vel(imin-HALO:imax+HALO  ,j)
+!$OMP END SINGLE
+#endif
+
+
+   if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
+
+#ifdef SLICE_MODEL
+!$OMP SINGLE
+      if (present(zub)) then
+         p_zub => zub
+      else
+         p_zub => t_zub
+      end if
+      if (present(zvb)) then
+         p_zvb => zvb
+      else
+         p_zvb => t_zvb
+      end if
 !$OMP END SINGLE
 #endif
 
@@ -233,27 +259,60 @@
 #endif
 !$OMP END DO
 
-!$OMP END PARALLEL
-
 #ifdef SLICE_MODEL
+!$OMP SINGLE
       ru   (imin-HALO  :imax+HALO-1,j+1) = ru   (imin-HALO  :imax+HALO-1,j)
       rv   (imin-HALO+1:imax+HALO-1,j-1) = rv   (imin-HALO+1:imax+HALO-1,j)
       rv   (imin-HALO+1:imax+HALO-1,j+1) = rv   (imin-HALO+1:imax+HALO-1,j)
       p_zub(imin-HALO  :imax+HALO-1,j+1) = p_zub(imin-HALO  :imax+HALO-1,j)
       p_zvb(imin-HALO+1:imax+HALO-1,j-1) = p_zvb(imin-HALO+1:imax+HALO-1,j)
       p_zvb(imin-HALO+1:imax+HALO-1,j+1) = p_zvb(imin-HALO+1:imax+HALO-1,j)
+!$OMP END SINGLE
 #endif
 
-      if (waves_method .ne. NO_WAVES) then
+   end if
+
+
+   if (calc_taubmax) then
+
+!$OMP WORKSHARE
+!     velocities must be zero at land!!!
+      taubcx = ru * u_vel
+      taubcy = rv * v_vel
+!$OMP END WORKSHARE
+
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+      do j=jmin-HALO+1,jmax+HALO-1
+#endif
+         do i=imin-HALO+1,imax+HALO-1
+            if (az(i,j) .ne. 0) then
+               taubmax(i,j) = _HALF_*sqrt(  ( taubcx(i-1,j  ) + taubcx(i,j) )**2 &
+                                          + ( taubcy(i  ,j-1) + taubcy(i,j) )**2 )
+            end if
+         end do
+#ifndef SLICE_MODEL
+      end do
+#endif
+!$OMP END DO
+
+#ifdef SLICE_MODEL
+!$OMP SINGLE
+      taubmax(imin-HALO+1:imax+HALO-1,j+1) = taubmax(imin-HALO+1:imax+HALO-1,j)
+!$OMP END SINGLE
+#endif
+
+   end if
+
+
+!$OMP END PARALLEL
+
+   if (waves_method .ne. NO_WAVES) then
+      if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
          call toc(TIM_BOTTFRIC)
-         if (present(taubmax)) then
-            call bottom_friction_waves(U1,V1,DU1,DV1,Dvel,velU,velV,ru,rv,p_zub,p_zvb,taubmax)
-         else
-            call bottom_friction_waves(U1,V1,DU1,DV1,Dvel,velU,velV,ru,rv,p_zub,p_zvb)
-         end if
+         call bottom_friction_waves(U1,V1,DU1,DV1,Dvel,u_vel,v_vel,velU,velV,ru,rv,p_zub,p_zvb,p_taubmax)
          call tic(TIM_BOTTFRIC)
       end if
-
    end if
 
    CALL toc(TIM_BOTTFRIC)
