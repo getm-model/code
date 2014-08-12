@@ -129,7 +129,7 @@ add_library(3d OBJECT
             3d/sigma_coordinates.F90
             3d/slow_bottom_friction.F90
             3d/slow_terms.F90
-            3d/spm.F90
+#            3d/spm.F90
             3d/ss_nn.F90
             3d/start_macro.F90
             3d/stop_macro.F90
@@ -142,6 +142,7 @@ add_library(3d OBJECT
             3d/uv_diffusion_3d.F90
             3d/variables_3d.F90
             3d/vv_momentum_3d.F90
+            3d/ww_momentum_3d.F90
            )
 
 add_library(domain OBJECT
@@ -322,12 +323,13 @@ add_executable(getm_exe
                $<TARGET_OBJECTS:meteo>
                $<TARGET_OBJECTS:3d>
                $<TARGET_OBJECTS:2d>
+               $<TARGET_OBJECTS:input>
                $<TARGET_OBJECTS:domain>
                $<TARGET_OBJECTS:ncdf>
                $<TARGET_OBJECTS:futils>
               )
 set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm")
-#KBtarget_link_libraries(getm_exe turbulence util)
+target_link_libraries(getm_exe ${GOTM_TURBULENCE} ${GOTM_UTILITY} ${NetCDF_LIBRARIES})
 
 #KBif(USE_NetCDF)
   #KBtarget_link_libraries(gotm_exe "${NetCDF_LIBRARIES}")
