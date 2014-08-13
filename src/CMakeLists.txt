@@ -288,6 +288,7 @@ add_library(ncdf OBJECT
             ncdf/set_attributes.F90
             ncdf/write_restart_ncdf.F90
            )
+set_property(TARGET ncdf APPEND PROPERTY INCLUDE_DIRECTORIES "${PROJECT_SOURCE_DIR}/ncdf")
 
 add_library(output OBJECT
             output/ascii_out.F90
