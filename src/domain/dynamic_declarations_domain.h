@@ -3,7 +3,7 @@
    integer         :: kmax=1
 
 !  coordinate axes - grid-type = 1 or 2
-   REALTYPE, dimension(:), allocatable      :: xcord, ycord
+   REALTYPE, dimension(:), allocatable, target :: xcord, ycord
 
 !  coordinate axes - grid-type = 3 or 4
    REALTYPE, dimension(:), allocatable      :: xxcord, yxcord
@@ -21,7 +21,7 @@
 
 !  lat/lon
    REALTYPE, dimension(:,:), allocatable    :: lonc,latc
-   REALTYPE, dimension(:,:), allocatable    :: lonx,latx
+   REALTYPE, dimension(:,:), allocatable, target :: lonx,latx
    REALTYPE, dimension(:,:), allocatable    :: lonu,latu
    REALTYPE, dimension(:,:), allocatable    :: lonv,latv
 
@@ -30,7 +30,7 @@
    REALTYPE, dimension(:,:), allocatable    :: convc,convx
 
 !  grid points
-   REALTYPE, dimension(:,:), allocatable    :: xx,yx
+   REALTYPE, dimension(:,:), allocatable, target :: xx,yx
    REALTYPE, dimension(:,:), allocatable    :: xc,yc
    REALTYPE, dimension(:,:), allocatable    :: xu,yu
    REALTYPE, dimension(:,:), allocatable    :: xv,yv

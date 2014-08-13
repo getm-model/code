@@ -51,7 +51,18 @@ confall: confdir confflags
 
 confdir:
 	@echo "GETMDIR:    "$(GETMDIR)
+ifdef  GOTM_PREFIX
+	@echo "GOTM_PREFIX:"$(GOTM_PREFIX)
+else
 	@echo "GOTMDIR:    "$(GOTMDIR)
+endif
+ifeq ($(FABM),true)
+ifdef  FABM_PREFIX
+	@echo "FABM_PREFIX:"$(FABM_PREFIX)
+else
+	@echo "FABMDIR:    "$(FABMDIR)
+endif
+endif
 	@echo "BINDIR:     "$(BINDIR)
 	@echo "MODDIR:     "$(MODDIR)
 	@echo "LIBDIR:     "$(LIBDIR)
