@@ -372,7 +372,7 @@ if (NetCDF_STATIC_MSVC_BUILD)
   target_compile_options(getm_exe PRIVATE "/libs:static")
 endif()
 if(DEFINE_PARALLEL)
-  target_link_libraries(getm_exe "${MPI_Fortran_LIBRARIES}")
+  target_link_libraries(getm_exe ${MPI_Fortran_LIBRARIES})
 endif()
 
 if(USE_FABM)
