@@ -17,6 +17,7 @@
    use domain, only: az,latc,lonc
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
    use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
+   use variables_3d, only: attenuation_feedback,fabm_light
    use variables_3d, only: nuh,T,S,rho,a,g1,g2,taubmax_3d
    use variables_3d, only: do_numerical_analyses_3d
    use meteo, only: swr,u10,v10,evap,precip,tcc
@@ -119,7 +120,7 @@
                            fabm_init_file,fabm_init_format,fabm_field_no, &
                            fabm_adv_split,fabm_adv_hor,fabm_adv_ver,      &
                            fabm_AH_method,fabm_AH_const,fabm_AH_Prt,      &
-                           fabm_AH_stirr_const
+                           fabm_AH_stirr_const,attenuation_feedback
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -161,6 +162,11 @@
       allocate(fabm_diag_hz(I2DFIELD,size(model%horizontal_diagnostic_variables)),stat=rc)
       if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (fabm_diag_hz)'
       fabm_diag_hz = _ZERO_
+
+!     Allocate memory for pelagic light field.
+      allocate(fabm_light(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (fabm_light)'
+      fabm_light = _ONE_
 
 !     Read settings specific to GETM-FABM interaction.
       open(NAMLST2,status='unknown',file=trim(nml_file))
@@ -214,6 +220,15 @@
       do n=1,size(model%state_variables)
          pa_nummix(n)%p3d => null()
       end do
+
+      if ( attenuation_feedback ) then
+         LEVEL3 'light attenuation feedback from FABM variables '
+         LEVEL4 'into the temperature equation'
+      else
+         LEVEL3 'no light attenuation feedback from FABM variables'
+         LEVEL4 'into the temperature equation'
+      endif
+
 
 !     Initialize biogeochemical state variables.
       select case (fabm_init_method)
@@ -430,6 +445,8 @@
             do n=1,size(model%horizontal_diagnostic_variables)
                fabm_diag_hz(i,j,n) = cc_diag_hz_col(n)
             end do
+
+            fabm_light(i,j,:) = bioshade
 
          end if
       end do
