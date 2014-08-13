@@ -5,7 +5,7 @@
 ! !ROUTINE: eta_mask() - masks out land.
 !
 ! !INTERFACE:
-   subroutine eta_mask(imin,jmin,imax,jmax,mask,H,D,z,min_depth,missing, &
+   subroutine eta_mask(imin,jmin,imax,jmax,mask,H,D,z,mask_depth,missing, &
                        il,jl,ih,jh,eta)
 !
 ! !DESCRIPTION:
@@ -19,7 +19,7 @@
    REALTYPE, intent(in)                :: H(E2DFIELD)
    REALTYPE, intent(in)                :: D(E2DFIELD)
    REALTYPE, intent(in)                :: z(E2DFIELD)
-   REALTYPE, intent(in)                :: min_depth,missing
+   REALTYPE, intent(in)                :: mask_depth,missing
    integer, intent(in)                 :: il,jl,ih,jh
 !
 ! !OUTPUT PARAMETERS:
@@ -36,7 +36,7 @@
    do j=jl,jh
       do i=il,ih
          if (mask(i,j) .gt. 0 ) then
-            if(z(i,j) .lt. (-H(i,j) + min_depth + 0.1) ) then
+            if(z(i,j) .lt. (-H(i,j) + mask_depth) ) then
                eta(i,j) = missing
             else
                eta(i,j) = z(i,j)

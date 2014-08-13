@@ -12,7 +12,7 @@
 ! !USES:
    use time, only: write_time_string,timestep,timestr
    use ascii_out
-   use domain, only: vert_cord
+   use domain, only: vert_cord,crit_depth,min_depth
    use m2d, only: no_2d,Am_method,AM_LES
    use variables_2d, only: do_numerical_analyses_2d,calc_taubmax
 #ifndef NO_3D
@@ -43,6 +43,7 @@
    logical                             :: save_meteo=.false.
    logical                             :: save_waves=.true.
    logical                             :: save_3d=.true.
+   REALTYPE                            :: mask_depth_2d,mask_depth_3d
    logical                             :: save_h=.false.
    logical                             :: save_mean=.false.
    logical                             :: save_vel=.true.
@@ -112,12 +113,13 @@
    namelist /io_spec/ &
              out_fmt,hotin_fmt,hotout_fmt, &
              in_dir,out_dir, save_metrics, save_masks, &
-             save_2d,save_3d,save_h,save_vel,save_fluxes, &
+             save_2d,save_3d,mask_depth,save_h,save_vel,save_fluxes, &
              save_strho,save_s,save_t,save_rho,save_rad, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              save_Am_2d,save_Am_3d,save_stirr,save_ss_nn,save_taub, &
              first_2d,step_2d,sync_2d,first_3d,step_3d,sync_3d,hotout, &
              meanout,save_meteo,save_waves,save_numerical_analyses
+   REALTYPE                            :: mask_depth=-1.0
 !   logical :: nesting=.true.
 !EOP
 !-------------------------------------------------------------------------
@@ -196,10 +198,19 @@
 
    call file_names(runid,myid)
 
+   if (mask_depth .lt. _ZERO_ ) then
+      mask_depth_2d = 0.1 + crit_depth
+      mask_depth_3d = 0.1 + min_depth
+   else
+      mask_depth_2d = mask_depth
+      mask_depth_3d = mask_depth
+   end if
+
    if(save_2d) then
       LEVEL2 '2D results: ',trim(out_f_2d)
       if (sync_2d .lt. 0) sync_2d=0
       LEVEL2 'First=',first_2d,' step=',step_2d,' sync_2d= ',sync_2d
+      LEVEL2 'Elevation will be masked for depths below ',real(mask_depth_2d)
       if(save_meteo) then
          LEVEL2 'Saving meteo forcing in ',trim(out_f_2d)
       end if
@@ -212,6 +223,7 @@
       LEVEL2 '3D results: ',trim(out_f_3d)
       if (sync_3d .lt. 0) sync_3d=0
       LEVEL2 'First=',first_3d,' step=',step_3d,' sync_3d= ',sync_3d
+      LEVEL2 'Elevation will be masked for depths below ',real(mask_depth_3d)
    end if
 
    save_mean=(meanout .ge. 0 .and. runtype .gt. 1)
