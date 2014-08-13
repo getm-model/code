@@ -113,6 +113,7 @@
 ! !USES:
    use domain,     only: imin,imax,jmin,jmax,kmax,bottfric_method,rdrag
    use waves , only: waves_method,NO_WAVES,WAVES_VF
+   use waves , only: waves_bbl_method,NO_WBBL
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -135,7 +136,7 @@
    REALTYPE, dimension(:,:  ), pointer :: UEulerAdv=>NULL(),VEulerAdv=>NULL()
    REALTYPE, dimension(:,:,:), pointer :: uuf=>NULL(),vvf=>NULL()
    REALTYPE, dimension(:,:,:), pointer :: uuEuler=>NULL(),vvEuler=>NULL()
-   REALTYPE, dimension(:,:  ), pointer :: taubmax=>NULL()
+   REALTYPE, dimension(:,:  ), pointer :: taubmax_3d=>NULL()
 
    REALTYPE,dimension(:,:,:),pointer         :: numdis_3d=>null()
    REALTYPE,dimension(:,:,:),pointer         :: phydis_3d=>null()
@@ -247,7 +248,7 @@
    UEulerAdv => Uadv ; VEulerAdv => Vadv
    uuf       => uu   ; vvf       => vv
    uuEuler   => uu   ; vvEuler   => vv
-   taubmax   => taub
+   taubmax_3d   => taub
 
 
    if (waves_method .ne. NO_WAVES) then
@@ -269,8 +270,10 @@
          uuf   => uuEuler   ; vvf   => vvEuler
       end if
 
-      allocate(taubmax(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_3d: Error allocating memory (taubmax)'
+      if (waves_bbl_method .ne. NO_WBBL) then
+         allocate(taubmax_3d(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_3d: Error allocating memory (taubmax_3d)'
+      end if
 
    end if
 
