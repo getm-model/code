@@ -297,6 +297,15 @@
                           FillValue=fv,missing_value=mv,valid_range=vr)
    end if
 
+   if (save_taub) then
+      fv = stress_missing; mv = stress_missing; vr(1) = -1; vr(2) = 1.
+      err = nf90_def_var(ncid,'taubmax',NCDF_FLOAT_PRECISION,f3_dims,taubmax_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,taubmax_id,  &
+                          long_name='max. bottom stress',units='N/m2', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
+
    if (residual .gt. 0) then
 !     residual currents - u and v
       fv = vel_missing; mv = vel_missing; vr(1) = -3.; vr(2) =  3.

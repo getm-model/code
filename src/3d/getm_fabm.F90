@@ -17,7 +17,7 @@
    use domain, only: az,latc,lonc
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
    use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
-   use variables_3d, only: nuh,T,S,rho,a,g1,g2,taubmax
+   use variables_3d, only: nuh,T,S,rho,a,g1,g2,taubmax_3d
    use variables_3d, only: do_numerical_analyses_3d
    use meteo, only: swr,u10,v10,evap,precip,tcc
    use time, only: yearday,secondsofday
@@ -392,7 +392,7 @@
             end do
 
 !           Calculate actual bottom stress from normalized bottom stress (taub/rho_0)
-            taub_nonnorm = taubmax(i,j)*rho_0
+            taub_nonnorm = taubmax_3d(i,j)*rho_0
 
 !           Copy current values of biogeochemical variables from full 3D field to columns.
             do n=1,size(model%state_variables)
