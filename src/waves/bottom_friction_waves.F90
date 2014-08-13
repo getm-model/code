@@ -5,7 +5,7 @@
 ! !ROUTINE: bottom_friction_waves - calculates the 2D bottom friction.
 !
 ! !INTERFACE:
-   subroutine bottom_friction_waves(U1,V1,DU1,DV1,Dvel,velU,velV,ru,rv,zub,zvb,taubmax)
+   subroutine bottom_friction_waves(U1,V1,DU1,DV1,Dvel,u_vel,v_vel,velU,velV,ru,rv,zub,zvb,taubmax)
 !
 ! !DESCRIPTION:
 !
@@ -21,13 +21,13 @@
    IMPLICIT NONE
 !
 ! !INPUT VARIABLES:
-   REALTYPE,dimension(E2DFIELD),intent(in)    :: U1,V1,DU1,DV1,Dvel,velU,velV
+   REALTYPE,dimension(E2DFIELD),intent(in)    :: U1,V1,DU1,DV1,Dvel,u_vel,v_vel,velU,velV
 !
 ! !INPUT/OUTPUT VARIABLES:
    REALTYPE,dimension(E2DFIELD),intent(inout) :: ru,rv,zub,zvb
+   REALTYPE,dimension(:,:),pointer,intent(inout),optional :: taubmax
 !
 ! !OUTPUT VARIABLES:
-   REALTYPE,dimension(:,:),pointer,intent(out),optional :: taubmax
 !
 ! !REVISION HISTORY:
 !  Original author(s): Ulf Gräwe
@@ -35,12 +35,11 @@
 !                      Knut Klingbeil
 !
 !  !LOCAL VARIABLES:
-   REALTYPE,dimension(E2DFIELD)             :: taubw,wbbl
-   REALTYPE,dimension(:,:),allocatable,save :: taubcx,taubcy,taubmx,taubmy
+   REALTYPE,dimension(E2DFIELD)             :: taubw,wbbl,taubmx,taubmy
    REALTYPE                                 :: Hrms,omegam1,uorb,aorb
    REALTYPE                                 :: Rew,fwr,fws,fwl,fw
    REALTYPE                                 :: tauwr,tauws,tauwl,tauw
-   REALTYPE                                 :: wbl,u_vel,v_vel
+   REALTYPE                                 :: wbl
    REALTYPE                                 :: cdm1,currDir,angle
    REALTYPE                                 :: tauc,taubm,taubc,taube,taubp
    integer                                  :: i,j,rc
@@ -71,36 +70,20 @@
    call tic(TIM_WAVES)
 
    if (first) then
-      allocate(taubcx(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (taubcx)'
-      taubcx=_ZERO_
-
-      allocate(taubcy(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (taubcy)'
-      taubcy=_ZERO_
-
-      allocate(taubmx(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (taubmx)'
-      taubmx=_ZERO_
-
-      allocate(taubmy(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_2d: Error allocating memory (taubmy)'
-      taubmy=_ZERO_
-
       avmmolm1 = _ONE_ / avmmol
       first = .false.
    end if
 
    calc_taubmax = .false.
    if (present(taubmax)) then
-      calc_taubmax = associated(taubmax)         
+      calc_taubmax = associated(taubmax)
    end if
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j)                                         &
 !$OMP          PRIVATE(i,Hrms,omegam1,uorb,aorb,Rew,fwr,fws,fwl,fw)    &
 !$OMP          PRIVATE(tauw,tauwr,tauws,tauwl)                         &
-!$OMP          PRIVATE(wbl,u_vel,v_vel,cdm1,currDir,angle)             &
+!$OMP          PRIVATE(wbl,cdm1,currDir,angle)                         &
 !$OMP          PRIVATE(tauc,tauw,taubm,taubc,taube,taubp)
 
 !$OMP DO SCHEDULE(RUNTIME)
@@ -165,6 +148,7 @@
 #ifdef SLICE_MODEL
 !$OMP SINGLE
    taubw(:,j+1) = taubw(:,j)
+   wbbl (:,j+1) = wbbl (:,j)
 !$OMP END SINGLE
 #endif
 
@@ -175,18 +159,14 @@
    do j=jmin-HALO+1,jmax+HALO-1
 #endif
       do i=imin-HALO,imax+HALO-1
-         if ( au(i,j) .ge. 1 ) then
-            u_vel = U1(i,j) / DU1(i,j)
-            taubcx(i,j) = ru(i,j) * u_vel
-            if (velU(i,j) .gt. _ZERO_) then
-               tauc = ru(i,j) * velU(i,j)
-               tauw = _HALF_ * ( taubw(i,j) + taubw(i+1,j) )
-               wbl = _HALF_ * ( wbbl(i,j) + wbbl(i+1,j) )
-               ru(i,j) = wbbl_rdrag(tauc,tauw,ru(i,j),velU(i,j),DU1(i,j),wbl,zub(i,j))
-               cdm1 = velU(i,j) / ru(i,j)
-               zub(i,j) = _HALF_*DU1(i,j) / (exp(kappa*sqrt(cdm1)) - _ONE_)
-            end if
-            taubmx(i,j) = ru(i,j) * u_vel
+!        velU must be zero at land!!!
+         if (velU(i,j) .gt. _ZERO_) then
+            tauc = ru(i,j) * velU(i,j)
+            tauw = _HALF_ * ( taubw(i,j) + taubw(i+1,j) )
+            wbl = _HALF_ * ( wbbl(i,j) + wbbl(i+1,j) )
+            ru(i,j) = wbbl_rdrag(tauc,tauw,ru(i,j),velU(i,j),DU1(i,j),wbl,zub(i,j))
+            cdm1 = velU(i,j) / ru(i,j)
+            zub(i,j) = _HALF_*DU1(i,j) / (exp(kappa*sqrt(cdm1)) - _ONE_)
          end if
       end do
 #ifndef SLICE_MODEL
@@ -202,18 +182,14 @@
    do j=jmin-HALO,jmax+HALO-1
 #endif
       do i=imin-HALO+1,imax+HALO-1
-         if ( av(i,j) .ge. 1 ) then
-            v_vel = V1(i,j) / DV1(i,j)
-            taubcy(i,j) = rv(i,j) * v_vel
-            if (velV(i,j) .gt. _ZERO_) then
-               tauc = rv(i,j) * velV(i,j)
-               tauw = _HALF_ * ( taubw(i,j) + taubw(i,j+1) )
-               wbl = _HALF_ * ( wbbl(i,j) + wbbl(i,j+1) )
-               rv(i,j) = wbbl_rdrag(tauc,tauw,rv(i,j),velV(i,j),DV1(i,j),wbl,zvb(i,j))
-               cdm1 = velV(i,j) / rv(i,j)
-               zvb(i,j) = _HALF_*DV1(i,j) / (exp(kappa*sqrt(cdm1)) - _ONE_)
-            end if
-            taubmy(i,j) = rv(i,j) * v_vel
+!        velV must be zero at land!!!
+         if (velV(i,j) .gt. _ZERO_) then
+            tauc = rv(i,j) * velV(i,j)
+            tauw = _HALF_ * ( taubw(i,j) + taubw(i,j+1) )
+            wbl = _HALF_ * ( wbbl(i,j) + wbbl(i,j+1) )
+            rv(i,j) = wbbl_rdrag(tauc,tauw,rv(i,j),velV(i,j),DV1(i,j),wbl,zvb(i,j))
+            cdm1 = velV(i,j) / rv(i,j)
+            zvb(i,j) = _HALF_*DV1(i,j) / (exp(kappa*sqrt(cdm1)) - _ONE_)
          end if
       end do
 #ifndef SLICE_MODEL
@@ -223,17 +199,29 @@
 
 #ifdef SLICE_MODEL
 !$OMP SINGLE
-   taubmy(:,j+1) = taubmy(:,j)
-   taubcy(:,j+1) = taubcy(:,j)
+   ru (imin-HALO  :imax+HALO-1,j+1) = ru (imin-HALO  :imax+HALO-1,j)
+   rv (imin-HALO+1:imax+HALO-1,j-1) = rv (imin-HALO+1:imax+HALO-1,j)
+   rv (imin-HALO+1:imax+HALO-1,j+1) = rv (imin-HALO+1:imax+HALO-1,j)
+   zub(imin-HALO  :imax+HALO-1,j+1) = zub(imin-HALO  :imax+HALO-1,j)
+   zvb(imin-HALO+1:imax+HALO-1,j-1) = zvb(imin-HALO+1:imax+HALO-1,j)
+   zvb(imin-HALO+1:imax+HALO-1,j+1) = zvb(imin-HALO+1:imax+HALO-1,j)
 !$OMP END SINGLE
 #endif
 
+
    if (calc_taubmax) then
+
+!$OMP WORKSHARE
+!     velocities must be zero at land!!!
+      taubmx = ru * u_vel
+      taubmy = rv * v_vel
+!$OMP END WORKSHARE
+
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
-      do j=jmin-HALO+1,jmax+HALO
+      do j=jmin-HALO+1,jmax+HALO-1
 #endif
-         do i=imin-HALO+1,imax+HALO
+         do i=imin-HALO+1,imax+HALO-1
             if (az(i,j) .ne. 0) then
                taubm = _HALF_*sqrt(  ( taubmx(i-1,j  ) + taubmx(i,j) )**2 &
                                    + ( taubmy(i  ,j-1) + taubmy(i,j) )**2 )
@@ -244,8 +232,7 @@
                   case (WBBL_DATA2)
                      taubp = taubw(i,j)
                   case (WBBL_SOULSBY05)
-                     taubc = _HALF_*sqrt(  ( taubcx(i-1,j  ) + taubcx(i,j) )**2 &
-                                         + ( taubcy(i  ,j-1) + taubcy(i,j) )**2 )
+                     taubc = taubmax(i,j)
                      taube = sqrt( taubc**2 + taubw(i,j)**2 )
                      taubp = sqrt( taube * taubw(i,j))
                end select
@@ -257,21 +244,17 @@
       end do
 #endif
 !$OMP END DO
-   end if
-
-!$OMP END PARALLEL
 
 #ifdef SLICE_MODEL
-   ru (imin-HALO  :imax+HALO-1,j+1) = ru (imin-HALO  :imax+HALO-1,j)
-   rv (imin-HALO+1:imax+HALO-1,j-1) = rv (imin-HALO+1:imax+HALO-1,j)
-   rv (imin-HALO+1:imax+HALO-1,j+1) = rv (imin-HALO+1:imax+HALO-1,j)
-   zub(imin-HALO  :imax+HALO-1,j+1) = zub(imin-HALO  :imax+HALO-1,j)
-   zvb(imin-HALO+1:imax+HALO-1,j-1) = zvb(imin-HALO+1:imax+HALO-1,j)
-   zvb(imin-HALO+1:imax+HALO-1,j+1) = zvb(imin-HALO+1:imax+HALO-1,j)
-   if (calc_taubmax) then
-      taubmax(imin-HALO+1:imax+HALO,j+1) = taubmax(imin-HALO+1:imax+HALO,j)
-   end if
+!$OMP SINGLE
+      taubmax(imin-HALO+1:imax+HALO-1,j+1) = taubmax(imin-HALO+1:imax+HALO-1,j)
+!$OMP END SINGLE
 #endif
+
+   end if
+
+
+!$OMP END PARALLEL
 
    call toc(TIM_WAVES)
 

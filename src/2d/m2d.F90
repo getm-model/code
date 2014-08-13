@@ -447,6 +447,12 @@
 #endif
       end if
 
+      if (calc_taubmax) then
+         allocate(taubmax(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_2d: Error allocating memory (taubmax)'
+         taubmax = _ZERO_
+      end if
+
    end if
 
 !
@@ -563,7 +569,7 @@
    call tic(TIM_INTEGR2D)
 
    if (mod(loop-1,MM) .eq. 0) then        ! MacroMicro time step
-      call bottom_friction(UEuler,VEuler,DU,DV,Dvel,ru,rv)
+      call bottom_friction(UEuler,VEuler,DU,DV,Dvel,ru,rv,taubmax=taubmax)
    end if
 
    call uv_advect(Uf,Vf,U,V,D,Dvel,DU,DV,numdis_2d)
