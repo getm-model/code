@@ -15,7 +15,7 @@
    use ncdf_3d
    use grid_ncdf,    only: xlen,ylen,zlen
    use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
-   use domain,       only: H,HU,HV,az,au,av,min_depth
+   use domain,       only: H,HU,HV,az,au,av
    use domain,       only: convc
    use domain,       only: grid_type,xc,xu,xv,yc,yu,yv
 #if defined CURVILINEAR || defined SPHERICAL
@@ -116,7 +116,7 @@
    edges(3) = 1
 
 !  elevations
-   call eta_mask(imin,jmin,imax,jmax,az,H,Dn,ssen,min_depth,elev_missing, &
+   call eta_mask(imin,jmin,imax,jmax,az,H,Dn,ssen,mask_depth_3d,elev_missing, &
                  imin,jmin,imax,jmax,ws2d)
    err = nf90_put_var(ncid,elev_id,ws2d(_2D_W_),start,edges)
    if (err .NE. NF90_NOERR) go to 10
