@@ -40,6 +40,7 @@
    integer                             :: fluxvStokes_id=-1
 
    integer                             :: Am_2d_id=-1
+   integer                             :: taubmax_id=-1
    integer                             :: break_stat_id=-1
 
    integer                             :: nd2d_id=-1
