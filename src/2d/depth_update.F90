@@ -40,7 +40,11 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
+#ifdef _NEW_DAF_
+   REALTYPE                  :: hcritm1
+#else
    REALTYPE                  :: d1,d2i
+#endif
    REALTYPE,dimension(E2DFIELD) :: zvel
    logical                      :: update_dryingfactors
 !EOP
@@ -78,8 +82,12 @@
 #ifdef USE_MASK
          if(au(i,j) .gt. 0) then
 #endif
+#ifdef _NEW_DAF_
+         DU(i,j) = _HALF_*(zvel(i,j)+zvel(i+1,j)) + HU(i,j)
+#else
          DU(i,j) = max( min_depth                                , &
                         _HALF_*(zvel(i,j)+zvel(i+1,j)) + HU(i,j) )
+#endif
 #ifdef USE_MASK
          end if
 #endif
@@ -94,8 +102,12 @@
 #ifdef USE_MASK
          if(av(i,j) .gt. 0) then
 #endif
+#ifdef _NEW_DAF_
+         DV(i,j) = _HALF_*(zvel(i,j)+zvel(i,j+1)) + HV(i,j)
+#else
          DV(i,j) = max( min_depth                                , &
                         _HALF_*(zvel(i,j)+zvel(i,j+1)) + HV(i,j) )
+#endif
 #ifdef USE_MASK
          end if
 #endif
@@ -112,6 +124,36 @@
 !  KK-TODO: why not set the dry masks in any case?
 !           however, consider that last call is from postinit_3d
    if (update_dryingfactors) then
+#ifdef _NEW_DAF_
+   hcritm1 = crit_depth - min_depth
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
+         if (az(i,j) .gt. 0) then
+            dry_z(i,j)=max(_ZERO_,min(_ONE_,(D(i,j)-min_depth)*hcritm1))
+         end if
+     end do
+  end do
+!$OMP END DO
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO-1
+         if (au(i,j) .gt. 0) then
+            dry_u(i,j) = min( dry_z(i,j) , dry_z(i+1,j) )
+         end if
+     end do
+  end do
+!$OMP END DO NOWAIT
+!$OMP DO SCHEDULE(RUNTIME)
+   do j=jmin-HALO,jmax+HALO-1
+      do i=imin-HALO,imax+HALO
+         if (av(i,j) .gt. 0) then
+            dry_v(i,j) = min( dry_z(i,j) , dry_z(i,j+1) )
+         end if
+     end do
+  end do
+!$OMP END DO
+#else
    d1  = 2*min_depth
    d2i = _ONE_/(crit_depth-2*min_depth)
 !$OMP DO SCHEDULE(RUNTIME)
@@ -129,14 +171,17 @@
      end do
   end do
 !$OMP END DO
+#endif
    end if
 
 !$OMP END PARALLEL
 
 #ifdef SLICE_MODEL
    j = jmax/2
-   DV(imin:imax,j-1) = DV(imin:imax,j)
-   DV(imin:imax,j+1) = DV(imin:imax,j)
+   DV   (:,j-1) = DV   (:,j)
+   DV   (:,j+1) = DV   (:,j)
+   dry_v(:,j-1) = dry_v(:,j)
+   dry_v(:,j+1) = dry_v(:,j)
 #endif
 
 #ifdef DEBUG
