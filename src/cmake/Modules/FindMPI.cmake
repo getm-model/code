@@ -409,6 +409,9 @@ function (interrogate_mpi_compiler lang try_libs)
         set(MS_MPI_ARCH_DIR i386)
       endif()
 
+      # Recent versions of MS-MPI also store a header file in architecture-specific subdirectory.
+      list(APPEND MPI_INCLUDE_PATH_WORK ${MPI_HEADER_PATH}/${MS_MPI_ARCH_DIR})
+
       set(MPI_LIB "MPI_LIB-NOTFOUND" CACHE FILEPATH "Cleared" FORCE)
       find_library(MPI_LIB
         NAMES         mpi mpich mpich2 msmpi
