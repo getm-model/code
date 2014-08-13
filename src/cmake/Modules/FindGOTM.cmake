@@ -6,14 +6,16 @@ find_path(GOTM_PREFIX
 )
 
 # Find GOTM turbulence library
-find_library(GOTM_LIBRARIES NAMES turbulence
+find_library(GOTM_TURBULENCE NAMES turbulence
              HINTS ${GOTM_PREFIX}/lib
              DOC "GOTM turbulence library")
 
 # Find GOTM utility library
-find_library(LIBRARIES NAMES util
+find_library(GOTM_UTIL NAMES util
              HINTS ${GOTM_PREFIX}/lib
              DOC "GOTM uutility library")
+
+set(GOTM_LIBRARIES "${GOTM_TURBULENCE} ${GOTM_UTIL}")
 
 # Store configurable path of GOTM include directory
 set(GOTM_INCLUDE_DIRS "${GOTM_PREFIX}/include"

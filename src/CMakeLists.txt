@@ -10,25 +10,35 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # various compilation switches
 
-option(USE_DEBUG "Debug compilation" OFF)
-if(USE_DEBUG)
-add_definitions(-DDEBUG)
-endif(USE_DEBUG)
-
-option(USE_PROFILING "Profiling compilation" OFF)
-if(USE_PROFILING)
-add_definitions(-DPROF)
-endif(USE_PROFILING)
-
-option(USE_STATIC "Static compilation" OFF)
-if(USE_STATIC)
+option(DEFINE_STATIC "Static compilation" OFF)
+if(DEFINE_STATIC)
 add_definitions(-DSTATIC)
-endif(USE_STATIC)
+endif(DEFINE_STATIC)
 
-option(USE_STRUCTURE_FRICTION "Include structure friction" OFF)
-if(USE_STRUCTURE_FRICTION)
+option(DEFINE_PARALLEL "Parallel compilation" OFF)
+if(DEFINE_PARALLEL)
+add_definitions(-DGETM_PARALLEL)
+endif(DEFINE_PARALLEL)
+
+option(DEFINE_DEBUG "Debug compilation" OFF)
+if(DEFINE_DEBUG)
+add_definitions(-DDEBUG)
+endif(DEFINE_DEBUG)
+
+option(DEFINE_PROFILING "Profiling compilation" OFF)
+if(DEFINE_PROFILING)
+add_definitions(-DPROF)
+endif(DEFINE_PROFILING)
+
+option(DEFINE_STATIC "Static compilation" OFF)
+if(DEFINE_STATIC)
+add_definitions(-DSTATIC)
+endif(DEFINE_STATIC)
+
+option(DEFINE_STRUCTURE_FRICTION "Include structure friction" OFF)
+if(DEFINE_STRUCTURE_FRICTION)
 add_definitions(-DSTRUCTURE_FRICTION)
-endif(USE_STRUCTURE_FRICTION)
+endif(DEFINE_STRUCTURE_FRICTION)
 
 add_definitions(-DFORTRAN95)
 
@@ -256,11 +266,11 @@ add_library(output OBJECT
             output/output.F90
            )
 
-option(USE_ICE "Include ICE support" OFF)
-if(USE_ICE)
+option(DEFINE_ICE "Include ICE support" OFF)
+if(DEFINE_ICE)
   add_library(ice OBJECT
              )
-endif(USE_ICE)
+endif(DEFINE_ICE)
 
 add_dependencies(domain futils)
 add_dependencies(meteo futils domain)
@@ -271,31 +281,17 @@ add_dependencies(ncdf futils domain output)
 add_dependencies(input futils 2d 3d ncdf)
 add_dependencies(getm input)
 
-#KBset_property(TARGET util turbulence PROPERTY Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
-
 find_package(NetCDF REQUIRED)
 set_property(TARGET futils ncdf input APPEND PROPERTY INCLUDE_DIRECTORIES "${NetCDF_INCLUDE_DIRS}")
 add_definitions(-DNETCDF_FMT -DREAL_4B=real\(4\))
 
 # Use GOTM_PREFIX to locate include and lib directories
-  find_package(GOTM REQUIRED)
-#  add_library(3d
-#              3d/gotm.F90
-#             )
-  #KBadd_dependencies(gotm_fabm output)
-#KB  target_link_libraries(gotm_fabm util)
-    set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
-#KB  set_property(TARGET gotm_fabm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
-#KB  set_property(TARGET gotm_fabm PROPERTY Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+find_package(GOTM REQUIRED)
+set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 
-  #KBadd_dependencies(gotm gotm_fabm)
-  #KBset_property(TARGET gotm APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
-
-
-#KBendif(USE_FABM)
 # Use FABM_PREFIX to locate include and lib directories
-#KBoption(USE_FABM "Include FABM support" ON)
-#KBif(USE_FABM)
+option(USE_FABM "Include FABM support" OFF)
+if(USE_FABM)
   #KBfind_package(FABM REQUIRED)
   #KBadd_library(gotm_fabm
               #KBfabm/gotm_fabm.F90
@@ -304,16 +300,13 @@ add_definitions(-DNETCDF_FMT -DREAL_4B=real\(4\))
              #KB)
   #KBadd_dependencies(gotm_fabm output)
   #KBtarget_link_libraries(gotm_fabm util)
-  #KBif(USE_NetCDF)
-    #KBset_property(TARGET gotm_fabm APPEND PROPERTY INCLUDE_DIRECTORIES "${NetCDF_INCLUDE_DIRS}")
-  #KBendif(USE_NetCDF)
-  #KBset_property(TARGET gotm_fabm APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
-  #KBset_property(TARGET gotm_fabm PROPERTY Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+  #KBset_property(TARGET getm_fabm APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
+  #KBset_property(TARGET getm_fabm PROPERTY Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
   #KBadd_definitions(-D_FABM_)
 
   #KBadd_dependencies(gotm gotm_fabm)
   #KBset_property(TARGET gotm APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
-#KBendif(USE_FABM)
+endif(USE_FABM)
 
 # Build GETM executable.
 add_executable(getm_exe
@@ -329,22 +322,14 @@ add_executable(getm_exe
                $<TARGET_OBJECTS:futils>
               )
 set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm")
-target_link_libraries(getm_exe ${GOTM_TURBULENCE} ${GOTM_UTILITY} ${NetCDF_LIBRARIES})
+target_link_libraries(getm_exe ${GOTM_LIBRARIES} ${NetCDF_LIBRARIES})
 
-#KBif(USE_NetCDF)
-  #KBtarget_link_libraries(gotm_exe "${NetCDF_LIBRARIES}")
-  #KBif (NetCDF_STATIC_MSVC_BUILD)
-    #KBset_property(TARGET gotm_exe PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:\"libcmtd\"")
-    #KBtarget_compile_options(gotm_exe PRIVATE "/libs:static")
-  #KBendif()
-#KBendif(USE_NetCDF)
-
-#KBif(USE_FABM)
-  #KBtarget_link_libraries(gotm_exe gotm_fabm ${FABM_LIBRARIES})
-#KBendif(USE_FABM)
+if(USE_FABM)
+  target_link_libraries(getm_exe gotm_fabm ${FABM_LIBRARIES})
+endif(USE_FABM)
 
 # Install GETM library and include files, unless the host overruled this.
-#KBinstall(TARGETS gotm_exe DESTINATION bin)
+install(TARGETS getm_exe DESTINATION bin)
 #KBinstall(TARGETS turbulence util DESTINATION lib)
 #KBif(USE_FABM)
   #KBinstall(TARGETS gotm_fabm DESTINATION lib)
