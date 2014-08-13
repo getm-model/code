@@ -667,7 +667,7 @@
    if (calc_bottfric) then
       call tic(TIM_INTEGR3D)
       call bottom_friction(uuEuler(:,:,1),vvEuler(:,:,1),hun(:,:,1),hvn(:,:,1), &
-                           Dveln,rru,rrv,zub=zub,zvb=zvb,taubmax=taubmax)
+                           Dveln,rru,rrv,zub=zub,zvb=zvb,taubmax=taubmax_3d)
       call toc(TIM_INTEGR3D)
       call stresses_3d()
    end if
