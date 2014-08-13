@@ -15,7 +15,7 @@ find_library(GOTM_UTIL NAMES util
              HINTS ${GOTM_PREFIX}/lib
              DOC "GOTM uutility library")
 
-set(GOTM_LIBRARIES "${GOTM_TURBULENCE} ${GOTM_UTIL}")
+set(GOTM_LIBRARIES ${GOTM_TURBULENCE} ${GOTM_UTIL})
 
 # Store configurable path of GOTM include directory
 set(GOTM_INCLUDE_DIRS "${GOTM_PREFIX}/include"
@@ -29,5 +29,5 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args (GOTM DEFAULT_MSG GOTM_LIBRARIES GOTM_INCLUDE_DIRS) 
 
 # For backward compatibility:
-#KBset(GOTM_LIBRARY GOTM_LIBRARIES)
-#KBset(GOTM_INCLUDE_DIR GOTM_INCLUDE_DIRS)
+#set(GOTM_LIBRARY GOTM_LIBRARIES)
+#set(GOTM_INCLUDE_DIR GOTM_INCLUDE_DIRS)
