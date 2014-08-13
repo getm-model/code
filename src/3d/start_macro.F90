@@ -73,18 +73,28 @@
    do j=jmin-HALO,jmax+HALO             ! Same for U-points
       do i=imin-HALO,imax+HALO-1
          ssuo(i,j) = ssun(i,j) ! needed for reconstruction of huo (sigma,gvc)
+#ifdef _NEW_DAF_
+         ssun(i,j) = _HALF_*( ssevel(i,j) + ssevel(i+1,j) )
+         Dun(i,j) = ssun(i,j) + HU(i,j)
+#else
          Dun(i,j) = max( min_depth                                    , &
                          _HALF_*(ssevel(i,j)+ssevel(i+1,j)) + HU(i,j) )
          ssun(i,j) = Dun(i,j) - HU(i,j)
+#endif
       end do
    end do
 
    do j=jmin-HALO,jmax+HALO-1
       do i=imin-HALO,imax+HALO             ! Same for V-points
          ssvo(i,j) = ssvn(i,j) ! needed for reconstruction of hvo (sigma,gvc)
+#ifdef _NEW_DAF_
+         ssvn(i,j) = _HALF_*( ssevel(i,j) + ssevel(i,j+1) )
+         Dvn(i,j) = ssvn(i,j) + HV(i,j)
+#else
          Dvn(i,j) = max( min_depth                                    , &
                          _HALF_*(ssevel(i,j)+ssevel(i,j+1)) + HV(i,j) )
          ssvn(i,j) = Dvn(i,j) - HV(i,j)
+#endif
       end do
    end do
 

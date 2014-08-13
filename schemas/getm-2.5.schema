@@ -877,6 +877,7 @@
 			<element name="save_meteo" type="bool" label="save meteo data"/>
 			<element name="save_waves" type="bool" label="save wave data"/>
 			<element name="save_3d" type="bool" label="save 3d fields"/>
+			<element name="mask_depth" type="float" label="depth below elev will be masked" description="negative values cause old masking depths: crit_depth+0.1 for 2d output and min_depth+0.1 for 3d output" unit="m"/>
 			<element name="save_h"  type="bool" label="save layer heights">
 				<condition type="eq" variable="../domain/vert_cord" value="1"/>
 			</element>
