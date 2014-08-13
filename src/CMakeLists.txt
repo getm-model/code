@@ -128,6 +128,7 @@ add_library(2d OBJECT
             2d/uv_diffusion.F90
             2d/variables_2d.F90
            )
+set_property(TARGET 2d APPEND PROPERTY INCLUDE_DIRECTORIES "${PROJECT_SOURCE_DIR}/2d")
 
 add_library(3d OBJECT
             3d/adaptive_coordinates.F90
@@ -176,6 +177,7 @@ add_library(3d OBJECT
             3d/vv_momentum_3d.F90
             3d/ww_momentum_3d.F90
            )
+set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES "${PROJECT_SOURCE_DIR}/3d")
 
 add_library(domain OBJECT
             domain/bdy_spec.F90
@@ -187,6 +189,7 @@ add_library(domain OBJECT
             domain/print_bdy.F90
             domain/uv_depths.F90
            )
+set_property(TARGET domain APPEND PROPERTY INCLUDE_DIRECTORIES "${PROJECT_SOURCE_DIR}/domain")
 
 add_library(futils OBJECT
             futils/c2x.F90
