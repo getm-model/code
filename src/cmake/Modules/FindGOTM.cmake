@@ -22,7 +22,7 @@ set(GOTM_INCLUDE_DIRS "${GOTM_PREFIX}/include"
     CACHE PATH
     "GOTM include directories")
 
-mark_as_advanced(GOTM_LIBRARIES GOTM_INCLUDE_DIRS)
+mark_as_advanced(GOTM_LIBRARIES GOTM_INCLUDE_DIRS GOTM_TURBULENCE GOTM_UTIL)
 
 # Process default arguments (QUIET, REQUIRED)
 include(FindPackageHandleStandardArgs) 
