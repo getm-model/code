@@ -72,12 +72,12 @@
          REALTYPE,dimension(I3DFIELD),intent(inout),optional :: uuEx,vvEx
       end subroutine stokes_drift_3d
 
-      subroutine bottom_friction_waves(U1,V1,DU1,DV1,Dvel,velU,velV,ru,rv,zub,zvb,taubmax)
+      subroutine bottom_friction_waves(U1,V1,DU1,DV1,Dvel,u_vel,v_vel,velU,velV,ru,rv,zub,zvb,taubmax)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
-         REALTYPE,dimension(E2DFIELD),intent(in)    :: U1,V1,DU1,DV1,Dvel,velU,velV
+         REALTYPE,dimension(E2DFIELD),intent(in)    :: U1,V1,DU1,DV1,Dvel,u_vel,v_vel,velU,velV
          REALTYPE,dimension(E2DFIELD),intent(inout) :: ru,rv,zub,zvb
-         REALTYPE,dimension(:,:),pointer,intent(out),optional :: taubmax
+         REALTYPE,dimension(:,:),pointer,intent(inout),optional :: taubmax
       end subroutine bottom_friction_waves
    end interface
 
@@ -521,7 +521,7 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
- 
+
    omega = _TWO_ * pi / period ! radian frequency
    omegastar = omega * sqrt(depth/grav) ! non-dimensional radian frequency
 
