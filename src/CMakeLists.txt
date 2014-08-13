@@ -39,7 +39,9 @@ endif(DEFINE_STATIC)
 option(DEFINE_PARALLEL "Parallel compilation" OFF)
 if(DEFINE_PARALLEL)
    find_package(MPI REQUIRED)
-   include_directories("${MPI_Fortran_INCLUDE_PATH}")
+   if(MPI_Fortran_INCLUDE_PATH)
+     include_directories("${MPI_Fortran_INCLUDE_PATH}")
+   endif()
    add_definitions(-DGETM_PARALLEL)
    set(HALO_MPI futils/halo_mpi.F90)
    if(WIN32)
@@ -124,8 +126,8 @@ else()
 endif()
 
 # Global include directories
-include_directories("${PROJECT_SOURCE_DIR}/../include"
-                    "${CMAKE_BINARY_DIR}/modules"
+include_directories("${CMAKE_BINARY_DIR}"
+                    "${PROJECT_SOURCE_DIR}/../include"
                    )
 # Libraries added in alphabetic order - dependencies are dealt with below 
 add_library(2d OBJECT
@@ -371,7 +373,7 @@ if (NetCDF_STATIC_MSVC_BUILD)
   set_property(TARGET getm_exe PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:\"libcmtd\"")
   target_compile_options(getm_exe PRIVATE "/libs:static")
 endif()
-if(DEFINE_PARALLEL)
+if(DEFINE_PARALLEL AND MPI_Fortran_LIBRARIES)
   target_link_libraries(getm_exe ${MPI_Fortran_LIBRARIES})
 endif()
 
