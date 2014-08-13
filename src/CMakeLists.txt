@@ -11,13 +11,15 @@ set(getm_VERSION_MINOR 5)
 set(getm_VERSION_PATCH 0)
 set(getm_VERSION "${getm_VERSION_MAJOR}.${getm_VERSION_MINOR}.${getm_VERSION_PATCH}")
 
-find_program (GIT_EXECUTABLE NAMES git DOC "git executable")
-if(NOT (GIT_EXECUTABLE STREQUAL GIT_EXECUTABLE-NOTFOUND))
-  execute_process(COMMAND ${GIT_EXECUTABLE} log
+find_package(Git)
+if(GIT_FOUND)
+  execute_process(COMMAND ${GIT_EXECUTABLE} log -n 1
                   OUTPUT_VARIABLE GIT_LOG
                   OUTPUT_STRIP_TRAILING_WHITESPACE
                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
   STRING(REGEX REPLACE "([^\n]+).*" "\\1" GIT_REVISION "${GIT_LOG}")
+else()
+  set(GIT_REVISION "unknown")
 endif()
 
 # Generate include file with version information.
