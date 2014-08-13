@@ -40,6 +40,7 @@
    integer, public                     :: myid=-1, nprocs=1
    integer, public                     :: comm_hd=MPI_COMM_WORLD
    LONGINT, public                     :: all_2d_exchange, all_3d_exchange
+   integer, public                     :: comm_getm=MPI_COMM_NULL
 !   integer, public                    :: comm_wave=MPI_COMM_WORLD
 !   integer, public                    :: comm_biology=MPI_COMM_WORLD
 !
@@ -130,23 +131,28 @@
       STDERR 'Fatal error: unable to get MPI status.'
       call MPI_Abort(MPI_COMM_WORLD,-1,ierr)
    end if
-   if (.not. external_mpi_init) then
+   if (external_mpi_init) then
+      if (comm_getm .eq. MPI_COMM_NULL) then
+         comm_getm = MPI_COMM_WORLD
+      end if
+   else
       call MPI_INIT(ierr)
       if(ierr .ne. MPI_SUCCESS) then
          STDERR 'Fatal error: unable to initialize MPI.'
          call MPI_Abort(MPI_COMM_WORLD,-1,ierr)
       end if
+      comm_getm = MPI_COMM_WORLD
    end if
 
 !  Get number of processes
-   call MPI_COMM_SIZE(MPI_COMM_WORLD,nprocs,ierr)
+   call MPI_COMM_SIZE(comm_getm,nprocs,ierr)
    if (ierr .ne. MPI_SUCCESS) THEN
       STDERR 'Fatal error: unable to get number of processes.'
       call MPI_Abort(MPI_COMM_WORLD,-1,ierr)
    end if
 
 !  Get rank of current process
-   call MPI_COMM_RANK(MPI_COMM_WORLD,myid,ierr)
+   call MPI_COMM_RANK(comm_getm,myid,ierr)
    if (ierr .ne. MPI_SUCCESS) THEN
       STDERR 'Fatal error: unable to get MYID.'
       call MPI_Abort(MPI_COMM_WORLD,-1,ierr)
@@ -473,7 +479,7 @@
    end select
 
    if (mesh_method .eq. ONED_MESH .or. mesh_method .eq. TWOD_MESH) then
-      call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periods,re_order,comm_hd,ierr)
+      call MPI_CART_CREATE(comm_getm,2,dims,periods,re_order,comm_hd,ierr)
       call MPI_CART_COORDS(comm_hd,myid,2,coords,ierr)
       call MPI_CART_SHIFT(comm_hd,0,1,down,up,ierr)
       call MPI_CART_SHIFT(comm_hd,1,1,left,right,ierr)
@@ -533,8 +539,11 @@
 #endif
       ioff=coords(2)*imax
       joff=coords(1)*jmax
+   else
+      comm_hd = comm_getm
    end if
 
+   call set_active_communicator(comm_hd)
    call MPI_data_types(imin,imax,jmin,jmax,kmax)
 
    STDERR LINE
@@ -1251,8 +1260,8 @@ STDERR 'TWOD_NONBLOCKING'
 !-------------------------------------------------------------------------
 !BOC
 
-   CALL MPI_GATHER(flag,1,MPI_INTEGER,flags,1,MPI_INTEGER,0,MPI_COMM_WORLD, ierr);
-   CALL MPI_BCAST(flags,nprocs,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+   CALL MPI_GATHER(flag,1,MPI_INTEGER,flags,1,MPI_INTEGER,0,comm_hd, ierr);
+   CALL MPI_BCAST(flags,nprocs,MPI_INTEGER,0,comm_hd,ierr)
 
    return
    end subroutine set_flag_mpi
