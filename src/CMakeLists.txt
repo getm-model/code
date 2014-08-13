@@ -5,6 +5,26 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 # Create main project.
 project(getm Fortran)
 
+# Set version information.
+set(getm_VERSION_MAJOR 2)
+set(getm_VERSION_MINOR 5)
+set(getm_VERSION_PATCH 0)
+set(getm_VERSION "${getm_VERSION_MAJOR}.${getm_VERSION_MINOR}.${getm_VERSION_PATCH}")
+
+find_program (GIT_EXECUTABLE NAMES git DOC "git executable")
+if(NOT (GIT_EXECUTABLE STREQUAL GIT_EXECUTABLE-NOTFOUND))
+  execute_process(COMMAND ${GIT_EXECUTABLE} log
+                  OUTPUT_VARIABLE GIT_LOG
+                  OUTPUT_STRIP_TRAILING_WHITESPACE
+                  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+  STRING(REGEX REPLACE "([^\n]+).*" "\\1" GIT_REVISION "${GIT_LOG}")
+endif()
+
+# Generate include file with version information.
+configure_file(../include/version.h.in version.h)
+configure_file(../include/fortran_version.h.in fortran_version.h)
+configure_file(../include/git_revision.h.in git_revision.h)
+
 # Use solution folders in IDEs
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
