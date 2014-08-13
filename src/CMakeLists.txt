@@ -12,32 +12,40 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 option(DEFINE_STATIC "Static compilation" OFF)
 if(DEFINE_STATIC)
-add_definitions(-DSTATIC)
+   add_definitions(-DSTATIC)
 endif(DEFINE_STATIC)
 
 option(DEFINE_PARALLEL "Parallel compilation" OFF)
 if(DEFINE_PARALLEL)
-add_definitions(-DGETM_PARALLEL)
+   add_definitions(-DGETM_PARALLEL)
+   set(HALO_MPI futils/halo_mpi.F90)
 endif(DEFINE_PARALLEL)
 
 option(DEFINE_DEBUG "Debug compilation" OFF)
 if(DEFINE_DEBUG)
-add_definitions(-DDEBUG)
+   add_definitions(-DDEBUG)
 endif(DEFINE_DEBUG)
 
 option(DEFINE_PROFILING "Profiling compilation" OFF)
 if(DEFINE_PROFILING)
-add_definitions(-DPROF)
+   add_definitions(-DPROF)
 endif(DEFINE_PROFILING)
 
 option(DEFINE_STATIC "Static compilation" OFF)
 if(DEFINE_STATIC)
-add_definitions(-DSTATIC)
+   add_definitions(-DSTATIC)
 endif(DEFINE_STATIC)
+
+option(USE_FABM "Include FABM support" OFF)
+if(USE_FABM)
+   add_definitions(-D_FABM_)
+   set (GETM_FABM 3d/getm_fabm.F90)
+endif(USE_FABM)
 
 option(DEFINE_STRUCTURE_FRICTION "Include structure friction" OFF)
 if(DEFINE_STRUCTURE_FRICTION)
-add_definitions(-DSTRUCTURE_FRICTION)
+   add_definitions(-DSTRUCTURE_FRICTION)
+   set (STRUCTURE_FRICTION 3d/structure_friction_3d.F90)
 endif(DEFINE_STRUCTURE_FRICTION)
 
 add_definitions(-DFORTRAN95)
@@ -118,7 +126,7 @@ add_library(3d OBJECT
             3d/eqstate.F90
             3d/general_coordinates.F90
 #            3d/getm_bio.F90
-#            3d/getm_fabm.F90
+            ${GETM_FABM}
             3d/gotm.F90
             3d/hcc_check.F90
             3d/hybrid_coordinates.F90
@@ -144,7 +152,7 @@ add_library(3d OBJECT
             3d/start_macro.F90
             3d/stop_macro.F90
             3d/stresses_3d.F90
-#            3d/structure_friction_3d.F90
+            ${STRUCTURE_FRICTION}
             3d/temperature.F90
             3d/tke_eps_advect_3d.F90
             3d/uu_momentum_3d.F90
@@ -177,7 +185,7 @@ add_library(futils OBJECT
             futils/getm_error.F90
             futils/getm_timers.F90
             futils/grid_interpol.F90
-#            futils/halo_mpi.F90
+            ${HALO_MPI}
             futils/halo_zones.F90
             futils/kbk_interpol.F90
             futils/parallel.F90
@@ -290,9 +298,8 @@ find_package(GOTM REQUIRED)
 set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 
 # Use FABM_PREFIX to locate include and lib directories
-option(USE_FABM "Include FABM support" OFF)
 if(USE_FABM)
-  #KBfind_package(FABM REQUIRED)
+  find_package(FABM REQUIRED)
   #KBadd_library(gotm_fabm
               #KBfabm/gotm_fabm.F90
               #KBfabm/gotm_fabm_input.F90
@@ -300,9 +307,8 @@ if(USE_FABM)
              #KB)
   #KBadd_dependencies(gotm_fabm output)
   #KBtarget_link_libraries(gotm_fabm util)
-  #KBset_property(TARGET getm_fabm APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
+  set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
   #KBset_property(TARGET getm_fabm PROPERTY Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
-  #KBadd_definitions(-D_FABM_)
 
   #KBadd_dependencies(gotm gotm_fabm)
   #KBset_property(TARGET gotm APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
@@ -328,11 +334,5 @@ if(USE_FABM)
   target_link_libraries(getm_exe gotm_fabm ${FABM_LIBRARIES})
 endif(USE_FABM)
 
-# Install GETM library and include files, unless the host overruled this.
+# Install GETM executable
 install(TARGETS getm_exe DESTINATION bin)
-#KBinstall(TARGETS turbulence util DESTINATION lib)
-#KBif(USE_FABM)
-  #KBinstall(TARGETS gotm_fabm DESTINATION lib)
-#KBendif()
-#KBinstall(DIRECTORY ${CMAKE_BINARY_DIR}/modules/ DESTINATION include)
-
