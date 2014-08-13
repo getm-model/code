@@ -26,6 +26,7 @@
    REALTYPE                            :: dtm
    REALTYPE,dimension(:,:),pointer     :: zo,z
    logical                             :: do_numerical_analyses_2d=.false.
+   logical                             :: calc_taubmax=.false.
 
 #ifdef STATIC
 #include "static_2d.h"
@@ -36,6 +37,7 @@
    REALTYPE,dimension(:,:),pointer     :: Uf=>NULL(),Vf=>NULL()
    REALTYPE,dimension(:,:),pointer     :: UEuler=>NULL(),VEuler=>NULL()
    REALTYPE,dimension(:,:),pointer     :: UEulerInt=>NULL(),VEulerInt=>NULL()
+   REALTYPE,dimension(:,:),pointer     :: taubmax=>NULL()
 !  the following fields will only be allocated if deformCX=.true.
    REALTYPE,dimension(:,:),allocatable :: dudxC,dvdyC
    REALTYPE,dimension(:,:),pointer     :: dudyX=>null()
