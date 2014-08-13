@@ -597,6 +597,9 @@
 			<save_waves>
 				True
 			</save_waves>
+			<mask_depth>
+				-1.0
+			</mask_depth>
 			<save_3d>
 				True
 			</save_3d>

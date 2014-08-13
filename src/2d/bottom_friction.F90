@@ -86,6 +86,7 @@
          if (rc /= 0) stop 'init_2d: Error allocating memory (v_vel)'
          v_vel=_ZERO_
 
+      if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
          allocate(velU(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_2d: Error allocating memory (velU)'
          velU=_ZERO_
@@ -93,6 +94,7 @@
          allocate(velV(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_2d: Error allocating memory (velV)'
          velV=_ZERO_
+      end if
 
          first = .false.
       end if
@@ -154,8 +156,6 @@
 
    if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
 
-#ifdef SLICE_MODEL
-!$OMP SINGLE
       if (present(zub)) then
          p_zub => zub
       else
@@ -166,8 +166,6 @@
       else
          p_zvb => t_zvb
       end if
-!$OMP END SINGLE
-#endif
 
 !     The x-direction
 
