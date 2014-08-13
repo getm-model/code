@@ -14,7 +14,7 @@
    use ascii_out
    use domain, only: vert_cord
    use m2d, only: no_2d,Am_method,AM_LES
-   use variables_2d, only: do_numerical_analyses_2d
+   use variables_2d, only: do_numerical_analyses_2d,calc_taubmax
 #ifndef NO_3D
    use variables_3d, only: do_numerical_analyses_3d,calc_stirr
    use m3d, only: nonhyd_method
@@ -163,6 +163,10 @@
       save_s = .false.
       save_t = .false.
       save_rho = .false.
+   end if
+
+   if (save_taub) then
+      if (save_2d) calc_taubmax = .true.
    end if
 
 #ifndef NO_3D
@@ -331,7 +335,7 @@
    write(debug,*) 'do_output() # ',Ncall
 #endif
    call tic(TIM_OUTPUT)
-       
+
    write_2d = save_2d .and. n .ge. first_2d .and. mod(n,step_2d).eq.0
    write_3d = save_3d .and. n .ge. first_3d .and. mod(n,step_3d).eq.0
 
