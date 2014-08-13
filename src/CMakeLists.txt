@@ -354,6 +354,10 @@ add_executable(getm_exe
               )
 set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm")
 target_link_libraries(getm_exe ${GOTM_LIBRARIES} ${NetCDF_LIBRARIES})
+if (NetCDF_STATIC_MSVC_BUILD)
+  set_property(TARGET getm_exe PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:\"libcmtd\"")
+  target_compile_options(getm_exe PRIVATE "/libs:static")
+endif()
 
 if(USE_FABM)
   target_link_libraries(getm_exe gotm_fabm ${FABM_LIBRARIES})
