@@ -242,11 +242,16 @@
       sinwavedir = sin(waveDir)
       waveE = grav * (_QUART_*waveH)**2
 
-!     calculate depth-integrated Stokes drift at T-point
-      waveECm1 = waveE * waveK * waveT * oneovertwopi
-      UStokesC = coswavedir * waveECm1
-      VStokesC = sinwavedir * waveECm1
-      new_StokesC = .true.
+!     Note (KK): the stokes_drift routines will still be called, but
+!                with zeros. [U|V]StokesC[int|adv] read from a restart
+!                file can be nonzero within the first 3d time step!
+      if (waves_method .ne. WAVES_NOSTOKES) then
+!        calculate depth-integrated Stokes drift at T-point
+         waveECm1 = waveE * waveK * waveT * oneovertwopi
+         UStokesC = coswavedir * waveECm1
+         VStokesC = sinwavedir * waveECm1
+         new_StokesC = .true.
+      end if
 
    end if
 
