@@ -87,8 +87,10 @@ endif(DEFINE_STRUCTURE_FRICTION)
 add_definitions(-DFORTRAN95)
 
 # Specify coordinate type
-set (COORDINATE_TYPE "Cartesian" CACHE STRING "Choose coordinate type." FORCE)
-set_property(CACHE COORDINATE_TYPE PROPERTY STRINGS "Cartesian" "Spherical" "Curvilinear")
+if(NOT COORDINATE_TYPE)
+   set (COORDINATE_TYPE "Cartesian" CACHE STRING "Choose coordinate type." FORCE)
+   set_property(CACHE COORDINATE_TYPE PROPERTY STRINGS Cartesian Spherical Curvilinear)
+endif()
 if(${COORDINATE_TYPE} STREQUAL "Cartesian")
   add_definitions(-DCARTESIAN)
 elseif(${COORDINATE_TYPE} STREQUAL "Spherical")
