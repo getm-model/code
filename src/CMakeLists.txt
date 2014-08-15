@@ -340,18 +340,7 @@ set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_
 # Use FABM_PREFIX to locate include and lib directories
 if(USE_FABM)
   find_package(FABM REQUIRED)
-  #KBadd_library(gotm_fabm
-              #KBfabm/gotm_fabm.F90
-              #KBfabm/gotm_fabm_input.F90
-              #KBfabm/gotm_fabm_output.F90
-             #KB)
-  #KBadd_dependencies(gotm_fabm output)
-  #KBtarget_link_libraries(gotm_fabm util)
   set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
-  #KBset_property(TARGET getm_fabm PROPERTY Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
-
-  #KBadd_dependencies(gotm gotm_fabm)
-  #KBset_property(TARGET gotm APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
 endif(USE_FABM)
 
 # Build GETM executable.
@@ -368,6 +357,7 @@ add_executable(getm_exe
                $<TARGET_OBJECTS:futils>
               )
 set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm")
+
 target_link_libraries(getm_exe ${GOTM_LIBRARIES} ${NetCDF_LIBRARIES})
 if (NetCDF_STATIC_MSVC_BUILD)
   set_property(TARGET getm_exe PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:\"libcmtd\"")
@@ -378,7 +368,7 @@ if(DEFINE_PARALLEL AND MPI_Fortran_LIBRARIES)
 endif()
 
 if(USE_FABM)
-  target_link_libraries(getm_exe gotm_fabm ${FABM_LIBRARIES})
+  target_link_libraries(getm_exe ${FABM_LIBRARIES})
 endif(USE_FABM)
 
 # Install GETM executable
