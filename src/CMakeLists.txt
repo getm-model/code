@@ -86,6 +86,18 @@ endif(DEFINE_STRUCTURE_FRICTION)
 
 add_definitions(-DFORTRAN95)
 
+# Specify coordinate type
+set (COORDINATE_TYPE "Cartesian" CACHE STRING "Choose coordinate type." FORCE)
+set_property(CACHE COORDINATE_TYPE PROPERTY STRINGS "Cartesian" "Spherical" "Curvilinear")
+if(${COORDINATE_TYPE} STREQUAL "Cartesian")
+  add_definitions(-DCARTESIAN)
+elseif(${COORDINATE_TYPE} STREQUAL "Spherical")
+  add_definitions(-DSPHERICAL)
+elseif(${COORDINATE_TYPE} STREQUAL "Curvilinear")
+  add_definitions(-DCURVILINEAR)
+endif()
+message(${COORDINATE_TYPE})
+
 # Specify default build type for single-type systems (not VS)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set (CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
