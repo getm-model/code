@@ -111,12 +111,12 @@ EXTRA_LIBS	=
 # FABM-geochemical component
 ifeq ($(FABM),true)
 
-ifdef FABM_PREFIX
-
 DEFINES += -D_FABM_
 FEATURES += fabm
 
 unexport GETM_BIO
+
+ifdef FABM_PREFIX
 
 ifeq ($(wildcard $(FABM_PREFIX)/lib/libfabm.*), )
 $(error the directory FABM_PREFIX=$(FABM_PREFIX) is not a valid FABM directory)
