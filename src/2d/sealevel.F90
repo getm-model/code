@@ -178,7 +178,7 @@
 !  {\tt sealevel\_check} parameter in the {\tt m2d} namelist.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax
+   use domain, only: imin,imax,jmin,jmax,ioff,joff
    use m2d, only: sealevel_check
    use variables_2d, only: z
    use exceptions, only: getm_error
@@ -291,6 +291,7 @@
          LEVEL1 "WARNING: NaN occuring in elevations at call no. ",Ncall
          LEVEL1 ": Number of NaN values: ",num_nan
          LEVEL1 ": NaNs include i j = ",inan,jnan
+         LEVEL1 ": (     global i j = ",ioff+inan,joff+jnan," )"
          have_warned = 1
 ! Stop execution if we have to (otherwise just warn)
          if (sealevel_check .gt. 0) then
