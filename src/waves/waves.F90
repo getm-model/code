@@ -35,7 +35,7 @@
    integer,public,parameter  :: WAVES_FROMEXT=0
    integer,public,parameter  :: WAVES_FROMFILE=1
    integer,public,parameter  :: WAVES_FROMWIND=2
-   integer,public            :: waves_datasource=WAVES_FROMEXT
+   integer,public            :: waves_datasource=WAVES_FROMWIND
    integer,public,parameter  :: NO_WBBL=0
    integer,public,parameter  :: WBBL_DATA2=1
    integer,public,parameter  :: WBBL_SOULSBY05=2
