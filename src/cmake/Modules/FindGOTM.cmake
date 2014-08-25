@@ -5,6 +5,13 @@ find_path(GOTM_PREFIX
   DOC "Installation prefix for General Ocean Turbulence Models - gotm.net"
 )
 
+# Find GOTM/FABM coupling library if USE_FABM
+if(USE_FABM)
+find_library(GOTM_FABM NAMES gotm_fabm
+             HINTS ${GOTM_PREFIX}/lib
+             DOC "GOTM-FABM library")
+endif(USE_FABM)
+
 # Find GOTM turbulence library
 find_library(GOTM_TURBULENCE NAMES turbulence
              HINTS ${GOTM_PREFIX}/lib
@@ -13,21 +20,17 @@ find_library(GOTM_TURBULENCE NAMES turbulence
 # Find GOTM utility library
 find_library(GOTM_UTIL NAMES util
              HINTS ${GOTM_PREFIX}/lib
-             DOC "GOTM uutility library")
+             DOC "GOTM utility library")
 
-set(GOTM_LIBRARIES ${GOTM_TURBULENCE} ${GOTM_UTIL})
+set(GOTM_LIBRARIES ${GOTM_FABM} ${GOTM_TURBULENCE} ${GOTM_UTIL})
 
 # Store configurable path of GOTM include directory
 set(GOTM_INCLUDE_DIRS "${GOTM_PREFIX}/include"
     CACHE PATH
     "GOTM include directories")
 
-mark_as_advanced(GOTM_LIBRARIES GOTM_INCLUDE_DIRS GOTM_TURBULENCE GOTM_UTIL)
+mark_as_advanced(GOTM_LIBRARIES GOTM_INCLUDE_DIRS GOTM_TURBULENCE GOTM_UTIL GOTM_FABM)
 
 # Process default arguments (QUIET, REQUIRED)
 include(FindPackageHandleStandardArgs) 
 find_package_handle_standard_args (GOTM DEFAULT_MSG GOTM_LIBRARIES GOTM_INCLUDE_DIRS) 
-
-# For backward compatibility:
-#set(GOTM_LIBRARY GOTM_LIBRARIES)
-#set(GOTM_INCLUDE_DIR GOTM_INCLUDE_DIRS)
