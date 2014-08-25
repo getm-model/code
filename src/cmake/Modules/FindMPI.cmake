@@ -443,6 +443,16 @@ function (interrogate_mpi_compiler lang try_libs)
         if (MPI_LIBRARIES_WORK AND MPI_LIB)
           list(APPEND MPI_LIBRARIES_WORK ${MPI_LIB})
         endif()
+
+        # MS HPC pack does not include mpi.mod, but provides mpi.f90 instead.
+        find_file(MPI_MOD mpi.mod HINTS ${MPI_INCLUDE_PATH_WORK})
+        if (NOT MPI_MOD)
+          find_file (MPI_F90 mpi.f90 HINTS ${MPI_INCLUDE_PATH_WORK})
+          if(MPI_F90)
+            set(MPI_${lang}_EXTRA_SOURCES ${MPI_F90} CACHE STRING "MPI ${lang} extra source files" FORCE)
+          endif()
+        endif()
+        mark_as_advanced(MPI_MOD MPI_F90)
       endif()
 
       if (NOT MPI_LIBRARIES_WORK)
