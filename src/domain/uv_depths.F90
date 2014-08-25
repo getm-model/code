@@ -49,7 +49,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: vel_depth_method
+   integer, intent(inout)              :: vel_depth_method
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -66,6 +66,14 @@
    write(0,*) 'uv_depths() # ',Ncall
 #endif
    CALL tic(TIM_UVDEPTHS)
+
+#ifdef _NEW_DAF_
+   if (vel_depth_method .ne. 0) then
+      vel_depth_method = 0
+      LEVEL2 'Reset vel_depth_method=0 because of -D_NEW_DAF_ !'
+      LEVEL2 '(Note that this should become the default in the future!)'
+   end if
+#endif
 
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO-1
