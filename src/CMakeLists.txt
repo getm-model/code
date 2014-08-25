@@ -13,6 +13,12 @@ set(getm_VERSION "${getm_VERSION_MAJOR}.${getm_VERSION_MINOR}.${getm_VERSION_PAT
 
 find_package(Git)
 if(GIT_FOUND)
+  #add_custom_command(OUTPUT git_revision.h
+  #                   COMMAND ${GIT_EXECUTABLE} log -1 "--format=#define GIT_REVISION \"%H\"" > ${CMAKE_CURRENT_BINARY_DIR}/git_revision.h
+  #                   DEPENDS SOME_GIT_FILE
+  #                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  #                   VERBATIM
+  #                  )
   execute_process(COMMAND ${GIT_EXECUTABLE} log -1 --format=%H
                   OUTPUT_VARIABLE GIT_REVISION
                   OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -31,60 +37,63 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # various compilation switches
 
-option(DEFINE_STATIC "Static compilation" OFF)
-if(DEFINE_STATIC)
+option(GETM_USE_STATIC "Static compilation (domain size is set at compile time)" OFF)
+if(GETM_USE_STATIC)
    add_definitions(-DSTATIC)
-endif(DEFINE_STATIC)
+endif(GETM_USE_STATIC)
 
-option(DEFINE_PARALLEL "Parallel compilation" OFF)
-if(DEFINE_PARALLEL)
+option(GETM_USE_PARALLEL "Enable parallel computation" OFF)
+if(GETM_USE_PARALLEL)
    find_package(MPI REQUIRED)
    if(MPI_Fortran_INCLUDE_PATH)
      include_directories("${MPI_Fortran_INCLUDE_PATH}")
    endif()
-   add_definitions(-DGETM_PARALLEL)
-   set(HALO_MPI futils/halo_mpi.F90)
-   if(WIN32)
-     # MS HPC pack does not include mpi.mod, but provides mpi.f90 instead.
-     find_file(MPI_MOD mpi.mod HINTS ${MPI_Fortran_INCLUDE_PATH})
-     if (NOT MPI_MOD)
-       find_file (MPI_F90 mpi.f90 HINTS ${MPI_Fortran_INCLUDE_PATH})
-       if(MPI_F90)
-         set(HALO_MPI ${HALO_MPI} ${MPI_F90})
-       endif()
-     endif()
-   endif()
-   mark_as_advanced(MPI_MOD MPI_F90)
-endif(DEFINE_PARALLEL)
+   add_definitions(-DGETM_USE_PARALLEL)
+   set(HALO_MPI futils/halo_mpi.F90 ${MPI_Fortran_EXTRA_SOURCES})
+endif(GETM_USE_PARALLEL)
 
-option(DEFINE_DEBUG "Debug compilation" OFF)
-if(DEFINE_DEBUG)
+option(GETM_USE_DEBUG "Enable debug output" OFF)
+if(GETM_USE_DEBUG)
    add_definitions(-DDEBUG)
-endif(DEFINE_DEBUG)
+endif(GETM_USE_DEBUG)
 
-option(DEFINE_PROFILING "Profiling compilation" OFF)
-if(DEFINE_PROFILING)
+option(GETM_USE_PROFILING "Profiling compilation" OFF)
+if(GETM_USE_PROFILING)
    add_definitions(-DPROF)
-endif(DEFINE_PROFILING)
+endif(GETM_USE_PROFILING)
 
-option(DEFINE_STATIC "Static compilation" OFF)
-if(DEFINE_STATIC)
+option(GETM_USE_STATIC "Static compilation (domain size specified at compile time)" OFF)
+if(GETM_USE_STATIC)
    add_definitions(-DSTATIC)
-endif(DEFINE_STATIC)
+endif(GETM_USE_STATIC)
 
-option(USE_FABM "Include FABM support" OFF)
-if(USE_FABM)
+option(GETM_USE_FABM "Include support for Framework for Aquatic Biogeochemical Models (fabm.net)" OFF)
+if(GETM_USE_FABM)
    add_definitions(-D_FABM_)
    set (GETM_FABM 3d/getm_fabm.F90)
-endif(USE_FABM)
+endif(GETM_USE_FABM)
 
-option(DEFINE_STRUCTURE_FRICTION "Include structure friction" OFF)
-if(DEFINE_STRUCTURE_FRICTION)
+option(GETM_USE_STRUCTURE_FRICTION "Include structure friction" OFF)
+if(GETM_USE_STRUCTURE_FRICTION)
    add_definitions(-DSTRUCTURE_FRICTION)
    set (STRUCTURE_FRICTION 3d/structure_friction_3d.F90)
-endif(DEFINE_STRUCTURE_FRICTION)
+endif(GETM_USE_STRUCTURE_FRICTION)
 
 add_definitions(-DFORTRAN95)
+
+# Specify coordinate type
+if(NOT GETM_COORDINATE_TYPE)
+   set (GETM_COORDINATE_TYPE "Cartesian" CACHE STRING "Choose coordinate type." FORCE)
+   set_property(CACHE GETM_COORDINATE_TYPE PROPERTY STRINGS Cartesian Spherical Curvilinear)
+endif()
+if(${GETM_COORDINATE_TYPE} STREQUAL "Cartesian")
+  add_definitions(-DCARTESIAN)
+elseif(${GETM_COORDINATE_TYPE} STREQUAL "Spherical")
+  add_definitions(-DSPHERICAL)
+elseif(${GETM_COORDINATE_TYPE} STREQUAL "Curvilinear")
+  add_definitions(-DCURVILINEAR)
+endif()
+message(${GETM_COORDINATE_TYPE})
 
 # Specify default build type for single-type systems (not VS)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -94,12 +103,12 @@ endif()
 
 # Customize compiler flags
 if(${CMAKE_Fortran_COMPILER_ID} STREQUAL "GNU")
-  set (CMAKE_Fortran_FLAGS "-ffree-line-length-none")
+  set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffree-line-length-none")
   add_definitions(-DGFORTRAN)
 elseif(${CMAKE_Fortran_COMPILER_ID} STREQUAL "Intel")
   add_definitions(-DIFORT)
 elseif(${CMAKE_Fortran_COMPILER_ID} STREQUAL "Cray")
-  set (CMAKE_Fortran_FLAGS "-N 1023")
+  set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -N 1023")
 endif()
 
 # Use use position-independent code (-fPIC) everywhere if building shared libraries
@@ -214,6 +223,7 @@ add_library(domain OBJECT
 set_property(TARGET domain APPEND PROPERTY INCLUDE_DIRECTORIES "${PROJECT_SOURCE_DIR}/domain")
 
 add_library(futils OBJECT
+#            git_revision.h
             futils/c2x.F90
             futils/check_3d_fields.F90
             futils/cnv_2d.F90
@@ -314,11 +324,11 @@ add_library(output OBJECT
             output/output.F90
            )
 
-option(DEFINE_ICE "Include ICE support" OFF)
-if(DEFINE_ICE)
-  add_library(ice OBJECT
-             )
-endif(DEFINE_ICE)
+#option(DEFINE_ICE "Include ICE support" OFF)
+#if(DEFINE_ICE)
+#  add_library(ice OBJECT
+#             )
+#endif(DEFINE_ICE)
 
 add_dependencies(domain futils)
 add_dependencies(meteo futils domain)
@@ -338,21 +348,10 @@ find_package(GOTM REQUIRED)
 set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 
 # Use FABM_PREFIX to locate include and lib directories
-if(USE_FABM)
+if(GETM_USE_FABM)
   find_package(FABM REQUIRED)
-  #KBadd_library(gotm_fabm
-              #KBfabm/gotm_fabm.F90
-              #KBfabm/gotm_fabm_input.F90
-              #KBfabm/gotm_fabm_output.F90
-             #KB)
-  #KBadd_dependencies(gotm_fabm output)
-  #KBtarget_link_libraries(gotm_fabm util)
   set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
-  #KBset_property(TARGET getm_fabm PROPERTY Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
-
-  #KBadd_dependencies(gotm gotm_fabm)
-  #KBset_property(TARGET gotm APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
-endif(USE_FABM)
+endif(GETM_USE_FABM)
 
 # Build GETM executable.
 add_executable(getm_exe
@@ -368,18 +367,19 @@ add_executable(getm_exe
                $<TARGET_OBJECTS:futils>
               )
 set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm")
+
 target_link_libraries(getm_exe ${GOTM_LIBRARIES} ${NetCDF_LIBRARIES})
 if (NetCDF_STATIC_MSVC_BUILD)
   set_property(TARGET getm_exe PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:\"libcmtd\"")
   target_compile_options(getm_exe PRIVATE "/libs:static")
 endif()
-if(DEFINE_PARALLEL AND MPI_Fortran_LIBRARIES)
+if(GETM_USE_PARALLEL AND MPI_Fortran_LIBRARIES)
   target_link_libraries(getm_exe ${MPI_Fortran_LIBRARIES})
 endif()
 
-if(USE_FABM)
-  target_link_libraries(getm_exe gotm_fabm ${FABM_LIBRARIES})
-endif(USE_FABM)
+if(GETM_USE_FABM)
+  target_link_libraries(getm_exe ${FABM_LIBRARIES})
+endif(GETM_USE_FABM)
 
 # Install GETM executable
 install(TARGETS getm_exe DESTINATION bin)
