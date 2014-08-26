@@ -6,11 +6,11 @@ find_path(GOTM_PREFIX
 )
 
 # Find GOTM/FABM coupling library if USE_FABM
-if(USE_FABM)
+if(GETM_USE_FABM)
 find_library(GOTM_FABM NAMES gotm_fabm
              HINTS ${GOTM_PREFIX}/lib
              DOC "GOTM-FABM library")
-endif(USE_FABM)
+endif(GETM_USE_FABM)
 
 # Find GOTM turbulence library
 find_library(GOTM_TURBULENCE NAMES turbulence
