@@ -842,63 +842,35 @@
          case (MUSCL)
             limiter = min(_TWO_*ratio,_HALF_*(_ONE_+ratio),_TWO_)
          case (P2)
-            adv_interfacial_reconstruction = &
-                adv_interfacial_reconstruction_p2(cfl,fu,deltafu,deltaf)
-            return
+            x = one6th*(_ONE_-_TWO_*cfl)
+            limiter = (_HALF_+x) + (_HALF_-x)*ratio
          case (UPSTREAM)
-            adv_interfacial_reconstruction = fu
-            return
+            limiter = _ZERO_
+         case (CENTRAL)
+            limiter = _ONE_ / ( _ONE_ -cfl )
       end select
 
       adv_interfacial_reconstruction = fu + _HALF_*limiter*(_ONE_-cfl)*deltaf
-      return
+
+   else
+
+      select case (scheme)
+         case (P2)
+            x = one6th*(_ONE_-_TWO_*cfl)
+!           limiter formulation invalid for deltaf=0
+            adv_interfacial_reconstruction = &
+                        fu + _HALF_*(_ONE_-cfl)*(  (_HALF_+x)*deltaf   &
+                                                 + (_HALF_-x)*deltafu )
+         case (CENTRAL)
+            adv_interfacial_reconstruction = _HALF_ * ( fu + fd )
+         case default
+            adv_interfacial_reconstruction = fu
+      end select
 
    end if
 
-   select case (scheme)
-      case (P2)
-         adv_interfacial_reconstruction = &
-                adv_interfacial_reconstruction_p2(cfl,fu,deltafu,deltaf)
-      case default
-         adv_interfacial_reconstruction = fu
-   end select
-
    return
    end function adv_interfacial_reconstruction
-
-!EOC
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE:  REALTYPE function adv_interfacial_reconstruction_p2 -
-!
-! !INTERFACE:
-   REALTYPE function adv_interfacial_reconstruction_p2(cfl,fu,deltafu,deltaf)
-!
-! !DESCRIPTION:
-!
-! !USES:
-   IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-   REALTYPE,intent(in) :: cfl,fu,deltafu,deltaf
-!
-! !LOCAL VARIABLES:
-   REALTYPE           :: x
-   REALTYPE,parameter :: one6th=_ONE_/6
-!
-! !REVISION HISTORY:
-!  Original author(s): Knut Klingbeil
-!EOP
-!-----------------------------------------------------------------------
-!BOC
-
-   x = one6th*(_ONE_-_TWO_*cfl)
-   adv_interfacial_reconstruction_p2 = &
-        fu + _HALF_*(_ONE_-cfl)*((_HALF_+x)*deltaf + (_HALF_-x)*deltafu)
-   return
-
-   end function adv_interfacial_reconstruction_p2
 
 !EOC
 !-----------------------------------------------------------------------
