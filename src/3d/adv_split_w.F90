@@ -60,7 +60,7 @@
    REALTYPE,dimension(:,:,:),pointer,intent(inout)   :: nvd
 !
 ! !LOCAL VARIABLES:
-   logical            :: iterate,use_limiter,calc_nvd,allocated_aux
+   logical            :: iterate,calc_nvd,allocated_aux
    integer            :: i,j,k,kshift,it,iters,iters_new,rc
    REALTYPE           :: itersm1,dti,dtik,fio,hio,advn,adv2n,fuu,fu,fd,splitfack
    REALTYPE,dimension(:),allocatable        :: wflux,wflux2
@@ -88,7 +88,6 @@
       kshift = 0
    end if
 
-   use_limiter = .false.
    calc_nvd = associated(nvd)
    dti = splitfac*dt
 
@@ -100,7 +99,7 @@
    end if
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP          FIRSTPRIVATE(j,use_limiter)                             &
+!$OMP          FIRSTPRIVATE(j)                                         &
 !$OMP          PRIVATE(rc,wflux,wflux2,cfl0,cfls)                      &
 !$OMP          PRIVATE(fo,faux,fiaux,hiaux,advaux,nvdaux)              &
 !$OMP          PRIVATE(p_fiaux,p_hiaux,p_advaux,p_nvdaux)              &
@@ -272,28 +271,22 @@
 !                    Note (KK): overwrite zero flux at k=0 in case of W_TAG
                      if (ww(i,j,k) .gt. _ZERO_) then
                         fu = faux(k)               ! central
-                        if (scheme .ne. UPSTREAM) then
-!                          also fall back to upstream near boundaries
-                           use_limiter = (k .gt. 1-kshift)
-                        end if
-                        if (use_limiter) then
+                        if (k .gt. 1-kshift) then
                            fuu = faux(k-1)            ! upstream
-                           fd  = faux(k+1)            ! downstream
+                        else
+                           fuu = fu
                         end if
+                        fd  = faux(k+1)            ! downstream
                      else
                         fu = faux(k+1)               ! central
-                        if (scheme .ne. UPSTREAM) then
-!                          also fall back to upstream near boundaries
-                           use_limiter = (k .lt. kmax-1)
-                        end if
-                        if (use_limiter) then
+                        if (k .lt. kmax-1) then
                            fuu = faux(k+2)            ! upstream
-                           fd  = faux(k  )            ! downstream
+                        else
+                           fuu = fu
                         end if
+                        fd  = faux(k  )            ! downstream
                      end if
-                     if (use_limiter) then
-                        fu = adv_interfacial_reconstruction(scheme,cfls(k)*itersm1,fuu,fu,fd)
-                     end if
+                     fu = adv_interfacial_reconstruction(scheme,cfls(k)*itersm1,fuu,fu,fd)
                      wflux(k) = ww(i,j,k)*fu
                      if (calc_nvd) then
                         wflux2(k) = wflux(k)*fu
