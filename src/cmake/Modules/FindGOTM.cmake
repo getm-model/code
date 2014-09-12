@@ -7,9 +7,9 @@ find_path(GOTM_PREFIX
 
 # Find GOTM/FABM coupling library if USE_FABM
 if(GETM_USE_FABM)
-find_library(GOTM_FABM NAMES gotm_fabm
-             HINTS ${GOTM_PREFIX}/lib
-             DOC "GOTM-FABM library")
+  find_library(GOTM_FABM NAMES gotm_fabm
+               HINTS ${GOTM_PREFIX}/lib
+               DOC "GOTM-FABM library")
 endif(GETM_USE_FABM)
 
 # Find GOTM turbulence library
@@ -25,9 +25,11 @@ find_library(GOTM_UTIL NAMES util
 set(GOTM_LIBRARIES ${GOTM_FABM} ${GOTM_TURBULENCE} ${GOTM_UTIL})
 
 # Store configurable path of GOTM include directory
-set(GOTM_INCLUDE_DIRS "${GOTM_PREFIX}/include"
-    CACHE PATH
-    "GOTM include directories")
+find_path(GOTM_INCLUDE_DIRS
+          NAMES turbulence.mod
+          HINTS ${GOTM_PREFIX}/include
+          DOC "GOTM include directories"
+)
 
 mark_as_advanced(GOTM_LIBRARIES GOTM_INCLUDE_DIRS GOTM_TURBULENCE GOTM_UTIL GOTM_FABM)
 
