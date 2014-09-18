@@ -125,7 +125,7 @@
 !           however, consider that last call is from postinit_3d
    if (update_dryingfactors) then
 #ifdef _NEW_DAF_
-   hcritm1 = crit_depth - min_depth
+   hcritm1 = _ONE_ / (crit_depth - min_depth)
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
