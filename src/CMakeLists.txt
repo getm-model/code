@@ -48,7 +48,7 @@ if(GETM_USE_PARALLEL)
    if(MPI_Fortran_INCLUDE_PATH)
      include_directories("${MPI_Fortran_INCLUDE_PATH}")
    endif()
-   add_definitions(-DGETM_USE_PARALLEL)
+   add_definitions(-DGETM_PARALLEL)
    set(HALO_MPI futils/halo_mpi.F90 ${MPI_Fortran_EXTRA_SOURCES})
 endif(GETM_USE_PARALLEL)
 
