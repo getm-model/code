@@ -88,10 +88,13 @@ if(NOT GETM_COORDINATE_TYPE)
 endif()
 if(${GETM_COORDINATE_TYPE} STREQUAL "Cartesian")
   add_definitions(-DCARTESIAN)
+  set(exe_id "_cartesian")
 elseif(${GETM_COORDINATE_TYPE} STREQUAL "Spherical")
   add_definitions(-DSPHERICAL)
+  set(exe_id "_spherical")
 elseif(${GETM_COORDINATE_TYPE} STREQUAL "Curvilinear")
   add_definitions(-DCURVILINEAR)
+  set(exe_id "_curvilinear")
 endif()
 message(${GETM_COORDINATE_TYPE})
 
@@ -366,7 +369,7 @@ add_executable(getm_exe
                $<TARGET_OBJECTS:ncdf>
                $<TARGET_OBJECTS:futils>
               )
-set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm")
+set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm${exe_id}")
 
 target_link_libraries(getm_exe ${GOTM_LIBRARIES} ${NetCDF_LIBRARIES})
 if (NetCDF_STATIC_MSVC_BUILD)
