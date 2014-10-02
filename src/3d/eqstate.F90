@@ -210,7 +210,7 @@
 ! Ulf, Richard, Hans, kb                        S(i,j,k)= _ZERO_
                         s1 = _ZERO_
                      end if
-#endif  !NONNEGSALT
+#endif
                      call rho_from_theta(s1,th,_ZERO_,rho(i,j,k),densp)
                   end do
                end if
