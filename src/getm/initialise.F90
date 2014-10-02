@@ -297,9 +297,6 @@
    call toc(TIM_INITIALIZE)
 
    if (metforcing) then
-      if (met_method .eq. 2) then
-         call get_meteo_data(MinN-1)
-      end if
       if(runtype .le. 2) then
          call do_meteo(MinN-1)
 #ifndef NO_3D
