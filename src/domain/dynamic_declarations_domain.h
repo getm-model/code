@@ -6,7 +6,7 @@
    REALTYPE, dimension(:), allocatable, target :: xcord, ycord
 
 !  coordinate axes - grid-type = 3 or 4
-   REALTYPE, dimension(:), allocatable      :: xxcord, yxcord
+   REALTYPE, dimension(:), allocatable, target :: xxcord, yxcord
 
 !  mask
    REALTYPE, dimension(:,:), allocatable    :: mask
@@ -20,7 +20,7 @@
    REALTYPE, dimension(:,:), allocatable    :: cor,coru,corv
 
 !  lat/lon
-   REALTYPE, dimension(:,:), allocatable    :: lonc,latc
+   REALTYPE, dimension(:,:), allocatable, target :: lonc,latc
    REALTYPE, dimension(:,:), allocatable, target :: lonx,latx
    REALTYPE, dimension(:,:), allocatable    :: lonu,latu
    REALTYPE, dimension(:,:), allocatable    :: lonv,latv
@@ -31,7 +31,7 @@
 
 !  grid points
    REALTYPE, dimension(:,:), allocatable, target :: xx,yx
-   REALTYPE, dimension(:,:), allocatable    :: xc,yc
+   REALTYPE, dimension(:,:), allocatable, target :: xc,yc
    REALTYPE, dimension(:,:), allocatable    :: xu,yu
    REALTYPE, dimension(:,:), allocatable    :: xv,yv
 
