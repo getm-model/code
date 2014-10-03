@@ -246,6 +246,9 @@
 #endif
 !
 ! Various tests
+#ifdef CARTESIAN
+   LEVEL1 'CARTESIAN'
+#endif
 #ifdef SPHERICAL
    LEVEL1 'SPHERICAL'
 #endif
