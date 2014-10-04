@@ -36,6 +36,8 @@
    integer,public,parameter  :: WAVES_FROMFILE=1
    integer,public,parameter  :: WAVES_FROMWIND=2
    integer,public            :: waves_datasource=WAVES_FROMWIND
+   character(LEN = PATH_MAX),public :: waves_file
+   logical,public            :: on_grid=.true.
    integer,public,parameter  :: NO_WBBL=0
    integer,public,parameter  :: WBBL_DATA2=1
    integer,public,parameter  :: WBBL_SOULSBY05=2
@@ -104,8 +106,9 @@
 ! the simulation.
 !
 ! !LOCAL VARIABLES
-   namelist /waves/ waves_method,waves_datasource,waves_windscalefactor, &
-                    max_depth_windwaves,waves_bbl_method
+   namelist /waves/ waves_method,waves_datasource,waves_file,on_grid,  &
+                    waves_windscalefactor,max_depth_windwaves,         &
+                    waves_bbl_method
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -129,7 +132,8 @@
       case(WAVES_NOSTOKES)
          LEVEL2 'wave forcing only via bottom friction'
       case default
-         stop 'init_waves(): no valid waves_method specified'
+         call getm_error("init_waves()", &
+                         "no valid waves_method")
    end select
 
    call init_variables_waves(runtype)
@@ -139,12 +143,12 @@
       case(WAVES_FROMEXT)
          LEVEL2 'wave data written from external'
       case(WAVES_FROMFILE)
-         LEVEL2 'wave data read from file'
+         LEVEL2 'wave data read from file: ',waves_file
+         LEVEL3 'on_grid = ',on_grid
       case(WAVES_FROMWIND)
          LEVEL2 'wave data derived from wind data'
-         if ( .not. metforcing ) then
-            stop 'init_waves(): metforcing must be active for WAVES_FROMWIND'
-         end if
+         if ( .not. metforcing ) call getm_error("init_waves()",       &
+                         "metforcing must be active for WAVES_FROMWIND")
          LEVEL3 'waves_windscalefactor = ',real(waves_windscalefactor)
          if ( max_depth_windwaves .lt. _ZERO_) then
             max_depth_windwaves = 99999.0
@@ -152,7 +156,8 @@
             LEVEL3 'max_depth_windwaves = ',real(max_depth_windwaves)
          end if
       case default
-         stop 'init_waves(): no valid waves_datasource specified'
+         call getm_error("init_waves()", &
+                         "no valid waves_datasource")
    end select
 
    select case (waves_bbl_method)
@@ -163,7 +168,8 @@
       case (WBBL_SOULSBY05)
          LEVEL2 'wave BBL according to Soulsby & Clarke (2005)'
       case default
-         stop 'init_waves(): no valid waves_bbl_method specified'
+         call getm_error("init_waves()", &
+                         "no valid_waves_bbl_method")
    end select
 
    return
@@ -189,7 +195,7 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: waveECm1
-   REALTYPE                     :: wind,depth
+   REALTYPE                     :: taus,wind,depth
    integer                      :: i,j
    REALTYPE,parameter           :: min_wind=_TENTH_
    REALTYPE,parameter           :: pi=3.1415926535897932384626433832795029d0
@@ -209,25 +215,27 @@
 
    if (waves_datasource .eq. WAVES_FROMWIND) then
       new_waves = .true.
-         do j=jmin-HALO,jmax+HALO
-            do i=imin-HALO,imax+HALO
-               if ( az(i,j) .gt. 0 ) then
-!                 use of approximation for wind based on taus[x|y] because of:
-!                    - missing temporal interpolation of [u|v]10
-!                    - missing halo update of [u|v]10
-!                    - also valid for met_method=1
-                  waveDir(i,j) = atan2(tausy(i,j),tausx(i,j)) ! cartesian convention and in radians
-                  wind = sqrt(sqrt(tausx(i,j)**2 + tausy(i,j)**2)/(1.25d-3*1.25))
-                  wind = waves_windscalefactor * max( min_wind , wind )
-!                 KK-TODO: Or do we want to use H instead of D?
-!                          Then we would not need to call depth_update in
-!                          initialise(). However H does not consider
-!                          min_depth.
-                  depth = min( D(i,j) , max_depth_windwaves )
-                  waveH(i,j) = wind2waveHeight(wind,depth)
-                  waveT(i,j) = wind2wavePeriod(wind,depth)
-                  waveK(i,j) = wavePeriod2waveNumber(waveT(i,j),D(i,j))
-                  waveL(i,j) = twopi / waveK(i,j)
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if ( az(i,j) .gt. 0 ) then
+!              use of approximation for wind based on taus[x|y] because of:
+!                 - missing temporal interpolation of [u|v]10
+!                 - missing halo update of [u|v]10
+!                 - also valid for met_method=1
+               taus = sqrt( tausx(i,j)**2 + tausy(i,j)**2 )
+               coswavedir(i,j) = tausx(i,j) / taus
+               sinwavedir(i,j) = tausy(i,j) / taus
+               wind = sqrt(taus/(1.25d-3*1.25))
+               wind = waves_windscalefactor * max( min_wind , wind )
+!              KK-TODO: Or do we want to use H instead of D?
+!                       Then we would not need to call depth_update in
+!                       initialise(). However H does not consider
+!                       min_depth.
+               depth = min( D(i,j) , max_depth_windwaves )
+               waveH(i,j) = wind2waveHeight(wind,depth)
+               waveT(i,j) = wind2wavePeriod(wind,depth)
+               waveK(i,j) = wavePeriod2waveNumber(waveT(i,j),D(i,j))
+               waveL(i,j) = twopi / waveK(i,j)
             end if
          end do
       end do
@@ -236,10 +244,6 @@
 
    if (new_waves) then
 
-      new_waves = .false.
-
-      coswavedir = cos(waveDir)
-      sinwavedir = sin(waveDir)
       waveE = grav * (_QUART_*waveH)**2
 
 !     Note (KK): the stokes_drift routines will still be called, but

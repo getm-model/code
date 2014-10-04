@@ -13,7 +13,7 @@
    use parameters, only: kappa,avmmol
    use domain, only: imin,imax,jmin,jmax,az,au,av
    use domain, only: z0,zub0,zvb0
-   use variables_waves, only: waveH,waveT,waveK,waveDir
+   use variables_waves, only: waveH,waveT,waveK,coswavedir,sinwavedir
    use waves, only: waves_bbl_method,NO_WBBL,WBBL_DATA2,WBBL_SOULSBY05
    use waves, only: wbbl_rdrag
    use getm_timers, only: tic,toc,TIM_WAVES
@@ -40,7 +40,9 @@
    REALTYPE                                 :: Rew,fwr,fws,fwl,fw
    REALTYPE                                 :: tauwr,tauws,tauwl,tauw
    REALTYPE                                 :: wbl
-   REALTYPE                                 :: cdm1,currDir,angle
+   REALTYPE                                 :: cdm1,cosangle
+   REALTYPE                                 :: ttransx,ttransy,ttrans
+   REALTYPE                                 :: coscurrdir,sincurrdir
    REALTYPE                                 :: tauc,taubm,taubc,taube,taubp
    integer                                  :: i,j,rc
    logical                                  :: calc_taubmax
@@ -83,7 +85,8 @@
 !$OMP          FIRSTPRIVATE(j)                                         &
 !$OMP          PRIVATE(i,Hrms,omegam1,uorb,aorb,Rew,fwr,fws,fwl,fw)    &
 !$OMP          PRIVATE(tauw,tauwr,tauws,tauwl)                         &
-!$OMP          PRIVATE(wbl,cdm1,currDir,angle)                         &
+!$OMP          PRIVATE(wbl,cdm1,cosangle,coscurrdir,sincurrdir)        &
+!$OMP          PRIVATE(ttransx,ttransy,ttrans)                         &
 !$OMP          PRIVATE(tauc,tauw,taubm,taubc,taube,taubp)
 
 !$OMP DO SCHEDULE(RUNTIME)
@@ -225,8 +228,6 @@
             if (az(i,j) .ne. 0) then
                taubm = _HALF_*sqrt(  ( taubmx(i-1,j  ) + taubmx(i,j) )**2 &
                                    + ( taubmy(i  ,j-1) + taubmy(i,j) )**2 )
-               currDir = atan2( V1(i,j-1)+V1(i,j) , U1(i-1,j)+U1(i,j) )
-               angle = abs( currDir - waveDir(i,j) )
 
                select case(waves_bbl_method)
                   case (WBBL_DATA2)
@@ -237,7 +238,19 @@
                      taubp = sqrt( taube * taubw(i,j))
                end select
 
-               taubmax(i,j) = sqrt( taubm**2 + taubp**2 + _TWO_*taubm*taubp*cos(angle) )
+!              we need the cosine of the angle between waves and currents
+               ttransx = U1(i-1,j) + U1(i,j)
+               ttransy = V1(i,j-1) + V1(i,j)
+               ttrans  = sqrt( ttransx**2 + ttransy**2 )
+               if (ttrans .gt. _ZERO_) then
+                  coscurrdir = ttransx / ttrans
+                  sincurrdir = ttransy / ttrans
+                  cosangle = coscurrdir*coswavedir(i,j) + sincurrdir*sinwavedir(i,j)
+               else
+                  cosangle = _ZERO_
+               end if
+
+               taubmax(i,j) = sqrt( taubm**2 + taubp**2 + _TWO_*taubm*taubp*cosangle )
             end if
          end do
 #ifndef SLICE_MODEL

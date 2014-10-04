@@ -16,8 +16,9 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
-   REALTYPE,dimension(:,:)  ,allocatable :: waveDir,coswavedir,sinwavedir
-   REALTYPE,dimension(:,:)  ,allocatable :: waveH,waveL,waveT,waveK,waveE
+   REALTYPE,dimension(:,:)  ,pointer     :: coswavedir,sinwavedir
+   REALTYPE,dimension(:,:)  ,pointer     :: waveH,waveL
+   REALTYPE,dimension(:,:)  ,allocatable :: waveT,waveK,waveE
    REALTYPE,dimension(:,:)  ,allocatable :: SJ,SJJ
    REALTYPE,dimension(:,:)  ,allocatable :: kDveln,sinh2kDvelnm1
    logical ,dimension(:,:)  ,allocatable :: is_deepwave
@@ -68,9 +69,6 @@
 #endif
 
    LEVEL2 'init_variables_waves'
-
-   allocate(waveDir(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_variables_waves: Error allocating memory (waveDir)'
 
    allocate(coswavedir(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_variables_waves: Error allocating memory (coswavedir)'
