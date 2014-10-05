@@ -18,7 +18,7 @@
    use domain         ,only: imin,imax,jmin,jmax,iextr,jextr
    use domain         ,only: ill,ihl,jll,jhl,ilg,ihg,jlg,jhg
    use domain         ,only: az,convc
-   use waves          ,only: waves_file,on_grid,new_waves
+   use waves          ,only: waves_file,on_grid
    use variables_waves,only: waveH,waveL,coswavedir,sinwavedir
    IMPLICIT NONE
 !
@@ -187,7 +187,6 @@
    write(debug,*) 'get_waves_data_ncdf() # ',Ncall
 #endif
 
-   new_waves = .true.
    if (stationary) return
 
 !  find the right index

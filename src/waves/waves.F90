@@ -46,11 +46,11 @@
    logical,public            :: new_StokesC=.false.
 !  KK-TODO: for computational efficiency this value should be as small as possible
 !           (reduces evaluations of hyperbolic functions)
+   REALTYPE,public           :: kD_deepthresh
 !   REALTYPE,public,parameter :: kD_deepthresh=100*_ONE_ ! errors<1% for less than 85 layers
 !   REALTYPE,public,parameter :: kD_deepthresh= 50*_ONE_ ! errors<1% for less than 40 layers
 !   REALTYPE,public,parameter :: kD_deepthresh= 25*_ONE_ ! errors<1% for less than 20 layers
 !   REALTYPE,public,parameter :: kD_deepthresh= 10*_ONE_ ! errors<1% for less than  8 layers
-   REALTYPE,public           :: kD_deepthresh
 !
 ! !PRIVATE DATA MEMBERS:
    REALTYPE                  :: waves_windscalefactor = _ONE_
@@ -137,7 +137,12 @@
    end select
 
    call init_variables_waves(runtype)
-   kD_deepthresh=1.25d0*kmax
+
+   if (runtype .eq. 1) then
+      kD_deepthresh = 10.0d0
+   else
+      kD_deepthresh = max( 10.0d0 , 1.25d0*kmax )
+   end if
 
    select case (waves_datasource)
       case(WAVES_FROMEXT)
@@ -185,6 +190,7 @@
    subroutine do_waves(D)
 
 ! !USES:
+   use parameters, only: grav=>g
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -213,33 +219,58 @@
 
    call tic(TIM_WAVES)
 
-   if (waves_datasource .eq. WAVES_FROMWIND) then
-      new_waves = .true.
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-            if ( az(i,j) .gt. 0 ) then
-!              use of approximation for wind based on taus[x|y] because of:
-!                 - missing temporal interpolation of [u|v]10
-!                 - missing halo update of [u|v]10
-!                 - also valid for met_method=1
-               taus = sqrt( tausx(i,j)**2 + tausy(i,j)**2 )
-               coswavedir(i,j) = tausx(i,j) / taus
-               sinwavedir(i,j) = tausy(i,j) / taus
-               wind = sqrt(taus/(1.25d-3*1.25))
-               wind = waves_windscalefactor * max( min_wind , wind )
-!              KK-TODO: Or do we want to use H instead of D?
-!                       Then we would not need to call depth_update in
-!                       initialise(). However H does not consider
-!                       min_depth.
-               depth = min( D(i,j) , max_depth_windwaves )
-               waveH(i,j) = wind2waveHeight(wind,depth)
-               waveT(i,j) = wind2wavePeriod(wind,depth)
-               waveK(i,j) = wavePeriod2waveNumber(waveT(i,j),D(i,j))
-               waveL(i,j) = twopi / waveK(i,j)
-            end if
+   select case (waves_datasource)
+      case(WAVES_FROMFILE)
+         new_waves = .true.
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO
+               if ( az(i,j) .gt. 0 ) then
+                  if (waveL(i,j) .gt. _ZERO_) then
+                     waveK(i,j) = twopi / waveL(i,j)
+                     waveT(i,j) = twopi / sqrt( grav*waveK(i,j)*tanh(waveK(i,j)*D(i,j)) )
+                  else
+                     waveK(i,j) = kD_deepthresh / D(i,j)
+                     waveT(i,j) = _ZERO_
+                  end if
+               end if
+            end do
          end do
-      end do
-   end if
+      case(WAVES_FROMWIND)
+         new_waves = .true.
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO
+               if ( az(i,j) .gt. 0 ) then
+!                 use of approximation for wind based on taus[x|y] because of:
+!                    - missing temporal interpolation of [u|v]10
+!                    - missing halo update of [u|v]10
+!                    - also valid for met_method=1
+                  taus = sqrt( tausx(i,j)**2 + tausy(i,j)**2 )
+                  if (taus .gt. _ZERO_) then
+                     coswavedir(i,j) = tausx(i,j) / taus
+                     sinwavedir(i,j) = tausy(i,j) / taus
+                     wind = sqrt(taus/(1.25d-3*1.25))
+                     wind = waves_windscalefactor * max( min_wind , wind )
+!                    KK-TODO: Or do we want to use H instead of D?
+!                             Then we would not need to call depth_update in
+!                             initialise(). However H does not consider
+!                             min_depth.
+                     depth = min( D(i,j) , max_depth_windwaves )
+                     waveH(i,j) = wind2waveHeight(wind,depth)
+                     waveT(i,j) = wind2wavePeriod(wind,depth)
+                     waveK(i,j) = wavePeriod2waveNumber(waveT(i,j),D(i,j))
+                     waveL(i,j) = twopi / waveK(i,j)
+                  else
+                     coswavedir(i,j) = _ZERO_
+                     sinwavedir(i,j) = _ZERO_
+                     waveH(i,j) = _ZERO_
+                     waveT(i,j) = _ZERO_
+                     waveK(i,j) = kD_deepthresh / D(i,j)
+                     waveL(i,j) = _ZERO_
+                  end if
+               end if
+            end do
+         end do
+   end select
 
 
    if (new_waves) then
