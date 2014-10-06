@@ -148,7 +148,7 @@
       case(WAVES_FROMEXT)
          LEVEL2 'wave data written from external'
       case(WAVES_FROMFILE)
-         LEVEL2 'wave data read from file: ',waves_file
+         LEVEL2 'wave data read from file: ',trim(waves_file)
          LEVEL3 'on_grid = ',on_grid
       case(WAVES_FROMWIND)
          LEVEL2 'wave data derived from wind data'
