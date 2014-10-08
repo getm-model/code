@@ -38,6 +38,7 @@
 ! !DEFINED PARAMETERS
    REALTYPE, parameter                 :: elev_missing       =-9999.0
    REALTYPE, parameter                 :: vel_missing        =-9999.0
+   REALTYPE, parameter                 :: flux_missing       =-99999.0
    REALTYPE, parameter                 :: airp_missing       =-9999.0
    REALTYPE, parameter                 :: t2_missing         =-9999.0
    REALTYPE, parameter                 :: hum_missing        =-9999.0
