@@ -230,6 +230,9 @@
 			<element name="max_depth_windwaves" type="float" label="truncate depth for wind wave parameterisation" unit="m">
 				<condition type="eq" variable="./waves_datasource" value="2"/>
 			</element>
+			<element name="waves_ramp" type="int" label="number of time steps for forcing spin-up" unit="micro time steps">
+				<condition type="ne" variable="./waves_method" value="0"/>
+			</element>
 			<element name="waves_bbl_method" type="int" label="wave BBL method">
 				<options>
 					<option value="0" label="no wave BBL" />

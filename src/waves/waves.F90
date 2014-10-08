@@ -12,6 +12,7 @@
 !
 ! !USES:
    use variables_waves
+   use time           , only: write_time_string,timestr
    use parameters     , only: grav => g
    use exceptions
    use halo_zones     , only: update_2d_halo,wait_halo,H_TAG
@@ -53,8 +54,10 @@
 !   REALTYPE,public,parameter :: kD_deepthresh= 10*_ONE_ ! errors<1% for less than  8 layers
 !
 ! !PRIVATE DATA MEMBERS:
+   integer                   :: waves_ramp=0
    REALTYPE                  :: waves_windscalefactor = _ONE_
    REALTYPE                  :: max_depth_windwaves = -_ONE_
+   logical                   :: ramp_is_active=.false.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Ulf Graewe
@@ -92,11 +95,12 @@
 ! \label{sec-init-waves}
 !
 ! !INTERFACE:
-   subroutine init_waves(runtype)
+   subroutine init_waves(hotstart,runtype)
 
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   logical,intent(in) :: hotstart
    integer,intent(in) :: runtype
 !
 ! !DESCRIPTION:
@@ -108,7 +112,7 @@
 ! !LOCAL VARIABLES
    namelist /waves/ waves_method,waves_datasource,waves_file,on_grid,  &
                     waves_windscalefactor,max_depth_windwaves,         &
-                    waves_bbl_method
+                    waves_ramp,waves_bbl_method
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -165,6 +169,15 @@
                          "no valid waves_datasource")
    end select
 
+   if (waves_ramp .gt. 1) then
+      LEVEL2 'waves_ramp=',waves_ramp
+      ramp_is_active = .true.
+      if (hotstart) then
+         LEVEL3 'WARNING: hotstart is .true. AND waves_ramp .gt. 1'
+         LEVEL3 'WARNING: .. be sure you know what you are doing ..'
+      end if
+   end if
+
    select case (waves_bbl_method)
       case (NO_WBBL)
          LEVEL2 'no wave BBL'
@@ -187,13 +200,14 @@
 ! \label{sec-do-waves}
 !
 ! !INTERFACE:
-   subroutine do_waves(D)
+   subroutine do_waves(n,D)
 
 ! !USES:
    use parameters, only: grav=>g
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   integer,intent(in)                      :: n
    REALTYPE,dimension(E2DFIELD),intent(in) :: D
 !
 ! !DESCRIPTION:
@@ -274,6 +288,18 @@
 
 
    if (new_waves) then
+
+      if (ramp_is_active) then
+         if (n .ge. waves_ramp) then
+            ramp_is_active = .false.
+            STDERR LINE
+            call write_time_string()
+            LEVEL3 timestr,': finished waves_ramp=',waves_ramp
+            STDERR LINE
+         else
+            waveH = waveH * n/waves_ramp
+         end if
+      end if
 
       waveE = grav * (_QUART_*waveH)**2
 

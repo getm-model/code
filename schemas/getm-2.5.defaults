@@ -199,6 +199,9 @@
 			<max_depth_windwaves>
 				-1.0
 			</max_depth_windwaves>
+			<waves_ramp>
+				0
+			</waves_ramp>
 			<waves_bbl_method>
 				1
 			</waves_bbl_method>
