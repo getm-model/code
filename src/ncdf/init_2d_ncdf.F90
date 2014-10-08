@@ -78,8 +78,8 @@
 
 !  volume fluxes
    if (save_fluxes) then
-      fv = -99999.
-      mv = -99999.
+      fv = flux_missing
+      mv = flux_missing
       vr(1) = -10000.
       vr(2) =  10000.
       err = nf90_def_var(ncid,'fluxu',NCDF_FLOAT_PRECISION,f3_dims,fluxu_id)
