@@ -92,7 +92,7 @@
 #else
                        dy,                     &
 #endif
-                       U,vel_missing,ws)
+                       U,flux_missing,ws)
          err = nf90_put_var(ncid,fluxu_id,ws(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
@@ -103,7 +103,7 @@
 #else
                        dx,                     &
 #endif
-                       V,vel_missing,ws)
+                       V,flux_missing,ws)
          err = nf90_put_var(ncid,fluxv_id,ws(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
