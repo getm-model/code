@@ -216,6 +216,7 @@
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: waveECm1
    REALTYPE                     :: taus,wind,depth
+   REALTYPE,save                :: ramp=_ONE_
    integer                      :: i,j
    REALTYPE,parameter           :: min_wind=_TENTH_
    REALTYPE,parameter           :: pi=3.1415926535897932384626433832795029d0
@@ -287,21 +288,22 @@
    end select
 
 
-   if (new_waves) then
+   if (new_waves .or. ramp_is_active) then
 
       if (ramp_is_active) then
          if (n .ge. waves_ramp) then
+            ramp = _ONE_
             ramp_is_active = .false.
             STDERR LINE
             call write_time_string()
             LEVEL3 timestr,': finished waves_ramp=',waves_ramp
             STDERR LINE
          else
-            waveH = waveH * n/waves_ramp
+            ramp = _ONE_*n/waves_ramp
          end if
       end if
 
-      waveE = grav * (_QUART_*waveH)**2
+      waveE = ramp * grav * (_QUART_*waveH)**2
 
 !     Note (KK): the stokes_drift routines will still be called, but
 !                with zeros. [U|V]StokesC[int|adv] read from a restart
