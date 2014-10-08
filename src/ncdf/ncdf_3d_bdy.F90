@@ -15,6 +15,8 @@
    use domain, only: nsbv,nsbvl,nbdy,NWB,NNB,NEB,NSB
    use domain, only: bdy_index,bdy_index_l,bdy_index_stop
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
+   use domain, only: H,HU,HV
+   use variables_3d, only: hn,hun,hvn
    use variables_2d, only: dtm
    use m3d, only: update_salt,update_temp
    use bdy_3d, only: bdy3d_vel
@@ -34,9 +36,11 @@
    integer                             :: uu_id=-1,vv_id=-1
    integer                             :: bdy_dim,bdy_len,bdy_pos
    integer                             :: zax_dim=-1,zax_len,zax_pos
-   integer                             :: time_dim=-1,time_len,time_pos
+   integer                             :: time_dim=-1,time_len=-1,time_pos
+   integer                             :: start(4),edges(4)
    logical                             :: climatology=.false.
    logical                             :: from_3d_fields
+   logical                             :: stationary=.false.
    REALTYPE,dimension(:),allocatable   :: zlev
    REALTYPE,dimension(:,:),pointer     :: uu_bdy,uu_bdy_new,d_uu_bdy
    REALTYPE,dimension(:,:),pointer     :: vv_bdy,vv_bdy_new,d_vv_bdy
@@ -50,7 +54,6 @@
    REALTYPE                            :: offset
    REALTYPE,dimension(:),allocatable   :: bdy_times
    REALTYPE,dimension(:,:),allocatable :: wrk
-   integer                             :: wrk_len
    integer,parameter                   :: climatology_len=12
 !
 ! !REVISION HISTORY:
@@ -124,34 +127,46 @@
       LEVEL4 n,dim_name(n), dim_len(n)
    end do
 
-   if(ndims .eq. 4) then
-!     We are reading boundary values from a full 3D field
-!     We assume COARDS conventions
-!     1 -> lon,x-axis
-!     2 -> lat,y-axis
-!     3 -> zax,levels
-!     4 -> time
-      LEVEL4 'boundary data from 3D fields'
-      from_3d_fields=.true.
-      zax_pos = 3
-      time_pos = 4
-   else
-!     We are reading boundary values from a special boundary data file
-!     The variables 'salt' and 'temp' must both exist and be spanned by
-!     dimensions as:
-!       1 -> zax,levels
-!       2 -> bdy_points
-!       3 -> time
-      LEVEL4 'special boundary data file'
-      from_3d_fields=.false.
-      zax_pos = 1
-      bdy_pos = 2
-      time_pos = 3
+   select case (ndims)
+      case(4)
+!        We are reading boundary values from a full 3D field
+!        We assume COARDS conventions
+!        1 -> lon,x-axis
+!        2 -> lat,y-axis
+!        3 -> zax,levels
+!        4 -> time
+         LEVEL4 'boundary data from 3D fields'
+         from_3d_fields=.true.
+         stationary=.false.
+         zax_pos = 3
+         time_pos = 4
+      case(3)
+!        We are reading non-stationary boundary values from a special boundary data file
+!        The variables 'salt' and 'temp' must both exist and be spanned by
+!        dimensions as:
+!        1 -> zax,levels
+!        2 -> bdy_points
+!        3 -> time
+         LEVEL4 'non-stationary special boundary data file'
+         from_3d_fields=.false.
+         stationary=.false.
+         zax_pos = 1
+         bdy_pos = 2
+         time_pos = 3
+      case(2)
+!        We are reading stationary boundary values from a special boundary data file
+!        The variables 'salt' and 'temp' must both exist and be spanned by
+!        dimensions as:
+!        1 -> zax,levels
+!        2 -> bdy_points
+         LEVEL4 'stationary special boundary data file'
+         from_3d_fields=.false.
+         stationary=.true.
+         zax_pos = 1
+         bdy_pos = 2
+         time_pos = 1
 
-!     Note(BJB): This test may break backward compatibility,
-!                so I leave it out for now:
-      !if (ndims .NE. 3) stop 'init_3d_bdy_ncdf: Wrong number of dims in file (must be 3)'
-   end if
+   end select
 
 !  We will use this information to actually find the dimension
 !  index numbers in the data set.
@@ -240,7 +255,9 @@
    end if
 
    zax_len = dim_len(zax_dim)
-   time_len = dim_len(time_dim)
+   if (.not. stationary) then
+      time_len = dim_len(time_dim)
+   end if
 
    allocate(zlev(zax_len),stat=rc)
    if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (zlev)'
@@ -275,32 +292,38 @@
    if (bdy3d_vel) then
       allocate(uu_bdy(zax_len,nsbvl),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (uu_bdy)'
-      allocate(uu_bdy_new(zax_len,nsbvl),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (uu_bdy_new)'
-      allocate(d_uu_bdy(zax_len,nsbvl),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_uu_bdy)'
       allocate(vv_bdy(zax_len,nsbvl),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (vv_bdy)'
-      allocate(vv_bdy_new(zax_len,nsbvl),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (vv_bdy_new)'
-      allocate(d_vv_bdy(zax_len,nsbvl),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_vv_bdy)'
+      if (.not. stationary) then
+         allocate(uu_bdy_new(zax_len,nsbvl),stat=err)
+         if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (uu_bdy_new)'
+         allocate(vv_bdy_new(zax_len,nsbvl),stat=err)
+         if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (vv_bdy_new)'
+         allocate(d_uu_bdy(zax_len,nsbvl),stat=err)
+         if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_uu_bdy)'
+         allocate(d_vv_bdy(zax_len,nsbvl),stat=err)
+         if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_vv_bdy)'
+      end if
    end if
    if (update_salt) then
       allocate(S_bdy(zax_len,nsbvl),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy)'
-      allocate(S_bdy_new(zax_len,nsbvl),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy_new)'
-      allocate(d_S_bdy(zax_len,nsbvl),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_S_bdy)'
+      if (.not. stationary) then
+         allocate(S_bdy_new(zax_len,nsbvl),stat=err)
+         if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy_new)'
+         allocate(d_S_bdy(zax_len,nsbvl),stat=err)
+         if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_S_bdy)'
+      end if
    end if
    if (update_temp) then
       allocate(T_bdy(zax_len,nsbvl),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_bdy)'
-      allocate(T_bdy_new(zax_len,nsbvl),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_bdy_new)'
-      allocate(d_T_bdy(zax_len,nsbvl),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_T_bdy)'
+      if (.not. stationary) then
+         allocate(T_bdy_new(zax_len,nsbvl),stat=err)
+         if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_bdy_new)'
+         allocate(d_T_bdy(zax_len,nsbvl),stat=err)
+         if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_T_bdy)'
+      end if
    end if
 
    if( time_len .eq. climatology_len) then
@@ -337,49 +360,72 @@
          stop 'init_3d_bdy_ncdf'
       end if
 
-      err = nf90_inq_varid(ncid,'time',time_id)
-      if (err .NE. NF90_NOERR) go to 10
-      err =  nf90_get_att(ncid,time_id,'units',units)
-      if (err .NE. NF90_NOERR) go to 10
+      start(1) = 1
+      edges(1) = zax_len
+      start(2) = bdy_index(1)
+      edges(2) = bdy_index_stop - bdy_index(1) + 1
+      edges(3) = 1
 
-      allocate(bdy_times(time_len),stat=err)
-      if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (bdy_times)'
-      bdy_times = _ZERO_
-      err = nf90_get_var(ncid,time_id,bdy_times)
-      if (err .NE. NF90_NOERR) go to 10
-
-      loop0 = loop - 1
-      call string_to_julsecs(units,j1,s1)
-      offset = time_diff(julianday,secondsofday,j1,s1)
-      if( offset .lt. bdy_times(1) ) then
-         FATAL 'Model simulation starts before available boundary data'
-         call write_time_string(julianday,secondsofday,tbuf)
-         FATAL 'Simulation starts: ',tbuf
-         call add_secs(j1,s1,nint(bdy_times(1)),j2,s2)
-         call write_time_string(j2,s2,tbuf)
-         FATAL 'Datafile starts:   ',tbuf
-         stop 'init_3d_bdy_ncdf'
-      else
-         LEVEL3 'Boundary offset time ',offset
-      end if
-
-!     check if the bdy data file is long enough
-      if( time_diff(juln,secsn,j1,s1) .gt. bdy_times(time_len) ) then
-         FATAL 'Not enough 3D boundary data in file'
-         call write_time_string(juln,secsn,tbuf)
-         FATAL 'Simulation ends: ',tbuf
-         call add_secs(j1,s1,nint(bdy_times(time_len)),j2,s2)
-         call write_time_string(j2,s2,tbuf)
-         FATAL 'Datafile ends:   ',tbuf
-         stop 'init_3d_bdy_ncdf'
-      end if
-
-      wrk_len = bdy_index_stop - bdy_index(1) + 1
       allocate(wrk(zax_len,bdy_index(1):bdy_index_stop),stat=err)
       if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (wrk)'
       wrk = _ZERO_
 
-      call do_3d_bdy_ncdf(loop0)
+      if ( stationary ) then
+
+         call read_3d_bdy_data_ncdf(0)
+         if (bdy3d_vel) then
+            call interpolate_3d_bdy_ncdf(nsbvl,zax_len,uu_bdy,HU,kmax,hun,bdy_data_uu)
+            call interpolate_3d_bdy_ncdf(nsbvl,zax_len,vv_bdy,HV,kmax,hvn,bdy_data_vv)
+         end if
+         if (update_salt) then
+            call interpolate_3d_bdy_ncdf(nsbvl,zax_len,S_bdy,H,kmax,hn,bdy_data_S)
+         end if
+         if (update_temp) then
+            call interpolate_3d_bdy_ncdf(nsbvl,zax_len,T_bdy,H,kmax,hn,bdy_data_T)
+         end if
+
+      else
+
+         err = nf90_inq_varid(ncid,dim_name(time_dim),time_id)
+         if (err .NE. NF90_NOERR) go to 10
+         err =  nf90_get_att(ncid,time_id,'units',units)
+         if (err .NE. NF90_NOERR) go to 10
+
+         allocate(bdy_times(time_len),stat=err)
+         if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (bdy_times)'
+         bdy_times = _ZERO_
+         err = nf90_get_var(ncid,time_id,bdy_times)
+         if (err .NE. NF90_NOERR) go to 10
+
+         loop0 = loop - 1
+         call string_to_julsecs(units,j1,s1)
+         offset = time_diff(julianday,secondsofday,j1,s1)
+         if( offset .lt. bdy_times(1) ) then
+            FATAL 'Model simulation starts before available boundary data'
+            call write_time_string(julianday,secondsofday,tbuf)
+            FATAL 'Simulation starts: ',tbuf
+            call add_secs(j1,s1,nint(bdy_times(1)),j2,s2)
+            call write_time_string(j2,s2,tbuf)
+            FATAL 'Datafile starts:   ',tbuf
+            stop 'init_3d_bdy_ncdf'
+         else
+            LEVEL3 'Boundary offset time ',offset
+         end if
+
+   !     check if the bdy data file is long enough
+         if( time_diff(juln,secsn,j1,s1) .gt. bdy_times(time_len) ) then
+            FATAL 'Not enough 3D boundary data in file'
+            call write_time_string(juln,secsn,tbuf)
+            FATAL 'Simulation ends: ',tbuf
+            call add_secs(j1,s1,nint(bdy_times(time_len)),j2,s2)
+            call write_time_string(j2,s2,tbuf)
+            FATAL 'Datafile ends:   ',tbuf
+            stop 'init_3d_bdy_ncdf'
+         end if
+
+         call do_3d_bdy_ncdf(loop0)
+
+      end if
 
    end if
 
@@ -407,8 +453,6 @@
 !
 ! !USES:
    use time, only: day,month,secondsofday,days_in_mon,leapyear,secsprday
-   use domain, only: H,HU,HV
-   use variables_3d, only: hn,hun,hvn
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -418,12 +462,12 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer,save    :: this,indx=1,start(3),edges(3)
-   integer         :: prev,next,i,err
+   integer,save    :: this,indx=1
+   integer         :: prev,next,i
    logical, save   :: first=.true.
    logical         :: new_set
    REALTYPE        :: t,t_minus_t2
-   REALTYPE, save  :: t1=_ZERO_,t2=-_ONE_,deltm1
+   REALTYPE, save  :: t1=_ZERO_,t2=-_ONE_,deltm1=_ZERO_
    REALTYPE,dimension(:,:),pointer :: uu_bdy_old,vv_bdy_old,S_bdy_old,T_bdy_old
 !EOP
 !-------------------------------------------------------------------------
@@ -431,6 +475,8 @@
 #ifdef DEBUG
    write(debug,*) 'do_3d_bdy_ncdf (NetCDF)'
 #endif
+
+   if (stationary) return
 
    new_set = .false.
 
@@ -490,7 +536,6 @@
 
    else
 
-
       t = (loop-loop0)*dtm
 
       if(t .gt. t2) then
@@ -508,44 +553,11 @@
          if (first) then
             indx = i-1
             t2 = bdy_times(indx) - offset
-            start(1) = 1
-            edges(1) = zax_len
-            start(2) = bdy_index(1)
-            edges(2) = wrk_len
-            edges(3) = 1
-            first = .false.
          else
             indx = i
          end if
-         start(3) = indx
 
-         call write_time_string()
-         LEVEL3 timestr,': reading 3D boundary data ...',indx
-
-!        Note(KK): We read in at once the data of all global bdy cells
-!                  but only for the current time stage.
-!                  Interpolation extracts all local bdy cells.
-
-         if (uu_id .ne. -1) then
-            err = nf90_get_var(ncid,uu_id,wrk,start,edges)
-            if (err .ne. NF90_NOERR) go to 10
-            call grid_3d_bdy_data_ncdf(wrk,uu_bdy)
-         end if
-         if (vv_id .ne. -1) then
-            err = nf90_get_var(ncid,vv_id,wrk,start,edges)
-            if (err .ne. NF90_NOERR) go to 10
-            call grid_3d_bdy_data_ncdf(wrk,vv_bdy)
-         end if
-         if (salt_id .ne. -1) then
-            err = nf90_get_var(ncid,salt_id,wrk,start,edges)
-            if (err .ne. NF90_NOERR) go to 10
-            call grid_3d_bdy_data_ncdf(wrk,S_bdy)
-         end if
-         if (temp_id .ne. -1) then
-            err = nf90_get_var(ncid,temp_id,wrk,start,edges)
-            if (err .ne. NF90_NOERR) go to 10
-            call grid_3d_bdy_data_ncdf(wrk,T_bdy)
-         end if
+         call read_3d_bdy_data_ncdf(indx)
 
       end if
 
@@ -568,7 +580,9 @@
          T_bdy_old=>T_bdy_new;T_bdy_new=>T_bdy;T_bdy=>d_T_bdy;d_T_bdy=>T_bdy_old
          d_T_bdy = T_bdy_new - T_bdy_old
       end if
-      deltm1 = _ONE_ / (t2 - t1)
+      if ( .not. first ) then
+         deltm1 = _ONE_ / (t2 - t1)
+      end if
    end if
 
    t_minus_t2 = t - t2
@@ -588,15 +602,80 @@
       call interpolate_3d_bdy_ncdf(nsbvl,zax_len,T_bdy,H,kmax,hn,bdy_data_T)
    end if
 
+   first = .false.
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_3d_bdy_ncdf()'
    write(debug,*)
 #endif
    return
+   end subroutine do_3d_bdy_ncdf
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: read_3d_bdy_data_ncdf -
+!
+! !INTERFACE:
+   subroutine read_3d_bdy_data_ncdf(indx)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer,intent(in) :: indx
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
+!
+! !LOCAL VARIABLES:
+   integer             :: err
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   write(debug,*) 'read_3d_bdy_data_ncdf'
+#endif
+
+   call write_time_string()
+   LEVEL3 timestr,': reading 3D boundary data ...',indx
+   start(3) = indx
+
+!  Note(KK): We read in at once the data of all global bdy cells
+!            but only for the current time stage.
+!            Interpolation extracts all local bdy cells.
+
+   if (uu_id .ne. -1) then
+      err = nf90_get_var(ncid,uu_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
+      call grid_3d_bdy_data_ncdf(wrk,uu_bdy)
+   end if
+   if (vv_id .ne. -1) then
+      err = nf90_get_var(ncid,vv_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
+      call grid_3d_bdy_data_ncdf(wrk,vv_bdy)
+   end if
+   if (salt_id .ne. -1) then
+      err = nf90_get_var(ncid,salt_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
+      call grid_3d_bdy_data_ncdf(wrk,S_bdy)
+   end if
+   if (temp_id .ne. -1) then
+      err = nf90_get_var(ncid,temp_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
+      call grid_3d_bdy_data_ncdf(wrk,T_bdy)
+   end if
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving read_3d_bdy_data_ncdf()'
+   write(debug,*)
+#endif
+   return
 10 FATAL 'do_3d_bdy_ncdf: ',nf90_strerror(err)
    stop
-   end subroutine do_3d_bdy_ncdf
+   end subroutine read_3d_bdy_data_ncdf
 !EOC
 !-----------------------------------------------------------------------
 !BOP
@@ -700,7 +779,6 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 ! !LOCAL VARIABLES:
-   integer         :: start(4),edges(4)
    integer         :: i,j,k,kl,l,m,n,err
 !EOP
 !-------------------------------------------------------------------------
