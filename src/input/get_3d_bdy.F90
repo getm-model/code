@@ -39,7 +39,7 @@
       case (ASCII)
          STDERR 'should get ASCII boundary data'
       case (NETCDF)
-         if (update_salt .or. update_temp) then
+         if (bdy3d_vel .or. update_salt .or. update_temp) then
             call do_3d_bdy_ncdf(n)
          end if
 #ifdef _FABM_
