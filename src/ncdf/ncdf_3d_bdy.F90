@@ -583,6 +583,7 @@
       if ( .not. first ) then
          deltm1 = _ONE_ / (t2 - t1)
       end if
+      first = .false.
    end if
 
    t_minus_t2 = t - t2
@@ -601,8 +602,6 @@
       T_bdy = T_bdy_new + d_T_bdy*deltm1*t_minus_t2
       call interpolate_3d_bdy_ncdf(nsbvl,zax_len,T_bdy,H,kmax,hn,bdy_data_T)
    end if
-
-   first = .false.
 
 #ifdef DEBUG
    write(debug,*) 'Leaving do_3d_bdy_ncdf()'
@@ -673,7 +672,7 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'do_3d_bdy_ncdf: ',nf90_strerror(err)
+10 FATAL 'read_3d_bdy_data_ncdf: ',nf90_strerror(err)
    stop
    end subroutine read_3d_bdy_data_ncdf
 !EOC
