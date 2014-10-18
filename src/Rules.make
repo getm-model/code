@@ -50,7 +50,7 @@ endif
 # 3D barotropic
 ifeq ($(GETM_NO_BAROCLINIC),true)
 DEFINES += -DNO_BAROCLINIC
-unexport FABM
+export FABM=false
 endif
 
 # Suspended matter
@@ -114,7 +114,7 @@ ifeq ($(FABM),true)
 DEFINES += -D_FABM_
 FEATURES += fabm
 
-unexport GETM_BIO
+export GETM_BIO=false
 
 ifdef FABM_PREFIX
 
