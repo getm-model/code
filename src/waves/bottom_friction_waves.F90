@@ -13,7 +13,7 @@
    use parameters, only: kappa,avmmol
    use domain, only: imin,imax,jmin,jmax,az,au,av
    use domain, only: z0,zub0,zvb0
-   use variables_waves, only: waveH,waveT,waveK,waveDir
+   use variables_waves, only: waveH,waveT,waveK,coswavedir,sinwavedir
    use waves, only: waves_bbl_method,NO_WBBL,WBBL_DATA2,WBBL_SOULSBY05
    use waves, only: wbbl_rdrag
    use getm_timers, only: tic,toc,TIM_WAVES
@@ -40,7 +40,9 @@
    REALTYPE                                 :: Rew,fwr,fws,fwl,fw
    REALTYPE                                 :: tauwr,tauws,tauwl,tauw
    REALTYPE                                 :: wbl
-   REALTYPE                                 :: cdm1,currDir,angle
+   REALTYPE                                 :: cdm1,cosangle
+   REALTYPE                                 :: ttransx,ttransy,ttrans
+   REALTYPE                                 :: coscurrdir,sincurrdir
    REALTYPE                                 :: tauc,taubm,taubc,taube,taubp
    integer                                  :: i,j,rc
    logical                                  :: calc_taubmax
@@ -83,7 +85,8 @@
 !$OMP          FIRSTPRIVATE(j)                                         &
 !$OMP          PRIVATE(i,Hrms,omegam1,uorb,aorb,Rew,fwr,fws,fwl,fw)    &
 !$OMP          PRIVATE(tauw,tauwr,tauws,tauwl)                         &
-!$OMP          PRIVATE(wbl,cdm1,currDir,angle)                         &
+!$OMP          PRIVATE(wbl,cdm1,cosangle,coscurrdir,sincurrdir)        &
+!$OMP          PRIVATE(ttransx,ttransy,ttrans)                         &
 !$OMP          PRIVATE(tauc,tauw,taubm,taubc,taube,taubp)
 
 !$OMP DO SCHEDULE(RUNTIME)
@@ -92,52 +95,57 @@
 #endif
       do i=imin-HALO,imax+HALO
          if (az(i,j) .ne. 0) then
-            Hrms = sqrthalf * waveH(i,j)
-            omegam1 = oneovertwopi * waveT(i,j)
-!           wave orbital velocity amplitude at bottom (peak orbital velocity, ubot in SWAN)
-            uorb = _HALF_ * Hrms / ( omegam1*sinh(waveK(i,j)*Dvel(i,j)) )
-!           wave orbital excursion
-            aorb = omegam1 * uorb
-!           wave Reynolds number
-            Rew = aorb * uorb * avmmolm1
+            if (waveT(i,j) .gt. _ZERO_) then
+               Hrms = sqrthalf * waveH(i,j)
+               omegam1 = oneovertwopi * waveT(i,j)
+!              wave orbital velocity amplitude at bottom (peak orbital velocity, ubot in SWAN)
+               uorb = _HALF_ * Hrms / ( omegam1*sinh(waveK(i,j)*Dvel(i,j)) )
+!              wave orbital excursion
+               aorb = omegam1 * uorb
+!              wave Reynolds number
+               Rew = aorb * uorb * avmmolm1
 
-!           Note (KK): We do not calculate fw alone, because for small
-!                      uorb this can become infinite.
+!              Note (KK): We do not calculate fw alone, because for small
+!                         uorb this can become infinite.
 
-!           KK-TODO: For combined wave-current flow, the decision on
-!                    turbulent or laminar flow depends on Rew AND Rec!
-!                    (Soulsby & Clarke, 2005)
-!                    However, here we decide according to Lettmann et al. (2009).
-!                    (Or do we want to assume always turbulent currents?)
-            if ( Rew .gt. Rew_crit ) then
-!              wave friction factor for rough turbulent flow
-!               fwr = 1.39d0 * (aorb/z0(i,j))**(-0.52d0)
-               tauwr = _HALF_ * 1.39d0 * (omegam1/z0(i,j))**(-0.52d0) * uorb**(2-0.52d0)
-!              wave friction factor for smooth turbulent flow
-!               fws = 0.0521d0 * Rew**(-0.187d0)
-               tauws = _HALF_ * (omegam1*avmmolm1)**(-0.187d0) * uorb**(2-2*0.187d0)
-!              wave friction factor
-!              Note (KK): For combined wave-current flow, the decision on
-!                         rough or smooth flow depends on the final taubmax.
-!                         (Soulsby & Clarke, 2005)
-!                         However, here we decide according to Stanev et al. (2009).
-!                         (as for wave-only flow)
-!               fw = max( fwr , fws )
-               tauw = max( tauwr , tauws )
+!              KK-TODO: For combined wave-current flow, the decision on
+!                       turbulent or laminar flow depends on Rew AND Rec!
+!                       (Soulsby & Clarke, 2005)
+!                       However, here we decide according to Lettmann et al. (2009).
+!                       (Or do we want to assume always turbulent currents?)
+               if ( Rew .gt. Rew_crit ) then
+!                 wave friction factor for rough turbulent flow
+!                  fwr = 1.39d0 * (aorb/z0(i,j))**(-0.52d0)
+                  tauwr = _HALF_ * 1.39d0 * (omegam1/z0(i,j))**(-0.52d0) * uorb**(2-0.52d0)
+!                 wave friction factor for smooth turbulent flow
+!                  fws = 0.0521d0 * Rew**(-0.187d0)
+                  tauws = _HALF_ * (omegam1*avmmolm1)**(-0.187d0) * uorb**(2-2*0.187d0)
+!                 wave friction factor
+!                 Note (KK): For combined wave-current flow, the decision on
+!                            rough or smooth flow depends on the final taubmax.
+!                            (Soulsby & Clarke, 2005)
+!                            However, here we decide according to Stanev et al. (2009).
+!                            (as for wave-only flow)
+!                  fw = max( fwr , fws )
+                  tauw = max( tauwr , tauws )
+               else
+!                 wave friction factor for laminar flow
+!                  fwl = _TWO_ * Rew**(-_HALF_)
+!                  fw = fwl
+                  tauwl = uorb / sqrt(omegam1*avmmolm1)
+                  tauw = tauwl
+               end if
+
+!              wave-only bottom stress
+!               taubw(i,j) = _HALF_ * fw * uorb**2
+               taubw(i,j) = tauw
+!              bbl thickness (Soulsby & Clarke, 2005)
+               wbbl(i,j) = max( 12.0d0*z0(i,j) , ar*omegam1*sqrt(taubw(i,j)) )
             else
-!              wave friction factor for laminar flow
-!               fwl = _TWO_ * Rew**(-_HALF_)
-!               fw = fwl
-               tauwl = (omegam1*avmmolm1)**(-_HALF_) * uorb
-               tauw = tauwl
+               taubw(i,j) = _ZERO_
+               wbbl(i,j) = 12.0d0*z0(i,j)
             end if
 
-!           wave-only bottom stress
-!            taubw(i,j) = _HALF_ * fw * uorb**2
-            taubw(i,j) = tauw
-
-!           bbl thickness (Soulsby & Clarke, 2005)
-            wbbl(i,j) = max( 12.0d0*z0(i,j) , ar*omegam1*sqrt(taubw(i,j)) )
          end if
       end do
 #ifndef SLICE_MODEL
@@ -225,8 +233,6 @@
             if (az(i,j) .ne. 0) then
                taubm = _HALF_*sqrt(  ( taubmx(i-1,j  ) + taubmx(i,j) )**2 &
                                    + ( taubmy(i  ,j-1) + taubmy(i,j) )**2 )
-               currDir = atan2( V1(i,j-1)+V1(i,j) , U1(i-1,j)+U1(i,j) )
-               angle = abs( currDir - waveDir(i,j) )
 
                select case(waves_bbl_method)
                   case (WBBL_DATA2)
@@ -237,7 +243,19 @@
                      taubp = sqrt( taube * taubw(i,j))
                end select
 
-               taubmax(i,j) = sqrt( taubm**2 + taubp**2 + _TWO_*taubm*taubp*cos(angle) )
+!              we need the cosine of the angle between waves and currents
+               ttransx = U1(i-1,j) + U1(i,j)
+               ttransy = V1(i,j-1) + V1(i,j)
+               ttrans  = sqrt( ttransx**2 + ttransy**2 )
+               if (ttrans .gt. _ZERO_) then
+                  coscurrdir = ttransx / ttrans
+                  sincurrdir = ttransy / ttrans
+                  cosangle = coscurrdir*coswavedir(i,j) + sincurrdir*sinwavedir(i,j)
+               else
+                  cosangle = _ZERO_
+               end if
+
+               taubmax(i,j) = sqrt( taubm**2 + taubp**2 + _TWO_*taubm*taubp*cosangle )
             end if
          end do
 #ifndef SLICE_MODEL

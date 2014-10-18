@@ -216,7 +216,7 @@
 
    call init_meteo(hotstart)
 
-   call init_waves(runtype)
+   call init_waves(hotstart,runtype)
 
 #ifndef NO_3D
    call init_rivers(hotstart)
@@ -315,7 +315,7 @@
    end if
 
    if (waves_method .ne. NO_WAVES) then
-      call do_waves(Dvel)
+      call do_waves(MinN-1,Dvel)
    end if
 
    call tic(TIM_INITIALIZE)

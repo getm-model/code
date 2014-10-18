@@ -12,6 +12,7 @@
 !
 ! !USES:
    use variables_waves
+   use time           , only: write_time_string,timestr
    use parameters     , only: grav => g
    use exceptions
    use halo_zones     , only: update_2d_halo,wait_halo,H_TAG
@@ -36,6 +37,8 @@
    integer,public,parameter  :: WAVES_FROMFILE=1
    integer,public,parameter  :: WAVES_FROMWIND=2
    integer,public            :: waves_datasource=WAVES_FROMWIND
+   character(LEN = PATH_MAX),public :: waves_file
+   logical,public            :: on_grid=.true.
    integer,public,parameter  :: NO_WBBL=0
    integer,public,parameter  :: WBBL_DATA2=1
    integer,public,parameter  :: WBBL_SOULSBY05=2
@@ -44,15 +47,17 @@
    logical,public            :: new_StokesC=.false.
 !  KK-TODO: for computational efficiency this value should be as small as possible
 !           (reduces evaluations of hyperbolic functions)
+   REALTYPE,public           :: kD_deepthresh
 !   REALTYPE,public,parameter :: kD_deepthresh=100*_ONE_ ! errors<1% for less than 85 layers
 !   REALTYPE,public,parameter :: kD_deepthresh= 50*_ONE_ ! errors<1% for less than 40 layers
 !   REALTYPE,public,parameter :: kD_deepthresh= 25*_ONE_ ! errors<1% for less than 20 layers
 !   REALTYPE,public,parameter :: kD_deepthresh= 10*_ONE_ ! errors<1% for less than  8 layers
-   REALTYPE,public           :: kD_deepthresh
 !
 ! !PRIVATE DATA MEMBERS:
+   integer                   :: waves_ramp=0
    REALTYPE                  :: waves_windscalefactor = _ONE_
    REALTYPE                  :: max_depth_windwaves = -_ONE_
+   logical                   :: ramp_is_active=.false.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Ulf Graewe
@@ -90,11 +95,12 @@
 ! \label{sec-init-waves}
 !
 ! !INTERFACE:
-   subroutine init_waves(runtype)
+   subroutine init_waves(hotstart,runtype)
 
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   logical,intent(in) :: hotstart
    integer,intent(in) :: runtype
 !
 ! !DESCRIPTION:
@@ -104,8 +110,9 @@
 ! the simulation.
 !
 ! !LOCAL VARIABLES
-   namelist /waves/ waves_method,waves_datasource,waves_windscalefactor, &
-                    max_depth_windwaves,waves_bbl_method
+   namelist /waves/ waves_method,waves_datasource,waves_file,on_grid,  &
+                    waves_windscalefactor,max_depth_windwaves,         &
+                    waves_ramp,waves_bbl_method
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -129,22 +136,28 @@
       case(WAVES_NOSTOKES)
          LEVEL2 'wave forcing only via bottom friction'
       case default
-         stop 'init_waves(): no valid waves_method specified'
+         call getm_error("init_waves()", &
+                         "no valid waves_method")
    end select
 
    call init_variables_waves(runtype)
-   kD_deepthresh=1.25d0*kmax
+
+   if (runtype .eq. 1) then
+      kD_deepthresh = 10.0d0
+   else
+      kD_deepthresh = max( 10.0d0 , 1.25d0*kmax )
+   end if
 
    select case (waves_datasource)
       case(WAVES_FROMEXT)
          LEVEL2 'wave data written from external'
       case(WAVES_FROMFILE)
-         LEVEL2 'wave data read from file'
+         LEVEL2 'wave data read from file: ',trim(waves_file)
+         LEVEL3 'on_grid = ',on_grid
       case(WAVES_FROMWIND)
          LEVEL2 'wave data derived from wind data'
-         if ( .not. metforcing ) then
-            stop 'init_waves(): metforcing must be active for WAVES_FROMWIND'
-         end if
+         if ( .not. metforcing ) call getm_error("init_waves()",       &
+                         "metforcing must be active for WAVES_FROMWIND")
          LEVEL3 'waves_windscalefactor = ',real(waves_windscalefactor)
          if ( max_depth_windwaves .lt. _ZERO_) then
             max_depth_windwaves = 99999.0
@@ -152,8 +165,18 @@
             LEVEL3 'max_depth_windwaves = ',real(max_depth_windwaves)
          end if
       case default
-         stop 'init_waves(): no valid waves_datasource specified'
+         call getm_error("init_waves()", &
+                         "no valid waves_datasource")
    end select
+
+   if (waves_ramp .gt. 1) then
+      LEVEL2 'waves_ramp=',waves_ramp
+      ramp_is_active = .true.
+      if (hotstart) then
+         LEVEL3 'WARNING: hotstart is .true. AND waves_ramp .gt. 1'
+         LEVEL3 'WARNING: .. be sure you know what you are doing ..'
+      end if
+   end if
 
    select case (waves_bbl_method)
       case (NO_WBBL)
@@ -163,7 +186,8 @@
       case (WBBL_SOULSBY05)
          LEVEL2 'wave BBL according to Soulsby & Clarke (2005)'
       case default
-         stop 'init_waves(): no valid waves_bbl_method specified'
+         call getm_error("init_waves()", &
+                         "no valid_waves_bbl_method")
    end select
 
    return
@@ -176,12 +200,14 @@
 ! \label{sec-do-waves}
 !
 ! !INTERFACE:
-   subroutine do_waves(D)
+   subroutine do_waves(n,D)
 
 ! !USES:
+   use parameters, only: grav=>g
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   integer,intent(in)                      :: n
    REALTYPE,dimension(E2DFIELD),intent(in) :: D
 !
 ! !DESCRIPTION:
@@ -189,7 +215,8 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: waveECm1
-   REALTYPE                     :: wind,depth
+   REALTYPE                     :: taus,wind,depth
+   REALTYPE,save                :: ramp=_ONE_
    integer                      :: i,j
    REALTYPE,parameter           :: min_wind=_TENTH_
    REALTYPE,parameter           :: pi=3.1415926535897932384626433832795029d0
@@ -207,8 +234,24 @@
 
    call tic(TIM_WAVES)
 
-   if (waves_datasource .eq. WAVES_FROMWIND) then
-      new_waves = .true.
+   select case (waves_datasource)
+      case(WAVES_FROMFILE)
+         new_waves = .true.
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO
+               if ( az(i,j) .gt. 0 ) then
+                  if (waveL(i,j) .gt. _ZERO_) then
+                     waveK(i,j) = twopi / waveL(i,j)
+                     waveT(i,j) = twopi / sqrt( grav*waveK(i,j)*tanh(waveK(i,j)*D(i,j)) )
+                  else
+                     waveK(i,j) = kD_deepthresh / D(i,j)
+                     waveT(i,j) = _ZERO_
+                  end if
+               end if
+            end do
+         end do
+      case(WAVES_FROMWIND)
+         new_waves = .true.
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO
                if ( az(i,j) .gt. 0 ) then
@@ -216,31 +259,51 @@
 !                    - missing temporal interpolation of [u|v]10
 !                    - missing halo update of [u|v]10
 !                    - also valid for met_method=1
-                  waveDir(i,j) = atan2(tausy(i,j),tausx(i,j)) ! cartesian convention and in radians
-                  wind = sqrt(sqrt(tausx(i,j)**2 + tausy(i,j)**2)/(1.25d-3*1.25))
-                  wind = waves_windscalefactor * max( min_wind , wind )
-!                 KK-TODO: Or do we want to use H instead of D?
-!                          Then we would not need to call depth_update in
-!                          initialise(). However H does not consider
-!                          min_depth.
-                  depth = min( D(i,j) , max_depth_windwaves )
-                  waveH(i,j) = wind2waveHeight(wind,depth)
-                  waveT(i,j) = wind2wavePeriod(wind,depth)
-                  waveK(i,j) = wavePeriod2waveNumber(waveT(i,j),D(i,j))
-                  waveL(i,j) = twopi / waveK(i,j)
-            end if
+                  taus = sqrt( tausx(i,j)**2 + tausy(i,j)**2 )
+                  if (taus .gt. _ZERO_) then
+                     coswavedir(i,j) = tausx(i,j) / taus
+                     sinwavedir(i,j) = tausy(i,j) / taus
+                     wind = sqrt(taus/(1.25d-3*1.25))
+                     wind = waves_windscalefactor * max( min_wind , wind )
+!                    KK-TODO: Or do we want to use H instead of D?
+!                             Then we would not need to call depth_update in
+!                             initialise(). However H does not consider
+!                             min_depth.
+                     depth = min( D(i,j) , max_depth_windwaves )
+                     waveH(i,j) = wind2waveHeight(wind,depth)
+                     waveT(i,j) = wind2wavePeriod(wind,depth)
+                     waveK(i,j) = wavePeriod2waveNumber(waveT(i,j),D(i,j))
+                     waveL(i,j) = twopi / waveK(i,j)
+                  else
+                     coswavedir(i,j) = _ZERO_
+                     sinwavedir(i,j) = _ZERO_
+                     waveH(i,j) = _ZERO_
+                     waveT(i,j) = _ZERO_
+                     waveK(i,j) = kD_deepthresh / D(i,j)
+                     waveL(i,j) = _ZERO_
+                  end if
+               end if
+            end do
          end do
-      end do
-   end if
+   end select
 
 
-   if (new_waves) then
+   if (new_waves .or. ramp_is_active) then
 
-      new_waves = .false.
+      if (ramp_is_active) then
+         if (n .ge. waves_ramp) then
+            ramp = _ONE_
+            ramp_is_active = .false.
+            STDERR LINE
+            call write_time_string()
+            LEVEL3 timestr,': finished waves_ramp=',waves_ramp
+            STDERR LINE
+         else
+            ramp = _ONE_*n/waves_ramp
+         end if
+      end if
 
-      coswavedir = cos(waveDir)
-      sinwavedir = sin(waveDir)
-      waveE = grav * (_QUART_*waveH)**2
+      waveE = ramp * grav * (_QUART_*waveH)**2
 
 !     Note (KK): the stokes_drift routines will still be called, but
 !                with zeros. [U|V]StokesC[int|adv] read from a restart

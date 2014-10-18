@@ -78,7 +78,6 @@
                        - UStokes(i,j)*dudxU(i,j) &
                        - work2d (i,j)*dvdxU(i,j) &
                        + DU(i,j)*dJdx(i,j)
-                             
          end if
       end do
    end do
