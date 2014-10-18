@@ -13,8 +13,7 @@ ${LIB}(integration.o)		\
 ${LIB}(initialise.o)
 
 OBJ   = \
-${LIB}(cleanup.o)		\
-main.o
+${LIB}(cleanup.o)
 
 all: modules objects
 
