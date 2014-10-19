@@ -111,16 +111,18 @@
    if (rc /= 0) call getm_error('init_waves_input_ncdf()',             &
                                 'Error allocating memory (wrk)')
 
+   allocate(waveH_new(E2DFIELD),stat=rc)
+   if (rc /= 0) call getm_error('init_waves_input_ncdf()',             &
+                                'Error allocating memory (waveH_new)')
+
 
    if ( stationary ) then
 
       call read_data(0)
+      waveH_new = waveH
 
    else
 
-      allocate(waveH_new(E2DFIELD),stat=rc)
-      if (rc /= 0) call getm_error('init_waves_input_ncdf()',          &
-                             'Error allocating memory (waveH_new)')
       allocate(d_waveH(E2DFIELD),stat=rc)
       if (rc /= 0) call getm_error('init_waves_input_ncdf()',          &
                              'Error allocating memory (d_waveH)')
@@ -187,7 +189,10 @@
    write(debug,*) 'get_waves_data_ncdf() # ',Ncall
 #endif
 
-   if (stationary) return
+   if (stationary) then
+      waveH = waveH_new
+      return
+   end if
 
 !  find the right index
 
