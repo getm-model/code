@@ -300,10 +300,11 @@
             STDERR LINE
          else
             ramp = _ONE_*n/waves_ramp
+            waveH = ramp * waveH
          end if
       end if
 
-      waveE = ramp * grav * (_QUART_*waveH)**2
+      waveE = grav * (_QUART_*waveH)**2
 
 !     Note (KK): the stokes_drift routines will still be called, but
 !                with zeros. [U|V]StokesC[int|adv] read from a restart
