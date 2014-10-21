@@ -386,3 +386,9 @@ endif(GETM_USE_FABM)
 
 # Install GETM executable
 install(TARGETS getm_exe DESTINATION bin)
+
+# Begin testing section
+
+add_custom_target(test_all COMMENT "building tests - nothing yet :-)")
+
+# End of testing section
