@@ -16,11 +16,12 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
-   REALTYPE,dimension(:,:)  ,allocatable :: waveDir,coswavedir,sinwavedir
-   REALTYPE,dimension(:,:)  ,allocatable :: waveH,waveL,waveT,waveK,waveE
+   REALTYPE,dimension(:,:)  ,pointer     :: coswavedir,sinwavedir
+   REALTYPE,dimension(:,:)  ,pointer     :: waveH,waveL
+   REALTYPE,dimension(:,:)  ,allocatable :: waveT,waveK,waveE
    REALTYPE,dimension(:,:)  ,allocatable :: SJ,SJJ
    REALTYPE,dimension(:,:)  ,allocatable :: kDveln,sinh2kDvelnm1
-   logical ,dimension(:,:)  ,allocatable :: is_deepwave
+   logical ,dimension(:,:)  ,allocatable :: is_deepwave_3d
    REALTYPE,dimension(:,:,:),allocatable :: khab,layerratios
    REALTYPE,dimension(:,:)  ,allocatable :: UStokesC,VStokesC
    REALTYPE,dimension(:,:)  ,allocatable :: UStokes,VStokes
@@ -68,9 +69,6 @@
 #endif
 
    LEVEL2 'init_variables_waves'
-
-   allocate(waveDir(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_variables_waves: Error allocating memory (waveDir)'
 
    allocate(coswavedir(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_variables_waves: Error allocating memory (coswavedir)'
@@ -124,8 +122,8 @@
       allocate(sinh2kDvelnm1(I2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_variables_waves: Error allocating memory (sinh2kDvelnm1)'
 
-      allocate(is_deepwave(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_variables_waves: Error allocating memory (is_deepwave)'
+      allocate(is_deepwave_3d(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_variables_waves: Error allocating memory (is_deepwave_3d)'
 
       allocate(khab(I3DFIELD),stat=rc)
       if (rc /= 0) stop 'init_variables_waves: Error allocating memory (khab)'
