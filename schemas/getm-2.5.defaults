@@ -204,12 +204,21 @@
 			<waves_datasource>
 				2
 			</waves_datasource>
+			<waves_file>
+				wavesfile.dat
+			</waves_file>
+			<on_grid>
+				True
+			</on_grid>
 			<waves_windscalefactor>
 				1.0
 			</waves_windscalefactor>
 			<max_depth_windwaves>
 				-1.0
 			</max_depth_windwaves>
+			<waves_ramp>
+				0
+			</waves_ramp>
 			<waves_bbl_method>
 				1
 			</waves_bbl_method>
