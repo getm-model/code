@@ -50,7 +50,7 @@ endif
 # 3D barotropic
 ifeq ($(GETM_NO_BAROCLINIC),true)
 DEFINES += -DNO_BAROCLINIC
-unexport FABM
+export FABM=false
 endif
 
 # Suspended matter
@@ -111,13 +111,37 @@ INCDIRS		= -I$(GETMDIR)/include -I$(MODDIR)
 LINKDIRS	= -L$(LIBDIR)
 EXTRA_LIBS	=
 
+# Turbulence directory
+ifdef GOTM_PREFIX
+
+GOTMLIBDIR	= $(GOTM_PREFIX)/lib
+LINKDIRS	+= -L$(GOTMLIBDIR)
+ifeq ($(FABM),true)
+EXTRA_LIBS	+= -lgotm_fabm
+endif
+EXTRA_LIBS	+= -lturbulence -lutil
+INCDIRS		+= -I$(GOTM_PREFIX)/include
+
+else
+
+GOTMLIBDIR	= $(GOTMDIR)/lib/$(FORTRAN_COMPILER)
+LINKDIRS	+= -L$(GOTMLIBDIR)
+ifeq ($(FABM),true)
+EXTRA_LIBS	+= -lgotm_fabm$(buildtype)
+endif
+EXTRA_LIBS	+= -lturbulence$(buildtype) -lutil$(buildtype)
+INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
+
+endif
+
+
 # FABM-geochemical component
 ifeq ($(FABM),true)
 
 DEFINES += -D_FABM_
 FEATURES += fabm
 
-unexport GETM_BIO
+export GETM_BIO=false
 
 ifdef FABM_PREFIX
 
@@ -127,7 +151,7 @@ endif
 
 INCDIRS         += -I$(FABM_PREFIX)/include
 LINKDIRS        += -L$(FABM_PREFIX)/lib
-EXTRA_LIBS      += -lgotm_fabm -lfabm
+EXTRA_LIBS	+= -lfabm
 
 else
 
@@ -140,7 +164,7 @@ $(error the directory FABMDIR=$(FABMDIR) is not a valid FABM directory)
 endif
 INCDIRS    += -I$(FABMDIR)/include -I$(FABMDIR)/modules/gotm/$(FORTRAN_COMPILER) -I$(FABMDIR)/src/drivers/gotm
 LINKDIRS   += -L$(FABMDIR)/lib/gotm/$(FORTRAN_COMPILER)
-EXTRA_LIBS += -lgotm_fabm$(buildtype) -lfabm$(buildtype)
+EXTRA_LIBS	+= -lfabm$(buildtype)
 
 endif
 
@@ -150,23 +174,6 @@ endif
 ifeq ($(GETM_BIO),true)
 DEFINES    += -DGETM_BIO
 EXTRA_LIBS += -lbio$(buildtype)
-endif
-
-# Turbulence directory
-ifdef GOTM_PREFIX
-
-GOTMLIBDIR	= $(GOTM_PREFIX)/lib
-LINKDIRS	+= -L$(GOTMLIBDIR)
-EXTRA_LIBS	+= -lturbulence -lutil
-INCDIRS		+= -I$(GOTM_PREFIX)/include
-
-else
-
-GOTMLIBDIR	= $(GOTMDIR)/lib/$(FORTRAN_COMPILER)
-LINKDIRS	+= -L$(GOTMLIBDIR)
-EXTRA_LIBS	+= -lturbulence$(buildtype) -lutil$(buildtype) 
-INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
-
 endif
 
 # Where does the NetCDF include file and library reside.

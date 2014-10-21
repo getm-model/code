@@ -8,6 +8,7 @@ LIB	= $(LIBDIR)/libncdfio${buildtype}.a
 
 MODSRC	= ncdf_common.F90 grid_ncdf.F90 ncdf_2d.F90 ncdf_2d_bdy.F90	\
           ncdf_3d.F90 ncdf_3d_bdy.F90 ncdf_meteo.F90 ncdf_rivers.F90	\
+          ncdf_waves.F90                                                \
           ncdf_restart.F90 ncdf_mean.F90 ncdf_topo.F90 ncdf_get_field.F90
 
 LIBSRC	= set_attributes.F90 init_grid_ncdf.F90 save_grid_ncdf.F90	\
@@ -36,6 +37,7 @@ endif
 endif
 MOD	+= 	\
 ${LIB}(ncdf_meteo.o)		\
+${LIB}(ncdf_waves.o)		\
 ${LIB}(ncdf_topo.o)		\
 ${LIB}(ncdf_restart.o)		\
 ${LIB}(ncdf_mean.o)		\
