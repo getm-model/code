@@ -82,7 +82,6 @@
                              - uuStokes(i,j,k)*dudxU(i,j) &
                              - work2d  (i,j  )*dvdxU(i,j) &
                              + hun(i,j,k)*dJdx(i,j)
-                                
             end if
          end do
       end do
