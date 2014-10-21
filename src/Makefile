@@ -82,8 +82,7 @@ GIT FORTRAN:
 	$(MAKE) -C .. $@
 
 getm$(buildtype)_$(FORTRAN_COMPILER): makedirs subdirs
-	$(FC) -o $@ getm/main.o $(LINKFLAGS) $(LIBS)
-	$(RM) getm/main.o
+	$(FC) -o $@ getm/main.F90 $(LINKFLAGS) $(LIBS)
 
 install: getm$(buildtype)_$(FORTRAN_COMPILER)
 	mkdir -p $(BINDIR)
