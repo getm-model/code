@@ -113,7 +113,7 @@
       end if
 
       if (waves_method .ne. NO_WAVES) then
-         call do_waves(Dvel)
+         call do_waves(n,Dvel)
       end if
 
       if (fwf_method .ge. 1) then
