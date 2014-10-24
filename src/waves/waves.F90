@@ -335,12 +335,15 @@
 ! \label{sec-uv-waves}
 !
 ! !INTERFACE:
-   subroutine uv_waves(UEuler,VEuler,Dvel,DU,DV,UEx,VEx)
+   subroutine uv_waves(UEuler,VEuler,UStokes,VStokes,UStokesC,VStokesC,Dvel,DU,DV,UEx,VEx)
 
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   REALTYPE,dimension(E2DFIELD),intent(in)    :: UEuler,VEuler,Dvel,DU,DV
+   REALTYPE,dimension(E2DFIELD),intent(in)    :: UEuler,VEuler
+   REALTYPE,dimension(E2DFIELD),intent(in)    :: UStokes,VStokes
+   REALTYPE,dimension(E2DFIELD),intent(in)    :: UStokesC,VStokesC
+   REALTYPE,dimension(E2DFIELD),intent(in)    :: Dvel,DU,DV
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout) :: UEx,VEx
@@ -364,7 +367,7 @@
       case (WAVES_RS)
          call radiation_stress(Dvel,UEx,VEx)
       case (WAVES_VF)
-         call vortex_force(UEuler,VEuler,DU,DV,UEx,VEx)
+         call vortex_force(UEuler,VEuler,UStokes,VStokes,UStokesC,VStokesC,DU,DV,UEx,VEx)
    end select
 
    call toc(TIM_WAVES)
