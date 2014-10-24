@@ -299,7 +299,7 @@
             LEVEL3 timestr,': finished waves_ramp=',waves_ramp
             STDERR LINE
          else
-            ramp = _ONE_*n/waves_ramp
+            ramp = sqrt(_ONE_*n/waves_ramp)
             waveH = ramp * waveH
          end if
       end if
