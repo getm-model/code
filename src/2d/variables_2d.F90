@@ -18,7 +18,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
-   use waves , only: waves_method,NO_WAVES,WAVES_VF
+   use waves , only: waveforcing_method,waves_method,NO_WAVES,WAVES_VF
    use domain, only: bottfric_method,rdrag
    IMPLICIT NONE
 !
@@ -147,7 +147,7 @@
    UEulerInt => Uint ; VEulerInt => Vint
 
 
-   if (waves_method .ne. NO_WAVES) then
+   if (waveforcing_method .ne. NO_WAVES) then
 
       allocate(UEuler(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (UEuler)'

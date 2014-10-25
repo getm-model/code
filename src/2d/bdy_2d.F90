@@ -24,7 +24,7 @@
    use domain, only: rigid_lid
    use time, only: write_time_string,timestr
    use variables_2d, only: dtm,z,zo,D,U,DU,V,DV,UEuler,VEuler
-   use waves, only: waves_method,NO_WAVES
+   use waves, only: waveforcing_method,NO_WAVES
    use variables_waves, only: UStokes,VStokes
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dyv
@@ -540,7 +540,7 @@
 !                    Note (KK): note approximation of sse at vel-time stage
                      U(i,j) = ramp*bdy_data_u(kl)*depth &
                               - _HALF_*sqrt(g*depth)*(z(i,j)-ramp*bdy_data(kl))
-                     if ( waves_method .ne. NO_WAVES ) then
+                     if ( waveforcing_method .ne. NO_WAVES ) then
                         UEuler(i,j) = U(i,j) - UStokes(i,j)
                      end if
                      k = k+1
@@ -552,7 +552,7 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i+1,j))
                      U(i,j) = ramp*bdy_data_u(kl)*depth
-                     if ( waves_method .ne. NO_WAVES ) then
+                     if ( waveforcing_method .ne. NO_WAVES ) then
                         UEuler(i,j) = U(i,j) - UStokes(i,j)
                      end if
                      k = k+1
@@ -575,7 +575,7 @@
 !                    Note (KK): note approximation of sse at vel-time stage
                      U(i-1,j) = ramp*bdy_data_u(kl)*depth &
                                 + _HALF_*sqrt(g*depth)*(z(i,j)-ramp*bdy_data(kl))
-                     if ( waves_method .ne. NO_WAVES ) then
+                     if ( waveforcing_method .ne. NO_WAVES ) then
                         UEuler(i-1,j) = U(i-1,j) - UStokes(i-1,j)
                      end if
                      k = k+1
@@ -587,7 +587,7 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i-1,j)+D(i,j))
                      U(i-1,j) = ramp*bdy_data_u(kl)*depth
-                     if ( waves_method .ne. NO_WAVES ) then
+                     if ( waveforcing_method .ne. NO_WAVES ) then
                         UEuler(i-1,j) = U(i-1,j) - UStokes(i-1,j)
                      end if
                      k = k+1
@@ -613,7 +613,7 @@
 !                    Note (KK): note approximation of sse at vel-time stage
                      V(i,j-1) = ramp*bdy_data_v(kl)*depth &
                                 + _HALF_*sqrt(g*depth)*(z(i,j)-ramp*bdy_data(kl))
-                     if ( waves_method .ne. NO_WAVES ) then
+                     if ( waveforcing_method .ne. NO_WAVES ) then
                         VEuler(i,j-1) = V(i,j-1) - VStokes(i,j-1)
                      end if
                      k = k+1
@@ -625,7 +625,7 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j-1)+D(i,j))
                      V(i,j-1) = ramp*bdy_data_v(kl)*depth
-                     if ( waves_method .ne. NO_WAVES ) then
+                     if ( waveforcing_method .ne. NO_WAVES ) then
                         VEuler(i,j-1) = V(i,j-1) - VStokes(i,j-1)
                      end if
                      k = k+1
@@ -648,7 +648,7 @@
 !                    Note (KK): note approximation of sse at vel-time stage
                      V(i,j) = ramp*bdy_data_v(kl)*depth &
                               - _HALF_*sqrt(g*depth)*(z(i,j)-ramp*bdy_data(kl))
-                     if ( waves_method .ne. NO_WAVES ) then
+                     if ( waveforcing_method .ne. NO_WAVES ) then
                         VEuler(i,j) = V(i,j) - VStokes(i,j)
                      end if
                      k = k+1
@@ -660,7 +660,7 @@
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i,j+1))
                      V(i,j) = ramp*bdy_data_v(kl)*depth
-                     if ( waves_method .ne. NO_WAVES ) then
+                     if ( waveforcing_method .ne. NO_WAVES ) then
                         VEuler(i,j) = V(i,j) - VStokes(i,j)
                      end if
                      k = k+1
