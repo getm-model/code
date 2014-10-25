@@ -45,7 +45,7 @@
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
    use bdy_3d, only: bdyfile_3d,bdyfmt_3d,bdy3d_vel,bdy3d_ramp,bdy3d_sponge_size
    use bdy_3d, only: bdy3d_tmrlx, bdy3d_tmrlx_ucut, bdy3d_tmrlx_max, bdy3d_tmrlx_min
-   use waves, only: waves_method,NO_WAVES,uv_waves_3d,stokes_drift_3d
+   use waves, only: waveforcing_method,NO_WAVES,uv_waves_3d,stokes_drift_3d
    use variables_waves, only: UStokesC,UStokesCadv,uuStokes
    use variables_waves, only: VStokesC,VStokesCadv,vvStokes
 #ifdef _FABM_
@@ -502,7 +502,7 @@
    end if
 #endif
 
-   if (waves_method .ne. NO_WAVES) then
+   if (waveforcing_method .ne. NO_WAVES) then
 !     calculate initial Stokes drift...
       if ( .not. hotstart ) then
          UStokesCadv = UStokesC ; VStokesCadv = VStokesC
@@ -649,7 +649,7 @@
 #ifdef STRUCTURE_FRICTION
    call structure_friction_3d
 #endif
-   if (waves_method .ne. NO_WAVES) then
+   if (waveforcing_method .ne. NO_WAVES) then
 !     calculate new Stokes drift
       call stokes_drift_3d(dt,Dveln,hvel,uuEx,vvEx)
    end if
@@ -688,7 +688,7 @@
       call uv_advect_3d()
       call uv_diffusion_3d()  ! Must be called after uv_advect_3d
 
-      if (waves_method .ne. NO_WAVES) then
+      if (waveforcing_method .ne. NO_WAVES) then
 !        add new wave forcing
          call uv_waves_3d(uuEuler,vvEuler,Dveln,hvel,hun,hvn,uuEx,vvEx)
       end if

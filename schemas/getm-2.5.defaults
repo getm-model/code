@@ -198,12 +198,12 @@
 			</precip_factor>
 		</meteo>
 		<waves>
+			<waveforcing_method>
+				-1
+			</waveforcing_method>
 			<waves_method>
-				0
+				1
 			</waves_method>
-			<waves_datasource>
-				2
-			</waves_datasource>
 			<waves_file>
 				wavesfile.dat
 			</waves_file>

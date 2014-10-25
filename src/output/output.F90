@@ -20,7 +20,7 @@
    use m3d, only: nonhyd_method
    use m3d, only: calc_bottfric,calc_salt,calc_temp
 #endif
-   use waves, only: waves_method,NO_WAVES
+   use waves, only: waveforcing_method,NO_WAVES
 #ifdef TEST_NESTING
    use nesting
 #endif
@@ -181,7 +181,7 @@
    end if
 #endif
 
-   if (waves_method .eq. NO_WAVES) then
+   if (waveforcing_method .eq. NO_WAVES) then
       save_waves = .false.
    end if
 

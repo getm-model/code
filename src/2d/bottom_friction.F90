@@ -36,7 +36,7 @@
    use parameters, only: kappa,avmmol
    use domain, only: imin,imax,jmin,jmax,az,au,av
    use domain, only: bottfric_method,cd_min,z0d_iters,zub0,zvb0
-   use waves, only: waves_method,NO_WAVES,bottom_friction_waves
+   use waves, only: waveforcing_method,NO_WAVES,bottom_friction_waves
    use getm_timers, only: tic,toc,TIM_BOTTFRIC
 !$ use omp_lib
    IMPLICIT NONE
@@ -305,7 +305,7 @@
 
 !$OMP END PARALLEL
 
-   if (waves_method .ne. NO_WAVES) then
+   if (waveforcing_method .ne. NO_WAVES) then
       if (bottfric_method.eq.2 .or. bottfric_method.eq.3) then
          call toc(TIM_BOTTFRIC)
          call bottom_friction_waves(U1,V1,DU1,DV1,Dvel,u_vel,v_vel,velU,velV,ru,rv,p_zub,p_zvb,p_taubmax)
