@@ -877,7 +877,7 @@
 !
 ! !USES:
    use domain, only: rigid_lid
-   use waves, only: waves_method,NO_WAVES
+   use waves, only: waveforcing_method,NO_WAVES
    use variables_waves, only: uuStokes,vvStokes
    IMPLICIT NONE
 !
@@ -950,7 +950,7 @@
 #else
                   uu(i,j,k) = hun(i,j,k) * ramp * bdy_data_uu(k,kl)
 #endif
-                  if (waves_method .ne. NO_WAVES) then
+                  if (waveforcing_method .ne. NO_WAVES) then
                      uuEuler(i,j,k) = uu(i,j,k) - uuStokes(i,j,k)
                   end if
                end do
@@ -974,7 +974,7 @@
 #else
                   uu(i-1,j,k) = hun(i-1,j,k) * ramp * bdy_data_uu(k,kl)
 #endif
-                  if (waves_method .ne. NO_WAVES) then
+                  if (waveforcing_method .ne. NO_WAVES) then
                      uuEuler(i,j,k) = uu(i,j,k) - uuStokes(i,j,k)
                   end if
                end do
@@ -1001,7 +1001,7 @@
                   else
                      vv(i,j-1,k) = hvn(i,j-1,k) * ( ramp*bdy_data_vv(k,kl) + Diff )
                   end if
-                  if (waves_method .ne. NO_WAVES) then
+                  if (waveforcing_method .ne. NO_WAVES) then
                      vvEuler(i,j,k) = vv(i,j,k) - vvStokes(i,j,k)
                   end if
                end do
@@ -1025,7 +1025,7 @@
                   else
                      vv(i,j,k) = hvn(i,j,k) * ( ramp*bdy_data_vv(k,kl) + Diff )
                   end if
-                  if (waves_method .ne. NO_WAVES) then
+                  if (waveforcing_method .ne. NO_WAVES) then
                      vvEuler(i,j,k) = vv(i,j,k) - vvStokes(i,j,k)
                   end if
                end do

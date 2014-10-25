@@ -11,7 +11,7 @@
 !
 ! !USES:
    use meteo, only: metforcing,met_method,meteo_file
-   use waves, only: waves_datasource,WAVES_FROMFILE,waves_file
+   use waves, only: waveforcing_method,WAVES_FROMFILE,waves_file
    use m2d, only: bdy2d
    use bdy_2d, only: bdyfile_2d,bdyfmt_2d
 #ifndef NO_3D
@@ -108,7 +108,7 @@
       call init_meteo_input(meteo_file,n)
    end if
 
-   if (waves_datasource .eq. WAVES_FROMFILE) then
+   if (waveforcing_method .eq. WAVES_FROMFILE) then
       call init_waves_input(trim(input_dir) // waves_file,n)
    end if
 
@@ -169,7 +169,7 @@
       call get_meteo_data(n)
    end if
 
-   if (waves_datasource .eq. WAVES_FROMFILE) then
+   if (waveforcing_method .eq. WAVES_FROMFILE) then
       call get_waves_data(n)
    end if
 

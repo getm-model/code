@@ -28,7 +28,7 @@
 #ifdef _FABM_
    use getm_fabm, only: fabm_calc,model
 #endif
-   use waves, only: waves_method,NO_WAVES
+   use waves, only: waveforcing_method,NO_WAVES
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -187,7 +187,7 @@
       if (status .NE. NF90_NOERR) go to 10
 
 
-      if (waves_method .ne. NO_WAVES) then
+      if (waveforcing_method .ne. NO_WAVES) then
 
          status = nf90_def_var(ncid, "UEulerInt", nf90_double, &
                                   (/ xdim_id, ydim_id /), UEulerInt_id)

@@ -127,7 +127,7 @@
    use domain, only: dx
 #endif
    use variables_2d, only: UEuler
-   use waves, only: waves_method,NO_WAVES
+   use waves, only: waveforcing_method,NO_WAVES
    use variables_waves, only: UStokes
    use domain, only: have_boundaries
    use variables_2d, only: dtm,D,z,UEx,U,DU,SlUx,Slru,ru,V,DV
@@ -247,7 +247,7 @@
    CALL toc(TIM_MOMENTUMH)
    call mirror_bdy_2d(UEuler,U_TAG)
 
-   if (waves_method .ne. NO_WAVES) then
+   if (waveforcing_method .ne. NO_WAVES) then
       U = UEuler + UStokes
    end if
 
@@ -323,7 +323,7 @@
    use domain, only: dy
 #endif
    use variables_2d, only: VEuler
-   use waves, only: waves_method,NO_WAVES
+   use waves, only: waveforcing_method,NO_WAVES
    use variables_waves, only: VStokes
    use domain, only: have_boundaries
    use variables_2d, only: dtm,D,z,VEx,V,DV,SlVx,Slrv,rv,U,DU
@@ -436,7 +436,7 @@
    CALL toc(TIM_MOMENTUMH)
    call mirror_bdy_2d(VEuler,V_TAG)
 
-   if (waves_method .ne. NO_WAVES) then
+   if (waveforcing_method .ne. NO_WAVES) then
       V = VEuler + VStokes
    end if
 
