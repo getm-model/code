@@ -112,7 +112,7 @@
 !
 ! !USES:
    use domain,     only: imin,imax,jmin,jmax,kmax,bottfric_method,rdrag
-   use waves , only: waves_method,NO_WAVES,WAVES_VF
+   use waves , only: waveforcing_method,waves_method,NO_WAVES,WAVES_VF
    use waves , only: waves_bbl_method,NO_WBBL
    IMPLICIT NONE
 !
@@ -253,7 +253,7 @@
    taubmax_3d   => taub
 
 
-   if (waves_method .ne. NO_WAVES) then
+   if (waveforcing_method .ne. NO_WAVES) then
 
       allocate(UEulerAdv(I2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_3d: Error allocating memory (UEulerAdv)'
