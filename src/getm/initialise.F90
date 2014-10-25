@@ -76,7 +76,7 @@
 #endif
 #endif
    use meteo, only: metforcing,met_method,init_meteo,do_meteo
-   use waves, only: init_waves,do_waves,waves_method,NO_WAVES
+   use waves, only: init_waves,do_waves,waveforcing_method,NO_WAVES
    use integration,  only: MinN,MaxN
    use exceptions
    IMPLICIT NONE
@@ -311,7 +311,7 @@
       end if
    end if
 
-   if (waves_method .ne. NO_WAVES) then
+   if (waveforcing_method .ne. NO_WAVES) then
       call do_waves(MinN-1,Dvel)
    end if
 
