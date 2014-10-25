@@ -22,7 +22,7 @@
    use variables_2d
 #ifndef NO_3D
    use variables_3d
-   use waves, only: waves_method,NO_WAVES
+   use waves, only: waveforcing_method,NO_WAVES
    use variables_waves
 #ifdef GETM_BIO
    use bio, only: bio_calc
@@ -171,7 +171,7 @@
       if (status .NE. NF90_NOERR) go to 10
 
 
-      if (waves_method .ne. NO_WAVES) then
+      if (waveforcing_method .ne. NO_WAVES) then
 
          status = &
          nf90_put_var(ncid,UEulerInt_id,UEulerInt(_2D_W_HOT_),start,edges)
