@@ -203,35 +203,35 @@
 		</element>
 
 		<element name="waves" label="waves">
-			<element name="waves_method" type="int" label="waves method">
+			<element name="waveforcing_method" type="int" label="waveforcing method">
 				<options>
-					<option value="0" label="no wave forcing" />
-					<option value="1" label="wave forcing by Radiation Stress" />
-					<option value="2" label="wave forcing by Vortex Force" />
-					<option value="3" label="wave forcing only via bottom friction" />
+					<option value="-1" label="no waveforcing" />
+					<option value="0" label="waveforcing data written from external" />
+					<option value="1" label="waveforcing data read from file" />
+					<option value="2" label="waveforcing data derived from wind data" />
 				</options>
 			</element>
-			<element name="waves_datasource" type="int" label="source of wave data">
+			<element name="waves_method" type="int" label="waves method">
 				<options>
-					<option value="0" label="wave data written from external" />
-					<option value="1" label="wave data read from file" />
-					<option value="2" label="wave data derived from wind data" />
+					<option value="1" label="waves included via Radiation Stress" />
+					<option value="2" label="waves included via Vortex Force" />
+					<option value="3" label="waves included only via bottom friction" />
 				</options>
 			</element>
 			<element name="waves_file" type="string" label="name of waves files">
-				<condition type="eq" variable="./waves_datasource" value="1"/>
+				<condition type="eq" variable="./waveforcing_method" value="1"/>
 			</element>
 			<element name="on_grid" type="bool" label="Are wave data given on grid-points?">
-				<condition type="eq" variable="./waves_datasource" value="1"/>
+				<condition type="eq" variable="./waveforcing_method" value="1"/>
 			</element>
 			<element name="waves_windscalefactor" type="float" label="scalefactor for wind wave parameterisation">
-				<condition type="eq" variable="./waves_datasource" value="2"/>
+				<condition type="eq" variable="./waveforcing_method" value="2"/>
 			</element>
 			<element name="max_depth_windwaves" type="float" label="truncate depth for wind wave parameterisation" unit="m">
-				<condition type="eq" variable="./waves_datasource" value="2"/>
+				<condition type="eq" variable="./waveforcing_method" value="2"/>
 			</element>
 			<element name="waves_ramp" type="int" label="number of time steps for forcing spin-up" unit="micro time steps">
-				<condition type="ne" variable="./waves_method" value="0"/>
+				<condition type="ne" variable="./waveforcing_method" value="0"/>
 			</element>
 			<element name="waves_bbl_method" type="int" label="wave BBL method">
 				<options>

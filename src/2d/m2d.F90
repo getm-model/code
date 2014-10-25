@@ -28,7 +28,7 @@
    use advection, only: init_advection,print_adv_settings,NOADV
    use les, only: les_mode,LES_MOMENTUM
    use halo_zones, only: update_2d_halo,wait_halo,H_TAG
-   use waves, only: uv_waves,waves_method,NO_WAVES
+   use waves, only: uv_waves,waveforcing_method,NO_WAVES
    use variables_waves, only: UStokesC,UStokesCint,UStokes
    use variables_waves, only: VStokesC,VStokesCint,VStokes
    use variables_2d
@@ -502,7 +502,7 @@
 
    end if
 
-   if (waves_method .ne. NO_WAVES) then
+   if (waveforcing_method .ne. NO_WAVES) then
 !     calculate initial Stokes drift...
       call stokes_drift(dtm,Dvel,UEx,VEx)
 !     ...and initialise Eulerian transports accordingly
@@ -577,8 +577,8 @@
 
    call toc(TIM_INTEGR2D)
 
-   if (waves_method .ne. NO_WAVES) then
-      call uv_waves(UEuler,VEuler,Dvel,DU,DV,UEx,VEx) ! add forcing
+   if (waveforcing_method .ne. NO_WAVES) then
+      call uv_waves(UEuler,VEuler,UStokes,VStokes,UStokesC,VStokesC,Dvel,DU,DV,UEx,VEx) ! add forcing
       call stokes_drift(dtm,Dvel,UEx,VEx)             ! calculate new Stokes drift
    end if
 
@@ -594,7 +594,7 @@
       call tic(TIM_INTEGR2D)
       Uint=Uint+U
       Vint=Vint+V
-      if (waves_method .ne. NO_WAVES) then
+      if (waveforcing_method .ne. NO_WAVES) then
          UEulerInt = UEulerInt + UEuler
          VEulerInt = VEulerInt + VEuler
          UStokesCint = UStokesCint + UStokesC

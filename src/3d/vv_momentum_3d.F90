@@ -74,7 +74,7 @@
    use variables_3d, only: idpdy
    use halo_zones, only: update_3d_halo,wait_halo,V_TAG
    use meteo, only: tausy,airp
-   use waves, only: waves_method,NO_WAVES
+   use waves, only: waveforcing_method,NO_WAVES
    use variables_waves, only: vvStokes
    use m3d, only: calc_ip,ip_fac
    use m3d, only: vel_check,min_vel,max_vel
@@ -426,7 +426,7 @@
    call toc(TIM_VVMOMENTUMH)
    call mirror_bdy_3d(vvEuler,V_TAG)
 
-   if (waves_method .ne. NO_WAVES) then
+   if (waveforcing_method .ne. NO_WAVES) then
       vv = vvEuler + vvStokes
    end if
 

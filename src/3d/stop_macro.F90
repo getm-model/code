@@ -26,7 +26,8 @@
    use variables_3d, only: uu,vv,uuEuler,vvEuler
    use variables_3d, only: Uadv,Vadv,UEulerAdv,VEulerAdv,Uadvf,Vadvf
    use variables_3d, only: idpdx_hs,idpdy_hs,idpdx_nh,idpdy_nh
-   use waves, only: uv_waves,waves_method,NO_WAVES
+   use waves, only: uv_waves,waveforcing_method,NO_WAVES
+   use variables_waves, only: UStokesCadv,VStokesCadv
    use variables_waves, only: UStokesCint,VStokesCint
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
@@ -76,8 +77,8 @@
       call bottom_friction(UEulerAdv,VEulerAdv,Dun,Dvn,Dveln,ru,rv)
       call uv_advect(Uadvf,Vadvf,Uadv,Vadv,Dn,Dveln,Dun,Dvn)
       call uv_diffusion(0,UEulerAdv,VEulerAdv,Dn,Dun,Dvn) ! Has to be called after uv_advect.
-      if (waves_method .ne. NO_WAVES) then
-         call uv_waves(UEulerAdv,VEulerAdv,Dveln,Dun,Dvn,UEx,VEx) ! add wave forcing
+      if (waveforcing_method .ne. NO_WAVES) then
+         call uv_waves(UEulerAdv,VEulerAdv,Uadv-UEulerAdv,VAdv-VEulerAdv,UStokesCadv,VStokesCadv,Dveln,Dun,Dvn,UEx,VEx) ! add wave forcing
       end if
 
 !$OMP END SINGLE
@@ -285,7 +286,7 @@
    if (reset) then
       Uint= _ZERO_
       Vint= _ZERO_
-      if (waves_method .ne. NO_WAVES) then
+      if (waveforcing_method .ne. NO_WAVES) then
          UEulerInt = _ZERO_
          VEulerInt = _ZERO_
          UStokesCint = _ZERO_
