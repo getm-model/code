@@ -28,15 +28,15 @@
    public stokes_drift_3d
    public bottom_friction_waves,wbbl_rdrag
 
-   integer,public,parameter  :: NO_WAVES=0
-   integer,public,parameter  :: WAVES_RS=1
-   integer,public,parameter  :: WAVES_VF=2
-   integer,public,parameter  :: WAVES_NOSTOKES=3
-   integer,public            :: waves_method=NO_WAVES
+   integer,public,parameter  :: NO_WAVES=-1
    integer,public,parameter  :: WAVES_FROMEXT=0
    integer,public,parameter  :: WAVES_FROMFILE=1
    integer,public,parameter  :: WAVES_FROMWIND=2
-   integer,public            :: waves_datasource=WAVES_FROMWIND
+   integer,public            :: waveforcing_method=NO_WAVES
+   integer,public,parameter  :: WAVES_RS=1
+   integer,public,parameter  :: WAVES_VF=2
+   integer,public,parameter  :: WAVES_NOSTOKES=3
+   integer,public            :: waves_method=WAVES_RS
    character(LEN = PATH_MAX),public :: waves_file
    logical,public            :: on_grid=.true.
    integer,public,parameter  :: NO_WBBL=0
@@ -110,7 +110,7 @@
 ! the simulation.
 !
 ! !LOCAL VARIABLES
-   namelist /waves/ waves_method,waves_datasource,waves_file,on_grid,  &
+   namelist /waves/ waveforcing_method,waves_method,waves_file,on_grid,&
                     waves_windscalefactor,max_depth_windwaves,         &
                     waves_ramp,waves_bbl_method
 !EOP
@@ -125,16 +125,38 @@
    LEVEL1 'init_waves'
 
    read(NAMLST,waves)
-   select case (waves_method)
+
+   select case (waveforcing_method)
       case(NO_WAVES)
-         LEVEL2 'no wave forcing'
+         LEVEL2 'no waveforcing'
          return
+      case(WAVES_FROMEXT)
+         LEVEL2 'waveforcing data written from external'
+      case(WAVES_FROMFILE)
+         LEVEL2 'waveforcing data read from file: ',trim(waves_file)
+         LEVEL3 'on_grid = ',on_grid
+      case(WAVES_FROMWIND)
+         LEVEL2 'waveforcing data derived from wind data'
+         if ( .not. metforcing ) call getm_error("init_waves()",       &
+                         "metforcing must be active for WAVES_FROMWIND")
+         LEVEL3 'waves_windscalefactor = ',real(waves_windscalefactor)
+         if ( max_depth_windwaves .lt. _ZERO_) then
+            max_depth_windwaves = 99999.0
+         else
+            LEVEL3 'max_depth_windwaves = ',real(max_depth_windwaves)
+         end if
+      case default
+         call getm_error("init_waves()", &
+                         "no valid waveforcing_method")
+   end select
+
+   select case (waves_method)
       case(WAVES_RS)
-         LEVEL2 'wave forcing by Radiation Stress'
+         LEVEL2 'waves included via Radiation Stress'
       case(WAVES_VF)
-         LEVEL2 'wave forcing by Vortex Force'
+         LEVEL2 'waves included via Vortex Force'
       case(WAVES_NOSTOKES)
-         LEVEL2 'wave forcing only via bottom friction'
+         LEVEL2 'waves included only via bottom friction'
       case default
          call getm_error("init_waves()", &
                          "no valid waves_method")
@@ -147,27 +169,6 @@
    else
       kD_deepthresh = max( 10.0d0 , 1.25d0*kmax )
    end if
-
-   select case (waves_datasource)
-      case(WAVES_FROMEXT)
-         LEVEL2 'wave data written from external'
-      case(WAVES_FROMFILE)
-         LEVEL2 'wave data read from file: ',trim(waves_file)
-         LEVEL3 'on_grid = ',on_grid
-      case(WAVES_FROMWIND)
-         LEVEL2 'wave data derived from wind data'
-         if ( .not. metforcing ) call getm_error("init_waves()",       &
-                         "metforcing must be active for WAVES_FROMWIND")
-         LEVEL3 'waves_windscalefactor = ',real(waves_windscalefactor)
-         if ( max_depth_windwaves .lt. _ZERO_) then
-            max_depth_windwaves = 99999.0
-         else
-            LEVEL3 'max_depth_windwaves = ',real(max_depth_windwaves)
-         end if
-      case default
-         call getm_error("init_waves()", &
-                         "no valid waves_datasource")
-   end select
 
    if (waves_ramp .gt. 1) then
       LEVEL2 'waves_ramp=',waves_ramp
@@ -234,7 +235,7 @@
 
    call tic(TIM_WAVES)
 
-   select case (waves_datasource)
+   select case (waveforcing_method)
       case(WAVES_FROMFILE)
          new_waves = .true.
          do j=jmin-HALO,jmax+HALO
