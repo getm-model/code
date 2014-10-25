@@ -17,7 +17,7 @@
    use ncdf_restart
 #ifndef NO_3D
    use vertical_coordinates,only: restart_with_ho,restart_with_hn
-   use waves, only: waves_method,NO_WAVES
+   use waves, only: waveforcing_method,NO_WAVES
 #ifdef GETM_BIO
    use bio, only: bio_calc
    use getm_bio, only: bio_init_method
@@ -216,7 +216,7 @@
       end if
 
 
-      if (waves_method .ne. NO_WAVES) then
+      if (waveforcing_method .ne. NO_WAVES) then
 
          varnam="UEulerInt"
          status = nf90_inq_varid(ncid, "UEulerInt", UEulerInt_id)

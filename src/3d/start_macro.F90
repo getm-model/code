@@ -31,7 +31,7 @@
    use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth
    use m2d, only: z,Uint,Vint,UEulerInt,VEulerInt
    use m3d, only: M
-   use waves, only: waves_method,NO_WAVES
+   use waves, only: waveforcing_method,NO_WAVES
    use variables_waves, only: UStokesCint,UStokesCadv
    use variables_waves, only: VStokesCint,VStokesCadv
    use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn,Dn,Dveln,Dun,Dvn
@@ -104,7 +104,7 @@
    split = _ONE_/M
    Uadv = split*Uint
    Vadv = split*Vint
-   if (waves_method .ne. NO_WAVES) then
+   if (waveforcing_method .ne. NO_WAVES) then
       UEulerAdv   = split*UEulerInt
       VEulerAdv   = split*VEulerInt
       UStokesCadv = split*UStokesCint

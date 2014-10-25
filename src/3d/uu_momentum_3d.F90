@@ -66,7 +66,7 @@
    use variables_3d, only: idpdx
    use halo_zones, only: update_3d_halo,wait_halo,U_TAG
    use meteo, only: tausx,airp
-   use waves, only: waves_method,NO_WAVES
+   use waves, only: waveforcing_method,NO_WAVES
    use variables_waves, only: uuStokes
    use m3d, only: calc_ip,ip_fac
    use m3d, only: vel_check,min_vel,max_vel
@@ -390,7 +390,7 @@
    call toc(TIM_UUMOMENTUMH)
    call mirror_bdy_3d(uuEuler,U_TAG)
 
-   if (waves_method .ne. NO_WAVES) then
+   if (waveforcing_method .ne. NO_WAVES) then
       uu = uuEuler + uuStokes
    end if
 
