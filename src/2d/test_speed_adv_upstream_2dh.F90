@@ -14,8 +14,8 @@
 ! !LOCAL VARIABLES
 !  basic eqstate interaction variables
    integer :: i,j,n
-   integer, parameter :: Nmax=1000000
-   integer, parameter :: imin=1,imax=100,jmin=1,jmax=1
+   integer, parameter :: Nmax=10000
+   integer, parameter :: imin=1,imax=100,jmin=1,jmax=100
 
    REALTYPE :: Ah=_ZERO_
    REALTYPE :: dx=100.,dy=100.
