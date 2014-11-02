@@ -211,10 +211,10 @@
    jextr = jh - jl + 1
    kmax=kdum
 #endif
+   ioff = il - 1
+   joff = jl - 1
 !  prepare parallel run
    call part_domain()
-   ioff = ioff + il - 1
-   joff = joff + jl - 1
 
 !  check grid and dimensions
 !  dynamic_allocations_domain_1.h will be included when reading
