@@ -182,7 +182,7 @@
 		</meteo>
 		<waves>
 			<waveforcing_method>
-				-1
+				0
 			</waveforcing_method>
 			<waves_method>
 				1
