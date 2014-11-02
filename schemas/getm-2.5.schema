@@ -213,10 +213,10 @@
 		<element name="waves" label="waves">
 			<element name="waveforcing_method" type="int" label="waveforcing method">
 				<options>
-					<option value="-1" label="no waveforcing" />
-					<option value="0" label="waveforcing data written from external" />
-					<option value="1" label="waveforcing data read from file" />
-					<option value="2" label="waveforcing data derived from wind data" />
+					<option value="0" label="no waveforcing" />
+					<option value="1" label="waveforcing data derived from wind data" />
+					<option value="2" label="waveforcing data read from file" />
+					<option value="3" label="waveforcing data written from external" />
 				</options>
 			</element>
 			<element name="waves_method" type="int" label="waves method">
