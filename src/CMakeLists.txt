@@ -389,6 +389,11 @@ install(TARGETS getm_exe DESTINATION bin)
 
 # Begin testing section
 
-add_custom_target(test_all COMMENT "building tests - nothing yet :-)")
+# add_custom_target(test_all COMMENT "building tests - nothing yet :-)")
+add_executable(test_speed_adv_upstream_2dh EXCLUDE_FROM_ALL
+               2d/test_speed_adv_upstream_2dh.F90
+              )
+add_custom_target(test_all WORKING_DIRECTORY tests COMMENT "building tests")
+add_dependencies( test_all test_speed_adv_upstream_2dh )
 
 # End of testing section
