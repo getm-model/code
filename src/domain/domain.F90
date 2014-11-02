@@ -186,31 +186,24 @@
    end if
 
 #ifdef STATIC
+!  for backward compatibility
    if (il.eq.-1 .and. ih.eq.-1) then
       il = 1 ; ih = iextr
-   else if (ih-il+1 .ne. iextr) then
-      call getm_error("init_domain()", &
-                      "il,ih do not correspond with iextr")
    end if
    if (jl.eq.-1 .and. jh.eq.-1) then
       jl = 1 ; jh = jextr
-   else if (jh-jl+1 .ne. jextr) then
-      call getm_error("init_domain()", &
-                      "jl,jh do not correspond with jextr")
    end if
 #else
-   if (il.lt.1 .or. ih.lt.il) then
-      call getm_error("init_domain()", &
-                      "invalid il,ih")
-   end if
-   if (jl.lt.1 .or. jh.lt.jl) then
-      call getm_error("init_domain()", &
-                      "invalid jl,jh")
-   end if
    iextr = ih - il + 1
    jextr = jh - jl + 1
    kmax=kdum
 #endif
+   if (il.lt.1 .or. ih.lt.il .or. ih-il+1.ne.iextr) then
+      call getm_error("init_domain()","invalid il,ih")
+   end if
+   if (jl.lt.1 .or. jh.lt.jl .or. jh-jl+1.ne.jextr) then
+      call getm_error("init_domain()","invalid jl,jh")
+   end if
    ioff = il - 1
    joff = jl - 1
 !  prepare parallel run
