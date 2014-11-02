@@ -144,7 +144,7 @@
 ! Perform straight-forward tests on this input:
 
       if ( ((ioff_read+imax) .LT. 1) .OR. ((joff_read+jmax) .LT. 1) .OR. &
-          (ioff_read .GT. iextr).OR. (joff_read.GT. jextr)    ) then
+          (ioff_read+1 .GT. iextr).OR. (joff_read+1 .GT. jextr)    ) then
          FATAL 'read_par_setup: Line ',iline
          FATAL '   Local grid fully outside global grid'
          stop
