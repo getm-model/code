@@ -28,10 +28,10 @@
    public stokes_drift_3d
    public bottom_friction_waves,wbbl_rdrag
 
-   integer,public,parameter  :: NO_WAVES=-1
-   integer,public,parameter  :: WAVES_FROMEXT=0
-   integer,public,parameter  :: WAVES_FROMFILE=1
-   integer,public,parameter  :: WAVES_FROMWIND=2
+   integer,public,parameter  :: NO_WAVES=0
+   integer,public,parameter  :: WAVES_FROMWIND=1
+   integer,public,parameter  :: WAVES_FROMFILE=2
+   integer,public,parameter  :: WAVES_FROMEXT=3
    integer,public            :: waveforcing_method=NO_WAVES
    integer,public,parameter  :: WAVES_RS=1
    integer,public,parameter  :: WAVES_VF=2
@@ -130,11 +130,6 @@
       case(NO_WAVES)
          LEVEL2 'no waveforcing'
          return
-      case(WAVES_FROMEXT)
-         LEVEL2 'waveforcing data written from external'
-      case(WAVES_FROMFILE)
-         LEVEL2 'waveforcing data read from file: ',trim(waves_file)
-         LEVEL3 'on_grid = ',on_grid
       case(WAVES_FROMWIND)
          LEVEL2 'waveforcing data derived from wind data'
          if ( .not. metforcing ) call getm_error("init_waves()",       &
@@ -145,6 +140,11 @@
          else
             LEVEL3 'max_depth_windwaves = ',real(max_depth_windwaves)
          end if
+      case(WAVES_FROMFILE)
+         LEVEL2 'waveforcing data read from file: ',trim(waves_file)
+         LEVEL3 'on_grid = ',on_grid
+      case(WAVES_FROMEXT)
+         LEVEL2 'waveforcing data written from external'
       case default
          call getm_error("init_waves()", &
                          "no valid waveforcing_method")
@@ -236,21 +236,6 @@
    call tic(TIM_WAVES)
 
    select case (waveforcing_method)
-      case(WAVES_FROMFILE)
-         new_waves = .true.
-         do j=jmin-HALO,jmax+HALO
-            do i=imin-HALO,imax+HALO
-               if ( az(i,j) .gt. 0 ) then
-                  if (waveL(i,j) .gt. _ZERO_) then
-                     waveK(i,j) = twopi / waveL(i,j)
-                     waveT(i,j) = twopi / sqrt( grav*waveK(i,j)*tanh(waveK(i,j)*D(i,j)) )
-                  else
-                     waveK(i,j) = kD_deepthresh / D(i,j)
-                     waveT(i,j) = _ZERO_
-                  end if
-               end if
-            end do
-         end do
       case(WAVES_FROMWIND)
          new_waves = .true.
          do j=jmin-HALO,jmax+HALO
@@ -282,6 +267,21 @@
                      waveT(i,j) = _ZERO_
                      waveK(i,j) = kD_deepthresh / D(i,j)
                      waveL(i,j) = _ZERO_
+                  end if
+               end if
+            end do
+         end do
+      case(WAVES_FROMFILE)
+         new_waves = .true.
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO
+               if ( az(i,j) .gt. 0 ) then
+                  if (waveL(i,j) .gt. _ZERO_) then
+                     waveK(i,j) = twopi / waveL(i,j)
+                     waveT(i,j) = twopi / sqrt( grav*waveK(i,j)*tanh(waveK(i,j)*D(i,j)) )
+                  else
+                     waveK(i,j) = kD_deepthresh / D(i,j)
+                     waveT(i,j) = _ZERO_
                   end if
                end if
             end do
