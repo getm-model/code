@@ -33,6 +33,7 @@
 
    integer                             :: grid_type      = 1
    integer                             :: vert_cord      = 1
+   integer                             :: il=-1,ih=-1,jl=-1,jh=-1
 !  global index range
    integer                             :: ilg=-1,ihg=-1,jlg=-1,jhg=-1
 !  local index range
@@ -154,7 +155,6 @@
    character(len=PATH_MAX)   :: min_depth_file           = 'minimum_depth.dat'
    character(len=PATH_MAX)   :: bathymetry_adjust_file   = 'bathymetry.adjust'
    character(len=PATH_MAX)   :: mask_adjust_file         = 'mask.adjust'
-   integer                   :: il=-1,ih=-1,jl=-1,jh=-1
    namelist /domain/ &
              vert_cord,maxdepth,                               &
              bathy_format,bathymetry,vel_depth_method,         &
@@ -185,12 +185,27 @@
       stop 'crit_depth must be larger than 2.5 time min_depth'
    end if
 
-#ifndef STATIC
+#ifdef STATIC
+!  for backward compatibility
+   if (il+ih+jl+jh .eq. -4) then
+      il = 1 ; ih = iextr
+      jl = 1 ; jh = jextr
+   end if
+#else
+   iextr = ih - il + 1
+   jextr = jh - jl + 1
    kmax=kdum
 #endif
+   if (il.lt.1 .or. ih.lt.il .or. ih-il+1.ne.iextr) then
+      call getm_error("init_domain()","invalid il,ih")
+   end if
+   if (jl.lt.1 .or. jh.lt.jl .or. jh-jl+1.ne.jextr) then
+      call getm_error("init_domain()","invalid jl,jh")
+   end if
+   ioff = il - 1
+   joff = jl - 1
 !  prepare parallel run
    call part_domain()
-   il=imin ; ih=imax ; jl=jmin ; jh=jmax
 
 !  check grid and dimensions
 !  dynamic_allocations_domain_1.h will be included when reading
@@ -292,7 +307,7 @@
    call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
    call wait_halo(H_TAG)
    au = mask
-   
+
 !  mask for V-points
    mask=_ZERO_
    do j=jmin-HALO,jmax+HALO-1

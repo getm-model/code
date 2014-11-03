@@ -384,7 +384,7 @@
 #ifndef STATIC
    integer, intent(out)                :: imin,imax,jmin,jmax
 #endif
-   integer, intent(out)                :: ioff,joff
+   integer, intent(inout)              :: ioff,joff
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -408,7 +408,6 @@
    STDERR imin,imax,jmin,jmax
    stop
 #endif
-      ioff=0 ; joff=0
       return
    end if
 
@@ -442,6 +441,9 @@
 !         STDERR 'dynamic dims ',dims
 #endif
       case(MESH_FROM_FILE)
+#ifndef STATIC
+         imin=1 ; jmin=1
+#endif
          call read_par_setup(par_setup,nprocs,myid,imax,jmax,iextr,jextr, &
                              ioff,joff,neighbours,numthreads)
          left  = neighbours(1) ; if (left  .eq. -1) left  = MPI_PROC_NULL
@@ -523,8 +525,8 @@
          jmin=1;jmax=jextr/dims(1)+1
       end if
 #endif
-      ioff=coords(2)*imax
-      joff=coords(1)*jmax
+      ioff = ioff + coords(2)*imax
+      joff = joff + coords(1)*jmax
    end if
 
    call MPI_data_types(imin,imax,jmin,jmax,kmax)
