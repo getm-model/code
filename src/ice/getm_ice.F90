@@ -15,7 +15,8 @@
    use time, only: julianday, secondsofday, timestep
    use domain, only: imin,imax,jmin,jmax,kmax,az
    use domain, only: lonc,latc
-   use meteo, only: shf,swr,albedo,precip,evap,tcc,t2,airp,hum,u10,v10,kelvin
+   use meteo, only: shf,swr,albedo,precip,evap,tcc,t2,airp,hum,u10,v10,kelvin, &
+                    tausx,tausy
    use parameters, only: rho_0
    use variables_3d, only: rho,rho_0,S,T,hn
    use ice_winton, only: init_ice_winton, do_ice_winton
@@ -181,12 +182,16 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j
+   integer                   :: i,j,ii,jj
 #if 1
    integer                   :: hum_method=1
    integer                   :: back_radiation_method=1
    integer                   :: fluxes_method=1
 #endif
+   logical                   :: damp_stress=.false.
+   REALTYPE                  :: taucoef=5.0
+   REALTYPE                  :: tauh=0.5
+   REALTYPE                  :: taudamp
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -217,6 +222,18 @@
                          T(i,j,kmax),shf(i,j),swr(i,j),precip(i,j), &
                          ice_hs(i,j),ice_hi(i,j),ice_t1(i,j),ice_t2(i,j), &
                          ice_ts(i,j),albedo(i,j),ice_tmelt(i,j),ice_bmelt(i,j))
+                  if (damp_stress) then
+                     taudamp = _ZERO_
+                     do ii=i-1,i+1
+                        do jj=j-1,j+1
+                           taudamp = taudamp + _ONE_ - _ONE_/(_ONE_ + &
+                               exp(-taucoef/tauh*(ice_hi(ii,jj)-tauh)))
+                        end do
+                     end do
+                     taudamp = taudamp / 9.0d0
+                     tausx = tausx * taudamp
+                     tausy = tausy * taudamp
+                  end if
                else
                   ice_hs(i,j) = -9999.
                   ice_hi(i,j) = -9999.
