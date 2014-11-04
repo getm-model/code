@@ -103,7 +103,6 @@
    REAL_4B                   :: bdy_data_u(1500)
    REAL_4B                   :: bdy_data_v(1500)
    REAL_4B, allocatable      :: bdy_times(:)
-   integer, parameter        :: comm_method=-1
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
