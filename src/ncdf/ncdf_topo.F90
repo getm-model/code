@@ -183,6 +183,8 @@ contains
                         "Could not get 'dimlen' of 'bathymetry' in "//trim(filename)//".")
    endif
 
+   LEVEL3 'iextr (iextr_topo): ',iextr,'(',dimlen,')'
+
    if (dimlen .lt. ih) then
       call getm_error("ncdf_check_grid()",   &
                       "Length of first dimension in 'bathymetry' inconsistent.")
@@ -194,16 +196,12 @@ contains
                         "Could not get 'dimlen' of 'bathymetry' in "//trim(filename)//".")
    endif
 
+   LEVEL3 'jextr (jextr_topo): ',jextr,'(',dimlen,')'
+
    if (dimlen .lt. jh) then
       call getm_error("ncdf_check_grid()",   &
                       "Length of second dimension in 'bathymetry' inconsistent.")
    endif
-
-   LEVEL3 'iextr, jextr: ',iextr,jextr
-
-#ifndef STATIC
-#include "../domain/dynamic_allocations_domain_1.h"
-#endif
 
 !  Does the bathymetry have proper axis defined?
 !  We will obtain the names of the two dimensions and
@@ -246,6 +244,9 @@ contains
 !  (different from GLOBAL range only for parallel runs)
    ill = imin-HALO+iskipl; jll = jmin-HALO+jskipl;
    ihl = ihg-ilg+ill;      jhl = jhg-jlg+jll;
+
+   LEVEL3 'mapping ill:ihl => ilg:ihg : ',ill,':',ihl,'=>',ilg,':',ihg
+   LEVEL3 'mapping jll:jhl => jlg:jhg : ',jll,':',jhl,'=>',jlg,':',jhg
 
 !  Read bathymetry
    call ncdf_read_2d(ncid,bathymetry_id,H(ill:ihl,jll:jhl),ilg,ihg,jlg,jhg)

@@ -207,13 +207,11 @@
 !  prepare parallel run
    call part_domain()
 
-!  check grid and dimensions
-!  dynamic_allocations_domain_1.h will be included when reading
-!  the topo file
-   call read_topo_file(bathy_format,bathymetry)
 #ifndef STATIC
-#include "dynamic_allocations_domain_2.h"
+#include "dynamic_allocations_domain.h"
 #endif
+
+   call read_topo_file(bathy_format,bathymetry)
 
    select case (vert_cord)
       case(_SIGMA_COORDS_)
