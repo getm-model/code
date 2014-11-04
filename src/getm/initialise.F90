@@ -258,7 +258,7 @@
    if (hotstart) then
       LEVEL1 'hotstart'
       if (myid .ge. 0) then
-         write(buf,'(I3.3)') myid
+         write(buf,'(I4.4)') myid
          buf = '.' // trim(buf) // '.in'
       else
          buf = '.in'
