@@ -1254,8 +1254,8 @@ STDERR 'TWOD_NONBLOCKING'
 !-------------------------------------------------------------------------
 !BOC
 
-   CALL MPI_GATHER(flag,1,MPI_INTEGER,flags,1,MPI_INTEGER,0,comm_hd, ierr);
-   CALL MPI_BCAST(flags,nprocs,MPI_INTEGER,0,comm_hd,ierr)
+   CALL MPI_GATHER(flag,1,MPI_INTEGER,flags,1,MPI_INTEGER,0,active_comm, ierr);
+   CALL MPI_BCAST(flags,nprocs,MPI_INTEGER,0,active_comm,ierr)
 
    return
    end subroutine set_flag_mpi
