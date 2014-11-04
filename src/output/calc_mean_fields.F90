@@ -13,7 +13,7 @@
    use domain, only: imax,imin,jmax,jmin,kmax
    use domain, only: az,au,av
    use meteo, only: swr
-   use m3d, only: M,calc_temp,calc_salt
+   use m3d, only: M,update_temp,update_salt
    use m3d, only: nonhyd_method
    use variables_3d, only: do_numerical_analyses_3d
    use variables_3d, only: hn,uu,hun,vv,hvn,ww,taub
@@ -132,7 +132,7 @@
          allocate(phydis_int_mean(I2DFIELD),stat=rc)
            if (rc /= 0) &
               stop 'calc_mean_fields.F90: Error allocating memory (phydis_int_mean)'
-         if (calc_temp) then
+         if (update_temp) then
             allocate(nummix_T_mean(I3DFIELD),stat=rc)
             if (rc /= 0) &
                stop 'calc_mean_fields.F90: Error allocating memory (nummix_T_mean)'
@@ -151,7 +151,7 @@
             if (rc /= 0) &
                stop 'calc_mean_fields.F90: Error allocating memory (nummix_T_int_mean)'
          end if
-         if (calc_salt) then
+         if (update_salt) then
             allocate(nummix_S_mean(I3DFIELD),stat=rc)
             if (rc /= 0) &
                stop 'calc_mean_fields.F90: Error allocating memory (nummix_S_mean)'
@@ -218,14 +218,14 @@
             numdis_3d_old_mean=_ZERO_; numdis_int_mean=_ZERO_
 #endif
             phydis_3d_mean=_ZERO_; phydis_int_mean=_ZERO_
-            if (calc_temp) then
+            if (update_temp) then
                nummix_T_mean=_ZERO_
 #ifdef _NUMERICAL_ANALYSES_OLD_
                nummix_T_old_mean=_ZERO_; nummix_T_int_mean=_ZERO_
 #endif
                phymix_T_mean=_ZERO_; phymix_T_int_mean=_ZERO_
             end if
-            if (calc_salt) then
+            if (update_salt) then
                nummix_S_mean=_ZERO_
 #ifdef _NUMERICAL_ANALYSES_OLD_
                nummix_S_old_mean=_ZERO_; nummix_S_int_mean=_ZERO_
@@ -294,7 +294,7 @@
 #endif
          phydis_3d_mean = phydis_3d_mean + phydis_3d*hn
          phydis_int_mean = phydis_int_mean + phydis_int
-         if (calc_temp) then
+         if (update_temp) then
             nummix_T_mean = nummix_T_mean + nummix_T*hn
 #ifdef _NUMERICAL_ANALYSES_OLD_
             nummix_T_old_mean = nummix_T_old_mean + nummix_T_old*hn
@@ -303,7 +303,7 @@
             phymix_T_mean = phymix_T_mean + phymix_T*hn
             phymix_T_int_mean = phymix_T_int_mean + phymix_T_int
          end if
-         if (calc_salt) then
+         if (update_salt) then
             nummix_S_mean = nummix_S_mean + nummix_S*hn
 #ifdef _NUMERICAL_ANALYSES_OLD_
             nummix_S_old_mean = nummix_S_old_mean + nummix_S_old*hn
@@ -361,7 +361,7 @@
 #endif
             phydis_3d_mean = phydis_3d_mean / step / hmean
             phydis_int_mean = phydis_int_mean / step
-            if (calc_temp) then
+            if (update_temp) then
                nummix_T_mean = nummix_T_mean / step / hmean
 #ifdef _NUMERICAL_ANALYSES_OLD_
                nummix_T_old_mean = nummix_T_old_mean / step / hmean
@@ -370,7 +370,7 @@
                phymix_T_mean = phymix_T_mean / step / hmean
                phymix_T_int_mean = phymix_T_int_mean / step
             end if
-            if (calc_salt) then
+            if (update_salt) then
                nummix_S_mean = nummix_S_mean / step / hmean
 #ifdef _NUMERICAL_ANALYSES_OLD_
                nummix_S_old_mean = nummix_S_old_mean / step / hmean
