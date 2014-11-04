@@ -114,7 +114,7 @@
                            gradterms(i,j+1) - gradterms(i,j)       &
                         ) / DYV
 #else
-                      &!comment only needed for line continuation :-)
+                      & !comment only needed for line continuation :-)
 #endif
          end if
       end do
