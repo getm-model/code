@@ -738,14 +738,14 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
-   character(len=3)                    :: buf
+   character(len=4)                    :: buf
    character(len=16)                   :: pid,ext
    character(len=PATH_MAX)             :: fname
 !EOP
 !-----------------------------------------------------------------------
 !BOC
    if (myid .ge. 0) then
-      write(buf,'(I3.3)') myid
+      write(buf,'(I4.4)') myid
       pid = '.' // trim(buf)
    else
       pid = ''
