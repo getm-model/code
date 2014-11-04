@@ -37,7 +37,6 @@
 #ifndef STATIC
    imin=1 ; imax=iextr ; jmin=1 ; jmax=jextr
 #endif
-   ioff=0 ; joff=0
 #else
    call part_domain_mpi(iextr,jextr,kmax,imin,imax,jmin,jmax,ioff,joff)
 #endif
