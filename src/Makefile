@@ -10,6 +10,7 @@ SUBDIRS = \
 $(GETMDIR)/src/futils		\
 $(GETMDIR)/src/domain		\
 $(GETMDIR)/src/meteo		\
+$(GETMDIR)/src/ice		\
 $(GETMDIR)/src/2d
 ifneq ($(GETM_NO_3D),true)
 SUBDIRS += \
@@ -27,6 +28,7 @@ CORE_LIBS	=	\
 		-lmeteo${buildtype}
 ifneq ($(GETM_NO_3D),true)
 CORE_LIBS	+=	\
+		-lgetm_ice${buildtype}	\
 		-l3d${buildtype}
 endif
 CORE_LIBS	+=	\

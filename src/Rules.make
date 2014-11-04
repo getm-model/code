@@ -173,6 +173,15 @@ DEFINES    += -DGETM_BIO
 EXTRA_LIBS += -lbio$(buildtype)
 endif
 
+<<<<<<< HEAD
+=======
+# Turbulence directory
+GOTMLIBDIR	= $(GOTMDIR)/lib/$(FORTRAN_COMPILER)
+LINKDIRS	+= -L$(GOTMLIBDIR)
+EXTRA_LIBS	+= -lice$(buildtype) -lturbulence$(buildtype) -lutil$(buildtype) 
+INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
+
+>>>>>>> initial commit of ice models
 # Where does the NetCDF include file and library reside.
 ifeq ($(NETCDF_VERSION),NETCDF4)
 

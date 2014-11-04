@@ -40,6 +40,9 @@
    use time,     only: update_time,timestep
    use domain,   only: kmax
    use meteo,    only: do_meteo,tausx,tausy,airp,fwf_method,evap,precip
+#ifndef NO_BAROCLINIC
+   use getm_ice, only: do_getm_ice
+#endif
    use m2d,      only: integrate_2d
    use variables_2d, only: fwf,fwf_int
 #ifndef NO_3D
@@ -107,6 +110,7 @@
 #ifndef NO_BAROCLINIC
       else
          call do_meteo(n,T(:,:,kmax))
+         call do_getm_ice()
 #endif
 #endif
       end if

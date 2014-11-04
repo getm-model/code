@@ -71,6 +71,7 @@
 #endif
 #endif
    use meteo, only: init_meteo,do_meteo
+   use getm_ice, only: init_getm_ice,do_getm_ice
    use integration,  only: MinN,MaxN
 #ifndef NO_BAROCLINIC
    use eqstate, only: do_eqstate
@@ -214,6 +215,8 @@
 
    call init_meteo(hotstart)
 
+   call init_getm_ice(hotstart)
+
 #ifndef NO_3D
    call init_rivers()
 #endif
@@ -301,6 +304,7 @@
 #ifndef NO_BAROCLINIC
    else
       call do_meteo(MinN,T(:,:,kmax))
+      call do_getm_ice()
 #endif
 #endif
    end if

@@ -189,6 +189,16 @@
 			</element>
 		</element>
 
+		<element name="ice" label="variables related to ice modeling">
+			<element name="ice_method" type="int" label="ice modeling method">
+				<options>
+					<option value="0" label="no ice modeling"/>
+					<option value="1" label="clip heat flux when SST less than freezing point"/>
+					<option value="2" label="thermodynamic ice model adapted after Winton"/>
+				</options>
+			</element>
+		</element>
+
 		<element name="rivers" label="variables related to rivers">
 			<element name="river_method" type="int" label="river method">
 				<options>
