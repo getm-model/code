@@ -390,7 +390,7 @@
 #ifndef STATIC
    integer, intent(out)                :: imin,imax,jmin,jmax
 #endif
-   integer, intent(out)                :: ioff,joff
+   integer, intent(inout)              :: ioff,joff
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -419,7 +419,6 @@
    STDERR imin,imax,jmin,jmax
    stop
 #endif
-      ioff=0 ; joff=0
       return
    end if
 
@@ -537,8 +536,8 @@
          jmin=1;jmax=jextr/dims(1)+1
       end if
 #endif
-      ioff=coords(2)*imax
-      joff=coords(1)*jmax
+      ioff = ioff + coords(2)*imax
+      joff = joff + coords(1)*jmax
    else
       comm_hd = comm_getm
    end if
@@ -1260,8 +1259,8 @@ STDERR 'TWOD_NONBLOCKING'
 !-------------------------------------------------------------------------
 !BOC
 
-   CALL MPI_GATHER(flag,1,MPI_INTEGER,flags,1,MPI_INTEGER,0,comm_hd, ierr);
-   CALL MPI_BCAST(flags,nprocs,MPI_INTEGER,0,comm_hd,ierr)
+   CALL MPI_GATHER(flag,1,MPI_INTEGER,flags,1,MPI_INTEGER,0,active_comm, ierr);
+   CALL MPI_BCAST(flags,nprocs,MPI_INTEGER,0,active_comm,ierr)
 
    return
    end subroutine set_flag_mpi
