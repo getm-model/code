@@ -20,6 +20,7 @@
   use domain, only                    : have_lonlat,have_xy
   use domain, only                    : iextr,jextr,ioff,joff
   use domain, only                    : imin,imax,jmin,jmax
+  use domain, only                    : il,ih,jl,jh
   use domain, only                    : ilg,ihg,jlg,jhg
   use domain, only                    : ill,ihl,jll,jhl
   use domain, only                    : H, Hland
@@ -182,17 +183,12 @@ contains
                         "Could not get 'dimlen' of 'bathymetry' in "//trim(filename)//".")
    endif
 
-#ifdef STATIC
-   if (dimlen .ne. iextr) then
+   LEVEL3 'iextr (iextr_topo): ',iextr,'(',dimlen,')'
+
+   if (dimlen .lt. ih) then
       call getm_error("ncdf_check_grid()",   &
                       "Length of first dimension in 'bathymetry' inconsistent.")
    endif
-#else
-!  Get i-dimension for dynamic allocation
-   iextr = dimlen
-   imin = 1
-   imax = iextr
-#endif
 
    status = nf90_inquire_dimension(ncid,dimidsT(2), len = dimlen)
    if (status .ne. NF90_NOERR) then
@@ -200,22 +196,12 @@ contains
                         "Could not get 'dimlen' of 'bathymetry' in "//trim(filename)//".")
    endif
 
-#ifdef STATIC
-    if (dimlen .ne. jextr) then
+   LEVEL3 'jextr (jextr_topo): ',jextr,'(',dimlen,')'
+
+   if (dimlen .lt. jh) then
       call getm_error("ncdf_check_grid()",   &
                       "Length of second dimension in 'bathymetry' inconsistent.")
    endif
-#else
-!  Get j-dimension for dynamic allocation
-   jextr = dimlen
-   jmin = 1
-   jmax = jextr
-#endif
-   LEVEL3 'iextr, jextr: ',iextr,jextr
-
-#ifndef STATIC
-#include "../domain/dynamic_allocations_domain_1.h"
-#endif
 
 !  Does the bathymetry have proper axis defined?
 !  We will obtain the names of the two dimensions and
@@ -223,13 +209,14 @@ contains
 !  that is the case they are by NetCDF definition coordinate
 !  axis.
 
-   status = nf90_inquire_dimension(ncid,dimidsT(1),name=xaxis_name)
-   if (status .ne. NF90_NOERR) then
-      call netcdf_error(status,"ncdf_check_grid()",   &
-                        "Could not get name associated with dimidsT(1) in "//trim(filename)//".")
-   endif
-
    if ( grid_type .le. 2 ) then
+
+      status = nf90_inquire_dimension(ncid,dimidsT(1),name=xaxis_name)
+      if (status .ne. NF90_NOERR) then
+         call netcdf_error(status,"ncdf_check_grid()",   &
+                           "Could not get name associated with dimidsT(1) in "//trim(filename)//".")
+      endif
+
       status = nf90_inq_varid(ncid,xaxis_name,xaxis_id)
       if (status .ne. NF90_NOERR) then
          call netcdf_error(status,"ncdf_check_grid()",   &
@@ -249,8 +236,8 @@ contains
       LEVEL3 'axes names:    ',trim(xaxis_name),', ',trim(yaxis_name)
    end if
 
-   ilg = max(imin-HALO+ioff,1); ihg = min(imax+HALO+ioff,iextr)
-   jlg = max(jmin-HALO+joff,1); jhg = min(jmax+HALO+joff,jextr)
+   ilg = max(imin-HALO+ioff,il); ihg = min(imax+HALO+ioff,ih)
+   jlg = max(jmin-HALO+joff,jl); jhg = min(jmax+HALO+joff,jh)
    iskipl= ilg - (imin-HALO+ioff)
    jskipl= jlg - (jmin-HALO+joff)
 
@@ -258,6 +245,9 @@ contains
 !  (different from GLOBAL range only for parallel runs)
    ill = imin-HALO+iskipl; jll = jmin-HALO+jskipl;
    ihl = ihg-ilg+ill;      jhl = jhg-jlg+jll;
+
+   LEVEL3 'mapping ill:ihl => ilg:ihg : ',ill,':',ihl,'=>',ilg,':',ihg
+   LEVEL3 'mapping jll:jhl => jlg:jhg : ',jll,':',jhl,'=>',jlg,':',jhg
 
 !  Read bathymetry
    call ncdf_read_2d(ncid,bathymetry_id,H(ill:ihl,jll:jhl),ilg,ihg,jlg,jhg)

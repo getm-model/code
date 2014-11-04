@@ -13,10 +13,17 @@
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)        :: fn ! file to read from
    integer, intent(in)                 :: nprocs,myid  ! Number of jobs actually started.
-   integer, intent(in)                 :: imax,jmax,iextr,jextr
+   integer, intent(in)                 :: iextr,jextr
+#ifdef STATIC
+   integer, intent(in)                 :: imax,jmax
+#endif
 !
 ! !OUTPUT PARAMETERS:
-   integer, intent(out)                :: ioff,joff,neighbours(8),numthreads
+#ifndef STATIC
+   integer, intent(out)                :: imax,jmax
+#endif
+   integer, intent(inout)              :: ioff,joff
+   integer, intent(out)                :: neighbours(8),numthreads
 !
 ! !DESCRIPTION:
 !  Test the content of a file with neighbour list information.
@@ -36,6 +43,7 @@
    integer                   :: nprocs_read,err,ijob,ioff_read,joff_read
    integer                   :: imax_read,jmax_read,iextr_read,jextr_read
    integer                   :: iline, njob, nnjob, ineigh, nthreads_read
+   integer                   :: il,jl
    integer                   :: thislineok
    integer, allocatable      :: neighbourlist(:,:), nthreads(:)
    integer                   :: neighbour_inverse(8)  = &
@@ -49,6 +57,10 @@
 !-------------------------------------------------------------------------
 !BOC
 ! Read #jobs, test vs. actual nprocs in use
+
+!  ioff,joff are initialised to the possible offset due to il,jl
+   il = ioff + 1
+   jl = joff + 1
 
    open(unit=iunit,file=fn,iostat=iostat)
    iline   = 0 ! Index for line number in file
@@ -103,12 +115,18 @@
       stop
    end if
 
+#ifdef STATIC
    if (imax_read /= imax .OR. jmax_read /= jmax) then
       FATAL 'read_par_setup: Local grid sizes do not match'
       FATAL '  Expected ',imax,' by ',jmax
       FATAL '  Read     ',imax_read,' by ',jmax_read
       stop
    end if
+#else
+   imax = imax_read
+   jmax = jmax_read
+#endif
+
 !
 ! Read following lines (one per job)
    do ijob=0,nprocs-1
@@ -143,8 +161,8 @@
 !
 ! Perform straight-forward tests on this input:
 
-      if ( ((ioff_read+imax) .LT. 1) .OR. ((joff_read+jmax) .LT. 1) .OR. &
-          (ioff_read+1 .GT. iextr).OR. (joff_read+1 .GT. jextr)    ) then
+      if ( ((ioff_read+imax) .LT. il) .OR. ((joff_read+jmax) .LT. jl) .OR. &
+          (ioff_read+1 .GT. il+iextr-1).OR. (joff_read+1 .GT. jl+jextr-1)    ) then
          FATAL 'read_par_setup: Line ',iline
          FATAL '   Local grid fully outside global grid'
          stop
