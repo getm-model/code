@@ -72,4 +72,3 @@
 
 !  bottom roughness
    REALTYPE,dimension(E2DFIELD)        :: z0,zub0,zvb0
-
