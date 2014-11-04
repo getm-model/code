@@ -209,13 +209,14 @@ contains
 !  that is the case they are by NetCDF definition coordinate
 !  axis.
 
-   status = nf90_inquire_dimension(ncid,dimidsT(1),name=xaxis_name)
-   if (status .ne. NF90_NOERR) then
-      call netcdf_error(status,"ncdf_check_grid()",   &
-                        "Could not get name associated with dimidsT(1) in "//trim(filename)//".")
-   endif
-
    if ( grid_type .le. 2 ) then
+
+      status = nf90_inquire_dimension(ncid,dimidsT(1),name=xaxis_name)
+      if (status .ne. NF90_NOERR) then
+         call netcdf_error(status,"ncdf_check_grid()",   &
+                           "Could not get name associated with dimidsT(1) in "//trim(filename)//".")
+      endif
+
       status = nf90_inq_varid(ncid,xaxis_name,xaxis_id)
       if (status .ne. NF90_NOERR) then
          call netcdf_error(status,"ncdf_check_grid()",   &
