@@ -18,7 +18,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
    use m2d, only: no_2d
-   use m3d, only: calc_temp,calc_salt
+   use m3d, only: update_temp,update_salt
    use nonhydrostatic, only: nonhyd_iters,bnh_filter,bnh_weight,calc_hs2d,sbnh_filter
 #ifdef SPM
    use suspended_matter, only: spm_save
@@ -457,7 +457,7 @@
           units='W/kg',&
           FillValue=fv,missing_value=mv,valid_range=vr)
 
-      if (calc_salt) then
+      if (update_salt) then
          err = nf90_def_var(ncid,'nummix_S',NCDF_FLOAT_PRECISION,f4_dims,nmS_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nmS_id, &
@@ -482,7 +482,7 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
       end if
 
-      if (calc_temp) then
+      if (update_temp) then
          err = nf90_def_var(ncid,'nummix_T',NCDF_FLOAT_PRECISION,f4_dims,nmT_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nmT_id, &
