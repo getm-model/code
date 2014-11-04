@@ -121,6 +121,7 @@
 ! !USES:
 !   use netcdf
    use domain, only: imin,jmin,imax,jmax,kmax,iextr,jextr,ioff,joff
+   use domain, only: il_domain=>il,ih_domain=>ih,jl_domain=>jl,jh_domain=>jh
    use domain, only: H,az
 #ifndef NO_3D
    use variables_3d, only: hn
@@ -242,8 +243,8 @@
    if (err .NE. NF90_NOERR) go to 10
 #endif
 
-   il = max(imin+ioff,1); ih = min(imax+ioff,iextr)
-   jl = max(jmin+joff,1); jh = min(jmax+joff,jextr)
+   il = max(imin+ioff,il_domain); ih = min(imax+ioff,ih_domain)
+   jl = max(jmin+joff,jl_domain); jh = min(jmax+joff,jh_domain)
    iloc = max(imin-ioff,1); jloc = max(jmin-joff,1)
 
    start(1) = il ; start(2) = jl
