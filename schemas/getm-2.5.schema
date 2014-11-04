@@ -78,10 +78,10 @@
 			<element name="gamma_surf" type="bool" label="layer thickness constant at surface (else at the bottom)">
 				<condition type="eq" variable="./vert_cord" value="3"/>
 			</element>
-			<element name="il" type="int" label="???"/>
-			<element name="ih" type="int" label="???"/>
-			<element name="jl" type="int" label="???"/>
-			<element name="jh" type="int" label="???"/>
+			<element name="il" type="int" label="lower bound of used i-indices (mandatory for dynamic compilation; default -1 indicates full domain for static compilation)"/>
+			<element name="ih" type="int" label="upper bound of used i-indices (mandatory for dynamic compilation; default -1 indicates full domain for static compilation)"/>
+			<element name="jl" type="int" label="lower bound of used j-indices (mandatory for dynamic compilation; default -1 indicates full domain for static compilation)"/>
+			<element name="jh" type="int" label="upper bound of used j-indices (mandatory for dynamic compilation; default -1 indicates full domain for static compilation)"/>
 			<element name="bottfric_method" type="int" label="bottom friction specification">
 				<options>
 					<option value="0" label="disable bottom friction"/>
