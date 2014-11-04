@@ -33,7 +33,7 @@
 
    integer                             :: grid_type      = 1
    integer                             :: vert_cord      = 1
-   integer                             :: iextr_topo,jextr_topo
+   integer                             :: il=-1,ih=-1,jl=-1,jh=-1
 !  global index range
    integer                             :: ilg=-1,ihg=-1,jlg=-1,jhg=-1
 !  local index range
@@ -155,8 +155,6 @@
    character(len=PATH_MAX)   :: min_depth_file           = 'minimum_depth.dat'
    character(len=PATH_MAX)   :: bathymetry_adjust_file   = 'bathymetry.adjust'
    character(len=PATH_MAX)   :: mask_adjust_file         = 'mask.adjust'
-   integer                   :: il=-1,ih=-1,jl=-1,jh=-1
-   integer                   :: iskipl,jskipl
    namelist /domain/ &
              vert_cord,maxdepth,                               &
              bathy_format,bathymetry,vel_depth_method,         &
@@ -187,57 +185,33 @@
       stop 'crit_depth must be larger than 2.5 time min_depth'
    end if
 
-   call open_topo_file(bathy_format,bathymetry,grid_type,iextr_topo,jextr_topo)
-
-!   LEVEL2 'grid_type: ',grid_type
-   select case (grid_type)
-      case(1)
-         LEVEL2 'using cartesian grid.'
-      case(2)
-         LEVEL2 'using spherical grid.'
-      case(3)
-         LEVEL2 'using plane curvilinear grid.'
-      case(4)
-         LEVEL2 'using spherical curvilinear grid.'
-         call getm_error("init_domain()","grid_type=4 has not been properly implemented yet.")
-      case default
-         call getm_error("init_domain()","Invalid grid type. Choose grid_type=1-4.")
-   end select
-
 #ifdef STATIC
-   if (iextr_topo.ne.iextr .or. jextr_topo.ne.jextr) then
-      FATAL "init_domain: inconsistent grid size:"
-      FATAL "   expected ",iextr     ," by ",jextr
-      FATAL "   read     ",iextr_topo," by ",jextr_topo
-      call getm_error("init_domain()","inconsistent grid size")
+!  for backward compatibility
+   if (il+ih+jl+jh .eq. -4) then
+      il = 1 ; ih = iextr
+      jl = 1 ; jh = jextr
    end if
 #else
-   iextr = iextr_topo
-   jextr = jextr_topo
+   iextr = ih - il + 1
+   jextr = jh - jl + 1
    kmax=kdum
 #endif
-   LEVEL3 'iextr, jextr: ',iextr,jextr
-
+   if (il.lt.1 .or. ih.lt.il .or. ih-il+1.ne.iextr) then
+      call getm_error("init_domain()","invalid il,ih")
+   end if
+   if (jl.lt.1 .or. jh.lt.jl .or. jh-jl+1.ne.jextr) then
+      call getm_error("init_domain()","invalid jl,jh")
+   end if
+   ioff = il - 1
+   joff = jl - 1
 !  prepare parallel run
    call part_domain()
-   il=imin ; ih=imax ; jl=jmin ; jh=jmax
 
 #ifndef STATIC
 #include "dynamic_allocations_domain.h"
 #endif
 
-!  GLOBAL index range
-   ilg = max(imin-HALO+ioff,1); ihg = min(imax+HALO+ioff,iextr)
-   jlg = max(jmin-HALO+joff,1); jhg = min(jmax+HALO+joff,jextr)
-   iskipl= ilg - (imin-HALO+ioff)
-   jskipl= jlg - (jmin-HALO+joff)
-
-!  LOCAL index range
-!  (different from GLOBAL range only for parallel runs)
-   ill = imin-HALO+iskipl; jll = jmin-HALO+jskipl;
-   ihl = ihg-ilg+ill;      jhl = jhg-jlg+jll;
-
-   call read_topo_file(bathy_format,grid_type)
+   call read_topo_file(bathy_format,bathymetry)
 
    select case (vert_cord)
       case(_SIGMA_COORDS_)
@@ -331,7 +305,7 @@
    call update_2d_halo(mask,mask,az,imin,jmin,imax,jmax,H_TAG,mirror=.false.)
    call wait_halo(H_TAG)
    au = mask
-   
+
 !  mask for V-points
    mask=_ZERO_
    do j=jmin-HALO,jmax+HALO-1
