@@ -347,7 +347,19 @@ set_property(TARGET futils ncdf input APPEND PROPERTY INCLUDE_DIRECTORIES "${Net
 add_definitions(-DNETCDF_FMT -DREAL_4B=real\(4\))
 
 # Use GOTM_PREFIX to locate include and lib directories
-find_package(GOTM REQUIRED)
+find_path(GOTM_BASE src/gotm/gotm.F90 DOC "Path to GOTM source directory.")
+if(GOTM_BASE)
+  set(GOTM_BUILD_LIBRARIES_ONLY ON)
+  add_subdirectory(${GOTM_BASE}/src gotm)
+  set(GOTM_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/gotm/modules)
+  set(GOTM_LIBRARIES turbulence util)
+  if(GETM_USE_FABM)
+    set(GOTM_LIBRARIES ${GOTM_LIBRARIES} gotm_fabm)
+  endif()
+  mark_as_advanced(GOTM_PREFIX)
+else()
+  find_package(GOTM REQUIRED)
+endif()
 set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 
 # Use FABM_PREFIX to locate include and lib directories
