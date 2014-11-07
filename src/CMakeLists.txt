@@ -361,14 +361,14 @@ if(GOTM_BASE)
   add_dependencies(3d ${GOTM_LIBRARIES})
 else()
   find_package(GOTM REQUIRED)
+
+  # Use FABM_PREFIX to locate include and lib directories
+  if(GETM_USE_FABM)
+    find_package(FABM REQUIRED)
+    set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
+  endif()
 endif()
 set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
-
-# Use FABM_PREFIX to locate include and lib directories
-if(GETM_USE_FABM)
-  find_package(FABM REQUIRED)
-  set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
-endif(GETM_USE_FABM)
 
 # Build GETM executable.
 add_executable(getm_exe
