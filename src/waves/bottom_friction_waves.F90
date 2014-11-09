@@ -42,7 +42,6 @@
    REALTYPE                                 :: wbl
    REALTYPE                                 :: cdm1,cosangle
    REALTYPE                                 :: ttransx,ttransy,ttrans
-   REALTYPE                                 :: coscurrdir,sincurrdir
    REALTYPE                                 :: tauc,taubm,taubc,taube,taubp
    integer                                  :: i,j,rc
    logical                                  :: calc_taubmax
@@ -85,8 +84,7 @@
 !$OMP          FIRSTPRIVATE(j)                                         &
 !$OMP          PRIVATE(i,Hrms,omegam1,uorb,aorb,Rew,fwr,fws,fwl,fw)    &
 !$OMP          PRIVATE(tauw,tauwr,tauws,tauwl)                         &
-!$OMP          PRIVATE(wbl,cdm1,cosangle,coscurrdir,sincurrdir)        &
-!$OMP          PRIVATE(ttransx,ttransy,ttrans)                         &
+!$OMP          PRIVATE(wbl,cdm1,cosangle,ttransx,ttransy,ttrans)       &
 !$OMP          PRIVATE(tauc,tauw,taubm,taubc,taube,taubp)
 
 !$OMP DO SCHEDULE(RUNTIME)
@@ -248,9 +246,7 @@
                ttransy = V1(i,j-1) + V1(i,j)
                ttrans  = sqrt( ttransx**2 + ttransy**2 )
                if (ttrans .gt. _ZERO_) then
-                  coscurrdir = ttransx / ttrans
-                  sincurrdir = ttransy / ttrans
-                  cosangle = coscurrdir*coswavedir(i,j) + sincurrdir*sinwavedir(i,j)
+                  cosangle = (coswavedir(i,j)*ttransx + sinwavedir(i,j)*ttransy ) / ttrans
                else
                   cosangle = _ZERO_
                end if
