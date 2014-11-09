@@ -17,6 +17,7 @@
    use domain, only: az,latc,lonc
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
    use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
+   use variables_3d, only: bioshade
    use variables_3d, only: nuh,T,S,rho,a,g1,g2,taubmax_3d
    use variables_3d, only: do_numerical_analyses_3d
    use meteo, only: swr,u10,v10,evap,precip,tcc
@@ -160,6 +161,10 @@
       allocate(fabm_diag_hz(I2DFIELD,size(model%horizontal_diagnostic_variables)),stat=rc)
       if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (fabm_diag_hz)'
       fabm_diag_hz = _ZERO_
+
+      allocate(bioshade(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (bioshade)'
+      bioshade = _ONE_
 
 !     Read settings specific to GETM-FABM interaction.
       open(NAMLST2,status='unknown',file=trim(nml_file))
@@ -345,7 +350,6 @@
 ! !LOCAL VARIABLES:
    integer         :: n
    integer         :: i,j,k
-   REALTYPE        :: bioshade(1:kmax)
    REALTYPE        :: wind_speed,I_0,taub_nonnorm,cloud
    REALTYPE        :: z(1:kmax)
    REALTYPE,dimension(I2DFIELD) :: work2d
@@ -410,7 +414,7 @@
 !           Transfer pointers to physical environment variables to FABM.
             call set_env_gotm_fabm(latc(i,j),lonc(i,j),dt,0,0,T(i,j,1:),S(i,j,1:), &
                                    rho(i,j,1:),nuh(i,j,0:),hn(i,j,0:),ww(i,j,0:), &
-                                   bioshade,I_0,cloud,taub_nonnorm,wind_speed,precip(i,j),evap(i,j), &
+                                   bioshade(i,j,1:),I_0,cloud,taub_nonnorm,wind_speed,precip(i,j),evap(i,j), &
                                    z,A(i,j),g1(i,j),g2(i,j),yearday,secondsofday)
 
 !           Update biogeochemical variable values.
