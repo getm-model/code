@@ -179,6 +179,7 @@
 #ifdef _FABM_
    REALTYPE, allocatable, dimension(:,:,:,:) :: fabm_pel,fabm_diag
    REALTYPE, allocatable, dimension(:,:,:)   :: fabm_ben,fabm_diag_hz
+   REALTYPE, allocatable, dimension(:,:,:), target :: bioshade
 #endif
    integer                             :: size3d_field
    integer                             :: mem3d
