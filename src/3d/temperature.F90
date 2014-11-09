@@ -392,9 +392,6 @@ temp_field_no=1
    use domain,       only: imin,imax,jmin,jmax,kmax,az
    use meteo,        only: swr,shf
    use parameters,   only: rho_0,cp
-#ifdef _FABM_
-   use variables_3d, only: attenuation_feedback,fabm_light
-#endif
    use getm_timers, only: tic,toc,TIM_TEMP,TIM_TEMPH,TIM_MIXANALYSIS
    use variables_3d, only: do_numerical_analyses_3d
    use variables_3d, only: nummix_T,nummix_T_old,nummix_T_int
@@ -414,7 +411,7 @@ temp_field_no=1
    REALTYPE, POINTER         :: auxn(:),auxo(:)
    REALTYPE, POINTER         :: a1(:),a2(:),a3(:),a4(:)
    REALTYPE, POINTER         :: rad1d(:)
-   REALTYPE                  :: zz,swr_loc,shf_loc,rad_loc
+   REALTYPE                  :: zz,swr_loc,shf_loc
    REALTYPE                  :: swr_refl
    REALTYPE                  :: rho_0_cpi
    integer                   :: status
@@ -517,14 +514,8 @@ temp_field_no=1
             zz = _ZERO_
             do k=kmax-1,0,-1
                zz=zz+hn(i,j,k+1)
-               rad_loc=swr_loc &
+               rad(i,j,k)=swr_loc &
                       *(A(i,j)*exp(-zz/g1(i,j))+(1-A(i,j))*exp(-zz/g2(i,j)))
-#ifdef _FABM_
-               if ( attenuation_feedback ) then
-                  rad_loc = rad_loc * fabm_light(i,j,k)
-               end if
-#endif
-               rad(i,j,k) = rad_loc
             end do
          end if
       end do
