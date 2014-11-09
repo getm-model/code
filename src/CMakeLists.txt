@@ -347,14 +347,29 @@ set_property(TARGET futils ncdf input APPEND PROPERTY INCLUDE_DIRECTORIES "${Net
 add_definitions(-DNETCDF_FMT -DREAL_4B=real\(4\))
 
 # Use GOTM_PREFIX to locate include and lib directories
-find_package(GOTM REQUIRED)
-set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
+find_path(GOTM_BASE src/gotm/gotm.F90 DOC "Path to GOTM source directory.")
+if(GOTM_BASE)
+  set(GOTM_BUILD_LIBRARIES_ONLY ON)
+  set(GOTM_USE_FABM ${GETM_USE_FABM} CACHE BOOL "Include support for Framework for Aquatic Biogeochemical Models (fabm.net)" FORCE)
+  add_subdirectory(${GOTM_BASE}/src gotm)
+  set(GOTM_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/gotm/modules)
+  set(GOTM_LIBRARIES turbulence util)
+  if(GETM_USE_FABM)
+    set(GOTM_LIBRARIES ${GOTM_LIBRARIES} gotm_fabm)
+    set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES $<TARGET_PROPERTY:gotm_fabm,INTERFACE_INCLUDE_DIRECTORIES>)
+  endif()
+  mark_as_advanced(GOTM_PREFIX GOTM_USE_FABM)
+  add_dependencies(3d ${GOTM_LIBRARIES})
+else()
+  find_package(GOTM REQUIRED)
 
-# Use FABM_PREFIX to locate include and lib directories
-if(GETM_USE_FABM)
-  find_package(FABM REQUIRED)
-  set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
-endif(GETM_USE_FABM)
+  # Use FABM_PREFIX to locate include and lib directories
+  if(GETM_USE_FABM)
+    find_package(FABM REQUIRED)
+    set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
+  endif()
+endif()
+set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 
 # Build GETM executable.
 add_executable(getm_exe
@@ -380,9 +395,9 @@ if(GETM_USE_PARALLEL AND MPI_Fortran_LIBRARIES)
   target_link_libraries(getm_exe ${MPI_Fortran_LIBRARIES})
 endif()
 
-if(GETM_USE_FABM)
+if(GETM_USE_FABM AND NOT GOTM_BASE)
   target_link_libraries(getm_exe ${FABM_LIBRARIES})
-endif(GETM_USE_FABM)
+endif()
 
 # Install GETM executable
 install(TARGETS getm_exe DESTINATION bin)
