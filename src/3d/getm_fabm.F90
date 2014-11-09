@@ -26,7 +26,6 @@
    use gotm_fabm, only: init_gotm_fabm,set_env_gotm_fabm,do_gotm_fabm
    use gotm_fabm, only: gotm_fabm_calc=>fabm_calc, model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz, cc_transport
    use fabm_types,only: output_instantaneous
-   use fabm,only: type_model
 
    IMPLICIT NONE
 
