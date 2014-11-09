@@ -395,9 +395,9 @@ if(GETM_USE_PARALLEL AND MPI_Fortran_LIBRARIES)
   target_link_libraries(getm_exe ${MPI_Fortran_LIBRARIES})
 endif()
 
-if(GETM_USE_FABM)
+if(GETM_USE_FABM AND NOT GOTM_BASE)
   target_link_libraries(getm_exe ${FABM_LIBRARIES})
-endif(GETM_USE_FABM)
+endif()
 
 # Install GETM executable
 install(TARGETS getm_exe DESTINATION bin)
