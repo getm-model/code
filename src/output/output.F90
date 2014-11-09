@@ -320,11 +320,11 @@
    write(debug,*) 'do_output() # ',Ncall
 #endif
    call tic(TIM_OUTPUT)
-       
+
    write_2d = save_2d .and. n .ge. first_2d .and. mod(n,step_2d).eq.0
    write_3d = save_3d .and. n .ge. first_3d .and. mod(n,step_3d).eq.0
 
-!  TODO: Presently save_init can only be used to switch of initial output.
+!  TODO: Presently save_init can only be used to switch off initial output.
 !        Maybe we want to extend this so that save_init=T in any case
 !        (independent of the checks above) causes initial output?
 
