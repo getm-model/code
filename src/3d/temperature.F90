@@ -384,6 +384,9 @@ temp_field_no=1
    use domain,       only: imin,imax,jmin,jmax,kmax,az
    use meteo,        only: swr,shf
    use parameters,   only: rho_0,cp
+#ifdef _FABM_
+   use variables_3d, only: bioshade
+#endif
    use parameters, only: avmolt
    use getm_timers, only: tic,toc,TIM_TEMP,TIM_TEMPH,TIM_MIXANALYSIS
    use variables_3d, only: do_numerical_analyses_3d
@@ -508,6 +511,9 @@ temp_field_no=1
             do k=kmax-1,0,-1
                zz=zz+hn(i,j,k+1)
                rad(i,j,k)=swr_loc &
+#ifdef _FABM_
+                      *bioshade(i,j,k+1) &
+#endif
                       *(A(i,j)*exp(-zz/g1(i,j))+(1-A(i,j))*exp(-zz/g2(i,j)))
             end do
          end if
