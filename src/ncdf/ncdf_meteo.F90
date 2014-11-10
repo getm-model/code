@@ -130,7 +130,6 @@
    integer         :: err
    logical         :: ok=.true.
    REALTYPE        :: olon,olat,rlon,rlat,x
-   character(len=10) :: name_thisvar
 !EOP
 !-------------------------------------------------------------------------
 #ifdef DEBUG
@@ -257,87 +256,6 @@
       end if
    end if
 
-   name_thisvar = name_airp
-   err = nf90_inq_varid(ncid,name_airp,airp_id)
-   if (err .NE. NF90_NOERR) go to 10
-
-   if (fwf_method .eq. 2) then
-      name_thisvar = name_evap
-      err = nf90_inq_varid(ncid,name_evap,evap_id)
-      if (err .NE. NF90_NOERR) go to 10
-   end if
-   if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-      name_thisvar = name_precip
-      err = nf90_inq_varid(ncid,name_precip,precip_id)
-      if (err .NE. NF90_NOERR) go to 10
-   end if
-
-   if (calc_met) then
-      name_thisvar = name_u10
-      err = nf90_inq_varid(ncid,name_u10,u10_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-      name_thisvar = name_v10
-      err = nf90_inq_varid(ncid,name_v10,v10_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-      name_thisvar = name_t2
-      err = nf90_inq_varid(ncid,name_t2,t2_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-      hum_id = -1
-      err = nf90_inq_varid(ncid,name_hum1,hum_id)
-      if (err .NE. NF90_NOERR) then
-         err = nf90_inq_varid(ncid,name_hum2,hum_id)
-         if (err .NE. NF90_NOERR) then
-            err = nf90_inq_varid(ncid,name_hum3,hum_id)
-            if (err .NE. NF90_NOERR) then
-               FATAL 'Not able to find valid humidity parameter'
-               stop 'init_meteo_input_ncdf()'
-            else
-               LEVEL2 'Taking hum as dew point temperature'
-               hum_method = DEW_POINT
-            end if
-         else
-            LEVEL2 'Taking hum as relative humidity'
-            hum_method = RELATIVE_HUM
-         end if
-      else
-         LEVEL2 'Taking hum as atmospheric specific humidity'
-         hum_method = SPECIFIC_HUM
-      end if
-!KBKSTDERR 'Taking hum as wet bulb temperature'
-
-      name_thisvar = name_tcc
-      err = nf90_inq_varid(ncid,name_tcc,tcc_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-   else
-
-      name_thisvar = name_tausx
-      err = nf90_inq_varid(ncid,name_tausx,tausx_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-      name_thisvar = name_tausy
-      err = nf90_inq_varid(ncid,name_tausy,tausy_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-      name_thisvar = name_swr
-      err = nf90_inq_varid(ncid,name_swr,swr_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-      name_thisvar = name_shf
-      err = nf90_inq_varid(ncid,name_shf,shf_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-   end if
-
-   if (nudge_sst) then
-      name_thisvar = name_sst
-      err = nf90_inq_varid(ncid,name_sst,sst_id)
-      if (err .NE. NF90_NOERR) go to 10
-   end if
-
    call get_meteo_data_ncdf(nstart-1)
 
 #ifdef DEBUG
@@ -345,8 +263,6 @@
    write(debug,*)
 #endif
    return
-10 FATAL 'init_meteo_input_ncdf: ',name_thisvar,' ',nf90_strerror(err)
-   stop
    end subroutine init_meteo_input_ncdf
 !EOC
 
@@ -647,6 +563,87 @@
 
       call add_secs(junit,sunit,nint(met_times(1)),    j1,s1)
       call add_secs(junit,sunit,nint(met_times(textr)),j2,s2)
+   end if
+
+   LEVEL4 ' ... checking variable ',name_airp
+   err = nf90_inq_varid(ncid,name_airp,airp_id)
+   if (err .NE. NF90_NOERR) go to 10
+
+   if (fwf_method .eq. 2) then
+      LEVEL4 ' ... checking variable ',name_evap
+      err = nf90_inq_varid(ncid,name_evap,evap_id)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+   if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+      LEVEL4 ' ... checking variable ',name_precip
+      err = nf90_inq_varid(ncid,name_precip,precip_id)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+
+   if (calc_met) then
+      LEVEL4 ' ... checking variable ',name_u10
+      err = nf90_inq_varid(ncid,name_u10,u10_id)
+      if (err .NE. NF90_NOERR) go to 10
+
+      LEVEL4 ' ... checking variable ',name_v10
+      err = nf90_inq_varid(ncid,name_v10,v10_id)
+      if (err .NE. NF90_NOERR) go to 10
+
+      LEVEL4 ' ... checking variable ',name_t2
+      err = nf90_inq_varid(ncid,name_t2,t2_id)
+      if (err .NE. NF90_NOERR) go to 10
+
+      hum_id = -1
+      err = nf90_inq_varid(ncid,name_hum1,hum_id)
+      if (err .NE. NF90_NOERR) then
+         err = nf90_inq_varid(ncid,name_hum2,hum_id)
+         if (err .NE. NF90_NOERR) then
+            err = nf90_inq_varid(ncid,name_hum3,hum_id)
+            if (err .NE. NF90_NOERR) then
+               FATAL 'Not able to find valid humidity parameter'
+               stop 'init_meteo_input_ncdf()'
+            else
+               LEVEL2 'Taking hum as dew point temperature'
+               hum_method = DEW_POINT
+            end if
+         else
+            LEVEL2 'Taking hum as relative humidity'
+            hum_method = RELATIVE_HUM
+         end if
+      else
+         LEVEL2 'Taking hum as atmospheric specific humidity'
+         hum_method = SPECIFIC_HUM
+      end if
+!KBKSTDERR 'Taking hum as wet bulb temperature'
+
+      LEVEL4 ' ... checking variable ',name_tcc
+      err = nf90_inq_varid(ncid,name_tcc,tcc_id)
+      if (err .NE. NF90_NOERR) go to 10
+
+   else
+
+      LEVEL4 ' ... checking variable ',name_tausx
+      err = nf90_inq_varid(ncid,name_tausx,tausx_id)
+      if (err .NE. NF90_NOERR) go to 10
+
+      LEVEL4 ' ... checking variable ',name_tausy
+      err = nf90_inq_varid(ncid,name_tausy,tausy_id)
+      if (err .NE. NF90_NOERR) go to 10
+
+      LEVEL4 ' ... checking variable ',name_swr
+      err = nf90_inq_varid(ncid,name_swr,swr_id)
+      if (err .NE. NF90_NOERR) go to 10
+
+      LEVEL4 ' ... checking variable ',name_shf
+      err = nf90_inq_varid(ncid,name_shf,shf_id)
+      if (err .NE. NF90_NOERR) go to 10
+
+   end if
+
+   if (nudge_sst) then
+      LEVEL4 ' ... checking variable ',name_sst
+      err = nf90_inq_varid(ncid,name_sst,sst_id)
+      if (err .NE. NF90_NOERR) go to 10
    end if
 
    if (found) then
