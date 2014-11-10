@@ -100,7 +100,7 @@
       end if
       il = ilg ; jl = jlg ; ih = ihg ; jh = jhg
    else
-      il = 1 ; jl = 1 ; ih = iextr ; jh = jextr
+      il = 1 ; jl = 1 ; ih = ilen ; jh = jlen
    end if
 
    start(1) = il; start(2) = jl;
