@@ -52,6 +52,7 @@
 #ifdef _FABM_
    use getm_fabm, only: fabm_calc
 #endif
+   use parameters, only: rho_0
 !  Necessary to use halo_zones because update_3d_halos() have been moved out
 !  temperature.F90 and salinity.F90 - should be changed at a later stage
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG
@@ -242,8 +243,9 @@
    if (runtype .eq. 2) then
       calc_temp = .false.
       calc_salt = .false.
-   else
 #ifndef NO_BAROCLINIC
+      rho = rho_0
+   else
       T = _ZERO_ ; S = _ZERO_ ; rho = _ZERO_
       if(calc_temp) call init_temperature(hotstart)
       if(calc_salt) call init_salinity(hotstart)

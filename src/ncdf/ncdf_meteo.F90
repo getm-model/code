@@ -15,6 +15,8 @@
    use time, only: jul0,secs0,julianday,secondsofday,timestep,simtime
    use time, only: write_time_string,timestr
    use domain, only: imin,imax,jmin,jmax,az,lonc,latc,convc
+   use domain, only: iextr_domain=>iextr,jextr_domain=>jextr
+   use domain, only: ill,ihl,jll,jhl,ilg,ihg,jlg,jhg
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
    use grid_interpol, only: to_rotated_lat_lon
    use meteo, only: meteo_file,on_grid,calc_met,met_method,hum_method
@@ -124,11 +126,10 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer         :: i,j,n
+   integer         :: i,j,il,ih,jl,jh
    integer         :: err
    logical         :: ok=.true.
    REALTYPE        :: olon,olat,rlon,rlat,x
-   character(len=10) :: name_thisvar
 !EOP
 !-------------------------------------------------------------------------
 #ifdef DEBUG
@@ -150,13 +151,23 @@
       end do
    end if
 
-   allocate(wrk(iextr,jextr),stat=err)
+   if (on_grid) then
+      if (iextr_domain.ne.iextr .or. jextr_domain.ne.jextr) then
+         call getm_error("init_meteo_input_ncdf()", &
+                         "dimensions do not match")
+      end if
+      il = ilg ; jl = jlg ; ih = ihg ; jh = jhg
+   else
+      il = 1 ; jl = 1 ; ih = iextr ; jh = jextr
+   end if
+
+   start(1) = il; start(2) = jl;
+   edges(1) = ih-il+1; edges(2) = jh-jl+1;
+   edges(3) = 1
+
+   allocate(wrk(edges(1),edges(2)),stat=err)
    if (err /= 0) stop 'ncdf_meteo: Error allocating memory (wrk)'
    wrk = 0.
-
-   allocate(wrk_dp(iextr,jextr),stat=err)
-   if (err /= 0) stop 'ncdf_meteo: Error allocating memory (wrk_dp)'
-   wrk_dp = _ZERO_
 
    allocate(beta(E2DFIELD),stat=err)
    if (err /= 0) &
@@ -178,11 +189,16 @@
       end if
    end if
 
+
    if ( .not. on_grid ) then
 
       if (.not. calc_met) then
          stop 'init_meteo_input_ncdf: calc_met=false requires on_grid=true'
       end if
+
+      allocate(wrk_dp(edges(1),edges(2)),stat=err)
+      if (err /= 0) stop 'ncdf_meteo: Error allocating memory (wrk_dp)'
+      wrk_dp = _ZERO_
 
       allocate(ti(E2DFIELD),stat=err)
       if (err /= 0) &
@@ -240,101 +256,13 @@
       end if
    end if
 
-   name_thisvar = name_airp
-   err = nf90_inq_varid(ncid,name_airp,airp_id)
-   if (err .NE. NF90_NOERR) go to 10
-
-   if (fwf_method .eq. 2) then
-      name_thisvar = name_evap
-      err = nf90_inq_varid(ncid,name_evap,evap_id)
-      if (err .NE. NF90_NOERR) go to 10
-   end if
-   if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-      name_thisvar = name_precip
-      err = nf90_inq_varid(ncid,name_precip,precip_id)
-      if (err .NE. NF90_NOERR) go to 10
-   end if
-
-   if (calc_met) then
-      name_thisvar = name_u10
-      err = nf90_inq_varid(ncid,name_u10,u10_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-      name_thisvar = name_v10
-      err = nf90_inq_varid(ncid,name_v10,v10_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-      name_thisvar = name_t2
-      err = nf90_inq_varid(ncid,name_t2,t2_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-      hum_id = -1
-      err = nf90_inq_varid(ncid,name_hum1,hum_id)
-      if (err .NE. NF90_NOERR) then
-         err = nf90_inq_varid(ncid,name_hum2,hum_id)
-         if (err .NE. NF90_NOERR) then
-            err = nf90_inq_varid(ncid,name_hum3,hum_id)
-            if (err .NE. NF90_NOERR) then
-               FATAL 'Not able to find valid humidity parameter'
-               stop 'init_meteo_input_ncdf()'
-            else
-               LEVEL2 'Taking hum as dew point temperature'
-               hum_method = DEW_POINT
-            end if
-         else
-            LEVEL2 'Taking hum as relative humidity'
-            hum_method = RELATIVE_HUM
-         end if
-      else
-         LEVEL2 'Taking hum as atmospheric specific humidity'
-         hum_method = SPECIFIC_HUM
-      end if
-!KBKSTDERR 'Taking hum as wet bulb temperature'
-
-      name_thisvar = name_tcc
-      err = nf90_inq_varid(ncid,name_tcc,tcc_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-   else
-
-      name_thisvar = name_tausx
-      err = nf90_inq_varid(ncid,name_tausx,tausx_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-      name_thisvar = name_tausy
-      err = nf90_inq_varid(ncid,name_tausy,tausy_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-      name_thisvar = name_swr
-      err = nf90_inq_varid(ncid,name_swr,swr_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-      name_thisvar = name_shf
-      err = nf90_inq_varid(ncid,name_shf,shf_id)
-      if (err .NE. NF90_NOERR) go to 10
-
-   end if
-
-   if (nudge_sst) then
-      name_thisvar = name_sst
-      err = nf90_inq_varid(ncid,name_sst,sst_id)
-      if (err .NE. NF90_NOERR) go to 10
-   end if
-
-   if (met_method .eq. 2) then
-      start(1) = 1; start(2) = 1;
-      edges(1) = iextr; edges(2) = jextr;
-      edges(3) = 1
-      call get_meteo_data_ncdf(nstart-1)
-   end if
+   call get_meteo_data_ncdf(nstart-1)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_meteo_input_ncdf()'
    write(debug,*)
 #endif
    return
-10 FATAL 'init_meteo_input_ncdf: ',name_thisvar,' ',nf90_strerror(err)
-   stop
    end subroutine init_meteo_input_ncdf
 !EOC
 
@@ -360,7 +288,7 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer         :: i,indx
+   integer         :: indx
    REALTYPE        :: t
    logical, save   :: first=.true.
    integer, save   :: save_n=1
@@ -637,14 +565,91 @@
       call add_secs(junit,sunit,nint(met_times(textr)),j2,s2)
    end if
 
+
    if (found) then
+
+      LEVEL4 ' ... checking variable ',name_airp
+      err = nf90_inq_varid(ncid,name_airp,airp_id)
+      if (err .NE. NF90_NOERR) go to 10
+
+      if (fwf_method .eq. 2) then
+         LEVEL4 ' ... checking variable ',name_evap
+         err = nf90_inq_varid(ncid,name_evap,evap_id)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+      if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+         LEVEL4 ' ... checking variable ',name_precip
+         err = nf90_inq_varid(ncid,name_precip,precip_id)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+
+      if (calc_met) then
+         LEVEL4 ' ... checking variable ',name_u10
+         err = nf90_inq_varid(ncid,name_u10,u10_id)
+         if (err .NE. NF90_NOERR) go to 10
+         LEVEL4 ' ... checking variable ',name_v10
+         err = nf90_inq_varid(ncid,name_v10,v10_id)
+         if (err .NE. NF90_NOERR) go to 10
+         LEVEL4 ' ... checking variable ',name_t2
+         err = nf90_inq_varid(ncid,name_t2,t2_id)
+         if (err .NE. NF90_NOERR) go to 10
+
+         hum_id = -1
+         err = nf90_inq_varid(ncid,name_hum1,hum_id)
+         if (err .NE. NF90_NOERR) then
+            err = nf90_inq_varid(ncid,name_hum2,hum_id)
+            if (err .NE. NF90_NOERR) then
+               err = nf90_inq_varid(ncid,name_hum3,hum_id)
+               if (err .NE. NF90_NOERR) then
+                  FATAL 'Not able to find valid humidity parameter'
+                  stop 'init_meteo_input_ncdf()'
+               else
+                  LEVEL2 'Taking hum as dew point temperature'
+                  hum_method = DEW_POINT
+               end if
+            else
+               LEVEL2 'Taking hum as relative humidity'
+               hum_method = RELATIVE_HUM
+            end if
+         else
+            LEVEL2 'Taking hum as atmospheric specific humidity'
+            hum_method = SPECIFIC_HUM
+         end if
+!KBKSTDERR 'Taking hum as wet bulb temperature'
+         LEVEL4 ' ... checking variable ',name_tcc
+         err = nf90_inq_varid(ncid,name_tcc,tcc_id)
+         if (err .NE. NF90_NOERR) go to 10
+      else
+         LEVEL4 ' ... checking variable ',name_tausx
+         err = nf90_inq_varid(ncid,name_tausx,tausx_id)
+         if (err .NE. NF90_NOERR) go to 10
+         LEVEL4 ' ... checking variable ',name_tausy
+         err = nf90_inq_varid(ncid,name_tausy,tausy_id)
+         if (err .NE. NF90_NOERR) go to 10
+         LEVEL4 ' ... checking variable ',name_swr
+         err = nf90_inq_varid(ncid,name_swr,swr_id)
+         if (err .NE. NF90_NOERR) go to 10
+         LEVEL4 ' ... checking variable ',name_shf
+         err = nf90_inq_varid(ncid,name_shf,shf_id)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+
+      if (nudge_sst) then
+         LEVEL4 ' ... checking variable ',name_sst
+         err = nf90_inq_varid(ncid,name_sst,sst_id)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+
       offset = time_diff(jul0,secs0,junit,sunit)
       LEVEL3 'Using meteo from:'
       LEVEL4 trim(fn)
       LEVEL3 'Meteorological offset time ',offset
+
    else
+
       FATAL 'Could not find any valid meteo-files'
       stop 'open_meteo_file'
+
    end if
 
    return
@@ -685,7 +690,6 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer         :: i1,i2,istr,j1,j2,jstr
    integer         :: i,j,err
    REALTYPE        :: angle,uu,vv,sinconv,cosconv
 !EOP
@@ -697,11 +701,7 @@
       if (point_source) then
          airp = wrk(1,1)
       else
-         do j=jmin,jmax
-            do i=imin,imax
-               airp(i,j) = wrk(i,j)
-            end do
-         end do
+         airp(ill:ihl,jll:jhl) = wrk
       end if
    else
       !KBKwrk_dp = _ZERO_
@@ -716,11 +716,7 @@
          if (point_source) then
             evap = wrk(1,1)
          else
-            do j=jmin,jmax
-               do i=imin,imax
-                  evap(i,j) = wrk(i,j)
-               end do
-            end do
+            evap(ill:ihl,jll:jhl) = wrk
          end if
       else
          call copy_var(grid_scan,wrk,wrk_dp)
@@ -738,11 +734,7 @@
          if (point_source) then
             precip = wrk(1,1)
          else
-            do j=jmin,jmax
-               do i=imin,imax
-                  precip(i,j) = wrk(i,j)
-               end do
-            end do
+            precip(ill:ihl,jll:jhl) = wrk
          end if
       else
          call copy_var(grid_scan,wrk,wrk_dp)
@@ -761,11 +753,7 @@
          if (point_source) then
             u10 = wrk(1,1)
          else
-            do j=jmin,jmax
-               do i=imin,imax
-                  u10(i,j) = wrk(i,j)
-               end do
-            end do
+            u10(ill:ihl,jll:jhl) = wrk
          end if
       else
          !KBKwrk_dp = _ZERO_
@@ -779,11 +767,7 @@
          if (point_source) then
             v10 = wrk(1,1)
          else
-            do j=jmin,jmax
-               do i=imin,imax
-                  v10(i,j) = wrk(i,j)
-               end do
-            end do
+            v10(ill:ihl,jll:jhl) = wrk
          end if
       else
          !KBKwrk_dp = _ZERO_
@@ -822,11 +806,7 @@
          if (point_source) then
             t2 = wrk(1,1)
          else
-            do j=jmin,jmax
-               do i=imin,imax
-                  t2(i,j) = wrk(i,j)
-               end do
-            end do
+            t2(ill:ihl,jll:jhl) = wrk
          end if
       else
          !KBKwrk_dp = _ZERO_
@@ -840,11 +820,7 @@
          if (point_source) then
             hum = wrk(1,1)
          else
-            do j=jmin,jmax
-               do i=imin,imax
-                  hum(i,j) = wrk(i,j)
-               end do
-            end do
+            hum(ill:ihl,jll:jhl) = wrk
          end if
       else
          !KBKwrk_dp = _ZERO_
@@ -858,11 +834,7 @@
          if (point_source) then
             tcc = wrk(1,1)
          else
-            do j=jmin,jmax
-               do i=imin,imax
-                  tcc(i,j) = wrk(i,j)
-               end do
-            end do
+            tcc(ill:ihl,jll:jhl) = wrk
          end if
       else
          !KBKwrk_dp = _ZERO_
@@ -877,11 +849,7 @@
       if (point_source) then
          tausx = wrk(1,1)
       else
-         do j=jmin,jmax
-            do i=imin,imax
-               tausx(i,j) = wrk(i,j)
-            end do
-         end do
+         tausx(ill:ihl,jll:jhl) = wrk
       end if
 
       err = nf90_get_var(ncid,tausy_id,wrk,start,edges)
@@ -889,11 +857,7 @@
       if (point_source) then
          tausy = wrk(1,1)
       else
-         do j=jmin,jmax
-            do i=imin,imax
-               tausy(i,j) = wrk(i,j)
-            end do
-         end do
+         tausy(ill:ihl,jll:jhl) = wrk
       end if
 
       err = nf90_get_var(ncid,swr_id,wrk,start,edges)
@@ -901,11 +865,7 @@
       if (point_source) then
          swr = wrk(1,1)
       else
-         do j=jmin,jmax
-            do i=imin,imax
-               swr(i,j) = wrk(i,j)
-            end do
-         end do
+         swr(ill:ihl,jll:jhl) = wrk
       end if
 
       err = nf90_get_var(ncid,shf_id,wrk,start,edges)
@@ -913,11 +873,7 @@
       if (point_source) then
          shf = wrk(1,1)
       else
-         do j=jmin,jmax
-            do i=imin,imax
-               shf(i,j) = wrk(i,j)
-            end do
-         end do
+         shf(ill:ihl,jll:jhl) = wrk
       end if
 
    end if
@@ -929,11 +885,7 @@
          if (point_source) then
             sst = wrk(1,1)
          else
-            do j=jmin,jmax
-               do i=imin,imax
-                  sst(i,j) = wrk(i,j)
-               end do
-            end do
+            sst(ill:ihl,jll:jhl) = wrk
          end if
       else if (calc_met) then
          call copy_var(grid_scan,wrk,wrk_dp)
@@ -981,8 +933,7 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer         :: i1,i2,istr,j1,j2,jstr
-   integer         :: i,j,err
+   integer         :: i,j
 !EOP
 !-----------------------------------------------------------------------
 
