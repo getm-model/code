@@ -100,7 +100,7 @@
       end if
       il = ilg ; jl = jlg ; ih = ihg ; jh = jhg
    else
-      il = 1 ; jl = 1 ; ih = iextr ; jh = jextr
+      il = 1 ; jl = 1 ; ih = ilen ; jh = jlen
    end if
 
    start(1) = il; start(2) = jl;
@@ -413,6 +413,8 @@
 
    end do
 
+   if ( .not. found ) call getm_error('open_waves_file()',             &
+               'Could not find valid waveforcing in '//trim(waves_file))
 
    LEVEL4 ' ... checking variable ',name_waveL
    err = nf90_inq_varid(ncid,name_waveL,waveL_id)
