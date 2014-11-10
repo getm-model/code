@@ -413,6 +413,8 @@
 
    end do
 
+   if ( .not. found ) call getm_error('open_waves_file()',             &
+               'Could not find valid waveforcing in '//trim(waves_file))
 
    LEVEL4 ' ... checking variable ',name_waveL
    err = nf90_inq_varid(ncid,name_waveL,waveL_id)
