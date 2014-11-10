@@ -126,7 +126,7 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer         :: i,j,n,il,ih,jl,jh
+   integer         :: i,j,il,ih,jl,jh
    integer         :: err
    logical         :: ok=.true.
    REALTYPE        :: olon,olat,rlon,rlat,x
@@ -288,7 +288,7 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer         :: i,indx
+   integer         :: indx
    REALTYPE        :: t
    logical, save   :: first=.true.
    integer, save   :: save_n=1
@@ -694,7 +694,6 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer         :: i1,i2,istr,j1,j2,jstr
    integer         :: i,j,err
    REALTYPE        :: angle,uu,vv,sinconv,cosconv
 !EOP
@@ -938,8 +937,7 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer         :: i1,i2,istr,j1,j2,jstr
-   integer         :: i,j,err
+   integer         :: i,j
 !EOP
 !-----------------------------------------------------------------------
 
