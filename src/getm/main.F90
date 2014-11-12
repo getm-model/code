@@ -6,8 +6,6 @@
 !!
 !! !AUTHORS: Hans Burchard and Karsten Bolding
 !!
-!! !AFFILIATION: Bolding & Burhard ApS.
-!!
 !! !DATE:
 !!
 !! !INTRODUCTION:
@@ -108,7 +106,7 @@
    LEVEL2 "3D data exchange: ",all_3d_exchange/(1024*1024)," MB"
    STDERR LINE
 #endif
-   LEVEL1 'Copyright (C) Bolding & Burchard ApS.'
+   LEVEL1 'Copyright (C) Karsten Bolding and Hans Burchard.'
    LEVEL1 'under the General Public License (GPL) - http://www.gnu.org '
    STDERR LINE
 
