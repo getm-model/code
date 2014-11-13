@@ -29,7 +29,7 @@
    use gotm_fabm, only: gotm_fabm_calc=>fabm_calc, model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz, cc_transport
 
    use fabm, only: type_horizontal_variable_id
-   use fabm_types,only: output_instantaneous
+   use fabm_types,only: output_instantaneous, output_none
    use fabm_standard_variables, only: standard_variables
 
    IMPLICIT NONE
@@ -45,7 +45,7 @@
    end interface
 !
 ! !PUBLIC DATA MEMBERS:
-   public init_getm_fabm, do_getm_fabm, model
+   public init_getm_fabm, do_getm_fabm, model, output_none
    integer, public :: fabm_init_method=0
    logical, public :: fabm_calc
 !
@@ -115,10 +115,12 @@
 !     not their time integral. This will be redundant when time-integrating/averaging
 !     is moved from FABM to the physical host.
       do n=1,size(model%diagnostic_variables)
-         model%diagnostic_variables(n)%output = output_instantaneous
+         if (model%diagnostic_variables(n)%output/=output_none) &
+            model%diagnostic_variables(n)%output = output_instantaneous
       end do
       do n=1,size(model%horizontal_diagnostic_variables)
-         model%horizontal_diagnostic_variables(n)%output = output_instantaneous
+         if (model%horizontal_diagnostic_variables(n)%output/=output_none) &
+            model%horizontal_diagnostic_variables(n)%output = output_instantaneous
       end do
 
 !     Allocate memory for pelagic state variables.
