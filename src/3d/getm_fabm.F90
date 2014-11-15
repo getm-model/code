@@ -173,10 +173,6 @@
       if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (fabm_diag_hz)'
       fabm_diag_hz = _ZERO_
 
-      allocate(bioshade(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (bioshade)'
-      bioshade = _ONE_
-
 !     Read settings specific to GETM-FABM interaction.
       open(NAMLST2,status='unknown',file=trim(nml_file))
       read(NAMLST2,NML=getm_fabm_nml)
