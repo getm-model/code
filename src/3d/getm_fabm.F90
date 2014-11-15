@@ -15,11 +15,14 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: ilg,ihg,jlg,jhg,ill,ihl,jll,jhl
    use domain, only: az,latc,lonc
+   use domain,only: H
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
    use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
    use variables_3d, only: bioshade
    use variables_3d, only: nuh,T,S,rho,a,g1,g2,taubmax_3d
    use variables_3d, only: do_numerical_analyses_3d
+   use advection_3d, only: print_adv_settings_3d,do_advection_3d
+   use variables_2d, only: D
    use meteo, only: swr,u10,v10,evap,precip,tcc
    use time, only: yearday,secondsofday
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
@@ -27,7 +30,10 @@
 ! JORN_FABM
    use gotm_fabm, only: init_gotm_fabm,set_env_gotm_fabm,do_gotm_fabm
    use gotm_fabm, only: gotm_fabm_calc=>fabm_calc, model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz, cc_transport
-   use fabm_types,only: output_instantaneous
+
+   use fabm, only: type_horizontal_variable_id
+   use fabm_types,only: output_instantaneous, output_none
+   use fabm_standard_variables, only: standard_variables
 
    IMPLICIT NONE
 
@@ -53,19 +59,12 @@
    end interface
 !
 ! !PUBLIC DATA MEMBERS:
-   public init_getm_fabm, postinit_getm_fabm, do_getm_fabm, model
+   public init_getm_fabm, postinit_getm_fabm, do_getm_fabm, model, output_none
    integer, public :: fabm_init_method=0
    logical, public :: fabm_calc
    REALTYPE,dimension(:,:,:,:),allocatable,target,public :: phymix_fabm_pel,nummix_fabm_pel
 !
 ! !PRIVATE DATA MEMBERS:
-   integer  :: fabm_adv_split=0
-   integer  :: fabm_adv_hor=1
-   integer  :: fabm_adv_ver=1
-   integer  :: fabm_AH_method=0
-   REALTYPE :: fabm_AH_const=1.4d-7
-   REALTYPE :: fabm_AH_Prt=_TWO_
-   REALTYPE :: fabm_AH_stirr_const=_ONE_
    type t_pa3d
       REALTYPE,dimension(:,:,:),pointer :: p3d
    end type t_pa3d
@@ -73,6 +72,14 @@
 #ifndef _POINTER_REMAP_
    REALTYPE,dimension(:,:,:),allocatable,target :: nummix
 #endif
+   integer         :: fabm_adv_split=0
+   integer         :: fabm_adv_hor=1
+   integer         :: fabm_adv_ver=1
+   integer         :: fabm_AH_method=0
+   REALTYPE        :: fabm_AH_const=1.4d-7
+   REALTYPE        :: fabm_AH_Prt=_TWO_
+   REALTYPE        :: fabm_AH_stirr_const=_ONE_
+   type (type_horizontal_variable_id) :: id_bottom_depth_below_geoid,id_bottom_depth
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -96,7 +103,6 @@
 !
 ! !USES:
    use advection, only: J7
-   use advection_3d, only: print_adv_settings_3d
    use variables_3d, only: deformC_3d,deformX_3d,deformUV_3d,calc_stirr
    use m2d, only: Am_method,AM_LES
    use les, only: les_mode,LES_TRACER,LES_BOTH
@@ -132,14 +138,19 @@
    fabm_calc = gotm_fabm_calc
 
    if (fabm_calc) then
+      id_bottom_depth_below_geoid = model%get_horizontal_variable_id(standard_variables%bottom_depth_below_geoid)
+      id_bottom_depth = model%get_horizontal_variable_id(standard_variables%bottom_depth)
+
 !     Temporary: make sure diagnostic variables store the last value,
 !     not their time integral. This will be redundant when time-integrating/averaging
 !     is moved from FABM to the physical host.
       do n=1,size(model%diagnostic_variables)
-         model%diagnostic_variables(n)%output = output_instantaneous
+         if (model%diagnostic_variables(n)%output/=output_none) &
+            model%diagnostic_variables(n)%output = output_instantaneous
       end do
       do n=1,size(model%horizontal_diagnostic_variables)
-         model%horizontal_diagnostic_variables(n)%output = output_instantaneous
+         if (model%horizontal_diagnostic_variables(n)%output/=output_none) &
+            model%horizontal_diagnostic_variables(n)%output = output_instantaneous
       end do
 
 !     Allocate memory for pelagic state variables.
@@ -337,7 +348,6 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use advection_3d, only: do_advection_3d
    use getm_timers, only: tic, toc, TIM_GETM_FABM, TIM_ADVECTFABM
    IMPLICIT NONE
 !
@@ -416,6 +426,8 @@
                                    rho(i,j,1:),nuh(i,j,0:),hn(i,j,0:),ww(i,j,0:), &
                                    bioshade(i,j,1:),I_0,cloud,taub_nonnorm,wind_speed,precip(i,j),evap(i,j), &
                                    z,A(i,j),g1(i,j),g2(i,j),yearday,secondsofday)
+            call model%link_horizontal_data(id_bottom_depth_below_geoid,H(i,j))
+            call model%link_horizontal_data(id_bottom_depth,D(i,j))
 
 !           Update biogeochemical variable values.
             call do_gotm_fabm(kmax)
