@@ -25,7 +25,7 @@
    use bio_var, only: numc,var_names,var_units,var_long
 #endif
 #ifdef _FABM_
-   use getm_fabm, only: model,fabm_calc
+   use getm_fabm, only: model,fabm_calc,output_none
 #endif
 
    IMPLICIT NONE
@@ -493,7 +493,9 @@
    if (fabm_calc) then
       allocate(fabm_ids(size(model%state_variables)),stat=rc)
       if (rc /= 0) stop 'init_3d_ncdf(): Error allocating memory (fabm_ids)'
+      fabm_ids = -1
       do n=1,size(model%state_variables)
+         if (model%state_variables(n)%output==output_none) cycle
          err = nf90_def_var(ncid,model%state_variables(n)%name,NCDF_FLOAT_PRECISION,f4_dims,fabm_ids(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabm_ids(n), &
@@ -507,7 +509,9 @@
 
       allocate(fabm_ids_ben(size(model%bottom_state_variables)),stat=rc)
       if (rc /= 0) stop 'init_3d_ncdf(): Error allocating memory (fabm_ids_ben)'
+      fabm_ids_ben = -1
       do n=1,size(model%bottom_state_variables)
+         if (model%bottom_state_variables(n)%output==output_none) cycle
          err = nf90_def_var(ncid,model%bottom_state_variables(n)%name,NCDF_FLOAT_PRECISION,f3_dims,fabm_ids_ben(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabm_ids_ben(n), &
@@ -521,7 +525,9 @@
 
       allocate(fabm_ids_diag(size(model%diagnostic_variables)),stat=rc)
       if (rc /= 0) stop 'init_3d_ncdf(): Error allocating memory (fabm_ids_diag)'
+      fabm_ids_diag = -1
       do n=1,size(model%diagnostic_variables)
+         if (model%diagnostic_variables(n)%output==output_none) cycle
          err = nf90_def_var(ncid,model%diagnostic_variables(n)%name,NCDF_FLOAT_PRECISION,f4_dims,fabm_ids_diag(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabm_ids_diag(n), &
@@ -535,7 +541,9 @@
 
       allocate(fabm_ids_diag_hz(size(model%horizontal_diagnostic_variables)),stat=rc)
       if (rc /= 0) stop 'init_3d_ncdf(): Error allocating memory (fabm_ids_diag_hz)'
+      fabm_ids_diag_hz = -1
       do n=1,size(model%horizontal_diagnostic_variables)
+         if (model%horizontal_diagnostic_variables(n)%output==output_none) cycle
          err = nf90_def_var(ncid,model%horizontal_diagnostic_variables(n)%name,NCDF_FLOAT_PRECISION,f3_dims,fabm_ids_diag_hz(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabm_ids_diag_hz(n), &
