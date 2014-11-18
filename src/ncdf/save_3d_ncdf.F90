@@ -124,7 +124,7 @@
 #else
                        dy,                     &
 #endif
-                       Uinto,vel_missing,ws2d)
+                       Uinto,flux_missing,ws2d)
       err = nf90_put_var(ncid,fluxu_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
@@ -135,7 +135,7 @@
 #else
                        dx,                     &
 #endif
-                       Vinto,vel_missing,ws2d)
+                       Vinto,flux_missing,ws2d)
       err = nf90_put_var(ncid,fluxv_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
@@ -204,7 +204,7 @@
 
 !  volume fluxes
    if (fluxuu_id .ne. -1) then
-      ws(:,:,0) = vel_missing
+      ws(:,:,0) = flux_missing
       do k=1,kmax
          call to_fluxu(imin,jmin,imax,jmax,au, &
 #if defined(CURVILINEAR) || defined(SPHERICAL)
@@ -212,12 +212,12 @@
 #else
                        dy,                     &
 #endif
-                       uu(:,:,k),vel_missing,ws(:,:,k))
+                       uu(:,:,k),flux_missing,ws(:,:,k))
       end do
       err = nf90_put_var(ncid,fluxuu_id,ws(_3D_W_),start,edges)
    end if
    if (fluxvv_id .ne. -1) then
-      ws(:,:,0) = vel_missing
+      ws(:,:,0) = flux_missing
       do k=1,kmax
          call to_fluxv(imin,jmin,imax,jmax,av, &
 #if defined(CURVILINEAR) || defined(SPHERICAL)
@@ -225,7 +225,7 @@
 #else
                        dx,                     &
 #endif
-                       vv(:,:,k),vel_missing,ws(:,:,k))
+                       vv(:,:,k),flux_missing,ws(:,:,k))
       end do
       err = nf90_put_var(ncid,fluxvv_id,ws(_3D_W_),start,edges)
    end if
@@ -236,7 +236,7 @@
 #else
                     ard1,                          &
 #endif
-                    ww,vel_missing,ws)
+                    ww,flux_missing,ws)
       err = nf90_put_var(ncid,fluxw_id,ws(_3D_W_),start,edges)
    end if
 

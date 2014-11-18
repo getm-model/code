@@ -77,6 +77,7 @@
    REALTYPE, parameter                 :: hh_missing     =-9999.0
    REALTYPE, parameter                 :: elev_missing   =-9999.0
    REALTYPE, parameter                 :: vel_missing    =-9999.0
+   REALTYPE, parameter                 :: flux_missing   =-99999.0
    REALTYPE, parameter                 :: tau_missing    =-9999.0
    REALTYPE, parameter                 :: salt_missing   =-9999.0
    REALTYPE, parameter                 :: temp_missing   =-9999.0
