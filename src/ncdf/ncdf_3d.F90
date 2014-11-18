@@ -22,10 +22,10 @@
 
    integer                             :: hcc_id,h_id
    integer                             :: elev_id
-   integer                             :: fluxu_adv_id=-1
-   integer                             :: fluxv_adv_id=-1
-   integer                             :: u_adv_id=-1
-   integer                             :: v_adv_id=-1
+   integer                             :: fluxu_id=-1
+   integer                             :: fluxv_id=-1
+   integer                             :: u_id=-1
+   integer                             :: v_id=-1
    integer                             :: fluxuu_id=-1
    integer                             :: fluxvv_id=-1
    integer                             :: fluxw_id=-1
