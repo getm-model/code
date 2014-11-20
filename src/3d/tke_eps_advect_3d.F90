@@ -17,11 +17,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,az,ax
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxv,dyu
-#else
-   use domain, only: dx,dy
-#endif
    use m3d, only: vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver
    use variables_3d, only: tke,eps,dt,uu,vv,ww,hun,hvn,ho,hn
    use advection, only: J7

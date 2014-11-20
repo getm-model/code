@@ -16,7 +16,7 @@
    use grid_ncdf,    only: xlen,ylen
    use domain,       only: ioff,joff,imin,imax,jmin,jmax
    use domain,       only: H,az,au,av,crit_depth
-   use domain,       only: convc
+   use domain,       only: convc,grid_type
    use variables_2d, only: z,D,U,DU,V,DV,res_u,res_v
 #ifdef USE_BREAKS
    use variables_2d, only: break_stat
@@ -44,11 +44,9 @@
    REALTYPE                  :: dum(1)
    integer                   :: i,j
    REALTYPE                  :: Utmp(E2DFIELD),Vtmp(E2DFIELD)
-#if defined(CURVILINEAR)
    REALTYPE                  :: Urot(E2DFIELD),Vrot(E2DFIELD)
    REALTYPE                  :: deg2rad = 3.141592654/180.
    REALTYPE                  :: cosconv,sinconv
-#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -95,7 +93,7 @@
       err = nf90_put_var(ncid,v_id,Vtmp(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
 
-#if defined(CURVILINEAR)
+      if (grid_type .ge. 3) then
 ! rotated zonal and meridional velocities
       do j=jmin,jmax
          do i=imin,imax
@@ -114,7 +112,7 @@
       if (err .NE. NF90_NOERR) go to 10
       err = nf90_put_var(ncid,vrot_id,Vrot(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
-#endif
+      end if
 
       if (metforcing .and. save_meteo) then
 

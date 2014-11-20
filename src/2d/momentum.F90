@@ -118,12 +118,8 @@
    use parameters, only: g,rho_0
    use domain, only: imin,imax,jmin,jmax
    use domain, only: H,au,av,min_depth,dry_u,Cori,corv
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,arvd1,dxc,dyx
    use variables_2d, only: V
-#else
-   use domain, only: dx
-#endif
    use m2d, only: dtm
    use variables_2d, only: D,z,UEx,U,DU,fV,SlUx,Slru,ru,fU,DV
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
@@ -202,13 +198,9 @@
 #else
             Uloc=_QUART_*( U(i-1,j)+U(i,j)+U(i-1,j+1)+U(i,j+1))
 #endif
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             cord_curv=(V(i,j)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC)) &
                       /DV(i,j)*ARVD1
             fU(i,j)=(cord_curv+corv(i,j))*Uloc
-#else
-            fU(i,j)=corv(i,j)*Uloc
-#endif
          else
             fU(i,j)= _ZERO_
          end if
@@ -281,12 +273,8 @@
    use parameters, only: g,rho_0
    use domain, only: imin,imax,jmin,jmax
    use domain, only: H,au,av,min_depth,dry_v,Cori,coru
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dyv,arud1,dxx,dyc
    use m2d, only: U
-#else
-   use domain, only: dy
-#endif
    use m2d, only: dtm
    use variables_2d, only: D,z,VEx,V,DV,fU,SlVx,Slrv,rv,fV,DU
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
@@ -365,13 +353,9 @@
 #else
             Vloc = _QUART_*( V(i,j-1)+ V(i+1,j-1)+V(i,j)+V(i+1,j))
 #endif
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             cord_curv=(Vloc*(DYCIP1-DYC)-U(i,j)*(DXX-DXXJM1)) &
                        /DU(i,j)*ARUD1
             fV(i,j)=(cord_curv+coru(i,j))*Vloc
-#else
-            fV(i,j)=coru(i,j)*Vloc
-#endif
          else
             fV(i,j) = _ZERO_
          end if

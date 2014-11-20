@@ -21,11 +21,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,az,H
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only : arcd1,dxv,dyu
-#else
-   use domain, only : dx,dy,ard1
-#endif
    use m2d, only: dtm
    use variables_2d, only: z,zo,U,V,fwf
    use getm_timers, only: tic, toc, TIM_SEALEVEL, TIM_SEALEVELH

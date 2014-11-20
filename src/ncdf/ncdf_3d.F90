@@ -41,9 +41,7 @@
    integer                             :: epg_v_id
    integer                             :: ipg_v_id
 #endif
-#if defined(CURVILINEAR)
    integer                             :: uurot_id,vvrot_id
-#endif
    integer                             :: salt_id,temp_id,sigma_t_id
    integer                             :: rad_id
    integer                             :: tke_id,num_id,nuh_id,eps_id

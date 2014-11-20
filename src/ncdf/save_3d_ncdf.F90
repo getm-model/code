@@ -17,12 +17,8 @@
    use grid_ncdf,    only: xlen,ylen,zlen
    use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
    use domain,       only: H,HU,HV,az,au,av,min_depth
-   use domain,       only: convc
-#if defined CURVILINEAR || defined SPHERICAL
+   use domain,       only: convc,grid_type
    use domain,       only: dxv,dyu,arcd1
-#else
-   use domain,       only: dx,dy,ard1
-#endif
    use variables_2d, only: z,D
    use variables_2d, only: U,V,DU,DV
    use variables_3d, only: dt,kmin,ho,hn,uu,hun,vv,hvn,ww,hcc,SS
@@ -71,11 +67,9 @@
    REALTYPE                  :: dum(1)
    integer                   :: i,j
    REALTYPE                  :: uutmp(I3DFIELD),vvtmp(I3DFIELD)
-#if defined(CURVILINEAR)
    REALTYPE                  :: uurot(I3DFIELD),vvrot(I3DFIELD)
    REALTYPE                  :: deg2rad = 3.141592654/180.
    REALTYPE                  :: cosconv,sinconv
-#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -202,11 +196,7 @@
 
       call tow(imin,jmin,imax,jmax,kmin,kmax,az, &
                dt,                               &
-#if defined CURVILINEAR || defined SPHERICAL
                dxv,dyu,arcd1,                    &
-#else
-               dx,dy,ard1,                       &
-#endif
                H,HU,HV,hn,ho,uu,hun,vv,hvn,ww,vel_missing,ws)
       err = nf90_put_var(ncid,w_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
@@ -255,7 +245,7 @@
       if (err .NE. NF90_NOERR) go to 10
 #endif
 
-#if defined(CURVILINEAR)
+      if (grid_type .ge. 3) then
 ! rotated zonal and meridional velocities
       do j=jmin,jmax
          do i=imin,imax
@@ -274,7 +264,7 @@
       if (err .NE. NF90_NOERR) go to 10
       err = nf90_put_var(ncid,vvrot_id,vvrot(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
-#endif
+      end if
 
    end if
 
