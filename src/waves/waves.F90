@@ -456,7 +456,7 @@
 !
 ! !LOCAL VARIABLES
    REALTYPE           :: depthstar,fetchstar,waveHeightstar
-   REALTYPE           :: tanhk3dm3,limiter
+   REALTYPE           :: wind2,windm2,tanhk3dm3,limiter
    REALTYPE,parameter :: waveHeightstar8 = 0.24d0
    REALTYPE,parameter :: k1 = 4.14d-4
    REALTYPE,parameter :: m1 = 0.79d0
@@ -468,14 +468,17 @@
 !-----------------------------------------------------------------------
 !BOC
 
+   wind2 = wind*wind
+   windm2 = _ONE_ / wind2
+
 !  dimensionless depth
-   depthstar = grav * depth / wind**2
+   depthstar = grav * depth * windm2
 
    tanhk3dm3 = tanh(k3*depthstar**m3)
 
    if (present(fetch)) then
 !     dimensionless fetch
-      fetchstar = grav * fetch / wind**2
+      fetchstar = grav * fetch * windm2
       limiter = tanh(k1*fetchstar**m1 / tanhk3dm3)
    else
       limiter = _ONE_
@@ -485,7 +488,7 @@
    waveHeightstar = waveHeightstar8 * (tanhk3dm3*limiter)**p
 
 !  significant wave height
-   wind2waveHeight = wind**2 * waveHeightstar / grav
+   wind2waveHeight = wind2 * waveHeightstar / grav
 
    end function wind2waveHeight
 !EOC
@@ -518,7 +521,7 @@
 !
 ! !LOCAL VARIABLES
    REALTYPE           :: depthstar,fetchstar,wavePeriodstar
-   REALTYPE           :: tanhk4dm4,limiter
+   REALTYPE           :: windm2,tanhk4dm4,limiter
    REALTYPE,parameter :: wavePeriodstar8 = 7.69d0
    REALTYPE,parameter :: k2 = 2.77d-7
    REALTYPE,parameter :: m2 = 1.45d0
@@ -530,14 +533,16 @@
 !-----------------------------------------------------------------------
 !BOC
 
+   windm2 = _ONE_ / (wind*wind)
+
 !  dimensionless depth
-   depthstar = grav * depth / wind**2
+   depthstar = grav * depth * windm2
 
    tanhk4dm4 = tanh(k4*depthstar**m4)
 
    if (present(fetch)) then
 !     dimensionless fetch
-      fetchstar = grav * fetch / wind**2
+      fetchstar = grav * fetch * windm2
       limiter = tanh(k2*fetchstar**m2 / tanhk4dm4)
    else
       limiter = _ONE_
@@ -585,7 +590,7 @@
 !  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES
-   REALTYPE           :: omega,omegastar,kD
+   REALTYPE           :: omega,omegastar,omegastar2,kD
    REALTYPE,parameter :: sqrtgrav_rec = _ONE_/sqrt(grav)
    REALTYPE,parameter :: omegastar1_rec = _ONE_/0.8727d0
    REALTYPE,parameter :: slopestar1_rec = _ONE_/0.77572d0
@@ -598,6 +603,7 @@
 
    omega = _TWO_ * pi / period ! radian frequency
    omegastar = omega * sqrt(depth) * sqrtgrav_rec ! non-dimensional radian frequency
+   omegastar2 = omegastar*omegastar
 
 !!   approximation by Knut
 !!   (errors less than 5%)
@@ -615,9 +621,9 @@
 !  approximation by Soulsby (1997, page 71) (see (18) in Lettmann et al., 2009)
 !  (errors less than 1%)
    if ( omegastar .gt. _ONE_ ) then
-      kD = omegastar**2 * ( _ONE_ + one5th*exp(_TWO_*(_ONE_-omegastar**2)) )
+      kD = omegastar2 * ( _ONE_ + one5th*exp(_TWO_*(_ONE_-omegastar2)) )
    else
-      kD = omegastar * ( _ONE_ + one5th*omegastar**2 )
+      kD = omegastar * ( _ONE_ + one5th*omegastar2 )
    end if
 
    wavePeriod2waveNumber = kD / depth
@@ -649,7 +655,7 @@
 !                      Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
-   REALTYPE :: taue_vel,lnT1m1,lnT2,T3,A1,A2,cd
+   REALTYPE :: taue_vel,lnT1m1,lnT2,T3,A1,A2,sqrtcd,cd
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -667,7 +673,8 @@
          T3 = taue_vel / vel
          A1 = _HALF_ * T3 * (lnT2-_ONE_) * lnT1m1
          A2 = kappa * T3 * lnT1m1
-         cd = (sqrt(A1**2 + A2) - A1)**2
+         sqrtcd = sqrt(A1**2 + A2) - A1
+         cd = sqrtcd*sqrtcd
          wbbl_rdrag = cd * vel
    end select
 
