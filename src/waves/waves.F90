@@ -450,10 +450,6 @@
 !  If fetch is not provided, unlimited fetch will be assumed.
 !  See page 250 in Holthuijsen (2007).
 !
-! !REVISION HISTORY:
-!  Original author(s): Ulf Graewe
-!                      Knut Klingbeil
-!
 ! !LOCAL VARIABLES
    REALTYPE           :: depthstar,fetchstar,waveHeightstar
    REALTYPE           :: wind2,windm2,tanhk3dm3,limiter
@@ -514,10 +510,6 @@
 !  See page 250 in Holthuijsen (2007).
 !  The peak wave period can be empirically related to the significant
 !  wave period (Holthuijsen Eqs. (4.2.7) and (4.2.9)).
-!
-! !REVISION HISTORY:
-!  Original author(s): Ulf Graewe
-!                      Knut Klingbeil
 !
 ! !LOCAL VARIABLES
    REALTYPE           :: depthstar,fetchstar,wavePeriodstar
@@ -586,9 +578,6 @@
 !  For alternatives see Holthuijsen (2007) page 124
 !  (Eckart, 1952 and Fenton, 1988)
 !
-! !REVISION HISTORY:
-!  Original author(s): Knut Klingbeil
-!
 ! !LOCAL VARIABLES
    REALTYPE           :: omega,omegastar,omegastar2,kD
    REALTYPE,parameter :: sqrtgrav_rec = _ONE_/sqrt(grav)
@@ -649,9 +638,6 @@
    REALTYPE,intent(out),optional :: wbl
 !
 ! !DESCRIPTION:
-!
-! !REVISION HISTORY:
-!  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
    REALTYPE           :: Hrms,omegam1,uorb,aorb,Rew,tauwr,tauws,tauwl
@@ -746,11 +732,6 @@
 ! !DESCRIPTION:
 !  rough => total stress => includes form drag (Whitehouse, 2000, page 57)
 !  smooth => skin-friction
-!
-! !REVISION HISTORY:
-!  Original author(s): Saeed Moghimi
-!                      Ulf Graewe
-!                      Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
    REALTYPE :: taue_vel,lnT1m1,lnT2,T3,A1,A2,sqrtcd,cd
