@@ -156,7 +156,7 @@
                      sqrtcd = kappa / log( _ONE_ + _HALF_*DU(i,j)/z0d )
                   end do
                end if
-               cd = max( cd_min , sqrtcd**2) ! see Blumberg and Mellor (1987)
+               cd = max( cd_min , sqrtcd*sqrtcd ) ! see Blumberg and Mellor (1987)
                ru(i,j) = cd * vel
                if (present(zub)) then
                   zub(i,j) = z0d
@@ -209,7 +209,7 @@
                      sqrtcd = kappa / log( _ONE_ + _HALF_*DV(i,j)/z0d )
                   end do
                end if
-               cd = max( cd_min , sqrtcd**2) ! see Blumberg and Mellor (1987)
+               cd = max( cd_min , sqrtcd*sqrtcd ) ! see Blumberg and Mellor (1987)
                rv(i,j) = cd * vel
                if (present(zvb)) then
                   zvb(i,j) = z0d
