@@ -11,8 +11,8 @@
 !
 ! !USES:
    use parameters, only: kappa
-   use domain, only: imin,imax,jmin,jmax,az,au,av
-   use domain, only: z0,zub0,zvb0
+   use domain, only: imin,imax,jmin,jmax,az
+   use domain, only: z0
    use variables_waves, only: waveH,waveT,waveK,coswavedir,sinwavedir
    use waves, only: waves_bbl_method,NO_WBBL,WBBL_DATA2,WBBL_SOULSBY05
    use waves, only: wbbl_tauw,wbbl_rdrag
@@ -40,7 +40,7 @@
    REALTYPE                                 :: cdm1,cosangle
    REALTYPE                                 :: ttransx,ttransy,ttrans
    REALTYPE                                 :: tauc,taubm,taubc,taube,taubp
-   integer                                  :: i,j,rc
+   integer                                  :: i,j
    logical                                  :: calc_taubmax
 
 !EOP
