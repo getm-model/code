@@ -53,7 +53,7 @@
 !  !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD)             :: work2d
    REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel
-   REALTYPE                                 :: vel,cd,cdsqrt,z0d
+   REALTYPE                                 :: vel,cd,sqrtcd,z0d
    integer                                  :: i,j,it,rc
    logical,save                             :: first=.true.
 !EOP
@@ -85,7 +85,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j)                                         &
-!$OMP          PRIVATE(i,vel,cd,cdsqrt,it,z0d)
+!$OMP          PRIVATE(i,vel,cd,sqrtcd,it,z0d)
 
 
 !     KK-TODO: the present implementation sets normal velocity outside open
@@ -148,15 +148,15 @@
                vel = sqrt( u_vel(i,j)**2 + (_HALF_*(work2d(i,j)+work2d(i+1,j)))**2 )
                z0d = zub0(i,j)
 !              Note (KK): note shifting of log profile so that U(-H)=0
-               cdsqrt = kappa / log( _ONE_ + _HALF_*DU(i,j)/z0d )
+               sqrtcd = kappa / log( _ONE_ + _HALF_*DU(i,j)/z0d )
                if (avmmol.gt._ZERO_ .and. vel.gt._ZERO_) then
                   do it=1,z0d_iters
-                     z0d = zub0(i,j) + _TENTH_*avmmol/(cdsqrt*vel)
+                     z0d = zub0(i,j) + _TENTH_*avmmol/(sqrtcd*vel)
 !                    KK-TODO: clipping of z0d at DU as in the old code?
-                     cdsqrt = kappa / log( _ONE_ + _HALF_*DU(i,j)/z0d )
+                     sqrtcd = kappa / log( _ONE_ + _HALF_*DU(i,j)/z0d )
                   end do
                end if
-               cd = max( cd_min , cdsqrt**2) ! see Blumberg and Mellor (1987)
+               cd = max( cd_min , sqrtcd**2) ! see Blumberg and Mellor (1987)
                ru(i,j) = cd * vel
                if (present(zub)) then
                   zub(i,j) = z0d
@@ -201,15 +201,15 @@
                vel = sqrt( (_HALF_*(work2d(i,j)+work2d(i,j+1)))**2 + v_vel(i,j)**2 )
                z0d = zvb0(i,j)
 !              Note (KK): note shifting of log profile so that V(-H)=0
-               cdsqrt = kappa / log( _ONE_ + _HALF_*DV(i,j)/z0d )
+               sqrtcd = kappa / log( _ONE_ + _HALF_*DV(i,j)/z0d )
                if (avmmol.gt._ZERO_ .and. vel.gt._ZERO_) then
                   do it=1,z0d_iters
-                     z0d = zvb0(i,j) + _TENTH_*avmmol/(cdsqrt*vel)
+                     z0d = zvb0(i,j) + _TENTH_*avmmol/(sqrtcd*vel)
 !                    KK-TODO: clipping of z0d at DV as in the old code?
-                     cdsqrt = kappa / log( _ONE_ + _HALF_*DV(i,j)/z0d )
+                     sqrtcd = kappa / log( _ONE_ + _HALF_*DV(i,j)/z0d )
                   end do
                end if
-               cd = max( cd_min , cdsqrt**2) ! see Blumberg and Mellor (1987)
+               cd = max( cd_min , sqrtcd**2) ! see Blumberg and Mellor (1987)
                rv(i,j) = cd * vel
                if (present(zvb)) then
                   zvb(i,j) = z0d
