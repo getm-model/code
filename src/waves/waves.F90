@@ -26,7 +26,7 @@
 ! !PUBLIC DATA MEMBERS:
    public init_waves,do_waves,uv_waves,uv_waves_3d
    public stokes_drift_3d
-   public bottom_friction_waves,wbbl_rdrag
+   public bottom_friction_waves,wbbl_tauw,wbbl_rdrag
 
    integer,public,parameter  :: NO_WAVES=0
    integer,public,parameter  :: WAVES_FROMWIND=1
@@ -450,13 +450,9 @@
 !  If fetch is not provided, unlimited fetch will be assumed.
 !  See page 250 in Holthuijsen (2007).
 !
-! !REVISION HISTORY:
-!  Original author(s): Ulf Graewe
-!                      Knut Klingbeil
-!
 ! !LOCAL VARIABLES
    REALTYPE           :: depthstar,fetchstar,waveHeightstar
-   REALTYPE           :: tanhk3dm3,limiter
+   REALTYPE           :: wind2,windm2,tanhk3dm3,limiter
    REALTYPE,parameter :: waveHeightstar8 = 0.24d0
    REALTYPE,parameter :: k1 = 4.14d-4
    REALTYPE,parameter :: m1 = 0.79d0
@@ -468,14 +464,17 @@
 !-----------------------------------------------------------------------
 !BOC
 
+   wind2 = wind*wind
+   windm2 = _ONE_ / wind2
+
 !  dimensionless depth
-   depthstar = grav * depth / wind**2
+   depthstar = grav * depth * windm2
 
    tanhk3dm3 = tanh(k3*depthstar**m3)
 
    if (present(fetch)) then
 !     dimensionless fetch
-      fetchstar = grav * fetch / wind**2
+      fetchstar = grav * fetch * windm2
       limiter = tanh(k1*fetchstar**m1 / tanhk3dm3)
    else
       limiter = _ONE_
@@ -485,7 +484,7 @@
    waveHeightstar = waveHeightstar8 * (tanhk3dm3*limiter)**p
 
 !  significant wave height
-   wind2waveHeight = wind**2 * waveHeightstar / grav
+   wind2waveHeight = wind2 * waveHeightstar / grav
 
    end function wind2waveHeight
 !EOC
@@ -512,13 +511,9 @@
 !  The peak wave period can be empirically related to the significant
 !  wave period (Holthuijsen Eqs. (4.2.7) and (4.2.9)).
 !
-! !REVISION HISTORY:
-!  Original author(s): Ulf Graewe
-!                      Knut Klingbeil
-!
 ! !LOCAL VARIABLES
    REALTYPE           :: depthstar,fetchstar,wavePeriodstar
-   REALTYPE           :: tanhk4dm4,limiter
+   REALTYPE           :: windm2,tanhk4dm4,limiter
    REALTYPE,parameter :: wavePeriodstar8 = 7.69d0
    REALTYPE,parameter :: k2 = 2.77d-7
    REALTYPE,parameter :: m2 = 1.45d0
@@ -530,14 +525,16 @@
 !-----------------------------------------------------------------------
 !BOC
 
+   windm2 = _ONE_ / (wind*wind)
+
 !  dimensionless depth
-   depthstar = grav * depth / wind**2
+   depthstar = grav * depth * windm2
 
    tanhk4dm4 = tanh(k4*depthstar**m4)
 
    if (present(fetch)) then
 !     dimensionless fetch
-      fetchstar = grav * fetch / wind**2
+      fetchstar = grav * fetch * windm2
       limiter = tanh(k2*fetchstar**m2 / tanhk4dm4)
    else
       limiter = _ONE_
@@ -581,11 +578,8 @@
 !  For alternatives see Holthuijsen (2007) page 124
 !  (Eckart, 1952 and Fenton, 1988)
 !
-! !REVISION HISTORY:
-!  Original author(s): Knut Klingbeil
-!
 ! !LOCAL VARIABLES
-   REALTYPE           :: omega,omegastar,kD
+   REALTYPE           :: omega,omegastar,omegastar2,kD
    REALTYPE,parameter :: sqrtgrav_rec = _ONE_/sqrt(grav)
    REALTYPE,parameter :: omegastar1_rec = _ONE_/0.8727d0
    REALTYPE,parameter :: slopestar1_rec = _ONE_/0.77572d0
@@ -598,6 +592,7 @@
 
    omega = _TWO_ * pi / period ! radian frequency
    omegastar = omega * sqrt(depth) * sqrtgrav_rec ! non-dimensional radian frequency
+   omegastar2 = omegastar*omegastar
 
 !!   approximation by Knut
 !!   (errors less than 5%)
@@ -615,14 +610,109 @@
 !  approximation by Soulsby (1997, page 71) (see (18) in Lettmann et al., 2009)
 !  (errors less than 1%)
    if ( omegastar .gt. _ONE_ ) then
-      kD = omegastar**2 * ( _ONE_ + one5th*exp(_TWO_*(_ONE_-omegastar**2)) )
+      kD = omegastar2 * ( _ONE_ + one5th*exp(_TWO_*(_ONE_-omegastar2)) )
    else
-      kD = omegastar * ( _ONE_ + one5th*omegastar**2 )
+      kD = omegastar * ( _ONE_ + one5th*omegastar2 )
    end if
 
    wavePeriod2waveNumber = kD / depth
 
    end function wavePeriod2waveNumber
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: wbbl_tauw - calculates wave-only bottom stress
+!
+! !INTERFACE:
+   REALTYPE function wbbl_tauw(waveT,waveH,waveK,depth,z0,wbl)
+
+! !USES:
+   use parameters, only: avmmol
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   REALTYPE,intent(in)           :: waveT,waveH,waveK,depth,z0
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE,intent(out),optional :: wbl
+!
+! !DESCRIPTION:
+!
+! !LOCAL VARIABLES:
+   REALTYPE           :: Hrms,omegam1,uorb,aorb,Rew,tauwr,tauws,tauwl
+   logical,save       :: first=.true.
+   REALTYPE,save      :: avmmolm1
+   REALTYPE,parameter :: sqrthalf=sqrt(_HALF_)
+   REALTYPE,parameter :: pi=3.1415926535897932384626433832795029d0
+   REALTYPE,parameter :: oneovertwopi=_HALF_/pi
+   REALTYPE,parameter :: Rew_crit = 5.0d5 ! (Stanev et al., 2009)
+   !REALTYPE,parameter :: Rew_crit = 1.5d5 ! (Soulsby & Clarke, 2005)
+   REALTYPE,parameter :: ar = 0.24d0 ! 0.26d0
+   REALTYPE,parameter :: as = 0.24d0 ! 0.22d0
+!
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   if (first) then
+      avmmolm1 = _ONE_ / avmmol
+      first = .false.
+   end if
+
+   if (waveT .gt. _ZERO_) then
+      Hrms = sqrthalf * waveH
+      omegam1 = oneovertwopi * waveT
+!     wave orbital velocity amplitude at bottom (peak orbital velocity, ubot in SWAN)
+      uorb = _HALF_ * Hrms / ( omegam1*sinh(waveK*depth) )
+!     wave orbital excursion
+      aorb = omegam1 * uorb
+!     wave Reynolds number
+      Rew = aorb * uorb * avmmolm1
+
+!     Note (KK): We do not calculate fw alone, because for small
+!                uorb this can become infinite.
+
+!     KK-TODO: For combined wave-current flow, the decision on
+!              turbulent or laminar flow depends on Rew AND Rec!
+!              (Soulsby & Clarke, 2005)
+!              However, here we decide according to Lettmann et al. (2009).
+!              (Or do we want to assume always turbulent currents?)
+      if ( Rew .gt. Rew_crit ) then
+!        wave friction factor for rough turbulent flow
+         !fwr = 1.39d0 * (aorb/z0(i,j))**(-0.52d0)
+         tauwr = _HALF_ * 1.39d0 * (omegam1/z0)**(-0.52d0) * uorb**(2-0.52d0)
+!        wave friction factor for smooth turbulent flow
+         !fws = 0.0521d0 * Rew**(-0.187d0)
+         tauws = _HALF_ * (omegam1*avmmolm1)**(-0.187d0) * uorb**(2-2*0.187d0)
+
+!        Note (KK): For combined wave-current flow, the decision on
+!                   rough or smooth flow depends on the final taubmax.
+!                   (Soulsby & Clarke, 2005)
+!                   However, here we decide according to Stanev et al. (2009).
+!                   (as for wave-only flow)
+!        wave friction factor
+         !fw = max( fwr , fws )
+!        wave-only bottom stress
+         !tauw = _HALF_ * fw * uorb**2
+         wbbl_tauw = max( tauwr , tauws )
+      else
+!        wave friction factor for laminar flow
+         !fwl = _TWO_ * Rew**(-_HALF_)
+         !fw = fwl
+         tauwl = uorb / sqrt(omegam1*avmmolm1)
+         wbbl_tauw = tauwl
+      end if
+
+!     bbl thickness (Soulsby & Clarke, 2005)
+      if (present(wbl)) wbl = max( 12.0d0*z0 , ar*omegam1*sqrt(wbbl_tauw) )
+
+   else
+      wbbl_tauw = _ZERO_
+      if (present(wbl)) wbl = 12.0d0*z0
+   end if
+
+   end function wbbl_tauw
 !EOC
 !-----------------------------------------------------------------------
 !BOP
@@ -643,13 +733,8 @@
 !  rough => total stress => includes form drag (Whitehouse, 2000, page 57)
 !  smooth => skin-friction
 !
-! !REVISION HISTORY:
-!  Original author(s): Saeed Moghimi
-!                      Ulf Graewe
-!                      Knut Klingbeil
-!
 ! !LOCAL VARIABLES:
-   REALTYPE :: taue_vel,lnT1m1,lnT2,T3,A1,A2,cd
+   REALTYPE :: taue_vel,lnT1m1,lnT2,T3,A1,A2,sqrtcd,cd
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -667,7 +752,8 @@
          T3 = taue_vel / vel
          A1 = _HALF_ * T3 * (lnT2-_ONE_) * lnT1m1
          A2 = kappa * T3 * lnT1m1
-         cd = (sqrt(A1**2 + A2) - A1)**2
+         sqrtcd = sqrt(A1**2 + A2) - A1
+         cd = sqrtcd*sqrtcd
          wbbl_rdrag = cd * vel
    end select
 
