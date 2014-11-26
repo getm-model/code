@@ -22,10 +22,10 @@
 
    integer                             :: hcc_id,h_id=-1
    integer                             :: elev_id
-   integer                             :: fluxu_adv_id=-1
-   integer                             :: fluxv_adv_id=-1
-   integer                             :: u_adv_id=-1
-   integer                             :: v_adv_id=-1
+   integer                             :: fluxu_id=-1
+   integer                             :: fluxv_id=-1
+   integer                             :: u_id=-1
+   integer                             :: v_id=-1
    integer                             :: fluxuu_id=-1
    integer                             :: fluxvv_id=-1
    integer                             :: fluxw_id=-1
@@ -86,6 +86,7 @@
    REALTYPE, parameter                 :: hh_missing     =-9999.0
    REALTYPE, parameter                 :: elev_missing   =-9999.0
    REALTYPE, parameter                 :: vel_missing    =-9999.0
+   REALTYPE, parameter                 :: flux_missing   =-99999.0
    REALTYPE, parameter                 :: tau_missing    =-9999.0
    REALTYPE, parameter                 :: salt_missing   =-9999.0
    REALTYPE, parameter                 :: temp_missing   =-9999.0
