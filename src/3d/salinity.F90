@@ -179,9 +179,6 @@
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-#ifdef NS_FRESHWATER_LENSE_TEST
-salt_field_no=1
-#endif
 #ifdef MED_15X15MINS_TEST
 salt_field_no=1
 #endif
