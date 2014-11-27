@@ -53,6 +53,7 @@
 !  !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD)             :: work2d
    REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel
+   REALTYPE                                 :: work
    REALTYPE                                 :: vel,cd,sqrtcd,z0d
    integer                                  :: i,j,it,rc
    logical,save                             :: first=.true.
@@ -85,7 +86,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j)                                         &
-!$OMP          PRIVATE(i,vel,cd,sqrtcd,it,z0d)
+!$OMP          PRIVATE(i,work,vel,cd,sqrtcd,it,z0d)
 
 
 !     KK-TODO: the present implementation sets normal velocity outside open
@@ -145,7 +146,8 @@
 #endif
          do i=imin-HALO,imax+HALO-1
             if ( au(i,j) .ge. 1 ) then
-               vel = sqrt( u_vel(i,j)**2 + (_HALF_*(work2d(i,j)+work2d(i+1,j)))**2 )
+               work = _HALF_ * ( work2d(i,j) + work2d(i+1,j) )
+               vel = sqrt( u_vel(i,j)*u_vel(i,j) + work*work )
                z0d = zub0(i,j)
 !              Note (KK): note shifting of log profile so that U(-H)=0
                sqrtcd = kappa / log( _ONE_ + _HALF_*DU(i,j)/z0d )
@@ -198,7 +200,8 @@
 #endif
          do i=imin-HALO+1,imax+HALO-1
             if ( av(i,j) .ge. 1 ) then
-               vel = sqrt( (_HALF_*(work2d(i,j)+work2d(i,j+1)))**2 + v_vel(i,j)**2 )
+               work = _HALF_ * ( work2d(i,j) + work2d(i,j+1) )
+               vel = sqrt( work*work + v_vel(i,j)*v_vel(i,j) )
                z0d = zvb0(i,j)
 !              Note (KK): note shifting of log profile so that V(-H)=0
                sqrtcd = kappa / log( _ONE_ + _HALF_*DV(i,j)/z0d )
