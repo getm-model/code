@@ -170,7 +170,7 @@
                   case (WBBL_DATA2)
                      taubp = taubw(i,j)
                   case (WBBL_SOULSBY05)
-                     taubc = taubmax(i,j)
+                     taubc = taubmax(i,j) ! taubmax set by currents
                      taube = sqrt( taubc*taubc + taubw(i,j)*taubw(i,j) )
                      taubp = sqrt( taube * taubw(i,j) )
                end select
