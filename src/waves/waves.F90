@@ -731,7 +731,9 @@
 !
 ! !DESCRIPTION:
 !  rough => total stress => includes form drag (Whitehouse, 2000, page 57)
-!  smooth => skin-friction
+!  also valid for smooth flows:
+!  smooth => skin-friction => z0=avmmol/9/taue_vel
+!                          => tauc(cds), tauw(fws), wbbl(as) !!!
 !
 ! !LOCAL VARIABLES:
    REALTYPE :: taue_vel,lnT1m1,lnT2,T3,A1,A2,sqrtcd,cd
