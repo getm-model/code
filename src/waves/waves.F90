@@ -646,8 +646,8 @@
    REALTYPE,parameter :: sqrthalf=sqrt(_HALF_)
    REALTYPE,parameter :: pi=3.1415926535897932384626433832795029d0
    REALTYPE,parameter :: oneovertwopi=_HALF_/pi
-   REALTYPE,parameter :: Rew_crit = 5.0d5 ! (Stanev et al., 2009)
-   !REALTYPE,parameter :: Rew_crit = 1.5d5 ! (Soulsby & Clarke, 2005)
+   REALTYPE,parameter :: Rew_crit = 5.0d5 ! (Soulsby, 1997, p79; Soulsby & Clarke, 2005, p12)
+!                                           (typo in Soulsby & Clarke, 2005, A.4.3 !!!)
    REALTYPE,parameter :: ar = 0.24d0 ! 0.26d0
    REALTYPE,parameter :: as = 0.24d0 ! 0.22d0
 !
