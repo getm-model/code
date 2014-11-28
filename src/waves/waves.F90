@@ -735,6 +735,8 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE :: taue_vel,lnT1m1,lnT2,T3,A1,A2,sqrtcd,cd
+   REALTYPE,parameter :: DATA2_a1=1.2d0 ! rough (smooth: 9.0d0; Whitehouse, 2000)
+   REALTYPE,parameter :: DATA2_n1=3.2d0 ! rough (smooth: 9.0d0; Whitehouse, 2000)
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -742,7 +744,7 @@
 
    select case(waves_bbl_method)
       case (WBBL_DATA2) ! DATA2 formula for rough flow (Soulsby, 1995, 1997)
-         wbbl_rdrag = (_ONE_ + 1.2d0*(tauw/(tauc+tauw))**3.2d0) * rdragc
+         wbbl_rdrag = (_ONE_ + DATA2_a1*(tauw/(tauc+tauw))*DATA2_n1) * rdragc
       case (WBBL_SOULSBY05) ! Soulsby & Clarke (2005) for rough flow
          taue_vel = ( tauc**2 + tauw**2 ) ** _QUART_
 !!        extension by Malarkey & Davies (2012)
