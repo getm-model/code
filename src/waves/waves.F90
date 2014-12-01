@@ -710,7 +710,7 @@
 !                          => tauc(cds), tauw(fws), wbbl(as) !!!
 !
 ! !LOCAL VARIABLES:
-   REALTYPE :: taue_vel,lnT1m1,lnT2,T3,A1,A2,sqrtcd,cd
+   REALTYPE :: taue_vel,lnT1m1,lnT2,T3m1,A1dT3,A2dT3,sqrtcddT3,cddT32,taum
    REALTYPE,parameter :: DATA2_a1=1.2d0 ! rough (smooth: 9.0d0; Whitehouse, 2000)
    REALTYPE,parameter :: DATA2_n1=3.2d0 ! rough (smooth: 9.0d0; Whitehouse, 2000)
 !
@@ -727,12 +727,13 @@
 !         taue_vel = (tauc**2 + tauw**2 + _TWO_*tauc*tauw*cos(angle))**_QUART_
          lnT1m1 = _ONE_ / log( wbbl / z0 )
          lnT2 = log( depth / wbbl )
-         T3 = taue_vel / vel
-         A1 = _HALF_ * T3 * (lnT2-_ONE_) * lnT1m1
-         A2 = kappa * T3 * lnT1m1
-         sqrtcd = sqrt(A1**2 + A2) - A1
-         cd = sqrtcd*sqrtcd
-         wbbl_rdrag = cd * vel
+         T3m1 = vel / taue_vel
+         A1dT3 = _HALF_ * (lnT2-_ONE_) * lnT1m1
+         A2dT3 = kappa * lnT1m1
+         sqrtcddT3 = sqrt(A1dT3**2 + T3m1*A2dT3) - A1dT3
+         cddT32 = sqrtcddT3*sqrtcddT3
+         taum = cddT32 * taue_vel*taue_vel
+         wbbl_rdrag = taum / vel
    end select
 
    end function wbbl_rdrag
