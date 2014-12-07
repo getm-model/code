@@ -19,7 +19,7 @@
    use domain, only: ill,ihl,jll,jhl,ilg,ihg,jlg,jhg
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
    use grid_interpol, only: to_rotated_lat_lon
-   use meteo, only: meteo_file,on_grid,calc_met,met_method,hum_method
+   use meteo, only: meteo_file,on_grid,calc_met,hum_method
    use meteo, only: airp,u10,v10,t2,hum,tcc
    use meteo, only: fwf_method,evap,precip
    use meteo, only: tausx,tausy,swr,shf
@@ -300,8 +300,6 @@
    write(debug,*) 'get_meteo_data_ncdf() # ',Ncall
 #endif
 
-   if (met_method .eq. 2) then
-
 !     find the right index
 
       t = loop*timestep
@@ -355,7 +353,6 @@
          save_n = indx+1
 
       end if
-   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving get_meteo_data_ncdf()'
