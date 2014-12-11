@@ -224,9 +224,6 @@
 !-------------------------------------------------------------------------
 !BOC
 
-#ifdef MED_15X15MINS_TEST
-temp_field_no=1
-#endif
    select case (temp_method)
       case(0)
          LEVEL3 'getting initial fields from hotstart'
