@@ -10,7 +10,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use meteo, only: metforcing,met_method,meteo_file
+   use meteo, only: met_method,METEO_FROMFILE,meteo_file
    use m2d, only: bdy2d
    use bdy_2d, only: bdyfile_2d,bdyfmt_2d
 #ifndef NO_3D
@@ -103,7 +103,7 @@
 #endif
 
    LEVEL1 'init_input'
-   if (metforcing .and. met_method .eq. 2) then
+   if (met_method .eq. METEO_FROMFILE) then
       call init_meteo_input(trim(input_dir) // meteo_file,n)
    end if
 
@@ -160,7 +160,7 @@
 #endif
    call tic(TIM_INPUT)
 
-   if(metforcing .and. met_method .eq. 2) then
+   if(met_method .eq. METEO_FROMFILE) then
       call get_meteo_data(n)
    end if
 
