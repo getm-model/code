@@ -54,10 +54,11 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
 !  !LOCAL VARIABLES:
-   REALTYPE,dimension(E2DFIELD)             :: work2d,taubcx,taubcy
+   REALTYPE,dimension(E2DFIELD)             :: work2d,taubcu,taubcv
    REALTYPE,dimension(E2DFIELD),target      :: t_zub,t_zvb
    REALTYPE,dimension(:,:),allocatable,save :: u_vel,v_vel,velU,velV
    REALTYPE,dimension(:,:),pointer          :: p_zub,p_zvb,p_taubmax
+   REALTYPE                                 :: work,taubcx,taubcy
    REALTYPE                                 :: vel,cd,sqrtcd,z0d
    integer                                  :: i,j,it,rc
    logical                                  :: calc_taubmax
@@ -109,7 +110,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j)                                         &
-!$OMP          PRIVATE(i,vel,cd,sqrtcd,it,z0d)
+!$OMP          PRIVATE(i,work,taubcx,taubcy,vel,cd,sqrtcd,it,z0d)
 
 
 !     KK-TODO: the present implementation sets normal velocity outside open
@@ -185,7 +186,8 @@
 #endif
          do i=imin-HALO,imax+HALO-1
             if ( au(i,j) .ge. 1 ) then
-               velU(i,j) = sqrt( u_vel(i,j)**2 + (_HALF_*(work2d(i,j)+work2d(i+1,j)))**2 )
+               work = _HALF_ * ( work2d(i,j) + work2d(i+1,j) )
+               velU(i,j) = sqrt( u_vel(i,j)*u_vel(i,j) + work*work )
                z0d = zub0(i,j)
 !              Note (KK): note shifting of log profile so that U(-H)=0
                sqrtcd = kappa / log( _ONE_ + _HALF_*DU1(i,j)/z0d )
@@ -236,7 +238,8 @@
 #endif
          do i=imin-HALO+1,imax+HALO-1
             if ( av(i,j) .ge. 1 ) then
-               velV(i,j) = sqrt( (_HALF_*(work2d(i,j)+work2d(i,j+1)))**2 + v_vel(i,j)**2 )
+               work = _HALF_ * ( work2d(i,j) + work2d(i,j+1) )
+               velV(i,j) = sqrt( work*work + v_vel(i,j)*v_vel(i,j) )
                z0d = zvb0(i,j)
 !              Note (KK): note shifting of log profile so that V(-H)=0
                sqrtcd = kappa / log( _ONE_ + _HALF_*DV1(i,j)/z0d )
@@ -275,8 +278,8 @@
 
 !$OMP WORKSHARE
 !     velocities must be zero at land!!!
-      taubcx = ru * u_vel
-      taubcy = rv * v_vel
+      taubcu = ru * u_vel
+      taubcv = rv * v_vel
 !$OMP END WORKSHARE
 
 !$OMP DO SCHEDULE(RUNTIME)
@@ -285,8 +288,9 @@
 #endif
          do i=imin-HALO+1,imax+HALO-1
             if (az(i,j) .ne. 0) then
-               taubmax(i,j) = _HALF_*sqrt(  ( taubcx(i-1,j  ) + taubcx(i,j) )**2 &
-                                          + ( taubcy(i  ,j-1) + taubcy(i,j) )**2 )
+               taubcx = _HALF_ * ( taubcu(i-1,j  ) + taubcu(i,j) )
+               taubcy = _HALF_ * ( taubcv(i  ,j-1) + taubcv(i,j) )
+               taubmax(i,j) = sqrt( taubcx*taubcx + taubcy*taubcy )
             end if
          end do
 #ifndef SLICE_MODEL
