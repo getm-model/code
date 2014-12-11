@@ -639,16 +639,13 @@
 ! !DESCRIPTION:
 !
 ! !LOCAL VARIABLES:
-   REALTYPE           :: Hrms,omegam1,uorb,aorb,Rew,tauwr,tauws,tauwl
+   REALTYPE           :: Hrms,omegam1,uorb
    logical,save       :: first=.true.
    REALTYPE,save      :: avmmolm1
    REALTYPE,parameter :: sqrthalf=sqrt(_HALF_)
    REALTYPE,parameter :: pi=3.1415926535897932384626433832795029d0
    REALTYPE,parameter :: oneovertwopi=_HALF_/pi
-   REALTYPE,parameter :: Rew_crit = 5.0d5 ! (Stanev et al., 2009)
-   !REALTYPE,parameter :: Rew_crit = 1.5d5 ! (Soulsby & Clarke, 2005)
    REALTYPE,parameter :: ar = 0.24d0 ! 0.26d0
-   REALTYPE,parameter :: as = 0.24d0 ! 0.22d0
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -664,44 +661,21 @@
       omegam1 = oneovertwopi * waveT
 !     wave orbital velocity amplitude at bottom (peak orbital velocity, ubot in SWAN)
       uorb = _HALF_ * Hrms / ( omegam1*sinh(waveK*depth) )
-!     wave orbital excursion
-      aorb = omegam1 * uorb
-!     wave Reynolds number
-      Rew = aorb * uorb * avmmolm1
+
+!     KK-TODO: For combined wave-current flow, the decision on
+!              turbulent or laminar flow depends on Rew AND Rec.
+!              Furthermore, the decision on rough or smooth flow depends
+!              on the final taubmax. (Soulsby & Clarke, 2005)
+!              However, here we assume always rough turbulent flows.
 
 !     Note (KK): We do not calculate fw alone, because for small
 !                uorb this can become infinite.
 
-!     KK-TODO: For combined wave-current flow, the decision on
-!              turbulent or laminar flow depends on Rew AND Rec!
-!              (Soulsby & Clarke, 2005)
-!              However, here we decide according to Lettmann et al. (2009).
-!              (Or do we want to assume always turbulent currents?)
-      if ( Rew .gt. Rew_crit ) then
-!        wave friction factor for rough turbulent flow
-         !fwr = 1.39d0 * (aorb/z0(i,j))**(-0.52d0)
-         tauwr = _HALF_ * 1.39d0 * (omegam1/z0)**(-0.52d0) * uorb**(2-0.52d0)
-!        wave friction factor for smooth turbulent flow
-         !fws = 0.0521d0 * Rew**(-0.187d0)
-         tauws = _HALF_ * (omegam1*avmmolm1)**(-0.187d0) * uorb**(2-2*0.187d0)
-
-!        Note (KK): For combined wave-current flow, the decision on
-!                   rough or smooth flow depends on the final taubmax.
-!                   (Soulsby & Clarke, 2005)
-!                   However, here we decide according to Stanev et al. (2009).
-!                   (as for wave-only flow)
-!        wave friction factor
-         !fw = max( fwr , fws )
-!        wave-only bottom stress
-         !tauw = _HALF_ * fw * uorb**2
-         wbbl_tauw = max( tauwr , tauws )
-      else
-!        wave friction factor for laminar flow
-         !fwl = _TWO_ * Rew**(-_HALF_)
-         !fw = fwl
-         tauwl = uorb / sqrt(omegam1*avmmolm1)
-         wbbl_tauw = tauwl
-      end if
+!     wave friction factor for rough turbulent flow
+      !fwr = 1.39d0 * (aorb/z0)**(-0.52d0)
+!     wave-only bottom stress
+      !tauw = _HALF_ * fw * uorb**2
+      wbbl_tauw = _HALF_ * 1.39d0 * (omegam1/z0)**(-0.52d0) * uorb**(2-0.52d0)
 
 !     bbl thickness (Soulsby & Clarke, 2005)
       if (present(wbl)) wbl = max( 12.0d0*z0 , ar*omegam1*sqrt(wbbl_tauw) )
@@ -730,10 +704,14 @@
 !
 ! !DESCRIPTION:
 !  rough => total stress => includes form drag (Whitehouse, 2000, page 57)
-!  smooth => skin-friction
+!  also valid for smooth flows:
+!  smooth => skin-friction => z0=avmmol/9/taue_vel
+!                          => tauc(cds), tauw(fws), wbbl(as) !!!
 !
 ! !LOCAL VARIABLES:
-   REALTYPE :: taue_vel,lnT1m1,lnT2,T3,A1,A2,sqrtcd,cd
+   REALTYPE :: taue_vel,lnT1m1,lnT2,T3m1,A1dT3,A2dT3,sqrtcddT3,cddT32,taum
+   REALTYPE,parameter :: DATA2_a1=1.2d0 ! rough (smooth: 9.0d0; Whitehouse, 2000)
+   REALTYPE,parameter :: DATA2_n1=3.2d0 ! rough (smooth: 9.0d0; Whitehouse, 2000)
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -741,19 +719,20 @@
 
    select case(waves_bbl_method)
       case (WBBL_DATA2) ! DATA2 formula for rough flow (Soulsby, 1995, 1997)
-         wbbl_rdrag = (_ONE_ + 1.2d0*(tauw/(tauc+tauw))**3.2d0) * rdragc
+         wbbl_rdrag = (_ONE_ + DATA2_a1*(tauw/(tauc+tauw))*DATA2_n1) * rdragc
       case (WBBL_SOULSBY05) ! Soulsby & Clarke (2005) for rough flow
          taue_vel = ( tauc**2 + tauw**2 ) ** _QUART_
 !!        extension by Malarkey & Davies (2012)
 !         taue_vel = (tauc**2 + tauw**2 + _TWO_*tauc*tauw*cos(angle))**_QUART_
          lnT1m1 = _ONE_ / log( wbbl / z0 )
          lnT2 = log( depth / wbbl )
-         T3 = taue_vel / vel
-         A1 = _HALF_ * T3 * (lnT2-_ONE_) * lnT1m1
-         A2 = kappa * T3 * lnT1m1
-         sqrtcd = sqrt(A1**2 + A2) - A1
-         cd = sqrtcd*sqrtcd
-         wbbl_rdrag = cd * vel
+         T3m1 = vel / taue_vel
+         A1dT3 = _HALF_ * (lnT2-_ONE_) * lnT1m1
+         A2dT3 = kappa * lnT1m1
+         sqrtcddT3 = sqrt(A1dT3**2 + T3m1*A2dT3) - A1dT3
+         cddT32 = sqrtcddT3*sqrtcddT3
+         taum = cddT32 * taue_vel*taue_vel
+         wbbl_rdrag = taum / vel
    end select
 
    end function wbbl_rdrag

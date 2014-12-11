@@ -124,13 +124,17 @@
 				<condition type="eq" variable="./met_method" value="2"/>
 			</element>
 			<element name="calc_met" type="bool" label="Fluxes are not provided and need to be calculated.">
-				<condition type="eq" variable="./met_method" value="2"/>
+				<condition type="or">
+					<condition type="eq" variable="./met_method" value="2"/>
+					<condition type="eq" variable="./met_method" value="3"/>
+				</condition>
 			</element>
 			<element name="met_method" type="int" label="meteo method">
 				<condition type="eq" variable="./metforcing" value="True"/>
 				<options>
 					<option value="1" label="constant"/>
 					<option value="2" label="from file"/>
+					<option value="3" label="from external coupler"/>
 				</options>
 			</element>
 			<element name="fwf_method" type="int" label="freshwater flux method">
@@ -138,11 +142,17 @@
 				<options>
 					<option value="0" label="none"/>
 					<option value="1" label="constant, use precip_const and evap_const"/>
-					<option value="2" label="both evapotation and precipitation from file">
-						<condition type="eq" variable="./met_method" value="2"/>
+					<option value="2" label="both evapotation and precipitation is read">
+						<condition type="or">
+							<condition type="eq" variable="./met_method" value="2"/>
+							<condition type="eq" variable="./met_method" value="3"/>
+						</condition>
 					</option>
-					<option value="3" label="evaporation is calculated, precipitation from file">
-						<condition type="eq" variable="./met_method" value="2"/>
+					<option value="3" label="evaporation is calculated, precipitation is read">
+						<condition type="or">
+							<condition type="eq" variable="./met_method" value="2"/>
+							<condition type="eq" variable="./met_method" value="3"/>
+						</condition>
 					</option>
 					<option value="4" label="evaporation is calculated, NO precipitation">
 						<condition type="eq" variable="./met_method" value="2"/>
