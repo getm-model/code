@@ -170,21 +170,12 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,n
-#ifdef PECS_TEST
-   integer                   :: cc(1:30)
-#endif
    integer, parameter        :: nmax=10000
    REALTYPE                  :: zlev(nmax),prof(nmax)
    integer                   :: status
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-#ifdef NS_FRESHWATER_LENSE_TEST
-salt_field_no=1
-#endif
-#ifdef MED_15X15MINS_TEST
-salt_field_no=1
-#endif
 
    select case (salt_method)
       case(0)
@@ -201,76 +192,10 @@ salt_field_no=1
       case(3)
          LEVEL3 'interpolating from 3D field'
          call get_3d_field(salt_file,salt_name,salt_field_no,.true.,S)
-#ifdef SALTWEDGE_TEST
-      case(4)
-      !I need this here for hotstart of salinity!!!
-         LEVEL3 'initializing with #ifdef SALTWEDGE'
-         S =  _ZERO_
-         do i=1,100
-            do k=1,kmax
-!               S(i,2,k)=30.*(1.- tanh(float(i-1)*0.05))
-               S(i,2,k)=(30*_ONE_)*(_ONE_- tanh((i-1)*_ONE_/20))
-            end do
-         end do
-#endif
       case default
          FATAL 'Not valid salt_method specified'
          stop 'init_salinity'
    end select
-
-#ifdef ARKONA_TEST
-   do i=100,135
-      do j=256,257
-         if (az(i,j).ge.1) S(i,j,0:kmax) = 25*_ONE_
-      end do
-   end do
-   do i=26,27
-      do j=77,100
-         S(i,j,0:kmax) = 8*_ONE_
-      end do
-   end do
-#endif
-#ifdef INTERLEAVING_TEST
-   S(2:6,2,1:20) = 12*_ONE_
-#endif
-#ifdef SLOPE_TEST
-   do i=81,82
-      do j=42,43
-      S(i,j,0:kmax) = 25*_ONE_
-      end do
-   end do
-#endif
-#ifdef BALTIC_SLICE_TEST
-  j=2
-   if (imax.eq.102) then
-      do i=2,21
-        S(i,j,0:kmax) = 25*_ONE_
-      end do
-   end if
-   if (imax.eq.302) then
-      do i=2,61
-        S(i,j,0:kmax) = 25*_ONE_
-      end do
-   end if
-   if (imax.eq.902) then
-      do i=2,181
-        S(i,j,0:kmax) = 25*_ONE_
-      end do
-   end if
-#endif
-!#else
-!#ifdef PECS_TEST
-!   S = 10.
-!   do i=1,160
-!      read(98,*) cc(1:30)
-!      do j=1,30
-!         if (cc(j).eq.1) then
-!            S(i,j+1,1)=20.
-!         end if
-!      end do
-!   end do
-!#endif
-!#endif
 
    call update_3d_halo(S,S,az,imin,jmin,imax,jmax,kmax,D_TAG)
    call wait_halo(D_TAG)
@@ -329,9 +254,6 @@ salt_field_no=1
    REALTYPE, POINTER         :: Res(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
    REALTYPE, POINTER         :: a1(:),a2(:),a3(:),a4(:)
-#ifdef SALTWEDGE_TEST
-   REALTYPE                  :: SRelax,kk
-#endif
   REALTYPE                   :: S2(I3DFIELD)
   integer                    :: status
 !EOP
@@ -390,24 +312,6 @@ salt_field_no=1
       call toc(TIM_MIXANALYSIS)
       call tic(TIM_SALT)
    end if
-
-#ifdef PECS_TEST
-   S(imin:imin,jmin:jmax,1:kmax)=10*_ONE_
-   S(imax:imax,jmin:jmax,1:kmax)=10*_ONE_
-#endif
-
-#ifdef SALTWEDGE_TEST
-   SRelax=30.
-   j=2
-   do k=1,kmax
-      do i=1,100
-!         kk=  1.- tanh(float(i-1)*0.05)
-         kk=  _ONE_- tanh((i-1)*_ONE_/20)
-         S(i,j,k)=(_ONE_-kk)*S(i,j,k)+kk*SRelax
-      end do
-   end do
-   S(imax-1,2,:)=_ZERO_ !river
-#endif
 
 
 ! OMP-NOTE: Pointers are used to for each thread to use its
@@ -504,26 +408,6 @@ salt_field_no=1
 
 !$OMP END PARALLEL
 
-#ifdef ARKONA_TEST
-   do i=100,135
-      do j=256,257
-         if (az(i,j).ge.1) S(i,j,0:kmax) = 25*_ONE_
-      end do
-   end do
-   do i=26,27
-      do j=77,100
-      S(i,j,0:kmax) = 8*_ONE_
-      end do
-   end do
-#endif
-
-#ifdef SLOPE_TEST
-   do i=81,82
-      do j=42,43
-      S(i,j,0:kmax) = 25*_ONE_
-      end do
-   end do
-#endif
 
    if (salt_check .ne. 0 .and. mod(n,abs(salt_check)) .eq. 0) then
       call check_3d_fields(imin,jmin,imax,jmax,kmin,kmax,az, &
