@@ -1,6 +1,7 @@
 # Try to locate FABM's installation prefix.
 find_path(FABM_PREFIX
   NAMES include/fabm_driver.h
+  HINTS "$ENV{FABM_PREFIX}"
   PATHS "$ENV{LOCALAPPDATA}/fabm/gotm" "$ENV{APPDATA}/fabm/gotm" "$ENV{HOME}/local/fabm/gotm"
   DOC "Installation prefix for Framework for Aquatic Biogeochemical Models - fabm.net"
 )
@@ -14,7 +15,7 @@ find_library(FABM_LIBRARIES NAMES fabm
 find_path(FABM_INCLUDE_DIRS
           NAMES fabm_driver.h
           HINTS ${FABM_PREFIX}/include
-          DOC "FABM include directories"
+          DOC "FABM include directory"
 )
 
 mark_as_advanced(FABM_LIBRARIES FABM_INCLUDE_DIRS)

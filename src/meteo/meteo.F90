@@ -46,6 +46,7 @@
    use time, only: write_time_string,timestr
    use halo_zones, only : H_TAG,update_2d_halo,wait_halo
    use domain, only: imin,imax,jmin,jmax,lonc,latc,convc,az
+   use exceptions
    IMPLICIT NONE
 !
    private
@@ -58,7 +59,11 @@
    logical, public                     :: metforcing=.false.
    logical, public                     :: on_grid=.true.
    logical, public                     :: calc_met=.false.
-   integer, public                     :: met_method
+   integer, public, parameter          :: NO_METEO=0
+   integer, public, parameter          :: METEO_CONST=1
+   integer, public, parameter          :: METEO_FROMFILE=2
+   integer, public, parameter          :: METEO_FROMEXT=3
+   integer, public                     :: met_method=NO_METEO
    integer, public                     :: fwf_method=0
    REALTYPE, public                    :: wind_factor=_ONE_
    REALTYPE, public                    :: evap_factor = _ONE_
@@ -182,10 +187,13 @@
 !  KK-TODO: replace metforcing by met_method=0
 
    LEVEL2 'Metforcing=',metforcing
-   if (.not. metforcing) return
+   if (.not. metforcing) then
+      met_method = NO_METEO
+      return
+   end if
 
    select case (met_method)
-      case (1)
+      case (METEO_CONST)
          LEVEL2 'Constant forcing is used:'
          LEVEL3 'tx     = ',tx
          LEVEL3 'ty     = ',ty
@@ -195,12 +203,21 @@
             LEVEL3 'evap   = ',evap_const
             LEVEL3 'precip = ',precip_const
          end if
-      case (2)
+      case (METEO_FROMFILE)
+         LEVEL2 'Meteo forcing read from file'
          if(on_grid) then
             LEVEL2 'Meteorological fields are on the computational grid'
          else
             LEVEL2 'Meteorological fields needs to be interpolated'
          end if
+      case (METEO_FROMEXT)
+         LEVEL2 'Meteo forcing provided from external'
+      case default
+         call getm_error("init_meteo()", &
+                         "no valid met_method")
+   end select
+
+   if (met_method.eq.METEO_FROMFILE .or. met_method.eq.METEO_FROMEXT) then
          if(calc_met) then
             LEVEL2 'Stresses and fluxes will be calculated'
          else
@@ -212,9 +229,9 @@
                LEVEL3 'evap   = ',evap_const
                LEVEL3 'precip = ',precip_const
             case (2)
-               LEVEL2 'Evaporation/precipitation read from file'
+               LEVEL2 'Evaporation/precipitation read'
             case (3)
-               LEVEL2 'Precipitation read from file'
+               LEVEL2 'Precipitation read'
                if (calc_met) then
                   LEVEL2 'Evaporation will be calculated'
                else
@@ -229,8 +246,8 @@
                end if
             case default
          end select
-      case default
-   end select
+   end if
+
 
    if (meteo_ramp .gt. 1) then
       LEVEL2 'meteo_ramp=',meteo_ramp
@@ -241,7 +258,7 @@
       end if
    end if
 
-   if (met_method .eq. 1) then
+   if (met_method .eq. METEO_CONST) then
 !     Rotation of wind stress due to grid convergence
       allocate(tausx_const(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx_const)'
@@ -266,8 +283,7 @@
       precip = precip_const
    end if
 
-   if (metforcing .and. met_method.eq.2) then
-
+   if (met_method.eq.METEO_FROMFILE .or. met_method.eq.METEO_FROMEXT) then
       if (calc_met) then
          allocate(u10(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (u10)'
@@ -289,6 +305,10 @@
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc)'
          tcc = _ZERO_
       end if
+   end if
+
+
+   if (met_method .eq. METEO_FROMFILE) then
 
       allocate(airp_new(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (airp_new)'
@@ -421,7 +441,7 @@
 
       if (first) then
          if (nudge_sst) then
-            if (met_method .eq. 2) then
+            if (met_method .eq. METEO_FROMFILE) then
                allocate(sst_new(E2DFIELD),stat=rc)
                if (rc /= 0) stop 'do_meteo: Error allocating memory (sst_new)'
                allocate(d_sst(E2DFIELD),stat=rc)
@@ -453,11 +473,11 @@
       end if
 
       select case (met_method)
-         case (1)
+         case (METEO_CONST)
             tausx = ramp*tausx_const
             tausy = ramp*tausy_const
 
-         case (2)
+         case (METEO_FROMFILE,METEO_FROMEXT)
 
 !           Note (KK): old and new meteo data cannot be read at once
 !                      since they might come from different files.
@@ -516,6 +536,7 @@
                call update_2d_halo(tausy,tausy,az,imin,jmin,imax,jmax,H_TAG)
                call wait_halo(H_TAG)
 
+               if (met_method .eq. METEO_FROMFILE) then
                airp_old=>airp_new;airp_new=>airp;airp=>d_airp;d_airp=>airp_old
                tausx_old=>tausx_new;tausx_new=>tausx;tausx=>d_tausx;d_tausx=>tausx_old
                tausy_old=>tausy_new;tausy_new=>tausy;tausy=>d_tausy;d_tausy=>tausy_old
@@ -569,12 +590,14 @@
 #endif
 !$OMP END DO
 !$OMP SINGLE
-               end if
+               end if !if (.not. first) then
+               end if !if (met_method .eq. METEO_FROMFILE) then
 
-            end if
+            end if !if (new_meteo) then
 
 
 !            if (.not. first) then
+            if (met_method .eq. METEO_FROMFILE) then
 
 !$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
@@ -589,7 +612,6 @@
                         shf  (i,j) = shf_new  (i,j) + d_shf  (i,j)*deltm1*t_minus_t2
                         if (calc_met) then
                            tcc(i,j) = tcc_new(i,j) + d_tcc(i,j)*deltm1*t_minus_t2
-                           swr(i,j) = short_wave_radiation(yearday,hh,latc(i,j),lonc(i,j),tcc(i,j))
                         else
                            swr(i,j) = swr_new(i,j) + d_swr(i,j)*deltm1*t_minus_t2
                         end if
@@ -609,6 +631,26 @@
 #endif
 !$OMP END DO
 !$OMP SINGLE
+            end if !if (met_method .eq. METEO_FROMFILE) then
+
+            if (calc_met) then
+!$OMP END SINGLE
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+               do j=jmin-HALO,jmax+HALO
+#endif
+                  do i=imin-HALO,imax+HALO
+                     if (az(i,j) .ne. 0) then
+                        swr(i,j) = short_wave_radiation(yearday,hh,latc(i,j),lonc(i,j),tcc(i,j))
+                     end if
+                  end do
+#ifndef SLICE_MODEL
+               end do
+#endif
+!$OMP END DO
+!$OMP SINGLE
+            end if
+
 #ifdef SLICE_MODEL
                airp (:,j+1) = airp (:,j)
                tausx(:,j+1) = tausx(:,j)
