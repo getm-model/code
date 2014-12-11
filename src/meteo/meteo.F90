@@ -189,6 +189,7 @@
    LEVEL2 'Metforcing=',metforcing
    if (.not. metforcing) then
       met_method = NO_METEO
+      calc_met = .false.
       return
    end if
 
@@ -203,6 +204,7 @@
             LEVEL3 'evap   = ',evap_const
             LEVEL3 'precip = ',precip_const
          end if
+         calc_met = .false.
       case (METEO_FROMFILE)
          LEVEL2 'Meteo forcing read from file'
          if(on_grid) then
