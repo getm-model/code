@@ -35,11 +35,11 @@
 !                      Knut Klingbeil
 !
 !  !LOCAL VARIABLES:
-   REALTYPE,dimension(E2DFIELD)             :: taubw,wbbl,taubmx,taubmy
-   REALTYPE                                 :: tauw,wbl
+   REALTYPE,dimension(E2DFIELD)             :: taubw,wbbl,taubmu,taubmv
+   REALTYPE                                 :: tauw,wbl,taubmx,taubmy,taubm
    REALTYPE                                 :: cdm1,cosangle
    REALTYPE                                 :: ttransx,ttransy,ttrans
-   REALTYPE                                 :: tauc,taubm,taubc,taube,taubp
+   REALTYPE                                 :: tauc,taubc,taube,taubp
    integer                                  :: i,j
    logical                                  :: calc_taubmax
 
@@ -67,7 +67,7 @@
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP          FIRSTPRIVATE(j)                                         &
 !$OMP          PRIVATE(i,tauwwbl,cdm1,cosangle,ttransx,ttransy,ttrans) &
-!$OMP          PRIVATE(tauc,tauw,taubm,taubc,taube,taubp)
+!$OMP          PRIVATE(tauc,tauw,taubmx,taubmy,taubm,taubc,taube,taubp)
 
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
@@ -152,8 +152,8 @@
 
 !$OMP WORKSHARE
 !     velocities must be zero at land!!!
-      taubmx = ru * u_vel
-      taubmy = rv * v_vel
+      taubmu = ru * u_vel
+      taubmv = rv * v_vel
 !$OMP END WORKSHARE
 
 !$OMP DO SCHEDULE(RUNTIME)
@@ -162,29 +162,30 @@
 #endif
          do i=imin-HALO+1,imax+HALO-1
             if (az(i,j) .ne. 0) then
-               taubm = _HALF_*sqrt(  ( taubmx(i-1,j  ) + taubmx(i,j) )**2 &
-                                   + ( taubmy(i  ,j-1) + taubmy(i,j) )**2 )
+               taubmx = _HALF_ * ( taubmu(i-1,j  ) + taubmu(i,j) )
+               taubmy = _HALF_ * ( taubmv(i  ,j-1) + taubmv(i,j) )
+               taubm = sqrt( taubmx*taubmx + taubmy*taubmy )
 
                select case(waves_bbl_method)
                   case (WBBL_DATA2)
                      taubp = taubw(i,j)
                   case (WBBL_SOULSBY05)
-                     taubc = taubmax(i,j)
-                     taube = sqrt( taubc**2 + taubw(i,j)**2 )
-                     taubp = sqrt( taube * taubw(i,j))
+                     taubc = taubmax(i,j) ! taubmax set by currents
+                     taube = sqrt( taubc*taubc + taubw(i,j)*taubw(i,j) )
+                     taubp = sqrt( taube * taubw(i,j) )
                end select
 
 !              we need the cosine of the angle between waves and currents
                ttransx = U1(i-1,j) + U1(i,j)
                ttransy = V1(i,j-1) + V1(i,j)
-               ttrans  = sqrt( ttransx**2 + ttransy**2 )
+               ttrans  = sqrt( ttransx*ttransx + ttransy*ttransy )
                if (ttrans .gt. _ZERO_) then
                   cosangle = (coswavedir(i,j)*ttransx + sinwavedir(i,j)*ttransy ) / ttrans
                else
                   cosangle = _ZERO_
                end if
 
-               taubmax(i,j) = sqrt( taubm**2 + taubp**2 + _TWO_*taubm*taubp*cosangle )
+               taubmax(i,j) = sqrt( taubm*taubm + taubp*taubp + _TWO_*taubm*taubp*cosangle )
             end if
          end do
 #ifndef SLICE_MODEL
