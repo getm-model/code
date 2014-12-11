@@ -293,10 +293,6 @@
       write(101,*) 'In column 9 2 indicates negative value after vertical diffusion step'
 #endif
 
-#ifdef INTERLEAVING_TEST
-   spm(2:6,2,1:20) = 1.
-#endif
-
    else
       LEVEL2 'No suspended sediment calculations'
       spm_save=.false.
@@ -532,17 +528,6 @@
 !  Boundary conditions. This should be done via do_bdy_3d but not ready yet
 #if 1
 
-#ifdef SALTWEDGE_TEST
-!  Valid for saltwedge case, lateral zero-gradient BC for WE boundary
-!   call do_bdy_3d(2,spm)
-   do k=1,kmax
-      if(uu(imin,2,k) > _ZERO_) then
-         spm(imin,2,k)=spm(imin+1,2,k)
-      end if
-   end do
-#endif
-
-#ifndef SALTWEDGE_TEST
 !  BC at open boundary points (no flux, can be other condition)
    do i=imin,imax
       if (az(i,jmin).eq.2) spm(i,jmin,:)=spm(i,jmin+1,:)
@@ -553,7 +538,6 @@
       if (az(imin,j).eq.2) spm(imin,j,:)=spm(imin+1,j,:)
       if (az(imax,j).eq.2) spm(imax,j,:)=spm(imax-1,j,:)
    end do
-#endif
 
 #endif
 !  End of BC
