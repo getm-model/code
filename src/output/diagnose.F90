@@ -200,22 +200,6 @@
      write(97,*) loop,Flux1,Flux2,Flux3
 
 #ifdef CURVILINEAR
-#ifdef PECS
-     if (abs(loop/100-loop/100.).lt.1.e-10) then
-        write(80,*) 'loop #',loop
-       do i=imin,imax
-          do j=jmin,jmax
-              if (S(i,j,1).gt.13) then
-                write(80,*) xx(i,j),yx(i,j)
-                write(80,*) xx(i-1,j),yx(i-1,j)
-                write(80,*) xx(i-1,j-1),yx(i-1,j-1)
-                write(80,*) xx(i,j-1),yx(i,j-1)
-                write(80,*) '>'
-              end if
-          end do
-       end do
-     end if
-#endif
      if (loop.eq.n) then
         i=imax/2
         do j=2,jmax-1
@@ -264,7 +248,6 @@
             write(94,*) 0.5*(U(i,j)/DU(i,j)+U(i,j+1)/DU(i,j+1)),i*dx
         end do
      end if
-!#endif
 #endif
 #endif
 
@@ -337,23 +320,6 @@
     if (FIRST) then
        FIRST=.false.
     end if
-    if ((abs(loop/14400-loop/14400.).lt.1e-10).or.(loop.eq.10)) then
-       do i=imin,imax
-          do j=jmin,jmax
-           out=85+loop/14400
-            write(out,995) (i-0.5)*0.5,(j-0.5)*0.5,T(i,j,kmax),     &
-            0.5*(uu(i,j,kmax)/hun(i,j,kmax)+uu(i-1,j,kmax)/hun(i-1,j,kmax)), &
-            0.5*(vv(i,j,kmax)/hvn(i,j,kmax)+vv(i,j-1,kmax)/hvn(i,j-1,kmax)), &
-           z(i,j)
-        end do
-       end do
-    end if
-    i=12
-    j=27
-    k=kmax
-    write(99,*) loop*dt/3600./24./float(M),vv(i,j,k)/hvn(i,j,k)
-    write(*,*) loop*dt/3600./24./float(M),vv(i,j,k)/hvn(i,j,k)
-
 
 !    count=0
 !    do j=1,jmax
