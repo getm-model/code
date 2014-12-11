@@ -19,7 +19,7 @@
    use domain, only: ill,ihl,jll,jhl,ilg,ihg,jlg,jhg
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
    use grid_interpol, only: to_rotated_lat_lon
-   use meteo, only: meteo_file,on_grid,calc_met,met_method,hum_method
+   use meteo, only: meteo_file,on_grid,calc_met,hum_method
    use meteo, only: airp,u10,v10,t2,hum,tcc
    use meteo, only: fwf_method,evap,precip
    use meteo, only: tausx,tausy,swr,shf
@@ -214,26 +214,6 @@
       if (err /= 0) stop &
               'init_meteo_input_ncdf: Error allocating memory (gridmap)'
       gridmap(:,:,:) = -999
-#if 0
-#ifdef MED_15X15MINS_TEST
-      do i=1,iextr
-         met_lon(i) = -10.125 + (i-1)*1.125
-      end do
-      do j=1,jextr
-         met_lat(j) =  28.125 + (j-1)*1.125
-      end do
-#endif
-
-#ifdef NS_06NM_TEST
-      do i=1,iextr
-         met_lon(i) = -21.0 + (i-1)*1.
-      end do
-      do j=1,jextr
-         met_lat(j) =  48.0 + (j-1)*1.
-      end do
-      grid_scan=0
-#endif
-#endif
 
       call init_grid_interpol(imin,imax,jmin,jmax,az,  &
                 lonc,latc,met_lon,met_lat,southpole,gridmap,beta,ti,ui)
@@ -300,8 +280,6 @@
    write(debug,*) 'get_meteo_data_ncdf() # ',Ncall
 #endif
 
-   if (met_method .eq. 2) then
-
 !     find the right index
 
       t = loop*timestep
@@ -355,7 +333,6 @@
          save_n = indx+1
 
       end if
-   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving get_meteo_data_ncdf()'
