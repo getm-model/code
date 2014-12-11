@@ -207,7 +207,6 @@
 #ifdef _MOMENTUM_TERMS_
                   cor_v(i,j,k)=-dry_v(i,j)*ex(k)
 #endif
-<<<<<<< HEAD
 !                 advection / diffusion
                   ex(k) = ex(k) - vvEx(i,j,k)
                end do
