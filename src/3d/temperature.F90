@@ -20,6 +20,7 @@
    use domain, only: imin,jmin,imax,kmax,jmax,H,az,dry_z
    use variables_3d, only: T,rad,hn,kmin,A,g1,g2
    use meteo, only: metforcing,met_method,nudge_sst,sst,sst_const
+   use meteo, only: METEO_CONST,METEO_FROMFILE,METEO_FROMEXT
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
    IMPLICIT NONE
 !
@@ -212,7 +213,7 @@
       allocate(sst(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_temperature: Error allocating memory (sst)'
       select case(met_method)
-         case (1)
+         case (METEO_CONST)
             if (sst_const .gt. _ZERO_) then
                LEVEL4 'constant sst=',real(sst_const)
                sst = sst_const
@@ -220,8 +221,8 @@
                call getm_error("init_temperature()", &
                                "non-positive sst_const")
             end if
-         case (2)
-            LEVEL4 'sst read from meteo file'
+         case (METEO_FROMFILE,METEO_FROMEXT)
+            LEVEL4 'sst read'
       end select
    end if
 
@@ -290,12 +291,6 @@
 !-------------------------------------------------------------------------
 !BOC
 
-#ifdef NS_FRESHWATER_LENSE_TEST
-temp_field_no=1
-#endif
-#ifdef MED_15X15MINS_TEST
-temp_field_no=1
-#endif
    select case (temp_method)
       case(0)
          LEVEL3 'getting initial fields from hotstart'
