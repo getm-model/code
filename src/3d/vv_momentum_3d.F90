@@ -43,9 +43,6 @@
 !
 ! When GETM is run as a slice model (compiler option {\tt SLICE\_MODEL}
 ! is activated), the result for $j=2$ is copied to $j=1$ and $j=3$.
-! If the compiler option {\tt XZ\_PLUME\_TEST} is set, a slope
-! of {\tt yslope} for bottom and isopycnals into the $y$-direction is
-! prescribed, which has to be hard-coded as local variable.
 !
 ! !USES:
    use exceptions
@@ -64,9 +61,6 @@
    use variables_3d, only: num,nuh,sseo,Dvn,rrv
 #ifdef _MOMENTUM_TERMS_
    use variables_3d, only: tdv_v,cor_v,ipg_v,epg_v,vsd_v,hsd_v
-#endif
-#ifdef XZ_PLUME_TEST
-   use variables_3d, only: buoy
 #endif
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
@@ -102,9 +96,6 @@
    REALTYPE                  :: gamma=g*rho_0
    REALTYPE                  :: cord_curv=_ZERO_
    REALTYPE                  :: gammai,rho_0i
-#ifdef XZ_PLUME_TEST
-   REALTYPE                  :: yslope=0.001
-#endif
    integer                   :: status
 !EOP
 !-----------------------------------------------------------------------
@@ -207,13 +198,14 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   cord_curv=(vv(i,j,k)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC))     &
                         /hvo(i,j,k)*ARVD1
-                  ex(k)=(cord_curv-corv(i,j))*Uloc
+                  ex(k)=-(cord_curv+corv(i,j))*Uloc
 #else
                   ex(k)=-corv(i,j)*Uloc
 #endif
 #ifdef _MOMENTUM_TERMS_
                   cor_v(i,j,k)=-dry_v(i,j)*ex(k)
 #endif
+<<<<<<< HEAD
 !                 advection / diffusion
                   ex(k) = ex(k) - vvEx(i,j,k)
                end do
