@@ -133,6 +133,13 @@
    NAMELIST /rivers/ &
             river_method,river_info,river_format,river_data,river_ramp, &
             river_factor,use_river_salt,use_river_temp,river_outflow_properties_follow_source_cell
+
+#ifdef INPUT_DIR
+   character(len=PATH_MAX)   :: input_dir=trim(INPUT_DIR) // '/'
+#else
+   character(len=PATH_MAX)   :: input_dir=''
+#endif
+
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -164,7 +171,7 @@
          LEVEL2 'use_river_temp= ',use_river_temp
          LEVEL2 'use_river_salt= ',use_river_salt
          LEVEL2 'river_outflow_properties_follow_source_cell=',river_outflow_properties_follow_source_cell
-         open(unit,file=river_info,action='read',status='old',err=90)
+         open(unit,file=(trim(input_dir) // river_info),action='read',status='old',err=90)
          read(unit,*) nriver
          allocate(ir(nriver),stat=rc) ! i index of rivers
          if (rc /= 0) stop 'rivers: Error allocating memory (ir)'
