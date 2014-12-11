@@ -56,10 +56,6 @@
    integer :: DVMINI,DVMINJ,DVMAXI,DVMAXJ
    REALTYPE:: pi=3.141592654
    REALTYPE:: Flux1,Flux2,Flux3
-#ifdef FRESHWATER_LENSE_TEST
-   REALTYPE:: MKE,APE,densi,zzz,zs,salmin,salmax,area
-   INTEGER     :: salimax,saljmax
-#endif
 #ifdef CONSTANCE_TEST
    REALTYPE:: ZET,MKE,APE,POT,POTX,APE0,densi,zs,Tint,ccc,N0,b0,WIND=0.
    LOGICAL,save:: FIRST=.true.
@@ -204,22 +200,6 @@
      write(97,*) loop,Flux1,Flux2,Flux3
 
 #ifdef CURVILINEAR
-#ifdef PECS
-     if (abs(loop/100-loop/100.).lt.1.e-10) then
-        write(80,*) 'loop #',loop
-       do i=imin,imax
-          do j=jmin,jmax
-              if (S(i,j,1).gt.13) then
-                write(80,*) xx(i,j),yx(i,j)
-                write(80,*) xx(i-1,j),yx(i-1,j)
-                write(80,*) xx(i-1,j-1),yx(i-1,j-1)
-                write(80,*) xx(i,j-1),yx(i,j-1)
-                write(80,*) '>'
-              end if
-          end do
-       end do
-     end if
-#endif
      if (loop.eq.n) then
         i=imax/2
         do j=2,jmax-1
@@ -268,75 +248,7 @@
             write(94,*) 0.5*(U(i,j)/DU(i,j)+U(i,j+1)/DU(i,j+1)),i*dx
         end do
      end if
-!#endif
 #endif
-#endif
-
-#ifdef FRESHWATER_LENSE_TEST
-
-! Mean kinetic energy:
-    if (abs(loop/M-loop/float(M)).lt.1e-10) then
-!do i=1,imax
-!   do j=1,jmax
-!      write(85,*) i,j,T(i,j,kmax),S(i,j,kmax),1025.-rho(i,j,kmax)*1025./9.82
-!   end do
-!end do
-!stop
-    MKE=0.
-    APE=0.
-    do k=1,kmax
-       do j=1,jmax
-          do i=1,imax
-            MKE=MKE+0.5*1025.858*uu(i,j,k)**2/hun(i,j,k)*dx*dy+vv(i,j,k)**2/hvn(i,j,k)*dx*dy
-         end do
-       end do
-    end do
-    do j=5,jmax-4
-       do i=5,imax-4
-          zs=z(i,j)
-          do k=kmax,1,-1
-             zzz=-(kmax-k+0.5)*(20./float(kmax))
-            zs=zs-0.5*hn(i,j,k)
-            densi=1025.-rho(i,j,k)*1025./9.82
-!            write(90,*) i,j,k,S(i,j,k),densi
-            APE=APE+dx*dy*9.82*(hn(i,j,k)*densi*zs-20./float(kmax)*1025.858*zzz)
-            zs=zs-0.5*hn(i,j,k)
-         end do
-       end do
-    end do
-    salmin=10000.
-    salmax=0.
-    area=0.
-    do j=1,jmax
-       do i=1,imax
-          do k=kmax,1,-1
-            if (S(i,j,k).gt.salmax) then
-               salmax=S(i,j,k)
-               salimax=i
-               saljmax=j
-            end if
-            if (S(i,j,k).lt.salmin) salmin=S(i,j,k)
-            if ((S(i,j,k).lt.34.839).and.(k.eq.kmax)) area=area+dx*dy
-         end do
-       end do
-    end do
-    write(99,994) loop,MKE,APE,MKE+APE,salmin,salmax,area
-!    write(*,994) loop,MKE,APE,MKE+APE,salmin,salmax,area
-!    stop
-    write(98,*) salimax,saljmax,salmax
-    end if
-    if (loop.eq.n) then
-       do i=5,imax-4
-          do j=5,jmax-4
-            write(96,995) (i-4.5)*30./float(imax-8),            &
-                          (j-4.5)*30./float(jmax-8),S(i,j,kmax),     &
-           0.5*(uu(i,j,kmax)/hun(i,j,kmax)+uu(i-1,j,kmax)/hun(i-1,j,kmax)), &
-           0.5*(vv(i,j,kmax)/hvn(i,j,kmax)+vv(i,j-1,kmax)/hvn(i,j-1,kmax)), &
-           0.5*(uu(i,j,1)/hun(i,j,1)+uu(i-1,j,1)/hun(i-1,j,1)), &
-           0.5*(vv(i,j,1)/hvn(i,j,1)+vv(i,j-1,1)/hvn(i,j-1,1))
-        end do
-       end do
-    end if
 #endif
 
 #if 0
@@ -408,23 +320,6 @@
     if (FIRST) then
        FIRST=.false.
     end if
-    if ((abs(loop/14400-loop/14400.).lt.1e-10).or.(loop.eq.10)) then
-       do i=imin,imax
-          do j=jmin,jmax
-           out=85+loop/14400
-            write(out,995) (i-0.5)*0.5,(j-0.5)*0.5,T(i,j,kmax),     &
-            0.5*(uu(i,j,kmax)/hun(i,j,kmax)+uu(i-1,j,kmax)/hun(i-1,j,kmax)), &
-            0.5*(vv(i,j,kmax)/hvn(i,j,kmax)+vv(i,j-1,kmax)/hvn(i,j-1,kmax)), &
-           z(i,j)
-        end do
-       end do
-    end if
-    i=12
-    j=27
-    k=kmax
-    write(99,*) loop*dt/3600./24./float(M),vv(i,j,k)/hvn(i,j,k)
-    write(*,*) loop*dt/3600./24./float(M),vv(i,j,k)/hvn(i,j,k)
-
 
 !    count=0
 !    do j=1,jmax
