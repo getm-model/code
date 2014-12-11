@@ -84,6 +84,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (az(i,j) .eq. 1) then
+
             z(i,j)=zo(i,j)-dtm*((U(i,j)*DYU-U(i-1,j  )*DYUIM1) &
                                +(V(i,j)*DXV-V(i  ,j-1)*DXVJM1))*ARCD1 &
                           +dtm*fwf(i,j)
