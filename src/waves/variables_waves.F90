@@ -18,7 +18,7 @@
 ! !PUBLIC DATA MEMBERS:
    REALTYPE,dimension(:,:)  ,pointer     :: coswavedir,sinwavedir
    REALTYPE,dimension(:,:)  ,pointer     :: waveH,waveL
-   REALTYPE,dimension(:,:)  ,allocatable :: waveT,waveK,waveE
+   REALTYPE,dimension(:,:)  ,allocatable,target :: waveT,waveK,waveE
    REALTYPE,dimension(:,:)  ,allocatable :: SJ,SJJ
    REALTYPE,dimension(:,:)  ,allocatable :: kDveln,sinh2kDvelnm1
    logical ,dimension(:,:)  ,allocatable :: is_deepwave_3d
