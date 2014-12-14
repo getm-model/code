@@ -509,19 +509,7 @@
                                    p_nvd)
 #endif
 
-#ifdef _NEW_ADV_NOSPLIT_
-!                 Note (KK): causes truncation errors
                   f = fi
-#else
-                  do j=jmin-HALO,jmax+HALO
-                     do i=imin-HALO,imax+HALO
-                        if (adv_grid%mask_finalise(i,j)) then
-!                          Note (KK): do not modify tracer inside open bdy cells
-                           f(i,j) = ( Do(i,j)*f(i,j) - dt*p_adv(i,j) ) / p_Di(i,j)
-                        end if
-                     end do
-                  end do
-#endif
 
                case(UPSTREAM_2DH)
 
