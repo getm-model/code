@@ -28,7 +28,9 @@
    integer                             :: res_u_id=-1,res_v_id=-1
    integer                             :: u10_id,v10_id
    integer                             :: airp_id,t2_id,hum_id,tcc_id
-   integer                             :: tausx_id,tausy_id,swr_id,shf_id
+   integer                             :: tausx_id,tausy_id
+   integer                             :: zenith_angle_id
+   integer                             :: swr_id,albedo_id,shf_id
    integer                             :: evap_id=-1,precip_id=-1
    integer                             :: break_stat_id=-1
    integer                             :: nd2d_id=-1
@@ -43,7 +45,9 @@
    REALTYPE, parameter                 :: hum_missing        =-9999.0
    REALTYPE, parameter                 :: tcc_missing        =-9999.0
    REALTYPE, parameter                 :: stress_missing     =-9999.0
+   REALTYPE, parameter                 :: angle_missing      =-9999.0
    REALTYPE, parameter                 :: swr_missing        =-9999.0
+   REALTYPE, parameter                 :: albedo_missing     =-9999.0
    REALTYPE, parameter                 :: shf_missing        =-9999.0
    REALTYPE, parameter                 :: evap_missing       =-9999.0
    REALTYPE, parameter                 :: precip_missing     =-9999.0
