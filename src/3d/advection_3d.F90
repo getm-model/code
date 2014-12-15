@@ -258,7 +258,7 @@
    REALTYPE,dimension(I2DFIELD),target :: nvd2d
 #endif
    REALTYPE,dimension(:,:,:),pointer   :: p_hi,p_adv,p_nvd
-   integer                             :: tag2d,i,j,k
+   integer                             :: tag2d,j,k
 !EOP
 !-----------------------------------------------------------------------
 !BOC

@@ -433,7 +433,7 @@
    type(t_adv_grid),pointer            :: adv_grid
    REALTYPE,dimension(E2DFIELD),target :: fi,Di,adv
    REALTYPE,dimension(:,:),pointer     :: p_Di,p_adv,p_nvd
-   integer                             :: i,j
+   integer                             :: j
 !
 !EOP
 !-----------------------------------------------------------------------
