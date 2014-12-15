@@ -143,6 +143,8 @@
 			<ty>
 				0.0
 			</ty>
+			<albedo_method>1</albedo_method>
+			<albedo_const>0.0</albedo_const>
 			<swr_const>
 				0.0
 			</swr_const>
