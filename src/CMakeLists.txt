@@ -282,7 +282,9 @@ add_library(meteo OBJECT
             meteo/exchange_coefficients.F90
             meteo/fluxes.F90
             meteo/meteo.F90
+            meteo/solar_zenith_angle.F90
             meteo/short_wave_radiation.F90
+            meteo/albedo_water.F90
            )
 
 add_library(ncdf OBJECT
