@@ -567,7 +567,7 @@
                   rotated_meteo_grid = .true.
                end if
             end if
-            if (rotated_grid) then
+            if (rotated_meteo_grid) then
                LEVEL4 'south pole:'
 !              changed indices - kb 2014-12-15
                LEVEL4 '      lon ',southpole(2)
