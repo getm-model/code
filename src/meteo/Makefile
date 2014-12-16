@@ -16,7 +16,9 @@ MOD   = \
 ${LIB}(meteo.o)
 
 OBJ   = \
+${LIB}(solar_zenith_angle.o)		\
 ${LIB}(short_wave_radiation.o)		\
+${LIB}(albedo_water.o)		\
 ${LIB}(exchange_coefficients.o)		\
 ${LIB}(fluxes.o)
 
