@@ -377,6 +377,7 @@
    integer, save   :: lon_id=-1,lat_id=-1,time_id=-1,id=-1
    integer, save   :: time_var_id=-1
    character(len=256) :: dimname
+   logical         :: have_southpole
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -460,18 +461,57 @@
             if (err /= 0) stop &
                   'open_meteo_file(): Error allocating memory (met_times)'
 
-            err = nf90_inq_varid(ncid,'southpole',id)
-            if (err .ne. NF90_NOERR) then
-               LEVEL4 'Setting southpole to (0,-90,0)'
-            else
-               err = nf90_get_var(ncid,id,southpole)
+!           first we check for CF compatible grid_mapping_name
+            err = nf90_inq_varid(ncid,'rotated_pole',id)
+            if (err .eq. NF90_NOERR) then
+               err = nf90_get_att(ncid,id, &
+                                  'grid_north_pole_latitude',southpole(1))
                if (err .ne. NF90_NOERR) go to 10
+               err = nf90_get_att(ncid,id, &
+                                  'grid_north_pole_longitude',southpole(2))
+!STDERR 'Inside rotated_pole'
+!STDERR 'grid_north_pole_latitude ',southpole(1)
+!STDERR 'grid_north_pole_longitude ',southpole(2)
+               if (err .ne. NF90_NOERR) go to 10
+               err = nf90_get_att(ncid,id, &
+                                  'north_pole_grid_longitude',southpole(3))
+               if (err .ne. NF90_NOERR) then
+                  southpole(3) = _ZERO_
+               end if
+!              Northpole ---> Southpole transformation
+               if (southpole(2) .ge. 0) then
+                  southpole(2) = southpole(2) - 180.
+               else
+                  southpole(2) = southpole(2) + 180.
+               end if 
+               southpole(1) = -southpole(1)
+!STDERR 'After transformation:'
+!STDERR 'grid_north_pole_latitude ',southpole(1)
+!STDERR 'grid_north_pole_longitude ',southpole(2)
+               southpole(3) = _ZERO_
+               have_southpole = .true.
                rotated_meteo_grid = .true.
+            else
+               have_southpole = .false.
             end if
-            LEVEL4 'south pole:'
-            LEVEL4 '      lon ',southpole(1)
-            LEVEL4 '      lat ',southpole(2)
 
+!           and then we revert to the old way - checking 'southpole' directly
+            if (.not. have_southpole) then
+               err = nf90_inq_varid(ncid,'southpole',id)
+               if (err .ne. NF90_NOERR) then
+                  LEVEL4 'Setting southpole to (0,-90,0)'
+               else
+                  err = nf90_get_var(ncid,id,southpole)
+                  if (err .ne. NF90_NOERR) go to 10
+                  rotated_meteo_grid = .true.
+               end if
+            end if
+            if (rotated_meteo_grid) then
+               LEVEL4 'south pole:'
+!              changed indices - kb 2014-12-15
+               LEVEL4 '      lon ',southpole(2)
+               LEVEL4 '      lat ',southpole(1)
+            end if
          end if
 
          err = nf90_inquire_dimension(ncid,time_id,len=idum)
