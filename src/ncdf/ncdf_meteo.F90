@@ -25,7 +25,7 @@
    use meteo, only: tausx,tausy,swr,shf
    use meteo, only: new_meteo,t_1,t_2
    use meteo, only: wind_factor,evap_factor,precip_factor
-   use meteo, only: nudge_sst,sst
+   use meteo, only: nudge_sst,sst,nudge_sss,sss
    use exceptions
    IMPLICIT NONE
 !
@@ -43,6 +43,7 @@
    integer         :: evap_id=-1,precip_id=-1
    integer         :: tausx_id,tausy_id,swr_id,shf_id
    integer         :: sst_id=-1
+   integer         :: sss_id=-1
    integer         :: iextr,jextr,textr,tmax=-1
    integer         :: grid_scan=1
    logical         :: point_source=.false.
@@ -85,6 +86,7 @@
    character(len=10)         :: name_swr="swr"
    character(len=10)         :: name_shf="shf"
    character(len=10)         :: name_sst="sst"
+   character(len=10)         :: name_sss="sss"
    character(len=128)        :: model_time
 !
 ! !REVISION HISTORY:
@@ -657,6 +659,12 @@
          if (err .NE. NF90_NOERR) go to 10
       end if
 
+      if (nudge_sss) then
+         LEVEL4 ' ... checking variable ',name_sss
+         err = nf90_inq_varid(ncid,name_sss,sss_id)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+
       offset = time_diff(jul0,secs0,junit,sunit)
       LEVEL3 'Using meteo from:'
       LEVEL4 trim(fn)
@@ -907,6 +915,21 @@
       else if (calc_met) then
          call copy_var(grid_scan,wrk,wrk_dp)
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sst)
+      end if
+   end if
+
+   if (sss_id .gt. 0) then
+      err = nf90_get_var(ncid,sss_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
+      if (on_grid) then
+         if (point_source) then
+            sss = wrk(1,1)
+         else
+            sss(ill:ihl,jll:jhl) = wrk
+         end if
+      else if (calc_met) then
+         call copy_var(grid_scan,wrk,wrk_dp)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sss)
       end if
    end if
 

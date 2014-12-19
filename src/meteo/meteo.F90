@@ -76,9 +76,11 @@
    REALTYPE,public,dimension(:,:),pointer            :: shf,swr=>null(),tcc=>null()
    REALTYPE,public,dimension(:,:),pointer            :: evap,precip
    REALTYPE,public,dimension(:,:),allocatable,target :: zenith_angle,albedo
-   REALTYPE,public,dimension(:,:),pointer            :: sst
+   REALTYPE,public,dimension(:,:),pointer            :: sst,sss
    logical,public                                    :: nudge_sst=.false.
+   logical,public                                    :: nudge_sss=.false.
    REALTYPE,public                                   :: sst_const=-_ONE_
+   REALTYPE,public                                   :: sss_const=-_ONE_
    REALTYPE, public                    :: cd_mom,cd_heat,cd_latent
    REALTYPE, public                    :: cd_precip = _ZERO_
    REALTYPE, public                    :: t_1=-_ONE_,t_2=-_ONE_
@@ -113,6 +115,7 @@
    REALTYPE, dimension(:,:), pointer     :: evap_new,d_evap
    REALTYPE, dimension(:,:), pointer     :: precip_new,d_precip
    REALTYPE, dimension(:,:), pointer     :: sst_new,d_sst
+   REALTYPE, dimension(:,:), pointer     :: sss_new,d_sss
    REALTYPE                              :: ramp=_ONE_
    logical                               :: ramp_is_active=.false.
 !EOP
@@ -145,11 +148,11 @@
    REALTYPE                  :: sinconv,cosconv
    REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029d0
    REALTYPE, parameter       :: deg2rad=pi/180
-   namelist /meteo/ metforcing,on_grid,calc_met,met_method,albedo_method, &
-                    fwf_method, &
+   namelist /meteo/ metforcing,on_grid,calc_met,met_method, &
+                    albedo_method,fwf_method, &
                     meteo_ramp,metfmt,meteo_file, &
-                    tx,ty,albedo_const, &
-                    swr_const,shf_const,evap_const,precip_const,sst_const, &
+                    tx,ty,albedo_const,swr_const,shf_const, &
+                    evap_const,precip_const,sst_const,sss_const, &
                     wind_factor,precip_factor,evap_factor
 !EOP
 !-------------------------------------------------------------------------
@@ -163,7 +166,7 @@
 
 ! Allocates memory for the public data members
 !  KK-TODO: Why is this not static #ifdef STATIC?
-!  Note (KK): sst will be allocated in init_temperature()
+!  Note (KK): ss[t|s] will be allocated in init_[temperature|salinity]()
 
    allocate(airp(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (airp)'
@@ -450,7 +453,7 @@
    REALTYPE, dimension(:,:), pointer :: airp_old,tausx_old,tausy_old
    REALTYPE, dimension(:,:), pointer :: shf_old,swr_old,tcc_old
    REALTYPE, dimension(:,:), pointer :: evap_old,precip_old
-   REALTYPE, dimension(:,:), pointer :: sst_old
+   REALTYPE, dimension(:,:), pointer :: sst_old,sss_old
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -475,6 +478,14 @@
                if (rc /= 0) stop 'do_meteo: Error allocating memory (sst_new)'
                allocate(d_sst(E2DFIELD),stat=rc)
                if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sst)'
+            end if
+         end if
+         if (nudge_sss) then
+            if (met_method .eq. METEO_FROMFILE) then
+               allocate(sss_new(E2DFIELD),stat=rc)
+               if (rc /= 0) stop 'do_meteo: Error allocating memory (sss_new)'
+               allocate(d_sss(E2DFIELD),stat=rc)
+               if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sss)'
             end if
          end if
       end if
@@ -584,6 +595,9 @@
                if (nudge_sst) then
                   sst_old=>sst_new;sst_new=>sst;sst=>d_sst;d_sst=>sst_old
                end if
+               if (nudge_sss) then
+                  sss_old=>sss_new;sss_new=>sss;sss=>d_sss;d_sss=>sss_old
+               end if
 
 
                if (.not. first) then
@@ -611,6 +625,9 @@
                            end if
                            if (nudge_sst) then
                               d_sst(i,j) = sst_new(i,j) - sst_old(i,j)
+                           end if
+                           if (nudge_sss) then
+                              d_sss(i,j) = sss_new(i,j) - sss_old(i,j)
                            end if
                         end if
                      end do
@@ -652,6 +669,9 @@
                         end if
                         if (nudge_sst) then
                            sst(i,j) = sst_new(i,j) + d_sst(i,j)*deltm1*t_minus_t2
+                        end if
+                        if (nudge_sss) then
+                           sss(i,j) = sss_new(i,j) + d_sss(i,j)*deltm1*t_minus_t2
                         end if
                      end if
                   end do
@@ -701,6 +721,9 @@
                end if
                if (nudge_sst) then
                   sst(:,j+1) = sst(:,j)
+               end if
+               if (nudge_sss) then
+                  sss(:,j+1) = sss(:,j)
                end if
 #endif
 

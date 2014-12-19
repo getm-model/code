@@ -169,6 +169,9 @@
 			<sst_const>
 				-1.0
 			</sst_const>
+			<sss_const>
+				-1.0
+			</sss_const>
 			<wind_factor>
 				1.0
 			</wind_factor>
@@ -443,6 +446,9 @@
 			<salt_AH>
 				-1.0
 			</salt_AH>
+			<sss_nudging_time>
+				-1.0
+			</sss_nudging_time>
 			<salt_check>
 				0
 			</salt_check>
