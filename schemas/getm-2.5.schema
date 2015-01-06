@@ -179,6 +179,18 @@
 			<element name="ty" type="float" label="constant y stress" unit="Pa">
 				<condition type="eq" variable="./met_method" value="1"/>
 			</element>
+			<element name="albedo_method" type="int" label="albedo method" unit="">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="eq" variable="./met_method" value="2"/>
+				</condition>
+			</element>
+			<element name="albedo_const" type="float" label="constant albedo">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="eq" variable="./met_method" value="2"/>
+				</condition>
+			</element>
 			<element name="swr_const" type="float" label="constant short wave radiation" unit="W/m²">
 				<condition type="eq" variable="./met_method" value="1"/>
 			</element>
@@ -196,6 +208,13 @@
 					<condition type="eq" variable="./met_method" value="1"/>
 					<condition type="eq" variable="../param/runtype" value="4"/>
 					<condition type="eq" variable="../m3d/calc_temp" value="True"/>
+				</condition>
+			</element>
+			<element name="sss_const" type="float" label="constant sea surface salinity" unit="psu" minExclusive="0">
+				<condition type="and">
+					<condition type="eq" variable="./met_method" value="1"/>
+					<condition type="eq" variable="../param/runtype" value="4"/>
+					<condition type="eq" variable="../m3d/calc_salt" value="True"/>
 				</condition>
 			</element>
 			<element name="wind_factor" type="float" label="factor to convert windspeeds to m/s">
@@ -736,6 +755,8 @@
 			</element>
 			<element name="salt_AH_stirr_const" type="float" label="salt stirring constant">
 				<condition type="eq" variable="./salt_AH_method" value="3"/>
+			<element name="sss_nudging_time" type="float" minExclusive="0.0" label="nudging time for sss" unit="s">
+				<condition type="eq" variable="../meteo/metforcing" value="True"/>
 			</element>
 			<element name="salt_check" type="int" label="interval between checks for out-of-bounds salinities" description="Interval between checks for out-of-bounds salinities. 0: disabled, &gt;0: check every salt_check step, abort if check fails, &lt;0: check every abs(salt_check) step, warn if check fails"/>
 			<element name="min_salt"   type="float" label="minimum valid salinity" unit="psu">
