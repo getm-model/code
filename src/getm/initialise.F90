@@ -73,6 +73,7 @@
    use meteo, only: metforcing,met_method,init_meteo,do_meteo
    use integration,  only: MinN,MaxN
 #ifndef NO_BAROCLINIC
+   use meteo, only: swr,albedo
    use eqstate, only: do_eqstate
 #endif
    use exceptions
@@ -297,6 +298,7 @@
 #ifndef NO_BAROCLINIC
       else
          call do_meteo(MinN-1,T(:,:,kmax))
+         swr = swr*(_ONE_-albedo)
 #endif
 #endif
       end if
