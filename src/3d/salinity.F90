@@ -16,10 +16,11 @@
 !
 ! !USES:
    use exceptions
-   use domain, only: imin,jmin,imax,jmax,kmax,ioff,joff
-   use domain, only: H,az
+   use domain, only: imin,jmin,imax,jmax,kmax,H,az,dry_z
    use variables_2d, only: fwf_int
    use variables_3d, only: S,hn,kmin
+   use meteo, only: metforcing,met_method,nudge_sss,sss,sss_const
+   use meteo, only: METEO_CONST,METEO_FROMFILE,METEO_FROMEXT
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
    IMPLICIT NONE
 !
@@ -38,6 +39,7 @@
    integer                   :: salt_adv_hor=1
    integer                   :: salt_adv_ver=1
    REALTYPE                  :: salt_AH=-_ONE_
+   REALTYPE                  :: sss_nudging_time=-_ONE_
    integer                   :: salt_check=0
    REALTYPE                  :: min_salt=_ZERO_,max_salt=40*_ONE_
 !
@@ -84,13 +86,13 @@
 ! !OUTPUT PARAMETERS:
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,k,n
+   integer                   :: i,j,k,n,rc
    integer                   :: status
    NAMELIST /salt/                                            &
             salt_method,salt_const,salt_file,                 &
             salt_format,salt_name,salt_field_no,              &
             salt_adv_split,salt_adv_hor,salt_adv_ver,salt_AH, &
-            salt_check,min_salt,max_salt
+            sss_nudging_time,salt_check,min_salt,max_salt
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -109,6 +111,26 @@
    LEVEL3 'Advection of salinity'
    if (salt_adv_hor .eq. J7) stop 'init_salinity: J7 not implemented yet'
    call print_adv_settings_3d(salt_adv_split,salt_adv_hor,salt_adv_ver,salt_AH)
+
+   if (metforcing .and. sss_nudging_time.gt._ZERO_) then
+      nudge_sss = .True.
+      LEVEL3 'nudging of SSS enabled'
+      LEVEL4 'sss_nudging_time=',real(sss_nudging_time)
+      allocate(sss(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_salinity: Error allocating memory (sss)'
+      select case(met_method)
+         case (METEO_CONST)
+            if (sss_const .gt. _ZERO_) then
+               LEVEL4 'constant sss=',real(sss_const)
+               sss = sss_const
+            else
+               call getm_error("init_salinity()", &
+                               "non-positive sss_const")
+            end if
+         case (METEO_FROMFILE,METEO_FROMEXT)
+            LEVEL4 'sss read'
+      end select
+   end if
 
    LEVEL3 'salt_check=',salt_check
    if (salt_check .ne. 0) then
@@ -360,6 +382,13 @@
                a1(k)=-auxn(k-1)
                a2(k)=hn(i,j,k)+auxn(k-1)
                a4(k)=S(i,j,k)*(hn(i,j,k)-auxo(k-1))+S(i,j,k-1)*auxo(k-1)
+               if (nudge_sss) then
+!                 implicit nudging
+                  a2(kmax) = a2(kmax) + dry_z(i,j)*hn(i,j,kmax)*dt/sss_nudging_time
+                  a4(kmax) = a4(kmax) + dry_z(i,j)*hn(i,j,kmax)*dt/sss_nudging_time*sss(i,j)
+!                 explicit nudging
+                  !a4(kmax) = a4(kmax) - dry_z(i,j)*dt*hn(i,j,kmax)*(S(i,j,kmax)-sss(i,j))/sss_nudging_time
+               end if
 
 !        Matrix elements for inner layers
                do k=2,kmax-1
