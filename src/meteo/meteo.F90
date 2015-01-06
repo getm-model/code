@@ -220,7 +220,7 @@
 
    allocate(zenith_angle(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (zenith_angle)'
-   swr = _ZERO_
+   zenith_angle = _ZERO_
 
    allocate(swr(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (swr)'
