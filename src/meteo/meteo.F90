@@ -185,7 +185,7 @@
    swr = _ZERO_
    allocate(albedo(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (albedo)'
-   albedo = albedo_const
+   albedo = _ZERO_
    allocate(shf(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (shf)'
    shf = _ZERO_
@@ -219,6 +219,7 @@
             LEVEL3 'evap   = ',evap_const
             LEVEL3 'precip = ',precip_const
          end if
+         albedo_method = 0
          calc_met = .false.
       case (METEO_FROMFILE)
          LEVEL2 'Meteo forcing read from file'
@@ -241,17 +242,6 @@
          else
             LEVEL2 'Stresses and fluxes are already calculated'
          end if
-
-         LEVEL2 'Albedo method =',albedo_method
-         select case (albedo_method)
-               case (0)
-                  LEVEL3 'albedo = ',albedo_const
-               case (1)
-                  LEVEL3 'Albedo according to Payne'
-               case (2)
-                  LEVEL3 'Albedo according to Cogley'
-            case default
-         end select
 
          select case (fwf_method)
             case (1)
@@ -278,6 +268,17 @@
          end select
    end if
 
+   LEVEL2 'Albedo method =',albedo_method
+   select case (albedo_method)
+         case (0)
+            LEVEL3 'albedo = ',albedo_const
+            albedo = albedo_const
+         case (1)
+            LEVEL3 'Albedo according to Payne'
+         case (2)
+            LEVEL3 'Albedo according to Cogley'
+      case default
+   end select
 
    if (meteo_ramp .gt. 1) then
       LEVEL2 'meteo_ramp=',meteo_ramp

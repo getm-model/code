@@ -35,7 +35,7 @@
    use variables_2d, only: dtm,z
 #ifndef NO_BAROCLINIC
    use m3d, only: update_salt,update_temp
-   use variables_3d, only: hn,Dn,ssen,T,S
+   use variables_3d, only: hn,ssen,T,S
 #endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
@@ -84,6 +84,7 @@
    integer                   :: river_format=2
    character(len=64)         :: river_info="riverinfo.dat"
    integer, allocatable      :: ir(:),jr(:)
+   REALTYPE, allocatable     :: rzl(:),rzu(:)
    REALTYPE, allocatable     :: irr(:)
    REALTYPE, allocatable     :: macro_height(:)
    REALTYPE, allocatable     :: flow_fraction(:),flow_fraction_rel(:)
@@ -121,9 +122,9 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n,nn,ni,rc,m,iriver,jriver,numcells
-   integer                   :: unit = 25 ! kbk
    logical                   :: outside,outsidehalo
    REALTYPE                  :: area, total_weight
+   character(len=255)        :: line,xxx
    NAMELIST /rivers/ &
             river_method,river_info,river_format,river_data,river_ramp, &
             river_factor,use_river_salt,use_river_temp,river_outflow_properties_follow_source_cell
@@ -151,16 +152,9 @@
          LEVEL2 'use_river_temp= ',use_river_temp
          LEVEL2 'use_river_salt= ',use_river_salt
          LEVEL2 'river_outflow_properties_follow_source_cell=',river_outflow_properties_follow_source_cell
-         open(unit,file=river_info,action='read',status='old',err=90)
-         read(unit,*) nriver
-         allocate(ir(nriver),stat=rc) ! i index of rivers
-         if (rc /= 0) stop 'rivers: Error allocating memory (ir)'
-         allocate(jr(nriver),stat=rc) ! j index of rivers
-         if (rc /= 0) stop 'rivers: Error allocating memory (jr)'
+         call read_river_info()
          allocate(ok(nriver),stat=rc) ! valid river spec. 1=yes, 0=other domain, -1=other domain, but need read.
          if (rc /= 0) stop 'rivers: Error allocating memory (ok)'
-         allocate(river_name(nriver),stat=rc) ! NetCDF name of river.
-         if (rc /= 0) stop 'rivers: Error allocating memory (river_name)'
          allocate(river_flow(nriver),stat=rc) ! river flux
          if (rc /= 0) stop 'rivers: Error allocating memory (river_flow)'
          allocate(macro_height(nriver),stat=rc) ! height over a macro tims-step
@@ -187,9 +181,6 @@
          rriver = 0 ! number of real existing rivers...
          flow_fraction_rel = _ZERO_
          do n=1,nriver
-            read(unit,*) ir(n),jr(n),river_name(n)
-            river_name(n) = trim(river_name(n))
-            LEVEL3 trim(river_name(n)),':',ir(n),jr(n)
             i = ir(n)-ioff
             j = jr(n)-joff
             river_temp(n) = temp_missing
@@ -217,19 +208,20 @@
                     (j .lt. jmin-HALO) .or. (j .gt. jmax+HALO)
             if( .not. outsidehalo) then
                if(az(i,j) .eq. 0) then
-                  LEVEL3 'Warning:  river# ',n,' at (',i,j,') is on land'
-                  LEVEL3 '          setting ok to 0'
+                  xxx = ' on land'
                   ok(n) = 0
                else if (.not. outside) then
-                  LEVEL3 'Inside ',trim(river_name(n)),': river# ',n
+                  xxx = ' in domain'
                   ok(n) = 1
                else
-                  LEVEL3 'Inhalo ',trim(river_name(n)),': river# ',n
+                  xxx = ' in halo'
                   ok(n) = 2
                end if
             else
-              LEVEL3 'Outside: river# ',n
+              xxx = ' outside'
             end if
+            write(line,'(I4,A20,2I5,2F7.1,A11)') n,trim(river_name(n)),ir(n),jr(n),rzl(n),rzu(n),xxx
+            LEVEL3 trim(line)
          end do
 
 !  Calculate the number of used gridboxes.
@@ -281,15 +273,112 @@
    end select
    return
 
-90 LEVEL2 'could not open ',trim(river_info),' for reading info on rivers'
-   stop 'init_rivers()'
-
 #ifdef DEBUG
    write(debug,*) 'Leaving init_rivers()'
    write(debug,*)
 #endif
    return
    end subroutine init_rivers
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: read_river_info
+!
+! !INTERFACE:
+   subroutine read_river_info()
+!
+! !DESCRIPTION:
+!  Read global indices for river positions, the river name and optionally
+!  depth range over which to distribute the water - zl:zu. Negative values
+!  imply 'bottom' for zl and 'surface' for zu.
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !LOCAL VARIABLES:
+   logical                   :: exist
+   integer                   :: unit = 25 ! kbk
+   integer                   :: n,rc,ios
+   character(len=255)        :: line
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'read_river_info() # ',Ncall
+#endif
+
+   LEVEL2 'read_river_info()'
+!KB   inquire(file=river_info, exist=exist) 
+!KB   if (exists) then
+   open(unit,file=river_info,action='read',iostat=ios,status='old',err=90)
+   do while (nriver == 0 .and. ios == 0)
+      read(unit,'(A)',iostat=ios,end=91,err=92) line
+      call strip_string(line)
+      if (len_trim(line) .gt. 0 .and. ios == 0) then
+         read(line,*,iostat=ios,err=92) nriver
+      end if
+   end do
+   allocate(ir(nriver),stat=rc) ! i index of rivers
+   if (rc /= 0) stop 'rivers: Error allocating memory (ir)'
+   allocate(jr(nriver),stat=rc) ! j index of rivers
+   if (rc /= 0) stop 'rivers: Error allocating memory (jr)'
+   allocate(river_name(nriver),stat=rc) ! NetCDF name of river.
+   if (rc /= 0) stop 'rivers: Error allocating memory (river_name)'
+   allocate(rzl(nriver),stat=rc) ! Lower value for inflow range
+   if (rc /= 0) stop 'rivers: Error allocating memory (rlz)'
+   allocate(rzu(nriver),stat=rc) ! Upper value for inflow range
+   if (rc /= 0) stop 'rivers: Error allocating memory (rzu)'
+
+   n = 0
+   do while (n .ne. nriver .and. ios == 0)
+      read(unit,'(A)',iostat=ios,end=91,err=92) line
+      call strip_string(line)
+      if (len_trim(line) .gt. 0 .and. ios == 0) then
+         n = n + 1
+         read(line,*,iostat=ios) ir(n),jr(n),river_name(n),rzl(n),rzu(n)
+         if (ios .eq. 0) then
+            if (rzl(n) .gt. H(ir(n),jr(n))) then
+               rzl(n) = -1.
+               LEVEL3 trim(river_name(n)),' setting rzl=-1.'
+            end if
+            if (rzu(n) .gt. H(ir(n),jr(n))) then
+               rzu(n) = -1.
+               LEVEL3 trim(river_name(n)),' setting rzu=-1.'
+            end if
+         else
+            read(line,*,iostat=ios) ir(n),jr(n),river_name(n)
+            rzl(n) = -1.
+            rzu(n) = -1.
+         end if
+         river_name(n) = trim(river_name(n))
+      end if
+   end do
+
+   if (n .ne. nriver) then
+      FATAL 'read_river_info(): Could not read number of specified rivers'
+      FATAL 'read_par_setup(): nriver =',nriver
+      FATAL 'read_par_setup(): nread = ',n
+      stop
+   end if
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving read_river_info()'
+   write(debug,*)
+#endif
+   return
+
+90 LEVEL2 'could not open ',trim(river_info),' for reading info on rivers'
+   stop 'read_river_info()'
+91 LEVEL2 'end of file reached'
+   stop 'read_river_info()'
+92 LEVEL2 'IO error condition'
+   stop 'read_river_info()'
+
+   end subroutine read_river_info
 !EOC
 
 #ifdef GETM_BIO
@@ -415,10 +504,11 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,m,n
+   integer                   :: kl,kh
    integer, save             :: nn=0
    REALTYPE                  :: ramp=_ONE_
    REALTYPE                  :: rvol,height
-   REALTYPE                  :: svol,tvol,vol
+   REALTYPE                  :: river_depth,x
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -451,30 +541,51 @@
                macro_height(n)=macro_height(n)+height
 !              on macrotime step adjust 3d fields
                if (do_3d) then
+                  if (rzl(n) .lt. _ZERO_) then
+                     kl = 1
+                  else
+                     x = _ZERO_
+                     do m=kmax,1,-1
+                        x = x + hn(i,j,m)
+                        if (rzl(n) .le. x) exit
+                     end do
+                     kl = m
+                  end if
+                  if (rzu(n) .lt. _ZERO_) then
+                     kh = kmax
+                  else
+                     x = _ZERO_
+                     do m=kmax,1,-1
+                        x = x + hn(i,j,m)
+                        if (rzu(n) .le. x) exit
+                     end do
+                     kh = m
+                  end if
+                  river_depth = sum(hn(i,j,kl:kh))
                   if (macro_height(n).gt._ZERO_ .or. .not.river_outflow_properties_follow_source_cell) then
                      if (update_salt ) then
                         if ( river_salt(n) .ne. salt_missing) then
-                           S(i,j,1:kmax) = (S(i,j,1:kmax)*Dn(i,j)   &
+                           S(i,j,kl:kh) = (S(i,j,kl:kh)*river_depth   &
                                          + river_salt(n)*macro_height(n))      &
-                                         / (Dn(i,j)+macro_height(n))
+                                         / (river_depth+macro_height(n))
                         else
-                           S(i,j,1:kmax) = S(i,j,1:kmax)*Dn(i,j)   &
-                                         / (Dn(i,j)+macro_height(n))
+                           S(i,j,kl:kh) = S(i,j,kl:kh)*river_depth   &
+                                         / (river_depth+macro_height(n))
                         end if
                      end if
                      if (update_temp .and. river_temp(n) .ne. temp_missing) then
-                        T(i,j,1:kmax) = (T(i,j,1:kmax)*Dn(i,j)   &
+                        T(i,j,kl:kh) = (T(i,j,kl:kh)*river_depth   &
                                          + river_temp(n)*macro_height(n))      &
-                                         / (Dn(i,j)+macro_height(n))
+                                         / (river_depth+macro_height(n))
                      end if
 #ifdef GETM_BIO
                      if (bio_calc) then
                         do m=1,numc
                            if ( river_bio(n,m) .ne. bio_missing ) then
-                              cc3d(m,i,j,1:kmax) = &
-                                    (cc3d(m,i,j,1:kmax)*Dn(i,j) &
+                              cc3d(m,i,j,kl:kh) = &
+                                    (cc3d(m,i,j,kl:kh)*river_depth &
                                     + river_bio(n,m)*macro_height(n))      &
-                                    / (Dn(i,j)+macro_height(n))
+                                    / (river_depth+macro_height(n))
                            end if
                         end do
                      end if
@@ -483,10 +594,10 @@
                      if (allocated(fabm_pel)) then
                         do m=1,size(model%state_variables)
                            if ( river_fabm(n,m) .ne. model%state_variables(m)%missing_value ) then
-                              fabm_pel(i,j,1:kmax,m) = &
-                                    (fabm_pel(i,j,1:kmax,m)*Dn(i,j) &
+                              fabm_pel(i,j,kl:kh,m) = &
+                                    (fabm_pel(i,j,kl:kh,m)*river_depth &
                                     + river_fabm(n,m)*macro_height(n))      &
-                                    / (Dn(i,j)+macro_height(n))
+                                    / (river_depth+macro_height(n))
                            end if
                         end do
                      end if
@@ -494,8 +605,8 @@
                   end if
 
 !                 Changes of total and layer height due to river inflow:
-                  hn(i,j,1:kmax) = hn(i,j,1:kmax)/Dn(i,j) &
-                                  *(Dn(i,j)+macro_height(n))
+                  hn(i,j,kl:kh) = hn(i,j,kl:kh)/river_depth &
+                                  *(river_depth+macro_height(n))
                   ssen(i,j) = ssen(i,j)+macro_height(n)
                   macro_height(n) = _ZERO_
                end if
