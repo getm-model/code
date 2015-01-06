@@ -39,7 +39,8 @@
 !  the model run.
 !
 ! !SEE ALSO:
-!  short_wave_radiation.F90, fluxes.F90, exchange_coefficients.F90
+!  short_wave_radiation.F90, solar_zenith_angle.F90, albedo_water.F90, 
+!  fluxes.F90, exchange_coefficients.F90
 !
 ! !USES:
    use time, only: yearday,secondsofday,timestep
@@ -64,6 +65,7 @@
    integer, public, parameter          :: METEO_FROMFILE=2
    integer, public, parameter          :: METEO_FROMEXT=3
    integer, public                     :: met_method=NO_METEO
+   integer, public                     :: albedo_method=1
    integer, public                     :: fwf_method=0
    REALTYPE, public                    :: wind_factor=_ONE_
    REALTYPE, public                    :: evap_factor = _ONE_
@@ -73,9 +75,12 @@
    REALTYPE,public,dimension(:,:),pointer            :: airp,tausx,tausy
    REALTYPE,public,dimension(:,:),pointer            :: shf,swr=>null(),tcc=>null()
    REALTYPE,public,dimension(:,:),pointer            :: evap,precip
-   REALTYPE,public,dimension(:,:),pointer            :: sst
+   REALTYPE,public,dimension(:,:),allocatable,target :: zenith_angle,albedo
+   REALTYPE,public,dimension(:,:),pointer            :: sst,sss
    logical,public                                    :: nudge_sst=.false.
+   logical,public                                    :: nudge_sss=.false.
    REALTYPE,public                                   :: sst_const=-_ONE_
+   REALTYPE,public                                   :: sss_const=-_ONE_
    REALTYPE, public                    :: cd_mom,cd_heat,cd_latent
    REALTYPE, public                    :: cd_precip = _ZERO_
    REALTYPE, public                    :: t_1=-_ONE_,t_2=-_ONE_
@@ -97,6 +102,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: meteo_ramp=0,metfmt=2
    REALTYPE                  :: tx= _ZERO_ ,ty= _ZERO_
+   REALTYPE                  :: albedo_const= _ZERO_
    REALTYPE                  :: swr_const= _ZERO_ ,shf_const= _ZERO_
    REALTYPE                  :: evap_const= _ZERO_ ,precip_const= _ZERO_
    REALTYPE, dimension(:,:), allocatable :: tausx_const,tausy_const
@@ -109,6 +115,7 @@
    REALTYPE, dimension(:,:), pointer     :: evap_new,d_evap
    REALTYPE, dimension(:,:), pointer     :: precip_new,d_precip
    REALTYPE, dimension(:,:), pointer     :: sst_new,d_sst
+   REALTYPE, dimension(:,:), pointer     :: sss_new,d_sss
    REALTYPE                              :: ramp=_ONE_
    logical                               :: ramp_is_active=.false.
 !EOP
@@ -141,10 +148,12 @@
    REALTYPE                  :: sinconv,cosconv
    REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029d0
    REALTYPE, parameter       :: deg2rad=pi/180
-   namelist /meteo/ metforcing,on_grid,calc_met,met_method,fwf_method, &
+   namelist /meteo/ metforcing,on_grid,calc_met,met_method, &
+                    albedo_method,fwf_method, &
                     meteo_ramp,metfmt,meteo_file, &
-                    tx,ty,swr_const,shf_const,evap_const,precip_const, &
-                    sst_const,wind_factor,precip_factor,evap_factor
+                    tx,ty,albedo_const,swr_const,shf_const, &
+                    evap_const,precip_const,sst_const,sss_const, &
+                    wind_factor,precip_factor,evap_factor
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -157,7 +166,7 @@
 
 ! Allocates memory for the public data members
 !  KK-TODO: Why is this not static #ifdef STATIC?
-!  Note (KK): sst will be allocated in init_temperature()
+!  Note (KK): ss[t|s] will be allocated in init_[temperature|salinity]()
 
    allocate(airp(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (airp)'
@@ -168,12 +177,18 @@
    allocate(tausy(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy)'
    tausy = _ZERO_
-   allocate(shf(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_meteo: Error allocating memory (shf)'
-   shf = _ZERO_
+   allocate(zenith_angle(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (zenith_angle)'
+   zenith_angle = _ZERO_
    allocate(swr(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (swr)'
    swr = _ZERO_
+   allocate(albedo(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (albedo)'
+   albedo = _ZERO_
+   allocate(shf(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (shf)'
+   shf = _ZERO_
    allocate(evap(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (evap)'
    evap = _ZERO_
@@ -189,6 +204,7 @@
    LEVEL2 'Metforcing=',metforcing
    if (.not. metforcing) then
       met_method = NO_METEO
+      calc_met = .false.
       return
    end if
 
@@ -203,6 +219,8 @@
             LEVEL3 'evap   = ',evap_const
             LEVEL3 'precip = ',precip_const
          end if
+         albedo_method = 0
+         calc_met = .false.
       case (METEO_FROMFILE)
          LEVEL2 'Meteo forcing read from file'
          if(on_grid) then
@@ -218,11 +236,13 @@
    end select
 
    if (met_method.eq.METEO_FROMFILE .or. met_method.eq.METEO_FROMEXT) then
+
          if(calc_met) then
             LEVEL2 'Stresses and fluxes will be calculated'
          else
             LEVEL2 'Stresses and fluxes are already calculated'
          end if
+
          select case (fwf_method)
             case (1)
                LEVEL2 'Constant evaporation/precipitation'
@@ -248,6 +268,17 @@
          end select
    end if
 
+   LEVEL2 'Albedo method =',albedo_method
+   select case (albedo_method)
+         case (0)
+            LEVEL3 'albedo = ',albedo_const
+            albedo = albedo_const
+         case (1)
+            LEVEL3 'Albedo according to Payne'
+         case (2)
+            LEVEL3 'Albedo according to Cogley'
+      case default
+   end select
 
    if (meteo_ramp .gt. 1) then
       LEVEL2 'meteo_ramp=',meteo_ramp
@@ -416,12 +447,14 @@
    integer                   :: i,j,rc
    REALTYPE                  :: hh,t,t_minus_t2
    REALTYPE, save            :: deltm1=_ZERO_
+   REALTYPE                  :: solar_zenith_angle
    REALTYPE                  :: short_wave_radiation
+   REALTYPE                  :: albedo_water
    logical,save              :: first=.true.
    REALTYPE, dimension(:,:), pointer :: airp_old,tausx_old,tausy_old
    REALTYPE, dimension(:,:), pointer :: shf_old,swr_old,tcc_old
    REALTYPE, dimension(:,:), pointer :: evap_old,precip_old
-   REALTYPE, dimension(:,:), pointer :: sst_old
+   REALTYPE, dimension(:,:), pointer :: sst_old,sss_old
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -446,6 +479,14 @@
                if (rc /= 0) stop 'do_meteo: Error allocating memory (sst_new)'
                allocate(d_sst(E2DFIELD),stat=rc)
                if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sst)'
+            end if
+         end if
+         if (nudge_sss) then
+            if (met_method .eq. METEO_FROMFILE) then
+               allocate(sss_new(E2DFIELD),stat=rc)
+               if (rc /= 0) stop 'do_meteo: Error allocating memory (sss_new)'
+               allocate(d_sss(E2DFIELD),stat=rc)
+               if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sss)'
             end if
          end if
       end if
@@ -555,6 +596,9 @@
                if (nudge_sst) then
                   sst_old=>sst_new;sst_new=>sst;sst=>d_sst;d_sst=>sst_old
                end if
+               if (nudge_sss) then
+                  sss_old=>sss_new;sss_new=>sss;sss=>d_sss;d_sss=>sss_old
+               end if
 
 
                if (.not. first) then
@@ -582,6 +626,9 @@
                            end if
                            if (nudge_sst) then
                               d_sst(i,j) = sst_new(i,j) - sst_old(i,j)
+                           end if
+                           if (nudge_sss) then
+                              d_sss(i,j) = sss_new(i,j) - sss_old(i,j)
                            end if
                         end if
                      end do
@@ -624,6 +671,9 @@
                         if (nudge_sst) then
                            sst(i,j) = sst_new(i,j) + d_sst(i,j)*deltm1*t_minus_t2
                         end if
+                        if (nudge_sss) then
+                           sss(i,j) = sss_new(i,j) + d_sss(i,j)*deltm1*t_minus_t2
+                        end if
                      end if
                   end do
 #ifndef SLICE_MODEL
@@ -641,7 +691,14 @@
 #endif
                   do i=imin-HALO,imax+HALO
                      if (az(i,j) .ne. 0) then
-                        swr(i,j) = short_wave_radiation(yearday,hh,latc(i,j),lonc(i,j),tcc(i,j))
+                        zenith_angle(i,j) = solar_zenith_angle             &
+                                (yearday,hh,lonc(i,j),latc(i,j))
+                        swr(i,j) = short_wave_radiation(zenith_angle(i,j), &
+                                 yearday,lonc(i,j),latc(i,j),tcc(i,j))
+                        if (albedo_method .gt. 0) then
+                           albedo(i,j) = albedo_water                      &
+                                   (albedo_method,zenith_angle(i,j),yearday)
+                        end if
                      end if
                   end do
 #ifndef SLICE_MODEL
@@ -665,6 +722,9 @@
                end if
                if (nudge_sst) then
                   sst(:,j+1) = sst(:,j)
+               end if
+               if (nudge_sss) then
+                  sss(:,j+1) = sss(:,j)
                end if
 #endif
 
