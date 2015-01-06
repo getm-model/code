@@ -155,6 +155,8 @@
 			<ty>
 				0.0
 			</ty>
+			<albedo_method>1</albedo_method>
+			<albedo_const>0.0</albedo_const>
 			<swr_const>
 				0.0
 			</swr_const>
@@ -170,6 +172,9 @@
 			<sst_const>
 				-1.0
 			</sst_const>
+			<sss_const>
+				-1.0
+			</sss_const>
 			<wind_factor>
 				1.0
 			</wind_factor>
@@ -494,6 +499,9 @@
 			<salt_AH_stirr_const>
 				1.0
 			</salt_AH_stirr_const>
+			<sss_nudging_time>
+				-1.0
+			</sss_nudging_time>
 			<salt_check>
 				0
 			</salt_check>
