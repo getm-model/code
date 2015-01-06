@@ -258,7 +258,7 @@
    REALTYPE,dimension(I2DFIELD),target :: nvd2d
 #endif
    REALTYPE,dimension(:,:,:),pointer   :: p_hi,p_adv,p_nvd
-   integer                             :: tag2d,i,j,k
+   integer                             :: tag2d,j,k
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -461,19 +461,7 @@
                                    1,p_nvd)
                end if
 
-#ifdef _NEW_ADV_NOSPLIT_
-!              Note (KK): causes truncation errors
                f = fi
-#else
-               do j=jmin-HALO,jmax+HALO
-                  do i=imin-HALO,imax+HALO
-                     if (adv_grid%mask_finalise(i,j)) then
-!                       Note (KK): do not modify tracer inside open bdy cells
-                        f(i,j,1:kmax) = ( ho(i,j,1:kmax)*f(i,j,1:kmax) - dt*p_adv(i,j,1:kmax) ) / p_hi(i,j,1:kmax)
-                     end if
-                  end do
-               end do
-#endif
 
             case(FULLSPLIT)
 
