@@ -244,6 +244,7 @@ add_library(futils OBJECT
             futils/parameters.F90
             futils/pos.F90
             futils/read_par_setup.F90
+            futils/strip_string.F90
             futils/time.F90
             futils/to_2d_u.F90
             futils/to_2d_vel.F90
