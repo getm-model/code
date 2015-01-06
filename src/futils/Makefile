@@ -41,6 +41,7 @@ ${LIB}(cnv_2d.o)	\
 ${LIB}(cnv_3d.o)	\
 ${LIB}(eta_mask.o)	\
 ${LIB}(col_interpol.o)	\
+${LIB}(strip_string.o)	\
 ${LIB}(to_2d_vel.o)	\
 ${LIB}(to_2d_u.o)	\
 ${LIB}(to_2d_v.o)	\
