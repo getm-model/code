@@ -16,12 +16,20 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
-   REALTYPE,dimension(:,:),allocatable    :: AmC_2d,AmX_2d
-#ifndef NO_3D
-   REALTYPE,dimension(:,:,:),allocatable  :: AmC_3d,AmX_3d,AmU_3d,AmV_3d
-#endif
-   integer,parameter :: NO_LES=0,LES_MOMENTUM=1,LES_TRACER=2,LES_BOTH=3
+   REALTYPE,dimension(:,:)  ,allocatable :: AmC_2d,AmX_2d
+   REALTYPE,dimension(:,:,:),allocatable :: AmC_3d,AmX_3d,AmU_3d,AmV_3d
+   REALTYPE,dimension(:,:)  ,allocatable,target :: SmagC2_2d
+   REALTYPE,dimension(:,:)  ,pointer     :: SmagX2_2d,SmagU2_2d,SmagV2_2d
+   integer,parameter :: NO_LES=0
+   integer,parameter :: LES_MOMENTUM=1
+   integer,parameter :: LES_TRACER=2
+   integer,parameter :: LES_BOTH=3
    integer           :: les_mode=NO_LES
+   integer,parameter :: SMAG_2D=1
+   integer           :: les_method=SMAG_2D
+   integer,parameter :: SMAG_CONSTANT=1
+   integer,parameter :: SMAG_FROMFILE=2
+   integer           :: smag_method=SMAG_CONSTANT
 !
 ! !REVISION HISTORY:
 !  Original author(s): Knut Klingbeil
@@ -94,6 +102,30 @@
       end if
    end if
 #endif
+
+   if (les_method .eq. SMAG_2D) then
+
+      allocate(SmagC2_2d(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_2d: Error allocating memory (SmagC_2d)'
+      SmagC2_2d = _ZERO_
+
+      if (smag_method .eq. SMAG_FROMFILE) then
+         if (les_mode.eq.LES_MOMENTUM .or. les_mode.eq.LES_BOTH) then
+            allocate(SmagX2_2d(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_2d: Error allocating memory (SmagX_2d)'
+            SmagX2_2d = _ZERO_
+         end if
+         if (les_mode.eq.LES_TRACER .or. les_mode.eq.LES_BOTH) then
+            allocate(SmagU2_2d(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_2d: Error allocating memory (SmagU_2d)'
+            SmagU2_2d = _ZERO_
+            allocate(SmagV2_2d(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_2d: Error allocating memory (SmagV_2d)'
+            SmagV2_2d = _ZERO_
+         end if
+      end if
+   end if
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_variables_les()'
