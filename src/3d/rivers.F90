@@ -315,11 +315,6 @@
    integer                   :: unit = 25 ! kbk
    integer                   :: n,rc,ios
    character(len=255)        :: line
-#ifdef INPUT_DIR
-   character(len=PATH_MAX)   :: input_dir=trim(INPUT_DIR) // '/'
-#else
-   character(len=PATH_MAX)   :: input_dir=''
-#endif
 !EOP
 !-------------------------------------------------------------------------
 !BOC
