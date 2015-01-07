@@ -244,6 +244,7 @@ add_library(futils OBJECT
             futils/parameters.F90
             futils/pos.F90
             futils/read_par_setup.F90
+            futils/strip_string.F90
             futils/time.F90
             futils/to_2d_u.F90
             futils/to_2d_vel.F90
@@ -282,7 +283,9 @@ add_library(meteo OBJECT
             meteo/exchange_coefficients.F90
             meteo/fluxes.F90
             meteo/meteo.F90
+            meteo/solar_zenith_angle.F90
             meteo/short_wave_radiation.F90
+            meteo/albedo_water.F90
            )
 
 add_library(ncdf OBJECT
@@ -408,7 +411,17 @@ install(TARGETS getm_exe DESTINATION bin)
 add_executable(test_speed_adv_upstream_2dh EXCLUDE_FROM_ALL
                2d/test_speed_adv_upstream_2dh.F90
               )
+
+add_executable(test_rotation EXCLUDE_FROM_ALL
+               futils/test_rotation.F90
+               $<TARGET_OBJECTS:futils>
+              )
+target_link_libraries(test_rotation ${NetCDF_LIBRARIES})
+if(GETM_USE_PARALLEL AND MPI_Fortran_LIBRARIES)
+  target_link_libraries(test_rotation ${MPI_Fortran_LIBRARIES})
+endif()
+
 add_custom_target(test_all WORKING_DIRECTORY tests COMMENT "building tests")
-add_dependencies( test_all test_speed_adv_upstream_2dh )
+add_dependencies( test_all test_speed_adv_upstream_2dh test_rotation )
 
 # End of testing section

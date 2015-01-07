@@ -39,7 +39,8 @@
 ! !USES:
    use time,     only: update_time,timestep
    use domain,   only: kmax
-   use meteo,    only: do_meteo,tausx,tausy,airp,fwf_method,evap,precip
+   use meteo,    only: do_meteo,tausx,tausy,airp,swr,albedo
+   use meteo,    only: fwf_method,evap,precip
    use waves,    only: do_waves,waveforcing_method,NO_WAVES
    use m2d,      only: no_2d,integrate_2d
    use variables_2d, only: fwf,fwf_int,Dvel
@@ -108,6 +109,7 @@
 #ifndef NO_BAROCLINIC
       else
          call do_meteo(n,T(:,:,kmax))
+         swr = swr*(_ONE_-albedo)
 #endif
 #endif
       end if

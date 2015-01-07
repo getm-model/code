@@ -76,6 +76,9 @@
 #endif
 #endif
    use meteo, only: metforcing,met_method,init_meteo,do_meteo
+#ifndef NO_BAROCLINIC
+   use meteo, only: swr,albedo
+#endif
    use waves, only: init_waves,do_waves,waveforcing_method,NO_WAVES
    use integration,  only: MinN,MaxN
    use exceptions
@@ -307,6 +310,7 @@
             call get_meteo_data(MinN-1)
             call do_meteo(MinN-1,T(:,:,kmax))
          end if
+         swr = swr*(_ONE_-albedo)
 #endif
       end if
    end if
