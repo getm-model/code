@@ -212,7 +212,7 @@
                   xxx = ' on land'
                   ok(n) = 0
                else if (.not. outside) then
-                  xxx = ' in domain'
+                  xxx = ' inside'
                   ok(n) = 1
                else
                   xxx = ' in halo'
