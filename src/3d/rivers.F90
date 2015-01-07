@@ -342,6 +342,11 @@
          n = n + 1
          read(line,*,iostat=ios) ir(n),jr(n),river_name(n),rzl(n),rzu(n)
          if (ios .eq. 0) then
+            if (rzu(n) .gt. rzl(n)) then
+               rzl(n) = -1.
+               rzu(n) = -1.
+               LEVEL3 trim(river_name(n)),' rzu > rzl setting both to -1.'
+            end if
             if (rzl(n) .gt. H(ir(n),jr(n))) then
                rzl(n) = -1.
                LEVEL3 trim(river_name(n)),' setting rzl=-1.'
