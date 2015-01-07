@@ -819,6 +819,7 @@
 			</element>
 			<element name="salt_AH_stirr_const" type="float" label="salt stirring constant">
 				<condition type="eq" variable="./salt_AH_method" value="3"/>
+			</element>
 			<element name="sss_nudging_time" type="float" minExclusive="0.0" label="nudging time for sss" unit="s">
 				<condition type="eq" variable="../meteo/metforcing" value="True"/>
 			</element>
@@ -890,8 +891,18 @@
 					<option value="1" label="Smagorinsky parameterisation"/>
 				</options>
 			</element>
-			<element name="smag_const" type="float" label="Smagorinsky constant" minInclusive="0.0">
+			<element name="smag_method" type="int" label="method for Smagorinsky parameter">
 				<condition type="eq" variable="./les_method" value="1"/>
+				<options>
+					<option value="1" label="constant"/>
+					<option value="2" label="from 2D field"/>
+				</options>
+			</element>
+			<element name="smag_const" type="float" label="constant Smagorinsky parameter" minInclusive="0.0">
+				<condition type="eq" variable="./smag_method" value="1"/>
+			</element>
+			<element name="smag_file" type="string" label="name of file with horizontally varying Smagorinsky parameter">
+				<condition type="eq" variable="./smag_method" value="2"/>
 			</element>
 		</element>
 
