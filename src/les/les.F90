@@ -21,11 +21,6 @@
 #ifndef NO_3D
    public do_les_3d
 #endif
-   REALTYPE :: smag_const=0.28d0
-!
-! !PRIVATE DATA MEMBERS:
-   integer,private,parameter :: SMAG_2D=1
-   integer,private           :: les_method=SMAG_2D
 
 !  explicit interface needed due to optional arguments
    interface
@@ -63,6 +58,13 @@
 ! !INTERFACE:
    subroutine init_les(runtype)
 
+!
+! !USES:
+   use domain    , only: ill,ihl,ilg,ihg,jll,jhl,jlg,jhg
+   use domain    , only: imin,imax,jmin,jmax
+   use domain    , only: az
+   use halo_zones, only: update_2d_halo,wait_halo,H_TAG
+
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -75,7 +77,10 @@
 ! the simulation.
 !
 ! !LOCAL VARIABLES
-   namelist /les/ les_method,smag_const
+   integer                 :: i,j
+   REALTYPE                :: smag_const=0.28d0
+   character(len=PATH_MAX) :: smag_file
+   namelist /les/ les_method,smag_method,smag_const,smag_file
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -87,18 +92,65 @@
 
    LEVEL1 'init_les'
 
+   if (les_mode .eq. NO_LES) return
+
+   read(NAMLST,les)
    call init_variables_les(runtype)
 
-   if (les_mode .ne. NO_LES) then
-      read(NAMLST,les)
-      select case (les_method)
-         case(SMAG_2D)
-            LEVEL2 'Smagorinsky (1963) parameterisation'
-            LEVEL3 'Smagorinsky constant: ',real(smag_const)
-         case default
-            stop 'init_les(): no valid les_method specified'
-      end select
-   end if
+   select case(les_method)
+
+      case (SMAG_2D)
+
+         LEVEL2 'Smagorinsky (1963) parameterisation'
+
+         select case(smag_method)
+
+            case (SMAG_CONSTANT)
+
+               LEVEL3 'Smagorinsky parameter: ',real(smag_const)
+               SmagC2_2d = smag_const*smag_const
+               SmagX2_2d => SmagC2_2d
+               SmagU2_2d => SmagC2_2d
+               SmagV2_2d => SmagC2_2d
+
+            case (SMAG_FROMFILE)
+
+               LEVEL3 'getting Smagorinsky parameter from ',trim(smag_file)
+               call get_2d_field(trim(smag_file),"smag2d",ilg,ihg,jlg,jhg,.true.,SmagC2_2d(ill:ihl,jll:jhl))
+               SmagC2_2d = SmagC2_2d*SmagC2_2d
+               call update_2d_halo(SmagC2_2d,SmagC2_2d,az,imin,jmin,imax,jmax,H_TAG)
+               call wait_halo(H_TAG)
+
+               if (les_mode.eq.LES_MOMENTUM .or. les_mode.eq.LES_BOTH) then
+                  do j=jmin-HALO,jmax+HALO-1
+                     do i=imin-HALO,imax+HALO-1
+                        SmagX2_2d(i,j) = _QUART_ * (  SmagC2_2d(i,j  ) + SmagC2_2d(i+1,j  ) &
+                                                    + SmagC2_2d(i,j+1) + SmagC2_2d(i+1,j+1) )
+                     end do
+                  end do
+               end if
+               if (les_mode.eq.LES_TRACER .or. les_mode.eq.LES_BOTH) then
+                  do j=jmin-HALO,jmax+HALO
+                     do i=imin-HALO,imax+HALO-1
+                        SmagU2_2d(i,j) = _HALF_ * ( SmagC2_2d(i,j) + SmagC2_2d(i+1,j  ) )
+                     end do
+                  end do
+                  do j=jmin-HALO,jmax+HALO-1
+                     do i=imin-HALO,imax+HALO
+                        SmagV2_2d(i,j) = _HALF_ * ( SmagC2_2d(i,j) + SmagC2_2d(i  ,j+1) )
+                     end do
+                  end do
+               end if
+
+            case default
+               stop 'init_les(): no valid smag_method specified'
+
+         end select
+
+      case default
+         stop 'init_les(): no valid les_method specified'
+
+   end select
 
    return
    end subroutine init_les
