@@ -25,7 +25,7 @@
    use meteo, only: tausx,tausy,swr,shf
    use meteo, only: new_meteo,t_1,t_2
    use meteo, only: wind_factor,evap_factor,precip_factor
-   use meteo, only: nudge_sst,sst
+   use meteo, only: nudge_sst,sst,nudge_sss,sss
    use exceptions
    IMPLICIT NONE
 !
@@ -43,6 +43,7 @@
    integer         :: evap_id=-1,precip_id=-1
    integer         :: tausx_id,tausy_id,swr_id,shf_id
    integer         :: sst_id=-1
+   integer         :: sss_id=-1
    integer         :: iextr,jextr,textr,tmax=-1
    integer         :: grid_scan=1
    logical         :: point_source=.false.
@@ -85,6 +86,7 @@
    character(len=10)         :: name_swr="swr"
    character(len=10)         :: name_shf="shf"
    character(len=10)         :: name_sst="sst"
+   character(len=10)         :: name_sss="sss"
    character(len=128)        :: model_time
 !
 ! !REVISION HISTORY:
@@ -377,6 +379,7 @@
    integer, save   :: lon_id=-1,lat_id=-1,time_id=-1,id=-1
    integer, save   :: time_var_id=-1
    character(len=256) :: dimname
+   logical         :: have_southpole
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -460,18 +463,57 @@
             if (err /= 0) stop &
                   'open_meteo_file(): Error allocating memory (met_times)'
 
-            err = nf90_inq_varid(ncid,'southpole',id)
-            if (err .ne. NF90_NOERR) then
-               LEVEL4 'Setting southpole to (0,-90,0)'
-            else
-               err = nf90_get_var(ncid,id,southpole)
+!           first we check for CF compatible grid_mapping_name
+            err = nf90_inq_varid(ncid,'rotated_pole',id)
+            if (err .eq. NF90_NOERR) then
+               err = nf90_get_att(ncid,id, &
+                                  'grid_north_pole_latitude',southpole(1))
                if (err .ne. NF90_NOERR) go to 10
+               err = nf90_get_att(ncid,id, &
+                                  'grid_north_pole_longitude',southpole(2))
+!STDERR 'Inside rotated_pole'
+!STDERR 'grid_north_pole_latitude ',southpole(1)
+!STDERR 'grid_north_pole_longitude ',southpole(2)
+               if (err .ne. NF90_NOERR) go to 10
+               err = nf90_get_att(ncid,id, &
+                                  'north_pole_grid_longitude',southpole(3))
+               if (err .ne. NF90_NOERR) then
+                  southpole(3) = _ZERO_
+               end if
+!              Northpole ---> Southpole transformation
+               if (southpole(2) .ge. 0) then
+                  southpole(2) = southpole(2) - 180.
+               else
+                  southpole(2) = southpole(2) + 180.
+               end if 
+               southpole(1) = -southpole(1)
+!STDERR 'After transformation:'
+!STDERR 'grid_north_pole_latitude ',southpole(1)
+!STDERR 'grid_north_pole_longitude ',southpole(2)
+               southpole(3) = _ZERO_
+               have_southpole = .true.
                rotated_meteo_grid = .true.
+            else
+               have_southpole = .false.
             end if
-            LEVEL4 'south pole:'
-            LEVEL4 '      lon ',southpole(1)
-            LEVEL4 '      lat ',southpole(2)
 
+!           and then we revert to the old way - checking 'southpole' directly
+            if (.not. have_southpole) then
+               err = nf90_inq_varid(ncid,'southpole',id)
+               if (err .ne. NF90_NOERR) then
+                  LEVEL4 'Setting southpole to (0,-90,0)'
+               else
+                  err = nf90_get_var(ncid,id,southpole)
+                  if (err .ne. NF90_NOERR) go to 10
+                  rotated_meteo_grid = .true.
+               end if
+            end if
+            if (rotated_meteo_grid) then
+               LEVEL4 'south pole:'
+!              changed indices - kb 2014-12-15
+               LEVEL4 '      lon ',southpole(2)
+               LEVEL4 '      lat ',southpole(1)
+            end if
          end if
 
          err = nf90_inquire_dimension(ncid,time_id,len=idum)
@@ -614,6 +656,12 @@
       if (nudge_sst) then
          LEVEL4 ' ... checking variable ',name_sst
          err = nf90_inq_varid(ncid,name_sst,sst_id)
+         if (err .NE. NF90_NOERR) go to 10
+      end if
+
+      if (nudge_sss) then
+         LEVEL4 ' ... checking variable ',name_sss
+         err = nf90_inq_varid(ncid,name_sss,sss_id)
          if (err .NE. NF90_NOERR) go to 10
       end if
 
@@ -867,6 +915,21 @@
       else if (calc_met) then
          call copy_var(grid_scan,wrk,wrk_dp)
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sst)
+      end if
+   end if
+
+   if (sss_id .gt. 0) then
+      err = nf90_get_var(ncid,sss_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
+      if (on_grid) then
+         if (point_source) then
+            sss = wrk(1,1)
+         else
+            sss(ill:ihl,jll:jhl) = wrk
+         end if
+      else if (calc_met) then
+         call copy_var(grid_scan,wrk,wrk_dp)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sss)
       end if
    end if
 
