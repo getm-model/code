@@ -315,11 +315,6 @@
    integer                   :: unit = 25 ! kbk
    integer                   :: n,rc,ios
    character(len=255)        :: line
-#ifdef INPUT_DIR
-   character(len=PATH_MAX)   :: input_dir=trim(INPUT_DIR) // '/'
-#else
-   character(len=PATH_MAX)   :: input_dir=''
-#endif
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -332,7 +327,7 @@
    LEVEL2 'read_river_info()'
 !KB   inquire(file=river_info, exist=exist) 
 !KB   if (exists) then
-   open(unit,file=(trim(input_dir) // river_info),action='read',iostat=ios,status='old',err=90)
+   open(unit,file=river_info,action='read',iostat=ios,status='old',err=90)
    do while (nriver == 0 .and. ios == 0)
       read(unit,'(A)',iostat=ios,end=91,err=92) line
       call strip_string(line)
