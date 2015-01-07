@@ -755,6 +755,7 @@
 			</element>
 			<element name="salt_AH_stirr_const" type="float" label="salt stirring constant">
 				<condition type="eq" variable="./salt_AH_method" value="3"/>
+			</element>
 			<element name="sss_nudging_time" type="float" minExclusive="0.0" label="nudging time for sss" unit="s">
 				<condition type="eq" variable="../meteo/metforcing" value="True"/>
 			</element>
