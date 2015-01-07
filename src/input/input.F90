@@ -109,7 +109,7 @@
    end if
 
    if (waveforcing_method .eq. WAVES_FROMFILE) then
-      call init_waves_input(trim(input_dir) // waves_file,n)
+      call init_waves_input(waves_file,n)
    end if
 
 #ifndef NO_3D
