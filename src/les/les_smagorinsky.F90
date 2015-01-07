@@ -18,7 +18,7 @@
 !
 !
 ! !USES:
-   use les, only: smag_const
+   use variables_les, only: SmagC2_2d,SmagX2_2d,SmagU2_2d,SmagV2_2d
    use domain, only: imin,imax,jmin,jmax,az,ax,au,av
 #if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxc,dyc,dxx,dyx,dxu,dyu,dxv,dyv
@@ -82,7 +82,7 @@
                          + dvdyC(i,j)**2                                    &
 #endif
                          + _HALF_*(_HALF_*(shearU(i-1,j) + shearU(i,j)))**2
-               AmC(i,j) = (smag_const**2)*DXC*DYC*sqrt(_TWO_*AmC(i,j))
+               AmC(i,j) = SmagC2_2d(i,j)*DXC*DYC*sqrt(_TWO_*AmC(i,j))
             end if
          end do
 #ifndef SLICE_MODEL
@@ -126,7 +126,7 @@
                          + dvdy**2 &
 #endif
                          + _HALF_*shearX(i,j)**2
-               AmX(i,j) = (smag_const**2)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
+               AmX(i,j) = SmagX2_2d(i,j)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
 #ifdef _CORRECT_METRICS_
 #if defined(SPHERICAL) || defined(CURVILINEAR)
             else
@@ -141,7 +141,7 @@
                                + dvdyU(i,j  )**2                         &
 #endif
                                + _HALF_*shearX(i,j)**2
-                     AmX(i,j) = (smag_const**2)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
+                     AmX(i,j) = SmagX2_2d(i,j)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
                   end if
                   if (au(i,j+1) .eq. 1) then ! southern closed boundary
                      AmX(i,j) =  (_HALF_*(dudxV(i,j) + dudxV(i+1,j)))**2 &
@@ -149,7 +149,7 @@
                                + dvdyU(i,j+1)**2                         &
 #endif
                                + _HALF_*shearX(i,j)**2
-                     AmX(i,j) = (smag_const**2)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
+                     AmX(i,j) = SmagX2_2d(i,j)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
                   end if
                end if
                if (au(i,j).eq.0 .and. au(i,j+1).eq.0) then
@@ -159,7 +159,7 @@
                                + (_HALF_*(dvdyU(i,j) + dvdyU(i,j+1)))**2 &
 #endif
                                + _HALF_*shearX(i,j)**2
-                     AmX(i,j) = (smag_const**2)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
+                     AmX(i,j) = SmagX2_2d(i,j)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
                   end if
                   if (av(i+1,j) .eq. 1) then ! western closed boundary
                      AmX(i,j) =  dudxV(i+1,j)**2                         &
@@ -167,7 +167,7 @@
                                + (_HALF_*(dvdyU(i,j) + dvdyU(i,j+1)))**2 &
 #endif
                                + _HALF_*shearX(i,j)**2
-                     AmX(i,j) = (smag_const**2)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
+                     AmX(i,j) = SmagX2_2d(i,j)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
                   end if
                end if
 #endif
@@ -209,7 +209,7 @@
                          + dvdyU(i,j)**2                               &
 #endif
                          + _HALF_*shearU(i,j)**2
-               AmU(i,j) = (smag_const**2)*DXU*DYU*sqrt(_TWO_*AmU(i,j))
+               AmU(i,j) = SmagU2_2d(i,j)*DXU*DYU*sqrt(_TWO_*AmU(i,j))
             end if
          end do
 #ifndef SLICE_MODEL
@@ -243,7 +243,7 @@
                AmV(i,j) =  dudxV(i,j)**2                                    &
                          + dvdy**2                                          &
                          + _HALF_*(_HALF_*(shearX(i-1,j) + shearX(i,j)))**2
-               AmV(i,j) = (smag_const**2)*DXV*DYV*sqrt(_TWO_*AmV(i,j))
+               AmV(i,j) = SmagV2_2d(i,j)*DXV*DYV*sqrt(_TWO_*AmV(i,j))
             end if
          end do
       end do
