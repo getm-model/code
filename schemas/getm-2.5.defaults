@@ -507,9 +507,15 @@
 			<les_method>
 				1
 			</les_method>
+			<smag_method>
+				1
+			</smag_method>
 			<smag_const>
 				0.28
 			</smag_const>
+			<smag_file>
+				topo.nc
+			</smag_file>
 		</les>
 		<io_spec>
 			<out_fmt>
