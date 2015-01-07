@@ -105,7 +105,7 @@
 
    LEVEL1 'init_input'
    if (met_method .eq. METEO_FROMFILE) then
-      call init_meteo_input(trim(input_dir) // meteo_file,n)
+      call init_meteo_input(meteo_file,n)
    end if
 
    if (waveforcing_method .eq. WAVES_FROMFILE) then
