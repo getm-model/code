@@ -221,7 +221,8 @@
             else
               xxx = ' outside'
             end if
-            write(line,'(I4,A20,2I5,2F7.1,A11)') n,trim(river_name(n)),ir(n),jr(n),rzl(n),rzu(n),xxx
+            write(line,'(I4,A20,2I5,3F8.1,A11)') n,trim(river_name(n)), &
+                  ir(n),jr(n),H(ir(n),jr(n)),rzl(n),rzu(n),xxx
             LEVEL3 trim(line)
          end do
 
