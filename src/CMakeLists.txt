@@ -140,6 +140,12 @@ else()
   set(CMAKE_INSTALL_PREFIX ${DEFAULT_PREFIX} CACHE PATH "Directory to install GETM in")
 endif()
 
+# Find NetCDF and - on Windows - compile against static runtime if NetCDF was compiled as such.
+find_package(NetCDF REQUIRED)
+if (NetCDF_STATIC_MSVC_BUILD)
+  add_compile_options("/libs:static")
+endif()
+
 # Global include directories
 include_directories("${CMAKE_BINARY_DIR}"
                     "${PROJECT_SOURCE_DIR}/../include"
@@ -348,7 +354,6 @@ add_dependencies(ncdf futils domain output)
 add_dependencies(input futils 2d 3d ncdf)
 add_dependencies(getm input)
 
-find_package(NetCDF REQUIRED)
 set_property(TARGET futils ncdf input APPEND PROPERTY INCLUDE_DIRECTORIES "${NetCDF_INCLUDE_DIRS}")
 add_definitions(-DNETCDF_FMT -DREAL_4B=real\(4\))
 
@@ -394,8 +399,7 @@ set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm${exe_id}")
 
 target_link_libraries(getm_exe ${GOTM_LIBRARIES} ${NetCDF_LIBRARIES})
 if (NetCDF_STATIC_MSVC_BUILD)
-  set_property(TARGET getm_exe PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:\"libcmtd\"")
-  target_compile_options(getm_exe PRIVATE "/libs:static")
+  set_property(TARGET getm_exe PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:\"libcmt\"")
 endif()
 if(GETM_USE_PARALLEL AND MPI_Fortran_LIBRARIES)
   target_link_libraries(getm_exe ${MPI_Fortran_LIBRARIES})
@@ -420,6 +424,9 @@ add_executable(test_rotation EXCLUDE_FROM_ALL
                $<TARGET_OBJECTS:futils>
               )
 target_link_libraries(test_rotation ${NetCDF_LIBRARIES})
+if (NetCDF_STATIC_MSVC_BUILD)
+  set_property(TARGET test_rotation PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:\"libcmt\"")
+endif()
 if(GETM_USE_PARALLEL AND MPI_Fortran_LIBRARIES)
   target_link_libraries(test_rotation ${MPI_Fortran_LIBRARIES})
 endif()
