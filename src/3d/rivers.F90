@@ -212,7 +212,7 @@
                   xxx = ' on land'
                   ok(n) = 0
                else if (.not. outside) then
-                  xxx = ' in domain'
+                  xxx = ' inside'
                   ok(n) = 1
                else
                   xxx = ' in halo'
@@ -221,7 +221,8 @@
             else
               xxx = ' outside'
             end if
-            write(line,'(I4,A20,2I5,2F7.1,A11)') n,trim(river_name(n)),ir(n),jr(n),rzl(n),rzu(n),xxx
+            write(line,'(I4,A20,2I5,3F8.1,A11)') n,trim(river_name(n)), &
+                  ir(n),jr(n),H(ir(n),jr(n)),rzl(n),rzu(n),xxx
             LEVEL3 trim(line)
          end do
 
@@ -342,6 +343,11 @@
          n = n + 1
          read(line,*,iostat=ios) ir(n),jr(n),river_name(n),rzl(n),rzu(n)
          if (ios .eq. 0) then
+            if (rzu(n) .gt. rzl(n)) then
+               rzl(n) = -1.
+               rzu(n) = -1.
+               LEVEL3 trim(river_name(n)),' rzu > rzl setting both to -1.'
+            end if
             if (rzl(n) .gt. H(ir(n),jr(n))) then
                rzl(n) = -1.
                LEVEL3 trim(river_name(n)),' setting rzl=-1.'
