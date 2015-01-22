@@ -18,7 +18,7 @@
    use meteo, only: shf,swr,albedo,precip,evap,tcc,t2,airp,hum,u10,v10,kelvin, &
                     tausx,tausy
    use parameters, only: rho_0
-   use variables_3d, only: rho,rho_0,S,T,hn
+   use variables_3d, only: rho,S,T,hn
    use ice_winton, only: init_ice_winton, do_ice_winton
    IMPLICIT NONE
 !
