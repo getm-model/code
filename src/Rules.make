@@ -109,7 +109,6 @@ LINKDIRS	= -L$(LIBDIR)
 EXTRA_LIBS	=
 
 # Turbulence directory
-EXTRA_LIBS	+=  -lturbulence$(buildtype) -lutil$(buildtype) 
 ifdef GOTM_PREFIX
 
 GOTMLIBDIR	= $(GOTM_PREFIX)/lib
