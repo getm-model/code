@@ -166,8 +166,38 @@
 		</meteo>
 		<ice>
 			<ice_method>
-				1
+				0
 			</ice_method>
+			<ks>
+				0.31
+			</ks>
+			<alb_sno>
+				0.85
+			</alb_sno>
+			<alb_ice>
+				0.5826
+			</alb_ice>
+			<pen_ice>
+				0.3
+			</pen_ice>
+			<opt_dep_ice>
+				0.67
+			</opt_dep_ice>
+			<opt_ext_ice>
+				1.5
+			</opt_ext_ice>
+			<opt_ext_snow>
+				15.0
+			</opt_ext_snow>
+			<t_range_melt>
+				1.0
+			</t_range_melt>
+			<h_lo_lim>
+				0.001
+			</h_lo_lim>
+			<kmelt>
+				240.0
+			</kmelt>
 		</ice>
 		<rivers>
 			<river_method>

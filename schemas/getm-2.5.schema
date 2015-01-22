@@ -209,6 +209,36 @@
 					<option value="2" label="thermodynamic ice model adapted after Winton"/>
 				</options>
 			</element>
+			<element name="ks" type="float" label="thermal conductivity of snow" unit="W (mK)-1">
+				<condition type="eq" variable="./ice_method" value="2"/>
+			</element>
+			<element name="alb_sno" type="float" label="albedo of snow">
+				<condition type="eq" variable="./ice_method" value="2"/>
+			</element>
+			<element name="alb_ice" type="float" label="albedo of ice">
+				<condition type="eq" variable="./ice_method" value="2"/>
+			</element>
+			<element name="pen_ice" type="float" label="ice surface penetrating solar fraction">
+				<condition type="eq" variable="./ice_method" value="2"/>
+			</element>
+			<element name="opt_dep_ice" type="float" label="ice optical depth" unit="m">
+				<condition type="eq" variable="./ice_method" value="2"/>
+			</element>
+			<element name="opt_ext_ice" type="float" label="ice optical extinction" unit="m-1">
+				<condition type="eq" variable="./ice_method" value="2"/>
+			</element>
+			<element name="opt_ext_snow" type="float" label="snow optical extinction" unit="m-1">
+				<condition type="eq" variable="./ice_method" value="2"/>
+			</element>
+			<element name="t_range_melt" type="float" label="temperature range for scaling albedo" description="melt albedos scaled in below melting T">
+				<condition type="eq" variable="./ice_method" value="2"/>
+			</element>
+			<element name="h_lo_lim" type="float" label="hi/hs lower limit">
+				<condition type="eq" variable="./ice_method" value="2"/>
+			</element>
+			<element name="kmelt" type="float" label="ocean/ice heat flux const.">
+				<condition type="eq" variable="./ice_method" value="2"/>
+			</element>
 		</element>
 
 		<element name="rivers" label="variables related to rivers">
