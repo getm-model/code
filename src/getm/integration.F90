@@ -111,8 +111,8 @@
 #ifndef NO_BAROCLINIC
       else
          call do_meteo(n,T(:,:,kmax))
-         swr = swr*(_ONE_-albedo)
          call do_getm_ice()
+         swr = swr*(_ONE_-albedo)
 #endif
 #endif
       end if

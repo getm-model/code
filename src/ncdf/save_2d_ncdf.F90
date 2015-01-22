@@ -24,7 +24,7 @@
    use meteo,        only: metforcing,calc_met
    use meteo,        only: airp,u10,v10,t2,hum,tcc
    use meteo,        only: evap,precip
-   use meteo,        only: tausx,tausy,swr,albedo,shf
+   use meteo,        only: tausx,tausy,zenith_angle,swr,albedo,shf
 
    IMPLICIT NONE
 !
@@ -173,6 +173,11 @@
          call cnv_2d(imin,jmin,imax,jmax,az,tausy,stress_missing, &
                      imin,jmin,imax,jmax,ws)
          err = nf90_put_var(ncid,tausy_id,ws(_2D_W_),start,edges)
+         if (err .NE. NF90_NOERR) go to 10
+
+         call cnv_2d(imin,jmin,imax,jmax,az,zenith_angle,angle_missing, &
+                     imin,jmin,imax,jmax,ws)
+         err = nf90_put_var(ncid,zenith_angle_id,ws(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
 
          call cnv_2d(imin,jmin,imax,jmax,az,swr,swr_missing, &

@@ -42,6 +42,8 @@ if(GETM_USE_STATIC)
    add_definitions(-DSTATIC)
 endif(GETM_USE_STATIC)
 
+# used for naming executable
+set(par_str "")
 option(GETM_USE_PARALLEL "Enable parallel computation" OFF)
 if(GETM_USE_PARALLEL)
    find_package(MPI REQUIRED)
@@ -50,6 +52,7 @@ if(GETM_USE_PARALLEL)
    endif()
    add_definitions(-DGETM_PARALLEL)
    set(HALO_MPI futils/halo_mpi.F90 ${MPI_Fortran_EXTRA_SOURCES})
+   set(par_str "_parallel")
 endif(GETM_USE_PARALLEL)
 
 option(GETM_USE_DEBUG "Enable debug output" OFF)
@@ -88,13 +91,13 @@ if(NOT GETM_COORDINATE_TYPE)
 endif()
 if(${GETM_COORDINATE_TYPE} STREQUAL "Cartesian")
   add_definitions(-DCARTESIAN)
-  set(exe_id "_cartesian")
+  set(exe_id "_cartesian${par_str}")
 elseif(${GETM_COORDINATE_TYPE} STREQUAL "Spherical")
   add_definitions(-DSPHERICAL)
-  set(exe_id "_spherical")
+  set(exe_id "_spherical${par_str}")
 elseif(${GETM_COORDINATE_TYPE} STREQUAL "Curvilinear")
   add_definitions(-DCURVILINEAR)
-  set(exe_id "_curvilinear")
+  set(exe_id "_curvilinear${par_str}")
 endif()
 message(${GETM_COORDINATE_TYPE})
 
@@ -135,6 +138,12 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 else()
   # Just set the doc string for the variable.
   set(CMAKE_INSTALL_PREFIX ${DEFAULT_PREFIX} CACHE PATH "Directory to install GETM in")
+endif()
+
+# Find NetCDF and - on Windows - compile against static runtime if NetCDF was compiled as such.
+find_package(NetCDF REQUIRED)
+if (NetCDF_STATIC_MSVC_BUILD)
+  add_compile_options("/libs:static")
 endif()
 
 # Global include directories
@@ -244,6 +253,7 @@ add_library(futils OBJECT
             futils/parameters.F90
             futils/pos.F90
             futils/read_par_setup.F90
+            futils/strip_string.F90
             futils/time.F90
             futils/to_2d_u.F90
             futils/to_2d_vel.F90
@@ -282,7 +292,9 @@ add_library(meteo OBJECT
             meteo/exchange_coefficients.F90
             meteo/fluxes.F90
             meteo/meteo.F90
+            meteo/solar_zenith_angle.F90
             meteo/short_wave_radiation.F90
+            meteo/albedo_water.F90
            )
 
 add_library(ncdf OBJECT
@@ -342,19 +354,33 @@ add_dependencies(ncdf futils domain output)
 add_dependencies(input futils 2d 3d ncdf)
 add_dependencies(getm input)
 
-find_package(NetCDF REQUIRED)
 set_property(TARGET futils ncdf input APPEND PROPERTY INCLUDE_DIRECTORIES "${NetCDF_INCLUDE_DIRS}")
 add_definitions(-DNETCDF_FMT -DREAL_4B=real\(4\))
 
 # Use GOTM_PREFIX to locate include and lib directories
-find_package(GOTM REQUIRED)
-set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
+find_path(GOTM_BASE src/gotm/gotm.F90 DOC "Path to GOTM source directory.")
+if(GOTM_BASE)
+  set(GOTM_BUILD_LIBRARIES_ONLY ON)
+  set(GOTM_USE_FABM ${GETM_USE_FABM} CACHE BOOL "Include support for Framework for Aquatic Biogeochemical Models (fabm.net)" FORCE)
+  add_subdirectory(${GOTM_BASE}/src gotm)
+  set(GOTM_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/gotm/modules)
+  set(GOTM_LIBRARIES turbulence util)
+  if(GETM_USE_FABM)
+    set(GOTM_LIBRARIES ${GOTM_LIBRARIES} gotm_fabm)
+    set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES $<TARGET_PROPERTY:gotm_fabm,INTERFACE_INCLUDE_DIRECTORIES>)
+  endif()
+  mark_as_advanced(GOTM_PREFIX GOTM_USE_FABM)
+  add_dependencies(3d ${GOTM_LIBRARIES})
+else()
+  find_package(GOTM REQUIRED)
 
-# Use FABM_PREFIX to locate include and lib directories
-if(GETM_USE_FABM)
-  find_package(FABM REQUIRED)
-  set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
-endif(GETM_USE_FABM)
+  # Use FABM_PREFIX to locate include and lib directories
+  if(GETM_USE_FABM)
+    find_package(FABM REQUIRED)
+    set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
+  endif()
+endif()
+set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 
 # Build GETM executable.
 add_executable(getm_exe
@@ -373,16 +399,15 @@ set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm${exe_id}")
 
 target_link_libraries(getm_exe ${GOTM_LIBRARIES} ${NetCDF_LIBRARIES})
 if (NetCDF_STATIC_MSVC_BUILD)
-  set_property(TARGET getm_exe PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:\"libcmtd\"")
-  target_compile_options(getm_exe PRIVATE "/libs:static")
+  set_property(TARGET getm_exe PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:\"libcmt\"")
 endif()
 if(GETM_USE_PARALLEL AND MPI_Fortran_LIBRARIES)
   target_link_libraries(getm_exe ${MPI_Fortran_LIBRARIES})
 endif()
 
-if(GETM_USE_FABM)
+if(GETM_USE_FABM AND NOT GOTM_BASE)
   target_link_libraries(getm_exe ${FABM_LIBRARIES})
-endif(GETM_USE_FABM)
+endif()
 
 # Install GETM executable
 install(TARGETS getm_exe DESTINATION bin)
@@ -393,7 +418,20 @@ install(TARGETS getm_exe DESTINATION bin)
 add_executable(test_speed_adv_upstream_2dh EXCLUDE_FROM_ALL
                2d/test_speed_adv_upstream_2dh.F90
               )
+
+add_executable(test_rotation EXCLUDE_FROM_ALL
+               futils/test_rotation.F90
+               $<TARGET_OBJECTS:futils>
+              )
+target_link_libraries(test_rotation ${NetCDF_LIBRARIES})
+if (NetCDF_STATIC_MSVC_BUILD)
+  set_property(TARGET test_rotation PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:\"libcmt\"")
+endif()
+if(GETM_USE_PARALLEL AND MPI_Fortran_LIBRARIES)
+  target_link_libraries(test_rotation ${MPI_Fortran_LIBRARIES})
+endif()
+
 add_custom_target(test_all WORKING_DIRECTORY tests COMMENT "building tests")
-add_dependencies( test_all test_speed_adv_upstream_2dh )
+add_dependencies( test_all test_speed_adv_upstream_2dh test_rotation )
 
 # End of testing section

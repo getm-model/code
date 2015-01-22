@@ -22,7 +22,7 @@
    use bio_var, only: numc,var_names,var_units,var_long
 #endif
 #ifdef _FABM_
-   use getm_fabm, only: model,fabm_pel
+   use getm_fabm, only: model,fabm_pel,output_none
 #endif
    IMPLICIT NONE
 !
@@ -273,8 +273,9 @@
    if (allocated(fabm_pel)) then
       allocate(fabmmean_ids(size(model%state_variables)),stat=err)
       if (err /= 0) stop 'init_mean_ncdf(): Error allocating memory (fabmmean_ids)'
-
+      fabmmean_ids = -1
       do n=1,size(model%state_variables)
+         if (model%state_variables(n)%output==output_none) cycle
          err = nf90_def_var(ncid,model%state_variables(n)%name,NCDF_FLOAT_PRECISION,f4_dims,fabmmean_ids(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabmmean_ids(n), &
@@ -288,7 +289,9 @@
 
       allocate(fabmmean_ids_ben(size(model%bottom_state_variables)),stat=err)
       if (err /= 0) stop 'init_mean_ncdf(): Error allocating memory (fabmmean_ids_ben)'
+      fabmmean_ids_ben = -1
       do n=1,size(model%bottom_state_variables)
+         if (model%bottom_state_variables(n)%output==output_none) cycle
          err = nf90_def_var(ncid,model%bottom_state_variables(n)%name,NCDF_FLOAT_PRECISION,f3_dims,fabmmean_ids_ben(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabmmean_ids_ben(n), &
@@ -302,7 +305,9 @@
 
       allocate(fabmmean_ids_diag(size(model%diagnostic_variables)),stat=err)
       if (err /= 0) stop 'init_mean_ncdf(): Error allocating memory (fabmmean_ids_diag)'
+      fabmmean_ids_diag = -1
       do n=1,size(model%diagnostic_variables)
+         if (model%diagnostic_variables(n)%output==output_none) cycle
          err = nf90_def_var(ncid,model%diagnostic_variables(n)%name,NCDF_FLOAT_PRECISION,f4_dims,fabmmean_ids_diag(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabmmean_ids_diag(n), &
@@ -316,7 +321,9 @@
 
       allocate(fabmmean_ids_diag_hz(size(model%horizontal_diagnostic_variables)),stat=err)
       if (err /= 0) stop 'init_mean_ncdf(): Error allocating memory (fabmmean_ids_diag_hz)'
+      fabmmean_ids_diag_hz = -1
       do n=1,size(model%horizontal_diagnostic_variables)
+         if (model%horizontal_diagnostic_variables(n)%output==output_none) cycle
          err = nf90_def_var(ncid,model%horizontal_diagnostic_variables(n)%name,NCDF_FLOAT_PRECISION,f3_dims,fabmmean_ids_diag_hz(n))
          if (err .NE.  NF90_NOERR) go to 10
          call set_attributes(ncid,fabmmean_ids_diag_hz(n), &

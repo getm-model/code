@@ -37,8 +37,6 @@ ${LIB}(get_3d_field.o)		\
 ${LIB}(read_profile.o)          \
 ${LIB}(read_topo_file.o)
 
-#${LIB}(get_grid.o)
-
 all: modules objects
 
 modules: $(MOD)

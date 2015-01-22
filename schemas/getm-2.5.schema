@@ -148,6 +148,18 @@
 					<condition type="eq" variable="./met_method" value="1"/>
 				</condition>
 			</element>
+			<element name="albedo_method" type="int" label="albedo method" unit="">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="eq" variable="./met_method" value="2"/>
+				</condition>
+			</element>
+			<element name="albedo_const" type="float" label="constant albedo">
+				<condition type="and">
+					<condition type="eq" variable="./metforcing" value="True"/>
+					<condition type="eq" variable="./met_method" value="2"/>
+				</condition>
+			</element>
 			<element name="swr_const" type="float" label="constant short wave radiation" unit="W/m²">
 				<condition type="and">
 					<condition type="eq" variable="./metforcing" value="True"/>

@@ -1,12 +1,12 @@
 #include "dimensions.h"
 
 !  coordinate axes - grid-type = 1 or 2
-   REALTYPE                             :: xcord(imin-HALO:imax+HALO)
-   REALTYPE                             :: ycord(jmin-HALO:jmax+HALO)
+   REALTYPE,target                     :: xcord(imin-HALO:imax+HALO)
+   REALTYPE,target                     :: ycord(jmin-HALO:jmax+HALO)
 
 !  pseudo coordinate axes - grid-type = 3 or 4
-   REALTYPE                             :: xxcord(imin-HALO-1:imax+HALO)
-   REALTYPE                             :: yxcord(jmin-HALO-1:jmax+HALO)
+   REALTYPE,target                     :: xxcord(imin-HALO-1:imax+HALO)
+   REALTYPE,target                     :: yxcord(jmin-HALO-1:jmax+HALO)
 
 !  mask
    REALTYPE                            :: mask(E2DFIELD)
@@ -29,10 +29,10 @@
    REALTYPE                            :: corv(E2DFIELD)
 
 !  lat/lon
-   REALTYPE                            :: lonc(E2DFIELD) = -999.
-   REALTYPE                            :: latc(E2DFIELD) = -999.
-   REALTYPE                            :: lonx(E2DXFIELD) = -999.
-   REALTYPE                            :: latx(E2DXFIELD) = -999.
+   REALTYPE,target                     :: lonc(E2DFIELD) = -999.
+   REALTYPE,target                     :: latc(E2DFIELD) = -999.
+   REALTYPE,target                     :: lonx(E2DXFIELD) = -999.
+   REALTYPE,target                     :: latx(E2DXFIELD) = -999.
    REALTYPE                            :: lonu(E2DFIELD) = -999.
    REALTYPE                            :: latu(E2DFIELD) = -999.
    REALTYPE                            :: lonv(E2DFIELD) = -999.
@@ -44,10 +44,10 @@
    REALTYPE                            :: convx(E2DXFIELD) = _ZERO_
 
 !  grid points
-   REALTYPE                            :: xx(E2DXFIELD)
-   REALTYPE                            :: yx(E2DXFIELD)
-   REALTYPE                            :: xc(E2DFIELD)
-   REALTYPE                            :: yc(E2DFIELD)
+   REALTYPE,target                     :: xx(E2DXFIELD)
+   REALTYPE,target                     :: yx(E2DXFIELD)
+   REALTYPE,target                     :: xc(E2DFIELD)
+   REALTYPE,target                     :: yc(E2DFIELD)
    REALTYPE                            :: xu(E2DFIELD)
    REALTYPE                            :: yu(E2DFIELD)
    REALTYPE                            :: xv(E2DFIELD)

@@ -15,18 +15,11 @@
    use time, only: julianday, secondsofday, timestep
    use domain, only: imin,imax,jmin,jmax,kmax,az
    use domain, only: lonc,latc
-<<<<<<< HEAD
    use meteo, only: shf,swr,albedo,precip,evap,tcc,t2,airp,hum,u10,v10,kelvin, &
                     tausx,tausy
    use parameters, only: rho_0
    use variables_3d, only: rho,rho_0,S,T,hn
    use ice_winton, only: init_ice_winton, do_ice_winton
-=======
-   use meteo, only: shf,swr,albedo,precip,evap,tcc,t2,airp,hum,u10,v10,kelvin
-   use parameters, only: rho_0
-   use variables_3d, only: rho,rho_0,S,T,hn
-   use ice_winton, only: do_ice_winton
->>>>>>> remotes/getm-sf/ice
    IMPLICIT NONE
 !
    private
@@ -78,20 +71,16 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,rc
-<<<<<<< HEAD
    REALTYPE :: ks, alb_sno, alb_ice, pen_ice, opt_dep_ice, opt_ext_ice, &
                opt_ext_snow, t_range_melt, h_lo_lim, kmelt, t_range_dhdt
    namelist /ice/ ice_method, ks, alb_sno, alb_ice, pen_ice, opt_dep_ice, &
                   opt_ext_ice, opt_ext_snow, t_range_melt, h_lo_lim, kmelt, &
                   t_range_dhdt
-=======
-   namelist /ice/ ice_method
->>>>>>> remotes/getm-sf/ice
 !EOP
 !-------------------------------------------------------------------------
 !BOC
    LEVEL1 'init_getm_ice'
-<<<<<<< HEAD
+
    ! initialize namelist variables to reasonable defaults
    ice_method   = 0
    ks           = 0.31
@@ -106,8 +95,6 @@
    kmelt        = 240.0
    t_range_dhdt = 0.1
 
-=======
->>>>>>> remotes/getm-sf/ice
    read(NAMLST,ice)
 
    select case (ice_method)
@@ -128,13 +115,11 @@
          end do
       case (2) ! Winton
          LEVEL2 'Winton ice model'
-<<<<<<< HEAD
 !        Set ice model parameters
          call  init_ice_winton(ks, alb_sno, alb_ice, pen_ice, &
                opt_dep_ice, opt_ext_ice, opt_ext_snow, t_range_melt, &
                h_lo_lim, kmelt, t_range_dhdt)
-=======
->>>>>>> remotes/getm-sf/ice
+
 !        Allocates memory for the public data members
          allocate(ice_hs(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hs)'
@@ -199,23 +184,16 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-<<<<<<< HEAD
    integer                   :: i,j,ii,jj
-=======
-   integer                   :: i,j
->>>>>>> remotes/getm-sf/ice
 #if 1
    integer                   :: hum_method=1
    integer                   :: back_radiation_method=1
    integer                   :: fluxes_method=1
 #endif
-<<<<<<< HEAD
    logical                   :: damp_stress=.false.
    REALTYPE                  :: taucoef=5.0
    REALTYPE                  :: tauh=0.5
    REALTYPE                  :: taudamp
-=======
->>>>>>> remotes/getm-sf/ice
 !EOP
 !-------------------------------------------------------------------------
 !BOC

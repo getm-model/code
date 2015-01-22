@@ -109,6 +109,7 @@ LINKDIRS	= -L$(LIBDIR)
 EXTRA_LIBS	=
 
 # Turbulence directory
+EXTRA_LIBS	+=  -lturbulence$(buildtype) -lutil$(buildtype) 
 ifdef GOTM_PREFIX
 
 GOTMLIBDIR	= $(GOTM_PREFIX)/lib
@@ -116,6 +117,7 @@ LINKDIRS	+= -L$(GOTMLIBDIR)
 ifeq ($(FABM),true)
 EXTRA_LIBS	+= -lgotm_fabm
 endif
+EXTRA_LIBS	+= -lice -lairsea_utils
 EXTRA_LIBS	+= -lturbulence -lutil
 INCDIRS		+= -I$(GOTM_PREFIX)/include
 
@@ -126,6 +128,7 @@ LINKDIRS	+= -L$(GOTMLIBDIR)
 ifeq ($(FABM),true)
 EXTRA_LIBS	+= -lgotm_fabm$(buildtype)
 endif
+EXTRA_LIBS	+= -lice$(buildtype) -lairsea_utils$(buildtype)
 EXTRA_LIBS	+= -lturbulence$(buildtype) -lutil$(buildtype)
 INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
 
@@ -173,15 +176,6 @@ DEFINES    += -DGETM_BIO
 EXTRA_LIBS += -lbio$(buildtype)
 endif
 
-<<<<<<< HEAD
-=======
-# Turbulence directory
-GOTMLIBDIR	= $(GOTMDIR)/lib/$(FORTRAN_COMPILER)
-LINKDIRS	+= -L$(GOTMLIBDIR)
-EXTRA_LIBS	+= -lice$(buildtype) -lairsea_utils$(buildtype) -lturbulence$(buildtype) -lutil$(buildtype) 
-INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
-
->>>>>>> initial commit of ice models
 # Where does the NetCDF include file and library reside.
 ifeq ($(NETCDF_VERSION),NETCDF4)
 
