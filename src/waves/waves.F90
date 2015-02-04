@@ -16,7 +16,7 @@
    use parameters     , only: grav => g
    use exceptions
    use halo_zones     , only: update_2d_halo,wait_halo,H_TAG
-   use domain         , only: imin,imax,jmin,jmax,kmax,az
+   use domain         , only: imin,imax,jmin,jmax,kmax,az,H
    use meteo          , only: metforcing,met_method,tausx,tausy
    use getm_timers    , only: tic,toc,TIM_WAVES
 
@@ -170,6 +170,8 @@
       kD_deepthresh = max( 10.0d0 , 1.25d0*kmax )
    end if
 
+   waveK = kD_deepthresh / H(i,j)
+
    if (waves_ramp .gt. 1) then
       LEVEL2 'waves_ramp=',waves_ramp
       ramp_is_active = .true.
@@ -319,6 +321,8 @@
       end if
 
    end if
+
+   new_waves = .false.
 
    call toc(TIM_WAVES)
 
