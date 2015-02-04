@@ -171,6 +171,21 @@
                           long_name='surface stress - y',units='N/m2', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
 
+      fv = angle_missing; mv = angle_missing; vr(1) = _ZERO_; vr(2) = 90.
+      err = nf90_def_var(ncid,'zenith_angle',NCDF_FLOAT_PRECISION, &
+                         f3_dims,zenith_angle_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,zenith_angle_id,  &
+                          long_name='solar zenith angle',units='degrees', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
+      fv = albedo_missing; mv = albedo_missing; vr(1) = _ZERO_; vr(2) = _ONE_
+      err = nf90_def_var(ncid,'albedo',NCDF_FLOAT_PRECISION,f3_dims,albedo_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,albedo_id,  &
+                          long_name='surface albedo',units='', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
       fv = swr_missing; mv = swr_missing; vr(1) = 0; vr(2) = 1500.
       err = nf90_def_var(ncid,'swr',NCDF_FLOAT_PRECISION,f3_dims,swr_id)
       if (err .NE. NF90_NOERR) go to 10

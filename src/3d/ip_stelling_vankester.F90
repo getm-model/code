@@ -62,7 +62,7 @@
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j,k,l,kcount, rc)                                   &
-!$OMP    PRIVATE(prgr,dyz,dzz,zlm,klower,kupper,lnum,db,dcn,dcm)       &
+!$OMP    PRIVATE(prgr,dyz,dzz,zlm,klower,kupper,db,dcn,dcm)            &
 !$OMP    PRIVATE(changed,zltmp,buoyplus,buoyminus)                     &
 !$OMP    PRIVATE(zx,zl,dzl,dzfrac,lvel,m,n)
 

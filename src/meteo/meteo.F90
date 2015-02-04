@@ -39,7 +39,8 @@
 !  the model run.
 !
 ! !SEE ALSO:
-!  short_wave_radiation.F90, fluxes.F90, exchange_coefficients.F90
+!  short_wave_radiation.F90, solar_zenith_angle.F90, albedo_water.F90, 
+!  fluxes.F90, exchange_coefficients.F90
 !
 ! !USES:
    use time, only: yearday,secondsofday,timestep
@@ -58,11 +59,14 @@
    logical, public                     :: on_grid=.true.
    logical, public                     :: calc_met=.false.
    integer, public                     :: met_method
+   integer, public                     :: albedo_method=1
    integer, public                     :: fwf_method=0
    REALTYPE, public                    :: evap_factor = _ONE_
    REALTYPE, public                    :: precip_factor = _ONE_
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
-   REALTYPE, public, dimension(:,:), allocatable, target  :: airp,tausx,tausy,swr,shf
+   REALTYPE, public, dimension(:,:), allocatable, target  :: airp,tausx,tausy
+   REALTYPE, public, dimension(:,:), allocatable, target  :: zenith_angle
+   REALTYPE, public, dimension(:,:), allocatable, target  :: albedo,swr,shf
    REALTYPE, public, dimension(:,:), allocatable, target  :: u10,v10,t2,hum,tcc
    REALTYPE, public, dimension(:,:), allocatable, target  :: evap,precip
    REALTYPE, public                    :: cd_mom,cd_heat,cd_latent
@@ -86,6 +90,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: meteo_ramp=0,metfmt=2
    REALTYPE                  :: tx= _ZERO_ ,ty= _ZERO_
+   REALTYPE                  :: albedo_const= _ZERO_
    REALTYPE                  :: swr_const= _ZERO_ ,shf_const= _ZERO_
    REALTYPE                  :: evap_const= _ZERO_ ,precip_const= _ZERO_
    REALTYPE, dimension(:,:), allocatable :: airp_old,airp_new
@@ -123,9 +128,11 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
-   namelist /meteo/ metforcing,on_grid,calc_met,met_method,fwf_method, &
+   namelist /meteo/ metforcing,on_grid,calc_met,met_method,albedo_method, &
+                    fwf_method, &
                     meteo_ramp,metfmt,meteo_file, &
-                    tx,ty,swr_const,shf_const,evap_const,precip_const, &
+                    tx,ty,albedo_method,albedo_const, &
+                    swr_const,shf_const,evap_const,precip_const, &
                     precip_factor,evap_factor
 !EOP
 !-------------------------------------------------------------------------
@@ -158,6 +165,17 @@
                else
                   LEVEL2 'Stresses and fluxes are already calculated'
                end if
+         case default
+      end select
+
+      LEVEL2 'Albedo method =',albedo_method
+      select case (albedo_method)
+            case (0)
+               LEVEL3 'albedo = ',albedo_const
+            case (1)
+               LEVEL3 'Albedo according to Payne'
+            case (2)
+               LEVEL3 'Albedo according to Cogley'
          case default
       end select
 
@@ -200,9 +218,17 @@
    if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy)'
    tausy = _ZERO_
 
+   allocate(zenith_angle(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (zenith_angle)'
+   zenith_angle = _ZERO_
+
    allocate(swr(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (swr)'
    swr = _ZERO_
+
+   allocate(albedo(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (albedo)'
+   albedo = albedo_const
 
    allocate(shf(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (shf)'
@@ -383,10 +409,12 @@
    integer, save             :: k=0
    integer                   :: i,j
    REALTYPE                  :: ramp,hh,t,t_frac
+   REALTYPE                  :: solar_zenith_angle
    REALTYPE                  :: short_wave_radiation
+   REALTYPE                  :: albedo_water
    REALTYPE                  :: uu,cosconv,vv,sinconv
    REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029d0
-   REALTYPE, parameter       :: deg2rad=pi/180
+   REALTYPE, parameter       :: deg2rad=pi/180.
    logical,save              :: first=.true.
    logical                   :: have_sst
 !EOP
@@ -553,8 +581,14 @@
                do j=jmin,jmax
                   do i=imin,imax
                      if (az(i,j) .ge. 1) then
-                        swr(i,j) = short_wave_radiation             &
-                                (yearday,hh,latc(i,j),lonc(i,j),tcc(i,j))
+                        zenith_angle(i,j) = solar_zenith_angle             &
+                                (yearday,hh,lonc(i,j),latc(i,j))
+                        swr(i,j) = short_wave_radiation(zenith_angle(i,j), &
+                                 yearday,lonc(i,j),latc(i,j),tcc(i,j))
+                        if (albedo_method .gt. 0) then
+                           albedo(i,j) = albedo_water                      &
+                                   (albedo_method,zenith_angle(i,j),yearday)
+                        end if
                      end if
                   end do
                end do

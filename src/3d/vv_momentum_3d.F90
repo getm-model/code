@@ -47,9 +47,6 @@
 !
 ! When GETM is run as a slice model (compiler option {\tt SLICE\_MODEL}
 ! is activated), the result for $j=2$ is copied to $j=1$ and $j=3$.
-! If the compiler option {\tt XZ\_PLUME\_TEST} is set, a slope
-! of {\tt yslope} for bottom and isopycnals into the $y$-direction is
-! prescribed, which has to be hard-coded as local variable.
 !
 ! !USES:
    use exceptions
@@ -64,9 +61,6 @@
    use variables_3d, only: ssvo
 #ifdef _MOMENTUM_TERMS_
    use variables_3d, only: tdv_v,cor_v,ipg_v,epg_v,vsd_v,hsd_v
-#endif
-#ifdef XZ_PLUME_TEST
-   use variables_3d, only: buoy
 #endif
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
@@ -103,9 +97,6 @@
    REALTYPE                  :: gamma=g*rho_0
    REALTYPE                  :: cord_curv=_ZERO_
    REALTYPE                  :: gammai,rho_0i
-#ifdef XZ_PLUME_TEST
-   REALTYPE                  :: yslope=0.001
-#endif
    integer                   :: status
 !EOP
 !-----------------------------------------------------------------------
@@ -203,11 +194,7 @@
 #ifdef NO_BAROCLINIC
                   ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k))
 #else
-#ifdef XZ_PLUME_TEST
-                  ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+idpdy(i,j,k)+yslope*hvn(i,j,k)*(buoy(i,j,kmax)-buoy(i,j,k)))
-#else
                   ex(k)=dry_v(i,j)*(ex(k)-vvEx(i,j,k)+ip_fac*idpdy(i,j,k))
-#endif
 #ifdef _MOMENTUM_TERMS_
                   ipg_v(i,j,k)=-dry_v(i,j)*ip_fac*idpdy(i,j,k)
 #endif

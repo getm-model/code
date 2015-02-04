@@ -38,7 +38,7 @@
    logical, save             :: first=.true.
    REALTYPE, save            :: time_array(1000),zbo(1000),zbn(1000)
    REALTYPE, save            :: t,t1,t2
-   REALTYPE                  :: a,amp,ratio,fac
+   REALTYPE                  :: a,ratio,fac
    integer                   :: i,j,k,l,n
    REALTYPE, parameter       :: FOUR=4.*_ONE_
 !
@@ -59,11 +59,6 @@
    select case (bdyfmt_2d)
       case (NO_DATA)
       case (ANALYTICAL)
-#define OMEGA 2.*3.141592654/43200.
-#ifdef COAST_TEST
-         amp = 1.5
-         bdy_data = amp*sin(OMEGA*t)
-#endif
       case (ASCII)
       case (NETCDF)
 !        Read in get_2d_bdy() via get_2d_bdy_ncdf()
