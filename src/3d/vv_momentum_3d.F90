@@ -192,7 +192,7 @@
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                   cord_curv=(vv(i,j,k)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC))     &
                         /hvo(i,j,k)*ARVD1
-                  ex(k)=(cord_curv-corv(i,j))*Uloc
+                  ex(k)=-(cord_curv+corv(i,j))*Uloc
 #else
                   ex(k)=-corv(i,j)*Uloc
 #endif
