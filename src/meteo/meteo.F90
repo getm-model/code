@@ -542,6 +542,12 @@
 !                      Thus only new data is read and new_meteo is set to true.
 !                      first call with sst at t_1, later with sst at t_2
 
+!           KK-TODO: for consistency of data provided to exchange_coefficients()
+!                    and fluxes() we cannot interpolate u10 and v10 isolated
+!                    in the beginning (usually t<t_2 and new_meteo data from t_2)!!!
+!                    (for alternative see INTERPOLATE_METEO in GOTM...)
+
+
 #ifdef SLICE_MODEL
             j = jmax/2
 #endif
@@ -601,6 +607,8 @@
                shf_old=>shf_new;shf_new=>shf;shf=>d_shf;d_shf=>shf_old
                if (calc_met) then
                   tcc_old=>tcc_new;tcc_new=>tcc;tcc=>d_tcc;d_tcc=>tcc_old
+                  u10_old=>u10_new;u10_new=>u10;u10=>d_u10;d_u10=>u10_old
+                  v10_old=>v10_new;v10_new=>v10;v10=>d_v10;d_v10=>v10_old
                else
                   swr_old=>swr_new;swr_new=>swr;swr=>d_swr;d_swr=>swr_old
                end if
@@ -632,6 +640,8 @@
                            d_shf  (i,j) = shf_new  (i,j) - shf_old  (i,j)
                            if (calc_met) then
                               d_tcc(i,j) = tcc_new(i,j) - tcc_old(i,j)
+                              d_u10(i,j) = u10_new(i,j) - u10_old(i,j)
+                              d_v10(i,j) = v10_new(i,j) - v10_old(i,j)
                            else
                               d_swr(i,j) = swr_new(i,j) - swr_old(i,j)
                            end if
@@ -676,6 +686,8 @@
                         shf  (i,j) = shf_new  (i,j) + d_shf  (i,j)*deltm1*t_minus_t2
                         if (calc_met) then
                            tcc(i,j) = tcc_new(i,j) + d_tcc(i,j)*deltm1*t_minus_t2
+                           u10(i,j) = u10_new(i,j) + d_u10(i,j)*deltm1*t_minus_t2
+                           v10(i,j) = v10_new(i,j) + d_v10(i,j)*deltm1*t_minus_t2
                         else
                            swr(i,j) = swr_new(i,j) + d_swr(i,j)*deltm1*t_minus_t2
                         end if
@@ -723,12 +735,18 @@
 #endif
 !$OMP END DO
 !$OMP SINGLE
+               if (.not. (met_method.eq.METEO_FROMEXT .and. .not.new_meteo)) then
+                  wind = sqrt( u10*u10 + v10*v10 )
+               end if
             end if
 
 #ifdef SLICE_MODEL
                airp (:,j+1) = airp (:,j)
                tausx(:,j+1) = tausx(:,j)
                tausy(:,j+1) = tausy(:,j)
+               u10  (:,j+1) = u10  (:,j)
+               v10  (:,j+1) = v10  (:,j)
+               wind (:,j+1) = wind (:,j)
                shf  (:,j+1) = shf  (:,j)
                swr  (:,j+1) = swr  (:,j)
                if (fwf_method .ge. 2) then
@@ -755,28 +773,8 @@
 
       end select
 
-!     KK-TODO: for consistency of data provided to exchange_coefficients()
-!              and fluxes() we cannot interpolate u10 and v10 isolated
-!              in the beginning (usually t<t_2 and new_meteo data from t_2)!!!
-!              (for alternative see INTERPOLATE_METEO in GOTM...)
-      if (calc_met) then
-         if (met_method .eq. METEO_FROMFILE) then
-            if (new_meteo) then
-               u10_old=>u10_new;u10_new=>u10;u10=>d_u10;d_u10=>u10_old
-               v10_old=>v10_new;v10_new=>v10;v10=>d_v10;d_v10=>v10_old
-               if (.not. first) then
-                  d_u10 = u10_new - u10_old
-                  d_v10 = v10_new - v10_old
-               end if
-            end if
-            u10 = u10_new + d_u10*deltm1*t_minus_t2
-            v10 = v10_new + d_v10*deltm1*t_minus_t2
-         end if
-         if (.not. (met_method.eq.METEO_FROMEXT .and. .not.new_meteo)) then
-            wind = sqrt( u10*u10 + v10*v10 )
-         end if
-      else
-!        KK-TODO: Jorn prefers zero wind instead of poor approximation...
+!     KK-TODO: Jorn prefers zero wind instead of poor approximation...
+      if (.not. calc_met) then
          if (.not. (met_method.eq.METEO_FROMEXT .and. .not.new_meteo)) then
             do j=jmin-HALO,jmax+HALO
                do i=imin-HALO,imax+HALO
