@@ -120,6 +120,11 @@
    integer                   :: i,j,n
    character(len=PATH_MAX)   :: fabm_init_file
    integer                   :: fabm_init_format, fabm_field_no
+#ifdef INPUT_DIR
+   character(len=PATH_MAX)   :: input_dir=trim(INPUT_DIR) // '/'
+#else
+   character(len=PATH_MAX)   :: input_dir=''
+#endif
 
    namelist /getm_fabm_nml/ fabm_init_method, &
                            fabm_init_file,fabm_init_format,fabm_field_no, &
@@ -132,7 +137,7 @@
    LEVEL2 'init_getm_fabm()'
 
 !  Initialize FABM.
-   call init_gotm_fabm(kmax,NAMLST2,'gotm_fabm.nml')
+   call init_gotm_fabm(kmax,NAMLST2,trim(input_dir)//'gotm_fabm.nml')
 
 !  Store fabm_calc and model for use by GETM
    fabm_calc = gotm_fabm_calc
