@@ -242,10 +242,6 @@
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO
                if ( az(i,j) .gt. 0 ) then
-!                 use of approximation for wind based on taus[x|y] because of:
-!                    - missing temporal interpolation of [u|v]10
-!                    - missing halo update of [u|v]10
-!                    - also valid for met_method=1
                   if (wind(i,j) .gt. _ZERO_) then
                      coswavedir(i,j) = u10(i,j) / wind(i,j)
                      sinwavedir(i,j) = v10(i,j) / wind(i,j)
