@@ -560,6 +560,11 @@
 
                if(calc_met) then
 
+                  call update_2d_halo(u10,u10,az,imin,jmin,imax,jmax,H_TAG)
+                  call wait_halo(H_TAG)
+                  call update_2d_halo(v10,v10,az,imin,jmin,imax,jmax,H_TAG)
+                  call wait_halo(H_TAG)
+
                   if (present(sst_model)) then
 ! OMP-NOTE: This is an expensive loop, but we cannot thread it as long
 !    as exchange_coefficients() and fluxes() pass information through
