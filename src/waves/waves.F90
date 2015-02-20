@@ -170,7 +170,7 @@
       kD_deepthresh = max( 10.0d0 , 1.25d0*kmax )
    end if
 
-   waveK = kD_deepthresh / H(i,j)
+   waveK = kD_deepthresh / H
 
    if (waves_ramp .gt. 1) then
       LEVEL2 'waves_ramp=',waves_ramp
