@@ -23,7 +23,7 @@
    use variables_3d, only: do_numerical_analyses_3d
    use advection_3d, only: print_adv_settings_3d,do_advection_3d
    use variables_2d, only: D
-   use meteo, only: swr,u10,v10,evap,precip,tcc
+   use meteo, only: swr,wind,evap,precip,tcc
    use time, only: yearday,secondsofday
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
    use exceptions
@@ -120,6 +120,11 @@
    integer                   :: i,j,n
    character(len=PATH_MAX)   :: fabm_init_file
    integer                   :: fabm_init_format, fabm_field_no
+#ifdef INPUT_DIR
+   character(len=PATH_MAX)   :: input_dir=trim(INPUT_DIR) // '/'
+#else
+   character(len=PATH_MAX)   :: input_dir=''
+#endif
 
    namelist /getm_fabm_nml/ fabm_init_method, &
                            fabm_init_file,fabm_init_format,fabm_field_no, &
@@ -132,7 +137,7 @@
    LEVEL2 'init_getm_fabm()'
 
 !  Initialize FABM.
-   call init_gotm_fabm(kmax,NAMLST2,'gotm_fabm.nml')
+   call init_gotm_fabm(kmax,NAMLST2,trim(input_dir)//'gotm_fabm.nml')
 
 !  Store fabm_calc and model for use by GETM
    fabm_calc = gotm_fabm_calc
@@ -356,7 +361,7 @@
 ! !LOCAL VARIABLES:
    integer         :: n
    integer         :: i,j,k
-   REALTYPE        :: wind_speed,I_0,taub_nonnorm,cloud
+   REALTYPE        :: I_0,taub_nonnorm,cloud
    REALTYPE        :: z(1:kmax)
    REALTYPE,dimension(I2DFIELD) :: work2d
 !EOP
@@ -373,13 +378,6 @@
 #endif
       do i=imin,imax
          if (az(i,j) .ge. 1 ) then
-
-!           Calculate wind speed from wind vector components.
-            if (allocated(u10) .and. allocated(v10)) then
-               wind_speed = sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
-            else
-               wind_speed = _ZERO_
-            end if
 
 !           Get surface short-wave radiation.
             if (associated(swr)) then
@@ -420,7 +418,7 @@
 !           Transfer pointers to physical environment variables to FABM.
             call set_env_gotm_fabm(latc(i,j),lonc(i,j),dt,0,0,T(i,j,1:),S(i,j,1:), &
                                    rho(i,j,1:),nuh(i,j,0:),hn(i,j,0:),ww(i,j,0:), &
-                                   bioshade(i,j,1:),I_0,cloud,taub_nonnorm,wind_speed,precip(i,j),evap(i,j), &
+                                   bioshade(i,j,1:),I_0,cloud,taub_nonnorm,wind(i,j),precip(i,j),evap(i,j), &
                                    z,A(i,j),g1(i,j),g2(i,j),yearday,secondsofday)
             call model%link_horizontal_data(id_bottom_depth_below_geoid,H(i,j))
             call model%link_horizontal_data(id_bottom_depth,D(i,j))
