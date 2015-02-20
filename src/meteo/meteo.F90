@@ -71,8 +71,10 @@
    REALTYPE, public                    :: evap_factor = _ONE_
    REALTYPE, public                    :: precip_factor = _ONE_
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
-   REALTYPE,public,dimension(:,:),allocatable,target :: u10,v10,t2,hum
+   REALTYPE,public,dimension(:,:),allocatable,target :: t2,hum
    REALTYPE,public,dimension(:,:),pointer            :: airp,tausx,tausy
+   REALTYPE,public,dimension(:,:),pointer            :: u10,v10
+   REALTYPE,public,dimension(:,:),allocatable,target :: wind
    REALTYPE,public,dimension(:,:),pointer            :: shf,swr=>null(),tcc=>null()
    REALTYPE,public,dimension(:,:),pointer            :: evap,precip
    REALTYPE,public,dimension(:,:),allocatable,target :: zenith_angle,albedo
@@ -107,6 +109,8 @@
    REALTYPE                  :: evap_const= _ZERO_ ,precip_const= _ZERO_
    REALTYPE, dimension(:,:), allocatable :: tausx_const,tausy_const
    REALTYPE, dimension(:,:), pointer     :: airp_new,d_airp
+   REALTYPE, dimension(:,:), pointer     :: u10_new,d_u10
+   REALTYPE, dimension(:,:), pointer     :: v10_new,d_v10
    REALTYPE, dimension(:,:), pointer     :: tausx_new,d_tausx
    REALTYPE, dimension(:,:), pointer     :: tausy_new,d_tausy
    REALTYPE, dimension(:,:), pointer     :: shf_new,d_shf
@@ -171,6 +175,15 @@
    allocate(airp(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (airp)'
    airp = _ZERO_
+   allocate(u10(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (u10)'
+   u10 = _ZERO_
+   allocate(v10(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (v10)'
+   v10 = _ZERO_
+   allocate(wind(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (wind)'
+   wind = _ZERO_
    allocate(tausx(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx)'
    tausx = _ZERO_
@@ -316,14 +329,6 @@
 
    if (met_method.eq.METEO_FROMFILE .or. met_method.eq.METEO_FROMEXT) then
       if (calc_met) then
-         allocate(u10(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_meteo: Error allocating memory (u10)'
-         u10 = _ZERO_
-
-         allocate(v10(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_meteo: Error allocating memory (v10)'
-         v10 = _ZERO_
-
          allocate(t2(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (t2)'
          t2 = _ZERO_
@@ -362,6 +367,14 @@
       if (rc /= 0) stop 'init_meteo: Error allocating memory (d_shf)'
 
       if (calc_met) then
+         allocate(u10_new(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (u10_new)'
+         allocate(d_u10(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (d_u10)'
+         allocate(v10_new(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (v10_new)'
+         allocate(d_v10(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (d_v10)'
          allocate(tcc_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc_new)'
          allocate(d_tcc(E2DFIELD),stat=rc)
@@ -450,11 +463,15 @@
    REALTYPE                  :: solar_zenith_angle
    REALTYPE                  :: short_wave_radiation
    REALTYPE                  :: albedo_water
+   REALTYPE                  :: taus,tausm1
    logical,save              :: first=.true.
    REALTYPE, dimension(:,:), pointer :: airp_old,tausx_old,tausy_old
+   REALTYPE, dimension(:,:), pointer :: u10_old,v10_old
    REALTYPE, dimension(:,:), pointer :: shf_old,swr_old,tcc_old
    REALTYPE, dimension(:,:), pointer :: evap_old,precip_old
    REALTYPE, dimension(:,:), pointer :: sst_old,sss_old
+   REALTYPE,parameter :: wind2taus = 1.25d-3 * 1.25d0
+   REALTYPE,parameter :: taus2wind = _ONE_ / sqrt(wind2taus)
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -525,6 +542,12 @@
 !                      Thus only new data is read and new_meteo is set to true.
 !                      first call with sst at t_1, later with sst at t_2
 
+!           KK-TODO: for consistency of data provided to exchange_coefficients()
+!                    and fluxes() we cannot interpolate u10 and v10 isolated
+!                    in the beginning (usually t<t_2 and new_meteo data from t_2)!!!
+!                    (for alternative see INTERPOLATE_METEO in GOTM...)
+
+
 #ifdef SLICE_MODEL
             j = jmax/2
 #endif
@@ -536,6 +559,11 @@
             if (new_meteo) then
 
                if(calc_met) then
+
+                  call update_2d_halo(u10,u10,az,imin,jmin,imax,jmax,H_TAG)
+                  call wait_halo(H_TAG)
+                  call update_2d_halo(v10,v10,az,imin,jmin,imax,jmax,H_TAG)
+                  call wait_halo(H_TAG)
 
                   if (present(sst_model)) then
 ! OMP-NOTE: This is an expensive loop, but we cannot thread it as long
@@ -584,6 +612,8 @@
                shf_old=>shf_new;shf_new=>shf;shf=>d_shf;d_shf=>shf_old
                if (calc_met) then
                   tcc_old=>tcc_new;tcc_new=>tcc;tcc=>d_tcc;d_tcc=>tcc_old
+                  u10_old=>u10_new;u10_new=>u10;u10=>d_u10;d_u10=>u10_old
+                  v10_old=>v10_new;v10_new=>v10;v10=>d_v10;d_v10=>v10_old
                else
                   swr_old=>swr_new;swr_new=>swr;swr=>d_swr;d_swr=>swr_old
                end if
@@ -615,6 +645,8 @@
                            d_shf  (i,j) = shf_new  (i,j) - shf_old  (i,j)
                            if (calc_met) then
                               d_tcc(i,j) = tcc_new(i,j) - tcc_old(i,j)
+                              d_u10(i,j) = u10_new(i,j) - u10_old(i,j)
+                              d_v10(i,j) = v10_new(i,j) - v10_old(i,j)
                            else
                               d_swr(i,j) = swr_new(i,j) - swr_old(i,j)
                            end if
@@ -659,6 +691,8 @@
                         shf  (i,j) = shf_new  (i,j) + d_shf  (i,j)*deltm1*t_minus_t2
                         if (calc_met) then
                            tcc(i,j) = tcc_new(i,j) + d_tcc(i,j)*deltm1*t_minus_t2
+                           u10(i,j) = u10_new(i,j) + d_u10(i,j)*deltm1*t_minus_t2
+                           v10(i,j) = v10_new(i,j) + d_v10(i,j)*deltm1*t_minus_t2
                         else
                            swr(i,j) = swr_new(i,j) + d_swr(i,j)*deltm1*t_minus_t2
                         end if
@@ -706,12 +740,18 @@
 #endif
 !$OMP END DO
 !$OMP SINGLE
+               if (.not. (met_method.eq.METEO_FROMEXT .and. .not.new_meteo)) then
+                  wind = sqrt( u10*u10 + v10*v10 )
+               end if
             end if
 
 #ifdef SLICE_MODEL
                airp (:,j+1) = airp (:,j)
                tausx(:,j+1) = tausx(:,j)
                tausy(:,j+1) = tausy(:,j)
+               u10  (:,j+1) = u10  (:,j)
+               v10  (:,j+1) = v10  (:,j)
+               wind (:,j+1) = wind (:,j)
                shf  (:,j+1) = shf  (:,j)
                swr  (:,j+1) = swr  (:,j)
                if (fwf_method .ge. 2) then
@@ -737,6 +777,29 @@
             stop 'do_meteo'
 
       end select
+
+!     KK-TODO: Jorn prefers zero wind instead of poor approximation...
+      if (.not. calc_met) then
+         if (.not. (met_method.eq.METEO_FROMEXT .and. .not.new_meteo)) then
+            do j=jmin-HALO,jmax+HALO
+               do i=imin-HALO,imax+HALO
+                  if (az(i,j) .ne. 0) then
+                     taus = sqrt( tausx(i,j)*tausx(i,j) + tausy(i,j)*tausy(i,j) )
+                     if (taus .gt. _ZERO_) then
+                        tausm1 = _ONE_ / taus
+                        wind(i,j) = sqrt( taus ) * taus2wind
+                        u10 (i,j) = tausx(i,j) * tausm1 * wind(i,j)
+                        v10 (i,j) = tausy(i,j) * tausm1 * wind(i,j)
+                     else
+                        wind(i,j) = _ZERO_
+                        u10 (i,j) = _ZERO_
+                        v10 (i,j) = _ZERO_
+                     end if
+                  end if
+               end do
+            end do
+         end if
+      end if
 
    end if
    first = .false.
