@@ -16,8 +16,8 @@
    use parameters     , only: grav => g
    use exceptions
    use halo_zones     , only: update_2d_halo,wait_halo,H_TAG
-   use domain         , only: imin,imax,jmin,jmax,kmax,az
-   use meteo          , only: metforcing,met_method,tausx,tausy
+   use domain         , only: imin,imax,jmin,jmax,kmax,az,H
+   use meteo          , only: metforcing,met_method,wind,u10,v10
    use getm_timers    , only: tic,toc,TIM_WAVES
 
    IMPLICIT NONE
@@ -170,6 +170,8 @@
       kD_deepthresh = max( 10.0d0 , 1.25d0*kmax )
    end if
 
+   waveK = kD_deepthresh / H
+
    if (waves_ramp .gt. 1) then
       LEVEL2 'waves_ramp=',waves_ramp
       ramp_is_active = .true.
@@ -216,10 +218,9 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: waveECm1
-   REALTYPE                     :: taus,wind,depth
+   REALTYPE                     :: depth
    REALTYPE,save                :: ramp=_ONE_
    integer                      :: i,j
-   REALTYPE,parameter           :: min_wind=_TENTH_
    REALTYPE,parameter           :: pi=3.1415926535897932384626433832795029d0
    REALTYPE,parameter           :: twopi = _TWO_*pi
    REALTYPE,parameter           :: oneovertwopi=_ONE_/twopi
@@ -241,23 +242,16 @@
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO
                if ( az(i,j) .gt. 0 ) then
-!                 use of approximation for wind based on taus[x|y] because of:
-!                    - missing temporal interpolation of [u|v]10
-!                    - missing halo update of [u|v]10
-!                    - also valid for met_method=1
-                  taus = sqrt( tausx(i,j)**2 + tausy(i,j)**2 )
-                  if (taus .gt. _ZERO_) then
-                     coswavedir(i,j) = tausx(i,j) / taus
-                     sinwavedir(i,j) = tausy(i,j) / taus
-                     wind = sqrt(taus/(1.25d-3*1.25))
-                     wind = waves_windscalefactor * max( min_wind , wind )
+                  if (wind(i,j) .gt. _ZERO_) then
+                     coswavedir(i,j) = u10(i,j) / wind(i,j)
+                     sinwavedir(i,j) = v10(i,j) / wind(i,j)
 !                    KK-TODO: Or do we want to use H instead of D?
 !                             Then we would not need to call depth_update in
 !                             initialise(). However H does not consider
 !                             min_depth.
                      depth = min( D(i,j) , max_depth_windwaves )
-                     waveH(i,j) = wind2waveHeight(wind,depth)
-                     waveT(i,j) = wind2wavePeriod(wind,depth)
+                     waveH(i,j) = wind2waveHeight(waves_windscalefactor*wind(i,j),depth)
+                     waveT(i,j) = wind2wavePeriod(waves_windscalefactor*wind(i,j),depth)
                      waveK(i,j) = wavePeriod2waveNumber(waveT(i,j),D(i,j))
                      waveL(i,j) = twopi / waveK(i,j)
                   else
@@ -319,6 +313,8 @@
       end if
 
    end if
+
+   new_waves = .false.
 
    call toc(TIM_WAVES)
 
