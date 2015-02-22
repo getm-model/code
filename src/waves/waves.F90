@@ -167,7 +167,7 @@
    if (runtype .eq. 1) then
       kD_deepthresh = 10.0d0
    else
-      kD_deepthresh = max( 10.0d0 , 1.25d0*kmax )
+      kD_deepthresh = min( max( 10.0d0 , 1.25d0*kmax ) , log(huge(kD_deepthresh)) )
    end if
 
    waveK = kD_deepthresh / H
