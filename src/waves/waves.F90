@@ -280,6 +280,16 @@
                end if
             end do
          end do
+      case(WAVES_FROMEXT)
+         if (new_waves) then
+            do j=jmin-HALO,jmax+HALO
+               do i=imin-HALO,imax+HALO
+                  if ( az(i,j) .gt. 0 ) then
+                     waveL(i,j) = twopi / waveK(i,j)
+                  end if
+               end do
+            end do
+         end if
    end select
 
 
