@@ -257,7 +257,7 @@
    end if
 #endif
 
-   if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
+   if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(runtype,preadapt)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_3d()'
