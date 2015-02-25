@@ -136,7 +136,8 @@
    REALTYPE,dimension(:,:,:),pointer         :: nummix_S=>null()
    REALTYPE,dimension(:,:,:),pointer         :: nummix_T=>null()
    REALTYPE, dimension(:,:,:), allocatable   :: nummix_S_old,nummix_T_old
-   REALTYPE, dimension(:,:,:), allocatable   :: phymix_S,phymix_T
+   REALTYPE,dimension(:,:,:),pointer         :: phymix_S=>null()
+   REALTYPE,dimension(:,:,:),pointer         :: phymix_T=>null()
    REALTYPE, dimension(:,:), allocatable     :: nummix_S_int,nummix_T_int
    REALTYPE, dimension(:,:), allocatable     :: phymix_S_int,phymix_T_int
 
