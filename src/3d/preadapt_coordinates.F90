@@ -6,7 +6,7 @@
 ! \label{sec-preadapt-coordinates}
 !
 ! !INTERFACE:
-   subroutine preadapt_coordinates(preadapt)
+   subroutine preadapt_coordinates(runtype,preadapt)
 !
 ! !DESCRIPTION:
 !
@@ -28,7 +28,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: preadapt
+   integer, intent(in)                 :: runtype,preadapt
 !
 ! !REVISION HISTORY:
 !  Original author(s): Richard Hofmeister
@@ -53,13 +53,15 @@
             LEVEL2 'reinterpolating initial temperature'
             call init_temperature_field()
          end if
-         call do_eqstate()
-         call buoyancy_frequency()
+         if (runtype .ge. 3) then
+            call do_eqstate()
+            call buoyancy_frequency()
+         end if
 #endif
       end do
 
 #ifndef NO_BAROCLINIC
-      call do_internal_pressure()
+      if (runtype .ge. 3) call do_internal_pressure()
 #endif
    end if
    call toc(TIM_COORDS)
