@@ -6,7 +6,7 @@
 ! \label{sec-preadapt-coordinates}
 !
 ! !INTERFACE:
-   subroutine preadapt_coordinates(preadapt)
+   subroutine preadapt_coordinates(runtype,preadapt)
 !
 ! !DESCRIPTION:
 !
@@ -27,7 +27,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: preadapt
+   integer, intent(in)                 :: runtype,preadapt
 !
 ! !REVISION HISTORY:
 !  Original author(s): Richard Hofmeister
@@ -47,8 +47,10 @@
       do ii=1,preadapt
 
 #ifndef NO_BAROCLINIC
-         call do_eqstate()
-         call buoyancy_frequency()
+         if (runtype .ge. 3) then
+            call do_eqstate()
+            call buoyancy_frequency()
+         end if
 #endif
          call adaptive_coordinates(.false.,.false.)
 #ifndef NO_BAROCLINIC
