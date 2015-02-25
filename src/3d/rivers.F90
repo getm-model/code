@@ -124,7 +124,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n,nn,ni,rc,m,iriver,jriver,numcells
    logical                   :: outside,outsidehalo
-   REALTYPE                  :: area, total_weight
+   REALTYPE                  :: bathy, area, total_weight
    character(len=255)        :: line,xxx
    NAMELIST /rivers/ &
             river_method,river_info,river_format,river_data,river_ramp, &
@@ -218,11 +218,13 @@
                   xxx = ' in halo'
                   ok(n) = 2
                end if
+               bathy = H(i,j)
             else
               xxx = ' outside'
+              bathy = -9999.9
             end if
             write(line,'(I4,A20,2I5,3F8.1,A11)') n,trim(river_name(n)), &
-                  ir(n),jr(n),H(ir(n),jr(n)),rzl(n),rzu(n),xxx
+                  ir(n),jr(n),bathy,rzl(n),rzu(n),xxx
             LEVEL3 trim(line)
          end do
 
