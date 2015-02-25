@@ -260,7 +260,7 @@
    end if
 
    if (.not.hotstart .and. vert_cord.eq._ADAPTIVE_COORDS_) then
-      call preadapt_coordinates(preadapt)
+      call preadapt_coordinates(runtype,preadapt)
    end if
 
    if (runtype .eq. 4) then
