@@ -167,7 +167,7 @@
    if (runtype .eq. 1) then
       kD_deepthresh = 10.0d0
    else
-      kD_deepthresh = max( 10.0d0 , 1.25d0*kmax )
+      kD_deepthresh = min( max( 10.0d0 , 1.25d0*kmax ) , log(huge(kD_deepthresh)) )
    end if
 
    waveK = kD_deepthresh / H
@@ -280,6 +280,16 @@
                end if
             end do
          end do
+      case(WAVES_FROMEXT)
+         if (new_waves) then
+            do j=jmin-HALO,jmax+HALO
+               do i=imin-HALO,imax+HALO
+                  if ( az(i,j) .gt. 0 ) then
+                     waveL(i,j) = twopi / waveK(i,j)
+                  end if
+               end do
+            end do
+         end if
    end select
 
 
