@@ -240,7 +240,7 @@
    end if
 #endif
 
-   if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
+   if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(runtype,preadapt)
 
    if (runtype .eq. 4) then
       if (calc_salt) update_salt = .true.
