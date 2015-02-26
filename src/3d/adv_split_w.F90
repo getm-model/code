@@ -66,6 +66,7 @@
    REALTYPE,dimension(:),allocatable,target :: cfl0
    REALTYPE,dimension(:),pointer            :: fo,faux,fiaux,hiaux,advaux,cfls
    REALTYPE,dimension(:),pointer            :: p_fiaux,p_hiaux,p_advaux
+   REALTYPE,dimension(:),pointer            :: p1d
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -175,9 +176,9 @@
 
 #ifdef _POINTER_REMAP_
                if (.not. iterate) then
-                  fiaux (0:) => fi (i,j,:)
-                  hiaux (0:) => hi (i,j,:)
-                  advaux(0:) => adv(i,j,:)
+                  p1d => fi (i,j,:) ; fiaux (0:) => p1d
+                  p1d => hi (i,j,:) ; hiaux (0:) => p1d
+                  p1d => adv(i,j,:) ; advaux(0:) => p1d
                end if
 #else
                fo = f(i,j,:)
@@ -200,7 +201,7 @@
                      end if
 
 #ifdef _POINTER_REMAP_
-                     faux(0:) => f(i,j,:)
+                     p1d => f(i,j,:) ; faux(0:) => p1d
 #else
                      faux => fo
 #endif
@@ -277,9 +278,9 @@
 
 #ifdef _POINTER_REMAP_
                   if (it .eq. iters) then
-                     p_fiaux (0:) => fi (i,j,:)
-                     p_hiaux (0:) => hi (i,j,:)
-                     p_advaux(0:) => adv(i,j,:)
+                     p1d => fi (i,j,:) ; p_fiaux (0:) => p1d
+                     p1d => hi (i,j,:) ; p_hiaux (0:) => p1d
+                     p1d => adv(i,j,:) ; p_advaux(0:) => p1d
                   end if
 #endif
 
