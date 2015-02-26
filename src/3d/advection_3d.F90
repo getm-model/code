@@ -506,7 +506,6 @@
 #endif
                      end do
 #ifndef SLICE_MODEL
-#ifdef GETM_PARALLEL
                      if (hscheme.ne.UPSTREAM .and. tag.eq.V_TAG) then
 !                       we need to update f(imin:imax,jmax+HALO)
                         call tic(TIM_ADV3DH)
@@ -514,7 +513,7 @@
                         call wait_halo(D_TAG)
                         call toc(TIM_ADV3DH)
                      end if
-#endif
+
                      do k=1,kmax
 #ifndef _POINTER_REMAP_
                         if (calc_nvd) then
@@ -544,25 +543,13 @@
                      end if
 
 #ifndef SLICE_MODEL
-#ifdef GETM_PARALLEL
-                     if (hscheme .eq. UPSTREAM) then
-                        if (tag .eq. V_TAG) then
-!                          we need to update f(imin-1:imax+1,jmax+1)
-!                          KK-TODO: if external hv was halo-updated this halo-update is not necessary
-                           call tic(TIM_ADV3DH)
-                           call update_3d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,kmax,D_TAG)
-                           call wait_halo(D_TAG)
-                           call toc(TIM_ADV3DH)
-                        end if
-                     else
-!                       we need to update f(imin:imax,jmin-HALO:jmin-1)
-!                       we need to update f(imin:imax,jmax+1:jmax+HALO)
-                        call tic(TIM_ADV3DH)
-                        call update_3d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,kmax,D_TAG)
-                        call wait_halo(D_TAG)
-                        call toc(TIM_ADV3DH)
-                     end if
-#endif
+!                    we need to update f(imin:imax,jmin-HALO:jmin-1)
+!                    we need to update f(imin:imax,jmax+1:jmax+HALO)
+                     call tic(TIM_ADV3DH)
+                     call update_3d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,kmax,D_TAG)
+                     call wait_halo(D_TAG)
+                     call toc(TIM_ADV3DH)
+
                      do k=1,kmax
 #ifndef _POINTER_REMAP_
                         if (calc_nvd) then
@@ -585,25 +572,14 @@
 #endif
                      end do
 #endif
-#ifdef GETM_PARALLEL
-                     if (hscheme .eq. UPSTREAM) then
-                        if (tag .eq. U_TAG) then
-!                          we need to update f(imax+1,jmin:jmax)
-!                          KK-TODO: if external hu was halo-updated this halo-update is not necessary
-                           call tic(TIM_ADV3DH)
-                           call update_3d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,kmax,D_TAG)
-                           call wait_halo(D_TAG)
-                           call toc(TIM_ADV3DH)
-                        end if
-                     else
-!                       we need to update f(imin-HALO:imin-1,jmin:jmax)
-!                       we need to update f(imax+1:imax+HALO,jmin:jmax)
-                        call tic(TIM_ADV3DH)
-                        call update_3d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,kmax,D_TAG)
-                        call wait_halo(D_TAG)
-                        call toc(TIM_ADV3DH)
-                     end if
-#endif
+
+!                    we need to update f(imin-HALO:imin-1,jmin:jmax)
+!                    we need to update f(imax+1:imax+HALO,jmin:jmax)
+                     call tic(TIM_ADV3DH)
+                     call update_3d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,kmax,D_TAG)
+                     call wait_halo(D_TAG)
+                     call toc(TIM_ADV3DH)
+
                      do k=1,kmax
 #ifndef _POINTER_REMAP_
                         if (calc_nvd) then
