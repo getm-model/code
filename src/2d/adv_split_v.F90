@@ -31,6 +31,11 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+!  KK-TODO: According to http://scc.qibebt.cas.cn/docs/compiler/intel/11.1/Intel%20Fortran%20Compiler%20for%20Linux/main_for/optaps/fortran/optaps_prg_arrs_f.htm
+!           mapping of pointers (deferred shape) to explicit shape is
+!           very unefficient (dxv,dyv,mask_flux). However, first tests
+!           of assumed shape, i.e. dimension(imin-HALO:,jmin-HALO:), 
+!           were not superior.
    REALTYPE,intent(in)                                          :: dt,splitfac,AH
    REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,V,DV
 #if defined(SPHERICAL) || defined(CURVILINEAR)
