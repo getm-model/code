@@ -243,7 +243,7 @@
 #ifndef _POINTER_REMAP_
    REALTYPE,dimension(0:kmax,nsbvl),target :: bdy_data
 #endif
-   REALTYPE,dimension(:,:),pointer         :: p_bdy_data
+   REALTYPE,dimension(:,:),pointer         :: p_bdy_data,p2d
    integer                                 :: i,j,l,n,o
 !EOP
 !-----------------------------------------------------------------------
@@ -304,7 +304,7 @@
                do o=1,size(model%state_variables)
                   if (have_bio_bdy_values(o) .eq. 1) then
 #ifdef _POINTER_REMAP_
-                     p_bdy_data(0:,1:) => bio_bdy(:,:,o)
+                     p2d => bio_bdy(:,:,o) ; p_bdy_data(0:,1:) => p2d
 #else
                      bdy_data = bio_bdy(:,:,o)
 #endif
@@ -338,7 +338,7 @@
                do o=1,size(model%state_variables)
                   if (have_bio_bdy_values(o) .eq. 1) then
 #ifdef _POINTER_REMAP_
-                     p_bdy_data(0:,1:) => bio_bdy(:,:,o)
+                     p2d => bio_bdy(:,:,o) ; p_bdy_data(0:,1:) => p2d
 #else
                      bdy_data = bio_bdy(:,:,o)
 #endif
@@ -372,7 +372,7 @@
                do o=1,size(model%state_variables)
                   if (have_bio_bdy_values(o) .eq. 1) then
 #ifdef _POINTER_REMAP_
-                     p_bdy_data(0:,1:) => bio_bdy(:,:,o)
+                     p2d => bio_bdy(:,:,o) ; p_bdy_data(0:,1:) => p2d
 #else
                      bdy_data = bio_bdy(:,:,o)
 #endif
@@ -406,7 +406,7 @@
                do o=1,size(model%state_variables)
                   if (have_bio_bdy_values(o) .eq. 1) then
 #ifdef _POINTER_REMAP_
-                     p_bdy_data(0:,1:) => bio_bdy(:,:,o)
+                     p2d => bio_bdy(:,:,o) ; p_bdy_data(0:,1:) => p2d
 #else
                      bdy_data = bio_bdy(:,:,o)
 #endif
