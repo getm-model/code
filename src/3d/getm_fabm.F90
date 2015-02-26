@@ -324,10 +324,8 @@
 
       do n=1,size(model%state_variables)
 #ifdef _POINTER_REMAP_
-         p3d => phymix_fabm_pel(:,:,:,n)
-         pa_phymix(n)%p3d(imin-HALO:,jmin-HALO:,0:) => p3d
-         p3d => nummix_fabm_pel(:,:,:,n)
-         pa_nummix(n)%p3d(imin-HALO:,jmin-HALO:,0:) => p3d
+         p3d => phymix_fabm_pel(:,:,:,n) ; pa_phymix(n)%p3d(imin-HALO:,jmin-HALO:,0:) => p3d
+         p3d => nummix_fabm_pel(:,:,:,n) ; pa_nummix(n)%p3d(imin-HALO:,jmin-HALO:,0:) => p3d
 #else
          pa_phymix(n)%p3d => work3d
          pa_nummix(n)%p3d => work3d
