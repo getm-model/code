@@ -258,6 +258,7 @@
    REALTYPE,dimension(I2DFIELD),target :: nvd2d
 #endif
    REALTYPE,dimension(:,:,:),pointer   :: p_hi,p_adv,p_nvd
+   REALTYPE,dimension(:,:)  ,pointer   :: p2d
    integer                             :: tag2d,i,j,k
 !EOP
 !-----------------------------------------------------------------------
@@ -296,7 +297,7 @@
       p_nvd => nvd
       do k=1,kmax
 #ifdef _POINTER_REMAP_
-         pa_nvd2d(k)%p2d(imin-HALO:,jmin-HALO:) => nvd(:,:,k)
+         p2d => nvd(:,:,k) ; pa_nvd2d(k)%p2d(imin-HALO:,jmin-HALO:) => p2d
 #else
          pa_nvd2d(k)%p2d => nvd2d
 #endif
