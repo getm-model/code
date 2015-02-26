@@ -35,6 +35,7 @@
 #ifndef _POINTER_REMAP_
    REALTYPE,dimension(I2DFIELD),target :: dvdxX,dudyX
 #endif
+   REALTYPE,dimension(:,:),pointer     :: p2d
    integer :: k
 !EOP
 !-----------------------------------------------------------------------
@@ -50,7 +51,7 @@
    if (calc_dvdxX) then
       do k=1,kmax
 #ifdef _POINTER_REMAP_
-         pa_dvdxX(k)%p2d(imin-HALO:,jmin-HALO:) => dvdxX_3d(:,:,k)
+         p2d => dvdxX_3d(:,:,k) ; pa_dvdxX(k)%p2d(imin-HALO:,jmin-HALO:) => p2d
 #else
          pa_dvdxX(k)%p2d => dvdxX
 #endif
@@ -65,7 +66,7 @@
    if (calc_dudyX) then
       do k=1,kmax
 #ifdef _POINTER_REMAP_
-         pa_dudyX(k)%p2d(imin-HALO:,jmin-HALO:) => dudyX_3d(:,:,k)
+         p2d => dudyX_3d(:,:,k) ; pa_dudyX(k)%p2d(imin-HALO:,jmin-HALO:) => p2d
 #else
          pa_dudyX(k)%p2d => dudyX
 #endif

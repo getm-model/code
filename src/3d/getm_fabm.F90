@@ -45,7 +45,7 @@
          integer,intent(in)            :: AH_method
          REALTYPE,intent(in)           :: AH_const,AH_Prt,AH_stirr_const
          REALTYPE,intent(inout)        :: f(I3DFIELD)
-         REALTYPE,intent(out),optional :: phymix(I3DFIELD)
+         REALTYPE,dimension(:,:,:),pointer,intent(out),optional :: phymix
       end subroutine tracer_diffusion
 
 ! Temporary interface (should be read from module):
@@ -67,9 +67,9 @@
    type t_pa3d
       REALTYPE,dimension(:,:,:),pointer :: p3d
    end type t_pa3d
-   type(t_pa3d),dimension(:),allocatable :: pa_nummix
+   type(t_pa3d),dimension(:),allocatable :: pa_phymix,pa_nummix
 #ifndef _POINTER_REMAP_
-   REALTYPE,dimension(:,:,:),allocatable,target :: nummix
+   REALTYPE,dimension(:,:,:),allocatable,target :: work3d
 #endif
    integer         :: fabm_adv_split=0
    integer         :: fabm_adv_hor=1
@@ -219,9 +219,12 @@
                             "A non valid fabm_AH_method has been chosen");
       end select
 
+      allocate(pa_phymix(size(model%state_variables)),stat=rc)
+      if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (pa_phymix)'
       allocate(pa_nummix(size(model%state_variables)),stat=rc)
       if (rc /= 0) stop 'init_getm_fabm: Error allocating memory (pa_nummix)'
       do n=1,size(model%state_variables)
+         pa_phymix(n)%p3d => null()
          pa_nummix(n)%p3d => null()
       end do
 
@@ -292,6 +295,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: rc
    integer                   :: n
+   REALTYPE,dimension(:,:,:),pointer :: p3d
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -314,15 +318,17 @@
       nummix_fabm_pel = _ZERO_
 
 #ifndef _POINTER_REMAP_
-      allocate(nummix(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_getm_fabm: Error allocating memory (nummix)'
+      allocate(work3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_getm_fabm: Error allocating memory (work3d)'
 #endif
 
       do n=1,size(model%state_variables)
 #ifdef _POINTER_REMAP_
-         pa_nummix(n)%p3d(imin-HALO:,jmin-HALO:,0:) => nummix_fabm_pel(:,:,:,n)
+         p3d => phymix_fabm_pel(:,:,:,n) ; pa_phymix(n)%p3d(imin-HALO:,jmin-HALO:,0:) => p3d
+         p3d => nummix_fabm_pel(:,:,:,n) ; pa_nummix(n)%p3d(imin-HALO:,jmin-HALO:,0:) => p3d
 #else
-         pa_nummix(n)%p3d => nummix
+         pa_phymix(n)%p3d => work3d
+         pa_nummix(n)%p3d => work3d
 #endif
       end do
 
@@ -469,7 +475,13 @@
             call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az,imin,jmin,imax,jmax,kmax,D_TAG)
             call wait_halo(D_TAG)
             call tracer_diffusion(fabm_pel(:,:,:,n),hn,fabm_AH_method,fabm_AH_const,fabm_AH_Prt,fabm_AH_stirr_const, &
-                                  phymix_fabm_pel(:,:,:,n))
+                                  phymix=pa_phymix(n)%p3d)
+
+#ifndef _POINTER_REMAP_
+            if (do_numerical_analyses_3d) then
+               phymix_fabm_pel(:,:,:,n) = pa_phymix(n)%p3d
+            end if
+#endif
          end if
 
          if (do_numerical_analyses_3d) then
