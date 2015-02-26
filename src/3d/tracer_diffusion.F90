@@ -38,7 +38,7 @@
 ! !OUTPUT PARAMETERS:
 !  KK-TODO: this should be an allocatable array
 !           (and an explicit interface should be provided in m3d)
-   REALTYPE,intent(out),optional :: phymix(I3DFIELD)
+   REALTYPE,dimension(:,:,:),pointer,intent(out),optional :: phymix
 !
 ! !REVISION HISTORY:
 !  Original author(s): Knut Klingbeil
@@ -102,7 +102,11 @@
       first=.false.
    end if
 
-   calc_phymix = (do_numerical_analyses_3d .and. present(phymix))
+   if (do_numerical_analyses_3d .and. present(phymix)) then
+      calc_phymix = associated(phymix)
+   else
+      calc_phymix = .false.
+   end if
 
 !  Note (KK): diffusion only within new layer heigts
 
