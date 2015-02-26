@@ -288,13 +288,12 @@
 
    if (present(nvd)) then
       calc_nvd = associated(nvd)
-      p_nvd => nvd
    else
       calc_nvd = .false.
-      p_nvd => null()
    end if
 
    if (calc_nvd) then
+      p_nvd => nvd
       do k=1,kmax
 #ifdef _POINTER_REMAP_
          pa_nvd2d(k)%p2d(imin-HALO:,jmin-HALO:) => nvd(:,:,k)
@@ -308,6 +307,7 @@
       nvd2d = _ZERO_
 #endif
    else
+      p_nvd => null()
       do k=1,kmax
          pa_nvd2d(k)%p2d => null()
       end do
