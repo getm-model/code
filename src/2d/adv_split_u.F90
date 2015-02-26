@@ -187,7 +187,7 @@
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: uflux,uflux2
    logical            :: use_AH,calc_nvd
-   integer            :: i,j,isub
+   integer            :: i,j
    REALTYPE           :: dti,fio,Dio,advn,adv2n,cfl,fuu,fu,fd
 !
 ! !REVISION HISTORY:
@@ -204,12 +204,6 @@
    j = jmax/2 ! this MUST NOT be changed!!!
 #endif
 
-   if (scheme .eq. UPSTREAM) then
-      isub = 0
-   else
-      isub = 1
-   end if
-
    use_AH = (AH .gt. _ZERO_)
    calc_nvd = associated(nvd)
    dti = splitfac*dt
@@ -223,7 +217,7 @@
 #ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO
 #endif
-      do i=imin-HALO+isub,imax+HALO-1-isub
+      do i=imin-HALO+1,imax+HALO-2
          if (mask_flux(i,j)) then
 !           Note (KK): exclude x-advection of u across W/E open bdys
             if (U(i,j) .gt. _ZERO_) then
@@ -266,7 +260,7 @@
 #ifndef SLICE_MODEL
    do j=jmin-HALO,jmax+HALO
 #endif
-      do i=imin-HALO+1+isub,imax+HALO-1-isub
+      do i=imin-HALO+2,imax+HALO-2
          if (mask_update(i,j)) then
 !           Note (KK): exclude x-advection of tracer and u across W/E open bdys
             fio = fi(i,j)
