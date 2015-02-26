@@ -23,6 +23,18 @@
    use meteo, only: METEO_CONST,METEO_FROMFILE,METEO_FROMEXT
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
    IMPLICIT NONE
+
+   interface
+      subroutine tracer_diffusion(f,hn,AH_method,AH_const,AH_Prt,AH_stirr_const, &
+                                  phymix)
+         use domain, only: imin,imax,jmin,jmax,kmax
+         REALTYPE,intent(in)           :: hn(I3DFIELD)
+         integer,intent(in)            :: AH_method
+         REALTYPE,intent(in)           :: AH_const,AH_Prt,AH_stirr_const
+         REALTYPE,intent(inout)        :: f(I3DFIELD)
+         REALTYPE,dimension(:,:,:),pointer,intent(out),optional :: phymix
+      end subroutine tracer_diffusion
+   end interface
 !
    private
 !
