@@ -235,6 +235,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: rc
    integer                   :: n
+   REALTYPE,dimension(:,:,:),pointer :: p3d
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -259,7 +260,7 @@
 
       do n=1,size(model%state_variables)
 #ifdef _POINTER_REMAP_
-         pa_nummix(n)%p3d(imin-HALO:,jmin-HALO:,0:) => nummix_fabm_pel(:,:,:,n)
+         p3d => nummix_fabm_pel(:,:,:,n) ; pa_nummix(n)%p3d(imin-HALO:,jmin-HALO:,0:) => p3d
 #else
          pa_nummix(n)%p3d => nummix
 #endif
