@@ -63,7 +63,7 @@
    status = nf90_put_var(ncid,timestep_id,timestep)
    if (status .NE. NF90_NOERR) go to 10
 
-   allocate(zax(0:kmax),stat=status)
+   allocate(zax(0:kmax),stat=rc)
    if (rc /= 0) &
       stop 'write_restart_ncdf(): Error allocating memory (zax)'
    do k=0,kmax

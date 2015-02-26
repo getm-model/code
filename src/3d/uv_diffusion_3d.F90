@@ -44,6 +44,7 @@
 #ifndef _POINTER_REMAP_
    REALTYPE,dimension(I2DFIELD),target :: pd2d,dvdxX,dudyX
 #endif
+   REALTYPE,dimension(:,:),pointer     :: p2d
    integer :: i,j,k
 
 !EOP
@@ -60,10 +61,10 @@
    if (calc_phydis) then
       do k=1,kmax
 #ifdef _POINTER_REMAP_
-         pa_pd2d (k)%p2d(imin-HALO:,jmin-HALO:) => phydis_3d(:,:,k)
-         pa_dvdxX(k)%p2d(imin-HALO:,jmin-HALO:) => dvdxX_3d (:,:,k)
+         p2d => phydis_3d(:,:,k) ; pa_pd2d (k)%p2d(imin-HALO:,jmin-HALO:) => p2d
+         p2d => dvdxX_3d (:,:,k) ; pa_dvdxX(k)%p2d(imin-HALO:,jmin-HALO:) => p2d
 #ifndef SLICE_MODEL
-         pa_dudyX(k)%p2d(imin-HALO:,jmin-HALO:) => dudyX_3d (:,:,k)
+         p2d => dudyX_3d (:,:,k) ; pa_dudyX(k)%p2d(imin-HALO:,jmin-HALO:) => p2d
 #endif
 #else
          pa_pd2d (k)%p2d => pd2d
