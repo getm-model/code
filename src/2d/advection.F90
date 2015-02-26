@@ -578,7 +578,6 @@
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate, &
                                    p_nvd)
 #ifndef SLICE_MODEL
-#ifdef GETM_PARALLEL
                   if (scheme.ne.UPSTREAM .and. tag.eq.V_TAG) then
 !                    we need to update f(imin:imax,jmax+HALO)
                      call tic(TIM_ADVH)
@@ -586,7 +585,7 @@
                      call wait_halo(H_TAG)
                      call toc(TIM_ADVH)
                   end if
-#endif
+
                   call adv_split_v(dt,f,f,p_Di,p_adv,V,DV,                    &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
@@ -620,7 +619,6 @@
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate, &
                                    p_nvd)
 #ifndef SLICE_MODEL
-#ifdef GETM_PARALLEL
                   if (scheme.ne.UPSTREAM .and. tag.eq.V_TAG) then
 !                    we need to update f(imin:imax,jmax+HALO)
                      call tic(TIM_ADVH)
@@ -628,7 +626,7 @@
                      call wait_halo(H_TAG)
                      call toc(TIM_ADVH)
                   end if
-#endif
+
                   call adv_split_v(dt,f,f,p_Di,p_adv,V,DV,                    &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
@@ -637,25 +635,14 @@
                                    adv_grid%mask_vflux,adv_grid%mask_vupdate, &
                                    p_nvd)
 #endif
-#ifdef GETM_PARALLEL
-                  if (scheme .eq. UPSTREAM) then
-                     if (tag .eq. U_TAG) then
-!                       we need to update f(imax+1,jmin:jmax)
-!                       KK-TODO: if external DU was halo-updated this halo-update is not necessary
-                        call tic(TIM_ADVH)
-                        call update_2d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,H_TAG)
-                        call wait_halo(H_TAG)
-                        call toc(TIM_ADVH)
-                     end if
-                  else
-!                    we need to update f(imin-HALO:imin-1,jmin:jmax)
-!                    we need to update f(imax+1:imax+HALO,jmin:jmax)
-                     call tic(TIM_ADVH)
-                     call update_2d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,H_TAG)
-                     call wait_halo(H_TAG)
-                     call toc(TIM_ADVH)
-                  end if
-#endif
+
+!                 we need to update f(imin-HALO:imin-1,jmin:jmax)
+!                 we need to update f(imax+1:imax+HALO,jmin:jmax)
+                  call tic(TIM_ADVH)
+                  call update_2d_halo(f,f,adv_grid%az,imin,jmin,imax,jmax,H_TAG)
+                  call wait_halo(H_TAG)
+                  call toc(TIM_ADVH)
+
                   call adv_split_u(dt,f,f,p_Di,p_adv,U,DU,                    &
 #if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &

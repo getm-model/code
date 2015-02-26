@@ -48,7 +48,7 @@
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: vflux,vflux2
    logical            :: use_AH,calc_nvd
-   integer            :: i,j,jsub
+   integer            :: i,j
    REALTYPE           :: dti,fio,Dio,advn,adv2n,cfl,fuu,fu,fd
 !
 ! !REVISION HISTORY:
@@ -62,12 +62,6 @@
    write(debug,*) 'adv_split_v() # ',Ncall
 #endif
 
-   if (scheme .eq. UPSTREAM) then
-      jsub = 0
-   else
-      jsub = 1
-   end if
-
    use_AH = (AH .gt. _ZERO_)
    calc_nvd = associated(nvd)
    dti = splitfac*dt
@@ -77,7 +71,7 @@
 
 ! Calculating v-interface fluxes !
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-HALO+jsub,jmax+HALO-1-jsub
+   do j=jmin-HALO+1,jmax+HALO-2
       do i=imin-HALO,imax+HALO
          if (mask_flux(i,j)) then
 !           Note (KK): exclude y-advection of v across N/S open bdys
@@ -116,7 +110,7 @@
 !$OMP END DO
 
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-HALO+1+jsub,jmax+HALO-1-jsub
+   do j=jmin-HALO+2,jmax+HALO-2
       do i=imin-HALO,imax+HALO
          if (mask_update(i,j)) then
 !           Note (KK): exclude y-advection of tracer and v across N/S open bdys
