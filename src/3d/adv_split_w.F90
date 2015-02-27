@@ -62,7 +62,7 @@
 ! !LOCAL VARIABLES:
    logical            :: calc_nvd
    integer            :: i,j,k,kshift,it,iters,iters_new,rc
-   REALTYPE           :: itersm1,dti,dtik,fio,hio,advn,adv2n,fuu,fu,fd,splitfack
+   REALTYPE           :: cfl,itersm1,dti,dtik,fio,hio,advn,adv2n,fuu,fu,fd,splitfack
    REALTYPE,dimension(:),allocatable        :: wflux,wflux2
    REALTYPE,dimension(:),allocatable,target :: cfl0
    REALTYPE,dimension(:),pointer            :: fo,faux,fiaux,hiaux,advaux,nvdaux,cfls
@@ -103,7 +103,7 @@
 !$OMP          PRIVATE(rc,wflux,wflux2,cfl0,cfls)                      &
 !$OMP          PRIVATE(fo,faux,fiaux,hiaux,advaux,nvdaux)              &
 !$OMP          PRIVATE(p_fiaux,p_hiaux,p_advaux,p_nvdaux)              &
-!$OMP          PRIVATE(itersm1,dtik,splitfack)                         &
+!$OMP          PRIVATE(cfl,itersm1,dtik,splitfack)                     &
 !$OMP          PRIVATE(i,k,it,iters,iters_new,fio,hio,advn,adv2n,fuu,fu,fd)
 
 
@@ -200,12 +200,14 @@
 
                   if (iters .lt. itersmax) then
 !                    estimate number of iterations by maximum cfl number in water column
-                     iters_new = max(1,maxval(ceiling(cfls(1-kshift:kmax-1))))
+                     cfl = maxval(cfls(1-kshift:kmax-1))
+                     iters_new = max(1,ceiling(cfl))
                      if (iters_new .gt. iters) then
                         if (iters_new .gt. itersmax) then
 !$OMP CRITICAL
                            STDERR 'adv_split_w: too many iterations needed at'
                            STDERR 'i=',i,' j=',j,':',iters_new
+                           STDERR 'cfl=',real(cfl)
 !$OMP END CRITICAL
                            iters = itersmax
                         else
