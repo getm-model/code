@@ -207,7 +207,7 @@
 !$OMP CRITICAL
                            STDERR 'adv_split_w: too many iterations needed at'
                            STDERR 'i=',i,' j=',j,':',iters_new
-                           STDERR 'cfl=',real(cfl)
+                           STDERR 'cfl=',real(cfl/itersmax)
 !$OMP END CRITICAL
                            iters = itersmax
                         else
