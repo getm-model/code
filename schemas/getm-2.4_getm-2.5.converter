@@ -5,13 +5,30 @@
 <![CDATA[
 z0_method = source['getm/domain/z0_method'].getValue(usedefault=True)
 target['getm/domain/bottfric_method'].setValue(z0_method+2)
+advect_turbulence = source['getm/m3d/advect_turbulence'].getValue(usedefault=True)
+if advect_turbulence:
+	turb_adv_split = source['getm/m3d/vel3d_adv_split'].getValue(usedefault=True)
+	turb_adv_hor   = source['getm/m3d/vel3d_adv_hor'  ].getValue(usedefault=True)
+	turb_adv_ver   = source['getm/m3d/vel3d_adv_ver'  ].getValue(usedefault=True)
+else:
+	turb_adv_split = 0
+	turb_adv_hor   = 0
+	turb_adv_ver   = 0
+target['getm/m3d/turb_adv_split'].setValue(turb_adv_split)
+target['getm/m3d/turb_adv_hor'  ].setValue(turb_adv_hor  )
+target['getm/m3d/turb_adv_ver'  ].setValue(turb_adv_ver  )
 ]]>
 		</forward>
 		<backward>
 <![CDATA[
 bottfric_method = source['getm/domain/bottfric_method'].getValue(usedefault=True)
 target['getm/domain/z0_method'].setValue(bottfric_method-2)
+turb_adv_hor   = source['getm/m3d/turb_adv_hor'].getValue(usedefault=True)
+turb_adv_ver   = source['getm/m3d/turb_adv_ver'].getValue(usedefault=True)
+advect_turbulence = (turb_adv_hor>0 and turb_adv_ver>0)
+target['getm/m3d/advect_turbulence'].setValue(advect_turbulence)
 ]]>
 		</backward>
 	</custom>
 </converter>
+
