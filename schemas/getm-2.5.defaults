@@ -316,6 +316,15 @@
 			<vel3d_adv_ver>
 				1
 			</vel3d_adv_ver>
+			<turb_adv_split>
+				0
+			</turb_adv_split>
+			<turb_adv_hor>
+				0
+			</turb_adv_hor>
+			<turb_adv_ver>
+				0
+			</turb_adv_ver>
 			<calc_temp>
 				True
 			</calc_temp>
@@ -328,9 +337,6 @@
 			<avhback>
 				0.0
 			</avhback>
-			<advect_turbulence>
-				False
-			</advect_turbulence>
 			<ip_method>
 				1
 			</ip_method>
