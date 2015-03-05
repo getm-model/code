@@ -53,6 +53,9 @@
    integer                             :: vel3d_adv_split=0
    integer                             :: vel3d_adv_hor=1
    integer                             :: vel3d_adv_ver=1
+   integer                             :: turb_adv_split=0
+   integer                             :: turb_adv_hor=0
+   integer                             :: turb_adv_ver=0
    logical                             :: calc_temp=.false.
    logical                             :: calc_salt=.false.
    logical                             :: update_temp=.false.
@@ -121,8 +124,9 @@
              bdy3d_tmrlx,bdy3d_tmrlx_ucut,                &
              bdy3d_tmrlx_max,bdy3d_tmrlx_min,             &
              vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver, &
+             turb_adv_split,turb_adv_hor,turb_adv_ver,    &
              calc_temp,calc_salt,                         &
-             avmback,avhback,advect_turbulence,           &
+             avmback,avhback,                             &
              ip_method,ip_ramp,                           &
              vel_check,min_vel,max_vel
 !EOP
@@ -172,6 +176,37 @@
 #endif
    call print_adv_settings_3d(vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_)
 
+
+#ifndef CONSTANT_VISCOSITY
+
+   LEVEL2 'Advection of TKE and eps'
+
+#ifdef NO_ADVECT
+   if (turb_adv_hor .ne. NOADV) then
+      LEVEL2 "reset turb_adv_hor= ",NOADV," because of"
+      LEVEL2 "obsolete NO_ADVECT macro. Note that this"
+      LEVEL2 "behaviour will be removed in the future."
+      turb_adv_hor = NOADV
+   end if
+   if (turb_adv_ver .ne. NOADV) then
+      LEVEL2 "reset turb_adv_ver= ",NOADV," because of"
+      LEVEL2 "obsolete NO_ADVECT macro. Note that this"
+      LEVEL2 "behaviour will be removed in the future."
+      turb_adv_ver = NOADV
+   end if
+#endif
+   call print_adv_settings_3d(turb_adv_split,turb_adv_hor,turb_adv_ver,_ZERO_)
+
+   advect_turbulence = (turb_adv_hor.ne.NOADV .or. turb_adv_ver.ne.NOADV)
+
+#ifdef TURB_ADV
+   if (.not. advect_turbulence) then
+      LEVEL2 "WARNING: ignored obsolete TURB_ADV macro!"
+   end if
+#endif
+
+#endif
+
    LEVEL2 'ip_ramp=',ip_ramp
 
    LEVEL2 'vel_check=',vel_check
@@ -195,18 +230,6 @@
 #else
    num=1.d-15
    nuh=1.d-15
-
-#ifdef TURB_ADV
-   if (.not. advect_turbulence) then
-      LEVEL2 "reenabled advection of TKE and eps due to"
-      LEVEL2 "obsolete TURB_ADV macro. Note that this"
-      LEVEL2 "behaviour will be removed in the future!"
-      advect_turbulence = .true.
-   end if
-#endif
-
-   LEVEL2 "advect_turbulence = ",advect_turbulence
-
 #endif
 
 !  Needed for interpolation of temperature and salinity
