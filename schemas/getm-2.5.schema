@@ -519,8 +519,20 @@
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
 				</options>
 			</element>
+			<element name="calc_temp" type="bool" label="solve temperature equation"/>
+			<element name="calc_salt" type="bool" label="solve salinity equation"/>
+			<element name="use_gotm" type="bool" label="calculate turb. vertical viscosity/diffusivity by GOTM"/>
+			<element name="avmback"   type="float" label="background viscosity" unit="m²/s">
+				<condition type="eq" variable="./use_gotm" value="False"/>
+			</element>
+			<element name="avhback"   type="float" label="background diffusivity" unit="m²/s">
+				<condition type="eq" variable="./use_gotm" value="False"/>
+			</element>
 			<element name="turb_adv_split" type="int" label="advection splitting for TKE and eps">
-				<condition type="ne" variable="./turb_adv_hor" value="0"/>
+				<condition type="or">
+					<condition type="eq" variable="./use_gotm" value="True"/>
+					<condition type="ne" variable="./turb_adv_hor" value="0"/>
+				</condition>
 				<options>
 					<option value="0" label="no split: one 3D uvw step"/>
 					<option value="1" label="full step splitting: u + v + w"/>
@@ -529,6 +541,7 @@
 				</options>
 			</element>
 			<element name="turb_adv_hor" type="int" label="horizontal advection scheme for TKE and eps">
+				<condition type="eq" variable="./use_gotm" value="True"/>
 				<options>
 					<option value="0" label="advection disabled"/>
 					<option value="1" label="upstream (first-order, monotone)"/>
@@ -563,6 +576,7 @@
 				</options>
 			</element>
 			<element name="turb_adv_ver" type="int" label="vertical advection scheme for TKE and eps">
+				<condition type="eq" variable="./use_gotm" value="True"/>
 				<options>
 					<option value="0" label="advection disabled"/>
 					<option value="1" label="upstream (first-order, monotone)"/>
@@ -571,15 +585,6 @@
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
 				</options>
-			</element>
-			<element name="calc_temp" type="bool" label="solve temperature equation"/>
-			<element name="calc_salt" type="bool" label="solve salinity equation"/>
-			<element name="use_gotm" type="bool" label="calculate turb. vertical viscosity/diffusivity by GOTM"/>
-			<element name="avmback"   type="float" label="background viscosity" unit="m²/s">
-				<condition type="eq" variable="./use_gotm" value="False"/>
-			</element>
-			<element name="avhback"   type="float" label="background diffusivity" unit="m²/s">
-				<condition type="eq" variable="./use_gotm" value="False"/>
 			</element>
 			<element name="nonhyd_method" type="int" label="nonhydrostatic options">
 				<options>
