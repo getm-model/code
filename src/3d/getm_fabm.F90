@@ -153,6 +153,12 @@
       if (fabm_adv_hor .eq. J7) stop 'init_getm_fabm: J7 not implemented yet'
       call print_adv_settings_3d(fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH)
 
+!     Here we will loop over all variables in the FABM forcing file (if it exists)
+!     For each variable, look up the corresponding FABM variable (raise error if not found)
+!     For now 2D only, so make sure the NetCDF variable and the FABM avriable are both 2D.
+!     Then allocate the 2D field that will hold the data (stored in linked list along with FABM variable id)
+!     Make sure to send the pointer to the data every time we call FABM for a particular i,j in do_getm_fabm.
+
 !     Initialize biogeochemical state variables.
       select case (fabm_init_method)
          case(0)
