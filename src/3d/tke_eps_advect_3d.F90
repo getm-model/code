@@ -19,6 +19,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax,az,ax
    use domain, only: dxv,dyu
    use m3d, only: vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver
+   use m3d, only: turb_adv_split,turb_adv_hor,turb_adv_ver
    use variables_3d, only: tke,eps,dt,uu,vv,ww,hun,hvn,ho,hn
    use advection, only: J7
    use advection_3d, only: do_advection_3d,W_TAG
@@ -95,7 +96,7 @@
 
 !$OMP END PARALLEL
 
-   if (vel3d_adv_hor .eq. J7) then
+   if (turb_adv_hor .eq. J7) then
 #ifdef SLICE_MODEL
       uuadv(:,j+1,:) = uuadv(:,j,:)
 #endif
@@ -129,10 +130,10 @@
    call wait_halo(H_TAG)
 
    call do_advection_3d(dt,tke,uuadv,vvadv,wwadv,huadv,hvadv,hoadv,hnadv,         &
-                        vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,W_TAG)
+                        turb_adv_split,turb_adv_hor,turb_adv_ver,_ZERO_,W_TAG)
 
    call do_advection_3d(dt,eps,uuadv,vvadv,wwadv,huadv,hvadv,hoadv,hnadv,         &
-                        vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,W_TAG)
+                        turb_adv_split,turb_adv_hor,turb_adv_ver,_ZERO_,W_TAG)
 
    tke = max(k_min,tke)
    eps = max(eps_min,eps)
