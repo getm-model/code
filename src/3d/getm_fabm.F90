@@ -28,7 +28,7 @@
    use gotm_fabm, only: init_gotm_fabm,set_env_gotm_fabm,do_gotm_fabm
    use gotm_fabm, only: gotm_fabm_calc=>fabm_calc, model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz, cc_transport
 
-   use fabm, only: type_horizontal_variable_id
+   use fabm, only: type_horizontal_variable_id, fabm_is_variable_used
    use fabm_types,only: output_instantaneous, output_none
    use fabm_standard_variables, only: standard_variables
 
@@ -55,6 +55,18 @@
    integer         :: fabm_adv_ver=1
    REALTYPE        :: fabm_AH=-_ONE_
    type (type_horizontal_variable_id) :: id_bottom_depth_below_geoid,id_bottom_depth
+
+   type type_input_variable
+      integer                              :: ncid = -1
+      class (type_input_variable), pointer :: next => null()
+   end type
+
+   type,extends(type_input_variable) :: type_horizontal_input_variable
+      REALTYPE, allocatable, dimension(:,:) :: data
+      type (type_horizontal_variable_id)    :: id
+   end type
+
+   class (type_input_variable), pointer, save :: first_input_variable => null()
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -153,11 +165,18 @@
       if (fabm_adv_hor .eq. J7) stop 'init_getm_fabm: J7 not implemented yet'
       call print_adv_settings_3d(fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH)
 
-!     Here we will loop over all variables in the FABM forcing file (if it exists)
-!     For each variable, look up the corresponding FABM variable (raise error if not found)
-!     For now 2D only, so make sure the NetCDF variable and the FABM avriable are both 2D.
-!     Then allocate the 2D field that will hold the data (stored in linked list along with FABM variable id)
-!     Make sure to send the pointer to the data every time we call FABM for a particular i,j in do_getm_fabm.
+!     Here we need to open the NetCDF file with FABM forcing data (if it exists)
+!     and loop over all its variables.
+!     For now 2D only, so make sure each NetCDF variable is 2D.
+!     For each variable, register_horizontal_input_variable should be called (see below).
+!     That looks up the FABM variable and also allocates the 2D field that will hold the input data.
+
+!     Note: in the call below, the first argument must match the pattern INSTANCENAME_VARIABLENAME,
+!     with INSTANCENAME matching the name of a model instance in fabm.yaml, and VARIABLENAME matching the name
+!     of a variable registered by that model instance. The second argument is the NetCDF identifier of the
+!     the variable, which will be stored within the variable object along with the data field so that at the
+!     start of a time step, a simple loop over all input vriables can be used to update all 2D fields from NetCDF.
+      call register_horizontal_input_variable('nitdep_flux',-1)
 
 !     Initialize biogeochemical state variables.
       select case (fabm_init_method)
@@ -211,6 +230,28 @@
    end subroutine init_getm_fabm
 !EOC
 
+   subroutine register_horizontal_input_variable(name,ncid)
+      character(len=*),intent(in) :: name
+      integer,         intent(in) :: ncid
+
+      class (type_horizontal_input_variable), pointer :: variable
+
+!     Create the input variable and set associated data (FABM id, NetCDF id, 2D data field).
+      allocate(variable)
+      variable%id = model%get_horizontal_variable_id(name)
+      if (.not.fabm_is_variable_used(variable%id)) then
+         LEVEL2 'Prescribed input variable '//trim(name)//' is not used by FABM.'
+         stop 'register_horizontal_input_variable: unrecognized variable name'
+      end if
+      variable%ncid = ncid
+      allocate(variable%data(I2DFIELD))
+      variable%data = 0
+
+!     Prepend to the list of inout variables.
+      variable%next => first_input_variable
+      first_input_variable => variable
+   end subroutine register_horizontal_input_variable
+
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -237,11 +278,25 @@
    REALTYPE        :: bioshade(1:kmax)
    REALTYPE        :: wind_speed,I_0,taub_nonnorm,cloud
    REALTYPE        :: z(1:kmax)
+   class (type_input_variable), pointer :: current_input_variable
 !EOP
 !-----------------------------------------------------------------------
 !BOC
 
    call tic(TIM_GETM_FABM)
+
+!  First update all input fields
+   current_input_variable => first_input_variable
+   do while (associated(current_input_variable))
+      select type (current_input_variable)
+      class is (type_horizontal_input_variable)
+!        Here we need to update the variable data by reading from NetCDF (and interpolating in time)
+!        The NetCDF variable id is stored in current_input_variable%ncid; the data field is current_input_variable%data.
+!        For instance:
+!        call get_current_2d_data(ncid_input_file, current_input_variable%ncid, current_input_variable%data)
+      end select
+      current_input_variable => current_input_variable%next
+   end do
 
 !  First we do all the vertical processes
 #ifdef SLICE_MODEL
@@ -302,6 +357,16 @@
                                    z,A(i,j),g1(i,j),g2(i,j),yearday,secondsofday)
             call model%link_horizontal_data(id_bottom_depth_below_geoid,H(i,j))
             call model%link_horizontal_data(id_bottom_depth,D(i,j))
+
+!           Transfer prescribed input variables
+            current_input_variable => first_input_variable
+            do while (associated(current_input_variable))
+               select type (current_input_variable)
+               class is (type_horizontal_input_variable)
+                  call model%link_horizontal_data(current_input_variable%id,current_input_variable%data(i,j))
+               end select
+               current_input_variable => current_input_variable%next
+            end do
 
 !           Update biogeochemical variable values.
             call do_gotm_fabm(kmax)
