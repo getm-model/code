@@ -388,6 +388,48 @@
       end do
    end do
 
+
+!  Advect pelagic biogeochemical variables.
+   call tic(TIM_ADVECTFABM)
+   do n=1,size(model%state_variables)
+
+      if (cc_transport(n)) then
+         call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az, &
+                             imin,jmin,imax,jmax,kmax,D_TAG)
+         call wait_halo(D_TAG)
+
+         call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn,           &
+                              fabm_adv_split,fabm_adv_hor,fabm_adv_ver,_ZERO_,H_TAG, &
+                              nvd=pa_nummix(n)%p3d)
+
+#ifndef _POINTER_REMAP_
+         if (do_numerical_analyses_3d) then
+            nummix_fabm_pel(:,:,:,n) = pa_nummix(n)%p3d
+         end if
+#endif
+
+         if (fabm_AH_method .gt. 0) then
+            call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az,imin,jmin,imax,jmax,kmax,D_TAG)
+            call wait_halo(D_TAG)
+            call tracer_diffusion(fabm_pel(:,:,:,n),hn,fabm_AH_method,fabm_AH_const,fabm_AH_Prt,fabm_AH_stirr_const, &
+                                  phymix=pa_phymix(n)%p3d)
+
+#ifndef _POINTER_REMAP_
+            if (do_numerical_analyses_3d) then
+               phymix_fabm_pel(:,:,:,n) = pa_phymix(n)%p3d
+            end if
+#endif
+         end if
+
+         if (do_numerical_analyses_3d) then
+            call physical_mixing(fabm_pel(:,:,:,n),_ZERO_,phymix_fabm_pel(:,:,:,n),work2d,fabm_AH_method)
+         end if
+
+      end if
+
+   end do
+   call toc(TIM_ADVECTFABM)
+
 !  First we do all the vertical processes
 #ifndef SLICE_MODEL
    do j=jmin,jmax
@@ -466,47 +508,6 @@
          fabm_ben(i,j+1,:)  =fabm_ben(i,j,:)
       end do
 #endif
-
-!  Advect pelagic biogeochemical variables.
-   call tic(TIM_ADVECTFABM)
-   do n=1,size(model%state_variables)
-
-      if (cc_transport(n)) then
-         call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az, &
-                             imin,jmin,imax,jmax,kmax,D_TAG)
-         call wait_halo(D_TAG)
-
-         call do_advection_3d(dt,fabm_pel(:,:,:,n),uu,vv,ww,hun,hvn,ho,hn,           &
-                              fabm_adv_split,fabm_adv_hor,fabm_adv_ver,_ZERO_,H_TAG, &
-                              nvd=pa_nummix(n)%p3d)
-
-#ifndef _POINTER_REMAP_
-         if (do_numerical_analyses_3d) then
-            nummix_fabm_pel(:,:,:,n) = pa_nummix(n)%p3d
-         end if
-#endif
-
-         if (fabm_AH_method .gt. 0) then
-            call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az,imin,jmin,imax,jmax,kmax,D_TAG)
-            call wait_halo(D_TAG)
-            call tracer_diffusion(fabm_pel(:,:,:,n),hn,fabm_AH_method,fabm_AH_const,fabm_AH_Prt,fabm_AH_stirr_const, &
-                                  phymix=pa_phymix(n)%p3d)
-
-#ifndef _POINTER_REMAP_
-            if (do_numerical_analyses_3d) then
-               phymix_fabm_pel(:,:,:,n) = pa_phymix(n)%p3d
-            end if
-#endif
-         end if
-
-         if (do_numerical_analyses_3d) then
-            call physical_mixing(fabm_pel(:,:,:,n),_ZERO_,phymix_fabm_pel(:,:,:,n),work2d,fabm_AH_method)
-         end if
-
-      end if
-
-   end do
-   call toc(TIM_ADVECTFABM)
 
    call toc(TIM_GETM_FABM)
 
