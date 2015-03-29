@@ -69,6 +69,8 @@
    integer                             :: turb_adv_split=0
    integer                             :: turb_adv_hor=0
    integer                             :: turb_adv_ver=0
+   logical                             :: smooth_bvf_hor=.false.
+   logical                             :: smooth_bvf_ver=.false.
    logical                             :: calc_temp=.false.
    logical                             :: calc_salt=.false.
    logical                             :: update_temp=.false.
@@ -136,7 +138,7 @@
              vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver, &
              turb_adv_split,turb_adv_hor,turb_adv_ver,    &
              calc_temp,calc_salt,                         &
-             use_gotm,avmback,avhback,                    &
+             use_gotm,avmback,avhback,smooth_bvf_hor,smooth_bvf_ver, &
              nonhyd_method,ip_method,ip_ramp,             &
              vel_check,min_vel,max_vel
 !EOP
@@ -253,6 +255,27 @@
       end if
       num=1.d-15
       nuh=1.d-15
+
+#ifdef SMOOTH_BVF_HOR
+      if (.not. smooth_bvf_hor) then
+         LEVEL2 "reset smooth_bvf_hor=T because of obsolete"
+         LEVEL2 "SMOOTH_BVF_HOR macro. Note that this"
+         LEVEL2 "behaviour will be removed in the future."
+         smooth_bvf_hor = .true.
+      end if
+#endif
+      LEVEL2 "smooth_bvf_hor = ",smooth_bvf_hor
+
+#ifdef _SMOOTH_BVF_VERT_
+      if (.not. smooth_bvf_ver) then
+         LEVEL2 "reset smooth_bvf_ver=T because of obsolete"
+         LEVEL2 "_SMOOTH_BVF_VERT_ macro. Note that this"
+         LEVEL2 "behaviour will be removed in the future."
+         smooth_bvf_ver = .true.
+      end if
+#endif
+      LEVEL2 "smooth_bvf_ver = ",smooth_bvf_ver
+
    end if
 
 !  Needed for interpolation of temperature and salinity
