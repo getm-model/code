@@ -369,6 +369,12 @@
 			<avhback>
 				0.0
 			</avhback>
+			<smooth_bvf_hor>
+				False
+			</smooth_bvf_hor>
+			<smooth_bvf_ver>
+				False
+			</smooth_bvf_ver>
 			<nonhyd_method>
 				0
 			</nonhyd_method>

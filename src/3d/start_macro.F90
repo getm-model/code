@@ -28,14 +28,16 @@
 !
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth
+   use domain, only: imin,imax,jmin,jmax,kmax,H,HU,HV,az,min_depth
    use m2d, only: z,Uint,Vint,UEulerInt,VEulerInt
+   use variables_2d, only: fwf_int
    use m3d, only: M
    use waves, only: waveforcing_method,NO_WAVES
    use variables_waves, only: UStokesCint,UStokesCadv
    use variables_waves, only: VStokesCint,VStokesCadv
-   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn,Dn,Dveln,Dun,Dvn
+   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn,Dn,Dveln,Dun,Dvn,hn
    use variables_3d, only: Uadv,Vadv,UEulerAdv,VEulerAdv
+   use halo_zones, only : update_2d_halo,wait_halo,z_TAG
    use getm_timers, only: tic, toc, TIM_STARTMCR
    IMPLICIT NONE
 !
@@ -55,6 +57,15 @@
    write(debug,*) 'start_macro() # ',Ncall
 #endif
    call tic(TIM_STARTMCR)
+
+   call update_2d_halo(fwf_int,fwf_int,az,imin,jmin,imax,jmax,z_TAG)
+   call wait_halo(z_TAG)
+
+!  Note (KK): This would be the correct handling for fwf_int, but it
+!             requires ho=hn in coordinates. See also necessary changes
+!             in do_salinity and do_getm_fabm!
+!             Do not update ssen, because true sseo is needed!
+!   hn(:,:,kmax) = hn(:,:,kmax) + fwf_int
 
    do j=jmin-HALO,jmax+HALO         ! Defining 'old' and 'new' sea surface
       do i=imin-HALO,imax+HALO      ! elevation for macro time step

@@ -21,7 +21,7 @@
    use variables_3d, only: nuh,T,S,rho,a,g1,g2,taubmax_3d
    use variables_3d, only: do_numerical_analyses_3d
    use advection_3d, only: print_adv_settings_3d,do_advection_3d
-   use variables_2d, only: D
+   use variables_2d, only: D,fwf_int
    use meteo, only: swr,wind,evap,precip,tcc
    use time, only: yearday,secondsofday
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
@@ -370,6 +370,21 @@
 !BOC
 
    call tic(TIM_GETM_FABM)
+
+   do n=1,size(model%state_variables)
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if (az(i,j) .eq. 1) then
+!              Note (KK): This would be the correct dilution if hn was
+!                         corrected in start_macro. This also requires,
+!                         that ho=hn is done in coordinates!
+!               fabm_pel(i,j,kmax,n) = fabm_pel(i,j,kmax,n)*(_ONE_-fwf_int(i,j)/ho(i,j,kmax))
+               fabm_pel(i,j,kmax,n) = fabm_pel(i,j,kmax,n)*            &
+                          ( ho(i,j,kmax) / (ho(i,j,kmax)+fwf_int(i,j)) )
+            end if
+         end do
+      end do
+   end do
 
 !  First we do all the vertical processes
 #ifdef SLICE_MODEL
