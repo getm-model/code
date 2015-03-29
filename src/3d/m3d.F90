@@ -214,10 +214,10 @@
    end if
 #endif
 
-#ifdef SMOOTH_BVF_HOR
+#ifdef SMOOTH_BVF_HORI
    if (.not. smooth_bvf_hor) then
       LEVEL2 "reset smooth_bvf_hor=T because of obsolete"
-      LEVEL2 "SMOOTH_BVF_HOR macro. Note that this"
+      LEVEL2 "SMOOTH_BVF_HORI macro. Note that this"
       LEVEL2 "behaviour will be removed in the future."
       smooth_bvf_hor = .true.
    end if
