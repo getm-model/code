@@ -74,6 +74,7 @@
 #ifndef _OLD_BVF_
    use variables_3d, only: alpha,beta
 #endif
+   use m3d, only: smooth_bvf_hor,smooth_bvf_ver
    use getm_timers, only: tic, toc, TIM_NN
 !$ use omp_lib
    IMPLICIT NONE
@@ -86,9 +87,7 @@
    REALTYPE                  :: dz,NNc,ttt
    REALTYPE                  :: NNe,NNw,NNn,NNs
    REALTYPE, parameter       :: small_bvf = 1.d-10
-#ifdef _SMOOTH_BVF_VERT_
-   REALTYPE                  :: below,center,above
-#endif
+   REALTYPE,dimension(I2DFIELD) :: below,center,above
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -127,26 +126,29 @@
                end if
                NN(i,j,k)= NNc
             end do
-#ifdef _SMOOTH_BVF_VERT_
-            if ( kmax .ge. 4 ) then
-               below  = NN(i,j,1)
-               center = NN(i,j,2)
-               above  = NN(i,j,3)
-               do k= 2,kmax-2
-                  center = _HALF_ * center + _QUART_ * (below+above)
-                  below  = NN(i,j,k)
-                  NN(i,j,k) = center
-                  center = NN(i,j,k+1)
-                  above  = NN(i,j,k+2)
-               end do
-            end if
-#endif
          end if
       end do
    end do
 !$OMP END DO
+!$OMP SINGLE
 
-#ifdef SMOOTH_BVF_HORI
+   if (smooth_bvf_ver) then
+      if ( kmax .ge. 4 ) then
+         below  = NN(:,:,1)
+         center = NN(:,:,2)
+         above  = NN(:,:,3)
+         do k= 2,kmax-2
+            center = _HALF_ * center + _QUART_ * (below+above)
+            below  = NN(:,:,k)
+            NN(:,:,k) = center
+            center = NN(:,:,k+1)
+            above  = NN(:,:,k+2)
+         end do
+      end if
+   end if
+
+   if (smooth_bvf_hor) then
+!$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
@@ -179,7 +181,8 @@
       end do
    end do
 !$OMP END DO
-#endif
+!$OMP SINGLE
+   end if
 
 #ifdef SLICE_MODEL
 do k=1,kmax-1
