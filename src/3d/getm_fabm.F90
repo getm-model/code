@@ -241,7 +241,7 @@
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
             if (az(i,j) .eq. 1) then
-!              Note (KK): This would be the correct diluation if hn was
+!              Note (KK): This would be the correct dilution if hn was
 !                         corrected in start_macro. This also requires,
 !                         that ho=hn is done in coordinates!
 !               fabm_pel(i,j,kmax,n) = fabm_pel(i,j,kmax,n)*(_ONE_-fwf_int(i,j)/ho(i,j,kmax))
