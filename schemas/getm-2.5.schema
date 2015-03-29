@@ -574,6 +574,10 @@
 			</element>
 			<element name="calc_temp" type="bool" label="solve temperature equation"/>
 			<element name="calc_salt" type="bool" label="solve salinity equation"/>
+			<element name="avmback"   type="float" label="background viscosity" unit="m²/s"/>
+			<element name="avhback"   type="float" label="background diffusivity" unit="m²/s"/>
+			<element name="smooth_bvf_hor" type="bool" label="smooth buoyancy frequency in the horizontal"/>
+			<element name="smooth_bvf_ver" type="bool" label="smooth buoyancy frequency in the vertical"/>
 			<element name="nonhyd_method" type="int" label="nonhydrostatic options">
 				<options>
 					<option value="-1" label="passive screening"/>
@@ -581,8 +585,6 @@
 					<option value="1" label="active"/>
 				</options>
 			</element>
-			<element name="avmback"   type="float" label="background viscosity" unit="m²/s"/>
-			<element name="avhback"   type="float" label="background diffusivity" unit="m²/s"/>
 			<element name="ip_method" type="int" label="internal pressure method">
 				<options>
 					<option value="1" label="Blumberg and Mellor"/>
