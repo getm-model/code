@@ -59,7 +59,7 @@
 !  Note (KK): This would be the correct handling for fwf_int, but it
 !             requires ho=hn in coordinates. See also necessary changes
 !             in do_salinity and do_getm_fabm!
-!   ssen = ssen + fwf_int
+!             Do not update ssen, because true sseo is needed!
 !   hn(:,:,kmax) = hn(:,:,kmax) + fwf_int
 
    do j=jmin-HALO,jmax+HALO         ! Defining 'old' and 'new' sea surface
