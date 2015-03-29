@@ -586,6 +586,8 @@
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
 				</options>
 			</element>
+			<element name="smooth_bvf_hor" type="bool" label="smooth buoyancy frequency in the horizontal"/>
+			<element name="smooth_bvf_ver" type="bool" label="smooth buoyancy frequency in the vertical"/>
 			<element name="nonhyd_method" type="int" label="nonhydrostatic options">
 				<options>
 					<option value="-1" label="passive screening"/>
