@@ -16,7 +16,7 @@
    use ncdf_3d
    use domain, only: ioff,joff
    use domain, only: imin,imax,jmin,jmax,kmax
-   use domain, only: vert_cord
+   use domain, only: grid_type,vert_cord
    use m3d, only: calc_temp,calc_salt
 #ifdef SPM
    use suspended_matter, only: spm_save
@@ -254,7 +254,7 @@
 
 #endif
 
-#if defined(CURVILINEAR)
+      if (grid_type .ge. 3) then
 !     rotated zonal velocity
       err = nf90_def_var(ncid,'uurot',NCDF_FLOAT_PRECISION,f4_dims,uurot_id)
       if (err .NE. NF90_NOERR) go to 10
@@ -268,7 +268,7 @@
       call set_attributes(ncid,vvrot_id,long_name='rot. meridional vel.', &
                           units='m/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
-#endif
+      end if
    end if
 
    if (save_s) then

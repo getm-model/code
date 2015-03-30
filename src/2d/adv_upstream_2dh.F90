@@ -6,9 +6,7 @@
 !
 ! !INTERFACE:
    subroutine adv_upstream_2dh(dt,f,fi,Di,adv,U,V,Dn,DU,DV, &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                dxv,dyu,dxu,dyv,arcd1,       &
-#endif
                                AH,az)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
@@ -25,20 +23,15 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
-#if !( defined(SPHERICAL) || defined(CURVILINEAR) )
-   use domain, only: dx,dy,ard1
-#endif
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    REALTYPE,intent(in)                                          :: dt,AH
    REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,U,V,Dn,DU,DV
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
    REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
    REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
-#endif
    integer,dimension(E2DFIELD),intent(in)                       :: az
 !
 ! !INPUT/OUTPUT PARAMETERS:
