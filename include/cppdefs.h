@@ -7,7 +7,6 @@
 #include "git_revision.h"
 #include "fortran_version.h"
 
-#if defined(SPHERICAL) || defined(CURVILINEAR)
 #define DXC dxc(i,j)
 #define DXCIP1 dxc(i+1,j)
 #define DXCIM1 dxc(i-1,j)
@@ -35,35 +34,6 @@
 #define ARCD1 arcd1(i,j)
 #define ARUD1 arud1(i,j)
 #define ARVD1 arvd1(i,j)
-#else
-#define DXC dx
-#define DXCIP1 dx
-#define DXCIM1 dx
-#define DXCJP1 dx
-#define DXU dx
-#define DXV dx
-#define DXVIP1 dx
-#define DXVJM1 dx
-#define DXVJP1 dx
-#define DXVPM dx
-#define DXX dx
-#define DXXJM1 dx
-#define DYC dy
-#define DYCIP1 dy
-#define DYCJP1 dy
-#define DYCJM1 dy
-#define DYU dy
-#define DYUIP1 dy
-#define DYUIM1 dy
-#define DYUJP1 dy
-#define DYUMP dy
-#define DYV dy
-#define DYX dy
-#define DYXIM1 dy
-#define ARCD1 ard1
-#define ARUD1 ard1
-#define ARVD1 ard1
-#endif
 
 ! For 2D boundary conditions
 #define ZERO_GRADIENT 1
