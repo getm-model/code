@@ -70,11 +70,6 @@
 
    zz(:,:,0) = _ZERO_
 
-#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
-   dxm1 = _ONE_/DXU
-   dym1 = _ONE_/DYV
-#endif
-
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j,k, cff,cff1,cff2,AJ)
 
@@ -194,9 +189,7 @@
       do j=jmin,jmax
          do i=imin,imax+HALO-2
             if (au(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                dxm1=_ONE_/DXU
-#endif
                AJ = P(i+1,j,k) - P(i,j,k)
                FC(i,j) = 0.5*((buoy(i+1,j,k)+buoy(i,j,k))* &
                   (zz(i+1,j,k)-zz(i,j,k))-OneFifth*((dRx(i+1,j)-dRx(i,j))* &
@@ -266,9 +259,7 @@
          do i=imin,imax
 #endif
             if (av(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                dym1 = _ONE_/DYV
-#endif
                AJ = P(i,j+1,k) - P(i,j,k)
                FC(i,j) = 0.5*((buoy(i,j+1,k)+buoy(i,j,k))* &
                       (zz(i,j+1,k)-zz(i,j,k))-OneFifth*((dRx(i,j+1)-dRx(i,j))* &

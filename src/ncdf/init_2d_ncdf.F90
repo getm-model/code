@@ -16,6 +16,7 @@
    use ncdf_2d
    use domain, only: imin,imax,jmin,jmax
    use domain, only: ioff,joff
+   use domain, only: grid_type
    use meteo,  only: metforcing,calc_met
    use meteo,  only: fwf_method
    use m2d,    only: residual
@@ -92,7 +93,8 @@
    if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,v_id,long_name='meridional velocity',units='m/s', &
                        FillValue=fv,missing_value=mv,valid_range=vr)
-#if defined(CURVILINEAR)
+
+   if (grid_type .ge. 3) then
 !  rotated zonal velocity
    err = nf90_def_var(ncid,'urot',NCDF_FLOAT_PRECISION,f3_dims,urot_id)
    if (err .NE. NF90_NOERR) go to 10
@@ -106,7 +108,7 @@
    call set_attributes(ncid,vrot_id,long_name='rot. meridional velocity', &
                        units='m/s', &
                        FillValue=fv,missing_value=mv,valid_range=vr)
-#endif
+   end if
 
 !  meteorology
    if (metforcing .and. save_meteo) then
