@@ -98,7 +98,7 @@
 ! !IROUTINE: init_getm_fabm
 !
 ! !INTERFACE:
-   subroutine init_getm_fabm(nml_file)
+   subroutine init_getm_fabm(nml_file,hotstart)
 !
 ! !DESCRIPTION:
 !  Reads the namelist and makes calls to the init functions of the
@@ -113,6 +113,7 @@
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)   :: nml_file
+   logical,intent(in)             :: hotstart
 !
 ! !REVISION HISTORY:
 !  See the log for the module
@@ -231,7 +232,9 @@
       end do
 
 !     Initialize biogeochemical state variables.
-      call init_getm_fabm_fields()
+      if (.not. hotstart) then
+         call init_getm_fabm_fields()
+      end if
 
    end if
 
