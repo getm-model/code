@@ -60,7 +60,10 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_getm_fabm, postinit_getm_fabm, do_getm_fabm, model, output_none
+   public init_getm_fabm_fields
    integer, public :: fabm_init_method=0
+   character(len=PATH_MAX)   :: fabm_init_file
+   integer                   :: fabm_init_format, fabm_field_no
    logical, public :: fabm_calc
    REALTYPE,dimension(:,:,:,:),allocatable,target,public :: phymix_fabm_pel,nummix_fabm_pel
 !
@@ -95,7 +98,7 @@
 ! !IROUTINE: init_getm_fabm
 !
 ! !INTERFACE:
-   subroutine init_getm_fabm(nml_file)
+   subroutine init_getm_fabm(nml_file,hotstart)
 !
 ! !DESCRIPTION:
 !  Reads the namelist and makes calls to the init functions of the
@@ -110,6 +113,7 @@
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)   :: nml_file
+   logical,intent(in)             :: hotstart
 !
 ! !REVISION HISTORY:
 !  See the log for the module
@@ -117,9 +121,7 @@
 !  !LOCAL VARIABLES
    integer, parameter        :: unit_fabm=63
    integer                   :: rc
-   integer                   :: i,j,n
-   character(len=PATH_MAX)   :: fabm_init_file
-   integer                   :: fabm_init_format, fabm_field_no
+   integer                   :: n
 
    namelist /getm_fabm_nml/ fabm_init_method, &
                            fabm_init_file,fabm_init_format,fabm_field_no, &
@@ -230,6 +232,42 @@
       end do
 
 !     Initialize biogeochemical state variables.
+      if (.not. hotstart) then
+         call init_getm_fabm_fields()
+      end if
+
+   end if
+
+   end subroutine init_getm_fabm
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: init_getm_fabm_fields - initialisation of the fabm fields
+! \label{sec-init-getm-fabm-fields}
+!
+! !INTERFACE:
+   subroutine init_getm_fabm_fields()
+!
+! !DESCRIPTION:
+! Initialisation of the getm-fabm fields as specified by fabm\_init\_method
+! and exchange of the HALO zones
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !LOCAL VARIABLES:
+   integer                   :: i,j,n
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+
       select case (fabm_init_method)
          case(0)
             LEVEL3 'getting initial biogeochemical fields from hotstart file'
@@ -266,7 +304,7 @@
             end if
          case default
             FATAL 'Not valid fabm_init_method specified'
-            stop 'init_getm_fabm()'
+            stop 'init_getm_fabm_fields()'
       end select
 
 !     Update halos with biogeochemical variable values (distribute initial values).
@@ -276,11 +314,13 @@
          call wait_halo(D_TAG)
       end do
 
-   end if
-
-   end subroutine init_getm_fabm
+#ifdef DEBUG
+   write(debug,*) 'Leaving init_getm_fabm_fields()'
+   write(debug,*)
+#endif
+   return
+   end subroutine init_getm_fabm_fields
 !EOC
-
 !-----------------------------------------------------------------------
 !BOP
 !
