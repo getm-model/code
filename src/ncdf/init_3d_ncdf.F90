@@ -13,7 +13,6 @@
    use netcdf
    use exceptions
    use ncdf_common
-   use ncdf_2d,      only: ws2d => ws
    use ncdf_3d
    use domain, only: ioff,joff
    use domain, only: imin,imax,jmin,jmax,kmax
@@ -54,16 +53,6 @@
 
 !  initialize all time-independent, grid related variables
    call init_grid_ncdf(ncid,init3d,x_dim,y_dim,z_dim)
-
-!  allocate workspace
-   if (.not. allocated(ws2d)) then
-      allocate(ws2d(E2DFIELD),stat=err)
-      if (err .ne. 0) call getm_error("init_3d_ncdf()",            &
-                                      "error allocating ws2d")
-   end if
-   allocate(ws(I3DFIELD),stat=err)
-   if (err .ne. 0) call getm_error("init_3d_ncdf()",               &
-                                   "error allocating ws")
 
 !  define unlimited dimension
    err = nf90_def_dim(ncid,'time',NF90_UNLIMITED,time_dim)
@@ -282,41 +271,40 @@
       end if
    end if
 
+   if (save_s) then
+      fv = salt_missing
+      mv = salt_missing
+      vr(1) =  0.
+      vr(2) = 40.
+      err = nf90_def_var(ncid,'salt',NCDF_FLOAT_PRECISION,f4_dims,salt_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,salt_id,long_name='salinity',units='PSU', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
+
+   if (save_t) then
+      fv = temp_missing
+      mv = temp_missing
+      vr(1) = -2.
+      vr(2) = 40.
+      err = nf90_def_var(ncid,'temp',NCDF_FLOAT_PRECISION,f4_dims,temp_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,temp_id,long_name='temperature',units='degC',&
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
+
+   if (save_rho) then
+      fv = rho_missing
+      mv = rho_missing
+      vr(1) =  0.
+      vr(2) = 30.
+      err = nf90_def_var(ncid,'sigma_t',NCDF_FLOAT_PRECISION,f4_dims,sigma_t_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,sigma_t_id,long_name='sigma_t',units='kg/m3',&
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
+
    if (save_strho) then
-
-      if (calc_salt .and. save_s) then
-         fv = salt_missing
-         mv = salt_missing
-         vr(1) =  0.
-         vr(2) = 40.
-         err = nf90_def_var(ncid,'salt',NCDF_FLOAT_PRECISION,f4_dims,salt_id)
-         if (err .NE. NF90_NOERR) go to 10
-         call set_attributes(ncid,salt_id,long_name='salinity',units='PSU', &
-                             FillValue=fv,missing_value=mv,valid_range=vr)
-      end if
-
-      if (calc_temp .and. save_t) then
-         fv = temp_missing
-         mv = temp_missing
-         vr(1) = -2.
-         vr(2) = 40.
-         err = nf90_def_var(ncid,'temp',NCDF_FLOAT_PRECISION,f4_dims,temp_id)
-         if (err .NE. NF90_NOERR) go to 10
-         call set_attributes(ncid,temp_id,long_name='temperature',units='degC',&
-                             FillValue=fv,missing_value=mv,valid_range=vr)
-      end if
-
-      if (save_rho) then
-         fv = rho_missing
-         mv = rho_missing
-         vr(1) =  0.
-         vr(2) = 30.
-         err = nf90_def_var(ncid,'sigma_t',NCDF_FLOAT_PRECISION,f4_dims,sigma_t_id)
-         if (err .NE. NF90_NOERR) go to 10
-         call set_attributes(ncid,sigma_t_id,long_name='sigma_t',units='kg/m3',&
-                             FillValue=fv,missing_value=mv,valid_range=vr)
-      end if
-
       if (save_rad) then
          fv = rad_missing
          mv = rad_missing
@@ -327,7 +315,6 @@
          call set_attributes(ncid,rad_id,long_name='radiation',units='W/m2',&
                              FillValue=fv,missing_value=mv,valid_range=vr)
       end if
-
    end if
 
    if (save_turb) then

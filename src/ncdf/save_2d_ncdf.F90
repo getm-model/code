@@ -47,6 +47,7 @@
    REALTYPE                  :: Urot(E2DFIELD),Vrot(E2DFIELD)
    REALTYPE                  :: deg2rad = 3.141592654/180.
    REALTYPE                  :: cosconv,sinconv
+   REALTYPE,dimension(E2DFIELD) :: ws
 !EOP
 !-----------------------------------------------------------------------
 !BOC

@@ -42,8 +42,10 @@
    integer                             :: ipg_v_id
 #endif
    integer                             :: uurot_id,vvrot_id
-   integer                             :: salt_id,temp_id,sigma_t_id
-   integer                             :: rad_id
+   integer                             :: salt_id=-1
+   integer                             :: temp_id=-1
+   integer                             :: sigma_t_id=-1
+   integer                             :: rad_id=-1
    integer                             :: tke_id,num_id,nuh_id,eps_id
    integer                             :: SS_id,NN_id
 #ifdef SPM
@@ -58,8 +60,6 @@
    integer                             :: nm3dS_id,nm3dT_id,nm2dS_id,nm2dT_id
    integer                             :: pm3dS_id,pm3dT_id,pm2dS_id,pm2dT_id
    integer                             :: nm3d_id,nm2d_id
-
-   REALTYPE, dimension(:,:,:), allocatable :: ws
 
 ! !DEFINED PARAMETERS
    REALTYPE, parameter                 :: hh_missing     =-9999.0
