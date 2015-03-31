@@ -45,9 +45,7 @@
       logical,dimension(:,:),pointer :: mask_uupdate,mask_vupdate
       logical,dimension(:,:),pointer :: mask_finalise
       integer,dimension(:,:),pointer :: az
-#if defined(SPHERICAL) || defined(CURVILINEAR)
       REALTYPE,dimension(:,:),pointer :: dxu,dyu,dxv,dyv,arcd1
-#endif
    end type t_adv_grid
 
    type(t_adv_grid),public,target :: adv_gridH,adv_gridU,adv_gridV
@@ -90,9 +88,7 @@
 
    interface
       subroutine adv_split_u(dt,f,fi,Di,adv,U,DU,   &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                              dxu,dyu,arcd1,         &
-#endif
                              splitfac,scheme,AH,    &
                              mask_flux,mask_update, &
                              nvd)
@@ -100,10 +96,8 @@
          IMPLICIT NONE
          REALTYPE,intent(in)                           :: dt,splitfac,AH
          REALTYPE,dimension(E2DFIELD),intent(in)       :: f,U,DU
-#if defined(SPHERICAL) || defined(CURVILINEAR)
          REALTYPE,dimension(:,:),pointer,intent(in)    :: dxu,dyu
          REALTYPE,dimension(E2DFIELD),intent(in)       :: arcd1
-#endif
          integer,intent(in)                            :: scheme
          logical,dimension(:,:),pointer,intent(in)     :: mask_flux
          logical,dimension(E2DFIELD),intent(in)        :: mask_update
@@ -112,9 +106,7 @@
       end subroutine adv_split_u
 
       subroutine adv_split_v(dt,f,fi,Di,adv,V,DV,   &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                              dxv,dyv,arcd1,         &
-#endif
                              splitfac,scheme,AH,    &
                              mask_flux,mask_update, &
                              nvd)
@@ -122,10 +114,8 @@
          IMPLICIT NONE
          REALTYPE,intent(in)                                          :: dt,splitfac,AH
          REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,V,DV
-#if defined(SPHERICAL) || defined(CURVILINEAR)
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
          REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
-#endif
          integer,intent(in)                                           :: scheme
          logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_flux
          logical,dimension(E2DFIELD),intent(in)                       :: mask_update
@@ -134,9 +124,7 @@
       end subroutine adv_split_v
 
       subroutine adv_arakawa_j7_2dh(dt,f,fi,Di,adv,U,V,Dn,DU,DV,      &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                     dxv,dyu,dxu,dyv,arcd1,            &
-#endif
                                     AH,az,                            &
                                     mask_uflux,mask_vflux,mask_xflux)
          use domain, only: imin,imax,jmin,jmax
@@ -144,11 +132,9 @@
          REALTYPE,intent(in)                                          :: dt,AH
          REALTYPE,dimension(E2DFIELD),target,intent(in)               :: f
          REALTYPE,dimension(E2DFIELD),intent(in)                      :: U,V,Dn,DU,DV
-#if defined(SPHERICAL) || defined(CURVILINEAR)
          REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
          REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
-#endif
          integer,dimension(E2DFIELD),intent(in)                       :: az
          logical,dimension(:,:),pointer,intent(in)                    :: mask_uflux,mask_xflux
          logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_vflux
@@ -156,27 +142,21 @@
       end subroutine adv_arakawa_j7_2dh
 
       subroutine adv_upstream_2dh(dt,f,fi,Di,adv,U,V,Dn,DU,DV, &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                   dxv,dyu,dxu,dyv,arcd1,       &
-#endif
                                   AH,az)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,intent(in)                                          :: dt,AH
          REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,U,V,Dn,DU,DV
-#if defined(SPHERICAL) || defined(CURVILINEAR)
          REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
          REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
-#endif
          integer,dimension(E2DFIELD),intent(in)                       :: az
          REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
       end subroutine adv_upstream_2dh
 
       subroutine adv_fct_2dh(fct,dt,f,fi,Di,adv,U,V,Dn,DU,DV, &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                              dxv,dyu,dxu,dyv,arcd1,           &
-#endif
                              AH,az,                           &
                              mask_uflux,mask_vflux)
          use domain, only: imin,imax,jmin,jmax
@@ -184,11 +164,9 @@
          logical,intent(in)                                           :: fct
          REALTYPE,intent(in)                                          :: dt,AH
          REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,U,V,Dn,DU,DV
-#if defined(SPHERICAL) || defined(CURVILINEAR)
          REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
          REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
          REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
-#endif
          integer,dimension(E2DFIELD),intent(in)                       :: az
          logical,dimension(:,:),pointer,intent(in)                    :: mask_uflux
          logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_vflux
@@ -213,9 +191,7 @@
 !
 ! !USES:
    use domain, only: az,au,av,ax
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxc,dyc,arcd1,dxu,dyu,arud1,dxv,dyv,arvd1,dxx,dyx
-#endif
    IMPLICIT NONE
 !
 ! !LOCAL VARIABLES:
@@ -321,7 +297,6 @@
    adv_gridV%mask_finalise => mask_vflux
    adv_gridV%az            => av
 
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    adv_gridH%dxu   => dxu
    adv_gridH%dyu   => dyu
    adv_gridH%dxv   => dxv(_IRANGE_HALO_,_JRANGE_HALO_-1)
@@ -348,7 +323,6 @@
    adv_gridV%dxv   => dxc(_IRANGE_HALO_,1+_JRANGE_HALO_)
    adv_gridV%dyv   => dyc(_IRANGE_HALO_,1+_JRANGE_HALO_)
    adv_gridV%arcd1 => arvd1
-#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_advection()'
@@ -493,17 +467,13 @@
                   fi = f
 
                   call adv_split_u(dt,f,fi,p_Di,p_adv,U,DU,                   &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
-#endif
                                    _ONE_,scheme,AH,                           &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate, &
                                    p_nvd)
 #ifndef SLICE_MODEL
                   call adv_split_v(dt,f,fi,p_Di,p_adv,V,DV,                   &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
-#endif
                                    _ONE_,scheme,AH,                           &
                                    adv_grid%mask_vflux,adv_grid%mask_vupdate, &
                                    p_nvd)
@@ -526,21 +496,17 @@
                case(UPSTREAM_2DH)
 
                   call adv_upstream_2dh(dt,f,f,p_Di,p_adv,U,V,Dn,DU,DV, &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                         adv_grid%dxv,adv_grid%dyu,      &
                                         adv_grid%dxu,adv_grid%dyv,      &
                                         adv_grid%arcd1,                 &
-#endif
                                         AH,adv_grid%az)
 
                case(J7)
 
                   call adv_arakawa_j7_2dh(dt,f,f,p_Di,p_adv,U,V,Dn,DU,DV, &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                           adv_grid%dxv,adv_grid%dyu,      &
                                           adv_grid%dxu,adv_grid%dyv,      &
                                           adv_grid%arcd1,                 &
-#endif
                                           AH,adv_grid%az,                 &
                                           adv_grid%mask_uflux,            &
                                           adv_grid%mask_vflux,            &
@@ -549,11 +515,9 @@
                case(FCT)
 
                   call adv_fct_2dh(.true.,dt,f,f,p_Di,p_adv,U,V,Dn,DU,DV, &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxv,adv_grid%dyu,             &
                                    adv_grid%dxu,adv_grid%dyv,             &
                                    adv_grid%arcd1,                        &
-#endif
                                    AH,adv_grid%az,                        &
                                    adv_grid%mask_uflux,                   &
                                    adv_grid%mask_vflux)
@@ -561,11 +525,9 @@
                case(P2_2DH)
 
                   call adv_fct_2dh(.false.,dt,f,f,p_Di,p_adv,U,V,Dn,DU,DV, &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxv,adv_grid%dyu,              &
                                    adv_grid%dxu,adv_grid%dyv,              &
                                    adv_grid%arcd1,                         &
-#endif
                                    AH,adv_grid%az,                         &
                                    adv_grid%mask_uflux,                    &
                                    adv_grid%mask_vflux)
@@ -583,9 +545,7 @@
                case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
                   call adv_split_u(dt,f,f,p_Di,p_adv,U,DU,                    &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
-#endif
                                    _ONE_,scheme,AH,                           &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate, &
                                    p_nvd)
@@ -600,9 +560,7 @@
                   end if
 #endif
                   call adv_split_v(dt,f,f,p_Di,p_adv,V,DV,                    &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
-#endif
                                    _ONE_,scheme,AH,                           &
                                    adv_grid%mask_vflux,adv_grid%mask_vupdate, &
                                    p_nvd)
@@ -625,9 +583,7 @@
                case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
 
                   call adv_split_u(dt,f,f,p_Di,p_adv,U,DU,                    &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
-#endif
                                    _HALF_,scheme,AH,                          &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate, &
                                    p_nvd)
@@ -642,9 +598,7 @@
                   end if
 #endif
                   call adv_split_v(dt,f,f,p_Di,p_adv,V,DV,                    &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
-#endif
                                    _ONE_,scheme,AH,                           &
                                    adv_grid%mask_vflux,adv_grid%mask_vupdate, &
                                    p_nvd)
@@ -669,9 +623,7 @@
                   end if
 #endif
                   call adv_split_u(dt,f,f,p_Di,p_adv,U,DU,                    &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
-#endif
                                    _HALF_,scheme,AH,                          &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate, &
                                    p_nvd)

@@ -6,11 +6,7 @@
 !
 ! !INTERFACE:
    subroutine to_fluxu(imin,jmin,imax,jmax,au, &
-#if defined(CURVILINEAR) || defined(SPHERICAL)
                        dyu,                    &
-#else
-                       dy,                     &
-#endif
                        U,missing,fluxu)
 !
 ! !DESCRIPTION:
@@ -22,11 +18,7 @@
 ! !INPUT PARAMETERS:
    integer,intent(in)                       :: imin,jmin,imax,jmax
    integer,dimension(E2DFIELD),intent(in)   :: au
-#if defined(CURVILINEAR) || defined(SPHERICAL)
    REALTYPE,dimension(E2DFIELD),intent(in)  :: dyu
-#else
-   REALTYPE,intent(in)                      :: dy
-#endif
    REALTYPE,dimension(E2DFIELD),intent(in)  :: U
    REALTYPE,intent(in)                      :: missing
 !

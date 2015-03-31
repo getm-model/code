@@ -24,11 +24,7 @@
    use domain, only: rigid_lid
    use time, only: write_time_string,timestr
    use variables_2d, only: dtm,z,zo,D,U,DU,V,DV
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dyv
-#else
-   use domain, only: dx,dy
-#endif
 
    IMPLICIT NONE
 !
