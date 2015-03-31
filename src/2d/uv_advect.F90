@@ -17,11 +17,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,az,au,av,ax
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxv,dyu,arcd1,arud1,arvd1
-#else
-   use domain, only: dx,dy,ard1
-#endif
    use m2d, only: dtm,vel2d_adv_split,vel2d_adv_hor
    use variables_2d, only: UEx,VEx
    use variables_2d, only: do_numerical_analyses_2d
