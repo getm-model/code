@@ -39,11 +39,7 @@
 !
 ! !USES:
    use domain,       only: imin,imax,jmin,jmax,kmax,H,au,av,ax,az
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxc,dyc,dxx,dyx
-#else
-   use domain, only: dx,dy
-#endif
    use domain, only: dry_z
    use m2d, only: Am
    use variables_3d, only: phydis_3d,phydis_int,num,uu,vv,hn,hun,hvn,SS

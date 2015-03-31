@@ -617,4 +617,16 @@
 			<preadapt>0</preadapt>
 		</adapt_coord>
         </adaptcoord>
+	<getm_fabm>
+		<getm_fabm_nml>
+			<fabm_init_method>1</fabm_init_method>
+			<fabm_init_file>fabm_fields.nc</fabm_init_file>
+			<fabm_init_format>2</fabm_init_format>
+			<fabm_field_no>1</fabm_field_no>
+			<fabm_adv_split>2</fabm_adv_split>
+			<fabm_adv_hor>4</fabm_adv_hor>
+			<fabm_adv_ver>4</fabm_adv_ver>
+			<fabm_AH>-1.0</fabm_AH>
+		</getm_fabm_nml>
+	</getm_fabm>
 </scenario>
