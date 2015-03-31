@@ -36,10 +36,6 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
-   dxm1 = _ONE_/DXU
-   dym1 = _ONE_/DYV
-#endif
 
    zz(:,:,0) = _ZERO_
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
@@ -77,9 +73,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
-#endif
             zx(1)=-HU(i,j)+_HALF_*hun(i,j,1) ! zx defined on u-points
             do k=2,kmax
                zx(k)=zx(k-1)+_HALF_*(hun(i,j,k-1)+hun(i,j,k))
@@ -127,9 +121,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-         dym1 = _ONE_/DYV
-#endif
+            dym1 = _ONE_/DYV
             zx(1)=-HV(i,j)+_HALF_*hvn(i,j,1) ! zx defined on v-points
             do k=2,kmax
                zx(k)=zx(k-1)+_HALF_*(hvn(i,j,k-1)+hvn(i,j,k))

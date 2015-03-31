@@ -23,11 +23,7 @@
 !
 ! !USES:
    use domain,       only: imin,imax,jmin,jmax,kmax,H,au,av
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dyv
-#else
-   use domain, only: dx,dy
-#endif
    use variables_3d, only: dt,nuh,hn,ssen
 
    IMPLICIT NONE
