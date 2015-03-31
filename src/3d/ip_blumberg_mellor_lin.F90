@@ -65,10 +65,6 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
-   dxm1 = _ONE_/DXU
-   dym1 = _ONE_/DYV
-#endif
 
 ! BJB-TODO: The zeroing of these three arrays is costly.
 !  Try to reduce amount of initialization. BJB 2009-09-22.
@@ -104,9 +100,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
-#endif
             dxzl=(zz(i+1,j,kmax)-zz(i,j,kmax))*dxm1
             dxrl=(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
             prgr=dxrl*_HALF_*hun(i,j,kmax)
@@ -135,9 +129,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             dym1 = _ONE_/DYV
-#endif
             dyzl=(zz(i,j+1,kmax)-zz(i,j,kmax))*dym1
             dyrl=(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
             prgr=dyrl*_HALF_*hun(i,j,kmax)
