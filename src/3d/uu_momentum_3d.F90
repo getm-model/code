@@ -47,11 +47,7 @@
    use parameters, only: g,avmmol,rho_0
    use domain, only: imin,imax,jmin,jmax,kmax,H,HU,min_depth
    use domain, only: dry_u,coru,au,av,az
-#if defined CURVILINEAR || defined SPHERICAL
    use domain, only: dxu,arud1,dxx,dyc,dyx,dxc
-#else
-   use domain, only: dx,dy
-#endif
    use bdy_3d, only: do_bdy_3d
    use variables_3d, only: dt,cnpar,kumin,uu,vv,huo,hun,hvo,uuEx,ww,hvn
    use variables_3d, only: num,nuh,sseo,Dun,rru
@@ -178,13 +174,9 @@
 #else
                   Vloc=_QUART_*(vv(i,j,k)+vv(i+1,j,k)+vv(i,j-1,k)+vv(i+1,j-1,k))
 #endif
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                   cord_curv=(Vloc*(DYCIP1-DYC)-uu(i,j,k)*(DXX-DXXJM1))   &
                         /huo(i,j,k)*ARUD1
                   ex(k)=(cord_curv+coru(i,j))*Vloc
-#else
-                  ex(k)=coru(i,j)*Vloc
-#endif
 #ifdef _MOMENTUM_TERMS_
                   cor_u(i,j,k)=-dry_u(i,j)*ex(k)
 #endif
