@@ -34,11 +34,7 @@
 ! !USES:
    use parameters, only: g
    use domain, only: imin,imax,jmin,jmax,H,az
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dyc,dxc
-#else
-   use domain, only: dy,dx
-#endif
    use m2d, only: dtm
    IMPLICIT NONE
 !
@@ -61,7 +57,6 @@
    lmask = (az(imin:imax,jmin:jmax) .gt. 0)
    h_max = maxval(H(imin:imax,jmin:jmax),mask = lmask)
    pos = maxloc(H(imin:imax,jmin:jmax),mask = lmask)
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    max_dt=1000000000.
    do i=imin,imax
       do j=jmin,jmax
@@ -76,8 +71,8 @@
             dxeff = (dxc(i,j)*dyc(i,j))/ &
                      (sqrt(2.0)*sqrt(dxc(i,j)*dxc(i,j)+dyc(i,j)*dyc(i,j)))
 #endif
+!           Becker and Deleersnijder
             dtt = dxeff/c
-
 #endif
             if (dtt .lt. max_dt) then
                max_dt=dtt
@@ -89,27 +84,6 @@
    end do
    LEVEL3 'max CFL number at depth=',H(max_pos(1),max_pos(2)),' at ',max_pos
    LEVEL3 'at this position, dx = ',dxc(max_pos(1),max_pos(2)),' and dy =  ',dyc(max_pos(1),max_pos(2))
-#else
-   c = sqrt(g*h_max)
-!  Becker and Deleersnijder
-#ifdef SLICE_MODEL
-   dxeff = dx
-#else
-   dxeff = (dx*dy)/(sqrt(2.0)*sqrt(dx*dx+dy*dy))
-#endif
-   max_dt = dxeff/c
-
-#if 0
-#ifdef POM_CFL
-   max_dt=0.5/(c*sqrt( _ONE_/dx**2 + _ONE_/dy**2 ))
-#endif
-#ifdef OLD_GETM
-   max_dt = min(dx,dy)/(c*sqrt(2.))
-#endif
-#endif
-
-   LEVEL3 'max depth=',h_max,' at ',pos
-#endif
 
    if (dtm .gt. max_dt) then
       FATAL 'reduce time-step (',dtm,') below ',max_dt

@@ -25,11 +25,7 @@
    use domain, only: bdy_2d_type
    use m2d, only: dtm,bdyfmt_2d,bdy_data,bdy_data_u,bdy_data_v
    use variables_2d, only: z,D,U,DU,V,DV
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxc,dyc
-#else
-   use domain, only: dx,dy
-#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
