@@ -55,10 +55,6 @@
 !-----------------------------------------------------------------------
 !BOC
    lnum=2*kmax+1
-#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
-   dxm1 = _ONE_/DXU
-   dym1 = _ONE_/DYV
-#endif
 
 ! BJB-TODO: The zeroing of these three arrays is costly.
 !  Try to reduce amount of initialization. BJB 2009-09-22.
@@ -125,9 +121,7 @@
          zl(:)=_ZERO_
 
          if (au(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
-#endif
             ! merge zl vector from zi's
             zx(1)=-HU(i,j)+_HALF_*hun(i,j,1) ! zx defined on u-points
             zl(1)=zi(i,j,1)
@@ -258,9 +252,7 @@
          zl(:)=_ZERO_
 
          if (av(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-         dym1 = _ONE_/DYV
-#endif
+            dym1 = _ONE_/DYV
             ! merge zl vector from zi's
             zx(1)=-HV(i,j)+_HALF_*hvn(i,j,1) ! zx defined on u-points
             zl(1)=zi(i,j,1)

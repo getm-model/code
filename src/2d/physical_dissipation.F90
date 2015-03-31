@@ -39,11 +39,7 @@
 !
 ! !USES:
    use domain,       only: imin,imax,jmin,jmax,az,au,av,ax
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxc,dyc,dxx,dyx
-#else
-   use domain, only: dx,dy
-#endif
    use domain, only: dry_z
 
    IMPLICIT NONE
