@@ -29,11 +29,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: arcd1,dxv,dyu
-#else
-   use domain, only: dx,dy,ard1
-#endif
    use variables_3d, only: dt,kmin,uu,vv,ww,ho,hn
 !  #define CALC_HALO_WW
 #ifndef CALC_HALO_WW

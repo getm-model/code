@@ -6,9 +6,7 @@
 !
 ! !INTERFACE:
    subroutine adv_split_v(dt,f,fi,Di,adv,V,DV,   &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                           dxv,dyv,arcd1,         &
-#endif
                           splitfac,scheme,AH,    &
                           mask_flux,mask_update)
 !  Note (KK): Keep in sync with interface in advection.F90
@@ -21,9 +19,6 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
-#if !( defined(SPHERICAL) || defined(CURVILINEAR) )
-   use domain, only: dx,dy,ard1
-#endif
    use advection, only: adv_interfacial_reconstruction
    use advection, only: UPSTREAM
 !$ use omp_lib
@@ -32,10 +27,8 @@
 ! !INPUT PARAMETERS:
    REALTYPE,intent(in)                                          :: dt,splitfac,AH
    REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,V,DV
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
    REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
-#endif
    integer,intent(in)                                           :: scheme
    logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_flux
    logical,dimension(E2DFIELD),intent(in)                       :: mask_update

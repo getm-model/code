@@ -159,11 +159,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,az,au,av,ax
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dyc,arud1,dxx,dyx,arvd1,dxc
-#else
-   use domain, only: dx,dy,ard1
-#endif
    use m2d, only: Am
    use variables_2d, only: An,AnX
 !$ use omp_lib

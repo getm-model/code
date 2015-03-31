@@ -18,11 +18,7 @@
    use domain,       only: H,HU,HV,az,au,av,min_depth
    use domain,       only: convc
    use domain,       only: grid_type,xc,xu,xv,yc,yu,yv
-#if defined CURVILINEAR || defined SPHERICAL
    use domain,       only: dxv,dyu,arcd1
-#else
-   use domain,       only: dx,dy,ard1
-#endif
    use variables_2d, only: Uinto,Vinto
    use variables_3d, only: sseo,ssen,Dn,Dveln,Dun,Dvn
    use variables_3d, only: dt,kmin,ho,hn,hvel,uu,hun,vv,hvn,ww,hcc,SS
@@ -119,22 +115,14 @@
 !  avg. volume fluxes
    if (fluxu_id .ne. -1) then
          call to_fluxu(imin,jmin,imax,jmax,au, &
-#if defined(CURVILINEAR) || defined(SPHERICAL)
                        dyu,                    &
-#else
-                       dy,                     &
-#endif
                        Uinto,flux_missing,ws2d)
       err = nf90_put_var(ncid,fluxu_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
    if (fluxv_id .ne. -1) then
          call to_fluxv(imin,jmin,imax,jmax,av, &
-#if defined(CURVILINEAR) || defined(SPHERICAL)
                        dxv,                    &
-#else
-                       dx,                     &
-#endif
                        Vinto,flux_missing,ws2d)
       err = nf90_put_var(ncid,fluxv_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
@@ -145,11 +133,7 @@
       wrk2d = _ZERO_
       call to_u(imin,jmin,imax,jmax,az,                            &
                 dt,grid_type,                                      &
-#if defined(CURVILINEAR) || defined(SPHERICAL)
                 dxv,dyu,arcd1,                                     &
-#else
-                dx,dy,ard1,                                        &
-#endif
                 xc,xu,xv,ssen,sseo,Dveln,Uinto,Dun,Vinto,Dvn,wrk2d,wrk2d,vel_missing,ws2d)
       err = nf90_put_var(ncid,u_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
@@ -158,11 +142,7 @@
       wrk2d = _ZERO_
       call to_v(imin,jmin,imax,jmax,az,                            &
                 dt,grid_type,                                      &
-#if defined(CURVILINEAR) || defined(SPHERICAL)
                 dxv,dyu,arcd1,                                     &
-#else
-                dx,dy,ard1,                                        &
-#endif
                 yc,yu,yv,ssen,sseo,Dveln,Uinto,Dun,Vinto,Dvn,wrk2d,wrk2d,vel_missing,ws2d)
       err = nf90_put_var(ncid,v_id,ws2d(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
@@ -207,11 +187,7 @@
       ws(:,:,0) = flux_missing
       do k=1,kmax
          call to_fluxu(imin,jmin,imax,jmax,au, &
-#if defined(CURVILINEAR) || defined(SPHERICAL)
                        dyu,                    &
-#else
-                       dy,                     &
-#endif
                        uu(:,:,k),flux_missing,ws(:,:,k))
       end do
       err = nf90_put_var(ncid,fluxuu_id,ws(_3D_W_),start,edges)
@@ -220,22 +196,14 @@
       ws(:,:,0) = flux_missing
       do k=1,kmax
          call to_fluxv(imin,jmin,imax,jmax,av, &
-#if defined(CURVILINEAR) || defined(SPHERICAL)
                        dxv,                    &
-#else
-                       dx,                     &
-#endif
                        vv(:,:,k),flux_missing,ws(:,:,k))
       end do
       err = nf90_put_var(ncid,fluxvv_id,ws(_3D_W_),start,edges)
    end if
    if (fluxw_id .ne. -1) then
       call to_fluxw(imin,jmin,imax,jmax,kmin,kmax,az, &
-#if defined(CURVILINEAR) || defined(SPHERICAL)
                     arcd1,                         &
-#else
-                    ard1,                          &
-#endif
                     ww,flux_missing,ws)
       err = nf90_put_var(ncid,fluxw_id,ws(_3D_W_),start,edges)
    end if
@@ -246,11 +214,7 @@
       do k=1,kmax
          call to_u(imin,jmin,imax,jmax,az,                            &
                    dt,grid_type,                                      &
-#if defined(CURVILINEAR) || defined(SPHERICAL)
                    dxv,dyu,arcd1,                                     &
-#else
-                   dx,dy,ard1,                                        &
-#endif
                    xc,xu,xv,hn(:,:,k),ho(:,:,k),hvel(:,:,k),          &
                    uu(:,:,k),hun(:,:,k),vv(:,:,k),hvn(:,:,k),         &
                    ww(:,:,k-1),ww(:,:,k),vel_missing,ws(:,:,k))
@@ -263,11 +227,7 @@
       do k=1,kmax
          call to_v(imin,jmin,imax,jmax,az,                            &
                    dt,grid_type,                                      &
-#if defined(CURVILINEAR) || defined(SPHERICAL)
                    dxv,dyu,arcd1,                                     &
-#else
-                   dx,dy,ard1,                                        &
-#endif
                    yc,yu,yv,hn(:,:,k),ho(:,:,k),hvel(:,:,k),          &
                    uu(:,:,k),hun(:,:,k),vv(:,:,k),hvn(:,:,k),         &
                    ww(:,:,k-1),ww(:,:,k),vel_missing,ws(:,:,k))
@@ -278,11 +238,7 @@
    if (w_id .ne. -1) then
       call to_w(imin,jmin,imax,jmax,kmin,kmax,az, &
                 dt,                               &
-#if defined CURVILINEAR || defined SPHERICAL
                 dxv,dyu,arcd1,                    &
-#else
-                dx,dy,ard1,                       &
-#endif
                 H,HU,HV,hn,ho,hvel,uu,hun,vv,hvn,ww,vel_missing,ws)
       err = nf90_put_var(ncid,w_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10

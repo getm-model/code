@@ -6,11 +6,7 @@
 !
 ! !INTERFACE:
    subroutine to_fluxw(imin,jmin,imax,jmax,kmin,kmax,az, &
-#if defined(CURVILINEAR) || defined(SPHERICAL)
                        arcd1,                            &
-#else
-                       ard1,                             &
-#endif
                        ww,missing,fluxw)
 !
 ! !DESCRIPTION:
@@ -23,11 +19,7 @@
    integer,intent(in)                       :: imin,jmin,imax,jmax,kmax
    integer,dimension(I2DFIELD),intent(in)   :: kmin
    integer,dimension(E2DFIELD),intent(in)   :: az
-#if defined(CURVILINEAR) || defined(SPHERICAL)
    REALTYPE,dimension(E2DFIELD),intent(in)  :: arcd1
-#else
-   REALTYPE,intent(in)                      :: ard1
-#endif
    REALTYPE,dimension(I3DFIELD),intent(in)  :: ww
    REALTYPE,intent(in)                      :: missing
 !

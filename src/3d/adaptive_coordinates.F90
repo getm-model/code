@@ -66,11 +66,7 @@
    use domain,       only: ddu,ddl
    use halo_zones, only: update_3d_halo,wait_halo
    use halo_zones, only: H_TAG,U_TAG,V_TAG
-#if defined CURVILINEAR || defined SPHERICAL
    use domain,       only: dxv,dyu,arcd1
-#else
-   use domain,       only: dx,dy,ard1
-#endif
 
 !ADAPTIVE-END
 
