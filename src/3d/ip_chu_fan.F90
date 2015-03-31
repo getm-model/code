@@ -29,10 +29,6 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
-   dxm1 = _ONE_/DXU
-   dym1 = _ONE_/DYV
-#endif
 
 ! OMP-NOTE: The initialization and OMP implementation in this routine
 !   is not tested, as the initialization states that the present
@@ -69,9 +65,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
-#endif
             grdl=(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
             buoyl=_HALF_*(buoy(i+1,j,kmax)+buoy(i,j,kmax))
             prgr=grdl
@@ -101,9 +95,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-         dym1 = _ONE_/DYV
-#endif
+            dym1 = _ONE_/DYV
             grdl=(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
             buoyl=_HALF_*(buoy(i,j+1,kmax)+buoy(i,j,kmax))
             prgr=grdl

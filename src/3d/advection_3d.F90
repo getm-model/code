@@ -319,17 +319,13 @@
                      do k=1,kmax
                         call adv_split_u(dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k),         &
                                          p_adv(:,:,k),uu(:,:,k),hu(:,:,k),          &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                          adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
-#endif
                                          _ONE_,hscheme,AH,                          &
                                          adv_grid%mask_uflux,adv_grid%mask_uupdate)
 #ifndef SLICE_MODEL
                         call adv_split_v(dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k),         &
                                          p_adv(:,:,k),vv(:,:,k),hv(:,:,k),          &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                          adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
-#endif
                                          _ONE_,hscheme,AH,                          &
                                          adv_grid%mask_vflux,adv_grid%mask_vupdate)
 #endif
@@ -341,11 +337,9 @@
                         call adv_upstream_2dh(dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k), &
                                               p_adv(:,:,k),uu(:,:,k),vv(:,:,k),  &
                                               hn(:,:,k),hu(:,:,k),hv(:,:,k),     &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                               adv_grid%dxv,adv_grid%dyu,         &
                                               adv_grid%dxu,adv_grid%dyv,         &
                                               adv_grid%arcd1,                    &
-#endif
                                               AH,adv_grid%az)
                      end do
 
@@ -355,11 +349,9 @@
                         call adv_arakawa_j7_2dh(dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k), &
                                                 p_adv(:,:,k),uu(:,:,k),vv(:,:,k),  &
                                                 hn(:,:,k),hu(:,:,k),hv(:,:,k),     &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                                 adv_grid%dxv,adv_grid%dyu,         &
                                                 adv_grid%dxu,adv_grid%dyv,         &
                                                 adv_grid%arcd1,                    &
-#endif
                                                 AH,adv_grid%az,                    &
                                                 adv_grid%mask_uflux,               &
                                                 adv_grid%mask_vflux,               &
@@ -372,11 +364,9 @@
                         call adv_fct_2dh(.true.,dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k), &
                                          p_adv(:,:,k),uu(:,:,k),vv(:,:,k),         &
                                          hn(:,:,k),hu(:,:,k),hv(:,:,k),            &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                          adv_grid%dxv,adv_grid%dyu,                &
                                          adv_grid%dxu,adv_grid%dyv,                &
                                          adv_grid%arcd1,                           &
-#endif
                                          AH,adv_grid%az,                           &
                                          adv_grid%mask_uflux,                      &
                                          adv_grid%mask_vflux)
@@ -388,11 +378,9 @@
                         call adv_fct_2dh(.false.,dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k), &
                                          p_adv(:,:,k),uu(:,:,k),vv(:,:,k),          &
                                          hn(:,:,k),hu(:,:,k),hv(:,:,k),             &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                          adv_grid%dxv,adv_grid%dyu,                 &
                                          adv_grid%dxu,adv_grid%dyv,                 &
                                          adv_grid%arcd1,                            &
-#endif
                                          AH,adv_grid%az,                            &
                                          adv_grid%mask_uflux,                       &
                                          adv_grid%mask_vflux)
@@ -445,9 +433,7 @@
                      do k=1,kmax
                         call adv_split_u(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
                                          p_adv(:,:,k),uu(:,:,k),hu(:,:,k),          &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                          adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
-#endif
                                          _HALF_,hscheme,AH,                         &
                                          adv_grid%mask_uflux,adv_grid%mask_uupdate)
                      end do
@@ -464,9 +450,7 @@
                      do k=1,kmax
                         call adv_split_v(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
                                          p_adv(:,:,k),vv(:,:,k),hv(:,:,k),          &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                          adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
-#endif
                                          _HALF_,hscheme,AH,                         &
                                          adv_grid%mask_vflux,adv_grid%mask_vupdate)
                      end do
@@ -500,9 +484,7 @@
                      do k=1,kmax
                         call adv_split_v(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
                                          p_adv(:,:,k),vv(:,:,k),hv(:,:,k),          &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                          adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
-#endif
                                          _HALF_,hscheme,AH,                         &
                                          adv_grid%mask_vflux,adv_grid%mask_vupdate)
                      end do
@@ -529,9 +511,7 @@
                      do k=1,kmax
                         call adv_split_u(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
                                          p_adv(:,:,k),uu(:,:,k),hu(:,:,k),          &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                                          adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
-#endif
                                          _HALF_,hscheme,AH,                         &
                                          adv_grid%mask_uflux,adv_grid%mask_uupdate)
                      end do

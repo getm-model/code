@@ -55,10 +55,6 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
-   dxm1 = _ONE_/DXU
-   dym1 = _ONE_/DYV
-#endif
 
    zz(:,:,0) = _ZERO_
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
@@ -90,9 +86,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
-#endif
             grdl=_HALF_*hun(i,j,kmax)*(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
             buoyl=_HALF_*(buoy(i+1,j,kmax)+buoy(i,j,kmax))       &
                      *(zz(i+1,j,kmax)- zz(i,j,kmax))*dxm1
@@ -120,9 +114,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-         dym1 = _ONE_/DYV
-#endif
+            dym1 = _ONE_/DYV
             grdl=_HALF_*hvn(i,j,kmax)*(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
             buoyl=_HALF_*(buoy(i,j+1,kmax)+buoy(i,j,kmax))     &
                      *(zz(i,j+1,kmax)- zz(i,j,kmax))*dxm1
