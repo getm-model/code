@@ -5,9 +5,7 @@
 !
 ! !INTERFACE:
    subroutine adv_fct_2dh(fct,dt,f,fi,Di,adv,U,V,Dn,DU,DV, &
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                           dxv,dyu,dxu,dyv,arcd1,           &
-#endif
                           AH,az,                           &
                           mask_uflux,mask_vflux)
 !  Note (KK): keep in sync with interface in advection.F90
@@ -38,9 +36,6 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
-#if !( defined(SPHERICAL) || defined(CURVILINEAR) )
-   use domain, only: dx,dy,ard1
-#endif
    use halo_zones, only : update_2d_halo,wait_halo,z_TAG
 !$ use omp_lib
    IMPLICIT NONE
@@ -49,11 +44,9 @@
    logical,intent(in)                                           :: fct
    REALTYPE,intent(in)                                          :: dt,AH
    REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,U,V,Dn,DU,DV
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    REALTYPE,dimension(:,:),pointer,intent(in)                   :: dxu,dyu
    REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
    REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
-#endif
    integer,dimension(E2DFIELD),intent(in)                       :: az
    logical,dimension(:,:),pointer,intent(in)                    :: mask_uflux
    logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_vflux

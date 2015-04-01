@@ -82,11 +82,7 @@
 ! !USES:
    use exceptions
    use domain, only: imin,imax,jmin,jmax,kmax,az,H,HU,HV
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxv,dyu,arcd1
-#else
-   use domain, only: dx,dy,ard1
-#endif
    use variables_3d, only: kmin
    use variables_3d, only: minus_bnh,wco
    use variables_3d, only: uu_0,vv_0
@@ -267,11 +263,7 @@
 
 !  calculate wc
    call to_w(imin,jmin,imax,jmax,kmin,kmax,az,dt,           &
-#if defined(CURVILINEAR) || defined(SPHERICAL)
              dxv,dyu,arcd1,                                 &
-#else
-             dx,dy,ard1,                                    &
-#endif
              H,HU,HV,hn,ho,hvel,uu,hun,vv,hvn,ww,_ZERO_,wc)
 
    call update_3d_halo(wc,wc,az,imin,jmin,imax,jmax,kmax,H_TAG)
