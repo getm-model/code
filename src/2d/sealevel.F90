@@ -21,11 +21,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,az,H
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only : arcd1,dxv,dyu
-#else
-   use domain, only : dx,dy,ard1
-#endif
    use domain, only: have_boundaries
    use variables_2d, only: dtm,z,zo,U,V,fwf
    use bdy_2d, only: do_bdy_2d
