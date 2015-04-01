@@ -16,7 +16,7 @@
    use ncdf_3d
    use domain, only: ioff,joff
    use domain, only: imin,imax,jmin,jmax,kmax
-   use domain, only: grid_type,vert_cord
+   use domain, only: vert_cord
    use m3d, only: calc_temp,calc_salt
 #ifdef SPM
    use suspended_matter, only: spm_save
