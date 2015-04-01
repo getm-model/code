@@ -27,11 +27,7 @@
 !
 ! !USES:
    use domain, only: imin,jmin,imax,jmax,ioff,joff
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: H,az,kmax,arcd1
-#else
-   use domain, only: H,az,kmax,ard1
-#endif
    use time, only: write_time_string,timestr
    use variables_2d, only: dtm,z
 #ifndef NO_BAROCLINIC

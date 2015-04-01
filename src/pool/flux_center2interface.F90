@@ -10,11 +10,8 @@
 ! !USES:
    use halo_zones, only: U_TAG,V_TAG
    use domain    , only: imin,imax,jmin,jmax,au,av
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain         , only: dxc,dyc,dxu,dyu,dxv,dyv
-#else
-   use domain         , only: dx,dy
-#endif
+
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:

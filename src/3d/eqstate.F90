@@ -112,11 +112,7 @@
 ! !USES:
    use parameters, only: rho_0
    use domain, only: imin,imax,jmin,jmax,kmax,az
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: arcd1
-#else
-   use domain, only: ard1
-#endif
    use variables_3d, only: kmin,T,S,rho,buoy,hn,alpha,beta
    use getm_timers, only: tic, toc, TIM_EQSTATE
 !$ use omp_lib
