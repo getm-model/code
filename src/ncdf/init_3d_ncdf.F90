@@ -160,6 +160,7 @@
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,w_id,long_name='vertical velocity (T-point)',units='m/s', &
                           FillValue=fv,missing_value=mv,valid_range=vr)
+
    end if
 
    if (save_taub) then

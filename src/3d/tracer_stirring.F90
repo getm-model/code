@@ -12,11 +12,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,az,au,av
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dyu,dxv,dyv
-#else
-   use domain, only: dx,dy
-#endif
    use variables_3d, only: dudxC_3d,dvdyC_3d,shearX_3d
    use variables_3d, only: dudxV_3d,dvdyU_3d,shearU_3d
    use variables_3d, only: diffxx,diffxy,diffyx,diffyy

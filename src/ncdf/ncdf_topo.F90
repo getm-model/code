@@ -260,10 +260,6 @@ contains
 !     cartesian - we check for: lonc, latc, convc
 !     cartesian - later we calculate: latu, latv
 
-#if ( defined(SPHERICAL) || defined(CURVILINEAR) )
-         call getm_error("ncdf_check_grid()",  &
-                         "Cannot use Cartesian grid with SPHERICAL or CURVILINEAR #defined.")
-#endif
          LEVEL2 'checking for dx and dy'
 
          status = nf90_inq_varid(ncid,'dx',id)
@@ -388,10 +384,6 @@ stop
 !     spherical - later we calculate: latu, latv
 !
 
-#if !( defined(SPHERICAL) && !defined(CURVILINEAR) )
-         call getm_error("ncdf_check_grid()",   &
-                          "Cannot use spherical grid with SPHERICAL not #defined or CURVILINEAR #defined.")
-#endif
          LEVEL2 'checking for dlon and dlat'
 
          status = nf90_inq_varid(ncid,'dlon',id)
@@ -510,10 +502,6 @@ stop
 !     curvi-linear - we check for: lonx, latx, convx
 !     curvi-linear - later we calculate: lonc, latc, latu, latv
 
-#if !( defined(CURVILINEAR) && !defined(SPHERICAL) )
-         call getm_error("ncdf_check_grid()",   &
-                         "Cannot use curvlinear grid with CURVILINEAR not #defined or SPHERICAL #defined")
-#endif
          LEVEL3 'reading coordinate variables: xx, yx'
          status = nf90_inq_varid(ncid,"xx",id)
          if (status .ne. NF90_NOERR) then
@@ -571,11 +559,7 @@ stop
 !     curvi-linear (spherical) - we require:   lonx, latx, convx
 !     curvi-linear (spherical) - we check for: xx, yx
 !     curvi-linear (spherical) - later we calculate: lonu, latu, lonv, latv and xc, yc
-#if !( defined(SPHERICAL) && defined(CURVILINEAR) )
-         call getm_error("ncdf_check_grid()",                      &
-                       & "Cannot use spherical curvlinear grid with&
-                       &  CURVILINEAR or SPHERICAL not #defined")
-#endif
+
          LEVEL3 'reading coordinate variables: lonx, latx'
          status = nf90_inq_varid(ncid,"lonx",id)
          if (status .ne. NF90_NOERR) then

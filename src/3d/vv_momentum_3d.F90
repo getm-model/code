@@ -49,11 +49,7 @@
    use parameters, only: g,avmmol,rho_0
    use domain, only: imin,imax,jmin,jmax,kmax,H,HV,min_depth
    use domain, only: dry_v,corv,au,av,az
-#if defined CURVILINEAR || defined SPHERICAL
    use domain, only: dyv,arvd1,dxc,dyx,dyc,dxx
-#else
-   use domain, only: dx,dy
-#endif
    use domain, only: have_boundaries,rigid_lid
    use bdy_3d, only: do_bdy_3d_vel
    use variables_3d, only: Vadv,Dn
@@ -195,13 +191,9 @@
 #else
                 Uloc=_QUART_*(uu(i,j,k)+uu(i-1,j,k)+uu(i,j+1,k)+uu(i-1,j+1,k))
 #endif
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                   cord_curv=(vv(i,j,k)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC))     &
                         /hvo(i,j,k)*ARVD1
                   ex(k)=-(cord_curv+corv(i,j))*Uloc
-#else
-                  ex(k)=-corv(i,j)*Uloc
-#endif
 #ifdef _MOMENTUM_TERMS_
                   cor_v(i,j,k)=-dry_v(i,j)*ex(k)
 #endif

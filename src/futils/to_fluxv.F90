@@ -6,11 +6,7 @@
 !
 ! !INTERFACE:
    subroutine to_fluxv(imin,jmin,imax,jmax,av, &
-#if defined(CURVILINEAR) || defined(SPHERICAL)
                        dxv,                    &
-#else
-                       dx,                     &
-#endif
                        V,missing,fluxv)
 !
 ! !DESCRIPTION:
@@ -22,11 +18,7 @@
 ! !INPUT PARAMETERS:
    integer,intent(in)                       :: imin,jmin,imax,jmax
    integer,dimension(E2DFIELD),intent(in)   :: av
-#if defined(CURVILINEAR) || defined(SPHERICAL)
    REALTYPE,dimension(E2DFIELD),intent(in)  :: dxv
-#else
-   REALTYPE,intent(in)                      :: dx
-#endif
    REALTYPE,dimension(E2DFIELD),intent(in)  :: V
    REALTYPE,intent(in)                      :: missing
 !
