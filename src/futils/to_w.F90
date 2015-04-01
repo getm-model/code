@@ -7,11 +7,7 @@
 ! !INTERFACE:
    subroutine to_w(imin,jmin,imax,jmax,kmin,kmax,az,                    &
                    dt,                                                  &
-#if defined(CURVILINEAR) || defined(SPHERICAL)
                    dxv,dyu,arcd1,                                       &
-#else
-                   dx,dy,ard1,                                          &
-#endif
                    H,HU,HV,hn,ho,hvel,uu,hun,vv,hvn,ww,missing,wc)
 !
 ! !DESCRIPTION:
@@ -28,11 +24,7 @@
    integer,dimension(I2DFIELD),intent(in)   :: kmin
    integer,dimension(E2DFIELD),intent(in)   :: az
    REALTYPE,intent(in)                      :: dt
-#if defined(CURVILINEAR) || defined(SPHERICAL)
    REALTYPE,dimension(E2DFIELD),intent(in)  :: dxv,dyu,arcd1
-#else
-   REALTYPE,intent(in)                      :: dx,dy,ard1
-#endif
    REALTYPE,dimension(E2DFIELD),intent(in)  :: H,HU,HV
    REALTYPE,dimension(I3DFIELD),intent(inout) :: hn,ho,hvel,hun,hvn
    REALTYPE,dimension(I3DFIELD),intent(in)  :: uu,vv,ww

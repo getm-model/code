@@ -26,11 +26,7 @@
    use variables_2d, only: dtm,z,zo,D,U,DU,V,DV,UEuler,VEuler
    use waves, only: waveforcing_method,NO_WAVES
    use variables_waves, only: UStokes,VStokes
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dyv
-#else
-   use domain, only: dx,dy
-#endif
 
    IMPLICIT NONE
 !

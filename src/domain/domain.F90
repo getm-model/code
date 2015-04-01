@@ -683,7 +683,10 @@ STDERR latc(1,1),latx(1,0)
 
       case(1)  ! Cartesian
 
+         dxc = dx ; dxu = dx ; dxv = dx ; dxx = dx
+         dyc = dy ; dyu = dy ; dyv = dy ; dyx = dy
          ard1 = _ONE_/(dx*dy)
+         arcd1 = ard1 ; arud1 = ard1 ; arvd1 = ard1
 
       case(2)  ! Spherical
 

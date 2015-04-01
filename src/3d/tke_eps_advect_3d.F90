@@ -17,11 +17,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,az,ax
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxv,dyu
-#else
-   use domain, only: dx,dy
-#endif
    use m3d, only: turb_adv_split,turb_adv_hor,turb_adv_ver
    use variables_3d, only: tke,eps,dt,uu,vv,ww,hun,hvn,ho,hn
    use advection, only: J7
