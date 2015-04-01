@@ -20,11 +20,7 @@
 ! !USES:
    use variables_les, only: SmagC2_2d,SmagX2_2d,SmagU2_2d,SmagV2_2d
    use domain, only: imin,imax,jmin,jmax,az,ax,au,av
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxc,dyc,dxx,dyx,dxu,dyu,dxv,dyv
-#else
-   use domain, only: dx,dy
-#endif
    use getm_timers, only: tic,toc,TIM_SMAG2D
 !$ use omp_lib
    IMPLICIT NONE
@@ -128,7 +124,6 @@
                          + _HALF_*shearX(i,j)**2
                AmX(i,j) = SmagX2_2d(i,j)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
 #ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             else
 !              Note (KK): in case of _CORRECT_METRICS_ *NOT* defined shearX(ax=0)=0
 !                         and AmX not needed, therefore nonzero dudxX and dvdyX
@@ -170,7 +165,6 @@
                      AmX(i,j) = SmagX2_2d(i,j)*DXX*DYX*sqrt(_TWO_*AmX(i,j))
                   end if
                end if
-#endif
 #endif
             end if
          end do

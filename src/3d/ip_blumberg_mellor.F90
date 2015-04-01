@@ -75,11 +75,6 @@
 !$OMP          PRIVATE(dxm1,dym1,pdiff)                                &
 !$OMP          PRIVATE(hvel,buoyvel,buoydiff)
 
-#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
-   dxm1 = _ONE_/DXU
-   dym1 = _ONE_/DYV
-#endif
-
 !  First, the interface heights are calculated in order to get the
 !  interface slopes further down.
 !$OMP DO SCHEDULE(RUNTIME)
@@ -103,9 +98,7 @@
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO-1
          if (au(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1 = _ONE_/DXU
-#endif
             kk = 0
             hvel(kk) = _HALF_ * ( hn(i,j,kmax) + hn(i+1,j,kmax) )
             buoyvel(kk) = _HALF_ * ( buoy(i,j,kmax) + buoy(i+1,j,kmax) )
@@ -139,9 +132,7 @@
    do j=jmin-HALO,jmax+HALO-1
       do i=imin-HALO,imax+HALO
          if (av(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             dym1 = _ONE_/DYV
-#endif
             kk = 0
             hvel(kk) = _HALF_ * ( hn(i,j,kmax) + hn(i,j+1,kmax) )
             buoyvel(kk) = _HALF_ * ( buoy(i,j,kmax) + buoy(i,j+1,kmax) )
