@@ -12,11 +12,7 @@
 ! !USES:
    use halo_zones     , only: U_TAG,V_TAG
    use domain         , only: imin,imax,jmin,jmax,kmax,au,av
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain         , only: dxu,dyv
-#else
-   use domain         , only: dx,dy
-#endif
    use pool           , only: deformation_rates,flux_center2interface
    use variables_waves, only: SJJ
    use variables_waves, only: uuStokesC,vvStokesC,uuStokes,vvStokes

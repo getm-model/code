@@ -9,11 +9,7 @@
 !
 ! !USES:
    use domain         , only: imin,imax,jmin,jmax,au,av,ax
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain         , only: dxc,dyc,dxx,dyx,dxu,dyv,arud1,arvd1
-#else
-   use domain         , only: dx,dy,ard1
-#endif
    use variables_waves, only: coswavedir,sinwavedir
    IMPLICIT NONE
 !

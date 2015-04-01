@@ -7,11 +7,7 @@
 ! !INTERFACE:
    subroutine to_v(imin,jmin,imax,jmax,az,                               &
                    dt,grid_type,                                         &
-#if defined(CURVILINEAR) || defined(SPHERICAL)
                    dxv,dyu,arcd1,                                        &
-#else
-                   dx,dy,ard1,                                           &
-#endif
                    yc,yu,yv,z,zo,Dvel,U,DU,V,DV,wwm,wwp,missing,vely)
 !
 ! !DESCRIPTION:
@@ -27,11 +23,7 @@
    integer,intent(in)                       :: imin,jmin,imax,jmax,grid_type
    integer,dimension(E2DFIELD),intent(in)   :: az
    REALTYPE,intent(in)                      :: dt
-#if defined(CURVILINEAR) || defined(SPHERICAL)
    REALTYPE,dimension(E2DFIELD),intent(in)  :: dxv,dyu,arcd1
-#else
-   REALTYPE,intent(in)                      :: dx,dy,ard1
-#endif
    REALTYPE,dimension(E2DFIELD),intent(in)  :: yc,yu,yv,z,zo,Dvel,U,DU,V,DV,wwm,wwp
    REALTYPE,intent(in)                      :: missing
 !
