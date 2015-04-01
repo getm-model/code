@@ -160,11 +160,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,az,au,av,ax
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxc,dyc,dxx,dyx,arud1,arvd1
-#else
-   use domain, only: dx,dy,ard1
-#endif
    use variables_2d, only: AnC,AnX
    use m2d, only: Am_method,Am_const,NO_AM,AM_LAPLACE,AM_LES,AM_CONSTANT,An_const
 !$ use omp_lib
@@ -322,7 +318,6 @@
                      end if
                end select
 #ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             else if (av(i,j).eq.0 .and. av(i+1,j).eq.0) then
 !              Note (KK): exclude convex corners (shearX=0)
 !                         exclude W/E closed boundaries (not needed)
@@ -354,7 +349,6 @@
                      work2d(i,j) = DXX * DU(i,j+1) * work2d(i,j)
                   end if
                end if
-#endif
 #endif
             end if
          end do
@@ -435,7 +429,6 @@
                      end if
                end select
 #ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
            else if (au(i,j).eq.0 .and. au(i,j+1).eq.0) then
 !              Note (KK): exclude convex corners (shearX=0)
 !                         exclude N/S closed boundaries (not needed)
@@ -467,7 +460,6 @@
                      work2d(i,j) = DXX * DV(i+1,j) * work2d(i,j)
                   end if
                end if
-#endif
 #endif
             end if
          end do
