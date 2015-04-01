@@ -14,11 +14,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,ax
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dyu,dxv,dyv,arcd1,arud1,arvd1
-#else
-   use domain, only: dx,dy,ard1
-#endif
    use variables_3d, only: dt
    use variables_3d, only: diffxx,diffxy,diffyx,diffyy
    use variables_les, only: AmU_3d,AmV_3d

@@ -77,11 +77,6 @@
 !$OMP          PRIVATE(prgr,dxzu,dxzl,dyzu,dyzl,hiu,hil)               &
 !$OMP          PRIVATE(dzr2,dzr1,dxru,dxrl,dyru,dyrl,aa,bb,cc)
 
-#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
-   dxm1 = _ONE_/DXU
-   dym1 = _ONE_/DYV
-#endif
-
 !  First, the pressure point heights are calculated in order to get the
 !  interface slopes further down.
 !$OMP DO SCHEDULE(RUNTIME)
@@ -105,9 +100,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
-#endif
             hil=_HALF_*(hn(i,j,kmax)+hn(i+1,j,kmax))
             dxzl=(zz(i+1,j,kmax)-zz(i,j,kmax))*dxm1
             dxrl=(buoy(i+1,j,kmax)-buoy(i,j,kmax))*dxm1
@@ -139,9 +132,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             dym1 = _ONE_/DYV
-#endif
             hil=_HALF_*(hn(i,j,kmax)+hn(i,j+1,kmax))
             dyzl=(zz(i,j+1,kmax)-zz(i,j,kmax))*dym1
             dyrl=(buoy(i,j+1,kmax)-buoy(i,j,kmax))*dym1
