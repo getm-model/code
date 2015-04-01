@@ -16,11 +16,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,az,au,av,ax
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxc,dyc,dxu,dyu,dxv,dyv,dxx,dyx,arcd1,arud1,arvd1
-#else
-   use domain, only: dx,dy,ard1
-#endif
    use domain, only: NWB,NNB,NEB,NSB
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
    use getm_timers, only: tic,toc,TIM_DEFORM
@@ -149,7 +145,6 @@
 #endif
 
 #ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
 !$OMP SINGLE
 !  mirror velocities based on ouflow condition for transverse velocity
 !  KK-TODO: update loop limits to new [w|n|e|s][f|l][i|j]
@@ -223,7 +218,6 @@
    end do
 !$OMP END SINGLE
 #endif
-#endif
 
 
 !!!!!!!!!!!!!!!!!!!!!!!
@@ -250,9 +244,7 @@
                deluxC(i,j) = u_vel(i,j) - u_vel(i-1,j)
                p2d(i,j) = deluxC(i,j) / DXC
 #ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                p2d(i,j) = p2d(i,j) + _HALF_*(v_vel(i,j)+v_vel(i,j-1))*(DXV-DXVJM1)*ARCD1
-#endif
 #endif
             else if (az(i,j) .eq. 2) then
 !              Note (KK): outflow condition dudxC=0 in W/E open boundaries
@@ -261,19 +253,15 @@
                   deluxC(i,j) = u_vel(i,j) - u_vel(i-1,j)
                   p2d(i,j) = deluxC(i,j) / DXC
 #ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                   tmp = v_vel(i,j-1) - _HALF_*(u_vel(i,j)+u_vel(i-1,j))*(DYU-DYUIM1)/DXC
                   p2d(i,j) = p2d(i,j) + _HALF_*(tmp+v_vel(i,j-1))*(DXV-DXVJM1)*ARCD1
-#endif
 #endif
                else if (av(i,j) .eq. 2) then ! southern open boundary
                   deluxC(i,j) = u_vel(i,j) - u_vel(i-1,j)
                   p2d(i,j) = deluxC(i,j) / DXC
 #ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                   tmp = v_vel(i,j) + _HALF_*(u_vel(i,j)+u_vel(i-1,j))*(DYU-DYUIM1)/DXC
                   p2d(i,j) = p2d(i,j) + _HALF_*(v_vel(i,j)+tmp)*(DXV-DXVJM1)*ARCD1
-#endif
 #endif
                end if
             end if
@@ -347,9 +335,7 @@
                   dudxV(i,j) = ( work2d(i,j) - work2d(i-1,j) )/DXV
                   !dudxV(i,j) = _HALF_*( deluxC(i,j) + deluxC(i,j+1) )/DXV
 #ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                   dudxV(i,j) = dudxV(i,j) + v_vel(i,j)*(DXCJP1-DXC)*ARVD1
-#endif
 #endif
                else if (av(i,j) .eq. 0) then
 !                 Note (KK): V(av=0)=0 and slip condition dudyV(av=0)=0 at N/S closed bdys
@@ -397,9 +383,7 @@
                delvyC(i,j) = v_vel(i,j) - v_vel(i,j-1)
                p2d(i,j) = delvyC(i,j) / DYC
 #ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                p2d(i,j) = p2d(i,j) + _HALF_*(u_vel(i,j)+u_vel(i-1,j))*(DYU-DYUIM1)*ARCD1
-#endif
 #endif
             else if(az(i,j) .eq. 2) then
 !              Note (KK): outflow condition dvdyC=0 in N/S open boundaries
@@ -409,19 +393,15 @@
                   delvyC(i,j) = v_vel(i,j) - v_vel(i,j-1)
                   p2d(i,j) = delvyC(i,j) / DYC
 #ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                   tmp = u_vel(i-1,j) - _HALF_*(v_vel(i,j)+v_vel(i,j-1))*(DXV-DXVJM1)/DYC
                   p2d(i,j) = p2d(i,j) + _HALF_*(tmp+u_vel(i-1,j))*(DYU-DYUIM1)*ARCD1
-#endif
 #endif
                else if (au(i,j) .eq. 2) then ! western open boundary
                   delvyC(i,j) = v_vel(i,j) - v_vel(i,j-1)
                   p2d(i,j) = delvyC(i,j) / DYC
 #ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                   tmp = u_vel(i,j) + _HALF_*(v_vel(i,j)+v_vel(i,j-1))*(DXV-DXVJM1)/DYC
                   p2d(i,j) = p2d(i,j) + _HALF_*(u_vel(i,j)+tmp)*(DYU-DYUIM1)*ARCD1
-#endif
 #endif
                end if
             end if
@@ -477,9 +457,7 @@
                   dvdyU(i,j) = ( work2d(i,j) - work2d(i,j-1) ) / DYU
                   !dvdyU(i,j) = _HALF_*( delvyC(i,j) + delvyC(i+1,j) )/DYU
 #ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                   dvdyU(i,j) = dvdyU(i,j) + u_vel(i,j)*(DYCIP1-DYC)*ARUD1
-#endif
 #endif
                else if (au(i,j) .eq. 0) then
 !                 Note (KK): U(au=0)=0 and slip condition dvdxU(au=0)=0
@@ -525,9 +503,7 @@
                   if (calc_dvdxX) then
                      dvdxX(i,j) = velgrad
 #ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                      dvdxX(i,j) = dvdxX(i,j) - _HALF_*(u_vel(i,j)+u_vel(i,j+1))/DXX*(DXUJP1-DXU)/DYX
-#endif
 #endif
                   end if
                   tmp = velgrad
@@ -541,9 +517,7 @@
                   if (calc_dudyX) then
                      dudyX(i,j) = velgrad
 #ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
                      dudyX(i,j) = dudyX(i,j) - _HALF_*(v_vel(i,j)+v_vel(i+1,j))/DYX*(DYVIP1-DYV)/DXX
-#endif
 #endif
                   end if
                   tmp = tmp + velgrad
@@ -551,7 +525,7 @@
 #endif
 
                if (present(shearX)) then
-#if !(defined(_CORRECT_METRICS_) && (defined(SPHERICAL) || defined(CURVILINEAR)))
+#ifndef _CORRECT_METRICS_
                   shearX(i,j) = tmp
 #else
 !                 Note (KK): although sum of dvdxX and dudyX would give shearX
@@ -565,7 +539,6 @@
                end if
 
 #ifdef _CORRECT_METRICS_
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             else
 
                if (av(i,j).eq.0 .and. av(i+1,j).eq.0) then
@@ -600,7 +573,6 @@
                end if
 #endif
 
-#endif
 #endif
 
             end if
