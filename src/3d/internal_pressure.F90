@@ -62,12 +62,9 @@
 ! !USES:
    use exceptions
    use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,H,HU,HV
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dyv
-#else
-   use domain, only: dx,dy
-#endif
    use variables_3d, only: kmin,hn,idpdx,idpdy,buoy,ssen
+
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:

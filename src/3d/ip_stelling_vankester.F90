@@ -58,11 +58,6 @@
 !$OMP          PRIVATE(zvel,zm,zn,dcm,dcn,corr,weight)                 &
 !$OMP          PRIVATE(zl,m,n)
 
-#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
-   dxm1 = _ONE_/DXU
-   dym1 = _ONE_/DYV
-#endif
-
 ! OMP-NOTE: Each thread allocates its own HEAP storage for the
 !    vertical work storage:
    allocate(zl(0:lextr),stat=rc)    ! work array
@@ -94,9 +89,7 @@
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO-1
          if (au(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
-#endif
             l = 0
             kl = 0
             kr = 0
@@ -239,9 +232,7 @@
    do j=jmin-HALO,jmax+HALO-1
       do i=imin-HALO,imax+HALO
          if (av(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             dym1=_ONE_/DYV
-#endif
             l = 0
             kl = 0
             kr = 0
