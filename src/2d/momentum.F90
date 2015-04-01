@@ -121,16 +121,12 @@
    use parameters, only: g,rho_0
    use domain, only: imin,imax,jmin,jmax
    use domain, only: H,au,av,min_depth,dry_u,Cori,coru
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,arud1,dyc,dxx
-#else
-   use domain, only: dx
-#endif
+   use domain, only: have_boundaries
+   use variables_2d, only: dtm,D,z,UEx,U,DU,SlUx,Slru,ru,V,DV
    use variables_2d, only: UEuler
    use waves, only: waveforcing_method,NO_WAVES
    use variables_waves, only: UStokes
-   use domain, only: have_boundaries
-   use variables_2d, only: dtm,D,z,UEx,U,DU,SlUx,Slru,ru,V,DV
    use bdy_2d, only: do_bdy_2d
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,U_TAG
@@ -202,13 +198,9 @@
 #else
             Vloc = _QUART_*( V(i,j-1)+ V(i+1,j-1)+V(i,j)+V(i+1,j))
 #endif
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             cord_curv=(Vloc*(DYCIP1-DYC)-U(i,j)*(DXX-DXXJM1)) &
                        /DU(i,j)*ARUD1
             fV=(cord_curv+coru(i,j))*Vloc
-#else
-            fV=coru(i,j)*Vloc
-#endif
 
             zp = max( z(i+1,j) , -H(i  ,j)+min( min_depth , D(i+1,j) ) )
             zm = max( z(i  ,j) , -H(i+1,j)+min( min_depth , D(i  ,j) ) )
@@ -317,16 +309,12 @@
    use parameters, only: g,rho_0
    use domain, only: imin,imax,jmin,jmax
    use domain, only: H,au,av,min_depth,dry_v,Cori,corv
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dyv,arvd1,dxc,dyx
-#else
-   use domain, only: dy
-#endif
+   use domain, only: have_boundaries
+   use variables_2d, only: dtm,D,z,VEx,V,DV,SlVx,Slrv,rv,U,DU
    use variables_2d, only: VEuler
    use waves, only: waveforcing_method,NO_WAVES
    use variables_waves, only: VStokes
-   use domain, only: have_boundaries
-   use variables_2d, only: dtm,D,z,VEx,V,DV,SlVx,Slrv,rv,U,DU
    use bdy_2d, only: do_bdy_2d
    use getm_timers,  only: tic, toc, TIM_MOMENTUMH
    use halo_zones, only : update_2d_halo,wait_halo,V_TAG
@@ -390,13 +378,9 @@
 #else
             Uloc=_QUART_*( U(i-1,j)+U(i,j)+U(i-1,j+1)+U(i,j+1))
 #endif
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             cord_curv=(V(i,j)*(DYX-DYXIM1)-Uloc*(DXCJP1-DXC)) &
                       /DV(i,j)*ARVD1
             fU=(cord_curv+corv(i,j))*Uloc
-#else
-            fU=corv(i,j)*Uloc
-#endif
 
             zp = max( z(i,j+1) , -H(i,j  )+min( min_depth , D(i,j+1) ) )
             zm = max( z(i,j  ) , -H(i,j+1)+min( min_depth , D(i,j  ) ) )

@@ -49,11 +49,6 @@
 !$OMP          PRIVATE(zx,hi)                                          &
 !$OMP          PRIVATE(buoyplus,buoyminus)
 
-#if ! ( defined(SPHERICAL) || defined(CURVILINEAR) )
-   dxm1 = _ONE_/DXU
-   dym1 = _ONE_/DYV
-#endif
-
 ! OMP-NOTE: Each thread allocates its own HEAP storage for the
 !    vertical work storage:
    allocate(zx(0:kmax),stat=rc)    ! work array
@@ -83,9 +78,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (au(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
             dxm1=_ONE_/DXU
-#endif
             zx(0) = -HU(i,j) ! zx defined on u-points
             do k=1,kmax
                hi(k) = _HALF_ * ( hn(i,j,k) + hn(i+1,j,k) )
@@ -136,9 +129,7 @@
    do j=jmin,jmax
       do i=imin,imax
          if (av(i,j) .ge. 1) then
-#if defined(SPHERICAL) || defined(CURVILINEAR)
-         dym1 = _ONE_/DYV
-#endif
+            dym1 = _ONE_/DYV
             zx(0) = -HV(i,j) ! zx defined on v-points
             do k=1,kmax
                hi(k) = _HALF_ * ( hn(i,j,k) + hn(i,j+1,k) )
