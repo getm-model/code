@@ -62,11 +62,7 @@
 ! !USES:
    use exceptions
    use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,H,HU,HV
-#if defined(SPHERICAL) || defined(CURVILINEAR)
    use domain, only: dxu,dyv
-#else
-   use domain, only: dx,dy
-#endif
 #ifndef NO_BAROCLINIC
    use variables_3d, only: buoy_eos=>buoy
 #endif
