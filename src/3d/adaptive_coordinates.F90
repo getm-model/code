@@ -232,8 +232,14 @@ STDERR 'adaptive_coordinates()'
       kvmin_pmz=1
 
 !     factors for diffusion at surface and bottom
-      faclower=max(_ZERO_,ddl)/(max(_ZERO_,ddu)+max(_ZERO_,ddl))
-      facupper=max(_ZERO_,ddu)/(max(_ZERO_,ddu)+max(_ZERO_,ddl))
+      if (ddl.gt._ZERO_ .or. ddu.gt._ZERO_) then
+         faclower=max(_ZERO_,ddl)/(max(_ZERO_,ddu)+max(_ZERO_,ddl))
+         facupper=max(_ZERO_,ddu)/(max(_ZERO_,ddu)+max(_ZERO_,ddl))
+      else
+         faclower = _HALF_
+         facupper = _HALF_
+      end if
+
 !   norm factors for diffusive adaption
 #ifdef NO_BAROCLINIC
       c1ad=_ZERO_
