@@ -278,9 +278,8 @@ add_library(getm OBJECT
 
 add_library(input OBJECT
             input/get_2d_bdy.F90
-            input/get_2d_field.F90
             input/get_3d_bdy.F90
-            input/get_3d_field.F90
+            input/get_field.F90
             input/get_meteo_data.F90
             input/get_river_data.F90
             input/init_2d_bdy.F90
