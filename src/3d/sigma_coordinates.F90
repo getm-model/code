@@ -38,8 +38,6 @@
 !
 ! !LOCAL VARIABLES:
    integer          :: i,j,k,rc
-   REALTYPE         :: kmaxm1
-   logical, save    :: equiv_sigma=.false.
    REALTYPE, save, dimension(:), allocatable  :: dga
 !EOP
 !-----------------------------------------------------------------------
@@ -53,22 +51,21 @@
    if (first) then
       if (.not. allocated(ga)) allocate(ga(0:kmax),stat=rc)
       if (rc /= 0) stop 'coordinates: Error allocating (ga)'
+      allocate(dga(0:kmax),stat=rc)
+      if (rc /= 0) STOP 'coordinates: Error allocating (dga)'
+      ga(0) = -_ONE_
+      ga(kmax) = _ZERO_
+      dga(0)= _ZERO_
       if (ddu .le. _ZERO_ .and. ddl .le. _ZERO_) then
-         equiv_sigma=.true.
-         ga(0) = -_ONE_
-         do k=1,kmax
-            ga(k) = ga(k-1) + _ONE_/kmax
+         dga(1:kmax) = _ONE_/kmax
+         do k=1,kmax-1
+            ga(k) = ga(k-1) + dga(k)
          end do
-         ga(kmax) = _ZERO_
       else
          ! Non-equidistant sigma coordinates
          ! This zooming routine is from Antoine Garapon, ICCH, DK
          if (ddu .lt. _ZERO_) ddu=_ZERO_
          if (ddl .lt. _ZERO_) ddl=_ZERO_
-         allocate(dga(0:kmax),stat=rc)
-         if (rc /= 0) STOP 'coordinates: Error allocating (dga)'
-         ga(0)= -_ONE_
-         dga(0)= _ZERO_
          do k=1,kmax
             ga(k)=tanh((ddl+ddu)*k/float(kmax)-ddl)+tanh(ddl)
             ga(k)=ga(k)/(tanh(ddl)+tanh(ddu)) - _ONE_
@@ -81,37 +78,7 @@
    end if ! first
 
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,rc,kmaxm1)
-   if (equiv_sigma) then
-      kmaxm1= _ONE_/float(kmax)
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-            ho(i,j,:)=(sseo(i,j)+H(i,j))*kmaxm1
-            hn(i,j,:) = Dn(i,j) * kmaxm1
-         end do
-      end do
-!$OMP END DO NOWAIT
-
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO-1
-            huo(i,j,:)=(ssuo(i,j)+HU(i,j))*kmaxm1
-            hun(i,j,:) = Dun(i,j) * kmaxm1
-         end do
-      end do
-!$OMP END DO NOWAIT
-
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+HALO-1
-         do i=imin-HALO,imax+HALO
-            hvo(i,j,:)=(ssvo(i,j)+HV(i,j))*kmaxm1
-            hvn(i,j,:) = Dvn(i,j) * kmaxm1
-         end do
-      end do
-!$OMP END DO NOWAIT
-
-   else ! non-equivdistant
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
       do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
          do j=jmin-HALO,jmax+HALO
@@ -144,7 +111,6 @@
          end do
 !$OMP END DO NOWAIT
       end do
-   end if
 
 !$OMP END PARALLEL
 
