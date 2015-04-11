@@ -283,6 +283,7 @@ add_library(input OBJECT
             input/get_3d_field.F90
             input/get_meteo_data.F90
             input/get_river_data.F90
+            input/inquire_file.F90
             input/init_2d_bdy.F90
             input/init_3d_bdy.F90
             input/init_meteo_input.F90

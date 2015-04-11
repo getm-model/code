@@ -22,7 +22,7 @@
    use advection_3d, only: print_adv_settings_3d,do_advection_3d
    use variables_2d, only: D
    use meteo, only: swr,u10,v10,evap,precip,tcc
-   use time, only: yearday,secondsofday
+   use time, only: month,yearday,secondsofday
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
 ! JORN_FABM
    use gotm_fabm, only: init_gotm_fabm,set_env_gotm_fabm,do_gotm_fabm
@@ -57,7 +57,8 @@
    type (type_horizontal_variable_id) :: id_bottom_depth_below_geoid,id_bottom_depth
 
    type type_input_variable
-      integer                              :: ncid = -1
+      integer                              :: ncid  = -1
+      integer                              :: varid = -1
       class (type_input_variable), pointer :: next => null()
    end type
 
@@ -67,12 +68,23 @@
    end type
 
    class (type_input_variable), pointer, save :: first_input_variable => null()
+
+   integer         :: old_month
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !EOP
 !-----------------------------------------------------------------------
+
+interface
+   subroutine inquire_file(fn,ncid,varids,varnames)
+   character(len=*), intent(in)        :: fn
+   integer, intent(inout)              :: ncid
+   integer, allocatable, intent(inout) :: varids(:)
+   character(len=50), allocatable, intent(out) :: varnames(:)
+   end subroutine inquire_file
+end interface
 
    contains
 
@@ -90,6 +102,9 @@
 !
 ! !USES:
    use advection, only: J7
+!KB
+!KB   use ncdf_get_field, only: inq_ncdf_file
+!KB
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -104,6 +119,10 @@
    integer                   :: i,j,n
    character(len=PATH_MAX)   :: fabm_init_file
    integer                   :: fabm_init_format, fabm_field_no
+   integer                   :: ncid
+   integer, allocatable      :: varids(:)
+   character(len=50), allocatable :: varnames(:)
+
 
    namelist /getm_fabm_nml/ fabm_init_method, &
                            fabm_init_file,fabm_init_format,fabm_field_no, &
@@ -164,6 +183,7 @@
       LEVEL2 'Advection of FABM variables'
       if (fabm_adv_hor .eq. J7) stop 'init_getm_fabm: J7 not implemented yet'
       call print_adv_settings_3d(fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH)
+      old_month = month
 
 !     Here we need to open the NetCDF file with FABM forcing data (if it exists)
 !     and loop over all its variables.
@@ -171,12 +191,26 @@
 !     For each variable, register_horizontal_input_variable should be called (see below).
 !     That looks up the FABM variable and also allocates the 2D field that will hold the input data.
 
+      call inquire_file("fabm_surface_fluxes.nc",ncid,varids,varnames)
+!STDERR ncid
+!STDERR varids
+!STDERR size(varnames)
+      do n=1,size(varids)
+         if ( varids(n) .ne. -1) then
+            LEVEL4  'inquiring: ',trim(varnames(n))//'_flux'
+            call register_horizontal_input_variable(trim(varnames(n))//'_flux',ncid,varids(n))
+         end if
+      end do
+stop 'kaj'
+
 !     Note: in the call below, the first argument must match the pattern INSTANCENAME_VARIABLENAME,
 !     with INSTANCENAME matching the name of a model instance in fabm.yaml, and VARIABLENAME matching the name
 !     of a variable registered by that model instance. The second argument is the NetCDF identifier of the
 !     the variable, which will be stored within the variable object along with the data field so that at the
 !     start of a time step, a simple loop over all input vriables can be used to update all 2D fields from NetCDF.
-      call register_horizontal_input_variable('nitdep_flux',-1)
+!KB      call register_horizontal_input_variable('fasham_nit_flux',-1,-1)
+!KB      call register_horizontal_input_variable('fasham_amm_flux',-1,-1)
+!KB      call register_horizontal_input_variable('nitdep_flux',-1)
 
 !     Initialize biogeochemical state variables.
       select case (fabm_init_method)
@@ -230,27 +264,50 @@
    end subroutine init_getm_fabm
 !EOC
 
-   subroutine register_horizontal_input_variable(name,ncid)
-      character(len=*),intent(in) :: name
-      integer,         intent(in) :: ncid
-
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: register_horizontal_input_variable
+!
+! !INTERFACE:
+   subroutine register_horizontal_input_variable(name,ncid,varid)
+!
+! !DESCRIPTION:
+!  Registers FABM horizontal fluxes (surface)
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   character(len=*),intent(in) :: name
+   integer,         intent(in) :: ncid,varid
+!
+! !REVISION HISTORY:
+!  See the log for the module
+!
+!  !LOCAL VARIABLES
       class (type_horizontal_input_variable), pointer :: variable
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+!  Create the input variable and set associated data (FABM id, 
+!  NetCDF id, 2D data field).
+   allocate(variable)
+   variable%id = model%get_horizontal_variable_id(name)
+   if (.not.fabm_is_variable_used(variable%id)) then
+      LEVEL2 'Prescribed input variable '//trim(name)//' is not used by FABM.'
+      stop 'register_horizontal_input_variable: unrecognized variable name'
+   end if
+   variable%ncid  = ncid
+   variable%varid = varid
+   allocate(variable%data(I2DFIELD))
+   variable%data = _ZERO_
 
-!     Create the input variable and set associated data (FABM id, NetCDF id, 2D data field).
-      allocate(variable)
-      variable%id = model%get_horizontal_variable_id(name)
-      if (.not.fabm_is_variable_used(variable%id)) then
-         LEVEL2 'Prescribed input variable '//trim(name)//' is not used by FABM.'
-         stop 'register_horizontal_input_variable: unrecognized variable name'
-      end if
-      variable%ncid = ncid
-      allocate(variable%data(I2DFIELD))
-      variable%data = 0
-
-!     Prepend to the list of inout variables.
-      variable%next => first_input_variable
-      first_input_variable => variable
+!  Prepend to the list of inout variables.
+   variable%next => first_input_variable
+   first_input_variable => variable
    end subroutine register_horizontal_input_variable
+!EOC
 
 !-----------------------------------------------------------------------
 !BOP
@@ -279,6 +336,7 @@
    REALTYPE        :: wind_speed,I_0,taub_nonnorm,cloud
    REALTYPE        :: z(1:kmax)
    class (type_input_variable), pointer :: current_input_variable
+   integer         :: ncid,varid
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -290,10 +348,32 @@
    do while (associated(current_input_variable))
       select type (current_input_variable)
       class is (type_horizontal_input_variable)
+!KB         if (month .ne. old_month) then
+            old_month = month
+#if 0
+            STDERR month
+               do n=1,size(model%state_variables)
+                  LEVEL4 'inquiring: ',trim(model%state_variables(n)%name)
+                  call get_3d_field(fabm_init_file, &
+                                 trim(model%state_variables(n)%name), &
+                                 fabm_field_no,.false., &
+                                 fabm_pel(:,:,:,n))
+               end do
+#endif
 !        Here we need to update the variable data by reading from NetCDF (and interpolating in time)
 !        The NetCDF variable id is stored in current_input_variable%ncid; the data field is current_input_variable%data.
 !        For instance:
 !        call get_current_2d_data(ncid_input_file, current_input_variable%ncid, current_input_variable%data)
+            ncid  = current_input_variable%ncid
+            varid = current_input_variable%varid
+STDERR ncid,varid
+#if 0
+!            call get_2d_field_ncdf_by_id(ncid,varid,ilg,ihg,jlg,jhg,.false., &
+!                                         current_input_variable%data)
+            call get_2d_field(ncid,varid,ilg,ihg,jlg,jhg,.false., &
+                              current_input_variable%data)
+#endif
+!KB         end if
       end select
       current_input_variable => current_input_variable%next
    end do
@@ -363,7 +443,9 @@
             do while (associated(current_input_variable))
                select type (current_input_variable)
                class is (type_horizontal_input_variable)
+!KB                  current_input_variable%data(i,j) = 0.001
                   call model%link_horizontal_data(current_input_variable%id,current_input_variable%data(i,j))
+!STDERR i,j,current_input_variable%data(i,j)
                end select
                current_input_variable => current_input_variable%next
             end do
