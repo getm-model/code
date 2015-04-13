@@ -26,6 +26,7 @@
    use domain, only: ill,ihl,jll,jhl
    use domain, only: openbdy,have_boundaries,z0_method,z0_const,z0
    use domain, only: az,ax
+   use get_field, only: get_2d_field
    use advection, only: init_advection,print_adv_settings,NOADV
    use halo_zones, only: update_2d_halo,wait_halo,H_TAG
    use variables_2d
