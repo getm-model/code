@@ -70,12 +70,16 @@
       do k=1,kmax
          sig(k)=k/float(kmax)-_ONE_
       end do
+      if (ddu .le. _ZERO_ .and. ddl .le. _ZERO_) then
+         be = sig
+      else
       if (ddu .lt. _ZERO_) ddu=_ZERO_
       if (ddl .lt. _ZERO_) ddl=_ZERO_
       do k=1,kmax
          be(k)=tanh((ddl+ddu)*k/float(kmax)-ddl)+tanh(ddl)
          be(k)=be(k)/(tanh(ddl)+tanh(ddu))-_ONE_
       end do
+      end if
       if (gamma_surf) then
          kk=kmax
       else
