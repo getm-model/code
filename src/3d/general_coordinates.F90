@@ -67,12 +67,14 @@
       if (rc /= 0) stop 'coordinates: Error allocating memory (gga)'
       be(0)=  -_ONE_
       sig(0)= -_ONE_
+      do k=1,kmax
+         sig(k)=k/float(kmax)-_ONE_
+      end do
       if (ddu .lt. _ZERO_) ddu=_ZERO_
       if (ddl .lt. _ZERO_) ddl=_ZERO_
       do k=1,kmax
          be(k)=tanh((ddl+ddu)*k/float(kmax)-ddl)+tanh(ddl)
          be(k)=be(k)/(tanh(ddl)+tanh(ddu))-_ONE_
-         sig(k)=k/float(kmax)-_ONE_
       end do
       if (gamma_surf) then
          kk=kmax
