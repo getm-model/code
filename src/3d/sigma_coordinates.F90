@@ -6,7 +6,7 @@
 ! \label{sec-sigma-coordinates}
 !
 ! !INTERFACE:
-   subroutine sigma_coordinates(first)
+   subroutine sigma_coordinates(first,hotstart)
 !
 ! !DESCRIPTION:
 !
@@ -28,10 +28,12 @@
    use domain, only: ga,ddu,ddl
    use variables_3d, only: kmin,kumin,kvmin,ho,hn,huo,hun,hvo,hvn
    use variables_3d, only: Dn,Dun,Dvn,sseo,ssuo,ssvo
+   use vertical_coordinates,only: restart_with_ho,restart_with_hn
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    logical, intent(in)                  :: first
+   logical, intent(in)                  :: hotstart
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -49,6 +51,7 @@
 #endif
 
    if (first) then
+
       if (.not. allocated(ga)) allocate(ga(0:kmax),stat=rc)
       if (rc /= 0) stop 'coordinates: Error allocating (ga)'
       allocate(dga(0:kmax),stat=rc)
@@ -72,23 +75,53 @@
             dga(k)=ga(k)-ga(k-1)
          end do
       end if
+
+      if (.not. restart_with_hn) then
+         if (hotstart) then
+            LEVEL2 'WARNING: assume sigma coordinates for hn'
+         end if
+         do k=1,kmax
+            do j=jmin-HALO,jmax+HALO
+               do i=imin-HALO,imax+HALO
+                  hn(i,j,k) = Dn(i,j) * dga(k)
+               end do
+            end do
+         end do
+      end if
+!     only for backward compatibility
+      if (.not. restart_with_ho) then
+         if (hotstart) then
+            LEVEL2 'WARNING: assume sigma coordinates for ho'
+         end if
+         do k=1,kmax
+            do j=jmin-HALO,jmax+HALO
+               do i=imin-HALO,imax+HALO
+                  ho(i,j,k) = (sseo(i,j)+H(i,j)) * dga(k)
+               end do
+            end do
+         end do
+      end if
+
       kmin=1
       kumin=1
       kvmin=1
-   end if ! first
 
+   else
+
+      ho = hn
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
       do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO
-               ho(i,j,k)=(sseo(i,j)+H(i,j))*dga(k)
                hn(i,j,k)= Dn(i,j) * dga(k)
             end do
          end do
 !$OMP END DO NOWAIT
       end do
+
+   end if
 
       do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)

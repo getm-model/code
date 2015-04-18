@@ -99,7 +99,7 @@
       select case (vert_cord)
          case (_SIGMA_COORDS_) ! sigma coordinates
             LEVEL2 'using ',kmax,' sigma layers'
-            call sigma_coordinates(.true.)
+            call sigma_coordinates(.true.,hotstart)
          case (_Z_COORDS_) ! z-level
             call getm_error("coordinates()","z-levels not implemented yet")
          case (_GENERAL_COORDS_) ! general vertical coordinates
