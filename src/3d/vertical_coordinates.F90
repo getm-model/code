@@ -119,7 +119,7 @@ stop
    else
       select case (vert_cord)
          case (_SIGMA_COORDS_) ! sigma coordinates
-            call sigma_coordinates(.false.)
+            call sigma_coordinates(.false.,hotstart)
          case (_Z_COORDS_) ! z-level
          case (_GENERAL_COORDS_) ! general vertical coordinates
             call general_coordinates(.false.,cord_relax,maxdepth)
