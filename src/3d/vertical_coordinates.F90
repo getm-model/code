@@ -104,7 +104,7 @@
             call getm_error("coordinates()","z-levels not implemented yet")
          case (_GENERAL_COORDS_) ! general vertical coordinates
             LEVEL2 'using ',kmax,' gvc layers'
-            call general_coordinates(.true.,cord_relax,maxdepth)
+            call general_coordinates(.true.,hotstart,cord_relax,maxdepth)
          case (_HYBRID_COORDS_) ! hybrid vertical coordinates
             LEVEL2 'using ',kmax,' hybrid layers'
             call hybrid_coordinates(.true.)
@@ -122,7 +122,7 @@ stop
             call sigma_coordinates(.false.,hotstart)
          case (_Z_COORDS_) ! z-level
          case (_GENERAL_COORDS_) ! general vertical coordinates
-            call general_coordinates(.false.,cord_relax,maxdepth)
+            call general_coordinates(.false.,hotstart,cord_relax,maxdepth)
          case (_HYBRID_COORDS_) ! hybrid vertical coordinates
             call hybrid_coordinates(.false.)
          case (_ADAPTIVE_COORDS_) ! adaptive vertical coordinates

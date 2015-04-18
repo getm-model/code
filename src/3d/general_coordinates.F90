@@ -6,7 +6,7 @@
 ! \label{sec-general-coordinates}
 !
 ! !INTERFACE:
-   subroutine general_coordinates(first,cord_relax,maxdepth)
+   subroutine general_coordinates(first,hotstart,cord_relax,maxdepth)
 !
 ! !DESCRIPTION:
 !
@@ -27,11 +27,13 @@
    use domain, only: imin,imax,jmin,jmax,kmax,H,HU,HV,az,au,av,min_depth
    use variables_3d, only: dt,kmin,kumin,kvmin,ho,hn,huo,hun,hvo,hvn
    use variables_3d, only: Dn,Dun,Dvn,sseo,ssen,ssuo,ssun,ssvo,ssvn
+   use vertical_coordinates,only: restart_with_ho,restart_with_hn
 !$ use omp_lib
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    logical, intent(in)                 :: first
+   logical, intent(in)                 :: hotstart
    REALTYPE, intent(in)                :: cord_relax
    REALTYPE, intent(in)                :: maxdepth
 !
@@ -113,15 +115,35 @@
       kumin=1
       kvmin=1
 
+      if (.not. restart_with_hn) then
+         if (hotstart) then
+            LEVEL2 'WARNING: assume general vertical coordinates for hn'
+         end if
+!     Here, the initial layer distribution is calculated.
+      do k=1,kmax
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO
+               HH=max(Dn(i,j),min_depth)
+               hn(i,j,k)=HH*(gga(i,j,k)-gga(i,j,k-1))
+            end do
+         end do
+      end do
+      end if
+
+      if (.not. restart_with_ho) then
+         if (hotstart) then
+            LEVEL2 'WARNING: assume general vertical coordinates for ho'
+         end if
 !     Here, the initial layer distribution is calculated.
       do k=1,kmax
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO
                HH=max(sseo(i,j)+H(i,j),min_depth)
-               hn(i,j,k)=HH*(gga(i,j,k)-gga(i,j,k-1))
+               ho(i,j,k)=HH*(gga(i,j,k)-gga(i,j,k-1))
             end do
          end do
       end do
+      end if
 
 ! BJB-TODO: Change 0.5 -> _HALF_ (and 1. -> _ONE_) in this file.
       do k=1,kmax
@@ -145,14 +167,13 @@
             end do
          end do
       end do
-   end if ! first
+
+   else
 
 ! The general vertical coordinates can be relaxed towards the new layer
 ! thicknesses by the following relaxation time scale r. This should
 ! later be generalised also for sigma coordinates.
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,rc,kk,HH,zz,r)
-!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
          r=cord_relax/dt*H(i,j)/maxdepth
@@ -174,8 +195,10 @@
          end if
       end do
    end do
-!$OMP END DO NOWAIT
 
+   end if ! first
+
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,rc,kk,HH,zz,r)
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO-1
