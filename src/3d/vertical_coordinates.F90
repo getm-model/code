@@ -158,7 +158,7 @@ stop
 ! !ROUTINE:  hcheck -
 !
 ! !INTERFACE:
-   subroutine hcheck(hn,Dn)
+   subroutine hcheck(hn,Dn,mask)
 !
 ! !DESCRIPTION:
 !
@@ -168,6 +168,7 @@ stop
 !
 ! !INPUT PARAMETERS:
    REALTYPE,intent(in)        :: Dn(I2DFIELD)
+   integer,intent(in)         :: mask(E2DFIELD)
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,intent(inout)     :: hn(I3DFIELD)
@@ -191,6 +192,7 @@ stop
 ! Final check of layer thicnkess thoug not necessary if zpos treated correctly
    do j=jmin,jmax
       do i=imin,imax
+         if (mask(i,j) .ne. 0) then
          HH=0.
          do k=1,kmax
             HH=HH+hn(i,j,k)
@@ -198,6 +200,7 @@ stop
          do k=1,kmax
             hn(i,j,k)=hn(i,j,k)* Dn(i,j)/HH
          end do
+         end if
       end do
    end do
 

@@ -215,7 +215,7 @@ STDERR 'adaptive_coordinates()'
          if (.not. restart_with_ho) then
             LEVEL2 'WARNING: assume ho=hn'
             ho=hn
-            call hcheck(ho,sseo+H)
+            call hcheck(ho,sseo+H,az)
          end if
       else
          do j=jmin-HALO,jmax+HALO
@@ -290,7 +290,7 @@ STDERR 'adaptive_coordinates()'
             end do
          end do
       end do
-      call hcheck(hn,Dn)
+      call hcheck(hn,Dn,az)
 
 !     Update the halo zones
       call update_3d_halo(hn,hn,az,imin,jmin,imax,jmax,kmax,H_TAG)
@@ -395,7 +395,7 @@ STDERR 'adaptive_coordinates()'
          end do
 
          call ztoh(zpos,hn,depthmin)
-         call hcheck(hn,Dn)
+         call hcheck(hn,Dn,az)
 
 
       end do ! End of Horizontal diffusion of zpos repeated mhor times
@@ -481,7 +481,7 @@ STDERR 'adaptive_coordinates()'
 
    end if !first
 
-   call hcheck(hn,Dn)
+   call hcheck(hn,Dn,az)
 ! Finally derive interface grid sizes for uu and vv
 ! Interface treatment and check
 
@@ -502,7 +502,7 @@ STDERR 'adaptive_coordinates()'
 !  KK-TODO: although the layer heights in the center points are consistent
 !           with the total water depth, in the present implementation we
 !           cannot rely on depth-coinciding layer heights in velocity points
-   call hcheck(hun,Dun)
+   call hcheck(hun,Dun,au)
 
 ! vv
    hvo=hvn
@@ -516,7 +516,7 @@ STDERR 'adaptive_coordinates()'
 !  KK-TODO: although the layer heights in the center points are consistent
 !           with the total water depth, in the present implementation we
 !           cannot rely on depth-coinciding layer heights in velocity points
-   call hcheck(hvn,Dvn)
+   call hcheck(hvn,Dvn,av)
 
 !  KK-TODO: do we really need these halo updates?!
 !  Update the halo zones for hun
