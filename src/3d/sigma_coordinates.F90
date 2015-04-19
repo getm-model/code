@@ -108,8 +108,6 @@
 
    else
 
-      ho = hn
-
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
       do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
@@ -127,7 +125,6 @@
 !$OMP DO SCHEDULE(RUNTIME)
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO-1
-               huo(i,j,k)=(ssuo(i,j)+HU(i,j))*dga(k)
                hun(i,j,k) = Dun(i,j) * dga(k)
             end do
          end do
@@ -138,7 +135,6 @@
 !$OMP DO SCHEDULE(RUNTIME)
          do j=jmin-HALO,jmax+HALO-1
             do i=imin-HALO,imax+HALO
-               hvo(i,j,k)=(ssvo(i,j)+HV(i,j))*dga(k)
                hvn(i,j,k) = Dvn(i,j) * dga(k)
             end do
          end do

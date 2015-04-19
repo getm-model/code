@@ -11,11 +11,13 @@
 !
 ! !USES:
 #ifdef SLICE_MODEL
-   use domain, only: imin,imax,jmin,jmax
-   use variables_3d, only: kvmin,hvo,hvn
+   use variables_3d, only: kvmin
 #endif
-   use domain, only: kmax,vert_cord,maxdepth
-   use variables_3d, only: ho,hn,hvel
+   use domain, only: imin,imax,jmin,jmax,kmax
+   use domain, only: au,av
+   use domain, only: vert_cord,maxdepth
+   use variables_3d, only: ho,hn,huo,hun,hvo,hvn,hvel
+   use variables_3d, only: Dun,Dvn
    use exceptions
    IMPLICIT NONE
 !
@@ -117,6 +119,9 @@ stop
       end select
       first = .false.
    else
+      ho  = hn
+      huo = hun
+      hvo = hvn
       select case (vert_cord)
          case (_SIGMA_COORDS_) ! sigma coordinates
             call sigma_coordinates(.false.,hotstart)
@@ -133,11 +138,21 @@ stop
 
    hvel = _HALF_ * ( ho + hn )
 
+   if (first .and. hotstart) then
+   hun(_IRANGE_HALO_-1,:,1:kmax) = &
+      _HALF_ * ( hvel(_IRANGE_HALO_-1,:,1:kmax) + hvel(1+_IRANGE_HALO_,:,1:kmax) )
+   hvn(:,_JRANGE_HALO_-1,1:kmax) = &
+      _HALF_ * ( hvel(:,_JRANGE_HALO_-1,1:kmax) + hvel(:,1+_JRANGE_HALO_,1:kmax) )
+
+!  KK-TODO: as long as hvel is based on "new" ho (including rivers)
+!           hun and hvn do not coincide with Dun and Dvn
+   call hcheck(hun,Dun,au)
+   call hcheck(hvn,Dvn,av)
+   end if
+
 #ifdef SLICE_MODEL
    do i=imin,imax
       do k=kvmin(i,2),kmax
-         hvo(i,1,k)=hvo(i,2,k)
-         hvo(i,3,k)=hvo(i,2,k)
          hvn(i,1,k)=hvn(i,2,k)
          hvn(i,3,k)=hvn(i,2,k)
       end do
@@ -163,7 +178,6 @@ stop
 ! !DESCRIPTION:
 !
 ! !USES:
-   use domain,   only: imin,imax,jmin,jmax,kmax
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:

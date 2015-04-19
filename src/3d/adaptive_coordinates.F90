@@ -269,7 +269,7 @@ STDERR 'adaptive_coordinates()'
       tfac_hor=_ONE_
 
    else !not first
-      ho=hn
+
 !     Lagrangian and thickness filtering step
       do k=1,kmax
          do j=jmin+1-HALO,jmax-1+HALO
@@ -491,7 +491,6 @@ STDERR 'adaptive_coordinates()'
    call mirror_bdy_3d(hn,H_TAG)
 
 ! uu
-   huo=hun
    do k=1,kmax
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO-1
@@ -505,7 +504,6 @@ STDERR 'adaptive_coordinates()'
    call hcheck(hun,Dun,au)
 
 ! vv
-   hvo=hvn
    do k=1,kmax
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO

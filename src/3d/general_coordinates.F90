@@ -180,17 +180,14 @@
          HH=Dn(i,j)
          if (HH .lt. D_gamma) then
             do k=1,kmax
-               ho(i,j,k)=hn(i,j,k)
                hn(i,j,k)=HH/kmax
             end do
          else
             zz=-H(i,j)
             do k=1,kmax-1
-               ho(i,j,k)=hn(i,j,k)
                hn(i,j,k)=(ho(i,j,k)*r+HH*(gga(i,j,k)-gga(i,j,k-1)))/(r+1.)
                zz=zz+hn(i,j,k)
             end do
-            ho(i,j,kmax)=hn(i,j,kmax)
             hn(i,j,kmax)=ssen(i,j)-zz
          end if
       end do
@@ -207,12 +204,10 @@
             zz=-HU(i,j)
             HH=Dun(i,j)
             do k=1,kmax-1
-               huo(i,j,k)=hun(i,j,k)
                hun(i,j,k)=(huo(i,j,k)*r+HH*0.5*(gga(i,j,k)-gga(i,j,k-1) &
                          +gga(i+1,j,k)-gga(i+1,j,k-1)))/(r+1.)
                zz=zz+hun(i,j,k)
             end do
-            huo(i,j,kmax)=hun(i,j,kmax)
             hun(i,j,kmax)=ssun(i,j)-zz
 !KBK         end if
       end do
@@ -227,12 +222,10 @@
             zz=-HV(i,j)
             HH=Dvn(i,j)
             do k=1,kmax-1
-               hvo(i,j,k)=hvn(i,j,k)
                hvn(i,j,k)=(hvo(i,j,k)*r+HH*0.5*(gga(i,j,k)-gga(i,j,k-1) &
                          +gga(i,j+1,k)-gga(i,j+1,k-1)))/(r+1.)
                zz=zz+hvn(i,j,k)
             end do
-            hvo(i,j,kmax)=hvn(i,j,kmax)
             hvn(i,j,kmax)=ssvn(i,j)-zz
 !KBK         end if
       end do
