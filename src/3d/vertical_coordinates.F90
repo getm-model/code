@@ -193,13 +193,13 @@ stop
    do j=jmin,jmax
       do i=imin,imax
          if (mask(i,j) .ne. 0) then
-         HH=0.
-         do k=1,kmax
-            HH=HH+hn(i,j,k)
-         end do
-         do k=1,kmax
-            hn(i,j,k)=hn(i,j,k)* Dn(i,j)/HH
-         end do
+            HH=0.
+            do k=1,kmax
+               HH=HH+hn(i,j,k)
+            end do
+            do k=1,kmax
+               hn(i,j,k)=hn(i,j,k)* Dn(i,j)/HH
+            end do
          end if
       end do
    end do
