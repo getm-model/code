@@ -41,32 +41,4 @@
       enddo
      return
      end
-         subroutine hcheck(hn,Dn)
-#include "cppdefs.h"
-!
-! !DESCRIPTION:
-!
-! !USES:
-   use domain,   only: imin,imax,jmin,jmax,kmax
-   IMPLICIT NONE
-   REALTYPE        :: Dn(I2DFIELD),hn(I3DFIELD)
-   REALTYPE        :: HH,depthmin
-   integer         :: i,j,k
-! Final check of layer thicnkess thoug not necessary if zpos treated correctly
-!     write(6,*) 'Inside',hn(imax/2,2,kmax/2)
-      do j=jmin,jmax
-         do i=imin,imax
-            HH=0.
-           do k=1,kmax
-              HH=HH+hn(i,j,k)
-           end do
-           do k=1,kmax
-              hn(i,j,k)=hn(i,j,k)* Dn(i,j)/HH
-           end do
-         end do
-      end do
-!     write(6,*) 'Inside after',hn(imax/2,2,kmax/2)
-
-     return
-     end
 
