@@ -6,7 +6,7 @@
 ! \label{sec-sigma-coordinates}
 !
 ! !INTERFACE:
-   subroutine sigma_coordinates(first)
+   subroutine sigma_coordinates(first,hotstart)
 !
 ! !DESCRIPTION:
 !
@@ -28,18 +28,18 @@
    use domain, only: ga,ddu,ddl
    use variables_3d, only: kmin,kumin,kvmin,ho,hn,huo,hun,hvo,hvn
    use variables_3d, only: Dn,Dun,Dvn,sseo,ssuo,ssvo
+   use vertical_coordinates,only: restart_with_ho,restart_with_hn
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    logical, intent(in)                  :: first
+   logical, intent(in)                  :: hotstart
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 ! !LOCAL VARIABLES:
    integer          :: i,j,k,rc
-   REALTYPE         :: kmaxm1
-   logical, save    :: equiv_sigma=.false.
    REALTYPE, save, dimension(:), allocatable  :: dga
 !EOP
 !-----------------------------------------------------------------------
@@ -50,84 +50,86 @@
    write(debug,*) 'coordinates() # ',Ncall
 #endif
 
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
+!$OMP SINGLE
+
    if (first) then
+
       if (.not. allocated(ga)) allocate(ga(0:kmax),stat=rc)
       if (rc /= 0) stop 'coordinates: Error allocating (ga)'
+      allocate(dga(0:kmax),stat=rc)
+      if (rc /= 0) STOP 'coordinates: Error allocating (dga)'
+      ga(0) = -_ONE_
+      ga(kmax) = _ZERO_
+      dga(0)= _ZERO_
       if (ddu .le. _ZERO_ .and. ddl .le. _ZERO_) then
-         equiv_sigma=.true.
-         ga(0) = -_ONE_
-         do k=1,kmax
-            ga(k) = ga(k-1) + _ONE_/kmax
+         dga(1:kmax) = _ONE_/kmax
+         do k=1,kmax-1
+            ga(k) = ga(k-1) + dga(k)
          end do
-         ga(kmax) = _ZERO_
       else
          ! Non-equidistant sigma coordinates
          ! This zooming routine is from Antoine Garapon, ICCH, DK
          if (ddu .lt. _ZERO_) ddu=_ZERO_
          if (ddl .lt. _ZERO_) ddl=_ZERO_
-         allocate(dga(0:kmax),stat=rc)
-         if (rc /= 0) STOP 'coordinates: Error allocating (dga)'
-         ga(0)= -_ONE_
-         dga(0)= _ZERO_
          do k=1,kmax
             ga(k)=tanh((ddl+ddu)*k/float(kmax)-ddl)+tanh(ddl)
             ga(k)=ga(k)/(tanh(ddl)+tanh(ddu)) - _ONE_
             dga(k)=ga(k)-ga(k-1)
          end do
       end if
+
+      if (.not. restart_with_hn) then
+         if (hotstart) then
+            LEVEL2 'WARNING: assume sigma coordinates for hn'
+         end if
+         do k=1,kmax
+            do j=jmin-HALO,jmax+HALO
+               do i=imin-HALO,imax+HALO
+                  hn(i,j,k) = Dn(i,j) * dga(k)
+               end do
+            end do
+         end do
+      end if
+!     only for backward compatibility
+      if (.not. restart_with_ho) then
+         if (hotstart) then
+            LEVEL2 'WARNING: assume sigma coordinates for ho'
+         end if
+         do k=1,kmax
+            do j=jmin-HALO,jmax+HALO
+               do i=imin-HALO,imax+HALO
+                  ho(i,j,k) = (sseo(i,j)+H(i,j)) * dga(k)
+               end do
+            end do
+         end do
+      end if
+
       kmin=1
       kumin=1
       kvmin=1
-   end if ! first
 
+   else
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k,rc,kmaxm1)
-   if (equiv_sigma) then
-      kmaxm1= _ONE_/float(kmax)
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-            ho(i,j,:)=(sseo(i,j)+H(i,j))*kmaxm1
-            hn(i,j,:) = Dn(i,j) * kmaxm1
-         end do
-      end do
-!$OMP END DO NOWAIT
-
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO-1
-            huo(i,j,:)=(ssuo(i,j)+HU(i,j))*kmaxm1
-            hun(i,j,:) = Dun(i,j) * kmaxm1
-         end do
-      end do
-!$OMP END DO NOWAIT
-
-!$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+HALO-1
-         do i=imin-HALO,imax+HALO
-            hvo(i,j,:)=(ssvo(i,j)+HV(i,j))*kmaxm1
-            hvn(i,j,:) = Dvn(i,j) * kmaxm1
-         end do
-      end do
-!$OMP END DO NOWAIT
-
-   else ! non-equivdistant
+!$OMP END SINGLE
       do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO
-               ho(i,j,k)=(sseo(i,j)+H(i,j))*dga(k)
                hn(i,j,k)= Dn(i,j) * dga(k)
             end do
          end do
 !$OMP END DO NOWAIT
       end do
+!$OMP SINGLE
 
+   end if
+
+!$OMP END SINGLE
       do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO-1
-               huo(i,j,k)=(ssuo(i,j)+HU(i,j))*dga(k)
                hun(i,j,k) = Dun(i,j) * dga(k)
             end do
          end do
@@ -138,13 +140,12 @@
 !$OMP DO SCHEDULE(RUNTIME)
          do j=jmin-HALO,jmax+HALO-1
             do i=imin-HALO,imax+HALO
-               hvo(i,j,k)=(ssvo(i,j)+HV(i,j))*dga(k)
                hvn(i,j,k) = Dvn(i,j) * dga(k)
             end do
          end do
 !$OMP END DO NOWAIT
       end do
-   end if
+!$OMP SINGLE
 
 !$OMP END PARALLEL
 
