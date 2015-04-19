@@ -55,6 +55,7 @@
    use variables_3d, only: Dn,Dun,Dvn,sseo,ssen,ssuo,ssvo
    use variables_3d, only: kmin_pmz,kumin_pmz,kvmin_pmz
    use variables_3d, only: preadapt
+   use vertical_coordinates,only: hcheck
    use vertical_coordinates,only: restart_with_ho,restart_with_hn
 
 ! ADAPTIVE-BEGIN
@@ -214,7 +215,7 @@ STDERR 'adaptive_coordinates()'
          if (.not. restart_with_ho) then
             LEVEL2 'WARNING: assume ho=hn'
             ho=hn
-            call hcheck(ho,sseo,H)
+            call hcheck(ho,sseo+H)
          end if
       else
          do j=jmin-HALO,jmax+HALO

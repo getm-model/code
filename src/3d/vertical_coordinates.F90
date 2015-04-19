@@ -153,6 +153,62 @@ stop
    end subroutine coordinates
 !EOC
 !-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE:  hcheck -
+!
+! !INTERFACE:
+   subroutine hcheck(hn,Dn)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use domain,   only: imin,imax,jmin,jmax,kmax
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   REALTYPE,intent(in)        :: Dn(I2DFIELD)
+!
+! !INPUT/OUTPUT PARAMETERS:
+   REALTYPE,intent(inout)     :: hn(I3DFIELD)
+!
+! !REVISION HISTORY:
+!  Original author(s): Richard Hofmeister
+!
+! !LOCAL VARIABLES:
+   REALTYPE        :: HH,depthmin
+   integer         :: i,j,k
+!
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'hcheck() # ',Ncall
+#endif
+
+! Final check of layer thicnkess thoug not necessary if zpos treated correctly
+   do j=jmin,jmax
+      do i=imin,imax
+         HH=0.
+         do k=1,kmax
+            HH=HH+hn(i,j,k)
+         end do
+         do k=1,kmax
+            hn(i,j,k)=hn(i,j,k)* Dn(i,j)/HH
+         end do
+      end do
+   end do
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving hcheck()'
+   write(debug,*)
+#endif
+   return
+   end subroutine hcheck
+!EOC
+!-----------------------------------------------------------------------
 
    end module vertical_coordinates
 
