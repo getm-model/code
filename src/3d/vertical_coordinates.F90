@@ -11,11 +11,13 @@
 !
 ! !USES:
 #ifdef SLICE_MODEL
-   use domain, only: imin,imax,jmin,jmax
-   use variables_3d, only: kvmin,hvo,hvn
+   use variables_3d, only: kvmin
 #endif
-   use domain, only: kmax,vert_cord,maxdepth
-   use variables_3d, only: ho,hn,hvel
+   use domain, only: imin,imax,jmin,jmax,kmax
+   use domain, only: au,av
+   use domain, only: vert_cord,maxdepth
+   use variables_3d, only: ho,hn,huo,hun,hvo,hvn,hvel
+   use variables_3d, only: Dun,Dvn
    use exceptions
    IMPLICIT NONE
 !
@@ -99,12 +101,12 @@
       select case (vert_cord)
          case (_SIGMA_COORDS_) ! sigma coordinates
             LEVEL2 'using ',kmax,' sigma layers'
-            call sigma_coordinates(.true.)
+            call sigma_coordinates(.true.,hotstart)
          case (_Z_COORDS_) ! z-level
             call getm_error("coordinates()","z-levels not implemented yet")
          case (_GENERAL_COORDS_) ! general vertical coordinates
             LEVEL2 'using ',kmax,' gvc layers'
-            call general_coordinates(.true.,cord_relax,maxdepth)
+            call general_coordinates(.true.,hotstart,cord_relax,maxdepth)
          case (_HYBRID_COORDS_) ! hybrid vertical coordinates
             LEVEL2 'using ',kmax,' hybrid layers'
             call hybrid_coordinates(.true.)
@@ -117,12 +119,15 @@ stop
       end select
       first = .false.
    else
+      ho  = hn
+      huo = hun
+      hvo = hvn
       select case (vert_cord)
          case (_SIGMA_COORDS_) ! sigma coordinates
-            call sigma_coordinates(.false.)
+            call sigma_coordinates(.false.,hotstart)
          case (_Z_COORDS_) ! z-level
          case (_GENERAL_COORDS_) ! general vertical coordinates
-            call general_coordinates(.false.,cord_relax,maxdepth)
+            call general_coordinates(.false.,hotstart,cord_relax,maxdepth)
          case (_HYBRID_COORDS_) ! hybrid vertical coordinates
             call hybrid_coordinates(.false.)
          case (_ADAPTIVE_COORDS_) ! adaptive vertical coordinates
@@ -133,11 +138,21 @@ stop
 
    hvel = _HALF_ * ( ho + hn )
 
+   if (first .and. hotstart) then
+   hun(_IRANGE_HALO_-1,:,1:kmax) = &
+      _HALF_ * ( hvel(_IRANGE_HALO_-1,:,1:kmax) + hvel(1+_IRANGE_HALO_,:,1:kmax) )
+   hvn(:,_JRANGE_HALO_-1,1:kmax) = &
+      _HALF_ * ( hvel(:,_JRANGE_HALO_-1,1:kmax) + hvel(:,1+_JRANGE_HALO_,1:kmax) )
+
+!  KK-TODO: as long as hvel is based on "new" ho (including rivers)
+!           hun and hvn do not coincide with Dun and Dvn
+   call hcheck(hun,Dun,au)
+   call hcheck(hvn,Dvn,av)
+   end if
+
 #ifdef SLICE_MODEL
    do i=imin,imax
       do k=kvmin(i,2),kmax
-         hvo(i,1,k)=hvo(i,2,k)
-         hvo(i,3,k)=hvo(i,2,k)
          hvn(i,1,k)=hvn(i,2,k)
          hvn(i,3,k)=hvn(i,2,k)
       end do
@@ -151,6 +166,64 @@ stop
 #endif
    return
    end subroutine coordinates
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE:  hcheck -
+!
+! !INTERFACE:
+   subroutine hcheck(hn,Dn,mask)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   REALTYPE,intent(in)        :: Dn(I2DFIELD)
+   integer,intent(in)         :: mask(E2DFIELD)
+!
+! !INPUT/OUTPUT PARAMETERS:
+   REALTYPE,intent(inout)     :: hn(I3DFIELD)
+!
+! !REVISION HISTORY:
+!  Original author(s): Richard Hofmeister
+!
+! !LOCAL VARIABLES:
+   REALTYPE        :: HH,depthmin
+   integer         :: i,j,k
+!
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'hcheck() # ',Ncall
+#endif
+
+! Final check of layer thicnkess thoug not necessary if zpos treated correctly
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
+         if (mask(i,j) .ne. 0) then
+            HH=0.
+            do k=1,kmax
+               HH=HH+hn(i,j,k)
+            end do
+            do k=1,kmax
+               hn(i,j,k)=hn(i,j,k)* Dn(i,j)/HH
+            end do
+         end if
+      end do
+   end do
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving hcheck()'
+   write(debug,*)
+#endif
+   return
+   end subroutine hcheck
 !EOC
 !-----------------------------------------------------------------------
 
