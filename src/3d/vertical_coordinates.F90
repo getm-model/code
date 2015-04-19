@@ -190,8 +190,8 @@ stop
 #endif
 
 ! Final check of layer thicnkess thoug not necessary if zpos treated correctly
-   do j=jmin,jmax
-      do i=imin,imax
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
          if (mask(i,j) .ne. 0) then
             HH=0.
             do k=1,kmax
