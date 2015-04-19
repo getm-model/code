@@ -50,6 +50,9 @@
    write(debug,*) 'coordinates() # ',Ncall
 #endif
 
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
+!$OMP SINGLE
+
    if (first) then
 
       if (.not. allocated(ga)) allocate(ga(0:kmax),stat=rc)
@@ -108,7 +111,7 @@
 
    else
 
-!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,k)
+!$OMP END SINGLE
       do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
          do j=jmin-HALO,jmax+HALO
@@ -118,9 +121,11 @@
          end do
 !$OMP END DO NOWAIT
       end do
+!$OMP SINGLE
 
    end if
 
+!$OMP END SINGLE
       do k=1,kmax
 !$OMP DO SCHEDULE(RUNTIME)
          do j=jmin-HALO,jmax+HALO
@@ -140,6 +145,7 @@
          end do
 !$OMP END DO NOWAIT
       end do
+!$OMP SINGLE
 
 !$OMP END PARALLEL
 
