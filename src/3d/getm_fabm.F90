@@ -16,6 +16,7 @@
    use domain, only: ilg,ihg,jlg,jhg,ill,ihl,jll,jhl
    use domain, only: az,latc,lonc
    use domain,only: H
+   use get_field, only: get_2d_field,get_3d_field
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
    use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
    use variables_3d, only: nuh,T,S,rho,a,g1,g2,taub
@@ -33,16 +34,6 @@
    use fabm_standard_variables, only: standard_variables
 
    IMPLICIT NONE
-
-! Temporary interface (should be read from module):
-   interface
-      subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,f)
-         character(len=*),intent(in)   :: fn,varname
-         integer, intent(in)           :: il,ih,jl,jh
-         logical, intent(in)           :: break_on_missing
-         REALTYPE, intent(out)         :: f(:,:)
-      end subroutine get_2d_field
-   end interface
 !
 ! !PUBLIC DATA MEMBERS:
    public init_getm_fabm, do_getm_fabm, model, output_none
