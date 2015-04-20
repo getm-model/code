@@ -27,12 +27,9 @@
 
    interface get_2d_field_ncdf
       module procedure get_2d_field_ncdf_by_name
-      module procedure get_2d_field_ncdf_by_id
    end interface
 
    contains
-
-!KB   generic :: get_2d_field_ncdf => get_2d_field_ncdf_by_name,get_2d_field_ncdf_by_id,
 
 !-----------------------------------------------------------------------
 !BOP

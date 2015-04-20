@@ -317,6 +317,7 @@ add_library(ncdf OBJECT
             ncdf/ncdf_close.F90
             ncdf/ncdf_common.F90
             ncdf/ncdf_get_field.F90
+            ncdf/get_2d_field_ncdf_by_id.F90
             ncdf/ncdf_in.F90
             ncdf/ncdf_mean.F90
             ncdf/ncdf_meteo.F90
