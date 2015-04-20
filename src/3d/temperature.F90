@@ -18,7 +18,7 @@
 ! !USES:
    use exceptions
    use domain, only: imin,jmin,imax,kmax,jmax,H,az,dry_z
-   use get_field, only: get_3d_field
+!KB   use get_field, only: get_3d_field
    use variables_3d, only: T,rad,hn,kmin,A,g1,g2
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
    IMPLICIT NONE

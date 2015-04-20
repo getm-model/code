@@ -16,7 +16,7 @@
    use domain, only: ilg,ihg,jlg,jhg,ill,ihl,jll,jhl
    use domain, only: az,latc,lonc
    use domain,only: H
-   use get_field, only: get_2d_field,get_3d_field
+!KB   use get_field, only: get_2d_field,get_3d_field
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
    use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
    use variables_3d, only: nuh,T,S,rho,a,g1,g2,taub
