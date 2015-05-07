@@ -16,7 +16,6 @@
    use ncdf_2d
    use domain, only: imin,imax,jmin,jmax
    use domain, only: ioff,joff
-   use domain, only: grid_type
    use meteo,  only: metforcing,calc_met
    use meteo,  only: fwf_method
    use m2d,    only: Am,residual
