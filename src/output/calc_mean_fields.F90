@@ -15,7 +15,7 @@
    use meteo, only: swr
    use m3d, only: M,calc_temp,calc_salt
    use variables_3d, only: do_numerical_analyses
-   use variables_3d, only: hn,uu,hun,vv,hvn,ww,taub
+   use variables_3d, only: ssen,hn,uu,hun,vv,hvn,ww,taub
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho
 #endif
@@ -69,6 +69,9 @@
       allocate(ustar2mean(E2DFIELD),stat=rc)
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (ustar2mean)'
+      allocate(elevmean(E2DFIELD),stat=rc)
+      if (rc /= 0) &
+          stop 'calc_mean_fields.F90: Error allocating memory (elevmean)'
       allocate(uumean(I3DFIELD),stat=rc)
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (uumean)'
@@ -174,6 +177,7 @@
 
 !     reset to start new meanout period
       if (step .eq. 0) then
+         elevmean = _ZERO_
          uumean=_ZERO_; vvmean=_ZERO_; wmean=_ZERO_
          humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
 #ifndef NO_BAROCLINIC
@@ -212,6 +216,7 @@
       ustarmean = ustarmean + sqrt(taub)
       ustar2mean = ustar2mean + (taub)
 
+      elevmean = elevmean + ssen
       uumean = uumean + uu
       vvmean = vvmean + vv
 
@@ -270,6 +275,7 @@
    if (write_mean) then
 
       if (step .gt. 1) then
+         elevmean = elevmean / step
          uumean = uumean / step
          vvmean = vvmean / step
          wmean = wmean / step
