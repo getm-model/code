@@ -78,6 +78,15 @@
    if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,time_id,units=trim(tts),long_name='time')
 
+!  elevation
+   err = nf90_def_var(ncid,'elevmean',NCDF_FLOAT_PRECISION,f3_dims,elevmean_id)
+   if (err .NE. NF90_NOERR) go to 10
+   fv = elev_missing
+   mv = elev_missing
+   vr(1) = -15.
+   vr(2) =  15.
+   call set_attributes(ncid,elevmean_id,long_name='mean elevation',units='m', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 
 !  short wave radiation
    fv = swr_missing; mv = swr_missing; vr(1) = 0; vr(2) = 1500.
