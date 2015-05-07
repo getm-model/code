@@ -17,7 +17,9 @@
    use diagnostic_variables
    use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
    use domain,       only: H,az
+   use domain,       only: min_depth
    use variables_3d, only: kmin
+   use variables_3d, only: Dn
    use m3d, only: calc_temp,calc_salt
 #ifdef GETM_BIO
    use bio_var, only: numc
@@ -64,6 +66,12 @@
    edges(1) = xlen
    edges(2) = ylen
    edges(3) = 1
+
+!  elevations
+   call eta_mask(imin,jmin,imax,jmax,az,H,Dn,elevmean,min_depth,elev_missing, &
+                 imin,jmin,imax,jmax,ws2d)
+   err = nf90_put_var(ncid,elevmean_id,ws2d(_2D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
 !  Short wave radiation
    call cnv_2d(imin,jmin,imax,jmax,az,swrmean,swr_missing, &
