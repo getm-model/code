@@ -51,7 +51,7 @@
    integer                             :: epg_v_id
    integer                             :: ipg_v_id
 #endif
-   integer                             :: uurot_id,vvrot_id
+
    integer                             :: salt_id=-1
    integer                             :: temp_id=-1
    integer                             :: sigma_t_id=-1
