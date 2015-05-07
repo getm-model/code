@@ -63,6 +63,7 @@
   REALTYPE                             :: idpdx(I3DFIELD)
   REALTYPE                             :: idpdy(I3DFIELD)
   REALTYPE                             :: light(I3DFIELD)
+  REALTYPE                             :: heatflux_net(I2DFIELD)
 #endif
 
 #ifdef SPM
