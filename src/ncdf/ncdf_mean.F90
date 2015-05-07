@@ -21,6 +21,7 @@
    integer                             :: time_id
 
    integer                             :: swrmean_id,ustarmean_id,ustar2mean_id
+   integer                             :: elevmean_id
    integer                             :: uumean_id,vvmean_id,wmean_id
    integer                             :: hmean_id
    integer                             :: saltmean_id=-1
@@ -39,6 +40,7 @@
    integer, allocatable                :: fabmmean_ids_diag_hz(:)
 #endif
 
+   REALTYPE, parameter                 :: elev_missing=-9999.0
    REALTYPE, parameter                 :: hh_missing=-9999.0
    REALTYPE, parameter                 :: swr_missing=-9999.0
    REALTYPE, parameter                 :: vel_missing=-9999.0
