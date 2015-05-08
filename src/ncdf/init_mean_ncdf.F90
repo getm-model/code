@@ -191,6 +191,15 @@
 
 #endif
 
+   if (metforcing) then
+      fv = fwf_missing; mv = fwf_missing; vr(1) = -1.; vr(2) = 1.
+      err = nf90_def_var(ncid,'fwfmean',NCDF_FLOAT_PRECISION,f3_dims,fwfmean_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,fwfmean_id,  &
+             long_name='mean surface freshwater flux',units='m/s', &
+             FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
+
    if (do_numerical_analyses_3d) then
 
       fv = nummix_missing

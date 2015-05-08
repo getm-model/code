@@ -82,6 +82,14 @@
    end if
 #endif
 
+!  surface freshwater fluxes
+   if (fwfmean_id .ne. -1) then
+      call cnv_2d(imin,jmin,imax,jmax,az,fwfmean,fwf_missing, &
+                  imin,jmin,imax,jmax,ws2d)
+      err = nf90_put_var(ncid,fwfmean_id,ws2d(_2D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+
 !  mean friction velocity
     call cnv_2d(imin,jmin,imax,jmax,az,ustarmean,vel_missing, &
                   imin,jmin,imax,jmax,ws2d)

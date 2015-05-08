@@ -27,6 +27,7 @@
    integer                             :: saltmean_id=-1
    integer                             :: tempmean_id=-1
    integer                             :: sigma_tmean_id=-1
+   integer                             :: fwfmean_id=-1
    integer                             :: hfmean_id=-1
    integer                             :: nd3d_id=-1,nd3do_id=-1,pd3d_id=-1
    integer                             :: ndint_id=-1,pdint_id=-1
@@ -46,6 +47,7 @@
 
    REALTYPE, parameter                 :: elev_missing=-9999.0
    REALTYPE, parameter                 :: hh_missing=-9999.0
+   REALTYPE, parameter                 :: fwf_missing=-9999.0
    REALTYPE, parameter                 :: hf_missing=-9999.0
    REALTYPE, parameter                 :: vel_missing=-9999.0
    REALTYPE, parameter                 :: salt_missing=-9999.0

@@ -14,6 +14,7 @@
    use domain, only: az,au,av
    use m3d, only: M,update_temp,update_salt
    use meteo, only: metforcing
+   use variables_2d, only: fwf
    use variables_3d, only: do_numerical_analyses_3d
    use variables_3d, only: ssen,hn,uu,hun,vv,hvn,ww,taub
 #ifndef NO_BAROCLINIC
@@ -48,7 +49,7 @@
 ! !LOCAL VARIABLES:
    integer         :: i,j,k,rc
    REALTYPE        :: tmpf(I3DFIELD)
-   integer,save    :: step=0
+   integer,save    :: step2d=0,step=0
    logical,save    :: first=.true.
    logical,save    :: fabm_mean=.false.
 !EOP
@@ -112,7 +113,11 @@
              stop 'calc_mean_fields.F90: Error allocating memory (hfmean)'
       end if
 #endif
-
+      if (metforcing) then
+         allocate(fwfmean(E2DFIELD),stat=rc)
+         if (rc /= 0) &
+             stop 'calc_mean_fields.F90: Error allocating memory (fwfmean)'
+      end if
       if (do_numerical_analyses_3d) then
          allocate(numdis_3d_mean(I3DFIELD),stat=rc)
            if (rc /= 0) &
@@ -197,6 +202,12 @@
       first = .false.
    end if
 
+!  reset to start new meanout period
+   if (step2d .eq. 0) then
+      if (metforcing) fwfmean=_ZERO_
+   end if
+   if (metforcing) fwfmean = fwfmean + fwf
+   step2d = step2d + 1
 
 !  Sum every macro time step, even less would be okay
    if(mod(n,M) .eq. 0) then
@@ -322,6 +333,9 @@
 !  prepare for output
    if (write_mean) then
 
+      if (step2d .gt. 1) then
+         if (metforcing) fwfmean = fwfmean / step2d
+      end if
       if (step .gt. 1) then
          elevmean = elevmean / step
          uumean = uumean / step
@@ -455,6 +469,7 @@
          end do
          wmean = tmpf
       end if
+      step2d = 0
       step = 0
    end if
 
