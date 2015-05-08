@@ -61,7 +61,7 @@
 !             requires ho=hn in coordinates. See also necessary changes
 !             in do_salinity and do_getm_fabm!
 !             Do not update ssen, because true sseo is needed!
-!   hn(:,:,kmax) = hn(:,:,kmax) + dt*fwf_int
+!   hn(:,:,kmax) = hn(:,:,kmax) + fwf_int
 
    do j=jmin-HALO,jmax+HALO         ! Defining 'old' and 'new' sea surface
       do i=imin-HALO,imax+HALO      ! elevation for macro time step
