@@ -72,11 +72,15 @@
    err = nf90_put_var(ncid,elevmean_id,ws2d(_2D_W_),start,edges)
    if (err .NE. NF90_NOERR) go to 10
 
-!  Short wave radiation
-   call cnv_2d(imin,jmin,imax,jmax,az,swrmean,swr_missing, &
-               imin,jmin,imax,jmax,ws2d)
-   err = nf90_put_var(ncid,swrmean_id,ws2d(_2D_W_),start,edges)
-   if (err .NE. NF90_NOERR) go to 10
+#ifndef NO_BAROCLINIC
+!  net heat flux
+   if (hfmean_id .ne. -1) then
+      call cnv_2d(imin,jmin,imax,jmax,az,hfmean,hf_missing, &
+                  imin,jmin,imax,jmax,ws2d)
+      err = nf90_put_var(ncid,hfmean_id,ws2d(_2D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+#endif
 
 !  mean friction velocity
     call cnv_2d(imin,jmin,imax,jmax,az,ustarmean,vel_missing, &

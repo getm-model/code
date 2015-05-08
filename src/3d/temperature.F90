@@ -477,7 +477,7 @@
                          *(A(i,j)*exp(-zz/g1(i,j))+(1-A(i,j))*exp(-zz/g2(i,j)))
                end do
             end if
-            heatflux_net(i,j) = rad1d(kmax) - rad1d(0) + shf_loc
+            heatflux_net(i,j) = dry_z(i,j) * ( rad1d(kmax) - rad1d(0) + shf_loc )
             do k=0,kmax
                rad1d(k)=rad1d(k)*rho_0_cpi                ! note this
             end do

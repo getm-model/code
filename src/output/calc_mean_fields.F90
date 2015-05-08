@@ -12,12 +12,13 @@
 ! !USES:
    use domain, only: imax,imin,jmax,jmin,kmax
    use domain, only: az,au,av
-   use meteo, only: swr
    use m3d, only: M,update_temp,update_salt
+   use meteo, only: metforcing
    use variables_3d, only: do_numerical_analyses_3d
    use variables_3d, only: ssen,hn,uu,hun,vv,hvn,ww,taub
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho
+   use variables_3d, only: heatflux_net
 #endif
    use variables_3d, only: nummix_S,nummix_T
    use variables_3d, only: nummix_S_old,nummix_S_int,nummix_T_old,nummix_T_int
@@ -62,9 +63,6 @@
 
    if (first ) then
       LEVEL3 'calc_mean_fields(): initialising variables'
-      allocate(swrmean(E2DFIELD),stat=rc)
-      if (rc /= 0) &
-          stop 'calc_mean_fields.F90: Error allocating memory (swrmean)'
       allocate(ustarmean(E2DFIELD),stat=rc)
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (ustarmean)'
@@ -107,6 +105,11 @@
          allocate(rhomean(I3DFIELD),stat=rc)
          if (rc /= 0) &
              stop 'calc_mean_fields.F90: Error allocating memory (rhomean)'
+      end if
+      if (metforcing) then
+         allocate(hfmean(E2DFIELD),stat=rc)
+         if (rc /= 0) &
+             stop 'calc_mean_fields.F90: Error allocating memory (hfmean)'
       end if
 #endif
 
@@ -207,6 +210,7 @@
          if (save_t) Tmean=_ZERO_
          if (save_s) Smean=_ZERO_
          if (save_rho) rhomean=_ZERO_
+         if (metforcing) hfmean=_ZERO_
 #endif
          if (do_numerical_analyses_3d) then
             numdis_3d_mean=_ZERO_
@@ -240,10 +244,9 @@
             fabmmean_diag_hz=_ZERO_
          end if
 #endif
-         ustarmean=_ZERO_; ustar2mean=_ZERO_; swrmean=_ZERO_
+         ustarmean=_ZERO_; ustar2mean=_ZERO_
       end if
 
-      swrmean = swrmean + swr
 !     AS this has to be checked, if it is the correct ustar,
 !     so we must not divide by rho_0 !!
       ustarmean = ustarmean + sqrt(taub)
@@ -272,6 +275,7 @@
       if (save_t) Tmean = Tmean + T*hn
       if (save_s) Smean = Smean + S*hn
       if (save_rho) rhomean = rhomean + rho*hn
+      if (metforcing) hfmean = hfmean + heatflux_net
 #endif
       if (do_numerical_analyses_3d) then
          numdis_3d_mean = numdis_3d_mean + numdis_3d*hn
@@ -331,6 +335,7 @@
          if (save_t) Tmean = Tmean / step
          if (save_s) Smean = Smean / step
          if (save_rho) rhomean = rhomean / step
+         if (metforcing) hfmean = hfmean / step
 #endif
          if (do_numerical_analyses_3d) then
             numdis_3d_mean = numdis_3d_mean / step / hmean
@@ -371,7 +376,6 @@
          end if
 #endif
          ustarmean = ustarmean / step
-         swrmean = swrmean / step
 
       end if
 

@@ -20,13 +20,14 @@
    integer                             :: time_dim
    integer                             :: time_id
 
-   integer                             :: swrmean_id,ustarmean_id,ustar2mean_id
+   integer                             :: ustarmean_id,ustar2mean_id
    integer                             :: elevmean_id
    integer                             :: uumean_id,vvmean_id,wmean_id
    integer                             :: hmean_id=-1
    integer                             :: saltmean_id=-1
    integer                             :: tempmean_id=-1
    integer                             :: sigma_tmean_id=-1
+   integer                             :: hfmean_id=-1
    integer                             :: nd3d_id=-1,nd3do_id=-1,pd3d_id=-1
    integer                             :: ndint_id=-1,pdint_id=-1
    integer                             :: nmS_id=-1
@@ -45,7 +46,7 @@
 
    REALTYPE, parameter                 :: elev_missing=-9999.0
    REALTYPE, parameter                 :: hh_missing=-9999.0
-   REALTYPE, parameter                 :: swr_missing=-9999.0
+   REALTYPE, parameter                 :: hf_missing=-9999.0
    REALTYPE, parameter                 :: vel_missing=-9999.0
    REALTYPE, parameter                 :: salt_missing=-9999.0
    REALTYPE, parameter                 :: temp_missing=-9999.0

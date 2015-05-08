@@ -18,6 +18,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
    use m3d, only: update_temp,update_salt
+   use meteo, only: metforcing
 #ifdef GETM_BIO
    use bio_var, only: numc,var_names,var_units,var_long
 #endif
@@ -87,14 +88,6 @@
    vr(2) =  15.
    call set_attributes(ncid,elevmean_id,long_name='mean elevation',units='m', &
                        FillValue=fv,missing_value=mv,valid_range=vr)
-
-!  short wave radiation
-   fv = swr_missing; mv = swr_missing; vr(1) = 0; vr(2) = 1500.
-   err = nf90_def_var(ncid,'swrmean',NCDF_FLOAT_PRECISION,f3_dims,swrmean_id)
-   if (err .NE. NF90_NOERR) go to 10
-   call set_attributes(ncid,swrmean_id,  &
-          long_name='mean short wave radiation',units='W/m2', &
-          FillValue=fv,missing_value=mv,valid_range=vr)
 
 ! Ustar at bottom
    fv = vel_missing; mv = vel_missing; vr(1) = -1; vr(2) = 1.
@@ -183,6 +176,16 @@
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,sigma_tmean_id, &
              long_name='mean sigma_t',units='kg/m3',&
+             FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
+
+!  net heat flux
+   if (metforcing) then
+      fv = hf_missing; mv = hf_missing; vr(1) = 0; vr(2) = 1500.
+      err = nf90_def_var(ncid,'hfmean',NCDF_FLOAT_PRECISION,f3_dims,hfmean_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,hfmean_id,  &
+             long_name='mean net heat flux',units='W/m2', &
              FillValue=fv,missing_value=mv,valid_range=vr)
    end if
 
