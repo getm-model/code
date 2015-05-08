@@ -116,7 +116,7 @@
       if (fwf_method .ge. 1) then
          fwf = evap+precip
 #ifndef NO_3D
-         fwf_int = fwf_int+timestep*fwf
+         fwf_int = fwf_int + fwf
 #endif
       end if
 
