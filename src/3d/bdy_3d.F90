@@ -31,6 +31,7 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_bdy_3d, do_bdy_3d,do_bdy_3d_vel
+   public bdy_3d_west,bdy_3d_north,bdy_3d_east,bdy_3d_south
    character(len=PATH_MAX),public         :: bdyfile_3d
    integer,public                         :: bdyfmt_3d
    integer,public                         :: bdy3d_ramp=-1
@@ -53,7 +54,6 @@
 !
 ! !PRIVATE DATA MEMBERS:
    private bdy3d_active
-   private bdy_3d_west,bdy_3d_north,bdy_3d_east,bdy_3d_south
    REALTYPE                            :: ramp=_ONE_
    logical                             :: ramp_is_active=.false.
    REALTYPE,         allocatable       :: sp(:)
