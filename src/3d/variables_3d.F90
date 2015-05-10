@@ -296,6 +296,7 @@
 #ifndef NO_BAROCLINIC
    NN=_ZERO_
    rad=_ZERO_
+   heatflux_net = _ZERO_
    light=_ONE_
 #endif
 
