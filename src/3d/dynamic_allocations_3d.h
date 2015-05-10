@@ -136,6 +136,9 @@
 
   allocate(light(I3DFIELD),stat=rc) ! light advection velocity
   if (rc /= 0) stop 'init_3d: Error allocating memory (light)'
+
+  allocate(heatflux_net(I2DFIELD),stat=rc) ! net heatflux
+  if (rc /= 0) stop 'init_3d: Error allocating memory (heatflux_net)'
 #endif
 
 #ifdef SPM

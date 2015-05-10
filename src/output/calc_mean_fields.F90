@@ -12,12 +12,14 @@
 ! !USES:
    use domain, only: imax,imin,jmax,jmin,kmax
    use domain, only: az,au,av
-   use meteo, only: swr
    use m3d, only: M,update_temp,update_salt
+   use meteo, only: metforcing
+   use variables_2d, only: fwf
    use variables_3d, only: do_numerical_analyses_3d
-   use variables_3d, only: hn,uu,hun,vv,hvn,ww,taub
+   use variables_3d, only: ssen,hn,uu,hun,vv,hvn,ww,taub
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho
+   use variables_3d, only: heatflux_net
 #endif
    use variables_3d, only: nummix_S,nummix_T
    use variables_3d, only: nummix_S_old,nummix_S_int,nummix_T_old,nummix_T_int
@@ -47,7 +49,7 @@
 ! !LOCAL VARIABLES:
    integer         :: i,j,k,rc
    REALTYPE        :: tmpf(I3DFIELD)
-   integer,save    :: step=0
+   integer,save    :: step2d=0,step=0
    logical,save    :: first=.true.
    logical,save    :: fabm_mean=.false.
 !EOP
@@ -62,15 +64,15 @@
 
    if (first ) then
       LEVEL3 'calc_mean_fields(): initialising variables'
-      allocate(swrmean(E2DFIELD),stat=rc)
-      if (rc /= 0) &
-          stop 'calc_mean_fields.F90: Error allocating memory (swrmean)'
       allocate(ustarmean(E2DFIELD),stat=rc)
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (ustarmean)'
       allocate(ustar2mean(E2DFIELD),stat=rc)
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (ustar2mean)'
+      allocate(elevmean(E2DFIELD),stat=rc)
+      if (rc /= 0) &
+          stop 'calc_mean_fields.F90: Error allocating memory (elevmean)'
       allocate(uumean(I3DFIELD),stat=rc)
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (uumean)'
@@ -105,8 +107,17 @@
          if (rc /= 0) &
              stop 'calc_mean_fields.F90: Error allocating memory (rhomean)'
       end if
+      if (metforcing) then
+         allocate(hfmean(E2DFIELD),stat=rc)
+         if (rc /= 0) &
+             stop 'calc_mean_fields.F90: Error allocating memory (hfmean)'
+      end if
 #endif
-
+      if (metforcing) then
+         allocate(fwfmean(E2DFIELD),stat=rc)
+         if (rc /= 0) &
+             stop 'calc_mean_fields.F90: Error allocating memory (fwfmean)'
+      end if
       if (do_numerical_analyses_3d) then
          allocate(numdis_3d_mean(I3DFIELD),stat=rc)
            if (rc /= 0) &
@@ -191,18 +202,26 @@
       first = .false.
    end if
 
+!  reset to start new meanout period
+   if (step2d .eq. 0) then
+      if (metforcing) fwfmean=_ZERO_
+   end if
+   if (metforcing) fwfmean = fwfmean + fwf
+   step2d = step2d + 1
 
 !  Sum every macro time step, even less would be okay
    if(mod(n,M) .eq. 0) then
 
 !     reset to start new meanout period
       if (step .eq. 0) then
+         elevmean = _ZERO_
          uumean=_ZERO_; vvmean=_ZERO_; wmean=_ZERO_
          humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
 #ifndef NO_BAROCLINIC
          if (save_t) Tmean=_ZERO_
          if (save_s) Smean=_ZERO_
          if (save_rho) rhomean=_ZERO_
+         if (metforcing) hfmean=_ZERO_
 #endif
          if (do_numerical_analyses_3d) then
             numdis_3d_mean=_ZERO_
@@ -236,15 +255,15 @@
             fabmmean_diag_hz=_ZERO_
          end if
 #endif
-         ustarmean=_ZERO_; ustar2mean=_ZERO_; swrmean=_ZERO_
+         ustarmean=_ZERO_; ustar2mean=_ZERO_
       end if
 
-      swrmean = swrmean + swr
 !     AS this has to be checked, if it is the correct ustar,
 !     so we must not divide by rho_0 !!
       ustarmean = ustarmean + sqrt(taub)
       ustar2mean = ustar2mean + (taub)
 
+      elevmean = elevmean + ssen
       uumean = uumean + uu
       vvmean = vvmean + vv
 
@@ -267,6 +286,7 @@
       if (save_t) Tmean = Tmean + T*hn
       if (save_s) Smean = Smean + S*hn
       if (save_rho) rhomean = rhomean + rho*hn
+      if (metforcing) hfmean = hfmean + heatflux_net
 #endif
       if (do_numerical_analyses_3d) then
          numdis_3d_mean = numdis_3d_mean + numdis_3d*hn
@@ -313,7 +333,11 @@
 !  prepare for output
    if (write_mean) then
 
+      if (step2d .gt. 1) then
+         if (metforcing) fwfmean = fwfmean / step2d
+      end if
       if (step .gt. 1) then
+         elevmean = elevmean / step
          uumean = uumean / step
          vvmean = vvmean / step
          wmean = wmean / step
@@ -325,6 +349,7 @@
          if (save_t) Tmean = Tmean / step
          if (save_s) Smean = Smean / step
          if (save_rho) rhomean = rhomean / step
+         if (metforcing) hfmean = hfmean / step
 #endif
          if (do_numerical_analyses_3d) then
             numdis_3d_mean = numdis_3d_mean / step / hmean
@@ -365,7 +390,6 @@
          end if
 #endif
          ustarmean = ustarmean / step
-         swrmean = swrmean / step
 
       end if
 
@@ -445,6 +469,7 @@
          end do
          wmean = tmpf
       end if
+      step2d = 0
       step = 0
    end if
 
