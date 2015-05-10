@@ -18,7 +18,7 @@
 ! !USES:
    use exceptions
    use domain, only: imin,jmin,imax,kmax,jmax,H,az,dry_z
-   use variables_3d, only: T,rad,hn,kmin,A,g1,g2
+   use variables_3d, only: T,rad,hn,kmin,A,g1,g2,heatflux_net
    use meteo, only: metforcing,met_method,nudge_sst,sst,sst_const
    use meteo, only: METEO_CONST,METEO_FROMFILE,METEO_FROMEXT
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
@@ -546,6 +546,7 @@
                          *(A(i,j)*exp(-zz/g1(i,j))+(1-A(i,j))*exp(-zz/g2(i,j)))
                end do
             end if
+            heatflux_net(i,j) = dry_z(i,j) * ( rad1d(kmax) - rad1d(0) + shf_loc )
             do k=0,kmax
                rad1d(k)=rad1d(k)*rho_0_cpi                ! note this
             end do
