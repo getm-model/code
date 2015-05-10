@@ -16,9 +16,11 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
-   REALTYPE,dimension(:,:),   allocatable :: swrmean
+   REALTYPE,dimension(:,:),   allocatable :: fwfmean
+   REALTYPE,dimension(:,:),   allocatable :: hfmean
    REALTYPE,dimension(:,:),   allocatable :: ustarmean
    REALTYPE,dimension(:,:),   allocatable :: ustar2mean
+   REALTYPE,dimension(:,:),   allocatable :: elevmean
    REALTYPE,dimension(:,:,:), allocatable :: uumean
    REALTYPE,dimension(:,:,:), allocatable :: vvmean
    REALTYPE,dimension(:,:,:), allocatable :: wmean

@@ -37,6 +37,7 @@
   REALTYPE, dimension(:,:,:), allocatable, target :: S,T,rho,buoy
   REALTYPE, dimension(:,:,:), allocatable   :: alpha,beta
   REALTYPE, dimension(:,:,:), allocatable   :: rad,light
+  REALTYPE, dimension(:,:)  , allocatable   :: heatflux_net
 #endif
 
 ! suspended matter
