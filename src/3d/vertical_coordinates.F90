@@ -119,7 +119,7 @@ stop
       end select
       first = .false.
    else
-      ho  = hn
+      ho  = hn  ! ho before advection (already including rivers and fwf)
       huo = hun
       hvo = hvn
       select case (vert_cord)
