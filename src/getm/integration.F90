@@ -124,6 +124,10 @@
       call integrate_2d(runtype,n,tausx,tausy,airp)
 #endif
 #ifndef NO_3D
+      !if (do_3d) then
+!        in case we need true ho (without rivers and fwf)
+         !ho = hn
+      !end if
       call do_rivers(do_3d)
       if (do_3d) then
          call integrate_3d(runtype,n)
