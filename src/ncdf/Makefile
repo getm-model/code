@@ -39,7 +39,8 @@ ${LIB}(ncdf_meteo.o)		\
 ${LIB}(ncdf_topo.o)		\
 ${LIB}(ncdf_restart.o)		\
 ${LIB}(ncdf_mean.o)		\
-${LIB}(ncdf_get_field.o)
+${LIB}(ncdf_get_field.o)	\
+${LIB}(get_2d_field_ncdf_by_id.o)
 
 OBJ	= 	\
 ${LIB}(set_attributes.o)	\
