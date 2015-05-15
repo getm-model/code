@@ -26,6 +26,7 @@
    use domain, only: ill,ihl,jll,jhl
    use domain, only: openbdy,have_boundaries,z0_method,z0_const,z0
    use domain, only: az,ax
+!KB   use get_field, only: get_2d_field
    use advection, only: init_advection,print_adv_settings,NOADV
    use halo_zones, only: update_2d_halo,wait_halo,H_TAG
    use variables_2d
@@ -57,13 +58,6 @@
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: hsd_u,hsd_v
       end subroutine uv_diff_2dh
 
-! Temporary interface (should be read from module):
-      subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,f)
-         character(len=*),intent(in)   :: fn,varname
-         integer, intent(in)           :: il,ih,jl,jh
-         logical, intent(in)           :: break_on_missing
-         REALTYPE, intent(out)         :: f(:,:)
-      end subroutine get_2d_field
    end interface
 !
 ! !PUBLIC DATA MEMBERS:
