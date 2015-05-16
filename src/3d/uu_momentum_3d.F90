@@ -49,7 +49,7 @@
    use domain, only: dry_u,coru,au,av,az
    use domain, only: dxu,arud1,dxx,dyc,dyx,dxc
    use bdy_3d, only: do_bdy_3d
-   use variables_3d, only: dt,cnpar,kumin,uu,vv,huo,hun,hvo,uuEx,ww,hvn
+   use variables_3d, only: dt,cnpar,kumin,uu,vv,huo,hun,hvo,uuEx,ww
    use variables_3d, only: num,nuh,sseo,Dun,rru
    use variables_3d, only: Uadv,Dn
 #ifdef _MOMENTUM_TERMS_

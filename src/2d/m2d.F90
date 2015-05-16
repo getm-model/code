@@ -25,6 +25,7 @@
    use domain, only: ilg,ihg,jlg,jhg
    use domain, only: ill,ihl,jll,jhl
    use domain, only: openbdy,have_boundaries
+!KB   use get_field, only: get_2d_field
    use advection, only: init_advection,print_adv_settings,NOADV
    use halo_zones, only: update_2d_halo,wait_halo,H_TAG
    use variables_2d
@@ -81,13 +82,6 @@
          REALTYPE,dimension(E2DFIELD),intent(out) :: phydiss
       end subroutine physical_dissipation
 
-! Temporary interface (should be read from module):
-      subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,f)
-         character(len=*),intent(in)   :: fn,varname
-         integer, intent(in)           :: il,ih,jl,jh
-         logical, intent(in)           :: break_on_missing
-         REALTYPE, intent(out)         :: f(:,:)
-      end subroutine get_2d_field
    end interface
 !
 ! !PUBLIC DATA MEMBERS:
@@ -343,7 +337,7 @@
 !  of a hotstart file.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j, ischange, rc
+   integer                   :: i,j, ischange
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -357,20 +351,7 @@
 
    ufirst = ( mod(MinN,2) .eq. 0 )
 
-   if (do_numerical_analyses_2d) then
-      allocate(phydis_2d(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_2d: Error allocating memory (phydis_2d)'
-      phydis_2d = _ZERO_
-      allocate(numdis_2d(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d)'
-      numdis_2d = _ZERO_
-#ifdef _NUMERICAL_ANALYSES_OLD_
-      allocate(numdis_2d_old(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d_old)'
-      numdis_2d_old = _ZERO_
-#endif
-   end if
-
+   call postinit_variables_2d()
 !
 ! It is possible that a user changes the land mask and reads an "old" hotstart file.
 ! In this case the "old" velocities will need to be zeroed out.
