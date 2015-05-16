@@ -65,7 +65,8 @@
 
    do j=jmin-HALO,jmax+HALO         ! Defining 'old' and 'new' sea surface
       do i=imin-HALO,imax+HALO      ! elevation for macro time step
-         sseo(i,j)=ssen(i,j)
+!        Note (KK): use true sseo set in time_loop
+         !sseo(i,j)=ssen(i,j) ! ssen already includes rivers and fwf
          ssen(i,j)=z(i,j)
          ssevel(i,j) = _HALF_ * ( sseo(i,j) + ssen(i,j) )
          Dn(i,j) = ssen(i,j) + H(i,j)

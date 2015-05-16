@@ -252,6 +252,7 @@
 
 !  Needed for interpolation of temperature and salinity
    if (.not. hotstart) then
+      sseo = z
       ssen = z
       call start_macro()
       call coordinates(hotstart)
