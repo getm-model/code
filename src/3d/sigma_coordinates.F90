@@ -55,8 +55,10 @@
 
    if (first) then
 
-      if (.not. allocated(ga)) allocate(ga(0:kmax),stat=rc)
-      if (rc /= 0) stop 'coordinates: Error allocating (ga)'
+      if (.not. allocated(ga)) then
+         allocate(ga(0:kmax),stat=rc)
+         if (rc /= 0) stop 'coordinates: Error allocating (ga)'
+      end if
       allocate(dga(0:kmax),stat=rc)
       if (rc /= 0) STOP 'coordinates: Error allocating (dga)'
       ga(0) = -_ONE_
