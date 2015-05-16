@@ -56,8 +56,10 @@
 #endif
 
    if (first) then
-      if (.not. allocated(ga)) allocate(ga(0:kmax),stat=rc)
-      if (rc /= 0) stop 'coordinates: Error allocating (ga)'
+      if (.not. allocated(ga)) then
+         allocate(ga(0:kmax),stat=rc)
+         if (rc /= 0) stop 'coordinates: Error allocating (ga)'
+      end if
       do k=0,kmax
          ga(k) = k
       end do
