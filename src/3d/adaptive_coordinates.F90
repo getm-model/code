@@ -50,9 +50,9 @@
 ! onto the adapted grid afterwards.
 !
 ! !USES:
-   use domain, only: ga,imin,imax,jmin,jmax,kmax,H,HU,HV,az,au,av
+   use domain, only: ga,imin,imax,jmin,jmax,kmax,H,az,au,av
    use variables_3d, only: dt,kmin,kumin,kvmin,ho,hn,huo,hvo,hun,hvn
-   use variables_3d, only: Dn,Dun,Dvn,sseo,ssen,ssuo,ssvo
+   use variables_3d, only: Dn,Dun,Dvn,sseo,ssen
    use variables_3d, only: kmin_pmz,kumin_pmz,kvmin_pmz
    use variables_3d, only: preadapt
    use vertical_coordinates,only: hcheck
@@ -126,9 +126,7 @@
    REALTYPE     :: cNN,cSS,cdd,csum
    REALTYPE     :: cbg=6*_TENTH_
    REALTYPE     :: tfac_hor=3600*_ONE_ ! factor introducing a hor. adaption timescale = dt/tgrid_hor where tgrid_hor=tgrid/N
-   integer      :: iip
 
-   integer,save :: count=0
       namelist /adapt_coord/   faclag,facdif,fachor,faciso,  &
                         depthmin,Ncrit, &
                         cNN,cSS,cdd,cbg,d_vel,d_dens, &

@@ -45,6 +45,7 @@
    use variables_2d, only: fwf,fwf_int
 #ifndef NO_3D
    use m3d,      only: integrate_3d,M
+   use variables_3d, only: sseo,ssen,ho,hn
 #ifndef NO_BAROCLINIC
    use variables_3d, only: T
 #endif
@@ -124,6 +125,10 @@
       call integrate_2d(runtype,n,tausx,tausy,airp)
 #endif
 #ifndef NO_3D
+      if (do_3d) then
+         sseo = ssen ! true sseo (without rivers and fwf)
+         ho   = hn   ! true ho   (without rivers and fwf)
+      end if
       call do_rivers(n,do_3d)
       if (do_3d) then
          call integrate_3d(runtype,n)
