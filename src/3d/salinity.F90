@@ -18,6 +18,7 @@
    use exceptions
    use domain, only: imin,jmin,imax,jmax,kmax,ioff,joff
    use domain, only: H,az
+!KB   use get_field, only: get_3d_field
    use variables_2d, only: fwf_int
    use variables_3d, only: S,hn,kmin
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG

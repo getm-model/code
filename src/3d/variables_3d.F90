@@ -229,6 +229,103 @@
 !-----------------------------------------------------------------------
 !BOP
 !
+! !IROUTINE: postinit_variables_3d - re-initialise some 3D stuff.
+!
+! !INTERFACE:
+   subroutine postinit_variables_3d(calc_temp,calc_salt)
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   logical, intent(in)                 :: calc_temp,calc_salt
+!
+! !DESCRIPTION:
+!
+! !LOCAL VARIABLES:
+   integer                   :: rc
+!
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'postinit_variables_3d() # ',Ncall
+#endif
+
+   if (do_numerical_analyses_3d) then
+
+      allocate(phydis_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (phydis_3d)'
+      phydis_3d = _ZERO_
+      allocate(phydis_int(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (phydis_int)'
+      phydis_int = _ZERO_
+      allocate(numdis_3d(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_3d)'
+      numdis_3d = _ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
+      allocate(numdis_3d_old(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_3d_old)'
+      numdis_3d_old = _ZERO_
+      allocate(numdis_int(I2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_int)'
+      numdis_int = _ZERO_
+#endif
+
+      if (calc_temp) then
+         allocate(phymix_T(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_T)'
+         phymix_T = _ZERO_
+         allocate(phymix_T_int(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_T_int)'
+         phymix_T_int = _ZERO_
+         allocate(nummix_T(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_T)'
+         nummix_T = _ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
+         allocate(nummix_T_old(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_T_old)'
+         nummix_T_old = _ZERO_
+         allocate(nummix_T_int(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_T_int)'
+         nummix_T_int = _ZERO_
+#endif
+      end if
+
+      if (calc_salt) then
+         allocate(phymix_S(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_S)'
+         phymix_S = _ZERO_
+         allocate(phymix_S_int(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_S_int)'
+         phymix_S_int = _ZERO_
+         allocate(nummix_S(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_S)'
+         nummix_S = _ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
+         allocate(nummix_S_old(I3DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_S_old)'
+         nummix_S_old = _ZERO_
+         allocate(nummix_S_int(I2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_S_int)'
+         nummix_S_int = _ZERO_
+#endif
+      end if
+
+   end if
+
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving postinit_variables_3d()'
+   write(debug,*)
+#endif
+   return
+   end subroutine postinit_variables_3d
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: clean_variables_3d - cleanup after 3D run.
 !
 ! !INTERFACE:
