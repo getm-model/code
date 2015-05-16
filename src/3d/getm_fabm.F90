@@ -427,6 +427,7 @@ end interface
          do i=imin-HALO,imax+HALO
             if (az(i,j) .eq. 1) then
                fabm_pel(i,j,kmax,n) = fabm_pel(i,j,kmax,n)*(_ONE_-fwf_int(i,j)/ho(i,j,kmax))
+            end if
          end do
       end do
    end do
