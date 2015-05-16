@@ -57,8 +57,6 @@
    call update_2d_halo(fwf_int,fwf_int,az,imin,jmin,imax,jmax,z_TAG)
    call wait_halo(z_TAG)
 
-!  Note (KK): Do not update ssen, because true sseo is needed
-!             in momentum routines!
    hn(:,:,kmax) = hn(:,:,kmax) + fwf_int
    ssen = ssen + fwf_int
 
