@@ -28,7 +28,8 @@
    use les, only: do_les_3d
    use les, only: les_mode,NO_LES,LES_MOMENTUM
    use m2d, only: depth_update,bottom_friction
-   use m2d, only: no_2d,deformC,deformX,deformUV
+   use m2d, only: no_2d
+   use variables_2d, only: deformC,deformX,deformUV
    use variables_2d, only: z
 #ifndef NO_BAROCLINIC
    use temperature, only: init_temperature,do_temperature,init_temperature_field
@@ -351,132 +352,7 @@
 
    ufirst = ( mod(int(ceiling((_ONE_*MinN)/M)),2) .eq. 1 )
 
-!  must be in postinit because flags are set init_getm_fabm
-!  KK-TODO: postinit_variables_3d()
-
-   if (deformC_3d) then
-      allocate(dudxC_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (dudxC_3d)'
-      dudxC_3d=_ZERO_
-#ifndef SLICE_MODEL
-      allocate(dvdyC_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (dvdyC_3d)'
-      dvdyC_3d=_ZERO_
-#endif
-   end if
-   if (deformX_3d) then
-      allocate(shearX_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (shearX_3d)'
-      shearX_3d=_ZERO_
-
-      if (do_numerical_analyses_3d) then
-            allocate(dvdxX_3d(I3DFIELD),stat=rc)
-            if (rc /= 0) stop 'postinit_3d: Error allocating memory (dvdxX_3d)'
-            dvdxX_3d=_ZERO_
-#ifndef SLICE_MODEL
-            allocate(dudyX_3d(I3DFIELD),stat=rc)
-            if (rc /= 0) stop 'postinit_3d: Error allocating memory (dudyX_3d)'
-            dudyX_3d=_ZERO_
-#endif
-      end if
-   end if
-   if (deformUV_3d) then
-      allocate(dudxV_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (dudxV_3d)'
-      dudxV_3d=_ZERO_
-
-#ifndef SLICE_MODEL
-      allocate(dvdyU_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (dvdyU_3d)'
-      dvdyU_3d=_ZERO_
-#endif
-
-      allocate(shearU_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (shearU_3d)'
-      shearU_3d=_ZERO_
-   end if
-   if (calc_stirr) then
-      allocate(diffxx(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (diffxx)'
-      diffxx=_ZERO_
-
-#ifndef SLICE_MODEL
-      allocate(diffxy(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (diffxy)'
-      diffxy=_ZERO_
-
-      allocate(diffyx(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (diffyx)'
-      diffyx=_ZERO_
-
-      allocate(diffyy(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (diffyy)'
-      diffyy=_ZERO_
-#endif
-   end if
-
-!  must be in postinit because do_numerical_analyses is set in init_output
-   if (do_numerical_analyses_3d) then
-
-      allocate(phydis_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (phydis_3d)'
-      phydis_3d = _ZERO_
-      allocate(phydis_int(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (phydis_int)'
-      phydis_int = _ZERO_
-      allocate(numdis_3d(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_3d)'
-      numdis_3d = _ZERO_
-#ifdef _NUMERICAL_ANALYSES_OLD_
-      allocate(numdis_3d_old(I3DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_3d_old)'
-      numdis_3d_old = _ZERO_
-      allocate(numdis_int(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_3d: Error allocating memory (numdis_int)'
-      numdis_int = _ZERO_
-#endif
-
-      if (update_temp) then
-         allocate(phymix_T(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_T)'
-         phymix_T = _ZERO_
-         allocate(phymix_T_int(I2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_T_int)'
-         phymix_T_int = _ZERO_
-         allocate(nummix_T(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_T)'
-         nummix_T = _ZERO_
-#ifdef _NUMERICAL_ANALYSES_OLD_
-         allocate(nummix_T_old(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_T_old)'
-         nummix_T_old = _ZERO_
-         allocate(nummix_T_int(I2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_T_int)'
-         nummix_T_int = _ZERO_
-#endif
-      end if
-
-      if (update_salt) then
-         allocate(phymix_S(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_S)'
-         phymix_S = _ZERO_
-         allocate(phymix_S_int(I2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (phymix_S_int)'
-         phymix_S_int = _ZERO_
-         allocate(nummix_S(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_S)'
-         nummix_S = _ZERO_
-#ifdef _NUMERICAL_ANALYSES_OLD_
-         allocate(nummix_S_old(I3DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_S_old)'
-         nummix_S_old = _ZERO_
-         allocate(nummix_S_int(I2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_3d: Error allocating memory (nummix_S_int)'
-         nummix_S_int = _ZERO_
-#endif
-      end if
-
-   end if
+   call postinit_variables_3d(update_temp,update_salt)
 
 ! Hotstart fix - see postinit_2d
    if (hotstart) then
