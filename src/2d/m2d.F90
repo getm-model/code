@@ -350,7 +350,7 @@
 !  of a hotstart file.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j, ischange, rc
+   integer                   :: i,j, ischange
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -364,20 +364,7 @@
 
    ufirst = ( mod(MinN,2) .eq. 0 )
 
-   if (do_numerical_analyses_2d) then
-      allocate(phydis_2d(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_2d: Error allocating memory (phydis_2d)'
-      phydis_2d = _ZERO_
-      allocate(numdis_2d(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d)'
-      numdis_2d = _ZERO_
-#ifdef _NUMERICAL_ANALYSES_OLD_
-      allocate(numdis_2d_old(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d_old)'
-      numdis_2d_old = _ZERO_
-#endif
-   end if
-
+   call postinit_variables_2d()
 !
 ! It is possible that a user changes the land mask and reads an "old" hotstart file.
 ! In this case the "old" velocities will need to be zeroed out.
