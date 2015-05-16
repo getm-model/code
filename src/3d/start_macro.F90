@@ -60,6 +60,7 @@
 !  Note (KK): Do not update ssen, because true sseo is needed
 !             in momentum routines!
    hn(:,:,kmax) = hn(:,:,kmax) + fwf_int
+   ssen = ssen + fwf_int
 
    do j=jmin-HALO,jmax+HALO         ! Defining 'old' and 'new' sea surface
       do i=imin-HALO,imax+HALO      ! elevation for macro time step
