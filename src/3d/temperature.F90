@@ -18,9 +18,12 @@
 ! !USES:
    use exceptions
    use domain, only: imin,jmin,imax,kmax,jmax,H,az,dry_z
+   use domain, only: ill,ihl,jll,jhl
+   use domain, only: ilg,ihg,jlg,jhg
    use variables_3d, only: T,rad,hn,kmin,A,g1,g2,heatflux_net
    use meteo, only: metforcing,met_method,nudge_sst,sst,sst_const
    use meteo, only: METEO_CONST,METEO_FROMFILE,METEO_FROMEXT
+!KB   use get_field, only: get_3d_field
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
    IMPLICIT NONE
 !
@@ -41,6 +44,10 @@
    REALTYPE                  :: temp_AH=-_ONE_
    integer                   :: attenuation_method=0,jerlov=1
    character(len=PATH_MAX)   :: attenuation_file="attenuation.nc"
+   integer                   :: ncid=-1,A_id,g1_id,g2_id
+   integer, allocatable      :: varids(:)
+   character(len=50), allocatable :: varnames(:)
+   integer                   :: old_month=-1
    REALTYPE                  :: A_const=0.58,g1_const=0.35,g2_const=23.0
    REALTYPE                  :: swr_bot_refl_frac=-_ONE_
    REALTYPE                  :: swr_min_bot_frac=0.01
@@ -53,6 +60,22 @@
 !
 !EOP
 !-----------------------------------------------------------------------
+
+interface
+   subroutine inquire_file(fn,ncid,varids,varnames)
+      character(len=*), intent(in)        :: fn
+      integer, intent(inout)              :: ncid
+      integer, allocatable, intent(inout) :: varids(:)
+      character(len=50), allocatable, intent(out) :: varnames(:)
+   end subroutine inquire_file
+
+!KB - only until a proper input_manager has been made
+   subroutine get_2d_field_ncdf_by_id(ncid,varid,il,ih,jl,jh,n,field)
+      integer, intent(in)                 :: ncid,varid
+      integer, intent(in)                 :: il,ih,jl,jh,n
+      REALTYPE, intent(out)               :: field(:,:)
+   end subroutine get_2d_field_ncdf_by_id
+end interface
 
    contains
 
@@ -147,12 +170,20 @@
       case (1)
          LEVEL3 'reading attenuation coefficients from:'
          LEVEL4 trim(attenuation_file)
+         call inquire_file(attenuation_file,ncid,varids,varnames)
+         do n=1,size(varids)
+            if(trim(varnames(n)) .eq. "A")  A_id  = varids(n)
+            if(trim(varnames(n)) .eq. "g1") g1_id = varids(n)
+            if(trim(varnames(n)) .eq. "g2") g2_id = varids(n)
+         end do
+#if 0
          LEVEL1 'WARNING: reading routine not coded yet'
          LEVEL1 'WARNING: setting to jerlov=1'
          A_const=0.58;g1_const=0.35;g2_const=23.0
          A=A_const
          g1=g1_const
          g2=g2_const
+#endif
       case default
    end select
 
@@ -320,6 +351,7 @@
 ! equation by means of a tri-diagonal solver.
 !
 ! !USES:
+   use time, only: month,timestr
    use advection_3d, only: do_advection_3d
    use variables_3d, only: dt,cnpar,hn,ho,nuh,uu,vv,ww,hun,hvn,S
    use domain,       only: imin,imax,jmin,jmax,kmax,az
@@ -359,6 +391,17 @@
 #endif
    call tic(TIM_TEMP)
    rho_0_cpi = _ONE_/(rho_0*cp)
+
+   if (ncid .ne. -1 .and. month .ne. old_month) then
+      old_month = month
+      LEVEL3 timestr,': reading varying attenuation ...',month
+      call get_2d_field_ncdf_by_id(ncid,A_id,ilg,ihg,jlg,jhg,month,  &
+                                   A(ill:ihl,jll:jhl))
+      call get_2d_field_ncdf_by_id(ncid,g1_id,ilg,ihg,jlg,jhg,month, &
+                                   g1(ill:ihl,jll:jhl))
+      call get_2d_field_ncdf_by_id(ncid,g2_id,ilg,ihg,jlg,jhg,month, &
+                                   g2(ill:ihl,jll:jhl))
+   end if
 
 #ifdef _NUMERICAL_ANALYSES_OLD_
    if (do_numerical_analyses_3d) then
