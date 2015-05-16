@@ -57,10 +57,11 @@
    call wait_halo(z_TAG)
 
 !  Note (KK): This would be the correct handling for fwf_int, but it
-!             requires ho=hn in coordinates. See also necessary changes
+!             requires ho=hn in coordinates and use of true sseo for
+!             momentum routines. See also necessary changes
 !             in do_salinity and do_getm_fabm!
-!             Do not update ssen, because true sseo is needed!
 !   hn(:,:,kmax) = hn(:,:,kmax) + fwf_int
+!   ssen = ssen + fwf_int
 
    do j=jmin-HALO,jmax+HALO         ! Defining 'old' and 'new' sea surface
       do i=imin-HALO,imax+HALO      ! elevation for macro time step
