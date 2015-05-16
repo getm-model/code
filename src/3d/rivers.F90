@@ -630,6 +630,7 @@
 !                 Changes of total and layer height due to river inflow:
                   hn(i,j,kl:kh) = hn(i,j,kl:kh)/river_depth &
                                   *(river_depth+macro_height(n))
+                  ssen(i,j) = ssen(i,j)+macro_height(n)
                   macro_height(n) = _ZERO_
                end if
 #endif
