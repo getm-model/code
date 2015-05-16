@@ -163,6 +163,52 @@
 !-----------------------------------------------------------------------
 !BOP
 !
+! !IROUTINE: postinit_variables_2d - re-initialise some 2D stuff.
+!
+! !INTERFACE:
+   subroutine postinit_variables_2d()
+   IMPLICIT NONE
+!
+! !DESCRIPTION:
+!
+! !LOCAL VARIABLES:
+   integer                   :: rc
+!
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'postinit_variables_2d() # ',Ncall
+#endif
+
+   if (do_numerical_analyses_2d) then
+      allocate(phydis_2d(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_2d: Error allocating memory (phydis_2d)'
+      phydis_2d = _ZERO_
+      allocate(numdis_2d(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d)'
+      numdis_2d = _ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
+      allocate(numdis_2d_old(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d_old)'
+      numdis_2d_old = _ZERO_
+#endif
+   end if
+
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving postinit_variables_2d()'
+   write(debug,*)
+#endif
+   return
+   end subroutine postinit_variables_2d
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: clean_variables_2d - cleanup after 2D run.
 !
 ! !INTERFACE:

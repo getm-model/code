@@ -630,6 +630,7 @@
 			<fabm_adv_hor>4</fabm_adv_hor>
 			<fabm_adv_ver>4</fabm_adv_ver>
 			<fabm_AH>-1.0</fabm_AH>
+                        <fabm_surface_flux_file></fabm_surface_flux_file>
 		</getm_fabm_nml>
 	</getm_fabm>
 </scenario>
