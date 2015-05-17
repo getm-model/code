@@ -1074,6 +1074,7 @@
 					<condition type="eq" variable="./fabm_init_format" value="2"/>
 				</condition>
 			</element>
+			<element name="fabm_surface_flux_file" type="string" label="name of file with FABM state variable surface fluxes"/>
 			<element name="fabm_adv_split" type="int" label="advection splitting for pelagic fabm fields">
 				<condition type="ne" variable="./fabm_adv_hor" value="0"/>
 				<options>
