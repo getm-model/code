@@ -32,6 +32,7 @@ endif
 OBJ   += \
 ${LIB}(init_meteo_input.o)	\
 ${LIB}(get_meteo_data.o)	\
+${LIB}(inquire_file.o)		\
 ${LIB}(get_2d_field.o)		\
 ${LIB}(get_3d_field.o)		\
 ${LIB}(read_profile.o)          \
