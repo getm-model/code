@@ -117,9 +117,12 @@ stop
             call adaptive_coordinates(.true.,hotstart)
          case default
       end select
+      if (.not. hotstart) then
+         ho = hn
+      end if
       first = .false.
    else
-      ho  = hn
+      ho  = hn  ! ho before advection (already including rivers and fwf)
       huo = hun
       hvo = hvn
       select case (vert_cord)
