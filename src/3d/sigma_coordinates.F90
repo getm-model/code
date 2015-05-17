@@ -24,10 +24,10 @@
 ! the water depths in all T-, U- and V-points to get the layer thicknesses.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,kmax,H,HU,HV
+   use domain, only: imin,imax,jmin,jmax,kmax,H
    use domain, only: ga,ddu,ddl
-   use variables_3d, only: kmin,kumin,kvmin,ho,hn,huo,hun,hvo,hvn
-   use variables_3d, only: Dn,Dun,Dvn,sseo,ssuo,ssvo
+   use variables_3d, only: kmin,kumin,kvmin,ho,hn,hun,hvn
+   use variables_3d, only: Dn,Dun,Dvn,sseo
    use vertical_coordinates,only: restart_with_ho,restart_with_hn
    IMPLICIT NONE
 !
@@ -55,8 +55,10 @@
 
    if (first) then
 
-      if (.not. allocated(ga)) allocate(ga(0:kmax),stat=rc)
-      if (rc /= 0) stop 'coordinates: Error allocating (ga)'
+      if (.not. allocated(ga)) then
+         allocate(ga(0:kmax),stat=rc)
+         if (rc /= 0) stop 'coordinates: Error allocating (ga)'
+      end if
       allocate(dga(0:kmax),stat=rc)
       if (rc /= 0) STOP 'coordinates: Error allocating (dga)'
       ga(0) = -_ONE_
