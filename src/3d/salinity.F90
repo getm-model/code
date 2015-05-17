@@ -17,6 +17,7 @@
 ! !USES:
    use exceptions
    use domain, only: imin,jmin,imax,jmax,kmax,H,az,dry_z
+!KB   use get_field, only: get_3d_field
    use variables_2d, only: fwf_int
    use variables_3d, only: S,hn,kmin
    use meteo, only: metforcing,met_method,nudge_sss,sss,sss_const
@@ -353,15 +354,7 @@
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
          if (az(i,j) .eq. 1) then
-!           Note (KK): This would be the correct dilution if hn was
-!                      corrected in start_macro. This also requires,
-!                      that ho=hn is done in coordinates!
-!            S(i,j,kmax) = S(i,j,kmax)*(_ONE_-fwf_int(i,j)/ho(i,j,kmax))
-! Developers note:
-!  The parentheses are set to minimize truncation errors for fwf_int=0
-            S(i,j,kmax) = S(i,j,kmax)*            &
-                          ( ho(i,j,kmax) / (ho(i,j,kmax)+fwf_int(i,j)) )
-
+            S(i,j,kmax) = S(i,j,kmax)*(_ONE_-fwf_int(i,j)/ho(i,j,kmax))
          end if
       end do
    end do
