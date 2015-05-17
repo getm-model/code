@@ -25,6 +25,7 @@
    use domain, only: ilg,ihg,jlg,jhg
    use domain, only: ill,ihl,jll,jhl
    use domain, only: rigid_lid,have_boundaries
+!KB   use get_field, only: get_2d_field
    use advection, only: init_advection,print_adv_settings,NOADV
    use les, only: les_mode,LES_MOMENTUM
    use halo_zones, only: update_2d_halo,wait_halo,H_TAG
@@ -88,20 +89,12 @@
          REALTYPE,dimension(:,:),pointer,intent(out),optional     :: taubmax
       end subroutine bottom_friction
 
-! Temporary interface (should be read from module):
-      subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,f)
-         character(len=*),intent(in)   :: fn,varname
-         integer, intent(in)           :: il,ih,jl,jh
-         logical, intent(in)           :: break_on_missing
-         REALTYPE, intent(out)         :: f(:,:)
-      end subroutine get_2d_field
    end interface
 !
 ! !PUBLIC DATA MEMBERS:
    logical                   :: no_2d
    integer                   :: vel2d_adv_split=0
    integer                   :: vel2d_adv_hor=1
-   logical                   :: deformC=.false.,deformX=.false.,deformUV=.false.
    integer,parameter         :: NO_AM=0,AM_LAPLACE=1,AM_LES=2,AM_CONSTANT=3
    integer                   :: Am_method=NO_AM
    REALTYPE                  :: Am_const=1.8d-6
@@ -374,7 +367,7 @@
 !  of a hotstart file.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j, ischange, rc
+   integer                   :: i,j, ischange
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -386,73 +379,9 @@
 
    LEVEL1 'postinit_2d'
 
-!  must be allocated in postinit because of do_numerical_analyses_2d
-!  KK-TODO: postinit_variables_2d()
+   ufirst = ( mod(MinN,2) .eq. 0 )
 
-   if (.not. no_2d) then
-
-      ufirst = ( mod(MinN,2) .eq. 0 )
-
-      if (deformC) then
-         allocate(dudxC(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_2d: Error allocating memory (dudxC)'
-         dudxC=_ZERO_
-#ifndef SLICE_MODEL
-         allocate(dvdyC(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_2d: Error allocating memory (dvdyC)'
-         dvdyC=_ZERO_
-#endif
-      end if
-      if (deformX) then
-         allocate(shearX(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_2d: Error allocating memory (shearX)'
-         shearX=_ZERO_
-         if (do_numerical_analyses_2d) then
-            allocate(dvdxX(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'postinit_2d: Error allocating memory (dvdxX)'
-            dvdxX=_ZERO_
-#ifndef SLICE_MODEL
-            allocate(dudyX(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'postinit_2d: Error allocating memory (dudyX)'
-            dudyX=_ZERO_
-#endif
-         end if
-      end if
-      if (deformUV) then
-         allocate(dudxV(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_2d: Error allocating memory (dudxV)'
-         dudxV=_ZERO_
-#ifndef SLICE_MODEL
-         allocate(dvdyU(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_2d: Error allocating memory (dvdyU)'
-         dvdyU=_ZERO_
-#endif
-         allocate(shearU(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_2d: Error allocating memory (shearU)'
-         shearU=_ZERO_
-      end if
-
-      if (do_numerical_analyses_2d) then
-         allocate(phydis_2d(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_2d: Error allocating memory (phydis_2d)'
-         phydis_2d = _ZERO_
-         allocate(numdis_2d(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d)'
-         numdis_2d = _ZERO_
-#ifdef _NUMERICAL_ANALYSES_OLD_
-         allocate(numdis_2d_old(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d_old)'
-         numdis_2d_old = _ZERO_
-#endif
-      end if
-
-      if (calc_taubmax) then
-         allocate(taubmax(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'postinit_2d: Error allocating memory (taubmax)'
-         taubmax = _ZERO_
-      end if
-
-   end if
+   call postinit_variables_2d(no_2d)
 
 !
 ! It is possible that a user changes the land mask and reads an "old" hotstart file.
