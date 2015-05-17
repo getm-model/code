@@ -25,6 +25,9 @@
 ! !PUBLIC DATA MEMBERS:
    REALTYPE                            :: dtm
    REALTYPE,dimension(:,:),pointer     :: zo,z
+   logical                             :: deformC=.false.
+   logical                             :: deformX=.false.
+   logical                             :: deformUV=.false.
    logical                             :: do_numerical_analyses_2d=.false.
    logical                             :: calc_taubmax=.false.
 
@@ -204,6 +207,105 @@
 #endif
    return
    end subroutine init_variables_2d
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: postinit_variables_2d - re-initialise some 2D stuff.
+!
+! !INTERFACE:
+   subroutine postinit_variables_2d(no_2d)
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   logical, intent(in)                 :: no_2d
+!
+! !DESCRIPTION:
+!
+! !LOCAL VARIABLES:
+   integer                   :: rc
+!
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'postinit_variables_2d() # ',Ncall
+#endif
+
+!  must be allocated in postinit because of do_numerical_analyses_2d
+
+   if (.not. no_2d) then
+
+      if (deformC) then
+         allocate(dudxC(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_variables_2d: Error allocating memory (dudxC)'
+         dudxC=_ZERO_
+#ifndef SLICE_MODEL
+         allocate(dvdyC(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_variables_2d: Error allocating memory (dvdyC)'
+         dvdyC=_ZERO_
+#endif
+      end if
+      if (deformX) then
+         allocate(shearX(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_variables_2d: Error allocating memory (shearX)'
+         shearX=_ZERO_
+         if (do_numerical_analyses_2d) then
+            allocate(dvdxX(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'postinit_variables_2d: Error allocating memory (dvdxX)'
+            dvdxX=_ZERO_
+#ifndef SLICE_MODEL
+            allocate(dudyX(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'postinit_variables_2d: Error allocating memory (dudyX)'
+            dudyX=_ZERO_
+#endif
+         end if
+      end if
+      if (deformUV) then
+         allocate(dudxV(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_variables_2d: Error allocating memory (dudxV)'
+         dudxV=_ZERO_
+#ifndef SLICE_MODEL
+         allocate(dvdyU(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_variables_2d: Error allocating memory (dvdyU)'
+         dvdyU=_ZERO_
+#endif
+         allocate(shearU(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_variables_2d: Error allocating memory (shearU)'
+         shearU=_ZERO_
+      end if
+
+   if (do_numerical_analyses_2d) then
+      allocate(phydis_2d(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_2d: Error allocating memory (phydis_2d)'
+      phydis_2d = _ZERO_
+      allocate(numdis_2d(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d)'
+      numdis_2d = _ZERO_
+#ifdef _NUMERICAL_ANALYSES_OLD_
+      allocate(numdis_2d_old(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_2d: Error allocating memory (numdis_2d_old)'
+      numdis_2d_old = _ZERO_
+#endif
+   end if
+
+      if (calc_taubmax) then
+         allocate(taubmax(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'postinit_2d: Error allocating memory (taubmax)'
+         taubmax = _ZERO_
+      end if
+
+   end if
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving postinit_variables_2d()'
+   write(debug,*)
+#endif
+   return
+   end subroutine postinit_variables_2d
 !EOC
 
 !-----------------------------------------------------------------------

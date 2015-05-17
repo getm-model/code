@@ -466,14 +466,17 @@
 !           first we check for CF compatible grid_mapping_name
             err = nf90_inq_varid(ncid,'rotated_pole',id)
             if (err .eq. NF90_NOERR) then
+               LEVEL4 'Reading CF-compliant rotated grid specification'
                err = nf90_get_att(ncid,id, &
                                   'grid_north_pole_latitude',southpole(1))
                if (err .ne. NF90_NOERR) go to 10
                err = nf90_get_att(ncid,id, &
                                   'grid_north_pole_longitude',southpole(2))
-!STDERR 'Inside rotated_pole'
-!STDERR 'grid_north_pole_latitude ',southpole(1)
-!STDERR 'grid_north_pole_longitude ',southpole(2)
+#if 0
+STDERR 'Inside rotated_pole'
+STDERR 'grid_north_pole_latitude ',southpole(1)
+STDERR 'grid_north_pole_longitude ',southpole(2)
+#endif
                if (err .ne. NF90_NOERR) go to 10
                err = nf90_get_att(ncid,id, &
                                   'north_pole_grid_longitude',southpole(3))
@@ -481,15 +484,18 @@
                   southpole(3) = _ZERO_
                end if
 !              Northpole ---> Southpole transformation
+               LEVEL4 'Transforming North Pole to South Pole specification'
                if (southpole(2) .ge. 0) then
                   southpole(2) = southpole(2) - 180.
                else
                   southpole(2) = southpole(2) + 180.
                end if 
                southpole(1) = -southpole(1)
-!STDERR 'After transformation:'
-!STDERR 'grid_north_pole_latitude ',southpole(1)
-!STDERR 'grid_north_pole_longitude ',southpole(2)
+#if 0
+STDERR 'After transformation:'
+STDERR 'grid_north_pole_latitude ',southpole(1)
+STDERR 'grid_north_pole_longitude ',southpole(2)
+#endif
                southpole(3) = _ZERO_
                have_southpole = .true.
                rotated_meteo_grid = .true.
