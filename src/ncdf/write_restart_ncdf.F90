@@ -44,7 +44,7 @@
 !  Original author(s): Karsten Bolding
 !
 ! !LOCAL VARIABLES:
-   integer         :: k,n
+   integer         :: k,n, rc
    REALTYPE, allocatable :: zax(:)
 !EOP
 !-----------------------------------------------------------------------

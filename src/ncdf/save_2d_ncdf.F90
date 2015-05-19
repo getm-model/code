@@ -49,6 +49,7 @@
    REALTYPE                  :: deg2rad = 3.141592654/180.
    REALTYPE                  :: cosconv,sinconv
 #endif
+   REALTYPE,dimension(E2DFIELD) :: ws
 !EOP
 !-----------------------------------------------------------------------
 !BOC
