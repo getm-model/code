@@ -18,6 +18,7 @@
 !  in from the library {\tt lib2d.a}.
 !
 ! !USES:
+   use field_manager
    use exceptions
    use time, only: julianday,secondsofday
    use parameters, only: avmmol
@@ -105,13 +106,14 @@
 ! !IROUTINE: init_2d - initialise 2D related stuff.
 !
 ! !INTERFACE:
-   subroutine init_2d(runtype,timestep,hotstart)
+   subroutine init_2d(runtype,timestep,hotstart,field_manager)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
    REALTYPE, intent(in)                :: timestep
    logical, intent(in)                 :: hotstart
+   class (type_field_manager),intent(inout),optional :: field_manager
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -148,6 +150,8 @@
    LEVEL1 'init_2d'
 
    dtm = timestep
+
+   call field_manager%register('z', 'm', 'sea surface elevation', standard_name='sea surface elevation', data2d=z(I2DFIELD))
 
 #if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
 !  STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'

@@ -10,6 +10,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use field_manager
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -19,6 +20,8 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
+
+   type (type_field_manager),target :: field_manager_
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -204,7 +207,8 @@
          FATAL 'A non valid runtype has been specified.'
          stop 'initialise()'
    end select
-
+!KB
+   
    call init_time(MinN,MaxN)
    if(use_epoch) then
       LEVEL2 'using "',start,'" as time reference'
@@ -212,17 +216,19 @@
 
    call init_domain(input_dir)
 
+   call field_manager_%initialize((imax+HALO)-(imin-HALO)+1,(jmax+HALO)-(jmin-HALO)+1,kmax+1,prepend_by_default=(/id_dim_lon,id_dim_lat/),append_by_default=(/id_dim_time/))
+
    call init_meteo(hotstart)
 
 #ifndef NO_3D
    call init_rivers()
 #endif
 
-   call init_2d(runtype,timestep,hotstart)
+   call init_2d(runtype,timestep,hotstart,field_manager_)
 
 #ifndef NO_3D
    if (runtype .gt. 1) then
-      call init_3d(runtype,timestep,hotstart)
+      call init_3d(runtype,timestep,hotstart,field_manager_)
 #ifndef CONSTANT_VISCOSITY
       call init_turbulence(60,trim(input_dir) // 'gotmturb.nml',kmax)
 #else
@@ -246,7 +252,7 @@
    end if
 #endif
 
-   call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)
+!KB   call init_output(runid,title,start,runtype,dryrun,myid)
 
    close(NAMLST)
 
@@ -305,7 +311,7 @@
 #endif
    end if
 
-   if (.not. dryrun) then
+   if (save_initial .and. .not. dryrun) then
       call do_output(runtype,MinN-1,timestep)
    end if
 

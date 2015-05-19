@@ -23,6 +23,7 @@
 !  section \ref{sec-clean-3d} on page \pageref{sec-clean-3d}.
 !
 ! !USES:
+   use field_manager
    use exceptions
    use parameters, only: avmmol
    use domain, only: openbdy,maxdepth,vert_cord,az
@@ -85,14 +86,15 @@
 ! !IROUTINE: init_3d - initialise 3D related stuff \label{sec-init-3d}
 !
 ! !INTERFACE:
-   subroutine init_3d(runtype,timestep,hotstart)
+   subroutine init_3d(runtype,timestep,hotstart,field_manager)
+!
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
    REALTYPE, intent(in)                :: timestep
    logical, intent(in)                 :: hotstart
-!
+   class (type_field_manager),intent(inout),optional :: field_manager
 !
 ! !DESCRIPTION:
 !  Here, the {\tt m3d} namelist is read from {\tt getm.inp}, and the
@@ -283,6 +285,14 @@
 #endif
 
    if (vert_cord .eq. _ADAPTIVE_COORDS_) call preadapt_coordinates(preadapt)
+
+! need to get a variable of type_field_manager already initialized to here
+#if 1
+   call field_manager%register('hn', 'm', 'layer thickness', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hn(I3DFIELD))
+
+#endif
+   call field_manager%list()
+stop '2'
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_3d()'

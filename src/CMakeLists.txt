@@ -11,6 +11,10 @@ set(getm_VERSION_MINOR 5)
 set(getm_VERSION_PATCH 0)
 set(getm_VERSION "${getm_VERSION_MAJOR}.${getm_VERSION_MINOR}.${getm_VERSION_PATCH}")
 
+if(GETM_FLAGS)
+   add_definitions(${GETM_FLAGS})
+endif(GETM_FLAGS)
+
 find_package(Git)
 if(GIT_FOUND)
   #add_custom_command(OUTPUT git_revision.h
@@ -100,6 +104,7 @@ elseif(${GETM_COORDINATE_TYPE} STREQUAL "Curvilinear")
   set(exe_id "_curvilinear${par_str}")
 endif()
 message(${GETM_COORDINATE_TYPE})
+
 
 # Specify default build type for single-type systems (not VS)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -370,6 +375,7 @@ if(GOTM_BASE)
     set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES $<TARGET_PROPERTY:gotm_fabm,INTERFACE_INCLUDE_DIRECTORIES>)
   endif()
   mark_as_advanced(GOTM_PREFIX GOTM_USE_FABM)
+#KB  add_dependencies(output ${GOTM_LIBRARIES})
   add_dependencies(3d ${GOTM_LIBRARIES})
 else()
   find_package(GOTM REQUIRED)
@@ -380,7 +386,12 @@ else()
     set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
   endif()
 endif()
+set_property(TARGET 2d APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
+set_property(TARGET output APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
+set_property(TARGET ncdf APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
+set_property(TARGET input APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
+set_property(TARGET getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 
 # Build GETM executable.
 add_executable(getm_exe
@@ -396,6 +407,7 @@ add_executable(getm_exe
                $<TARGET_OBJECTS:futils>
               )
 set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm${exe_id}")
+set_property(TARGET getm_exe APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 
 target_link_libraries(getm_exe ${GOTM_LIBRARIES} ${NetCDF_LIBRARIES})
 if (NetCDF_STATIC_MSVC_BUILD)
