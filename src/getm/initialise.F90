@@ -11,6 +11,7 @@
 !
 ! !USES:
    use field_manager
+   use output_manager
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -217,6 +218,7 @@
    call init_domain(input_dir)
 
    call field_manager_%initialize((imax+HALO)-(imin-HALO)+1,(jmax+HALO)-(jmin-HALO)+1,kmax+1,prepend_by_default=(/id_dim_lon,id_dim_lat/),append_by_default=(/id_dim_time/))
+   call output_manager_init(field_manager_)
 
    call init_meteo(hotstart)
 
