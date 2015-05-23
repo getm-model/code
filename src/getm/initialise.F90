@@ -11,6 +11,8 @@
 !
 ! !USES:
    use field_manager
+   use output_manager_core, only:output_manager_host=>host, type_output_manager_host=>type_host
+   use time, only: CalDat,JulDay
    use output_manager
    IMPLICIT NONE
 !
@@ -23,6 +25,12 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 
    type (type_field_manager),target :: field_manager_
+
+   type,extends(type_output_manager_host) :: type_getm_host
+   contains
+      procedure :: julian_day => getm_host_julian_day
+      procedure :: calendar_date => getm_host_calendar_date
+   end type
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -218,6 +226,7 @@
    call init_domain(input_dir)
 
    call field_manager_%initialize((imax+HALO)-(imin-HALO)+1,(jmax+HALO)-(jmin-HALO)+1,kmax+1,prepend_by_default=(/id_dim_lon,id_dim_lat/),append_by_default=(/id_dim_time/))
+   allocate(type_getm_host::output_manager_host)
    call output_manager_init(field_manager_)
 
    call init_meteo(hotstart)
@@ -326,6 +335,20 @@
 !EOC
 
 !-----------------------------------------------------------------------
+
+   subroutine getm_host_julian_day(self,yyyy,mm,dd,julian)
+      class (type_getm_host), intent(in) :: self
+      integer, intent(in)  :: yyyy,mm,dd
+      integer, intent(out) :: julian
+      call JulDay(yyyy,mm,dd,julian)
+   end subroutine
+
+   subroutine getm_host_calendar_date(self,julian,yyyy,mm,dd)
+      class (type_getm_host), intent(in) :: self
+      integer, intent(in)  :: julian
+      integer, intent(out) :: yyyy,mm,dd
+      call CalDat(julian,yyyy,mm,dd)
+   end subroutine
 
    end module initialise
 
