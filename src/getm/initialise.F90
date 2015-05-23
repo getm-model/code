@@ -57,6 +57,7 @@
    use domain, only: vert_cord,maxdepth
    use time, only: init_time,update_time,write_time_string
    use time, only: start,timestr,timestep
+   use time, only: julianday,secondsofday
    use m2d, only: init_2d,postinit_2d, z
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
 #ifndef NO_3D
@@ -263,7 +264,8 @@
    end if
 #endif
 
-!KB   call init_output(runid,title,start,runtype,dryrun,myid)
+!   call init_output(runid,title,start,runtype,dryrun,myid)
+   call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)
 
    close(NAMLST)
 
@@ -324,6 +326,7 @@
 
    if (save_initial .and. .not. dryrun) then
       call do_output(runtype,MinN-1,timestep)
+      call output_manager_save(julianday,secondsofday)
    end if
 
 #ifdef DEBUG
