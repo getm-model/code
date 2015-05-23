@@ -289,10 +289,10 @@
 ! need to get a variable of type_field_manager already initialized to here
 #if 1
    call field_manager%register('hn', 'm', 'layer thickness', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hn(I3DFIELD))
+   call field_manager%register('temp', 'Celsius', 'temperature', standard_name='', dimensions=(/id_dim_z/),data3d=T(I3DFIELD))
 
 #endif
    call field_manager%list()
-stop '2'
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_3d()'
