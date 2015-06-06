@@ -215,6 +215,19 @@
                   ok(n) = 2
                end if
                bathy = H(i,j)
+               if (rzu(n) .gt. rzl(n)) then
+                  rzl(n) = -1.
+                  rzu(n) = -1.
+                  LEVEL3 trim(river_name(n)),' rzu > rzl setting both to -1.'
+               end if
+               if (rzl(n) .gt. H(i,j)) then
+                  rzl(n) = -1.
+                  LEVEL3 trim(river_name(n)),' setting rzl=-1.'
+               end if
+               if (rzu(n) .gt. H(i,j)) then
+                  rzu(n) = -1.
+                  LEVEL3 trim(river_name(n)),' setting rzu=-1.'
+               end if
             else
               xxx = ' outside'
               bathy = -9999.9
@@ -340,21 +353,7 @@
       if (len_trim(line) .gt. 0 .and. ios == 0) then
          n = n + 1
          read(line,*,iostat=ios) ir(n),jr(n),river_name(n),rzl(n),rzu(n)
-         if (ios .eq. 0) then
-            if (rzu(n) .gt. rzl(n)) then
-               rzl(n) = -1.
-               rzu(n) = -1.
-               LEVEL3 trim(river_name(n)),' rzu > rzl setting both to -1.'
-            end if
-            if (rzl(n) .gt. H(ir(n),jr(n))) then
-               rzl(n) = -1.
-               LEVEL3 trim(river_name(n)),' setting rzl=-1.'
-            end if
-            if (rzu(n) .gt. H(ir(n),jr(n))) then
-               rzu(n) = -1.
-               LEVEL3 trim(river_name(n)),' setting rzu=-1.'
-            end if
-         else
+         if (ios .ne. 0) then
             read(line,*,iostat=ios) ir(n),jr(n),river_name(n)
             rzl(n) = -1.
             rzu(n) = -1.
