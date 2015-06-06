@@ -407,6 +407,23 @@
                        valid_min    =model%horizontal_diagnostic_variables(n)%minimum,        &
                        valid_max    =model%horizontal_diagnostic_variables(n)%maximum)
       end do
+
+      if (do_numerical_analyses_3d) then
+         allocate(nummix_fabmmean_ids(size(model%state_variables)),stat=err)
+         if (err /= 0) stop 'init_mean_ncdf(): Error allocating memory (nummix_fabmmean_ids)'
+         nummix_fabmmean_ids = -1
+         do n=1,size(model%state_variables)
+            if (model%state_variables(n)%output==output_none) cycle
+            err = nf90_def_var(ncid,'nummix_'//trim(model%state_variables(n)%name),NCDF_FLOAT_PRECISION,f4_dims,nummix_fabmmean_ids(n))
+            if (err .NE.  NF90_NOERR) go to 10
+            call set_attributes(ncid,nummix_fabmmean_ids(n), &
+                             long_name    ='mean numerical mixing of '//trim(model%state_variables(n)%long_name), &
+                             units        =trim(model%state_variables(n)%units)//'**2/s',    &
+                             FillValue    =model%state_variables(n)%missing_value,  &
+                             missing_value=model%state_variables(n)%missing_value)
+         end do
+      end if
+
    end if
 #endif
 
