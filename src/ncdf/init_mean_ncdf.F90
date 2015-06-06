@@ -418,8 +418,8 @@
             if (err .NE.  NF90_NOERR) go to 10
             call set_attributes(ncid,nummix_fabmmean_ids(n), &
                              long_name    ='mean numerical mixing of '//trim(model%state_variables(n)%long_name), &
-                             units        =trim(model%state_variables(n)%units)//'**2/s',    &
-                             FillValue    =model%state_variables(n)%missing_value,  &
+                             units        ='('//trim(model%state_variables(n)%units)//')**2/s',                   &
+                             FillValue    =model%state_variables(n)%missing_value,                                &
                              missing_value=model%state_variables(n)%missing_value)
          end do
       end if
