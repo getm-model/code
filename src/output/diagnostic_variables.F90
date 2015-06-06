@@ -55,6 +55,7 @@
    REALTYPE,dimension(:,:,:), allocatable :: fabmmean_ben
    REALTYPE,dimension(:,:,:,:), allocatable :: fabmmean_diag
    REALTYPE,dimension(:,:,:), allocatable :: fabmmean_diag_hz
+   REALTYPE,dimension(:,:,:,:), allocatable :: nummix_fabmmean_pel
 #endif
 !
 ! !REVISION HISTORY:
