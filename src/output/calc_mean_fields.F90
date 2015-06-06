@@ -31,6 +31,7 @@
 #endif
 #ifdef _FABM_
    use getm_fabm, only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
+   use getm_fabm, only: nummix_fabm_pel
 #endif
    use output, only: save_s,save_t,save_rho
    use diagnostic_variables
@@ -45,7 +46,7 @@
 !  Original author(s): Karsten Bolding & Adolf Stips
 !
 ! !LOCAL VARIABLES:
-   integer         :: i,j,k,rc
+   integer         :: i,j,k,l,rc
    REALTYPE        :: tmpf(I3DFIELD)
    integer,save    :: step=0
    logical,save    :: first=.true.
@@ -187,6 +188,11 @@
          allocate(fabmmean_diag_hz(I2DFIELD,ubound(fabm_diag_hz,3)),stat=rc)
          if (rc /= 0) &
             stop 'calc_mean_fields.F90: Error allocating memory (fabmmean_diag_hz)'
+         if (do_numerical_analyses_3d) then
+            allocate(nummix_fabmmean_pel(I3DFIELD,ubound(fabm_pel,4)),stat=rc)
+            if (rc /= 0) &
+               stop 'calc_mean_fields.F90: Error allocating memory (nummix_fabmmean_pel)'
+         end if
       else
          fabm_mean=.false.
       end if
@@ -238,6 +244,9 @@
             fabmmean_ben=_ZERO_
             fabmmean_diag=_ZERO_
             fabmmean_diag_hz=_ZERO_
+            if (allocated(nummix_fabmmean_pel)) then
+               nummix_fabmmean_pel = _ZERO_
+            end if
          end if
 #endif
          ustarmean=_ZERO_; ustar2mean=_ZERO_; swrmean=_ZERO_
@@ -309,6 +318,12 @@
           fabmmean_ben = fabmmean_ben + fabm_ben
           fabmmean_diag = fabmmean_diag + fabm_diag
           fabmmean_diag_hz = fabmmean_diag_hz + fabm_diag_hz
+         if (allocated(nummix_fabmmean_pel)) then
+            do l=1,ubound(nummix_fabmmean_pel,4)
+               nummix_fabmmean_pel(:,:,:,l) = nummix_fabmmean_pel(:,:,:,l) &
+                                                + nummix_fabm_pel(:,:,:,l)*hn
+            end do
+         end if
       end if
 #endif
 !  count them
@@ -368,6 +383,11 @@
             fabmmean_ben = fabmmean_ben / step
             fabmmean_diag = fabmmean_diag / step
             fabmmean_diag_hz = fabmmean_diag_hz / step
+            if (allocated(nummix_fabmmean_pel)) then
+               do l=1,ubound(nummix_fabmmean_pel,4)
+                  nummix_fabmmean_pel(:,:,:,l) = nummix_fabmmean_pel(:,:,:,l) / step / hmean
+               end do
+            end if
          end if
 #endif
          ustarmean = ustarmean / step
