@@ -511,6 +511,14 @@
          err = nf90_put_var(ncid,fabm_ids(n),ws(_3D_W_),start,edges)
          if (err .NE.  NF90_NOERR) go to 10
       end do
+      if (allocated(nummix_fabm_pel)) then
+         do n=1,ubound(nummix_fabm_pel,4)
+            call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix_fabm_pel(:,:,:,n), &
+                        model%state_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
+            err = nf90_put_var(ncid,nmpel_ids(n),ws(_3D_W_),start,edges)
+            if (err .NE.  NF90_NOERR) go to 10
+         end do
+      end if
       do n=1,size(model%diagnostic_variables)
          if (fabm_ids_diag(n)==-1) cycle
          call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,fabm_diag(:,:,:,n), &
@@ -523,12 +531,6 @@
             call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,phymix_fabm_pel(:,:,:,n), &
                         model%state_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
             err = nf90_put_var(ncid,pmpel_ids(n),ws(_3D_W_),start,edges)
-            if (err .NE.  NF90_NOERR) go to 10
-         end do
-         do n=1,size(model%state_variables)
-            call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix_fabm_pel(:,:,:,n), &
-                        model%state_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
-            err = nf90_put_var(ncid,nmpel_ids(n),ws(_3D_W_),start,edges)
             if (err .NE.  NF90_NOERR) go to 10
          end do
       end if
