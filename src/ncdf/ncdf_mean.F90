@@ -44,6 +44,7 @@
    integer, allocatable                :: fabmmean_ids_diag(:)
    integer, allocatable                :: fabmmean_ids_diag_hz(:)
    integer, allocatable                :: nummix_fabmmean_ids(:)
+   integer, allocatable                :: phymix_fabmmean_ids(:)
 #endif
 
    REALTYPE, parameter                 :: elev_missing=-9999.0

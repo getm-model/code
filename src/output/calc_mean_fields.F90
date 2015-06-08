@@ -33,7 +33,7 @@
 #endif
 #ifdef _FABM_
    use getm_fabm, only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
-   use getm_fabm, only: nummix_fabm_pel
+   use getm_fabm, only: nummix_fabm_pel,phymix_fabm_pel
 #endif
    use output, only: save_s,save_t,save_rho
    use diagnostic_variables
@@ -200,6 +200,9 @@
             allocate(nummix_fabmmean_pel(I3DFIELD,ubound(fabm_pel,4)),stat=rc)
             if (rc /= 0) &
                stop 'calc_mean_fields.F90: Error allocating memory (nummix_fabmmean_pel)'
+            allocate(phymix_fabmmean_pel(I3DFIELD,ubound(fabm_pel,4)),stat=rc)
+            if (rc /= 0) &
+               stop 'calc_mean_fields.F90: Error allocating memory (phymix_fabmmean_pel)'
          end if
       else
          fabm_mean=.false.
@@ -261,6 +264,9 @@
             fabmmean_diag_hz=_ZERO_
             if (allocated(nummix_fabmmean_pel)) then
                nummix_fabmmean_pel = _ZERO_
+            end if
+            if (allocated(phymix_fabmmean_pel)) then
+               phymix_fabmmean_pel = _ZERO_
             end if
          end if
 #endif
@@ -339,6 +345,12 @@
                                                 + nummix_fabm_pel(:,:,:,l)*hn
             end do
          end if
+         if (allocated(phymix_fabmmean_pel)) then
+            do l=1,ubound(phymix_fabmmean_pel,4)
+               phymix_fabmmean_pel(:,:,:,l) = phymix_fabmmean_pel(:,:,:,l) &
+                                                + phymix_fabm_pel(:,:,:,l)*hn
+            end do
+         end if
       end if
 #endif
 !  count them
@@ -405,6 +417,11 @@
             if (allocated(nummix_fabmmean_pel)) then
                do l=1,ubound(nummix_fabmmean_pel,4)
                   nummix_fabmmean_pel(:,:,:,l) = nummix_fabmmean_pel(:,:,:,l) / step / hmean
+               end do
+            end if
+            if (allocated(phymix_fabmmean_pel)) then
+               do l=1,ubound(phymix_fabmmean_pel,4)
+                  phymix_fabmmean_pel(:,:,:,l) = phymix_fabmmean_pel(:,:,:,l) / step / hmean
                end do
             end if
          end if

@@ -430,6 +430,19 @@
                              FillValue    =model%state_variables(n)%missing_value,                                &
                              missing_value=model%state_variables(n)%missing_value)
          end do
+         allocate(phymix_fabmmean_ids(size(model%state_variables)),stat=err)
+         if (err /= 0) stop 'init_mean_ncdf(): Error allocating memory (phymix_fabmmean_ids)'
+         phymix_fabmmean_ids = -1
+         do n=1,size(model%state_variables)
+            if (model%state_variables(n)%output==output_none) cycle
+            err = nf90_def_var(ncid,'phymix_'//trim(model%state_variables(n)%name),NCDF_FLOAT_PRECISION,f4_dims,phymix_fabmmean_ids(n))
+            if (err .NE.  NF90_NOERR) go to 10
+            call set_attributes(ncid,phymix_fabmmean_ids(n), &
+                             long_name    ='mean physical mixing of '//trim(model%state_variables(n)%long_name), &
+                             units        ='('//trim(model%state_variables(n)%units)//')**2/s',                   &
+                             FillValue    =model%state_variables(n)%missing_value,                                &
+                             missing_value=model%state_variables(n)%missing_value)
+         end do
       end if
 
    end if
