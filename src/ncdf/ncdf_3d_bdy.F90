@@ -228,10 +228,10 @@
       allocate(wrk(zax_len),stat=rc)
       if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (wrk)'
 
-      allocate(T_bdy_clim(time_len,0:kmax,nsbv),stat=rc)
+      allocate(T_bdy_clim(0:kmax,nsbv,time_len),stat=rc)
       if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_bdy_clim)'
 
-      allocate(S_bdy_clim(time_len,0:kmax,nsbv),stat=rc)
+      allocate(S_bdy_clim(0:kmax,nsbv,time_len),stat=rc)
       if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy_clim)'
 
 !     Note(KK): We read in the data columnwise for all time stages
@@ -263,11 +263,11 @@
                err = nf90_get_var(ncid,salt_id,wrk,start,edges)
                if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             S_bdy_clim(m,:,k))
+                             S_bdy_clim(:,k,m))
                err = nf90_get_var(ncid,temp_id,wrk,start,edges)
                if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             T_bdy_clim(m,:,k))
+                             T_bdy_clim(:,k,m))
                k = k+1
             end do
          end do
@@ -285,11 +285,11 @@
                err = nf90_get_var(ncid,salt_id,wrk,start,edges)
                if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             S_bdy_clim(m,:,k))
+                             S_bdy_clim(:,k,m))
                err = nf90_get_var(ncid,temp_id,wrk,start,edges)
                if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             T_bdy_clim(m,:,k))
+                             T_bdy_clim(:,k,m))
                k = k+1
             end do
          end do
@@ -307,11 +307,11 @@
                err = nf90_get_var(ncid,salt_id,wrk,start,edges)
                if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             S_bdy_clim(m,:,k))
+                             S_bdy_clim(:,k,m))
                err = nf90_get_var(ncid,temp_id,wrk,start,edges)
                if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             T_bdy_clim(m,:,k))
+                             T_bdy_clim(:,k,m))
                k = k+1
             end do
          end do
@@ -329,11 +329,11 @@
                err = nf90_get_var(ncid,salt_id,wrk,start,edges)
                if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             S_bdy_clim(m,:,k))
+                             S_bdy_clim(:,k,m))
                err = nf90_get_var(ncid,temp_id,wrk,start,edges)
                if (err .ne. NF90_NOERR) go to 10
                call interpol(zax_len,zlev,wrk,H(i,j),kmax,hn(i,j,:), &
-                             T_bdy_clim(m,:,k))
+                             T_bdy_clim(:,k,m))
                k = k+1
             end do
          end do
@@ -538,10 +538,10 @@
          stop
       end if
 
-      S_bdy=(1.-rat)*0.5*(S_bdy_clim(prev,:,:)+S_bdy_clim(this,:,:))  &
-         +     rat*0.5*(S_bdy_clim(next,:,:)+S_bdy_clim(this,:,:))
-      T_bdy=(1.-rat)*0.5*(T_bdy_clim(prev,:,:)+T_bdy_clim(this,:,:))  &
-         +     rat*0.5*(T_bdy_clim(next,:,:)+T_bdy_clim(this,:,:))
+      S_bdy=(1.-rat)*0.5*(S_bdy_clim(:,:,prev)+S_bdy_clim(:,:,this))  &
+         +     rat*0.5*(S_bdy_clim(:,:,next)+S_bdy_clim(:,:,this))
+      T_bdy=(1.-rat)*0.5*(T_bdy_clim(:,:,prev)+T_bdy_clim(:,:,this))  &
+         +     rat*0.5*(T_bdy_clim(:,:,next)+T_bdy_clim(:,:,this))
    else
 
       if (first) then
