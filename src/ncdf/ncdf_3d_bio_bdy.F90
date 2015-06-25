@@ -410,9 +410,9 @@
       start(2) = 1; edges(2) = nsbv;
       start(3) = i; edges(3) = 1
 
-      do m=1,npel
-         if (have_bio_bdy_values(m) .eq. 1 ) then
-            err = nf90_get_var(ncid,bio_ids(m),bio_wrk(:,:,m),start,edges)
+      do o=1,npel
+         if (have_bio_bdy_values(o) .eq. 1 ) then
+            err = nf90_get_var(ncid,bio_ids(o),bio_wrk(:,:,o),start,edges)
             if (err .ne. NF90_NOERR) go to 10
          end if
       end do
@@ -421,11 +421,11 @@
       do n=1,NWB
          l = l+1
          i = wi(n)
-         do m=1,npel
+         do o=1,npel
             k = bdy_index(l)
             do j=wfj(n),wlj(n)
-               call interpol(zax_len,zlev,bio_wrk(:,k,m),H(i,j), &
-                             kmax,hn(i,j,:),bio_new(:,k,m))
+               call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j), &
+                             kmax,hn(i,j,:),bio_new(:,k,o))
                k = k+1
             end do
          end do
@@ -434,11 +434,11 @@
       do n = 1,NNB
          l = l+1
          j = nj(n)
-         do m=1,npel
+         do o=1,npel
             k = bdy_index(l)
             do i = nfi(n),nli(n)
-               call interpol(zax_len,zlev,bio_wrk(:,k,m),H(i,j), &
-                             kmax,hn(i,j,:),bio_new(:,k,m))
+               call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j), &
+                             kmax,hn(i,j,:),bio_new(:,k,o))
                k = k+1
             end do
          end do
@@ -447,11 +447,11 @@
       do n=1,NEB
          l = l+1
          i = ei(n)
-         do m=1,npel
+         do o=1,npel
             k = bdy_index(l)
             do j=efj(1),elj(1)
-               call interpol(zax_len,zlev,bio_wrk(:,k,m),H(i,j), &
-                             kmax,hn(i,j,:),bio_new(:,k,m))
+               call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j), &
+                             kmax,hn(i,j,:),bio_new(:,k,o))
                k = k+1
             end do
          end do
@@ -460,11 +460,11 @@
       do n = 1,NSB
          l = l+1
          j = sj(n)
-         do m=1,npel
+         do o=1,npel
             k = bdy_index(l)
             do i = sfi(n),sli(n)
-               call interpol(zax_len,zlev,bio_wrk(:,k,m),H(i,j), &
-                             kmax,hn(i,j,:),bio_new(:,k,m))
+               call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j), &
+                             kmax,hn(i,j,:),bio_new(:,k,o))
                k = k+1
             end do
          end do
