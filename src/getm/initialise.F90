@@ -65,6 +65,7 @@
 #ifdef _FABM_
    use getm_fabm, only: fabm_calc
    use getm_fabm, only: init_getm_fabm, postinit_getm_fabm
+   use getm_fabm, only: init_getm_fabm_fields
    use rivers, only: init_rivers_fabm
 #endif
 #ifdef GETM_BIO
@@ -239,7 +240,7 @@
       call init_spm(trim(input_dir) // 'spm.inp',runtype)
 #endif
 #ifdef _FABM_
-      call init_getm_fabm(trim(input_dir) // 'getm_fabm.inp')
+      call init_getm_fabm(trim(input_dir) // 'getm_fabm.inp',hotstart)
       call init_rivers_fabm
 #endif
 #ifdef GETM_BIO
@@ -275,6 +276,7 @@
       call write_time_string()
       LEVEL3 timestr
       MinN = MinN+1
+#ifndef NO_3D
 #ifndef NO_BAROCLINIC
       if (calc_temp) then
          LEVEL2 'hotstart temperature:'
@@ -284,6 +286,13 @@
          LEVEL2 'hotstart salinity:'
          call init_salinity_field()
       end if
+#endif
+#ifdef _FABM_
+      if (fabm_calc) then
+         LEVEL2 'hotstart getm_fabm:'
+         call init_getm_fabm_fields()
+      end if
+#endif
 #endif
    end if
 
