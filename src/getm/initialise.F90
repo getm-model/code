@@ -62,6 +62,7 @@
 #ifdef _FABM_
    use getm_fabm, only: fabm_calc
    use getm_fabm, only: init_getm_fabm, postinit_getm_fabm
+   use getm_fabm, only: init_getm_fabm_fields
    use rivers, only: init_rivers_fabm
 #endif
 #ifdef GETM_BIO
@@ -237,7 +238,7 @@
       call init_spm(trim(input_dir) // 'spm.inp',runtype)
 #endif
 #ifdef _FABM_
-      call init_getm_fabm(trim(input_dir) // 'getm_fabm.inp')
+      call init_getm_fabm(trim(input_dir) // 'getm_fabm.inp',hotstart)
       call init_rivers_fabm
 #endif
 #ifdef GETM_BIO
@@ -274,6 +275,14 @@
       call write_time_string()
       LEVEL3 timestr
       MinN = MinN+1
+#ifndef NO_3D
+#ifdef _FABM_
+      if (fabm_calc) then
+         LEVEL2 'hotstart getm_fabm:'
+         call init_getm_fabm_fields()
+      end if
+#endif
+#endif
    end if
 
    call postinit_2d(runtype,timestep,hotstart,MinN)
