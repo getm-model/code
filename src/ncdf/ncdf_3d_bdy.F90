@@ -335,17 +335,17 @@
    if (climatology) then
 
       if (bdy3d_vel) then
-         allocate(uu_bdy_clim(climatology_len,zax_len,nsbvl),stat=rc)
+         allocate(uu_bdy_clim(zax_len,nsbvl,climatology_len),stat=rc)
          if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (uu_bdy_clim)'
-         allocate(vv_bdy_clim(climatology_len,zax_len,nsbvl),stat=rc)
+         allocate(vv_bdy_clim(zax_len,nsbvl,climatology_len),stat=rc)
          if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (vv_bdy_clim)'
       end if
       if (update_salt) then
-         allocate(S_bdy_clim(climatology_len,zax_len,nsbvl),stat=rc)
+         allocate(S_bdy_clim(zax_len,nsbvl,climatology_len),stat=rc)
          if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy_clim)'
       end if
       if (update_temp) then
-         allocate(T_bdy_clim(climatology_len,zax_len,nsbvl),stat=rc)
+         allocate(T_bdy_clim(zax_len,nsbvl,climatology_len),stat=rc)
          if (rc /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_bdy_clim)'
       end if
 
@@ -508,27 +508,27 @@
 !        Note (KK): in principle the average can be calculated only once
          if (first) then
             if (bdy3d_vel) then
-               uu_bdy_new = _HALF_ * ( uu_bdy_clim(prev,:,:) + uu_bdy_clim(this,:,:) )
-               vv_bdy_new = _HALF_ * ( vv_bdy_clim(prev,:,:) + vv_bdy_clim(this,:,:) )
+               uu_bdy_new = _HALF_ * ( uu_bdy_clim(:,:,prev) + uu_bdy_clim(:,:,this) )
+               vv_bdy_new = _HALF_ * ( vv_bdy_clim(:,:,prev) + vv_bdy_clim(:,:,this) )
             end if
             if (update_salt) then
-               S_bdy_new = _HALF_ * ( S_bdy_clim(prev,:,:) + S_bdy_clim(this,:,:) )
+               S_bdy_new = _HALF_ * ( S_bdy_clim(:,:,prev) + S_bdy_clim(:,:,this) )
             end if
             if (update_temp) then
-               T_bdy_new = _HALF_ * ( T_bdy_clim(prev,:,:) + T_bdy_clim(this,:,:) )
+               T_bdy_new = _HALF_ * ( T_bdy_clim(:,:,prev) + T_bdy_clim(:,:,this) )
             end if
             first = .false.
          end if
 
          if (bdy3d_vel) then
-            uu_bdy = _HALF_ * ( uu_bdy_clim(this,:,:) + uu_bdy_clim(next,:,:) )
-            vv_bdy = _HALF_ * ( vv_bdy_clim(this,:,:) + vv_bdy_clim(next,:,:) )
+            uu_bdy = _HALF_ * ( uu_bdy_clim(:,:,this) + uu_bdy_clim(:,:,next) )
+            vv_bdy = _HALF_ * ( vv_bdy_clim(:,:,this) + vv_bdy_clim(:,:,next) )
          end if
          if (update_salt) then
-            S_bdy = _HALF_ * ( S_bdy_clim(this,:,:) + S_bdy_clim(next,:,:) )
+            S_bdy = _HALF_ * ( S_bdy_clim(:,:,this) + S_bdy_clim(:,:,next) )
          end if
          if (update_temp) then
-            T_bdy = _HALF_ * ( T_bdy_clim(this,:,:) + T_bdy_clim(next,:,:) )
+            T_bdy = _HALF_ * ( T_bdy_clim(:,:,this) + T_bdy_clim(:,:,next) )
          end if
 
       end if
@@ -815,19 +815,19 @@
                start(2) = k
             end if
             if (uu_id .ne. -1) then
-               err = nf90_get_var(ncid,uu_id,uu_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,uu_id,uu_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (vv_id .ne. -1) then
-               err = nf90_get_var(ncid,vv_id,vv_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,vv_id,vv_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (salt_id .ne. -1) then
-               err = nf90_get_var(ncid,salt_id,S_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,salt_id,S_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (temp_id .ne. -1) then
-               err = nf90_get_var(ncid,temp_id,T_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,temp_id,T_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             k = k+1
@@ -846,19 +846,19 @@
                start(2) = k
             end if
             if (uu_id .ne. -1) then
-               err = nf90_get_var(ncid,uu_id,uu_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,uu_id,uu_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (vv_id .ne. -1) then
-               err = nf90_get_var(ncid,vv_id,vv_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,vv_id,vv_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (salt_id .ne. -1) then
-               err = nf90_get_var(ncid,salt_id,S_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,salt_id,S_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (temp_id .ne. -1) then
-               err = nf90_get_var(ncid,temp_id,T_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,temp_id,T_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             k = k+1
@@ -877,19 +877,19 @@
                start(2) = k
             end if
             if (uu_id .ne. -1) then
-               err = nf90_get_var(ncid,uu_id,uu_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,uu_id,uu_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (vv_id .ne. -1) then
-               err = nf90_get_var(ncid,vv_id,vv_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,vv_id,vv_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (salt_id .ne. -1) then
-               err = nf90_get_var(ncid,salt_id,S_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,salt_id,S_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (temp_id .ne. -1) then
-               err = nf90_get_var(ncid,temp_id,T_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,temp_id,T_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             k = k+1
@@ -908,19 +908,19 @@
                start(2) = k
             end if
             if (uu_id .ne. -1) then
-               err = nf90_get_var(ncid,uu_id,uu_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,uu_id,uu_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (vv_id .ne. -1) then
-               err = nf90_get_var(ncid,vv_id,vv_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,vv_id,vv_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (salt_id .ne. -1) then
-               err = nf90_get_var(ncid,salt_id,S_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,salt_id,S_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             if (temp_id .ne. -1) then
-               err = nf90_get_var(ncid,temp_id,T_bdy_clim(m,:,kl),start,edges)
+               err = nf90_get_var(ncid,temp_id,T_bdy_clim(:,kl,m),start,edges)
                if (err .ne. NF90_NOERR) go to 10
             end if
             k = k+1
