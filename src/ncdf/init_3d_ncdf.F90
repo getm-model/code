@@ -588,7 +588,9 @@
       if (do_numerical_analyses_3d) then
          allocate(nmpel_ids(size(model%state_variables)),stat=rc)
          if (rc /= 0) stop 'init_3d_ncdf(): Error allocating memory (nmpel_ids)'
+         nmpel_ids = -1
          do n=1,size(model%state_variables)
+            if (model%state_variables(n)%output==output_none) cycle
             err = nf90_def_var(ncid,'nummix_'//trim(model%state_variables(n)%name),NCDF_FLOAT_PRECISION,f4_dims,nmpel_ids(n))
             if (err .NE.  NF90_NOERR) go to 10
             call set_attributes(ncid,nmpel_ids(n),                                                                &
