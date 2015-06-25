@@ -273,6 +273,7 @@
       call write_time_string()
       LEVEL3 timestr
       MinN = MinN+1
+#ifndef NO_3D
 #ifndef NO_BAROCLINIC
       if (calc_temp) then
          LEVEL2 'hotstart temperature:'
@@ -283,7 +284,6 @@
          call init_salinity_field()
       end if
 #endif
-#ifndef NO_3D
 #ifdef _FABM_
       if (fabm_calc) then
          LEVEL2 'hotstart getm_fabm:'
