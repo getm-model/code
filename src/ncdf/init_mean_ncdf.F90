@@ -250,7 +250,7 @@
 
       if (update_salt) then
 
-         err = nf90_def_var(ncid,'nummix_S',NCDF_FLOAT_PRECISION,f4_dims,nmS_id)
+         err = nf90_def_var(ncid,'nummix_salt',NCDF_FLOAT_PRECISION,f4_dims,nmS_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nmS_id, &
              long_name='mean numerical mixing of salinity', &
@@ -258,7 +258,7 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
 
 #ifdef _NUMERICAL_ANALYSES_OLD_
-         err = nf90_def_var(ncid,'nummix_S_old',NCDF_FLOAT_PRECISION,f4_dims,nmSo_id)
+         err = nf90_def_var(ncid,'nummix_salt_old',NCDF_FLOAT_PRECISION,f4_dims,nmSo_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nmSo_id, &
              long_name='mean numerical mixing of salinity (old)', &
@@ -266,7 +266,7 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
 #endif
 
-         err = nf90_def_var(ncid,'phymix_S',NCDF_FLOAT_PRECISION,f4_dims,pmS_id)
+         err = nf90_def_var(ncid,'phymix_salt',NCDF_FLOAT_PRECISION,f4_dims,pmS_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,pmS_id, &
              long_name='mean physical mixing of salinity', &
@@ -274,7 +274,7 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
 
 #ifdef _NUMERICAL_ANALYSES_OLD_
-         err = nf90_def_var(ncid,'nummix_S_int',NCDF_FLOAT_PRECISION,f3_dims,nmSint_id)
+         err = nf90_def_var(ncid,'nummix_salt_int',NCDF_FLOAT_PRECISION,f3_dims,nmSint_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nmSint_id, &
              long_name='mean, vert.integrated numerical mixing of salinity', &
@@ -282,7 +282,7 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
 #endif
 
-         err = nf90_def_var(ncid,'phymix_S_int',NCDF_FLOAT_PRECISION,f3_dims,pmSint_id)
+         err = nf90_def_var(ncid,'phymix_salt_int',NCDF_FLOAT_PRECISION,f3_dims,pmSint_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,pmSint_id, &
              long_name='mean, vert.integrated physical mixing of salinity', &
@@ -292,7 +292,7 @@
 
       if (update_temp) then
 
-         err = nf90_def_var(ncid,'nummix_T',NCDF_FLOAT_PRECISION,f4_dims,nmT_id)
+         err = nf90_def_var(ncid,'nummix_temp',NCDF_FLOAT_PRECISION,f4_dims,nmT_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nmT_id, &
              long_name='mean numerical mixing of temperature', &
@@ -300,7 +300,7 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
 
 #ifdef _NUMERICAL_ANALYSES_OLD_
-         err = nf90_def_var(ncid,'nummix_T_old',NCDF_FLOAT_PRECISION,f4_dims,nmTo_id)
+         err = nf90_def_var(ncid,'nummix_temp_old',NCDF_FLOAT_PRECISION,f4_dims,nmTo_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nmTo_id, &
              long_name='mean numerical mixing of temperature (old)', &
@@ -308,7 +308,7 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
 #endif
 
-         err = nf90_def_var(ncid,'phymix_T',NCDF_FLOAT_PRECISION,f4_dims,pmT_id)
+         err = nf90_def_var(ncid,'phymix_temp',NCDF_FLOAT_PRECISION,f4_dims,pmT_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,pmT_id, &
              long_name='mean physical mixing of temperature', &
@@ -316,7 +316,7 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
 
 #ifdef _NUMERICAL_ANALYSES_OLD_
-         err = nf90_def_var(ncid,'nummix_T_int',NCDF_FLOAT_PRECISION,f3_dims,nmTint_id)
+         err = nf90_def_var(ncid,'nummix_temp_int',NCDF_FLOAT_PRECISION,f3_dims,nmTint_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,nmTint_id, &
              long_name='mean, vert.integrated numerical mixing of temperature', &
@@ -324,7 +324,7 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
 #endif
 
-         err = nf90_def_var(ncid,'phymix_T_int',NCDF_FLOAT_PRECISION,f3_dims,pmTint_id)
+         err = nf90_def_var(ncid,'phymix_temp_int',NCDF_FLOAT_PRECISION,f3_dims,pmTint_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,pmTint_id, &
              long_name='mean, vert.integrated physical mixing of temperature', &
@@ -444,6 +444,36 @@
                        valid_min    =model%horizontal_diagnostic_variables(n)%minimum,        &
                        valid_max    =model%horizontal_diagnostic_variables(n)%maximum)
       end do
+
+      if (do_numerical_analyses_3d) then
+         allocate(nummix_fabmmean_ids(size(model%state_variables)),stat=err)
+         if (err /= 0) stop 'init_mean_ncdf(): Error allocating memory (nummix_fabmmean_ids)'
+         nummix_fabmmean_ids = -1
+         do n=1,size(model%state_variables)
+            if (model%state_variables(n)%output==output_none) cycle
+            err = nf90_def_var(ncid,'nummix_'//trim(model%state_variables(n)%name),NCDF_FLOAT_PRECISION,f4_dims,nummix_fabmmean_ids(n))
+            if (err .NE.  NF90_NOERR) go to 10
+            call set_attributes(ncid,nummix_fabmmean_ids(n), &
+                             long_name    ='mean numerical mixing of '//trim(model%state_variables(n)%long_name), &
+                             units        ='('//trim(model%state_variables(n)%units)//')**2/s',                   &
+                             FillValue    =model%state_variables(n)%missing_value,                                &
+                             missing_value=model%state_variables(n)%missing_value)
+         end do
+         allocate(phymix_fabmmean_ids(size(model%state_variables)),stat=err)
+         if (err /= 0) stop 'init_mean_ncdf(): Error allocating memory (phymix_fabmmean_ids)'
+         phymix_fabmmean_ids = -1
+         do n=1,size(model%state_variables)
+            if (model%state_variables(n)%output==output_none) cycle
+            err = nf90_def_var(ncid,'phymix_'//trim(model%state_variables(n)%name),NCDF_FLOAT_PRECISION,f4_dims,phymix_fabmmean_ids(n))
+            if (err .NE.  NF90_NOERR) go to 10
+            call set_attributes(ncid,phymix_fabmmean_ids(n), &
+                             long_name    ='mean physical mixing of '//trim(model%state_variables(n)%long_name), &
+                             units        ='('//trim(model%state_variables(n)%units)//')**2/s',                   &
+                             FillValue    =model%state_variables(n)%missing_value,                                &
+                             missing_value=model%state_variables(n)%missing_value)
+         end do
+      end if
+
    end if
 #endif
 
