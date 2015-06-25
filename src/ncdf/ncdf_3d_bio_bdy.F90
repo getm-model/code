@@ -317,7 +317,7 @@
                      err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
                      if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
-                                   hn(i,j,:),bio_bdy_clim(:,k,o,m))
+                                   hn(i,j,:),bio_bdy_clim(:,k,m,o))
                      k = k+1
                   end do
                else
@@ -337,7 +337,7 @@
                      err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
                      if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
-                                   hn(i,j,:),bio_bdy_clim(:,k,o,m))
+                                   hn(i,j,:),bio_bdy_clim(:,k,m,o))
                      k = k+1
                   end do
                else
@@ -541,9 +541,9 @@
 
       do o=1,npel
          bio_bdy(:,:,o)=(1.-rat)*_HALF_ &
-                        *(bio_bdy_clim(prev,:,:,o)+bio_bdy_clim(this,:,:,o)) &
+                        *(bio_bdy_clim(:,:,prev,o)+bio_bdy_clim(:,:,this,o)) &
                         +rat*_HALF_     &
-                        *(bio_bdy_clim(next,:,:,o)+bio_bdy_clim(this,:,:,o))
+                        *(bio_bdy_clim(:,:,next,o)+bio_bdy_clim(:,:,this,o))
       end do
    else
 
