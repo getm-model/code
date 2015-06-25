@@ -481,6 +481,7 @@
       end do
       if (allocated(nummix_fabm_pel)) then
          do n=1,ubound(nummix_fabm_pel,4)
+            if (nmpel_ids(n)==-1) cycle
             call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,nummix_fabm_pel(:,:,:,n), &
                         model%state_variables(n)%missing_value,imin,imax,jmin,jmax,0,kmax,ws)
             err = nf90_put_var(ncid,nmpel_ids(n),ws(_3D_W_),start,edges)
