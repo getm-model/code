@@ -450,11 +450,63 @@
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
 				</options>
 			</element>
+			<element name="turb_adv_split" type="int" label="advection splitting for TKE and eps">
+				<condition type="ne" variable="./turb_adv_hor" value="0"/>
+				<options>
+					<option value="0" label="no split: one 3D uvw step"/>
+					<option value="1" label="full step splitting: u + v + w"/>
+					<option value="2" label="half step splitting: u/2 + v/2 + w + v/2 + u/2"/>
+					<option value="3" label="hor/ver splitting: uv + w"/>
+				</options>
+			</element>
+			<element name="turb_adv_hor" type="int" label="horizontal advection scheme for TKE and eps">
+				<options>
+					<option value="0" label="advection disabled"/>
+					<option value="1" label="upstream (first-order, monotone)"/>
+					<option value="2" label="2DH-upstream with forced monotonicity">
+						<condition type="or">
+							<condition type="eq" variable="./turb_adv_split" value="0"/>
+							<condition type="eq" variable="./turb_adv_split" value="3"/>
+						</condition>
+					</option>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
+					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
+					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
+					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+					<option value="7" label="2DH-J7">
+						<condition type="or">
+							<condition type="eq" variable="./turb_adv_split" value="0"/>
+							<condition type="eq" variable="./turb_adv_split" value="3"/>
+						</condition>
+					</option>
+					<option value="8" label="2DH-FCT">
+						<condition type="or">
+							<condition type="eq" variable="./turb_adv_split" value="0"/>
+							<condition type="eq" variable="./turb_adv_split" value="3"/>
+						</condition>
+					</option>
+					<option value="9" label="2DH-P2">
+						<condition type="or">
+							<condition type="eq" variable="./turb_adv_split" value="0"/>
+							<condition type="eq" variable="./turb_adv_split" value="3"/>
+						</condition>
+					</option>
+				</options>
+			</element>
+			<element name="turb_adv_ver" type="int" label="vertical advection scheme for TKE and eps">
+				<options>
+					<option value="0" label="advection disabled"/>
+					<option value="1" label="upstream (first-order, monotone)"/>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
+					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
+					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
+					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+				</options>
+			</element>
 			<element name="calc_temp" type="bool" label="solve temperature equation"/>
 			<element name="calc_salt" type="bool" label="solve salinity equation"/>
 			<element name="avmback"   type="float" label="background viscosity" unit="m²/s"/>
 			<element name="avhback"   type="float" label="background diffusivity" unit="m²/s"/>
-			<element name="advect_turbulence"  type="bool"  label="advect TKE and eps"/>
 			<element name="ip_method" type="int" label="internal pressure method">
 				<options>
 					<option value="1" label="Blumberg and Mellor"/>
@@ -805,6 +857,83 @@
 			<element name="dsurf" type="float" label="reference distance to boundaries" unit="m"/>
 			<element name="tgrid" type="float" label="adaptation timescale" unit="s"/>
 			<element name="preadapt" type="int" label="pre-adaptation iterations"/> 
+		</element>
+	</element>
+	<element name="getm_fabm">
+		<element name="getm_fabm_nml" label="parameters related to treatment of fabm quantities inside getm">
+			<element name="fabm_init_method" type="int" label="fabm init method">
+				<options>
+					<option value="0" label="read from hotstart file"/>
+					<option value="1" label="constant from fabm.nml"/>
+					<option value="2" label="constant from fabm.nml and from 3D field"/>
+				</options>
+			</element>
+			<element name="fabm_init_format" type="int" label="format of fabm_init_file">
+				<condition type="eq" variable="./fabm_init_method" value="2"/>
+				<options>
+					<option value="1" label="ASCII"/>
+					<option value="2" label="NetCDF"/>
+				</options>
+			</element>
+			<element name="fabm_init_file" type="string" label="name of file with initial distribution of fabm quantities">
+				<condition type="eq" variable="./fabm_init_method" value="2"/>
+			</element>
+			<element name="fabm_field_no" type="int" label="what number to read initial data from">
+				<condition type="and">
+					<condition type="eq" variable="./fabm_init_method" value="2"/>
+					<condition type="eq" variable="./fabm_init_format" value="2"/>
+				</condition>
+			</element>
+			<element name="fabm_adv_split" type="int" label="advection splitting for pelagic fabm fields">
+				<condition type="ne" variable="./fabm_adv_hor" value="0"/>
+				<options>
+					<option value="0" label="no split: one 3D uvw step"/>
+					<option value="1" label="full step splitting: u + v + w"/>
+					<option value="2" label="half step splitting: u/2 + v/2 + w + v/2 + u/2"/>
+					<option value="3" label="hor/ver splitting: uv + w"/>
+				</options>
+			</element>
+			<element name="fabm_adv_hor" type="int" label="horizontal advection scheme for pelagic fabm fields">
+				<options>
+					<option value="0" label="advection disabled"/>
+					<option value="1" label="upstream (first-order, monotone)"/>
+					<option value="2" label="2DH-upstream with forced monotonicity">
+						<condition type="or">
+							<condition type="eq" variable="./fabm_adv_split" value="0"/>
+							<condition type="eq" variable="./fabm_adv_split" value="3"/>
+						</condition>
+					</option>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
+					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
+					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
+					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+					<option value="8" label="2DH-FCT">
+						<condition type="or">
+							<condition type="eq" variable="./fabm_adv_split" value="0"/>
+							<condition type="eq" variable="./fabm_adv_split" value="3"/>
+						</condition>
+					</option>
+					<option value="9" label="2DH-P2">
+						<condition type="or">
+							<condition type="eq" variable="./fabm_adv_split" value="0"/>
+							<condition type="eq" variable="./fabm_adv_split" value="3"/>
+						</condition>
+					</option>
+				</options>
+			</element>
+			<element name="fabm_adv_ver" type="int" label="vertical advection scheme for pelagic fabm fields">
+				<options>
+					<option value="0" label="advection disabled"/>
+					<option value="1" label="upstream (first-order, monotone)"/>
+					<option value="3" label="P2 (third-order, non-monotone)"/>
+					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
+					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
+					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+				</options>
+			</element>
+			<element name="fabm_AH" type="float" label="constant horizontal diffusivity of pelagic fabm fields" unit="m²/s"/>
+			<element name="fabm_surface_flux_file" type="string" label="name of file with FABM state variable surface fluxes">
+			</element>
 		</element>
 	</element>
 </element>
