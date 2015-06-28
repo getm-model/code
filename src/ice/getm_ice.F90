@@ -119,7 +119,7 @@
          LEVEL2 'Winton ice model'
          if (.not. calc_met) then
             call getm_error("init_getm_ice()", "Winton ice model "  // &
-                            "requires u10, v10, hum, tcc allocated "// &
+                            "requires u10, v10, t2, hum, tcc allocated "// &
                             "which is not the case for calc_met=F."    )
          end if
 !        Set ice model parameters
