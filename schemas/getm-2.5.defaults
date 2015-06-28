@@ -198,6 +198,9 @@
 			<kmelt>
 				240.0
 			</kmelt>
+			<t_range_dhdt>
+				0.1
+			</t_range_dhdt>
 		</ice>
 		<rivers>
 			<river_method>

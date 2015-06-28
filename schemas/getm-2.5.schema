@@ -239,6 +239,9 @@
 			<element name="kmelt" type="float" label="ocean/ice heat flux const.">
 				<condition type="eq" variable="./ice_method" value="2"/>
 			</element>
+			<element name="t_range_dhdt" type="float" label="temperature range for calculating d(heat)/d(ts)">
+				<condition type="eq" variable="./ice_method" value="2"/>
+			</element>
 		</element>
 
 		<element name="rivers" label="variables related to rivers">
