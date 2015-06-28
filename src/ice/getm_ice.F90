@@ -15,11 +15,13 @@
    use time, only: julianday, secondsofday, timestep
    use domain, only: imin,imax,jmin,jmax,kmax,az
    use domain, only: lonc,latc
+   use meteo, only: calc_met
    use meteo, only: shf,swr,albedo,precip,evap,tcc,t2,airp,hum,u10,v10,kelvin, &
                     tausx,tausy
    use parameters, only: rho_0
    use variables_3d, only: rho,S,T,hn
    use ice_winton, only: init_ice_winton, do_ice_winton
+   use exceptions
    IMPLICIT NONE
 !
    private
@@ -115,6 +117,11 @@
          end do
       case (2) ! Winton
          LEVEL2 'Winton ice model'
+         if (.not. calc_met) then
+            call getm_error("init_getm_ice()", "Winton ice model "  // &
+                            "requires u10, v10, hum, tcc allocated "// &
+                            "which is not the case for calc_met=F."    )
+         end if
 !        Set ice model parameters
          call  init_ice_winton(ks, alb_sno, alb_ice, pen_ice, &
                opt_dep_ice, opt_ext_ice, opt_ext_snow, t_range_melt, &
