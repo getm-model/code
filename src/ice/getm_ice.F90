@@ -16,7 +16,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax,az
    use domain, only: lonc,latc
    use meteo, only: calc_met
-   use meteo, only: shf,swr,albedo,precip,evap,tcc,t2,airp,hum,u10,v10,kelvin, &
+   use meteo, only: shf,swr,albedo,precip,evap,tcc,t2,airp,hum,u10,v10, &
                     tausx,tausy
    use parameters, only: rho_0
    use variables_3d, only: rho,S,T,hn
@@ -223,7 +223,7 @@
                if (az(i,j) .ge. 1) then
                   call do_ice_winton(julianday,secondsofday, &
                          lonc(i,j),latc(i,j), &
-                         tcc(i,j),t2(i,j)-kelvin,airp(i,j),hum(i,j), &
+                         tcc(i,j),t2(i,j),airp(i,j),hum(i,j), &
                          u10(i,j),v10(i,j), &
                          S(i,j,kmax),rho(i,j,kmax),rho_0,hn(i,j,kmax), &
                          back_radiation_method,hum_method, &
