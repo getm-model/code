@@ -79,6 +79,12 @@
   allocate(hvn(I3DFIELD),stat=rc)   ! 3D field for new box height (v-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (hvn)'
 
+  allocate(zwn(I3DFIELD),stat=rc)   ! new vertical position of cell
+  if (rc /= 0) stop 'init_3d: Error allocating memory (zwn)'
+
+  allocate(zcn(I3DFIELD),stat=rc)   ! new vertical position of cell
+  if (rc /= 0) stop 'init_3d: Error allocating memory (zcn)'
+
   allocate(hcc(I3DFIELD),stat=rc)    ! Hydrostatic consistency check
   if (rc /= 0) stop 'init_3d: Error allocating memory (hcc)'
 
