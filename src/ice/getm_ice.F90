@@ -191,7 +191,7 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,ii,jj
+   integer                   :: i,j,ii,jj,n
 #if 1
    integer                   :: hum_method=1
    integer                   :: back_radiation_method=1
@@ -233,15 +233,19 @@
                          ice_ts(i,j),albedo(i,j),ice_tmelt(i,j),ice_bmelt(i,j))
                   if (damp_stress) then
                      taudamp = _ZERO_
-                     do ii=i-1,i+1
-                        do jj=j-1,j+1
-                           taudamp = taudamp + _ONE_ - _ONE_/(_ONE_ + &
-                               exp(-taucoef/tauh*(ice_hi(ii,jj)-tauh)))
+                     n       = 0
+                     do jj=j-1,j+1
+                        do ii=i-1,i+1
+                           if (az(ii,jj) .ge. 1) then
+                              n       = n + 1
+                              taudamp = taudamp + _ONE_ - _ONE_/(_ONE_ + &
+                                  exp(-taucoef/tauh*(ice_hi(ii,jj)-tauh)))
+                           end if
                         end do
                      end do
-                     taudamp = taudamp / 9.0d0
-                     tausx = tausx * taudamp
-                     tausy = tausy * taudamp
+                     taudamp = taudamp / n
+                     tausx(i,j) = tausx(i,j) * taudamp
+                     tausy(i,j) = tausy(i,j) * taudamp
                   end if
                else
                   ice_hs(i,j) = -9999.
