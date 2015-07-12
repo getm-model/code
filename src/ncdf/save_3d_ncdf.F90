@@ -23,7 +23,6 @@
 #else
    use domain,       only: dx,dy,ard1
 #endif
-   use getm_ice
    use variables_2d, only: z,D
    use variables_2d, only: U,V,DU,DV
    use variables_3d, only: dt,kmin,ho,hn,uu,hun,vv,hvn,ww,hcc,SS
@@ -34,6 +33,7 @@
 #endif
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T,rho,rad,NN
+   use getm_ice
 #endif
    use variables_3d, only: nummix3d_S,nummix3d_T,phymix3d_S,phymix3d_T
    use variables_3d, only: numdis3d
@@ -116,6 +116,7 @@
    edges(2) = ylen
    edges(3) = 1
 
+#ifndef NO_BAROCLINIC
 !  ice
    select case (ice_method)
 !     Freezing point ice 'model'
@@ -138,6 +139,7 @@
          if (err .NE. NF90_NOERR) go to 10
       case default
    end select
+#endif
 
 !  elevations
    call eta_mask(imin,jmin,imax,jmax,az,H,D,z,min_depth,elev_missing, &

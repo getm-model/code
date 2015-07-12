@@ -18,7 +18,9 @@
    use domain, only: ioff,joff
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
+#ifndef NO_BAROCLINIC
    use getm_ice, only: ice_method
+#endif
    use m3d, only: calc_temp,calc_salt
 #ifdef SPM
    use suspended_matter, only: spm_save
@@ -89,6 +91,7 @@
    if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,time_id,units=trim(ts),long_name='time')
 
+#ifndef NO_BAROCLINIC
 !  ice
    select case (ice_method)
 !     Freezing point ice 'model'
@@ -132,6 +135,7 @@
 !                             FillValue=fv,missing_value=mv,valid_range=vr)
       case default
    end select
+#endif
 
 !  elevation
    err = nf90_def_var(ncid,'elev',NCDF_FLOAT_PRECISION,f3_dims,elev_id)
