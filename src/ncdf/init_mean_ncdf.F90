@@ -18,6 +18,9 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
    use m3d, only: calc_temp,calc_salt
+#ifndef NO_BAROCLINIC
+   use getm_ice, only: ice_method
+#endif
 #ifdef GETM_BIO
    use bio_var, only: numc,var_names,var_units,var_long
 #endif
@@ -165,6 +168,23 @@
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,tempmean_id, &
              long_name='mean temperature',units='degC',&
+             FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
+
+   if (ice_method .eq. 2) then
+      fv = hh_missing
+      mv = hh_missing
+      vr(1) =   0.
+      vr(2) = 100.
+      err = nf90_def_var(ncid,'ice_hs_mean',NCDF_FLOAT_PRECISION,f3_dims,ice_hs_mean_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,ice_hs_mean_id, &
+             long_name='mean snow layer thickness',units='m',&
+             FillValue=fv,missing_value=mv,valid_range=vr)
+      err = nf90_def_var(ncid,'ice_hi_mean',NCDF_FLOAT_PRECISION,f3_dims,ice_hi_mean_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,ice_hi_mean_id, &
+             long_name='mean ice layer thickness',units='m',&
              FillValue=fv,missing_value=mv,valid_range=vr)
    end if
 #endif

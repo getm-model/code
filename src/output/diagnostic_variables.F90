@@ -39,6 +39,9 @@
    REALTYPE,dimension(:,:,:), allocatable :: phymix3d_T_mean
    REALTYPE,dimension(:,:), allocatable :: phymix2d_T_mean
 
+   REALTYPE,dimension(:,:), allocatable :: ice_hs_mean
+   REALTYPE,dimension(:,:), allocatable :: ice_hi_mean
+
 #ifdef GETM_BIO
    REALTYPE,dimension(:,:,:,:), allocatable :: cc3dmean
 #endif

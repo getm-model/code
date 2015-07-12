@@ -135,6 +135,19 @@
       err = nf90_put_var(ncid, tempmean_id,ws3d(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
+
+   if (ice_hs_mean_id .ne. -1) then
+      call cnv_2d(imin,jmin,imax,jmax,az,ice_hs_mean,hh_missing, &
+                     imin,jmin,imax,jmax,ws2d)
+      err = nf90_put_var(ncid,ice_hs_mean_id,ws2d(_2D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+   if (ice_hi_mean_id .ne. -1) then
+      call cnv_2d(imin,jmin,imax,jmax,az,ice_hi_mean,hh_missing, &
+                     imin,jmin,imax,jmax,ws2d)
+      err = nf90_put_var(ncid,ice_hi_mean_id,ws2d(_2D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
 #endif
 
    if (save_numerical_analyses) then
