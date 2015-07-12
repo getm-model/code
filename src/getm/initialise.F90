@@ -217,7 +217,7 @@
 
    call init_meteo(hotstart)
 
-   call init_getm_ice(hotstart)
+   if (runtype .gt. 2) call init_getm_ice(hotstart)
 
 #ifndef NO_3D
    call init_rivers()
