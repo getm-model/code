@@ -20,6 +20,7 @@
                     tausx,tausy
    use parameters, only: rho_0
    use variables_3d, only: rho,S,T,hn
+   use halo_zones, only : update_2d_halo,wait_halo,z_TAG
    use ice_winton, only: init_ice_winton, do_ice_winton
    use exceptions
    IMPLICIT NONE
@@ -200,7 +201,8 @@
    logical                   :: damp_stress=.false.
    REALTYPE                  :: taucoef=5.0
    REALTYPE                  :: tauh=0.5
-   REALTYPE                  :: taudamp
+   REALTYPE                  :: taudamp_avg
+   REALTYPE,dimension(I2DFIELD) :: taudamp
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -231,22 +233,6 @@
                          T(i,j,kmax),shf(i,j),swr(i,j),precip(i,j), &
                          ice_hs(i,j),ice_hi(i,j),ice_t1(i,j),ice_t2(i,j), &
                          ice_ts(i,j),albedo(i,j),ice_tmelt(i,j),ice_bmelt(i,j))
-                  if (damp_stress) then
-                     taudamp = _ZERO_
-                     n       = 0
-                     do jj=j-1,j+1
-                        do ii=i-1,i+1
-                           if (az(ii,jj) .ge. 1) then
-                              n       = n + 1
-                              taudamp = taudamp + _ONE_ - _ONE_/(_ONE_ + &
-                                  exp(-taucoef/tauh*(ice_hi(ii,jj)-tauh)))
-                           end if
-                        end do
-                     end do
-                     taudamp = taudamp / n
-                     tausx(i,j) = tausx(i,j) * taudamp
-                     tausy(i,j) = tausy(i,j) * taudamp
-                  end if
                else
                   ice_hs(i,j) = -9999.
                   ice_hi(i,j) = -9999.
@@ -258,6 +244,30 @@
               end if
             end do
          end do
+         if (damp_stress) then
+            call update_2d_halo(ice_hi,ice_hi,az,imin,jmin,imax,jmax,z_TAG)
+            call wait_halo(z_TAG)
+            taudamp = _ONE_ - _ONE_/(_ONE_ + exp(-taucoef/tauh*(ice_hi-tauh)))
+            do j=jmin-HALO+1,jmax+HALO-1
+               do i=imin-HALO+1,imax+HALO-1
+                  if (az(i,j) .ge. 1) then
+                     taudamp_avg = _ZERO_
+                     n = 0
+                     do jj=j-1,j+1
+                        do ii=i-1,i+1
+                           if (az(ii,jj) .ge. 1) then
+                              taudamp_avg = taudamp_avg + taudamp(ii,jj)
+                              n = n + 1
+                           end if
+                        end do
+                     end do
+                     taudamp_avg = taudamp_avg / n
+                     tausx(i,j) = tausx(i,j) * taudamp_avg
+                     tausy(i,j) = tausy(i,j) * taudamp_avg
+                  end if
+               end do
+            end do
+         end if
       case default
    end select
 !KB    call toc(TIM_METEO)
