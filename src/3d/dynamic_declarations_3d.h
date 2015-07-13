@@ -23,6 +23,7 @@
 #endif
   REALTYPE, dimension(:,:,:), allocatable, target :: hn,hvel,hun,hvn
   REALTYPE, dimension(:,:,:), allocatable   :: ho,huo,hvo
+  REALTYPE, dimension(:,:,:), allocatable   :: zwn,zcn
   REALTYPE, dimension(:,:,:), allocatable   :: hcc
   REALTYPE, dimension(:,:,:), allocatable   :: uuEx,vvEx
   REALTYPE, dimension(:,:,:), allocatable, target :: nuh
