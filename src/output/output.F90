@@ -45,6 +45,7 @@
    logical                             :: save_3d=.true.
    REALTYPE                            :: mask_depth_2d,mask_depth_3d
    logical                             :: save_h=.false.
+   logical                             :: save_z=.false.
    logical                             :: save_mean=.false.
    logical                             :: save_vel=.true.
    logical                             :: save_vel2d=.true.
@@ -113,7 +114,7 @@
    namelist /io_spec/ &
              out_fmt,hotin_fmt,hotout_fmt, &
              in_dir,out_dir, save_metrics, save_masks, &
-             save_2d,save_3d,mask_depth,save_h,save_vel,save_fluxes, &
+             save_2d,save_3d,mask_depth,save_h,save_z,save_vel,save_fluxes, &
              save_strho,save_s,save_t,save_rho,save_rad, &
              save_turb,save_tke,save_eps,save_num,save_nuh, &
              save_Am_2d,save_Am_3d,save_stirr,save_ss_nn,save_taub, &
