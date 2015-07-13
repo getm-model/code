@@ -22,6 +22,7 @@
    use variables_3d, only: sseo,ssen,Dn,Dveln,Dun,Dvn,Uadv,Vadv
    use variables_3d, only: dt,kmin,ho,hn,hvel,uu,hun,vv,hvn,ww,hcc,SS
    use variables_3d, only: taubx,tauby
+   use variables_3d, only: zcn
 #ifdef _MOMENTUM_TERMS_
    use variables_3d, only: tdv_u,adv_u,vsd_u,hsd_u,cor_u,epg_u,ipg_u
    use variables_3d, only: tdv_v,adv_v,vsd_v,hsd_v,cor_v,epg_v,ipg_v
@@ -179,6 +180,13 @@
                   imin,imax,jmin,jmax,0,kmax,ws)
       err = nf90_put_var(ncid,h_id,ws(_3D_W_),start,edges)
 !      err = nf90_put_var(ncid,h_id,hn(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+
+   if (zc_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,zcn,zc_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,zc_id,ws(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
 
