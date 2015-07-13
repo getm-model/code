@@ -15,8 +15,9 @@
 #endif
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: au,av
-   use domain, only: vert_cord,maxdepth
+   use domain, only: H,vert_cord,maxdepth
    use variables_3d, only: ho,hn,huo,hun,hvo,hvn,hvel
+   use variables_3d, only: zwn,zcn
    use variables_3d, only: Dun,Dvn
    use exceptions
    IMPLICIT NONE
@@ -84,9 +85,7 @@
    logical, save   :: first=.true.
    integer         :: ii
 !   integer         :: preadapt=0
-#ifdef SLICE_MODEL
    integer          :: i,j,k
-#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -138,6 +137,12 @@ stop
          case default
       end select
    end if ! first
+
+   zwn(:,:,0) = -H
+   do k=1,kmax
+      zwn(:,:,k) = zwn(:,:,k-1) + hn(:,:,k)
+   end do
+   zcn(:,:,1:kmax) = _HALF_ * ( zwn(:,:,0:kmax-1) + zwn(:,:,1:kmax) )
 
    hvel = _HALF_ * ( ho + hn )
 
