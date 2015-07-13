@@ -40,7 +40,7 @@ doc: $(SRC)
 	touch doc
 
 clean:
-	$(RM) $(LIB) $(MODDIR)/les.{m,mod}
+	$(RM) $(LIB) $(MODDIR)/{variables_waves,waves}.{m,mod}
 
 realclean: clean
 	$(RM) *.o  doc
