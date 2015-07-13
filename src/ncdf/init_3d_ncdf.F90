@@ -193,6 +193,14 @@
                           units='m',FillValue=fv,missing_value=mv)
    end if
 
+   if (save_z) then
+      fv = zc_missing
+      mv = zc_missing
+      err = nf90_def_var(ncid,'zc',NCDF_FLOAT_PRECISION,f4_dims,zc_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,zc_id,long_name='vertical position',  &
+                          units='m',FillValue=fv,missing_value=mv)
+   end if
 
 !  hydrostatic consistency criterion
    err = nf90_def_var(ncid,'hcc',NCDF_FLOAT_PRECISION,f4_dims(1:3),hcc_id)
