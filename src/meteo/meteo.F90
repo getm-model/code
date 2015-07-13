@@ -87,6 +87,10 @@
    REALTYPE, public                    :: cd_precip = _ZERO_
    REALTYPE, public                    :: t_1=-_ONE_,t_2=-_ONE_
    logical, public                     :: new_meteo=.false.
+   integer, public, parameter          :: RELATIVE_HUM=1
+   integer, public, parameter          :: WET_BULB=2
+   integer, public, parameter          :: DEW_POINT=3
+   integer, public, parameter          :: SPECIFIC_HUM=4
    integer, public                     :: hum_method=-1
 !
 ! !DEFINED PARAMETERS:
