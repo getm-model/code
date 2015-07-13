@@ -51,6 +51,7 @@
 !
 ! !USES:
    use meteo, only: cpa,KELVIN
+   use meteo, only: RELATIVE_HUM,WET_BULB,DEW_POINT,SPECIFIC_HUM
    use meteo, only: L,rho_air,w,qs,qa,ea,es
    use meteo, only: cd_mom,cd_heat,cd_latent
    use meteo, only: fwf_method,cpw,cd_precip
@@ -121,7 +122,7 @@
 !  various formulations are available
 !  I've tested in a spread sheet - they give almost the same
 !  result
-!  for hum_method=2 the calculation of es can be substituted
+!  for hum_method=RELATIVE_HUM the calculation of es can be substituted
 !  by any of the formlaes below.
 #if 0
 !  http://www.cdc.noaa.gov/coads/software/other/profs_short
@@ -157,12 +158,12 @@
 
 !  see ../ncdf/ncdf_meteo.F90 for defined constants
    select case (hum_method)
-   case (1)
+   case (SPECIFIC_HUM)
 !     specific humidity in kg/kg is given
       qa = hum
 !     actual water vapor pressure in Pascal
       ea = qa *airp/(const06+0.378*qa)
-   case (2)
+   case (RELATIVE_HUM)
 !     relative humidity in % given
       rh = 0.01 * hum
 !     saturation vapor pressure at that air temperature
@@ -179,7 +180,7 @@
       ea = rh * ea
 !     convert to specific humidity
       qa = const06*ea/(airp-0.377*ea)
-   case (3)
+   case (DEW_POINT)
       ! Piece of code taken from HAMSOM for calculating relative
       ! humidity from dew point temperature and dry air temperature.
       ! It must be sure that hum is dew point temperature in Kelvin
@@ -215,7 +216,7 @@
 !     AS convert actual vapor pressure to specific humidity
       qa = const06*ea/(airp-0.377*ea)
 #endif
-   case (4)
+   case (WET_BULB)
 !     wet bulb temperature given
 !     Calculate the SVP at wet bulb temp then
 !     use the psychrometer formula to get vapour pressure

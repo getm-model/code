@@ -21,6 +21,7 @@
    integer                             :: time_id
 
    integer                             :: hcc_id,h_id=-1
+   integer                             :: zc_id=-1
    integer                             :: elev_id
    integer                             :: fluxu_id=-1
    integer                             :: fluxv_id=-1
@@ -81,6 +82,7 @@
 
 ! !DEFINED PARAMETERS
    REALTYPE, parameter                 :: hh_missing     =-9999.0
+   REALTYPE, parameter                 :: zc_missing     = 9999.0
    REALTYPE, parameter                 :: elev_missing   =-9999.0
    REALTYPE, parameter                 :: vel_missing    =-9999.0
    REALTYPE, parameter                 :: flux_missing   =-99999.0
