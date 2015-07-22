@@ -38,7 +38,7 @@
 !
 ! !USES:
    use time,     only: update_time,timestep
-   use domain,   only: kmax
+   use domain,   only: imin,imax,jmin,jmax,kmax
    use meteo,    only: do_meteo,tausx,tausy,airp,swr,albedo
    use meteo,    only: fwf_method,evap,precip
    use m2d,      only: integrate_2d
@@ -74,6 +74,7 @@
 ! !REVISION HISTORY:
 !
 ! !LOCAL VARIABLES
+   REALTYPE, dimension(E2DFIELD) :: sst,ssu,ssv
    logical                   :: do_3d=.false.
    integer                   :: n
    integer                   :: progress=100
@@ -103,12 +104,13 @@
       do_3d = (runtype .ge. 2 .and. mod(n,M) .eq. 0)
 #endif
       call do_input(n,do_3d)
+      call set_sea_surface_state(runtype,sst,ssu,ssv)
       if(runtype .le. 2) then
-         call do_meteo(n)
+         call do_meteo(n,ssu,ssv)
 #ifndef NO_3D
 #ifndef NO_BAROCLINIC
       else
-         call do_meteo(n,T(:,:,kmax))
+         call do_meteo(n,ssu,ssv,sst)
          swr = swr*(_ONE_-albedo)
 #endif
 #endif

@@ -91,6 +91,7 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
+   REALTYPE, dimension(E2DFIELD) :: sst,ssu,ssv
    integer:: i,j
    character(len=8)          :: buf
    character(len=64)         :: runid
@@ -301,12 +302,13 @@
    ! The rest is timed with meteo and output.
 
    if (metforcing) then
+      call set_sea_surface_state(runtype,sst,ssu,ssv)
       if(runtype .le. 2) then
-         call do_meteo(MinN-1)
+         call do_meteo(MinN-1,ssu,ssv)
 #ifndef NO_3D
 #ifndef NO_BAROCLINIC
       else
-         call do_meteo(MinN-1,T(:,:,kmax))
+         call do_meteo(MinN-1,ssu,ssv,sst)
          swr = swr*(_ONE_-albedo)
 #endif
 #endif

@@ -70,10 +70,12 @@
    REALTYPE, public                    :: wind_factor=_ONE_
    REALTYPE, public                    :: evap_factor = _ONE_
    REALTYPE, public                    :: precip_factor = _ONE_
+   logical, public                     :: calc_relative_wind=.false.
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
    REALTYPE,public,dimension(:,:),allocatable,target :: t2,hum
    REALTYPE,public,dimension(:,:),pointer            :: airp,tausx,tausy
    REALTYPE,public,dimension(:,:),pointer            :: u10,v10
+   REALTYPE,public,dimension(:,:),pointer            :: u10r,v10r
    REALTYPE,public,dimension(:,:),allocatable,target :: wind
    REALTYPE,public,dimension(:,:),pointer            :: shf,swr=>null(),tcc=>null()
    REALTYPE,public,dimension(:,:),pointer            :: evap,precip
@@ -161,7 +163,8 @@
                     meteo_ramp,metfmt,meteo_file, &
                     tx,ty,albedo_const,swr_const,shf_const, &
                     evap_const,precip_const,sst_const,sss_const, &
-                    wind_factor,precip_factor,evap_factor
+                    wind_factor,precip_factor,evap_factor, &
+                    calc_relative_wind
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -182,9 +185,11 @@
    allocate(u10(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (u10)'
    u10 = _ZERO_
+   u10r => u10
    allocate(v10(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (v10)'
    v10 = _ZERO_
+   v10r => v10
    allocate(wind(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (wind)'
    wind = _ZERO_
@@ -256,6 +261,9 @@
 
          if(calc_met) then
             LEVEL2 'Stresses and fluxes will be calculated'
+            if (calc_relative_wind) then
+               LEVEL3 'will consider surface currents for relative wind'
+            end if
          else
             LEVEL2 'Stresses and fluxes are already calculated'
          end if
@@ -333,6 +341,17 @@
 
    if (met_method.eq.METEO_FROMFILE .or. met_method.eq.METEO_FROMEXT) then
       if (calc_met) then
+
+         if (calc_relative_wind) then
+            allocate(u10r(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_meteo: Error allocating memory (u10r)'
+            u10r = _ZERO_
+
+            allocate(v10r(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_meteo: Error allocating memory (v10r)'
+            v10r = _ZERO_
+         end if
+
          allocate(t2(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (t2)'
          t2 = _ZERO_
@@ -419,7 +438,7 @@
 ! !IROUTINE: do_meteo - update the meteo forcing
 !
 ! !INTERFACE:
-   subroutine do_meteo(n,sst_model)
+   subroutine do_meteo(n,ssu,ssv,sst_model)
 !$ use omp_lib
 !
 ! !DESCRIPTION:
@@ -455,6 +474,7 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    integer, intent(in)                 :: n
+   REALTYPE, dimension(E2DFIELD), intent(in) :: ssu,ssv
    REALTYPE, optional, intent(inout)   :: sst_model(I2DFIELD)
 !
 ! !REVISION HISTORY:
@@ -569,6 +589,15 @@
                   call update_2d_halo(v10,v10,az,imin,jmin,imax,jmax,H_TAG)
                   call wait_halo(H_TAG)
 
+                  if (calc_relative_wind) then
+                     u10r = u10 - ssu
+                     v10r = v10 - ssv
+                  else
+!                    targets might have changed because of pointer swap
+                     u10r => u10
+                     v10r => v10
+                  end if
+
                   if (present(sst_model)) then
 ! OMP-NOTE: This is an expensive loop, but we cannot thread it as long
 !    as exchange_coefficients() and fluxes() pass information through
@@ -577,9 +606,9 @@
                         do i=imin,imax
                            if (az(i,j) .ge. 1) then
                               call exchange_coefficients( &
-                                     u10(i,j),v10(i,j),t2(i,j),airp(i,j), &
+                                     u10r(i,j),v10r(i,j),t2(i,j),airp(i,j), &
                                      sst_model(i,j),hum(i,j),hum_method)
-                              call fluxes(latc(i,j),u10(i,j),v10(i,j),    &
+                              call fluxes(latc(i,j),u10r(i,j),v10r(i,j),    &
                                       t2(i,j),tcc(i,j),sst_model(i,j),precip(i,j), &
                                       shf(i,j),tausx(i,j),tausy(i,j),evap(i,j))
                            end if
@@ -591,9 +620,9 @@
                         do i=imin,imax
                            if (az(i,j) .ge. 1) then
 ! BJB-TODO: Update constants to double.
-                              w=sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
-                              tausx(i,j) = 1.25e-3*1.25*w*U10(i,j)
-                              tausy(i,j) = 1.25e-3*1.25*w*V10(i,j)
+                              w=sqrt(u10r(i,j)*u10r(i,j)+v10r(i,j)*v10r(i,j))
+                              tausx(i,j) = 1.25e-3*1.25*w*U10r(i,j)
+                              tausy(i,j) = 1.25e-3*1.25*w*V10r(i,j)
                            end if
                         end do
                      end do
@@ -744,9 +773,22 @@
 #endif
 !$OMP END DO
 !$OMP SINGLE
-               if (.not. (met_method.eq.METEO_FROMEXT .and. .not.new_meteo)) then
-                  wind = sqrt( u10*u10 + v10*v10 )
-               end if
+               !if (.not. (met_method.eq.METEO_FROMEXT .and. .not.new_meteo)) then
+                  if (calc_relative_wind) then
+!                    update with latest surface currents
+                     u10r = u10 - ssu
+                     v10r = v10 - ssv
+                     call update_2d_halo(u10r,u10r,az,imin,jmin,imax,jmax,H_TAG)
+                     call wait_halo(H_TAG)
+                     call update_2d_halo(v10r,v10r,az,imin,jmin,imax,jmax,H_TAG)
+                     call wait_halo(H_TAG)
+                  else
+!                    targets might have changed because of pointer swap
+                     u10r => u10
+                     v10r => v10
+                  end if
+                  wind = sqrt( u10r*u10r + v10r*v10r )
+               !end if
             end if
 
 #ifdef SLICE_MODEL
