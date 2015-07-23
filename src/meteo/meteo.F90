@@ -46,7 +46,7 @@
    use time, only: yearday,secondsofday,timestep
    use time, only: write_time_string,timestr
    use halo_zones, only : H_TAG,update_2d_halo,wait_halo
-   use domain, only: imin,imax,jmin,jmax,lonc,latc,convc,az
+   use domain, only: imin,imax,jmin,jmax,lonc,latc,convc,cosconv,sinconv,az
    use exceptions
    IMPLICIT NONE
 !
@@ -155,10 +155,7 @@
 !  See log for module.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,rc
-   REALTYPE                  :: sinconv,cosconv
-   REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029d0
-   REALTYPE, parameter       :: deg2rad=pi/180
+   integer                   :: rc
    namelist /meteo/ metforcing,on_grid,calc_met,met_method, &
                     albedo_method,fwf_method, &
                     meteo_ramp,metfmt,meteo_file, &
@@ -327,14 +324,8 @@
       if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx_const)'
       allocate(tausy_const(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy_const)'
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-            sinconv=sin(-convc(i,j)*deg2rad)
-            cosconv=cos(-convc(i,j)*deg2rad)
-            tausx_const(i,j)= tx*cosconv+ty*sinconv
-            tausy_const(i,j)=-tx*sinconv+ty*cosconv
-         end do
-      end do
+      tausx_const = cosconv*tx - sinconv*ty
+      tausy_const = sinconv*tx + cosconv*ty
       tausx = tausx_const ! KK-TODO: can we remove this? -- ramp will be
       tausy = tausy_const !          applied in do_meteo() ...
       shf   = shf_const
