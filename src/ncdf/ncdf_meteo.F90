@@ -18,6 +18,7 @@
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
    use grid_interpol, only: to_rotated_lat_lon
    use meteo, only: meteo_file,on_grid,calc_met,met_method,hum_method
+   use meteo, only: RELATIVE_HUM,WET_BULB,DEW_POINT,SPECIFIC_HUM
    use meteo, only: airp,u10,v10,t2,hum,tcc
    use meteo, only: fwf_method,evap,precip
    use meteo, only: tausx,tausy,swr,shf
@@ -71,10 +72,6 @@
    character(len=10)         :: name_tcc="tcc"
    character(len=10)         :: name_evap="evap"
    character(len=10)         :: name_precip="precip"
-   integer, parameter        :: SPECIFIC_HUM=1
-   integer, parameter        :: RELATIVE_HUM=2
-   integer, parameter        :: DEW_POINT=3
-   integer, parameter        :: WET_BULB=4
 
    character(len=10)         :: name_tausx="tausx"
    character(len=10)         :: name_tausy="tausy"
