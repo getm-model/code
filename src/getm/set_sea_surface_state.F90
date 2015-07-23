@@ -5,7 +5,7 @@
 ! !IROUTINE: set_sea_surface_state -
 !
 ! !INTERFACE:
-   subroutine set_sea_surface_state( runtype , sst , ssu , ssv )
+   subroutine set_sea_surface_state( runtype , ssu , ssv )
 !
 ! !USES:
    use domain      , only: imin,imax,jmin,jmax,kmax
@@ -24,7 +24,7 @@
    integer, intent(in)                        :: runtype
 !
 ! !OUTPUT PARAMETERS:
-   REALTYPE, dimension(E2DFIELD), intent(out) :: sst, ssu, ssv
+   REALTYPE, dimension(E2DFIELD), intent(out) :: ssu, ssv
 !
 ! !DESCRIPTION:
 !
@@ -47,11 +47,11 @@
       call to_u(imin,jmin,imax,jmax,az,                            &
                 dtm,grid_type,                                     &
                 dxv,dyu,arcd1,                                     &
-                xc,xu,xv,z,zo,Dvel,U,DU,V,DV,wrk,wrk,-9999.0,u_vel)
+                xc,xu,xv,z,zo,Dvel,U,DU,V,DV,wrk,wrk,_ZERO_,u_vel)
       call to_v(imin,jmin,imax,jmax,az,                            &
                 dtm,grid_type,                                     &
                 dxv,dyu,arcd1,                                     &
-                yc,yu,yv,z,zo,Dvel,U,DU,V,DV,wrk,wrk,-9999.0,v_vel)
+                yc,yu,yv,z,zo,Dvel,U,DU,V,DV,wrk,wrk,_ZERO_,v_vel)
    else
 #ifndef NO_3D
       call to_u(imin,jmin,imax,jmax,az,                                &
@@ -59,16 +59,16 @@
                 dxv,dyu,arcd1,                                         &
                 xc,xu,xv,hn(:,:,kmax),ho(:,:,kmax),hvel(:,:,kmax),     &
                 uu(:,:,kmax),hun(:,:,kmax),vv(:,:,kmax),hvn(:,:,kmax), &
-                ww(:,:,kmax-1),ww(:,:,kmax),-9999.0,u_vel)
+                ww(:,:,kmax-1),ww(:,:,kmax),_ZERO_,u_vel)
       call to_v(imin,jmin,imax,jmax,az,                                &
                 dt,grid_type,                                          &
                 dxv,dyu,arcd1,                                         &
                 yc,yu,yv,hn(:,:,kmax),ho(:,:,kmax),hvel(:,:,kmax),     &
                 uu(:,:,kmax),hun(:,:,kmax),vv(:,:,kmax),hvn(:,:,kmax), &
-                ww(:,:,kmax-1),ww(:,:,kmax),-9999.0,v_vel)
+                ww(:,:,kmax-1),ww(:,:,kmax),_ZERO_,v_vel)
 #ifndef NO_BAROCLINIC
       if (runtype .gt. 2) then
-         sst = T(:,:,kmax)
+         !sst = T(:,:,kmax)
       end if
 #endif
 #endif

@@ -85,6 +85,7 @@
    logical,public                                    :: nudge_sss=.false.
    REALTYPE,public                                   :: sst_const=-_ONE_
    REALTYPE,public                                   :: sss_const=-_ONE_
+   REALTYPE,public,dimension(:,:),allocatable        :: ssu,ssv
    REALTYPE, public                    :: cd_mom,cd_heat,cd_latent
    REALTYPE, public                    :: cd_precip = _ZERO_
    REALTYPE, public                    :: t_1=-_ONE_,t_2=-_ONE_
@@ -217,6 +218,12 @@
    allocate(precip(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (precip)'
    precip = _ZERO_
+   allocate(ssu(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (ssu)'
+   ssu = _ZERO_
+   allocate(ssv(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (ssv)'
+   ssv = _ZERO_
 
 
    read(NAMLST,meteo)
@@ -438,7 +445,7 @@
 ! !IROUTINE: do_meteo - update the meteo forcing
 !
 ! !INTERFACE:
-   subroutine do_meteo(n,ssu,ssv,sst_model)
+   subroutine do_meteo(n,sst_model)
 !$ use omp_lib
 !
 ! !DESCRIPTION:
@@ -474,7 +481,6 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    integer, intent(in)                 :: n
-   REALTYPE, dimension(E2DFIELD), intent(in) :: ssu,ssv
    REALTYPE, optional, intent(inout)   :: sst_model(I2DFIELD)
 !
 ! !REVISION HISTORY:
