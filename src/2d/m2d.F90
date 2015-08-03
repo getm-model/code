@@ -151,8 +151,6 @@
 
    dtm = timestep
 
-   call field_manager%register('z', 'm', 'sea surface elevation', standard_name='sea surface elevation', data2d=z(I2DFIELD))
-
 #if defined(GETM_PARALLEL) || defined(NO_BAROTROPIC)
 !  STDERR 'Not calling cfl_check() - GETM_PARALLEL or NO_BAROTROPIC'
 !  call cfl_check()
@@ -166,6 +164,8 @@
 !  Allocates memory for the public data members - if not static
    call init_variables_2d(runtype)
    call init_advection()
+
+   call field_manager%register('z', 'm', 'sea surface elevation', standard_name='sea surface elevation', data2d=z(I2DFIELD))
 
    LEVEL2 'Advection of depth-averaged velocities'
 #ifdef NO_ADVECT
