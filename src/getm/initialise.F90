@@ -226,7 +226,7 @@
 
    call init_domain(input_dir)
 
-   call field_manager_%register_dimension('time',id=id_dim_time)
+   call field_manager_%register_dimension('time',-1,id=id_dim_time)
    call field_manager_%register_dimension('x',(imax+HALO)-(imin-HALO)+1,id=id_dim_lon)
    call field_manager_%register_dimension('y',(jmax+HALO)-(jmin-HALO)+1,id=id_dim_lat)
    call field_manager_%register_dimension('z',kmax+1,id=id_dim_z)
