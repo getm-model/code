@@ -117,6 +117,20 @@
 #endif
    character(len=PATH_MAX)   :: hot_in=''
 
+#if defined SPHERICAL
+   character(len=8)          :: xname='lonc'
+   character(len=8)          :: yname='latc'
+#elif defined CURVILINEAR
+   character(len=8)          :: xname='xic'
+   character(len=8)          :: yname='etac'
+#else
+   character(len=8)          :: xname='xc'
+   character(len=8)          :: yname='yc'
+#endif
+   character(len=8)          :: zname='sigma'
+
+!KB   character(len=PATH_MAX)   :: zname='lonc'
+
    namelist /param/ &
              dryrun,runid,title,parallel,runtype,  &
              hotstart,use_epoch,save_initial
@@ -226,10 +240,25 @@
 
    call init_domain(input_dir)
 
-   call field_manager_%register_dimension('time',-1,id=id_dim_time)
-   call field_manager_%register_dimension('x',(imax+HALO)-(imin-HALO)+1,id=id_dim_lon)
-   call field_manager_%register_dimension('y',(jmax+HALO)-(jmin-HALO)+1,id=id_dim_lat)
-   call field_manager_%register_dimension('z',kmax+1,id=id_dim_z)
+#ifndef NO_3D
+   select case (vert_cord)
+      case (1)
+         zname  = 'sigma'
+!         zunits = 'sigma_level'
+      case (2)
+         zname  = 'z'
+!         zunits = 'm'
+      case (3,4,5)
+         zname  = 'level'
+!         zunits = 'level'
+      case default
+   end select
+#endif
+
+   call field_manager_%register_dimension(trim(xname),(imax+HALO)-(imin-HALO)+1,id=id_dim_lon)
+   call field_manager_%register_dimension(trim(yname),(jmax+HALO)-(jmin-HALO)+1,id=id_dim_lat)
+   call field_manager_%register_dimension(trim(zname),kmax+1,id=id_dim_z)
+   call field_manager_%register_dimension('time',id=id_dim_time)
    call field_manager_%initialize(prepend_by_default=(/id_dim_lon,id_dim_lat/),append_by_default=(/id_dim_time/))
    allocate(type_getm_host::output_manager_host)
    call output_manager_init(field_manager_)
