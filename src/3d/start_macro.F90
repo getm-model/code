@@ -61,8 +61,15 @@
 !             requires ho=hn in coordinates and use of true sseo for
 !             momentum routines. See also necessary changes
 !             in do_salinity and do_getm_fabm!
-!   hn(:,:,kmax) = hn(:,:,kmax) + fwf_int
-!   ssen = ssen + fwf_int
+!   do j=jmin-HALO,jmax+HALO
+!      do i=imin-HALO,imax+HALO
+!        fwf_int(az=2)<>0; do not mess with open bdy cells!
+!         if (az(i,j) .eq. 1) then
+!            ssen(i,j)      = ssen(i,j)      + fwf_int(i,j)
+!            hn  (i,j,kmax) = hn  (i,j,kmax) + fwf_int(i,j)
+!         end if
+!      end do
+!   end do
 
    do j=jmin-HALO,jmax+HALO         ! Defining 'old' and 'new' sea surface
       do i=imin-HALO,imax+HALO      ! elevation for macro time step
