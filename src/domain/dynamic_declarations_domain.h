@@ -28,6 +28,7 @@
 !  grid convergence
 !KB   REALTYPE, dimension(:,:), allocatable    :: angle
    REALTYPE, dimension(:,:), allocatable    :: convc,convx
+   REALTYPE, dimension(:,:), allocatable    :: cosconv,sinconv
 
 !  grid points
    REALTYPE, dimension(:,:), allocatable, target :: xx,yx
