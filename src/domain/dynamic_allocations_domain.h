@@ -117,6 +117,14 @@
    if (rc /= 0) stop 'init_domain: Error allocating memory (convx)'
    convx = _ZERO_
 
+   allocate(cosconv(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (cosconv)'
+   cosconv = _ZERO_
+
+   allocate(sinconv(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (sinconv)'
+   sinconv = _ZERO_
+
 ! grid points
    allocate(xx(E2DXFIELD),stat=rc)
    if (rc /=0) stop 'init_domain: Error allocating memory (xx)'
