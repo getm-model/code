@@ -12,9 +12,7 @@
   INTEGER                              :: kumin_pmz(I2DFIELD)
   INTEGER                              :: kvmin_pmz(I2DFIELD)
 
-  REALTYPE                             :: uu(I3DFIELD)
-  REALTYPE                             :: vv(I3DFIELD)
-  REALTYPE, target                     :: ww(I3DFIELD)
+  REALTYPE,dimension(I3DFIELD),target  :: uu,vv,ww
 #ifdef _MOMENTUM_TERMS_
   REALTYPE                             :: tdv_u(I3DFIELD)
   REALTYPE                             :: adv_u(I3DFIELD)

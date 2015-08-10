@@ -302,7 +302,7 @@
    ! The rest is timed with meteo and output.
 
    if (metforcing) then
-      call set_sea_surface_state(runtype,ssu,ssv)
+      call set_sea_surface_state(runtype,ssu,ssv,.true.)
       if(runtype .le. 2) then
          call do_meteo(MinN-1)
 #ifndef NO_3D
