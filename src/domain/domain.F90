@@ -398,6 +398,9 @@
 !  Interpolate (latx,lonx) and (xx,yx) to the u, v, and T-points.
    call x2uvc()
 
+   cosconv = cos( deg2rad*convc )
+   sinconv = sin( deg2rad*convc )
+
 !  calculate the metric coeff.
    call metric()
 
