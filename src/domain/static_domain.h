@@ -42,6 +42,7 @@
 !KB   REALTYPE                            :: angle(E2DFIELD)
    REALTYPE                            :: convc(E2DFIELD) = _ZERO_
    REALTYPE                            :: convx(E2DXFIELD) = _ZERO_
+   REALTYPE,dimension(E2DFIELD)        :: cosconv,sinconv
 
 !  grid points
    REALTYPE,target                     :: xx(E2DXFIELD)

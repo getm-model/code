@@ -17,7 +17,7 @@
    use exceptions
    use halo_zones     , only: update_2d_halo,wait_halo,H_TAG
    use domain         , only: imin,imax,jmin,jmax,kmax,az,H
-   use meteo          , only: metforcing,met_method,wind,u10,v10
+   use meteo          , only: metforcing,met_method,wind,u10r,v10r
    use getm_timers    , only: tic,toc,TIM_WAVES
 
    IMPLICIT NONE
@@ -243,8 +243,8 @@
             do i=imin-HALO,imax+HALO
                if ( az(i,j) .gt. 0 ) then
                   if (wind(i,j) .gt. _ZERO_) then
-                     coswavedir(i,j) = u10(i,j) / wind(i,j)
-                     sinwavedir(i,j) = v10(i,j) / wind(i,j)
+                     coswavedir(i,j) = u10r(i,j) / wind(i,j)
+                     sinwavedir(i,j) = v10r(i,j) / wind(i,j)
 !                    KK-TODO: Or do we want to use H instead of D?
 !                             Then we would not need to call depth_update in
 !                             initialise(). However H does not consider

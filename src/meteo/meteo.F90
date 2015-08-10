@@ -46,7 +46,7 @@
    use time, only: yearday,secondsofday,timestep
    use time, only: write_time_string,timestr
    use halo_zones, only : H_TAG,update_2d_halo,wait_halo
-   use domain, only: imin,imax,jmin,jmax,lonc,latc,convc,az
+   use domain, only: imin,imax,jmin,jmax,lonc,latc,convc,cosconv,sinconv,az
    use exceptions
    IMPLICIT NONE
 !
@@ -70,10 +70,12 @@
    REALTYPE, public                    :: wind_factor=_ONE_
    REALTYPE, public                    :: evap_factor = _ONE_
    REALTYPE, public                    :: precip_factor = _ONE_
+   logical, public                     :: calc_relative_wind=.false.
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
    REALTYPE,public,dimension(:,:),allocatable,target :: t2,hum
    REALTYPE,public,dimension(:,:),pointer            :: airp,tausx,tausy
    REALTYPE,public,dimension(:,:),pointer            :: u10,v10
+   REALTYPE,public,dimension(:,:),pointer            :: u10r,v10r
    REALTYPE,public,dimension(:,:),allocatable,target :: wind
    REALTYPE,public,dimension(:,:),pointer            :: shf,swr=>null(),tcc=>null()
    REALTYPE,public,dimension(:,:),pointer            :: evap,precip
@@ -83,6 +85,7 @@
    logical,public                                    :: nudge_sss=.false.
    REALTYPE,public                                   :: sst_const=-_ONE_
    REALTYPE,public                                   :: sss_const=-_ONE_
+   REALTYPE,public,dimension(:,:),allocatable        :: ssu,ssv
    REALTYPE, public                    :: cd_mom,cd_heat,cd_latent
    REALTYPE, public                    :: cd_precip = _ZERO_
    REALTYPE, public                    :: t_1=-_ONE_,t_2=-_ONE_
@@ -152,16 +155,14 @@
 !  See log for module.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,rc
-   REALTYPE                  :: sinconv,cosconv
-   REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029d0
-   REALTYPE, parameter       :: deg2rad=pi/180
+   integer                   :: rc
    namelist /meteo/ metforcing,on_grid,calc_met,met_method, &
                     albedo_method,fwf_method, &
                     meteo_ramp,metfmt,meteo_file, &
                     tx,ty,albedo_const,swr_const,shf_const, &
                     evap_const,precip_const,sst_const,sss_const, &
-                    wind_factor,precip_factor,evap_factor
+                    wind_factor,precip_factor,evap_factor, &
+                    calc_relative_wind
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -182,9 +183,11 @@
    allocate(u10(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (u10)'
    u10 = _ZERO_
+   u10r => u10
    allocate(v10(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (v10)'
    v10 = _ZERO_
+   v10r => v10
    allocate(wind(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (wind)'
    wind = _ZERO_
@@ -212,6 +215,12 @@
    allocate(precip(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (precip)'
    precip = _ZERO_
+   allocate(ssu(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (ssu)'
+   ssu = _ZERO_
+   allocate(ssv(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo: Error allocating memory (ssv)'
+   ssv = _ZERO_
 
 
    read(NAMLST,meteo)
@@ -256,6 +265,9 @@
 
          if(calc_met) then
             LEVEL2 'Stresses and fluxes will be calculated'
+            if (calc_relative_wind) then
+               LEVEL3 'will consider surface currents for relative wind'
+            end if
          else
             LEVEL2 'Stresses and fluxes are already calculated'
          end if
@@ -312,14 +324,8 @@
       if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx_const)'
       allocate(tausy_const(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy_const)'
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-            sinconv=sin(-convc(i,j)*deg2rad)
-            cosconv=cos(-convc(i,j)*deg2rad)
-            tausx_const(i,j)= tx*cosconv+ty*sinconv
-            tausy_const(i,j)=-tx*sinconv+ty*cosconv
-         end do
-      end do
+      tausx_const = cosconv*tx - sinconv*ty
+      tausy_const = sinconv*tx + cosconv*ty
       tausx = tausx_const ! KK-TODO: can we remove this? -- ramp will be
       tausy = tausy_const !          applied in do_meteo() ...
       shf   = shf_const
@@ -333,6 +339,17 @@
 
    if (met_method.eq.METEO_FROMFILE .or. met_method.eq.METEO_FROMEXT) then
       if (calc_met) then
+
+         if (calc_relative_wind) then
+            allocate(u10r(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_meteo: Error allocating memory (u10r)'
+            u10r = _ZERO_
+
+            allocate(v10r(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_meteo: Error allocating memory (v10r)'
+            v10r = _ZERO_
+         end if
+
          allocate(t2(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (t2)'
          t2 = _ZERO_
@@ -569,6 +586,15 @@
                   call update_2d_halo(v10,v10,az,imin,jmin,imax,jmax,H_TAG)
                   call wait_halo(H_TAG)
 
+                  if (calc_relative_wind) then
+                     u10r = u10 - ssu
+                     v10r = v10 - ssv
+                  else
+!                    targets might have changed because of pointer swap
+                     u10r => u10
+                     v10r => v10
+                  end if
+
                   if (present(sst_model)) then
 ! OMP-NOTE: This is an expensive loop, but we cannot thread it as long
 !    as exchange_coefficients() and fluxes() pass information through
@@ -577,9 +603,9 @@
                         do i=imin,imax
                            if (az(i,j) .ge. 1) then
                               call exchange_coefficients( &
-                                     u10(i,j),v10(i,j),t2(i,j),airp(i,j), &
+                                     u10r(i,j),v10r(i,j),t2(i,j),airp(i,j), &
                                      sst_model(i,j),hum(i,j),hum_method)
-                              call fluxes(latc(i,j),u10(i,j),v10(i,j),    &
+                              call fluxes(latc(i,j),u10r(i,j),v10r(i,j),    &
                                       t2(i,j),tcc(i,j),sst_model(i,j),precip(i,j), &
                                       shf(i,j),tausx(i,j),tausy(i,j),evap(i,j))
                            end if
@@ -591,9 +617,9 @@
                         do i=imin,imax
                            if (az(i,j) .ge. 1) then
 ! BJB-TODO: Update constants to double.
-                              w=sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
-                              tausx(i,j) = 1.25e-3*1.25*w*U10(i,j)
-                              tausy(i,j) = 1.25e-3*1.25*w*V10(i,j)
+                              w=sqrt(u10r(i,j)*u10r(i,j)+v10r(i,j)*v10r(i,j))
+                              tausx(i,j) = 1.25e-3*1.25*w*U10r(i,j)
+                              tausy(i,j) = 1.25e-3*1.25*w*V10r(i,j)
                            end if
                         end do
                      end do
@@ -744,9 +770,22 @@
 #endif
 !$OMP END DO
 !$OMP SINGLE
-               if (.not. (met_method.eq.METEO_FROMEXT .and. .not.new_meteo)) then
-                  wind = sqrt( u10*u10 + v10*v10 )
-               end if
+               !if (.not. (met_method.eq.METEO_FROMEXT .and. .not.new_meteo)) then
+                  if (calc_relative_wind) then
+!                    update with latest surface currents
+                     u10r = u10 - ssu
+                     v10r = v10 - ssv
+                     call update_2d_halo(u10r,u10r,az,imin,jmin,imax,jmax,H_TAG)
+                     call wait_halo(H_TAG)
+                     call update_2d_halo(v10r,v10r,az,imin,jmin,imax,jmax,H_TAG)
+                     call wait_halo(H_TAG)
+                  else
+!                    targets might have changed because of pointer swap
+                     u10r => u10
+                     v10r => v10
+                  end if
+                  wind = sqrt( u10r*u10r + v10r*v10r )
+               !end if
             end if
 
 #ifdef SLICE_MODEL
