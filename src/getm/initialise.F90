@@ -72,6 +72,7 @@
 #endif
 #endif
    use meteo, only: metforcing,met_method,init_meteo,do_meteo
+   use meteo, only: ssu,ssv
    use integration,  only: MinN,MaxN
 #ifndef NO_BAROCLINIC
    use meteo, only: swr,albedo
@@ -301,6 +302,7 @@
    ! The rest is timed with meteo and output.
 
    if (metforcing) then
+      call set_sea_surface_state(runtype,ssu,ssv,.true.)
       if(runtype .le. 2) then
          call do_meteo(MinN-1)
 #ifndef NO_3D

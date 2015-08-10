@@ -6,8 +6,7 @@
    integer  break_stat(E2DFIELD)
 #endif
    REALTYPE,dimension(E2DFIELD),target :: t_zo,t_z,D,Dvel,DU,DV
-   REALTYPE U(E2DFIELD)
-   REALTYPE V(E2DFIELD)
+   REALTYPE,dimension(E2DFIELD),target :: U,V
    REALTYPE UEx(E2DFIELD)
    REALTYPE VEx(E2DFIELD)
    REALTYPE ru(E2DFIELD)
