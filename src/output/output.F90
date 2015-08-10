@@ -381,6 +381,8 @@
          write_restart = hotout(1).le.n .and. n.le.hotout(2) .and. mod(n,hotout(3)).eq.0
       end if
       if (write_restart) then
+         LEVEL2 'Checking for NANs before saving hotstart file...'
+         call sealevel_nan_check()
          dummy = n
          call restart_file(WRITING,trim(hot_out),dummy,runtype)
       end if
