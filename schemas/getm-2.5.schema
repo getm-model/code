@@ -229,6 +229,9 @@
 					<condition type="eq" variable="./fwf_method" value="3"/>
 				</condition>
 			</element>
+			<element name="calc_relative_wind" type="bool" label="consider surface currents for relative wind">
+				<condition type="eq" variable="./calc_met" value="True"/>
+			</element>
 		</element>
 
 		<element name="waves" label="waves">
