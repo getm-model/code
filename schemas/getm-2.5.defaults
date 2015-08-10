@@ -184,6 +184,9 @@
 			<precip_factor>
 				1.0
 			</precip_factor>
+			<calc_relative_wind>
+				False
+			</calc_relative_wind>
 		</meteo>
 		<waves>
 			<waveforcing_method>
