@@ -13,7 +13,8 @@ ${LIB}(integration.o)		\
 ${LIB}(initialise.o)
 
 OBJ   = \
-${LIB}(cleanup.o)
+${LIB}(cleanup.o) \
+${LIB}(set_sea_surface_state.o)
 
 all: modules objects
 
