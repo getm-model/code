@@ -132,6 +132,7 @@
    integer                   :: i,j
    integer                   :: elev_method=1
    REALTYPE                  :: elev_const=_ZERO_
+   integer,parameter :: rk = kind(_ONE_)
    character(LEN = PATH_MAX) :: elev_file='elev.nc'
    namelist /m2d/ &
           elev_method,elev_const,elev_file,                    &
@@ -162,10 +163,8 @@
    read(NAMLST,m2d)
 
 !  Allocates memory for the public data members - if not static
-   call init_variables_2d(runtype)
+   call init_variables_2d(runtype,field_manager)
    call init_advection()
-
-   call field_manager%register('z', 'm', 'sea surface elevation', standard_name='sea surface elevation', data2d=z(I2DFIELD))
 
    LEVEL2 'Advection of depth-averaged velocities'
 #ifdef NO_ADVECT
