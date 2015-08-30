@@ -24,6 +24,7 @@
    use time, only: write_time_string,timestr
    use variables_2d, only: dtm,z,zo,D,U,DU,V,DV
    use domain, only: dxu,dyv
+   use exceptions
 
    IMPLICIT NONE
 !
@@ -72,7 +73,7 @@
    logical, intent(inout)              :: bdy2d
 !
 ! !LOCAL VARIABLES:
-   integer :: i,n,l,rc
+   integer :: i,j,n,l,shift, rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -183,7 +184,103 @@
          sp(i) = ((_ONE_+bdy2d_sponge_size-i)/(_ONE_+bdy2d_sponge_size))**2
          LEVEL4 "sp(",i,")=",real(sp(i))
       end do
+   else
+      bdy2d_sponge_size = 0
    end if
+
+   l = 0
+   do n = 1,NWB
+      l = l+1
+      i = wi(n)
+      do j = wfj(n),wlj(n)
+         if (az(i,j) .eq. 2) then
+            select case (bdy_2d_type(l))
+               case (CONSTANT,CLAMPED_ELEV,CLAMPED)
+                  shift = bdy2d_sponge_size
+               case (ZERO_GRADIENT,SOMMERFELD,CLAMPED_VEL,FLATHER_VEL)
+                  shift = 1
+               case default
+                  shift = 0
+            end select
+            if ( i+shift .gt. imax ) then
+               FATAL 'local western bdy #',n,'too close to eastern subdomain edge'
+               call getm_error('init_bdy_2d()', &
+                               'western open bdy too close to eastern subdomain edge')
+            else
+               exit
+            end if
+         end if
+      end do
+   end do
+   do n = 1,NNB
+      l = l+1
+      j = nj(n)
+      do i = nfi(n),nli(n)
+         if (az(i,j) .eq. 2) then
+            select case (bdy_2d_type(l))
+               case (CONSTANT,CLAMPED_ELEV,CLAMPED)
+                  shift = bdy2d_sponge_size
+               case (ZERO_GRADIENT,SOMMERFELD,CLAMPED_VEL,FLATHER_VEL)
+                  shift = 1
+               case default
+                  shift = 0
+            end select
+            if ( j-shift .lt. jmin ) then
+               FATAL 'local northern bdy #',n,'too close to southern subdomain edge'
+               call getm_error('init_bdy_2d()', &
+                               'northern open bdy too close to southern subdomain edge')
+            else
+               exit
+            end if
+         end if
+      end do
+   end do
+   do n = 1,NEB
+      l = l+1
+      i = ei(n)
+      do j = efj(n),elj(n)
+         if (az(i,j) .eq. 2) then
+            select case (bdy_2d_type(l))
+               case (CONSTANT,CLAMPED_ELEV,CLAMPED)
+                  shift = bdy2d_sponge_size
+               case (ZERO_GRADIENT,SOMMERFELD,CLAMPED_VEL,FLATHER_VEL)
+                  shift = 1
+               case default
+                  shift = 0
+            end select
+            if ( i-shift .lt. imin ) then
+               FATAL 'local eastern bdy #',n,'too close to western subdomain edge'
+               call getm_error('init_bdy_2d()', &
+                               'eastern open bdy too close to western subdomain edge')
+            else
+               exit
+            end if
+         end if
+      end do
+   end do
+   do n = 1,NSB
+      l = l+1
+      j = sj(n)
+      do i = sfi(n),sli(n)
+         if (az(i,j) .eq. 2) then
+            select case (bdy_2d_type(l))
+               case (CONSTANT,CLAMPED_ELEV,CLAMPED)
+                  shift = bdy2d_sponge_size
+               case (ZERO_GRADIENT,SOMMERFELD,CLAMPED_VEL,FLATHER_VEL)
+                  shift = 1
+               case default
+                  shift = 0
+            end select
+            if ( j+shift .gt. jmax ) then
+               FATAL 'local southern bdy #',n,'too close to northern subdomain edge'
+               call getm_error('init_bdy_2d()', &
+                               'southern open bdy too close to northern subdomain edge')
+            else
+               exit
+            end if
+         end if
+      end do
+   end do
 
 
 #ifdef DEBUG
