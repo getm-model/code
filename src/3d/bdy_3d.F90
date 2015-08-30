@@ -50,6 +50,7 @@
 #ifdef _FABM_
    REALTYPE,allocatable,target,public     :: bio_bdy(:,:,:)
    integer,allocatable,public             :: have_bio_bdy_values(:)
+   integer,allocatable,public             :: bdy_bio_type(:,:)
 #endif
 !
 ! !PRIVATE DATA MEMBERS:
@@ -391,26 +392,19 @@
          do j=wfj(n),wlj(n)
             fabm_ben(i,j,:) = fabm_ben(i+1,j,:)
          end do
-         select case (bdy_3d_type(l))
-            case(ZERO_GRADIENT)
-               do o=1,size(model%state_variables)
+         do o=1,size(model%state_variables)
+            select case (bdy_bio_type(l,o))
+               case(ZERO_GRADIENT)
                   call bdy_3d_west(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
-               end do
-            case(CLAMPED)
-               do o=1,size(model%state_variables)
-                  if (have_bio_bdy_values(o) .eq. 1) then
+               case(CLAMPED)
 #ifdef _POINTER_REMAP_
-                     p2d => bio_bdy(:,:,o) ; p_bdy_data(0:,1:) => p2d
+                  p2d => bio_bdy(:,:,o) ; p_bdy_data(0:,1:) => p2d
 #else
-                     bdy_data = bio_bdy(:,:,o)
+                  bdy_data = bio_bdy(:,:,o)
 #endif
-                     call bdy_3d_west(l,n,CLAMPED,fabm_pel(:,:,:,o),p_bdy_data)
-                  else
-!                    zero gradient when we don't have bdy values
-                     call bdy_3d_west(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
-                  end if
-               end do
-         end select
+                  call bdy_3d_west(l,n,CLAMPED,fabm_pel(:,:,:,o),p_bdy_data)
+            end select
+         end do
       end if
 #endif
    end do
@@ -425,26 +419,19 @@
          do i = nfi(n),nli(n)
             fabm_ben(i,j,:) = fabm_ben(i,j-1,:)
          end do
-         select case (bdy_3d_type(l))
-            case(ZERO_GRADIENT)
-               do o=1,size(model%state_variables)
+         do o=1,size(model%state_variables)
+            select case (bdy_bio_type(l,o))
+               case(ZERO_GRADIENT)
                   call bdy_3d_north(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
-               end do
-            case(CLAMPED)
-               do o=1,size(model%state_variables)
-                  if (have_bio_bdy_values(o) .eq. 1) then
+               case(CLAMPED)
 #ifdef _POINTER_REMAP_
-                     p2d => bio_bdy(:,:,o) ; p_bdy_data(0:,1:) => p2d
+                  p2d => bio_bdy(:,:,o) ; p_bdy_data(0:,1:) => p2d
 #else
-                     bdy_data = bio_bdy(:,:,o)
+                  bdy_data = bio_bdy(:,:,o)
 #endif
-                     call bdy_3d_north(l,n,CLAMPED,fabm_pel(:,:,:,o),p_bdy_data)
-                  else
-!                    zero gradient when we don't have bdy values
-                     call bdy_3d_north(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
-                  end if
-               end do
-         end select
+                  call bdy_3d_north(l,n,CLAMPED,fabm_pel(:,:,:,o),p_bdy_data)
+            end select
+         end do
       end if
 #endif
    end do
@@ -459,26 +446,19 @@
          do j=efj(n),elj(n)
             fabm_ben(i,j,:) = fabm_ben(i-1,j,:)
          end do
-         select case (bdy_3d_type(l))
-            case(ZERO_GRADIENT)
-               do o=1,size(model%state_variables)
+         do o=1,size(model%state_variables)
+            select case (bdy_bio_type(l,o))
+               case(ZERO_GRADIENT)
                   call bdy_3d_east(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
-               end do
-            case(CLAMPED)
-               do o=1,size(model%state_variables)
-                  if (have_bio_bdy_values(o) .eq. 1) then
+               case(CLAMPED)
 #ifdef _POINTER_REMAP_
-                     p2d => bio_bdy(:,:,o) ; p_bdy_data(0:,1:) => p2d
+                  p2d => bio_bdy(:,:,o) ; p_bdy_data(0:,1:) => p2d
 #else
-                     bdy_data = bio_bdy(:,:,o)
+                  bdy_data = bio_bdy(:,:,o)
 #endif
-                     call bdy_3d_east(l,n,CLAMPED,fabm_pel(:,:,:,o),p_bdy_data)
-                  else
-!                    zero gradient when we don't have bdy values
-                     call bdy_3d_east(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
-                  end if
-               end do
-         end select
+                  call bdy_3d_east(l,n,CLAMPED,fabm_pel(:,:,:,o),p_bdy_data)
+            end select
+         end do
       end if
 #endif
    end do
@@ -493,26 +473,19 @@
          do i = sfi(n),sli(n)
             fabm_ben(i,j,:) = fabm_ben(i,j+1,:)
          end do
-         select case (bdy_3d_type(l))
-            case(ZERO_GRADIENT)
-               do o=1,size(model%state_variables)
+         do o=1,size(model%state_variables)
+            select case (bdy_bio_type(l,o))
+               case(ZERO_GRADIENT)
                   call bdy_3d_south(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
-               end do
-            case(CLAMPED)
-               do o=1,size(model%state_variables)
-                  if (have_bio_bdy_values(o) .eq. 1) then
+               case(CLAMPED)
 #ifdef _POINTER_REMAP_
-                     p2d => bio_bdy(:,:,o) ; p_bdy_data(0:,1:) => p2d
+                  p2d => bio_bdy(:,:,o) ; p_bdy_data(0:,1:) => p2d
 #else
-                     bdy_data = bio_bdy(:,:,o)
+                  bdy_data = bio_bdy(:,:,o)
 #endif
-                     call bdy_3d_south(l,n,CLAMPED,fabm_pel(:,:,:,o),p_bdy_data)
-                  else
-!                    zero gradient when we don't have bdy values
-                     call bdy_3d_south(l,n,ZERO_GRADIENT,fabm_pel(:,:,:,o))
-                  end if
-               end do
-         end select
+                  call bdy_3d_south(l,n,CLAMPED,fabm_pel(:,:,:,o),p_bdy_data)
+            end select
+         end do
       end if
 #endif
    end do

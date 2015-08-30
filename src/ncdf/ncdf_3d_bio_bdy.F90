@@ -13,13 +13,14 @@
 ! !USES:
    use netcdf
    use domain, only: imin,imax,jmin,jmax,kmax,ioff,joff
-   use domain, only: nsbv,nsbvl,NWB,NNB,NEB,NSB,bdy_index,bdy_index_l
+   use domain, only: nsbv,nsbvl,NWB,NNB,NEB,NSB,NOB,bdy_index,bdy_index_l
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
+   use domain, only: bdy_3d_type
    use domain, only: H
    use m2d, only: dtm
    use variables_3d, only: hn
    use getm_fabm, only: fabm_calc,model
-   use bdy_3d, only: bio_bdy,have_bio_bdy_values
+   use bdy_3d, only: bio_bdy,have_bio_bdy_values,bdy_bio_type
    use time, only: string_to_julsecs,time_diff,add_secs
    use time, only: julianday,secondsofday,juln,secsn
    use time, only: write_time_string,timestr
@@ -113,6 +114,10 @@
    allocate(have_bio_bdy_values(npel),stat=rc)
    if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (have_bio_bdy_values)'
    have_bio_bdy_values = -1
+
+   allocate(bdy_bio_type(NOB,npel),stat=rc)
+   if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_bio_type)'
+   bdy_bio_type = ZERO_GRADIENT
 
    inquire(file=fname,exist=exist)
    if (.not.exist) then
@@ -208,6 +213,8 @@
          else if (time_dim /= vardim_ids(time_pos)) then
             stop 'init_3d_bio_bdy_ncdf: Position of time dimension differs'
          end if
+
+         bdy_bio_type(:,n) = bdy_3d_type(:)
 
       end if
    end do
@@ -467,6 +474,7 @@
          l = l+1
          i = wi(n)
          do o=1,npel
+            if ( bdy_bio_type(l,o) .eq. CLAMPED ) then
             k = bdy_index(l)
             kl = bdy_index_l(l)
             do j=wfj(n),wlj(n)
@@ -475,6 +483,7 @@
                k = k+1
                kl = kl + 1
             end do
+            end if
          end do
       end do
 
@@ -482,6 +491,7 @@
          l = l+1
          j = nj(n)
          do o=1,npel
+            if ( bdy_bio_type(l,o) .eq. CLAMPED ) then
             k = bdy_index(l)
             kl = bdy_index_l(l)
             do i = nfi(n),nli(n)
@@ -490,6 +500,7 @@
                k = k+1
                kl = kl + 1
             end do
+            end if
          end do
       end do
 
@@ -497,6 +508,7 @@
          l = l+1
          i = ei(n)
          do o=1,npel
+            if ( bdy_bio_type(l,o) .eq. CLAMPED ) then
             k = bdy_index(l)
             kl = bdy_index_l(l)
             do j=efj(1),elj(1)
@@ -505,6 +517,7 @@
                k = k+1
                kl = kl + 1
             end do
+            end if
          end do
       end do
 
@@ -512,6 +525,7 @@
          l = l+1
          j = sj(n)
          do o=1,npel
+            if ( bdy_bio_type(l,o) .eq. CLAMPED ) then
             k = bdy_index(l)
             kl = bdy_index_l(l)
             do i = sfi(n),sli(n)
@@ -520,6 +534,7 @@
                k = k+1
                kl = kl + 1
             end do
+            end if
          end do
       end do
    end if
@@ -642,6 +657,7 @@
             l = l+1
             i = wi(n)
             do o=1,npel
+               if ( bdy_bio_type(l,o) .eq. CLAMPED ) then
                k = bdy_index(l)
                kl = bdy_index_l(l)
                do j=wfj(n),wlj(n)
@@ -650,6 +666,7 @@
                   k = k+1
                   kl = kl + 1
                end do
+               end if
             end do
          end do
 
@@ -657,6 +674,7 @@
             l = l+1
             j = nj(n)
             do o=1,npel
+               if ( bdy_bio_type(l,o) .eq. CLAMPED ) then
                k = bdy_index(l)
                kl = bdy_index_l(l)
                do i = nfi(n),nli(n)
@@ -665,6 +683,7 @@
                   k = k+1
                   kl = kl + 1
                end do
+               end if
             end do
          end do
 
@@ -672,6 +691,7 @@
             l = l+1
             i = ei(n)
             do o=1,npel
+               if ( bdy_bio_type(l,o) .eq. CLAMPED ) then
                k = bdy_index(l)
                kl = bdy_index_l(l)
                do j=efj(1),elj(1)
@@ -680,6 +700,7 @@
                   k = k+1
                   kl = kl + 1
                end do
+               end if
             end do
          end do
 
@@ -687,6 +708,7 @@
             l = l+1
             j = sj(n)
             do o=1,npel
+               if ( bdy_bio_type(l,o) .eq. CLAMPED ) then
                k = bdy_index(l)
                kl = bdy_index_l(l)
                do i = sfi(n),sli(n)
@@ -695,6 +717,7 @@
                   k = k+1
                   kl = kl + 1
                end do
+               end if
             end do
          end do
       end if
