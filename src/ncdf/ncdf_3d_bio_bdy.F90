@@ -47,6 +47,8 @@
    REALTYPE, allocatable, dimension(:,:,:)   :: bio_old, bio_new
    REAL_4B,  allocatable, dimension(:,:,:)   :: bio_wrk
    REALTYPE, allocatable, dimension(:,:,:,:) :: bio_bdy_clim
+   logical , allocatable, dimension(:) :: have_bio_missing
+   REALTYPE, allocatable, dimension(:) :: bio_missing
    integer                             :: npel=-1
 !
 ! !REVISION HISTORY:
@@ -175,6 +177,14 @@
    if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (bio_ids)'
    bio_ids = -1
 
+   allocate(have_bio_missing(npel),stat=rc)
+   if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (have_bio_missing)'
+   have_bio_missing = .false.
+
+   allocate(bio_missing(npel),stat=rc)
+   if (rc /= 0) stop 'init_3d_bio_bdy_ncdf: Error allocating memory (bio_missing)'
+   bio_missing = -9999.0d0
+
    allocate(bio_bdy(0:kmax,nsbvl,npel),stat=rc)
    if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bio_bdy)'
 
@@ -213,6 +223,9 @@
          else if (time_dim /= vardim_ids(time_pos)) then
             stop 'init_3d_bio_bdy_ncdf: Position of time dimension differs'
          end if
+
+         err = nf90_get_att(ncid,id,"missing_value",bio_missing(n))
+         have_bio_missing(n) = (err .EQ. NF90_NOERR)
 
          bdy_bio_type(:,n) = bdy_3d_type(:)
 
@@ -477,6 +490,12 @@
             if ( bdy_bio_type(l,o) .eq. CLAMPED ) then
             k = bdy_index(l)
             kl = bdy_index_l(l)
+               if ( have_bio_missing(o) ) then
+                  if ( ANY( bio_wrk(:,k:k+(wlj(n)-wfj(n)),o) .EQ. bio_missing(o) ) ) then
+                     bdy_bio_type(l,o) = ZERO_GRADIENT
+                     cycle
+                  end if
+               end if
             do j=wfj(n),wlj(n)
                call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j), &
                              kmax,hn(i,j,:),bio_new(:,kl,o))
@@ -494,6 +513,12 @@
             if ( bdy_bio_type(l,o) .eq. CLAMPED ) then
             k = bdy_index(l)
             kl = bdy_index_l(l)
+               if ( have_bio_missing(o) ) then
+                  if ( ANY( bio_wrk(:,k:k+(nfi(n)-nli(n)),o) .EQ. bio_missing(o) ) ) then
+                     bdy_bio_type(l,o) = ZERO_GRADIENT
+                     cycle
+                  end if
+               end if
             do i = nfi(n),nli(n)
                call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j), &
                              kmax,hn(i,j,:),bio_new(:,kl,o))
@@ -511,6 +536,12 @@
             if ( bdy_bio_type(l,o) .eq. CLAMPED ) then
             k = bdy_index(l)
             kl = bdy_index_l(l)
+               if ( have_bio_missing(o) ) then
+                  if ( ANY( bio_wrk(:,k:k+(elj(n)-efj(n)),o) .EQ. bio_missing(o) ) ) then
+                     bdy_bio_type(l,o) = ZERO_GRADIENT
+                     cycle
+                  end if
+               end if
             do j=efj(1),elj(1)
                call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j), &
                              kmax,hn(i,j,:),bio_new(:,kl,o))
@@ -528,6 +559,12 @@
             if ( bdy_bio_type(l,o) .eq. CLAMPED ) then
             k = bdy_index(l)
             kl = bdy_index_l(l)
+               if ( have_bio_missing(o) ) then
+                  if ( ANY( bio_wrk(:,k:k+(sli(n)-sfi(n)),o) .EQ. bio_missing(o) ) ) then
+                     bdy_bio_type(l,o) = ZERO_GRADIENT
+                     cycle
+                  end if
+               end if
             do i = sfi(n),sli(n)
                call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j), &
                              kmax,hn(i,j,:),bio_new(:,kl,o))
