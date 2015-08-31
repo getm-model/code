@@ -514,7 +514,7 @@
             k = bdy_index(l)
             kl = bdy_index_l(l)
                if ( have_bio_missing(o) ) then
-                  if ( ANY( bio_wrk(:,k:k+(nfi(n)-nli(n)),o) .EQ. bio_missing(o) ) ) then
+                  if ( ANY( bio_wrk(:,k:k+(nli(n)-nfi(n)),o) .EQ. bio_missing(o) ) ) then
                      bdy_bio_type(l,o) = ZERO_GRADIENT
                      cycle
                   end if
