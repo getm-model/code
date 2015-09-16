@@ -18,7 +18,6 @@
 !  in from the library {\tt lib2d.a}.
 !
 ! !USES:
-   use field_manager
    use exceptions
    use time, only: julianday,secondsofday
    use parameters, only: avmmol
@@ -106,14 +105,13 @@
 ! !IROUTINE: init_2d - initialise 2D related stuff.
 !
 ! !INTERFACE:
-   subroutine init_2d(runtype,timestep,hotstart,field_manager)
+   subroutine init_2d(runtype,timestep,hotstart)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
    REALTYPE, intent(in)                :: timestep
    logical, intent(in)                 :: hotstart
-   class (type_field_manager),intent(inout),optional :: field_manager
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -163,7 +161,7 @@
    read(NAMLST,m2d)
 
 !  Allocates memory for the public data members - if not static
-   call init_variables_2d(runtype,field_manager)
+   call init_variables_2d(runtype)
    call init_advection()
 
    LEVEL2 'Advection of depth-averaged velocities'

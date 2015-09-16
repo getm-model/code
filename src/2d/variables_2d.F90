@@ -17,7 +17,6 @@
 !  {\tt PUBLIC DATA MEMBERS}.
 !
 ! !USES:
-   use field_manager
    use domain, only: imin,imax,jmin,jmax
    IMPLICIT NONE
 !
@@ -44,7 +43,7 @@
 ! !IROUTINE: init_variables_2d - initialise 2D related stuff.
 !
 ! !INTERFACE:
-   subroutine init_variables_2d(runtype,field_manager)
+   subroutine init_variables_2d(runtype)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -89,7 +88,6 @@
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
-   class (type_field_manager),intent(inout),optional :: field_manager
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
@@ -117,13 +115,10 @@
 #endif
 
    z  = _ZERO_; zo =_ZERO_
-   call field_manager%register('z', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=10.05_rk, data2d=z(_2D_W_), category="2d")
-   call field_manager%register('zo', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=10.05_rk, data2d=zo(_2D_W_), category="2d", output_level=output_level_debug)
 
    zub=_ZERO_ ; zub0=_ZERO_
    zvb=_ZERO_ ; zvb0=_ZERO_
    D = _ZERO_;
-   call field_manager%register('D', 'm', 'water depth', standard_name='water depth', fill_value=10.05_rk, data2d=D(_2D_W_), category="2d")
    U = _ZERO_; DU = _ZERO_; fU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; DV = _ZERO_; fV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
 

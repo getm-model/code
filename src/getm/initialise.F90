@@ -24,7 +24,7 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 
-   type (type_field_manager),target :: field_manager_
+   type (type_field_manager),target :: fm
 
    type,extends(type_output_manager_host) :: type_getm_host
    contains
@@ -119,29 +119,7 @@
 #endif
    character(len=PATH_MAX)   :: hot_in=''
 
-#if defined SPHERICAL
-   character(len=16)         :: xname='lonc'
-   character(len=16)         :: xlongname='longitude'
-   character(len=16)         :: xunits='degrees_east'
-   character(len=16)         :: yname='latc'
-   character(len=16)         :: ylongname='latitude'
-   character(len=16)         :: yunits='degrees_north'
-#elif defined CURVILINEAR
-   character(len=16)         :: xname='xic'
-   character(len=16)         :: yname='etac'
-#else
-   character(len=16)         :: xname='xc'
-   character(len=16)         :: yname='yc'
-#endif
-   character(len=16)         :: zname='sigma'
-   character(len=64)         :: zlongname='sigma'
-   character(len=16)         :: zunits='sigma'
-
    character(len=16)         :: postfix
-
-   integer,parameter         :: rk = kind(_ONE_)
-
-!KB   character(len=PATH_MAX)   :: zname='lonc'
 
    namelist /param/ &
              dryrun,runid,title,parallel,runtype,  &
@@ -243,7 +221,6 @@
          FATAL 'A non valid runtype has been specified.'
          stop 'initialise()'
    end select
-!KB
    
    call init_time(MinN,MaxN)
    if(use_epoch) then
@@ -252,57 +229,17 @@
 
    call init_domain(input_dir)
 
-#ifndef NO_3D
-   select case (vert_cord)
-      case (1)
-         zname     = 'sigma'
-         zlongname = 'sigma layers'
-         zunits    = 'sigma_level'
-      case (2)
-         zname     = 'z'
-         zlongname = 'geopotential'
-         zunits    = 'm'
-      case (3,4,5)
-         zname  = 'level'
-         zlongname  = 'general vertical coordinates'
-         zunits = 'level'
-      case default
-   end select
-#endif
-
-   call field_manager_%register_dimension(trim(xname),imax-imin+1,global_length=iextr,offset=ioff,id=id_dim_lon)
-   call field_manager_%register_dimension(trim(yname),jmax-jmin+1,global_length=jextr,offset=joff,id=id_dim_lat)
-   call field_manager_%register_dimension(trim(zname),kmax+1,id=id_dim_z)
-   call field_manager_%register_dimension('time',id=id_dim_time)
-   call field_manager_%initialize(prepend_by_default=(/id_dim_lon,id_dim_lat/),append_by_default=(/id_dim_time/))
-   allocate(type_getm_host::output_manager_host)
-
-   if (myid .ge. 0) then
-      write(postfix,'(A,I4.4)') '.',myid
-      call output_manager_init(field_manager_,trim(postfix))
-   else
-      call output_manager_init(field_manager_)
-   end if
-
-   call field_manager_%register(trim(xname),trim(xunits),trim(xlongname),dimensions=(/id_dim_lon/),no_default_dimensions=.true.,data1d=xcord(_IRANGE_NO_HALO_),coordinate_dimension=id_dim_lon)
-   call field_manager_%register(trim(yname),trim(yunits),trim(ylongname),dimensions=(/id_dim_lat/),no_default_dimensions=.true.,data1d=ycord(_JRANGE_NO_HALO_),coordinate_dimension=id_dim_lat)
-   call field_manager_%register('bathymetry', 'm', 'bathymetry', standard_name='bathymetry', fill_value=-10._rk, data2d=H(_2D_W_), category='depth',output_level=output_level_required)
-!KB   call field_manager_%register('bathymetry', 'm', 'bathymetry', standard_name='bathymetry', fill_value=-10._rk, data2d=H(_2D_W_), category='depth',output_level=output_level_required)
-!KB   call field_manager_%register('bathymetry', 'm', 'bathymetry', standard_name='bathymetry', fill_value=-10._rk, data2d=H(_2D_W_), category='depth',output_level=output_level_required)
-
    call init_meteo(hotstart)
 
 #ifndef NO_3D
    call init_rivers()
 #endif
 
-   call init_2d(runtype,timestep,hotstart,field_manager_)
+   call init_2d(runtype,timestep,hotstart)
 
 #ifndef NO_3D
    if (runtype .gt. 1) then
-      call init_3d(runtype,timestep,hotstart,field_manager_)
-STDERR ga
-   call field_manager_%register(trim(zname),trim(zunits),trim(zlongname),dimensions=(/id_dim_z/),no_default_dimensions=.true.,data1d=ga,coordinate_dimension=id_dim_z)
+      call init_3d(runtype,timestep,hotstart)
 #ifndef CONSTANT_VISCOSITY
       call init_turbulence(60,trim(input_dir) // 'gotmturb.nml',kmax)
 #else
@@ -325,6 +262,14 @@ STDERR ga
 #endif
    end if
 #endif
+   call register_all_variables(fm)
+   allocate(type_getm_host::output_manager_host)
+   if (myid .ge. 0) then
+      write(postfix,'(A,I4.4)') '.',myid
+      call output_manager_init(fm,trim(postfix))
+   else
+      call output_manager_init(fm)
+   end if
 
 !   call init_output(runid,title,start,runtype,dryrun,myid)
    call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)

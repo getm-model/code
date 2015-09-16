@@ -111,7 +111,6 @@
 ! {\tt init\_variables\_3d}) and cleanup (see {\tt clean\_variables\_3d}).
 !
 ! !USES:
-   use field_manager
    use domain,     only: imin,imax,jmin,jmax,kmax
    IMPLICIT NONE
 !
@@ -160,12 +159,11 @@
 ! \label{sec-init-variables}
 !
 ! !INTERFACE:
-   subroutine init_variables_3d(runtype,field_manager)
+   subroutine init_variables_3d(runtype)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
-   class (type_field_manager),intent(inout),optional :: field_manager
 !
 ! !DESCRIPTION:
 !  Dynamic allocation of memory for 3D related fields via
@@ -195,11 +193,6 @@
 #endif
 
    hn = _ZERO_ ; hun = _ZERO_ ; hvn = _ZERO_
-   call field_manager%register('hn', 'm', 'layer thickness', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hn(_3D_W_), category='grid')
-   call field_manager%register('hun', 'm', 'layer thickness - U-points', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hun(_3D_W_), category='grid', output_level=output_level_debug)
-   call field_manager%register('hvn', 'm', 'layer thickness - V-points', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hvn(_3D_W_), category='grid', output_level=output_level_debug)
-   call field_manager%register('temp', 'Celsius', 'temperature', standard_name='', dimensions=(/id_dim_z/),data3d=T(_3D_W_), category='baroclinic')
-   call field_manager%register('salt', 'PSU', 'salinity', standard_name='', dimensions=(/id_dim_z/),data3d=S(_3D_W_), category='baroclinic')
 
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
 
@@ -210,15 +203,6 @@
    cor_v = _ZERO_ ; epg_v = _ZERO_ ; ipg_v = _ZERO_
 #endif
    ssen = _ZERO_ ; ssun = _ZERO_ ; ssvn = _ZERO_
-   call field_manager%register('ssen', 'm', 'elevtion at T-points (3D)', standard_name='', data2d=ssen(_2D_W_), category='3d', output_level=output_level_debug)
-   call field_manager%register('ssun', 'm', 'elevtion at U-points (3D)', standard_name='', data2d=ssun(_2D_W_), category='3d', output_level=output_level_debug)
-   call field_manager%register('ssvn', 'm', 'elevtion at V-points (3D)', standard_name='', data2d=ssvn(_2D_W_), category='3d', output_level=output_level_debug)
-   Dn = _ZERO_ ; Dun = _ZERO_ ; Dvn = _ZERO_
-#if 0
-   call field_manager%register('ssen', 'm', 'elevtion at T-points (3D)', standard_name='', data2d=ssen(_2D_W_), category='3d', output_level=output_level_debug)
-   call field_manager%register('ssun', 'm', 'elevtion at U-points (3D)', standard_name='', data2d=ssun(_2D_W_), category='3d', output_level=output_level_debug)
-   call field_manager%register('ssvn', 'm', 'elevtion at V-points (3D)', standard_name='', data2d=ssvn(_2D_W_), category='3d', output_level=output_level_debug)
-#endif
    rru= _ZERO_ ; rrv= _ZERO_
    uuEx= _ZERO_ ; vvEx= _ZERO_
    tke=1.e-10 ; eps=1.e-10
@@ -229,8 +213,6 @@
    light=_ONE_
    idpdx=_ZERO_
    idpdy=_ZERO_
-   call field_manager%register('idpdx', 'm', 'baroclinic pressure gradient - x', standard_name='', dimensions=(/id_dim_z/),data3d=idpdx(_3D_W_), category='baroclinic', output_level=output_level_debug)
-   call field_manager%register('idpdy', 'm', 'baroclinic pressure gradient - y', standard_name='', dimensions=(/id_dim_z/),data3d=idpdy(_3D_W_), category='baroclinic', output_level=output_level_debug)
 #endif
 
 #ifdef DEBUG

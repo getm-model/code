@@ -275,6 +275,7 @@ add_library(getm OBJECT
             getm/cleanup.F90
             getm/initialise.F90
             getm/integration.F90
+            getm/register_all_variables.F90
            )
 
 add_library(input OBJECT

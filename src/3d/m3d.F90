@@ -23,7 +23,6 @@
 !  section \ref{sec-clean-3d} on page \pageref{sec-clean-3d}.
 !
 ! !USES:
-   use field_manager
    use exceptions
    use parameters, only: avmmol
    use domain, only: openbdy,maxdepth,vert_cord,az
@@ -86,7 +85,7 @@
 ! !IROUTINE: init_3d - initialise 3D related stuff \label{sec-init-3d}
 !
 ! !INTERFACE:
-   subroutine init_3d(runtype,timestep,hotstart,field_manager)
+   subroutine init_3d(runtype,timestep,hotstart)
 !
    IMPLICIT NONE
 !
@@ -94,7 +93,6 @@
    integer, intent(in)                 :: runtype
    REALTYPE, intent(in)                :: timestep
    logical, intent(in)                 :: hotstart
-   class (type_field_manager),intent(inout),optional :: field_manager
 !
 ! !DESCRIPTION:
 !  Here, the {\tt m3d} namelist is read from {\tt getm.inp}, and the
@@ -155,7 +153,7 @@
    end if
 
 ! Allocates memory for the public data members - if not static
-   call init_variables_3d(runtype,field_manager)
+   call init_variables_3d(runtype)
    call init_advection_3d()
 
 !  Sanity checks for advection specifications
