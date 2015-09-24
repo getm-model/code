@@ -165,7 +165,6 @@ add_library(2d OBJECT
             2d/bdy_2d.F90
             2d/bottom_friction.F90
             2d/cfl_check.F90
-            2d/deformation_rates.F90
             2d/depth_update.F90
             2d/m2d.F90
             2d/momentum.F90
@@ -295,11 +294,13 @@ add_library(input OBJECT
             input/get_3d_field.F90
             input/get_meteo_data.F90
             input/get_river_data.F90
+            input/get_waves_data.F90
             input/inquire_file.F90
             input/init_2d_bdy.F90
             input/init_3d_bdy.F90
             input/init_meteo_input.F90
             input/init_river_input.F90
+            input/init_waves_input.F90
             input/input.F90
             input/read_profile.F90
             input/read_topo_file.F90
@@ -342,6 +343,7 @@ add_library(ncdf OBJECT
             ncdf/ncdf_restart.F90
             ncdf/ncdf_rivers.F90
             ncdf/ncdf_topo.F90
+            ncdf/ncdf_waves.F90
             ncdf/open_restart_ncdf.F90
             ncdf/read_restart_ncdf.F90
             ncdf/save_2d_ncdf.F90
@@ -363,6 +365,25 @@ add_library(output OBJECT
             output/output.F90
            )
 
+add_library(pool OBJECT
+            pool/deformation_rates.F90
+            pool/flux_center2interface.F90
+            pool/pool.F90
+           )
+
+add_library(waves OBJECT
+            waves/bottom_friction_waves.F90
+            waves/radiation_stress.F90
+            waves/radiation_stress_3d.F90
+            waves/rs_force.F90
+            waves/stokes_drift.F90
+            waves/stokes_drift_3d.F90
+            waves/variables_waves.F90
+            waves/vortex_force.F90
+            waves/vortex_force_3d.F90
+            waves/waves.F90
+           )
+
 #option(DEFINE_ICE "Include ICE support" OFF)
 #if(DEFINE_ICE)
 #  add_library(ice OBJECT
@@ -370,14 +391,16 @@ add_library(output OBJECT
 #endif(DEFINE_ICE)
 
 add_dependencies(domain futils)
+add_dependencies(pool domain futils)
 add_dependencies(meteo futils domain)
+add_dependencies(waves futils domain pool meteo)
 add_dependencies(les futils domain)
-add_dependencies(2d domain les)
-add_dependencies(3d meteo domain 2d les)
-add_dependencies(output futils domain 2d 3d meteo)
-add_dependencies(ncdf futils domain les output)
-add_dependencies(input futils 2d 3d ncdf)
-add_dependencies(getm futils domain meteo les 2d 3d output input)
+add_dependencies(2d domain pool waves les)
+add_dependencies(3d meteo domain pool waves 2d les)
+add_dependencies(output futils domain waves 2d 3d meteo)
+add_dependencies(ncdf futils domain waves les output)
+add_dependencies(input futils waves 2d 3d ncdf)
+add_dependencies(getm futils domain meteo waves les 2d 3d output input)
 
 set_property(TARGET futils ncdf input APPEND PROPERTY INCLUDE_DIRECTORIES "${NetCDF_INCLUDE_DIRS}")
 add_definitions(-DNETCDF_FMT -DREAL_4B=real\(4\))
@@ -417,6 +440,8 @@ add_executable(getm_exe
                $<TARGET_OBJECTS:2d>
                $<TARGET_OBJECTS:input>
                $<TARGET_OBJECTS:les>
+               $<TARGET_OBJECTS:waves>
+               $<TARGET_OBJECTS:pool>
                $<TARGET_OBJECTS:domain>
                $<TARGET_OBJECTS:ncdf>
                $<TARGET_OBJECTS:futils>
