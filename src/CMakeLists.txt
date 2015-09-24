@@ -186,7 +186,6 @@ add_library(3d OBJECT
             3d/bottom_friction_3d.F90
             3d/buoyancy_frequency.F90
             3d/check_h.F90
-            3d/coordinates.F90
             3d/eqstate.F90
             3d/general_coordinates.F90
 #            3d/getm_bio.F90
@@ -224,6 +223,7 @@ add_library(3d OBJECT
             3d/uv_advect_3d.F90
             3d/uv_diffusion_3d.F90
             3d/variables_3d.F90
+            3d/vertical_coordinates.F90
             3d/vv_momentum_3d.F90
             3d/ww_momentum_3d.F90
            )
