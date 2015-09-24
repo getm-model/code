@@ -279,6 +279,7 @@ add_library(getm OBJECT
             getm/cleanup.F90
             getm/initialise.F90
             getm/integration.F90
+            getm/set_sea_surface_state.F90
            )
 
 add_library(input OBJECT
@@ -363,7 +364,7 @@ add_dependencies(3d meteo domain 2d)
 add_dependencies(output futils domain 2d 3d meteo)
 add_dependencies(ncdf futils domain output)
 add_dependencies(input futils 2d 3d ncdf)
-add_dependencies(getm input)
+add_dependencies(getm futils domain meteo 2d 3d output input)
 
 set_property(TARGET futils ncdf input APPEND PROPERTY INCLUDE_DIRECTORIES "${NetCDF_INCLUDE_DIRS}")
 add_definitions(-DNETCDF_FMT -DREAL_4B=real\(4\))
