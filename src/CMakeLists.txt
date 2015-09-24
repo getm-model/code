@@ -167,6 +167,7 @@ add_library(2d OBJECT
             2d/depth_update.F90
             2d/m2d.F90
             2d/momentum.F90
+            2d/physical_dissipation.F90
             2d/residual.F90
             2d/sealevel.F90
             2d/update_2d_bdy.F90
@@ -203,6 +204,7 @@ add_library(3d OBJECT
             3d/ip_z_interpol.F90
             3d/m3d.F90
             3d/numerical_mixing.F90
+            3d/physical_dissipation_3d.F90
             3d/physical_mixing.F90
             3d/preadapt_coordinates.F90
             3d/rivers.F90
