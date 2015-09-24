@@ -165,10 +165,10 @@ add_library(2d OBJECT
             2d/bdy_2d.F90
             2d/bottom_friction.F90
             2d/cfl_check.F90
+            2d/deformation_rates.F90
             2d/depth_update.F90
             2d/m2d.F90
             2d/momentum.F90
-            2d/physical_dissipation.F90
             2d/residual.F90
             2d/sealevel.F90
             2d/uv_advect.F90
@@ -185,6 +185,7 @@ add_library(3d OBJECT
             3d/bdy_3d.F90
             3d/buoyancy_frequency.F90
             3d/check_h.F90
+            3d/deformation_rates_3d.F90
             3d/eqstate.F90
             3d/general_coordinates.F90
 #            3d/getm_bio.F90
@@ -216,6 +217,8 @@ add_library(3d OBJECT
             ${STRUCTURE_FRICTION}
             3d/temperature.F90
             3d/tke_eps_advect_3d.F90
+            3d/tracer_diffusion.F90
+            3d/tracer_stirring.F90
             3d/uu_momentum_3d.F90
             3d/uv_advect_3d.F90
             3d/uv_diffusion_3d.F90
@@ -299,6 +302,12 @@ add_library(input OBJECT
             input/read_topo_file.F90
            )
 
+add_library(les OBJECT
+            les/les.F90
+            les/les_smagorinsky.F90
+            les/variables_les.F90
+           )
+
 add_library(meteo OBJECT
             meteo/exchange_coefficients.F90
             meteo/fluxes.F90
@@ -359,12 +368,13 @@ add_library(output OBJECT
 
 add_dependencies(domain futils)
 add_dependencies(meteo futils domain)
-add_dependencies(2d domain)
-add_dependencies(3d meteo domain 2d)
+add_dependencies(les futils domain)
+add_dependencies(2d domain les)
+add_dependencies(3d meteo domain 2d les)
 add_dependencies(output futils domain 2d 3d meteo)
-add_dependencies(ncdf futils domain output)
+add_dependencies(ncdf futils domain les output)
 add_dependencies(input futils 2d 3d ncdf)
-add_dependencies(getm futils domain meteo 2d 3d output input)
+add_dependencies(getm futils domain meteo les 2d 3d output input)
 
 set_property(TARGET futils ncdf input APPEND PROPERTY INCLUDE_DIRECTORIES "${NetCDF_INCLUDE_DIRS}")
 add_definitions(-DNETCDF_FMT -DREAL_4B=real\(4\))
@@ -403,6 +413,7 @@ add_executable(getm_exe
                $<TARGET_OBJECTS:3d>
                $<TARGET_OBJECTS:2d>
                $<TARGET_OBJECTS:input>
+               $<TARGET_OBJECTS:les>
                $<TARGET_OBJECTS:domain>
                $<TARGET_OBJECTS:ncdf>
                $<TARGET_OBJECTS:futils>
