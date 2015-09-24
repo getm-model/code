@@ -265,7 +265,12 @@ add_library(futils OBJECT
             futils/to_3d_uu.F90
             futils/to_3d_vel.F90
             futils/to_3d_vv.F90
-            futils/tow.F90
+            futils/to_fluxu.F90
+            futils/to_fluxv.F90
+            futils/to_fluxw.F90
+            futils/to_u.F90
+            futils/to_v.F90
+            futils/to_w.F90
             futils/tridiagonal.F90
             futils/ver_interpol.F90
            )
