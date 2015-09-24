@@ -202,6 +202,8 @@ add_library(3d OBJECT
             3d/ip_stelling_vankester.F90
             3d/ip_z_interpol.F90
             3d/m3d.F90
+            3d/momentum_3d.F90
+            3d/nonhydrostatic.F90
             3d/numerical_mixing.F90
             3d/physical_dissipation_3d.F90
             3d/physical_mixing.F90
