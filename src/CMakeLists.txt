@@ -162,6 +162,7 @@ add_library(2d OBJECT
             2d/adv_split_u.F90
             2d/adv_split_v.F90
             2d/adv_upstream_2dh.F90
+            2d/bdy_2d.F90
             2d/bottom_friction.F90
             2d/cfl_check.F90
             2d/depth_update.F90
@@ -170,7 +171,6 @@ add_library(2d OBJECT
             2d/physical_dissipation.F90
             2d/residual.F90
             2d/sealevel.F90
-            2d/update_2d_bdy.F90
             2d/uv_advect.F90
             2d/uv_diff_2dh.F90
             2d/uv_diffusion.F90
