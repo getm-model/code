@@ -252,6 +252,7 @@ add_library(futils OBJECT
             futils/col_interpol.F90
             futils/eta_mask.F90
             futils/exceptions.F90
+            futils/filter_1d.F90
             futils/getm_error.F90
             futils/getm_timers.F90
             futils/grid_interpol.F90
