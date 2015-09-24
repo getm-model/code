@@ -183,6 +183,7 @@ add_library(3d OBJECT
             3d/adv_split_w.F90
             3d/bdy_3d.F90
             3d/bottom_friction_3d.F90
+            3d/buoyancy_frequency.F90
             3d/check_h.F90
             3d/coordinates.F90
             3d/eqstate.F90
@@ -206,11 +207,11 @@ add_library(3d OBJECT
             3d/preadapt_coordinates.F90
             3d/rivers.F90
             3d/salinity.F90
+            3d/shear_frequency.F90
             3d/sigma_coordinates.F90
             3d/slow_bottom_friction.F90
             3d/slow_terms.F90
 #            3d/spm.F90
-            3d/ss_nn.F90
             3d/start_macro.F90
             3d/stop_macro.F90
             3d/stresses_3d.F90
