@@ -167,6 +167,7 @@ add_library(2d OBJECT
             2d/depth_update.F90
             2d/m2d.F90
             2d/momentum.F90
+            2d/physical_dissipation.F90
             2d/residual.F90
             2d/sealevel.F90
             2d/update_2d_bdy.F90
@@ -183,8 +184,8 @@ add_library(3d OBJECT
             3d/adv_split_w.F90
             3d/bdy_3d.F90
             3d/bottom_friction_3d.F90
+            3d/buoyancy_frequency.F90
             3d/check_h.F90
-            3d/coordinates.F90
             3d/eqstate.F90
             3d/general_coordinates.F90
 #            3d/getm_bio.F90
@@ -202,15 +203,16 @@ add_library(3d OBJECT
             3d/ip_z_interpol.F90
             3d/m3d.F90
             3d/numerical_mixing.F90
+            3d/physical_dissipation_3d.F90
             3d/physical_mixing.F90
             3d/preadapt_coordinates.F90
             3d/rivers.F90
             3d/salinity.F90
+            3d/shear_frequency.F90
             3d/sigma_coordinates.F90
             3d/slow_bottom_friction.F90
             3d/slow_terms.F90
 #            3d/spm.F90
-            3d/ss_nn.F90
             3d/start_macro.F90
             3d/stop_macro.F90
             3d/stresses_3d.F90
@@ -221,6 +223,7 @@ add_library(3d OBJECT
             3d/uv_advect_3d.F90
             3d/uv_diffusion_3d.F90
             3d/variables_3d.F90
+            3d/vertical_coordinates.F90
             3d/vv_momentum_3d.F90
             3d/ww_momentum_3d.F90
            )
@@ -265,7 +268,12 @@ add_library(futils OBJECT
             futils/to_3d_uu.F90
             futils/to_3d_vel.F90
             futils/to_3d_vv.F90
-            futils/tow.F90
+            futils/to_fluxu.F90
+            futils/to_fluxv.F90
+            futils/to_fluxw.F90
+            futils/to_u.F90
+            futils/to_v.F90
+            futils/to_w.F90
             futils/tridiagonal.F90
             futils/ver_interpol.F90
            )
