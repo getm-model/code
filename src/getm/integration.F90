@@ -154,7 +154,7 @@
       call update_time(n)
 
       call do_output(runtype,n,timestep)
-      call output_manager_save(julianday,secondsofday)
+      call output_manager_save(julianday,secondsofday,n)
 #ifdef DIAGNOSE
       call diagnose(n,MaxN,runtype)
 #endif
