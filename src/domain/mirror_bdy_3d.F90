@@ -59,13 +59,13 @@
          end do
          do n = 1,NNB
             j = nj(n)
-            do i = max(imin-HALO,nfi(n)),min(nli(n),imax+HALO)
+            do i = max(imin-HALO,nfi(n)-1),nli(n)
                if (au(i,j) .eq. 3) f(i,j,:) = f(i,j-1,:)
             end do
          end do
          do n = 1,NSB
             j = sj(n)
-            do i = max(imin-HALO,sfi(n)),min(sli(n),imax+HALO)
+            do i = max(imin-HALO,sfi(n)-1),sli(n)
                if (au(i,j) .eq. 3) f(i,j,:) = f(i,j+1,:)
             end do
          end do
@@ -84,13 +84,13 @@
          end do
          do n = 1,NWB
             i = wi(n)
-            do j = max(jmin-HALO,wfj(n)),min(wlj(n),jmax+HALO)
+            do j = max(jmin-HALO,wfj(n)-1),wlj(n)
                if (av(i,j) .eq. 3) f(i,j,:) = f(i+1,j,:)
             end do
          end do
          do n = 1,NEB
             i = ei(n)
-            do j = max(jmin-HALO,efj(n)),min(elj(n),jmax+HALO)
+            do j = max(jmin-HALO,efj(n)-1),elj(n)
                if (av(i,j) .eq. 3) f(i,j,:) = f(i-1,j,:)
             end do
          end do
