@@ -130,25 +130,25 @@
          do n = 1,NWB
             i = wi(n)
             do j = wfj(n),wlj(n)
-               if (az(i,j) .gt. 1) f(i-1,j,:) = f(i,j,:)
+               if (az(i-1,j).eq.0 .and. az(i,j).gt.1) f(i-1,j,:) = f(i,j,:)
             end do
          end do
          do n = 1,NNB
             j = nj(n)
             do i = nfi(n),nli(n)
-               if (az(i,j) .gt. 1) f(i,j+1,:) = f(i,j,:)
+               if (az(i,j+1).eq.0 .and. az(i,j).gt.1) f(i,j+1,:) = f(i,j,:)
             end do
          end do
          do n = 1,NEB
             i = ei(n)
             do j = efj(n),elj(n)
-               if (az(i,j) .gt. 1) f(i+1,j,:) = f(i,j,:)
+               if (az(i+1,j).eq.0 .and. az(i,j).gt.1) f(i+1,j,:) = f(i,j,:)
             end do
          end do
          do n = 1,NSB
             j = sj(n)
             do i = sfi(n),sli(n)
-               if (az(i,j) .gt. 1) f(i,j-1,:) = f(i,j,:)
+               if (az(i,j-1).eq.0 .and. az(i,j).gt.1) f(i,j-1,:) = f(i,j,:)
             end do
          end do
       case default
