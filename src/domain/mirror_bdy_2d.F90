@@ -51,16 +51,16 @@
                if (au(i-1,j) .eq. 0) f(i-1,j) = f(i,j)
             end do
          end do
-         do n = 1,NNB
-            j = nj(n)
-            do i = max(imin-HALO,nfi(n)),min(nli(n),imax+HALO)
-               if (au(i,j) .eq. 3) f(i,j) = f(i,j-1)
-            end do
-         end do
          do n = 1,NEB
             i = ei(n)
             do j = efj(n),elj(n)
                if (au(i,j) .eq. 0) f(i,j) = f(i-1,j)
+            end do
+         end do
+         do n = 1,NNB
+            j = nj(n)
+            do i = max(imin-HALO,nfi(n)),min(nli(n),imax+HALO)
+               if (au(i,j) .eq. 3) f(i,j) = f(i,j-1)
             end do
          end do
          do n = 1,NSB
@@ -70,28 +70,28 @@
             end do
          end do
       case (V_TAG)
-         do n = 1,NWB
-            i = wi(n)
-            do j = max(jmin-HALO,wfj(n)),min(wlj(n),jmax+HALO)
-               if (av(i,j) .eq. 3) f(i,j) = f(i+1,j)
-            end do
-         end do
          do n = 1,NNB
             j = nj(n)
             do i = nfi(n),nli(n)
                if (av(i,j) .eq. 0) f(i,j) = f(i,j-1)
             end do
          end do
-         do n = 1,NEB
-            i = ei(n)
-            do j = max(jmin-HALO,efj(n)),min(elj(n),jmax+HALO)
-               if (av(i,j) .eq. 3) f(i,j) = f(i-1,j)
-            end do
-         end do
          do n = 1,NSB
             j = sj(n)
             do i = sfi(n),sli(n)
                if (av(i,j-1) .eq. 0) f(i,j-1) = f(i,j)
+            end do
+         end do
+         do n = 1,NWB
+            i = wi(n)
+            do j = max(jmin-HALO,wfj(n)),min(wlj(n),jmax+HALO)
+               if (av(i,j) .eq. 3) f(i,j) = f(i+1,j)
+            end do
+         end do
+         do n = 1,NEB
+            i = ei(n)
+            do j = max(jmin-HALO,efj(n)),min(elj(n),jmax+HALO)
+               if (av(i,j) .eq. 3) f(i,j) = f(i-1,j)
             end do
          end do
       case default
