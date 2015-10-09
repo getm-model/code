@@ -345,20 +345,19 @@ add_library(output OBJECT
             output/output.F90
            )
 
-#option(DEFINE_ICE "Include ICE support" OFF)
-#if(DEFINE_ICE)
-#  add_library(ice OBJECT
-#             )
-#endif(DEFINE_ICE)
+add_library(getm_ice OBJECT
+            ice/getm_ice.F90
+           )
 
 add_dependencies(domain futils)
 add_dependencies(meteo futils domain)
 add_dependencies(2d domain)
 add_dependencies(3d meteo domain 2d)
-add_dependencies(output futils domain 2d 3d meteo)
-add_dependencies(ncdf futils domain output)
+add_dependencies(getm_ice futils domain meteo 3d)
+add_dependencies(output futils domain 2d 3d meteo getm_ice)
+add_dependencies(ncdf futils domain output getm_ice)
 add_dependencies(input futils 2d 3d ncdf)
-add_dependencies(getm input)
+add_dependencies(getm input getm_ice)
 
 set_property(TARGET futils ncdf input APPEND PROPERTY INCLUDE_DIRECTORIES "${NetCDF_INCLUDE_DIRS}")
 add_definitions(-DNETCDF_FMT -DREAL_4B=real\(4\))
@@ -370,13 +369,14 @@ if(GOTM_BASE)
   set(GOTM_USE_FABM ${GETM_USE_FABM} CACHE BOOL "Include support for Framework for Aquatic Biogeochemical Models (fabm.net)" FORCE)
   add_subdirectory(${GOTM_BASE}/src gotm)
   set(GOTM_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/gotm/modules)
-  set(GOTM_LIBRARIES turbulence util)
+  set(GOTM_LIBRARIES ice_utils airsea_utils turbulence util)
   if(GETM_USE_FABM)
     set(GOTM_LIBRARIES ${GOTM_LIBRARIES} gotm_fabm)
     set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES $<TARGET_PROPERTY:gotm_fabm,INTERFACE_INCLUDE_DIRECTORIES>)
   endif()
   mark_as_advanced(GOTM_PREFIX GOTM_USE_FABM)
   add_dependencies(3d ${GOTM_LIBRARIES})
+  add_dependencies(getm_ice ${GOTM_LIBRARIES})
 else()
   find_package(GOTM REQUIRED)
 
@@ -386,13 +386,14 @@ else()
     set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
   endif()
 endif()
-set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
+set_property(TARGET 3d getm_ice getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 
 # Build GETM executable.
 add_executable(getm_exe
                getm/main.F90
                $<TARGET_OBJECTS:getm>
                $<TARGET_OBJECTS:output>
+               $<TARGET_OBJECTS:getm_ice>
                $<TARGET_OBJECTS:meteo>
                $<TARGET_OBJECTS:3d>
                $<TARGET_OBJECTS:2d>
