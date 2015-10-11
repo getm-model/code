@@ -37,19 +37,6 @@
 
    IMPLICIT NONE
 
-   interface
-      subroutine tracer_diffusion(f,hn,AH_method,AH_const,AH_Prt,AH_stirr_const, &
-                                  phymix)
-         use domain, only: imin,imax,jmin,jmax,kmax
-         IMPLICIT NONE
-         REALTYPE,intent(in)           :: hn(I3DFIELD)
-         integer,intent(in)            :: AH_method
-         REALTYPE,intent(in)           :: AH_const,AH_Prt,AH_stirr_const
-         REALTYPE,intent(inout)        :: f(I3DFIELD)
-         REALTYPE,dimension(:,:,:),pointer,intent(out),optional :: phymix
-      end subroutine tracer_diffusion
-   end interface
-
 !
 ! !PUBLIC DATA MEMBERS:
    public init_getm_fabm, postinit_getm_fabm, do_getm_fabm, model, output_none
@@ -99,6 +86,17 @@
 !-----------------------------------------------------------------------
 
 interface
+   subroutine tracer_diffusion(f,hn,AH_method,AH_const,AH_Prt,AH_stirr_const, &
+                               phymix)
+      use domain, only: imin,imax,jmin,jmax,kmax
+      IMPLICIT NONE
+      REALTYPE,intent(in)           :: hn(I3DFIELD)
+      integer,intent(in)            :: AH_method
+      REALTYPE,intent(in)           :: AH_const,AH_Prt,AH_stirr_const
+      REALTYPE,intent(inout)        :: f(I3DFIELD)
+      REALTYPE,dimension(:,:,:),pointer,intent(out),optional :: phymix
+   end subroutine tracer_diffusion
+
    subroutine inquire_file(fn,ncid,varids,varnames)
       character(len=*), intent(in)        :: fn
       integer, intent(inout)              :: ncid
@@ -113,6 +111,13 @@ interface
       REALTYPE, intent(out)               :: field(:,:)
    end subroutine get_2d_field_ncdf_by_id
 
+! Temporary interface (should be read from module):
+   subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,f)
+      character(len=*),intent(in)   :: fn,varname
+      integer, intent(in)           :: il,ih,jl,jh
+      logical, intent(in)           :: break_on_missing
+      REALTYPE, intent(out)         :: f(:,:)
+   end subroutine get_2d_field
 end interface
 
    contains

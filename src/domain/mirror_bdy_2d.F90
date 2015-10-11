@@ -50,76 +50,108 @@
             do j = wfj(n),wlj(n)
                if (au(i-1,j) .eq. 0) f(i-1,j) = f(i,j)
             end do
-         end do
-         do n = 1,NNB
-            j = nj(n)
-            do i = nfi(n),nli(n)
-               if (au(i,j) .eq. 3) f(i,j) = f(i,j-1)
-            end do
+            j = wfj(n)-1
+            if ( jmin-HALO .le. j ) then
+               if (au(i-1,j).eq.0 .and. au(i,j).eq.3) f(i-1,j) = f(i,j)
+            end if
+            j = wlj(n)+1
+            if ( j .le. jmax+HALO ) then
+               if (au(i-1,j).eq.0 .and. au(i,j).eq.3) f(i-1,j) = f(i,j)
+            end if
          end do
          do n = 1,NEB
             i = ei(n)
             do j = efj(n),elj(n)
                if (au(i,j) .eq. 0) f(i,j) = f(i-1,j)
             end do
+            j = efj(n)-1
+            if ( jmin-HALO .le. j ) then
+               if (au(i,j).eq.0 .and. au(i-1,j).eq.3) f(i,j) = f(i-1,j)
+            end if
+            j = elj(n)+1
+            if ( j .le. jmax+HALO ) then
+               if (au(i,j).eq.0 .and. au(i-1,j).eq.3) f(i,j) = f(i-1,j)
+            end if
+         end do
+         do n = 1,NNB
+            j = nj(n)
+            do i = max(imin-HALO,nfi(n)-1),nli(n)
+               if (au(i,j) .eq. 3) f(i,j) = f(i,j-1)
+            end do
          end do
          do n = 1,NSB
             j = sj(n)
-            do i = sfi(n),sli(n)
+            do i = max(imin-HALO,sfi(n)-1),sli(n)
                if (au(i,j) .eq. 3) f(i,j) = f(i,j+1)
             end do
          end do
       case (V_TAG)
-         do n = 1,NWB
-            i = wi(n)
-            do j = wfj(n),wlj(n)
-               if (av(i,j) .eq. 3) f(i,j) = f(i+1,j)
-            end do
-         end do
          do n = 1,NNB
             j = nj(n)
             do i = nfi(n),nli(n)
                if (av(i,j) .eq. 0) f(i,j) = f(i,j-1)
             end do
-         end do
-         do n = 1,NEB
-            i = ei(n)
-            do j = efj(n),elj(n)
-               if (av(i,j) .eq. 3) f(i,j) = f(i-1,j)
-            end do
+            i = nfi(n)-1
+            if ( imin-HALO .le. i ) then
+               if (av(i,j).eq.0 .and. av(i,j-1).eq.3) f(i,j) = f(i,j-1)
+            end if
+            i = nli(n)+1
+            if ( i .le. imax+HALO ) then
+               if (av(i,j).eq.0 .and. av(i,j-1).eq.3) f(i,j) = f(i,j-1)
+            end if
          end do
          do n = 1,NSB
             j = sj(n)
             do i = sfi(n),sli(n)
                if (av(i,j-1) .eq. 0) f(i,j-1) = f(i,j)
             end do
+            i = sfi(n)-1
+            if ( imin-HALO .le. i ) then
+               if (av(i,j-1).eq.0 .and. av(i,j).eq.3) f(i,j-1) = f(i,j)
+            end if
+            i = sli(n)+1
+            if ( i .le. imax+HALO ) then
+               if (av(i,j-1).eq.0 .and. av(i,j).eq.3) f(i,j-1) = f(i,j)
+            end if
+         end do
+         do n = 1,NWB
+            i = wi(n)
+            do j = max(jmin-HALO,wfj(n)-1),wlj(n)
+               if (av(i,j) .eq. 3) f(i,j) = f(i+1,j)
+            end do
+         end do
+         do n = 1,NEB
+            i = ei(n)
+            do j = max(jmin-HALO,efj(n)-1),elj(n)
+               if (av(i,j) .eq. 3) f(i,j) = f(i-1,j)
+            end do
          end do
       case default
          do n = 1,NWB
             i = wi(n)
             do j = wfj(n),wlj(n)
-               if (az(i,j) .gt. 1) f(i-1,j) = f(i,j)
+               if (az(i-1,j).eq.0 .and. az(i,j).gt.1) f(i-1,j) = f(i,j)
             end do
          end do
 
          do n = 1,NNB
             j = nj(n)
             do i = nfi(n),nli(n)
-               if (az(i,j) .gt. 1) f(i,j+1) = f(i,j)
+               if (az(i,j+1).eq.0 .and. az(i,j).gt.1) f(i,j+1) = f(i,j)
             end do
          end do
 
          do n = 1,NEB
             i = ei(n)
             do j = efj(n),elj(n)
-               if (az(i,j) .gt. 1) f(i+1,j) = f(i,j)
+               if (az(i+1,j).eq.0 .and. az(i,j).gt.1) f(i+1,j) = f(i,j)
             end do
          end do
 
          do n = 1,NSB
             j = sj(n)
             do i = sfi(n),sli(n)
-               if (az(i,j) .gt. 1) f(i,j-1) = f(i,j)
+               if (az(i,j-1).eq.0 .and. az(i,j).gt.1) f(i,j-1) = f(i,j)
             end do
          end do
    end select
