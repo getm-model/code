@@ -28,7 +28,7 @@
 !KB   use get_field, only: get_2d_field
    use advection, only: init_advection,print_adv_settings,NOADV
    use les, only: les_mode,LES_MOMENTUM
-   use halo_zones, only: update_2d_halo,wait_halo,H_TAG
+   use halo_zones, only: update_2d_halo,wait_halo,H_TAG,U_TAG,V_TAG
    use variables_2d
    use bdy_2d, only: init_bdy_2d
    use bdy_2d, only: bdyfile_2d,bdyfmt_2d,bdy2d_ramp,bdy2d_sponge_size
@@ -100,6 +100,14 @@
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: dvdxU,shearU
          REALTYPE,dimension(E2DFIELD),intent(out),optional :: dudyV,shearV
       end subroutine deformation_rates
+
+! Temporary interface (should be read from module):
+      subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,f)
+         character(len=*),intent(in)   :: fn,varname
+         integer, intent(in)           :: il,ih,jl,jh
+         logical, intent(in)           :: break_on_missing
+         REALTYPE, intent(out)         :: f(:,:)
+      end subroutine get_2d_field
 
    end interface
 !
@@ -400,40 +408,38 @@
    if (hotstart) then
 
       ischange = 0
-!     The first two loops are pure diagnostics, logging where changes will actually take place
-!     (and if there is something to do at all, to be able to skip the second part)
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-            if ( au(i,j).eq.0 .and. U(i,j).ne._ZERO_ ) then
+      do j=jmin,jmax
+         do i=imin,imax
+            if ( au(i,j).eq.0 .and. U(i,j).ne._ZERO_ .and. (az(i,j).eq.1 .or. az(i+1,j).eq.1) ) then
                LEVEL3 'postinit_2d: Reset to mask(au), U=0 for i,j=',i,j
                ischange = 1
+               U   (i,j) = _ZERO_
+               Uint(i,j) = _ZERO_
             end if
          end do
       end do
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-            if ( av(i,j).eq.0 .and. V(i,j).ne._ZERO_ ) then
+      if (ischange.ne.0) then
+         call update_2d_halo(U   ,U   ,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+         call update_2d_halo(Uint,Uint,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+      end if
+      ischange = 0
+      do j=jmin,jmax
+         do i=imin,imax
+            if ( av(i,j).eq.0 .and. V(i,j).ne._ZERO_ .and. (az(i,j).eq.1 .or. az(i,j+1).eq.1) ) then
                LEVEL3 'postinit_2d: Reset to mask(av), V=0 for i,j=',i,j
                ischange = 1
+               V   (i,j) = _ZERO_
+               Vint(i,j) = _ZERO_
             end if
          end do
       end do
-
-!     The actual reset is below here - independent of the above diagnostics (except for the if)
       if (ischange.ne.0) then
-         where (au .eq. 0)
-            U    = _ZERO_
-            Uint = _ZERO_
-         end where
-         where (av .eq. 0)
-            V    = _ZERO_
-            Vint = _ZERO_
-         end where
-!        This is probably not absolutely necessary:
-         where (az .eq. 0)
-            z  = _ZERO_
-            zo = _ZERO_
-         end where
+         call update_2d_halo(V   ,V   ,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
+         call update_2d_halo(Vint,Vint,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
       end if
 
       call depth_update(zo,z,D,Dvel,DU,DV)
