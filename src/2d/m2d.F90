@@ -75,6 +75,14 @@
          REALTYPE,dimension(E2DFIELD),intent(out) :: phydiss
       end subroutine physical_dissipation
 
+! Temporary interface (should be read from module):
+      subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,f)
+         character(len=*),intent(in)   :: fn,varname
+         integer, intent(in)           :: il,ih,jl,jh
+         logical, intent(in)           :: break_on_missing
+         REALTYPE, intent(out)         :: f(:,:)
+      end subroutine get_2d_field
+
    end interface
 !
 ! !PUBLIC DATA MEMBERS:
