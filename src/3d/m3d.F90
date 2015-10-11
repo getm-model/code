@@ -49,7 +49,7 @@
    use bdy_3d, only: bdy3d_tmrlx, bdy3d_tmrlx_ucut, bdy3d_tmrlx_max, bdy3d_tmrlx_min
 !  Necessary to use halo_zones because update_3d_halos() have been moved out
 !  temperature.F90 and salinity.F90 - should be changed at a later stage
-   use halo_zones, only: update_3d_halo,wait_halo,D_TAG
+   use halo_zones, only: update_2d_halo,update_3d_halo,wait_halo,D_TAG,U_TAG,V_TAG
 
    IMPLICIT NONE
 !
@@ -334,7 +334,7 @@
 !  of a hotstart file.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,rc
+   integer                   :: i,j,ischange,rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -353,36 +353,40 @@
 ! Hotstart fix - see postinit_2d
    if (hotstart) then
 
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-            if (au(i,j) .eq. 0) then
-               uu(i,j,:)  = _ZERO_
-               Uadv(i,j)  = _ZERO_
+      ischange = 0
+      do j=jmin,jmax
+         do i=imin,imax
+            if ( au(i,j).eq.0 .and. ANY(uu(i,j,1:kmax).ne._ZERO_) .and. (az(i,j).eq.1 .or. az(i+1,j).eq.1) ) then
+               LEVEL3 'postinit_3d: Reset to mask(au), uu=0 for i,j=',i,j
+               ischange = 1
+               uu  (i,j,:) = _ZERO_
+               Uadv(i,j)   = _ZERO_
             end if
          end do
       end do
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-            if (av(i,j) .eq. 0) then
-               vv(i,j,:)  = _ZERO_
-               Vadv(i,j)  = _ZERO_
+      if (ischange.ne.0) then
+         call update_3d_halo(uu,uu,au,imin,jmin,imax,jmax,kmax,U_TAG)
+         call wait_halo(U_TAG)
+         call update_2d_halo(Uadv,Uadv,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+      end if
+      ischange = 0
+      do j=jmin,jmax
+         do i=imin,imax
+            if ( av(i,j).eq.0 .and. ANY(vv(i,j,1:kmax).ne._ZERO_) .and. (az(i,j).eq.1 .or. az(i,j+1).eq.1) ) then
+               LEVEL3 'postinit_3d: Reset to mask(av), vv=0 for i,j=',i,j
+               ischange = 1
+               vv  (i,j,:) = _ZERO_
+               Vadv(i,j)   = _ZERO_
             end if
          end do
       end do
-!     These may not be necessary, but we clean up anyway just in case.
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
-            if(az(i,j) .eq. 0) then
-               tke(i,j,:) = _ZERO_
-               num(i,j,:) = 1.e-15
-               nuh(i,j,:) = 1.e-15
-#ifndef NO_BAROCLINIC
-               S(i,j,:)   = _ZERO_
-               T(i,j,:)   = _ZERO_
-#endif
-            end if
-         end do
-      end do
+      if (ischange.ne.0) then
+         call update_3d_halo(vv,vv,av,imin,jmin,imax,jmax,kmax,V_TAG)
+         call wait_halo(V_TAG)
+         call update_2d_halo(Vadv,Vadv,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
+      end if
 
       call depth_update(sseo,ssen,Dn,Dveln,Dun,Dvn,from3d=.true.)
 !     KK-TODO: do not store ss[u|v]n in hotstart file
