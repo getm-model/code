@@ -590,31 +590,19 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 
    if (found) then
 
-      LEVEL4 ' ... checking variable ',name_airp
-      err = nf90_inq_varid(ncid,name_airp,airp_id)
-      if (err .NE. NF90_NOERR) go to 10
-
       if (fwf_method .eq. 2) then
-         LEVEL4 ' ... checking variable ',name_evap
-         err = nf90_inq_varid(ncid,name_evap,evap_id)
-         if (err .NE. NF90_NOERR) go to 10
+         evap_id   = ncdf_meteo_inq_varid(ncid,name_evap  ,required=.true.)
       end if
       if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-         LEVEL4 ' ... checking variable ',name_precip
-         err = nf90_inq_varid(ncid,name_precip,precip_id)
-         if (err .NE. NF90_NOERR) go to 10
+         precip_id = ncdf_meteo_inq_varid(ncid,name_precip,required=.true.)
       end if
 
       if (calc_met) then
-         LEVEL4 ' ... checking variable ',name_u10
-         err = nf90_inq_varid(ncid,name_u10,u10_id)
-         if (err .NE. NF90_NOERR) go to 10
-         LEVEL4 ' ... checking variable ',name_v10
-         err = nf90_inq_varid(ncid,name_v10,v10_id)
-         if (err .NE. NF90_NOERR) go to 10
-         LEVEL4 ' ... checking variable ',name_t2
-         err = nf90_inq_varid(ncid,name_t2,t2_id)
-         if (err .NE. NF90_NOERR) go to 10
+         airp_id = ncdf_meteo_inq_varid(ncid,name_airp,required=.true.)
+         u10_id  = ncdf_meteo_inq_varid(ncid,name_u10 ,required=.true.)
+         v10_id  = ncdf_meteo_inq_varid(ncid,name_v10 ,required=.true.)
+         t2_id   = ncdf_meteo_inq_varid(ncid,name_t2  ,required=.true.)
+         tcc_id  = ncdf_meteo_inq_varid(ncid,name_tcc ,required=.true.)
 
          hum_id = -1
          err = nf90_inq_varid(ncid,name_hum1,hum_id)
@@ -638,34 +626,21 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
             hum_method = SPECIFIC_HUM
          end if
 !KBKSTDERR 'Taking hum as wet bulb temperature'
-         LEVEL4 ' ... checking variable ',name_tcc
-         err = nf90_inq_varid(ncid,name_tcc,tcc_id)
-         if (err .NE. NF90_NOERR) go to 10
+
       else
-         LEVEL4 ' ... checking variable ',name_tausx
-         err = nf90_inq_varid(ncid,name_tausx,tausx_id)
-         if (err .NE. NF90_NOERR) go to 10
-         LEVEL4 ' ... checking variable ',name_tausy
-         err = nf90_inq_varid(ncid,name_tausy,tausy_id)
-         if (err .NE. NF90_NOERR) go to 10
-         LEVEL4 ' ... checking variable ',name_swr
-         err = nf90_inq_varid(ncid,name_swr,swr_id)
-         if (err .NE. NF90_NOERR) go to 10
-         LEVEL4 ' ... checking variable ',name_shf
-         err = nf90_inq_varid(ncid,name_shf,shf_id)
-         if (err .NE. NF90_NOERR) go to 10
+         airp_id  = ncdf_meteo_inq_varid(ncid,name_airp )
+         tausx_id = ncdf_meteo_inq_varid(ncid,name_tausx)
+         tausy_id = ncdf_meteo_inq_varid(ncid,name_tausy)
+         swr_id   = ncdf_meteo_inq_varid(ncid,name_swr  )
+         shf_id   = ncdf_meteo_inq_varid(ncid,name_shf  )
       end if
 
       if (nudge_sst) then
-         LEVEL4 ' ... checking variable ',name_sst
-         err = nf90_inq_varid(ncid,name_sst,sst_id)
-         if (err .NE. NF90_NOERR) go to 10
+         sst_id = ncdf_meteo_inq_varid(ncid,name_sst,required=.true.)
       end if
 
       if (nudge_sss) then
-         LEVEL4 ' ... checking variable ',name_sss
-         err = nf90_inq_varid(ncid,name_sss,sss_id)
-         if (err .NE. NF90_NOERR) go to 10
+         sss_id = ncdf_meteo_inq_varid(ncid,name_sss,required=.true.)
       end if
 
       offset = time_diff(jul0,secs0,junit,sunit)
@@ -723,18 +698,20 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 !EOP
 !-----------------------------------------------------------------------
 
-   err = nf90_get_var(ncid,airp_id,wrk,start,edges)
-   if (err .ne. NF90_NOERR) go to 10
-   if (on_grid) then
-      if (point_source) then
-         airp = wrk(1,1)
+   if (airp_id .gt. 0) then
+      err = nf90_get_var(ncid,airp_id,wrk,start,edges)
+      if (err .ne. NF90_NOERR) go to 10
+      if (on_grid) then
+         if (point_source) then
+            airp = wrk(1,1)
+         else
+            airp(ill:ihl,jll:jhl) = wrk
+         end if
       else
-         airp(ill:ihl,jll:jhl) = wrk
+         !KBKwrk_dp = _ZERO_
+         call copy_var(grid_scan,wrk,wrk_dp)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,airp)
       end if
-   else
-      !KBKwrk_dp = _ZERO_
-      call copy_var(grid_scan,wrk,wrk_dp)
-      call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,airp)
    end if
 
    if (evap_id .ge. 0) then
@@ -872,36 +849,41 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 
    else
 
-      err = nf90_get_var(ncid,tausx_id,wrk,start,edges)
-      if (err .ne. NF90_NOERR) go to 10
-      if (point_source) then
-         tausx = wrk(1,1)
-      else
-         tausx(ill:ihl,jll:jhl) = wrk
+      if (tausx_id .gt. 0) then
+         err = nf90_get_var(ncid,tausx_id,wrk,start,edges)
+         if (err .ne. NF90_NOERR) go to 10
+         if (point_source) then
+            tausx = wrk(1,1)
+         else
+            tausx(ill:ihl,jll:jhl) = wrk
+         end if
       end if
-
-      err = nf90_get_var(ncid,tausy_id,wrk,start,edges)
-      if (err .ne. NF90_NOERR) go to 10
-      if (point_source) then
-         tausy = wrk(1,1)
-      else
-         tausy(ill:ihl,jll:jhl) = wrk
+      if (tausy_id .gt. 0) then
+         err = nf90_get_var(ncid,tausy_id,wrk,start,edges)
+         if (err .ne. NF90_NOERR) go to 10
+         if (point_source) then
+            tausy = wrk(1,1)
+         else
+            tausy(ill:ihl,jll:jhl) = wrk
+         end if
       end if
-
-      err = nf90_get_var(ncid,swr_id,wrk,start,edges)
-      if (err .ne. NF90_NOERR) go to 10
-      if (point_source) then
-         swr = wrk(1,1)
-      else
-         swr(ill:ihl,jll:jhl) = wrk
+      if (swr_id .gt. 0) then
+         err = nf90_get_var(ncid,swr_id,wrk,start,edges)
+         if (err .ne. NF90_NOERR) go to 10
+         if (point_source) then
+            swr = wrk(1,1)
+         else
+            swr(ill:ihl,jll:jhl) = wrk
+         end if
       end if
-
-      err = nf90_get_var(ncid,shf_id,wrk,start,edges)
-      if (err .ne. NF90_NOERR) go to 10
-      if (point_source) then
-         shf = wrk(1,1)
-      else
-         shf(ill:ihl,jll:jhl) = wrk
+      if (shf_id .gt. 0) then
+         err = nf90_get_var(ncid,shf_id,wrk,start,edges)
+         if (err .ne. NF90_NOERR) go to 10
+         if (point_source) then
+            shf = wrk(1,1)
+         else
+            shf(ill:ihl,jll:jhl) = wrk
+         end if
       end if
 
    end if
@@ -1000,6 +982,49 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
    end subroutine copy_var
 !EOC
 
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: ncdf_meteo_inq_varid -
+!
+! !INTERFACE:
+   integer function ncdf_meteo_inq_varid(ncid,varname,required)
+   IMPLICIT NONE
+!
+! !DESCRIPTION:
+!
+! !INPUT PARAMETERS:
+   integer         , intent(in)        :: ncid
+   character(len=*), intent(in)        :: varname
+   logical         , intent(in), optional :: required
+!
+! !LOCAL VARIABLES:
+   integer         :: varid,err
+   logical         :: break_on_missing
+!EOP
+!-----------------------------------------------------------------------
+
+   if ( present(required) ) then
+      break_on_missing = required
+   else
+      break_on_missing = .false.
+   end if
+
+   LEVEL4 ' ... checking variable ',trim(varname)
+   err = nf90_inq_varid(ncid,varname,varid)
+   if (err .NE. NF90_NOERR) then
+      if ( break_on_missing ) then
+         FATAL 'ncdf_meteo_inq_varid: ',nf90_strerror(err)
+         stop 'ncdf_meteo_inq_varid()'
+      else
+         LEVEL4 '       missing - continue with '//trim(varname)//'=0'
+         varid = -1
+      end if
+   end if
+
+   ncdf_meteo_inq_varid = varid
+   end function ncdf_meteo_inq_varid
+!EOC
 !-----------------------------------------------------------------------
 
    end module ncdf_meteo
