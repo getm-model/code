@@ -54,7 +54,7 @@
 
    if (first) then
       if (grid_type.eq.1 .or. grid_type.eq.2) then
-         allocate(mask(E2DFIELD))
+         allocate(mask(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'set_sea_surface_state: Error allocating memory (mask)'
          where(az .eq. 0)
             mask = 0

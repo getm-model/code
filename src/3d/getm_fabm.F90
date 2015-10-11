@@ -35,6 +35,7 @@
    use fabm_standard_variables, only: standard_variables
 
    IMPLICIT NONE
+
 !
 ! !PUBLIC DATA MEMBERS:
    public init_getm_fabm, postinit_getm_fabm, do_getm_fabm, model, output_none
@@ -95,6 +96,13 @@ interface
       REALTYPE, intent(out)               :: field(:,:)
    end subroutine get_2d_field_ncdf_by_id
 
+! Temporary interface (should be read from module):
+   subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,f)
+      character(len=*),intent(in)   :: fn,varname
+      integer, intent(in)           :: il,ih,jl,jh
+      logical, intent(in)           :: break_on_missing
+      REALTYPE, intent(out)         :: f(:,:)
+   end subroutine get_2d_field
 end interface
 
    contains
