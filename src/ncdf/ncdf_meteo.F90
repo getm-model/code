@@ -1010,14 +1010,14 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
       break_on_missing = .false.
    end if
 
-   LEVEL4 ' ... checking variable ',varname
+   LEVEL4 ' ... checking variable ',trim(varname)
    err = nf90_inq_varid(ncid,varname,varid)
    if (err .NE. NF90_NOERR) then
       if ( break_on_missing ) then
          FATAL 'ncdf_meteo_inq_varid: ',nf90_strerror(err)
          stop 'ncdf_meteo_inq_varid()'
       else
-         LEVEL4 '       missing - continue with '//varname//'=0'
+         LEVEL4 '       missing - continue with '//trim(varname)//'=0'
          varid = -1
       end if
    end if
