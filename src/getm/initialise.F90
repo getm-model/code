@@ -56,7 +56,8 @@
    use turbulence, only: init_turbulence
    use mtridiagonal, only: init_tridiagonal
    use rivers, only: init_rivers
-   use variables_3d, only: avmback,avhback
+   use variables_3d, only: ho,hn,hvel,avmback,avhback
+   use vertical_coordinates, only: restart_with_ho,restart_with_hn
 #ifdef SPM
    use suspended_matter, only: init_spm
 #endif
@@ -271,6 +272,12 @@
 
 #ifndef NO_3D
       if (runtype .ge. 2) then
+         if ( restart_with_ho .and. restart_with_hn ) then
+            hvel = _HALF_ * ( ho + hn )
+         else
+!           throw a warning here, if ho or hn are needed before they
+!           are calculated in postinit_3d()
+         end if
          Uint=_ZERO_
          Vint=_ZERO_
       end if
