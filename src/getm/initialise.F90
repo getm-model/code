@@ -268,24 +268,28 @@
       hot_in = trim(out_dir) //'/'// 'restart' // trim(buf)
       call restart_file(READING,trim(hot_in),MinN,runtype,use_epoch)
       LEVEL3 'MinN adjusted to ',MinN
+      call update_time(MinN)
+      call write_time_string()
+      LEVEL3 timestr
+      MinN = MinN+1
+
 #ifndef NO_3D
       if (runtype .ge. 2) then
          if ( restart_with_ho .and. restart_with_hn ) then
             hvel = _HALF_ * ( ho + hn )
          else
-!           throw a warning here, if ho or hn are needed before they
-!           are calculated in postinit_3d()
+            STDERR LINE
+            LEVEL3 "ho and hn missing in restart field!!!"
+            LEVEL3 "This might be ok for some specific settings, but in"
+            LEVEL3 "general you should do a zero-length simulation with"
+            LEVEL3 "your previous coordinate settings to create a valid"
+            LEVEL3 "restart file."
+            STDERR LINE
          end if
 #ifndef NO_BAROCLINIC
          if (runtype .ge. 3) call do_eqstate()
 #endif
       end if
-#endif
-      call update_time(MinN)
-      call write_time_string()
-      LEVEL3 timestr
-      MinN = MinN+1
-#ifndef NO_3D
 #ifdef _FABM_
       if (fabm_calc) then
          LEVEL2 'hotstart getm_fabm:'
