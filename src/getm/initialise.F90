@@ -290,7 +290,6 @@
          if (runtype .ge. 3) call do_eqstate()
 #endif
       end if
-#endif
 #ifdef _FABM_
       if (fabm_calc) then
          LEVEL2 'hotstart getm_fabm:'
