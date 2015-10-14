@@ -55,7 +55,8 @@
    use turbulence, only: init_turbulence
    use mtridiagonal, only: init_tridiagonal
    use rivers, only: init_rivers
-   use variables_3d, only: avmback,avhback
+   use variables_3d, only: ho,hn,hvel,avmback,avhback
+   use vertical_coordinates, only: restart_with_ho,restart_with_hn
 #ifdef SPM
    use suspended_matter, only: init_spm
 #endif
@@ -269,8 +270,18 @@
       hot_in = trim(out_dir) //'/'// 'restart' // trim(buf)
       call restart_file(READING,trim(hot_in),MinN,runtype,use_epoch)
       LEVEL3 'MinN adjusted to ',MinN
+#ifndef NO_3D
+      if (runtype .ge. 2) then
+         if ( restart_with_ho .and. restart_with_hn ) then
+            hvel = _HALF_ * ( ho + hn )
+         else
+!           throw a warning here, if ho or hn are needed before they
+!           are calculated in postinit_3d()
+         end if
 #ifndef NO_BAROCLINIC
-      if (runtype .ge. 3) call do_eqstate()
+         if (runtype .ge. 3) call do_eqstate()
+#endif
+      end if
 #endif
       call update_time(MinN)
       call write_time_string()
