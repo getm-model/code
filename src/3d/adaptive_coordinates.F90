@@ -496,10 +496,6 @@ STDERR 'adaptive_coordinates()'
          end do
       end do
    end do
-!  KK-TODO: although the layer heights in the center points are consistent
-!           with the total water depth, in the present implementation we
-!           cannot rely on depth-coinciding layer heights in velocity points
-   call hcheck(hun,Dun,au)
 
 ! vv
    do k=1,kmax
@@ -509,10 +505,15 @@ STDERR 'adaptive_coordinates()'
          end do
       end do
    end do
+
+#ifndef _NEW_DAF_
 !  KK-TODO: although the layer heights in the center points are consistent
 !           with the total water depth, in the present implementation we
 !           cannot rely on depth-coinciding layer heights in velocity points
+!           (vel_depth_method + min_depth for interface heights)
+   call hcheck(hun,Dun,au)
    call hcheck(hvn,Dvn,av)
+#endif
 
 !  KK-TODO: do we really need these halo updates?!
 !  Update the halo zones for hun
