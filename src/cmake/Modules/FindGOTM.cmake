@@ -1,6 +1,7 @@
 # Try to locate GOTM's installation prefix.
 find_path(GOTM_PREFIX
   NAMES include/turbulence.mod
+  HINTS "$ENV{GOTM_PREFIX}"
   PATHS "$ENV{LOCALAPPDATA}/gotm" "$ENV{APPDATA}/gotm" "$ENV{HOME}/local/gotm"
   DOC "Installation prefix for General Ocean Turbulence Models - gotm.net"
 )
