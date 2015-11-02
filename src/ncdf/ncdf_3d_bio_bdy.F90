@@ -35,7 +35,7 @@
    integer                             :: ncid
    integer                             :: time_id
    integer, allocatable, dimension(:)  :: bio_ids
-   integer                             :: start(3),edges(3)
+   integer                             :: start(4),edges(4)
    integer                             :: zax_dim=-1,zax_len,zax_pos
    integer                             :: time_dim=-1,time_len,time_pos
    logical                             :: climatology=.false.
