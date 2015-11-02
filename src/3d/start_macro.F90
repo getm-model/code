@@ -28,12 +28,10 @@
 !
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,kmax,H,HU,HV,az,min_depth
+   use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth
    use m2d, only: z,Uint,Vint
-   use variables_2d, only: fwf_int
    use m3d, only: M
-   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn,Dn,Dun,Dvn,hn
-   use halo_zones, only : update_2d_halo,wait_halo,z_TAG
+   use variables_3d, only: sseo,ssen,ssuo,ssun,ssvo,ssvn,Dn,Dun,Dvn
    use getm_timers, only: tic, toc, TIM_STARTMCR
    IMPLICIT NONE
 !
@@ -52,23 +50,6 @@
    write(debug,*) 'start_macro() # ',Ncall
 #endif
    call tic(TIM_STARTMCR)
-
-   call update_2d_halo(fwf_int,fwf_int,az,imin,jmin,imax,jmax,z_TAG)
-   call wait_halo(z_TAG)
-
-!  Note (KK): This would be the correct handling for fwf_int, but it
-!             requires ho=hn in coordinates and use of true sseo for
-!             momentum routines. See also necessary changes
-!             in do_salinity and do_getm_fabm!
-!   do j=jmin-HALO,jmax+HALO
-!      do i=imin-HALO,imax+HALO
-!        fwf_int(az=2)<>0; do not mess with open bdy cells!
-!         if (az(i,j) .eq. 1) then
-!            ssen(i,j)      = ssen(i,j)      + fwf_int(i,j)
-!            hn  (i,j,kmax) = hn  (i,j,kmax) + fwf_int(i,j)
-!         end if
-!      end do
-!   end do
 
    do j=jmin-HALO,jmax+HALO         ! Defining 'old' and 'new' sea surface
       do i=imin-HALO,imax+HALO      ! elevation for macro time step
