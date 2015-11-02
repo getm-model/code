@@ -341,7 +341,7 @@
 #endif
    end if
 
-   if (save_initial .and. .not. dryrun) then
+   if (.not. dryrun) then
       call do_output(runtype,MinN-1,timestep)
       call output_manager_save(julianday,secondsofday,MinN)
    end if
