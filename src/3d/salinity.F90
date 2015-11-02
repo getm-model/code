@@ -270,10 +270,15 @@
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
          if (az(i,j) .eq. 1) then
+!           Note (KK): This would be the correct dilution if hn was
+!                      corrected in start_macro. This also requires,
+!                      that ho=hn is done in coordinates!
+!            S(i,j,kmax) = S(i,j,kmax)*(_ONE_-fwf_int(i,j)/ho(i,j,kmax))
 ! Developers note:
 !  The parentheses are set to minimize truncation errors for fwf_int=0
             S(i,j,kmax) = S(i,j,kmax)*            &
-                          ( hn(i,j,kmax) / (hn(i,j,kmax)+fwf_int(i,j)) )
+                          ( ho(i,j,kmax) / (ho(i,j,kmax)+fwf_int(i,j)) )
+
          end if
       end do
    end do
