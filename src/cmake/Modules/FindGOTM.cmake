@@ -1,9 +1,17 @@
 # Try to locate GOTM's installation prefix.
 find_path(GOTM_PREFIX
   NAMES include/turbulence.mod
+  HINTS "$ENV{GOTM_PREFIX}"
   PATHS "$ENV{LOCALAPPDATA}/gotm" "$ENV{APPDATA}/gotm" "$ENV{HOME}/local/gotm"
   DOC "Installation prefix for General Ocean Turbulence Models - gotm.net"
 )
+
+# Find GOTM output_manager library
+if(GETM_USE_FLEXIBLE_OUTPUT)
+  find_library(GOTM_OUTMAN NAMES output_manager
+               HINTS ${GOTM_PREFIX}/lib
+               DOC "GOTM output_manager library")
+endif(GETM_USE_FLEXIBLE_OUTPUT)
 
 # Find GOTM/FABM coupling library if USE_FABM
 if(GETM_USE_FABM)
@@ -22,7 +30,7 @@ find_library(GOTM_UTIL NAMES util
              HINTS ${GOTM_PREFIX}/lib
              DOC "GOTM utility library")
 
-set(GOTM_LIBRARIES ${GOTM_FABM} ${GOTM_TURBULENCE} ${GOTM_UTIL})
+set(GOTM_LIBRARIES ${GOTM_OUTMAN} ${GOTM_FABM} ${GOTM_TURBULENCE} ${GOTM_UTIL})
 
 # Store configurable path of GOTM include directory
 find_path(GOTM_INCLUDE_DIRS
@@ -31,7 +39,7 @@ find_path(GOTM_INCLUDE_DIRS
           DOC "GOTM include directories"
 )
 
-mark_as_advanced(GOTM_LIBRARIES GOTM_INCLUDE_DIRS GOTM_TURBULENCE GOTM_UTIL GOTM_FABM)
+mark_as_advanced(GOTM_LIBRARIES GOTM_INCLUDE_DIRS GOTM_TURBULENCE GOTM_UTIL GOTM_FABM GOTM_OUTMAN)
 
 # Process default arguments (QUIET, REQUIRED)
 include(FindPackageHandleStandardArgs) 

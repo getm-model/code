@@ -98,6 +98,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
+   integer,parameter         :: rk = kind(_ONE_)
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -123,6 +124,7 @@
 #endif
 
    z  = _ZERO_; zo =_ZERO_
+
    zub=_ZERO_ ; zub0=_ZERO_
    zvb=_ZERO_ ; zvb0=_ZERO_
    D = _ZERO_ ; Dvel = _ZERO_
