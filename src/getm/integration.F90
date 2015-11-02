@@ -38,6 +38,7 @@
 !
 ! !USES:
    use time,     only: update_time,timestep
+   use time,     only: julianday,secondsofday
    use domain,   only: kmax
    use meteo,    only: do_meteo,tausx,tausy,airp,swr,albedo
    use meteo,    only: fwf_method,evap,precip
@@ -65,6 +66,7 @@
 #ifdef TEST_NESTING
    use nesting,   only: nesting_file
 #endif
+   use output_manager
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -152,6 +154,7 @@
       call update_time(n)
 
       call do_output(runtype,n,timestep)
+      call output_manager_save(julianday,secondsofday,n)
 #ifdef DIAGNOSE
       call diagnose(n,MaxN,runtype)
 #endif
