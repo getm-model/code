@@ -13,6 +13,7 @@ ${LIB}(integration.o)		\
 ${LIB}(initialise.o)
 
 OBJ   = \
+${LIB}(register_all_variables.o) \
 ${LIB}(cleanup.o)
 
 all: modules objects
