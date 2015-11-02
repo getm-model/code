@@ -514,14 +514,8 @@ STDERR 'adaptive_coordinates()'
 !           cannot rely on depth-coinciding layer heights in velocity points
    call hcheck(hvn,Dvn,av)
 
-!  KK-TODO: do we really need these halo updates?!
-!  Update the halo zones for hun
-   call update_3d_halo(hun,hun,au,imin,jmin,imax,jmax,kmax,U_TAG)
-   call wait_halo(U_TAG)
+!  KK-TODO: do we really need these mirror_bdy's?!
    call mirror_bdy_3d(hun,U_TAG)
-!  Update the halo zones for hvn
-   call update_3d_halo(hvn,hvn,av,imin,jmin,imax,jmax,kmax,V_TAG)
-   call wait_halo(V_TAG)
    call mirror_bdy_3d(hvn,V_TAG)
 
 !  only for backward compatibility
