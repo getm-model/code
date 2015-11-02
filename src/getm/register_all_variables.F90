@@ -28,20 +28,12 @@
 !
 ! !LOCAL VARIABLES:
    integer,parameter :: rk = kind(_ONE_)
-#if defined SPHERICAL
-   character(len=16)         :: xname='lonc'
-   character(len=16)         :: xlongname='longitude'
-   character(len=16)         :: xunits='degrees_east'
-   character(len=16)         :: yname='latc'
-   character(len=16)         :: ylongname='latitude'
-   character(len=16)         :: yunits='degrees_north'
-#elif defined CURVILINEAR
-   character(len=16)         :: xname='xic'
-   character(len=16)         :: yname='etac'
-#else
-   character(len=16)         :: xname='xc'
-   character(len=16)         :: yname='yc'
-#endif
+   character(len=16)         :: xname=''
+   character(len=16)         :: xlongname=''
+   character(len=16)         :: xunits=''
+   character(len=16)         :: yname=''
+   character(len=16)         :: ylongname=''
+   character(len=16)         :: yunits=''
    character(len=16)         :: zname='sigma'
    character(len=64)         :: zlongname='sigma'
    character(len=16)         :: zunits='sigma'
@@ -50,6 +42,24 @@
 !BOC
 
    LEVEL1 'register_all_variables()'
+
+   select case (grid_type)
+      case (1)
+         xname     = 'xc'
+         xunits    = 'm'
+         yname     = 'yc'
+         yunits    = 'm'
+      case (2)
+         xname     = 'lonc'
+         xlongname = 'longitude'
+         xunits    = 'degrees_east'
+         yname     = 'latc'
+         ylongname = 'latitude'
+         yunits    = 'degrees_north'
+      case (3)
+         xname     = 'xic'
+         yname     = 'etac'
+   end select
 
 #ifndef NO_3D
    select case (vert_cord)
