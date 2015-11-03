@@ -10,6 +10,12 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use field_manager
+#ifdef _FLEXIBLE_OUTPUT_
+   use output_manager_core, only:output_manager_host=>host, type_output_manager_host=>type_host
+   use time, only: CalDat,JulDay
+   use output_manager
+#endif
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -19,6 +25,15 @@
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
+
+   type (type_field_manager),target :: fm
+#ifdef _FLEXIBLE_OUTPUT_
+   type,extends(type_output_manager_host) :: type_getm_host
+   contains
+      procedure :: julian_day => getm_host_julian_day
+      procedure :: calendar_date => getm_host_calendar_date
+   end type
+#endif
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -41,10 +56,13 @@
    use output, only: init_output,do_output,restart_file,out_dir
    use input,  only: init_input
    use domain, only: init_domain
-   use domain, only: iextr,jextr,imin,imax,jmin,jmax,kmax
-   use domain, only: vert_cord,maxdepth
+   use domain, only: H
+   use domain, only: iextr,jextr,imin,imax,ioff,jmin,jmax,joff,kmax
+   use domain, only: xcord,ycord
+   use domain, only: vert_cord,maxdepth,ga
    use time, only: init_time,update_time,write_time_string
    use time, only: start,timestr,timestep
+   use time, only: julianday,secondsofday
    use m2d, only: init_2d,postinit_2d, z
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
 #ifndef NO_3D
@@ -107,6 +125,8 @@
    character(len=PATH_MAX)   :: input_dir='./'
 #endif
    character(len=PATH_MAX)   :: hot_in=''
+
+   character(len=16)         :: postfix
 
    namelist /param/ &
              dryrun,runid,title,parallel,runtype,  &
@@ -208,7 +228,7 @@
          FATAL 'A non valid runtype has been specified.'
          stop 'initialise()'
    end select
-
+   
    call init_time(MinN,MaxN)
    if(use_epoch) then
       LEVEL2 'using "',start,'" as time reference'
@@ -250,6 +270,17 @@
    end if
 #endif
 
+   call register_all_variables(fm)
+
+#ifdef _FLEXIBLE_OUTPUT_
+   allocate(type_getm_host::output_manager_host)
+   if (myid .ge. 0) then
+      write(postfix,'(A,I4.4)') '.',myid
+      call output_manager_init(fm,trim(postfix))
+   else
+      call output_manager_init(fm)
+   end if
+#endif
    call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)
 
    close(NAMLST)
@@ -281,7 +312,7 @@
             hvel = _HALF_ * ( ho + hn )
          else
             STDERR LINE
-            LEVEL3 "ho and hn missing in restart field!!!"
+            LEVEL3 "ho and hn missing in restart file!!!"
             LEVEL3 "This might be ok for some specific settings, but in"
             LEVEL3 "general you should do a zero-length simulation with"
             LEVEL3 "your previous coordinate settings to create a valid"
@@ -332,6 +363,9 @@
 
    if (.not. dryrun) then
       call do_output(runtype,MinN-1,timestep)
+#ifdef _FLEXIBLE_OUTPUT_
+      call output_manager_save(julianday,secondsofday,MinN)
+#endif
    end if
 
 #ifdef DEBUG
@@ -343,6 +377,22 @@
 !EOC
 
 !-----------------------------------------------------------------------
+
+#ifdef _FLEXIBLE_OUTPUT_
+   subroutine getm_host_julian_day(self,yyyy,mm,dd,julian)
+      class (type_getm_host), intent(in) :: self
+      integer, intent(in)  :: yyyy,mm,dd
+      integer, intent(out) :: julian
+      call JulDay(yyyy,mm,dd,julian)
+   end subroutine
+
+   subroutine getm_host_calendar_date(self,julian,yyyy,mm,dd)
+      class (type_getm_host), intent(in) :: self
+      integer, intent(in)  :: julian
+      integer, intent(out) :: yyyy,mm,dd
+      call CalDat(julian,yyyy,mm,dd)
+   end subroutine
+#endif
 
    end module initialise
 
