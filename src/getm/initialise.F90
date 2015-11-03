@@ -99,6 +99,7 @@
    use meteo, only: ssu,ssv
 #ifndef NO_BAROCLINIC
    use meteo, only: swr,albedo
+   use eqstate, only: do_eqstate
 #endif
    use waves, only: init_waves,do_waves,waveforcing_method,NO_WAVES
    use integration,  only: MinN,MaxN
