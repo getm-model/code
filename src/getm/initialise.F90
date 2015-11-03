@@ -349,7 +349,7 @@
    if (.not. dryrun) then
       call do_output(runtype,MinN-1,timestep)
 #ifdef _FLEXIBLE_OUTPUT_
-      call output_manager_save(julianday,secondsofday,MinN)
+      if (save_initial) call output_manager_save(julianday,secondsofday,MinN)
 #endif
    end if
 
