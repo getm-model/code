@@ -121,6 +121,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
+   integer,parameter         :: rk = kind(_ONE_)
 !EOP
 !-------------------------------------------------------------------------
 !BOC
