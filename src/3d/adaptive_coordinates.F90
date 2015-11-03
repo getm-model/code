@@ -496,10 +496,6 @@ STDERR 'adaptive_coordinates()'
          end do
       end do
    end do
-!  KK-TODO: although the layer heights in the center points are consistent
-!           with the total water depth, in the present implementation we
-!           cannot rely on depth-coinciding layer heights in velocity points
-   call hcheck(hun,Dun,au)
 
 ! vv
    do k=1,kmax
@@ -509,19 +505,18 @@ STDERR 'adaptive_coordinates()'
          end do
       end do
    end do
+
+#ifndef _NEW_DAF_
 !  KK-TODO: although the layer heights in the center points are consistent
 !           with the total water depth, in the present implementation we
 !           cannot rely on depth-coinciding layer heights in velocity points
+!           (vel_depth_method + min_depth for interface heights)
+   call hcheck(hun,Dun,au)
    call hcheck(hvn,Dvn,av)
+#endif
 
-!  KK-TODO: do we really need these halo updates?!
-!  Update the halo zones for hun
-   call update_3d_halo(hun,hun,au,imin,jmin,imax,jmax,kmax,U_TAG)
-   call wait_halo(U_TAG)
+!  KK-TODO: do we really need these mirror_bdy's?!
    call mirror_bdy_3d(hun,U_TAG)
-!  Update the halo zones for hvn
-   call update_3d_halo(hvn,hvn,av,imin,jmin,imax,jmax,kmax,V_TAG)
-   call wait_halo(V_TAG)
    call mirror_bdy_3d(hvn,V_TAG)
 
 !  only for backward compatibility
