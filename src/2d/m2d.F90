@@ -150,6 +150,7 @@
    integer                   :: i,j
    integer                   :: elev_method=1
    REALTYPE                  :: elev_const=_ZERO_
+   integer,parameter :: rk = kind(_ONE_)
    character(LEN = PATH_MAX) :: elev_file='elev.nc'
    namelist /m2d/ &
           elev_method,elev_const,elev_file,                    &

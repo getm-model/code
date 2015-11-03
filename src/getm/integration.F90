@@ -38,6 +38,7 @@
 !
 ! !USES:
    use time,     only: update_time,timestep
+   use time,     only: julianday,secondsofday
    use domain,   only: kmax
    use meteo,    only: do_meteo,tausx,tausy,airp,swr,albedo
    use meteo,    only: ssu,ssv
@@ -66,6 +67,9 @@
    use output,   only: do_output
 #ifdef TEST_NESTING
    use nesting,   only: nesting_file
+#endif
+#ifdef _FLEXIBLE_OUTPUT_
+   use output_manager
 #endif
    IMPLICIT NONE
 !
@@ -159,6 +163,9 @@
       call update_time(n)
 
       call do_output(runtype,n,timestep)
+#ifdef _FLEXIBLE_OUTPUT_
+      call output_manager_save(julianday,secondsofday,n)
+#endif
 #ifdef DIAGNOSE
       call diagnose(n,MaxN,runtype)
 #endif
