@@ -213,6 +213,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
+   integer,parameter         :: rk = kind(_ONE_)
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -232,7 +233,7 @@
 #include "dynamic_allocations_3d.h"
 #endif
 
-   hn = _ZERO_ ; hvel = _ZERO_ ; hun = _ZERO_ ; hvn = _ZERO_
+   ho = _ZERO_ ; hn = _ZERO_ ; hvel = _ZERO_ ; hun = _ZERO_ ; hvn = _ZERO_
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
 
 #ifdef _MOMENTUM_TERMS_
