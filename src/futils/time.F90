@@ -27,7 +27,7 @@
    IMPLICIT NONE
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-   public                              :: time_diff
+   public                              :: time_diff,CalDat,JulDay
 
 ! !PUBLIC DATA MEMBERS:
    integer, target                     :: julianday,secondsofday,yearday

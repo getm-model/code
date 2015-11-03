@@ -72,9 +72,11 @@
 
    allocate(coswavedir(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_variables_waves: Error allocating memory (coswavedir)'
+   coswavedir = _ZERO_
 
    allocate(sinwavedir(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_variables_waves: Error allocating memory (sinwavedir)'
+   sinwavedir = _ZERO_
 
    allocate(waveH(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_variables_waves: Error allocating memory (waveH)'
