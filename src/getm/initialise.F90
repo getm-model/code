@@ -97,6 +97,7 @@
    use meteo, only: ssu,ssv
 #ifndef NO_BAROCLINIC
    use meteo, only: swr,albedo
+   use eqstate, only: do_eqstate
 #endif
    use integration,  only: MinN,MaxN
    use exceptions
