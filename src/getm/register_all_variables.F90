@@ -46,8 +46,10 @@
    select case (grid_type)
       case (1)
          xname     = 'xc'
+         xlongname = 'x'
          xunits    = 'm'
          yname     = 'yc'
+         ylongname = 'y'
          yunits    = 'm'
       case (2)
          xname     = 'lonc'
@@ -58,7 +60,9 @@
          yunits    = 'degrees_north'
       case (3)
          xname     = 'xic'
+         xlongname = 'xic'
          yname     = 'etac'
+         ylongname = 'etac'
    end select
 
 #ifndef NO_3D
