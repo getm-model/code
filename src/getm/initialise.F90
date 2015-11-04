@@ -279,6 +279,8 @@
       call output_manager_init(fm)
    end if
 #endif
+
+!   call init_output(runid,title,start,runtype,dryrun,myid)
    call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)
 
    close(NAMLST)

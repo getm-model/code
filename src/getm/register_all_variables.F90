@@ -71,21 +71,23 @@
    end select
 
 #ifndef NO_3D
-   select case (vert_cord)
-      case (1)
-         zname     = 'sigma'
-         zlongname = 'sigma layers'
-         zunits    = 'sigma_level'
-      case (2)
-         zname     = 'z'
-         zlongname = 'geopotential'
-         zunits    = 'm'
-      case (3,4,5)
-         zname  = 'level'
-         zlongname  = 'general vertical coordinates'
-         zunits = 'level'
-      case default
-   end select
+   if (runtype .ge. 2) then
+      select case (vert_cord)
+         case (1)
+            zname     = 'sigma'
+            zlongname = 'sigma layers'
+            zunits    = 'sigma_level'
+         case (2)
+            zname     = 'z'
+            zlongname = 'geopotential'
+            zunits    = 'm'
+         case (3,4,5)
+            zname  = 'level'
+            zlongname  = 'general vertical coordinates'
+            zunits = 'level'
+         case default
+      end select
+   end if
 #endif
 
 
@@ -133,7 +135,9 @@
       call fm%register('ssen', 'm', 'elevtion at T-points (3D)', standard_name='', data2d=ssen(_2D_W_), category='3d', output_level=output_level_debug)
       call fm%register('ssun', 'm', 'elevtion at U-points (3D)', standard_name='', data2d=ssun(_2D_W_), category='3d', output_level=output_level_debug)
       call fm%register('ssvn', 'm', 'elevtion at V-points (3D)', standard_name='', data2d=ssvn(_2D_W_), category='3d', output_level=output_level_debug)
+   end if
 #ifndef NO_BAROCLINIC
+   if (runtype .ge. 3) then
       call fm%register('temp', 'Celsius', 'temperature', standard_name='', dimensions=(/id_dim_z/),data3d=T(_3D_W_), category='baroclinic')
       call fm%register('salt', 'PSU', 'salinity', standard_name='', dimensions=(/id_dim_z/),data3d=S(_3D_W_), category='baroclinic')
       call fm%register('idpdx', 'm', 'baroclinic pressure gradient - x', standard_name='', dimensions=(/id_dim_z/),data3d=idpdx(_3D_W_), category='baroclinic', output_level=output_level_debug)
