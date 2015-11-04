@@ -11,9 +11,11 @@
 !
 ! !USES:
    use field_manager
+#ifdef _FLEXIBLE_OUTPUT_
    use output_manager_core, only:output_manager_host=>host, type_output_manager_host=>type_host
    use time, only: CalDat,JulDay
    use output_manager
+#endif
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -25,12 +27,13 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 
    type (type_field_manager),target :: fm
-
+#ifdef _FLEXIBLE_OUTPUT_
    type,extends(type_output_manager_host) :: type_getm_host
    contains
       procedure :: julian_day => getm_host_julian_day
       procedure :: calendar_date => getm_host_calendar_date
    end type
+#endif
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -267,6 +270,7 @@
 
    call register_all_variables(runtype,fm)
 
+#ifdef _FLEXIBLE_OUTPUT_
    allocate(type_getm_host::output_manager_host)
    if (myid .ge. 0) then
       write(postfix,'(A,I4.4)') '.',myid
@@ -274,6 +278,7 @@
    else
       call output_manager_init(fm)
    end if
+#endif
 
 !   call init_output(runid,title,start,runtype,dryrun,myid)
    call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)
@@ -345,7 +350,9 @@
 
    if (.not. dryrun) then
       call do_output(runtype,MinN-1,timestep)
+#ifdef _FLEXIBLE_OUTPUT_
       if (save_initial) call output_manager_save(julianday,secondsofday,MinN)
+#endif
    end if
 
 #ifdef DEBUG
@@ -358,6 +365,7 @@
 
 !-----------------------------------------------------------------------
 
+#ifdef _FLEXIBLE_OUTPUT_
    subroutine getm_host_julian_day(self,yyyy,mm,dd,julian)
       class (type_getm_host), intent(in) :: self
       integer, intent(in)  :: yyyy,mm,dd
@@ -371,6 +379,7 @@
       integer, intent(out) :: yyyy,mm,dd
       call CalDat(julian,yyyy,mm,dd)
    end subroutine
+#endif
 
    end module initialise
 
