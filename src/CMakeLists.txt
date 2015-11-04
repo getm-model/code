@@ -422,7 +422,7 @@ add_executable(getm_exe
                $<TARGET_OBJECTS:ncdf>
                $<TARGET_OBJECTS:futils>
               )
-set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm${exe_id}")
+set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm")
 set_property(TARGET getm_exe APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 
 target_link_libraries(getm_exe ${GOTM_LIBRARIES} ${NetCDF_LIBRARIES})
