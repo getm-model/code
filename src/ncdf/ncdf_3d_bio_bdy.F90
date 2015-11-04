@@ -35,10 +35,11 @@
    integer                             :: ncid
    integer                             :: time_id
    integer, allocatable, dimension(:)  :: bio_ids
-   integer                             :: start(3),edges(3)
+   integer                             :: start(4),edges(4)
    integer                             :: zax_dim=-1,zax_len,zax_pos
    integer                             :: time_dim=-1,time_len,time_pos
    logical                             :: climatology=.false.
+   logical                             :: from_3d_fields
    REALTYPE                            :: offset
    REAL_4B, allocatable                :: bdy_times(:),wrk(:)
    REAL_4B,  allocatable, dimension(:) :: zlev
@@ -141,13 +142,28 @@
       LEVEL4 n,dim_name(n), dim_len(n)
    end do
 
-!  We are reading boundary values from a special boundary data file
-!  The bio variables must all exist and be spanned by dimensions as:
-!    1 -> zax,levels
-!    2 -> bdy_points
-!    3 -> time
-   zax_pos = 1
-   time_pos = 3
+   if(ndims .eq. 4) then
+!     We are reading boundary values from a full 3D field
+!     We assume COARDS conventions
+!     1 -> lon,x-axis
+!     2 -> lat,y-axis
+!     3 -> zax,levels
+!     4 -> time
+      LEVEL4 'boundary data from 3D fields'
+      from_3d_fields=.true.
+      zax_pos = 3
+      time_pos = 4
+   else
+!     We are reading boundary values from a special boundary data file
+!     The variables must be spanned by dimensions as:
+!       1 -> zax,levels
+!       2 -> bdy_points
+!       3 -> time
+      LEVEL4 'special boundary data file'
+      from_3d_fields=.false.
+      zax_pos = 1
+      time_pos = 3
+   end if
 
 !  npel is known and we can allocate memory for boundary conditions
    allocate(bio_ids(npel),stat=rc)
@@ -273,7 +289,11 @@
                k = bdy_index(l)
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do j=wfj(n),wlj(n)
-                     start(2) = k
+                     if (from_3d_fields) then
+                        start(1) = i+ioff ; start(2) = j+joff
+                     else
+                        start(2) = k
+                     end if
                      err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
                      if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
@@ -293,7 +313,11 @@
                k = bdy_index(l)
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do i = nfi(n),nli(n)
-                     start(2) = k
+                     if (from_3d_fields) then
+                        start(1) = i+ioff ; start(2) = j+joff
+                     else
+                        start(2) = k
+                     end if
                      err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
                      if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
@@ -313,11 +337,15 @@
                k = bdy_index(l)
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do j=efj(1),elj(1)
-                     start(2) = k
+                     if (from_3d_fields) then
+                        start(1) = i+ioff ; start(2) = j+joff
+                     else
+                        start(2) = k
+                     end if
                      err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
                      if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
-                                   hn(i,j,:),bio_bdy_clim(:,k,o,m))
+                                   hn(i,j,:),bio_bdy_clim(:,k,m,o))
                      k = k+1
                   end do
                else
@@ -333,11 +361,15 @@
                k = bdy_index(l)
                if (have_bio_bdy_values(o) .eq. 1 ) then
                   do i = sfi(n),sli(n)
-                     start(2) = k
+                     if (from_3d_fields) then
+                        start(1) = i+ioff ; start(2) = j+joff
+                     else
+                        start(2) = k
+                     end if
                      err = nf90_get_var(ncid,bio_ids(o),wrk,start,edges)
                      if (err .ne. NF90_NOERR) go to 10
                      call interpol(zax_len,zlev,wrk,H(i,j),kmax, &
-                                   hn(i,j,:),bio_bdy_clim(:,k,o,m))
+                                   hn(i,j,:),bio_bdy_clim(:,k,m,o))
                      k = k+1
                   end do
                else
@@ -349,6 +381,11 @@
       err = nf90_close(ncid)
 
    else
+
+      if (from_3d_fields) then
+         FATAL 'non-climatology bdy data only support special bdy data file'
+         stop 'init_3d_bio_bdy_ncdf'
+      end if
 
       err = nf90_inq_varid(ncid,'time',time_id)
       if (err .NE. NF90_NOERR) go to 10
@@ -410,9 +447,9 @@
       start(2) = 1; edges(2) = nsbv;
       start(3) = i; edges(3) = 1
 
-      do m=1,npel
-         if (have_bio_bdy_values(m) .eq. 1 ) then
-            err = nf90_get_var(ncid,bio_ids(m),bio_wrk(:,:,m),start,edges)
+      do o=1,npel
+         if (have_bio_bdy_values(o) .eq. 1 ) then
+            err = nf90_get_var(ncid,bio_ids(o),bio_wrk(:,:,o),start,edges)
             if (err .ne. NF90_NOERR) go to 10
          end if
       end do
@@ -421,11 +458,11 @@
       do n=1,NWB
          l = l+1
          i = wi(n)
-         do m=1,npel
+         do o=1,npel
             k = bdy_index(l)
             do j=wfj(n),wlj(n)
-               call interpol(zax_len,zlev,bio_wrk(:,k,m),H(i,j), &
-                             kmax,hn(i,j,:),bio_new(:,k,m))
+               call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j), &
+                             kmax,hn(i,j,:),bio_new(:,k,o))
                k = k+1
             end do
          end do
@@ -434,11 +471,11 @@
       do n = 1,NNB
          l = l+1
          j = nj(n)
-         do m=1,npel
+         do o=1,npel
             k = bdy_index(l)
             do i = nfi(n),nli(n)
-               call interpol(zax_len,zlev,bio_wrk(:,k,m),H(i,j), &
-                             kmax,hn(i,j,:),bio_new(:,k,m))
+               call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j), &
+                             kmax,hn(i,j,:),bio_new(:,k,o))
                k = k+1
             end do
          end do
@@ -447,11 +484,11 @@
       do n=1,NEB
          l = l+1
          i = ei(n)
-         do m=1,npel
+         do o=1,npel
             k = bdy_index(l)
             do j=efj(1),elj(1)
-               call interpol(zax_len,zlev,bio_wrk(:,k,m),H(i,j), &
-                             kmax,hn(i,j,:),bio_new(:,k,m))
+               call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j), &
+                             kmax,hn(i,j,:),bio_new(:,k,o))
                k = k+1
             end do
          end do
@@ -460,11 +497,11 @@
       do n = 1,NSB
          l = l+1
          j = sj(n)
-         do m=1,npel
+         do o=1,npel
             k = bdy_index(l)
             do i = sfi(n),sli(n)
-               call interpol(zax_len,zlev,bio_wrk(:,k,m),H(i,j), &
-                             kmax,hn(i,j,:),bio_new(:,k,m))
+               call interpol(zax_len,zlev,bio_wrk(:,k,o),H(i,j), &
+                             kmax,hn(i,j,:),bio_new(:,k,o))
                k = k+1
             end do
          end do
@@ -541,9 +578,9 @@
 
       do o=1,npel
          bio_bdy(:,:,o)=(1.-rat)*_HALF_ &
-                        *(bio_bdy_clim(prev,:,:,o)+bio_bdy_clim(this,:,:,o)) &
+                        *(bio_bdy_clim(:,:,prev,o)+bio_bdy_clim(:,:,this,o)) &
                         +rat*_HALF_     &
-                        *(bio_bdy_clim(next,:,:,o)+bio_bdy_clim(this,:,:,o))
+                        *(bio_bdy_clim(:,:,next,o)+bio_bdy_clim(:,:,this,o))
       end do
    else
 

@@ -118,6 +118,10 @@ if(${CMAKE_Fortran_COMPILER_ID} STREQUAL "GNU")
   add_definitions(-DGFORTRAN)
 elseif(${CMAKE_Fortran_COMPILER_ID} STREQUAL "Intel")
   add_definitions(-DIFORT)
+  if(WIN32)
+    set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} /Od")
+    set(CMAKE_Fortran_STACK_SIZE 128000000)
+  endif()
 elseif(${CMAKE_Fortran_COMPILER_ID} STREQUAL "Cray")
   set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -N 1023")
 endif()
@@ -285,6 +289,7 @@ add_library(input OBJECT
             input/get_3d_field.F90
             input/get_meteo_data.F90
             input/get_river_data.F90
+            input/inquire_file.F90
             input/init_2d_bdy.F90
             input/init_3d_bdy.F90
             input/init_meteo_input.F90
@@ -318,6 +323,7 @@ add_library(ncdf OBJECT
             ncdf/ncdf_close.F90
             ncdf/ncdf_common.F90
             ncdf/ncdf_get_field.F90
+            ncdf/get_2d_field_ncdf_by_id.F90
             ncdf/ncdf_in.F90
             ncdf/ncdf_mean.F90
             ncdf/ncdf_meteo.F90
