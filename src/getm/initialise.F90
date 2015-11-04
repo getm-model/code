@@ -268,7 +268,7 @@
    end if
 #endif
 
-   call register_all_variables(fm)
+   call register_all_variables(runtype,fm)
 
 #ifdef _FLEXIBLE_OUTPUT_
    allocate(type_getm_host::output_manager_host)
