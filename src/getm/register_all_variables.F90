@@ -190,6 +190,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+   use domain
    use meteo
    IMPLICIT NONE
 !
@@ -202,6 +203,43 @@
 !BOC
    LEVEL2 'register_meteo_variables() - none so-far '
 
+   if (met_method .eq. 2) then
+      if (calc_met) then
+         call fm%register('airp', 'Pa', 'air pressure', standard_name='', data2d=airp(_2D_W_), category="meteo/in")
+         call fm%register('t2', 'Celcius', '2m air temperature', standard_name='', data2d=t2(_2D_W_), category="meteo/in")
+         call fm%register('u10', 'm/s', '10m wind (x)', standard_name='', data2d=u10(_2D_W_), category="meteo/in")
+         call fm%register('v10', 'm/s', '10m wind (y)', standard_name='', data2d=v10(_2D_W_), category="meteo/in")
+!:: hum
+         call fm%register('tcc', '', 'total cloud cover', standard_name='', data2d=tcc(_2D_W_), category="meteo/in")
+         ! fwf_method = 2, 3 - precipitation read from file
+         if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+            call fm%register('precip', 'm/s', 'precipitation', standard_name='', data2d=precip(_2D_W_), category="meteo/in")
+         end if
+         ! fwf_method = 2 - evaporation read from file
+         if (fwf_method .eq. 2) then
+            call fm%register('evap', 'm/s', 'evaporation', standard_name='', data2d=evap(_2D_W_), category="meteo/in")
+         end if
+      end if
+      call fm%register('swr', 'W', 'short wave radiation', standard_name='', data2d=swr(_2D_W_), category="meteo/out")
+      call fm%register('shf', 'W', 'surface heat flux', standard_name='', data2d=shf(_2D_W_), category="meteo/out")
+      call fm%register('tausx', 'Pa', 'wind stress (x)', standard_name='', data2d=tausx(_2D_W_), category="meteo/out")
+      call fm%register('tausy', 'Pa', 'wind stress (y)', standard_name='', data2d=tausy(_2D_W_), category="meteo/out")
+      call fm%register('albedo', '', 'albedo', standard_name='', data2d=albedo(_2D_W_), category="meteo/out")
+      call fm%register('zenith_angle', 'degrees', 'solar zenith angle', standard_name='', data2d=zenith_angle(_2D_W_), category="meteo/out")
+      ! fwf_method = 3 - evaporation calculated
+      if (fwf_method .eq. 3 .or. fwf_method .eq. 4) then
+         call fm%register('evap', 'm/s', 'evaporation', standard_name='', data2d=evap(_2D_W_), category="meteo/out")
+      end if
+   end if
+
+!:: airp_old,airp_new
+!:: tausx_old,tausy_old
+!:: d_airp,d_tausx,d_tausy
+!:: tcc_old,tcc_new
+!:: swr_old,shf_old
+!:: d_tcc,d_swr,d_shf
+!:: evap_old,precip_old
+!:: d_evap,d_precip
 
    return
    end subroutine register_meteo_variables
@@ -229,6 +267,45 @@
 !-----------------------------------------------------------------------
 !BOC
    LEVEL2 'register_2d_variables()'
+
+!D(E2DFIELD)
+!DU,DV
+!z(E2DFIELD)
+!zo(E2DFIELD)
+!U(E2DFIELD)
+!V(E2DFIELD)
+!UEx(E2DFIELD)
+!VEx(E2DFIELD)
+!fU(E2DFIELD)
+!fV(E2DFIELD)
+!ru(E2DFIELD)
+!rv(E2DFIELD)
+!Uint(E2DFIELD)
+!Vint(E2DFIELD)
+!Uinto(E2DFIELD)
+!Vinto(E2DFIELD)
+!res_du(E2DFIELD)
+!res_u(E2DFIELD)
+!res_dv(E2DFIELD)
+!res_v(E2DFIELD)
+!kbk
+!ruu(E2DFIELD)
+!rvv(E2DFIELD)
+!kbk
+!SlUx(E2DFIELD)
+!SlVx(E2DFIELD)
+!Slru(E2DFIELD)
+!Slrv(E2DFIELD)
+!zub(E2DFIELD)
+!zvb(E2DFIELD)
+!zub0(E2DFIELD)
+!zvb0(E2DFIELD)
+!An(E2DFIELD)
+!AnX(E2DFIELD)
+!fwf(E2DFIELD)
+!fwf_int(E2DFIELD)
+!EWbdy(jmax),ENbdy(imax),EEbdy(jmax),ESbdy(imax)
+
 
 !  category - 2d
    call fm%register('z', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=10.05_rk, data2d=z(_2D_W_), category="2d")
@@ -267,6 +344,97 @@
 !-----------------------------------------------------------------------
 !BOC
    LEVEL2 'register_3d_variables()'
+
+!:: kmin(I2DFIELD)
+!:: kumin(I2DFIELD)
+!:: kvmin(I2DFIELD)
+!:: kmin_pmz(I2DFIELD)
+!:: kumin_pmz(I2DFIELD)
+!:: kvmin_pmz(I2DFIELD)
+
+!:: uu(I3DFIELD)
+!:: vv(I3DFIELD)
+!:: ww(I3DFIELD)
+#ifdef _MOMENTUM_TERMS_
+!:: tdv_u(I3DFIELD)
+!:: adv_u(I3DFIELD)
+!:: vsd_u(I3DFIELD)
+!:: hsd_u(I3DFIELD)
+!:: cor_u(I3DFIELD)
+!:: epg_u(I3DFIELD)
+!:: ipg_u(I3DFIELD)
+
+!:: tdv_v(I3DFIELD)
+!:: adv_v(I3DFIELD)
+!:: vsd_v(I3DFIELD)
+!:: hsd_v(I3DFIELD)
+!:: cor_v(I3DFIELD)
+!:: epg_v(I3DFIELD)
+!:: ipg_v(I3DFIELD)
+#endif
+#ifdef STRUCTURE_FRICTION
+!:: sf(I3DFIELD)
+#endif
+!:: ho(I3DFIELD)
+!:: hn(I3DFIELD)
+!:: huo(I3DFIELD)
+!:: hun(I3DFIELD)
+!:: hvo(I3DFIELD)
+!:: hvn(I3DFIELD)
+!:: hcc(I3DFIELD)
+!:: uuEx(I3DFIELD)
+!:: vvEx(I3DFIELD)
+!:: num(I3DFIELD)
+!:: nuh(I3DFIELD)
+
+! 3D turbulent fields
+!:: tke(I3DFIELD)
+!:: eps(I3DFIELD)
+!:: SS(I3DFIELD)
+#ifndef NO_BAROCLINIC
+! 3D baroclinic fields
+!:: NN(I3DFIELD)
+!:: S(I3DFIELD)
+!:: T(I3DFIELD)
+!:: rho(I3DFIELD)
+!:: rad(I3DFIELD)
+!:: buoy(I3DFIELD)
+!:: alpha(I3DFIELD)
+!:: beta(I3DFIELD)
+!:: idpdx(I3DFIELD)
+!:: idpdy(I3DFIELD)
+!:: light(I3DFIELD)
+#endif
+
+#ifdef SPM
+! suspended matter
+!:: spm(I3DFIELD)
+!:: spm_ws(I3DFIELD)
+!:: spm_pool(I2DFIELD)
+#endif
+
+! 2D fields in 3D domain
+!:: sseo(I2DFIELD)
+!:: ssen(I2DFIELD)
+!:: Dn(I2DFIELD)
+!:: ssuo(I2DFIELD)
+!:: ssun(I2DFIELD)
+!:: ssvo(I2DFIELD)
+!:: ssvn(I2DFIELD)
+!:: Dun,Dvn
+
+! 3D friction in 3D domain
+!:: rru(I2DFIELD)
+!:: rrv(I2DFIELD)
+!:: taus(I2DFIELD)
+!:: taubx(I2DFIELD)
+!:: tauby(I2DFIELD)
+!:: taub(I2DFIELD)
+
+! light attenuation
+!:: A(I2DFIELD)
+!:: g1(I2DFIELD)
+!:: g2(I2DFIELD)
 
 !  category - 3d
    if (runtype .ge. 2) then
