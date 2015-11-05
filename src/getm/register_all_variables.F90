@@ -1,38 +1,97 @@
-#include "cppdefs.h"
+#include"cppdefs.h"
+!-----------------------------------------------------------------------
+!BOP
+!
+! !MODULE: register_all_variables
+!
+! !INTERFACE:
+   module register_all_variables
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use field_manager
+   IMPLICIT NONE
+!
+!  default: all is private.
+   private
+!
+! !PUBLIC MEMBER FUNCTIONS:
+   public :: do_register_all_variables
+!
+! !PUBLIC DATA MEMBERS:
+   type (type_field_manager), public, target :: fm
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !PRIVATE DATA MEMBERS
+   integer,parameter :: rk = kind(_ONE_)
+!
+!-----------------------------------------------------------------------
+
+   contains
+
 !-----------------------------------------------------------------------
 !BOP
 !
 ! !ROUTINE: register_all_variables() - register GETM variables.
 !
 ! !INTERFACE:
-   subroutine register_all_variables(runtype,fm)
+   subroutine do_register_all_variables(runtype)
 !
 ! !DESCRIPTION:
 !
 ! !USES:
-   use field_manager
-   use domain
-   use meteo
-   use variables_2d
-#ifndef NO_3D
-   use variables_3d
-#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)               :: runtype
 !
-! !INPUT/OUTPUT PARAMETERS:
-!KB   class (type_field_manager), target intent(inout) :: fm
-   type (type_field_manager), target :: fm
-!
-! !OUTPUT PARAMETERS:
-!
 ! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Hans Burchard
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
 !
 ! !LOCAL VARIABLES:
-   integer,parameter :: rk = kind(_ONE_)
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   LEVEL1 'register_all_variables()'
+   call register_domain_variables(runtype)
+   call register_meteo_variables()
+   call register_2d_variables()
+#ifndef NO_3D
+   call register_3d_variables(runtype)
+#endif
+#if 0
+   call register_diagnostic_variables()
+#endif
+
+   return
+   end subroutine do_register_all_variables
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: register_domain_variables() - register GETM variables.
+!
+! !INTERFACE:
+   subroutine register_domain_variables(runtype)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use domain
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)               :: runtype
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !LOCAL VARIABLES:
    character(len=16)         :: xname=''
    character(len=16)         :: xlongname=''
    character(len=16)         :: xunits=''
@@ -45,8 +104,7 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-
-   LEVEL1 'register_all_variables()'
+   LEVEL2 'register_domain_variables()'
 
    select case (grid_type)
       case (1)
@@ -117,6 +175,60 @@
    call fm%register('dxc', 'm', 'dx at T-points', dimensions=(/id_dim_lon,id_dim_lat/), no_default_dimensions=.true., data2d=dxc(_2D_W_), category="metrics", output_level=output_level_debug)
    call fm%register('dyc', 'm', 'dy at T-points', dimensions=(/id_dim_lon,id_dim_lat/), no_default_dimensions=.true., data2d=dyc(_2D_W_), category="metrics", output_level=output_level_debug)
 
+   return
+   end subroutine register_domain_variables
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: register_meteo_variables() - register GETM variables.
+!
+! !INTERFACE:
+   subroutine register_meteo_variables()
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use meteo
+   IMPLICIT NONE
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !LOCAL VARIABLES:
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   LEVEL2 'register_meteo_variables() - none so-far '
+
+
+   return
+   end subroutine register_meteo_variables
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: register_2d_variables() - register GETM variables.
+!
+! !INTERFACE:
+   subroutine register_2d_variables()
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use variables_2d
+   IMPLICIT NONE
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !LOCAL VARIABLES:
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   LEVEL2 'register_2d_variables()'
 
 !  category - 2d
    call fm%register('z', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=10.05_rk, data2d=z(_2D_W_), category="2d")
@@ -124,7 +236,38 @@
    call fm%register('zo', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=10.05_rk, data2d=zo(_2D_W_), category="2d", output_level=output_level_debug)
    call fm%register('D', 'm', 'water depth', standard_name='water depth', fill_value=10.05_rk, data2d=D(_2D_W_), category="2d")
 
+
+   return
+   end subroutine register_2d_variables
+!EOC
+
 #ifndef NO_3D
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: register_3d_variables() - register GETM variables.
+!
+! !INTERFACE:
+   subroutine register_3d_variables(runtype)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use variables_3d
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)               :: runtype
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !LOCAL VARIABLES:
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   LEVEL2 'register_3d_variables()'
+
 !  category - 3d
    if (runtype .ge. 2) then
       call fm%register('hn', 'm', 'layer thickness', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hn(_3D_W_), category='grid')
@@ -142,12 +285,45 @@
       call fm%register('idpdy', 'm', 'baroclinic pressure gradient - y', standard_name='', dimensions=(/id_dim_z/),data3d=idpdy(_3D_W_), category='baroclinic', output_level=output_level_debug)
    end if
 #endif
-#endif
 
    return
-   end subroutine register_all_variables
+   end subroutine register_3d_variables
+!EOC
+#endif
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: register_diagnostic_variables() - register GETM variables.
+!
+! !INTERFACE:
+   subroutine register_diagnostic_variables(runtype)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)               :: runtype
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !LOCAL VARIABLES:
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   LEVEL2 'register_diagnostic_variables() - non so-far'
+
+   return
+   end subroutine register_diagnostic_variables
 !EOC
 
 !-----------------------------------------------------------------------
-! Copyright (C) 2015 - Karsten Bolding and Jorn Bruggeman(BB)          !
+
+   end module register_all_variables
+
+!-----------------------------------------------------------------------
+! Copyright (C) 2015 - Bolding & Bruggeman ApS                         !
 !-----------------------------------------------------------------------
