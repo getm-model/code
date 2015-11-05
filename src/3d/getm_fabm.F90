@@ -16,37 +16,32 @@
    use domain, only: ilg,ihg,jlg,jhg,ill,ihl,jll,jhl
    use domain, only: az,latc,lonc
    use domain,only: H
+!KB   use get_field, only: get_2d_field,get_3d_field
    use variables_3d, only: uu,vv,ww,hun,hvn,ho,hn
    use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
    use variables_3d, only: nuh,T,S,rho,a,g1,g2,taub
    use advection_3d, only: print_adv_settings_3d,do_advection_3d
    use variables_2d, only: D
    use meteo, only: swr,u10,v10,evap,precip,tcc
-   use time, only: yearday,secondsofday
+   use time, only: month,yearday,secondsofday,timestr
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
 ! JORN_FABM
    use gotm_fabm, only: init_gotm_fabm,set_env_gotm_fabm,do_gotm_fabm
    use gotm_fabm, only: gotm_fabm_calc=>fabm_calc, model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz, cc_transport
 
-   use fabm, only: type_horizontal_variable_id
+   use fabm, only: type_horizontal_variable_id, fabm_is_variable_used
    use fabm_types,only: output_instantaneous, output_none
    use fabm_standard_variables, only: standard_variables
 
    IMPLICIT NONE
 
-! Temporary interface (should be read from module):
-   interface
-      subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,f)
-         character(len=*),intent(in)   :: fn,varname
-         integer, intent(in)           :: il,ih,jl,jh
-         logical, intent(in)           :: break_on_missing
-         REALTYPE, intent(out)         :: f(:,:)
-      end subroutine get_2d_field
-   end interface
 !
 ! !PUBLIC DATA MEMBERS:
+   public init_getm_fabm_fields
    public init_getm_fabm, do_getm_fabm, model, output_none
    integer, public :: fabm_init_method=0
+   character(len=PATH_MAX)   :: fabm_init_file
+   integer                   :: fabm_init_format, fabm_field_no
    logical, public :: fabm_calc
 !
 ! !PRIVATE DATA MEMBERS:
@@ -55,12 +50,51 @@
    integer         :: fabm_adv_ver=1
    REALTYPE        :: fabm_AH=-_ONE_
    type (type_horizontal_variable_id) :: id_bottom_depth_below_geoid,id_bottom_depth
+
+   type type_input_variable
+      integer                              :: ncid  = -1
+      integer                              :: varid = -1
+      class (type_input_variable), pointer :: next => null()
+   end type
+
+   type,extends(type_input_variable) :: type_horizontal_input_variable
+      REALTYPE, allocatable, dimension(:,:) :: data
+      type (type_horizontal_variable_id)    :: id
+   end type
+
+   class (type_input_variable), pointer, save :: first_input_variable => null()
+
+   integer         :: old_month=-1
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
 !
 !EOP
 !-----------------------------------------------------------------------
+
+interface
+   subroutine inquire_file(fn,ncid,varids,varnames)
+      character(len=*), intent(in)        :: fn
+      integer, intent(inout)              :: ncid
+      integer, allocatable, intent(inout) :: varids(:)
+      character(len=50), allocatable, intent(out) :: varnames(:)
+   end subroutine inquire_file
+
+!KB - only until a proper input_manager has been made
+   subroutine get_2d_field_ncdf_by_id(ncid,varid,il,ih,jl,jh,n,field)
+      integer, intent(in)                 :: ncid,varid
+      integer, intent(in)                 :: il,ih,jl,jh,n
+      REALTYPE, intent(out)               :: field(:,:)
+   end subroutine get_2d_field_ncdf_by_id
+
+! Temporary interface (should be read from module):
+   subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,f)
+      character(len=*),intent(in)   :: fn,varname
+      integer, intent(in)           :: il,ih,jl,jh
+      logical, intent(in)           :: break_on_missing
+      REALTYPE, intent(out)         :: f(:,:)
+   end subroutine get_2d_field
+end interface
 
    contains
 
@@ -70,7 +104,7 @@
 ! !IROUTINE: init_getm_fabm
 !
 ! !INTERFACE:
-   subroutine init_getm_fabm(nml_file)
+   subroutine init_getm_fabm(nml_file,hotstart)
 !
 ! !DESCRIPTION:
 !  Reads the namelist and makes calls to the init functions of the
@@ -82,6 +116,7 @@
 !
 ! !INPUT PARAMETERS:
    character(len=*), intent(in)   :: nml_file
+   logical,intent(in)             :: hotstart
 !
 ! !REVISION HISTORY:
 !  See the log for the module
@@ -90,11 +125,15 @@
    integer, parameter        :: unit_fabm=63
    integer                   :: rc
    integer                   :: i,j,n
-   character(len=PATH_MAX)   :: fabm_init_file
-   integer                   :: fabm_init_format, fabm_field_no
+   character(len=PATH_MAX)   :: fabm_surface_flux_file=""
+   integer                   :: ncid
+   integer, allocatable      :: varids(:)
+   character(len=50), allocatable :: varnames(:)
+
 
    namelist /getm_fabm_nml/ fabm_init_method, &
                            fabm_init_file,fabm_init_format,fabm_field_no, &
+                           fabm_surface_flux_file, &
                            fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH
 !EOP
 !-------------------------------------------------------------------------
@@ -153,7 +192,63 @@
       if (fabm_adv_hor .eq. J7) stop 'init_getm_fabm: J7 not implemented yet'
       call print_adv_settings_3d(fabm_adv_split,fabm_adv_hor,fabm_adv_ver,fabm_AH)
 
+!     Here we need to open the NetCDF file with FABM forcing data (if it exists)
+!     and loop over all its variables.
+!     For now 2D only, so make sure each NetCDF variable is 2D.
+!     For each variable, register_horizontal_input_variable should be called (see below).
+!     That looks up the FABM variable and also allocates the 2D field that will hold the input data.
+
+      LEVEL2 'FABM input and forcing ...'
+      if (len_trim(fabm_surface_flux_file) .ne. 0) then
+         LEVEL3 'reading surface fluxes from:'
+         LEVEL4 trim(fabm_surface_flux_file)
+         call inquire_file(fabm_surface_flux_file,ncid,varids,varnames)
+         do n=1,size(varids)
+            if ( varids(n) .ne. -1) then
+!              remeber surface_flux model in fabm.yaml
+               LEVEL4  'inquiring: ',trim(varnames(n))//'_flux'
+               call register_horizontal_input_variable(trim(varnames(n))//'_flux',ncid,varids(n))
+            end if
+         end do
+      end if
+
 !     Initialize biogeochemical state variables.
+      if (.not. hotstart) then
+         call init_getm_fabm_fields()
+      end if
+
+   end if
+
+   end subroutine init_getm_fabm
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: init_getm_fabm_fields - initialisation of the fabm fields
+! \label{sec-init-getm-fabm-fields}
+!
+! !INTERFACE:
+   subroutine init_getm_fabm_fields()
+!
+! !DESCRIPTION:
+! Initialisation of the getm-fabm fields as specified by fabm\_init\_method
+! and exchange of the HALO zones
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !LOCAL VARIABLES:
+   integer                   :: i,j,n
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+
       select case (fabm_init_method)
          case(0)
             LEVEL3 'getting initial biogeochemical fields from hotstart file'
@@ -190,7 +285,7 @@
             end if
          case default
             FATAL 'Not valid fabm_init_method specified'
-            stop 'init_getm_fabm()'
+            stop 'init_getm_fabm_fields()'
       end select
 
 !     Update halos with biogeochemical variable values (distribute initial values).
@@ -200,9 +295,57 @@
          call wait_halo(D_TAG)
       end do
 
-   end if
+#ifdef DEBUG
+   write(debug,*) 'Leaving init_getm_fabm_fields()'
+   write(debug,*)
+#endif
+   return
+   end subroutine init_getm_fabm_fields
+!EOC
 
-   end subroutine init_getm_fabm
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: register_horizontal_input_variable
+!
+! !INTERFACE:
+   subroutine register_horizontal_input_variable(name,ncid,varid)
+!
+! !DESCRIPTION:
+!  Registers FABM horizontal fluxes (surface)
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   character(len=*),intent(in) :: name
+   integer,         intent(in) :: ncid,varid
+!
+! !REVISION HISTORY:
+!  See the log for the module
+!
+!  !LOCAL VARIABLES
+      class (type_horizontal_input_variable), pointer :: variable
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+!  Create the input variable and set associated data (FABM id, 
+!  NetCDF id, 2D data field).
+   allocate(variable)
+   variable%id = model%get_horizontal_variable_id(name)
+   if (.not.fabm_is_variable_used(variable%id)) then
+      LEVEL2 'Prescribed input variable '//trim(name)//' is not used by FABM.'
+      stop 'register_horizontal_input_variable: unrecognized variable name'
+   end if
+   variable%ncid  = ncid
+   variable%varid = varid
+   allocate(variable%data(I2DFIELD))
+   variable%data = _ZERO_
+
+!  Prepend to the list of inout variables.
+   variable%next => first_input_variable
+   first_input_variable => variable
+   end subroutine register_horizontal_input_variable
 !EOC
 
 !-----------------------------------------------------------------------
@@ -231,11 +374,36 @@
    REALTYPE        :: bioshade(1:kmax)
    REALTYPE        :: wind_speed,I_0,taub_nonnorm,cloud
    REALTYPE        :: z(1:kmax)
+   class (type_input_variable), pointer :: current_input_variable
+   integer         :: ncid,varid
+   logical         :: some_var_ok=.false.
 !EOP
 !-----------------------------------------------------------------------
 !BOC
 
    call tic(TIM_GETM_FABM)
+
+!  First update all input fields
+   if (month .ne. old_month) then
+      old_month = month
+      current_input_variable => first_input_variable
+      do while (associated(current_input_variable))
+         select type (current_input_variable)
+            class is (type_horizontal_input_variable)
+               ncid  = current_input_variable%ncid
+               varid = current_input_variable%varid
+               if (ncid .gt. 0 .and. varid .gt. 0) then
+                  some_var_ok = .true.
+                  call get_2d_field_ncdf_by_id(ncid,varid,ilg,ihg,jlg,jhg,month, &
+                                               current_input_variable%data(ill:ihl,jll:jhl))
+               end if
+         end select
+         current_input_variable => current_input_variable%next
+      end do
+      if (some_var_ok) then
+         LEVEL3 timestr,': reading FABM surface fluxes ...',month
+      end if
+   end if
 
 !  First we do all the vertical processes
 #ifdef SLICE_MODEL
@@ -296,6 +464,16 @@
                                    z,A(i,j),g1(i,j),g2(i,j),yearday,secondsofday)
             call model%link_horizontal_data(id_bottom_depth_below_geoid,H(i,j))
             call model%link_horizontal_data(id_bottom_depth,D(i,j))
+
+!           Transfer prescribed input variables
+            current_input_variable => first_input_variable
+            do while (associated(current_input_variable))
+               select type (current_input_variable)
+               class is (type_horizontal_input_variable)
+                  call model%link_horizontal_data(current_input_variable%id,current_input_variable%data(i,j))
+               end select
+               current_input_variable => current_input_variable%next
+            end do
 
 !           Update biogeochemical variable values.
             call do_gotm_fabm(kmax)

@@ -80,6 +80,12 @@ if(GETM_USE_FABM)
    set (GETM_FABM 3d/getm_fabm.F90)
 endif(GETM_USE_FABM)
 
+include(CMakeDependentOption)
+CMAKE_DEPENDENT_OPTION(GETM_USE_FLEXIBLE_OUTPUT "Use new output manager" ON "GETM_USE_FABM" OFF)
+if(GETM_USE_FLEXIBLE_OUTPUT)
+  add_definitions(-D_FLEXIBLE_OUTPUT_)
+endif()
+
 option(GETM_USE_STRUCTURE_FRICTION "Include structure friction" OFF)
 if(GETM_USE_STRUCTURE_FRICTION)
    add_definitions(-DSTRUCTURE_FRICTION)
@@ -118,6 +124,10 @@ if(${CMAKE_Fortran_COMPILER_ID} STREQUAL "GNU")
   add_definitions(-DGFORTRAN)
 elseif(${CMAKE_Fortran_COMPILER_ID} STREQUAL "Intel")
   add_definitions(-DIFORT)
+  if(WIN32)
+    set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} /Od")
+    set(CMAKE_Fortran_STACK_SIZE 128000000)
+  endif()
 elseif(${CMAKE_Fortran_COMPILER_ID} STREQUAL "Cray")
   set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -N 1023")
 endif()
@@ -285,6 +295,7 @@ add_library(input OBJECT
             input/get_3d_field.F90
             input/get_meteo_data.F90
             input/get_river_data.F90
+            input/inquire_file.F90
             input/init_2d_bdy.F90
             input/init_3d_bdy.F90
             input/init_meteo_input.F90
@@ -318,6 +329,7 @@ add_library(ncdf OBJECT
             ncdf/ncdf_close.F90
             ncdf/ncdf_common.F90
             ncdf/ncdf_get_field.F90
+            ncdf/get_2d_field_ncdf_by_id.F90
             ncdf/ncdf_in.F90
             ncdf/ncdf_mean.F90
             ncdf/ncdf_meteo.F90
@@ -368,9 +380,13 @@ find_path(GOTM_BASE src/gotm/gotm.F90 DOC "Path to GOTM source directory.")
 if(GOTM_BASE)
   set(GOTM_BUILD_LIBRARIES_ONLY ON)
   set(GOTM_USE_FABM ${GETM_USE_FABM} CACHE BOOL "Include support for Framework for Aquatic Biogeochemical Models (fabm.net)" FORCE)
+  set(GOTM_USE_FLEXIBLE_OUTPUT ${GETM_USE_FLEXIBLE_OUTPUT} CACHE BOOL "Use new output manager" FORCE)
   add_subdirectory(${GOTM_BASE}/src gotm)
   set(GOTM_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/gotm/modules)
-  set(GOTM_LIBRARIES turbulence output_manager util)
+  set(GOTM_LIBRARIES turbulence util)
+  if(GETM_USE_FLEXIBLE_OUTPUT)
+    set(GOTM_LIBRARIES ${GOTM_LIBRARIES} output_manager)
+  endif()
   if(GETM_USE_FABM)
     set(GOTM_LIBRARIES ${GOTM_LIBRARIES} gotm_fabm)
     set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES $<TARGET_PROPERTY:gotm_fabm,INTERFACE_INCLUDE_DIRECTORIES>)

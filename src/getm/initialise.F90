@@ -11,9 +11,11 @@
 !
 ! !USES:
    use field_manager
+#ifdef _FLEXIBLE_OUTPUT_
    use output_manager_core, only:output_manager_host=>host, type_output_manager_host=>type_host
    use time, only: CalDat,JulDay
    use output_manager
+#endif
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -25,12 +27,13 @@
 !  Original author(s): Karsten Bolding & Hans Burchard
 
    type (type_field_manager),target :: fm
-
+#ifdef _FLEXIBLE_OUTPUT_
    type,extends(type_output_manager_host) :: type_getm_host
    contains
       procedure :: julian_day => getm_host_julian_day
       procedure :: calendar_date => getm_host_calendar_date
    end type
+#endif
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -76,6 +79,8 @@
    use suspended_matter, only: init_spm
 #endif
 #ifdef _FABM_
+   use getm_fabm, only: fabm_calc
+   use getm_fabm, only: init_getm_fabm_fields
    use getm_fabm, only: init_getm_fabm
    use rivers, only: init_rivers_fabm
 #endif
@@ -253,7 +258,7 @@
       call init_spm(trim(input_dir) // 'spm.inp',runtype)
 #endif
 #ifdef _FABM_
-      call init_getm_fabm(trim(input_dir) // 'getm_fabm.inp')
+      call init_getm_fabm(trim(input_dir) // 'getm_fabm.inp',hotstart)
       call init_rivers_fabm
 #endif
 #ifdef GETM_BIO
@@ -262,7 +267,10 @@
 #endif
    end if
 #endif
-   call register_all_variables(fm)
+
+   call register_all_variables(runtype,fm)
+
+#ifdef _FLEXIBLE_OUTPUT_
    allocate(type_getm_host::output_manager_host)
    if (myid .ge. 0) then
       write(postfix,'(A,I4.4)') '.',myid
@@ -270,6 +278,7 @@
    else
       call output_manager_init(fm)
    end if
+#endif
 
 !   call init_output(runid,title,start,runtype,dryrun,myid)
    call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)
@@ -307,6 +316,14 @@
       call write_time_string()
       LEVEL3 timestr
       MinN = MinN+1
+#ifndef NO_3D
+#ifdef _FABM_
+      if (fabm_calc) then
+         LEVEL2 'hotstart getm_fabm:'
+         call init_getm_fabm_fields()
+      end if
+#endif
+#endif
    end if
 
    call postinit_2d(runtype,timestep,hotstart)
@@ -331,9 +348,11 @@
 #endif
    end if
 
-   if (save_initial .and. .not. dryrun) then
+   if (.not. dryrun) then
       call do_output(runtype,MinN-1,timestep)
-      call output_manager_save(julianday,secondsofday,MinN)
+#ifdef _FLEXIBLE_OUTPUT_
+      if (save_initial) call output_manager_save(julianday,secondsofday,MinN)
+#endif
    end if
 
 #ifdef DEBUG
@@ -346,6 +365,7 @@
 
 !-----------------------------------------------------------------------
 
+#ifdef _FLEXIBLE_OUTPUT_
    subroutine getm_host_julian_day(self,yyyy,mm,dd,julian)
       class (type_getm_host), intent(in) :: self
       integer, intent(in)  :: yyyy,mm,dd
@@ -359,6 +379,7 @@
       integer, intent(out) :: yyyy,mm,dd
       call CalDat(julian,yyyy,mm,dd)
    end subroutine
+#endif
 
    end module initialise
 

@@ -18,6 +18,7 @@
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
    use grid_interpol, only: to_rotated_lat_lon
    use meteo, only: meteo_file,on_grid,calc_met,met_method,hum_method
+   use meteo, only: RELATIVE_HUM,WET_BULB,DEW_POINT,SPECIFIC_HUM
    use meteo, only: airp,u10,v10,t2,hum,tcc
    use meteo, only: fwf_method,evap,precip
    use meteo, only: tausx,tausy,swr,shf
@@ -71,10 +72,6 @@
    character(len=10)         :: name_tcc="tcc"
    character(len=10)         :: name_evap="evap"
    character(len=10)         :: name_precip="precip"
-   integer, parameter        :: SPECIFIC_HUM=1
-   integer, parameter        :: RELATIVE_HUM=2
-   integer, parameter        :: DEW_POINT=3
-   integer, parameter        :: WET_BULB=4
 
    character(len=10)         :: name_tausx="tausx"
    character(len=10)         :: name_tausy="tausy"
@@ -525,14 +522,17 @@
 !           first we check for CF compatible grid_mapping_name
             err = nf90_inq_varid(ncid,'rotated_pole',id)
             if (err .eq. NF90_NOERR) then
+               LEVEL4 'Reading CF-compliant rotated grid specification'
                err = nf90_get_att(ncid,id, &
                                   'grid_north_pole_latitude',southpole(1))
                if (err .ne. NF90_NOERR) go to 10
                err = nf90_get_att(ncid,id, &
                                   'grid_north_pole_longitude',southpole(2))
-!STDERR 'Inside rotated_pole'
-!STDERR 'grid_north_pole_latitude ',southpole(1)
-!STDERR 'grid_north_pole_longitude ',southpole(2)
+#if 0
+STDERR 'Inside rotated_pole'
+STDERR 'grid_north_pole_latitude ',southpole(1)
+STDERR 'grid_north_pole_longitude ',southpole(2)
+#endif
                if (err .ne. NF90_NOERR) go to 10
                err = nf90_get_att(ncid,id, &
                                   'north_pole_grid_longitude',southpole(3))
@@ -540,15 +540,18 @@
                   southpole(3) = _ZERO_
                end if
 !              Northpole ---> Southpole transformation
+               LEVEL4 'Transforming North Pole to South Pole specification'
                if (southpole(2) .ge. 0) then
                   southpole(2) = southpole(2) - 180.
                else
                   southpole(2) = southpole(2) + 180.
                end if 
                southpole(1) = -southpole(1)
-!STDERR 'After transformation:'
-!STDERR 'grid_north_pole_latitude ',southpole(1)
-!STDERR 'grid_north_pole_longitude ',southpole(2)
+#if 0
+STDERR 'After transformation:'
+STDERR 'grid_north_pole_latitude ',southpole(1)
+STDERR 'grid_north_pole_longitude ',southpole(2)
+#endif
                southpole(3) = _ZERO_
                have_southpole = .true.
                rotated_meteo_grid = .true.
