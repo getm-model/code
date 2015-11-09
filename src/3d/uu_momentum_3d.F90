@@ -206,7 +206,7 @@
                        +dry_u(i,j)*_HALF_*(tausx(i,j)+tausx(i+1,j))*rho_0i
 !     Eddy viscosity
                do k=kumin(i,j),kmax-1
-                  dif(k)=0.5*(num(i,j,k)+num(i+1,j,k)) + avmmol
+                  dif(k)=_HALF_*(num(i,j,k)+num(i+1,j,k)) + avmmol
                end do
 
 !     Auxilury terms, old and new time level,
