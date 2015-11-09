@@ -218,8 +218,8 @@
 !     Auxiliury terms, old and new time level,
 !     cnpar: Crank-Nicholson parameter
                do k=kvmin(i,j),kmax-1
-                  auxo(k)=2*(1-cnpar)*dt*dif(k)/(hvo(i,j,k+1)+hvo(i,j,k))
-                  auxn(k)=2*   cnpar *dt*dif(k)/(hvn(i,j,k+1)+hvn(i,j,k))
+                  auxo(k)=_TWO_*(1-cnpar)*dt*dif(k)/(hvo(i,j,k+1)+hvo(i,j,k))
+                  auxn(k)=_TWO_*   cnpar *dt*dif(k)/(hvn(i,j,k+1)+hvn(i,j,k))
                end do
 
 !     Barotropic pressure gradient
