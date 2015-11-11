@@ -55,7 +55,7 @@
    use variables_3d, only: dt,cnpar,kvmin,uu,vv,huo,hvo,hvn,vvEx,ww
    use variables_3d, only: num,nuh,sseo,Dvn,rrv
 #ifdef _MOMENTUM_TERMS_
-   use variables_3d, only: tdv_v,cor_v,ipg_v,epg_v,vsd_v,hsd_v
+   use variables_3d, only: tdv_v,cor_v,ipg_v,epg_v,vsd_v,hsd_v,adv_v
 #endif
 #ifdef STRUCTURE_FRICTION
    use variables_3d, only: sf
@@ -205,8 +205,8 @@
 !     Auxiliury terms, old and new time level,
 !     cnpar: Crank-Nicholson parameter
                do k=kvmin(i,j),kmax-1
-                  auxo(k)=2*(1-cnpar)*dt*dif(k)/(hvo(i,j,k+1)+hvo(i,j,k))
-                  auxn(k)=2*   cnpar *dt*dif(k)/(hvn(i,j,k+1)+hvn(i,j,k))
+                  auxo(k)=_TWO_*(1-cnpar)*dt*dif(k)/(hvo(i,j,k+1)+hvo(i,j,k))
+                  auxn(k)=_TWO_*   cnpar *dt*dif(k)/(hvn(i,j,k+1)+hvn(i,j,k))
                end do
 
 !     Barotropic pressure gradient
@@ -271,6 +271,7 @@
                   tdv_v(i,j,k)=vv(i,j,k)
                   epg_v(i,j,k)=_HALF_*(hvo(i,j,k)+hvn(i,j,k))*g*zy     &
                               -hvn(i,j,k)*Diff/dt
+                  adv_v(i,j,k)=adv_v(i,j,k)*dry_v(i,j)
                   hsd_v(i,j,k)=hsd_v(i,j,k)*dry_v(i,j)
                   if (k .eq. kmax) then
                      vsd_v(i,j,k)=-dt*dry_v(i,j)*_HALF_*               &
