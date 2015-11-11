@@ -121,7 +121,7 @@
 
 !
 ! !INTERFACE:
-   subroutine init_domain(input_dir)
+   subroutine init_domain(input_dir,runtype)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -149,6 +149,7 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    character(len=*)                    :: input_dir
+   integer, intent(in)                 :: runtype
 !
 ! !REVISION HISTORY:
 !
@@ -246,6 +247,7 @@
 
    if (rigid_lid) LEVEL2 'using rigid lid'
 
+   if ( runtype .ge. 2 ) then
    select case (vert_cord)
       case(_SIGMA_COORDS_)
          LEVEL2 'Using sigma coordinates'
@@ -263,6 +265,9 @@
          call getm_error("init_domain()", &
                          "A non valid vertical coordinate system has been chosen");
    end select
+   allocate(ga(0:kmax),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (ga)'
+   end if
 
 !  Calculation masks
 !  Do we want to set a minimum depth for certain regions
