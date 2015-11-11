@@ -200,14 +200,13 @@ end interface
 
       LEVEL2 'FABM input and forcing ...'
       if (len_trim(fabm_surface_flux_file) .ne. 0) then
-         LEVEL3 'reading surface fluxes from:'
-         LEVEL4 trim(fabm_surface_flux_file)
          call inquire_file(fabm_surface_flux_file,ncid,varids,varnames)
          do n=1,size(varids)
             if ( varids(n) .ne. -1) then
-               LEVEL4 'inquiring: ',trim(varnames(n))//'_flux'
-               call register_horizontal_input_variable(trim(varnames(n))//'_flux',ncid,varids(n))
-               LEVEL4 'remember to add surface_flux model to fabm.yaml'
+               call register_horizontal_input_variable(trim(varnames(n))//'_flux',ncid,varids(n),rc)
+               if (rc .eq. 0) then
+                  LEVEL4 'remember to add external_surface_flux model to fabm.yaml'
+               end if
             end if
          end do
       else
@@ -311,7 +310,7 @@ end interface
 ! !IROUTINE: register_horizontal_input_variable
 !
 ! !INTERFACE:
-   subroutine register_horizontal_input_variable(name,ncid,varid)
+   subroutine register_horizontal_input_variable(name,ncid,varid,rc)
 !
 ! !DESCRIPTION:
 !  Registers FABM horizontal fluxes (surface)
@@ -322,6 +321,9 @@ end interface
 ! !INPUT PARAMETERS:
    character(len=*),intent(in) :: name
    integer,         intent(in) :: ncid,varid
+!
+! !OUTPUT PARAMETERS:
+   integer,         intent(out) :: rc
 !
 ! !REVISION HISTORY:
 !  See the log for the module
@@ -336,17 +338,23 @@ end interface
    allocate(variable)
    variable%id = model%get_horizontal_variable_id(name)
    if (.not.fabm_is_variable_used(variable%id)) then
-      LEVEL2 'Prescribed input variable '//trim(name)//' is not used by FABM.'
-      stop 'register_horizontal_input_variable: unrecognized variable name'
-   end if
-   variable%ncid  = ncid
-   variable%varid = varid
-   allocate(variable%data(I2DFIELD))
-   variable%data = _ZERO_
+      LEVEL4 'register: no - ',trim(name)//' is not used by this FABM configuration.'
+!      stop 'register_horizontal_input_variable: unrecognized variable name'
+      deallocate(variable)
+      rc = 1
+   else
+      LEVEL4 'register: yes - ',trim(name)
+      variable%ncid  = ncid
+      variable%varid = varid
+      allocate(variable%data(I2DFIELD))
+      variable%data = _ZERO_
 
-!  Prepend to the list of inout variables.
-   variable%next => first_input_variable
-   first_input_variable => variable
+      ! Prepend to the list of inout variables.
+      variable%next => first_input_variable
+      first_input_variable => variable
+      rc = 0
+   end if
+   return
    end subroutine register_horizontal_input_variable
 !EOC
 
