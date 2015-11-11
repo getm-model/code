@@ -9,11 +9,11 @@ LIB	= $(LIBDIR)/libgetm${buildtype}.a
 SRC	= main.F90 initialise.F90 integration.F90 cleanup.F90
 
 MOD   = \
+${LIB}(register_all_variables.o) \
 ${LIB}(integration.o)		\
 ${LIB}(initialise.o)
 
 OBJ   = \
-${LIB}(register_all_variables.o) \
 ${LIB}(set_sea_surface_state.o) \
 ${LIB}(cleanup.o)
 
@@ -28,7 +28,7 @@ doc: $(SRC)
 	touch doc
 
 clean:
-	$(RM) ${LIB} $(MODDIR)/{integration,initialise}.{m.mod}
+	$(RM) ${LIB} $(MODDIR)/{register_all_variables,integration,initialise}.{m.mod}
 
 realclean: clean
 	$(RM) *.o doc
