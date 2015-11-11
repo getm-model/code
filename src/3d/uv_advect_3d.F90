@@ -30,7 +30,6 @@
    use variables_3d, only: do_numerical_analyses_3d
    use variables_3d, only: numdis_3d,numdis_3d_old,numdis_int
 #ifdef _MOMENTUM_TERMS_
-   use domain, only: dry_u,dry_v
    use variables_3d, only: adv_u,adv_v
 #endif
    use getm_timers, only: tic,toc,TIM_UVADV3D,TIM_UVADV3DH
@@ -331,21 +330,6 @@
       end if
 #endif
 
-#ifdef _MOMENTUM_TERMS_
-      do k=1,kmax
-!$OMP DO SCHEDULE(RUNTIME)
-#ifndef SLICE_MODEL
-         do j=jmin,jmax
-#endif
-            do i=imin,imax
-               adv_u(i,j,k) = dry_u(i,j) * uuEx(i,j,k)
-            end do
-#ifndef SLICE_MODEL
-         end do
-#endif
-!$OMP END DO NOWAIT
-      end do
-#endif
 
 !     Here begins dimensional split advection for v-velocity
 
@@ -592,20 +576,12 @@
       end if
 #endif
 
+
 #ifdef _MOMENTUM_TERMS_
-      do k=1,kmax
-!$OMP DO SCHEDULE(RUNTIME)
-#ifndef SLICE_MODEL
-         do j=jmin,jmax
-#endif
-            do i=imin,imax
-               adv_v(i,j,k) = dry_v(i,j) * vvEx(i,j,k)
-            end do
-#ifndef SLICE_MODEL
-         end do
-#endif
-!$OMP END DO NOWAIT
-      end do
+!$OMP WORKSHARE
+      adv_u = uuEx
+      adv_v = vvEx
+!$OMP END WORKSHARE
 #endif
 
 !$OMP END PARALLEL
