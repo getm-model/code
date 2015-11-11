@@ -422,6 +422,7 @@ find_path(GOTM_BASE src/gotm/gotm.F90 DOC "Path to GOTM source directory.")
 if(GOTM_BASE)
   set(GOTM_BUILD_LIBRARIES_ONLY ON)
   set(GOTM_USE_FABM ${GETM_USE_FABM} CACHE BOOL "Include support for Framework for Aquatic Biogeochemical Models (fabm.net)" FORCE)
+  set(GOTM_USE_FLEXIBLE_OUTPUT ${GETM_USE_FLEXIBLE_OUTPUT} CACHE BOOL "Use new output manager" FORCE)
   add_subdirectory(${GOTM_BASE}/src gotm)
   set(GOTM_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/gotm/modules)
   set(GOTM_LIBRARIES turbulence util)
@@ -467,7 +468,7 @@ add_executable(getm_exe
                $<TARGET_OBJECTS:ncdf>
                $<TARGET_OBJECTS:futils>
               )
-set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm${exe_id}")
+set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm")
 set_property(TARGET getm_exe APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 
 target_link_libraries(getm_exe ${GOTM_LIBRARIES} ${NetCDF_LIBRARIES})
