@@ -473,7 +473,7 @@
       call toc(TIM_INTEGR2D)
    end if
    if (have_boundaries) call update_2d_bdy(loop,bdy2d_ramp)
-   call sealevel()
+   call sealevel(loop)
    call depth_update()
 
    if(residual .gt. 0) then

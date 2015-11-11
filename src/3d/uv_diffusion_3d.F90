@@ -19,7 +19,6 @@
    use m2d, only: Am
    use variables_3d, only: uu,vv,uuEx,vvEx,hn,hun,hvn
 #ifdef _MOMENTUM_TERMS_
-   use domain, only: dry_u,dry_v
    use variables_3d, only: hsd_u,hsd_v
 #endif
    use getm_timers, only: tic, toc, TIM_UVDIFF3D
@@ -52,24 +51,6 @@
 #endif
                          )
       end do
-
-#ifdef _MOMENTUM_TERMS_
-!$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP          PRIVATE(i,j,k)
-
-      do k=1,kmax
-!$OMP DO SCHEDULE(RUNTIME)
-         do j=jmin,jmax
-            do i=imin,imax
-               hsd_u(i,j,k) = dry_u(i,j) * hsd_u(i,j,k)
-               hsd_v(i,j,k) = dry_v(i,j) * hsd_v(i,j,k)
-            end do
-         end do
-!$OMP END DO NOWAIT
-      end do
-
-!$OMP END PARALLEL
-#endif
 
    end if
 

@@ -5,7 +5,7 @@
 ! !ROUTINE: sealevel - using the cont. eq. to get the sealevel.
 !
 ! !INTERFACE:
-   subroutine sealevel
+   subroutine sealevel(loop)
 !
 ! !DESCRIPTION:
 !
@@ -22,7 +22,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,az,H
    use domain, only : arcd1,dxv,dyu
-   use m2d, only: dtm
+   use m2d, only: dtm,sealevel_check
    use variables_2d, only: z,zo,U,V,fwf
    use getm_timers, only: tic, toc, TIM_SEALEVEL, TIM_SEALEVELH
    use halo_zones, only : update_2d_halo,wait_halo,z_TAG
@@ -33,6 +33,9 @@
 #endif
 !$ use omp_lib
    IMPLICIT NONE
+
+! !INPUT PARAMETERS:
+   integer, intent(in)                 :: loop
 !
 ! !REVISION HISTORY:
 !  Original author(s): Hans Burchard & Karsten Bolding
@@ -133,7 +136,9 @@
    end do                    !end do while(break_flag>0)
 #endif
 
-   call sealevel_nan_check()
+   if (sealevel_check.ne.0 .and. mod(loop,abs(sealevel_check)).eq.0) then
+      call sealevel_nan_check()
+   end if
 
 #ifdef SLICE_MODEL
       do i=imin,imax
@@ -213,7 +218,7 @@
 !
 
 ! Fast return if we should not sweep:
-  if (sealevel_check.eq.0 .or. have_warned.gt.0) then
+  if ( have_warned .gt. 0 ) then
 #ifdef DEBUG
      write(debug,*) 'Leaving sealevel_nan_check() early'
      write(debug,*)
@@ -259,7 +264,7 @@
    end if
 !
 ! Main bulk of work:
-   if (can_check .gt. 0 .and. mod(Ncall,abs(sealevel_check)).eq.0) then
+   if (can_check .gt. 0 ) then
 ! Count number of NaNs encountered
       num_nan = 0
 !$OMP  PARALLEL DO DEFAULT(SHARED) PRIVATE(i,j,idum)
