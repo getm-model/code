@@ -205,11 +205,13 @@ end interface
          call inquire_file(fabm_surface_flux_file,ncid,varids,varnames)
          do n=1,size(varids)
             if ( varids(n) .ne. -1) then
-!              remeber surface_flux model in fabm.yaml
-               LEVEL4  'inquiring: ',trim(varnames(n))//'_flux'
+               LEVEL4 'inquiring: ',trim(varnames(n))//'_flux'
                call register_horizontal_input_variable(trim(varnames(n))//'_flux',ncid,varids(n))
+               LEVEL4 'remember to add surface_flux model to fabm.yaml'
             end if
          end do
+      else
+         LEVEL3 'no file with FABM surface fluxes specified in getm_fabm.inp'
       end if
 
 !     Initialize biogeochemical state variables.
