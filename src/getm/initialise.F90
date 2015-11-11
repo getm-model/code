@@ -11,6 +11,7 @@
 !
 ! !USES:
    use field_manager
+   use register_all_variables, only: do_register_all_variables, fm
 #ifdef _FLEXIBLE_OUTPUT_
    use output_manager_core, only:output_manager_host=>host, type_output_manager_host=>type_host
    use time, only: CalDat,JulDay
@@ -26,7 +27,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 
-   type (type_field_manager),target :: fm
 #ifdef _FLEXIBLE_OUTPUT_
    type,extends(type_output_manager_host) :: type_getm_host
    contains
@@ -232,7 +232,7 @@
       LEVEL2 'using "',start,'" as time reference'
    end if
 
-   call init_domain(input_dir)
+   call init_domain(input_dir,runtype)
 
    call init_meteo(hotstart)
 
@@ -268,7 +268,7 @@
    end if
 #endif
 
-   call register_all_variables(fm)
+   call do_register_all_variables(runtype)
 
 #ifdef _FLEXIBLE_OUTPUT_
    allocate(type_getm_host::output_manager_host)
@@ -279,6 +279,8 @@
       call output_manager_init(fm)
    end if
 #endif
+
+!   call init_output(runid,title,start,runtype,dryrun,myid)
    call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)
 
    close(NAMLST)
@@ -358,7 +360,7 @@
    if (.not. dryrun) then
       call do_output(runtype,MinN-1,timestep)
 #ifdef _FLEXIBLE_OUTPUT_
-      call output_manager_save(julianday,secondsofday,MinN)
+      if (save_initial) call output_manager_save(julianday,secondsofday,MinN)
 #endif
    end if
 
