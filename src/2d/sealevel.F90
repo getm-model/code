@@ -23,6 +23,7 @@
    use domain, only: imin,imax,jmin,jmax,az,H
    use domain, only : arcd1,dxv,dyu
    use domain, only: have_boundaries
+   use m2d, only: sealevel_check
    use variables_2d, only: dtm,z,zo,U,V,fwf
    use bdy_2d, only: do_bdy_2d
    use getm_timers, only: tic, toc, TIM_SEALEVEL, TIM_SEALEVELH
@@ -34,7 +35,7 @@
 #endif
 !$ use omp_lib
    IMPLICIT NONE
-!
+
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: loop
 !
@@ -133,7 +134,9 @@
 #endif
 
    if (have_boundaries) call do_bdy_2d(loop,z_TAG)
-   call sealevel_nan_check()
+   if (sealevel_check.ne.0 .and. mod(loop,abs(sealevel_check)).eq.0) then
+      call sealevel_nan_check()
+   end if
 
 #ifdef SLICE_MODEL
       do i=imin,imax
@@ -213,7 +216,7 @@
 !
 
 ! Fast return if we should not sweep:
-  if (sealevel_check.eq.0 .or. have_warned.gt.0) then
+  if ( have_warned .gt. 0 ) then
 #ifdef DEBUG
      write(debug,*) 'Leaving sealevel_nan_check() early'
      write(debug,*)
@@ -259,7 +262,7 @@
    end if
 !
 ! Main bulk of work:
-   if (can_check .gt. 0 .and. mod(Ncall,abs(sealevel_check)).eq.0) then
+   if (can_check .gt. 0 ) then
 ! Count number of NaNs encountered
       num_nan = 0
 !$OMP  PARALLEL DO DEFAULT(SHARED) PRIVATE(i,j,idum)
