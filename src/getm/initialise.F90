@@ -232,7 +232,7 @@
       LEVEL2 'using "',start,'" as time reference'
    end if
 
-   call init_domain(input_dir)
+   call init_domain(input_dir,runtype)
 
    call init_meteo(hotstart)
 

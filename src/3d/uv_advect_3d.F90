@@ -33,7 +33,6 @@
    use variables_3d, only: do_numerical_analyses
    use variables_3d, only: numdis3d,numdis2d
 #ifdef _MOMENTUM_TERMS_
-   use domain, only: dry_u,dry_v
    use variables_3d, only: adv_u,adv_v
 #endif
    use getm_timers, only: tic,toc,TIM_UVADV3D,TIM_UVADV3DH
@@ -210,18 +209,6 @@
                            vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver,_ZERO_,U_TAG, &
                            advres=uuEx)
 !$OMP END SINGLE
-
-#ifdef _MOMENTUM_TERMS_
-      do k=1,kmax
-!$OMP DO SCHEDULE(RUNTIME)
-         do j=jmin,jmax
-            do i=imin,imax
-               adv_u(i,j,k) = dry_u(i,j) * uuEx(i,j,k)
-            end do
-         end do
-!$OMP END DO NOWAIT
-      end do
-#endif
 
       if (do_numerical_analyses) then
 
@@ -401,18 +388,6 @@
                            advres=vvEx)
 !$OMP END SINGLE
 
-#ifdef _MOMENTUM_TERMS_
-      do k=1,kmax
-!$OMP DO SCHEDULE(RUNTIME)
-         do j=jmin,jmax
-            do i=imin,imax
-               adv_v(i,j,k) = dry_v(i,j) * vvEx(i,j,k)
-            end do
-         end do
-!$OMP END DO NOWAIT
-      end do
-#endif
-
       if (do_numerical_analyses) then
 
 !$OMP SINGLE
@@ -466,6 +441,13 @@
          end do
 
       end if
+
+#ifdef _MOMENTUM_TERMS_
+!$OMP WORKSHARE
+      adv_u = uuEx
+      adv_v = vvEx
+!$OMP END WORKSHARE
+#endif
 
 !$OMP END PARALLEL
 
