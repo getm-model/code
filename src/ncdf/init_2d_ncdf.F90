@@ -313,7 +313,7 @@
    end if
 
    if (save_taub) then
-      fv = stress_missing; mv = stress_missing; vr(1) = -1; vr(2) = 1.
+      fv = stress_missing; mv = stress_missing; vr(1) = 0.; vr(2) = 20.
       err = nf90_def_var(ncid,'taubmax',NCDF_FLOAT_PRECISION,f3_dims,taubmax_id)
       if (err .NE. NF90_NOERR) go to 10
       call set_attributes(ncid,taubmax_id,  &

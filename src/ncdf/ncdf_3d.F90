@@ -68,6 +68,7 @@
    integer                             :: vvStokes_id=-1
    integer                             :: fluxuuStokes_id=-1
    integer                             :: fluxvvStokes_id=-1
+   integer                             :: taubmax_3d_id=-1
 #ifdef SPM
    integer                             :: spmpool_id,spm_id
 #endif
