@@ -21,7 +21,7 @@
    use domain,       only: dxv,dyu,arcd1
    use variables_3d, only: sseo,ssen,Dn,Dveln,Dun,Dvn,Uadv,Vadv
    use variables_3d, only: dt,kmin,ho,hn,hvel,uu,hun,vv,hvn,ww,hcc,SS
-   use variables_3d, only: taubx,tauby
+   use variables_3d, only: taubx,tauby,taubmax_3d
    use variables_3d, only: zcn
 #ifdef _MOMENTUM_TERMS_
    use variables_3d, only: tdv_u,adv_u,vsd_u,hsd_u,cor_u,epg_u,ipg_u
@@ -170,6 +170,14 @@
       if (err .NE. NF90_NOERR) go to 10
 
    endif
+
+   if (taubmax_3d_id .ne. -1) then
+      call cnv_2d(imin,jmin,imax,jmax,az,rho_0*taubmax_3d,tau_missing, &
+                  imin,jmin,imax,jmax,ws2d)
+      err = nf90_put_var(ncid,taubmax_3d_id,ws2d(_2D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+
 
    start(1) = 1
    start(2) = 1

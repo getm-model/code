@@ -185,6 +185,18 @@
       vr(2) =  10.
       call set_attributes(ncid,tauby_id,long_name='bottom stress (y)',units='Pa', &
            FillValue=fv,missing_value=mv,valid_range=vr)
+
+      !  maximum bottom stress
+      err = nf90_def_var(ncid,'taubmax_3d',NCDF_FLOAT_PRECISION,f3_dims,taubmax_3d_id)
+      if (err .NE. NF90_NOERR) go to 10
+      fv = tau_missing
+      mv = tau_missing
+      vr(1) =  0.
+      vr(2) = 20.
+      call set_attributes(ncid,taubmax_3d_id,  &
+                          long_name='max. bottom stress',units='N/m2', &
+                          FillValue=fv,missing_value=mv,valid_range=vr)
+
    endif
 
    if (save_h) then
@@ -605,7 +617,6 @@
       end if
 
    end if
-
 
 #ifdef SPM
    if (spm_save) then
