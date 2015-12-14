@@ -149,7 +149,7 @@
           FillValue=fv,missing_value=mv,valid_range=vr)
 
 #ifndef NO_BAROCLINIC
-   if (calc_salt) then
+   if (update_salt) then
       fv = salt_missing
       mv = salt_missing
       vr(1) =  0.
@@ -161,7 +161,7 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
    end if
 
-   if (calc_temp) then
+   if (update_temp) then
       fv = temp_missing
       mv = temp_missing
       vr(1) = -2.

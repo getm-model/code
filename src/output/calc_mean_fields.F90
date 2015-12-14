@@ -94,12 +94,12 @@
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (hmean)'
 #ifndef NO_BAROCLINIC
-      if (calc_temp) then
+      if (update_temp) then
          allocate(Tmean(I3DFIELD),stat=rc)
          if (rc /= 0) &
              stop 'calc_mean_fields.F90: Error allocating memory (Tmean)'
       end if
-      if (calc_salt) then
+      if (update_salt) then
          allocate(Smean(I3DFIELD),stat=rc)
          if (rc /= 0) &
              stop 'calc_mean_fields.F90: Error allocating memory (Smean)'
@@ -210,8 +210,8 @@
          uumean=_ZERO_; vvmean=_ZERO_; wmean=_ZERO_
          humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
 #ifndef NO_BAROCLINIC
-         if (calc_temp) Tmean=_ZERO_
-         if (calc_salt) Smean=_ZERO_
+         if (update_temp) Tmean=_ZERO_
+         if (update_salt) Smean=_ZERO_
          if (save_rho) rhomean=_ZERO_
 #endif
          if (do_numerical_analyses_3d) then
@@ -278,8 +278,8 @@
       hmean = hmean + hn
 
 #ifndef NO_BAROCLINIC
-      if (calc_temp) Tmean = Tmean + T*hn
-      if (calc_salt) Smean = Smean + S*hn
+      if (update_temp) Tmean = Tmean + T*hn
+      if (update_salt) Smean = Smean + S*hn
       if (save_rho) rhomean = rhomean + rho*hn
 #endif
       if (do_numerical_analyses_3d) then
@@ -343,8 +343,8 @@
          hmean = hmean / step
 
 #ifndef NO_BAROCLINIC
-         if (calc_temp) Tmean = Tmean / step
-         if (calc_salt) Smean = Smean / step
+         if (update_temp) Tmean = Tmean / step
+         if (update_salt) Smean = Smean / step
          if (save_rho) rhomean = rhomean / step
 #endif
          if (do_numerical_analyses_3d) then
@@ -398,12 +398,12 @@
       if (step .ge. 1) then
 
 #ifndef NO_BAROCLINIC
-         if (calc_temp) then
+         if (update_temp) then
             forall (i=imin:imax,j=jmin:jmax,az(i,j).ne.0)
                Tmean(i,j,1:) = Tmean(i,j,1:) / hmean(i,j,1:)
             end forall
          end if
-         if (calc_salt) then
+         if (update_salt) then
             forall (i=imin:imax,j=jmin:jmax,az(i,j).ne.0)
                Smean(i,j,1:) = Smean(i,j,1:) / hmean(i,j,1:)
             end forall
