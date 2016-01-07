@@ -31,15 +31,19 @@
    public                              :: init_getm_ice,do_getm_ice
 !
 ! !PUBLIC DATA MEMBERS:
+   integer, public                     :: ice_model=0
    integer, public                     :: ice_method=0
 !  Freezing point ice 'model'
-   REALTYPE, public, dimension(:,:), allocatable, target  :: ice_mask
+   REALTYPE, public, dimension(:,:), pointer              :: ice_mask=>null()
 !  Winton ice model
    REALTYPE, public, dimension(:,:), allocatable, target  :: ice_hs,ice_hi
    REALTYPE, public, dimension(:,:), allocatable, target  :: ice_ts
    REALTYPE, public, dimension(:,:), allocatable, target  :: ice_T1,ice_T2
    REALTYPE, public, dimension(:,:), allocatable, target  :: ice_tmelt
    REALTYPE, public, dimension(:,:), allocatable, target  :: ice_bmelt
+!
+! !PUBLIC DATA MEMBERS:
+   REALTYPE                            :: hi_thresh=0.2d0
 !
 ! !DEFINED PARAMETERS:
 !
@@ -76,7 +80,8 @@
    integer                   :: i,j,rc
    REALTYPE :: ks, alb_sno, alb_ice, pen_ice, opt_dep_ice, opt_ext_ice, &
                opt_ext_snow, t_range_melt, h_lo_lim, kmelt, t_range_dhdt
-   namelist /ice/ ice_method, ks, alb_sno, alb_ice, pen_ice, opt_dep_ice, &
+   namelist /ice/ ice_model,ice_method,hi_thresh, &
+                  ks, alb_sno, alb_ice, pen_ice, opt_dep_ice, &
                   opt_ext_ice, opt_ext_snow, t_range_melt, h_lo_lim, kmelt, &
                   t_range_dhdt
 !EOP
@@ -100,22 +105,23 @@
 
    read(NAMLST,ice)
 
+   select case (ice_model)
+      case (0)
+         LEVEL2 'No ice model included'
+         ice_method = 0
+      case (1)
+         !LEVEL2 'Thermodynamic ice model included'
+      case (2)
+         LEVEL2 'Read in ice mask/thickness from file'
+         ice_method = 0
+   end select
+
    select case (ice_method)
       case (0) ! No ice model
          LEVEL2 'No ice model included'
+         ice_model = 0
       case (1) ! Salinity dependent freezing point
          LEVEL2 'Freezing point ice model'
-         allocate(ice_mask(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_mask)'
-         do j=jmin,jmax
-            do i=imin,imax
-               if (az(i,j) .ge. 1) then
-                  ice_mask(i,j) = _ZERO_
-               else
-                  ice_mask(i,j) = -9999.
-               end if
-            end do
-         end do
       case (2) ! Winton
          LEVEL2 'Winton ice model'
          if (.not. calc_met) then
@@ -131,8 +137,6 @@
 !        Allocates memory for the public data members
          allocate(ice_hs(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hs)'
-         allocate(ice_hi(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hi)'
          allocate(ice_T1(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_T1)'
          allocate(ice_T2(E2DFIELD),stat=rc)
@@ -148,7 +152,6 @@
             do i=imin,imax
                if (az(i,j) .ge. 1) then
                   ice_hs(i,j) = _ZERO_
-                  ice_hi(i,j) = _ZERO_
                   ice_T1(i,j) = _ZERO_
                   ice_T2(i,j) = _ZERO_
                   ice_tmelt(i,j) = _ZERO_
@@ -167,6 +170,13 @@
          end do
       case default
    end select
+
+   if (ice_model .ne. 0) then
+      allocate(ice_hi(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hi)'
+      ice_hi = _ZERO_
+      ice_mask => ice_hi
+   end if
 
    return
    end subroutine init_getm_ice
@@ -200,13 +210,16 @@
 #endif
    logical                   :: damp_stress=.false.
    REALTYPE                  :: taucoef=5.0
-   REALTYPE                  :: tauh=0.5
+   REALTYPE                  :: tauh
    REALTYPE                  :: taudamp_avg
    REALTYPE,dimension(I2DFIELD) :: taudamp
 !EOP
 !-------------------------------------------------------------------------
 !BOC
 !KB   call tic(TIM_METEO)
+   if (ice_model .eq. 0) return
+
+   if (ice_model .eq. 1) then
    select case (ice_method)
       case (0) ! No ice model
       case (1) ! Salinity dependent freezing point
@@ -244,7 +257,12 @@
               end if
             end do
          end do
-         if (damp_stress) then
+      case default
+   end select
+   end if
+
+   tauh = _HALF_ * hi_thresh
+   if (tauh .gt. _ZERO_) then
             call update_2d_halo(ice_hi,ice_hi,az,imin,jmin,imax,jmax,z_TAG)
             call wait_halo(z_TAG)
             taudamp = _ONE_ - _ONE_/(_ONE_ + exp(-taucoef/tauh*(ice_hi-tauh)))
@@ -267,9 +285,11 @@
                   end if
                end do
             end do
-         end if
-      case default
-   end select
+   else
+      tausx = _ZERO_
+      tausy = _ZERO_
+   end if
+
 !KB    call toc(TIM_METEO)
    return
    end subroutine do_getm_ice

@@ -202,12 +202,23 @@
 		</element>
 
 		<element name="ice" label="variables related to ice modeling">
-			<element name="ice_method" type="int" label="ice modeling method">
+			<element name="ice_model" type="int" label="ice modeling method">
+				<options>
+					<option value="0" label="no ice modeling"/>
+					<option value="1" label="thermodynamic ice model"/>
+					<option value="2" label="ice mask/thickness from file"/>
+				</options>
+			</element>
+			<element name="ice_method" type="int" label="thermodynamic ice modeling method">
+				<condition type="eq" variable="./ice_model" value="1"/>
 				<options>
 					<option value="0" label="no ice modeling"/>
 					<option value="1" label="clip heat flux when SST less than freezing point"/>
 					<option value="2" label="thermodynamic ice model adapted after Winton"/>
 				</options>
+			</element>
+			<element name="hi_thresh" type="float" label="ice thickness threshold" unit="m" description="Until now only used for wind stress damping. Should be large for no damping and &lt;=0 in case only ice mask is read in.">
+				<condition type="ne" variable="./ice_model" value="0"/>
 			</element>
 			<element name="ks" type="float" label="thermal conductivity of snow" unit="W (mK)-1">
 				<condition type="eq" variable="./ice_method" value="2"/>

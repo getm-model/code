@@ -165,9 +165,15 @@
 			</precip_factor>
 		</meteo>
 		<ice>
+			<ice_model>
+				0
+			</ice_model>
 			<ice_method>
 				0
 			</ice_method>
+			<hi_thresh>
+				0.2
+			</hi_thresh>
 			<ks>
 				0.31
 			</ks>
