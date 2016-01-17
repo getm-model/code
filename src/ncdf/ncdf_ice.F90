@@ -40,7 +40,10 @@
    integer         :: grid_scan=1
    logical         :: point_source=.false.
    logical         :: rotated_ice_grid=.false.
+   logical         :: have_ice_hi_missing=.false.
 
+   REALTYPE                  :: ice_hi_missing
+   integer, allocatable      :: ice_mask(:,:)
    REALTYPE, allocatable     :: ice_lon(:),ice_lat(:)
 
 !  For gridinterpolation
@@ -106,14 +109,6 @@
       point_source = .true.
       on_grid = .true.
       il = 1 ; jl = 1 ; ih = 1 ; jh = 1
-
-      if (rotated_meteo_grid) then
-         rlon=ice_lon(1)
-         rlat=ice_lat(1)
-         call to_rotated_lat_lon(southpole,olon,olat,rlon,rlat,x)
-         beta = x
-      end if
-
    else
       on_grid = .false.
       il = 1 ; jl = 1 ; ih = ilen ; jh = jlen
@@ -138,8 +133,10 @@
           stop 'init_meteo_input_ncdf: Error allocating memory (beta)'
       beta = _ZERO_
 
+!     do not call with ice_mask, otherwise we have nearest neighbour
       call init_grid_interpol(imin,imax,jmin,jmax,az,  &
-                lonc,latc,ice_lon,ice_lat,southpole,gridmap,beta,ti,ui)
+                lonc,latc,ice_lon,ice_lat,southpole,gridmap,beta,ti,ui, &
+                break_on_missing=.false.)
 
       LEVEL2 "Checking interpolation coefficients"
       do j=jmin,jmax
@@ -394,6 +391,7 @@
       if (nvardims .NE. ndims) call getm_error('open_ice_file()',      &
                                 'Wrong number of dims in '//name_ice_hi)
       err = nf90_inquire_variable(ncid,ice_hi_id,dimids=vardim_ids)
+missing_value !!!
       if (err .NE. NF90_NOERR) go to 10
       lon_dim = vardim_ids(1)
       lat_dim = vardim_ids(2)
@@ -469,7 +467,7 @@
       if (err /= 0) call getm_error('open_ice_file()',                 &
                                     'Error allocating memory (ice_lat)')
       end if
-      err = nf90_get_var(ncid,lon_id,ice_lat(1:ilen))
+      err = nf90_get_var(ncid,lat_id,ice_lat(1:ilen))
       if (err .ne. NF90_NOERR) go to 10
 
 !           first we check for CF compatible grid_mapping_name
@@ -519,6 +517,16 @@
                LEVEL4 '      lon ',southpole(2)
                LEVEL4 '      lat ',southpole(1)
             end if
+
+      err = nf90_get_att(ncid,ice_hi_id,'_FillValue',ice_hi_missing)
+      if (err .eq. NF90_NOERR) have_ice_hi_missing = .true.
+
+      allocate(ice_mask(1:ilen,1:jlen),stat=err)
+      if (err /= 0) &
+         stop 'init_meteo_input_ncdf: Error allocating memory (ice_mask)'
+      ice_mask = 0
+      err = nf90_get_var(ncid,id,ice_mask)
+      if (err .ne. NF90_NOERR) go to 10
    end if
 
 
@@ -575,7 +583,8 @@
          ice_hi(ill:ihl,jll:jhl) = wrk
       end if
    else
-      call do_grid_interpol(az,wrk,gridmap,ti,ui,ice_hi)
+      call do_grid_interpol(az,wrk,gridmap,ti,ui,ice_hi,               &
+                            imask=ice_mask,fillvalue=_ZERO_)
    end if
 
 #ifdef DEBUG
