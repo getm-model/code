@@ -31,8 +31,14 @@
    public                              :: init_getm_ice,do_getm_ice
 !
 ! !PUBLIC DATA MEMBERS:
-   integer, public                     :: ice_model=0
-   integer, public                     :: ice_method=0
+   integer, public, parameter          :: NO_ICE=0
+   integer, public, parameter          :: ICE_THERMODYNAMIC=1
+   integer, public, parameter          :: ICE_FROMFILE=2
+   integer, public                     :: ice_method=NO_ICE
+   integer, public, parameter          :: ICE_FREEZINGPOINT=1
+   integer, public, parameter          :: ICE_WINTON=2
+   integer, public, parameter          :: ICE_UVIC=3
+   integer, public                     :: ice_model=NO_ICE
    character(LEN = PATH_MAX), public   :: ice_file
 !  Freezing point ice 'model'
    REALTYPE, public, dimension(:,:), pointer              :: ice_mask=>null()
@@ -82,7 +88,7 @@
    integer                   :: i,j,rc
    REALTYPE :: ks, alb_sno, alb_ice, pen_ice, opt_dep_ice, opt_ext_ice, &
                opt_ext_snow, t_range_melt, h_lo_lim, kmelt, t_range_dhdt
-   namelist /ice/ ice_model,ice_method,ice_file,hi_thresh, &
+   namelist /ice/ ice_method,ice_model,ice_file,hi_thresh, &
                   ks, alb_sno, alb_ice, pen_ice, opt_dep_ice, &
                   opt_ext_ice, opt_ext_snow, t_range_melt, h_lo_lim, kmelt, &
                   t_range_dhdt
@@ -92,7 +98,6 @@
    LEVEL1 'init_getm_ice'
 
    ! initialize namelist variables to reasonable defaults
-   ice_method   = 0
    ks           = 0.31
    alb_sno      = 0.85
    alb_ice      = 0.5826
@@ -107,24 +112,24 @@
 
    read(NAMLST,ice)
 
-   select case (ice_model)
-      case (0)
+   select case (ice_method)
+      case (NO_ICE)
          LEVEL2 'No ice model included'
-         ice_method = 0
-      case (1)
+         ice_model = NO_ICE
+      case (ICE_THERMODYNAMIC)
          !LEVEL2 'Thermodynamic ice model included'
-      case (2)
+      case (ICE_FROMFILE)
          LEVEL2 'Read in ice mask/thickness from file'
-         ice_method = 0
+         ice_model = NO_ICE
    end select
 
-   select case (ice_method)
-      case (0) ! No ice model
+   select case (ice_model)
+      case (NO_ICE) ! No ice model
          LEVEL2 'No ice model included'
-         ice_model = 0
-      case (1) ! Salinity dependent freezing point
+         ice_method = NO_ICE
+      case (ICE_FREEZINGPOINT) ! Salinity dependent freezing point
          LEVEL2 'Freezing point ice model'
-      case (2) ! Winton
+      case (ICE_WINTON) ! Winton
          LEVEL2 'Winton ice model'
          if (.not. calc_met) then
             call getm_error("init_getm_ice()", "Winton ice model "  // &
@@ -173,7 +178,7 @@
       case default
    end select
 
-   if (ice_model .ne. 0) then
+   if (ice_method .ne. NO_ICE) then
       allocate(ice_hi(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hi)'
       ice_hi = _ZERO_
@@ -219,12 +224,12 @@
 !-------------------------------------------------------------------------
 !BOC
 !KB   call tic(TIM_METEO)
-   if (ice_model .eq. 0) return
+   if (ice_method .eq. NO_ICE) return
 
-   if (ice_model .eq. 1) then
-   select case (ice_method)
-      case (0) ! No ice model
-      case (1) ! Salinity dependent freezing point
+   if (ice_method .eq. ICE_THERMODYNAMIC) then
+   select case (ice_model)
+      case (NO_ICE) ! No ice model
+      case (ICE_FREEZINGPOINT) ! Salinity dependent freezing point
          do j=jmin,jmax
             do i=imin,imax
                if (az(i,j) .ge. 1 .and. T(i,j,kmax).le.-0.0575*S(i,j,kmax)) then

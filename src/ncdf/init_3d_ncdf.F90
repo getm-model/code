@@ -19,7 +19,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
 #ifndef NO_BAROCLINIC
-   use getm_ice, only: ice_method
+   use getm_ice, only: ice_model,ICE_FREEZINGPOINT,ICE_WINTON
 #endif
    use m3d, only: calc_temp,calc_salt
 #ifdef SPM
@@ -93,14 +93,14 @@
 
 #ifndef NO_BAROCLINIC
 !  ice
-   select case (ice_method)
+   select case (ice_model)
 !     Freezing point ice 'model'
-      case (1)
+      case (ICE_FREEZINGPOINT)
          err = nf90_def_var(ncid,'ice_mask',NCDF_FLOAT_PRECISION,f3_dims,ice_mask_id)
          if (err .NE. NF90_NOERR) go to 10
          call set_attributes(ncid,ice_mask_id,long_name='ice mask')
 !     Winton ice model
-      case (2)
+      case (ICE_WINTON)
          fv = ice_missing
          mv = ice_missing
 !         vr(1) = _ZERO_

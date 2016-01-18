@@ -23,7 +23,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: vert_cord
 #ifndef NO_BAROCLINIC
-   use getm_ice, only: ice_method
+   use getm_ice, only: ice_model,ICE_FREEZINGPOINT,ICE_WINTON
 #endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
@@ -230,12 +230,12 @@
                                (/ xdim_id, ydim_id, zdim_id /), S_id)
       if (status .NE. NF90_NOERR) go to 10
 
-      select case (ice_method)
-         case (1) ! Freezing point ice model
+      select case (ice_model)
+         case (ICE_FREEZINGPOINT) ! Freezing point ice model
             status = nf90_def_var(ncid, "ice_mask", nf90_double, &
                                   (/ xdim_id, ydim_id /), ice_mask_id)
             if (status .NE. NF90_NOERR) go to 10
-         case (2) ! Winton ice model
+         case (ICE_WINTON) ! Winton ice model
             status = nf90_def_var(ncid, "ice_hs", nf90_double, &
                                   (/ xdim_id, ydim_id /), ice_hs_id)
             if (status .NE. NF90_NOERR) go to 10

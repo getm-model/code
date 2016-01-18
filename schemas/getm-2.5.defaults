@@ -165,12 +165,12 @@
 			</precip_factor>
 		</meteo>
 		<ice>
-			<ice_model>
-				0
-			</ice_model>
 			<ice_method>
 				0
 			</ice_method>
+			<ice_model>
+				0
+			</ice_model>
 			<ice_file>
 				icefiles.dat
 			</ice_file>

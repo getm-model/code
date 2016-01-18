@@ -118,15 +118,15 @@
 
 #ifndef NO_BAROCLINIC
 !  ice
-   select case (ice_method)
+   select case (ice_model)
 !     Freezing point ice 'model'
-      case (1)
+      case (ICE_FREEZINGPOINT)
          err = nf90_put_var(ncid,ice_mask_id,ice_mask(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
 !         err = nf90_put_var(ncid,ice_hs_id,ice_hs(_2D_W_),start,edges)
 !         if (err .NE. NF90_NOERR) go to 10
 !     Winton ice model
-      case (2)
+      case (ICE_WINTON)
          err = nf90_put_var(ncid,ice_hs_id,ice_hs(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
          err = nf90_put_var(ncid,ice_hi_id,ice_hi(_2D_W_),start,edges)
