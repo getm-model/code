@@ -134,6 +134,11 @@
                          "invalid ice_method.")
    end select
 
+   allocate(ice_hi(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hi)'
+   ice_hi = _ZERO_
+   ice_mask => ice_hi
+
    select case (ice_model)
       case (NO_ICE)
       case (ICE_FREEZINGPOINT) ! Salinity dependent freezing point
@@ -189,11 +194,6 @@
          call getm_error("init_getm_ice()",                            &
                          "invalid ice_model.")
    end select
-
-   allocate(ice_hi(E2DFIELD),stat=rc)
-   if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hi)'
-   ice_hi = _ZERO_
-   ice_mask => ice_hi
 
    return
    end subroutine init_getm_ice
