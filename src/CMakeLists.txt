@@ -282,11 +282,13 @@ add_library(input OBJECT
             input/get_3d_bdy.F90
             input/get_3d_field.F90
             input/get_meteo_data.F90
+            input/get_ice_data.F90
             input/get_river_data.F90
             input/inquire_file.F90
             input/init_2d_bdy.F90
             input/init_3d_bdy.F90
             input/init_meteo_input.F90
+            input/init_ice_input.F90
             input/init_river_input.F90
             input/input.F90
             input/read_profile.F90
@@ -321,6 +323,7 @@ add_library(ncdf OBJECT
             ncdf/ncdf_in.F90
             ncdf/ncdf_mean.F90
             ncdf/ncdf_meteo.F90
+            ncdf/ncdf_ice.F90
             ncdf/ncdf_restart.F90
             ncdf/ncdf_rivers.F90
             ncdf/ncdf_topo.F90
