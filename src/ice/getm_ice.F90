@@ -126,7 +126,6 @@
    select case (ice_model)
       case (NO_ICE) ! No ice model
          LEVEL2 'No ice model included'
-         ice_method = NO_ICE
       case (ICE_FREEZINGPOINT) ! Salinity dependent freezing point
          LEVEL2 'Freezing point ice model'
       case (ICE_WINTON) ! Winton
