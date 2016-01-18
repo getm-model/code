@@ -14,12 +14,9 @@ $(GETMDIR)/src/2d
 ifneq ($(GETM_NO_3D),true)
 SUBDIRS += \
 $(GETMDIR)/src/3d
-ifneq ($(GETM_NO_BAROCLINIC),true)
-SUBDIRS += \
-$(GETMDIR)/src/ice
-endif
 endif
 SUBDIRS += \
+$(GETMDIR)/src/ice		\
 $(GETMDIR)/src/output		\
 $(GETMDIR)/src/ncdf		\
 $(GETMDIR)/src/input		\
@@ -28,12 +25,9 @@ $(GETMDIR)/src/getm
 CORE_LIBS	=	\
 		-lgetm${buildtype} 	\
 		-loutput${buildtype}	\
-		-lmeteo${buildtype}
-ifneq ($(GETM_NO_3D),true)
-ifneq ($(GETM_NO_BAROCLINIC),true)
-CORE_LIBS	+=	\
+		-lmeteo${buildtype}	\
 		-lgetm_ice${buildtype}
-endif
+ifneq ($(GETM_NO_3D),true)
 CORE_LIBS	+=	\
 		-l3d${buildtype}
 endif

@@ -19,7 +19,9 @@
    use meteo, only: shf,swr,albedo,precip,evap,tcc,t2,airp,hum,u10,v10, &
                     tausx,tausy
    use parameters, only: rho_0
+#ifndef NO_BAROCLINIC
    use variables_3d, only: rho,S,T,hn
+#endif
    use halo_zones, only : update_2d_halo,wait_halo,z_TAG
    use ice_winton, only: init_ice_winton, do_ice_winton
    use exceptions
@@ -70,7 +72,7 @@
 ! !IROUTINE: init_getm_ice - initialise the \emph{meteo} module.
 !
 ! !INTERFACE:
-   subroutine init_getm_ice(hotstart)
+   subroutine init_getm_ice(runtype,hotstart)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -78,6 +80,7 @@
 !  the content of the namelist various variables are allocated and initialised.
 !
 ! !INPUT PARAMETERS:
+   integer, intent(in)                 :: runtype
    logical, intent(in)                 :: hotstart
 !
 ! !REVISION HISTORY:
@@ -116,16 +119,23 @@
       case (NO_ICE)
          LEVEL2 'No ice model included'
          ice_model = NO_ICE
+         return
       case (ICE_THERMODYNAMIC)
          !LEVEL2 'Thermodynamic ice model included'
+         if ( runtype .le. 2 ) then
+            call getm_error("init_getm_ice()",                         &
+                            "thermodynamic ice model requires runtype>2.")
+         end if
       case (ICE_FROMFILE)
          LEVEL2 'Read in ice mask/thickness from file'
          ice_model = NO_ICE
+      case default
+         call getm_error("init_getm_ice()",                            &
+                         "invalid ice_method.")
    end select
 
    select case (ice_model)
-      case (NO_ICE) ! No ice model
-         LEVEL2 'No ice model included'
+      case (NO_ICE)
       case (ICE_FREEZINGPOINT) ! Salinity dependent freezing point
          LEVEL2 'Freezing point ice model'
       case (ICE_WINTON) ! Winton
@@ -174,15 +184,16 @@
                end if
             end do
          end do
+
       case default
+         call getm_error("init_getm_ice()",                            &
+                         "invalid ice_model.")
    end select
 
-   if (ice_method .ne. NO_ICE) then
-      allocate(ice_hi(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hi)'
-      ice_hi = _ZERO_
-      ice_mask => ice_hi
-   end if
+   allocate(ice_hi(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hi)'
+   ice_hi = _ZERO_
+   ice_mask => ice_hi
 
    return
    end subroutine init_getm_ice
@@ -225,7 +236,7 @@
 !KB   call tic(TIM_METEO)
    if (ice_method .eq. NO_ICE) return
 
-   if (ice_method .eq. ICE_THERMODYNAMIC) then
+#ifndef NO_BAROCLINIC
    select case (ice_model)
       case (NO_ICE) ! No ice model
       case (ICE_FREEZINGPOINT) ! Salinity dependent freezing point
@@ -238,7 +249,7 @@
                end if
             end do
          end do
-      case (2) ! Winton
+      case (ICE_WINTON) ! Winton
          do j=jmin,jmax
             do i=imin,imax
                if (az(i,j) .ge. 1) then
@@ -263,9 +274,8 @@
               end if
             end do
          end do
-      case default
    end select
-   end if
+#endif
 
    tauh = _HALF_ * hi_thresh
    if (tauh .gt. _ZERO_) then

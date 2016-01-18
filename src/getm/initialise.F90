@@ -73,9 +73,7 @@
 #endif
 #endif
    use meteo, only: init_meteo,do_meteo
-#ifndef NO_BAROCLINIC
    use getm_ice, only: init_getm_ice,do_getm_ice
-#endif
    use integration,  only: MinN,MaxN
 #ifndef NO_BAROCLINIC
    use eqstate, only: do_eqstate
@@ -219,9 +217,7 @@
 
    call init_meteo(hotstart)
 
-#ifndef NO_BAROCLINIC
-   if (runtype .gt. 2) call init_getm_ice(hotstart)
-#endif
+   call init_getm_ice(runtype,hotstart)
 
 #ifndef NO_3D
    call init_rivers()
@@ -314,6 +310,7 @@
 
    if(runtype .le. 2) then
       call do_meteo(MinN)
+      call do_getm_ice()
 #ifndef NO_3D
 #ifndef NO_BAROCLINIC
    else
