@@ -36,6 +36,7 @@ endif
 endif
 MOD	+= 	\
 ${LIB}(ncdf_meteo.o)		\
+${LIB}(ncdf_ice.o)		\
 ${LIB}(ncdf_topo.o)		\
 ${LIB}(ncdf_restart.o)		\
 ${LIB}(ncdf_mean.o)		\

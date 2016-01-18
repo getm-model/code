@@ -33,10 +33,12 @@
 ! !PUBLIC DATA MEMBERS:
    integer, public                     :: ice_model=0
    integer, public                     :: ice_method=0
+   character(LEN = PATH_MAX), public   :: ice_file
 !  Freezing point ice 'model'
    REALTYPE, public, dimension(:,:), pointer              :: ice_mask=>null()
 !  Winton ice model
-   REALTYPE, public, dimension(:,:), allocatable, target  :: ice_hs,ice_hi
+   REALTYPE, public, dimension(:,:), pointer              :: ice_hi
+   REALTYPE, public, dimension(:,:), allocatable, target  :: ice_hs
    REALTYPE, public, dimension(:,:), allocatable, target  :: ice_ts
    REALTYPE, public, dimension(:,:), allocatable, target  :: ice_T1,ice_T2
    REALTYPE, public, dimension(:,:), allocatable, target  :: ice_tmelt
@@ -80,7 +82,7 @@
    integer                   :: i,j,rc
    REALTYPE :: ks, alb_sno, alb_ice, pen_ice, opt_dep_ice, opt_ext_ice, &
                opt_ext_snow, t_range_melt, h_lo_lim, kmelt, t_range_dhdt
-   namelist /ice/ ice_model,ice_method,hi_thresh, &
+   namelist /ice/ ice_model,ice_method,ice_file,hi_thresh, &
                   ks, alb_sno, alb_ice, pen_ice, opt_dep_ice, &
                   opt_ext_ice, opt_ext_snow, t_range_melt, h_lo_lim, kmelt, &
                   t_range_dhdt

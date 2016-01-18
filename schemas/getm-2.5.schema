@@ -217,6 +217,9 @@
 					<option value="2" label="thermodynamic ice model adapted after Winton"/>
 				</options>
 			</element>
+			<element name="ice_file" type="string" label="name of icefile">
+				<condition type="eq" variable="./ice_model" value="2"/>
+			</element>
 			<element name="hi_thresh" type="float" label="ice thickness threshold" unit="m" description="Until now only used for wind stress damping. Should be large for no damping and &lt;=0 in case only ice mask is read in.">
 				<condition type="ne" variable="./ice_model" value="0"/>
 			</element>

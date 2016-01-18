@@ -11,6 +11,7 @@
 !
 ! !USES:
    use meteo, only: metforcing,met_method,meteo_file
+   use getm_ice, only: ice_model,ice_file
    use m2d, only: bdy2d,bdyfile_2d,bdyfmt_2d
 #ifndef NO_3D
    use m3d, only: bdy3d,bdyfile_3d,bdyfmt_3d
@@ -105,6 +106,10 @@
       call init_meteo_input(trim(input_dir) // meteo_file,n)
    end if
 
+   if (ice_model .eq. 2) then
+      call init_ice_input(ice_file,n)
+   end if
+
 #ifndef NO_3D
    if (river_method .gt. 0 .and. nriver .gt. 0) then
       call init_river_input(trim(input_dir) // river_data,n)
@@ -159,6 +164,10 @@
 
    if(metforcing .and. met_method .eq. 2) then
       call get_meteo_data(n)
+   end if
+
+   if(ice_model .eq. 2) then
+      call get_ice_data(n)
    end if
 
 #ifndef NO_3D

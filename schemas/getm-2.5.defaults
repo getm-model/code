@@ -171,6 +171,9 @@
 			<ice_method>
 				0
 			</ice_method>
+			<ice_file>
+				icefiles.dat
+			</ice_file>
 			<hi_thresh>
 				0.2
 			</hi_thresh>
