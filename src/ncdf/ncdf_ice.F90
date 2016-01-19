@@ -508,9 +508,10 @@
       if (err /= 0) &
          stop 'init_meteo_input_ncdf: Error allocating memory (ice_hi_mask)'
       err =  nf90_get_att(ncid,ice_hi_id,'mask',name_ice_hi_mask)
+      if (err .ne. NF90_NOERR) name_ice_hi_mask='ice_mask'
+      err = nf90_inq_varid(ncid,trim(name_ice_hi_mask),id)
       if (err .eq. NF90_NOERR) then
-         err = nf90_inq_varid(ncid,trim(name_ice_hi_mask),id)
-         if (err .NE. NF90_NOERR) go to 10
+         LEVEL4 'taking variable' // trim(name_ice_hi_mask) // ' as ice_hi_mask'
          err = nf90_get_var(ncid,id,ice_hi_mask)
          if (err .ne. NF90_NOERR) go to 10
       else
