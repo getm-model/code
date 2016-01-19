@@ -38,8 +38,8 @@
    integer, public, parameter          :: ICE_FROMFILE=2
    integer, public                     :: ice_method=NO_ICE
    integer, public, parameter          :: ICE_FREEZINGPOINT=1
-   integer, public, parameter          :: ICE_WINTON=2
-   integer, public, parameter          :: ICE_UVIC=3
+   integer, public, parameter          :: ICE_MODEL_WINTON=2
+   integer, public, parameter          :: ICE_MODEL_UVIC=3
    integer, public                     :: ice_model=NO_ICE
    character(LEN = PATH_MAX), public   :: ice_file
 !  Freezing point ice 'model'
@@ -143,7 +143,7 @@
       case (NO_ICE)
       case (ICE_FREEZINGPOINT) ! Salinity dependent freezing point
          LEVEL2 'Freezing point ice model'
-      case (ICE_WINTON) ! Winton
+      case (ICE_MODEL_WINTON) ! Winton
          LEVEL2 'Winton ice model'
          if (.not. calc_met) then
             call getm_error("init_getm_ice()", "Winton ice model "  // &
@@ -249,7 +249,7 @@
                end if
             end do
          end do
-      case (ICE_WINTON) ! Winton
+      case (ICE_MODEL_WINTON) ! Winton
          do j=jmin,jmax
             do i=imin,imax
                if (az(i,j) .ge. 1) then

@@ -23,7 +23,7 @@
 #ifndef NO_3D
    use variables_3d
 #ifndef NO_BAROCLINIC
-   use getm_ice, only: ice_model,ICE_FREEZINGPOINT,ICE_WINTON
+   use getm_ice, only: ice_model,ICE_FREEZINGPOINT,ICE_MODEL_WINTON
    use getm_ice, only: ice_mask
    use getm_ice, only: ice_hs,ice_hi
    use getm_ice, only: ice_ts,ice_T1,ice_T2
@@ -222,7 +222,7 @@
             status = &
             nf90_put_var(ncid,ice_mask_id,ice_mask(_2D_W_HOT_),start,edges)
             if (status .NE. NF90_NOERR) go to 10
-         case (ICE_WINTON) ! Winton ice model
+         case (ICE_MODEL_WINTON) ! Winton ice model
             status = &
             nf90_put_var(ncid,ice_hs_id,ice_hs(_2D_W_HOT_),start,edges)
             if (status .NE. NF90_NOERR) go to 10

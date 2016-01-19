@@ -34,7 +34,7 @@
 #ifndef NO_3D
    use variables_3d
 #ifndef NO_BAROCLINIC
-   use getm_ice, only: ice_model,ICE_FREEZINGPOINT,ICE_WINTON
+   use getm_ice, only: ice_model,ICE_FREEZINGPOINT,ICE_MODEL_WINTON
    use getm_ice, only: ice_mask
    use getm_ice, only: ice_hs,ice_hi
    use getm_ice, only: ice_ts,ice_T1,ice_T2
@@ -409,7 +409,7 @@
                call update_2d_halo(ice_mask,ice_mask,az,imin,jmin,imax,jmax,H_TAG)
                call wait_halo(H_TAG)
             end if
-         case (ICE_WINTON) ! Winton ice model
+         case (ICE_MODEL_WINTON) ! Winton ice model
             status = &
             nf90_get_var(ncid,ice_hs_id,ice_hs(istart:istop,jstart:jstop),start(1:2),edges(1:2))
             if (status .NE. NF90_NOERR) then

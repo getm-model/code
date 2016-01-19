@@ -126,7 +126,7 @@
 !         err = nf90_put_var(ncid,ice_hs_id,ice_hs(_2D_W_),start,edges)
 !         if (err .NE. NF90_NOERR) go to 10
 !     Winton ice model
-      case (ICE_WINTON)
+      case (ICE_MODEL_WINTON)
          err = nf90_put_var(ncid,ice_hs_id,ice_hs(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
          err = nf90_put_var(ncid,ice_hi_id,ice_hi(_2D_W_),start,edges)

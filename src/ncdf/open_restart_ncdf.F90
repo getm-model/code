@@ -18,7 +18,7 @@
 #ifndef NO_3D
    use domain, only: vert_cord
 #ifndef NO_BAROCLINIC
-   use getm_ice, only: ice_model,ICE_FREEZINGPOINT,ICE_WINTON
+   use getm_ice, only: ice_model,ICE_FREEZINGPOINT,ICE_MODEL_WINTON
    use getm_ice, only: ice_mask
    use getm_ice, only: ice_hs,ice_hi
    use getm_ice, only: ice_ts,ice_T1,ice_T2
@@ -279,7 +279,7 @@
                LEVEL3 'variable missing in restart file. Skipping ',varnam
                ice_mask_id=-1
             end if
-         case (ICE_WINTON) ! Winton ice model
+         case (ICE_MODEL_WINTON) ! Winton ice model
             varnam="ice_hs"
             status = nf90_inq_varid(ncid, "ice_hs", ice_hs_id)
             if (status .NE. NF90_NOERR) then

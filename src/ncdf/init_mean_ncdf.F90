@@ -19,7 +19,7 @@
    use domain, only: vert_cord
    use m3d, only: calc_temp,calc_salt
 #ifndef NO_BAROCLINIC
-   use getm_ice, only: ice_model,ICE_WINTON
+   use getm_ice, only: ice_model,ICE_MODEL_WINTON
 #endif
 #ifdef GETM_BIO
    use bio_var, only: numc,var_names,var_units,var_long
@@ -171,7 +171,7 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
    end if
 
-   if (ice_model .eq. ICE_WINTON) then
+   if (ice_model .eq. ICE_MODEL_WINTON) then
       fv = hh_missing
       mv = hh_missing
       vr(1) =   0.

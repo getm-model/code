@@ -18,7 +18,7 @@
    use variables_3d, only: hn,uu,hun,vv,hvn,ww,taub
 #ifndef NO_BAROCLINIC
    use variables_3d, only: S,T
-   use getm_ice, only: ice_model,ICE_WINTON,ice_hs,ice_hi
+   use getm_ice, only: ice_model,ICE_MODEL_WINTON,ice_hs,ice_hi
 #endif
    use variables_3d, only: nummix3d_S,nummix2d_S,nummix3d_T,nummix2d_T
    use variables_3d, only: phymix3d_S,phymix2d_S,phymix3d_T,phymix2d_T
@@ -93,7 +93,7 @@
       allocate(Smean(I3DFIELD),stat=rc)
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (Smean)'
-      if (ice_model .eq. ICE_WINTON) then
+      if (ice_model .eq. ICE_MODEL_WINTON) then
          allocate(ice_hs_mean(I2DFIELD),stat=rc)
          if (rc /= 0) &
              stop 'calc_mean_fields.F90: Error allocating memory (ice_hs_mean)'
@@ -171,7 +171,7 @@
       humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
 #ifndef NO_BAROCLINIC
       Tmean=_ZERO_; Smean=_ZERO_
-      if (ice_model .eq. ICE_WINTON) then
+      if (ice_model .eq. ICE_MODEL_WINTON) then
          ice_hs_mean = _ZERO_ ; ice_hi_mean = _ZERO_
       end if
 #endif
@@ -230,7 +230,7 @@
 #ifndef NO_BAROCLINIC
       Tmean = Tmean + T
       Smean = Smean + S
-      if (ice_model .eq. ICE_WINTON) then
+      if (ice_model .eq. ICE_MODEL_WINTON) then
          ice_hs_mean = ice_hs_mean + ice_hs
          ice_hi_mean = ice_hi_mean + ice_hi
       end if
@@ -280,7 +280,7 @@
 #ifndef NO_BAROCLINIC
          Tmean = Tmean / step
          Smean = Smean / step
-         if (ice_model .eq. ICE_WINTON) then
+         if (ice_model .eq. ICE_MODEL_WINTON) then
             ice_hs_mean = ice_hs_mean / step
             ice_hi_mean = ice_hi_mean / step
          end if
