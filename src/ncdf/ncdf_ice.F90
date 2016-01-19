@@ -376,22 +376,25 @@
       if (nvardims .NE. ndims) call getm_error('open_ice_file()',      &
                                 'Wrong number of dims in '//name_ice_hi)
       err = nf90_inquire_variable(ncid,ice_hi_id,dimids=vardim_ids)
-
       if (err .NE. NF90_NOERR) go to 10
+
       lon_dim = vardim_ids(1)
       lat_dim = vardim_ids(2)
+
       if (stationary) exit
+
       time_dim = vardim_ids(3)
 
       err = nf90_inq_varid(ncid,dim_name(time_dim),time_id)
       if (err .ne. NF90_NOERR) go to 10
+
       if (dim_len(time_dim) > nlen) then
          if (.not. first) then
             deallocate(ice_times,stat=err)
             if (err /= 0) call getm_error('open_ice_file()',           &
                                'Error de-allocating memory (ice_times)')
          end if
-         allocate(ice_times(nlen),stat=err)
+         allocate(ice_times(dim_len(time_dim)),stat=err)
          if (err /= 0) call getm_error('open_ice_file()',              &
                                   'Error allocating memory (ice_times)')
       end if
