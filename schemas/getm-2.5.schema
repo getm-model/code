@@ -212,7 +212,6 @@
 			<element name="ice_model" type="int" label="thermodynamic ice modeling method">
 				<condition type="eq" variable="./ice_method" value="1"/>
 				<options>
-					<option value="0" label="no ice modeling"/>
 					<option value="1" label="clip heat flux when SST less than freezing point"/>
 					<option value="2" label="thermodynamic ice model adapted after Winton"/>
 				</options>
