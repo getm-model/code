@@ -35,7 +35,7 @@
    use getm_fabm, only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
    use getm_fabm, only: nummix_fabm_pel,phymix_fabm_pel
 #endif
-   use output, only: save_s,save_t,save_rho
+   use output, only: save_rho
    use diagnostic_variables
    use getm_timers, only: tic, toc, TIM_CALCMEANF
    IMPLICIT NONE
@@ -93,12 +93,12 @@
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (hmean)'
 #ifndef NO_BAROCLINIC
-      if (save_t) then
+      if (update_temp) then
          allocate(Tmean(I3DFIELD),stat=rc)
          if (rc /= 0) &
              stop 'calc_mean_fields.F90: Error allocating memory (Tmean)'
       end if
-      if (save_s) then
+      if (update_salt) then
          allocate(Smean(I3DFIELD),stat=rc)
          if (rc /= 0) &
              stop 'calc_mean_fields.F90: Error allocating memory (Smean)'
@@ -227,8 +227,8 @@
          uumean=_ZERO_; vvmean=_ZERO_; wmean=_ZERO_
          humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
 #ifndef NO_BAROCLINIC
-         if (save_t) Tmean=_ZERO_
-         if (save_s) Smean=_ZERO_
+         if (update_temp) Tmean=_ZERO_
+         if (update_salt) Smean=_ZERO_
          if (save_rho) rhomean=_ZERO_
          if (metforcing) hfmean=_ZERO_
 #endif
@@ -298,8 +298,8 @@
       hmean = hmean + hn
 
 #ifndef NO_BAROCLINIC
-      if (save_t) Tmean = Tmean + T*hn
-      if (save_s) Smean = Smean + S*hn
+      if (update_temp) Tmean = Tmean + T*hn
+      if (update_salt) Smean = Smean + S*hn
       if (save_rho) rhomean = rhomean + rho*hn
       if (metforcing) hfmean = hfmean + heatflux_net
 #endif
@@ -373,8 +373,8 @@
          hmean = hmean / step
 
 #ifndef NO_BAROCLINIC
-         if (save_t) Tmean = Tmean / step
-         if (save_s) Smean = Smean / step
+         if (update_temp) Tmean = Tmean / step
+         if (update_salt) Smean = Smean / step
          if (save_rho) rhomean = rhomean / step
          if (metforcing) hfmean = hfmean / step
 #endif
@@ -433,12 +433,12 @@
       if (step .ge. 1) then
 
 #ifndef NO_BAROCLINIC
-         if (save_t) then
+         if (update_temp) then
             forall (i=imin:imax,j=jmin:jmax,az(i,j).ne.0)
                Tmean(i,j,1:) = Tmean(i,j,1:) / hmean(i,j,1:)
             end forall
          end if
-         if (save_s) then
+         if (update_salt) then
             forall (i=imin:imax,j=jmin:jmax,az(i,j).ne.0)
                Smean(i,j,1:) = Smean(i,j,1:) / hmean(i,j,1:)
             end forall
