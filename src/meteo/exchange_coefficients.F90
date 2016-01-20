@@ -278,7 +278,7 @@
    cee_e = (ae_e+be_e*exp(pe_e*log(w+eps))+ce_e*(w-8.0)**2)*1.0e-3
 
 !  Stability - assume 10 meter wind
-   s0=0.25*(tw-ta)/(w+eps)**2
+   s0=(tw-ta)/(w+eps)**2
    s=s0*abs(s0)/(abs(s0)+0.01)
 
    if(s .lt. -3.3) then
