@@ -393,12 +393,13 @@
 !  In addition checks of the logical \emph{new\_meteo} is checked - set by the
 !  reading subroutine.
 !  Temporal interpolation is done in the principal variables.
-!  It is possible to specify a soft start - via the meteo_ramp variable -
-!  which is used to calculate a ramp (linearly from 0 to one over meteo_ramp
+!  It is possible to specify a soft start - via the {\tt meteo\_ramp} variable -
+!  which is used to calculate a ramp (linearly from 0 to one over {\tt meteo\_ramp}
 !  time steps).
 !  To implement an use a different set of formulae for flux calculations
 !  should be a matter of only changing the involved subroutines.
 !
+! !USES:
    use getm_timers, only: tic, toc, TIM_METEO
    IMPLICIT NONE
 !
