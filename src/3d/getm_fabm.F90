@@ -21,7 +21,7 @@
    use variables_3d,only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
    use variables_3d, only: nuh,T,S,rho,a,g1,g2,taub
    use advection_3d, only: print_adv_settings_3d,do_advection_3d
-   use variables_2d, only: D
+   use variables_2d, only: D,fwf_int
    use meteo, only: swr,u10,v10,evap,precip,tcc
    use time, only: month,yearday,secondsofday,timestr
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
@@ -414,6 +414,21 @@ end interface
          LEVEL3 timestr,': reading FABM surface fluxes ...',month
       end if
    end if
+
+   do n=1,size(model%state_variables)
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if (az(i,j) .eq. 1) then
+!              Note (KK): This would be the correct dilution if hn was
+!                         corrected in start_macro. This also requires,
+!                         that ho=hn is done in coordinates!
+!               fabm_pel(i,j,kmax,n) = fabm_pel(i,j,kmax,n)*(_ONE_-fwf_int(i,j)/ho(i,j,kmax))
+               fabm_pel(i,j,kmax,n) = fabm_pel(i,j,kmax,n)*            &
+                          ( ho(i,j,kmax) / (ho(i,j,kmax)+fwf_int(i,j)) )
+            end if
+         end do
+      end do
+   end do
 
 !  First we do all the vertical processes
 #ifdef SLICE_MODEL
