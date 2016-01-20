@@ -15,6 +15,7 @@
    use domain, only: vert_cord
    use m2d, only: no_2d,Am_method,AM_LES
    use variables_2d, only: do_numerical_analyses_2d
+   use m2d, only: sealevel_check
 #ifndef NO_3D
    use variables_3d, only: do_numerical_analyses_3d,calc_stirr
    use m3d, only: nonhyd_method
@@ -385,8 +386,10 @@
          write_restart = hotout(1).le.n .and. n.le.hotout(2) .and. mod(n,hotout(3)).eq.0
       end if
       if (write_restart) then
-         LEVEL2 'Checking for NANs before saving hotstart file...'
-         call sealevel_nan_check()
+         if ( sealevel_check .ne. 0 ) then
+            LEVEL2 'Checking for NANs before saving hotstart file...'
+            call sealevel_nan_check()
+         end if
          dummy = n
          call restart_file(WRITING,trim(hot_out),dummy,runtype)
       end if
