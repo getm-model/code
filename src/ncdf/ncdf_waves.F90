@@ -380,7 +380,7 @@
             if (err /= 0) call getm_error('open_waves_file()',         &
                               'Error de-allocating memory (wave_times)')
          end if
-         allocate(wave_times(nlen),stat=err)
+         allocate(wave_times(dim_len(time_dim)),stat=err)
          if (err /= 0) call getm_error('open_waves_file()',            &
                                  'Error allocating memory (wave_times)')
       end if
