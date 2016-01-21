@@ -22,13 +22,14 @@
    use variables_3d, only: nuh,T,S,rho,a,g1,g2,taub
    use variables_3d, only: do_numerical_analyses_3d
    use advection_3d, only: print_adv_settings_3d,do_advection_3d
-   use variables_2d, only: D
+   use variables_2d, only: D,fwf_int
    use meteo, only: swr,u10,v10,evap,precip,tcc
    use time, only: month,yearday,secondsofday,timestr
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
 ! JORN_FABM
    use gotm_fabm, only: init_gotm_fabm,set_env_gotm_fabm,do_gotm_fabm
    use gotm_fabm, only: gotm_fabm_calc=>fabm_calc, model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz, cc_transport
+   use gotm_fabm, only: no_precipitation_dilution
 
    use fabm, only: type_horizontal_variable_id, fabm_is_variable_used
    use fabm_types,only: output_instantaneous, output_none
@@ -454,6 +455,7 @@ end interface
    class (type_input_variable), pointer :: current_input_variable
    integer         :: ncid,varid
    logical         :: some_var_ok=.false.
+   REALTYPE,parameter :: zero=_ZERO_
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -481,6 +483,18 @@ end interface
          LEVEL3 timestr,': reading FABM surface fluxes ...',month
       end if
    end if
+
+   do n=1,size(model%state_variables)
+      if (.not. (model%state_variables(n)%no_precipitation_dilution .or. no_precipitation_dilution)) then
+         do j=jmin-HALO,jmax+HALO
+            do i=imin-HALO,imax+HALO
+               if (az(i,j) .eq. 1) then
+                  fabm_pel(i,j,kmax,n) = fabm_pel(i,j,kmax,n)*(_ONE_-fwf_int(i,j)/ho(i,j,kmax))
+               end if
+            end do
+         end do
+      end if
+   end do
 
 !  First we do all the vertical processes
 #ifdef SLICE_MODEL
@@ -537,7 +551,7 @@ end interface
 !           Transfer pointers to physical environment variables to FABM.
             call set_env_gotm_fabm(latc(i,j),lonc(i,j),dt,0,0,T(i,j,1:),S(i,j,1:), &
                                    rho(i,j,1:),nuh(i,j,0:),hn(i,j,0:),ww(i,j,0:), &
-                                   bioshade,I_0,cloud,taub_nonnorm,wind_speed,precip(i,j),evap(i,j), &
+                                   bioshade,I_0,cloud,taub_nonnorm,wind_speed,zero,zero, &
                                    z,A(i,j),g1(i,j),g2(i,j),yearday,secondsofday)
             call model%link_horizontal_data(id_bottom_depth_below_geoid,H(i,j))
             call model%link_horizontal_data(id_bottom_depth,D(i,j))
