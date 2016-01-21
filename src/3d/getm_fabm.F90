@@ -489,12 +489,7 @@ end interface
          do j=jmin-HALO,jmax+HALO
             do i=imin-HALO,imax+HALO
                if (az(i,j) .eq. 1) then
-!                 Note (KK): This would be the correct dilution if hn was
-!                            corrected in start_macro. This also requires,
-!                            that ho=hn is done in coordinates!
-!                  fabm_pel(i,j,kmax,n) = fabm_pel(i,j,kmax,n)*(_ONE_-fwf_int(i,j)/ho(i,j,kmax))
-                  fabm_pel(i,j,kmax,n) = fabm_pel(i,j,kmax,n)*            &
-                             ( ho(i,j,kmax) / (ho(i,j,kmax)+fwf_int(i,j)) )
+                  fabm_pel(i,j,kmax,n) = fabm_pel(i,j,kmax,n)*(_ONE_-fwf_int(i,j)/ho(i,j,kmax))
                end if
             end do
          end do
