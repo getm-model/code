@@ -82,14 +82,14 @@
          end if
       end do
    end do
-   LEVEL3 'max CFL number at depth=',H(max_pos(1),max_pos(2)),' at ',max_pos
-   LEVEL3 'at this position, dx = ',dxc(max_pos(1),max_pos(2)),' and dy =  ',dyc(max_pos(1),max_pos(2))
+   LEVEL3 'max CFL number at depth=',real(H(max_pos(1),max_pos(2))),' at ',max_pos
+   LEVEL3 'at this position, dx = ',real(dxc(max_pos(1),max_pos(2))),' and dy =  ',real(dyc(max_pos(1),max_pos(2)))
 
    if (dtm .gt. max_dt) then
-      FATAL 'reduce time-step (',dtm,') below ',max_dt
+      FATAL 'reduce time-step (',real(dtm),') below ',real(max_dt)
       stop 'cfl_check()'
    else
-      LEVEL3 'used dt (',dtm,') is less than ',max_dt
+      LEVEL3 'used dt (',real(dtm),') is less than ',real(max_dt)
    end if
 
 #ifdef FORTRAN90

@@ -283,9 +283,9 @@
    allocate(type_getm_host::output_manager_host)
    if (myid .ge. 0) then
       write(postfix,'(A,I4.4)') '.',myid
-      call output_manager_init(fm,trim(postfix))
+      call output_manager_init(fm,title,trim(postfix))
    else
-      call output_manager_init(fm)
+      call output_manager_init(fm,title)
    end if
 #endif
 
