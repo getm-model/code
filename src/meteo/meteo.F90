@@ -785,7 +785,7 @@
                      u10r => u10
                      v10r => v10
                   end if
-                  wind = sqrt( u10r*u10r + v10r*v10r )
+                  where (az.ne.0) wind = sqrt( u10r*u10r + v10r*v10r )
                !end if
             end if
 
