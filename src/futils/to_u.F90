@@ -75,6 +75,7 @@
          end do
 #endif
 !$OMP END DO
+         velx(imin-HALO,:) = missing
 
       case (3)
 
@@ -109,6 +110,8 @@
          end do
 #endif
 !$OMP END DO
+         velx(imin-HALO,:) = missing
+         velx(:,jmin-HALO) = missing
 
       case (4)
          stop 'to_u: grid_type=4 not implemented yet'
