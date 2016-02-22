@@ -364,6 +364,7 @@
 					<option value="9" label="2DH-P2">
 						<condition type="eq" variable="./vel2d_adv_split" value="0"/>
 					</option>
+					<option value="13" label="TVD-SPL-max-1/3 (second-order, monotone)"/>
 				</options>
 			</element>
 			<element name="Am_method" type="int" label="method for horizontal momentum diffusion coefficient">
@@ -502,6 +503,7 @@
 							<condition type="eq" variable="./vel3d_adv_split" value="3"/>
 						</condition>
 					</option>
+					<option value="13" label="TVD-SPL-max-1/3 (second-order, monotone)"/>
 				</options>
 			</element>
 			<element name="vel3d_adv_ver" type="int" label="vertical advection scheme for horizontal 3D velocities">
@@ -512,6 +514,7 @@
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+					<option value="13" label="TVD-SPL-max-1/3 (second-order, monotone)"/>
 				</options>
 			</element>
 			<element name="turb_adv_split" type="int" label="advection splitting for TKE and eps">
@@ -555,6 +558,7 @@
 							<condition type="eq" variable="./turb_adv_split" value="3"/>
 						</condition>
 					</option>
+					<option value="13" label="TVD-SPL-max-1/3 (second-order, monotone)"/>
 				</options>
 			</element>
 			<element name="turb_adv_ver" type="int" label="vertical advection scheme for TKE and eps">
@@ -565,6 +569,7 @@
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+					<option value="13" label="TVD-SPL-max-1/3 (second-order, monotone)"/>
 				</options>
 			</element>
 			<element name="calc_temp" type="bool" label="solve temperature equation"/>
@@ -673,6 +678,7 @@
 							<condition type="eq" variable="./temp_adv_split" value="3"/>
 						</condition>
 					</option>
+					<option value="13" label="TVD-SPL-max-1/3 (second-order, monotone)"/>
 				</options>
 			</element>
 			<element name="temp_adv_ver" type="int" label="vertical advection scheme for temperature">
@@ -683,6 +689,7 @@
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+					<option value="13" label="TVD-SPL-max-1/3 (second-order, monotone)"/>
 				</options>
 			</element>
 			<element name="temp_AH_method" type="int" label="method for horizontal diffusivity of heat">
@@ -831,6 +838,7 @@
 							<condition type="eq" variable="./salt_adv_split" value="3"/>
 						</condition>
 					</option>
+					<option value="13" label="TVD-SPL-max-1/3 (second-order, monotone)"/>
 				</options>
 			</element>
 			<element name="salt_adv_ver" type="int" label="vertical advection scheme for salinity">
@@ -841,6 +849,7 @@
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+					<option value="13" label="TVD-SPL-max-1/3 (second-order, monotone)"/>
 				</options>
 			</element>
 			<element name="salt_AH_method" type="int" label="method for horizontal diffusivity of salt">
@@ -1103,6 +1112,7 @@
 							<condition type="eq" variable="./fabm_adv_split" value="3"/>
 						</condition>
 					</option>
+					<option value="13" label="TVD-SPL-max-1/3 (second-order, monotone)"/>
 				</options>
 			</element>
 			<element name="fabm_adv_ver" type="int" label="vertical advection scheme for pelagic fabm fields">
@@ -1113,6 +1123,7 @@
 					<option value="4" label="TVD-Superbee (second-order, monotone)"/>
 					<option value="5" label="TVD-MUSCL (second-order, monotone)"/>
 					<option value="6" label="TVD-P2-PDM (third-order, monotone)"/>
+					<option value="13" label="TVD-SPL-max-1/3 (second-order, monotone)"/>
 				</options>
 			</element>
 			<element name="fabm_AH_method" type="int" label="method for horizontal diffusivity of pelagic fabm fields">
