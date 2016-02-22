@@ -75,6 +75,7 @@
          end do
 #endif
 !$OMP END DO
+         vely(:,jmin-HALO) = missing
 
       case (3)
 
@@ -109,6 +110,8 @@
          end do
 #endif
 !$OMP END DO
+         vely(imin-HALO,:) = missing
+         vely(:,jmin-HALO) = missing
 
       case (4)
          stop 'to_v: grid_type=4 not implemented yet'
