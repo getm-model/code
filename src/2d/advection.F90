@@ -58,18 +58,23 @@
    integer,public,parameter           :: NOADV=0,UPSTREAM=1,UPSTREAM_2DH=2
    integer,public,parameter           :: P2=3,SUPERBEE=4,MUSCL=5,P2_PDM=6
    integer,public,parameter           :: J7=7,FCT=8,P2_2DH=9
+   integer,public,parameter           :: SPLMAX13=13
    integer,public,parameter           :: CENTRAL=-1
-   character(len=64),public,parameter :: adv_schemes(0:9) = &
-      (/"advection disabled                             ",  &
-        "upstream advection (first-order, monotone)     ",  &
-        "2DH-upstream advection with forced monotonicity",  &
-        "P2 advection (third-order, non-monotone)       ",  &
-        "TVD-Superbee advection (second-order, monotone)",  &
-        "TVD-MUSCL advection (second-order, monotone)   ",  &
-        "TVD-P2-PDM advection (third-order, monotone)   ",  &
-        "2DH-J7 advection (Arakawa and Lamb, 1977)      ",  &
-        "2DH-FCT advection                              ",  &
-        "2DH-P2 advection                               "/)
+   character(len=64),public,parameter :: adv_schemes(0:13) = &
+      (/"advection disabled                             ",   &
+        "upstream advection (first-order, monotone)     ",   &
+        "2DH-upstream advection with forced monotonicity",   &
+        "P2 advection (third-order, non-monotone)       ",   &
+        "TVD-Superbee advection (second-order, monotone)",   &
+        "TVD-MUSCL advection (second-order, monotone)   ",   &
+        "TVD-P2-PDM advection (third-order, monotone)   ",   &
+        "2DH-J7 advection (Arakawa and Lamb, 1977)      ",   &
+        "2DH-FCT advection                              ",   &
+        "2DH-P2 advection                               ",   &
+        "advection disabled                             ",   &
+        "advection disabled                             ",   &
+        "advection disabled                             ",   &
+        "SPL-max-1/3                                    "/)
 !
 ! !LOCAL VARIABLES:
 #ifdef STATIC
@@ -463,7 +468,7 @@
 
             select case (scheme)
 
-               case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
+               case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(SPLMAX13))
 
                   fi = f
 
@@ -531,7 +536,7 @@
 
             select case (scheme)
 
-               case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
+               case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(SPLMAX13))
 
                   call adv_split_u(dt,f,f,p_Di,p_adv,U,DU,                    &
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
@@ -568,7 +573,7 @@
 
             select case (scheme)
 
-               case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
+               case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(SPLMAX13))
 
                   call adv_split_u(dt,f,f,p_Di,p_adv,U,DU,                    &
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
@@ -690,7 +695,7 @@
    end if
 
    select case (scheme)
-      case((NOADV),(UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(J7),(FCT),(P2_2DH))
+      case((NOADV),(UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(J7),(FCT),(P2_2DH),(SPLMAX13))
       case default
          FATAL 'adv_scheme=',scheme,' is invalid'
          stop
@@ -744,6 +749,7 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE           :: ratio,limiter,x,deltaf,deltafu
+   REALTYPE,parameter :: one3rd=_ONE_/3
    REALTYPE,parameter :: one6th=_ONE_/6
 !
 ! !REVISION HISTORY:
@@ -766,6 +772,8 @@
             limiter = min(_TWO_*ratio/(cfl+1.d-10),limiter,_TWO_/(_ONE_-cfl))
          case (SUPERBEE)
             limiter = max(min(_TWO_*ratio,_ONE_),min(ratio,_TWO_))
+         case (SPLMAX13)
+            limiter = min(_TWO_*ratio,one3rd*max(_ONE_+_TWO_*ratio,_TWO_+ratio),_TWO_)
          case (MUSCL)
             limiter = min(_TWO_*ratio,_HALF_*(_ONE_+ratio),_TWO_)
          case (P2)
