@@ -38,7 +38,7 @@
    REALTYPE                            :: offset
    integer                             :: ncid,ndims,dims(2),textr
    integer                             :: start(1),edges(1)
-   integer                             :: timedim,time_id
+   integer                             :: time_dim,time_id
    integer, allocatable                :: r_ids(:)
    integer, allocatable                :: salt_id(:)
    integer, allocatable                :: temp_id(:)
@@ -128,10 +128,13 @@
    err = nf90_open(fn,NF90_NOWRITE,ncid)
    if (err .ne. NF90_NOERR) go to 10
 
+   err = nf90_inq_dimid(ncid,"time",time_dim)
+   if (err .ne. NF90_NOERR) go to 10
+
    err = nf90_inq_varid(ncid,"time",time_id)
    if (err .ne. NF90_NOERR) go to 10
 
-   err = nf90_inquire_dimension(ncid,time_id,len = textr)
+   err = nf90_inquire_dimension(ncid,time_dim,len = textr)
    if (err .ne. NF90_NOERR) go to 10
 
    do n=1,rriver

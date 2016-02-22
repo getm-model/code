@@ -358,7 +358,7 @@
 
                select case (hscheme)
 
-                  case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(CENTRAL))
+                  case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(SPLMAX13),(CENTRAL))
 
                      do k=1,kmax
                         call adv_split_u(dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k),         &
@@ -475,7 +475,7 @@
 
                select case (hscheme)
 
-                  case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
+                  case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(SPLMAX13))
 
                      do k=1,kmax
                         call adv_split_u(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
@@ -690,14 +690,14 @@
    end if
 
    select case (hscheme)
-      case((NOADV),(UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(J7),(FCT),(P2_2DH))
+      case((NOADV),(UPSTREAM),(UPSTREAM_2DH),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(J7),(FCT),(P2_2DH),(SPLMAX13))
       case default
          FATAL 'hor_adv=',hscheme,' is invalid'
          stop
    end select
 
    select case (vscheme)
-      case((NOADV),(UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM))
+      case((NOADV),(UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(SPLMAX13))
       case default
          FATAL 'ver_adv=',vscheme,' is invalid'
          stop
