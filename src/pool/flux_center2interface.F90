@@ -88,6 +88,14 @@
 
    end select
 
+#ifdef SLICE_MODEL
+   if (ttag .eq. V_TAG) then
+      j = jmax / 2
+      fluxi(:,j-1) = fluxi(:,j)
+      fluxi(:,j+1) = fluxi(:,j)
+   end if
+#endif
+
 #ifdef DEBUG
    write(debug,*) 'Leaving flux_center2interface()'
    write(debug,*)
