@@ -450,7 +450,9 @@
       call fm%register('temp', 'Celsius', 'temperature', standard_name='', dimensions=(/id_dim_z/),data3d=T(_3D_W_), category='baroclinic')
       call fm%register('salt', '1e-3', 'salinity', standard_name='', dimensions=(/id_dim_z/),data3d=S(_3D_W_), category='baroclinic')
       call fm%register('idpdx', 'm', 'baroclinic pressure gradient - x', standard_name='', dimensions=(/id_dim_z/),data3d=idpdx(_3D_W_), category='baroclinic', output_level=output_level_debug)
+#ifndef SLICE_MODEL
       call fm%register('idpdy', 'm', 'baroclinic pressure gradient - y', standard_name='', dimensions=(/id_dim_z/),data3d=idpdy(_3D_W_), category='baroclinic', output_level=output_level_debug)
+#endif
    end if
 #endif
 
