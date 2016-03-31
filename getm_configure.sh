@@ -5,7 +5,7 @@ GETM_BASE=${GETM_BASE:=~/GETM/code}
 GOTM_BASE=${GOTM_BASE:=~/GOTM/code}
 FABM_BASE=${FABM_BASE:=~/FABM/code}
 
-# default Fortran compiler is gfortran - overide by setting compuiler like:
+# default Fortran compiler is gfortran - overide by setting compiler like:
 # export compiler=ifort
 compiler=${compiler:=gfortran}
 
@@ -14,6 +14,12 @@ compiler=${compiler:=gfortran}
 # to set use e.g.:
 # export coordinates=Spherical
 coordinate=${coordinate:=Cartesian}
+
+# configurable installation prefix
+# override by e.g.:
+# export install_prefix=/tmp
+# note that $compiler will be appended
+install_prefix=${install_prefix:=~/local/getm/$compiler}
 
 # NetCDF
 # nf-config must be in the path and correpsond to the value of compiler
