@@ -186,7 +186,7 @@
 #endif
 
    STDERR LINE
-   STDERR 'getm ver. ',RELEASE,': Started on  ',dstr,' ',tstr
+   STDERR 'getm: Started on  ',dstr,' ',tstr
    STDERR LINE
    STDERR 'Initialising....'
    STDERR LINE
