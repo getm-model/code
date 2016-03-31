@@ -30,6 +30,7 @@ install_prefix=${install_prefix:=~/local/getm/$compiler}
 mkdir -p $compiler
 cd $compiler
 cmake $GETM_BASE/src \
+      -DGETM_EMBED_VERSION=on \
       -DGOTM_BASE=$GOTM_BASE \
       -DGETM_USE_FABM=on \
       -DFABM_BASE=$FABM_BASE/ \
