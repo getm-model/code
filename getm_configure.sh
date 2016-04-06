@@ -19,7 +19,7 @@ coordinate=${coordinate:=Cartesian}
 # override by e.g.:
 # export install_prefix=/tmp
 # note that $compiler will be appended
-install_prefix=${install_prefix:=~/local/getm/$compiler}
+install_prefix=${install_prefix:=~/local/getm}
 
 # NetCDF
 # nf-config must be in the path and correpsond to the value of compiler
@@ -37,5 +37,5 @@ cmake $GETM_BASE/src \
       -DCMAKE_Fortran_COMPILER=$compiler \
       -DGETM_USE_PARALLEL=off \
       -DGETM_COORDINATE_TYPE=$coordinate \
-      -DCMAKE_INSTALL_PREFIX=~/local/getm/$compiler
+      -DCMAKE_INSTALL_PREFIX=$install_prefix/$compiler
 cd ..
