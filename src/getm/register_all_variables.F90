@@ -63,6 +63,7 @@
 #ifndef NO_3D
    call register_3d_variables(runtype)
 #endif
+   call register_fabm_variables()
 #if 0
    call register_diagnostic_variables()
 #endif
@@ -486,6 +487,73 @@
 
    return
    end subroutine register_diagnostic_variables
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: register_fabm_variables() - register FABM variables.
+!
+! !INTERFACE:
+   subroutine register_fabm_variables()
+!
+! !DESCRIPTION:
+!
+! !USES:
+#ifdef _FABM_
+   use getm_fabm
+#endif
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !LOCAL VARIABLES:
+  integer :: i,output_level
+  logical :: in_output
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   LEVEL2 'register_fabm_variables()'
+
+#ifdef _FABM_
+   do i=1,size(model%state_variables)
+      output_level = output_level_default
+      if (model%state_variables(i)%output==output_none) output_level = output_level_debug
+      call fm%register(model%state_variables(i)%name, model%state_variables(i)%units, &
+         model%state_variables(i)%long_name, minimum=model%state_variables(i)%minimum, maximum=model%state_variables(i)%maximum, &
+         fill_value=model%state_variables(i)%missing_value, dimensions=(/id_dim_z/), data3d=fabm_pel(_3D_W_,i), category='fabm'//model%state_variables(i)%target%owner%get_path(), output_level=output_level)
+   end do
+   do i=1,size(model%bottom_state_variables)
+      output_level = output_level_default
+      if (model%bottom_state_variables(i)%output==output_none) output_level = output_level_debug
+      call fm%register(model%bottom_state_variables(i)%name, model%bottom_state_variables(i)%units, &
+         model%bottom_state_variables(i)%long_name, minimum=model%bottom_state_variables(i)%minimum, &
+         maximum=model%bottom_state_variables(i)%maximum, fill_value=model%bottom_state_variables(i)%missing_value, &
+         data2d=fabm_ben(_2D_W_,i), category='fabm'//model%bottom_state_variables(i)%target%owner%get_path(), output_level=output_level)
+   end do
+   do i=1,size(model%diagnostic_variables)
+      output_level = output_level_default
+      if (model%diagnostic_variables(i)%output==output_none) output_level = output_level_debug
+      call fm%register(model%diagnostic_variables(i)%name, model%diagnostic_variables(i)%units, &
+         model%diagnostic_variables(i)%long_name, minimum=model%diagnostic_variables(i)%minimum, maximum=model%diagnostic_variables(i)%maximum, &
+         fill_value=model%diagnostic_variables(i)%missing_value, dimensions=(/id_dim_z/), data3d=fabm_diag(_3D_W_,i), category='fabm'//model%diagnostic_variables(i)%target%owner%get_path(), output_level=output_level, used=in_output)
+      if (in_output) model%diagnostic_variables(i)%save = .true.
+   end do
+   do i=1,size(model%horizontal_diagnostic_variables)
+      output_level = output_level_default
+      if (model%horizontal_diagnostic_variables(i)%output==output_none) output_level = output_level_debug
+      call fm%register(model%horizontal_diagnostic_variables(i)%name, model%horizontal_diagnostic_variables(i)%units, &
+         model%horizontal_diagnostic_variables(i)%long_name, minimum=model%horizontal_diagnostic_variables(i)%minimum, maximum=model%horizontal_diagnostic_variables(i)%maximum, &
+         fill_value=model%horizontal_diagnostic_variables(i)%missing_value, data2d=fabm_diag_hz(_2D_W_,i), category='fabm'//model%horizontal_diagnostic_variables(i)%target%owner%get_path(), output_level=output_level, used=in_output)
+      if (in_output) model%horizontal_diagnostic_variables(i)%save = .true.
+   end do
+#endif
+
+   return
+   end subroutine register_fabm_variables
 !EOC
 
 !-----------------------------------------------------------------------
