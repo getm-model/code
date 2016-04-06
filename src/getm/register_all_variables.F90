@@ -516,6 +516,7 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+   if (.not. fabm_calc) return
    LEVEL2 'register_fabm_variables()'
 
 #ifdef _FABM_
