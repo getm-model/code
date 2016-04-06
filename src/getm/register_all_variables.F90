@@ -309,10 +309,10 @@
 
 
 !  category - 2d
-   call fm%register('z', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=10.05_rk, data2d=z(_2D_W_), category="2d")
+   call fm%register('z', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=-9999.0_rk, data2d=z(_2D_W_), category="2d")
 
-   call fm%register('zo', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=10.05_rk, data2d=zo(_2D_W_), category="2d", output_level=output_level_debug)
-   call fm%register('D', 'm', 'water depth', standard_name='water depth', fill_value=10.05_rk, data2d=D(_2D_W_), category="2d")
+   call fm%register('zo', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=-9999.0_rk, data2d=zo(_2D_W_), category="2d", output_level=output_level_debug)
+   call fm%register('D', 'm', 'water depth', standard_name='water depth', fill_value=0.0_rk, data2d=D(_2D_W_), category="2d")
 
 
    return
@@ -442,7 +442,7 @@
       call fm%register('hn', 'm', 'layer thickness', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hn(_3D_W_), category='grid')
       call fm%register('hun', 'm', 'layer thickness - U-points', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hun(_3D_W_), category='grid', output_level=output_level_debug)
       call fm%register('hvn', 'm', 'layer thickness - V-points', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hvn(_3D_W_), category='grid', output_level=output_level_debug)
-      call fm%register('ssen', 'm', 'elevtion at T-points (3D)', standard_name='', data2d=ssen(_2D_W_), category='3d', output_level=output_level_debug)
+      call fm%register('ssen', 'm', 'elevtion at T-points (3D)', standard_name='', data2d=ssen(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       call fm%register('ssun', 'm', 'elevtion at U-points (3D)', standard_name='', data2d=ssun(_2D_W_), category='3d', output_level=output_level_debug)
       call fm%register('ssvn', 'm', 'elevtion at V-points (3D)', standard_name='', data2d=ssvn(_2D_W_), category='3d', output_level=output_level_debug)
    end if
