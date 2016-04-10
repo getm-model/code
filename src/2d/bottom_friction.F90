@@ -123,7 +123,7 @@
 
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
-      do i=imin-HALO,imax+HALO
+      do i=imin-HALO,imax+HALO-1
          if (au(i,j) .gt. 0) then
             uloc(i,j) = U(i,j)/DU(i,j)
             HH(i,j)=max(min_depth,DU(i,j))
@@ -149,7 +149,7 @@
    if (runtype .eq. 1) then
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
+         do i=imin-HALO,imax+HALO-1
             if (au(i,j) .gt. 0) then
                fricvel(i,j)=sqrt(ruu(i,j)*(uloc(i,j)**2+vloc(i,j)**2))
                zub(i,j)=min(HH(i,j),zub0(i,j)+_TENTH_*avmmol/max(avmmol,fricvel(i,j)))
@@ -163,7 +163,7 @@
    else
 !$OMP DO SCHEDULE(RUNTIME)
       do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
+         do i=imin-HALO,imax+HALO-1
             if (au(i,j) .gt. 0) then
                ru(i,j)=ruu(i,j)*sqrt(uloc(i,j)**2+vloc(i,j)**2)
             end if
@@ -189,7 +189,7 @@
 !$OMP END DO NOWAIT
 
 !$OMP DO SCHEDULE(RUNTIME)
-   do j=jmin-HALO,jmax+HALO
+   do j=jmin-HALO,jmax+HALO-1
       do i=imin-HALO,imax+HALO
          if (av(i,j) .gt. 0) then
             vloc(i,j)=V(i,j)/DV(i,j)
@@ -215,7 +215,7 @@
 
    if (runtype .eq. 1) then
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+HALO
+      do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO
             if (av(i,j) .gt. 0) then
                fricvel(i,j)=sqrt(rvv(i,j)*(uloc(i,j)**2+vloc(i,j)**2))
@@ -229,7 +229,7 @@
 !$OMP END DO
    else
 !$OMP DO SCHEDULE(RUNTIME)
-      do j=jmin-HALO,jmax+HALO
+      do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO
             if (av(i,j) .gt. 0) then
                rv(i,j)=rvv(i,j)*sqrt(uloc(i,j)**2+vloc(i,j)**2)
