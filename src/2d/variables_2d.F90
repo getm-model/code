@@ -114,7 +114,7 @@
    break_stat = 0
 #endif
 
-   z  = _ZERO_; zo =_ZERO_
+   z  = -9999.0; zo =_ZERO_
 
    zub=_ZERO_ ; zub0=_ZERO_
    zvb=_ZERO_ ; zvb0=_ZERO_
