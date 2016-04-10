@@ -17,7 +17,9 @@ LIBSRC	= ver_interpol.F90 kbk_interpol.F90 tridiagonal.F90 pos.F90 \
 
 SRC	= $(MODSRC) $(LIBSRC)
 
-MOD = ${LIB}(getm_timers.o)
+MOD = \
+${LIB}(getm_version.o) \
+${LIB}(getm_timers.o)
 ifeq ($(GETM_PARALLEL),true)
 MOD += \
 ${LIB}(halo_mpi.o)	\
