@@ -206,7 +206,7 @@
 #endif
 
    STDERR LINE
-   STDERR 'getm ver. ',RELEASE,': Started on  ',dstr,' ',tstr
+   STDERR 'getm: Started on  ',dstr,' ',tstr
    STDERR LINE
    STDERR 'Initialising....'
    STDERR LINE
@@ -351,7 +351,7 @@
    if (.not. dryrun) then
       call do_output(runtype,MinN-1,timestep)
 #ifdef _FLEXIBLE_OUTPUT_
-      if (save_initial) call output_manager_save(julianday,secondsofday,MinN)
+      if (save_initial) call output_manager_save(julianday,secondsofday,MinN-1)
 #endif
    end if
 
