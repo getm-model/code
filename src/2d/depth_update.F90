@@ -53,8 +53,10 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
+         if (az(i,j) .gt. 0) then
          ! TODO/BJB: Is it enough to do this on az?
          D(i,j) = z(i,j)+H(i,j)
+         end if
       end do
    end do
 !$OMP END DO NOWAIT
