@@ -448,6 +448,7 @@
 
 !  category - 3d
    if (runtype .ge. 2) then
+      call fm%register('zcn', 'm', 'z', standard_name='', dimensions=(/id_dim_z/), data3d=zcn(_3D_W_), category='grid')
       call fm%register('hn', 'm', 'layer thickness', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hn(_3D_W_), category='grid')
       call fm%register('hun', 'm', 'layer thickness - U-points', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hun(_3D_W_), category='grid', output_level=output_level_debug)
       call fm%register('hvn', 'm', 'layer thickness - V-points', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hvn(_3D_W_), category='grid', output_level=output_level_debug)
