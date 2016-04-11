@@ -1,0 +1,43 @@
+@rem Script to configure the getm executable uing CMake
+
+@set old=%cd%
+@rem echo %old%
+
+@echo Build directory:
+@if "%build_dir%"=="" ( @set build_dir=%UserProfile%\build\getm ) else ( @echo build_dir is set )
+@echo %build_dir%
+@if not EXIST "%build_dir%\." ( @mkdir "%build_dir%" )
+@chdir "%build_dir%"
+
+@echo Base directories:
+@set GETM_BASE=%USERPROFILE%\GETM\code
+@set GOTM_BASE=%USERPROFILE%\GOTM\code
+@set FABM_BASE=%USERPROFILE%\FABM\code
+@echo %GETM_BASE%
+@echo %GOTM_BASE%
+@echo %FABM_BASE%
+
+@echo Default Fortran compiler is ifort
+@set compiler=ifort
+
+@echo Install directory:
+@set install_prefix=%APPDATA%\getm
+@echo %install_prefix%
+
+@set coordinate=Cartesian
+@if not EXIST "%compiler%\%coordinate%\." ( mkdir "%compiler%\%coordinate%" )
+@chdir "%compiler%\%coordinate%"
+@echo Ready to configure:
+cmake "%GETM_BASE%\src" ^
+      -DGETM_EMBED_VERSION=on ^
+      -DGOTM_BASE="%GOTM_BASE%" ^
+      -DGETM_USE_FABM=on ^
+      -DFABM_BASE="%FABM_BASE%" ^
+      -DCMAKE_Fortran_COMPILER=%compiler% ^
+      -DGETM_USE_PARALLEL=off ^
+      -DCMAKE_INSTALL_PREFIX="%install_prefix%\%compiler%"
+
+@pause
+
+@chdir ..\..
+@chdir %old%
