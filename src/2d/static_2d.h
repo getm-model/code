@@ -8,6 +8,7 @@
    REALTYPE,dimension(E2DFIELD),target :: t_zo,t_z,D,Dvel,DU,DV
    REALTYPE U(E2DFIELD)
    REALTYPE V(E2DFIELD)
+   REALTYPE,dimension(E2DFIELD),target :: velx,vely
    REALTYPE UEx(E2DFIELD)
    REALTYPE VEx(E2DFIELD)
    REALTYPE ru(E2DFIELD)
