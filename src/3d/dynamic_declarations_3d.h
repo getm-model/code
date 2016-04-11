@@ -7,6 +7,7 @@
 
   REALTYPE, dimension(:,:,:), allocatable   :: uu,vv
   REALTYPE, dimension(:,:,:), allocatable, target :: ww
+  REALTYPE, dimension(:,:,:), allocatable, target :: velx3d,vely3d,w
 
 #ifdef _MOMENTUM_TERMS_
   REALTYPE, dimension(:,:,:), allocatable, target :: tdv_u,adv_u,vsd_u

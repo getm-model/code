@@ -15,26 +15,23 @@ if(GETM_FLAGS)
    add_definitions(${GETM_FLAGS})
 endif(GETM_FLAGS)
 
-find_package(Git)
-if(GIT_FOUND)
-  #add_custom_command(OUTPUT git_revision.h
-  #                   COMMAND ${GIT_EXECUTABLE} log -1 "--format=#define GIT_REVISION \"%H\"" > ${CMAKE_CURRENT_BINARY_DIR}/git_revision.h
-  #                   DEPENDS SOME_GIT_FILE
-  #                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  #                   VERBATIM
-  #                  )
-  execute_process(COMMAND ${GIT_EXECUTABLE} log -1 --format=%H
-                  OUTPUT_VARIABLE GIT_REVISION
-                  OUTPUT_STRIP_TRAILING_WHITESPACE
-                  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-else()
-  set(GIT_REVISION "unknown")
+set(GIT_COMMIT_ID ${getm_VERSION})
+configure_file("${PROJECT_SOURCE_DIR}/futils/getm_version.F90.in" getm_version.F90)
+option(GETM_EMBED_VERSION "Embed GETM version information" OFF)
+if(GETM_EMBED_VERSION)
+  add_custom_target(getm_version
+    ${CMAKE_COMMAND} -DINFILE=${PROJECT_SOURCE_DIR}/futils/getm_version.F90.in -DOUTFILE=${CMAKE_BINARY_DIR}/getm_version.F90 -P "${PROJECT_SOURCE_DIR}/cmake/Modules/GetGitInfo.cmake"
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    COMMENT "Retrieving description of last GETM commit..."
+    SOURCES ${PROJECT_SOURCE_DIR}/futils/getm_version.F90.in "${PROJECT_SOURCE_DIR}/cmake/Modules/GetGitInfo.cmake"
+    VERBATIM
+  )
 endif()
 
 # Generate include file with version information.
-configure_file(../include/version.h.in version.h)
-configure_file(../include/fortran_version.h.in fortran_version.h)
-configure_file(../include/git_revision.h.in git_revision.h)
+#configure_file(../include/version.h.in version.h)
+#configure_file(../include/fortran_version.h.in fortran_version.h)
+#configure_file(../include/git_revision.h.in git_revision.h)
 
 # Use solution folders in IDEs
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -78,6 +75,8 @@ option(GETM_USE_FABM "Include support for Framework for Aquatic Biogeochemical M
 if(GETM_USE_FABM)
    add_definitions(-D_FABM_)
    set (GETM_FABM 3d/getm_fabm.F90)
+   set(FABM_EMBED_VERSION ${GETM_EMBED_VERSION} CACHE BOOL "Embed FABM version information" FORCE)
+
 endif(GETM_USE_FABM)
 
 include(CMakeDependentOption)
@@ -186,6 +185,7 @@ add_library(2d OBJECT
             2d/uv_diff_2dh.F90
             2d/uv_diffusion.F90
             2d/variables_2d.F90
+            2d/velocity_update.F90
            )
 set_property(TARGET 2d APPEND PROPERTY INCLUDE_DIRECTORIES "${PROJECT_SOURCE_DIR}/2d")
 
@@ -234,6 +234,7 @@ add_library(3d OBJECT
             3d/uv_advect_3d.F90
             3d/uv_diffusion_3d.F90
             3d/variables_3d.F90
+            3d/velocity_update_3d.F90
             3d/vertical_coordinates.F90
             3d/vv_momentum_3d.F90
             3d/ww_momentum_3d.F90
@@ -287,13 +288,18 @@ add_library(futils OBJECT
             futils/to_w.F90
             futils/tridiagonal.F90
             futils/ver_interpol.F90
+            ${CMAKE_BINARY_DIR}/getm_version.F90
            )
+if(GETM_EMBED_VERSION)
+  add_dependencies(futils getm_version)
+endif()
 
 add_library(getm OBJECT
             getm/cleanup.F90
             getm/initialise.F90
             getm/integration.F90
             getm/register_all_variables.F90
+            getm/print_version.F90
            )
 
 add_library(input OBJECT
@@ -384,6 +390,7 @@ set_property(TARGET futils ncdf input APPEND PROPERTY INCLUDE_DIRECTORIES "${Net
 add_definitions(-DNETCDF_FMT -DREAL_4B=real\(4\))
 
 # Use GOTM_PREFIX to locate include and lib directories
+set(GOTM_EMBED_VERSION ${GETM_EMBED_VERSION} CACHE BOOL "Embed GOTM version information" FORCE)
 find_path(GOTM_BASE src/gotm/gotm.F90 DOC "Path to GOTM source directory.")
 if(GOTM_BASE)
   set(GOTM_BUILD_LIBRARIES_ONLY ON)
@@ -397,7 +404,7 @@ if(GOTM_BASE)
   endif()
   if(GETM_USE_FABM)
     set(GOTM_LIBRARIES ${GOTM_LIBRARIES} gotm_fabm)
-    set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES $<TARGET_PROPERTY:gotm_fabm,INTERFACE_INCLUDE_DIRECTORIES>)
+    set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES $<TARGET_PROPERTY:gotm_fabm,INTERFACE_INCLUDE_DIRECTORIES>)
   endif()
   mark_as_advanced(GOTM_PREFIX GOTM_USE_FABM)
 #KB  add_dependencies(output ${GOTM_LIBRARIES})
@@ -408,7 +415,7 @@ else()
   # Use FABM_PREFIX to locate include and lib directories
   if(GETM_USE_FABM)
     find_package(FABM REQUIRED)
-    set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
+    set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
   endif()
 endif()
 set_property(TARGET 2d APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")

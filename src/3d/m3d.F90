@@ -398,6 +398,8 @@
 
    end if
 
+   call velocity_update_3d()
+
    return
    end subroutine postinit_3d
 !EOC
@@ -608,6 +610,8 @@
       call toc(TIM_INTEGR3D)
 
    end if
+
+   call velocity_update_3d()
 
    call slow_terms()
 #endif
