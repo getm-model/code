@@ -67,7 +67,7 @@
    secs = t2-t1
    STDERR LINE
    if( dryrun ) then
-      LEVEL1 'getm ver. ',RELEASE,' just did a dry run'
+      LEVEL1 'getm just did a dry run'
       LEVEL1 'Number of calc-points: ',Calc_Points
       LEVEL1 'Space requirements (global 2D and 3D arrays):'
       LEVEL2 '2D: ',mem2d/1024,' kbytes'
@@ -77,7 +77,7 @@
       end if
 #endif
    else
-      LEVEL1 'getm ver. ',RELEASE,': Completed on ',datestr,' ',timestr
+      LEVEL1 'getm: Completed on ',datestr,' ',timestr
       LEVEL1 'Memory used (global 2D and 3D arrays):'
       LEVEL2 '2D: ',mem2d/1024,' kbytes'
 #ifndef NO_3D
@@ -130,16 +130,13 @@
 
       select case (arg)
       case ('-v', '--version')
-         LEVEL0
-         LEVEL0 'GETM:     www.getm.eu'
-         LEVEL0 'version:  ',RELEASE
-         LEVEL0 'git:      ',GIT_REVISION
-         LEVEL0 'compiler: ',FORTRAN_VERSION
-         LEVEL0
+         LEVEL0 'GETM www.getm.eu'
+         call print_version()
          stop
       case ('-c', '--compile')
-         LEVEL0
-         call compilation_options
+         LEVEL0 'GETM www.getm.eu'
+         call print_version()
+         call compilation_options()
          LEVEL0
          stop
       case ('-h', '--help')
@@ -182,14 +179,6 @@
 !-----------------------------------------------------------------------
    subroutine compilation_options
    IMPLICIT NONE
-!
-   STDERR LINE
-   STDERR 'GETM:     www.getm.eu'
-   STDERR 'version:  ',RELEASE
-   STDERR 'git:      ',GIT_REVISION
-   STDERR 'compiler: ',FORTRAN_VERSION
-   STDERR 'Compilation options: '
-   STDERR LINE
 !
 #ifdef GETM_PARALLEL
    LEVEL1 'Compiled for parallel execution'
