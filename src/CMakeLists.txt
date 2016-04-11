@@ -184,6 +184,7 @@ add_library(2d OBJECT
             2d/uv_diff_2dh.F90
             2d/uv_diffusion.F90
             2d/variables_2d.F90
+            2d/velocity_update.F90
            )
 set_property(TARGET 2d APPEND PROPERTY INCLUDE_DIRECTORIES "${PROJECT_SOURCE_DIR}/2d")
 
@@ -231,6 +232,7 @@ add_library(3d OBJECT
             3d/uv_advect_3d.F90
             3d/uv_diffusion_3d.F90
             3d/variables_3d.F90
+            3d/velocity_update_3d.F90
             3d/vv_momentum_3d.F90
             3d/ww_momentum_3d.F90
            )

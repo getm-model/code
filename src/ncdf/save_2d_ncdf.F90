@@ -21,6 +21,7 @@
    use domain,       only: dxv,dyu,arcd1
    use m2d,          only: dtm
    use variables_2d, only: zo,z,D,Dvel,U,DU,V,DV,res_u,res_v
+   use variables_2d, only: velx,vely
 #ifdef USE_BREAKS
    use variables_2d, only: break_stat
 #endif
@@ -93,21 +94,11 @@
 
 !     velocites
       if (u_id .ne. -1) then
-         wrk = _ZERO_
-         call to_u(imin,jmin,imax,jmax,az,                            &
-                   dtm,grid_type,                                     &
-                   dxv,dyu,arcd1,                                     &
-                   xc,xu,xv,z,zo,Dvel,U,DU,V,DV,wrk,wrk,vel_missing,ws)
-         err = nf90_put_var(ncid,u_id,ws(_2D_W_),start,edges)
+         err = nf90_put_var(ncid,u_id,velx(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
       if (v_id .ne. -1) then
-         wrk = _ZERO_
-         call to_v(imin,jmin,imax,jmax,az,                            &
-                   dtm,grid_type,                                     &
-                   dxv,dyu,arcd1,                                     &
-                   yc,yu,yv,z,zo,Dvel,U,DU,V,DV,wrk,wrk,vel_missing,ws)
-         err = nf90_put_var(ncid,v_id,ws(_2D_W_),start,edges)
+         err = nf90_put_var(ncid,v_id,vely(_2D_W_),start,edges)
          if (err .NE. NF90_NOERR) go to 10
       end if
 

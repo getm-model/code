@@ -43,6 +43,17 @@
          REALTYPE,dimension(E2DFIELD),intent(out) :: D,Dvel,DU,DV
       end subroutine depth_update
 
+      subroutine velocity_update(dt,z,zo,Dvel,U,DU,V,DV,wwm,wwp,missing,  &
+                                 velx,vely)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         REALTYPE,intent(in)                      :: dt
+         REALTYPE,dimension(E2DFIELD),intent(in)  :: z,zo,Dvel,U,DU,V,DV
+         REALTYPE,dimension(E2DFIELD),target,intent(in),optional :: wwm,wwp
+         REALTYPE,intent(in),optional             :: missing
+         REALTYPE,dimension(E2DFIELD),intent(out) :: velx,vely
+      end subroutine velocity_update
+
       subroutine uv_advect(U,V,D,Dvel,DU,DV)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
@@ -412,6 +423,8 @@
 
    end if
 
+   call velocity_update(dtm,z,zo,Dvel,U,DU,V,DV,velx=velx,vely=vely)
+
    return
    end subroutine postinit_2d
 !EOC
@@ -488,6 +501,7 @@
    if (have_boundaries) call update_2d_bdy(loop,bdy2d_ramp)
    call sealevel(loop)
    call depth_update(zo,z,D,Dvel,DU,DV)
+   call velocity_update(dtm,z,zo,Dvel,U,DU,V,DV,velx=velx,vely=vely)
 
    if(residual .gt. 0) then
       call tic(TIM_INTEGR2D)
