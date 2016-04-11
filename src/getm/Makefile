@@ -6,7 +6,8 @@ include ../Rules.make
 
 LIB	= $(LIBDIR)/libgetm${buildtype}.a
 
-SRC	= main.F90 initialise.F90 integration.F90 cleanup.F90
+SRC	= main.F90 initialise.F90 integration.F90 cleanup.F90 \
+   	  print_version.F90
 
 MOD   = \
 ${LIB}(register_all_variables.o) \
@@ -14,7 +15,8 @@ ${LIB}(integration.o)		\
 ${LIB}(initialise.o)
 
 OBJ   = \
-${LIB}(cleanup.o)
+${LIB}(cleanup.o) \
+${LIB}(print_version.o)
 
 all: modules objects
 

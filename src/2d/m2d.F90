@@ -43,6 +43,17 @@
          REALTYPE,dimension(E2DFIELD),intent(out) :: D,Dvel,DU,DV
       end subroutine depth_update
 
+      subroutine velocity_update(dt,z,zo,Dvel,U,DU,V,DV,wwm,wwp,missing,  &
+                                 velx,vely)
+         use domain, only: imin,imax,jmin,jmax
+         IMPLICIT NONE
+         REALTYPE,intent(in)                      :: dt
+         REALTYPE,dimension(E2DFIELD),intent(in)  :: z,zo,Dvel,U,DU,V,DV
+         REALTYPE,dimension(E2DFIELD),target,intent(in),optional :: wwm,wwp
+         REALTYPE,intent(in),optional             :: missing
+         REALTYPE,dimension(E2DFIELD),intent(out) :: velx,vely
+      end subroutine velocity_update
+
       subroutine uv_advect(U,V,D,Dvel,DU,DV,numdis)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
@@ -196,7 +207,7 @@
       select case (elev_method)
          case(1)
             LEVEL2 'setting initial surface elevation to ',real(elev_const)
-            z = elev_const
+            where ( az.gt.0 ) z = elev_const
          case(2)
             LEVEL2 'getting initial surface elevation from ',trim(elev_file)
             call get_2d_field(trim(elev_file),"elev",ilg,ihg,jlg,jhg,.true.,z(ill:ihl,jll:jhl))
@@ -207,7 +218,7 @@
             stop 'init_2d(): invalid elev_method'
       end select
 
-      where ( z .lt. -H+min_depth)
+      where ( az.gt.0 .and. z.lt.-H+min_depth)
          z = -H+min_depth
       end where
       zo = z
@@ -411,14 +422,16 @@
          end where
 !        This is probably not absolutely necessary:
          where (az .eq. 0)
-            z  = _ZERO_
-            zo = _ZERO_
+            z  = -9999.
+            zo = -9999.
          end where
       end if
 
       call depth_update(zo,z,D,Dvel,DU,DV)
 
    end if
+
+   call velocity_update(dtm,z,zo,Dvel,U,DU,V,DV,velx=velx,vely=vely)
 
    return
    end subroutine postinit_2d
@@ -497,6 +510,7 @@
    if (have_boundaries) call update_2d_bdy(loop,bdy2d_ramp)
    call sealevel(loop)
    call depth_update(zo,z,D,Dvel,DU,DV)
+   call velocity_update(dtm,z,zo,Dvel,U,DU,V,DV,velx=velx,vely=vely)
 
    if(residual .gt. 0) then
       call tic(TIM_INTEGR2D)
