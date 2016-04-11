@@ -93,10 +93,8 @@
                                + (                                &
                                     U(i  ,j  )*yu(i  ,j  )*DYU    &
                                   - U(i-1,j  )*yu(i-1,j  )*DYUIM1 &
-#ifndef SLICE_MODEL
                                   + V(i  ,j  )*yv(i  ,j  )*DXV    &
                                   - V(i  ,j-1)*yv(i  ,j-1)*DXVJM1 &
-#endif
                                  )                                &
                                  *ARCD1                           &
                               )                                   &
