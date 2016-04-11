@@ -24,20 +24,23 @@
 @set install_prefix=%APPDATA%\getm
 @echo %install_prefix%
 
-@set coordinate=Cartesian
-@if not EXIST "%compiler%\%coordinate%\." ( mkdir "%compiler%\%coordinate%" )
-@chdir "%compiler%\%coordinate%"
 @echo Ready to configure:
-cmake "%GETM_BASE%\src" ^
-      -DGETM_EMBED_VERSION=on ^
-      -DGOTM_BASE="%GOTM_BASE%" ^
-      -DGETM_USE_FABM=on ^
-      -DFABM_BASE="%FABM_BASE%" ^
-      -DCMAKE_Fortran_COMPILER=%compiler% ^
-      -DGETM_USE_PARALLEL=off ^
-      -DCMAKE_INSTALL_PREFIX="%install_prefix%\%compiler%"
+FOR %%c IN (Cartesian Spherical Curvilinear) DO (
+   @IF NOT EXIST "%compiler%\%%c\." ( mkdir "%compiler%\%%c" )
+   @chdir "%compiler%\%%c"
+   cmake "%GETM_BASE%\src" ^
+         -DGETM_EMBED_VERSION=on ^
+         -DGOTM_BASE="%GOTM_BASE%" ^
+         -DGETM_USE_FABM=on ^
+         -DFABM_BASE="%FABM_BASE%" ^
+         -DCMAKE_Fortran_COMPILER=%compiler% ^
+         -DGETM_USE_PARALLEL=off ^
+         -DGETM_COORDINATE_TYPE=%%c ^
+         -DCMAKE_INSTALL_PREFIX="%install_prefix%\%compiler%"
+
+   @chdir ..\..
+)
 
 @pause
 
-@chdir ..\..
 @chdir %old%

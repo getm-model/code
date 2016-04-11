@@ -11,13 +11,15 @@
 @echo Default Fortran compiler is ifort
 @set compiler=ifort
 
-@set coordinate=Cartesian
-@chdir "%compiler%\%coordinate%"
 @echo Ready to build/compile:
-@rem cmake --build . --clean-first --config Release --target INSTALL
-cmake --build . --config Release --target INSTALL
+@FOR %%c IN (Cartesian Spherical Curvilinear) DO (
+   @chdir "%compiler%\%%c"
+   @rem cmake --build . --clean-first --config Release --target INSTALL
+   @cmake --build . --config Release --target INSTALL
+
+   @chdir ..\..
+)
 
 @pause
 
-@chdir ..\..
 @chdir %old%
