@@ -340,7 +340,7 @@
 !
 ! !USES:
    use variables_3d
-   use m3d, only: calc_temp,calc_salt
+   use m3d, only: update_temp,update_salt
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -485,11 +485,11 @@
    if (do_numerical_analyses_3d) then
       call fm%register('numdis_3d', 'W/kg', 'numerical dissipation (3D)', standard_name='', dimensions=(/id_dim_z/), data3d=numdis_3d(_3D_W_), category='3d', output_level=output_level_debug)
       call fm%register('phydis_3d', 'W/kg', 'physical dissipation (3D)' , standard_name='', dimensions=(/id_dim_z/), data3d=phydis_3d(_3D_W_), category='3d', output_level=output_level_debug)
-      if (calc_temp) then
+      if (update_temp) then
          call fm%register('nummix_temp', 'degC**2/s', 'numerical mixing of temperature', standard_name='', dimensions=(/id_dim_z/), data3d=nummix_T(_3D_W_), category='3d', output_level=output_level_debug)
          call fm%register('phymix_temp', 'degC**2/s', 'physical mixing of temperature' , standard_name='', dimensions=(/id_dim_z/), data3d=phymix_T(_3D_W_), category='3d', output_level=output_level_debug)
       end if
-      if (calc_salt) then
+      if (update_salt) then
          call fm%register('nummix_salt', 'psu**2/s', 'numerical mixing of salinity', standard_name='', dimensions=(/id_dim_z/), data3d=nummix_S(_3D_W_), category='3d', output_level=output_level_debug)
          call fm%register('phymix_salt', 'psu**2/s', 'physical mixing of salinity' , standard_name='', dimensions=(/id_dim_z/), data3d=phymix_S(_3D_W_), category='3d', output_level=output_level_debug)
       end if
