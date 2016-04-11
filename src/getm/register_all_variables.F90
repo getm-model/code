@@ -318,6 +318,11 @@
    call fm%register('velx', 'm/s', 'velocity in global x-direction', standard_name='', data2d=velx(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
    call fm%register('vely', 'm/s', 'velocity in global y-direction', standard_name='', data2d=vely(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
 
+   if (do_numerical_analyses_2d) then
+      call fm%register('numdis_2d', 'W/kg', 'numerical dissipation', standard_name='', data2d=numdis_2d(_2D_W_), category='2d', output_level=output_level_debug)
+      call fm%register('phydis_2d', 'W/kg', 'physical dissipation' , standard_name='', data2d=phydis_2d(_2D_W_), category='2d', output_level=output_level_debug)
+   end if
+
    return
    end subroutine register_2d_variables
 !EOC
@@ -335,6 +340,7 @@
 !
 ! !USES:
    use variables_3d
+   use m3d, only: calc_temp,calc_salt
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -475,6 +481,19 @@
    end if
 #endif
 
+   if (do_numerical_analyses_3d) then
+      call fm%register('numdis_3d', 'W/kg', 'numerical dissipation (3D)', standard_name='', dimensions=(/id_dim_z/), data3d=numdis_3d(_3D_W_), category='3d', output_level=output_level_debug)
+      call fm%register('phydis_3d', 'W/kg', 'physical dissipation (3D)' , standard_name='', dimensions=(/id_dim_z/), data3d=phydis_3d(_3D_W_), category='3d', output_level=output_level_debug)
+      if (calc_temp) then
+         call fm%register('nummix_temp', 'degC**2/s', 'numerical mixing of temperature', standard_name='', dimensions=(/id_dim_z/), data3d=nummix_T(_3D_W_), category='3d', output_level=output_level_debug)
+         call fm%register('phymix_temp', 'degC**2/s', 'physical mixing of temperature' , standard_name='', dimensions=(/id_dim_z/), data3d=phymix_T(_3D_W_), category='3d', output_level=output_level_debug)
+      end if
+      if (calc_salt) then
+         call fm%register('nummix_salt', 'psu**2/s', 'numerical mixing of salinity', standard_name='', dimensions=(/id_dim_z/), data3d=nummix_S(_3D_W_), category='3d', output_level=output_level_debug)
+         call fm%register('phymix_salt', 'psu**2/s', 'physical mixing of salinity' , standard_name='', dimensions=(/id_dim_z/), data3d=phymix_S(_3D_W_), category='3d', output_level=output_level_debug)
+      end if
+   end if
+
    return
    end subroutine register_3d_variables
 !EOC
@@ -571,6 +590,17 @@
          fill_value=model%horizontal_diagnostic_variables(i)%missing_value, data2d=fabm_diag_hz(_2D_W_,i), category='fabm'//model%horizontal_diagnostic_variables(i)%target%owner%get_path(), output_level=output_level, used=in_output)
       if (in_output) model%horizontal_diagnostic_variables(i)%save = .true.
    end do
+
+   if (do_numerical_analyses_3d) then
+      do i=1,size(model%state_variables)
+         call fm%register('nummix_'//trim(model%state_variables(i)%name),                    &
+                          '('//trim(model%state_variables(i)%units)//')**2/s',               &
+                          'numerical mixing of '//trim(model%state_variables(i)%long_name),  &
+                          dimensions=(/id_dim_z/), data3d=nummix_fabm_pel(_3D_W_,i),         &
+                          category='fabm'//model%state_variables(i)%target%owner%get_path(), &
+                          output_level=output_level_debug)
+      end do
+   end if
 #endif
 
    return
