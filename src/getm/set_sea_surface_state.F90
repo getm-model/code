@@ -9,8 +9,7 @@
 !
 ! !USES:
    use domain      , only: imin,imax,jmin,jmax,kmax
-   use domain      , only: az, grid_type, cosconv, sinconv 
-   use domain      , only: xc, xu, xv, yc, yu, yv, dxv, dyu, arcd1
+   use domain      , only: grid_type, cosconv, sinconv
    use domain      , only: NWB, wi, wfj, wlj
    use domain      , only: NNB, nj, nfi, nli
    use domain      , only: NEB, ei, efj, elj
@@ -37,7 +36,7 @@
 !  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES: 
-   REALTYPE,dimension(:,:),pointer :: p_U, p_V, p_Dvel, p2d
+   REALTYPE,dimension(:,:),pointer :: p_U, p_V, p_Dvel,p_velx,p_vely,p2d
    integer                         :: i,j,n,start
 !EOP
 !-------------------------------------------------------------------------
@@ -52,12 +51,16 @@
       p_U    => U
       p_V    => V
       p_Dvel => Dvel
+      p_velx => velx
+      p_vely => vely
    else
 #ifndef NO_3D
       if (.not. do_3d) return
-      p2d => uu  (:,:,kmax) ; p_U   (imin-HALO:,jmin-HALO:) => p2d
-      p2d => vv  (:,:,kmax) ; p_V   (imin-HALO:,jmin-HALO:) => p2d
-      p2d => hvel(:,:,kmax) ; p_Dvel(imin-HALO:,jmin-HALO:) => p2d
+      p2d => uu    (:,:,kmax) ; p_U   (imin-HALO:,jmin-HALO:) => p2d
+      p2d => vv    (:,:,kmax) ; p_V   (imin-HALO:,jmin-HALO:) => p2d
+      p2d => hvel  (:,:,kmax) ; p_Dvel(imin-HALO:,jmin-HALO:) => p2d
+      p2d => velx3d(:,:,kmax) ; p_velx(imin-HALO:,jmin-HALO:) => p2d
+      p2d => vely3d(:,:,kmax) ; p_vely(imin-HALO:,jmin-HALO:) => p2d
 #ifndef NO_BAROCLINIC
       if (runtype .gt. 2) then
          !sst = T(:,:,kmax)
@@ -69,14 +72,14 @@
 
    if (grid_type.eq.1 .or. grid_type.eq.2) then
 
-      ssu = velx
-      ssv = vely
+      ssu = p_velx
+      ssv = p_vely
 
    else
 
 !     rotate back to grid-related coordinates
-      ssu = cosconv*velx3d(:,:,kmax) - sinconv*vely3d(:,:,kmax)
-      ssv = sinconv*velx3d(:,:,kmax) + cosconv*vely3d(:,:,kmax)
+      ssu = cosconv*p_velx - sinconv*p_vely
+      ssv = sinconv*p_velx + cosconv*p_vely
 
    end if
 
