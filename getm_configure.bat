@@ -4,15 +4,15 @@
 @rem echo %old%
 
 @echo Build directory:
-@if "%build_dir%"=="" ( @set build_dir=%UserProfile%\build\getm ) else ( @echo build_dir is set )
+@if "%build_dir%"=="" ( @set build_dir=%TEMP%\build\getm ) else ( @echo build_dir is set )
 @echo %build_dir%
 @if not EXIST "%build_dir%\." ( @mkdir "%build_dir%" )
 @chdir "%build_dir%"
 
 @echo Base directories:
-@set GETM_BASE=%USERPROFILE%\GETM\code
-@set GOTM_BASE=%USERPROFILE%\GOTM\code
-@set FABM_BASE=%USERPROFILE%\FABM\code
+@set GETM_BASE=%USERPROFILE%\Documents\GETM\code
+@set GOTM_BASE=%USERPROFILE%\Documents\GOTM\code
+@set FABM_BASE=%USERPROFILE%\Documents\FABM\code
 @echo %GETM_BASE%
 @echo %GOTM_BASE%
 @echo %FABM_BASE%
@@ -26,8 +26,8 @@
 
 @echo Ready to configure:
 FOR %%c IN (Cartesian Spherical Curvilinear) DO (
-   @IF NOT EXIST "%compiler%\%%c\." ( mkdir "%compiler%\%%c" )
-   @chdir "%compiler%\%%c"
+   @IF NOT EXIST "%%c\." ( mkdir "%%c" )
+   @chdir "%%c"
    cmake "%GETM_BASE%\src" ^
          -DGETM_EMBED_VERSION=on ^
          -DGOTM_BASE="%GOTM_BASE%" ^
@@ -36,9 +36,9 @@ FOR %%c IN (Cartesian Spherical Curvilinear) DO (
          -DCMAKE_Fortran_COMPILER=%compiler% ^
          -DGETM_USE_PARALLEL=off ^
          -DGETM_COORDINATE_TYPE=%%c ^
-         -DCMAKE_INSTALL_PREFIX="%install_prefix%\%compiler%"
+         -DCMAKE_INSTALL_PREFIX="%install_prefix%\"
 
-   @chdir ..\..
+   @chdir ..\
 )
 
 @pause
