@@ -214,7 +214,7 @@
 #endif
 
    STDERR LINE
-   STDERR 'getm ver. ',RELEASE,': Started on  ',dstr,' ',tstr
+   STDERR 'getm: Started on  ',dstr,' ',tstr
    STDERR LINE
    STDERR 'Initialising....'
    STDERR LINE
@@ -282,18 +282,6 @@
 
    call init_les(runtype)
 
-   call do_register_all_variables(runtype)
-
-#ifdef _FLEXIBLE_OUTPUT_
-   allocate(type_getm_host::output_manager_host)
-   if (myid .ge. 0) then
-      write(postfix,'(A,I4.4)') '.',myid
-      call output_manager_init(fm,title,trim(postfix))
-   else
-      call output_manager_init(fm,title)
-   end if
-#endif
-
 !   call init_output(runid,title,start,runtype,dryrun,myid)
    call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)
 
@@ -360,6 +348,18 @@
 !  Note (KK): init_input() calls do_3d_bdy_ncdf() which requires hn
    call init_input(input_dir,MinN)
 
+   call do_register_all_variables(runtype)
+
+#ifdef _FLEXIBLE_OUTPUT_
+   allocate(type_getm_host::output_manager_host)
+   if (myid .ge. 0) then
+      write(postfix,'(A,I4.4)') '.',myid
+      call output_manager_init(fm,title,trim(postfix))
+   else
+      call output_manager_init(fm,title)
+   end if
+#endif
+
    call toc(TIM_INITIALIZE)
 
    if (metforcing) then
@@ -403,7 +403,7 @@
    if (.not. dryrun) then
       call do_output(runtype,MinN-1,timestep)
 #ifdef _FLEXIBLE_OUTPUT_
-      if (save_initial) call output_manager_save(julianday,secondsofday,MinN)
+      if (save_initial) call output_manager_save(julianday,secondsofday,MinN-1)
 #endif
    end if
 
