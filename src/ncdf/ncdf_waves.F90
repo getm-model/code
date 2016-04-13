@@ -507,7 +507,7 @@
       waveDir(ill:ihl,jll:jhl) = wrk
    else
    end if
-   waveDir = (waveDir - convc) * deg2rad
+   waveDir = (waveDir + convc) * deg2rad
    coswavedir = cos(waveDir)
    sinwavedir = sin(waveDir)
 
