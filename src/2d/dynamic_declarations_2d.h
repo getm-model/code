@@ -5,6 +5,7 @@
   REALTYPE,dimension(:,:),allocatable,target :: t_zo,t_z,D,Dvel,DU,DV
   REALTYPE,dimension(:,:),allocatable,target :: U,V
   REALTYPE,dimension(:,:),allocatable  :: UEx,VEx
+  REALTYPE,dimension(:,:),allocatable,target :: velx,vely
   REALTYPE,dimension(:,:),allocatable  :: ru,rv
   REALTYPE,dimension(:,:),allocatable,target :: Uint,Vint
   REALTYPE,dimension(:,:),allocatable  :: res_du,res_u
