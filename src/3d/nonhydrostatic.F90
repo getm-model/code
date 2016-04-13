@@ -84,7 +84,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax,az,H,HU,HV
    use domain, only: dxv,dyu,arcd1
    use variables_3d, only: kmin
-   use variables_3d, only: minus_bnh,wco
+   use variables_3d, only: minus_bnh,wco,w
    use variables_3d, only: uu_0,vv_0
    use variables_3d, only: dt,uu,vv,ww,ho,hn,hvel,hun,hvn,num
    use parameters, only: avmmol
@@ -235,7 +235,7 @@
    integer,intent(in)           :: nonhyd_loop,vel3d_adv_split,vel3d_adv_hor,vel3d_adv_ver
 !
 ! !LOCAL VARIABLES:
-   REALTYPE,dimension(I3DFIELD) :: wc,bnh,fadv3d
+   REALTYPE,dimension(I3DFIELD) :: wc,bnh
    integer                      :: i,j,k
 !EOP
 !-----------------------------------------------------------------------
@@ -250,19 +250,19 @@
 #endif
    call tic(TIM_NONHYD)
 
-!  calculate wc
+!  calculate w
    call to_w(imin,jmin,imax,jmax,kmin,kmax,az,dt,           &
              dxv,dyu,arcd1,                                 &
-             H,HU,HV,hn,ho,hvel,uu,hun,vv,hvn,ww,_ZERO_,wc)
+             H,HU,HV,hn,ho,hvel,uu,hun,vv,hvn,ww,_ZERO_,w)
 
-   call update_3d_halo(wc,wc,az,imin,jmin,imax,jmax,kmax,H_TAG)
+   call update_3d_halo(w,w,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)
 
 !  initialise bnh by advective term
 #ifndef NO_ADVECT
-   fadv3d = wc
-   call do_advection_3d(dt,fadv3d,uu,vv,ww,hun,hvn,hvel,hvel, &
-                        NOSPLIT,CENTRAL,CENTRAL,_ZERO_,H_TAG, &
+   wc = w
+   call do_advection_3d(dt,wc,uu,vv,ww,hun,hvn,hvel,hvel,             &
+                        NOSPLIT,CENTRAL,CENTRAL,_ZERO_,H_TAG,          &
                         advres=bnh)
    call update_3d_halo(bnh,bnh,az,imin,jmin,imax,jmax,kmax,H_TAG)
    call wait_halo(H_TAG)
@@ -284,26 +284,27 @@
 !           KK-TODO: do we really have to add num?
             bnh(i,j,1) = bnh(i,j,1)                         &
                - (num(i,j,1) + avmmol)                      &
-                 * (           wc(i,j,2) -  wc(i,j,1)   )   &
+                 * (             w(i,j,2) -    w(i,j,1)   ) &
                  / ( _HALF_*( hvel(i,j,1) + hvel(i,j,2) ) )
             do k=2,kmax-1
                bnh(i,j,k) = bnh(i,j,k)                                   &
                   - (                                                    &
                         (num(i,j,k) + avmmol)                            &
-                        * (             wc(i,j,k+1) -  wc(i,j,k  )   )   &
+                        * (               w(i,j,k+1) -    w(i,j,k  )   ) &
                         / ( _HALF_ * ( hvel(i,j,k  ) + hvel(i,j,k+1) ) ) &
                       - (num(i,j,k-1) + avmmol)                          &
-                        * (             wc(i,j,k  ) -  wc(i,j,k-1)   )   &
+                        * (               w(i,j,k  ) -    w(i,j,k-1)   ) &
                         / ( _HALF_ * ( hvel(i,j,k-1) + hvel(i,j,k  ) ) ) &
                      )
             end do
             bnh(i,j,kmax) = bnh(i,j,kmax)                               &
                - (num(i,j,kmax-1) + avmmol)                             &
-                 * (             wc(i,j,kmax  ) -  wc(i,j,kmax-1)   )   &
+                 * (               w(i,j,kmax  ) -    w(i,j,kmax-1)   ) &
                  / ( _HALF_ * ( hvel(i,j,kmax-1) + hvel(i,j,kmax  ) ) )
 
 !           add local vertical acceleration and divide by layer height
-            wc(i,j,1:kmax) = hvel(i,j,1:kmax)*wc(i,j,1:kmax)
+!           Note (KK): note units of wc now !!!
+            wc(i,j,1:kmax) = hvel(i,j,1:kmax)*w(i,j,1:kmax)
             bnh(i,j,1:kmax) = (                                          &
                                  bnh(i,j,1:kmax)                         &
                                + (wc(i,j,1:kmax) - wco(i,j,1:kmax))*dtm1 &
@@ -364,5 +365,5 @@
    end module nonhydrostatic
 
 !-----------------------------------------------------------------------
-! Copyright (C) 2011 - Karsten Bolding and Hans Burchard               !
+! Copyright (C) 2011 - Knut Klingbeil                                  !
 !-----------------------------------------------------------------------

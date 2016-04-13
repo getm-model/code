@@ -100,6 +100,8 @@
       call toc(TIM_INTEGR3D)
    end if
 
+   call velocity_update_3d((nonhyd_method.eq.0))
+
 #ifdef DEBUG
    write(debug,*) 'Leaving momentum_3d()'
    write(debug,*)
@@ -108,5 +110,5 @@
    end subroutine momentum_3d
 !EOC
 !-----------------------------------------------------------------------
-! Copyright (C) 2011 - Hans Burchard and Karsten Bolding               !
+! Copyright (C) 2011 - Knut Klingbeil                                  !
 !-----------------------------------------------------------------------

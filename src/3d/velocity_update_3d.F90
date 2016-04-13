@@ -5,7 +5,7 @@
 ! !ROUTINE: velocity_update_3d - calculate new 3D velocities.
 !
 ! !INTERFACE:
-   subroutine velocity_update_3d()
+   subroutine velocity_update_3d(calc_w)
 !
 ! !DESCRIPTION:
 !
@@ -17,6 +17,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   logical,intent(in) :: calc_w
 !
 ! !OUTPUT PARAMETERS:
 !
@@ -41,10 +42,12 @@
                            wwm=ww(:,:,k-1),wwp=ww(:,:,k),              &
                            velx=velx3d(:,:,k),vely=vely3d(:,:,k))
    end do
-   call to_w(imin,jmin,imax,jmax,kmin,kmax,az,                         &
-             dt,                                                       &
-             dxv,dyu,arcd1,                                            &
-             H,HU,HV,hn,ho,hvel,uu,hun,vv,hvn,ww,vel_missing,w)
+   if (calc_w) then
+      call to_w(imin,jmin,imax,jmax,kmin,kmax,az,                      &
+                dt,                                                    &
+                dxv,dyu,arcd1,                                         &
+                H,HU,HV,hn,ho,hvel,uu,hun,vv,hvn,ww,vel_missing,w)
+   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving velocity_update_3d()'

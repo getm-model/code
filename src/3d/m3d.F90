@@ -423,7 +423,7 @@
 !           requires storage of [U|V]adv (when hotstart is done within 2d cycle)
 !           and calculation of Dn,Dun,Dvn for hostarts
 
-   call velocity_update_3d()
+   call velocity_update_3d(.true.)
 
    return
    end subroutine postinit_3d
@@ -588,8 +588,6 @@
 #endif
 
    end if
-
-   call velocity_update_3d()
 
    if (do_numerical_analyses_3d) call physical_dissipation_3d()
 
