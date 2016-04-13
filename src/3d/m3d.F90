@@ -404,6 +404,8 @@
 
    end if
 
+   call velocity_update_3d()
+
    return
    end subroutine postinit_3d
 !EOC
@@ -570,6 +572,8 @@
 #endif
 
    end if
+
+   call velocity_update_3d()
 
    if (do_numerical_analyses_3d) call physical_dissipation_3d()
 

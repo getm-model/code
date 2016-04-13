@@ -354,6 +354,9 @@ end interface
          stop 'init_temperature'
    end select
 
+   T(:,:,0) = -9999.0
+   forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) T(i,j,:) = -9999.0
+
    call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
    call wait_halo(D_TAG)
    call mirror_bdy_3d(T,D_TAG)
