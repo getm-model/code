@@ -25,6 +25,8 @@
 #ifdef _FABM_
    use getm_fabm, only: model,fabm_pel,output_none
 #endif
+   use getm_version
+!
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -71,7 +73,7 @@
 
 
 !  globall settings
-   history = 'GETM, ver. '//RELEASE
+   history = 'GETM - www.getm.eu'
    tts = 'seconds since '//starttime
 
 !  time
@@ -451,16 +453,19 @@
    err = nf90_put_att(ncid,NF90_GLOBAL,'title',trim(title))
    if (err .NE. NF90_NOERR) go to 10
 
-   err = nf90_put_att(ncid,NF90_GLOBAL,'history',trim(history))
+   err = nf90_put_att(ncid,NF90_GLOBAL,'model ',trim(history))
    if (err .NE. NF90_NOERR) go to 10
 
-   history = GIT_REVISION
-   err = nf90_put_att(ncid,NF90_GLOBAL,'git',trim(history))
+#if 0
+   err = nf90_put_att(ncid,NF90_GLOBAL,'git hash:   ',trim(git_commit_id))
    if (err .NE. NF90_NOERR) go to 10
+   err = nf90_put_att(ncid,NF90_GLOBAL,'git branch: ',trim(git_branch_name))
+   if (err .NE. NF90_NOERR) go to 10
+#endif
 
-   history = FORTRAN_VERSION
-   err = nf90_put_att(ncid,NF90_GLOBAL,'compiler',trim(history))
-   if (err .NE. NF90_NOERR) go to 10
+!   history = FORTRAN_VERSION
+!   err = nf90_put_att(ncid,NF90_GLOBAL,'compiler',trim(history))
+!   if (err .NE. NF90_NOERR) go to 10
 
    ! leave define mode
    err = nf90_enddef(ncid)

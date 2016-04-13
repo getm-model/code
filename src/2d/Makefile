@@ -24,6 +24,7 @@ ${LIB}(cfl_check.o)	\
 ${LIB}(bottom_friction.o)	\
 ${LIB}(depth_update.o)		\
 ${LIB}(momentum.o)		\
+${LIB}(velocity_update.o)		\
 ${LIB}(sealevel.o)		\
 ${LIB}(deformation_rates.o)	\
 ${LIB}(uv_advect.o)		\

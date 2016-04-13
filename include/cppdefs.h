@@ -3,10 +3,6 @@
 ! in a correct format.
 ! KBK 990615
 
-#include "version.h"
-#include "git_revision.h"
-#include "fortran_version.h"
-
 #define DXC dxc(i,j)
 #define DXCJP1 dxc(i,j+1)
 #define DXU dxu(i,j)
