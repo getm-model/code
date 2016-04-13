@@ -126,10 +126,12 @@
    break_stat = 0
 #endif
 
-   z  = _ZERO_; zo =_ZERO_
+   z  = -9999.0; zo =_ZERO_
+
    D = _ZERO_ ; Dvel = _ZERO_
    U = _ZERO_; DU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; DV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
+   velx = -9999.0 ; vely = -9999.0
 
    if (bottfric_method .eq. 1) then
       ru = rdrag
