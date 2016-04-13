@@ -59,6 +59,7 @@
    LEVEL1 'register_all_variables()'
    call register_domain_variables(runtype)
    call register_meteo_variables()
+   call register_waves_variables(runtype)
    call register_2d_variables()
 #ifndef NO_3D
    call register_3d_variables(runtype)
@@ -317,6 +318,7 @@
    call fm%register('V', 'm2/s', 'transport in local y-direction', standard_name='', data2d=V(_2D_W_), category='2d', output_level=output_level_debug)
    call fm%register('velx', 'm/s', 'velocity in global x-direction', standard_name='', data2d=velx(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
    call fm%register('vely', 'm/s', 'velocity in global y-direction', standard_name='', data2d=vely(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
+!   call fm%register('taubmax', 'N/m2', 'max. bottom stress', standard_name='', data2d=taubmax(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
 
    if (do_numerical_analyses_2d) then
       call fm%register('numdis_2d', 'W/kg', 'numerical dissipation', standard_name='', data2d=numdis_2d(_2D_W_), category='2d', output_level=output_level_debug)
@@ -461,6 +463,7 @@
       call fm%register('vely3d', 'm/s', 'velocity in global y-direction (3D)', standard_name='', dimensions=(/id_dim_z/), data3d=vely3d(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       call fm%register('w', 'm2/s', 'vertical velocity', standard_name='', dimensions=(/id_dim_z/), data3d=w(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       call fm%register('SS', 's-2', 'shear frequency squared', standard_name='', dimensions=(/id_dim_z/), data3d=SS(_3D_W_), category='3d', output_level=output_level_debug)
+!      call fm%register('taubmax_3d', 'N2/m2', 'max. bottom stress', standard_name='', data2d=taubmax_3d(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       if (nonhyd_method .ne. 0) then
          call fm%register('minus_bnh', 'm/s2', 'neg. nh buoyancy correction', standard_name='', dimensions=(/id_dim_z/), data3d=minus_bnh(_3D_W_), category='3d', output_level=output_level_debug)
       end if
@@ -611,6 +614,42 @@
 
    return
    end subroutine register_fabm_variables
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: register_waves_variables() - register waves variables.
+!
+! !INTERFACE:
+   subroutine register_waves_variables(runtype)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use variables_waves
+   use waves, only: waveforcing_method,NO_WAVES
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)               :: runtype
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!
+! !LOCAL VARIABLES:
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   if (waveforcing_method .eq. NO_WAVES) return
+   LEVEL2 'register_waves_variables()'
+
+   call fm%register('waveH', 'm', 'wave height', standard_name='', data2d=waveH(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
+   call fm%register('waveL', 'm', 'wave length', standard_name='', data2d=waveL(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
+   call fm%register('waveT', 's', 'wave period', standard_name='', data2d=waveT(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
+
+   return
+   end subroutine register_waves_variables
 !EOC
 
 !-----------------------------------------------------------------------
