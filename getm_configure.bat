@@ -36,7 +36,7 @@ FOR %%c IN (Cartesian Spherical Curvilinear) DO (
          -DCMAKE_Fortran_COMPILER=%compiler% ^
          -DGETM_USE_PARALLEL=off ^
          -DGETM_COORDINATE_TYPE=%%c ^
-         -DCMAKE_INSTALL_PREFIX="%install_prefix%\"
+         -DCMAKE_INSTALL_PREFIX="%install_prefix%"
 
    @chdir ..\
 )
