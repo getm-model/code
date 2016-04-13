@@ -367,9 +367,23 @@ end interface
 
 !     Update halos with biogeochemical variable values (distribute initial values).
       do n=1,size(model%state_variables)
+         fabm_pel(:,:,0,n) = model%state_variables(n)%missing_value
+         forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) &
+            fabm_pel(i,j,:,n) = model%state_variables(n)%missing_value
          call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az, &
                              imin,jmin,imax,jmax,kmax,D_TAG)
          call wait_halo(D_TAG)
+      end do
+      do n=1,size(model%bottom_state_variables)
+         where ( az.eq.0 ) fabm_ben(:,:,n) = model%bottom_state_variables(n)%missing_value
+      end do
+      do n=1,size(model%diagnostic_variables)
+         fabm_diag(:,:,0,n) = model%diagnostic_variables(n)%missing_value
+         forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) &
+            fabm_diag(i,j,:,n) = model%diagnostic_variables(n)%missing_value
+      end do
+      do n=1,size(model%horizontal_diagnostic_variables)
+         where ( az.eq.0 ) fabm_diag_hz(:,:,n) = model%horizontal_diagnostic_variables(n)%missing_value
       end do
 
 #ifdef DEBUG

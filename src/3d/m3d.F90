@@ -450,6 +450,9 @@
 !  KK-TODO: call stop_macro also for hotstarts => do not store slow terms in restart files
 !           requires storage of [U|V]adv (when hotstart is done within 2d cycle)
 !           and calculation of Dn,Dun,Dvn for hostarts
+
+   call velocity_update_3d(.true.)
+
    return
    end subroutine postinit_3d
 !EOC
