@@ -345,8 +345,6 @@
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
-   character                 :: c1,c2,c3,c4
-   integer                   :: yy,mm,dd,hh,min,ss
    integer                   :: i
    character(len=3)          :: set='/:-'
 !EOP
@@ -357,13 +355,9 @@
       FATAL "Can't read valid time in: ", trim(str)
       stop 'string_to_julsecs'
    end if
-   read(str(i-4:),'(i4,a1,i2,a1,i2,1x,i2,a1,i2,a1,i2)')  &
-                          yy,c1,mm,c2,dd,hh,c3,min,c4,ss
-   call JulDay(yy,mm,dd,jul)
-   secs = 3600*hh + 60*min + ss
-#ifdef DEBUG_TIME
-   STDERR 'string_to_julsecs" ',yy,mm,dd,hh,min,ss
-#endif
+
+   call String2JulSecs(str(i-4:),jul,secs)
+
    return
    end subroutine string_to_julsecs
 !EOC
@@ -392,12 +386,17 @@
 ! !LOCAL VARIABLES:
    character                 :: c1,c2,c3,c4
    integer                   :: yy,mm,dd,hh,min,ss
+   integer                   :: rc
 !EOP
 !-----------------------------------------------------------------------
 !BOC
 
-   READ(timestr,'(i4,a1,i2,a1,i2,1x,i2,a1,i2,a1,i2)')  &
+   READ(timestr,'(i4,a1,i2,a1,i2,1x,i2,a1,i2,a1,i2)',iostat=rc)  &
                           yy,c1,mm,c2,dd,hh,c3,min,c4,ss
+   if (rc .ne. 0) then
+      STDERR 'Fatal error: A non valid time units string was provided'
+      stop 'String2JulSecs'
+   end if
    call JulDay(yy,mm,dd,jul)
    secs = 3600*hh + 60*min + ss
 

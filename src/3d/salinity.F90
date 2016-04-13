@@ -277,6 +277,9 @@
          stop 'init_salinity'
    end select
 
+   S(:,:,0) = -9999.0
+   forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) S(i,j,:) = -9999.0
+
    call update_3d_halo(S,S,az,imin,jmin,imax,jmax,kmax,D_TAG)
    call wait_halo(D_TAG)
    call mirror_bdy_3d(S,D_TAG)

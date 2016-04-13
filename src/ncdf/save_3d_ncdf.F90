@@ -21,6 +21,7 @@
    use domain,       only: dxv,dyu,arcd1
    use variables_3d, only: sseo,ssen,Dn,Dveln,Dun,Dvn,Uadv,Vadv
    use variables_3d, only: dt,kmin,ho,hn,hvel,uu,hun,vv,hvn,ww,hcc,SS
+   use variables_3d, only: velx3d,vely3d,w
    use variables_3d, only: taubx,tauby
    use variables_3d, only: zcn
 #ifdef _MOMENTUM_TERMS_
@@ -222,37 +223,15 @@
 
 !  velocites
    if (uu_id .ne. -1) then
-      ws(:,:,0) = vel_missing
-      do k=1,kmax
-         call to_u(imin,jmin,imax,jmax,az,                            &
-                   dt,grid_type,                                      &
-                   dxv,dyu,arcd1,                                     &
-                   xc,xu,xv,hn(:,:,k),ho(:,:,k),hvel(:,:,k),          &
-                   uu(:,:,k),hun(:,:,k),vv(:,:,k),hvn(:,:,k),         &
-                   ww(:,:,k-1),ww(:,:,k),vel_missing,ws(:,:,k))
-      end do
-      err = nf90_put_var(ncid,uu_id,ws(_3D_W_),start,edges)
+      err = nf90_put_var(ncid,uu_id,velx3d(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
    if (vv_id .ne. -1) then
-      ws(:,:,0) = vel_missing
-      do k=1,kmax
-         call to_v(imin,jmin,imax,jmax,az,                            &
-                   dt,grid_type,                                      &
-                   dxv,dyu,arcd1,                                     &
-                   yc,yu,yv,hn(:,:,k),ho(:,:,k),hvel(:,:,k),          &
-                   uu(:,:,k),hun(:,:,k),vv(:,:,k),hvn(:,:,k),         &
-                   ww(:,:,k-1),ww(:,:,k),vel_missing,ws(:,:,k))
-      end do
-      err = nf90_put_var(ncid,vv_id,ws(_3D_W_),start,edges)
+      err = nf90_put_var(ncid,vv_id,vely3d(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
    if (w_id .ne. -1) then
-      call to_w(imin,jmin,imax,jmax,kmin,kmax,az, &
-                dt,                               &
-                dxv,dyu,arcd1,                    &
-                H,HU,HV,hn,ho,hvel,uu,hun,vv,hvn,ww,vel_missing,ws)
-      err = nf90_put_var(ncid,w_id,ws(_3D_W_),start,edges)
+      err = nf90_put_var(ncid,w_id,w(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
 

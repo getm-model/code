@@ -291,7 +291,9 @@
    status = nf90_put_att(ncid,NF90_GLOBAL,'title',trim(title))
    if (status .NE. NF90_NOERR) go to 10
 
-   history = 'GETM, ver. '//RELEASE
+#if 0
+   history = 'GETM'
+!   history = 'GETM, ver. '//RELEASE
    status = nf90_put_att(ncid,NF90_GLOBAL,'history',trim(history))
    if (status .NE. NF90_NOERR) go to 10
 
@@ -302,6 +304,7 @@
    history = FORTRAN_VERSION
    status = nf90_put_att(ncid,NF90_GLOBAL,'compiler',trim(history))
    if (status .NE. NF90_NOERR) go to 10
+#endif
 
    ! leave define mode
    status = nf90_enddef(ncid)
