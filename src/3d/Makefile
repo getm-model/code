@@ -61,8 +61,8 @@ $(LIB)(preadapt_coordinates.o)		\
 $(LIB)(uu_momentum_3d.o)		\
 $(LIB)(vv_momentum_3d.o)		\
 $(LIB)(ww_momentum_3d.o)		\
-$(LIB)(momentum_3d.o)
-
+$(LIB)(momentum_3d.o)		\
+$(LIB)(velocity_update_3d.o)
 ifeq ($(GETM_STRUCTURE_FRICTION),true)
 OBJ += \
 $(LIB)(structure_friction_3d.o)
