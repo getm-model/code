@@ -6,6 +6,7 @@
   integer, dimension(:,:), allocatable:: kmin_pmz,kumin_pmz,kvmin_pmz
 
   REALTYPE, dimension(:,:,:), allocatable, target :: uu,vv,ww
+  REALTYPE, dimension(:,:,:), allocatable, target :: velx3d,vely3d,w
 
 #ifdef _MOMENTUM_TERMS_
   REALTYPE, dimension(:,:,:), allocatable, target :: tdv_u,adv_u,vsd_u
