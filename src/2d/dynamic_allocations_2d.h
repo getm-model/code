@@ -30,6 +30,12 @@
    allocate(V(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (V)'
 
+   allocate(velx(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (velx)'
+
+   allocate(vely(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_2d: Error allocating memory (vely)'
+
    allocate(UEx(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_2d: Error allocating memory (UEx)'
 
