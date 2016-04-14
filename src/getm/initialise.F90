@@ -64,7 +64,7 @@
    use time, only: init_time,update_time,write_time_string
    use time, only: start,timestr,timestep
    use time, only: julianday,secondsofday
-   use m2d, only: init_2d,postinit_2d,depth_update
+   use m2d, only: init_2d,hotstart_2d,postinit_2d
    use variables_2d, only: zo,z,D,Dvel,DU,DV
    use les, only: init_les
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
@@ -299,16 +299,13 @@
       LEVEL3 timestr
       MinN = MinN+1
 
+      call hotstart_2d(runtype)
 #ifndef NO_3D
       if (runtype .ge. 2) then
          call hotstart_3d(runtype)
       end if
 #endif
    end if
-
-!  Note (KK): we need Dvel for do_waves()
-!  KK-TODO: we would not need Dvel if we use H for WAVES_FROMWIND
-   call depth_update(zo,z,D,Dvel,DU,DV)
 
 !  Note (KK): init_input() calls do_3d_bdy_ncdf() which requires hn
    call init_input(input_dir,MinN)
