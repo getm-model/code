@@ -343,18 +343,6 @@
 !  Note (KK): init_input() calls do_3d_bdy_ncdf() which requires hn
    call init_input(input_dir,MinN)
 
-   call do_register_all_variables(runtype)
-
-#ifdef _FLEXIBLE_OUTPUT_
-   allocate(type_getm_host::output_manager_host)
-   if (myid .ge. 0) then
-      write(postfix,'(A,I4.4)') '.',myid
-      call output_manager_init(fm,title,trim(postfix))
-   else
-      call output_manager_init(fm,title)
-   end if
-#endif
-
    call toc(TIM_INITIALIZE)
 
    if (metforcing) then
@@ -390,6 +378,18 @@
 #ifdef _FABM_
       if (fabm_calc) call postinit_getm_fabm()
 #endif
+   end if
+#endif
+
+   call do_register_all_variables(runtype)
+
+#ifdef _FLEXIBLE_OUTPUT_
+   allocate(type_getm_host::output_manager_host)
+   if (myid .ge. 0) then
+      write(postfix,'(A,I4.4)') '.',myid
+      call output_manager_init(fm,title,trim(postfix))
+   else
+      call output_manager_init(fm,title)
    end if
 #endif
 
