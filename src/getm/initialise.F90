@@ -69,11 +69,9 @@
    use les, only: init_les
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
 #ifndef NO_3D
-   use m3d, only: init_3d,postinit_3d
+   use m3d, only: init_3d,hotstart_3d,postinit_3d
 #ifndef NO_BAROCLINIC
-   use m3d, only: T,calc_temp,calc_salt
-   use temperature, only: init_temperature_field
-   use salinity, only: init_salinity_field
+   use m3d, only: T
 #endif
    use m3d, only: use_gotm
    use turbulence, only: init_turbulence
@@ -87,7 +85,6 @@
 #ifdef _FABM_
    use getm_fabm, only: fabm_calc
    use getm_fabm, only: init_getm_fabm, postinit_getm_fabm
-   use getm_fabm, only: init_getm_fabm_fields
    use rivers, only: init_rivers_fabm
 #endif
 #ifdef GETM_BIO
@@ -304,35 +301,8 @@
 
 #ifndef NO_3D
       if (runtype .ge. 2) then
-         if ( restart_with_ho .and. restart_with_hn ) then
-            hvel = _HALF_ * ( ho + hn )
-         else
-            STDERR LINE
-            LEVEL3 "ho and hn missing in restart file!!!"
-            LEVEL3 "This might be ok for some specific settings, but in"
-            LEVEL3 "general you should do a zero-length simulation with"
-            LEVEL3 "your previous coordinate settings to create a valid"
-            LEVEL3 "restart file."
-            STDERR LINE
-         end if
-#ifndef NO_BAROCLINIC
-         if (calc_temp) then
-            LEVEL2 'hotstart temperature:'
-            call init_temperature_field()
-         end if
-         if (calc_salt) then
-            LEVEL2 'hotstart salinity:'
-            call init_salinity_field()
-         end if
-         if (runtype .ge. 3) call do_eqstate()
-#endif
+         call hotstart_3d(runtype)
       end if
-#ifdef _FABM_
-      if (fabm_calc) then
-         LEVEL2 'hotstart getm_fabm:'
-         call init_getm_fabm_fields()
-      end if
-#endif
 #endif
    end if
 
