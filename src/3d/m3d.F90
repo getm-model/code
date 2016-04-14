@@ -484,6 +484,17 @@
 
    call postinit_variables_3d(update_temp,update_salt)
 
+   if (waveforcing_method .ne. NO_WAVES) then
+!     calculate initial Stokes drift...
+      if ( .not. hotstart ) then
+         UStokesCadv = UStokesC ; VStokesCadv = VStokesC
+      end if
+      call stokes_drift_3d(dt,Dveln,hvel) ! do not update [uu|vv]Ex!!!
+!     ...and initialise Eulerian transports accordingly
+      uuEuler = uu - uuStokes
+      vvEuler = vv - vvStokes
+   end if
+
    if (hotstart) then
       if (vert_cord .eq. _ADAPTIVE_COORDS_) call shear_frequency()
       call bottom_friction(uuEuler(:,:,1),vvEuler(:,:,1),hun(:,:,1),hvn(:,:,1), &
@@ -497,17 +508,6 @@
       call do_internal_pressure(1)
    end if
 #endif
-
-   if (waveforcing_method .ne. NO_WAVES) then
-!     calculate initial Stokes drift...
-      if ( .not. hotstart ) then
-         UStokesCadv = UStokesC ; VStokesCadv = VStokesC
-      end if
-      call stokes_drift_3d(dt,Dveln,hvel) ! do not update [uu|vv]Ex!!!
-!     ...and initialise Eulerian transports accordingly
-      uuEuler = uu - uuStokes
-      vvEuler = vv - vvStokes
-   end if
 
    if (.not. hotstart) then
 #ifndef NO_BAROTROPIC
