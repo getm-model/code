@@ -202,7 +202,10 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   LEVEL2 'register_meteo_variables() - none so-far '
+   LEVEL2 'register_meteo_variables()'
+
+   call fm%register('ssu', 'm/s', 'sea surface velocity in local x-direction', standard_name='', data2d=ssu(_2D_W_), category="meteo", fill_value=-9999.0_rk, output_level=output_level_debug)
+   call fm%register('ssv', 'm/s', 'sea surface velocity in local y-direction', standard_name='', data2d=ssv(_2D_W_), category="meteo", fill_value=-9999.0_rk, output_level=output_level_debug)
 
    if (met_method .eq. 2) then
       if (calc_met) then
