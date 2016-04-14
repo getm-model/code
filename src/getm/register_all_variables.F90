@@ -63,7 +63,9 @@
 #ifndef NO_3D
    call register_3d_variables(runtype)
 #endif
+#ifdef _FABM_
    call register_fabm_variables()
+#endif
 #if 0
    call register_diagnostic_variables()
 #endif
@@ -504,6 +506,7 @@
    end subroutine register_diagnostic_variables
 !EOC
 
+#ifdef _FABM_
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -515,9 +518,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-#ifdef _FABM_
    use getm_fabm
-#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -534,7 +535,6 @@
    if (.not. fabm_calc) return
    LEVEL2 'register_fabm_variables()'
 
-#ifdef _FABM_
    do i=1,size(model%state_variables)
       output_level = output_level_default
       if (model%state_variables(i)%output==output_none) output_level = output_level_debug
@@ -566,11 +566,11 @@
          fill_value=model%horizontal_diagnostic_variables(i)%missing_value, data2d=fabm_diag_hz(_2D_W_,i), category='fabm'//model%horizontal_diagnostic_variables(i)%target%owner%get_path(), output_level=output_level, used=in_output)
       if (in_output) model%horizontal_diagnostic_variables(i)%save = .true.
    end do
-#endif
 
    return
    end subroutine register_fabm_variables
 !EOC
+#endif
 
 !-----------------------------------------------------------------------
 
