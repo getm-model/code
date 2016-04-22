@@ -51,7 +51,7 @@
    use variables_waves, only: UStokesC,UStokesCadv,uuStokes
    use variables_waves, only: VStokesC,VStokesCadv,vvStokes
 #ifdef _FABM_
-   use getm_fabm, only: fabm_calc
+   use getm_fabm, only: fabm_calc,init_getm_fabm_fields
 #endif
 !  Necessary to use halo_zones because update_3d_halos() have been moved out
 !  temperature.F90 and salinity.F90 - should be changed at a later stage
@@ -321,6 +321,115 @@
 !-----------------------------------------------------------------------
 !BOP
 !
+! !IROUTINE: hotstart_3d - re-initialise some 3D after hotstart read.
+!
+! !INTERFACE:
+   subroutine hotstart_3d(runtype)
+! !USES:
+   use domain, only: imin,imax,jmin,jmax, az,au,av
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)                 :: runtype
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !DESCRIPTION:
+!  This routine provides possibility to reset/initialize 3D variables to
+!  ensure that velocities are correctly set on land cells after read
+!  of a hotstart file.
+!
+! !LOCAL VARIABLES:
+   integer                   :: i,j,ischange
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'hotstart_3d() # ',Ncall
+#endif
+
+   LEVEL1 'hotstart_3d'
+
+   call depth_update(sseo,ssen,Dn,Dveln,Dun,Dvn,from3d=.true.)
+!  KK-TODO: do not store ss[u|v]n in hotstart file
+!           can be calculated here (if needed at all... use of D[u|v]n)
+!  ssun = Dun - HU
+!  ssvn = Dvn - HV
+   call coordinates(.true.)
+
+#ifndef NO_BAROCLINIC
+   if (calc_temp) then
+      LEVEL2 'hotstart temperature:'
+      call init_temperature_field()
+   end if
+   if (calc_salt) then
+      LEVEL2 'hotstart salinity:'
+      call init_salinity_field()
+   end if
+#endif
+#ifdef _FABM_
+   if (fabm_calc) then
+      LEVEL2 'hotstart getm_fabm:'
+      call init_getm_fabm_fields()
+   end if
+#endif
+
+   if (nonhyd_method .eq. 1) then
+      call do_internal_pressure(2)
+   end if
+
+   call velocity_update_3d(.true.)
+
+
+! Hotstart fix - see postinit_2d
+
+      ischange = 0
+      do j=jmin,jmax
+         do i=imin,imax
+            if ( au(i,j).eq.0 .and. ANY(uu(i,j,1:kmax).ne._ZERO_) .and. (az(i,j).eq.1 .or. az(i+1,j).eq.1) ) then
+               LEVEL3 'hotstart_3d: Reset to mask(au), uu=0 for i,j=',i,j
+               ischange = 1
+               uu  (i,j,:) = _ZERO_
+               Uadv(i,j)   = _ZERO_
+            end if
+         end do
+      end do
+      if (ischange.ne.0) then
+         call update_3d_halo(uu,uu,au,imin,jmin,imax,jmax,kmax,U_TAG)
+         call wait_halo(U_TAG)
+         call update_2d_halo(Uadv,Uadv,au,imin,jmin,imax,jmax,U_TAG)
+         call wait_halo(U_TAG)
+      end if
+      ischange = 0
+      do j=jmin,jmax
+         do i=imin,imax
+            if ( av(i,j).eq.0 .and. ANY(vv(i,j,1:kmax).ne._ZERO_) .and. (az(i,j).eq.1 .or. az(i,j+1).eq.1) ) then
+               LEVEL3 'hotstart_3d: Reset to mask(av), vv=0 for i,j=',i,j
+               ischange = 1
+               vv  (i,j,:) = _ZERO_
+               Vadv(i,j)   = _ZERO_
+            end if
+         end do
+      end do
+      if (ischange.ne.0) then
+         call update_3d_halo(vv,vv,av,imin,jmin,imax,jmax,kmax,V_TAG)
+         call wait_halo(V_TAG)
+         call update_2d_halo(Vadv,Vadv,av,imin,jmin,imax,jmax,V_TAG)
+         call wait_halo(V_TAG)
+      end if
+
+
+   return
+   end subroutine hotstart_3d
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: postinit_3d - re-initialise some 3D after hotstart read.
 !
 ! !INTERFACE:
@@ -365,69 +474,6 @@
 
    call postinit_variables_3d(update_temp,update_salt)
 
-! Hotstart fix - see postinit_2d
-   if (hotstart) then
-
-      ischange = 0
-      do j=jmin,jmax
-         do i=imin,imax
-            if ( au(i,j).eq.0 .and. ANY(uu(i,j,1:kmax).ne._ZERO_) .and. (az(i,j).eq.1 .or. az(i+1,j).eq.1) ) then
-               LEVEL3 'postinit_3d: Reset to mask(au), uu=0 for i,j=',i,j
-               ischange = 1
-               uu  (i,j,:) = _ZERO_
-               Uadv(i,j)   = _ZERO_
-            end if
-         end do
-      end do
-      if (ischange.ne.0) then
-         call update_3d_halo(uu,uu,au,imin,jmin,imax,jmax,kmax,U_TAG)
-         call wait_halo(U_TAG)
-         call update_2d_halo(Uadv,Uadv,au,imin,jmin,imax,jmax,U_TAG)
-         call wait_halo(U_TAG)
-      end if
-      ischange = 0
-      do j=jmin,jmax
-         do i=imin,imax
-            if ( av(i,j).eq.0 .and. ANY(vv(i,j,1:kmax).ne._ZERO_) .and. (az(i,j).eq.1 .or. az(i,j+1).eq.1) ) then
-               LEVEL3 'postinit_3d: Reset to mask(av), vv=0 for i,j=',i,j
-               ischange = 1
-               vv  (i,j,:) = _ZERO_
-               Vadv(i,j)   = _ZERO_
-            end if
-         end do
-      end do
-      if (ischange.ne.0) then
-         call update_3d_halo(vv,vv,av,imin,jmin,imax,jmax,kmax,V_TAG)
-         call wait_halo(V_TAG)
-         call update_2d_halo(Vadv,Vadv,av,imin,jmin,imax,jmax,V_TAG)
-         call wait_halo(V_TAG)
-      end if
-
-      call depth_update(sseo,ssen,Dn,Dveln,Dun,Dvn,from3d=.true.)
-!     KK-TODO: do not store ss[u|v]n in hotstart file
-!              can be calculated here (if needed at all... use of D[u|v]n)
-!     ssun = Dun - HU
-!     ssvn = Dvn - HV
-      call coordinates(hotstart)
-
-      if (vert_cord .eq. _ADAPTIVE_COORDS_) call shear_frequency()
-      call bottom_friction(uuEuler(:,:,1),vvEuler(:,:,1),hun(:,:,1),hvn(:,:,1), &
-                           Dveln,rru,rrv)
-
-      if (nonhyd_method .eq. 1) then
-         call do_internal_pressure(2)
-      end if
-
-   end if
-
-#ifndef NO_BAROCLINIC
-   if (runtype .ge. 3) then
-      call do_eqstate()
-      call buoyancy_frequency()
-      call do_internal_pressure(1)
-   end if
-#endif
-
    if (waveforcing_method .ne. NO_WAVES) then
 !     calculate initial Stokes drift...
       if ( .not. hotstart ) then
@@ -438,6 +484,20 @@
       uuEuler = uu - uuStokes
       vvEuler = vv - vvStokes
    end if
+
+   if (hotstart) then
+      if (vert_cord .eq. _ADAPTIVE_COORDS_) call shear_frequency()
+      call bottom_friction(uuEuler(:,:,1),vvEuler(:,:,1),hun(:,:,1),hvn(:,:,1), &
+                           Dveln,rru,rrv)
+   end if
+
+#ifndef NO_BAROCLINIC
+   if (runtype .ge. 3) then
+      call do_eqstate()
+      call buoyancy_frequency()
+      call do_internal_pressure(1)
+   end if
+#endif
 
    if (.not. hotstart) then
 #ifndef NO_BAROTROPIC
@@ -450,8 +510,6 @@
 !  KK-TODO: call stop_macro also for hotstarts => do not store slow terms in restart files
 !           requires storage of [U|V]adv (when hotstart is done within 2d cycle)
 !           and calculation of Dn,Dun,Dvn for hostarts
-
-   call velocity_update_3d(.true.)
 
    return
    end subroutine postinit_3d
