@@ -111,7 +111,7 @@
 ! {\tt init\_variables\_3d}) and cleanup (see {\tt clean\_variables\_3d}).
 !
 ! !USES:
-   use domain,     only: imin,imax,jmin,jmax,kmax,bottfric_method,rdrag
+   use domain,     only: imin,imax,jmin,jmax,kmax,az,bottfric_method,rdrag
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
@@ -203,7 +203,7 @@
 !  {\tt STATIC} is set). Furthermore, most variables are initialised here.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: rc
+   integer                   :: i,j, rc
    integer,parameter         :: rk = kind(_ONE_)
 !EOP
 !-------------------------------------------------------------------------
@@ -226,7 +226,14 @@
 
    ho = _ZERO_ ; hn = _ZERO_ ; hvel = _ZERO_ ; hun = _ZERO_ ; hvn = _ZERO_
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
+
    velx3d = -9999.0 ; vely3d = -9999.0 ; w = -9999.0
+   forall(i=imin-HALO:imax+HALO, j=jmin-HALO:jmax+HALO, az(i,j).ne.0)
+       velx3d(i,j,1:kmax) = _ZERO_
+       vely3d(i,j,1:kmax) = _ZERO_
+       w     (i,j,1:kmax) = _ZERO_
+   end forall
+
 
 #ifdef _MOMENTUM_TERMS_
    tdv_u = _ZERO_ ; adv_u = _ZERO_ ; vsd_u = _ZERO_ ; hsd_u = _ZERO_
