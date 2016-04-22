@@ -18,8 +18,8 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,az
-   use waves , only: waveforcing_method,waves_method,NO_WAVES,WAVES_VF
    use domain, only: bottfric_method,rdrag
+   use waves , only: waveforcing_method,waves_method,NO_WAVES,WAVES_VF
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:

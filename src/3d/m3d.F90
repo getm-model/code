@@ -353,7 +353,7 @@
 !  of a hotstart file.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,ischange,rc
+   integer                   :: i,j,ischange
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -395,7 +395,8 @@
 
    call velocity_update_3d(.true.)
 
-! Hotstart fix - see hotstart_2d
+
+! Hotstart fix - see postinit_2d
 
       ischange = 0
       do j=jmin,jmax

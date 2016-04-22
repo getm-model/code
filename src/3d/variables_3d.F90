@@ -111,7 +111,7 @@
 ! {\tt init\_variables\_3d}) and cleanup (see {\tt clean\_variables\_3d}).
 !
 ! !USES:
-   use domain,     only: imin,imax,jmin,jmax,kmax,az,bottfric_method,rdrag
+   use domain, only: imin,imax,jmin,jmax,kmax,az,bottfric_method,rdrag
    use waves , only: waveforcing_method,waves_method,NO_WAVES,WAVES_VF
    use waves , only: waves_bbl_method,NO_WBBL
    IMPLICIT NONE
@@ -242,6 +242,7 @@
       vely3d(i,j,1:kmax) = _ZERO_
       w     (i,j,1:kmax) = _ZERO_
    end forall
+
 
 #ifdef _MOMENTUM_TERMS_
    tdv_u = _ZERO_ ; adv_u = _ZERO_ ; vsd_u = _ZERO_ ; hsd_u = _ZERO_

@@ -446,7 +446,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: postinit_2d - re-initialise some 2D after hotstart read.
+! !IROUTINE: postinit_2d -
 !
 ! !INTERFACE:
    subroutine postinit_2d(runtype,timestep,hotstart,MinN)
@@ -462,12 +462,9 @@
 ! !OUTPUT PARAMETERS:
 !
 ! !DESCRIPTION:
-!  This routine provides possibility to reset/initialize 2D variables to
-!  ensure that velocities are correctly set on land cells after read
-!  of a hotstart file.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j, ischange
+!
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -490,6 +487,7 @@
       UEuler = U - UStokes
       VEuler = V - VStokes
    end if
+
 
    return
    end subroutine postinit_2d

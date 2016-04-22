@@ -65,7 +65,7 @@
    use time, only: start,timestr,timestep
    use time, only: julianday,secondsofday
    use m2d, only: init_2d,hotstart_2d,postinit_2d
-   use variables_2d, only: zo,z,D,Dvel,DU,DV
+   use variables_2d, only: Dvel
    use les, only: init_les
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
 #ifndef NO_3D
@@ -77,8 +77,7 @@
    use turbulence, only: init_turbulence
    use mtridiagonal, only: init_tridiagonal
    use rivers, only: init_rivers
-   use variables_3d, only: ho,hn,hvel,avmback,avhback
-   use vertical_coordinates, only: restart_with_ho,restart_with_hn
+   use variables_3d, only: avmback,avhback
 #ifdef SPM
    use suspended_matter, only: init_spm
 #endif
@@ -97,7 +96,6 @@
    use meteo, only: ssu,ssv
 #ifndef NO_BAROCLINIC
    use meteo, only: swr,albedo
-   use eqstate, only: do_eqstate
 #endif
    use waves, only: init_waves,do_waves,waveforcing_method,NO_WAVES
    use integration,  only: MinN,MaxN
