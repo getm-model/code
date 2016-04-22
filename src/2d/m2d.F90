@@ -366,16 +366,14 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: postinit_2d - re-initialise some 2D after hotstart read.
+! !IROUTINE: hotstart_2d - re-initialise some 2D after hotstart read.
 !
 ! !INTERFACE:
-   subroutine postinit_2d(runtype,timestep,hotstart,MinN)
+   subroutine hotstart_2d(runtype)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: runtype,MinN
-   REALTYPE, intent(in)                :: timestep
-   logical, intent(in)                 :: hotstart
+   integer, intent(in)                 :: runtype
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -394,25 +392,23 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'postinit_2d() # ',Ncall
+   write(debug,*) 'hotstart_2d() # ',Ncall
 #endif
 
-   LEVEL1 'postinit_2d'
+   LEVEL1 'hotstart_2d'
 
-   ufirst = ( mod(MinN,2) .eq. 0 )
-
-   call postinit_variables_2d(no_2d)
+   call depth_update(zo,z,D,Dvel,DU,DV)
+   call velocity_update(dtm,z,zo,Dvel,U,DU,V,DV,velx=velx,vely=vely)
 
 !
 ! It is possible that a user changes the land mask and reads an "old" hotstart file.
 ! In this case the "old" velocities will need to be zeroed out.
-   if (hotstart) then
 
       ischange = 0
       do j=jmin,jmax
          do i=imin,imax
             if ( au(i,j).eq.0 .and. U(i,j).ne._ZERO_ .and. (az(i,j).eq.1 .or. az(i+1,j).eq.1) ) then
-               LEVEL3 'postinit_2d: Reset to mask(au), U=0 for i,j=',i,j
+               LEVEL3 'hotstart_2d: Reset to mask(au), U=0 for i,j=',i,j
                ischange = 1
                U   (i,j) = _ZERO_
                Uint(i,j) = _ZERO_
@@ -429,7 +425,7 @@
       do j=jmin,jmax
          do i=imin,imax
             if ( av(i,j).eq.0 .and. V(i,j).ne._ZERO_ .and. (az(i,j).eq.1 .or. az(i,j+1).eq.1) ) then
-               LEVEL3 'postinit_2d: Reset to mask(av), V=0 for i,j=',i,j
+               LEVEL3 'hotstart_2d: Reset to mask(av), V=0 for i,j=',i,j
                ischange = 1
                V   (i,j) = _ZERO_
                Vint(i,j) = _ZERO_
@@ -443,10 +439,46 @@
          call wait_halo(V_TAG)
       end if
 
-!     Note (KK): moved to initialise()
-!      call depth_update(zo,z,D,Dvel,DU,DV)
+   return
+   end subroutine hotstart_2d
+!EOC
 
-   end if
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: postinit_2d -
+!
+! !INTERFACE:
+   subroutine postinit_2d(runtype,timestep,hotstart,MinN)
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)                 :: runtype,MinN
+   REALTYPE, intent(in)                :: timestep
+   logical, intent(in)                 :: hotstart
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !DESCRIPTION:
+!
+! !LOCAL VARIABLES:
+!
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'postinit_2d() # ',Ncall
+#endif
+
+   LEVEL1 'postinit_2d'
+
+   ufirst = ( mod(MinN,2) .eq. 0 )
+
+   call postinit_variables_2d(no_2d)
 
    if (waveforcing_method .ne. NO_WAVES) then
 !     calculate initial Stokes drift...
@@ -456,7 +488,6 @@
       VEuler = V - VStokes
    end if
 
-   call velocity_update(dtm,z,zo,Dvel,U,DU,V,DV,velx=velx,vely=vely)
 
    return
    end subroutine postinit_2d
