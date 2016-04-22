@@ -229,9 +229,9 @@
 
    velx3d = -9999.0 ; vely3d = -9999.0 ; w = -9999.0
    forall(i=imin-HALO:imax+HALO, j=jmin-HALO:jmax+HALO, az(i,j).ne.0)
-       velx3d(i,j,1:kmax) = _ZERO_
-       vely3d(i,j,1:kmax) = _ZERO_
-       w     (i,j,1:kmax) = _ZERO_
+      velx3d(i,j,1:kmax) = _ZERO_
+      vely3d(i,j,1:kmax) = _ZERO_
+      w     (i,j,1:kmax) = _ZERO_
    end forall
 
 
