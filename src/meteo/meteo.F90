@@ -619,8 +619,8 @@
                            if (az(i,j) .ge. 1) then
 ! BJB-TODO: Update constants to double.
                               w=sqrt(u10r(i,j)*u10r(i,j)+v10r(i,j)*v10r(i,j))
-                              tausx(i,j) = 1.25e-3*1.25*w*U10r(i,j)
-                              tausy(i,j) = 1.25e-3*1.25*w*V10r(i,j)
+                              tausx(i,j) = 1.25e-3*1.25*w*u10r(i,j)
+                              tausy(i,j) = 1.25e-3*1.25*w*v10r(i,j)
                            end if
                         end do
                      end do
