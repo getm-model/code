@@ -601,7 +601,6 @@
                           output_level=output_level_debug)
       end do
    end if
-#endif
 
    return
    end subroutine register_fabm_variables
