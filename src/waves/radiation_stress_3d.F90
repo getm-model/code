@@ -43,7 +43,9 @@
    write(debug,*) 'radiation_stress_3d() # ',Ncall
 #endif
 
-   sinhkDvelnm2 = (_ONE_ / sinh(kDveln))**2
+   where (az .gt. 0)
+      sinhkDvelnm2 = (_ONE_ / sinh(kDveln))**2
+   end where
 
    sinhkhab2(:,:,0) = _ZERO_
    kp = 0
