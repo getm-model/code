@@ -64,7 +64,10 @@
 
    kDveln = waveK * Dveln
    is_deepwave_3d = ( kDveln .gt. kD_deepthresh )
-   sinh2kDvelnm1 = _ONE_ / sinh(_TWO_*kDveln)
+
+   where (az .gt. 0)
+      sinh2kDvelnm1 = _ONE_ / sinh(_TWO_*kDveln)
+   end where
 
 !  wave-induced kinematic pressure
    SJJ = waveE * waveK * sinh2kDvelnm1
