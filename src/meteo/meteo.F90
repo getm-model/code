@@ -71,6 +71,7 @@
    REALTYPE, public                    :: evap_factor = _ONE_
    REALTYPE, public                    :: precip_factor = _ONE_
    logical, public                     :: calc_relative_wind=.false.
+   logical, public                     :: constant_cd=.false.
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
    REALTYPE,public,dimension(:,:),allocatable,target :: t2,hum
    REALTYPE,public,dimension(:,:),pointer            :: airp,tausx,tausy
@@ -596,7 +597,7 @@
                      v10r => v10
                   end if
 
-                  if (present(sst_model)) then
+                  if (present(sst_model) .and. .not.constant_cd) then
 ! OMP-NOTE: This is an expensive loop, but we cannot thread it as long
 !    as exchange_coefficients() and fluxes() pass information through
 !    scalars in the meteo module. BJB 2009-09-30.
@@ -619,8 +620,8 @@
                            if (az(i,j) .ge. 1) then
 ! BJB-TODO: Update constants to double.
                               w=sqrt(u10r(i,j)*u10r(i,j)+v10r(i,j)*v10r(i,j))
-                              tausx(i,j) = 1.25e-3*1.25*w*U10r(i,j)
-                              tausy(i,j) = 1.25e-3*1.25*w*V10r(i,j)
+                              tausx(i,j) = 1.25e-3*1.25*w*u10r(i,j)
+                              tausy(i,j) = 1.25e-3*1.25*w*v10r(i,j)
                            end if
                         end do
                      end do

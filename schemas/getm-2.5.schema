@@ -595,6 +595,7 @@
 			</element>
 			<element name="ip_method" type="int" label="internal pressure method">
 				<options>
+					<option value="0" label="no internal pressure gradient"/>
 					<option value="1" label="Blumberg and Mellor"/>
 					<option value="2" label="Blumberg and Mellor (linear)"/>
 					<option value="3" label="z-interpolation"/>
