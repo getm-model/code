@@ -19,7 +19,7 @@
    use domain, only: ill,ihl,jll,jhl,ilg,ihg,jlg,jhg
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
    use grid_interpol, only: to_rotated_lat_lon
-   use meteo, only: meteo_file,on_grid,calc_met,hum_method
+   use meteo, only: meteo_file,on_grid,calc_met,constant_cd,hum_method
    use meteo, only: RELATIVE_HUM,WET_BULB,DEW_POINT,SPECIFIC_HUM
    use meteo, only: airp,u10,v10,t2,hum,tcc
    use meteo, only: fwf_method,evap,precip
@@ -139,17 +139,6 @@
 
    call open_meteo_file(meteo_file)
 
-   if (met_lat(1) .gt. met_lat(2)) then
-      LEVEL3 'Reverting lat-axis and setting grid_scan to 0'
-      grid_scan = 0
-      x = met_lat(1)
-      do j=1,jextr/2
-         met_lat(j) = met_lat(jextr-j+1)
-         met_lat(jextr-j+1) = x
-         x = met_lat(j+1)
-      end do
-   end if
-
    if (on_grid) then
       if (iextr_domain.ne.iextr .or. jextr_domain.ne.jextr) then
          call getm_error("init_meteo_input_ncdf()", &
@@ -186,6 +175,17 @@
          call to_rotated_lat_lon(southpole,olon,olat,rlon,rlat,x)
          beta = x
       end if
+   else
+   if (met_lat(1) .gt. met_lat(2)) then
+      LEVEL3 'Reverting lat-axis and setting grid_scan to 0'
+      grid_scan = 0
+      x = met_lat(1)
+      do j=1,jextr/2
+         met_lat(j) = met_lat(jextr-j+1)
+         met_lat(jextr-j+1) = x
+         x = met_lat(j+1)
+      end do
+   end if
    end if
 
 
@@ -590,6 +590,8 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 
    if (found) then
 
+      airp_id = ncdf_meteo_inq_varid(ncid,name_airp)
+
       if (fwf_method .eq. 2) then
          evap_id   = ncdf_meteo_inq_varid(ncid,name_evap  ,required=.true.)
       end if
@@ -598,11 +600,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
       end if
 
       if (calc_met) then
-         airp_id = ncdf_meteo_inq_varid(ncid,name_airp,required=.true.)
-         u10_id  = ncdf_meteo_inq_varid(ncid,name_u10 ,required=.true.)
-         v10_id  = ncdf_meteo_inq_varid(ncid,name_v10 ,required=.true.)
-         t2_id   = ncdf_meteo_inq_varid(ncid,name_t2  ,required=.true.)
-         tcc_id  = ncdf_meteo_inq_varid(ncid,name_tcc ,required=.true.)
+         u10_id  = ncdf_meteo_inq_varid(ncid,name_u10 )
+         v10_id  = ncdf_meteo_inq_varid(ncid,name_v10 )
+         t2_id   = ncdf_meteo_inq_varid(ncid,name_t2  )
+         tcc_id  = ncdf_meteo_inq_varid(ncid,name_tcc )
 
          hum_id = -1
          err = nf90_inq_varid(ncid,name_hum1,hum_id)
@@ -611,8 +612,7 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
             if (err .NE. NF90_NOERR) then
                err = nf90_inq_varid(ncid,name_hum3,hum_id)
                if (err .NE. NF90_NOERR) then
-                  FATAL 'Not able to find valid humidity parameter'
-                  stop 'init_meteo_input_ncdf()'
+                  hum_id = -1
                else
                   LEVEL2 'Taking hum as dew point temperature'
                   hum_method = DEW_POINT
@@ -627,8 +627,16 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          end if
 !KBKSTDERR 'Taking hum as wet bulb temperature'
 
+         if (airp_id.eq.-1 .and. t2_id.eq.-1 .and. tcc_id.eq.-1 .and. hum_id.eq.-1) then
+            LEVEL4 'WARNING: Only wind data provided. Stresses will be'
+            LEVEL4 '         calculated with constant drag coefficient.'
+            constant_cd = .true.
+         else if (airp_id.eq.-1 .or. t2_id.eq.-1 .or. tcc_id.eq.-1 .or. hum_id.eq.-1) then
+            FATAL 'Incomplete input data for bulk formulas.'
+            stop 'init_meteo_input_ncdf()'
+         end if
+
       else
-         airp_id  = ncdf_meteo_inq_varid(ncid,name_airp )
          tausx_id = ncdf_meteo_inq_varid(ncid,name_tausx)
          tausy_id = ncdf_meteo_inq_varid(ncid,name_tausy)
          swr_id   = ncdf_meteo_inq_varid(ncid,name_swr  )
@@ -752,6 +760,7 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 
    if (calc_met) then
 
+   if (u10_id .gt. 0) then
       err = nf90_get_var(ncid,u10_id,wrk,start,edges)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
@@ -765,7 +774,9 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          call copy_var(grid_scan,wrk,wrk_dp)
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,u10)
       end if
+   end if
 
+   if (v10_id .gt. 0) then
       err = nf90_get_var(ncid,v10_id,wrk,start,edges)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
@@ -779,6 +790,7 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          call copy_var(grid_scan,wrk,wrk_dp)
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,v10)
       end if
+   end if
 
 !     Rotation of wind due to the combined effect of possible rotation of
 !     meteorological grid and possible hydrodynamic grid convergence
@@ -804,7 +816,7 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          v10 = v10 * wind_factor
       end if
 
-
+   if (t2_id .gt. 0) then
       err = nf90_get_var(ncid,t2_id,wrk,start,edges)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
@@ -818,7 +830,9 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          call copy_var(grid_scan,wrk,wrk_dp)
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,t2)
       end if
+   end if
 
+   if (hum_id .gt. 0) then
       err = nf90_get_var(ncid,hum_id,wrk,start,edges)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
@@ -832,7 +846,9 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          call copy_var(grid_scan,wrk,wrk_dp)
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,hum)
       end if
+   end if
 
+   if (tcc_id .gt. 0) then
       err = nf90_get_var(ncid,tcc_id,wrk,start,edges)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
@@ -846,6 +862,7 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          call copy_var(grid_scan,wrk,wrk_dp)
          call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,tcc)
       end if
+   end if
 
    else
 
