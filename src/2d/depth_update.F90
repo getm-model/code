@@ -58,6 +58,7 @@
    CALL tic(TIM_DPTHUPDATE)
 
 ! TODO/BJB: Why is this turned off?
+! KK: ...because we need to have non-zero DU/DV at land-sea-interfaces
 #undef USE_MASK
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,d1,d2i)

@@ -205,34 +205,37 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   LEVEL2 'register_meteo_variables() - none so-far '
+   LEVEL2 'register_meteo_variables()'
+
+   call fm%register('ssu', 'm/s', 'sea surface velocity in local x-direction', standard_name='', data2d=ssu(_2D_W_), category="meteo", fill_value=-9999.0_rk, output_level=output_level_debug)
+   call fm%register('ssv', 'm/s', 'sea surface velocity in local y-direction', standard_name='', data2d=ssv(_2D_W_), category="meteo", fill_value=-9999.0_rk, output_level=output_level_debug)
 
    if (met_method .eq. 2) then
       if (calc_met) then
-         call fm%register('airp', 'Pa', 'air pressure', standard_name='', data2d=airp(_2D_W_), category="meteo/in")
-         call fm%register('t2', 'Celcius', '2m air temperature', standard_name='', data2d=t2(_2D_W_), category="meteo/in")
-         call fm%register('u10', 'm/s', '10m wind (x)', standard_name='', data2d=u10(_2D_W_), category="meteo/in")
-         call fm%register('v10', 'm/s', '10m wind (y)', standard_name='', data2d=v10(_2D_W_), category="meteo/in")
+         call fm%register('airp', 'Pa', 'air pressure', standard_name='', data2d=airp(_2D_W_), category="meteo/in", output_level=output_level_debug)
+         call fm%register('t2', 'Celcius', '2m air temperature', standard_name='', data2d=t2(_2D_W_), category="meteo/in", output_level=output_level_debug)
+         call fm%register('u10', 'm/s', '10m wind (x)', standard_name='', data2d=u10(_2D_W_), category="meteo/in", output_level=output_level_debug)
+         call fm%register('v10', 'm/s', '10m wind (y)', standard_name='', data2d=v10(_2D_W_), category="meteo/in", output_level=output_level_debug)
 !:: hum
-         call fm%register('tcc', '', 'total cloud cover', standard_name='', data2d=tcc(_2D_W_), category="meteo/in")
+         call fm%register('tcc', '', 'total cloud cover', standard_name='', data2d=tcc(_2D_W_), category="meteo/in", output_level=output_level_debug)
          ! fwf_method = 2, 3 - precipitation read from file
          if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
-            call fm%register('precip', 'm/s', 'precipitation', standard_name='', data2d=precip(_2D_W_), category="meteo/in")
+            call fm%register('precip', 'm/s', 'precipitation', standard_name='', data2d=precip(_2D_W_), category="meteo/in", output_level=output_level_debug)
          end if
          ! fwf_method = 2 - evaporation read from file
          if (fwf_method .eq. 2) then
-            call fm%register('evap', 'm/s', 'evaporation', standard_name='', data2d=evap(_2D_W_), category="meteo/in")
+            call fm%register('evap', 'm/s', 'evaporation', standard_name='', data2d=evap(_2D_W_), category="meteo/in", output_level=output_level_debug)
          end if
       end if
-      call fm%register('swr', 'W', 'short wave radiation', standard_name='', data2d=swr(_2D_W_), category="meteo/out")
-      call fm%register('shf', 'W', 'surface heat flux', standard_name='', data2d=shf(_2D_W_), category="meteo/out")
-      call fm%register('tausx', 'Pa', 'wind stress (x)', standard_name='', data2d=tausx(_2D_W_), category="meteo/out")
-      call fm%register('tausy', 'Pa', 'wind stress (y)', standard_name='', data2d=tausy(_2D_W_), category="meteo/out")
-      call fm%register('albedo', '', 'albedo', standard_name='', data2d=albedo(_2D_W_), category="meteo/out")
-      call fm%register('zenith_angle', 'degrees', 'solar zenith angle', standard_name='', data2d=zenith_angle(_2D_W_), category="meteo/out")
+      call fm%register('swr', 'W', 'short wave radiation', standard_name='', data2d=swr(_2D_W_), category="meteo/out", output_level=output_level_debug)
+      call fm%register('shf', 'W', 'surface heat flux', standard_name='', data2d=shf(_2D_W_), category="meteo/out", output_level=output_level_debug)
+      call fm%register('tausx', 'Pa', 'wind stress (x)', standard_name='', data2d=tausx(_2D_W_), category="meteo/out", output_level=output_level_debug)
+      call fm%register('tausy', 'Pa', 'wind stress (y)', standard_name='', data2d=tausy(_2D_W_), category="meteo/out", output_level=output_level_debug)
+      call fm%register('albedo', '', 'albedo', standard_name='', data2d=albedo(_2D_W_), category="meteo/out", output_level=output_level_debug)
+      call fm%register('zenith_angle', 'degrees', 'solar zenith angle', standard_name='', data2d=zenith_angle(_2D_W_), category="meteo/out", output_level=output_level_debug)
       ! fwf_method = 3 - evaporation calculated
       if (fwf_method .eq. 3 .or. fwf_method .eq. 4) then
-         call fm%register('evap', 'm/s', 'evaporation', standard_name='', data2d=evap(_2D_W_), category="meteo/out")
+         call fm%register('evap', 'm/s', 'evaporation', standard_name='', data2d=evap(_2D_W_), category="meteo/out", output_level=output_level_debug)
       end if
    end if
 
@@ -320,7 +323,10 @@
    call fm%register('V', 'm2/s', 'transport in local y-direction', standard_name='', data2d=V(_2D_W_), category='2d', output_level=output_level_debug)
    call fm%register('velx', 'm/s', 'velocity in global x-direction', standard_name='', data2d=velx(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
    call fm%register('vely', 'm/s', 'velocity in global y-direction', standard_name='', data2d=vely(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
-!   call fm%register('taubmax', 'N/m2', 'max. bottom stress', standard_name='', data2d=taubmax(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
+
+   if (associated(taubmax)) then
+      call fm%register('taubmax', 'N/m2', 'max. bottom stress', standard_name='', data2d=taubmax(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
+   end if
 
    if (do_numerical_analyses_2d) then
       call fm%register('numdis_2d', 'W/kg', 'numerical dissipation', standard_name='', data2d=numdis_2d(_2D_W_), category='2d', output_level=output_level_debug)
@@ -465,7 +471,11 @@
       call fm%register('vely3d', 'm/s', 'velocity in global y-direction (3D)', standard_name='', dimensions=(/id_dim_z/), data3d=vely3d(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       call fm%register('w', 'm2/s', 'vertical velocity', standard_name='', dimensions=(/id_dim_z/), data3d=w(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       call fm%register('SS', 's-2', 'shear frequency squared', standard_name='', dimensions=(/id_dim_z/), data3d=SS(_3D_W_), category='3d', output_level=output_level_debug)
-!      call fm%register('taubmax_3d', 'N2/m2', 'max. bottom stress', standard_name='', data2d=taubmax_3d(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
+
+      if (associated(taubmax_3d)) then
+         call fm%register('taubmax_3d', 'N2/m2', 'max. bottom stress', standard_name='', data2d=taubmax_3d(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
+      end if
+
       if (nonhyd_method .ne. 0) then
          call fm%register('minus_bnh', 'm/s2', 'neg. nh buoyancy correction', standard_name='', dimensions=(/id_dim_z/), data3d=minus_bnh(_3D_W_), category='3d', output_level=output_level_debug)
       end if
