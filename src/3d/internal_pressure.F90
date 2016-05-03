@@ -89,6 +89,7 @@
    REALTYPE,dimension(:,:,:),allocatable,private        :: idpdx0,idpdy0
 #endif
    logical,private                                      :: calc_buoyc=.false.
+   integer, private, parameter         :: NO_IP=0
    integer, private, parameter         :: BLUMBERG_MELLOR=1
    integer, private, parameter         :: BLUMBERG_MELLOR_LIN=2
    integer, private, parameter         :: Z_INTERPOL=3
@@ -140,6 +141,8 @@
    LEVEL2 'init_internal_pressure()'
 
    select case (ip_method)
+      case(NO_IP)
+         LEVEL3 'no internal pressure gradient'
       case(BLUMBERG_MELLOR)
          LEVEL3 'Blumber-Mellor scheme'
       case(BLUMBERG_MELLOR_LIN)
@@ -276,9 +279,6 @@
          call ip_shchepetkin_mcwilliams()
       case(STELLING_VANKESTER)
          call ip_stelling_vankester()
-      case default
-         FATAL 'Not valid ip_method specified'
-         stop 'do_internal_pressure()'
    end select
 
 #ifdef SUBSTR_INI_PRESS
