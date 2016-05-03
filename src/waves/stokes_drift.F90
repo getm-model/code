@@ -9,7 +9,7 @@
 !
 ! !USES:
    use halo_zones     , only: U_TAG,V_TAG
-   use domain         , only: imin,imax,jmin,jmax,au,av
+   use domain         , only: imin,imax,jmin,jmax,az,au,av
    use pool           , only: flux_center2interface
    use waves          , only: new_StokesC,waves_method,WAVES_RS
    use variables_waves, only: waveE,waveK,SJ
@@ -51,7 +51,9 @@
 !  other routines (SJ)
 
 !  wave-induced kinematic pressure
-   SJ = waveE * waveK / sinh(_TWO_*waveK*Dvel)
+   where (az .gt. 0)
+      SJ = waveE * waveK / sinh(_TWO_*waveK*Dvel)
+   end where
 
 
 !  here begins the actual calculation of the depth-integrated Stokes drift
