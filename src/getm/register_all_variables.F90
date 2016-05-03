@@ -323,7 +323,10 @@
    call fm%register('V', 'm2/s', 'transport in local y-direction', standard_name='', data2d=V(_2D_W_), category='2d', output_level=output_level_debug)
    call fm%register('velx', 'm/s', 'velocity in global x-direction', standard_name='', data2d=velx(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
    call fm%register('vely', 'm/s', 'velocity in global y-direction', standard_name='', data2d=vely(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
-!   call fm%register('taubmax', 'N/m2', 'max. bottom stress', standard_name='', data2d=taubmax(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
+
+   if (associated(taubmax)) then
+      call fm%register('taubmax', 'N/m2', 'max. bottom stress', standard_name='', data2d=taubmax(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
+   end if
 
    if (do_numerical_analyses_2d) then
       call fm%register('numdis_2d', 'W/kg', 'numerical dissipation', standard_name='', data2d=numdis_2d(_2D_W_), category='2d', output_level=output_level_debug)
@@ -468,7 +471,11 @@
       call fm%register('vely3d', 'm/s', 'velocity in global y-direction (3D)', standard_name='', dimensions=(/id_dim_z/), data3d=vely3d(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       call fm%register('w', 'm2/s', 'vertical velocity', standard_name='', dimensions=(/id_dim_z/), data3d=w(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       call fm%register('SS', 's-2', 'shear frequency squared', standard_name='', dimensions=(/id_dim_z/), data3d=SS(_3D_W_), category='3d', output_level=output_level_debug)
-!      call fm%register('taubmax_3d', 'N2/m2', 'max. bottom stress', standard_name='', data2d=taubmax_3d(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
+
+      if (associated(taubmax_3d)) then
+         call fm%register('taubmax_3d', 'N2/m2', 'max. bottom stress', standard_name='', data2d=taubmax_3d(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
+      end if
+
       if (nonhyd_method .ne. 0) then
          call fm%register('minus_bnh', 'm/s2', 'neg. nh buoyancy correction', standard_name='', dimensions=(/id_dim_z/), data3d=minus_bnh(_3D_W_), category='3d', output_level=output_level_debug)
       end if
