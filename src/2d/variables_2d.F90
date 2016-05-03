@@ -142,7 +142,6 @@
 
    z  = -9999.0; zo =_ZERO_
 
-   D = _ZERO_ ; Dvel = _ZERO_
    U = _ZERO_; DU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; DV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
 
