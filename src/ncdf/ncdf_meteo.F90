@@ -627,9 +627,9 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          end if
 !KBKSTDERR 'Taking hum as wet bulb temperature'
 
-         if (airp_id.eq.-1 .and. t2_id.eq.-1 .and. tcc_id.eq.-1 .and. hum_id.eq.-1) then
-            LEVEL4 'WARNING: Only wind data provided. Stresses will be'
-            LEVEL4 '         calculated with constant drag coefficient.'
+         if (t2_id.eq.-1 .and. tcc_id.eq.-1 .and. hum_id.eq.-1) then
+            LEVEL4 'WARNING: Incomplete input data for bulk formulas.'
+            LEVEL4 '         Stresses will be calculated with constant drag coefficient.'
             constant_cd = .true.
          else if (airp_id.eq.-1 .or. t2_id.eq.-1 .or. tcc_id.eq.-1 .or. hum_id.eq.-1) then
             FATAL 'Incomplete input data for bulk formulas.'
