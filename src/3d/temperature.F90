@@ -449,7 +449,7 @@ end interface
    REALTYPE, POINTER         :: auxn(:),auxo(:)
    REALTYPE, POINTER         :: a1(:),a2(:),a3(:),a4(:)
    REALTYPE, POINTER         :: rad1d(:)
-   REALTYPE                  :: zz,swr_loc,shf_loc
+   REALTYPE                  :: zz,swr_loc,shf_loc,bioshade_loc
    REALTYPE                  :: swr_refl
    REALTYPE                  :: rho_0_cpi
    integer                   :: status
@@ -527,7 +527,7 @@ end interface
 ! OMP-NOTE: Pointer definitions and allocation so that each thread can
 !           get its own work memory.
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
-!$OMP    PRIVATE(i,j,k,rc, zz,swr_loc,shf_loc)                         &
+!$OMP    PRIVATE(i,j,k,rc, zz,swr_loc,shf_loc,bioshade_loc)            &
 !$OMP    PRIVATE(Res,auxn,auxo,a1,a2,a3,a4,rad1d)
 
 ! Each thread allocates its own HEAP storage:
@@ -554,6 +554,7 @@ end interface
 !  Solar radiation and vertical diffusion of temperature
 
 !  Solar radiation
+   bioshade_loc = _ONE_
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
@@ -563,11 +564,11 @@ end interface
             zz = _ZERO_
             do k=kmax-1,0,-1
                zz=zz+hn(i,j,k+1)
-               rad(i,j,k)=swr_loc &
 #ifdef _FABM_
-                      *bioshade(i,j,k+1) &
+               bioshade_loc = bioshade(i,j,k+1)
 #endif
-                      *(A(i,j)*exp(-zz/g1(i,j))+(1-A(i,j))*exp(-zz/g2(i,j)))
+               rad(i,j,k)=swr_loc &
+                      *(A(i,j)*exp(-zz/g1(i,j))+(1-A(i,j))*exp(-zz/g2(i,j))*bioshade_loc)
             end do
          end if
       end do
