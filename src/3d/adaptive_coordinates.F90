@@ -171,8 +171,10 @@ STDERR 'adaptive_coordinates()'
       if (rc /= 0) stop 'coordinates: Error allocating memory (zposo)'
       allocate(work2(I3DFIELD),stat=rc)  !
       if (rc /= 0) stop 'coordinates: Error allocating memory (work2)'
+      work2 = _ZERO_
       allocate(work3(I3DFIELD),stat=rc)  !
       if (rc /= 0) stop 'coordinates: Error allocating memory (work3)'
+      work3 = _ZERO_
       allocate(be(0:kmax),stat=rc)     ! working space
       if (rc /= 0) STOP 'coordinates: Error allocating (be)'
       allocate(NNloc(0:kmax),stat=rc)     ! working space
