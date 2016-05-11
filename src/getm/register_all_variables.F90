@@ -156,7 +156,7 @@
    call fm%register_dimension(trim(yname),jmax-jmin+1,global_length=jextr,offset=joff,id=id_dim_lat)
 #ifndef NO_3D
    if (runtype .ge. 2) then
-      call fm%register_dimension(trim(zname),kmax+1,id=id_dim_z)
+      call fm%register_dimension(trim(zname),kmax+1,global_length=kmax,offset=-1,id=id_dim_z)
    end if
 #endif
 
