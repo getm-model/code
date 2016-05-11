@@ -239,9 +239,9 @@
       if (bdy3d_tmrlx_min<_ZERO_ .or. bdy3d_tmrlx_min>_ONE_)          &
            call getm_error("init_3d()",                               &
            "bdy3d_tmrlx_min is out of valid range [0:1]")
-      if (bdy3d_tmrlx_max<bdy3d_tmrlx_min .or. bdy3d_tmrlx_min>_ONE_) &
+      if (bdy3d_tmrlx_max<bdy3d_tmrlx_min .or. bdy3d_tmrlx_max>_ONE_) &
            call getm_error("init_3d()",                               &
-           "bdy3d_tmrlx_max is out of valid range [bdy3d_tmrlx_max:1]")
+           "bdy3d_tmrlx_max is out of valid range [bdy3d_tmrlx_min:1]")
       if (bdy3d_tmrlx_ucut<_ZERO_)                                    &
            call getm_error("init_3d()",                               &
            "bdy3d_tmrlx_max is out of valid range [0:inf[")
