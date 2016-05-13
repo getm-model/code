@@ -133,15 +133,6 @@
 
    call open_meteo_file(meteo_file)
 
-   if(iextr .eq. 1 .and. jextr .eq. 1) then
-      point_source = .true.
-      LEVEL3 'Assuming Point Source meteo forcing'
-!      if (on_grid .eq. .false. ) then
-         LEVEL3 'Setting on_grid to true'
-         on_grid=.true.
-!      end if
-   end if
-
    if (met_lat(1) .gt. met_lat(2)) then
       LEVEL3 'Reverting lat-axis and setting grid_scan to 0'
       grid_scan = 0
