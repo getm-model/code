@@ -133,17 +133,6 @@
 
    call open_meteo_file(meteo_file)
 
-   if (met_lat(1) .gt. met_lat(2)) then
-      LEVEL3 'Reverting lat-axis and setting grid_scan to 0'
-      grid_scan = 0
-      x = met_lat(1)
-      do j=1,jextr/2
-         met_lat(j) = met_lat(jextr-j+1)
-         met_lat(jextr-j+1) = x
-         x = met_lat(j+1)
-      end do
-   end if
-
    allocate(wrk(iextr,jextr),stat=err)
    if (err /= 0) stop 'ncdf_meteo: Error allocating memory (wrk)'
    wrk = 0.
@@ -169,6 +158,17 @@
          rlat=met_lat(1)
          call to_rotated_lat_lon(southpole,olon,olat,rlon,rlat,x)
          beta = x
+      end if
+   else
+      if (met_lat(1) .gt. met_lat(2)) then
+         LEVEL3 'Reverting lat-axis and setting grid_scan to 0'
+         grid_scan = 0
+         x = met_lat(1)
+         do j=1,jextr/2
+            met_lat(j) = met_lat(jextr-j+1)
+            met_lat(jextr-j+1) = x
+            x = met_lat(j+1)
+         end do
       end if
    end if
 
