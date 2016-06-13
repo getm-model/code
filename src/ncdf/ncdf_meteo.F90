@@ -176,16 +176,16 @@
          beta = x
       end if
    else
-   if (met_lat(1) .gt. met_lat(2)) then
-      LEVEL3 'Reverting lat-axis and setting grid_scan to 0'
-      grid_scan = 0
-      x = met_lat(1)
-      do j=1,jextr/2
-         met_lat(j) = met_lat(jextr-j+1)
-         met_lat(jextr-j+1) = x
-         x = met_lat(j+1)
-      end do
-   end if
+      if (met_lat(1) .gt. met_lat(2)) then
+         LEVEL3 'Reverting lat-axis and setting grid_scan to 0'
+         grid_scan = 0
+         x = met_lat(1)
+         do j=1,jextr/2
+            met_lat(j) = met_lat(jextr-j+1)
+            met_lat(jextr-j+1) = x
+            x = met_lat(j+1)
+         end do
+      end if
    end if
 
 
