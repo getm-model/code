@@ -16,8 +16,7 @@
 ! !USES:
    use netcdf
    use ncdf_restart
-   use domain, only: grid_type
-   use domain, only: xc,yc,lonc,latc
+   use domain, only: xcord,ycord
    use domain, only: imin,imax,jmin,jmax,kmax
    use variables_2d
 #ifndef NO_3D
@@ -78,18 +77,11 @@
 #endif
    start(3) = 1; edges(3) = kmax+1
 
-   select case (grid_type)
-      case (1) ! cartesian
-         status = nf90_put_var(ncid,xax_id,xc(_IRANGE_,1))
-         if (status .NE. NF90_NOERR) go to 10
-         status = nf90_put_var(ncid,yax_id,yc(1,_JRANGE_))
-         if (status .NE. NF90_NOERR) go to 10
-      case (2) ! spherical
-         status = nf90_put_var(ncid,xax_id,lonc(_IRANGE_,1))
-         if (status .NE. NF90_NOERR) go to 10
-         status = nf90_put_var(ncid,yax_id,latc(1,_JRANGE_))
-         if (status .NE. NF90_NOERR) go to 10
-   end select
+   status = nf90_put_var(ncid,xax_id,xcord(_IRANGE_))
+   if (status .NE. NF90_NOERR) go to 10
+
+   status = nf90_put_var(ncid,yax_id,ycord(_JRANGE_))
+   if (status .NE. NF90_NOERR) go to 10
 
    status = nf90_put_var(ncid,zax_id,zax(0:kmax))
    if (status .NE. NF90_NOERR) go to 10
