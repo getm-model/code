@@ -245,10 +245,6 @@
                   if (wind(i,j) .gt. _ZERO_) then
                      coswavedir(i,j) = u10r(i,j) / wind(i,j)
                      sinwavedir(i,j) = v10r(i,j) / wind(i,j)
-!                    KK-TODO: Or do we want to use H instead of D?
-!                             Then we would not need to call depth_update in
-!                             initialise(). However H does not consider
-!                             min_depth.
                      depth = min( D(i,j) , max_depth_windwaves )
                      waveH(i,j) = wind2waveHeight(waves_windscalefactor*wind(i,j),depth)
                      waveT(i,j) = wind2wavePeriod(waves_windscalefactor*wind(i,j),depth)
