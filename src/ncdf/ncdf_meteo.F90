@@ -176,16 +176,16 @@
          beta = x
       end if
    else
-   if (met_lat(1) .gt. met_lat(2)) then
-      LEVEL3 'Reverting lat-axis and setting grid_scan to 0'
-      grid_scan = 0
-      x = met_lat(1)
-      do j=1,jextr/2
-         met_lat(j) = met_lat(jextr-j+1)
-         met_lat(jextr-j+1) = x
-         x = met_lat(j+1)
-      end do
-   end if
+      if (met_lat(1) .gt. met_lat(2)) then
+         LEVEL3 'Reverting lat-axis and setting grid_scan to 0'
+         grid_scan = 0
+         x = met_lat(1)
+         do j=1,jextr/2
+            met_lat(j) = met_lat(jextr-j+1)
+            met_lat(jextr-j+1) = x
+            x = met_lat(j+1)
+         end do
+      end if
    end if
 
 
@@ -627,9 +627,9 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          end if
 !KBKSTDERR 'Taking hum as wet bulb temperature'
 
-         if (airp_id.eq.-1 .and. t2_id.eq.-1 .and. tcc_id.eq.-1 .and. hum_id.eq.-1) then
-            LEVEL4 'WARNING: Only wind data provided. Stresses will be'
-            LEVEL4 '         calculated with constant drag coefficient.'
+         if (t2_id.eq.-1 .and. tcc_id.eq.-1 .and. hum_id.eq.-1) then
+            LEVEL4 'WARNING: Incomplete input data for bulk formulas.'
+            LEVEL4 '         Stresses will be calculated with constant drag coefficient.'
             constant_cd = .true.
          else if (airp_id.eq.-1 .or. t2_id.eq.-1 .or. tcc_id.eq.-1 .or. hum_id.eq.-1) then
             FATAL 'Incomplete input data for bulk formulas.'
