@@ -601,7 +601,9 @@
 ! OMP-NOTE: This is an expensive loop, but we cannot thread it as long
 !    as exchange_coefficients() and fluxes() pass information through
 !    scalars in the meteo module. BJB 2009-09-30.
+#ifndef SLICE_MODEL
                      do j=jmin,jmax
+#endif
                         do i=imin,imax
                            if (az(i,j) .ge. 1) then
                               call exchange_coefficients( &
@@ -612,10 +614,14 @@
                                       shf(i,j),tausx(i,j),tausy(i,j),evap(i,j))
                            end if
                         end do
+#ifndef SLICE_MODEL
                      end do
+#endif
                   else
 ! OMP-NOTE: w needs to be a local (stack) variable to thread this loop.
+#ifndef SLICE_MODEL
                      do j=jmin,jmax
+#endif
                         do i=imin,imax
                            if (az(i,j) .ge. 1) then
 ! BJB-TODO: Update constants to double.
@@ -624,7 +630,9 @@
                               tausy(i,j) = 1.25e-3*1.25*w*v10r(i,j)
                            end if
                         end do
+#ifndef SLICE_MODEL
                      end do
+#endif
                   end if
 
                end if
@@ -811,6 +819,7 @@
                if (nudge_sss) then
                   sss(:,j+1) = sss(:,j)
                end if
+               zenith_angle(:,j+1) = zenith_angle(:,j)
 #endif
 
 !            end if
