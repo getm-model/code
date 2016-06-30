@@ -5,18 +5,21 @@
 ! !ROUTINE: velocity_update_3d - calculate new 3D velocities.
 !
 ! !INTERFACE:
-   subroutine velocity_update_3d()
+   subroutine velocity_update_3d(calc_2d)
 !
 ! !DESCRIPTION:
 !
 ! !USES:
    use domain
    use m2d,          only: velocity_update
-   use variables_3d, only: kmin
-   use variables_3d, only: hn,ho,uu,vv,ww,hun,hvn,hvel,velx3d,vely3d,w,dt
+   use variables_2d, only: Uint,Vint
+   use variables_3d, only: kmin,dt
+   use variables_3d, only: hn,ho,uu,vv,ww,hun,hvn,hvel,velx3d,vely3d,w
+   use variables_3d, only: ssen,sseo,Dun,Dvn,Dveln,velx2dadv,vely2dadv
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   logical,intent(in) :: calc_2d
 !
 ! !OUTPUT PARAMETERS:
 !
@@ -45,6 +48,12 @@
              dt,                                                       &
              dxv,dyu,arcd1,                                            &
              H,HU,HV,hn,ho,hvel,uu,hun,vv,hvn,ww,vel_missing,w)
+
+   if (calc_2d) then
+      call velocity_update(dt,ssen,sseo,Dveln,Uint,Dun,Vint,Dvn,       &
+                           velx=velx2dadv,vely=vely2dadv)
+   end if
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving velocity_update_3d()'

@@ -634,7 +634,7 @@
 
    end if
 
-   call velocity_update_3d()
+   call velocity_update_3d(.true.)
 
    call slow_terms()
 #endif

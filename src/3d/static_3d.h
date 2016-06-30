@@ -16,6 +16,7 @@
   REALTYPE                             :: vv(I3DFIELD)
   REALTYPE, target                     :: ww(I3DFIELD)
   REALTYPE,dimension(I3DFIELD),target  :: velx3d,vely3d,w
+  REALTYPE,dimension(I2DFIELD),target  :: velx2dadv,vely2dadv
 
 #ifdef _MOMENTUM_TERMS_
   REALTYPE                             :: tdv_u(I3DFIELD)
