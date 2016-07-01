@@ -382,7 +382,7 @@
       call do_internal_pressure(2)
    end if
 
-   call velocity_update_3d(.true.)
+   call velocity_update_3d(.true.,.true.)
 
 
 ! Hotstart fix - see postinit_2d
