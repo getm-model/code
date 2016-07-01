@@ -228,12 +228,14 @@
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
 
    velx3d = -9999.0 ; vely3d = -9999.0 ; w = -9999.0
+   velx2dadv = -9999.0 ; vely2dadv = -9999.0
    forall(i=imin-HALO:imax+HALO, j=jmin-HALO:jmax+HALO, az(i,j).ne.0)
-      velx3d(i,j,1:kmax) = _ZERO_
-      vely3d(i,j,1:kmax) = _ZERO_
-      w     (i,j,1:kmax) = _ZERO_
+      velx3d   (i,j,1:kmax) = _ZERO_
+      vely3d   (i,j,1:kmax) = _ZERO_
+      w        (i,j,1:kmax) = _ZERO_
+      velx2dadv(i,j)        = _ZERO_
+      vely2dadv(i,j)        = _ZERO_
    end forall
-
 
 #ifdef _MOMENTUM_TERMS_
    tdv_u = _ZERO_ ; adv_u = _ZERO_ ; vsd_u = _ZERO_ ; hsd_u = _ZERO_

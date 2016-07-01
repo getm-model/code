@@ -5,19 +5,20 @@
 ! !ROUTINE: velocity_update_3d - calculate new 3D velocities.
 !
 ! !INTERFACE:
-   subroutine velocity_update_3d(calc_w)
+   subroutine velocity_update_3d(calc_w,calc_2d)
 !
 ! !DESCRIPTION:
 !
 ! !USES:
    use domain
    use m2d,          only: velocity_update
-   use variables_3d, only: kmin
-   use variables_3d, only: hn,ho,uu,vv,ww,hun,hvn,hvel,velx3d,vely3d,w,dt
+   use variables_3d, only: kmin,dt
+   use variables_3d, only: hn,ho,uu,vv,ww,hun,hvn,hvel,velx3d,vely3d,w
+   use variables_3d, only: ssen,sseo,Uadv,Vadv,Dun,Dvn,Dveln,velx2dadv,vely2dadv
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   logical,intent(in) :: calc_w
+   logical,intent(in) :: calc_w,calc_2d
 !
 ! !OUTPUT PARAMETERS:
 !
@@ -42,12 +43,19 @@
                            wwm=ww(:,:,k-1),wwp=ww(:,:,k),              &
                            velx=velx3d(:,:,k),vely=vely3d(:,:,k))
    end do
+
    if (calc_w) then
       call to_w(imin,jmin,imax,jmax,kmin,kmax,az,                      &
                 dt,                                                    &
                 dxv,dyu,arcd1,                                         &
                 H,HU,HV,hn,ho,hvel,uu,hun,vv,hvn,ww,vel_missing,w)
    end if
+
+   if (calc_2d) then
+      call velocity_update(dt,ssen,sseo,Dveln,Uadv,Dun,Vadv,Dvn,       &
+                           velx=velx2dadv,vely=vely2dadv)
+   end if
+
 
 #ifdef DEBUG
    write(debug,*) 'Leaving velocity_update_3d()'
