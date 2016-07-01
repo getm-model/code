@@ -100,7 +100,7 @@
       call toc(TIM_INTEGR3D)
    end if
 
-   call velocity_update_3d((nonhyd_method.eq.0))
+   call velocity_update_3d((nonhyd_method.eq.0),.true.)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving momentum_3d()'

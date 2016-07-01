@@ -423,7 +423,7 @@
 !           requires storage of [U|V]adv (when hotstart is done within 2d cycle)
 !           and calculation of Dn,Dun,Dvn for hostarts
 
-   call velocity_update_3d(.true.)
+   call velocity_update_3d(.true.,.true.)
 
    return
    end subroutine postinit_3d
