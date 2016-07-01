@@ -16,6 +16,12 @@
   allocate(w(I3DFIELD),stat=rc)    ! 3D field for w-velocity
   if (rc /= 0) stop 'init_3d: Error allocating memory (w)'
 
+  allocate(velx2dadv(I2DFIELD),stat=rc)    ! 2D field for Uadv-velocity
+  if (rc /= 0) stop 'init_3d: Error allocating memory (velx2dadv)'
+
+  allocate(vely2dadv(I2DFIELD),stat=rc)    ! 2D field for Vadv-velocity
+  if (rc /= 0) stop 'init_3d: Error allocating memory (vely2dadv)'
+
 #ifdef _MOMENTUM_TERMS_
   allocate(tdv_u(I3DFIELD),stat=rc) ! 3D field for tdv_u
   if (rc /= 0) stop 'init_3d: Error allocating memory (tdv_u)'
