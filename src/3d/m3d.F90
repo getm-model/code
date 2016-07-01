@@ -401,7 +401,7 @@
 
    end if
 
-   call velocity_update_3d()
+   call velocity_update_3d(.true.)
 
    return
    end subroutine postinit_3d
@@ -557,7 +557,7 @@
 
    end if
 
-   call velocity_update_3d()
+   call velocity_update_3d(.true.)
 
    if (do_numerical_analyses_3d) call physical_dissipation_3d()
 
