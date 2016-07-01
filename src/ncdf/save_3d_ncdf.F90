@@ -14,15 +14,13 @@
    use exceptions
    use ncdf_3d
    use grid_ncdf,    only: xlen,ylen,zlen
-   use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
-   use domain,       only: H,HU,HV,az,au,av,min_depth
-   use domain,       only: convc
-   use domain,       only: grid_type,xc,xu,xv,yc,yu,yv
+   use domain,       only: imin,imax,jmin,jmax,kmax
+   use domain,       only: H,az,au,av,min_depth
    use domain,       only: dxv,dyu,arcd1
    use variables_2d, only: Uinto,Vinto
-   use variables_3d, only: sseo,ssen,Dn,Dveln,Dun,Dvn
-   use variables_3d, only: dt,kmin,ho,hn,hvel,uu,hun,vv,hvn,ww,hcc,SS
-   use variables_3d, only: velx3d,vely3d,w
+   use variables_3d, only: ssen,Dn
+   use variables_3d, only: kmin,hn,uu,vv,ww,hcc,SS
+   use variables_3d, only: velx3d,vely3d,w,velx2dadv,vely2dadv
    use variables_3d, only: taubx,tauby
 #ifdef _MOMENTUM_TERMS_
    use variables_3d, only: tdv_u,adv_u,vsd_u,hsd_u,cor_u,epg_u,ipg_u
@@ -66,7 +64,7 @@
    integer                   :: start(4),edges(4)
    integer, save             :: n3d=0
    REALTYPE                  :: dum(1)
-   REALTYPE,dimension(E2DFIELD) :: ws2d,wrk2d
+   REALTYPE,dimension(E2DFIELD) :: ws2d
    REALTYPE,dimension(I3DFIELD) :: ws
    integer                   :: k
 !EOP
@@ -132,21 +130,11 @@
 
 !  avg. velocities
    if (u_id .ne. -1) then
-      wrk2d = _ZERO_
-      call to_u(imin,jmin,imax,jmax,az,                            &
-                dt,grid_type,                                      &
-                dxv,dyu,arcd1,                                     &
-                xc,xu,xv,ssen,sseo,Dveln,Uinto,Dun,Vinto,Dvn,wrk2d,wrk2d,vel_missing,ws2d)
-      err = nf90_put_var(ncid,u_id,ws2d(_2D_W_),start,edges)
+      err = nf90_put_var(ncid,u_id,velx2dadv(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
    if (v_id .ne. -1) then
-      wrk2d = _ZERO_
-      call to_v(imin,jmin,imax,jmax,az,                            &
-                dt,grid_type,                                      &
-                dxv,dyu,arcd1,                                     &
-                yc,yu,yv,ssen,sseo,Dveln,Uinto,Dun,Vinto,Dvn,wrk2d,wrk2d,vel_missing,ws2d)
-      err = nf90_put_var(ncid,v_id,ws2d(_2D_W_),start,edges)
+      err = nf90_put_var(ncid,v_id,vely2dadv(_2D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
 
