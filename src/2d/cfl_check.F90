@@ -78,8 +78,10 @@
          end if
       end do
    end do
+   if (max_dt .lt. 1000000000.) then
    LEVEL3 'max CFL number at depth=',H(max_pos(1),max_pos(2)),' at ',max_pos
    LEVEL3 'at this position, dx = ',dxc(max_pos(1),max_pos(2)),' and dy =  ',dyc(max_pos(1),max_pos(2))
+   end if
 
    if (dtm .gt. max_dt) then
       FATAL 'reduce time-step (',dtm,') below ',max_dt
