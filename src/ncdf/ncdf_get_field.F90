@@ -27,6 +27,7 @@
 
    interface get_2d_field_ncdf
       module procedure get_2d_field_ncdf_by_name
+      module procedure get_2d_field_ncdf_by_id_and_name
    end interface
 
    contains
@@ -186,6 +187,80 @@
 
    return
    end subroutine get_2d_field_ncdf_by_name
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+! !IROUTINE: get_2d_field_ncdf_by_name()
+!
+! !INTERFACE:
+   subroutine get_2d_field_ncdf_by_id_and_name(ncid,varname,il,ih,jl,jh,break_on_missing,field,varid)
+! !USES:
+    IMPLICIT NONE
+!
+! !DESCRIPTION:
+!  A two-dimensional netCDF variable with specified global range
+! {\tt il < i < ih} and {\tt jl < j < jh} is read into {\tt field}.
+! It is checked if the sizes of the fields correspond exactly.
+! When calling this funtions, remember that  FORTRAN netCDF variables
+! start with index 1.
+!
+! !INPUT PARAMETERS:
+   integer,          intent(in)        :: ncid
+   character(len=*), intent(in)        :: varname
+   integer,          intent(in)        :: il,ih,jl,jh
+   logical, intent(in)                 :: break_on_missing
+!
+! !OUTPUT PARAMETERS:
+   REALTYPE, intent(out)               :: field(:,:)
+   integer, intent(out), optional      :: varid
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding, Lars Umlauf
+!
+! !LOCAL VARIABLES:
+   integer, dimension(2)               :: start
+   integer, dimension(2)               :: edges
+   integer, dimension(2)               :: ubounds
+   integer                             :: status,id
+!EOP
+!-------------------------------------------------------------------------
+   LEVEL3 'get_2d_field_ncdf_by_id_and_name()'
+
+   start(1) = il
+   start(2) = jl
+   edges(1) = ih-il+1
+   edges(2) = jh-jl+1
+
+   ubounds =  ubound(field)
+
+   if ((ubounds(1) .ne. edges(1)) .or. ubounds(2) .ne. edges(2) ) then
+      call getm_error("get_2d_field_ncdf_by_id_and_name()", &
+           "Array bounds inconsistent.")
+   endif
+
+   status = nf90_inq_varid(ncid,trim(varname),id)
+   if (status .ne. NF90_NOERR) then
+      if (break_on_missing) then
+         call netcdf_error(status,"get_2d_field_ncdf_by_id_and_name()", &
+              "Error inquiring "//trim(varname))
+      else
+         LEVEL4 trim(varname),': does not exist - continuing'
+         if (present(varid)) varid=-1
+         return
+      end if
+   endif
+
+   status = nf90_get_var(ncid,id,field,start,edges)
+   if (status .ne. NF90_NOERR) then
+      call netcdf_error(status,"get_2d_field_ncdf_by_id_and_name()", &
+           "Error reading "//trim(varname))
+   endif
+
+   if (present(varid)) varid=id
+
+   return
+   end subroutine get_2d_field_ncdf_by_id_and_name
 !EOC
 
 !-----------------------------------------------------------------------
