@@ -32,7 +32,7 @@
 !  \begin{itemize}
 !     \item Latent heat: $L = (2.5-0.00234T)10^6$
 !     \item Saturation vapor pressure: $e_s = a_0 + a_1 T^1 + a_2 T^2 + a_3 T^3
-!                                    + a_4 T^4 + a_5 T^5 + a_6 T^6 + a_7 T^7$
+!                                    + a_4 T^4 + a_5 T^5 + a_6 T^6$
 !     \item Specific humidity: $q_s = const06 e_s / (airp-0.377 e_s) $
 !     \item Actual humidity: $q_a = 0.01  rh q_s $
 !     \item Virtual temperature: $T_v = T_k ( 1 + q_a/const06 )/( 1 + q_a)$
@@ -145,6 +145,7 @@
          (min(tw_k,300.)-273.15)/(max(tw_k,240.)-273.15+257.87)
     es = 611.2 * exp(x)
 #else
+!  note shifted indices of coefficients compared to Lowe (1977, J. Appl. Met.)
    es = a1 +tw*(a2+tw*(a3+tw*(a4+tw*(a5+tw*(a6+tw*a7)))))
    es = es * 100.0 ! Conversion millibar --> Pascal
 #endif
