@@ -182,11 +182,10 @@
 !     sensible heat due to rain
       hf = hf - precip*rho_precip* cd_precip
 !     momentum flux due to rainfall (in kg/m^2/s)
-      tmp  = 0.85 * precip*rho_precip * w
-      x=u10
-      taux  = taux + tmp * sign(_ONE_,x)
-      x=v10
-      tauy  = tauy + tmp * sign(_ONE_,x)
+!     according to Caldwell and Elliott (1971, JPO)
+      tmp  = 0.85d0 * precip*rho_precip
+      taux  = taux + tmp * u10
+      tauy  = tauy + tmp * v10
    end if
 
    if (fwf_method .ge. 2) then
