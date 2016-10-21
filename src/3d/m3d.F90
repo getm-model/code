@@ -423,6 +423,20 @@
          call wait_halo(V_TAG)
       end if
 
+!     These may not be necessary, but we clean up anyway just in case.
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if(az(i,j) .eq. 0) then
+               tke(i,j,:) = _ZERO_
+               num(i,j,:) = 1.e-15
+               nuh(i,j,:) = 1.e-15
+#ifndef NO_BAROCLINIC
+               S(i,j,:)   = -9999.0
+               T(i,j,:)   = -9999.0
+#endif
+            end if
+         end do
+      end do
 
    return
    end subroutine hotstart_3d
