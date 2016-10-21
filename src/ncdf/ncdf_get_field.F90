@@ -225,7 +225,6 @@
    integer                             :: status,id
 !EOP
 !-------------------------------------------------------------------------
-   LEVEL3 'get_2d_field_ncdf_by_id_and_name()'
 
    start(1) = il
    start(2) = jl
