@@ -17,24 +17,8 @@
 ! !USES:
   use netcdf
   use exceptions
-  use domain, only                    : have_lonlat,have_xy
-  use domain, only                    : iextr,jextr,ioff,joff
-  use domain, only                    : imin,imax,jmin,jmax
-  use domain, only                    : il,ih,jl,jh
-  use domain, only                    : ilg,ihg,jlg,jhg
-  use domain, only                    : ill,ihl,jll,jhl
-  use domain, only                    : H, Hland
-  use domain, only                    : grid_type
-  use domain, only                    : xcord,ycord
-  use domain, only                    : xxcord,yxcord
-  use domain, only                    : dx,dy
-  use domain, only                    : xc,yc
-  use domain, only                    : xx,yx
-  use domain, only                    : dlon,dlat
-  use domain, only                    : latc,lonc
-  use domain, only                    : latx,lonx
-  use domain, only                    : convx,convc
-  use domain, only                    : z0_method,z0
+  use domain
+  use ncdf_get_field
   IMPLICIT NONE
 !
 ! !PUBLIC MEMBER FUNCTIONS:
@@ -42,7 +26,6 @@
 !
 ! !DEFINED PARAMETERS:
    REALTYPE, parameter                 :: missing_double =-999.
-   REALTYPE, parameter                 :: rearth_default = 6378815
 !
 ! !REVISION HISTORY:
 !  Original author(s): Lars Umlauf (adapted from an earlier version of
@@ -601,6 +584,34 @@ stop
             ycord(j)  = j+joff - _HALF_
             yxcord(j) = j+joff
          end do
+
+         LEVEL3 'checking for fancy curvilinear grid'
+         id=0
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"dxc"  ,ilg,ihg,jlg,jhg,.false.,dxc  (ill:ihl,jll:jhl),id)
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"dyc"  ,ilg,ihg,jlg,jhg,.false.,dyc  (ill:ihl,jll:jhl),id)
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"dxu"  ,ilg,ihg,jlg,jhg,.false.,dxu  (ill:ihl,jll:jhl),id)
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"dyu"  ,ilg,ihg,jlg,jhg,.false.,dyu  (ill:ihl,jll:jhl),id)
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"dxv"  ,ilg,ihg,jlg,jhg,.false.,dxv  (ill:ihl,jll:jhl),id)
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"dyv"  ,ilg,ihg,jlg,jhg,.false.,dyv  (ill:ihl,jll:jhl),id)
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"dxx"  ,ilg,ihg,jlg,jhg,.false.,dxx  (ill:ihl,jll:jhl),id)
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"dyx"  ,ilg,ihg,jlg,jhg,.false.,dyx  (ill:ihl,jll:jhl),id)
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"arcd1",ilg,ihg,jlg,jhg,.false.,arcd1(ill:ihl,jll:jhl),id)
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"arud1",ilg,ihg,jlg,jhg,.false.,arud1(ill:ihl,jll:jhl),id)
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"arvd1",ilg,ihg,jlg,jhg,.false.,arvd1(ill:ihl,jll:jhl),id)
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"convc",ilg,ihg,jlg,jhg,.false.,convc(ill:ihl,jll:jhl),id)
+         if (have_lonlat) then
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"lonc" ,ilg,ihg,jlg,jhg,.false.,lonc (ill:ihl,jll:jhl),id)
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"latc" ,ilg,ihg,jlg,jhg,.false.,latc (ill:ihl,jll:jhl),id)
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"latu" ,ilg,ihg,jlg,jhg,.false.,latu (ill:ihl,jll:jhl),id)
+         if (id .ne. -1) call get_2d_field_ncdf(ncid,"latv" ,ilg,ihg,jlg,jhg,.false.,latv (ill:ihl,jll:jhl),id)
+         end if
+         if (id .ne. -1) then
+            LEVEL4 'using fancy curvilinear grid'
+            have_metrics=.true.
+         else
+            LEVEL4 'missing data for fancy curvilinear grid'
+         end if
+
    end select
 
 !  read bottom roughness
