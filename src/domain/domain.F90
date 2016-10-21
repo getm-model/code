@@ -41,6 +41,7 @@
 
    logical                             :: have_lonlat    = .true.
    logical                             :: have_xy        = .true.
+   logical                             :: have_metrics   = .false.
 
    REALTYPE                            :: rearth
 
@@ -541,6 +542,7 @@ STDERR latc(1,1),latx(1,0)
             end do
          end do
 
+         if (.not. have_metrics) then
          if ( have_lonlat ) then
 
             do j=jll,jhl
@@ -558,9 +560,11 @@ STDERR latc(1,1),latx(1,0)
 
                   convc(i,j) = ( convx(i-1,j-1) + convx(i-1,j) &
                                + convx(i  ,j-1) + convx(i,j  ) ) / 4
+
                end do
             end do
 
+         end if
          end if
 
       case default
@@ -595,6 +599,8 @@ STDERR latc(1,1),latx(1,0)
    rearth = rearth_default
 
    LEVEL2 'calculating metrics'
+
+   if (.not. have_metrics) then
 
    select case (grid_type)
 
@@ -795,6 +801,9 @@ STDERR latc(1,1),latx(1,0)
          end do
       end do
    end if
+
+   end if
+
 
    if ( grid_type .ne. 1 ) then
 
