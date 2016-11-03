@@ -94,7 +94,7 @@
    integer,           parameter        :: INNER          = 1
    REALTYPE, private, parameter        :: pi             = 3.141592654
    REALTYPE, private, parameter        :: deg2rad        = pi/180.
-   REALTYPE, private, parameter        :: omega          = 2.*pi/86400.
+   REALTYPE, private, parameter        :: omega          = 2.*pi/86164.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
