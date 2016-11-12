@@ -32,9 +32,53 @@
    subroutine time_loop(runtype)
 !
 ! !DESCRIPTION:
+!  A wrapper that calls time_step within a time loop.
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)                 :: runtype
+!
+! !REVISION HISTORY:
+!
+! !LOCAL VARIABLES
+   integer                   :: n
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'time_loop() # ',Ncall
+#endif
+
+   STDERR LINE
+   LEVEL1 'integrating....'
+   STDERR LINE
+
+   do n=MinN,MaxN
+      call time_step(runtype,n)
+   end do
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving time_loop()'
+   write(debug,*)
+#endif
+   return
+   end subroutine time_loop
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: time_step - a single time step of getm
+!
+! !INTERFACE:
+   subroutine time_step(runtype,n)
+!
+! !DESCRIPTION:
 !  A wrapper that calls meteo\_forcing, integrate\_2d, integrate\_3d,
-!  do\_getm\_bio and output
-!  within a time loop.
+!  do\_getm\_bio and output for one time step.
 !
 ! !USES:
    use time,     only: update_time,timestep
@@ -75,13 +119,12 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)                 :: runtype
+   integer, intent(in)                 :: runtype,n
 !
 ! !REVISION HISTORY:
 !
 ! !LOCAL VARIABLES
    logical                   :: do_3d=.false.
-   integer                   :: n
    integer                   :: progress=100
    character(8)              :: d_
    character(10)             :: t_
@@ -91,14 +134,8 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'time_loop() # ',Ncall
+   write(debug,*) 'time_step() # ',Ncall
 #endif
-
-   STDERR LINE
-   LEVEL1 'integrating....'
-   STDERR LINE
-
-   do n=MinN,MaxN
 
       if (progress .gt. 0 .and. mod(n,progress) .eq. 0) then
          call date_and_time(date=d_,time=t_)
@@ -175,15 +212,14 @@
 #ifdef DIAGNOSE
       call diagnose(n,MaxN,runtype)
 #endif
-   end do
 
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving time_loop()'
+   write(debug,*) 'Leaving time_step()'
    write(debug,*)
 #endif
    return
-   end subroutine time_loop
+   end subroutine time_step
 !EOC
 
 !-----------------------------------------------------------------------
