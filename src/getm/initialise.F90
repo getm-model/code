@@ -20,9 +20,20 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
-   public                              :: init_model
-   integer                             :: runtype=1
-   logical                             :: dryrun=.false.
+   public                    :: init_model
+   public                    :: init_initialise,do_initialise
+   integer                   :: runtype=1
+   logical                   :: dryrun=.false.
+   character(len=64)         :: runid
+   character(len=80)         :: title
+   logical                   :: hotstart=.false.
+   logical                   :: use_epoch=.false.
+   logical                   :: save_initial=.false.
+#if (defined GETM_PARALLEL && defined INPUT_DIR)
+   character(len=PATH_MAX)   :: input_dir=INPUT_DIR
+#else
+   character(len=PATH_MAX)   :: input_dir='./'
+#endif
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -48,57 +59,58 @@
 ! !INTERFACE:
    subroutine init_model(dstr,tstr)
 !
+! !DESCRIPTION:
+!  Wrapper for the different parts of model and time initialisation.
+!
 ! !USES:
-   use kurt_parallel, only: init_parallel,myid
+   use time       , only: init_time
+   use integration, only: MinN,MaxN
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   character(len=*)                    :: dstr,tstr
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
+!
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'init_model() # ',Ncall
+#endif
+
+   call init_initialise(dstr,tstr)
+   call init_time(MinN,MaxN)
+   call do_initialise()
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving init_model()'
+   write(debug,*)
+#endif
+   return
+   end subroutine init_model
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: init_initialise - first part of init_model
+!
+! !INTERFACE:
+   subroutine init_initialise(dstr,tstr)
+!
+! !DESCRIPTION:
+!  Reads the namelist and initialises parallel runs.
+!
+! !USES:
+   use kurt_parallel, only: init_parallel
 #ifdef GETM_PARALLEL
    use halo_mpi, only: init_mpi,print_MPI_info
 #endif
    use parameters, only: init_parameters
-   use output, only: init_output,do_output,restart_file,out_dir
-   use input,  only: init_input
-   use domain, only: init_domain
-   use domain, only: H
-   use domain, only: iextr,jextr,imin,imax,ioff,jmin,jmax,joff,kmax
-   use domain, only: xcord,ycord
-   use domain, only: vert_cord,maxdepth,ga
-   use time, only: init_time,update_time,write_time_string
-   use time, only: start,timestr,timestep
-   use time, only: julianday,secondsofday
-   use m2d, only: init_2d,hotstart_2d,postinit_2d
-   use variables_2d, only: Dvel
-   use les, only: init_les
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
-#ifndef NO_3D
-   use m3d, only: init_3d,hotstart_3d,postinit_3d
-#ifndef NO_BAROCLINIC
-   use m3d, only: T
-#endif
-   use m3d, only: use_gotm
-   use turbulence, only: init_turbulence
-   use mtridiagonal, only: init_tridiagonal
-   use rivers, only: init_rivers
-   use variables_3d, only: avmback,avhback
-#ifdef SPM
-   use suspended_matter, only: init_spm
-#endif
-#ifdef _FABM_
-   use getm_fabm, only: fabm_calc
-   use getm_fabm, only: init_getm_fabm, postinit_getm_fabm
-   use rivers, only: init_rivers_fabm
-#endif
-#ifdef GETM_BIO
-   use bio, only: bio_calc
-   use getm_bio, only: init_getm_bio
-   use rivers, only: init_rivers_bio
-#endif
-#endif
-   use meteo, only: metforcing,met_method,init_meteo,do_meteo
-   use meteo, only: ssu,ssv
-#ifndef NO_BAROCLINIC
-   use meteo, only: swr,albedo
-#endif
-   use waves, only: init_waves,do_waves,waveforcing_method,NO_WAVES
-   use integration,  only: MinN,MaxN
    use exceptions
    IMPLICIT NONE
 !
@@ -106,29 +118,13 @@
    character(len=*)                    :: dstr,tstr
 !
 ! !DESCRIPTION:
-!  Reads the namelist and makes calls to the init functions of the
-!  various model components.
+!  Reads the namelist and initialises parallel runs.
 !
 ! !REVISION HISTORY:
 !  22Nov Author name Initial code
 !
 ! !LOCAL VARIABLES:
-   integer:: i,j
-   character(len=8)          :: buf
-   character(len=64)         :: runid
-   character(len=80)         :: title
    logical                   :: parallel=.false.
-   logical                   :: hotstart=.false.
-   logical                   :: use_epoch=.false.
-   logical                   :: save_initial=.false.
-#if (defined GETM_PARALLEL && defined INPUT_DIR)
-   character(len=PATH_MAX)   :: input_dir=INPUT_DIR
-#else
-   character(len=PATH_MAX)   :: input_dir='./'
-#endif
-   character(len=PATH_MAX)   :: hot_in=''
-
-   character(len=16)         :: postfix
 
    namelist /param/ &
              dryrun,runid,title,parallel,runtype,  &
@@ -139,7 +135,7 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'init_model() # ',Ncall
+   write(debug,*) 'init_initialise() # ',Ncall
 #endif
 #ifndef NO_TIMERS
    call init_getm_timers()
@@ -181,14 +177,14 @@
 #ifdef NO_BAROCLINIC
    if(runtype .ge. 3) then
       FATAL 'getm not compiled for baroclinic runs'
-      stop 'init_model()'
+      stop 'init_initialise()'
    end if
 #endif
 
 #ifdef NO_3D
    if(runtype .ge. 2) then
       FATAL 'getm not compiled for 3D runs'
-      stop 'init_model()'
+      stop 'init_initialise()'
    end if
 #endif
 
@@ -200,7 +196,7 @@
 #else
       STDERR 'You must define GETM_PARALLEL and recompile'
       STDERR 'in order to run in parallel'
-      stop 'init_model()'
+      stop 'init_initialise()'
 #endif
    end if
 
@@ -223,12 +219,103 @@
          LEVEL1 '3D run - full (hotstart=',hotstart,')'
       case default
          FATAL 'A non valid runtype has been specified.'
-         stop 'initialise()'
+         stop 'init_initialise()'
    end select
 
+!  KK-TODO: should be moved to do_initialise()
    call init_parameters()
 
-   call init_time(MinN,MaxN)
+   call toc(TIM_INITIALIZE)
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving init_initialise()'
+   write(debug,*)
+#endif
+   return
+   end subroutine init_initialise
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: do_initialise - second part of init_model
+!
+! !INTERFACE:
+   subroutine do_initialise()
+!
+! !DESCRIPTION:
+!  Makes calls to the init functions of the
+!  various model components.
+!
+! !USES:
+   use kurt_parallel, only: myid
+   use output, only: init_output,do_output,restart_file,out_dir
+   use input,  only: init_input
+   use domain, only: init_domain
+   use domain, only: H
+   use domain, only: iextr,jextr,imin,imax,ioff,jmin,jmax,joff,kmax
+   use domain, only: xcord,ycord
+   use domain, only: vert_cord,maxdepth,ga
+   use time, only: update_time,write_time_string
+   use time, only: start,timestr,timestep
+   use time, only: julianday,secondsofday
+   use m2d, only: init_2d,hotstart_2d,postinit_2d
+   use variables_2d, only: Dvel
+   use les, only: init_les
+   use getm_timers, only: tic, toc, TIM_INITIALIZE
+#ifndef NO_3D
+   use m3d, only: init_3d,hotstart_3d,postinit_3d
+#ifndef NO_BAROCLINIC
+   use m3d, only: T
+#endif
+   use m3d, only: use_gotm
+   use turbulence, only: init_turbulence
+   use mtridiagonal, only: init_tridiagonal
+   use rivers, only: init_rivers
+   use variables_3d, only: avmback,avhback
+#ifdef SPM
+   use suspended_matter, only: init_spm
+#endif
+#ifdef _FABM_
+   use getm_fabm, only: fabm_calc
+   use getm_fabm, only: init_getm_fabm, postinit_getm_fabm
+   use rivers, only: init_rivers_fabm
+#endif
+#ifdef GETM_BIO
+   use bio, only: bio_calc
+   use getm_bio, only: init_getm_bio
+   use rivers, only: init_rivers_bio
+#endif
+#endif
+   use meteo, only: metforcing,met_method,init_meteo,do_meteo
+   use meteo, only: ssu,ssv
+#ifndef NO_BAROCLINIC
+   use meteo, only: swr,albedo
+#endif
+   use waves, only: init_waves,do_waves,waveforcing_method,NO_WAVES
+   use integration,  only: MinN,MaxN
+   use exceptions
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
+!
+! !LOCAL VARIABLES:
+   character(len=8)          :: buf
+   character(len=PATH_MAX)   :: hot_in=''
+   character(len=16)         :: postfix
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'do_initialise() # ',Ncall
+#endif
+
+   call tic(TIM_INITIALIZE)
+
    if(use_epoch) then
       LEVEL2 'using "',start,'" as time reference'
    end if
@@ -365,11 +452,11 @@
    end if
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving init_model()'
+   write(debug,*) 'Leaving do_initialise()'
    write(debug,*)
 #endif
    return
-   end subroutine init_model
+   end subroutine do_initialise
 !EOC
 
 !-----------------------------------------------------------------------
