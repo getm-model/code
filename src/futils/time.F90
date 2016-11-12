@@ -58,10 +58,11 @@
 ! !IROUTINE: init_time - initialise the time system in getm
 !
 ! !INTERFACE:
-   subroutine init_time(MinN,MaxN)
+   subroutine init_time(MinN,MaxN,start_external,stop_external)
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+   character(len=19),intent(in),optional :: start_external,stop_external
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -97,6 +98,13 @@
 !
    LEVEL1 'init_time'
    READ(NAMLST,NML=time)
+
+   if (present(start_external) .and. present(stop_external)) then
+      timefmt = 2
+      start = start_external
+      stop = stop_external
+   end if
+
 !
 !  Calculate MaxN -> MinN is 1 if not changed by HotStart
 !
