@@ -40,7 +40,7 @@
 #endif
   REALTYPE                             :: ho(I3DFIELD)
   REALTYPE,dimension(I3DFIELD),target  :: hn,hvel,hun,hvn
-  REALTYPE,dimension(I3DFIELD)         :: zwn,zcn
+  REALTYPE,dimension(I3DFIELD),target  :: zwn,zcn
   REALTYPE                             :: huo(I3DFIELD)
   REALTYPE                             :: hvo(I3DFIELD)
   REALTYPE                             :: hcc(I3DFIELD)
