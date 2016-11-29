@@ -1,0 +1,67 @@
+ifndef ESMFMKFILE
+$(error ESMFMKFILE must be defined for GETM_ESMF=true)
+endif
+
+DEFINES	+= -D_GETM_ESMF_
+include $(ESMFMKFILE)
+
+ESMF_COMM = $(strip $(shell grep "\# ESMF_COMM:" $(ESMFMKFILE) | cut -d':' -f2-))
+
+ifneq ($(ESMF_COMM),mpiuni)
+
+ifeq ($(GETM_PARALLEL),false)
+$(error ESMF compiled with MPI and GETM_PARALLEL set to false)
+endif
+
+ifeq ($(ESMF_COMM),openmpi)
+ESMF_F90:=$(shell $(ESMF_F90COMPILER) --showme:command 2> /dev/null)
+export ESMF_MPI=OPENMPI
+else
+ESMF_F90:=$(shell $(ESMF_F90COMPILER) -compile_info 2> /dev/null | cut -d' ' -f1)
+ifeq ($(ESMF_COMM),mpi)
+export ESMF_MPI=MPICH
+else
+export ESMF_MPI=MPICH2
+endif
+endif
+
+ifndef GETM_PARALLEL
+$(warning export GETM_PARALLEL=true)
+export GETM_PARALLEL:=true
+endif
+
+ifdef MPI
+ifneq ($(MPI),$(ESMF_MPI))
+$(error MPI derived from ESMFMKFILE ($(ESMF_MPI)) does not agree with defined one ($(MPI)).)
+endif
+else
+$(warning export MPI=$(ESMF_MPI))
+export MPI:=$(ESMF_MPI)
+endif
+
+endif
+
+ifeq ($(ESMF_F90),)
+ESMF_F90 = $(ESMF_F90COMPILER)
+endif
+ESMF_F90:=$(notdir $(ESMF_F90))
+
+ESMF_FORTRAN_COMPILER = $(shell grep -r "FC=$(ESMF_F90)" $(GETMDIR)/compilers/compiler.* | head -1 | cut -d':' -f1 | xargs basename | cut -d'.' -f2)
+
+ifdef FORTRAN_COMPILER
+
+ifneq ($(ESMF_FORTRAN_COMPILER),$(FORTRAN_COMPILER))
+$(error FORTRAN_COMPILER derived from ESMFMKFILE ($(ESMF_FORTRAN_COMPILER)) does not agree with defined one ($(FORTRAN_COMPILER)).)
+endif
+
+else
+
+$(warning export FORTRAN_COMPILER=$(ESMF_FORTRAN_COMPILER))
+export FORTRAN_COMPILER:=$(ESMF_FORTRAN_COMPILER)
+
+endif
+
+INCDIRS    = $(ESMF_F90COMPILEPATHS)
+LINKDIRS   = $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS)
+EXTRA_LIBS = $(ESMF_F90ESMFLINKLIBS)
+# What about ESMF_F90LINKOPTS?
