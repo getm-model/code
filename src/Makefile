@@ -23,8 +23,16 @@ $(GETMDIR)/src/output		\
 $(GETMDIR)/src/ncdf		\
 $(GETMDIR)/src/input		\
 $(GETMDIR)/src/getm
+ifeq ($(GETM_ESMF),true)
+SUBDIRS += \
+$(GETMDIR)/src/coupling
+endif
 
+ifeq ($(GETM_ESMF_EXEC),true)
 CORE_LIBS	=	\
+		-lgetm_esmf${buildtype}
+endif
+CORE_LIBS	+=	\
 		-lgetm${buildtype} 	\
 		-loutput${buildtype}	\
 		-lmeteo${buildtype}
