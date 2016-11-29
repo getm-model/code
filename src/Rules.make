@@ -26,11 +26,21 @@ $(error the directory GOTMDIR=$(GOTMDIR) is not a valid GOTM directory)
 endif
 
 
+# ESMF specific settings
+ifeq ($(GETM_ESMF_EXEC),true)
+export GETM_ESMF=true
+DEFINES += -D_GETM_ESMF_EXEC_
+endif
+ifeq ($(GETM_ESMF),true)
+include $(GETMDIR)/src/coupling/Rules.make_ESMF
+endif
+
+
 # Information about which Fortran compiler to use is 
 # obtained from $(FORTRAN_COMPILER) - environment variable.
 # The file ../compilers/compiler.$(FORTRAN_COMPILER) must exist
 
-DEFINES=-D$(FORTRAN_COMPILER)
+DEFINES += -D$(FORTRAN_COMPILER)
 include $(GETMDIR)/compilers/compiler.$(FORTRAN_COMPILER)
 
 # The compilation mode is obtained from $COMPILATION_MODE
@@ -107,9 +117,8 @@ ifndef MODDIR
 MODDIR	= $(GETMDIR)/modules/$(FORTRAN_COMPILER)
 endif
 
-INCDIRS		= -I$(GETMDIR)/include -I$(MODDIR)
-LINKDIRS	= -L$(LIBDIR)
-EXTRA_LIBS	=
+INCDIRS		+= -I$(GETMDIR)/include -I$(MODDIR)
+LINKDIRS	+= -L$(LIBDIR)
 
 # Turbulence directory
 ifdef GOTM_PREFIX
