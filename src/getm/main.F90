@@ -22,6 +22,9 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+#ifdef _GETM_ESMF_EXEC_
+   use getm_esmf, only: do_getm_esmf
+#endif
    use initialise, only: init_model,runtype,dryrun
    use time, only: simtime
    use domain, only: calc_points
@@ -54,11 +57,15 @@
 #endif
    call Date_And_Time(datestr,timestr)
 
+#ifdef _GETM_ESMF_EXEC_
+   call do_getm_esmf()
+#else
    call init_model(datestr,timestr)
    if ( .not. dryrun ) then
       call time_loop(runtype)
    end if
    call clean_up(dryrun,runtype,MaxN)
+#endif
 
 #ifdef FORTRAN95
    call CPU_Time(t2)
@@ -180,6 +187,13 @@
    subroutine compilation_options
    IMPLICIT NONE
 !
+#ifdef _GETM_ESMF_
+   LEVEL1 'Compiled for ESMF integration'
+#ifdef _GETM_ESMF_EXEC_
+   LEVEL1 '   exec is standalone component'
+#endif
+#endif
+
 #ifdef GETM_PARALLEL
    LEVEL1 'Compiled for parallel execution'
 #else
