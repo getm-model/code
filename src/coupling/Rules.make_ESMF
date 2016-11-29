@@ -44,7 +44,9 @@ endif
 ifeq ($(ESMF_F90),)
 ESMF_F90 = $(ESMF_F90COMPILER)
 endif
-ESMF_F90:=$(notdir $(ESMF_F90))
+
+# remove path and possible version suffix
+ESMF_F90:=$(shell echo $(notdir $(ESMF_F90)) | cut -d"-" -f1)
 
 ESMF_FORTRAN_COMPILER = $(shell grep -r "FC=$(ESMF_F90)" $(GETMDIR)/compilers/compiler.* | head -1 | cut -d':' -f1 | xargs basename | cut -d'.' -f2)
 
