@@ -1,5 +1,5 @@
 #include "cppdefs.h"
-#define ALLEXPORT
+!#define ALLEXPORT
 !-----------------------------------------------------------------------
 !BOP
 !
