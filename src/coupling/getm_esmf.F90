@@ -1,4 +1,5 @@
 #include "cppdefs.h"
+#define ALLEXPORT
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -2074,7 +2075,7 @@
 
    call StateAddGridSetField(exportState,"gridSetField2D",getmGrid2D)
 
-#if 0
+#ifdef ALLEXPORT
    call StateAddGridSetField(exportState,trim(name_depth  ),getmGrid2D,units="m")
    call StateAddGridSetField(exportState,trim(name_h3D    ),getmGrid3D,units="m")
    call StateAddGridSetField(exportState,trim(name_hbot   ),getmGrid2D,units="m")
@@ -2181,7 +2182,7 @@
    write(debug,*) 'init_exportStateP2() # ',Ncall
 #endif
 
-#if 0
+#ifdef ALLEXPORT
 !  force allocation of new memory if Stokes drift needs to be removed
    frc = (waveforcing_method.ne.NO_WAVES .and. waves_method.ne.WAVES_NOSTOKES)
 
@@ -2428,7 +2429,7 @@
    write(debug,*) 'update_exportState() # ',Ncall
 #endif
 
-#if 0
+#ifdef ALLEXPORT
 !  force allocation of new memory if Stokes drift needs to be removed
    frc = (waveforcing_method.ne.NO_WAVES .and. waves_method.ne.WAVES_NOSTOKES)
 
@@ -3327,6 +3328,8 @@
 !
 ! !DESCRIPTION:
 !  returns if KindMatch and unforced
+!  frc tries to read also if KindMatch
+!  ign skips missing fields that were forced to be read
 !
 ! !USES:
    use domain, only: imin,jmin,imax,jmax,kmax
@@ -3388,7 +3391,12 @@
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
 !  unconnected fields might have been removed
-   if (itemType .eq. ESMF_STATEITEM_NOTFOUND) return
+   if (itemType .eq. ESMF_STATEITEM_NOTFOUND) then
+      if (ign_) return
+      call ESMF_LogWrite('missing field '//trim(name)//'',             &
+                         ESMF_LOGMSG_ERROR,line=__LINE__,file=FILENAME)
+      call ESMF_Finalize(endflag=ESMF_END_ABORT)
+   end if
 
    call ESMF_StateGet(state,trim(name),field,rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
