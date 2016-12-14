@@ -100,7 +100,7 @@
       if (hotstart) then
          if ( .not.restart_with_ho .or. .not.restart_with_hn ) then
             STDERR LINE
-            LEVEL3 "ho and hn missing in restart file!!!"
+            LEVEL3 "ho and/or hn missing in restart file!!!"
             LEVEL3 "This might be ok for some specific settings, but in"
             LEVEL3 "general you should do a zero-length simulation with"
             LEVEL3 "your previous coordinate settings to create a valid"
