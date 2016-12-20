@@ -19,14 +19,6 @@
 			<element name="save_initial" type="bool"   label="save initial values i.e. before entering the time loop" />
 		</element>
 
-		<element name="parameters" label="model constants">
-			<element name="g" type="float" unit="m/s²" label="gravitational acceleration"/>
-			<element name="rho_0" type="float" unit="kg/m³" label="reference density"/>
-			<element name="cp" type="float" unit="J/(kg*K)" label="spec. heat capacity at const. pressure"/>
-			<element name="kappa" type="float" label="von-Karman constant"/>
-			<element name="avmmol" type="float" label="molecular momentum viscosity" unit="m²/s"/>
-		</element>
-
 		<element name="time" label="time related formats and variables">
 			<element name="timestep" type="float"    label="micro timestep" unit="s"/>
 			<element name="timefmt"  type="int"      label="time format">
@@ -116,6 +108,14 @@
 					<condition type="eq" variable="./bottfric_method" value="3"/>
 				</condition>
 			</element>
+		</element>
+
+		<element name="parameters" label="model constants">
+			<element name="g" type="float" unit="m/s²" label="gravitational acceleration"/>
+			<element name="rho_0" type="float" unit="kg/m³" label="reference density"/>
+			<element name="cp" type="float" unit="J/(kg*K)" label="spec. heat capacity at const. pressure"/>
+			<element name="kappa" type="float" label="von-Karman constant"/>
+			<element name="avmmol" type="float" label="molecular momentum viscosity" unit="m²/s"/>
 		</element>
 
 		<element name="meteo" label="variables related to meteorological forcing">

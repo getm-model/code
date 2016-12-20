@@ -109,7 +109,6 @@
 #ifdef GETM_PARALLEL
    use halo_mpi, only: init_mpi,print_MPI_info
 #endif
-   use parameters, only: init_parameters
    use getm_timers, only: init_getm_timers, tic, toc, TIM_INITIALIZE
    use exceptions
    IMPLICIT NONE
@@ -227,9 +226,6 @@
          stop 'init_initialise()'
    end select
 
-!  KK-TODO: should be moved to do_initialise()
-   call init_parameters()
-
    call toc(TIM_INITIALIZE)
 
 #ifdef DEBUG
@@ -290,6 +286,7 @@
    use rivers, only: init_rivers_bio
 #endif
 #endif
+   use parameters, only: init_parameters
    use meteo, only: metforcing,met_method,init_meteo,do_meteo
    use meteo, only: ssu,ssv
 #ifndef NO_BAROCLINIC
@@ -325,6 +322,8 @@
    end if
 
    call init_domain(input_dir,runtype)
+
+   call init_parameters()
 
    call init_meteo(hotstart)
 
