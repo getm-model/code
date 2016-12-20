@@ -11,6 +11,10 @@ set(getm_VERSION_MINOR 5)
 set(getm_VERSION_PATCH 0)
 set(getm_VERSION "${getm_VERSION_MAJOR}.${getm_VERSION_MINOR}.${getm_VERSION_PATCH}")
 
+if(GETM_FLAGS)
+   add_definitions(${GETM_FLAGS})
+endif(GETM_FLAGS)
+
 set(GIT_COMMIT_ID ${getm_VERSION})
 configure_file("${PROJECT_SOURCE_DIR}/futils/getm_version.F90.in" getm_version.F90)
 option(GETM_EMBED_VERSION "Embed GETM version information" OFF)
