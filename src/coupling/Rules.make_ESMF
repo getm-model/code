@@ -44,7 +44,9 @@ endif
 ifeq ($(ESMF_F90),)
 ESMF_F90 = $(ESMF_F90COMPILER)
 endif
-ESMF_F90:=$(notdir $(ESMF_F90))
+
+# remove path and possible version suffix
+ESMF_F90:=$(shell echo $(notdir $(ESMF_F90)) | cut -d"-" -f1)
 
 ESMF_FORTRAN_COMPILER = $(shell grep -r "FC=$(ESMF_F90)" $(GETMDIR)/compilers/compiler.* | head -1 | cut -d':' -f1 | xargs basename | cut -d'.' -f2)
 
@@ -62,6 +64,8 @@ export FORTRAN_COMPILER:=$(ESMF_FORTRAN_COMPILER)
 endif
 
 INCDIRS    = $(ESMF_F90COMPILEPATHS)
+ifeq ($(GETM_ESMF_EXEC),true)
 LINKDIRS   = $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS)
 EXTRA_LIBS = $(ESMF_F90ESMFLINKLIBS)
 # What about ESMF_F90LINKOPTS?
+endif
