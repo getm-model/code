@@ -131,7 +131,7 @@ LINKDIRS	+= -L$(GOTMLIBDIR)
 ifeq ($(FABM),true)
 EXTRA_LIBS	+= -lgotm_fabm
 endif
-EXTRA_LIBS	+= -lturbulence -lutil
+EXTRA_LIBS	+= -lturbulence $(GOTM_PREFIX)/lib/libutil.a
 INCDIRS		+= -I$(GOTM_PREFIX)/include
 
 else
@@ -141,7 +141,7 @@ LINKDIRS	+= -L$(GOTMLIBDIR)
 ifeq ($(FABM),true)
 EXTRA_LIBS	+= -lgotm_fabm$(buildtype)
 endif
-EXTRA_LIBS	+= -lturbulence$(buildtype) -lutil$(buildtype)
+EXTRA_LIBS	+= -lturbulence$(buildtype) $(GOTMLIBDIR)/libutil$(buildtype).a
 INCDIRS		+= -I$(GOTMDIR)/modules/$(FORTRAN_COMPILER)
 
 endif
