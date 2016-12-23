@@ -39,6 +39,7 @@
    integer,public            :: waves_method=WAVES_RS
    character(LEN = PATH_MAX),public :: waves_file
    logical,public            :: on_grid=.true.
+   integer,public            :: waves_ramp=0
    integer,public,parameter  :: NO_WBBL=0
    integer,public,parameter  :: WBBL_DATA2=1
    integer,public,parameter  :: WBBL_SOULSBY05=2
@@ -54,7 +55,6 @@
 !   REALTYPE,public,parameter :: kD_deepthresh= 10*_ONE_ ! errors<1% for less than  8 layers
 !
 ! !PRIVATE DATA MEMBERS:
-   integer                   :: waves_ramp=0
    REALTYPE                  :: waves_windscalefactor = _ONE_
    REALTYPE                  :: max_depth_windwaves = -_ONE_
    logical                   :: ramp_is_active=.false.
