@@ -1889,6 +1889,7 @@
    use meteo          ,only: met_method,calc_met,METEO_FROMEXT
    use meteo          ,only: u10,v10
    use waves          ,only: waveforcing_method,WAVES_FROMEXT
+   use waves          ,only: waves_ramp
    use variables_waves,only: waveH,waveK,waveT
    IMPLICIT NONE
 !
@@ -1925,7 +1926,10 @@
 
    if (waveforcing_method .eq. WAVES_FROMEXT) then
    call StateCompleteConnectedField(importState,trim(name_waveDir))
-   call StateCompleteConnectedField(importState,trim(name_waveH  ),farray2d=waveH)
+!  force allocation of new memory if waveH is ramped
+   frc = (waves_ramp .gt. 1)
+   call StateCompleteConnectedField(importState,trim(name_waveH  ),    &
+                                    farray2d=waveH,frc=frc)
    call StateCompleteConnectedField(importState,trim(name_waveK  ),farray2d=waveK)
    call StateCompleteConnectedField(importState,trim(name_waveT  ),farray2d=waveT)
    end if
@@ -1953,6 +1957,7 @@
    use meteo          ,only: met_method,calc_met,METEO_FROMEXT,new_meteo
    use meteo          ,only: u10,v10
    use waves          ,only: waveforcing_method,WAVES_FROMEXT,new_waves
+   use waves          ,only: waves_ramp
    use variables_waves,only: coswavedir,sinwavedir,waveH,waveK,waveT
    IMPLICIT NONE
 !
@@ -2008,8 +2013,9 @@
          coswavedir = cos( p2dr + convc*deg2rad )
          sinwavedir = sin( p2dr + convc*deg2rad )
 
+         frc = (waves_ramp .gt. 1)
          call StateReadCompleteField(importState,trim(name_waveH  ),   &
-                                     farray2d=waveH)
+                                     farray2d=waveH,frc=frc)
          call StateReadCompleteField(importState,trim(name_waveK  ),   &
                                      farray2d=waveK)
          call StateReadCompleteField(importState,trim(name_waveT  ),   &
@@ -3205,7 +3211,7 @@
    real(ESMF_KIND_R8),pointer :: p2dr_(:,:),p3dr_(:,:,:)
    REALTYPE                   :: getmreal
    integer                    :: rc,dimCount,klen
-   logical                    :: abort,isConnected,noKindMatch
+   logical                    :: abort,isPresent,isConnected,noKindMatch
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -3220,7 +3226,27 @@
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   isConnected = NUOPC_isConnected(field,rc)
+   call ESMF_AttributeGetAttPack(field,                                 &
+                                 convention="NUOPC",purpose="Instance", &
+                                 isPresent=isPresent,rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   if (isPresent) then
+      call ESMF_AttributeGet(field,"Connected",                        &
+                             convention="NUOPC",purpose="Instance",    &
+                             isPresent=isPresent,rc=rc)
+      abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+      if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+   end if
+
+   if (.not. isPresent) then
+      call ESMF_LogWrite('hope for non-NUOPC field '//trim(name)//'',  &
+                         ESMF_LOGMSG_WARNING,line=__LINE__,file=FILENAME)
+      return
+   end if
+
+   isConnected = NUOPC_IsConnected(field,rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
@@ -3421,14 +3447,20 @@
       call ESMF_FieldGet(field,farrayPtr=p2dr_,rc=rc)
       abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
       if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+      if (present(p2dr)) then
+         p2dr => p2dr_
+         if (frc_) return
+      end if
       if (present(farray2d)) farray2d = p2dr_
-      if (present(p2dr)) p2dr => p2dr_
    else if (dimCount .eq. 3) then
       call ESMF_FieldGet(field,farrayPtr=p3dr,rc=rc)
       abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
       if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+      if (present(p3dr)) then
+         p3dr => p3dr_
+         if (frc_) return
+      end if
       if (present(farray3d)) farray3d = p3dr_
-      if (present(p3dr)) p3dr => p3dr_
    end if
 
 #ifdef DEBUG
