@@ -771,7 +771,6 @@
 
    call ESMF_LogWrite(trim(name)//"::InitializeP2...",ESMF_LOGMSG_TRACE)
 
-   call init_importStateP2(getmComp,importState)
    call init_exportStateP2(getmComp,exportState)
 
 !  If the initial Export state needs to be filled, do it here.
@@ -1817,8 +1816,12 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use meteo,only: met_method,calc_met,METEO_FROMEXT
-   use waves,only: waveforcing_method,WAVES_FROMEXT
+   use domain         ,only: grid_type
+   use meteo          ,only: met_method,calc_met,METEO_FROMEXT
+   use meteo          ,only: u10,v10
+   use waves          ,only: waveforcing_method,WAVES_FROMEXT
+   use waves          ,only: waves_ramp
+   use variables_waves,only: waveH,waveK,waveT
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -1834,7 +1837,7 @@
 ! !LOCAL VARIABLES
    type(ESMF_Grid) :: getmGrid3D
    integer         :: rc
-   logical         :: abort
+   logical         :: abort,frc
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -1849,21 +1852,31 @@
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   call StateAddGridSetField(importState,"gridSetField2D",getmGrid2D)
+   call StateAddField(importState,"gridSetField2D",getmGrid2D)
 
    if (met_method .eq. METEO_FROMEXT) then
-   !call StateAddGridSetField(importState,trim(name_swr    ),getmGrid2D,units="W m-2")
-   if (calc_met) then
-   call StateAddGridSetField(importState,trim(name_windU  ),getmGrid2D,units="m s-1")
-   call StateAddGridSetField(importState,trim(name_windV  ),getmGrid2D,units="m s-1")
-   end if ! calc_met
+      !call StateAddField(importState,trim(name_swr    ),getmGrid2D,units="W m-2")
+      if (calc_met) then
+!        force allocation of new memory if grid rotation needs to be removed
+         frc = (grid_type .ne. 2)
+         call StateAddField(importState,trim(name_windU  ),getmGrid2D, &
+                            farray2D=u10,units="m s-1",frc=frc)
+         call StateAddField(importState,trim(name_windV  ),getmGrid2D, &
+                            farray2D=v10,units="m s-1",frc=frc)
+      end if ! calc_met
    end if ! meteo
 
    if (waveforcing_method .eq. WAVES_FROMEXT) then
-   call StateAddGridSetField(importState,trim(name_waveDir),getmGrid2D,units="rad")
-   call StateAddGridSetField(importState,trim(name_waveH  ),getmGrid2D,units="m")
-   call StateAddGridSetField(importState,trim(name_waveK  ),getmGrid2D,units="m-1")
-   call StateAddGridSetField(importState,trim(name_waveT  ),getmGrid2D,units="s")
+      call StateAddField(importState,trim(name_waveDir),getmGrid2D,    &
+                         units="rad",frc=.true.)
+!     force allocation of new memory if waveH is ramped
+      frc = (waves_ramp .gt. 1)
+      call StateAddField(importState,trim(name_waveH  ),getmGrid2D,    &
+                         farray2D=waveH,units="m",frc=frc)
+      call StateAddField(importState,trim(name_waveK  ),getmGrid2D,    &
+                         farray2D=waveK,units="m-1")
+      call StateAddField(importState,trim(name_waveT  ),getmGrid2D,    &
+                         farray2D=waveT,units="s")
    end if
 
 #ifdef DEBUG
@@ -1873,74 +1886,6 @@
    return
 
    end subroutine init_importStateP1
-!EOC
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: init_importStateP2 -
-!
-! !INTERFACE:
-   subroutine init_importStateP2(getmComp,importState)
-!
-! !DESCRIPTION:
-!
-! !USES:
-   use domain         ,only: grid_type
-   use meteo          ,only: met_method,calc_met,METEO_FROMEXT
-   use meteo          ,only: u10,v10
-   use waves          ,only: waveforcing_method,WAVES_FROMEXT
-   use waves          ,only: waves_ramp
-   use variables_waves,only: waveH,waveK,waveT
-   IMPLICIT NONE
-!
-! !INPUT/OUTPUT PARAMETERS:
-   type(ESMF_GridComp) :: getmComp
-   type(ESMF_State)    :: importState
-!
-! !REVISION HISTORY:
-!  Original Author(s): Knut Klingbeil
-!
-! !LOCAL VARIABLES
-   logical :: frc
-!
-!EOP
-!-----------------------------------------------------------------------
-!BOC
-#ifdef DEBUG
-   integer, save :: Ncall = 0
-   Ncall = Ncall+1
-   write(debug,*) 'init_importStateP2() # ',Ncall
-#endif
-
-   if (met_method .eq. METEO_FROMEXT) then
-   !call StateCompleteConnectedField(importState,trim(name_swr  ),farray2d=swr)
-   if (calc_met) then
-!  force allocation of new memory if grid rotation needs to be removed
-   frc = (grid_type .ne. 2)
-   call StateCompleteConnectedField(importState,trim(name_windU  ),    &
-                                    farray2D=u10,frc=frc)
-   call StateCompleteConnectedField(importState,trim(name_windV  ),    &
-                                    farray2D=v10,frc=frc)
-   end if ! calc_met
-   end if ! meteo
-
-   if (waveforcing_method .eq. WAVES_FROMEXT) then
-   call StateCompleteConnectedField(importState,trim(name_waveDir))
-!  force allocation of new memory if waveH is ramped
-   frc = (waves_ramp .gt. 1)
-   call StateCompleteConnectedField(importState,trim(name_waveH  ),    &
-                                    farray2d=waveH,frc=frc)
-   call StateCompleteConnectedField(importState,trim(name_waveK  ),farray2d=waveK)
-   call StateCompleteConnectedField(importState,trim(name_waveT  ),farray2d=waveT)
-   end if
-
-#ifdef DEBUG
-   write(debug,*) 'Leaving init_importStateP2()'
-   write(debug,*)
-#endif
-   return
-
-   end subroutine init_importStateP2
 !EOC
 !-----------------------------------------------------------------------
 !BOP
@@ -2079,54 +2024,54 @@
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   call StateAddGridSetField(exportState,"gridSetField2D",getmGrid2D)
+   call StateAddField(exportState,"gridSetField2D",getmGrid2D)
 
 #ifdef ALLEXPORT
-   call StateAddGridSetField(exportState,trim(name_depth  ),getmGrid2D,units="m")
-   call StateAddGridSetField(exportState,trim(name_h3D    ),getmGrid3D,units="m")
-   call StateAddGridSetField(exportState,trim(name_hbot   ),getmGrid2D,units="m")
-   call StateAddGridSetField(exportState,trim(name_U2D    ),getmGrid2D,units="m s-1")
-   call StateAddGridSetField(exportState,trim(name_U3D    ),getmGrid3D,units="m s-1")
-   call StateAddGridSetField(exportState,trim(name_Ubot   ),getmGrid2D,units="m s-1")
-   call StateAddGridSetField(exportState,trim(name_V2D    ),getmGrid2D,units="m s-1")
-   call StateAddGridSetField(exportState,trim(name_V3D    ),getmGrid3D,units="m s-1")
-   call StateAddGridSetField(exportState,trim(name_Vbot   ),getmGrid2D,units="m s-1")
+   call StateAddField(exportState,trim(name_depth  ),getmGrid2D,units="m")
+   call StateAddField(exportState,trim(name_h3D    ),getmGrid3D,units="m")
+   call StateAddField(exportState,trim(name_hbot   ),getmGrid2D,units="m")
+   call StateAddField(exportState,trim(name_U2D    ),getmGrid2D,units="m s-1")
+   call StateAddField(exportState,trim(name_U3D    ),getmGrid3D,units="m s-1")
+   call StateAddField(exportState,trim(name_Ubot   ),getmGrid2D,units="m s-1")
+   call StateAddField(exportState,trim(name_V2D    ),getmGrid2D,units="m s-1")
+   call StateAddField(exportState,trim(name_V3D    ),getmGrid3D,units="m s-1")
+   call StateAddField(exportState,trim(name_Vbot   ),getmGrid2D,units="m s-1")
    if (runtype .ge. 2) then
 #ifndef NO_3D
-   call StateAddGridSetField(exportState,trim(name_eps3D  ),getmGrid3D,units="m2 s-3",staggerloc=ESMF_STAGGERLOC_CENTER_VFACE)
-   call StateAddGridSetField(exportState,trim(name_epsbot ),getmGrid2D,units="m2 s-3")
-   call StateAddGridSetField(exportState,trim(name_num3D  ),getmGrid3D,units="m2 s-1",staggerloc=ESMF_STAGGERLOC_CENTER_VFACE)
-   call StateAddGridSetField(exportState,trim(name_numbot ),getmGrid2D,units="m2 s-1")
-   call StateAddGridSetField(exportState,trim(name_SS3D   ),getmGrid3D,units="s-2",staggerloc=ESMF_STAGGERLOC_CENTER_VFACE)
-   call StateAddGridSetField(exportState,trim(name_taubmax),getmGrid2D,units="Pa")
-   call StateAddGridSetField(exportState,trim(name_tke3D  ),getmGrid3D,units="m2 s-2",staggerloc=ESMF_STAGGERLOC_CENTER_VFACE)
-   call StateAddGridSetField(exportState,trim(name_tkebot ),getmGrid2D,units="m2 s-2")
+   call StateAddField(exportState,trim(name_eps3D  ),getmGrid3D,units="m2 s-3",staggerloc=ESMF_STAGGERLOC_CENTER_VFACE)
+   call StateAddField(exportState,trim(name_epsbot ),getmGrid2D,units="m2 s-3")
+   call StateAddField(exportState,trim(name_num3D  ),getmGrid3D,units="m2 s-1",staggerloc=ESMF_STAGGERLOC_CENTER_VFACE)
+   call StateAddField(exportState,trim(name_numbot ),getmGrid2D,units="m2 s-1")
+   call StateAddField(exportState,trim(name_SS3D   ),getmGrid3D,units="s-2",staggerloc=ESMF_STAGGERLOC_CENTER_VFACE)
+   call StateAddField(exportState,trim(name_taubmax),getmGrid2D,units="Pa")
+   call StateAddField(exportState,trim(name_tke3D  ),getmGrid3D,units="m2 s-2",staggerloc=ESMF_STAGGERLOC_CENTER_VFACE)
+   call StateAddField(exportState,trim(name_tkebot ),getmGrid2D,units="m2 s-2")
    if (runtype .ge. 3) then
 #ifndef NO_BAROCLINIC
-   call StateAddGridSetField(exportState,trim(name_NN3D   ),getmGrid3D,units="s-2",staggerloc=ESMF_STAGGERLOC_CENTER_VFACE)
-   call StateAddGridSetField(exportState,trim(name_nuh3D  ),getmGrid3D,units="m",staggerloc=ESMF_STAGGERLOC_CENTER_VFACE)
+   call StateAddField(exportState,trim(name_NN3D   ),getmGrid3D,units="s-2",staggerloc=ESMF_STAGGERLOC_CENTER_VFACE)
+   call StateAddField(exportState,trim(name_nuh3D  ),getmGrid3D,units="m",staggerloc=ESMF_STAGGERLOC_CENTER_VFACE)
    if (calc_salt) then
-   call StateAddGridSetField(exportState,trim(name_S3D    ),getmGrid3D,units="")
+   call StateAddField(exportState,trim(name_S3D    ),getmGrid3D,units="")
    end if
    if (calc_temp) then
-   call StateAddGridSetField(exportState,trim(name_T3D    ),getmGrid3D,units="degC")
-   call StateAddGridSetField(exportState,trim(name_Tbot   ),getmGrid2D,units="degC")
+   call StateAddField(exportState,trim(name_T3D    ),getmGrid3D,units="degC")
+   call StateAddField(exportState,trim(name_Tbot   ),getmGrid2D,units="degC")
    end if
 #endif
    end if
 #endif
    end if
    if (met_method.eq.METEO_CONST .or. met_method.eq.METEO_FROMFILE) then
-   call StateAddGridSetField(exportState,trim(name_swr    ),getmGrid2D,units="W m-2")
-   call StateAddGridSetField(exportState,trim(name_windU  ),getmGrid2D,units="m s-1")
-   call StateAddGridSetField(exportState,trim(name_windV  ),getmGrid2D,units="m s-1")
+   call StateAddField(exportState,trim(name_swr    ),getmGrid2D,units="W m-2")
+   call StateAddField(exportState,trim(name_windU  ),getmGrid2D,units="m s-1")
+   call StateAddField(exportState,trim(name_windV  ),getmGrid2D,units="m s-1")
    end if
    if (     waveforcing_method.eq.WAVES_FROMWIND                       &
        .or. waveforcing_method.eq.WAVES_FROMFILE) then
-   call StateAddGridSetField(exportState,trim(name_waveDir),getmGrid2D,units="rad")
-   call StateAddGridSetField(exportState,trim(name_waveH  ),getmGrid2D,units="m")
-   call StateAddGridSetField(exportState,trim(name_waveK  ),getmGrid2D,units="m-1")
-   call StateAddGridSetField(exportState,trim(name_waveT  ),getmGrid2D,units="s")
+   call StateAddField(exportState,trim(name_waveDir),getmGrid2D,units="rad")
+   call StateAddField(exportState,trim(name_waveH  ),getmGrid2D,units="m")
+   call StateAddField(exportState,trim(name_waveK  ),getmGrid2D,units="m-1")
+   call StateAddField(exportState,trim(name_waveT  ),getmGrid2D,units="s")
    end if
 #endif
 
@@ -3087,14 +3032,17 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: StateAddGridSetField -
+! !ROUTINE: StateAddField -
 !
 ! !INTERFACE:
-  subroutine StateAddGridSetField(state,name,grid,kwe,units,staggerloc)
+  subroutine StateAddField(state,name,grid,kwe,units,staggerloc,       &
+                           farray2D,farray3D,frc)
 !
 ! !DESCRIPTION:
 !
 ! !USES:
+   use domain    ,only: imin,jmin,imax,jmax,kmax
+   use initialise,only: runtype
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -3103,6 +3051,9 @@
    logical              ,intent(in),optional :: kwe !keyword-enforcer
    character(len=*)     ,intent(in),optional :: units
    type(ESMF_StaggerLoc),intent(in),optional :: staggerloc
+   REALTYPE,target      ,intent(in),optional :: farray2D(I2DFIELD)
+   REALTYPE,target      ,intent(in),optional :: farray3D(I3DFIELD)
+   logical              ,intent(in),optional :: frc
 !
 ! !INPUT/OUTPUT PARAMETERS:
    type(ESMF_State)                          :: state
@@ -3111,9 +3062,11 @@
 !  Original Author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES
-   type(ESMF_Field) :: field
-   integer          :: rc
-   logical          :: abort,isCreated
+   type(ESMF_Field)           :: field
+   real(ESMF_KIND_R8),pointer :: p2dr_(:,:),p3dr_(:,:,:)
+   REALTYPE                   :: getmreal
+   integer                    :: rc,dimCount,klen
+   logical                    :: abort,frc_,isCreated,noKindMatch
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -3121,8 +3074,14 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'StateAddGridSetField() # ',Ncall
+   write(debug,*) 'StateAddField() # ',Ncall
 #endif
+
+   if (present(frc)) then
+      frc_ = frc
+   else
+      frc_ = .false.
+   end if
 
    isCreated = ESMF_StateIsCreated(state,rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
@@ -3158,17 +3117,82 @@
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
+   call ESMF_GridGet(grid,dimCount=dimCount,rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   noKindMatch = ( kind(getmreal) .ne. ESMF_KIND_R8 )
+
+   if (dimCount .eq. 2) then
+
+      p2dr_ => NULL()
+      if (frc_) then
+         allocate(p2dr_(I2DFIELD))
+         if (present(farray2D)) p2dr_ = farray2D
+      else if (present(farray2D) .and. .not.noKindMatch) then
+         p2dr_(imin-HALO:,jmin-HALO:) => farray2D
+      end if
+      if (associated(p2dr_)) then
+!        in contrast to ESMF_ArrayCreate() no automatic determination of total[L|U]Width
+#if 1
+!        Note (KK): in former times ESMF_FieldCreateGridDataPtr<rank><type><kind>() failed
+         call ESMF_FieldEmptyComplete(field,p2dr_,                     &
+#else
+!        internal call to ESMF_FieldCreateGridData<rank><type><kind>()
+!        forced by indexflag argument.
+         call ESMF_FieldEmptyComplete(field,p2dr_,ESMF_INDEX_DELOCAL,  &
+#endif
+                                      totalLWidth=(/HALO,HALO/),       &
+                                      totalUWidth=(/HALO,HALO/),       &
+                                      rc=rc)
+         abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+         if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+      end if
+
+   else if (dimCount .eq. 3) then
+
+      p3dr_ => NULL()
+      if (runtype .eq. 1) then
+         klen = 1
+      else
+         klen = kmax
+      end if
+      if (frc_) then
+         allocate(p3dr_(I2DFIELD,0:klen))
+         if (present(farray3D)) p3dr_ = farray3D
+      else if (present(farray3D) .and. .not.noKindMatch) then
+         p3dr_(imin-HALO:,jmin-HALO:,0:) => farray3D
+      end if
+      if (associated(p2dr_)) then
+!        in contrast to ESMF_ArrayCreate() no automatic determination of total[L|U]Width
+#if 1
+!        Note (KK): in former times ESMF_FieldCreateGridDataPtr<rank><type><kind>() failed
+         call ESMF_FieldEmptyComplete(field,p3dr_,                     &
+#else
+!        internal call to ESMF_FieldCreateGridData<rank><type><kind>()
+!        forced by indexflag argument.
+         call ESMF_FieldEmptyComplete(field,p3dr_,ESMF_INDEX_DELOCAL,  &
+#endif
+                                      totalLWidth=(/HALO,HALO,1/),     &
+                                      totalUWidth=(/HALO,HALO,0/),     &
+                                      rc=rc)
+         abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+         if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+      end if
+
+   end if
+
    call ESMF_StateAdd(state,(/field/),rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving StateAddGridSetField()'
+   write(debug,*) 'Leaving StateAddField()'
    write(debug,*)
 #endif
    return
 
-   end subroutine StateAddGridSetField
+   end subroutine StateAddField
 !EOC
 !-----------------------------------------------------------------------
 !BOP
