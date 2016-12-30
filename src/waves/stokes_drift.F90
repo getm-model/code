@@ -11,7 +11,7 @@
    use halo_zones     , only: U_TAG,V_TAG
    use domain         , only: imin,imax,jmin,jmax,az,au,av
    use pool           , only: flux_center2interface
-   use waves          , only: new_StokesC,waves_method,WAVES_RS
+   use waves          , only: new_StokesC,waves_method,WAVES_RS,kD_deepthresh
    use variables_waves, only: waveE,waveK,SJ
    use variables_waves, only: UStokesC,VStokesC,UStokes,VStokes
    use getm_timers    , only: tic,toc,TIM_WAVES
@@ -32,6 +32,7 @@
 !                      Knut Klingbeil
 !
 ! !LOCAL VARIABLES
+   REALTYPE,dimension(E2DFIELD) :: kDvel
    REALTYPE :: dtmm1
    integer  :: i,j
 !
@@ -46,13 +47,17 @@
 
    call tic(TIM_WAVES)
 
+!  KK-TODO: stokes_drift is not called first anymore!!!???
 !  stokes_drift is called first for each timestep,
 !  so some quantities calculated here are also used later in
 !  other routines (SJ)
 
+   kDvel = waveK * Dvel
 !  wave-induced kinematic pressure
-   where (az .gt. 0)
-      SJ = waveE * waveK / sinh(_TWO_*waveK*Dvel)
+   where (az.gt.0 .and. kDvel.lt.kD_deepthresh)
+      SJ = waveE * waveK / sinh(_TWO_*kDvel)
+   elsewhere
+      SJ = _ZERO_
    end where
 
 
