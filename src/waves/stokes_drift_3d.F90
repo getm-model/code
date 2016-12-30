@@ -14,7 +14,7 @@
    use waves          , only: waves_method,WAVES_RS,kD_deepthresh
    use variables_waves, only: waveK,waveE
    use variables_waves, only: SJJ
-   use variables_waves, only: kDveln,sinh2kDvelnm1,is_deepwave_3d
+   use variables_waves, only: kDveln,is_deepwave_3d
    use variables_waves, only: khab,layerratios
    use variables_waves, only: UStokesCadv,VStokesCadv
    use variables_waves, only: uuStokesC,vvStokesC,uuStokes,vvStokes
@@ -46,6 +46,7 @@
 !
 ! !LOCAL VARIABLES
    REALTYPE,dimension(I2DFIELD,0:1) :: sinh2khab
+   REALTYPE,dimension(I2DFIELD)     :: sinh2kDvelnm1
    REALTYPE,dimension(I2DFIELD)     :: hab
    REALTYPE                         :: dtm1
    integer                          :: i,j,k,km,kp
@@ -63,10 +64,12 @@
    call tic(TIM_WAVES)
 
    kDveln = waveK * Dveln
-   is_deepwave_3d = ( kDveln .gt. kD_deepthresh )
+   is_deepwave_3d = ( kDveln .ge. kD_deepthresh )
 
-   where (az .gt. 0)
+   where (az.gt.0 .and. .not.is_deepwave_3d)
       sinh2kDvelnm1 = _ONE_ / sinh(_TWO_*kDveln)
+   elsewhere
+      sinh2kDvelnm1 = _ZERO_
    end where
 
 !  wave-induced kinematic pressure
