@@ -57,6 +57,8 @@
       "turbulent_diffusivity_of_momentum_at_soil_surface"
    character(len=*),parameter :: name_S3D    = &
       "salinity_in_water"
+   character(len=*),parameter :: name_slp    = &
+      "air_pressure_at_sea_level"
    character(len=*),parameter :: name_SS3D   = &
       "shear_frequency_squared_in_water"
    character(len=*),parameter :: name_swr    = &
@@ -1818,7 +1820,7 @@
 ! !USES:
    use domain         ,only: grid_type
    use meteo          ,only: met_method,calc_met,METEO_FROMEXT
-   use meteo          ,only: u10,v10
+   use meteo          ,only: airp,u10,v10
    use waves          ,only: waveforcing_method,WAVES_FROMEXT
    use waves          ,only: waves_ramp
    use variables_waves,only: waveH,waveK,waveT
@@ -1856,6 +1858,8 @@
 
    if (met_method .eq. METEO_FROMEXT) then
       !call StateAddField(importState,trim(name_swr    ),getmGrid2D,units="W m-2")
+      call StateAddField(importState,trim(name_slp    ),getmGrid2D,    &
+                         farray2D=airp,units="Pa")
       if (calc_met) then
 !        force allocation of new memory if grid rotation needs to be removed
          frc = (grid_type .ne. 2)
@@ -1900,7 +1904,7 @@
 ! !USES:
    use domain         ,only: grid_type,convc,cosconv,sinconv
    use meteo          ,only: met_method,calc_met,METEO_FROMEXT,new_meteo
-   use meteo          ,only: u10,v10
+   use meteo          ,only: airp,u10,v10
    use waves          ,only: waveforcing_method,WAVES_FROMEXT,new_waves
    use waves          ,only: waves_ramp
    use variables_waves,only: coswavedir,sinwavedir,waveH,waveK,waveT
@@ -1932,6 +1936,9 @@
 
       new_meteo = .true. ! KK-TODO: should be set by coupler
       !call StateCompleteConnectedField(importState,trim(name_swr  ),farray2d=swr)
+
+         call StateReadCompleteField(importState,trim(name_slp    ),   &
+                                     farray2d=airp)
 
       if (calc_met) then
 !        force reading if grid rotation needs to be removed
