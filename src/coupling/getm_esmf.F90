@@ -1820,7 +1820,7 @@
 ! !USES:
    use domain         ,only: grid_type
    use meteo          ,only: met_method,calc_met,METEO_FROMEXT
-   use meteo          ,only: airp,u10,v10
+   use meteo          ,only: airp,u10,v10,constant_cd
    use waves          ,only: waveforcing_method,WAVES_FROMEXT
    use waves          ,only: waves_ramp
    use variables_waves,only: waveH,waveK,waveT
@@ -1861,6 +1861,7 @@
       call StateAddField(importState,trim(name_slp    ),getmGrid2D,    &
                          farray2D=airp,units="Pa")
       if (calc_met) then
+         constant_cd = .true.
 !        force allocation of new memory if grid rotation needs to be removed
          frc = (grid_type .ne. 2)
          call StateAddField(importState,trim(name_windU  ),getmGrid2D, &
