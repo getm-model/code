@@ -113,14 +113,6 @@
 
    npel = size(model%state_variables)
 
-   allocate(have_bio_bdy_values(npel),stat=rc)
-   if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (have_bio_bdy_values)'
-   have_bio_bdy_values = -1
-
-   allocate(bdy_bio_type(NOB,npel),stat=rc)
-   if (rc /= 0) stop 'init_bdy_3d: Error allocating memory (bdy_bio_type)'
-   bdy_bio_type = ZERO_GRADIENT
-
    inquire(file=fname,exist=exist)
    if (.not.exist) then
       LEVEL3 'Boundary file '//trim(fname)//' does not exist. Not using bio boundaries.'

@@ -15,7 +15,7 @@
 ! !USES:
    use halo_zones, only : H_TAG,U_TAG,V_TAG
    use domain, only: imin,jmin,imax,jmax,kmax,H,az,au,av
-   use domain, only: nsbvl,nbdy,NWB,NNB,NEB,NSB,bdy_index,bdy_index_l
+   use domain, only: nsbvl,nbdy,NOB,NWB,NNB,NEB,NSB,bdy_index,bdy_index_l
    use domain, only: bdy_3d_desc,bdy_3d_type
    use domain, only: need_3d_bdy
    use domain, only: wi,wfj,wlj,nj,nfi,nli,ei,efj,elj,sj,sfi,sli
@@ -31,6 +31,9 @@
 !
 ! !PUBLIC DATA MEMBERS:
    public init_bdy_3d, do_bdy_3d,do_bdy_3d_vel
+#ifdef _FABM_
+   public init_bdy_3d_fabm
+#endif
    public bdy_3d_west,bdy_3d_north,bdy_3d_east,bdy_3d_south
    character(len=PATH_MAX),public         :: bdyfile_3d
    integer,public                         :: bdyfmt_3d
@@ -306,6 +309,52 @@
    return
    end subroutine init_bdy_3d
 !EOC
+
+!-----------------------------------------------------------------------
+#ifdef _FABM_
+!BOP
+!
+! !IROUTINE: init_bdy_3d_fabm
+!
+! !INTERFACE:
+   subroutine init_bdy_3d_fabm()
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use getm_fabm, only: model
+   IMPLICIT NONE
+!
+! !LOCAL VARIABLES:
+   integer                   :: rc
+   integer                   :: npel
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'init_bdy_3d_fabm() # ',Ncall
+#endif
+
+   npel = size(model%state_variables)
+
+   allocate(bdy_bio_type(NOB,npel),stat=rc)
+   if (rc /= 0) stop 'init_bdy_3d_fabm: Error allocating memory (bdy_bio_type)'
+   bdy_bio_type = ZERO_GRADIENT
+
+   allocate(have_bio_bdy_values(npel),stat=rc)
+   if (rc /= 0) stop 'init_bdy_3d_fabm: Error allocating memory (have_bio_bdy_values)'
+   have_bio_bdy_values = -1
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving init_bdy_3d_fabm()'
+   write(debug,*)
+#endif
+   return
+   end subroutine init_bdy_3d_fabm
+!EOC
+#endif
 
 !-----------------------------------------------------------------------
 !BOP
