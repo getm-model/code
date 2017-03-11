@@ -486,10 +486,6 @@
 ! {\tt do\_getm\_bio}          & call to GOTM-BIO (not yet released) & \\
 ! {\tt slow\_bottom\_friction} & slow bottom friction & see page
 ! \pageref{sec-slow-bottom-friction} \\
-! {\tt slow\_advection}        & slow advection terms & see page
-! \pageref{sec-slow-advection} \\
-! {\tt slow\_diffusion}        & slow diffusion terms & see page
-! \pageref{sec-slow-diffusion} \\
 ! {\tt slow\_terms}            & sum of slow terms & see page
 ! \pageref{sec-slow-terms} \\
 ! {\tt stop\_macro}            & finishing a 3d step & see page
