@@ -105,15 +105,13 @@ gradient from vertically integrated equations with explicit vertical resolution
 of these processes. These slow terms which are updated every macro
 time step only (that is why we call them slow terms) need to be considered
 for the external mode included in module {\tt 2d}.
-Those slow terms are calculated here in the {\tt 3d} module in the routines
-{\tt slow\_bottom\_friction}, {\tt slow\_advection} 
-and {\tt slow\_diffusion}, and they are added together in {\tt slow\_terms},
-see the descriptions in sections \ref{sec-slow-bottom-friction}, 
-\ref{sec-slow-advection},\ref{sec-slow-diffusion} and \ref{sec-slow-terms}
-on pages \pageref{sec-slow-bottom-friction}, 
-\pageref{sec-slow-advection},\pageref{sec-slow-diffusion} and 
-\pageref{sec-slow-terms},
-respectively.
+Those slow terms are calculated here in the {\tt 3d} module at the end
+of {\tt integrate\_3d} and in the routine {\tt slow\_bottom\_friction},
+and they are added together in {\tt slow\_terms},
+see the descriptions in sections \ref{sec-integrate-3d},
+\ref{sec-slow-bottom-friction} and \ref{sec-slow-terms}
+on pages \pageref{sec-integrate-3d}, \pageref{sec-slow-bottom-friction},
+and \pageref{sec-slow-terms}, respectively.
 
 One other important measure of coupling the two modes is to
 add to all calculated $u$- and $v$-velocity profiles the difference 
