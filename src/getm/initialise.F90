@@ -60,6 +60,7 @@
    use domain, only: iextr,jextr,imin,imax,ioff,jmin,jmax,joff,kmax
    use domain, only: xcord,ycord
    use domain, only: vert_cord,maxdepth,ga
+   use domain, only: have_boundaries
    use time, only: init_time,update_time,write_time_string
    use time, only: start,timestr,timestep
    use time, only: julianday,secondsofday
@@ -83,6 +84,7 @@
    use getm_fabm, only: init_getm_fabm, postinit_getm_fabm
    use getm_fabm, only: init_getm_fabm_fields
    use rivers, only: init_rivers_fabm
+   use bdy_3d, only: init_bdy_3d_fabm
 #endif
 #ifdef GETM_BIO
    use bio, only: bio_calc
@@ -261,7 +263,10 @@
 #endif
 #ifdef _FABM_
       call init_getm_fabm(trim(input_dir) // 'getm_fabm.inp',hotstart)
-      call init_rivers_fabm
+      if (fabm_calc) then
+        call init_rivers_fabm()
+        if (have_boundaries) call init_bdy_3d_fabm()
+      end if
 #endif
 #ifdef GETM_BIO
       call init_getm_bio(trim(input_dir) // 'getm_bio.inp')
