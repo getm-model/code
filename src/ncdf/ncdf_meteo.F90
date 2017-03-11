@@ -369,10 +369,10 @@
 ! !LOCAL VARIABLES:
    integer, parameter        :: iunit=55
    character(len=256)        :: fn,time_units
+   character(len=19)         :: tbuf
    integer         :: junit,sunit,j1,s1,j2,s2
    integer         :: n,err,idum
    logical         :: first=.true.
-   logical         :: found=.false.,first_open=.true.
    integer, save   :: lon_id=-1,lat_id=-1,time_id=-1,id=-1
    integer, save   :: time_var_id=-1
    character(len=256) :: dimname
@@ -386,19 +386,68 @@
    write(debug,*) 'open_meteo_file() # ',Ncall
 #endif
 
-   if (first) then
-      first = .false.
-      open(iunit,file=meteo_file,status='old',action='read',err=80)
+      if (first) open(iunit,file=meteo_file,status='old',action='read',err=80)
+
       do
-         if (found) EXIT
+         if (.not. first) then
+            err = nf90_close(ncid)
+            if (err .NE. NF90_NOERR) go to 10
+         end if
          read(iunit,*,err=85,end=90) fn
          LEVEL3 'Trying meteo from:'
          LEVEL4 trim(fn)
          err = nf90_open(fn,NF90_NOWRITE,ncid)
          if (err .ne. NF90_NOERR) go to 10
 
-         if (first_open) then
-            first_open = .false.
+         err = nf90_inq_dimid(ncid,name_time,time_id)
+         if (err .NE. NF90_NOERR) go to 10
+
+         err = nf90_inquire_dimension(ncid,time_id,len=idum)
+         if (err .ne. NF90_NOERR) go to 10
+         if(idum .gt. size(met_times)) then
+            if (allocated(met_times)) then
+            deallocate(met_times,stat=err)
+            if (err /= 0) stop      &
+               'open_meteo_file(): Error de-allocating memory (met_times)'
+            end if
+            allocate(met_times(idum),stat=err)
+            if (err /= 0) stop &
+               'open_meteo_file(): Error allocating memory (met_times)'
+         end if
+         textr = idum
+         LEVEL4 'time_id --> ',time_id,', len = ',textr
+!        if (tmax .lt. 0) tmax=textr
+         tmax=textr
+
+         err = nf90_inq_varid(ncid,name_time,time_var_id)
+         if (err .NE. NF90_NOERR) go to 10
+         err =  nf90_get_att(ncid,time_var_id,'units',time_units)
+         if (err .NE. NF90_NOERR) go to 10
+         call string_to_julsecs(time_units,junit,sunit)
+         err = nf90_get_var(ncid,time_var_id,met_times(1:textr))
+         if (err .ne. NF90_NOERR) go to 10
+
+         call add_secs(junit,sunit,nint(met_times(    1)),j1,s1)
+         call write_time_string(j1,s1,tbuf)
+         LEVEL4 'Datafile starts:   ',tbuf
+
+         call add_secs(junit,sunit,nint(met_times(textr)),j2,s2)
+         call write_time_string(j2,s2,tbuf)
+         LEVEL4 'Datafile ends  :   ',tbuf
+
+         if (first) then
+            if (in_interval(j1,s1,julianday,secondsofday,j2,s2)) exit
+         else
+            if ( time_diff(julianday,secondsofday,junit,sunit) .le. met_times(textr) ) exit
+!           KK-TODO: Or should we allow to cycle?
+            FATAL 'Datafile does not contain new records'
+            stop 'open_meteo_file()'
+         end if
+
+      end do
+
+         if (first) then
+            first = .false.
             err = nf90_inquire(ncid,nDimensions=ndims)
             if (err .NE. NF90_NOERR) go to 10
 
@@ -418,14 +467,6 @@
                   if (err .ne. NF90_NOERR) go to 10
                   LEVEL4 'lat_id  --> ',lat_id,', len = ',jextr
                end if
-               if( dimname .eq. name_time ) then
-                  time_id = n
-                  err = nf90_inquire_dimension(ncid,time_id,len=textr)
-                  if (err .ne. NF90_NOERR) go to 10
-                  LEVEL4 'time_id --> ',time_id,', len = ',textr
-!                  if (tmax .lt. 0) tmax=textr
-                  tmax=textr
-               end if
             end do
             if(lon_id .eq. -1) then
                FATAL 'could not find longitude coordinate in meteo file'
@@ -433,10 +474,6 @@
             end if
             if(lat_id .eq. -1) then
                FATAL 'could not find latitude coordinate in meteo file'
-               stop 'open_meteo_file()'
-            end if
-            if(time_id .eq. -1) then
-               FATAL 'could not find time coordinate in meteo file'
                stop 'open_meteo_file()'
             end if
 
@@ -455,10 +492,6 @@
             if (err .NE. NF90_NOERR) go to 10
             err = nf90_get_var(ncid,id,met_lat)
             if (err .ne. NF90_NOERR) go to 10
-
-            allocate(met_times(textr),stat=err)
-            if (err /= 0) stop &
-                  'open_meteo_file(): Error allocating memory (met_times)'
 
 !           first we check for CF compatible grid_mapping_name
             err = nf90_inq_varid(ncid,'rotated_pole',id)
@@ -518,77 +551,6 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
                LEVEL4 '      lat ',southpole(1)
             end if
          end if
-
-         err = nf90_inquire_dimension(ncid,time_id,len=idum)
-         if (err .ne. NF90_NOERR) go to 10
-         if(idum .gt. size(met_times)) then
-            deallocate(met_times,stat=err)
-            if (err /= 0) stop      &
-               'open_meteo_file(): Error de-allocating memory (met_times)'
-            allocate(met_times(idum),stat=err)
-            if (err /= 0) stop &
-               'open_meteo_file(): Error allocating memory (met_times)'
-         end if
-         textr = idum
-         LEVEL3 'time_id --> ',time_id,', len = ',textr
-!        if (tmax .lt. 0) tmax=textr
-         tmax=textr
-
-         err = nf90_inq_varid(ncid,name_time,time_var_id)
-         if (err .NE. NF90_NOERR) go to 10
-         err =  nf90_get_att(ncid,time_var_id,'units',time_units)
-         if (err .NE. NF90_NOERR) go to 10
-         call string_to_julsecs(time_units,junit,sunit)
-         err = nf90_get_var(ncid,time_var_id,met_times(1:textr))
-         if (err .ne. NF90_NOERR) go to 10
-
-         call add_secs(junit,sunit,nint(met_times(1)),    j1,s1)
-         call add_secs(junit,sunit,nint(met_times(textr)),j2,s2)
-
-         if (in_interval(j1,s1,julianday,secondsofday,j2,s2)) then
-            found = .true.
-         else
-            err = nf90_close(ncid)
-            if (err .NE. NF90_NOERR) go to 10
-         end if
-      end do
-   else
-      err = nf90_close(ncid)
-      if (err .NE. NF90_NOERR) go to 10
-!     open next file
-      read(iunit,*,err=85,end=90) fn
-      err = nf90_open(fn,NF90_NOWRITE,ncid)
-      if (err .ne. NF90_NOERR) go to 10
-
-      err = nf90_inquire_dimension(ncid,time_id,len=idum)
-      if (err .ne. NF90_NOERR) go to 10
-      if(idum .gt. size(met_times)) then
-         deallocate(met_times,stat=err)
-         if (err /= 0) stop      &
-            'open_meteo_file(): Error de-allocating memory (met_times)'
-         allocate(met_times(idum),stat=err)
-         if (err /= 0) stop &
-            'open_meteo_file(): Error allocating memory (met_times)'
-      end if
-      textr = idum
-      LEVEL3 'time_id --> ',time_id,', len = ',textr
-!     if (tmax .lt. 0) tmax=textr
-      tmax=textr
-
-      err = nf90_inq_varid(ncid,name_time,time_var_id)
-      if (err .NE. NF90_NOERR) go to 10
-      err =  nf90_get_att(ncid,time_var_id,'units',time_units)
-      if (err .NE. NF90_NOERR) go to 10
-      call string_to_julsecs(time_units,junit,sunit)
-      err = nf90_get_var(ncid,time_var_id,met_times(1:textr))
-      if (err .ne. NF90_NOERR) go to 10
-
-      call add_secs(junit,sunit,nint(met_times(1)),    j1,s1)
-      call add_secs(junit,sunit,nint(met_times(textr)),j2,s2)
-   end if
-
-
-   if (found) then
 
       airp_id = ncdf_meteo_inq_varid(ncid,name_airp)
 
@@ -656,12 +618,6 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
       LEVEL4 trim(fn)
       LEVEL3 'Meteorological offset time ',offset
 
-   else
-
-      FATAL 'Could not find any valid meteo-files'
-      stop 'open_meteo_file'
-
-   end if
 
    return
 10 FATAL 'open_meteo_file: ',nf90_strerror(err)
