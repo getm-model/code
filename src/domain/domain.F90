@@ -362,6 +362,9 @@
 
 !  Compute Coriolis parameter
    if (f_plane) then
+      if (have_lonlat) then
+         LEVEL2 "WARNING: f_plane despite available lat data from topo!"
+      end if
       LEVEL2 "Assuming constant Coriolis parameter - lat = ",latitude
       cori = 2.*omega*sin(deg2rad*latitude)
       coru = cori
