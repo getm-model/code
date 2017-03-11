@@ -60,7 +60,7 @@ a4.dvi: a4.tex $(TEXSRC) $(PROTEXSRC)
 	latex  a4.tex
 	latex  a4.tex
 
-html: a4.tex $(TEXSRC) $(PROTEXSRC)
+html: a4.dvi
 	mkdir -p html
 	latex2html -dir html a4.tex
 
