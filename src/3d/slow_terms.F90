@@ -15,8 +15,7 @@
 ! equations (\ref{Slowfirst}) - (\ref{Slowlast}), see section
 ! \ref{SectionVerticalIntegrated}.
 ! These calculations have been prepared in the routines
-! {\tt slow\_bottom\_friction}, {\tt slow\_advection} and
-! {\tt slow\_diffusion}.
+! {\tt integrate\_3d} and {\tt slow\_bottom\_friction}.
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax,HU,HV,au,av
