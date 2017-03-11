@@ -79,8 +79,7 @@ if(GETM_USE_FABM)
 
 endif(GETM_USE_FABM)
 
-include(CMakeDependentOption)
-CMAKE_DEPENDENT_OPTION(GETM_USE_FLEXIBLE_OUTPUT "Use new output manager" ON "GETM_USE_FABM" OFF)
+option(GETM_USE_FLEXIBLE_OUTPUT "Use new output manager" ON)
 if(GETM_USE_FLEXIBLE_OUTPUT)
   add_definitions(-D_FLEXIBLE_OUTPUT_)
 endif()
