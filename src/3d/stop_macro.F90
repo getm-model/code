@@ -98,8 +98,13 @@
                k=kumin(i,j)
                rrdraghm1 = rru(i,j) / hun(i,j,k)
                rdragDm1  = ru (i,j) / Dun(i,j)
+#ifdef _SLR_V26_
+               Slru(i,j) =   rrdraghm1*uu  (i,j,k) &
+                           - rdragDm1 *Uadv(i,j)
+#else
                Slru(i,j) =   rrdraghm1*uu  (i,j,k) / (_ONE_+dt*rrdraghm1) &
                            - rdragDm1 *Uadv(i,j)   / (_ONE_+dt*rdragDm1 )
+#endif
 #endif
 
 #ifdef STRUCTURE_FRICTION
@@ -129,8 +134,13 @@
                k=kvmin(i,j)
                rrdraghm1 = rrv(i,j) / hvn(i,j,k)
                rdragDm1  = rv (i,j) / Dvn(i,j)
+#ifdef _SLR_V26_
+               Slrv(i,j) =   rrdraghm1*vv  (i,j,k) &
+                           - rdragDm1 *Vadv(i,j)
+#else
                Slrv(i,j) =   rrdraghm1*vv  (i,j,k) / (_ONE_+dt*rrdraghm1) &
                            - rdragDm1 *Vadv(i,j)   / (_ONE_+dt*rdragDm1 )
+#endif
 #endif
 
 #ifdef STRUCTURE_FRICTION
