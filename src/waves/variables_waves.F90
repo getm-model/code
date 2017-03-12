@@ -20,7 +20,7 @@
    REALTYPE,dimension(:,:)  ,pointer     :: waveH,waveL
    REALTYPE,dimension(:,:)  ,allocatable,target :: waveT,waveK,waveE
    REALTYPE,dimension(:,:)  ,allocatable :: SJ,SJJ
-   REALTYPE,dimension(:,:)  ,allocatable :: kDveln,sinh2kDvelnm1
+   REALTYPE,dimension(:,:)  ,allocatable :: kDveln
    logical ,dimension(:,:)  ,allocatable :: is_deepwave_3d
    REALTYPE,dimension(:,:,:),allocatable :: khab,layerratios
    REALTYPE,dimension(:,:)  ,allocatable :: UStokesC,VStokesC
@@ -120,9 +120,6 @@
 
       allocate(kDveln(I2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_variables_waves: Error allocating memory (kDveln)'
-
-      allocate(sinh2kDvelnm1(I2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_variables_waves: Error allocating memory (sinh2kDvelnm1)'
 
       allocate(is_deepwave_3d(I2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_variables_waves: Error allocating memory (is_deepwave_3d)'
