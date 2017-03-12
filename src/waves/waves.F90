@@ -642,7 +642,7 @@
 ! !DESCRIPTION:
 !
 ! !LOCAL VARIABLES:
-   REALTYPE           :: Hrms,omegam1,uorb
+   REALTYPE           :: kD,Hrms,omegam1,uorb
    logical,save       :: first=.true.
    REALTYPE,save      :: avmmolm1
    REALTYPE,parameter :: sqrthalf=sqrt(_HALF_)
@@ -659,11 +659,13 @@
       first = .false.
    end if
 
-   if (waveT .gt. _ZERO_) then
+   kD = waveK * depth
+
+   if (waveT.gt._ZERO_ .and. kD.lt.kD_deepthresh) then
       Hrms = sqrthalf * waveH
       omegam1 = oneovertwopi * waveT
 !     wave orbital velocity amplitude at bottom (peak orbital velocity, ubot in SWAN)
-      uorb = _HALF_ * Hrms / ( omegam1*sinh(waveK*depth) )
+      uorb = _HALF_ * Hrms / ( omegam1*sinh(kD) )
 
 !     KK-TODO: For combined wave-current flow, the decision on
 !              turbulent or laminar flow depends on Rew AND Rec.
