@@ -43,8 +43,10 @@
    write(debug,*) 'radiation_stress_3d() # ',Ncall
 #endif
 
-   where (az .gt. 0)
+   where (az.gt.0 .and. .not.is_deepwave_3d)
       sinhkDvelnm2 = (_ONE_ / sinh(kDveln))**2
+   elsewhere
+      sinhkDvelnm2 = _ZERO_
    end where
 
    sinhkhab2(:,:,0) = _ZERO_
