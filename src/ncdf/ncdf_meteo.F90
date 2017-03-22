@@ -435,9 +435,10 @@
          call write_time_string(j2,s2,tbuf)
          LEVEL4 'Datafile ends  :   ',tbuf
 
-         if (first) then
-            if (in_interval(j1,s1,julianday,secondsofday,j2,s2)) exit
-         else
+         if (in_interval(j1,s1,julianday,secondsofday,j2,s2)) exit
+
+         if (.not. first) then
+            LEVEL4 'WARNING: possible time gap - check start of Datafile!'
             if ( time_diff(julianday,secondsofday,junit,sunit) .le. met_times(textr) ) exit
 !           KK-TODO: Or should we allow to cycle?
             FATAL 'Datafile does not contain new records'
