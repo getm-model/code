@@ -254,6 +254,9 @@
 #ifdef NO_SLR
    LEVEL1 'NO_SLR'
 #endif
+#ifdef _SLR_V26_
+   LEVEL1 '_SLR_V26_'
+#endif
 #ifdef CONSTANT_VISCOSITY
    LEVEL1 'CONSTANT_VISCOSITY'
 #endif
