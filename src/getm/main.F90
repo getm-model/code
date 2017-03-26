@@ -257,6 +257,9 @@
 #ifdef NO_SLR
    LEVEL1 'NO_SLR'
 #endif
+#ifdef _NEW_DAF_
+   LEVEL1 '_NEW_DAF_'
+endif
 #ifdef CONSTANT_VISCOSITY
    LEVEL1 'CONSTANT_VISCOSITY'
 #endif
