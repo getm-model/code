@@ -254,6 +254,9 @@
 #ifdef NO_SLR
    LEVEL1 'NO_SLR'
 #endif
+#ifdef _SLR_V26_
+   LEVEL1 '_SLR_V26_'
+#endif
 #ifdef CONSTANT_VISCOSITY
    LEVEL1 'CONSTANT_VISCOSITY'
 #endif
@@ -265,6 +268,9 @@
 #endif
 #ifdef NEW_SS
    LEVEL1 'NEW_SS'
+#endif
+#ifdef NEW_CORI
+   LEVEL1 'NEW_CORI'
 #endif
 #ifdef NONNEGSALT
    LEVEL1 'NONNEGSALT'
