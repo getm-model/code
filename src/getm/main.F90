@@ -266,6 +266,9 @@
 #ifdef NEW_SS
    LEVEL1 'NEW_SS'
 #endif
+#ifdef NEW_CORI
+   LEVEL1 'NEW_CORI'
+#endif
 #ifdef NONNEGSALT
    LEVEL1 'NONNEGSALT'
 #endif
