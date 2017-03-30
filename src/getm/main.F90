@@ -257,6 +257,9 @@
 #ifdef _SLR_V26_
    LEVEL1 '_SLR_V26_'
 #endif
+#ifdef _MIRROR_BDY_EXTRA_
+   LEVEL1 '_MIRROR_BDY_EXTRA_'
+#endif
 #ifdef CONSTANT_VISCOSITY
    LEVEL1 'CONSTANT_VISCOSITY'
 #endif
