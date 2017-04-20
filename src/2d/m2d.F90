@@ -397,6 +397,7 @@
 
    LEVEL1 'hotstart_2d'
 
+!  KK-TODO: velocity update *after* reset of U and V ?!
    call depth_update(zo,z,D,Dvel,DU,DV)
    call velocity_update(dtm,z,zo,Dvel,U,DU,V,DV,velx=velx,vely=vely)
 
@@ -438,6 +439,12 @@
          call update_2d_halo(Vint,Vint,av,imin,jmin,imax,jmax,V_TAG)
          call wait_halo(V_TAG)
       end if
+
+!  This is only needed for proper flexible output
+   where (az .eq. 0)
+      z  = -9999.0d0
+      zo = -9999.0d0
+   end where
 
    return
    end subroutine hotstart_2d
