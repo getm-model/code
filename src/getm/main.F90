@@ -286,6 +286,9 @@
 #ifdef MIN_VEL_DEPTH
    LEVEL1 'MIN_VEL_DEPTH'
 #endif
+#ifdef _NEW_DAF_
+   LEVEL1 '_NEW_DAF_'
+#endif
 #ifdef NEW_SS
    LEVEL1 'NEW_SS'
 #endif
