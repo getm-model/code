@@ -24,6 +24,7 @@
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,H,HU,HV,min_depth,crit_depth
    use domain, only: az,au,av,dry_z,dry_u,dry_v
+   use halo_zones, only: U_TAG,V_TAG
    use getm_timers,  only: tic, toc, TIM_DPTHUPDATE
 !$ use omp_lib
    IMPLICIT NONE
@@ -132,6 +133,11 @@
    end if
 
 !$OMP END PARALLEL
+
+#ifdef _MIRROR_BDY_EXTRA_
+   call mirror_bdy_2d(DU,U_TAG)
+   call mirror_bdy_2d(DV,V_TAG)
+#endif
 
 #ifdef SLICE_MODEL
    do i=imin,imax
