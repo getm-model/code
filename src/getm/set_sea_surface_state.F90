@@ -84,11 +84,16 @@
    end if
 
 !  dirty approximation for open bdy cells
+!  KK-TODO: Replace extra handling of open bdy cells
+!           by valid setting of ssu,ssv(az=2)!
+!           Calculation of velx,vely(az=2) seems to require ww(az=2) and
+!           _MIRROR_BDY_EXTRA_. But continuity is illposed with mirrored
+!           transports!!!
    do n = 1,NWB
       i = wi(n)
       start = max(jmin-HALO+1,wfj(n))
       do j = start,wlj(n)
-         ssu(i,j) = _HALF_*( p_U(i-1,j  ) + p_U(i,j) )/p_Dvel(i,j)
+         ssu(i,j) = p_U(i,j)/p_Dvel(i,j)
          ssv(i,j) = _HALF_*( p_V(i  ,j-1) + p_V(i,j) )/p_Dvel(i,j)
       end do
    end do
@@ -97,14 +102,14 @@
       start = max(imin-HALO+1,nfi(n))
       do i = start,nli(n)
          ssu(i,j) = _HALF_*( p_U(i-1,j  ) + p_U(i,j) )/p_Dvel(i,j)
-         ssv(i,j) = _HALF_*( p_V(i  ,j-1) + p_V(i,j) )/p_Dvel(i,j)
+         ssv(i,j) = p_V(i,j-1)/p_Dvel(i,j)
       end do
    end do
    do n = 1,NEB
       i = ei(n)
       start = max(jmin-HALO+1,efj(n))
       do j = start,elj(n)
-         ssu(i,j) = _HALF_*( p_U(i-1,j  ) + p_U(i,j) )/p_Dvel(i,j)
+         ssu(i,j) = p_U(i-1,j)/p_Dvel(i,j)
          ssv(i,j) = _HALF_*( p_V(i  ,j-1) + p_V(i,j) )/p_Dvel(i,j)
       end do
    end do
@@ -113,7 +118,7 @@
       start = max(imin-HALO+1,sfi(n))
       do i = start,sli(n)
          ssu(i,j) = _HALF_*( p_U(i-1,j  ) + p_U(i,j) )/p_Dvel(i,j)
-         ssv(i,j) = _HALF_*( p_V(i  ,j-1) + p_V(i,j) )/p_Dvel(i,j)
+         ssv(i,j) = p_V(i,j)/p_Dvel(i,j)
       end do
    end do
 
