@@ -12,6 +12,7 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax
+   use domain, only: az
 
    IMPLICIT NONE
 !
@@ -58,6 +59,8 @@
 !
 ! !INPUT PARAMETERS:
    integer,intent(in) :: runtype
+! !LOCAL VARIABLES:
+   integer :: i,j
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -73,7 +76,11 @@
    if (les_mode.eq.LES_MOMENTUM .or. les_mode.eq.LES_BOTH) then
       allocate(AmC_2d(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (AmC_2d)'
-      AmC_2d  = _ZERO_
+      where(az .gt. 0)
+         AmC_2d = _ZERO_
+      elsewhere
+         AmC_2d = -9999.0d0
+      end where
 
       allocate(AmX_2d(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_2d: Error allocating memory (AmX_2d)'
@@ -84,7 +91,10 @@
       if (les_mode.eq.LES_MOMENTUM .or. les_mode.eq.LES_BOTH) then
          allocate(AmC_3d(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'init_2d: Error allocating memory (AmC_3d)'
-         AmC_3d  = _ZERO_
+         AmC_3d  = -9999.0d0
+         forall(i=imin-HALO:imax+HALO, j=jmin-HALO:jmax+HALO, az(i,j).ne.0)
+            AmC_3d(i,j,1:kmax) = _ZERO_
+         end forall
 
          allocate(AmX_3d(I3DFIELD),stat=rc)
          if (rc /= 0) stop 'init_2d: Error allocating memory (AmX_3d)'
