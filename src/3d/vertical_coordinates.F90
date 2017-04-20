@@ -16,6 +16,7 @@
    use domain, only: imin,imax,jmin,jmax,kmax
    use domain, only: au,av
    use domain, only: H,vert_cord,maxdepth
+   use halo_zones, only: U_TAG,V_TAG
    use variables_3d, only: ho,hn,huo,hun,hvo,hvn,hvel
    use variables_3d, only: zwn,zcn
    use variables_3d, only: Dun,Dvn
@@ -157,6 +158,13 @@ stop
    call hcheck(hun,Dun,au)
    call hcheck(hvn,Dvn,av)
    end if
+
+#ifdef _MIRROR_BDY_EXTRA_
+!  Note (KK): required for calculation of SS
+!             with non-zero velocity behind open bdy
+   call mirror_bdy_3d(hun,U_TAG)
+   call mirror_bdy_3d(hvn,V_TAG)
+#endif
 
 #ifdef SLICE_MODEL
    do i=imin,imax
