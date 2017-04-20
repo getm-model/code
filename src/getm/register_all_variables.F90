@@ -263,6 +263,8 @@
 !
 ! !USES:
    use variables_2d
+   use variables_les
+   use m2d, only: Am_method,AM_LES
    IMPLICIT NONE
 !
 ! !REVISION HISTORY:
@@ -323,6 +325,10 @@
    call fm%register('velx', 'm/s', 'velocity in global x-direction', standard_name='', data2d=velx(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
    call fm%register('vely', 'm/s', 'velocity in global y-direction', standard_name='', data2d=vely(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
 
+   if (Am_method .eq. AM_LES) then
+      call fm%register('AmC_2d', 'm2/s', 'hor eddy viscosity', standard_name='', data2d=AmC_2d(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
+   end if
+
    if (do_numerical_analyses_2d) then
       call fm%register('numdis_2d', 'W/kg', 'numerical dissipation', standard_name='', data2d=numdis_2d(_2D_W_), category='2d', output_level=output_level_debug)
       call fm%register('phydis_2d', 'W/kg', 'physical dissipation' , standard_name='', data2d=phydis_2d(_2D_W_), category='2d', output_level=output_level_debug)
@@ -345,6 +351,8 @@
 !
 ! !USES:
    use variables_3d
+   use variables_les
+   use m2d, only: Am_method,AM_LES
    use m3d, only: update_temp,update_salt,nonhyd_method
    IMPLICIT NONE
 !
@@ -471,6 +479,10 @@
       if (nonhyd_method .ne. 0) then
          call fm%register('minus_bnh', 'm/s2', 'neg. nh buoyancy correction', standard_name='', dimensions=(/id_dim_z/), data3d=minus_bnh(_3D_W_), category='3d', output_level=output_level_debug)
       end if
+   end if
+
+   if (Am_method .eq. AM_LES) then
+      call fm%register('AmC_3d', 'm2/s', 'hor eddy viscosity', standard_name='', dimensions=(/id_dim_z/), data3d=AmC_3d(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
    end if
 
 !  category - turbulence
