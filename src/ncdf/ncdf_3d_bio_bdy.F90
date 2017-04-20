@@ -41,6 +41,7 @@
    integer                             :: time_dim=-1,time_len,time_pos
    logical                             :: climatology=.false.
    logical                             :: from_3d_fields
+   logical                             :: bdy3d_bio=.false.
    REALTYPE                            :: offset
    REAL_4B, allocatable                :: bdy_times(:),wrk(:)
    REAL_4B,  allocatable, dimension(:) :: zlev
@@ -188,6 +189,7 @@
          have_bio_bdy_values(n) = -1
          LEVEL4 trim(varname),': no'
       else
+         bdy3d_bio = .true.
          have_bio_bdy_values(n) = 1
          LEVEL4 trim(varname),': yes'
          bio_ids(n) = id
@@ -223,6 +225,8 @@
 
       end if
    end do
+
+   if (.not. bdy3d_bio) return
 
 !  made to work with the Bodden simulations
 #if 0
@@ -620,7 +624,7 @@
 #ifdef DEBUG
    write(debug,*) 'do_3d_bio_bdy_ncdf (NetCDF)'
 #endif
-   if (ncid .eq. -1) return
+   if (.not. bdy3d_bio) return
 
    if ( climatology ) then
       if (time_len .eq. 12) then
