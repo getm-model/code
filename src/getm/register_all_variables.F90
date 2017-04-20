@@ -489,10 +489,11 @@
       if (nonhyd_method .ne. 0) then
          call fm%register('minus_bnh', 'm/s2', 'neg. nh buoyancy correction', standard_name='', dimensions=(/id_dim_z/), data3d=minus_bnh(_3D_W_), category='3d', output_level=output_level_debug)
       end if
-   end if
 
-   if (Am_method .eq. AM_LES) then
-      call fm%register('AmC_3d', 'm2/s', 'hor eddy viscosity', standard_name='', dimensions=(/id_dim_z/), data3d=AmC_3d(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
+      if (Am_method .eq. AM_LES) then
+         call fm%register('AmC_3d', 'm2/s', 'hor eddy viscosity', standard_name='', dimensions=(/id_dim_z/), data3d=AmC_3d(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
+      end if
+
    end if
 
 !  category - turbulence
