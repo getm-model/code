@@ -226,7 +226,10 @@
       end if
    end do
 
-   if (.not. bdy3d_bio) return
+   if (.not. bdy3d_bio) then
+      FATAL 'Provided boundary file does not contain matching bio data.'
+      stop 'init_3d_bio_bdy_ncdf'
+   end if
 
 !  made to work with the Bodden simulations
 #if 0
