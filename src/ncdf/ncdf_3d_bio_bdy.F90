@@ -227,7 +227,7 @@
    end do
 
    if (.not. bdy3d_bio) then
-      FATAL 'Provided boundary file does not contain matching bio data.'
+      FATAL 'Provide valid or no bio boundary data file!'
       stop 'init_3d_bio_bdy_ncdf'
    end if
 
