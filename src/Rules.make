@@ -219,6 +219,18 @@ ifeq ($(MPI),MPICH2)
 FC=mpif90
 endif
 
+ifeq ($(MPI),INTELMPI)
+ifeq ($(FORTRAN_COMPILER),IFORT)
+FC=mpiifort
+else
+ifeq ($(FORTRAN_COMPILER),GFORTRAN)
+FC=mpif90
+else
+FC=mpifc
+endif
+endif
+endif
+
 # SGI - MPI - works for Peter Holtermann on ALTIX 3700.
 ifeq ($(MPI),SGIMPI)
 EXTRA_LIBS      += -lmpi
