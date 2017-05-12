@@ -298,16 +298,16 @@
 
    if (calc_nvd) then
       p_nvd => nvd
-      do k=1,kmax
 #ifdef _POINTER_REMAP_
+      do k=1,kmax
          p2d => nvd(:,:,k) ; pa_nvd2d(k)%p2d(imin-HALO:,jmin-HALO:) => p2d
+      end do
+      nvd = _ZERO_
 #else
+      do k=1,kmax
          pa_nvd2d(k)%p2d => aa_nvd2d(k)%a2d
          aa_nvd2d(k)%a2d = _ZERO_
-#endif
       end do
-#ifdef _POINTER_REMAP_
-      nvd = _ZERO_
 #endif
    else
       p_nvd => null()
