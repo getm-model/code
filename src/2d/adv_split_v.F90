@@ -9,7 +9,7 @@
                           dxv,dyv,arcd1,         &
                           splitfac,scheme,AH,    &
                           mask_flux,mask_update, &
-                          nvd)
+                          ffluxv,nvd)
 !  Note (KK): Keep in sync with interface in advection.F90
 !
 ! !DESCRIPTION:
@@ -41,6 +41,7 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
+   REALTYPE,dimension(E2DFIELD),intent(inout)                   :: ffluxv
    REALTYPE,dimension(:,:),pointer,intent(inout)                :: nvd
 !
 ! !LOCAL VARIABLES:
@@ -106,7 +107,9 @@
       end do
    end do
 !$OMP END DO
-
+!$OMP WORKSHARE
+   ffluxv = ffluxv + vflux
+!$OMP END WORKSHARE
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO+2,jmax+HALO-2
       do i=imin-HALO,imax+HALO

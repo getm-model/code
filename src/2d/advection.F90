@@ -97,7 +97,7 @@
                              dxu,dyu,arcd1,         &
                              splitfac,scheme,AH,    &
                              mask_flux,mask_update, &
-                             nvd)
+                             ffluxu,nvd)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,intent(in)                           :: dt,splitfac,AH
@@ -108,6 +108,7 @@
          logical,dimension(:,:),pointer,intent(in)     :: mask_flux
          logical,dimension(E2DFIELD),intent(in)        :: mask_update
          REALTYPE,dimension(E2DFIELD),intent(inout)    :: fi,Di,adv
+         REALTYPE,dimension(E2DFIELD),intent(inout)    :: ffluxu
          REALTYPE,dimension(:,:),pointer,intent(inout) :: nvd
       end subroutine adv_split_u
 
@@ -115,7 +116,7 @@
                              dxv,dyv,arcd1,         &
                              splitfac,scheme,AH,    &
                              mask_flux,mask_update, &
-                             nvd)
+                             ffluxv,nvd)
          use domain, only: imin,imax,jmin,jmax
          IMPLICIT NONE
          REALTYPE,intent(in)                                          :: dt,splitfac,AH
@@ -126,6 +127,7 @@
          logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_flux
          logical,dimension(E2DFIELD),intent(in)                       :: mask_update
          REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
+         REALTYPE,dimension(E2DFIELD),intent(inout)                   :: ffluxv
          REALTYPE,dimension(:,:),pointer,intent(inout)                :: nvd
       end subroutine adv_split_v
 
@@ -344,7 +346,7 @@
 !
 ! !INTERFACE:
    subroutine do_advection(dt,f,U,V,DU,DV,Do,Dn,split,scheme,AH,tag, &
-                           Dires,advres,nvd)
+                           Dires,advres,ffluxu,ffluxv,nvd)
 !
 ! !DESCRIPTION:
 !
@@ -407,12 +409,15 @@
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),target,intent(out),optional :: Dires,advres
+   REALTYPE,dimension(E2DFIELD),target,intent(out),optional :: ffluxu,ffluxv
    REALTYPE,dimension(:,:),pointer,intent(out),optional     :: nvd
 !
 ! !LOCAL VARIABLES:
    type(t_adv_grid),pointer            :: adv_grid
    REALTYPE,dimension(E2DFIELD),target :: fi,Di,adv
+   REALTYPE,dimension(E2DFIELD),target :: t_ffluxu,t_ffluxv
    REALTYPE,dimension(:,:),pointer     :: p_Di,p_adv,p_nvd
+   REALTYPE,dimension(:,:),pointer     :: p_ffluxu,p_ffluxv
    integer                             :: j
 !
 !EOP
@@ -445,6 +450,20 @@
       p_nvd => null()
    end if
 
+   if (present(ffluxu)) then
+      p_ffluxu => ffluxu
+   else
+      p_ffluxu => t_ffluxu
+   end if
+   p_ffluxu = _ZERO_
+
+   if (present(ffluxv)) then
+      p_ffluxv => ffluxv
+   else
+      p_ffluxv => t_ffluxv
+   end if
+   p_ffluxv = _ZERO_
+
    if (present(Dires)) then
       p_Di => Dires
    else
@@ -476,13 +495,13 @@
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
                                    _ONE_,scheme,AH,                           &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate, &
-                                   p_nvd)
+                                   p_ffluxu,p_nvd)
 #ifndef SLICE_MODEL
                   call adv_split_v(dt,f,fi,p_Di,p_adv,V,DV,                   &
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
                                    _ONE_,scheme,AH,                           &
                                    adv_grid%mask_vflux,adv_grid%mask_vupdate, &
-                                   p_nvd)
+                                   p_ffluxv,p_nvd)
 #endif
 
                   f = fi
@@ -542,7 +561,7 @@
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
                                    _ONE_,scheme,AH,                           &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate, &
-                                   p_nvd)
+                                   p_ffluxu,p_nvd)
 #ifndef SLICE_MODEL
                   if (scheme.ne.UPSTREAM .and. tag.eq.V_TAG) then
 !                    we need to update f(imin:imax,jmax+HALO)
@@ -556,7 +575,7 @@
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
                                    _ONE_,scheme,AH,                           &
                                    adv_grid%mask_vflux,adv_grid%mask_vupdate, &
-                                   p_nvd)
+                                   p_ffluxv,p_nvd)
 #endif
 
                case((UPSTREAM_2DH),(J7),(FCT),(P2_2DH))
@@ -579,7 +598,7 @@
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
                                    _HALF_,scheme,AH,                          &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate, &
-                                   p_nvd)
+                                   p_ffluxu,p_nvd)
 #ifndef SLICE_MODEL
                   if (scheme.ne.UPSTREAM .and. tag.eq.V_TAG) then
 !                    we need to update f(imin:imax,jmax+HALO)
@@ -593,7 +612,7 @@
                                    adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
                                    _ONE_,scheme,AH,                           &
                                    adv_grid%mask_vflux,adv_grid%mask_vupdate, &
-                                   p_nvd)
+                                   p_ffluxv,p_nvd)
 #endif
 
 !                 we need to update f(imin-HALO:imin-1,jmin:jmax)
@@ -607,7 +626,7 @@
                                    adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
                                    _HALF_,scheme,AH,                          &
                                    adv_grid%mask_uflux,adv_grid%mask_uupdate, &
-                                   p_nvd)
+                                   p_ffluxu,p_nvd)
 
                case((UPSTREAM_2DH),(J7),(FCT),(P2_2DH))
 
