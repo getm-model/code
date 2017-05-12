@@ -108,7 +108,7 @@
          logical,dimension(:,:),pointer,intent(in)     :: mask_flux
          logical,dimension(E2DFIELD),intent(in)        :: mask_update
          REALTYPE,dimension(E2DFIELD),intent(inout)    :: fi,Di,adv
-         REALTYPE,dimension(E2DFIELD),intent(inout)    :: ffluxu
+         REALTYPE,dimension(:,:),pointer,intent(inout) :: ffluxu
          REALTYPE,dimension(:,:),pointer,intent(inout) :: nvd
       end subroutine adv_split_u
 
@@ -127,7 +127,7 @@
          logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_flux
          logical,dimension(E2DFIELD),intent(in)                       :: mask_update
          REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
-         REALTYPE,dimension(E2DFIELD),intent(inout)                   :: ffluxv
+         REALTYPE,dimension(:,:),pointer,intent(inout)                :: ffluxv
          REALTYPE,dimension(:,:),pointer,intent(inout)                :: nvd
       end subroutine adv_split_v
 
@@ -409,13 +409,12 @@
 !
 ! !OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),target,intent(out),optional :: Dires,advres
-   REALTYPE,dimension(E2DFIELD),target,intent(out),optional :: ffluxu,ffluxv
+   REALTYPE,dimension(:,:),pointer,intent(out),optional     :: ffluxu,ffluxv
    REALTYPE,dimension(:,:),pointer,intent(out),optional     :: nvd
 !
 ! !LOCAL VARIABLES:
    type(t_adv_grid),pointer            :: adv_grid
    REALTYPE,dimension(E2DFIELD),target :: fi,Di,adv
-   REALTYPE,dimension(E2DFIELD),target :: t_ffluxu,t_ffluxv
    REALTYPE,dimension(:,:),pointer     :: p_Di,p_adv,p_nvd
    REALTYPE,dimension(:,:),pointer     :: p_ffluxu,p_ffluxv
    integer                             :: j
@@ -450,19 +449,21 @@
       p_nvd => null()
    end if
 
+   p_ffluxu => null()
    if (present(ffluxu)) then
-      p_ffluxu => ffluxu
-   else
-      p_ffluxu => t_ffluxu
+      if (associated(ffluxu)) then
+         p_ffluxu => ffluxu
+         ffluxu = _ZERO_
+      end if
    end if
-   p_ffluxu = _ZERO_
 
+   p_ffluxv => null()
    if (present(ffluxv)) then
-      p_ffluxv => ffluxv
-   else
-      p_ffluxv => t_ffluxv
+      if (associated(ffluxv)) then
+         p_ffluxv => ffluxv
+         ffluxv = _ZERO_
+      end if
    end if
-   p_ffluxv = _ZERO_
 
    if (present(Dires)) then
       p_Di => Dires

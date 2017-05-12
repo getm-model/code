@@ -175,7 +175,7 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout)    :: fi,Di,adv
-   REALTYPE,dimension(E2DFIELD),intent(inout)    :: ffluxu
+   REALTYPE,dimension(:,:),pointer,intent(inout) :: ffluxu
    REALTYPE,dimension(:,:),pointer,intent(inout) :: nvd
 !
 ! !LOCAL VARIABLES:
@@ -250,7 +250,7 @@
 #endif
 !$OMP END DO
 !$OMP WORKSHARE
-   ffluxu = ffluxu + uflux
+   if (associated(ffluxu)) ffluxu = ffluxu + uflux
 !$OMP END WORKSHARE
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL

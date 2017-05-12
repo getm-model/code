@@ -57,11 +57,11 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(I3DFIELD),target,intent(inout) :: fi,hi,adv
-   REALTYPE,dimension(I3DFIELD),target,intent(inout) :: ffluxw
+   REALTYPE,dimension(:,:,:),pointer,intent(inout)   :: ffluxw
    REALTYPE,dimension(:,:,:),pointer,intent(inout)   :: nvd
 !
 ! !LOCAL VARIABLES:
-   logical            :: calc_nvd
+   logical            :: calc_ffluxw,calc_nvd
    integer            :: i,j,k,kshift,it,iters,iters_new,rc
    REALTYPE           :: cfl,itersm1,dti,dtik,fio,hio,advn,adv2n,fuu,fu,fd,splitfack
    REALTYPE,dimension(:),allocatable        :: wflux,wflux2
@@ -90,7 +90,8 @@
       kshift = 0
    end if
 
-   calc_nvd = associated(nvd)
+   calc_ffluxw = associated(ffluxw)
+   calc_nvd    = associated(nvd)
    dti = splitfac*dt
 
 #ifdef NO_BAROTROPIC
@@ -136,8 +137,10 @@
       allocate(cfls(0:kmax),stat=rc)    ! work array
       if (rc /= 0) stop 'adv_split_w: Error allocating memory (cfls)'
 
-      allocate(ffluxwaux(0:kmax),stat=rc)    ! work array
-      if (rc /= 0) stop 'adv_split_w: Error allocating memory (ffluxwaux)'
+      if (calc_ffluxw) then
+         allocate(ffluxwaux(0:kmax),stat=rc)    ! work array
+         if (rc /= 0) stop 'adv_split_w: Error allocating memory (ffluxwaux)'
+      end if
 
       if (calc_nvd) then
          allocate(wflux2(0:kmax),stat=rc)    ! work array
@@ -185,11 +188,11 @@
                do while (it .le. iters)
 
                   if (it .eq. 1) then
-                     fiaux     = fi    (i,j,:)
-                     hiaux     = hi    (i,j,:)
-                     advaux    = adv   (i,j,:)
-                     ffluxwaux = ffluxw(i,j,:)
-                     if (calc_nvd) nvdaux = nvd(i,j,:)
+                     fiaux  = fi (i,j,:)
+                     hiaux  = hi (i,j,:)
+                     advaux = adv(i,j,:)
+                     if (calc_ffluxw) ffluxwaux = ffluxw(i,j,:)
+                     if (calc_nvd)    nvdaux    = nvd   (i,j,:)
 #ifdef _POINTER_REMAP_
                      p1d => f(i,j,:) ; faux(0:) => p1d
 #else
@@ -262,17 +265,19 @@
 
 #ifdef _POINTER_REMAP_
                   if (it .eq. iters) then
-                     p1d => fi    (i,j,:) ; p_fiaux    (0:) => p1d
-                     p1d => hi    (i,j,:) ; p_hiaux    (0:) => p1d
-                     p1d => adv   (i,j,:) ; p_advaux   (0:) => p1d
-                     p1d => ffluxw(i,j,:) ; p_ffluxwaux(0:) => p1d
+                     p1d => fi (i,j,:) ; p_fiaux (0:) => p1d
+                     p1d => hi (i,j,:) ; p_hiaux (0:) => p1d
+                     p1d => adv(i,j,:) ; p_advaux(0:) => p1d
+                     if (calc_ffluxw) then
+                        p1d => ffluxw(i,j,:) ; p_ffluxwaux(0:) => p1d
+                     end if
                      if (calc_nvd) then
                         p1d => nvd(i,j,:) ; p_nvdaux(0:) => p1d
                      end if
                   end if
 #endif
 
-                  p_ffluxwaux = ffluxwaux + wflux
+                  if (calc_ffluxw) p_ffluxwaux = ffluxwaux + wflux
 
                   do k=1,kmax-kshift
 !                    Note (KK): in case of W_TAG do not advect at k=kmax
@@ -301,10 +306,8 @@
                fi    (i,j,1:kmax-kshift) = p_fiaux    (1:kmax-kshift)
                hi    (i,j,1:kmax-kshift) = p_hiaux    (1:kmax-kshift)
                adv   (i,j,1:kmax-kshift) = p_advaux   (1:kmax-kshift)
-               ffluxw(i,j,1:kmax-kshift) = p_ffluxwaux(1:kmax-kshift)
-               if (calc_nvd) then
-                  nvd(i,j,1:kmax-kshift) = p_nvdaux(1:kmax-kshift)
-               end if
+               if (calc_ffluxw) ffluxw(i,j,1:kmax-kshift) = p_ffluxwaux(1:kmax-kshift)
+               if (calc_nvd)    nvd   (i,j,1:kmax-kshift) = p_nvdaux   (1:kmax-kshift)
 #endif
 
             end if
@@ -339,8 +342,10 @@
       deallocate(cfls,stat=rc)
       if (rc /= 0) stop 'adv_split_w: Error deallocating memory (cfls)'
 
-      deallocate(ffluxwaux,stat=rc)
-      if (rc /= 0) stop 'adv_split_w: Error deallocating memory (ffluxwaux)'
+      if (calc_ffluxw) then
+         deallocate(ffluxwaux,stat=rc)
+         if (rc /= 0) stop 'adv_split_w: Error deallocating memory (ffluxwaux)'
+      end if
 
       if (calc_nvd) then
          deallocate(wflux2,stat=rc)

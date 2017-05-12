@@ -41,7 +41,7 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(inout)                   :: fi,Di,adv
-   REALTYPE,dimension(E2DFIELD),intent(inout)                   :: ffluxv
+   REALTYPE,dimension(:,:),pointer,intent(inout)                :: ffluxv
    REALTYPE,dimension(:,:),pointer,intent(inout)                :: nvd
 !
 ! !LOCAL VARIABLES:
@@ -108,7 +108,7 @@
    end do
 !$OMP END DO
 !$OMP WORKSHARE
-   ffluxv = ffluxv + vflux
+   if (associated(ffluxv)) ffluxv = ffluxv + vflux
 !$OMP END WORKSHARE
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO+2,jmax+HALO-2
