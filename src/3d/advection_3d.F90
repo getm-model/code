@@ -261,11 +261,8 @@
    logical                               :: calc_nvd
    REALTYPE,dimension(I3DFIELD),target   :: fi,hi,adv
 #ifndef _POINTER_REMAP_
-   type t_aa2d
-      REALTYPE,dimension(I2DFIELD) :: a2d
-   end type t_aa2d
-   type(t_aa2d),dimension(1:kmax),target :: aa_ffluxu2d,aa_ffluxv2d
-   type(t_aa2d),dimension(1:kmax),target :: aa_nvd2d
+   REALTYPE,dimension(I2DFIELD),target   :: ffluxu2d,ffluxv2d
+   REALTYPE,dimension(I2DFIELD),target   :: nvd2d
 #endif
    REALTYPE,dimension(:,:,:),pointer     :: p_hi,p_adv,p_ffluxw,p_nvd
    REALTYPE,dimension(:,:)  ,pointer     :: p2d
@@ -306,16 +303,15 @@
 
    if (calc_nvd) then
       p_nvd => nvd
-      do k=1,kmax
-#ifdef _POINTER_REMAP_
-         p2d => nvd(:,:,k) ; pa_nvd2d(k)%p2d(imin-HALO:,jmin-HALO:) => p2d
-#else
-         pa_nvd2d(k)%p2d => aa_nvd2d(k)%a2d
-         aa_nvd2d(k)%a2d = _ZERO_
-#endif
-      end do
-#ifdef _POINTER_REMAP_
       nvd = _ZERO_
+#ifdef _POINTER_REMAP_
+      do k=1,kmax
+         p2d => nvd(:,:,k) ; pa_nvd2d(k)%p2d(imin-HALO:,jmin-HALO:) => p2d
+      end do
+#else
+      do k=1,kmax
+         pa_nvd2d(k)%p2d => nvd2d
+      end do
 #endif
    else
       p_nvd => null()
@@ -339,8 +335,7 @@
       ffluxu = _ZERO_
 #else
       do k=1,kmax
-         pa_ffluxu2d(k)%p2d => aa_ffluxu2d(k)%a2d
-         aa_ffluxu2d(k)%a2d = _ZERO_
+         pa_ffluxu2d(k)%p2d => ffluxu2d
       end do
 #endif
    else
@@ -364,8 +359,7 @@
       ffluxv = _ZERO_
 #else
       do k=1,kmax
-         pa_ffluxv2d(k)%p2d => aa_ffluxv2d(k)%a2d
-         aa_ffluxv2d(k)%a2d = _ZERO_
+         pa_ffluxv2d(k)%p2d => ffluxv2d
       end do
 #endif
    else
@@ -406,6 +400,11 @@
          end if
       else if (vscheme .eq. NOADV) then
          do k=1,kmax
+#ifndef _POINTER_REMAP_
+            if (calc_nvd)    pa_nvd2d   (k)%p2d = _ZERO_
+            if (calc_ffluxu) pa_ffluxu2d(k)%p2d = _ZERO_
+            if (calc_ffluxv) pa_ffluxv2d(k)%p2d = _ZERO_
+#endif
             call do_advection(dt,f(:,:,k),uu(:,:,k),vv(:,:,k),         &
                               hu(:,:,k),hv(:,:,k),ho(:,:,k),hn(:,:,k), &
                               split,hscheme,AH,tag2d,                  &
@@ -413,7 +412,9 @@
                               ffluxu=pa_ffluxu2d(k)%p2d,ffluxv=pa_ffluxv2d(k)%p2d, &
                               nvd=pa_nvd2d(k)%p2d)
 #ifndef _POINTER_REMAP_
-            if (calc_nvd) nvd(:,:,k) = aa_nvd2d(k)%a2d
+            if (calc_nvd)    nvd   (:,:,k) = pa_nvd2d   (k)%p2d
+            if (calc_ffluxu) ffluxu(:,:,k) = pa_ffluxu2d(k)%p2d
+            if (calc_ffluxv) ffluxv(:,:,k) = pa_ffluxv2d(k)%p2d
 #endif
          end do
       else
@@ -429,6 +430,11 @@
                   case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(SPLMAX13),(CENTRAL))
 
                      do k=1,kmax
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd)    pa_nvd2d   (k)%p2d = _ZERO_
+                        if (calc_ffluxu) pa_ffluxu2d(k)%p2d = _ZERO_
+                        if (calc_ffluxv) pa_ffluxv2d(k)%p2d = _ZERO_
+#endif
                         call adv_split_u(dt,f(:,:,k),fi(:,:,k),p_hi(:,:,k),         &
                                          p_adv(:,:,k),uu(:,:,k),hu(:,:,k),          &
                                          adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
@@ -443,9 +449,10 @@
                                          adv_grid%mask_vflux,adv_grid%mask_vupdate, &
                                          pa_ffluxv2d(k)%p2d,pa_nvd2d(k)%p2d)
 #endif
-
 #ifndef _POINTER_REMAP_
-                        if (calc_nvd) nvd(:,:,k) = aa_nvd2d(k)%a2d
+                        if (calc_nvd)    nvd   (:,:,k) = pa_nvd2d   (k)%p2d
+                        if (calc_ffluxu) ffluxu(:,:,k) = pa_ffluxu2d(k)%p2d
+                        if (calc_ffluxv) ffluxv(:,:,k) = pa_ffluxv2d(k)%p2d
 #endif
                      end do
 
@@ -520,15 +527,21 @@
             case(FULLSPLIT)
 
                do k=1,kmax
+#ifndef _POINTER_REMAP_
+                  if (calc_nvd)    pa_nvd2d   (k)%p2d = _ZERO_
+                  if (calc_ffluxu) pa_ffluxu2d(k)%p2d = _ZERO_
+                  if (calc_ffluxv) pa_ffluxv2d(k)%p2d = _ZERO_
+#endif
                   call do_advection(dt,f(:,:,k),uu(:,:,k),vv(:,:,k),         &
                                     hu(:,:,k),hv(:,:,k),ho(:,:,k),hn(:,:,k), &
                                     FULLSPLIT,hscheme,AH,tag2d,              &
                                     Dires=p_hi(:,:,k),advres=p_adv(:,:,k),   &
                                     ffluxu=pa_ffluxu2d(k)%p2d,ffluxv=pa_ffluxv2d(k)%p2d, &
                                     nvd=pa_nvd2d(k)%p2d)
-
 #ifndef _POINTER_REMAP_
-                  if (calc_nvd) nvd(:,:,k) = aa_nvd2d(k)%a2d
+                  if (calc_nvd)    nvd   (:,:,k) = pa_nvd2d   (k)%p2d
+                  if (calc_ffluxu) ffluxu(:,:,k) = pa_ffluxu2d(k)%p2d
+                  if (calc_ffluxv) ffluxv(:,:,k) = pa_ffluxv2d(k)%p2d
 #endif
                end do
                if (kmax .gt. 1) then
@@ -543,12 +556,20 @@
                   case((UPSTREAM),(P2),(SUPERBEE),(MUSCL),(P2_PDM),(SPLMAX13))
 
                      do k=1,kmax
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd)    pa_nvd2d   (k)%p2d = _ZERO_
+                        if (calc_ffluxu) pa_ffluxu2d(k)%p2d = _ZERO_
+#endif
                         call adv_split_u(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
                                          p_adv(:,:,k),uu(:,:,k),hu(:,:,k),          &
                                          adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
                                          _HALF_,hscheme,AH,                         &
                                          adv_grid%mask_uflux,adv_grid%mask_uupdate, &
                                          pa_ffluxu2d(k)%p2d,pa_nvd2d(k)%p2d)
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd)    nvd   (:,:,k) = pa_nvd2d   (k)%p2d
+                        if (calc_ffluxu) ffluxu(:,:,k) = pa_ffluxu2d(k)%p2d
+#endif
                      end do
 #ifndef SLICE_MODEL
                      if (hscheme.ne.UPSTREAM .and. tag.eq.V_TAG) then
@@ -560,32 +581,26 @@
                      end if
 
                      do k=1,kmax
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd)    pa_nvd2d   (k)%p2d = nvd   (:,:,k)
+                        if (calc_ffluxv) pa_ffluxv2d(k)%p2d = ffluxv(:,:,k)
+#endif
                         call adv_split_v(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
                                          p_adv(:,:,k),vv(:,:,k),hv(:,:,k),          &
                                          adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
                                          _HALF_,hscheme,AH,                         &
                                          adv_grid%mask_vflux,adv_grid%mask_vupdate, &
                                          pa_ffluxv2d(k)%p2d,pa_nvd2d(k)%p2d)
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd)    nvd   (:,:,k) = pa_nvd2d   (k)%p2d
+                        if (calc_ffluxv) ffluxv(:,:,k) = pa_ffluxv2d(k)%p2d
+#endif
                      end do
 #endif
 
                      if (kmax .gt. 1) then
-#ifndef _POINTER_REMAP_
-                        if (calc_nvd) then
-                           do k=1,kmax
-                              nvd(:,:,k) = aa_nvd2d(k)%a2d
-                           end do
-                        end if
-#endif
                         call adv_split_w(dt,f,f,p_hi,p_adv,ww,_ONE_,vscheme,tag,adv_grid%az, &
                                          adv_ver_iterations,p_ffluxw,p_nvd)
-#ifndef _POINTER_REMAP_
-                        if (calc_nvd) then
-                           do k=1,kmax
-                              aa_nvd2d(k)%a2d = nvd(:,:,k)
-                           end do
-                        end if
-#endif
                      end if
 
 #ifndef SLICE_MODEL
@@ -597,12 +612,20 @@
                      call toc(TIM_ADV3DH)
 
                      do k=1,kmax
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd)    pa_nvd2d   (k)%p2d = nvd   (:,:,k)
+                        if (calc_ffluxv) pa_ffluxv2d(k)%p2d = ffluxv(:,:,k)
+#endif
                         call adv_split_v(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
                                          p_adv(:,:,k),vv(:,:,k),hv(:,:,k),          &
                                          adv_grid%dxv,adv_grid%dyv,adv_grid%arcd1,  &
                                          _HALF_,hscheme,AH,                         &
                                          adv_grid%mask_vflux,adv_grid%mask_vupdate, &
                                          pa_ffluxv2d(k)%p2d,pa_nvd2d(k)%p2d)
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd)    nvd   (:,:,k) = pa_nvd2d   (k)%p2d
+                        if (calc_ffluxv) ffluxv(:,:,k) = pa_ffluxv2d(k)%p2d
+#endif
                      end do
 #endif
 
@@ -614,6 +637,10 @@
                      call toc(TIM_ADV3DH)
 
                      do k=1,kmax
+#ifndef _POINTER_REMAP_
+                        if (calc_nvd)    pa_nvd2d   (k)%p2d = nvd   (:,:,k)
+                        if (calc_ffluxu) pa_ffluxu2d(k)%p2d = ffluxu(:,:,k)
+#endif
                         call adv_split_u(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
                                          p_adv(:,:,k),uu(:,:,k),hu(:,:,k),          &
                                          adv_grid%dxu,adv_grid%dyu,adv_grid%arcd1,  &
@@ -621,7 +648,8 @@
                                          adv_grid%mask_uflux,adv_grid%mask_uupdate, &
                                          pa_ffluxu2d(k)%p2d,pa_nvd2d(k)%p2d)
 #ifndef _POINTER_REMAP_
-                        if (calc_nvd) nvd(:,:,k) = aa_nvd2d(k)%a2d
+                        if (calc_nvd)    nvd   (:,:,k) = pa_nvd2d   (k)%p2d
+                        if (calc_ffluxu) ffluxu(:,:,k) = pa_ffluxu2d(k)%p2d
 #endif
                      end do
 
@@ -638,6 +666,11 @@
             case(HVSPLIT)
 
                do k=1,kmax
+#ifndef _POINTER_REMAP_
+                  if (calc_nvd)    pa_nvd2d   (k)%p2d = _ZERO_
+                  if (calc_ffluxu) pa_ffluxu2d(k)%p2d = _ZERO_
+                  if (calc_ffluxv) pa_ffluxv2d(k)%p2d = _ZERO_
+#endif
                   call do_advection(dt,f(:,:,k),uu(:,:,k),vv(:,:,k),         &
                                     hu(:,:,k),hv(:,:,k),ho(:,:,k),hn(:,:,k), &
                                     NOSPLIT,hscheme,AH,tag2d,                &
@@ -646,7 +679,9 @@
                                     nvd=pa_nvd2d(k)%p2d)
 
 #ifndef _POINTER_REMAP_
-                  if (calc_nvd) nvd(:,:,k) = aa_nvd2d(k)%a2d
+                  if (calc_nvd)    nvd   (:,:,k) = pa_nvd2d   (k)%p2d
+                  if (calc_ffluxu) ffluxu(:,:,k) = pa_ffluxu2d(k)%p2d
+                  if (calc_ffluxv) ffluxv(:,:,k) = pa_ffluxv2d(k)%p2d
 #endif
                end do
                if (kmax .gt. 1) then
@@ -661,13 +696,6 @@
          end select
 
       end if
-
-#ifndef _POINTER_REMAP_
-      do k=1,kmax
-         if (calc_ffluxu) ffluxu(:,:,k) = aa_ffluxu2d(k)%a2d
-         if (calc_ffluxv) ffluxv(:,:,k) = aa_ffluxv2d(k)%a2d
-      end do
-#endif
 
 #ifdef SLICE_MODEL
       j = jmax/2
