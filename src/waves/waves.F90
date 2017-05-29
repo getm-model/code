@@ -708,10 +708,13 @@
    REALTYPE,intent(in) :: tauc,tauw,rdragc,vel,depth,wbbl,z0
 !
 ! !DESCRIPTION:
-!  rough => total stress => includes form drag (Whitehouse, 2000, page 57)
+!  Soulsby (1997, page 92): DATA2 can be used for total z0 and grain size z0
+!  rough (total z0) => total stress
+!                   => includes form drag (Whitehouse, 2000, page 57)
 !  also valid for smooth flows:
-!  smooth => skin-friction => z0=avmmol/9/taue_vel
-!                          => tauc(cds), tauw(fws), wbbl(as) !!!
+!  smooth (grain size z0) => skin-friction
+!                         => z0=avmmol/9/taue_vel
+!                         => tauc(cds), tauw(fws), wbbl(as) !!!
 !
 ! !LOCAL VARIABLES:
    REALTYPE :: taue_vel,lnT1m1,lnT2,T3m1,A1dT3,A2dT3,sqrtcddT3,cddT32,taum
