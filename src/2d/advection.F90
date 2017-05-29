@@ -436,13 +436,12 @@
          stop 'do_advection: tag is invalid'
    end select
 
+   p_nvd => null()
    if (present(nvd)) then
-      p_nvd => nvd
       if (associated(nvd)) then
+         p_nvd => nvd
          nvd = _ZERO_
       end if
-   else
-      p_nvd => null()
    end if
 
    if (present(Dires)) then

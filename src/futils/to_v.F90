@@ -49,6 +49,8 @@
    j = jmax/2
 #endif
 
+!  KK-TODO: completely remove mask checks
+
    dtm1 = _ONE_/dt
 
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
@@ -67,15 +69,15 @@
             do i=imin-HALO,imax+HALO
                if (az(i,j) .eq. 1) then
                   vely(i,j) = _HALF_*( V(i,j-1) + V(i,j) )/Dvel(i,j)
-               else
-                  vely(i,j) = missing
+               !else
+               !   vely(i,j) = missing
                end if
             end do
 #ifndef SLICE_MODEL
          end do
 #endif
 !$OMP END DO
-         vely(:,jmin-HALO) = missing
+         !vely(:,jmin-HALO) = missing
 
       case (3)
 
@@ -100,16 +102,16 @@
                                  *ARCD1                           &
                               )                                   &
                               /Dvel(i,j)
-               else
-                  vely(i,j) = missing
+               !else
+               !   vely(i,j) = missing
                end if
             end do
 #ifndef SLICE_MODEL
          end do
 #endif
 !$OMP END DO
-         vely(imin-HALO,:) = missing
-         vely(:,jmin-HALO) = missing
+         !vely(imin-HALO,:) = missing
+         !vely(:,jmin-HALO) = missing
 
       case (4)
          stop 'to_v: grid_type=4 not implemented yet'
