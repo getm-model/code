@@ -10,8 +10,6 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use field_manager
-!   use register_all_variables, only: do_register_all_variables, fm
    use register_all_variables
 #ifdef _FLEXIBLE_OUTPUT_
    use output_manager_core, only:output_manager_host=>host, type_output_manager_host=>type_host
