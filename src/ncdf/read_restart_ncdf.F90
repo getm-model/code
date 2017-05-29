@@ -63,6 +63,7 @@
 ! !LOCAL VARIABLES:
    integer         :: il,ih,iloc,ilen,i,istart,istop
    integer         :: jl,jh,jloc,jlen,j,jstart,jstop
+   integer         :: n
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -433,13 +434,22 @@
          status = &
          nf90_get_var(ncid,fabm_pel_id,fabm_pel(istart:istop,jstart:jstop,0:kmax,:),start(1:3),edges(1:3))
          if (status .NE. NF90_NOERR) go to 10
-
-         start(3) = 1;  edges(3) = size(fabm_ben,3)
+         do n=lbound(fabm_pel,4),ubound(fabm_pel,4)
+            call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),   &
+                                az,imin,jmin,imax,jmax,kmax,H_TAG)
+            call wait_halo(H_TAG)
+         end do
 
          if (fabm_ben_id .gt. 0) then
+            start(3) = 1;  edges(3) = size(fabm_ben,3)
             status = &
             nf90_get_var(ncid,fabm_ben_id,fabm_ben(istart:istop,jstart:jstop,:),start(1:3),edges(1:3))
             if (status .NE. NF90_NOERR) go to 10
+            do n=lbound(fabm_ben,3),ubound(fabm_ben,3)
+               call update_2d_halo(fabm_ben(:,:,n),fabm_ben(:,:,n),    &
+                                   az,imin,jmin,imax,jmax,H_TAG)
+               call wait_halo(H_TAG)
+            end do
          end if
       end if
 #endif
