@@ -306,7 +306,9 @@
                      p1d => fi (i,j,:) ; p_fiaux (0:) => p1d
                      p1d => hi (i,j,:) ; p_hiaux (0:) => p1d
                      p1d => adv(i,j,:) ; p_advaux(0:) => p1d
-                     p1d => nvd(i,j,:) ; p_nvdaux(0:) => p1d
+                     if (calc_nvd) then
+                        p1d => nvd(i,j,:) ; p_nvdaux(0:) => p1d
+                     end if
                   end if
 #endif
 
