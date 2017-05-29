@@ -388,12 +388,13 @@
             V     = _ZERO_
             Vinto = _ZERO_
          end where
-!        This is probably not absolutely necessary:
-         where (az .eq. 0)
-            z  = -9999.
-            zo = -9999.
-         end where
       end if
+
+!     This is only needed for proper flexible output
+      where (az .eq. 0)
+         z  = -9999.0d0
+         zo = -9999.0d0
+      end where
 
       call depth_update()
 
