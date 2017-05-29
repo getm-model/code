@@ -10,8 +10,7 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use field_manager
-   use register_all_variables, only: do_register_all_variables, fm
+   use register_all_variables
 #ifdef _FLEXIBLE_OUTPUT_
    use output_manager_core, only:output_manager_host=>host, type_output_manager_host=>type_host
    use time, only: CalDat,JulDay
@@ -279,6 +278,18 @@
 
    call init_les(runtype)
 
+   call init_register_all_variables(runtype)
+
+#ifdef _FLEXIBLE_OUTPUT_
+   allocate(type_getm_host::output_manager_host)
+   if (myid .ge. 0) then
+      write(postfix,'(A,I4.4)') '.',myid
+      call output_manager_init(fm,title,trim(postfix))
+   else
+      call output_manager_init(fm,title)
+   end if
+#endif
+
 !   call init_output(runid,title,start,runtype,dryrun,myid)
    call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)
 
@@ -354,16 +365,6 @@
 #endif
 
    call do_register_all_variables(runtype)
-
-#ifdef _FLEXIBLE_OUTPUT_
-   allocate(type_getm_host::output_manager_host)
-   if (myid .ge. 0) then
-      write(postfix,'(A,I4.4)') '.',myid
-      call output_manager_init(fm,title,trim(postfix))
-   else
-      call output_manager_init(fm,title)
-   end if
-#endif
 
    call toc(TIM_INITIALIZE)
 
