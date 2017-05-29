@@ -17,6 +17,7 @@
    private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
+   public :: init_register_all_variables
    public :: do_register_all_variables
 !
 ! !PUBLIC DATA MEMBERS:
@@ -27,6 +28,15 @@
 !
 ! !PRIVATE DATA MEMBERS
    integer,parameter :: rk = kind(_ONE_)
+   character(len=16)         :: xname=''
+   character(len=16)         :: xlongname=''
+   character(len=16)         :: xunits=''
+   character(len=16)         :: yname=''
+   character(len=16)         :: ylongname=''
+   character(len=16)         :: yunits=''
+   character(len=16)         :: zname='sigma'
+   character(len=64)         :: zlongname='sigma'
+   character(len=16)         :: zunits='sigma'
 !
 !-----------------------------------------------------------------------
 
@@ -35,53 +45,10 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: register_all_variables() - register GETM variables.
+! !ROUTINE: init_register_all_variables() - register GETM variables.
 !
 ! !INTERFACE:
-   subroutine do_register_all_variables(runtype)
-!
-! !DESCRIPTION:
-!
-! !USES:
-   IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-   integer, intent(in)               :: runtype
-!
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Jorn Bruggeman
-!
-! !LOCAL VARIABLES:
-!EOP
-!-----------------------------------------------------------------------
-!BOC
-
-   LEVEL1 'register_all_variables()'
-   call register_domain_variables(runtype)
-   call register_meteo_variables()
-   call register_waves_variables(runtype)
-   call register_2d_variables()
-#ifndef NO_3D
-   call register_3d_variables(runtype)
-#endif
-#ifdef _FABM_
-   call register_fabm_variables()
-#endif
-#if 0
-   call register_diagnostic_variables()
-#endif
-
-   return
-   end subroutine do_register_all_variables
-!EOC
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: register_domain_variables() - register GETM variables.
-!
-! !INTERFACE:
-   subroutine register_domain_variables(runtype)
+   subroutine init_register_all_variables(runtype)
 !
 ! !DESCRIPTION:
 !
@@ -96,19 +63,10 @@
 !  Original author(s): Karsten Bolding & Jorn Bruggeman
 !
 ! !LOCAL VARIABLES:
-   character(len=16)         :: xname=''
-   character(len=16)         :: xlongname=''
-   character(len=16)         :: xunits=''
-   character(len=16)         :: yname=''
-   character(len=16)         :: ylongname=''
-   character(len=16)         :: yunits=''
-   character(len=16)         :: zname='sigma'
-   character(len=64)         :: zlongname='sigma'
-   character(len=16)         :: zunits='sigma'
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   LEVEL2 'register_domain_variables()'
+   LEVEL1 'init_register_all_variables()'
 
    select case (grid_type)
       case (1)
@@ -163,6 +121,79 @@
 
    call fm%register_dimension('time',id=id_dim_time)
    call fm%initialize(prepend_by_default=(/id_dim_lon,id_dim_lat/),append_by_default=(/id_dim_time/))
+
+   return
+   end subroutine init_register_all_variables
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: do_register_all_variables() - register GETM variables.
+!
+! !INTERFACE:
+   subroutine do_register_all_variables(runtype)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)               :: runtype
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !LOCAL VARIABLES:
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   LEVEL1 'do_register_all_variables()'
+   call register_domain_variables(runtype)
+   call register_meteo_variables()
+   call register_waves_variables(runtype)
+   call register_2d_variables()
+#ifndef NO_3D
+   call register_3d_variables(runtype)
+#endif
+#ifdef _FABM_
+   call register_fabm_variables()
+#endif
+#if 0
+   call register_diagnostic_variables()
+#endif
+
+   return
+   end subroutine do_register_all_variables
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: register_domain_variables() - register GETM variables.
+!
+! !INTERFACE:
+   subroutine register_domain_variables(runtype)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use domain
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)               :: runtype
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !LOCAL VARIABLES:
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   LEVEL2 'register_domain_variables()'
 
 !  register - domain
    call fm%register(trim(xname),trim(xunits),trim(xlongname),dimensions=(/id_dim_lon/),no_default_dimensions=.true.,data1d=xcord(_IRANGE_NO_HALO_),coordinate_dimension=id_dim_lon,output_level=output_level_debug)
