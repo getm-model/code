@@ -1416,6 +1416,9 @@
 !             (thus it matters whether a single- or multi-tile DistGrid
 !              was created). If gridEdgeWidth's are not set, they are set
 !             automatically based on gridAlign.
+!             For single staggered grid items, default specification for
+!             gridAlign and gridEdgesWidth's can be overwritten by
+!             staggerAlign and staggerEdgeWidth's.
 !  internal call to ESMF_GridCreateFrmDistGrid()
    getmGrid2D = ESMF_GridCreate(getmDistGrid2D,name=trim(name)//"Grid2D", &
                                 gridAlign=(/1,1/),                        &
