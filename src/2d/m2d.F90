@@ -401,6 +401,12 @@
          call wait_halo(V_TAG)
       end if
 
+!     This is only needed for proper flexible output
+      where (az .eq. 0)
+         z  = -9999.0d0
+         zo = -9999.0d0
+      end where
+
       call depth_update(zo,z,D,Dvel,DU,DV)
 
    end if
