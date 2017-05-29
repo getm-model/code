@@ -302,8 +302,8 @@
    end if
 
    if (calc_nvd) then
-      p_nvd => nvd
       nvd = _ZERO_
+      p_nvd => nvd
 #ifdef _POINTER_REMAP_
       do k=1,kmax
          p2d => nvd(:,:,k) ; pa_nvd2d(k)%p2d(imin-HALO:,jmin-HALO:) => p2d
