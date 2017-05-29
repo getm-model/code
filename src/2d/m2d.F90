@@ -396,7 +396,7 @@
 !  of a hotstart file.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j, ischange
+   integer                   :: i,j
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -415,40 +415,39 @@
 ! It is possible that a user changes the land mask and reads an "old" hotstart file.
 ! In this case the "old" velocities will need to be zeroed out.
 
-      ischange = 0
       do j=jmin,jmax
          do i=imin,imax
             if ( au(i,j).eq.0 .and. U(i,j).ne._ZERO_ .and. (az(i,j).eq.1 .or. az(i+1,j).eq.1) ) then
                LEVEL3 'hotstart_2d: Reset to mask(au), U=0 for i,j=',i,j
-               ischange = 1
-               U   (i,j) = _ZERO_
-               Uint(i,j) = _ZERO_
             end if
          end do
       end do
-      if (ischange.ne.0) then
-         call update_2d_halo(U   ,U   ,au,imin,jmin,imax,jmax,U_TAG)
-         call wait_halo(U_TAG)
-         call update_2d_halo(Uint,Uint,au,imin,jmin,imax,jmax,U_TAG)
-         call wait_halo(U_TAG)
-      end if
-      ischange = 0
+      where (au .eq. 0)
+         U    = _ZERO_
+         Uint = _ZERO_
+      end where
+      call mirror_bdy_2d(U   ,U_TAG)
+      call mirror_bdy_2d(Uint,U_TAG)
+
       do j=jmin,jmax
          do i=imin,imax
             if ( av(i,j).eq.0 .and. V(i,j).ne._ZERO_ .and. (az(i,j).eq.1 .or. az(i,j+1).eq.1) ) then
                LEVEL3 'hotstart_2d: Reset to mask(av), V=0 for i,j=',i,j
-               ischange = 1
-               V   (i,j) = _ZERO_
-               Vint(i,j) = _ZERO_
             end if
          end do
       end do
-      if (ischange.ne.0) then
-         call update_2d_halo(V   ,V   ,av,imin,jmin,imax,jmax,V_TAG)
-         call wait_halo(V_TAG)
-         call update_2d_halo(Vint,Vint,av,imin,jmin,imax,jmax,V_TAG)
-         call wait_halo(V_TAG)
-      end if
+      where (av .eq. 0)
+         V    = _ZERO_
+         Vint = _ZERO_
+      end where
+      call mirror_bdy_2d(V   ,V_TAG)
+      call mirror_bdy_2d(Vint,V_TAG)
+
+!     This is only needed for proper flexible output
+      where (az .eq. 0)
+         z  = -9999.0d0
+         zo = -9999.0d0
+      end where
 
    return
    end subroutine hotstart_2d
