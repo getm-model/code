@@ -342,7 +342,7 @@
 !  of a hotstart file.
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,ischange
+   integer                   :: i,j,rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -387,40 +387,41 @@
 
 ! Hotstart fix - see postinit_2d
 
-      ischange = 0
       do j=jmin,jmax
          do i=imin,imax
             if ( au(i,j).eq.0 .and. ANY(uu(i,j,1:kmax).ne._ZERO_) .and. (az(i,j).eq.1 .or. az(i+1,j).eq.1) ) then
                LEVEL3 'hotstart_3d: Reset to mask(au), uu=0 for i,j=',i,j
-               ischange = 1
-               uu  (i,j,:) = _ZERO_
-               Uadv(i,j)   = _ZERO_
             end if
          end do
       end do
-      if (ischange.ne.0) then
-         call update_3d_halo(uu,uu,au,imin,jmin,imax,jmax,kmax,U_TAG)
-         call wait_halo(U_TAG)
-         call update_2d_halo(Uadv,Uadv,au,imin,jmin,imax,jmax,U_TAG)
-         call wait_halo(U_TAG)
-      end if
-      ischange = 0
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if (au(i,j) .eq. 0) then
+               uu(i,j,:)  = _ZERO_
+               Uadv(i,j)  = _ZERO_
+            end if
+         end do
+      end do
+      call mirror_bdy_3d(uu  ,U_TAG)
+      call mirror_bdy_2d(Uadv,U_TAG)
+
       do j=jmin,jmax
          do i=imin,imax
             if ( av(i,j).eq.0 .and. ANY(vv(i,j,1:kmax).ne._ZERO_) .and. (az(i,j).eq.1 .or. az(i,j+1).eq.1) ) then
                LEVEL3 'hotstart_3d: Reset to mask(av), vv=0 for i,j=',i,j
-               ischange = 1
-               vv  (i,j,:) = _ZERO_
-               Vadv(i,j)   = _ZERO_
             end if
          end do
       end do
-      if (ischange.ne.0) then
-         call update_3d_halo(vv,vv,av,imin,jmin,imax,jmax,kmax,V_TAG)
-         call wait_halo(V_TAG)
-         call update_2d_halo(Vadv,Vadv,av,imin,jmin,imax,jmax,V_TAG)
-         call wait_halo(V_TAG)
-      end if
+      do j=jmin-HALO,jmax+HALO
+         do i=imin-HALO,imax+HALO
+            if (av(i,j) .eq. 0) then
+               vv(i,j,:)  = _ZERO_
+               Vadv(i,j)  = _ZERO_
+            end if
+         end do
+      end do
+      call mirror_bdy_3d(vv  ,V_TAG)
+      call mirror_bdy_2d(Vadv,V_TAG)
 
 !     These may not be necessary, but we clean up anyway just in case.
       do j=jmin-HALO,jmax+HALO
