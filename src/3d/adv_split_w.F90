@@ -303,9 +303,9 @@
                end do
 
 #ifndef _POINTER_REMAP_
-               fi    (i,j,1:kmax-kshift) = p_fiaux    (1:kmax-kshift)
-               hi    (i,j,1:kmax-kshift) = p_hiaux    (1:kmax-kshift)
-               adv   (i,j,1:kmax-kshift) = p_advaux   (1:kmax-kshift)
+               fi (i,j,1:kmax-kshift) = p_fiaux (1:kmax-kshift)
+               hi (i,j,1:kmax-kshift) = p_hiaux (1:kmax-kshift)
+               adv(i,j,1:kmax-kshift) = p_advaux(1:kmax-kshift)
                if (calc_ffluxw) ffluxw(i,j,1:kmax-kshift) = p_ffluxwaux(1:kmax-kshift)
                if (calc_nvd)    nvd   (i,j,1:kmax-kshift) = p_nvdaux   (1:kmax-kshift)
 #endif
