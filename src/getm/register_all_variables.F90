@@ -650,6 +650,12 @@
                           dimensions=(/id_dim_z/),                                           &
                           category='fabm'//model%state_variables(i)%target%owner%get_path(), &
                           output_level=output_level_debug)
+         call fm%register('phymix_'//trim(model%state_variables(i)%name),                    &
+                          '('//trim(model%state_variables(i)%units)//')**2/s',               &
+                          'physical mixing of '//trim(model%state_variables(i)%long_name),  &
+                          dimensions=(/id_dim_z/),                                           &
+                          category='fabm'//model%state_variables(i)%target%owner%get_path(), &
+                          output_level=output_level_debug)
       end do
    end if
 
@@ -720,6 +726,7 @@
       if (do_numerical_analyses_3d) then
          do i=1,size(model%state_variables)
             call fm%send_data('nummix_'//trim(model%state_variables(i)%name), nummix_fabm_pel(_3D_W_,i))
+            call fm%send_data('phymix_'//trim(model%state_variables(i)%name), phymix_fabm_pel(_3D_W_,i))
          end do
       end if
    end if
