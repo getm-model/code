@@ -119,6 +119,9 @@
 ! !PUBLIC DATA MEMBERS:
    REALTYPE                            :: dt,cnpar=0.9
    REALTYPE                            :: avmback=_ZERO_,avhback=_ZERO_
+   logical                             :: save_Sfluxu=.false.
+   logical                             :: save_Sfluxv=.false.
+   logical                             :: save_Sfluxw=.false.
    logical                             :: do_numerical_analyses_3d=.false.
    logical                             :: deformC_3d=.false.
    logical                             :: deformX_3d=.false.
@@ -137,6 +140,10 @@
    REALTYPE, dimension(:,:,:), pointer :: uuf=>NULL(),vvf=>NULL()
    REALTYPE, dimension(:,:,:), pointer :: uuEuler=>NULL(),vvEuler=>NULL()
    REALTYPE, dimension(:,:  ), pointer :: taubmax_3d=>NULL()
+
+   REALTYPE,dimension(:,:,:),pointer         :: Sfluxu=>null()
+   REALTYPE,dimension(:,:,:),pointer         :: Sfluxv=>null()
+   REALTYPE,dimension(:,:,:),pointer         :: Sfluxw=>null()
 
    REALTYPE,dimension(:,:,:),pointer         :: numdis_3d=>null()
    REALTYPE,dimension(:,:,:),pointer         :: phydis_3d=>null()
@@ -412,6 +419,22 @@
       if (rc /= 0) stop 'postinit_variables_3d: Error allocating memory (diffyy)'
       diffyy=_ZERO_
 #endif
+   end if
+
+   if (save_Sfluxu) then
+      allocate(Sfluxu(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (Sfluxu)'
+      Sfluxu = _ZERO_
+   end if
+   if (save_Sfluxv) then
+      allocate(Sfluxv(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (Sfluxv)'
+      Sfluxv = _ZERO_
+   end if
+   if (save_Sfluxw) then
+      allocate(Sfluxw(I3DFIELD),stat=rc)
+      if (rc /= 0) stop 'postinit_3d: Error allocating memory (Sfluxw)'
+      Sfluxw = _ZERO_
    end if
 
 !  must be in postinit because do_numerical_analyses is set in init_output

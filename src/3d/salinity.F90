@@ -20,6 +20,7 @@
 !KB   use get_field, only: get_3d_field
    use variables_2d, only: fwf_int
    use variables_3d, only: S,hn,kmin
+   use variables_3d, only: Sfluxu,Sfluxv,Sfluxw
    use meteo, only: metforcing,met_method,nudge_sss,sss,sss_const
    use meteo, only: METEO_CONST,METEO_FROMFILE,METEO_FROMEXT
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
@@ -399,7 +400,7 @@
 
    call do_advection_3d(dt,S,uu,vv,ww,hun,hvn,ho,hn,                           &
                         salt_adv_split,salt_adv_hor,salt_adv_ver,_ZERO_,H_TAG, &
-                        nvd=nummix_S)
+                        ffluxu=Sfluxu,ffluxv=Sfluxv,ffluxw=Sfluxw,nvd=nummix_S)
 
 #ifdef _NUMERICAL_ANALYSES_OLD_
    if (do_numerical_analyses_3d) then

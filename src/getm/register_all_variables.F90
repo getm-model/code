@@ -585,6 +585,12 @@
    end if
 #endif
 
+   if (update_salt) then
+      call fm%register('Sfluxu', 'g/kg*m2/s', 'salt flux in local x-direction', standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug, used=save_Sfluxu)
+      call fm%register('Sfluxv', 'g/kg*m2/s', 'salt flux in local y-direction', standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug, used=save_Sfluxv)
+      call fm%register('Sfluxw', 'g/kg*m2/s', 'vertical salt flux'            , standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug, used=save_Sfluxw)
+   end if
+
    if (do_numerical_analyses_3d) then
       call fm%register('numdis_3d', 'W/kg', 'numerical dissipation (3D)', standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug)
       call fm%register('phydis_3d', 'W/kg', 'physical dissipation (3D)' , standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug)
@@ -757,6 +763,10 @@
 
 !  category - 3d
 #ifndef NO_3D
+   if (associated(Sfluxu)) call fm%send_data('Sfluxu', Sfluxu(_3D_W_))
+   if (associated(Sfluxv)) call fm%send_data('Sfluxv', Sfluxv(_3D_W_))
+   if (associated(Sfluxw)) call fm%send_data('Sfluxw', Sfluxw(_3D_W_))
+
    if (do_numerical_analyses_3d) then
       call fm%send_data('numdis_3d', numdis_3d(_3D_W_))
       call fm%send_data('phydis_3d', phydis_3d(_3D_W_))
