@@ -305,6 +305,9 @@
 #ifdef _FABM_
    LEVEL1 '_FABM_'
 #endif
+#ifdef _POINTER_REMAP_
+   LEVEL1 '_POINTER_REMAP_'
+#endif
 #ifdef _NCDF_SAVE_DOUBLE_
    LEVEL1 '_NCDF_SAVE_DOUBLE_'
 #endif
