@@ -292,6 +292,8 @@
 !   call init_output(runid,title,start,runtype,dryrun,myid)
    call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)
 
+   call do_register_all_variables(runtype)
+
    close(NAMLST)
 
 #if 0
@@ -353,7 +355,7 @@
 
    call init_input(input_dir,MinN)
 
-   call do_register_all_variables(runtype)
+   call finalize_register_all_variables(runtype)
 
    call toc(TIM_INITIALIZE)
    ! The rest is timed with meteo and output.
