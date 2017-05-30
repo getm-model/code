@@ -19,6 +19,7 @@
 ! !PUBLIC MEMBER FUNCTIONS:
    public :: init_register_all_variables
    public :: do_register_all_variables
+   public :: finalize_register_all_variables
 !
 ! !PUBLIC DATA MEMBERS:
    type (type_field_manager), public, target :: fm
@@ -286,6 +287,42 @@
 !-----------------------------------------------------------------------
 !BOP
 !
+! !ROUTINE: register_waves_variables() - register waves variables.
+!
+! !INTERFACE:
+   subroutine register_waves_variables(runtype)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use variables_waves
+   use waves, only: waveforcing_method,NO_WAVES
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   integer, intent(in)               :: runtype
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!
+! !LOCAL VARIABLES:
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   if (waveforcing_method .eq. NO_WAVES) return
+   LEVEL2 'register_waves_variables()'
+
+   call fm%register('waveH', 'm', 'wave height', standard_name='', data2d=waveH(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
+   call fm%register('waveL', 'm', 'wave length', standard_name='', data2d=waveL(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
+   call fm%register('waveT', 's', 'wave period', standard_name='', data2d=waveT(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
+
+   return
+   end subroutine register_waves_variables
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
 ! !ROUTINE: register_2d_variables() - register GETM variables.
 !
 ! !INTERFACE:
@@ -366,8 +403,8 @@
    end if
 
    if (do_numerical_analyses_2d) then
-      call fm%register('numdis_2d', 'W/kg', 'numerical dissipation', standard_name='', data2d=numdis_2d(_2D_W_), category='2d', output_level=output_level_debug)
-      call fm%register('phydis_2d', 'W/kg', 'physical dissipation' , standard_name='', data2d=phydis_2d(_2D_W_), category='2d', output_level=output_level_debug)
+      call fm%register('numdis_2d', 'W/kg', 'numerical dissipation', standard_name='', category='2d', output_level=output_level_debug)
+      call fm%register('phydis_2d', 'W/kg', 'physical dissipation' , standard_name='', category='2d', output_level=output_level_debug)
    end if
 
    return
@@ -549,15 +586,15 @@
 #endif
 
    if (do_numerical_analyses_3d) then
-      call fm%register('numdis_3d', 'W/kg', 'numerical dissipation (3D)', standard_name='', dimensions=(/id_dim_z/), data3d=numdis_3d(_3D_W_), category='3d', output_level=output_level_debug)
-      call fm%register('phydis_3d', 'W/kg', 'physical dissipation (3D)' , standard_name='', dimensions=(/id_dim_z/), data3d=phydis_3d(_3D_W_), category='3d', output_level=output_level_debug)
+      call fm%register('numdis_3d', 'W/kg', 'numerical dissipation (3D)', standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug)
+      call fm%register('phydis_3d', 'W/kg', 'physical dissipation (3D)' , standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug)
       if (update_temp) then
-         call fm%register('nummix_temp', 'degC**2/s', 'numerical mixing of temperature', standard_name='', dimensions=(/id_dim_z/), data3d=nummix_T(_3D_W_), category='3d', output_level=output_level_debug)
-         call fm%register('phymix_temp', 'degC**2/s', 'physical mixing of temperature' , standard_name='', dimensions=(/id_dim_z/), data3d=phymix_T(_3D_W_), category='3d', output_level=output_level_debug)
+         call fm%register('nummix_temp', 'degC**2/s', 'numerical mixing of temperature', standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug)
+         call fm%register('phymix_temp', 'degC**2/s', 'physical mixing of temperature' , standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug)
       end if
       if (update_salt) then
-         call fm%register('nummix_salt', 'psu**2/s', 'numerical mixing of salinity', standard_name='', dimensions=(/id_dim_z/), data3d=nummix_S(_3D_W_), category='3d', output_level=output_level_debug)
-         call fm%register('phymix_salt', 'psu**2/s', 'physical mixing of salinity' , standard_name='', dimensions=(/id_dim_z/), data3d=phymix_S(_3D_W_), category='3d', output_level=output_level_debug)
+         call fm%register('nummix_salt', 'psu**2/s', 'numerical mixing of salinity', standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug)
+         call fm%register('phymix_salt', 'psu**2/s', 'physical mixing of salinity' , standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug)
       end if
    end if
 
@@ -661,7 +698,13 @@
          call fm%register('nummix_'//trim(model%state_variables(i)%name),                    &
                           '('//trim(model%state_variables(i)%units)//')**2/s',               &
                           'numerical mixing of '//trim(model%state_variables(i)%long_name),  &
-                          dimensions=(/id_dim_z/), data3d=nummix_fabm_pel(_3D_W_,i),         &
+                          dimensions=(/id_dim_z/),                                           &
+                          category='fabm'//model%state_variables(i)%target%owner%get_path(), &
+                          output_level=output_level_debug)
+         call fm%register('phymix_'//trim(model%state_variables(i)%name),                    &
+                          '('//trim(model%state_variables(i)%units)//')**2/s',               &
+                          'physical mixing of '//trim(model%state_variables(i)%long_name),  &
+                          dimensions=(/id_dim_z/),                                           &
                           category='fabm'//model%state_variables(i)%target%owner%get_path(), &
                           output_level=output_level_debug)
       end do
@@ -675,37 +718,73 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: register_waves_variables() - register waves variables.
+! !ROUTINE: finalize_register_all_variables() - send optional variables.
 !
 ! !INTERFACE:
-   subroutine register_waves_variables(runtype)
+   subroutine finalize_register_all_variables(runtype)
 !
 ! !DESCRIPTION:
 !
 ! !USES:
-   use variables_waves
-   use waves, only: waveforcing_method,NO_WAVES
+   use variables_2d
+#ifndef NO_3D
+   use variables_3d
+   use m3d, only: update_temp,update_salt
+#endif
+#ifdef _FABM_
+   use getm_fabm
+#endif
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)               :: runtype
 !
 ! !REVISION HISTORY:
-!  Original author(s): Knut Klingbeil
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
 !
 ! !LOCAL VARIABLES:
+   integer :: i
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-   if (waveforcing_method .eq. NO_WAVES) return
-   LEVEL2 'register_waves_variables()'
+   LEVEL1 'finalize_register_all_variables()'
 
-   call fm%register('waveH', 'm', 'wave height', standard_name='', data2d=waveH(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
-   call fm%register('waveL', 'm', 'wave length', standard_name='', data2d=waveL(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
-   call fm%register('waveT', 's', 'wave period', standard_name='', data2d=waveT(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
+!  category - 2d
+   if (do_numerical_analyses_2d) then
+      call fm%send_data('numdis_2d', numdis_2d(_2D_W_))
+      call fm%send_data('phydis_2d', phydis_2d(_2D_W_))
+   end if
+
+!  category - 3d
+#ifndef NO_3D
+   if (do_numerical_analyses_3d) then
+      call fm%send_data('numdis_3d', numdis_3d(_3D_W_))
+      call fm%send_data('phydis_3d', phydis_3d(_3D_W_))
+      if (update_temp) then
+         call fm%send_data('nummix_temp', nummix_T(_3D_W_))
+         call fm%send_data('phymix_temp', phymix_T(_3D_W_))
+      end if
+      if (update_salt) then
+         call fm%send_data('nummix_salt', nummix_S(_3D_W_))
+         call fm%send_data('phymix_salt', phymix_S(_3D_W_))
+      end if
+   end if
+#endif
+
+!  category - fabm
+#ifdef _FABM_
+   if (fabm_calc) then
+      if (do_numerical_analyses_3d) then
+         do i=1,size(model%state_variables)
+            call fm%send_data('nummix_'//trim(model%state_variables(i)%name), nummix_fabm_pel(_3D_W_,i))
+            call fm%send_data('phymix_'//trim(model%state_variables(i)%name), phymix_fabm_pel(_3D_W_,i))
+         end do
+      end if
+   end if
+#endif
 
    return
-   end subroutine register_waves_variables
+   end subroutine finalize_register_all_variables
 !EOC
 
 !-----------------------------------------------------------------------
