@@ -17,11 +17,16 @@ ifeq ($(ESMF_COMM),openmpi)
 ESMF_F90:=$(shell $(ESMF_F90COMPILER) --showme:command 2> /dev/null)
 export ESMF_MPI=OPENMPI
 else
+ifeq ($(ESMF_COMM),intelmpi)
+ESMF_F90:=$(shell $(ESMF_F90COMPILER) -show 2> /dev/null | cut -d' ' -f1)
+export ESMF_MPI=INTELMPI
+else
 ESMF_F90:=$(shell $(ESMF_F90COMPILER) -compile_info 2> /dev/null | cut -d' ' -f1)
 ifeq ($(ESMF_COMM),mpi)
 export ESMF_MPI=MPICH
 else
 export ESMF_MPI=MPICH2
+endif
 endif
 endif
 
