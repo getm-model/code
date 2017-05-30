@@ -582,8 +582,8 @@
 
                      do k=1,kmax
 #ifndef _POINTER_REMAP_
-                        if (calc_nvd)    pa_nvd2d   (k)%p2d = nvd   (:,:,k)
-                        if (calc_ffluxv) pa_ffluxv2d(k)%p2d = ffluxv(:,:,k)
+                        if (calc_nvd)    pa_nvd2d   (k)%p2d = nvd(:,:,k)
+                        if (calc_ffluxv) pa_ffluxv2d(k)%p2d = _ZERO_
 #endif
                         call adv_split_v(dt,f(:,:,k),f(:,:,k),p_hi(:,:,k),          &
                                          p_adv(:,:,k),vv(:,:,k),hv(:,:,k),          &
