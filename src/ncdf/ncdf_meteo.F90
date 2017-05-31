@@ -21,12 +21,12 @@
    use grid_interpol, only: to_rotated_lat_lon
    use meteo, only: meteo_file,on_grid,calc_met,constant_cd,hum_method
    use meteo, only: RELATIVE_HUM,WET_BULB,DEW_POINT,SPECIFIC_HUM
-   use meteo, only: airp,u10,v10,t2,hum,tcc
-   use meteo, only: fwf_method,evap,precip
-   use meteo, only: tausx,tausy,swr,shf
+   use meteo, only: airp=>airp_input,u10=>u10_input,v10=>v10_input,t2,hum,tcc=>tcc_input
+   use meteo, only: fwf_method,evap=>evap_input,precip=>precip_input
+   use meteo, only: tausx=>tausx_input,tausy=>tausy_input,swr=>swr_input,shf=>shf_input
    use meteo, only: new_meteo,t_1,t_2
    use meteo, only: wind_factor,evap_factor,precip_factor
-   use meteo, only: nudge_sst,sst,nudge_sss,sss
+   use meteo, only: nudge_sst,sst=>sst_input,nudge_sss,sss=>sss_input
    use exceptions
    IMPLICIT NONE
 !

@@ -73,6 +73,11 @@
    logical, public                     :: calc_relative_wind=.false.
    logical, public                     :: constant_cd=.false.
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
+   REALTYPE,public,dimension(:,:),pointer            :: airp_input,tausx_input,tausy_input
+   REALTYPE,public,dimension(:,:),pointer            :: u10_input,v10_input
+   REALTYPE,public,dimension(:,:),pointer            :: shf_input,swr_input=>null(),tcc_input=>null()
+   REALTYPE,public,dimension(:,:),pointer            :: evap_input,precip_input
+   REALTYPE,public,dimension(:,:),pointer            :: sst_input,sss_input
    REALTYPE,public,dimension(:,:),allocatable,target :: t2,hum
    REALTYPE,public,dimension(:,:),pointer            :: airp,tausx,tausy
    REALTYPE,public,dimension(:,:),pointer            :: u10,v10
@@ -181,48 +186,69 @@
    allocate(airp(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (airp)'
    airp = _ZERO_
+   airp_input => airp
+
    allocate(u10(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (u10)'
    u10 = _ZERO_
    u10r => u10
+   u10_input => u10
+
    allocate(v10(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (v10)'
    v10 = _ZERO_
    v10r => v10
+   v10_input => v10
+
    allocate(wind(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (wind)'
    wind = _ZERO_
+
    allocate(tausx(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx)'
    tausx = _ZERO_
+   tausx_input => tausx
+
    allocate(tausy(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy)'
    tausy = _ZERO_
+   tausy_input => tausy
+
    allocate(zenith_angle(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (zenith_angle)'
    zenith_angle = _ZERO_
+
    allocate(swr(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (swr)'
    swr = _ZERO_
+   swr_input => swr
+
    allocate(albedo(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (albedo)'
    albedo = _ZERO_
+
    allocate(shf(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (shf)'
    shf = _ZERO_
+   shf_input => shf
+
    allocate(evap(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (evap)'
    evap = _ZERO_
+   evap_input => evap
+
    allocate(precip(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (precip)'
    precip = _ZERO_
+   precip_input => precip
+
    allocate(ssu(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (ssu)'
    ssu = _ZERO_
+
    allocate(ssv(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (ssv)'
    ssv = _ZERO_
-
 
    read(NAMLST,meteo)
 
@@ -362,6 +388,7 @@
          allocate(tcc(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc)'
          tcc = _ZERO_
+         tcc_input => tcc
       end if
    end if
 
@@ -372,40 +399,50 @@
       if (rc /= 0) stop 'init_meteo: Error allocating memory (airp_new)'
       allocate(d_airp(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (d_airp)'
+      airp_input => d_airp
 
       allocate(tausx_new(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx_new)'
       allocate(d_tausx(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tausx)'
+      tausx_input => d_tausx
 
       allocate(tausy_new(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy_new)'
       allocate(d_tausy(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tausy)'
+      tausy_input => d_tausy
 
       allocate(shf_new(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (shf_new)'
       allocate(d_shf(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (d_shf)'
+      shf_input => d_shf
 
       if (calc_met) then
          allocate(u10_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (u10_new)'
          allocate(d_u10(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_u10)'
+         u10_input => d_u10
+
          allocate(v10_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (v10_new)'
          allocate(d_v10(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_v10)'
+         v10_input => d_v10
+
          allocate(tcc_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc_new)'
          allocate(d_tcc(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tcc)'
+         tcc_input => d_tcc
       else
          allocate(swr_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (swr_new)'
          allocate(d_swr(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_swr)'
+         swr_input => d_swr
       end if
 
       if (fwf_method .ge. 2) then
@@ -413,6 +450,7 @@
          if (rc /= 0) stop 'init_meteo: Error allocating memory (evap_new)'
          allocate(d_evap(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_evap)'
+         evap_input => d_evap
       end if
 
       if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
@@ -420,6 +458,7 @@
          if (rc /= 0) stop 'init_meteo: Error allocating memory (precip_new)'
          allocate(d_precip(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_precip)'
+         precip_input => d_precip
       end if
 
    end if
@@ -514,19 +553,23 @@
 
       if (first) then
          if (nudge_sst) then
+            sst_input => sst
             if (met_method .eq. METEO_FROMFILE) then
                allocate(sst_new(E2DFIELD),stat=rc)
                if (rc /= 0) stop 'do_meteo: Error allocating memory (sst_new)'
                allocate(d_sst(E2DFIELD),stat=rc)
                if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sst)'
+               sst_input => d_sst
             end if
          end if
          if (nudge_sss) then
+            sss_input => sss
             if (met_method .eq. METEO_FROMFILE) then
                allocate(sss_new(E2DFIELD),stat=rc)
                if (rc /= 0) stop 'do_meteo: Error allocating memory (sss_new)'
                allocate(d_sss(E2DFIELD),stat=rc)
                if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sss)'
+               sss_input => d_sss
             end if
          end if
       end if
@@ -583,18 +626,18 @@
 
                if(calc_met) then
 
-                  call update_2d_halo(u10,u10,az,imin,jmin,imax,jmax,H_TAG)
+                  call update_2d_halo(u10_input,u10_input,az,imin,jmin,imax,jmax,H_TAG)
                   call wait_halo(H_TAG)
-                  call update_2d_halo(v10,v10,az,imin,jmin,imax,jmax,H_TAG)
+                  call update_2d_halo(v10_input,v10_input,az,imin,jmin,imax,jmax,H_TAG)
                   call wait_halo(H_TAG)
 
                   if (calc_relative_wind) then
-                     u10r = u10 - ssu
-                     v10r = v10 - ssv
+                     u10r = u10_input - ssu
+                     v10r = v10_input - ssv
                   else
 !                    targets might have changed because of pointer swap
-                     u10r => u10
-                     v10r => v10
+                     u10r => u10_input
+                     v10r => v10_input
                   end if
 
                   if (present(sst_model) .and. .not.constant_cd) then
@@ -607,11 +650,11 @@
                         do i=imin,imax
                            if (az(i,j) .ge. 1) then
                               call exchange_coefficients( &
-                                     u10r(i,j),v10r(i,j),t2(i,j),airp(i,j), &
+                                     u10r(i,j),v10r(i,j),t2(i,j),airp_input(i,j), &
                                      sst_model(i,j),hum(i,j),hum_method)
                               call fluxes(latc(i,j),u10r(i,j),v10r(i,j),    &
-                                      t2(i,j),tcc(i,j),sst_model(i,j),precip(i,j), &
-                                      shf(i,j),tausx(i,j),tausy(i,j),evap(i,j))
+                                      t2(i,j),tcc_input(i,j),sst_model(i,j),precip_input(i,j), &
+                                      shf_input(i,j),tausx_input(i,j),tausy_input(i,j),evap_input(i,j))
                            end if
                         end do
 #ifndef SLICE_MODEL
@@ -626,8 +669,8 @@
                            if (az(i,j) .ge. 1) then
 ! BJB-TODO: Update constants to double.
                               w=sqrt(u10r(i,j)*u10r(i,j)+v10r(i,j)*v10r(i,j))
-                              tausx(i,j) = 1.25e-3*1.25*w*u10r(i,j)
-                              tausy(i,j) = 1.25e-3*1.25*w*v10r(i,j)
+                              tausx_input(i,j) = 1.25e-3*1.25*w*u10r(i,j)
+                              tausy_input(i,j) = 1.25e-3*1.25*w*v10r(i,j)
                            end if
                         end do
 #ifndef SLICE_MODEL
@@ -638,36 +681,36 @@
                end if
 
 
-               call update_2d_halo(airp,airp,az,imin,jmin,imax,jmax,H_TAG)
+               call update_2d_halo(airp_input,airp_input,az,imin,jmin,imax,jmax,H_TAG)
                call wait_halo(H_TAG)
-               call update_2d_halo(tausx,tausx,az,imin,jmin,imax,jmax,H_TAG)
+               call update_2d_halo(tausx_input,tausx_input,az,imin,jmin,imax,jmax,H_TAG)
                call wait_halo(H_TAG)
-               call update_2d_halo(tausy,tausy,az,imin,jmin,imax,jmax,H_TAG)
+               call update_2d_halo(tausy_input,tausy_input,az,imin,jmin,imax,jmax,H_TAG)
                call wait_halo(H_TAG)
 
                if (met_method .eq. METEO_FROMFILE) then
-               airp_old=>airp_new;airp_new=>airp;airp=>d_airp;d_airp=>airp_old
-               tausx_old=>tausx_new;tausx_new=>tausx;tausx=>d_tausx;d_tausx=>tausx_old
-               tausy_old=>tausy_new;tausy_new=>tausy;tausy=>d_tausy;d_tausy=>tausy_old
-               shf_old=>shf_new;shf_new=>shf;shf=>d_shf;d_shf=>shf_old
+               airp_old=>airp_new;airp_new=>d_airp;d_airp=>airp_old;airp_input=>airp_old
+               tausx_old=>tausx_new;tausx_new=>d_tausx;d_tausx=>tausx_old;tausx_input=>tausx_old
+               tausy_old=>tausy_new;tausy_new=>d_tausy;d_tausy=>tausy_old;tausy_input=>tausy_old
+               shf_old=>shf_new;shf_new=>d_shf;d_shf=>shf_old;shf_input=>shf_old
                if (calc_met) then
-                  tcc_old=>tcc_new;tcc_new=>tcc;tcc=>d_tcc;d_tcc=>tcc_old
-                  u10_old=>u10_new;u10_new=>u10;u10=>d_u10;d_u10=>u10_old
-                  v10_old=>v10_new;v10_new=>v10;v10=>d_v10;d_v10=>v10_old
+                  tcc_old=>tcc_new;tcc_new=>d_tcc;d_tcc=>tcc_old;tcc_input=>d_tcc
+                  u10_old=>u10_new;u10_new=>d_u10;d_u10=>u10_old;u10_input=>d_u10
+                  v10_old=>v10_new;v10_new=>d_v10;d_v10=>v10_old;v10_input=>d_v10
                else
-                  swr_old=>swr_new;swr_new=>swr;swr=>d_swr;d_swr=>swr_old
+                  swr_old=>swr_new;swr_new=>d_swr;d_swr=>swr_old;swr_input=>d_swr
                end if
                if (fwf_method .ge. 2) then
-                  evap_old=>evap_new;evap_new=>evap;evap=>d_evap;d_evap=>evap_old
+                  evap_old=>evap_new;evap_new=>d_evap;d_evap=>evap_old;evap_input=>d_evap
                end if
                if (fwf_method.eq.2 .or. fwf_method.eq.3) then
-                  precip_old=>precip_new;precip_new=>precip;precip=>d_precip;d_precip=>precip_old
+                  precip_old=>precip_new;precip_new=>d_precip;d_precip=>precip_old;precip_input=>d_precip
                end if
                if (nudge_sst) then
-                  sst_old=>sst_new;sst_new=>sst;sst=>d_sst;d_sst=>sst_old
+                  sst_old=>sst_new;sst_new=>d_sst;d_sst=>sst_old;sst_input=>d_sst
                end if
                if (nudge_sss) then
-                  sss_old=>sss_new;sss_new=>sss;sss=>d_sss;d_sss=>sss_old
+                  sss_old=>sss_new;sss_new=>d_sss;d_sss=>sss_old;sss_input=>d_sss
                end if
 
 
@@ -789,10 +832,6 @@
                      call wait_halo(H_TAG)
                      call update_2d_halo(v10r,v10r,az,imin,jmin,imax,jmax,H_TAG)
                      call wait_halo(H_TAG)
-                  else
-!                    targets might have changed because of pointer swap
-                     u10r => u10
-                     v10r => v10
                   end if
                   where (az.ne.0) wind = sqrt( u10r*u10r + v10r*v10r )
                !end if
