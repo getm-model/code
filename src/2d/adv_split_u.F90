@@ -250,7 +250,7 @@
 #endif
 !$OMP END DO
 !$OMP WORKSHARE
-   if (associated(ffluxu)) ffluxu = ffluxu + uflux
+   if (associated(ffluxu)) ffluxu = ffluxu + splitfac*uflux
 !$OMP END WORKSHARE
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL

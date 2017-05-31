@@ -277,7 +277,7 @@
                   end if
 #endif
 
-                  if (calc_ffluxw) p_ffluxwaux = ffluxwaux + wflux
+                  if (calc_ffluxw) p_ffluxwaux = ffluxwaux + splitfack*wflux
 
                   do k=1,kmax-kshift
 !                    Note (KK): in case of W_TAG do not advect at k=kmax

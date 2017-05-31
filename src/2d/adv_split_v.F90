@@ -108,7 +108,7 @@
    end do
 !$OMP END DO
 !$OMP WORKSHARE
-   if (associated(ffluxv)) ffluxv = ffluxv + vflux
+   if (associated(ffluxv)) ffluxv = ffluxv + splitfac*vflux
 !$OMP END WORKSHARE
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO+2,jmax+HALO-2
