@@ -188,6 +188,7 @@
    if (rc /= 0) stop 'init_meteo: Error allocating memory (airp)'
    airp = _ZERO_
    airp_input => airp
+   airp_new => airp
 
    allocate(u10(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (u10)'
@@ -242,6 +243,7 @@
    if (rc /= 0) stop 'init_meteo: Error allocating memory (precip)'
    precip = _ZERO_
    precip_input => precip
+   precip_new => precip
 
    allocate(ssu(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (ssu)'
@@ -398,6 +400,7 @@
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc)'
          tcc = _ZERO_
          tcc_input => tcc
+         tcc_new => tcc
       end if
    end if
 
