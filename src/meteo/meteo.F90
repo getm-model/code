@@ -657,7 +657,7 @@
 
                if (met_method .eq. METEO_FROMFILE) then
 
-               airp_old=>airp_new;airp_new=>d_airp;d_airp=>airp_old;airp_input=>airp_old
+               airp_old=>airp_new;airp_new=>d_airp;d_airp=>airp_old;airp_input=>d_airp
                if (calc_met) then
                   tcc_old=>tcc_new;tcc_new=>d_tcc;d_tcc=>tcc_old;tcc_input=>d_tcc
                   u10_old=>u10_new;u10_new=>d_u10;d_u10=>u10_old;u10_input=>d_u10
