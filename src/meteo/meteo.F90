@@ -121,6 +121,7 @@
    REALTYPE                  :: swr_const= _ZERO_ ,shf_const= _ZERO_
    REALTYPE                  :: evap_const= _ZERO_ ,precip_const= _ZERO_
    REALTYPE, dimension(:,:), allocatable :: tausx_const,tausy_const
+   REALTYPE, dimension(:,:), pointer     :: u10r_new,v10r_new
    REALTYPE, dimension(:,:), pointer     :: airp_new,d_airp
    REALTYPE, dimension(:,:), pointer     :: u10_new,d_u10
    REALTYPE, dimension(:,:), pointer     :: v10_new,d_v10
@@ -368,9 +369,17 @@
       if (calc_met) then
 
          if (calc_relative_wind) then
+            allocate(u10r_new(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_meteo: Error allocating memory (u10r_new)'
+            u10r_new = _ZERO_
+
             allocate(u10r(E2DFIELD),stat=rc)
             if (rc /= 0) stop 'init_meteo: Error allocating memory (u10r)'
             u10r = _ZERO_
+
+            allocate(v10r_new(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_meteo: Error allocating memory (v10r_new)'
+            v10r_new = _ZERO_
 
             allocate(v10r(E2DFIELD),stat=rc)
             if (rc /= 0) stop 'init_meteo: Error allocating memory (v10r)'
@@ -624,84 +633,34 @@
 
             if (new_meteo) then
 
-               if(calc_met) then
+               call update_2d_halo(airp_input,airp_input,az,imin,jmin,imax,jmax,H_TAG)
+               call wait_halo(H_TAG)
 
+               if (calc_met) then
                   call update_2d_halo(u10_input,u10_input,az,imin,jmin,imax,jmax,H_TAG)
                   call wait_halo(H_TAG)
                   call update_2d_halo(v10_input,v10_input,az,imin,jmin,imax,jmax,H_TAG)
                   call wait_halo(H_TAG)
 
                   if (calc_relative_wind) then
-                     u10r = u10_input - ssu
-                     v10r = v10_input - ssv
+                     u10r_new = u10_input - ssu
+                     v10r_new = v10_input - ssv
                   else
 !                    targets might have changed because of pointer swap
-                     u10r => u10_input
-                     v10r => v10_input
+                     u10r_new => u10_input
+                     v10r_new => v10_input
                   end if
-
-                  if (present(sst_model) .and. .not.constant_cd) then
-! OMP-NOTE: This is an expensive loop, but we cannot thread it as long
-!    as exchange_coefficients() and fluxes() pass information through
-!    scalars in the meteo module. BJB 2009-09-30.
-#ifndef SLICE_MODEL
-                     do j=jmin,jmax
-#endif
-                        do i=imin,imax
-                           if (az(i,j) .ge. 1) then
-                              call exchange_coefficients( &
-                                     u10r(i,j),v10r(i,j),t2(i,j),airp_input(i,j), &
-                                     sst_model(i,j),hum(i,j),hum_method)
-                              call fluxes(latc(i,j),u10r(i,j),v10r(i,j),    &
-                                      t2(i,j),tcc_input(i,j),sst_model(i,j),precip_input(i,j), &
-                                      shf_input(i,j),tausx_input(i,j),tausy_input(i,j),evap_input(i,j))
-                           end if
-                        end do
-#ifndef SLICE_MODEL
-                     end do
-#endif
-                  else
-! OMP-NOTE: w needs to be a local (stack) variable to thread this loop.
-#ifndef SLICE_MODEL
-                     do j=jmin,jmax
-#endif
-                        do i=imin,imax
-                           if (az(i,j) .ge. 1) then
-! BJB-TODO: Update constants to double.
-                              w=sqrt(u10r(i,j)*u10r(i,j)+v10r(i,j)*v10r(i,j))
-                              tausx_input(i,j) = 1.25e-3*1.25*w*u10r(i,j)
-                              tausy_input(i,j) = 1.25e-3*1.25*w*v10r(i,j)
-                           end if
-                        end do
-#ifndef SLICE_MODEL
-                     end do
-#endif
-                  end if
-
                end if
 
-
-               call update_2d_halo(airp_input,airp_input,az,imin,jmin,imax,jmax,H_TAG)
-               call wait_halo(H_TAG)
-               call update_2d_halo(tausx_input,tausx_input,az,imin,jmin,imax,jmax,H_TAG)
-               call wait_halo(H_TAG)
-               call update_2d_halo(tausy_input,tausy_input,az,imin,jmin,imax,jmax,H_TAG)
-               call wait_halo(H_TAG)
-
                if (met_method .eq. METEO_FROMFILE) then
+
                airp_old=>airp_new;airp_new=>d_airp;d_airp=>airp_old;airp_input=>airp_old
-               tausx_old=>tausx_new;tausx_new=>d_tausx;d_tausx=>tausx_old;tausx_input=>tausx_old
-               tausy_old=>tausy_new;tausy_new=>d_tausy;d_tausy=>tausy_old;tausy_input=>tausy_old
-               shf_old=>shf_new;shf_new=>d_shf;d_shf=>shf_old;shf_input=>shf_old
                if (calc_met) then
                   tcc_old=>tcc_new;tcc_new=>d_tcc;d_tcc=>tcc_old;tcc_input=>d_tcc
                   u10_old=>u10_new;u10_new=>d_u10;d_u10=>u10_old;u10_input=>d_u10
                   v10_old=>v10_new;v10_new=>d_v10;d_v10=>v10_old;v10_input=>d_v10
                else
                   swr_old=>swr_new;swr_new=>d_swr;d_swr=>swr_old;swr_input=>d_swr
-               end if
-               if (fwf_method .ge. 2) then
-                  evap_old=>evap_new;evap_new=>d_evap;d_evap=>evap_old;evap_input=>d_evap
                end if
                if (fwf_method.eq.2 .or. fwf_method.eq.3) then
                   precip_old=>precip_new;precip_new=>d_precip;d_precip=>precip_old;precip_input=>d_precip
@@ -713,7 +672,6 @@
                   sss_old=>sss_new;sss_new=>d_sss;d_sss=>sss_old;sss_input=>d_sss
                end if
 
-
                if (.not. first) then
 !$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
@@ -723,18 +681,10 @@
                      do i=imin-HALO,imax+HALO
                         if (az(i,j) .ne. 0) then
                            d_airp (i,j) = airp_new (i,j) - airp_old (i,j)
-                           d_tausx(i,j) = tausx_new(i,j) - tausx_old(i,j)
-                           d_tausy(i,j) = tausy_new(i,j) - tausy_old(i,j)
-                           d_shf  (i,j) = shf_new  (i,j) - shf_old  (i,j)
                            if (calc_met) then
                               d_tcc(i,j) = tcc_new(i,j) - tcc_old(i,j)
                               d_u10(i,j) = u10_new(i,j) - u10_old(i,j)
                               d_v10(i,j) = v10_new(i,j) - v10_old(i,j)
-                           else
-                              d_swr(i,j) = swr_new(i,j) - swr_old(i,j)
-                           end if
-                           if (fwf_method .ge. 2) then
-                              d_evap(i,j) = evap_new(i,j) - evap_old(i,j)
                            end if
                            if (fwf_method.eq.2 .or. fwf_method.eq.3) then
                               d_precip(i,j) = precip_new(i,j) - precip_old(i,j)
@@ -753,14 +703,12 @@
 !$OMP END DO
 !$OMP SINGLE
                end if !if (.not. first) then
-               end if !if (met_method .eq. METEO_FROMFILE) then
 
-            end if !if (new_meteo) then
+               end if !if METEO_FROMFILE
 
+            end if !if new_meteo
 
-!            if (.not. first) then
             if (met_method .eq. METEO_FROMFILE) then
-
 !$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
@@ -769,18 +717,10 @@
                   do i=imin-HALO,imax+HALO
                      if (az(i,j) .ne. 0) then
                         airp (i,j) = airp_new (i,j) + d_airp (i,j)*deltm1*t_minus_t2
-                        tausx(i,j) = ramp*(tausx_new(i,j) + d_tausx(i,j)*deltm1*t_minus_t2)
-                        tausy(i,j) = ramp*(tausy_new(i,j) + d_tausy(i,j)*deltm1*t_minus_t2)
-                        shf  (i,j) = shf_new  (i,j) + d_shf  (i,j)*deltm1*t_minus_t2
                         if (calc_met) then
                            tcc(i,j) = tcc_new(i,j) + d_tcc(i,j)*deltm1*t_minus_t2
                            u10(i,j) = u10_new(i,j) + d_u10(i,j)*deltm1*t_minus_t2
                            v10(i,j) = v10_new(i,j) + d_v10(i,j)*deltm1*t_minus_t2
-                        else
-                           swr(i,j) = swr_new(i,j) + d_swr(i,j)*deltm1*t_minus_t2
-                        end if
-                        if (fwf_method .ge. 2) then
-                           evap(i,j) = evap_new(i,j) + d_evap(i,j)*deltm1*t_minus_t2
                         end if
                         if (fwf_method.eq.2 .or. fwf_method.eq.3) then
                            precip(i,j) = precip_new(i,j) + d_precip(i,j)*deltm1*t_minus_t2
@@ -836,6 +776,121 @@
                   where (az.ne.0) wind = sqrt( u10r*u10r + v10r*v10r )
                !end if
             end if
+
+            if (new_meteo) then
+
+               if(calc_met) then
+
+                  if (present(sst_model) .and. .not.constant_cd) then
+! OMP-NOTE: This is an expensive loop, but we cannot thread it as long
+!    as exchange_coefficients() and fluxes() pass information through
+!    scalars in the meteo module. BJB 2009-09-30.
+#ifndef SLICE_MODEL
+                     do j=jmin,jmax
+#endif
+                        do i=imin,imax
+                           if (az(i,j) .ge. 1) then
+                              call exchange_coefficients( &
+                                     u10r_new(i,j),v10r_new(i,j),t2(i,j),airp_new(i,j), &
+                                     sst_model(i,j),hum(i,j),hum_method)
+                              call fluxes(latc(i,j),u10r_new(i,j),v10r_new(i,j),    &
+                                      t2(i,j),tcc_new(i,j),sst_model(i,j),precip_new(i,j), &
+                                      shf_input(i,j),tausx_input(i,j),tausy_input(i,j),evap_input(i,j))
+                           end if
+                        end do
+#ifndef SLICE_MODEL
+                     end do
+#endif
+                  else
+! OMP-NOTE: w needs to be a local (stack) variable to thread this loop.
+#ifndef SLICE_MODEL
+                     do j=jmin,jmax
+#endif
+                        do i=imin,imax
+                           if (az(i,j) .ge. 1) then
+! BJB-TODO: Update constants to double.
+                              w=sqrt(u10r_new(i,j)*u10r_new(i,j)+v10r_new(i,j)*v10r_new(i,j))
+                              tausx_input(i,j) = 1.25e-3*1.25*w*u10r_new(i,j)
+                              tausy_input(i,j) = 1.25e-3*1.25*w*v10r_new(i,j)
+                           end if
+                        end do
+#ifndef SLICE_MODEL
+                     end do
+#endif
+                  end if
+
+               end if
+
+               call update_2d_halo(tausx_input,tausx_input,az,imin,jmin,imax,jmax,H_TAG)
+               call wait_halo(H_TAG)
+               call update_2d_halo(tausy_input,tausy_input,az,imin,jmin,imax,jmax,H_TAG)
+               call wait_halo(H_TAG)
+
+               if (met_method .eq. METEO_FROMFILE) then
+               tausx_old=>tausx_new;tausx_new=>d_tausx;d_tausx=>tausx_old;tausx_input=>tausx_old
+               tausy_old=>tausy_new;tausy_new=>d_tausy;d_tausy=>tausy_old;tausy_input=>tausy_old
+               shf_old=>shf_new;shf_new=>d_shf;d_shf=>shf_old;shf_input=>shf_old
+               if (fwf_method .ge. 2) then
+                  evap_old=>evap_new;evap_new=>d_evap;d_evap=>evap_old;evap_input=>d_evap
+               end if
+
+               if (.not. first) then
+!$OMP END SINGLE
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+                  do j=jmin-HALO,jmax+HALO
+#endif
+                     do i=imin-HALO,imax+HALO
+                        if (az(i,j) .ne. 0) then
+                           d_tausx(i,j) = tausx_new(i,j) - tausx_old(i,j)
+                           d_tausy(i,j) = tausy_new(i,j) - tausy_old(i,j)
+                           d_shf  (i,j) = shf_new  (i,j) - shf_old  (i,j)
+                           if (.not.calc_met) then
+                              d_swr(i,j) = swr_new(i,j) - swr_old(i,j)
+                           end if
+                           if (fwf_method .ge. 2) then
+                              d_evap(i,j) = evap_new(i,j) - evap_old(i,j)
+                           end if
+                        end if
+                     end do
+#ifndef SLICE_MODEL
+                  end do
+#endif
+!$OMP END DO
+!$OMP SINGLE
+               end if !if (.not. first) then
+               end if !if (met_method .eq. METEO_FROMFILE) then
+
+            end if !if (new_meteo) then
+
+
+!            if (.not. first) then
+            if (met_method .eq. METEO_FROMFILE) then
+
+!$OMP END SINGLE
+!$OMP DO SCHEDULE(RUNTIME)
+#ifndef SLICE_MODEL
+               do j=jmin-HALO,jmax+HALO
+#endif
+                  do i=imin-HALO,imax+HALO
+                     if (az(i,j) .ne. 0) then
+                        tausx(i,j) = ramp*(tausx_new(i,j) + d_tausx(i,j)*deltm1*t_minus_t2)
+                        tausy(i,j) = ramp*(tausy_new(i,j) + d_tausy(i,j)*deltm1*t_minus_t2)
+                        shf  (i,j) = shf_new  (i,j) + d_shf  (i,j)*deltm1*t_minus_t2
+                        if (.not.calc_met) then
+                           swr(i,j) = swr_new(i,j) + d_swr(i,j)*deltm1*t_minus_t2
+                        end if
+                        if (fwf_method .ge. 2) then
+                           evap(i,j) = evap_new(i,j) + d_evap(i,j)*deltm1*t_minus_t2
+                        end if
+                     end if
+                  end do
+#ifndef SLICE_MODEL
+               end do
+#endif
+!$OMP END DO
+!$OMP SINGLE
+            end if !if (met_method .eq. METEO_FROMFILE) then
 
 #ifdef SLICE_MODEL
                airp (:,j+1) = airp (:,j)
