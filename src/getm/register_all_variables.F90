@@ -496,7 +496,7 @@
       call fm%register('vv', 'm2/s', 'transport in local y-direction (3D)', standard_name='', dimensions=(/id_dim_z/), data3d=vv(_3D_W_), category='3d', output_level=output_level_debug)
       call fm%register('velx3d', 'm/s', 'velocity in global x-direction (3D)', standard_name='', dimensions=(/id_dim_z/), data3d=velx3d(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       call fm%register('vely3d', 'm/s', 'velocity in global y-direction (3D)', standard_name='', dimensions=(/id_dim_z/), data3d=vely3d(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
-      call fm%register('w', 'm2/s', 'vertical velocity', standard_name='', dimensions=(/id_dim_z/), data3d=w(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
+      call fm%register('w', 'm/s', 'vertical velocity', standard_name='', dimensions=(/id_dim_z/), data3d=w(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       call fm%register('velx2dadv', 'm/s', 'depth-avg. velocity in global x-direction (3D)', standard_name='', data2d=velx2dadv(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       call fm%register('vely2dadv', 'm/s', 'depth-avg. velocity in global y-direction (3D)', standard_name='', data2d=vely2dadv(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       call fm%register('SS', 's-2', 'shear frequency squared', standard_name='', dimensions=(/id_dim_z/), data3d=SS(_3D_W_), category='3d', output_level=output_level_debug)
