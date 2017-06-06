@@ -281,6 +281,12 @@
 #ifdef NEW_CORI
    LEVEL1 'NEW_CORI'
 #endif
+#ifdef SMOOTH_BVF_HORI
+   LEVEL1 'SMOOTH_BVF_HORI'
+#endif
+#ifdef _SMOOTH_BVF_VERT_
+   LEVEL1 '_SMOOTH_BVF_VERT_'
+#endif
 #ifdef NONNEGSALT
    LEVEL1 'NONNEGSALT'
 #endif
