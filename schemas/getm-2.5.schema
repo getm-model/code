@@ -137,6 +137,9 @@
 					<option value="3" label="from external coupler"/>
 				</options>
 			</element>
+			<element name="interpolate_meteo" type="bool" label="Temporal interpolation of meteo data instead of calculated fluxes.">
+				<condition type="eq" variable="./calc_met" value="True"/>
+			</element>
 			<element name="fwf_method" type="int" label="freshwater flux method">
 				<condition type="eq" variable="./metforcing" value="True"/>
 				<options>

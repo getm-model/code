@@ -154,6 +154,9 @@
 			<met_method>
 				1
 			</met_method>
+			<interpolate_meteo>
+				False
+			</interpolate_meteo>
 			<fwf_method>
 				0
 			</fwf_method>
