@@ -60,6 +60,7 @@
    logical, public                     :: metforcing=.false.
    logical, public                     :: on_grid=.true.
    logical, public                     :: calc_met=.false.
+   logical, public                     :: interpolate_meteo=.false.
    integer, public, parameter          :: NO_METEO=0
    integer, public, parameter          :: METEO_CONST=1
    integer, public, parameter          :: METEO_FROMFILE=2
@@ -73,6 +74,7 @@
    logical, public                     :: calc_relative_wind=.false.
    logical, public                     :: constant_cd=.false.
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
+   REALTYPE,public,dimension(:,:),pointer            :: t2_input,hum_input
    REALTYPE,public,dimension(:,:),pointer            :: airp_input,tausx_input,tausy_input
    REALTYPE,public,dimension(:,:),pointer            :: u10_input,v10_input
    REALTYPE,public,dimension(:,:),pointer            :: shf_input,swr_input=>null(),tcc_input=>null()
@@ -121,7 +123,6 @@
    REALTYPE                  :: swr_const= _ZERO_ ,shf_const= _ZERO_
    REALTYPE                  :: evap_const= _ZERO_ ,precip_const= _ZERO_
    REALTYPE, dimension(:,:), allocatable :: tausx_const,tausy_const
-   REALTYPE, dimension(:,:), pointer     :: u10r_new,v10r_new
    REALTYPE, dimension(:,:), pointer     :: airp_new,d_airp
    REALTYPE, dimension(:,:), pointer     :: u10_new,d_u10
    REALTYPE, dimension(:,:), pointer     :: v10_new,d_v10
@@ -129,6 +130,8 @@
    REALTYPE, dimension(:,:), pointer     :: tausy_new,d_tausy
    REALTYPE, dimension(:,:), pointer     :: shf_new,d_shf
    REALTYPE, dimension(:,:), pointer     :: swr_new,d_swr
+   REALTYPE, dimension(:,:), pointer     :: t2_new,d_t2
+   REALTYPE, dimension(:,:), pointer     :: hum_new,d_hum
    REALTYPE, dimension(:,:), pointer     :: tcc_new,d_tcc
    REALTYPE, dimension(:,:), pointer     :: evap_new,d_evap
    REALTYPE, dimension(:,:), pointer     :: precip_new,d_precip
@@ -163,7 +166,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
-   namelist /meteo/ metforcing,on_grid,calc_met,met_method, &
+   namelist /meteo/ metforcing,on_grid,calc_met,met_method,interpolate_meteo, &
                     albedo_method,fwf_method, &
                     meteo_ramp,metfmt,meteo_file, &
                     tx,ty,albedo_const,swr_const,shf_const, &
@@ -295,6 +298,11 @@
 
          if(calc_met) then
             LEVEL2 'Stresses and fluxes will be calculated'
+            if (interpolate_meteo) then
+               LEVEL3 'will interpolate input meteo data'
+            else
+               LEVEL3 'will interpolate calculated fluxes'
+            end if
             if (calc_relative_wind) then
                LEVEL3 'will consider surface currents for relative wind'
             end if
@@ -371,17 +379,9 @@
       if (calc_met) then
 
          if (calc_relative_wind) then
-            allocate(u10r_new(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'init_meteo: Error allocating memory (u10r_new)'
-            u10r_new = _ZERO_
-
             allocate(u10r(E2DFIELD),stat=rc)
             if (rc /= 0) stop 'init_meteo: Error allocating memory (u10r)'
             u10r = _ZERO_
-
-            allocate(v10r_new(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'init_meteo: Error allocating memory (v10r_new)'
-            v10r_new = _ZERO_
 
             allocate(v10r(E2DFIELD),stat=rc)
             if (rc /= 0) stop 'init_meteo: Error allocating memory (v10r)'
@@ -391,10 +391,12 @@
          allocate(t2(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (t2)'
          t2 = _ZERO_
+         t2_input => t2
 
          allocate(hum(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (hum)'
          hum = _ZERO_
+         hum_input => hum
 
          allocate(tcc(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc)'
@@ -413,23 +415,25 @@
       if (rc /= 0) stop 'init_meteo: Error allocating memory (d_airp)'
       airp_input => d_airp
 
-      allocate(tausx_new(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx_new)'
-      allocate(d_tausx(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tausx)'
-      tausx_input => d_tausx
+      if (.not.(calc_met .and. interpolate_meteo)) then
+         allocate(tausx_new(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx_new)'
+         allocate(d_tausx(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tausx)'
+         tausx_input => d_tausx
 
-      allocate(tausy_new(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy_new)'
-      allocate(d_tausy(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tausy)'
-      tausy_input => d_tausy
+         allocate(tausy_new(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy_new)'
+         allocate(d_tausy(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tausy)'
+         tausy_input => d_tausy
 
-      allocate(shf_new(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_meteo: Error allocating memory (shf_new)'
-      allocate(d_shf(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_meteo: Error allocating memory (d_shf)'
-      shf_input => d_shf
+         allocate(shf_new(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (shf_new)'
+         allocate(d_shf(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (d_shf)'
+         shf_input => d_shf
+      end if
 
       if (calc_met) then
          allocate(u10_new(E2DFIELD),stat=rc)
@@ -449,6 +453,20 @@
          allocate(d_tcc(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tcc)'
          tcc_input => d_tcc
+
+         if (interpolate_meteo) then
+            allocate(t2_new(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_meteo: Error allocating memory (t2_new)'
+            allocate(d_t2(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_meteo: Error allocating memory (d_t2)'
+            t2_input => d_t2
+
+            allocate(hum_new(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_meteo: Error allocating memory (hum_new)'
+            allocate(d_hum(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_meteo: Error allocating memory (d_hum)'
+            hum_input => d_hum
+         end if
       else
          allocate(swr_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (swr_new)'
@@ -457,7 +475,7 @@
          swr_input => d_swr
       end if
 
-      if (fwf_method .ge. 2) then
+      if (fwf_method.eq.2 .or. (fwf_method.gt.2 .and. calc_met .and. .not.interpolate_meteo)) then
          allocate(evap_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (evap_new)'
          allocate(d_evap(E2DFIELD),stat=rc)
@@ -539,11 +557,14 @@
    REALTYPE                  :: albedo_water
    REALTYPE                  :: taus,tausm1
    logical,save              :: first=.true.
+   REALTYPE,dimension(E2DFIELD),target :: work1,work2
    REALTYPE, dimension(:,:), pointer :: airp_old,tausx_old,tausy_old
    REALTYPE, dimension(:,:), pointer :: u10_old,v10_old
    REALTYPE, dimension(:,:), pointer :: shf_old,swr_old,tcc_old
+   REALTYPE, dimension(:,:), pointer :: t2_old,hum_old
    REALTYPE, dimension(:,:), pointer :: evap_old,precip_old
    REALTYPE, dimension(:,:), pointer :: sst_old,sss_old
+   REALTYPE, dimension(:,:), pointer :: u10r_x,v10r_x,airp_x,precip_x,tcc_x
    REALTYPE,parameter :: wind2taus = 1.25d-3 * 1.25d0
    REALTYPE,parameter :: taus2wind = _ONE_ / sqrt(wind2taus)
 !EOP
@@ -644,68 +665,69 @@
                   call wait_halo(H_TAG)
                   call update_2d_halo(v10_input,v10_input,az,imin,jmin,imax,jmax,H_TAG)
                   call wait_halo(H_TAG)
-
-                  if (calc_relative_wind) then
-                     u10r_new = u10_input - ssu
-                     v10r_new = v10_input - ssv
-                  else
-!                    targets might have changed because of pointer swap
-                     u10r_new => u10_input
-                     v10r_new => v10_input
-                  end if
                end if
 
                if (met_method .eq. METEO_FROMFILE) then
 
-               airp_old=>airp_new;airp_new=>d_airp;d_airp=>airp_old;airp_input=>d_airp
-               if (calc_met) then
-                  tcc_old=>tcc_new;tcc_new=>d_tcc;d_tcc=>tcc_old;tcc_input=>d_tcc
-                  u10_old=>u10_new;u10_new=>d_u10;d_u10=>u10_old;u10_input=>d_u10
-                  v10_old=>v10_new;v10_new=>d_v10;d_v10=>v10_old;v10_input=>d_v10
-               else
-                  swr_old=>swr_new;swr_new=>d_swr;d_swr=>swr_old;swr_input=>d_swr
-               end if
-               if (fwf_method.eq.2 .or. fwf_method.eq.3) then
-                  precip_old=>precip_new;precip_new=>d_precip;d_precip=>precip_old;precip_input=>d_precip
-               end if
-               if (nudge_sst) then
-                  sst_old=>sst_new;sst_new=>d_sst;d_sst=>sst_old;sst_input=>d_sst
-               end if
-               if (nudge_sss) then
-                  sss_old=>sss_new;sss_new=>d_sss;d_sss=>sss_old;sss_input=>d_sss
-               end if
+                  airp_old=>airp_new;airp_new=>d_airp;d_airp=>airp_old;airp_input=>d_airp
+                  if (calc_met) then
+                     tcc_old=>tcc_new;tcc_new=>d_tcc;d_tcc=>tcc_old;tcc_input=>d_tcc
+                     u10_old=>u10_new;u10_new=>d_u10;d_u10=>u10_old;u10_input=>d_u10
+                     v10_old=>v10_new;v10_new=>d_v10;d_v10=>v10_old;v10_input=>d_v10
+                     if (interpolate_meteo) then
+                        t2_old =>t2_new ;t2_new =>d_t2 ;d_t2 =>t2_old ;t2_input =>d_t2
+                        hum_old=>hum_new;hum_new=>d_hum;d_hum=>hum_old;hum_input=>d_hum
+                     end if
+                  else
+                     swr_old=>swr_new;swr_new=>d_swr;d_swr=>swr_old;swr_input=>d_swr
+                  end if
+                  if (fwf_method.eq.2 .or. fwf_method.eq.3) then
+                     precip_old=>precip_new;precip_new=>d_precip;d_precip=>precip_old;precip_input=>d_precip
+                  end if
+                  if (nudge_sst) then
+                     sst_old=>sst_new;sst_new=>d_sst;d_sst=>sst_old;sst_input=>d_sst
+                  end if
+                  if (nudge_sss) then
+                     sss_old=>sss_new;sss_new=>d_sss;d_sss=>sss_old;sss_input=>d_sss
+                  end if
 
-               if (.not. first) then
+                  if (.not. first) then
 !$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
-                  do j=jmin-HALO,jmax+HALO
+                     do j=jmin-HALO,jmax+HALO
 #endif
-                     do i=imin-HALO,imax+HALO
-                        if (az(i,j) .ne. 0) then
-                           d_airp (i,j) = airp_new (i,j) - airp_old (i,j)
-                           if (calc_met) then
-                              d_tcc(i,j) = tcc_new(i,j) - tcc_old(i,j)
-                              d_u10(i,j) = u10_new(i,j) - u10_old(i,j)
-                              d_v10(i,j) = v10_new(i,j) - v10_old(i,j)
+                        do i=imin-HALO,imax+HALO
+                           if (az(i,j) .ne. 0) then
+                              d_airp(i,j) = airp_new(i,j) - airp_old(i,j)
+                              if (calc_met) then
+                                 d_tcc(i,j) = tcc_new(i,j) - tcc_old(i,j)
+                                 d_u10(i,j) = u10_new(i,j) - u10_old(i,j)
+                                 d_v10(i,j) = v10_new(i,j) - v10_old(i,j)
+                                 if (interpolate_meteo) then
+                                    d_t2 (i,j) = t2_new (i,j) - t2_old (i,j)
+                                    d_hum(i,j) = hum_new(i,j) - hum_old(i,j)
+                                 end if
+                              else
+                                 d_swr(i,j) = swr_new(i,j) - swr_old(i,j)
+                              end if
+                              if (fwf_method.eq.2 .or. fwf_method.eq.3) then
+                                 d_precip(i,j) = precip_new(i,j) - precip_old(i,j)
+                              end if
+                              if (nudge_sst) then
+                                 d_sst(i,j) = sst_new(i,j) - sst_old(i,j)
+                              end if
+                              if (nudge_sss) then
+                                 d_sss(i,j) = sss_new(i,j) - sss_old(i,j)
+                              end if
                            end if
-                           if (fwf_method.eq.2 .or. fwf_method.eq.3) then
-                              d_precip(i,j) = precip_new(i,j) - precip_old(i,j)
-                           end if
-                           if (nudge_sst) then
-                              d_sst(i,j) = sst_new(i,j) - sst_old(i,j)
-                           end if
-                           if (nudge_sss) then
-                              d_sss(i,j) = sss_new(i,j) - sss_old(i,j)
-                           end if
-                        end if
-                     end do
+                        end do
 #ifndef SLICE_MODEL
-                  end do
+                     end do
 #endif
 !$OMP END DO
 !$OMP SINGLE
-               end if !if (.not. first) then
+                  end if !if (.not. first) then
 
                end if !if METEO_FROMFILE
 
@@ -719,11 +741,17 @@
 #endif
                   do i=imin-HALO,imax+HALO
                      if (az(i,j) .ne. 0) then
-                        airp (i,j) = airp_new (i,j) + d_airp (i,j)*deltm1*t_minus_t2
+                        airp(i,j) = airp_new(i,j) + d_airp(i,j)*deltm1*t_minus_t2
                         if (calc_met) then
                            tcc(i,j) = tcc_new(i,j) + d_tcc(i,j)*deltm1*t_minus_t2
                            u10(i,j) = u10_new(i,j) + d_u10(i,j)*deltm1*t_minus_t2
                            v10(i,j) = v10_new(i,j) + d_v10(i,j)*deltm1*t_minus_t2
+                           if (interpolate_meteo) then
+                              t2 (i,j) = t2_new (i,j) + d_t2 (i,j)*deltm1*t_minus_t2
+                              hum(i,j) = hum_new(i,j) + d_hum(i,j)*deltm1*t_minus_t2
+                           end if
+                        else
+                           swr(i,j) = swr_new(i,j) + d_swr(i,j)*deltm1*t_minus_t2
                         end if
                         if (fwf_method.eq.2 .or. fwf_method.eq.3) then
                            precip(i,j) = precip_new(i,j) + d_precip(i,j)*deltm1*t_minus_t2
@@ -744,6 +772,7 @@
             end if !if (met_method .eq. METEO_FROMFILE) then
 
             if (calc_met) then
+
 !$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
@@ -766,23 +795,44 @@
 #endif
 !$OMP END DO
 !$OMP SINGLE
-               !if (.not. (met_method.eq.METEO_FROMEXT .and. .not.new_meteo)) then
-                  if (calc_relative_wind) then
-!                    update with latest surface currents
-                     u10r = u10 - ssu
-                     v10r = v10 - ssv
-                     call update_2d_halo(u10r,u10r,az,imin,jmin,imax,jmax,H_TAG)
-                     call wait_halo(H_TAG)
-                     call update_2d_halo(v10r,v10r,az,imin,jmin,imax,jmax,H_TAG)
-                     call wait_halo(H_TAG)
-                  end if
-                  where (az.ne.0) wind = sqrt( u10r*u10r + v10r*v10r )
-               !end if
+
+               if (calc_relative_wind) then
+!                 update with latest surface currents
+                  u10r = u10 - ssu
+                  v10r = v10 - ssv
+                  call update_2d_halo(u10r,u10r,az,imin,jmin,imax,jmax,H_TAG)
+                  call wait_halo(H_TAG)
+                  call update_2d_halo(v10r,v10r,az,imin,jmin,imax,jmax,H_TAG)
+                  call wait_halo(H_TAG)
+               end if
+               where (az.ne.0) wind = sqrt( u10r*u10r + v10r*v10r )
+
             end if
 
-            if (new_meteo) then
+            if (new_meteo .or. ((met_method.eq.METEO_FROMFILE).and.calc_met.and.interpolate_meteo)) then
 
-               if(calc_met) then
+               if (calc_met) then
+
+                  if (met_method.eq.METEO_FROMFILE .and. .not.interpolate_meteo) then
+                     if (calc_relative_wind) then
+                        work1 = u10_new - ssu
+                        work2 = v10_new - ssv
+                        u10r_x => work1
+                        v10r_x => work2
+                     else
+                        u10r_x => u10_new
+                        v10r_x => v10_new
+                     end if
+                     airp_x   => airp_new
+                     precip_x => precip_new
+                     tcc_x    => tcc_new
+                  else
+                     u10r_x   => u10r
+                     v10r_x   => v10r
+                     airp_x   => airp
+                     precip_x => precip
+                     tcc_x    => tcc
+                  end if
 
                   if (present(sst_model) .and. .not.constant_cd) then
 ! OMP-NOTE: This is an expensive loop, but we cannot thread it as long
@@ -794,10 +844,10 @@
                         do i=imin,imax
                            if (az(i,j) .ge. 1) then
                               call exchange_coefficients( &
-                                     u10r_new(i,j),v10r_new(i,j),t2(i,j),airp_new(i,j), &
+                                     u10r_x(i,j),v10r_x(i,j),t2(i,j),airp_x(i,j), &
                                      sst_model(i,j),hum(i,j),hum_method)
-                              call fluxes(latc(i,j),u10r_new(i,j),v10r_new(i,j),    &
-                                      t2(i,j),tcc_new(i,j),sst_model(i,j),precip_new(i,j), &
+                              call fluxes(latc(i,j),u10r_x(i,j),v10r_x(i,j),    &
+                                      t2(i,j),tcc_x(i,j),sst_model(i,j),precip_x(i,j), &
                                       shf_input(i,j),tausx_input(i,j),tausy_input(i,j),evap_input(i,j))
                            end if
                         end do
@@ -812,9 +862,9 @@
                         do i=imin,imax
                            if (az(i,j) .ge. 1) then
 ! BJB-TODO: Update constants to double.
-                              w=sqrt(u10r_new(i,j)*u10r_new(i,j)+v10r_new(i,j)*v10r_new(i,j))
-                              tausx_input(i,j) = 1.25e-3*1.25*w*u10r_new(i,j)
-                              tausy_input(i,j) = 1.25e-3*1.25*w*v10r_new(i,j)
+                              w=sqrt(u10r_x(i,j)*u10r_x(i,j)+v10r_x(i,j)*v10r_x(i,j))
+                              tausx_input(i,j) = 1.25e-3*1.25*w*u10r_x(i,j)
+                              tausy_input(i,j) = 1.25e-3*1.25*w*v10r_x(i,j)
                            end if
                         end do
 #ifndef SLICE_MODEL
@@ -829,47 +879,49 @@
                call update_2d_halo(tausy_input,tausy_input,az,imin,jmin,imax,jmax,H_TAG)
                call wait_halo(H_TAG)
 
-               if (met_method .eq. METEO_FROMFILE) then
-               tausx_old=>tausx_new;tausx_new=>d_tausx;d_tausx=>tausx_old;tausx_input=>tausx_old
-               tausy_old=>tausy_new;tausy_new=>d_tausy;d_tausy=>tausy_old;tausy_input=>tausy_old
-               shf_old=>shf_new;shf_new=>d_shf;d_shf=>shf_old;shf_input=>shf_old
-               if (fwf_method .ge. 2) then
-                  evap_old=>evap_new;evap_new=>d_evap;d_evap=>evap_old;evap_input=>d_evap
-               end if
+           end if
 
-               if (.not. first) then
+            if (new_meteo) then
+               if (met_method .eq. METEO_FROMFILE) then
+
+                  if (.not.(calc_met .and. interpolate_meteo)) then
+                     tausx_old=>tausx_new;tausx_new=>d_tausx;d_tausx=>tausx_old;tausx_input=>tausx_old
+                     tausy_old=>tausy_new;tausy_new=>d_tausy;d_tausy=>tausy_old;tausy_input=>tausy_old
+                     shf_old=>shf_new;shf_new=>d_shf;d_shf=>shf_old;shf_input=>shf_old
+                  end if
+                  if (fwf_method.eq.2 .or. (fwf_method.gt.2 .and. calc_met .and. .not.interpolate_meteo)) then
+                     evap_old=>evap_new;evap_new=>d_evap;d_evap=>evap_old;evap_input=>d_evap
+                  end if
+
+                  if (.not. first) then
 !$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
-                  do j=jmin-HALO,jmax+HALO
+                     do j=jmin-HALO,jmax+HALO
 #endif
-                     do i=imin-HALO,imax+HALO
-                        if (az(i,j) .ne. 0) then
-                           d_tausx(i,j) = tausx_new(i,j) - tausx_old(i,j)
-                           d_tausy(i,j) = tausy_new(i,j) - tausy_old(i,j)
-                           d_shf  (i,j) = shf_new  (i,j) - shf_old  (i,j)
-                           if (.not.calc_met) then
-                              d_swr(i,j) = swr_new(i,j) - swr_old(i,j)
+                        do i=imin-HALO,imax+HALO
+                           if (az(i,j) .ne. 0) then
+                              if (.not.(calc_met .and. interpolate_meteo)) then
+                                 d_tausx(i,j) = tausx_new(i,j) - tausx_old(i,j)
+                                 d_tausy(i,j) = tausy_new(i,j) - tausy_old(i,j)
+                                 d_shf  (i,j) = shf_new  (i,j) - shf_old  (i,j)
+                              end if
+                              if (fwf_method.eq.2 .or. (fwf_method.gt.2 .and. calc_met .and. .not.interpolate_meteo)) then
+                                 d_evap(i,j) = evap_new(i,j) - evap_old(i,j)
+                              end if
                            end if
-                           if (fwf_method .ge. 2) then
-                              d_evap(i,j) = evap_new(i,j) - evap_old(i,j)
-                           end if
-                        end if
-                     end do
+                        end do
 #ifndef SLICE_MODEL
-                  end do
+                     end do
 #endif
 !$OMP END DO
 !$OMP SINGLE
-               end if !if (.not. first) then
+                  end if !if (.not. first) then
+
                end if !if (met_method .eq. METEO_FROMFILE) then
+            end if !if (new_meteo)
 
-            end if !if (new_meteo) then
-
-
-!            if (.not. first) then
             if (met_method .eq. METEO_FROMFILE) then
-
 !$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
@@ -877,13 +929,12 @@
 #endif
                   do i=imin-HALO,imax+HALO
                      if (az(i,j) .ne. 0) then
-                        tausx(i,j) = ramp*(tausx_new(i,j) + d_tausx(i,j)*deltm1*t_minus_t2)
-                        tausy(i,j) = ramp*(tausy_new(i,j) + d_tausy(i,j)*deltm1*t_minus_t2)
-                        shf  (i,j) = shf_new  (i,j) + d_shf  (i,j)*deltm1*t_minus_t2
-                        if (.not.calc_met) then
-                           swr(i,j) = swr_new(i,j) + d_swr(i,j)*deltm1*t_minus_t2
+                        if (.not.(calc_met .and. interpolate_meteo)) then
+                           tausx(i,j) = ramp*(tausx_new(i,j) + d_tausx(i,j)*deltm1*t_minus_t2)
+                           tausy(i,j) = ramp*(tausy_new(i,j) + d_tausy(i,j)*deltm1*t_minus_t2)
+                           shf  (i,j) = shf_new  (i,j) + d_shf  (i,j)*deltm1*t_minus_t2
                         end if
-                        if (fwf_method .ge. 2) then
+                        if (fwf_method.eq.2 .or. (fwf_method.gt.2 .and. calc_met .and. .not.interpolate_meteo)) then
                            evap(i,j) = evap_new(i,j) + d_evap(i,j)*deltm1*t_minus_t2
                         end if
                      end if
@@ -904,7 +955,7 @@
                wind (:,j+1) = wind (:,j)
                shf  (:,j+1) = shf  (:,j)
                swr  (:,j+1) = swr  (:,j)
-               if (fwf_method .ge. 2) then
+               if (fwf_method.eq.2 .or. (fwf_method.gt.2 .and. calc_met .and. .not.interpolate_meteo)) then
                   evap(:,j+1) = evap(:,j)
                end if
                if (fwf_method.eq.2 .or. fwf_method.eq.3) then

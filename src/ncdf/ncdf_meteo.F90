@@ -21,7 +21,7 @@
    use grid_interpol, only: to_rotated_lat_lon
    use meteo, only: meteo_file,on_grid,calc_met,constant_cd,hum_method
    use meteo, only: RELATIVE_HUM,WET_BULB,DEW_POINT,SPECIFIC_HUM
-   use meteo, only: airp=>airp_input,u10=>u10_input,v10=>v10_input,t2,hum,tcc=>tcc_input
+   use meteo, only: airp=>airp_input,u10=>u10_input,v10=>v10_input,t2=>t2_input,hum=>hum_input,tcc=>tcc_input
    use meteo, only: fwf_method,evap=>evap_input,precip=>precip_input
    use meteo, only: tausx=>tausx_input,tausy=>tausy_input,swr=>swr_input,shf=>shf_input
    use meteo, only: new_meteo,t_1,t_2
