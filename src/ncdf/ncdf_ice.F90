@@ -453,7 +453,7 @@
       allocate(ice_lat(ilen),stat=err)
       if (err /= 0) call getm_error('open_ice_file()',                 &
                                     'Error allocating memory (ice_lat)')
-      err = nf90_get_var(ncid,lat_id,ice_lat(1:ilen))
+      err = nf90_get_var(ncid,lat_id,ice_lat(1:jlen))
       if (err .ne. NF90_NOERR) go to 10
 
 !           first we check for CF compatible grid_mapping_name
