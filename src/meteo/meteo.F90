@@ -586,7 +586,6 @@
 
       if (first) then
          if (nudge_sst) then
-            sst_input => sst
             if (met_method .eq. METEO_FROMFILE) then
                allocate(sst_new(E2DFIELD),stat=rc)
                if (rc /= 0) stop 'do_meteo: Error allocating memory (sst_new)'
@@ -596,7 +595,6 @@
             end if
          end if
          if (nudge_sss) then
-            sss_input => sss
             if (met_method .eq. METEO_FROMFILE) then
                allocate(sss_new(E2DFIELD),stat=rc)
                if (rc /= 0) stop 'do_meteo: Error allocating memory (sss_new)'
