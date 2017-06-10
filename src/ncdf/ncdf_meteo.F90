@@ -325,10 +325,7 @@
             t_2 = met_times(indx) - offset
          end if
 
-         start(3) = indx
-         call write_time_string()
-         LEVEL3 timestr,': reading meteo data ...',indx
-         call read_data()
+         call read_data(indx)
          save_n = indx+1
 
       end if
@@ -644,7 +641,7 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 ! !IROUTINE: read_data -
 !
 ! !INTERFACE:
-   subroutine read_data()
+   subroutine read_data(indx)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -657,11 +654,18 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 !
 !  See module for log.
 !
+! !INPUT PARAMETERS:
+   integer,intent(in) :: indx
+!
 ! !LOCAL VARIABLES:
    integer         :: i,j,err
    REALTYPE        :: angle,uu,vv,sinconv,cosconv
 !EOP
 !-----------------------------------------------------------------------
+
+   call write_time_string()
+   LEVEL3 timestr,': reading meteo data ...',indx
+   start(3) = indx
 
    if (airp_id .gt. 0) then
       err = nf90_get_var(ncid,airp_id,wrk,start,edges)
