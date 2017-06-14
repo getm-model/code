@@ -280,8 +280,8 @@ contains
          status = nf90_get_var(ncid,id,a(2:2),start = start,count = count)
 
          if ( .not. have_dx ) dx = (a(2)-a(1))/(iextr-1)
-         do i=imin-HALO,imax+HALO
-            xcord(i) = a(1) + (i+ioff-1)*dx
+         do i=imin-HALO-1,imax+HALO
+            xxcord(i) = a(1) + (i+ioff-_HALF_)*dx
          end do
 #if 0
 !        potentially do checks on consistency of spacing and axis
@@ -305,8 +305,8 @@ contains
          start(1) = jextr
          status = nf90_get_var(ncid,id,a(2:2),start = start,count = count)
          if ( .not. have_dy ) dy = (a(2)-a(1))/(jextr-1)
-         do j=jmin-HALO,jmax+HALO
-            ycord(j) = a(1) + (j+joff-1)*dy
+         do j=jmin-HALO-1,jmax+HALO
+            yxcord(j) = a(1) + (j+joff-_HALF_)*dy
          end do
 #if 0
 !        potentially do checks on consistency of spacing and axis
@@ -404,8 +404,8 @@ stop
          status = nf90_get_var(ncid,id,a(2:2),start = start,count = count)
 
          if ( .not. have_dlon ) dlon = (a(2)-a(1))/(iextr-1)
-         do i=imin-HALO,imax+HALO
-            xcord(i) = a(1) + (i+ioff-1)*dlon
+         do i=imin-HALO-1,imax+HALO
+            xxcord(i) = a(1) + (i+ioff-_HALF_)*dlon
          end do
 #if 0
 !        potentially do checks on consistency of spacing and axis
@@ -417,9 +417,7 @@ stop
                               "Error reading x-axis in "//trim(filename))
          end if
 #endif
-         do j=jmin-HALO,jmax+HALO
-            lonc(:,j) = xcord(:)
-         end do
+
 !        lat
          status = nf90_inq_varid(ncid,trim(yaxis_name),id)
          if (status .ne. NF90_NOERR) then
@@ -433,8 +431,8 @@ stop
          status = nf90_get_var(ncid,id,a(2:2),start = start,count = count)
 
          if ( .not. have_dlat ) dlat = (a(2)-a(1))/(jextr-1)
-         do j=jmin-HALO,jmax+HALO
-            ycord(j) = a(1) + (j+joff-1)*dlat
+         do j=jmin-HALO-1,jmax+HALO
+            yxcord(j) = a(1) + (j+joff-_HALF_)*dlat
          end do
 #if 0
 !        potentially do checks on consistency of spacing and axis
@@ -446,9 +444,6 @@ stop
                               "Error reading y-axis in "//trim(filename))
          end if
 #endif
-         do i=imin-HALO,imax+HALO
-            latc(i,:) = ycord(:)
-         end do
 
          LEVEL3 'dlon= ',dlon,', dlat= ',dlat
 
@@ -572,16 +567,14 @@ stop
    end select
 
    select case (grid_type)
+
       case(3,4)
+
 !        pseudo coordinates for T- and X-points
-         xxcord(imin-HALO-1) = imin-HALO-1+ioff
-         do i=imin-HALO,imax+HALO
-            xcord(i)  = i+ioff - _HALF_
+         do i=imin-HALO-1,imax+HALO
             xxcord(i) = i+ioff
          end do
-         yxcord(jmin-HALO-1) = jmin-HALO-1+joff
-         do j=jmin-HALO,jmax+HALO
-            ycord(j)  = j+joff - _HALF_
+         do j=jmin-HALO-1,jmax+HALO
             yxcord(j) = j+joff
          end do
 
@@ -613,6 +606,9 @@ stop
          end if
 
    end select
+
+   xcord = _HALF_ * ( xxcord(:imax+HALO-1) + xxcord(imin-HALO:) )
+   ycord = _HALF_ * ( yxcord(:jmax+HALO-1) + yxcord(jmin-HALO:) )
 
 !  read bottom roughness
    if (bottfric_method .eq. 3) then

@@ -603,19 +603,24 @@
 
       case(2)
 
+         do j=jmin-HALO,jmax+HALO
+            lonc(:,j) = xcord
+         end do
+         do i=imin-HALO,imax+HALO
+            latc(i,:) = ycord
+         end do
+
+!        lonx is not required for internal use
 !        we need latx to calculate dxv - utilize equidistance
-         latx(ill:ihl,jll-1) = latc(ill:ihl,jll) - dlat/2.
-STDERR ill,jll,dlat/2.
-STDERR latc(1,1),latx(1,0)
-!stop
-         n=1
-         do j=jll,jhl
-            latx(ill:ihl,j) = latx(ill:ihl,jll-1) + n*dlat
-            n=n+1
+         do j=jmin-HALO-1,jmax+HALO
+            lonx(:,j) = xxcord
+         end do
+         do i=imin-HALO-1,imax+HALO
+            latx(i,:) = yxcord
          end do
 
          latu = latc
-         latv(ill:ihl,jll:jhl) = latx(ill:ihl,jll:jhl)
+         latv = latx(E2DFIELD)
 
       case(3)
 
