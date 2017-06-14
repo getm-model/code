@@ -67,6 +67,7 @@
    REALTYPE,target                     :: dyu(E2DFIELD) = -999.
    REALTYPE,target                     :: dyv(E2DFIELD) = -999.
    REALTYPE,target                     :: dyx(E2DFIELD) = -999.
+   REALTYPE,target                     :: areac(E2DFIELD)
    REALTYPE,target                     :: arcd1(E2DFIELD)
    REALTYPE,target                     :: arud1(E2DFIELD)
    REALTYPE,target                     :: arvd1(E2DFIELD)

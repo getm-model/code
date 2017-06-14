@@ -712,6 +712,7 @@
 
          dxc = dx ; dxu = dx ; dxv = dx ; dxx = dx
          dyc = dy ; dyu = dy ; dyv = dy ; dyx = dy
+         areac = dx*dy
          ard1 = _ONE_/(dx*dy)
          arcd1 = ard1 ; arud1 = ard1 ; arvd1 = ard1
 
@@ -747,11 +748,9 @@
                                   - _HALF_*( xx(i-1,j-1) + xx(i  ,j-1) ) )**2 &
                                + (  _HALF_*( yx(i-1,j  ) + yx(i  ,j  ) )      &
                                   - _HALF_*( yx(i-1,j-1) + yx(i  ,j-1) ) )**2 )
-               if (az(i,j) .gt. 0) then
-                  ard1 = _HALF_*abs(  (xx(i,j-1)-xx(i-1,j  ))*(yx(i  ,j)-yx(i-1,j-1)) &
-                                    + (xx(i,j  )-xx(i-1,j-1))*(yx(i-1,j)-yx(i  ,j-1)) )
-                  arcd1(i,j)=_ONE_/ard1
-               end if
+               areac(i,j) = _HALF_*abs(  (xx(i,j-1)-xx(i-1,j  ))*(yx(i  ,j)-yx(i-1,j-1)) &
+                                       + (xx(i,j  )-xx(i-1,j-1))*(yx(i-1,j)-yx(i  ,j-1)) )
+               arcd1(i,j)=_ONE_/areac(i,j)
             end do
          end do
 
@@ -890,9 +889,8 @@
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
 
-            if( az(i,j) .gt. 0) then
-               arcd1(i,j)=_ONE_/(dxc(i,j)*dyc(i,j))
-            end if
+            areac(i,j) = dxc(i,j) * dyc(i,j)
+            arcd1(i,j) = _ONE_/areac(i,j)
 
             if( au(i,j) .gt. 0) then
                arud1(i,j)=_ONE_/(dxu(i,j)*dyu(i,j))
