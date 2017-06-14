@@ -543,8 +543,7 @@
 !  Original author(s): Lars Umlauf
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,n
-   REALTYPE                  :: x
+   integer                   :: i,j
 !EOP
 !------------------------------------------------------------------------
 !BOC

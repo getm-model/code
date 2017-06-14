@@ -85,7 +85,7 @@ contains
    integer                             :: yaxis_id=-1
    integer, dimension(2)               :: dimidsT(2)
    character*(NF90_MAX_NAME)           :: xaxis_name,yaxis_name
-   integer                             :: i,j,n
+   integer                             :: i,j
    integer                             :: iskipl,jskipl
    integer, dimension(1)               :: start
    integer, dimension(1)               :: count
@@ -96,7 +96,6 @@ contains
    logical                             :: have_xc=.false.
    logical                             :: have_yc=.false.
    REALTYPE                            :: a(2)
-   integer                             :: rc
 !EOP
 !-------------------------------------------------------------------------
 
