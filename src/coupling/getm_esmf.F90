@@ -1247,17 +1247,14 @@
          if (noKindMatch) then
             allocate(xc1D(   _IRANGE_HALO_)) ; xc1D = xcord
             allocate(yc1D(   _JRANGE_HALO_)) ; yc1D = ycord
-            allocate(xx1D(-1+_IRANGE_HALO_))
-            allocate(yx1D(-1+_JRANGE_HALO_))
+            allocate(xx1D(-1+_IRANGE_HALO_)) ; xx1D = xxcord
+            allocate(yx1D(-1+_JRANGE_HALO_)) ; yx1D = yxcord
          else
             xc1D => xcord
             yc1D => ycord
             xx1D => xxcord
             yx1D => yxcord
          end if
-
-         xx1D(imin-HALO:imax+HALO-1) = 0.5d0 * ( xc1D(imin-HALO:imax+HALO-1) + xc1D(imin-HALO+1:imax+HALO) )
-         yx1D(jmin-HALO:jmax+HALO-1) = 0.5d0 * ( yc1D(jmin-HALO:jmax+HALO-1) + yc1D(jmin-HALO+1:jmax+HALO) )
 
 !        put pointers into persistent deep Arrays
          call createCoordArrays1D(xc1d,yc1d,xx1d,yx1d,                     &
@@ -1285,17 +1282,14 @@
          if (noKindMatch) then
             allocate(lonc1D(   _IRANGE_HALO_)) ; lonc1D = xcord
             allocate(latc1D(   _JRANGE_HALO_)) ; latc1D = ycord
-            allocate(lonx1D(-1+_IRANGE_HALO_))
-            allocate(latx1D(-1+_JRANGE_HALO_))
+            allocate(lonx1D(-1+_IRANGE_HALO_)) ; lonx1D = xxcord
+            allocate(latx1D(-1+_JRANGE_HALO_)) ; latx1D = yxcord
          else
             lonc1D => xcord
             latc1D => ycord
             lonx1D => xxcord
             latx1D => yxcord
          end if
-
-         lonx1D(imin-HALO:imax+HALO-1) = 0.5d0 * ( lonc1D(imin-HALO:imax+HALO-1) + lonc1D(imin-HALO+1:imax+HALO) )
-         latx1D(jmin-HALO:jmax+HALO-1) = 0.5d0 * ( latc1D(jmin-HALO:jmax+HALO-1) + latc1D(jmin-HALO+1:jmax+HALO) )
 
 !        put pointers into persistent deep Arrays
          call createCoordArrays1D(lonc1d,latc1d,lonx1d,latx1d,                     &
