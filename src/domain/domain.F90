@@ -499,9 +499,6 @@
 
 !        we need latx to calculate dxv - utilize equidistance
          latx(ill:ihl,jll-1) = latc(ill:ihl,jll) - dlat/2.
-STDERR ill,jll,dlat/2.
-STDERR latc(1,1),latx(1,0)
-!stop
          n=1
          do j=jll,jhl
             latx(ill:ihl,j) = latx(ill:ihl,jll-1) + n*dlat
