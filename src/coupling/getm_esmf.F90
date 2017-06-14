@@ -1052,7 +1052,7 @@
    use initialise, only: runtype
    use domain    , only: ioff,joff,imin,jmin,imax,jmax,kmax
    use domain    , only: grid_type,have_lonlat
-   use domain    , only: az,ax,arcd1
+   use domain    , only: az,ax,areac_getm=>areac
    use domain    , only: xcord,ycord,xc,yc,lonc,latc
    use domain    , only: xxcord,yxcord,xx,yx,lonx,latx
 #ifndef NO_3D
@@ -1215,12 +1215,7 @@
    maskX(:,jmax/2+1) = 0
 #endif
 
-!  KK-TODO: let GETM provide valid value on land
-   where(az .gt. 0)
-      areaC = _ONE_/arcd1
-   elsewhere
-      areaC = 0.0d0
-   end where
+   areaC = areac_getm
 
    do k=0,klen
       maskC3D(:,:,k) = maskC
