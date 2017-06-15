@@ -95,8 +95,9 @@
    integer, parameter :: TIM_SMAG2D      = 154  ! les_smagorinsky
 !  WAVE timers
    integer, parameter :: TIM_WAVES       = 160  ! waves
-!  ESMF
+!  coupling
    integer, parameter :: TIM_ESMF        = 166  ! ESMF specific
+   integer, parameter :: TIM_OASIS       = 168  ! OASIS specific
    ! This is test timers for temporary coding purposes:
    !  Note: All timers with index 170+ (test_timer_first) are
    !  considered test timers, so dont implement your timers here
@@ -266,6 +267,9 @@
 
 #ifdef _GETM_ESMF_
    timernames(TIM_ESMF)        = 'esmf'
+#endif
+#ifdef _GETM_OASIS_
+   timernames(TIM_OASIS)       = 'oasis'
 #endif
 
    timernames(TIM_TEST00)  = ' test-00'
