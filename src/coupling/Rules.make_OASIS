@@ -1,0 +1,9 @@
+ARCHDIR = $(OASIS_ARCHDIR)
+CHAN = $(OASIS_CHAN)
+
+DEFINES	+= -D_GETM_OASIS_
+
+INCDIRS    = -I$(ARCHDIR)/build/lib/psmile.$(CHAN)
+LINKDIRS   = -L$(ARCHDIR)/lib
+EXTRA_LIBS = -lpsmile.$(CHAN) -lmct -lmpeu -lscrip
+
