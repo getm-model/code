@@ -1,15 +1,28 @@
 #
-# Makefile to build the getm_esmf library - libgetm_esmf.a
+# Makefile to build the coupling libraries - libgetm_esmf.a libgetm_oasis.a
 #
 
 include ../Rules.make
 
-LIB	= $(LIBDIR)/libgetm_esmf${buildtype}.a
+LIB_ESMF	= $(LIBDIR)/libgetm_esmf${buildtype}.a
+LIB_OASIS	= $(LIBDIR)/libgetm_oasis${buildtype}.a
+LIB		= $(LIB_ESMF) $(LIB_OASIS)
 
-SRC	= getm_esmf.F90
+SRC	=
+ifeq ($(GETM_ESMF),true)
+SRC	+= getm_esmf.F90
+endif
+ifeq ($(GETM_OASIS),true)
+SRC	+= getm_oasis.F90
+endif
 
-MOD   = \
-${LIB}(getm_esmf.o)
+MOD   =
+ifeq ($(GETM_ESMF),true)
+MOD   += ${LIB_ESMF}(getm_esmf.o)
+endif
+ifeq ($(GETM_OASIS),true)
+MOD   += ${LIB_OASIS}(getm_oasis.o)
+endif
 
 OBJ   =
 
@@ -20,11 +33,11 @@ modules: $(MOD)
 objects: $(OBJ)
 
 doc: $(SRC)
-	$(PROTEX) $(SRC) > $(DOCDIR)/getm_esmf.tex
+	$(PROTEX) $(SRC) > $(DOCDIR)/coupling.tex
 	touch doc
 
 clean:
-	$(RM) ${LIB} $(MODDIR)/{getm_esmf}.{m.mod}
+	$(RM) ${LIB} $(MODDIR)/{getm_esmf,getm_oasis}.{m.mod}
 
 realclean: clean
 	$(RM) *.o doc
