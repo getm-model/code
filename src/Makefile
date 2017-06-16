@@ -22,15 +22,17 @@ SUBDIRS += \
 $(GETMDIR)/src/output		\
 $(GETMDIR)/src/ncdf		\
 $(GETMDIR)/src/input		\
-$(GETMDIR)/src/getm
-ifeq ($(GETM_ESMF),true)
-SUBDIRS += \
+$(GETMDIR)/src/getm		\
 $(GETMDIR)/src/coupling
-endif
 
 ifeq ($(GETM_ESMF_EXEC),true)
 CORE_LIBS	=	\
 		-lgetm_esmf${buildtype}
+else
+ifeq ($(GETM_OASIS),true)
+CORE_LIBS	=	\
+		-lgetm_oasis${buildtype}
+endif
 endif
 CORE_LIBS	+=	\
 		-lgetm${buildtype} 	\
