@@ -1,4 +1,5 @@
 #include "cppdefs.h"
+#define _LINE_ trim(integer2string(__LINE__))
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -19,6 +20,9 @@
    public do_getm_oasis
 !
 ! !PRIVATE DATA MEMBERS:
+!  Note (KK): __FILE__ includes full path, thus too long for log
+   character(len=*),parameter :: FILENAME="getm_oasis.F90"
+
    integer :: compid,il_part_id
 !
 ! !REVISION HISTORY:
@@ -77,17 +81,17 @@
    call tic(TIM_OASIS)
 
    call oasis_init_comp(compid,"getm",ierror)
-   if (ierror /= 0) call oasis_abort(compid,"InitializeP0()","cannot init component")
+   if (ierror /= 0) call oasis_abort(compid,FILENAME//':'//_LINE_)
 
    call oasis_get_localcomm(local_comm,ierror)
-   if (ierror /= 0) call oasis_abort(compid,"InitializeP1()","cannot get localcomm")
+   if (ierror /= 0) call oasis_abort(compid,FILENAME//':'//_LINE_)
 
 #ifdef GETM_PARALLEL
    call MPI_COMM_DUP(local_comm,comm_getm,ierror)
    if (ierror .ne. MPI_SUCCESS) then
 !     need depends on specified mpi error handler (i.e. not MPI_ERRORS_ARE_FATAL)
       call MPI_ERROR_STRING(ierror,mpierrmsg,length,rc)
-      call oasis_abort(compid,"InitializeP1()","cannot duplicate communicator")
+      call oasis_abort(compid,FILENAME//':'//_LINE_)
    end if
 #endif
 
@@ -100,7 +104,7 @@
    !call declare_fields()
 
    call oasis_enddef(ierror)
-   if (ierror /= 0) call oasis_abort(compid,"getmComp_init_grid()","cannot end definition phase")
+   if (ierror /= 0) call oasis_abort(compid,FILENAME//':'//_LINE_)
 
    call toc(TIM_OASIS)
 
@@ -193,7 +197,7 @@
    if (ierror .ne. MPI_SUCCESS) then
 !     need depends on specified mpi error handler (i.e. not MPI_ERRORS_ARE_FATAL)
       call MPI_ERROR_STRING(ierror,mpierrmsg,length,rc)
-      call oasis_abort(compid,"getmComp_init_grid()","cannot mpi_allgather")
+      call oasis_abort(compid,FILENAME//':'//_LINE_)
    end if
 #else
    alledges = myedges
@@ -212,10 +216,10 @@
    call oasis_def_partition(il_part_id,                                              &
                             (/2,(joff-j0)*nx_global+(ioff-i0),imax,jmax,nx_global/), &
                             ierror,iextr*jextr,"getm")
-   if (ierror /= 0) call oasis_abort(compid,"getmComp_init_grid()","cannot define partition")
+   if (ierror /= 0) call oasis_abort(compid,FILENAME//':'//_LINE_)
 
    if (grid_type.ne.2 .and. grid_type.ne.4) then
-!      call oasis_abort(compid,"getmComp_init_grid()","grid_type not supported")
+!      call oasis_abort(compid,FILENAME//':'//_LINE_)
    end if
 
    do i=imax,imax
@@ -1226,32 +1230,30 @@
 
    end subroutine update_exportState
 !EOC
+#endif
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: TimeStringISOFrac2ESMFtime - converts timestring to ESMF_Time
+! !ROUTINE: integer2string -
 !
 ! !INTERFACE:
-   subroutine TimeStringISOFrac2ESMFtime(TimeStrISOFrac,ESMFtime)
+   function integer2string(i)
 !
 ! !DESCRIPTION:
-!  So far missing extension to ESMF_TimeSet().
 !
 ! !USES:
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   character(len=*), intent(in)  :: TimeStrISOFrac
+   integer,intent(in) :: i
 !
 ! !OUTPUT PARAMETERS:
-   type(ESMF_Time) , intent(out) :: ESMFtime
+   character(len=range(i)+2) :: integer2string
 !
 ! !REVISION HISTORY:
-!  Original Author(s): Carsten Lemmen and Richard Hofmeister
+!  Original Author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES
-   integer :: yy,mm,dd,h,m,s,rc
-   logical :: abort
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -1259,30 +1261,20 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'TimeStringISOFrac2ESMFtime() # ',Ncall
+   write(debug,*) 'integer2string() # ',Ncall
 #endif
 
-   read(TimeStrISOFrac( 1: 4),'(i4)') yy
-   read(TimeStrISOFrac( 6: 7),'(i2)') mm
-   read(TimeStrISOFrac( 9:10),'(i2)') dd
-   read(TimeStrISOFrac(12:13),'(i2)') h
-   read(TimeStrISOFrac(15:16),'(i2)') m
-   read(TimeStrISOFrac(18:19),'(i2)') s
-
-   call ESMF_TimeSet(ESMFtime,yy=yy,mm=mm,dd=dd,h=h,m=m,s=s,           &
-                     calkindflag=ESMF_CALKIND_GREGORIAN,rc=rc)
-   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+   write(integer2string,'(I0)') i
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving TimeStringISOFrac2ESMFtime()'
+   write(debug,*) 'Leaving integer2string()'
    write(debug,*)
 #endif
    return
 
-   end subroutine TimeStringISOFrac2ESMFtime
+   end function integer2string
 !EOC
-#endif
+
 !-----------------------------------------------------------------------
 
    end module getm_oasis
