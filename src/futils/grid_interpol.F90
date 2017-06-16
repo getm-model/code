@@ -96,7 +96,6 @@
    REALTYPE                  :: x(4),y(4)
    REALTYPE                  :: z
    REALTYPE                  :: xr,yr,zr
-   logical                   :: break
 !EOP
 !-------------------------------------------------------------------------
 #ifdef DEBUG
@@ -114,16 +113,6 @@
 #else
    LEVEL2 'interpolates only when mask > 0'
 #endif
-
-   if ( present(break_on_missing) ) then
-      break = break_on_missing
-   else
-#ifdef _OLD_GRID_INTERPOL_
-      break = .false.
-#else
-      break = .true.
-#endif
-   end if
 
    if(southpole(3) .ne. _ZERO_ ) then
       FATAL 'southpole(3) (rotation) is not coded yet'
@@ -152,15 +141,9 @@
 
    gridmap = -999
 
-   if (present(met_mask)) then
       call interpol_coefficients(mask,southpole, &
                    olon,olat,met_lon,met_lat,beta,gridmap,t,u,         &
-                   met_mask=met_mask,break_on_missing=break)
-   else
-      call interpol_coefficients(mask,southpole, &
-                   olon,olat,met_lon,met_lat,beta,gridmap,t,u,         &
-                   break_on_missing=break)
-   end if
+                   met_mask=met_mask,break_on_missing=break_on_missing)
 
 #ifdef DEBUG
    write(debug,*) 'leaving init_grid_interpol()'
@@ -752,10 +735,12 @@
                      t(i,j) = _ZERO_
                      u(i,j) = _ZERO_
 #ifndef _OLD_GRID_INTERPOL_
+                     if (present(met_mask)) then
                      if(met_mask(im,jm) .eq. 0 .or. met_mask(im,jm+1) .eq. 0 ) &
                          t(i,j) = _ONE_
                      if(met_mask(im,jm) .eq. 0 .or. met_mask(im+1,jm) .eq. 0 ) &
                          u(i,j) = _ONE_
+                     end if
 #endif
                   case (4)
                      lon1 = met_lon(im)
