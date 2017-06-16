@@ -2646,9 +2646,8 @@
                                      p2dr=p2dr,frc=.true.,ign=.true.)
          if (associated(p2dr)) p2dr = atan2(sinwavedir,coswavedir) - convc*deg2rad
 
-!      force update of pointer because of pointer swap within GETM
          call StateSetCompleteField(exportState,trim(name_waveH  ),    &
-                                    farray2D=waveH,frc=.true.)
+                                    farray2D=waveH)
          call StateSetCompleteField(exportState,trim(name_waveK  ),    &
                                     farray2D=waveK)
          call StateSetCompleteField(exportState,trim(name_waveT  ),    &
