@@ -38,8 +38,8 @@
    logical         :: stationary
 
    REALTYPE,dimension(:),allocatable   :: wave_times(:)
-   REALTYPE,dimension(:,:),pointer     :: waveH_new,d_waveH
-   REALTYPE,dimension(:,:),pointer     :: waveL_new,d_waveL
+   REALTYPE,dimension(:,:),pointer     :: waveH_new,d_waveH,waveH_input
+   REALTYPE,dimension(:,:),pointer     :: waveL_new,d_waveL,waveL_input
    REALTYPE,dimension(:,:),pointer     :: coswavedir_new,d_coswavedir
    REALTYPE,dimension(:,:),pointer     :: sinwavedir_new,d_sinwavedir
    REALTYPE,dimension(:,:),allocatable :: wrk
@@ -115,11 +115,11 @@
    if (rc /= 0) call getm_error('init_waves_input_ncdf()',             &
                                 'Error allocating memory (waveH_new)')
 
-
    if ( stationary ) then
 
+      waveH_input => waveH_new
+      waveL_input => waveL
       call read_data(0)
-      waveH_new = waveH
 
    else
 
@@ -145,6 +145,8 @@
       if (rc /= 0) call getm_error('init_waves_input_ncdf()',          &
                              'Error allocating memory (d_sinwavedir)')
 
+      waveH_input => d_waveH
+      waveL_input => d_waveL
       call get_waves_data_ncdf(nstart-1)
 
    end if
@@ -239,8 +241,8 @@
       call read_data(indx)
       save_n = indx+1
 
-      waveH_old=>waveH_new;waveH_new=>waveH;waveH=>d_waveH;d_waveH=>waveH_old
-      waveL_old=>waveL_new;waveL_new=>waveL;waveL=>d_waveL;d_waveL=>waveL_old
+      waveH_old=>waveH_new;waveH_new=>d_waveH;d_waveH=>waveH_old;waveH_input=>d_waveH
+      waveL_old=>waveL_new;waveL_new=>d_waveL;d_waveL=>waveL_old;waveL_input=>d_waveL
       coswavedir_old=>coswavedir_new;coswavedir_new=>coswavedir;coswavedir=>d_coswavedir;d_coswavedir=>coswavedir_old
       sinwavedir_old=>sinwavedir_new;sinwavedir_new=>sinwavedir;sinwavedir=>d_sinwavedir;d_sinwavedir=>sinwavedir_old
 
@@ -490,14 +492,14 @@
    err = nf90_get_var(ncid,waveH_id,wrk,start,edges)
    if (err .ne. NF90_NOERR) go to 10
    if (on_grid) then
-      waveH(ill:ihl,jll:jhl) = wrk
+      waveH_input(ill:ihl,jll:jhl) = wrk
    else
    end if
 
    err = nf90_get_var(ncid,waveL_id,wrk,start,edges)
    if (err .ne. NF90_NOERR) go to 10
    if (on_grid) then
-      waveL(ill:ihl,jll:jhl) = wrk
+      waveL_input(ill:ihl,jll:jhl) = wrk
    else
    end if
 
@@ -527,5 +529,5 @@
    end module ncdf_waves
 
 !-----------------------------------------------------------------------
-! Copyright (C) 2014 - Hans Burchard and Karsten Bolding (BBH)         !
+! Copyright (C) 2014 - Knut Klingbeil                                  !
 !-----------------------------------------------------------------------

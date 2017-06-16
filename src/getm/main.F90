@@ -24,6 +24,10 @@
 ! !USES:
 #ifdef _GETM_ESMF_EXEC_
    use getm_esmf, only: do_getm_esmf
+#else
+#ifdef _GETM_OASIS_
+   use getm_oasis, only: do_getm_oasis
+#endif
 #endif
    use initialise, only: init_model,runtype,dryrun
    use time, only: simtime
@@ -60,11 +64,15 @@
 #ifdef _GETM_ESMF_EXEC_
    call do_getm_esmf()
 #else
+#ifdef _GETM_OASIS_
+   call do_getm_oasis()
+#else
    call init_model(datestr,timestr)
    if ( .not. dryrun ) then
       call time_loop(runtype)
    end if
    call clean_up(dryrun,runtype,MaxN)
+#endif
 #endif
 
 #ifdef FORTRAN95
@@ -189,8 +197,12 @@
 !
 #ifdef _GETM_ESMF_
    LEVEL1 'Compiled for ESMF integration'
+#endif
 #ifdef _GETM_ESMF_EXEC_
    LEVEL1 '   exec is standalone component'
+#else
+#ifdef _GETM_OASIS_
+   LEVEL1 'exec is OASIS component'
 #endif
 #endif
 

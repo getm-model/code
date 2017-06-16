@@ -16,7 +16,7 @@
    use grid_ncdf,    only: xlen,ylen,zlen
    use domain,       only: imin,imax,jmin,jmax,kmax
    use domain,       only: H,az,au,av
-   use domain,       only: dxv,dyu,arcd1
+   use domain,       only: dxv,dyu,areac
    use variables_3d, only: Uadv,Vadv
    use variables_3d, only: ssen,Dn
    use variables_3d, only: kmin,hn,hvel,uu,vv,ww,hcc,SS
@@ -214,7 +214,7 @@
    end if
    if (fluxw_id .ne. -1) then
       call to_fluxw(imin,jmin,imax,jmax,kmin,kmax,az, &
-                    arcd1,                         &
+                    areac,                            &
                     ww,flux_missing,ws)
       err = nf90_put_var(ncid,fluxw_id,ws(_3D_W_),start,edges)
    end if
