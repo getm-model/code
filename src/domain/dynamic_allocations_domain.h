@@ -182,6 +182,9 @@
    allocate(dyx(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_domain: Error allocating memory (dyx)'
 
+   allocate(areac(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_domain: Error allocating memory (areac)'
+
    allocate(arcd1(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_domain: Error allocating memory (arcd1)'
 

@@ -6,7 +6,7 @@
 !
 ! !INTERFACE:
    subroutine to_fluxw(imin,jmin,imax,jmax,kmin,kmax,az, &
-                       arcd1,                            &
+                       areac,                            &
                        ww,missing,fluxw)
 !
 ! !DESCRIPTION:
@@ -19,7 +19,7 @@
    integer,intent(in)                       :: imin,jmin,imax,jmax,kmax
    integer,dimension(I2DFIELD),intent(in)   :: kmin
    integer,dimension(E2DFIELD),intent(in)   :: az
-   REALTYPE,dimension(E2DFIELD),intent(in)  :: arcd1
+   REALTYPE,dimension(E2DFIELD),intent(in)  :: areac
    REALTYPE,dimension(I3DFIELD),intent(in)  :: ww
    REALTYPE,intent(in)                      :: missing
 !
@@ -56,7 +56,7 @@
 #endif
          do i=imin-HALO,imax+HALO
             if (az(i,j).gt.0 .and. kmin(i,j).le.k) then
-               fluxw(i,j,k) = ww(i,j,k)/ARCD1
+               fluxw(i,j,k) = ww(i,j,k)*areac(i,j)
             end if
          end do
 #ifndef SLICE_MODEL

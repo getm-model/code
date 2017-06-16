@@ -25,14 +25,19 @@ ifeq ($(wildcard $(GOTMDIR)/src/gotm/gotm.F90),)
 $(error the directory GOTMDIR=$(GOTMDIR) is not a valid GOTM directory)
 endif
 
-
 # ESMF specific settings
 ifeq ($(GETM_ESMF_EXEC),true)
+export GETM_OASIS=false
 export GETM_ESMF=true
 DEFINES += -D_GETM_ESMF_EXEC_
 endif
 ifeq ($(GETM_ESMF),true)
 include $(GETMDIR)/src/coupling/Rules.make_ESMF
+endif
+
+# OASIS specific settings
+ifeq ($(GETM_OASIS),true)
+include $(GETMDIR)/src/coupling/Rules.make_OASIS
 endif
 
 

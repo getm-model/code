@@ -552,8 +552,7 @@
 !  Original author(s): Lars Umlauf
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,n
-   REALTYPE                  :: x
+   integer                   :: i,j
 !EOP
 !------------------------------------------------------------------------
 !BOC
@@ -612,19 +611,24 @@
 
       case(2)
 
+         do j=jmin-HALO,jmax+HALO
+            lonc(:,j) = xcord
+         end do
+         do i=imin-HALO,imax+HALO
+            latc(i,:) = ycord
+         end do
+
+!        lonx is not required for internal use
 !        we need latx to calculate dxv - utilize equidistance
-         latx(ill:ihl,jll-1) = latc(ill:ihl,jll) - dlat/2.
-STDERR ill,jll,dlat/2.
-STDERR latc(1,1),latx(1,0)
-!stop
-         n=1
-         do j=jll,jhl
-            latx(ill:ihl,j) = latx(ill:ihl,jll-1) + n*dlat
-            n=n+1
+         do j=jmin-HALO-1,jmax+HALO
+            lonx(:,j) = xxcord
+         end do
+         do i=imin-HALO-1,imax+HALO
+            latx(i,:) = yxcord
          end do
 
          latu = latc
-         latv(ill:ihl,jll:jhl) = latx(ill:ihl,jll:jhl)
+         latv = latx(E2DFIELD)
 
       case(3)
 
@@ -717,6 +721,7 @@ STDERR latc(1,1),latx(1,0)
 
          dxc = dx ; dxu = dx ; dxv = dx ; dxx = dx
          dyc = dy ; dyu = dy ; dyv = dy ; dyx = dy
+         areac = dx*dy
          ard1 = _ONE_/(dx*dy)
          arcd1 = ard1 ; arud1 = ard1 ; arvd1 = ard1
 
@@ -752,11 +757,9 @@ STDERR latc(1,1),latx(1,0)
                                   - _HALF_*( xx(i-1,j-1) + xx(i  ,j-1) ) )**2 &
                                + (  _HALF_*( yx(i-1,j  ) + yx(i  ,j  ) )      &
                                   - _HALF_*( yx(i-1,j-1) + yx(i  ,j-1) ) )**2 )
-               if (az(i,j) .gt. 0) then
-                  ard1 = _HALF_*abs(  (xx(i,j-1)-xx(i-1,j  ))*(yx(i  ,j)-yx(i-1,j-1)) &
-                                    + (xx(i,j  )-xx(i-1,j-1))*(yx(i-1,j)-yx(i  ,j-1)) )
-                  arcd1(i,j)=_ONE_/ard1
-               end if
+               areac(i,j) = _HALF_*abs(  (xx(i,j-1)-xx(i-1,j  ))*(yx(i  ,j)-yx(i-1,j-1)) &
+                                       + (xx(i,j  )-xx(i-1,j-1))*(yx(i-1,j)-yx(i  ,j-1)) )
+               arcd1(i,j)=_ONE_/areac(i,j)
             end do
          end do
 
@@ -895,9 +898,8 @@ STDERR latc(1,1),latx(1,0)
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO
 
-            if( az(i,j) .gt. 0) then
-               arcd1(i,j)=_ONE_/(dxc(i,j)*dyc(i,j))
-            end if
+            areac(i,j) = dxc(i,j) * dyc(i,j)
+            arcd1(i,j) = _ONE_/areac(i,j)
 
             if( au(i,j) .gt. 0) then
                arud1(i,j)=_ONE_/(dxu(i,j)*dyu(i,j))

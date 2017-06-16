@@ -42,7 +42,7 @@
    REALTYPE,dimension(:,:),allocatable,target :: dxdyc,dydxc
    REALTYPE,dimension(:,:),allocatable,target :: dxc,dxu,dxv,dxx
    REALTYPE,dimension(:,:),allocatable,target :: dyc,dyu,dyv,dyx
-   REALTYPE,dimension(:,:),allocatable,target :: arcd1,arud1,arvd1
+   REALTYPE,dimension(:,:),allocatable,target :: areac,arcd1,arud1,arvd1
 
 !  bottom roughness
    REALTYPE, dimension(:,:), allocatable    :: z0,zub0,zvb0
