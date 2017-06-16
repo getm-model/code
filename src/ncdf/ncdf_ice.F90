@@ -55,7 +55,7 @@
 
 
    REALTYPE,dimension(:),allocatable   :: ice_times(:)
-   REALTYPE,dimension(:,:),pointer     :: ice_hi_new,d_ice_hi
+   REALTYPE,dimension(:,:),pointer     :: ice_hi_new,d_ice_hi,ice_hi_input
    REALTYPE,dimension(:,:),allocatable :: wrk
 
    character(len=10)         :: name_ice_hi="ice_hi"
@@ -153,8 +153,9 @@
 
    if ( stationary ) then
 
+      ice_hi_input => ice_hi_new
       call read_data(0)
-      ice_hi_new = ice_hi
+      ice_hi = ice_hi_new
 
    else
 
@@ -162,6 +163,7 @@
       if (rc /= 0) call getm_error('init_ice_input_ncdf()',            &
                                    'Error allocating memory (d_ice_hi)')
 
+      ice_hi_input => d_ice_hi
       call get_ice_data_ncdf(nstart-1)
 
    end if
@@ -255,7 +257,7 @@
       call read_data(indx)
       save_n = indx+1
 
-      ice_hi_old=>ice_hi_new;ice_hi_new=>ice_hi;ice_hi=>d_ice_hi;d_ice_hi=>ice_hi_old
+      ice_hi_old=>ice_hi_new;ice_hi_new=>d_ice_hi;d_ice_hi=>ice_hi_old;ice_hi_input=>d_ice_hi
 
       if ( .not. first ) then
          d_ice_hi = ice_hi_new - ice_hi_old
@@ -569,12 +571,12 @@
    if (err .ne. NF90_NOERR) go to 10
    if (on_grid) then
       if (point_source) then
-         ice_hi = wrk(1,1)
+         ice_hi_input = wrk(1,1)
       else
-         ice_hi(ill:ihl,jll:jhl) = wrk
+         ice_hi_input(ill:ihl,jll:jhl) = wrk
       end if
    else
-      call do_grid_interpol(az,wrk,gridmap,ti,ui,ice_hi,               &
+      call do_grid_interpol(az,wrk,gridmap,ti,ui,ice_hi_input,         &
                             imask=ice_hi_mask,fillvalue=_ZERO_)
    end if
 
