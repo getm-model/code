@@ -120,6 +120,7 @@
       waveH_input => waveH_new
       waveL_input => waveL
       call read_data(0)
+      waveH = waveH_new
 
    else
 
