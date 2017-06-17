@@ -256,9 +256,6 @@
 			<element name="waves_file" type="string" label="name of waves files">
 				<condition type="eq" variable="./waveforcing_method" value="2"/>
 			</element>
-			<element name="on_grid" type="bool" label="Are wave data given on grid-points?">
-				<condition type="eq" variable="./waveforcing_method" value="2"/>
-			</element>
 			<element name="waves_windscalefactor" type="float" label="scalefactor for wind wave parameterisation">
 				<condition type="eq" variable="./waveforcing_method" value="1"/>
 			</element>
