@@ -292,9 +292,11 @@
    write(debug,*) 'define_fields() # ',Ncall
 #endif
 
+!  Out fields
    call oasis_def_var(elev_id,"getm_elev",il_part_id,(/2,1/),OASIS_Out,(/1,1+imax-imin,1,1+jmax-jmin/),OASIS_Real,ierror)
    if (ierror /= 0) call oasis_abort(compid,FILENAME//':'//_LINE_)
 
+!  In fields
    if (waveforcing_method .eq. WAVES_FROMEXT) then
       call oasis_def_var(waveDir_id,"getm_waveDir",il_part_id,(/2,1/),OASIS_In,(/1,1+imax-imin,1,1+jmax-jmin/),OASIS_Real,ierror)
       if (ierror /= 0) call oasis_abort(compid,FILENAME//':'//_LINE_)
