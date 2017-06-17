@@ -555,7 +555,7 @@
 
       allocate(waves_mask(1:ilen,1:jlen),stat=err)
       if (err /= 0) &
-         stop 'init_waves_input_ncdf: Error allocating memory (waves_mask)'
+         stop 'open_waves_file: Error allocating memory (waves_mask)'
       err =  nf90_get_att(ncid,waveH_id,'mask',name_waves_mask)
       if (err .ne. NF90_NOERR) name_waves_mask='waves_mask'
       err = nf90_inq_varid(ncid,trim(name_waves_mask),id)
