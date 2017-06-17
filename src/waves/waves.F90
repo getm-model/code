@@ -38,7 +38,6 @@
    integer,public,parameter  :: WAVES_NOSTOKES=3
    integer,public            :: waves_method=WAVES_RS
    character(LEN = PATH_MAX),public :: waves_file
-   logical,public            :: on_grid=.true.
    integer,public,parameter  :: NO_WBBL=0
    integer,public,parameter  :: WBBL_DATA2=1
    integer,public,parameter  :: WBBL_SOULSBY05=2
@@ -110,7 +109,7 @@
 ! the simulation.
 !
 ! !LOCAL VARIABLES
-   namelist /waves/ waveforcing_method,waves_method,waves_file,on_grid,&
+   namelist /waves/ waveforcing_method,waves_method,waves_file,        &
                     waves_windscalefactor,max_depth_windwaves,         &
                     waves_ramp,waves_bbl_method
 !EOP
@@ -142,7 +141,6 @@
          end if
       case(WAVES_FROMFILE)
          LEVEL2 'waveforcing data read from file: ',trim(waves_file)
-         LEVEL3 'on_grid = ',on_grid
       case(WAVES_FROMEXT)
          LEVEL2 'waveforcing data written from external'
       case default
