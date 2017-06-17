@@ -113,22 +113,22 @@
 
       allocate(ti(E2DFIELD),stat=rc)
       if (rc /= 0) &
-          stop 'init_meteo_input_ncdf: Error allocating memory (ti)'
+          stop 'init_ice_input_ncdf: Error allocating memory (ti)'
       ti = -999.
 
       allocate(ui(E2DFIELD),stat=rc)
       if (rc /= 0) stop &
-              'init_meteo_input_ncdf: Error allocating memory (ui)'
+              'init_ice_input_ncdf: Error allocating memory (ui)'
       ui = -999.
 
       allocate(gridmap(E2DFIELD,1:2),stat=rc)
       if (rc /= 0) stop &
-              'init_meteo_input_ncdf: Error allocating memory (gridmap)'
+              'init_ice_input_ncdf: Error allocating memory (gridmap)'
       gridmap(:,:,:) = -999
 
       allocate(beta(E2DFIELD),stat=rc)
       if (rc /= 0) &
-          stop 'init_meteo_input_ncdf: Error allocating memory (beta)'
+          stop 'init_ice_input_ncdf: Error allocating memory (beta)'
       beta = _ZERO_
 
 !     do not call with ice_hi_mask, otherwise we have nearest neighbour
@@ -508,7 +508,7 @@
 
       allocate(ice_hi_mask(1:ilen,1:jlen),stat=err)
       if (err /= 0) &
-         stop 'init_meteo_input_ncdf: Error allocating memory (ice_hi_mask)'
+         stop 'open_ice_file: Error allocating memory (ice_hi_mask)'
       err =  nf90_get_att(ncid,ice_hi_id,'mask',name_ice_hi_mask)
       if (err .ne. NF90_NOERR) name_ice_hi_mask='ice_mask'
       err = nf90_inq_varid(ncid,trim(name_ice_hi_mask),id)
