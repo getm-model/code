@@ -218,9 +218,6 @@
 			<waves_file>
 				wavesfile.dat
 			</waves_file>
-			<on_grid>
-				True
-			</on_grid>
 			<waves_windscalefactor>
 				1.0
 			</waves_windscalefactor>
