@@ -17,8 +17,10 @@
    use time           ,only: write_time_string,timestr
    use domain         ,only: imin,imax,jmin,jmax,iextr,jextr
    use domain         ,only: ill,ihl,jll,jhl,ilg,ihg,jlg,jhg
-   use domain         ,only: az,convc
-   use waves          ,only: waves_file,on_grid
+   use domain         ,only: az,lonc,latc,cosconv,sinconv
+   use grid_interpol  ,only: init_grid_interpol,do_grid_interpol
+   use grid_interpol  ,only: to_rotated_lat_lon
+   use waves          ,only: waves_file
    use variables_waves,only: waveH,waveL,coswavedir,sinwavedir
    IMPLICIT NONE
 !
@@ -35,14 +37,29 @@
    integer         :: ilen,jlen,nlen=0
    integer         :: start(3),edges(3)
    REALTYPE        :: offset
-   logical         :: stationary
+   logical         :: stationary,on_grid
+
+   integer         :: grid_scan=1
+   logical         :: point_source=.false.
+   logical         :: rotated_waves_grid=.false.
+
+   integer, allocatable      :: waves_mask(:,:)
+   REALTYPE, allocatable     :: waves_lon(:),waves_lat(:)
+
+!  For gridinterpolation
+   REALTYPE, allocatable     :: beta(:,:)
+   REALTYPE, allocatable     :: ti(:,:),ui(:,:)
+   integer, allocatable      :: gridmap(:,:,:)
+!
+   REALTYPE, parameter       :: pi=3.1415926535897932384626433832795029
+   REALTYPE, parameter       :: deg2rad=pi/180.,rad2deg=180./pi
+   REALTYPE                  :: southpole(3) = (/0.0,-90.0,0.0/)
 
    REALTYPE,dimension(:),allocatable   :: wave_times(:)
    REALTYPE,dimension(:,:),pointer     :: waveH_new,d_waveH,waveH_input
    REALTYPE,dimension(:,:),pointer     :: waveL_new,d_waveL,waveL_input
    REALTYPE,dimension(:,:),pointer     :: coswavedir_new,d_coswavedir
    REALTYPE,dimension(:,:),pointer     :: sinwavedir_new,d_sinwavedir
-   REALTYPE,dimension(:,:),allocatable :: wrk
 
    character(len=10)         :: name_waveH="hs"
    character(len=10)         :: name_waveL="L"
@@ -86,30 +103,50 @@
    write(debug,*) 'init_waves_input_ncdf() # ',Ncall
 #endif
 
-   if ( .not. on_grid ) then
-      call getm_error("init_waves_input_ncdf()", &
-                      "currently only on_grid=T supported")
-   end if
-
    call open_waves_file(waves_file)
 
-   if (on_grid) then
-      if (ilen.ne.iextr .or. jlen.ne.jextr) then
-         call getm_error("init_waves_input_ncdf()", &
-                         "dimensions do not match")
-      end if
+   if (ilen.eq.iextr .and. jlen.eq.jextr) then
+      LEVEL3 'Assuming On-Grid waves forcing'
+      on_grid = .true.
       il = ilg ; jl = jlg ; ih = ihg ; jh = jhg
+   else if (ilen.eq.1 .and. jlen.eq.1) then
+      LEVEL3 'Assuming Point Source waves forcing'
+      point_source = .true.
+      on_grid = .true.
+      il = 1 ; jl = 1 ; ih = 1 ; jh = 1
    else
+      on_grid = .false.
       il = 1 ; jl = 1 ; ih = ilen ; jh = jlen
+
+      allocate(ti(E2DFIELD),stat=rc)
+      if (rc /= 0) &
+          stop 'init_waves_input_ncdf: Error allocating memory (ti)'
+      ti = -999.
+
+      allocate(ui(E2DFIELD),stat=rc)
+      if (rc /= 0) stop &
+              'init_waves_input_ncdf: Error allocating memory (ui)'
+      ui = -999.
+
+      allocate(gridmap(E2DFIELD,1:2),stat=rc)
+      if (rc /= 0) stop &
+              'init_waves_input_ncdf: Error allocating memory (gridmap)'
+      gridmap(:,:,:) = -999
+
+      allocate(beta(E2DFIELD),stat=rc)
+      if (rc /= 0) &
+          stop 'init_waves_input_ncdf: Error allocating memory (beta)'
+      beta = _ZERO_
+
+      call init_grid_interpol(imin,imax,jmin,jmax,az,  &
+                lonc,latc,waves_lon,waves_lat,southpole,gridmap,beta,ti,ui, &
+                break_on_missing=.false.)
+
    end if
 
    start(1) = il; start(2) = jl;
    edges(1) = ih-il+1; edges(2) = jh-jl+1;
    edges(3) = 1
-
-   allocate(wrk(edges(1),edges(2)),stat=rc)
-   if (rc /= 0) call getm_error('init_waves_input_ncdf()',             &
-                                'Error allocating memory (wrk)')
 
    allocate(waveH_new(E2DFIELD),stat=rc)
    if (rc /= 0) call getm_error('init_waves_input_ncdf()',             &
@@ -120,6 +157,7 @@
       waveH_input => waveH_new
       waveL_input => waveL
       call read_data(0)
+      waveH = waveH_new
 
    else
 
@@ -305,9 +343,12 @@
    logical,save       :: found=.false.
 
    integer            :: ndims,nvardims
-   integer            :: x_dim,y_dim,time_dim=-1,time_id=-1
+   integer            :: lon_dim,lat_dim,time_dim=-1
+   integer            :: lon_id,lat_id,time_id=-1
    integer            :: dim_len(3),vardim_ids(3)
-   character(len=16)  :: dim_name(3)
+   character(len=16)  :: dim_name(3),name_waves_mask
+   integer            :: id
+   logical            :: have_southpole
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -369,13 +410,17 @@
                                  'Wrong number of dims in '//name_waveH)
       err = nf90_inquire_variable(ncid,waveH_id,dimids=vardim_ids)
       if (err .NE. NF90_NOERR) go to 10
-      x_dim = vardim_ids(1)
-      y_dim = vardim_ids(2)
+
+      lon_dim = vardim_ids(1)
+      lat_dim = vardim_ids(2)
+
       if (stationary) exit
+
       time_dim = vardim_ids(3)
 
       err = nf90_inq_varid(ncid,dim_name(time_dim),time_id)
       if (err .ne. NF90_NOERR) go to 10
+
       if (dim_len(time_dim) > nlen) then
          if (.not. first) then
             deallocate(wave_times,stat=err)
@@ -406,7 +451,7 @@
          if (time_diff(j2,s2,julianday,secondsofday) > _ZERO_) then
             found = .true.
          else
-            LEVEL0 'WARNING: skipping meteo file ',trim(fn)
+            LEVEL0 'WARNING: skipping waves file ',trim(fn)
          end if
       end if
 
@@ -439,8 +484,91 @@
    if ( .not. stationary ) then
       LEVEL3 'waves offset time ',offset
    end if
-   ilen = dim_len(x_dim)
-   jlen = dim_len(y_dim)
+   ilen = dim_len(lon_dim)
+   jlen = dim_len(lat_dim)
+
+   if (first) then
+
+      err = nf90_inq_varid(ncid,dim_name(lon_dim),lon_id)
+      if (err .ne. NF90_NOERR) go to 10
+      allocate(waves_lon(ilen),stat=err)
+      if (err /= 0) call getm_error('open_waves_file()',                 &
+                                    'Error allocating memory (waves_lon)')
+      err = nf90_get_var(ncid,lon_id,waves_lon(1:ilen))
+      if (err .ne. NF90_NOERR) go to 10
+
+      err = nf90_inq_varid(ncid,dim_name(lat_dim),lat_id)
+      if (err .ne. NF90_NOERR) go to 10
+      allocate(waves_lat(ilen),stat=err)
+      if (err /= 0) call getm_error('open_waves_file()',                 &
+                                    'Error allocating memory (waves_lat)')
+      err = nf90_get_var(ncid,lat_id,waves_lat(1:jlen))
+      if (err .ne. NF90_NOERR) go to 10
+
+!           first we check for CF compatible grid_mapping_name
+            err = nf90_inq_varid(ncid,'rotated_pole',id)
+            if (err .eq. NF90_NOERR) then
+               LEVEL4 'Reading CF-compliant rotated grid specification'
+               err = nf90_get_att(ncid,id, &
+                                  'grid_north_pole_latitude',southpole(1))
+               if (err .ne. NF90_NOERR) go to 10
+               err = nf90_get_att(ncid,id, &
+                                  'grid_north_pole_longitude',southpole(2))
+               if (err .ne. NF90_NOERR) go to 10
+               err = nf90_get_att(ncid,id, &
+                                  'north_pole_grid_longitude',southpole(3))
+               if (err .ne. NF90_NOERR) then
+                  southpole(3) = _ZERO_
+               end if
+!              Northpole ---> Southpole transformation
+               LEVEL4 'Transforming North Pole to South Pole specification'
+               if (southpole(2) .ge. 0) then
+                  southpole(2) = southpole(2) - 180.
+               else
+                  southpole(2) = southpole(2) + 180.
+               end if
+               southpole(1) = -southpole(1)
+               southpole(3) = _ZERO_
+               have_southpole = .true.
+               rotated_waves_grid = .true.
+            else
+               have_southpole = .false.
+            end if
+
+!           and then we revert to the old way - checking 'southpole' directly
+            if (.not. have_southpole) then
+               err = nf90_inq_varid(ncid,'southpole',id)
+               if (err .ne. NF90_NOERR) then
+                  LEVEL4 'Setting southpole to (0,-90,0)'
+               else
+                  err = nf90_get_var(ncid,id,southpole)
+                  if (err .ne. NF90_NOERR) go to 10
+                  rotated_waves_grid = .true.
+               end if
+            end if
+            if (rotated_waves_grid) then
+               LEVEL4 'south pole:'
+!              changed indices - kb 2014-12-15
+               LEVEL4 '      lon ',southpole(2)
+               LEVEL4 '      lat ',southpole(1)
+            end if
+
+      allocate(waves_mask(1:ilen,1:jlen),stat=err)
+      if (err /= 0) &
+         stop 'open_waves_file: Error allocating memory (waves_mask)'
+      err =  nf90_get_att(ncid,waveH_id,'mask',name_waves_mask)
+      if (err .ne. NF90_NOERR) name_waves_mask='waves_mask'
+      err = nf90_inq_varid(ncid,trim(name_waves_mask),id)
+      if (err .eq. NF90_NOERR) then
+         LEVEL4 'taking variable' // trim(name_waves_mask) // ' as waves_mask'
+         err = nf90_get_var(ncid,id,waves_mask)
+         if (err .ne. NF90_NOERR) go to 10
+      else
+         waves_mask = 1
+      end if
+
+   end if
+
 
    first = .false.
 
@@ -478,7 +606,8 @@
    integer,intent(in) :: indx
 !
 ! !LOCAL VARIABLES:
-   REALTYPE,dimension(E2DFIELD) :: waveDir
+   REALTYPE,dimension(edges(1),edges(2)) :: wrk,wd
+   REALTYPE,dimension(E2DFIELD) :: cwd,swd
    integer                      :: err
    REALTYPE, parameter :: pi=3.1415926535897932384626433832795029d0
    REALTYPE, parameter :: deg2rad=pi/180.,rad2deg=180./pi
@@ -492,26 +621,50 @@
    err = nf90_get_var(ncid,waveH_id,wrk,start,edges)
    if (err .ne. NF90_NOERR) go to 10
    if (on_grid) then
-      waveH_input(ill:ihl,jll:jhl) = wrk
+      if (point_source) then
+         waveH_input = wrk(1,1)
+      else
+         waveH_input(ill:ihl,jll:jhl) = wrk
+      end if
    else
+      call do_grid_interpol(az,wrk,gridmap,ti,ui,waveH_input,          &
+                            imask=waves_mask,fillvalue=_ZERO_)
    end if
 
    err = nf90_get_var(ncid,waveL_id,wrk,start,edges)
    if (err .ne. NF90_NOERR) go to 10
    if (on_grid) then
-      waveL_input(ill:ihl,jll:jhl) = wrk
+      if (point_source) then
+         waveL_input = wrk(1,1)
+      else
+         waveL_input(ill:ihl,jll:jhl) = wrk
+      end if
    else
+      call do_grid_interpol(az,wrk,gridmap,ti,ui,waveL_input,          &
+                            imask=waves_mask,fillvalue=_ZERO_)
    end if
 
    err = nf90_get_var(ncid,waveDir_id,wrk,start,edges)
    if (err .ne. NF90_NOERR) go to 10
    if (on_grid) then
-      waveDir(ill:ihl,jll:jhl) = wrk
+      if (point_source) then
+         cwd = cos(wrk(1,1))
+         swd = sin(wrk(1,1))
+      else
+         cwd(ill:ihl,jll:jhl) = cos(wrk)
+         swd(ill:ihl,jll:jhl) = sin(wrk)
+      end if
    else
+      wd = wrk*deg2rad
+      wrk = cos(wd)
+      call do_grid_interpol(az,wd,gridmap,ti,ui,cwd,                   &
+                            imask=waves_mask,fillvalue=_ZERO_)
+      wrk = sin(wd)
+      call do_grid_interpol(az,wd,gridmap,ti,ui,swd,                   &
+                            imask=waves_mask,fillvalue=_ZERO_)
    end if
-   waveDir = (waveDir + convc) * deg2rad
-   coswavedir = cos(waveDir)
-   sinwavedir = sin(waveDir)
+   coswavedir = cwd*cosconv - swd*sinconv
+   sinwavedir = swd*cosconv + cwd*sinconv
 
 #ifdef DEBUG
    write(debug,*) 'Leaving read_data()'
