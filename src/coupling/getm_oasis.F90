@@ -24,6 +24,11 @@
    character(len=*),parameter :: FILENAME="getm_oasis.F90"
 
    integer :: compid,il_part_id
+   integer :: elev_id   =-1
+   integer :: waveDir_id=-1
+   integer :: waveH_id  =-1
+   integer :: waveK_id  =-1
+   integer :: waveT_id  =-1
 !
 ! !REVISION HISTORY:
 !  Original author(s): Xaver Lange & Knut Klingbeil
@@ -44,12 +49,12 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use initialise , only: init_model,dryrun,runtype
-   use integration, only: time_step,MinN,MaxN
-   use getm_timers, only: write_getm_timers,tic,toc,TIM_OASIS
+   use initialise ,only: init_model,dryrun,runtype
+   use integration,only: time_step,MinN,MaxN
+   use getm_timers,only: write_getm_timers,tic,toc,TIM_OASIS
 #ifdef GETM_PARALLEL
    use mpi
-   use halo_mpi   , only: comm_getm
+   use halo_mpi   ,only: comm_getm
 #endif
    IMPLICIT NONE
 !
@@ -96,13 +101,14 @@
 #endif
 
    call toc(TIM_OASIS)
+
    call date_and_time(datestr,timestr)
    call init_model(datestr,timestr)
+
    call tic(TIM_OASIS)
 
    call define_grid()
-   !call declare_fields()
-
+   call define_fields()
    call oasis_enddef(ierror)
    if (ierror /= 0) call oasis_abort(compid,FILENAME//':'//_LINE_)
 
@@ -116,7 +122,7 @@
 
       do n=MinN,MaxN
          call tic(TIM_OASIS)
-!        exchange data...
+         call exchange_fields()
          call toc(TIM_OASIS)
          call time_step(runtype,n)
       end do
@@ -155,12 +161,12 @@
 !  Defines partition and prepares grid data files.
 !
 ! !USES:
-   use domain    , only: ioff,imin,imax,iextr,joff,jmin,jmax,jextr
-   use domain    , only: lonc,latc,lonx,latx,areac,az,grid_type
-   use halo_zones, only: nprocs
+   use domain    ,only: ioff,imin,imax,iextr,joff,jmin,jmax,jextr
+   use domain    ,only: lonc,latc,lonx,latx,areac,az,grid_type
+   use halo_zones,only: nprocs
 #ifdef GETM_PARALLEL
    use mpi
-   use halo_mpi  , only: comm_getm
+   use halo_mpi  ,only: comm_getm
 #endif
    IMPLICIT NONE
 !
@@ -222,7 +228,7 @@
 !      call oasis_abort(compid,FILENAME//':'//_LINE_)
    end if
 
-   do i=imax,imax
+   do i=imin,imax
       do j=jmin,jmax
          clon(i,j,1) = lonx(i  ,j  )
          clon(i,j,2) = lonx(i-1,j  )
@@ -252,21 +258,20 @@
    end subroutine define_grid
 !EOC
 !-----------------------------------------------------------------------
-#if 0
 !BOP
 !
-! !ROUTINE: InitializeP1 -
+! !ROUTINE: define_fields -
 !
 ! !INTERFACE:
-   subroutine InitializeP1()
+   subroutine define_fields()
 !
 ! !DESCRIPTION:
+!  Declares the coupling fields
 !
 ! !USES:
-   use time       , only: init_time,start,timestep
-   use initialise , only: init_model,init_initialise,do_initialise,dryrun
-   use integration, only: MinN,MaxN
-   use getm_timers, only: 
+   use domain,only: imin,imax,jmin,jmax
+   use meteo ,only: met_method,calc_met,METEO_FROMEXT
+   use waves ,only: waveforcing_method,WAVES_FROMEXT
    IMPLICIT NONE
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -276,264 +281,7 @@
 ! !REVISION HISTORY:
 !
 ! !LOCAL VARIABLES
-   integer                    :: localrc,comm,length,getmRunTimeStepCount
-   logical                    :: abort,clockIsPresent
-   character(len=ESMF_MAXSTR) :: name="getm"
-   character(len=19)          :: TimeStrISOFrac,start_external,stop_external
-!
-!EOP
-!-----------------------------------------------------------------------
-!BOC
-   return
-
-   end subroutine InitializeP1
-!EOC
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: InitializeP2 -
-!
-! !INTERFACE:
-   subroutine InitializeP2(getmComp,importState,exportState,clock,rc)
-!
-! !DESCRIPTION:
-!  Here neccessary import and export fields are allocated.
-!
-!  Note: states and clock are uninitialized if the toplevel component
-!        did not provide corresponding arguments to
-!        ESMF_GridCompInitialize(getmComp).
-!        Status can be checked with [State|Clock]IsCreated().
-!  The toplevel component can inquire rc via optional keyword argument
-!  userRc to ESMF_GridCompInitialize().
-!
-! !USES:
-   use initialise, only: dryrun
-   use getm_timers, only: tic,toc,TIM_OASIS
-   IMPLICIT NONE
-!
-! !INPUT/OUTPUT PARAMETERS:
-   type(ESMF_GridComp) :: getmComp
-   type(ESMF_State)    :: importState,exportState ! may be uninitialized
-   type(ESMF_Clock)    :: clock                   ! may be uninitialized
-!
-! !OUTPUT PARAMETERS:
-   integer,intent(out) :: rc
-!
-! !REVISION HISTORY:
-!
-! !LOCAL VARIABLES
-   logical                    :: abort
-   character(len=ESMF_MAXSTR) :: name="getm"
-!
-!EOP
-!-----------------------------------------------------------------------
-!BOC
-   return
-
-   end subroutine InitializeP2
-!EOC
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: RunP1 -
-!
-! !INTERFACE:
-   subroutine RunP1(getmComp,importState,exportState,clock,rc)
-!
-! !DESCRIPTION:
-!  Note: states and clock are uninitialized if the toplevel component
-!        did not provide corresponding arguments to
-!        ESMF_GridCompRun(getmComp).
-!        Status can be checked with [State|Clock]IsCreated().
-!  The toplevel component can inquire rc via optional keyword argument
-!  userRc to ESMF_GridCompRun().
-!
-! !USES:
-
-
-   use getm_timers, only: tic,toc,TIM_OASIS
-   IMPLICIT NONE
-!
-! !INPUT/OUTPUT PARAMETERS:
-   type(ESMF_GridComp) :: getmComp
-   type(ESMF_State)    :: importState,exportState ! may be uninitialized
-   type(ESMF_Clock)    :: clock                   ! may be uninitialized
-!
-! !OUTPUT PARAMETERS:
-   integer,intent(out) :: rc
-!
-! !REVISION HISTORY:
-!
-! !LOCAL VARIABLES
-   type(ESMF_Clock)           :: getmClock
-   type(ESMF_Time)            :: getmTime,nextTime
-   type(ESMF_TimeInterval)    :: getmTimeStep
-   integer(ESMF_KIND_I8)      :: advanceCount
-   integer(kind=kind(MinN))   :: n
-   logical                    :: abort
-   character(len=ESMF_MAXSTR) :: name="getm"
-!
-!EOP
-!-----------------------------------------------------------------------
-!BOC
-   return
-
-   end subroutine RunP1
-!EOC
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: FinalizeP1 -
-!
-! !INTERFACE:
-   subroutine FinalizeP1(getmComp,importState,exportState,clock,rc)
-!
-! !DESCRIPTION:
-!  Note: states and clock are uninitialized if the toplevel component
-!        did not provide corresponding arguments to
-!        ESMF_GridCompFinalize(getmComp).
-!        Status can be checked with [State|Clock]IsCreated().
-!  The toplevel component can inquire rc via optional keyword argument
-!  userRc to ESMF_GridCompFinalize().
-!
-! !USES:
-   use initialise , only: runtype,dryrun
-   use integration, only: MaxN
-
-   use getm_timers, only: tic,toc,TIM_OASIS
-   IMPLICIT NONE
-!
-! !INPUT/OUTPUT PARAMETERS:
-   type(ESMF_GridComp) :: getmComp
-   type(ESMF_State)    :: importState,exportState ! may be uninitialized
-   type(ESMF_Clock)    :: clock                   ! may be uninitialized
-!
-! !OUTPUT PARAMETERS:
-   integer,intent(out) :: rc
-!
-! !REVISION HISTORY:
-!
-! !LOCAL VARIABLES
-   type(ESMF_Clock)           :: getmClock
-   type(ESMF_Grid)            :: getmGrid
-   type(ESMF_DistGrid)        :: getmDistGrid3D
-   type(type_getmInternalState)               :: gis
-   type(type_getmInternalStateStruct),pointer :: isd
-   logical                    :: abort,clockIsPresent,GridIsPresent
-   character(len=ESMF_MAXSTR) :: name="getm"
-!
-!EOP
-!-----------------------------------------------------------------------
-!BOC
-   return
-
-   end subroutine FinalizeP1
-!EOC
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: getmComp_init_grid - Creates Grid
-!
-! !INTERFACE:
-   subroutine getmComp_init_grid(getmComp,getmGrid2D)
-!
-! !DESCRIPTION:
-!
-! !USES:
-   use initialise, only: runtype
-   use domain    , only: ioff,joff,imin,jmin,imax,jmax,kmax
-   use domain    , only: grid_type,have_lonlat
-   use domain    , only: az,ax,arcd1
-   use domain    , only: xcord,ycord,xc,yc,lonc,latc
-   use domain    , only: xxcord,yxcord,xx,yx,lonx,latx
-#ifndef NO_3D
-   use variables_3d, only: zwn,zcn
-#endif
-   IMPLICIT NONE
-!
-! !INPUT/OUTPUT PARAMETERS:
-   type(ESMF_GridComp) :: getmComp
-!
-! !OUTPUT PARAMETERS:
-   type(ESMF_Grid),intent(out) :: getmGrid2D
-!
-! !REVISION HISTORY:
-!  Original Author(s): Knut Klingbeil
-!
-! !LOCAL VARIABLES
-   real(ESMF_KIND_R8),pointer :: xc1D  (:)    =>NULL()
-   real(ESMF_KIND_R8),pointer :: yc1D  (:)    =>NULL()
-   real(ESMF_KIND_R8),pointer :: xx1D  (:)    =>NULL()
-   real(ESMF_KIND_R8),pointer :: yx1D  (:)    =>NULL()
-   real(ESMF_KIND_R8),pointer :: xc2D  (:,:)  =>NULL()
-   real(ESMF_KIND_R8),pointer :: yc2D  (:,:)  =>NULL()
-   real(ESMF_KIND_R8),pointer :: xx2D  (:,:)  =>NULL()
-   real(ESMF_KIND_R8),pointer :: yx2D  (:,:)  =>NULL()
-   real(ESMF_KIND_R8),pointer :: lonc1D(:)    =>NULL()
-   real(ESMF_KIND_R8),pointer :: latc1D(:)    =>NULL()
-   real(ESMF_KIND_R8),pointer :: lonx1D(:)    =>NULL()
-   real(ESMF_KIND_R8),pointer :: latx1D(:)    =>NULL()
-   real(ESMF_KIND_R8),pointer :: lonc2D(:,:)  =>NULL()
-   real(ESMF_KIND_R8),pointer :: latc2D(:,:)  =>NULL()
-   real(ESMF_KIND_R8),pointer :: lonx2D(:,:)  =>NULL()
-   real(ESMF_KIND_R8),pointer :: latx2D(:,:)  =>NULL()
-   real(ESMF_KIND_R8),pointer :: zw    (:,:,:)=>NULL()
-   real(ESMF_KIND_R8),pointer :: zc    (:,:,:)=>NULL()
-   real(ESMF_KIND_R8),pointer :: zx    (:,:,:)=>NULL()
-   real(ESMF_KIND_R8),pointer :: areaC (:,:)
-   real(ESMF_KIND_R8),pointer :: p2dr  (:,:)
-   real(ESMF_KIND_R8),dimension(:,:,:),allocatable,target :: areaW3D
-   integer(ESMF_KIND_I4),pointer :: maskC(:,:)
-   integer(ESMF_KIND_I4),pointer :: maskX(:,:)
-   integer(ESMF_KIND_I4),dimension(:,:,:),allocatable,target :: maskC3D
-   integer(ESMF_KIND_I4),dimension(:,:,:),allocatable,target :: maskX3D
-   integer(ESMF_KIND_I4),pointer                         :: p2di(:,:)
-   REALTYPE                 :: getmreal
-   integer                  :: rc,pet,i0,j0,ilen,jlen,klen,k
-   integer                  :: petCount
-   integer,dimension(3)     :: coordDimCount
-   integer,dimension(3,3)   :: coordDimMap
-   integer,dimension(:,:,:),allocatable                  :: deBlockList
-   logical                    :: abort,noKindMatch
-!
-!EOP
-!-----------------------------------------------------------------------
-   return
-
-   end subroutine getmComp_init_grid
-!EOC
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: getmComp_update_grid -
-!
-! !INTERFACE:
-   subroutine getmComp_update_grid(getmComp)
-!
-! !DESCRIPTION:
-!
-! !USES:
-   use initialise  , only: runtype
-   use domain      , only: imin,imax,jmin,jmax,kmax,az,au,av,H
-   use variables_2d, only: z
-#ifndef NO_3D
-   use variables_3d, only: zwn,zcn
-#endif
-   IMPLICIT NONE
-!
-! !INPUT/OUTPUT PARAMETERS:
-   type(ESMF_GridComp) :: getmComp
-!
-! !REVISION HISTORY:
-!  Original Author(s): Knut Klingbeil
-!
-! !LOCAL VARIABLES
-   type(ESMF_Grid)                             :: getmGrid3D
-   real(ESMF_KIND_R8),dimension(:,:,:),pointer :: zw,zc,zx
-   REALTYPE,dimension(E2DFIELD)                :: zwu
-   REALTYPE                                    :: getmreal
-   integer                                     :: rc,i,j,k,klen
-   logical                                     :: abort,noKindMatch
+   integer :: ierror
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -541,89 +289,118 @@
 #ifdef DEBUG
    integer, save :: Ncall = 0
    Ncall = Ncall+1
-   write(debug,*) 'getmComp_update_grid() # ',Ncall
+   write(debug,*) 'define_fields() # ',Ncall
 #endif
 
-   call ESMF_GridCompGet(getmComp,grid=getmGrid3D,rc=rc)
-   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+!  Out fields
+   call oasis_def_var(elev_id,"getm_elev",il_part_id,(/2,1/),OASIS_Out,(/1,1+imax-imin,1,1+jmax-jmin/),OASIS_Real,ierror)
+   if (ierror /= 0) call oasis_abort(compid,FILENAME//':'//_LINE_)
 
-   call ESMF_GridGetCoord(getmGrid3D,3,farrayPtr=zw,                   &
-                          staggerloc=ESMF_StaggerLoc_CENTER_VFACE,     &
-                          rc=rc)
-   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
-
-   call ESMF_GridGetCoord(getmGrid3D,3,farrayPtr=zc,                   &
-                          staggerloc=ESMF_StaggerLoc_CENTER_VCENTER,   &
-                          rc=rc)
-   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
-
-   call ESMF_GridGetCoord(getmGrid3D,3,farrayPtr=zx,                   &
-                          staggerloc=ESMF_StaggerLoc_CORNER,           &
-                          rc=rc)
-   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
-
-   if (runtype .eq. 1) then
-      klen = 1
-   else
-      klen = kmax
+!  In fields
+   if (waveforcing_method .eq. WAVES_FROMEXT) then
+      call oasis_def_var(waveDir_id,"getm_waveDir",il_part_id,(/2,1/),OASIS_In,(/1,1+imax-imin,1,1+jmax-jmin/),OASIS_Real,ierror)
+      if (ierror /= 0) call oasis_abort(compid,FILENAME//':'//_LINE_)
+      call oasis_def_var(waveH_id  ,"getm_waveH"  ,il_part_id,(/2,1/),OASIS_In,(/1,1+imax-imin,1,1+jmax-jmin/),OASIS_Real,ierror)
+      if (ierror /= 0) call oasis_abort(compid,FILENAME//':'//_LINE_)
+      call oasis_def_var(waveK_id  ,"getm_waveK"  ,il_part_id,(/2,1/),OASIS_In,(/1,1+imax-imin,1,1+jmax-jmin/),OASIS_Real,ierror)
+      if (ierror /= 0) call oasis_abort(compid,FILENAME//':'//_LINE_)
+      call oasis_def_var(waveT_id  ,"getm_waveT"  ,il_part_id,(/2,1/),OASIS_In,(/1,1+imax-imin,1,1+jmax-jmin/),OASIS_Real,ierror)
+      if (ierror /= 0) call oasis_abort(compid,FILENAME//':'//_LINE_)
    end if
-
-   noKindMatch = ( kind(getmreal) .ne. ESMF_KIND_R8 )
-
-   if (noKindMatch .or. runtype.eq.1) then
-      if (runtype .eq. 1) then
-         zw(:,:,0)    = -H
-         zw(:,:,klen) = z
-         zc(:,:,klen) = 0.5d0 * ( zw(:,:,klen-1) + zw(:,:,klen) )
-      else
-#ifndef NO_3D
-         zw = zwn
-         zc = zcn
-#endif
-      end if
-   end if
-
-   do k=0,klen
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO-1
-            if (au(i,j) .gt. 0) then
-               zwu(i,j) = 0.5d0 * ( zw(i,j,k) + zw(i+1,j,k) )
-            else
-               if (az(i,j) .gt. 0) then
-                  zwu(i,j) = zw(i,j,k)
-               else if (az(i+1,j) .gt. 0) then
-                  zwu(i,j) = zw(i+1,j,k)
-               end if
-            end if
-         end do
-      end do
-      do j=jmin-HALO,jmax+HALO-1
-         do i=imin-HALO,imax+HALO-1
-            if (av(i,j).gt.0 .or. av(i+1,j).gt.0) then
-               zx(i,j,k) = 0.5d0 * ( zwu(i,j) + zwu(i,j+1) )
-            else
-               if (az(i,j).gt.0 .or. az(i+1,j).gt.0) then
-                  zx(i,j,k) = zwu(i,j)
-               else if (az(i,j+1).gt.0 .or. az(i+1,j+1).gt.0) then
-                  zx(i,j,k) = zwu(i,j+1)
-               end if
-            end if
-         end do
-      end do
-   end do
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving getmComp_update_grid()'
+   write(debug,*) 'Leaving define_fields()'
    write(debug,*)
 #endif
    return
 
-   end subroutine getmComp_update_grid
+   end subroutine define_fields
 !EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: exchange_fields -
+!
+! !INTERFACE:
+   subroutine exchange_fields()
+!
+! !DESCRIPTION:
+!  Sends and receives the coupling fields.
+!
+! !USES:
+   use domain         ,only: imin,imax,jmin,jmax,az,convc
+   use variables_2d   ,only: z
+   use meteo          ,only: met_method,calc_met,METEO_FROMEXT
+   use waves          ,only: waveforcing_method,WAVES_FROMEXT,new_waves
+   use variables_waves,only: coswavedir,sinwavedir,waveH,waveK,waveT
+   use halo_zones     ,only: update_2d_halo,wait_halo,H_TAG
+   use time           ,only: fsecs
+   IMPLICIT NONE
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !OUTPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!
+! !LOCAL VARIABLES
+   REALTYPE,dimension(E2DFIELD) :: wrk
+   integer :: date,info
+   REALTYPE, parameter :: pi=3.1415926535897932384626433832795029d0
+   REALTYPE, parameter :: deg2rad=pi/180
+!
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'exchange_fields() # ',Ncall
+#endif
+
+   date = int(fsecs)
+
+!  put fields (only if specified in namcouple)
+   if (elev_id.ne.-1) call oasis_put(elev_id,date,z(imin:imax,jmin:jmax))
+
+!  get fields
+   if (waveforcing_method .eq. WAVES_FROMEXT) then
+      call oasis_get(waveDir_id,date,wrk(imin:imax,jmin:jmax),info)
+      if (info /= OASIS_Ok) then
+         call update_2d_halo(wrk,wrk,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
+         coswavedir = cos( wrk + convc*deg2rad )
+         sinwavedir = sin( wrk + convc*deg2rad )
+         new_waves = .true.
+      end if
+      call oasis_get(waveH_id  ,date,waveH(imin:imax,jmin:jmax),info)
+      if (info /= OASIS_Ok) then
+         call update_2d_halo(waveH,waveH,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
+      end if
+      call oasis_get(waveK_id  ,date,waveK(imin:imax,jmin:jmax),info)
+      if (info /= OASIS_Ok) then
+         call update_2d_halo(waveK,waveK,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
+      end if
+      call oasis_get(waveT_id  ,date,waveT(imin:imax,jmin:jmax),info)
+      if (info /= OASIS_Ok) then
+         call update_2d_halo(waveT,waveT,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
+      end if
+   end if
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving exchange_fields()'
+   write(debug,*)
+#endif
+   return
+
+   end subroutine exchange_fields
+!EOC
+!-----------------------------------------------------------------------
+
+#if 0
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -635,8 +412,6 @@
 ! !DESCRIPTION:
 !
 ! !USES:
-   use meteo,only: met_method,calc_met,METEO_FROMEXT
-   use waves,only: waveforcing_method,WAVES_FROMEXT
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -657,17 +432,6 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
-#ifdef DEBUG
-   integer, save :: Ncall = 0
-   Ncall = Ncall+1
-   write(debug,*) 'init_importStateP1() # ',Ncall
-#endif
-
-   call ESMF_GridCompGet(getmComp,grid=getmGrid3D,rc=rc)
-   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
-
-   call StateAddGridSetField(importState,"gridSetField2D",getmGrid2D)
 
    if (met_method .eq. METEO_FROMEXT) then
    !call StateAddGridSetField(importState,trim(name_swr    ),getmGrid2D,units="W m-2")
@@ -677,12 +441,6 @@
    end if ! calc_met
    end if ! meteo
 
-   if (waveforcing_method .eq. WAVES_FROMEXT) then
-   call StateAddGridSetField(importState,trim(name_waveDir),getmGrid2D,units="rad")
-   call StateAddGridSetField(importState,trim(name_waveH  ),getmGrid2D,units="m")
-   call StateAddGridSetField(importState,trim(name_waveK  ),getmGrid2D,units="m-1")
-   call StateAddGridSetField(importState,trim(name_waveT  ),getmGrid2D,units="s")
-   end if
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_importStateP1()'
@@ -759,8 +517,6 @@
 
          call StateReadCompleteField(importState,trim(name_waveDir),   &
                                      p2dr=p2dr,frc=.true.)
-         coswavedir = cos( p2dr + convc*deg2rad )
-         sinwavedir = sin( p2dr + convc*deg2rad )
 
          call StateReadCompleteField(importState,trim(name_waveH  ),   &
                                      farray2d=waveH)
