@@ -168,8 +168,8 @@
    integer, intent(in)                 :: mask(-HALO+1:,-HALO+1:)
    REALTYPE, intent(in),target         :: ifield(:,:)
    integer, intent(in)                 :: gridmap(-HALO+1:,-HALO+1:,1:)
-   REALTYPE, intent(in),target         :: t(-HALO+1:,-HALO+1:)
-   REALTYPE, intent(in),target         :: u(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)                :: t(-HALO+1:,-HALO+1:)
+   REALTYPE, intent(in)                :: u(-HALO+1:,-HALO+1:)
    integer, intent(in),optional        :: imask(:,:)
    REALTYPE, intent(in),optional       :: fillvalue
 !
