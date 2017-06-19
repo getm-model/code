@@ -214,7 +214,7 @@
               'init_meteo_input_ncdf: Error allocating memory (gridmap)'
       gridmap(:,:,:) = -999
 
-      call init_grid_interpol(imin,imax,jmin,jmax,az,  &
+      call init_grid_interpol(ill,ihl,jll,jhl,az,  &
                 lonc,latc,met_lon,met_lat,southpole,gridmap,beta,ti,ui)
 
       LEVEL2 "Checking interpolation coefficients"
@@ -756,8 +756,8 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 !     Rotation of wind due to the combined effect of possible rotation of
 !     meteorological grid and possible hydrodynamic grid convergence
 !     (cartesian and curvi-linear grids where conv <> 0.)
-      do j=jmin-1,jmax+1
-         do i=imin-1,imax+1
+      do j=jll,jhl
+         do i=ill,ihl
 !KBK            angle=-convc(i,j)*deg2rad
 !KBK            angle=beta(i,j)
             angle=beta(i,j)-convc(i,j)*deg2rad

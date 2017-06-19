@@ -653,19 +653,9 @@
 !$OMP          PRIVATE(i)
 !$OMP SINGLE
 
-            if (new_meteo) then
+            if (met_method .eq. METEO_FROMFILE) then
 
-               call update_2d_halo(airp_input,airp_input,az,imin,jmin,imax,jmax,H_TAG)
-               call wait_halo(H_TAG)
-
-               if (calc_met) then
-                  call update_2d_halo(u10_input,u10_input,az,imin,jmin,imax,jmax,H_TAG)
-                  call wait_halo(H_TAG)
-                  call update_2d_halo(v10_input,v10_input,az,imin,jmin,imax,jmax,H_TAG)
-                  call wait_halo(H_TAG)
-               end if
-
-               if (met_method .eq. METEO_FROMFILE) then
+               if (new_meteo) then
 
                   airp_old=>airp_new;airp_new=>d_airp;d_airp=>airp_old;airp_input=>d_airp
                   if (calc_met) then
@@ -727,11 +717,8 @@
 !$OMP SINGLE
                   end if !if (.not. first) then
 
-               end if !if METEO_FROMFILE
+               end if !if new_meteo
 
-            end if !if new_meteo
-
-            if (met_method .eq. METEO_FROMFILE) then
 !$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
@@ -795,21 +782,19 @@
 !$OMP SINGLE
 
                if (calc_relative_wind) then
+                  call update_2d_halo(ssu,ssu,az,imin,jmin,imax,jmax,H_TAG)
+                  call wait_halo(H_TAG)
+                  call update_2d_halo(ssv,ssv,az,imin,jmin,imax,jmax,H_TAG)
+                  call wait_halo(H_TAG)
+
 !                 update with latest surface currents
                   u10r = u10 - ssu
                   v10r = v10 - ssv
-                  call update_2d_halo(u10r,u10r,az,imin,jmin,imax,jmax,H_TAG)
-                  call wait_halo(H_TAG)
-                  call update_2d_halo(v10r,v10r,az,imin,jmin,imax,jmax,H_TAG)
-                  call wait_halo(H_TAG)
                end if
                where (az.ne.0) wind = sqrt( u10r*u10r + v10r*v10r )
 
-            end if
 
-            if (new_meteo .or. ((met_method.eq.METEO_FROMFILE).and.calc_met.and.interpolate_meteo)) then
-
-               if (calc_met) then
+               if (new_meteo .or. ((met_method.eq.METEO_FROMFILE).and.interpolate_meteo)) then
 
                   if (met_method.eq.METEO_FROMFILE .and. .not.interpolate_meteo) then
                      if (calc_relative_wind) then
@@ -832,14 +817,16 @@
                      tcc_x    => tcc
                   end if
 
+
                   if (present(sst_model) .and. .not.constant_cd) then
+
 ! OMP-NOTE: This is an expensive loop, but we cannot thread it as long
 !    as exchange_coefficients() and fluxes() pass information through
 !    scalars in the meteo module. BJB 2009-09-30.
 #ifndef SLICE_MODEL
-                     do j=jmin,jmax
+                     do j=jmin-HALO,jmax+HALO
 #endif
-                        do i=imin,imax
+                        do i=imin-HALO,imax+HALO
                            if (az(i,j) .ge. 1) then
                               call exchange_coefficients( &
                                      u10r_x(i,j),v10r_x(i,j),t2(i,j),airp_x(i,j), &
@@ -852,12 +839,14 @@
 #ifndef SLICE_MODEL
                      end do
 #endif
+
                   else
+
 ! OMP-NOTE: w needs to be a local (stack) variable to thread this loop.
 #ifndef SLICE_MODEL
-                     do j=jmin,jmax
+                     do j=jmin-HALO,jmax+HALO
 #endif
-                        do i=imin,imax
+                        do i=imin-HALO,imax+HALO
                            if (az(i,j) .ge. 1) then
 ! BJB-TODO: Update constants to double.
                               w=sqrt(u10r_x(i,j)*u10r_x(i,j)+v10r_x(i,j)*v10r_x(i,j))
@@ -872,15 +861,11 @@
 
                end if
 
-               call update_2d_halo(tausx_input,tausx_input,az,imin,jmin,imax,jmax,H_TAG)
-               call wait_halo(H_TAG)
-               call update_2d_halo(tausy_input,tausy_input,az,imin,jmin,imax,jmax,H_TAG)
-               call wait_halo(H_TAG)
+            end if !if calc_met
 
-           end if
+            if (met_method .eq. METEO_FROMFILE) then
 
-            if (new_meteo) then
-               if (met_method .eq. METEO_FROMFILE) then
+               if (new_meteo) then
 
                   if (.not.(calc_met .and. interpolate_meteo)) then
                      tausx_old=>tausx_new;tausx_new=>d_tausx;d_tausx=>tausx_old;tausx_input=>tausx_old
@@ -916,10 +901,8 @@
 !$OMP SINGLE
                   end if !if (.not. first) then
 
-               end if !if (met_method .eq. METEO_FROMFILE) then
-            end if !if (new_meteo)
+               end if !if (new_meteo)
 
-            if (met_method .eq. METEO_FROMFILE) then
 !$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
