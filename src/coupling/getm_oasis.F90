@@ -228,8 +228,8 @@
 !      call oasis_abort(compid,FILENAME//':'//_LINE_)
    end if
 
-   do i=imin,imax
-      do j=jmin,jmax
+   do j=jmin,jmax
+      do i=imin,imax
          clon(i,j,1) = lonx(i  ,j  )
          clon(i,j,2) = lonx(i-1,j  )
          clon(i,j,3) = lonx(i-1,j  )
