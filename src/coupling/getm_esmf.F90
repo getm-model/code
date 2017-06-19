@@ -1084,7 +1084,7 @@
    type(ESMF_Array),pointer :: coordArrayYX3D=>NULL()
    type(ESMF_Array)         :: array
    type(ESMF_CoordSys_Flag) :: coordSys
-   type(ESMF_DistGrid)      :: getmDistGrid2D,getmDistGrid3D
+   type(ESMF_DistGrid)      :: getmDistGrid2D,getmDistGrid3D,distgrid
    type(ESMF_Grid)          :: getmGrid3D
    type(ESMF_StaggerLoc)    :: staggerloc
    type(ESMF_VM)            :: vm
@@ -1237,6 +1237,77 @@
 
    select case (grid_type)
 
+!        coordDimMap: for each grid dimension i map array dimension j
+!                     to grid dimension coordDimMap(i,j)
+!                     i=1,dimCount ; j=1,coordDimCount(i)
+
+      case(1)
+
+         coordSys = ESMF_COORDSYS_CART
+         coordDimCount = (/ 1 , 1 , 3 /)     ! rectilinear horizontal coordinates
+         coordDimMap = reshape( (/1,2,1,0,0,2,0,0,3/) , (/3,3/) )
+
+      case(2)
+
+         coordSys = ESMF_COORDSYS_SPH_DEG    ! (default)
+         coordDimCount = (/ 1 , 1 , 3 /)     ! rectilinear horizontal coordinates
+         coordDimMap = reshape( (/1,2,1,0,0,2,0,0,3/) , (/3,3/) )
+
+      case(3)
+
+         coordSys = ESMF_COORDSYS_CART
+         coordDimCount = (/ 2 , 2 , 3 /)
+         coordDimMap = reshape( (/1,1,1,2,2,2,0,0,3/) , (/3,3/) ) ! (default)
+
+      case(4)
+
+         coordSys = ESMF_COORDSYS_SPH_DEG                         ! (default)
+         coordDimCount = (/ 2 , 2 , 3 /)
+         coordDimMap = reshape( (/1,1,1,2,2,2,0,0,3/) , (/3,3/) ) ! (default)
+
+   end select
+
+!  Note (KK): gridAlign specifies which corner point in a grid cell
+!             shares the center indices [ default=(/-1,...,-1/) ].
+!             gridEdge[L|U]Width only affect DE's at the edge of tiles
+!             (thus it matters whether a single- or multi-tile DistGrid
+!              was created). If gridEdgeWidth's are not set, they are set
+!             automatically based on gridAlign.
+!             For single staggered grid items, default specification for
+!             gridAlign and gridEdgesWidth's can be overwritten by
+!             staggerAlign and staggerEdgeWidth's.
+!  internal call to ESMF_GridCreateFrmDistGrid()
+   getmGrid2D = ESMF_GridCreate(getmDistGrid2D,name=trim(name)//"Grid2D", &
+#if 0
+! bug in ESMF
+                                gridAlign=(/1,1/),                        &
+#else
+                                gridEdgeLWidth=(/1,1/),                   &
+#endif
+                                coordSys=coordSys,                        &
+                                coordDimCount=int(coordDimCount(1:2)),    &
+                                coordDimMap=int(coordDimMap(1:2,1:2)),    &
+                                rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   getmGrid3D = ESMF_GridCreate(getmDistGrid3D,name=trim(name)//"Grid3D", &
+#if 0
+! bug in ESMF
+                                gridAlign=(/1,1,1/),                      &
+#else
+                                gridEdgeLWidth=(/1,1,1/),                 &
+#endif
+
+                                coordSys=coordSys,                        &
+                                coordDimCount=coordDimCount,              &
+                                coordDimMap=coordDimMap,                  &
+                                rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   select case (grid_type)
+
       case(1)
 
          if (noKindMatch) then
@@ -1253,7 +1324,7 @@
 
 !        put pointers into persistent deep Arrays
          call createCoordArrays1D(xc1d,yc1d,xx1d,yx1d,                     &
-                                  getmDistGrid2D,getmDistGrid3D,           &
+                                  getmGrid2D,getmGrid3D,                   &
                                   xcArray2D,ycArray2D,xxArray2D,yxArray2D, &
                                   xcArray3D,ycArray3D,xxArray3D,yxArray3D)
          call setCoordUnits("m","m",                                   &
@@ -1264,13 +1335,6 @@
          coordArrayXX2D => xxArray2D ; coordArrayYX2D => yxArray2D
          coordArrayXC3D => xcArray3D ; coordArrayYC3D => ycArray3D
          coordArrayXX3D => xxArray3D ; coordArrayYX3D => yxArray3D
-
-         coordSys = ESMF_COORDSYS_CART
-!        coordDimMap: for each grid dimension i map array dimension j
-!                     to grid dimension coordDimMap(i,j)
-!                     i=1,dimCount ; j=1,coordDimCount(i)
-         coordDimCount = (/ 1 , 1 , 3 /)     ! rectilinear horizontal coordinates
-         coordDimMap = reshape( (/1,2,1,0,0,2,0,0,3/) , (/3,3/) )
 
       case(2)
 
@@ -1288,7 +1352,7 @@
 
 !        put pointers into persistent deep Arrays
          call createCoordArrays1D(lonc1d,latc1d,lonx1d,latx1d,                     &
-                                  getmDistGrid2D,getmDistGrid3D,                   &
+                                  getmGrid2D,getmGrid3D,                           &
                                   loncArray2D,latcArray2D,lonxArray2D,latxArray2D, &
                                   loncArray3D,latcArray3D,lonxArray3D,latxArray3D)
          call setCoordUnits("degrees_east","degrees_north",                  &
@@ -1299,10 +1363,6 @@
          coordArrayXX2D => lonxArray2D ; coordArrayYX2D => latxArray2D
          coordArrayXC3D => loncArray3D ; coordArrayYC3D => latcArray3D
          coordArrayXX3D => lonxArray3D ; coordArrayYX3D => latxArray3D
-
-         coordSys = ESMF_COORDSYS_SPH_DEG    ! (default)
-         coordDimCount = (/ 1 , 1 , 3 /)     ! rectilinear horizontal coordinates
-         coordDimMap = reshape( (/1,2,1,0,0,2,0,0,3/) , (/3,3/) )
 
       case(3)
 
@@ -1332,7 +1392,7 @@
 
 !        put pointers into persistent deep Arrays
          call createCoordArrays2D(xc2d,yc2d,xx2d,yx2d,                     &
-                                  getmDistGrid2D,getmDistGrid3D,           &
+                                  getmGrid2D,getmGrid3D,                   &
                                   xcArray2D,ycArray2D,xxArray2D,yxArray2D, &
                                   xcArray3D,ycArray3D,xxArray3D,yxArray3D)
          call setCoordUnits("m","m",                                   &
@@ -1341,7 +1401,7 @@
 
          if (have_lonlat) then
             call createCoordArrays2D(lonc2d,latc2d,lonx2d,latx2d,                     &
-                                     getmDistGrid2D,getmDistGrid3D,                   &
+                                     getmGrid2D,getmGrid3D,                           &
                                      loncArray2D,latcArray2D,lonxArray2D,latxArray2D, &
                                      loncArray3D,latcArray3D,lonxArray3D,latxArray3D)
             call setCoordUnits("degrees_east","degrees_north",                  &
@@ -1361,10 +1421,6 @@
             coordArrayXX3D => lonxArray3D ; coordArrayYX3D => latxArray3D
          end if
 
-         coordSys = ESMF_COORDSYS_CART
-         coordDimCount = (/ 2 , 2 , 3 /)
-         coordDimMap = reshape( (/1,1,1,2,2,2,0,0,3/) , (/3,3/) ) ! (default)
-
       case(4)
 
          if (noKindMatch) then
@@ -1381,7 +1437,7 @@
 
 !        put pointers into persistent deep Arrays
          call createCoordArrays2D(lonc2d,latc2d,lonx2d,latx2d,                     &
-                                  getmDistGrid2D,getmDistGrid3D,                   &
+                                  getmGrid2D,getmGrid3D,                           &
                                   loncArray2D,latcArray2D,lonxArray2D,latxArray2D, &
                                   loncArray3D,latcArray3D,lonxArray3D,latxArray3D)
          call setCoordUnits("degrees_east","degrees_north",                  &
@@ -1393,44 +1449,14 @@
          coordArrayXC3D => loncArray3D ; coordArrayYC3D => latcArray3D
          coordArrayXX3D => lonxArray3D ; coordArrayYX3D => latxArray3D
 
-         coordSys = ESMF_COORDSYS_SPH_DEG                         ! (default)
-         coordDimCount = (/ 2 , 2 , 3 /)
-         coordDimMap = reshape( (/1,1,1,2,2,2,0,0,3/) , (/3,3/) ) ! (default)
-
    end select
-
-!  Note (KK): gridAlign specifies which corner point in a grid cell
-!             shares the center indices [ default=(/-1,...,-1/) ].
-!             gridEdge[L|U]Width only affect DE's at the edge of tiles
-!             (thus it matters whether a single- or multi-tile DistGrid
-!              was created). If gridEdgeWidth's are not set, they are set
-!             automatically based on gridAlign.
-!             For single staggered grid items, default specification for
-!             gridAlign and gridEdgesWidth's can be overwritten by
-!             staggerAlign and staggerEdgeWidth's.
-!  internal call to ESMF_GridCreateFrmDistGrid()
-   getmGrid2D = ESMF_GridCreate(getmDistGrid2D,name=trim(name)//"Grid2D", &
-                                gridAlign=(/1,1/),                        &
-                                coordSys=coordSys,                        &
-                                coordDimCount=int(coordDimCount(1:2)),    &
-                                coordDimMap=int(coordDimMap(1:2,1:2)),    &
-                                rc=rc)
-   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
-
-   getmGrid3D = ESMF_GridCreate(getmDistGrid3D,name=trim(name)//"Grid3D", &
-                                gridAlign=(/1,1,1/),                      &
-                                coordSys=coordSys,                        &
-                                coordDimCount=coordDimCount,              &
-                                coordDimMap=coordDimMap,                  &
-                                rc=rc)
-   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
-
 
 !  2D grid
 
    staggerloc = ESMF_StaggerLoc_CENTER ! (default)
+   call ESMF_GridGet(getmGrid2D, staggerloc, distgrid=distgrid, rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    call ESMF_GridSetCoord(getmGrid2D,1,array=coordArrayXC2D,           &
                           staggerloc=staggerloc,rc=rc)
@@ -1443,7 +1469,7 @@
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
 !  2D center mask
-   array = ESMF_ArrayCreate(getmDistGrid2D,maskC,                      &
+   array = ESMF_ArrayCreate(distgrid,maskC,                            &
                             indexflag=ESMF_INDEX_DELOCAL,              &
                             datacopyflag=ESMF_DATACOPY_VALUE,          &
                             rc=rc)
@@ -1457,7 +1483,7 @@
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
 !  2D center area
-   array = ESMF_ArrayCreate(getmDistGrid2D,areaC,                      &
+   array = ESMF_ArrayCreate(distgrid,areaC,                            &
                             indexflag=ESMF_INDEX_DELOCAL,              &
                             datacopyflag = ESMF_DATACOPY_VALUE,        &
                             rc=rc)
@@ -1474,6 +1500,9 @@
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    staggerloc = ESMF_StaggerLoc_CORNER
+   call ESMF_GridGet(getmGrid2D, staggerloc, distgrid=distgrid, rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    call ESMF_GridSetCoord(getmGrid2D,1,array=coordArrayXX2D,           &
                           staggerloc=staggerloc,rc=rc)
@@ -1486,7 +1515,7 @@
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
 !  2D corner mask
-   array = ESMF_ArrayCreate(getmDistGrid2D,maskX,                      &
+   array = ESMF_ArrayCreate(distgrid,maskX,                            &
                             indexflag=ESMF_INDEX_DELOCAL,              &
                             datacopyflag=ESMF_DATACOPY_VALUE,          &
                             rc=rc)
@@ -1499,10 +1528,18 @@
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
+#if 0
+call ESMF_OutputScripGridFile('GETM_Grid_Update.nc', getmGrid2D, rc)
+abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+#endif
 
 !  3D grid
 
    staggerloc = ESMF_StaggerLoc_CENTER_VCENTER ! (=CENTER, default for 3D)
+   call ESMF_GridGet(getmGrid3D, staggerloc, distgrid=distgrid, rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    call ESMF_GridSetCoord(getmGrid3D,1,array=coordArrayXC3D,           &
                           staggerloc=staggerloc,rc=rc)
@@ -1515,7 +1552,7 @@
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
 !  3D center position
-   array = ESMF_ArrayCreate(getmDistGrid3D,zc,                         &
+   array = ESMF_ArrayCreate(distgrid,zc,                               &
                             indexflag=ESMF_INDEX_DELOCAL,              &
                             totalLWidth=(/HALO,HALO,1/),               &
                             totalUWidth=(/HALO,HALO,0/),               &
@@ -1534,7 +1571,7 @@
 
 !  3D center mask
 !  KK-TODO: get rid of k=0 layer (implemented by MOSSCO commit 5e04bd4)
-   array = ESMF_ArrayCreate(getmDistGrid3D,maskC3D,                    &
+   array = ESMF_ArrayCreate(distgrid,maskC3D,                          &
                             indexflag=ESMF_INDEX_DELOCAL,              &
                             datacopyflag=ESMF_DATACOPY_VALUE,          &
                             totalLWidth=(/HALO,HALO,1/),               &
@@ -1552,7 +1589,7 @@
 !  3D center area
    !array = ESMF_ArrayCreate(getmDistGrid3D,areaC,indexflag=ESMF_INDEX_DELOCAL,rc=rc)
 !  KK-TODO: k=0 layer needed because of areaW3D (needed by MOSSCO)
-   array = ESMF_ArrayCreate(getmDistGrid3D,areaW3D,                    &
+   array = ESMF_ArrayCreate(distgrid,areaW3D,                          &
                             indexflag=ESMF_INDEX_DELOCAL,              &
                             datacopyflag = ESMF_DATACOPY_VALUE,        &
                             totalLWidth=(/HALO,HALO,1/),               &
@@ -1570,7 +1607,10 @@
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   staggerloc = ESMF_StaggerLoc_CORNER
+   staggerloc = ESMF_StaggerLoc_CORNER_VFACE
+   call ESMF_GridGet(getmGrid3D, staggerloc, distgrid=distgrid, rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    call ESMF_GridSetCoord(getmGrid3D,1,array=coordArrayXX3D,           &
                           staggerloc=staggerloc,rc=rc)
@@ -1583,11 +1623,12 @@
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
 !  3D corner position
-   array = ESMF_ArrayCreate(getmDistGrid3D,zx,                         &
+!  KK-TODO: this call defines zx[1:kmax+1],
+!           [0:kmax] not possible because exclusive region is spanned
+!           from 1:kmax+1
+   array = ESMF_ArrayCreate(distgrid,zx,                               &
                             indexflag=ESMF_INDEX_DELOCAL,              &
                             datacopyflag = ESMF_DATACOPY_VALUE,        &
-                            totalLWidth=(/HALO+1,HALO+1,1/),           &
-                            totalUWidth=(/HALO,HALO,0/),               &
                             rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -1604,11 +1645,12 @@
 !  3D corner mask
    !array = ESMF_ArrayCreate(getmDistGrid3D,maskX,indexflag=ESMF_INDEX_DELOCAL,rc=rc)
 !  Note (KK): no HALO+1 in totalLWidth because based on E2DFIELD
-   array = ESMF_ArrayCreate(getmDistGrid3D,maskX3D,                    &
+!  KK-TODO: this call defines maskX3D[1:kmax+1],
+!           [0:kmax] not possible because exclusive region is spanned
+!           from 1:kmax+1
+   array = ESMF_ArrayCreate(distgrid,maskX3D,                          &
                             indexflag=ESMF_INDEX_DELOCAL,              &
                             datacopyflag = ESMF_DATACOPY_VALUE,        &
-                            totalLWidth=(/HALO,HALO,1/),               &
-                            totalUWidth=(/HALO,HALO,0/),               &
                             rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -1620,12 +1662,16 @@
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    staggerloc = ESMF_StaggerLoc_CENTER_VFACE
+   call ESMF_GridGet(getmGrid3D, staggerloc, distgrid=distgrid, rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
 !  3D interface position
-   array = ESMF_ArrayCreate(getmDistGrid3D,zw,                         &
+!  KK-TODO: this call defines zw[1:kmax+1],
+!           [0:kmax] not possible because exclusive region is spanned
+!           from 1:kmax+1
+   array = ESMF_ArrayCreate(distgrid,zw,                               &
                             indexflag=ESMF_INDEX_DELOCAL,              &
-                            totalLWidth=(/HALO,HALO,1/),               &
-                            totalUWidth=(/HALO,HALO,0/),               &
                             rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -1640,12 +1686,13 @@
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
 !  3D interface area
+!  KK-TODO: this call defines areaw3D[1:kmax+1],
+!           [0:kmax] not possible because exclusive region is spanned
+!           from 1:kmax+1
    !array = ESMF_ArrayCreate(getmDistGrid3D,areaC,indexflag=ESMF_INDEX_DELOCAL,rc=rc)
-   array = ESMF_ArrayCreate(getmDistGrid3D,areaW3D,                    &
+   array = ESMF_ArrayCreate(distgrid,areaW3D,                          &
                             indexflag=ESMF_INDEX_DELOCAL,              &
                             datacopyflag = ESMF_DATACOPY_VALUE,        &
-                            totalLWidth=(/HALO,HALO,1/),               &
-                            totalUWidth=(/HALO,HALO,0/),               &
                             rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -1707,7 +1754,7 @@
    real(ESMF_KIND_R8),dimension(:,:,:),pointer :: zw,zc,zx
    REALTYPE,dimension(E2DFIELD)                :: zwu
    REALTYPE                                    :: getmreal
-   integer                                     :: rc,i,j,k,klen
+   integer                                     :: rc,i,j,k,klen,k0
    logical                                     :: abort,noKindMatch
 !
 !EOP
@@ -1736,7 +1783,7 @@
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    call ESMF_GridGetCoord(getmGrid3D,3,farrayPtr=zx,                   &
-                          staggerloc=ESMF_StaggerLoc_CORNER,           &
+                          staggerloc=ESMF_StaggerLoc_CORNER_VFACE,     &
                           rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -1747,13 +1794,15 @@
       klen = kmax
    end if
 
+   k0 = lbound(zx,3)
+
    noKindMatch = ( kind(getmreal) .ne. ESMF_KIND_R8 )
 
    if (noKindMatch .or. runtype.eq.1) then
       if (runtype .eq. 1) then
-         zw(:,:,0)    = -H
-         zw(:,:,klen) = z
-         zc(:,:,klen) = 0.5d0 * ( zw(:,:,klen-1) + zw(:,:,klen) )
+         zw(:,:,k0+0)    = -H
+         zw(:,:,k0+klen) = z
+         zc(:,:,k0+klen) = 0.5d0 * ( zw(:,:,k0+klen-1) + zw(:,:,k0+klen) )
       else
 #ifndef NO_3D
          zw = zwn
@@ -1766,12 +1815,12 @@
       do j=jmin-HALO,jmax+HALO
          do i=imin-HALO,imax+HALO-1
             if (au(i,j) .gt. 0) then
-               zwu(i,j) = 0.5d0 * ( zw(i,j,k) + zw(i+1,j,k) )
+               zwu(i,j) = 0.5d0 * ( zw(i,j,k0+k) + zw(i+1,j,k0+k) )
             else
                if (az(i,j) .gt. 0) then
-                  zwu(i,j) = zw(i,j,k)
+                  zwu(i,j) = zw(i,j,k0+k)
                else if (az(i+1,j) .gt. 0) then
-                  zwu(i,j) = zw(i+1,j,k)
+                  zwu(i,j) = zw(i+1,j,k0+k)
                end if
             end if
          end do
@@ -1779,12 +1828,12 @@
       do j=jmin-HALO,jmax+HALO-1
          do i=imin-HALO,imax+HALO-1
             if (av(i,j).gt.0 .or. av(i+1,j).gt.0) then
-               zx(i,j,k) = 0.5d0 * ( zwu(i,j) + zwu(i,j+1) )
+               zx(i,j,k0+k) = 0.5d0 * ( zwu(i,j) + zwu(i,j+1) )
             else
                if (az(i,j).gt.0 .or. az(i+1,j).gt.0) then
-                  zx(i,j,k) = zwu(i,j)
+                  zx(i,j,k0+k) = zwu(i,j)
                else if (az(i,j+1).gt.0 .or. az(i+1,j+1).gt.0) then
-                  zx(i,j,k) = zwu(i,j+1)
+                  zx(i,j,k0+k) = zwu(i,j+1)
                end if
             end if
          end do
@@ -2618,9 +2667,8 @@
 
 
    if (met_method.eq.METEO_CONST .or. met_method.eq.METEO_FROMFILE) then
-!     force update of pointer because of pointer swap within GETM
          call StateSetCompleteField(exportState,trim(name_swr    ),    &
-                                    farray2D=swr,frc=.true.)
+                                    farray2D=swr)
 !     check whether grid rotation needs to be removed
          frc = (grid_type .ne. 2)
          p2dr => NULL()
@@ -2726,7 +2774,7 @@
 !
 ! !INTERFACE:
    subroutine createCoordArrays1D(xc1d,yc1d,xx1d,yx1d,                     &
-                                  getmDistGrid2D,getmDistGrid3D,           &
+                                  getmGrid2D,getmGrid3D,                   &
                                   xcArray2D,ycArray2D,xxArray2D,yxArray2D, &
                                   xcArray3D,ycArray3D,xxArray3D,yxArray3D)
 !
@@ -2737,7 +2785,7 @@
 !
 ! !INPUT PARAMETERS:
    real(ESMF_KIND_R8),dimension(:),pointer,intent(in) :: xc1d,yc1d,xx1d,yx1d
-   type(ESMF_DistGrid),intent(in) :: getmDistGrid2D,getmDistGrid3D
+   type(ESMF_Grid),intent(in)                         :: getmGrid2D,getmGrid3D
 !
 ! !OUTPUT PARAMETERS:
    type(ESMF_Array),intent(out) :: xcArray2D,ycArray2D,xxArray2D,yxArray2D
@@ -2747,6 +2795,8 @@
 !  Original Author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES
+   type(ESMF_DistGrid)      :: distgrid
+   type(ESMF_StaggerLoc)    :: staggerloc
    logical                  :: abort
    integer                  :: rc
 !
@@ -2773,63 +2823,90 @@
 !  Note (KK): These ArrayCreate()'s only work for 1DE per PET!!!
 !             Automatically determined coordDimMap for rectilinear
 !             coordinates is incorrect!
+!             automatically determined total[L|U]Width are not
+!             consistent with specified gridAlign
 
-   xcArray2D = ESMF_ArrayCreate(getmDistGrid2D,xc1D,                   &
+!  2D grid
+
+   staggerloc = ESMF_STAGGERLOC_CENTER
+   call ESMF_GridGet(getmGrid2D, staggerloc, distgrid=distgrid, rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   xcArray2D = ESMF_ArrayCreate(distgrid,xc1D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   xcArray3D = ESMF_ArrayCreate(getmDistGrid3D,xc1D,                   &
-                                indexflag=ESMF_INDEX_DELOCAL,          &
-                                rc=rc)
-   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
-
-   ycArray2D = ESMF_ArrayCreate(getmDistGrid2D,yc1D,                   &
+   ycArray2D = ESMF_ArrayCreate(distgrid,yc1D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
                                 distgridToArrayMap=(/0,1/),            &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   ycArray3D = ESMF_ArrayCreate(getmDistGrid3D,yc1D,                   &
+   staggerloc = ESMF_STAGGERLOC_CORNER
+   call ESMF_GridGet(getmGrid2D, staggerloc, distgrid=distgrid, rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   xxArray2D = ESMF_ArrayCreate(distgrid,xx1D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
-                                distgridToArrayMap=(/0,1,0/),          &
+!                                totalLWidth=(/HALO+1/),                &
+                                totalUWidth=(/HALO  /),                &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   xxArray2D = ESMF_ArrayCreate(getmDistGrid2D,xx1D,                   &
-                                indexflag=ESMF_INDEX_DELOCAL,          &
-                                totalLWidth=(/HALO+1/),                &
-                                totalUWidth=(/HALO/),                  &
-                                rc=rc)
-   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
-
-   xxArray3D = ESMF_ArrayCreate(getmDistGrid3D,xx1D,                   &
-                                indexflag=ESMF_INDEX_DELOCAL,          &
-                                totalLWidth=(/HALO+1/),                &
-                                totalUWidth=(/HALO/),                  &
-                                rc=rc)
-   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
-
-   yxArray2D = ESMF_ArrayCreate(getmDistGrid2D,yx1D,                   &
+   yxArray2D = ESMF_ArrayCreate(distgrid,yx1D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
                                 distgridToArrayMap=(/0,1/),            &
-                                totalLWidth=(/HALO+1/),                &
-                                totalUWidth=(/HALO/),                  &
+!                                totalLWidth=(/HALO+1/),                &
+                                totalUWidth=(/HALO  /),                &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   yxArray3D = ESMF_ArrayCreate(getmDistGrid3D,yx1D,                   &
+
+!  3D grid
+
+   staggerloc = ESMF_STAGGERLOC_CENTER
+   call ESMF_GridGet(getmGrid3D, staggerloc, distgrid=distgrid, rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   xcArray3D = ESMF_ArrayCreate(distgrid,xc1D,                         &
+                                indexflag=ESMF_INDEX_DELOCAL,          &
+                                rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   ycArray3D = ESMF_ArrayCreate(distgrid,yc1D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
                                 distgridToArrayMap=(/0,1,0/),          &
-                                totalLWidth=(/HALO+1/),                &
-                                totalUWidth=(/HALO/),                  &
+                                rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   staggerloc = ESMF_STAGGERLOC_CORNER
+   call ESMF_GridGet(getmGrid3D, staggerloc, distgrid=distgrid, rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   xxArray3D = ESMF_ArrayCreate(distgrid,xx1D,                         &
+                                indexflag=ESMF_INDEX_DELOCAL,          &
+!                                totalLWidth=(/HALO+1/),                &
+                                totalUWidth=(/HALO  /),                &
+                                rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   yxArray3D = ESMF_ArrayCreate(distgrid,yx1D,                         &
+                                indexflag=ESMF_INDEX_DELOCAL,          &
+                                distgridToArrayMap=(/0,1,0/),          &
+!                                totalLWidth=(/HALO+1/),                &
+                                totalUWidth=(/HALO  /),                &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -2849,7 +2926,7 @@
 !
 ! !INTERFACE:
    subroutine createCoordArrays2D(xc2d,yc2d,xx2d,yx2d,                     &
-                                  getmDistGrid2D,getmDistGrid3D,           &
+                                  getmGrid2D,getmGrid3D,                   &
                                   xcArray2D,ycArray2D,xxArray2D,yxArray2D, &
                                   xcArray3D,ycArray3D,xxArray3D,yxArray3D)
 !
@@ -2860,7 +2937,7 @@
 !
 ! !INPUT PARAMETERS:
    real(ESMF_KIND_R8),dimension(:,:),pointer,intent(in) :: xc2d,yc2d,xx2d,yx2d
-   type(ESMF_DistGrid),intent(in) :: getmDistGrid2D,getmDistGrid3D
+   type(ESMF_Grid),intent(in)                           :: getmGrid2D,getmGrid3D
 !
 ! !OUTPUT PARAMETERS:
    type(ESMF_Array),intent(out) :: xcArray2D,ycArray2D,xxArray2D,yxArray2D
@@ -2870,6 +2947,8 @@
 !  Original Author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES
+   type(ESMF_DistGrid)      :: distgrid
+   type(ESMF_StaggerLoc)    :: staggerloc
    logical                  :: abort
    integer                  :: rc
 !
@@ -2891,60 +2970,85 @@
 !  (because of required indexflag)
 !  Note (KK): These ArrayCreate()'s only work for 1DE per PET!!!
 !             automatically determined total[L|U]Width are not
-!             consistent with gridAlign specified later
+!             consistent with specified gridAlign
 
-   xcArray2D = ESMF_ArrayCreate(getmDistGrid2D,xc2D,                   &
+!  2D grid
+
+   staggerloc = ESMF_STAGGERLOC_CENTER
+   call ESMF_GridGet(getmGrid2D, staggerloc, distgrid=distgrid, rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   xcArray2D = ESMF_ArrayCreate(distgrid,xc2D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   xcArray3D = ESMF_ArrayCreate(getmDistGrid3D,xc2D,                   &
+   ycArray2D = ESMF_ArrayCreate(distgrid,yc2D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   ycArray2D = ESMF_ArrayCreate(getmDistGrid2D,yc2D,                   &
+   staggerloc = ESMF_STAGGERLOC_CORNER
+   call ESMF_GridGet(getmGrid2D, staggerloc, distgrid=distgrid, rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   xxArray2D = ESMF_ArrayCreate(distgrid,xx2D,                         &
+                                indexflag=ESMF_INDEX_DELOCAL,          &
+!                                totalLWidth=(/HALO+1,HALO+1/),         &
+                                totalUWidth=(/HALO  ,HALO  /),         &
+                                rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   yxArray2D = ESMF_ArrayCreate(distgrid,yx2D,                         &
+                                indexflag=ESMF_INDEX_DELOCAL,          &
+!                                totalLWidth=(/HALO+1,HALO+1/),         &
+                                totalUWidth=(/HALO  ,HALO  /),         &
+                                rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+
+!  3D grid
+
+   staggerloc = ESMF_STAGGERLOC_CENTER
+   call ESMF_GridGet(getmGrid3D, staggerloc, distgrid=distgrid, rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   xcArray3D = ESMF_ArrayCreate(distgrid,xc2D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   ycArray3D = ESMF_ArrayCreate(getmDistGrid3D,yc2D,                   &
+   ycArray3D = ESMF_ArrayCreate(distgrid,yc2D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   xxArray2D = ESMF_ArrayCreate(getmDistGrid2D,xx2D,                   &
+   staggerloc = ESMF_STAGGERLOC_CORNER
+   call ESMF_GridGet(getmGrid3D, staggerloc, distgrid=distgrid, rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   xxArray3D = ESMF_ArrayCreate(distgrid,xx2D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
-                                totalLWidth=(/HALO+1,HALO+1/),         &
-                                totalUWidth=(/HALO,HALO/),             &
+!                                totalLWidth=(/HALO+1,HALO+1/),         &
+                                totalUWidth=(/HALO  ,HALO  /),         &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   xxArray3D = ESMF_ArrayCreate(getmDistGrid3D,xx2D,                   &
+   yxArray3D = ESMF_ArrayCreate(distgrid,yx2D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
-                                totalLWidth=(/HALO+1,HALO+1/),         &
-                                totalUWidth=(/HALO,HALO/),             &
-                                rc=rc)
-   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
-
-   yxArray2D = ESMF_ArrayCreate(getmDistGrid2D,yx2D,                   &
-                                indexflag=ESMF_INDEX_DELOCAL,          &
-                                totalLWidth=(/HALO+1,HALO+1/),         &
-                                totalUWidth=(/HALO,HALO/),             &
-                                rc=rc)
-   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
-
-   yxArray3D = ESMF_ArrayCreate(getmDistGrid3D,yx2D,                   &
-                                indexflag=ESMF_INDEX_DELOCAL,          &
-                                totalLWidth=(/HALO+1,HALO+1/),         &
-                                totalUWidth=(/HALO,HALO/),             &
+!                                totalLWidth=(/HALO+1,HALO+1/),         &
+                                totalUWidth=(/HALO  ,HALO  /),         &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
