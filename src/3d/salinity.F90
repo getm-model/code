@@ -80,7 +80,7 @@
 ! !USES:
    use advection, only: J7
    use advection_3d, only: print_adv_settings_3d
-   use meteo, only: sss_input,sss_const
+   use meteo, only: sss_const
    IMPLICIT NONE
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -120,7 +120,6 @@
       LEVEL4 'sss_nudging_time=',real(sss_nudging_time)
       allocate(sss(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_salinity: Error allocating memory (sss)'
-      sss_input => sss
       select case(met_method)
          case (METEO_CONST)
             if (sss_const .gt. _ZERO_) then

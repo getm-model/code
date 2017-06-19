@@ -74,21 +74,32 @@
    logical, public                     :: calc_relative_wind=.false.
    logical, public                     :: constant_cd=.false.
    REALTYPE, public                    :: w,L,rho_air,qs,qa,ea,es
-   REALTYPE,public,dimension(:,:),pointer            :: t2_input,hum_input
-   REALTYPE,public,dimension(:,:),pointer            :: airp_input,tausx_input,tausy_input
-   REALTYPE,public,dimension(:,:),pointer            :: u10_input,v10_input
-   REALTYPE,public,dimension(:,:),pointer            :: shf_input,swr_input=>null(),tcc_input=>null()
-   REALTYPE,public,dimension(:,:),pointer            :: evap_input,precip_input
-   REALTYPE,public,dimension(:,:),pointer            :: sst_input,sss_input
-   REALTYPE,public,dimension(:,:),allocatable,target :: t2,hum
-   REALTYPE,public,dimension(:,:),pointer            :: airp,tausx,tausy
-   REALTYPE,public,dimension(:,:),pointer            :: u10,v10
-   REALTYPE,public,dimension(:,:),pointer            :: u10r,v10r
+   REALTYPE,public,dimension(:,:),allocatable,target :: airp
+   REALTYPE,public,dimension(:,:),pointer            :: airp_new
+   REALTYPE,public,dimension(:,:),allocatable,target :: tausx
+   REALTYPE,public,dimension(:,:),pointer            :: tausx_input
+   REALTYPE,public,dimension(:,:),allocatable,target :: tausy
+   REALTYPE,public,dimension(:,:),pointer            :: tausy_input
+   REALTYPE,public,dimension(:,:),allocatable,target :: shf
+   REALTYPE,public,dimension(:,:),pointer            :: shf_input
+   REALTYPE,public,dimension(:,:),allocatable,target :: evap
+   REALTYPE,public,dimension(:,:),pointer            :: evap_input
+   REALTYPE,public,dimension(:,:),allocatable,target :: u10
+   REALTYPE,public,dimension(:,:),pointer            :: u10_new
+   REALTYPE,public,dimension(:,:),allocatable,target :: v10
+   REALTYPE,public,dimension(:,:),pointer            :: v10_new
+   REALTYPE,public,dimension(:,:),allocatable,target :: tcc
+   REALTYPE,public,dimension(:,:),pointer            :: tcc_new
+   REALTYPE,public,dimension(:,:),allocatable,target :: precip
+   REALTYPE,public,dimension(:,:),pointer            :: precip_new
+   REALTYPE,public,dimension(:,:),allocatable,target :: t2
+   REALTYPE,public,dimension(:,:),allocatable,target :: hum
+   REALTYPE,public,dimension(:,:),allocatable,target :: swr
+   REALTYPE,public,dimension(:,:),allocatable,target :: sst
+   REALTYPE,public,dimension(:,:),allocatable,target :: sss
    REALTYPE,public,dimension(:,:),allocatable,target :: wind
-   REALTYPE,public,dimension(:,:),pointer            :: shf,swr=>null(),tcc=>null()
-   REALTYPE,public,dimension(:,:),pointer            :: evap,precip
+   REALTYPE,public,dimension(:,:),pointer            :: u10r,v10r
    REALTYPE,public,dimension(:,:),allocatable,target :: zenith_angle,albedo
-   REALTYPE,public,dimension(:,:),pointer            :: sst,sss
    logical,public                                    :: nudge_sst=.false.
    logical,public                                    :: nudge_sss=.false.
    REALTYPE,public                                   :: sst_const=-_ONE_
@@ -123,20 +134,10 @@
    REALTYPE                  :: swr_const= _ZERO_ ,shf_const= _ZERO_
    REALTYPE                  :: evap_const= _ZERO_ ,precip_const= _ZERO_
    REALTYPE, dimension(:,:), allocatable :: tausx_const,tausy_const
-   REALTYPE, dimension(:,:), pointer     :: airp_new,d_airp
-   REALTYPE, dimension(:,:), pointer     :: u10_new,d_u10
-   REALTYPE, dimension(:,:), pointer     :: v10_new,d_v10
    REALTYPE, dimension(:,:), pointer     :: tausx_new,d_tausx
    REALTYPE, dimension(:,:), pointer     :: tausy_new,d_tausy
    REALTYPE, dimension(:,:), pointer     :: shf_new,d_shf
-   REALTYPE, dimension(:,:), pointer     :: swr_new,d_swr
-   REALTYPE, dimension(:,:), pointer     :: t2_new,d_t2
-   REALTYPE, dimension(:,:), pointer     :: hum_new,d_hum
-   REALTYPE, dimension(:,:), pointer     :: tcc_new,d_tcc
    REALTYPE, dimension(:,:), pointer     :: evap_new,d_evap
-   REALTYPE, dimension(:,:), pointer     :: precip_new,d_precip
-   REALTYPE, dimension(:,:), pointer     :: sst_new,d_sst
-   REALTYPE, dimension(:,:), pointer     :: sss_new,d_sss
    REALTYPE                              :: ramp=_ONE_
    logical                               :: ramp_is_active=.false.
 !EOP
@@ -190,20 +191,16 @@
    allocate(airp(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (airp)'
    airp = _ZERO_
-   airp_input => airp
-   airp_new => airp
 
    allocate(u10(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (u10)'
    u10 = _ZERO_
    u10r => u10
-   u10_input => u10
 
    allocate(v10(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (v10)'
    v10 = _ZERO_
    v10r => v10
-   v10_input => v10
 
    allocate(wind(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (wind)'
@@ -226,7 +223,6 @@
    allocate(swr(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (swr)'
    swr = _ZERO_
-   swr_input => swr
 
    allocate(albedo(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (albedo)'
@@ -245,7 +241,6 @@
    allocate(precip(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo: Error allocating memory (precip)'
    precip = _ZERO_
-   precip_input => precip
    precip_new => precip
 
    allocate(ssu(E2DFIELD),stat=rc)
@@ -391,18 +386,14 @@
          allocate(t2(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (t2)'
          t2 = _ZERO_
-         t2_input => t2
 
          allocate(hum(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (hum)'
          hum = _ZERO_
-         hum_input => hum
 
          allocate(tcc(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc)'
          tcc = _ZERO_
-         tcc_input => tcc
-         tcc_new => tcc
       end if
    end if
 
@@ -411,9 +402,6 @@
 
       allocate(airp_new(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (airp_new)'
-      allocate(d_airp(E2DFIELD),stat=rc)
-      if (rc /= 0) stop 'init_meteo: Error allocating memory (d_airp)'
-      airp_input => d_airp
 
       if (.not.(calc_met .and. interpolate_meteo)) then
          allocate(tausx_new(E2DFIELD),stat=rc)
@@ -438,41 +426,12 @@
       if (calc_met) then
          allocate(u10_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (u10_new)'
-         allocate(d_u10(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_meteo: Error allocating memory (d_u10)'
-         u10_input => d_u10
 
          allocate(v10_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (v10_new)'
-         allocate(d_v10(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_meteo: Error allocating memory (d_v10)'
-         v10_input => d_v10
 
          allocate(tcc_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc_new)'
-         allocate(d_tcc(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tcc)'
-         tcc_input => d_tcc
-
-         if (interpolate_meteo) then
-            allocate(t2_new(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'init_meteo: Error allocating memory (t2_new)'
-            allocate(d_t2(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'init_meteo: Error allocating memory (d_t2)'
-            t2_input => d_t2
-
-            allocate(hum_new(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'init_meteo: Error allocating memory (hum_new)'
-            allocate(d_hum(E2DFIELD),stat=rc)
-            if (rc /= 0) stop 'init_meteo: Error allocating memory (d_hum)'
-            hum_input => d_hum
-         end if
-      else
-         allocate(swr_new(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_meteo: Error allocating memory (swr_new)'
-         allocate(d_swr(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_meteo: Error allocating memory (d_swr)'
-         swr_input => d_swr
       end if
 
       if (fwf_method.eq.2 .or. (fwf_method.gt.2 .and. calc_met .and. .not.interpolate_meteo)) then
@@ -486,12 +445,10 @@
       if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
          allocate(precip_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (precip_new)'
-         allocate(d_precip(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'init_meteo: Error allocating memory (d_precip)'
-         precip_input => d_precip
       end if
 
    end if
+
 #ifdef DEBUG
    write(debug,*) 'Leaving init_meteo()'
    write(debug,*)
@@ -558,12 +515,10 @@
    REALTYPE                  :: taus,tausm1
    logical,save              :: first=.true.
    REALTYPE,dimension(E2DFIELD),target :: work1,work2
-   REALTYPE, dimension(:,:), pointer :: airp_old,tausx_old,tausy_old
-   REALTYPE, dimension(:,:), pointer :: u10_old,v10_old
-   REALTYPE, dimension(:,:), pointer :: shf_old,swr_old,tcc_old
-   REALTYPE, dimension(:,:), pointer :: t2_old,hum_old
-   REALTYPE, dimension(:,:), pointer :: evap_old,precip_old
-   REALTYPE, dimension(:,:), pointer :: sst_old,sss_old
+   REALTYPE, dimension(:,:), pointer :: tausx_old
+   REALTYPE, dimension(:,:), pointer :: tausy_old
+   REALTYPE, dimension(:,:), pointer :: shf_old
+   REALTYPE, dimension(:,:), pointer :: evap_old
    REALTYPE, dimension(:,:), pointer :: u10r_x,v10r_x,airp_x,precip_x,tcc_x
    REALTYPE,parameter :: wind2taus = 1.25d-3 * 1.25d0
    REALTYPE,parameter :: taus2wind = _ONE_ / sqrt(wind2taus)
@@ -583,27 +538,6 @@
 !    is by far the most expensive of the present routine.
 !       BJB 2009-09-30.
    if (metforcing) then
-
-      if (first) then
-         if (nudge_sst) then
-            if (met_method .eq. METEO_FROMFILE) then
-               allocate(sst_new(E2DFIELD),stat=rc)
-               if (rc /= 0) stop 'do_meteo: Error allocating memory (sst_new)'
-               allocate(d_sst(E2DFIELD),stat=rc)
-               if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sst)'
-               sst_input => d_sst
-            end if
-         end if
-         if (nudge_sss) then
-            if (met_method .eq. METEO_FROMFILE) then
-               allocate(sss_new(E2DFIELD),stat=rc)
-               if (rc /= 0) stop 'do_meteo: Error allocating memory (sss_new)'
-               allocate(d_sss(E2DFIELD),stat=rc)
-               if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sss)'
-               sss_input => d_sss
-            end if
-         end if
-      end if
 
       t = n*timestep
       hh = secondsofday*(_ONE_/3600)
@@ -652,109 +586,6 @@
 !$OMP          FIRSTPRIVATE(j)                                         &
 !$OMP          PRIVATE(i)
 !$OMP SINGLE
-
-            if (met_method .eq. METEO_FROMFILE) then
-
-               if (new_meteo) then
-
-                  airp_old=>airp_new;airp_new=>d_airp;d_airp=>airp_old;airp_input=>d_airp
-                  if (calc_met) then
-                     tcc_old=>tcc_new;tcc_new=>d_tcc;d_tcc=>tcc_old;tcc_input=>d_tcc
-                     u10_old=>u10_new;u10_new=>d_u10;d_u10=>u10_old;u10_input=>d_u10
-                     v10_old=>v10_new;v10_new=>d_v10;d_v10=>v10_old;v10_input=>d_v10
-                     if (interpolate_meteo) then
-                        t2_old =>t2_new ;t2_new =>d_t2 ;d_t2 =>t2_old ;t2_input =>d_t2
-                        hum_old=>hum_new;hum_new=>d_hum;d_hum=>hum_old;hum_input=>d_hum
-                     end if
-                  else
-                     swr_old=>swr_new;swr_new=>d_swr;d_swr=>swr_old;swr_input=>d_swr
-                  end if
-                  if (fwf_method.eq.2 .or. fwf_method.eq.3) then
-                     precip_old=>precip_new;precip_new=>d_precip;d_precip=>precip_old;precip_input=>d_precip
-                  end if
-                  if (nudge_sst) then
-                     sst_old=>sst_new;sst_new=>d_sst;d_sst=>sst_old;sst_input=>d_sst
-                  end if
-                  if (nudge_sss) then
-                     sss_old=>sss_new;sss_new=>d_sss;d_sss=>sss_old;sss_input=>d_sss
-                  end if
-
-                  if (.not. first) then
-!$OMP END SINGLE
-!$OMP DO SCHEDULE(RUNTIME)
-#ifndef SLICE_MODEL
-                     do j=jmin-HALO,jmax+HALO
-#endif
-                        do i=imin-HALO,imax+HALO
-                           if (az(i,j) .ne. 0) then
-                              d_airp(i,j) = airp_new(i,j) - airp_old(i,j)
-                              if (calc_met) then
-                                 d_tcc(i,j) = tcc_new(i,j) - tcc_old(i,j)
-                                 d_u10(i,j) = u10_new(i,j) - u10_old(i,j)
-                                 d_v10(i,j) = v10_new(i,j) - v10_old(i,j)
-                                 if (interpolate_meteo) then
-                                    d_t2 (i,j) = t2_new (i,j) - t2_old (i,j)
-                                    d_hum(i,j) = hum_new(i,j) - hum_old(i,j)
-                                 end if
-                              else
-                                 d_swr(i,j) = swr_new(i,j) - swr_old(i,j)
-                              end if
-                              if (fwf_method.eq.2 .or. fwf_method.eq.3) then
-                                 d_precip(i,j) = precip_new(i,j) - precip_old(i,j)
-                              end if
-                              if (nudge_sst) then
-                                 d_sst(i,j) = sst_new(i,j) - sst_old(i,j)
-                              end if
-                              if (nudge_sss) then
-                                 d_sss(i,j) = sss_new(i,j) - sss_old(i,j)
-                              end if
-                           end if
-                        end do
-#ifndef SLICE_MODEL
-                     end do
-#endif
-!$OMP END DO
-!$OMP SINGLE
-                  end if !if (.not. first) then
-
-               end if !if new_meteo
-
-!$OMP END SINGLE
-!$OMP DO SCHEDULE(RUNTIME)
-#ifndef SLICE_MODEL
-               do j=jmin-HALO,jmax+HALO
-#endif
-                  do i=imin-HALO,imax+HALO
-                     if (az(i,j) .ne. 0) then
-                        airp(i,j) = airp_new(i,j) + d_airp(i,j)*deltm1*t_minus_t2
-                        if (calc_met) then
-                           tcc(i,j) = tcc_new(i,j) + d_tcc(i,j)*deltm1*t_minus_t2
-                           u10(i,j) = u10_new(i,j) + d_u10(i,j)*deltm1*t_minus_t2
-                           v10(i,j) = v10_new(i,j) + d_v10(i,j)*deltm1*t_minus_t2
-                           if (interpolate_meteo) then
-                              t2 (i,j) = t2_new (i,j) + d_t2 (i,j)*deltm1*t_minus_t2
-                              hum(i,j) = hum_new(i,j) + d_hum(i,j)*deltm1*t_minus_t2
-                           end if
-                        else
-                           swr(i,j) = swr_new(i,j) + d_swr(i,j)*deltm1*t_minus_t2
-                        end if
-                        if (fwf_method.eq.2 .or. fwf_method.eq.3) then
-                           precip(i,j) = precip_new(i,j) + d_precip(i,j)*deltm1*t_minus_t2
-                        end if
-                        if (nudge_sst) then
-                           sst(i,j) = sst_new(i,j) + d_sst(i,j)*deltm1*t_minus_t2
-                        end if
-                        if (nudge_sss) then
-                           sss(i,j) = sss_new(i,j) + d_sss(i,j)*deltm1*t_minus_t2
-                        end if
-                     end if
-                  end do
-#ifndef SLICE_MODEL
-               end do
-#endif
-!$OMP END DO
-!$OMP SINGLE
-            end if !if (met_method .eq. METEO_FROMFILE) then
 
             if (calc_met) then
 

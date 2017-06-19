@@ -19,14 +19,7 @@
    use domain, only: ill,ihl,jll,jhl,ilg,ihg,jlg,jhg
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
    use grid_interpol, only: to_rotated_lat_lon
-   use meteo, only: meteo_file,on_grid,calc_met,constant_cd,hum_method
-   use meteo, only: RELATIVE_HUM,WET_BULB,DEW_POINT,SPECIFIC_HUM
-   use meteo, only: airp=>airp_input,u10=>u10_input,v10=>v10_input,t2=>t2_input,hum=>hum_input,tcc=>tcc_input
-   use meteo, only: fwf_method,evap=>evap_input,precip=>precip_input
-   use meteo, only: tausx=>tausx_input,tausy=>tausy_input,swr=>swr_input,shf=>shf_input
-   use meteo, only: new_meteo,t_1,t_2
-   use meteo, only: wind_factor,evap_factor,precip_factor
-   use meteo, only: nudge_sst,sst=>sst_input,nudge_sss,sss=>sss_input
+   use meteo
    use exceptions
    IMPLICIT NONE
 !
@@ -52,8 +45,17 @@
 
    REALTYPE, allocatable     :: met_lon(:),met_lat(:)
    REALTYPE, allocatable      :: met_times(:)
-   REALTYPE, allocatable      :: wrk(:,:)
-   REALTYPE, allocatable     :: wrk_dp(:,:)
+
+   REALTYPE,dimension(:,:),pointer :: d_airp,airp_input
+   REALTYPE,dimension(:,:),pointer :: d_u10,u10_input
+   REALTYPE,dimension(:,:),pointer :: d_v10,v10_input
+   REALTYPE,dimension(:,:),pointer :: d_tcc,tcc_input
+   REALTYPE,dimension(:,:),pointer :: t2_new,d_t2,t2_input
+   REALTYPE,dimension(:,:),pointer :: hum_new,d_hum,hum_input
+   REALTYPE,dimension(:,:),pointer :: swr_new,d_swr,swr_input
+   REALTYPE,dimension(:,:),pointer :: d_precip,precip_input
+   REALTYPE,dimension(:,:),pointer :: sst_new,d_sst,sst_input
+   REALTYPE,dimension(:,:),pointer :: sss_new,d_sss,sss_input
 
 !  For gridinterpolation
    REALTYPE, allocatable     :: beta(:,:)
@@ -126,7 +128,7 @@
 !
 ! !LOCAL VARIABLES:
    integer         :: i,j,il,ih,jl,jh
-   integer         :: err
+   integer         :: rc,err
    logical         :: ok=.true.
    REALTYPE        :: olon,olat,rlon,rlat,x
 !EOP
@@ -152,10 +154,6 @@
    start(1) = il; start(2) = jl;
    edges(1) = ih-il+1; edges(2) = jh-jl+1;
    edges(3) = 1
-
-   allocate(wrk(edges(1),edges(2)),stat=err)
-   if (err /= 0) stop 'ncdf_meteo: Error allocating memory (wrk)'
-   wrk = 0.
 
    allocate(beta(E2DFIELD),stat=err)
    if (err /= 0) &
@@ -195,10 +193,6 @@
          stop 'init_meteo_input_ncdf: calc_met=false requires on_grid=true'
       end if
 
-      allocate(wrk_dp(edges(1),edges(2)),stat=err)
-      if (err /= 0) stop 'ncdf_meteo: Error allocating memory (wrk_dp)'
-      wrk_dp = _ZERO_
-
       allocate(ti(E2DFIELD),stat=err)
       if (err /= 0) &
           stop 'init_meteo_input_ncdf: Error allocating memory (ti)'
@@ -235,6 +229,78 @@
       end if
    end if
 
+   allocate(d_airp(E2DFIELD),stat=rc)
+   if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_airp)'
+   airp_input => d_airp
+
+   if (calc_met) then
+
+      allocate(d_u10(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_u10)'
+      u10_input => d_u10
+
+      allocate(d_v10(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_v10)'
+      v10_input => d_v10
+
+      allocate(d_tcc(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_tcc)'
+      tcc_input => d_tcc
+
+      if (interpolate_meteo) then
+
+         allocate(t2_new(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (t2_new)'
+         allocate(d_t2(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_t2)'
+         t2_input => d_t2
+
+         allocate(hum_new(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (hum_new)'
+         allocate(d_hum(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_hum)'
+         hum_input => d_hum
+
+      else
+
+         t2_input  => t2
+         hum_input => hum
+
+      end if
+
+   else
+
+      allocate(swr_new(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (swr_new)'
+      allocate(d_swr(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_swr)'
+      swr_input => d_swr
+
+   end if
+
+   if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+      allocate(d_precip(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_precip)'
+      precip_input => d_precip
+   end if
+
+   if (nudge_sst) then
+      allocate(sst_new(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'do_meteo: Error allocating memory (sst_new)'
+      allocate(d_sst(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sst)'
+      sst_input => d_sst
+   end if
+
+   if (nudge_sss) then
+      allocate(sss_new(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'do_meteo: Error allocating memory (sss_new)'
+      allocate(d_sss(E2DFIELD),stat=rc)
+      if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sss)'
+      sss_input => d_sss
+   end if
+
+
    call get_meteo_data_ncdf(nstart-1)
 
 #ifdef DEBUG
@@ -267,8 +333,20 @@
 !  See module for log.
 !
 ! !LOCAL VARIABLES:
+   REALTYPE,dimension(:,:),pointer :: airp_old
+   REALTYPE,dimension(:,:),pointer :: u10_old
+   REALTYPE,dimension(:,:),pointer :: v10_old
+   REALTYPE,dimension(:,:),pointer :: tcc_old
+   REALTYPE,dimension(:,:),pointer :: t2_old
+   REALTYPE,dimension(:,:),pointer :: hum_old
+   REALTYPE,dimension(:,:),pointer :: swr_old
+   REALTYPE,dimension(:,:),pointer :: precip_old
+   REALTYPE,dimension(:,:),pointer :: sst_old
+   REALTYPE,dimension(:,:),pointer :: sss_old
+
    integer         :: indx
-   REALTYPE        :: t
+   REALTYPE        :: t,t_minus_t2
+   REALTYPE,save   :: deltm1=_ZERO_
    logical, save   :: first=.true.
    integer, save   :: save_n=1
 !EOP
@@ -317,7 +395,6 @@
          end if
 
          if (first) then
-            first = .false.
 !            if (indx .gt. 1) then
             if ( t_2 .gt. t ) then
                indx = indx-1
@@ -328,7 +405,80 @@
          call read_data(indx)
          save_n = indx+1
 
+         airp_old=>airp_new;airp_new=>d_airp;d_airp=>airp_old;airp_input=>d_airp
+         if (calc_met) then
+            u10_old=>u10_new;u10_new=>d_u10;d_u10=>u10_old;u10_input=>d_u10
+            v10_old=>v10_new;v10_new=>d_v10;d_v10=>v10_old;v10_input=>d_v10
+            tcc_old=>tcc_new;tcc_new=>d_tcc;d_tcc=>tcc_old;tcc_input=>d_tcc
+            if (interpolate_meteo) then
+               t2_old =>t2_new ;t2_new =>d_t2 ;d_t2 =>t2_old ;t2_input =>d_t2
+               hum_old=>hum_new;hum_new=>d_hum;d_hum=>hum_old;hum_input=>d_hum
+            end if
+         else
+            swr_old=>swr_new;swr_new=>d_swr;d_swr=>swr_old;swr_input=>d_swr
+         end if
+         if (fwf_method.eq.2 .or. fwf_method.eq.3) then
+            precip_old=>precip_new;precip_new=>d_precip;d_precip=>precip_old;precip_input=>d_precip
+         end if
+         if (nudge_sst) then
+            sst_old=>sst_new;sst_new=>d_sst;d_sst=>sst_old;sst_input=>d_sst
+         end if
+         if (nudge_sss) then
+            sss_old=>sss_new;sss_new=>d_sss;d_sss=>sss_old;sss_input=>d_sss
+         end if
+
+         if (.not. first) then
+            d_airp = airp_new - airp_old
+            if (calc_met) then
+               d_tcc = tcc_new - tcc_old
+               d_u10 = u10_new - u10_old
+               d_v10 = v10_new - v10_old
+               if (interpolate_meteo) then
+                  d_t2  = t2_new  - t2_old
+                  d_hum = hum_new - hum_old
+               end if
+            else
+               d_swr = swr_new - swr_old
+            end if
+            if (fwf_method.eq.2 .or. fwf_method.eq.3) then
+               d_precip = precip_new - precip_old
+            end if
+            if (nudge_sst) then
+               d_sst = sst_new - sst_old
+            end if
+            if (nudge_sss) then
+               d_sss = sss_new - sss_old
+            end if
+            deltm1 = _ONE_ / (t_2 - t_1)
+         end if
+
       end if
+
+      t_minus_t2 = t - t_2
+
+      airp = airp_new + d_airp*deltm1*t_minus_t2
+      if (calc_met) then
+         tcc = tcc_new + d_tcc*deltm1*t_minus_t2
+         u10 = u10_new + d_u10*deltm1*t_minus_t2
+         v10 = v10_new + d_v10*deltm1*t_minus_t2
+         if (interpolate_meteo) then
+            t2  = t2_new  + d_t2 *deltm1*t_minus_t2
+            hum = hum_new + d_hum*deltm1*t_minus_t2
+         end if
+      else
+         swr = swr_new + d_swr*deltm1*t_minus_t2
+      end if
+      if (fwf_method.eq.2 .or. fwf_method.eq.3) then
+         precip = precip_new + d_precip*deltm1*t_minus_t2
+      end if
+      if (nudge_sst) then
+         sst = sst_new + d_sst*deltm1*t_minus_t2
+      end if
+      if (nudge_sss) then
+         sss = sss_new + d_sss*deltm1*t_minus_t2
+      end if
+
+      first = .false.
 
 #ifdef DEBUG
    write(debug,*) 'Leaving get_meteo_data_ncdf()'
@@ -659,6 +809,7 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 !
 ! !LOCAL VARIABLES:
    integer         :: i,j,err
+   REALTYPE,dimension(edges(1),edges(2)) :: wrk,wrk_dp
    REALTYPE        :: angle,uu,vv,sinconv,cosconv
 !EOP
 !-----------------------------------------------------------------------
@@ -672,14 +823,14 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
-            airp = wrk(1,1)
+            airp_input = wrk(1,1)
          else
-            airp(ill:ihl,jll:jhl) = wrk
+            airp_input(ill:ihl,jll:jhl) = wrk
          end if
       else
          !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,airp)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,airp_input)
       end if
    end if
 
@@ -688,16 +839,16 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
-            evap = wrk(1,1)
+            evap_input = wrk(1,1)
          else
-            evap(ill:ihl,jll:jhl) = wrk
+            evap_input(ill:ihl,jll:jhl) = wrk
          end if
       else
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,evap)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,evap_input)
       end if
       if (evap_factor .ne. _ONE_) then
-         evap = evap * evap_factor
+         evap_input = evap_input * evap_factor
       end if
    end if
 
@@ -706,16 +857,16 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
-            precip = wrk(1,1)
+            precip_input = wrk(1,1)
          else
-            precip(ill:ihl,jll:jhl) = wrk
+            precip_input(ill:ihl,jll:jhl) = wrk
          end if
       else
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,precip)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,precip_input)
       end if
       if (precip_factor .ne. _ONE_) then
-         precip = precip * precip_factor
+         precip_input = precip_input * precip_factor
       end if
    end if
 
@@ -726,14 +877,14 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
-            u10 = wrk(1,1)
+            u10_input = wrk(1,1)
          else
-            u10(ill:ihl,jll:jhl) = wrk
+            u10_input(ill:ihl,jll:jhl) = wrk
          end if
       else
          !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,u10)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,u10_input)
       end if
    end if
 
@@ -742,14 +893,14 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
-            v10 = wrk(1,1)
+            v10_input = wrk(1,1)
          else
-            v10(ill:ihl,jll:jhl) = wrk
+            v10_input(ill:ihl,jll:jhl) = wrk
          end if
       else
          !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,v10)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,v10_input)
       end if
    end if
 
@@ -764,17 +915,17 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
             if(angle .ne. _ZERO_) then
                sinconv=sin(angle)
                cosconv=cos(angle)
-               uu=u10(i,j)
-               vv=v10(i,j)
-               u10(i,j)= uu*cosconv+vv*sinconv
-               v10(i,j)=-uu*sinconv+vv*cosconv
+               uu=u10_input(i,j)
+               vv=v10_input(i,j)
+               u10_input(i,j)= uu*cosconv+vv*sinconv
+               v10_input(i,j)=-uu*sinconv+vv*cosconv
             end if
          end do
       end do
 
       if (wind_factor .ne. _ONE_) then
-         u10 = u10 * wind_factor
-         v10 = v10 * wind_factor
+         u10_input = u10_input * wind_factor
+         v10_input = v10_input * wind_factor
       end if
 
    if (t2_id .gt. 0) then
@@ -782,14 +933,14 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
-            t2 = wrk(1,1)
+            t2_input = wrk(1,1)
          else
-            t2(ill:ihl,jll:jhl) = wrk
+            t2_input(ill:ihl,jll:jhl) = wrk
          end if
       else
          !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,t2)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,t2_input)
       end if
    end if
 
@@ -798,14 +949,14 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
-            hum = wrk(1,1)
+            hum_input = wrk(1,1)
          else
-            hum(ill:ihl,jll:jhl) = wrk
+            hum_input(ill:ihl,jll:jhl) = wrk
          end if
       else
          !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,hum)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,hum_input)
       end if
    end if
 
@@ -814,14 +965,14 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
-            tcc = wrk(1,1)
+            tcc_input = wrk(1,1)
          else
-            tcc(ill:ihl,jll:jhl) = wrk
+            tcc_input(ill:ihl,jll:jhl) = wrk
          end if
       else
          !KBKwrk_dp = _ZERO_
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,tcc)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,tcc_input)
       end if
    end if
 
@@ -831,36 +982,36 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          err = nf90_get_var(ncid,tausx_id,wrk,start,edges)
          if (err .ne. NF90_NOERR) go to 10
          if (point_source) then
-            tausx = wrk(1,1)
+            tausx_input = wrk(1,1)
          else
-            tausx(ill:ihl,jll:jhl) = wrk
+            tausx_input(ill:ihl,jll:jhl) = wrk
          end if
       end if
       if (tausy_id .gt. 0) then
          err = nf90_get_var(ncid,tausy_id,wrk,start,edges)
          if (err .ne. NF90_NOERR) go to 10
          if (point_source) then
-            tausy = wrk(1,1)
+            tausy_input = wrk(1,1)
          else
-            tausy(ill:ihl,jll:jhl) = wrk
+            tausy_input(ill:ihl,jll:jhl) = wrk
          end if
       end if
       if (swr_id .gt. 0) then
          err = nf90_get_var(ncid,swr_id,wrk,start,edges)
          if (err .ne. NF90_NOERR) go to 10
          if (point_source) then
-            swr = wrk(1,1)
+            swr_input = wrk(1,1)
          else
-            swr(ill:ihl,jll:jhl) = wrk
+            swr_input(ill:ihl,jll:jhl) = wrk
          end if
       end if
       if (shf_id .gt. 0) then
          err = nf90_get_var(ncid,shf_id,wrk,start,edges)
          if (err .ne. NF90_NOERR) go to 10
          if (point_source) then
-            shf = wrk(1,1)
+            shf_input = wrk(1,1)
          else
-            shf(ill:ihl,jll:jhl) = wrk
+            shf_input(ill:ihl,jll:jhl) = wrk
          end if
       end if
 
@@ -871,13 +1022,13 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
-            sst = wrk(1,1)
+            sst_input = wrk(1,1)
          else
-            sst(ill:ihl,jll:jhl) = wrk
+            sst_input(ill:ihl,jll:jhl) = wrk
          end if
       else if (calc_met) then
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sst)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sst_input)
       end if
    end if
 
@@ -886,13 +1037,13 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
       if (err .ne. NF90_NOERR) go to 10
       if (on_grid) then
          if (point_source) then
-            sss = wrk(1,1)
+            sss_input = wrk(1,1)
          else
-            sss(ill:ihl,jll:jhl) = wrk
+            sss_input(ill:ihl,jll:jhl) = wrk
          end if
       else if (calc_met) then
          call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sss)
+         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sss_input)
       end if
    end if
 

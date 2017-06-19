@@ -104,7 +104,7 @@ end interface
 ! !USES:
    use advection, only: J7
    use advection_3d, only: print_adv_settings_3d
-   use meteo, only: sst_input,sst_const
+   use meteo, only: sst_const
    IMPLICIT NONE
 !
 ! !LOCAL VARIABLES:
@@ -200,7 +200,6 @@ end interface
       LEVEL4 'sst_nudging_time=',real(sst_nudging_time)
       allocate(sst(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_temperature: Error allocating memory (sst)'
-      sst_input => sst
       select case(met_method)
          case (METEO_CONST)
             if (sst_const .gt. _ZERO_) then
