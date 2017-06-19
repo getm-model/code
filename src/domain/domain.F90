@@ -729,16 +729,16 @@
 
 !        note that all dy? are identical on constant
 
-         do j=jll,jhl
-            dxc(ill:ihl,j)=deg2rad*dlon*rearth*cos(deg2rad*latc(ill:ihl,j))
+         do j=jmin-HALO,jmax+HALO
+            dxc(:,j)=deg2rad*dlon*rearth*cos(deg2rad*latc(:,j))
          end do
          dyc = deg2rad*dlat*rearth
 
          dxu = dxc
          dyu = dyc
 
-         do j=jll,jhl
-            dxv(ill:ihl,j)=deg2rad*dlon*rearth*cos(deg2rad*latx(ill:ihl,j))
+         do j=jmin-HALO,jmax+HALO
+            dxv(:,j)=deg2rad*dlon*rearth*cos(deg2rad*latx(imin-HALO:,j))
          end do
          dyv = dyc
 
