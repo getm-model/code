@@ -520,13 +520,13 @@ end interface
          if (az(i,j) .ge. 1 ) then
 
 !           Get surface short-wave radiation.
-            if (associated(swr)) then
+            if (allocated(swr)) then
                I_0 = swr(i,j)
             else
                I_0 = _ZERO_
             end if
 
-            if (associated(tcc)) then
+            if (allocated(tcc)) then
                cloud = tcc(i,j)
             else
                cloud = _ZERO_
