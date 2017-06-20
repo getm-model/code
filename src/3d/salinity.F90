@@ -20,7 +20,7 @@
 !KB   use get_field, only: get_3d_field
    use variables_2d, only: fwf_int
    use variables_3d, only: S,hn,kmin
-   use meteo, only: metforcing,met_method,nudge_sss,sss,sss_const
+   use meteo, only: metforcing,met_method,nudge_sss,sss
    use meteo, only: METEO_CONST,METEO_FROMFILE,METEO_FROMEXT
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
    IMPLICIT NONE
@@ -99,6 +99,7 @@
    use variables_3d, only: deformC_3d,deformX_3d,deformUV_3d,calc_stirr
    use m2d, only: Am_method,AM_LES
    use les, only: les_mode,LES_TRACER,LES_BOTH
+   use meteo, only: sss_const
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
