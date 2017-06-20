@@ -138,7 +138,7 @@
           stop 'init_waves_input_ncdf: Error allocating memory (beta)'
       beta = _ZERO_
 
-      call init_grid_interpol(imin,imax,jmin,jmax,az,  &
+      call init_grid_interpol(ill,ihl,jll,jhl,az,  &
                 lonc,latc,waves_lon,waves_lat,southpole,gridmap,beta,ti,ui, &
                 break_on_missing=.false.)
 
