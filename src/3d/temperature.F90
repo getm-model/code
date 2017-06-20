@@ -21,7 +21,7 @@
    use domain, only: ill,ihl,jll,jhl
    use domain, only: ilg,ihg,jlg,jhg
    use variables_3d, only: T,rad,hn,kmin,A,g1,g2,heatflux_net
-   use meteo, only: metforcing,met_method,nudge_sst,sst,sst_const
+   use meteo, only: metforcing,met_method,nudge_sst,sst
    use meteo, only: METEO_CONST,METEO_FROMFILE,METEO_FROMEXT
 !KB   use get_field, only: get_3d_field
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
@@ -123,6 +123,7 @@ end interface
    use variables_3d, only: deformC_3d,deformX_3d,deformUV_3d,calc_stirr
    use m2d, only: Am_method,AM_LES
    use les, only: les_mode,LES_TRACER,LES_BOTH
+   use meteo, only: sst_const
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
