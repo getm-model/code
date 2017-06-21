@@ -221,7 +221,7 @@
 !  Box partition
    call oasis_def_partition(il_part_id,                                              &
                             (/2,(joff-j0)*nx_global+(ioff-i0),imax,jmax,nx_global/), &
-                            ierror,iextr*jextr,"getm")
+                            ierror,nx_global*ny_global,"getm")
    if (ierror /= 0) call oasis_abort(compid,FILENAME//':'//_LINE_)
 
    if (grid_type.ne.2 .and. grid_type.ne.4) then
