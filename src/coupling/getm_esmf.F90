@@ -3169,6 +3169,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    real(ESMF_KIND_R8),pointer :: p2dr_(:,:),p3dr_(:,:,:)
    REALTYPE                   :: getmreal
    integer                    :: rc,dimCount,klen
+   integer,target             :: elb(3),eub(3)
    logical                    :: abort,frc_,isCreated,noKindMatch
 !
 !EOP
@@ -3236,17 +3237,22 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
          p2dr_(imin-HALO:,jmin-HALO:) => farray2D
       end if
       if (associated(p2dr_)) then
+         call ESMF_GridGetFieldBounds(grid,staggerloc=staggerloc,      &
+                                      totalLBound=elb(1:2),totalUBound=eub(1:2),rc=rc)
+         abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+         if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
 !        in contrast to ESMF_ArrayCreate() no automatic determination of total[L|U]Width
 #if 1
 !        Note (KK): in former times ESMF_FieldCreateGridDataPtr<rank><type><kind>() failed
-         call ESMF_FieldEmptyComplete(field,p2dr_,                     &
+         call ESMF_FieldEmptyComplete(field,p2dr_,                             &
 #else
 !        internal call to ESMF_FieldCreateGridData<rank><type><kind>()
 !        forced by indexflag argument.
-         call ESMF_FieldEmptyComplete(field,p2dr_,ESMF_INDEX_DELOCAL,  &
+         call ESMF_FieldEmptyComplete(field,p2dr_,ESMF_INDEX_DELOCAL,          &
 #endif
-                                      totalLWidth=(/HALO,HALO/),       &
-                                      totalUWidth=(/HALO,HALO/),       &
+                                      totalLWidth=int(elb(1:2)-lbound(p2dr_)), &
+                                      totalUWidth=int(ubound(p2dr_)-eub(1:2)), &
                                       rc=rc)
          abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
          if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -3266,18 +3272,23 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
       else if (present(farray3D) .and. .not.noKindMatch) then
          p3dr_(imin-HALO:,jmin-HALO:,0:) => farray3D
       end if
-      if (associated(p2dr_)) then
+      if (associated(p3dr_)) then
+         call ESMF_GridGetFieldBounds(grid,staggerloc=staggerloc,      &
+                                      totalLBound=elb,totalUBound=eub,rc=rc)
+         abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+         if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
 !        in contrast to ESMF_ArrayCreate() no automatic determination of total[L|U]Width
 #if 1
 !        Note (KK): in former times ESMF_FieldCreateGridDataPtr<rank><type><kind>() failed
-         call ESMF_FieldEmptyComplete(field,p3dr_,                     &
+         call ESMF_FieldEmptyComplete(field,p3dr_,                        &
 #else
 !        internal call to ESMF_FieldCreateGridData<rank><type><kind>()
 !        forced by indexflag argument.
-         call ESMF_FieldEmptyComplete(field,p3dr_,ESMF_INDEX_DELOCAL,  &
+         call ESMF_FieldEmptyComplete(field,p3dr_,ESMF_INDEX_DELOCAL,     &
 #endif
-                                      totalLWidth=(/HALO,HALO,1/),     &
-                                      totalUWidth=(/HALO,HALO,0/),     &
+                                      totalLWidth=int(elb-lbound(p3dr_)), &
+                                      totalUWidth=int(ubound(p3dr_)-eub), &
                                       rc=rc)
          abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
          if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -3335,9 +3346,11 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 ! !LOCAL VARIABLES
    type(ESMF_Field)           :: field
    type(ESMF_Grid)            :: grid
+   type(ESMF_StaggerLoc)      :: staggerloc
    real(ESMF_KIND_R8),pointer :: p2dr_(:,:),p3dr_(:,:,:)
    REALTYPE                   :: getmreal
    integer                    :: rc,dimCount,klen
+   integer,target             :: elb(3),eub(3)
    logical                    :: abort,isPresent,isConnected,noKindMatch
 !
 !EOP
@@ -3386,7 +3399,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
       return
    end if
 
-   call ESMF_FieldGet(field,grid=grid,rc=rc)
+   call ESMF_FieldGet(field,grid=grid,staggerloc=staggerloc,rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
@@ -3416,17 +3429,22 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
       if (.not. associated(p2dr_)) allocate(p2dr_(I2DFIELD))
       if (present(p2dr)) p2dr => p2dr_
 
+      call ESMF_GridGetFieldBounds(grid,staggerloc=staggerloc,         &
+                                   totalLBound=elb(1:2),totalUBound=eub(1:2),rc=rc)
+      abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+      if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
 !     in contrast to ESMF_ArrayCreate() no automatic determination of total[L|U]Width
 #if 1
 !     Note (KK): in former times ESMF_FieldCreateGridDataPtr<rank><type><kind>() failed
-      call ESMF_FieldEmptyComplete(field,p2dr_,                        &
+      call ESMF_FieldEmptyComplete(field,p2dr_,                             &
 #else
 !     internal call to ESMF_FieldCreateGridData<rank><type><kind>()
 !     forced by indexflag argument.
-      call ESMF_FieldEmptyComplete(field,p2dr_,ESMF_INDEX_DELOCAL,     &
+      call ESMF_FieldEmptyComplete(field,p2dr_,ESMF_INDEX_DELOCAL,          &
 #endif
-                                   totalLWidth=(/HALO,HALO/),          &
-                                   totalUWidth=(/HALO,HALO/),          &
+                                   totalLWidth=int(elb(1:2)-lbound(p2dr_)), &
+                                   totalUWidth=int(ubound(p2dr_)-eub(1:2)), &
                                    rc=rc)
       abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
       if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -3445,6 +3463,11 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
       if (.not. associated(p3dr_)) allocate(p3dr_(I2DFIELD,0:klen))
       if (present(p3dr)) p3dr => p3dr_
 
+      call ESMF_GridGetFieldBounds(grid,staggerloc=staggerloc,            &
+                                   totalLBound=elb,totalUBound=eub,rc=rc)
+      abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+      if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
 !     in contrast to ESMF_ArrayCreate() no automatic determination of total[L|U]Width
 #if 1
 !     Note (KK): in former times ESMF_FieldCreateGridDataPtr<rank><type><kind>() failed
@@ -3454,8 +3477,8 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 !     forced by indexflag argument.
       call ESMF_FieldEmptyComplete(field,p3dr_,ESMF_INDEX_DELOCAL,     &
 #endif
-                                   totalLWidth=(/HALO,HALO,1/),        &
-                                   totalUWidth=(/HALO,HALO,0/),        &
+                                   totalLWidth=int(elb-lbound(p3dr_)), &
+                                   totalUWidth=int(ubound(p3dr_)-eub), &
                                    rc=rc)
       abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
       if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
