@@ -446,8 +446,7 @@
 !  Original author(s): Lars Umlauf
 !
 ! !LOCAL VARIABLES:
-   integer                   :: i,j,n
-   REALTYPE                  :: x
+   integer                   :: i,j
 !EOP
 !------------------------------------------------------------------------
 !BOC
@@ -506,19 +505,24 @@
 
       case(2)
 
+         do j=jmin-HALO,jmax+HALO
+            lonc(:,j) = xcord
+         end do
+         do i=imin-HALO,imax+HALO
+            latc(i,:) = ycord
+         end do
+
+!        lonx is not required for internal use
 !        we need latx to calculate dxv - utilize equidistance
-         latx(ill:ihl,jll-1) = latc(ill:ihl,jll) - dlat/2.
-STDERR ill,jll,dlat/2.
-STDERR latc(1,1),latx(1,0)
-!stop
-         n=1
-         do j=jll,jhl
-            latx(ill:ihl,j) = latx(ill:ihl,jll-1) + n*dlat
-            n=n+1
+         do j=jmin-HALO-1,jmax+HALO
+            lonx(:,j) = xxcord
+         end do
+         do i=imin-HALO-1,imax+HALO
+            latx(i,:) = yxcord
          end do
 
          latu = latc
-         latv(ill:ihl,jll:jhl) = latx(ill:ihl,jll:jhl)
+         latv = latx(E2DFIELD)
 
       case(3)
 
@@ -618,16 +622,16 @@ STDERR latc(1,1),latx(1,0)
 
 !        note that all dy? are identical on constant
 
-         do j=jll,jhl
-            dxc(ill:ihl,j)=deg2rad*dlon*rearth*cos(deg2rad*latc(ill:ihl,j))
+         do j=jmin-HALO,jmax+HALO
+            dxc(:,j)=deg2rad*dlon*rearth*cos(deg2rad*latc(:,j))
          end do
          dyc = deg2rad*dlat*rearth
 
          dxu = dxc
          dyu = dyc
 
-         do j=jll,jhl
-            dxv(ill:ihl,j)=deg2rad*dlon*rearth*cos(deg2rad*latx(ill:ihl,j))
+         do j=jmin-HALO,jmax+HALO
+            dxv(:,j)=deg2rad*dlon*rearth*cos(deg2rad*latx(imin-HALO:,j))
          end do
          dyv = dyc
 
