@@ -237,7 +237,7 @@
 !BOC
    LEVEL2 'register_meteo_variables()'
 
-   if (met_method .eq. 2) then
+   if (metforcing) then
       if (calc_met) then
          call fm%register('airp', 'Pa', 'air pressure', standard_name='', data2d=airp(_2D_W_), category="meteo/in", output_level=output_level_debug)
          call fm%register('t2', 'Celcius', '2m air temperature', standard_name='', data2d=t2(_2D_W_), category="meteo/in", output_level=output_level_debug)
