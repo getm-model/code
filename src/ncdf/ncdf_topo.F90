@@ -134,7 +134,6 @@ contains
          LEVEL2 'using plane curvilinear grid.'
       case(4)
          LEVEL2 'using spherical curvilinear grid.'
-         call getm_error("ncdf_check_grid()","grid_type=4 has not been properly implemented yet.")
       case default
          call getm_error("ncdf_check_grid()","Invalid grid type. Choose grid_type=1-4.")
    end select

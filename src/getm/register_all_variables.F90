@@ -84,7 +84,7 @@
          yname     = 'latc'
          ylongname = 'latitude'
          yunits    = 'degrees_north'
-      case (3)
+      case (3,4)
          xname     = 'xic'
          xlongname = 'xic'
          yname     = 'etac'
