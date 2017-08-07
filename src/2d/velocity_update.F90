@@ -31,6 +31,7 @@
 !  Original author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES:
+   REALTYPE,dimension(E2DFIELD)        :: scalefac
    REALTYPE,dimension(E2DFIELD),target :: zeros
    REALTYPE,dimension(:,:),pointer     :: p_wwm,p_wwp
    REALTYPE                            :: missval
@@ -61,14 +62,18 @@
       missval = vel_missing
    end if
 
+   if (grid_type .eq. 3) scalefac = _ONE_
+   if (grid_type .eq. 4) scalefac = deg2rad*rearth*cos(deg2rad*latc)
    call to_u(imin,jmin,imax,jmax,az,                                   &
              dt,grid_type,                                             &
              dxv,dyu,arcd1,                                            &
-             xc,xu,xv,z,zo,Dvel,U,DU,V,DV,p_wwm,p_wwp,missval,velx)
+             p_xc,p_xu,p_xv,z,zo,Dvel,U,DU,V,DV,p_wwm,p_wwp,scalefac,missval,velx)
+
+   if (grid_type .eq. 4) scalefac = deg2rad*rearth
    call to_v(imin,jmin,imax,jmax,az,                                   &
              dt,grid_type,                                             &
              dxv,dyu,arcd1,                                            &
-             yc,yu,yv,z,zo,Dvel,U,DU,V,DV,p_wwm,p_wwp,missval,vely)
+             p_yc,p_yu,p_yv,z,zo,Dvel,U,DU,V,DV,p_wwm,p_wwp,scalefac,missval,vely)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving velocity_update()'
