@@ -193,6 +193,9 @@
 #endif
 
 !
+#ifdef SLICE_MODEL
+   LEVEL1 'SLICE_MODEL'
+#endif
 #ifdef NO_3D
    LEVEL1 'NO_3D'
 #endif
