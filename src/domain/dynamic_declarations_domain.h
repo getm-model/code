@@ -22,8 +22,8 @@
 !  lat/lon
    REALTYPE, dimension(:,:), allocatable, target :: lonc,latc
    REALTYPE, dimension(:,:), allocatable, target :: lonx,latx
-   REALTYPE, dimension(:,:), allocatable    :: lonu,latu
-   REALTYPE, dimension(:,:), allocatable    :: lonv,latv
+   REALTYPE, dimension(:,:), allocatable, target :: lonu,latu
+   REALTYPE, dimension(:,:), allocatable, target :: lonv,latv
 
 !  grid convergence
 !KB   REALTYPE, dimension(:,:), allocatable    :: angle
@@ -32,8 +32,8 @@
 !  grid points
    REALTYPE, dimension(:,:), allocatable, target :: xx,yx
    REALTYPE, dimension(:,:), allocatable, target :: xc,yc
-   REALTYPE, dimension(:,:), allocatable    :: xu,yu
-   REALTYPE, dimension(:,:), allocatable    :: xv,yv
+   REALTYPE, dimension(:,:), allocatable, target :: xu,yu
+   REALTYPE, dimension(:,:), allocatable, target :: xv,yv
 
 !  metric parameters
    REALTYPE                                 :: dx=-_ONE_,dy=-_ONE_,ard1

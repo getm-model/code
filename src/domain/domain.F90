@@ -29,6 +29,7 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
+   REALTYPE,dimension(:,:),pointer     :: p_xx,p_xc,p_xu,p_xv,p_yx,p_yc,p_yu,p_yv
    integer                             :: bathy_format   = NETCDF
 
    integer                             :: grid_type      = 1
@@ -93,8 +94,8 @@
 
 ! !DEFINED PARAMETERS:
    integer,           parameter        :: INNER          = 1
-   REALTYPE, private, parameter        :: pi             = 3.141592654
-   REALTYPE, private, parameter        :: deg2rad        = pi/180.
+   REALTYPE,          parameter        :: pi             = 3.141592654
+   REALTYPE,          parameter        :: deg2rad        = pi/180.
    REALTYPE, private, parameter        :: omega          = 2.*pi/86164.
 !
 ! !REVISION HISTORY:
@@ -455,6 +456,9 @@
 
       case(1)
 
+         p_xx => xx ; p_xc => xc ; p_xu => xu ; p_xv => xv
+         p_yx => yx ; p_yc => yc ; p_yu => yu ; p_yv => yv
+
          if ( have_lonlat ) then
 
 !           latu and latv are only needed for active momentum points
@@ -504,6 +508,9 @@
 
       case(2)
 
+         p_xx => lonx ; p_xc => lonc ; p_xu => lonu ; p_xv => lonv
+         p_yx => latx ; p_yc => latc ; p_yu => latu ; p_yv => latv
+
          do j=jmin-HALO,jmax+HALO
             lonc(:,j) = xcord
          end do
@@ -524,6 +531,9 @@
          latv = latx(E2DFIELD)
 
       case(3)
+
+         p_xx => xx ; p_xc => xc ; p_xu => xu ; p_xv => xv
+         p_yx => yx ; p_yc => yc ; p_yu => yu ; p_yv => yv
 
          do j=jll,jhl
             do i=ill,ihl
@@ -574,6 +584,9 @@
          end if
 
       case(4)
+
+         p_xx => lonx ; p_xc => lonc ; p_xu => lonu ; p_xv => lonv
+         p_yx => latx ; p_yc => latc ; p_yu => latu ; p_yv => latv
 
          do j=jll,jhl
             do i=ill,ihl
