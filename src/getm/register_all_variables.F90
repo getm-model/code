@@ -84,7 +84,7 @@
          yname     = 'latc'
          ylongname = 'latitude'
          yunits    = 'degrees_north'
-      case (3)
+      case (3,4)
          xname     = 'xic'
          xlongname = 'xic'
          yname     = 'etac'
@@ -241,7 +241,7 @@
    call fm%register('ssu', 'm/s', 'sea surface velocity in local x-direction', standard_name='', data2d=ssu(_2D_W_), category="meteo", fill_value=-9999.0_rk, output_level=output_level_debug)
    call fm%register('ssv', 'm/s', 'sea surface velocity in local y-direction', standard_name='', data2d=ssv(_2D_W_), category="meteo", fill_value=-9999.0_rk, output_level=output_level_debug)
 
-   if (met_method .eq. 2) then
+   if (metforcing) then
       if (calc_met) then
          call fm%register('airp', 'Pa', 'air pressure', standard_name='', data2d=airp(_2D_W_), category="meteo/in", output_level=output_level_debug)
          call fm%register('t2', 'Celcius', '2m air temperature', standard_name='', data2d=t2(_2D_W_), category="meteo/in", output_level=output_level_debug)
@@ -489,11 +489,14 @@
       call fm%register('hn', 'm', 'layer thickness', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hn(_3D_W_), category='grid')
       call fm%register('hun', 'm', 'layer thickness - U-points', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hun(_3D_W_), category='grid', output_level=output_level_debug)
       call fm%register('hvn', 'm', 'layer thickness - V-points', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hvn(_3D_W_), category='grid', output_level=output_level_debug)
-      call fm%register('ssen', 'm', 'elevtion at T-points (3D)', standard_name='', data2d=ssen(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
-      call fm%register('ssun', 'm', 'elevtion at U-points (3D)', standard_name='', data2d=ssun(_2D_W_), category='3d', output_level=output_level_debug)
-      call fm%register('ssvn', 'm', 'elevtion at V-points (3D)', standard_name='', data2d=ssvn(_2D_W_), category='3d', output_level=output_level_debug)
+      call fm%register('ho', 'm', 'old layer thickness', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=ho(_3D_W_), category='grid', output_level=output_level_debug)
+      call fm%register('ssen', 'm', 'elevation at T-points (3D)', standard_name='', data2d=ssen(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
+      call fm%register('ssun', 'm', 'elevation at U-points (3D)', standard_name='', data2d=ssun(_2D_W_), category='3d', output_level=output_level_debug)
+      call fm%register('ssvn', 'm', 'elevation at V-points (3D)', standard_name='', data2d=ssvn(_2D_W_), category='3d', output_level=output_level_debug)
+      call fm%register('sseo', 'm', 'old elevation at T-points (3D)', standard_name='', data2d=sseo(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       call fm%register('uu', 'm2/s', 'transport in local x-direction (3D)', standard_name='', dimensions=(/id_dim_z/), data3d=uu(_3D_W_), category='3d', output_level=output_level_debug)
       call fm%register('vv', 'm2/s', 'transport in local y-direction (3D)', standard_name='', dimensions=(/id_dim_z/), data3d=vv(_3D_W_), category='3d', output_level=output_level_debug)
+      call fm%register('ww', 'm/s', 'grid-related vertical velocity', standard_name='', dimensions=(/id_dim_z/), data3d=ww(_3D_W_), category='3d', output_level=output_level_debug)
       call fm%register('velx3d', 'm/s', 'velocity in global x-direction (3D)', standard_name='', dimensions=(/id_dim_z/), data3d=velx3d(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       call fm%register('vely3d', 'm/s', 'velocity in global y-direction (3D)', standard_name='', dimensions=(/id_dim_z/), data3d=vely3d(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       call fm%register('w', 'm/s', 'vertical velocity', standard_name='', dimensions=(/id_dim_z/), data3d=w(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
