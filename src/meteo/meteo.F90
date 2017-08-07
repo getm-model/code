@@ -284,6 +284,7 @@
          end if
       case (METEO_FROMEXT)
          LEVEL2 'Meteo forcing provided from external'
+         interpolate_meteo = .false.
       case default
          call getm_error("init_meteo()", &
                          "no valid met_method")
@@ -300,6 +301,10 @@
             end if
             if (calc_relative_wind) then
                LEVEL3 'will consider surface currents for relative wind'
+               if (.not. interpolate_meteo) then
+                  LEVEL3 'WARNING: calc_relative_wind is .true. AND interpolate_meteo is .false.'
+                  LEVEL3 'WARNING: restart will not be identical to continuous run !!!'
+               end if
             end if
          else
             LEVEL2 'Stresses and fluxes are already calculated'
