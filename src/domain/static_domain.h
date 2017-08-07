@@ -33,10 +33,10 @@
    REALTYPE,target                     :: latc(E2DFIELD) = -999.
    REALTYPE,target                     :: lonx(E2DXFIELD) = -999.
    REALTYPE,target                     :: latx(E2DXFIELD) = -999.
-   REALTYPE                            :: lonu(E2DFIELD) = -999.
-   REALTYPE                            :: latu(E2DFIELD) = -999.
-   REALTYPE                            :: lonv(E2DFIELD) = -999.
-   REALTYPE                            :: latv(E2DFIELD) = -999.
+   REALTYPE,target                     :: lonu(E2DFIELD) = -999.
+   REALTYPE,target                     :: latu(E2DFIELD) = -999.
+   REALTYPE,target                     :: lonv(E2DFIELD) = -999.
+   REALTYPE,target                     :: latv(E2DFIELD) = -999.
 
 !  grid convergence
 !KB   REALTYPE                            :: angle(E2DFIELD)
@@ -48,10 +48,10 @@
    REALTYPE,target                     :: yx(E2DXFIELD)
    REALTYPE,target                     :: xc(E2DFIELD)
    REALTYPE,target                     :: yc(E2DFIELD)
-   REALTYPE                            :: xu(E2DFIELD)
-   REALTYPE                            :: yu(E2DFIELD)
-   REALTYPE                            :: xv(E2DFIELD)
-   REALTYPE                            :: yv(E2DFIELD)
+   REALTYPE,target                     :: xu(E2DFIELD)
+   REALTYPE,target                     :: yu(E2DFIELD)
+   REALTYPE,target                     :: xv(E2DFIELD)
+   REALTYPE,target                     :: yv(E2DFIELD)
 
 !  metric parameters
    REALTYPE                            :: dx=-_ONE_,dy=-_ONE_,x0,y0,ard1
