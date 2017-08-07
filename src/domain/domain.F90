@@ -29,6 +29,7 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
+   REALTYPE,dimension(:,:),pointer     :: p_xx,p_xc,p_xu,p_xv,p_yx,p_yc,p_yu,p_yv
    integer                             :: bathy_format   = NETCDF
 
    integer                             :: grid_type      = 1
@@ -101,8 +102,8 @@
 
 ! !DEFINED PARAMETERS:
    integer,           parameter        :: INNER          = 1
-   REALTYPE, private, parameter        :: pi             = 3.141592654
-   REALTYPE, private, parameter        :: deg2rad        = pi/180.
+   REALTYPE,          parameter        :: pi             = 3.141592654
+   REALTYPE,          parameter        :: deg2rad        = pi/180.
    REALTYPE, private, parameter        :: omega          = 2.*pi/86164.
 !
 ! !REVISION HISTORY:
@@ -546,6 +547,9 @@
 
       case(1)
 
+         p_xx => xx ; p_xc => xc ; p_xu => xu ; p_xv => xv
+         p_yx => yx ; p_yc => yc ; p_yu => yu ; p_yv => yv
+
          if ( have_lonlat ) then
 
 !           latu and latv are only needed for active momentum points
@@ -593,8 +597,10 @@
 
          end if
 
-
       case(2)
+
+         p_xx => lonx ; p_xc => lonc ; p_xu => lonu ; p_xv => lonv
+         p_yx => latx ; p_yc => latc ; p_yu => latu ; p_yv => latv
 
          do j=jmin-HALO,jmax+HALO
             lonc(:,j) = xcord
@@ -616,6 +622,9 @@
          latv = latx(E2DFIELD)
 
       case(3)
+
+         p_xx => xx ; p_xc => xc ; p_xu => xu ; p_xv => xv
+         p_yx => yx ; p_yc => yc ; p_yu => yu ; p_yv => yv
 
          do j=jll,jhl
             do i=ill,ihl
@@ -665,8 +674,40 @@
          end if
          end if
 
+      case(4)
+
+         p_xx => lonx ; p_xc => lonc ; p_xu => lonu ; p_xv => lonv
+         p_yx => latx ; p_yc => latc ; p_yu => latu ; p_yv => latv
+
+         do j=jll,jhl
+            do i=ill,ihl
+               lonc (i,j) = _QUART_*(  lonx (i-1,j-1) + lonx (i,j-1) &
+                                     + lonx (i-1,j  ) + lonx (i,j  ) )
+               latc (i,j) = _QUART_*(  latx (i-1,j-1) + latx (i,j-1) &
+                                     + latx (i-1,j  ) + latx (i,j  ) )
+               convc(i,j) = _QUART_*(  convx(i-1,j-1) + convx(i,j-1) &
+                                     + convx(i-1,j  ) + convx(i,j  ) )
+            end do
+         end do
+
+         do j=jll,jhl
+            do i=max(imin-HALO,ill-1),ihl
+               lonu(i,j) = _HALF_*( lonx(i,j-1) + lonx(i,j) )
+               latu(i,j) = _HALF_*( latx(i,j-1) + latx(i,j) )
+            end do
+         end do
+
+         do j=max(jmin-HALO,jll-1),jhl
+            do i=ill,ihl
+               lonv(i,j) = _HALF_*( lonx(i-1,j) + lonx(i,j) )
+               latv(i,j) = _HALF_*( latx(i-1,j) + latx(i,j) )
+            end do
+         end do
+
       case default
+
          call getm_error("x2uvc()","A non valid grid type has been chosen.")
+
    end select
 
    return
@@ -690,6 +731,7 @@
 !  Original author(s): Lars Umlauf
 !
 ! !LOCAL VARIABLES:
+   REALTYPE                  :: phi1,phi2
    integer                   :: i,j
 !EOP
 !------------------------------------------------------------------------
@@ -828,8 +870,145 @@
             end do
          end do
 
-      case(4) ! sperical curvi-linear
+      case(4) ! spherical curvi-linear
 
+#if 1
+!        distance along rhumb lines (not great circles!!!)
+         do j=jll,jhl
+            do i=max(imin-HALO,ill-1)+1,ihl
+               dlon = lonu(i,j) - lonu(i-1,j)
+               dlat = latu(i,j) - latu(i-1,j)
+               if (abs(dlat) .lt. SMALL) then
+                  dxc(i,j) = deg2rad*dlon*rearth*cos(deg2rad*latc(i,j))
+               else
+                  phi1 = deg2rad*latu(i-1,j)
+                  phi2 = deg2rad*latu(i  ,j)
+                  !dx = deg2rad*dlon*rearth*cos(deg2rad*latc(i,j))
+                  dx = deg2rad*dlon*rearth*dlat/log(tan(_QUART_*pi+_HALF_*phi2)/tan(_QUART_*pi+_HALF_*phi1))
+                  dy = deg2rad*dlat*rearth
+                  dxc(i,j) = sqrt(dx*dx+dy*dy)
+               end if
+!              dxc(imin-HALO,:) cannot be calculated but is not needed
+            end do
+         end do
+         do j=max(jmin-HALO,jll-1)+1,jhl
+            do i=ill,ihl
+               dlon = lonv(i,j) - lonv(i,j-1)
+               dlat = latv(i,j) - latv(i,j-1)
+               if (abs(dlat) .lt. SMALL) then
+                  dyc(i,j) = deg2rad*dlon*rearth*cos(deg2rad*latc(i,j))
+               else
+                  phi1 = deg2rad*latv(i,j-1)
+                  phi2 = deg2rad*latv(i,j  )
+                  !dx = deg2rad*dlon*rearth*cos(deg2rad*latc(i,j))
+                  dx = deg2rad*dlon*rearth*dlat/log(tan(_QUART_*pi+_HALF_*phi2)/tan(_QUART_*pi+_HALF_*phi1))
+                  dy = deg2rad*dlat*rearth
+                  dyc(i,j) = sqrt(dx*dx+dy*dy)
+               end if
+!              dyc(:,jmin-HALO) cannot be calculated but is not needed
+            end do
+         end do
+         do j=jll,jhl
+            do i=ill,ihl-1
+               dlon = lonc(i+1,j) - lonc(i,j)
+               dlat = latc(i+1,j) - latc(i,j)
+               if (abs(dlat) .lt. SMALL) then
+                  dxu(i,j) = deg2rad*dlon*rearth*cos(deg2rad*latu(i,j))
+               else
+                  phi1 = deg2rad*latc(i  ,j)
+                  phi2 = deg2rad*latc(i+1,j)
+                  !dx = deg2rad*dlon*rearth*cos(deg2rad*latu(i,j))
+                  dx = deg2rad*dlon*rearth*dlat/log(tan(_QUART_*pi+_HALF_*phi2)/tan(_QUART_*pi+_HALF_*phi1))
+                  dy = deg2rad*dlat*rearth
+                  dxu(i,j) = sqrt(dx*dx+dy*dy)
+               end if
+!              dxu(ihl,:) cannot be calculated but is not needed
+            end do
+         end do
+         do j=jll,jhl
+            do i=ill,ihl
+               dlon = lonx(i,j) - lonx(i,j-1)
+               dlat = latx(i,j) - latx(i,j-1)
+               if (abs(dlat) .lt. SMALL) then
+                  dyu(i,j) = deg2rad*dlon*rearth*cos(deg2rad*latu(i,j))
+               else
+                  phi1 = deg2rad*latx(i,j-1)
+                  phi2 = deg2rad*latx(i,j  )
+                  !dx = deg2rad*dlon*rearth*cos(deg2rad*latu(i,j))
+                  dx = deg2rad*dlon*rearth*dlat/log(tan(_QUART_*pi+_HALF_*phi2)/tan(_QUART_*pi+_HALF_*phi1))
+                  dy = deg2rad*dlat*rearth
+                  dyu(i,j) = sqrt(dx*dx+dy*dy)
+               end if
+            end do
+         end do
+         do j=jll,jhl
+            do i=ill,ihl
+               dlon = lonx(i,j) - lonx(i-1,j)
+               dlat = latx(i,j) - latx(i-1,j)
+               if (abs(dlat) .lt. SMALL) then
+                  dxv(i,j) = deg2rad*dlon*rearth*cos(deg2rad*latv(i,j))
+               else
+                  phi1 = deg2rad*latx(i-1,j)
+                  phi2 = deg2rad*latx(i  ,j)
+                  !dx = deg2rad*dlon*rearth*cos(deg2rad*latv(i,j))
+                  dx = deg2rad*dlon*rearth*dlat/log(tan(_QUART_*pi+_HALF_*phi2)/tan(_QUART_*pi+_HALF_*phi1))
+                  dy = deg2rad*dlat*rearth
+                  dxv(i,j) = sqrt(dx*dx+dy*dy)
+               end if
+            end do
+         end do
+         do j=jll,jhl-1
+            do i=ill,ihl
+               dlon = lonc(i,j+1) - lonc(i,j)
+               dlat = latc(i,j+1) - latc(i,j)
+               if (abs(dlat) .lt. SMALL) then
+                  dyv(i,j) = deg2rad*dlon*rearth*cos(deg2rad*latv(i,j))
+               else
+                  phi1 = deg2rad*latc(i,j  )
+                  phi2 = deg2rad*latc(i,j+1)
+                  !dx = deg2rad*dlon*rearth*cos(deg2rad*latv(i,j))
+                  dx = deg2rad*dlon*rearth*dlat/log(tan(_QUART_*pi+_HALF_*phi2)/tan(_QUART_*pi+_HALF_*phi1))
+                  dy = deg2rad*dlat*rearth
+                  dyv(i,j) = sqrt(dx*dx+dy*dy)
+               end if
+!              dyv(:,jhl) cannot be calculated but is not needed
+            end do
+         end do
+         do j=jll,jhl
+            do i=ill,ihl-1
+               dlon = lonv(i+1,j) - lonv(i,j)
+               dlat = latv(i+1,j) - latv(i,j)
+               if (abs(dlat) .lt. SMALL) then
+                  dxx(i,j) = deg2rad*dlon*rearth*cos(deg2rad*latx(i,j))
+               else
+                  phi1 = deg2rad*latv(i  ,j)
+                  phi2 = deg2rad*latv(i+1,j)
+                  !dx = deg2rad*dlon*rearth*cos(deg2rad*latx(i,j))
+                  dx = deg2rad*dlon*rearth*dlat/log(tan(_QUART_*pi+_HALF_*phi2)/tan(_QUART_*pi+_HALF_*phi1))
+                  dy = deg2rad*dlat*rearth
+                  dxx(i,j) = sqrt(dx*dx+dy*dy)
+               end if
+!              dxx(ihl,:) cannot be calculated but is not needed
+            end do
+         end do
+         do j=jll,jhl-1
+            do i=ill,ihl
+               dlon = lonu(i,j+1) - lonu(i,j)
+               dlat = latu(i,j+1) - latu(i,j)
+               if (abs(dlat) .lt. SMALL) then
+                  dyx(i,j) = deg2rad*dlon*rearth*cos(deg2rad*latx(i,j))
+               else
+                  phi1 = deg2rad*latu(i,j  )
+                  phi2 = deg2rad*latu(i,j+1)
+                  !dx = deg2rad*dlon*rearth*cos(deg2rad*latx(i,j))
+                  dx = deg2rad*dlon*rearth*dlat/log(tan(_QUART_*pi+_HALF_*phi2)/tan(_QUART_*pi+_HALF_*phi1))
+                  dy = deg2rad*dlat*rearth
+                  dyx(i,j) = sqrt(dx*dx+dy*dy)
+               end if
+!              dyx(:,jhl) cannot be calculated but is not needed
+            end do
+         end do
+#else
          do j=jmin,jmax
             do i=imin,imax
                dx = deg2rad*(lonu(i,j)-lonu(i-1,j))*rearth*cos(deg2rad*latc(i,j))
@@ -873,9 +1052,12 @@
                dyx(i,j)= sqrt(dx*dx+dy*dy)
             end do
          end do
+#endif
 
       case default
+
          call getm_error("metric()","A non valid grid type has been chosen.")
+
    end select
 
    if (grid_type.eq.2 .or. grid_type.eq.4) then
