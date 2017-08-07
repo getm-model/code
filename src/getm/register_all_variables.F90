@@ -242,7 +242,7 @@
    call fm%register('ssu', 'm/s', 'sea surface velocity in local x-direction', standard_name='', data2d=ssu(_2D_W_), category="meteo", fill_value=-9999.0_rk, output_level=output_level_debug)
    call fm%register('ssv', 'm/s', 'sea surface velocity in local y-direction', standard_name='', data2d=ssv(_2D_W_), category="meteo", fill_value=-9999.0_rk, output_level=output_level_debug)
 
-   if (met_method .eq. 2) then
+   if (metforcing) then
       if (calc_met) then
          call fm%register('airp', 'Pa', 'air pressure', standard_name='', data2d=airp(_2D_W_), category="meteo/in", output_level=output_level_debug)
          call fm%register('t2', 'Celcius', '2m air temperature', standard_name='', data2d=t2(_2D_W_), category="meteo/in", output_level=output_level_debug)
