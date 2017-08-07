@@ -582,11 +582,27 @@
          call write_time_string(j2,s2,tbuf)
          LEVEL4 'Datafile ends  :   ',tbuf
 
+!        KK-TODO: if not first, julianday and secondsofday lag one timestep behind!!!
          if (in_interval(j1,s1,julianday,secondsofday,j2,s2)) exit
 
+         if ( time_diff(julianday,secondsofday,junit,sunit) .lt. met_times(1) ) then
+            if (first) then
+               FATAL 'Model simulation starts before available meteo data'
+               call write_time_string()
+               FATAL 'Simulation starts: ',timestr
+               call write_time_string(j1,s1,tbuf)
+               FATAL 'Datafile starts:   ',tbuf
+               stop 'open_meteo_file()'
+            else
+               LEVEL4 'WARNING: possible time gap - check start of Datafile!'
+               call write_time_string()
+               LEVEL4 'Simulation clock: ',timestr
+               call write_time_string(j1,s1,tbuf)
+               LEVEL4 'Datafile starts:   ',tbuf
+               exit
+            end if
+         end if
          if (.not. first) then
-            LEVEL4 'WARNING: possible time gap - check start of Datafile!'
-            if ( time_diff(julianday,secondsofday,junit,sunit) .le. met_times(textr) ) exit
 !           KK-TODO: Or should we allow to cycle?
             FATAL 'Datafile does not contain new records'
             stop 'open_meteo_file()'

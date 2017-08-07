@@ -8,7 +8,7 @@
    subroutine to_v(imin,jmin,imax,jmax,az,                               &
                    dt,grid_type,                                         &
                    dxv,dyu,arcd1,                                        &
-                   yc,yu,yv,z,zo,Dvel,U,DU,V,DV,wwm,wwp,missing,vely)
+                   yc,yu,yv,z,zo,Dvel,U,DU,V,DV,wwm,wwp,scalefac,missing,vely)
 !
 ! !DESCRIPTION:
 !
@@ -24,7 +24,7 @@
    integer,dimension(E2DFIELD),intent(in)   :: az
    REALTYPE,intent(in)                      :: dt
    REALTYPE,dimension(E2DFIELD),intent(in)  :: dxv,dyu,arcd1
-   REALTYPE,dimension(E2DFIELD),intent(in)  :: yc,yu,yv,z,zo,Dvel,U,DU,V,DV,wwm,wwp
+   REALTYPE,dimension(E2DFIELD),intent(in)  :: yc,yu,yv,z,zo,Dvel,U,DU,V,DV,wwm,wwp,scalefac
    REALTYPE,intent(in)                      :: missing
 !
 ! !OUTPUT PARAMETERS:
@@ -79,7 +79,7 @@
 !$OMP END DO
          !vely(:,jmin-HALO) = missing
 
-      case (3)
+      case (3,4)
 
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
@@ -101,7 +101,7 @@
                                  )                                &
                                  *ARCD1                           &
                               )                                   &
-                              /Dvel(i,j)
+                              /Dvel(i,j)*scalefac(i,j)
                !else
                !   vely(i,j) = missing
                end if
@@ -113,10 +113,8 @@
          !vely(imin-HALO,:) = missing
          !vely(:,jmin-HALO) = missing
 
-      case (4)
-         stop 'to_v: grid_type=4 not implemented yet'
-
       case default
+
          stop 'to_v: invalid grid_type'
 
    end select
