@@ -22,6 +22,7 @@
 !
 ! !PUBLIC DATA MEMBERS:
 #ifndef GETM_PARALLEL
+   logical                             :: periodic_domain=.false.
    integer, parameter                  :: H_TAG=10,HU_TAG=11,HV_TAG=12
    integer, parameter                  :: D_TAG=20,DU_TAG=21,DV_TAG=22
    integer, parameter                  :: z_TAG=30,U_TAG=31,V_TAG=32

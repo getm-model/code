@@ -36,6 +36,7 @@
    private                             :: MPI_data_types
 
 ! !PUBLIC DATA MEMBERS:
+   logical, public                     :: periodic_domain=.false.
    logical, public                     :: external_mpi_init=.false.
    integer, public                     :: myid=-1, nprocs=1
    integer, public                     :: comm_hd=MPI_COMM_WORLD
@@ -397,6 +398,7 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,zz(2),neighbours(nneighbours),numthreads
+   logical                   :: bool
    character(len=*),parameter:: par_setup="par_setup.dat"
 #ifdef INPUT_DIR
    character(len=PATH_MAX)   :: input_dir=trim(INPUT_DIR) // '/'
@@ -465,6 +467,9 @@
          lr    = neighbours(6) ; if (lr    .eq. -1) lr    = MPI_PROC_NULL
          down  = neighbours(7) ; if (down  .eq. -1) down  = MPI_PROC_NULL
          ll    = neighbours(8) ; if (ll    .eq. -1) ll    = MPI_PROC_NULL
+
+         bool = ( left.ne.MPI_PROC_NULL .or. down.ne.MPI_PROC_NULL )
+         call MPI_ALLREDUCE(bool,periodic_domain,1,MPI_LOGICAL,MPI_LAND,comm_getm,ierr)
 
 ! IF we use OMP and IF the number of read threads is sensible (>0), then set #threads:
 !$       if (numthreads>0) then
