@@ -108,6 +108,7 @@
 
    LEVEL3 'init_3d_bdy_ncdf'
 
+   LEVEL4 trim(fname)
    err = nf90_open(fname,NF90_NOWRITE,ncid)
    if (err .NE. NF90_NOERR) go to 10
 
@@ -247,6 +248,8 @@
    if (.not. from_3d_fields) then
       bdy_dim = vardim_ids(bdy_pos)
       bdy_len = dim_len(bdy_dim)
+      LEVEL4 'number of provided boundary points: ',bdy_len
+      LEVEL4 '(required: ',nsbv,')'
       if (bdy_len .lt. nsbv) then
          stop 'init_3d_bdy_ncdf: netcdf file does not contain enough bdy points'
       else if (bdy_len .gt. nsbv) then
