@@ -45,8 +45,8 @@
 ! !USES:
    use time, only: yearday,secondsofday,timestep
    use time, only: write_time_string,timestr
-   use halo_zones, only : H_TAG,update_2d_halo,wait_halo
-   use domain, only: imin,imax,jmin,jmax,lonc,latc,convc,cosconv,sinconv,az
+   use halo_zones, only : H_TAG,update_2d_halo,wait_halo,periodic_domain
+   use domain
    use exceptions
    IMPLICIT NONE
 !
@@ -598,9 +598,9 @@
 !$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
-               do j=jmin-HALO,jmax+HALO
+               do j=jll,jhl
 #endif
-                  do i=imin-HALO,imax+HALO
+                  do i=ill,ihl
                      if (az(i,j) .ne. 0) then
                         zenith_angle(i,j) = solar_zenith_angle             &
                                 (yearday,hh,lonc(i,j),latc(i,j))
@@ -661,9 +661,9 @@
 !    as exchange_coefficients() and fluxes() pass information through
 !    scalars in the meteo module. BJB 2009-09-30.
 #ifndef SLICE_MODEL
-                     do j=jmin-HALO,jmax+HALO
+                     do j=jll,jhl
 #endif
-                        do i=imin-HALO,imax+HALO
+                        do i=ill,ihl
                            if (az(i,j) .ge. 1) then
                               call exchange_coefficients( &
                                      u10r_x(i,j),v10r_x(i,j),t2(i,j),airp_x(i,j), &
@@ -681,9 +681,9 @@
 
 ! OMP-NOTE: w needs to be a local (stack) variable to thread this loop.
 #ifndef SLICE_MODEL
-                     do j=jmin-HALO,jmax+HALO
+                     do j=jll,jhl
 #endif
-                        do i=imin-HALO,imax+HALO
+                        do i=ill,ihl
                            if (az(i,j) .ge. 1) then
 ! BJB-TODO: Update constants to double.
                               w=sqrt(u10r_x(i,j)*u10r_x(i,j)+v10r_x(i,j)*v10r_x(i,j))
@@ -699,6 +699,16 @@
                end if
 
             end if !if calc_met
+
+            if (new_meteo .or. interpolate_meteo) then
+               if (periodic_domain) then
+!                 need tausx(ihl+1,:) and/or tausy(:,jhl+1) for periodic velocity points
+                  call update_2d_halo(tausx_input,tausx_input,az,imin,jmin,imax,jmax,H_TAG)
+                  call wait_halo(H_TAG)
+                  call update_2d_halo(tausy_input,tausy_input,az,imin,jmin,imax,jmax,H_TAG)
+                  call wait_halo(H_TAG)
+               end if
+            end if
 
             if (met_method .eq. METEO_FROMFILE) then
 
