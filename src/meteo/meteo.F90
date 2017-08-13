@@ -308,6 +308,7 @@
             end if
          else
             LEVEL2 'Stresses and fluxes are already calculated'
+            interpolate_meteo = .false.
          end if
 
          select case (fwf_method)
@@ -408,7 +409,7 @@
       allocate(airp_new(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (airp_new)'
 
-      if (.not.(calc_met .and. interpolate_meteo)) then
+      if (.not. interpolate_meteo) then
          allocate(tausx_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx_new)'
          allocate(d_tausx(E2DFIELD),stat=rc)
@@ -630,7 +631,7 @@
                where (az.ne.0) wind = sqrt( u10r*u10r + v10r*v10r )
 
 
-               if (new_meteo .or. ((met_method.eq.METEO_FROMFILE).and.interpolate_meteo)) then
+               if (new_meteo .or. interpolate_meteo) then
 
                   if (met_method.eq.METEO_FROMFILE .and. .not.interpolate_meteo) then
                      if (calc_relative_wind) then
@@ -703,7 +704,7 @@
 
                if (new_meteo) then
 
-                  if (.not.(calc_met .and. interpolate_meteo)) then
+                  if (.not. interpolate_meteo) then
                      tausx_old=>tausx_new;tausx_new=>d_tausx;d_tausx=>tausx_old;tausx_input=>tausx_old
                      tausy_old=>tausy_new;tausy_new=>d_tausy;d_tausy=>tausy_old;tausy_input=>tausy_old
                      shf_old=>shf_new;shf_new=>d_shf;d_shf=>shf_old;shf_input=>shf_old
@@ -720,7 +721,7 @@
 #endif
                         do i=imin-HALO,imax+HALO
                            if (az(i,j) .ne. 0) then
-                              if (.not.(calc_met .and. interpolate_meteo)) then
+                              if (.not. interpolate_meteo) then
                                  d_tausx(i,j) = tausx_new(i,j) - tausx_old(i,j)
                                  d_tausy(i,j) = tausy_new(i,j) - tausy_old(i,j)
                                  d_shf  (i,j) = shf_new  (i,j) - shf_old  (i,j)
@@ -746,7 +747,7 @@
 #endif
                   do i=imin-HALO,imax+HALO
                      if (az(i,j) .ne. 0) then
-                        if (.not.(calc_met .and. interpolate_meteo)) then
+                        if (.not. interpolate_meteo) then
                            tausx(i,j) = ramp*(tausx_new(i,j) + d_tausx(i,j)*deltm1*t_minus_t2)
                            tausy(i,j) = ramp*(tausy_new(i,j) + d_tausy(i,j)*deltm1*t_minus_t2)
                            shf  (i,j) = shf_new  (i,j) + d_shf  (i,j)*deltm1*t_minus_t2
