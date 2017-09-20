@@ -361,32 +361,47 @@
    date = int(fsecs)
 
 !  put fields (only if specified in namcouple)
-   if (elev_id.ne.-1) call oasis_put(elev_id,date,z(imin:imax,jmin:jmax))
+   if (elev_id.ne.-1) then
+      call oasis_put(elev_id,date,z(imin:imax,jmin:jmax),info)
+      if (info /= OASIS_Ok .and. info .lt. OASIS_Sent) call oasis_abort(compid,FILENAME//':'//_LINE_)
+   end if
 
 !  get fields
    if (waveforcing_method .eq. WAVES_FROMEXT) then
+
       call oasis_get(waveDir_id,date,wrk(imin:imax,jmin:jmax),info)
-      if (info /= OASIS_Ok) then
+      if (info .ge. OASIS_Recvd) then
          call update_2d_halo(wrk,wrk,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
          coswavedir = cos( wrk + convc*deg2rad )
          sinwavedir = sin( wrk + convc*deg2rad )
          new_waves = .true.
+      else if (info /= OASIS_Ok ) then
+         call oasis_abort(compid,FILENAME//':'//_LINE_)
       end if
+
       call oasis_get(waveH_id  ,date,waveH(imin:imax,jmin:jmax),info)
-      if (info /= OASIS_Ok) then
+      if (info .ge. OASIS_Recvd) then
          call update_2d_halo(waveH,waveH,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
+      else if (info /= OASIS_Ok ) then
+         call oasis_abort(compid,FILENAME//':'//_LINE_)
       end if
+
       call oasis_get(waveK_id  ,date,waveK(imin:imax,jmin:jmax),info)
-      if (info /= OASIS_Ok) then
+      if (info .ge. OASIS_Recvd) then
          call update_2d_halo(waveK,waveK,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
+      else if (info /= OASIS_Ok ) then
+         call oasis_abort(compid,FILENAME//':'//_LINE_)
       end if
+
       call oasis_get(waveT_id  ,date,waveT(imin:imax,jmin:jmax),info)
-      if (info /= OASIS_Ok) then
+      if (info .ge. OASIS_Recvd) then
          call update_2d_halo(waveT,waveT,az,imin,jmin,imax,jmax,H_TAG)
          call wait_halo(H_TAG)
+      else if (info /= OASIS_Ok ) then
+         call oasis_abort(compid,FILENAME//':'//_LINE_)
       end if
    end if
 
