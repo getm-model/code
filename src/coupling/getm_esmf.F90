@@ -1802,7 +1802,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
       if (runtype .eq. 1) then
          zw(:,:,k0+0)    = -H
          zw(:,:,k0+klen) = z
-         zc(:,:,k0+klen) = 0.5d0 * ( zw(:,:,k0+klen-1) + zw(:,:,k0+klen) )
+         zc(:,:,klen) = 0.5d0 * ( zw(:,:,k0+klen-1) + zw(:,:,k0+klen) )
       else
 #ifndef NO_3D
          zw = zwn
