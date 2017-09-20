@@ -1072,7 +1072,9 @@
          do i=imin-HALO,imax+HALO
 
             areac(i,j) = dxc(i,j) * dyc(i,j)
-            arcd1(i,j) = _ONE_/areac(i,j)
+            if( az(i,j) .gt. 0) then
+               arcd1(i,j) = _ONE_/areac(i,j)
+            end if
 
             if( au(i,j) .gt. 0) then
                arud1(i,j)=_ONE_/(dxu(i,j)*dyu(i,j))
