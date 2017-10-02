@@ -55,6 +55,11 @@
    REALTYPE,dimension(:),allocatable   :: bdy_times
    REALTYPE,dimension(:,:),allocatable :: wrk
    integer,parameter                   :: climatology_len=12
+
+   character(len=*),parameter          :: name_uu  ='uu'
+   character(len=*),parameter          :: name_vv  ='vv'
+   character(len=*),parameter          :: name_salt='salt'
+   character(len=*),parameter          :: name_temp='temp'
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -176,8 +181,8 @@
 
    dims_ready = .false.
    if (bdy3d_vel) then
-      LEVEL4 ' ... checking variable "uu"'
-      err = nf90_inq_varid(ncid,'uu',uu_id)
+      LEVEL4 ' ... checking variable "'//trim(name_uu)//'"'
+      err = nf90_inq_varid(ncid,name_uu,uu_id)
       if (err .NE. NF90_NOERR) go to 10
       err = nf90_inquire_variable(ncid,uu_id,ndims=nvardims)
       if (err .NE. NF90_NOERR) go to 10
@@ -188,8 +193,8 @@
       zax_dim  = vardim_ids(zax_pos)
       time_dim = vardim_ids(time_pos)
       dims_ready = .true.
-      LEVEL4 ' ... checking variable "vv"'
-      err = nf90_inq_varid(ncid,'vv',vv_id)
+      LEVEL4 ' ... checking variable "'//trim(name_vv)//'"'
+      err = nf90_inq_varid(ncid,name_vv,vv_id)
       if (err .NE. NF90_NOERR) go to 10
       err = nf90_inquire_variable(ncid,vv_id,ndims=nvardims)
       if (err .NE. NF90_NOERR) go to 10
@@ -203,8 +208,8 @@
            stop 'init_3d_bdy_ncdf: Position of time dimension of vv'
    end if
    if (update_salt) then
-      LEVEL4 ' ... checking variable "salt"'
-      err = nf90_inq_varid(ncid,'salt',salt_id)
+      LEVEL4 ' ... checking variable "'//trim(name_salt)//'"'
+      err = nf90_inq_varid(ncid,name_salt,salt_id)
       if (err .NE. NF90_NOERR) go to 10
       err = nf90_inquire_variable(ncid,salt_id,ndims=nvardims)
       if (err .NE. NF90_NOERR) go to 10
@@ -224,8 +229,8 @@
       end if
    end if
    if (update_temp) then
-      LEVEL4 ' ... checking variable "temp"'
-      err = nf90_inq_varid(ncid,'temp',temp_id)
+      LEVEL4 ' ... checking variable "'//trim(name_temp)//'"'
+      err = nf90_inq_varid(ncid,name_temp,temp_id)
       if (err .NE. NF90_NOERR) go to 10
       err = nf90_inquire_variable(ncid,temp_id,ndims=nvardims)
       if (err .NE. NF90_NOERR) go to 10
