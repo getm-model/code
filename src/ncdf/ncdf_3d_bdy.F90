@@ -553,12 +553,12 @@
          t1 = t2
          do i=indx+1,time_len
             t2 = bdy_times(i) - offset
-            if(t2 .gt. t) then
+            if(t2 .ge. t) then
                EXIT
             end if
          end do
 
-         if (first) then
+         if (first .and. t2.gt.t) then
             indx = i-1
             t2 = bdy_times(indx) - offset
          else
