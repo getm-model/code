@@ -731,7 +731,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  REALTYPE function adv_interfacial_reconstruction -
+! !IROUTINE:  adv_interfacial_reconstruction -
 !
 ! !INTERFACE:
    REALTYPE function adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
@@ -800,7 +800,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  REALTYPE function adv_interfacial_reconstruction_p2 -
+! !IROUTINE:  adv_interfacial_reconstruction_p2 -
 !
 ! !INTERFACE:
    REALTYPE function adv_interfacial_reconstruction_p2(cfl,fu,deltafu,deltaf)
@@ -835,7 +835,7 @@
 #ifdef _POINTER_REMAP_
 !BOP
 !
-! !IROUTINE:  LOGICAL function test_pointer_remap
+! !IROUTINE:  test_pointer_remap -
 !
 ! !INTERFACE:
    logical function test_pointer_remap()
