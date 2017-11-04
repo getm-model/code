@@ -454,42 +454,38 @@
 
          if ( have_lonlat ) then
 
-!           latu and latv are only needed for active momentum points
-            do j=jll,jhl-1
+            do j=jll,jhl
                do i=ill,ihl-1
+                  latu(i,j) = _HALF_ * ( latc(i,j) + latc(i+1,j) )
+               end do
+            end do
 
-                  if ( au(i,j) .eq. 1 .or. au(i,j) .eq. 2 ) then
-
-                     latu(i,j) = ( latc(i  ,j) + latc(i+1,j+1) &
-                                 + latc(i+1,j) + latc(i  ,j+1) ) / 4
-                  end if
-
-                  if ( av(i,j) .eq. 1 .or. av(i,j) .eq. 2 ) then
-                     latv(i,j) = ( latc(i  ,j) + latc(i+1,j+1) &
-                                 + latc(i+1,j) + latc(i  ,j+1) ) / 4
-                  end if
-
+            do j=jll,jhl-1
+               do i=ill,ihl
+                  latv(i,j) = _HALF_ * ( latc(i,j) + latc(i,j+1) )
                end do
             end do
 
 ! this is just a check and can be deleted if nobody experiences problems
+! Note (KK): there should only be problems for periodic domains (mask=1)
+!            (the mask=2 condition is always wrong)
 #if 1
-            if ( joff+jhl .eq. jextr ) then
+            if ( joff+jhl .eq. jextr ) then ! most northern subdomain
                do i=ill,ihl
-                  if ( au(i,jhl) .eq. 1 .or. au(i,j) .eq. 2 ) then
-                     latu(i,jhl) = 1000
-                     LEVEL0 'x2uvc() - warning: latu is set to illegal value'
+                  if ( av(i,jhl) .eq. 1 .or. av(i,jhl) .eq. 2 ) then
+                     latv(i,jhl) = 1000
+                     LEVEL0 'x2uvc() - warning: latv is set to illegal value'
                      LEVEL0 'please report the problem on getm-users'
                      stop
                   end if
                end do
             end if
 
-            if ( ioff+ihl .eq. iextr ) then
+            if ( ioff+ihl .eq. iextr ) then ! most eastern subdomain
                do j=jll,jhl
-                  if ( av(ihl,j) .eq. 1 .or. av(i,j) .eq. 2 ) then
-                     latv(i,jhl) = 1000
-                     LEVEL0 'x2uvc() - warning: latv is set to illegal value'
+                  if ( au(ihl,j) .eq. 1 .or. au(ihl,j) .eq. 2 ) then
+                     latu(ihl,j) = 1000
+                     LEVEL0 'x2uvc() - warning: latu is set to illegal value'
                      LEVEL0 'please report the problem on getm-users'
                      stop
                   end if
