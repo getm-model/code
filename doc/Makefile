@@ -62,7 +62,7 @@ a4.dvi: a4.tex $(TEXSRC) $(PROTEXSRC)
 
 html: a4.dvi
 	mkdir -p html
-	latex2html -dir html a4.tex
+	latex2html -dir html a4.tex -local_icons
 
 # Generate the protex dependend latex files (from the source code)
 $(PROTEXSRC):
