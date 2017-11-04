@@ -41,6 +41,10 @@
    REALTYPE,dimension(:),pointer       :: bdy_data_u_new,d_bdy_data_u
    REALTYPE,dimension(:),pointer       :: bdy_data_v_new,d_bdy_data_v
    REALTYPE,dimension(:),allocatable   :: wrk
+
+   character(len=*),parameter          :: name_elev='elev'
+   character(len=*),parameter          :: name_u   ='u'
+   character(len=*),parameter          :: name_v   ='v'
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -96,6 +100,7 @@
 #endif
    LEVEL3 'init_2d_bdy_ncdf'
 
+   LEVEL4 trim(fname)
    err = nf90_open(fname,NF90_NOWRITE,ncid)
    if (err .NE. NF90_NOERR) go to 10
 
@@ -125,7 +130,8 @@
    end select
 
    if ( need_2d_bdy_elev ) then
-      err = nf90_inq_varid(ncid,'elev',elev_id)
+      LEVEL4 ' ... checking variable "'//trim(name_elev)//'"'
+      err = nf90_inq_varid(ncid,name_elev,elev_id)
       if (err .NE. NF90_NOERR) go to 10
       err = nf90_inquire_variable(ncid,elev_id,ndims=nvardims)
       if (err .NE. NF90_NOERR) go to 10
@@ -146,7 +152,8 @@
    end if
 
    if ( need_2d_bdy_u ) then
-      err = nf90_inq_varid(ncid,'u',u_id)
+      LEVEL4 ' ... checking variable "'//trim(name_u)//'"'
+      err = nf90_inq_varid(ncid,name_u,u_id)
       if (err .NE. NF90_NOERR) go to 10
       err = nf90_inquire_variable(ncid,u_id,ndims=nvardims)
       if (err .NE. NF90_NOERR) go to 10
@@ -172,7 +179,8 @@
    end if
 
    if ( need_2d_bdy_v ) then
-      err = nf90_inq_varid(ncid,'v',v_id)
+      LEVEL4 ' ... checking variable "'//trim(name_v)//'"'
+      err = nf90_inq_varid(ncid,name_v,v_id)
       if (err .NE. NF90_NOERR) go to 10
       err = nf90_inquire_variable(ncid,v_id,ndims=nvardims)
       if (err .NE. NF90_NOERR) go to 10
@@ -198,6 +206,8 @@
    end if
 
    bdy_len = dim_len(bdy_dim)
+   LEVEL4 'number of provided boundary points: ',bdy_len
+   LEVEL4 '(required: ',nsbv,')'
    if (bdy_len .lt. nsbv) then
       stop 'init_2d_bdy_ncdf: netcdf file does not contain enough bdy points'
    else if (bdy_len .gt. nsbv) then
@@ -324,12 +334,12 @@
       t1 = t2
       do i=indx+1,time_len
          t2 = bdy_times(i) - offset
-         if(t2 .gt. t) then
+         if(t2 .ge. t) then
             EXIT
          end if
       end do
 
-      if (first) then
+      if (first .and. t2.gt.t) then
          indx = i-1
          t2 = bdy_times(indx) - offset
       else
