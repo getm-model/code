@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: REALTYPE function pos() - ....
+! !ROUTINE: pos() -
 !
 ! !INTERFACE:
    REALTYPE function pos(a)
