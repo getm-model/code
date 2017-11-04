@@ -37,6 +37,7 @@
    integer                             :: time_id
    integer, allocatable, dimension(:)  :: bio_ids
    integer                             :: start(4),edges(4)
+   integer                             :: bdy_dim,bdy_len,bdy_pos
    integer                             :: zax_dim=-1,zax_len,zax_pos
    integer                             :: time_dim=-1,time_len,time_pos
    logical                             :: climatology=.false.
@@ -121,6 +122,7 @@
       return
    end if
 
+   LEVEL4 trim(fname)
    err = nf90_open(fname,NF90_NOWRITE,ncid)
    if (err .NE. NF90_NOERR) go to 10
 
@@ -162,6 +164,7 @@
       LEVEL4 'special boundary data file'
       from_3d_fields=.false.
       zax_pos = 1
+      bdy_pos = 2
       time_pos = 3
    end if
 
@@ -239,6 +242,18 @@
 !   time_dim = 1
 !   zax_dim  = 3
 #endif
+
+   if (.not. from_3d_fields) then
+      bdy_dim = vardim_ids(bdy_pos)
+      bdy_len = dim_len(bdy_dim)
+      LEVEL4 'number of provided boundary points: ',bdy_len
+      LEVEL4 '(required: ',nsbv,')'
+      if (bdy_len .lt. nsbv) then
+         stop 'init_3d_bio_bdy_ncdf: netcdf file does not contain enough bdy points'
+      else if (bdy_len .gt. nsbv) then
+         LEVEL4 'WARNING: netcdf file contains data for more bdy points'
+      end if
+   end if
 
    zax_len = dim_len(zax_dim)
    time_len = dim_len(time_dim)
