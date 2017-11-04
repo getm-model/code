@@ -153,6 +153,17 @@ if(WIN32)
   list(APPEND _MPI_PREFIX_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\MPICH\\SMPD;binary]/..")
   list(APPEND _MPI_PREFIX_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\MPICH2;Path]")
   list(APPEND _MPI_PREFIX_PATH "$ENV{ProgramW6432}/MPICH2/")
+  # We first attempt to locate the msmpi.lib. Should be find it, we'll assume that the MPI present is indeed
+  # Microsoft MPI.
+  if("${CMAKE_SIZEOF_VOID_P}" EQUAL 8)
+    set(MPI_MSMPI_LIB_PATH "$ENV{MSMPI_LIB64}")
+    set(MPI_MSMPI_INC_PATH_EXTRA "$ENV{MSMPI_INC}/x64")
+  else()
+    set(MPI_MSMPI_LIB_PATH "$ENV{MSMPI_LIB32}")
+    set(MPI_MSMPI_INC_PATH_EXTRA "$ENV{MSMPI_INC}/x86")
+  endif()
+  list(APPEND _MPI_PREFIX_PATH "$ENV{MSMPI_INC}/")
+  list(APPEND _MPI_PREFIX_PATH "${MPI_MSMPI_LIB_PATH}/")
 endif()
 
 # Build a list of prefixes to search for MPI.
@@ -403,6 +414,7 @@ function (interrogate_mpi_compiler lang try_libs)
       set(MPI_INCLUDE_PATH_WORK ${MPI_HEADER_PATH})
 
       # Decide between 32-bit and 64-bit libraries for Microsoft's MPI
+      # This is for MS-MPI pre version 8 (which changed the architecture strings - but that's handled through MPI_MSMPI_INC_PATH_EXTRA)
       if("${CMAKE_SIZEOF_VOID_P}" EQUAL 8)
         set(MS_MPI_ARCH_DIR amd64)
       else()
@@ -410,7 +422,11 @@ function (interrogate_mpi_compiler lang try_libs)
       endif()
 
       # Recent versions of MS-MPI also store a header file in architecture-specific subdirectory.
-      list(APPEND MPI_INCLUDE_PATH_WORK ${MPI_HEADER_PATH}/${MS_MPI_ARCH_DIR})
+      if(EXISTS "${MPI_MSMPI_INC_PATH_EXTRA}/mpifptr.h")
+        list(APPEND MPI_INCLUDE_PATH_WORK "${MPI_MSMPI_INC_PATH_EXTRA}")
+      elseif(EXISTS ${MPI_HEADER_PATH}/${MS_MPI_ARCH_DIR})
+        list(APPEND MPI_INCLUDE_PATH_WORK ${MPI_HEADER_PATH}/${MS_MPI_ARCH_DIR})
+      endif()
 
       set(MPI_LIB "MPI_LIB-NOTFOUND" CACHE FILEPATH "Cleared" FORCE)
       find_library(MPI_LIB
