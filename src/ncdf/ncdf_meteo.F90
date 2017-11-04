@@ -20,6 +20,7 @@
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
    use grid_interpol, only: to_rotated_lat_lon
    use meteo
+   use halo_zones, only : H_TAG,update_2d_halo,wait_halo,periodic_domain
    use exceptions
    IMPLICIT NONE
 !
@@ -404,6 +405,12 @@
 
          call read_data(indx)
          save_n = indx+1
+
+         if (periodic_domain) then
+!           need airp(ihl+1,:) and/or airp(:,jhl+1) for periodic velocity points
+            call update_2d_halo(airp_input,airp_input,az,imin,jmin,imax,jmax,H_TAG)
+            call wait_halo(H_TAG)
+         end if
 
          airp_old=>airp_new;airp_new=>d_airp;d_airp=>airp_old;airp_input=>d_airp
          if (calc_met) then
