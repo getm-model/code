@@ -53,13 +53,11 @@
          stop 'init_3d_bdy'
       case (NETCDF)
          if (bdy3d_vel .or. update_salt .or. update_temp) then
-            LEVEL3 'reading from: ',trim(fn)
             call init_3d_bdy_ncdf(fn,n)
          end if
 #ifdef _FABM_
          if (fabm_calc) then
             bio_fn='bdy_3d_bio.nc'
-            LEVEL3 'reading BIO from: ',trim(bio_fn)
             call init_3d_bio_bdy_ncdf(bio_fn)
          end if
 #endif

@@ -558,42 +558,38 @@
 
          if ( have_lonlat ) then
 
-!           latu and latv are only needed for active momentum points
-            do j=jll,jhl-1
+            do j=jll,jhl
                do i=ill,ihl-1
+                  latu(i,j) = _HALF_ * ( latc(i,j) + latc(i+1,j) )
+               end do
+            end do
 
-                  if ( au(i,j) .eq. 1 .or. au(i,j) .eq. 2 ) then
-
-                     latu(i,j) = ( latc(i  ,j) + latc(i+1,j+1) &
-                                 + latc(i+1,j) + latc(i  ,j+1) ) / 4
-                  end if
-
-                  if ( av(i,j) .eq. 1 .or. av(i,j) .eq. 2 ) then
-                     latv(i,j) = ( latc(i  ,j) + latc(i+1,j+1) &
-                                 + latc(i+1,j) + latc(i  ,j+1) ) / 4
-                  end if
-
+            do j=jll,jhl-1
+               do i=ill,ihl
+                  latv(i,j) = _HALF_ * ( latc(i,j) + latc(i,j+1) )
                end do
             end do
 
 ! this is just a check and can be deleted if nobody experiences problems
+! Note (KK): there should only be problems for periodic domains (mask=1)
+!            (the mask=2 condition is always wrong)
 #if 1
-            if ( joff+jhl .eq. jextr ) then
+            if ( joff+jhl .eq. jextr ) then ! most northern subdomain
                do i=ill,ihl
-                  if ( au(i,jhl) .eq. 1 .or. au(i,j) .eq. 2 ) then
-                     latu(i,jhl) = 1000
-                     LEVEL0 'x2uvc() - warning: latu is set to illegal value'
+                  if ( av(i,jhl) .eq. 1 .or. av(i,jhl) .eq. 2 ) then
+                     latv(i,jhl) = 1000
+                     LEVEL0 'x2uvc() - warning: latv is set to illegal value'
                      LEVEL0 'please report the problem on getm-users'
                      stop
                   end if
                end do
             end if
 
-            if ( ioff+ihl .eq. iextr ) then
+            if ( ioff+ihl .eq. iextr ) then ! most eastern subdomain
                do j=jll,jhl
-                  if ( av(ihl,j) .eq. 1 .or. av(i,j) .eq. 2 ) then
-                     latv(i,jhl) = 1000
-                     LEVEL0 'x2uvc() - warning: latv is set to illegal value'
+                  if ( au(ihl,j) .eq. 1 .or. au(ihl,j) .eq. 2 ) then
+                     latu(ihl,j) = 1000
+                     LEVEL0 'x2uvc() - warning: latu is set to illegal value'
                      LEVEL0 'please report the problem on getm-users'
                      stop
                   end if
@@ -642,13 +638,13 @@
          end do
 
          do j=jll,jhl
-            do i=min(ill,imin-1),ihl
+            do i=max(imin-HALO,ill-1),ihl
                xu(i,j) = _HALF_*( xx(i,j-1) + xx(i,j) )
                yu(i,j) = _HALF_*( yx(i,j-1) + yx(i,j) )
             end do
          end do
 
-         do j=min(jll,jmin-1),jhl
+         do j=max(jmin-HALO,jll-1),jhl
             do i=ill,ihl
                xv(i,j) = _HALF_*( xx(i-1,j) + xx(i,j) )
                yv(i,j) = _HALF_*( yx(i-1,j) + yx(i,j) )
@@ -819,13 +815,13 @@
          end do
 
          do j=jll,jhl
-            do i=min(ill,imin-1),ihl
+            do i=max(imin-HALO,ill-1),ihl
                dyu(i,j) = sqrt(  ( xx(i,j) - xx(i  ,j-1) )**2 &
                                + ( yx(i,j) - yx(i  ,j-1) )**2 )
             end do
          end do
 
-         do j=min(jll,jmin-1),jhl
+         do j=max(jmin-HALO,jll-1),jhl
             do i=ill,ihl
                dxv(i,j) = sqrt(  ( xx(i,j) - xx(i-1,j  ) )**2 &
                                + ( yx(i,j) - yx(i-1,j  ) )**2 )
@@ -853,7 +849,7 @@
             end do
          end do
 
-         do j=min(jll,jmin-1),jhl
+         do j=max(jmin-HALO,jll-1),jhl
             do i=ill,ihl-1
 !              Note (KK): in the present code we do not need
 !                         a halo-update for imax+HALO, since
@@ -866,7 +862,7 @@
          end do
 
          do j=jll,jhl-1
-            do i=min(ill,imin-1),ihl
+            do i=max(imin-HALO,ill-1),ihl
 !              Note (KK): in the present code we do not need
 !                         a halo-update for jmax+HALO, since
 !                         metrics there are not used
@@ -895,7 +891,7 @@
                   dy = deg2rad*dlat*rearth
                   dxc(i,j) = sqrt(dx*dx+dy*dy)
                end if
-!              dxc(imin-HALO,:) cannot be calculated but is not needed
+!              dxc(imin-HALO,:) cannot be calculated
             end do
          end do
          do j=max(jmin-HALO,jll-1)+1,jhl
@@ -912,7 +908,7 @@
                   dy = deg2rad*dlat*rearth
                   dyc(i,j) = sqrt(dx*dx+dy*dy)
                end if
-!              dyc(:,jmin-HALO) cannot be calculated but is not needed
+!              dyc(:,jmin-HALO) cannot be calculated
             end do
          end do
          do j=jll,jhl
@@ -929,7 +925,7 @@
                   dy = deg2rad*dlat*rearth
                   dxu(i,j) = sqrt(dx*dx+dy*dy)
                end if
-!              dxu(ihl,:) cannot be calculated but is not needed
+!              dxu(ihl,:) cannot be calculated
             end do
          end do
          do j=jll,jhl
@@ -978,7 +974,7 @@
                   dy = deg2rad*dlat*rearth
                   dyv(i,j) = sqrt(dx*dx+dy*dy)
                end if
-!              dyv(:,jhl) cannot be calculated but is not needed
+!              dyv(:,jhl) cannot be calculated
             end do
          end do
          do j=jll,jhl
@@ -995,7 +991,7 @@
                   dy = deg2rad*dlat*rearth
                   dxx(i,j) = sqrt(dx*dx+dy*dy)
                end if
-!              dxx(ihl,:) cannot be calculated but is not needed
+!              dxx(ihl,:) cannot be calculated
             end do
          end do
          do j=jll,jhl-1
@@ -1012,7 +1008,7 @@
                   dy = deg2rad*dlat*rearth
                   dyx(i,j) = sqrt(dx*dx+dy*dy)
                end if
-!              dyx(:,jhl) cannot be calculated but is not needed
+!              dyx(:,jhl) cannot be calculated
             end do
          end do
 #else
@@ -1069,8 +1065,8 @@
 
    if (grid_type.eq.2 .or. grid_type.eq.4) then
 !     compute differently centered areas of grid boxes
-      do j=jmin-HALO,jmax+HALO
-         do i=imin-HALO,imax+HALO
+      do j=jmin,jmax
+         do i=imin,imax
 
             if( az(i,j) .gt. 0) then
                arcd1(i,j)=_ONE_/(dxc(i,j)*dyc(i,j))
@@ -1093,31 +1089,6 @@
 
    if ( grid_type .ne. 1 ) then
 
-      LEVEL3 'dxc= [ ',minval(dxc,mask=(az .gt. 0)), &
-                       maxval(dxc,mask=(az .gt. 0)), ' ]'
-      LEVEL3 'dyc= [ ',minval(dyc,mask=(az .gt. 0)), &
-                       maxval(dyc,mask=(az .gt. 0)), ' ]'
-      LEVEL3 'dxu= [ ',minval(dxu,mask=(au .gt. 0)), &
-                       maxval(dxu,mask=(au .gt. 0)), ' ]'
-      LEVEL3 'dyu= [ ',minval(dyu,mask=(au .gt. 0)), &
-                       maxval(dyu,mask=(au .gt. 0)), ' ]'
-      LEVEL3 'dxv= [ ',minval(dxv,mask=(av .gt. 0)), &
-                       maxval(dxv,mask=(av .gt. 0)), ' ]'
-      LEVEL3 'dyv= [ ',minval(dyv,mask=(av .gt. 0)), &
-                       maxval(dyv,mask=(av .gt. 0)), ' ]'
-      LEVEL3 'dxx= [ ',minval(dxx,mask=(ax .gt. 0)), &
-                       maxval(dxx,mask=(ax .gt. 0)), ' ]'
-      LEVEL3 'dyx= [ ',minval(dyx,mask=(ax .gt. 0)), &
-                       maxval(dyx,mask=(ax .gt. 0)), ' ]'
-
-      LEVEL3 'arcd1= [ ',minval(arcd1,mask=(az .gt. 0)), &
-                         maxval(arcd1,mask=(az .gt. 0)), ' ]'
-      LEVEL3 'arud1= [ ',minval(arud1,mask=(au .gt. 0)), &
-                         maxval(arud1,mask=(au .gt. 0)), ' ]'
-      LEVEL3 'arvd1= [ ',minval(arvd1,mask=(av .gt. 0)), &
-                         maxval(arvd1,mask=(av .gt. 0)), ' ]'
-
-!     Note(KK): we only need halo-update for periodic domains
       call update_2d_halo(dxc,dxc,az,imin,jmin,imax,jmax,H_TAG)
       call wait_halo(H_TAG)
 
@@ -1150,6 +1121,30 @@
 
       call update_2d_halo(arvd1,arvd1,av,imin,jmin,imax,jmax,V_TAG)
       call wait_halo(V_TAG)
+
+      LEVEL3 'dxc= [ ',minval(dxc,mask=(az .gt. 0)), &
+                       maxval(dxc,mask=(az .gt. 0)), ' ]'
+      LEVEL3 'dyc= [ ',minval(dyc,mask=(az .gt. 0)), &
+                       maxval(dyc,mask=(az .gt. 0)), ' ]'
+      LEVEL3 'dxu= [ ',minval(dxu,mask=(au .gt. 0)), &
+                       maxval(dxu,mask=(au .gt. 0)), ' ]'
+      LEVEL3 'dyu= [ ',minval(dyu,mask=(au .gt. 0)), &
+                       maxval(dyu,mask=(au .gt. 0)), ' ]'
+      LEVEL3 'dxv= [ ',minval(dxv,mask=(av .gt. 0)), &
+                       maxval(dxv,mask=(av .gt. 0)), ' ]'
+      LEVEL3 'dyv= [ ',minval(dyv,mask=(av .gt. 0)), &
+                       maxval(dyv,mask=(av .gt. 0)), ' ]'
+      LEVEL3 'dxx= [ ',minval(dxx,mask=(ax .gt. 0)), &
+                       maxval(dxx,mask=(ax .gt. 0)), ' ]'
+      LEVEL3 'dyx= [ ',minval(dyx,mask=(ax .gt. 0)), &
+                       maxval(dyx,mask=(ax .gt. 0)), ' ]'
+
+      LEVEL3 'arcd1= [ ',minval(arcd1,mask=(az .gt. 0)), &
+                         maxval(arcd1,mask=(az .gt. 0)), ' ]'
+      LEVEL3 'arud1= [ ',minval(arud1,mask=(au .gt. 0)), &
+                         maxval(arud1,mask=(au .gt. 0)), ' ]'
+      LEVEL3 'arvd1= [ ',minval(arvd1,mask=(av .gt. 0)), &
+                         maxval(arvd1,mask=(av .gt. 0)), ' ]'
 
    end if
 
