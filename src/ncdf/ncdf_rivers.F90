@@ -98,6 +98,7 @@
 #endif
 
    LEVEL3 'init_river_input_ncdf'
+   LEVEL4 trim(fn)
 
    allocate(r_ids(rriver),stat=err)
    if (err /= 0) stop 'ncdf_river: Error allocating memory (r_ids)'
@@ -138,6 +139,9 @@
    if (err .ne. NF90_NOERR) go to 10
 
    do n=1,rriver
+
+      LEVEL4 ' ... checking available variables for river "'//trim(real_river_name(n))//'"'
+
       err = nf90_inq_varid(ncid,real_river_name(n),r_ids(n))
       if (err .ne. NF90_NOERR) go to 10
       r_salt(n) = 0
@@ -180,10 +184,10 @@
                         trim(model%state_variables(m)%name)
             err =  nf90_inq_varid(ncid,trim(fabm_name),fabm_id(n,m))
             if (err .ne. NF90_NOERR) then
+               LEVEL4 '     '//trim(fabm_name)//': no'
                fabm_id(n,m) = -1
             else
-               LEVEL4 trim(real_river_name(n)),': ', &
-                        trim(model%state_variables(m)%name)
+               LEVEL4 '     '//trim(fabm_name)//': yes'
             end if
          end do
       end if
