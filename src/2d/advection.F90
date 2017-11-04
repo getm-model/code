@@ -732,7 +732,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE:  REALTYPE function adv_interfacial_reconstruction -
+! !IROUTINE:  adv_interfacial_reconstruction -
 !
 ! !INTERFACE:
    REALTYPE function adv_interfacial_reconstruction(scheme,cfl,fuu,fu,fd)
@@ -811,7 +811,7 @@
 #ifdef _POINTER_REMAP_
 !BOP
 !
-! !IROUTINE:  LOGICAL function test_pointer_remap
+! !IROUTINE:  test_pointer_remap -
 !
 ! !INTERFACE:
    logical function test_pointer_remap()
