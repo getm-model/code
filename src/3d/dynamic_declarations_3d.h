@@ -62,6 +62,4 @@
 
 ! attenuation
   REALTYPE, dimension(:,:), allocatable     :: A,g1,g2
-#ifdef _FABM_
   REALTYPE, allocatable, dimension(:,:,:), target :: bioshade
-#endif
