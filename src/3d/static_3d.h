@@ -96,6 +96,4 @@
   REALTYPE,target                      :: A(I2DFIELD)
   REALTYPE,target                      :: g1(I2DFIELD)
   REALTYPE,target                      :: g2(I2DFIELD)
-#ifdef _FABM_
   REALTYPE,target                      :: bioshade(I3DFIELD)
-#endif
