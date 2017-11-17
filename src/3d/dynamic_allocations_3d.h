@@ -257,7 +257,5 @@
   allocate(g2(I2DFIELD),stat=rc)
   if (rc /= 0) stop 'init_3d: Error allocating memory (g2)'
 
-#ifdef _FABM_
   allocate(bioshade(I3DFIELD),stat=rc)
   if (rc /= 0) stop 'init_3d: Error allocating memory (bioshade)'
-#endif
