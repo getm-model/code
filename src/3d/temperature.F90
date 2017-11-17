@@ -436,7 +436,6 @@ end interface
    use meteo,        only: swr,shf
    use parameters,   only: rho_0,cp
    use variables_3d, only: bioshade
-   use parameters, only: avmolt
    use getm_timers, only: tic,toc,TIM_TEMP,TIM_TEMPH,TIM_MIXANALYSIS
    use variables_3d, only: do_numerical_analyses_3d
    use variables_3d, only: nummix_T,nummix_T_old,nummix_T_int
