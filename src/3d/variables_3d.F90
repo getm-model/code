@@ -316,9 +316,7 @@
    rad=_ZERO_
    heatflux_net = _ZERO_
    light=_ONE_
-#ifdef _FABM_
    bioshade = _ONE_
-#endif
 #endif
 
 #ifdef STRUCTURE_FRICTION
