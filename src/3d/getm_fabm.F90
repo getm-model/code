@@ -89,6 +89,7 @@
 
 interface
    subroutine tracer_diffusion(f,hn,AH_method,AH_const,AH_Prt,AH_stirr_const, &
+                               ffluxu,ffluxv,                                 &
                                phymix)
       use domain, only: imin,imax,jmin,jmax,kmax
       IMPLICIT NONE
@@ -96,6 +97,7 @@ interface
       integer,intent(in)            :: AH_method
       REALTYPE,intent(in)           :: AH_const,AH_Prt,AH_stirr_const
       REALTYPE,intent(inout)        :: f(I3DFIELD)
+      REALTYPE,dimension(:,:,:),pointer,intent(inout),optional :: ffluxu,ffluxv
       REALTYPE,dimension(:,:,:),pointer,intent(out),optional :: phymix
    end subroutine tracer_diffusion
 

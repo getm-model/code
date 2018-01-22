@@ -7,8 +7,10 @@
 !
 ! !INTERFACE:
    subroutine tracer_diffusion(f,hn,AH_method,AH_const,AH_Prt,AH_stirr_const, &
+                               ffluxu,ffluxv,                                 &
                                phymix)
-!  Note (KK): keep in sync with interface in getm_fabm.F90
+!  Note (KK): keep in sync with interfaces in
+!             salinity.F90, temperature.F90, getm_fabm.F90
 !
 ! !DESCRIPTION:
 !
@@ -30,6 +32,7 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    REALTYPE,intent(inout)        :: f(I3DFIELD)
+   REALTYPE,dimension(:,:,:),pointer,intent(inout),optional :: ffluxu,ffluxv
 !
 ! !OUTPUT PARAMETERS:
 !  KK-TODO: this should be an allocatable array
@@ -46,6 +49,7 @@
    REALTYPE,dimension(:,:),allocatable,save :: phymixU,phymixV
    REALTYPE                                 :: dfdxU,dfdyV
    logical,save                             :: first=.true.
+   logical                                  :: calc_ffluxu,calc_ffluxv
    logical                                  :: calc_phymix
    integer                                  :: rc
    integer                                  :: i,j,k
@@ -97,6 +101,11 @@
 
       first=.false.
    end if
+
+   calc_ffluxu = .false.
+   calc_ffluxv = .false.
+   if (present(ffluxu)) calc_ffluxu = associated(ffluxu)
+   if (present(ffluxv)) calc_ffluxv = associated(ffluxv)
 
    if (do_numerical_analyses_3d .and. present(phymix)) then
       calc_phymix = associated(phymix)
@@ -227,6 +236,9 @@
                if (calc_phymix) then
                   phymixU(i,j) = _TWO_ * delfxU(i,j) * dfdxU
                end if
+               if (calc_ffluxu) then
+                  ffluxu(i,j,k) = ffluxu(i,j,k) - delfxU(i,j)
+               end if
                delfxU(i,j) = DYU*_HALF_*(hn(i,j,k)+hn(i+1,j,k))*delfxU(i,j)
 !              now delfxU is flux!
             end if
@@ -260,6 +272,9 @@
                end select
                if (calc_phymix) then
                   phymixV(i,j) = _TWO_ * delfyV(i,j) * dfdyV
+               end if
+               if (calc_ffluxv) then
+                  ffluxv(i,j,k) = ffluxv(i,j,k) - delfyV(i,j)
                end if
                delfyV(i,j) = DXV*_HALF_*(hn(i,j,k)+hn(i,j+1,k))*delfyV(i,j)
 !              now delfyV is flux!
