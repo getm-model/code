@@ -156,6 +156,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+#define _U2DFIELD_ _IRANGE_HALO_-1,_JRANGE_HALO_
 !  Note (KK): in general dxu, dyu and mask_flux do only have valid data
 !             within (_IRANGE_HALO_-1,_JRANGE_HALO_). In some cases the
 !             original field extension may even be _IRANGE_HALO_. Then
@@ -250,7 +251,9 @@
 #endif
 !$OMP END DO
 !$OMP WORKSHARE
-   if (associated(ffluxu)) ffluxu = ffluxu + splitfac*uflux
+   if (associated(ffluxu)) then
+      ffluxu(_U2DFIELD_) = ffluxu(_U2DFIELD_) + splitfac*dyu(_U2DFIELD_)*uflux(_U2DFIELD_)
+   end if
 !$OMP END WORKSHARE
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL

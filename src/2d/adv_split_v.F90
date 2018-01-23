@@ -26,6 +26,7 @@
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
+#define _V2DFIELD_ _IRANGE_HALO_,_JRANGE_HALO_-1
 !  KK-TODO: According to http://scc.qibebt.cas.cn/docs/compiler/intel/11.1/Intel%20Fortran%20Compiler%20for%20Linux/main_for/optaps/fortran/optaps_prg_arrs_f.htm
 !           mapping of pointers (deferred shape) to explicit shape is
 !           very unefficient (dxv,dyv,mask_flux). However, first tests
@@ -33,10 +34,10 @@
 !           were not superior.
    REALTYPE,intent(in)                                          :: dt,splitfac,AH
    REALTYPE,dimension(E2DFIELD),intent(in)                      :: f,V,DV
-   REALTYPE,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in) :: dxv,dyv
+   REALTYPE,dimension(_V2DFIELD_),intent(in)     :: dxv,dyv
    REALTYPE,dimension(E2DFIELD),intent(in)                      :: arcd1
    integer,intent(in)                                           :: scheme
-   logical,dimension(_IRANGE_HALO_,_JRANGE_HALO_-1),intent(in)  :: mask_flux
+   logical,dimension(_V2DFIELD_),intent(in)      :: mask_flux
    logical,dimension(E2DFIELD),intent(in)                       :: mask_update
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -108,7 +109,9 @@
    end do
 !$OMP END DO
 !$OMP WORKSHARE
-   if (associated(ffluxv)) ffluxv = ffluxv + splitfac*vflux
+   if (associated(ffluxv)) then
+      ffluxv(_V2DFIELD_) = ffluxv(_V2DFIELD_) + splitfac*dxv(_V2DFIELD_)*vflux(_V2DFIELD_)
+   end if
 !$OMP END WORKSHARE
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO+2,jmax+HALO-2

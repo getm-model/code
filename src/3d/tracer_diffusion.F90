@@ -236,11 +236,11 @@
                if (calc_phymix) then
                   phymixU(i,j) = _TWO_ * delfxU(i,j) * dfdxU
                end if
+               delfxU(i,j) = DYU*_HALF_*(hn(i,j,k)+hn(i+1,j,k))*delfxU(i,j)
+!              now delfxU is flux!
                if (calc_ffluxu) then
                   ffluxu(i,j,k) = ffluxu(i,j,k) - delfxU(i,j)
                end if
-               delfxU(i,j) = DYU*_HALF_*(hn(i,j,k)+hn(i+1,j,k))*delfxU(i,j)
-!              now delfxU is flux!
             end if
          end do
 #ifndef SLICE_MODEL
@@ -273,11 +273,11 @@
                if (calc_phymix) then
                   phymixV(i,j) = _TWO_ * delfyV(i,j) * dfdyV
                end if
+               delfyV(i,j) = DXV*_HALF_*(hn(i,j,k)+hn(i,j+1,k))*delfyV(i,j)
+!              now delfyV is flux!
                if (calc_ffluxv) then
                   ffluxv(i,j,k) = ffluxv(i,j,k) - delfyV(i,j)
                end if
-               delfyV(i,j) = DXV*_HALF_*(hn(i,j,k)+hn(i,j+1,k))*delfyV(i,j)
-!              now delfyV is flux!
             end if
          end do
       end do
