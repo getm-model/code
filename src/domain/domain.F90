@@ -249,8 +249,8 @@
    call wait_halo(H_TAG)
 
    az = 0
-   where (H .gt. Hland+SMALL)
-      az=1
+   where (H(imin:imax,jmin:jmax) .gt. Hland+SMALL)
+      az(imin:imax,jmin:jmax) = 1
    end where
 
    call update_2d_halo(H,H,az,imin,jmin,imax,jmax,H_TAG,mirror=.true.)
