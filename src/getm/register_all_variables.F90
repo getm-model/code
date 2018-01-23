@@ -340,6 +340,7 @@
 !  Original author(s): Karsten Bolding & Jorn Bruggeman
 !
 ! !LOCAL VARIABLES:
+   logical :: used
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -398,9 +399,8 @@
       call fm%register('AmC_2d', 'm2/s', 'hor eddy viscosity', standard_name='', data2d=AmC_2d(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
    end if
 
-   if (associated(taubmax)) then
-      call fm%register('taubmax', 'N/m2', 'max. bottom stress', standard_name='', data2d=taubmax(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
-   end if
+   call fm%register('taubmax', 'N/m2', 'max. bottom stress', standard_name='', category='2d', fill_value=-9999.0_rk, output_level=output_level_debug, used=used)
+   if (.not. calc_taubmax) calc_taubmax = used
 
    if (do_numerical_analyses_2d) then
       call fm%register('numdis_2d', 'W/kg', 'numerical dissipation', standard_name='', category='2d', output_level=output_level_debug)
@@ -753,6 +753,9 @@
    LEVEL1 'finalize_register_all_variables()'
 
 !  category - 2d
+   if (associated(taubmax)) then
+      call fm%send_data('taubmax', taubmax(_2D_W_))
+   end if
    if (do_numerical_analyses_2d) then
       call fm%send_data('numdis_2d', numdis_2d(_2D_W_))
       call fm%send_data('phydis_2d', phydis_2d(_2D_W_))
