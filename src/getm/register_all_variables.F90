@@ -37,6 +37,12 @@
    character(len=16)         :: zname='sigma'
    character(len=64)         :: zlongname='sigma'
    character(len=16)         :: zunits='sigma'
+   character(len=16),parameter :: lonname     = 'lonc'
+   character(len=16),parameter :: lonlongname = 'longitude'
+   character(len=16),parameter :: lonunits    = 'degrees_east'
+   character(len=16),parameter :: latname     = 'latc'
+   character(len=16),parameter :: latlongname = 'latitude'
+   character(len=16),parameter :: latunits    = 'degrees_north'
 !
 !-----------------------------------------------------------------------
 
@@ -77,12 +83,12 @@
          ylongname = 'y'
          yunits    = 'm'
       case (2)
-         xname     = 'lonc'
-         xlongname = 'longitude'
-         xunits    = 'degrees_east'
-         yname     = 'latc'
-         ylongname = 'latitude'
-         yunits    = 'degrees_north'
+         xname     = lonname
+         xlongname = lonlongname
+         xunits    = lonunits
+         yname     = latname
+         ylongname = latlongname
+         yunits    = latunits
       case (3,4)
          xname     = 'xic'
          xlongname = 'xic'
@@ -202,6 +208,11 @@
       call fm%register(trim(zname),trim(zunits),trim(zlongname),dimensions=(/id_dim_z/),no_default_dimensions=.true.,data1d=ga,coordinate_dimension=id_dim_z,output_level=output_level_debug)
    end if
 #endif
+
+   if (have_lonlat .and. grid_type.ne.2) then
+      call fm%register(trim(lonname),trim(lonunits),trim(lonlongname),dimensions=(/id_dim_lon,id_dim_lat/),no_default_dimensions=.true.,data2d=lonc(_2D_W_), category='domain',output_level=output_level_required)
+      call fm%register(trim(latname),trim(latunits),trim(latlongname),dimensions=(/id_dim_lon,id_dim_lat/),no_default_dimensions=.true.,data2d=latc(_2D_W_), category='domain',output_level=output_level_required)
+   end if
 
    call fm%register('bathymetry', 'm', 'bathymetry', standard_name='bathymetry', dimensions=(/id_dim_lon,id_dim_lat/), no_default_dimensions=.true., fill_value=-10._rk, data2d=H(_2D_W_), category='domain',output_level=output_level_required)
 
@@ -498,8 +509,9 @@
 #ifndef NO_BAROCLINIC
 !  category - baroclinic
    if (runtype .ge. 3) then
-      call fm%register('temp', 'Celsius', 'temperature', standard_name='', dimensions=(/id_dim_z/), fill_value=-9999.0_rk, data3d=T(_3D_W_), category='baroclinic')
-      call fm%register('salt', '1e-3', 'salinity', standard_name='', dimensions=(/id_dim_z/), fill_value=-9999.0_rk, data3d=S(_3D_W_), category='baroclinic')
+      call fm%register('temp', 'Celsius', 'temperature', standard_name='', dimensions=(/id_dim_z/), fill_value=-9999.0_rk, data3d=T  (_3D_W_), category='baroclinic')
+      call fm%register('salt', '1e-3'   , 'salinity'   , standard_name='', dimensions=(/id_dim_z/), fill_value=-9999.0_rk, data3d=S  (_3D_W_), category='baroclinic')
+      call fm%register('rho' , 'kg/m3'  , 'density'    , standard_name='', dimensions=(/id_dim_z/), fill_value=-9999.0_rk, data3d=rho(_3D_W_), category='baroclinic', output_level=output_level_debug)
       call fm%register('NN', 's-2', 'buoyancy frequency squared', standard_name='', dimensions=(/id_dim_z/), data3d=NN(_3D_W_), category='baroclinic', output_level=output_level_debug)
       call fm%register('idpdx', 'm2/s2', 'baroclinic pressure gradient - x', standard_name='', dimensions=(/id_dim_z/),data3d=idpdx(_3D_W_), category='baroclinic', output_level=output_level_debug)
       call fm%register('idpdy', 'm2/s2', 'baroclinic pressure gradient - y', standard_name='', dimensions=(/id_dim_z/),data3d=idpdy(_3D_W_), category='baroclinic', output_level=output_level_debug)
