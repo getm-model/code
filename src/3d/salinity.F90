@@ -205,16 +205,18 @@
       case(0)
          LEVEL3 'getting initial fields from hotstart'
       case(1)
-         LEVEL3 'setting to constant value'
+         LEVEL3 'setting to constant value ',real(salt_const)
          forall(i=imin:imax,j=jmin:jmax, az(i,j) .ne. 0) &
                 S(i,j,:) = salt_const
       case(2)
          LEVEL3 'using profile'
+         LEVEL4 trim(salt_file)
          call read_profile(salt_file,nmax,zlev,prof,n)
          call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,kmax, &
                            az,H,hn,S)
       case(3)
          LEVEL3 'interpolating from 3D field'
+         LEVEL4 trim(salt_file)
          call get_3d_field(salt_file,salt_name,salt_field_no,.true.,S)
       case default
          FATAL 'Not valid salt_method specified'
