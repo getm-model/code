@@ -202,17 +202,19 @@ end interface
          LEVEL4 'out-of-bound values result in warnings only'
       end if
 
+      if (temp_method .ne. 0) then
       call check_3d_fields(imin,jmin,imax,jmax,kmin,kmax,az, &
                            T,min_temp,max_temp,status)
       if (status .gt. 0) then
          if (temp_check .gt. 0) then
-            call getm_error("do_temperature()", &
+            call getm_error("init_temperature()", &
                             "out-of-bound values encountered")
          end if
          if (temp_check .lt. 0) then
-            LEVEL1 'do_temperature(): ',status, &
+            LEVEL1 'init_temperature(): ',status, &
                    ' out-of-bound values encountered'
          end if
+      end if
       end if
    end if
 
