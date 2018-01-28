@@ -211,6 +211,8 @@
 #include "dynamic_allocations_3d.h"
 #endif
 
+   kmin = 1
+
    ho = _ZERO_ ; hn = _ZERO_ ; hvel = _ZERO_ ; hun = _ZERO_ ; hvn = _ZERO_
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
    velx3d = -9999.0 ; vely3d = -9999.0 ; w = -9999.0
