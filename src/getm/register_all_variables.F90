@@ -589,8 +589,8 @@
 #endif
 
    if (update_salt) then
-      call fm%register('Sfluxu', 'g/kg*m2/s', 'salt flux in local x-direction', standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug, used=save_Sfluxu)
-      call fm%register('Sfluxv', 'g/kg*m2/s', 'salt flux in local y-direction', standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug, used=save_Sfluxv)
+      call fm%register('Sfluxu', 'g/kg*m3/s', 'salt flux in local x-direction', standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug, used=save_Sfluxu)
+      call fm%register('Sfluxv', 'g/kg*m3/s', 'salt flux in local y-direction', standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug, used=save_Sfluxv)
       call fm%register('Sfluxw', 'g/kg*m/s', 'vertical salt flux'            , standard_name='', dimensions=(/id_dim_z/), category='3d', output_level=output_level_debug, used=save_Sfluxw)
    end if
 
