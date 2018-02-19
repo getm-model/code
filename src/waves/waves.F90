@@ -17,6 +17,7 @@
    use exceptions
    use halo_zones     , only: update_2d_halo,wait_halo,H_TAG
    use domain         , only: imin,imax,jmin,jmax,kmax,az,H
+   use domain         , only: ill,ihl,ilg,ihg,jll,jhl,jlg,jhg
    use meteo          , only: metforcing,met_method,wind,u10r,v10r
    use getm_timers    , only: tic,toc,TIM_WAVES
 
@@ -56,6 +57,7 @@
 ! !PRIVATE DATA MEMBERS:
    REALTYPE                  :: waves_windscalefactor = _ONE_
    REALTYPE                  :: max_depth_windwaves = -_ONE_
+   logical                   :: fetch_from_ellipsis=.false.
    logical                   :: ramp_is_active=.false.
 !
 ! !REVISION HISTORY:
@@ -83,6 +85,15 @@
          REALTYPE,dimension(E2DFIELD),intent(inout) :: ru,rv,zub,zvb
          REALTYPE,dimension(:,:),pointer,intent(inout),optional :: taubmax
       end subroutine bottom_friction_waves
+
+! Temporary interface (should be read from module):
+      subroutine get_2d_field(fn,varname,il,ih,jl,jh,break_on_missing,f)
+         character(len=*),intent(in)   :: fn,varname
+         integer, intent(in)           :: il,ih,jl,jh
+         logical, intent(in)           :: break_on_missing
+         REALTYPE, intent(out)         :: f(:,:)
+      end subroutine get_2d_field
+
    end interface
 
    contains
@@ -109,8 +120,10 @@
 ! the simulation.
 !
 ! !LOCAL VARIABLES
+   integer :: rc
    namelist /waves/ waveforcing_method,waves_method,waves_file,        &
                     waves_windscalefactor,max_depth_windwaves,         &
+                    fetch_from_ellipsis,                               &
                     waves_ramp,waves_bbl_method
 !EOP
 !-----------------------------------------------------------------------
@@ -138,6 +151,27 @@
             max_depth_windwaves = 99999.0
          else
             LEVEL3 'max_depth_windwaves = ',real(max_depth_windwaves)
+         end if
+         if (fetch_from_ellipsis) then
+            LEVEL3 'parameters for fetch ellipsis read from file: ',trim(waves_file)
+            allocate(fetch(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_waves: Error allocating memory (fetch)'
+            fetch = _ZERO_
+            allocate(aa(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_waves: Error allocating memory (aa)'
+            call get_2d_field(trim(waves_file),"aa",ilg,ihg,jlg,jhg,.true.,aa(ill:ihl,jll:jhl))
+            allocate(bb(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_waves: Error allocating memory (bb)'
+            call get_2d_field(trim(waves_file),"bb",ilg,ihg,jlg,jhg,.true.,bb(ill:ihl,jll:jhl))
+            allocate(phi(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_waves: Error allocating memory (phi)'
+            call get_2d_field(trim(waves_file),"phi",ilg,ihg,jlg,jhg,.true.,phi(ill:ihl,jll:jhl))
+            allocate(x0(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_waves: Error allocating memory (x0)'
+            call get_2d_field(trim(waves_file),"x0",ilg,ihg,jlg,jhg,.true.,x0(ill:ihl,jll:jhl))
+            allocate(y0(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'init_waves: Error allocating memory (y0)'
+            call get_2d_field(trim(waves_file),"y0",ilg,ihg,jlg,jhg,.true.,y0(ill:ihl,jll:jhl))
          end if
       case(WAVES_FROMFILE)
          LEVEL2 'waveforcing data read from file: ',trim(waves_file)
@@ -216,7 +250,6 @@
 !
 ! !LOCAL VARIABLES:
    REALTYPE,dimension(E2DFIELD) :: waveECm1
-   REALTYPE                     :: depth
    REALTYPE,save                :: ramp=_ONE_
    integer                      :: i,j
    REALTYPE,parameter           :: pi=3.1415926535897932384626433832795029d0
@@ -237,28 +270,7 @@
    select case (waveforcing_method)
       case(WAVES_FROMWIND)
          new_waves = .true.
-         do j=jmin-HALO,jmax+HALO
-            do i=imin-HALO,imax+HALO
-               if ( az(i,j) .gt. 0 ) then
-                  if (wind(i,j) .gt. _ZERO_) then
-                     coswavedir(i,j) = u10r(i,j) / wind(i,j)
-                     sinwavedir(i,j) = v10r(i,j) / wind(i,j)
-                     depth = min( D(i,j) , max_depth_windwaves )
-                     waveH(i,j) = wind2waveHeight(waves_windscalefactor*wind(i,j),depth)
-                     waveT(i,j) = wind2wavePeriod(waves_windscalefactor*wind(i,j),depth)
-                     waveK(i,j) = wavePeriod2waveNumber(waveT(i,j),D(i,j))
-                     waveL(i,j) = twopi / waveK(i,j)
-                  else
-                     coswavedir(i,j) = _ZERO_
-                     sinwavedir(i,j) = _ZERO_
-                     waveH(i,j) = _ZERO_
-                     waveT(i,j) = _ZERO_
-                     waveK(i,j) = kD_deepthresh / D(i,j)
-                     waveL(i,j) = _ZERO_
-                  end if
-               end if
-            end do
-         end do
+         call do_waves_fromwind(D)
       case(WAVES_FROMFILE)
          new_waves = .true.
          do j=jmin-HALO,jmax+HALO
@@ -328,6 +340,78 @@
 #endif
    return
    end subroutine do_waves
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: do_waves_fromwind -
+!
+! !INTERFACE:
+   subroutine do_waves_fromwind(D)
+
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   REALTYPE,dimension(E2DFIELD),intent(in) :: D
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! !DESCRIPTION:
+!
+! !LOCAL VARIABLES
+   REALTYPE                     :: depth,wwind
+   integer                      :: i,j
+   REALTYPE,parameter           :: pi=3.1415926535897932384626433832795029d0
+   REALTYPE,parameter           :: twopi = _TWO_*pi
+!
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'do_waves_fromwind() # ',Ncall
+#endif
+
+   do j=jmin-HALO,jmax+HALO
+      do i=imin-HALO,imax+HALO
+         if ( az(i,j) .gt. 0 ) then
+            if (wind(i,j) .gt. _ZERO_) then
+               coswavedir(i,j) = u10r(i,j) / wind(i,j)
+               sinwavedir(i,j) = v10r(i,j) / wind(i,j)
+               depth = min( D(i,j) , max_depth_windwaves )
+               wwind = waves_windscalefactor * wind(i,j)
+               if (fetch_from_ellipsis) then
+                  fetch(i,j) = fetch_from_ellipsis_(u10r(i,j),v10r(i,j),aa(i,j),bb(i,j),phi(i,j),x0(i,j),y0(i,j))
+                  waveH(i,j) = wind2waveHeight(wwind,depth,fetch(i,j))
+                  waveT(i,j) = wind2wavePeriod(wwind,depth,fetch(i,j))
+               else
+                  waveH(i,j) = wind2waveHeight(wwind,depth)
+                  waveT(i,j) = wind2wavePeriod(wwind,depth)
+               end if
+               waveK(i,j) = wavePeriod2waveNumber(waveT(i,j),D(i,j))
+               waveL(i,j) = twopi / waveK(i,j)
+            else
+               coswavedir(i,j) = _ZERO_
+               sinwavedir(i,j) = _ZERO_
+               if (fetch_from_ellipsis) then
+                  fetch(i,j) = _ZERO_
+               end if
+               waveH(i,j) = _ZERO_
+               waveT(i,j) = _ZERO_
+               waveK(i,j) = kD_deepthresh / D(i,j)
+               waveL(i,j) = _ZERO_
+            end if
+         end if
+      end do
+   end do
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving do_waves_fromwind()'
+   write(debug,*)
+#endif
+   return
+   end subroutine do_waves_fromwind
 !EOC
 !-----------------------------------------------------------------------
 !BOP
@@ -742,6 +826,50 @@
    end select
 
    end function wbbl_rdrag
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: fetch_from_ellipsis_
+!
+! !INTERFACE:
+   REALTYPE function fetch_from_ellipsis_(u10,v10,aa,bb,phi,x0,y0)
+
+! !USES:
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   REALTYPE,intent(in)          :: u10,v10
+   REALTYPE,intent(in)          :: aa,bb,phi,x0,y0
+!
+! !DESCRIPTION:
+!  compute the parametric fetch as function of wind angle
+!  aa - sub axis (radius) of the X axis of the non-tilt ellipse
+!  bb - sub axis (radius) of the Y axis of the non-tilt ellipse
+!  phi- orientation in radians of the ellipse (tilt)
+!  x0 - center at the X axis of the tilt ellipse
+!  y0 - center at the Y axis of the tilt ellipse
+!
+! !LOCAL VARIABLES
+   REALTYPE           :: angle0,r0,angle,P,Q,R
+   REALTYPE           :: aa2,bb2
+!
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+
+   angle0 = atan2(y0,x0)
+   r0     = sqrt( x0*x0 + y0*y0 )
+   angle  = atan2(v10,u10)
+   aa2    = aa*aa
+   bb2    = bb*bb
+   P      = r0*((bb2-aa2)*cos(angle+angle0-2*phi) + (aa2+bb2)*cos(angle-angle0))
+   R      = (bb2-aa2)*cos(2*(angle-phi)) + (aa2+bb2)
+   Q      = aa*bb*sqrt(2*(R-2*(r0*sin(angle-angle0))**2))
+
+   fetch_from_ellipsis_ = (P + Q) / R
+
+   end function fetch_from_ellipsis_
 !EOC
 !-----------------------------------------------------------------------
 
