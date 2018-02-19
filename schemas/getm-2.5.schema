@@ -254,12 +254,21 @@
 				</options>
 			</element>
 			<element name="waves_file" type="string" label="name of waves files">
-				<condition type="eq" variable="./waveforcing_method" value="2"/>
+				<condition type="or">
+					<condition type="and">
+						<condition type="eq" variable="./waveforcing_method" value="1"/>
+						<condition type="eq" variable="./fetch_from_ellipsis" value="True"/>
+					</condition>
+					<condition type="eq" variable="./waveforcing_method" value="2"/>
+				</condition>
 			</element>
 			<element name="waves_windscalefactor" type="float" label="scalefactor for wind wave parameterisation">
 				<condition type="eq" variable="./waveforcing_method" value="1"/>
 			</element>
 			<element name="max_depth_windwaves" type="float" label="truncate depth for wind wave parameterisation" unit="m">
+				<condition type="eq" variable="./waveforcing_method" value="1"/>
+			</element>
+			<element name="fetch_from_ellipsis" type="bool" label="use ellipsis parameters from waves_file to estimate fetch">
 				<condition type="eq" variable="./waveforcing_method" value="1"/>
 			</element>
 			<element name="waves_ramp" type="int" label="number of time steps for forcing spin-up" unit="micro time steps">
