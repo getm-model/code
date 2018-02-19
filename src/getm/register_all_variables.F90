@@ -38,6 +38,12 @@
    character(len=16)         :: zname='sigma'
    character(len=64)         :: zlongname='sigma'
    character(len=16)         :: zunits='sigma'
+   character(len=16),parameter :: lonname     = 'lonc'
+   character(len=16),parameter :: lonlongname = 'longitude'
+   character(len=16),parameter :: lonunits    = 'degrees_east'
+   character(len=16),parameter :: latname     = 'latc'
+   character(len=16),parameter :: latlongname = 'latitude'
+   character(len=16),parameter :: latunits    = 'degrees_north'
 !
 !-----------------------------------------------------------------------
 
@@ -78,12 +84,12 @@
          ylongname = 'y'
          yunits    = 'm'
       case (2)
-         xname     = 'lonc'
-         xlongname = 'longitude'
-         xunits    = 'degrees_east'
-         yname     = 'latc'
-         ylongname = 'latitude'
-         yunits    = 'degrees_north'
+         xname     = lonname
+         xlongname = lonlongname
+         xunits    = lonunits
+         yname     = latname
+         ylongname = latlongname
+         yunits    = latunits
       case (3,4)
          xname     = 'xic'
          xlongname = 'xic'
@@ -205,6 +211,11 @@
    end if
 #endif
 
+   if (have_lonlat .and. grid_type.ne.2) then
+      call fm%register(trim(lonname),trim(lonunits),trim(lonlongname),dimensions=(/id_dim_lon,id_dim_lat/),no_default_dimensions=.true.,data2d=lonc(_2D_W_), category='domain',output_level=output_level_required)
+      call fm%register(trim(latname),trim(latunits),trim(latlongname),dimensions=(/id_dim_lon,id_dim_lat/),no_default_dimensions=.true.,data2d=latc(_2D_W_), category='domain',output_level=output_level_required)
+   end if
+
    call fm%register('bathymetry', 'm', 'bathymetry', standard_name='bathymetry', dimensions=(/id_dim_lon,id_dim_lat/), no_default_dimensions=.true., fill_value=-10._rk, data2d=H(_2D_W_), category='domain',output_level=output_level_required)
 
 !  register -  metric
@@ -315,6 +326,9 @@
    call fm%register('waveH', 'm', 'wave height', standard_name='', data2d=waveH(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
    call fm%register('waveL', 'm', 'wave length', standard_name='', data2d=waveL(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
    call fm%register('waveT', 's', 'wave period', standard_name='', data2d=waveT(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
+   if (allocated(fetch)) then
+      call fm%register('fetch', 'm', 'wind fetch', standard_name='', data2d=fetch(_2D_W_), category='waves', fill_value=0.0_rk, output_level=output_level_debug)
+   end if
 
    return
    end subroutine register_waves_variables
@@ -340,6 +354,7 @@
 !  Original author(s): Karsten Bolding & Jorn Bruggeman
 !
 ! !LOCAL VARIABLES:
+   logical :: used
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -398,9 +413,8 @@
       call fm%register('AmC_2d', 'm2/s', 'hor eddy viscosity', standard_name='', data2d=AmC_2d(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
    end if
 
-   if (associated(taubmax)) then
-      call fm%register('taubmax', 'N/m2', 'max. bottom stress', standard_name='', data2d=taubmax(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
-   end if
+   call fm%register('taubmax', 'N/m2', 'max. bottom stress', standard_name='', category='2d', fill_value=-9999.0_rk, output_level=output_level_debug, used=used)
+   if (.not. calc_taubmax) calc_taubmax = used
 
    if (do_numerical_analyses_2d) then
       call fm%register('numdis_2d', 'W/kg', 'numerical dissipation', standard_name='', category='2d', output_level=output_level_debug)
@@ -578,8 +592,9 @@
 #ifndef NO_BAROCLINIC
 !  category - baroclinic
    if (runtype .ge. 3) then
-      call fm%register('temp', 'Celsius', 'temperature', standard_name='', dimensions=(/id_dim_z/), fill_value=-9999.0_rk, data3d=T(_3D_W_), category='baroclinic')
-      call fm%register('salt', '1e-3', 'salinity', standard_name='', dimensions=(/id_dim_z/), fill_value=-9999.0_rk, data3d=S(_3D_W_), category='baroclinic')
+      call fm%register('temp', 'Celsius', 'temperature', standard_name='', dimensions=(/id_dim_z/), fill_value=-9999.0_rk, data3d=T  (_3D_W_), category='baroclinic')
+      call fm%register('salt', '1e-3'   , 'salinity'   , standard_name='', dimensions=(/id_dim_z/), fill_value=-9999.0_rk, data3d=S  (_3D_W_), category='baroclinic')
+      call fm%register('rho' , 'kg/m3'  , 'density'    , standard_name='', dimensions=(/id_dim_z/), fill_value=-9999.0_rk, data3d=rho(_3D_W_), category='baroclinic', output_level=output_level_debug)
       call fm%register('NN', 's-2', 'buoyancy frequency squared', standard_name='', dimensions=(/id_dim_z/), data3d=NN(_3D_W_), category='baroclinic', output_level=output_level_debug)
       call fm%register('idpdx', 'm2/s2', 'baroclinic pressure gradient - x', standard_name='', dimensions=(/id_dim_z/),data3d=idpdx(_3D_W_), category='baroclinic', output_level=output_level_debug)
 #ifndef SLICE_MODEL
@@ -759,6 +774,9 @@
    LEVEL1 'finalize_register_all_variables()'
 
 !  category - 2d
+   if (associated(taubmax)) then
+      call fm%send_data('taubmax', taubmax(_2D_W_))
+   end if
    if (do_numerical_analyses_2d) then
       call fm%send_data('numdis_2d', numdis_2d(_2D_W_))
       call fm%send_data('phydis_2d', phydis_2d(_2D_W_))

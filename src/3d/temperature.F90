@@ -304,11 +304,11 @@ end interface
                            T,min_temp,max_temp,status)
       if (status .gt. 0) then
          if (temp_check .gt. 0) then
-            call getm_error("do_temperature()", &
+            call getm_error("init_temperature()", &
                             "out-of-bound values encountered")
          end if
          if (temp_check .lt. 0) then
-            LEVEL1 'do_temperature(): ',status, &
+            LEVEL1 'init_temperature(): ',status, &
                    ' out-of-bound values encountered'
          end if
       end if
@@ -360,16 +360,18 @@ end interface
       case(0)
          LEVEL3 'getting initial fields from hotstart'
       case(1)
-         LEVEL3 'setting to constant value'
+         LEVEL3 'setting to constant value ',real(temp_const)
          forall(i=imin:imax,j=jmin:jmax, az(i,j) .ne. 0) &
                 T(i,j,:) = temp_const
       case(2)
          LEVEL3 'using profile'
+         LEVEL4 trim(temp_file)
          call read_profile(temp_file,nmax,zlev,prof,n)
          call ver_interpol(n,zlev,prof,imin,jmin,imax,jmax,kmax, &
                            az,H,hn,T)
       case(3)
          LEVEL3 'interpolating from 3D field'
+         LEVEL4 trim(temp_file)
          call get_3d_field(temp_file,temp_name,temp_field_no,.true.,T)
       case default
          FATAL 'Not valid temp_method specified'
