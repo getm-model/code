@@ -188,6 +188,7 @@ EXTRA_LIBS += -lbio$(buildtype)
 endif
 
 # Where does the NetCDF include file and library reside.
+NETCDF_VERSION?=NETCDF4
 ifeq ($(NETCDF_VERSION),NETCDF4)
 
 DEFINES		+= -DNETCDF4
