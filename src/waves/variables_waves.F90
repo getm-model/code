@@ -29,6 +29,7 @@
    REALTYPE,dimension(:,:)  ,allocatable :: UStokesCadv,VStokesCadv
    REALTYPE,dimension(:,:,:),allocatable :: uuStokesC,vvStokesC
    REALTYPE,dimension(:,:,:),allocatable :: uuStokes,vvStokes
+   REALTYPE,dimension(:,:)  ,allocatable :: fetch,aa,bb,phi,x0,y0
 !
 ! !REVISION HISTORY:
 !  Original author(s): Ulf Graewe
