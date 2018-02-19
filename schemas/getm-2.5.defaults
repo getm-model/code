@@ -207,6 +207,9 @@
 			<max_depth_windwaves>
 				-1.0
 			</max_depth_windwaves>
+			<fetch_from_ellipsis>
+				False
+			</fetch_from_ellipsis>
 			<waves_ramp>
 				0
 			</waves_ramp>
