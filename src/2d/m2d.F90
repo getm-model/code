@@ -337,6 +337,12 @@
       end select
 
       if (.not. rigid_lid) then
+#ifdef _NO_SEALEVEL_CHECK_
+         if (sealevel_check .ne. 0) then
+            LEVEL2 "WARNING: reset sealevel_check=0 because of _NO_SEALEVEL_CHECK_ macro."
+            sealevel_check=0
+         end if
+#endif
          if (sealevel_check .eq. 0) then
             LEVEL2 'sealevel_check=0 --> NaN checks disabled'
          else if (sealevel_check .gt. 0) then

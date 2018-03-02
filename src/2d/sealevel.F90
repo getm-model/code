@@ -239,12 +239,14 @@
       end if
 ! Check a failing (NaN) case:
 ! does not work in DEBUG comilation with ifort:
+#ifndef _NO_SEALEVEL_CHECK_
 #ifdef GFORTRAN
       zdum = _ZERO_
       zdum = _ZERO_ / zdum
 #else
 #ifndef DEBUG
       zdum = 0.0/0.0
+#endif
 #endif
 #endif
       call sealevel_nandum(zdum,ahuge,idum)
