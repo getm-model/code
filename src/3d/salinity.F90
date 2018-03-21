@@ -368,6 +368,7 @@
    REALTYPE, POINTER         :: Res(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
    REALTYPE, POINTER         :: a1(:),a2(:),a3(:),a4(:)
+   REALTYPE, pointer         :: fluxw(:)
   REALTYPE                   :: S2(I3DFIELD)
   integer                    :: status
 !EOP
@@ -443,7 +444,7 @@
 !           own work storage.
 !$OMP PARALLEL DEFAULT(SHARED)                                         &
 !$OMP    PRIVATE(i,j,k,rc)                                             &
-!$OMP    PRIVATE(Res,auxn,auxo,a1,a2,a3,a4)
+!$OMP    PRIVATE(Res,auxn,auxo,a1,a2,a3,a4,fluxw)
 
 ! Each thread allocates its own HEAP storage:
    allocate(Res(0:kmax),stat=rc)    ! work array
@@ -460,6 +461,11 @@
    if (rc /= 0) stop 'do_salinity: Error allocating memory (a3)'
    allocate(a4(0:kmax),stat=rc)    ! work array
    if (rc /= 0) stop 'do_salinity: Error allocating memory (auxo)'
+
+   if (associated(Sfluxw) .or. do_numerical_analyses_3d) then
+      allocate(fluxw(0:kmax),stat=rc)    ! work array
+      if (rc /= 0) stop 'do_salinity: Error allocating memory (fluxw)'
+   end if
 
 ! Note: We do not need to initialize these work arrays.
 !   Tested BJB 2009-09-25.
@@ -512,6 +518,20 @@
 
                call getm_tridiagonal(kmax,1,kmax,a1,a2,a3,a4,Res)
 
+               if (associated(Sfluxw) .or. do_numerical_analyses_3d) then
+                  fluxw(   0) = _ZERO_
+                  fluxw(kmax) = _ZERO_
+                  do k=1,kmax-1
+                     fluxw(k) = - (                                      &
+                                     auxo(k) * ( S(i,j,k+1) - S(i,j,k) ) &
+                                   + auxn(k) * ( Res  (k+1) - Res  (k) ) &
+                                  ) / dt
+                  end do
+               end if
+               if (associated(Sfluxw)) then
+                  Sfluxw(i,j,1:kmax-1) = Sfluxw(i,j,1:kmax-1) + fluxw(1:kmax-1)
+               end if
+
                do k=1,kmax
                   S(i,j,k)=Res(k)
                end do
@@ -537,6 +557,11 @@
    if (rc /= 0) stop 'do_salinity: Error deallocating memory (a3)'
    deallocate(a4,stat=rc)
    if (rc /= 0) stop 'do_salinity: Error deallocating memory (a4)'
+
+   if (associated(Sfluxw) .or. do_numerical_analyses_3d) then
+      deallocate(fluxw,stat=rc)
+      if (rc /= 0) stop 'do_salinity: Error deallocating memory (fluxw)'
+   end if
 
 !$OMP END PARALLEL
 
