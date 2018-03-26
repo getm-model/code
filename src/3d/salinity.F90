@@ -260,7 +260,9 @@
    REALTYPE, POINTER         :: Res(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
    REALTYPE, POINTER         :: a1(:),a2(:),a3(:),a4(:)
+#ifdef _NUMERICAL_ANALYSES_OLD_
   REALTYPE                   :: S2(I3DFIELD)
+#endif
   integer                    :: status
 !EOP
 !-----------------------------------------------------------------------
