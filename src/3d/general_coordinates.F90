@@ -74,8 +74,8 @@
       do k=1,kmax-1
          sig(k)=k/float(kmax)-_ONE_
       end do
-      gga(   0) = -_ONE_
-      gga(kmax) =  _ZERO_
+      gga(:,:,   0) = -_ONE_
+      gga(:,:,kmax) =  _ZERO_
 
       if (kmax .gt. 1) then
 
