@@ -453,7 +453,9 @@ end interface
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc
+#ifdef _NUMERICAL_ANALYSES_OLD_
    REALTYPE                  :: T2(I3DFIELD)
+#endif
 ! OMP-NOTE: The pointer declarations is to allow each omp thread to
 !   have its own work storage (over a vertical).
    REALTYPE, POINTER         :: Res(:)
