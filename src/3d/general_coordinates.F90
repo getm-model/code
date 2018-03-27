@@ -65,18 +65,19 @@
       end do
       allocate(sig(0:kmax),stat=rc)    ! dimensionless sigma-coordinate
       if (rc /= 0) STOP 'coordinates: Error allocating (sig)'
+      allocate(be(0:kmax),stat=rc)     ! dimensionless beta-coordinate
+      if (rc /= 0) STOP 'coordinates: Error allocating (be)'
+      allocate(gga(I3DFIELD),stat=rc)  ! dimensionless gamma-coordinate
+      if (rc /= 0) stop 'coordinates: Error allocating memory (gga)'
       sig(   0) = -_ONE_
       sig(kmax) =  _ZERO_
       do k=1,kmax-1
          sig(k)=k/float(kmax)-_ONE_
       end do
+      gga(   0) = -_ONE_
+      gga(kmax) =  _ZERO_
 
       if (kmax .gt. 1) then
-
-      allocate(be(0:kmax),stat=rc)     ! dimensionless beta-coordinate
-      if (rc /= 0) STOP 'coordinates: Error allocating (be)'
-      allocate(gga(I3DFIELD),stat=rc)  ! dimensionless gamma-coordinate
-      if (rc /= 0) stop 'coordinates: Error allocating memory (gga)'
 
       be = sig
       if (ddu .gt. _ZERO_ .or. ddl .gt. _ZERO_) then
@@ -100,7 +101,6 @@
                      ((be(kk)-be(kk-1))-D_gamma/HH&
                       *(sig(kk)-sig(kk-1)))&
                       /((be(kk)-be(kk-1))-(sig(kk)-sig(kk-1))),_ONE_)
-            gga(i,j,0)=-_ONE_
             do k=1,kmax-1
                gga(i,j,k)=alpha*sig(k)+(1.-alpha)*be(k)
                if (gga(i,j,k) .lt. gga(i,j,k-1)) then
