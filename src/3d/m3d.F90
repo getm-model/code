@@ -272,6 +272,7 @@
     if (runtype .eq. 3 .or. runtype .eq. 4) then
       call init_eqstate()
 #ifndef PECS
+!     KK-TODO: in case of hotstart no layer heights are available at this point
       call do_eqstate()
       call ss_nn()
 #endif
