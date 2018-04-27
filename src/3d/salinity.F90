@@ -281,8 +281,8 @@
          stop 'init_salinity'
    end select
 
-   S(:,:,0) = -9999.0
-   forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) S(i,j,:) = -9999.0
+   S(:,:,0) = -9999*_ONE_
+   forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) S(i,j,:) = -9999*_ONE_
 
    call update_3d_halo(S,S,az,imin,jmin,imax,jmax,kmax,D_TAG)
    call wait_halo(D_TAG)
@@ -341,7 +341,9 @@
    REALTYPE, POINTER         :: Res(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
    REALTYPE, POINTER         :: a1(:),a2(:),a3(:),a4(:)
+#ifdef _NUMERICAL_ANALYSES_OLD_
   REALTYPE                   :: S2(I3DFIELD)
+#endif
   integer                    :: status
 !EOP
 !-----------------------------------------------------------------------
