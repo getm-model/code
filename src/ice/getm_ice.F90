@@ -290,8 +290,10 @@
                end do
             end do
    else
-      tausx = _ZERO_
-      tausy = _ZERO_
+      where( ice_hi .gt. _ZERO_ )
+         tausx = _ZERO_
+         tausy = _ZERO_
+      end where
    end if
 
 !KB    call toc(TIM_METEO)
