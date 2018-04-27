@@ -438,9 +438,7 @@
 #ifdef _FABM_
       if (fabm_calc) then
          i = wi(n)
-         do j=wfj(n),wlj(n)
-            fabm_ben(i,j,:) = fabm_ben(i+1,j,:)
-         end do
+         forall(j=wfj(n):wlj(n),az(i+1,j).gt.0) fabm_ben(i,j,:)=fabm_ben(i+1,j,:)
          do o=1,size(model%state_variables)
             select case (bdy_bio_type(l,o))
                case(ZERO_GRADIENT)
@@ -465,9 +463,7 @@
 #ifdef _FABM_
       if (fabm_calc) then
          j = nj(n)
-         do i = nfi(n),nli(n)
-            fabm_ben(i,j,:) = fabm_ben(i,j-1,:)
-         end do
+         forall(i=nfi(n):nli(n),az(i,j-1).gt.0) fabm_ben(i,j,:)=fabm_ben(i,j-1,:)
          do o=1,size(model%state_variables)
             select case (bdy_bio_type(l,o))
                case(ZERO_GRADIENT)
@@ -492,9 +488,7 @@
 #ifdef _FABM_
       if (fabm_calc) then
          i = ei(n)
-         do j=efj(n),elj(n)
-            fabm_ben(i,j,:) = fabm_ben(i-1,j,:)
-         end do
+         forall(j=efj(n):elj(n),az(i-1,j).gt.0) fabm_ben(i,j,:)=fabm_ben(i-1,j,:)
          do o=1,size(model%state_variables)
             select case (bdy_bio_type(l,o))
                case(ZERO_GRADIENT)
@@ -519,9 +513,7 @@
 #ifdef _FABM_
       if (fabm_calc) then
          j = sj(n)
-         do i = sfi(n),sli(n)
-            fabm_ben(i,j,:) = fabm_ben(i,j+1,:)
-         end do
+         forall(i=sfi(n):sli(n),az(i,j+1).gt.0) fabm_ben(i,j,:)=fabm_ben(i,j+1,:)
          do o=1,size(model%state_variables)
             select case (bdy_bio_type(l,o))
                case(ZERO_GRADIENT)
@@ -590,9 +582,7 @@
 
    select case (bdy_type)
       case(ZERO_GRADIENT)
-         do j=wfj(n),wlj(n)
-            f(i,j,:) = f(i+1,j,:)
-         end do
+         forall(j=wfj(n):wlj(n),az(i+1,j).gt.0) f(i,j,:)=f(i+1,j,:)
       case(CLAMPED)
          k = bdy_index(l)
          kl = bdy_index_l(l)
@@ -696,9 +686,7 @@
 
    select case (bdy_type)
       case(ZERO_GRADIENT)
-         do i = nfi(n),nli(n)
-            f(i,j,:) = f(i,j-1,:)
-         end do
+         forall(i=nfi(n):nli(n),az(i,j-1).gt.0) f(i,j,:)=f(i,j-1,:)
       case(CLAMPED)
          k = bdy_index(l)
          kl = bdy_index_l(l)
@@ -802,9 +790,7 @@
 
    select case (bdy_type)
       case(ZERO_GRADIENT)
-         do j=efj(n),elj(n)
-            f(i,j,:) = f(i-1,j,:)
-         end do
+         forall(j=efj(n):elj(n),az(i-1,j).gt.0) f(i,j,:)=f(i-1,j,:)
       case(CLAMPED)
          k = bdy_index(l)
          kl = bdy_index_l(l)
@@ -908,9 +894,7 @@
 
    select case (bdy_type)
       case(ZERO_GRADIENT)
-         do i = sfi(n),sli(n)
-            f(i,j,:) = f(i,j+1,:)
-         end do
+         forall(i=sfi(n):sli(n),az(i,j+1).gt.0) f(i,j,:)=f(i,j+1,:)
       case(CLAMPED)
          k = bdy_index(l)
          kl = bdy_index_l(l)
