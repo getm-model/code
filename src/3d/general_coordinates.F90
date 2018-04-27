@@ -69,18 +69,21 @@
       if (rc /= 0) STOP 'coordinates: Error allocating (be)'
       allocate(gga(I3DFIELD),stat=rc)  ! dimensionless gamma-coordinate
       if (rc /= 0) stop 'coordinates: Error allocating memory (gga)'
-      be(0)=  -_ONE_
-      sig(0)= -_ONE_
-      do k=1,kmax
+      sig(   0) = -_ONE_
+      sig(kmax) =  _ZERO_
+      do k=1,kmax-1
          sig(k)=k/float(kmax)-_ONE_
       end do
+      gga(:,:,   0) = -_ONE_
+      gga(:,:,kmax) =  _ZERO_
 
-      if (ddu .le. _ZERO_ .and. ddl .le. _ZERO_) then
-         be = sig
-      else
+      if (kmax .gt. 1) then
+
+      be = sig
+      if (ddu .gt. _ZERO_ .or. ddl .gt. _ZERO_) then
          if (ddu .lt. _ZERO_) ddu=_ZERO_
          if (ddl .lt. _ZERO_) ddl=_ZERO_
-         do k=1,kmax
+         do k=1,kmax-1
             be(k)=tanh((ddl+ddu)*k/float(kmax)-ddl)+tanh(ddl)
             be(k)=be(k)/(tanh(ddl)+tanh(ddu))-_ONE_
          end do
@@ -98,8 +101,7 @@
                      ((be(kk)-be(kk-1))-D_gamma/HH&
                       *(sig(kk)-sig(kk-1)))&
                       /((be(kk)-be(kk-1))-(sig(kk)-sig(kk-1))),_ONE_)
-            gga(i,j,0)=-_ONE_
-            do k=1,kmax
+            do k=1,kmax-1
                gga(i,j,k)=alpha*sig(k)+(1.-alpha)*be(k)
                if (gga(i,j,k) .lt. gga(i,j,k-1)) then
                   STDERR kk,(be(kk)-be(kk-1)),(sig(kk)-sig(kk-1))
@@ -112,6 +114,8 @@
             end do
          end do
       end do
+
+      end if
 
       kmin=1
       kumin=1
