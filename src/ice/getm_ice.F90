@@ -134,6 +134,7 @@
    allocate(ice_hi(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hi)'
    ice_hi = _ZERO_
+   where( az .eq. 0 ) ice_hi = -9999.
    ice_mask => ice_hi
 
    select case (ice_model)
@@ -155,37 +156,31 @@
 !        Allocates memory for the public data members
          allocate(ice_hs(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_hs)'
+         ice_hs = _ZERO_
          allocate(ice_T1(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_T1)'
+         ice_T1 = _ZERO_
          allocate(ice_T2(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_T2)'
+         ice_T2 = _ZERO_
          allocate(ice_tmelt(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_tmelt)'
+         ice_tmelt = _ZERO_
          allocate(ice_bmelt(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_bmelt)'
+         ice_bmelt = _ZERO_
          allocate(ice_ts(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_getm_ice: Error allocating memory (ice_ts)'
+         ice_ts = _ZERO_
 
-         do j=jmin,jmax
-            do i=imin,imax
-               if (az(i,j) .ge. 1) then
-                  ice_hs(i,j) = _ZERO_
-                  ice_T1(i,j) = _ZERO_
-                  ice_T2(i,j) = _ZERO_
-                  ice_tmelt(i,j) = _ZERO_
-                  ice_bmelt(i,j) = _ZERO_
-                  ice_ts(i,j) = _ZERO_
-               else
-                  ice_hs(i,j) = -9999.
-                  ice_hi(i,j) = -9999.
-                  ice_T1(i,j) = -9999.
-                  ice_T2(i,j) = -9999.
-                  ice_tmelt(i,j) = -9999.
-                  ice_bmelt(i,j) = -9999.
-                  ice_ts(i,j) = -9999.
-               end if
-            end do
-         end do
+         where( az .eq. 0 )
+            ice_hs    = -9999.
+            ice_T1    = -9999.
+            ice_T2    = -9999.
+            ice_tmelt = -9999.
+            ice_bmelt = -9999.
+            ice_ts    = -9999.
+         end where
 
       case default
          call getm_error("init_getm_ice()",                            &
@@ -263,15 +258,7 @@
                          sst(i,j),shf(i,j),swr(i,j),precip(i,j), &
                          ice_hs(i,j),ice_hi(i,j),ice_t1(i,j),ice_t2(i,j), &
                          ice_ts(i,j),albedo(i,j),ice_tmelt(i,j),ice_bmelt(i,j))
-               else
-                  ice_hs(i,j) = -9999.
-                  ice_hi(i,j) = -9999.
-                  ice_T1(i,j) = -9999.
-                  ice_T2(i,j) = -9999.
-                  ice_tmelt(i,j) = -9999.
-                  ice_bmelt(i,j) = -9999.
-                  ice_ts(i,j) = -9999.
-              end if
+               end if
             end do
          end do
    end select
@@ -280,7 +267,9 @@
    if (tauh .gt. _ZERO_) then
             call update_2d_halo(ice_hi,ice_hi,az,imin,jmin,imax,jmax,z_TAG)
             call wait_halo(z_TAG)
+            where( az .ne. 0 )
             taudamp = _ONE_ - _ONE_/(_ONE_ + exp(-taucoef/tauh*(ice_hi-tauh)))
+            end where
             do j=jmin-HALO+1,jmax+HALO-1
                do i=imin-HALO+1,imax+HALO-1
                   if (az(i,j) .ge. 1) then
