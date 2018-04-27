@@ -375,8 +375,8 @@ end interface
          stop 'init_temperature'
    end select
 
-   T(:,:,0) = -9999.0
-   forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) T(i,j,:) = -9999.0
+   T(:,:,0) = -9999*_ONE_
+   forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) T(i,j,:) = -9999*_ONE_
 
    call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
    call wait_halo(D_TAG)
@@ -450,7 +450,9 @@ end interface
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j,k,rc
+#ifdef _NUMERICAL_ANALYSES_OLD_
    REALTYPE                  :: T2(I3DFIELD)
+#endif
 ! OMP-NOTE: The pointer declarations is to allow each omp thread to
 !   have its own work storage (over a vertical).
    REALTYPE, POINTER         :: Res(:)
