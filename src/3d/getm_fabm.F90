@@ -631,7 +631,7 @@ end interface
    do j=jmin,jmax
 #endif
       do i=imin,imax
-         if (az(i,j) .ge. 1 ) then
+         if (az(i,j) .eq. 1 ) then
 
 !           Get surface short-wave radiation.
             if (allocated(swr)) then
