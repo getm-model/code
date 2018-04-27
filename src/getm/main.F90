@@ -55,6 +55,8 @@
 !-----------------------------------------------------------------------
 !BOC
    call cmdline
+   call print_version()
+   call compilation_options()
 
 #ifdef FORTRAN95
    call CPU_Time(t1)
@@ -100,12 +102,10 @@
          LEVEL2 '3D: ',mem3d/1024,' kbytes'
       end if
 #endif
-      if(secs .gt. _ZERO_) then
-         LEVEL1 'Total CPU-time was:    ',secs,' seconds'
-      end if
+      LEVEL1 'Total CPU-time was:    ',secs,' seconds'
       LEVEL1 'Number of time steps:  ',MaxN-MinN+1
       LEVEL1 'Number of calc-points: ',Calc_Points
-      if(secs .gt. _ZERO_) then
+      if(MaxN-MinN+1 .gt. _ZERO_) then
          LEVEL1 'CPU-time/calc-point:   ',secs/(MaxN-MinN+1)/Calc_Points,' seconds'
          LEVEL1 'Sim-time/CPU-time:     ',simtime/secs
       end if
