@@ -123,19 +123,20 @@
          LEVEL4 'out-of-bound values result in warnings only'
       end if
 
+      if (salt_method .ne. 0) then
       call check_3d_fields(imin,jmin,imax,jmax,kmin,kmax,az, &
                            S,min_salt,max_salt,status)
       if (status .gt. 0) then
          if (salt_check .gt. 0) then
-            call getm_error("do_salinity()", &
+            call getm_error("init_salinity()", &
                             "out-of-bound values encountered")
          end if
          if (salt_check .lt. 0) then
-            LEVEL1 'do_salinity(): ',status, &
+            LEVEL1 'init_salinity(): ',status, &
                    ' out-of-bound values encountered'
          end if
       end if
-
+      end if
    end if
 
 
@@ -200,8 +201,8 @@
          stop 'init_salinity'
    end select
 
-   S(:,:,0) = -9999.0
-   forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) S(i,j,:) = -9999.0
+   S(:,:,0) = -9999*_ONE_
+   forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) S(i,j,:) = -9999*_ONE_
 
    call update_3d_halo(S,S,az,imin,jmin,imax,jmax,kmax,D_TAG)
    call wait_halo(D_TAG)
@@ -260,7 +261,9 @@
    REALTYPE, POINTER         :: Res(:)
    REALTYPE, POINTER         :: auxn(:),auxo(:)
    REALTYPE, POINTER         :: a1(:),a2(:),a3(:),a4(:)
+#ifdef _NUMERICAL_ANALYSES_OLD_
   REALTYPE                   :: S2(I3DFIELD)
+#endif
   integer                    :: status
 !EOP
 !-----------------------------------------------------------------------

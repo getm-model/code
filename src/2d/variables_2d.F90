@@ -124,7 +124,7 @@
    break_stat = 0
 #endif
 
-   z  = -9999.0; zo =_ZERO_
+   z  = -9999*_ONE_; zo =_ZERO_
 
    U = _ZERO_; DU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; DV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
