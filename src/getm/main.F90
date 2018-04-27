@@ -55,6 +55,8 @@
 !-----------------------------------------------------------------------
 !BOC
    call cmdline
+   call print_version()
+   call compilation_options()
 
 #ifdef FORTRAN95
    call CPU_Time(t1)
