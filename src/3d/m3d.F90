@@ -294,6 +294,7 @@
 #ifndef NO_BAROCLINIC
     if (runtype .eq. 3 .or. runtype .eq. 4) then
       call init_eqstate()
+!     KK-TODO: in case of hotstart no layer heights are available at this point
       call do_eqstate()
       call buoyancy_frequency()
 
