@@ -19,9 +19,6 @@
    use meteo, only: shf,swr,albedo,precip,evap,tcc,t2,airp,hum,u10,v10, &
                     tausx,tausy
    use parameters, only: rho_0
-#ifndef NO_BAROCLINIC
-   use variables_3d, only: rho,S,T,hn
-#endif
    use halo_zones, only : update_2d_halo,wait_halo,z_TAG
    use ice_winton, only: init_ice_winton, do_ice_winton
    use exceptions
@@ -205,7 +202,7 @@
 ! !IROUTINE: do_getm_ice - update the meteo forcing
 !
 ! !INTERFACE:
-   subroutine do_getm_ice()
+   subroutine do_getm_ice(h,rho,sss,sst)
 !$ use omp_lib
 !
 ! !DESCRIPTION:
@@ -213,7 +210,11 @@
 !KB   use getm_timers, only: tic, toc, TIM_METEO
    IMPLICIT NONE
 !
+! !INPUT PARAMETERS:
+   REALTYPE,dimension(E2DFIELD),intent(in),optional :: h,rho,sss
+!
 ! !INPUT/OUTPUT PARAMETERS:
+   REALTYPE,dimension(E2DFIELD),intent(inout),optional :: sst
 !
 ! !REVISION HISTORY:
 !  See module for log.
@@ -236,13 +237,12 @@
 !KB   call tic(TIM_METEO)
    if (ice_method .eq. NO_ICE) return
 
-#ifndef NO_BAROCLINIC
    select case (ice_model)
       case (NO_ICE) ! No ice model
       case (ICE_FREEZINGPOINT) ! Salinity dependent freezing point
          do j=jmin,jmax
             do i=imin,imax
-               if (az(i,j) .ge. 1 .and. T(i,j,kmax).le.-0.0575*S(i,j,kmax)) then
+               if (az(i,j) .ge. 1 .and. sst(i,j).le.-0.0575*sss(i,j)) then
                   ice_mask(i,j) = _ONE_ 
                else
                   ice_mask(i,j) = _ZERO_ 
@@ -257,10 +257,10 @@
                          lonc(i,j),latc(i,j), &
                          tcc(i,j),t2(i,j),airp(i,j),hum(i,j), &
                          u10(i,j),v10(i,j), &
-                         S(i,j,kmax),rho(i,j,kmax),rho_0,hn(i,j,kmax), &
+                         sss(i,j),rho(i,j),rho_0,h(i,j), &
                          back_radiation_method,hum_method, &
                          fluxes_method,timestep, &
-                         T(i,j,kmax),shf(i,j),swr(i,j),precip(i,j), &
+                         sst(i,j),shf(i,j),swr(i,j),precip(i,j), &
                          ice_hs(i,j),ice_hi(i,j),ice_t1(i,j),ice_t2(i,j), &
                          ice_ts(i,j),albedo(i,j),ice_tmelt(i,j),ice_bmelt(i,j))
                else
@@ -275,7 +275,6 @@
             end do
          end do
    end select
-#endif
 
    tauh = _HALF_ * hi_thresh
    if (tauh .gt. _ZERO_) then

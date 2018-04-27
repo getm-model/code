@@ -46,8 +46,9 @@
    use variables_2d, only: fwf,fwf_int
 #ifndef NO_3D
    use m3d,      only: integrate_3d,M
+   use variables_3d, only: hn
 #ifndef NO_BAROCLINIC
-   use variables_3d, only: T
+   use variables_3d, only: rho,T,S
 #endif
    use rivers,   only: do_rivers
 #ifdef _FABM_
@@ -110,7 +111,7 @@
 #ifndef NO_BAROCLINIC
       else
          call do_meteo(n,T(:,:,kmax))
-         call do_getm_ice()
+         call do_getm_ice(hn(:,:,kmax),rho(:,:,kmax),S(:,:,kmax),T(:,:,kmax))
          swr = swr*(_ONE_-albedo)
 #endif
 #endif

@@ -10,13 +10,13 @@ SUBDIRS = \
 $(GETMDIR)/src/futils		\
 $(GETMDIR)/src/domain		\
 $(GETMDIR)/src/meteo		\
+$(GETMDIR)/src/ice		\
 $(GETMDIR)/src/2d
 ifneq ($(GETM_NO_3D),true)
 SUBDIRS += \
 $(GETMDIR)/src/3d
 endif
 SUBDIRS += \
-$(GETMDIR)/src/ice		\
 $(GETMDIR)/src/output		\
 $(GETMDIR)/src/ncdf		\
 $(GETMDIR)/src/input		\
@@ -24,15 +24,15 @@ $(GETMDIR)/src/getm
 
 CORE_LIBS	=	\
 		-lgetm${buildtype} 	\
-		-loutput${buildtype}	\
-		-lmeteo${buildtype}	\
-		-lgetm_ice${buildtype}
+		-loutput${buildtype}
 ifneq ($(GETM_NO_3D),true)
 CORE_LIBS	+=	\
 		-l3d${buildtype}
 endif
 CORE_LIBS	+=	\
 		-l2d${buildtype}	\
+		-lgetm_ice${buildtype} \
+		-lmeteo${buildtype}	\
 		-ldomain${buildtype} 	\
 		-linput${buildtype}	\
 		-lncdfio${buildtype}	\

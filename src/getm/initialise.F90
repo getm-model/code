@@ -50,8 +50,9 @@
 #ifndef NO_3D
    use m2d, only: Uint,Vint
    use m3d, only: cord_relax,init_3d,postinit_3d, ssen,ssun,ssvn
+   use variables_3d, only: hn
 #ifndef NO_BAROCLINIC
-   use m3d, only: T
+   use variables_3d, only: rho,T,S
 #endif
    use turbulence, only: init_turbulence
    use mtridiagonal, only: init_tridiagonal
@@ -315,7 +316,7 @@
 #ifndef NO_BAROCLINIC
    else
       call do_meteo(MinN,T(:,:,kmax))
-      call do_getm_ice()
+      call do_getm_ice(hn(:,:,kmax),rho(:,:,kmax),S(:,:,kmax),T(:,:,kmax))
 #endif
 #endif
    end if
