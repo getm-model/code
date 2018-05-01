@@ -365,8 +365,8 @@
       if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy_const)'
       tausx_const = cosconv*tx - sinconv*ty
       tausy_const = sinconv*tx + cosconv*ty
-      tausx = tausx_const ! KK-TODO: can we remove this? -- ramp will be
-      tausy = tausy_const !          applied in do_meteo() ...
+      tausx = tausx_const
+      tausy = tausy_const
       shf   = shf_const
       swr   = swr_const
    end if
@@ -408,22 +408,26 @@
 
       allocate(airp_new(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (airp_new)'
+      airp_new = -9999*_ONE_
 
       if (.not. interpolate_meteo) then
          allocate(tausx_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx_new)'
+         tausx_new = -9999*_ONE_
          allocate(d_tausx(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tausx)'
          tausx_input => d_tausx
 
          allocate(tausy_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy_new)'
+         tausy_new = -9999*_ONE_
          allocate(d_tausy(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tausy)'
          tausy_input => d_tausy
 
          allocate(shf_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (shf_new)'
+         shf_new = -9999*_ONE_
          allocate(d_shf(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_shf)'
          shf_input => d_shf
@@ -432,17 +436,21 @@
       if (calc_met) then
          allocate(u10_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (u10_new)'
+         u10_new = -9999*_ONE_
 
          allocate(v10_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (v10_new)'
+         v10_new = -9999*_ONE_
 
          allocate(tcc_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc_new)'
+         tcc_new = -9999*_ONE_
       end if
 
       if (fwf_method.eq.2 .or. (fwf_method.gt.2 .and. calc_met .and. .not.interpolate_meteo)) then
          allocate(evap_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (evap_new)'
+         evap_new = -9999*_ONE_
          allocate(d_evap(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_evap)'
          evap_input => d_evap
@@ -451,8 +459,18 @@
       if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
          allocate(precip_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (precip_new)'
+         precip_new = -9999*_ONE_
       end if
 
+   end if
+
+   if (met_method .eq. METEO_FROMEXT) then
+      if (ramp_is_active) then
+         allocate(tausx_input(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx_input)'
+         allocate(tausy_input(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy_input)'
+      end if
    end if
 
 #ifdef DEBUG
@@ -562,17 +580,30 @@
             call write_time_string()
             LEVEL3 timestr,': finished meteo_ramp=',meteo_ramp
             STDERR LINE
+         select case (met_method)
+            case (METEO_CONST)
+               where (az.ne.0)
+                  tausx = tausx_const
+                  tausy = tausy_const
+               end where
+            case (METEO_FROMEXT)
+               where (az.ne.0)
+                  tausx = tausx_input
+                  tausy = tausy_input
+               end where
+               deallocate(tausx_input,stat=rc)
+               if (rc /= 0) stop 'do_meteo: Error deallocating memory (tausx_input)'
+               deallocate(tausy_input,stat=rc)
+               if (rc /= 0) stop 'do_meteo: Error deallocating memory (tausy_input)'
+               tausx_input => tausx
+               tausy_input => tausy
+         end select
          else
             ramp = _ONE_*n/meteo_ramp
          end if
       end if
 
-      select case (met_method)
-         case (METEO_CONST)
-            tausx = ramp*tausx_const
-            tausy = ramp*tausy_const
-
-         case (METEO_FROMFILE,METEO_FROMEXT)
+   if (met_method.eq.METEO_FROMFILE .or. met_method.eq.METEO_FROMEXT) then
 
 !           Note (KK): old and new meteo data cannot be read at once
 !                      since they might come from different files.
@@ -758,8 +789,8 @@
                   do i=imin-HALO,imax+HALO
                      if (az(i,j) .ne. 0) then
                         if (.not. interpolate_meteo) then
-                           tausx(i,j) = ramp*(tausx_new(i,j) + d_tausx(i,j)*deltm1*t_minus_t2)
-                           tausy(i,j) = ramp*(tausy_new(i,j) + d_tausy(i,j)*deltm1*t_minus_t2)
+                           tausx(i,j) = tausx_new(i,j) + d_tausx(i,j)*deltm1*t_minus_t2
+                           tausy(i,j) = tausy_new(i,j) + d_tausy(i,j)*deltm1*t_minus_t2
                            shf  (i,j) = shf_new  (i,j) + d_shf  (i,j)*deltm1*t_minus_t2
                         end if
                         if (fwf_method.eq.2 .or. (fwf_method.gt.2 .and. calc_met .and. .not.interpolate_meteo)) then
@@ -798,15 +829,30 @@
                zenith_angle(:,j+1) = zenith_angle(:,j)
 #endif
 
-!            end if
 !$OMP END PARALLEL
 
-         case default
+   end if
 
-            FATAL 'A non valid meteo method has been specified.'
-            stop 'do_meteo'
-
+   if (ramp_is_active) then
+      select case (met_method)
+         case (METEO_CONST)
+            where (az.ne.0)
+               tausx = ramp * tausx_const
+               tausy = ramp * tausy_const
+            end where
+         case (METEO_FROMFILE)
+            where (az.ne.0)
+               tausx = ramp * tausx
+               tausy = ramp * tausy
+            end where
+         case (METEO_FROMEXT)
+            where (az.ne.0)
+               tausx = ramp * tausx_input
+               tausy = ramp * tausy_input
+            end where
       end select
+   end if
+
 
 !     KK-TODO: Jorn prefers zero wind instead of poor approximation...
       if (.not. calc_met) then
