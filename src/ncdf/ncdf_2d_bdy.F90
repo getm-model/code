@@ -145,6 +145,7 @@
          allocate(bdy_data_new(nsbvl),stat=err)
          if (err /= 0) &
             call getm_error('init_2d_bdy_ncdf','Error allocating memory (bdy_data_new)')
+         bdy_data_new = -9999*_ONE_
          allocate(d_bdy_data(nsbvl),stat=err)
          if (err /= 0) &
             call getm_error('init_2d_bdy_ncdf','Error allocating memory (d_bdy_data)')
@@ -172,6 +173,7 @@
          allocate(bdy_data_u_new(nsbvl),stat=err)
          if (err /= 0) &
             call getm_error('init_2d_bdy_ncdf','Error allocating memory (bdy_data_u_new)')
+         bdy_data_u_new = -9999*_ONE_
          allocate(d_bdy_data_u(nsbvl),stat=err)
          if (err /= 0) &
             call getm_error('init_2d_bdy_ncdf','Error allocating memory (d_bdy_data_u)')
@@ -199,6 +201,7 @@
          allocate(bdy_data_v_new(nsbvl),stat=err)
          if (err /= 0) &
             call getm_error('init_2d_bdy_ncdf','Error allocating memory (bdy_data_v_new)')
+         bdy_data_v_new = -9999*_ONE_
          allocate(d_bdy_data_v(nsbvl),stat=err)
          if (err /= 0) &
             call getm_error('init_2d_bdy_ncdf','Error allocating memory (d_bdy_data_v)')
