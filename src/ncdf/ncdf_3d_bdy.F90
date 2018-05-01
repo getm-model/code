@@ -305,8 +305,10 @@
       if (.not. stationary) then
          allocate(uu_bdy_new(zax_len,nsbvl),stat=err)
          if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (uu_bdy_new)'
+         uu_bdy_new = -9999*_ONE_
          allocate(vv_bdy_new(zax_len,nsbvl),stat=err)
          if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (vv_bdy_new)'
+         vv_bdy_new = -9999*_ONE_
          allocate(d_uu_bdy(zax_len,nsbvl),stat=err)
          if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_uu_bdy)'
          allocate(d_vv_bdy(zax_len,nsbvl),stat=err)
@@ -319,6 +321,7 @@
       if (.not. stationary) then
          allocate(S_bdy_new(zax_len,nsbvl),stat=err)
          if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (S_bdy_new)'
+         S_bdy_new = -9999*_ONE_
          allocate(d_S_bdy(zax_len,nsbvl),stat=err)
          if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_S_bdy)'
       end if
@@ -329,6 +332,7 @@
       if (.not. stationary) then
          allocate(T_bdy_new(zax_len,nsbvl),stat=err)
          if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (T_bdy_new)'
+         T_bdy_new = -9999*_ONE_
          allocate(d_T_bdy(zax_len,nsbvl),stat=err)
          if (err /= 0) stop 'init_3d_bdy_ncdf: Error allocating memory (d_T_bdy)'
       end if
