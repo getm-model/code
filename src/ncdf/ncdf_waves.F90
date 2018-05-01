@@ -151,6 +151,7 @@
    allocate(waveH_new(E2DFIELD),stat=rc)
    if (rc /= 0) call getm_error('init_waves_input_ncdf()',             &
                                 'Error allocating memory (waveH_new)')
+   waveH_new = -9999*_ONE_
 
    if ( stationary ) then
 
@@ -167,18 +168,21 @@
       allocate(waveL_new(E2DFIELD),stat=rc)
       if (rc /= 0) call getm_error('init_waves_input_ncdf()',          &
                              'Error allocating memory (waveL_new)')
+      waveL_new = -9999*_ONE_
       allocate(d_waveL(E2DFIELD),stat=rc)
       if (rc /= 0) call getm_error('init_waves_input_ncdf()',          &
                              'Error allocating memory (d_waveL)')
       allocate(coswavedir_new(E2DFIELD),stat=rc)
       if (rc /= 0) call getm_error('init_waves_input_ncdf()',          &
                              'Error allocating memory (coswavedir_new)')
+      coswavedir_new = -9999*_ONE_
       allocate(d_coswavedir(E2DFIELD),stat=rc)
       if (rc /= 0) call getm_error('init_waves_input_ncdf()',          &
                              'Error allocating memory (d_coswavedir)')
       allocate(sinwavedir_new(E2DFIELD),stat=rc)
       if (rc /= 0) call getm_error('init_waves_input_ncdf()',          &
                              'Error allocating memory (sinwavedir_new)')
+      sinwavedir_new = -9999*_ONE_
       allocate(d_sinwavedir(E2DFIELD),stat=rc)
       if (rc /= 0) call getm_error('init_waves_input_ncdf()',          &
                              'Error allocating memory (d_sinwavedir)')

@@ -408,22 +408,26 @@
 
       allocate(airp_new(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo: Error allocating memory (airp_new)'
+      airp_new = -9999*_ONE_
 
       if (.not. interpolate_meteo) then
          allocate(tausx_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tausx_new)'
+         tausx_new = -9999*_ONE_
          allocate(d_tausx(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tausx)'
          tausx_input => d_tausx
 
          allocate(tausy_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tausy_new)'
+         tausy_new = -9999*_ONE_
          allocate(d_tausy(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_tausy)'
          tausy_input => d_tausy
 
          allocate(shf_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (shf_new)'
+         shf_new = -9999*_ONE_
          allocate(d_shf(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_shf)'
          shf_input => d_shf
@@ -432,17 +436,21 @@
       if (calc_met) then
          allocate(u10_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (u10_new)'
+         u10_new = -9999*_ONE_
 
          allocate(v10_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (v10_new)'
+         v10_new = -9999*_ONE_
 
          allocate(tcc_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (tcc_new)'
+         tcc_new = -9999*_ONE_
       end if
 
       if (fwf_method.eq.2 .or. (fwf_method.gt.2 .and. calc_met .and. .not.interpolate_meteo)) then
          allocate(evap_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (evap_new)'
+         evap_new = -9999*_ONE_
          allocate(d_evap(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (d_evap)'
          evap_input => d_evap
@@ -451,6 +459,7 @@
       if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
          allocate(precip_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (precip_new)'
+         precip_new = -9999*_ONE_
       end if
 
    end if
