@@ -252,12 +252,14 @@
 
          allocate(t2_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (t2_new)'
+         t2_new = -9999*_ONE_
          allocate(d_t2(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_t2)'
          t2_input => d_t2
 
          allocate(hum_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (hum_new)'
+         hum_new = -9999*_ONE_
          allocate(d_hum(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_hum)'
          hum_input => d_hum
@@ -273,6 +275,7 @@
 
       allocate(swr_new(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (swr_new)'
+      swr_new = -9999*_ONE_
       allocate(d_swr(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_swr)'
       swr_input => d_swr
@@ -288,6 +291,7 @@
    if (nudge_sst) then
       allocate(sst_new(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'do_meteo: Error allocating memory (sst_new)'
+      sst_new = -9999*_ONE_
       allocate(d_sst(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sst)'
       sst_input => d_sst
@@ -296,6 +300,7 @@
    if (nudge_sss) then
       allocate(sss_new(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'do_meteo: Error allocating memory (sss_new)'
+      sss_new = -9999*_ONE_
       allocate(d_sss(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sss)'
       sss_input => d_sss
