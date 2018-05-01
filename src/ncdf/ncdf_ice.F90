@@ -149,6 +149,7 @@
    allocate(ice_hi_new(E2DFIELD),stat=rc)
    if (rc /= 0) call getm_error('init_ice_input_ncdf()',               &
                                 'Error allocating memory (ice_hi_new)')
+   ice_hi_new = -9999*_ONE_
 
 
    if ( stationary ) then
