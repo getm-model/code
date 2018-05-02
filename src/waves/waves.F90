@@ -156,7 +156,7 @@
             LEVEL3 'parameters for fetch ellipsis read from file: ',trim(waves_file)
             allocate(fetch(E2DFIELD),stat=rc)
             if (rc /= 0) stop 'init_waves: Error allocating memory (fetch)'
-            fetch = _ZERO_
+            fetch = -9999*_ONE_
             allocate(aa(E2DFIELD),stat=rc)
             if (rc /= 0) stop 'init_waves: Error allocating memory (aa)'
             call get_2d_field(trim(waves_file),"aa",ilg,ihg,jlg,jhg,.true.,aa(ill:ihl,jll:jhl))
@@ -311,7 +311,7 @@
             STDERR LINE
          else
             ramp = sqrt(_ONE_*n/waves_ramp)
-            waveH = ramp * waveH
+            where (az.gt.0) waveH = ramp * waveH
          end if
       end if
 
