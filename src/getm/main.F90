@@ -264,6 +264,9 @@
 #ifdef MIN_VEL_DEPTH
    LEVEL1 'MIN_VEL_DEPTH'
 #endif
+#ifdef MUDFLAT
+   LEVEL1 'MUDFLAT'
+#endif
 #ifdef NEW_SS
    LEVEL1 'NEW_SS'
 #endif
