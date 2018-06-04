@@ -81,12 +81,15 @@
 
    allocate(waveH(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_variables_waves: Error allocating memory (waveH)'
+   waveH = -9999*_ONE_
 
    allocate(waveL(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_variables_waves: Error allocating memory (waveL)'
+   waveL = -9999*_ONE_
 
    allocate(waveT(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_variables_waves: Error allocating memory (waveT)'
+   waveT = -9999*_ONE_
 
    allocate(waveK(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_variables_waves: Error allocating memory (waveK)'
