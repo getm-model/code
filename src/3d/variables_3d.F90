@@ -259,6 +259,10 @@
    light=_ONE_
 #endif
 
+!  must be nonzero for gotm_fabm in case of calc_temp=F
+   g1 = -9999*_ONE_
+   g2 = -9999*_ONE_
+
 #ifdef STRUCTURE_FRICTION
    sf = _ZERO_
 #endif
