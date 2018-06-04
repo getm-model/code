@@ -156,7 +156,7 @@
             LEVEL3 'parameters for fetch ellipsis read from file: ',trim(waves_file)
             allocate(fetch(E2DFIELD),stat=rc)
             if (rc /= 0) stop 'init_waves: Error allocating memory (fetch)'
-            fetch = _ZERO_
+            fetch = -9999*_ONE_
             allocate(aa(E2DFIELD),stat=rc)
             if (rc /= 0) stop 'init_waves: Error allocating memory (aa)'
             call get_2d_field(trim(waves_file),"aa",ilg,ihg,jlg,jhg,.true.,aa(ill:ihl,jll:jhl))
@@ -311,7 +311,7 @@
             STDERR LINE
          else
             ramp = sqrt(_ONE_*n/waves_ramp)
-            waveH = ramp * waveH
+            where (az.gt.0) waveH = ramp * waveH
          end if
       end if
 
@@ -673,6 +673,8 @@
 !-----------------------------------------------------------------------
 !BOC
 
+   if (period .gt. _ZERO_) then
+
    omega = _TWO_ * pi / period ! radian frequency
    omegastar = omega * sqrt(depth/grav) ! non-dimensional radian frequency
    omegastar2 = omegastar*omegastar
@@ -696,6 +698,12 @@
       kD = omegastar2 * ( _ONE_ + one5th*exp(_TWO_*(_ONE_-omegastar2)) )
    else
       kD = omegastar * ( _ONE_ + one5th*omegastar2 )
+   end if
+
+   else
+
+      kD = kD_deepthresh
+
    end if
 
    wavePeriod2waveNumber = kD / depth
@@ -866,7 +874,7 @@
    R      = (bb2-aa2)*cos(2*(angle-phi)) + (aa2+bb2)
    Q      = aa*bb*sqrt(2*(R-2*(r0*sin(angle-angle0))**2))
 
-   fetch_from_ellipsis_ = (P + Q) / R
+   fetch_from_ellipsis_ = max( _ZERO_ , (P + Q) / R )
 
    end function fetch_from_ellipsis_
 !EOC
