@@ -200,7 +200,10 @@
 
    STDERR LINE
    STDERR 'getm: Started on  ',dstr,' ',tstr
-   STDERR LINE
+
+   call print_version()
+   call compilation_options()
+
    STDERR 'Initialising....'
    STDERR LINE
    LEVEL1 'the run id is: ',trim(runid)
