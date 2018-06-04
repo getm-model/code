@@ -327,7 +327,7 @@
    call fm%register('waveL', 'm', 'wave length', standard_name='', data2d=waveL(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
    call fm%register('waveT', 's', 'wave period', standard_name='', data2d=waveT(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
    if (allocated(fetch)) then
-      call fm%register('fetch', 'm', 'wind fetch', standard_name='', data2d=fetch(_2D_W_), category='waves', fill_value=0.0_rk, output_level=output_level_debug)
+      call fm%register('fetch', 'm', 'wind fetch', standard_name='', data2d=fetch(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
    end if
 
    return
