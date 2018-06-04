@@ -224,6 +224,10 @@
    idpdy=_ZERO_
 #endif
 
+!  must be nonzero for gotm_fabm in case of calc_temp=F
+   g1 = -9999*_ONE_
+   g2 = -9999*_ONE_
+
 #ifdef DEBUG
    write(debug,*) 'Leaving init_variables_3d()'
    write(debug,*)
