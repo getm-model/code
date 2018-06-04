@@ -48,8 +48,6 @@
 !-----------------------------------------------------------------------
 !BOC
    call cmdline
-   call print_version()
-   call compilation_options()
 
 #ifdef FORTRAN95
    call CPU_Time(t1)
@@ -110,7 +108,7 @@
    LEVEL1 'under the General Public License (GPL) - http://www.gnu.org '
    STDERR LINE
 
-   call compilation_options
+   !call compilation_options
 
    end program getm
 
