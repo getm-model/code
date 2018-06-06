@@ -38,7 +38,7 @@
 !
 ! !USES:
    use internal_pressure
-   use variables_3d, only: hn,buoy,sseo
+   use variables_3d, only: buoy,sseo
    use domain, only: H,az,au,av
 !$ use omp_lib
    IMPLICIT NONE
