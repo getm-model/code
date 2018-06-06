@@ -63,7 +63,8 @@
    use exceptions
    use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,H,HU,HV
    use domain, only: dxu,dyv
-   use variables_3d, only: kmin,hn,hun,hvn,idpdx,idpdy,buoy,ssun,ssvn,ssen
+   use variables_3d, only: kmin,hun,hvn,idpdx,idpdy,buoy,ssun,ssvn,ssen
+   use variables_3d, only: hn=>ho
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
