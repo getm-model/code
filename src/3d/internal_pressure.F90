@@ -63,12 +63,7 @@
    use exceptions
    use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,H,HU,HV
    use domain, only: dxu,dyv
-   use variables_3d, only: kmin,hun,hvn,idpdx,idpdy,buoy,ssun,ssvn,ssen
-#ifdef MUDFLAT
-   use variables_3d, only: hn=>ho
-#else
-   use variables_3d, only: hn
-#endif
+   use variables_3d, only: kmin,hn,hun,hvn,idpdx,idpdy,buoy,ssun,ssvn,ssen
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
