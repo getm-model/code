@@ -67,7 +67,12 @@
 #else
    use domain, only: dx,dy
 #endif
-   use variables_3d, only: kmin,hn,hun,hvn,idpdx,idpdy,buoy,ssun,ssvn,ssen
+   use variables_3d, only: kmin,hun,hvn,idpdx,idpdy,buoy,ssun,ssvn,ssen
+#ifdef MUDFLAT
+   use variables_3d, only: hn=>ho
+#else
+   use variables_3d, only: hn
+#endif
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
