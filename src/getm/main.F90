@@ -261,6 +261,9 @@
 #ifdef _SLR_V26_
    LEVEL1 '_SLR_V26_'
 #endif
+#ifdef _DELAY_SLOW_IP_
+   LEVEL1 '_DELAY_SLOW_IP_'
+#endif
 #ifdef _MIRROR_BDY_EXTRA_
    LEVEL1 '_MIRROR_BDY_EXTRA_'
 #endif
