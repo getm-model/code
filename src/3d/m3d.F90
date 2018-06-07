@@ -416,7 +416,9 @@
    if (runtype .ge. 3) then
       call do_eqstate()
       call buoyancy_frequency()
+#ifndef _DELAY_SLOW_IP_
       call do_internal_pressure()
+#endif
       if (.not. hotstart) then
 #ifndef NO_BAROTROPIC
          if (.not. no_2d) then
@@ -424,6 +426,9 @@
          end if
 #endif
       end if
+#ifdef _DELAY_SLOW_IP_
+      call do_internal_pressure()
+#endif
 
 !     KK-TODO: call stop_macro also for hotstarts => do not store slow terms in restart files
 !              requires storage of [U|V]adv (when hotstart is done within 2d cycle)
@@ -653,7 +658,10 @@
 !                          2) adaptive coordinates
       call buoyancy_frequency()
 
+#ifndef _DELAY_SLOW_IP_
       call do_internal_pressure()
+#endif
+
    end if
 #endif
 
@@ -661,6 +669,10 @@
    if (.not. no_2d) then
       call stop_macro(.true.)
    end if
+#endif
+
+#ifdef _DELAY_SLOW_IP_
+   if (runtype .eq. 4) call do_internal_pressure()
 #endif
 
 #ifdef DEBUG

@@ -64,7 +64,6 @@
    use domain, only: imin,imax,jmin,jmax,kmax,az,au,av,H,HU,HV
    use domain, only: dxu,dyv
    use variables_3d, only: kmin,hn,idpdx,idpdy,buoy,ssen
-
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
