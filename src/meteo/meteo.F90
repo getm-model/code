@@ -140,6 +140,7 @@
    REALTYPE, dimension(:,:), pointer     :: evap_new,d_evap
    REALTYPE                              :: ramp=_ONE_
    logical                               :: ramp_is_active=.false.
+   logical                               :: calc_evap=.false.
 !EOP
 !-----------------------------------------------------------------------
 
@@ -151,7 +152,7 @@
 ! !IROUTINE: init_meteo - initialise the \emph{meteo} module.
 !
 ! !INTERFACE:
-   subroutine init_meteo(hotstart)
+   subroutine init_meteo(runtype,hotstart)
    IMPLICIT NONE
 !
 ! !DESCRIPTION:
@@ -159,6 +160,7 @@
 !  the content of the namelist various variables are allocated and initialised.
 !
 ! !INPUT PARAMETERS:
+   integer, intent(in)                 :: runtype
    logical, intent(in)                 :: hotstart
 !
 ! !REVISION HISTORY:
@@ -311,6 +313,7 @@
             interpolate_meteo = .false.
          end if
 
+         calc_evap = (runtype.gt.2 .and. fwf_method.gt.2 .and. calc_met)
          select case (fwf_method)
             case (1)
                LEVEL2 'Constant evaporation/precipitation'
@@ -320,14 +323,14 @@
                LEVEL2 'Evaporation/precipitation read'
             case (3)
                LEVEL2 'Precipitation read'
-               if (calc_met) then
+               if (calc_evap) then
                   LEVEL2 'Evaporation will be calculated'
                else
                   LEVEL2 'No evaporation'
                end if
             case (4)
                LEVEL2 'No precipitation'
-               if (calc_met) then
+               if (calc_evap) then
                   LEVEL2 'Evaporation will be calculated'
                else
                   LEVEL2 'No evaporation'
@@ -447,7 +450,7 @@
          tcc_new = -9999*_ONE_
       end if
 
-      if (fwf_method.eq.2 .or. (fwf_method.gt.2 .and. calc_met .and. .not.interpolate_meteo)) then
+      if (fwf_method.eq.2 .or. (calc_evap .and. .not.interpolate_meteo)) then
          allocate(evap_new(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo: Error allocating memory (evap_new)'
          evap_new = -9999*_ONE_
@@ -750,7 +753,7 @@
                      tausy_old=>tausy_new;tausy_new=>d_tausy;d_tausy=>tausy_old;tausy_input=>tausy_old
                      shf_old=>shf_new;shf_new=>d_shf;d_shf=>shf_old;shf_input=>shf_old
                   end if
-                  if (fwf_method.eq.2 .or. (fwf_method.gt.2 .and. calc_met .and. .not.interpolate_meteo)) then
+                  if (fwf_method.eq.2 .or. (calc_evap .and. .not.interpolate_meteo)) then
                      evap_old=>evap_new;evap_new=>d_evap;d_evap=>evap_old;evap_input=>d_evap
                   end if
 
@@ -767,7 +770,7 @@
                                  d_tausy(i,j) = tausy_new(i,j) - tausy_old(i,j)
                                  d_shf  (i,j) = shf_new  (i,j) - shf_old  (i,j)
                               end if
-                              if (fwf_method.eq.2 .or. (fwf_method.gt.2 .and. calc_met .and. .not.interpolate_meteo)) then
+                              if (fwf_method.eq.2 .or. (calc_evap .and. .not.interpolate_meteo)) then
                                  d_evap(i,j) = evap_new(i,j) - evap_old(i,j)
                               end if
                            end if
@@ -793,7 +796,7 @@
                            tausy(i,j) = tausy_new(i,j) + d_tausy(i,j)*deltm1*t_minus_t2
                            shf  (i,j) = shf_new  (i,j) + d_shf  (i,j)*deltm1*t_minus_t2
                         end if
-                        if (fwf_method.eq.2 .or. (fwf_method.gt.2 .and. calc_met .and. .not.interpolate_meteo)) then
+                        if (fwf_method.eq.2 .or. (calc_evap .and. .not.interpolate_meteo)) then
                            evap(i,j) = evap_new(i,j) + d_evap(i,j)*deltm1*t_minus_t2
                         end if
                      end if
@@ -814,7 +817,7 @@
                wind (:,j+1) = wind (:,j)
                shf  (:,j+1) = shf  (:,j)
                swr  (:,j+1) = swr  (:,j)
-               if (fwf_method.eq.2 .or. (fwf_method.gt.2 .and. calc_met .and. .not.interpolate_meteo)) then
+               if (fwf_method.eq.2 .or. (calc_evap .and. .not.interpolate_meteo)) then
                   evap(:,j+1) = evap(:,j)
                end if
                if (fwf_method.eq.2 .or. fwf_method.eq.3) then
