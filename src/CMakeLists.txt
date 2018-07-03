@@ -279,6 +279,7 @@ endif()
 
 add_library(getm OBJECT
             getm/cleanup.F90
+            getm/compilation_options.F90
             getm/initialise.F90
             getm/integration.F90
             getm/print_version.F90
