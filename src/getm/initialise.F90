@@ -477,7 +477,7 @@
 !
 ! !USES:
    use output, only: do_output
-   use time, only: julianday,secondsofday
+   use time, only: timestep,julianday,secondsofday
    use integration,  only: MinN
    IMPLICIT NONE
 !
