@@ -184,6 +184,9 @@
 #ifdef _NCDF_SAVE_DOUBLE_
    LEVEL1 '_NCDF_SAVE_DOUBLE_'
 #endif
+#ifdef _FLEXIBLE_OUTPUT_
+   LEVEL1 '_FLEXIBLE_OUTPUT_'
+#endif
 
    STDERR LINE
 
