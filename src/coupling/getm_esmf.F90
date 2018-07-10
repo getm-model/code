@@ -514,7 +514,7 @@
    use halo_mpi   , only: comm_getm
 #endif
    use time       , only: init_time,start,timestep
-   use initialise , only: init_model,init_initialise,do_initialise,dryrun
+   use initialise , only: init_initialise,do_initialise,dryrun
    use integration, only: MinN,MaxN
    use getm_timers, only: tic,toc,TIM_ESMF
    IMPLICIT NONE
@@ -741,7 +741,7 @@
 !  userRc to ESMF_GridCompInitialize().
 !
 ! !USES:
-   use initialise, only: dryrun
+   use initialise, only: finalise_initialise,dryrun
    use getm_timers, only: tic,toc,TIM_ESMF
    IMPLICIT NONE
 !
