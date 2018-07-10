@@ -673,7 +673,9 @@
       call toc(TIM_ESMF)
 
       ! set up clock based on internal GETM specifications
-      call init_model(datestr,timestr)
+      call init_initialise(datestr,timestr)
+      call init_time(MinN,MaxN)
+      call do_initialise()
 
       call tic(TIM_ESMF)
 
@@ -780,6 +782,8 @@
    call update_exportState(getmComp,exportState)
 
    call toc(TIM_ESMF)
+
+   call finalise_initialise()
 
    if (.not.dryrun) then
       STDERR LINE
