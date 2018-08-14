@@ -568,7 +568,7 @@
       call fm%register('SS', 's-2', 'shear frequency squared', standard_name='', dimensions=(/id_dim_z/), data3d=SS(_3D_W_), category='3d', output_level=output_level_debug)
 
       if (associated(taubmax_3d)) then
-         call fm%register('taubmax_3d', 'N2/m2', 'max. bottom stress', standard_name='', data2d=taubmax_3d(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
+         call fm%register('taubmax_3d', 'N/m2', 'max. bottom stress', standard_name='', data2d=taubmax_3d(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       end if
 
       if (nonhyd_method .ne. 0) then
