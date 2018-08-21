@@ -413,7 +413,7 @@
       call fm%register('AmC_2d', 'm2/s', 'hor eddy viscosity', standard_name='', data2d=AmC_2d(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
    end if
 
-   call fm%register('taubmax', 'N/m2', 'max. bottom stress', standard_name='', category='2d', fill_value=-9999.0_rk, output_level=output_level_debug, used=used)
+   call fm%register('taubmax', 'm2/s2', 'max. bottom stress', standard_name='', category='2d', fill_value=-9999.0_rk, output_level=output_level_debug, used=used)
    if (.not. calc_taubmax) calc_taubmax = used
 
    if (do_numerical_analyses_2d) then
@@ -568,7 +568,7 @@
       call fm%register('SS', 's-2', 'shear frequency squared', standard_name='', dimensions=(/id_dim_z/), data3d=SS(_3D_W_), category='3d', output_level=output_level_debug)
 
       if (associated(taubmax_3d)) then
-         call fm%register('taubmax_3d', 'N/m2', 'max. bottom stress', standard_name='', data2d=taubmax_3d(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
+         call fm%register('taubmax_3d', 'm2/s2', 'max. bottom stress', standard_name='', data2d=taubmax_3d(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
       end if
 
       if (nonhyd_method .ne. 0) then
