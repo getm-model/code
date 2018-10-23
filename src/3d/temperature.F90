@@ -70,6 +70,8 @@
    REALTYPE                  :: A_const=0.58,g1_const=0.35,g2_const=23.0
    REALTYPE                  :: swr_bot_refl_frac=-_ONE_
    REALTYPE                  :: swr_min_bot_frac=0.01
+   REALTYPE                  :: swr_bot_diss_frac=_ZERO_
+   REALTYPE                  :: swr_bot_trans_frac=_ONE_
    REALTYPE                  :: sst_nudging_time=-_ONE_
    integer                   :: temp_check=0
    REALTYPE                  :: min_temp=-2.,max_temp=35.
@@ -143,7 +145,7 @@ end interface
             temp_AH_stirr_const,                              &
             attenuation_method,attenuation_file,jerlov,       &
             A_const,g1_const,g2_const,                        &
-            swr_bot_refl_frac, swr_min_bot_frac,              &
+            swr_bot_refl_frac, swr_min_bot_frac,swr_bot_diss_frac, &
             sst_nudging_time,temp_check,min_temp,max_temp
 !EOP
 !-------------------------------------------------------------------------
@@ -264,6 +266,12 @@ end interface
       LEVEL3 "reflection of short wave radiation from the bottom:"
       LEVEL4 "swr_bot_refl_frac=",swr_bot_refl_frac
       LEVEL4 "swr_min_bot_frac= ",swr_min_bot_frac
+   end if
+
+   if (swr_bot_diss_frac .gt. _ZERO_) then
+      LEVEL3 "direct dissipation of short wave radiation at the bottom:"
+      LEVEL4 "swr_bot_diss_frac=",real(swr_bot_diss_frac)
+      swr_bot_trans_frac = _ONE_ - swr_bot_diss_frac
    end if
 
    if (metforcing .and. sst_nudging_time.gt._ZERO_) then
@@ -436,7 +444,7 @@ end interface
 ! !USES:
    use time, only: month,timestr
    use advection_3d, only: do_advection_3d
-   use variables_3d, only: dt,cnpar,hn,ho,nuh,uu,vv,ww,hun,hvn,S
+   use variables_3d, only: dt,cnpar,hn,ho,nuh,uu,vv,ww,hun,hvn,S,Dn
    use domain,       only: imin,imax,jmin,jmax,kmax,az
    use meteo,        only: swr,shf
    use parameters,   only: rho_0,cp
@@ -611,13 +619,15 @@ end interface
             end if
 #endif
                rad1d(0)=rad1d(0)-swr_refl
-               zz = _ZERO_
+               swr_loc = swr_bot_refl_frac * swr(i,j)
+               zz = Dn(i,j)
                do k=1,kmax
                   zz=zz+hn(i,j,k)
-                  rad1d(k)=rad(i,j,k) - swr_refl &
-                         *(A(i,j)*exp(-zz/g1(i,j))+(1-A(i,j))*exp(-zz/g2(i,j)))
+                  rad1d(k)=rad1d(k) - swr_loc &
+                      *(A(i,j)*exp(-zz/g1(i,j))+(1-A(i,j))*exp(-zz/g2(i,j))*bioshade(i,j,k))
                end do
             end if
+            rad1d(0) = swr_bot_trans_frac * rad1d(0)
             heatflux_net(i,j) = dry_z(i,j) * ( rad1d(kmax) - rad1d(0) + shf_loc )
             do k=0,kmax
                rad1d(k)=rad1d(k)*rho_0_cpi                ! note this
