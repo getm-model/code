@@ -487,6 +487,9 @@
 			<swr_min_bot_frac>
 				0.01
 			</swr_min_bot_frac>
+			<swr_bot_diss_frac>
+				0.
+			</swr_bot_diss_frac>
 			<sst_nudging_time>
 				-1.0
 			</sst_nudging_time>
