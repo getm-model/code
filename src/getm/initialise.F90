@@ -80,6 +80,7 @@
    call init_initialise(dstr,tstr)
    call init_time(MinN,MaxN)
    call do_initialise()
+   call finalise_initialise()
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_model()'
@@ -457,6 +458,45 @@
 
    call toc(TIM_INITIALIZE)
 
+#ifdef DEBUG
+   write(debug,*) 'Leaving do_initialise()'
+   write(debug,*)
+#endif
+   return
+   end subroutine do_initialise
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: finalise_initialise - third part of init_model
+!
+! !INTERFACE:
+   subroutine finalise_initialise()
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use output, only: do_output
+   use time, only: timestep,julianday,secondsofday
+   use integration,  only: MinN
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Hans Burchard
+!
+! !LOCAL VARIABLES:
+!
+!EOP
+!-------------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'finalise_initialise() # ',Ncall
+#endif
+
    if (.not. dryrun) then
       call do_output(runtype,MinN-1,timestep)
 #ifdef _FLEXIBLE_OUTPUT_
@@ -465,11 +505,11 @@
    end if
 
 #ifdef DEBUG
-   write(debug,*) 'Leaving do_initialise()'
+   write(debug,*) 'Leaving finalise_initialise()'
    write(debug,*)
 #endif
    return
-   end subroutine do_initialise
+   end subroutine finalise_initialise
 !EOC
 
 !-----------------------------------------------------------------------
