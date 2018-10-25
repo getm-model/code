@@ -759,7 +759,7 @@
 !        note that all dy? are identical on constant
 
          do j=jmin-HALO,jmax+HALO
-            dxc(:,j)=deg2rad*dlon*rearth*cos(deg2rad*latc(:,j))
+            dxc(:,j)=deg2rad*dlon*rearth*cos(deg2rad*ycord(j))
          end do
          dyc = deg2rad*dlat*rearth
 
@@ -767,12 +767,16 @@
          dyu = dyc
 
          do j=jmin-HALO,jmax+HALO
-            dxv(:,j)=deg2rad*dlon*rearth*cos(deg2rad*latx(imin-HALO:,j))
+            dxv(:,j)=deg2rad*dlon*rearth*cos(deg2rad*yxcord(j))
          end do
          dyv = dyc
 
          dxx = dxv
          dyx = dyc
+
+         do j=jmin-HALO,jmax+HALO
+            areac(:,j) = deg2rad*dlon*rearth * (sin(deg2rad*yxcord(j))-sin(deg2rad*yxcord(j-1)))*rearth
+         end do
 
       case(3) ! planar curvi-linear
 
@@ -1056,6 +1060,12 @@
          end do
 #endif
 
+         do j=jll,jhl
+            do i=ill,ihl
+               areac(i,j) = dxc(i,j) * dyc(i,j)
+            end do
+         end do
+
       case default
 
          call getm_error("metric()","A non valid grid type has been chosen.")
@@ -1067,7 +1077,6 @@
       do j=jmin,jmax
          do i=imin,imax
 
-            areac(i,j) = dxc(i,j) * dyc(i,j)
             if( az(i,j) .gt. 0) then
                arcd1(i,j) = _ONE_/areac(i,j)
             end if
