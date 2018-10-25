@@ -3142,10 +3142,11 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 ! !ROUTINE: StateAddField -
 !
 ! !INTERFACE:
-  subroutine StateAddField(state,name,grid,kwe,units,staggerloc,       &
-                           farray2D,farray3D,frc)
+   subroutine StateAddField(state,name,grid,kwe,units,staggerloc,      &
+                            farray2D,farray3D,frc)
 !
 ! !DESCRIPTION:
+!  Creates empty or complete field in state.
 !
 ! !USES:
    use domain    ,only: imin,jmin,imax,jmax,kmax
@@ -3318,10 +3319,12 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 ! !ROUTINE: StateCompleteConnectedField -
 !
 ! !INTERFACE:
-  subroutine StateCompleteConnectedField(state,name,kwe,&
-                                         farray2d,farray3d,p2dr,p3dr,frc)
+   subroutine StateCompleteConnectedField(state,name,kwe,&
+                                          farray2d,farray3d,p2dr,p3dr,frc)
 !
 ! !DESCRIPTION:
+!  Links allocated arrays to empty field in state or removes unconnected
+!  field. Returns pointer to array (also for an already completed field).
 !  Note, that 3D fields are expected to contain k=0 layer!!!
 !  priority order: 1) associated Ptr to ESMF_KIND_R8 array
 !                  2) forced allocation
@@ -3348,14 +3351,15 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 !  Original Author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES
-   type(ESMF_Field)           :: field
-   type(ESMF_Grid)            :: grid
-   type(ESMF_StaggerLoc)      :: staggerloc
-   real(ESMF_KIND_R8),pointer :: p2dr_(:,:),p3dr_(:,:,:)
-   REALTYPE                   :: getmreal
-   integer                    :: rc,dimCount,klen
-   integer,target             :: elb(3),eub(3)
-   logical                    :: abort,isPresent,isConnected,noKindMatch
+   type(ESMF_Field)            :: field
+   type(ESMF_FieldStatus_Flag) :: status
+   type(ESMF_Grid)             :: grid
+   type(ESMF_StaggerLoc)       :: staggerloc
+   real(ESMF_KIND_R8),pointer  :: p2dr_(:,:),p3dr_(:,:,:)
+   REALTYPE                    :: getmreal
+   integer                     :: rc,dimCount,klen
+   integer,target              :: elb(3),eub(3)
+   logical                     :: abort,isPresent,isConnected,noKindMatch
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -3403,7 +3407,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
       return
    end if
 
-   call ESMF_FieldGet(field,grid=grid,staggerloc=staggerloc,rc=rc)
+   call ESMF_FieldGet(field,status=status,grid=grid,staggerloc=staggerloc,rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
@@ -3420,6 +3424,12 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    end if
 
    if (dimCount .eq. 2) then
+      if (status.eq.ESMF_FIELDSTATUS_COMPLETE .and. present(p2dr)) then
+         call ESMF_FieldGet(field,farrayPtr=p2dr_,rc=rc)
+         abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+         p2dr => p2dr_
+         return
+      end if
       p2dr_ => NULL()
       if (present(p2dr)) then
          if (associated(p2dr)) p2dr_(imin-HALO:,jmin-HALO:) => p2dr
@@ -3454,6 +3464,12 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
       if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    else if (dimCount .eq. 3) then
+      if (status.eq.ESMF_FIELDSTATUS_COMPLETE .and. present(p3dr)) then
+         call ESMF_FieldGet(field,farrayPtr=p3dr_,rc=rc)
+         abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+         p3dr => p3dr_
+         return
+      end if
       p3dr_ => NULL()
       if (present(p3dr)) then
          if (associated(p3dr)) p3dr_(imin-HALO:,jmin-HALO:,0:) => p3dr
@@ -3503,10 +3519,11 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 ! !ROUTINE: StateReadCompleteField -
 !
 ! !INTERFACE:
-  subroutine StateReadCompleteField(state,name,kwe,                    &
-                                    farray2d,farray3d,p2dr,p3dr,frc,ign)
+   subroutine StateReadCompleteField(state,name,kwe,                   &
+                                     farray2d,farray3d,p2dr,p3dr,frc,ign)
 !
 ! !DESCRIPTION:
+!  Gets pointer or values from field in state.
 !  returns if KindMatch and unforced
 !  frc tries to read also if KindMatch
 !  ign skips missing fields that were forced to be read
@@ -3631,10 +3648,11 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 ! !ROUTINE: StateSetCompleteField -
 !
 ! !INTERFACE:
-  subroutine StateSetCompleteField(state,name,kwe,                    &
-                                   farray2d,farray3d,p2dr,p3dr,frc)
+   subroutine StateSetCompleteField(state,name,kwe,                    &
+                                    farray2d,farray3d,p2dr,p3dr,frc)
 !
 ! !DESCRIPTION:
+!  Update field in state (either its pointer or values).
 !  priority order: 1) return if KindMatch and unforced
 !                  2) forced update of associated Ptr
 !                  3) forced linking to farray if KindMatch
@@ -3773,5 +3791,5 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    end module getm_esmf
 
 !-----------------------------------------------------------------------
-! Copyright (C) 2013 - Hans Burchard and Karsten Bolding               !
+! Copyright (C) 2013 - Knut Klingbeil                                  !
 !-----------------------------------------------------------------------
