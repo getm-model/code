@@ -1,4 +1,4 @@
 module getm_version
    character(len=*),parameter :: git_commit_id = "2.5.0"
-   character(len=*),parameter :: git_branch_name = "fwf_int"
+   character(len=*),parameter :: git_branch_name = "grid_type"
 end module
