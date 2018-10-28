@@ -241,7 +241,7 @@
 
    call init_domain(input_dir,runtype)
 
-   call init_meteo(hotstart)
+   call init_meteo(runtype,hotstart)
 
 #ifndef NO_3D
    call init_rivers(hotstart)
