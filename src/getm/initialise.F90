@@ -329,7 +329,7 @@
 
    call init_parameters()
 
-   call init_meteo(hotstart)
+   call init_meteo(runtype,hotstart)
 
    call init_waves(hotstart,runtype)
 
