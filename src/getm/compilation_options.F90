@@ -15,6 +15,7 @@
 !EOP
 !-----------------------------------------------------------------------
 !BOC
+!
 #ifdef _GETM_ESMF_
    LEVEL1 'Compiled for ESMF integration'
 #endif
