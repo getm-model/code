@@ -327,7 +327,7 @@
 
    call init_domain(input_dir,runtype)
 
-   call init_meteo(hotstart)
+   call init_meteo(runtype,hotstart)
 
    call init_waves(hotstart,runtype)
 
