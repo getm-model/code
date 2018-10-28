@@ -184,7 +184,7 @@
                         trim(model%state_variables(m)%name)
             err =  nf90_inq_varid(ncid,trim(fabm_name),fabm_id(n,m))
             if (err .ne. NF90_NOERR) then
-               LEVEL4 '     '//trim(fabm_name)//': no'
+               LEVEL4 '     '//trim(fabm_name)//': no, no_river_dilution=',model%state_variables(m)%no_river_dilution
                fabm_id(n,m) = -1
             else
                LEVEL4 '     '//trim(fabm_name)//': yes'
