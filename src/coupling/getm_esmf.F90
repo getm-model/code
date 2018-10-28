@@ -1457,7 +1457,7 @@
 
 !  2D grid
 
-   staggerloc = ESMF_StaggerLoc_CENTER ! (default)
+   staggerloc = ESMF_STAGGERLOC_CENTER ! (default)
    call ESMF_GridGet(getmGrid2D, staggerloc, distgrid=distgrid, rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -1503,7 +1503,7 @@
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   staggerloc = ESMF_StaggerLoc_CORNER
+   staggerloc = ESMF_STAGGERLOC_CORNER
    call ESMF_GridGet(getmGrid2D, staggerloc, distgrid=distgrid, rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -1540,7 +1540,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
 !  3D grid
 
-   staggerloc = ESMF_StaggerLoc_CENTER_VCENTER ! (=CENTER, default for 3D)
+   staggerloc = ESMF_STAGGERLOC_CENTER_VCENTER ! (=CENTER, default for 3D)
    call ESMF_GridGet(getmGrid3D, staggerloc, distgrid=distgrid, rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -1611,7 +1611,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   staggerloc = ESMF_StaggerLoc_CORNER_VFACE
+   staggerloc = ESMF_STAGGERLOC_CORNER_VFACE
    call ESMF_GridGet(getmGrid3D, staggerloc, distgrid=distgrid, rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -1665,7 +1665,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   staggerloc = ESMF_StaggerLoc_CENTER_VFACE
+   staggerloc = ESMF_STAGGERLOC_CENTER_VFACE
    call ESMF_GridGet(getmGrid3D, staggerloc, distgrid=distgrid, rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -1775,19 +1775,19 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    call ESMF_GridGetCoord(getmGrid3D,3,farrayPtr=zw,                   &
-                          staggerloc=ESMF_StaggerLoc_CENTER_VFACE,     &
+                          staggerloc=ESMF_STAGGERLOC_CENTER_VFACE,     &
                           rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    call ESMF_GridGetCoord(getmGrid3D,3,farrayPtr=zc,                   &
-                          staggerloc=ESMF_StaggerLoc_CENTER_VCENTER,   &
+                          staggerloc=ESMF_STAGGERLOC_CENTER_VCENTER,   &
                           rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    call ESMF_GridGetCoord(getmGrid3D,3,farrayPtr=zx,                   &
-                          staggerloc=ESMF_StaggerLoc_CORNER_VFACE,     &
+                          staggerloc=ESMF_STAGGERLOC_CORNER_VFACE,     &
                           rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
