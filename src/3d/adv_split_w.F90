@@ -40,7 +40,7 @@
 ! section \ref{sec-u-split-adv} on page \pageref{sec-u-split-adv}.
 !
 ! !USES:
-   use domain, only: imin,imax,jmin,jmax,kmax
+   use domain, only: imin,imax,jmin,jmax,kmax,ioff,joff
    use advection, only: adv_interfacial_reconstruction
    use advection, only: NOADV,UPSTREAM
    use advection_3d, only: W_TAG
@@ -244,8 +244,8 @@
                         if (iters_new .gt. iters) then
                            if (iters_new .gt. itersmax) then
 !$OMP CRITICAL
-                              STDERR 'adv_split_w: too many iterations needed at'
-                              STDERR 'i=',i,' j=',j,':',iters_new
+                              STDERR 'adv_split_w: too many iterations needed: ',iters_new
+                              STDERR '             at global i j = ',ioff+i,joff+j
 !$OMP END CRITICAL
                               iters = itersmax
                            else
