@@ -573,13 +573,17 @@ end interface
 
    do n=1,size(model%state_variables)
       if (.not. (model%state_variables(n)%no_precipitation_dilution .or. no_precipitation_dilution)) then
+#ifndef SLICE_MODEL
          do j=jmin-HALO,jmax+HALO
+#endif
             do i=imin-HALO,imax+HALO
                if (az(i,j) .eq. 1) then
                   fabm_pel(i,j,kmax,n) = fabm_pel(i,j,kmax,n)*(_ONE_-fwf_int(i,j)/ho(i,j,kmax))
                end if
             end do
+#ifndef SLICE_MODEL
          end do
+#endif
       end if
    end do
 
