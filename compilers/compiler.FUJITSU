@@ -11,5 +11,4 @@ EXTRAS  = -fw
 DEBUG_FLAGS = -g -H aeus
 PROF_FLAGS  = -pg -O3
 PROD_FLAGS  = -O -K fast
-DEFINES += -DREAL_4B=real\(4\)
 endif

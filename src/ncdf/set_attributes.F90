@@ -27,15 +27,9 @@
    integer, intent(in)                 :: ncid,id
    integer, optional                   :: netcdf_real
    character(len=*), optional          :: units,long_name
-#if 1
    REALTYPE, optional                  :: valid_min,valid_max,valid_range(2)
    REALTYPE, optional                  :: scale_factor,add_offset
    REALTYPE, optional                  :: FillValue,missing_value
-#else
-   REAL_4B, optional                  :: valid_min,valid_max,valid_range(2)
-   REAL_4B, optional                  :: scale_factor,add_offset
-   REAL_4B, optional                  :: FillValue,missing_value
-#endif
    character(len=*), optional          :: C_format,FORTRAN_format
 !
 ! !REVISION HISTORY:
@@ -44,8 +38,8 @@
 !  See ncdfout module
 !
 ! !LOCAL VARIABLES:
-   integer, parameter :: kind_real_single = SELECTED_REAL_KIND(p=5)
-   integer, parameter :: kind_real_double = SELECTED_REAL_KIND(p=14)
+   integer, parameter :: kind_real_single = kind(NF90_FILL_FLOAT)
+   integer, parameter :: kind_real_double = kind(NF90_FILL_DOUBLE)
    integer                   :: iret
    integer                   :: ft
 !EOP

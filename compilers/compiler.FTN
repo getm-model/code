@@ -11,5 +11,4 @@ PROF_FLAGS  = -xomp
 PROD_FLAGS  = -O3 -Ovector3 -Oautothread -xomp
 OMP_FLAGS   = -Oomp
 VERSION_FLAG = -V 2>&1 | tail -1
-DEFINES += -DREAL_4B=real\(kind=4\)
 endif

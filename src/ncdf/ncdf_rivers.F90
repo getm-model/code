@@ -44,7 +44,7 @@
    integer, allocatable                :: temp_id(:)
    integer, allocatable                :: r_salt(:)
    integer, allocatable                :: r_temp(:)
-   REAL_4B, allocatable                :: river_times(:)
+   REALTYPE, allocatable               :: river_times(:)
 #ifdef GETM_BIO
    integer, allocatable                :: bio_id(:,:)
 #endif
@@ -261,7 +261,7 @@
 ! !LOCAL VARIABLES:
    integer                   :: i,j,n,nn,ni,m,indx,err
    REALTYPE                  :: t
-   REAL_4B                   :: x(1)
+   REALTYPE                  :: x(1)
    logical, save             :: first=.true.
    integer, save             :: save_n=1,last_indx=-1
    REALTYPE, save            :: t_1,t_2,loop0
