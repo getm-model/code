@@ -403,7 +403,6 @@ add_dependencies(input futils waves 2d 3d ncdf)
 add_dependencies(getm futils domain meteo waves les 2d 3d output input)
 
 set_property(TARGET futils ncdf input APPEND PROPERTY INCLUDE_DIRECTORIES "${NetCDF_INCLUDE_DIRS}")
-add_definitions(-DNETCDF_FMT -DREAL_4B=real\(4\))
 
 # Use GOTM_PREFIX to locate include and lib directories
 set(GOTM_EMBED_VERSION ${GETM_EMBED_VERSION} CACHE BOOL "Embed GOTM version information" FORCE)

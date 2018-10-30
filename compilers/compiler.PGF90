@@ -12,5 +12,4 @@ EXTRAS  =
 DEBUG_FLAGS = -g -Ktrap=fp -Mbounds
 PROF_FLAGS  = -Mprof=func
 PROD_FLAGS  = -fast
-DEFINES += -DREAL_4B=real\(4\)
 endif
