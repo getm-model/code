@@ -361,7 +361,7 @@
    integer                   :: ndims
    integer                   :: xax_id=-1,yax_id=-1,zax_id=-1,time_id=-1
    character(len=256)        :: dimname
-   REAL_4B, allocatable      :: zax(:), tax(:), wrk(:)
+   REALTYPE, allocatable     :: zax(:), tax(:), wrk(:)
    REALTYPE, allocatable     :: zax_2d(:), wrk_2d(:,:,:)
 !EOP
 !-------------------------------------------------------------------------
