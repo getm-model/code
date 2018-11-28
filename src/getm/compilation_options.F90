@@ -93,8 +93,8 @@
 #ifdef NO_SLR
    LEVEL1 'NO_SLR'
 #endif
-#ifdef _SLR_V26_
-   LEVEL1 '_SLR_V26_'
+#ifdef _SLR_NOCLIP_
+   LEVEL1 '_SLR_NOCLIP_'
 #endif
 #ifdef CONSTANT_VISCOSITY
    LEVEL1 'CONSTANT_VISCOSITY'
