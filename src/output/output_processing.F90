@@ -76,7 +76,45 @@
 
 !-----------------------------------------------------------------------
 !BOP
-! !IROUTINE: init_output_processing - read required variables
+!
+! !ROUTINE: register_processed_variables()
+!
+! !INTERFACE:
+   subroutine register_processed_variables(fm)
+!
+! !DESCRIPTION:
+!
+! !USES:
+!   use variables_2d
+   use field_manager
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   type (type_field_manager) :: fm
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !LOCAL VARIABLES:
+   logical :: used
+   integer,parameter :: rk = kind(_ONE_)
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   LEVEL2 'register_processed_variables()'
+
+   call fm%register('u2d', 'm/s', 'velocity in local x-direction', standard_name='', data2d=u_2d(_2D_W_), category='velocities')
+   call fm%register('v2d', 'm/s', 'velocity in local y-direction', standard_name='', data2d=v_2d(_2D_W_), category='velocities')
+   call fm%register('u2d_destag', 'm/s', 'velocity in local x-direction(destag)', standard_name='', data2d=u_2d_destag(_2D_W_), category='velocities',output_level=output_level_debug)
+   call fm%register('v2d_destag', 'm/s', 'velocity in local y-direction(destag)', standard_name='', data2d=v_2d_destag(_2D_W_), category='velocities',output_level=output_level_debug)
+
+   return
+   end subroutine register_processed_variables
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+! !IROUTINE: do_output_processing - read required variables
 !
 ! !INTERFACE:
   subroutine do_output_processing

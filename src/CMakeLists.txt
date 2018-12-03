@@ -366,7 +366,7 @@ add_library(output OBJECT
 
 add_dependencies(domain futils)
 add_dependencies(meteo futils domain)
-add_dependencies(2d domain)
+add_dependencies(2d domain util)
 add_dependencies(3d meteo domain 2d)
 add_dependencies(output futils domain 2d 3d meteo)
 add_dependencies(ncdf futils domain output)
