@@ -49,6 +49,7 @@
    use halo_mpi, only: init_mpi,print_MPI_info
 #endif
    use output, only: init_output,do_output,restart_file,out_dir
+   use output_processing
    use input,  only: init_input
    use domain, only: init_domain
    use domain, only: H
@@ -265,6 +266,7 @@
 #endif
    end if
 #endif
+   call init_output_processing()
 
    call init_register_all_variables(runtype)
 
@@ -277,7 +279,6 @@
    end if
 
    call do_register_all_variables(runtype)
-!   call fm%list()
 
 !   call init_output(runid,title,start,runtype,dryrun,myid)
    call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)
@@ -349,6 +350,7 @@
 
    if (.not. dryrun) then
       call do_output(runtype,MinN-1,timestep)
+      call do_output_processing()
       if (save_initial) call output_manager_save(julianday,secondsofday,MinN-1)
    end if
 

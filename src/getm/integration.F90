@@ -63,6 +63,7 @@
 #endif
    use input,    only: do_input
    use output,   only: do_output,meanout
+   use output_processing, only: do_output_processing
 #ifdef TEST_NESTING
    use nesting,   only: nesting_file
 #endif
@@ -159,6 +160,7 @@
       end if
 #endif
       call do_output(runtype,n,timestep)
+      call do_output_processing()
       call output_manager_save(julianday,secondsofday,n)
 #ifdef DIAGNOSE
       call diagnose(n,MaxN,runtype)

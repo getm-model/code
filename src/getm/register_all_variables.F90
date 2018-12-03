@@ -11,6 +11,7 @@
 !
 ! !USES:
    use field_manager
+   use processed_variables
    IMPLICIT NONE
 !
 !  default: all is private.
@@ -361,6 +362,10 @@
    call fm%register('D', 'm', 'water depth', standard_name='water depth', fill_value=-10009.0_rk, data2d=D(_2D_W_), category="2d")
    call fm%register('U', 'm2/s', 'transport in local x-direction', standard_name='', data2d=U(_2D_W_), category='2d', output_level=output_level_debug)
    call fm%register('V', 'm2/s', 'transport in local y-direction', standard_name='', data2d=V(_2D_W_), category='2d', output_level=output_level_debug)
+   call fm%register('u2d', 'm/s', 'velocity in local x-direction', standard_name='', data2d=u_2d(_2D_W_), category='velocities')
+   call fm%register('v2d', 'm/s', 'velocity in local y-direction', standard_name='', data2d=v_2d(_2D_W_), category='velocities')
+   call fm%register('u2d_destag', 'm/s', 'velocity in local x-direction(destag)', standard_name='', data2d=u_2d_destag(_2D_W_), category='velocities',output_level=output_level_debug)
+   call fm%register('v2d_destag', 'm/s', 'velocity in local y-direction(destag)', standard_name='', data2d=v_2d_destag(_2D_W_), category='velocities',output_level=output_level_debug)
 
    return
    end subroutine register_2d_variables
