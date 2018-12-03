@@ -20,7 +20,9 @@
    use rivers, only: clean_rivers
    use m3d, only: clean_3d
 #endif
+   use register_all_variables, only: fm
    use output, only: clean_output
+   use output_manager
    use kurt_parallel, only: clean_parallel
    IMPLICIT NONE
 !
@@ -59,6 +61,9 @@
    if( .not. dryrun ) then
       call clean_output(runtype,loop)
    end if
+   call output_manager_clean()
+
+   call fm%finalize()
 
    call clean_input()
 
