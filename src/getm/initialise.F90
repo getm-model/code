@@ -20,6 +20,7 @@
    public                              :: init_model
    integer                             :: runtype=1
    logical                             :: dryrun=.false.
+   logical                             :: list_variables=.false.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
@@ -279,6 +280,7 @@
    end if
 
    call do_register_all_variables(runtype)
+   if (list_variables) call fm%list()
 
 !   call init_output(runid,title,start,runtype,dryrun,myid)
    call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)

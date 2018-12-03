@@ -371,7 +371,7 @@ add_dependencies(3d meteo domain 2d)
 add_dependencies(output futils domain 2d 3d meteo)
 add_dependencies(ncdf futils domain output)
 add_dependencies(input futils 2d 3d ncdf)
-add_dependencies(getm input)
+add_dependencies(getm input output)
 
 set_property(TARGET futils ncdf input APPEND PROPERTY INCLUDE_DIRECTORIES "${NetCDF_INCLUDE_DIRS}")
 add_definitions(-DNETCDF_FMT -DREAL_4B=real\(4\))
