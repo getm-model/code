@@ -68,6 +68,7 @@
    use nesting,   only: nesting_file
 #endif
    use output_manager
+   use getm_timers, only: tic, toc, TIM_FLEX_OUTPUT, TIM_OUTPUT_PROC
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -101,7 +102,9 @@
          LEVEL1 t_(1:2),':',t_(3:4),':',t_(5:10),' n=',n
       end if
 
+      call tic(TIM_FLEX_OUTPUT)
       call output_manager_prepare_save(julianday, int(secondsofday), 0, int(n))
+      call toc(TIM_FLEX_OUTPUT)
 
 #ifndef NO_3D
       do_3d = (runtype .ge. 2 .and. mod(n,M) .eq. 0)
@@ -154,8 +157,12 @@
          call nesting_file(WRITING)
       end if
 #endif
+      call tic(TIM_OUTPUT_PROC)
       call do_output_processing()
+      call toc(TIM_OUTPUT_PROC)
+      call tic(TIM_FLEX_OUTPUT)
       call output_manager_save(julianday,secondsofday,n)
+      call toc(TIM_FLEX_OUTPUT)
       call update_time(n)
 
 #ifndef NO_3D
