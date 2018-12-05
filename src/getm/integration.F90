@@ -101,6 +101,8 @@
          LEVEL1 t_(1:2),':',t_(3:4),':',t_(5:10),' n=',n
       end if
 
+      call output_manager_prepare_save(julianday, int(secondsofday), 0, int(n))
+
 #ifndef NO_3D
       do_3d = (runtype .ge. 2 .and. mod(n,M) .eq. 0)
 #endif
@@ -152,6 +154,8 @@
          call nesting_file(WRITING)
       end if
 #endif
+      call do_output_processing()
+      call output_manager_save(julianday,secondsofday,n)
       call update_time(n)
 
 #ifndef NO_3D
@@ -160,8 +164,6 @@
       end if
 #endif
       call do_output(runtype,n,timestep)
-      call do_output_processing()
-      call output_manager_save(julianday,secondsofday,n)
 #ifdef DIAGNOSE
       call diagnose(n,MaxN,runtype)
 #endif

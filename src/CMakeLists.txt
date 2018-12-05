@@ -353,7 +353,6 @@ add_library(output OBJECT
             output/diagnostic_variables.F90
             output/ncdf_out.F90
             output/nesting.F90
-            output/processed_variables.F90
             output/output_processing.F90
             output/output.F90
            )

@@ -17,7 +17,6 @@
    use getm_fabm, only: register_fabm_variables
 #endif
    use output_processing, only: register_processed_variables
-   use processed_variables
    IMPLICIT NONE
 !
 !  default: all is private.
