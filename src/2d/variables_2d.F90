@@ -211,12 +211,11 @@
 
 
 !  category - 2d
-   call fm%register('z', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=-9999.0_rk, data2d=z(_2D_W_), category="2d")
-
+   call fm%register('z', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=-9999.0_rk, data2d=z(_2D_W_), category="2d", part_of_state=.true.)
    call fm%register('zo', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=-9999.0_rk, data2d=zo(_2D_W_), category="2d", output_level=output_level_debug)
-   call fm%register('D', 'm', 'water depth', standard_name='water depth', fill_value=-10009.0_rk, data2d=D(_2D_W_), category="2d")
-   call fm%register('U', 'm2/s', 'transport in local x-direction', standard_name='', data2d=U(_2D_W_), category='2d', output_level=output_level_debug)
-   call fm%register('V', 'm2/s', 'transport in local y-direction', standard_name='', data2d=V(_2D_W_), category='2d', output_level=output_level_debug)
+   call fm%register('D', 'm', 'water depth', standard_name='water depth', fill_value=-10009.0_rk, data2d=D(_2D_W_), category="2d", part_of_state=.true.)
+   call fm%register('U', 'm2/s', 'transport in local x-direction', standard_name='', data2d=U(_2D_W_), category='2d', output_level=output_level_debug, part_of_state=.true.)
+   call fm%register('V', 'm2/s', 'transport in local y-direction', standard_name='', data2d=V(_2D_W_), category='2d', output_level=output_level_debug, part_of_state=.true.)
 
    return
    end subroutine register_2d_variables
