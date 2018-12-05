@@ -15,8 +15,10 @@
    use field_manager
    IMPLICIT NONE
 !
+   private
+!
 ! !PUBLIC DATA FUNCTIONS:
-   public init_output_processing, do_output_processing
+   public init_output_processing, register_processed_variables, do_output_processing
 !
 ! !PUBLIC DATA MEMBERS:
    REALTYPE, dimension(:,:),   allocatable, target :: u2d, v2d
