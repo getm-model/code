@@ -179,7 +179,7 @@
 
    timernames(TIM_METEO)       = 'do_meteo'
    timernames(TIM_INPUT)       = 'do_input'
-   timernames(TIM_OUTPUT)      = 'output'
+   timernames(TIM_OUTPUT)      = 'do_output'
    timernames(TIM_FLEX_OUTPUT) = 'output_manager_save'
    timernames(TIM_OUTPUT_PROC) = 'do_output_processing'
 
