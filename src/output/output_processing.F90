@@ -115,10 +115,10 @@
 !BOC
    LEVEL2 'register_processed_variables()'
 
-   call fm%register('u2d', 'm/s', 'velocity in local x-direction', standard_name='', data2d=u2d(_2D_W_), category='velocities', used_now=u2d_use)
-   call fm%register('v2d', 'm/s', 'velocity in local y-direction', standard_name='', data2d=v2d(_2D_W_), category='velocities', used_now=v2d_use)
-   call fm%register('u2d-destag', 'm/s', 'velocity in local x-direction(destag)', standard_name='', data2d=u2d_destag(_2D_W_), category='velocities',output_level=output_level_debug, used_now=u2d_destag_use)
-   call fm%register('v2d-destag', 'm/s', 'velocity in local y-direction(destag)', standard_name='', data2d=v2d_destag(_2D_W_), category='velocities',output_level=output_level_debug, used_now=v2d_destag_use)
+   call fm%register('u2d', 'm/s', 'velocity in local x-direction', standard_name='', data2d=u2d(_2D_W_), fill_value=-9999._rk, category='velocities', used_now=u2d_use)
+   call fm%register('v2d', 'm/s', 'velocity in local y-direction', standard_name='', data2d=v2d(_2D_W_), fill_value=-9999._rk, category='velocities', used_now=v2d_use)
+   call fm%register('u2d-destag', 'm/s', 'velocity in local x-direction(destag)', standard_name='', data2d=u2d_destag(_2D_W_), fill_value=-9999._rk, category='velocities',output_level=output_level_debug, used_now=u2d_destag_use)
+   call fm%register('v2d-destag', 'm/s', 'velocity in local y-direction(destag)', standard_name='', data2d=v2d_destag(_2D_W_), fill_value=-9999._rk, category='velocities',output_level=output_level_debug, used_now=v2d_destag_use)
 
    return
    end subroutine register_processed_variables
