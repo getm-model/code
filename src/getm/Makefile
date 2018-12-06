@@ -10,6 +10,7 @@ SRC	= main.F90 initialise.F90 integration.F90 cleanup.F90 \
    	  compilation_options.F90 print_version.F90
 
 MOD   = \
+${LIB}(register_all_variables.o) \
 ${LIB}(integration.o)		\
 ${LIB}(initialise.o)
 
@@ -29,7 +30,7 @@ doc: $(SRC)
 	touch doc
 
 clean:
-	$(RM) ${LIB} $(MODDIR)/{integration,initialise}.{m.mod}
+	$(RM) ${LIB} $(MODDIR)/{register_all_variables,integration,initialise}.{m.mod}
 
 realclean: clean
 	$(RM) *.o doc

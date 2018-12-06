@@ -113,6 +113,7 @@ ifdef GOTM_PREFIX
 
 GOTMLIBDIR	= $(GOTM_PREFIX)/lib
 LINKDIRS	+= -L$(GOTMLIBDIR)
+EXTRA_LIBS	+= -loutput_manager
 ifeq ($(FABM),true)
 EXTRA_LIBS	+= -lgotm_fabm
 endif
