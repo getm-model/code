@@ -252,7 +252,7 @@
 !
 ! !USES:
    use kurt_parallel, only: myid
-   use output, only: init_output,do_output,restart_file,out_dir
+   use output, only: init_output,restart_file,out_dir
    use input,  only: init_input
    use domain, only: init_domain
    use domain, only: H
@@ -262,7 +262,6 @@
    use domain, only: have_boundaries
    use time, only: update_time,write_time_string
    use time, only: start,timestr,timestep
-   use time, only: julianday,secondsofday
    use m2d, only: init_2d,hotstart_2d,postinit_2d
    use variables_2d, only: Dvel
    use les, only: init_les
