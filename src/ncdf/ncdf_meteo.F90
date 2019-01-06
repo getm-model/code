@@ -232,20 +232,24 @@
 
    allocate(d_airp(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_airp)'
+   d_airp = -9999*_ONE_
    airp_input => d_airp
 
    if (calc_met) then
 
       allocate(d_u10(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_u10)'
+      d_u10 = -9999*_ONE_
       u10_input => d_u10
 
       allocate(d_v10(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_v10)'
+      d_v10 = -9999*_ONE_
       v10_input => d_v10
 
       allocate(d_tcc(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_tcc)'
+      d_tcc = -9999*_ONE_
       tcc_input => d_tcc
 
       if (interpolate_meteo) then
@@ -255,6 +259,7 @@
          t2_new = -9999*_ONE_
          allocate(d_t2(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_t2)'
+         d_t2 = -9999*_ONE_
          t2_input => d_t2
 
          allocate(hum_new(E2DFIELD),stat=rc)
@@ -262,6 +267,7 @@
          hum_new = -9999*_ONE_
          allocate(d_hum(E2DFIELD),stat=rc)
          if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_hum)'
+         d_hum = -9999*_ONE_
          hum_input => d_hum
 
       else
@@ -285,6 +291,7 @@
    if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
       allocate(d_precip(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_precip)'
+      d_precip = -9999*_ONE_
       precip_input => d_precip
    end if
 
@@ -294,6 +301,7 @@
       sst_new = -9999*_ONE_
       allocate(d_sst(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sst)'
+      d_sst = -9999*_ONE_
       sst_input => d_sst
    end if
 
@@ -303,6 +311,7 @@
       sss_new = -9999*_ONE_
       allocate(d_sss(E2DFIELD),stat=rc)
       if (rc /= 0) stop 'do_meteo: Error allocating memory (d_sss)'
+      d_sss = -9999*_ONE_
       sss_input => d_sss
    end if
 
