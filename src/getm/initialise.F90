@@ -11,28 +11,25 @@
 !
 ! !USES:
    use register_all_variables
-#ifdef _FLEXIBLE_OUTPUT_
    use output_manager_core, only:output_manager_host=>host, type_output_manager_host=>type_host
    use time, only: CalDat,JulDay
    use output_manager
-#endif
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
    public                              :: init_model
    integer                             :: runtype=1
    logical                             :: dryrun=.false.
+   logical                             :: list_variables=.false.
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 
-#ifdef _FLEXIBLE_OUTPUT_
    type,extends(type_output_manager_host) :: type_getm_host
    contains
       procedure :: julian_day => getm_host_julian_day
       procedure :: calendar_date => getm_host_calendar_date
    end type
-#endif
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -53,6 +50,7 @@
    use halo_mpi, only: init_mpi,print_MPI_info
 #endif
    use output, only: init_output,do_output,restart_file,out_dir
+   use output_processing
    use input,  only: init_input
    use domain, only: init_domain
    use domain, only: H
@@ -277,12 +275,12 @@
 #endif
    end if
 #endif
+   call init_output_processing()
 
    call init_les(runtype)
 
    call init_register_all_variables(runtype)
 
-#ifdef _FLEXIBLE_OUTPUT_
    allocate(type_getm_host::output_manager_host)
    if (myid .ge. 0) then
       write(postfix,'(A,I4.4)') '.',myid
@@ -290,12 +288,12 @@
    else
       call output_manager_init(fm,title)
    end if
-#endif
 
 !   call init_output(runid,title,start,runtype,dryrun,myid)
    call init_output(runid,title,start,runtype,dryrun,myid,MinN,MaxN,save_initial)
 
    call do_register_all_variables(runtype)
+   if (list_variables) call fm%list()
 
    close(NAMLST)
 
@@ -378,10 +376,12 @@
    end if
 
    if (.not. dryrun) then
+      if (save_initial) then
+      call output_manager_prepare_save(julianday, int(secondsofday), 0, int(MinN-1))
+      call do_output_processing()
+      call output_manager_save(julianday,secondsofday,MinN-1)
+      end if
       call do_output(runtype,MinN-1,timestep)
-#ifdef _FLEXIBLE_OUTPUT_
-      if (save_initial) call output_manager_save(julianday,secondsofday,MinN-1)
-#endif
    end if
 
 #ifdef DEBUG
@@ -394,7 +394,6 @@
 
 !-----------------------------------------------------------------------
 
-#ifdef _FLEXIBLE_OUTPUT_
    subroutine getm_host_julian_day(self,yyyy,mm,dd,julian)
       class (type_getm_host), intent(in) :: self
       integer, intent(in)  :: yyyy,mm,dd
@@ -408,7 +407,6 @@
       integer, intent(out) :: yyyy,mm,dd
       call CalDat(julian,yyyy,mm,dd)
    end subroutine
-#endif
 
    end module initialise
 
