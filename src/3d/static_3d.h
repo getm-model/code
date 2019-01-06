@@ -35,6 +35,7 @@
 #ifdef STRUCTURE_FRICTION
   REALTYPE                             :: sf(I3DFIELD)
 #endif
+  REALTYPE                             :: zc(I3DFIELD)
   REALTYPE                             :: ho(I3DFIELD)
   REALTYPE, target                     :: hn(I3DFIELD)
   REALTYPE                             :: huo(I3DFIELD)
