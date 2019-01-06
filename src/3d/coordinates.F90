@@ -30,9 +30,10 @@
 !
 !
 ! !USES:
+   use domain, only: imin,imax,jmin,jmax,kmax,H
+   use variables_3d, only: ho,hn,hvel
 #ifdef SLICE_MODEL
-   use domain, only: imin,imax,jmin,jmax,kmax
-   use variables_3d, only: kvmin,hvo,hvn,ho,hn,hvel
+   use variables_3d, only: kvmin,hvo,hvn
 #endif
    use getm_timers, only: tic, toc,TIM_COORDS
    use m3d
@@ -52,9 +53,7 @@
    logical, save   :: first=.true.
    integer         :: ii
 !   integer         :: preadapt=0
-#ifdef SLICE_MODEL
    integer          :: i,j,k
-#endif
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -101,6 +100,14 @@ stop
    end if ! first
 
    hvel = _HALF_ * ( ho + hn )
+
+   ! calculate the z-coordinate of the cell centers
+   ! references to mean sea level
+   zc(:,:,0)=-H(:,:)
+   zc(:,:,1)=-H(:,:) + 0.5*hn(:,:,1)
+   do k=2,kmax
+      zc(:,:,k)=zc(:,:,k-1)+0.5*(hn(:,:,k-1)+hn(:,:,k))
+   end do
 
 #ifdef SLICE_MODEL
    do i=imin,imax
