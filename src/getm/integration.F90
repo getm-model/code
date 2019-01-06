@@ -62,13 +62,13 @@
    use suspended_matter, only: spm_calc,do_spm
 #endif
    use input,    only: do_input
+   use output_processing, only: do_output_processing
    use output,   only: do_output
 #ifdef TEST_NESTING
    use nesting,   only: nesting_file
 #endif
-#ifdef _FLEXIBLE_OUTPUT_
    use output_manager
-#endif
+   use getm_timers, only: tic, toc, TIM_FLEX_OUTPUT, TIM_OUTPUT_PROC
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -153,12 +153,19 @@
          call nesting_file(WRITING)
       end if
 #endif
+
       call update_time(n)
 
-      call do_output(runtype,n,timestep)
-#ifdef _FLEXIBLE_OUTPUT_
+      call tic(TIM_FLEX_OUTPUT)
+      call output_manager_prepare_save(julianday, int(secondsofday), 0, int(n))
+      call toc(TIM_FLEX_OUTPUT)
+      call tic(TIM_OUTPUT_PROC)
+      call do_output_processing()
+      call toc(TIM_OUTPUT_PROC)
+      call tic(TIM_FLEX_OUTPUT)
       call output_manager_save(julianday,secondsofday,n)
-#endif
+      call toc(TIM_FLEX_OUTPUT)
+      call do_output(runtype,n,timestep)
 #ifdef DIAGNOSE
       call diagnose(n,MaxN,runtype)
 #endif
