@@ -22,9 +22,7 @@
 #endif
    use register_all_variables, only: fm
    use output, only: clean_output
-#if defined(_FLEXIBLE_OUTPUT_)
    use output_manager
-#endif
    use kurt_parallel, only: clean_parallel
    IMPLICIT NONE
 !
@@ -63,9 +61,7 @@
    if( .not. dryrun ) then
       call clean_output(runtype,loop)
    end if
-#if defined(_FLEXIBLE_OUTPUT_)
    call output_manager_clean()
-#endif
 
    call fm%finalize()
 
