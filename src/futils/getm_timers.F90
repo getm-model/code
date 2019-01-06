@@ -71,6 +71,8 @@
    ! This is for do_input and do_output
    integer, parameter :: TIM_INPUT       = 90   ! input
    integer, parameter :: TIM_OUTPUT      = 92   ! output
+   integer, parameter :: TIM_FLEX_OUTPUT = 95   ! output_manager
+   integer, parameter :: TIM_OUTPUT_PROC = 96   ! output_processing
    ! These catch stuff that are *also* measured somewhere else:
    integer, parameter :: TIM_ADV         = 100  ! 2d advection
    integer, parameter :: TIM_ADVH        = 101  ! 2d advection halo parts
@@ -176,6 +178,8 @@
    timernames(TIM_METEO)       = 'do_meteo'
    timernames(TIM_INPUT)       = 'do_input'
    timernames(TIM_OUTPUT)      = 'do_output'
+   timernames(TIM_FLEX_OUTPUT) = 'output_manager_save'
+   timernames(TIM_OUTPUT_PROC) = 'do_output_processing'
 
 #ifdef GETM_PARALLEL
    timernames(TIM_MOMENTUMH)   = ' momentum-halo'
