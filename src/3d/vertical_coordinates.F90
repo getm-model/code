@@ -69,6 +69,7 @@
 !
 !
 ! !USES:
+   use variables_3d, only: zc
    use getm_timers, only: tic, toc,TIM_COORDS
    IMPLICIT NONE
 !
@@ -157,6 +158,15 @@ stop
    call hcheck(hun,Dun,au)
    call hcheck(hvn,Dvn,av)
    end if
+
+!  KK-TODO: remove because we already have zcn
+   ! calculate the z-coordinate of the cell centers
+   ! references to mean sea level
+   zc(:,:,0)=-H(:,:)
+   zc(:,:,1)=-H(:,:) + 0.5*hn(:,:,1)
+   do k=2,kmax
+      zc(:,:,k)=zc(:,:,k-1)+0.5*(hn(:,:,k-1)+hn(:,:,k))
+   end do
 
 #ifdef SLICE_MODEL
    do i=imin,imax
