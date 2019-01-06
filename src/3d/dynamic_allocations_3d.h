@@ -73,6 +73,9 @@
   if (rc /= 0) stop 'init_3d: Error allocating memory (sf)'
 #endif
 
+  allocate(zc(I3DFIELD),stat=rc)    ! 3D field for cell center coordinates
+  if (rc /= 0) stop 'init_3d: Error allocating memory (zc)'
+
   allocate(ho(I3DFIELD),stat=rc)    ! 3D field for old box height (z-column)
   if (rc /= 0) stop 'init_3d: Error allocating memory (ho)'
 
