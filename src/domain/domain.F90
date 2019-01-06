@@ -216,25 +216,25 @@
    call read_topo_file(bathy_format,bathymetry)
 
    if ( runtype .ge. 2 ) then
-   select case (vert_cord)
-      case(_SIGMA_COORDS_)
-         LEVEL2 'Using sigma coordinates'
-      case(_Z_COORDS_)
-         LEVEL2 'Using z-level coordinates'
-      case(_GENERAL_COORDS_)
-         LEVEL2 'Using general vertical coordinates'
-      case (_HYBRID_COORDS_) ! hybrid vertical coordinates
-         LEVEL2 'using hybrid vertical coordinates'
-         STDERR 'domain: hybrid_coordinates not coded yet'
-         stop
-      case (_ADAPTIVE_COORDS_) ! adaptive vertical coordinates
-         LEVEL2 'using adaptive vertical coordinates'
-      case default
-         call getm_error("init_domain()", &
-                         "A non valid vertical coordinate system has been chosen");
-   end select
-   allocate(ga(0:kmax),stat=rc)
-   if (rc /= 0) stop 'init_domain: Error allocating memory (ga)'
+      select case (vert_cord)
+         case(_SIGMA_COORDS_)
+            LEVEL2 'Using sigma coordinates'
+         case(_Z_COORDS_)
+            LEVEL2 'Using z-level coordinates'
+         case(_GENERAL_COORDS_)
+            LEVEL2 'Using general vertical coordinates'
+         case (_HYBRID_COORDS_) ! hybrid vertical coordinates
+            LEVEL2 'using hybrid vertical coordinates'
+            STDERR 'domain: hybrid_coordinates not coded yet'
+            stop
+         case (_ADAPTIVE_COORDS_) ! adaptive vertical coordinates
+            LEVEL2 'using adaptive vertical coordinates'
+         case default
+            call getm_error("init_domain()", &
+                            "A non valid vertical coordinate system has been chosen");
+      end select
+      allocate(ga(0:kmax),stat=rc)
+      if (rc /= 0) stop 'init_domain: Error allocating memory (ga)'
    end if
 
 !  Calculation masks
