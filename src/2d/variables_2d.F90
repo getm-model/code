@@ -211,6 +211,123 @@
 !-----------------------------------------------------------------------
 !BOP
 !
+! !ROUTINE: register_2d_variables() - register GETM variables.
+!
+! !INTERFACE:
+   subroutine register_2d_variables(fm)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use field_manager
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   type (type_field_manager) :: fm
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !LOCAL VARIABLES:
+   logical :: used
+   integer,parameter :: rk = kind(_ONE_)
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   LEVEL2 'register_2d_variables()'
+
+!D(E2DFIELD)
+!DU,DV
+!z(E2DFIELD)
+!zo(E2DFIELD)
+!U(E2DFIELD)
+!V(E2DFIELD)
+!UEx(E2DFIELD)
+!VEx(E2DFIELD)
+!fU(E2DFIELD)
+!fV(E2DFIELD)
+!ru(E2DFIELD)
+!rv(E2DFIELD)
+!Uint(E2DFIELD)
+!Vint(E2DFIELD)
+!Uinto(E2DFIELD)
+!Vinto(E2DFIELD)
+!res_du(E2DFIELD)
+!res_u(E2DFIELD)
+!res_dv(E2DFIELD)
+!res_v(E2DFIELD)
+!kbk
+!SlUx(E2DFIELD)
+!SlVx(E2DFIELD)
+!Slru(E2DFIELD)
+!Slrv(E2DFIELD)
+!zub(E2DFIELD)
+!zvb(E2DFIELD)
+!zub0(E2DFIELD)
+!zvb0(E2DFIELD)
+!An(E2DFIELD)
+!AnX(E2DFIELD)
+!fwf(E2DFIELD)
+!fwf_int(E2DFIELD)
+!EWbdy(jmax),ENbdy(imax),EEbdy(jmax),ESbdy(imax)
+
+
+!  category - 2d
+   call fm%register('z', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=-9999.0_rk, data2d=z(_2D_W_), category="2d", part_of_state=.true.)
+   call fm%register('zo', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=-9999.0_rk, data2d=zo(_2D_W_), category="2d", output_level=output_level_debug)
+   call fm%register('D', 'm', 'water depth', standard_name='water depth', fill_value=-10009.0_rk, data2d=D(_2D_W_), category="2d", part_of_state=.true.)
+   call fm%register('U', 'm2/s', 'transport in local x-direction', standard_name='', data2d=U(_2D_W_), category='2d', output_level=output_level_debug, part_of_state=.true.)
+   call fm%register('V', 'm2/s', 'transport in local y-direction', standard_name='', data2d=V(_2D_W_), category='2d', output_level=output_level_debug, part_of_state=.true.)
+   call fm%register('velx', 'm/s', 'velocity in global x-direction', standard_name='', data2d=velx(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
+   call fm%register('vely', 'm/s', 'velocity in global y-direction', standard_name='', data2d=vely(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
+
+   if (do_numerical_analyses_2d) then
+      call fm%register('numdis_2d', 'W/kg', 'numerical dissipation', standard_name='', category='2d', output_level=output_level_debug)
+      call fm%register('phydis_2d', 'W/kg', 'physical dissipation' , standard_name='', category='2d', output_level=output_level_debug)
+   end if
+
+   return
+   end subroutine register_2d_variables
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: finalize_register_2d_variables() - send optional variables.
+!
+! !INTERFACE:
+   subroutine finalize_register_2d_variables(fm)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use field_manager
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   type (type_field_manager) :: fm
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !LOCAL VARIABLES:
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   LEVEL1 'finalize_register_2d_variables()'
+
+   if (do_numerical_analyses_2d) then
+      call fm%send_data('numdis_2d', numdis_2d(_2D_W_))
+      call fm%send_data('phydis_2d', phydis_2d(_2D_W_))
+   end if
+
+   return
+   end subroutine finalize_register_2d_variables
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: clean_variables_2d - cleanup after 2D run.
 !
 ! !INTERFACE:
