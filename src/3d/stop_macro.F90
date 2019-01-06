@@ -88,7 +88,7 @@
                k=kumin(i,j)
                rrdraghm1 = rru(i,j) / hun(i,j,k)
                rdragDm1  = ru (i,j) / Dun(i,j)
-#ifdef _SLR_V26_
+#ifndef _SLR_NOCLIP_
                Slru(i,j) =   rrdraghm1*uu  (i,j,k) &
                            - rdragDm1 *Uadv(i,j)
 #else
@@ -128,7 +128,7 @@
                k=kvmin(i,j)
                rrdraghm1 = rrv(i,j) / hvn(i,j,k)
                rdragDm1  = rv (i,j) / Dvn(i,j)
-#ifdef _SLR_V26_
+#ifndef _SLR_NOCLIP_
                Slrv(i,j) =   rrdraghm1*vv  (i,j,k) &
                            - rdragDm1 *Vadv(i,j)
 #else
