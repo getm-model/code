@@ -1711,7 +1711,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
 
-   call ESMF_GridCompSet(getmComp,grid=getmGrid3D,rc=rc)
+   call ESMF_GridCompSet(getmComp,gridList=(/getmGrid3D,getmGrid2D/),rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
