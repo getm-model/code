@@ -131,7 +131,7 @@
 
 !-----------------------------------------------------------------------
    subroutine cmdline
-   use initialise, only: dryrun
+   use initialise, only: dryrun,list_variables
    IMPLICIT NONE
    character(len=64)    :: arg
    integer              :: i
@@ -152,6 +152,8 @@
          call compilation_options()
          LEVEL0
          stop
+      case ('-l', '--list_variables')
+         list_variables=.true.
       case ('-h', '--help')
          call print_help()
          stop
@@ -180,9 +182,10 @@
      print '(a)', ''
      print '(a)', 'cmdline options:'
      print '(a)', ''
-     print '(a)', '  -v, --version     print version information and exit'
-     print '(a)', '  -c, --compile     print compilation options'
-     print '(a)', '  -h, --help        print usage information and exit'
+     print '(a)', '  -v, --version        print version information and exit'
+     print '(a)', '  -c, --compile        print compilation options'
+     print '(a)', '  -l, --list_variables list possible output variables'
+     print '(a)', '  -h, --help           print usage information and exit'
      print '(a)', ''
      print '(a)', 'visit getm.eu for further info'
      print '(a)', 'consider subscribing to getm-users@googlegroups.com'

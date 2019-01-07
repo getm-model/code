@@ -96,7 +96,7 @@
          REALTYPE,dimension(E2DFIELD),intent(out) :: ru,rv
          logical,intent(in),optional              :: kwe !keyword-enforcer
          REALTYPE,dimension(E2DFIELD),intent(out),target,optional :: zub,zvb
-         REALTYPE,dimension(:,:),pointer,intent(out),optional     :: taubmax
+         REALTYPE,dimension(:,:),pointer,intent(in),optional      :: taubmax
       end subroutine bottom_friction
 
 ! Temporary interface (should be read from module):
