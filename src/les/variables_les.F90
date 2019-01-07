@@ -148,6 +148,45 @@
 !-----------------------------------------------------------------------
 !BOP
 !
+! !ROUTINE: register_les_variables() - register GETM variables.
+!
+! !INTERFACE:
+   subroutine register_les_variables(fm,runtype)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use field_manager
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   type (type_field_manager) :: fm
+   integer, intent(in)       :: runtype
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !LOCAL VARIABLES:
+   integer,parameter :: rk = kind(_ONE_)
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   LEVEL2 'register_les_variables()'
+
+   if (les_mode.eq.LES_MOMENTUM .or. les_mode.eq.LES_BOTH) then
+      call fm%register('AmC_2d', 'm2/s', 'hor eddy viscosity', standard_name='', data2d=AmC_2d(_2D_W_), category='2d', fill_value=-9999.0_rk, output_level=output_level_debug)
+      if (runtype .ge. 2) then
+      call fm%register('AmC_3d', 'm2/s', 'hor eddy viscosity', standard_name='', dimensions=(/id_dim_z/), data3d=AmC_3d(_3D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug)
+      end if
+   end if
+
+   return
+   end subroutine register_les_variables
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: clean_variables_les - cleanup after run.
 !
 ! !INTERFACE:
