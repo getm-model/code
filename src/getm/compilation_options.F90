@@ -107,8 +107,8 @@
 #ifdef NO_SLR
    LEVEL1 'NO_SLR'
 #endif
-#ifdef _SLR_V26_
-   LEVEL1 '_SLR_V26_'
+#ifdef _SLR_NOCLIP_
+   LEVEL1 '_SLR_NOCLIP_'
 #endif
 #ifdef _DELAY_SLOW_IP_
    LEVEL1 '_DELAY_SLOW_IP_'
@@ -184,9 +184,6 @@
 #endif
 #ifdef _NCDF_SAVE_DOUBLE_
    LEVEL1 '_NCDF_SAVE_DOUBLE_'
-#endif
-#ifdef _FLEXIBLE_OUTPUT_
-   LEVEL1 '_FLEXIBLE_OUTPUT_'
 #endif
 
    STDERR LINE
