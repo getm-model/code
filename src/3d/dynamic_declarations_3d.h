@@ -22,6 +22,7 @@
 #ifdef STRUCTURE_FRICTION
   REALTYPE, dimension(:,:,:), allocatable   :: sf
 #endif
+  REALTYPE, dimension(:,:,:), allocatable, target :: zc
   REALTYPE, dimension(:,:,:), allocatable, target :: hn,hvel,hun,hvn
   REALTYPE, dimension(:,:,:), allocatable   :: ho,huo,hvo
   REALTYPE, dimension(:,:,:), allocatable, target :: zwn,zcn
