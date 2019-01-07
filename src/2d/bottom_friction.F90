@@ -48,7 +48,7 @@
 ! !OUTPUT PARAMETERS:
    REALTYPE,dimension(E2DFIELD),intent(out)                 :: ru,rv
    REALTYPE,dimension(E2DFIELD),intent(out),target,optional :: zub,zvb
-   REALTYPE,dimension(:,:),pointer,intent(out),optional     :: taubmax
+   REALTYPE,dimension(:,:),pointer,intent(in),optional      :: taubmax
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard

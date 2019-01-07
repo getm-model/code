@@ -202,7 +202,7 @@
             zm = max( z(i  ,j) , -H(i+1,j)+min( min_depth , D(i  ,j) ) )
             zx = ( zp - zm + (airp(i+1,j)-airp(i,j))*gammai ) / DXU
             tausu = _HALF_ * ( tausx(i,j) + tausx(i+1,j) )
-#ifdef _SLR_V26_
+#ifndef _SLR_NOCLIP_
             if (UEuler(i,j) .gt. _ZERO_) then
                Slr = max( Slru(i,j) , _ZERO_ )
             else
@@ -379,7 +379,7 @@
             zm = max( z(i,j  ) , -H(i,j+1)+min( min_depth , D(i,j  ) ) )
             zy = ( zp - zm + (airp(i,j+1)-airp(i,j))*gammai ) / DYV
             tausv = _HALF_ * ( tausy(i,j) + tausy(i,j+1) )
-#ifdef _SLR_V26_
+#ifndef _SLR_NOCLIP_
             if (VEuler(i,j) .gt. _ZERO_) then
                Slr = max( Slrv(i,j) , _ZERO_ )
             else
