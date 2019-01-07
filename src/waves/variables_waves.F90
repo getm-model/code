@@ -17,7 +17,8 @@
 !
 ! !PUBLIC DATA MEMBERS:
    REALTYPE,dimension(:,:)  ,pointer     :: coswavedir,sinwavedir
-   REALTYPE,dimension(:,:)  ,pointer     :: waveH,waveL
+   REALTYPE,dimension(:,:)  ,pointer     :: waveH=>null()
+   REALTYPE,dimension(:,:)  ,pointer     :: waveL=>null()
    REALTYPE,dimension(:,:)  ,allocatable,target :: waveT,waveK,waveE
    REALTYPE,dimension(:,:)  ,allocatable :: SJ,SJJ
    REALTYPE,dimension(:,:)  ,allocatable :: kDveln
@@ -176,6 +177,53 @@
    return
    end subroutine init_variables_waves
 !EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: register_waves_variables() - register waves variables.
+!
+! !INTERFACE:
+   subroutine register_waves_variables(fm,runtype)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use field_manager
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   type (type_field_manager) :: fm
+   integer, intent(in)       :: runtype
+!
+! !REVISION HISTORY:
+!  Original author(s): Knut Klingbeil
+!
+! !LOCAL VARIABLES:
+   integer,parameter :: rk = kind(_ONE_)
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   !if (waveforcing_method .eq. NO_WAVES) return
+   LEVEL2 'register_waves_variables()'
+
+   if (associated(waveH)) then
+   call fm%register('waveH', 'm', 'wave height', standard_name='', data2d=waveH(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
+   end if
+   if (associated(waveL)) then
+   call fm%register('waveL', 'm', 'wave length', standard_name='', data2d=waveL(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
+   end if
+   if (allocated(waveT)) then
+   call fm%register('waveT', 's', 'wave period', standard_name='', data2d=waveT(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
+   end if
+   if (allocated(fetch)) then
+   call fm%register('fetch', 'm', 'wind fetch', standard_name='', data2d=fetch(_2D_W_), category='waves', fill_value=-9999.0_rk, output_level=output_level_debug)
+   end if
+
+   return
+   end subroutine register_waves_variables
+!EOC
+
 !-----------------------------------------------------------------------
 !BOP
 !
