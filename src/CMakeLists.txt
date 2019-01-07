@@ -79,11 +79,6 @@ if(GETM_USE_FABM)
 
 endif(GETM_USE_FABM)
 
-option(GETM_USE_FLEXIBLE_OUTPUT "Use new output manager" ON)
-if(GETM_USE_FLEXIBLE_OUTPUT)
-  add_definitions(-D_FLEXIBLE_OUTPUT_)
-endif()
-
 option(GETM_USE_STRUCTURE_FRICTION "Include structure friction" OFF)
 if(GETM_USE_STRUCTURE_FRICTION)
    add_definitions(-DSTRUCTURE_FRICTION)
@@ -362,6 +357,7 @@ add_library(output OBJECT
             output/diagnostic_variables.F90
             output/ncdf_out.F90
             output/nesting.F90
+            output/output_processing.F90
             output/output.F90
            )
 
@@ -393,9 +389,9 @@ add_library(waves OBJECT
 add_dependencies(domain futils)
 add_dependencies(pool domain futils)
 add_dependencies(meteo futils domain)
-add_dependencies(waves futils domain pool meteo)
-add_dependencies(les futils domain)
-add_dependencies(2d domain pool waves les)
+add_dependencies(waves futils domain pool meteo util)
+add_dependencies(les futils domain util)
+add_dependencies(2d domain pool waves les util)
 add_dependencies(3d meteo domain pool waves 2d les)
 add_dependencies(output futils domain waves 2d 3d meteo)
 add_dependencies(ncdf futils domain waves les output)
@@ -411,13 +407,10 @@ find_path(GOTM_BASE src/gotm/gotm.F90 DOC "Path to GOTM source directory.")
 if(GOTM_BASE)
   set(GOTM_BUILD_LIBRARIES_ONLY ON)
   set(GOTM_USE_FABM ${GETM_USE_FABM} CACHE BOOL "Include support for Framework for Aquatic Biogeochemical Models (fabm.net)" FORCE)
-  set(GOTM_USE_FLEXIBLE_OUTPUT ${GETM_USE_FLEXIBLE_OUTPUT} CACHE BOOL "Use new output manager" FORCE)
   add_subdirectory(${GOTM_BASE}/src gotm)
   set(GOTM_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/gotm/modules)
-  set(GOTM_LIBRARIES turbulence util)
-  if(GETM_USE_FLEXIBLE_OUTPUT)
-    set(GOTM_LIBRARIES ${GOTM_LIBRARIES} output_manager)
-  endif()
+  set(GOTM_LIBRARIES turbulence util output_manager)
+#KB  set(GOTM_LIBRARIES ${GOTM_LIBRARIES} output_manager)
   if(GETM_USE_FABM)
     set(GOTM_LIBRARIES ${GOTM_LIBRARIES} gotm_fabm)
     set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES $<TARGET_PROPERTY:gotm_fabm,INTERFACE_INCLUDE_DIRECTORIES>)
@@ -434,6 +427,8 @@ else()
     set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
   endif()
 endif()
+set_property(TARGET waves APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
+set_property(TARGET les APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 set_property(TARGET 2d APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 set_property(TARGET output APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
