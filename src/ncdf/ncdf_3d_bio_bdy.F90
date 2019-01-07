@@ -44,10 +44,10 @@
    logical                             :: from_3d_fields
    logical                             :: bdy3d_bio=.false.
    REALTYPE                            :: offset
-   REAL_4B, allocatable                :: bdy_times(:),wrk(:)
-   REAL_4B,  allocatable, dimension(:) :: zlev
+   REALTYPE, allocatable               :: bdy_times(:),wrk(:)
+   REALTYPE, allocatable, dimension(:) :: zlev
    REALTYPE, allocatable, dimension(:,:,:)   :: bio_old, bio_new
-   REAL_4B,  allocatable, dimension(:,:,:)   :: bio_wrk
+   REALTYPE, allocatable, dimension(:,:,:)   :: bio_wrk
    REALTYPE, allocatable, dimension(:,:,:,:) :: bio_bdy_clim
    logical , allocatable, dimension(:) :: have_bio_missing
    REALTYPE, allocatable, dimension(:) :: bio_missing
@@ -796,7 +796,7 @@
 
 ! !INPUT PARAMETERS:
    integer, intent(in)       :: nlev
-   REAL_4B, intent(in)       :: zlev(nlev),wrk(nlev)
+   REALTYPE, intent(in)      :: zlev(nlev),wrk(nlev)
    REALTYPE, intent(in)      :: depth
    integer, intent(in)       :: kmax
    REALTYPE, intent(in)      :: zm(0:kmax)
