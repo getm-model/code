@@ -568,12 +568,6 @@
 
       t = n*timestep
       hh = secondsofday*(_ONE_/3600)
-      if (new_meteo) then
-         if (.not. first) then
-            deltm1 = _ONE_ / (t_2 - t_1)
-         end if
-      end if
-      t_minus_t2 = t - t_2
 
       if (ramp_is_active) then
          if (n .ge. meteo_ramp) then
@@ -780,10 +774,12 @@
 #endif
 !$OMP END DO
 !$OMP SINGLE
+                     deltm1 = _ONE_ / (t_2 - t_1)
                   end if !if (.not. first) then
 
                end if !if (new_meteo)
 
+               t_minus_t2 = t - t_2
 !$OMP END SINGLE
 !$OMP DO SCHEDULE(RUNTIME)
 #ifndef SLICE_MODEL
