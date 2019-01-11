@@ -363,6 +363,77 @@
    end subroutine init_meteo
 !EOC
 
+#if 0
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: register_meteo_variables() - register GETM variables.
+!
+! !INTERFACE:
+   subroutine register_meteo_variables(fm)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use domain
+   use field_manager
+   IMPLICIT NONE
+! !INPUT PARAMETERS:
+   type (type_field_manager) :: fm
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !LOCAL VARIABLES:
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   LEVEL2 'register_meteo_variables()'
+
+   if (metforcing) then
+      if (calc_met) then
+         call fm%register('airp', 'Pa', 'air pressure', standard_name='', data2d=airp(_2D_W_), category="meteo/in", output_level=output_level_debug)
+         call fm%register('t2', 'Celcius', '2m air temperature', standard_name='', data2d=t2(_2D_W_), category="meteo/in", output_level=output_level_debug)
+         call fm%register('u10', 'm/s', '10m wind (x)', standard_name='', data2d=u10(_2D_W_), category="meteo/in", output_level=output_level_debug)
+         call fm%register('v10', 'm/s', '10m wind (y)', standard_name='', data2d=v10(_2D_W_), category="meteo/in", output_level=output_level_debug)
+!:: hum
+         call fm%register('tcc', '', 'total cloud cover', standard_name='', data2d=tcc(_2D_W_), category="meteo/in", output_level=output_level_debug)
+         ! fwf_method = 2, 3 - precipitation read from file
+         if (fwf_method .eq. 2 .or. fwf_method .eq. 3) then
+            call fm%register('precip', 'm/s', 'precipitation', standard_name='', data2d=precip(_2D_W_), category="meteo/in", output_level=output_level_debug)
+         end if
+         ! fwf_method = 2 - evaporation read from file
+         if (fwf_method .eq. 2) then
+            call fm%register('evap', 'm/s', 'evaporation', standard_name='', data2d=evap(_2D_W_), category="meteo/in", output_level=output_level_debug)
+         end if
+      end if
+      call fm%register('swr', 'W', 'short wave radiation', standard_name='', data2d=swr(_2D_W_), category="meteo/out", output_level=output_level_debug)
+      call fm%register('shf', 'W', 'surface heat flux', standard_name='', data2d=shf(_2D_W_), category="meteo/out", output_level=output_level_debug)
+      call fm%register('tausx', 'Pa', 'wind stress (x)', standard_name='', data2d=tausx(_2D_W_), category="meteo/out", output_level=output_level_debug)
+      call fm%register('tausy', 'Pa', 'wind stress (y)', standard_name='', data2d=tausy(_2D_W_), category="meteo/out", output_level=output_level_debug)
+      call fm%register('albedo', '', 'albedo', standard_name='', data2d=albedo(_2D_W_), category="meteo/out", output_level=output_level_debug)
+      call fm%register('zenith_angle', 'degrees', 'solar zenith angle', standard_name='', data2d=zenith_angle(_2D_W_), category="meteo/out", output_level=output_level_debug)
+      ! fwf_method = 3 - evaporation calculated
+      if (fwf_method .eq. 3 .or. fwf_method .eq. 4) then
+         call fm%register('evap', 'm/s', 'evaporation', standard_name='', data2d=evap(_2D_W_), category="meteo/out", output_level=output_level_debug)
+      end if
+   end if
+
+!:: airp_old,airp_new
+!:: tausx_old,tausy_old
+!:: d_airp,d_tausx,d_tausy
+!:: tcc_old,tcc_new
+!:: swr_old,shf_old
+!:: d_tcc,d_swr,d_shf
+!:: evap_old,precip_old
+!:: d_evap,d_precip
+
+   return
+   end subroutine register_meteo_variables
+!EOC
+#endif
+
+
 !-----------------------------------------------------------------------
 !BOP
 !
