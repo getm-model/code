@@ -22,6 +22,7 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
+   integer, parameter                  :: rk = kind(_ONE_)
 #ifdef STATIC
 #include "static_2d.h"
 #else
@@ -33,8 +34,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
-   integer                   :: rc
 !EOP
 !-----------------------------------------------------------------------
 
@@ -92,6 +91,8 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
 !
+! !LOCAL VARIABLES:
+   integer                   :: rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -114,10 +115,11 @@
    break_stat = 0
 #endif
 
-   z  = _ZERO_; zo =_ZERO_
+   z  = -9999._rk ; zo =_ZERO_
+
    zub=_ZERO_ ; zub0=_ZERO_
    zvb=_ZERO_ ; zvb0=_ZERO_
-   D = _ZERO_;
+
    U = _ZERO_; DU = _ZERO_; fU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; DV = _ZERO_; fV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
 
@@ -168,7 +170,6 @@
 !
 ! !LOCAL VARIABLES:
    logical :: used
-   integer,parameter :: rk = kind(_ONE_)
 !EOP
 !-----------------------------------------------------------------------
 !BOC

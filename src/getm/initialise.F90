@@ -351,9 +351,12 @@
    end if
 
    if (.not. dryrun) then
-      call do_output(runtype,MinN-1,timestep)
+      if (save_initial) then
+      call output_manager_prepare_save(julianday, int(secondsofday), 0, int(MinN-1))
       call do_output_processing()
-      if (save_initial) call output_manager_save(julianday,secondsofday,MinN-1)
+      call output_manager_save(julianday,secondsofday,MinN-1)
+      end if
+      call do_output(runtype,MinN-1,timestep)
    end if
 
 #ifdef DEBUG

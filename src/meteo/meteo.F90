@@ -158,6 +158,7 @@
                LEVEL3 'ty     = ',ty
                LEVEL3 'swr    = ',swr_const
                LEVEL3 'shf    = ',shf_const
+               calc_met = .false.
             case (2)
                if(on_grid) then
                   LEVEL2 'Meteorological fields are on the computational grid'

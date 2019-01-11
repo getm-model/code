@@ -292,9 +292,23 @@ end interface
 
 !     Update halos with biogeochemical variable values (distribute initial values).
       do n=1,size(model%state_variables)
+         fabm_pel(:,:,0,n) = model%state_variables(n)%missing_value
+         forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) &
+            fabm_pel(i,j,:,n) = model%state_variables(n)%missing_value
          call update_3d_halo(fabm_pel(:,:,:,n),fabm_pel(:,:,:,n),az, &
                              imin,jmin,imax,jmax,kmax,D_TAG)
          call wait_halo(D_TAG)
+      end do
+      do n=1,size(model%bottom_state_variables)
+         where ( az.eq.0 ) fabm_ben(:,:,n) = model%bottom_state_variables(n)%missing_value
+      end do
+      do n=1,size(model%diagnostic_variables)
+         fabm_diag(:,:,0,n) = model%diagnostic_variables(n)%missing_value
+         forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) &
+            fabm_diag(i,j,:,n) = model%diagnostic_variables(n)%missing_value
+      end do
+      do n=1,size(model%horizontal_diagnostic_variables)
+         where ( az.eq.0 ) fabm_diag_hz(:,:,n) = model%horizontal_diagnostic_variables(n)%missing_value
       end do
 
 #ifdef DEBUG
@@ -366,24 +380,6 @@ end interface
          fill_value=model%horizontal_diagnostic_variables(i)%missing_value, data2d=fabm_diag_hz(_2D_W_,i), category='fabm'//model%horizontal_diagnostic_variables(i)%target%owner%get_path(), output_level=output_level, used=in_output)
       if (in_output) model%horizontal_diagnostic_variables(i)%save = .true.
    end do
-#if 0
-   if (do_numerical_analyses_3d) then
-      do i=1,size(model%state_variables)
-         call fm%register('nummix_'//trim(model%state_variables(i)%name),                    &
-                          '('//trim(model%state_variables(i)%units)//')**2/s',               &
-                          'numerical mixing of '//trim(model%state_variables(i)%long_name),  &
-                          dimensions=(/id_dim_z/),                                           &
-                          category='fabm'//model%state_variables(i)%target%owner%get_path(), &
-                          output_level=output_level_debug)
-         call fm%register('phymix_'//trim(model%state_variables(i)%name),                    &
-                          '('//trim(model%state_variables(i)%units)//')**2/s',               &
-                          'physical mixing of '//trim(model%state_variables(i)%long_name),  &
-                          dimensions=(/id_dim_z/),                                           &
-                          category='fabm'//model%state_variables(i)%target%owner%get_path(), &
-                          output_level=output_level_debug)
-      end do
-   end if
-#endif
 
    return
    end subroutine register_fabm_variables

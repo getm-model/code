@@ -354,25 +354,10 @@
 !  Original author(s): Karsten Bolding & Jorn Bruggeman
 !
 ! !LOCAL VARIABLES:
-   integer :: i
 !EOP
 !-----------------------------------------------------------------------
 !BOC
    LEVEL1 'finalize_register_all_variables()'
-
-!  category - fabm
-#if 0
-#ifdef _FABM_
-   if (fabm_calc) then
-      if (do_numerical_analyses_3d) then
-         do i=1,size(model%state_variables)
-            call fm%send_data('nummix_'//trim(model%state_variables(i)%name), nummix_fabm_pel(_3D_W_,i))
-            call fm%send_data('phymix_'//trim(model%state_variables(i)%name), phymix_fabm_pel(_3D_W_,i))
-         end do
-      end if
-   end if
-#endif
-#endif
 
    return
    end subroutine finalize_register_all_variables

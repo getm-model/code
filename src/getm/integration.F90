@@ -62,8 +62,8 @@
    use suspended_matter, only: spm_calc,do_spm
 #endif
    use input,    only: do_input
-   use output,   only: do_output,meanout
    use output_processing, only: do_output_processing
+   use output,   only: do_output
 #ifdef TEST_NESTING
    use nesting,   only: nesting_file
 #endif
@@ -101,10 +101,6 @@
          call date_and_time(date=d_,time=t_)
          LEVEL1 t_(1:2),':',t_(3:4),':',t_(5:10),' n=',n
       end if
-
-      call tic(TIM_FLEX_OUTPUT)
-      call output_manager_prepare_save(julianday, int(secondsofday), 0, int(n))
-      call toc(TIM_FLEX_OUTPUT)
 
 #ifndef NO_3D
       do_3d = (runtype .ge. 2 .and. mod(n,M) .eq. 0)
@@ -157,19 +153,18 @@
          call nesting_file(WRITING)
       end if
 #endif
+
+      call update_time(n)
+
+      call tic(TIM_FLEX_OUTPUT)
+      call output_manager_prepare_save(julianday, int(secondsofday), 0, int(n))
+      call toc(TIM_FLEX_OUTPUT)
       call tic(TIM_OUTPUT_PROC)
       call do_output_processing()
       call toc(TIM_OUTPUT_PROC)
       call tic(TIM_FLEX_OUTPUT)
       call output_manager_save(julianday,secondsofday,n)
       call toc(TIM_FLEX_OUTPUT)
-      call update_time(n)
-
-#ifndef NO_3D
-      if(meanout .ge. 0) then
-         call calc_mean_fields(n,meanout)
-      end if
-#endif
       call do_output(runtype,n,timestep)
 #ifdef DIAGNOSE
       call diagnose(n,MaxN,runtype)
