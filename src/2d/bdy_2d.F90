@@ -364,16 +364,18 @@
             select case (bdy_2d_type(l))
                case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
                   do j = wfj(n),wlj(n)
-                     z(i,j) = z(i+1,j)
+                     if ( az(i+1,j) .ne. 0 ) z(i,j) = z(i+1,j)
                   end do
                case (SOMMERFELD)
                   do j = wfj(n),wlj(n)
+                     if ( az(i+1,j) .ne. 0 ) then
                      cfl = sqrt(g*_HALF_*(D(i,j)+D(i+1,j)))*dtm/DXU
                      z(i,j) = (                                             &
                                 (_ONE_ - _TWO_*cfl*(_ONE_-theta))*z (i  ,j) &
                                +(_ONE_ + _TWO_*cfl*(_ONE_-theta))*zo(i+1,j) &
                                -(_ONE_ - _TWO_*cfl*theta        )*z (i+1,j) &
                               )/(_ONE_ + _TWO_*cfl*theta        )
+                     end if
                   end do
                case (CLAMPED_ELEV,CLAMPED)
                   do j = wfj(n),wlj(n)
@@ -383,13 +385,16 @@
                   end do
                case (FLATHER_ELEV)
                   do j = wfj(n),wlj(n)
+                     if ( az(i+1,j) .ne. 0 ) then
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i+1,j))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     a = ramp*bdy_data(kl) &
-                         - _TWO_/sqrt(g*depth)*(U(i,j)-ramp*bdy_data_u(kl)*depth)
-                     z(i,j) = max(a,-H(i,j)+min_depth)
+                     a = _TWO_/sqrt(g*depth)*(U(i,j)-ramp*bdy_data_u(kl)*depth)
+                     else
+                     a = _ZERO_
+                     end if
+                     z(i,j) = max(ramp*bdy_data(kl)-a,-H(i,j)+min_depth)
                      k = k+1
                      kl = kl + 1
                   end do
@@ -403,16 +408,18 @@
             select case (bdy_2d_type(l))
                case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
                   do i = nfi(n),nli(n)
-                     z(i,j) = z(i,j-1)
+                     if ( az(i,j-1) .ne. 0 ) z(i,j) = z(i,j-1)
                   end do
                case (SOMMERFELD)
                   do i = nfi(n),nli(n)
+                     if ( az(i,j-1) .ne. 0 ) then
                      cfl = sqrt(g*_HALF_*(D(i,j-1)+D(i,j)))*dtm/DYVJM1
                      z(i,j) = (                                             &
                                 (_ONE_ - _TWO_*cfl*(_ONE_-theta))*z (i,j  ) &
                                +(_ONE_ + _TWO_*cfl*(_ONE_-theta))*zo(i,j-1) &
                                -(_ONE_ - _TWO_*cfl*theta        )*z (i,j-1) &
                               )/(_ONE_ + _TWO_*cfl*theta        )
+                     end if
                   end do
                case (CLAMPED_ELEV,CLAMPED)
                   do i = nfi(n),nli(n)
@@ -422,13 +429,16 @@
                   end do
                case (FLATHER_ELEV)
                   do i = nfi(n),nli(n)
+                     if ( az(i,j-1) .ne. 0 ) then
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j-1)+D(i,j))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     a = ramp*bdy_data(kl) &
-                         + _TWO_/sqrt(g*depth)*(V(i,j-1)-ramp*bdy_data_v(kl)*depth)
-                     z(i,j) = max(a,-H(i,j)+min_depth)
+                     a = _TWO_/sqrt(g*depth)*(V(i,j-1)-ramp*bdy_data_v(kl)*depth)
+                     else
+                     a = _ZERO_
+                     end if
+                     z(i,j) = max(ramp*bdy_data(kl)+a,-H(i,j)+min_depth)
                      k = k+1
                      kl = kl + 1
                   end do
@@ -442,16 +452,18 @@
             select case (bdy_2d_type(l))
                case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
                   do j = efj(n),elj(n)
-                     z(i,j) = z(i-1,j)
+                     if ( az(i-1,j) .ne. 0 ) z(i,j) = z(i-1,j)
                   end do
                case (SOMMERFELD)
                   do j = efj(n),elj(n)
+                     if ( az(i-1,j) .ne. 0 ) then
                      cfl = sqrt(g*_HALF_*(D(i-1,j)+D(i,j)))*dtm/DXUIM1
                      z(i,j) = (                                             &
                                 (_ONE_ - _TWO_*cfl*(_ONE_-theta))*z (i  ,j) &
                                +(_ONE_ + _TWO_*cfl*(_ONE_-theta))*zo(i-1,j) &
                                -(_ONE_ - _TWO_*cfl*theta        )*z (i-1,j) &
                               )/(_ONE_ + _TWO_*cfl*theta        )
+                     end if
                   end do
                case (CLAMPED_ELEV,CLAMPED)
                   do j = efj(n),elj(n)
@@ -461,13 +473,16 @@
                   end do
                case (FLATHER_ELEV)
                   do j = efj(n),elj(n)
+                     if ( az(i-1,j) .ne. 0 ) then
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i-1,j)+D(i,j))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     a = ramp*bdy_data(kl) &
-                         + _TWO_/sqrt(g*depth)*(U(i-1,j)-ramp*bdy_data_u(kl)*depth)
-                     z(i,j) = max(a,-H(i,j)+min_depth)
+                     a = _TWO_/sqrt(g*depth)*(U(i-1,j)-ramp*bdy_data_u(kl)*depth)
+                     else
+                     a = _ZERO_
+                     end if
+                     z(i,j) = max(ramp*bdy_data(kl)+a,-H(i,j)+min_depth)
                      k = k+1
                      kl = kl + 1
                   end do
@@ -481,16 +496,18 @@
             select case (bdy_2d_type(l))
                case (ZERO_GRADIENT,CLAMPED_VEL,FLATHER_VEL)
                   do i = sfi(n),sli(n)
-                     z(i,j) = z(i,j+1)
+                     if ( az(i,j+1) .ne. 0 ) z(i,j) = z(i,j+1)
                   end do
                case (SOMMERFELD)
                   do i = sfi(n),sli(n)
+                     if ( az(i,j+1) .ne. 0 ) then
                      cfl = sqrt(g*_HALF_*(D(i,j)+D(i,j+1)))*dtm/DYV
                      z(i,j) = (                                             &
                                 (_ONE_ - _TWO_*cfl*(_ONE_-theta))*z (i,j  ) &
                                +(_ONE_ + _TWO_*cfl*(_ONE_-theta))*zo(i,j+1) &
                                -(_ONE_ - _TWO_*cfl*theta        )*z (i,j+1) &
                               )/(_ONE_ + _TWO_*cfl*theta        )
+                     end if
                   end do
                case (CLAMPED_ELEV,CLAMPED)
                   do i = sfi(n),sli(n)
@@ -500,13 +517,16 @@
                   end do
                case (FLATHER_ELEV)
                   do i = sfi(n),sli(n)
+                     if ( az(i,j+1) .ne. 0 ) then
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i,j+1))
 !                    Note (KK): note approximation of sse at vel-time stage
-                     a = ramp*bdy_data(kl) &
-                         - _TWO_/sqrt(g*depth)*(V(i,j)-ramp*bdy_data_v(kl)*depth)
-                     z(i,j) = max(a,-H(i,j)+min_depth)
+                     a = _TWO_/sqrt(g*depth)*(V(i,j)-ramp*bdy_data_v(kl)*depth)
+                     else
+                     a = _ZERO_
+                     end if
+                     z(i,j) = max(ramp*bdy_data(kl)-a,-H(i,j)+min_depth)
                      k = k+1
                      kl = kl + 1
                   end do
@@ -601,21 +621,25 @@
             select case (bdy_2d_type(l))
                case (FLATHER_VEL)
                   do j = wfj(n),wlj(n)
+                     if ( az(i+1,j) .ne. 0 ) then
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i+1,j))
 !                    Note (KK): note approximation of sse at vel-time stage
                      U(i,j) = ramp*bdy_data_u(kl)*depth &
                               - _HALF_*sqrt(g*depth)*(z(i,j)-ramp*bdy_data(kl))
+                     end if
                      k = k+1
                      kl = kl + 1
                   end do
                case (CLAMPED_VEL,CLAMPED)
                   do j = wfj(n),wlj(n)
+                     if ( az(i+1,j) .ne. 0 ) then
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i+1,j))
                      U(i,j) = ramp*bdy_data_u(kl)*depth
+                     end if
                      k = k+1
                      kl = kl + 1
                   end do
@@ -630,21 +654,25 @@
             select case (bdy_2d_type(l))
                case (FLATHER_VEL)
                   do j = efj(n),elj(n)
+                     if ( az(i-1,j) .ne. 0 ) then
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i-1,j)+D(i,j))
 !                    Note (KK): note approximation of sse at vel-time stage
                      U(i-1,j) = ramp*bdy_data_u(kl)*depth &
                                 + _HALF_*sqrt(g*depth)*(z(i,j)-ramp*bdy_data(kl))
+                     end if
                      k = k+1
                      kl = kl + 1
                   end do
                case (CLAMPED_VEL,CLAMPED)
                   do j = efj(n),elj(n)
+                     if ( az(i-1,j) .ne. 0 ) then
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i-1,j)+D(i,j))
                      U(i-1,j) = ramp*bdy_data_u(kl)*depth
+                     end if
                      k = k+1
                      kl = kl + 1
                   end do
@@ -662,21 +690,25 @@
             select case (bdy_2d_type(l))
                case (FLATHER_VEL)
                   do i = nfi(n),nli(n)
+                     if ( az(i,j-1) .ne. 0 ) then
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j-1)+D(i,j))
 !                    Note (KK): note approximation of sse at vel-time stage
                      V(i,j-1) = ramp*bdy_data_v(kl)*depth &
                                 + _HALF_*sqrt(g*depth)*(z(i,j)-ramp*bdy_data(kl))
+                     end if
                      k = k+1
                      kl = kl + 1
                   end do
                case (CLAMPED_VEL,CLAMPED)
                   do i = nfi(n),nli(n)
+                     if ( az(i,j-1) .ne. 0 ) then
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j-1)+D(i,j))
                      V(i,j-1) = ramp*bdy_data_v(kl)*depth
+                     end if
                      k = k+1
                      kl = kl + 1
                   end do
@@ -691,21 +723,25 @@
             select case (bdy_2d_type(l))
                case (FLATHER_VEL)
                   do i = sfi(n),sli(n)
+                     if ( az(i,j+1) .ne. 0 ) then
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i,j+1))
 !                    Note (KK): note approximation of sse at vel-time stage
                      V(i,j) = ramp*bdy_data_v(kl)*depth &
                               - _HALF_*sqrt(g*depth)*(z(i,j)-ramp*bdy_data(kl))
+                     end if
                      k = k+1
                      kl = kl + 1
                   end do
                case (CLAMPED_VEL,CLAMPED)
                   do i = sfi(n),sli(n)
+                     if ( az(i,j+1) .ne. 0 ) then
 !                    Note (KK): approximate interface depths at vel-time stage
 !                               by spatial mean at last sse-time stage
                      depth = _HALF_*(D(i,j)+D(i,j+1))
                      V(i,j) = ramp*bdy_data_v(kl)*depth
+                     end if
                      k = k+1
                      kl = kl + 1
                   end do
