@@ -531,7 +531,6 @@
 !
 ! !LOCAL VARIABLES
    type(ESMF_Clock)           :: getmClock
-   type(ESMF_Grid)            :: getmGrid2D
    type(ESMF_Time)            :: getmRefTime,getmStartTime,getmStopTime
    type(ESMF_TimeInterval)    :: getmTimeStep
    type(ESMF_VM)              :: vm
@@ -708,9 +707,9 @@
 
    end if
 
-   call getmComp_init_grid(getmComp,getmGrid2D)
-   call init_importStateP1(getmComp,getmGrid2D,importState)
-   call init_exportStateP1(getmComp,getmGrid2D,exportState)
+   call getmComp_init_grid(getmComp)
+   call init_importStateP1(getmComp,importState)
+   call init_exportStateP1(getmComp,exportState)
 
    call toc(TIM_ESMF)
 
@@ -1048,7 +1047,7 @@
 ! !ROUTINE: getmComp_init_grid - Creates Grid
 !
 ! !INTERFACE:
-   subroutine getmComp_init_grid(getmComp,getmGrid2D)
+   subroutine getmComp_init_grid(getmComp)
 !
 ! !DESCRIPTION:
 !
@@ -1066,9 +1065,6 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
    type(ESMF_GridComp) :: getmComp
-!
-! !OUTPUT PARAMETERS:
-   type(ESMF_Grid),intent(out) :: getmGrid2D
 !
 ! !REVISION HISTORY:
 !  Original Author(s): Knut Klingbeil
@@ -1089,7 +1085,7 @@
    type(ESMF_Array)         :: array
    type(ESMF_CoordSys_Flag) :: coordSys
    type(ESMF_DistGrid)      :: getmDistGrid2D,getmDistGrid3D,distgrid
-   type(ESMF_Grid)          :: getmGrid3D
+   type(ESMF_Grid)          :: getmGrid3D,getmGrid2D
    type(ESMF_StaggerLoc)    :: staggerloc
    type(ESMF_VM)            :: vm
 !  Note (KK): ESMF_ARRAY's are deep classes, that persist after return.
@@ -1858,7 +1854,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 ! !ROUTINE: init_importStateP1 -
 !
 ! !INTERFACE:
-   subroutine init_importStateP1(getmComp,getmGrid2D,importState)
+   subroutine init_importStateP1(getmComp,importState)
 !
 ! !DESCRIPTION:
 !
@@ -1871,9 +1867,6 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    use variables_waves,only: waveH,waveK,waveT
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-   type(ESMF_Grid),intent(in)   :: getmGrid2D
-!
 ! !INPUT/OUTPUT PARAMETERS:
    type(ESMF_GridComp) :: getmComp
    type(ESMF_State)    :: importState
@@ -1882,7 +1875,8 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 !  Original Author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES
-   type(ESMF_Grid) :: getmGrid3D
+   type(ESMF_Grid) :: getmGrid3D,getmGrid2D
+   type(ESMF_Grid), allocatable :: gridList(:)
    integer         :: rc
    logical         :: abort,frc
 !
@@ -1895,11 +1889,12 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    write(debug,*) 'init_importStateP1() # ',Ncall
 #endif
 
-   call ESMF_GridCompGet(getmComp,grid=getmGrid3D,rc=rc)
+   call ESMF_GridCompGet(getmComp, gridList=gridList, rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   call StateAddField(importState,"gridSetField2D",getmGrid2D)
+   getmGrid3D = gridList(1)
+   getmGrid2D = gridList(2)
 
    if (met_method .eq. METEO_FROMEXT) then
       !call StateAddField(importState,trim(name_swr    ),getmGrid2D,units="W m-2")
@@ -2035,7 +2030,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 ! !ROUTINE: init_exportStateP1 -
 !
 ! !INTERFACE:
-   subroutine init_exportStateP1(getmComp,getmGrid2D,exportState)
+   subroutine init_exportStateP1(getmComp,exportState)
 !
 ! !DESCRIPTION:
 !
@@ -2049,9 +2044,6 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    use waves          ,only: WAVES_FROMWIND,WAVES_FROMFILE
    IMPLICIT NONE
 !
-! !INPUT PARAMETERS:
-   type(ESMF_Grid),intent(in)   :: getmGrid2D
-!
 ! !INPUT/OUTPUT PARAMETERS:
    type(ESMF_GridComp) :: getmComp
    type(ESMF_State)    :: exportState
@@ -2060,7 +2052,8 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 !  Original Author(s): Knut Klingbeil
 !
 ! !LOCAL VARIABLES
-   type(ESMF_Grid) :: getmGrid3D
+   type(ESMF_Grid) :: getmGrid3D,getmGrid2D
+   type(ESMF_Grid), allocatable :: gridList(:)
    integer         :: rc
    logical         :: abort
 !
@@ -2073,11 +2066,12 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    write(debug,*) 'init_exportStateP1() # ',Ncall
 #endif
 
-   call ESMF_GridCompGet(getmComp,grid=getmGrid3D,rc=rc)
+   call ESMF_GridCompGet(getmComp, gridList=gridList, rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   call StateAddField(exportState,"gridSetField2D",getmGrid2D)
+   getmGrid3D = gridList(1)
+   getmGrid2D = gridList(2)
 
 #ifdef ALLEXPORT
    call StateAddField(exportState,trim(name_depth  ),getmGrid2D,units="m")
