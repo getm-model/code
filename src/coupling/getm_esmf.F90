@@ -711,6 +711,7 @@
    end if
 
    call getmComp_init_grid(getmComp)
+   call NUOPC_FieldDictionarySetAutoAdd(.true.)
    call init_importStateP1(getmComp,importState)
    call init_exportStateP1(getmComp,exportState)
 
@@ -3201,13 +3202,29 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    end if
 
 #ifdef _GETM_NUOPC_
-   call NUOPC_Advertise(state, trim(name), Units=units, rc=rc)
-   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+   if (NUOPC_FieldDictionaryHasEntry(trim(name))) then
+      call NUOPC_Advertise(state, trim(name), Units=units, rc=rc)
+      abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+      if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   call ESMF_StateGet(state, trim(name), field=field, rc=rc)
-   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+      call ESMF_StateGet(state, trim(name), field=field, rc=rc)
+      abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+      if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+   else
+      call NUOPC_Advertise(state, trim(name), rc=rc)
+      abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+      if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+      call ESMF_StateGet(state, trim(name), field=field, rc=rc)
+      abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+      if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+      if (present(units)) then
+         call ESMF_AttributeSet(field,'units',trim(units),rc=rc)
+         abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+         if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+      end if
+   end if
 #else
    field = ESMF_FieldEmptyCreate(name=trim(name),rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
