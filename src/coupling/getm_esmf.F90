@@ -97,6 +97,16 @@
       "wind_x_velocity_at_10m"
    character(len=*),parameter :: name_windV  = &
       "wind_y_velocity_at_10m"
+   character(len=*),parameter :: name_airT2  = &
+      "air_temperature_at_2m"
+   character(len=*),parameter :: name_humr   = &
+      "relative_humidity"
+   character(len=*),parameter :: name_hums   = &
+      "specific_humidity"
+   character(len=*),parameter :: name_dev2   = &
+      "dew_point_temperature"
+   character(len=*),parameter :: name_tcc    = &
+      "total_cloud_cover"
 !
 ! !REVISION HISTORY:
 !  Original author(s): Knut Klingbeil
@@ -1862,9 +1872,10 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 ! !DESCRIPTION:
 !
 ! !USES:
+   use initialise     ,only: runtype
    use domain         ,only: grid_type
    use meteo          ,only: met_method,calc_met,METEO_FROMEXT
-   use meteo          ,only: airp,u10,v10,constant_cd
+   use meteo          ,only: airp,u10,v10,t2,hum,tcc
    use waves          ,only: waveforcing_method,WAVES_FROMEXT
    use waves          ,only: waves_ramp
    use variables_waves,only: waveH,waveK,waveT
@@ -1904,13 +1915,24 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
       call StateAddField(importState,trim(name_slp    ),getmGrid2D,    &
                          farray2D=airp,units="Pa")
       if (calc_met) then
-         constant_cd = .true.
 !        force allocation of new memory if grid rotation needs to be removed
          frc = (grid_type .ne. 2)
          call StateAddField(importState,trim(name_windU  ),getmGrid2D, &
                             farray2D=u10,units="m s-1",frc=frc)
          call StateAddField(importState,trim(name_windV  ),getmGrid2D, &
                             farray2D=v10,units="m s-1",frc=frc)
+         if (runtype .gt. 2) then
+         call StateAddField(importState,trim(name_airT2  ),getmGrid2D, &
+                            farray2D=t2,units="K")
+         call StateAddField(importState,trim(name_hums   ),getmGrid2D, &
+                            farray2D=hum,units="kg/kg")
+         call StateAddField(importState,trim(name_humr   ),getmGrid2D, &
+                            farray2D=hum,units="%")
+         call StateAddField(importState,trim(name_dev2   ),getmGrid2D, &
+                            farray2D=hum,units="K")
+         call StateAddField(importState,trim(name_tcc    ),getmGrid2D, &
+                            farray2D=hum,units="")
+         end if
       end if ! calc_met
    end if ! meteo
 
@@ -1948,9 +1970,11 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 ! !DESCRIPTION:
 !
 ! !USES:
+   use initialise     ,only: runtype
    use domain         ,only: grid_type,convc,cosconv,sinconv
    use meteo          ,only: met_method,calc_met,METEO_FROMEXT,new_meteo
-   use meteo          ,only: airp,u10,v10
+   use meteo          ,only: hum_method,RELATIVE_HUM,WET_BULB,DEW_POINT,SPECIFIC_HUM
+   use meteo          ,only: airp,u10,v10,t2,hum,tcc
    use waves          ,only: waveforcing_method,WAVES_FROMEXT,new_waves
    use waves          ,only: waves_ramp
    use variables_waves,only: coswavedir,sinwavedir,waveH,waveK,waveT
@@ -1996,6 +2020,35 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
          if (frc) then
             u10 = cosconv*windU - sinconv*windV
             v10 = sinconv*windU + cosconv*windV
+         end if
+         if (runtype .gt. 2) then
+            call StateReadCompleteField(importState,trim(name_airT2  ),&
+                                        farray2d=t2)
+            p2dr => NULL()
+            call StateReadCompleteField(importState,trim(name_hums   ),&
+                                        p2dr=p2dr,frc=.true.,ign=.true.)
+            if (associated(p2dr)) then
+            hum_method = SPECIFIC_HUM
+            else
+            call StateReadCompleteField(importState,trim(name_humr   ),&
+                                        p2dr=p2dr,frc=.true.,ign=.true.)
+            if (associated(p2dr)) then
+            hum_method = RELATIVE_HUM
+            else
+            call StateReadCompleteField(importState,trim(name_dev2   ),&
+                                        p2dr=p2dr,frc=.true.,ign=.true.)
+            if (associated(p2dr)) then
+            hum_method = DEW_POINT
+            else
+            hum_method = -1
+            call ESMF_LogWrite('hum_method=-1',                        &
+                               ESMF_LOGMSG_WARNING,line=__LINE__,file=FILENAME)
+
+            end if
+            end if
+            end if
+            call StateReadCompleteField(importState,trim(name_tcc    ),&
+                                        farray2d=tcc)
          end if
       end if ! calc_met
 
