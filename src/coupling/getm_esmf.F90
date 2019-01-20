@@ -1,4 +1,5 @@
 #include "cppdefs.h"
+#define _GETM_NUOPC_
 !#define ALLEXPORT
 !-----------------------------------------------------------------------
 !BOP
@@ -461,26 +462,28 @@
    InitializePhaseMap(1) = "IPDv00p1=1"
    InitializePhaseMap(2) = "IPDv00p2=2"
 
-!  Note (KK): NUOPC attributes are purpose="Instance"
-#if 1
+#ifdef _GETM_NUOPC_
    call NUOPC_CompAttributeAdd(getmComp,(/"InitializePhaseMap"/),rc=rc)
-#else
-   call ESMF_AttributeAdd(getmComp,convention="NUOPC",purpose="General", &
-                          attrList=(/"InitializePhaseMap"/),rc=rc)
-#endif
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-#if 1
    call NUOPC_CompAttributeSet(getmComp,"InitializePhaseMap",          &
                                InitializePhaseMap,rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 #else
+!  Note (KK): NUOPC attributes are purpose="Instance"
+   call ESMF_AttributeAdd(getmComp,convention="NUOPC",purpose="General", &
+                          attrList=(/"InitializePhaseMap"/),rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
    call ESMF_AttributeSet(getmComp,name="InitializePhaseMap",          &
                           valueList=InitializePhaseMap,                &
                           convention="NUOPC",purpose="General",rc=rc)
-#endif
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+#endif
 
    call toc(TIM_ESMF)
 
@@ -3197,6 +3200,15 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
       return
    end if
 
+#ifdef _GETM_NUOPC_
+   call NUOPC_Advertise(state, trim(name), Units=units, rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   call ESMF_StateGet(state, trim(name), field=field, rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+#else
    field = ESMF_FieldEmptyCreate(name=trim(name),rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -3215,6 +3227,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    call NUOPC_SetAttribute(field,"Connected","false",rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+#endif
 
    call ESMF_FieldEmptySet(field,grid,staggerloc=staggerloc,rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
@@ -3295,9 +3308,11 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    end if
 
+#ifndef _GETM_NUOPC_
    call ESMF_StateAdd(state,(/field/),rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving StateAddField()'
@@ -3498,6 +3513,10 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
       if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    end if
+
+   call NUOPC_Realize(state, field, rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
 #ifdef DEBUG
    write(debug,*) 'Leaving StateCompleteConnectedField()'
