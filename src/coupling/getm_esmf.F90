@@ -787,7 +787,10 @@
 
    call ESMF_LogWrite(trim(name)//"::InitializeP2...",ESMF_LOGMSG_TRACE)
 
+   call init_importStateP2(getmComp,importState)
    call init_exportStateP2(getmComp,exportState)
+
+   call read_importState(getmComp,importState)
 
 !  If the initial Export state needs to be filled, do it here.
    call getmComp_update_grid(getmComp)
@@ -1875,7 +1878,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    use initialise     ,only: runtype
    use domain         ,only: grid_type
    use meteo          ,only: met_method,calc_met,METEO_FROMEXT
-   use meteo          ,only: airp,u10,v10,t2,hum,tcc
+   use meteo          ,only: airp,u10,v10,t2,tcc
    use waves          ,only: waveforcing_method,WAVES_FROMEXT
    use waves          ,only: waves_ramp
    use variables_waves,only: waveH,waveK,waveT
@@ -1925,13 +1928,13 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
          call StateAddField(importState,trim(name_airT2  ),getmGrid2D, &
                             farray2D=t2,units="K")
          call StateAddField(importState,trim(name_hums   ),getmGrid2D, &
-                            farray2D=hum,units="kg/kg")
+                            units="kg/kg")
          call StateAddField(importState,trim(name_humr   ),getmGrid2D, &
-                            farray2D=hum,units="%")
+                            units="%")
          call StateAddField(importState,trim(name_dev2   ),getmGrid2D, &
-                            farray2D=hum,units="K")
+                            units="K")
          call StateAddField(importState,trim(name_tcc    ),getmGrid2D, &
-                            farray2D=hum,units="")
+                            farray2D=tcc,units="")
          end if
       end if ! calc_met
    end if ! meteo
@@ -1958,6 +1961,85 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    return
 
    end subroutine init_importStateP1
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: init_importStateP2 -
+!
+! !INTERFACE:
+   subroutine init_importStateP2(getmComp,importState)
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use initialise     ,only: runtype
+   use meteo          ,only: met_method,calc_met,METEO_FROMEXT
+   use meteo          ,only: hum
+   use meteo          ,only: hum_method,RELATIVE_HUM,WET_BULB,DEW_POINT,SPECIFIC_HUM
+   IMPLICIT NONE
+!
+! !INPUT/OUTPUT PARAMETERS:
+   type(ESMF_GridComp) :: getmComp
+   type(ESMF_State)    :: importState
+!
+! !REVISION HISTORY:
+!  Original Author(s): Knut Klingbeil
+!
+! !LOCAL VARIABLES
+   type(ESMF_Grid) :: getmGrid3D,getmGrid2D
+   type(ESMF_Grid), allocatable :: gridList(:)
+   real(ESMF_KIND_R8), pointer  :: p2dr(:,:)
+   integer         :: rc
+   logical         :: abort,frc
+!
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'init_importStateP2() # ',Ncall
+#endif
+
+   if (met_method .eq. METEO_FROMEXT) then
+      if (calc_met) then
+         if (runtype .gt. 2) then
+         p2dr => NULL()
+         call StateCompleteConnectedField(importState,trim(name_hums   ), &
+                            farray2d=hum,p2dr=p2dr)
+         if (associated(p2dr)) then
+            hum_method = SPECIFIC_HUM
+         else
+         call StateCompleteConnectedField(importState,trim(name_humr   ), &
+                            farray2d=hum,p2dr=p2dr)
+         if (associated(p2dr)) then
+            hum_method = RELATIVE_HUM
+         else
+         call StateCompleteConnectedField(importState,trim(name_dev2   ), &
+                            farray2d=hum,p2dr=p2dr)
+         if (associated(p2dr)) then
+            hum_method = DEW_POINT
+         else
+            hum_method = -1
+            call ESMF_LogWrite('hum_method=-1',                        &
+                               ESMF_LOGMSG_WARNING,line=__LINE__,file=FILENAME)
+         end if
+         end if
+         end if
+         end if
+      end if ! calc_met
+   end if ! meteo
+
+   !call ESMF_StatePrint(importState)
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving init_importStateP2()'
+   write(debug,*)
+#endif
+   return
+
+   end subroutine init_importStateP2
 !EOC
 !-----------------------------------------------------------------------
 !BOP
@@ -2024,29 +2106,19 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
          if (runtype .gt. 2) then
             call StateReadCompleteField(importState,trim(name_airT2  ),&
                                         farray2d=t2)
-            p2dr => NULL()
-            call StateReadCompleteField(importState,trim(name_hums   ),&
-                                        p2dr=p2dr,frc=.true.,ign=.true.)
-            if (associated(p2dr)) then
-            hum_method = SPECIFIC_HUM
-            else
-            call StateReadCompleteField(importState,trim(name_humr   ),&
-                                        p2dr=p2dr,frc=.true.,ign=.true.)
-            if (associated(p2dr)) then
-            hum_method = RELATIVE_HUM
-            else
-            call StateReadCompleteField(importState,trim(name_dev2   ),&
-                                        p2dr=p2dr,frc=.true.,ign=.true.)
-            if (associated(p2dr)) then
-            hum_method = DEW_POINT
-            else
-            hum_method = -1
-            call ESMF_LogWrite('hum_method=-1',                        &
-                               ESMF_LOGMSG_WARNING,line=__LINE__,file=FILENAME)
 
-            end if
-            end if
-            end if
+            select case(hum_method)
+               case (SPECIFIC_HUM)
+            call StateReadCompleteField(importState,trim(name_hums   ),&
+                                        farray2d=hum)
+               case (RELATIVE_HUM)
+            call StateReadCompleteField(importState,trim(name_humr   ),&
+                                        farray2d=hum)
+               case (DEW_POINT)
+            call StateReadCompleteField(importState,trim(name_dev2   ),&
+                                        farray2d=hum)
+            end select
+
             call StateReadCompleteField(importState,trim(name_tcc    ),&
                                         farray2d=tcc)
          end if
