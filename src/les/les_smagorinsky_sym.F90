@@ -78,7 +78,7 @@
 #ifndef SLICE_MODEL
                             - dvdyC(i,j)                               &
 #endif
-                           )**2
+                           )**2                                        &
                          + (_HALF_*(shearU(i-1,j) + shearU(i,j)))**2
                AmC(i,j) = SmagC2_2d(i,j)*DXC*DYC*sqrt(AmC(i,j))
             end if
@@ -124,7 +124,7 @@
 #ifndef SLICE_MODEL
                             - dvdy                                     &
 #endif
-                           )**2
+                           )**2                                        &
                          + shearX(i,j)**2
                AmX(i,j) = SmagX2_2d(i,j)*DXX*DYX*sqrt(AmX(i,j))
             end if
