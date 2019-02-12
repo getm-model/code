@@ -854,7 +854,7 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 !
 ! !LOCAL VARIABLES:
    integer         :: i,j,err
-   REALTYPE,dimension(edges(1),edges(2)) :: wrk,wrk_dp
+   REALTYPE,dimension(edges(1),edges(2)) :: wrk!,wrk_dp
    REALTYPE        :: angle,uu,vv,sinconv,cosconv
 !EOP
 !-----------------------------------------------------------------------
@@ -874,8 +874,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          end if
       else
          !KBKwrk_dp = _ZERO_
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,airp_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,airp_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,airp_input)
       end if
    end if
 
@@ -889,8 +891,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
             evap_input(ill:ihl,jll:jhl) = wrk
          end if
       else
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,evap_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,evap_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,evap_input)
       end if
       if (evap_factor .ne. _ONE_) then
          evap_input = evap_input * evap_factor
@@ -907,8 +911,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
             precip_input(ill:ihl,jll:jhl) = wrk
          end if
       else
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,precip_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,precip_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,precip_input)
       end if
       if (precip_factor .ne. _ONE_) then
          precip_input = precip_input * precip_factor
@@ -928,8 +934,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          end if
       else
          !KBKwrk_dp = _ZERO_
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,u10_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,u10_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,u10_input)
       end if
    end if
 
@@ -944,8 +952,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          end if
       else
          !KBKwrk_dp = _ZERO_
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,v10_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,v10_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,v10_input)
       end if
    end if
 
@@ -984,8 +994,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          end if
       else
          !KBKwrk_dp = _ZERO_
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,t2_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,t2_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,t2_input)
       end if
    end if
 
@@ -1000,8 +1012,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          end if
       else
          !KBKwrk_dp = _ZERO_
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,hum_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,hum_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,hum_input)
       end if
    end if
 
@@ -1016,8 +1030,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          end if
       else
          !KBKwrk_dp = _ZERO_
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,tcc_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,tcc_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,tcc_input)
       end if
    end if
 
@@ -1072,8 +1088,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
             sst_input(ill:ihl,jll:jhl) = wrk
          end if
       else if (calc_met) then
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sst_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sst_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,sst_input)
       end if
    end if
 
@@ -1087,8 +1105,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
             sss_input(ill:ihl,jll:jhl) = wrk
          end if
       else if (calc_met) then
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sss_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sss_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,sss_input)
       end if
    end if
 
@@ -1100,6 +1120,35 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 10 FATAL 'read_data: ',nf90_strerror(err)
    stop
    end subroutine read_data
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: flip_var -
+!
+! !INTERFACE:
+   subroutine flip_var(var)
+   IMPLICIT NONE
+!
+! !DESCRIPTION:
+!
+! !INPUT/OUTPUT PARAMETERS:
+   REALTYPE, intent(inout) :: var(edges(1),edges(2))
+!
+! !REVISION HISTORY:
+!
+! !LOCAL VARIABLES:
+!
+!EOP
+!-----------------------------------------------------------------------
+
+   select case (grid_scan)
+      case (0)
+         var = var(:,edges(2):1:-1)
+   end select
+   return
+   end subroutine flip_var
 !EOC
 
 !-----------------------------------------------------------------------
