@@ -148,13 +148,7 @@
                          "dimensions do not match")
       end if
       il = ilg ; jl = jlg ; ih = ihg ; jh = jhg
-   else
-      il = 1 ; jl = 1 ; ih = iextr ; jh = jextr
    end if
-
-   start(1) = il; start(2) = jl;
-   edges(1) = ih-il+1; edges(2) = jh-jl+1;
-   edges(3) = 1
 
    allocate(beta(E2DFIELD),stat=err)
    if (err /= 0) &
@@ -174,6 +168,7 @@
          call to_rotated_lat_lon(southpole,olon,olat,rlon,rlat,x)
          beta = x
       end if
+      il = 1 ; jl = 1 ; ih = iextr ; jh = jextr
    else
       if (met_lat(1) .gt. met_lat(2)) then
          LEVEL3 'Reverting lat-axis and setting grid_scan to 0'
@@ -228,7 +223,20 @@
          call getm_error("init_meteo_input_ncdf()", &
                           "Some interpolation coefficients are not valid")
       end if
+
+      il = minval(gridmap(:,:,1),mask=(gridmap(:,:,1).gt.0))
+      jl = minval(gridmap(:,:,2),mask=(gridmap(:,:,2).gt.0))
+      ih = min( maxval(gridmap(:,:,1))+1 , iextr )
+      jh = min( maxval(gridmap(:,:,2))+1 , jextr )
+
+      where( gridmap(:,:,1).gt.0 ) gridmap(:,:,1) = gridmap(:,:,1) - il + 1
+      where( gridmap(:,:,2).gt.0 ) gridmap(:,:,2) = gridmap(:,:,2) - jl + 1
+
    end if
+
+   start(1) = il; start(2) = jl;
+   edges(1) = ih-il+1; edges(2) = jh-jl+1;
+   edges(3) = 1
 
    allocate(d_airp(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_airp)'
@@ -1125,8 +1133,11 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 !
 ! !LOCAL VARIABLES:
    integer         :: i,j
+   integer         :: iextr,jextr
 !EOP
 !-----------------------------------------------------------------------
+
+   iextr = edges(1) ; jextr = edges(2)
 
    select case (grid_scan)
       case (0)
