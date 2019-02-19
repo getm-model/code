@@ -424,8 +424,8 @@
                num(i,j,:) = 1.e-15
                nuh(i,j,:) = 1.e-15
 #ifndef NO_BAROCLINIC
-               S(i,j,:)   = -9999.0
-               T(i,j,:)   = -9999.0
+               S(i,j,:)   = -9999._rk
+               T(i,j,:)   = -9999._rk
 #endif
             end if
          end do

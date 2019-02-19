@@ -272,9 +272,10 @@
 #endif
    end if
 #endif
-   call init_output_processing()
 
    call init_les(runtype)
+
+   call init_output_processing()
 
    call init_register_all_variables(runtype)
 
