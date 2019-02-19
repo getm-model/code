@@ -275,9 +275,10 @@
 #endif
    end if
 #endif
-   call init_output_processing()
 
    call init_les(runtype)
+
+   call init_output_processing()
 
    call init_register_all_variables(runtype)
 
@@ -374,6 +375,8 @@
 #endif
       end if
    end if
+
+   call finalize_register_all_variables(runtype)
 
    if (.not. dryrun) then
       if (save_initial) then
