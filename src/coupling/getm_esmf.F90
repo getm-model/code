@@ -1294,12 +1294,7 @@
 !             staggerAlign and staggerEdgeWidth's.
 !  internal call to ESMF_GridCreateFrmDistGrid()
    getmGrid2D = ESMF_GridCreate(getmDistGrid2D,name=trim(name)//"Grid2D", &
-#if 0
-! bug in ESMF
                                 gridAlign=(/1,1/),                        &
-#else
-                                gridEdgeLWidth=(/1,1/),                   &
-#endif
                                 coordSys=coordSys,                        &
                                 coordDimCount=int(coordDimCount(1:2)),    &
                                 coordDimMap=int(coordDimMap(1:2,1:2)),    &
@@ -1308,13 +1303,7 @@
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    getmGrid3D = ESMF_GridCreate(getmDistGrid3D,name=trim(name)//"Grid3D", &
-#if 0
-! bug in ESMF
                                 gridAlign=(/1,1,1/),                      &
-#else
-                                gridEdgeLWidth=(/1,1,1/),                 &
-#endif
-
                                 coordSys=coordSys,                        &
                                 coordDimCount=coordDimCount,              &
                                 coordDimMap=coordDimMap,                  &
@@ -2979,8 +2968,6 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    xxArray2D = ESMF_ArrayCreate(distgrid,xx1D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
-!                                totalLWidth=(/HALO+1/),                &
-                                totalUWidth=(/HALO  /),                &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -2988,8 +2975,6 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    yxArray2D = ESMF_ArrayCreate(distgrid,yx1D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
                                 distgridToArrayMap=(/0,1/),            &
-!                                totalLWidth=(/HALO+1/),                &
-                                totalUWidth=(/HALO  /),                &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -3022,8 +3007,6 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    xxArray3D = ESMF_ArrayCreate(distgrid,xx1D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
-!                                totalLWidth=(/HALO+1/),                &
-                                totalUWidth=(/HALO  /),                &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -3031,8 +3014,6 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    yxArray3D = ESMF_ArrayCreate(distgrid,yx1D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
                                 distgridToArrayMap=(/0,1,0/),          &
-!                                totalLWidth=(/HALO+1/),                &
-                                totalUWidth=(/HALO  /),                &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -3124,16 +3105,12 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    xxArray2D = ESMF_ArrayCreate(distgrid,xx2D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
-!                                totalLWidth=(/HALO+1,HALO+1/),         &
-                                totalUWidth=(/HALO  ,HALO  /),         &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    yxArray2D = ESMF_ArrayCreate(distgrid,yx2D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
-!                                totalLWidth=(/HALO+1,HALO+1/),         &
-                                totalUWidth=(/HALO  ,HALO  /),         &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -3165,16 +3142,12 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    xxArray3D = ESMF_ArrayCreate(distgrid,xx2D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
-!                                totalLWidth=(/HALO+1,HALO+1/),         &
-                                totalUWidth=(/HALO  ,HALO  /),         &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    yxArray3D = ESMF_ArrayCreate(distgrid,yx2D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
-!                                totalLWidth=(/HALO+1,HALO+1/),         &
-                                totalUWidth=(/HALO  ,HALO  /),         &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)

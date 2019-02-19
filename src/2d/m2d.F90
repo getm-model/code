@@ -167,7 +167,6 @@
    integer                   :: i,j
    integer                   :: elev_method=1
    REALTYPE                  :: elev_const=_ZERO_
-   integer,parameter :: rk = kind(_ONE_)
    character(LEN = PATH_MAX) :: elev_file='elev.nc'
    namelist /m2d/ &
           elev_method,elev_const,elev_file,                       &
@@ -441,8 +440,8 @@
 
 !     This is only needed for proper flexible output
       where (az .eq. 0)
-         z  = -9999.0d0
-         zo = -9999.0d0
+         z  = -9999._rk
+         zo = -9999._rk
       end where
 
    return
