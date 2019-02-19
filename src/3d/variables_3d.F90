@@ -115,6 +115,7 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
+   integer, parameter                  :: rk = kind(_ONE_)
    REALTYPE                            :: dt,cnpar=0.9
    REALTYPE                            :: avmback=_ZERO_,avhback=_ZERO_
    logical                             :: do_numerical_analyses_3d=.false.
@@ -191,7 +192,6 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
-   integer,parameter         :: rk = kind(_ONE_)
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -252,8 +252,8 @@
 #endif
 
 !  must be nonzero for gotm_fabm in case of calc_temp=F
-   g1 = -9999*_ONE_
-   g2 = -9999*_ONE_
+   g1 = -9999._rk
+   g2 = -9999._rk
 
 #ifdef STRUCTURE_FRICTION
    sf = _ZERO_
@@ -450,7 +450,7 @@
 !  Original author(s): Karsten Bolding & Jorn Bruggeman
 !
 ! !LOCAL VARIABLES:
-   integer,parameter :: rk = kind(_ONE_)
+!
 !EOP
 !-----------------------------------------------------------------------
 !BOC
