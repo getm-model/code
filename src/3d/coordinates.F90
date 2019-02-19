@@ -101,9 +101,9 @@ stop
    ! calculate the z-coordinate of the cell centers
    ! references to mean sea level
    zc(:,:,0)=-H(:,:)
-   zc(:,:,1)=-H(:,:) + 0.5*hn(:,:,1)
+   zc(:,:,1)=-H(:,:) + _HALF_*hn(:,:,1)
    do k=2,kmax
-      zc(:,:,k)=zc(:,:,k-1)+0.5*(hn(:,:,k-1)+hn(:,:,k))
+      zc(:,:,k)=zc(:,:,k-1)+_HALF_*(hn(:,:,k-1)+hn(:,:,k))
    end do
 
 #ifdef SLICE_MODEL
