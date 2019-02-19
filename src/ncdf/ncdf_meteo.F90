@@ -46,7 +46,7 @@
    logical         :: rotated_meteo_grid=.false.
 
    REALTYPE, allocatable     :: met_lon(:),met_lat(:)
-   REAL_4B, allocatable      :: met_times(:)
+   REALTYPE, allocatable     :: met_times(:)
    REAL_4B, allocatable      :: wrk(:,:)
    REALTYPE, allocatable     :: wrk_dp(:,:)
 
@@ -328,6 +328,8 @@
    REALTYPE        :: t
    logical, save   :: first=.true.
    integer, save   :: save_n=1
+   integer         :: j,s
+   character(len=19) :: met_str
 !EOP
 !-------------------------------------------------------------------------
 #ifdef DEBUG
@@ -342,7 +344,7 @@
 
       t = loop*timestep
       do indx=save_n,tmax
-         if (met_times(indx) .ge. real(t + offset)) EXIT
+         if (met_times(indx) .ge. t + offset) EXIT
       end do
 !     end of simulation?
 
@@ -365,6 +367,11 @@
             indx = indx-1
          end if
          start(3) = indx
+         save_n = indx-1
+         call write_time_string()
+         call add_secs(jul0,secs0,nint(met_times(indx)-offset),j,s)
+         call write_time_string(j,s,met_str)
+         LEVEL3 timestr,': reading meteo data - ',met_str
          t_1 = met_times(indx) - offset
          t_2 = t_1
          call read_data()
@@ -372,7 +379,9 @@
          if (indx .gt. save_n) then
             new_meteo = .true.
             call write_time_string()
-            LEVEL3 timestr,': reading meteo data ...'
+            call add_secs(jul0,secs0,nint(met_times(indx)-offset),j,s)
+            call write_time_string(j,s,met_str)
+            LEVEL3 timestr,': reading meteo data - ',met_str
             save_n = indx
             t_1 = t_2
             t_2 = met_times(indx) - offset
@@ -427,6 +436,7 @@
    integer, save   :: time_var_id=-1
    character(len=256) :: dimname
    logical         :: have_southpole
+   character(len=19) :: str1,str2
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -597,6 +607,8 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 
          if (in_interval(j1,s1,julianday,secondsofday,j2,s2)) then
             found = .true.
+            call write_time_string(j1,s1,str1)
+            call write_time_string(j2,s2,str2)
          else
             err = nf90_close(ncid)
             if (err .NE. NF90_NOERR) go to 10
@@ -635,6 +647,8 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 
       call add_secs(junit,sunit,nint(met_times(1)),    j1,s1)
       call add_secs(junit,sunit,nint(met_times(textr)),j2,s2)
+      call write_time_string(j1,s1,str1)
+      call write_time_string(j2,s2,str2)
    end if
 
    if (found) then
@@ -642,6 +656,8 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
       LEVEL3 'Using meteo from:'
       LEVEL4 trim(fn)
       LEVEL3 'Meteorological offset time ',offset
+      LEVEL3 'Data from: ', str1,' to ',str2
+!      LEVEL3 'Seconds: ', nint(met_times(1)),' to ',nint(met_times(textr))
    else
       FATAL 'Could not find any valid meteo-files'
       stop 'open_meteo_file'

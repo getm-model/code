@@ -634,7 +634,13 @@
                end if
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j, t_frac, hh)
                if (.not. first) then
-                  t_frac = (t-t_1)/(t_2-t_1)
+                  if (t_1 .ge. t_2) then
+                     FATAL 'do_meteo: error calculating time increment ',t_1,t_2
+                     stop
+                  else
+                     t_frac = (t-t_1)/(t_2-t_1)
+!                    STDERR 'T ',t_frac,t_1,t_2
+                  end if
 !$OMP DO SCHEDULE(RUNTIME)
                   do j=jmin-HALO,jmax+HALO
 !                     do i=imin-HALO,imax+HALO
