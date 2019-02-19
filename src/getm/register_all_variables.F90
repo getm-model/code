@@ -11,6 +11,12 @@
 !
 ! !USES:
    use field_manager
+   use variables_2d, only: register_2d_variables
+   use variables_3d, only: register_3d_variables
+#ifdef _FABM_
+   use getm_fabm, only: register_fabm_variables
+#endif
+   use output_processing, only: register_processed_variables, finalize_register_processed_variables
    IMPLICIT NONE
 !
 !  default: all is private.
@@ -225,6 +231,7 @@
 #ifdef _FABM_
    call finalize_register_fabm_variables(fm)
 #endif
+   call finalize_register_processed_variables(fm)
 
    return
    end subroutine finalize_register_all_variables
