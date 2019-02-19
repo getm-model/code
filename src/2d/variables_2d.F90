@@ -23,6 +23,7 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
+   integer, parameter                  :: rk = kind(_ONE_)
    REALTYPE                            :: dtm
    REALTYPE,dimension(:,:),pointer     :: zo,z
    logical                             :: deformC=.false.
@@ -121,7 +122,6 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
-   integer,parameter         :: rk = kind(_ONE_)
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -174,12 +174,12 @@
    end if
 
 
-   z  = -9999*_ONE_; zo =_ZERO_
+   z  = -9999._rk ; zo =_ZERO_
 
    U = _ZERO_; DU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; DV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
 
-   velx = -9999.0 ; vely = -9999.0
+   velx = -9999._rk ; vely = -9999._rk
    where (az .gt. 0)
       velx = _ZERO_ ; vely = _ZERO_
    end where
@@ -336,7 +336,6 @@
 !
 ! !LOCAL VARIABLES:
    logical :: used
-   integer,parameter :: rk = kind(_ONE_)
 !EOP
 !-----------------------------------------------------------------------
 !BOC
