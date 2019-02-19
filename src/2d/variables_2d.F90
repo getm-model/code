@@ -22,6 +22,7 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
+   integer, parameter                  :: rk = kind(_ONE_)
    REALTYPE                            :: dtm
    REALTYPE,dimension(:,:),pointer     :: zo,z
    logical                             :: do_numerical_analyses_2d=.false.
@@ -101,7 +102,6 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: rc
-   integer,parameter         :: rk = kind(_ONE_)
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -126,7 +126,7 @@
    break_stat = 0
 #endif
 
-   z  = -9999*_ONE_; zo =_ZERO_
+   z  = -9999._rk ; zo =_ZERO_
 
    U = _ZERO_; DU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; DV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
@@ -230,7 +230,6 @@
 !
 ! !LOCAL VARIABLES:
    logical :: used
-   integer,parameter :: rk = kind(_ONE_)
 !EOP
 !-----------------------------------------------------------------------
 !BOC

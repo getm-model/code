@@ -19,7 +19,7 @@
    use domain, only: imin,jmin,imax,jmax,kmax,H,az,dry_z
 !KB   use get_field, only: get_3d_field
    use variables_2d, only: fwf_int
-   use variables_3d, only: S,hn,kmin
+   use variables_3d, only: rk,S,hn,kmin
    use meteo, only: metforcing,met_method,nudge_sss,sss
    use meteo, only: METEO_CONST,METEO_FROMFILE,METEO_FROMEXT
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
@@ -224,8 +224,8 @@
          stop 'init_salinity'
    end select
 
-   S(:,:,0) = -9999*_ONE_
-   forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) S(i,j,:) = -9999*_ONE_
+   S(:,:,0) = -9999._rk
+   forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) S(i,j,:) = -9999._rk
 
    call update_3d_halo(S,S,az,imin,jmin,imax,jmax,kmax,D_TAG)
    call wait_halo(D_TAG)
