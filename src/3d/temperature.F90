@@ -20,7 +20,7 @@
    use domain, only: imin,jmin,imax,kmax,jmax,H,az,dry_z
    use domain, only: ill,ihl,jll,jhl
    use domain, only: ilg,ihg,jlg,jhg
-   use variables_3d, only: T,rad,hn,kmin,A,g1,g2,heatflux_net
+   use variables_3d, only: rk,T,rad,hn,kmin,A,g1,g2,heatflux_net
    use meteo, only: metforcing,met_method,nudge_sst,sst
    use meteo, only: METEO_CONST,METEO_FROMFILE,METEO_FROMEXT
 !KB   use get_field, only: get_3d_field
@@ -303,8 +303,8 @@ end interface
          stop 'init_temperature'
    end select
 
-   T(:,:,0) = -9999*_ONE_
-   forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) T(i,j,:) = -9999*_ONE_
+   T(:,:,0) = -9999._rk
+   forall(i=imin:imax,j=jmin:jmax, az(i,j).eq.0) T(i,j,:) = -9999._rk
 
    call update_3d_halo(T,T,az,imin,jmin,imax,jmax,kmax,D_TAG)
    call wait_halo(D_TAG)
