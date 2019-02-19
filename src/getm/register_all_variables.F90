@@ -231,6 +231,7 @@
 #ifdef _FABM_
    call finalize_register_fabm_variables(fm)
 #endif
+   call finalize_register_processed_variables(fm)
 
    return
    end subroutine finalize_register_all_variables
@@ -379,44 +380,6 @@
 
    return
    end subroutine register_diagnostic_variables
-!EOC
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: finalize_register_all_variables() - send optional variables.
-!
-! !INTERFACE:
-   subroutine finalize_register_all_variables(runtype)
-!
-! !DESCRIPTION:
-!
-! !USES:
-   use variables_2d
-#ifndef NO_3D
-   use variables_3d
-#endif
-#ifdef _FABM_
-   use getm_fabm
-#endif
-   IMPLICIT NONE
-!
-! !INPUT PARAMETERS:
-   integer, intent(in)               :: runtype
-!
-! !REVISION HISTORY:
-!  Original author(s): Karsten Bolding & Jorn Bruggeman
-!
-! !LOCAL VARIABLES:
-!EOP
-!-----------------------------------------------------------------------
-!BOC
-   LEVEL1 'finalize_register_all_variables()'
-
-   call finalize_register_processed_variables(fm)
-
-   return
-   end subroutine finalize_register_all_variables
 !EOC
 
 !-----------------------------------------------------------------------
