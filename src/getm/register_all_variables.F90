@@ -16,7 +16,7 @@
 #ifdef _FABM_
    use getm_fabm, only: register_fabm_variables
 #endif
-   use output_processing, only: register_processed_variables
+   use output_processing, only: register_processed_variables, finalize_register_processed_variables
    IMPLICIT NONE
 !
 !  default: all is private.
@@ -358,6 +358,8 @@
 !-----------------------------------------------------------------------
 !BOC
    LEVEL1 'finalize_register_all_variables()'
+
+   call finalize_register_processed_variables(fm)
 
    return
    end subroutine finalize_register_all_variables
