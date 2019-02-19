@@ -148,13 +148,7 @@
                          "dimensions do not match")
       end if
       il = ilg ; jl = jlg ; ih = ihg ; jh = jhg
-   else
-      il = 1 ; jl = 1 ; ih = iextr ; jh = jextr
    end if
-
-   start(1) = il; start(2) = jl;
-   edges(1) = ih-il+1; edges(2) = jh-jl+1;
-   edges(3) = 1
 
    allocate(beta(E2DFIELD),stat=err)
    if (err /= 0) &
@@ -174,6 +168,7 @@
          call to_rotated_lat_lon(southpole,olon,olat,rlon,rlat,x)
          beta = x
       end if
+      il = 1 ; jl = 1 ; ih = iextr ; jh = jextr
    else
       if (met_lat(1) .gt. met_lat(2)) then
          LEVEL3 'Reverting lat-axis and setting grid_scan to 0'
@@ -228,7 +223,20 @@
          call getm_error("init_meteo_input_ncdf()", &
                           "Some interpolation coefficients are not valid")
       end if
+
+      il = minval(gridmap(:,:,1),mask=(gridmap(:,:,1).gt.0))
+      jl = minval(gridmap(:,:,2),mask=(gridmap(:,:,2).gt.0))
+      ih = min( maxval(gridmap(:,:,1))+1 , iextr )
+      jh = min( maxval(gridmap(:,:,2))+1 , jextr )
+
+      where( gridmap(:,:,1).gt.0 ) gridmap(:,:,1) = gridmap(:,:,1) - il + 1
+      where( gridmap(:,:,2).gt.0 ) gridmap(:,:,2) = gridmap(:,:,2) - jl + 1
+
    end if
+
+   start(1) = il; start(2) = jl;
+   edges(1) = ih-il+1; edges(2) = jh-jl+1;
+   edges(3) = 1
 
    allocate(d_airp(E2DFIELD),stat=rc)
    if (rc /= 0) stop 'init_meteo_input_ncdf: Error allocating memory (d_airp)'
@@ -846,7 +854,7 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 !
 ! !LOCAL VARIABLES:
    integer         :: i,j,err
-   REALTYPE,dimension(edges(1),edges(2)) :: wrk,wrk_dp
+   REALTYPE,dimension(edges(1),edges(2)) :: wrk!,wrk_dp
    REALTYPE        :: angle,uu,vv,sinconv,cosconv
 !EOP
 !-----------------------------------------------------------------------
@@ -866,8 +874,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          end if
       else
          !KBKwrk_dp = _ZERO_
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,airp_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,airp_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,airp_input)
       end if
    end if
 
@@ -881,8 +891,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
             evap_input(ill:ihl,jll:jhl) = wrk
          end if
       else
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,evap_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,evap_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,evap_input)
       end if
       if (evap_factor .ne. _ONE_) then
          evap_input = evap_input * evap_factor
@@ -899,8 +911,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
             precip_input(ill:ihl,jll:jhl) = wrk
          end if
       else
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,precip_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,precip_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,precip_input)
       end if
       if (precip_factor .ne. _ONE_) then
          precip_input = precip_input * precip_factor
@@ -920,8 +934,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          end if
       else
          !KBKwrk_dp = _ZERO_
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,u10_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,u10_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,u10_input)
       end if
    end if
 
@@ -936,8 +952,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          end if
       else
          !KBKwrk_dp = _ZERO_
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,v10_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,v10_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,v10_input)
       end if
    end if
 
@@ -976,8 +994,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          end if
       else
          !KBKwrk_dp = _ZERO_
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,t2_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,t2_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,t2_input)
       end if
    end if
 
@@ -992,8 +1012,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          end if
       else
          !KBKwrk_dp = _ZERO_
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,hum_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,hum_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,hum_input)
       end if
    end if
 
@@ -1008,8 +1030,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
          end if
       else
          !KBKwrk_dp = _ZERO_
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,tcc_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,tcc_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,tcc_input)
       end if
    end if
 
@@ -1064,8 +1088,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
             sst_input(ill:ihl,jll:jhl) = wrk
          end if
       else if (calc_met) then
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sst_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sst_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,sst_input)
       end if
    end if
 
@@ -1079,8 +1105,10 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
             sss_input(ill:ihl,jll:jhl) = wrk
          end if
       else if (calc_met) then
-         call copy_var(grid_scan,wrk,wrk_dp)
-         call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sss_input)
+         !call copy_var(grid_scan,wrk,wrk_dp)
+         !call do_grid_interpol(az,wrk_dp,gridmap,ti,ui,sss_input)
+         call flip_var(wrk)
+         call do_grid_interpol(az,wrk,gridmap,ti,ui,sss_input)
       end if
    end if
 
@@ -1092,6 +1120,35 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 10 FATAL 'read_data: ',nf90_strerror(err)
    stop
    end subroutine read_data
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: flip_var -
+!
+! !INTERFACE:
+   subroutine flip_var(var)
+   IMPLICIT NONE
+!
+! !DESCRIPTION:
+!
+! !INPUT/OUTPUT PARAMETERS:
+   REALTYPE, intent(inout) :: var(edges(1),edges(2))
+!
+! !REVISION HISTORY:
+!
+! !LOCAL VARIABLES:
+!
+!EOP
+!-----------------------------------------------------------------------
+
+   select case (grid_scan)
+      case (0)
+         var = var(:,edges(2):1:-1)
+   end select
+   return
+   end subroutine flip_var
 !EOC
 
 !-----------------------------------------------------------------------
@@ -1125,8 +1182,11 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
 !
 ! !LOCAL VARIABLES:
    integer         :: i,j
+   integer         :: iextr,jextr
 !EOP
 !-----------------------------------------------------------------------
+
+   iextr = edges(1) ; jextr = edges(2)
 
    select case (grid_scan)
       case (0)

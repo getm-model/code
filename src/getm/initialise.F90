@@ -376,6 +376,8 @@
       end if
    end if
 
+   call finalize_register_all_variables(runtype)
+
    if (.not. dryrun) then
       if (save_initial) then
       call output_manager_prepare_save(julianday, int(secondsofday), 0, int(MinN-1))
