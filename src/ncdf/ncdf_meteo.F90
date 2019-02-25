@@ -289,7 +289,7 @@
       start(1) = 1; start(2) = 1;
       edges(1) = iextr; edges(2) = jextr;
       edges(3) = 1
-      call get_meteo_data_ncdf(nstart)
+      call get_meteo_data_ncdf(nstart-1)
    end if
 
 #ifdef DEBUG
@@ -344,18 +344,21 @@
 
       t = loop*timestep
       do indx=save_n,tmax
-         if (met_times(indx) .ge. t + offset) EXIT
+         if (met_times(indx) .gt. t + offset) EXIT
       end do
+      if (first) then
+         indx = indx-1
+         if (indx .eq. 0) indx = 1
+      end if
 !     end of simulation?
 
       if (indx .gt. tmax) then
          LEVEL2 'Need new meteo file'
          call open_meteo_file(meteo_file)
-         save_n = 1
-         do indx=save_n,tmax
-            if (met_times(indx) .gt. real(t + offset)) EXIT
+         do indx=1,tmax
+            if (met_times(indx) .gt. t + offset) EXIT
          end do
-         save_n = 0
+         save_n = indx-1 ! to force reading below
       end if
       start(3) = indx
 
@@ -363,11 +366,6 @@
       if (first) then
          first = .false.
          new_meteo = .true.
-         if (indx .gt. 1) then
-            indx = indx-1
-         end if
-         start(3) = indx
-         save_n = indx-1
          call write_time_string()
          call add_secs(jul0,secs0,nint(met_times(indx)-offset),j,s)
          call write_time_string(j,s,met_str)
@@ -382,7 +380,6 @@
             call add_secs(jul0,secs0,nint(met_times(indx)-offset),j,s)
             call write_time_string(j,s,met_str)
             LEVEL3 timestr,': reading meteo data - ',met_str
-            save_n = indx
             t_1 = t_2
             t_2 = met_times(indx) - offset
             call read_data()
@@ -390,6 +387,7 @@
             new_meteo = .false.
          end if
       end if
+      save_n = indx ! index of the last time read
    end if
 
 #ifdef DEBUG

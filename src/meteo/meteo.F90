@@ -639,7 +639,7 @@
                      stop
                   else
                      t_frac = (t-t_1)/(t_2-t_1)
-!                    STDERR 'T ',t_frac,t_1,t_2
+!                     STDERR 'T ',t_frac,t,t_1,t_2
                   end if
 !$OMP DO SCHEDULE(RUNTIME)
                   do j=jmin-HALO,jmax+HALO
