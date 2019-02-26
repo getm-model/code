@@ -1923,7 +1923,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
          call StateAddField(importState,trim(name_dev2   ),getmGrid2D, &
                             units="K")
          call StateAddField(importState,trim(name_tcc    ),getmGrid2D, &
-                            farray2D=tcc,units="")
+                            farray2D=tcc,units="1")
          end if
       end if ! calc_met
    end if ! meteo
