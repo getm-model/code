@@ -1923,7 +1923,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
          call StateAddField(importState,trim(name_dev2   ),getmGrid2D, &
                             units="K")
          call StateAddField(importState,trim(name_tcc    ),getmGrid2D, &
-                            farray2D=tcc,units="")
+                            farray2D=tcc,units="1")
          end if
       end if ! calc_met
    end if ! meteo
@@ -2042,6 +2042,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 !
 ! !USES:
    use initialise     ,only: runtype
+   use domain         ,only: imin,jmin,imax,jmax,az
    use domain         ,only: grid_type,convc,cosconv,sinconv
    use meteo          ,only: met_method,calc_met,METEO_FROMEXT,new_meteo
    use meteo          ,only: hum_method,RELATIVE_HUM,WET_BULB,DEW_POINT,SPECIFIC_HUM
@@ -2049,6 +2050,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    use waves          ,only: waveforcing_method,WAVES_FROMEXT,new_waves
    use waves          ,only: waves_ramp
    use variables_waves,only: coswavedir,sinwavedir,waveH,waveK,waveT
+   use halo_zones, only: update_2d_halo,wait_halo,H_TAG
    IMPLICIT NONE
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -2080,6 +2082,9 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
          call StateReadCompleteField(importState,trim(name_slp    ),   &
                                      farray2d=airp)
+         call update_2d_halo(airp,airp,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
+
 
       if (calc_met) then
 !        force reading if grid rotation needs to be removed
@@ -2092,9 +2097,16 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
             u10 = cosconv*windU - sinconv*windV
             v10 = sinconv*windU + cosconv*windV
          end if
+         call update_2d_halo(u10,u10,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
+         call update_2d_halo(v10,v10,az,imin,jmin,imax,jmax,H_TAG)
+         call wait_halo(H_TAG)
+
          if (runtype .gt. 2) then
             call StateReadCompleteField(importState,trim(name_airT2  ),&
                                         farray2d=t2)
+            call update_2d_halo(t2,t2,az,imin,jmin,imax,jmax,H_TAG)
+            call wait_halo(H_TAG)
 
             select case(hum_method)
                case (SPECIFIC_HUM)
@@ -2107,9 +2119,13 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
             call StateReadCompleteField(importState,trim(name_dev2   ),&
                                         farray2d=hum)
             end select
+            call update_2d_halo(hum,hum,az,imin,jmin,imax,jmax,H_TAG)
+            call wait_halo(H_TAG)
 
             call StateReadCompleteField(importState,trim(name_tcc    ),&
                                         farray2d=tcc)
+            call update_2d_halo(tcc,tcc,az,imin,jmin,imax,jmax,H_TAG)
+            call wait_halo(H_TAG)
          end if
       end if ! calc_met
 
