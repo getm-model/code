@@ -3611,12 +3611,18 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    end if
 
    if (dimCount .eq. 2) then
-      if (status.eq.ESMF_FIELDSTATUS_COMPLETE .and. present(p2dr)) then
-         call ESMF_FieldGet(field,farrayPtr=p2dr_,rc=rc)
-         abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-         p2dr => p2dr_
-         return
-      end if
+
+      if (status .eq. ESMF_FIELDSTATUS_COMPLETE) then
+         if (present(p2dr)) then
+            if (associated(p2dr)) then
+               call ESMF_LogWrite('overwriting associated pointer for field '//trim(name)//'',  &
+                                  ESMF_LOGMSG_WARNING,line=__LINE__,file=FILENAME)
+            end if
+            call ESMF_FieldGet(field,farrayPtr=p2dr,rc=rc)
+            abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+         end if
+      else
+
       p2dr_ => NULL()
       if (present(p2dr)) then
          if (associated(p2dr)) p2dr_(imin-HALO:,jmin-HALO:) => p2dr
@@ -3650,13 +3656,21 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
       abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
       if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
-   else if (dimCount .eq. 3) then
-      if (status.eq.ESMF_FIELDSTATUS_COMPLETE .and. present(p3dr)) then
-         call ESMF_FieldGet(field,farrayPtr=p3dr_,rc=rc)
-         abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
-         p3dr => p3dr_
-         return
       end if
+
+   else if (dimCount .eq. 3) then
+
+      if (status .eq. ESMF_FIELDSTATUS_COMPLETE) then
+         if (present(p3dr)) then
+            if (associated(p3dr)) then
+               call ESMF_LogWrite('overwriting associated pointer for field '//trim(name)//'',  &
+                                  ESMF_LOGMSG_WARNING,line=__LINE__,file=FILENAME)
+            end if
+            call ESMF_FieldGet(field,farrayPtr=p3dr,rc=rc)
+            abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+         end if
+      else
+
       p3dr_ => NULL()
       if (present(p3dr)) then
          if (associated(p3dr)) p3dr_(imin-HALO:,jmin-HALO:,0:) => p3dr
@@ -3689,6 +3703,8 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
                                    rc=rc)
       abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
       if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+      end if
 
    end if
 
