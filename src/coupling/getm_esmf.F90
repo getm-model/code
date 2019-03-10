@@ -2930,6 +2930,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    type(ESMF_StaggerLoc)    :: staggerloc
    logical                  :: abort
    integer                  :: rc
+   integer                  :: elb(3),eub(3)
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -2947,7 +2948,8 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 !  1D xcord is replicated automatically along 2nd DistGrid dimension
 !  1D ycord is replicated along 1st DistGrid dimension as specified
 !  by distgridToArrayMap.
-!  total[L|U]Width are automatically determined from shape of [x|y]cord
+!  total[L|U]Width automatically determined from shape of [x|y]cord only works for gridAlign=-1
+!  applied correction only works for gridAlign=1
 
 !  internal call to ESMF_ArrayCreateAssmdShape<rank><type><kind>()
 !  (because of required indexflag)
@@ -2982,8 +2984,15 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
+   call ESMF_GridGetFieldBounds(getmGrid2D,staggerloc=staggerloc,      &
+                                totalLBound=elb(1:2),totalUBound=eub(1:2),rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
    xxArray2D = ESMF_ArrayCreate(distgrid,xx1D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
+                                totalLWidth=int(elb(1)-lbound(xx1D)),  &
+                                totalUWidth=int(ubound(xx1D)-eub(1)),  &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -2991,6 +3000,8 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    yxArray2D = ESMF_ArrayCreate(distgrid,yx1D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
                                 distgridToArrayMap=(/0,1/),            &
+                                totalLWidth=int(elb(2)-lbound(yx1D)),  &
+                                totalUWidth=int(ubound(yx1D)-eub(2)),  &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -3021,8 +3032,15 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
+   call ESMF_GridGetFieldBounds(getmGrid3D,staggerloc=staggerloc,      &
+                                totalLBound=elb,totalUBound=eub,rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
    xxArray3D = ESMF_ArrayCreate(distgrid,xx1D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
+                                totalLWidth=int(elb(1)-lbound(xx1D)),  &
+                                totalUWidth=int(ubound(xx1D)-eub(1)),  &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -3030,6 +3048,8 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    yxArray3D = ESMF_ArrayCreate(distgrid,yx1D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
                                 distgridToArrayMap=(/0,1,0/),          &
+                                totalLWidth=int(elb(2)-lbound(yx1D)),  &
+                                totalUWidth=int(ubound(yx1D)-eub(2)),  &
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -3074,6 +3094,7 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    type(ESMF_StaggerLoc)    :: staggerloc
    logical                  :: abort
    integer                  :: rc
+   integer                  :: elb(3),eub(3)
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -3092,8 +3113,9 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 !  internal call to ESMF_ArrayCreateAssmdShape<rank><type><kind>()
 !  (because of required indexflag)
 !  Note (KK): These ArrayCreate()'s only work for 1DE per PET!!!
-!             automatically determined total[L|U]Width are not
-!             consistent with specified gridAlign
+!  total[L|U]Width automatically determined from shape of [x|y]cord only works for gridAlign=-1
+!  applied correction only works for gridAlign=1
+
 
 !  2D grid
 
@@ -3119,14 +3141,23 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
+   call ESMF_GridGetFieldBounds(getmGrid2D,staggerloc=staggerloc,      &
+                                totalLBound=elb(1:2),totalUBound=eub(1:2),rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
    xxArray2D = ESMF_ArrayCreate(distgrid,xx2D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
+                                totalLWidth=int(elb(1:2)-lbound(xx2D)),&
+                                totalUWidth=int(ubound(xx2D)-eub(1:2)),&
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    yxArray2D = ESMF_ArrayCreate(distgrid,yx2D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
+                                totalLWidth=int(elb(1:2)-lbound(yx2D)),&
+                                totalUWidth=int(ubound(yx2D)-eub(1:2)),&
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
@@ -3156,14 +3187,23 @@ if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
+   call ESMF_GridGetFieldBounds(getmGrid3D,staggerloc=staggerloc,      &
+                                totalLBound=elb,totalUBound=eub,rc=rc)
+   abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
+   if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
    xxArray3D = ESMF_ArrayCreate(distgrid,xx2D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
+                                totalLWidth=int(elb(1:2)-lbound(xx2D)),&
+                                totalUWidth=int(ubound(xx2D)-eub(1:2)),&
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
 
    yxArray3D = ESMF_ArrayCreate(distgrid,yx2D,                         &
                                 indexflag=ESMF_INDEX_DELOCAL,          &
+                                totalLWidth=int(elb(1:2)-lbound(yx2D)),&
+                                totalUWidth=int(ubound(yx2D)-eub(1:2)),&
                                 rc=rc)
    abort = ESMF_LogFoundError(rc,line=__LINE__,file=FILENAME)
    if (abort) call ESMF_Finalize(endflag=ESMF_END_ABORT)
