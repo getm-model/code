@@ -41,7 +41,7 @@
    use internal_pressure, only: init_internal_pressure, do_internal_pressure
    use internal_pressure, only: ip_method,ip_ramp,ip_ramp_is_active
    use variables_3d
-   use vertical_coordinates, only: coordinates,cord_relax
+   use vertical_coordinates, only: init_vertical_coordinates,coordinates,cord_relax
    use advection, only: NOADV
    use advection_3d, only: init_advection_3d,print_adv_settings_3d,adv_ver_iterations
    use bdy_3d, only: init_bdy_3d, do_bdy_3d
@@ -261,6 +261,8 @@
    num=1.d-15
    nuh=1.d-15
 #endif
+
+   call init_vertical_coordinates()
 
 !  Needed for interpolation of temperature and salinity
    if (.not. hotstart) then
