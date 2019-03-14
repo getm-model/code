@@ -2,7 +2,8 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: vertical_coordinates
+! !MODULE: vertical_coordinates - defines the vertical coordinate
+! \label{sec-coordinates}
 !
 ! !INTERFACE:
    module vertical_coordinates
@@ -24,6 +25,7 @@
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
+   public init_vertical_coordinates
    public coordinates
    logical,public  :: restart_with_ho=.false.
    logical,public  :: restart_with_hn=.false.
@@ -42,8 +44,75 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE:  coordinates - defines the vertical coordinate
-! \label{sec-coordinates}
+! !ROUTINE:  init_vertical_coordinates - initializes the vertical coordinate
+!
+! !INTERFACE:
+   subroutine init_vertical_coordinates()
+!
+! !DESCRIPTION:
+!
+! The different methods for the vertical layer distribution
+! are initialised and called to be chosen by the namelist paramter {\tt vert\_cord}:\\
+! \\
+! {\tt vert\_cord=1}: sigma coordinates (section~\ref{sec-sigma-coordinates}) \\
+! {\tt vert\_cord=2}: z-level (not coded yet) \\
+! {\tt vert\_cord=3}: general vertical coordinates (gvc, section~\ref{sec-general-coordinates})
+! \\
+! {\tt vert\_cord=5}: adaptive vertical coordinates (section~\ref{sec-adaptive-coordinates}) \\
+! \\
+!
+!
+! !USES:
+   use getm_timers, only: tic, toc,TIM_COORDS
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+!
+! !REVISION HISTORY:
+!  Original author(s): Hans Burchard & Karsten Bolding
+!
+! !LOCAL VARIABLES:
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+#ifdef DEBUG
+   integer, save :: Ncall = 0
+   Ncall = Ncall+1
+   write(debug,*) 'init_vertical_coordinates() # ',Ncall
+#endif
+
+   LEVEL2 'init_vertical_coordinates'
+
+   call tic(TIM_COORDS)
+
+      select case (vert_cord)
+         case (_SIGMA_COORDS_) ! sigma coordinates
+            LEVEL3 'Using sigma coordinates:',kmax,' sigma layers'
+         case (_Z_COORDS_) ! z-level
+            LEVEL3 'Using z-level coordinates:',kmax,' z levels'
+            call getm_error("coordinates()","z-levels not implemented yet")
+         case (_GENERAL_COORDS_) ! general vertical coordinates
+            LEVEL3 'Using general vertical coordinates:',kmax,' gvc layers'
+         case (_HYBRID_COORDS_) ! hybrid vertical coordinates
+            LEVEL3 'using hybrid vertical coordinates:',kmax,' hybrid layers'
+STDERR 'init_vertical_coordinates(): hybrid_coordinates not coded yet'
+stop
+         case (_ADAPTIVE_COORDS_) ! adaptive vertical coordinates
+            LEVEL3 'using adaptive vertical coordinates:',kmax,' adaptive layers'
+         case default
+      end select
+
+#ifdef DEBUG
+   write(debug,*) 'Leaving init_vertical_coordinates()'
+   write(debug,*)
+#endif
+   return
+   end subroutine init_vertical_coordinates
+!EOC
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE:  coordinates - updates the vertical coordinate
 !
 ! !INTERFACE:
    subroutine coordinates(hotstart)
@@ -57,17 +126,6 @@
 ! T-points, since different methods for the calculation of the
 ! bathymetry values in the U- and V-points are possible, see routine
 ! {\tt uv\_depths} described on page \pageref{sec-uv-depth}.
-!
-! The different methods for the vertical layer distribution
-! are initialised and called to be chosen by the namelist paramter {\tt vert\_cord}:\\
-! \\
-! {\tt vert\_cord=1}: sigma coordinates (section~\ref{sec-sigma-coordinates}) \\
-! {\tt vert\_cord=2}: z-level (not coded yet) \\
-! {\tt vert\_cord=3}: general vertical coordinates (gvc, section~\ref{sec-general-coordinates})
-! \\
-! {\tt vert\_cord=5}: adaptive vertical coordinates (section~\ref{sec-adaptive-coordinates}) \\
-! \\
-!
 !
 ! !USES:
    use variables_3d, only: zc
@@ -101,20 +159,16 @@
    if (first) then
       select case (vert_cord)
          case (_SIGMA_COORDS_) ! sigma coordinates
-            LEVEL2 'using ',kmax,' sigma layers'
             call sigma_coordinates(.true.,hotstart)
          case (_Z_COORDS_) ! z-level
             call getm_error("coordinates()","z-levels not implemented yet")
          case (_GENERAL_COORDS_) ! general vertical coordinates
-            LEVEL2 'using ',kmax,' gvc layers'
             call general_coordinates(.true.,hotstart,cord_relax,maxdepth)
          case (_HYBRID_COORDS_) ! hybrid vertical coordinates
-            LEVEL2 'using ',kmax,' hybrid layers'
             call hybrid_coordinates(.true.)
 STDERR 'coordinates(): hybrid_coordinates not coded yet'
 stop
          case (_ADAPTIVE_COORDS_) ! adaptive vertical coordinates
-            LEVEL2 'using ',kmax,' adaptive layers'
             call adaptive_coordinates(.true.,hotstart)
          case default
       end select
