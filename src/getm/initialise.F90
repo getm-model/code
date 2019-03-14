@@ -353,8 +353,6 @@
 
    call init_input(input_dir,MinN)
 
-   call finalize_register_all_variables(runtype)
-
    call toc(TIM_INITIALIZE)
    ! The rest is timed with meteo and output.
 
