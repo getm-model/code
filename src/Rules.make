@@ -22,7 +22,7 @@ ifndef GOTMDIR
 GOTMDIR = $(HOME)/GOTM/gotm-git
 endif
 ifeq ($(wildcard $(GOTMDIR)/src/gotm/gotm.F90),)
-$(error the directory GOTMDIR=$(GOTMDIR) is not a valid GOTM directory)
+$(warning the directory GOTMDIR=$(GOTMDIR) is not a valid GOTM directory)
 endif
 
 # ESMF specific settings
@@ -158,12 +158,12 @@ export GETM_BIO=false
 ifdef FABM_PREFIX
 
 ifeq ($(wildcard $(FABM_PREFIX)/lib/libfabm.*), )
-$(error the directory FABM_PREFIX=$(FABM_PREFIX) is not a valid FABM directory)
-endif
-
+$(warning the directory FABM_PREFIX=$(FABM_PREFIX) is not a valid FABM directory)
+else
 INCDIRS         += -I$(FABM_PREFIX)/include
 LINKDIRS        += -L$(FABM_PREFIX)/lib
 EXTRA_LIBS	+= -lfabm
+endif
 
 else
 
@@ -172,11 +172,12 @@ FABMDIR = $(HOME)/FABM/fabm-git
 endif
 
 ifeq ($(wildcard $(FABMDIR)/src/fabm.F90),)
-$(error the directory FABMDIR=$(FABMDIR) is not a valid FABM directory)
-endif
+$(warning the directory FABMDIR=$(FABMDIR) is not a valid FABM directory)
+else
 INCDIRS    += -I$(FABMDIR)/include -I$(FABMDIR)/modules/gotm/$(FORTRAN_COMPILER) -I$(FABMDIR)/src/drivers/gotm
 LINKDIRS   += -L$(FABMDIR)/lib/gotm/$(FORTRAN_COMPILER)
 EXTRA_LIBS	+= -lfabm$(buildtype)
+endif
 
 endif
 
