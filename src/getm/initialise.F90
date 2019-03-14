@@ -341,7 +341,7 @@
    ! The rest is timed with meteo and output.
 
    if(runtype .le. 2) then
-      call do_meteo(MinN)
+      call do_meteo(MinN-1)
 #ifndef NO_3D
 #ifndef NO_BAROCLINIC
    else
