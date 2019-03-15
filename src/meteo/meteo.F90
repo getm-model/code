@@ -296,10 +296,12 @@
 
          if(calc_met) then
             LEVEL2 'Stresses and fluxes will be calculated'
+            if (met_method .eq. METEO_FROMFILE) then
             if (interpolate_meteo) then
                LEVEL3 'will interpolate input meteo data'
             else
                LEVEL3 'will interpolate calculated fluxes'
+            end if
             end if
             if (calc_relative_wind) then
                LEVEL3 'will consider surface currents for relative wind'
