@@ -37,7 +37,7 @@ endif
 
 ifdef MPI
 ifneq ($(MPI),$(ESMF_MPI))
-$(error MPI derived from ESMFMKFILE ($(ESMF_MPI)) does not agree with defined one ($(MPI)).)
+$(warning MPI derived from ESMFMKFILE ($(ESMF_MPI)) does not agree with defined one ($(MPI)).)
 endif
 else
 $(warning export MPI=$(ESMF_MPI))
@@ -58,7 +58,7 @@ ESMF_FORTRAN_COMPILER = $(shell grep -r "FC=$(ESMF_F90)" $(GETMDIR)/compilers/co
 ifdef FORTRAN_COMPILER
 
 ifneq ($(ESMF_FORTRAN_COMPILER),$(FORTRAN_COMPILER))
-$(error FORTRAN_COMPILER derived from ESMFMKFILE ($(ESMF_FORTRAN_COMPILER)) does not agree with defined one ($(FORTRAN_COMPILER)).)
+$(warning FORTRAN_COMPILER derived from ESMFMKFILE ($(ESMF_FORTRAN_COMPILER)) does not agree with defined one ($(FORTRAN_COMPILER)).)
 endif
 
 else
