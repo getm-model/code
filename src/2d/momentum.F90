@@ -119,8 +119,8 @@
 !
 ! !USES:
    use parameters, only: g,rho_0
-   use domain, only: imin,imax,jmin,jmax
-   use domain, only: H,au,av,min_depth,dry_u,Cori,coru
+   use domain, only: imin,imax,jmin,jmax,ioff,joff
+   use domain, only: H,au,av,min_depth,clip_depth,dry_u,Cori,coru
    use domain, only: dxu,arud1,dyc,dxx
    use domain, only: have_boundaries
    use variables_2d, only: dtm,D,z,UEx,U,DU,SlUx,Slru,ru,V,DV
@@ -139,6 +139,12 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
+#ifdef _NEW_DAF_
+   integer                   :: rc
+   logical                   :: clipped
+   logical, save             :: first=.true.
+   REALTYPE,dimension(:,:),pointer,save :: pUStokes
+#endif
 #ifdef NEW_CORI
    REALTYPE,dimension(E2DFIELD) :: work2d
 #endif
@@ -157,7 +163,21 @@
 
    gammai = _ONE_/gamma
 
+#ifdef _NEW_DAF_
+   if (first) then
+      first = .false.
+      if (waveforcing_method .ne. NO_WAVES) then
+         pUStokes => UStokes
+      else
+         allocate(pUStokes(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'umomentum: Error allocating memory (pUStokes)'
+         pUStokes = _ZERO_
+      end if
+   end if
+#endif
+
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zx,tausu,Slr,Vloc,fV,cord_curv)
+!$OMP                          PRIVATE(clipped)
 
 #ifdef NEW_CORI
 !  Espelid et al. [2000], IJNME 49, 1521-1545
@@ -214,6 +234,20 @@
             UEuler(i,j)=(UEuler(i,j)-dtm*(g*DU(i,j)*zx+dry_u(i,j)*&
                  (-tausu/rho_0-fV+UEx(i,j)+SlUx(i,j)+Slr)))/&
                  (_ONE_+dtm*ru(i,j)/DU(i,j))
+#ifdef _NEW_DAF_
+            clipped = .false.
+            if ( D(i  ,j) .lt. clip_depth ) then
+               UEuler(i,j) = min( UEuler(i,j) , -pUStokes(i,j) )
+               clipped = .true.
+            end if
+            if ( D(i+1,j) .lt. clip_depth ) then
+               UEuler(i,j) = max( UEuler(i,j) , -pUStokes(i,j) )
+               clipped = .true.
+            end if
+            if (clipped) then
+               STDERR 'umomentum: clipped at global i j =',i+ioff,j+joff
+            end if
+#endif
          end if
       end do
    end do
@@ -304,8 +338,8 @@
 !
 ! !USES:
    use parameters, only: g,rho_0
-   use domain, only: imin,imax,jmin,jmax
-   use domain, only: H,au,av,min_depth,dry_v,Cori,corv
+   use domain, only: imin,imax,jmin,jmax,ioff,joff
+   use domain, only: H,au,av,min_depth,clip_depth,dry_v,Cori,corv
    use domain, only: dyv,arvd1,dxc,dyx
    use domain, only: have_boundaries
    use variables_2d, only: dtm,D,z,VEx,V,DV,SlVx,Slrv,rv,U,DU
@@ -323,6 +357,12 @@
 !
 ! !LOCAL VARIABLES:
    integer                   :: i,j
+#ifdef _NEW_DAF_
+   integer                   :: rc
+   logical                   :: clipped
+   logical,save              :: first=.true.
+   REALTYPE,dimension(:,:),pointer,save :: pVStokes
+#endif
 #ifdef NEW_CORI
    REALTYPE,dimension(E2DFIELD) :: work2d
 #endif
@@ -341,7 +381,21 @@
 
    gammai = _ONE_/gamma
 
+#ifdef _NEW_DAF_
+   if (first) then
+      first = .false.
+      if (waveforcing_method .ne. NO_WAVES) then
+         pVStokes => VStokes
+      else
+         allocate(pVStokes(E2DFIELD),stat=rc)
+         if (rc /= 0) stop 'vmomentum: Error allocating memory (pVStokes)'
+         pVStokes = _ZERO_
+      end if
+   end if
+#endif
+
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zy,tausv,Slr,Uloc,fU,cord_curv)
+!$OMP                          PRIVATE(clipped)
 
 #ifdef NEW_CORI
 !  Espelid et al. [2000], IJNME 49, 1521-1545
@@ -391,6 +445,20 @@
             VEuler(i,j)=(VEuler(i,j)-dtm*(g*DV(i,j)*zy+dry_v(i,j)*&
                  (-tausv/rho_0+fU+VEx(i,j)+SlVx(i,j)+Slr)))/&
                  (_ONE_+dtm*rv(i,j)/DV(i,j))
+#ifdef _NEW_DAF_
+            clipped = .false.
+            if ( D(i,j  ) .lt. clip_depth ) then
+               VEuler(i,j) = min( VEuler(i,j) , -pVStokes(i,j) )
+               clipped = .true.
+            end if
+            if ( D(i,j+1) .lt. clip_depth ) then
+               VEuler(i,j) = max( VEuler(i,j) , -pVStokes(i,j) )
+               clipped = .true.
+            end if
+            if (clipped) then
+               STDERR 'vmomentum: clipped at global i j =',i+ioff,j+joff
+            end if
+#endif
          end if
       end do
    end do
