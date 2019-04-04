@@ -69,6 +69,7 @@
 			</element>
 			<element name="crit_depth" type="float" unit="m" label="the critical depth - when the drying procedure starts"/>
 			<element name="min_depth"  type="float" unit="m" label="the absolute minimum depth"/>
+			<element name="clip_depth"  type="float" unit="m" label="depth below transports are clipped"/>
 			<element name="kdum" type="int" label="number of layers in the vertical - only used when -DDYNAMIC"/>
 			<element name="ddu" type="float" label="surface zooming" description="Surface zooming: 0: no zooming, 1: weak zooming, 3: strong zooming, etc."/>
 			<element name="ddl" type="float" label="bottom zooming" description="Bottom zooming: 0: no zooming, 1: weak zooming, 3: strong zooming, etc."/>
