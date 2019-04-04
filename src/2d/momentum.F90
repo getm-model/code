@@ -143,7 +143,6 @@
 #ifdef _NEW_DAF_
    integer                   :: rc
    logical                   :: clipped
-   logical, save             :: first=.true.
    REALTYPE,dimension(:,:),pointer,save :: pUStokes
 #endif
 #ifdef NEW_CORI
@@ -162,14 +161,10 @@
 #endif
 
    if (first) then
+      first = .false.
       rho_0i = _ONE_ / rho_0
       gammai = _ONE_ / (rho_0*max(SMALL,g))
-      first = .false.
-   end if
-
 #ifdef _NEW_DAF_
-   if (first) then
-      first = .false.
       if (waveforcing_method .ne. NO_WAVES) then
          pUStokes => UStokes
       else
@@ -177,8 +172,9 @@
          if (rc /= 0) stop 'umomentum: Error allocating memory (pUStokes)'
          pUStokes = _ZERO_
       end if
-   end if
 #endif
+   end if
+
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zx,tausu,Slr,Vloc,fV,cord_curv)
 !$OMP                          PRIVATE(clipped)
@@ -364,7 +360,6 @@
 #ifdef _NEW_DAF_
    integer                   :: rc
    logical                   :: clipped
-   logical,save              :: first=.true.
    REALTYPE,dimension(:,:),pointer,save :: pVStokes
 #endif
 #ifdef NEW_CORI
@@ -383,14 +378,10 @@
 #endif
 
    if (first) then
+      first = .false.
       rho_0i = _ONE_ / rho_0
       gammai = _ONE_ / (rho_0*max(SMALL,g))
-      first = .false.
-   end if
-
 #ifdef _NEW_DAF_
-   if (first) then
-      first = .false.
       if (waveforcing_method .ne. NO_WAVES) then
          pVStokes => VStokes
       else
@@ -398,8 +389,9 @@
          if (rc /= 0) stop 'vmomentum: Error allocating memory (pVStokes)'
          pVStokes = _ZERO_
       end if
-   end if
 #endif
+   end if
+
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zy,tausv,Slr,Uloc,fU,cord_curv)
 !$OMP                          PRIVATE(clipped)
