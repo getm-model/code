@@ -59,6 +59,7 @@
 
    REALTYPE                            :: Hland=-10.0
    REALTYPE                            :: min_depth,crit_depth
+   REALTYPE                            :: clip_depth = _ZERO_
 
    REALTYPE                            :: longitude      = _ZERO_
    REALTYPE                            :: latitude       = _ZERO_
@@ -170,7 +171,7 @@
              vert_cord,maxdepth,                                 &
              bathy_format,bathymetry,vel_depth_method,rigid_lid, &
              longitude,latitude,f_plane,openbdy,bdyinfofile,     &
-             crit_depth,min_depth,kdum,ddu,ddl,                  &
+             crit_depth,min_depth,clip_depth,kdum,ddu,ddl,       &
              d_gamma,gamma_surf,il,ih,jl,jh,                     &
              bottfric_method,rdrag,z0_const,z0d_iters,cd_min
 !EOP
