@@ -25,7 +25,7 @@
    logical ,dimension(:,:)  ,allocatable :: is_deepwave_3d
    REALTYPE,dimension(:,:,:),allocatable :: khab,layerratios
    REALTYPE,dimension(:,:)  ,allocatable :: UStokesC,VStokesC
-   REALTYPE,dimension(:,:)  ,allocatable :: UStokes,VStokes
+   REALTYPE,dimension(:,:)  ,allocatable,target :: UStokes,VStokes
    REALTYPE,dimension(:,:)  ,allocatable :: UStokesCint,VStokesCint
    REALTYPE,dimension(:,:)  ,allocatable :: UStokesCadv,VStokesCadv
    REALTYPE,dimension(:,:,:),allocatable :: uuStokesC,vvStokesC
