@@ -18,9 +18,11 @@
 !
 ! !USES:
    use domain, only: imin,imax,jmin,jmax
+   use field_manager
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
+   integer, parameter                  :: rk = kind(_ONE_)
 #ifdef STATIC
 #include "static_2d.h"
 #else
@@ -32,8 +34,6 @@
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Hans Burchard
 !
-! !LOCAL VARIABLES:
-   integer                   :: rc
 !EOP
 !-----------------------------------------------------------------------
 
@@ -91,6 +91,8 @@
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
 !
+! !LOCAL VARIABLES:
+   integer                   :: rc
 !EOP
 !-------------------------------------------------------------------------
 !BOC
@@ -113,10 +115,11 @@
    break_stat = 0
 #endif
 
-   z  = _ZERO_; zo =_ZERO_
+   z  = -9999._rk ; zo =_ZERO_
+
    zub=_ZERO_ ; zub0=_ZERO_
    zvb=_ZERO_ ; zvb0=_ZERO_
-   D = _ZERO_;
+
    U = _ZERO_; DU = _ZERO_; fU = _ZERO_; Uint = _ZERO_; UEx = _ZERO_
    V = _ZERO_; DV = _ZERO_; fV = _ZERO_; Vint = _ZERO_; VEx = _ZERO_
 
@@ -143,6 +146,80 @@
 #endif
    return
    end subroutine init_variables_2d
+!EOC
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: register_2d_variables() - register GETM variables.
+!
+! !INTERFACE:
+   subroutine register_2d_variables(fm)
+!
+! !DESCRIPTION:
+!
+! !USES:
+!   use variables_2d
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   type (type_field_manager) :: fm
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !LOCAL VARIABLES:
+   logical :: used
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   LEVEL2 'register_2d_variables()'
+
+!D(E2DFIELD)
+!DU,DV
+!z(E2DFIELD)
+!zo(E2DFIELD)
+!U(E2DFIELD)
+!V(E2DFIELD)
+!UEx(E2DFIELD)
+!VEx(E2DFIELD)
+!fU(E2DFIELD)
+!fV(E2DFIELD)
+!ru(E2DFIELD)
+!rv(E2DFIELD)
+!Uint(E2DFIELD)
+!Vint(E2DFIELD)
+!Uinto(E2DFIELD)
+!Vinto(E2DFIELD)
+!res_du(E2DFIELD)
+!res_u(E2DFIELD)
+!res_dv(E2DFIELD)
+!res_v(E2DFIELD)
+!kbk
+!SlUx(E2DFIELD)
+!SlVx(E2DFIELD)
+!Slru(E2DFIELD)
+!Slrv(E2DFIELD)
+!zub(E2DFIELD)
+!zvb(E2DFIELD)
+!zub0(E2DFIELD)
+!zvb0(E2DFIELD)
+!An(E2DFIELD)
+!AnX(E2DFIELD)
+!fwf(E2DFIELD)
+!fwf_int(E2DFIELD)
+!EWbdy(jmax),ENbdy(imax),EEbdy(jmax),ESbdy(imax)
+
+
+!  category - 2d
+   call fm%register('z', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=-9999.0_rk, data2d=z(_2D_W_), category="2d", part_of_state=.true.)
+   call fm%register('zo', 'm', 'sea surface elevation', standard_name='sea surface elevation', fill_value=-9999.0_rk, data2d=zo(_2D_W_), category="2d", output_level=output_level_debug)
+   call fm%register('D', 'm', 'water depth', standard_name='water depth', fill_value=-10009.0_rk, data2d=D(_2D_W_), category="2d", part_of_state=.true.)
+   call fm%register('U', 'm2/s', 'transport in local x-direction', standard_name='', data2d=U(_2D_W_), category='2d', output_level=output_level_debug, part_of_state=.true.)
+   call fm%register('V', 'm2/s', 'transport in local y-direction', standard_name='', data2d=V(_2D_W_), category='2d', output_level=output_level_debug, part_of_state=.true.)
+
+   return
+   end subroutine register_2d_variables
 !EOC
 
 !-----------------------------------------------------------------------

@@ -83,6 +83,15 @@
    if (err .NE. NF90_NOERR) go to 10
    call set_attributes(ncid,time_id,units=trim(tts),long_name='time')
 
+!  elevation
+   err = nf90_def_var(ncid,'elevmean',NCDF_FLOAT_PRECISION,f3_dims,elevmean_id)
+   if (err .NE. NF90_NOERR) go to 10
+   fv = elev_missing
+   mv = elev_missing
+   vr(1) = -15.
+   vr(2) =  15.
+   call set_attributes(ncid,elevmean_id,long_name='mean elevation',units='m', &
+                       FillValue=fv,missing_value=mv,valid_range=vr)
 
 !  short wave radiation
    fv = swr_missing; mv = swr_missing; vr(1) = 0; vr(2) = 1500.
@@ -173,6 +182,18 @@
              FillValue=fv,missing_value=mv,valid_range=vr)
    end if
 
+   if (save_rho) then
+      fv = rho_missing
+      mv = rho_missing
+      vr(1) =  0.
+      vr(2) = 30.
+      err = nf90_def_var(ncid,'sigma_t',NCDF_FLOAT_PRECISION,f4_dims,sigma_tmean_id)
+      if (err .NE. NF90_NOERR) go to 10
+      call set_attributes(ncid,sigma_tmean_id, &
+             long_name='mean sigma_t',units='kg/m3',&
+             FillValue=fv,missing_value=mv,valid_range=vr)
+   end if
+
    if (ice_model .eq. ICE_MODEL_WINTON) then
       fv = hh_missing
       mv = hh_missing
@@ -189,6 +210,7 @@
              long_name='mean ice layer thickness',units='m',&
              FillValue=fv,missing_value=mv,valid_range=vr)
    end if
+
 #endif
 
    if (save_numerical_analyses) then

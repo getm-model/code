@@ -12,7 +12,6 @@
 ! !USES:
    use netcdf
    use exceptions
-   use ncdf_2d,      only: ws2d => ws
    use ncdf_3d
    use grid_ncdf,    only: xlen,ylen,zlen
    use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
@@ -77,6 +76,8 @@
    REALTYPE                  :: deg2rad = 3.141592654/180.
    REALTYPE                  :: cosconv,sinconv
 #endif
+   REALTYPE,dimension(E2DFIELD) :: ws2d
+   REALTYPE,dimension(I3DFIELD) :: ws
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -305,37 +306,35 @@
    end if
 
 #ifndef NO_BAROCLINIC
-   if (save_strho) then
 
-      if (calc_salt .and. save_s) then
-         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,S,salt_missing, &
-                     imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf90_put_var(ncid,salt_id,ws(_3D_W_),start,edges)
-         if (err .NE. NF90_NOERR) go to 10
-      end if
+   if (salt_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,S,salt_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,salt_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
 
-      if (calc_temp .and. save_t) then
-         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,T,temp_missing, &
-                     imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf90_put_var(ncid,temp_id,ws(_3D_W_),start,edges)
-         if (err .NE. NF90_NOERR) go to 10
-      end if
+   if (temp_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,T,temp_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,temp_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
 
-      if (save_rho) then
-         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,rho-1000.,rho_missing, &
-                     imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf90_put_var(ncid,sigma_t_id,ws(_3D_W_),start,edges)
-         if (err .NE. NF90_NOERR) go to 10
-      end if
+   if (sigma_t_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,rho-1000.,rho_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,sigma_t_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
 
-      if (save_rad) then
-         call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,rad,rad_missing, &
-                     imin,imax,jmin,jmax,0,kmax,ws)
-         err = nf90_put_var(ncid,rad_id,ws(_3D_W_),start,edges)
-         if (err .NE. NF90_NOERR) go to 10
-      end if
+   if (rad_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,rad,rad_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws)
+      err = nf90_put_var(ncid,rad_id,ws(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
 
-   end if ! save_strho
 #endif
 
    if (save_turb) then

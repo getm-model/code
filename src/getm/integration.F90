@@ -38,6 +38,7 @@
 !
 ! !USES:
    use time,     only: update_time,timestep
+   use time,     only: julianday,secondsofday
    use domain,   only: kmax
    use meteo,    only: do_meteo,tausx,tausy,airp,swr,albedo
    use meteo,    only: fwf_method,evap,precip
@@ -63,10 +64,13 @@
    use suspended_matter, only: spm_calc,do_spm
 #endif
    use input,    only: do_input
-   use output,   only: do_output,meanout
+   use output_processing, only: do_output_processing
+   use output,   only: do_output
 #ifdef TEST_NESTING
    use nesting,   only: nesting_file
 #endif
+   use output_manager
+   use getm_timers, only: tic, toc, TIM_FLEX_OUTPUT, TIM_OUTPUT_PROC
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
@@ -153,24 +157,24 @@
          call nesting_file(WRITING)
       end if
 #endif
+
       call update_time(n)
 
-#ifndef NO_3D
-      if(meanout .ge. 0) then
-         call calc_mean_fields(n,meanout)
-      end if
-#endif
+      call tic(TIM_FLEX_OUTPUT)
+      call output_manager_prepare_save(julianday, int(secondsofday), 0, int(n))
+      call toc(TIM_FLEX_OUTPUT)
+      call tic(TIM_OUTPUT_PROC)
+      call do_output_processing()
+      call toc(TIM_OUTPUT_PROC)
+      call tic(TIM_FLEX_OUTPUT)
+      call output_manager_save(julianday,secondsofday,n)
+      call toc(TIM_FLEX_OUTPUT)
       call do_output(runtype,n,timestep)
 #ifdef DIAGNOSE
       call diagnose(n,MaxN,runtype)
 #endif
    end do
 
-#ifndef NO_3D
-   if (meanout .eq. 0) then
-     call calc_mean_fields(n,n)
-   end if
-#endif
 
 #ifdef DEBUG
    write(debug,*) 'Leaving time_loop()'

@@ -28,12 +28,17 @@ find_library(GOTM_AIRSEA NAMES airsea_utils
              HINTS ${GOTM_PREFIX}/lib
              DOC "GOTM airsea utility library")
 
+# Find GOTM output_manager library
+find_library(GOTM_OUTMAN NAMES output_manager
+             HINTS ${GOTM_PREFIX}/lib
+             DOC "GOTM output_manager library")
+
 # Find GOTM utility library
 find_library(GOTM_UTIL NAMES util
              HINTS ${GOTM_PREFIX}/lib
              DOC "GOTM utility library")
 
-set(GOTM_LIBRARIES ${GOTM_FABM} ${GOTM_TURBULENCE} ${GOTM_ICE} ${GOTM_AIRSEA} ${GOTM_UTIL})
+set(GOTM_LIBRARIES ${GOTM_FABM} ${GOTM_TURBULENCE} ${GOTM_ICE} ${GOTM_AIRSEA} ${GOTM_OUTMAN} ${GOTM_UTIL})
 
 # Store configurable path of GOTM include directory
 find_path(GOTM_INCLUDE_DIRS
@@ -42,7 +47,7 @@ find_path(GOTM_INCLUDE_DIRS
           DOC "GOTM include directories"
 )
 
-mark_as_advanced(GOTM_LIBRARIES GOTM_INCLUDE_DIRS GOTM_TURBULENCE GOTM_ICE GOTM_AIRSEA GOTM_UTIL GOTM_FABM)
+mark_as_advanced(GOTM_LIBRARIES GOTM_INCLUDE_DIRS GOTM_TURBULENCE GOTM_ICE GOTM_AIRSEA GOTM_OUTMAN GOTM_UTIL GOTM_FABM)
 
 # Process default arguments (QUIET, REQUIRED)
 include(FindPackageHandleStandardArgs) 

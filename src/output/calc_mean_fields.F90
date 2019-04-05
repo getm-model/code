@@ -5,7 +5,7 @@
 ! !IROUTINE: calc_mean_fields() - produces averaged output.
 !
 ! !INTERFACE:
-   subroutine calc_mean_fields(n,meanout)
+   subroutine calc_mean_fields(n,write_mean)
 !
 ! !DESCRIPTION:
 !
@@ -15,9 +15,9 @@
    use meteo, only: swr
    use m3d, only: M,calc_temp,calc_salt
    use variables_3d, only: do_numerical_analyses
-   use variables_3d, only: hn,uu,hun,vv,hvn,ww,taub
+   use variables_3d, only: ssen,hn,uu,hun,vv,hvn,ww,taub
 #ifndef NO_BAROCLINIC
-   use variables_3d, only: S,T
+   use variables_3d, only: S,T,rho
    use getm_ice, only: ice_model,ICE_MODEL_WINTON,ice_hs,ice_hi
 #endif
    use variables_3d, only: nummix3d_S,nummix2d_S,nummix3d_T,nummix2d_T
@@ -31,12 +31,14 @@
 #ifdef _FABM_
    use getm_fabm, only: fabm_pel,fabm_ben,fabm_diag,fabm_diag_hz
 #endif
+   use output, only: save_rho
    use diagnostic_variables
    use getm_timers, only: tic, toc, TIM_CALCMEANF
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
-   integer, intent(in)  :: n,meanout
+   integer, intent(in)  :: n
+   logical, intent(in)  :: write_mean
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Adolf Stips
@@ -44,7 +46,7 @@
 ! !LOCAL VARIABLES:
    integer         :: i,j,k,rc
    REALTYPE        :: tmpf(I3DFIELD)
-   REALTYPE,save   :: step=_ZERO_
+   integer,save    :: step=0
    logical,save    :: first=.true.
    logical,save    :: fabm_mean=.false.
 !EOP
@@ -68,6 +70,9 @@
       allocate(ustar2mean(E2DFIELD),stat=rc)
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (ustar2mean)'
+      allocate(elevmean(E2DFIELD),stat=rc)
+      if (rc /= 0) &
+          stop 'calc_mean_fields.F90: Error allocating memory (elevmean)'
       allocate(uumean(I3DFIELD),stat=rc)
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (uumean)'
@@ -87,12 +92,21 @@
       if (rc /= 0) &
           stop 'calc_mean_fields.F90: Error allocating memory (hmean)'
 #ifndef NO_BAROCLINIC
-      allocate(Tmean(I3DFIELD),stat=rc)
-      if (rc /= 0) &
-          stop 'calc_mean_fields.F90: Error allocating memory (Tmean)'
-      allocate(Smean(I3DFIELD),stat=rc)
-      if (rc /= 0) &
-          stop 'calc_mean_fields.F90: Error allocating memory (Smean)'
+      if (calc_temp) then
+         allocate(Tmean(I3DFIELD),stat=rc)
+         if (rc /= 0) &
+             stop 'calc_mean_fields.F90: Error allocating memory (Tmean)'
+      end if
+      if (calc_salt) then
+         allocate(Smean(I3DFIELD),stat=rc)
+         if (rc /= 0) &
+             stop 'calc_mean_fields.F90: Error allocating memory (Smean)'
+      end if
+      if (save_rho) then
+         allocate(rhomean(I3DFIELD),stat=rc)
+         if (rc /= 0) &
+             stop 'calc_mean_fields.F90: Error allocating memory (rhomean)'
+      end if
       if (ice_model .eq. ICE_MODEL_WINTON) then
          allocate(ice_hs_mean(I2DFIELD),stat=rc)
          if (rc /= 0) &
@@ -166,42 +180,47 @@
       first = .false.
    end if
 
-   if (step .eq. _ZERO_ ) then
-      uumean=_ZERO_; vvmean=_ZERO_; wmean=_ZERO_
-      humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
-#ifndef NO_BAROCLINIC
-      Tmean=_ZERO_; Smean=_ZERO_
-      if (ice_model .eq. ICE_MODEL_WINTON) then
-         ice_hs_mean = _ZERO_ ; ice_hi_mean = _ZERO_
-      end if
-#endif
-      if (do_numerical_analyses) then
-         numdis3d_mean=_ZERO_; numdis2d_mean=_ZERO_
-         if (calc_temp) then
-            nummix3d_T_mean=_ZERO_; nummix2d_T_mean=_ZERO_
-            phymix3d_T_mean=_ZERO_; phymix2d_T_mean=_ZERO_
-         end if
-         if (calc_salt) then
-            nummix3d_S_mean=_ZERO_; nummix2d_S_mean=_ZERO_
-            phymix3d_S_mean=_ZERO_; phymix2d_S_mean=_ZERO_
-         end if
-      end if
-#ifdef GETM_BIO
-      cc3dmean=_ZERO_
-#endif
-#ifdef _FABM_
-      if (fabm_mean) then
-         fabmmean_pel=_ZERO_
-         fabmmean_ben=_ZERO_
-         fabmmean_diag=_ZERO_
-         fabmmean_diag_hz=_ZERO_
-      end if
-#endif
-      ustarmean=_ZERO_; ustar2mean=_ZERO_; swrmean=_ZERO_
-   end if
 
 !  Sum every macro time step, even less would be okay
    if(mod(n,M) .eq. 0) then
+
+!     reset to start new meanout period
+      if (step .eq. 0) then
+         elevmean = _ZERO_
+         uumean=_ZERO_; vvmean=_ZERO_; wmean=_ZERO_
+         humean=_ZERO_; hvmean=_ZERO_; hmean=_ZERO_
+#ifndef NO_BAROCLINIC
+         if (calc_temp) Tmean=_ZERO_
+         if (calc_salt) Smean=_ZERO_
+         if (save_rho) rhomean=_ZERO_
+         if (ice_model .eq. ICE_MODEL_WINTON) then
+            ice_hs_mean = _ZERO_ ; ice_hi_mean = _ZERO_
+         end if
+#endif
+         if (do_numerical_analyses) then
+            numdis3d_mean=_ZERO_; numdis2d_mean=_ZERO_
+            if (calc_temp) then
+               nummix3d_T_mean=_ZERO_; nummix2d_T_mean=_ZERO_
+               phymix3d_T_mean=_ZERO_; phymix2d_T_mean=_ZERO_
+            end if
+            if (calc_salt) then
+               nummix3d_S_mean=_ZERO_; nummix2d_S_mean=_ZERO_
+               phymix3d_S_mean=_ZERO_; phymix2d_S_mean=_ZERO_
+            end if
+         end if
+#ifdef GETM_BIO
+         cc3dmean=_ZERO_
+#endif
+#ifdef _FABM_
+         if (fabm_mean) then
+            fabmmean_pel=_ZERO_
+            fabmmean_ben=_ZERO_
+            fabmmean_diag=_ZERO_
+            fabmmean_diag_hz=_ZERO_
+         end if
+#endif
+         ustarmean=_ZERO_; ustar2mean=_ZERO_; swrmean=_ZERO_
+      end if
 
       swrmean = swrmean + swr
 !     AS this has to be checked, if it is the correct ustar,
@@ -209,6 +228,7 @@
       ustarmean = ustarmean + sqrt(taub)
       ustar2mean = ustar2mean + (taub)
 
+      elevmean = elevmean + ssen
       uumean = uumean + uu
       vvmean = vvmean + vv
 
@@ -228,8 +248,9 @@
       hmean = hmean + hn
 
 #ifndef NO_BAROCLINIC
-      Tmean = Tmean + T
-      Smean = Smean + S
+      if (calc_temp) Tmean = Tmean + T*hn
+      if (calc_salt) Smean = Smean + S*hn
+      if (save_rho) rhomean = rhomean + rho*hn
       if (ice_model .eq. ICE_MODEL_WINTON) then
          ice_hs_mean = ice_hs_mean + ice_hs
          ice_hi_mean = ice_hi_mean + ice_hi
@@ -263,13 +284,14 @@
       end if
 #endif
 !  count them
-      step = step + 1.0
+      step = step + 1
    end if   ! here we summed them up
 
 !  prepare for output
-   if(meanout .gt. 0 .and. mod(n,meanout) .eq. 0) then
+   if (write_mean) then
 
-      if ( step .ge. 1.0) then
+      if (step .gt. 1) then
+         elevmean = elevmean / step
          uumean = uumean / step
          vvmean = vvmean / step
          wmean = wmean / step
@@ -278,8 +300,9 @@
          hmean = hmean / step
 
 #ifndef NO_BAROCLINIC
-         Tmean = Tmean / step
-         Smean = Smean / step
+         if (calc_temp) Tmean = Tmean / step
+         if (calc_salt) Smean = Smean / step
+         if (save_rho) rhomean = rhomean / step
          if (ice_model .eq. ICE_MODEL_WINTON) then
             ice_hs_mean = ice_hs_mean / step
             ice_hi_mean = ice_hi_mean / step
@@ -314,6 +337,29 @@
 #endif
          ustarmean = ustarmean / step
          swrmean = swrmean / step
+
+      end if
+
+      if (step .ge. 1) then
+
+#ifndef NO_BAROCLINIC
+         if (calc_temp) then
+            forall (i=imin:imax,j=jmin:jmax,az(i,j).ne.0)
+               Tmean(i,j,1:) = Tmean(i,j,1:) / hmean(i,j,1:)
+            end forall
+         end if
+         if (calc_salt) then
+            forall (i=imin:imax,j=jmin:jmax,az(i,j).ne.0)
+               Smean(i,j,1:) = Smean(i,j,1:) / hmean(i,j,1:)
+            end forall
+         end if
+         if (save_rho) then
+            forall (i=imin:imax,j=jmin:jmax,az(i,j).ne.0)
+               rhomean(i,j,1:) = rhomean(i,j,1:) / hmean(i,j,1:)
+            end forall
+         end if
+#endif
+
 
 !  now calculate the velocities
          where ( humean .ne. _ZERO_ )
@@ -370,7 +416,7 @@
          end do
          wmean = tmpf
       end if
-      step = _ZERO_
+      step = 0
    end if
 
    call toc(TIM_CALCMEANF)

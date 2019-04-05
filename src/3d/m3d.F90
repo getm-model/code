@@ -86,13 +86,13 @@
 !
 ! !INTERFACE:
    subroutine init_3d(runtype,timestep,hotstart)
+!
    IMPLICIT NONE
 !
 ! !INPUT PARAMETERS:
    integer, intent(in)                 :: runtype
    REALTYPE, intent(in)                :: timestep
    logical, intent(in)                 :: hotstart
-!
 !
 ! !DESCRIPTION:
 !  Here, the {\tt m3d} namelist is read from {\tt getm.inp}, and the
@@ -397,8 +397,8 @@
                num(i,j,:) = 1.e-15
                nuh(i,j,:) = 1.e-15
 #ifndef NO_BAROCLINIC
-               S(i,j,:)   = _ZERO_
-               T(i,j,:)   = _ZERO_
+               S(i,j,:)   = -9999._rk
+               T(i,j,:)   = -9999._rk
 #endif
             end if
          end do

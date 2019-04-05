@@ -179,7 +179,7 @@
       select case (elev_method)
          case(1)
             LEVEL2 'setting initial surface elevation to ',real(elev_const)
-            z = elev_const
+            where ( az.gt.0 ) z = elev_const
          case(2)
             LEVEL2 'getting initial surface elevation from ',trim(elev_file)
             call get_2d_field(trim(elev_file),"elev",ilg,ihg,jlg,jhg,.true.,z(ill:ihl,jll:jhl))
@@ -190,7 +190,7 @@
             stop 'init_2d(): invalid elev_method'
       end select
 
-      where ( z .lt. -H+min_depth)
+      where ( az.gt.0 .and. z.lt.-H+min_depth)
          z = -H+min_depth
       end where
       zo = z
@@ -387,12 +387,13 @@
             V     = _ZERO_
             Vinto = _ZERO_
          end where
-!        This is probably not absolutely necessary:
-         where (az .eq. 0)
-            z  = _ZERO_
-            zo = _ZERO_
-         end where
       end if
+
+!     This is only needed for proper flexible output
+      where (az .eq. 0)
+         z  = -9999._rk
+         zo = -9999._rk
+      end where
 
       call depth_update()
 
@@ -472,7 +473,7 @@
       call toc(TIM_INTEGR2D)
    end if
    if (have_boundaries) call update_2d_bdy(loop,bdy2d_ramp)
-   call sealevel()
+   call sealevel(loop)
    call depth_update()
 
    if(residual .gt. 0) then

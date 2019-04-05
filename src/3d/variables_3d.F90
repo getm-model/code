@@ -112,9 +112,11 @@
 !
 ! !USES:
    use domain,     only: imin,imax,jmin,jmax,kmax
+   use field_manager
    IMPLICIT NONE
 !
 ! !PUBLIC DATA MEMBERS:
+   integer, parameter                  :: rk = kind(_ONE_)
    REALTYPE                            :: dt,cnpar=0.9
    REALTYPE                            :: avmback=_ZERO_,avhback=_ZERO_
    logical                             :: do_numerical_analyses=.false.
@@ -191,8 +193,11 @@
 #include "dynamic_allocations_3d.h"
 #endif
 
+   kmin = 1
+
    hn = _ZERO_ ; hun = _ZERO_ ; hvn = _ZERO_
    uu = _ZERO_ ; vv = _ZERO_ ; ww = _ZERO_
+
 #ifdef _MOMENTUM_TERMS_
    tdv_u = _ZERO_ ; adv_u = _ZERO_ ; vsd_u = _ZERO_ ; hsd_u = _ZERO_
    cor_u = _ZERO_ ; epg_u = _ZERO_ ; ipg_u = _ZERO_
@@ -214,8 +219,8 @@
 #endif
 
 !  must be nonzero for gotm_fabm in case of calc_temp=F
-   g1 = -9999*_ONE_
-   g2 = -9999*_ONE_
+   g1 = -9999._rk
+   g2 = -9999._rk
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_variables_3d()'
@@ -224,6 +229,172 @@
    return
    end subroutine init_variables_3d
 !EOC
+
+#ifndef NO_3D
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: register_3d_variables() - register GETM variables.
+!
+! !INTERFACE:
+   subroutine register_3d_variables(fm,runtype)
+!
+! !DESCRIPTION:
+!
+! !USES:
+!KB   use variables_3d
+   IMPLICIT NONE
+!
+! !INPUT PARAMETERS:
+   type (type_field_manager) :: fm
+   integer, intent(in)       :: runtype
+!
+! !REVISION HISTORY:
+!  Original author(s): Karsten Bolding & Jorn Bruggeman
+!
+! !LOCAL VARIABLES:
+!
+!EOP
+!-----------------------------------------------------------------------
+!BOC
+   LEVEL2 'register_3d_variables()'
+
+!:: kmin(I2DFIELD)
+!:: kumin(I2DFIELD)
+!:: kvmin(I2DFIELD)
+!:: kmin_pmz(I2DFIELD)
+!:: kumin_pmz(I2DFIELD)
+!:: kvmin_pmz(I2DFIELD)
+
+!:: uu(I3DFIELD)
+!:: vv(I3DFIELD)
+!:: ww(I3DFIELD)
+#ifdef _MOMENTUM_TERMS_
+!:: tdv_u(I3DFIELD)
+!:: adv_u(I3DFIELD)
+!:: vsd_u(I3DFIELD)
+!:: hsd_u(I3DFIELD)
+!:: cor_u(I3DFIELD)
+!:: epg_u(I3DFIELD)
+!:: ipg_u(I3DFIELD)
+
+!:: tdv_v(I3DFIELD)
+!:: adv_v(I3DFIELD)
+!:: vsd_v(I3DFIELD)
+!:: hsd_v(I3DFIELD)
+!:: cor_v(I3DFIELD)
+!:: epg_v(I3DFIELD)
+!:: ipg_v(I3DFIELD)
+#endif
+#ifdef STRUCTURE_FRICTION
+!:: sf(I3DFIELD)
+#endif
+!:: ho(I3DFIELD)
+!:: hn(I3DFIELD)
+!:: huo(I3DFIELD)
+!:: hun(I3DFIELD)
+!:: hvo(I3DFIELD)
+!:: hvn(I3DFIELD)
+!:: hcc(I3DFIELD)
+!:: uuEx(I3DFIELD)
+!:: vvEx(I3DFIELD)
+!:: num(I3DFIELD)
+!:: nuh(I3DFIELD)
+
+! 3D turbulent fields
+!:: tke(I3DFIELD)
+!:: eps(I3DFIELD)
+!:: SS(I3DFIELD)
+#ifndef NO_BAROCLINIC
+! 3D baroclinic fields
+!:: NN(I3DFIELD)
+!:: S(I3DFIELD)
+!:: T(I3DFIELD)
+!:: rho(I3DFIELD)
+!:: rad(I3DFIELD)
+!:: buoy(I3DFIELD)
+!:: alpha(I3DFIELD)
+!:: beta(I3DFIELD)
+!:: idpdx(I3DFIELD)
+!:: idpdy(I3DFIELD)
+!:: light(I3DFIELD)
+#endif
+
+#ifdef SPM
+! suspended matter
+!:: spm(I3DFIELD)
+!:: spm_ws(I3DFIELD)
+!:: spm_pool(I2DFIELD)
+#endif
+
+! 2D fields in 3D domain
+!:: sseo(I2DFIELD)
+!:: ssen(I2DFIELD)
+!:: Dn(I2DFIELD)
+!:: ssuo(I2DFIELD)
+!:: ssun(I2DFIELD)
+!:: ssvo(I2DFIELD)
+!:: ssvn(I2DFIELD)
+!:: Dun,Dvn
+
+! 3D friction in 3D domain
+!:: rru(I2DFIELD)
+!:: rrv(I2DFIELD)
+!:: taus(I2DFIELD)
+!:: taubx(I2DFIELD)
+!:: tauby(I2DFIELD)
+!:: taub(I2DFIELD)
+
+! light attenuation
+!:: A(I2DFIELD)
+!:: g1(I2DFIELD)
+!:: g2(I2DFIELD)
+
+!  category - 3d
+   if (runtype .ge. 2) then
+      call fm%register('zc', 'm', 'center coordinate', standard_name='', dimensions=(/id_dim_z/),data3d=zc(_3D_W_), category='grid', part_of_state=.false.)
+      call fm%register('hn', 'm', 'layer thickness', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hn(_3D_W_), category='grid', part_of_state=.true.)
+      call fm%register('hun', 'm', 'layer thickness - U-points', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hun(_3D_W_), category='grid', output_level=output_level_debug)
+      call fm%register('hvn', 'm', 'layer thickness - V-points', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=hvn(_3D_W_), category='grid', output_level=output_level_debug)
+      call fm%register('ho', 'm', 'old layer thickness', standard_name='cell_thickness', dimensions=(/id_dim_z/),data3d=ho(_3D_W_), category='grid', output_level=output_level_debug)
+      call fm%register('ssen', 'm', 'elevation at T-points (3D)', standard_name='', data2d=ssen(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug, part_of_state=.true.)
+      call fm%register('ssun', 'm', 'elevation at U-points (3D)', standard_name='', data2d=ssun(_2D_W_), category='3d', output_level=output_level_debug, part_of_state=.true.)
+      call fm%register('ssvn', 'm', 'elevation at V-points (3D)', standard_name='', data2d=ssvn(_2D_W_), category='3d', output_level=output_level_debug, part_of_state=.true.)
+      call fm%register('sseo', 'm', 'old elevation at T-points (3D)', standard_name='', data2d=sseo(_2D_W_), category='3d', fill_value=-9999.0_rk, output_level=output_level_debug, part_of_state=.true.)
+      call fm%register('uu', 'm2/s', 'transport in local x-direction (3D)', standard_name='', dimensions=(/id_dim_z/), data3d=uu(_3D_W_), category='3d', output_level=output_level_debug, part_of_state=.true.)
+      call fm%register('vv', 'm2/s', 'transport in local y-direction (3D)', standard_name='', dimensions=(/id_dim_z/), data3d=vv(_3D_W_), category='3d', output_level=output_level_debug, part_of_state=.true.)
+      call fm%register('ww', 'm/s', 'grid-related vertical velocity', standard_name='', dimensions=(/id_dim_z/), data3d=ww(_3D_W_), category='3d', output_level=output_level_debug)
+      call fm%register('SS', 's-2', 'shear frequency squared', standard_name='', dimensions=(/id_dim_z/), data3d=SS(_3D_W_), category='3d', output_level=output_level_debug)
+
+   end if
+
+!  category - turbulence
+   if (runtype .ge. 2) then
+      call fm%register('tke' , 'm2/s2', 'TKE'        , standard_name='', dimensions=(/id_dim_z/), data3d=tke(_3D_W_), category='turbulence', output_level=output_level_debug)
+      call fm%register('diss', 'm2/s3', 'dissipation', standard_name='', dimensions=(/id_dim_z/), data3d=eps(_3D_W_), category='turbulence', output_level=output_level_debug)
+      call fm%register('num' , 'm2/s' , 'viscosity'  , standard_name='', dimensions=(/id_dim_z/), data3d=num(_3D_W_), category='turbulence', output_level=output_level_debug)
+      call fm%register('nuh' , 'm2/s' , 'diffusivity', standard_name='', dimensions=(/id_dim_z/), data3d=nuh(_3D_W_), category='turbulence', output_level=output_level_debug)
+   end if
+
+#ifndef NO_BAROCLINIC
+!  category - baroclinic
+   if (runtype .ge. 3) then
+      call fm%register('temp', 'Celsius', 'temperature', standard_name='', dimensions=(/id_dim_z/), fill_value=-9999.0_rk, data3d=T  (_3D_W_), category='baroclinic', part_of_state=.true.)
+      call fm%register('salt', '1e-3'   , 'salinity'   , standard_name='', dimensions=(/id_dim_z/), fill_value=-9999.0_rk, data3d=S  (_3D_W_), category='baroclinic', part_of_state=.true.)
+      call fm%register('rho' , 'kg/m3'  , 'density'    , standard_name='', dimensions=(/id_dim_z/), fill_value=-9999.0_rk, data3d=rho(_3D_W_), category='baroclinic', output_level=output_level_debug)
+      call fm%register('NN', 's-2', 'buoyancy frequency squared', standard_name='', dimensions=(/id_dim_z/), data3d=NN(_3D_W_), category='baroclinic', output_level=output_level_debug)
+      call fm%register('idpdx', 'm2/s2', 'baroclinic pressure gradient - x', standard_name='', dimensions=(/id_dim_z/),data3d=idpdx(_3D_W_), category='baroclinic', output_level=output_level_debug)
+#ifndef SLICE_MODEL
+      call fm%register('idpdy', 'm2/s2', 'baroclinic pressure gradient - y', standard_name='', dimensions=(/id_dim_z/),data3d=idpdy(_3D_W_), category='baroclinic', output_level=output_level_debug)
+#endif
+   end if
+#endif
+
+   return
+   end subroutine register_3d_variables
+!EOC
+#endif
+
 
 !-----------------------------------------------------------------------
 !BOP

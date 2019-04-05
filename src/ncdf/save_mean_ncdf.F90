@@ -12,14 +12,14 @@
 ! !USES:
    use netcdf
    use exceptions
-   use grid_ncdf,    only: xlen,ylen,zlen,h_missing
-   use ncdf_2d, only: ws2d => ws
-   use ncdf_3d, only: ws3d => ws
+   use grid_ncdf,    only: xlen,ylen,zlen
    use ncdf_mean
    use diagnostic_variables
    use domain,       only: ioff,joff,imin,imax,jmin,jmax,kmax
    use domain,       only: H,az
+   use domain,       only: min_depth
    use variables_3d, only: kmin
+   use variables_3d, only: Dn
    use m3d, only: calc_temp,calc_salt
 #ifdef GETM_BIO
    use bio_var, only: numc
@@ -45,6 +45,8 @@
    integer                   :: start(4),edges(4)
    integer, save             :: n3d=0
    REALTYPE                  :: dum(1)
+   REALTYPE,dimension(E2DFIELD) :: ws2d
+   REALTYPE,dimension(I3DFIELD) :: ws3d
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -64,6 +66,12 @@
    edges(1) = xlen
    edges(2) = ylen
    edges(3) = 1
+
+!  elevations
+   call eta_mask(imin,jmin,imax,jmax,az,H,Dn,elevmean,min_depth,elev_missing, &
+                 imin,jmin,imax,jmax,ws2d)
+   err = nf90_put_var(ncid,elevmean_id,ws2d(_2D_W_),start,edges)
+   if (err .NE. NF90_NOERR) go to 10
 
 #ifndef NO_BAROCLINIC
    if (ice_hs_mean_id .ne. -1) then
@@ -110,7 +118,7 @@
 
 !  layer thickness
    if (hmean_id .gt. 0) then
-      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,hmean,h_missing, &
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,hmean,hh_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws3d)
       err = nf90_put_var(ncid,hmean_id,ws3d(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
@@ -136,7 +144,7 @@
 
 #ifndef NO_BAROCLINIC
 !  salt mean
-   if (calc_salt) then
+   if (saltmean_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,Smean,salt_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws3d)
       err = nf90_put_var(ncid, saltmean_id,ws3d(_3D_W_),start,edges)
@@ -144,10 +152,18 @@
    end if
 
 !  mean temperature
-   if (calc_temp) then
+   if (tempmean_id .ne. -1) then
       call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,Tmean,temp_missing, &
                   imin,imax,jmin,jmax,0,kmax,ws3d)
       err = nf90_put_var(ncid, tempmean_id,ws3d(_3D_W_),start,edges)
+      if (err .NE. NF90_NOERR) go to 10
+   end if
+
+!  mean sigma_t
+   if (sigma_tmean_id .ne. -1) then
+      call cnv_3d(imin,jmin,imax,jmax,kmin,kmax,az,rhomean-1000.,rho_missing, &
+                  imin,imax,jmin,jmax,0,kmax,ws3d)
+      err = nf90_put_var(ncid,sigma_tmean_id,ws3d(_3D_W_),start,edges)
       if (err .NE. NF90_NOERR) go to 10
    end if
 #endif

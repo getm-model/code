@@ -104,6 +104,7 @@ elseif(${GETM_COORDINATE_TYPE} STREQUAL "Curvilinear")
 endif()
 message(${GETM_COORDINATE_TYPE})
 
+
 # Specify default build type for single-type systems (not VS)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set (CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
@@ -282,6 +283,7 @@ add_library(getm OBJECT
             getm/compilation_options.F90
             getm/initialise.F90
             getm/integration.F90
+            getm/register_all_variables.F90
             getm/print_version.F90
            )
 
@@ -354,6 +356,7 @@ add_library(output OBJECT
             output/diagnostic_variables.F90
             output/ncdf_out.F90
             output/nesting.F90
+            output/output_processing.F90
             output/output.F90
            )
 
@@ -369,7 +372,7 @@ add_dependencies(getm_ice futils domain meteo)
 add_dependencies(output futils domain 2d 3d meteo getm_ice)
 add_dependencies(ncdf futils domain output getm_ice)
 add_dependencies(input futils 2d 3d ncdf)
-add_dependencies(getm input getm_ice)
+add_dependencies(getm input getm_ice output)
 
 set_property(TARGET futils ncdf input APPEND PROPERTY INCLUDE_DIRECTORIES "${NetCDF_INCLUDE_DIRS}")
 add_definitions(-DNETCDF_FMT -DREAL_4B=real\(4\))
@@ -382,12 +385,15 @@ if(GOTM_BASE)
   set(GOTM_USE_FABM ${GETM_USE_FABM} CACHE BOOL "Include support for Framework for Aquatic Biogeochemical Models (fabm.net)" FORCE)
   add_subdirectory(${GOTM_BASE}/src gotm)
   set(GOTM_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/gotm/modules)
-  set(GOTM_LIBRARIES ice_utils airsea_utils turbulence util)
+  set(GOTM_LIBRARIES turbulence ice_utils airsea_utils util output_manager)
+#KB  set(GOTM_LIBRARIES ${GOTM_LIBRARIES} output_manager)
   if(GETM_USE_FABM)
     set(GOTM_LIBRARIES ${GOTM_LIBRARIES} gotm_fabm)
     set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES $<TARGET_PROPERTY:gotm_fabm,INTERFACE_INCLUDE_DIRECTORIES>)
   endif()
   mark_as_advanced(GOTM_PREFIX GOTM_USE_FABM)
+#KB  add_dependencies(output ${GOTM_LIBRARIES})
+  add_dependencies(2d util)
   add_dependencies(3d ${GOTM_LIBRARIES})
   add_dependencies(getm_ice ${GOTM_LIBRARIES})
 else()
@@ -399,7 +405,13 @@ else()
     set_property(TARGET 3d getm APPEND PROPERTY INCLUDE_DIRECTORIES "${FABM_INCLUDE_DIRS}")
   endif()
 endif()
-set_property(TARGET 3d getm_ice getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
+set_property(TARGET 2d APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
+set_property(TARGET 3d APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
+set_property(TARGET getm_ice APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
+set_property(TARGET output APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
+set_property(TARGET ncdf APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
+set_property(TARGET input APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
+set_property(TARGET getm APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 
 # Build GETM executable.
 add_executable(getm_exe
@@ -416,6 +428,7 @@ add_executable(getm_exe
                $<TARGET_OBJECTS:futils>
               )
 set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm${exe_id}")
+set_property(TARGET getm_exe APPEND PROPERTY INCLUDE_DIRECTORIES "${GOTM_INCLUDE_DIRS}")
 
 target_link_libraries(getm_exe ${GOTM_LIBRARIES} ${NetCDF_LIBRARIES})
 if (NetCDF_STATIC_MSVC_BUILD)

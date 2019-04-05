@@ -44,6 +44,7 @@
    CALL tic(TIM_DPTHUPDATE)
 
 ! TODO/BJB: Why is this turned off?
+! KK: ...because we need to have non-zero DU/DV at land-sea-interfaces
 #undef USE_MASK
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,d1,d2i,x)
@@ -53,7 +54,6 @@
 !$OMP DO SCHEDULE(RUNTIME)
    do j=jmin-HALO,jmax+HALO
       do i=imin-HALO,imax+HALO
-         ! TODO/BJB: Is it enough to do this on az?
          D(i,j) = z(i,j)+H(i,j)
       end do
    end do
