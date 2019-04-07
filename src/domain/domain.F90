@@ -59,7 +59,7 @@
 
    REALTYPE                            :: Hland=-10.0
    REALTYPE                            :: min_depth,crit_depth
-   REALTYPE                            :: clip_depth = _ZERO_
+   REALTYPE                            :: clip_depth = -1.
 
    REALTYPE                            :: longitude      = _ZERO_
    REALTYPE                            :: latitude       = _ZERO_

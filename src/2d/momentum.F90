@@ -142,7 +142,6 @@
    integer                   :: i,j
 #ifdef _NEW_DAF_
    integer                   :: rc
-   logical                   :: clipped
    REALTYPE,dimension(:,:),pointer,save :: pUStokes
 #endif
 #ifdef NEW_CORI
@@ -165,19 +164,20 @@
       rho_0i = _ONE_ / rho_0
       gammai = _ONE_ / (rho_0*max(SMALL,g))
 #ifdef _NEW_DAF_
-      if (waveforcing_method .ne. NO_WAVES) then
-         pUStokes => UStokes
-      else
-         allocate(pUStokes(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'umomentum: Error allocating memory (pUStokes)'
-         pUStokes = _ZERO_
+      if (clip_depth .gt. _ZERO_) then
+         if (waveforcing_method .ne. NO_WAVES) then
+            pUStokes => UStokes
+         else
+            allocate(pUStokes(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'umomentum: Error allocating memory (pUStokes)'
+            pUStokes = _ZERO_
+         end if
       end if
 #endif
    end if
 
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zx,tausu,Slr,Vloc,fV,cord_curv)
-!$OMP                          PRIVATE(clipped)
 
 #ifdef NEW_CORI
 !  Espelid et al. [2000], IJNME 49, 1521-1545
@@ -194,6 +194,7 @@
 !$OMP END DO
 #endif
 
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if ((au(i,j) .eq. 1) .or. (au(i,j) .eq. 2)) then
@@ -234,24 +235,32 @@
             UEuler(i,j)=(UEuler(i,j)-dtm*(g*DU(i,j)*zx+dry_u(i,j)*&
                  (-tausu*rho_0i-fV+UEx(i,j)+SlUx(i,j)+Slr)))/&
                  (_ONE_+dtm*ru(i,j)/DU(i,j))
-#ifdef _NEW_DAF_
-            clipped = .false.
-            if ( D(i  ,j) .lt. clip_depth ) then
-               UEuler(i,j) = min( UEuler(i,j) , -pUStokes(i,j) )
-               clipped = .true.
-            end if
-            if ( D(i+1,j) .lt. clip_depth ) then
-               UEuler(i,j) = max( UEuler(i,j) , -pUStokes(i,j) )
-               clipped = .true.
-            end if
-            if (clipped) then
-               STDERR 'umomentum: clipped at global i j =',i+ioff,j+joff
-            end if
-#endif
          end if
       end do
    end do
+!$OMP END DO NOWAIT
+
+#ifdef _NEW_DAF_
+   if (clip_depth .gt. _ZERO_) then
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin,jmax
+         do i=imin,imax
+            if ((au(i,j) .eq. 1) .or. (au(i,j) .eq. 2)) then
+               if ( D(i  ,j) .lt. clip_depth ) then
+                  UEuler(i,j) = min( UEuler(i,j) , -pUStokes(i,j) )
+                  STDERR 'umomentum: clipped at global i j =',i+ioff,j+joff,'D =',real(D(i,j))
+               end if
+               if ( D(i+1,j) .lt. clip_depth ) then
+                  UEuler(i,j) = max( UEuler(i,j) , -pUStokes(i,j) )
+                  STDERR 'umomentum: clipped at global i j =',i+ioff,j+joff,'D =',real(D(i+1,j))
+               end if
+            end if
+         end do
+      end do
 !$OMP END DO
+   end if
+#endif
+
 !$OMP END PARALLEL
 ! The rest of this sub is not easy to thread.
 
@@ -359,7 +368,6 @@
    integer                   :: i,j
 #ifdef _NEW_DAF_
    integer                   :: rc
-   logical                   :: clipped
    REALTYPE,dimension(:,:),pointer,save :: pVStokes
 #endif
 #ifdef NEW_CORI
@@ -382,19 +390,20 @@
       rho_0i = _ONE_ / rho_0
       gammai = _ONE_ / (rho_0*max(SMALL,g))
 #ifdef _NEW_DAF_
-      if (waveforcing_method .ne. NO_WAVES) then
-         pVStokes => VStokes
-      else
-         allocate(pVStokes(E2DFIELD),stat=rc)
-         if (rc /= 0) stop 'vmomentum: Error allocating memory (pVStokes)'
-         pVStokes = _ZERO_
+      if (clip_depth .gt. _ZERO_) then
+         if (waveforcing_method .ne. NO_WAVES) then
+            pVStokes => VStokes
+         else
+            allocate(pVStokes(E2DFIELD),stat=rc)
+            if (rc /= 0) stop 'vmomentum: Error allocating memory (pVStokes)'
+            pVStokes = _ZERO_
+         end if
       end if
 #endif
    end if
 
 
 !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i,j,zp,zm,zy,tausv,Slr,Uloc,fU,cord_curv)
-!$OMP                          PRIVATE(clipped)
 
 #ifdef NEW_CORI
 !  Espelid et al. [2000], IJNME 49, 1521-1545
@@ -411,6 +420,7 @@
 !$OMP END DO
 #endif
 
+!$OMP DO SCHEDULE(RUNTIME)
    do j=jmin,jmax
       do i=imin,imax
          if ((av(i,j) .eq. 1) .or. (av(i,j) .eq. 2)) then
@@ -444,24 +454,32 @@
             VEuler(i,j)=(VEuler(i,j)-dtm*(g*DV(i,j)*zy+dry_v(i,j)*&
                  (-tausv*rho_0i+fU+VEx(i,j)+SlVx(i,j)+Slr)))/&
                  (_ONE_+dtm*rv(i,j)/DV(i,j))
-#ifdef _NEW_DAF_
-            clipped = .false.
-            if ( D(i,j  ) .lt. clip_depth ) then
-               VEuler(i,j) = min( VEuler(i,j) , -pVStokes(i,j) )
-               clipped = .true.
-            end if
-            if ( D(i,j+1) .lt. clip_depth ) then
-               VEuler(i,j) = max( VEuler(i,j) , -pVStokes(i,j) )
-               clipped = .true.
-            end if
-            if (clipped) then
-               STDERR 'vmomentum: clipped at global i j =',i+ioff,j+joff
-            end if
-#endif
          end if
       end do
    end do
+!$OMP END DO NOWAIT
+
+#ifdef _NEW_DAF_
+   if (clip_depth .gt. _ZERO_) then
+!$OMP DO SCHEDULE(RUNTIME)
+      do j=jmin,jmax
+         do i=imin,imax
+            if ((av(i,j) .eq. 1) .or. (av(i,j) .eq. 2)) then
+               if ( D(i,j  ) .lt. clip_depth ) then
+                  VEuler(i,j) = min( VEuler(i,j) , -pVStokes(i,j) )
+                  STDERR 'vmomentum: clipped at global i j =',i+ioff,j+joff,'D =',real(D(i,j))
+               end if
+               if ( D(i,j+1) .lt. clip_depth ) then
+                  VEuler(i,j) = max( VEuler(i,j) , -pVStokes(i,j) )
+                  STDERR 'vmomentum: clipped at global i j =',i+ioff,j+joff,'D =',real(D(i,j+1))
+               end if
+            end if
+         end do
+      end do
 !$OMP END DO
+   end if
+#endif
+
 !$OMP END PARALLEL
 ! The rest of this sub is not easy to thread.
 
