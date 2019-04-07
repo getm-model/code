@@ -82,7 +82,7 @@
 				0.02
 			</min_depth>
 			<clip_depth>
-				0.0
+				-1.0
 			</clip_depth>
 			<kdum>
 				30
