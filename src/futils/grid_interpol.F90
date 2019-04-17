@@ -604,7 +604,7 @@
 #ifdef USE_VALID_LON_LAT_ONLY
          if(olon(i,j) .gt. -1000. .and. olat(i,j) .gt. -1000.) then
 #endif
-         if(mask(i,j) .ge. 1) then
+         !if(mask(i,j) .ge. 1) then
             if (rotated_grid) then
                call to_rotated_lat_lon(sp,olon(i,j),olat(i,j), &
                                        alon,alat,beta(i,j))
@@ -639,7 +639,7 @@
                end if
             else
             endif
-         end if
+         !end if
 #ifdef USE_VALID_LON_LAT_ONLY
          end if
 #endif
@@ -662,7 +662,7 @@
 #ifdef USE_VALID_LON_LAT_ONLY
          if(olon(i,j) .gt. -1000. .and. olat(i,j) .gt. -1000.) then
 #endif
-         if(mask(i,j) .ge. 1) then
+         !if(mask(i,j) .ge. 1) then
             if (rotated_grid) then
                call to_rotated_lat_lon(sp,olon(i,j),olat(i,j), &
                                        x,y,beta(i,j))
@@ -720,7 +720,7 @@
                end select
 #endif
             end if
-         end if
+         !end if
 #ifdef USE_VALID_LON_LAT_ONLY
          else if (mask(i,j) .gt. 0) then
             FATAL 'Could not find coefficients for all water points'
