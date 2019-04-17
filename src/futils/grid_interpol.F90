@@ -621,8 +621,10 @@
                   end do
                   gridmap(i,j,1) = im-1
                else
+                  if(mask(i,j) .ge. 1) then
                   STDERR i,j,real(olon(i,j)),real(olat(i,j))
                   outside = .true.
+                  end if
                end if
             else
             endif
@@ -634,8 +636,10 @@
                   end do
                   gridmap(i,j,2) = jm-1
                else
+                  if(mask(i,j) .ge. 1) then
                   STDERR i,j,real(olon(i,j)),real(olat(i,j))
                   outside = .true.
+                  end if
                end if
             else
             endif
@@ -686,14 +690,14 @@
 !                               and this was catched after init_grid_interpol
 !                               in init_meteo_input_ncdf.
                      STDERR 'none:',i,j,real(olon(i,j)),real(olat(i,j))
-                     ok = .false.
+                     if(mask(i,j) .ge. 1) ok = .false.
 !                    condition for filling in do_grid_interpol()
                      gridmap(i,j,1) = -999
                      gridmap(i,j,2) = -999
 #ifdef _OLD_GRID_INTERPOL_
                   case (1,2,3)
                      STDERR 'miss:',i,j,real(olon(i,j)),real(olat(i,j))
-                     ok = .false.
+                     if(mask(i,j) .ge. 1) ok = .false.
                      t(i,j) = _ZERO_
                      u(i,j) = _ZERO_
                      if (present(met_mask)) then
