@@ -14,7 +14,7 @@
    use time, only: string_to_julsecs,time_diff,add_secs,in_interval
    use time, only: jul0,secs0,julianday,secondsofday,timestep,simtime
    use time, only: write_time_string,timestr
-   use domain, only: imin,imax,jmin,jmax,az,lonc,latc,convc
+   use domain, only: imin,imax,jmin,jmax,az,lonc,latc,convc,calc_points
    use domain, only: iextr_domain=>iextr,jextr_domain=>jextr
    use domain, only: ill,ihl,jll,jhl,ilg,ihg,jlg,jhg
    use grid_interpol, only: init_grid_interpol,do_grid_interpol
@@ -425,7 +425,7 @@
             t_2 = met_times(indx) - offset
          end if
 
-         call read_data(indx)
+         if (calc_points.gt.0) call read_data(indx)
          save_n = indx+1
 
          if (periodic_domain) then
