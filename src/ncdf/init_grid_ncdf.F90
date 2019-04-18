@@ -499,7 +499,7 @@
    fv = h_missing
    mv = h_missing
    vr(1) = -5.
-   vr(2) = 4000.
+   vr(2) = 13000.
    call set_attributes(ncid,id,                                         &
                        long_name='bathymetry',units='m',                &
                        netcdf_real=NF90_DOUBLE, &
