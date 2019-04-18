@@ -176,7 +176,7 @@
 #if 0
    call register_diagnostic_variables()
 #endif
-   call register_processed_variables(fm)
+   call register_processed_variables(fm,runtype)
 
    return
    end subroutine do_register_all_variables
