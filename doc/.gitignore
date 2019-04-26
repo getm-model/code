@@ -1,3 +1,6 @@
 *.aux
 *.bbl
 *.blg
+getm_pub.bib.bak
+getm_pub.html
+getm_pub_bib.html
