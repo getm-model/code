@@ -92,6 +92,7 @@
 
    allocate(rlxcoef(0:kmax),stat=rc)
    if (rc /= 0) stop 'init_init_bdy_3d: Error allocating memory (rlxcoef)'
+   rlxcoef = _ZERO_
 
 #ifdef DEBUG
    write(debug,*) 'Leaving init_bdy_3d()'

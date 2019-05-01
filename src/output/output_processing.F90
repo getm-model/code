@@ -30,9 +30,9 @@
    REALTYPE, dimension(:,:,:), allocatable, target :: u3d_destag, v3d_destag
 
    logical         :: u2d_used, v2d_used
-   logical         :: u3d_used, v3d_used
+   logical         :: u3d_used=.false., v3d_used=.false.
    logical, target :: u2d_now, v2d_now
-   logical, target :: u3d_now, v3d_now
+   logical, target :: u3d_now=.false., v3d_now=.false.
    logical, target:: u2d_destag_use, v2d_destag_use
    logical, target:: u3d_destag_use, v3d_destag_use
    integer, parameter :: rk = kind(_ONE_)
@@ -93,7 +93,7 @@
 ! !ROUTINE: register_processed_variables()
 !
 ! !INTERFACE:
-   subroutine register_processed_variables(fm)
+   subroutine register_processed_variables(fm,runtype)
 !
 ! !DESCRIPTION:
 !
@@ -102,6 +102,7 @@
 !
 ! !INPUT PARAMETERS:
    type (type_field_manager) :: fm
+   integer, intent(in)       :: runtype
 !
 ! !REVISION HISTORY:
 !  Original author(s): Karsten Bolding & Jorn Bruggeman
@@ -116,8 +117,10 @@
    call fm%register('v2d', 'm/s', 'velocity in local y-direction', standard_name='', fill_value=-9999._rk, category='velocities', output_level=output_level_debug, used=v2d_used, used_now=v2d_now)
 
 #ifndef NO_3D
+   if (runtype .ge. 2) then
    call fm%register('u3d', 'm/s', 'velocity in local x-direction (3D)', standard_name='', dimensions=(/id_dim_z/), fill_value=-9999._rk, category='velocities', output_level=output_level_debug, used=u3d_used, used_now=u3d_now)
    call fm%register('v3d', 'm/s', 'velocity in local y-direction (3D)', standard_name='', dimensions=(/id_dim_z/), fill_value=-9999._rk, category='velocities', output_level=output_level_debug, used=v3d_used, used_now=v3d_now)
+   end if
 #endif
 
 
