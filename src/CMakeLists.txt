@@ -324,16 +324,6 @@ if(GETM_USE_PARALLEL)
   target_link_libraries(getm_exe PRIVATE MPI::MPI_Fortran)
 endif()
 
-# Set default installation prefix.
-if(WIN32)
-  if(DEFINED ENV{LOCALAPPDATA})
-    set(DEFAULT_PREFIX "$ENV{LOCALAPPDATA}/getm")
-  else()
-    set(DEFAULT_PREFIX "$ENV{APPDATA}/getm")
-  endif()
-else()
-  set(DEFAULT_PREFIX "$ENV{HOME}/local/getm")
-endif()
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   # Still on CMake default - override with our own default.
   set(CMAKE_INSTALL_PREFIX ${DEFAULT_PREFIX} CACHE PATH "Directory to install GETM in" FORCE)

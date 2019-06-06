@@ -19,12 +19,15 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-# Find required and optional external components - NetCDF, GOTM, FABM? and MPI?
-
-# Find NetCDF and - on Windows - compile against static runtime if NetCDF was compiled as such.
-find_package(NetCDF REQUIRED)
-if (NetCDF_STATIC_MSVC_BUILD)
-  add_compile_options("/libs:static")
+# Set default installation prefix.
+if(WIN32)
+  if(DEFINED ENV{LOCALAPPDATA})
+    set(DEFAULT_PREFIX "$ENV{LOCALAPPDATA}/getm")
+  else()
+    set(DEFAULT_PREFIX "$ENV{APPDATA}/getm")
+  endif()
+else()
+  set(DEFAULT_PREFIX "$ENV{HOME}/local/getm")
 endif()
 
 option(GETM_USE_FABM "Include support for Framework for Aquatic Biogeochemical Models (fabm.net)" OFF)
@@ -36,7 +39,7 @@ if(GOTM_BASE)
   add_subdirectory(${GOTM_BASE} ${CMAKE_BINARY_DIR}/extern/gotm)
   mark_as_advanced(GOTM_PREFIX GOTM_USE_FABM)
 else()
-  find_package(GOTM REQUIRED HINTS "${GOTM_PREFIX}")
+  find_package(GOTM REQUIRED HINTS "${GOTM_PREFIX}" "${DEFAULT_PREFIX}/../gotm")
 endif()
 
 option(GETM_USE_PARALLEL "Enable parallel computation" OFF)
