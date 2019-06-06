@@ -36,11 +36,7 @@ if(GOTM_BASE)
   add_subdirectory(${GOTM_BASE} ${CMAKE_BINARY_DIR}/extern/gotm)
   mark_as_advanced(GOTM_PREFIX GOTM_USE_FABM)
 else()
-  find_package(GOTM REQUIRED)
-  # Use FABM_PREFIX to locate include and lib directories
-  if(GETM_USE_FABM)
-    find_package(FABM REQUIRED)
-  endif()
+  find_package(GOTM REQUIRED HINTS "${GOTM_PREFIX}")
 endif()
 
 option(GETM_USE_PARALLEL "Enable parallel computation" OFF)
