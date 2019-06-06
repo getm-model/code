@@ -11,7 +11,7 @@ add_executable(test_rotation
                test_rotation.F90
                $<TARGET_OBJECTS:futils>
               )
-target_link_libraries(test_rotation PRIVATE futils ${NetCDF_LIBRARIES})
+target_link_libraries(test_rotation PRIVATE futils output_manager)
 if (NetCDF_STATIC_MSVC_BUILD)
   set_property(TARGET test_rotation PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:\"libcmt\"")
 endif()
