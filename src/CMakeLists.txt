@@ -159,7 +159,7 @@ add_library(3d OBJECT
             3d/vv_momentum_3d.F90
             3d/ww_momentum_3d.F90
            )
-target_link_libraries(3d PRIVATE domain meteo 2d field_manager futils turbulence)
+target_link_libraries(3d PRIVATE domain meteo 2d field_manager futils gotm::turbulence)
 if (GETM_USE_FABM)
    target_link_libraries(3d PRIVATE fabm)
 endif()
@@ -221,7 +221,7 @@ add_library(getm OBJECT
             getm/register_all_variables.F90
             getm/print_version.F90
            )
-target_link_libraries(getm PRIVATE domain input output_manager util)
+target_link_libraries(getm PRIVATE domain input output_manager gotm::util)
 if (GETM_USE_FABM)
    target_link_libraries(getm PRIVATE fabm)
 endif()
@@ -314,7 +314,7 @@ add_executable(getm_exe
                $<TARGET_OBJECTS:futils>
               )
 set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm${exe_id}")
-target_link_libraries(getm_exe PRIVATE getm output_manager turbulence)
+target_link_libraries(getm_exe PRIVATE getm output_manager gotm::turbulence)
 if (NetCDF_STATIC_MSVC_BUILD)
   set_property(TARGET getm_exe PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:\"libcmt\"")
 endif()
