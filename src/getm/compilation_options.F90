@@ -10,6 +10,9 @@
 ! !DESCRIPTION:
 !
 ! !USES:
+#ifdef STATIC
+   use domain, only: iextr,jextr,imax,jmax,kmax
+#endif
    IMPLICIT NONE
 !
 !EOP
@@ -61,6 +64,8 @@
 !
 #ifdef STATIC
    LEVEL1 'Using STATIC memory allocation'
+   LEVEL2 'iextr, jextr:     ',iextr,jextr
+   LEVEL2 'imax, jmax, kmax: ',imax,jmax,kmax
 #else
    LEVEL1 'Using DYNAMIC memory allocation'
 #endif

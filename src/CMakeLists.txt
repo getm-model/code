@@ -17,6 +17,7 @@ set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules)
 
 if(GETM_USE_STATIC)
    add_definitions(-DSTATIC)
+   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/dimensions.h.in" ${CMAKE_CURRENT_BINARY_DIR}/dimensions.h)
 endif(GETM_USE_STATIC)
 
 if(GETM_USE_DEBUG)
