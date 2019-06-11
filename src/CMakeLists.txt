@@ -214,6 +214,9 @@ if(GETM_EMBED_VERSION)
 endif()
 target_include_directories(futils PRIVATE ${NetCDF_INCLUDE_DIRS})
 target_include_directories(futils PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/modules> $<INSTALL_INTERFACE:include>)
+if(GETM_USE_PARALLEL)
+  target_link_libraries(futils PRIVATE MPI::MPI_Fortran)
+endif()
 
 add_library(getm OBJECT
             getm/cleanup.F90
