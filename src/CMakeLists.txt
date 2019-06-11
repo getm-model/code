@@ -18,6 +18,7 @@ set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules)
 if(GETM_USE_STATIC)
    add_definitions(-DSTATIC)
    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/dimensions.h.in" ${CMAKE_CURRENT_BINARY_DIR}/dimensions.h)
+   include_directories(${CMAKE_CURRENT_BINARY_DIR})
 endif(GETM_USE_STATIC)
 
 if(GETM_USE_DEBUG)
@@ -211,6 +212,7 @@ add_library(futils OBJECT
 if(GETM_EMBED_VERSION)
   add_dependencies(futils getm_version)
 endif()
+target_include_directories(futils PRIVATE ${NetCDF_INCLUDE_DIRS})
 target_include_directories(futils PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/modules> $<INSTALL_INTERFACE:include>)
 
 add_library(getm OBJECT
@@ -221,7 +223,7 @@ add_library(getm OBJECT
             getm/register_all_variables.F90
             getm/print_version.F90
            )
-target_link_libraries(getm PRIVATE domain input output_manager gotm::util)
+target_link_libraries(getm PRIVATE futils domain input output_manager gotm::util)
 if (GETM_USE_FABM)
    target_link_libraries(getm PRIVATE fabm)
 endif()
