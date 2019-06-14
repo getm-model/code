@@ -303,7 +303,7 @@ add_library(output OBJECT
             output/output_processing.F90
             output/output.F90
            )
-target_link_libraries(output PRIVATE domain 2d 3d field_manager ouput_manager futils)
+target_link_libraries(output PRIVATE domain 2d 3d field_manager output_manager futils)
 
 # Build GETM executable.
 add_executable(getm_exe
