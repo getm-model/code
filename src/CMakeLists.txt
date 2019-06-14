@@ -216,6 +216,7 @@ target_include_directories(futils PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINAR
 if(GETM_USE_PARALLEL)
   target_link_libraries(futils PRIVATE MPI::MPI_Fortran)
 endif()
+target_link_libraries(futils PRIVATE netcdf)
 
 add_library(getm OBJECT
             getm/cleanup.F90
@@ -246,7 +247,7 @@ add_library(input OBJECT
             input/read_profile.F90
             input/read_topo_file.F90
            )
-target_link_libraries(input PRIVATE ncdf 2d 3d field_manager)
+target_link_libraries(input PRIVATE ncdf 2d 3d field_manager netcdf)
 
 add_library(meteo OBJECT
             meteo/exchange_coefficients.F90

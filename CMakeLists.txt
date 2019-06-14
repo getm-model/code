@@ -34,7 +34,7 @@ option(GETM_USE_FABM "Include support for Framework for Aquatic Biogeochemical M
 set(GOTM_EMBED_VERSION ${GETM_EMBED_VERSION} CACHE BOOL "Embed GOTM version information" FORCE)
 find_path(GOTM_BASE src/gotm/gotm.F90 DOC "Path to GOTM source directory.")
 if(GOTM_BASE)
-  message("Building GOTM related libraries")
+  message("Configuring GOTM")
   set(GOTM_BUILD_LIBRARIES_ONLY ON)
   set(GOTM_USE_FABM ${GETM_USE_FABM} CACHE BOOL "Include support for Framework for Aquatic Biogeochemical Models (fabm.net)" FORCE)
   add_subdirectory(${GOTM_BASE} extern/gotm EXCLUDE_FROM_ALL)
