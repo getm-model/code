@@ -7,7 +7,7 @@ if(GETM_USE_STRUCTURE_FRICTION)
    set (STRUCTURE_FRICTION structure_friction_3d.F90)
 endif(GETM_USE_STRUCTURE_FRICTION)
 
-add_library(3d OBJECT
+add_library(3d
             adaptive_coordinates.F90
             advection_3d.F90
             adv_split_w.F90

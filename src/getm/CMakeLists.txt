@@ -1,4 +1,4 @@
-add_library(getm OBJECT
+add_library(getm
             cleanup.F90
             compilation_options.F90
             initialise.F90

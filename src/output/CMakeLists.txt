@@ -1,4 +1,4 @@
-add_library(output OBJECT
+add_library(output
             ascii_out.F90
             calc_mean_fields.F90
             diagnose.F90

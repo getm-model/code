@@ -1,4 +1,4 @@
-add_library(ncdf OBJECT
+add_library(ncdf
             create_restart_ncdf.F90
             grid_ncdf.F90
             init_2d_ncdf.F90

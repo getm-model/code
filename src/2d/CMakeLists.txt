@@ -1,4 +1,4 @@
-add_library(2d OBJECT
+add_library(2d
             adv_arakawa_j7_2dh.F90
             advection.F90
             adv_fct_2dh.F90

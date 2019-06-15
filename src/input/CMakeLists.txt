@@ -1,4 +1,4 @@
-add_library(input OBJECT
+add_library(input
             get_2d_bdy.F90
             get_2d_field.F90
             get_3d_bdy.F90

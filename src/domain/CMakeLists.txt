@@ -1,4 +1,4 @@
-add_library(domain OBJECT
+add_library(domain
             bdy_spec.F90
             domain.F90
             have_bdy.F90
@@ -8,4 +8,4 @@ add_library(domain OBJECT
             print_bdy.F90
             uv_depths.F90
            )
-target_link_libraries(domain PRIVATE futils)
+target_link_libraries(domain PRIVATE futils input)

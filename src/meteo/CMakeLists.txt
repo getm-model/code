@@ -1,4 +1,4 @@
-add_library(meteo OBJECT
+add_library(meteo
             exchange_coefficients.F90
             fluxes.F90
             meteo.F90

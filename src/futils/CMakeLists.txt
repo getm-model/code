@@ -13,7 +13,7 @@ if(GETM_USE_PARALLEL)
    set(HALO_MPI halo_mpi.F90 ${MPI_Fortran_EXTRA_SOURCES})
 endif(GETM_USE_PARALLEL)
 
-add_library(futils OBJECT
+add_library(futils
 #            git_revision.h
             c2x.F90
             check_3d_fields.F90
@@ -48,7 +48,7 @@ add_library(futils OBJECT
 if(GETM_EMBED_VERSION)
   add_dependencies(futils getm_version)
 endif()
-target_include_directories(futils PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/modules> $<INSTALL_INTERFACE:include>)
+target_include_directories(futils PUBLIC $<BUILD_INTERFACE:$<TARGET_PROPERTY:futils,Fortran_MODULE_DIRECTORY>> $<INSTALL_INTERFACE:include>)
 if(GETM_USE_PARALLEL)
   target_link_libraries(futils PRIVATE MPI::MPI_Fortran)
 endif()
