@@ -1,23 +1,10 @@
-# actual compilation on GETM specific code - accoring to configuration don in ../CMakeLists.txt
-
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/futils/getm_version.F90.in" ${CMAKE_CURRENT_BINARY_DIR}/getm_version.F90)
-if(GETM_EMBED_VERSION)
-  add_custom_target(getm_version COMMAND
-    ${CMAKE_COMMAND} -DINFILE=${CMAKE_CURRENT_SOURCE_DIR}/futils/getm_version.F90.in -DOUTFILE=${CMAKE_CURRENT_BINARY_DIR}/getm_version.F90 -P "${PROJECT_SOURCE_DIR}/cmake/Modules/GetGitInfo.cmake"
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    COMMENT "Retrieving description of last GETM commit..."
-#KB    SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/futils/getm_version.F90.in "${PROJECT_SOURCE_DIR}/cmake/Modules/GetGitInfo.cmake"
-    VERBATIM
-  )
-endif()
-
 set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules)
 
 # various compilation switches
 
 if(GETM_USE_STATIC)
    add_definitions(-DSTATIC)
-   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/dimensions.h.in" ${CMAKE_CURRENT_BINARY_DIR}/dimensions.h)
+   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/include/dimensions.h.in" ${CMAKE_CURRENT_BINARY_DIR}/dimensions.h)
    include_directories(${CMAKE_CURRENT_BINARY_DIR})
 endif(GETM_USE_STATIC)
 
@@ -31,13 +18,10 @@ endif(GETM_USE_PROFILING)
 
 if(GETM_USE_FABM)
    add_definitions(-D_FABM_)
-   set (GETM_FABM 3d/getm_fabm.F90)
-   set(FABM_EMBED_VERSION ${GETM_EMBED_VERSION} CACHE BOOL "Embed FABM version information" FORCE)
 endif(GETM_USE_FABM)
 
 if(GETM_USE_STRUCTURE_FRICTION)
    add_definitions(-DSTRUCTURE_FRICTION)
-   set (STRUCTURE_FRICTION 3d/structure_friction_3d.F90)
 endif(GETM_USE_STRUCTURE_FRICTION)
 
 if(GETM_FLAGS)
@@ -51,7 +35,6 @@ set(par_str "")
 if(GETM_USE_PARALLEL)
    set(par_str "_parallel")
    add_definitions(-DGETM_PARALLEL)
-   set(HALO_MPI futils/halo_mpi.F90 ${MPI_Fortran_EXTRA_SOURCES})
 endif(GETM_USE_PARALLEL)
 
 # Specify coordinate type
@@ -89,237 +72,22 @@ include_directories("${CMAKE_BINARY_DIR}"
                     "${PROJECT_SOURCE_DIR}/include"
                    )
 
-# Libraries added in alphabetic order
-add_library(2d OBJECT
-            2d/adv_arakawa_j7_2dh.F90
-            2d/advection.F90
-            2d/adv_fct_2dh.F90
-            2d/adv_split_u.F90
-            2d/adv_split_v.F90
-            2d/adv_upstream_2dh.F90
-            2d/bottom_friction.F90
-            2d/cfl_check.F90
-            2d/depth_update.F90
-            2d/m2d.F90
-            2d/momentum.F90
-            2d/residual.F90
-            2d/sealevel.F90
-            2d/update_2d_bdy.F90
-            2d/uv_advect.F90
-            2d/uv_diff_2dh.F90
-            2d/uv_diffusion.F90
-            2d/variables_2d.F90
-           )
-target_compile_definitions(2d PRIVATE REAL_4B=real\(4\))
-target_link_libraries(2d PRIVATE domain field_manager)
-
-add_library(3d OBJECT
-            3d/adaptive_coordinates.F90
-            3d/advection_3d.F90
-            3d/adv_split_w.F90
-            3d/bdy_3d.F90
-            3d/bottom_friction_3d.F90
-            3d/check_h.F90
-            3d/coordinates.F90
-            3d/eqstate.F90
-            3d/general_coordinates.F90
-#            3d/getm_bio.F90
-            ${GETM_FABM}
-            3d/gotm.F90
-            3d/hcc_check.F90
-            3d/hybrid_coordinates.F90
-            3d/internal_pressure.F90
-            3d/ip_blumberg_mellor.F90
-            3d/ip_blumberg_mellor_lin.F90
-            3d/ip_chu_fan.F90
-            3d/ip_shchepetkin_mcwilliams.F90
-            3d/ip_song_wright.F90
-            3d/ip_stelling_vankester.F90
-            3d/ip_z_interpol.F90
-            3d/m3d.F90
-            3d/numerical_mixing.F90
-            3d/physical_mixing.F90
-            3d/preadapt_coordinates.F90
-            3d/rivers.F90
-            3d/salinity.F90
-            3d/sigma_coordinates.F90
-            3d/slow_bottom_friction.F90
-            3d/slow_terms.F90
-#            3d/spm.F90
-            3d/ss_nn.F90
-            3d/start_macro.F90
-            3d/stop_macro.F90
-            3d/stresses_3d.F90
-            ${STRUCTURE_FRICTION}
-            3d/temperature.F90
-            3d/tke_eps_advect_3d.F90
-            3d/uu_momentum_3d.F90
-            3d/uv_advect_3d.F90
-            3d/uv_diffusion_3d.F90
-            3d/variables_3d.F90
-            3d/vv_momentum_3d.F90
-            3d/ww_momentum_3d.F90
-           )
-target_link_libraries(3d PRIVATE domain meteo 2d field_manager futils gotm::turbulence)
-if (GETM_USE_FABM)
-   target_link_libraries(3d PRIVATE fabm)
-endif()
-
-add_library(domain OBJECT
-            domain/bdy_spec.F90
-            domain/domain.F90
-            domain/have_bdy.F90
-            domain/mirror_bdy_2d.F90
-            domain/mirror_bdy_3d.F90
-            domain/part_domain.F90
-            domain/print_bdy.F90
-            domain/uv_depths.F90
-           )
-target_link_libraries(domain PRIVATE futils)
-
-add_library(futils OBJECT
-#            git_revision.h
-            futils/c2x.F90
-            futils/check_3d_fields.F90
-            futils/cnv_2d.F90
-            futils/cnv_3d.F90
-            futils/col_interpol.F90
-            futils/eta_mask.F90
-            futils/exceptions.F90
-            futils/getm_error.F90
-            futils/getm_timers.F90
-            futils/grid_interpol.F90
-            ${HALO_MPI}
-            futils/halo_zones.F90
-            futils/kbk_interpol.F90
-            futils/parallel.F90
-            futils/parameters.F90
-            futils/pos.F90
-            futils/read_par_setup.F90
-            futils/strip_string.F90
-            futils/time.F90
-            futils/to_2d_u.F90
-            futils/to_2d_vel.F90
-            futils/to_2d_v.F90
-            futils/to_3d_uu.F90
-            futils/to_3d_vel.F90
-            futils/to_3d_vv.F90
-            futils/tow.F90
-            futils/tridiagonal.F90
-            futils/ver_interpol.F90
-            ${CMAKE_CURRENT_BINARY_DIR}/getm_version.F90
-           )
-if(GETM_EMBED_VERSION)
-  add_dependencies(futils getm_version)
-endif()
-target_include_directories(futils PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/modules> $<INSTALL_INTERFACE:include>)
-if(GETM_USE_PARALLEL)
-  target_link_libraries(futils PRIVATE MPI::MPI_Fortran)
-endif()
-target_link_libraries(futils PRIVATE netcdf)
-
-add_library(getm OBJECT
-            getm/cleanup.F90
-            getm/compilation_options.F90
-            getm/initialise.F90
-            getm/integration.F90
-            getm/register_all_variables.F90
-            getm/print_version.F90
-           )
-target_link_libraries(getm PRIVATE futils domain input output_manager gotm::util)
-if (GETM_USE_FABM)
-   target_link_libraries(getm PRIVATE fabm)
-endif()
-
-add_library(input OBJECT
-            input/get_2d_bdy.F90
-            input/get_2d_field.F90
-            input/get_3d_bdy.F90
-            input/get_3d_field.F90
-            input/get_meteo_data.F90
-            input/get_river_data.F90
-            input/inquire_file.F90
-            input/init_2d_bdy.F90
-            input/init_3d_bdy.F90
-            input/init_meteo_input.F90
-            input/init_river_input.F90
-            input/input.F90
-            input/read_profile.F90
-            input/read_topo_file.F90
-           )
-target_link_libraries(input PRIVATE ncdf 2d 3d field_manager netcdf)
-
-add_library(meteo OBJECT
-            meteo/exchange_coefficients.F90
-            meteo/fluxes.F90
-            meteo/meteo.F90
-            meteo/solar_zenith_angle.F90
-            meteo/short_wave_radiation.F90
-            meteo/albedo_water.F90
-           )
-target_link_libraries(meteo PRIVATE domain futils)
-
-add_library(ncdf OBJECT
-            ncdf/create_restart_ncdf.F90
-            ncdf/grid_ncdf.F90
-            ncdf/init_2d_ncdf.F90
-            ncdf/init_3d_ncdf.F90
-            ncdf/init_grid_ncdf.F90
-            ncdf/init_mean_ncdf.F90
-            ncdf/ncdf_2d_bdy.F90
-            ncdf/ncdf_2d.F90
-            ncdf/ncdf_3d_bdy.F90
-            ncdf/ncdf_3d_bio_bdy.F90
-            ncdf/ncdf_3d.F90
-            ncdf/ncdf_close.F90
-            ncdf/ncdf_common.F90
-            ncdf/ncdf_get_field.F90
-            ncdf/get_2d_field_ncdf_by_id.F90
-            ncdf/ncdf_in.F90
-            ncdf/ncdf_mean.F90
-            ncdf/ncdf_meteo.F90
-            ncdf/ncdf_restart.F90
-            ncdf/ncdf_rivers.F90
-            ncdf/ncdf_topo.F90
-            ncdf/open_restart_ncdf.F90
-            ncdf/read_restart_ncdf.F90
-            ncdf/save_2d_ncdf.F90
-            ncdf/save_3d_ncdf.F90
-            ncdf/save_grid_ncdf.F90
-            ncdf/save_mean_ncdf.F90
-            ncdf/set_attributes.F90
-            ncdf/write_restart_ncdf.F90
-           )
-target_compile_definitions(ncdf PRIVATE REAL_4B=real\(4\))
-target_link_libraries(ncdf PRIVATE domain 2d 3d output output_manager futils)
-
-add_library(output OBJECT
-            output/ascii_out.F90
-            output/calc_mean_fields.F90
-            output/diagnose.F90
-            output/diagnostic_variables.F90
-            output/ncdf_out.F90
-            output/nesting.F90
-            output/output_processing.F90
-            output/output.F90
-           )
-target_link_libraries(output PRIVATE domain 2d 3d field_manager output_manager futils)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/2d)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/3d)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/domain)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/futils)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/getm)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/input)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/meteo)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ncdf)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/output)
 
 # Build GETM executable.
 add_executable(getm_exe
-               getm/main.F90
-               $<TARGET_OBJECTS:getm>
-               $<TARGET_OBJECTS:output>
-               $<TARGET_OBJECTS:meteo>
-               $<TARGET_OBJECTS:3d>
-               $<TARGET_OBJECTS:2d>
-               $<TARGET_OBJECTS:input>
-               $<TARGET_OBJECTS:domain>
-               $<TARGET_OBJECTS:ncdf>
-               $<TARGET_OBJECTS:futils>
+               src/getm/main.F90
               )
 set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm${exe_id}")
-target_link_libraries(getm_exe PRIVATE getm output_manager gotm::turbulence)
+target_link_libraries(getm_exe PRIVATE getm input domain futils meteo 2d 3d ncdf output output_manager gotm::turbulence)
 if (NetCDF_STATIC_MSVC_BUILD)
   set_property(TARGET getm_exe PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:\"libcmt\"")
 endif()

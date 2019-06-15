@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
@@ -60,21 +60,5 @@ option(GETM_USE_PROFILING "Profiling compilation" OFF)
 
 option(GETM_USE_STRUCTURE_FRICTION "Include structure friction" OFF)
 
-# Customize compiler flags
-#[[---
-if(${CMAKE_Fortran_COMPILER_ID} STREQUAL "GNU")
-  set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffree-line-length-none")
-  add_definitions(-DGFORTRAN)
-elseif(${CMAKE_Fortran_COMPILER_ID} STREQUAL "Intel")
-  add_definitions(-DIFORT)
-  if(WIN32)
-    set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} /Od")
-    set(CMAKE_Fortran_STACK_SIZE 128000000)
-  endif()
-elseif(${CMAKE_Fortran_COMPILER_ID} STREQUAL "Cray")
-  set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -N 1023")
-endif()
----]]
-
-add_subdirectory(src)
+include(src/CMakeLists.txt)
 add_subdirectory(tests EXCLUDE_FROM_ALL)
