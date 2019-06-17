@@ -8,4 +8,4 @@ add_library(domain
             print_bdy.F90
             uv_depths.F90
            )
-target_link_libraries(domain PRIVATE futils input)
+target_link_libraries(domain PRIVATE futils)

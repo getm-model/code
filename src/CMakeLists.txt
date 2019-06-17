@@ -87,7 +87,7 @@ add_executable(getm_exe
                src/getm/main.F90
               )
 set_property(TARGET getm_exe PROPERTY OUTPUT_NAME "getm${exe_id}")
-target_link_libraries(getm_exe PRIVATE getm input domain futils meteo 2d 3d ncdf output output_manager gotm::turbulence)
+target_link_libraries(getm_exe PRIVATE getm futils domain meteo 2d 3d ncdf input output output_manager gotm::turbulence)
 if (NetCDF_STATIC_MSVC_BUILD)
   set_property(TARGET getm_exe PROPERTY LINK_FLAGS_DEBUG "/NODEFAULTLIB:\"libcmt\"")
 endif()
