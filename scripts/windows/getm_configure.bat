@@ -10,12 +10,8 @@
 @chdir "%build_dir%"
 
 @echo Base directories:
-@set GETM_BASE=%USERPROFILE%\Documents\GETM\code
-@set GOTM_BASE=%USERPROFILE%\Documents\GOTM\code
-@set FABM_BASE=%USERPROFILE%\Documents\FABM\code
+@set GETM_BASE=%USERPROFILE%\source\repos\\GETM\code
 @echo %GETM_BASE%
-@echo %GOTM_BASE%
-@echo %FABM_BASE%
 
 @echo Default Fortran compiler is ifort
 @set compiler=ifort
@@ -28,11 +24,9 @@
 FOR %%c IN (Cartesian Spherical Curvilinear) DO (
    @IF NOT EXIST "%%c\." ( mkdir "%%c" )
    @chdir "%%c"
-   cmake "%GETM_BASE%\src" ^
+   cmake "%GETM_BASE%" ^
          -DGETM_EMBED_VERSION=on ^
-         -DGOTM_BASE="%GOTM_BASE%" ^
          -DGETM_USE_FABM=on ^
-         -DFABM_BASE="%FABM_BASE%" ^
          -DCMAKE_Fortran_COMPILER=%compiler% ^
          -DGETM_USE_PARALLEL=off ^
          -DGETM_COORDINATE_TYPE=%%c ^
