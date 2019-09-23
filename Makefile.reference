@@ -59,45 +59,6 @@ VER=2.4.0
 # 2013/04/01 - new devel release
 VER=2.5.0
 
-include compilers/compiler.$(FORTRAN_COMPILER)
-
-.PHONY: doc
-
-all: VERSION
-
-VERSION: Makefile src/Makefile src/Rules.make
-	$(MAKE) distclean
-	@echo $(VER) > $@
-	@date > timestamp
-	@echo \#define RELEASE \"$(VER)\" > .ver
-	@mv -f .ver include/version.h
-
-FORTRAN:
-	@echo "#define FORTRAN_VERSION \"`$(FC) $(VERSION_FLAG) 2> /dev/null`\"" > ./include/fortran_version.h
-
-GIT:
-	@echo "#define GIT_REVISION \"`git log | head -1`\"" > ./include/git_revision.h
-
-Makefile:
-
-doc:
-	$(MAKE) -C doc/
-
-devel stable branch: VERSION
-	@echo
-	@echo "making a new "$@" release: v"$(VER)
-	@echo
-	./release.sh $@ $(VER)
-
-clean:
-	rm -f VERSION
-
-distclean:
-	$(MAKE) -C doc $@
-	$(MAKE) -C src $@
-	$(RM) timestamp VERSION include/version.h
-	$(RM) -r bin/ lib/ modules/
-
 #-----------------------------------------------------------------------
 # Copyright (C) 2006 - Hans Burchard and Karsten Bolding (BBH)         !
 #-----------------------------------------------------------------------
