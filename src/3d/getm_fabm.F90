@@ -26,6 +26,7 @@
    use time, only: month,yearday,secondsofday,timestr
    use halo_zones, only: update_3d_halo,wait_halo,D_TAG,H_TAG
 ! JORN_FABM
+   use gotm_fabm, only: configure_gotm_fabm_from_nml, gotm_fabm_create_model
    use gotm_fabm, only: init_gotm_fabm,set_env_gotm_fabm,do_gotm_fabm
    use gotm_fabm, only: gotm_fabm_calc=>fabm_calc, model, cc_col=>cc, cc_diag_col=>cc_diag, cc_diag_hz_col=>cc_diag_hz, cc_transport
 
@@ -142,7 +143,9 @@ end interface
    LEVEL2 'init_getm_fabm()'
 
 !  Initialize FABM.
-   call init_gotm_fabm(kmax,NAMLST2,'gotm_fabm.nml')
+   call configure_gotm_fabm_from_nml(NAMLST2,'gotm_fabm.nml')
+   call gotm_fabm_create_model(NAMLST2)
+   call init_gotm_fabm(kmax)
 
 !  Store fabm_calc and model for use by GETM
    fabm_calc = gotm_fabm_calc
