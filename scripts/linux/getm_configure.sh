@@ -1,9 +1,7 @@
 #!/bin/sh
 
 # if not set use the suggested source code installation directories
-GETM_BASE=${GETM_BASE:=~/GETM/code}
-GOTM_BASE=${GOTM_BASE:=~/GOTM/code}
-FABM_BASE=${FABM_BASE:=~/FABM/code}
+GETM_BASE=${GETM_BASE:=~/source/repos/GETM/code}
 
 # default Fortran compiler is gfortran - overide by setting compiler like:
 # export compiler=ifort
@@ -21,19 +19,12 @@ coordinate=${coordinate:=Cartesian}
 # note that $compiler will be appended
 install_prefix=${install_prefix:=~/local/getm}
 
-# NetCDF
-# nf-config must be in the path and correpsond to the value of compiler
-# try:
-# nf-config --all
-
 # ready to configure
 mkdir -p $compiler
 cd $compiler
-cmake $GETM_BASE/src \
+cmake $GETM_BASE \
       -DGETM_EMBED_VERSION=on \
-      -DGOTM_BASE=$GOTM_BASE \
       -DGETM_USE_FABM=on \
-      -DFABM_BASE=$FABM_BASE/ \
       -DCMAKE_Fortran_COMPILER=$compiler \
       -DGETM_USE_PARALLEL=off \
       -DGETM_COORDINATE_TYPE=$coordinate \

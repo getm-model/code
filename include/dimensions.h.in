@@ -1,0 +1,5 @@
+!  specifies dimensions - in case of static compilation
+   integer, parameter :: iextr=@IEXTR@,jextr=@JEXTR@
+   integer, parameter :: imin=1,imax=@IMAX@,jmin=1,jmax=@JMAX@
+   integer, parameter :: kmax=@KMAX@
+

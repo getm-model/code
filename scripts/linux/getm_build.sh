@@ -4,7 +4,7 @@ if [ "$1" != "" ]; then
    action=$1
    echo "doing a "$action
 else
-   action=install
+   action=
 fi
 
 # default Fortran compiler is gfortran - overide by setting compuiler like:
