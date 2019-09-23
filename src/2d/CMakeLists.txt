@@ -19,4 +19,4 @@ add_library(2d
             variables_2d.F90
            )
 target_compile_definitions(2d PRIVATE REAL_4B=real\(4\))
-target_link_libraries(2d PRIVATE domain field_manager)
+target_link_libraries(2d PRIVATE domain)

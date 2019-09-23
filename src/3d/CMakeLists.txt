@@ -54,7 +54,7 @@ add_library(3d
             vv_momentum_3d.F90
             ww_momentum_3d.F90
            )
-target_link_libraries(3d PRIVATE domain meteo 2d field_manager futils gotm::turbulence)
+target_link_libraries(3d PRIVATE domain meteo 2d futils gotm::turbulence)
 if (GETM_USE_FABM)
    target_link_libraries(3d PRIVATE gotm::gotm_fabm fabm)
 endif()
