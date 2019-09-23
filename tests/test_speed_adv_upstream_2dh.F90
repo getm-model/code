@@ -50,12 +50,12 @@
    V = V - _HALF_
 
 !#define _USE_ABS_
-   
+
 !  Calculating u-interface low-order fluxes !
    do j=jmin,jmax
       do i=imin-1,imax
 #ifdef _USE_ABS_
-         uflux(i,j) = _HALF_*( (U(i,j)+abs(U(i,j)))*f(i,j) + (U(i,j)-abs(U(i,j)))*f(i+1,j) ) 
+         uflux(i,j) = _HALF_*( (U(i,j)+abs(U(i,j)))*f(i,j) + (U(i,j)-abs(U(i,j)))*f(i+1,j) )
 #else
          if (U(i,j) .gt. _ZERO_) then
             uflux(i,j)=U(i,j)*f(i,j)
@@ -76,7 +76,7 @@
    do j=jmin-1,jmax
       do i=imin,imax
 #ifdef _USE_ABS_
-         vflux(i,j) = _HALF_*( (V(i,j)+abs(V(i,j)))*f(i,j) + (V(i,j)-abs(V(i,j)))*f(i,j+1) ) 
+         vflux(i,j) = _HALF_*( (V(i,j)+abs(V(i,j)))*f(i,j) + (V(i,j)-abs(V(i,j)))*f(i,j+1) )
 #else
          if (V(i,j) .gt. _ZERO_) then
             vflux(i,j)=V(i,j)*f(i,j)

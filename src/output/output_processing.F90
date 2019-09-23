@@ -8,7 +8,7 @@
    module output_processing
 !
 ! !DESCRIPTION:
-!  This modules serves as a container for processing output variables. 
+!  This modules serves as a container for processing output variables.
 
 ! !USES:
    use domain, only: imin,imax,jmin,jmax,kmax

@@ -418,7 +418,7 @@ end interface
 !EOP
 !-------------------------------------------------------------------------
 !BOC
-!  Create the input variable and set associated data (FABM id, 
+!  Create the input variable and set associated data (FABM id,
 !  NetCDF id, 2D data field).
    allocate(variable)
    variable%id = model%get_horizontal_variable_id(name)

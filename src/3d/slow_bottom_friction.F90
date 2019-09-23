@@ -102,7 +102,7 @@
                LEVEL1 i,j,ssuo(i,j)
                LEVEL1 'Bottom xfriction coefficient infinite.'
                FATAL 'slow_bottom_friction()'
-               call getm_error('slow_bottom_friction()','Bottom xfriction coefficient infinite.') 
+               call getm_error('slow_bottom_friction()','Bottom xfriction coefficient infinite.')
                STOP ! Just if getm_error doesnt actually halt
             end if
             ruu(i,j)=(kappa/log(ruu(i,j)))**2
@@ -121,7 +121,7 @@
                LEVEL1 i,j,ssvo(i,j)
                LEVEL1 'Bottom yfriction coefficient infinite.'
                FATAL 'slow_bottom_friction()'
-               call getm_error('slow_bottom_friction()','Bottom yfriction coefficient infinite.') 
+               call getm_error('slow_bottom_friction()','Bottom yfriction coefficient infinite.')
                STOP ! Just if getm_error doesnt actually halt
             end if
             rvv(i,j)=(kappa/log(rvv(i,j)))**2

@@ -329,7 +329,7 @@
 #endif
 
    LEVEL2 'read_river_info()'
-!KB   inquire(file=river_info, exist=exist) 
+!KB   inquire(file=river_info, exist=exist)
 !KB   if (exists) then
    open(unit,file=river_info,action='read',iostat=ios,status='old',err=90)
    do while (nriver == 0 .and. ios == 0)

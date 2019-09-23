@@ -226,7 +226,7 @@
          FATAL 'A non valid runtype has been specified.'
          stop 'initialise()'
    end select
-   
+
    call init_time(MinN,MaxN)
    if(use_epoch) then
       LEVEL2 'using "',start,'" as time reference'

@@ -39,7 +39,7 @@
 !  the model run.
 !
 ! !SEE ALSO:
-!  short_wave_radiation.F90, solar_zenith_angle.F90, albedo_water.F90, 
+!  short_wave_radiation.F90, solar_zenith_angle.F90, albedo_water.F90,
 !  fluxes.F90, exchange_coefficients.F90
 !
 ! !USES:

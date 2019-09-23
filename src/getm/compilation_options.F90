@@ -2,7 +2,7 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: compilation_options() - 
+! !ROUTINE: compilation_options() -
 !
 ! !INTERFACE:
    subroutine compilation_options()

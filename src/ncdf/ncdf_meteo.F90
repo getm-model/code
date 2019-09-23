@@ -544,7 +544,7 @@ STDERR 'grid_north_pole_longitude ',southpole(2)
                   southpole(2) = southpole(2) - 180.
                else
                   southpole(2) = southpole(2) + 180.
-               end if 
+               end if
                southpole(1) = -southpole(1)
 #if 0
 STDERR 'After transformation:'
