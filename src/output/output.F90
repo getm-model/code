@@ -226,8 +226,8 @@
             if (save_2d) call init_2d_ncdf(out_f_2d,title,starttime)
 #ifndef NO_3D
             if (save_3d) call init_3d_ncdf(out_f_3d,title,starttime)
-            if (save_mean)  &
-                     call init_mean_ncdf(out_f_mean,title,starttime)
+!KB            if (save_mean)  &
+!KB                     call init_mean_ncdf(out_f_mean,title,starttime)
 #endif
          case (GRADS)
          case DEFAULT
@@ -313,7 +313,7 @@
          write_mean = (mod(n,meanout).eq.0)
          !write_mean = (mod(n-mean0,meanout).eq.0)
       end if
-      call calc_mean_fields(n,write_mean)
+!KB      call calc_mean_fields(n,write_mean)
    end if
 #endif
 
@@ -337,7 +337,7 @@
             if (write_2d) call save_2d_ncdf(secs)
 #ifndef NO_3D
             if (write_3d) call save_3d_ncdf(secs)
-            if (write_mean) call save_mean_ncdf(secs)
+!KB            if (write_mean) call save_mean_ncdf(secs)
 #endif
          case DEFAULT
            STDERR 'Fatal error: A non valid input format has been chosen'

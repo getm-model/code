@@ -4,7 +4,7 @@ add_library(ncdf
             init_2d_ncdf.F90
             init_3d_ncdf.F90
             init_grid_ncdf.F90
-            init_mean_ncdf.F90
+#            init_mean_ncdf.F90
             ncdf_2d_bdy.F90
             ncdf_2d.F90
             ncdf_3d_bdy.F90
@@ -15,7 +15,7 @@ add_library(ncdf
             ncdf_get_field.F90
             get_2d_field_ncdf_by_id.F90
             ncdf_in.F90
-            ncdf_mean.F90
+#            ncdf_mean.F90
             ncdf_meteo.F90
             ncdf_restart.F90
             ncdf_rivers.F90
@@ -25,7 +25,7 @@ add_library(ncdf
             save_2d_ncdf.F90
             save_3d_ncdf.F90
             save_grid_ncdf.F90
-            save_mean_ncdf.F90
+#            save_mean_ncdf.F90
             set_attributes.F90
             write_restart_ncdf.F90
            )
